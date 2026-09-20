@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tareas pendientes — Estudio Secundaria</title>
+<style>
+  :root {
+    --bg: #faf9f7; --card-bg: #ffffff; --text: #1c1917; --text-muted: #78716c; --border: #e7e5e4;
+    --overdue: #dc2626; --overdue-bg: #fef2f2; --today: #b45309; --today-bg: #fffbeb;
+    --accent: #4f46e5; --chip: #eef2ff; box-sizing: border-box;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #18181b; --card-bg: #27272a; --text: #f4f4f5; --text-muted: #a1a1aa; --border: #3f3f46;
+      --overdue-bg: #3b1414; --today-bg: #3a2a08; --chip: #312e81;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    max-width: 720px; margin: 0 auto;
+  }
+  h1 { font-size: 1.15rem; margin: 0 0 2px; }
+  .subtitle { color: var(--text-muted); font-size: .8rem; margin-bottom: 14px; }
+  .week-strip { display: flex; gap: 4px; margin-bottom: 14px; }
+  .week-day { flex: 1; min-width: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 5px 3px; text-align: center; }
+  .week-day.is-today { border-color: var(--accent); border-width: 2px; }
+  .week-day.is-past { opacity: .55; }
+  .week-day .wd-label { font-size: .62rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+  .week-day .wd-date { font-size: .68rem; font-weight: 700; margin-bottom: 3px; }
+  .week-day .wd-chip { font-size: .55rem; line-height: 1.15; padding: 1px 2px; border-radius: 3px; background: var(--chip); color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .week-day .wd-chip.done { background: transparent; color: var(--text-muted); text-decoration: line-through; }
+  .week-day .wd-empty { font-size: .6rem; color: var(--text-muted); }
+  .stats { display: flex; gap: 8px; margin-bottom: 14px; }
+  .stat { flex: 1; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 8px; text-align: center; }
+  .stat .num { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+  .stat.overdue .num { color: var(--overdue); }
+  .stat.today .num { color: var(--today); }
+  .stat.upcoming .num { color: var(--accent); }
+  .stat .label { font-size: .68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; }
+  .controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  button { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: .82rem; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: .55; }
+  .updated { font-size: .72rem; color: var(--text-muted); }
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: flex; align-items: center; gap: 10px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .row.overdue { border-left: 4px solid var(--overdue); background: var(--overdue-bg); }
+  .row.today { border-left: 4px solid var(--today); background: var(--today-bg); }
+  .row.upcoming { border-left: 4px solid var(--border); }
+  .row.completed { border-left: 4px solid #16a34a; opacity: .92; }
+  .badge { font-size: .68rem; font-weight: 700; padding: 4px 8px; border-radius: 99px; white-space: nowrap; min-width: 62px; text-align: center; flex-shrink: 0; }
+  .badge.overdue { background: var(--overdue); color: #fff; }
+  .badge.today { background: var(--today); color: #fff; }
+  .badge.upcoming { background: var(--chip); color: var(--accent); }
+  .badge.completed { background: #16a34a; color: #fff; }
+  .meta { flex: 1; min-width: 0; }
+  .meta .name { font-weight: 600; font-size: .88rem; overflow-wrap: anywhere; }
+  .meta .row2 { font-size: .76rem; color: var(--text-muted); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .materia { display: inline-block; background: var(--chip); color: var(--accent); font-size: .68rem; font-weight: 600; padding: 2px 7px; border-radius: 6px; }
+  .fecha { font-weight: 600; color: var(--text); }
+  a.link { color: var(--accent); text-decoration: none; font-size: .74rem; font-weight: 600; flex-shrink: 0; }
+  .empty, .error, .loading { text-align: center; color: var(--text-muted); padding: 32px 12px; font-size: .88rem; }
+  .error { color: var(--overdue); }
+  .section-title { font-size: .82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin: 20px 0 8px; }
+  .fallback-note { font-size: .72rem; color: var(--text-muted); text-align: center; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <h1>📚 Tareas pendientes</h1>
+  <div class="subtitle">Estudio Secundaria — público, actualizado desde Notion</div>
+
+  <div class="week-strip" id="week-strip"></div>
+
+  <div class="stats">
+    <div class="stat overdue"><div class="num" id="n-overdue">–</div><div class="label">Atrasadas</div></div>
+    <div class="stat today"><div class="num" id="n-today">–</div><div class="label">Hoy</div></div>
+    <div class="stat upcoming"><div class="num" id="n-upcoming">–</div><div class="label">Próximas</div></div>
+  </div>
+
+  <div class="controls">
+    <button id="refresh-btn">🔄 Actualizar</button>
+    <span class="updated" id="updated-label"></span>
+  </div>
+
+  <div id="content" class="list"><div class="loading">Cargando…</div></div>
+
+  <div class="section-title">✅ Entregado en los últimos 2 días</div>
+  <div id="content-recent" class="list"></div>
+  <div class="fallback-note">Usa el campo "Fecha entrega real" de Notion (se llena con la automatización al marcar Completado).</div>
+
+<script>
+  const DATA_URL = 'https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria/data';
+
+  const contentEl = document.getElementById('content');
+  const recentEl = document.getElementById('content-recent');
+  const weekStripEl = document.getElementById('week-strip');
+  const updatedEl = document.getElementById('updated-label');
+  const refreshBtn = document.getElementById('refresh-btn');
+  const nOverdue = document.getElementById('n-overdue');
+  const nToday = document.getElementById('n-today');
+  const nUpcoming = document.getElementById('n-upcoming');
+
+  function fmtDate(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  function todayStr() { return fmtDate(new Date()); }
+  function daysAgoStr(n) { const d = new Date(); d.setDate(d.getDate()-n); return fmtDate(d); }
+  function classify(fecha, today) { if (fecha < today) return 'overdue'; if (fecha === today) return 'today'; return 'upcoming'; }
+  function diffDays(fecha, today) { const a = new Date(fecha+'T00:00:00'); const b = new Date(today+'T00:00:00'); return Math.round((b-a)/86400000); }
+  function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function currentWeekRange() {
+    const d = new Date();
+    const dow = d.getDay();
+    const diffToMonday = dow === 0 ? 6 : dow - 1;
+    const monday = new Date(d); monday.setDate(d.getDate() - diffToMonday);
+    const days = [];
+    for (let i = 0; i < 7; i++) { const day = new Date(monday); day.setDate(monday.getDate()+i); days.push(day); }
+    return { start: fmtDate(days[0]), end: fmtDate(days[6]), days };
+  }
+
+  function renderWeekStrip(rows) {
+    const week = currentWeekRange();
+    const today = todayStr();
+    const labels = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+    weekStripEl.innerHTML = week.days.map(function(d, i) {
+      const ds = fmtDate(d);
+      const items = rows.filter(function(r) { return r.fecha === ds; });
+      const cls = ds === today ? 'is-today' : (ds < today ? 'is-past' : '');
+      const body = items.length
+        ? items.map(function(it) { return '<div class="wd-chip ' + (it.completado ? 'done' : '') + '">' + escapeHtml(it.materia || '?') + '</div>'; }).join('')
+        : '<div class="wd-empty">—</div>';
+      return '<div class="week-day ' + cls + '">' +
+        '<div class="wd-label">' + labels[i] + '</div>' +
+        '<div class="wd-date">' + d.getDate() + '</div>' +
+        '<div class="wd-items">' + body + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function formatRow(i, badgeClass, badgeText) {
+    let dow = i.fecha;
+    try { dow = new Date(i.fecha+'T00:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric', month:'short'}); } catch(e) {}
+    return '<div class="row ' + badgeClass + '">' +
+      '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
+      '<div class="meta">' +
+        '<div class="name">' + escapeHtml(i.name) + '</div>' +
+        '<div class="row2">' +
+          '<span class="materia">' + escapeHtml(i.materia || '—') + '</span>' +
+          '<span class="fecha">' + escapeHtml(dow) + '</span>' +
+          (i.semana ? ' · ' + escapeHtml(i.semana) : '') +
+          (i.dia ? ' · ' + escapeHtml(i.dia) : '') +
+        '</div>' +
+      '</div>' +
+      (i.url ? '<a class="link" href="' + escapeHtml(i.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '') +
+    '</div>';
+  }
+
+  function render(rows) {
+    const today = todayStr();
+    const cutoff = daysAgoStr(2);
+
+    renderWeekStrip(rows);
+
+    const pending = rows.filter(r => !r.completado && r.fecha)
+      .map(r => ({...r, _status: classify(r.fecha, today), _diff: diffDays(r.fecha, today)}))
+      .sort((a,b) => a.fecha.localeCompare(b.fecha));
+
+    const recent = rows.filter(r => r.completado && r.fechaReal && r.fechaReal >= cutoff && r.fechaReal <= today)
+      .map(r => ({...r, fecha: r.fechaReal}))
+      .sort((a,b) => b.fecha.localeCompare(a.fecha));
+
+    const counts = {overdue:0, today:0, upcoming:0};
+    pending.forEach(i => counts[i._status]++);
+    nOverdue.textContent = counts.overdue;
+    nToday.textContent = counts.today;
+    nUpcoming.textContent = counts.upcoming;
+
+    contentEl.innerHTML = pending.length
+      ? pending.map(i => formatRow(i, i._status, i._status === 'overdue' ? i._diff + 'd atraso' : (i._status === 'today' ? 'Hoy' : 'en ' + (-i._diff) + 'd'))).join('')
+      : '<div class="empty">🎉 No hay tareas pendientes sin entregar.</div>';
+
+    recentEl.innerHTML = recent.length
+      ? recent.map(i => formatRow(i, 'completed', '✅ Hecho')).join('')
+      : '<div class="empty">Nada entregado en los últimos 2 días todavía.</div>';
+  }
+
+  async function load() {
+    refreshBtn.disabled = true;
+    try {
+      const res = await fetch(DATA_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      render(data.rows || []);
+      updatedEl.textContent = 'Actualizado ' + new Date(data.generatedAt).toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+    } catch (e) {
+      contentEl.innerHTML = '<div class="error">⚠️ No se pudo cargar la información de Notion (' + escapeHtml(e.message) + ').</div>';
+    } finally {
+      refreshBtn.disabled = false;
+    }
+  }
+
+  refreshBtn.addEventListener('click', load);
+  load();
+  setInterval(load, 5 * 60 * 1000);
+</script>
+</body>
+</html>
