@@ -68,34 +68,67 @@
   .error { color: var(--overdue); }
   .section-title { font-size: .82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin: 20px 0 8px; }
   .fallback-note { font-size: .72rem; color: var(--text-muted); text-align: center; margin-top: 10px; }
+  .login-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 24px; }
+  .login-box label { font-size: .82rem; font-weight: 600; display: block; margin-bottom: 6px; }
+  .login-box input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: .95rem; margin-bottom: 12px; }
+  .login-box button { width: 100%; }
+  .login-error { color: #dc2626; font-size: .8rem; margin-top: 8px; display: none; }
+  .top-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .top-bar .who { font-size: .82rem; color: var(--text-muted); }
+  .top-bar button { width: auto; padding: 6px 12px; font-size: .78rem; background: var(--border); color: var(--text); }
+  .admin-tag { background: var(--accent); color: #fff; font-size: .65rem; font-weight: 700; padding: 2px 7px; border-radius: 99px; margin-left: 6px; text-transform: uppercase; }
+  .meta .who { font-size: .72rem; color: var(--accent); font-weight: 600; }
+  #app { display: none; }
 </style>
 </head>
 <body>
   <h1>📚 Tareas pendientes</h1>
-  <div class="subtitle">Estudio Secundaria — público, actualizado desde Notion</div>
+  <div class="subtitle">Estudio Secundaria — actualizado desde Notion</div>
 
-  <div class="week-strip" id="week-strip"></div>
-
-  <div class="stats">
-    <div class="stat overdue"><div class="num" id="n-overdue">–</div><div class="label">Atrasadas</div></div>
-    <div class="stat today"><div class="num" id="n-today">–</div><div class="label">Hoy</div></div>
-    <div class="stat upcoming"><div class="num" id="n-upcoming">–</div><div class="label">Próximas</div></div>
+  <div id="login" class="login-box">
+    <label for="email-input">Tu correo</label>
+    <input id="email-input" type="email" placeholder="tucorreo@gmail.com" autocomplete="email">
+    <button id="login-btn">Entrar</button>
+    <div class="login-error" id="login-error">No encontré clases asociadas a ese correo.</div>
   </div>
 
-  <div class="controls">
-    <button id="refresh-btn">🔄 Actualizar</button>
-    <span class="updated" id="updated-label"></span>
+  <div id="app">
+    <div class="top-bar">
+      <div class="who" id="who-label"></div>
+      <button id="logout-btn">Cerrar sesión</button>
+    </div>
+
+    <div class="week-strip" id="week-strip"></div>
+
+    <div class="stats">
+      <div class="stat overdue"><div class="num" id="n-overdue">–</div><div class="label">Atrasadas</div></div>
+      <div class="stat today"><div class="num" id="n-today">–</div><div class="label">Hoy</div></div>
+      <div class="stat upcoming"><div class="num" id="n-upcoming">–</div><div class="label">Próximas</div></div>
+    </div>
+
+    <div class="controls">
+      <button id="refresh-btn">🔄 Actualizar</button>
+      <span class="updated" id="updated-label"></span>
+    </div>
+
+    <div id="content" class="list"><div class="loading">Cargando…</div></div>
+
+    <div class="section-title">✅ Entregado en los últimos 2 días</div>
+    <div id="content-recent" class="list"></div>
+    <div class="fallback-note">Se basa en la última edición de cada clase marcada como Completada.</div>
   </div>
-
-  <div id="content" class="list"><div class="loading">Cargando…</div></div>
-
-  <div class="section-title">✅ Entregado en los últimos 2 días</div>
-  <div id="content-recent" class="list"></div>
-  <div class="fallback-note">Usa el campo "Fecha entrega real" de Notion (se llena con la automatización al marcar Completado).</div>
 
 <script>
-  const DATA_URL = 'https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria/data';
+  const DATA_URL_BASE = 'https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria/data';
+  const STORAGE_KEY = 'secundaria_email';
 
+  const loginEl = document.getElementById('login');
+  const appEl = document.getElementById('app');
+  const emailInput = document.getElementById('email-input');
+  const loginBtn = document.getElementById('login-btn');
+  const loginError = document.getElementById('login-error');
+  const whoLabel = document.getElementById('who-label');
+  const logoutBtn = document.getElementById('logout-btn');
   const contentEl = document.getElementById('content');
   const recentEl = document.getElementById('content-recent');
   const weekStripEl = document.getElementById('week-strip');
@@ -141,9 +174,10 @@
     }).join('');
   }
 
-  function formatRow(i, badgeClass, badgeText) {
+  function formatRow(i, badgeClass, badgeText, isAdmin) {
     let dow = i.fecha;
     try { dow = new Date(i.fecha+'T00:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric', month:'short'}); } catch(e) {}
+    const whoStr = isAdmin ? ('<div class="who">👤 ' + escapeHtml((i.userNames && i.userNames.length) ? i.userNames.join(', ') : 'Sin asignar') + '</div>') : '';
     return '<div class="row ' + badgeClass + '">' +
       '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
       '<div class="meta">' +
@@ -154,14 +188,24 @@
           (i.semana ? ' · ' + escapeHtml(i.semana) : '') +
           (i.dia ? ' · ' + escapeHtml(i.dia) : '') +
         '</div>' +
+        whoStr +
       '</div>' +
       (i.url ? '<a class="link" href="' + escapeHtml(i.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '') +
     '</div>';
   }
 
-  function render(rows) {
+  function render(data) {
+    const rows = data.rows || [];
     const today = todayStr();
     const cutoff = daysAgoStr(2);
+
+    whoLabel.textContent = data.isAdmin ? 'Modo maestro — viendo todo' : 'Tu progreso';
+    if (data.isAdmin) {
+      const tag = document.createElement('span');
+      tag.className = 'admin-tag';
+      tag.textContent = 'Admin';
+      whoLabel.appendChild(tag);
+    }
 
     renderWeekStrip(rows);
 
@@ -180,32 +224,65 @@
     nUpcoming.textContent = counts.upcoming;
 
     contentEl.innerHTML = pending.length
-      ? pending.map(i => formatRow(i, i._status, i._status === 'overdue' ? i._diff + 'd atraso' : (i._status === 'today' ? 'Hoy' : 'en ' + (-i._diff) + 'd'))).join('')
+      ? pending.map(i => formatRow(i, i._status, i._status === 'overdue' ? i._diff + 'd atraso' : (i._status === 'today' ? 'Hoy' : 'en ' + (-i._diff) + 'd'), data.isAdmin)).join('')
       : '<div class="empty">🎉 No hay tareas pendientes sin entregar.</div>';
 
     recentEl.innerHTML = recent.length
-      ? recent.map(i => formatRow(i, 'completed', '✅ Hecho')).join('')
+      ? recent.map(i => formatRow(i, 'completed', '✅ Hecho', data.isAdmin)).join('')
       : '<div class="empty">Nada entregado en los últimos 2 días todavía.</div>';
   }
 
-  async function load() {
-    refreshBtn.disabled = true;
+  async function loadFor(email) {
+    contentEl.innerHTML = '<div class="loading">Cargando…</div>';
+    loginError.style.display = 'none';
     try {
-      const res = await fetch(DATA_URL, { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const res = await fetch(DATA_URL_BASE + '?email=' + encodeURIComponent(email), { cache: 'no-store' });
       const data = await res.json();
-      render(data.rows || []);
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+
+      if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {
+        loginError.style.display = 'block';
+        localStorage.removeItem(STORAGE_KEY);
+        loginEl.style.display = 'block';
+        appEl.style.display = 'none';
+        return;
+      }
+
+      localStorage.setItem(STORAGE_KEY, email);
+      loginEl.style.display = 'none';
+      appEl.style.display = 'block';
+      render(data);
       updatedEl.textContent = 'Actualizado ' + new Date(data.generatedAt).toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
     } catch (e) {
-      contentEl.innerHTML = '<div class="error">⚠️ No se pudo cargar la información de Notion (' + escapeHtml(e.message) + ').</div>';
-    } finally {
-      refreshBtn.disabled = false;
+      loginError.textContent = '⚠️ ' + e.message;
+      loginError.style.display = 'block';
     }
   }
 
-  refreshBtn.addEventListener('click', load);
-  load();
-  setInterval(load, 5 * 60 * 1000);
+  loginBtn.addEventListener('click', () => {
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email) return;
+    loadFor(email);
+  });
+  emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
+
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    appEl.style.display = 'none';
+    loginEl.style.display = 'block';
+    emailInput.value = '';
+  });
+
+  refreshBtn.addEventListener('click', () => {
+    const email = localStorage.getItem(STORAGE_KEY);
+    if (email) loadFor(email);
+  });
+
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    emailInput.value = saved;
+    loadFor(saved);
+  }
 </script>
 </body>
 </html>

@@ -51,6 +51,10 @@
   a.link { color: var(--accent); text-decoration: none; font-size: .74rem; font-weight: 600; flex-shrink: 0; }
   .empty, .error, .loading { text-align: center; color: var(--text-muted); padding: 24px 12px; font-size: .88rem; }
   .error { color: #dc2626; }
+  .student { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; }
+  .student summary { cursor: pointer; padding: 12px 14px; font-weight: 700; font-size: .9rem; display: flex; justify-content: space-between; gap: 8px; }
+  .student summary .progress { font-weight: 600; font-size: .76rem; color: var(--text-muted); }
+  .student .list { padding: 0 10px 10px; }
   #app { display: none; }
 </style>
 </head>
@@ -88,15 +92,35 @@
 
   function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-  function renderRow(row) {
+  function formatFecha(fecha) {
+    try { return new Date(fecha + 'T00:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric', month:'short'}); }
+    catch (e) { return fecha; }
+  }
+
+  // Pendientes primero; luego por fecha de entrega (sin fecha al final) y por nombre.
+  function byPendingThenDate(a, b) {
+    if (a.completado !== b.completado) return a.completado ? 1 : -1;
+    // '9999' manda al final las clases sin fecha.
+    const fa = a.fecha || '9999', fb = b.fecha || '9999';
+    if (fa !== fb) return fa.localeCompare(fb);
+    return String(a.name).localeCompare(String(b.name), 'es');
+  }
+
+  function progressLabel(rows) {
+    return rows.filter(r => r.completado).length + '/' + rows.length + ' completadas';
+  }
+
+  function renderRow(row, isAdmin) {
     const cls = row.completado ? 'done' : 'pending';
     const badgeText = row.completado ? '✅ Hecho' : '⏳ Pendiente';
-    const dateStr = row.fecha ? (' · ' + row.fecha) : '';
+    const dateStr = row.fecha ? (' · 📅 ' + escapeHtml(formatFecha(row.fecha))) : '';
+    const whoStr = isAdmin ? ('<div class="who">👤 ' + escapeHtml((row.userNames && row.userNames.length) ? row.userNames.join(', ') : 'Usuario sin asignar en Notion') + '</div>') : '';
     return '<div class="row ' + cls + '">' +
       '<span class="badge ' + cls + '">' + badgeText + '</span>' +
       '<div class="meta">' +
         '<div class="name">' + escapeHtml(row.name) + '</div>' +
         '<div class="row2">' + escapeHtml(row.label || '') + dateStr + '</div>' +
+        whoStr +
       '</div>' +
       (row.url ? '<a class="link" href="' + escapeHtml(row.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '') +
     '</div>';
@@ -112,22 +136,35 @@
       whoLabel.appendChild(tag);
     }
 
-    const clases = rows.filter(r => r.source === 'clases_ingles');
-    const sofia = rows.filter(r => r.source === 'sofia');
+    const clases = rows.filter(r => r.source === 'clases_ingles').sort(byPendingThenDate);
 
-    let html = '';
-    if (clases.length) {
-      html += '<div class="section-title">📘 Clases Inglés</div>';
-      html += '<div class="list">' + clases.map(renderRow).join('') + '</div>';
+    if (!clases.length) {
+      contentEl.innerHTML = '<div class="empty">No hay clases registradas todavía.</div>';
+      return;
     }
-    if (sofia.length) {
-      html += '<div class="section-title">📗 Temas — Sofía</div>';
-      html += '<div class="list">' + sofia.map(renderRow).join('') + '</div>';
+
+    if (!data.isAdmin) {
+      contentEl.innerHTML =
+        '<div class="section-title">📘 Mis clases · ' + progressLabel(clases) + '</div>' +
+        '<div class="list">' + clases.map(r => renderRow(r, false)).join('') + '</div>';
+      return;
     }
-    if (!html) {
-      html = '<div class="empty">No hay clases registradas todavía.</div>';
-    }
-    contentEl.innerHTML = html;
+
+    // Admin: una sección plegable por alumno (campo "Nombre" de Notion).
+    const groups = new Map();
+    clases.forEach(r => {
+      const key = r.alumno || 'Sin alumno';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(r);
+    });
+    const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es'));
+    contentEl.innerHTML = names.map(name => {
+      const list = groups.get(name);
+      return '<details class="student">' +
+        '<summary><span>👤 ' + escapeHtml(name) + '</span><span class="progress">' + progressLabel(list) + '</span></summary>' +
+        '<div class="list">' + list.map(r => renderRow(r, true)).join('') + '</div>' +
+      '</details>';
+    }).join('');
   }
 
   async function loadFor(email) {
@@ -139,6 +176,7 @@
       if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
 
       if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {
+        loginError.textContent = 'No encontré clases asociadas a ese correo.';
         loginError.style.display = 'block';
         localStorage.removeItem(STORAGE_KEY);
         loginEl.style.display = 'block';
