@@ -36,11 +36,11 @@
 - [x] 5.1 curl: `/ingles/data` sin email → 400; correo inexistente → `rows: []`; admin → 255 filas, `alumno` y `fecha` presentes, sin `userEmails`
 - [x] 5.2 curl: `/data` admin → 200 sin `userEmails`; raíz → 404
 - [x] 5.3 Servir `ingles.html` e `index.html` localmente y recorrer los estados: login, correo sin filas, admin agrupado
-- [ ] 5.4 Tras el merge a `main`, verificar las URLs publicadas en GitHub Pages
+- [x] 5.4 Tras el merge a `main`, verificar las URLs publicadas en GitHub Pages
 
 ## 6. Documentación (OBLIGATORIO)
 
 - [x] 6.1 `docs/data-model.md`: propiedades reales de "📖 Clases Inglés" (`Fecha Entrega `, `Nombre`, etc.) y el modelo de una fila por alumno
 - [x] 6.2 `docs/backend-standards.md`: la función ya está versionada; variable `SUPER_ADMIN_EMAIL`; contrato actualizado
 - [x] 6.3 Actualizar en Notion los links viejos (`/tareas-estudio-secundaria/`) → `/platform-STALD/`
-- [ ] 6.4 Commit, push y merge a `main`
+- [x] 6.4 Commit, push y merge a `main`

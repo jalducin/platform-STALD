@@ -49,10 +49,12 @@
 - El índice SQL de Notion (`query-data-sources` en modo SQL) devolvió datos atrasados durante varios
   minutos (filas con `Nombre` vacío que en realidad eran Fernando). Se verificó con `fetch` de páginas y
   con la API en vivo a través de la función.
-- Hay un servidor local detenido tras las pruebas (puerto 8765).
+- El servidor local de pruebas (puerto 8765) se detuvo al terminar.
 
 ## Resultado
 
 - Estado Step 4: PASS
-- Estado Step 5 (verificación manual local): PASS. Queda pendiente la verificación en GitHub Pages después del merge.
+- Estado Step 5 (verificación manual local): PASS.
+- Publicación: PR #1 fusionado (`4d00666`); build de GitHub Pages `built`. E2E contra
+  `https://jalducin.github.io/platform-STALD/` (index e ingles.html): 10/10 PASS.
 - Bloqueos: ninguno
