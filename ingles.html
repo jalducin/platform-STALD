@@ -8,12 +8,13 @@
   :root {
     --bg: #faf9f7; --card-bg: #ffffff; --text: #1c1917; --text-muted: #78716c; --border: #e7e5e4;
     --accent: #4f46e5; --chip: #eef2ff; --green: #16a34a; --green-bg: #f0fdf4;
+    --overdue: #dc2626; --overdue-bg: #fef2f2; --today: #b45309; --today-bg: #fffbeb;
     box-sizing: border-box;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #18181b; --card-bg: #27272a; --text: #f4f4f5; --text-muted: #a1a1aa; --border: #3f3f46;
-      --chip: #312e81; --green-bg: #052e16;
+      --chip: #312e81; --green-bg: #052e16; --overdue-bg: #3b1414; --today-bg: #3a2a08;
     }
   }
   * { box-sizing: border-box; }
@@ -36,25 +37,65 @@
   .top-bar .who { font-size: .82rem; color: var(--text-muted); }
   .top-bar button { width: auto; padding: 6px 12px; font-size: .78rem; background: var(--border); color: var(--text); }
   .admin-tag { background: var(--accent); color: #fff; font-size: .65rem; font-weight: 700; padding: 2px 7px; border-radius: 99px; margin-left: 6px; text-transform: uppercase; }
-  .section-title { font-size: .82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 8px; }
+  /* Contadores y progreso */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+  .stat { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 4px; text-align: center; }
+  .stat .num { font-size: 1.35rem; font-weight: 800; line-height: 1; }
+  .stat .label { font-size: .62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .03em; margin-top: 4px; }
+  .stat.done .num { color: var(--green); }
+  .stat.overdue .num { color: var(--overdue); }
+  .stat.today .num { color: var(--today); }
+  .stat.upcoming .num { color: var(--accent); }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; margin: 2px 0 4px; }
+  .progress-bar span { display: block; height: 100%; background: var(--green); border-radius: 99px; transition: width .4s ease; }
+  .progress-text { font-size: .72rem; color: var(--text-muted); margin-bottom: 14px; }
+
+  /* Secciones con scroll interno */
+  .section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+  .section-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .section-head .count { background: var(--chip); color: var(--accent); border-radius: 99px; padding: 2px 8px; font-size: .7rem; }
+  .scroll { max-height: 340px; overflow-y: auto; padding: 8px; scroll-behavior: smooth; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .scroll::-webkit-scrollbar { width: 6px; }
+  .scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  details.section > summary { list-style: none; cursor: pointer; }
+  details.section > summary::-webkit-details-marker { display: none; }
+  details.section > summary .section-head { border-bottom: none; }
+  details.section[open] > summary .section-head { border-bottom: 1px solid var(--border); }
+  .chevron { transition: transform .2s ease; display: inline-block; margin-right: 4px; }
+  details[open] > summary .chevron { transform: rotate(90deg); }
+
+  /* Filas */
   .list { display: flex; flex-direction: column; gap: 8px; }
-  .row { display: flex; align-items: center; gap: 10px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
-  .row.done { border-left: 4px solid var(--green); background: var(--green-bg); opacity: .9; }
-  .row.pending { border-left: 4px solid var(--accent); }
-  .badge { font-size: .68rem; font-weight: 700; padding: 4px 8px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+  .row { display: flex; align-items: center; gap: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .row.done { border-left: 4px solid var(--green); }
+  .row.overdue { border-left: 4px solid var(--overdue); background: var(--overdue-bg); }
+  .row.today { border-left: 4px solid var(--today); background: var(--today-bg); }
+  .row.upcoming, .row.nodate { border-left: 4px solid var(--accent); }
+  .badge { font-size: .68rem; font-weight: 700; padding: 4px 8px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; min-width: 64px; text-align: center; }
   .badge.done { background: var(--green); color: #fff; }
-  .badge.pending { background: var(--chip); color: var(--accent); }
+  .badge.overdue { background: var(--overdue); color: #fff; }
+  .badge.today { background: var(--today); color: #fff; }
+  .badge.upcoming, .badge.nodate { background: var(--chip); color: var(--accent); }
   .meta { flex: 1; min-width: 0; }
   .meta .name { font-weight: 600; font-size: .88rem; overflow-wrap: anywhere; }
-  .meta .row2 { font-size: .76rem; color: var(--text-muted); margin-top: 3px; }
-  .meta .who { font-size: .72rem; color: var(--accent); font-weight: 600; }
+  .meta .row2 { font-size: .74rem; color: var(--text-muted); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .meta .fecha { font-weight: 600; color: var(--text); }
+  .grade { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); border-radius: 6px; padding: 1px 6px; font-weight: 700; font-size: .7rem; }
+  .level { background: var(--chip); color: var(--accent); border-radius: 6px; padding: 1px 6px; font-weight: 700; font-size: .66rem; }
+  .meta .who { font-size: .72rem; color: var(--accent); font-weight: 600; margin-top: 2px; }
   a.link { color: var(--accent); text-decoration: none; font-size: .74rem; font-weight: 600; flex-shrink: 0; }
-  .empty, .error, .loading { text-align: center; color: var(--text-muted); padding: 24px 12px; font-size: .88rem; }
+  .empty, .error, .loading { text-align: center; color: var(--text-muted); padding: 18px 12px; font-size: .85rem; }
   .error { color: #dc2626; }
-  .student { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; }
-  .student summary { cursor: pointer; padding: 12px 14px; font-weight: 700; font-size: .9rem; display: flex; justify-content: space-between; gap: 8px; }
-  .student summary .progress { font-weight: 600; font-size: .76rem; color: var(--text-muted); }
-  .student .list { padding: 0 10px 10px; }
+
+  /* Admin: un bloque plegable por alumno */
+  .student { border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; background: var(--card-bg); }
+  .student > summary { cursor: pointer; padding: 12px 14px; font-weight: 700; font-size: .92rem; display: flex; justify-content: space-between; gap: 8px; align-items: center; list-style: none; }
+  .student > summary::-webkit-details-marker { display: none; }
+  .student > summary .mini { font-weight: 600; font-size: .72rem; color: var(--text-muted); display: flex; gap: 8px; }
+  .student > summary .mini .o { color: var(--overdue); }
+  .student > summary .mini .t { color: var(--today); }
+  .student .student-body { padding: 0 10px 10px; }
+  .student .section { background: var(--bg); }
   #app { display: none; }
 </style>
 </head>
@@ -92,38 +133,117 @@
 
   function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+  // Días que cuentan como "realizadas recientes": hoy y los 2 anteriores.
+  const RECENT_DAYS = 3;
+
+  function fmtDate(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  function todayStr() { return fmtDate(new Date()); }
+  function daysAgoStr(n) { const d = new Date(); d.setDate(d.getDate() - n); return fmtDate(d); }
+  function diffDays(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
+  // Fecha local (AAAA-MM-DD) de la última edición; se usa como fecha de realización.
+  function localDateOf(iso) { if (!iso) return null; const d = new Date(iso); return isNaN(d) ? null : fmtDate(d); }
+
   function formatFecha(fecha) {
     try { return new Date(fecha + 'T00:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric', month:'short'}); }
     catch (e) { return fecha; }
   }
 
-  // Pendientes primero; luego por fecha de entrega (sin fecha al final) y por nombre.
-  function byPendingThenDate(a, b) {
-    if (a.completado !== b.completado) return a.completado ? 1 : -1;
-    // '9999' manda al final las clases sin fecha.
-    const fa = a.fecha || '9999', fb = b.fecha || '9999';
-    if (fa !== fb) return fa.localeCompare(fb);
-    return String(a.name).localeCompare(String(b.name), 'es');
+  // Estado de cada clase respecto a hoy.
+  function classify(r, today) {
+    if (r.completado) {
+      const hecho = localDateOf(r.editadoEn);
+      return { status: 'done', hecho, recent: !!hecho && hecho >= daysAgoStr(RECENT_DAYS - 1) };
+    }
+    if (!r.fecha) return { status: 'nodate' };
+    if (r.fecha < today) return { status: 'overdue', diff: diffDays(r.fecha, today) };
+    if (r.fecha === today) return { status: 'today' };
+    return { status: 'upcoming', diff: diffDays(today, r.fecha) };
   }
 
-  function progressLabel(rows) {
-    return rows.filter(r => r.completado).length + '/' + rows.length + ' completadas';
+  function badgeText(c) {
+    if (c.status === 'done') return '✅ Hecho';
+    if (c.status === 'overdue') return c.diff + 'd atraso';
+    if (c.status === 'today') return '📌 Hoy';
+    if (c.status === 'upcoming') return 'en ' + c.diff + 'd';
+    return 'Sin fecha';
   }
 
-  function renderRow(row, isAdmin) {
-    const cls = row.completado ? 'done' : 'pending';
-    const badgeText = row.completado ? '✅ Hecho' : '⏳ Pendiente';
-    const dateStr = row.fecha ? (' · 📅 ' + escapeHtml(formatFecha(row.fecha))) : '';
-    const whoStr = isAdmin ? ('<div class="who">👤 ' + escapeHtml((row.userNames && row.userNames.length) ? row.userNames.join(', ') : 'Usuario sin asignar en Notion') + '</div>') : '';
-    return '<div class="row ' + cls + '">' +
-      '<span class="badge ' + cls + '">' + badgeText + '</span>' +
+  function renderRow(r, isAdmin) {
+    const c = r._c;
+    const parts = [];
+    if (r.fecha) parts.push('<span class="fecha">📅 ' + escapeHtml(formatFecha(r.fecha)) + '</span>');
+    if (c.status === 'done' && c.hecho) parts.push('<span>hecho ' + escapeHtml(formatFecha(c.hecho)) + '</span>');
+    if (r.dificultad) parts.push('<span class="level">' + escapeHtml(r.dificultad) + '</span>');
+    if (r.label) parts.push('<span>' + escapeHtml(r.label) + '</span>');
+    if (r.calificacion) parts.push('<span class="grade">⭐ ' + escapeHtml(r.calificacion) + '</span>');
+    let whoStr = '';
+    if (isAdmin) {
+      const who = (r.userNames && r.userNames.length) ? r.userNames.join(', ') : 'Usuario sin asignar en Notion';
+      whoStr = '<div class="who">👤 ' + escapeHtml(who) + '</div>';
+    }
+    return '<div class="row ' + c.status + '">' +
+      '<span class="badge ' + c.status + '">' + badgeText(c) + '</span>' +
       '<div class="meta">' +
-        '<div class="name">' + escapeHtml(row.name) + '</div>' +
-        '<div class="row2">' + escapeHtml(row.label || '') + dateStr + '</div>' +
+        '<div class="name">' + escapeHtml(r.name) + '</div>' +
+        '<div class="row2">' + parts.join('') + '</div>' +
         whoStr +
       '</div>' +
-      (row.url ? '<a class="link" href="' + escapeHtml(row.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '') +
+      (r.url ? '<a class="link" href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '') +
     '</div>';
+  }
+
+  // Agrupa en el orden pedido: realizadas recientes, atrasadas, hoy, próximas, y lo demás plegado.
+  function buildGroups(rows) {
+    const today = todayStr();
+    rows.forEach(r => { r._c = classify(r, today); });
+    const byFecha = (a, b) => (a.fecha || '').localeCompare(b.fecha || '');
+    const byHechoDesc = (a, b) => (b._c.hecho || '').localeCompare(a._c.hecho || '');
+    const done = rows.filter(r => r._c.status === 'done');
+    return {
+      recent: done.filter(r => r._c.recent).sort(byHechoDesc),
+      overdue: rows.filter(r => r._c.status === 'overdue').sort(byFecha),
+      today: rows.filter(r => r._c.status === 'today').sort(byFecha),
+      upcoming: rows.filter(r => r._c.status === 'upcoming').sort(byFecha),
+      older: done.filter(r => !r._c.recent).sort(byHechoDesc),
+      nodate: rows.filter(r => r._c.status === 'nodate'),
+      total: rows.length,
+      completed: done.length,
+    };
+  }
+
+  function section(title, items, isAdmin, opts) {
+    const o = opts || {};
+    if (!items.length && o.hideEmpty) return '';
+    const body = items.length
+      ? '<div class="scroll"><div class="list">' + items.map(r => renderRow(r, isAdmin)).join('') + '</div></div>'
+      : '<div class="empty">' + escapeHtml(o.empty || 'Nada por aquí.') + '</div>';
+    const head = '<div class="section-head"><span>' + (o.collapsible ? '<span class="chevron">▶</span>' : '') + escapeHtml(title) + '</span><span class="count">' + items.length + '</span></div>';
+    return o.collapsible
+      ? '<details class="section"><summary>' + head + '</summary>' + body + '</details>'
+      : '<div class="section">' + head + body + '</div>';
+  }
+
+  function renderStats(g) {
+    const pct = g.total ? Math.round(g.completed * 100 / g.total) : 0;
+    return '<div class="stats">' +
+        '<div class="stat done"><div class="num">' + g.recent.length + '</div><div class="label">Hechas 3 días</div></div>' +
+        '<div class="stat overdue"><div class="num">' + g.overdue.length + '</div><div class="label">Atrasadas</div></div>' +
+        '<div class="stat today"><div class="num">' + g.today.length + '</div><div class="label">Hoy</div></div>' +
+        '<div class="stat upcoming"><div class="num">' + g.upcoming.length + '</div><div class="label">Próximas</div></div>' +
+      '</div>' +
+      '<div class="progress-bar"><span style="width:' + pct + '%"></span></div>' +
+      '<div class="progress-text">' + g.completed + '/' + g.total + ' completadas (' + pct + '%)</div>';
+  }
+
+  function renderBoard(rows, isAdmin) {
+    const g = buildGroups(rows);
+    return renderStats(g) +
+      section('✅ Realizadas · últimos 3 días', g.recent, isAdmin, { empty: 'Aún no hay entregas en los últimos 3 días.' }) +
+      section('⏰ Atrasadas', g.overdue, isAdmin, { empty: '¡Nada atrasado! 🎉' }) +
+      section('📌 Hoy', g.today, isAdmin, { empty: 'No hay entrega para hoy.' }) +
+      section('📅 Próximas', g.upcoming, isAdmin, { empty: 'No hay entregas próximas.' }) +
+      section('✔️ Realizadas anteriores', g.older, isAdmin, { collapsible: true, hideEmpty: true }) +
+      section('🗒️ Sin fecha', g.nodate, isAdmin, { collapsible: true, hideEmpty: true });
   }
 
   function render(data) {
@@ -136,21 +256,18 @@
       whoLabel.appendChild(tag);
     }
 
-    const clases = rows.filter(r => r.source === 'clases_ingles').sort(byPendingThenDate);
-
+    const clases = rows.filter(r => r.source === 'clases_ingles');
     if (!clases.length) {
       contentEl.innerHTML = '<div class="empty">No hay clases registradas todavía.</div>';
       return;
     }
 
     if (!data.isAdmin) {
-      contentEl.innerHTML =
-        '<div class="section-title">📘 Mis clases · ' + progressLabel(clases) + '</div>' +
-        '<div class="list">' + clases.map(r => renderRow(r, false)).join('') + '</div>';
+      contentEl.innerHTML = renderBoard(clases, false);
       return;
     }
 
-    // Admin: una sección plegable por alumno (campo "Nombre" de Notion).
+    // Admin: un bloque plegable por alumno (campo "Nombre" de Notion) con el mismo tablero dentro.
     const groups = new Map();
     clases.forEach(r => {
       const key = r.alumno || 'Sin alumno';
@@ -160,9 +277,12 @@
     const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es'));
     contentEl.innerHTML = names.map(name => {
       const list = groups.get(name);
+      const g = buildGroups(list);
       return '<details class="student">' +
-        '<summary><span>👤 ' + escapeHtml(name) + '</span><span class="progress">' + progressLabel(list) + '</span></summary>' +
-        '<div class="list">' + list.map(r => renderRow(r, true)).join('') + '</div>' +
+        '<summary><span>👤 ' + escapeHtml(name) + '</span>' +
+          '<span class="mini"><span>' + g.completed + '/' + g.total + '</span>' +
+          '<span class="o">⏰ ' + g.overdue.length + '</span><span class="t">📌 ' + g.today.length + '</span></span></summary>' +
+        '<div class="student-body">' + renderBoard(list, true) + '</div>' +
       '</details>';
     }).join('');
   }
