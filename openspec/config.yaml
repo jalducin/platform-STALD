@@ -54,18 +54,18 @@ rules:
       todas las páginas consumidoras en el mismo cambio
 
   proposal:
-    - Indicar qué superficies toca el cambio: index.html, ingles.html, Edge Function, bases de Notion
+    - "Indicar qué superficies toca el cambio: index.html, ingles.html, Edge Function, bases de Notion"
     - Si hay cambios manuales fuera del repo (Notion, Supabase secrets, Pages), listarlos como
       "Acciones externas" con responsable (agente o usuario)
 
   spec:
     - Definir QUÉ debe hacer el sistema en términos de requisitos y escenarios verificables
     - Cada capability nueva genera un specs/<nombre>/spec.md en kebab-case
-    - Capabilities de referencia: dashboard-secundaria, dashboard-ingles, notion-data-api, acceso-por-correo
+    - "Capabilities de referencia: dashboard-secundaria, dashboard-ingles, notion-data-api, acceso-por-correo"
     - Incluir escenarios de acceso denegado / correo no asignado / error de Notion cuando apliquen
 
   design:
-    - Documentar el CÓMO: decisiones técnicas, alternativas consideradas y trade-offs
+    - "Documentar el CÓMO: decisiones técnicas, alternativas consideradas y trade-offs"
     - Incluir solo lo necesario para implementar sin ambigüedad
     - Si cambia la forma de autenticar o autorizar, documentar el modelo de amenaza mínimo
 
