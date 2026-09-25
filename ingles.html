@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clases de Inglés</title>
+<style>
+  :root {
+    --bg: #faf9f7; --card-bg: #ffffff; --text: #1c1917; --text-muted: #78716c; --border: #e7e5e4;
+    --accent: #4f46e5; --chip: #eef2ff; --green: #16a34a; --green-bg: #f0fdf4;
+    box-sizing: border-box;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #18181b; --card-bg: #27272a; --text: #f4f4f5; --text-muted: #a1a1aa; --border: #3f3f46;
+      --chip: #312e81; --green-bg: #052e16;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    max-width: 720px; margin: 0 auto;
+  }
+  h1 { font-size: 1.15rem; margin: 0 0 2px; }
+  .subtitle { color: var(--text-muted); font-size: .8rem; margin-bottom: 18px; }
+  .login-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 24px; }
+  .login-box label { font-size: .82rem; font-weight: 600; display: block; margin-bottom: 6px; }
+  .login-box input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: .95rem; margin-bottom: 12px; }
+  .login-box button, .top-bar button { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: .88rem; font-weight: 600; cursor: pointer; width: 100%; }
+  .login-error { color: #dc2626; font-size: .8rem; margin-top: 8px; display: none; }
+  .top-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+  .top-bar .who { font-size: .82rem; color: var(--text-muted); }
+  .top-bar button { width: auto; padding: 6px 12px; font-size: .78rem; background: var(--border); color: var(--text); }
+  .admin-tag { background: var(--accent); color: #fff; font-size: .65rem; font-weight: 700; padding: 2px 7px; border-radius: 99px; margin-left: 6px; text-transform: uppercase; }
+  .section-title { font-size: .82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 8px; }
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: flex; align-items: center; gap: 10px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .row.done { border-left: 4px solid var(--green); background: var(--green-bg); opacity: .9; }
+  .row.pending { border-left: 4px solid var(--accent); }
+  .badge { font-size: .68rem; font-weight: 700; padding: 4px 8px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+  .badge.done { background: var(--green); color: #fff; }
+  .badge.pending { background: var(--chip); color: var(--accent); }
+  .meta { flex: 1; min-width: 0; }
+  .meta .name { font-weight: 600; font-size: .88rem; overflow-wrap: anywhere; }
+  .meta .row2 { font-size: .76rem; color: var(--text-muted); margin-top: 3px; }
+  .meta .who { font-size: .72rem; color: var(--accent); font-weight: 600; }
+  a.link { color: var(--accent); text-decoration: none; font-size: .74rem; font-weight: 600; flex-shrink: 0; }
+  .empty, .error, .loading { text-align: center; color: var(--text-muted); padding: 24px 12px; font-size: .88rem; }
+  .error { color: #dc2626; }
+  #app { display: none; }
+</style>
+</head>
+<body>
+  <h1>📗 Clases de Inglés</h1>
+  <div class="subtitle">Progreso por alumno, actualizado desde Notion</div>
+
+  <div id="login" class="login-box">
+    <label for="email-input">Tu correo</label>
+    <input id="email-input" type="email" placeholder="tucorreo@gmail.com" autocomplete="email">
+    <button id="login-btn">Entrar</button>
+    <div class="login-error" id="login-error">No encontré clases asociadas a ese correo.</div>
+  </div>
+
+  <div id="app">
+    <div class="top-bar">
+      <div class="who" id="who-label"></div>
+      <button id="logout-btn">Cerrar sesión</button>
+    </div>
+    <div id="content"><div class="loading">Cargando…</div></div>
+  </div>
+
+<script>
+  const DATA_URL_BASE = 'https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria/ingles/data';
+  const STORAGE_KEY = 'ingles_email';
+
+  const loginEl = document.getElementById('login');
+  const appEl = document.getElementById('app');
+  const emailInput = document.getElementById('email-input');
+  const loginBtn = document.getElementById('login-btn');
+  const loginError = document.getElementById('login-error');
+  const whoLabel = document.getElementById('who-label');
+  const logoutBtn = document.getElementById('logout-btn');
+  const contentEl = document.getElementById('content');
+
+  function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function renderRow(row) {
+    const cls = row.completado ? 'done' : 'pending';
+    const badgeText = row.completado ? '✅ Hecho' : '⏳ Pendiente';
+    const dateStr = row.fecha ? (' · ' + row.fecha) : '';
+    return '<div class="row ' + cls + '">' +
+      '<span class="badge ' + cls + '">' + badgeText + '</span>' +
+      '<div class="meta">' +
+        '<div class="name">' + escapeHtml(row.name) + '</div>' +
+        '<div class="row2">' + escapeHtml(row.label || '') + dateStr + '</div>' +
+      '</div>' +
+      (row.url ? '<a class="link" href="' + escapeHtml(row.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '') +
+    '</div>';
+  }
+
+  function render(data) {
+    const rows = data.rows || [];
+    whoLabel.textContent = data.isAdmin ? 'Modo maestro — viendo todo' : 'Tu progreso';
+    if (data.isAdmin) {
+      const tag = document.createElement('span');
+      tag.className = 'admin-tag';
+      tag.textContent = 'Admin';
+      whoLabel.appendChild(tag);
+    }
+
+    const clases = rows.filter(r => r.source === 'clases_ingles');
+    const sofia = rows.filter(r => r.source === 'sofia');
+
+    let html = '';
+    if (clases.length) {
+      html += '<div class="section-title">📘 Clases Inglés</div>';
+      html += '<div class="list">' + clases.map(renderRow).join('') + '</div>';
+    }
+    if (sofia.length) {
+      html += '<div class="section-title">📗 Temas — Sofía</div>';
+      html += '<div class="list">' + sofia.map(renderRow).join('') + '</div>';
+    }
+    if (!html) {
+      html = '<div class="empty">No hay clases registradas todavía.</div>';
+    }
+    contentEl.innerHTML = html;
+  }
+
+  async function loadFor(email) {
+    contentEl.innerHTML = '<div class="loading">Cargando…</div>';
+    loginError.style.display = 'none';
+    try {
+      const res = await fetch(DATA_URL_BASE + '?email=' + encodeURIComponent(email), { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+
+      if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {
+        loginError.style.display = 'block';
+        localStorage.removeItem(STORAGE_KEY);
+        loginEl.style.display = 'block';
+        appEl.style.display = 'none';
+        return;
+      }
+
+      localStorage.setItem(STORAGE_KEY, email);
+      loginEl.style.display = 'none';
+      appEl.style.display = 'block';
+      render(data);
+    } catch (e) {
+      loginError.textContent = '⚠️ ' + e.message;
+      loginError.style.display = 'block';
+    }
+  }
+
+  loginBtn.addEventListener('click', () => {
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email) return;
+    loadFor(email);
+  });
+  emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
+
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    appEl.style.display = 'none';
+    loginEl.style.display = 'block';
+    emailInput.value = '';
+  });
+
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    emailInput.value = saved;
+    loadFor(saved);
+  }
+</script>
+</body>
+</html>
