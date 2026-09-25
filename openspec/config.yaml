@@ -1,0 +1,81 @@
+schema: spec-driven
+
+# ---------------------------------------------------------------------------
+# Contexto del proyecto
+# Este bloque se muestra a la IA al crear cualquier artefacto OpenSpec.
+# ---------------------------------------------------------------------------
+context: |
+  Proyecto: platform-STALD — dashboards de tareas escolares alimentados desde Notion.
+  Detalle y URLs: openspec/project.md.
+
+  Stack tecnológico:
+  - Frontend: páginas HTML estáticas autocontenidas (HTML + CSS + JS vanilla, sin build),
+    publicadas con GitHub Pages desde la raíz de `main` (https://jalducin.github.io/platform-STALD/).
+  - Backend: 1 Supabase Edge Function (Deno + TypeScript), slug `tareas-estudio-secundaria`,
+    proyecto Supabase `xozsrcnjnugwbrrrwoeb`, `verify_jwt: false`.
+  - Datos: bases de Notion (API 2022-06-28) leídas en vivo con un token de integración
+    (secreto `NOTION_TOKEN` en Supabase). No hay base de datos propia.
+
+  Arquitectura: navegador → Edge Function (proxy de solo lectura + filtro por correo) → Notion API.
+  Cada página HTML consume una ruta de la función:
+  - index.html  → /data         (base "📖 Clases", Secundaria)
+  - ingles.html → /ingles/data  (base "📖 Clases Inglés")
+
+  Dominio: seguimiento de tareas/clases de alumnas (menores de edad). Los datos son personales:
+  tratar privacidad y control de acceso como requisitos de primer nivel, no como detalles.
+
+  Idioma: documentación, comentarios, commits y artefactos OpenSpec en español; identificadores en inglés.
+  Control de versiones: conventional commits; ramas `feature/<change-name>`.
+
+  Estándares del proyecto (fuente única de verdad). Leer y aplicar:
+  - docs/base-standards.md — principios base, idioma, skills, planificación y reglas OpenSpec.
+  - docs/documentation-standards.md — estructura y mantenimiento de la documentación.
+  - docs/frontend-standards.md — páginas HTML estáticas / GitHub Pages.
+  - docs/backend-standards.md — Edge Function, contrato HTTP, integración con Notion y seguridad.
+  - docs/data-model.md — bases de Notion y propiedades que consume el sistema.
+
+  Para implementar: adopta el agente relevante de ai-specs/agents/ (frontend-developer para *.html,
+  backend-developer para la Edge Function).
+
+# ---------------------------------------------------------------------------
+# Reglas por artefacto
+# ---------------------------------------------------------------------------
+rules:
+  _global:
+    - Antes de crear cualquier artefacto, leer y aplicar docs/base-standards.md
+    - Aplicar los docs/*-standards.md que correspondan al área del cambio
+    - Mantener consistencia con los specs existentes en openspec/specs/
+    - El repositorio es la fuente de verdad. Nada se despliega (Edge Function) ni se publica (Pages)
+      si no está versionado en el repo dentro del mismo cambio
+    - Todo cambio que toque datos de alumnas debe declarar explícitamente quién puede ver qué
+      (matriz de acceso) y cómo se verifica
+    - Nunca escribir en el repo correos, nombres o datos personales de alumnas/guests; tampoco secretos
+    - Cambios en el contrato HTTP (rutas, parámetros, forma del JSON) exigen actualizar backend y
+      todas las páginas consumidoras en el mismo cambio
+
+  proposal:
+    - Indicar qué superficies toca el cambio: index.html, ingles.html, Edge Function, bases de Notion
+    - Si hay cambios manuales fuera del repo (Notion, Supabase secrets, Pages), listarlos como
+      "Acciones externas" con responsable (agente o usuario)
+
+  spec:
+    - Definir QUÉ debe hacer el sistema en términos de requisitos y escenarios verificables
+    - Cada capability nueva genera un specs/<nombre>/spec.md en kebab-case
+    - Capabilities de referencia: dashboard-secundaria, dashboard-ingles, notion-data-api, acceso-por-correo
+    - Incluir escenarios de acceso denegado / correo no asignado / error de Notion cuando apliquen
+
+  design:
+    - Documentar el CÓMO: decisiones técnicas, alternativas consideradas y trade-offs
+    - Incluir solo lo necesario para implementar sin ambigüedad
+    - Si cambia la forma de autenticar o autorizar, documentar el modelo de amenaza mínimo
+
+  tasks:
+    - Dividir las tareas en bloques de máximo 2 horas
+    - El primer paso (Step 0) SIEMPRE es crear la feature branch
+    - Toda lista de tareas debe incluir los pasos obligatorios definidos en
+      .claude/rules/openspec-tasks-mandatory-steps.md (rama, pruebas, verificación manual, documentación)
+    - Verificación de backend = curl contra la función desplegada (casos válidos, sin email, email no
+      asignado, admin); verificación de frontend = abrir la página publicada o servida localmente
+    - Si el cambio despliega la Edge Function, incluir tarea de despliegue desde el archivo del repo y
+      comprobar que la versión desplegada coincide con el repo
+    - Si el cambio afecta a Notion, la tarea de verificación debe restaurar cualquier fila de prueba
