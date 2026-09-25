@@ -5,11 +5,13 @@
 - El código de la función vive en `supabase/functions/tareas-estudio-secundaria/index.ts`.
   **Lo desplegado debe ser idéntico a lo versionado.** Prohibido editar y desplegar la función
   directamente (desde el dashboard o MCP) sin que el cambio esté en el repo.
-- Despliegue: CLI `supabase functions deploy tareas-estudio-secundaria`, o la herramienta MCP
-  `deploy_edge_function` usando **el contenido del archivo del repo**. Tras desplegar, anotar la versión
-  resultante en el reporte del cambio.
-- Estado actual (2026-09-25): la función (v9) todavía **no** está en el repo. Versionarla es el primer
-  cambio pendiente; mientras tanto, cualquier cambio de backend empieza por traer la versión desplegada al repo.
+- Despliegue (desde la raíz del repo):
+  `supabase functions deploy tareas-estudio-secundaria --project-ref xozsrcnjnugwbrrrwoeb --no-verify-jwt --use-api`.
+  Tras desplegar, anotar la versión resultante en el reporte del cambio.
+- Archivos: `index.ts` (HTTP + llamadas a Notion), `rows.ts` (lógica pura: extracción y filtrado),
+  `rows_test.ts` (pruebas).
+- Pruebas: `npx -y deno test supabase/functions/tareas-estudio-secundaria/rows_test.ts`
+  y verificación de tipos con `npx -y deno check supabase/functions/tareas-estudio-secundaria/index.ts`.
 
 ## 2. Configuración y secretos
 
@@ -22,12 +24,14 @@
 
 | Ruta | Método | Parámetros | Respuesta 200 |
 |---|---|---|---|
-| `/data` | GET | `email` (obligatorio) | `{ rows: Row[], isAdmin: boolean, generatedAt: ISO }` |
+| `/data` | GET | `email` (obligatorio) | `{ rows: SecundariaRow[], isAdmin: boolean, generatedAt: ISO }` |
 | `/ingles/data` | GET | `email` (obligatorio) | `{ rows: InglesRow[], isAdmin: boolean, generatedAt: ISO }` |
-| cualquier otra | OPTIONS | — | 204 con CORS |
+| cualquier ruta | OPTIONS | — | 200 con CORS |
+| cualquier otra | GET | — | `404 { error: "not_found" }` |
 
-Errores: `400 { error: "missing_email" }`, `500 { error: string }`.
-Las formas `Row` e `InglesRow` están en `docs/data-model.md`. Cambiar el contrato exige actualizar
+Errores: `400 { error: "missing_email" }`, `500 { error: "upstream_error" }` (el detalle solo va al log).
+Las filas **no** incluyen `userIds` ni `userEmails`; solo `userNames`. Los campos de cada fila están en
+`docs/data-model.md` y los tipos en `rows.ts`. Cambiar el contrato exige actualizar
 este documento y todas las páginas consumidoras en el mismo cambio.
 
 ## 4. Seguridad y privacidad
@@ -53,6 +57,7 @@ este documento y todas las páginas consumidoras en el mismo cambio.
 | Variable | Uso | Estado |
 |---|---|---|
 | `NOTION_TOKEN` | Token de la integración de Notion (lectura + correos de usuarios) | En uso |
+| `SUPER_ADMIN_EMAIL` | Correo que ve todas las filas (`isAdmin: true`). Vacío o ausente ⇒ nadie es admin | En uso desde 2026-09-25 |
 
 ## 7. Verificación (Step N+2)
 

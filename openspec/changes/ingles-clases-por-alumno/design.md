@@ -24,10 +24,12 @@
    por `Usuario`. Alternativa: base "Clases" + base "Progreso" con relación. Es más normalizada, pero
    obliga a reescribir backend, vistas y la forma de capturar datos en Notion. Trade-off: editar una clase
    implica editar 5 filas.
-2. **Copia de página completa.** Lo decidió el usuario. Mecánica: leer el contenido de cada una de las 51
-   páginas de Fernando y crear las 204 filas con `notion-create-pages` (content + propiedades). Es más
-   barato que 204 llamadas a `duplicate-page` más 204 actualizaciones. El contenido se copia tal cual,
-   incluidas las notas de práctica escritas para Fernando.
+2. **Copia de página completa.** Lo decidió el usuario. Mecánica aplicada: `notion-duplicate-page` sobre
+   cada una de las 51 páginas de Fernando, 4 veces, y después `update-page` para quitar el sufijo " (1)"
+   del título y fijar `Nombre` y `Usuario` vacío. Se descartó recrear las páginas con `create-pages`
+   leyendo su contenido: el duplicado del servidor conserva las subpáginas y los bloques no soportados
+   por el markdown, y evita reescribir el contenido 204 veces. El contenido se copia tal cual, incluidas
+   las notas de práctica escritas para Fernando.
 3. **`Calificación` y `Observaciones` vacías en todas las filas.** El usuario confirmó que los valores de
    Fernando venían clonados y no son su avance real.
 4. **Vistas en "Vistas Alumnos" filtradas por `Nombre`, no por `Usuario`.** Funcionan ya, sin esperar a los guests.
@@ -53,7 +55,7 @@
 
 1. Secreto → 2. desplegar la función desde el repo → 3. verificar con curl → 4. datos de Notion →
 5. vistas → 6. merge a `main` (Pages) → 7. verificar las páginas publicadas.
-Rollback de la función: redesplegar v9 (su código queda en el historial de git como primer commit del archivo).
+Rollback de la función: redesplegar el commit anterior del repo. La v9, anterior al repo, no se versionó porque traía el correo admin fijo en el código; su comportamiento equivale al del commit `1eda2f1`, salvo el filtrado de correos y la fecha.
 
 ## Open Questions
 

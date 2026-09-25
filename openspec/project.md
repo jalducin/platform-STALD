@@ -50,6 +50,5 @@ Navegador (GitHub Pages)
 - Instalar dependencias: no aplica (sin build).
 - Servir el frontend en local: `npx serve .` o `python -m http.server 8080`.
 - Probar el backend: `curl "<URL función>/data?email=<correo>"` (ver `docs/backend-standards.md`).
-- Desplegar la Edge Function: desde `supabase/functions/tareas-estudio-secundaria/` (pendiente de
-  versionar en el repo; ver `docs/backend-standards.md` §1).
+- Pruebas del backend y despliegue de la Edge Function: ver `docs/backend-standards.md` §1.
 - Publicar el frontend: merge a `main` → GitHub Pages lo publica solo.
