@@ -30,7 +30,7 @@
 | cualquier otra | GET | — | `404 { error: "not_found" }` |
 
 Errores: `400 { error: "missing_email" }`, `500 { error: "upstream_error" }` (el detalle solo va al log).
-Las filas **no** incluyen `userIds` ni `userEmails`; solo `userNames`. Los campos de cada fila están en
+Las filas **no** incluyen `userIds` ni `userEmails`; solo `userNames`. Las filas de Inglés incluyen además `calificacion`, `dificultad` y `editadoEn`. Los campos de cada fila están en
 `docs/data-model.md` y los tipos en `rows.ts`. Cambiar el contrato exige actualizar
 este documento y todas las páginas consumidoras en el mismo cambio.
 

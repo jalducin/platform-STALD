@@ -28,6 +28,9 @@ backend: tratarlo como un cambio OpenSpec.
 - **Modelo: una fila por (clase, alumno).** El mismo catálogo de clases se repite para cada alumno.
   Alumnos actuales: Fernando, Marisol, Angel, Laura y Jesus (51 clases cada uno). Una clase nueva se
   agrega una vez por alumno.
+- Calendario de entregas: una actividad por día desde 2026-09-26 (hasta 2026-11-14), ordenadas por
+  `Dificultad` (A1 → A2 → B1), luego por `Módulo` y por número de lección; el mismo para todos los alumnos.
+  "📋 REGLA — Dónde anotar cada tipo de clase" no lleva fecha. Detalle: cambio OpenSpec `ingles-fechas-y-avance`.
 - Vistas: "Mis clases" (`Usuario` = me; pestaña de la base y vista en "Vistas Alumnos") para que cada
   alumno vea sus filas, y una vista por alumno filtrada por `Nombre` para el admin. Las vistas no son
   control de acceso: un guest con acceso a la base puede quitar el filtro.
@@ -41,10 +44,10 @@ backend: tratarlo como un cambio OpenSpec.
 | `Completado` | checkbox | `completado` |
 | `Fecha Entrega ` (sic, con espacio final) | date | `fecha` |
 | `Usuario` | people | resuelto a `userNames` (el correo solo se usa en el servidor para filtrar) |
-| `Dificultad` | select (A1–C2) | — (solo en Notion) |
-| `Calificación` | text | — (solo en Notion) |
+| `Dificultad` | select (A1–C2) | `dificultad` |
+| `Calificación` | text | `calificacion` (null si está vacía) |
 | `Observaciones` | text | — (solo en Notion) |
-| `Fecha` | last_edited_time | — |
+| (página) `last_edited_time` | sistema | `editadoEn`: se usa como fecha de realización |
 
 ## Acceso por correo
 

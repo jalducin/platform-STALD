@@ -4,6 +4,7 @@ import { attachUsers, extractInglesRow, filterForEmail, normalizeEmail } from ".
 function inglesPage(overrides: Record<string, unknown> = {}) {
   return {
     url: "https://notion.so/x",
+    last_edited_time: "2026-09-25T18:30:00.000Z",
     properties: {
       "Name": { title: [{ plain_text: "Lesson 28" }] },
       "Módulo": { select: { name: "Fonetica 1B" } },
@@ -34,6 +35,23 @@ Deno.test("extractInglesRow tolera propiedades vacías", () => {
   assertEquals(row.fecha, null);
   assertEquals(row.alumno, null);
   assertEquals(row.label, "Fonetica 1B");
+  assertEquals(row.calificacion, null);
+  assertEquals(row.dificultad, null);
+});
+
+Deno.test("extractInglesRow lee calificación, dificultad y última edición", () => {
+  const row = extractInglesRow(inglesPage({
+    "Calificación": { rich_text: [{ plain_text: "93% " }, { plain_text: "✅" }] },
+    "Dificultad": { select: { name: "A2" } },
+  }));
+  assertEquals(row.calificacion, "93% ✅");
+  assertEquals(row.dificultad, "A2");
+  assertEquals(row.editadoEn, "2026-09-25T18:30:00.000Z");
+});
+
+Deno.test("calificación vacía se normaliza a null", () => {
+  const row = extractInglesRow(inglesPage({ "Calificación": { rich_text: [] } }));
+  assertEquals(row.calificacion, null);
 });
 
 Deno.test("alumna ve solo sus filas y sin correos", () => {

@@ -31,6 +31,10 @@ export interface InglesRow extends WithUsers {
   completado: boolean;
   fecha: string | null;
   alumno: string | null;
+  calificacion: string | null;
+  dificultad: string | null;
+  // Última edición de la página (ISO); se usa como fecha de realización.
+  editadoEn: string | null;
   url: string;
 }
 
@@ -40,6 +44,12 @@ type NotionPage = any;
 function peopleIds(p: NotionPage): string[] {
   // deno-lint-ignore no-explicit-any
   return (p?.["Usuario"]?.people || []).map((u: any) => u.id);
+}
+
+// Texto plano de una propiedad rich_text de Notion.
+function plainText(prop: NotionPage): string {
+  // deno-lint-ignore no-explicit-any
+  return (prop?.rich_text || []).map((t: any) => t.plain_text || "").join("").trim();
 }
 
 function title(p: NotionPage): string {
@@ -79,6 +89,9 @@ export function extractInglesRow(page: NotionPage): InglesRow {
     completado: !!p["Completado"]?.checkbox,
     fecha: p["Fecha Entrega "]?.date?.start || null,
     alumno: p["Nombre"]?.select?.name || null,
+    calificacion: plainText(p["Calificación"]) || null,
+    dificultad: p["Dificultad"]?.select?.name || null,
+    editadoEn: page.last_edited_time || null,
     userIds: peopleIds(p),
     userEmails: [],
     userNames: [],
