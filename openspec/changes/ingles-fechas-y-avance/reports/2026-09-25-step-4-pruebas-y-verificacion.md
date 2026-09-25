@@ -40,5 +40,5 @@
 ## Resultado
 
 - Estado Step 4: PASS
-- Estado Step 5 (local): PASS. Pendiente: verificación en GitHub Pages después del merge.
+- Estado Step 5: PASS local y en producción (PR #2 fusionado, `df7a364`; E2E 13/13 contra GitHub Pages).
 - Bloqueos: ninguno

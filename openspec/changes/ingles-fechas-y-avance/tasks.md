@@ -26,9 +26,9 @@
 
 - [x] 5.1 curl de `/ingles/data`: campos nuevos presentes, sin correos
 - [x] 5.2 E2E local (admin y alumna): secciones, contadores, scroll y fechas; captura de pantalla
-- [ ] 5.3 Tras el merge a `main`, E2E contra GitHub Pages
+- [x] 5.3 Tras el merge a `main`, E2E contra GitHub Pages
 
 ## 6. Documentación (OBLIGATORIO)
 
 - [x] 6.1 `docs/data-model.md` y `docs/backend-standards.md`: campos nuevos y regla del calendario
-- [ ] 6.2 Commit, push, PR y merge a `main` (autorizado por el usuario)
+- [x] 6.2 Commit, push, PR y merge a `main` (autorizado por el usuario)
