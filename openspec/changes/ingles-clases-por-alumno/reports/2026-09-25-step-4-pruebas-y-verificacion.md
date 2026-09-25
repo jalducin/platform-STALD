@@ -58,3 +58,12 @@
 - Publicación: PR #1 fusionado (`4d00666`); build de GitHub Pages `built`. E2E contra
   `https://jalducin.github.io/platform-STALD/` (index e ingles.html): 10/10 PASS.
 - Bloqueos: ninguno
+
+## Acción externa del usuario: asignación de `Usuario` (verificada)
+
+- El usuario invitó a los guests y asignó `Usuario` en Notion: las 51 filas de cada alumno tienen su guest.
+- Backend en vivo, un correo por alumno (no se registran los correos): cada uno recibe `isAdmin: false`
+  y exactamente sus 51 filas (Marisol, Angel, Laura, Jesus y Fernando), sin `userEmails` en la respuesta.
+- E2E en `https://jalducin.github.io/platform-STALD/ingles.html` con una alumna: "Tu progreso",
+  "📘 Mis clases · 0/51 completadas", 51 filas, sin grupos ni nombres de otros alumnos.
+- Observación: en las filas de Laura el guest asignado se llama "Alejandra Aguilar"; el usuario debe confirmar que es correcto.
