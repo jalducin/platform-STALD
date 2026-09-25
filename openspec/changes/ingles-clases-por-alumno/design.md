@@ -33,6 +33,7 @@
 3. **`Calificación` y `Observaciones` vacías en todas las filas.** El usuario confirmó que los valores de
    Fernando venían clonados y no son su avance real.
 4. **Vistas en "Vistas Alumnos" filtradas por `Nombre`, no por `Usuario`.** Funcionan ya, sin esperar a los guests.
+4b. **Vista "Mis clases" con `Usuario` = me.** Cada persona ve solo sus filas al entrar a Notion, sin crear una vista por alumno. Alternativa descartada por ahora: compartir fila por fila (acceso real, pero más trabajo manual). Las vistas por `Nombre` se conservan para el admin.
 5. **`SUPER_ADMIN_EMAIL` como secreto de Supabase** (`supabase secrets set`). El repo es público.
 6. **`alumno` en la respuesta** para agrupar en el cliente. Viene del select `Nombre`, no de datos de usuario.
 7. **Refactor mínimo**: `queryAllNotion` usa `queryDatabase`, y un solo helper `attachUsers` resuelve

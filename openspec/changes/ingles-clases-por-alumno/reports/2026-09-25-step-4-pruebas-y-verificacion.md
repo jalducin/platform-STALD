@@ -67,3 +67,11 @@
 - E2E en `https://jalducin.github.io/platform-STALD/ingles.html` con una alumna: "Tu progreso",
   "📘 Mis clases · 0/51 completadas", 51 filas, sin grupos ni nombres de otros alumnos.
 - Observación: en las filas de Laura el guest asignado se llama "Alejandra Aguilar"; el usuario debe confirmar que es correcto.
+
+## Vista "Mis clases" (post-apply, artefactos actualizados antes de implementar)
+
+- Creada como pestaña de la base (`view://3e61c6b4-f8b5-8177-9349-000c5b814af9`) y como vista enlazada en
+  "Vistas Alumnos" (`view://3e61c6b4-f8b5-8119-b30b-000c512d2893`).
+- Filtro guardado: `Usuario` person_contains relative "me"; orden `Completado` ↑, `Fecha Entrega ` ↑.
+- Consulta como admin (no asignado en `Usuario`): 0 filas, como se esperaba. La vista del alumno no se puede
+  probar desde la sesión del agente; se valida por el filtro "me" y por los datos (51 filas asignadas a cada guest).

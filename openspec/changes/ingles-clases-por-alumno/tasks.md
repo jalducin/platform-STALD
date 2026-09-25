@@ -25,6 +25,8 @@
 - [x] 3.4 Ajustar cada duplicado (título sin " (1)", `Nombre` = alumno, `Usuario` vacío) para Marisol, Angel, Laura y Jesus; contar después de cada lote
 - [x] 3.5 Crear en "Vistas Alumnos" una vista por alumno (5), filtrada por `Nombre` y ordenada con pendientes primero
 
+- [x] 3.6 Crear la vista "Mis clases" (`Usuario` = me) como pestaña de la base y como vista enlazada en "Vistas Alumnos"; verificar que el filtro quedó guardado como "me"
+
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 4.1 Revisar pruebas existentes: no hay suite; agregar `supabase/functions/tareas-estudio-secundaria/index_test.ts` con `deno test` para la extracción de filas y el filtrado por correo (si Deno está disponible)

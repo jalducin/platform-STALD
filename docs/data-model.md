@@ -28,8 +28,9 @@ backend: tratarlo como un cambio OpenSpec.
 - **Modelo: una fila por (clase, alumno).** El mismo catálogo de clases se repite para cada alumno.
   Alumnos actuales: Fernando, Marisol, Angel, Laura y Jesus (51 clases cada uno). Una clase nueva se
   agrega una vez por alumno.
-- Vistas por alumno: página "Vistas Alumnos" (una vista enlazada por alumno, filtrada por `Nombre`).
-  Las vistas no son control de acceso.
+- Vistas: "Mis clases" (`Usuario` = me; pestaña de la base y vista en "Vistas Alumnos") para que cada
+  alumno vea sus filas, y una vista por alumno filtrada por `Nombre` para el admin. Las vistas no son
+  control de acceso: un guest con acceso a la base puede quitar el filtro.
 
 | Propiedad Notion | Tipo | Campo en `InglesRow` |
 |---|---|---|

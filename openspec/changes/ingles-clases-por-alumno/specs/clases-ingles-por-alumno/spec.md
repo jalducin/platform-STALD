@@ -36,3 +36,16 @@ filtrada por `Nombre`, con pendientes primero.
 #### Scenario: Vista filtrada
 - **WHEN** se abre la vista "Marisol" en "Vistas Alumnos"
 - **THEN** solo aparecen las 51 filas con `Nombre` = Marisol
+
+### Requirement: Vista personal "Mis clases"
+La base "📖 Clases Inglés" SHALL tener una vista "Mis clases" filtrada por `Usuario` = usuario actual
+("me"), disponible como pestaña de la base y como vista enlazada en "Vistas Alumnos", con pendientes
+primero. La vista SHALL documentarse como filtro de conveniencia, no como control de acceso.
+
+#### Scenario: Alumno abre "Mis clases"
+- **WHEN** un alumno con `Usuario` asignado abre la vista "Mis clases"
+- **THEN** ve solo sus 51 filas
+
+#### Scenario: Admin abre "Mis clases"
+- **WHEN** el admin, que no está asignado en `Usuario`, abre la vista "Mis clases"
+- **THEN** la vista aparece vacía (el admin usa las vistas por `Nombre`)
