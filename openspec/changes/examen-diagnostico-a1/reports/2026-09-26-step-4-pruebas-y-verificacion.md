@@ -46,5 +46,5 @@
 ## Resultado
 
 - Estado Step 4: PASS
-- Estado Step 5 (local): PASS. Pendiente: E2E contra GitHub Pages después del merge.
+- Estado Step 5: PASS local y en producción (PR #3 fusionado, `d331634`; E2E 16/16 contra GitHub Pages).
 - Bloqueos: ninguno

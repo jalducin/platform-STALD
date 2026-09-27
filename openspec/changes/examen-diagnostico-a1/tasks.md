@@ -29,9 +29,9 @@
 - [x] 5.1 curl: alumno antes de la fecha → 403; admin: vista previa sin `correcta` y POST con `guardado: false`; alumno DELETE → 403
 - [x] 5.2 Escritura en Storage con un resultado de prueba del admin; borrarlo y verificar que se restauró el estado
 - [x] 5.3 E2E: tarjeta, resolver (con fecha y respuesta simuladas), resultado y encabezado del admin
-- [ ] 5.4 Tras el merge a `main`, E2E contra GitHub Pages
+- [x] 5.4 Tras el merge a `main`, E2E contra GitHub Pages
 
 ## 6. Documentación (OBLIGATORIO)
 
 - [x] 6.1 `docs/backend-standards.md` (rutas y Storage) y `docs/data-model.md` (formato de los JSON)
-- [ ] 6.2 Commit, push, PR y merge a `main`
+- [x] 6.2 Commit, push, PR y merge a `main`
