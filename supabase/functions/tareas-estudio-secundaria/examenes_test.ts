@@ -3,6 +3,7 @@ import {
   type Examen,
   gradeExam,
   isAvailable,
+  isLate,
   mxToday,
   publicQuestions,
   sanitizeRespuestas,
@@ -91,8 +92,11 @@ Deno.test("sanitizeRespuestas descarta ids desconocidos e índices inválidos", 
 });
 
 Deno.test("disponibilidad por fecha de CDMX", () => {
-  assertEquals(isAvailable(ex, "2026-09-26"), false);
-  assertEquals(isAvailable(ex, "2026-09-27"), true);
+  assertEquals(isAvailable(ex, "2026-09-25"), false);
+  assertEquals(isAvailable(ex, "2026-09-26"), true); // se puede adelantar
+  assertEquals(ex.fechaLimite, "2026-09-27");
+  assertEquals(isLate(ex, "2026-09-27"), false);
+  assertEquals(isLate(ex, "2026-09-28"), true);
   // 27 sep 05:30 UTC = 26 sep 23:30 en CDMX (UTC-6): todavía no.
   assertEquals(mxToday(new Date("2026-09-27T05:30:00Z")), "2026-09-26");
   assertEquals(mxToday(new Date("2026-09-27T06:30:00Z")), "2026-09-27");

@@ -66,7 +66,7 @@ backend: tratarlo como un cambio OpenSpec.
 ```json
 {
   "id": "diagnostico-a1", "titulo": "…", "descripcion": "…", "nivel": "A1",
-  "disponibleDesde": "2026-09-27",
+  "disponibleDesde": "2026-09-26", "fechaLimite": "2026-09-27",
   "secciones": [{ "id": "to-be", "titulo": "Verbo to be",
     "retroalimentacion": { "fortaleza": "…", "en-progreso": "…", "debilidad": "…" } }],
   "preguntas": [{ "id": "be-1", "seccion": "to-be", "enunciado": "I ___ a student.",
@@ -75,7 +75,7 @@ backend: tratarlo como un cambio OpenSpec.
 ```
 
 **Resultado** (Supabase Storage, bucket privado `examenes`, `resultados/<id>/<alumno>.json`): `examen`,
-`titulo`, `alumno`, `enviadoEn`, `respuestas`, `correctas`, `total`, `porcentaje`, `nivelSugerido`,
+`titulo`, `alumno`, `enviadoEn`, `fueraDeTiempo` (enviado después de `fechaLimite`), `respuestas`, `correctas`, `total`, `porcentaje`, `nivelSugerido`,
 `secciones[]` (`correctas`, `total`, `porcentaje`, `estado`, `retroalimentacion`), `fortalezas`,
 `enProgreso`, `debilidades` y `revision[]` (`enunciado`, `tuRespuesta`, `correcta`, `explicacion`). Sin correos.
 

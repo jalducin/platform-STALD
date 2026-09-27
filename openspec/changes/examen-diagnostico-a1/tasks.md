@@ -21,6 +21,8 @@
 
 - [x] 3.3 El examen como actividad del tablero (Hoy / Atrasadas / Realizadas / Próximas), botón Resolver / Ver resultado, fuera del total x/51; también en el tablero admin de cada alumno
 
+- [x] 3.4 Fecha límite: `disponibleDesde` 2026-09-26 y `fechaLimite` 2026-09-27; `fueraDeTiempo` en envíos tardíos; fila y tarjeta con la fecha límite
+
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 4.1 `deno test` y `deno check`

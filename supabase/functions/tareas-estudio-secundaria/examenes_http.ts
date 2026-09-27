@@ -6,6 +6,7 @@ import {
   examStatusFor,
   gradeExam,
   isAvailable,
+  isLate,
   mxToday,
   publicQuestions,
   sanitizeRespuestas,
@@ -85,7 +86,7 @@ async function borrarResultado(examId: string, slug: string): Promise<void> {
 }
 
 function resumenExamen(ex: Examen) {
-  return { id: ex.id, titulo: ex.titulo, descripcion: ex.descripcion, nivel: ex.nivel, disponibleDesde: ex.disponibleDesde, total: ex.preguntas.length };
+  return { id: ex.id, titulo: ex.titulo, descripcion: ex.descripcion, nivel: ex.nivel, disponibleDesde: ex.disponibleDesde, fechaLimite: ex.fechaLimite, total: ex.preguntas.length };
 }
 
 export async function handleExamenes(
@@ -153,7 +154,7 @@ export async function handleExamenes(
     }
 
     if (!isAvailable(ex, hoy)) return json({ error: "no_disponible", disponibleDesde: ex.disponibleDesde }, 403);
-    const registro = { examen: ex.id, titulo: ex.titulo, alumno: quien.alumno, enviadoEn: new Date().toISOString(), respuestas, ...calificacion };
+    const registro = { examen: ex.id, titulo: ex.titulo, alumno: quien.alumno, enviadoEn: new Date().toISOString(), fueraDeTiempo: isLate(ex, hoy), respuestas, ...calificacion };
     const ok = await guardarResultado(ex.id, slug!, registro);
     if (!ok) return json({ error: "ya_resuelto", resultado: await leerResultado(ex.id, slug!) }, 409);
     return json({ guardado: true, resultado: registro });

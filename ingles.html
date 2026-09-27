@@ -362,7 +362,7 @@
       name: '📝 ' + e.titulo,
       label: 'Examen · ' + e.total + ' preguntas',
       dificultad: e.nivel,
-      fecha: e.disponibleDesde,
+      fecha: e.fechaLimite || e.disponibleDesde,
       completado: estado === 'resuelto',
       calificacion: resultado ? resultado.porcentaje + '%' : null,
       editadoEn: resultado ? resultado.enviadoEn : null,
@@ -386,7 +386,7 @@
     const lista = (ex && ex.examenes) || [];
     if (!lista.length) return '';
     return '<div class="exam-card"><h3>📝 Exámenes</h3>' + lista.map(e => {
-      let right = '', sub = e.total + ' preguntas · nivel ' + escapeHtml(e.nivel);
+      let right = '', sub = e.total + ' preguntas · nivel ' + escapeHtml(e.nivel) + (e.fechaLimite ? ' · fecha límite ' + escapeHtml(formatFecha(e.fechaLimite)) : '');
       if (e.estado === 'resuelto' && e.resultado) {
         right = '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(e.id) + '">Ver resultado</button>';
         sub = '<span class="pill ok">' + e.resultado.porcentaje + '% · ' + escapeHtml(e.resultado.nivelSugerido) + '</span>';
@@ -403,7 +403,7 @@
     if (!diag) return '';
     const n = (diag.resultados || []).length;
     return '<div class="exam-card"><h3>📝 Exámenes</h3><div class="exam-item"><div><div class="t">' + escapeHtml(diag.titulo) + '</div>' +
-      '<div class="s">' + n + ' resuelto(s) · abre ' + escapeHtml(formatFecha(diag.disponibleDesde)) + '</div></div>' +
+      '<div class="s">' + n + ' resuelto(s) · fecha límite ' + escapeHtml(formatFecha(diag.fechaLimite || diag.disponibleDesde)) + '</div></div>' +
       '<button class="btn ghost" data-action="abrir-examen" data-id="' + escapeHtml(diag.id) + '">👁 Vista previa</button></div></div>';
   }
 

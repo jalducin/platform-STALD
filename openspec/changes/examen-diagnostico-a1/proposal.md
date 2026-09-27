@@ -6,8 +6,8 @@ ve cómo le fue a cada alumno en su última actividad.
 
 ## What Changes
 
-- **Examen diagnóstico A1** (`diagnostico-a1`): 33 preguntas de opción múltiple, disponible desde el
-  **domingo 2026-09-27** (hora de CDMX) y con un solo intento por alumno. Secciones:
+- **Examen diagnóstico A1** (`diagnostico-a1`): 33 preguntas de opción múltiple, abierto desde el
+  2026-09-26 con **fecha límite el domingo 2026-09-27** (hora de CDMX), para que se pueda adelantar y con un solo intento por alumno. Secciones:
   1. Alfabeto y sonidos: 26 letras, letra vs. sonido y letras que confunden (H J R W Y TH).
   2. Verbo *to be*.
   3. Presente simple.
