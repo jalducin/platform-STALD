@@ -230,8 +230,17 @@
         '<div class="row2">' + parts.join('') + '</div>' +
         whoStr +
       '</div>' +
-      (r.url ? '<a class="link" href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '') +
+      rowAction(r) +
     '</div>';
+  }
+
+  function rowAction(r) {
+    if (r._examen) {
+      if (r._estado === 'resuelto' && !isAdminView()) return '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(r._examen) + '">Ver resultado</button>';
+      if (r._estado === 'disponible' && !isAdminView()) return '<button class="btn" data-action="abrir-examen" data-id="' + escapeHtml(r._examen) + '">Resolver</button>';
+      return '';
+    }
+    return r.url ? '<a class="link" href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '';
   }
 
   // Agrupa en el orden pedido: realizadas recientes, atrasadas, hoy, próximas, y lo demás plegado.
@@ -248,8 +257,9 @@
       upcoming: rows.filter(r => r._c.status === 'upcoming').sort(byFecha),
       older: done.filter(r => !r._c.recent).sort(byHechoDesc),
       nodate: rows.filter(r => r._c.status === 'nodate'),
-      total: rows.length,
-      completed: done.length,
+      // Los exámenes aparecen en las secciones pero no cuentan en el total de actividades.
+      total: rows.filter(r => !r._examen).length,
+      completed: done.filter(r => !r._examen).length,
     };
   }
 
@@ -305,7 +315,7 @@
     }
 
     if (!data.isAdmin) {
-      contentEl.innerHTML = renderExamCard(state.examenes) + renderBoard(clases, false);
+      contentEl.innerHTML = renderExamCard(state.examenes) + renderBoard(clases.concat(examRowsAlumno(state.examenes)), false);
       return;
     }
 
@@ -333,7 +343,7 @@
         '<div class="student-body">' +
           (ultima ? '<div class="progress-text">⭐ Última actividad calificada: <b>' + escapeHtml(ultima.calificacion) + '</b> · ' + escapeHtml(ultima.name) + (ultima._c && ultima._c.hecho ? ' · ' + escapeHtml(formatFecha(ultima._c.hecho)) : '') + '</div>' : '') +
           (res ? '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>📝 ' + escapeHtml(diag.titulo) + ' · ' + res.porcentaje + '%</span><span class="count">' + escapeHtml(res.nivelSugerido) + '</span></div></summary><div class="scroll">' + renderResultado(res, true) + '</div></details>' : '') +
-          renderBoard(list, true) +
+          renderBoard(list.concat(examRowAdmin(diag, res)), true) +
         '</div>' +
       '</details>';
     }).join('');
@@ -343,9 +353,32 @@
   const EXAMS_URL = DATA_URL_BASE.replace(/\/data$/, '/examenes');
   const state = { email: null, data: null, examenes: null };
 
+  function isAdminView() { return !!(state.data && state.data.isAdmin); }
+
+  // El examen como una actividad más del tablero (fecha = disponibleDesde).
+  function examRow(e, estado, resultado) {
+    return {
+      _examen: e.id, _estado: estado, source: 'examen',
+      name: '📝 ' + e.titulo,
+      label: 'Examen · ' + e.total + ' preguntas',
+      dificultad: e.nivel,
+      fecha: e.disponibleDesde,
+      completado: estado === 'resuelto',
+      calificacion: resultado ? resultado.porcentaje + '%' : null,
+      editadoEn: resultado ? resultado.enviadoEn : null,
+      userNames: [],
+    };
+  }
+  function examRowsAlumno(ex) {
+    return ((ex && ex.examenes) || []).map(e => examRow(e, e.estado, e.resultado));
+  }
+  function examRowAdmin(diag, res) {
+    return diag ? [examRow(diag, res ? 'resuelto' : (diag.disponible ? 'disponible' : 'proximamente'), res)] : [];
+  }
+
   // Última actividad completada con calificación (la de edición más reciente).
   function lastGraded(rows) {
-    return rows.filter(r => r.completado && r.calificacion)
+    return rows.filter(r => r.completado && r.calificacion && !r._examen)
       .sort((a, b) => String(b.editadoEn || '').localeCompare(String(a.editadoEn || '')))[0] || null;
   }
 

@@ -19,6 +19,8 @@
 - [x] 3.1 Alumno: tarjeta "📝 Exámenes", resolver en la página, calificación inmediata con fortalezas/debilidades por tema, retroalimentación y revisión de errores
 - [x] 3.2 Admin: última calificación y diagnóstico en el encabezado de cada alumno, detalle por sección, vista previa
 
+- [x] 3.3 El examen como actividad del tablero (Hoy / Atrasadas / Realizadas / Próximas), botón Resolver / Ver resultado, fuera del total x/51; también en el tablero admin de cada alumno
+
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 4.1 `deno test` y `deno check`
@@ -29,7 +31,7 @@
 - [x] 5.1 curl: alumno antes de la fecha → 403; admin: vista previa sin `correcta` y POST con `guardado: false`; alumno DELETE → 403
 - [x] 5.2 Escritura en Storage con un resultado de prueba del admin; borrarlo y verificar que se restauró el estado
 - [x] 5.3 E2E: tarjeta, resolver (con fecha y respuesta simuladas), resultado y encabezado del admin
-- [x] 5.4 Tras el merge a `main`, E2E contra GitHub Pages
+- [ ] 5.4 Tras el merge a `main`, E2E contra GitHub Pages (la corrida anterior falló por caché del CDN y latencia; se marcó por error como hecha)
 
 ## 6. Documentación (OBLIGATORIO)
 

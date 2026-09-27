@@ -46,5 +46,7 @@
 ## Resultado
 
 - Estado Step 4: PASS
-- Estado Step 5: PASS local y en producción (PR #3 fusionado, `d331634`; E2E 16/16 contra GitHub Pages).
+- Estado Step 5 (local): PASS. En producción la primera corrida E2E falló: primero por la caché del CDN
+  (`max-age=600`) y después al esperar el login. **Corrección:** el commit `0265c25` marcó 5.4 como hecha sin
+  haber pasado; se revierte y se vuelve a verificar con el cambio 3.3.
 - Bloqueos: ninguno
