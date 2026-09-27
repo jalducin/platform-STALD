@@ -1,0 +1,494 @@
+{
+  "id": "diagnostico-a1",
+  "titulo": "Examen diagnóstico A1",
+  "descripcion": "Para saber cómo vas y preparar tus clases. No cuenta para calificación: responde con lo que sabes, sin buscar respuestas.",
+  "nivel": "A1",
+  "disponibleDesde": "2026-09-27",
+  "secciones": [
+    {
+      "id": "alfabeto",
+      "titulo": "Alfabeto y sonidos",
+      "retroalimentacion": {
+        "fortaleza": "Distingues bien el nombre de las letras de su sonido. ¡Buena base para la pronunciación!",
+        "en-progreso": "Vas bien, pero repasa las letras que confunden (H, J, R, W, Y) y el sonido TH.",
+        "debilidad": "Empieza por aquí: el nombre de la letra no es el sonido en la palabra. Repasa H /eich/, J /djei/, Y /uai/ y que la H en inglés sí suena."
+      }
+    },
+    {
+      "id": "to-be",
+      "titulo": "Verbo to be",
+      "retroalimentacion": {
+        "fortaleza": "Dominas am / is / are, la negación y las preguntas con to be.",
+        "en-progreso": "Casi: revisa cuándo va am (I), is (he/she/it) y are (you/we/they), y que en preguntas el verbo va primero.",
+        "debilidad": "Refuerza to be: I am, he/she/it is, you/we/they are. Negativo: is not. Pregunta: Are you…?"
+      }
+    },
+    {
+      "id": "presente-simple",
+      "titulo": "Presente simple",
+      "retroalimentacion": {
+        "fortaleza": "Usas bien el presente simple, incluida la -s de la 3.ª persona y do/does.",
+        "en-progreso": "Repasa la -s/-es con he/she/it (works, watches) y cuándo usar do o does.",
+        "debilidad": "Refuerza el presente simple: I work / she works; preguntas con Do (I/you/we/they) y Does (he/she/it); negativo con don't/doesn't."
+      }
+    },
+    {
+      "id": "verbos",
+      "titulo": "Verbos comunes",
+      "retroalimentacion": {
+        "fortaleza": "Conoces bien los verbos más comunes.",
+        "en-progreso": "Buen avance; practica más verbos básicos (eat, go, have, want, study) en oraciones cortas.",
+        "debilidad": "Aprende los verbos básicos con su significado: eat = comer, go = ir, have = tener, want = querer, study = estudiar."
+      }
+    },
+    {
+      "id": "dias",
+      "titulo": "Días de la semana",
+      "retroalimentacion": {
+        "fortaleza": "Sabes los días de la semana y cómo se escriben.",
+        "en-progreso": "Repasa el orden de los días y la escritura de Wednesday y Thursday.",
+        "debilidad": "Aprende los días en orden: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday."
+      }
+    },
+    {
+      "id": "orden",
+      "titulo": "Orden de la oración (S + V + C)",
+      "retroalimentacion": {
+        "fortaleza": "Armas bien las oraciones con Sujeto + Verbo + Complemento.",
+        "en-progreso": "Casi siempre aciertas; recuerda: primero quién (sujeto), luego qué hace (verbo) y después qué/dónde/cómo.",
+        "debilidad": "Refuerza el orden S + V + C: I like coffee (no \"Coffee I like\"). Pregúntate: ¿quién? ¿hace qué? ¿qué/dónde/cómo?"
+      }
+    }
+  ],
+  "preguntas": [
+    {
+      "id": "alf-1",
+      "seccion": "alfabeto",
+      "enunciado": "¿Cuántas letras tiene el alfabeto en inglés?",
+      "opciones": [
+        "24",
+        "26",
+        "27",
+        "28"
+      ],
+      "correcta": 1,
+      "explicacion": "El alfabeto inglés tiene 26 letras (no tiene la ñ)."
+    },
+    {
+      "id": "alf-2",
+      "seccion": "alfabeto",
+      "enunciado": "¿Cómo se pronuncia el nombre de la letra H en inglés?",
+      "opciones": [
+        "/áche/",
+        "/eich/",
+        "/ji/",
+        "/ei/"
+      ],
+      "correcta": 1,
+      "explicacion": "La H se llama /eich/."
+    },
+    {
+      "id": "alf-3",
+      "seccion": "alfabeto",
+      "enunciado": "¿Cómo se pronuncia el nombre de la letra J?",
+      "opciones": [
+        "/jota/",
+        "/yei/",
+        "/djei/",
+        "/ji/"
+      ],
+      "correcta": 2,
+      "explicacion": "La J se llama /djei/, como en \"job\"."
+    },
+    {
+      "id": "alf-4",
+      "seccion": "alfabeto",
+      "enunciado": "¿Cómo se pronuncia el nombre de la letra Y?",
+      "opciones": [
+        "/i griega/",
+        "/yi/",
+        "/uai/",
+        "/ye/"
+      ],
+      "correcta": 2,
+      "explicacion": "La Y se llama /uai/, como en \"why\"."
+    },
+    {
+      "id": "alf-5",
+      "seccion": "alfabeto",
+      "enunciado": "En la palabra \"house\", la letra H…",
+      "opciones": [
+        "es muda, como en español",
+        "sí suena, como una \"j\" suave",
+        "suena como /ch/",
+        "suena como /ei/"
+      ],
+      "correcta": 1,
+      "explicacion": "En inglés la H sí suena (house, hello); no es muda como en español."
+    },
+    {
+      "id": "alf-6",
+      "seccion": "alfabeto",
+      "enunciado": "¿Qué es cierto sobre las letras y los sonidos en inglés?",
+      "opciones": [
+        "El nombre de la letra siempre es el sonido que tiene en la palabra",
+        "El nombre de la letra no siempre es el sonido que tiene en la palabra",
+        "Se leen igual que en español",
+        "Solo importa la letra, no el sonido"
+      ],
+      "correcta": 1,
+      "explicacion": "Letra = nombre; sonido = cómo se pronuncia en la palabra. No siempre coinciden (A en apple suena como una \"e\" abierta)."
+    },
+    {
+      "id": "alf-7",
+      "seccion": "alfabeto",
+      "enunciado": "¿Cuál de estas palabras tiene el sonido TH?",
+      "opciones": [
+        "tree",
+        "think",
+        "ten",
+        "tea"
+      ],
+      "correcta": 1,
+      "explicacion": "TH suena como en think o this; se pone la lengua entre los dientes."
+    },
+    {
+      "id": "be-1",
+      "seccion": "to-be",
+      "enunciado": "I ___ a student.",
+      "opciones": [
+        "is",
+        "are",
+        "am",
+        "be"
+      ],
+      "correcta": 2,
+      "explicacion": "Con I siempre va am: I am a student."
+    },
+    {
+      "id": "be-2",
+      "seccion": "to-be",
+      "enunciado": "She ___ my teacher.",
+      "opciones": [
+        "am",
+        "is",
+        "are",
+        "be"
+      ],
+      "correcta": 1,
+      "explicacion": "Con he/she/it va is: She is my teacher."
+    },
+    {
+      "id": "be-3",
+      "seccion": "to-be",
+      "enunciado": "They ___ from Mexico.",
+      "opciones": [
+        "is",
+        "am",
+        "are",
+        "be"
+      ],
+      "correcta": 2,
+      "explicacion": "Con they va are: They are from Mexico."
+    },
+    {
+      "id": "be-4",
+      "seccion": "to-be",
+      "enunciado": "We ___ happy today.",
+      "opciones": [
+        "are",
+        "is",
+        "am",
+        "be"
+      ],
+      "correcta": 0,
+      "explicacion": "Con we va are: We are happy today."
+    },
+    {
+      "id": "be-5",
+      "seccion": "to-be",
+      "enunciado": "Elige la forma negativa correcta:",
+      "opciones": [
+        "He not is tired.",
+        "He is not tired.",
+        "He no is tired.",
+        "He are not tired."
+      ],
+      "correcta": 1,
+      "explicacion": "El negativo de to be se forma con not después del verbo: He is not (isn't) tired."
+    },
+    {
+      "id": "be-6",
+      "seccion": "to-be",
+      "enunciado": "Elige la pregunta correcta:",
+      "opciones": [
+        "You are a doctor?",
+        "Are you a doctor?",
+        "Is you a doctor?",
+        "Do you are a doctor?"
+      ],
+      "correcta": 1,
+      "explicacion": "En preguntas con to be, el verbo va antes del sujeto: Are you a doctor?"
+    },
+    {
+      "id": "be-7",
+      "seccion": "to-be",
+      "enunciado": "La forma corta de \"I am\" es:",
+      "opciones": [
+        "I'm",
+        "Im'",
+        "I'am",
+        "Ia'm"
+      ],
+      "correcta": 0,
+      "explicacion": "I am se contrae como I'm (el apóstrofo sustituye la a)."
+    },
+    {
+      "id": "ps-1",
+      "seccion": "presente-simple",
+      "enunciado": "She ___ in a bank.",
+      "opciones": [
+        "work",
+        "works",
+        "working",
+        "is work"
+      ],
+      "correcta": 1,
+      "explicacion": "Con he/she/it el verbo lleva -s: She works."
+    },
+    {
+      "id": "ps-2",
+      "seccion": "presente-simple",
+      "enunciado": "I ___ coffee every morning.",
+      "opciones": [
+        "drinks",
+        "drinking",
+        "drink",
+        "am drink"
+      ],
+      "correcta": 2,
+      "explicacion": "Con I el verbo va sin -s: I drink coffee."
+    },
+    {
+      "id": "ps-3",
+      "seccion": "presente-simple",
+      "enunciado": "He ___ play soccer on Mondays. (negativo)",
+      "opciones": [
+        "don't",
+        "doesn't",
+        "isn't",
+        "not"
+      ],
+      "correcta": 1,
+      "explicacion": "Negativo con he/she/it: doesn't + verbo base: He doesn't play."
+    },
+    {
+      "id": "ps-4",
+      "seccion": "presente-simple",
+      "enunciado": "___ you speak English?",
+      "opciones": [
+        "Does",
+        "Are",
+        "Do",
+        "Is"
+      ],
+      "correcta": 2,
+      "explicacion": "Preguntas con you usan Do: Do you speak English?"
+    },
+    {
+      "id": "ps-5",
+      "seccion": "presente-simple",
+      "enunciado": "___ your brother live here?",
+      "opciones": [
+        "Do",
+        "Does",
+        "Is",
+        "Are"
+      ],
+      "correcta": 1,
+      "explicacion": "Con he/she/it (your brother) se usa Does: Does your brother live here?"
+    },
+    {
+      "id": "ps-6",
+      "seccion": "presente-simple",
+      "enunciado": "My mom ___ TV at night.",
+      "opciones": [
+        "watch",
+        "watchs",
+        "watches",
+        "watching"
+      ],
+      "correcta": 2,
+      "explicacion": "Verbos que terminan en -ch llevan -es en 3.ª persona: watches."
+    },
+    {
+      "id": "vb-1",
+      "seccion": "verbos",
+      "enunciado": "\"eat\" significa:",
+      "opciones": [
+        "beber",
+        "comer",
+        "dormir",
+        "correr"
+      ],
+      "correcta": 1,
+      "explicacion": "eat = comer."
+    },
+    {
+      "id": "vb-2",
+      "seccion": "verbos",
+      "enunciado": "\"Yo tengo un perro\" se dice:",
+      "opciones": [
+        "I have a dog.",
+        "I has a dog.",
+        "I am a dog.",
+        "I want a dog."
+      ],
+      "correcta": 0,
+      "explicacion": "Con I se usa have: I have a dog."
+    },
+    {
+      "id": "vb-3",
+      "seccion": "verbos",
+      "enunciado": "¿Qué verbo significa \"ir\"?",
+      "opciones": [
+        "go",
+        "come",
+        "get",
+        "give"
+      ],
+      "correcta": 0,
+      "explicacion": "go = ir; come = venir."
+    },
+    {
+      "id": "vb-4",
+      "seccion": "verbos",
+      "enunciado": "\"want\" significa:",
+      "opciones": [
+        "necesitar",
+        "querer",
+        "poder",
+        "tener"
+      ],
+      "correcta": 1,
+      "explicacion": "want = querer; need = necesitar."
+    },
+    {
+      "id": "vb-5",
+      "seccion": "verbos",
+      "enunciado": "They ___ English at school. (estudian)",
+      "opciones": [
+        "study",
+        "studies",
+        "studys",
+        "studying"
+      ],
+      "correcta": 0,
+      "explicacion": "Con they el verbo va en forma base: They study."
+    },
+    {
+      "id": "dia-1",
+      "seccion": "dias",
+      "enunciado": "¿Qué día va después de Monday?",
+      "opciones": [
+        "Sunday",
+        "Wednesday",
+        "Tuesday",
+        "Thursday"
+      ],
+      "correcta": 2,
+      "explicacion": "El orden es Monday, Tuesday, Wednesday…"
+    },
+    {
+      "id": "dia-2",
+      "seccion": "dias",
+      "enunciado": "\"Sábado\" en inglés es:",
+      "opciones": [
+        "Sunday",
+        "Saturday",
+        "Friday",
+        "Thursday"
+      ],
+      "correcta": 1,
+      "explicacion": "Saturday = sábado; Sunday = domingo."
+    },
+    {
+      "id": "dia-3",
+      "seccion": "dias",
+      "enunciado": "¿Cómo se escribe \"miércoles\" en inglés?",
+      "opciones": [
+        "Wensday",
+        "Wednesday",
+        "Wednesdey",
+        "Wendsday"
+      ],
+      "correcta": 1,
+      "explicacion": "Se escribe Wednesday (la d no suena: /uénsdei/)."
+    },
+    {
+      "id": "dia-4",
+      "seccion": "dias",
+      "enunciado": "¿Cuáles son los días del fin de semana?",
+      "opciones": [
+        "Friday y Saturday",
+        "Saturday y Sunday",
+        "Sunday y Monday",
+        "Monday y Friday"
+      ],
+      "correcta": 1,
+      "explicacion": "El fin de semana (weekend) es Saturday y Sunday."
+    },
+    {
+      "id": "ord-1",
+      "seccion": "orden",
+      "enunciado": "Elige la oración con el orden correcto:",
+      "opciones": [
+        "Coffee I like.",
+        "Like I coffee.",
+        "I like coffee.",
+        "I coffee like."
+      ],
+      "correcta": 2,
+      "explicacion": "Sujeto + Verbo + Complemento: I (S) like (V) coffee (C)."
+    },
+    {
+      "id": "ord-2",
+      "seccion": "orden",
+      "enunciado": "Elige la oración con el orden correcto:",
+      "opciones": [
+        "Football plays he.",
+        "He plays football.",
+        "Plays he football.",
+        "He football plays."
+      ],
+      "correcta": 1,
+      "explicacion": "He (S) plays (V) football (C)."
+    },
+    {
+      "id": "ord-3",
+      "seccion": "orden",
+      "enunciado": "En \"They live here\", ¿cuál es el sujeto?",
+      "opciones": [
+        "live",
+        "here",
+        "They",
+        "They live"
+      ],
+      "correcta": 2,
+      "explicacion": "El sujeto responde \"¿quién?\": They."
+    },
+    {
+      "id": "ord-4",
+      "seccion": "orden",
+      "enunciado": "En \"He plays soccer\", \"soccer\" es…",
+      "opciones": [
+        "el sujeto",
+        "el verbo",
+        "el complemento",
+        "un día de la semana"
+      ],
+      "correcta": 2,
+      "explicacion": "soccer responde \"¿qué?\": es el complemento."
+    }
+  ]
+}
