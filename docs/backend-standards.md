@@ -43,7 +43,8 @@
 - Resultados: Supabase Storage, bucket privado `examenes`, `resultados/<id>/<alumno>.json`, un intento por
   alumno y sin correos. La función crea el bucket si no existe. `?prueba=1` (solo admin) escribe
   `_prueba-admin.json`, que se oculta de los listados.
-- La fecha de disponibilidad se evalúa en hora de CDMX (`America/Mexico_City`).
+- Fechas en hora de CDMX (`America/Mexico_City`): se puede resolver desde `disponibleDesde`; después de
+  `fechaLimite` se acepta, pero se guarda con `fueraDeTiempo: true`.
 - Riesgo aceptado: las respuestas están en el repo público; ver el cambio `examen-diagnostico-a1`.
 
 Errores: `400 { error: "missing_email" }`, `500 { error: "upstream_error" }` (el detalle solo va al log).

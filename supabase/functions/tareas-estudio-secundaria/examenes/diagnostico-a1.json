@@ -3,7 +3,8 @@
   "titulo": "Examen diagnóstico A1",
   "descripcion": "Para saber cómo vas y preparar tus clases. No cuenta para calificación: responde con lo que sabes, sin buscar respuestas.",
   "nivel": "A1",
-  "disponibleDesde": "2026-09-27",
+  "disponibleDesde": "2026-09-26",
+  "fechaLimite": "2026-09-27",
   "secciones": [
     {
       "id": "alfabeto",

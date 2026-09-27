@@ -22,7 +22,8 @@ export interface Examen {
   titulo: string;
   descripcion?: string;
   nivel: string;
-  disponibleDesde: string; // AAAA-MM-DD, hora de CDMX
+  disponibleDesde: string; // AAAA-MM-DD, hora de CDMX: desde cuándo se puede resolver
+  fechaLimite: string; // AAAA-MM-DD, hora de CDMX: después se acepta, pero con fueraDeTiempo
   secciones: Seccion[];
   preguntas: Pregunta[];
 }
@@ -74,6 +75,10 @@ export function mxToday(now: Date = new Date()): string {
 
 export function isAvailable(ex: Examen, today: string): boolean {
   return today >= ex.disponibleDesde;
+}
+
+export function isLate(ex: Examen, today: string): boolean {
+  return today > ex.fechaLimite;
 }
 
 export type EstadoExamen = "proximamente" | "disponible" | "resuelto";
@@ -186,5 +191,7 @@ export function validateExam(ex: Examen): string[] {
     if (p.opciones.length < 2) errors.push(`${p.id}: menos de 2 opciones`);
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(ex.disponibleDesde)) errors.push("disponibleDesde inválida");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ex.fechaLimite)) errors.push("fechaLimite inválida");
+  else if (ex.fechaLimite < ex.disponibleDesde) errors.push("fechaLimite antes de disponibleDesde");
   return errors;
 }

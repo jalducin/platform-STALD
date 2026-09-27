@@ -2,7 +2,7 @@
 
 ### Requirement: Tarjeta de exámenes del alumno
 `ingles.html` SHALL mostrar al alumno, arriba de su tablero, una tarjeta "📝 Exámenes" con cada examen y su
-estado: "Disponible el <fecha>", botón "Resolver" o el resultado (porcentaje, nivel sugerido y secciones).
+estado: "Disponible el <fecha>", botón "Resolver" con su fecha límite, o el resultado (porcentaje, nivel sugerido y secciones).
 
 #### Scenario: Examen disponible
 - **WHEN** el alumno entra el 2026-09-27 sin haberlo resuelto
@@ -30,7 +30,7 @@ Dentro del bloque del alumno SHALL verse el resultado por sección con fortaleza
 - **THEN** su encabezado muestra "📝 pendiente"
 
 ### Requirement: El examen aparece como actividad del día
-Cada examen SHALL aparecer también como una fila del tablero del alumno con fecha = `disponibleDesde`, en
+Cada examen SHALL aparecer también como una fila del tablero del alumno con fecha = `fechaLimite`, en
 la misma lógica de secciones: "📌 Hoy" en su fecha, "⏰ Atrasadas" después si no se ha resuelto y
 "✅ Realizadas" cuando se resuelve, con su porcentaje como calificación. La fila SHALL tener el botón
 "Resolver" (o "Ver resultado") en lugar de "Abrir ↗". La fila de examen NO SHALL contar en el total x/51
@@ -44,6 +44,6 @@ de actividades. En la vista admin, la fila se muestra en el tablero de cada alum
 - **WHEN** el alumno ya resolvió el diagnóstico con 76 %
 - **THEN** la fila aparece en "✅ Realizadas" con "⭐ 76%" y el botón "Ver resultado"
 
-#### Scenario: Antes de la fecha
-- **WHEN** el alumno entra el 2026-09-26
-- **THEN** la fila aparece en "📅 Próximas" como "en 1d", sin botón para resolver
+#### Scenario: Adelantar desde Próximas
+- **WHEN** el alumno entra el 2026-09-26 sin haberlo resuelto
+- **THEN** la fila aparece en "📅 Próximas" como "en 1d" y ya tiene el botón "Resolver"

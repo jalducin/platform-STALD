@@ -21,9 +21,9 @@ alfabeto, to be, presente simple, verbos comunes, días de la semana y orden de 
 Un alumno SHALL poder obtener y enviar el examen solo a partir de `disponibleDesde` en hora de CDMX. El
 admin SHALL poder previsualizarlo y enviarlo en cualquier momento; su envío no se guarda.
 
-#### Scenario: Antes de la fecha
-- **WHEN** un alumno pide el diagnóstico el 2026-09-26
-- **THEN** la respuesta es 403 `{ "error": "no_disponible", "disponibleDesde": "2026-09-27" }`
+#### Scenario: Antes de la fecha de apertura
+- **WHEN** un alumno pide el diagnóstico el 2026-09-25 (antes de `disponibleDesde` = 2026-09-26)
+- **THEN** la respuesta es 403 `{ "error": "no_disponible", "disponibleDesde": "2026-09-26" }`
 
 #### Scenario: Admin en vista previa
 - **WHEN** el admin envía respuestas antes de la fecha
@@ -87,3 +87,16 @@ Cada sección del JSON SHALL definir `retroalimentacion.fortaleza`, `retroalimen
 #### Scenario: Revisión de errores
 - **WHEN** un alumno responde mal "I ___ a student."
 - **THEN** `revision` incluye esa pregunta con su respuesta, la correcta ("am") y la explicación
+
+### Requirement: Fecha límite
+Cada examen SHALL tener `fechaLimite` (AAAA-MM-DD, hora de CDMX), además de `disponibleDesde`. El
+diagnóstico A1 SHALL abrir el 2026-09-26 y tener fecha límite el 2026-09-27, para que el alumno pueda
+adelantarlo. Un envío posterior a `fechaLimite` SHALL aceptarse y guardarse con `fueraDeTiempo: true`.
+
+#### Scenario: Adelantar el examen
+- **WHEN** un alumno pide el diagnóstico el 2026-09-26
+- **THEN** recibe las preguntas (no 403)
+
+#### Scenario: Envío tardío
+- **WHEN** un alumno envía el diagnóstico el 2026-09-28
+- **THEN** se califica y se guarda con `fueraDeTiempo: true`
