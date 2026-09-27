@@ -28,3 +28,22 @@ Dentro del bloque del alumno SHALL verse el resultado por sección con fortaleza
 #### Scenario: Diagnóstico pendiente
 - **WHEN** un alumno no ha resuelto el diagnóstico
 - **THEN** su encabezado muestra "📝 pendiente"
+
+### Requirement: El examen aparece como actividad del día
+Cada examen SHALL aparecer también como una fila del tablero del alumno con fecha = `disponibleDesde`, en
+la misma lógica de secciones: "📌 Hoy" en su fecha, "⏰ Atrasadas" después si no se ha resuelto y
+"✅ Realizadas" cuando se resuelve, con su porcentaje como calificación. La fila SHALL tener el botón
+"Resolver" (o "Ver resultado") en lugar de "Abrir ↗". La fila de examen NO SHALL contar en el total x/51
+de actividades. En la vista admin, la fila se muestra en el tablero de cada alumno según su resultado.
+
+#### Scenario: Día del examen
+- **WHEN** el alumno entra el 2026-09-27 sin haberlo resuelto
+- **THEN** "📝 Examen diagnóstico A1" aparece en "📌 Hoy" con el botón "Resolver" y el contador de hoy lo incluye
+
+#### Scenario: Examen resuelto
+- **WHEN** el alumno ya resolvió el diagnóstico con 76 %
+- **THEN** la fila aparece en "✅ Realizadas" con "⭐ 76%" y el botón "Ver resultado"
+
+#### Scenario: Antes de la fecha
+- **WHEN** el alumno entra el 2026-09-26
+- **THEN** la fila aparece en "📅 Próximas" como "en 1d", sin botón para resolver
