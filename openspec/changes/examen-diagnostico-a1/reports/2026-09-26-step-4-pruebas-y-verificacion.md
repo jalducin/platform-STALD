@@ -50,3 +50,14 @@
   (`max-age=600`) y después al esperar el login. **Corrección:** el commit `0265c25` marcó 5.4 como hecha sin
   haber pasado; se revierte y se vuelve a verificar con el cambio 3.3.
 - Bloqueos: ninguno
+
+## Verificación en producción (después de los PR #4 y #5)
+
+- PR #4: el examen aparece como actividad del día. PR #5: el 27 es fecha límite y se puede adelantar
+  (Edge Function v14).
+- `curl` con una alumna: la lista marca `disponible` (hoy = 2026-09-26, abre 26, límite 27) y el GET
+  devuelve 33 preguntas sin fuga de respuestas. No se envió nada, para no gastar su intento.
+- E2E contra `https://jalducin.github.io/platform-STALD/`: 21/21 (`ab88359`).
+  - Una corrida previa falló por la caché del CDN y otra por un "Failed to fetch" momentáneo; se repitió y pasó.
+- Estado restaurado: ningún alumno ni alumna gastó su intento; Storage sigue sin resultados de alumnos.
+- Estado Step 5: PASS (local y producción).
