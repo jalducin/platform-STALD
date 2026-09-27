@@ -31,7 +31,7 @@ admin SHALL poder previsualizarlo y enviarlo en cualquier momento; su envío no 
 
 ### Requirement: Calificación en el servidor y un solo intento
 `POST /ingles/examenes/<id>?email=` con `{ "respuestas": { "<idPregunta>": <índice> } }` SHALL calificar en
-el servidor y devolver `correctas`, `total`, `porcentaje`, el resultado por sección y `nivelSugerido`:
+el servidor, de inmediato, y devolver `correctas`, `total`, `porcentaje`, el resultado por sección y `nivelSugerido`:
 - ≥ 80 %: "A1 sólido — listo para A2".
 - 50–79 %: "A1 en progreso".
 - < 50 %: "Iniciando A1".
@@ -67,3 +67,23 @@ con el alumno, la fecha de envío, las respuestas y la calificación. El archivo
 #### Scenario: Reinicio por no admin
 - **WHEN** un alumno llama al DELETE
 - **THEN** la respuesta es 403
+
+### Requirement: Calificación inmediata con retroalimentación por tema
+Todo examen SHALL devolver la calificación en la misma respuesta del envío, sin revisión manual, e incluir:
+- Por sección (tema): `correctas`, `total`, `porcentaje`, `estado` (`fortaleza` ≥ 80 %, `en-progreso`
+  60–79 %, `debilidad` < 60 %) y un texto de `retroalimentacion` definido en el JSON del examen para ese
+  estado.
+- Las listas `fortalezas`, `enProgreso` y `debilidades` con los títulos de sección.
+- `revision`: cada pregunta incorrecta o sin responder con la respuesta del alumno, la correcta y una
+  `explicacion`.
+
+Cada sección del JSON SHALL definir `retroalimentacion.fortaleza`, `retroalimentacion.en-progreso` y
+`retroalimentacion.debilidad`. Cada pregunta SHALL tener `explicacion`.
+
+#### Scenario: Retroalimentación por tema
+- **WHEN** un alumno falla todas las preguntas de "Verbo to be" y acierta el resto
+- **THEN** "Verbo to be" aparece en `debilidades` con su texto de retroalimentación de debilidad, y las otras 5 secciones aparecen en `fortalezas`
+
+#### Scenario: Revisión de errores
+- **WHEN** un alumno responde mal "I ___ a student."
+- **THEN** `revision` incluye esa pregunta con su respuesta, la correcta ("am") y la explicación

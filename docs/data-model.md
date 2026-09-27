@@ -58,3 +58,26 @@ backend: tratarlo como un cambio OpenSpec.
   integración debe tener la capability de leer correos de usuarios.
 - El administrador (correo en el secreto `SUPER_ADMIN_EMAIL`) ve todas las filas.
 - La lista de alumnas y sus correos **vive solo en Notion**; no se copia al repo.
+
+## Exámenes (JSON, sin base de datos)
+
+**Definición** (versionada en `supabase/functions/tareas-estudio-secundaria/examenes/<id>.json`):
+
+```json
+{
+  "id": "diagnostico-a1", "titulo": "…", "descripcion": "…", "nivel": "A1",
+  "disponibleDesde": "2026-09-27",
+  "secciones": [{ "id": "to-be", "titulo": "Verbo to be",
+    "retroalimentacion": { "fortaleza": "…", "en-progreso": "…", "debilidad": "…" } }],
+  "preguntas": [{ "id": "be-1", "seccion": "to-be", "enunciado": "I ___ a student.",
+    "opciones": ["is", "are", "am", "be"], "correcta": 2, "explicacion": "…" }]
+}
+```
+
+**Resultado** (Supabase Storage, bucket privado `examenes`, `resultados/<id>/<alumno>.json`): `examen`,
+`titulo`, `alumno`, `enviadoEn`, `respuestas`, `correctas`, `total`, `porcentaje`, `nivelSugerido`,
+`secciones[]` (`correctas`, `total`, `porcentaje`, `estado`, `retroalimentacion`), `fortalezas`,
+`enProgreso`, `debilidades` y `revision[]` (`enunciado`, `tuRespuesta`, `correcta`, `explicacion`). Sin correos.
+
+Umbrales por tema: ≥ 80 % fortaleza, 60–79 % en progreso, < 60 % debilidad. Nivel sugerido del diagnóstico
+A1: ≥ 80 % "A1 sólido — listo para A2", 50–79 % "A1 en progreso", < 50 % "Iniciando A1".

@@ -34,7 +34,8 @@ autenticación fuerte.
    (por ejemplo, si un alumno tuvo un problema técnico).
 6. **Fecha en hora de CDMX** (`America/Mexico_City`) calculada en el servidor, para que el cambio de día no
    dependa del navegador.
-7. **CORS**: se agregan `POST`, `DELETE` y `Access-Control-Allow-Headers: content-type`.
+7. **Retroalimentación definida en el JSON**, no generada al vuelo: cada sección tiene un texto por estado (fortaleza / en progreso / debilidad) y cada pregunta una explicación. Así la retroalimentación es inmediata, revisable en SDD y reutilizable en los exámenes por nivel.
+8. **CORS**: se agregan `POST`, `DELETE` y `Access-Control-Allow-Headers: content-type`.
 
 ## Risks / Trade-offs
 

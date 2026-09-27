@@ -29,6 +29,23 @@
 | cualquier ruta | OPTIONS | — | 200 con CORS |
 | cualquier otra | GET | — | `404 { error: "not_found" }` |
 
+### Exámenes (`/ingles/examenes`)
+
+| Ruta | Método | Quién | Respuesta |
+|---|---|---|---|
+| `/ingles/examenes` | GET | alumno / admin | Lista con `estado` (`proximamente`, `disponible`, `resuelto` + `resultado`); el admin recibe `resultados` de todos |
+| `/ingles/examenes/<id>` | GET | alumno (desde `disponibleDesde`) / admin (vista previa) | Preguntas **sin** `correcta` ni `explicacion`; 403 `no_disponible`; 409 `ya_resuelto` |
+| `/ingles/examenes/<id>` | POST `{ respuestas }` | alumno / admin | Calificación inmediata: porcentaje, `nivelSugerido`, temas con `estado` y `retroalimentacion`, `fortalezas` / `enProgreso` / `debilidades`, `revision`. El admin no guarda (`guardado: false`) |
+| `/ingles/examenes/<id>/resultados/<alumno>` | DELETE | solo admin | Reinicia el intento de un alumno |
+
+- Definiciones: `supabase/functions/tareas-estudio-secundaria/examenes/*.json` (formato en `docs/data-model.md`).
+  Motor puro en `examenes.ts`; rutas en `examenes_http.ts`.
+- Resultados: Supabase Storage, bucket privado `examenes`, `resultados/<id>/<alumno>.json`, un intento por
+  alumno y sin correos. La función crea el bucket si no existe. `?prueba=1` (solo admin) escribe
+  `_prueba-admin.json`, que se oculta de los listados.
+- La fecha de disponibilidad se evalúa en hora de CDMX (`America/Mexico_City`).
+- Riesgo aceptado: las respuestas están en el repo público; ver el cambio `examen-diagnostico-a1`.
+
 Errores: `400 { error: "missing_email" }`, `500 { error: "upstream_error" }` (el detalle solo va al log).
 Las filas **no** incluyen `userIds` ni `userEmails`; solo `userNames`. Las filas de Inglés incluyen además `calificacion`, `dificultad` y `editadoEn`. Los campos de cada fila están en
 `docs/data-model.md` y los tipos en `rows.ts`. Cambiar el contrato exige actualizar

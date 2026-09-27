@@ -7,6 +7,7 @@ import {
   normalizeEmail,
   type UserInfo,
 } from "./rows.ts";
+import { handleExamenes } from "./examenes_http.ts";
 
 const NOTION_TOKEN = Deno.env.get("NOTION_TOKEN");
 const SUPER_ADMIN_EMAIL = normalizeEmail(Deno.env.get("SUPER_ADMIN_EMAIL"));
@@ -79,7 +80,8 @@ async function loadRows<T extends { userIds: string[]; userEmails: string[]; use
 function corsHeaders(extra: Record<string, string> = {}): Headers {
   const h = new Headers();
   h.set("Access-Control-Allow-Origin", "*");
-  h.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+  h.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  h.set("Access-Control-Allow-Headers", "content-type");
   h.set("Cache-Control", "no-store, no-cache, must-revalidate");
   for (const [k, v] of Object.entries(extra)) h.set(k, v);
   return h;
@@ -97,6 +99,23 @@ Deno.serve(async (req: Request) => {
 
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders() });
+  }
+
+  // Exámenes: /ingles/examenes[/...]. La identidad sale de las filas de Inglés del correo.
+  const idxExamenes = url.pathname.indexOf("/ingles/examenes");
+  if (idxExamenes !== -1) {
+    const email = normalizeEmail(url.searchParams.get("email"));
+    if (!email) return json({ error: "missing_email" }, 400);
+    try {
+      const allRows = await loadRows(CLASES_INGLES_DB_ID, extractInglesRow);
+      const { rows, isAdmin } = filterForEmail(allRows, email, SUPER_ADMIN_EMAIL);
+      const alumno = isAdmin ? null : (rows.find((r) => r.alumno)?.alumno ?? null);
+      const subpath = url.pathname.slice(idxExamenes + "/ingles/examenes".length);
+      return await handleExamenes(req, subpath, { isAdmin, alumno }, json);
+    } catch (e) {
+      console.error("error en exámenes:", e instanceof Error ? e.message : "desconocido");
+      return json({ error: "upstream_error" }, 500);
+    }
   }
 
   // "/ingles/data" también termina en "/data": evaluarlo primero.

@@ -96,6 +96,48 @@
   .student > summary .mini .t { color: var(--today); }
   .student .student-body { padding: 0 10px 10px; }
   .student .section { background: var(--bg); }
+  .student > summary .mini .g { color: var(--green); }
+
+  /* Exámenes */
+  .exam-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; }
+  .exam-card h3 { margin: 0 0 8px; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); }
+  .exam-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); }
+  .exam-item:first-of-type { border-top: none; }
+  .exam-item .t { font-weight: 700; font-size: .9rem; }
+  .exam-item .s { font-size: .74rem; color: var(--text-muted); margin-top: 2px; }
+  .btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: .82rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .btn.ghost { background: var(--border); color: var(--text); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .pill { font-size: .72rem; font-weight: 700; border-radius: 99px; padding: 3px 9px; white-space: nowrap; }
+  .pill.wait { background: var(--chip); color: var(--accent); }
+  .pill.ok { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+  .q { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .q .n { font-size: .68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+  .q .e { font-weight: 700; margin: 4px 0 8px; font-size: .92rem; }
+  .q label { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; cursor: pointer; font-size: .88rem; }
+  .q label:has(input:checked) { border-color: var(--accent); background: var(--chip); }
+  .q.answered { border-left: 4px solid var(--accent); }
+  .exam-sec { font-size: .78rem; font-weight: 800; color: var(--accent); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .exam-bar { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .score { text-align: center; padding: 14px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; }
+  .score .big { font-size: 2.4rem; font-weight: 800; line-height: 1; }
+  .score .lvl { font-weight: 700; margin-top: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+  .chip { font-size: .74rem; font-weight: 700; border-radius: 99px; padding: 3px 9px; }
+  .chip.fortaleza { background: var(--green-bg); color: var(--green); }
+  .chip.en-progreso { background: var(--today-bg); color: var(--today); }
+  .chip.debilidad { background: var(--overdue-bg); color: var(--overdue); }
+  .topic { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+  .topic .h { display: flex; justify-content: space-between; font-weight: 700; font-size: .86rem; }
+  .topic .bar { height: 6px; background: var(--border); border-radius: 99px; margin: 6px 0; overflow: hidden; }
+  .topic .bar span { display: block; height: 100%; border-radius: 99px; }
+  .topic.fortaleza .bar span { background: var(--green); }
+  .topic.en-progreso .bar span { background: var(--today); }
+  .topic.debilidad .bar span { background: var(--overdue); }
+  .topic .r { font-size: .78rem; color: var(--text-muted); }
+  .rev { font-size: .8rem; padding: 8px 0; border-top: 1px solid var(--border); }
+  .rev .bad { color: var(--overdue); } .rev .good { color: var(--green); font-weight: 700; }
+  .rev .why { color: var(--text-muted); margin-top: 2px; }
   #app { display: none; }
 </style>
 </head>
@@ -263,7 +305,7 @@
     }
 
     if (!data.isAdmin) {
-      contentEl.innerHTML = renderBoard(clases, false);
+      contentEl.innerHTML = renderExamCard(state.examenes) + renderBoard(clases, false);
       return;
     }
 
@@ -274,23 +316,192 @@
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(r);
     });
+    const diag = (state.examenes && state.examenes.examenes && state.examenes.examenes[0]) || null;
+    const porAlumno = new Map(((diag && diag.resultados) || []).map(r => [r.alumno, r]));
     const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es'));
-    contentEl.innerHTML = names.map(name => {
+    contentEl.innerHTML = renderAdminExams(diag) + names.map(name => {
       const list = groups.get(name);
       const g = buildGroups(list);
+      const ultima = lastGraded(list);
+      const res = porAlumno.get(name);
       return '<details class="student">' +
         '<summary><span>👤 ' + escapeHtml(name) + '</span>' +
           '<span class="mini"><span>' + g.completed + '/' + g.total + '</span>' +
-          '<span class="o">⏰ ' + g.overdue.length + '</span><span class="t">📌 ' + g.today.length + '</span></span></summary>' +
-        '<div class="student-body">' + renderBoard(list, true) + '</div>' +
+          '<span class="o">⏰ ' + g.overdue.length + '</span><span class="t">📌 ' + g.today.length + '</span>' +
+          '<span class="g" title="Última actividad calificada">⭐ ' + escapeHtml(ultima ? ultima.calificacion : '—') + '</span>' +
+          '<span title="Diagnóstico">📝 ' + (res ? res.porcentaje + '%' : 'pendiente') + '</span></span></summary>' +
+        '<div class="student-body">' +
+          (ultima ? '<div class="progress-text">⭐ Última actividad calificada: <b>' + escapeHtml(ultima.calificacion) + '</b> · ' + escapeHtml(ultima.name) + (ultima._c && ultima._c.hecho ? ' · ' + escapeHtml(formatFecha(ultima._c.hecho)) : '') + '</div>' : '') +
+          (res ? '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>📝 ' + escapeHtml(diag.titulo) + ' · ' + res.porcentaje + '%</span><span class="count">' + escapeHtml(res.nivelSugerido) + '</span></div></summary><div class="scroll">' + renderResultado(res, true) + '</div></details>' : '') +
+          renderBoard(list, true) +
+        '</div>' +
       '</details>';
     }).join('');
   }
+
+  // ---------- Exámenes ----------
+  const EXAMS_URL = DATA_URL_BASE.replace(/\/data$/, '/examenes');
+  const state = { email: null, data: null, examenes: null };
+
+  // Última actividad completada con calificación (la de edición más reciente).
+  function lastGraded(rows) {
+    return rows.filter(r => r.completado && r.calificacion)
+      .sort((a, b) => String(b.editadoEn || '').localeCompare(String(a.editadoEn || '')))[0] || null;
+  }
+
+  function renderExamCard(ex) {
+    const lista = (ex && ex.examenes) || [];
+    if (!lista.length) return '';
+    return '<div class="exam-card"><h3>📝 Exámenes</h3>' + lista.map(e => {
+      let right = '', sub = e.total + ' preguntas · nivel ' + escapeHtml(e.nivel);
+      if (e.estado === 'resuelto' && e.resultado) {
+        right = '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(e.id) + '">Ver resultado</button>';
+        sub = '<span class="pill ok">' + e.resultado.porcentaje + '% · ' + escapeHtml(e.resultado.nivelSugerido) + '</span>';
+      } else if (e.estado === 'disponible') {
+        right = '<button class="btn" data-action="abrir-examen" data-id="' + escapeHtml(e.id) + '">Resolver</button>';
+      } else {
+        right = '<span class="pill wait">Disponible el ' + escapeHtml(formatFecha(e.disponibleDesde)) + '</span>';
+      }
+      return '<div class="exam-item"><div><div class="t">' + escapeHtml(e.titulo) + '</div><div class="s">' + sub + '</div></div>' + right + '</div>';
+    }).join('') + '</div>';
+  }
+
+  function renderAdminExams(diag) {
+    if (!diag) return '';
+    const n = (diag.resultados || []).length;
+    return '<div class="exam-card"><h3>📝 Exámenes</h3><div class="exam-item"><div><div class="t">' + escapeHtml(diag.titulo) + '</div>' +
+      '<div class="s">' + n + ' resuelto(s) · abre ' + escapeHtml(formatFecha(diag.disponibleDesde)) + '</div></div>' +
+      '<button class="btn ghost" data-action="abrir-examen" data-id="' + escapeHtml(diag.id) + '">👁 Vista previa</button></div></div>';
+  }
+
+  function renderResultado(r, compacto) {
+    const chips = (arr, cls) => arr.map(t => '<span class="chip ' + cls + '">' + escapeHtml(t) + '</span>').join('');
+    let html = '';
+    if (!compacto) {
+      html += '<div class="score"><div class="big">' + r.porcentaje + '%</div>' +
+        '<div class="progress-text" style="margin:4px 0 0">' + r.correctas + ' de ' + r.total + ' correctas</div>' +
+        '<div class="lvl">' + escapeHtml(r.nivelSugerido) + '</div></div>';
+    }
+    if (r.fortalezas.length) html += '<div class="progress-text" style="margin:0">💪 Fortalezas</div><div class="chips">' + chips(r.fortalezas, 'fortaleza') + '</div>';
+    if (r.enProgreso.length) html += '<div class="progress-text" style="margin:0">📈 En progreso</div><div class="chips">' + chips(r.enProgreso, 'en-progreso') + '</div>';
+    if (r.debilidades.length) html += '<div class="progress-text" style="margin:0">🎯 A reforzar</div><div class="chips">' + chips(r.debilidades, 'debilidad') + '</div>';
+    html += r.secciones.map(s =>
+      '<div class="topic ' + s.estado + '"><div class="h"><span>' + escapeHtml(s.titulo) + '</span><span>' + s.correctas + '/' + s.total + ' · ' + s.porcentaje + '%</span></div>' +
+      '<div class="bar"><span style="width:' + s.porcentaje + '%"></span></div><div class="r">' + escapeHtml(s.retroalimentacion) + '</div></div>'
+    ).join('');
+    if (r.revision && r.revision.length) {
+      html += '<details class="section"' + (compacto ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>🔍 Revisa tus errores</span><span class="count">' + r.revision.length + '</span></div></summary><div class="scroll">' +
+        r.revision.map(x => '<div class="rev"><div><b>' + escapeHtml(x.enunciado) + '</b></div>' +
+          '<div class="bad">✗ ' + (x.tuRespuesta === null ? 'Sin responder' : escapeHtml(x.tuRespuesta)) + '</div>' +
+          '<div class="good">✓ ' + escapeHtml(x.correcta) + '</div><div class="why">' + escapeHtml(x.explicacion) + '</div></div>').join('') +
+        '</div></details>';
+    } else {
+      html += '<div class="empty">¡Sin errores! 🎉</div>';
+    }
+    return html;
+  }
+
+  async function fetchJson(url, opts) {
+    const res = await fetch(url, Object.assign({ cache: 'no-store' }, opts || {}));
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, body };
+  }
+
+  async function loadExamenes() {
+    try {
+      const r = await fetchJson(EXAMS_URL + '?email=' + encodeURIComponent(state.email));
+      state.examenes = r.ok ? r.body : null;
+    } catch (e) { state.examenes = null; }
+  }
+
+  function volverBtn() { return '<button class="btn ghost" data-action="volver">← Volver</button>'; }
+
+  async function openExam(id) {
+    contentEl.innerHTML = '<div class="loading">Cargando examen…</div>';
+    const r = await fetchJson(EXAMS_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email));
+    if (r.status === 409 && r.body.resultado) return showResult(r.body.resultado, false);
+    if (!r.ok) {
+      const msg = r.body.error === 'no_disponible' ? 'Este examen se abre el ' + formatFecha(r.body.disponibleDesde) + '.' : 'No se pudo abrir el examen (' + (r.body.error || r.status) + ').';
+      contentEl.innerHTML = '<div class="exam-card"><div class="empty">' + escapeHtml(msg) + '</div>' + volverBtn() + '</div>';
+      return;
+    }
+    const ex = r.body;
+    const titulos = new Map(ex.secciones.map(s => [s.id, s.titulo]));
+    let lastSec = null, n = 0;
+    const qs = ex.preguntas.map(p => {
+      n++;
+      const head = p.seccion !== lastSec ? '<div class="exam-sec">' + escapeHtml(titulos.get(p.seccion) || p.seccion) + '</div>' : '';
+      lastSec = p.seccion;
+      return head + '<div class="q" data-q="' + escapeHtml(p.id) + '"><div class="n">Pregunta ' + n + ' de ' + ex.total + '</div>' +
+        '<div class="e">' + escapeHtml(p.enunciado) + '</div>' +
+        p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"> ' + escapeHtml(o) + '</label>').join('') + '</div>';
+    }).join('');
+    contentEl.innerHTML =
+      '<div class="exam-card"><h3>📝 ' + escapeHtml(ex.titulo) + (ex.vistaPrevia ? ' · vista previa (no se guarda)' : '') + '</h3>' +
+      '<div class="s" style="font-size:.82rem">' + escapeHtml(ex.descripcion || '') + '</div></div>' +
+      '<form id="exam-form" data-id="' + escapeHtml(ex.id) + '" data-total="' + ex.total + '">' + qs +
+      '<div class="exam-bar">' + volverBtn() + '<span class="progress-text" id="exam-count" style="margin:0">0/' + ex.total + ' respondidas</span>' +
+      '<button class="btn" type="submit" id="exam-send" disabled>Enviar</button></div></form>';
+    window.scrollTo(0, 0);
+  }
+
+  function examAnswers(form) {
+    const out = {};
+    new FormData(form).forEach((v, k) => { out[k] = Number(v); });
+    return out;
+  }
+
+  function updateExamProgress(form) {
+    const total = Number(form.dataset.total);
+    const answers = examAnswers(form);
+    const count = Object.keys(answers).length;
+    form.querySelectorAll('.q').forEach(q => q.classList.toggle('answered', q.dataset.q in answers));
+    document.getElementById('exam-count').textContent = count + '/' + total + ' respondidas' + (count < total ? ' · faltan ' + (total - count) : '');
+    document.getElementById('exam-send').disabled = count < total;
+  }
+
+  async function submitExam(form) {
+    if (!confirm('¿Enviar tus respuestas? Solo tienes un intento.')) return;
+    const btn = document.getElementById('exam-send');
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    const r = await fetchJson(EXAMS_URL + '/' + encodeURIComponent(form.dataset.id) + '?email=' + encodeURIComponent(state.email), {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ respuestas: examAnswers(form) }),
+    });
+    if (r.ok || (r.status === 409 && r.body.resultado)) {
+      await loadExamenes();
+      return showResult(r.body.resultado, !r.body.guardado && r.status !== 409);
+    }
+    btn.disabled = false; btn.textContent = 'Enviar';
+    alert('No se pudo enviar (' + (r.body.error || r.status) + '). Intenta de nuevo.');
+  }
+
+  function showResult(resultado, vistaPrevia) {
+    contentEl.innerHTML = '<div class="exam-card"><h3>📝 Tu resultado' + (vistaPrevia ? ' · vista previa (no se guardó)' : '') + '</h3></div>' +
+      renderResultado(resultado, false) + '<div class="exam-bar">' + volverBtn() + '<span></span></div>';
+    window.scrollTo(0, 0);
+  }
+
+  contentEl.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-action]');
+    if (!b) return;
+    const act = b.dataset.action;
+    if (act === 'abrir-examen') { e.preventDefault(); openExam(b.dataset.id); }
+    if (act === 'ver-resultado') {
+      const ex = ((state.examenes && state.examenes.examenes) || []).find(x => x.id === b.dataset.id);
+      if (ex && ex.resultado) showResult(ex.resultado, false);
+    }
+    if (act === 'volver') { e.preventDefault(); render(state.data); window.scrollTo(0, 0); }
+  });
+  contentEl.addEventListener('change', (e) => { const f = e.target.closest('#exam-form'); if (f) updateExamProgress(f); });
+  contentEl.addEventListener('submit', (e) => { const f = e.target.closest('#exam-form'); if (f) { e.preventDefault(); submitExam(f); } });
 
   async function loadFor(email) {
     contentEl.innerHTML = '<div class="loading">Cargando…</div>';
     loginError.style.display = 'none';
     try {
+      // Tablero y exámenes en paralelo para no sumar las dos esperas.
+      state.email = email;
+      const examenesP = loadExamenes();
       const res = await fetch(DATA_URL_BASE + '?email=' + encodeURIComponent(email), { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
@@ -307,6 +518,8 @@
       localStorage.setItem(STORAGE_KEY, email);
       loginEl.style.display = 'none';
       appEl.style.display = 'block';
+      state.data = data;
+      await examenesP;
       render(data);
     } catch (e) {
       loginError.textContent = '⚠️ ' + e.message;
