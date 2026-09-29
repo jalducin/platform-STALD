@@ -220,7 +220,7 @@
 
 <script>
   // Backend: Deno Deploy (sin Supabase). Para pruebas locales se puede usar ?api=http://localhost:8000
-  const DEFAULT_API = 'https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria';
+  const DEFAULT_API = 'https://stald.jalducin.deno.net';
   const API_BASE = (new URLSearchParams(location.search).get('api') || DEFAULT_API).replace(/\/$/, '');
   const DATA_URL_BASE = API_BASE + '/ingles/data';
   const STORAGE_KEY = 'ingles_email';

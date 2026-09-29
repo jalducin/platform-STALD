@@ -61,6 +61,9 @@ backend: tratarlo como un cambio OpenSpec.
 
 ## Exámenes (JSON, sin base de datos)
 
+> Legado (Supabase v14). En producción, el diagnóstico y los exámenes se sirven desde el repo de datos
+> (`contenido/examenes/`, `resultados/<id>/<alumno>.json`). Ver la sección de actividades online.
+
 **Definición** (versionada en `supabase/functions/tareas-estudio-secundaria/examenes/<id>.json`):
 
 ```json

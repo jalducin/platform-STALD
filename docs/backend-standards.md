@@ -1,10 +1,10 @@
 # Estándares de backend
 
-> **Migración en curso (cambio `tareas-online-semanales`):** el backend se muda a **Deno Deploy**
-> (`server/main.ts`) y los datos a **JSON en el repo privado** `jalducin/platform-STALD-data`; ya no se usa
-> Supabase ("Fidello QAS"). La configuración está en [deno-deploy-setup.md](deno-deploy-setup.md). Las
-> secciones de Supabase de este documento describen la versión anterior (v14), que sigue desplegada como
-> respaldo hasta el cambio de `DEFAULT_API` en `ingles.html`.
+> **Backend en producción: Deno Deploy** (`https://stald.jalducin.deno.net`, `server/main.ts`). Los datos
+> viven como JSON en el repo privado `jalducin/platform-STALD-data`. Ya no se usa Supabase ("Fidello QAS").
+> La configuración está en [deno-deploy-setup.md](deno-deploy-setup.md). Las secciones de Supabase de este
+> documento describen la versión anterior (v14). Sigue desplegada, pero las páginas dejaron de usarla el
+> 2026-09-28 y queda como legado.
 
 ## 0. Backend actual: Deno Deploy (`server/`)
 

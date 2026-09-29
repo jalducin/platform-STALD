@@ -83,3 +83,19 @@
 - Correcciones tras revisar las capturas:
   - La tabla de posesivos (8 filas) se desbordaba: las tablas largas se parten en dos columnas.
   - "Lo que reforzamos hoy" pasó de preguntas sueltas a temas.
+
+## Producción en Deno Deploy (5.3)
+
+- Backend: `https://stald.jalducin.deno.net` (Dynamic App, `server/main.ts`).
+- Curl:
+  - `/` → 404 JSON.
+  - `/ingles/actividades` sin correo → 400; con un correo desconocido → 403.
+  - `/ingles/data` → 7 filas.
+  - `/data` → 74 filas, igual que Supabase v14.
+- Escritura en GitHub verificada con un archivo de prueba, que después se borró.
+- Migración: el diagnóstico tiene 4 resultados, igual que en Supabase Storage.
+- E2E (página local contra el backend de producción, `e2e-prod.js`): 10/10.
+  - La alumna solo leyó; no hubo ningún POST.
+  - Admin en vista previa.
+- Estado después del E2E: 0 resultados guardados en las actividades de la semana 1; el diagnóstico sigue en 4.
+- Las páginas apuntan a Deno (`DEFAULT_API`, `DATA_URL_BASE`). Supabase queda como legado.

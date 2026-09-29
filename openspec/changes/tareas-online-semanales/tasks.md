@@ -42,7 +42,7 @@
 
 - [x] 5.1 Servidor local con almacén en memoria y Notion simulado: curl de rutas, intentos, 409 `sin_intentos`, refuerzo
 - [x] 5.2 E2E local: semana, teoría, ejercicios, reintento y admin
-- [ ] 5.3 Con Deno Deploy configurado: curl y E2E contra producción; migración verificada (conteos iguales)
+- [x] 5.3 Con Deno Deploy configurado: curl y E2E contra producción; migración verificada (conteos iguales)
 
 ## 6. Documentación (OBLIGATORIO)
 
