@@ -31,6 +31,19 @@
 - TDD: la prueba nueva en `rows_test.ts` falló antes y pasa después.
 - Suite: 36 pasaron + 6 omitidas sin `DATA_DIR`; 42 pasaron con `DATA_DIR`. `check` y `lint` limpios.
 
+## Verificación en producción (4.1 y 4.2)
+- Curl a `https://stald.jalducin.deno.net`:
+  - Sofy: `semana = 2026-09-28`; `diagnostico-a1` con fecha límite 2026-09-29, `disponible`, 0 intentos;
+    actividades del 29 y del 1 disponibles; examen, refuerzo y Meet `proximamente`.
+  - Marisol y admin: `diagnostico-a1` con fecha límite 2026-09-27.
+  - `/ingles/data` de Sofy: 1 fila, "📋 A1 Test #1 — Verbo TO BE + Pronombres".
+  - Admin: 8 filas de Inglés, 0 "(sin título)". Secundaria: 71 filas, 1 con título vacío en Notion.
+  - Resultados sin cambios: diagnóstico 4, semana 1 en 0.
+- E2E de solo lectura en GitHub Pages con el correo de Sofy (`e2e-sofy.js`): 4/4 pasaron.
+  - Semana con 5 elementos, diagnóstico "mar 29 de sep · 0/1", fila de Notion con título y 0 envíos.
+  - Una 5.ª verificación (saludo con su nombre) era una expectativa errónea de la prueba: la página muestra
+    "Tu progreso" a los alumnos y alumnas.
+
 ## Resultado
 - Estado Step 3: PASS
 - Bloqueos: ninguno

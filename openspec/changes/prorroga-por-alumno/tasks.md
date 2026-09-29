@@ -20,15 +20,15 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Producción, tras el merge:
+- [x] 4.1 Producción, tras el merge:
   - curl de la lista con el correo de Sofy: diagnóstico con 2026-09-29, disponible y sin intentos;
   - otra alumna ve 2026-09-27;
   - `/ingles/data` de Sofy trae solo su fila.
   - No se envían intentos reales.
-- [ ] 4.2 E2E de solo lectura con el correo de Sofy: entra, ve la semana y el diagnóstico con fecha de mañana
+- [x] 4.2 E2E de solo lectura con el correo de Sofy: entra, ve la semana y el diagnóstico con fecha de mañana
 
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/data-model.md` (`prorrogas`) y `docs/backend-standards.md`
 - [x] 5.2 Commit, push, PR y merge a `main` (PR #14)
-- [ ] 5.3 Commit, PR y merge de la corrección 1.3
+- [x] 5.3 Commit, PR y merge de la corrección 1.3 (PR #15)
