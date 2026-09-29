@@ -27,3 +27,13 @@ JSON (`meetUrl`), o "El enlace se comparte por WhatsApp" si todavía no existe.
 #### Scenario: Sin enlace
 - **WHEN** `meetUrl` es null
 - **THEN** la fila del domingo dice "El enlace se comparte por WhatsApp"
+
+### Requirement: Guion de la clase del domingo en la vista admin
+La vista admin SHALL tener el botón "📋 Guion de clase" en el elemento `meet`. El guion SHALL mostrar
+primero la retroalimentación por alumno o alumna (mejores calificaciones de la semana y temas a
+reforzar) y luego los bloques de la clase con sus tiempos, la teoría para compartir en pantalla, las tareas
+de libreta y el reto en vivo (con vista previa).
+
+#### Scenario: Retroalimentación en el guion
+- **WHEN** el admin abre el guion
+- **THEN** ve una tarjeta por alumno o alumna con sus porcentajes de la semana y sus temas a reforzar

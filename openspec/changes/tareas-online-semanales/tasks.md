@@ -24,6 +24,13 @@
 - [x] 3.2 Vista de actividad: teoría → ejercicios (opción y escribir) → resultado, intento n/2, Reintentar, tips; Meet
 - [x] 3.3 Admin: intentos, mejor calificación, temas a reforzar por alumno o alumna; vista previa
 
+## 3b. Clase del domingo (post-apply; artefactos actualizados antes de implementar)
+
+- [x] 3b.1 Contenido de `meet-2026-10-04`: guion (retro, presente simple negativo y en pregunta, WH, adjetivos, posesivos, reto, cierre), teoría, libreta y banco del reto
+- [x] 3b.2 Servidor: meet con banco como actividad; `guion` solo para admin; `tieneReto` en la lista
+- [ ] 3b.3 Frontend: "📋 Guion de clase" (admin) con retroalimentación automática; botón "Reto" del domingo para alumnos
+- [ ] 3b.4 Pruebas y E2E del guion y el reto
+
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 4.1 `deno test` y `deno check` de `server/`
