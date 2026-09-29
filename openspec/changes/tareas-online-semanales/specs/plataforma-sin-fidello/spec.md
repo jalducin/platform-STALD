@@ -25,8 +25,9 @@ NO SHALL incluir correos.
 
 ### Requirement: Migración del diagnóstico
 Los resultados de `diagnostico-a1` guardados en Supabase Storage SHALL copiarse a
-`resultados/diagnostico-a1/` del repo de datos, sin cambios en su contenido, antes de apagar la función de
-Supabase.
+`resultados/diagnostico-a1/` del repo de datos antes de apagar la función de Supabase. Se convierten al
+formato de intentos (`intentos[0]` con sus respuestas y calificación, `mejor` igual al intento 1 y
+`migradoDe: "supabase-storage"`) sin cambiar ninguna calificación.
 
 #### Scenario: Resultados migrados
 - **WHEN** termina la migración
