@@ -81,3 +81,25 @@ backend: tratarlo como un cambio OpenSpec.
 
 Umbrales por tema: ≥ 80 % fortaleza, 60–79 % en progreso, < 60 % debilidad. Nivel sugerido del diagnóstico
 A1: ≥ 80 % "A1 sólido — listo para A2", 50–79 % "A1 en progreso", < 50 % "Iniciando A1".
+
+## Actividades semanales (repo privado `platform-STALD-data`)
+
+Fuente canónica del formato. El contenido **incluye las respuestas** y por eso vive en el repo privado.
+
+- `contenido/semanas/<lunes>.json`: `{ id, titulo, elementos: [{ id, tipo, fecha }] }`. Ritmo: martes y
+  jueves `actividad`, viernes `examen`, sábado `refuerzo`, domingo `meet`.
+- `contenido/actividades/<id>.json` y `contenido/examenes/<id>.json`:
+  - Campos generales: `id`, `tipo`, `titulo`, `nivel`, `descripcion`, `disponibleDesde`, `fechaLimite`,
+    `intentos` (actividad y refuerzo 2, examen 1), `preguntasPorIntento`.
+  - `temas[]`: con `retroalimentacion` por estado.
+  - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }] }`.
+  - `tips[]`: `{ tipo: "libreta" | "video", texto, url? }`. Los videos son enlaces de **búsqueda** de YouTube.
+  - `banco[]`: ejercicios `{ id, tema, tipo: "opcion" | "escribir", enunciado, opciones? + correcta? |
+    aceptadas?, explicacion }`.
+  - Refuerzo: `bancoDe[]`, `basadoEn` (examen de la semana), `respaldo` (diagnóstico) y `mapeoTemas`.
+  - Meet: `meetUrl` y `hora`.
+- `resultados/<id>/<slug-alumno>.json`: `{ id, titulo, alumno, intentos: [{ n, enviadoEn, fueraDeTiempo,
+  preguntas, respuestas, calificacion }], mejor }`. Cuenta el **mejor** intento. Sin correos.
+
+Selección de ejercicios: determinista por `id|slug|intento` y repartida por tema. Así toca la misma clase
+para todos, pero con ejercicios distintos para cada alumno o alumna y en cada intento.

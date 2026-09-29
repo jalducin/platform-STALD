@@ -33,7 +33,9 @@ Navegador (GitHub Pages)
 | Repo | https://github.com/jalducin/platform-STALD |
 | Dashboard Secundaria | https://jalducin.github.io/platform-STALD/ |
 | Dashboard Inglés | https://jalducin.github.io/platform-STALD/ingles.html |
-| Edge Function | `https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria` |
+| Backend (nuevo) | Deno Deploy, `server/main.ts` (ver `docs/deno-deploy-setup.md`) |
+| Datos privados | Repo `jalducin/platform-STALD-data` (contenido con respuestas y resultados JSON) |
+| Edge Function (anterior) | `https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria`, respaldo hasta cambiar `DEFAULT_API` |
 
 > El repo se llamaba `tareas-estudio-secundaria`. Los links `jalducin.github.io/tareas-estudio-secundaria/…`
 > ya no funcionan: GitHub Pages no redirige repos renombrados.

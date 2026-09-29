@@ -1,4 +1,40 @@
-# Estándares de backend (Supabase Edge Function)
+# Estándares de backend
+
+> **Migración en curso (cambio `tareas-online-semanales`):** el backend se muda a **Deno Deploy**
+> (`server/main.ts`) y los datos a **JSON en el repo privado** `jalducin/platform-STALD-data`; ya no se usa
+> Supabase ("Fidello QAS"). La configuración está en [deno-deploy-setup.md](deno-deploy-setup.md). Las
+> secciones de Supabase de este documento describen la versión anterior (v14), que sigue desplegada como
+> respaldo hasta el cambio de `DEFAULT_API` en `ingles.html`.
+
+## 0. Backend actual: Deno Deploy (`server/`)
+
+| Archivo | Rol |
+|---|---|
+| `server/main.ts` | Entrypoint: Notion, CORS y rutas `/data`, `/ingles/data`, `/ingles/actividades…` |
+| `server/actividades.ts` | Rutas de actividades y exámenes sobre el almacén JSON (caché de contenido de 60 s) |
+| `server/motor.ts` | Lógica pura: selección por alumno e intento, calificación, mejor intento, refuerzo |
+| `server/store.ts` | `GitHubStore` (API de contenidos, escritura con `sha`) y `MemoryStore` (pruebas) |
+| `server/rows.ts` | Extracción de filas de Notion y filtrado por correo |
+
+**Variables:** `NOTION_TOKEN`, `SUPER_ADMIN_EMAIL`, `GITHUB_TOKEN` (token fino, solo Contents del repo
+de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PERMITIR_HOY=1` (permite
+`?hoy=`).
+
+**Rutas `/ingles/actividades`:**
+
+| Ruta | Método | Respuesta |
+|---|---|---|
+| `/ingles/actividades` | GET | Alumno: elementos de las semanas iniciadas y exámenes sueltos, con `estado` (`proximamente`, `disponible`, `en-curso`, `completo`), `intentosUsados`, `mejor` y `ultimoEnvio`. Admin: `resultados` por elemento y `resumen[alumno].temasAReforzar` |
+| `/ingles/actividades/<id>` | GET | Teoría, tips, temas, `enfoque` (refuerzo) y los ejercicios del intento que toca, **sin respuestas**. 403 `no_disponible`, 409 `sin_intentos`. El admin puede usar `?alumno=` y `?intento=` |
+| `/ingles/actividades/<id>` | POST `{ intento, respuestas }` | Calificación inmediata, `mejor` y `restantes`. 409 `intento_invalido` / `sin_intentos`. El admin no guarda |
+| `/ingles/actividades/<id>/resultados/<alumno>` | DELETE | Solo admin: reinicia los intentos |
+
+**Pruebas:** `DATA_DIR=<copia del repo de datos> npx -y deno test --allow-env --allow-read` en `server/`
+(sin `DATA_DIR` se omiten las de integración).
+
+---
+
+# Versión anterior: Supabase Edge Function
 
 ## 1. Fuente de verdad y despliegue
 

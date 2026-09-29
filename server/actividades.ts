@@ -129,7 +129,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     }
     const conEstado = await Promise.all(items.map(async (it) => {
       const r = it.tipo === "meet" ? null : (await leerResultado(store, it.id, slug!))?.data ?? null;
-      return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null };
+      return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null };
     }));
     return json({ isAdmin: false, hoy, semana, items: conEstado });
   }
