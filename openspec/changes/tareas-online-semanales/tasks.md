@@ -48,4 +48,4 @@
 
 - [x] 6.1 `docs/backend-standards.md`, `docs/data-model.md`, `openspec/project.md` y README: Deno Deploy, repo de datos y formatos
 - [x] 6.2 Guía para el usuario: configurar Deno Deploy y el token (paso a paso)
-- [ ] 6.3 Commit, push, PR y merge a `main`
+- [x] 6.3 Commit, push, PR y merge a `main`

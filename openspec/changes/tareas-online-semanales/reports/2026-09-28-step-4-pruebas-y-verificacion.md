@@ -99,3 +99,4 @@
   - Admin en vista previa.
 - Estado después del E2E: 0 resultados guardados en las actividades de la semana 1; el diagnóstico sigue en 4.
 - Las páginas apuntan a Deno (`DEFAULT_API`, `DATA_URL_BASE`). Supabase queda como legado.
+- E2E contra GitHub Pages (https://jalducin.github.io/platform-STALD/): 10/10. PR #11 fusionado; Secundaria responde 200.
