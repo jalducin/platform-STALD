@@ -52,8 +52,12 @@ function plainText(prop: NotionPage): string {
   return (prop?.rich_text || []).map((t: any) => t.plain_text || "").join("").trim();
 }
 
+// La propiedad de título puede llamarse como sea (en "📖 Clases Inglés" hoy no tiene nombre).
 function title(p: NotionPage): string {
-  return p?.["Name"]?.title?.[0]?.plain_text || "(sin título)";
+  // deno-lint-ignore no-explicit-any
+  const prop = Object.values(p || {}).find((v: any) => v?.type === "title" || Array.isArray(v?.title)) as NotionPage | undefined;
+  // deno-lint-ignore no-explicit-any
+  return (prop?.title || []).map((t: any) => t.plain_text || "").join("").trim() || "(sin título)";
 }
 
 // Base "📖 Clases" (Secundaria). Los nombres de propiedad son literales de Notion.

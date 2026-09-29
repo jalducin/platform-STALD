@@ -85,3 +85,10 @@ Deno.test("normalizeEmail recorta y pasa a minúsculas", () => {
   assertEquals(normalizeEmail("  Alumna@Example.COM "), "alumna@example.com");
   assertEquals(normalizeEmail(null), "");
 });
+
+Deno.test("título: se lee de la propiedad de tipo title aunque no se llame 'Name'", () => {
+  const page = inglesPage({ "": { type: "title", title: [{ plain_text: "📋 A1 Test #1 — " }, { plain_text: "Verbo TO BE" }] } });
+  delete (page.properties as Record<string, unknown>)["Name"];
+  assertEquals(extractInglesRow(page).name, "📋 A1 Test #1 — Verbo TO BE");
+  assertEquals(extractInglesRow(inglesPage({ "Name": { type: "title", title: [] } })).name, "(sin título)");
+});

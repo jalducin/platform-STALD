@@ -25,6 +25,12 @@
 - Repo de datos: `diagnostico-a1.json` con `prorrogas.sofy = 2026-09-29`. Sin cambios en `resultados/`.
 - Estado restaurado: no aplica. Los cambios son el alta pedida por el usuario.
 
+## Corrección post-apply 1.3 (título de fila)
+- Hallazgo al verificar en producción: `/ingles/data` devolvía "(sin título)" en todas las filas de Inglés.
+  La propiedad de título de la base ya no se llama "Name".
+- TDD: la prueba nueva en `rows_test.ts` falló antes y pasa después.
+- Suite: 36 pasaron + 6 omitidas sin `DATA_DIR`; 42 pasaron con `DATA_DIR`. `check` y `lint` limpios.
+
 ## Resultado
 - Estado Step 3: PASS
 - Bloqueos: ninguno

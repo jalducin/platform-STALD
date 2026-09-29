@@ -22,6 +22,8 @@ Hoy la fecha límite es la misma para todos. Sofy vería el 27 y su entrega qued
 
 ### Modified Capabilities
 - `actividades-online`: fecha límite por alumno o alumna.
+- `notion-data-api`: el título de la fila no depende del nombre de su propiedad. Es un bug hallado al
+  verificar el alta: todas las filas de Inglés salían "(sin título)".
 
 ## Impact
 
