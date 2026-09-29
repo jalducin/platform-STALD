@@ -15,7 +15,7 @@
 
 - [x] 2.1 `server/motor.ts`: tipos opcion/escribir, selección determinista por alumno e intento, calificación, refuerzo
 - [x] 2.2 `server/store.ts`: almacén GitHub (con `sha` y reintentos) y almacén en memoria para pruebas
-- [x] 2.3 `server/main.ts`: rutas `/data`, `/ingles/data`, `/ingles/examenes…` (compatibles) y `/ingles/actividades…`
+- [x] 2.3 `server/main.ts`: rutas `/data`, `/ingles/data` y `/ingles/actividades…` (el diagnóstico se sirve como examen suelto; `/ingles/examenes` queda solo en Supabase v14)
 - [x] 2.4 Pruebas `server/*_test.ts`
 
 ## 3. Frontend

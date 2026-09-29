@@ -2,7 +2,7 @@
 
 ### Requirement: Backend en Deno Deploy
 El backend SHALL correr en Deno Deploy desde `server/main.ts`, con las mismas rutas relativas
-(`/data`, `/ingles/data`, `/ingles/examenes…`, `/ingles/actividades…`) y la configuración por variables de
+(`/data`, `/ingles/data`) más `/ingles/actividades…`, que sustituye a `/ingles/examenes…` (el diagnóstico se sirve como examen suelto) y la configuración por variables de
 entorno: `NOTION_TOKEN`, `SUPER_ADMIN_EMAIL`, `GITHUB_TOKEN` y `DATA_REPO`. NO SHALL depender de Supabase.
 
 #### Scenario: Sin Supabase
