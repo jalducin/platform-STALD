@@ -48,6 +48,7 @@ export interface Item {
   meetUrl?: string | null;
   hora?: string | null;
   guion?: unknown[]; // solo admin (clase del domingo)
+  presentacion?: unknown; // solo admin: diapositivas para proyectar en el Meet
 }
 
 // Un Meet con banco trae reto en vivo y se califica como una actividad.
