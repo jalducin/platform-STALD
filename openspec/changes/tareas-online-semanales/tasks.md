@@ -28,8 +28,10 @@
 
 - [x] 3b.1 Contenido de `meet-2026-10-04`: guion (retro, presente simple negativo y en pregunta, WH, adjetivos, posesivos, reto, cierre), teoría, libreta y banco del reto
 - [x] 3b.2 Servidor: meet con banco como actividad; `guion` solo para admin; `tieneReto` en la lista
-- [ ] 3b.3 Frontend: "📋 Guion de clase" (admin) con retroalimentación automática; botón "Reto" del domingo para alumnos
-- [ ] 3b.4 Pruebas y E2E del guion y el reto
+- [x] 3b.3 Frontend: "📋 Guion de clase" (admin) con retroalimentación automática; botón "Reto" del domingo para alumnos
+- [x] 3b.4 Pruebas y E2E del guion y el reto
+
+- [x] 3b.5 Modo presentación: `presentacion.diapositivas` en el JSON del Meet y visor a pantalla completa (retroalimentación grupal sin nombres, navegación con teclado)
 
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
@@ -40,7 +42,7 @@
 
 - [x] 5.1 Servidor local con almacén en memoria y Notion simulado: curl de rutas, intentos, 409 `sin_intentos`, refuerzo
 - [x] 5.2 E2E local: semana, teoría, ejercicios, reintento y admin
-- [ ] 5.3 Con Deno Deploy configurado: curl y E2E contra producción; migración verificada (conteos iguales)
+- [x] 5.3 Con Deno Deploy configurado: curl y E2E contra producción; migración verificada (conteos iguales)
 
 ## 6. Documentación (OBLIGATORIO)
 

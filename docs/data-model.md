@@ -61,6 +61,9 @@ backend: tratarlo como un cambio OpenSpec.
 
 ## Exámenes (JSON, sin base de datos)
 
+> Legado (Supabase v14). En producción, el diagnóstico y los exámenes se sirven desde el repo de datos
+> (`contenido/examenes/`, `resultados/<id>/<alumno>.json`). Ver la sección de actividades online.
+
 **Definición** (versionada en `supabase/functions/tareas-estudio-secundaria/examenes/<id>.json`):
 
 ```json
@@ -97,7 +100,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `banco[]`: ejercicios `{ id, tema, tipo: "opcion" | "escribir", enunciado, opciones? + correcta? |
     aceptadas?, explicacion }`.
   - Refuerzo: `bancoDe[]`, `basadoEn` (examen de la semana), `respaldo` (diagnóstico) y `mapeoTemas`.
-  - Meet: `meetUrl` y `hora`.
+  - Meet: `meetUrl` y `hora`. Además, para la clase del domingo, `guion` (solo admin), `teoria`, `tips`,
+    `banco` (reto en vivo) y `presentacion.diapositivas` (solo admin), con tipos `portada`, `agenda`, `retro`
+    (grupal, sin nombres), `teoria` (con `ref` al índice de la teoría), `practica`, `juego`, `reto`,
+    `libreta` y `cierre`.
 - `resultados/<id>/<slug-alumno>.json`: `{ id, titulo, alumno, intentos: [{ n, enviadoEn, fueraDeTiempo,
   preguntas, respuestas, calificacion }], mejor }`. Cuenta el **mejor** intento. Sin correos.
 

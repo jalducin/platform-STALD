@@ -37,3 +37,30 @@ de libreta y el reto en vivo (con vista previa).
 #### Scenario: Retroalimentación en el guion
 - **WHEN** el admin abre el guion
 - **THEN** ve una tarjeta por alumno o alumna con sus porcentajes de la semana y sus temas a reforzar
+
+### Requirement: Modo presentación para el Meet
+La vista admin SHALL tener "🎬 Presentar" en el elemento `meet`. Abre diapositivas a pantalla completa
+(16:9, letra grande, colores por tema) definidas en `presentacion.diapositivas` del JSON:
+
+| Tipo | Contenido |
+|---|---|
+| `portada` | Título de la clase |
+| `agenda` | Bloques del guion con sus tiempos |
+| `retro` | Retroalimentación **grupal**: promedio por actividad, entregas, fortalezas del grupo y errores más comunes, **sin nombres** |
+| `teoria` | Un bloque de la teoría |
+| `practica` | Frases para practicar en voz alta |
+| `juego` | Reglas de un juego |
+| `reto` | Enlace a la página (y QR) |
+| `libreta` | Tareas de libreta |
+| `cierre` | Despedida |
+
+Se navega con ← / →, espacio, clic o botones, con contador y barra de avance; F alterna pantalla completa
+y Esc sale.
+
+#### Scenario: Retroalimentación sin exponer a nadie
+- **WHEN** el admin proyecta la diapositiva de retroalimentación
+- **THEN** ve promedios y errores del grupo, y ningún nombre de alumno o alumna
+
+#### Scenario: Navegación
+- **WHEN** el admin presiona → en la diapositiva 1
+- **THEN** pasa a la diapositiva 2 y el contador lo refleja

@@ -52,3 +52,50 @@
   (`docs/deno-deploy-setup.md`). Antes del corte hay que volver a migrar por si Fernando resuelve el
   diagnóstico en Supabase.
 - Bloqueos: configuración de Deno Deploy y del token (acción del usuario)
+
+## Clase del domingo (3b, post-apply)
+
+- Contenido `meet-2026-10-04`:
+  - Guion de 6 bloques (retroalimentación, presente simple negativo y en pregunta, WH, adjetivos y
+    posesivos, reto en vivo, cierre), 5 bloques de teoría y 7 tips.
+  - Reto de 26 ejercicios: 10 por intento, 2 intentos.
+- `deno test`: 24/24.
+  - El guion solo le llega al admin.
+  - El reto abre el domingo, con 2 intentos, y queda `en-curso` tras el primero.
+- E2E local, en un servidor nuevo:
+  - Semana: 16/16.
+  - Guion: 8/8. Examen del viernes bloqueado ("Abre vie 2", sin botón); Meet sin reto antes del domingo;
+    guion con retroalimentación de 5 alumnos o alumnas, errores comunes, 6 bloques y teoría para
+    compartir; "Probar el reto" en vista previa con 10 ejercicios.
+  - Hubo 2 fallas iniciales de la prueba (no de la página): un selector sin distinguir mayúsculas y
+    correr dos veces la prueba de la semana sobre el mismo servidor en memoria. Se corrigieron y se
+    repitió todo en un servidor nuevo.
+
+## Modo presentación (3b.5)
+
+- 14 diapositivas en `meet-2026-10-04.presentacion`; el servidor las entrega solo al admin (`deno test` 24/24).
+- E2E local a 1280×720: 8/8.
+  - 14 diapositivas sin desbordes.
+  - La retroalimentación es grupal y sin nombres: promedio y entregas por actividad, fortalezas, temas a
+    reforzar y la pregunta más fallada, omitiendo enunciados que mencionan a alguien del grupo.
+  - QR del reto; navegación ← / →; Esc sale.
+  - Regresión: guion 8/8 y semana 16/16.
+- Correcciones tras revisar las capturas:
+  - La tabla de posesivos (8 filas) se desbordaba: las tablas largas se parten en dos columnas.
+  - "Lo que reforzamos hoy" pasó de preguntas sueltas a temas.
+
+## Producción en Deno Deploy (5.3)
+
+- Backend: `https://stald.jalducin.deno.net` (Dynamic App, `server/main.ts`).
+- Curl:
+  - `/` → 404 JSON.
+  - `/ingles/actividades` sin correo → 400; con un correo desconocido → 403.
+  - `/ingles/data` → 7 filas.
+  - `/data` → 74 filas, igual que Supabase v14.
+- Escritura en GitHub verificada con un archivo de prueba, que después se borró.
+- Migración: el diagnóstico tiene 4 resultados, igual que en Supabase Storage.
+- E2E (página local contra el backend de producción, `e2e-prod.js`): 10/10.
+  - La alumna solo leyó; no hubo ningún POST.
+  - Admin en vista previa.
+- Estado después del E2E: 0 resultados guardados en las actividades de la semana 1; el diagnóstico sigue en 4.
+- Las páginas apuntan a Deno (`DEFAULT_API`, `DATA_URL_BASE`). Supabase queda como legado.
