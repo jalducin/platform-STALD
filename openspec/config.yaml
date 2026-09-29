@@ -11,13 +11,14 @@ context: |
   Stack tecnológico:
   - Frontend: páginas HTML estáticas autocontenidas (HTML + CSS + JS vanilla, sin build),
     publicadas con GitHub Pages desde la raíz de `main` (https://jalducin.github.io/platform-STALD/).
-  - Backend: 1 Supabase Edge Function (Deno + TypeScript), slug `tareas-estudio-secundaria`,
-    proyecto Supabase `xozsrcnjnugwbrrrwoeb`, `verify_jwt: false`.
-  - Datos: bases de Notion (API 2022-06-28) leídas en vivo con un token de integración
-    (secreto `NOTION_TOKEN` en Supabase). No hay base de datos propia.
+  - Backend: Deno Deploy (Deno + TypeScript), `server/main.ts`, https://stald.jalducin.deno.net.
+    La Supabase Edge Function `tareas-estudio-secundaria` (proyecto "Fidello QAS") es legado: no tocarla.
+  - Datos: bases de Notion (API 2022-06-28) leídas en vivo con un token de integración (`NOTION_TOKEN`)
+    y JSON en el repo privado `jalducin/platform-STALD-data` (actividades con respuestas y resultados).
+    No hay base de datos propia.
 
-  Arquitectura: navegador → Edge Function (proxy de solo lectura + filtro por correo) → Notion API.
-  Cada página HTML consume una ruta de la función:
+  Arquitectura: navegador → Deno Deploy (filtro por correo; actividades en el repo de datos) → Notion API.
+  Cada página HTML consume una ruta del backend:
   - index.html  → /data         (base "📖 Clases", Secundaria)
   - ingles.html → /ingles/data  (base "📖 Clases Inglés")
 
@@ -31,11 +32,11 @@ context: |
   - docs/base-standards.md — principios base, idioma, skills, planificación y reglas OpenSpec.
   - docs/documentation-standards.md — estructura y mantenimiento de la documentación.
   - docs/frontend-standards.md — páginas HTML estáticas / GitHub Pages.
-  - docs/backend-standards.md — Edge Function, contrato HTTP, integración con Notion y seguridad.
+  - docs/backend-standards.md — backend Deno, contrato HTTP, integración con Notion y seguridad.
   - docs/data-model.md — bases de Notion y propiedades que consume el sistema.
 
   Para implementar: adopta el agente relevante de ai-specs/agents/ (frontend-developer para *.html,
-  backend-developer para la Edge Function).
+  backend-developer para `server/`).
 
 # ---------------------------------------------------------------------------
 # Reglas por artefacto

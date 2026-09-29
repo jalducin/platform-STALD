@@ -15,6 +15,8 @@
 | `server/motor.ts` | Lógica pura: selección por alumno e intento, calificación, mejor intento, refuerzo |
 | `server/store.ts` | `GitHubStore` (API de contenidos, escritura con `sha`) y `MemoryStore` (pruebas) |
 | `server/rows.ts` | Extracción de filas de Notion y filtrado por correo |
+| `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
+| `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes>` (código 1 si hay errores) |
 
 **Variables:** `NOTION_TOKEN`, `SUPER_ADMIN_EMAIL`, `GITHUB_TOKEN` (token fino, solo Contents del repo
 de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PERMITIR_HOY=1` (permite
@@ -24,13 +26,16 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 
 | Ruta | Método | Respuesta |
 |---|---|---|
-| `/ingles/actividades` | GET | Alumno: elementos de las semanas iniciadas y exámenes sueltos, con `estado` (`proximamente`, `disponible`, `en-curso`, `completo`), `intentosUsados`, `mejor` y `ultimoEnvio`. Admin: `resultados` por elemento y `resumen[alumno].temasAReforzar` |
+| `/ingles/actividades` | GET | Alumno: elementos de las semanas iniciadas (`id <= hoy`) y exámenes sueltos (los que no referencia ninguna semana, iniciada o no; así una semana subida por adelantado no se asoma), con `estado` (`proximamente`, `disponible`, `en-curso`, `completo`), `intentosUsados`, `mejor` y `ultimoEnvio`. Admin: `resultados` por elemento y `resumen[alumno].temasAReforzar` |
 | `/ingles/actividades/<id>` | GET | Teoría, tips, temas, `enfoque` (refuerzo) y los ejercicios del intento que toca, **sin respuestas**. 403 `no_disponible`, 409 `sin_intentos`. El admin puede usar `?alumno=` y `?intento=` |
 | `/ingles/actividades/<id>` | POST `{ intento, respuestas }` | Calificación inmediata, `mejor` y `restantes`. 409 `intento_invalido` / `sin_intentos`. El admin no guarda |
 | `/ingles/actividades/<id>/resultados/<alumno>` | DELETE | Solo admin: reinicia los intentos |
 
 **Pruebas:** `DATA_DIR=<copia del repo de datos> npx -y deno test --allow-env --allow-read` en `server/`
-(sin `DATA_DIR` se omiten las de integración).
+(sin `DATA_DIR` se omiten las de integración; `semana_test.ts` usa datos inline y corre siempre).
+
+**Cargar una semana nueva:** skill `nueva-semana-ingles` (`ai-specs/skills/`). Se prepara el fin de
+semana anterior, se valida con la CLI y se sube al repo de datos. Aparece sola su lunes.
 
 ---
 

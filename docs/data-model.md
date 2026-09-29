@@ -90,7 +90,9 @@ A1: ≥ 80 % "A1 sólido — listo para A2", 50–79 % "A1 en progreso", < 50 % 
 Fuente canónica del formato. El contenido **incluye las respuestas** y por eso vive en el repo privado.
 
 - `contenido/semanas/<lunes>.json`: `{ id, titulo, elementos: [{ id, tipo, fecha }] }`. Ritmo: martes y
-  jueves `actividad`, viernes `examen`, sábado `refuerzo`, domingo `meet`.
+  jueves `actividad`, viernes `examen`, sábado `refuerzo`, domingo `meet`. Una semana se puede subir por
+  adelantado: es visible desde su lunes. Reglas de validación: `server/semana.ts`; flujo: skill
+  `nueva-semana-ingles`.
 - `contenido/actividades/<id>.json` y `contenido/examenes/<id>.json`:
   - Campos generales: `id`, `tipo`, `titulo`, `nivel`, `descripcion`, `disponibleDesde`, `fechaLimite`,
     `intentos` (actividad y refuerzo 2, examen 1), `preguntasPorIntento`.
