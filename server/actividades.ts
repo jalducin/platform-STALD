@@ -16,6 +16,7 @@ import {
   slugAlumno,
   temasAReforzar,
   temasRefuerzo,
+  tieneReto,
 } from "./motor.ts";
 import type { Store } from "./store.ts";
 
@@ -91,9 +92,9 @@ function meta(it: Item) {
   return {
     id: it.id, tipo: it.tipo, titulo: it.titulo, nivel: it.nivel, descripcion: it.descripcion,
     disponibleDesde: it.disponibleDesde, fechaLimite: it.fechaLimite,
-    intentosMax: it.tipo === "meet" ? 0 : maxIntentos(it),
-    preguntas: it.tipo === "meet" ? 0 : (it.preguntasPorIntento || (it.banco || []).length),
-    meetUrl: it.meetUrl ?? null, hora: it.hora ?? null,
+    intentosMax: tieneReto(it) ? maxIntentos(it) : 0,
+    preguntas: tieneReto(it) ? (it.preguntasPorIntento || (it.banco || []).length) : 0,
+    meetUrl: it.meetUrl ?? null, hora: it.hora ?? null, tieneReto: it.tipo === "meet" && tieneReto(it),
   };
 }
 
@@ -121,14 +122,14 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const { items, semanaActual } = await visibleItems(store, hoy);
     const semana = semanaActual ? { id: semanaActual.id, titulo: semanaActual.titulo, ids: semanaActual.elementos.map((e) => e.id) } : null;
     if (quien.isAdmin) {
-      const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), resultados: it.tipo === "meet" ? [] : await resultadosDe(store, it.id) })));
+      const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), resultados: tieneReto(it) ? await resultadosDe(store, it.id) : [] })));
       const porAlumno = new Map<string, Resultado[]>();
       for (const it of conRes) for (const r of it.resultados) { if (!porAlumno.has(r.alumno)) porAlumno.set(r.alumno, []); porAlumno.get(r.alumno)!.push(r); }
       const resumen = Object.fromEntries([...porAlumno].map(([a, rs]) => [a, { temasAReforzar: temasAReforzar(rs) }]));
       return json({ isAdmin: true, hoy, semana, items: conRes, resumen });
     }
     const conEstado = await Promise.all(items.map(async (it) => {
-      const r = it.tipo === "meet" ? null : (await leerResultado(store, it.id, slug!))?.data ?? null;
+      const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
       return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null };
     }));
     return json({ isAdmin: false, hoy, semana, items: conEstado });
@@ -136,7 +137,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
 
   const it = await loadItem(store, partes[0]);
   if (!it) return json({ error: "no_encontrado" }, 404);
-  if (it.tipo === "meet") return json({ error: "no_aplica" }, 400);
+  if (!tieneReto(it)) return json({ error: "no_aplica" }, 400);
 
   // DELETE /ingles/actividades/<id>/resultados/<alumno> → reiniciar (solo admin)
   if (req.method === "DELETE" && partes[1] === "resultados" && partes[2]) {
@@ -164,6 +165,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const titulos = new Map((it.temas || []).map((t) => [t.id, t.titulo]));
     return json({
       ...meta(it), teoria: it.teoria || [], tips: it.tips || [],
+      ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}),
       temas: (it.temas || []).map((t) => ({ id: t.id, titulo: t.titulo })),
       enfoque: enfoque.map((t) => titulos.get(t) || t),
       intento: n, intentosUsados: usados, vistaPrevia: quien.isAdmin,

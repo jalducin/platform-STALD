@@ -65,3 +65,23 @@ sus intentos, su mejor calificación y los temas a reforzar, acumulados de todas
 #### Scenario: Temas a reforzar
 - **WHEN** Jesus tiene "Presente simple" como debilidad en el diagnóstico y "Plurales" en progreso en la actividad del jueves
 - **THEN** su resumen admin lista ambos temas a reforzar
+
+### Requirement: Clase del domingo (Meet)
+El elemento `meet` SHALL poder traer:
+- `guion` (solo admin): bloques con tiempo, objetivo y pasos para dar la clase. El primero es la
+  retroalimentación, que la vista admin completa con los datos de cada alumno o alumna.
+- `teoria` y `tips` de libreta, visibles para alumnos y alumnas desde `disponibleDesde`.
+- `banco` para un **reto interactivo en vivo**, con las mismas reglas que una actividad (2 intentos, cuenta
+  el mejor).
+
+El `guion` NO SHALL enviarse a quien no sea admin. Semana 1: presente simple negativo y en pregunta, WH
+questions, adjetivos (van antes del sustantivo) y adjetivos posesivos (my, your, his, her, its, our,
+their).
+
+#### Scenario: Guion solo para admin
+- **WHEN** una alumna abre la clase del domingo
+- **THEN** recibe la teoría, los tips y el reto, pero no el `guion`
+
+#### Scenario: Reto en vivo
+- **WHEN** el alumno resuelve el reto durante el Meet
+- **THEN** ve su calificación inmediata y el admin ve su resultado al recargar
