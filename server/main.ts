@@ -1,0 +1,120 @@
+// Backend de platform-STALD para Deno Deploy (sin Supabase).
+// Variables: NOTION_TOKEN, SUPER_ADMIN_EMAIL, GITHUB_TOKEN, DATA_REPO (p. ej. jalducin/platform-STALD-data).
+// Pruebas locales: DATA_DIR (carpeta con una copia del repo de datos) y ROWS_FIXTURE (filas simuladas).
+import { attachUsers, extractInglesRow, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type UserInfo } from "./rows.ts";
+import { handleActividades } from "./actividades.ts";
+import { GitHubStore, MemoryStore, type Store } from "./store.ts";
+
+const NOTION_VERSION = "2022-06-28";
+const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
+const CLASES_INGLES_DB_ID = "3c41c6b4f8b580f888d8d122cbb5c613"; // 📖 Clases Inglés
+const env = (k: string) => Deno.env.get(k) || "";
+
+// ---------- Notion ----------
+// deno-lint-ignore no-explicit-any
+async function queryDatabase(dbId: string): Promise<any[]> {
+  // deno-lint-ignore no-explicit-any
+  const pages: any[] = [];
+  let cursor: string | undefined = undefined;
+  do {
+    const body: Record<string, unknown> = { page_size: 100 };
+    if (cursor) body.start_cursor = cursor;
+    const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${env("NOTION_TOKEN")}`, "Notion-Version": NOTION_VERSION, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`notion_${res.status}`);
+    const j = await res.json();
+    pages.push(...j.results);
+    cursor = j.has_more ? j.next_cursor : undefined;
+  } while (cursor);
+  return pages;
+}
+
+async function resolveUser(userId: string): Promise<UserInfo> {
+  try {
+    const res = await fetch(`https://api.notion.com/v1/users/${userId}`, {
+      headers: { "Authorization": `Bearer ${env("NOTION_TOKEN")}`, "Notion-Version": NOTION_VERSION },
+    });
+    if (!res.ok) return { email: null, name: null };
+    const u = await res.json();
+    return { email: u?.person?.email ? normalizeEmail(String(u.person.email)) : null, name: u?.name ? String(u.name) : null };
+  } catch {
+    return { email: null, name: null };
+  }
+}
+
+async function loadRows<T extends { userIds: string[]; userEmails: string[]; userNames: string[] }>(
+  dbId: string,
+  // deno-lint-ignore no-explicit-any
+  extract: (page: any) => T,
+  fixtureKey: "ingles" | "secundaria",
+): Promise<T[]> {
+  if (env("ROWS_FIXTURE")) return JSON.parse(await Deno.readTextFile(env("ROWS_FIXTURE")))[fixtureKey] as T[];
+  const rows = (await queryDatabase(dbId)).map(extract);
+  const ids = Array.from(new Set(rows.flatMap((r) => r.userIds)));
+  const infos = await Promise.all(ids.map(resolveUser));
+  return attachUsers(rows, new Map(ids.map((id, i) => [id, infos[i]])));
+}
+
+// ---------- HTTP ----------
+function corsHeaders(extra: Record<string, string> = {}): Headers {
+  const h = new Headers();
+  h.set("Access-Control-Allow-Origin", "*");
+  h.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  h.set("Access-Control-Allow-Headers", "content-type");
+  h.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  for (const [k, v] of Object.entries(extra)) h.set(k, v);
+  return h;
+}
+
+function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status, headers: corsHeaders({ "Content-Type": "application/json" }) });
+}
+
+let storePromise: Promise<Store> | null = null;
+function getStore(): Promise<Store> {
+  if (!storePromise) {
+    storePromise = env("DATA_DIR")
+      ? MemoryStore.fromDir(env("DATA_DIR"))
+      : Promise.resolve(new GitHubStore(env("DATA_REPO"), env("GITHUB_TOKEN")));
+  }
+  return storePromise;
+}
+
+export async function handler(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders() });
+  const email = normalizeEmail(url.searchParams.get("email"));
+  const admin = normalizeEmail(env("SUPER_ADMIN_EMAIL"));
+
+  try {
+    const idx = url.pathname.indexOf("/ingles/actividades");
+    if (idx !== -1) {
+      if (!email) return json({ error: "missing_email" }, 400);
+      const all = await loadRows<InglesRow>(CLASES_INGLES_DB_ID, extractInglesRow, "ingles");
+      const { rows, isAdmin } = filterForEmail(all, email, admin);
+      const alumno = isAdmin ? null : (rows.find((r) => r.alumno)?.alumno ?? null);
+      return await handleActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), { isAdmin, alumno }, await getStore(), json);
+    }
+
+    // "/ingles/data" también termina en "/data": evaluarlo primero.
+    const route = url.pathname.endsWith("/ingles/data")
+      ? { db: CLASES_INGLES_DB_ID, extract: extractInglesRow, key: "ingles" as const }
+      : url.pathname.endsWith("/data")
+      ? { db: SECUNDARIA_DB_ID, extract: extractSecundariaRow, key: "secundaria" as const }
+      : null;
+    if (!route) return json({ error: "not_found" }, 404);
+    if (!email) return json({ error: "missing_email" }, 400);
+    // deno-lint-ignore no-explicit-any
+    const all = await loadRows(route.db, route.extract as (p: any) => any, route.key);
+    const { rows, isAdmin } = filterForEmail(all, email, admin);
+    return json({ rows, isAdmin, generatedAt: new Date().toISOString() });
+  } catch (e) {
+    console.error("error:", e instanceof Error ? e.message : "desconocido");
+    return json({ error: "upstream_error" }, 500);
+  }
+}
+
+if (import.meta.main) Deno.serve({ port: Number(env("PORT")) || 8000 }, handler);
