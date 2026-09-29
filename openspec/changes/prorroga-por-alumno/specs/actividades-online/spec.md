@@ -1,8 +1,8 @@
 ## ADDED Requirements
 
 ### Requirement: Prórroga por alumno o alumna
-Un elemento MAY traer `prorrogas: { "<slug>": "AAAA-MM-DD" }`. Para el alumno o alumna con ese slug, el
-sistema SHALL usar esa fecha como `fechaLimite` en la lista, en el detalle y al marcar `fueraDeTiempo`.
+El sistema SHALL aceptar en un elemento `prorrogas: { "<slug>": "AAAA-MM-DD" }` (opcional). Para el
+alumno o alumna con ese slug, SHALL usar esa fecha como `fechaLimite` en la lista, en el detalle y al marcar `fueraDeTiempo`.
 Para los demás, y para el admin, SHALL usar la fecha base. La prórroga SHALL NOT adelantar
 `disponibleDesde`.
 

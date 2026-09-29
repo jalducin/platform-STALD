@@ -6,6 +6,7 @@
 
 - [x] 1.1 Pruebas que fallan (`server/prorroga_test.ts`, datos inline): lista y detalle con prórroga, `fueraDeTiempo`, los demás sin cambio, validación
 - [x] 1.2 `paraAlumno` y validación de `prorrogas` en `motor.ts`; aplicarlo en `handleActividades`
+- [x] 1.3 (post-apply) Título de fila desde la propiedad de tipo `title` sin importar su nombre (`server/rows.ts` y su prueba); hallado al verificar la fila de Sofy
 
 ## 2. Alta de Sofy
 
@@ -29,4 +30,5 @@
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/data-model.md` (`prorrogas`) y `docs/backend-standards.md`
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #14)
+- [ ] 5.3 Commit, PR y merge de la corrección 1.3
