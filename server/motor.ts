@@ -49,6 +49,13 @@ export interface Item {
   hora?: string | null;
   guion?: unknown[]; // solo admin (clase del domingo)
   presentacion?: unknown; // solo admin: diapositivas para proyectar en el Meet
+  prorrogas?: Record<string, string>; // slug del alumno → fecha límite propia (AAAA-MM-DD)
+}
+
+// El elemento como lo ve un alumno o alumna: con su prórroga, si tiene (no adelanta la apertura).
+export function paraAlumno(it: Item, slug: string): Item {
+  const f = it.prorrogas?.[slug];
+  return f ? { ...it, fechaLimite: f } : it;
 }
 
 // Un Meet con banco trae reto en vivo y se califica como una actividad.
@@ -123,6 +130,7 @@ export function normalizeItem(raw: any): Item {
       descripcion: raw.descripcion,
       disponibleDesde: raw.disponibleDesde,
       fechaLimite: raw.fechaLimite ?? raw.disponibleDesde,
+      prorrogas: raw.prorrogas,
       intentos: 1,
       temas: raw.secciones,
       niveles: raw.niveles,
@@ -338,6 +346,9 @@ export function validateItem(it: Item): string[] {
   const errs: string[] = [];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.disponibleDesde || "")) errs.push(`${it.id}: disponibleDesde inválida`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.fechaLimite || "")) errs.push(`${it.id}: fechaLimite inválida`);
+  for (const [slug, f] of Object.entries(it.prorrogas || {})) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f) || f < it.disponibleDesde) errs.push(`${it.id}: prorrogas.${slug} inválida (${f})`);
+  }
   if (!tieneReto(it)) return errs;
   const temas = new Set((it.temas || []).map((t) => t.id));
   for (const t of it.temas || []) {

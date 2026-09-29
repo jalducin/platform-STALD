@@ -7,6 +7,7 @@ import {
   type Intento,
   type Item,
   maxIntentos,
+  paraAlumno,
   mxToday,
   normalizeItem,
   publicQuestion,
@@ -129,15 +130,16 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
       const resumen = Object.fromEntries([...porAlumno].map(([a, rs]) => [a, { temasAReforzar: temasAReforzar(rs) }]));
       return json({ isAdmin: true, hoy, semana, items: conRes, resumen });
     }
-    const conEstado = await Promise.all(items.map(async (it) => {
+    const conEstado = await Promise.all(items.map((base) => paraAlumno(base, slug!)).map(async (it) => {
       const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
       return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null };
     }));
     return json({ isAdmin: false, hoy, semana, items: conEstado });
   }
 
-  const it = await loadItem(store, partes[0]);
-  if (!it) return json({ error: "no_encontrado" }, 404);
+  const base = await loadItem(store, partes[0]);
+  if (!base) return json({ error: "no_encontrado" }, 404);
+  const it = slug && !quien.isAdmin ? paraAlumno(base, slug) : base;
   if (!tieneReto(it)) return json({ error: "no_aplica" }, 400);
 
   // DELETE /ingles/actividades/<id>/resultados/<alumno> → reiniciar (solo admin)
