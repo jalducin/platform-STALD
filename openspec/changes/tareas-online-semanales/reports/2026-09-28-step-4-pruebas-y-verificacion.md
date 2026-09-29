@@ -70,3 +70,16 @@
   - Hubo 2 fallas iniciales de la prueba (no de la página): un selector sin distinguir mayúsculas y
     correr dos veces la prueba de la semana sobre el mismo servidor en memoria. Se corrigieron y se
     repitió todo en un servidor nuevo.
+
+## Modo presentación (3b.5)
+
+- 14 diapositivas en `meet-2026-10-04.presentacion`; el servidor las entrega solo al admin (`deno test` 24/24).
+- E2E local a 1280×720: 8/8.
+  - 14 diapositivas sin desbordes.
+  - La retroalimentación es grupal y sin nombres: promedio y entregas por actividad, fortalezas, temas a
+    reforzar y la pregunta más fallada, omitiendo enunciados que mencionan a alguien del grupo.
+  - QR del reto; navegación ← / →; Esc sale.
+  - Regresión: guion 8/8 y semana 16/16.
+- Correcciones tras revisar las capturas:
+  - La tabla de posesivos (8 filas) se desbordaba: las tablas largas se parten en dos columnas.
+  - "Lo que reforzamos hoy" pasó de preguntas sueltas a temas.

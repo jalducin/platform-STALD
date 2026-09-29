@@ -31,6 +31,8 @@
 - [x] 3b.3 Frontend: "📋 Guion de clase" (admin) con retroalimentación automática; botón "Reto" del domingo para alumnos
 - [x] 3b.4 Pruebas y E2E del guion y el reto
 
+- [x] 3b.5 Modo presentación: `presentacion.diapositivas` en el JSON del Meet y visor a pantalla completa (retroalimentación grupal sin nombres, navegación con teclado)
+
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 4.1 `deno test` y `deno check` de `server/`

@@ -144,6 +144,58 @@
   .teo-list { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; }
   .teo-list li { margin: 3px 0; }
   .q-text { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: .95rem; margin-top: 4px; }
+
+  /* ---------- Modo presentación (Meet) ---------- */
+  .deck { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(ellipse at top, #1e1b4b, #0b1020 70%); display: flex; flex-direction: column; }
+  .deck-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5vh 2vw; min-height: 0; }
+  .slide { container-type: inline-size; width: min(96vw, calc((100vh - 90px) * 16 / 9)); aspect-ratio: 16 / 9; background: #fffdf8; color: #1c1917; border-radius: 1.6vmin; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2vmin 6vmin rgba(0,0,0,.45); animation: slideIn .35s ease; font-family: "Segoe UI", Roboto, system-ui, sans-serif; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(1.5vmin) scale(.985); } to { opacity: 1; transform: none; } }
+  .slide[data-tone="indigo"] { --tone: #4f46e5; --tone2: #7c3aed; --soft: #eef2ff; }
+  .slide[data-tone="amber"] { --tone: #d97706; --tone2: #f59e0b; --soft: #fffbeb; }
+  .slide[data-tone="blue"] { --tone: #2563eb; --tone2: #0ea5e9; --soft: #eff6ff; }
+  .slide[data-tone="green"] { --tone: #16a34a; --tone2: #22c55e; --soft: #f0fdf4; }
+  .slide[data-tone="pink"] { --tone: #db2777; --tone2: #f472b6; --soft: #fdf2f8; }
+  .slide[data-tone="orange"] { --tone: #ea580c; --tone2: #fb923c; --soft: #fff7ed; }
+  .slide[data-tone="teal"] { --tone: #0d9488; --tone2: #2dd4bf; --soft: #f0fdfa; }
+  .slide-top { background: linear-gradient(90deg, var(--tone), var(--tone2)); color: #fff; padding: 2.2cqw 4cqw; font-size: 3.6cqw; font-weight: 800; letter-spacing: -.02em; display: flex; justify-content: space-between; align-items: center; }
+  .slide-top small { font-size: 1.6cqw; font-weight: 600; opacity: .85; }
+  .slide-body { flex: 1; padding: 2.6cqw 4cqw; font-size: 2.3cqw; line-height: 1.35; overflow: hidden; display: flex; flex-direction: column; gap: 1.6cqw; }
+  .slide-body p { margin: 0; }
+  .slide.hero { background: linear-gradient(135deg, var(--tone), var(--tone2)); color: #fff; justify-content: center; align-items: center; text-align: center; gap: 1cqw; }
+  .slide.hero .big-emoji { font-size: 9cqw; line-height: 1; }
+  .slide.hero h1 { font-size: 7.5cqw; margin: 0; letter-spacing: -.03em; }
+  .slide.hero h2 { font-size: 3cqw; margin: 0; font-weight: 600; opacity: .95; }
+  .slide.hero .pill-hero { font-size: 1.9cqw; background: rgba(255,255,255,.2); border-radius: 99px; padding: .6cqw 2cqw; margin-top: 1.5cqw; }
+  .s-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 2.1cqw; border-radius: 1cqw; overflow: hidden; }
+  .s-table th { background: var(--tone); color: #fff; text-align: left; padding: .9cqw 1.4cqw; }
+  .s-table td { padding: .8cqw 1.4cqw; border-bottom: .15cqw solid #eee; background: #fff; }
+  .s-table tr:nth-child(even) td { background: var(--soft); }
+  .s-table td:first-child { font-weight: 800; color: var(--tone); }
+  .s-points { margin: 0; padding-left: 3cqw; }
+  .s-points li { margin: .5cqw 0; }
+  .s-ex { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2cqw; }
+  .s-ex div { background: var(--soft); border-left: .6cqw solid var(--tone); border-radius: 1cqw; padding: 1cqw 1.6cqw; }
+  .s-ex b { color: var(--tone); display: block; font-size: 2.6cqw; }
+  .s-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4cqw; }
+  .s-card { background: var(--soft); border-radius: 1.2cqw; padding: 1.4cqw 1.8cqw; display: flex; gap: 1.4cqw; align-items: center; }
+  .s-num { flex-shrink: 0; width: 4.2cqw; height: 4.2cqw; border-radius: 50%; background: var(--tone); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 2.2cqw; }
+  .s-time { margin-left: auto; font-size: 1.7cqw; font-weight: 700; color: var(--tone); background: #fff; border-radius: 99px; padding: .3cqw 1.2cqw; white-space: nowrap; }
+  .s-stat { background: #fff; border: .2cqw solid var(--soft); border-radius: 1.4cqw; padding: 1.4cqw; text-align: center; }
+  .s-stat .n { font-size: 5.2cqw; font-weight: 800; color: var(--tone); line-height: 1; }
+  .s-stat .l { font-size: 1.7cqw; color: #57534e; margin-top: .6cqw; }
+  .s-bar { height: 1cqw; background: #eee; border-radius: 99px; overflow: hidden; margin-top: 1cqw; }
+  .s-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--tone), var(--tone2)); }
+  .s-col h3 { margin: 0 0 .8cqw; font-size: 2.3cqw; color: var(--tone); }
+  .s-col ul { margin: 0; padding-left: 2.6cqw; font-size: 2cqw; }
+  .s-lead { font-size: 2.5cqw; font-weight: 700; color: #44403c; }
+  .s-qr { background: #fff; padding: 1.2cqw; border-radius: 1.4cqw; box-shadow: 0 .5cqw 2cqw rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; }
+  .s-qr img, .s-qr canvas { width: 22cqw !important; height: 22cqw !important; }
+  .s-url { font-size: 1.8cqw; font-weight: 700; color: var(--tone); word-break: break-all; }
+  .deck-bar { display: flex; align-items: center; gap: 10px; padding: 8px 16px 12px; color: #e0e7ff; font-size: .85rem; }
+  .deck-bar button { background: rgba(255,255,255,.12); color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor: pointer; }
+  .deck-bar button:hover { background: rgba(255,255,255,.22); }
+  .deck-progress { flex: 1; height: 6px; background: rgba(255,255,255,.15); border-radius: 99px; overflow: hidden; }
+  .deck-progress span { display: block; height: 100%; background: linear-gradient(90deg, #818cf8, #c084fc); transition: width .3s ease; }
   #app { display: none; }
 </style>
 </head>
@@ -457,7 +509,7 @@
       const n = (it.resultados || []).length;
       const sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + (it.tipo === 'meet' ? (it.meetUrl ? ' · con enlace' : ' · sin enlace (meetUrl)') : ' · ' + n + ' con intentos');
       let btn = it.tipo === 'meet' ? '' : '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Vista previa</button>';
-      if (it.tipo === 'meet' && it.tieneReto) btn = '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-action="abrir-guion" data-id="' + escapeHtml(it.id) + '">📋 Guion de clase</button><button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Reto</button></span>';
+      if (it.tipo === 'meet' && it.tieneReto) btn = '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button><button class="btn ghost" data-action="abrir-guion" data-id="' + escapeHtml(it.id) + '">📋 Guion</button><button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Reto</button></span>';
       return '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + sub + '</div></div>' + btn + '</div>';
     }).join('') + '</div>';
   }
@@ -648,8 +700,141 @@
       '<details class="section" open><summary><div class="section-head"><span><span class="chevron">▶</span>🗒️ Bloques de la clase</span><span class="count">' + it.guion.length + '</span></div></summary><div style="padding:8px">' + bloques + '</div></details>' +
       '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría para compartir en pantalla</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' +
       renderTips(it.tips) +
-      '<div class="exam-bar">' + volverBtn() + '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Probar el reto</button></div>';
+      '<div class="exam-bar">' + volverBtn() + '<span style="display:flex;gap:6px"><button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Probar el reto</button><button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button></span></div>';
     window.scrollTo(0, 0);
+  }
+
+  // ---------- Modo presentación para el Meet (solo admin) ----------
+  const TONOS = { portada: 'indigo', agenda: 'indigo', retro: 'amber', teoria: 'blue', practica: 'green', juego: 'pink', reto: 'orange', libreta: 'teal', cierre: 'indigo' };
+
+  // Retroalimentación grupal, sin nombres: promedio del mejor intento, entregas, fortalezas y errores comunes.
+  function retroGrupal() {
+    const items = semanaItems(state.act).filter(i => i.tipo !== 'meet');
+    const total = new Set(((state.data && state.data.rows) || []).map(r => r.alumno).filter(Boolean)).size || 5;
+    const fuertes = new Map(), errores = new Map(), debiles = new Map();
+    const stats = items.map(it => {
+      const rs = (it.resultados || []).filter(r => r.mejor);
+      rs.forEach(r => {
+        (r.mejor.fortalezas || []).forEach(f => fuertes.set(f, (fuertes.get(f) || 0) + 1));
+        (r.mejor.debilidades || []).forEach(f => debiles.set(f, (debiles.get(f) || 0) + 2));
+        (r.mejor.enProgreso || []).forEach(f => debiles.set(f, (debiles.get(f) || 0) + 1));
+        (r.mejor.revision || []).forEach(x => errores.set(x.enunciado, (errores.get(x.enunciado) || 0) + 1));
+      });
+      const prom = rs.length ? Math.round(rs.reduce((a, r) => a + r.mejor.porcentaje, 0) / rs.length) : null;
+      return { it, prom, n: rs.length };
+    });
+    const top = (m, k) => [...m].sort((a, b) => b[1] - a[1]).slice(0, k).map(x => x[0]);
+    // Para proyectar: se omiten preguntas que mencionan a alguien del grupo (p. ej. «Pronombre para "Marisol"»).
+    const nombres = [...new Set(((state.data && state.data.rows) || []).map(r => r.alumno).filter(Boolean))];
+    const sinNombres = new Map([...errores].filter(([e]) => !nombres.some(n => e.includes(n))));
+    return { stats, total, fuertes: top(fuertes, 3), debiles: top(debiles, 3), errores: top(sinNombres, 1) };
+  }
+
+  function slideHtml(d, ctx) {
+    const tono = TONOS[d.tipo] || 'indigo';
+    const wrap = (titulo, cuerpo, extra) => '<div class="slide" data-tone="' + tono + '"><div class="slide-top"><span>' + escapeHtml(titulo) + '</span><small>' + escapeHtml(extra || ctx.titulo) + '</small></div><div class="slide-body">' + cuerpo + '</div></div>';
+    if (d.tipo === 'portada' || d.tipo === 'cierre') {
+      return '<div class="slide hero" data-tone="' + tono + '"><div class="big-emoji">' + escapeHtml(d.emoji || '🎥') + '</div><h1>' + escapeHtml(d.titulo) + '</h1>' +
+        (d.subtitulo ? '<h2>' + escapeHtml(d.subtitulo) + '</h2>' : '') + (d.texto ? '<div class="pill-hero">' + escapeHtml(d.texto) + '</div>' : '') +
+        (d.tipo === 'portada' ? '<div class="pill-hero">' + escapeHtml(formatFecha(ctx.fecha)) + (ctx.hora ? ' · ' + escapeHtml(ctx.hora) : '') + '</div>' : '') + '</div>';
+    }
+    if (d.tipo === 'agenda') {
+      return wrap(d.titulo, '<div class="s-grid">' + (ctx.guion || []).map((b, i) => '<div class="s-card"><span class="s-num">' + (i + 1) + '</span><span>' + escapeHtml(String(b.titulo).replace(/^\d+\.\s*/, '')) + '</span><span class="s-time">' + escapeHtml(b.tiempo) + '</span></div>').join('') + '</div>');
+    }
+    if (d.tipo === 'retro') {
+      const g = retroGrupal();
+      if (!g.stats.some(s => s.n)) return wrap(d.titulo, '<p class="s-lead">Esta semana arrancamos 💪 — hoy vemos juntos lo que viene.</p>');
+      const cards = g.stats.map(s => '<div class="s-stat"><div class="n">' + (s.prom === null ? '—' : s.prom + '%') + '</div><div class="l">' + icono(s.it.tipo) + ' ' + escapeHtml(s.it.titulo) + '<br>' + s.n + ' de ' + g.total + ' entregas</div>' +
+        '<div class="s-bar"><span style="width:' + (s.prom || 0) + '%"></span></div></div>').join('');
+      return wrap(d.titulo, '<div style="display:grid;grid-template-columns:repeat(' + Math.min(4, g.stats.length) + ',1fr);gap:1.4cqw">' + cards + '</div>' +
+        '<div class="s-grid"><div class="s-col"><h3>💪 Lo que el grupo ya domina</h3><ul>' + (g.fuertes.length ? g.fuertes.map(f => '<li>' + escapeHtml(f) + '</li>').join('') : '<li>¡Vamos por ello!</li>') + '</ul></div>' +
+        '<div class="s-col"><h3>🎯 Lo que reforzamos hoy</h3><ul>' + (g.debiles.length ? g.debiles.map(e => '<li>' + escapeHtml(e) + '</li>').join('') : '<li>¡Todo en verde! 🎉</li>') + '</ul>' +
+        (g.errores.length ? '<p style="font-size:1.7cqw;color:#78716c;margin-top:1cqw">Pregunta más fallada: «' + escapeHtml(g.errores[0]) + '»</p>' : '') + '</div></div>', 'Resultados del grupo');
+    }
+    if (d.tipo === 'teoria') {
+      const b = (ctx.teoria || [])[d.ref] || {};
+      let c = '';
+      if (b.texto) c += '<p class="s-lead">' + escapeHtml(b.texto) + '</p>';
+      if (b.tabla) {
+        const tabla = (filas) => '<table class="s-table"><thead><tr>' + b.tabla.columnas.map(x => '<th>' + escapeHtml(x) + '</th>').join('') + '</tr></thead><tbody>' + filas.map(f => '<tr>' + f.map(x => '<td>' + escapeHtml(x) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+        const fs = b.tabla.filas;
+        // Más de 5 filas con 2 columnas: se parte en dos tablas lado a lado para que quepa sin cortarse.
+        c += fs.length > 5 && b.tabla.columnas.length <= 2
+          ? '<div class="s-grid" style="align-items:start">' + tabla(fs.slice(0, Math.ceil(fs.length / 2))) + tabla(fs.slice(Math.ceil(fs.length / 2))) + '</div>'
+          : tabla(fs);
+      }
+      if (b.ejemplos) c += '<div class="s-ex">' + b.ejemplos.map(e => '<div><b>' + escapeHtml(e.en) + '</b>' + escapeHtml(e.es) + '</div>').join('') + '</div>';
+      if (b.puntos) c += '<ul class="s-points">' + b.puntos.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul>';
+      return wrap(b.titulo || '', c);
+    }
+    if (d.tipo === 'practica') {
+      return wrap(d.titulo, '<p class="s-lead">' + escapeHtml(d.instrucciones || '') + '</p><div class="s-grid">' + (d.frases || []).map((f, i) => '<div class="s-card"><span class="s-num">' + (i + 1) + '</span><b style="font-size:2.6cqw">' + escapeHtml(f) + '</b></div>').join('') + '</div>');
+    }
+    if (d.tipo === 'juego') {
+      return wrap(d.titulo, '<div style="display:flex;flex-direction:column;gap:1.2cqw">' + (d.reglas || []).map((r, i) => '<div class="s-card"><span class="s-num">' + (i + 1) + '</span><span style="font-size:2.5cqw">' + escapeHtml(r) + '</span></div>').join('') + '</div>');
+    }
+    if (d.tipo === 'reto') {
+      return wrap(d.titulo, '<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:3cqw;align-items:center;height:100%">' +
+        '<div style="display:flex;flex-direction:column;gap:1.2cqw">' + (d.pasos || []).map((p, i) => '<div class="s-card"><span class="s-num">' + (i + 1) + '</span><span style="font-size:2.4cqw">' + escapeHtml(p) + '</span></div>').join('') + '<div class="s-url">' + escapeHtml(d.url || '') + '</div></div>' +
+        '<div style="display:flex;justify-content:center"><div class="s-qr" id="deck-qr" data-url="' + escapeHtml(d.url || '') + '"></div></div></div>', '¡Desde tu celular!');
+    }
+    if (d.tipo === 'libreta') {
+      const tips = (ctx.tips || []).filter(t => t.tipo === 'libreta');
+      return wrap(d.titulo, '<div style="display:flex;flex-direction:column;gap:1.1cqw">' + tips.map((t, i) => '<div class="s-card"><span class="s-num">✓</span><span style="font-size:2.2cqw">' + escapeHtml(t.texto) + '</span></div>').join('') + '</div>', 'Tarea de la semana');
+    }
+    return wrap(d.titulo || '', '');
+  }
+
+  let qrLib = null;
+  function ensureQr(el) {
+    if (!el || el.dataset.done) return;
+    const draw = () => { try { el.innerHTML = ''; new window.QRCode(el, { text: el.dataset.url, width: 256, height: 256, correctLevel: window.QRCode.CorrectLevel.M }); el.dataset.done = '1'; } catch (e) { el.textContent = el.dataset.url; } };
+    if (window.QRCode) return draw();
+    if (!qrLib) {
+      qrLib = new Promise((ok, fail) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = ok; sc.onerror = fail; document.head.appendChild(sc); });
+    }
+    qrLib.then(draw).catch(() => { el.textContent = el.dataset.url; });
+  }
+
+  async function openPresentacion(id) {
+    const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email));
+    const it = r.body || {};
+    const diapos = (it.presentacion && it.presentacion.diapositivas) || [];
+    if (!r.ok || !diapos.length) { alert('Esta clase no tiene presentación.'); return; }
+    const ctx = { titulo: it.titulo, fecha: it.fechaLimite, hora: it.hora, guion: it.guion, teoria: it.teoria, tips: it.tips };
+    const slides = diapos.map(d => slideHtml(d, ctx));
+    let i = 0;
+    const deck = document.createElement('div');
+    deck.className = 'deck';
+    deck.innerHTML = '<div class="deck-stage" id="deck-stage"></div><div class="deck-bar">' +
+      '<button data-deck="prev" title="Anterior (←)">←</button><button data-deck="next" title="Siguiente (→)">→</button>' +
+      '<span id="deck-count"></span><div class="deck-progress"><span id="deck-prog"></span></div>' +
+      '<button data-deck="full" title="Pantalla completa (F)">⛶</button><button data-deck="exit" title="Salir (Esc)">✕ Salir</button></div>';
+    document.body.appendChild(deck);
+    const show = () => {
+      document.getElementById('deck-stage').innerHTML = slides[i];
+      document.getElementById('deck-count').textContent = (i + 1) + ' / ' + slides.length;
+      document.getElementById('deck-prog').style.width = ((i + 1) * 100 / slides.length) + '%';
+      ensureQr(document.getElementById('deck-qr'));
+    };
+    const go = (n) => { i = Math.max(0, Math.min(slides.length - 1, n)); show(); };
+    const salir = () => { document.removeEventListener('keydown', onKey); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); deck.remove(); };
+    const full = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else deck.requestFullscreen && deck.requestFullscreen().catch(() => {}); };
+    function onKey(e) {
+      if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(i + 1); }
+      else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+      else if (e.key === 'Home') go(0);
+      else if (e.key === 'End') go(slides.length - 1);
+      else if (e.key === 'f' || e.key === 'F') full();
+      else if (e.key === 'Escape' && !document.fullscreenElement) salir();
+    }
+    document.addEventListener('keydown', onKey);
+    deck.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-deck]');
+      if (b) { const a = b.dataset.deck; if (a === 'prev') go(i - 1); if (a === 'next') go(i + 1); if (a === 'full') full(); if (a === 'exit') salir(); return; }
+      if (e.target.closest('.slide')) go(i + 1);
+    });
+    show();
   }
 
   contentEl.addEventListener('click', (e) => {
@@ -662,6 +847,7 @@
       if (it && it.mejor) showResult(it.mejor, { titulo: it.titulo + ' · mejor intento (' + it.intentosUsados + '/' + it.intentosMax + ')' });
     }
     if (act === 'abrir-guion') { e.preventDefault(); openGuion(b.dataset.id); }
+    if (act === 'presentar') { e.preventDefault(); openPresentacion(b.dataset.id); }
     if (act === 'volver') { e.preventDefault(); render(state.data); window.scrollTo(0, 0); }
   });
   contentEl.addEventListener('change', (e) => { const f = e.target.closest('#exam-form'); if (f) updateExamProgress(f); });
