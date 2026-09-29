@@ -1,0 +1,32 @@
+## 0. Rama (OBLIGATORIO)
+
+- [x] 0.1 Crear y usar la rama `feature/prorroga-por-alumno`
+
+## 1. Servidor
+
+- [x] 1.1 Pruebas que fallan (`server/prorroga_test.ts`, datos inline): lista y detalle con prórroga, `fueraDeTiempo`, los demás sin cambio, validación
+- [x] 1.2 `paraAlumno` y validación de `prorrogas` en `motor.ts`; aplicarlo en `handleActividades`
+
+## 2. Alta de Sofy
+
+- [x] 2.1 Fila en Notion "📖 Clases Inglés" (Nombre Sofy, Usuario, A1 Test #1, entrega 2026-09-29)
+- [x] 2.2 `diagnostico-a1.json`: `prorrogas.sofy = "2026-09-29"` en el repo de datos
+
+## 3. Pruebas y verificación de estado (OBLIGATORIO)
+
+- [x] 3.1 `deno test` (con y sin `DATA_DIR`), `deno check` y `deno lint`
+- [x] 3.2 Reporte `openspec/changes/prorroga-por-alumno/reports/2026-09-28-step-3-pruebas-y-verificacion.md`
+
+## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
+
+- [ ] 4.1 Producción, tras el merge:
+  - curl de la lista con el correo de Sofy: diagnóstico con 2026-09-29, disponible y sin intentos;
+  - otra alumna ve 2026-09-27;
+  - `/ingles/data` de Sofy trae solo su fila.
+  - No se envían intentos reales.
+- [ ] 4.2 E2E de solo lectura con el correo de Sofy: entra, ve la semana y el diagnóstico con fecha de mañana
+
+## 5. Documentación (OBLIGATORIO)
+
+- [x] 5.1 `docs/data-model.md` (`prorrogas`) y `docs/backend-standards.md`
+- [ ] 5.2 Commit, push, PR y merge a `main`

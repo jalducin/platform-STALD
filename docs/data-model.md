@@ -96,6 +96,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
 - `contenido/actividades/<id>.json` y `contenido/examenes/<id>.json`:
   - Campos generales: `id`, `tipo`, `titulo`, `nivel`, `descripcion`, `disponibleDesde`, `fechaLimite`,
     `intentos` (actividad y refuerzo 2, examen 1), `preguntasPorIntento`.
+  - `prorrogas` (opcional): `{ "<slug-alumno>": "AAAA-MM-DD" }`, la fecha límite propia de un alumno o alumna
+    (p. ej. quien se integra tarde). No adelanta `disponibleDesde`. El slug es el de `resultados/`, nunca el correo.
   - `temas[]`: con `retroalimentacion` por estado.
   - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }] }`.
   - `tips[]`: `{ tipo: "libreta" | "video", texto, url? }`. Los videos son enlaces de **búsqueda** de YouTube.
