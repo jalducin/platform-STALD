@@ -63,12 +63,13 @@ export async function loadItem(store: Store, id: string): Promise<Item | null> {
 interface Semana { id: string; titulo: string; elementos: { id: string; tipo: string; fecha: string }[] }
 
 // Elementos visibles: los de semanas ya iniciadas + exámenes sueltos (p. ej. el diagnóstico).
+// Suelto = ninguna semana lo referencia, aunque no haya iniciado (las semanas se suben por adelantado).
 export async function visibleItems(store: Store, hoy: string): Promise<{ items: Item[]; semanaActual: Semana | null }> {
   return await cached(`visibles:${hoy}`, async () => {
     const nombres = (await store.list("contenido/semanas")).filter((n) => n.endsWith(".json")).map((n) => n.slice(0, -5)).sort();
-    const iniciadas = nombres.filter((id) => id <= hoy);
-    const semanas = (await Promise.all(iniciadas.map((id) => store.get<Semana>(`contenido/semanas/${id}.json`)))).map((d) => d!.data);
-    const enSemana = new Set(semanas.flatMap((s) => s.elementos.map((e) => e.id)));
+    const todas = (await Promise.all(nombres.map((id) => store.get<Semana>(`contenido/semanas/${id}.json`)))).map((d) => d!.data);
+    const semanas = todas.filter((_s, i) => nombres[i] <= hoy);
+    const enSemana = new Set(todas.flatMap((s) => s.elementos.map((e) => e.id)));
     const sueltos = (await store.list("contenido/examenes")).map((n) => n.replace(/\.json$/, "")).filter((id) => !enSemana.has(id));
     const ids = [...semanas.flatMap((s) => s.elementos.map((e) => e.id)), ...sueltos];
     const items = (await Promise.all(ids.map((id) => loadItem(store, id)))).filter((x): x is Item => !!x);
