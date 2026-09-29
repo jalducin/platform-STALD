@@ -381,10 +381,10 @@
     return {
       _item: it.id, _tipo: it.tipo, _estado: estado, _meetUrl: it.meetUrl, source: 'item',
       name: icono(it.tipo) + ' ' + it.titulo,
-      label: tipoTexto(it.tipo) + (esMeet ? (it.hora ? ' · ' + it.hora : '') : ' · ' + it.preguntas + ' ejercicios · ' + (intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)'),
+      label: tipoTexto(it.tipo) + (esMeet ? (it.hora ? ' · ' + it.hora : '') + (it.tieneReto ? ' · reto en vivo ' + (intentosUsados || 0) + '/' + it.intentosMax : '') : ' · ' + it.preguntas + ' ejercicios · ' + (intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)'),
       dificultad: it.nivel,
       fecha: it.fechaLimite,
-      completado: estado === 'completo' || (esMeet && todayStr() > it.fechaLimite),
+      completado: estado === 'completo' || (esMeet && !it.tieneReto && todayStr() > it.fechaLimite),
       calificacion: mejor ? mejor.porcentaje + '%' : null,
       editadoEn: ultimoEnvio || (esMeet ? it.fechaLimite + 'T23:00:00' : null),
       userNames: [],
@@ -404,7 +404,13 @@
 
   function accionItem(it, estado) {
     if (it.tipo === 'meet') {
-      return it.meetUrl ? '<a class="btn" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">Unirme</a>' : '<span class="pill wait">Enlace por WhatsApp</span>';
+      const enlace = it.meetUrl ? '<a class="btn" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">Unirme</a>' : '<span class="pill wait">Enlace por WhatsApp</span>';
+      if (!it.tieneReto) return enlace;
+      let reto = '';
+      if (estado === 'completo') reto = '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver reto</button>';
+      else if (estado === 'en-curso') reto = '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">Reintentar reto</button>';
+      else if (estado === 'disponible') reto = '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">Reto en vivo</button>';
+      return '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' + enlace + reto + '</span>';
     }
     if (estado === 'completo') return '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver resultado</button>';
     if (estado === 'en-curso') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">Reintentar</button>';
@@ -450,7 +456,8 @@
     return '<div class="exam-card"><h3>📚 Esta semana · ' + escapeHtml(act.semana.titulo) + '</h3>' + lista.map(it => {
       const n = (it.resultados || []).length;
       const sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + (it.tipo === 'meet' ? (it.meetUrl ? ' · con enlace' : ' · sin enlace (meetUrl)') : ' · ' + n + ' con intentos');
-      const btn = it.tipo === 'meet' ? '' : '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Vista previa</button>';
+      let btn = it.tipo === 'meet' ? '' : '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Vista previa</button>';
+      if (it.tipo === 'meet' && it.tieneReto) btn = '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-action="abrir-guion" data-id="' + escapeHtml(it.id) + '">📋 Guion de clase</button><button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Reto</button></span>';
       return '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + sub + '</div></div>' + btn + '</div>';
     }).join('') + '</div>';
   }
@@ -600,6 +607,51 @@
     window.scrollTo(0, 0);
   }
 
+  // Guion de la clase del domingo (solo admin): retroalimentación automática + bloques de la clase.
+  function retroAlumnos() {
+    const items = semanaItems(state.act).filter(i => i.tipo !== 'meet');
+    const resumen = (state.act && state.act.resumen) || {};
+    const diag = ((state.act && state.act.items) || []).find(i => i.id === 'diagnostico-a1');
+    const nombres = [...new Set(((state.data && state.data.rows) || []).map(r => r.alumno).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+    // Errores más comunes del grupo en la semana (por enunciado, en el mejor intento).
+    const cuenta = new Map();
+    items.forEach(it => (it.resultados || []).forEach(r => ((r.mejor && r.mejor.revision) || []).forEach(x => cuenta.set(x.enunciado, (cuenta.get(x.enunciado) || 0) + 1))));
+    const comunes = [...cuenta].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    let html = '<div class="exam-card"><h3>👥 Errores más comunes del grupo (esta semana)</h3>' +
+      (comunes.length ? '<ul class="teo-list">' + comunes.map(([e, n]) => '<li>' + escapeHtml(e) + ' <span class="pill wait">' + n + '</span></li>').join('') + '</ul>' : '<div class="s">Aún no hay intentos esta semana.</div>') + '</div>';
+    html += nombres.map(name => {
+      const notas = items.map(it => { const r = (it.resultados || []).find(x => x.alumno === name); return icono(it.tipo) + ' ' + escapeHtml(it.titulo) + ': <b>' + (r && r.mejor ? r.mejor.porcentaje + '%' : '—') + '</b>'; });
+      const d = diag && (diag.resultados || []).find(x => x.alumno === name);
+      const temas = (resumen[name] && resumen[name].temasAReforzar) || [];
+      const fuertes = new Set();
+      items.forEach(it => (it.resultados || []).filter(x => x.alumno === name).forEach(r => ((r.mejor && r.mejor.fortalezas) || []).forEach(f => fuertes.add(f))));
+      return '<div class="topic"><div class="h"><span>👤 ' + escapeHtml(name) + '</span><span>📝 ' + (d && d.mejor ? d.mejor.porcentaje + '%' : '—') + '</span></div>' +
+        '<ul class="teo-list">' + notas.map(n => '<li>' + n + '</li>').join('') + '</ul>' +
+        (fuertes.size ? '<div class="chips">' + [...fuertes].map(t => '<span class="chip fortaleza">💪 ' + escapeHtml(t) + '</span>').join('') + '</div>' : '') +
+        (temas.length ? '<div class="chips">' + temas.map(t => '<span class="chip ' + t.estado + '">🎯 ' + escapeHtml(t.titulo) + '</span>').join('') + '</div>' : '') + '</div>';
+    }).join('');
+    return html;
+  }
+
+  async function openGuion(id) {
+    contentEl.innerHTML = '<div class="loading">Cargando guion…</div>';
+    const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email));
+    if (!r.ok || !r.body.guion) { contentEl.innerHTML = '<div class="exam-card"><div class="empty">No se pudo abrir el guion.</div>' + volverBtn() + '</div>'; return; }
+    const it = r.body;
+    const bloques = it.guion.map(b => '<div class="topic"><div class="h"><span>' + escapeHtml(b.titulo) + '</span><span class="pill wait">' + escapeHtml(b.tiempo) + '</span></div>' +
+      (b.objetivo ? '<div class="r">🎯 ' + escapeHtml(b.objetivo) + '</div>' : '') +
+      '<ul class="teo-list">' + (b.pasos || []).map(p => '<li>' + escapeHtml(p) + '</li>').join('') + '</ul></div>').join('');
+    contentEl.innerHTML =
+      '<div class="exam-card"><h3>📋 Guion de clase · ' + escapeHtml(it.titulo) + '</h3><div class="s" style="font-size:.82rem">' + escapeHtml(it.descripcion || '') + '</div>' +
+      '<div class="s" style="font-size:.8rem;margin-top:4px">' + escapeHtml(formatFecha(it.fechaLimite)) + (it.hora ? ' · ' + escapeHtml(it.hora) : '') + (it.meetUrl ? ' · <a class="link" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">Abrir Meet</a>' : ' · enlace pendiente') + '</div></div>' +
+      '<details class="section" open><summary><div class="section-head"><span><span class="chevron">▶</span>1️⃣ Retroalimentación por alumno o alumna</span></div></summary><div style="padding:8px">' + retroAlumnos() + '</div></details>' +
+      '<details class="section" open><summary><div class="section-head"><span><span class="chevron">▶</span>🗒️ Bloques de la clase</span><span class="count">' + it.guion.length + '</span></div></summary><div style="padding:8px">' + bloques + '</div></details>' +
+      '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría para compartir en pantalla</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' +
+      renderTips(it.tips) +
+      '<div class="exam-bar">' + volverBtn() + '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Probar el reto</button></div>';
+    window.scrollTo(0, 0);
+  }
+
   contentEl.addEventListener('click', (e) => {
     const b = e.target.closest('[data-action]');
     if (!b) return;
@@ -609,6 +661,7 @@
       const it = ((state.act && state.act.items) || []).find(x => x.id === b.dataset.id);
       if (it && it.mejor) showResult(it.mejor, { titulo: it.titulo + ' · mejor intento (' + it.intentosUsados + '/' + it.intentosMax + ')' });
     }
+    if (act === 'abrir-guion') { e.preventDefault(); openGuion(b.dataset.id); }
     if (act === 'volver') { e.preventDefault(); render(state.data); window.scrollTo(0, 0); }
   });
   contentEl.addEventListener('change', (e) => { const f = e.target.closest('#exam-form'); if (f) updateExamProgress(f); });

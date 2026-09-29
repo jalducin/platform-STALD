@@ -52,3 +52,21 @@
   (`docs/deno-deploy-setup.md`). Antes del corte hay que volver a migrar por si Fernando resuelve el
   diagnóstico en Supabase.
 - Bloqueos: configuración de Deno Deploy y del token (acción del usuario)
+
+## Clase del domingo (3b, post-apply)
+
+- Contenido `meet-2026-10-04`:
+  - Guion de 6 bloques (retroalimentación, presente simple negativo y en pregunta, WH, adjetivos y
+    posesivos, reto en vivo, cierre), 5 bloques de teoría y 7 tips.
+  - Reto de 26 ejercicios: 10 por intento, 2 intentos.
+- `deno test`: 24/24.
+  - El guion solo le llega al admin.
+  - El reto abre el domingo, con 2 intentos, y queda `en-curso` tras el primero.
+- E2E local, en un servidor nuevo:
+  - Semana: 16/16.
+  - Guion: 8/8. Examen del viernes bloqueado ("Abre vie 2", sin botón); Meet sin reto antes del domingo;
+    guion con retroalimentación de 5 alumnos o alumnas, errores comunes, 6 bloques y teoría para
+    compartir; "Probar el reto" en vista previa con 10 ejercicios.
+  - Hubo 2 fallas iniciales de la prueba (no de la página): un selector sin distinguir mayúsculas y
+    correr dos veces la prueba de la semana sobre el mismo servidor en memoria. Se corrigieron y se
+    repitió todo en un servidor nuevo.

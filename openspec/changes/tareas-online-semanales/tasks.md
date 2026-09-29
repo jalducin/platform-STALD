@@ -28,8 +28,8 @@
 
 - [x] 3b.1 Contenido de `meet-2026-10-04`: guion (retro, presente simple negativo y en pregunta, WH, adjetivos, posesivos, reto, cierre), teoría, libreta y banco del reto
 - [x] 3b.2 Servidor: meet con banco como actividad; `guion` solo para admin; `tieneReto` en la lista
-- [ ] 3b.3 Frontend: "📋 Guion de clase" (admin) con retroalimentación automática; botón "Reto" del domingo para alumnos
-- [ ] 3b.4 Pruebas y E2E del guion y el reto
+- [x] 3b.3 Frontend: "📋 Guion de clase" (admin) con retroalimentación automática; botón "Reto" del domingo para alumnos
+- [x] 3b.4 Pruebas y E2E del guion y el reto
 
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
