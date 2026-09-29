@@ -166,6 +166,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     return json({
       ...meta(it), teoria: it.teoria || [], tips: it.tips || [],
       ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}),
+      ...(quien.isAdmin && it.presentacion ? { presentacion: it.presentacion } : {}),
       temas: (it.temas || []).map((t) => ({ id: t.id, titulo: t.titulo })),
       enfoque: enfoque.map((t) => titulos.get(t) || t),
       intento: n, intentosUsados: usados, vistaPrevia: quien.isAdmin,
