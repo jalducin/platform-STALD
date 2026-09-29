@@ -47,6 +47,12 @@ export interface Item {
   niveles?: Nivel[];
   meetUrl?: string | null;
   hora?: string | null;
+  guion?: unknown[]; // solo admin (clase del domingo)
+}
+
+// Un Meet con banco trae reto en vivo y se califica como una actividad.
+export function tieneReto(it: Item): boolean {
+  return it.tipo !== "meet" || (it.banco || []).length > 0;
 }
 
 export interface ResultadoTema {
@@ -300,7 +306,7 @@ export function addIntento(prev: Resultado | null, it: Item, alumno: string, int
 export type EstadoItem = "proximamente" | "disponible" | "en-curso" | "completo";
 
 export function estadoItem(it: Item, hoy: string, r: Resultado | null): EstadoItem {
-  if (it.tipo === "meet") return hoy >= it.disponibleDesde ? "disponible" : "proximamente";
+  if (!tieneReto(it)) return hoy >= it.disponibleDesde ? "disponible" : "proximamente";
   const usados = r?.intentos.length || 0;
   if (usados >= maxIntentos(it)) return "completo";
   if (hoy < it.disponibleDesde) return "proximamente";
@@ -331,7 +337,7 @@ export function validateItem(it: Item): string[] {
   const errs: string[] = [];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.disponibleDesde || "")) errs.push(`${it.id}: disponibleDesde inválida`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.fechaLimite || "")) errs.push(`${it.id}: fechaLimite inválida`);
-  if (it.tipo === "meet") return errs;
+  if (!tieneReto(it)) return errs;
   const temas = new Set((it.temas || []).map((t) => t.id));
   for (const t of it.temas || []) {
     for (const e of ["fortaleza", "en-progreso", "debilidad"] as EstadoTema[]) if (!t.retroalimentacion?.[e]) errs.push(`${it.id}/${t.id}: falta retroalimentacion.${e}`);

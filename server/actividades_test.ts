@@ -107,3 +107,20 @@ Deno.test({ name: "admin: resultados por actividad y temas a reforzar por alumno
   assert(diag.resultados.length >= 4);
   assert(l.body.resumen.Jesus.temasAReforzar.some((t: { titulo: string }) => t.titulo === "Presente simple"));
 }});
+
+Deno.test({ name: "clase del domingo: guion solo admin, reto con 2 intentos", ignore, fn: async () => {
+  clearCache();
+  const store = await MemoryStore.fromDir(DATA_DIR!);
+  const jesus = { isAdmin: false, alumno: "Jesus" }, admin = { isAdmin: true, alumno: null };
+  assertEquals((await call(store, "GET", "/meet-2026-10-04", jesus, undefined, "2026-10-03")).status, 403);
+  const g = await call(store, "GET", "/meet-2026-10-04", jesus, undefined, "2026-10-04");
+  assertEquals([g.status, g.body.preguntas.length, g.body.intentosMax, "guion" in g.body], [200, 10, 2, false]);
+  assert(g.body.teoria.length >= 5 && g.body.tips.length >= 4);
+  const ga = await call(store, "GET", "/meet-2026-10-04", admin, undefined, "2026-10-01");
+  assert(Array.isArray(ga.body.guion) && ga.body.guion.length === 6);
+  const p = await call(store, "POST", "/meet-2026-10-04", jesus, { intento: 1, respuestas: {} }, "2026-10-04");
+  assertEquals([p.body.guardado, p.body.restantes], [true, 1]);
+  const l = await call(store, "GET", "", jesus, undefined, "2026-10-04");
+  const m = l.body.items.find((i: { id: string }) => i.id === "meet-2026-10-04");
+  assertEquals([m.tieneReto, m.estado, m.intentosUsados], [true, "en-curso", 1]);
+}});
