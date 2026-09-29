@@ -138,6 +138,12 @@
   .rev { font-size: .8rem; padding: 8px 0; border-top: 1px solid var(--border); }
   .rev .bad { color: var(--overdue); } .rev .good { color: var(--green); font-weight: 700; }
   .rev .why { color: var(--text-muted); margin-top: 2px; }
+  table.teo { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  table.teo th, table.teo td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; }
+  table.teo th { background: var(--chip); color: var(--accent); }
+  .teo-list { margin: 6px 0 0; padding-left: 18px; font-size: .84rem; }
+  .teo-list li { margin: 3px 0; }
+  .q-text { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: .95rem; margin-top: 4px; }
   #app { display: none; }
 </style>
 </head>
@@ -161,7 +167,10 @@
   </div>
 
 <script>
-  const DATA_URL_BASE = 'https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria/ingles/data';
+  // Backend: Deno Deploy (sin Supabase). Para pruebas locales se puede usar ?api=http://localhost:8000
+  const DEFAULT_API = 'https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria';
+  const API_BASE = (new URLSearchParams(location.search).get('api') || DEFAULT_API).replace(/\/$/, '');
+  const DATA_URL_BASE = API_BASE + '/ingles/data';
   const STORAGE_KEY = 'ingles_email';
 
   const loginEl = document.getElementById('login');
@@ -309,102 +318,141 @@
     }
 
     const clases = rows.filter(r => r.source === 'clases_ingles');
-    if (!clases.length) {
+    if (!clases.length && !(state.act && state.act.items && state.act.items.length)) {
       contentEl.innerHTML = '<div class="empty">No hay clases registradas todavía.</div>';
       return;
     }
 
     if (!data.isAdmin) {
-      contentEl.innerHTML = renderExamCard(state.examenes) + renderBoard(clases.concat(examRowsAlumno(state.examenes)), false);
+      contentEl.innerHTML = renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
       return;
     }
 
-    // Admin: un bloque plegable por alumno (campo "Nombre" de Notion) con el mismo tablero dentro.
+    // Admin: un bloque plegable por alumno o alumna (campo "Nombre" de Notion) con su tablero dentro.
     const groups = new Map();
     clases.forEach(r => {
       const key = r.alumno || 'Sin nombre asignado';
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(r);
     });
-    const diag = (state.examenes && state.examenes.examenes && state.examenes.examenes[0]) || null;
-    const porAlumno = new Map(((diag && diag.resultados) || []).map(r => [r.alumno, r]));
+    const items = (state.act && state.act.items) || [];
+    const resumen = (state.act && state.act.resumen) || {};
+    const diag = items.find(i => i.id === 'diagnostico-a1');
     const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es'));
-    contentEl.innerHTML = renderAdminExams(diag) + names.map(name => {
+    contentEl.innerHTML = renderAdminWeek(state.act) + names.map(name => {
       const list = groups.get(name);
       const g = buildGroups(list);
       const ultima = lastGraded(list);
-      const res = porAlumno.get(name);
+      const resDiag = diag && (diag.resultados || []).find(r => r.alumno === name);
+      const temas = (resumen[name] && resumen[name].temasAReforzar) || [];
+      const suyos = items.map(it => ({ it, r: (it.resultados || []).find(r => r.alumno === name) })).filter(x => x.r);
       return '<details class="student">' +
         '<summary><span>👤 ' + escapeHtml(name) + '</span>' +
           '<span class="mini"><span>' + g.completed + '/' + g.total + '</span>' +
           '<span class="o">⏰ ' + g.overdue.length + '</span><span class="t">📌 ' + g.today.length + '</span>' +
-          '<span class="g" title="Última actividad calificada">⭐ ' + escapeHtml(ultima ? ultima.calificacion : '—') + '</span>' +
-          '<span title="Diagnóstico">📝 ' + (res ? res.porcentaje + '%' : 'pendiente') + '</span></span></summary>' +
+          '<span class="g" title="Última actividad calificada (Notion)">⭐ ' + escapeHtml(ultima ? ultima.calificacion : '—') + '</span>' +
+          '<span title="Diagnóstico">📝 ' + (resDiag && resDiag.mejor ? resDiag.mejor.porcentaje + '%' : 'pendiente') + '</span>' +
+          '<span class="o" title="Temas a reforzar">🎯 ' + temas.length + '</span></span></summary>' +
         '<div class="student-body">' +
-          (ultima ? '<div class="progress-text">⭐ Última actividad calificada: <b>' + escapeHtml(ultima.calificacion) + '</b> · ' + escapeHtml(ultima.name) + (ultima._c && ultima._c.hecho ? ' · ' + escapeHtml(formatFecha(ultima._c.hecho)) : '') + '</div>' : '') +
-          (res ? '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>📝 ' + escapeHtml(diag.titulo) + ' · ' + res.porcentaje + '%</span><span class="count">' + escapeHtml(res.nivelSugerido) + '</span></div></summary><div class="scroll">' + renderResultado(res, true) + '</div></details>' : '') +
-          renderBoard(list.concat(examRowAdmin(diag, res)), true) +
+          (temas.length ? '<div class="progress-text" style="margin:4px 0 2px">🎯 Temas a reforzar (para armar su clase)</div><div class="chips">' +
+            temas.map(t => '<span class="chip ' + t.estado + '" title="' + escapeHtml(t.fuente) + '">' + escapeHtml(t.titulo) + '</span>').join('') + '</div>' : '') +
+          (ultima ? '<div class="progress-text">⭐ Última actividad calificada en Notion: <b>' + escapeHtml(ultima.calificacion) + '</b> · ' + escapeHtml(ultima.name) + '</div>' : '') +
+          suyos.map(({ it, r }) => '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) +
+            ' · ' + (r.mejor ? r.mejor.porcentaje + '%' : '—') + '</span><span class="count">' + r.intentos.length + '/' + it.intentosMax + ' intento(s)</span></div></summary><div class="scroll">' +
+            (r.intentos.length > 1 ? '<div class="progress-text">Intentos: ' + r.intentos.map(x => x.calificacion.porcentaje + '%').join(' → ') + ' · cuenta el mejor</div>' : '') +
+            (r.mejor ? renderResultado(r.mejor, true) : '') + '</div></details>').join('') +
+          renderBoard(list.concat(itemRowsAdmin(items, name)), true) +
         '</div>' +
       '</details>';
     }).join('');
   }
 
-  // ---------- Exámenes ----------
-  const EXAMS_URL = DATA_URL_BASE.replace(/\/data$/, '/examenes');
-  const state = { email: null, data: null, examenes: null };
+  // ---------- Actividades y exámenes (servidor: /ingles/actividades) ----------
+  const ACT_URL = API_BASE + '/ingles/actividades';
+  const state = { email: null, data: null, act: null };
 
   function isAdminView() { return !!(state.data && state.data.isAdmin); }
+  function icono(tipo) { return ({ actividad: '📘', refuerzo: '🎯', examen: '📝', meet: '🎥' })[tipo] || '📘'; }
+  function tipoTexto(tipo) { return ({ actividad: 'Actividad', refuerzo: 'Refuerzo', examen: 'Examen', meet: 'Repaso por Meet' })[tipo] || 'Actividad'; }
 
-  // El examen como una actividad más del tablero (fecha = disponibleDesde).
-  function examRow(e, estado, resultado) {
+  // Un elemento (actividad, examen, refuerzo, Meet) como fila del tablero.
+  function itemRow(it, estado, mejor, ultimoEnvio, intentosUsados) {
+    const esMeet = it.tipo === 'meet';
     return {
-      _examen: e.id, _estado: estado, source: 'examen',
-      name: '📝 ' + e.titulo,
-      label: 'Examen · ' + e.total + ' preguntas',
-      dificultad: e.nivel,
-      fecha: e.fechaLimite || e.disponibleDesde,
-      completado: estado === 'resuelto',
-      calificacion: resultado ? resultado.porcentaje + '%' : null,
-      editadoEn: resultado ? resultado.enviadoEn : null,
+      _item: it.id, _tipo: it.tipo, _estado: estado, _meetUrl: it.meetUrl, source: 'item',
+      name: icono(it.tipo) + ' ' + it.titulo,
+      label: tipoTexto(it.tipo) + (esMeet ? (it.hora ? ' · ' + it.hora : '') : ' · ' + it.preguntas + ' ejercicios · ' + (intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)'),
+      dificultad: it.nivel,
+      fecha: it.fechaLimite,
+      completado: estado === 'completo' || (esMeet && todayStr() > it.fechaLimite),
+      calificacion: mejor ? mejor.porcentaje + '%' : null,
+      editadoEn: ultimoEnvio || (esMeet ? it.fechaLimite + 'T23:00:00' : null),
       userNames: [],
     };
   }
-  function examRowsAlumno(ex) {
-    return ((ex && ex.examenes) || []).map(e => examRow(e, e.estado, e.resultado));
+  function itemRowsAlumno(act) {
+    return ((act && act.items) || []).map(it => itemRow(it, it.estado, it.mejor, it.ultimoEnvio, it.intentosUsados));
   }
-  function examRowAdmin(diag, res) {
-    return diag ? [examRow(diag, res ? 'resuelto' : (diag.disponible ? 'disponible' : 'proximamente'), res)] : [];
+  function itemRowsAdmin(items, alumno) {
+    return items.map(it => {
+      const r = (it.resultados || []).find(x => x.alumno === alumno);
+      const usados = r ? r.intentos.length : 0;
+      const estado = it.tipo === 'meet' ? 'disponible' : (usados >= it.intentosMax ? 'completo' : (usados ? 'en-curso' : 'disponible'));
+      return itemRow(it, estado, r && r.mejor, r && r.intentos.length ? r.intentos[r.intentos.length - 1].enviadoEn : null, usados);
+    });
   }
 
-  // Última actividad completada con calificación (la de edición más reciente).
+  function accionItem(it, estado) {
+    if (it.tipo === 'meet') {
+      return it.meetUrl ? '<a class="btn" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">Unirme</a>' : '<span class="pill wait">Enlace por WhatsApp</span>';
+    }
+    if (estado === 'completo') return '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver resultado</button>';
+    if (estado === 'en-curso') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">Reintentar</button>';
+    if (estado === 'disponible') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">' + (it.tipo === 'examen' ? 'Resolver' : 'Empezar') + '</button>';
+    return '<span class="pill wait">Abre ' + escapeHtml(formatFecha(it.disponibleDesde)) + '</span>';
+  }
+
+  function rowAction(r) {
+    if (r._item) {
+      if (isAdminView()) return '';
+      const it = ((state.act && state.act.items) || []).find(x => x.id === r._item);
+      return it ? accionItem(it, it.estado) : '';
+    }
+    return r.url ? '<a class="link" href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '';
+  }
+
+  // Última actividad completada con calificación en Notion (la de edición más reciente).
   function lastGraded(rows) {
-    return rows.filter(r => r.completado && r.calificacion && !r._examen)
+    return rows.filter(r => r.completado && r.calificacion && !r._item)
       .sort((a, b) => String(b.editadoEn || '').localeCompare(String(a.editadoEn || '')))[0] || null;
   }
 
-  function renderExamCard(ex) {
-    const lista = (ex && ex.examenes) || [];
+  function semanaItems(act) {
+    if (!act || !act.semana) return [];
+    const ids = new Set(act.semana.ids);
+    return (act.items || []).filter(i => ids.has(i.id));
+  }
+
+  function renderWeekCard(act) {
+    const lista = semanaItems(act);
     if (!lista.length) return '';
-    return '<div class="exam-card"><h3>📝 Exámenes</h3>' + lista.map(e => {
-      let right = '', sub = e.total + ' preguntas · nivel ' + escapeHtml(e.nivel) + (e.fechaLimite ? ' · fecha límite ' + escapeHtml(formatFecha(e.fechaLimite)) : '');
-      if (e.estado === 'resuelto' && e.resultado) {
-        right = '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(e.id) + '">Ver resultado</button>';
-        sub = '<span class="pill ok">' + e.resultado.porcentaje + '% · ' + escapeHtml(e.resultado.nivelSugerido) + '</span>';
-      } else if (e.estado === 'disponible') {
-        right = '<button class="btn" data-action="abrir-examen" data-id="' + escapeHtml(e.id) + '">Resolver</button>';
-      } else {
-        right = '<span class="pill wait">Disponible el ' + escapeHtml(formatFecha(e.disponibleDesde)) + '</span>';
-      }
-      return '<div class="exam-item"><div><div class="t">' + escapeHtml(e.titulo) + '</div><div class="s">' + sub + '</div></div>' + right + '</div>';
+    return '<div class="exam-card"><h3>📚 Esta semana · ' + escapeHtml(act.semana.titulo) + '</h3>' + lista.map(it => {
+      let sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo);
+      if (it.tipo !== 'meet') sub += ' · ' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)';
+      if (it.mejor) sub += ' · <span class="pill ok">⭐ ' + it.mejor.porcentaje + '%</span>';
+      return '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + sub + '</div></div>' + accionItem(it, it.estado) + '</div>';
     }).join('') + '</div>';
   }
 
-  function renderAdminExams(diag) {
-    if (!diag) return '';
-    const n = (diag.resultados || []).length;
-    return '<div class="exam-card"><h3>📝 Exámenes</h3><div class="exam-item"><div><div class="t">' + escapeHtml(diag.titulo) + '</div>' +
-      '<div class="s">' + n + ' resuelto(s) · fecha límite ' + escapeHtml(formatFecha(diag.fechaLimite || diag.disponibleDesde)) + '</div></div>' +
-      '<button class="btn ghost" data-action="abrir-examen" data-id="' + escapeHtml(diag.id) + '">👁 Vista previa</button></div></div>';
+  function renderAdminWeek(act) {
+    const lista = semanaItems(act);
+    if (!lista.length) return '';
+    return '<div class="exam-card"><h3>📚 Esta semana · ' + escapeHtml(act.semana.titulo) + '</h3>' + lista.map(it => {
+      const n = (it.resultados || []).length;
+      const sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + (it.tipo === 'meet' ? (it.meetUrl ? ' · con enlace' : ' · sin enlace (meetUrl)') : ' · ' + n + ' con intentos');
+      const btn = it.tipo === 'meet' ? '' : '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Vista previa</button>';
+      return '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + sub + '</div></div>' + btn + '</div>';
+    }).join('') + '</div>';
   }
 
   function renderResultado(r, compacto) {
@@ -434,53 +482,82 @@
     return html;
   }
 
+  function renderTeoria(teoria) {
+    return (teoria || []).map(b => {
+      let h = '<div class="topic"><div class="h"><span>' + escapeHtml(b.titulo || '') + '</span></div>';
+      if (b.texto) h += '<div class="r" style="margin-top:6px;color:var(--text)">' + escapeHtml(b.texto) + '</div>';
+      if (b.tabla) {
+        h += '<div class="scroll" style="max-height:260px;padding:6px 0"><table class="teo"><thead><tr>' + b.tabla.columnas.map(c => '<th>' + escapeHtml(c) + '</th>').join('') + '</tr></thead><tbody>' +
+          b.tabla.filas.map(f => '<tr>' + f.map(c => '<td>' + escapeHtml(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+      }
+      if (b.puntos) h += '<ul class="teo-list">' + b.puntos.map(p => '<li>' + escapeHtml(p) + '</li>').join('') + '</ul>';
+      if (b.ejemplos) h += '<ul class="teo-list">' + b.ejemplos.map(e => '<li><b>' + escapeHtml(e.en) + '</b> — ' + escapeHtml(e.es) + '</li>').join('') + '</ul>';
+      return h + '</div>';
+    }).join('');
+  }
+
+  function renderTips(tips) {
+    if (!tips || !tips.length) return '';
+    return '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>💡 Tips extra</span><span class="count">' + tips.length + '</span></div></summary><div class="scroll"><ul class="teo-list">' +
+      tips.map(t => '<li>' + (t.tipo === 'video' ? '▶️ ' : '📓 ') + (t.url ? '<a class="link" href="' + escapeHtml(t.url) + '" target="_blank" rel="noopener">' + escapeHtml(t.texto) + '</a>' : escapeHtml(t.texto)) + '</li>').join('') +
+      '</ul></div></details>';
+  }
+
   async function fetchJson(url, opts) {
     const res = await fetch(url, Object.assign({ cache: 'no-store' }, opts || {}));
     const body = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, body };
   }
 
-  async function loadExamenes() {
+  async function loadActividades() {
     try {
-      const r = await fetchJson(EXAMS_URL + '?email=' + encodeURIComponent(state.email));
-      state.examenes = r.ok ? r.body : null;
-    } catch (e) { state.examenes = null; }
+      const r = await fetchJson(ACT_URL + '?email=' + encodeURIComponent(state.email));
+      state.act = r.ok ? r.body : null;
+    } catch (e) { state.act = null; }
   }
 
   function volverBtn() { return '<button class="btn ghost" data-action="volver">← Volver</button>'; }
 
-  async function openExam(id) {
-    contentEl.innerHTML = '<div class="loading">Cargando examen…</div>';
-    const r = await fetchJson(EXAMS_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email));
-    if (r.status === 409 && r.body.resultado) return showResult(r.body.resultado, false);
+  async function openItem(id) {
+    contentEl.innerHTML = '<div class="loading">Cargando…</div>';
+    const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email));
+    if (r.status === 409 && r.body.resultado) return showResult(r.body.resultado.mejor, { titulo: r.body.resultado.titulo });
     if (!r.ok) {
-      const msg = r.body.error === 'no_disponible' ? 'Este examen se abre el ' + formatFecha(r.body.disponibleDesde) + '.' : 'No se pudo abrir el examen (' + (r.body.error || r.status) + ').';
+      const msg = r.body.error === 'no_disponible' ? 'Se abre el ' + formatFecha(r.body.disponibleDesde) + '.' : 'No se pudo abrir (' + (r.body.error || r.status) + ').';
       contentEl.innerHTML = '<div class="exam-card"><div class="empty">' + escapeHtml(msg) + '</div>' + volverBtn() + '</div>';
       return;
     }
-    const ex = r.body;
-    const titulos = new Map(ex.secciones.map(s => [s.id, s.titulo]));
-    let lastSec = null, n = 0;
-    const qs = ex.preguntas.map(p => {
+    const it = r.body;
+    const titulos = new Map(it.temas.map(t => [t.id, t.titulo]));
+    let lastTema = null, n = 0;
+    const qs = it.preguntas.map(p => {
       n++;
-      const head = p.seccion !== lastSec ? '<div class="exam-sec">' + escapeHtml(titulos.get(p.seccion) || p.seccion) + '</div>' : '';
-      lastSec = p.seccion;
-      return head + '<div class="q" data-q="' + escapeHtml(p.id) + '"><div class="n">Pregunta ' + n + ' de ' + ex.total + '</div>' +
-        '<div class="e">' + escapeHtml(p.enunciado) + '</div>' +
-        p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"> ' + escapeHtml(o) + '</label>').join('') + '</div>';
+      const head = p.tema !== lastTema ? '<div class="exam-sec">' + escapeHtml(titulos.get(p.tema) || p.tema) + '</div>' : '';
+      lastTema = p.tema;
+      const cuerpo = p.tipo === 'escribir'
+        ? '<input class="q-text" type="text" name="' + escapeHtml(p.id) + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe tu respuesta">'
+        : p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"> ' + escapeHtml(o) + '</label>').join('');
+      return head + '<div class="q" data-q="' + escapeHtml(p.id) + '"><div class="n">Ejercicio ' + n + ' de ' + it.preguntas.length + '</div>' +
+        '<div class="e">' + escapeHtml(p.enunciado) + '</div>' + cuerpo + '</div>';
     }).join('');
+    const info = (it.vistaPrevia ? 'Vista previa (no se guarda)' : 'Intento ' + it.intento + ' de ' + it.intentosMax) +
+      (it.enfoque && it.enfoque.length ? ' · Enfocado en: ' + it.enfoque.join(', ') : '');
     contentEl.innerHTML =
-      '<div class="exam-card"><h3>📝 ' + escapeHtml(ex.titulo) + (ex.vistaPrevia ? ' · vista previa (no se guarda)' : '') + '</h3>' +
-      '<div class="s" style="font-size:.82rem">' + escapeHtml(ex.descripcion || '') + '</div></div>' +
-      '<form id="exam-form" data-id="' + escapeHtml(ex.id) + '" data-total="' + ex.total + '">' + qs +
-      '<div class="exam-bar">' + volverBtn() + '<span class="progress-text" id="exam-count" style="margin:0">0/' + ex.total + ' respondidas</span>' +
+      '<div class="exam-card"><h3>' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</h3>' +
+      '<div class="s" style="font-size:.82rem">' + escapeHtml(info) + '</div>' +
+      (it.descripcion ? '<div class="s" style="font-size:.8rem;margin-top:4px">' + escapeHtml(it.descripcion) + '</div>' : '') + '</div>' +
+      (it.teoria && it.teoria.length ? '<details class="section" open><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
+      renderTips(it.tips) +
+      '<form id="exam-form" data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + it.preguntas.length + '"><div class="exam-sec" style="font-size:.9rem">✏️ Ejercicios</div>' + qs +
+      '<div class="exam-bar">' + volverBtn() + '<span class="progress-text" id="exam-count" style="margin:0">0/' + it.preguntas.length + ' respondidas</span>' +
       '<button class="btn" type="submit" id="exam-send" disabled>Enviar</button></div></form>';
     window.scrollTo(0, 0);
   }
 
   function examAnswers(form) {
     const out = {};
-    new FormData(form).forEach((v, k) => { out[k] = Number(v); });
+    form.querySelectorAll('input[type=radio]:checked').forEach(i => { out[i.name] = Number(i.value); });
+    form.querySelectorAll('input.q-text').forEach(i => { if (i.value.trim()) out[i.name] = i.value; });
     return out;
   }
 
@@ -494,23 +571,32 @@
   }
 
   async function submitExam(form) {
-    if (!confirm('¿Enviar tus respuestas? Solo tienes un intento.')) return;
+    if (!confirm('¿Enviar tus respuestas?')) return;
     const btn = document.getElementById('exam-send');
     btn.disabled = true; btn.textContent = 'Enviando…';
-    const r = await fetchJson(EXAMS_URL + '/' + encodeURIComponent(form.dataset.id) + '?email=' + encodeURIComponent(state.email), {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ respuestas: examAnswers(form) }),
+    const id = form.dataset.id;
+    const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email), {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas: examAnswers(form) }),
     });
-    if (r.ok || (r.status === 409 && r.body.resultado)) {
-      await loadExamenes();
-      return showResult(r.body.resultado, !r.body.guardado && r.status !== 409);
+    if (r.ok) {
+      await loadActividades();
+      return showResult(r.body.calificacion, { id, intento: r.body.intento, intentosMax: r.body.intentosMax, restantes: r.body.restantes, mejor: r.body.mejor, vistaPrevia: !r.body.guardado });
     }
     btn.disabled = false; btn.textContent = 'Enviar';
     alert('No se pudo enviar (' + (r.body.error || r.status) + '). Intenta de nuevo.');
   }
 
-  function showResult(resultado, vistaPrevia) {
-    contentEl.innerHTML = '<div class="exam-card"><h3>📝 Tu resultado' + (vistaPrevia ? ' · vista previa (no se guardó)' : '') + '</h3></div>' +
-      renderResultado(resultado, false) + '<div class="exam-bar">' + volverBtn() + '<span></span></div>';
+  function showResult(calificacion, info) {
+    const i = info || {};
+    const it = ((state.act && state.act.items) || []).find(x => x.id === i.id);
+    let head = '📝 Tu resultado';
+    if (i.vistaPrevia) head += ' · vista previa (no se guardó)';
+    else if (i.intento) head += ' · intento ' + i.intento + ' de ' + i.intentosMax + (i.mejor ? ' · mejor: ' + i.mejor.porcentaje + '%' : '');
+    const reintento = i.restantes > 0 ? '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(i.id) + '">Reintentar (' + i.restantes + ' intento restante)</button>' : '';
+    contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' +
+      renderResultado(calificacion, false) + (it ? '' : '') +
+      '<div class="exam-bar">' + volverBtn() + reintento + '</div>';
     window.scrollTo(0, 0);
   }
 
@@ -518,14 +604,15 @@
     const b = e.target.closest('[data-action]');
     if (!b) return;
     const act = b.dataset.action;
-    if (act === 'abrir-examen') { e.preventDefault(); openExam(b.dataset.id); }
+    if (act === 'abrir-item') { e.preventDefault(); openItem(b.dataset.id); }
     if (act === 'ver-resultado') {
-      const ex = ((state.examenes && state.examenes.examenes) || []).find(x => x.id === b.dataset.id);
-      if (ex && ex.resultado) showResult(ex.resultado, false);
+      const it = ((state.act && state.act.items) || []).find(x => x.id === b.dataset.id);
+      if (it && it.mejor) showResult(it.mejor, { titulo: it.titulo + ' · mejor intento (' + it.intentosUsados + '/' + it.intentosMax + ')' });
     }
     if (act === 'volver') { e.preventDefault(); render(state.data); window.scrollTo(0, 0); }
   });
   contentEl.addEventListener('change', (e) => { const f = e.target.closest('#exam-form'); if (f) updateExamProgress(f); });
+  contentEl.addEventListener('input', (e) => { const f = e.target.closest('#exam-form'); if (f && e.target.classList.contains('q-text')) updateExamProgress(f); });
   contentEl.addEventListener('submit', (e) => { const f = e.target.closest('#exam-form'); if (f) { e.preventDefault(); submitExam(f); } });
 
   async function loadFor(email) {
@@ -534,7 +621,7 @@
     try {
       // Tablero y exámenes en paralelo para no sumar las dos esperas.
       state.email = email;
-      const examenesP = loadExamenes();
+      const actividadesP = loadActividades();
       const res = await fetch(DATA_URL_BASE + '?email=' + encodeURIComponent(email), { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
@@ -552,7 +639,7 @@
       loginEl.style.display = 'none';
       appEl.style.display = 'block';
       state.data = data;
-      await examenesP;
+      await actividadesP;
       render(data);
     } catch (e) {
       loginError.textContent = '⚠️ ' + e.message;
