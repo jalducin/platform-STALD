@@ -138,6 +138,9 @@
   .rev { font-size: .8rem; padding: 8px 0; border-top: 1px solid var(--border); }
   .rev .bad { color: var(--overdue); } .rev .good { color: var(--green); font-weight: 700; }
   .rev .why { color: var(--text-muted); margin-top: 2px; }
+  .q .antes { font-size: .8rem; color: var(--overdue); margin: -4px 0 6px; }
+  .q.fija { opacity: .85; } .q.fija label, .q.fija input { cursor: default; }
+  .aviso-corr { background: var(--chip); color: var(--accent); border-radius: 10px; padding: 10px 12px; font-size: .85rem; font-weight: 600; margin: 8px 0; }
   table.teo { width: 100%; border-collapse: collapse; font-size: .82rem; }
   table.teo th, table.teo td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; }
   table.teo th { background: var(--chip); color: var(--accent); }
@@ -449,7 +452,8 @@
     return items.map(it => {
       const r = (it.resultados || []).find(x => x.alumno === alumno);
       const usados = r ? r.intentos.length : 0;
-      const estado = it.tipo === 'meet' ? 'disponible' : (usados >= it.intentosMax ? 'completo' : (usados ? 'en-curso' : 'disponible'));
+      const perfecto = it.tipo !== 'examen' && r && r.intentos.length && r.intentos[r.intentos.length - 1].calificacion.porcentaje === 100;
+      const estado = it.tipo === 'meet' ? 'disponible' : (usados >= it.intentosMax || perfecto ? 'completo' : (usados ? 'en-curso' : 'disponible'));
       return itemRow(it, estado, r && r.mejor, r && r.intentos.length ? r.intentos[r.intentos.length - 1].enviadoEn : null, usados);
     });
   }
@@ -460,12 +464,12 @@
       if (!it.tieneReto) return enlace;
       let reto = '';
       if (estado === 'completo') reto = '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver reto</button>';
-      else if (estado === 'en-curso') reto = '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">Reintentar reto</button>';
+      else if (estado === 'en-curso') reto = '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">Corregir reto</button>';
       else if (estado === 'disponible') reto = '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">Reto en vivo</button>';
       return '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' + enlace + reto + '</span>';
     }
     if (estado === 'completo') return '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver resultado</button>';
-    if (estado === 'en-curso') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">Reintentar</button>';
+    if (estado === 'en-curso') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">' + (it.tipo === 'examen' ? 'Reintentar' : 'Corregir errores') + '</button>';
     if (estado === 'disponible') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">' + (it.tipo === 'examen' ? 'Resolver' : 'Empezar') + '</button>';
     return '<span class="pill wait">Abre ' + escapeHtml(formatFecha(it.disponibleDesde)) + '</span>';
   }
@@ -588,35 +592,53 @@
     }
     const it = r.body;
     const titulos = new Map(it.temas.map(t => [t.id, t.titulo]));
-    let lastTema = null, n = 0;
-    const qs = it.preguntas.map(p => {
-      n++;
-      const head = p.tema !== lastTema ? '<div class="exam-sec">' + escapeHtml(titulos.get(p.tema) || p.tema) + '</div>' : '';
-      lastTema = p.tema;
+    // Corrección (actividades): las correctas del intento anterior vienen fijas; solo se contestan las falladas.
+    const corr = it.correccion || null;
+    const fijas = corr ? corr.fijas : {};
+    const porCorregir = it.preguntas.filter(p => !(p.id in fijas));
+    const yaBien = it.preguntas.filter(p => p.id in fijas);
+    const pregunta = (p, n, total, fija) => {
+      const v = fija ? fijas[p.id] : undefined;
+      const dis = fija ? ' disabled' : '';
       const cuerpo = p.tipo === 'escribir'
-        ? '<input class="q-text" type="text" name="' + escapeHtml(p.id) + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe tu respuesta">'
-        : p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"> ' + escapeHtml(o) + '</label>').join('');
-      return head + '<div class="q" data-q="' + escapeHtml(p.id) + '"><div class="n">Ejercicio ' + n + ' de ' + it.preguntas.length + '</div>' +
-        '<div class="e">' + escapeHtml(p.enunciado) + '</div>' + cuerpo + '</div>';
-    }).join('');
-    const info = (it.vistaPrevia ? 'Vista previa (no se guarda)' : 'Intento ' + it.intento + ' de ' + it.intentosMax) +
+        ? '<input class="q-text" type="text" name="' + escapeHtml(p.id) + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe tu respuesta"' + (fija ? ' value="' + escapeHtml(v) + '"' : '') + dis + '>'
+        : p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"' + (fija && v === i ? ' checked' : '') + dis + '> ' + escapeHtml(o) + '</label>').join('');
+      const antes = corr && !fija ? '<div class="antes">Antes respondiste: ' + escapeHtml(corr.anteriores[p.id] || 'Sin responder') + ' ✗</div>' : '';
+      return '<div class="q' + (fija ? ' fija answered' : '') + '" data-q="' + escapeHtml(p.id) + '"><div class="n">' + (fija ? '✓ Ya la tenías bien' : 'Ejercicio ' + n + ' de ' + total) + '</div>' +
+        '<div class="e">' + escapeHtml(p.enunciado) + '</div>' + antes + cuerpo + '</div>';
+    };
+    const conTemas = (lista, fija) => {
+      let lastTema = null, n = 0;
+      return lista.map(p => {
+        n++;
+        const head = p.tema !== lastTema ? '<div class="exam-sec">' + escapeHtml(titulos.get(p.tema) || p.tema) + '</div>' : '';
+        lastTema = p.tema;
+        return head + pregunta(p, n, lista.length, fija);
+      }).join('');
+    };
+    const qs = corr
+      ? '<div class="aviso-corr">✏️ Corrección: tus ' + yaBien.length + ' respuestas correctas ya están guardadas. Corrige solo ' + (porCorregir.length === 1 ? 'la que fallaste' : 'las ' + porCorregir.length + ' que fallaste') + '.</div>' +
+        conTemas(porCorregir, false) +
+        (yaBien.length ? '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>✅ Ya las tenías bien</span><span class="count">' + yaBien.length + '</span></div></summary><div style="padding:8px">' + conTemas(yaBien, true) + '</div></details>' : '')
+      : conTemas(it.preguntas, false);
+    const info = (it.vistaPrevia ? 'Vista previa (no se guarda)' : (corr ? 'Corrección · intento ' : 'Intento ') + it.intento + ' de ' + it.intentosMax) +
       (it.enfoque && it.enfoque.length ? ' · Enfocado en: ' + it.enfoque.join(', ') : '');
     contentEl.innerHTML =
       '<div class="exam-card"><h3>' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</h3>' +
       '<div class="s" style="font-size:.82rem">' + escapeHtml(info) + '</div>' +
       (it.descripcion ? '<div class="s" style="font-size:.8rem;margin-top:4px">' + escapeHtml(it.descripcion) + '</div>' : '') + '</div>' +
-      (it.teoria && it.teoria.length ? '<details class="section" open><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
+      (it.teoria && it.teoria.length ? '<details class="section"' + (corr ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
       renderTips(it.tips) +
-      '<form id="exam-form" data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + it.preguntas.length + '"><div class="exam-sec" style="font-size:.9rem">✏️ Ejercicios</div>' + qs +
-      '<div class="exam-bar">' + volverBtn() + '<span class="progress-text" id="exam-count" style="margin:0">0/' + it.preguntas.length + ' respondidas</span>' +
+      '<form id="exam-form" data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + porCorregir.length + '"><div class="exam-sec" style="font-size:.9rem">✏️ ' + (corr ? 'Ejercicios por corregir' : 'Ejercicios') + '</div>' + qs +
+      '<div class="exam-bar">' + volverBtn() + '<span class="progress-text" id="exam-count" style="margin:0">0/' + porCorregir.length + ' respondidas</span>' +
       '<button class="btn" type="submit" id="exam-send" disabled>Enviar</button></div></form>';
     window.scrollTo(0, 0);
   }
 
   function examAnswers(form) {
     const out = {};
-    form.querySelectorAll('input[type=radio]:checked').forEach(i => { out[i.name] = Number(i.value); });
-    form.querySelectorAll('input.q-text').forEach(i => { if (i.value.trim()) out[i.name] = i.value; });
+    form.querySelectorAll('input[type=radio]:checked:not(:disabled)').forEach(i => { out[i.name] = Number(i.value); });
+    form.querySelectorAll('input.q-text:not(:disabled)').forEach(i => { if (i.value.trim()) out[i.name] = i.value; });
     return out;
   }
 
@@ -624,7 +646,7 @@
     const total = Number(form.dataset.total);
     const answers = examAnswers(form);
     const count = Object.keys(answers).length;
-    form.querySelectorAll('.q').forEach(q => q.classList.toggle('answered', q.dataset.q in answers));
+    form.querySelectorAll('.q:not(.fija)').forEach(q => q.classList.toggle('answered', q.dataset.q in answers));
     document.getElementById('exam-count').textContent = count + '/' + total + ' respondidas' + (count < total ? ' · faltan ' + (total - count) : '');
     document.getElementById('exam-send').disabled = count < total;
   }
@@ -652,7 +674,8 @@
     let head = '📝 Tu resultado';
     if (i.vistaPrevia) head += ' · vista previa (no se guardó)';
     else if (i.intento) head += ' · intento ' + i.intento + ' de ' + i.intentosMax + (i.mejor ? ' · mejor: ' + i.mejor.porcentaje + '%' : '');
-    const reintento = i.restantes > 0 ? '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(i.id) + '">Reintentar (' + i.restantes + ' intento restante)</button>' : '';
+    const corrige = it ? it.tipo !== 'examen' : true;
+    const reintento = i.restantes > 0 ? '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(i.id) + '">' + (corrige ? 'Corregir errores' : 'Reintentar') + ' (' + i.restantes + ' intento restante)</button>' : '';
     contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' +
       renderResultado(calificacion, false) + (it ? '' : '') +
       '<div class="exam-bar">' + volverBtn() + reintento + '</div>';

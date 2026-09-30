@@ -7,6 +7,7 @@ import {
   type Intento,
   type Item,
   maxIntentos,
+  correccionDe,
   paraAlumno,
   mxToday,
   normalizeItem,
@@ -162,7 +163,12 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     if (estado === "completo") return json({ error: "sin_intentos", resultado: doc!.data }, 409);
   }
 
-  const { preguntas, enfoque } = await preguntasPara(store, it, alumnoVista, n);
+  // Corrección: a partir del intento anterior (del alumno o alumna, o del que ve el admin en vista previa).
+  const docVista = quien.isAdmin ? (alumnoVista ? await leerResultado(store, it.id, slugAlumno(alumnoVista)) : null) : doc;
+  const correccion = n > 1 ? correccionDe(it, docVista?.data.intentos[n - 2]) : null;
+  const seleccion = await preguntasPara(store, it, alumnoVista, n);
+  const preguntas = correccion ? correccion.preguntas : seleccion.preguntas;
+  const enfoque = seleccion.enfoque;
 
   if (req.method === "GET") {
     const titulos = new Map((it.temas || []).map((t) => [t.id, t.titulo]));
@@ -173,6 +179,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
       temas: (it.temas || []).map((t) => ({ id: t.id, titulo: t.titulo })),
       enfoque: enfoque.map((t) => titulos.get(t) || t),
       intento: n, intentosUsados: usados, vistaPrevia: quien.isAdmin,
+      ...(correccion ? { correccion: { fijas: correccion.fijas, anteriores: correccion.anteriores } } : {}),
       preguntas: preguntas.map(publicQuestion),
     });
   }
@@ -181,7 +188,8 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     let body: { intento?: number; respuestas?: unknown } = {};
     try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
     if (!quien.isAdmin && body.intento !== n) return json({ error: "intento_invalido", esperado: n }, 409);
-    const respuestas = sanitizeRespuestas(preguntas, body.respuestas);
+    // Las correctas del intento anterior mandan sobre lo que envíe el cliente.
+    const respuestas = { ...sanitizeRespuestas(preguntas, body.respuestas), ...(correccion?.fijas || {}) };
     const calificacion = grade(it, preguntas, respuestas);
     if (quien.isAdmin) return json({ guardado: false, intento: n, intentosMax: maxIntentos(it), calificacion });
 
@@ -191,7 +199,8 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
       if ((actual?.data.intentos.length || 0) !== n - 1) return json({ error: "intento_invalido", esperado: (actual?.data.intentos.length || 0) + 1 }, 409);
       const nuevo = addIntento(actual?.data ?? null, it, quien.alumno!, intento);
       const ok = await store.put(rutaResultado(it.id, slug!), nuevo, actual?.sha ?? null, `${it.id}: intento ${n} de ${quien.alumno}`);
-      if (ok) return json({ guardado: true, intento: n, intentosMax: maxIntentos(it), restantes: maxIntentos(it) - n, calificacion, mejor: nuevo.mejor });
+      const restantes = estadoItem(it, hoy, nuevo) === "completo" ? 0 : maxIntentos(it) - n;
+      if (ok) return json({ guardado: true, intento: n, intentosMax: maxIntentos(it), restantes, calificacion, mejor: nuevo.mejor });
     }
     return json({ error: "conflicto_escritura" }, 503);
   }

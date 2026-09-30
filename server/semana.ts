@@ -39,7 +39,7 @@ export async function validarSemana(store: Store, lunes: string): Promise<Report
     if (esperado !== el.tipo) avisos.push(`${el.id}: ${el.tipo} el ${DIAS[diaSemana(el.fecha)]}; se esperaba ${esperado ?? "ningún elemento"}`);
     const banco = (it.banco || []).length, ppi = it.preguntasPorIntento || 0;
     if (ppi && it.tipo !== "examen" && (it.tipo !== "meet" || banco) && banco < ppi * maxIntentos(it)) {
-      avisos.push(`${el.id}: banco de ${banco} ejercicios, menor que ${ppi} × ${maxIntentos(it)} intentos (se repetirán ejercicios)`);
+      avisos.push(`${el.id}: banco de ${banco} ejercicios, menor que ${ppi} × ${maxIntentos(it)} (poca variedad entre alumnos y alumnas)`);
     }
     if ((it.tipo === "actividad" || it.tipo === "refuerzo") && (!(it.teoria || []).length || !(it.tips || []).length)) avisos.push(`${el.id}: sin teoría o sin tips`);
 

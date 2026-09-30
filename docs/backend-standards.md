@@ -27,8 +27,8 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 | Ruta | Método | Respuesta |
 |---|---|---|
 | `/ingles/actividades` | GET | Alumno: elementos de las semanas iniciadas (`id <= hoy`) y exámenes sueltos (los que no referencia ninguna semana, iniciada o no; así una semana subida por adelantado no se asoma), con `estado` (`proximamente`, `disponible`, `en-curso`, `completo`), `intentosUsados`, `mejor` y `ultimoEnvio`. Admin: `resultados` por elemento y `resumen[alumno].temasAReforzar` |
-| `/ingles/actividades/<id>` | GET | Con `prorrogas`, el alumno o alumna recibe su propia `fechaLimite` aquí, en la lista y en `fueraDeTiempo`; el admin ve la base. Teoría, tips, temas, `enfoque` (refuerzo) y los ejercicios del intento que toca, **sin respuestas**. 403 `no_disponible`, 409 `sin_intentos`. El admin puede usar `?alumno=` y `?intento=` |
-| `/ingles/actividades/<id>` | POST `{ intento, respuestas }` | Calificación inmediata, `mejor` y `restantes`. 409 `intento_invalido` / `sin_intentos`. El admin no guarda |
+| `/ingles/actividades/<id>` | GET | Con `prorrogas`, el alumno o alumna recibe su propia `fechaLimite` aquí, en la lista y en `fueraDeTiempo`; el admin ve la base. Teoría, tips, temas, `enfoque` (refuerzo) y los ejercicios del intento que toca, **sin respuestas**. 403 `no_disponible`, 409 `sin_intentos`. El admin puede usar `?alumno=` y `?intento=`. En el intento de corrección (no examen) agrega `correccion: { fijas, anteriores }`: `fijas` son sus respuestas correctas y `anteriores` el texto de lo que contestó mal, nunca la respuesta correcta |
+| `/ingles/actividades/<id>` | POST `{ intento, respuestas }` | Calificación inmediata, `mejor` y `restantes` (0 si una actividad llega a 100 %). En la corrección, las `fijas` mandan sobre lo que envíe el cliente. 409 `intento_invalido` / `sin_intentos`. El admin no guarda |
 | `/ingles/actividades/<id>/resultados/<alumno>` | DELETE | Solo admin: reinicia los intentos |
 
 **Pruebas:** `DATA_DIR=<copia del repo de datos> npx -y deno test --allow-env --allow-read` en `server/`
