@@ -31,6 +31,15 @@
 - **Regresiones:** partidas 15/15, juegos 29/29, últimas calificaciones 9/9, semana 16/16 y marcar 9/9.
 - Capturas revisadas: la sala de espera con el QR.
 
+## Producción (4.1)
+- **`/juegos/admin/resumen`:**
+  - admin → 200, semana 2026-09-28; jugadores reales: Sofy 3394 (5 partidas) y Profe 1944; 0 salas; sin
+    correos;
+  - alumna → 403 `solo_admin`.
+- **Vista de admin publicada (solo lectura):** la tarjeta "🎮 Juegos de la semana" muestra el ranking real;
+  0 envíos.
+- No se crearon datos de prueba en producción; no hubo nada que restaurar.
+
 ## Verificación de estado
 - Sin datos reales modificados. En el repo de datos solo cambió el README.
 - Las copias se borraron y el servidor local se detuvo.
