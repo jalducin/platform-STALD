@@ -35,6 +35,20 @@
 - **Limpieza:** se quitó un `rowAction` duplicado y muerto (del examen de Supabase), que anulaba la
   definición posterior.
 
+## Producción (4.1 y 4.2)
+- **Antes:** 8 filas de Inglés en Notion; solo la de Sofy sin completar. No existía `avance/`.
+- **Curl a `https://stald.jalducin.deno.net`:**
+  - Sofy sobre la fila de Marisol → 403 `sin_acceso`; Marisol sigue igual en Notion.
+  - Sin correo → 400. Correo desconocido → 403.
+  - Admin marca la fila de Sofy → 200, `registrado: true`; Notion `true` y Sofy la ve completada.
+  - Admin desmarca → 200; Notion `false`.
+- **Restauración:**
+  - La fila de Sofy quedó sin completar, igual que antes; las 8 filas coinciden con el estado previo.
+  - Se borró `avance/sofy.json` del repo de datos. Tenía solo las 2 entradas de la prueba, ambas
+    `por: admin`.
+- **E2E de solo lectura en Pages (Angel y Sofy, 0 envíos):** la actividad del 29 con 1 intento aparece en
+  "Realizadas · últimos 3 días", con ⭐ 75 % y "Corregir errores". Progreso: Angel 4/8, Sofy 2/7.
+
 ## Verificación de estado
 - Notion: sin cambios (la verificación de permiso reescribió el mismo valor).
 - Repo de datos: solo el README (`avance/`). Las pruebas usaron copias en memoria, que se borraron, y el
