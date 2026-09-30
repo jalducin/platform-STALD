@@ -142,6 +142,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - Partidas multijugador. Cada jugador escribe solo su archivo y no hay correos.
   - Las salas vencen a las 3 h y se pueden borrar sin afectar el ranking.
   - Al terminar, el archivo de cada jugador guarda `final`, y el del host, además, `podio`.
+  - En ¡Una!, `jugadas[]` `{ n, accion, carta, color, una, t }`, hasta 600. El mazo y el reparto salen de la
+    semilla.
   - En Lotería, `loteria` guarda la hora del primer grito. Las tablas y el orden de las cartas salen de
     la semilla.
 - `juegos/salas-semana/<lunes>.json`: `{ salas: [{ codigo, juego, host, creada }] }`, índice para el

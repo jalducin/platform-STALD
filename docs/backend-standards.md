@@ -57,6 +57,9 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
   - Juegos permitidos: los 9 de preguntas (incluye `en-preguntas`), Basta (es/en) y Lotería.
     `opciones.modo` va en Lotería (`linea` o `llena`), y `respuesta` con `{ loteria: true }` guarda la hora
     del primer grito.
+  - ¡Una! (`una`): `respuesta` con `{ jugada: { n, accion, carta?, color?, una? } }` se guarda con `t`
+    (hora del servidor). Si otro jugador ya tiene ese paso `n`, responde 409 `turno_tomado`. El servidor
+    no reproduce la partida: la reconstruye cada cliente con la semilla.
   - Al terminar, `respuesta` acepta `{ final }` de cada jugador y `{ podio }`, que solo guarda el del host.
   - Cada sala nueva se agrega al índice `juegos/salas-semana/<lunes>.json`.
 - **`GET /juegos/admin/resumen?semana=`** (solo admin, 403 para los demás):

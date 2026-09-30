@@ -46,7 +46,7 @@ Deno.test("salas: crear devuelve código y el host queda dentro", async () => {
 
 Deno.test("salas: juego no permitido y no registrado", async () => {
   const c = ctx();
-  assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "una" })).status, 400);
+  assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "en-memorama" })).status, 400);
   assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "no-existe" })).status, 400);
   assertEquals((await c.call("POST", "/sala", "nadie@example.com", { juego: "cultura" })).status, 403);
 });
@@ -165,4 +165,23 @@ Deno.test("salas: los jugadores llevan su avatar", async () => {
   const g = await c.call("GET", `/sala/${codigo}`, "marisol@example.com");
   const av = g.body.jugadores[0].avatar;
   assert(av && typeof av.emoji === "string" && av.color.startsWith("#"), JSON.stringify(av));
+});
+
+Deno.test("salas: ¡Una! en partida (jugadas con hora y turno tomado)", async () => {
+  const c = ctx();
+  const r = await c.call("POST", "/sala", "marisol@example.com", { juego: "una", bots: true });
+  assertEquals(r.status, 200);
+  const codigo = r.body.codigo;
+  await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com");
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(6000);
+  const j0 = await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { jugada: { n: 0, accion: "jugar", carta: 17, color: "r", una: false } });
+  assertEquals([j0.status, j0.body.jugadas.length, j0.body.jugadas[0].t, j0.body.jugadas[0].carta], [200, 1, c.ahora(), 17]);
+  const tomado = await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { jugada: { n: 0, accion: "robar" } });
+  assertEquals([tomado.status, tomado.body.error], [409, "turno_tomado"]);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { jugada: { n: 1, accion: "bailar" } })).status, 400);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { jugada: { n: 1, accion: "jugar", carta: 500 } })).status, 400);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { jugada: { n: 1, accion: "robar" } })).status, 200);
+  const g = await c.call("GET", `/sala/${codigo}`, "marisol@example.com");
+  assertEquals(g.body.jugadores.map((x: any) => (x.jugadas || []).map((j: any) => j.n)), [[0], [1]]);
 });
