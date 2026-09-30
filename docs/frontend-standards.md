@@ -11,7 +11,7 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
 - `index.html` es el **portal** (lo que Pages sirve en `/`):
   - pide el correo, consulta `/perfil` y muestra una tarjeta por espacio;
   - el tablero de Secundaria vive en `secundaria.html` desde el cambio `portal-acceso`.
-- Cada página de espacio lleva "← Inicio" al portal y acepta `?api=` para probar contra un servidor local.
+- Cada página de espacio lleva "← Inicio" al portal y "🎮 Juegos"; ambos conservan `?api=` para probar contra un servidor local.
 - **Excepción (`juegos.html`):**
   - El contenido de los juegos se carga de `juegos/datos/*.json` en el mismo sitio (vocabulario, trivia,
     etc.). Crece con el tiempo y se edita sin tocar el código.

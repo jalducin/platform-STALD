@@ -142,6 +142,7 @@
   table.inv th, table.inv td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--border); }
   .scroll-x { overflow-x: auto; }
   .kbd-hint { text-align: center; font-size: .72rem; color: var(--muted); margin-top: 8px; }
+  .sel { width: 100%; font: inherit; font-size: .95rem; padding: 11px 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
   /* Basta */
   .letra { font-size: 4rem; font-weight: 900; line-height: 1; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .basta-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; }
@@ -217,8 +218,8 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
   const fmt = n => Number(n || 0).toLocaleString('es-MX');
-  const barajar = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
-  const tomar = (a, n) => barajar(a).slice(0, n);
+  const barajar = (a, rnd = Math.random) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  const tomar = (a, n, rnd = Math.random) => barajar(a, rnd).slice(0, n);
   const sinAcentos = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
 
   async function api(ruta, opts) {
@@ -341,12 +342,13 @@
     state.tab = tab || state.tab || 'juegos';
     const admin = state.jugador && state.jugador.tipo === 'admin';
     const tabs = '<div class="tabs" role="tablist">' +
-      ['juegos:🎮 Juegos', 'ranking:🏆 Ranking'].concat(admin ? ['invitados:👥 Invitados'] : []).map(x => {
+      ['juegos:🎮 Juegos', 'partidas:👥 Partidas', 'ranking:🏆 Ranking'].concat(admin ? ['invitados:📋 Invitados'] : []).map(x => {
         const [id, t] = x.split(':');
         return '<button class="tab" role="tab" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + t + '</button>';
       }).join('') + '</div>';
     app.innerHTML = '<h1>🎮 Juegos</h1><p class="lead">Aprende jugando y suma puntos para el ranking de la semana.</p>' + tabs + '<div id="tab-body"></div>';
     if (state.tab === 'ranking') return pintarRanking();
+    if (state.tab === 'partidas') return pintarPartidas();
     if (state.tab === 'invitados') return pintarInvitados();
     document.getElementById('tab-body').innerHTML = CATEGORIAS.map(c => {
       const js = JUEGOS.filter(j => j.cat === c.id);
@@ -525,8 +527,8 @@
   }
 
   // Mezcla opciones y devuelve la pregunta con el índice correcto recalculado.
-  function conOpciones(base, correcta, distractores) {
-    const opciones = barajar([correcta, ...distractores]);
+  function conOpciones(base, correcta, distractores, rnd = Math.random) {
+    const opciones = barajar([correcta, ...distractores], rnd);
     return Object.assign(base, { opciones, correcta: opciones.indexOf(correcta) });
   }
 
@@ -733,29 +735,28 @@
   }
 
   // ---------- Mente ágil ----------
+  // Operación n (la dificultad sube con n). `aleatorio` permite semilla en partidas.
+  function genCalculo(n, aleatorio = Math.random) {
+    const rnd = (a, b) => a + Math.floor(aleatorio() * (b - a + 1));
+    const nivel = Math.min(4, Math.floor(n / 5));
+    const ops = nivel < 1 ? ['+', '−'] : nivel < 2 ? ['+', '−', '×'] : ['+', '−', '×', '÷'];
+    const op = ops[rnd(0, ops.length - 1)];
+    let a, b, r;
+    const max = [10, 20, 50, 100, 200][nivel];
+    if (op === '+') { a = rnd(1, max); b = rnd(1, max); r = a + b; }
+    if (op === '−') { a = rnd(2, max); b = rnd(1, a); r = a - b; }
+    if (op === '×') { a = rnd(2, nivel < 3 ? 10 : 15); b = rnd(2, 10); r = a * b; }
+    if (op === '÷') { b = rnd(2, 10); r = rnd(2, 12); a = b * r; }
+    const dis = new Set();
+    while (dis.size < 3) { const x = r + [1, -1, 2, -2, 10, -10, 5][rnd(0, 6)]; if (x !== r && x >= 0) dis.add(x); }
+    return conOpciones({ big: '🧮', q: a + ' ' + op + ' ' + b + ' = ?', explicacion: a + ' ' + op + ' ' + b + ' = ' + r }, String(r), [...dis].map(String), aleatorio);
+  }
   function jugarCalculo() {
-    const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-    quiz({
-      id: 'mente-calculo', modo: 'reloj', segundos: 60,
-      siguiente: n => {
-        const nivel = Math.min(4, Math.floor(n / 5));
-        const ops = nivel < 1 ? ['+', '−'] : nivel < 2 ? ['+', '−', '×'] : ['+', '−', '×', '÷'];
-        const op = ops[rnd(0, ops.length - 1)];
-        let a, b, r;
-        const max = [10, 20, 50, 100, 200][nivel];
-        if (op === '+') { a = rnd(1, max); b = rnd(1, max); r = a + b; }
-        if (op === '−') { a = rnd(2, max); b = rnd(1, a); r = a - b; }
-        if (op === '×') { a = rnd(2, nivel < 3 ? 10 : 15); b = rnd(2, 10); r = a * b; }
-        if (op === '÷') { b = rnd(2, 10); r = rnd(2, 12); a = b * r; }
-        const dis = new Set();
-        while (dis.size < 3) { const x = r + [1, -1, 2, -2, 10, -10, 5][rnd(0, 6)]; if (x !== r && x >= 0) dis.add(x); }
-        return conOpciones({ big: '🧮', q: a + ' ' + op + ' ' + b + ' = ?', explicacion: a + ' ' + op + ' ' + b + ' = ' + r }, String(r), [...dis].map(String));
-      },
-    });
+    quiz({ id: 'mente-calculo', modo: 'reloj', segundos: 60, siguiente: n => genCalculo(n) });
   }
 
-  function jugarSecuencias() {
-    const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  function genSecuencia(n, aleatorio = Math.random) {
+    const rnd = (a, b) => a + Math.floor(aleatorio() * (b - a + 1));
     const tipos = [
       () => { const a = rnd(1, 20), k = rnd(2, 9); return { s: [0, 1, 2, 3].map(i => a + k * i), r: a + 4 * k, regla: 'sumar ' + k }; },
       () => { const a = rnd(60, 99), k = rnd(2, 9); return { s: [0, 1, 2, 3].map(i => a - k * i), r: a - 4 * k, regla: 'restar ' + k }; },
@@ -764,16 +765,13 @@
       () => { let x = rnd(1, 4), y = rnd(1, 5); const s = [x, y]; while (s.length < 5) s.push(s[s.length - 1] + s[s.length - 2]); return { s: s.slice(0, 4), r: s[4], regla: 'sumar los dos anteriores' }; },
       () => { const a = rnd(1, 9), k = rnd(1, 4); return { s: [a, a + k, a + 3 * k, a + 6 * k], r: a + 10 * k, regla: 'sumar ' + k + ', ' + 2 * k + ', ' + 3 * k + '…' }; },
     ];
-    quiz({
-      id: 'mente-secuencias', modo: 'vidas', porPregunta: 20,
-      siguiente: n => {
-        if (n >= 30) return null;
-        const g = tipos[rnd(0, Math.min(tipos.length - 1, 1 + Math.floor(n / 3)))]();
-        const dis = new Set();
-        while (dis.size < 3) { const x = g.r + [1, -1, 2, -2, 3, 5, -5, 10][rnd(0, 7)]; if (x !== g.r) dis.add(x); }
-        return conOpciones({ big: '🔢', q: g.s.join(', ') + ', ?', sub: '¿Qué número sigue?', explicacion: 'Era ' + g.r + ' (' + g.regla + ')' }, String(g.r), [...dis].map(String));
-      },
-    });
+    const g = tipos[rnd(0, Math.min(tipos.length - 1, 1 + Math.floor(n / 3)))]();
+    const dis = new Set();
+    while (dis.size < 3) { const x = g.r + [1, -1, 2, -2, 3, 5, -5, 10][rnd(0, 7)]; if (x !== g.r) dis.add(x); }
+    return conOpciones({ big: '🔢', q: g.s.join(', ') + ', ?', sub: '¿Qué número sigue?', explicacion: 'Era ' + g.r + ' (' + g.regla + ')' }, String(g.r), [...dis].map(String), aleatorio);
+  }
+  function jugarSecuencias() {
+    quiz({ id: 'mente-secuencias', modo: 'vidas', porPregunta: 20, siguiente: n => n >= 30 ? null : genSecuencia(n) });
   }
 
   function jugarSimon() {
@@ -1180,9 +1178,319 @@
     siguiente();
   }
 
+  // ---------- Partidas multijugador (openspec: juegos-partidas) ----------
+  // Aleatorio con semilla: todos los dispositivos de una partida generan lo mismo.
+  function fnv(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
+
+  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en'];
+  const BOTS = [{ id: 'bot-ajolote', nombre: 'Bot Ajolote 🦎', acierto: 0.6 }, { id: 'bot-colibri', nombre: 'Bot Colibrí 🐦', acierto: 0.45 }];
+  const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
+  const P_BASTA = 60000, P_GRACIA = 3000;
+  const dur = ms => ms * TIEMPO;
+
+  // Diez preguntas iguales para todos a partir de la semilla.
+  async function preguntasPartida(juego, seed, opciones) {
+    const rnd = rngDe(seed, 'preguntas');
+    const d = juego.startsWith('en-') ? await datos('ingles') : juego.startsWith('es-') ? await datos('espanol') : juego === 'cultura' ? await datos('cultura') : null;
+    const lista = [];
+    if (juego === 'en-vocab') for (const w of tomar(d.vocabulario, P_N, rnd)) {
+      const dis = tomar(d.vocabulario.filter(x => x.en !== w.en && x.tema === w.tema), 2, rnd).concat(tomar(d.vocabulario.filter(x => x.tema !== w.tema), 3, rnd)).map(x => x.en).filter((v, k, a) => a.indexOf(v) === k).slice(0, 3);
+      lista.push(conOpciones({ big: w.emoji, q: w.es, sub: '¿Cómo se dice en inglés?' }, w.en, dis, rnd));
+    }
+    if (juego === 'en-frases') for (const f of tomar(d.verbos, P_N, rnd)) lista.push(conOpciones({ big: '🧩', q: f.frase, sub: f.es }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd));
+    if (juego === 'es-ortografia' || juego === 'es-acentos') for (const f of tomar(d[juego === 'es-ortografia' ? 'ortografia' : 'acentos'], P_N, rnd))
+      lista.push(conOpciones({ big: juego === 'es-ortografia' ? '✍️' : 'á', q: f.frase, sub: f.regla ? 'Regla: ' + f.regla : '' }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd));
+    if (juego === 'es-sinonimos') {
+      const pool = d.sinonimos.map(x => Object.assign({ tipo: 'sinónimo' }, x)).concat(d.antonimos.map(x => Object.assign({ tipo: 'antónimo' }, x)));
+      for (const f of tomar(pool, P_N, rnd)) lista.push(conOpciones({ big: f.tipo === 'sinónimo' ? '🟰' : '↔️', q: '«' + f.palabra + '»', sub: 'Elige el ' + f.tipo }, f.respuesta, f.distractores, rnd));
+    }
+    if (juego === 'cultura') {
+      const del = d.preguntas.filter(p => !opciones.cat || opciones.cat === 'todas' || p.cat === opciones.cat);
+      const orden = tomar(del.filter(p => p.nivel === 1), 4, rnd).concat(tomar(del.filter(p => p.nivel === 2), 4, rnd), tomar(del.filter(p => p.nivel === 3), 2, rnd));
+      for (const p of orden.concat(tomar(del.filter(x => !orden.includes(x)), P_N, rnd)).slice(0, P_N))
+        lista.push(conOpciones({ q: p.pregunta, sub: (d.categorias.find(c => c.id === p.cat) || {}).titulo, dato: p.dato }, p.opciones[p.correcta], p.opciones.filter((_, k) => k !== p.correcta), rnd));
+    }
+    if (juego === 'mente-calculo') for (let n = 0; n < P_N; n++) lista.push(genCalculo(n * 2, rnd));
+    if (juego === 'mente-secuencias') for (let n = 0; n < P_N; n++) lista.push(genSecuencia(n, rnd));
+    return lista;
+  }
+
+  // Respuesta de un bot a la pregunta q: al azar con su % de acierto y un tiempo de 2 a 13 s.
+  function botPregunta(seed, bot, q, pregunta) {
+    const r = rngDe(seed, bot.id + '|q' + q);
+    const correcta = r() < bot.acierto;
+    const ms = Math.round((2 + r() * 11) * 1000);
+    const malas = pregunta.opciones.map((_, k) => k).filter(k => k !== pregunta.correcta);
+    const opcion = correcta ? pregunta.correcta : malas[Math.floor(r() * malas.length)];
+    return { correcta, opcion, ms, puntos: correcta ? 100 + Math.round(100 * Math.max(0, 1 - ms / P_Q)) : 0 };
+  }
+
+  // Palabras de un bot en Basta: 75 % de las categorías con una palabra del diccionario al azar.
+  function botBasta(seed, bot, letra, d) {
+    const r = rngDe(seed, bot.id + '|basta');
+    const L = normBasta(letra);
+    return Object.fromEntries(d.categorias.map(c => {
+      const opciones = (d.palabras[c.id] || []).filter(w => normBasta(w).startsWith(L));
+      return [c.id, r() < 0.75 && opciones.length ? opciones[Math.floor(r() * opciones.length)] : ''];
+    }));
+  }
+
+  // Puntuación de Basta en sala: única/verificada 100, repetida 50; no verificada 25/10; inválida 0.
+  function puntuarBasta(d, letra, participantes) {
+    const L = normBasta(letra);
+    const dic = Object.fromEntries(d.categorias.map(c => [c.id, new Set((d.palabras[c.id] || []).map(normBasta))]));
+    const res = participantes.map(p => ({ nombre: p.nombre, id: p.id, total: 0, detalle: {} }));
+    for (const c of d.categorias) {
+      const norm = participantes.map(p => normBasta((p.palabras || {})[c.id] || ''));
+      norm.forEach((n, i) => {
+        let pts = 0, estado = '—';
+        const valida = n && n.startsWith(L) && n.length >= 2;
+        if (valida) {
+          const repetida = norm.filter(x => x === n).length > 1;
+          if (dic[c.id].has(n)) { pts = repetida ? 50 : 100; estado = repetida ? 'repetida' : 'única'; }
+          else if (n.length >= 3) { pts = repetida ? 10 : 25; estado = 'no verificada'; }
+          else estado = 'inválida';
+        } else if (n) estado = 'inválida';
+        res[i].total += pts;
+        res[i].detalle[c.id] = { palabra: (participantes[i].palabras || {})[c.id] || '', pts, estado };
+      });
+    }
+    return res.sort((a, b) => b.total - a.total);
+  }
+
+  const sala = { codigo: null, estado: null, offset: 0, poll: null, guardado: false };
+  const ahoraServidor = () => Date.now() + sala.offset;
+
+  async function traerSala() {
+    const r = await api('/juegos/sala/' + sala.codigo);
+    if (r.ok) { sala.estado = r.body; sala.offset = r.body.ahora - Date.now(); }
+    return r;
+  }
+
+  function pintarPartidas() {
+    const body = document.getElementById('tab-body');
+    const opcionesJuego = JUEGOS_PARTIDA.map(id => { const j = juegoPorId(id); return '<option value="' + id + '">' + j.emoji + ' ' + escapeHtml(j.t) + '</option>'; }).join('');
+    body.innerHTML = '<p class="muted" style="margin:10px 0">Juega con tus compañeros y compañeras al mismo tiempo. Crea una partida y comparte el código.</p>' +
+      '<div class="card" style="margin-bottom:12px"><h2 style="margin-top:0">➕ Crear partida</h2>' +
+      '<form id="f-crear"><label for="p-juego">Juego</label><select id="p-juego" class="sel">' + opcionesJuego + '</select>' +
+      '<div id="p-cat-wrap" hidden><label for="p-cat">Maratón</label><select id="p-cat" class="sel"><option value="todas">🌈 Todas mezcladas</option></select></div>' +
+      '<label class="check"><input id="p-bots" type="checkbox" checked><span>Incluir 2 bots (Bot Ajolote 🦎 y Bot Colibrí 🐦) que contestan al azar</span></label>' +
+      '<div class="row-btns"><button class="btn" type="submit">Crear partida</button></div></form></div>' +
+      '<div class="card"><h2 style="margin-top:0">🔑 Unirme con código</h2><form id="f-unirse" autocomplete="off"><label for="p-codigo">Código de 4 letras</label>' +
+      '<input id="p-codigo" type="text" maxlength="4" placeholder="KXQP" style="text-transform:uppercase;letter-spacing:.3em;font-weight:800;text-align:center">' +
+      '<div class="row-btns"><button class="btn" type="submit">Unirme</button></div></form><div id="p-msg"></div></div>';
+    datos('cultura').then(d => {
+      const sel = document.getElementById('p-cat'); if (!sel) return;
+      sel.innerHTML += d.categorias.map(c => '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.emoji + ' ' + c.titulo) + '</option>').join('');
+    }).catch(() => {});
+  }
+
+  async function entrarSala(codigo) {
+    limpiar();
+    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null });
+    app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
+    const r = await traerSala();
+    if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const j = juegoPorId(sala.estado.sala.juego);
+    const preparar = sala.estado.sala.juego.startsWith('basta') ? datos('basta') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+    sala.contenido = await preparar;
+    const tick = setInterval(() => { if (!document.hidden) traerSala().then(() => pintarSala()); }, 2500);
+    const reloj = setInterval(() => pintarSala(), 250);
+    limpiezas.push(() => clearInterval(tick), () => clearInterval(reloj));
+    app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + ' · partida</span>' +
+      '<span class="stat" id="p-codigo-chip">🔑 ' + escapeHtml(codigo) + '</span></div><div class="bar" id="m-bar" hidden><span style="width:100%"></span></div><div id="p-body"></div></div>';
+    sala.vista = null;
+    pintarSala();
+  }
+
+  function participantes() {
+    const e = sala.estado;
+    const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta }));
+    return e.sala.bots ? humanos.concat(BOTS.map(b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b }))) : humanos;
+  }
+
+  function pintarSala() {
+    const e = sala.estado; if (!e) return;
+    const body = document.getElementById('p-body'); if (!body) return;
+    const s = e.sala;
+    if (s.inicio === null) return pintarEspera(body);
+    if (s.juego.startsWith('basta')) return pintarBastaSala(body);
+    return pintarPreguntaSala(body);
+  }
+
+  function pintarEspera(body) {
+    const e = sala.estado;
+    const lista = participantes();
+    const html = '<div class="q-card"><div class="sub">Código de la partida</div><div class="letra" style="letter-spacing:.15em">' + escapeHtml(e.sala.codigo) + '</div>' +
+      '<div class="sub">Compártelo en el Meet o por WhatsApp · entran desde 🎮 Juegos → 👥 Partidas</div></div>' +
+      '<h2>👥 Jugadores (' + lista.length + ')</h2><ol class="rank">' + lista.map(x => '<li><span class="pos">' + (x.tipo === 'bot' ? '🤖' : '👤') + '</span><span class="n">' + escapeHtml(x.nombre) +
+        (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
+      '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
+    if (sala.vista !== 'espera:' + lista.length + ':' + e.soyHost) { body.innerHTML = html; sala.vista = 'espera:' + lista.length + ':' + e.soyHost; }
+  }
+
+  function totalesPreguntas(hasta) {
+    const e = sala.estado; const s = e.sala;
+    return participantes().map(p => {
+      let total = 0, ultimo = 0;
+      for (let q = 0; q <= hasta; q++) {
+        const r = p.bot ? botPregunta(s.seed, p.bot, q, sala.contenido[q]) : p.respuestas[q];
+        if (r) { total += r.puntos; if (q === hasta) ultimo = r.puntos; }
+      }
+      return { id: p.id, nombre: p.nombre, tipo: p.tipo, total, ultimo };
+    }).sort((a, b) => b.total - a.total);
+  }
+
+  function marcadorHtml(filas, yo, max = 6) {
+    return '<ol class="rank">' + filas.slice(0, max).map((f, i) => '<li class="' + (f.id === yo ? 'yo' : '') + '"><span class="pos">' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1) + '</span>' +
+      '<span class="n">' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' <small>🤖</small>' : '') + (f.ultimo ? ' <small>+' + f.ultimo + '</small>' : '') + '</span><span class="pts">⭐ ' + fmt(f.total) + '</span></li>').join('') + '</ol>';
+  }
+
+  function pintarPreguntaSala(body) {
+    const e = sala.estado; const s = e.sala;
+    const t = ahoraServidor() - s.inicio;
+    const ciclo = dur(P_Q + P_REV);
+    const bar = document.getElementById('m-bar');
+    if (t < 0) { bar.hidden = true; const k = 'cuenta:' + Math.ceil(-t / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate!</div><div class="letra">' + Math.ceil(-t / 1000) + '</div><div class="sub">' + participantes().length + ' jugadores</div></div>'; sala.vista = k; } return; }
+    const q = Math.floor(t / ciclo);
+    if (q >= P_N) return pintarFinalSala(body, totalesPreguntas(P_N - 1));
+    const enQ = t - q * ciclo;
+    const p = sala.contenido[q];
+    const mia = (e.jugadores.find(x => x.id === e.yo) || { respuestas: {} }).respuestas[q] || sala.mias && sala.mias[q];
+    if (enQ < dur(P_Q)) {
+      bar.hidden = false; bar.firstChild.style.width = Math.max(0, 100 - enQ / dur(P_Q) * 100) + '%';
+      const k = 'q:' + q + ':' + (mia ? 'r' : '');
+      if (sala.vista !== k) {
+        sala.vista = k;
+        body.innerHTML = '<div class="muted" style="text-align:center;margin-bottom:6px">Pregunta ' + (q + 1) + ' de ' + P_N + '</div><div class="q-card">' + (p.big ? '<div class="big">' + escapeHtml(p.big) + '</div>' : '') +
+          '<div class="q">' + escapeHtml(p.q) + '</div>' + (p.sub ? '<div class="sub">' + escapeHtml(p.sub) + '</div>' : '') + '</div>' +
+          (mia ? '<div class="feedback ok">✔ Respuesta enviada · esperando a los demás…</div>'
+            : '<div class="opts' + (p.opciones.some(o => String(o).length > 18) ? ' una-col' : '') + '">' + p.opciones.map((o, i) => '<button class="opt" data-pq="' + q + '" data-po="' + i + '"><span class="k">' + (i + 1) + '</span>' + escapeHtml(o) + '</button>').join('') + '</div>');
+        sala.inicioQ = s.inicio + q * ciclo;
+      }
+    } else {
+      bar.hidden = true;
+      const k = 'rev:' + q + ':' + e.jugadores.map(x => Object.keys(x.respuestas || {}).length).join(',');
+      if (sala.vista !== k) {
+        sala.vista = k;
+        body.innerHTML = '<div class="q-card"><div class="q">' + escapeHtml(p.q) + '</div><div class="sub">Respuesta correcta: <b>' + escapeHtml(p.opciones[p.correcta]) + '</b></div>' +
+          (mia ? '<div class="feedback ' + (mia.correcta ? 'ok">✔ ¡Bien! +' + mia.puntos : 'bad">✘ Esta vez no') + '</div>' : '<div class="feedback bad">⏰ No respondiste</div>') +
+          (p.dato ? '<div class="sub">💡 ' + escapeHtml(p.dato) + '</div>' : '') + '</div><h2>🏆 Marcador</h2>' + marcadorHtml(totalesPreguntas(q), e.yo);
+      }
+    }
+  }
+
+  async function responderSala(q, i) {
+    const s = sala.estado.sala; const p = sala.contenido[q];
+    if (sala.mias && sala.mias[q]) return;
+    const ms = Math.max(0, ahoraServidor() - (s.inicio + q * dur(P_Q + P_REV)));
+    if (ms > dur(P_Q)) return;
+    const correcta = i === p.correcta;
+    const puntos = correcta ? 100 + Math.round(100 * Math.max(0, 1 - ms / dur(P_Q))) : 0;
+    sala.mias = sala.mias || {}; sala.mias[q] = { correcta, puntos, ms };
+    correcta ? sonidoOk() : sonidoMal();
+    sala.vista = null; pintarSala();
+    await post('/juegos/sala/' + sala.codigo + '/respuesta', { q, correcta, puntos, ms: Math.round(ms / TIEMPO) });
+  }
+
+  // ---- Basta en sala ----
+  function letraSala() { const d = sala.contenido[sala.estado.sala.juego === 'basta-en' ? 'en' : 'es']; return d.letras[Math.floor(rngDe(sala.estado.sala.seed, 'letra')() * d.letras.length)]; }
+
+  function cierreBasta() {
+    const e = sala.estado; const s = e.sala;
+    const gritos = e.jugadores.map(x => x.basta).filter(Boolean);
+    const fin = s.inicio + dur(P_BASTA);
+    return gritos.length ? Math.min(fin, Math.min(...gritos) + dur(P_GRACIA)) : fin;
+  }
+
+  function pintarBastaSala(body) {
+    const e = sala.estado; const s = e.sala;
+    const idioma = s.juego === 'basta-en' ? 'en' : 'es';
+    const d = sala.contenido[idioma];
+    const letra = letraSala();
+    const ahora = ahoraServidor();
+    const bar = document.getElementById('m-bar');
+    if (ahora < s.inicio) { bar.hidden = true; const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate!</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
+    const cierre = cierreBasta();
+    const gritador = e.jugadores.filter(x => x.basta).sort((a, b) => a.basta - b.basta)[0];
+    if (ahora < cierre) {
+      bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cierre - ahora) / dur(P_BASTA) * 100) + '%';
+      if (sala.vista !== 'basta') {
+        sala.vista = 'basta';
+        body.innerHTML = '<div class="q-card"><div class="sub">' + (idioma === 'en' ? 'Letter' : 'Letra') + '</div><div class="letra">' + escapeHtml(letra) + '</div><div class="sub" id="pb-aviso">Todos tienen la misma letra</div></div>' +
+          '<form id="pb-form" autocomplete="off" class="basta-grid">' + d.categorias.map(c => '<label for="pb-' + c.id + '">' + escapeHtml(c.emoji + ' ' + c.titulo) + '</label><input id="pb-' + c.id + '" data-pbcat="' + c.id + '" type="text" maxlength="40" autocapitalize="off" spellcheck="false" placeholder="' + escapeHtml(letra) + '…">').join('') +
+          '<div class="row-btns" style="grid-column:1/-1"><button class="btn" type="submit" id="pb-basta" disabled>✋ ¡Basta!</button></div></form>';
+      }
+      if (gritador) { const a = document.getElementById('pb-aviso'); if (a) { a.textContent = '✋ ¡' + gritador.nombre + ' gritó BASTA! Cierra en ' + Math.max(0, Math.ceil((cierre - ahora) / 1000 / TIEMPO)) + ' s'; a.style.color = 'var(--bad)'; } }
+      return;
+    }
+    // Cerrado: enviar lo mío una sola vez y mostrar resultados cuando estén todos (o tras 6 s).
+    if (!sala.enviado) {
+      sala.enviado = true;
+      const palabras = Object.fromEntries(d.categorias.map(c => [c.id, ((document.getElementById('pb-' + c.id) || {}).value || '').trim()]));
+      sala.misPalabras = palabras;
+      post('/juegos/sala/' + sala.codigo + '/respuesta', { palabras }).then(() => traerSala());
+    }
+    const listos = e.jugadores.every(x => x.palabras) || ahora > cierre + 6000;
+    if (!listos) { if (sala.vista !== 'esperando') { sala.vista = 'esperando'; bar.hidden = true; body.innerHTML = '<div class="q-card"><div class="big">✋</div><div class="q">¡Basta!</div><div class="sub">Juntando las palabras de todos…</div></div>'; } return; }
+    const parts = participantes().map(p => p.bot ? { id: p.id, nombre: p.nombre, palabras: botBasta(s.seed, p.bot, letra, d) } : { id: p.id, nombre: p.nombre, palabras: p.id === e.yo ? (sala.misPalabras || p.palabras) : p.palabras });
+    const res = puntuarBasta(d, letra, parts);
+    pintarFinalSala(body, res.map(r => ({ id: r.id, nombre: r.nombre, tipo: r.id.startsWith('bot-') ? 'bot' : '', total: r.total, ultimo: 0, detalle: r.detalle })), { d, letra });
+  }
+
+  function pintarFinalSala(body, todas, basta) {
+    if (sala.vista === 'final') return;
+    sala.vista = 'final';
+    const filas = todas.map(f => Object.assign({}, f, { ultimo: 0 })); // en el podio no se muestra el +puntos de la última pregunta
+    document.getElementById('m-bar').hidden = true;
+    const e = sala.estado; const juego = e.sala.juego;
+    const mio = filas.find(f => f.id === e.yo);
+    const detalle = basta && mio ? '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
+      basta.d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>' : '';
+    body.innerHTML = '<div class="card result"><div style="font-size:2.4rem">🏆</div><h1>¡Fin de la partida!</h1>' +
+      (mio ? '<div class="score">' + fmt(mio.total) + '</div><div class="muted">tus puntos · lugar ' + (filas.indexOf(mio) + 1) + ' de ' + filas.length + '</div>' : '') +
+      '<div id="p-guardado" class="muted" style="margin-top:8px"></div></div><h2>🥇 Podio</h2>' + marcadorHtml(filas, e.yo, 30) + detalle +
+      '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn" data-tab="partidas">👥 Otra partida</button></div>';
+    if (mio && mio.total > 0) confeti();
+    if (mio && !sala.guardado) {
+      sala.guardado = true;
+      const n = basta ? basta.d.categorias.length : P_N;
+      const aciertos = basta ? Object.values(mio.detalle).filter(x => x.pts > 0).length : Object.values((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {}).filter(x => x.correcta).length;
+      post('/juegos/partida', { juego, puntos: mio.total, aciertos, total: n, segundos: 0 }).then(r => {
+        const g = document.getElementById('p-guardado');
+        if (r.ok) { state.total = r.body.total; state.pos = r.body.pos; state.mejores[juego] = r.body.mejor; pintarChip(); if (g) g.textContent = '✔ Guardado en tu ranking de la semana (#' + r.body.pos + ')'; }
+        else if (g) g.textContent = 'No se guardó en el ranking (' + (r.body.error || r.status) + ')';
+      });
+    }
+  }
+
+  async function crearPartida() {
+    const juego = document.getElementById('p-juego').value;
+    const opciones = juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : {};
+    const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
+    if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    entrarSala(r.body.codigo);
+  }
+
+  async function unirsePartida() {
+    const codigo = document.getElementById('p-codigo').value.trim().toUpperCase();
+    if (!/^[A-Z]{4}$/.test(codigo)) { document.getElementById('p-msg').innerHTML = '<div class="alert">El código tiene 4 letras.</div>'; return; }
+    const r = await post('/juegos/sala/' + codigo + '/unirse', {});
+    if (!r.ok) {
+      const txt = { sala_no_existe: 'No existe una partida con ese código.', ya_empezo: 'Esa partida ya empezó.', sala_llena: 'La partida está llena.', sala_vencida: 'La partida ya venció.' }[r.body.error] || ('Error ' + (r.body.error || r.status));
+      document.getElementById('p-msg').innerHTML = '<div class="alert">' + escapeHtml(txt) + '</div>'; return;
+    }
+    entrarSala(codigo);
+  }
+
   // ---------- Eventos ----------
   app.addEventListener('click', e => {
-    const t = e.target.closest('[data-tab]'); if (t) return pantallaHub(t.dataset.tab);
+    const t = e.target.closest('[data-tab]'); if (t) { limpiar(); return pantallaHub(t.dataset.tab); }
+    const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
+    const pa = e.target.closest('[data-p]');
+    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(() => traerSala()).then(() => { sala.vista = null; pintarSala(); }); }
     const g = e.target.closest('[data-juego]');
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
     const a = e.target.closest('[data-a]'); if (!a) return;
@@ -1191,7 +1499,20 @@
     if (a.dataset.a === 'csv') descargarCsv();
     if (a.dataset.a === 'otro-correo') { SESSION_KEYS.forEach(k => localStorage.removeItem(k)); pantallaLogin(); }
   });
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; });
+  app.addEventListener('input', e => {
+    if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
+  });
   app.addEventListener('submit', async e => {
+    if (e.target.id === 'f-crear') { e.preventDefault(); return crearPartida(); }
+    if (e.target.id === 'f-unirse') { e.preventDefault(); return unirsePartida(); }
+    if (e.target.id === 'pb-form') {
+      e.preventDefault();
+      const d = sala.contenido[sala.estado.sala.juego === 'basta-en' ? 'en' : 'es'];
+      const palabras = Object.fromEntries(d.categorias.map(c => [c.id, document.getElementById('pb-' + c.id).value.trim()]));
+      document.getElementById('pb-basta').disabled = true;
+      return post('/juegos/sala/' + sala.codigo + '/respuesta', { palabras, basta: true }).then(() => traerSala());
+    }
     if (e.target.id === 'f-login') {
       e.preventDefault();
       const email = document.getElementById('correo').value.trim().toLowerCase();

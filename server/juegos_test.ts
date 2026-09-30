@@ -1,7 +1,7 @@
 // Plataforma de juegos (openspec: juegos-plataforma), con almacén en memoria y sin red.
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { CATALOGO, handleJuegos, lunesDe, resolverJugador } from "./juegos.ts";
+import { CATALOGO, clearCacheJuegos, handleJuegos, lunesDe, resolverJugador } from "./juegos.ts";
 import { MemoryStore } from "./store.ts";
 
 const ingles = [{ alumno: "Marisol", userEmails: ["marisol@example.com"], userNames: ["Marisol"] }, { alumno: "Angel", userEmails: ["angel@example.com"], userNames: ["Sisifo"] }];
@@ -10,6 +10,7 @@ const ADMIN = "admin@example.com";
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s });
 
 function ctx(hoy = "2026-09-30") {
+  clearCacheJuegos();
   const store = new MemoryStore();
   const deps = { store, admin: ADMIN, filasIngles: () => Promise.resolve(ingles), filasSecundaria: () => Promise.resolve(secundaria), hoy: () => hoy, ahora: () => `${hoy}T12:00:00.000Z` };
   const call = async (method: string, sub: string, email: string, body?: unknown, query = "") => {
@@ -146,4 +147,15 @@ Deno.test("juegos: clásicos (Basta, ¡Una!, Lotería) con sus topes", async () 
     const r = await call("POST", "/partida", "marisol@example.com", partida(id, 5000));
     assertEquals([r.status, r.body.puntos], [200, max], id);
   }
+});
+
+Deno.test("juegos: la identidad se reutiliza 60 s (no recarga Notion en cada sondeo)", async () => {
+  const { deps } = ctx();
+  let cargas = 0;
+  const d = { ...deps, filasIngles: () => { cargas++; return Promise.resolve(ingles); } };
+  for (let i = 0; i < 5; i++) await handleJuegos(new Request("http://x/juegos/yo?email=marisol@example.com"), "/yo", "marisol@example.com", d, json);
+  assertEquals(cargas, 1);
+  await handleJuegos(new Request("http://x/juegos/invitados?email=admin@example.com"), "/invitados", "admin@example.com", d, json);
+  await handleJuegos(new Request("http://x/juegos/invitados?email=admin@example.com"), "/invitados", "admin@example.com", d, json);
+  assertEquals(cargas, 3, "la lista de invitados siempre es fresca");
 });
