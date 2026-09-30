@@ -134,6 +134,13 @@
   .chip.fortaleza { background: var(--green-bg); color: var(--green); }
   .chip.en-progreso { background: var(--today-bg); color: var(--today); }
   .chip.debilidad { background: var(--overdue-bg); color: var(--overdue); }
+  .chip.neutra { background: var(--chip); color: var(--accent); }
+  .ultimas-tabla { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .ultimas-tabla td { padding: 6px 4px; border-top: 1px solid var(--border); vertical-align: middle; }
+  .ultimas-tabla td:first-child { font-weight: 700; white-space: nowrap; width: 1%; padding-right: 10px; }
+  .ultimas-tabla .chips { margin: 0; }
+  .ultimas-lista { font-size: .8rem; margin: 4px 0 10px; }
+  .ultimas-lista div { padding: 3px 0; }
   .topic { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
   .topic .h { display: flex; justify-content: space-between; font-weight: 700; font-size: .86rem; }
   .topic .bar { height: 6px; background: var(--border); border-radius: 99px; margin: 6px 0; overflow: hidden; }
@@ -412,7 +419,7 @@
     const resumen = (state.act && state.act.resumen) || {};
     const diag = items.find(i => i.id === 'diagnostico-a1');
     const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es'));
-    contentEl.innerHTML = renderAdminWeek(state.act) + names.map(name => {
+    contentEl.innerHTML = renderUltimasAdmin(names, groups, items) + renderAdminWeek(state.act) + names.map(name => {
       const list = groups.get(name);
       const g = buildGroups(list);
       const ultima = lastGraded(list);
@@ -427,6 +434,11 @@
           '<span title="Diagnóstico">📝 ' + (resDiag && resDiag.mejor ? resDiag.mejor.porcentaje + '%' : 'pendiente') + '</span>' +
           '<span class="o" title="Temas a reforzar">🎯 ' + temas.length + '</span></span></summary>' +
         '<div class="student-body">' +
+          (() => {
+            const u = ultimasCalificaciones(name, list, items);
+            return u.length ? '<div class="ultimas-lista"><div class="progress-text" style="margin:4px 0 2px">🗓️ Últimas 5 calificaciones</div>' +
+              u.map(x => '<div>• ' + x.icono + ' ' + escapeHtml(x.titulo) + ' · <span class="chip ' + claseNota(x.pct) + '">' + escapeHtml(x.valor) + '</span> · ' + escapeHtml(fechaCorta(x.fecha)) + '</div>').join('') + '</div>' : '';
+          })() +
           (temas.length ? '<div class="progress-text" style="margin:4px 0 2px">🎯 Temas a reforzar (para armar su clase)</div><div class="chips">' +
             temas.map(t => '<span class="chip ' + t.estado + '" title="' + escapeHtml(t.fuente) + '">' + escapeHtml(t.titulo) + '</span>').join('') + '</div>' : '') +
           (ultima ? '<div class="progress-text">⭐ Última actividad calificada en Notion: <b>' + escapeHtml(ultima.calificacion) + '</b> · ' + escapeHtml(ultima.name) + '</div>' : '') +
@@ -530,6 +542,32 @@
   }
 
   // Última actividad completada con calificación en Notion (la de edición más reciente).
+  // Últimas calificaciones de un alumno o alumna: actividades/exámenes en línea (mejor, fecha del último envío)
+  // y filas de Notion con "Calificación" (fecha de edición). De la más reciente a la más antigua.
+  function ultimasCalificaciones(name, filas, items, n = 5) {
+    const enLinea = items.map(it => ({ it, r: (it.resultados || []).find(r => r.alumno === name) }))
+      .filter(x => x.r && x.r.mejor && x.r.intentos.length)
+      .map(({ it, r }) => ({ icono: icono(it.tipo), titulo: it.titulo, valor: r.mejor.porcentaje + '%', pct: r.mejor.porcentaje, fecha: r.intentos[r.intentos.length - 1].enviadoEn }));
+    const notion = filas.filter(r => r.calificacion && !r._item).map(r => {
+      const num = Number(String(r.calificacion).replace(',', '.'));
+      return { icono: '📓', titulo: r.name, valor: String(r.calificacion), pct: Number.isFinite(num) ? (num <= 10 ? num * 10 : num) : null, fecha: r.editadoEn || r.fecha || '' };
+    });
+    return enLinea.concat(notion).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, n);
+  }
+  const claseNota = pct => pct === null ? 'neutra' : pct >= 80 ? 'fortaleza' : pct >= 60 ? 'en-progreso' : 'debilidad';
+  const fechaCorta = f => f ? new Date(f.length === 10 ? f + 'T12:00:00' : f).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : '';
+
+  function renderUltimasAdmin(names, groups, items) {
+    return '<details class="section" id="ultimas" open><summary><div class="section-head"><span><span class="chevron">▶</span>📊 Últimas calificaciones</span><span class="count">' + names.length + '</span></div></summary>' +
+      '<div style="padding:4px 12px 10px"><div class="progress-text" style="margin:4px 0">Las 5 más recientes de cada alumno o alumna · en línea (mejor intento) y Notion</div>' +
+      '<table class="ultimas-tabla"><tbody>' + names.map(name => {
+        const u = ultimasCalificaciones(name, groups.get(name), items);
+        return '<tr data-alumno="' + escapeHtml(name) + '"><td>' + escapeHtml(name) + '</td><td>' + (u.length
+          ? '<div class="chips">' + u.map(x => '<span class="chip ' + claseNota(x.pct) + '" data-fecha="' + escapeHtml(x.fecha) + '" title="' + escapeHtml(x.titulo + ' · ' + fechaCorta(x.fecha)) + '">' + escapeHtml(x.valor) + '</span>').join('') + '</div>'
+          : '<span class="progress-text">—</span>') + '</td></tr>';
+      }).join('') + '</tbody></table></div></details>';
+  }
+
   function lastGraded(rows) {
     return rows.filter(r => r.completado && r.calificacion && !r._item)
       .sort((a, b) => String(b.editadoEn || '').localeCompare(String(a.editadoEn || '')))[0] || null;
