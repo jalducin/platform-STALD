@@ -8,7 +8,7 @@ type Json = (body: unknown, status?: number) => Response;
 
 // Juegos que se pueden jugar en partida (los de preguntas y Basta).
 export const JUEGOS_PARTIDA = new Set([
-  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria",
+  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria", "una",
 ]);
 const LETRAS_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const MAX_JUGADORES = 30;
@@ -37,6 +37,7 @@ interface EnSala {
   palabras?: Record<string, string>;
   basta?: number;
   loteria?: number; // hora del servidor del primer "¡Lotería!"
+  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; t: number }[]; // ¡Una!
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
 }
@@ -167,7 +168,22 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (!dentro) return json({ error: "no_en_sala" }, 403);
     if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
     let cambiar: (e: EnSala) => EnSala;
-    if (body.loteria === true) {
+    if (body.jugada !== undefined) {
+      // ¡Una!: cada jugada con su paso n; nadie más puede tener ese paso.
+      const j = (body.jugada && typeof body.jugada === "object") ? body.jugada as Record<string, unknown> : {};
+      const n = Number(j.n);
+      const accion = String(j.accion || "");
+      const carta = j.carta === undefined ? undefined : Number(j.carta);
+      const color = j.color === undefined ? undefined : String(j.color);
+      if (!Number.isInteger(n) || n < 0 || n > 2000 || !["jugar", "robar", "pasar"].includes(accion) ||
+        (carta !== undefined && (!Number.isInteger(carta) || carta < 0 || carta > 107)) ||
+        (color !== undefined && !["r", "y", "g", "b"].includes(color)) || (j.una !== undefined && typeof j.una !== "boolean")) {
+        return json({ error: "jugada_invalida" }, 400);
+      }
+      if (jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409);
+      const nueva = { n, accion, ...(carta !== undefined ? { carta } : {}), ...(color ? { color } : {}), ...(j.una !== undefined ? { una: j.una as boolean } : {}), t: ahora };
+      cambiar = (e) => (e.jugadas || []).some((y) => y.n === n) ? e : { ...e, jugadas: [...(e.jugadas || []), nueva].slice(-600) };
+    } else if (body.loteria === true) {
       cambiar = (e) => e.loteria ? e : { ...e, loteria: ahora };
     } else if (body.final !== undefined || body.podio !== undefined) {
       // Cierre: total final de cada jugador y, del host, el podio completo (con bots).
@@ -190,7 +206,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     }
     const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
     if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
-    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, loteria: nuevo.loteria });
+    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, loteria: nuevo.loteria, jugadas: nuevo.jugadas });
   }
 
   if (!accion && req.method === "GET") {

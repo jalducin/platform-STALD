@@ -221,6 +221,7 @@
   // Enlace de partida: juegos.html?sala=KXQP entra (o registra al invitado) y se une solo.
   const SALA_URL = (new URLSearchParams(location.search).get('sala') || '').trim().toUpperCase();
   let salaPendiente = /^[A-Z]{4}$/.test(SALA_URL) ? SALA_URL : null;
+  let abrirAvatar = new URLSearchParams(location.search).get('avatar') === '1';
 
   const app = document.getElementById('app');
   const chip = document.getElementById('chip');
@@ -300,7 +301,7 @@
     { id: 'mente-sopa', cat: 'mente', emoji: '🔎', t: 'Sopa de letras', d: 'Encuentra las palabras en inglés.', jugar: () => jugarSopa() },
     { id: 'basta-es', cat: 'clasicos', emoji: '✋', t: 'Basta', d: 'Nombre, animal, fruta, país… ¡con la letra que salga!', jugar: () => jugarBasta('es') },
     { id: 'basta-en', cat: 'clasicos', emoji: '🗽', t: 'Basta en inglés', d: 'Name, animal, food… in English!', jugar: () => jugarBasta('en') },
-    { id: 'una', cat: 'clasicos', emoji: '🃏', t: '¡Una!', d: 'Cartas de colores contra bots. ¡Grita «¡Una!»!', jugar: () => elegirUna() },
+    { id: 'una', cat: 'clasicos', emoji: '🃏', t: '¡Una!', d: 'Cartas de colores. Con una carta, ¡presiona el botón UNA!', jugar: () => elegirUna() },
     { id: 'loteria', cat: 'clasicos', emoji: '🎴', t: 'Lotería', d: 'Lotería mexicana bilingüe con gritón.', jugar: () => elegirLoteria() },
   ];
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
@@ -359,6 +360,7 @@
       if (r.status === 403 && r.body.error === 'no_registrado') return pantallaInvitado();
       if (!r.ok) throw new Error(r.body.error || ('HTTP ' + r.status));
       if (salaPendiente) { const c = salaPendiente; salaPendiente = null; return unirseCodigo(c); }
+      if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
       pantallaHub();
     } catch (e) {
       app.innerHTML = '<div class="card"><div class="alert">⚠️ No pude conectarme (' + escapeHtml(e.message) + ').</div><div class="row-btns"><button class="btn" data-a="reintentar">Reintentar</button></div></div>';
@@ -981,8 +983,8 @@
   // ---------- Clásicos: ¡Una! (cartas de colores) ----------
   const UNA_COLOR = { r: '#ef4444', y: '#eab308', g: '#22c55e', b: '#3b82f6' };
   const UNA_TXT = {
-    es: { color: { r: 'Rojo', y: 'Amarillo', g: 'Verde', b: 'Azul' }, skip: 'Salta', rev: 'Reversa', '+2': 'Más dos', wild: 'Comodín', '+4': 'Más cuatro', tu: 'Tu turno', robar: 'Robar', pasar: 'Pasar', una: '¡Una!' },
-    en: { color: { r: 'Red', y: 'Yellow', g: 'Green', b: 'Blue' }, skip: 'Skip', rev: 'Reverse', '+2': 'Draw two', wild: 'Wild', '+4': 'Wild draw four', tu: 'Your turn', robar: 'Draw', pasar: 'Pass', una: 'Una!' },
+    es: { color: { r: 'Rojo', y: 'Amarillo', g: 'Verde', b: 'Azul' }, skip: 'Salta', rev: 'Reversa', '+2': 'Más dos', wild: 'Comodín', '+4': 'Más cuatro', tu: 'Tu turno', robar: 'Robar', pasar: 'Pasar', una: 'UNA' },
+    en: { color: { r: 'Red', y: 'Yellow', g: 'Green', b: 'Blue' }, skip: 'Skip', rev: 'Reverse', '+2': 'Draw two', wild: 'Wild', '+4': 'Wild draw four', tu: 'Your turn', robar: 'Draw', pasar: 'Pass', una: 'UNA' },
   };
   const NUM_EN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
   const NUM_ES = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
@@ -1000,7 +1002,7 @@
 
   function elegirUna() {
     const m = marco('una');
-    m.body.innerHTML = '<div class="q-card"><div class="big">🃏</div><div class="q">¡Una!</div><div class="sub">Iguala el color o el número. Cuando te quede una carta, ¡grita «¡Una!»!</div></div>' +
+    m.body.innerHTML = '<div class="q-card"><div class="big">🃏</div><div class="q">¡Una!</div><div class="sub">Iguala el color o el número. Cuando te quede una carta, ¡presiona el botón UNA!</div></div>' +
       '<label>Rivales</label><div class="opts" style="grid-template-columns:repeat(3,1fr)">' + [1, 2, 3].map(n => '<button class="opt" data-una-bots="' + n + '"' + (n === 2 ? ' aria-pressed="true"' : '') + '>' + n + ' bot' + (n > 1 ? 's' : '') + '</button>').join('') + '</div>' +
       '<label>Idioma</label><div class="opts"><button class="opt" data-una-lang="es" aria-pressed="true">🇲🇽 Español</button><button class="opt" data-una-lang="en">🇺🇸 English</button></div>' +
       '<div class="row-btns"><button class="btn" data-una-go>Repartir cartas</button></div>';
@@ -1089,7 +1091,7 @@
       const c = castiga ? accion[0] : (numeros[0] || opciones.find(x => x.c) || opciones[0]);
       mano.splice(mano.indexOf(c), 1);
       if (!c.c) { const cuenta = { r: 0, y: 0, g: 0, b: 0 }; mano.forEach(x => { if (x.c) cuenta[x.c]++; }); color = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0][0]; }
-      msg = nombres[j] + ': ' + nombreCarta(c) + (mano.length === 1 ? ' · ¡' + T.una.replace(/[¡!]/g, '') + '!' : '');
+      msg = nombres[j] + ': ' + nombreCarta(c) + (mano.length === 1 ? ' · ' + T.una : '');
       aplicar(j, c);
     }
 
@@ -1105,7 +1107,7 @@
         dibujar();
         const t = setTimeout(() => {
           esperandoUna = false; pila.pop();
-          if (!dijoUna) { robar(0, 2); msg = lang === 'en' ? '⚠️ You forgot to say Una! +2 cards' : '⚠️ ¡Olvidaste decir «¡Una!»! Robas 2'; sonidoMal(); }
+          if (!dijoUna) { robar(0, 2); msg = lang === 'en' ? '⚠️ You forgot to press UNA! +2 cards' : '⚠️ ¡Olvidaste presionar UNA! Robas 2'; sonidoMal(); }
           aplicar(0, c);
         }, 3000 * TIEMPO);
         limpiezas.push(() => clearTimeout(t));
@@ -1241,7 +1243,7 @@
   function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
-  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-preguntas', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en', 'loteria'];
+  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-preguntas', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en', 'loteria', 'una'];
   const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
   const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
   const P_BASTA = 60000, P_GRACIA = 3000;
@@ -1348,12 +1350,12 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null });
+    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaDecl: false, unaElegir: null, unaEnviando: false, unaAnunciada: null, finAciertos: undefined, finTotal: undefined });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     const j = juegoPorId(sala.estado.sala.juego);
-    const preparar = sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+    const preparar = sala.estado.sala.juego === 'una' ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
     sala.contenido = await preparar;
     const tick = setInterval(() => { if (!document.hidden) traerSala().then(() => pintarSala()); }, 2500);
     const reloj = setInterval(() => pintarSala(), 250);
@@ -1377,6 +1379,7 @@
     if (s.inicio === null) return pintarEspera(body);
     if (s.juego.startsWith('basta')) return pintarBastaSala(body);
     if (s.juego === 'loteria') return pintarLoteriaSala(body);
+    if (s.juego === 'una') return pintarUnaSala(body);
     return pintarPreguntaSala(body);
   }
 
@@ -1521,8 +1524,8 @@
       sala.guardado = true;
       // Registro de la partida para el admin: total final de cada quien y, del anfitrión, el podio con bots.
       post('/juegos/sala/' + sala.codigo + '/respuesta', Object.assign({ final: mio.total }, e.soyHost ? { podio: filas.map(f => Object.assign({ nombre: f.nombre, total: f.total }, f.tipo === 'bot' ? { bot: true } : {})) } : {}));
-      const n = basta ? basta.d.categorias.length : juego === 'loteria' ? 16 : P_N;
-      const aciertos = juego === 'loteria' ? (sala.aciertosLoteria || 0) : basta ? Object.values(mio.detalle).filter(x => x.pts > 0).length : Object.values((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {}).filter(x => x.correcta).length;
+      const n = sala.finTotal !== undefined ? sala.finTotal : basta ? basta.d.categorias.length : juego === 'loteria' ? 16 : P_N;
+      const aciertos = sala.finAciertos !== undefined ? sala.finAciertos : juego === 'loteria' ? (sala.aciertosLoteria || 0) : basta ? Object.values(mio.detalle).filter(x => x.pts > 0).length : Object.values((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {}).filter(x => x.correcta).length;
       post('/juegos/partida', { juego, puntos: mio.total, aciertos, total: n, segundos: 0 }).then(r => {
         const g = document.getElementById('p-guardado');
         if (r.ok) { state.total = r.body.total; state.pos = r.body.pos; state.mejores[juego] = r.body.mejor; pintarChip(); if (g) g.textContent = '✔ Guardado en tu ranking de la semana (#' + r.body.pos + ')'; }
@@ -1620,6 +1623,193 @@
     if (!cumple(lot.marcas, lot.modo)) { sonidoMal(); $m.className = 'feedback bad'; $m.textContent = 'Aún no tienes lotería 😉 ' + (lot.modo === 'llena' ? 'Necesitas la tabla llena.' : 'Necesitas una línea completa.'); return; }
     sonidoOk(); $m.className = 'feedback ok'; $m.textContent = '📣 ¡LOTERÍA! Revisando…';
     post('/juegos/sala/' + sala.codigo + '/respuesta', { loteria: true }).then(() => traerSala());
+  }
+
+  // ---- ¡Una! en sala (openspec: una-en-partida) ----
+  // Estado reconstruido reproduciendo las jugadas sobre el mazo de la semilla: igual en todos los dispositivos.
+  const U_BOT_MS = 1500, U_TURNO_MS = 30000;
+  const UNA_CARTAS = (() => {
+    const m = []; let id = 0;
+    for (const c of ['r', 'y', 'g', 'b']) {
+      m.push({ id: id++, c, v: '0' });
+      for (let k = 0; k < 2; k++) { for (let n = 1; n <= 9; n++) m.push({ id: id++, c, v: String(n) }); m.push({ id: id++, c, v: 'skip' }, { id: id++, c, v: 'rev' }, { id: id++, c, v: '+2' }); }
+    }
+    for (let k = 0; k < 4; k++) m.push({ id: id++, c: null, v: 'wild' }, { id: id++, c: null, v: '+4' });
+    return m;
+  })();
+  const colorMas = ids => { const q = { r: 0, y: 0, g: 0, b: 0 }; ids.forEach(id => { const c = UNA_CARTAS[id].c; if (c) q[c]++; }); return Object.entries(q).sort((a, b) => b[1] - a[1])[0][0]; };
+
+  function estadoUna() {
+    const e = sala.estado, s = e.sala;
+    const orden = participantes();
+    const jugs = new Map();
+    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+    const mazo = barajar(UNA_CARTAS.map(c => c.id), rngDe(s.seed, 'una-mazo'));
+    const manos = orden.map(() => []);
+    for (let k = 0; k < 7; k++) for (let j = 0; j < orden.length; j++) manos[j].push(mazo.pop());
+    let pila = [mazo.pop()];
+    while (UNA_CARTAS[pila[0]].v === '+4') { mazo.unshift(pila[0]); pila = [mazo.pop()]; }
+    const st = { orden, manos, mazo, pila, color: UNA_CARTAS[pila[0]].c || 'r', dir: 1, turno: 0, paso: 0, T0: s.inicio, pendiente: null, fin: null, jugadas: orden.map(() => 0), ultima: null, castigos: [] };
+    const top = () => UNA_CARTAS[st.pila[st.pila.length - 1]];
+    const valida = id => { const c = UNA_CARTAS[id]; return !c.c || c.c === st.color || c.v === top().v; };
+    const sig = (d, pasos = 1) => ((d + st.dir * pasos) % orden.length + orden.length) % orden.length;
+    const robar = (j, n) => {
+      for (let k = 0; k < n; k++) {
+        if (!st.mazo.length) { const t = st.pila.pop(); st.mazo = barajar(st.pila, rngDe(s.seed, 'rebaraja' + st.paso)); st.pila = [t]; }
+        if (st.mazo.length) st.manos[j].push(st.mazo.pop());
+      }
+    };
+    const aplicar = (j, mv, t) => {
+      st.paso++; st.T0 = t;
+      if (mv.accion === 'jugar') {
+        const c = UNA_CARTAS[mv.carta];
+        st.manos[j].splice(st.manos[j].indexOf(mv.carta), 1); st.pila.push(mv.carta);
+        st.color = c.c || (['r', 'y', 'g', 'b'].includes(mv.color) ? mv.color : 'r');
+        st.pendiente = null; st.jugadas[j]++;
+        st.ultima = { j, accion: 'jugar', carta: mv.carta, color: st.color, paso: st.paso };
+        if (!st.manos[j].length) { st.fin = { ganador: j, t }; return; }
+        if (st.manos[j].length === 1 && !mv.una) { robar(j, 2); st.ultima.castigo = true; st.castigos.push(j); }
+        let pasos = 1;
+        if (c.v === 'skip') pasos = 2;
+        if (c.v === 'rev') { if (orden.length === 2) pasos = 2; else st.dir *= -1; }
+        if (c.v === '+2') { robar(sig(j), 2); pasos = 2; }
+        if (c.v === '+4') { robar(sig(j), 4); pasos = 2; }
+        st.turno = sig(j, pasos);
+      } else if (mv.accion === 'robar') {
+        robar(j, 1);
+        const n = st.manos[j][st.manos[j].length - 1];
+        st.ultima = { j, accion: 'robar', auto: !!mv.auto, paso: st.paso };
+        if (!mv.auto && n !== undefined && valida(n)) st.pendiente = n; else st.turno = sig(j);
+      } else {
+        st.ultima = { j, accion: 'pasar', auto: !!mv.auto, paso: st.paso };
+        st.pendiente = null; st.turno = sig(j);
+      }
+    };
+    const esValida = (j, mv) => {
+      if (mv.accion === 'jugar') return st.manos[j].includes(mv.carta) && valida(mv.carta) && (st.pendiente === null || st.pendiente === mv.carta);
+      if (mv.accion === 'robar') return st.pendiente === null;
+      if (mv.accion === 'pasar') return st.pendiente !== null;
+      return false;
+    };
+    const bot = j => {
+      const mano = st.manos[j];
+      if (st.pendiente !== null) return { accion: 'jugar', carta: st.pendiente, color: colorMas(mano.filter(x => x !== st.pendiente)), una: true };
+      const ops = mano.filter(valida);
+      if (!ops.length) return { accion: 'robar' };
+      const r = rngDe(s.seed, 'bot' + st.paso);
+      const sigN = st.manos[sig(j)].length;
+      const accion = ops.filter(id => ['skip', '+2', '+4', 'rev'].includes(UNA_CARTAS[id].v));
+      const nums = ops.filter(id => UNA_CARTAS[id].c && /^\d$/.test(UNA_CARTAS[id].v));
+      const c = sigN <= 2 && accion.length && r() < 0.4 ? accion[0] : (nums.length ? nums[0] : (ops.find(id => UNA_CARTAS[id].c) ?? ops[0]));
+      return { accion: 'jugar', carta: c, color: colorMas(mano.filter(x => x !== c)), una: true };
+    };
+    const ahora = ahoraServidor();
+    for (let guard = 0; guard < 4000 && !st.fin; guard++) {
+      const j = st.turno, p = orden[j];
+      if (p.bot) {
+        const t = st.T0 + dur(U_BOT_MS); if (ahora < t) break;
+        aplicar(j, bot(j), t);
+      } else {
+        const mv = jugs.get(st.paso); const limite = st.T0 + dur(U_TURNO_MS);
+        if (mv && mv.jugador === p.id && mv.t <= limite && esValida(j, mv)) aplicar(j, mv, mv.t);
+        else if (ahora >= limite) aplicar(j, st.pendiente !== null ? { accion: 'pasar', auto: true } : { accion: 'robar', auto: true }, limite);
+        else break;
+      }
+    }
+    st.valida = valida; st.top = top;
+    return st;
+  }
+
+  function unaNombre(c, lang) {
+    const T = UNA_TXT[lang];
+    if (c.v === 'wild' || c.v === '+4') return T[c.v];
+    const num = /^\d$/.test(c.v) ? (lang === 'en' ? NUM_EN : NUM_ES)[Number(c.v)] : T[c.v];
+    return lang === 'en' ? T.color[c.c] + ' ' + num : num + ' ' + T.color[c.c].toLowerCase();
+  }
+  const unaCartaHtml = (c, extra) => '<span class="una-card' + (extra || '') + '" style="--c:' + (c.c ? UNA_COLOR[c.c] : '#1e1b2e') + '">' + (c.c ? '' : '<span class="una-wild"></span>') + '<b>' + escapeHtml(unaSimbolo(c.v)) + '</b></span>';
+
+  function pintarUnaSala(body) {
+    const e = sala.estado, s = e.sala;
+    const lang = sala.unaLang || 'es'; const T = UNA_TXT[lang];
+    const bar = document.getElementById('m-bar');
+    const ahora = ahoraServidor();
+    if (ahora < s.inicio) { bar.hidden = true; const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate! Se reparten 7 cartas</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
+    const st = estadoUna();
+    if (st.fin) {
+      bar.hidden = true;
+      const restantes = st.manos.reduce((a, h, j) => a + (j === st.fin.ganador ? 0 : h.length), 0);
+      const filas = st.orden.map((p, j) => ({ id: p.id, nombre: p.nombre + (j === st.fin.ganador ? ' 🏆' : ''), tipo: p.tipo, avatar: p.avatar,
+        total: j === st.fin.ganador ? Math.min(1000, 400 + restantes * 10) : st.jugadas[j] * 5, ultimo: 0 })).sort((a, b) => b.total - a.total);
+      const yo = st.orden.findIndex(p => p.id === e.yo);
+      sala.finAciertos = yo >= 0 ? st.jugadas[yo] : 0; sala.finTotal = yo >= 0 ? st.jugadas[yo] + st.manos[yo].length : 0;
+      return pintarFinalSala(body, filas, null, '🃏 ¡Ganó ' + st.orden[st.fin.ganador].nombre + '!');
+    }
+    const yo = st.orden.findIndex(p => p.id === e.yo);
+    const miTurno = st.turno === yo && !sala.unaEnviando;
+    const limite = st.T0 + dur(st.orden[st.turno].bot ? U_BOT_MS : U_TURNO_MS);
+    bar.hidden = false; bar.firstChild.style.width = Math.max(0, Math.min(100, (limite - ahora) / dur(st.orden[st.turno].bot ? U_BOT_MS : U_TURNO_MS) * 100)) + '%';
+    // Anunciar la última jugada (voz) una sola vez
+    if (st.ultima && st.ultima.paso !== sala.unaAnunciada) {
+      sala.unaAnunciada = st.ultima.paso;
+      if (st.ultima.accion === 'jugar') hablar(unaNombre(UNA_CARTAS[st.ultima.carta], lang), lang === 'en' ? 'en-US' : 'es-MX', 1);
+    }
+    const clave = 'una:' + st.paso + ':' + (sala.unaElegir ?? '') + ':' + (sala.unaDecl ? 1 : 0) + ':' + (sala.unaEnviando ? 1 : 0) + ':' + lang;
+    if (sala.vista === clave) return;
+    sala.vista = clave;
+    const u = st.ultima;
+    const ult = !u ? (lang === 'en' ? 'The game begins!' : '¡Empieza la partida!') :
+      escapeHtml(st.orden[u.j].nombre) + ': ' + (u.accion === 'jugar' ? escapeHtml(unaNombre(UNA_CARTAS[u.carta], lang)) + (u.castigo ? ' · ⚠️ ' + (lang === 'en' ? 'forgot to press UNA +2' : 'no presionó UNA +2') : '') :
+        u.accion === 'robar' ? (lang === 'en' ? 'draws' : 'roba') + (u.auto ? ' ⏰' : '') : (lang === 'en' ? 'passes' : 'pasa') + (u.auto ? ' ⏰' : ''));
+    const mano = yo >= 0 ? st.manos[yo] : [];
+    const jugable = id => miTurno && st.valida(id) && (st.pendiente === null || st.pendiente === id);
+    body.innerHTML =
+      '<div class="una-bots">' + st.orden.map((p, j) => j === yo ? '' : '<div class="una-bot' + (st.turno === j ? ' activo' : '') + '"><span>' + avatarHtml(p.avatar, 20) + ' ' + escapeHtml(p.nombre) + '</span><span>🂠 × ' + st.manos[j].length +
+        (st.manos[j].length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
+      '<div class="una-mesa"><div>' + unaCartaHtml(st.top(), ' grande') + '<div class="muted" style="text-align:center">' + escapeHtml(T.color[st.color]) + ' <span class="una-dot" style="background:' + UNA_COLOR[st.color] + '"></span></div></div>' +
+      '<button class="una-mazo" data-usala="robar"' + (miTurno && st.pendiente === null ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + st.mazo.length + ')</small></button></div>' +
+      '<div class="feedback" id="una-msg">' + (sala.unaElegir != null ? (lang === 'en' ? 'Choose a color: ' : 'Elige color: ') + ['r', 'y', 'g', 'b'].map(x => '<button class="una-color" data-usala-color="' + x + '" style="background:' + UNA_COLOR[x] + '" aria-label="' + T.color[x] + '"></button>').join('')
+        : (miTurno ? '👉 ' + escapeHtml(T.tu) : '⏳ ' + escapeHtml(st.orden[st.turno].nombre)) + ' · ' + ult) + '</div>' +
+      '<div class="una-mano">' + mano.map(id => '<button class="una-btn" data-usala-carta="' + id + '"' + (jugable(id) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(unaNombre(UNA_CARTAS[id], lang)) + '">' + unaCartaHtml(UNA_CARTAS[id], jugable(id) ? ' jugable' : '') + '</button>').join('') + '</div>' +
+      '<div class="row-btns">' + (miTurno && st.pendiente !== null ? '<button class="btn ghost" data-usala="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
+      (mano.length === 2 ? '<button class="btn una-grito' + (sala.unaDecl ? '' : ' pulsa') + '" data-usala="una" aria-pressed="' + !!sala.unaDecl + '">📣 ' + escapeHtml(T.una) + (sala.unaDecl ? ' ✔' : '') + '</button>' : '') + '</div>' +
+      '<div class="row-btns" style="margin-top:6px"><button class="btn ghost sm" data-usala-lang="es" aria-pressed="' + (lang === 'es') + '">🇲🇽 Español</button><button class="btn ghost sm" data-usala-lang="en" aria-pressed="' + (lang === 'en') + '">🇺🇸 English</button></div>';
+    sala.unaSt = st;
+  }
+
+  async function jugadaUnaSala(jugada) {
+    sala.unaEnviando = true; sala.vista = null; pintarSala();
+    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n: sala.unaSt.paso }, jugada) });
+    await traerSala();
+    sala.unaEnviando = false; sala.unaElegir = null; if (jugada.accion === 'jugar') sala.unaDecl = false;
+    sala.vista = null; pintarSala();
+    if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');
+  }
+
+  function clicUnaSala(e) {
+    const st = sala.unaSt; if (!st) return false;
+    const yo = st.orden.findIndex(p => p.id === sala.estado.yo);
+    const lg = e.target.closest('[data-usala-lang]'); if (lg) { sala.unaLang = lg.dataset.usalaLang; sala.vista = null; pintarSala(); return true; }
+    const b = e.target.closest('[data-usala]');
+    if (b && b.dataset.usala === 'una') { sala.unaDecl = !sala.unaDecl; sonidoOk(); sala.vista = null; pintarSala(); return true; }
+    if (st.turno !== yo || sala.unaEnviando) return !!(b || e.target.closest('[data-usala-carta]'));
+    const col = e.target.closest('[data-usala-color]');
+    if (col && sala.unaElegir != null) { jugadaUnaSala({ accion: 'jugar', carta: sala.unaElegir, color: col.dataset.usalaColor, una: !!sala.unaDecl }); return true; }
+    if (b && b.dataset.usala === 'robar' && st.pendiente === null) { jugadaUnaSala({ accion: 'robar' }); return true; }
+    if (b && b.dataset.usala === 'pasar' && st.pendiente !== null) { jugadaUnaSala({ accion: 'pasar' }); return true; }
+    const k = e.target.closest('[data-usala-carta]');
+    if (k) {
+      const id = Number(k.dataset.usalaCarta);
+      if (!st.valida(id) || (st.pendiente !== null && st.pendiente !== id)) {
+        sonidoMal(); const m = document.getElementById('una-msg'); m.className = 'feedback bad';
+        const T = UNA_TXT[sala.unaLang || 'es'];
+        m.textContent = st.pendiente !== null ? 'Solo puedes jugar la que robaste o pasar' : 'Debe ser ' + T.color[st.color].toLowerCase() + ' o ' + unaSimbolo(st.top().v);
+        return true;
+      }
+      if (!UNA_CARTAS[id].c) { sala.unaElegir = id; sala.vista = null; pintarSala(); return true; }
+      jugadaUnaSala({ accion: 'jugar', carta: id, una: !!sala.unaDecl });
+      return true;
+    }
+    return false;
   }
 
   async function crearPartida() {
@@ -1784,6 +1974,7 @@
   app.addEventListener('click', e => {
     const t = e.target.closest('[data-tab]'); if (t) { limpiar(); return pantallaHub(t.dataset.tab); }
     const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
+    if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
     const lsc = e.target.closest('[data-lsc]'); if (lsc) return marcarLoteriaSala(Number(lsc.dataset.lsc), lsc);
     if (e.target.closest('[data-lsgrito]')) return gritarLoteriaSala();
     const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }
