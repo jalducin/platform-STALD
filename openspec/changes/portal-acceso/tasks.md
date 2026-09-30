@@ -26,9 +26,9 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Tras el merge: curl `/perfil` (alumna, admin, desconocido y sin correo) y E2E de solo lectura del portal publicado
+- [x] 4.1 Tras el merge: curl `/perfil` (alumna, admin, desconocido y sin correo) y E2E de solo lectura del portal publicado
 
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/frontend-standards.md` (§1 páginas, §2 claves de sesión), `docs/backend-standards.md` (`/perfil`), `openspec/project.md` y README (URLs)
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #23)
