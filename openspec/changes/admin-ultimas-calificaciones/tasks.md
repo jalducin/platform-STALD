@@ -22,9 +22,9 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Tras el merge: E2E de solo lectura en Pages con el correo del admin: la tarjeta con los alumnos y alumnas reales y sin envíos
+- [x] 4.1 Tras el merge: E2E de solo lectura en Pages con el correo del admin: la tarjeta con los alumnos y alumnas reales y sin envíos
 
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/frontend-standards.md` (vista de admin: últimas calificaciones)
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #29)

@@ -21,6 +21,13 @@
   y portal 16/16.
 - Captura revisada: `ultimas-admin.png`.
 
+## Producción (4.1)
+- E2E de solo lectura en GitHub Pages con el correo del admin: 9/9.
+  - 6 filas: Angel, Fernando, Jesus, Laura, Marisol y Sofy.
+  - Hasta 5 calificaciones por fila, en orden de fecha.
+  - Marisol mezcla en línea y Notion: 100%, 100%, 10, 70% y 10.
+  - 0 envíos. La alumna no ve la tarjeta.
+
 ## Verificación de estado
 - Solo frontend, sin cambios de datos. Las copias se borraron y el servidor local se detuvo.
 - Estado restaurado: Sí.
