@@ -46,6 +46,11 @@
   .stat.overdue .num { color: var(--overdue); }
   .stat.today .num { color: var(--today); }
   .stat.upcoming .num { color: var(--accent); }
+  button.stat { font: inherit; color: inherit; width: 100%; cursor: pointer; transition: border-color .15s, background .15s; }
+  button.stat:hover { border-color: var(--accent); }
+  button.stat:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.stat[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--chip); }
+  .ver-todo { font: inherit; font-size: .78rem; font-weight: 700; color: var(--accent); background: none; border: none; cursor: pointer; padding: 2px 0 8px; }
   .progress-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; margin: 2px 0 4px; }
   .progress-bar span { display: block; height: 100%; background: var(--green); border-radius: 99px; transition: width .4s ease; }
   .progress-text { font-size: .72rem; color: var(--text-muted); margin-bottom: 14px; }
@@ -329,37 +334,49 @@
 
   function section(title, items, isAdmin, opts) {
     const o = opts || {};
+    const grupo = o.grupo ? ' data-grupo="' + o.grupo + '"' : '';
     if (!items.length && o.hideEmpty) return '';
     const body = items.length
       ? '<div class="scroll"><div class="list">' + items.map(r => renderRow(r, isAdmin)).join('') + '</div></div>'
       : '<div class="empty">' + escapeHtml(o.empty || 'Nada por aquí.') + '</div>';
     const head = '<div class="section-head"><span>' + (o.collapsible ? '<span class="chevron">▶</span>' : '') + escapeHtml(title) + '</span><span class="count">' + items.length + '</span></div>';
     return o.collapsible
-      ? '<details class="section"><summary>' + head + '</summary>' + body + '</details>'
-      : '<div class="section">' + head + body + '</div>';
+      ? '<details class="section"' + grupo + '><summary>' + head + '</summary>' + body + '</details>'
+      : '<div class="section"' + grupo + '>' + head + body + '</div>';
   }
 
   function renderStats(g) {
     const pct = g.total ? Math.round(g.completed * 100 / g.total) : 0;
+    const tarjeta = (cls, grupo, n, label) => '<button type="button" class="stat ' + cls + '" data-action="filtrar" data-grupo="' + grupo + '" aria-pressed="false" title="Ver solo: ' + label + '">' +
+      '<div class="num">' + n + '</div><div class="label">' + label + '</div></button>';
     return '<div class="stats">' +
-        '<div class="stat done"><div class="num">' + g.recent.length + '</div><div class="label">Hechas 3 días</div></div>' +
-        '<div class="stat overdue"><div class="num">' + g.overdue.length + '</div><div class="label">Atrasadas</div></div>' +
-        '<div class="stat today"><div class="num">' + g.today.length + '</div><div class="label">Hoy</div></div>' +
-        '<div class="stat upcoming"><div class="num">' + g.upcoming.length + '</div><div class="label">Próximas</div></div>' +
+        tarjeta('done', 'recent', g.recent.length, 'Hechas 3 días') +
+        tarjeta('overdue', 'overdue', g.overdue.length, 'Atrasadas') +
+        tarjeta('today', 'today', g.today.length, 'Hoy') +
+        tarjeta('upcoming', 'upcoming', g.upcoming.length, 'Próximas') +
       '</div>' +
+      '<button type="button" class="ver-todo" data-action="ver-todo" hidden>✕ Ver todo</button>' +
       '<div class="progress-bar"><span style="width:' + pct + '%"></span></div>' +
       '<div class="progress-text">' + g.completed + '/' + g.total + ' completadas (' + pct + '%)</div>';
   }
 
   function renderBoard(rows, isAdmin) {
     const g = buildGroups(rows);
-    return renderStats(g) +
-      section('✅ Realizadas · últimos 3 días', g.recent, isAdmin, { empty: 'Aún no hay entregas en los últimos 3 días.' }) +
-      section('⏰ Atrasadas', g.overdue, isAdmin, { empty: '¡Nada atrasado! 🎉' }) +
-      section('📌 Hoy', g.today, isAdmin, { empty: 'No hay entrega para hoy.' }) +
-      section('📅 Próximas', g.upcoming, isAdmin, { empty: 'No hay entregas próximas.' }) +
-      section('✔️ Realizadas anteriores', g.older, isAdmin, { collapsible: true, hideEmpty: true }) +
-      section('🗒️ Sin fecha', g.nodate, isAdmin, { collapsible: true, hideEmpty: true });
+    return '<div class="board">' + renderStats(g) +
+      section('✅ Realizadas · últimos 3 días', g.recent, isAdmin, { grupo: 'recent', empty: 'Aún no hay entregas en los últimos 3 días.' }) +
+      section('⏰ Atrasadas', g.overdue, isAdmin, { grupo: 'overdue', empty: '¡Nada atrasado! 🎉' }) +
+      section('📌 Hoy', g.today, isAdmin, { grupo: 'today', empty: 'No hay entrega para hoy.' }) +
+      section('📅 Próximas', g.upcoming, isAdmin, { grupo: 'upcoming', empty: 'No hay entregas próximas.' }) +
+      section('✔️ Realizadas anteriores', g.older, isAdmin, { grupo: 'older', collapsible: true, hideEmpty: true }) +
+      section('🗒️ Sin fecha', g.nodate, isAdmin, { grupo: 'nodate', collapsible: true, hideEmpty: true }) + '</div>';
+  }
+
+  // Filtro por tarjeta: solo afecta a su tablero (en admin, a ese alumno o alumna). null = ver todo.
+  function aplicarFiltro(board, grupo) {
+    board.querySelectorAll('.section[data-grupo]').forEach(sec => { sec.hidden = !!grupo && sec.dataset.grupo !== grupo; });
+    board.querySelectorAll('button.stat[data-grupo]').forEach(t => t.setAttribute('aria-pressed', String(t.dataset.grupo === grupo)));
+    const todo = board.querySelector('[data-action="ver-todo"]');
+    if (todo) todo.hidden = !grupo;
   }
 
   function render(data) {
@@ -864,6 +881,8 @@
     const b = e.target.closest('[data-action]');
     if (!b) return;
     const act = b.dataset.action;
+    if (act === 'filtrar') { const board = b.closest('.board'); aplicarFiltro(board, b.getAttribute('aria-pressed') === 'true' ? null : b.dataset.grupo); }
+    if (act === 'ver-todo') aplicarFiltro(b.closest('.board'), null);
     if (act === 'abrir-item') { e.preventDefault(); openItem(b.dataset.id); }
     if (act === 'ver-resultado') {
       const it = ((state.act && state.act.items) || []).find(x => x.id === b.dataset.id);
