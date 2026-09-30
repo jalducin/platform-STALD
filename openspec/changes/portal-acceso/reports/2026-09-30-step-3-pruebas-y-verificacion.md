@@ -36,6 +36,19 @@
 - **Regresiones de Inglés:** semana 16/16, corrección 11/11, filtro 11/11, marcar 9/9, guion 8/8,
   presentación 8/8.
 
+## Producción (4.1)
+- **`/perfil`:**
+  - Marisol: Inglés.
+  - Sofy: Inglés y Secundaria.
+  - Admin: todo, como "Profe".
+  - Desconocido: sin accesos.
+  - Sin correo: 400.
+- **E2E de solo lectura en GitHub Pages:** 15/16.
+  - La que no pasó espera a alguien que solo tenga Secundaria. En producción se usó a Sofy, que tiene
+    Inglés y Secundaria, y le salen correctamente las 3 tarjetas.
+  - `secundaria.html` entra sola con sus tareas y "← Inicio".
+  - 0 envíos.
+
 ## Verificación de estado
 - Sin cambios de datos, ni en Notion ni en el repo de datos. Las copias en memoria se borraron y el
   servidor local se detuvo.
