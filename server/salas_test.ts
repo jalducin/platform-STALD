@@ -158,3 +158,11 @@ Deno.test("salas: Lotería (modo y grito único) y Responde en inglés", async (
   assertEquals([g1.status, g1.body.loteria, g2.body.loteria], [200, t1, t1]);
   assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "en-preguntas" })).status, 200);
 });
+
+Deno.test("salas: los jugadores llevan su avatar", async () => {
+  const c = ctx();
+  const codigo = await salaCon(c);
+  const g = await c.call("GET", `/sala/${codigo}`, "marisol@example.com");
+  const av = g.body.jugadores[0].avatar;
+  assert(av && typeof av.emoji === "string" && av.color.startsWith("#"), JSON.stringify(av));
+});

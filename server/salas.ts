@@ -32,6 +32,7 @@ interface EnSala {
   nombre: string;
   tipo: Jugador["tipo"];
   unido: number;
+  avatar?: { emoji: string; color: string };
   respuestas: Record<string, { correcta: boolean; puntos: number; ms: number }>;
   palabras?: Record<string, string>;
   basta?: number;
@@ -65,7 +66,7 @@ async function guardarJugador(store: Store, codigo: string, j: Jugador, cambiar:
   for (let i = 0; i < 3; i++) {
     const doc = await store.get<EnSala>(ruta(codigo, j.id));
     const base: EnSala = doc?.data ?? { id: j.id, nombre: j.nombre, tipo: j.tipo, unido: ahora, respuestas: {} };
-    const nuevo = cambiar(base);
+    const nuevo = { ...cambiar(base), avatar: j.avatar };
     if (await store.put(ruta(codigo, j.id), nuevo, doc?.sha ?? null, `sala ${codigo}: ${j.nombre}`)) {
       cache.delete(codigo);
       return nuevo;
@@ -93,7 +94,7 @@ export async function resumenSalas(store: Store, lunes: string) {
     const host = est.jugadores.find((j) => j.id === est.sala.host);
     return {
       codigo: s.codigo, juego: s.juego, host: s.host, creada: s.creada, inicio: est.sala.inicio, bots: est.sala.bots,
-      jugadores: est.jugadores.map((j) => ({ nombre: j.nombre, tipo: j.tipo, final: j.final ?? null, respondidas: Object.keys(j.respuestas || {}).length })),
+      jugadores: est.jugadores.map((j) => ({ nombre: j.nombre, tipo: j.tipo, avatar: j.avatar, final: j.final ?? null, respondidas: Object.keys(j.respuestas || {}).length })),
       podio: host?.podio ?? null,
     };
   }));
