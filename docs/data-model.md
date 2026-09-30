@@ -93,7 +93,8 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - `vocabulario[]` `{ en, es, emoji, tema }`;
   - `spelling[]` `{ en, es, nivel }`;
   - `verbos[]` `{ frase, opciones, correcta, es, tema }`;
-  - `oraciones[]` `{ en, es }`.
+  - `oraciones[]` `{ en, es }`;
+  - `preguntas[]` `{ pregunta, opciones (4), correcta, es, tema }` para "Responde en inglés" (124, nivel A1).
 - `espanol.json`:
   - `ortografia[]` y `acentos[]` `{ frase, opciones, correcta, regla?, explicacion }`;
   - `sinonimos[]` y `antonimos[]` `{ palabra, respuesta, distractores }`;
@@ -141,6 +142,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - Partidas multijugador. Cada jugador escribe solo su archivo y no hay correos.
   - Las salas vencen a las 3 h y se pueden borrar sin afectar el ranking.
   - Al terminar, el archivo de cada jugador guarda `final`, y el del host, además, `podio`.
+  - En Lotería, `loteria` guarda la hora del primer grito. Las tablas y el orden de las cartas salen de
+    la semilla.
 - `juegos/salas-semana/<lunes>.json`: `{ salas: [{ codigo, juego, host, creada }] }`, índice para el
   resumen del admin.
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.

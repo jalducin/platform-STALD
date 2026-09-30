@@ -54,7 +54,9 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
     - en Basta, `{ palabras, basta }`.
   - `GET /juegos/sala/<código>`: sala, jugadores y `ahora` (hora del servidor), solo para sus jugadores y
     el admin. Caché de 2 s.
-  - Juegos permitidos: los 8 de preguntas y Basta (es/en).
+  - Juegos permitidos: los 9 de preguntas (incluye `en-preguntas`), Basta (es/en) y Lotería.
+    `opciones.modo` va en Lotería (`linea` o `llena`), y `respuesta` con `{ loteria: true }` guarda la hora
+    del primer grito.
   - Al terminar, `respuesta` acepta `{ final }` de cada jugador y `{ podio }`, que solo guarda el del host.
   - Cada sala nueva se agrega al índice `juegos/salas-semana/<lunes>.json`.
 - **`GET /juegos/admin/resumen?semana=`** (solo admin, 403 para los demás):
@@ -65,7 +67,7 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
   - Sincronía por reloj; los bots los calcula el cliente con la semilla.
   - La identidad del jugador se guarda en caché 60 s para no consultar Notion en cada sondeo. La lista de
     invitados siempre se lee fresca.
-- **Catálogo (`CATALOGO`):** 18 juegos. Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+- **Catálogo (`CATALOGO`):** 19 juegos (`en-preguntas`, "Responde en inglés", tope 2000). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
 **Ruta `GET /perfil?email=`** (`server/perfil.ts`):
