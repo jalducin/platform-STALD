@@ -37,6 +37,9 @@ Cada página debe manejar y mostrar de forma explícita:
 - Colores en variables CSS en `:root`, con variante `prefers-color-scheme: dark`.
 - Inputs con `<label for>`; los botones son `<button>`, no `div`.
 - Fechas en `es-MX` y comparadas como `AAAA-MM-DD` en hora local.
+- Tarjetas de resumen que filtran (`ingles.html`): cada tarjeta es un `<button data-action="filtrar" data-grupo aria-pressed>`
+  y cada sección del tablero lleva `data-grupo`. El filtro se aplica en el DOM al `.board` más cercano (en
+  admin, por alumno o alumna), no se guarda y se quita con la misma tarjeta o con "Ver todo".
 
 ## 5. Código compartido
 
