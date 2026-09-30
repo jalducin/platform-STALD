@@ -40,6 +40,15 @@
   de la semana" se revisa en cualquier tarjeta, porque una partida aleatoria puede dar 0.
 - **Capturas revisadas:** Lotería (carta, tabla, bots, aviso) y ¡Una! (mesa, mano, bots).
 
+## Producción (4.1)
+- **Antes:** sin archivos en `juegos/` del repo de datos.
+- **Curl:** partida de `loteria` como admin con 5000 puntos → se guardaron 1000 (tope).
+- **Restauración:** se borró `juegos/semanas/2026-09-28/admin.json`. Después, el ranking tiene 0 jugadores.
+- **Revisión de solo lectura en Pages (Marisol):**
+  - la categoría Clásicos muestra `basta-es`, `basta-en`, `una` y `loteria`;
+  - Lotería y Basta abren;
+  - 0 envíos.
+
 ## Verificación de estado
 - Sin cambios de datos. Las pruebas usaron almacén en memoria, que se borró, y el servidor local se
   detuvo.
