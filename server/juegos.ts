@@ -3,7 +3,7 @@
 // de invitados, solo para análisis del admin). Ver openspec: juegos-plataforma.
 import { mxToday, slugAlumno } from "./motor.ts";
 import type { Store } from "./store.ts";
-import { handleSalas } from "./salas.ts";
+import { handleSalas, resumenSalas } from "./salas.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -184,7 +184,19 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
   const lunes = lunesDe(hoy);
 
   // /juegos/sala… → partidas multijugador (server/salas.ts)
-  if (sub === "/sala" || sub.startsWith("/sala/")) return await handleSalas(req, sub.slice("/sala".length), jugador, store, ahora, json);
+  if (sub === "/sala" || sub.startsWith("/sala/")) return await handleSalas(req, sub.slice("/sala".length), jugador, store, ahora, json, lunes);
+
+  // GET /juegos/admin/resumen → jugadores y partidas de la semana (solo admin, sin correos)
+  if (sub === "/admin/resumen" && req.method === "GET") {
+    if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
+    const semana = new URL(req.url).searchParams.get("semana") || lunes;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
+    const l = lunesDe(semana);
+    const docs = ordenar(await leerSemana(store, l));
+    const jugadores = docs.map((d) => ({ nombre: d.nombre, tipo: d.tipo, total: d.total, mejores: d.mejores, partidas: d.partidas.length, ultima: d.partidas.at(-1)?.en ?? null }));
+    const catalogo = Object.fromEntries(Object.entries(CATALOGO).map(([id, d]) => [id, d.titulo]));
+    return json({ semana: l, jugadores, salas: await resumenSalas(store, l), catalogo });
+  }
 
   // POST /juegos/partida → guardar puntos (con tope) y actualizar el mejor por juego
   if (sub === "/partida" && req.method === "POST") {

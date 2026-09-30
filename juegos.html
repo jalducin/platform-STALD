@@ -142,6 +142,8 @@
   table.inv th, table.inv td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--border); }
   .scroll-x { overflow-x: auto; }
   .kbd-hint { text-align: center; font-size: .72rem; color: var(--muted); margin-top: 8px; }
+  .p-share { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 12px; text-align: left; }
+  #p-qr { background: #fff; padding: 6px; border-radius: 10px; min-width: 162px; min-height: 162px; }
   .sel { width: 100%; font: inherit; font-size: .95rem; padding: 11px 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
   /* Basta */
   .letra { font-size: 4rem; font-weight: 900; line-height: 1; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -207,6 +209,9 @@
   const API_BASE = (API_PARAM || DEFAULT_API).replace(/\/$/, '');
   const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
   if (API_PARAM) document.querySelector('.home-link').href = './?api=' + encodeURIComponent(API_PARAM);
+  // Enlace de partida: juegos.html?sala=KXQP entra (o registra al invitado) y se une solo.
+  const SALA_URL = (new URLSearchParams(location.search).get('sala') || '').trim().toUpperCase();
+  let salaPendiente = /^[A-Z]{4}$/.test(SALA_URL) ? SALA_URL : null;
 
   const app = document.getElementById('app');
   const chip = document.getElementById('chip');
@@ -314,6 +319,7 @@
       const r = await cargarYo();
       if (r.status === 403 && r.body.error === 'no_registrado') return pantallaInvitado();
       if (!r.ok) throw new Error(r.body.error || ('HTTP ' + r.status));
+      if (salaPendiente) { const c = salaPendiente; salaPendiente = null; return unirseCodigo(c); }
       pantallaHub();
     } catch (e) {
       app.innerHTML = '<div class="card"><div class="alert">⚠️ No pude conectarme (' + escapeHtml(e.message) + ').</div><div class="row-btns"><button class="btn" data-a="reintentar">Reintentar</button></div></div>';
@@ -322,14 +328,14 @@
 
   function pantallaLogin(msg) {
     limpiar(); chip.hidden = true;
-    app.innerHTML = '<div class="card"><h1>🎮 Juegos</h1><p class="lead">Aprende jugando. Entra con tu correo.</p>' +
+    app.innerHTML = '<div class="card"><h1>🎮 Juegos</h1><p class="lead">' + (salaPendiente ? '🎉 Te invitaron a la partida <b>' + escapeHtml(salaPendiente) + '</b>. Entra con tu correo para unirte.' : 'Aprende jugando. Entra con tu correo.') + '</p>' +
       '<form id="f-login" novalidate><label for="correo">Tu correo</label><input id="correo" type="email" autocomplete="email" placeholder="tucorreo@gmail.com">' +
       '<div class="row-btns"><button class="btn" type="submit">Entrar →</button></div></form>' + (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
   }
 
   function pantallaInvitado(msg) {
     limpiar(); chip.hidden = true;
-    app.innerHTML = '<div class="card"><h1>👋 ¡Hola!</h1><p class="lead">Tu correo <b>' + escapeHtml(state.email) + '</b> no está en las clases, pero puedes jugar como invitado.</p>' +
+    app.innerHTML = '<div class="card"><h1>👋 ¡Hola!</h1><p class="lead">Tu correo <b>' + escapeHtml(state.email) + '</b> no está en las clases, pero puedes jugar como invitado' + (salaPendiente ? ' en la partida <b>' + escapeHtml(salaPendiente) + '</b>' : '') + '.</p>' +
       '<form id="f-invitado" novalidate><label for="apodo">¿Cómo te llamamos? (apodo)</label><input id="apodo" type="text" maxlength="20" placeholder="Ej. Leo" autocomplete="nickname">' +
       '<label class="check"><input id="acepto" type="checkbox"><span>Acepto que se guarde mi correo y mis puntos para registrar mi avance y mejorar la plataforma.</span></label>' +
       '<div class="row-btns"><button class="btn ghost" type="button" data-a="otro-correo">Usar otro correo</button><button class="btn" type="submit">Entrar a jugar</button></div></form>' +
@@ -1324,11 +1330,13 @@
     const e = sala.estado;
     const lista = participantes();
     const html = '<div class="q-card"><div class="sub">Código de la partida</div><div class="letra" style="letter-spacing:.15em">' + escapeHtml(e.sala.codigo) + '</div>' +
-      '<div class="sub">Compártelo en el Meet o por WhatsApp · entran desde 🎮 Juegos → 👥 Partidas</div></div>' +
+      '<div class="sub">Compártelo en el Meet o por WhatsApp · entran desde 🎮 Juegos → 👥 Partidas</div>' +
+      '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
+      '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
       '<h2>👥 Jugadores (' + lista.length + ')</h2><ol class="rank">' + lista.map(x => '<li><span class="pos">' + (x.tipo === 'bot' ? '🤖' : '👤') + '</span><span class="n">' + escapeHtml(x.nombre) +
         (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
       '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
-    if (sala.vista !== 'espera:' + lista.length + ':' + e.soyHost) { body.innerHTML = html; sala.vista = 'espera:' + lista.length + ':' + e.soyHost; }
+    if (sala.vista !== 'espera:' + lista.length + ':' + e.soyHost) { body.innerHTML = html; sala.vista = 'espera:' + lista.length + ':' + e.soyHost; pintarQr(document.getElementById('p-qr'), enlaceSala(e.sala.codigo)); }
   }
 
   function totalesPreguntas(hasta) {
@@ -1456,6 +1464,8 @@
     if (mio && mio.total > 0) confeti();
     if (mio && !sala.guardado) {
       sala.guardado = true;
+      // Registro de la partida para el admin: total final de cada quien y, del anfitrión, el podio con bots.
+      post('/juegos/sala/' + sala.codigo + '/respuesta', Object.assign({ final: mio.total }, e.soyHost ? { podio: filas.map(f => Object.assign({ nombre: f.nombre, total: f.total }, f.tipo === 'bot' ? { bot: true } : {})) } : {}));
       const n = basta ? basta.d.categorias.length : P_N;
       const aciertos = basta ? Object.values(mio.detalle).filter(x => x.pts > 0).length : Object.values((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {}).filter(x => x.correcta).length;
       post('/juegos/partida', { juego, puntos: mio.total, aciertos, total: n, segundos: 0 }).then(r => {
@@ -1477,12 +1487,32 @@
   async function unirsePartida() {
     const codigo = document.getElementById('p-codigo').value.trim().toUpperCase();
     if (!/^[A-Z]{4}$/.test(codigo)) { document.getElementById('p-msg').innerHTML = '<div class="alert">El código tiene 4 letras.</div>'; return; }
+    unirseCodigo(codigo);
+  }
+
+  async function unirseCodigo(codigo) {
     const r = await post('/juegos/sala/' + codigo + '/unirse', {});
     if (!r.ok) {
       const txt = { sala_no_existe: 'No existe una partida con ese código.', ya_empezo: 'Esa partida ya empezó.', sala_llena: 'La partida está llena.', sala_vencida: 'La partida ya venció.' }[r.body.error] || ('Error ' + (r.body.error || r.status));
+      if (!document.getElementById('p-msg')) pantallaHub('partidas');
       document.getElementById('p-msg').innerHTML = '<div class="alert">' + escapeHtml(txt) + '</div>'; return;
     }
     entrarSala(codigo);
+  }
+
+  const enlaceSala = codigo => location.origin + location.pathname + '?sala=' + codigo + (API_PARAM ? '&api=' + encodeURIComponent(API_PARAM) : '');
+  let qrLib = null;
+  function pintarQr(el, texto) {
+    qrLib = qrLib || new Promise((ok, fail) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = ok; sc.onerror = fail; document.head.appendChild(sc); });
+    qrLib.then(() => { if (el.isConnected && !el.childNodes.length) new QRCode(el, { text: texto, width: 150, height: 150, correctLevel: QRCode.CorrectLevel.M }); }).catch(() => { el.textContent = ''; });
+  }
+  async function compartirSala(btn) {
+    const url = enlaceSala(sala.codigo);
+    const j = juegoPorId(sala.estado.sala.juego);
+    const texto = '🎮 ¡Juega conmigo ' + j.t + '! Entra con este enlace (código ' + sala.codigo + '):';
+    if (navigator.share) { try { await navigator.share({ title: 'Partida ' + sala.codigo, text: texto, url }); return; } catch (e) { /* cancelado: copiar */ } }
+    try { await navigator.clipboard.writeText(texto + ' ' + url); btn.textContent = '✔ ¡Enlace copiado!'; } catch (e) { btn.textContent = 'Copia el enlace de arriba'; }
+    setTimeout(() => { if (btn.isConnected) btn.textContent = '📤 Compartir'; }, 2500);
   }
 
   // ---------- Eventos ----------
@@ -1490,6 +1520,7 @@
     const t = e.target.closest('[data-tab]'); if (t) { limpiar(); return pantallaHub(t.dataset.tab); }
     const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
     const pa = e.target.closest('[data-p]');
+    if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(() => traerSala()).then(() => { sala.vista = null; pintarSala(); }); }
     const g = e.target.closest('[data-juego]');
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }

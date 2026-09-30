@@ -35,6 +35,8 @@ interface EnSala {
   respuestas: Record<string, { correcta: boolean; puntos: number; ms: number }>;
   palabras?: Record<string, string>;
   basta?: number;
+  final?: number; // total del jugador al terminar
+  podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
 }
 
 const cache = new Map<string, { t: number; v: unknown }>();
@@ -71,8 +73,34 @@ async function guardarJugador(store: Store, codigo: string, j: Jugador, cambiar:
   return null;
 }
 
+// Índice semanal de salas (GitHubStore.list no lista carpetas).
+async function indexar(store: Store, lunes: string, entrada: { codigo: string; juego: string; host: string; creada: number }) {
+  const ruta = `juegos/salas-semana/${lunes}.json`;
+  for (let i = 0; i < 3; i++) {
+    const doc = await store.get<{ salas: typeof entrada[] }>(ruta);
+    const salas = [...(doc?.data.salas ?? []), entrada];
+    if (await store.put(ruta, { salas }, doc?.sha ?? null, `salas: ${entrada.codigo}`)) return;
+  }
+}
+
+// Resumen de las salas de una semana, para el admin (sin correos).
+export async function resumenSalas(store: Store, lunes: string) {
+  const idx = await store.get<{ salas: { codigo: string; juego: string; host: string; creada: number }[] }>(`juegos/salas-semana/${lunes}.json`);
+  const salas = await Promise.all((idx?.data.salas ?? []).map(async (s) => {
+    const est = await estado(store, s.codigo);
+    if (!est) return null;
+    const host = est.jugadores.find((j) => j.id === est.sala.host);
+    return {
+      codigo: s.codigo, juego: s.juego, host: s.host, creada: s.creada, inicio: est.sala.inicio, bots: est.sala.bots,
+      jugadores: est.jugadores.map((j) => ({ nombre: j.nombre, tipo: j.tipo, final: j.final ?? null, respondidas: Object.keys(j.respuestas || {}).length })),
+      podio: host?.podio ?? null,
+    };
+  }));
+  return salas.filter((x) => x !== null).sort((a, b) => b!.creada - a!.creada);
+}
+
 // sub: "" (crear) o "/<código>[/unirse|/empezar|/respuesta]"
-export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json): Promise<Response> {
+export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string): Promise<Response> {
   const ahora = Date.parse(ahoraIso);
   let body: Record<string, unknown> = {};
   if (req.method === "POST") {
@@ -96,6 +124,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: body.bots !== false };
     await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`);
     await guardarJugador(store, codigo, jugador, (e) => e, ahora);
+    await indexar(store, lunes, { codigo, juego, host: jugador.nombre, creada: ahora });
     return json({ codigo, sala });
   }
 
@@ -132,7 +161,14 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (!dentro) return json({ error: "no_en_sala" }, 403);
     if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
     let cambiar: (e: EnSala) => EnSala;
-    if (sala.juego.startsWith("basta")) {
+    if (body.final !== undefined || body.podio !== undefined) {
+      // Cierre: total final de cada jugador y, del host, el podio completo (con bots).
+      const final = Math.max(0, Math.min(3000, Math.round(Number(body.final) || 0)));
+      const podio = sala.host === jugador.id && Array.isArray(body.podio)
+        ? (body.podio as Record<string, unknown>[]).slice(0, 32).map((x) => ({ nombre: String(x?.nombre ?? "").slice(0, 30), total: Math.max(0, Math.min(3000, Math.round(Number(x?.total) || 0))), ...(x?.bot ? { bot: true } : {}) }))
+        : undefined;
+      cambiar = (e) => ({ ...e, ...(body.final !== undefined ? { final } : {}), ...(podio ? { podio } : {}) });
+    } else if (sala.juego.startsWith("basta")) {
       if (body.palabras !== undefined && (typeof body.palabras !== "object" || body.palabras === null || Array.isArray(body.palabras))) return json({ error: "palabras_invalidas" }, 400);
       const palabras = Object.fromEntries(Object.entries((body.palabras || {}) as Record<string, unknown>).slice(0, 10)
         .map(([k, v]) => [String(k).slice(0, 20), String(v ?? "").trim().slice(0, 40)]));
