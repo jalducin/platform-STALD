@@ -36,6 +36,15 @@
   .home-link { font-size: .84rem; font-weight: 700; color: var(--accent-2); text-decoration: none; }
   .chip { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 700; background: var(--card); border: 1px solid var(--border);
     padding: 6px 12px; border-radius: 99px; box-shadow: var(--shadow); }
+  .chip-btn { font: inherit; font-size: .8rem; font-weight: 700; color: var(--text); cursor: pointer; }
+  .av { display: inline-grid; place-items: center; border-radius: 50%; background: var(--avc); flex-shrink: 0; line-height: 1; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+  .av-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 6px; }
+  .av-grid button, .col-grid button { font: inherit; font-size: 1.4rem; aspect-ratio: 1; border-radius: 12px; border: 2px solid var(--border); background: var(--card); cursor: pointer; }
+  .av-grid button[aria-pressed="true"], .col-grid button[aria-pressed="true"] { border-color: var(--accent-2); box-shadow: 0 0 0 3px var(--mente-soft); }
+  .col-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(28px, 1fr)); gap: 6px; }
+  .menu-musica { position: absolute; right: 0; top: 40px; z-index: 20; background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 10px; width: 210px; display: flex; flex-direction: column; gap: 6px; }
+  .mus-opt { flex: 1; font: inherit; font-weight: 700; font-size: .88rem; padding: 9px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; text-align: left; }
+  .mus-opt[aria-pressed="true"] { border-color: var(--accent-2); background: var(--mente-soft); }
   .chip .inv { font-size: .66rem; color: var(--muted); font-weight: 700; }
   h1 { font-size: 1.55rem; margin: 0 0 4px; letter-spacing: -.01em; }
   h2 { font-size: 1.05rem; margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; }
@@ -197,7 +206,7 @@
 <div class="wrap">
   <div class="top">
     <a class="home-link" href="./">← Inicio</a>
-    <span class="chip" id="chip" hidden></span>
+    <span style="display:flex;gap:6px;align-items:center;position:relative"><button class="chip chip-btn" id="btn-musica" type="button" aria-label="Música">🔇</button><button class="chip chip-btn" id="chip" type="button" hidden title="Cambiar mi avatar"></button><span id="menu-musica-wrap"></span></span>
   </div>
   <main id="app"><div class="loading">Cargando juegos…</div></main>
 </div>
@@ -255,6 +264,7 @@
 
   function hablar(texto, lang = 'en-US', rate = .9) {
     if (!window.speechSynthesis) return false;
+    if (typeof bajarMusica === 'function') bajarMusica();
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(texto);
     u.lang = lang; u.rate = rate;
@@ -296,17 +306,45 @@
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
 
   // ---------- Sesión ----------
+  const avatarHtml = (av, px = 26) => av ? '<span class="av" style="--avc:' + escapeHtml(av.color) + ';width:' + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * 0.58) + 'px" aria-hidden="true">' + escapeHtml(av.emoji) + '</span>' : '';
+
+  function pantallaAvatar() {
+    limpiar();
+    const listas = state.avatares || { emojis: [], colores: [] };
+    let sel = Object.assign({}, state.jugador.avatar || { emoji: listas.emojis[0], color: listas.colores[0] });
+    const pintar = () => {
+      app.innerHTML = '<div class="card"><h1>🎨 Tu avatar</h1><p class="lead">Elige un personaje y un color. Así te verán en el ranking y en las partidas.</p>' +
+        '<div style="display:flex;justify-content:center;margin:6px 0 14px">' + avatarHtml(sel, 96) + '</div>' +
+        '<label>Personaje</label><div class="av-grid">' + listas.emojis.map(e => '<button type="button" data-av-emoji="' + escapeHtml(e) + '" aria-pressed="' + (e === sel.emoji) + '">' + escapeHtml(e) + '</button>').join('') + '</div>' +
+        '<label>Color</label><div class="col-grid">' + listas.colores.map(c => '<button type="button" data-av-color="' + escapeHtml(c) + '" aria-pressed="' + (c === sel.color) + '" style="background:' + escapeHtml(c) + '" aria-label="Color ' + escapeHtml(c) + '"></button>').join('') + '</div>' +
+        '<div class="row-btns"><button class="btn ghost" data-a="hub">Cancelar</button><button class="btn" data-av-guardar>Guardar</button></div><div id="av-msg"></div></div>';
+    };
+    pintar();
+    app.onclick = async e => {
+      const em = e.target.closest('[data-av-emoji]'), co = e.target.closest('[data-av-color]'), gu = e.target.closest('[data-av-guardar]');
+      if (em) { sel.emoji = em.dataset.avEmoji; pintar(); }
+      if (co) { sel.color = co.dataset.avColor; pintar(); }
+      if (gu) {
+        gu.disabled = true;
+        const r = await post('/juegos/avatar', sel);
+        if (!r.ok) { document.getElementById('av-msg').innerHTML = '<div class="alert">No se pudo guardar (' + escapeHtml(r.body.error || r.status) + ').</div>'; gu.disabled = false; return; }
+        state.jugador.avatar = r.body.avatar; pintarChip(); app.onclick = null; pantallaHub();
+      }
+      if (e.target.closest('[data-a="hub"]')) app.onclick = null;
+    };
+  }
+
   function pintarChip() {
     if (!state.jugador) { chip.hidden = true; return; }
     chip.hidden = false;
-    chip.innerHTML = '👤 ' + escapeHtml(state.jugador.nombre) + (state.jugador.tipo === 'invitado' ? ' <span class="inv">INVITADO</span>' : '') +
+    chip.innerHTML = avatarHtml(state.jugador.avatar, 22) + ' ' + escapeHtml(state.jugador.nombre) + (state.jugador.tipo === 'invitado' ? ' <span class="inv">INVITADO</span>' : '') +
       ' · ⭐ ' + fmt(state.total) + (state.pos ? ' · #' + state.pos : '');
   }
 
   async function cargarYo() {
     const r = await api('/juegos/yo');
     if (r.ok) {
-      Object.assign(state, { jugador: r.body.jugador, total: r.body.total, pos: r.body.pos, mejores: r.body.mejores, semana: r.body.semana });
+      Object.assign(state, { jugador: r.body.jugador, total: r.body.total, pos: r.body.pos, mejores: r.body.mejores, semana: r.body.semana, avatares: r.body.avatares });
       pintarChip();
     }
     return r;
@@ -383,7 +421,7 @@
     const medalla = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
     body.innerHTML = '<p class="muted" style="margin:10px 0">Semana del ' + escapeHtml(rangoSemana(r.body.semana)) + ' · cuenta tu mejor puntaje de cada juego.</p>' +
       (r.body.top.length
-        ? '<ol class="rank">' + r.body.top.map(x => '<li class="' + (x.yo ? 'yo' : '') + '"><span class="pos">' + medalla(x.pos) + '</span><span class="n">' + escapeHtml(x.nombre) +
+        ? '<ol class="rank">' + r.body.top.map(x => '<li class="' + (x.yo ? 'yo' : '') + '"><span class="pos">' + medalla(x.pos) + '</span>' + avatarHtml(x.avatar, 30) + '<span class="n">' + escapeHtml(x.nombre) +
           (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '<br><small>' + x.juegos + ' juego(s)</small></span><span class="pts">⭐ ' + fmt(x.total) + '</span></li>').join('') + '</ol>'
         : '<div class="card muted" style="text-align:center">Nadie ha jugado esta semana. ¡Estrena el ranking! 🚀</div>') +
       (r.body.yo.pos && r.body.yo.pos > 20 ? '<p class="muted">Tu lugar: #' + r.body.yo.pos + ' con ⭐ ' + fmt(r.body.yo.total) + '</p>' : '');
@@ -1204,7 +1242,7 @@
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
   const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-preguntas', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en', 'loteria'];
-  const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6 }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45 }];
+  const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
   const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
   const P_BASTA = 60000, P_GRACIA = 3000;
   const dur = ms => ms * TIEMPO;
@@ -1328,8 +1366,8 @@
 
   function participantes() {
     const e = sala.estado;
-    const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, loteria: x.loteria }));
-    return e.sala.bots ? humanos.concat(BOTS.map(b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b }))) : humanos;
+    const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, loteria: x.loteria }));
+    return e.sala.bots ? humanos.concat(BOTS.map(b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b, avatar: b.avatar }))) : humanos;
   }
 
   function pintarSala() {
@@ -1349,7 +1387,7 @@
       '<div class="sub">Compártelo en el Meet o por WhatsApp · entran desde 🎮 Juegos → 👥 Partidas</div>' +
       '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
       '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
-      '<h2>👥 Jugadores (' + lista.length + ')</h2><ol class="rank">' + lista.map(x => '<li><span class="pos">' + (x.tipo === 'bot' ? '🤖' : '👤') + '</span><span class="n">' + escapeHtml(x.nombre) +
+      '<h2>👥 Jugadores (' + lista.length + ')</h2><ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
         (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
       '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
     if (sala.vista !== 'espera:' + lista.length + ':' + e.soyHost) { body.innerHTML = html; sala.vista = 'espera:' + lista.length + ':' + e.soyHost; pintarQr(document.getElementById('p-qr'), enlaceSala(e.sala.codigo)); }
@@ -1363,13 +1401,13 @@
         const r = p.bot ? botPregunta(s.seed, p.bot, q, sala.contenido[q]) : p.respuestas[q];
         if (r) { total += r.puntos; if (q === hasta) ultimo = r.puntos; }
       }
-      return { id: p.id, nombre: p.nombre, tipo: p.tipo, total, ultimo };
+      return { id: p.id, nombre: p.nombre, tipo: p.tipo, avatar: p.avatar, total, ultimo };
     }).sort((a, b) => b.total - a.total);
   }
 
   function marcadorHtml(filas, yo, max = 6) {
     return '<ol class="rank">' + filas.slice(0, max).map((f, i) => '<li class="' + (f.id === yo ? 'yo' : '') + '"><span class="pos">' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1) + '</span>' +
-      '<span class="n">' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' <small>🤖</small>' : '') + (f.ultimo ? ' <small>+' + f.ultimo + '</small>' : '') + '</span><span class="pts">⭐ ' + fmt(f.total) + '</span></li>').join('') + '</ol>';
+      avatarHtml(f.avatar, 28) + '<span class="n">' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' <small>🤖</small>' : '') + (f.ultimo ? ' <small>+' + f.ultimo + '</small>' : '') + '</span><span class="pts">⭐ ' + fmt(f.total) + '</span></li>').join('') + '</ol>';
   }
 
   function pintarPreguntaSala(body) {
@@ -1461,7 +1499,8 @@
     if (!listos) { if (sala.vista !== 'esperando') { sala.vista = 'esperando'; bar.hidden = true; body.innerHTML = '<div class="q-card"><div class="big">✋</div><div class="q">¡Basta!</div><div class="sub">Juntando las palabras de todos…</div></div>'; } return; }
     const parts = participantes().map(p => p.bot ? { id: p.id, nombre: p.nombre, palabras: botBasta(s.seed, p.bot, letra, d) } : { id: p.id, nombre: p.nombre, palabras: p.id === e.yo ? (sala.misPalabras || p.palabras) : p.palabras });
     const res = puntuarBasta(d, letra, parts);
-    pintarFinalSala(body, res.map(r => ({ id: r.id, nombre: r.nombre, tipo: r.id.startsWith('bot-') ? 'bot' : '', total: r.total, ultimo: 0, detalle: r.detalle })), { d, letra });
+    const avs = Object.fromEntries(participantes().map(p => [p.id, p.avatar]));
+    pintarFinalSala(body, res.map(r => ({ id: r.id, nombre: r.nombre, tipo: r.id.startsWith('bot-') ? 'bot' : '', avatar: avs[r.id], total: r.total, ultimo: 0, detalle: r.detalle })), { d, letra });
   }
 
   function pintarFinalSala(body, todas, basta, titulo) {
@@ -1539,7 +1578,7 @@
       const filas = participantes().map(p => {
         const esGan = gan && gan.id === p.id;
         const total = esGan ? Math.min(1000, (lot.modo === 'llena' ? 500 : 300) + (54 - nFin) * 10) : conteo(p.id) * 10;
-        return { id: p.id, nombre: p.nombre + (esGan ? ' 🎉' : ''), tipo: p.tipo, total, ultimo: 0 };
+        return { id: p.id, nombre: p.nombre + (esGan ? ' 🎉' : ''), tipo: p.tipo, avatar: p.avatar, total, ultimo: 0 };
       }).sort((a, b) => b.total - a.total);
       sala.aciertosLoteria = lot.marcas.filter(Boolean).length;
       return pintarFinalSala(body, filas, null, gan ? '🎴 ¡Lotería de ' + gan.nombre + '! (' + nFin + ' cartas cantadas)' : '🎴 Se acabaron las cartas');
@@ -1621,6 +1660,125 @@
     try { await navigator.clipboard.writeText(texto + ' ' + url); btn.textContent = '✔ ¡Enlace copiado!'; } catch (e) { btn.textContent = 'Copia el enlace de arriba'; }
     setTimeout(() => { if (btn.isConnected) btn.textContent = '📤 Compartir'; }, 2500);
   }
+
+  // ---------- Música de fondo generada (WebAudio, sin archivos ni derechos) ----------
+  const ESTILOS_MUSICA = {
+    alegre: { nombre: '🎵 Alegre', bpm: 118 },
+    relajante: { nombre: '😌 Relajante', bpm: 72 },
+    fiesta: { nombre: '🎉 Fiesta', bpm: 126 },
+  };
+  const PROG = [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]]; // I–V–vi–IV (semitonos sobre Do)
+  const hz = st => 261.63 * Math.pow(2, st / 12);
+  const musica = { estilo: null, volumen: 'bajo', ctx: null, master: null, timer: null, paso: 0, siguiente: 0 };
+
+  function leerPrefMusica() { try { return JSON.parse(localStorage.getItem('juegos_pref') || '{}'); } catch (e) { return {}; } }
+  function guardarPrefMusica() { try { localStorage.setItem('juegos_pref', JSON.stringify({ musica: musica.estilo, volumen: musica.volumen })); } catch (e) { /* sin almacenamiento */ } }
+  const volMusica = () => musica.volumen === 'medio' ? 0.16 : 0.08;
+
+  function notaMusica(t, freq, dur, tipo, vol, filtro) {
+    const c = musica.ctx; const o = c.createOscillator(); const g = c.createGain();
+    o.type = tipo; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    let salida = g;
+    if (filtro) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = filtro; g.connect(f); salida = f; }
+    o.connect(g); salida.connect(musica.master); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function ruidoMusica(t, dur, vol, agudo) {
+    const c = musica.ctx; const n = Math.floor(c.sampleRate * dur); const buf = c.createBuffer(1, n, c.sampleRate); const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = vol;
+    const f = c.createBiquadFilter(); f.type = agudo ? 'highpass' : 'lowpass'; f.frequency.value = agudo ? 7000 : 900;
+    src.connect(f); f.connect(g); g.connect(musica.master); src.start(t);
+  }
+  function bomboMusica(t) {
+    const c = musica.ctx; const o = c.createOscillator(); const g = c.createGain();
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+    g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    o.connect(g); g.connect(musica.master); o.start(t); o.stop(t + 0.2);
+  }
+
+  // Un paso = corchea. 8 pasos por compás, 4 compases por vuelta.
+  function pasoMusica(t, paso) {
+    const est = musica.estilo; const acorde = PROG[Math.floor(paso / 8) % 4]; const i = paso % 8; const corchea = 30 / ESTILOS_MUSICA[est].bpm;
+    if (est === 'alegre') {
+      const penta = [0, 2, 4, 7, 9, 12, 14, 16];
+      notaMusica(t, hz(penta[(paso * 3 + acorde[0]) % penta.length] + 12), corchea * 0.9, 'square', 0.05, 2500);
+      if (i % 2 === 0) notaMusica(t, hz(acorde[0] - 12), corchea * 1.8, 'triangle', 0.22);
+      if (i % 2 === 1) ruidoMusica(t, 0.04, 0.05, true);
+    } else if (est === 'relajante') {
+      if (i === 0) acorde.forEach((st, k) => notaMusica(t, hz(st) * (1 + (k - 1) * 0.002), corchea * 8, 'sine', 0.07));
+      if (i % 2 === 0) notaMusica(t, hz(acorde[(i / 2) % 3] + 12), corchea * 2.5, 'triangle', 0.035);
+      if (i === 0 || i === 4) notaMusica(t, hz(acorde[0] - 24), corchea * 4, 'sine', 0.18);
+      if (Math.random() < 0.3) ruidoMusica(t, 0.02, 0.012, true);
+    } else if (est === 'fiesta') {
+      if (i % 2 === 0) bomboMusica(t);
+      if (i % 2 === 1) notaMusica(t, hz(acorde[0] - 12), corchea * 0.9, 'sawtooth', 0.12, 700);
+      if (i === 2 || i === 6) acorde.forEach(st => notaMusica(t, hz(st + 12), corchea * 0.6, 'sawtooth', 0.035, 1800));
+      if (i % 2 === 1) ruidoMusica(t, 0.03, 0.06, true);
+    }
+  }
+
+  function iniciarMusica(estilo) {
+    detenerMusica();
+    musica.estilo = estilo; guardarPrefMusica(); pintarBotonMusica();
+    if (!estilo) return;
+    try {
+      musica.ctx = musica.ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (musica.ctx.state === 'suspended') musica.ctx.resume();
+      musica.master = musica.ctx.createGain(); musica.master.gain.value = volMusica(); musica.master.connect(musica.ctx.destination);
+      musica.paso = 0; musica.siguiente = musica.ctx.currentTime + 0.1;
+      musica.timer = setInterval(() => {
+        const corchea = 30 / ESTILOS_MUSICA[musica.estilo].bpm;
+        while (musica.siguiente < musica.ctx.currentTime + 0.12) { pasoMusica(musica.siguiente, musica.paso++); musica.siguiente += corchea; }
+      }, 25);
+    } catch (e) { musica.estilo = null; pintarBotonMusica(); }
+  }
+  function detenerMusica() {
+    if (musica.timer) clearInterval(musica.timer);
+    musica.timer = null;
+    if (musica.master) { try { musica.master.disconnect(); } catch (e) { /* ya desconectado */ } musica.master = null; }
+  }
+  // Mientras habla la voz (gritón, Spelling), la música baja.
+  function bajarMusica(ms = 2500) {
+    if (!musica.master || !musica.ctx) return;
+    const g = musica.master.gain, t = musica.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setTargetAtTime(volMusica() * 0.25, t, 0.05); g.setTargetAtTime(volMusica(), t + ms / 1000, 0.3);
+  }
+  function pintarBotonMusica() {
+    const b = document.getElementById('btn-musica'); if (!b) return;
+    b.textContent = musica.estilo ? ESTILOS_MUSICA[musica.estilo].nombre.split(' ')[0] + ' ♪' : '🔇';
+    b.setAttribute('aria-label', 'Música: ' + (musica.estilo ? ESTILOS_MUSICA[musica.estilo].nombre : 'apagada'));
+    const menu = document.getElementById('menu-musica');
+    if (menu) menu.querySelectorAll('[data-mus]').forEach(x => x.setAttribute('aria-pressed', String((x.dataset.mus || null) === (musica.estilo || '') || (x.dataset.mus === '' && !musica.estilo))));
+    if (menu) menu.querySelectorAll('[data-vol]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.vol === musica.volumen)));
+  }
+  function menuMusicaHtml() {
+    return '<div class="menu-musica" id="menu-musica" hidden><div class="muted" style="margin-bottom:6px">Música de fondo</div>' +
+      '<button class="mus-opt" data-mus="">🔇 Apagada</button>' + Object.entries(ESTILOS_MUSICA).map(([k, v]) => '<button class="mus-opt" data-mus="' + k + '">' + v.nombre + '</button>').join('') +
+      '<div class="muted" style="margin:8px 0 4px">Volumen</div><div style="display:flex;gap:6px"><button class="mus-opt" data-vol="bajo">Bajo</button><button class="mus-opt" data-vol="medio">Medio</button></div></div>';
+  }
+  (() => {
+    const pref = leerPrefMusica();
+    if (pref.volumen === 'medio') musica.volumen = 'medio';
+    // Los navegadores exigen un gesto: si había música guardada, empieza con el primer toque.
+    if (pref.musica && ESTILOS_MUSICA[pref.musica]) {
+      musica.estilo = pref.musica;
+      const arrancar = () => { document.removeEventListener('pointerdown', arrancar); if (musica.estilo && !musica.timer) iniciarMusica(musica.estilo); };
+      document.addEventListener('pointerdown', arrancar);
+    }
+  })();
+
+  document.getElementById('menu-musica-wrap').innerHTML = menuMusicaHtml();
+  pintarBotonMusica();
+  document.getElementById('btn-musica').addEventListener('click', e => { e.stopPropagation(); const m = document.getElementById('menu-musica'); m.hidden = !m.hidden; pintarBotonMusica(); });
+  document.getElementById('menu-musica').addEventListener('click', e => {
+    e.stopPropagation();
+    const b = e.target.closest('[data-mus]'), v = e.target.closest('[data-vol]');
+    if (b) iniciarMusica(b.dataset.mus || null);
+    if (v) { musica.volumen = v.dataset.vol; guardarPrefMusica(); if (musica.master) musica.master.gain.value = volMusica(); pintarBotonMusica(); }
+  });
+  document.addEventListener('click', () => { const m = document.getElementById('menu-musica'); if (m) m.hidden = true; });
+  chip.addEventListener('click', () => { if (state.jugador) pantallaAvatar(); });
 
   // ---------- Eventos ----------
   app.addEventListener('click', e => {

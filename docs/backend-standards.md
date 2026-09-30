@@ -67,6 +67,12 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
   - Sincronía por reloj; los bots los calcula el cliente con la semilla.
   - La identidad del jugador se guarda en caché 60 s para no consultar Notion en cada sondeo. La lista de
     invitados siempre se lee fresca.
+- **Avatar:**
+  - `POST /juegos/avatar` `{ emoji, color }`, solo con valores de `AVATARES` (32) y `COLORES` (10); si no,
+    400.
+  - Se guarda en `juegos/perfiles/<id>.json`; mientras no se elige, hay uno por defecto a partir del id.
+  - `/juegos/yo` incluye `jugador.avatar` y las listas.
+  - El ranking, las salas y el resumen del admin incluyen `avatar`.
 - **Catálogo (`CATALOGO`):** 19 juegos (`en-preguntas`, "Responde en inglés", tope 2000). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 

@@ -1,7 +1,7 @@
 // Plataforma de juegos (openspec: juegos-plataforma), con almacén en memoria y sin red.
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { CATALOGO, clearCacheJuegos, handleJuegos, lunesDe, resolverJugador } from "./juegos.ts";
+import { AVATARES, CATALOGO, clearCacheJuegos, COLORES, handleJuegos, lunesDe, resolverJugador } from "./juegos.ts";
 import { MemoryStore } from "./store.ts";
 
 const ingles = [{ alumno: "Marisol", userEmails: ["marisol@example.com"], userNames: ["Marisol"] }, { alumno: "Angel", userEmails: ["angel@example.com"], userNames: ["Sisifo"] }];
@@ -164,4 +164,23 @@ Deno.test("juegos: Responde en inglés en el catálogo", async () => {
   const { call } = ctx();
   const r = await call("POST", "/partida", "marisol@example.com", partida("en-preguntas", 99999));
   assertEquals([r.status, r.body.puntos], [200, 2000]);
+});
+
+Deno.test("juegos: avatar por defecto, cambio validado y propagado", async () => {
+  const { call, store } = ctx();
+  const y1 = await call("GET", "/yo", "marisol@example.com");
+  const def = y1.body.jugador.avatar;
+  assert(AVATARES.includes(def.emoji) && COLORES.includes(def.color), JSON.stringify(def));
+  assertEquals((await call("GET", "/yo", "marisol@example.com")).body.jugador.avatar, def, "estable");
+  await call("POST", "/partida", "marisol@example.com", partida("en-vocab", 500));
+  assertEquals((await call("POST", "/avatar", "marisol@example.com", { emoji: "💀💀", color: "#123456" })).status, 400);
+  assertEquals((await call("POST", "/avatar", "marisol@example.com", { emoji: AVATARES[0], color: "red" })).status, 400);
+  const ok = await call("POST", "/avatar", "marisol@example.com", { emoji: AVATARES[3], color: COLORES[2] });
+  assertEquals([ok.status, ok.body.avatar], [200, { emoji: AVATARES[3], color: COLORES[2] }]);
+  assertEquals((await store.get<any>("juegos/perfiles/a-marisol.json"))!.data, { emoji: AVATARES[3], color: COLORES[2] });
+  assertEquals((await call("GET", "/yo", "marisol@example.com")).body.jugador.avatar.emoji, AVATARES[3], "la caché se actualiza");
+  const rank = await call("GET", "/ranking", "angel@example.com");
+  assertEquals(rank.body.top[0].avatar, { emoji: AVATARES[3], color: COLORES[2] }, "el ranking lo muestra de inmediato");
+  const res = await call("GET", "/admin/resumen", "admin@example.com");
+  assertEquals(res.body.jugadores[0].avatar.emoji, AVATARES[3]);
 });

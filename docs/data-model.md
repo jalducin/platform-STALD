@@ -146,6 +146,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     la semilla.
 - `juegos/salas-semana/<lunes>.json`: `{ salas: [{ codigo, juego, host, creada }] }`, índice para el
   resumen del admin.
+- `juegos/perfiles/<id-jugador>.json`: `{ emoji, color }`, el avatar elegido. Sin fotos ni datos
+  personales.
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.
   - Son los únicos correos que guarda el repo de datos. El invitado aceptó el aviso al registrarse.
   - Solo el admin los ve (`/juegos/invitados`).

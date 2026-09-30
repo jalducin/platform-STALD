@@ -28,6 +28,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - El portal escribe las de los espacios a los que el correo tiene acceso, así que las páginas entran
     solas.
   - "Cerrar sesión" en cualquier página borra las tres.
+  - Además del correo, se permiten preferencias de interfaz sin datos personales, como
+    `juegos_pref = { musica, volumen }` (música de fondo de `juegos.html`).
   - No guardar filas ni otros datos personales.
 - La página **no decide permisos**: muestra lo que devuelve el backend. Ocultar algo en el cliente no
   cuenta como control de acceso.
@@ -59,6 +61,10 @@ Cada página debe manejar y mostrar de forma explícita:
 - Vista de admin de `ingles.html`: tarjeta "🎮 Juegos de la semana" (`#juegos-admin`), con el ranking
   completo y las partidas con su podio, desde `/juegos/admin/resumen`. En el bloque de cada alumno o alumna
   va su línea de juegos.
+- `juegos.html`:
+  - **avatar:** personaje y color de las listas que envía `/juegos/yo`; sin fotos;
+  - **música de fondo:** generada con WebAudio (Alegre, Relajante, Fiesta); empieza solo tras un gesto y
+    baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el
   enlace, "📤 Compartir" y un QR (qrcodejs de cdnjs, cargado solo en esa pantalla).
 

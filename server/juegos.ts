@@ -13,11 +13,32 @@ interface FilaConUsuarios {
   alumno?: string | null;
 }
 
+export interface Avatar {
+  emoji: string;
+  color: string;
+}
+
 export interface Jugador {
   id: string;
   nombre: string;
   tipo: "alumno" | "invitado" | "admin";
+  avatar?: Avatar;
 }
+
+// Avatares permitidos: personajes (sin fotos) y colores de fondo. Única fuente válida.
+export const AVATARES = [
+  "🦊", "🐼", "🐯", "🦁", "🐸", "🐵", "🦄", "🐙", "🦖", "🐧", "🐨", "🐰", "🦉", "🐢", "🐬", "🦋",
+  "🐝", "🐱", "🐶", "🦜", "🌮", "🌶️", "🌵", "🪅", "⚽", "🏀", "🎸", "🎨", "🚀", "🌈", "⭐", "👾",
+];
+export const COLORES = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6", "#3b82f6", "#6366f1", "#a855f7", "#ec4899", "#64748b"];
+
+function fnv(s: string): number {
+  let h = 2166136261;
+  for (const ch of s) { h ^= ch.codePointAt(0)!; h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+export const avatarPorDefecto = (id: string): Avatar => ({ emoji: AVATARES[fnv(id) % AVATARES.length], color: COLORES[fnv(id + "|c") % COLORES.length] });
+const rutaPerfil = (id: string) => `juegos/perfiles/${id}.json`;
 
 export interface Invitado {
   nombre: string;
@@ -44,6 +65,7 @@ interface Semana {
   mejores: Record<string, number>;
   total: number;
   actualizado?: string;
+  avatar?: Avatar;
 }
 
 // Catálogo del servidor: solo estos juegos suman puntos, con su tope por partida.
@@ -174,8 +196,9 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
     return json({ error: "conflicto_escritura" }, 503);
   }
 
-  const jugador = await resolverJugador(email, deps.admin, ingles, secundaria, invitados);
-  if (!jugador) return json({ error: "no_registrado" }, 403);
+  const base = await resolverJugador(email, deps.admin, ingles, secundaria, invitados);
+  if (!base) return json({ error: "no_registrado" }, 403);
+  const jugador: Jugador = { ...base, avatar: (await store.get<Avatar>(rutaPerfil(base.id)))?.data ?? avatarPorDefecto(base.id) };
   cacheJugadores.set(email, { t: Date.now(), j: jugador, invitados });
   return await rutasDeJugador(req, sub, jugador, deps, hoy, ahora, json, invitados);
 }
@@ -183,6 +206,28 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
 async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps: DepsJuegos, hoy: string, ahora: string, json: Json, invitados: Invitados): Promise<Response> {
   const store = deps.store;
   const lunes = lunesDe(hoy);
+
+  // POST /juegos/avatar → cambiar personaje y color (solo de la lista)
+  if (sub === "/avatar" && req.method === "POST") {
+    let body: { emoji?: unknown; color?: unknown } = {};
+    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+    if (!AVATARES.includes(String(body.emoji)) || !COLORES.includes(String(body.color))) return json({ error: "avatar_invalido" }, 400);
+    const avatar: Avatar = { emoji: String(body.emoji), color: String(body.color) };
+    for (let i = 0; i < 3; i++) {
+      const doc = await store.get<Avatar>(rutaPerfil(jugador.id));
+      if (await store.put(rutaPerfil(jugador.id), avatar, doc?.sha ?? null, `juegos: avatar de ${jugador.nombre}`)) break;
+    }
+    jugador.avatar = avatar;
+    for (const [k, m] of cacheJugadores) if (m.j.id === jugador.id) cacheJugadores.set(k, { ...m, j: { ...m.j, avatar } });
+    // Que el ranking lo muestre ya: actualizar la semana si existe.
+    const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
+    for (let i = 0; i < 3; i++) {
+      const doc = await store.get<Semana>(ruta);
+      if (!doc || await store.put(ruta, { ...doc.data, avatar }, doc.sha, `juegos: avatar de ${jugador.nombre}`)) break;
+    }
+    cache.delete(lunes);
+    return json({ ok: true, avatar });
+  }
 
   // /juegos/sala… → partidas multijugador (server/salas.ts)
   if (sub === "/sala" || sub.startsWith("/sala/")) return await handleSalas(req, sub.slice("/sala".length), jugador, store, ahora, json, lunes);
@@ -194,7 +239,7 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
     if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
     const l = lunesDe(semana);
     const docs = ordenar(await leerSemana(store, l));
-    const jugadores = docs.map((d) => ({ nombre: d.nombre, tipo: d.tipo, total: d.total, mejores: d.mejores, partidas: d.partidas.length, ultima: d.partidas.at(-1)?.en ?? null }));
+    const jugadores = docs.map((d) => ({ nombre: d.nombre, tipo: d.tipo, total: d.total, mejores: d.mejores, partidas: d.partidas.length, ultima: d.partidas.at(-1)?.en ?? null, avatar: d.avatar ?? avatarPorDefecto(d.id) }));
     const catalogo = Object.fromEntries(Object.entries(CATALOGO).map(([id, d]) => [id, d.titulo]));
     return json({ semana: l, jugadores, salas: await resumenSalas(store, l), catalogo });
   }
@@ -220,6 +265,7 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
       const anterior = s.mejores[juego] ?? 0;
       const nuevoRecord = nueva.puntos > anterior;
       s.nombre = jugador.nombre;
+      s.avatar = jugador.avatar;
       s.partidas = [...s.partidas, nueva].slice(-MAX_PARTIDAS_GUARDADAS);
       s.mejores = { ...s.mejores, [juego]: Math.max(anterior, nueva.puntos) };
       s.total = Object.values(s.mejores).reduce((a, b) => a + b, 0);
@@ -238,7 +284,7 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
     const semana = new URL(req.url).searchParams.get("semana") || lunes;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
     const docs = ordenar(await leerSemana(store, lunesDe(semana)));
-    const top = docs.slice(0, 20).map((d, i) => ({ pos: i + 1, nombre: d.nombre, tipo: d.tipo, total: d.total, juegos: Object.keys(d.mejores).length, yo: d.id === jugador.id }));
+    const top = docs.slice(0, 20).map((d, i) => ({ pos: i + 1, nombre: d.nombre, tipo: d.tipo, total: d.total, juegos: Object.keys(d.mejores).length, yo: d.id === jugador.id, avatar: d.avatar ?? avatarPorDefecto(d.id) }));
     const mio = docs.find((d) => d.id === jugador.id);
     return json({ semana: lunesDe(semana), top, jugadores: docs.length, yo: { pos: posicionDe(docs, jugador.id), total: mio?.total ?? 0, mejores: mio?.mejores ?? {} } });
   }
@@ -248,7 +294,7 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
     const docs = await leerSemana(store, lunes);
     const mio = docs.find((d) => d.id === jugador.id);
     const catalogo = Object.entries(CATALOGO).map(([id, d]) => ({ id, ...d }));
-    return json({ jugador, semana: lunes, total: mio?.total ?? 0, mejores: mio?.mejores ?? {}, pos: posicionDe(docs, jugador.id), catalogo });
+    return json({ jugador, semana: lunes, total: mio?.total ?? 0, mejores: mio?.mejores ?? {}, pos: posicionDe(docs, jugador.id), catalogo, avatares: { emojis: AVATARES, colores: COLORES } });
   }
 
   // GET /juegos/invitados → solo admin: lista para análisis (con correos)
