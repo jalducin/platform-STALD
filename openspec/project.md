@@ -17,7 +17,8 @@ padre/maestro (administrador) y sus alumnas para ver pendientes, entregas y prog
 
 ```
 Navegador (GitHub Pages)
-  ├─ index.html   ──GET /data?email=…────────┐
+  ├─ index.html   ──GET /perfil?email=…──────┤  (portal)
+  ├─ secundaria.html ─GET /data?email=…──────┤
   └─ ingles.html  ──GET /ingles/data?email=…─┤
                                              ▼
              Deno Deploy `https://stald.jalducin.deno.net` (`server/main.ts`)
@@ -31,7 +32,8 @@ Navegador (GitHub Pages)
 | Superficie | Ubicación |
 |---|---|
 | Repo | https://github.com/jalducin/platform-STALD |
-| Dashboard Secundaria | https://jalducin.github.io/platform-STALD/ |
+| Portal (acceso) | https://jalducin.github.io/platform-STALD/ |
+| Dashboard Secundaria | https://jalducin.github.io/platform-STALD/secundaria.html |
 | Dashboard Inglés | https://jalducin.github.io/platform-STALD/ingles.html |
 | Backend | `https://stald.jalducin.deno.net` — Deno Deploy, `server/main.ts` (ver `docs/deno-deploy-setup.md`) |
 | Datos privados | Repo `jalducin/platform-STALD-data` (contenido con respuestas y resultados JSON) |

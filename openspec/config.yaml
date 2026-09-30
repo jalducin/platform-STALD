@@ -19,7 +19,8 @@ context: |
 
   Arquitectura: navegador → Deno Deploy (filtro por correo; actividades en el repo de datos) → Notion API.
   Cada página HTML consume una ruta del backend:
-  - index.html  → /data         (base "📖 Clases", Secundaria)
+  - index.html  → /perfil       (portal: accesos por correo)
+  - secundaria.html → /data     (base "📖 Clases", Secundaria)
   - ingles.html → /ingles/data  (base "📖 Clases Inglés")
 
   Dominio: seguimiento de tareas/clases de alumnas (menores de edad). Los datos son personales:
@@ -55,7 +56,7 @@ rules:
       todas las páginas consumidoras en el mismo cambio
 
   proposal:
-    - "Indicar qué superficies toca el cambio: index.html, ingles.html, Edge Function, bases de Notion"
+    - "Indicar qué superficies toca el cambio: index.html (portal), secundaria.html, ingles.html, servidor Deno, bases de Notion"
     - Si hay cambios manuales fuera del repo (Notion, Supabase secrets, Pages), listarlos como
       "Acciones externas" con responsable (agente o usuario)
 

@@ -1,6 +1,6 @@
 # Estándares de frontend (páginas estáticas)
 
-Aplica a `index.html`, `ingles.html` y cualquier página nueva que se publique con GitHub Pages.
+Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier página nueva que se publique con GitHub Pages.
 
 ## 1. Forma de las páginas
 
@@ -8,15 +8,22 @@ Aplica a `index.html`, `ingles.html` y cualquier página nueva que se publique c
   `<script>`. Sin build, sin frameworks y sin dependencias de CDN salvo que un cambio lo justifique en su `design.md`.
 - Una página = una ruta del backend. La URL del backend va en una constante al inicio del script
   (`DATA_URL_BASE`); no repetirla en varios lugares.
-- `index.html` es el dashboard de Secundaria y es lo que Pages sirve en `/`. No renombrarlo.
+- `index.html` es el **portal** (lo que Pages sirve en `/`):
+  - pide el correo, consulta `/perfil` y muestra una tarjeta por espacio;
+  - el tablero de Secundaria vive en `secundaria.html` desde el cambio `portal-acceso`.
+- Cada página de espacio lleva "← Inicio" al portal y acepta `?api=` para probar contra un servidor local.
 
 ## 2. Seguridad en el DOM
 
 - Todo texto que venga de Notion se inserta con `escapeHtml()` o con `textContent`. Nunca concatenar
   datos crudos en `innerHTML`.
 - Los enlaces externos llevan `target="_blank" rel="noopener"`.
-- `localStorage` solo guarda el correo de sesión (clave por página, p. ej. `secundaria_email`). No guardar
-  filas ni otros datos personales.
+- `localStorage` solo guarda el correo de sesión: `stald_email` (portal), `ingles_email` y
+  `secundaria_email`.
+  - El portal escribe las de los espacios a los que el correo tiene acceso, así que las páginas entran
+    solas.
+  - "Cerrar sesión" en cualquier página borra las tres.
+  - No guardar filas ni otros datos personales.
 - La página **no decide permisos**: muestra lo que devuelve el backend. Ocultar algo en el cliente no
   cuenta como control de acceso.
 
@@ -43,7 +50,7 @@ Cada página debe manejar y mostrar de forma explícita:
 
 ## 5. Código compartido
 
-`index.html` e `ingles.html` repiten lógica de login, `escapeHtml` y estilos. Mientras sean dos archivos,
+`secundaria.html` e `ingles.html` (y el portal) repiten lógica de login, `escapeHtml` y estilos. Mientras sean archivos separados,
 **un cambio en la lógica común debe aplicarse a ambos en el mismo cambio** y la tarea de verificación
 debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio OpenSpec propio.
 

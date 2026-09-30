@@ -3,287 +3,229 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tareas pendientes — Estudio Secundaria</title>
+<title>STALD · Plataforma de aprendizaje</title>
+<meta name="description" content="Clases, tareas y juegos para aprender en un solo lugar.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%234f46e5'/><text x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'>S</text></svg>">
 <style>
   :root {
-    --bg: #faf9f7; --card-bg: #ffffff; --text: #1c1917; --text-muted: #78716c; --border: #e7e5e4;
-    --overdue: #dc2626; --overdue-bg: #fef2f2; --today: #b45309; --today-bg: #fffbeb;
-    --accent: #4f46e5; --chip: #eef2ff; box-sizing: border-box;
+    --bg: #f6f5fb; --bg-2: #eef0ff; --card: #ffffff; --text: #1e1b2e; --muted: #6b6880; --border: #e6e4f0;
+    --accent: #4f46e5; --accent-2: #7c3aed; --accent-soft: #eef0ff; --ok: #16a34a; --warn: #b45309; --danger: #dc2626;
+    --shadow: 0 1px 2px rgba(30, 27, 46, .06), 0 8px 24px rgba(30, 27, 46, .07);
+    --shadow-hover: 0 2px 4px rgba(30, 27, 46, .08), 0 14px 32px rgba(79, 70, 229, .16);
+    --radius: 18px;
+    --ingles: #2563eb; --ingles-soft: #dbeafe; --secundaria: #0d9488; --secundaria-soft: #ccfbf1; --juegos: #db2777; --juegos-soft: #fce7f3;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #18181b; --card-bg: #27272a; --text: #f4f4f5; --text-muted: #a1a1aa; --border: #3f3f46;
-      --overdue-bg: #3b1414; --today-bg: #3a2a08; --chip: #312e81;
+      --bg: #13111c; --bg-2: #1b1830; --card: #1e1b2e; --text: #f4f3fa; --muted: #a8a5bd; --border: #2e2a45;
+      --accent-soft: #29255a; --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+      --shadow-hover: 0 2px 4px rgba(0, 0, 0, .5), 0 14px 32px rgba(124, 58, 237, .25);
+      --ingles-soft: #1e2a4d; --secundaria-soft: #113b37; --juegos-soft: #45162f;
     }
   }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; }
-  body {
-    background: var(--bg); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-    padding-top: calc(16px + env(safe-area-inset-top, 0px));
-    max-width: 720px; margin: 0 auto;
+  :root[data-theme="dark"] {
+    --bg: #13111c; --bg-2: #1b1830; --card: #1e1b2e; --text: #f4f3fa; --muted: #a8a5bd; --border: #2e2a45;
+    --accent-soft: #29255a; --ingles-soft: #1e2a4d; --secundaria-soft: #113b37; --juegos-soft: #45162f;
   }
-  h1 { font-size: 1.15rem; margin: 0 0 2px; }
-  .subtitle { color: var(--text-muted); font-size: .8rem; margin-bottom: 14px; }
-  .week-strip { display: flex; gap: 4px; margin-bottom: 14px; }
-  .week-day { flex: 1; min-width: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 5px 3px; text-align: center; }
-  .week-day.is-today { border-color: var(--accent); border-width: 2px; }
-  .week-day.is-past { opacity: .55; }
-  .week-day .wd-label { font-size: .62rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-  .week-day .wd-date { font-size: .68rem; font-weight: 700; margin-bottom: 3px; }
-  .week-day .wd-chip { font-size: .55rem; line-height: 1.15; padding: 1px 2px; border-radius: 3px; background: var(--chip); color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .week-day .wd-chip.done { background: transparent; color: var(--text-muted); text-decoration: line-through; }
-  .week-day .wd-empty { font-size: .6rem; color: var(--text-muted); }
-  .stats { display: flex; gap: 8px; margin-bottom: 14px; }
-  .stat { flex: 1; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 8px; text-align: center; }
-  .stat .num { font-size: 1.5rem; font-weight: 800; line-height: 1; }
-  .stat.overdue .num { color: var(--overdue); }
-  .stat.today .num { color: var(--today); }
-  .stat.upcoming .num { color: var(--accent); }
-  .stat .label { font-size: .68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; }
-  .controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-  button { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: .82rem; font-weight: 600; cursor: pointer; }
-  button:disabled { opacity: .55; }
-  .updated { font-size: .72rem; color: var(--text-muted); }
-  .list { display: flex; flex-direction: column; gap: 8px; }
-  .row { display: flex; align-items: center; gap: 10px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
-  .row.overdue { border-left: 4px solid var(--overdue); background: var(--overdue-bg); }
-  .row.today { border-left: 4px solid var(--today); background: var(--today-bg); }
-  .row.upcoming { border-left: 4px solid var(--border); }
-  .row.completed { border-left: 4px solid #16a34a; opacity: .92; }
-  .badge { font-size: .68rem; font-weight: 700; padding: 4px 8px; border-radius: 99px; white-space: nowrap; min-width: 62px; text-align: center; flex-shrink: 0; }
-  .badge.overdue { background: var(--overdue); color: #fff; }
-  .badge.today { background: var(--today); color: #fff; }
-  .badge.upcoming { background: var(--chip); color: var(--accent); }
-  .badge.completed { background: #16a34a; color: #fff; }
-  .meta { flex: 1; min-width: 0; }
-  .meta .name { font-weight: 600; font-size: .88rem; overflow-wrap: anywhere; }
-  .meta .row2 { font-size: .76rem; color: var(--text-muted); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .materia { display: inline-block; background: var(--chip); color: var(--accent); font-size: .68rem; font-weight: 600; padding: 2px 7px; border-radius: 6px; }
-  .fecha { font-weight: 600; color: var(--text); }
-  a.link { color: var(--accent); text-decoration: none; font-size: .74rem; font-weight: 600; flex-shrink: 0; }
-  .empty, .error, .loading { text-align: center; color: var(--text-muted); padding: 32px 12px; font-size: .88rem; }
-  .error { color: var(--overdue); }
-  .section-title { font-size: .82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin: 20px 0 8px; }
-  .fallback-note { font-size: .72rem; color: var(--text-muted); text-align: center; margin-top: 10px; }
-  .login-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 24px; }
-  .login-box label { font-size: .82rem; font-weight: 600; display: block; margin-bottom: 6px; }
-  .login-box input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: .95rem; margin-bottom: 12px; }
-  .login-box button { width: 100%; }
-  .login-error { color: #dc2626; font-size: .8rem; margin-top: 8px; display: none; }
-  .top-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
-  .top-bar .who { font-size: .82rem; color: var(--text-muted); }
-  .top-bar button { width: auto; padding: 6px 12px; font-size: .78rem; background: var(--border); color: var(--text); }
-  .admin-tag { background: var(--accent); color: #fff; font-size: .65rem; font-weight: 700; padding: 2px 7px; border-radius: 99px; margin-left: 6px; text-transform: uppercase; }
-  .meta .who { font-size: .72rem; color: var(--accent); font-weight: 600; }
-  #app { display: none; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background:
+      radial-gradient(900px 480px at 110% -10%, rgba(124, 58, 237, .16), transparent 60%),
+      radial-gradient(700px 420px at -10% 0%, rgba(37, 99, 235, .12), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45; -webkit-font-smoothing: antialiased;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 10px; margin: 4px 0 28px; }
+  .logo { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 1.25rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 6px 16px rgba(79, 70, 229, .35); }
+  .brand .name { font-weight: 800; letter-spacing: .08em; font-size: 1rem; }
+  .brand .tagline { font-size: .76rem; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .hero { padding: 28px 22px; }
+  .eyebrow { display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);
+    background: var(--accent-soft); padding: 4px 10px; border-radius: 99px; margin-bottom: 12px; }
+  h1 { font-size: 1.7rem; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.01em; }
+  .lead { color: var(--muted); margin: 0 0 22px; font-size: .98rem; }
+  label { display: block; font-size: .82rem; font-weight: 700; margin-bottom: 6px; }
+  input[type=email] { width: 100%; font: inherit; font-size: 1rem; padding: 13px 14px; border-radius: 12px; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text); outline: none; transition: border-color .15s, box-shadow .15s; }
+  input[type=email]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 12px; font: inherit; font-weight: 700; font-size: 1rem;
+    color: #fff; border: none; border-radius: 12px; padding: 13px 16px; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px rgba(79, 70, 229, .3); transition: transform .12s, box-shadow .15s, opacity .15s; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(79, 70, 229, .38); }
+  .btn:disabled { opacity: .6; cursor: default; transform: none; }
+  .btn:focus-visible, .tile:focus-visible, .link-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .hint { font-size: .8rem; color: var(--muted); margin: 14px 0 0; }
+  .alert { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .88rem; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .alert { background: #3b1414; color: #fecaca; border-color: #7f1d1d; } }
+  .loading { padding: 40px 22px; text-align: center; color: var(--muted); }
+  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--accent-soft); border-top-color: var(--accent); margin: 0 auto 12px; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .greet { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+  .date { font-size: .8rem; color: var(--muted); margin-bottom: 2px; }
+  .greet p { margin: 0; color: var(--muted); }
+  .tag { font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 5px 10px; border-radius: 99px; white-space: nowrap;
+    background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
+  .tiles { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .tiles { grid-template-columns: 1fr 1fr; } .tile.wide { grid-column: 1 / -1; } }
+  .tile { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 18px 18px 16px; text-decoration: none; color: var(--text);
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+    transition: transform .15s, box-shadow .15s, border-color .15s; }
+  .tile::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--tone); }
+  a.tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--tone); }
+  .tile .ico { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 1.5rem; background: var(--tone-soft); margin-bottom: 4px; }
+  .tile .t { font-weight: 800; font-size: 1.05rem; }
+  .tile .d { color: var(--muted); font-size: .86rem; }
+  .tile .go { position: absolute; right: 16px; top: 18px; font-size: 1.1rem; color: var(--tone); font-weight: 800; transition: transform .15s; }
+  a.tile:hover .go { transform: translateX(3px); }
+  .tile.ingles { --tone: var(--ingles); --tone-soft: var(--ingles-soft); }
+  .tile.secundaria { --tone: var(--secundaria); --tone-soft: var(--secundaria-soft); }
+  .tile.juegos { --tone: var(--juegos); --tone-soft: var(--juegos-soft); }
+  .tile.soon { opacity: .7; cursor: default; }
+  .pill { align-self: flex-start; font-size: .7rem; font-weight: 800; padding: 3px 9px; border-radius: 99px; background: var(--tone-soft); color: var(--tone); }
+  .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
+  .link-btn { font: inherit; font-size: .86rem; font-weight: 600; background: none; border: none; color: var(--muted); cursor: pointer; padding: 6px 0; }
+  .link-btn:hover { color: var(--text); }
+  .who { font-size: .8rem; color: var(--muted); }
+  footer { text-align: center; font-size: .74rem; color: var(--muted); margin-top: 36px; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
-  <h1>📚 Tareas pendientes</h1>
-  <div class="subtitle">Estudio Secundaria — actualizado desde Notion</div>
+<div class="wrap">
+  <header class="brand">
+    <div class="logo" aria-hidden="true">S</div>
+    <div><div class="name">STALD</div><div class="tagline">Plataforma de aprendizaje</div></div>
+  </header>
 
-  <div id="login" class="login-box">
-    <label for="email-input">Tu correo</label>
-    <input id="email-input" type="email" placeholder="tucorreo@gmail.com" autocomplete="email">
-    <button id="login-btn">Entrar</button>
-    <div class="login-error" id="login-error">No encontré clases asociadas a ese correo.</div>
-  </div>
+  <main>
+    <section id="login" class="card hero" hidden>
+      <span class="eyebrow">Te damos la bienvenida</span>
+      <h1>Aprende, practica y juega</h1>
+      <p class="lead">Tus clases, tareas y juegos en un solo lugar.</p>
+      <form id="login-form" novalidate>
+        <label for="email">Tu correo</label>
+        <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com" required>
+        <button class="btn" id="login-btn" type="submit">Entrar →</button>
+      </form>
+      <p class="hint">Usa el mismo correo con el que te registraron en tus clases.</p>
+      <div class="alert" id="login-error" role="alert" hidden></div>
+    </section>
 
-  <div id="app">
-    <div class="top-bar">
-      <div class="who" id="who-label"></div>
-      <button id="logout-btn">Cerrar sesión</button>
-    </div>
+    <section id="loading" class="card loading" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <div>Preparando tu espacio…</div>
+    </section>
 
-    <div class="week-strip" id="week-strip"></div>
+    <section id="home" hidden>
+      <div class="greet">
+        <div>
+          <div class="date" id="date"></div>
+          <h1 id="hello">Hola 👋</h1>
+          <p>¿Qué hacemos hoy?</p>
+        </div>
+        <span class="tag" id="admin-tag" hidden>Modo maestro</span>
+      </div>
+      <nav class="tiles" id="tiles" aria-label="Espacios"></nav>
+      <div class="foot">
+        <span class="who" id="who"></span>
+        <button class="link-btn" id="logout" type="button">Cerrar sesión</button>
+      </div>
+    </section>
+  </main>
 
-    <div class="stats">
-      <div class="stat overdue"><div class="num" id="n-overdue">–</div><div class="label">Atrasadas</div></div>
-      <div class="stat today"><div class="num" id="n-today">–</div><div class="label">Hoy</div></div>
-      <div class="stat upcoming"><div class="num" id="n-upcoming">–</div><div class="label">Próximas</div></div>
-    </div>
-
-    <div class="controls">
-      <button id="refresh-btn">🔄 Actualizar</button>
-      <span class="updated" id="updated-label"></span>
-    </div>
-
-    <div id="content" class="list"><div class="loading">Cargando…</div></div>
-
-    <div class="section-title">✅ Entregado en los últimos 2 días</div>
-    <div id="content-recent" class="list"></div>
-    <div class="fallback-note">Se basa en la última edición de cada clase marcada como Completada.</div>
-  </div>
+  <footer>STALD · aprender también puede ser divertido</footer>
+</div>
 
 <script>
-  // Backend en Deno Deploy (ver docs/deno-deploy-setup.md).
-  const DATA_URL_BASE = 'https://stald.jalducin.deno.net/data';
-  const STORAGE_KEY = 'secundaria_email';
+  // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` permite probar contra un servidor local.
+  const DEFAULT_API = 'https://stald.jalducin.deno.net';
+  const API_PARAM = new URLSearchParams(location.search).get('api');
+  const API_BASE = (API_PARAM || DEFAULT_API).replace(/\/$/, '');
+  // Solo se guarda el correo. Las páginas de cada espacio leen su propia clave (frontend-standards §2).
+  const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
 
-  const loginEl = document.getElementById('login');
-  const appEl = document.getElementById('app');
-  const emailInput = document.getElementById('email-input');
-  const loginBtn = document.getElementById('login-btn');
-  const loginError = document.getElementById('login-error');
-  const whoLabel = document.getElementById('who-label');
-  const logoutBtn = document.getElementById('logout-btn');
-  const contentEl = document.getElementById('content');
-  const recentEl = document.getElementById('content-recent');
-  const weekStripEl = document.getElementById('week-strip');
-  const updatedEl = document.getElementById('updated-label');
-  const refreshBtn = document.getElementById('refresh-btn');
-  const nOverdue = document.getElementById('n-overdue');
-  const nToday = document.getElementById('n-today');
-  const nUpcoming = document.getElementById('n-upcoming');
+  const $ = (id) => document.getElementById(id);
+  const show = (id) => ['login', 'loading', 'home'].forEach(s => { $(s).hidden = s !== id; });
 
-  function fmtDate(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-  function todayStr() { return fmtDate(new Date()); }
-  function daysAgoStr(n) { const d = new Date(); d.setDate(d.getDate()-n); return fmtDate(d); }
-  function classify(fecha, today) { if (fecha < today) return 'overdue'; if (fecha === today) return 'today'; return 'upcoming'; }
-  function diffDays(fecha, today) { const a = new Date(fecha+'T00:00:00'); const b = new Date(today+'T00:00:00'); return Math.round((b-a)/86400000); }
-  function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-  function currentWeekRange() {
-    const d = new Date();
-    const dow = d.getDay();
-    const diffToMonday = dow === 0 ? 6 : dow - 1;
-    const monday = new Date(d); monday.setDate(d.getDate() - diffToMonday);
-    const days = [];
-    for (let i = 0; i < 7; i++) { const day = new Date(monday); day.setDate(monday.getDate()+i); days.push(day); }
-    return { start: fmtDate(days[0]), end: fmtDate(days[6]), days };
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  function renderWeekStrip(rows) {
-    const week = currentWeekRange();
-    const today = todayStr();
-    const labels = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-    weekStripEl.innerHTML = week.days.map(function(d, i) {
-      const ds = fmtDate(d);
-      const items = rows.filter(function(r) { return r.fecha === ds; });
-      const cls = ds === today ? 'is-today' : (ds < today ? 'is-past' : '');
-      const body = items.length
-        ? items.map(function(it) { return '<div class="wd-chip ' + (it.completado ? 'done' : '') + '">' + escapeHtml(it.materia || '?') + '</div>'; }).join('')
-        : '<div class="wd-empty">—</div>';
-      return '<div class="week-day ' + cls + '">' +
-        '<div class="wd-label">' + labels[i] + '</div>' +
-        '<div class="wd-date">' + d.getDate() + '</div>' +
-        '<div class="wd-items">' + body + '</div>' +
-      '</div>';
-    }).join('');
+  // Conserva ?api= al navegar (pruebas locales).
+  const conApi = (href) => API_PARAM ? href + '?api=' + encodeURIComponent(API_PARAM) : href;
+
+  const ESPACIOS = [
+    { id: 'ingles', clase: 'ingles', href: 'ingles.html', ico: '📘', t: 'Clases de Inglés', d: 'Actividades de la semana, exámenes y tu avance.' },
+    { id: 'secundaria', clase: 'secundaria', href: 'secundaria.html', ico: '📚', t: 'Secundaria', d: 'Tus tareas y clases por materia.' },
+    { id: 'juegos', clase: 'juegos wide', href: null, ico: '🎮', t: 'Juegos', d: 'Aprende jugando: inglés, español, cultura, Basta, Lotería y más.', pronto: true },
+  ];
+
+  function renderHome(p) {
+    $('hello').textContent = 'Hola, ' + (p.nombre || 'qué gusto verte') + ' 👋';
+    const hoy = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('date').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
+    $('admin-tag').hidden = !p.isAdmin;
+    $('who').textContent = p.email;
+    $('tiles').innerHTML = ESPACIOS.filter(e => p.accesos[e.id]).map(e => e.pronto
+      ? '<div class="tile ' + e.clase + ' soon" aria-disabled="true" data-espacio="' + e.id + '"><span class="ico" aria-hidden="true">' + e.ico + '</span>' +
+        '<span class="t">' + escapeHtml(e.t) + '</span><span class="d">' + escapeHtml(e.d) + '</span><span class="pill">Muy pronto</span></div>'
+      : '<a class="tile ' + e.clase + '" href="' + escapeHtml(conApi(e.href)) + '" data-espacio="' + e.id + '"><span class="ico" aria-hidden="true">' + e.ico + '</span>' +
+        '<span class="t">' + escapeHtml(e.t) + '</span><span class="d">' + escapeHtml(e.d) + '</span><span class="go" aria-hidden="true">→</span></a>'
+    ).join('');
+    show('home');
   }
 
-  function formatRow(i, badgeClass, badgeText, isAdmin) {
-    let dow = i.fecha;
-    try { dow = new Date(i.fecha+'T00:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric', month:'short'}); } catch(e) {}
-    const whoStr = isAdmin ? ('<div class="who">👤 ' + escapeHtml((i.userNames && i.userNames.length) ? i.userNames.join(', ') : 'Sin asignar') + '</div>') : '';
-    return '<div class="row ' + badgeClass + '">' +
-      '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
-      '<div class="meta">' +
-        '<div class="name">' + escapeHtml(i.name) + '</div>' +
-        '<div class="row2">' +
-          '<span class="materia">' + escapeHtml(i.materia || '—') + '</span>' +
-          '<span class="fecha">' + escapeHtml(dow) + '</span>' +
-          (i.semana ? ' · ' + escapeHtml(i.semana) : '') +
-          (i.dia ? ' · ' + escapeHtml(i.dia) : '') +
-        '</div>' +
-        whoStr +
-      '</div>' +
-      (i.url ? '<a class="link" href="' + escapeHtml(i.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '') +
-    '</div>';
+  function error(msg) {
+    $('login-error').textContent = msg;
+    $('login-error').hidden = false;
+    show('login');
   }
 
-  function render(data) {
-    const rows = data.rows || [];
-    const today = todayStr();
-    const cutoff = daysAgoStr(2);
-
-    whoLabel.textContent = data.isAdmin ? 'Modo maestro — viendo todo' : 'Tu progreso';
-    if (data.isAdmin) {
-      const tag = document.createElement('span');
-      tag.className = 'admin-tag';
-      tag.textContent = 'Admin';
-      whoLabel.appendChild(tag);
-    }
-
-    renderWeekStrip(rows);
-
-    const pending = rows.filter(r => !r.completado && r.fecha)
-      .map(r => ({...r, _status: classify(r.fecha, today), _diff: diffDays(r.fecha, today)}))
-      .sort((a,b) => a.fecha.localeCompare(b.fecha));
-
-    const recent = rows.filter(r => r.completado && r.fechaReal && r.fechaReal >= cutoff && r.fechaReal <= today)
-      .map(r => ({...r, fecha: r.fechaReal}))
-      .sort((a,b) => b.fecha.localeCompare(a.fecha));
-
-    const counts = {overdue:0, today:0, upcoming:0};
-    pending.forEach(i => counts[i._status]++);
-    nOverdue.textContent = counts.overdue;
-    nToday.textContent = counts.today;
-    nUpcoming.textContent = counts.upcoming;
-
-    contentEl.innerHTML = pending.length
-      ? pending.map(i => formatRow(i, i._status, i._status === 'overdue' ? i._diff + 'd atraso' : (i._status === 'today' ? 'Hoy' : 'en ' + (-i._diff) + 'd'), data.isAdmin)).join('')
-      : '<div class="empty">🎉 No hay tareas pendientes sin entregar.</div>';
-
-    recentEl.innerHTML = recent.length
-      ? recent.map(i => formatRow(i, 'completed', '✅ Hecho', data.isAdmin)).join('')
-      : '<div class="empty">Nada entregado en los últimos 2 días todavía.</div>';
-  }
-
-  async function loadFor(email) {
-    contentEl.innerHTML = '<div class="loading">Cargando…</div>';
-    loginError.style.display = 'none';
+  async function entrar(email) {
+    show('loading');
+    $('login-error').hidden = true;
     try {
-      const res = await fetch(DATA_URL_BASE + '?email=' + encodeURIComponent(email), { cache: 'no-store' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
-
-      if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {
-        loginError.style.display = 'block';
-        localStorage.removeItem(STORAGE_KEY);
-        loginEl.style.display = 'block';
-        appEl.style.display = 'none';
-        return;
+      const res = await fetch(API_BASE + '/perfil?email=' + encodeURIComponent(email), { cache: 'no-store' });
+      const p = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(p.error || ('HTTP ' + res.status));
+      if (!p.conocido) {
+        SESSION_KEYS.forEach(k => localStorage.removeItem(k));
+        $('email').value = email;
+        return error('No encontré clases con ese correo. Revisa que esté bien escrito o pide a quien te da clases que te registre.');
       }
-
-      localStorage.setItem(STORAGE_KEY, email);
-      loginEl.style.display = 'none';
-      appEl.style.display = 'block';
-      render(data);
-      updatedEl.textContent = 'Actualizado ' + new Date(data.generatedAt).toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+      localStorage.setItem('stald_email', email);
+      if (p.accesos.ingles) localStorage.setItem('ingles_email', email);
+      if (p.accesos.secundaria) localStorage.setItem('secundaria_email', email);
+      renderHome(p);
     } catch (e) {
-      loginError.textContent = '⚠️ ' + e.message;
-      loginError.style.display = 'block';
+      error('⚠️ No pude conectarme (' + e.message + '). Revisa tu internet e intenta de nuevo.');
     }
   }
 
-  loginBtn.addEventListener('click', () => {
-    const email = emailInput.value.trim().toLowerCase();
-    if (!email) return;
-    loadFor(email);
-  });
-  emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
-
-  logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem(STORAGE_KEY);
-    appEl.style.display = 'none';
-    loginEl.style.display = 'block';
-    emailInput.value = '';
+  $('login-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = $('email').value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error('Escribe un correo válido, por ejemplo tucorreo@gmail.com.');
+    entrar(email);
   });
 
-  refreshBtn.addEventListener('click', () => {
-    const email = localStorage.getItem(STORAGE_KEY);
-    if (email) loadFor(email);
+  $('logout').addEventListener('click', () => {
+    SESSION_KEYS.forEach(k => localStorage.removeItem(k));
+    $('email').value = '';
+    show('login');
+    $('email').focus();
   });
 
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    emailInput.value = saved;
-    loadFor(saved);
-  }
+  // Sesión recordada: del portal o de una página que ya tenía sesión.
+  const saved = SESSION_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
+  if (saved) entrar(saved); else show('login');
 </script>
 </body>
 </html>

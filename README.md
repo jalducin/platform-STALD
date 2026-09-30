@@ -2,7 +2,8 @@
 
 Dashboards de tareas escolares alimentados desde Notion (Secundaria e Inglés).
 
-- Secundaria: https://jalducin.github.io/platform-STALD/
+- Portal (entrada única): https://jalducin.github.io/platform-STALD/
+- Secundaria: https://jalducin.github.io/platform-STALD/secundaria.html
 - Inglés: https://jalducin.github.io/platform-STALD/ingles.html
 
 Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:ff` → `/opsx:apply` →
