@@ -29,7 +29,7 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Producción:
+- [x] 4.1 Producción:
   - curl de sala de Lotería (modo) y del grito;
   - **restaurar** borrando la sala de prueba;
   - revisión de solo lectura de juegos publicados.
@@ -37,4 +37,4 @@
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/backend-standards.md` y `docs/data-model.md`
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #35)

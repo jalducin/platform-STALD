@@ -34,6 +34,19 @@
     no llegó a una carta; se verificó aparte en `juegos-clasicos`.
   - Las expectativas se actualizaron a 19 juegos y a los nombres nuevos de los bots.
 
+## Producción (4.1)
+- **Curl:**
+  - sala de Lotería en modo `llena` → TFGU;
+  - modo inválido → 400 `modo_invalido`;
+  - el grito dos veces conserva la primera hora;
+  - sala de `en-preguntas` → PEJP.
+- **Restauración:**
+  - Se borraron solo TFGU y PEJP, y sus entradas del índice. El índice quedó vacío y se eliminó.
+  - Las otras 6 salas (ASVN, DVKU, FBKE, HNGR, RYWA y VCRP) son **partidas reales** del admin y de una
+    alumna y no se tocaron.
+  - Se crearon antes de que existiera el índice, así que no aparecen en "Partidas de la semana"; las
+    nuevas sí.
+
 ## Verificación de estado
 - Sin datos reales modificados. Las copias se borraron y el servidor local se detuvo.
 - Estado restaurado: Sí.
