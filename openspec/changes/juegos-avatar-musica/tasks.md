@@ -31,7 +31,7 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Producción:
+- [x] 4.1 Producción:
   - curl de avatar (válido e inválido) como admin;
   - **restaurar** el perfil de prueba;
   - revisión de solo lectura publicada.
@@ -39,4 +39,4 @@
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/frontend-standards.md` §2, `docs/backend-standards.md`, `docs/data-model.md` y README del repo de datos
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #37)
