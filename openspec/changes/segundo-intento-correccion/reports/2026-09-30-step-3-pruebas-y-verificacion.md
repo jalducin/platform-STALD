@@ -39,6 +39,16 @@
 - **Examen (1 intento, sin corrección):** cubierto por `correccion_test.ts` y `actividades_test.ts`. En la
   página está bloqueado hasta el viernes.
 
+## Verificación en producción (4.2, sin enviar intentos)
+- Vista previa de admin (`?alumno=X&intento=2`, no guarda), actividad del 29:
+  - Angel: 12 ejercicios, 9 fijas y 3 por corregir, `vistaPrevia: true`, sin respuestas correctas en la
+    respuesta.
+  - Jesus: 6 fijas, 6 por corregir. Sofy: 9 fijas, 3 por corregir.
+- Marisol: actividad del 1 (100 %) → `completo` con 1 intento; actividad del 29 (92 %) → `en-curso`.
+- Resultados sin cambios: diagnóstico 5, actividad del 29 con 4 × 1 intento y actividad del 1 con
+  2 × 1 intento.
+- GitHub Pages ya sirve la página con la vista de corrección.
+
 ## Verificación de estado
 - Antes: repo de datos real sin cambios. Las pruebas usan copias en memoria (`data-e2e`).
 - Después: el repo de datos no se tocó. Se borraron las copias y se detuvo el servidor local.

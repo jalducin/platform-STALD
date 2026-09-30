@@ -25,11 +25,11 @@
   - corrección con fijas deshabilitadas;
   - corrige todo → 100 % y completo.
   - Examen: 1 intento.
-- [ ] 4.2 Producción tras el merge, sin enviar intentos reales:
+- [x] 4.2 Producción tras el merge, sin enviar intentos reales:
   - curl de admin con `?alumno=<quien tenga 1 intento>&intento=2` → `correccion` con sus fijas;
   - Marisol (100 % en la actividad del 1) ve `completo`.
 
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/data-model.md` (regla de intentos), `docs/backend-standards.md` (campo `correccion`) y skill `nueva-semana-ingles` (con copia)
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #17)
