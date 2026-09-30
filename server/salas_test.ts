@@ -139,3 +139,22 @@ Deno.test("salas: índice semanal, final, podio del host y resumen del admin", a
   assertEquals(r.body.catalogo.cultura, "Maratón de cultura");
   assertEquals(JSON.stringify(r.body).includes("@"), false);
 });
+
+Deno.test("salas: Lotería (modo y grito único) y Responde en inglés", async () => {
+  const c = ctx();
+  assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "loteria", opciones: { modo: "nada" } })).status, 400);
+  const r = await c.call("POST", "/sala", "marisol@example.com", { juego: "loteria", opciones: { modo: "llena" }, bots: true });
+  assertEquals([r.status, r.body.sala.opciones.modo], [200, "llena"]);
+  const def = await c.call("POST", "/sala", "marisol@example.com", { juego: "loteria" });
+  assertEquals(def.body.sala.opciones.modo, "linea");
+  const codigo = r.body.codigo;
+  await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com");
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(40000);
+  const g1 = await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { loteria: true });
+  const t1 = c.ahora();
+  c.avanzar(5000);
+  const g2 = await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { loteria: true });
+  assertEquals([g1.status, g1.body.loteria, g2.body.loteria], [200, t1, t1]);
+  assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "en-preguntas" })).status, 200);
+});

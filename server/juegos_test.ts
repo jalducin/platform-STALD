@@ -159,3 +159,9 @@ Deno.test("juegos: la identidad se reutiliza 60 s (no recarga Notion en cada son
   await handleJuegos(new Request("http://x/juegos/invitados?email=admin@example.com"), "/invitados", "admin@example.com", d, json);
   assertEquals(cargas, 3, "la lista de invitados siempre es fresca");
 });
+
+Deno.test("juegos: Responde en inglés en el catálogo", async () => {
+  const { call } = ctx();
+  const r = await call("POST", "/partida", "marisol@example.com", partida("en-preguntas", 99999));
+  assertEquals([r.status, r.body.puntos], [200, 2000]);
+});

@@ -8,7 +8,7 @@ type Json = (body: unknown, status?: number) => Response;
 
 // Juegos que se pueden jugar en partida (los de preguntas y Basta).
 export const JUEGOS_PARTIDA = new Set([
-  "en-vocab", "en-frases", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en",
+  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria",
 ]);
 const LETRAS_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const MAX_JUGADORES = 30;
@@ -35,6 +35,7 @@ interface EnSala {
   respuestas: Record<string, { correcta: boolean; puntos: number; ms: number }>;
   palabras?: Record<string, string>;
   basta?: number;
+  loteria?: number; // hora del servidor del primer "¡Lotería!"
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
 }
@@ -115,6 +116,10 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     const opciones: Record<string, string> = {};
     const op = (body.opciones && typeof body.opciones === "object") ? body.opciones as Record<string, unknown> : {};
     if (typeof op.cat === "string" && op.cat.length <= 30) opciones.cat = op.cat;
+    if (juego === "loteria") {
+      if (op.modo !== undefined && op.modo !== "linea" && op.modo !== "llena") return json({ error: "modo_invalido" }, 400);
+      opciones.modo = (op.modo as string) || "linea";
+    }
     let codigo = "";
     for (let i = 0; i < 10 && !codigo; i++) {
       const cand = [...aleatorio(4)].map((x) => LETRAS_CODIGO[x % LETRAS_CODIGO.length]).join("");
@@ -161,7 +166,9 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (!dentro) return json({ error: "no_en_sala" }, 403);
     if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
     let cambiar: (e: EnSala) => EnSala;
-    if (body.final !== undefined || body.podio !== undefined) {
+    if (body.loteria === true) {
+      cambiar = (e) => e.loteria ? e : { ...e, loteria: ahora };
+    } else if (body.final !== undefined || body.podio !== undefined) {
       // Cierre: total final de cada jugador y, del host, el podio completo (con bots).
       const final = Math.max(0, Math.min(3000, Math.round(Number(body.final) || 0)));
       const podio = sala.host === jugador.id && Array.isArray(body.podio)
@@ -182,7 +189,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     }
     const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
     if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
-    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta });
+    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, loteria: nuevo.loteria });
   }
 
   if (!accion && req.method === "GET") {
