@@ -35,6 +35,7 @@ Navegador (GitHub Pages)
 | Portal (acceso) | https://jalducin.github.io/platform-STALD/ |
 | Dashboard Secundaria | https://jalducin.github.io/platform-STALD/secundaria.html |
 | Dashboard Inglés | https://jalducin.github.io/platform-STALD/ingles.html |
+| Juegos | https://jalducin.github.io/platform-STALD/juegos.html |
 | Backend | `https://stald.jalducin.deno.net` — Deno Deploy, `server/main.ts` (ver `docs/deno-deploy-setup.md`) |
 | Datos privados | Repo `jalducin/platform-STALD-data` (contenido con respuestas y resultados JSON) |
 | Edge Function (anterior) | `https://xozsrcnjnugwbrrrwoeb.supabase.co/functions/v1/tareas-estudio-secundaria`, legado; ya no lo usan las páginas (desde 2026-09-28) |

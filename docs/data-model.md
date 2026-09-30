@@ -86,6 +86,22 @@ backend: tratarlo como un cambio OpenSpec.
 Umbrales por tema: ≥ 80 % fortaleza, 60–79 % en progreso, < 60 % debilidad. Nivel sugerido del diagnóstico
 A1: ≥ 80 % "A1 sólido — listo para A2", 50–79 % "A1 en progreso", < 50 % "Iniciando A1".
 
+## Contenido de juegos (repo público, `juegos/datos/`)
+
+Sin datos personales. Se sirve junto a `juegos.html`.
+- `ingles.json`:
+  - `vocabulario[]` `{ en, es, emoji, tema }`;
+  - `spelling[]` `{ en, es, nivel }`;
+  - `verbos[]` `{ frase, opciones, correcta, es, tema }`;
+  - `oraciones[]` `{ en, es }`.
+- `espanol.json`:
+  - `ortografia[]` y `acentos[]` `{ frase, opciones, correcta, regla?, explicacion }`;
+  - `sinonimos[]` y `antonimos[]` `{ palabra, respuesta, distractores }`;
+  - `oraciones[]` (texto).
+- `cultura.json`: `categorias[]` `{ id, titulo, emoji }` y `preguntas[]`
+  `{ cat, nivel (1–3), pregunta, opciones (4), correcta, dato }`.
+- `basta.json` y `loteria.json`: los usa el cambio `juegos-clasicos`.
+
 ## Actividades semanales (repo privado `platform-STALD-data`)
 
 Fuente canónica del formato. El contenido **incluye las respuestas** y por eso vive en el repo privado.
@@ -109,6 +125,12 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     `banco` (reto en vivo) y `presentacion.diapositivas` (solo admin), con tipos `portada`, `agenda`, `retro`
     (grupal, sin nombres), `teoria` (con `ref` al índice de la teoría), `practica`, `juego`, `reto`,
     `libreta` y `cierre`.
+- `juegos/semanas/<lunes>/<id-jugador>.json`: partidas de la semana.
+  - `{ id, nombre, tipo, partidas: [{ juego, puntos, aciertos, total, segundos, en }], mejores, total }`.
+  - Sin correos. Guarda las últimas 300 partidas.
+- `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.
+  - Son los únicos correos que guarda el repo de datos. El invitado aceptó el aviso al registrarse.
+  - Solo el admin los ve (`/juegos/invitados`).
 - `avance/<slug-alumno>.json`: avance fuera de las actividades en línea.
   - `{ alumno, notion: { <pageId>: { titulo, completado, en, por } }, historial: [...] }`.
   - `por` es `alumno` o `admin`. `historial` guarda como máximo las 200 entradas más recientes. Sin correos.

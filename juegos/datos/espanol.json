@@ -1,0 +1,2956 @@
+{
+  "ortografia": [
+    {
+      "frase": "La ___ da leche.",
+      "opciones": [
+        "vaca",
+        "baca"
+      ],
+      "correcta": 0,
+      "regla": "b/v",
+      "explicacion": "Vaca (animal) va con v; baca es la parrilla del techo de un coche."
+    },
+    {
+      "frase": "Ayer mi hermano ___ fiebre.",
+      "opciones": [
+        "tubo",
+        "tuvo"
+      ],
+      "correcta": 1,
+      "regla": "b/v",
+      "explicacion": "Tuvo, del verbo tener, va con v; tubo es un objeto cilíndrico."
+    },
+    {
+      "frase": "El agua sale por el ___.",
+      "opciones": [
+        "tubo",
+        "tuvo"
+      ],
+      "correcta": 0,
+      "regla": "b/v",
+      "explicacion": "Tubo (objeto hueco) va con b; tuvo es del verbo tener."
+    },
+    {
+      "frase": "Mi abuela ___ en Oaxaca.",
+      "opciones": [
+        "bive",
+        "vive"
+      ],
+      "correcta": 1,
+      "regla": "b/v",
+      "explicacion": "Vive, del verbo vivir, se escribe con v."
+    },
+    {
+      "frase": "Nosotros ___ al parque todos los domingos.",
+      "opciones": [
+        "íbamos",
+        "ívamos"
+      ],
+      "correcta": 0,
+      "regla": "b/v",
+      "explicacion": "El copretérito del verbo ir se escribe con b: íbamos."
+    },
+    {
+      "frase": "El avión ___ sobre la ciudad.",
+      "opciones": [
+        "buela",
+        "vuela"
+      ],
+      "correcta": 1,
+      "regla": "b/v",
+      "explicacion": "Vuela, del verbo volar, va con v."
+    },
+    {
+      "frase": "Mi ___ me cuenta cuentos.",
+      "opciones": [
+        "abuela",
+        "avuela"
+      ],
+      "correcta": 0,
+      "regla": "b/v",
+      "explicacion": "Abuela se escribe con b."
+    },
+    {
+      "frase": "Tiene mucho ___ en los brazos.",
+      "opciones": [
+        "bello",
+        "vello"
+      ],
+      "correcta": 1,
+      "regla": "b/v",
+      "explicacion": "Vello (pelo fino del cuerpo) va con v; bello significa hermoso."
+    },
+    {
+      "frase": "¡Qué paisaje tan ___!",
+      "opciones": [
+        "bello",
+        "vello"
+      ],
+      "correcta": 0,
+      "regla": "b/v",
+      "explicacion": "Bello (hermoso) va con b; vello es el pelo fino del cuerpo."
+    },
+    {
+      "frase": "Mañana ___ a llover.",
+      "opciones": [
+        "ba",
+        "va"
+      ],
+      "correcta": 1,
+      "regla": "b/v",
+      "explicacion": "Va, del verbo ir, se escribe con v."
+    },
+    {
+      "frase": "El ___ de agua está lleno.",
+      "opciones": [
+        "vaso",
+        "baso"
+      ],
+      "correcta": 0,
+      "regla": "b/v",
+      "explicacion": "Vaso se escribe con v."
+    },
+    {
+      "frase": "Me encanta la ___ de mi escuela.",
+      "opciones": [
+        "viblioteca",
+        "biblioteca"
+      ],
+      "correcta": 1,
+      "regla": "b/v",
+      "explicacion": "Biblioteca se escribe con b (las palabras que empiezan con biblio- van con b)."
+    },
+    {
+      "frase": "Los pájaros ___ en el árbol.",
+      "opciones": [
+        "cantaban",
+        "cantavan"
+      ],
+      "correcta": 0,
+      "regla": "b/v",
+      "explicacion": "La terminación -aba del copretérito siempre va con b: cantaban."
+    },
+    {
+      "frase": "Hay que ___ la ropa sucia.",
+      "opciones": [
+        "labar",
+        "lavar"
+      ],
+      "correcta": 1,
+      "regla": "b/v",
+      "explicacion": "Lavar se escribe con v."
+    },
+    {
+      "frase": "Vivo en una ___ azul.",
+      "opciones": [
+        "casa",
+        "caza"
+      ],
+      "correcta": 0,
+      "regla": "c/s/z",
+      "explicacion": "Casa (vivienda) va con s; caza es la acción de cazar."
+    },
+    {
+      "frase": "Compré unos ___ nuevos para la escuela.",
+      "opciones": [
+        "sapatos",
+        "zapatos"
+      ],
+      "correcta": 1,
+      "regla": "c/s/z",
+      "explicacion": "Zapatos se escribe con z."
+    },
+    {
+      "frase": "Tengo tres ___ de colores.",
+      "opciones": [
+        "lápizes",
+        "lápices",
+        "lápises"
+      ],
+      "correcta": 1,
+      "regla": "c/s/z",
+      "explicacion": "Si el singular termina en z, el plural cambia a -ces: lápiz, lápices."
+    },
+    {
+      "frase": "Hoy es un día muy ___.",
+      "opciones": [
+        "felis",
+        "feliz"
+      ],
+      "correcta": 1,
+      "regla": "c/s/z",
+      "explicacion": "Feliz termina en z."
+    },
+    {
+      "frase": "Me duele la ___.",
+      "opciones": [
+        "cabeza",
+        "cabesa"
+      ],
+      "correcta": 0,
+      "regla": "c/s/z",
+      "explicacion": "Cabeza se escribe con z."
+    },
+    {
+      "frase": "El ___ tiene grandes cuernos y corre por el bosque.",
+      "opciones": [
+        "siervo",
+        "ciervo"
+      ],
+      "correcta": 1,
+      "regla": "c/s/z",
+      "explicacion": "Ciervo (animal) va con c; siervo significa sirviente."
+    },
+    {
+      "frase": "Pon los platos en la ___.",
+      "opciones": [
+        "mesa",
+        "meza"
+      ],
+      "correcta": 0,
+      "regla": "c/s/z",
+      "explicacion": "Mesa se escribe con s."
+    },
+    {
+      "frase": "Me gusta ayudar en la ___ de mi casa.",
+      "opciones": [
+        "cosina",
+        "cocina"
+      ],
+      "correcta": 1,
+      "regla": "c/s/z",
+      "explicacion": "Cocina se escribe con c."
+    },
+    {
+      "frase": "La ___ de inglés empieza a las ocho.",
+      "opciones": [
+        "clase",
+        "clace"
+      ],
+      "correcta": 0,
+      "regla": "c/s/z",
+      "explicacion": "Clase se escribe con s."
+    },
+    {
+      "frase": "Voy a ___ las papas para hacer puré.",
+      "opciones": [
+        "coser",
+        "cocer"
+      ],
+      "correcta": 1,
+      "regla": "c/s/z",
+      "explicacion": "Cocer (cocinar en agua) va con c; coser es unir con aguja e hilo."
+    },
+    {
+      "frase": "Mi abuela va a ___ el botón de mi camisa.",
+      "opciones": [
+        "coser",
+        "cocer"
+      ],
+      "correcta": 0,
+      "regla": "c/s/z",
+      "explicacion": "Coser (con aguja e hilo) va con s; cocer es cocinar."
+    },
+    {
+      "frase": "La ___ es una fruta pequeña y roja.",
+      "opciones": [
+        "sereza",
+        "cereza",
+        "cerasa"
+      ],
+      "correcta": 1,
+      "regla": "c/s/z",
+      "explicacion": "Cereza se escribe con c al inicio y z al final."
+    },
+    {
+      "frase": "Los niños ___ muy rápido.",
+      "opciones": [
+        "crecen",
+        "cresen"
+      ],
+      "correcta": 0,
+      "regla": "c/s/z",
+      "explicacion": "Crecen, del verbo crecer, se escribe con c."
+    },
+    {
+      "frase": "La ___ tiene el cuello muy largo.",
+      "opciones": [
+        "girafa",
+        "jirafa"
+      ],
+      "correcta": 1,
+      "regla": "g/j",
+      "explicacion": "Jirafa se escribe con j."
+    },
+    {
+      "frase": "Me gusta ___ en el parque.",
+      "opciones": [
+        "jugar",
+        "gugar"
+      ],
+      "correcta": 0,
+      "regla": "g/j",
+      "explicacion": "Jugar se escribe con j."
+    },
+    {
+      "frase": "En la clase de ___ vemos mapas.",
+      "opciones": [
+        "jeografía",
+        "geografía"
+      ],
+      "correcta": 1,
+      "regla": "g/j",
+      "explicacion": "Las palabras que empiezan con geo- se escriben con g."
+    },
+    {
+      "frase": "Quiero un vaso de ___ de naranja.",
+      "opciones": [
+        "jugo",
+        "gugo"
+      ],
+      "correcta": 0,
+      "regla": "g/j",
+      "explicacion": "Jugo se escribe con j."
+    },
+    {
+      "frase": "El ___ principal de la película es muy valiente.",
+      "opciones": [
+        "personage",
+        "personaje"
+      ],
+      "correcta": 1,
+      "regla": "g/j",
+      "explicacion": "Las palabras terminadas en -aje se escriben con j."
+    },
+    {
+      "frase": "Mi hermana es muy ___.",
+      "opciones": [
+        "inteligente",
+        "intelijente"
+      ],
+      "correcta": 0,
+      "regla": "g/j",
+      "explicacion": "Inteligente se escribe con g."
+    },
+    {
+      "frase": "De postre hay ___ de fresa.",
+      "opciones": [
+        "jelatina",
+        "gelatina"
+      ],
+      "correcta": 1,
+      "regla": "g/j",
+      "explicacion": "Gelatina se escribe con g."
+    },
+    {
+      "frase": "Hacemos ejercicio en el ___ de la escuela.",
+      "opciones": [
+        "gimnasio",
+        "jimnasio"
+      ],
+      "correcta": 0,
+      "regla": "g/j",
+      "explicacion": "Gimnasio se escribe con g."
+    },
+    {
+      "frase": "Ayer le ___ la verdad a mi mamá.",
+      "opciones": [
+        "dige",
+        "dije"
+      ],
+      "correcta": 1,
+      "regla": "g/j",
+      "explicacion": "Las formas del pasado de decir llevan j: dije, dijiste, dijo."
+    },
+    {
+      "frase": "Ayer mis tíos ___ pastel a la fiesta.",
+      "opciones": [
+        "trajeron",
+        "trageron"
+      ],
+      "correcta": 0,
+      "regla": "g/j",
+      "explicacion": "Las formas del pasado de traer llevan j: traje, trajeron."
+    },
+    {
+      "frase": "La ___ del cuento vuela en su escoba.",
+      "opciones": [
+        "bruga",
+        "bruja"
+      ],
+      "correcta": 1,
+      "regla": "g/j",
+      "explicacion": "Bruja se escribe con j."
+    },
+    {
+      "frase": "Después de jugar hay que ___ los juguetes.",
+      "opciones": [
+        "recoger",
+        "recojer"
+      ],
+      "correcta": 0,
+      "regla": "g/j",
+      "explicacion": "Los verbos terminados en -ger se escriben con g (excepto tejer y crujir)."
+    },
+    {
+      "frase": "Yo siempre ___ mis juguetes.",
+      "opciones": [
+        "recogo",
+        "recojo"
+      ],
+      "correcta": 1,
+      "regla": "g/j",
+      "explicacion": "Recoger cambia la g por j antes de o: yo recojo."
+    },
+    {
+      "frase": "El ___ de la tienda habló con los clientes.",
+      "opciones": [
+        "gerente",
+        "jerente"
+      ],
+      "correcta": 0,
+      "regla": "g/j",
+      "explicacion": "Gerente se escribe con g."
+    },
+    {
+      "frase": "___ muchos niños en el patio.",
+      "opciones": [
+        "Ay",
+        "Ahí",
+        "Hay"
+      ],
+      "correcta": 2,
+      "regla": "h",
+      "explicacion": "Hay, del verbo haber, indica que algo existe."
+    },
+    {
+      "frase": "¡___, me pegué en el dedo!",
+      "opciones": [
+        "Ay",
+        "Hay",
+        "Ahí"
+      ],
+      "correcta": 0,
+      "regla": "h",
+      "explicacion": "Ay es una expresión de dolor o sorpresa y no lleva h."
+    },
+    {
+      "frase": "Tu mochila está ___, junto a la puerta.",
+      "opciones": [
+        "hay",
+        "ahí",
+        "ay"
+      ],
+      "correcta": 1,
+      "regla": "h",
+      "explicacion": "Ahí indica un lugar."
+    },
+    {
+      "frase": "Mañana voy a ___ la tarea.",
+      "opciones": [
+        "hacer",
+        "acer"
+      ],
+      "correcta": 0,
+      "regla": "h",
+      "explicacion": "Hacer lleva h inicial."
+    },
+    {
+      "frase": "Mi ___ mayor tiene quince años.",
+      "opciones": [
+        "ermano",
+        "hermano"
+      ],
+      "correcta": 1,
+      "regla": "h",
+      "explicacion": "Hermano lleva h inicial."
+    },
+    {
+      "frase": "Ya ___ comido, gracias.",
+      "opciones": [
+        "he",
+        "e"
+      ],
+      "correcta": 0,
+      "regla": "h",
+      "explicacion": "He, del verbo haber, lleva h."
+    },
+    {
+      "frase": "Voy ___ la tienda por pan.",
+      "opciones": [
+        "ha",
+        "a"
+      ],
+      "correcta": 1,
+      "regla": "h",
+      "explicacion": "La preposición a (dirección) no lleva h."
+    },
+    {
+      "frase": "Juan ya ___ llegado a la escuela.",
+      "opciones": [
+        "ha",
+        "a"
+      ],
+      "correcta": 0,
+      "regla": "h",
+      "explicacion": "Ha, del verbo haber, lleva h."
+    },
+    {
+      "frase": "Quiero ___ contigo un momento.",
+      "opciones": [
+        "ablar",
+        "hablar"
+      ],
+      "correcta": 1,
+      "regla": "h",
+      "explicacion": "Hablar lleva h inicial."
+    },
+    {
+      "frase": "La ___ del árbol es verde.",
+      "opciones": [
+        "hoja",
+        "oja"
+      ],
+      "correcta": 0,
+      "regla": "h",
+      "explicacion": "Hoja lleva h inicial."
+    },
+    {
+      "frase": "Me gusta el ___ de chocolate.",
+      "opciones": [
+        "elado",
+        "helado"
+      ],
+      "correcta": 1,
+      "regla": "h",
+      "explicacion": "Helado lleva h inicial."
+    },
+    {
+      "frase": "Pedro ___ la puerta de la casa.",
+      "opciones": [
+        "abre",
+        "habre"
+      ],
+      "correcta": 0,
+      "regla": "h",
+      "explicacion": "Abrir no lleva h."
+    },
+    {
+      "frase": "Tengo mucha ___, ya quiero comer.",
+      "opciones": [
+        "ambre",
+        "hambre"
+      ],
+      "correcta": 1,
+      "regla": "h",
+      "explicacion": "Hambre lleva h inicial."
+    },
+    {
+      "frase": "¿___ visto a mi gato?",
+      "opciones": [
+        "Has",
+        "As"
+      ],
+      "correcta": 0,
+      "regla": "h",
+      "explicacion": "Has, del verbo haber, lleva h."
+    },
+    {
+      "frase": "Mi abuela ha ___ tamales para todos.",
+      "opciones": [
+        "echo",
+        "hecho"
+      ],
+      "correcta": 1,
+      "regla": "h",
+      "explicacion": "Hecho, del verbo hacer, lleva h; echo es del verbo echar."
+    },
+    {
+      "frase": "Mañana va a ___ mucho.",
+      "opciones": [
+        "llover",
+        "yover"
+      ],
+      "correcta": 0,
+      "regla": "ll/y",
+      "explicacion": "Llover se escribe con ll."
+    },
+    {
+      "frase": "Perdí la ___ de mi casa.",
+      "opciones": [
+        "yave",
+        "llave"
+      ],
+      "correcta": 1,
+      "regla": "ll/y",
+      "explicacion": "Llave se escribe con ll."
+    },
+    {
+      "frase": "La ___ del huevo es amarilla.",
+      "opciones": [
+        "yema",
+        "llema"
+      ],
+      "correcta": 0,
+      "regla": "ll/y",
+      "explicacion": "Yema se escribe con y."
+    },
+    {
+      "frase": "La ___ es un animal de las montañas de Perú.",
+      "opciones": [
+        "yama",
+        "llama"
+      ],
+      "correcta": 1,
+      "regla": "ll/y",
+      "explicacion": "Llama (animal) se escribe con ll."
+    },
+    {
+      "frase": "Mi hermanito ___ porque tiene hambre.",
+      "opciones": [
+        "llora",
+        "yora"
+      ],
+      "correcta": 0,
+      "regla": "ll/y",
+      "explicacion": "Llora, del verbo llorar, se escribe con ll."
+    },
+    {
+      "frase": "Hoy voy a ___ mi mochila nueva.",
+      "opciones": [
+        "yevar",
+        "llevar"
+      ],
+      "correcta": 1,
+      "regla": "ll/y",
+      "explicacion": "Llevar se escribe con ll."
+    },
+    {
+      "frase": "___ quiero un helado de fresa.",
+      "opciones": [
+        "Yo",
+        "Llo"
+      ],
+      "correcta": 0,
+      "regla": "ll/y",
+      "explicacion": "El pronombre yo se escribe con y."
+    },
+    {
+      "frase": "Es bueno ___ a los demás.",
+      "opciones": [
+        "alludar",
+        "ayudar"
+      ],
+      "correcta": 1,
+      "regla": "ll/y",
+      "explicacion": "Ayudar se escribe con y."
+    },
+    {
+      "frase": "La ___ de mi bicicleta está ponchada.",
+      "opciones": [
+        "llanta",
+        "yanta"
+      ],
+      "correcta": 0,
+      "regla": "ll/y",
+      "explicacion": "Llanta se escribe con ll."
+    },
+    {
+      "frase": "El vaso está ___ de agua.",
+      "opciones": [
+        "yeno",
+        "lleno"
+      ],
+      "correcta": 1,
+      "regla": "ll/y",
+      "explicacion": "Lleno se escribe con ll."
+    },
+    {
+      "frase": "Hoy comemos caldo de ___.",
+      "opciones": [
+        "pollo",
+        "poyo"
+      ],
+      "correcta": 0,
+      "regla": "ll/y",
+      "explicacion": "Pollo (ave) se escribe con ll; poyo es un banco de piedra."
+    },
+    {
+      "frase": "Ya ___ el camión de la escuela.",
+      "opciones": [
+        "yegó",
+        "llegó"
+      ],
+      "correcta": 1,
+      "regla": "ll/y",
+      "explicacion": "Llegó, del verbo llegar, se escribe con ll."
+    },
+    {
+      "frase": "El ___ de mi vecino ladra mucho.",
+      "opciones": [
+        "perro",
+        "pero"
+      ],
+      "correcta": 0,
+      "regla": "r/rr",
+      "explicacion": "Perro (animal) lleva rr; pero es una palabra para unir ideas."
+    },
+    {
+      "frase": "Quiero ir al parque, ___ estoy cansado.",
+      "opciones": [
+        "perro",
+        "pero"
+      ],
+      "correcta": 1,
+      "regla": "r/rr",
+      "explicacion": "Pero une ideas y lleva una sola r; perro es el animal."
+    },
+    {
+      "frase": "El ___ rebuzna en el rancho.",
+      "opciones": [
+        "burro",
+        "buro"
+      ],
+      "correcta": 0,
+      "regla": "r/rr",
+      "explicacion": "Burro se escribe con rr entre vocales."
+    },
+    {
+      "frase": "Vamos a ___ en el parque.",
+      "opciones": [
+        "corer",
+        "correr"
+      ],
+      "correcta": 1,
+      "regla": "r/rr",
+      "explicacion": "Correr lleva rr porque entre vocales la r fuerte se escribe doble."
+    },
+    {
+      "frase": "Mi papá maneja un ___ rojo.",
+      "opciones": [
+        "carro",
+        "caro"
+      ],
+      "correcta": 0,
+      "regla": "r/rr",
+      "explicacion": "Carro (vehículo) lleva rr; caro significa que cuesta mucho."
+    },
+    {
+      "frase": "Ese juguete es muy ___, cuesta mucho dinero.",
+      "opciones": [
+        "carro",
+        "caro"
+      ],
+      "correcta": 1,
+      "regla": "r/rr",
+      "explicacion": "Caro (que cuesta mucho) lleva una sola r; carro es un vehículo."
+    },
+    {
+      "frase": "Me gusta el ___ con frijoles.",
+      "opciones": [
+        "arroz",
+        "aroz"
+      ],
+      "correcta": 0,
+      "regla": "r/rr",
+      "explicacion": "Arroz lleva rr entre vocales."
+    },
+    {
+      "frase": "La ___ es una flor muy bonita.",
+      "opciones": [
+        "rrosa",
+        "rosa"
+      ],
+      "correcta": 1,
+      "regla": "r/rr",
+      "explicacion": "Al inicio de palabra, la r suena fuerte pero se escribe con una sola r."
+    },
+    {
+      "frase": "Mi amigo ___ juega futbol.",
+      "opciones": [
+        "Enrique",
+        "Enrrique"
+      ],
+      "correcta": 0,
+      "regla": "r/rr",
+      "explicacion": "Después de n, la r suena fuerte pero se escribe con una sola r."
+    },
+    {
+      "frase": "Voy a ___ el piso de mi cuarto.",
+      "opciones": [
+        "barer",
+        "barrer"
+      ],
+      "correcta": 1,
+      "regla": "r/rr",
+      "explicacion": "Barrer lleva rr entre vocales."
+    },
+    {
+      "frase": "La ___ salta en el estanque.",
+      "opciones": [
+        "rana",
+        "rrana"
+      ],
+      "correcta": 0,
+      "regla": "r/rr",
+      "explicacion": "Al inicio de palabra se escribe una sola r: rana."
+    },
+    {
+      "frase": "Vamos a nadar al ___.",
+      "opciones": [
+        "rrío",
+        "río"
+      ],
+      "correcta": 1,
+      "regla": "r/rr",
+      "explicacion": "Al inicio de palabra se escribe una sola r: río."
+    },
+    {
+      "frase": "Mi primo ___ vive en Monterrey.",
+      "opciones": [
+        "Israel",
+        "Isrrael"
+      ],
+      "correcta": 0,
+      "regla": "r/rr",
+      "explicacion": "Después de s, la r suena fuerte pero se escribe con una sola r."
+    },
+    {
+      "frase": "Vivo en la ciudad de ___.",
+      "opciones": [
+        "puebla",
+        "Puebla"
+      ],
+      "correcta": 1,
+      "regla": "mayúsculas",
+      "explicacion": "Los nombres de ciudades se escriben con mayúscula inicial."
+    },
+    {
+      "frase": "Mi cumpleaños es en ___.",
+      "opciones": [
+        "abril",
+        "Abril"
+      ],
+      "correcta": 0,
+      "regla": "mayúsculas",
+      "explicacion": "En español, los meses se escriben con minúscula."
+    },
+    {
+      "frase": "Hoy es ___ y tenemos clase.",
+      "opciones": [
+        "Lunes",
+        "lunes"
+      ],
+      "correcta": 1,
+      "regla": "mayúsculas",
+      "explicacion": "Los días de la semana se escriben con minúscula."
+    },
+    {
+      "frase": "Mi mejor amiga se llama ___.",
+      "opciones": [
+        "Sofía",
+        "sofía"
+      ],
+      "correcta": 0,
+      "regla": "mayúsculas",
+      "explicacion": "Los nombres de personas se escriben con mayúscula inicial."
+    },
+    {
+      "frase": "Mis vecinos hablan ___.",
+      "opciones": [
+        "Inglés",
+        "inglés"
+      ],
+      "correcta": 1,
+      "regla": "mayúsculas",
+      "explicacion": "Los nombres de idiomas se escriben con minúscula."
+    },
+    {
+      "frase": "Ellos son ___, nacieron en Guadalajara.",
+      "opciones": [
+        "mexicanos",
+        "Mexicanos"
+      ],
+      "correcta": 0,
+      "regla": "mayúsculas",
+      "explicacion": "Los gentilicios (mexicano, poblana) se escriben con minúscula."
+    },
+    {
+      "frase": "___ perro se llama Max.",
+      "opciones": [
+        "mi",
+        "Mi"
+      ],
+      "correcta": 1,
+      "regla": "mayúsculas",
+      "explicacion": "La primera palabra de una oración se escribe con mayúscula."
+    },
+    {
+      "frase": "Mi estación favorita es el ___.",
+      "opciones": [
+        "verano",
+        "Verano"
+      ],
+      "correcta": 0,
+      "regla": "mayúsculas",
+      "explicacion": "Las estaciones del año se escriben con minúscula."
+    },
+    {
+      "frase": "El océano ___ es el más grande del mundo.",
+      "opciones": [
+        "pacífico",
+        "Pacífico"
+      ],
+      "correcta": 1,
+      "regla": "mayúsculas",
+      "explicacion": "Los nombres propios de océanos se escriben con mayúscula inicial."
+    },
+    {
+      "frase": "La capital del país es la ___ de México.",
+      "opciones": [
+        "Ciudad",
+        "ciudad"
+      ],
+      "correcta": 0,
+      "regla": "mayúsculas",
+      "explicacion": "Ciudad de México es un nombre propio: Ciudad va con mayúscula."
+    },
+    {
+      "frase": "Fui al parque. ___ jugué con mi hermano.",
+      "opciones": [
+        "ahí",
+        "Ahí"
+      ],
+      "correcta": 1,
+      "regla": "mayúsculas",
+      "explicacion": "Después de un punto se escribe con mayúscula."
+    },
+    {
+      "frase": "Mi perro ___ es muy juguetón.",
+      "opciones": [
+        "Firulais",
+        "firulais"
+      ],
+      "correcta": 0,
+      "regla": "mayúsculas",
+      "explicacion": "Los nombres propios de las mascotas se escriben con mayúscula inicial."
+    },
+    {
+      "frase": "Vamos a la playa en ___.",
+      "opciones": [
+        "Diciembre",
+        "diciembre"
+      ],
+      "correcta": 1,
+      "regla": "mayúsculas",
+      "explicacion": "Los meses se escriben con minúscula, aunque sean de vacaciones."
+    },
+    {
+      "frase": "Mañana tengo ___ de matemáticas.",
+      "opciones": [
+        "examen",
+        "esamen"
+      ],
+      "correcta": 0,
+      "regla": "x",
+      "explicacion": "Examen se escribe con x."
+    },
+    {
+      "frase": "Mi tía vive en ___, en el sur de México.",
+      "opciones": [
+        "Oajaca",
+        "Oaxaca"
+      ],
+      "correcta": 1,
+      "regla": "x",
+      "explicacion": "Oaxaca se escribe con x, aunque suena como j."
+    },
+    {
+      "frase": "Mi hermano toca el ___ en la banda.",
+      "opciones": [
+        "saxofón",
+        "sasofón"
+      ],
+      "correcta": 0,
+      "regla": "x",
+      "explicacion": "Saxofón se escribe con x."
+    },
+    {
+      "frase": "La maestra nos ___ la lección.",
+      "opciones": [
+        "esplicó",
+        "explicó"
+      ],
+      "correcta": 1,
+      "regla": "x",
+      "explicacion": "Explicó, del verbo explicar, se escribe con x."
+    },
+    {
+      "frase": "Mi papá llegó en ___ al aeropuerto.",
+      "opciones": [
+        "taxi",
+        "tasi"
+      ],
+      "correcta": 0,
+      "regla": "x",
+      "explicacion": "Taxi se escribe con x."
+    },
+    {
+      "frase": "Leímos un ___ sobre los volcanes.",
+      "opciones": [
+        "testo",
+        "texto"
+      ],
+      "correcta": 1,
+      "regla": "x",
+      "explicacion": "Texto se escribe con x."
+    },
+    {
+      "frase": "Tu dibujo quedó ___.",
+      "opciones": [
+        "excelente",
+        "escelente"
+      ],
+      "correcta": 0,
+      "regla": "x",
+      "explicacion": "Excelente se escribe con x."
+    },
+    {
+      "frase": "Las plantas producen ___.",
+      "opciones": [
+        "ojígeno",
+        "oxígeno"
+      ],
+      "correcta": 1,
+      "regla": "x",
+      "explicacion": "Oxígeno se escribe con x."
+    },
+    {
+      "frase": "La ___ semana vamos al museo.",
+      "opciones": [
+        "próxima",
+        "prócsima"
+      ],
+      "correcta": 0,
+      "regla": "x",
+      "explicacion": "Próxima se escribe con x."
+    },
+    {
+      "frase": "Me siento ___ en esta ciudad nueva.",
+      "opciones": [
+        "estraño",
+        "extraño"
+      ],
+      "correcta": 1,
+      "regla": "x",
+      "explicacion": "Extraño se escribe con x."
+    },
+    {
+      "frase": "Mi prima se llama ___.",
+      "opciones": [
+        "Xóchitl",
+        "Sóchitl"
+      ],
+      "correcta": 0,
+      "regla": "x",
+      "explicacion": "Xóchitl es un nombre de origen náhuatl que se escribe con x."
+    },
+    {
+      "frase": "Mi tío practica ___ en el gimnasio.",
+      "opciones": [
+        "boseo",
+        "boxeo"
+      ],
+      "correcta": 1,
+      "regla": "x",
+      "explicacion": "Boxeo se escribe con x."
+    }
+  ],
+  "acentos": [
+    {
+      "frase": "¿___ vienes mañana?",
+      "opciones": [
+        "Tú",
+        "Tu"
+      ],
+      "correcta": 0,
+      "explicacion": "Tú, pronombre personal, lleva tilde."
+    },
+    {
+      "frase": "___ perro es muy juguetón.",
+      "opciones": [
+        "Tú",
+        "Tu"
+      ],
+      "correcta": 1,
+      "explicacion": "Tu, posesivo (tu perro), no lleva tilde."
+    },
+    {
+      "frase": "___ es mi hermano mayor.",
+      "opciones": [
+        "Él",
+        "El"
+      ],
+      "correcta": 0,
+      "explicacion": "Él, pronombre personal, lleva tilde."
+    },
+    {
+      "frase": "___ gato duerme en la cama.",
+      "opciones": [
+        "Él",
+        "El"
+      ],
+      "correcta": 1,
+      "explicacion": "El, artículo (el gato), no lleva tilde."
+    },
+    {
+      "frase": "Este regalo es para ___.",
+      "opciones": [
+        "mí",
+        "mi"
+      ],
+      "correcta": 0,
+      "explicacion": "Mí, pronombre (para mí), lleva tilde."
+    },
+    {
+      "frase": "___ mamá cocina muy rico.",
+      "opciones": [
+        "Mí",
+        "Mi"
+      ],
+      "correcta": 1,
+      "explicacion": "Mi, posesivo (mi mamá), no lleva tilde."
+    },
+    {
+      "frase": "Le pregunté si quería venir y dijo que ___.",
+      "opciones": [
+        "sí",
+        "si"
+      ],
+      "correcta": 0,
+      "explicacion": "Sí, de afirmación, lleva tilde."
+    },
+    {
+      "frase": "___ llueve, no salimos al patio.",
+      "opciones": [
+        "Sí",
+        "Si"
+      ],
+      "correcta": 1,
+      "explicacion": "Si, condicional, no lleva tilde."
+    },
+    {
+      "frase": "Quiero ___ agua, por favor.",
+      "opciones": [
+        "más",
+        "mas"
+      ],
+      "correcta": 0,
+      "explicacion": "Más, de cantidad, lleva tilde."
+    },
+    {
+      "frase": "Quería ir, ___ no pude.",
+      "opciones": [
+        "más",
+        "mas"
+      ],
+      "correcta": 1,
+      "explicacion": "Mas, cuando significa pero, no lleva tilde."
+    },
+    {
+      "frase": "Me gusta el ___ de manzanilla.",
+      "opciones": [
+        "té",
+        "te"
+      ],
+      "correcta": 0,
+      "explicacion": "Té, la bebida, lleva tilde."
+    },
+    {
+      "frase": "___ quiero mucho, mamá.",
+      "opciones": [
+        "Té",
+        "Te"
+      ],
+      "correcta": 1,
+      "explicacion": "Te, pronombre (te quiero), no lleva tilde."
+    },
+    {
+      "frase": "Yo no ___ la respuesta.",
+      "opciones": [
+        "sé",
+        "se"
+      ],
+      "correcta": 0,
+      "explicacion": "Sé, del verbo saber, lleva tilde."
+    },
+    {
+      "frase": "Mi hermano ___ lava las manos.",
+      "opciones": [
+        "sé",
+        "se"
+      ],
+      "correcta": 1,
+      "explicacion": "Se, pronombre (se lava), no lleva tilde."
+    },
+    {
+      "frase": "Espero que me ___ su número de teléfono.",
+      "opciones": [
+        "dé",
+        "de"
+      ],
+      "correcta": 0,
+      "explicacion": "Dé, del verbo dar, lleva tilde."
+    },
+    {
+      "frase": "El vaso ___ agua está lleno.",
+      "opciones": [
+        "dé",
+        "de"
+      ],
+      "correcta": 1,
+      "explicacion": "De, preposición (vaso de agua), no lleva tilde."
+    },
+    {
+      "frase": "¿___ quieres de comer?",
+      "opciones": [
+        "Qué",
+        "Que"
+      ],
+      "correcta": 0,
+      "explicacion": "Qué, en preguntas, lleva tilde."
+    },
+    {
+      "frase": "Creo ___ va a llover.",
+      "opciones": [
+        "qué",
+        "que"
+      ],
+      "correcta": 1,
+      "explicacion": "Que, cuando une ideas, no lleva tilde."
+    },
+    {
+      "frase": "¿___ estás?",
+      "opciones": [
+        "Cómo",
+        "Como"
+      ],
+      "correcta": 0,
+      "explicacion": "Cómo, en preguntas, lleva tilde."
+    },
+    {
+      "frase": "Yo ___ tacos los domingos.",
+      "opciones": [
+        "cómo",
+        "como"
+      ],
+      "correcta": 1,
+      "explicacion": "Como, del verbo comer, no lleva tilde."
+    },
+    {
+      "frase": "¡___ bonito día!",
+      "opciones": [
+        "Qué",
+        "Que"
+      ],
+      "correcta": 0,
+      "explicacion": "Qué, en exclamaciones, lleva tilde."
+    },
+    {
+      "frase": "No sé ___ se llama tu perro.",
+      "opciones": [
+        "como",
+        "cómo"
+      ],
+      "correcta": 1,
+      "explicacion": "Cómo lleva tilde también en preguntas indirectas (no sé cómo)."
+    },
+    {
+      "frase": "¿___ es tu cumpleaños?",
+      "opciones": [
+        "Cuándo",
+        "Cuando"
+      ],
+      "correcta": 0,
+      "explicacion": "Cuándo, en preguntas, lleva tilde."
+    },
+    {
+      "frase": "Te llamo ___ llegue a casa.",
+      "opciones": [
+        "cuándo",
+        "cuando"
+      ],
+      "correcta": 1,
+      "explicacion": "Cuando, si no pregunta, no lleva tilde."
+    },
+    {
+      "frase": "¿___ vives?",
+      "opciones": [
+        "Dónde",
+        "Donde"
+      ],
+      "correcta": 0,
+      "explicacion": "Dónde, en preguntas, lleva tilde."
+    },
+    {
+      "frase": "Esta es la casa ___ vivo.",
+      "opciones": [
+        "dónde",
+        "donde"
+      ],
+      "correcta": 1,
+      "explicacion": "Donde, si no pregunta, no lleva tilde."
+    },
+    {
+      "frase": "¿___ es tu maestra de inglés?",
+      "opciones": [
+        "Quién",
+        "Quien"
+      ],
+      "correcta": 0,
+      "explicacion": "Quién, en preguntas, lleva tilde."
+    },
+    {
+      "frase": "A ___ me gusta el futbol.",
+      "opciones": [
+        "mi",
+        "mí"
+      ],
+      "correcta": 1,
+      "explicacion": "Mí, pronombre (a mí), lleva tilde."
+    },
+    {
+      "frase": "___ tú quieres, vamos al parque.",
+      "opciones": [
+        "Si",
+        "Sí"
+      ],
+      "correcta": 0,
+      "explicacion": "Si, condicional, no lleva tilde."
+    },
+    {
+      "frase": "¿Me das ___ pastel?",
+      "opciones": [
+        "mas",
+        "más"
+      ],
+      "correcta": 1,
+      "explicacion": "Más, de cantidad, lleva tilde."
+    },
+    {
+      "frase": "___, me gusta mucho.",
+      "opciones": [
+        "Sí",
+        "Si"
+      ],
+      "correcta": 0,
+      "explicacion": "Sí, de afirmación, lleva tilde."
+    },
+    {
+      "frase": "¿Por ___ lloras?",
+      "opciones": [
+        "que",
+        "qué"
+      ],
+      "correcta": 1,
+      "explicacion": "Por qué, en preguntas, se escribe separado y con tilde."
+    },
+    {
+      "frase": "No vino a clase ___ estaba enfermo.",
+      "opciones": [
+        "porque",
+        "por qué"
+      ],
+      "correcta": 0,
+      "explicacion": "Porque explica una causa: va junto y sin tilde."
+    },
+    {
+      "frase": "Me gusta mucho esta ___.",
+      "opciones": [
+        "cancion",
+        "canción"
+      ],
+      "correcta": 1,
+      "explicacion": "Canción es aguda terminada en n: lleva tilde."
+    },
+    {
+      "frase": "Escribo mi nombre con ___.",
+      "opciones": [
+        "lápiz",
+        "lapiz"
+      ],
+      "correcta": 0,
+      "explicacion": "Lápiz es grave terminada en z: lleva tilde."
+    },
+    {
+      "frase": "Me gusta escuchar ___.",
+      "opciones": [
+        "musica",
+        "música"
+      ],
+      "correcta": 1,
+      "explicacion": "Música es esdrújula: todas las esdrújulas llevan tilde."
+    },
+    {
+      "frase": "Mi ___ me lleva a la escuela.",
+      "opciones": [
+        "papá",
+        "papa"
+      ],
+      "correcta": 0,
+      "explicacion": "Papá es aguda terminada en vocal: lleva tilde. Papa sin tilde es el tubérculo."
+    },
+    {
+      "frase": "El ___ ruge muy fuerte.",
+      "opciones": [
+        "leon",
+        "león"
+      ],
+      "correcta": 1,
+      "explicacion": "León es aguda terminada en n: lleva tilde."
+    },
+    {
+      "frase": "El gato persigue al ___.",
+      "opciones": [
+        "ratón",
+        "raton"
+      ],
+      "correcta": 0,
+      "explicacion": "Ratón es aguda terminada en n: lleva tilde."
+    },
+    {
+      "frase": "El ___ tiene muchas hojas verdes.",
+      "opciones": [
+        "arbol",
+        "árbol"
+      ],
+      "correcta": 1,
+      "explicacion": "Árbol es grave terminada en l: lleva tilde."
+    },
+    {
+      "frase": "Viajamos en ___ a Cancún.",
+      "opciones": [
+        "avión",
+        "avion"
+      ],
+      "correcta": 0,
+      "explicacion": "Avión es aguda terminada en n: lleva tilde."
+    },
+    {
+      "frase": "El ___ vamos al cine.",
+      "opciones": [
+        "sabado",
+        "sábado"
+      ],
+      "correcta": 1,
+      "explicacion": "Sábado es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "Marca el ___ correcto en la hoja.",
+      "opciones": [
+        "número",
+        "numero"
+      ],
+      "correcta": 0,
+      "explicacion": "Número es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "Suena el ___ de la casa.",
+      "opciones": [
+        "telefono",
+        "teléfono"
+      ],
+      "correcta": 1,
+      "explicacion": "Teléfono es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "El ___ canta en la mañana.",
+      "opciones": [
+        "pájaro",
+        "pajaro"
+      ],
+      "correcta": 0,
+      "explicacion": "Pájaro es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "El ___ me revisó la garganta.",
+      "opciones": [
+        "medico",
+        "médico"
+      ],
+      "correcta": 1,
+      "explicacion": "Médico es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "Este ejercicio es muy ___.",
+      "opciones": [
+        "fácil",
+        "facil"
+      ],
+      "correcta": 0,
+      "explicacion": "Fácil es grave terminada en l: lleva tilde."
+    },
+    {
+      "frase": "Mi materia favorita es ___.",
+      "opciones": [
+        "matematicas",
+        "matemáticas"
+      ],
+      "correcta": 1,
+      "explicacion": "Matemáticas es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "Vimos una ___ muy divertida.",
+      "opciones": [
+        "película",
+        "pelicula"
+      ],
+      "correcta": 0,
+      "explicacion": "Película es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "Me como un ___ en el recreo.",
+      "opciones": [
+        "platano",
+        "plátano"
+      ],
+      "correcta": 1,
+      "explicacion": "Plátano es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "Mi mamá toma ___ con leche.",
+      "opciones": [
+        "café",
+        "cafe"
+      ],
+      "correcta": 0,
+      "explicacion": "Café es aguda terminada en vocal: lleva tilde."
+    },
+    {
+      "frase": "Ella ___ quiere ir al parque.",
+      "opciones": [
+        "tambien",
+        "también"
+      ],
+      "correcta": 1,
+      "explicacion": "También es aguda terminada en n: lleva tilde."
+    },
+    {
+      "frase": "Te quiero con todo mi ___.",
+      "opciones": [
+        "corazón",
+        "corazon"
+      ],
+      "correcta": 0,
+      "explicacion": "Corazón es aguda terminada en n: lleva tilde."
+    },
+    {
+      "frase": "Pateo el ___ en la cancha.",
+      "opciones": [
+        "balon",
+        "balón"
+      ],
+      "correcta": 1,
+      "explicacion": "Balón es aguda terminada en n: lleva tilde."
+    },
+    {
+      "frase": "Lee la ___ diez del libro.",
+      "opciones": [
+        "página",
+        "pagina"
+      ],
+      "correcta": 0,
+      "explicacion": "Página es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "El ___ marca las tres en punto.",
+      "opciones": [
+        "relój",
+        "reloj"
+      ],
+      "correcta": 1,
+      "explicacion": "Reloj es aguda terminada en j (no en n, s ni vocal): no lleva tilde."
+    },
+    {
+      "frase": "Mi primo es muy ___.",
+      "opciones": [
+        "joven",
+        "jóven"
+      ],
+      "correcta": 0,
+      "explicacion": "Joven es grave terminada en n: no lleva tilde."
+    },
+    {
+      "frase": "Mañana tengo ___ de historia.",
+      "opciones": [
+        "exámen",
+        "examen"
+      ],
+      "correcta": 1,
+      "explicacion": "Examen es grave terminada en n: no lleva tilde."
+    },
+    {
+      "frase": "Hoy estoy muy ___.",
+      "opciones": [
+        "feliz",
+        "felíz"
+      ],
+      "correcta": 0,
+      "explicacion": "Feliz es aguda terminada en z: no lleva tilde."
+    },
+    {
+      "frase": "Colgué un cuadro en la ___.",
+      "opciones": [
+        "paréd",
+        "pared"
+      ],
+      "correcta": 1,
+      "explicacion": "Pared es aguda terminada en d: no lleva tilde."
+    },
+    {
+      "frase": "Vivo en una ___ muy grande.",
+      "opciones": [
+        "ciudad",
+        "ciudád"
+      ],
+      "correcta": 0,
+      "explicacion": "Ciudad es aguda terminada en d: no lleva tilde."
+    },
+    {
+      "frase": "Mi amiga habla ___ y español.",
+      "opciones": [
+        "ingles",
+        "inglés"
+      ],
+      "correcta": 1,
+      "explicacion": "Inglés es aguda terminada en s: lleva tilde."
+    },
+    {
+      "frase": "Siéntate en el ___ de la sala.",
+      "opciones": [
+        "sofá",
+        "sofa"
+      ],
+      "correcta": 0,
+      "explicacion": "Sofá es aguda terminada en vocal: lleva tilde."
+    },
+    {
+      "frase": "El ___ de la escuela es amarillo.",
+      "opciones": [
+        "camion",
+        "camión"
+      ],
+      "correcta": 1,
+      "explicacion": "Camión es aguda terminada en n: lleva tilde."
+    },
+    {
+      "frase": "Nos vemos el ___ en la tarde.",
+      "opciones": [
+        "miércoles",
+        "miercoles"
+      ],
+      "correcta": 0,
+      "explicacion": "Miércoles es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "Tomé una foto con la ___.",
+      "opciones": [
+        "camara",
+        "cámara"
+      ],
+      "correcta": 1,
+      "explicacion": "Cámara es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "Ella corre muy ___.",
+      "opciones": [
+        "rápido",
+        "rapido"
+      ],
+      "correcta": 0,
+      "explicacion": "Rápido es esdrújula: lleva tilde."
+    },
+    {
+      "frase": "Mi mamá está en el ___ regando las plantas.",
+      "opciones": [
+        "jardin",
+        "jardín"
+      ],
+      "correcta": 1,
+      "explicacion": "Jardín es aguda terminada en n: lleva tilde."
+    },
+    {
+      "frase": "Le puse ___ a mi agua.",
+      "opciones": [
+        "limón",
+        "limon"
+      ],
+      "correcta": 0,
+      "explicacion": "Limón es aguda terminada en n: lleva tilde."
+    }
+  ],
+  "sinonimos": [
+    {
+      "palabra": "feliz",
+      "respuesta": "contento",
+      "distractores": [
+        "triste",
+        "cansado",
+        "lento"
+      ]
+    },
+    {
+      "palabra": "bonito",
+      "respuesta": "hermoso",
+      "distractores": [
+        "feo",
+        "rápido",
+        "frío"
+      ]
+    },
+    {
+      "palabra": "grande",
+      "respuesta": "enorme",
+      "distractores": [
+        "pequeño",
+        "delgado",
+        "suave"
+      ]
+    },
+    {
+      "palabra": "rápido",
+      "respuesta": "veloz",
+      "distractores": [
+        "lento",
+        "pesado",
+        "oscuro"
+      ]
+    },
+    {
+      "palabra": "empezar",
+      "respuesta": "comenzar",
+      "distractores": [
+        "terminar",
+        "dormir",
+        "perder"
+      ]
+    },
+    {
+      "palabra": "terminar",
+      "respuesta": "acabar",
+      "distractores": [
+        "iniciar",
+        "correr",
+        "subir"
+      ]
+    },
+    {
+      "palabra": "casa",
+      "respuesta": "hogar",
+      "distractores": [
+        "escuela",
+        "calle",
+        "parque"
+      ]
+    },
+    {
+      "palabra": "alumno",
+      "respuesta": "estudiante",
+      "distractores": [
+        "maestro",
+        "director",
+        "vecino"
+      ]
+    },
+    {
+      "palabra": "maestro",
+      "respuesta": "profesor",
+      "distractores": [
+        "alumno",
+        "doctor",
+        "cocinero"
+      ]
+    },
+    {
+      "palabra": "cara",
+      "respuesta": "rostro",
+      "distractores": [
+        "mano",
+        "pie",
+        "espalda"
+      ]
+    },
+    {
+      "palabra": "enojado",
+      "respuesta": "molesto",
+      "distractores": [
+        "alegre",
+        "tranquilo",
+        "dormido"
+      ]
+    },
+    {
+      "palabra": "miedo",
+      "respuesta": "temor",
+      "distractores": [
+        "valor",
+        "alegría",
+        "hambre"
+      ]
+    },
+    {
+      "palabra": "regalo",
+      "respuesta": "obsequio",
+      "distractores": [
+        "castigo",
+        "tarea",
+        "problema"
+      ]
+    },
+    {
+      "palabra": "hablar",
+      "respuesta": "platicar",
+      "distractores": [
+        "callar",
+        "escuchar",
+        "caminar"
+      ]
+    },
+    {
+      "palabra": "mirar",
+      "respuesta": "observar",
+      "distractores": [
+        "oír",
+        "tocar",
+        "oler"
+      ]
+    },
+    {
+      "palabra": "caminar",
+      "respuesta": "andar",
+      "distractores": [
+        "correr",
+        "saltar",
+        "nadar"
+      ]
+    },
+    {
+      "palabra": "bello",
+      "respuesta": "lindo",
+      "distractores": [
+        "feo",
+        "sucio",
+        "viejo"
+      ]
+    },
+    {
+      "palabra": "inteligente",
+      "respuesta": "listo",
+      "distractores": [
+        "torpe",
+        "distraído",
+        "flojo"
+      ]
+    },
+    {
+      "palabra": "auto",
+      "respuesta": "coche",
+      "distractores": [
+        "avión",
+        "barco",
+        "bicicleta"
+      ]
+    },
+    {
+      "palabra": "cabello",
+      "respuesta": "pelo",
+      "distractores": [
+        "piel",
+        "uña",
+        "ojo"
+      ]
+    },
+    {
+      "palabra": "alegría",
+      "respuesta": "felicidad",
+      "distractores": [
+        "tristeza",
+        "enojo",
+        "cansancio"
+      ]
+    },
+    {
+      "palabra": "difícil",
+      "respuesta": "complicado",
+      "distractores": [
+        "fácil",
+        "sencillo",
+        "rápido"
+      ]
+    },
+    {
+      "palabra": "fácil",
+      "respuesta": "sencillo",
+      "distractores": [
+        "difícil",
+        "complicado",
+        "largo"
+      ]
+    },
+    {
+      "palabra": "limpio",
+      "respuesta": "aseado",
+      "distractores": [
+        "sucio",
+        "manchado",
+        "roto"
+      ]
+    },
+    {
+      "palabra": "viejo",
+      "respuesta": "anciano",
+      "distractores": [
+        "joven",
+        "nuevo",
+        "niño"
+      ]
+    },
+    {
+      "palabra": "delgado",
+      "respuesta": "flaco",
+      "distractores": [
+        "gordo",
+        "alto",
+        "fuerte"
+      ]
+    },
+    {
+      "palabra": "enorme",
+      "respuesta": "gigante",
+      "distractores": [
+        "diminuto",
+        "pequeño",
+        "corto"
+      ]
+    },
+    {
+      "palabra": "pequeño",
+      "respuesta": "chico",
+      "distractores": [
+        "grande",
+        "alto",
+        "largo"
+      ]
+    },
+    {
+      "palabra": "lanzar",
+      "respuesta": "arrojar",
+      "distractores": [
+        "atrapar",
+        "guardar",
+        "romper"
+      ]
+    },
+    {
+      "palabra": "mandar",
+      "respuesta": "enviar",
+      "distractores": [
+        "recibir",
+        "abrir",
+        "leer"
+      ]
+    },
+    {
+      "palabra": "ayudar",
+      "respuesta": "apoyar",
+      "distractores": [
+        "molestar",
+        "estorbar",
+        "olvidar"
+      ]
+    },
+    {
+      "palabra": "contestar",
+      "respuesta": "responder",
+      "distractores": [
+        "preguntar",
+        "callar",
+        "escribir"
+      ]
+    },
+    {
+      "palabra": "regresar",
+      "respuesta": "volver",
+      "distractores": [
+        "salir",
+        "irse",
+        "quedarse"
+      ]
+    },
+    {
+      "palabra": "elegir",
+      "respuesta": "escoger",
+      "distractores": [
+        "rechazar",
+        "perder",
+        "romper"
+      ]
+    },
+    {
+      "palabra": "cansado",
+      "respuesta": "agotado",
+      "distractores": [
+        "descansado",
+        "activo",
+        "feliz"
+      ]
+    },
+    {
+      "palabra": "valiente",
+      "respuesta": "valeroso",
+      "distractores": [
+        "cobarde",
+        "miedoso",
+        "tímido"
+      ]
+    },
+    {
+      "palabra": "miedoso",
+      "respuesta": "cobarde",
+      "distractores": [
+        "valiente",
+        "atrevido",
+        "audaz"
+      ]
+    },
+    {
+      "palabra": "escuela",
+      "respuesta": "colegio",
+      "distractores": [
+        "hospital",
+        "mercado",
+        "iglesia"
+      ]
+    },
+    {
+      "palabra": "frío",
+      "respuesta": "helado",
+      "distractores": [
+        "caliente",
+        "tibio",
+        "seco"
+      ]
+    },
+    {
+      "palabra": "hallar",
+      "respuesta": "encontrar",
+      "distractores": [
+        "perder",
+        "buscar",
+        "esconder"
+      ]
+    },
+    {
+      "palabra": "cuarto",
+      "respuesta": "habitación",
+      "distractores": [
+        "cocina",
+        "patio",
+        "baño"
+      ]
+    },
+    {
+      "palabra": "alto",
+      "respuesta": "elevado",
+      "distractores": [
+        "bajo",
+        "ancho",
+        "corto"
+      ]
+    },
+    {
+      "palabra": "correcto",
+      "respuesta": "acertado",
+      "distractores": [
+        "equivocado",
+        "erróneo",
+        "dudoso"
+      ]
+    },
+    {
+      "palabra": "error",
+      "respuesta": "equivocación",
+      "distractores": [
+        "acierto",
+        "logro",
+        "éxito"
+      ]
+    },
+    {
+      "palabra": "sabroso",
+      "respuesta": "delicioso",
+      "distractores": [
+        "asqueroso",
+        "desabrido",
+        "amargo"
+      ]
+    },
+    {
+      "palabra": "enojo",
+      "respuesta": "furia",
+      "distractores": [
+        "calma",
+        "paz",
+        "alegría"
+      ]
+    },
+    {
+      "palabra": "tranquilo",
+      "respuesta": "calmado",
+      "distractores": [
+        "nervioso",
+        "inquieto",
+        "agitado"
+      ]
+    },
+    {
+      "palabra": "brincar",
+      "respuesta": "saltar",
+      "distractores": [
+        "caer",
+        "sentarse",
+        "caminar"
+      ]
+    },
+    {
+      "palabra": "lugar",
+      "respuesta": "sitio",
+      "distractores": [
+        "momento",
+        "persona",
+        "cosa"
+      ]
+    },
+    {
+      "palabra": "país",
+      "respuesta": "nación",
+      "distractores": [
+        "ciudad",
+        "pueblo",
+        "barrio"
+      ]
+    },
+    {
+      "palabra": "idioma",
+      "respuesta": "lengua",
+      "distractores": [
+        "palabra",
+        "letra",
+        "libro"
+      ]
+    },
+    {
+      "palabra": "empleo",
+      "respuesta": "trabajo",
+      "distractores": [
+        "descanso",
+        "vacaciones",
+        "juego"
+      ]
+    },
+    {
+      "palabra": "entender",
+      "respuesta": "comprender",
+      "distractores": [
+        "confundir",
+        "ignorar",
+        "olvidar"
+      ]
+    },
+    {
+      "palabra": "permitir",
+      "respuesta": "autorizar",
+      "distractores": [
+        "prohibir",
+        "impedir",
+        "negar"
+      ]
+    },
+    {
+      "palabra": "odiar",
+      "respuesta": "detestar",
+      "distractores": [
+        "amar",
+        "adorar",
+        "querer"
+      ]
+    },
+    {
+      "palabra": "amable",
+      "respuesta": "gentil",
+      "distractores": [
+        "grosero",
+        "egoísta",
+        "enojón"
+      ]
+    },
+    {
+      "palabra": "largo",
+      "respuesta": "extenso",
+      "distractores": [
+        "corto",
+        "breve",
+        "pequeño"
+      ]
+    },
+    {
+      "palabra": "duro",
+      "respuesta": "rígido",
+      "distractores": [
+        "blando",
+        "suave",
+        "flexible"
+      ]
+    },
+    {
+      "palabra": "suave",
+      "respuesta": "blando",
+      "distractores": [
+        "duro",
+        "áspero",
+        "rígido"
+      ]
+    },
+    {
+      "palabra": "oscuro",
+      "respuesta": "sombrío",
+      "distractores": [
+        "claro",
+        "luminoso",
+        "brillante"
+      ]
+    },
+    {
+      "palabra": "brillante",
+      "respuesta": "reluciente",
+      "distractores": [
+        "opaco",
+        "oscuro",
+        "apagado"
+      ]
+    },
+    {
+      "palabra": "vacío",
+      "respuesta": "desocupado",
+      "distractores": [
+        "lleno",
+        "ocupado",
+        "repleto"
+      ]
+    },
+    {
+      "palabra": "lleno",
+      "respuesta": "repleto",
+      "distractores": [
+        "vacío",
+        "hueco",
+        "libre"
+      ]
+    },
+    {
+      "palabra": "barco",
+      "respuesta": "buque",
+      "distractores": [
+        "avión",
+        "tren",
+        "coche"
+      ]
+    },
+    {
+      "palabra": "ropa",
+      "respuesta": "vestimenta",
+      "distractores": [
+        "comida",
+        "casa",
+        "juguete"
+      ]
+    },
+    {
+      "palabra": "cocinar",
+      "respuesta": "guisar",
+      "distractores": [
+        "comer",
+        "lavar",
+        "barrer"
+      ]
+    },
+    {
+      "palabra": "sucio",
+      "respuesta": "mugroso",
+      "distractores": [
+        "limpio",
+        "aseado",
+        "lavado"
+      ]
+    }
+  ],
+  "antonimos": [
+    {
+      "palabra": "alto",
+      "respuesta": "bajo",
+      "distractores": [
+        "grande",
+        "largo",
+        "fuerte"
+      ]
+    },
+    {
+      "palabra": "grande",
+      "respuesta": "pequeño",
+      "distractores": [
+        "enorme",
+        "gigante",
+        "alto"
+      ]
+    },
+    {
+      "palabra": "feliz",
+      "respuesta": "triste",
+      "distractores": [
+        "contento",
+        "alegre",
+        "tranquilo"
+      ]
+    },
+    {
+      "palabra": "día",
+      "respuesta": "noche",
+      "distractores": [
+        "tarde",
+        "mañana",
+        "sol"
+      ]
+    },
+    {
+      "palabra": "frío",
+      "respuesta": "caliente",
+      "distractores": [
+        "helado",
+        "fresco",
+        "húmedo"
+      ]
+    },
+    {
+      "palabra": "rápido",
+      "respuesta": "lento",
+      "distractores": [
+        "veloz",
+        "ligero",
+        "fuerte"
+      ]
+    },
+    {
+      "palabra": "abrir",
+      "respuesta": "cerrar",
+      "distractores": [
+        "empujar",
+        "mover",
+        "romper"
+      ]
+    },
+    {
+      "palabra": "subir",
+      "respuesta": "bajar",
+      "distractores": [
+        "saltar",
+        "correr",
+        "caminar"
+      ]
+    },
+    {
+      "palabra": "entrar",
+      "respuesta": "salir",
+      "distractores": [
+        "pasar",
+        "llegar",
+        "volver"
+      ]
+    },
+    {
+      "palabra": "limpio",
+      "respuesta": "sucio",
+      "distractores": [
+        "nuevo",
+        "bonito",
+        "seco"
+      ]
+    },
+    {
+      "palabra": "nuevo",
+      "respuesta": "viejo",
+      "distractores": [
+        "moderno",
+        "grande",
+        "limpio"
+      ]
+    },
+    {
+      "palabra": "lleno",
+      "respuesta": "vacío",
+      "distractores": [
+        "completo",
+        "pesado",
+        "grande"
+      ]
+    },
+    {
+      "palabra": "bueno",
+      "respuesta": "malo",
+      "distractores": [
+        "amable",
+        "alegre",
+        "grande"
+      ]
+    },
+    {
+      "palabra": "fácil",
+      "respuesta": "difícil",
+      "distractores": [
+        "sencillo",
+        "rápido",
+        "corto"
+      ]
+    },
+    {
+      "palabra": "arriba",
+      "respuesta": "abajo",
+      "distractores": [
+        "encima",
+        "lejos",
+        "adentro"
+      ]
+    },
+    {
+      "palabra": "cerca",
+      "respuesta": "lejos",
+      "distractores": [
+        "junto",
+        "abajo",
+        "arriba"
+      ]
+    },
+    {
+      "palabra": "dentro",
+      "respuesta": "fuera",
+      "distractores": [
+        "debajo",
+        "encima",
+        "lejos"
+      ]
+    },
+    {
+      "palabra": "ganar",
+      "respuesta": "perder",
+      "distractores": [
+        "jugar",
+        "correr",
+        "intentar"
+      ]
+    },
+    {
+      "palabra": "comprar",
+      "respuesta": "vender",
+      "distractores": [
+        "pagar",
+        "gastar",
+        "pedir"
+      ]
+    },
+    {
+      "palabra": "reír",
+      "respuesta": "llorar",
+      "distractores": [
+        "sonreír",
+        "hablar",
+        "gritar"
+      ]
+    },
+    {
+      "palabra": "encender",
+      "respuesta": "apagar",
+      "distractores": [
+        "prender",
+        "mover",
+        "abrir"
+      ]
+    },
+    {
+      "palabra": "empezar",
+      "respuesta": "terminar",
+      "distractores": [
+        "comenzar",
+        "iniciar",
+        "seguir"
+      ]
+    },
+    {
+      "palabra": "mucho",
+      "respuesta": "poco",
+      "distractores": [
+        "bastante",
+        "demasiado",
+        "todo"
+      ]
+    },
+    {
+      "palabra": "amor",
+      "respuesta": "odio",
+      "distractores": [
+        "cariño",
+        "alegría",
+        "amistad"
+      ]
+    },
+    {
+      "palabra": "blanco",
+      "respuesta": "negro",
+      "distractores": [
+        "gris",
+        "rojo",
+        "azul"
+      ]
+    },
+    {
+      "palabra": "duro",
+      "respuesta": "blando",
+      "distractores": [
+        "rígido",
+        "fuerte",
+        "pesado"
+      ]
+    },
+    {
+      "palabra": "gordo",
+      "respuesta": "delgado",
+      "distractores": [
+        "grande",
+        "alto",
+        "pesado"
+      ]
+    },
+    {
+      "palabra": "joven",
+      "respuesta": "anciano",
+      "distractores": [
+        "adolescente",
+        "alto",
+        "fuerte"
+      ]
+    },
+    {
+      "palabra": "rico",
+      "respuesta": "pobre",
+      "distractores": [
+        "caro",
+        "grande",
+        "feliz"
+      ]
+    },
+    {
+      "palabra": "valiente",
+      "respuesta": "cobarde",
+      "distractores": [
+        "fuerte",
+        "rápido",
+        "alegre"
+      ]
+    },
+    {
+      "palabra": "temprano",
+      "respuesta": "tarde",
+      "distractores": [
+        "pronto",
+        "rápido",
+        "antes"
+      ]
+    },
+    {
+      "palabra": "antes",
+      "respuesta": "después",
+      "distractores": [
+        "ahora",
+        "nunca",
+        "siempre"
+      ]
+    },
+    {
+      "palabra": "siempre",
+      "respuesta": "nunca",
+      "distractores": [
+        "ahora",
+        "luego",
+        "pronto"
+      ]
+    },
+    {
+      "palabra": "dormir",
+      "respuesta": "despertar",
+      "distractores": [
+        "soñar",
+        "descansar",
+        "roncar"
+      ]
+    },
+    {
+      "palabra": "preguntar",
+      "respuesta": "responder",
+      "distractores": [
+        "decir",
+        "hablar",
+        "pedir"
+      ]
+    },
+    {
+      "palabra": "recordar",
+      "respuesta": "olvidar",
+      "distractores": [
+        "pensar",
+        "saber",
+        "aprender"
+      ]
+    },
+    {
+      "palabra": "sentarse",
+      "respuesta": "levantarse",
+      "distractores": [
+        "descansar",
+        "esperar",
+        "dormir"
+      ]
+    },
+    {
+      "palabra": "aceptar",
+      "respuesta": "rechazar",
+      "distractores": [
+        "recibir",
+        "tomar",
+        "pedir"
+      ]
+    },
+    {
+      "palabra": "amigo",
+      "respuesta": "enemigo",
+      "distractores": [
+        "compañero",
+        "vecino",
+        "hermano"
+      ]
+    },
+    {
+      "palabra": "guerra",
+      "respuesta": "paz",
+      "distractores": [
+        "pelea",
+        "lucha",
+        "batalla"
+      ]
+    },
+    {
+      "palabra": "luz",
+      "respuesta": "oscuridad",
+      "distractores": [
+        "sol",
+        "brillo",
+        "lámpara"
+      ]
+    },
+    {
+      "palabra": "izquierda",
+      "respuesta": "derecha",
+      "distractores": [
+        "arriba",
+        "centro",
+        "abajo"
+      ]
+    },
+    {
+      "palabra": "norte",
+      "respuesta": "sur",
+      "distractores": [
+        "este",
+        "oeste",
+        "centro"
+      ]
+    },
+    {
+      "palabra": "largo",
+      "respuesta": "corto",
+      "distractores": [
+        "ancho",
+        "alto",
+        "extenso"
+      ]
+    },
+    {
+      "palabra": "ancho",
+      "respuesta": "angosto",
+      "distractores": [
+        "largo",
+        "grande",
+        "alto"
+      ]
+    },
+    {
+      "palabra": "caro",
+      "respuesta": "barato",
+      "distractores": [
+        "costoso",
+        "nuevo",
+        "bonito"
+      ]
+    },
+    {
+      "palabra": "mojado",
+      "respuesta": "seco",
+      "distractores": [
+        "húmedo",
+        "frío",
+        "limpio"
+      ]
+    },
+    {
+      "palabra": "ruido",
+      "respuesta": "silencio",
+      "distractores": [
+        "sonido",
+        "grito",
+        "música"
+      ]
+    },
+    {
+      "palabra": "verdad",
+      "respuesta": "mentira",
+      "distractores": [
+        "secreto",
+        "pregunta",
+        "idea"
+      ]
+    },
+    {
+      "palabra": "éxito",
+      "respuesta": "fracaso",
+      "distractores": [
+        "triunfo",
+        "premio",
+        "logro"
+      ]
+    },
+    {
+      "palabra": "tranquilo",
+      "respuesta": "nervioso",
+      "distractores": [
+        "calmado",
+        "sereno",
+        "callado"
+      ]
+    },
+    {
+      "palabra": "alegría",
+      "respuesta": "tristeza",
+      "distractores": [
+        "felicidad",
+        "gusto",
+        "risa"
+      ]
+    },
+    {
+      "palabra": "meter",
+      "respuesta": "sacar",
+      "distractores": [
+        "poner",
+        "guardar",
+        "dejar"
+      ]
+    },
+    {
+      "palabra": "empujar",
+      "respuesta": "jalar",
+      "distractores": [
+        "mover",
+        "cargar",
+        "soltar"
+      ]
+    },
+    {
+      "palabra": "mayor",
+      "respuesta": "menor",
+      "distractores": [
+        "grande",
+        "viejo",
+        "alto"
+      ]
+    },
+    {
+      "palabra": "primero",
+      "respuesta": "último",
+      "distractores": [
+        "segundo",
+        "único",
+        "siguiente"
+      ]
+    },
+    {
+      "palabra": "fuerte",
+      "respuesta": "débil",
+      "distractores": [
+        "grande",
+        "duro",
+        "rápido"
+      ]
+    },
+    {
+      "palabra": "ligero",
+      "respuesta": "pesado",
+      "distractores": [
+        "rápido",
+        "suave",
+        "delgado"
+      ]
+    },
+    {
+      "palabra": "claro",
+      "respuesta": "oscuro",
+      "distractores": [
+        "brillante",
+        "blanco",
+        "limpio"
+      ]
+    },
+    {
+      "palabra": "encima",
+      "respuesta": "debajo",
+      "distractores": [
+        "arriba",
+        "sobre",
+        "junto"
+      ]
+    },
+    {
+      "palabra": "poner",
+      "respuesta": "quitar",
+      "distractores": [
+        "dejar",
+        "colocar",
+        "meter"
+      ]
+    },
+    {
+      "palabra": "sano",
+      "respuesta": "enfermo",
+      "distractores": [
+        "fuerte",
+        "limpio",
+        "feliz"
+      ]
+    },
+    {
+      "palabra": "bonito",
+      "respuesta": "feo",
+      "distractores": [
+        "lindo",
+        "grande",
+        "nuevo"
+      ]
+    },
+    {
+      "palabra": "trabajar",
+      "respuesta": "descansar",
+      "distractores": [
+        "estudiar",
+        "ayudar",
+        "correr"
+      ]
+    },
+    {
+      "palabra": "dar",
+      "respuesta": "recibir",
+      "distractores": [
+        "regalar",
+        "prestar",
+        "entregar"
+      ]
+    },
+    {
+      "palabra": "igual",
+      "respuesta": "diferente",
+      "distractores": [
+        "parecido",
+        "mismo",
+        "similar"
+      ]
+    },
+    {
+      "palabra": "obedecer",
+      "respuesta": "desobedecer",
+      "distractores": [
+        "escuchar",
+        "cumplir",
+        "seguir"
+      ]
+    }
+  ],
+  "oraciones": [
+    "El perro de mi abuela duerme en el jardín",
+    "Mi hermana menor juega con sus muñecas",
+    "Los niños comen tacos en la escuela",
+    "Mi papá maneja un camión muy grande",
+    "La maestra escribe en el pizarrón blanco",
+    "Mi gato negro duerme sobre el sillón",
+    "Nosotros vivimos en una casa azul",
+    "El pájaro canta en la ventana",
+    "Mi mamá prepara chilaquiles para el desayuno",
+    "Los alumnos y alumnas leen un cuento divertido",
+    "Mi abuelo tiene un rancho con vacas",
+    "La niña pinta un dibujo de flores",
+    "El camión de la escuela es amarillo",
+    "Mi amigo Luis juega futbol muy bien",
+    "Las flores del jardín son muy bonitas",
+    "Mi hermano mayor estudia en la universidad",
+    "El doctor revisa a los pacientes",
+    "Mi tía vende pan en el mercado",
+    "Los perros ladran a los gatos",
+    "La luna brilla en el cielo oscuro",
+    "Mi familia viaja a la playa en verano",
+    "El bebé llora cuando tiene hambre",
+    "Ana lee un libro de animales",
+    "Mi escuela tiene una biblioteca muy grande",
+    "El tren llega a la estación",
+    "Mis primos viven en la Ciudad de México",
+    "La abuela teje una bufanda roja",
+    "El mono come un plátano amarillo",
+    "Pedro lava los platos después de comer",
+    "La mariposa vuela sobre las flores",
+    "Mi mejor amiga canta muy bonito",
+    "El elefante tiene una trompa muy larga",
+    "Los alumnos juegan en el patio",
+    "Mi papá riega las plantas del jardín",
+    "La cocina de mi casa es pequeña",
+    "Los pescadores salen al mar en lancha",
+    "Mi hermanita tiene un conejo blanco",
+    "El sol sale por la mañana",
+    "Mi mamá compra fruta en el mercado",
+    "Las niñas corren en el parque",
+    "El cartero trae una carta para ti",
+    "Mi abuela cuenta historias muy divertidas",
+    "El jugador patea el balón con fuerza",
+    "La tortuga camina muy despacio",
+    "Mi perro juega con una pelota roja",
+    "Los niños construyen un castillo de arena",
+    "El panadero hornea pan todas las mañanas",
+    "Mi hermano toca la guitarra en su cuarto",
+    "La leche está en el refrigerador",
+    "Mis amigos y yo vamos al cine",
+    "El maestro explica la lección de ciencias",
+    "La gallina pone huevos todos los días"
+  ]
+}

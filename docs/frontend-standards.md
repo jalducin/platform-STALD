@@ -12,6 +12,11 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - pide el correo, consulta `/perfil` y muestra una tarjeta por espacio;
   - el tablero de Secundaria vive en `secundaria.html` desde el cambio `portal-acceso`.
 - Cada página de espacio lleva "← Inicio" al portal y acepta `?api=` para probar contra un servidor local.
+- **Excepción (`juegos.html`):**
+  - El contenido de los juegos se carga de `juegos/datos/*.json` en el mismo sitio (vocabulario, trivia,
+    etc.). Crece con el tiempo y se edita sin tocar el código.
+  - No lleva datos personales ni respuestas de evaluaciones.
+  - Los relojes aceptan `window.__TIEMPO_JUEGOS` (solo en pruebas E2E) para acelerarlos.
 
 ## 2. Seguridad en el DOM
 

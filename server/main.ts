@@ -5,6 +5,7 @@ import { attachUsers, extractInglesRow, extractSecundariaRow, filterForEmail, ty
 import { handleActividades } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
+import { handleJuegos, type Invitados } from "./juegos.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 
 const NOTION_VERSION = "2022-06-28";
@@ -129,8 +130,17 @@ export async function handler(req: Request): Promise<Response> {
     // GET /perfil → accesos del portal (sin filas ni correos ajenos).
     if (url.pathname.endsWith("/perfil")) {
       if (!email) return json({ error: "missing_email" }, 400);
-      const [ingles, secundaria] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria")]);
-      return json(armarPerfil(email, admin, ingles, secundaria));
+      const store = await getStore();
+      const [ingles, secundaria, inv] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), store.get<Invitados>("juegos/invitados.json")]);
+      return json(armarPerfil(email, admin, ingles, secundaria, inv?.data ?? {}));
+    }
+
+    // /juegos/… → partidas, ranking e invitados (server/juegos.ts)
+    const iJuegos = url.pathname.indexOf("/juegos/");
+    if (iJuegos !== -1) {
+      return await handleJuegos(req, url.pathname.slice(iJuegos + "/juegos".length), email, {
+        store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"),
+      }, json);
     }
 
     // POST /ingles/data/<pageId>/completado → marcar o desmarcar una tarea de Notion.

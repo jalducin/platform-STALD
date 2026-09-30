@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Juegos · STALD</title>
+<meta name="description" content="Aprende jugando: inglés, español, cultura, mente ágil y más.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23db2777'/><text x='32' y='44' font-size='34' text-anchor='middle'>🎮</text></svg>">
+<style>
+  :root {
+    --bg: #f7f5fb; --card: #ffffff; --text: #1e1b2e; --muted: #6b6880; --border: #e6e4f0;
+    --accent: #db2777; --accent-2: #7c3aed; --accent-soft: #fce7f3; --ok: #16a34a; --ok-soft: #dcfce7; --bad: #dc2626; --bad-soft: #fee2e2;
+    --gold: #f59e0b; --shadow: 0 1px 2px rgba(30, 27, 46, .06), 0 8px 24px rgba(30, 27, 46, .07); --radius: 18px;
+    --ingles: #2563eb; --ingles-soft: #dbeafe; --espanol: #ea580c; --espanol-soft: #ffedd5; --cultura: #0d9488; --cultura-soft: #ccfbf1;
+    --mente: #7c3aed; --mente-soft: #ede9fe; --clasicos: #db2777; --clasicos-soft: #fce7f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #13111c; --card: #1e1b2e; --text: #f4f3fa; --muted: #a8a5bd; --border: #2e2a45; --accent-soft: #45162f;
+      --ok-soft: #12351f; --bad-soft: #3b1414; --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+      --ingles-soft: #1e2a4d; --espanol-soft: #432411; --cultura-soft: #113b37; --mente-soft: #2e2159; --clasicos-soft: #45162f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: radial-gradient(800px 420px at 110% -10%, rgba(219, 39, 119, .14), transparent 60%),
+      radial-gradient(700px 400px at -10% 0%, rgba(124, 58, 237, .12), transparent 60%), var(--bg);
+    color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45; -webkit-font-smoothing: antialiased;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  [hidden] { display: none !important; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .home-link { font-size: .84rem; font-weight: 700; color: var(--accent-2); text-decoration: none; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 700; background: var(--card); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 99px; box-shadow: var(--shadow); }
+  .chip .inv { font-size: .66rem; color: var(--muted); font-weight: 700; }
+  h1 { font-size: 1.55rem; margin: 0 0 4px; letter-spacing: -.01em; }
+  h2 { font-size: 1.05rem; margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; }
+  .lead { color: var(--muted); margin: 0 0 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+  .tabs { display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 4px; margin: 10px 0 6px; }
+  .tab { flex: 1; font: inherit; font-weight: 700; font-size: .86rem; padding: 9px 6px; border-radius: 10px; border: none; background: none; color: var(--muted); cursor: pointer; }
+  .tab[aria-selected="true"] { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+  .grid { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+  @media (min-width: 620px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }
+  .game { position: relative; display: flex; flex-direction: column; gap: 4px; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; box-shadow: var(--shadow); transition: transform .12s, border-color .12s; }
+  .game:hover { transform: translateY(-2px); border-color: var(--tone); }
+  .game:focus-visible, .btn:focus-visible, .opt:focus-visible, .tab:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+  .game .ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 1.4rem; background: var(--tone-soft); }
+  .game .t { font-weight: 800; font-size: .95rem; line-height: 1.2; margin-top: 4px; }
+  .game .d { font-size: .76rem; color: var(--muted); }
+  .game .best { position: absolute; top: 12px; right: 12px; font-size: .7rem; font-weight: 800; color: var(--gold); }
+  .cat-ingles { --tone: var(--ingles); --tone-soft: var(--ingles-soft); }
+  .cat-espanol { --tone: var(--espanol); --tone-soft: var(--espanol-soft); }
+  .cat-cultura { --tone: var(--cultura); --tone-soft: var(--cultura-soft); }
+  .cat-mente { --tone: var(--mente); --tone-soft: var(--mente-soft); }
+  .cat-clasicos { --tone: var(--clasicos); --tone-soft: var(--clasicos-soft); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 800; font-size: .95rem; border: none; border-radius: 12px;
+    padding: 12px 16px; cursor: pointer; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px rgba(219, 39, 119, .25); }
+  .btn.ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+  .btn.sm { padding: 7px 11px; font-size: .8rem; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .row-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .row-btns .btn { flex: 1; }
+  label { display: block; font-size: .82rem; font-weight: 700; margin: 10px 0 6px; }
+  input[type=email], input[type=text] { width: 100%; font: inherit; font-size: 1rem; padding: 12px 13px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+  input:focus { border-color: var(--accent-2); }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: .84rem; font-weight: 500; margin: 12px 0; }
+  .check input { width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0; }
+  .alert { margin-top: 12px; padding: 10px 12px; border-radius: 12px; font-size: .86rem; background: var(--bad-soft); color: var(--bad); }
+  .muted { color: var(--muted); font-size: .84rem; }
+  .loading { padding: 40px; text-align: center; color: var(--muted); }
+  /* Marco de juego */
+  .play-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .play-top .t { flex: 1; font-weight: 800; font-size: 1rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stat { font-size: .82rem; font-weight: 800; background: var(--card); border: 1px solid var(--border); border-radius: 99px; padding: 5px 10px; white-space: nowrap; }
+  .stat.warn { color: var(--bad); border-color: var(--bad); }
+  .bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+  .bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .25s linear; }
+  .q-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 16px; text-align: center; margin-bottom: 12px; }
+  .q-card .big { font-size: 3rem; line-height: 1.1; margin-bottom: 6px; }
+  .q-card .q { font-size: 1.2rem; font-weight: 800; }
+  .q-card .sub { color: var(--muted); font-size: .88rem; margin-top: 4px; }
+  .opts { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+  .opts.una-col { grid-template-columns: 1fr; }
+  .opt { font: inherit; font-weight: 700; font-size: 1rem; padding: 14px 10px; border-radius: 14px; border: 1.5px solid var(--border); background: var(--card); color: var(--text);
+    cursor: pointer; transition: transform .08s, background .12s, border-color .12s; }
+  .opt:hover { border-color: var(--accent-2); }
+  .opt:active { transform: scale(.98); }
+  .opt .k { display: inline-block; font-size: .7rem; color: var(--muted); margin-right: 6px; }
+  .opt.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+  .opt.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  .feedback { min-height: 22px; text-align: center; font-size: .86rem; font-weight: 700; margin-top: 10px; }
+  .feedback.ok { color: var(--ok); } .feedback.bad { color: var(--bad); }
+  .flash-ok { animation: pop .35s; } @keyframes pop { 50% { transform: scale(1.04); } }
+  /* Memorama */
+  .memo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .memo button { aspect-ratio: 1; font: inherit; font-weight: 800; font-size: .82rem; border-radius: 12px; border: 1.5px solid var(--border); cursor: pointer; padding: 4px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: transparent; transition: background .15s; word-break: break-word; }
+  .memo button.up, .memo button.done { background: var(--card); color: var(--text); }
+  .memo button.done { border-color: var(--ok); background: var(--ok-soft); cursor: default; }
+  .memo button .em { display: block; font-size: 1.5rem; }
+  /* Ordena */
+  .slots { min-height: 58px; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border: 2px dashed var(--border); border-radius: 14px; margin-bottom: 10px; background: var(--card); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .word { font: inherit; font-weight: 700; font-size: .95rem; padding: 9px 12px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; }
+  .slots .word { background: var(--mente-soft); border-color: var(--mente); }
+  /* Simón */
+  .simon { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 320px; margin: 0 auto; }
+  .simon button { aspect-ratio: 1; border: none; border-radius: 22px; cursor: pointer; opacity: .55; transition: opacity .1s, transform .1s; }
+  .simon button.on { opacity: 1; transform: scale(1.04); box-shadow: 0 0 24px currentColor; }
+  .simon button:disabled { cursor: default; }
+  /* Sopa */
+  .sopa { display: grid; gap: 3px; user-select: none; margin: 0 auto 10px; max-width: 420px; }
+  .sopa button { aspect-ratio: 1; font: inherit; font-weight: 800; font-size: .9rem; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); cursor: pointer; padding: 0; }
+  .sopa button.sel { background: var(--mente-soft); border-color: var(--mente); }
+  .sopa button.found { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+  .lista-sopa { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; font-size: .82rem; }
+  .lista-sopa span { padding: 4px 9px; border-radius: 99px; background: var(--card); border: 1px solid var(--border); }
+  .lista-sopa span.found { text-decoration: line-through; color: var(--ok); border-color: var(--ok); }
+  /* Resultado */
+  .result { text-align: center; }
+  .result .score { font-size: 3rem; font-weight: 900; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; }
+  .result .record { display: inline-block; margin-top: 8px; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--gold), #ef4444); padding: 4px 12px; border-radius: 99px; }
+  .result .pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  .burst { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .burst span { position: absolute; top: -40px; font-size: 1.6rem; animation: fall 1.8s ease-in forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: .2; } }
+  /* Ranking */
+  .rank { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .rank li { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; }
+  .rank li.yo { border: 2px solid var(--accent-2); }
+  .rank .pos { width: 34px; text-align: center; font-weight: 900; font-size: 1.05rem; }
+  .rank .n { flex: 1; font-weight: 700; }
+  .rank .n small { color: var(--muted); font-weight: 600; }
+  .rank .pts { font-weight: 900; }
+  table.inv { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  table.inv th, table.inv td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--border); }
+  .scroll-x { overflow-x: auto; }
+  .kbd-hint { text-align: center; font-size: .72rem; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="home-link" href="./">← Inicio</a>
+    <span class="chip" id="chip" hidden></span>
+  </div>
+  <main id="app"><div class="loading">Cargando juegos…</div></main>
+</div>
+
+<script>
+  // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
+  const DEFAULT_API = 'https://stald.jalducin.deno.net';
+  const API_PARAM = new URLSearchParams(location.search).get('api');
+  const API_BASE = (API_PARAM || DEFAULT_API).replace(/\/$/, '');
+  const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
+  if (API_PARAM) document.querySelector('.home-link').href = './?api=' + encodeURIComponent(API_PARAM);
+
+  const app = document.getElementById('app');
+  const chip = document.getElementById('chip');
+  const state = { email: null, jugador: null, total: 0, pos: null, mejores: {}, semana: null, tab: 'juegos' };
+  let limpiezas = []; // timers del juego en curso
+  function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) speechSynthesis.cancel(); }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  const fmt = n => Number(n || 0).toLocaleString('es-MX');
+  const barajar = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  const tomar = (a, n) => barajar(a).slice(0, n);
+  const sinAcentos = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  async function api(ruta, opts) {
+    const res = await fetch(API_BASE + ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(state.email), Object.assign({ cache: 'no-store' }, opts || {}));
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, body };
+  }
+  const post = (ruta, datos) => api(ruta, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(datos) });
+
+  const cacheDatos = {};
+  async function datos(nombre) {
+    if (!cacheDatos[nombre]) cacheDatos[nombre] = fetch('juegos/datos/' + nombre + '.json').then(r => { if (!r.ok) throw new Error('datos ' + nombre); return r.json(); });
+    return cacheDatos[nombre];
+  }
+
+  // ---------- Sonido (WebAudio, sin archivos) ----------
+  let audioCtx = null;
+  function tono(freq, ms = 120, tipo = 'sine', vol = .08) {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = tipo; o.frequency.value = freq; g.gain.value = vol;
+      o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + ms / 1000);
+    } catch (e) { /* sin audio */ }
+  }
+  const sonidoOk = () => { tono(660, 90); setTimeout(() => tono(880, 120), 90); };
+  const sonidoMal = () => tono(180, 220, 'square', .05);
+
+  function hablar(texto, lang = 'en-US', rate = .9) {
+    if (!window.speechSynthesis) return false;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = lang; u.rate = rate;
+    const v = speechSynthesis.getVoices().find(x => x.lang && x.lang.toLowerCase().startsWith(lang.slice(0, 2).toLowerCase()));
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+    return true;
+  }
+
+  // ---------- Catálogo ----------
+  const CATEGORIAS = [
+    { id: 'ingles', titulo: '📘 Inglés', clase: 'cat-ingles' },
+    { id: 'espanol', titulo: '📝 Español', clase: 'cat-espanol' },
+    { id: 'cultura', titulo: '🧠 Maratón de cultura', clase: 'cat-cultura' },
+    { id: 'mente', titulo: '⚡ Mente ágil', clase: 'cat-mente' },
+  ];
+  const JUEGOS = [
+    { id: 'en-vocab', cat: 'ingles', emoji: '⏱️', t: 'Vocabulario contra reloj', d: '60 segundos: elige la palabra en inglés.', jugar: () => jugarVocab() },
+    { id: 'en-spelling', cat: 'ingles', emoji: '🐝', t: 'Spelling bee', d: 'Escucha y escribe la palabra.', jugar: () => jugarSpelling() },
+    { id: 'en-frases', cat: 'ingles', emoji: '🧩', t: 'Completa la frase', d: 'To be, presente simple, WH y más.', jugar: () => jugarFrases() },
+    { id: 'en-memorama', cat: 'ingles', emoji: '🃏', t: 'Memorama', d: 'Une cada palabra con su significado.', jugar: () => jugarMemorama() },
+    { id: 'en-ordena', cat: 'ingles', emoji: '🔀', t: 'Ordena la oración', d: 'Arma la oración en inglés.', jugar: () => jugarOrdena('en') },
+    { id: 'es-ortografia', cat: 'espanol', emoji: '✍️', t: 'Ortografía', d: 'b/v, c/s/z, g/j, h, ll/y…', jugar: () => jugarQuizEspanol('ortografia') },
+    { id: 'es-acentos', cat: 'espanol', emoji: 'á', t: 'Acentos', d: '¿Lleva tilde o no?', jugar: () => jugarQuizEspanol('acentos') },
+    { id: 'es-sinonimos', cat: 'espanol', emoji: '🔁', t: 'Sinónimos y antónimos', d: 'Palabras que significan lo mismo… o lo contrario.', jugar: () => jugarSinonimos() },
+    { id: 'es-ordena', cat: 'espanol', emoji: '🔀', t: 'Ordena la oración', d: 'Pon las palabras en orden.', jugar: () => jugarOrdena('es') },
+    { id: 'cultura', cat: 'cultura', emoji: '🏃', t: 'Maratón de cultura', d: 'Historia, geografía, ciencias, arte… 3 vidas.', jugar: () => elegirCultura() },
+    { id: 'mente-calculo', cat: 'mente', emoji: '🧮', t: 'Cálculo mental', d: '60 segundos de operaciones.', jugar: () => jugarCalculo() },
+    { id: 'mente-secuencias', cat: 'mente', emoji: '🔢', t: 'Secuencias', d: '¿Qué número sigue?', jugar: () => jugarSecuencias() },
+    { id: 'mente-simon', cat: 'mente', emoji: '🟢', t: 'Simón dice', d: 'Repite la secuencia de colores.', jugar: () => jugarSimon() },
+    { id: 'mente-sopa', cat: 'mente', emoji: '🔎', t: 'Sopa de letras', d: 'Encuentra las palabras en inglés.', jugar: () => jugarSopa() },
+  ];
+  const juegoPorId = id => JUEGOS.find(j => j.id === id);
+
+  // ---------- Sesión ----------
+  function pintarChip() {
+    if (!state.jugador) { chip.hidden = true; return; }
+    chip.hidden = false;
+    chip.innerHTML = '👤 ' + escapeHtml(state.jugador.nombre) + (state.jugador.tipo === 'invitado' ? ' <span class="inv">INVITADO</span>' : '') +
+      ' · ⭐ ' + fmt(state.total) + (state.pos ? ' · #' + state.pos : '');
+  }
+
+  async function cargarYo() {
+    const r = await api('/juegos/yo');
+    if (r.ok) {
+      Object.assign(state, { jugador: r.body.jugador, total: r.body.total, pos: r.body.pos, mejores: r.body.mejores, semana: r.body.semana });
+      pintarChip();
+    }
+    return r;
+  }
+
+  async function iniciar() {
+    state.email = SESSION_KEYS.map(k => localStorage.getItem(k)).find(Boolean) || null;
+    if (!state.email) return pantallaLogin();
+    app.innerHTML = '<div class="loading">Cargando juegos…</div>';
+    try {
+      const r = await cargarYo();
+      if (r.status === 403 && r.body.error === 'no_registrado') return pantallaInvitado();
+      if (!r.ok) throw new Error(r.body.error || ('HTTP ' + r.status));
+      pantallaHub();
+    } catch (e) {
+      app.innerHTML = '<div class="card"><div class="alert">⚠️ No pude conectarme (' + escapeHtml(e.message) + ').</div><div class="row-btns"><button class="btn" data-a="reintentar">Reintentar</button></div></div>';
+    }
+  }
+
+  function pantallaLogin(msg) {
+    limpiar(); chip.hidden = true;
+    app.innerHTML = '<div class="card"><h1>🎮 Juegos</h1><p class="lead">Aprende jugando. Entra con tu correo.</p>' +
+      '<form id="f-login" novalidate><label for="correo">Tu correo</label><input id="correo" type="email" autocomplete="email" placeholder="tucorreo@gmail.com">' +
+      '<div class="row-btns"><button class="btn" type="submit">Entrar →</button></div></form>' + (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
+  }
+
+  function pantallaInvitado(msg) {
+    limpiar(); chip.hidden = true;
+    app.innerHTML = '<div class="card"><h1>👋 ¡Hola!</h1><p class="lead">Tu correo <b>' + escapeHtml(state.email) + '</b> no está en las clases, pero puedes jugar como invitado.</p>' +
+      '<form id="f-invitado" novalidate><label for="apodo">¿Cómo te llamamos? (apodo)</label><input id="apodo" type="text" maxlength="20" placeholder="Ej. Leo" autocomplete="nickname">' +
+      '<label class="check"><input id="acepto" type="checkbox"><span>Acepto que se guarde mi correo y mis puntos para registrar mi avance y mejorar la plataforma.</span></label>' +
+      '<div class="row-btns"><button class="btn ghost" type="button" data-a="otro-correo">Usar otro correo</button><button class="btn" type="submit">Entrar a jugar</button></div></form>' +
+      (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
+  }
+
+  // ---------- Hub ----------
+  function pantallaHub(tab) {
+    limpiar();
+    state.tab = tab || state.tab || 'juegos';
+    const admin = state.jugador && state.jugador.tipo === 'admin';
+    const tabs = '<div class="tabs" role="tablist">' +
+      ['juegos:🎮 Juegos', 'ranking:🏆 Ranking'].concat(admin ? ['invitados:👥 Invitados'] : []).map(x => {
+        const [id, t] = x.split(':');
+        return '<button class="tab" role="tab" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + t + '</button>';
+      }).join('') + '</div>';
+    app.innerHTML = '<h1>🎮 Juegos</h1><p class="lead">Aprende jugando y suma puntos para el ranking de la semana.</p>' + tabs + '<div id="tab-body"></div>';
+    if (state.tab === 'ranking') return pintarRanking();
+    if (state.tab === 'invitados') return pintarInvitados();
+    document.getElementById('tab-body').innerHTML = CATEGORIAS.map(c => {
+      const js = JUEGOS.filter(j => j.cat === c.id);
+      if (!js.length) return '';
+      return '<h2>' + c.titulo + '</h2><div class="grid">' + js.map(j => {
+        const best = state.mejores[j.id];
+        return '<button class="game ' + c.clase + '" data-juego="' + j.id + '"><span class="ico" aria-hidden="true">' + j.emoji + '</span>' +
+          '<span class="t">' + escapeHtml(j.t) + '</span><span class="d">' + escapeHtml(j.d) + '</span>' +
+          (best ? '<span class="best" title="Tu mejor de la semana">⭐ ' + fmt(best) + '</span>' : '') + '</button>';
+      }).join('') + '</div>';
+    }).join('');
+  }
+
+  function rangoSemana(lunes) {
+    const d = new Date(lunes + 'T12:00:00'); const f = new Date(d); f.setDate(d.getDate() + 6);
+    const o = { day: 'numeric', month: 'short' };
+    return d.toLocaleDateString('es-MX', o) + ' al ' + f.toLocaleDateString('es-MX', o);
+  }
+
+  async function pintarRanking() {
+    const body = document.getElementById('tab-body');
+    body.innerHTML = '<div class="loading">Cargando ranking…</div>';
+    const r = await api('/juegos/ranking');
+    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar el ranking (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const medalla = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
+    body.innerHTML = '<p class="muted" style="margin:10px 0">Semana del ' + escapeHtml(rangoSemana(r.body.semana)) + ' · cuenta tu mejor puntaje de cada juego.</p>' +
+      (r.body.top.length
+        ? '<ol class="rank">' + r.body.top.map(x => '<li class="' + (x.yo ? 'yo' : '') + '"><span class="pos">' + medalla(x.pos) + '</span><span class="n">' + escapeHtml(x.nombre) +
+          (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '<br><small>' + x.juegos + ' juego(s)</small></span><span class="pts">⭐ ' + fmt(x.total) + '</span></li>').join('') + '</ol>'
+        : '<div class="card muted" style="text-align:center">Nadie ha jugado esta semana. ¡Estrena el ranking! 🚀</div>') +
+      (r.body.yo.pos && r.body.yo.pos > 20 ? '<p class="muted">Tu lugar: #' + r.body.yo.pos + ' con ⭐ ' + fmt(r.body.yo.total) + '</p>' : '');
+  }
+
+  async function pintarInvitados() {
+    const body = document.getElementById('tab-body');
+    body.innerHTML = '<div class="loading">Cargando invitados…</div>';
+    const r = await api('/juegos/invitados');
+    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const lista = r.body.invitados;
+    const fecha = s => s ? new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+    body.innerHTML = '<p class="muted" style="margin:10px 0">' + lista.length + ' invitado(s). Sus correos solo los ves tú.</p>' +
+      (lista.length ? '<div class="card scroll-x"><table class="inv"><thead><tr><th>Correo</th><th>Apodo</th><th>Visitas</th><th>Última visita</th><th>Puntos semana</th></tr></thead><tbody>' +
+        lista.map(x => '<tr><td>' + escapeHtml(x.email) + '</td><td>' + escapeHtml(x.nombre) + '</td><td>' + x.visitas + '</td><td>' + escapeHtml(fecha(x.ultimaVisita)) + '</td><td>' + fmt(x.puntosSemana) + '</td></tr>').join('') +
+        '</tbody></table></div><div class="row-btns"><button class="btn ghost" data-a="csv">⬇️ Descargar CSV</button></div>' : '');
+    state.invitadosLista = lista;
+  }
+
+  function descargarCsv() {
+    const filas = [['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana]));
+    const csv = filas.map(f => f.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+    a.download = 'invitados-juegos.csv'; a.click();
+  }
+
+  // ---------- Marco común y resultado ----------
+  function marco(id, extra) {
+    const j = juegoPorId(id);
+    const tone = (CATEGORIAS.find(c => c.id === j.cat) || {}).clase || '';
+    app.innerHTML = '<div class="' + tone + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + '</span>' +
+      '<span class="stat" id="m-tiempo" hidden></span><span class="stat" id="m-vidas" hidden></span><span class="stat" id="m-puntos">⭐ 0</span></div>' +
+      '<div class="bar" id="m-bar" hidden><span style="width:100%"></span></div><div id="m-body"></div></div>';
+    const $ = s => document.getElementById(s);
+    return {
+      body: $('m-body'),
+      puntos: n => { $('m-puntos').textContent = '⭐ ' + fmt(n); },
+      vidas: n => { const e = $('m-vidas'); e.hidden = false; e.textContent = '❤️'.repeat(Math.max(0, n)) + '🖤'.repeat(Math.max(0, (extra && extra.vidas || 3) - n)); },
+      tiempo: (s, total) => {
+        const e = $('m-tiempo'); e.hidden = false; e.textContent = '⏱ ' + Math.max(0, Math.ceil(s)); e.classList.toggle('warn', s <= 10);
+        if (total) { $('m-bar').hidden = false; $('m-bar').firstChild.style.width = Math.max(0, s / total * 100) + '%'; }
+      },
+    };
+  }
+
+  // Cuenta regresiva; devuelve la función para detenerla.
+  // Las pruebas E2E pueden acelerar los relojes con window.__TIEMPO_JUEGOS (p. ej. 0.1); para quien juega vale 1.
+  const TIEMPO = Number(window.__TIEMPO_JUEGOS) || 1;
+  function reloj(segundos, onTick, onFin) {
+    const fin = Date.now() + segundos * 1000 * TIEMPO;
+    const t = setInterval(() => {
+      const quedan = (fin - Date.now()) / 1000 / TIEMPO;
+      onTick(quedan);
+      if (quedan <= 0) { clearInterval(t); onFin(); }
+    }, 200);
+    onTick(segundos);
+    const stop = () => clearInterval(t);
+    limpiezas.push(stop);
+    return stop;
+  }
+
+  async function terminar(id, r) {
+    limpiar();
+    const j = juegoPorId(id);
+    app.innerHTML = '<div class="card result"><div class="loading">Guardando tus puntos…</div></div>';
+    const puntos = Math.max(0, Math.round(r.puntos));
+    let s = null;
+    try {
+      const res = await post('/juegos/partida', { juego: id, puntos, aciertos: r.aciertos || 0, total: r.total || 0, segundos: Math.round(r.segundos || 0) });
+      s = res.ok ? res.body : { error: res.body.error || res.status };
+    } catch (e) { s = { error: e.message }; }
+    if (s && s.guardado) {
+      state.total = s.total; state.pos = s.pos; state.mejores[id] = s.mejor; pintarChip();
+    }
+    app.innerHTML = '<div class="card result"><div style="font-size:2.4rem">' + j.emoji + '</div><h1>' + escapeHtml(r.titulo || '¡Terminaste!') + '</h1>' +
+      '<div class="score">' + fmt(s && s.guardado ? s.puntos : puntos) + '</div><div class="muted">puntos</div>' +
+      (s && s.nuevoRecord ? '<div class="record">🏅 ¡Nuevo récord personal!</div>' : '') +
+      '<div class="pills">' + (r.total ? '<span class="stat">✅ ' + r.aciertos + ' de ' + r.total + '</span>' : '') +
+      (s && s.guardado ? '<span class="stat">🏆 #' + s.pos + ' de la semana</span><span class="stat">⭐ ' + fmt(s.total) + ' en total</span>' : '') + '</div>' +
+      (r.detalle ? '<p class="muted" style="margin-top:12px">' + r.detalle + '</p>' : '') +
+      (s && s.guardado ? '' : '<div class="alert">No se guardaron tus puntos (' + escapeHtml(s && s.error) + '). ' + (s && s.error === 'limite_diario' ? 'Llegaste al límite de partidas de hoy.' : 'Revisa tu conexión.') + '</div>') +
+      '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn" data-juego="' + id + '">🔁 Jugar otra vez</button></div></div>';
+    if (s && s.nuevoRecord) confeti();
+  }
+
+  function confeti() {
+    const b = document.createElement('div'); b.className = 'burst';
+    b.innerHTML = Array.from({ length: 24 }, () => '<span style="left:' + Math.random() * 100 + '%;animation-delay:' + Math.random() * .6 + 's">' + ['🎉', '⭐', '✨', '🏅'][Math.floor(Math.random() * 4)] + '</span>').join('');
+    document.body.appendChild(b); setTimeout(() => b.remove(), 2600);
+  }
+
+  // ---------- Motor quiz (opción múltiple) ----------
+  // opts: id, modo 'reloj' | 'vidas', segundos (reloj), porPregunta (vidas), siguiente() → { big, q, sub, opciones, correcta, explicacion } | null
+  function quiz(opts) {
+    const m = marco(opts.id, { vidas: 3 });
+    let puntos = 0, aciertos = 0, total = 0, racha = 0, vidas = 3, actual = null, bloqueado = false, inicioQ = 0, stopQ = null, terminado = false;
+    const t0 = Date.now();
+    const acabar = (titulo) => {
+      if (terminado) return; terminado = true;
+      terminar(opts.id, { puntos, aciertos, total, segundos: (Date.now() - t0) / 1000, titulo, detalle: opts.detalle ? opts.detalle({ aciertos, total }) : '' });
+    };
+    if (opts.modo === 'vidas') m.vidas(vidas);
+    else reloj(opts.segundos || 60, s => m.tiempo(s, opts.segundos || 60), () => acabar('⏰ ¡Se acabó el tiempo!'));
+    function pintar() {
+      actual = opts.siguiente(total);
+      if (!actual) return acabar(opts.modo === 'vidas' ? '🏁 ¡Llegaste a la meta!' : '¡Terminaste!');
+      bloqueado = false; inicioQ = Date.now();
+      const opciones = actual.opciones;
+      m.body.innerHTML = '<div class="q-card">' + (actual.big ? '<div class="big">' + escapeHtml(actual.big) + '</div>' : '') +
+        '<div class="q">' + escapeHtml(actual.q) + '</div>' + (actual.sub ? '<div class="sub">' + escapeHtml(actual.sub) + '</div>' : '') + '</div>' +
+        '<div class="opts' + (opciones.some(o => String(o).length > 18) ? ' una-col' : '') + '">' +
+        opciones.map((o, i) => '<button class="opt" data-opt="' + i + '"><span class="k">' + (i + 1) + '</span>' + escapeHtml(o) + '</button>').join('') + '</div>' +
+        '<div class="feedback" id="fb"></div><div class="kbd-hint">Tip: usa las teclas 1–' + opciones.length + '</div>';
+      if (opts.modo === 'vidas') {
+        if (stopQ) stopQ();
+        const seg = opts.porPregunta || 15;
+        stopQ = reloj(seg, s => m.tiempo(s, seg), () => responder(-1));
+      }
+    }
+    function responder(i) {
+      if (bloqueado || terminado) return;
+      bloqueado = true; total++;
+      if (stopQ && opts.modo === 'vidas') stopQ();
+      const btns = m.body.querySelectorAll('.opt');
+      const bien = i === actual.correcta;
+      const fb = document.getElementById('fb');
+      if (btns[actual.correcta]) btns[actual.correcta].classList.add('ok');
+      if (bien) {
+        aciertos++; racha++;
+        const rapidez = opts.modo === 'vidas' ? Math.max(0, Math.round(((opts.porPregunta || 15) * 1000 - (Date.now() - inicioQ)) / 100)) : 0;
+        const gana = 100 + Math.min(racha - 1, 10) * 10 + rapidez;
+        puntos += gana; m.puntos(puntos); sonidoOk();
+        fb.className = 'feedback ok'; fb.textContent = '✔ +' + gana + (racha > 2 ? ' · racha ×' + racha + ' 🔥' : '');
+      } else {
+        racha = 0; sonidoMal();
+        if (i >= 0 && btns[i]) btns[i].classList.add('bad');
+        fb.className = 'feedback bad'; fb.textContent = (i < 0 ? '⏰ ¡Tiempo! ' : '✘ ') + (actual.explicacion || ('Era: ' + actual.opciones[actual.correcta]));
+        if (opts.modo === 'vidas') { vidas--; m.vidas(vidas); if (vidas <= 0) return setTimeout(() => acabar('💔 ¡Sin vidas!'), 1400); }
+      }
+      setTimeout(() => { if (!terminado) pintar(); }, bien ? 550 : 1400);
+    }
+    const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= (actual ? actual.opciones.length : 0)) responder(n - 1); };
+    document.addEventListener('keydown', onKey);
+    limpiezas.push(() => document.removeEventListener('keydown', onKey));
+    m.body.addEventListener('click', e => { const b = e.target.closest('[data-opt]'); if (b) responder(Number(b.dataset.opt)); });
+    pintar();
+  }
+
+  // Mezcla opciones y devuelve la pregunta con el índice correcto recalculado.
+  function conOpciones(base, correcta, distractores) {
+    const opciones = barajar([correcta, ...distractores]);
+    return Object.assign(base, { opciones, correcta: opciones.indexOf(correcta) });
+  }
+
+  // ---------- Juegos de Inglés ----------
+  async function jugarVocab() {
+    const d = await datos('ingles');
+    const pool = barajar(d.vocabulario);
+    let i = 0;
+    quiz({
+      id: 'en-vocab', modo: 'reloj', segundos: 60,
+      siguiente: () => {
+        const w = pool[i++ % pool.length];
+        const mismos = d.vocabulario.filter(x => x.en !== w.en && x.tema === w.tema);
+        const otros = d.vocabulario.filter(x => x.en !== w.en && x.tema !== w.tema);
+        const dis = tomar(mismos, 2).concat(tomar(otros, 3)).map(x => x.en).filter((v, k, a) => a.indexOf(v) === k).slice(0, 3);
+        return conOpciones({ big: w.emoji, q: w.es, sub: '¿Cómo se dice en inglés?', explicacion: w.es + ' = ' + w.en }, w.en, dis);
+      },
+    });
+  }
+
+  async function jugarFrases() {
+    const d = await datos('ingles');
+    const pool = barajar(d.verbos);
+    quiz({
+      id: 'en-frases', modo: 'reloj', segundos: 90,
+      siguiente: n => {
+        const f = pool[n % pool.length];
+        return { big: '🧩', q: f.frase, sub: f.es, opciones: f.opciones, correcta: f.correcta, explicacion: 'Era: ' + f.frase.replace('___', f.opciones[f.correcta]) };
+      },
+    });
+  }
+
+  async function jugarSpelling() {
+    const d = await datos('ingles');
+    const usadas = new Set(); const lista = [];
+    for (const nv of [1, 1, 1, 2, 2, 2, 2, 3, 3, 3]) { const w = barajar(d.spelling.filter(s => s.nivel === nv && !usadas.has(s.en)))[0]; if (w) { usadas.add(w.en); lista.push(w); } }
+    const m = marco('en-spelling');
+    let i = 0, puntos = 0, aciertos = 0, pista = false;
+    const t0 = Date.now();
+    const voz = !!window.speechSynthesis;
+    function pintar() {
+      if (i >= lista.length) return terminar('en-spelling', { puntos, aciertos, total: lista.length, segundos: (Date.now() - t0) / 1000, titulo: '🐝 ¡Spelling bee terminado!' });
+      const w = lista[i]; pista = false;
+      m.body.innerHTML = '<div class="q-card"><div class="big">🐝</div><div class="q">Palabra ' + (i + 1) + ' de ' + lista.length + '</div>' +
+        '<div class="sub" id="sp-pista">' + (voz ? 'Escucha y escríbela en inglés' : 'Tu navegador no tiene voz: usa la pista 💡') + '</div></div>' +
+        '<div class="row-btns" style="margin-top:0"><button class="btn ghost" data-sp="oir">🔊 Escuchar</button><button class="btn ghost" data-sp="lento">🐢 Lento</button><button class="btn ghost" data-sp="pista">💡 Pista</button></div>' +
+        '<form id="sp-form" autocomplete="off"><label for="sp-in">Escribe la palabra</label><input id="sp-in" type="text" autocapitalize="off" spellcheck="false" autocomplete="off">' +
+        '<div class="row-btns"><button class="btn" type="submit">Revisar</button></div></form><div class="feedback" id="fb"></div>';
+      document.getElementById('sp-in').focus();
+      if (voz) setTimeout(() => hablar(w.en), 250);
+      else darPista();
+    }
+    function darPista() {
+      const w = lista[i]; pista = true;
+      document.getElementById('sp-pista').textContent = '💡 ' + w.es + ' · empieza con «' + w.en[0] + '» · ' + w.en.length + ' letras';
+    }
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-sp]'); if (!b) return;
+      if (b.dataset.sp === 'oir') hablar(lista[i].en);
+      if (b.dataset.sp === 'lento') hablar(lista[i].en, 'en-US', .55);
+      if (b.dataset.sp === 'pista') darPista();
+    });
+    m.body.addEventListener('submit', e => {
+      e.preventDefault();
+      const w = lista[i]; const v = document.getElementById('sp-in').value.trim();
+      if (!v) return;
+      const fb = document.getElementById('fb');
+      if (v.toLowerCase() === w.en.toLowerCase()) {
+        const gana = pista ? 75 : 150; puntos += gana; aciertos++; m.puntos(puntos); sonidoOk();
+        fb.className = 'feedback ok'; fb.textContent = '✔ ¡Perfecto! +' + gana;
+      } else {
+        sonidoMal(); fb.className = 'feedback bad'; fb.textContent = '✘ Se escribe: ' + w.en + ' (' + w.es + ')';
+      }
+      document.querySelector('#sp-form button').disabled = true;
+      i++; setTimeout(pintar, 1300);
+    });
+    pintar();
+  }
+
+  async function jugarMemorama() {
+    const d = await datos('ingles');
+    const pares = tomar(d.vocabulario, 8);
+    const cartas = barajar(pares.flatMap((p, k) => [{ k, lado: 'en', txt: p.en }, { k, lado: 'es', txt: p.es, em: p.emoji }]));
+    const m = marco('en-memorama');
+    let abiertas = [], encontrados = 0, movs = 0, bloqueado = false;
+    const t0 = Date.now();
+    m.body.innerHTML = '<p class="muted" style="text-align:center;margin-top:0">Une cada palabra en inglés con su significado.</p><div class="memo">' +
+      cartas.map((c, i) => '<button data-memo="' + i + '" aria-label="Carta ' + (i + 1) + '">' + (c.em ? '<span class="em">' + escapeHtml(c.em) + '</span>' : '') + escapeHtml(c.txt) + '</button>').join('') + '</div>';
+    const btns = [...m.body.querySelectorAll('[data-memo]')];
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-memo]'); if (!b || bloqueado || b.classList.contains('up') || b.classList.contains('done')) return;
+      b.classList.add('up'); abiertas.push(Number(b.dataset.memo));
+      if (abiertas.length < 2) return;
+      movs++;
+      const [a, c] = abiertas.map(x => cartas[x]);
+      if (a.k === c.k && a.lado !== c.lado) {
+        abiertas.forEach(x => btns[x].classList.add('done')); abiertas = []; encontrados++; sonidoOk();
+        if (encontrados === pares.length) {
+          const seg = (Date.now() - t0) / 1000;
+          const puntos = Math.max(100, 1000 - Math.max(0, movs - pares.length) * 25 - Math.round(seg) * 2);
+          m.puntos(puntos);
+          setTimeout(() => terminar('en-memorama', { puntos, aciertos: pares.length, total: pares.length, segundos: seg, titulo: '🃏 ¡Memorama completo!', detalle: movs + ' movimientos en ' + Math.round(seg) + ' s' }), 600);
+        }
+      } else {
+        bloqueado = true; sonidoMal();
+        setTimeout(() => { abiertas.forEach(x => btns[x].classList.remove('up')); abiertas = []; bloqueado = false; }, 900);
+      }
+    });
+  }
+
+  async function jugarOrdena(idioma) {
+    const id = idioma === 'en' ? 'en-ordena' : 'es-ordena';
+    const fuente = idioma === 'en' ? (await datos('ingles')).oraciones.map(o => ({ txt: o.en, pista: o.es })) : (await datos('espanol')).oraciones.map(o => ({ txt: o, pista: '' }));
+    const lista = tomar(fuente, 6);
+    const m = marco(id);
+    let i = 0, puntos = 0, aciertos = 0, intento = 1, puestas = [], quedan = [];
+    const t0 = Date.now();
+    function pintar() {
+      if (i >= lista.length) return terminar(id, { puntos, aciertos, total: lista.length, segundos: (Date.now() - t0) / 1000, titulo: '🔀 ¡Listo!' });
+      const o = lista[i]; intento = 1; puestas = [];
+      const palabras = o.txt.split(/\s+/);
+      do { quedan = barajar(palabras.map((w, k) => ({ w, k }))); } while (palabras.length > 1 && quedan.map(x => x.w).join(' ') === o.txt);
+      dibujar();
+    }
+    function dibujar() {
+      const o = lista[i];
+      m.body.innerHTML = '<div class="q-card"><div class="q">Oración ' + (i + 1) + ' de ' + lista.length + '</div>' + (o.pista ? '<div class="sub">💬 ' + escapeHtml(o.pista) + '</div>' : '<div class="sub">Toca las palabras en orden</div>') + '</div>' +
+        '<div class="slots" id="slots">' + puestas.map((x, j) => '<button class="word" data-quitar="' + j + '">' + escapeHtml(x.w) + '</button>').join('') + '</div>' +
+        '<div class="chips">' + quedan.map((x, j) => '<button class="word" data-poner="' + j + '">' + escapeHtml(x.w) + '</button>').join('') + '</div>' +
+        '<div class="row-btns"><button class="btn ghost" data-ord="borrar">↺ Borrar</button><button class="btn" data-ord="revisar"' + (quedan.length ? ' disabled' : '') + '>Revisar</button></div><div class="feedback" id="fb"></div>';
+    }
+    m.body.addEventListener('click', e => {
+      const p = e.target.closest('[data-poner]'), q = e.target.closest('[data-quitar]'), b = e.target.closest('[data-ord]');
+      if (p) { puestas.push(quedan.splice(Number(p.dataset.poner), 1)[0]); dibujar(); }
+      if (q) { quedan.push(puestas.splice(Number(q.dataset.quitar), 1)[0]); dibujar(); }
+      if (b && b.dataset.ord === 'borrar') { quedan = quedan.concat(puestas); puestas = []; dibujar(); }
+      if (b && b.dataset.ord === 'revisar') {
+        const o = lista[i]; const fb = document.getElementById('fb');
+        if (puestas.map(x => x.w).join(' ') === o.txt) {
+          const gana = intento === 1 ? 150 : 75; puntos += gana; aciertos++; m.puntos(puntos); sonidoOk();
+          fb.className = 'feedback ok'; fb.textContent = '✔ ¡Correcto! +' + gana; b.disabled = true;
+          i++; setTimeout(pintar, 900);
+        } else if (intento === 1) {
+          intento = 2; sonidoMal(); fb.className = 'feedback bad'; fb.textContent = '✘ Casi. Inténtalo otra vez (último intento).';
+        } else {
+          sonidoMal(); fb.className = 'feedback bad'; fb.textContent = '✘ Era: ' + o.txt; b.disabled = true;
+          i++; setTimeout(pintar, 1800);
+        }
+      }
+    });
+    pintar();
+  }
+
+  // ---------- Juegos de Español ----------
+  async function jugarQuizEspanol(tipo) {
+    const d = await datos('espanol');
+    const pool = barajar(d[tipo]);
+    quiz({
+      id: tipo === 'ortografia' ? 'es-ortografia' : 'es-acentos', modo: 'reloj', segundos: 90,
+      siguiente: n => {
+        const f = pool[n % pool.length];
+        const opciones = barajar(f.opciones.map((o, k) => ({ o, k })));
+        return { big: tipo === 'ortografia' ? '✍️' : 'á', q: f.frase, sub: f.regla ? 'Regla: ' + f.regla : '', opciones: opciones.map(x => x.o), correcta: opciones.findIndex(x => x.k === f.correcta), explicacion: f.explicacion };
+      },
+    });
+  }
+
+  async function jugarSinonimos() {
+    const d = await datos('espanol');
+    const pool = barajar(d.sinonimos.map(x => Object.assign({ tipo: 'sinónimo' }, x)).concat(d.antonimos.map(x => Object.assign({ tipo: 'antónimo' }, x))));
+    quiz({
+      id: 'es-sinonimos', modo: 'reloj', segundos: 75,
+      siguiente: n => {
+        const f = pool[n % pool.length];
+        return conOpciones({ big: f.tipo === 'sinónimo' ? '🟰' : '↔️', q: '«' + f.palabra + '»', sub: 'Elige el ' + f.tipo, explicacion: f.tipo + ' de «' + f.palabra + '»: ' + f.respuesta }, f.respuesta, f.distractores);
+      },
+    });
+  }
+
+  // ---------- Maratón de cultura ----------
+  async function elegirCultura() {
+    const d = await datos('cultura');
+    marco('cultura');
+    const m = document.getElementById('m-body');
+    m.innerHTML = '<div class="q-card"><div class="big">🏃</div><div class="q">Elige tu maratón</div><div class="sub">3 vidas · 15 segundos por pregunta · sube de nivel</div></div>' +
+      '<div class="opts">' + [{ id: 'todas', titulo: 'Todas mezcladas', emoji: '🌈' }].concat(d.categorias).map(c =>
+        '<button class="opt" data-cat="' + escapeHtml(c.id) + '">' + escapeHtml(c.emoji) + ' ' + escapeHtml(c.titulo) + '</button>').join('') + '</div>';
+    m.addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (b) jugarCultura(d, b.dataset.cat); }, { once: false });
+  }
+
+  function jugarCultura(d, cat) {
+    const del = d.preguntas.filter(p => cat === 'todas' || p.cat === cat);
+    const orden = [].concat(barajar(del.filter(p => p.nivel === 1)).slice(0, 10), barajar(del.filter(p => p.nivel === 2)).slice(0, 12), barajar(del.filter(p => p.nivel === 3)));
+    const nombreCat = cat === 'todas' ? 'Todas' : (d.categorias.find(c => c.id === cat) || {}).titulo;
+    quiz({
+      id: 'cultura', modo: 'vidas', porPregunta: 15,
+      detalle: r => 'Maratón: ' + escapeHtml(nombreCat) + ' · llegaste a la pregunta ' + r.total,
+      siguiente: n => {
+        const p = orden[n]; if (!p) return null;
+        const niv = ['', 'Nivel fácil', 'Nivel medio', 'Nivel difícil'][p.nivel];
+        return { q: p.pregunta, sub: niv + ' · ' + (d.categorias.find(c => c.id === p.cat) || {}).titulo, opciones: p.opciones, correcta: p.correcta, explicacion: '💡 ' + p.dato };
+      },
+    });
+  }
+
+  // ---------- Mente ágil ----------
+  function jugarCalculo() {
+    const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    quiz({
+      id: 'mente-calculo', modo: 'reloj', segundos: 60,
+      siguiente: n => {
+        const nivel = Math.min(4, Math.floor(n / 5));
+        const ops = nivel < 1 ? ['+', '−'] : nivel < 2 ? ['+', '−', '×'] : ['+', '−', '×', '÷'];
+        const op = ops[rnd(0, ops.length - 1)];
+        let a, b, r;
+        const max = [10, 20, 50, 100, 200][nivel];
+        if (op === '+') { a = rnd(1, max); b = rnd(1, max); r = a + b; }
+        if (op === '−') { a = rnd(2, max); b = rnd(1, a); r = a - b; }
+        if (op === '×') { a = rnd(2, nivel < 3 ? 10 : 15); b = rnd(2, 10); r = a * b; }
+        if (op === '÷') { b = rnd(2, 10); r = rnd(2, 12); a = b * r; }
+        const dis = new Set();
+        while (dis.size < 3) { const x = r + [1, -1, 2, -2, 10, -10, 5][rnd(0, 6)]; if (x !== r && x >= 0) dis.add(x); }
+        return conOpciones({ big: '🧮', q: a + ' ' + op + ' ' + b + ' = ?', explicacion: a + ' ' + op + ' ' + b + ' = ' + r }, String(r), [...dis].map(String));
+      },
+    });
+  }
+
+  function jugarSecuencias() {
+    const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    const tipos = [
+      () => { const a = rnd(1, 20), k = rnd(2, 9); return { s: [0, 1, 2, 3].map(i => a + k * i), r: a + 4 * k, regla: 'sumar ' + k }; },
+      () => { const a = rnd(60, 99), k = rnd(2, 9); return { s: [0, 1, 2, 3].map(i => a - k * i), r: a - 4 * k, regla: 'restar ' + k }; },
+      () => { const a = rnd(1, 5), k = rnd(2, 3); return { s: [0, 1, 2, 3].map(i => a * k ** i), r: a * k ** 4, regla: 'multiplicar por ' + k }; },
+      () => { const a = rnd(1, 6); return { s: [0, 1, 2, 3].map(i => (a + i) ** 2), r: (a + 4) ** 2, regla: 'cuadrados' }; },
+      () => { let x = rnd(1, 4), y = rnd(1, 5); const s = [x, y]; while (s.length < 5) s.push(s[s.length - 1] + s[s.length - 2]); return { s: s.slice(0, 4), r: s[4], regla: 'sumar los dos anteriores' }; },
+      () => { const a = rnd(1, 9), k = rnd(1, 4); return { s: [a, a + k, a + 3 * k, a + 6 * k], r: a + 10 * k, regla: 'sumar ' + k + ', ' + 2 * k + ', ' + 3 * k + '…' }; },
+    ];
+    quiz({
+      id: 'mente-secuencias', modo: 'vidas', porPregunta: 20,
+      siguiente: n => {
+        if (n >= 30) return null;
+        const g = tipos[rnd(0, Math.min(tipos.length - 1, 1 + Math.floor(n / 3)))]();
+        const dis = new Set();
+        while (dis.size < 3) { const x = g.r + [1, -1, 2, -2, 3, 5, -5, 10][rnd(0, 7)]; if (x !== g.r) dis.add(x); }
+        return conOpciones({ big: '🔢', q: g.s.join(', ') + ', ?', sub: '¿Qué número sigue?', explicacion: 'Era ' + g.r + ' (' + g.regla + ')' }, String(g.r), [...dis].map(String));
+      },
+    });
+  }
+
+  function jugarSimon() {
+    const m = marco('mente-simon');
+    const colores = [{ c: '#22c55e', f: 330 }, { c: '#ef4444', f: 262 }, { c: '#eab308', f: 392 }, { c: '#3b82f6', f: 494 }];
+    let seq = [], paso = 0, turno = false, nivel = 0, terminado = false;
+    const t0 = Date.now();
+    m.body.innerHTML = '<div class="q-card"><div class="q" id="sim-msg">Mira la secuencia…</div><div class="sub">Nivel <b id="sim-niv">1</b></div></div>' +
+      '<div class="simon">' + colores.map((x, i) => '<button data-sim="' + i + '" aria-label="Color ' + (i + 1) + '" style="background:' + x.c + ';color:' + x.c + '"></button>').join('') + '</div>';
+    const pads = [...m.body.querySelectorAll('[data-sim]')];
+    const encender = (i, ms = 420) => new Promise(ok => { pads[i].classList.add('on'); tono(colores[i].f, ms - 60, 'triangle', .1); setTimeout(() => { pads[i].classList.remove('on'); setTimeout(ok, 140); }, ms); });
+    async function ronda() {
+      nivel++; paso = 0; turno = false;
+      document.getElementById('sim-niv').textContent = nivel;
+      document.getElementById('sim-msg').textContent = 'Mira la secuencia…';
+      seq.push(Math.floor(Math.random() * 4));
+      pads.forEach(p => { p.disabled = true; });
+      await new Promise(r => setTimeout(r, 600));
+      const vel = Math.max(220, 480 - nivel * 20);
+      for (const i of seq) { if (terminado) return; await encender(i, vel); }
+      turno = true; pads.forEach(p => { p.disabled = false; });
+      document.getElementById('sim-msg').textContent = '¡Tu turno!';
+    }
+    m.body.addEventListener('click', async e => {
+      const b = e.target.closest('[data-sim]'); if (!b || !turno || terminado) return;
+      const i = Number(b.dataset.sim);
+      encender(i, 220);
+      if (i !== seq[paso]) {
+        terminado = true; sonidoMal();
+        const puntos = (nivel - 1) * 100;
+        document.getElementById('sim-msg').textContent = '✘ ¡Uy! Llegaste al nivel ' + nivel;
+        return setTimeout(() => terminar('mente-simon', { puntos, aciertos: nivel - 1, total: nivel, segundos: (Date.now() - t0) / 1000, titulo: '🟢 Simón dice', detalle: 'Repetiste ' + (nivel - 1) + ' secuencia(s)' }), 1200);
+      }
+      paso++;
+      if (paso === seq.length) { turno = false; m.puntos(nivel * 100); setTimeout(ronda, 600); }
+    });
+    limpiezas.push(() => { terminado = true; });
+    ronda();
+  }
+
+  async function jugarSopa() {
+    const d = await datos('ingles');
+    const N = 10;
+    const candidatas = barajar(d.vocabulario.filter(v => /^[a-z]{3,8}$/.test(v.en)));
+    const grid = Array.from({ length: N }, () => Array(N).fill(''));
+    const dirs = [[0, 1], [1, 0], [1, 1], [-1, 1]];
+    const puestas = [];
+    for (const w of candidatas) {
+      if (puestas.length >= 6) break;
+      const W = w.en.toUpperCase();
+      for (let intento = 0; intento < 60; intento++) {
+        const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
+        const r0 = Math.floor(Math.random() * N), c0 = Math.floor(Math.random() * N);
+        const celdas = [...W].map((_, k) => [r0 + dr * k, c0 + dc * k]);
+        if (celdas.every(([r, c], k) => r >= 0 && r < N && c >= 0 && c < N && (!grid[r][c] || grid[r][c] === W[k]))) {
+          celdas.forEach(([r, c], k) => { grid[r][c] = W[k]; });
+          puestas.push({ w, W, celdas, found: false });
+          break;
+        }
+      }
+    }
+    const letras = 'ABCDEFGHIJKLMNOPRSTUVWY';
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!grid[r][c]) grid[r][c] = letras[Math.floor(Math.random() * letras.length)];
+    const m = marco('mente-sopa');
+    const TOT = 180;
+    let inicio = null, encontradas = 0, terminado = false;
+    const t0 = Date.now();
+    const fin = () => {
+      if (terminado) return; terminado = true;
+      const seg = (Date.now() - t0) / 1000;
+      const bono = encontradas === puestas.length ? Math.max(0, Math.round(TOT - seg)) * 3 : 0;
+      terminar('mente-sopa', { puntos: encontradas * 150 + bono, aciertos: encontradas, total: puestas.length, segundos: seg, titulo: '🔎 Sopa de letras', detalle: encontradas === puestas.length ? '¡Las encontraste todas! Bono de tiempo: ' + bono : '' });
+    };
+    reloj(TOT, s => m.tiempo(s, TOT), fin);
+    m.body.innerHTML = '<p class="muted" style="text-align:center;margin-top:0">Toca la primera y la última letra de cada palabra en inglés.</p>' +
+      '<div class="sopa" style="grid-template-columns:repeat(' + N + ',1fr)">' + grid.flatMap((fila, r) => fila.map((l, c) => '<button data-r="' + r + '" data-c="' + c + '">' + l + '</button>')).join('') + '</div>' +
+      '<div class="lista-sopa">' + puestas.map((p, i) => '<span id="sopa-w' + i + '">' + escapeHtml(p.w.emoji + ' ' + p.w.es) + '</span>').join('') + '</div>';
+    const celda = (r, c) => m.body.querySelector('[data-r="' + r + '"][data-c="' + c + '"]');
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-r]'); if (!b || terminado) return;
+      const r = Number(b.dataset.r), c = Number(b.dataset.c);
+      if (!inicio) { inicio = [r, c]; b.classList.add('sel'); return; }
+      celda(inicio[0], inicio[1]).classList.remove('sel');
+      const [r0, c0] = inicio; inicio = null;
+      const hit = puestas.findIndex(p => !p.found && ((p.celdas[0][0] === r0 && p.celdas[0][1] === c0 && p.celdas.at(-1)[0] === r && p.celdas.at(-1)[1] === c) ||
+        (p.celdas.at(-1)[0] === r0 && p.celdas.at(-1)[1] === c0 && p.celdas[0][0] === r && p.celdas[0][1] === c)));
+      if (hit >= 0) {
+        const p = puestas[hit]; p.found = true; encontradas++;
+        p.celdas.forEach(([rr, cc]) => celda(rr, cc).classList.add('found'));
+        const s = document.getElementById('sopa-w' + hit); s.classList.add('found'); s.textContent = p.w.emoji + ' ' + p.w.es + ' = ' + p.W;
+        m.puntos(encontradas * 150); sonidoOk();
+        if (encontradas === puestas.length) setTimeout(fin, 700);
+      } else sonidoMal();
+    });
+  }
+
+  // ---------- Eventos ----------
+  app.addEventListener('click', e => {
+    const t = e.target.closest('[data-tab]'); if (t) return pantallaHub(t.dataset.tab);
+    const g = e.target.closest('[data-juego]');
+    if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); pantallaHub(); }
+    if (a.dataset.a === 'reintentar') iniciar();
+    if (a.dataset.a === 'csv') descargarCsv();
+    if (a.dataset.a === 'otro-correo') { SESSION_KEYS.forEach(k => localStorage.removeItem(k)); pantallaLogin(); }
+  });
+  app.addEventListener('submit', async e => {
+    if (e.target.id === 'f-login') {
+      e.preventDefault();
+      const email = document.getElementById('correo').value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return pantallaLogin('Escribe un correo válido.');
+      localStorage.setItem('stald_email', email); iniciar();
+    }
+    if (e.target.id === 'f-invitado') {
+      e.preventDefault();
+      const nombre = document.getElementById('apodo').value.trim();
+      if (!document.getElementById('acepto').checked) return pantallaInvitado('Para jugar como invitado necesitas aceptar el aviso.');
+      if (!/^[\p{L}\p{N} ]{2,20}$/u.test(nombre)) return pantallaInvitado('Tu apodo debe tener de 2 a 20 letras o números.');
+      const r = await post('/juegos/invitado', { nombre, acepto: true });
+      if (!r.ok) return pantallaInvitado('No se pudo registrar (' + (r.body.error || r.status) + ').');
+      localStorage.setItem('stald_email', state.email);
+      iniciar();
+    }
+  });
+
+  iniciar();
+</script>
+</body>
+</html>

@@ -1,0 +1,4622 @@
+{
+  "categorias": [
+    {
+      "id": "historia-mexico",
+      "titulo": "Historia de México",
+      "emoji": "🇲🇽"
+    },
+    {
+      "id": "historia-mundial",
+      "titulo": "Historia universal",
+      "emoji": "🏛️"
+    },
+    {
+      "id": "geografia",
+      "titulo": "Geografía",
+      "emoji": "🗺️"
+    },
+    {
+      "id": "capitales",
+      "titulo": "Capitales",
+      "emoji": "🏙️"
+    },
+    {
+      "id": "banderas",
+      "titulo": "Banderas",
+      "emoji": "🚩"
+    },
+    {
+      "id": "ciencias",
+      "titulo": "Ciencias",
+      "emoji": "🔬"
+    },
+    {
+      "id": "arte",
+      "titulo": "Arte y literatura",
+      "emoji": "🎨"
+    },
+    {
+      "id": "cuerpo-humano",
+      "titulo": "Cuerpo humano",
+      "emoji": "🫀"
+    }
+  ],
+  "preguntas": [
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿En qué año inició la Independencia de México?",
+      "opciones": [
+        "1821",
+        "1810",
+        "1910",
+        "1492"
+      ],
+      "correcta": 1,
+      "dato": "El 16 de septiembre de 1810 Miguel Hidalgo dio el Grito de Dolores."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Quién dio el Grito de Dolores?",
+      "opciones": [
+        "Agustín de Iturbide",
+        "Vicente Guerrero",
+        "José María Morelos",
+        "Miguel Hidalgo"
+      ],
+      "correcta": 3,
+      "dato": "Hidalgo era el cura del pueblo de Dolores, hoy Dolores Hidalgo, Guanajuato."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿En qué año inició la Revolución Mexicana?",
+      "opciones": [
+        "1810",
+        "1917",
+        "1857",
+        "1910"
+      ],
+      "correcta": 3,
+      "dato": "Se conmemora cada 20 de noviembre, fecha que Madero fijó para el levantamiento."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué pueblo fundó México-Tenochtitlan?",
+      "opciones": [
+        "Los mexicas",
+        "Los zapotecas",
+        "Los mayas",
+        "Los olmecas"
+      ],
+      "correcta": 0,
+      "dato": "Según la tradición, la fundaron donde vieron un águila sobre un nopal."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué presidente es conocido como el \"Benemérito de las Américas\"?",
+      "opciones": [
+        "Porfirio Díaz",
+        "Benito Juárez",
+        "Francisco I. Madero",
+        "Lázaro Cárdenas"
+      ],
+      "correcta": 1,
+      "dato": "Juárez era zapoteco, nacido en San Pablo Guelatao, Oaxaca, en 1806."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué batalla se conmemora el 5 de mayo?",
+      "opciones": [
+        "La Batalla del Monte de las Cruces",
+        "La Batalla de Puebla",
+        "La toma de Zacatecas",
+        "La Batalla de Celaya"
+      ],
+      "correcta": 1,
+      "dato": "En 1862 el ejército mexicano venció al francés en Puebla."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué conquistador español llegó a Tenochtitlan en 1519?",
+      "opciones": [
+        "Hernán Cortés",
+        "Francisco Pizarro",
+        "Cristóbal Colón",
+        "Vasco Núñez de Balboa"
+      ],
+      "correcta": 0,
+      "dato": "Cortés fue recibido por el tlatoani Moctezuma II."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿En qué año se promulgó la Constitución que hoy rige en México?",
+      "opciones": [
+        "1857",
+        "1910",
+        "1824",
+        "1917"
+      ],
+      "correcta": 3,
+      "dato": "Se promulgó el 5 de febrero de 1917 en Querétaro."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué corregidora de Querétaro apoyó la conspiración de Independencia?",
+      "opciones": [
+        "Leona Vicario",
+        "Josefa Ortiz de Domínguez",
+        "Sor Juana Inés de la Cruz",
+        "Gertrudis Bocanegra"
+      ],
+      "correcta": 1,
+      "dato": "Avisó a los conspiradores que habían sido descubiertos."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué gobernante dio nombre al periodo conocido como \"Porfiriato\"?",
+      "opciones": [
+        "Sebastián Lerdo de Tejada",
+        "Porfirio Díaz",
+        "Benito Juárez",
+        "Victoriano Huerta"
+      ],
+      "correcta": 1,
+      "dato": "Porfirio Díaz gobernó México durante más de 30 años."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué general revolucionario era conocido como el \"Centauro del Norte\"?",
+      "opciones": [
+        "Álvaro Obregón",
+        "Emiliano Zapata",
+        "Francisco Villa",
+        "Venustiano Carranza"
+      ],
+      "correcta": 2,
+      "dato": "Su nombre verdadero era José Doroteo Arango."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué civilización construyó la ciudad de Chichén Itzá?",
+      "opciones": [
+        "Los olmecas",
+        "Los mayas",
+        "Los purépechas",
+        "Los mexicas"
+      ],
+      "correcta": 1,
+      "dato": "Su pirámide de Kukulkán muestra una serpiente de luz en los equinoccios."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué civilización es famosa por sus cabezas colosales de piedra?",
+      "opciones": [
+        "Los mexicas",
+        "Los mayas",
+        "Los olmecas",
+        "Los totonacas"
+      ],
+      "correcta": 2,
+      "dato": "Los olmecas son considerados una de las culturas más antiguas de Mesoamérica."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Quién inició la Revolución Mexicana con el Plan de San Luis?",
+      "opciones": [
+        "Venustiano Carranza",
+        "Emiliano Zapata",
+        "Francisco I. Madero",
+        "Porfirio Díaz"
+      ],
+      "correcta": 2,
+      "dato": "Madero llamó a levantarse en armas el 20 de noviembre de 1910."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿En qué año se consumó la Independencia de México?",
+      "opciones": [
+        "1836",
+        "1810",
+        "1821",
+        "1824"
+      ],
+      "correcta": 2,
+      "dato": "El Ejército Trigarante entró a la Ciudad de México el 27 de septiembre de 1821."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué presidente realizó la expropiación petrolera en 1938?",
+      "opciones": [
+        "Lázaro Cárdenas",
+        "Adolfo López Mateos",
+        "Miguel Alemán",
+        "Plutarco Elías Calles"
+      ],
+      "correcta": 0,
+      "dato": "La expropiación se anunció el 18 de marzo de 1938."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué líder revolucionario del sur encabezó el Ejército Libertador del Sur?",
+      "opciones": [
+        "Felipe Ángeles",
+        "Pascual Orozco",
+        "Francisco Villa",
+        "Emiliano Zapata"
+      ],
+      "correcta": 3,
+      "dato": "Zapata nació en Anenecuilco, Morelos, y luchó por la tierra de los campesinos."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llama el documento en el que Morelos expuso sus ideas en 1813?",
+      "opciones": [
+        "Sentimientos de la Nación",
+        "Plan de Iguala",
+        "Plan de Ayala",
+        "Leyes de Reforma"
+      ],
+      "correcta": 0,
+      "dato": "Lo presentó en el Congreso de Chilpancingo."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué plan proclamó Agustín de Iturbide en 1821?",
+      "opciones": [
+        "Plan de Iguala",
+        "Plan de Ayutla",
+        "Plan de Ayala",
+        "Plan de Guadalupe"
+      ],
+      "correcta": 0,
+      "dato": "Estableció las Tres Garantías: religión, independencia y unión."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué plan proclamó Emiliano Zapata en 1911?",
+      "opciones": [
+        "Plan de Iguala",
+        "Plan de San Luis",
+        "Plan de Agua Prieta",
+        "Plan de Ayala"
+      ],
+      "correcta": 3,
+      "dato": "Exigía devolver las tierras a los pueblos y campesinos."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Quién fue el primer emperador del México independiente?",
+      "opciones": [
+        "Maximiliano de Habsburgo",
+        "Antonio López de Santa Anna",
+        "Agustín de Iturbide",
+        "Guadalupe Victoria"
+      ],
+      "correcta": 2,
+      "dato": "Iturbide fue coronado en 1822 y su imperio duró menos de un año."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Quién fue el primer presidente de México?",
+      "opciones": [
+        "Guadalupe Victoria",
+        "Vicente Guerrero",
+        "Benito Juárez",
+        "Agustín de Iturbide"
+      ],
+      "correcta": 0,
+      "dato": "Su nombre real era José Miguel Ramón Adaucto Fernández y Félix."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué emperador de origen europeo gobernó México de 1864 a 1867?",
+      "opciones": [
+        "Napoleón III",
+        "Maximiliano de Habsburgo",
+        "Fernando VII",
+        "Carlos V"
+      ],
+      "correcta": 1,
+      "dato": "Vivió en el Castillo de Chapultepec junto con la emperatriz Carlota."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué año cayó México-Tenochtitlan ante los españoles?",
+      "opciones": [
+        "1535",
+        "1519",
+        "1521",
+        "1492"
+      ],
+      "correcta": 2,
+      "dato": "La ciudad cayó el 13 de agosto de 1521, tras un largo sitio."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llamó el último tlatoani mexica?",
+      "opciones": [
+        "Itzcóatl",
+        "Moctezuma II",
+        "Cuauhtémoc",
+        "Cuitláhuac"
+      ],
+      "correcta": 2,
+      "dato": "Su nombre significa \"águila que desciende\"."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llamaba el virreinato español que incluía el territorio de México?",
+      "opciones": [
+        "Río de la Plata",
+        "Nueva España",
+        "Nueva Castilla",
+        "Nueva Granada"
+      ],
+      "correcta": 1,
+      "dato": "El Virreinato de la Nueva España existió de 1535 a 1821."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué tratado de 1848 puso fin a la guerra entre México y Estados Unidos?",
+      "opciones": [
+        "Tratado de Guadalupe Hidalgo",
+        "Tratados de Córdoba",
+        "Tratado de Velasco",
+        "Tratado de La Mesilla"
+      ],
+      "correcta": 0,
+      "dato": "Con este tratado México cedió más de la mitad de su territorio."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Cómo se conoce a los jóvenes cadetes que defendieron el Castillo de Chapultepec en 1847?",
+      "opciones": [
+        "Los Insurgentes",
+        "Los Niños Héroes",
+        "Los Dorados",
+        "Los Chinacos"
+      ],
+      "correcta": 1,
+      "dato": "Eran cadetes del Colegio Militar, que estaba en el castillo."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué general mexicano encabezó la victoria en la Batalla de Puebla de 1862?",
+      "opciones": [
+        "Mariano Escobedo",
+        "Porfirio Díaz",
+        "Antonio López de Santa Anna",
+        "Ignacio Zaragoza"
+      ],
+      "correcta": 3,
+      "dato": "Zaragoza nació en Bahía del Espíritu Santo, hoy Goliad, Texas."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué insurgente consumó la Independencia junto con Iturbide tras el Abrazo de Acatempan?",
+      "opciones": [
+        "José María Morelos",
+        "Ignacio López Rayón",
+        "Vicente Guerrero",
+        "Nicolás Bravo"
+      ],
+      "correcta": 2,
+      "dato": "Guerrero después fue presidente de México en 1829."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué ciudad prehispánica están las pirámides del Sol y de la Luna?",
+      "opciones": [
+        "Tula",
+        "Palenque",
+        "Monte Albán",
+        "Teotihuacan"
+      ],
+      "correcta": 3,
+      "dato": "Teotihuacan suele traducirse como \"lugar donde se hacen los dioses\"."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué insurgente se llamó a sí mismo \"Siervo de la Nación\"?",
+      "opciones": [
+        "José María Morelos",
+        "Vicente Guerrero",
+        "Miguel Hidalgo",
+        "Ignacio Allende"
+      ],
+      "correcta": 0,
+      "dato": "Morelos era sacerdote y un gran estratega militar."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué estado se encuentra la zona arqueológica de Monte Albán?",
+      "opciones": [
+        "Chiapas",
+        "Puebla",
+        "Yucatán",
+        "Oaxaca"
+      ],
+      "correcta": 3,
+      "dato": "Monte Albán fue la gran capital de los zapotecas."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué estado se encuentra la zona arqueológica de Palenque?",
+      "opciones": [
+        "Chiapas",
+        "Quintana Roo",
+        "Yucatán",
+        "Campeche"
+      ],
+      "correcta": 0,
+      "dato": "En Palenque está la tumba del gobernante maya Pakal."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué año se celebraron los Juegos Olímpicos en la Ciudad de México?",
+      "opciones": [
+        "1970",
+        "1964",
+        "1986",
+        "1968"
+      ],
+      "correcta": 3,
+      "dato": "Fueron los primeros Juegos Olímpicos realizados en América Latina."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿En qué año se promulgó la Constitución liberal anterior a la de 1917?",
+      "opciones": [
+        "1843",
+        "1857",
+        "1824",
+        "1836"
+      ],
+      "correcta": 1,
+      "dato": "La Constitución de 1857 dio origen a la Guerra de Reforma."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿Quién fue el primer titular de la Secretaría de Educación Pública, creada en 1921?",
+      "opciones": [
+        "Justo Sierra",
+        "Gabino Barreda",
+        "José Vasconcelos",
+        "Jaime Torres Bodet"
+      ],
+      "correcta": 2,
+      "dato": "Vasconcelos impulsó bibliotecas, escuelas rurales y el muralismo."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué tratados firmaron Agustín de Iturbide y Juan O'Donojú en 1821?",
+      "opciones": [
+        "Tratados de Bucareli",
+        "Tratado de Velasco",
+        "Tratado de Guadalupe Hidalgo",
+        "Tratados de Córdoba"
+      ],
+      "correcta": 3,
+      "dato": "Se firmaron en Córdoba, Veracruz, el 24 de agosto de 1821."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿En qué año se inauguró el Metro de la Ciudad de México?",
+      "opciones": [
+        "1968",
+        "1985",
+        "1969",
+        "1975"
+      ],
+      "correcta": 2,
+      "dato": "La primera ruta iba de Chapultepec a Zaragoza."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué ciudad fue la capital del señorío purépecha?",
+      "opciones": [
+        "Tula",
+        "Cholula",
+        "Tzintzuntzan",
+        "Pátzcuaro"
+      ],
+      "correcta": 2,
+      "dato": "Tzintzuntzan significa \"lugar de colibríes\"."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué ciudad fue la gran capital de los toltecas?",
+      "opciones": [
+        "Teotihuacan",
+        "Tula",
+        "Mitla",
+        "El Tajín"
+      ],
+      "correcta": 1,
+      "dato": "En Tula, Hidalgo, están los famosos Atlantes de piedra."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿En qué año las mujeres obtuvieron el derecho a votar en elecciones federales en México?",
+      "opciones": [
+        "1953",
+        "1968",
+        "1947",
+        "1917"
+      ],
+      "correcta": 0,
+      "dato": "Antes, en 1947, se les reconoció el voto en elecciones municipales."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué presidente nacionalizó la industria eléctrica en 1960?",
+      "opciones": [
+        "Adolfo López Mateos",
+        "Gustavo Díaz Ordaz",
+        "Miguel Alemán",
+        "Lázaro Cárdenas"
+      ],
+      "correcta": 0,
+      "dato": "La nacionalización se anunció el 27 de septiembre de 1960."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué capitán criollo participó con Hidalgo en la conspiración de Querétaro?",
+      "opciones": [
+        "Agustín de Iturbide",
+        "Vicente Guerrero",
+        "José María Morelos",
+        "Ignacio Allende"
+      ],
+      "correcta": 3,
+      "dato": "Allende nació en San Miguel el Grande, hoy San Miguel de Allende."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿En qué año llegó Cristóbal Colón a América?",
+      "opciones": [
+        "1492",
+        "1810",
+        "1453",
+        "1521"
+      ],
+      "correcta": 0,
+      "dato": "Llegó el 12 de octubre de 1492 a una isla de las Bahamas."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué civilización construyó las pirámides de Guiza?",
+      "opciones": [
+        "Los griegos",
+        "Los persas",
+        "Los romanos",
+        "Los egipcios"
+      ],
+      "correcta": 3,
+      "dato": "La Gran Pirámide es la única de las Siete Maravillas antiguas que sigue en pie."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿En qué país se originaron los Juegos Olímpicos antiguos?",
+      "opciones": [
+        "Grecia",
+        "Italia",
+        "Turquía",
+        "Egipto"
+      ],
+      "correcta": 0,
+      "dato": "Se celebraban en Olimpia en honor a Zeus."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿En qué país se encuentra la Gran Muralla?",
+      "opciones": [
+        "Mongolia",
+        "China",
+        "India",
+        "Japón"
+      ],
+      "correcta": 1,
+      "dato": "Se construyó y reconstruyó durante muchos siglos por distintas dinastías."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué ciudad era la capital del Imperio romano?",
+      "opciones": [
+        "Roma",
+        "Atenas",
+        "Cartago",
+        "Alejandría"
+      ],
+      "correcta": 0,
+      "dato": "Según la leyenda, Roma fue fundada por Rómulo y Remo."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Quién fue el primer ser humano en pisar la Luna?",
+      "opciones": [
+        "Yuri Gagarin",
+        "Michael Collins",
+        "Neil Armstrong",
+        "Buzz Aldrin"
+      ],
+      "correcta": 2,
+      "dato": "Armstrong pisó la Luna el 20 de julio de 1969 con la misión Apolo 11."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿En qué año llegó el ser humano a la Luna?",
+      "opciones": [
+        "1957",
+        "1975",
+        "1961",
+        "1969"
+      ],
+      "correcta": 3,
+      "dato": "La misión Apolo 11 llevó a Armstrong y Aldrin a la superficie lunar."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Quién fue el primer ser humano en viajar al espacio?",
+      "opciones": [
+        "Valentina Tereshkova",
+        "Yuri Gagarin",
+        "John Glenn",
+        "Neil Armstrong"
+      ],
+      "correcta": 1,
+      "dato": "Gagarin orbitó la Tierra en 1961 a bordo de la nave Vostok 1."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué navegante encabezó la expedición que inició la primera vuelta al mundo en 1519?",
+      "opciones": [
+        "Américo Vespucio",
+        "Fernando de Magallanes",
+        "Cristóbal Colón",
+        "Vasco da Gama"
+      ],
+      "correcta": 1,
+      "dato": "Magallanes murió en el viaje; Juan Sebastián Elcano lo completó en 1522."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué civilización construyó Machu Picchu?",
+      "opciones": [
+        "Los mexicas",
+        "Los olmecas",
+        "Los mayas",
+        "Los incas"
+      ],
+      "correcta": 3,
+      "dato": "Machu Picchu está en los Andes de Perú."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué reina de Egipto es famosa por su alianza con Julio César y Marco Antonio?",
+      "opciones": [
+        "Nefertiti",
+        "Nefertari",
+        "Hatshepsut",
+        "Cleopatra"
+      ],
+      "correcta": 3,
+      "dato": "Cleopatra VII fue la última gobernante del Egipto ptolemaico."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Cuántos barcos llevó Colón en su primer viaje a América?",
+      "opciones": [
+        "3",
+        "7",
+        "2",
+        "5"
+      ],
+      "correcta": 0,
+      "dato": "Fueron la Niña, la Pinta y la Santa María."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué inventor alemán creó la imprenta de tipos móviles hacia 1450?",
+      "opciones": [
+        "Galileo Galilei",
+        "Leonardo da Vinci",
+        "Johannes Gutenberg",
+        "Isaac Newton"
+      ],
+      "correcta": 2,
+      "dato": "Uno de sus primeros grandes trabajos fue una Biblia impresa."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué país regaló la Estatua de la Libertad a Estados Unidos?",
+      "opciones": [
+        "Inglaterra",
+        "España",
+        "Francia",
+        "Italia"
+      ],
+      "correcta": 2,
+      "dato": "Su estructura interna fue diseñada por Gustave Eiffel."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué río fue fundamental para la civilización del antiguo Egipto?",
+      "opciones": [
+        "Éufrates",
+        "Nilo",
+        "Danubio",
+        "Amazonas"
+      ],
+      "correcta": 1,
+      "dato": "Las crecidas del Nilo dejaban tierra fértil para cultivar."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué filósofo griego fue maestro de Alejandro Magno?",
+      "opciones": [
+        "Aristóteles",
+        "Sócrates",
+        "Platón",
+        "Pitágoras"
+      ],
+      "correcta": 0,
+      "dato": "Aristóteles fue a su vez alumno de Platón."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué muro que dividía a una ciudad alemana cayó en 1989?",
+      "opciones": [
+        "El Muro de Berlín",
+        "La Muralla de Ávila",
+        "La Gran Muralla",
+        "El Muro de Adriano"
+      ],
+      "correcta": 0,
+      "dato": "Su caída abrió paso a la reunificación de Alemania en 1990."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿En qué año inició la Revolución francesa?",
+      "opciones": [
+        "1848",
+        "1776",
+        "1789",
+        "1815"
+      ],
+      "correcta": 2,
+      "dato": "Se asocia con la toma de la Bastilla el 14 de julio de 1789."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿En qué año terminó la Segunda Guerra Mundial?",
+      "opciones": [
+        "1950",
+        "1939",
+        "1918",
+        "1945"
+      ],
+      "correcta": 3,
+      "dato": "Tras la guerra se fundó la Organización de las Naciones Unidas."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿En qué año inició la Primera Guerra Mundial?",
+      "opciones": [
+        "1918",
+        "1914",
+        "1939",
+        "1905"
+      ],
+      "correcta": 1,
+      "dato": "Terminó en 1918 con la firma de un armisticio."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿En qué año declararon su independencia las Trece Colonias de Estados Unidos?",
+      "opciones": [
+        "1810",
+        "1789",
+        "1492",
+        "1776"
+      ],
+      "correcta": 3,
+      "dato": "La Declaración de Independencia se aprobó el 4 de julio de 1776."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué emperador francés fue derrotado en la Batalla de Waterloo?",
+      "opciones": [
+        "Carlomagno",
+        "Luis XVI",
+        "Luis XIV",
+        "Napoleón Bonaparte"
+      ],
+      "correcta": 3,
+      "dato": "La batalla de Waterloo ocurrió en 1815, en la actual Bélgica."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué ciudad fue la capital del Imperio bizantino?",
+      "opciones": [
+        "Constantinopla",
+        "Roma",
+        "Alejandría",
+        "Atenas"
+      ],
+      "correcta": 0,
+      "dato": "Hoy esa ciudad se llama Estambul y está en Turquía."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué navegante portugués llegó por mar a la India rodeando África en 1498?",
+      "opciones": [
+        "Fernando de Magallanes",
+        "Cristóbal Colón",
+        "Bartolomeu Dias",
+        "Vasco da Gama"
+      ],
+      "correcta": 3,
+      "dato": "Abrió una ruta marítima de comercio de especias entre Europa y Asia."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué pueblo del norte de Europa navegaba en barcos llamados drakares?",
+      "opciones": [
+        "Los sajones",
+        "Los vikingos",
+        "Los godos",
+        "Los celtas"
+      ],
+      "correcta": 1,
+      "dato": "Los vikingos llegaron a Norteamérica siglos antes que Colón."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué proceso histórico impulsó la máquina de vapor a partir del siglo XVIII?",
+      "opciones": [
+        "La Reforma agraria",
+        "La Revolución francesa",
+        "La Revolución Industrial",
+        "El Renacimiento"
+      ],
+      "correcta": 2,
+      "dato": "Comenzó en Gran Bretaña y cambió la forma de producir bienes."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué organización internacional se fundó en 1945 para mantener la paz mundial?",
+      "opciones": [
+        "La ONU",
+        "La OMS",
+        "La OTAN",
+        "La OEA"
+      ],
+      "correcta": 0,
+      "dato": "La Carta de las Naciones Unidas se firmó en San Francisco."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué movimiento cultural de renovación de las artes surgió en Italia en los siglos XIV y XV?",
+      "opciones": [
+        "El Renacimiento",
+        "El Barroco",
+        "El Romanticismo",
+        "La Ilustración"
+      ],
+      "correcta": 0,
+      "dato": "Florencia fue uno de sus centros más importantes."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué líder impulsó la resistencia no violenta por la independencia de la India?",
+      "opciones": [
+        "Nelson Mandela",
+        "Jawaharlal Nehru",
+        "Mahatma Gandhi",
+        "Martin Luther King"
+      ],
+      "correcta": 2,
+      "dato": "La India se independizó del Reino Unido en 1947."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Quién fue el primer presidente negro de Sudáfrica?",
+      "opciones": [
+        "Desmond Tutu",
+        "Nelson Mandela",
+        "Thabo Mbeki",
+        "Kofi Annan"
+      ],
+      "correcta": 1,
+      "dato": "Mandela recibió el Premio Nobel de la Paz en 1993."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué ciudad griega es conocida como la cuna de la democracia?",
+      "opciones": [
+        "Tebas",
+        "Corinto",
+        "Atenas",
+        "Esparta"
+      ],
+      "correcta": 2,
+      "dato": "En Atenas los ciudadanos votaban en una asamblea."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué ciudad romana quedó sepultada por la erupción del Vesubio en el año 79?",
+      "opciones": [
+        "Pompeya",
+        "Ostia",
+        "Rávena",
+        "Pisa"
+      ],
+      "correcta": 0,
+      "dato": "La ceniza conservó calles, casas y objetos de la vida diaria."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué transatlántico se hundió en 1912 durante su viaje inaugural?",
+      "opciones": [
+        "Britannic",
+        "Titanic",
+        "Lusitania",
+        "Queen Mary"
+      ],
+      "correcta": 1,
+      "dato": "Chocó contra un iceberg en el océano Atlántico Norte."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué rey de Macedonia formó un imperio que llegó hasta la India?",
+      "opciones": [
+        "Filipo II",
+        "Darío I",
+        "Alejandro Magno",
+        "Julio César"
+      ],
+      "correcta": 2,
+      "dato": "Fundó muchas ciudades llamadas Alejandría, la más famosa en Egipto."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Entre qué dos ríos se desarrolló la antigua Mesopotamia?",
+      "opciones": [
+        "Indo y Ganges",
+        "Tigris y Éufrates",
+        "Danubio y Rin",
+        "Nilo y Jordán"
+      ],
+      "correcta": 1,
+      "dato": "Mesopotamia significa \"tierra entre ríos\"."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿En qué año cayó Constantinopla ante el Imperio otomano?",
+      "opciones": [
+        "1204",
+        "1517",
+        "1453",
+        "1492"
+      ],
+      "correcta": 2,
+      "dato": "Muchos historiadores usan esta fecha para marcar el fin de la Edad Media."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué documento inglés de 1215 limitó el poder del rey?",
+      "opciones": [
+        "La Petición de Derechos",
+        "El Acta de Unión",
+        "La Carta Magna",
+        "La Declaración de Derechos"
+      ],
+      "correcta": 2,
+      "dato": "La firmó el rey Juan sin Tierra."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿En qué año se disolvió la Unión Soviética?",
+      "opciones": [
+        "1989",
+        "1985",
+        "1993",
+        "1991"
+      ],
+      "correcta": 3,
+      "dato": "Dio lugar a 15 repúblicas independientes, entre ellas Rusia."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué dinastía china gobernaba cuando se creó el Ejército de terracota?",
+      "opciones": [
+        "Tang",
+        "Ming",
+        "Han",
+        "Qin"
+      ],
+      "correcta": 3,
+      "dato": "Las figuras acompañaban la tumba del emperador Qin Shi Huang."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué pueblo de Mesopotamia desarrolló la escritura cuneiforme?",
+      "opciones": [
+        "Los sumerios",
+        "Los hititas",
+        "Los fenicios",
+        "Los egipcios"
+      ],
+      "correcta": 0,
+      "dato": "Escribían sobre tablillas de barro con marcas en forma de cuña."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué pueblo creó el alfabeto del que derivan el griego y el latino?",
+      "opciones": [
+        "Los persas",
+        "Los egipcios",
+        "Los sumerios",
+        "Los fenicios"
+      ],
+      "correcta": 3,
+      "dato": "Los fenicios eran comerciantes que navegaban por el Mediterráneo."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué general cartaginés cruzó los Alpes con elefantes para atacar Roma?",
+      "opciones": [
+        "Escipión",
+        "Aníbal",
+        "Asdrúbal",
+        "Julio César"
+      ],
+      "correcta": 1,
+      "dato": "Lo hizo durante la Segunda Guerra Púnica, en el año 218 a. C."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué tratado de 1494 repartió las tierras por descubrir entre España y Portugal?",
+      "opciones": [
+        "Paz de Westfalia",
+        "Tratado de Utrecht",
+        "Tratado de Tordesillas",
+        "Tratado de Versalles"
+      ],
+      "correcta": 2,
+      "dato": "Gracias a este tratado, Brasil quedó del lado portugués."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué tratado de 1919 puso fin a la Primera Guerra Mundial entre Alemania y los Aliados?",
+      "opciones": [
+        "Paz de Westfalia",
+        "Tratado de Versalles",
+        "Tratado de Tordesillas",
+        "Tratado de Utrecht"
+      ],
+      "correcta": 1,
+      "dato": "Se firmó en el Palacio de Versalles, cerca de París."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el océano más grande del planeta?",
+      "opciones": [
+        "Índico",
+        "Ártico",
+        "Pacífico",
+        "Atlántico"
+      ],
+      "correcta": 2,
+      "dato": "El Pacífico cubre cerca de un tercio de la superficie de la Tierra."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el continente más grande?",
+      "opciones": [
+        "África",
+        "Asia",
+        "América",
+        "Europa"
+      ],
+      "correcta": 1,
+      "dato": "Asia también es el continente con más habitantes."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuántos estados tiene México, además de la Ciudad de México?",
+      "opciones": [
+        "31",
+        "32",
+        "29",
+        "30"
+      ],
+      "correcta": 0,
+      "dato": "México tiene 32 entidades federativas: 31 estados y la Ciudad de México."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Qué río forma gran parte de la frontera entre México y Estados Unidos?",
+      "opciones": [
+        "Río Lerma",
+        "Río Usumacinta",
+        "Río Bravo",
+        "Río Balsas"
+      ],
+      "correcta": 2,
+      "dato": "En Estados Unidos lo llaman Río Grande."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la montaña más alta del mundo sobre el nivel del mar?",
+      "opciones": [
+        "Everest",
+        "K2",
+        "Kilimanjaro",
+        "Aconcagua"
+      ],
+      "correcta": 0,
+      "dato": "El Everest está en el Himalaya, entre Nepal y China."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la montaña más alta de México?",
+      "opciones": [
+        "Iztaccíhuatl",
+        "Popocatépetl",
+        "Nevado de Toluca",
+        "Pico de Orizaba"
+      ],
+      "correcta": 3,
+      "dato": "También se llama Citlaltépetl, \"cerro de la estrella\"."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿En qué continente se encuentra Egipto?",
+      "opciones": [
+        "Asia",
+        "Europa",
+        "Oceanía",
+        "África"
+      ],
+      "correcta": 3,
+      "dato": "Una pequeña parte de Egipto, la península del Sinaí, está en Asia."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Qué país tiene forma de bota en el mapa?",
+      "opciones": [
+        "Portugal",
+        "España",
+        "Italia",
+        "Grecia"
+      ],
+      "correcta": 2,
+      "dato": "La \"punta\" de la bota parece patear a la isla de Sicilia."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿En qué península se encuentra Cancún?",
+      "opciones": [
+        "Península de Yucatán",
+        "Península de Baja California",
+        "Península de Florida",
+        "Península Ibérica"
+      ],
+      "correcta": 0,
+      "dato": "La península de Yucatán tiene miles de cenotes."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el desierto cálido más grande del mundo?",
+      "opciones": [
+        "Gobi",
+        "Sahara",
+        "Atacama",
+        "Kalahari"
+      ],
+      "correcta": 1,
+      "dato": "El Sahara ocupa gran parte del norte de África."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Con qué países tiene frontera terrestre México?",
+      "opciones": [
+        "Estados Unidos, Guatemala y Belice",
+        "Estados Unidos y Guatemala",
+        "Estados Unidos, Belice y El Salvador",
+        "Estados Unidos, Guatemala y Honduras"
+      ],
+      "correcta": 0,
+      "dato": "La frontera con Estados Unidos mide más de 3,000 km."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Qué línea imaginaria divide la Tierra en hemisferio norte y hemisferio sur?",
+      "opciones": [
+        "El ecuador",
+        "El círculo polar ártico",
+        "El meridiano de Greenwich",
+        "El trópico de Cáncer"
+      ],
+      "correcta": 0,
+      "dato": "El país Ecuador toma su nombre de esta línea."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿A qué océano pertenece el Golfo de México?",
+      "opciones": [
+        "Pacífico",
+        "Atlántico",
+        "Índico",
+        "Ártico"
+      ],
+      "correcta": 1,
+      "dato": "El Golfo de México está conectado con el mar Caribe."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿En qué continente se encuentra Australia?",
+      "opciones": [
+        "Oceanía",
+        "América",
+        "África",
+        "Asia"
+      ],
+      "correcta": 0,
+      "dato": "Australia es un país y también la mayor parte de Oceanía."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el país más grande del mundo por territorio?",
+      "opciones": [
+        "Canadá",
+        "China",
+        "Rusia",
+        "Estados Unidos"
+      ],
+      "correcta": 2,
+      "dato": "Rusia se extiende por Europa y Asia."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Qué continente está cubierto casi por completo de hielo?",
+      "opciones": [
+        "América",
+        "Oceanía",
+        "Europa",
+        "Antártida"
+      ],
+      "correcta": 3,
+      "dato": "La Antártida no tiene población permanente, solo bases científicas."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el río más caudaloso del mundo?",
+      "opciones": [
+        "Nilo",
+        "Amazonas",
+        "Yangtsé",
+        "Misisipi"
+      ],
+      "correcta": 1,
+      "dato": "El Amazonas lleva más agua que cualquier otro río del planeta."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué cordillera recorre el oeste de Sudamérica?",
+      "opciones": [
+        "Las Montañas Rocosas",
+        "El Himalaya",
+        "Los Andes",
+        "Los Alpes"
+      ],
+      "correcta": 2,
+      "dato": "Los Andes son la cordillera continental más larga del mundo."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿En qué cordillera se encuentra el monte Everest?",
+      "opciones": [
+        "Andes",
+        "Alpes",
+        "Urales",
+        "Himalaya"
+      ],
+      "correcta": 3,
+      "dato": "Himalaya significa \"morada de las nieves\" en sánscrito."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué montes se consideran tradicionalmente el límite entre Europa y Asia?",
+      "opciones": [
+        "Los Pirineos",
+        "Los Cárpatos",
+        "Los Alpes",
+        "Los Urales"
+      ],
+      "correcta": 3,
+      "dato": "Los montes Urales están en Rusia."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué cordillera separa a España de Francia?",
+      "opciones": [
+        "Los Apeninos",
+        "Los Alpes",
+        "Los Pirineos",
+        "Los Andes"
+      ],
+      "correcta": 2,
+      "dato": "Entre sus montañas está el pequeño país de Andorra."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el estado más grande de México por extensión?",
+      "opciones": [
+        "Coahuila",
+        "Durango",
+        "Chihuahua",
+        "Sonora"
+      ],
+      "correcta": 2,
+      "dato": "Chihuahua ocupa más del 12% del territorio nacional."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el estado más pequeño de México por extensión, sin contar la Ciudad de México?",
+      "opciones": [
+        "Colima",
+        "Tlaxcala",
+        "Aguascalientes",
+        "Morelos"
+      ],
+      "correcta": 1,
+      "dato": "Tlaxcala mide unos 4,000 km²."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el lago natural más grande de México?",
+      "opciones": [
+        "Lago de Chapala",
+        "Lago de Catemaco",
+        "Lago de Texcoco",
+        "Lago de Pátzcuaro"
+      ],
+      "correcta": 0,
+      "dato": "Chapala está entre Jalisco y Michoacán."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué mar separa la península de Baja California del resto de México?",
+      "opciones": [
+        "Mar Caribe",
+        "Mar de Cortés",
+        "Golfo de México",
+        "Mar Mediterráneo"
+      ],
+      "correcta": 1,
+      "dato": "También se llama Golfo de California y tiene gran diversidad marina."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué estrecho separa a España de Marruecos?",
+      "opciones": [
+        "Estrecho del Bósforo",
+        "Estrecho de Magallanes",
+        "Estrecho de Bering",
+        "Estrecho de Gibraltar"
+      ],
+      "correcta": 3,
+      "dato": "Conecta el mar Mediterráneo con el océano Atlántico."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué estrecho separa a Asia de América?",
+      "opciones": [
+        "Estrecho de Magallanes",
+        "Estrecho de Gibraltar",
+        "Estrecho de Ormuz",
+        "Estrecho de Bering"
+      ],
+      "correcta": 3,
+      "dato": "Separa a Rusia de Alaska, Estados Unidos."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué canal une los océanos Atlántico y Pacífico en Centroamérica?",
+      "opciones": [
+        "Canal de Panamá",
+        "Canal de Suez",
+        "Canal de Corinto",
+        "Canal de Kiel"
+      ],
+      "correcta": 0,
+      "dato": "Se inauguró en 1914 y usa esclusas para elevar los barcos."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué canal une el mar Mediterráneo con el mar Rojo?",
+      "opciones": [
+        "Canal de Panamá",
+        "Canal de Suez",
+        "Canal de Corinto",
+        "Canal de Kiel"
+      ],
+      "correcta": 1,
+      "dato": "Está en Egipto y se inauguró en 1869."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué río atraviesa la ciudad de Londres?",
+      "opciones": [
+        "Rin",
+        "Támesis",
+        "Danubio",
+        "Sena"
+      ],
+      "correcta": 1,
+      "dato": "El Puente de la Torre cruza el río Támesis."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué río atraviesa la ciudad de París?",
+      "opciones": [
+        "Loira",
+        "Támesis",
+        "Ródano",
+        "Sena"
+      ],
+      "correcta": 3,
+      "dato": "La catedral de Notre Dame está en una isla del Sena."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué trópico atraviesa el territorio de México?",
+      "opciones": [
+        "El ecuador",
+        "Círculo polar ártico",
+        "Trópico de Cáncer",
+        "Trópico de Capricornio"
+      ],
+      "correcta": 2,
+      "dato": "Pasa por estados como Baja California Sur, Sinaloa y Tamaulipas."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué desierto de Chile es uno de los más secos del mundo?",
+      "opciones": [
+        "Gobi",
+        "Sahara",
+        "Sonora",
+        "Atacama"
+      ],
+      "correcta": 3,
+      "dato": "Por su cielo despejado, en Atacama hay grandes observatorios astronómicos."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el país más pequeño del mundo?",
+      "opciones": [
+        "Mónaco",
+        "Ciudad del Vaticano",
+        "San Marino",
+        "Liechtenstein"
+      ],
+      "correcta": 1,
+      "dato": "El Vaticano mide menos de medio kilómetro cuadrado y está dentro de Roma."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Cómo se llama el punto más profundo conocido de los océanos?",
+      "opciones": [
+        "Fosa de las Marianas",
+        "Fosa de Atacama",
+        "Fosa de Puerto Rico",
+        "Fosa de Java"
+      ],
+      "correcta": 0,
+      "dato": "Está en el océano Pacífico y supera los 10,000 metros de profundidad."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el lago más profundo del mundo?",
+      "opciones": [
+        "Lago Tanganica",
+        "Lago Superior",
+        "Lago Baikal",
+        "Lago Titicaca"
+      ],
+      "correcta": 2,
+      "dato": "El Baikal, en Rusia, guarda cerca de una quinta parte del agua dulce superficial."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿En qué país se encuentra el monte Kilimanjaro?",
+      "opciones": [
+        "Tanzania",
+        "Uganda",
+        "Etiopía",
+        "Kenia"
+      ],
+      "correcta": 0,
+      "dato": "Es la montaña más alta de África."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿En qué estado mexicano se encuentra la Barranca del Cobre?",
+      "opciones": [
+        "Sonora",
+        "Durango",
+        "Sinaloa",
+        "Chihuahua"
+      ],
+      "correcta": 3,
+      "dato": "El tren Chepe recorre la Sierra Tarahumara y sus barrancas."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Qué gran lago comparten Perú y Bolivia?",
+      "opciones": [
+        "Lago de Maracaibo",
+        "Lago Titicaca",
+        "Lago Poopó",
+        "Lago de Nicaragua"
+      ],
+      "correcta": 1,
+      "dato": "Está a más de 3,800 metros sobre el nivel del mar."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Qué volcán mexicano nació en un campo de cultivo en 1943?",
+      "opciones": [
+        "Chichonal",
+        "Paricutín",
+        "Jorullo",
+        "Volcán de Colima"
+      ],
+      "correcta": 1,
+      "dato": "Surgió en Michoacán, en el terreno de un campesino."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la isla más grande del mundo, sin contar a Australia?",
+      "opciones": [
+        "Borneo",
+        "Madagascar",
+        "Groenlandia",
+        "Nueva Guinea"
+      ],
+      "correcta": 2,
+      "dato": "Groenlandia pertenece al Reino de Dinamarca."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el río más largo de Europa?",
+      "opciones": [
+        "Volga",
+        "Rin",
+        "Dniéper",
+        "Danubio"
+      ],
+      "correcta": 0,
+      "dato": "El Volga recorre Rusia y desemboca en el mar Caspio."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Canadá?",
+      "opciones": [
+        "Toronto",
+        "Ottawa",
+        "Montreal",
+        "Vancouver"
+      ],
+      "correcta": 1,
+      "dato": "Ottawa está en la provincia de Ontario."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Estados Unidos?",
+      "opciones": [
+        "Washington D. C.",
+        "Los Ángeles",
+        "Chicago",
+        "Nueva York"
+      ],
+      "correcta": 0,
+      "dato": "La ciudad lleva el nombre de George Washington, su primer presidente."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Japón?",
+      "opciones": [
+        "Tokio",
+        "Kioto",
+        "Hiroshima",
+        "Osaka"
+      ],
+      "correcta": 0,
+      "dato": "Antes de Tokio, la capital imperial fue Kioto por más de mil años."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Francia?",
+      "opciones": [
+        "Lyon",
+        "Marsella",
+        "París",
+        "Niza"
+      ],
+      "correcta": 2,
+      "dato": "En París está la Torre Eiffel, construida para la Exposición de 1889."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Italia?",
+      "opciones": [
+        "Venecia",
+        "Roma",
+        "Milán",
+        "Florencia"
+      ],
+      "correcta": 1,
+      "dato": "Dentro de Roma se encuentra otro país: la Ciudad del Vaticano."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de España?",
+      "opciones": [
+        "Barcelona",
+        "Madrid",
+        "Valencia",
+        "Sevilla"
+      ],
+      "correcta": 1,
+      "dato": "Madrid está casi en el centro geográfico de la península Ibérica."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Argentina?",
+      "opciones": [
+        "Buenos Aires",
+        "Rosario",
+        "Córdoba",
+        "Mendoza"
+      ],
+      "correcta": 0,
+      "dato": "A quienes nacen en Buenos Aires se les llama porteños."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Perú?",
+      "opciones": [
+        "Arequipa",
+        "Lima",
+        "Cusco",
+        "Trujillo"
+      ],
+      "correcta": 1,
+      "dato": "Lima fue fundada por Francisco Pizarro en 1535."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Colombia?",
+      "opciones": [
+        "Bogotá",
+        "Cali",
+        "Cartagena",
+        "Medellín"
+      ],
+      "correcta": 0,
+      "dato": "Bogotá está a unos 2,600 metros sobre el nivel del mar."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Cuba?",
+      "opciones": [
+        "Santiago de Cuba",
+        "Camagüey",
+        "Varadero",
+        "La Habana"
+      ],
+      "correcta": 3,
+      "dato": "La Habana Vieja es Patrimonio de la Humanidad."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Reino Unido?",
+      "opciones": [
+        "Londres",
+        "Mánchester",
+        "Edimburgo",
+        "Liverpool"
+      ],
+      "correcta": 0,
+      "dato": "El Big Ben es en realidad el nombre de la gran campana de la torre."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Grecia?",
+      "opciones": [
+        "Corinto",
+        "Esparta",
+        "Tesalónica",
+        "Atenas"
+      ],
+      "correcta": 3,
+      "dato": "En Atenas está la Acrópolis con el templo del Partenón."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Jalisco?",
+      "opciones": [
+        "Puerto Vallarta",
+        "Zapopan",
+        "Guadalajara",
+        "Tlaquepaque"
+      ],
+      "correcta": 2,
+      "dato": "Guadalajara es conocida como \"la Perla Tapatía\"."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Nuevo León?",
+      "opciones": [
+        "Apodaca",
+        "Guadalupe",
+        "Monterrey",
+        "San Pedro Garza García"
+      ],
+      "correcta": 2,
+      "dato": "A Monterrey se le llama \"la Sultana del Norte\"."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Yucatán?",
+      "opciones": [
+        "Cancún",
+        "Progreso",
+        "Valladolid",
+        "Mérida"
+      ],
+      "correcta": 3,
+      "dato": "A Mérida se le llama \"la Ciudad Blanca\"."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Michoacán?",
+      "opciones": [
+        "Zamora",
+        "Morelia",
+        "Uruapan",
+        "Pátzcuaro"
+      ],
+      "correcta": 1,
+      "dato": "Su nombre antiguo era Valladolid; se cambió en honor a Morelos."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de el Estado de México?",
+      "opciones": [
+        "Texcoco",
+        "Toluca",
+        "Naucalpan",
+        "Ecatepec"
+      ],
+      "correcta": 1,
+      "dato": "Cerca de Toluca está el volcán Nevado de Toluca, o Xinantécatl."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Morelos?",
+      "opciones": [
+        "Tepoztlán",
+        "Cuautla",
+        "Cuernavaca",
+        "Jiutepec"
+      ],
+      "correcta": 2,
+      "dato": "Cuernavaca es conocida como \"la ciudad de la eterna primavera\"."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Brasil?",
+      "opciones": [
+        "Río de Janeiro",
+        "São Paulo",
+        "Brasilia",
+        "Salvador"
+      ],
+      "correcta": 2,
+      "dato": "Brasilia se construyó a propósito y se inauguró como capital en 1960."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Australia?",
+      "opciones": [
+        "Sídney",
+        "Perth",
+        "Melbourne",
+        "Canberra"
+      ],
+      "correcta": 3,
+      "dato": "Canberra se eligió como punto intermedio entre Sídney y Melbourne."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Alemania?",
+      "opciones": [
+        "Fráncfort",
+        "Múnich",
+        "Berlín",
+        "Hamburgo"
+      ],
+      "correcta": 2,
+      "dato": "Berlín estuvo dividida por un muro de 1961 a 1989."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Chile?",
+      "opciones": [
+        "Concepción",
+        "Valparaíso",
+        "Antofagasta",
+        "Santiago"
+      ],
+      "correcta": 3,
+      "dato": "Desde Santiago se ve la cordillera de los Andes."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Guatemala?",
+      "opciones": [
+        "Escuintla",
+        "Antigua Guatemala",
+        "Ciudad de Guatemala",
+        "Quetzaltenango"
+      ],
+      "correcta": 2,
+      "dato": "Antigua Guatemala fue capital hasta que los terremotos de 1773 la dañaron."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Egipto?",
+      "opciones": [
+        "Luxor",
+        "Alejandría",
+        "Asuán",
+        "El Cairo"
+      ],
+      "correcta": 3,
+      "dato": "Cerca de El Cairo están las pirámides de Guiza."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de China?",
+      "opciones": [
+        "Hong Kong",
+        "Cantón",
+        "Shanghái",
+        "Pekín"
+      ],
+      "correcta": 3,
+      "dato": "En Pekín está la Ciudad Prohibida, antiguo palacio imperial."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Rusia?",
+      "opciones": [
+        "Kazán",
+        "Novosibirsk",
+        "San Petersburgo",
+        "Moscú"
+      ],
+      "correcta": 3,
+      "dato": "En Moscú está la famosa Plaza Roja."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Portugal?",
+      "opciones": [
+        "Braga",
+        "Oporto",
+        "Lisboa",
+        "Coímbra"
+      ],
+      "correcta": 2,
+      "dato": "Lisboa es famosa por sus tranvías amarillos."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Ecuador?",
+      "opciones": [
+        "Guayaquil",
+        "Manta",
+        "Quito",
+        "Cuenca"
+      ],
+      "correcta": 2,
+      "dato": "Quito está muy cerca de la línea del ecuador."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Uruguay?",
+      "opciones": [
+        "Montevideo",
+        "Salto",
+        "Colonia del Sacramento",
+        "Punta del Este"
+      ],
+      "correcta": 0,
+      "dato": "Montevideo está a orillas del Río de la Plata."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Honduras?",
+      "opciones": [
+        "La Ceiba",
+        "San Pedro Sula",
+        "Tegucigalpa",
+        "Comayagua"
+      ],
+      "correcta": 2,
+      "dato": "Comayagua fue capital de Honduras antes que Tegucigalpa."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de India?",
+      "opciones": [
+        "Calcuta",
+        "Nueva Delhi",
+        "Bangalore",
+        "Bombay"
+      ],
+      "correcta": 1,
+      "dato": "Nueva Delhi es parte de la gran área urbana de Delhi."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Corea del Sur?",
+      "opciones": [
+        "Seúl",
+        "Busan",
+        "Daegu",
+        "Incheon"
+      ],
+      "correcta": 0,
+      "dato": "Seúl ha sido capital de Corea durante más de 600 años."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Veracruz?",
+      "opciones": [
+        "Coatzacoalcos",
+        "Orizaba",
+        "Veracruz",
+        "Xalapa"
+      ],
+      "correcta": 3,
+      "dato": "A Xalapa se le conoce como \"la Atenas veracruzana\"."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Guerrero?",
+      "opciones": [
+        "Acapulco",
+        "Chilpancingo",
+        "Iguala",
+        "Taxco"
+      ],
+      "correcta": 1,
+      "dato": "En Chilpancingo se reunió el Congreso convocado por Morelos en 1813."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Baja California?",
+      "opciones": [
+        "Tijuana",
+        "Mexicali",
+        "Ensenada",
+        "Tecate"
+      ],
+      "correcta": 1,
+      "dato": "Su nombre combina las palabras México y California."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Quintana Roo?",
+      "opciones": [
+        "Playa del Carmen",
+        "Cancún",
+        "Tulum",
+        "Chetumal"
+      ],
+      "correcta": 3,
+      "dato": "Chetumal está en la frontera con Belice."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Chiapas?",
+      "opciones": [
+        "San Cristóbal de las Casas",
+        "Comitán",
+        "Tuxtla Gutiérrez",
+        "Tapachula"
+      ],
+      "correcta": 2,
+      "dato": "Cerca de Tuxtla está el Cañón del Sumidero."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Coahuila?",
+      "opciones": [
+        "Saltillo",
+        "Piedras Negras",
+        "Torreón",
+        "Monclova"
+      ],
+      "correcta": 0,
+      "dato": "Saltillo es famoso por sus sarapes de colores."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Sonora?",
+      "opciones": [
+        "Guaymas",
+        "Nogales",
+        "Hermosillo",
+        "Ciudad Obregón"
+      ],
+      "correcta": 2,
+      "dato": "Hermosillo lleva el nombre del insurgente José María González de Hermosillo."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Suiza?",
+      "opciones": [
+        "Zúrich",
+        "Basilea",
+        "Ginebra",
+        "Berna"
+      ],
+      "correcta": 3,
+      "dato": "Suiza tiene cuatro idiomas oficiales."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Nueva Zelanda?",
+      "opciones": [
+        "Wellington",
+        "Auckland",
+        "Christchurch",
+        "Queenstown"
+      ],
+      "correcta": 0,
+      "dato": "Wellington es una de las capitales más australes del mundo."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Marruecos?",
+      "opciones": [
+        "Marrakech",
+        "Fez",
+        "Casablanca",
+        "Rabat"
+      ],
+      "correcta": 3,
+      "dato": "Casablanca es la ciudad más grande, pero la capital es Rabat."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Turquía?",
+      "opciones": [
+        "Ankara",
+        "Antalya",
+        "Esmirna",
+        "Estambul"
+      ],
+      "correcta": 0,
+      "dato": "Ankara es capital desde 1923; antes lo era Estambul."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Kenia?",
+      "opciones": [
+        "Mombasa",
+        "Nairobi",
+        "Nakuru",
+        "Kisumu"
+      ],
+      "correcta": 1,
+      "dato": "Nairobi tiene un parque nacional con jirafas y leones junto a la ciudad."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Tamaulipas?",
+      "opciones": [
+        "Ciudad Victoria",
+        "Reynosa",
+        "Tampico",
+        "Nuevo Laredo"
+      ],
+      "correcta": 0,
+      "dato": "Lleva el nombre de Guadalupe Victoria, primer presidente de México."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Baja California Sur?",
+      "opciones": [
+        "Santa Rosalía",
+        "La Paz",
+        "Loreto",
+        "Los Cabos"
+      ],
+      "correcta": 1,
+      "dato": "La Paz está a orillas del Mar de Cortés."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Tabasco?",
+      "opciones": [
+        "Villahermosa",
+        "Cárdenas",
+        "Paraíso",
+        "Comalcalco"
+      ],
+      "correcta": 0,
+      "dato": "En Villahermosa está el parque-museo La Venta, con cabezas olmecas."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Nayarit?",
+      "opciones": [
+        "Tepic",
+        "Compostela",
+        "Ixtlán del Río",
+        "San Blas"
+      ],
+      "correcta": 0,
+      "dato": "Nayarit tiene costas en el océano Pacífico, como la Riviera Nayarit."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Guanajuato?",
+      "opciones": [
+        "León",
+        "Guanajuato",
+        "Irapuato",
+        "Celaya"
+      ],
+      "correcta": 1,
+      "dato": "León es la ciudad más grande del estado, pero la capital es Guanajuato."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇲🇽",
+      "opciones": [
+        "Italia",
+        "Irlanda",
+        "Hungría",
+        "México"
+      ],
+      "correcta": 3,
+      "dato": "El escudo muestra un águila sobre un nopal devorando una serpiente."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇯🇵",
+      "opciones": [
+        "Corea del Sur",
+        "China",
+        "Bangladés",
+        "Japón"
+      ],
+      "correcta": 3,
+      "dato": "El círculo rojo representa al Sol."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇺🇸",
+      "opciones": [
+        "Liberia",
+        "Estados Unidos",
+        "Malasia",
+        "Reino Unido"
+      ],
+      "correcta": 1,
+      "dato": "Sus 50 estrellas representan a los 50 estados."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇨🇦",
+      "opciones": [
+        "Perú",
+        "Suiza",
+        "Austria",
+        "Canadá"
+      ],
+      "correcta": 3,
+      "dato": "La hoja de arce es un símbolo nacional de Canadá."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇧🇷",
+      "opciones": [
+        "Jamaica",
+        "Colombia",
+        "Brasil",
+        "Portugal"
+      ],
+      "correcta": 2,
+      "dato": "El lema \"Ordem e Progresso\" aparece en su bandera."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇦🇷",
+      "opciones": [
+        "Guatemala",
+        "Argentina",
+        "Uruguay",
+        "Nicaragua"
+      ],
+      "correcta": 1,
+      "dato": "En el centro lleva el Sol de Mayo."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇪🇸",
+      "opciones": [
+        "Alemania",
+        "Colombia",
+        "Portugal",
+        "España"
+      ],
+      "correcta": 3,
+      "dato": "Tiene franjas roja y amarilla, con la central más ancha."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇫🇷",
+      "opciones": [
+        "Francia",
+        "Italia",
+        "Países Bajos",
+        "Rusia"
+      ],
+      "correcta": 0,
+      "dato": "Se le conoce como \"la tricolor\": azul, blanco y rojo."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇮🇹",
+      "opciones": [
+        "Francia",
+        "Irlanda",
+        "Italia",
+        "México"
+      ],
+      "correcta": 2,
+      "dato": "Se parece a la de México, pero sin escudo."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇬🇧",
+      "opciones": [
+        "Australia",
+        "Nueva Zelanda",
+        "Reino Unido",
+        "Estados Unidos"
+      ],
+      "correcta": 2,
+      "dato": "Se llama Union Jack y combina cruces de Inglaterra, Escocia e Irlanda."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇩🇪",
+      "opciones": [
+        "Bélgica",
+        "Alemania",
+        "Austria",
+        "Colombia"
+      ],
+      "correcta": 1,
+      "dato": "Sus colores son negro, rojo y dorado."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇨🇳",
+      "opciones": [
+        "Turquía",
+        "Vietnam",
+        "China",
+        "Japón"
+      ],
+      "correcta": 2,
+      "dato": "Tiene una estrella grande y cuatro pequeñas sobre fondo rojo."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇨🇴",
+      "opciones": [
+        "Venezuela",
+        "España",
+        "Colombia",
+        "Ecuador"
+      ],
+      "correcta": 2,
+      "dato": "La franja amarilla ocupa la mitad de la bandera."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇨🇺",
+      "opciones": [
+        "Cuba",
+        "Panamá",
+        "Chile",
+        "Costa Rica"
+      ],
+      "correcta": 0,
+      "dato": "Tiene cinco franjas azules y blancas y un triángulo rojo con una estrella."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇨🇭",
+      "opciones": [
+        "Suiza",
+        "Dinamarca",
+        "Austria",
+        "Suecia"
+      ],
+      "correcta": 0,
+      "dato": "Es una de las pocas banderas nacionales cuadradas."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇰🇷",
+      "opciones": [
+        "Mongolia",
+        "Japón",
+        "China",
+        "Corea del Sur"
+      ],
+      "correcta": 3,
+      "dato": "El círculo central es el símbolo del yin y el yang."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇵🇪",
+      "opciones": [
+        "Letonia",
+        "Austria",
+        "Perú",
+        "Canadá"
+      ],
+      "correcta": 2,
+      "dato": "Tiene tres franjas verticales: roja, blanca y roja."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇨🇱",
+      "opciones": [
+        "Cuba",
+        "Chile",
+        "Panamá",
+        "Estados Unidos"
+      ],
+      "correcta": 1,
+      "dato": "Su estrella blanca se conoce como \"la estrella solitaria\"."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇬🇷",
+      "opciones": [
+        "Uruguay",
+        "Finlandia",
+        "Argentina",
+        "Grecia"
+      ],
+      "correcta": 3,
+      "dato": "Tiene nueve franjas azules y blancas."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇵🇹",
+      "opciones": [
+        "Brasil",
+        "Bolivia",
+        "España",
+        "Portugal"
+      ],
+      "correcta": 3,
+      "dato": "En el escudo aparece una esfera armilar, instrumento de navegación."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇮🇳",
+      "opciones": [
+        "India",
+        "Irlanda",
+        "Níger",
+        "Pakistán"
+      ],
+      "correcta": 0,
+      "dato": "La rueda azul del centro tiene 24 rayos."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇸🇪",
+      "opciones": [
+        "Dinamarca",
+        "Suecia",
+        "Finlandia",
+        "Noruega"
+      ],
+      "correcta": 1,
+      "dato": "Tiene una cruz amarilla sobre fondo azul."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇳🇴",
+      "opciones": [
+        "Noruega",
+        "Islandia",
+        "Suecia",
+        "Dinamarca"
+      ],
+      "correcta": 0,
+      "dato": "Tiene una cruz azul con borde blanco sobre fondo rojo."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇩🇰",
+      "opciones": [
+        "Suecia",
+        "Dinamarca",
+        "Suiza",
+        "Noruega"
+      ],
+      "correcta": 1,
+      "dato": "Se considera una de las banderas nacionales más antiguas en uso."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇮🇪",
+      "opciones": [
+        "Irlanda",
+        "Costa de Marfil",
+        "Italia",
+        "México"
+      ],
+      "correcta": 0,
+      "dato": "Sus colores son verde, blanco y naranja."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇦🇺",
+      "opciones": [
+        "Nueva Zelanda",
+        "Reino Unido",
+        "Australia",
+        "Fiyi"
+      ],
+      "correcta": 2,
+      "dato": "Incluye la constelación de la Cruz del Sur."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇬🇹",
+      "opciones": [
+        "El Salvador",
+        "Guatemala",
+        "Nicaragua",
+        "Argentina"
+      ],
+      "correcta": 1,
+      "dato": "En su escudo aparece el quetzal, ave nacional."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇺🇾",
+      "opciones": [
+        "Grecia",
+        "Argentina",
+        "Paraguay",
+        "Uruguay"
+      ],
+      "correcta": 3,
+      "dato": "Tiene nueve franjas y un sol llamado Sol de Mayo."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇻🇪",
+      "opciones": [
+        "Ecuador",
+        "Venezuela",
+        "Bolivia",
+        "Colombia"
+      ],
+      "correcta": 1,
+      "dato": "Tiene un arco de estrellas blancas en la franja azul."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇯🇲",
+      "opciones": [
+        "Sudáfrica",
+        "Tanzania",
+        "Jamaica",
+        "Brasil"
+      ],
+      "correcta": 2,
+      "dato": "Sus colores son verde, negro y amarillo, con una gran cruz en aspa."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇹🇷",
+      "opciones": [
+        "Turquía",
+        "Marruecos",
+        "Pakistán",
+        "Túnez"
+      ],
+      "correcta": 0,
+      "dato": "Tiene una media luna y una estrella blancas sobre fondo rojo."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇿🇦",
+      "opciones": [
+        "Jamaica",
+        "Kenia",
+        "Namibia",
+        "Sudáfrica"
+      ],
+      "correcta": 3,
+      "dato": "Tiene seis colores y una forma de \"Y\" horizontal."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇳🇿",
+      "opciones": [
+        "Nueva Zelanda",
+        "Australia",
+        "Fiyi",
+        "Reino Unido"
+      ],
+      "correcta": 0,
+      "dato": "Sus estrellas rojas forman la Cruz del Sur."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇪🇨",
+      "opciones": [
+        "Ecuador",
+        "Colombia",
+        "Bolivia",
+        "Venezuela"
+      ],
+      "correcta": 0,
+      "dato": "Se distingue de la de Colombia por su escudo con un cóndor."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇧🇴",
+      "opciones": [
+        "Ghana",
+        "Bolivia",
+        "Etiopía",
+        "Lituania"
+      ],
+      "correcta": 1,
+      "dato": "Tiene franjas roja, amarilla y verde."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇳🇮",
+      "opciones": [
+        "Honduras",
+        "Nicaragua",
+        "Argentina",
+        "El Salvador"
+      ],
+      "correcta": 1,
+      "dato": "Su escudo muestra cinco volcanes y un gorro frigio."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇭🇳",
+      "opciones": [
+        "Honduras",
+        "Nicaragua",
+        "El Salvador",
+        "Guatemala"
+      ],
+      "correcta": 0,
+      "dato": "Sus cinco estrellas recuerdan a la antigua unión centroamericana."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇮🇩",
+      "opciones": [
+        "Singapur",
+        "Polonia",
+        "Indonesia",
+        "Mónaco"
+      ],
+      "correcta": 2,
+      "dato": "Es casi idéntica a la de Mónaco, solo cambian las proporciones."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇵🇱",
+      "opciones": [
+        "Mónaco",
+        "Austria",
+        "Indonesia",
+        "Polonia"
+      ],
+      "correcta": 3,
+      "dato": "El blanco va arriba y el rojo abajo."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇦🇹",
+      "opciones": [
+        "Letonia",
+        "Canadá",
+        "Austria",
+        "Perú"
+      ],
+      "correcta": 2,
+      "dato": "Tiene franjas horizontales roja, blanca y roja."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇧🇪",
+      "opciones": [
+        "Alemania",
+        "Chad",
+        "Bélgica",
+        "Rumania"
+      ],
+      "correcta": 2,
+      "dato": "Sus franjas negra, amarilla y roja son verticales."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇳🇱",
+      "opciones": [
+        "Rusia",
+        "Países Bajos",
+        "Francia",
+        "Luxemburgo"
+      ],
+      "correcta": 1,
+      "dato": "Tiene franjas horizontales roja, blanca y azul."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇷🇺",
+      "opciones": [
+        "Rusia",
+        "Eslovenia",
+        "Países Bajos",
+        "Serbia"
+      ],
+      "correcta": 0,
+      "dato": "Tiene franjas horizontales blanca, azul y roja."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇨🇷",
+      "opciones": [
+        "Cuba",
+        "Tailandia",
+        "Panamá",
+        "Costa Rica"
+      ],
+      "correcta": 3,
+      "dato": "Se parece a la de Tailandia, pero con el escudo nacional."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el planeta más cercano al Sol?",
+      "opciones": [
+        "Venus",
+        "Mercurio",
+        "Tierra",
+        "Marte"
+      ],
+      "correcta": 1,
+      "dato": "Un año en Mercurio dura solo 88 días terrestres."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el planeta más grande del sistema solar?",
+      "opciones": [
+        "Neptuno",
+        "Saturno",
+        "Urano",
+        "Júpiter"
+      ],
+      "correcta": 3,
+      "dato": "En Júpiter cabrían más de mil planetas como la Tierra."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué planeta es conocido como \"el planeta rojo\"?",
+      "opciones": [
+        "Júpiter",
+        "Mercurio",
+        "Venus",
+        "Marte"
+      ],
+      "correcta": 3,
+      "dato": "Su color se debe al óxido de hierro de su suelo."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la fórmula química del agua?",
+      "opciones": [
+        "O₂",
+        "H₂O",
+        "CO₂",
+        "NaCl"
+      ],
+      "correcta": 1,
+      "dato": "Cada molécula de agua tiene dos átomos de hidrógeno y uno de oxígeno."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué gas necesitamos respirar para vivir?",
+      "opciones": [
+        "Dióxido de carbono",
+        "Helio",
+        "Nitrógeno",
+        "Oxígeno"
+      ],
+      "correcta": 3,
+      "dato": "Gran parte del oxígeno del planeta lo producen algas y plantas."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué gas toman las plantas del aire para hacer la fotosíntesis?",
+      "opciones": [
+        "Nitrógeno",
+        "Dióxido de carbono",
+        "Oxígeno",
+        "Hidrógeno"
+      ],
+      "correcta": 1,
+      "dato": "Con él, agua y luz, las plantas producen azúcares y liberan oxígeno."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿A qué temperatura hierve el agua al nivel del mar?",
+      "opciones": [
+        "100 °C",
+        "0 °C",
+        "212 °C",
+        "50 °C"
+      ],
+      "correcta": 0,
+      "dato": "En lugares altos, como la CDMX, el agua hierve a menos de 100 °C."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿A qué temperatura se congela el agua pura?",
+      "opciones": [
+        "-10 °C",
+        "0 °C",
+        "32 °C",
+        "10 °C"
+      ],
+      "correcta": 1,
+      "dato": "El hielo flota porque es menos denso que el agua líquida."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cuántos planetas tiene el sistema solar?",
+      "opciones": [
+        "8",
+        "9",
+        "10",
+        "7"
+      ],
+      "correcta": 0,
+      "dato": "Desde 2006 Plutón se clasifica como planeta enano."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama el satélite natural de la Tierra?",
+      "opciones": [
+        "Europa",
+        "La Luna",
+        "Titán",
+        "Fobos"
+      ],
+      "correcta": 1,
+      "dato": "La Luna siempre nos muestra la misma cara."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cuál de estos animales es un mamífero?",
+      "opciones": [
+        "Pulpo",
+        "Pingüino",
+        "Tiburón",
+        "Ballena"
+      ],
+      "correcta": 3,
+      "dato": "Las ballenas respiran aire y alimentan a sus crías con leche."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué fuerza nos mantiene sobre la superficie de la Tierra?",
+      "opciones": [
+        "Fricción",
+        "Magnetismo",
+        "Gravedad",
+        "Electricidad"
+      ],
+      "correcta": 2,
+      "dato": "En la Luna la gravedad es unas seis veces menor que en la Tierra."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama el proceso con el que las plantas fabrican su alimento usando luz?",
+      "opciones": [
+        "Fotosíntesis",
+        "Digestión",
+        "Evaporación",
+        "Respiración"
+      ],
+      "correcta": 0,
+      "dato": "La fotosíntesis ocurre sobre todo en las hojas."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿En qué estado de la materia se encuentra el hielo?",
+      "opciones": [
+        "Líquido",
+        "Plasma",
+        "Gaseoso",
+        "Sólido"
+      ],
+      "correcta": 3,
+      "dato": "El agua es de las pocas sustancias que vemos en la Tierra en los tres estados."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué científico formuló la ley de la gravitación universal?",
+      "opciones": [
+        "Galileo Galilei",
+        "Albert Einstein",
+        "Isaac Newton",
+        "Charles Darwin"
+      ],
+      "correcta": 2,
+      "dato": "Newton publicó sus leyes en 1687 en su obra Principia."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cuántas patas tiene un insecto adulto?",
+      "opciones": [
+        "10",
+        "8",
+        "6",
+        "4"
+      ],
+      "correcta": 2,
+      "dato": "Las arañas tienen ocho patas, por eso no son insectos."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué planeta es famoso por sus grandes anillos visibles?",
+      "opciones": [
+        "Saturno",
+        "Marte",
+        "Mercurio",
+        "Venus"
+      ],
+      "correcta": 0,
+      "dato": "Sus anillos están formados principalmente por hielo y roca."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el símbolo químico del oro?",
+      "opciones": [
+        "Or",
+        "Ag",
+        "Au",
+        "Go"
+      ],
+      "correcta": 2,
+      "dato": "Viene del latín aurum."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el símbolo químico del sodio?",
+      "opciones": [
+        "So",
+        "Na",
+        "Sd",
+        "S"
+      ],
+      "correcta": 1,
+      "dato": "Viene del latín natrium."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué científico propuso la teoría de la relatividad?",
+      "opciones": [
+        "Albert Einstein",
+        "Stephen Hawking",
+        "Nikola Tesla",
+        "Isaac Newton"
+      ],
+      "correcta": 0,
+      "dato": "Su fórmula E=mc² relaciona la masa con la energía."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué científico propuso la evolución por selección natural?",
+      "opciones": [
+        "Louis Pasteur",
+        "Charles Darwin",
+        "Jean-Baptiste Lamarck",
+        "Gregor Mendel"
+      ],
+      "correcta": 1,
+      "dato": "Darwin estudió animales de las islas Galápagos."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué científica ganó premios Nobel en Física y en Química?",
+      "opciones": [
+        "Marie Curie",
+        "Lise Meitner",
+        "Rosalind Franklin",
+        "Ada Lovelace"
+      ],
+      "correcta": 0,
+      "dato": "Marie Curie ganó el Nobel de Física en 1903 y el de Química en 1911."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la unidad de fuerza en el Sistema Internacional?",
+      "opciones": [
+        "Newton",
+        "Watt",
+        "Pascal",
+        "Joule"
+      ],
+      "correcta": 0,
+      "dato": "Lleva el nombre de Isaac Newton."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué partícula del átomo tiene carga eléctrica negativa?",
+      "opciones": [
+        "Electrón",
+        "Protón",
+        "Fotón",
+        "Neutrón"
+      ],
+      "correcta": 0,
+      "dato": "El electrón fue descubierto por J. J. Thomson en 1897."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el gas más abundante en la atmósfera de la Tierra?",
+      "opciones": [
+        "Argón",
+        "Nitrógeno",
+        "Oxígeno",
+        "Dióxido de carbono"
+      ],
+      "correcta": 1,
+      "dato": "El nitrógeno forma cerca del 78% del aire."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué científico descubrió la penicilina?",
+      "opciones": [
+        "Robert Koch",
+        "Edward Jenner",
+        "Alexander Fleming",
+        "Louis Pasteur"
+      ],
+      "correcta": 2,
+      "dato": "Fleming la descubrió en 1928 a partir de un moho."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el planeta más caliente del sistema solar?",
+      "opciones": [
+        "Júpiter",
+        "Marte",
+        "Venus",
+        "Mercurio"
+      ],
+      "correcta": 2,
+      "dato": "Su gruesa atmósfera atrapa el calor, aunque Mercurio esté más cerca del Sol."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué tipo de roca se forma cuando se enfría el magma?",
+      "opciones": [
+        "Sedimentaria",
+        "Metamórfica",
+        "Caliza",
+        "Ígnea"
+      ],
+      "correcta": 3,
+      "dato": "El granito y el basalto son rocas ígneas."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llama el paso del agua de líquido a gas?",
+      "opciones": [
+        "Fusión",
+        "Solidificación",
+        "Condensación",
+        "Evaporación"
+      ],
+      "correcta": 3,
+      "dato": "La evaporación es parte clave del ciclo del agua."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué parte de la célula vegetal realiza la fotosíntesis?",
+      "opciones": [
+        "Núcleo",
+        "Cloroplasto",
+        "Ribosoma",
+        "Mitocondria"
+      ],
+      "correcta": 1,
+      "dato": "Los cloroplastos contienen clorofila, que da el color verde."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué parte de la célula es conocida como su \"central de energía\"?",
+      "opciones": [
+        "Núcleo",
+        "Ribosoma",
+        "Mitocondria",
+        "Membrana"
+      ],
+      "correcta": 2,
+      "dato": "Las mitocondrias tienen su propio ADN."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la velocidad aproximada de la luz en el vacío?",
+      "opciones": [
+        "3,000,000 km/s",
+        "30,000 km/s",
+        "300 km/s",
+        "300,000 km/s"
+      ],
+      "correcta": 3,
+      "dato": "La luz del Sol tarda unos 8 minutos en llegar a la Tierra."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué científico descubrió las leyes de la herencia estudiando plantas de chícharo?",
+      "opciones": [
+        "Gregor Mendel",
+        "Alexander Fleming",
+        "Louis Pasteur",
+        "Charles Darwin"
+      ],
+      "correcta": 0,
+      "dato": "Por sus experimentos, Mendel es considerado el padre de la genética."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué metal es líquido a temperatura ambiente?",
+      "opciones": [
+        "Plomo",
+        "Estaño",
+        "Mercurio",
+        "Aluminio"
+      ],
+      "correcta": 2,
+      "dato": "Antes se usaba en termómetros, pero es tóxico."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el elemento químico más abundante del universo?",
+      "opciones": [
+        "Helio",
+        "Hidrógeno",
+        "Carbono",
+        "Oxígeno"
+      ],
+      "correcta": 1,
+      "dato": "Las estrellas, como el Sol, están formadas sobre todo de hidrógeno."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el símbolo químico del hierro?",
+      "opciones": [
+        "Ir",
+        "Hi",
+        "Fe",
+        "H"
+      ],
+      "correcta": 2,
+      "dato": "Viene del latín ferrum."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el número atómico del carbono?",
+      "opciones": [
+        "12",
+        "14",
+        "8",
+        "6"
+      ],
+      "correcta": 3,
+      "dato": "El número atómico indica cuántos protones tiene el núcleo."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Qué científico mexicano ganó el Premio Nobel de Química en 1995?",
+      "opciones": [
+        "Rodolfo Neri Vela",
+        "Guillermo González Camarena",
+        "Mario Molina",
+        "Luis Miramontes"
+      ],
+      "correcta": 2,
+      "dato": "Lo ganó por sus estudios sobre el daño a la capa de ozono."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Qué inventor mexicano creó un sistema de televisión a color?",
+      "opciones": [
+        "Guillermo González Camarena",
+        "Rodolfo Neri Vela",
+        "Luis Miramontes",
+        "Mario Molina"
+      ],
+      "correcta": 0,
+      "dato": "Patentó su sistema tricromático en 1940."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Quién fue el primer astronauta mexicano?",
+      "opciones": [
+        "Rodolfo Neri Vela",
+        "José Hernández",
+        "Mario Molina",
+        "Guillermo González Camarena"
+      ],
+      "correcta": 0,
+      "dato": "Viajó al espacio en 1985 a bordo del transbordador Atlantis."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Qué planeta gira prácticamente \"acostado\", con su eje muy inclinado?",
+      "opciones": [
+        "Saturno",
+        "Marte",
+        "Urano",
+        "Neptuno"
+      ],
+      "correcta": 2,
+      "dato": "El eje de Urano está inclinado unos 98 grados."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Qué ley dice que a toda acción corresponde una reacción igual y opuesta?",
+      "opciones": [
+        "Ley de Ohm",
+        "Primera ley de Newton",
+        "Segunda ley de Newton",
+        "Tercera ley de Newton"
+      ],
+      "correcta": 3,
+      "dato": "Por esta ley un cohete sube al expulsar gases hacia abajo."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el pH del agua pura a 25 °C?",
+      "opciones": [
+        "14",
+        "7",
+        "10",
+        "0"
+      ],
+      "correcta": 1,
+      "dato": "Un pH de 7 es neutro: ni ácido ni básico."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Quién escribió \"Don Quijote de la Mancha\"?",
+      "opciones": [
+        "Gabriel García Márquez",
+        "Francisco de Quevedo",
+        "Miguel de Cervantes",
+        "Lope de Vega"
+      ],
+      "correcta": 2,
+      "dato": "La primera parte se publicó en 1605."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Quién pintó la \"Mona Lisa\"?",
+      "opciones": [
+        "Leonardo da Vinci",
+        "Rafael",
+        "Miguel Ángel",
+        "Sandro Botticelli"
+      ],
+      "correcta": 0,
+      "dato": "La Mona Lisa se exhibe en el Museo del Louvre, en París."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Qué pintora mexicana es famosa por sus autorretratos y vivió en la Casa Azul?",
+      "opciones": [
+        "Leonora Carrington",
+        "Remedios Varo",
+        "Frida Kahlo",
+        "María Izquierdo"
+      ],
+      "correcta": 2,
+      "dato": "La Casa Azul está en Coyoacán y hoy es un museo."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Qué muralista mexicano estuvo casado con Frida Kahlo?",
+      "opciones": [
+        "José Clemente Orozco",
+        "David Alfaro Siqueiros",
+        "Diego Rivera",
+        "Rufino Tamayo"
+      ],
+      "correcta": 2,
+      "dato": "Rivera pintó murales en el Palacio Nacional."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Quién escribió \"Cien años de soledad\"?",
+      "opciones": [
+        "Gabriel García Márquez",
+        "Mario Vargas Llosa",
+        "Jorge Luis Borges",
+        "Julio Cortázar"
+      ],
+      "correcta": 0,
+      "dato": "La novela transcurre en el pueblo imaginario de Macondo."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Quién escribió \"Romeo y Julieta\"?",
+      "opciones": [
+        "Miguel de Cervantes",
+        "Charles Dickens",
+        "William Shakespeare",
+        "Molière"
+      ],
+      "correcta": 2,
+      "dato": "La obra transcurre en la ciudad italiana de Verona."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Quién pintó el techo de la Capilla Sixtina?",
+      "opciones": [
+        "Rafael",
+        "Leonardo da Vinci",
+        "Miguel Ángel",
+        "Donatello"
+      ],
+      "correcta": 2,
+      "dato": "Miguel Ángel trabajó en el techo de 1508 a 1512."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Qué instrumento musical tiene normalmente 88 teclas?",
+      "opciones": [
+        "Acordeón",
+        "Guitarra",
+        "Arpa",
+        "Piano"
+      ],
+      "correcta": 3,
+      "dato": "Las 88 teclas se dividen en 52 blancas y 36 negras."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Qué pintor pintó \"La noche estrellada\"?",
+      "opciones": [
+        "Vincent van Gogh",
+        "Johannes Vermeer",
+        "Claude Monet",
+        "Rembrandt"
+      ],
+      "correcta": 0,
+      "dato": "Van Gogh la pintó en 1889 en el sur de Francia."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Quién escribió \"El principito\"?",
+      "opciones": [
+        "Alejandro Dumas",
+        "Antoine de Saint-Exupéry",
+        "Victor Hugo",
+        "Julio Verne"
+      ],
+      "correcta": 1,
+      "dato": "Saint-Exupéry también era aviador."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Qué escritora novohispana es conocida como \"la Décima Musa\"?",
+      "opciones": [
+        "Elena Poniatowska",
+        "Sor Juana Inés de la Cruz",
+        "Laura Esquivel",
+        "Rosario Castellanos"
+      ],
+      "correcta": 1,
+      "dato": "Sor Juana escribió poesía, teatro y prosa en el siglo XVII."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Qué compositor alemán siguió componiendo a pesar de quedar sordo?",
+      "opciones": [
+        "Wolfgang Amadeus Mozart",
+        "Johann Sebastian Bach",
+        "Ludwig van Beethoven",
+        "Frédéric Chopin"
+      ],
+      "correcta": 2,
+      "dato": "Compuso su Novena Sinfonía cuando ya estaba sordo."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Cuántas cuerdas tiene una guitarra clásica?",
+      "opciones": [
+        "5",
+        "12",
+        "6",
+        "4"
+      ],
+      "correcta": 2,
+      "dato": "La guitarra clásica suele usar cuerdas de nailon."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Quién escribió \"Pedro Páramo\"?",
+      "opciones": [
+        "Octavio Paz",
+        "Juan Rulfo",
+        "Carlos Fuentes",
+        "Juan José Arreola"
+      ],
+      "correcta": 1,
+      "dato": "La novela transcurre en el pueblo de Comala."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿En qué ciudad se encuentra el Museo del Louvre?",
+      "opciones": [
+        "París",
+        "Madrid",
+        "Londres",
+        "Roma"
+      ],
+      "correcta": 0,
+      "dato": "Su entrada principal es una pirámide de vidrio."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Qué personaje de Cervantes lucha contra molinos creyendo que son gigantes?",
+      "opciones": [
+        "Sancho Panza",
+        "Don Quijote",
+        "El Lazarillo de Tormes",
+        "El Cid"
+      ],
+      "correcta": 1,
+      "dato": "Su fiel escudero se llama Sancho Panza."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Cuántas notas tiene la escala musical básica (do, re, mi...)?",
+      "opciones": [
+        "8",
+        "5",
+        "12",
+        "7"
+      ],
+      "correcta": 3,
+      "dato": "Las notas son do, re, mi, fa, sol, la y si."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué poeta mexicano ganó el Premio Nobel de Literatura en 1990?",
+      "opciones": [
+        "Carlos Fuentes",
+        "José Emilio Pacheco",
+        "Octavio Paz",
+        "Juan Rulfo"
+      ],
+      "correcta": 2,
+      "dato": "Entre sus obras está el ensayo \"El laberinto de la soledad\"."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿A quién se atribuye el poema épico \"La Odisea\"?",
+      "opciones": [
+        "Platón",
+        "Virgilio",
+        "Sófocles",
+        "Homero"
+      ],
+      "correcta": 3,
+      "dato": "Narra el largo regreso de Odiseo a su hogar en Ítaca."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué pintor español pintó el \"Guernica\"?",
+      "opciones": [
+        "Salvador Dalí",
+        "Francisco de Goya",
+        "Diego Velázquez",
+        "Pablo Picasso"
+      ],
+      "correcta": 3,
+      "dato": "Se exhibe en el Museo Reina Sofía de Madrid."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué pintor pintó \"La persistencia de la memoria\", con relojes derretidos?",
+      "opciones": [
+        "Joan Miró",
+        "Pablo Picasso",
+        "Salvador Dalí",
+        "René Magritte"
+      ],
+      "correcta": 2,
+      "dato": "Dalí fue una figura destacada del surrealismo."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué pintor español pintó \"Las meninas\"?",
+      "opciones": [
+        "Diego Velázquez",
+        "Bartolomé Esteban Murillo",
+        "Francisco de Goya",
+        "El Greco"
+      ],
+      "correcta": 0,
+      "dato": "Velázquez se pintó a sí mismo dentro del cuadro."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué compositor escribió la ópera \"La flauta mágica\"?",
+      "opciones": [
+        "Ludwig van Beethoven",
+        "Joseph Haydn",
+        "Franz Schubert",
+        "Wolfgang Amadeus Mozart"
+      ],
+      "correcta": 3,
+      "dato": "Mozart compuso desde que era niño."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué escritor creó al detective Sherlock Holmes?",
+      "opciones": [
+        "Arthur Conan Doyle",
+        "Edgar Allan Poe",
+        "Agatha Christie",
+        "Charles Dickens"
+      ],
+      "correcta": 0,
+      "dato": "Sherlock Holmes vivía en el 221B de Baker Street, en Londres."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué escritora creó al detective Hércules Poirot?",
+      "opciones": [
+        "Virginia Woolf",
+        "Agatha Christie",
+        "Jane Austen",
+        "Mary Shelley"
+      ],
+      "correcta": 1,
+      "dato": "Agatha Christie es una de las autoras más vendidas de la historia."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué poeta chileno escribió \"Veinte poemas de amor y una canción desesperada\"?",
+      "opciones": [
+        "Mario Benedetti",
+        "Vicente Huidobro",
+        "Nicanor Parra",
+        "Pablo Neruda"
+      ],
+      "correcta": 3,
+      "dato": "Neruda ganó el Premio Nobel de Literatura en 1971."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Quién escribió \"Oliver Twist\"?",
+      "opciones": [
+        "Charles Dickens",
+        "Lewis Carroll",
+        "Oscar Wilde",
+        "Mark Twain"
+      ],
+      "correcta": 0,
+      "dato": "Dickens también escribió \"Un cuento de Navidad\"."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué pintor dio nombre al impresionismo con su cuadro \"Impresión, sol naciente\"?",
+      "opciones": [
+        "Edgar Degas",
+        "Pierre-Auguste Renoir",
+        "Claude Monet",
+        "Édouard Manet"
+      ],
+      "correcta": 2,
+      "dato": "Monet pintó muchas veces los nenúfares de su jardín."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Quién compuso \"Las cuatro estaciones\"?",
+      "opciones": [
+        "Antonio Vivaldi",
+        "Johann Sebastian Bach",
+        "Georg Friedrich Händel",
+        "Wolfgang Amadeus Mozart"
+      ],
+      "correcta": 0,
+      "dato": "Son cuatro conciertos para violín, uno por cada estación."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué escritora mexicana escribió \"Como agua para chocolate\"?",
+      "opciones": [
+        "Ángeles Mastretta",
+        "Elena Poniatowska",
+        "Rosario Castellanos",
+        "Laura Esquivel"
+      ],
+      "correcta": 3,
+      "dato": "Cada capítulo de la novela empieza con una receta."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Quién escribió \"La Divina Comedia\"?",
+      "opciones": [
+        "Dante Alighieri",
+        "Virgilio",
+        "Francesco Petrarca",
+        "Giovanni Boccaccio"
+      ],
+      "correcta": 0,
+      "dato": "En la obra, el poeta Virgilio guía a Dante en su viaje."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué escultor francés creó \"El pensador\"?",
+      "opciones": [
+        "Antonio Canova",
+        "Auguste Rodin",
+        "Miguel Ángel",
+        "Gian Lorenzo Bernini"
+      ],
+      "correcta": 1,
+      "dato": "Rodin es uno de los escultores más famosos de Francia."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué recinto de la Ciudad de México es famoso por su telón de cristal?",
+      "opciones": [
+        "Castillo de Chapultepec",
+        "Palacio Nacional",
+        "Museo Soumaya",
+        "Palacio de Bellas Artes"
+      ],
+      "correcta": 3,
+      "dato": "El telón fue hecho por la casa Tiffany de Nueva York."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué poeta chilena fue la primera persona latinoamericana en ganar el Nobel de Literatura?",
+      "opciones": [
+        "Rosario Castellanos",
+        "Juana de Ibarbourou",
+        "Gabriela Mistral",
+        "Alfonsina Storni"
+      ],
+      "correcta": 2,
+      "dato": "Gabriela Mistral recibió el Nobel en 1945."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué muralista pintó \"El hombre de fuego\" en el Hospicio Cabañas?",
+      "opciones": [
+        "Rufino Tamayo",
+        "José Clemente Orozco",
+        "David Alfaro Siqueiros",
+        "Diego Rivera"
+      ],
+      "correcta": 1,
+      "dato": "El Hospicio Cabañas, en Guadalajara, es Patrimonio de la Humanidad."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué escritor ruso escribió \"Guerra y paz\"?",
+      "opciones": [
+        "Fiódor Dostoievski",
+        "León Tolstói",
+        "Aleksandr Pushkin",
+        "Antón Chéjov"
+      ],
+      "correcta": 1,
+      "dato": "Es una novela muy extensa sobre la época de Napoleón."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué escritor argentino escribió \"El Aleph\"?",
+      "opciones": [
+        "Ernesto Sabato",
+        "Julio Cortázar",
+        "Adolfo Bioy Casares",
+        "Jorge Luis Borges"
+      ],
+      "correcta": 3,
+      "dato": "Borges fue director de la Biblioteca Nacional de Argentina."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué escritor argentino escribió la novela \"Rayuela\"?",
+      "opciones": [
+        "Ernesto Sabato",
+        "Julio Cortázar",
+        "Jorge Luis Borges",
+        "Ricardo Piglia"
+      ],
+      "correcta": 1,
+      "dato": "Rayuela se puede leer en más de un orden de capítulos."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué pintor oaxaqueño es famoso por sus sandías y colores intensos?",
+      "opciones": [
+        "Rufino Tamayo",
+        "Diego Rivera",
+        "Francisco Toledo",
+        "Gerardo Murillo"
+      ],
+      "correcta": 0,
+      "dato": "En Oaxaca hay un museo con su colección de arte prehispánico."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué compositor mexicano escribió la obra orquestal \"Huapango\"?",
+      "opciones": [
+        "José Pablo Moncayo",
+        "Carlos Chávez",
+        "Silvestre Revueltas",
+        "Agustín Lara"
+      ],
+      "correcta": 0,
+      "dato": "Se estrenó en 1941 y se basa en sones veracruzanos."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué escritor mexicano escribió \"La región más transparente\"?",
+      "opciones": [
+        "Octavio Paz",
+        "Juan José Arreola",
+        "Juan Rulfo",
+        "Carlos Fuentes"
+      ],
+      "correcta": 3,
+      "dato": "Fue la primera novela de Carlos Fuentes, publicada en 1958."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Quién escribió \"Platero y yo\"?",
+      "opciones": [
+        "Federico García Lorca",
+        "Juan Ramón Jiménez",
+        "Antonio Machado",
+        "Gustavo Adolfo Bécquer"
+      ],
+      "correcta": 1,
+      "dato": "Platero es un burrito; el autor ganó el Nobel en 1956."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué pintor mexicano del siglo XIX es famoso por sus paisajes del Valle de México?",
+      "opciones": [
+        "Gerardo Murillo",
+        "José María Velasco",
+        "Hermenegildo Bustos",
+        "Saturnino Herrán"
+      ],
+      "correcta": 1,
+      "dato": "Velasco pintó con detalle volcanes, valles y cielos mexicanos."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué órgano bombea la sangre a todo el cuerpo?",
+      "opciones": [
+        "Corazón",
+        "Riñones",
+        "Pulmones",
+        "Hígado"
+      ],
+      "correcta": 0,
+      "dato": "El corazón late alrededor de 100,000 veces al día."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Cuántos pulmones tiene una persona?",
+      "opciones": [
+        "2",
+        "1",
+        "4",
+        "3"
+      ],
+      "correcta": 0,
+      "dato": "El pulmón izquierdo es un poco más pequeño para dejar espacio al corazón."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué órgano nos permite pensar y controla el resto del cuerpo?",
+      "opciones": [
+        "Estómago",
+        "Cerebro",
+        "Hígado",
+        "Corazón"
+      ],
+      "correcta": 1,
+      "dato": "El cerebro está formado por miles de millones de neuronas."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el órgano más grande del cuerpo humano?",
+      "opciones": [
+        "Intestino",
+        "Hígado",
+        "Piel",
+        "Pulmones"
+      ],
+      "correcta": 2,
+      "dato": "La piel nos protege de microbios, del sol y de la pérdida de agua."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Cuántos dientes tiene la dentadura adulta completa?",
+      "opciones": [
+        "32",
+        "36",
+        "28",
+        "20"
+      ],
+      "correcta": 0,
+      "dato": "Incluye las cuatro muelas del juicio."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Cuántos dientes de leche tiene normalmente un niño?",
+      "opciones": [
+        "32",
+        "20",
+        "24",
+        "16"
+      ],
+      "correcta": 1,
+      "dato": "Los dientes de leche empiezan a caer alrededor de los 6 años."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué sentido usamos con la nariz?",
+      "opciones": [
+        "Oído",
+        "Olfato",
+        "Tacto",
+        "Gusto"
+      ],
+      "correcta": 1,
+      "dato": "El olfato influye mucho en el sabor de lo que comemos."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el hueso más largo del cuerpo?",
+      "opciones": [
+        "Fémur",
+        "Radio",
+        "Tibia",
+        "Húmero"
+      ],
+      "correcta": 0,
+      "dato": "El fémur es el hueso del muslo."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué parte del ojo le da su color?",
+      "opciones": [
+        "Córnea",
+        "Retina",
+        "Iris",
+        "Pupila"
+      ],
+      "correcta": 2,
+      "dato": "El iris cambia el tamaño de la pupila según la luz."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Cuántos sentidos básicos se enseñan tradicionalmente?",
+      "opciones": [
+        "7",
+        "6",
+        "5",
+        "4"
+      ],
+      "correcta": 2,
+      "dato": "Son vista, oído, olfato, gusto y tacto."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿En qué parte del cuerpo empieza la digestión?",
+      "opciones": [
+        "En el esófago",
+        "En el estómago",
+        "En el intestino delgado",
+        "En la boca"
+      ],
+      "correcta": 3,
+      "dato": "La saliva empieza a descomponer algunos alimentos."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué órganos filtran la sangre y producen la orina?",
+      "opciones": [
+        "Bazo",
+        "Riñones",
+        "Pulmones",
+        "Intestinos"
+      ],
+      "correcta": 1,
+      "dato": "Tenemos dos riñones con forma de frijol."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué tubo lleva el alimento de la boca al estómago?",
+      "opciones": [
+        "Laringe",
+        "Esófago",
+        "Intestino",
+        "Tráquea"
+      ],
+      "correcta": 1,
+      "dato": "El esófago mueve el alimento con contracciones, aunque estés de cabeza."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué conjunto de huesos protege al cerebro?",
+      "opciones": [
+        "Columna vertebral",
+        "Cráneo",
+        "Pelvis",
+        "Costillas"
+      ],
+      "correcta": 1,
+      "dato": "Los huesos del cráneo de un bebé aún no están unidos del todo."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué huesos protegen al corazón y a los pulmones?",
+      "opciones": [
+        "Vértebras",
+        "Clavículas",
+        "Costillas",
+        "Omóplatos"
+      ],
+      "correcta": 2,
+      "dato": "Las costillas se mueven un poco cada vez que respiramos."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué células de la sangre transportan el oxígeno?",
+      "opciones": [
+        "Glóbulos blancos",
+        "Neuronas",
+        "Glóbulos rojos",
+        "Plaquetas"
+      ],
+      "correcta": 2,
+      "dato": "Los glóbulos rojos también se llaman eritrocitos."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué órganos usamos para respirar?",
+      "opciones": [
+        "Pulmones",
+        "Estómago",
+        "Riñones",
+        "Hígado"
+      ],
+      "correcta": 0,
+      "dato": "En los pulmones el oxígeno pasa del aire a la sangre."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Cuántos huesos tiene aproximadamente una persona adulta?",
+      "opciones": [
+        "150",
+        "106",
+        "306",
+        "206"
+      ],
+      "correcta": 3,
+      "dato": "Un bebé nace con más huesos, que se van uniendo al crecer."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el hueso más pequeño del cuerpo humano?",
+      "opciones": [
+        "Rótula",
+        "Falange",
+        "Martillo",
+        "Estribo"
+      ],
+      "correcta": 3,
+      "dato": "El estribo está dentro del oído y mide unos 3 milímetros."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué células de la sangre defienden al cuerpo de infecciones?",
+      "opciones": [
+        "Plaquetas",
+        "Neuronas",
+        "Glóbulos rojos",
+        "Glóbulos blancos"
+      ],
+      "correcta": 3,
+      "dato": "También se llaman leucocitos."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué órgano produce la bilis?",
+      "opciones": [
+        "Estómago",
+        "Páncreas",
+        "Hígado",
+        "Bazo"
+      ],
+      "correcta": 2,
+      "dato": "La bilis ayuda a digerir las grasas."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué órgano produce la insulina?",
+      "opciones": [
+        "Estómago",
+        "Hígado",
+        "Riñón",
+        "Páncreas"
+      ],
+      "correcta": 3,
+      "dato": "La insulina ayuda a controlar el azúcar en la sangre."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Cuántas cavidades tiene el corazón humano?",
+      "opciones": [
+        "4",
+        "2",
+        "3",
+        "6"
+      ],
+      "correcta": 0,
+      "dato": "Son dos aurículas y dos ventrículos."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué vasos sanguíneos llevan la sangre desde el corazón hacia el cuerpo?",
+      "opciones": [
+        "Vasos linfáticos",
+        "Capilares",
+        "Venas",
+        "Arterias"
+      ],
+      "correcta": 3,
+      "dato": "La aorta es la arteria más grande del cuerpo."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué tejido une los músculos con los huesos?",
+      "opciones": [
+        "Tendones",
+        "Cartílagos",
+        "Ligamentos",
+        "Nervios"
+      ],
+      "correcta": 0,
+      "dato": "El tendón de Aquiles está en el talón."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué vitamina produce la piel cuando recibe luz solar?",
+      "opciones": [
+        "Vitamina A",
+        "Vitamina B12",
+        "Vitamina D",
+        "Vitamina C"
+      ],
+      "correcta": 2,
+      "dato": "La vitamina D ayuda a absorber el calcio."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué mineral es muy importante para tener huesos y dientes fuertes?",
+      "opciones": [
+        "Potasio",
+        "Calcio",
+        "Hierro",
+        "Sodio"
+      ],
+      "correcta": 1,
+      "dato": "La leche, las sardinas y la tortilla de maíz nixtamalizado aportan calcio."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué capa del ojo recibe la luz y forma la imagen?",
+      "opciones": [
+        "Iris",
+        "Retina",
+        "Córnea",
+        "Pupila"
+      ],
+      "correcta": 1,
+      "dato": "La retina envía la imagen al cerebro por el nervio óptico."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿En qué órgano se absorbe la mayor parte de los nutrientes?",
+      "opciones": [
+        "Intestino grueso",
+        "Intestino delgado",
+        "Estómago",
+        "Hígado"
+      ],
+      "correcta": 1,
+      "dato": "El intestino delgado mide varios metros de largo."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué músculo separa el tórax del abdomen y nos ayuda a respirar?",
+      "opciones": [
+        "Diafragma",
+        "Bíceps",
+        "Trapecio",
+        "Deltoides"
+      ],
+      "correcta": 0,
+      "dato": "El hipo ocurre por contracciones involuntarias del diafragma."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llama el hueso que cubre la rodilla por delante?",
+      "opciones": [
+        "Fémur",
+        "Peroné",
+        "Rótula",
+        "Clavícula"
+      ],
+      "correcta": 2,
+      "dato": "La rótula también se llama patela."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué pigmento da color a la piel?",
+      "opciones": [
+        "Clorofila",
+        "Queratina",
+        "Hemoglobina",
+        "Melanina"
+      ],
+      "correcta": 3,
+      "dato": "La melanina ayuda a proteger la piel de los rayos del sol."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la célula básica del sistema nervioso?",
+      "opciones": [
+        "Glóbulo rojo",
+        "Neurona",
+        "Plaqueta",
+        "Célula muscular"
+      ],
+      "correcta": 1,
+      "dato": "Las neuronas se comunican con señales eléctricas y químicas."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué parte de la sangre ayuda a detener el sangrado de una herida?",
+      "opciones": [
+        "Glóbulos blancos",
+        "Plasma",
+        "Plaquetas",
+        "Glóbulos rojos"
+      ],
+      "correcta": 2,
+      "dato": "Las plaquetas se juntan y forman un tapón."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Qué proteína de los glóbulos rojos transporta el oxígeno?",
+      "opciones": [
+        "Hemoglobina",
+        "Melanina",
+        "Queratina",
+        "Insulina"
+      ],
+      "correcta": 0,
+      "dato": "La hemoglobina contiene hierro, que da el color rojo a la sangre."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Qué proteína forma el cabello y las uñas?",
+      "opciones": [
+        "Melanina",
+        "Colágeno",
+        "Hemoglobina",
+        "Queratina"
+      ],
+      "correcta": 3,
+      "dato": "La queratina también forma los cuernos y las plumas de otros animales."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Qué glándula del cuello regula el metabolismo?",
+      "opciones": [
+        "Tiroides",
+        "Timo",
+        "Hipófisis",
+        "Suprarrenal"
+      ],
+      "correcta": 0,
+      "dato": "La tiroides tiene forma de mariposa."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Qué parte del encéfalo coordina el equilibrio y el movimiento?",
+      "opciones": [
+        "Lóbulo frontal",
+        "Hipotálamo",
+        "Bulbo raquídeo",
+        "Cerebelo"
+      ],
+      "correcta": 3,
+      "dato": "El cerebelo está en la parte posterior de la cabeza, debajo del cerebro."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Cuántos pares de costillas tiene normalmente el ser humano?",
+      "opciones": [
+        "12",
+        "14",
+        "10",
+        "24"
+      ],
+      "correcta": 0,
+      "dato": "En total son 24 costillas, 12 de cada lado."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Qué órgano almacena la bilis?",
+      "opciones": [
+        "Páncreas",
+        "Vesícula biliar",
+        "Bazo",
+        "Vejiga"
+      ],
+      "correcta": 1,
+      "dato": "La vesícula libera la bilis al intestino cuando comemos grasas."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Qué sistema del cuerpo forman las glándulas que producen hormonas?",
+      "opciones": [
+        "Sistema linfático",
+        "Sistema nervioso",
+        "Sistema endocrino",
+        "Sistema digestivo"
+      ],
+      "correcta": 2,
+      "dato": "Las hormonas viajan por la sangre como mensajeros químicos."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Qué ácido produce el estómago para digerir los alimentos?",
+      "opciones": [
+        "Ácido acético",
+        "Ácido cítrico",
+        "Ácido clorhídrico",
+        "Ácido sulfúrico"
+      ],
+      "correcta": 2,
+      "dato": "Una capa de moco protege al estómago de su propio ácido."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Qué tejido une a los huesos entre sí en las articulaciones?",
+      "opciones": [
+        "Nervios",
+        "Músculos",
+        "Tendones",
+        "Ligamentos"
+      ],
+      "correcta": 3,
+      "dato": "Un esguince es una lesión de los ligamentos."
+    }
+  ]
+}
