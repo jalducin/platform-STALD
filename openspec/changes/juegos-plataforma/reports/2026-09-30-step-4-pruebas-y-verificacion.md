@@ -43,6 +43,23 @@
   - 0 correos en `juegos/datos`.
   - Lotería: "The Death" → "Death" y "The Brave Man" → "The Brave One".
 
+## Producción (5.1)
+- **Antes:** el repo de datos no tenía `juegos/`.
+- **Curl a `https://stald.jalducin.deno.net`:**
+  - partida con un correo desconocido → 403 `no_registrado`;
+  - `/juegos/invitados` como alumna → 403 `solo_admin`;
+  - invitado sin aceptar → 400 `debe_aceptar`;
+  - juego inválido → 400;
+  - partida del admin con 999999 → se guardaron 2000 (tope de `mente-calculo`);
+  - registro del invitado de prueba → 200, visible en el ranking y en `/juegos/invitados` para el admin;
+  - `/perfil` del invitado → `invitado: true`, solo Juegos.
+- **Restauración:**
+  - Se borraron `juegos/invitados.json` y `juegos/semanas/2026-09-28/admin.json`, que solo tenían la
+    prueba.
+  - Después: ranking con 0 jugadores y el invitado de prueba ya no se reconoce.
+- **Revisión de solo lectura en Pages (Marisol):** 14 juegos, 9 maratones y portal con Inglés y Juegos
+  como enlaces; 0 envíos.
+
 ## Verificación de estado
 - Sin cambios en Notion. En el repo de datos solo cambió el README.
 - Las pruebas usaron almacén en memoria y copias que se borraron, y el servidor local se detuvo.

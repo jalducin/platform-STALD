@@ -35,7 +35,7 @@
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Producción tras el merge:
+- [x] 5.1 Producción tras el merge:
   - curl de ranking, partida con tope, invitado inválido, no registrado e invitados sin ser admin → 403;
   - una partida y un invitado de prueba;
   - **restaurar**: borrar del repo de datos la partida y el invitado de prueba.
@@ -43,4 +43,4 @@
 ## 6. Documentación (OBLIGATORIO)
 
 - [x] 6.1 `docs/frontend-standards.md` (juegos y datos JSON), `docs/backend-standards.md` (rutas `/juegos`), `docs/data-model.md` (`juegos/` y `juegos/datos`), README del repo de datos, `openspec/project.md`
-- [ ] 6.2 Commit, push, PR y merge a `main`
+- [x] 6.2 Commit, push, PR y merge a `main` (PR #25)
