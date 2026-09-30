@@ -43,6 +43,18 @@
 - **Enlace 🎮 Juegos:** 2/2. Desde `ingles.html` y `secundaria.html` abre los juegos con sesión y conserva
   `?api=`.
 
+## Producción (4.1)
+- **Curl a `https://stald.jalducin.deno.net`:**
+  - crear partida de cultura como admin → código KYBS;
+  - juego no permitido (`una`) → 400;
+  - sala inexistente → 404;
+  - una alumna se une → 200; intenta empezar → 403 `solo_host`;
+  - el host empieza → `inicio` = ahora + 5000 ms;
+  - respuesta con 999 puntos → se guardan 200;
+  - estado para la alumna: 2 jugadores, sin correos, `soyHost: false`.
+- **Restauración:** se borró `juegos/salas/KYBS/` del repo de datos. `juegos/` quedó vacío. No se
+  enviaron partidas al ranking.
+
 ## Verificación de estado
 - Sin cambios en datos reales. En el repo de datos solo cambió el README.
 - Las copias en memoria se borraron y el servidor local se detuvo.

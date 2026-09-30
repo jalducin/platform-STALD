@@ -33,11 +33,11 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Producción tras el merge:
+- [x] 4.1 Producción tras el merge:
   - curl: crear, unirse, empezar, respuesta, estado y errores;
   - **restaurar**: borrar la sala y las partidas de prueba del repo de datos.
 
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/backend-standards.md` (rutas de sala), `docs/data-model.md` (`juegos/salas/`), README del repo de datos
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #31)
