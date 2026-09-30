@@ -25,7 +25,7 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Tras el merge:
+- [x] 4.1 Tras el merge:
   - curl de partida con tope de `loteria` como admin;
   - **restaurar** borrando la partida de prueba;
   - revisión de solo lectura en Pages: la categoría Clásicos con 4 juegos.
@@ -33,4 +33,4 @@
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/backend-standards.md` (catálogo) y `docs/data-model.md` (`basta.json`, `loteria.json`)
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #27)
