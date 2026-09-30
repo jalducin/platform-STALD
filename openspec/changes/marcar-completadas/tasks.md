@@ -25,15 +25,15 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Producción, tras el merge:
+- [x] 4.1 Producción, tras el merge:
   - curl de alumna sobre fila ajena → 403;
   - sin correo → 400;
   - ciclo marcar y desmarcar como admin sobre una fila de prueba, verificando Notion;
   - **restaurar**: la fila queda como estaba y se quitan del repo de datos las entradas de avance de la
     prueba.
-- [ ] 4.2 La actividad del 29 aparece como hecha para quien envió el intento 1 (lista y conteo), sin enviar nada
+- [x] 4.2 La actividad del 29 aparece como hecha para quien envió el intento 1 (lista y conteo), sin enviar nada
 
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/backend-standards.md` (ruta nueva), `docs/data-model.md` (`id` en filas y `avance/`), README del repo de datos
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #21)
