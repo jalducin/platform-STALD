@@ -136,6 +136,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
 - `juegos/semanas/<lunes>/<id-jugador>.json`: partidas de la semana.
   - `{ id, nombre, tipo, partidas: [{ juego, puntos, aciertos, total, segundos, en }], mejores, total }`.
   - Sin correos. Guarda las últimas 300 partidas.
+- `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots }` y
+  `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta? }`.
+  - Partidas multijugador. Cada jugador escribe solo su archivo y no hay correos.
+  - Las salas vencen a las 3 h y se pueden borrar sin afectar el ranking.
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.
   - Son los únicos correos que guarda el repo de datos. El invitado aceptó el aviso al registrarse.
   - Solo el admin los ve (`/juegos/invitados`).

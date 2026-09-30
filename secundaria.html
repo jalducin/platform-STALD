@@ -84,7 +84,7 @@
 </style>
 </head>
 <body>
-  <a class="home-link" href="./">← Inicio</a>
+  <a class="home-link" href="./">← Inicio</a> <a class="home-link games-link" href="juegos.html" style="margin-left:12px">🎮 Juegos</a>
   <h1>📚 Tareas pendientes</h1>
   <div class="subtitle">Estudio Secundaria — actualizado desde Notion</div>
 
@@ -129,7 +129,7 @@
   // Claves de sesión compartidas con el portal (index.html): solo el correo.
   const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
   // "← Inicio" conserva ?api= (pruebas locales).
-  (() => { const api = new URLSearchParams(location.search).get('api'); const l = document.querySelector('.home-link'); if (api && l) l.href = './?api=' + encodeURIComponent(api); })();
+  (() => { const api = new URLSearchParams(location.search).get('api'); const l = document.querySelector('.home-link'); if (api && l) l.href = './?api=' + encodeURIComponent(api); const g = document.querySelector('.games-link'); if (api && g) g.href = 'juegos.html?api=' + encodeURIComponent(api); })();
 
   const loginEl = document.getElementById('login');
   const appEl = document.getElementById('app');

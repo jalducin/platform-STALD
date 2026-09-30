@@ -3,6 +3,7 @@
 // de invitados, solo para análisis del admin). Ver openspec: juegos-plataforma.
 import { mxToday, slugAlumno } from "./motor.ts";
 import type { Store } from "./store.ts";
+import { handleSalas } from "./salas.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -110,8 +111,10 @@ export interface DepsJuegos {
 }
 
 const cache = new Map<string, { t: number; v: unknown }>();
+const cacheJugadores = new Map<string, { t: number; j: Jugador; invitados: Invitados }>();
 export function clearCacheJuegos() {
   cache.clear();
+  cacheJugadores.clear();
 }
 
 async function leerSemana(store: Store, lunes: string): Promise<Semana[]> {
@@ -138,6 +141,9 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
   const hoy = deps.hoy ? deps.hoy() : mxToday();
   const ahora = deps.ahora ? deps.ahora() : new Date().toISOString();
   const store = deps.store;
+  // Identidad en caché 60 s: las partidas sondean cada pocos segundos y no deben golpear Notion cada vez.
+  const memo = cacheJugadores.get(email);
+  if (sub !== "/invitado" && sub !== "/invitados" && memo && Date.now() - memo.t < 60_000) return await rutasDeJugador(req, sub, memo.j, deps, hoy, ahora, json, memo.invitados);
   const invDoc = await store.get<Invitados>(RUTA_INVITADOS);
   const invitados = invDoc?.data ?? {};
   const [ingles, secundaria] = await Promise.all([deps.filasIngles(), deps.filasSecundaria()]);
@@ -169,7 +175,16 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
 
   const jugador = await resolverJugador(email, deps.admin, ingles, secundaria, invitados);
   if (!jugador) return json({ error: "no_registrado" }, 403);
+  cacheJugadores.set(email, { t: Date.now(), j: jugador, invitados });
+  return await rutasDeJugador(req, sub, jugador, deps, hoy, ahora, json, invitados);
+}
+
+async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps: DepsJuegos, hoy: string, ahora: string, json: Json, invitados: Invitados): Promise<Response> {
+  const store = deps.store;
   const lunes = lunesDe(hoy);
+
+  // /juegos/sala… → partidas multijugador (server/salas.ts)
+  if (sub === "/sala" || sub.startsWith("/sala/")) return await handleSalas(req, sub.slice("/sala".length), jugador, store, ahora, json);
 
   // POST /juegos/partida → guardar puntos (con tope) y actualizar el mejor por juego
   if (sub === "/partida" && req.method === "POST") {
