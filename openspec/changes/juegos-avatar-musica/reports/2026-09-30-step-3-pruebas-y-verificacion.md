@@ -30,6 +30,16 @@
 - **Regresiones tras la corrección:** partidas 15/15, Lotería 10/10, juegos 29/29, clásicos 10/10,
   resultados 8/8, enlace 8/8 y últimas 9/9.
 
+## Producción (4.1)
+- `/juegos/yo` del admin incluye su avatar por defecto (🌮, #f97316) y las listas.
+- `POST /juegos/avatar` con un valor fuera de la lista → 400 `avatar_invalido`.
+- El avatar válido (el mismo por defecto) → 200. Con curl desde Git Bash el emoji llegaba mal codificado y
+  daba 400; con JSON UTF-8 desde Python, 200. Era un problema de la terminal, no del servidor.
+- El ranking de producción muestra el avatar de cada jugador.
+- **Restauración:**
+  - Se borró `juegos/perfiles/admin.json`, así que el avatar vuelve al de por defecto, que es idéntico.
+  - La semana del admin quedó con `avatar` igual al de por defecto, sin cambio visible.
+
 ## Verificación de estado
 - Sin datos reales modificados. En el repo de datos solo cambió el README.
 - Las copias se borraron y el servidor local se detuvo.
