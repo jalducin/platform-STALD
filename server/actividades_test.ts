@@ -27,29 +27,30 @@ Deno.test({ name: "contenido de la semana 1 válido", ignore, fn: async () => {
   assert((ref!.banco || []).length >= 60, "el refuerzo reúne los bancos");
 }});
 
-Deno.test({ name: "flujo: teoría → intento 1 → intento 2 (distinto) → sin intentos", ignore, fn: async () => {
+Deno.test({ name: "flujo: teoría → intento 1 → intento 2 (corrección, mismos ejercicios) → sin intentos", ignore, fn: async () => {
   clearCache();
   const store = await MemoryStore.fromDir(DATA_DIR!);
-  const marisol = { isAdmin: false, alumno: "Marisol" };
+  // Alumno de prueba sin resultados en el repo de datos (los reales ya tienen intentos).
+  const marisol = { isAdmin: false, alumno: "Prueba Integracion" };
   const g1 = await call(store, "GET", "/act-2026-09-29", marisol);
   assertEquals(g1.status, 200);
   assertEquals(g1.body.intento, 1);
   assert(g1.body.teoria.length > 0 && g1.body.tips.length > 0);
   assertEquals(JSON.stringify(g1.body.preguntas).includes("aceptadas") || JSON.stringify(g1.body.preguntas).includes('"correcta"'), false);
   const it = (await loadItem(store, "act-2026-09-29")) as Item;
-  const sel1 = selectQuestions(it.banco!, it, slugAlumno("Marisol"), 1);
+  const sel1 = selectQuestions(it.banco!, it, slugAlumno("Prueba Integracion"), 1);
   assertEquals(g1.body.preguntas.map((p: { id: string }) => p.id), sel1.map((q) => q.id));
   // intento 1: todo mal
   const p1 = await call(store, "POST", "/act-2026-09-29", marisol, { intento: 1, respuestas: {} });
   assertEquals(p1.body.guardado, true);
   assertEquals(p1.body.calificacion.porcentaje, 0);
   assertEquals(p1.body.restantes, 1);
-  // intento 2: selección distinta, todo bien
+  // intento 2: corrección con los mismos ejercicios; corrige todo
   const g2 = await call(store, "GET", "/act-2026-09-29", marisol);
   assertEquals(g2.body.intento, 2);
-  const sel2 = selectQuestions(it.banco!, it, slugAlumno("Marisol"), 2);
-  assert(JSON.stringify(sel1.map((q) => q.id)) !== JSON.stringify(sel2.map((q) => q.id)));
-  const p2 = await call(store, "POST", "/act-2026-09-29", marisol, { intento: 2, respuestas: correctas(sel2) });
+  assertEquals(g2.body.preguntas.map((p: { id: string }) => p.id), sel1.map((q) => q.id));
+  assertEquals(Object.keys(g2.body.correccion.anteriores).length, sel1.length);
+  const p2 = await call(store, "POST", "/act-2026-09-29", marisol, { intento: 2, respuestas: correctas(sel1) });
   assertEquals(p2.body.calificacion.porcentaje, 100);
   assertEquals(p2.body.mejor.porcentaje, 100);
   // tercer intento
@@ -60,7 +61,8 @@ Deno.test({ name: "flujo: teoría → intento 1 → intento 2 (distinto) → sin
   const lista = await call(store, "GET", "", marisol);
   const act = lista.body.items.find((i: { id: string }) => i.id === "act-2026-09-29");
   assertEquals([act.estado, act.intentosUsados, act.mejor.porcentaje], ["completo", 2, 100]);
-  const diag = lista.body.items.find((i: { id: string }) => i.id === "diagnostico-a1");
+  const deMarisol = await call(store, "GET", "", { isAdmin: false, alumno: "Marisol" });
+  const diag = deMarisol.body.items.find((i: { id: string }) => i.id === "diagnostico-a1");
   assertEquals([diag.estado, diag.mejor.porcentaje], ["completo", 70]); // resultado migrado
 }});
 

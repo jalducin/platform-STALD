@@ -312,12 +312,36 @@ export function addIntento(prev: Resultado | null, it: Item, alumno: string, int
   return r;
 }
 
+// Intento de corrección (actividad, refuerzo, reto): mismos ejercicios del intento previo; las correctas
+// quedan fijas y de las falladas solo se devuelve lo que contestó el alumno o alumna (texto).
+export interface Correccion {
+  preguntas: Ejercicio[];
+  fijas: Record<string, unknown>;
+  anteriores: Record<string, string>;
+}
+
+export function correccionDe(it: Item, previo: Intento | undefined): Correccion | null {
+  if (it.tipo === "examen" || !previo) return null;
+  const porId = new Map((it.banco || []).map((e) => [e.id, e]));
+  const preguntas = (previo.preguntas || []).map((id) => porId.get(id)).filter((e): e is Ejercicio => !!e);
+  if (!preguntas.length) return null;
+  const fijas: Record<string, unknown> = {}, anteriores: Record<string, string> = {};
+  for (const e of preguntas) {
+    const r = previo.respuestas[e.id];
+    if (esCorrecta(e, r)) fijas[e.id] = r;
+    else anteriores[e.id] = textoRespuesta(e, r) ?? "Sin responder";
+  }
+  return { preguntas, fijas, anteriores };
+}
+
 export type EstadoItem = "proximamente" | "disponible" | "en-curso" | "completo";
 
 export function estadoItem(it: Item, hoy: string, r: Resultado | null): EstadoItem {
   if (!tieneReto(it)) return hoy >= it.disponibleDesde ? "disponible" : "proximamente";
   const usados = r?.intentos.length || 0;
   if (usados >= maxIntentos(it)) return "completo";
+  // Sin nada que corregir: una actividad con 100 % queda completa.
+  if (it.tipo !== "examen" && r?.intentos.at(-1)?.calificacion.porcentaje === 100) return "completo";
   if (hoy < it.disponibleDesde) return "proximamente";
   return usados > 0 ? "en-curso" : "disponible";
 }

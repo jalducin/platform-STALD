@@ -112,4 +112,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   preguntas, respuestas, calificacion }], mejor }`. Cuenta el **mejor** intento. Sin correos.
 
 Selección de ejercicios: determinista por `id|slug|intento` y repartida por tema. Así toca la misma clase
-para todos, pero con ejercicios distintos para cada alumno o alumna y en cada intento.
+para todos, pero con ejercicios distintos para cada alumno o alumna.
+
+**Intento de corrección** (actividad, refuerzo y reto del Meet): el intento 2 trae los **mismos**
+ejercicios del intento 1 (`intentos[].preguntas`). Las correctas quedan fijas y solo se contestan las
+falladas; si el último intento tiene 100 %, el elemento queda completo. El examen tiene 1 intento; si
+tuviera más, cada uno sería una selección nueva.
