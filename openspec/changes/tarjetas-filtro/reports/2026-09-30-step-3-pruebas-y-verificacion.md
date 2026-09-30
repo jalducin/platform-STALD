@@ -25,6 +25,9 @@
 - **Regresiones:** semana 16/16, corrección 11/11, guion 8/8, presentación 8/8.
 - Captura revisada: `filtro-atrasadas.png`.
 
+## Producción (4.1)
+- E2E de solo lectura en GitHub Pages: 11/11. Se usó el correo de Marisol y el del admin; 0 envíos al servidor.
+
 ## Verificación de estado
 - Solo frontend; no hay cambios de servidor ni de datos. Las pruebas usaron copias en memoria, que se
   borraron, y el servidor local se detuvo.
