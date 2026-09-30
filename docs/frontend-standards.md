@@ -56,6 +56,11 @@ Cada página debe manejar y mostrar de forma explícita:
   por alumno o alumna. Junta las de en línea (mejor intento, fecha del último envío) y las de Notion
   (fecha de edición). El color va por nivel: ≥ 80, 60–79 y < 60; una calificación de Notion ≤ 10 se
   escala × 10.
+- Vista de admin de `ingles.html`: tarjeta "🎮 Juegos de la semana" (`#juegos-admin`), con el ranking
+  completo y las partidas con su podio, desde `/juegos/admin/resumen`. En el bloque de cada alumno o alumna
+  va su línea de juegos.
+- `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el
+  enlace, "📤 Compartir" y un QR (qrcodejs de cdnjs, cargado solo en esa pantalla).
 
 ## 5. Código compartido
 

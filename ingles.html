@@ -419,7 +419,7 @@
     const resumen = (state.act && state.act.resumen) || {};
     const diag = items.find(i => i.id === 'diagnostico-a1');
     const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es'));
-    contentEl.innerHTML = renderUltimasAdmin(names, groups, items) + renderAdminWeek(state.act) + names.map(name => {
+    contentEl.innerHTML = renderUltimasAdmin(names, groups, items) + renderJuegosAdmin() + renderAdminWeek(state.act) + names.map(name => {
       const list = groups.get(name);
       const g = buildGroups(list);
       const ultima = lastGraded(list);
@@ -434,6 +434,7 @@
           '<span title="Diagnóstico">📝 ' + (resDiag && resDiag.mejor ? resDiag.mejor.porcentaje + '%' : 'pendiente') + '</span>' +
           '<span class="o" title="Temas a reforzar">🎯 ' + temas.length + '</span></span></summary>' +
         '<div class="student-body">' +
+          lineaJuegos(name) +
           (() => {
             const u = ultimasCalificaciones(name, list, items);
             return u.length ? '<div class="ultimas-lista"><div class="progress-text" style="margin:4px 0 2px">🗓️ Últimas 5 calificaciones</div>' +
@@ -654,6 +655,40 @@
     const res = await fetch(url, Object.assign({ cache: 'no-store' }, opts || {}));
     const body = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, body };
+  }
+
+  // Resumen de juegos de la semana (solo admin): jugadores y partidas con su podio.
+  async function loadJuegosAdmin() {
+    try {
+      const r = await fetchJson(API_BASE + '/juegos/admin/resumen?email=' + encodeURIComponent(state.email));
+      state.juegos = r.ok ? r.body : { error: r.body.error || r.status };
+    } catch (e) { state.juegos = { error: e.message }; }
+  }
+
+  function renderJuegosAdmin() {
+    const j = state.juegos;
+    const cab = '<details class="section" id="juegos-admin"><summary><div class="section-head"><span><span class="chevron">▶</span>🎮 Juegos de la semana</span>' +
+      '<span class="count">' + (j && j.jugadores ? j.jugadores.length : 0) + '</span></div></summary><div style="padding:4px 12px 10px">';
+    if (!j || j.error) return cab + '<div class="progress-text">No se pudieron cargar los juegos (' + escapeHtml(j && j.error) + ').</div></div></details>';
+    if (!j.jugadores.length && !j.salas.length) return cab + '<div class="progress-text">Aún no hay juegos esta semana.</div></div></details>';
+    const cuando = ms => new Date(ms).toLocaleString('es-MX', { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const medalla = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
+    const ranking = '<div class="progress-text" style="margin:4px 0">🏆 Ranking de la semana (suma del mejor de cada juego)</div><table class="ultimas-tabla"><tbody>' +
+      j.jugadores.map((x, i) => '<tr data-jugador="' + escapeHtml(x.nombre) + '"><td>' + medalla(i) + ' ' + escapeHtml(x.nombre) + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</td>' +
+        '<td>⭐ <b>' + x.total.toLocaleString('es-MX') + '</b> · ' + Object.keys(x.mejores).length + ' juego(s) · ' + x.partidas + ' partida(s)' + (x.ultima ? ' · ' + escapeHtml(cuando(Date.parse(x.ultima))) : '') + '</td></tr>').join('') + '</tbody></table>';
+    const salas = j.salas.length ? '<div class="progress-text" style="margin:12px 0 4px">👥 Partidas de la semana</div>' + j.salas.map(s => {
+      const podio = s.podio || s.jugadores.filter(x => x.final !== null).map(x => ({ nombre: x.nombre, total: x.final })).sort((a, b) => b.total - a.total);
+      return '<div class="topic" data-sala="' + escapeHtml(s.codigo) + '"><div class="h"><span>' + escapeHtml((j.catalogo[s.juego] || s.juego)) + ' · 🔑 ' + escapeHtml(s.codigo) + '</span><span class="pill wait">' + escapeHtml(cuando(s.creada)) + '</span></div>' +
+        '<div class="r">Anfitrión: ' + escapeHtml(s.host) + ' · ' + s.jugadores.length + ' persona(s)' + (s.bots ? ' + 2 bots' : '') + (s.inicio ? '' : ' · no empezó') + '</div>' +
+        (podio.length ? '<div class="chips">' + podio.map((p, i) => '<span class="chip ' + (i === 0 ? 'fortaleza' : 'neutra') + '">' + medalla(i) + ' ' + escapeHtml(p.nombre) + ' ' + p.total.toLocaleString('es-MX') + '</span>').join('') + '</div>'
+          : '<div class="progress-text">Sin resultados todavía.</div>') + '</div>';
+    }).join('') : '';
+    return cab + ranking + salas + '</div></details>';
+  }
+
+  function lineaJuegos(name) {
+    const x = state.juegos && state.juegos.jugadores && state.juegos.jugadores.find(y => y.nombre === name);
+    return x ? '<div class="progress-text" data-juegos-alumno>🎮 Juegos: ⭐ ' + x.total.toLocaleString('es-MX') + ' · ' + Object.keys(x.mejores).length + ' juego(s) · ' + x.partidas + ' partida(s)</div>' : '';
   }
 
   async function loadActividades() {
@@ -989,6 +1024,7 @@
       appEl.style.display = 'block';
       state.data = data;
       await actividadesP;
+      if (data.isAdmin) await loadJuegosAdmin();
       render(data);
     } catch (e) {
       loginError.textContent = '⚠️ ' + e.message;

@@ -55,6 +55,13 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
   - `GET /juegos/sala/<código>`: sala, jugadores y `ahora` (hora del servidor), solo para sus jugadores y
     el admin. Caché de 2 s.
   - Juegos permitidos: los 8 de preguntas y Basta (es/en).
+  - Al terminar, `respuesta` acepta `{ final }` de cada jugador y `{ podio }`, que solo guarda el del host.
+  - Cada sala nueva se agrega al índice `juegos/salas-semana/<lunes>.json`.
+- **`GET /juegos/admin/resumen?semana=`** (solo admin, 403 para los demás):
+  - `jugadores`: todos los de la semana, con total, mejores, partidas y última vez;
+  - `salas`: juego, anfitrión, fecha, jugadores con su `final` y el podio;
+  - `catalogo`: nombre de cada juego.
+  - No incluye correos.
   - Sincronía por reloj; los bots los calcula el cliente con la semilla.
   - La identidad del jugador se guarda en caché 60 s para no consultar Notion en cada sondeo. La lista de
     invitados siempre se lee fresca.

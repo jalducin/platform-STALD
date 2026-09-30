@@ -113,3 +113,29 @@ Deno.test("salas: la sala vence a las 3 horas y solo la ven sus jugadores", asyn
   assertEquals((await c.call("GET", `/sala/${codigo}`, "marisol@example.com")).status, 410);
   assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com")).status, 410);
 });
+
+Deno.test("salas: índice semanal, final, podio del host y resumen del admin", async () => {
+  const c = ctx();
+  const codigo = await salaCon(c);
+  await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com");
+  const idx = (await c.store.get<any>("juegos/salas-semana/2026-09-28.json"))!.data;
+  assertEquals(idx.salas.map((s: any) => [s.codigo, s.juego, s.host]), [[codigo, "cultura", "Marisol"]]);
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(200000);
+  const podio = [{ nombre: "Bot Ajolote 🦎", total: 1300, bot: true }, { nombre: "Marisol", total: 900 }, { nombre: "Angel", total: 400 }];
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { final: 900, podio })).status, 200);
+  await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { final: 5000, podio: [{ nombre: "Angel", total: 3000 }] });
+  // alumna no ve el resumen
+  assertEquals((await c.call("GET", "/admin/resumen", "angel@example.com")).status, 403);
+  await c.call("POST", "/partida", "marisol@example.com", { juego: "cultura", puntos: 900, aciertos: 5, total: 10, segundos: 0 });
+  const r = await c.call("GET", "/admin/resumen", "admin@example.com");
+  assertEquals(r.status, 200);
+  assertEquals(r.body.semana, "2026-09-28");
+  assertEquals(r.body.jugadores.map((j: any) => [j.nombre, j.total, j.partidas]), [["Marisol", 900, 1]]);
+  const s = r.body.salas[0];
+  assertEquals([s.codigo, s.juego, s.host], [codigo, "cultura", "Marisol"]);
+  assertEquals(s.jugadores.map((j: any) => [j.nombre, j.final]), [["Marisol", 900], ["Angel", 3000]], "final recortado a 3000");
+  assertEquals(s.podio, podio, "solo cuenta el podio del host");
+  assertEquals(r.body.catalogo.cultura, "Maratón de cultura");
+  assertEquals(JSON.stringify(r.body).includes("@"), false);
+});
