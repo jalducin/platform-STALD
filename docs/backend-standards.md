@@ -31,6 +31,11 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 | `/ingles/actividades/<id>` | POST `{ intento, respuestas }` | Calificación inmediata, `mejor` y `restantes` (0 si una actividad llega a 100 %). En la corrección, las `fijas` mandan sobre lo que envíe el cliente. 409 `intento_invalido` / `sin_intentos`. El admin no guarda |
 | `/ingles/actividades/<id>/resultados/<alumno>` | DELETE | Solo admin: reinicia los intentos |
 
+**Ruta `GET /perfil?email=`** (`server/perfil.ts`):
+- Devuelve `{ email, isAdmin, nombre, conocido, accesos: { ingles, secundaria, juegos } }` para el portal.
+- Mismas reglas que `/data` e `/ingles/data`; sin filas ni correos ajenos.
+- Sin `email` responde 400.
+
 **Ruta `/ingles/data/<pageId>/completado`** (`server/completar.ts`), método POST con `{ completado: boolean }`:
 - Marca o desmarca "Completado" en Notion.
 - Solo sobre filas visibles para el correo: las del alumno o alumna, o cualquiera para el admin.

@@ -7,7 +7,7 @@ backend: tratarlo como un cambio OpenSpec.
 ## Base "📖 Clases" (Secundaria)
 
 - ID: `3831c6b4f8b5817ba701ed689f825cf0`
-- Consumida por: `/data` → `index.html`
+- Consumida por: `/data` → `secundaria.html`
 
 | Propiedad Notion | Tipo | Campo en `Row` |
 |---|---|---|

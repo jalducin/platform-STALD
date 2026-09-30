@@ -207,9 +207,12 @@
   .deck-progress { flex: 1; height: 6px; background: rgba(255,255,255,.15); border-radius: 99px; overflow: hidden; }
   .deck-progress span { display: block; height: 100%; background: linear-gradient(90deg, #818cf8, #c084fc); transition: width .3s ease; }
   #app { display: none; }
+  .home-link { display: inline-block; font-size: .8rem; font-weight: 600; color: var(--accent); text-decoration: none; margin-bottom: 8px; }
+  .home-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
+  <a class="home-link" href="./">← Inicio</a>
   <h1>📗 Clases de Inglés</h1>
   <div class="subtitle">Progreso de alumnos y alumnas, actualizado desde Notion</div>
 
@@ -234,6 +237,10 @@
   const API_BASE = (new URLSearchParams(location.search).get('api') || DEFAULT_API).replace(/\/$/, '');
   const DATA_URL_BASE = API_BASE + '/ingles/data';
   const STORAGE_KEY = 'ingles_email';
+  // Claves de sesión compartidas con el portal (index.html): solo el correo.
+  const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
+  // "← Inicio" conserva ?api= (pruebas locales).
+  (() => { const api = new URLSearchParams(location.search).get('api'); const l = document.querySelector('.home-link'); if (api && l) l.href = './?api=' + encodeURIComponent(api); })();
 
   const loginEl = document.getElementById('login');
   const appEl = document.getElementById('app');
@@ -959,13 +966,13 @@
   emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
 
   logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem(STORAGE_KEY);
+    SESSION_KEYS.forEach(k => localStorage.removeItem(k));
     appEl.style.display = 'none';
     loginEl.style.display = 'block';
     emailInput.value = '';
   });
 
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('stald_email');
   if (saved) {
     emailInput.value = saved;
     loadFor(saved);

@@ -4,6 +4,7 @@
 import { attachUsers, extractInglesRow, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type UserInfo } from "./rows.ts";
 import { handleActividades } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
+import { armarPerfil } from "./perfil.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 
 const NOTION_VERSION = "2022-06-28";
@@ -123,6 +124,13 @@ export async function handler(req: Request): Promise<Response> {
       const { rows, isAdmin } = filterForEmail(all, email, admin);
       const alumno = isAdmin ? null : (rows.find((r) => r.alumno)?.alumno ?? null);
       return await handleActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), { isAdmin, alumno }, await getStore(), json);
+    }
+
+    // GET /perfil → accesos del portal (sin filas ni correos ajenos).
+    if (url.pathname.endsWith("/perfil")) {
+      if (!email) return json({ error: "missing_email" }, 400);
+      const [ingles, secundaria] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria")]);
+      return json(armarPerfil(email, admin, ingles, secundaria));
     }
 
     // POST /ingles/data/<pageId>/completado → marcar o desmarcar una tarea de Notion.
