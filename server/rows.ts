@@ -26,6 +26,7 @@ export interface SecundariaRow extends WithUsers {
 
 export interface InglesRow extends WithUsers {
   source: "clases_ingles";
+  id: string; // id de la página de Notion (para marcar "Completado")
   name: string;
   label: string;
   completado: boolean;
@@ -88,6 +89,7 @@ export function extractInglesRow(page: NotionPage): InglesRow {
   const tipo = p["Tipo"]?.select?.name || "";
   return {
     source: "clases_ingles",
+    id: page.id,
     name: title(p),
     label: [modulo, tipo].filter(Boolean).join(" · "),
     completado: !!p["Completado"]?.checkbox,

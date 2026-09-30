@@ -92,3 +92,7 @@ Deno.test("título: se lee de la propiedad de tipo title aunque no se llame 'Nam
   assertEquals(extractInglesRow(page).name, "📋 A1 Test #1 — Verbo TO BE");
   assertEquals(extractInglesRow(inglesPage({ "Name": { type: "title", title: [] } })).name, "(sin título)");
 });
+
+Deno.test("extractInglesRow incluye el id de la página", () => {
+  assertEquals(extractInglesRow({ ...inglesPage(), id: "3ea1c6b4-f8b5-812b" }).id, "3ea1c6b4-f8b5-812b");
+});

@@ -50,6 +50,8 @@
   button.stat:hover { border-color: var(--accent); }
   button.stat:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   button.stat[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--chip); }
+  .row-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .btn.sm { padding: 5px 9px; font-size: .74rem; }
   .ver-todo { font: inherit; font-size: .78rem; font-weight: 700; color: var(--accent); background: none; border: none; cursor: pointer; padding: 2px 0 8px; }
   .progress-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; margin: 2px 0 4px; }
   .progress-bar span { display: block; height: 100%; background: var(--green); border-radius: 99px; transition: width .4s ease; }
@@ -303,14 +305,6 @@
     '</div>';
   }
 
-  function rowAction(r) {
-    if (r._examen) {
-      if (r._estado === 'resuelto' && !isAdminView()) return '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(r._examen) + '">Ver resultado</button>';
-      if (r._estado === 'disponible' && !isAdminView()) return '<button class="btn" data-action="abrir-examen" data-id="' + escapeHtml(r._examen) + '">Resolver</button>';
-      return '';
-    }
-    return r.url ? '<a class="link" href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '';
-  }
 
   // Agrupa en el orden pedido: realizadas recientes, atrasadas, hoy, próximas, y lo demás plegado.
   function buildGroups(rows) {
@@ -418,7 +412,7 @@
       const resDiag = diag && (diag.resultados || []).find(r => r.alumno === name);
       const temas = (resumen[name] && resumen[name].temasAReforzar) || [];
       const suyos = items.map(it => ({ it, r: (it.resultados || []).find(r => r.alumno === name) })).filter(x => x.r);
-      return '<details class="student">' +
+      return '<details class="student" data-alumno="' + escapeHtml(name) + '">' +
         '<summary><span>👤 ' + escapeHtml(name) + '</span>' +
           '<span class="mini"><span>' + g.completed + '/' + g.total + '</span>' +
           '<span class="o">⏰ ' + g.overdue.length + '</span><span class="t">📌 ' + g.today.length + '</span>' +
@@ -456,7 +450,8 @@
       label: tipoTexto(it.tipo) + (esMeet ? (it.hora ? ' · ' + it.hora : '') + (it.tieneReto ? ' · reto en vivo ' + (intentosUsados || 0) + '/' + it.intentosMax : '') : ' · ' + it.preguntas + ' ejercicios · ' + (intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)'),
       dificultad: it.nivel,
       fecha: it.fechaLimite,
-      completado: estado === 'completo' || (esMeet && !it.tieneReto && todayStr() > it.fechaLimite),
+      // Con un intento enviado ya está hecha: la corrección (2.º intento) es opcional.
+      completado: estado === 'completo' || (intentosUsados || 0) > 0 || (esMeet && !it.tieneReto && todayStr() > it.fechaLimite),
       calificacion: mejor ? mejor.porcentaje + '%' : null,
       editadoEn: ultimoEnvio || (esMeet ? it.fechaLimite + 'T23:00:00' : null),
       userNames: [],
@@ -497,7 +492,34 @@
       const it = ((state.act && state.act.items) || []).find(x => x.id === r._item);
       return it ? accionItem(it, it.estado) : '';
     }
-    return r.url ? '<a class="link" href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '';
+    const abrir = r.url ? '<a class="link" href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '';
+    if (!r.id) return abrir;
+    const marcar = r.completado
+      ? '<button class="btn ghost sm" data-action="marcar" data-id="' + escapeHtml(r.id) + '" data-valor="false" data-titulo="' + escapeHtml(r.name) + '" title="Desmarcar (no hecha)">↩ Desmarcar</button>'
+      : '<button class="btn sm" data-action="marcar" data-id="' + escapeHtml(r.id) + '" data-valor="true" data-titulo="' + escapeHtml(r.name) + '">✓ Marcar hecha</button>';
+    return '<span class="row-actions">' + marcar + abrir + '</span>';
+  }
+
+  // Marca o desmarca "Completado" en Notion y vuelve a dibujar conservando la vista (alumnos abiertos, scroll).
+  async function marcarTarea(btn) {
+    const hecha = btn.dataset.valor === 'true';
+    if (!confirm((hecha ? '¿Marcar como hecha "' : '¿Desmarcar "') + btn.dataset.titulo + '"?')) return;
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    const r = await fetchJson(DATA_URL_BASE + '/' + encodeURIComponent(btn.dataset.id) + '/completado?email=' + encodeURIComponent(state.email), {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ completado: hecha }),
+    });
+    if (!r.ok) {
+      btn.disabled = false; btn.textContent = hecha ? '✓ Marcar hecha' : '↩ Desmarcar';
+      alert('No se pudo guardar (' + (r.body.error || r.status) + '). Intenta de nuevo.');
+      return;
+    }
+    const abiertos = [...document.querySelectorAll('details.student[open]')].map(d => d.dataset.alumno);
+    const y = window.scrollY;
+    const d = await fetchJson(DATA_URL_BASE + '?email=' + encodeURIComponent(state.email));
+    if (d.ok) state.data = d.body;
+    render(state.data);
+    document.querySelectorAll('details.student').forEach(det => { if (abiertos.includes(det.dataset.alumno)) det.open = true; });
+    window.scrollTo(0, y);
   }
 
   // Última actividad completada con calificación en Notion (la de edición más reciente).
@@ -883,6 +905,7 @@
     const act = b.dataset.action;
     if (act === 'filtrar') { const board = b.closest('.board'); aplicarFiltro(board, b.getAttribute('aria-pressed') === 'true' ? null : b.dataset.grupo); }
     if (act === 'ver-todo') aplicarFiltro(b.closest('.board'), null);
+    if (act === 'marcar') { e.preventDefault(); marcarTarea(b); }
     if (act === 'abrir-item') { e.preventDefault(); openItem(b.dataset.id); }
     if (act === 'ver-resultado') {
       const it = ((state.act && state.act.items) || []).find(x => x.id === b.dataset.id);
