@@ -44,6 +44,8 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 - **Semana:** de lunes a domingo, hora de CDMX.
 - **Total:** suma del mejor puntaje de cada juego.
 - **Id del jugador:** `admin`, `a-<slug>` (Inglés), `s-<slug>` (Secundaria) o `i-<hash>` (invitado).
+- **Catálogo (`CATALOGO`):** 18 juegos. Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+  `una` y `loteria` (tope 1000).
 
 **Ruta `GET /perfil?email=`** (`server/perfil.ts`):
 - Devuelve `{ email, isAdmin, nombre, conocido, invitado, accesos: { ingles, secundaria, juegos } }` para
