@@ -31,6 +31,18 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 | `/ingles/actividades/<id>` | POST `{ intento, respuestas }` | Calificación inmediata, `mejor` y `restantes` (0 si una actividad llega a 100 %). En la corrección, las `fijas` mandan sobre lo que envíe el cliente. 409 `intento_invalido` / `sin_intentos`. El admin no guarda |
 | `/ingles/actividades/<id>/resultados/<alumno>` | DELETE | Solo admin: reinicia los intentos |
 
+**Ruta `/ingles/data/<pageId>/completado`** (`server/completar.ts`), método POST con `{ completado: boolean }`:
+- Marca o desmarca "Completado" en Notion.
+- Solo sobre filas visibles para el correo: las del alumno o alumna, o cualquiera para el admin.
+- Registra la marca en `avance/<slug>.json`.
+- Respuestas:
+  - 200 `{ ok, id, completado, registrado }`;
+  - 400 `missing_email` / `json_invalido`;
+  - 403 `sin_acceso`;
+  - 502 `sin_permiso_notion` / `notion_<status>`.
+- Requiere que la integración de Notion tenga permiso de actualizar contenido.
+- Con `ROWS_FIXTURE`, las marcas se guardan en memoria.
+
 **Pruebas:** `DATA_DIR=<copia del repo de datos> npx -y deno test --allow-env --allow-read` en `server/`
 (sin `DATA_DIR` se omiten las de integración; `semana_test.ts` usa datos inline y corre siempre).
 

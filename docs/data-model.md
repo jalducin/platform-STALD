@@ -23,7 +23,8 @@ backend: tratarlo como un cambio OpenSpec.
 ## Base "📖 Clases Inglés"
 
 - ID: `3c41c6b4f8b580f888d8d122cbb5c613` (data source `9581c6b4-f8b5-8283-bf7e-878652c0d17e`)
-- Consumida por: `/ingles/data` → `ingles.html` (`source: "clases_ingles"`)
+- Consumida por: `/ingles/data` → `ingles.html` (`source: "clases_ingles"`). Cada fila trae `id` (id de la
+  página), que usa `POST /ingles/data/<id>/completado` para escribir `Completado` desde la página.
 - Fuera de alcance: el hub "Ingles Aguilar" (excluido a pedido del usuario).
 - **Modelo: una fila por (clase, alumno).** El mismo catálogo de clases se repite para cada alumno.
   Alumnos actuales: Fernando, Marisol, Angel, Laura y Jesus (51 clases cada uno). Una clase nueva se
@@ -108,6 +109,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     `banco` (reto en vivo) y `presentacion.diapositivas` (solo admin), con tipos `portada`, `agenda`, `retro`
     (grupal, sin nombres), `teoria` (con `ref` al índice de la teoría), `practica`, `juego`, `reto`,
     `libreta` y `cierre`.
+- `avance/<slug-alumno>.json`: avance fuera de las actividades en línea.
+  - `{ alumno, notion: { <pageId>: { titulo, completado, en, por } }, historial: [...] }`.
+  - `por` es `alumno` o `admin`. `historial` guarda como máximo las 200 entradas más recientes. Sin correos.
 - `resultados/<id>/<slug-alumno>.json`: `{ id, titulo, alumno, intentos: [{ n, enviadoEn, fueraDeTiempo,
   preguntas, respuestas, calificacion }], mejor }`. Cuenta el **mejor** intento. Sin correos.
 

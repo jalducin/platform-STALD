@@ -3,6 +3,7 @@
 // Pruebas locales: DATA_DIR (carpeta con una copia del repo de datos) y ROWS_FIXTURE (filas simuladas).
 import { attachUsers, extractInglesRow, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type UserInfo } from "./rows.ts";
 import { handleActividades } from "./actividades.ts";
+import { handleCompletar } from "./completar.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 
 const NOTION_VERSION = "2022-06-28";
@@ -58,6 +59,31 @@ async function loadRows<T extends { userIds: string[]; userEmails: string[]; use
   return attachUsers(rows, new Map(ids.map((id, i) => [id, infos[i]])));
 }
 
+// En modo fixture (pruebas locales) las marcas se guardan en memoria y se aplican al leer.
+const marcasFixture = new Map<string, { completado: boolean; en: string }>();
+
+async function filasIngles(): Promise<InglesRow[]> {
+  const rows = await loadRows<InglesRow>(CLASES_INGLES_DB_ID, extractInglesRow, "ingles");
+  if (env("ROWS_FIXTURE")) {
+    for (const r of rows) {
+      const m = marcasFixture.get(r.id);
+      if (m) { r.completado = m.completado; r.editadoEn = m.en; } // como Notion: marcar actualiza la última edición
+    }
+  }
+  return rows;
+}
+
+async function parcheCompletado(id: string, completado: boolean): Promise<{ ok: boolean; status: number }> {
+  if (env("ROWS_FIXTURE")) { marcasFixture.set(id, { completado, en: new Date().toISOString() }); return { ok: true, status: 200 }; }
+  const res = await fetch(`https://api.notion.com/v1/pages/${id}`, {
+    method: "PATCH",
+    headers: { "Authorization": `Bearer ${env("NOTION_TOKEN")}`, "Notion-Version": NOTION_VERSION, "Content-Type": "application/json" },
+    body: JSON.stringify({ properties: { "Completado": { checkbox: completado } } }),
+  });
+  await res.body?.cancel();
+  return { ok: res.ok, status: res.status };
+}
+
 // ---------- HTTP ----------
 function corsHeaders(extra: Record<string, string> = {}): Headers {
   const h = new Headers();
@@ -93,10 +119,17 @@ export async function handler(req: Request): Promise<Response> {
     const idx = url.pathname.indexOf("/ingles/actividades");
     if (idx !== -1) {
       if (!email) return json({ error: "missing_email" }, 400);
-      const all = await loadRows<InglesRow>(CLASES_INGLES_DB_ID, extractInglesRow, "ingles");
+      const all = await filasIngles();
       const { rows, isAdmin } = filterForEmail(all, email, admin);
       const alumno = isAdmin ? null : (rows.find((r) => r.alumno)?.alumno ?? null);
       return await handleActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), { isAdmin, alumno }, await getStore(), json);
+    }
+
+    // POST /ingles/data/<pageId>/completado → marcar o desmarcar una tarea de Notion.
+    const marca = url.pathname.match(/\/ingles\/data\/([0-9a-fA-F-]{32,36})\/completado$/);
+    if (marca) {
+      if (req.method !== "POST") return json({ error: "metodo_no_permitido" }, 405);
+      return await handleCompletar(req, marca[1], email, { filas: filasIngles, parche: parcheCompletado, store: await getStore(), admin }, json);
     }
 
     // "/ingles/data" también termina en "/data": evaluarlo primero.
@@ -108,7 +141,7 @@ export async function handler(req: Request): Promise<Response> {
     if (!route) return json({ error: "not_found" }, 404);
     if (!email) return json({ error: "missing_email" }, 400);
     // deno-lint-ignore no-explicit-any
-    const all = await loadRows(route.db, route.extract as (p: any) => any, route.key);
+    const all = route.key === "ingles" ? await filasIngles() : await loadRows(route.db, route.extract as (p: any) => any, route.key);
     const { rows, isAdmin } = filterForEmail(all, email, admin);
     return json({ rows, isAdmin, generatedAt: new Date().toISOString() });
   } catch (e) {
