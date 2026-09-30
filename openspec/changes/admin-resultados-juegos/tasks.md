@@ -26,7 +26,7 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Producción:
+- [x] 4.1 Producción:
   - curl del resumen (admin 200 y alumna 403);
   - revisión de solo lectura de la vista de admin publicada.
   - **Restaurar** cualquier dato de prueba.
@@ -34,4 +34,4 @@
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/backend-standards.md`, `docs/data-model.md`, README del repo de datos y `docs/frontend-standards.md`
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #33)
