@@ -138,3 +138,12 @@ Deno.test("juegos: yo (perfil del jugador) con mejores de la semana", async () =
   assertEquals([r.body.jugador.nombre, r.body.total, r.body.mejores["en-vocab"], r.body.pos], ["Marisol", 600, 600, 1]);
   assert(Array.isArray(r.body.catalogo) && r.body.catalogo.length >= 14);
 });
+
+Deno.test("juegos: clásicos (Basta, ¡Una!, Lotería) con sus topes", async () => {
+  const { call } = ctx();
+  const topes: Record<string, number> = { "basta-es": 1500, "basta-en": 1500, "una": 1000, "loteria": 1000 };
+  for (const [id, max] of Object.entries(topes)) {
+    const r = await call("POST", "/partida", "marisol@example.com", partida(id, 5000));
+    assertEquals([r.status, r.body.puntos], [200, max], id);
+  }
+});

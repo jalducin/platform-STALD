@@ -100,7 +100,15 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - `oraciones[]` (texto).
 - `cultura.json`: `categorias[]` `{ id, titulo, emoji }` y `preguntas[]`
   `{ cat, nivel (1–3), pregunta, opciones (4), correcta, dato }`.
-- `basta.json` y `loteria.json`: los usa el cambio `juegos-clasicos`.
+- `basta.json`: `{ es, en }`, cada uno con:
+  - `categorias[]` `{ id, titulo, emoji }`;
+  - `letras[]` que pueden salir;
+  - `palabras{ <categoria>: [...] }`, el diccionario para verificar respuestas; se compara sin
+    mayúsculas ni acentos, y la ñ cuenta aparte.
+- `loteria.json`: `cartas[]` `{ n, es, en, emoji, verso }`.
+  - 54 cartas, con versos originales.
+  - "El Ajolote", "El Colibrí" y "El Tlacuache" sustituyen a tres cartas tradicionales poco apropiadas
+    para menores.
 
 ## Actividades semanales (repo privado `platform-STALD-data`)
 

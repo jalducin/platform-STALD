@@ -61,6 +61,10 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "mente-secuencias": { categoria: "mente", titulo: "Secuencias", max: 2000 },
   "mente-simon": { categoria: "mente", titulo: "Simón dice", max: 1500 },
   "mente-sopa": { categoria: "mente", titulo: "Sopa de letras", max: 1500 },
+  "basta-es": { categoria: "clasicos", titulo: "Basta", max: 1500 },
+  "basta-en": { categoria: "clasicos", titulo: "Basta en inglés", max: 1500 },
+  "una": { categoria: "clasicos", titulo: "¡Una!", max: 1000 },
+  "loteria": { categoria: "clasicos", titulo: "Lotería", max: 1000 },
 };
 
 const LIMITE_DIARIO = 100;
