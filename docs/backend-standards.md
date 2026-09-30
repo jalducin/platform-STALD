@@ -31,8 +31,23 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 | `/ingles/actividades/<id>` | POST `{ intento, respuestas }` | Calificación inmediata, `mejor` y `restantes` (0 si una actividad llega a 100 %). En la corrección, las `fijas` mandan sobre lo que envíe el cliente. 409 `intento_invalido` / `sin_intentos`. El admin no guarda |
 | `/ingles/actividades/<id>/resultados/<alumno>` | DELETE | Solo admin: reinicia los intentos |
 
+**Rutas `/juegos/…`** (`server/juegos.ts`, cambio `juegos-plataforma`):
+
+| Ruta | Método | Respuesta |
+|---|---|---|
+| `/juegos/yo` | GET | Jugador, total, mejores y posición de la semana, y catálogo |
+| `/juegos/partida` | POST `{ juego, puntos, aciertos, total, segundos }` | `{ guardado, puntos, mejor, nuevoRecord, total, pos }`. Puntos recortados al tope del juego. 400 si el juego es inválido, 403 `no_registrado`, 429 `limite_diario` (100 por día) |
+| `/juegos/ranking` | GET (`?semana=<lunes>`) | Top 20 `{ pos, nombre, tipo, total, juegos }` y `yo`. Sin correos |
+| `/juegos/invitado` | POST `{ nombre, acepto: true }` | Registra o hace entrar a un invitado; `{ ya: true }` si el correo ya es alumno o alumna. 400 si falta aceptar o el apodo es inválido; 429 con 500 invitados |
+| `/juegos/invitados` | GET | Solo admin: correos, apodos, visitas y puntos de la semana, para análisis |
+
+- **Semana:** de lunes a domingo, hora de CDMX.
+- **Total:** suma del mejor puntaje de cada juego.
+- **Id del jugador:** `admin`, `a-<slug>` (Inglés), `s-<slug>` (Secundaria) o `i-<hash>` (invitado).
+
 **Ruta `GET /perfil?email=`** (`server/perfil.ts`):
-- Devuelve `{ email, isAdmin, nombre, conocido, accesos: { ingles, secundaria, juegos } }` para el portal.
+- Devuelve `{ email, isAdmin, nombre, conocido, invitado, accesos: { ingles, secundaria, juegos } }` para
+  el portal. Un invitado registrado (`juegos/invitados.json`) llega con `invitado: true` y solo Juegos.
 - Mismas reglas que `/data` e `/ingles/data`; sin filas ni correos ajenos.
 - Sin `email` responde 400.
 

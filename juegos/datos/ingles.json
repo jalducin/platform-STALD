@@ -1,0 +1,3061 @@
+{
+  "vocabulario": [
+    {
+      "en": "apple",
+      "es": "manzana",
+      "emoji": "🍎",
+      "tema": "comida"
+    },
+    {
+      "en": "banana",
+      "es": "plátano",
+      "emoji": "🍌",
+      "tema": "comida"
+    },
+    {
+      "en": "bread",
+      "es": "pan",
+      "emoji": "🍞",
+      "tema": "comida"
+    },
+    {
+      "en": "cheese",
+      "es": "queso",
+      "emoji": "🧀",
+      "tema": "comida"
+    },
+    {
+      "en": "egg",
+      "es": "huevo",
+      "emoji": "🥚",
+      "tema": "comida"
+    },
+    {
+      "en": "milk",
+      "es": "leche",
+      "emoji": "🥛",
+      "tema": "comida"
+    },
+    {
+      "en": "pizza",
+      "es": "pizza",
+      "emoji": "🍕",
+      "tema": "comida"
+    },
+    {
+      "en": "carrot",
+      "es": "zanahoria",
+      "emoji": "🥕",
+      "tema": "comida"
+    },
+    {
+      "en": "grapes",
+      "es": "uvas",
+      "emoji": "🍇",
+      "tema": "comida"
+    },
+    {
+      "en": "watermelon",
+      "es": "sandía",
+      "emoji": "🍉",
+      "tema": "comida"
+    },
+    {
+      "en": "rice",
+      "es": "arroz",
+      "emoji": "🍚",
+      "tema": "comida"
+    },
+    {
+      "en": "cake",
+      "es": "pastel",
+      "emoji": "🍰",
+      "tema": "comida"
+    },
+    {
+      "en": "strawberry",
+      "es": "fresa",
+      "emoji": "🍓",
+      "tema": "comida"
+    },
+    {
+      "en": "tomato",
+      "es": "jitomate",
+      "emoji": "🍅",
+      "tema": "comida"
+    },
+    {
+      "en": "corn",
+      "es": "elote",
+      "emoji": "🌽",
+      "tema": "comida"
+    },
+    {
+      "en": "dog",
+      "es": "perro",
+      "emoji": "🐶",
+      "tema": "animales"
+    },
+    {
+      "en": "cat",
+      "es": "gato",
+      "emoji": "🐱",
+      "tema": "animales"
+    },
+    {
+      "en": "bird",
+      "es": "pájaro",
+      "emoji": "🐦",
+      "tema": "animales"
+    },
+    {
+      "en": "fish",
+      "es": "pez",
+      "emoji": "🐟",
+      "tema": "animales"
+    },
+    {
+      "en": "horse",
+      "es": "caballo",
+      "emoji": "🐴",
+      "tema": "animales"
+    },
+    {
+      "en": "cow",
+      "es": "vaca",
+      "emoji": "🐮",
+      "tema": "animales"
+    },
+    {
+      "en": "pig",
+      "es": "cerdo",
+      "emoji": "🐷",
+      "tema": "animales"
+    },
+    {
+      "en": "rabbit",
+      "es": "conejo",
+      "emoji": "🐰",
+      "tema": "animales"
+    },
+    {
+      "en": "lion",
+      "es": "león",
+      "emoji": "🦁",
+      "tema": "animales"
+    },
+    {
+      "en": "elephant",
+      "es": "elefante",
+      "emoji": "🐘",
+      "tema": "animales"
+    },
+    {
+      "en": "monkey",
+      "es": "mono",
+      "emoji": "🐵",
+      "tema": "animales"
+    },
+    {
+      "en": "duck",
+      "es": "pato",
+      "emoji": "🦆",
+      "tema": "animales"
+    },
+    {
+      "en": "frog",
+      "es": "rana",
+      "emoji": "🐸",
+      "tema": "animales"
+    },
+    {
+      "en": "snake",
+      "es": "serpiente",
+      "emoji": "🐍",
+      "tema": "animales"
+    },
+    {
+      "en": "bear",
+      "es": "oso",
+      "emoji": "🐻",
+      "tema": "animales"
+    },
+    {
+      "en": "turtle",
+      "es": "tortuga",
+      "emoji": "🐢",
+      "tema": "animales"
+    },
+    {
+      "en": "house",
+      "es": "casa",
+      "emoji": "🏠",
+      "tema": "casa"
+    },
+    {
+      "en": "door",
+      "es": "puerta",
+      "emoji": "🚪",
+      "tema": "casa"
+    },
+    {
+      "en": "window",
+      "es": "ventana",
+      "emoji": "🪟",
+      "tema": "casa"
+    },
+    {
+      "en": "bed",
+      "es": "cama",
+      "emoji": "🛏️",
+      "tema": "casa"
+    },
+    {
+      "en": "chair",
+      "es": "silla",
+      "emoji": "🪑",
+      "tema": "casa"
+    },
+    {
+      "en": "sofa",
+      "es": "sofá",
+      "emoji": "🛋️",
+      "tema": "casa"
+    },
+    {
+      "en": "bathtub",
+      "es": "tina",
+      "emoji": "🛁",
+      "tema": "casa"
+    },
+    {
+      "en": "toilet",
+      "es": "inodoro",
+      "emoji": "🚽",
+      "tema": "casa"
+    },
+    {
+      "en": "key",
+      "es": "llave",
+      "emoji": "🔑",
+      "tema": "casa"
+    },
+    {
+      "en": "mirror",
+      "es": "espejo",
+      "emoji": "🪞",
+      "tema": "casa"
+    },
+    {
+      "en": "shower",
+      "es": "regadera",
+      "emoji": "🚿",
+      "tema": "casa"
+    },
+    {
+      "en": "television",
+      "es": "televisión",
+      "emoji": "📺",
+      "tema": "casa"
+    },
+    {
+      "en": "clock",
+      "es": "reloj",
+      "emoji": "🕰️",
+      "tema": "casa"
+    },
+    {
+      "en": "broom",
+      "es": "escoba",
+      "emoji": "🧹",
+      "tema": "casa"
+    },
+    {
+      "en": "family",
+      "es": "familia",
+      "emoji": "👪",
+      "tema": "familia"
+    },
+    {
+      "en": "mother",
+      "es": "mamá",
+      "emoji": "🤱",
+      "tema": "familia"
+    },
+    {
+      "en": "father",
+      "es": "papá",
+      "emoji": "👨‍🍼",
+      "tema": "familia"
+    },
+    {
+      "en": "baby",
+      "es": "bebé",
+      "emoji": "👶",
+      "tema": "familia"
+    },
+    {
+      "en": "grandmother",
+      "es": "abuela",
+      "emoji": "👵",
+      "tema": "familia"
+    },
+    {
+      "en": "grandfather",
+      "es": "abuelo",
+      "emoji": "👴",
+      "tema": "familia"
+    },
+    {
+      "en": "boy",
+      "es": "niño",
+      "emoji": "👦",
+      "tema": "familia"
+    },
+    {
+      "en": "girl",
+      "es": "niña",
+      "emoji": "👧",
+      "tema": "familia"
+    },
+    {
+      "en": "man",
+      "es": "hombre",
+      "emoji": "👨",
+      "tema": "familia"
+    },
+    {
+      "en": "woman",
+      "es": "mujer",
+      "emoji": "👩",
+      "tema": "familia"
+    },
+    {
+      "en": "couple",
+      "es": "pareja",
+      "emoji": "💑",
+      "tema": "familia"
+    },
+    {
+      "en": "red",
+      "es": "rojo",
+      "emoji": "🔴",
+      "tema": "colores"
+    },
+    {
+      "en": "blue",
+      "es": "azul",
+      "emoji": "🔵",
+      "tema": "colores"
+    },
+    {
+      "en": "green",
+      "es": "verde",
+      "emoji": "🟢",
+      "tema": "colores"
+    },
+    {
+      "en": "yellow",
+      "es": "amarillo",
+      "emoji": "🟡",
+      "tema": "colores"
+    },
+    {
+      "en": "orange",
+      "es": "naranja",
+      "emoji": "🟠",
+      "tema": "colores"
+    },
+    {
+      "en": "purple",
+      "es": "morado",
+      "emoji": "🟣",
+      "tema": "colores"
+    },
+    {
+      "en": "brown",
+      "es": "café",
+      "emoji": "🟤",
+      "tema": "colores"
+    },
+    {
+      "en": "black",
+      "es": "negro",
+      "emoji": "⚫",
+      "tema": "colores"
+    },
+    {
+      "en": "white",
+      "es": "blanco",
+      "emoji": "⚪",
+      "tema": "colores"
+    },
+    {
+      "en": "pink",
+      "es": "rosa",
+      "emoji": "🩷",
+      "tema": "colores"
+    },
+    {
+      "en": "gray",
+      "es": "gris",
+      "emoji": "🩶",
+      "tema": "colores"
+    },
+    {
+      "en": "one",
+      "es": "uno",
+      "emoji": "1️⃣",
+      "tema": "numeros"
+    },
+    {
+      "en": "two",
+      "es": "dos",
+      "emoji": "2️⃣",
+      "tema": "numeros"
+    },
+    {
+      "en": "three",
+      "es": "tres",
+      "emoji": "3️⃣",
+      "tema": "numeros"
+    },
+    {
+      "en": "four",
+      "es": "cuatro",
+      "emoji": "4️⃣",
+      "tema": "numeros"
+    },
+    {
+      "en": "five",
+      "es": "cinco",
+      "emoji": "5️⃣",
+      "tema": "numeros"
+    },
+    {
+      "en": "six",
+      "es": "seis",
+      "emoji": "6️⃣",
+      "tema": "numeros"
+    },
+    {
+      "en": "seven",
+      "es": "siete",
+      "emoji": "7️⃣",
+      "tema": "numeros"
+    },
+    {
+      "en": "eight",
+      "es": "ocho",
+      "emoji": "8️⃣",
+      "tema": "numeros"
+    },
+    {
+      "en": "nine",
+      "es": "nueve",
+      "emoji": "9️⃣",
+      "tema": "numeros"
+    },
+    {
+      "en": "ten",
+      "es": "diez",
+      "emoji": "🔟",
+      "tema": "numeros"
+    },
+    {
+      "en": "hundred",
+      "es": "cien",
+      "emoji": "💯",
+      "tema": "numeros"
+    },
+    {
+      "en": "t-shirt",
+      "es": "playera",
+      "emoji": "👕",
+      "tema": "ropa"
+    },
+    {
+      "en": "dress",
+      "es": "vestido",
+      "emoji": "👗",
+      "tema": "ropa"
+    },
+    {
+      "en": "jeans",
+      "es": "pantalón de mezclilla",
+      "emoji": "👖",
+      "tema": "ropa"
+    },
+    {
+      "en": "shoe",
+      "es": "zapato",
+      "emoji": "👞",
+      "tema": "ropa"
+    },
+    {
+      "en": "sneakers",
+      "es": "tenis",
+      "emoji": "👟",
+      "tema": "ropa"
+    },
+    {
+      "en": "cap",
+      "es": "gorra",
+      "emoji": "🧢",
+      "tema": "ropa"
+    },
+    {
+      "en": "socks",
+      "es": "calcetines",
+      "emoji": "🧦",
+      "tema": "ropa"
+    },
+    {
+      "en": "scarf",
+      "es": "bufanda",
+      "emoji": "🧣",
+      "tema": "ropa"
+    },
+    {
+      "en": "gloves",
+      "es": "guantes",
+      "emoji": "🧤",
+      "tema": "ropa"
+    },
+    {
+      "en": "coat",
+      "es": "abrigo",
+      "emoji": "🧥",
+      "tema": "ropa"
+    },
+    {
+      "en": "boots",
+      "es": "botas",
+      "emoji": "👢",
+      "tema": "ropa"
+    },
+    {
+      "en": "tie",
+      "es": "corbata",
+      "emoji": "👔",
+      "tema": "ropa"
+    },
+    {
+      "en": "glasses",
+      "es": "lentes",
+      "emoji": "👓",
+      "tema": "ropa"
+    },
+    {
+      "en": "eye",
+      "es": "ojo",
+      "emoji": "👁️",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "ear",
+      "es": "oreja",
+      "emoji": "👂",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "nose",
+      "es": "nariz",
+      "emoji": "👃",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "mouth",
+      "es": "boca",
+      "emoji": "👄",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "hand",
+      "es": "mano",
+      "emoji": "✋",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "foot",
+      "es": "pie",
+      "emoji": "🦶",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "leg",
+      "es": "pierna",
+      "emoji": "🦵",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "arm",
+      "es": "brazo",
+      "emoji": "💪",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "tooth",
+      "es": "diente",
+      "emoji": "🦷",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "tongue",
+      "es": "lengua",
+      "emoji": "👅",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "brain",
+      "es": "cerebro",
+      "emoji": "🧠",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "heart",
+      "es": "corazón",
+      "emoji": "🫀",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "bone",
+      "es": "hueso",
+      "emoji": "🦴",
+      "tema": "cuerpo"
+    },
+    {
+      "en": "book",
+      "es": "libro",
+      "emoji": "📖",
+      "tema": "escuela"
+    },
+    {
+      "en": "pencil",
+      "es": "lápiz",
+      "emoji": "✏️",
+      "tema": "escuela"
+    },
+    {
+      "en": "pen",
+      "es": "pluma",
+      "emoji": "🖊️",
+      "tema": "escuela"
+    },
+    {
+      "en": "notebook",
+      "es": "cuaderno",
+      "emoji": "📓",
+      "tema": "escuela"
+    },
+    {
+      "en": "backpack",
+      "es": "mochila",
+      "emoji": "🎒",
+      "tema": "escuela"
+    },
+    {
+      "en": "scissors",
+      "es": "tijeras",
+      "emoji": "✂️",
+      "tema": "escuela"
+    },
+    {
+      "en": "ruler",
+      "es": "regla",
+      "emoji": "📏",
+      "tema": "escuela"
+    },
+    {
+      "en": "computer",
+      "es": "computadora",
+      "emoji": "💻",
+      "tema": "escuela"
+    },
+    {
+      "en": "school",
+      "es": "escuela",
+      "emoji": "🏫",
+      "tema": "escuela"
+    },
+    {
+      "en": "crayon",
+      "es": "crayola",
+      "emoji": "🖍️",
+      "tema": "escuela"
+    },
+    {
+      "en": "paper",
+      "es": "papel",
+      "emoji": "📄",
+      "tema": "escuela"
+    },
+    {
+      "en": "map",
+      "es": "mapa",
+      "emoji": "🗺️",
+      "tema": "escuela"
+    },
+    {
+      "en": "calendar",
+      "es": "calendario",
+      "emoji": "📅",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "birthday",
+      "es": "cumpleaños",
+      "emoji": "🎂",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "morning",
+      "es": "mañana",
+      "emoji": "🌅",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "afternoon",
+      "es": "tarde",
+      "emoji": "🌇",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "night",
+      "es": "noche",
+      "emoji": "🌙",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "spring",
+      "es": "primavera",
+      "emoji": "🌸",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "autumn",
+      "es": "otoño",
+      "emoji": "🍂",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "winter",
+      "es": "invierno",
+      "emoji": "⛄",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "December",
+      "es": "diciembre",
+      "emoji": "🎄",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "October",
+      "es": "octubre",
+      "emoji": "🎃",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "February",
+      "es": "febrero",
+      "emoji": "💘",
+      "tema": "dias-meses"
+    },
+    {
+      "en": "run",
+      "es": "correr",
+      "emoji": "🏃",
+      "tema": "verbos"
+    },
+    {
+      "en": "swim",
+      "es": "nadar",
+      "emoji": "🏊",
+      "tema": "verbos"
+    },
+    {
+      "en": "sleep",
+      "es": "dormir",
+      "emoji": "😴",
+      "tema": "verbos"
+    },
+    {
+      "en": "dance",
+      "es": "bailar",
+      "emoji": "💃",
+      "tema": "verbos"
+    },
+    {
+      "en": "sing",
+      "es": "cantar",
+      "emoji": "🎤",
+      "tema": "verbos"
+    },
+    {
+      "en": "write",
+      "es": "escribir",
+      "emoji": "✍️",
+      "tema": "verbos"
+    },
+    {
+      "en": "cook",
+      "es": "cocinar",
+      "emoji": "🍳",
+      "tema": "verbos"
+    },
+    {
+      "en": "cry",
+      "es": "llorar",
+      "emoji": "😢",
+      "tema": "verbos"
+    },
+    {
+      "en": "laugh",
+      "es": "reír",
+      "emoji": "😂",
+      "tema": "verbos"
+    },
+    {
+      "en": "walk",
+      "es": "caminar",
+      "emoji": "🚶",
+      "tema": "verbos"
+    },
+    {
+      "en": "think",
+      "es": "pensar",
+      "emoji": "🤔",
+      "tema": "verbos"
+    },
+    {
+      "en": "listen",
+      "es": "escuchar",
+      "emoji": "🎧",
+      "tema": "verbos"
+    },
+    {
+      "en": "paint",
+      "es": "pintar",
+      "emoji": "🎨",
+      "tema": "verbos"
+    },
+    {
+      "en": "climb",
+      "es": "escalar",
+      "emoji": "🧗",
+      "tema": "verbos"
+    },
+    {
+      "en": "call",
+      "es": "llamar",
+      "emoji": "📞",
+      "tema": "verbos"
+    },
+    {
+      "en": "hospital",
+      "es": "hospital",
+      "emoji": "🏥",
+      "tema": "lugares"
+    },
+    {
+      "en": "beach",
+      "es": "playa",
+      "emoji": "🏖️",
+      "tema": "lugares"
+    },
+    {
+      "en": "park",
+      "es": "parque",
+      "emoji": "🏞️",
+      "tema": "lugares"
+    },
+    {
+      "en": "church",
+      "es": "iglesia",
+      "emoji": "⛪",
+      "tema": "lugares"
+    },
+    {
+      "en": "bank",
+      "es": "banco",
+      "emoji": "🏦",
+      "tema": "lugares"
+    },
+    {
+      "en": "store",
+      "es": "tienda",
+      "emoji": "🏪",
+      "tema": "lugares"
+    },
+    {
+      "en": "hotel",
+      "es": "hotel",
+      "emoji": "🏨",
+      "tema": "lugares"
+    },
+    {
+      "en": "mountain",
+      "es": "montaña",
+      "emoji": "⛰️",
+      "tema": "lugares"
+    },
+    {
+      "en": "city",
+      "es": "ciudad",
+      "emoji": "🏙️",
+      "tema": "lugares"
+    },
+    {
+      "en": "stadium",
+      "es": "estadio",
+      "emoji": "🏟️",
+      "tema": "lugares"
+    },
+    {
+      "en": "castle",
+      "es": "castillo",
+      "emoji": "🏰",
+      "tema": "lugares"
+    },
+    {
+      "en": "factory",
+      "es": "fábrica",
+      "emoji": "🏭",
+      "tema": "lugares"
+    },
+    {
+      "en": "island",
+      "es": "isla",
+      "emoji": "🏝️",
+      "tema": "lugares"
+    },
+    {
+      "en": "desert",
+      "es": "desierto",
+      "emoji": "🏜️",
+      "tema": "lugares"
+    },
+    {
+      "en": "sun",
+      "es": "sol",
+      "emoji": "☀️",
+      "tema": "clima"
+    },
+    {
+      "en": "cloud",
+      "es": "nube",
+      "emoji": "☁️",
+      "tema": "clima"
+    },
+    {
+      "en": "rain",
+      "es": "lluvia",
+      "emoji": "🌧️",
+      "tema": "clima"
+    },
+    {
+      "en": "snow",
+      "es": "nieve",
+      "emoji": "❄️",
+      "tema": "clima"
+    },
+    {
+      "en": "wind",
+      "es": "viento",
+      "emoji": "🌬️",
+      "tema": "clima"
+    },
+    {
+      "en": "rainbow",
+      "es": "arcoíris",
+      "emoji": "🌈",
+      "tema": "clima"
+    },
+    {
+      "en": "storm",
+      "es": "tormenta",
+      "emoji": "⛈️",
+      "tema": "clima"
+    },
+    {
+      "en": "lightning",
+      "es": "rayo",
+      "emoji": "⚡",
+      "tema": "clima"
+    },
+    {
+      "en": "umbrella",
+      "es": "paraguas",
+      "emoji": "☂️",
+      "tema": "clima"
+    },
+    {
+      "en": "hot",
+      "es": "calor",
+      "emoji": "🥵",
+      "tema": "clima"
+    },
+    {
+      "en": "cold",
+      "es": "frío",
+      "emoji": "🥶",
+      "tema": "clima"
+    },
+    {
+      "en": "tornado",
+      "es": "tornado",
+      "emoji": "🌪️",
+      "tema": "clima"
+    },
+    {
+      "en": "fog",
+      "es": "niebla",
+      "emoji": "🌫️",
+      "tema": "clima"
+    },
+    {
+      "en": "teacher",
+      "es": "maestro(a)",
+      "emoji": "🧑‍🏫",
+      "tema": "profesiones"
+    },
+    {
+      "en": "doctor",
+      "es": "doctor(a)",
+      "emoji": "🧑‍⚕️",
+      "tema": "profesiones"
+    },
+    {
+      "en": "chef",
+      "es": "chef",
+      "emoji": "🧑‍🍳",
+      "tema": "profesiones"
+    },
+    {
+      "en": "farmer",
+      "es": "granjero(a)",
+      "emoji": "🧑‍🌾",
+      "tema": "profesiones"
+    },
+    {
+      "en": "firefighter",
+      "es": "bombero(a)",
+      "emoji": "🧑‍🚒",
+      "tema": "profesiones"
+    },
+    {
+      "en": "police officer",
+      "es": "policía",
+      "emoji": "👮",
+      "tema": "profesiones"
+    },
+    {
+      "en": "pilot",
+      "es": "piloto",
+      "emoji": "🧑‍✈️",
+      "tema": "profesiones"
+    },
+    {
+      "en": "astronaut",
+      "es": "astronauta",
+      "emoji": "🧑‍🚀",
+      "tema": "profesiones"
+    },
+    {
+      "en": "artist",
+      "es": "artista",
+      "emoji": "🧑‍🎨",
+      "tema": "profesiones"
+    },
+    {
+      "en": "singer",
+      "es": "cantante",
+      "emoji": "🧑‍🎤",
+      "tema": "profesiones"
+    },
+    {
+      "en": "mechanic",
+      "es": "mecánico(a)",
+      "emoji": "🧑‍🔧",
+      "tema": "profesiones"
+    },
+    {
+      "en": "scientist",
+      "es": "científico(a)",
+      "emoji": "🧑‍🔬",
+      "tema": "profesiones"
+    },
+    {
+      "en": "student",
+      "es": "estudiante",
+      "emoji": "🧑‍🎓",
+      "tema": "profesiones"
+    },
+    {
+      "en": "judge",
+      "es": "juez(a)",
+      "emoji": "🧑‍⚖️",
+      "tema": "profesiones"
+    },
+    {
+      "en": "car",
+      "es": "coche",
+      "emoji": "🚗",
+      "tema": "transporte"
+    },
+    {
+      "en": "bus",
+      "es": "autobús",
+      "emoji": "🚌",
+      "tema": "transporte"
+    },
+    {
+      "en": "train",
+      "es": "tren",
+      "emoji": "🚆",
+      "tema": "transporte"
+    },
+    {
+      "en": "plane",
+      "es": "avión",
+      "emoji": "✈️",
+      "tema": "transporte"
+    },
+    {
+      "en": "ship",
+      "es": "barco",
+      "emoji": "🚢",
+      "tema": "transporte"
+    },
+    {
+      "en": "bicycle",
+      "es": "bicicleta",
+      "emoji": "🚲",
+      "tema": "transporte"
+    },
+    {
+      "en": "motorcycle",
+      "es": "motocicleta",
+      "emoji": "🏍️",
+      "tema": "transporte"
+    },
+    {
+      "en": "taxi",
+      "es": "taxi",
+      "emoji": "🚕",
+      "tema": "transporte"
+    },
+    {
+      "en": "truck",
+      "es": "camión",
+      "emoji": "🚚",
+      "tema": "transporte"
+    },
+    {
+      "en": "helicopter",
+      "es": "helicóptero",
+      "emoji": "🚁",
+      "tema": "transporte"
+    },
+    {
+      "en": "ambulance",
+      "es": "ambulancia",
+      "emoji": "🚑",
+      "tema": "transporte"
+    },
+    {
+      "en": "subway",
+      "es": "metro",
+      "emoji": "🚇",
+      "tema": "transporte"
+    },
+    {
+      "en": "rocket",
+      "es": "cohete",
+      "emoji": "🚀",
+      "tema": "transporte"
+    },
+    {
+      "en": "tractor",
+      "es": "tractor",
+      "emoji": "🚜",
+      "tema": "transporte"
+    },
+    {
+      "en": "scooter",
+      "es": "patín del diablo",
+      "emoji": "🛴",
+      "tema": "transporte"
+    }
+  ],
+  "spelling": [
+    {
+      "en": "cat",
+      "es": "gato",
+      "nivel": 1
+    },
+    {
+      "en": "dog",
+      "es": "perro",
+      "nivel": 1
+    },
+    {
+      "en": "sun",
+      "es": "sol",
+      "nivel": 1
+    },
+    {
+      "en": "red",
+      "es": "rojo",
+      "nivel": 1
+    },
+    {
+      "en": "blue",
+      "es": "azul",
+      "nivel": 1
+    },
+    {
+      "en": "big",
+      "es": "grande",
+      "nivel": 1
+    },
+    {
+      "en": "pen",
+      "es": "pluma",
+      "nivel": 1
+    },
+    {
+      "en": "cup",
+      "es": "taza",
+      "nivel": 1
+    },
+    {
+      "en": "hat",
+      "es": "sombrero",
+      "nivel": 1
+    },
+    {
+      "en": "bed",
+      "es": "cama",
+      "nivel": 1
+    },
+    {
+      "en": "box",
+      "es": "caja",
+      "nivel": 1
+    },
+    {
+      "en": "egg",
+      "es": "huevo",
+      "nivel": 1
+    },
+    {
+      "en": "fish",
+      "es": "pez",
+      "nivel": 1
+    },
+    {
+      "en": "milk",
+      "es": "leche",
+      "nivel": 1
+    },
+    {
+      "en": "book",
+      "es": "libro",
+      "nivel": 1
+    },
+    {
+      "en": "car",
+      "es": "coche",
+      "nivel": 1
+    },
+    {
+      "en": "bus",
+      "es": "autobús",
+      "nivel": 1
+    },
+    {
+      "en": "ten",
+      "es": "diez",
+      "nivel": 1
+    },
+    {
+      "en": "six",
+      "es": "seis",
+      "nivel": 1
+    },
+    {
+      "en": "run",
+      "es": "correr",
+      "nivel": 1
+    },
+    {
+      "en": "sit",
+      "es": "sentarse",
+      "nivel": 1
+    },
+    {
+      "en": "pig",
+      "es": "cerdo",
+      "nivel": 1
+    },
+    {
+      "en": "bag",
+      "es": "bolsa",
+      "nivel": 1
+    },
+    {
+      "en": "hot",
+      "es": "caliente",
+      "nivel": 1
+    },
+    {
+      "en": "map",
+      "es": "mapa",
+      "nivel": 1
+    },
+    {
+      "en": "leg",
+      "es": "pierna",
+      "nivel": 1
+    },
+    {
+      "en": "arm",
+      "es": "brazo",
+      "nivel": 1
+    },
+    {
+      "en": "eye",
+      "es": "ojo",
+      "nivel": 1
+    },
+    {
+      "en": "cake",
+      "es": "pastel",
+      "nivel": 1
+    },
+    {
+      "en": "tree",
+      "es": "árbol",
+      "nivel": 1
+    },
+    {
+      "en": "door",
+      "es": "puerta",
+      "nivel": 1
+    },
+    {
+      "en": "frog",
+      "es": "rana",
+      "nivel": 1
+    },
+    {
+      "en": "teacher",
+      "es": "maestro(a)",
+      "nivel": 2
+    },
+    {
+      "en": "family",
+      "es": "familia",
+      "nivel": 2
+    },
+    {
+      "en": "window",
+      "es": "ventana",
+      "nivel": 2
+    },
+    {
+      "en": "yellow",
+      "es": "amarillo",
+      "nivel": 2
+    },
+    {
+      "en": "orange",
+      "es": "naranja",
+      "nivel": 2
+    },
+    {
+      "en": "purple",
+      "es": "morado",
+      "nivel": 2
+    },
+    {
+      "en": "school",
+      "es": "escuela",
+      "nivel": 2
+    },
+    {
+      "en": "pencil",
+      "es": "lápiz",
+      "nivel": 2
+    },
+    {
+      "en": "kitchen",
+      "es": "cocina",
+      "nivel": 2
+    },
+    {
+      "en": "garden",
+      "es": "jardín",
+      "nivel": 2
+    },
+    {
+      "en": "mother",
+      "es": "mamá",
+      "nivel": 2
+    },
+    {
+      "en": "father",
+      "es": "papá",
+      "nivel": 2
+    },
+    {
+      "en": "brother",
+      "es": "hermano",
+      "nivel": 2
+    },
+    {
+      "en": "sister",
+      "es": "hermana",
+      "nivel": 2
+    },
+    {
+      "en": "animal",
+      "es": "animal",
+      "nivel": 2
+    },
+    {
+      "en": "chicken",
+      "es": "pollo",
+      "nivel": 2
+    },
+    {
+      "en": "monkey",
+      "es": "mono",
+      "nivel": 2
+    },
+    {
+      "en": "rabbit",
+      "es": "conejo",
+      "nivel": 2
+    },
+    {
+      "en": "tiger",
+      "es": "tigre",
+      "nivel": 2
+    },
+    {
+      "en": "doctor",
+      "es": "doctor(a)",
+      "nivel": 2
+    },
+    {
+      "en": "summer",
+      "es": "verano",
+      "nivel": 2
+    },
+    {
+      "en": "winter",
+      "es": "invierno",
+      "nivel": 2
+    },
+    {
+      "en": "morning",
+      "es": "mañana",
+      "nivel": 2
+    },
+    {
+      "en": "dinner",
+      "es": "cena",
+      "nivel": 2
+    },
+    {
+      "en": "breakfast",
+      "es": "desayuno",
+      "nivel": 2
+    },
+    {
+      "en": "water",
+      "es": "agua",
+      "nivel": 2
+    },
+    {
+      "en": "table",
+      "es": "mesa",
+      "nivel": 2
+    },
+    {
+      "en": "flower",
+      "es": "flor",
+      "nivel": 2
+    },
+    {
+      "en": "happy",
+      "es": "feliz",
+      "nivel": 2
+    },
+    {
+      "en": "number",
+      "es": "número",
+      "nivel": 2
+    },
+    {
+      "en": "birthday",
+      "es": "cumpleaños",
+      "nivel": 2
+    },
+    {
+      "en": "computer",
+      "es": "computadora",
+      "nivel": 2
+    },
+    {
+      "en": "Wednesday",
+      "es": "miércoles",
+      "nivel": 3
+    },
+    {
+      "en": "February",
+      "es": "febrero",
+      "nivel": 3
+    },
+    {
+      "en": "beautiful",
+      "es": "hermoso",
+      "nivel": 3
+    },
+    {
+      "en": "because",
+      "es": "porque",
+      "nivel": 3
+    },
+    {
+      "en": "friend",
+      "es": "amigo(a)",
+      "nivel": 3
+    },
+    {
+      "en": "people",
+      "es": "gente",
+      "nivel": 3
+    },
+    {
+      "en": "knife",
+      "es": "cuchillo",
+      "nivel": 3
+    },
+    {
+      "en": "knee",
+      "es": "rodilla",
+      "nivel": 3
+    },
+    {
+      "en": "write",
+      "es": "escribir",
+      "nivel": 3
+    },
+    {
+      "en": "listen",
+      "es": "escuchar",
+      "nivel": 3
+    },
+    {
+      "en": "answer",
+      "es": "respuesta",
+      "nivel": 3
+    },
+    {
+      "en": "daughter",
+      "es": "hija",
+      "nivel": 3
+    },
+    {
+      "en": "island",
+      "es": "isla",
+      "nivel": 3
+    },
+    {
+      "en": "light",
+      "es": "luz",
+      "nivel": 3
+    },
+    {
+      "en": "night",
+      "es": "noche",
+      "nivel": 3
+    },
+    {
+      "en": "eight",
+      "es": "ocho",
+      "nivel": 3
+    },
+    {
+      "en": "cousin",
+      "es": "primo(a)",
+      "nivel": 3
+    },
+    {
+      "en": "laugh",
+      "es": "reír",
+      "nivel": 3
+    },
+    {
+      "en": "tomorrow",
+      "es": "mañana",
+      "nivel": 3
+    },
+    {
+      "en": "different",
+      "es": "diferente",
+      "nivel": 3
+    },
+    {
+      "en": "library",
+      "es": "biblioteca",
+      "nivel": 3
+    },
+    {
+      "en": "vegetable",
+      "es": "verdura",
+      "nivel": 3
+    },
+    {
+      "en": "Thursday",
+      "es": "jueves",
+      "nivel": 3
+    },
+    {
+      "en": "Saturday",
+      "es": "sábado",
+      "nivel": 3
+    },
+    {
+      "en": "January",
+      "es": "enero",
+      "nivel": 3
+    },
+    {
+      "en": "August",
+      "es": "agosto",
+      "nivel": 3
+    },
+    {
+      "en": "weather",
+      "es": "clima",
+      "nivel": 3
+    },
+    {
+      "en": "science",
+      "es": "ciencia",
+      "nivel": 3
+    },
+    {
+      "en": "favorite",
+      "es": "favorito(a)",
+      "nivel": 3
+    },
+    {
+      "en": "which",
+      "es": "cuál",
+      "nivel": 3
+    },
+    {
+      "en": "busy",
+      "es": "ocupado(a)",
+      "nivel": 3
+    },
+    {
+      "en": "hour",
+      "es": "hora",
+      "nivel": 3
+    },
+    {
+      "en": "September",
+      "es": "septiembre",
+      "nivel": 3
+    }
+  ],
+  "verbos": [
+    {
+      "frase": "She ___ a teacher.",
+      "opciones": [
+        "is",
+        "are",
+        "am"
+      ],
+      "correcta": 0,
+      "es": "Ella es maestra.",
+      "tema": "to be"
+    },
+    {
+      "frase": "I ___ happy.",
+      "opciones": [
+        "is",
+        "am",
+        "are"
+      ],
+      "correcta": 1,
+      "es": "Estoy feliz.",
+      "tema": "to be"
+    },
+    {
+      "frase": "They ___ my friends.",
+      "opciones": [
+        "is",
+        "am",
+        "are"
+      ],
+      "correcta": 2,
+      "es": "Ellos son mis amigos.",
+      "tema": "to be"
+    },
+    {
+      "frase": "We ___ at school.",
+      "opciones": [
+        "are",
+        "is",
+        "am"
+      ],
+      "correcta": 0,
+      "es": "Estamos en la escuela.",
+      "tema": "to be"
+    },
+    {
+      "frase": "He ___ ten years old.",
+      "opciones": [
+        "are",
+        "is",
+        "am"
+      ],
+      "correcta": 1,
+      "es": "Él tiene diez años.",
+      "tema": "to be"
+    },
+    {
+      "frase": "You ___ very tall.",
+      "opciones": [
+        "is",
+        "am",
+        "are"
+      ],
+      "correcta": 2,
+      "es": "Eres muy alto.",
+      "tema": "to be"
+    },
+    {
+      "frase": "The dog ___ in the garden.",
+      "opciones": [
+        "is",
+        "are",
+        "am"
+      ],
+      "correcta": 0,
+      "es": "El perro está en el jardín.",
+      "tema": "to be"
+    },
+    {
+      "frase": "My parents ___ at home.",
+      "opciones": [
+        "is",
+        "are",
+        "am"
+      ],
+      "correcta": 1,
+      "es": "Mis papás están en casa.",
+      "tema": "to be"
+    },
+    {
+      "frase": "It ___ cold today.",
+      "opciones": [
+        "are",
+        "am",
+        "is"
+      ],
+      "correcta": 2,
+      "es": "Hoy hace frío.",
+      "tema": "to be"
+    },
+    {
+      "frase": "I ___ not tired.",
+      "opciones": [
+        "am",
+        "is",
+        "are"
+      ],
+      "correcta": 0,
+      "es": "No estoy cansado.",
+      "tema": "to be"
+    },
+    {
+      "frase": "The apples ___ red.",
+      "opciones": [
+        "is",
+        "are",
+        "am"
+      ],
+      "correcta": 1,
+      "es": "Las manzanas son rojas.",
+      "tema": "to be"
+    },
+    {
+      "frase": "My name ___ Ana.",
+      "opciones": [
+        "are",
+        "am",
+        "is"
+      ],
+      "correcta": 2,
+      "es": "Me llamo Ana.",
+      "tema": "to be"
+    },
+    {
+      "frase": "Tom and I ___ brothers.",
+      "opciones": [
+        "are",
+        "is",
+        "am"
+      ],
+      "correcta": 0,
+      "es": "Tom y yo somos hermanos.",
+      "tema": "to be"
+    },
+    {
+      "frase": "The book ___ on the table.",
+      "opciones": [
+        "are",
+        "is",
+        "am"
+      ],
+      "correcta": 1,
+      "es": "El libro está sobre la mesa.",
+      "tema": "to be"
+    },
+    {
+      "frase": "She ___ milk every day.",
+      "opciones": [
+        "drink",
+        "drinking",
+        "drinks"
+      ],
+      "correcta": 2,
+      "es": "Ella toma leche todos los días.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "I ___ in Mexico City.",
+      "opciones": [
+        "live",
+        "lives",
+        "living"
+      ],
+      "correcta": 0,
+      "es": "Vivo en la Ciudad de México.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "He ___ to school by bus.",
+      "opciones": [
+        "go",
+        "goes",
+        "going"
+      ],
+      "correcta": 1,
+      "es": "Él va a la escuela en autobús.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "They ___ soccer on Saturdays.",
+      "opciones": [
+        "plays",
+        "playing",
+        "play"
+      ],
+      "correcta": 2,
+      "es": "Ellos juegan futbol los sábados.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "My mom ___ in a hospital.",
+      "opciones": [
+        "works",
+        "work",
+        "working"
+      ],
+      "correcta": 0,
+      "es": "Mi mamá trabaja en un hospital.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "We ___ English at school.",
+      "opciones": [
+        "studies",
+        "study",
+        "studying"
+      ],
+      "correcta": 1,
+      "es": "Estudiamos inglés en la escuela.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "The cat ___ a lot.",
+      "opciones": [
+        "sleep",
+        "sleeping",
+        "sleeps"
+      ],
+      "correcta": 2,
+      "es": "El gato duerme mucho.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "You ___ very well.",
+      "opciones": [
+        "sing",
+        "sings",
+        "singing"
+      ],
+      "correcta": 0,
+      "es": "Cantas muy bien.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "My brother ___ TV at night.",
+      "opciones": [
+        "watch",
+        "watches",
+        "watching"
+      ],
+      "correcta": 1,
+      "es": "Mi hermano ve la tele en la noche.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "I ___ breakfast at seven.",
+      "opciones": [
+        "eats",
+        "eating",
+        "eat"
+      ],
+      "correcta": 2,
+      "es": "Desayuno a las siete.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "She ___ her homework after school.",
+      "opciones": [
+        "does",
+        "do",
+        "doing"
+      ],
+      "correcta": 0,
+      "es": "Ella hace su tarea después de la escuela.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "He ___ two dogs.",
+      "opciones": [
+        "have",
+        "has",
+        "having"
+      ],
+      "correcta": 1,
+      "es": "Él tiene dos perros.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "The bus ___ at eight.",
+      "opciones": [
+        "leave",
+        "leaving",
+        "leaves"
+      ],
+      "correcta": 2,
+      "es": "El autobús sale a las ocho.",
+      "tema": "presente simple"
+    },
+    {
+      "frase": "I ___ like coffee.",
+      "opciones": [
+        "don't",
+        "doesn't",
+        "isn't"
+      ],
+      "correcta": 0,
+      "es": "No me gusta el café.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "She ___ eat meat.",
+      "opciones": [
+        "don't",
+        "doesn't",
+        "isn't"
+      ],
+      "correcta": 1,
+      "es": "Ella no come carne.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "They ___ live here.",
+      "opciones": [
+        "doesn't",
+        "aren't",
+        "don't"
+      ],
+      "correcta": 2,
+      "es": "Ellos no viven aquí.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "He ___ play the guitar.",
+      "opciones": [
+        "doesn't",
+        "don't",
+        "isn't"
+      ],
+      "correcta": 0,
+      "es": "Él no toca la guitarra.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "We ___ have class today.",
+      "opciones": [
+        "doesn't",
+        "don't",
+        "aren't"
+      ],
+      "correcta": 1,
+      "es": "Hoy no tenemos clase.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "I ___ hungry.",
+      "opciones": [
+        "don't",
+        "doesn't",
+        "am not"
+      ],
+      "correcta": 2,
+      "es": "No tengo hambre.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "She ___ at home.",
+      "opciones": [
+        "isn't",
+        "doesn't",
+        "don't"
+      ],
+      "correcta": 0,
+      "es": "Ella no está en casa.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "They ___ students.",
+      "opciones": [
+        "isn't",
+        "aren't",
+        "doesn't"
+      ],
+      "correcta": 1,
+      "es": "Ellos no son estudiantes.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "My dad ___ drive.",
+      "opciones": [
+        "don't",
+        "isn't",
+        "doesn't"
+      ],
+      "correcta": 2,
+      "es": "Mi papá no maneja.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "You ___ need a pencil.",
+      "opciones": [
+        "don't",
+        "doesn't",
+        "aren't"
+      ],
+      "correcta": 0,
+      "es": "No necesitas un lápiz.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "It ___ hot today.",
+      "opciones": [
+        "doesn't",
+        "isn't",
+        "don't"
+      ],
+      "correcta": 1,
+      "es": "Hoy no hace calor.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "The dog ___ like cats.",
+      "opciones": [
+        "don't",
+        "isn't",
+        "doesn't"
+      ],
+      "correcta": 2,
+      "es": "Al perro no le gustan los gatos.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "We ___ tired.",
+      "opciones": [
+        "aren't",
+        "isn't",
+        "don't"
+      ],
+      "correcta": 0,
+      "es": "No estamos cansados.",
+      "tema": "negativo"
+    },
+    {
+      "frase": "___ you like pizza?",
+      "opciones": [
+        "Does",
+        "Do",
+        "Are"
+      ],
+      "correcta": 1,
+      "es": "¿Te gusta la pizza?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ she speak English?",
+      "opciones": [
+        "Do",
+        "Is",
+        "Does"
+      ],
+      "correcta": 2,
+      "es": "¿Ella habla inglés?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ they your friends?",
+      "opciones": [
+        "Are",
+        "Do",
+        "Is"
+      ],
+      "correcta": 0,
+      "es": "¿Ellos son tus amigos?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ he a doctor?",
+      "opciones": [
+        "Does",
+        "Is",
+        "Are"
+      ],
+      "correcta": 1,
+      "es": "¿Él es doctor?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ you have a pet?",
+      "opciones": [
+        "Does",
+        "Are",
+        "Do"
+      ],
+      "correcta": 2,
+      "es": "¿Tienes una mascota?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ it cold outside?",
+      "opciones": [
+        "Is",
+        "Does",
+        "Are"
+      ],
+      "correcta": 0,
+      "es": "¿Hace frío afuera?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ your brother play soccer?",
+      "opciones": [
+        "Do",
+        "Does",
+        "Is"
+      ],
+      "correcta": 1,
+      "es": "¿Tu hermano juega futbol?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ we late?",
+      "opciones": [
+        "Do",
+        "Is",
+        "Are"
+      ],
+      "correcta": 2,
+      "es": "¿Llegamos tarde?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ I your friend?",
+      "opciones": [
+        "Am",
+        "Is",
+        "Do"
+      ],
+      "correcta": 0,
+      "es": "¿Soy tu amigo?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ your parents work here?",
+      "opciones": [
+        "Does",
+        "Do",
+        "Are"
+      ],
+      "correcta": 1,
+      "es": "¿Tus papás trabajan aquí?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ the store big?",
+      "opciones": [
+        "Does",
+        "Are",
+        "Is"
+      ],
+      "correcta": 2,
+      "es": "¿La tienda es grande?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ you happy?",
+      "opciones": [
+        "Are",
+        "Do",
+        "Is"
+      ],
+      "correcta": 0,
+      "es": "¿Estás feliz?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ your cat eat fish?",
+      "opciones": [
+        "Do",
+        "Does",
+        "Is"
+      ],
+      "correcta": 1,
+      "es": "¿Tu gato come pescado?",
+      "tema": "preguntas"
+    },
+    {
+      "frase": "___ is your name? My name is Luis.",
+      "opciones": [
+        "Where",
+        "When",
+        "What"
+      ],
+      "correcta": 2,
+      "es": "¿Cómo te llamas? Me llamo Luis.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ do you live? I live in Puebla.",
+      "opciones": [
+        "Where",
+        "When",
+        "Who"
+      ],
+      "correcta": 0,
+      "es": "¿Dónde vives? Vivo en Puebla.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ old are you? I am twelve.",
+      "opciones": [
+        "What",
+        "How",
+        "Who"
+      ],
+      "correcta": 1,
+      "es": "¿Cuántos años tienes? Tengo doce.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ is that man? He is my uncle.",
+      "opciones": [
+        "Where",
+        "When",
+        "Who"
+      ],
+      "correcta": 2,
+      "es": "¿Quién es ese señor? Es mi tío.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ is your birthday? It is in May.",
+      "opciones": [
+        "When",
+        "Who",
+        "How"
+      ],
+      "correcta": 0,
+      "es": "¿Cuándo es tu cumpleaños? Es en mayo.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ is the bathroom? It is on the left.",
+      "opciones": [
+        "Who",
+        "Where",
+        "When"
+      ],
+      "correcta": 1,
+      "es": "¿Dónde está el baño? Está a la izquierda.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ color is your bag? It is blue.",
+      "opciones": [
+        "Who",
+        "Where",
+        "What"
+      ],
+      "correcta": 2,
+      "es": "¿De qué color es tu bolsa? Es azul.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ are you sad? Because my dog is sick.",
+      "opciones": [
+        "Why",
+        "Who",
+        "What"
+      ],
+      "correcta": 0,
+      "es": "¿Por qué estás triste? Porque mi perro está enfermo.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ many brothers do you have? I have two.",
+      "opciones": [
+        "What",
+        "How",
+        "Who"
+      ],
+      "correcta": 1,
+      "es": "¿Cuántos hermanos tienes? Tengo dos.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ is your favorite food? Pizza.",
+      "opciones": [
+        "Who",
+        "When",
+        "What"
+      ],
+      "correcta": 2,
+      "es": "¿Cuál es tu comida favorita? La pizza.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ do you go to school? At seven.",
+      "opciones": [
+        "When",
+        "Who",
+        "What"
+      ],
+      "correcta": 0,
+      "es": "¿A qué hora vas a la escuela? A las siete.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ is this bag? It is Maria's.",
+      "opciones": [
+        "Who",
+        "Whose",
+        "Where"
+      ],
+      "correcta": 1,
+      "es": "¿De quién es esta bolsa? Es de María.",
+      "tema": "wh"
+    },
+    {
+      "frase": "___ is your best friend? Ana.",
+      "opciones": [
+        "What",
+        "When",
+        "Who"
+      ],
+      "correcta": 2,
+      "es": "¿Quién es tu mejor amiga? Ana.",
+      "tema": "wh"
+    },
+    {
+      "frase": "This is ___ book. I love it.",
+      "opciones": [
+        "my",
+        "me",
+        "I"
+      ],
+      "correcta": 0,
+      "es": "Este es mi libro. Me encanta.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "She has a cat. ___ cat is white.",
+      "opciones": [
+        "She",
+        "Her",
+        "Hers"
+      ],
+      "correcta": 1,
+      "es": "Ella tiene un gato. Su gato es blanco.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "He plays with ___ dog.",
+      "opciones": [
+        "he",
+        "him",
+        "his"
+      ],
+      "correcta": 2,
+      "es": "Él juega con su perro.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "We love ___ school.",
+      "opciones": [
+        "our",
+        "us",
+        "we"
+      ],
+      "correcta": 0,
+      "es": "Amamos nuestra escuela.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "They are in ___ house.",
+      "opciones": [
+        "them",
+        "their",
+        "they"
+      ],
+      "correcta": 1,
+      "es": "Ellos están en su casa.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "Is this ___ pencil, Ana?",
+      "opciones": [
+        "you",
+        "yours",
+        "your"
+      ],
+      "correcta": 2,
+      "es": "¿Este es tu lápiz, Ana?",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "The dog is eating ___ food.",
+      "opciones": [
+        "its",
+        "it",
+        "it's"
+      ],
+      "correcta": 0,
+      "es": "El perro está comiendo su comida.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "My sister and I share ___ room.",
+      "opciones": [
+        "us",
+        "our",
+        "we"
+      ],
+      "correcta": 1,
+      "es": "Mi hermana y yo compartimos nuestro cuarto.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "Hi! ___ name is Sofia.",
+      "opciones": [
+        "Me",
+        "I",
+        "My"
+      ],
+      "correcta": 2,
+      "es": "¡Hola! Me llamo Sofía.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "Mr. Ruiz is ___ teacher.",
+      "opciones": [
+        "our",
+        "us",
+        "we"
+      ],
+      "correcta": 0,
+      "es": "El señor Ruiz es nuestro maestro.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "The children play with ___ toys.",
+      "opciones": [
+        "them",
+        "their",
+        "they"
+      ],
+      "correcta": 1,
+      "es": "Los niños juegan con sus juguetes.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "Do you have ___ keys?",
+      "opciones": [
+        "you",
+        "yours",
+        "your"
+      ],
+      "correcta": 2,
+      "es": "¿Tienes tus llaves?",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "Paula brushes ___ hair.",
+      "opciones": [
+        "her",
+        "she",
+        "hers"
+      ],
+      "correcta": 0,
+      "es": "Paula se cepilla el cabello.",
+      "tema": "posesivos"
+    },
+    {
+      "frase": "I have ___ apple.",
+      "opciones": [
+        "a",
+        "an",
+        "many"
+      ],
+      "correcta": 1,
+      "es": "Tengo una manzana.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "She is ___ teacher.",
+      "opciones": [
+        "an",
+        "many",
+        "a"
+      ],
+      "correcta": 2,
+      "es": "Ella es maestra.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "It is ___ elephant.",
+      "opciones": [
+        "an",
+        "a",
+        "two"
+      ],
+      "correcta": 0,
+      "es": "Es un elefante.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "___ moon is beautiful tonight.",
+      "opciones": [
+        "A",
+        "The",
+        "An"
+      ],
+      "correcta": 1,
+      "es": "La luna está hermosa esta noche.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "He eats ___ egg every day.",
+      "opciones": [
+        "a",
+        "two",
+        "an"
+      ],
+      "correcta": 2,
+      "es": "Él come un huevo todos los días.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "I want ___ banana, please.",
+      "opciones": [
+        "a",
+        "an",
+        "many"
+      ],
+      "correcta": 0,
+      "es": "Quiero un plátano, por favor.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "My dad is ___ engineer.",
+      "opciones": [
+        "a",
+        "an",
+        "two"
+      ],
+      "correcta": 1,
+      "es": "Mi papá es ingeniero.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "We live in ___ small house.",
+      "opciones": [
+        "an",
+        "many",
+        "a"
+      ],
+      "correcta": 2,
+      "es": "Vivimos en una casa pequeña.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "___ sky is blue.",
+      "opciones": [
+        "The",
+        "A",
+        "An"
+      ],
+      "correcta": 0,
+      "es": "El cielo es azul.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "She has ___ umbrella.",
+      "opciones": [
+        "a",
+        "an",
+        "two"
+      ],
+      "correcta": 1,
+      "es": "Ella tiene un paraguas.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "This is ___ interesting book.",
+      "opciones": [
+        "a",
+        "many",
+        "an"
+      ],
+      "correcta": 2,
+      "es": "Este es un libro interesante.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "I see ___ bird in the tree.",
+      "opciones": [
+        "a",
+        "an",
+        "two"
+      ],
+      "correcta": 0,
+      "es": "Veo un pájaro en el árbol.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "I go to school in ___ morning.",
+      "opciones": [
+        "a",
+        "the",
+        "an"
+      ],
+      "correcta": 1,
+      "es": "Voy a la escuela en la mañana.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "He is ___ honest boy.",
+      "opciones": [
+        "a",
+        "two",
+        "an"
+      ],
+      "correcta": 2,
+      "es": "Él es un niño honesto.",
+      "tema": "articulos"
+    },
+    {
+      "frase": "There are three ___ in the class.",
+      "opciones": [
+        "children",
+        "childs",
+        "child"
+      ],
+      "correcta": 0,
+      "es": "Hay tres niños en la clase.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "I have thirty-two ___.",
+      "opciones": [
+        "tooths",
+        "teeth",
+        "tooth"
+      ],
+      "correcta": 1,
+      "es": "Tengo treinta y dos dientes.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "Two ___ are in the kitchen.",
+      "opciones": [
+        "womans",
+        "woman",
+        "women"
+      ],
+      "correcta": 2,
+      "es": "Dos mujeres están en la cocina.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "My ___ are cold.",
+      "opciones": [
+        "feet",
+        "foots",
+        "foot"
+      ],
+      "correcta": 0,
+      "es": "Mis pies están fríos.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "There are two ___ in the house.",
+      "opciones": [
+        "mouses",
+        "mice",
+        "mouse"
+      ],
+      "correcta": 1,
+      "es": "Hay dos ratones en la casa.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "I have three ___.",
+      "opciones": [
+        "boxs",
+        "box",
+        "boxes"
+      ],
+      "correcta": 2,
+      "es": "Tengo tres cajas.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "The ___ are playing in the park.",
+      "opciones": [
+        "babies",
+        "babys",
+        "baby"
+      ],
+      "correcta": 0,
+      "es": "Los bebés están jugando en el parque.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "I buy four ___.",
+      "opciones": [
+        "tomatos",
+        "tomatoes",
+        "tomato"
+      ],
+      "correcta": 1,
+      "es": "Compro cuatro jitomates.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "Two ___ are at the door.",
+      "opciones": [
+        "mans",
+        "man",
+        "men"
+      ],
+      "correcta": 2,
+      "es": "Dos hombres están en la puerta.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "We need six ___.",
+      "opciones": [
+        "knives",
+        "knifes",
+        "knife"
+      ],
+      "correcta": 0,
+      "es": "Necesitamos seis cuchillos.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "There are many ___ in the city.",
+      "opciones": [
+        "buss",
+        "buses",
+        "bus"
+      ],
+      "correcta": 1,
+      "es": "Hay muchos autobuses en la ciudad.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "I visit two ___ every year.",
+      "opciones": [
+        "citys",
+        "city",
+        "cities"
+      ],
+      "correcta": 2,
+      "es": "Visito dos ciudades cada año.",
+      "tema": "plurales"
+    },
+    {
+      "frase": "Mom cooks five ___.",
+      "opciones": [
+        "potatoes",
+        "potatos",
+        "potato"
+      ],
+      "correcta": 0,
+      "es": "Mamá cocina cinco papas.",
+      "tema": "plurales"
+    }
+  ],
+  "oraciones": [
+    {
+      "en": "I like green apples",
+      "es": "Me gustan las manzanas verdes"
+    },
+    {
+      "en": "My dog is very big",
+      "es": "Mi perro es muy grande"
+    },
+    {
+      "en": "She lives in Mexico",
+      "es": "Ella vive en México"
+    },
+    {
+      "en": "We play soccer after school",
+      "es": "Jugamos futbol después de la escuela"
+    },
+    {
+      "en": "The cat is under the bed",
+      "es": "El gato está debajo de la cama"
+    },
+    {
+      "en": "He drinks milk every morning",
+      "es": "Él toma leche todas las mañanas"
+    },
+    {
+      "en": "My mother is a nurse",
+      "es": "Mi mamá es enfermera"
+    },
+    {
+      "en": "They are in the park",
+      "es": "Ellos están en el parque"
+    },
+    {
+      "en": "I have two brothers",
+      "es": "Tengo dos hermanos"
+    },
+    {
+      "en": "The sky is blue today",
+      "es": "Hoy el cielo está azul"
+    },
+    {
+      "en": "Our school has a big garden",
+      "es": "Nuestra escuela tiene un jardín grande"
+    },
+    {
+      "en": "I get up at six",
+      "es": "Me levanto a las seis"
+    },
+    {
+      "en": "She reads a book every night",
+      "es": "Ella lee un libro cada noche"
+    },
+    {
+      "en": "The bus is yellow",
+      "es": "El autobús es amarillo"
+    },
+    {
+      "en": "My father works in an office",
+      "es": "Mi papá trabaja en una oficina"
+    },
+    {
+      "en": "I am twelve years old",
+      "es": "Tengo doce años"
+    },
+    {
+      "en": "We eat dinner at eight",
+      "es": "Cenamos a las ocho"
+    },
+    {
+      "en": "The children are happy",
+      "es": "Los niños están felices"
+    },
+    {
+      "en": "He doesn't like cold weather",
+      "es": "A él no le gusta el clima frío"
+    },
+    {
+      "en": "My sister has long hair",
+      "es": "Mi hermana tiene el cabello largo"
+    },
+    {
+      "en": "I go to school by bike",
+      "es": "Voy a la escuela en bicicleta"
+    },
+    {
+      "en": "It is hot in summer",
+      "es": "Hace calor en verano"
+    },
+    {
+      "en": "The book is on the table",
+      "es": "El libro está sobre la mesa"
+    },
+    {
+      "en": "My grandmother makes delicious tamales",
+      "es": "Mi abuela hace tamales deliciosos"
+    },
+    {
+      "en": "They watch TV on Sundays",
+      "es": "Ellos ven la tele los domingos"
+    },
+    {
+      "en": "I brush my teeth every day",
+      "es": "Me lavo los dientes todos los días"
+    },
+    {
+      "en": "She is my best friend",
+      "es": "Ella es mi mejor amiga"
+    },
+    {
+      "en": "We have English class today",
+      "es": "Hoy tenemos clase de inglés"
+    },
+    {
+      "en": "The dog runs in the garden",
+      "es": "El perro corre en el jardín"
+    },
+    {
+      "en": "My favorite color is purple",
+      "es": "Mi color favorito es el morado"
+    },
+    {
+      "en": "I don't have a car",
+      "es": "No tengo coche"
+    },
+    {
+      "en": "Birds can fly",
+      "es": "Los pájaros pueden volar"
+    },
+    {
+      "en": "My uncle is a doctor",
+      "es": "Mi tío es doctor"
+    },
+    {
+      "en": "The store opens at nine",
+      "es": "La tienda abre a las nueve"
+    },
+    {
+      "en": "I listen to music at night",
+      "es": "Escucho música en la noche"
+    },
+    {
+      "en": "He plays the guitar",
+      "es": "Él toca la guitarra"
+    },
+    {
+      "en": "We visit our grandparents on Saturdays",
+      "es": "Visitamos a nuestros abuelos los sábados"
+    },
+    {
+      "en": "There is a cat on the roof",
+      "es": "Hay un gato en el techo"
+    },
+    {
+      "en": "My bedroom is small",
+      "es": "Mi recámara es pequeña"
+    },
+    {
+      "en": "She cooks rice and beans",
+      "es": "Ella cocina arroz y frijoles"
+    },
+    {
+      "en": "The train is very fast",
+      "es": "El tren es muy rápido"
+    },
+    {
+      "en": "I want a glass of water",
+      "es": "Quiero un vaso de agua"
+    },
+    {
+      "en": "Today is Monday",
+      "es": "Hoy es lunes"
+    },
+    {
+      "en": "My birthday is in April",
+      "es": "Mi cumpleaños es en abril"
+    },
+    {
+      "en": "They speak Spanish and English",
+      "es": "Ellos hablan español e inglés"
+    },
+    {
+      "en": "The baby is sleeping now",
+      "es": "El bebé está durmiendo ahora"
+    },
+    {
+      "en": "I can swim very well",
+      "es": "Sé nadar muy bien"
+    },
+    {
+      "en": "My friends are at the beach",
+      "es": "Mis amigos están en la playa"
+    },
+    {
+      "en": "He wears a blue shirt",
+      "es": "Él lleva una camisa azul"
+    },
+    {
+      "en": "We need three pencils",
+      "es": "Necesitamos tres lápices"
+    },
+    {
+      "en": "The teacher is very kind",
+      "es": "La maestra es muy amable"
+    },
+    {
+      "en": "It is raining today",
+      "es": "Hoy está lloviendo"
+    },
+    {
+      "en": "I love my family",
+      "es": "Amo a mi familia"
+    }
+  ]
+}

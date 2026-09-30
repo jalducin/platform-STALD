@@ -1,0 +1,382 @@
+{
+ "cartas": [
+  {
+   "n": 1,
+   "es": "El Gallo",
+   "en": "The Rooster",
+   "emoji": "🐓",
+   "verso": "Canta al salir el sol y despierta a todo el rancho."
+  },
+  {
+   "n": 2,
+   "es": "El Diablito",
+   "en": "The Little Devil",
+   "emoji": "😈",
+   "verso": "Pórtate bien, que aquí viene el diablito con su colita traviesa."
+  },
+  {
+   "n": 3,
+   "es": "La Dama",
+   "en": "The Lady",
+   "emoji": "👩",
+   "verso": "Con su abanico y su vestido, la dama saluda a todo el vecindario."
+  },
+  {
+   "n": 4,
+   "es": "El Catrín",
+   "en": "The Dandy",
+   "emoji": "🎩",
+   "verso": "Bastón, sombrero y bigote: el catrín se cree el más elegante."
+  },
+  {
+   "n": 5,
+   "es": "El Paraguas",
+   "en": "The Umbrella",
+   "emoji": "☂️",
+   "verso": "Si las nubes se ponen grises, ábreme y no te mojas."
+  },
+  {
+   "n": 6,
+   "es": "La Sirena",
+   "en": "The Mermaid",
+   "emoji": "🧜‍♀️",
+   "verso": "Canta en el mar entre las olas y los peces le hacen coro."
+  },
+  {
+   "n": 7,
+   "es": "La Escalera",
+   "en": "The Ladder",
+   "emoji": "🪜",
+   "verso": "Sube, sube, escalón por escalón, hasta tocar el cielo."
+  },
+  {
+   "n": 8,
+   "es": "La Botella",
+   "en": "The Bottle",
+   "emoji": "🍾",
+   "verso": "Llena de agua fresquita para quitarte la sed."
+  },
+  {
+   "n": 9,
+   "es": "El Barril",
+   "en": "The Barrel",
+   "emoji": "🛢️",
+   "verso": "Redondo y panzón, rueda que rueda por el callejón."
+  },
+  {
+   "n": 10,
+   "es": "El Árbol",
+   "en": "The Tree",
+   "emoji": "🌳",
+   "verso": "Da sombra, da frutos y en sus ramas anidan los pájaros."
+  },
+  {
+   "n": 11,
+   "es": "El Melón",
+   "en": "The Melon",
+   "emoji": "🍈",
+   "verso": "Dulce, redondo y jugoso, ¡qué rico melón para el calor!"
+  },
+  {
+   "n": 12,
+   "es": "El Valiente",
+   "en": "The Brave One",
+   "emoji": "💪",
+   "verso": "No le teme a la oscuridad ni a los truenos: ¡qué valiente!"
+  },
+  {
+   "n": 13,
+   "es": "El Gorrito",
+   "en": "The Little Hat",
+   "emoji": "👒",
+   "verso": "Póntelo en la cabeza para que no te dé frío."
+  },
+  {
+   "n": 14,
+   "es": "La Muerte",
+   "en": "Death",
+   "emoji": "🦴",
+   "verso": "Flaca y bailadora, sale a pasear en Día de Muertos."
+  },
+  {
+   "n": 15,
+   "es": "La Pera",
+   "en": "The Pear",
+   "emoji": "🍐",
+   "verso": "Verde y dulcecita, la pera se come de un mordisquito."
+  },
+  {
+   "n": 16,
+   "es": "La Bandera",
+   "en": "The Flag",
+   "emoji": "🇲🇽",
+   "verso": "Verde, blanco y colorado, con el águila en el centro."
+  },
+  {
+   "n": 17,
+   "es": "El Bandolón",
+   "en": "The Mandolin",
+   "emoji": "🪕",
+   "verso": "Sus cuerdas suenan tan bonito que hasta los grillos bailan."
+  },
+  {
+   "n": 18,
+   "es": "El Violoncello",
+   "en": "The Cello",
+   "emoji": "🎻",
+   "verso": "Grandote y serio, toca notas graves en la orquesta."
+  },
+  {
+   "n": 19,
+   "es": "La Garza",
+   "en": "The Heron",
+   "emoji": "🦢",
+   "verso": "Parada en una pata, la garza espera a los pececitos."
+  },
+  {
+   "n": 20,
+   "es": "El Pájaro",
+   "en": "The Bird",
+   "emoji": "🐦",
+   "verso": "Vuela alto y canta bajito, siempre alegre el pajarito."
+  },
+  {
+   "n": 21,
+   "es": "La Mano",
+   "en": "The Hand",
+   "emoji": "✋",
+   "verso": "Cinco dedos para saludar, aplaudir y ayudar."
+  },
+  {
+   "n": 22,
+   "es": "La Bota",
+   "en": "The Boot",
+   "emoji": "👢",
+   "verso": "Una bota sin su pareja anda buscando a su compañera."
+  },
+  {
+   "n": 23,
+   "es": "La Luna",
+   "en": "The Moon",
+   "emoji": "🌙",
+   "verso": "Redonda y plateada, alumbra la noche mientras duermes."
+  },
+  {
+   "n": 24,
+   "es": "El Cotorro",
+   "en": "The Parrot",
+   "emoji": "🦜",
+   "verso": "Habla y habla sin parar, no se cansa de platicar."
+  },
+  {
+   "n": 25,
+   "es": "El Ajolote",
+   "en": "The Axolotl",
+   "emoji": "🦎💗",
+   "verso": "Sonriente y rosadito, nada feliz en los canales de Xochimilco."
+  },
+  {
+   "n": 26,
+   "es": "El Colibrí",
+   "en": "The Hummingbird",
+   "emoji": "🐦🌺",
+   "verso": "Chiquito y veloz, besa las flores y se va en un dos por tres."
+  },
+  {
+   "n": 27,
+   "es": "El Corazón",
+   "en": "The Heart",
+   "emoji": "❤️",
+   "verso": "Late, late sin parar, lleno de cariño para regalar."
+  },
+  {
+   "n": 28,
+   "es": "La Sandía",
+   "en": "The Watermelon",
+   "emoji": "🍉",
+   "verso": "Verde por fuera, roja por dentro y con semillitas negras."
+  },
+  {
+   "n": 29,
+   "es": "El Tambor",
+   "en": "The Drum",
+   "emoji": "🥁",
+   "verso": "Pum, pum, pum, que suene el tambor para empezar la fiesta."
+  },
+  {
+   "n": 30,
+   "es": "El Camarón",
+   "en": "The Shrimp",
+   "emoji": "🦐",
+   "verso": "Chiquito y rosado, salta en el agua con sus bigotes largos."
+  },
+  {
+   "n": 31,
+   "es": "Las Jaras",
+   "en": "The Arrows",
+   "emoji": "🏹",
+   "verso": "Vuelan derechitas hacia el blanco, ¡qué buena puntería!"
+  },
+  {
+   "n": 32,
+   "es": "El Músico",
+   "en": "The Musician",
+   "emoji": "🎺",
+   "verso": "Toca la trompeta y todo el pueblo sale a bailar."
+  },
+  {
+   "n": 33,
+   "es": "La Araña",
+   "en": "The Spider",
+   "emoji": "🕷️",
+   "verso": "Teje y teje su telaraña en la esquina del corral."
+  },
+  {
+   "n": 34,
+   "es": "El Soldado",
+   "en": "The Soldier",
+   "emoji": "💂",
+   "verso": "Marcha derechito con su uniforme bien planchado."
+  },
+  {
+   "n": 35,
+   "es": "La Estrella",
+   "en": "The Star",
+   "emoji": "⭐",
+   "verso": "Brilla en el cielo para que pidas un deseo."
+  },
+  {
+   "n": 36,
+   "es": "El Cazo",
+   "en": "The Pot",
+   "emoji": "🥘",
+   "verso": "En el cazo de cobre se hacen los dulces más ricos."
+  },
+  {
+   "n": 37,
+   "es": "El Mundo",
+   "en": "The World",
+   "emoji": "🌎",
+   "verso": "Grande y redondo, aquí vivimos todos juntos."
+  },
+  {
+   "n": 38,
+   "es": "El Tlacuache",
+   "en": "The Opossum",
+   "emoji": "🐀🌙",
+   "verso": "De noche sale a pasear y carga a sus crías en la espalda."
+  },
+  {
+   "n": 39,
+   "es": "El Nopal",
+   "en": "The Cactus",
+   "emoji": "🌵",
+   "verso": "Tiene espinas, pero guisado con huevo sabe delicioso."
+  },
+  {
+   "n": 40,
+   "es": "El Alacrán",
+   "en": "The Scorpion",
+   "emoji": "🦂",
+   "verso": "Con su colita levantada, mejor ni lo toques."
+  },
+  {
+   "n": 41,
+   "es": "La Rosa",
+   "en": "The Rose",
+   "emoji": "🌹",
+   "verso": "Roja y perfumada, la rosa adorna el jardín."
+  },
+  {
+   "n": 42,
+   "es": "La Calavera",
+   "en": "The Skull",
+   "emoji": "💀",
+   "verso": "De azúcar y con tu nombre, esta calavera es para comer."
+  },
+  {
+   "n": 43,
+   "es": "La Campana",
+   "en": "The Bell",
+   "emoji": "🔔",
+   "verso": "Tilín, tilín, suena la campana: ¡ya es hora de ir a clase!"
+  },
+  {
+   "n": 44,
+   "es": "El Cantarito",
+   "en": "The Little Jug",
+   "emoji": "🏺",
+   "verso": "De barro y bien fresquito, guarda el agua para el calor."
+  },
+  {
+   "n": 45,
+   "es": "El Venado",
+   "en": "The Deer",
+   "emoji": "🦌",
+   "verso": "Salta por el bosque con sus cuernos como ramas."
+  },
+  {
+   "n": 46,
+   "es": "El Sol",
+   "en": "The Sun",
+   "emoji": "☀️",
+   "verso": "Calienta la tierra y hace crecer las milpas."
+  },
+  {
+   "n": 47,
+   "es": "La Corona",
+   "en": "The Crown",
+   "emoji": "👑",
+   "verso": "Brilla en la cabeza del rey y de la reina."
+  },
+  {
+   "n": 48,
+   "es": "La Chalupa",
+   "en": "The Canoe",
+   "emoji": "🛶",
+   "verso": "Remando, remando, la chalupa lleva flores al mercado."
+  },
+  {
+   "n": 49,
+   "es": "El Pino",
+   "en": "The Pine Tree",
+   "emoji": "🌲",
+   "verso": "Alto y verde, huele a bosque y a Navidad."
+  },
+  {
+   "n": 50,
+   "es": "El Pescado",
+   "en": "The Fish",
+   "emoji": "🐟",
+   "verso": "Nada que nada en el río sin mojarse los calcetines."
+  },
+  {
+   "n": 51,
+   "es": "La Palma",
+   "en": "The Palm Tree",
+   "emoji": "🌴",
+   "verso": "En la playa se mece con el viento y regala cocos."
+  },
+  {
+   "n": 52,
+   "es": "La Maceta",
+   "en": "The Flowerpot",
+   "emoji": "🪴",
+   "verso": "Riégala todos los días y verás crecer su flor."
+  },
+  {
+   "n": 53,
+   "es": "El Arpa",
+   "en": "The Harp",
+   "emoji": "🎼",
+   "verso": "Sus cuerdas suenan como lluvia suave en una canción."
+  },
+  {
+   "n": 54,
+   "es": "La Rana",
+   "en": "The Frog",
+   "emoji": "🐸",
+   "verso": "Croac, croac, salta la rana de charco en charco."
+  }
+ ]
+}

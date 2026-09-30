@@ -93,6 +93,9 @@
   .link-btn { font: inherit; font-size: .86rem; font-weight: 600; background: none; border: none; color: var(--muted); cursor: pointer; padding: 6px 0; }
   .link-btn:hover { color: var(--text); }
   .who { font-size: .8rem; color: var(--muted); }
+  .guest { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--juegos-soft); }
+  .guest-t { font-weight: 800; color: var(--juegos); }
+  .ghost-btn { margin-top: 0; background: var(--card); color: var(--juegos); border: 1.5px solid var(--juegos); box-shadow: none; }
   footer { text-align: center; font-size: .74rem; color: var(--muted); margin-top: 36px; }
   [hidden] { display: none !important; }
 </style>
@@ -116,6 +119,11 @@
       </form>
       <p class="hint">Usa el mismo correo con el que te registraron en tus clases.</p>
       <div class="alert" id="login-error" role="alert" hidden></div>
+      <div class="guest" id="guest" hidden>
+        <div class="guest-t">🎮 ¿Vienes a jugar?</div>
+        <p class="hint" style="margin:4px 0 10px">Puedes entrar a Juegos como invitado con este correo.</p>
+        <button class="btn ghost-btn" id="guest-btn" type="button">Entrar como invitado a Juegos →</button>
+      </div>
     </section>
 
     <section id="loading" class="card loading" hidden>
@@ -164,7 +172,7 @@
   const ESPACIOS = [
     { id: 'ingles', clase: 'ingles', href: 'ingles.html', ico: '📘', t: 'Clases de Inglés', d: 'Actividades de la semana, exámenes y tu avance.' },
     { id: 'secundaria', clase: 'secundaria', href: 'secundaria.html', ico: '📚', t: 'Secundaria', d: 'Tus tareas y clases por materia.' },
-    { id: 'juegos', clase: 'juegos wide', href: null, ico: '🎮', t: 'Juegos', d: 'Aprende jugando: inglés, español, cultura, Basta, Lotería y más.', pronto: true },
+    { id: 'juegos', clase: 'juegos wide', href: 'juegos.html', ico: '🎮', t: 'Juegos', d: 'Aprende jugando: inglés, español, cultura, mente ágil y ranking semanal.' },
   ];
 
   function renderHome(p) {
@@ -188,9 +196,11 @@
     show('login');
   }
 
+  let pendiente = null; // correo desconocido que puede entrar como invitado
   async function entrar(email) {
     show('loading');
     $('login-error').hidden = true;
+    $('guest').hidden = true;
     try {
       const res = await fetch(API_BASE + '/perfil?email=' + encodeURIComponent(email), { cache: 'no-store' });
       const p = await res.json().catch(() => ({}));
@@ -198,7 +208,10 @@
       if (!p.conocido) {
         SESSION_KEYS.forEach(k => localStorage.removeItem(k));
         $('email').value = email;
-        return error('No encontré clases con ese correo. Revisa que esté bien escrito o pide a quien te da clases que te registre.');
+        pendiente = email;
+        error('No encontré clases con ese correo. Revisa que esté bien escrito o pide a quien te da clases que te registre.');
+        $('guest').hidden = false;
+        return;
       }
       localStorage.setItem('stald_email', email);
       if (p.accesos.ingles) localStorage.setItem('ingles_email', email);
@@ -214,6 +227,13 @@
     const email = $('email').value.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error('Escribe un correo válido, por ejemplo tucorreo@gmail.com.');
     entrar(email);
+  });
+
+  // Invitado: Juegos pide su apodo y la aceptación del aviso.
+  $('guest-btn').addEventListener('click', () => {
+    if (!pendiente) return;
+    localStorage.setItem('stald_email', pendiente);
+    location.href = conApi('juegos.html');
   });
 
   $('logout').addEventListener('click', () => {
