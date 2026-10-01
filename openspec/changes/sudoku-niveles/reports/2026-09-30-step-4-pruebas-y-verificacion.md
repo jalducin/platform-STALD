@@ -31,3 +31,12 @@
 ## Resultado
 - Estado Step 4: PASS
 - Bloqueos: ninguno
+
+## Step 5 — Verificación manual en producción (EL AGENTE EJECUTA)
+- Script Python contra `https://stald.jalducin.deno.net` como admin y `curl` a GitHub Pages:
+  - `/juegos/yo` lista `mente-sudoku` (categoría `mente`, tope 2000);
+  - `POST /juegos/partida` `mente-sudoku` con 99999 → guardado con 2000 (tope);
+  - `juegos.html` publicado en GitHub Pages incluye el Sudoku (`generarSudoku`).
+- Estado restaurado: Sí. Se respaldó `juegos/semanas/2026-09-28/admin.json` antes de la prueba; la
+  única diferencia fue la partida de prueba (total 7794 → 9794). Se restauró el archivo y la API volvió a
+  mostrar total 7794 sin `mente-sudoku`.

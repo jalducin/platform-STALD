@@ -24,7 +24,7 @@
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Producción: `/juegos/yo` lista `mente-sudoku`; `POST /juegos/partida` de prueba con tope;
+- [x] 5.1 Producción: `/juegos/yo` lista `mente-sudoku`; `POST /juegos/partida` de prueba con tope;
   **restaurar** la semana del admin en el repo de datos
 
 ## 6. Documentación (OBLIGATORIO)
