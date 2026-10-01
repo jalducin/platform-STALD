@@ -124,7 +124,7 @@ Deno.test("salas: índice semanal, final, podio del host y resumen del admin", a
   c.avanzar(200000);
   const podio = [{ nombre: "Bot Ajolote 🦎", total: 1300, bot: true }, { nombre: "Marisol", total: 900 }, { nombre: "Angel", total: 400 }];
   assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { final: 900, podio })).status, 200);
-  await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { final: 5000, podio: [{ nombre: "Angel", total: 3000 }] });
+  await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { final: 50000, podio: [{ nombre: "Angel", total: 3000 }] });
   // alumna no ve el resumen
   assertEquals((await c.call("GET", "/admin/resumen", "angel@example.com")).status, 403);
   await c.call("POST", "/partida", "marisol@example.com", { juego: "cultura", puntos: 900, aciertos: 5, total: 10, segundos: 0 });
@@ -134,7 +134,7 @@ Deno.test("salas: índice semanal, final, podio del host y resumen del admin", a
   assertEquals(r.body.jugadores.map((j: any) => [j.nombre, j.total, j.partidas]), [["Marisol", 900, 1]]);
   const s = r.body.salas[0];
   assertEquals([s.codigo, s.juego, s.host], [codigo, "cultura", "Marisol"]);
-  assertEquals(s.jugadores.map((j: any) => [j.nombre, j.final]), [["Marisol", 900], ["Angel", 3000]], "final recortado a 3000");
+  assertEquals(s.jugadores.map((j: any) => [j.nombre, j.final]), [["Marisol", 900], ["Angel", 10000]], "final recortado a 10000 (Basta por rondas)");
   assertEquals(s.podio, podio, "solo cuenta el podio del host");
   assertEquals(r.body.catalogo.cultura, "Maratón de cultura");
   assertEquals(JSON.stringify(r.body).includes("@"), false);
@@ -197,4 +197,37 @@ Deno.test("salas: ¡Una! registra el botón UNA con su hora (una vez por paso)",
   const u2 = await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { una: { paso: 12 } });
   assertEquals([u1.status, u1.body.unas, u2.body.unas], [200, [{ paso: 12, t: t1 }], [{ paso: 12, t: t1 }]]);
   assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { una: { paso: -1 } })).status, 400);
+});
+
+// ---- Basta por rondas (openspec: basta-rondas) ----
+Deno.test("salas: Basta con rondas (10 por defecto, 5 y 12 válidos, otro 400)", async () => {
+  const c = ctx();
+  const crear = (opciones: unknown, juego = "basta-es") => c.call("POST", "/sala", "marisol@example.com", { juego, opciones, bots: true });
+  assertEquals((await crear({})).body.sala.opciones.rondas, "10");
+  assertEquals((await crear({ rondas: "5" })).body.sala.opciones.rondas, "5");
+  assertEquals((await crear({ rondas: 12 }, "basta-en")).body.sala.opciones.rondas, "12");
+  const mal = await crear({ rondas: "7" });
+  assertEquals([mal.status, mal.body.error], [400, "rondas_invalidas"]);
+  assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "cultura", opciones: { rondas: "5" } })).body.sala.opciones.rondas, undefined, "solo Basta");
+});
+
+Deno.test("salas: Basta guarda palabras y el primer ¡Basta! por ronda", async () => {
+  const c = ctx();
+  const codigo = (await c.call("POST", "/sala", "marisol@example.com", { juego: "basta-es", opciones: { rondas: "5" } })).body.codigo;
+  await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com");
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(20000);
+  const r0 = await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { ronda: 0, palabras: { nombre: "Ana" }, basta: true });
+  assertEquals([r0.status, r0.body.rondasBasta["0"].palabras.nombre, r0.body.rondasBasta["0"].basta], [200, "Ana", c.ahora()]);
+  const t0 = c.ahora();
+  c.avanzar(5000);
+  const otra = await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { ronda: 0, palabras: { nombre: "Ana" }, basta: true });
+  assertEquals(otra.body.rondasBasta["0"].basta, t0, "solo cuenta el primer ¡Basta! de la ronda");
+  const r3 = await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { ronda: 3, palabras: { animal: "Delfín" } });
+  assertEquals([r3.body.rondasBasta["3"].palabras.animal, r3.body.rondasBasta["3"].basta, r3.body.rondasBasta["0"].palabras.nombre], ["Delfín", undefined, "Ana"]);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { ronda: 5, palabras: {} })).status, 400, "fuera de rango");
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { ronda: -1, palabras: {} })).status, 400);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { ronda: 1.5, palabras: {} })).status, 400);
+  const g = await c.call("GET", `/sala/${codigo}`, "marisol@example.com");
+  assertEquals(Object.keys(g.body.jugadores.find((j: any) => j.nombre === "Angel").rondasBasta), ["0", "3"]);
 });

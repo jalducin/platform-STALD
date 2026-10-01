@@ -51,10 +51,14 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
   - `POST /juegos/sala/<código>/empezar`: solo el host; fija `inicio` = ahora + 5 s.
   - `POST /juegos/sala/<código>/respuesta`:
     - en preguntas, `{ q, correcta, puntos ≤ 200, ms }`, y solo cuenta la primera;
-    - en Basta, `{ palabras, basta }`.
+    - en Basta, `{ ronda, palabras, basta }` (`basta-rondas`): `ronda` entero `0 ≤ ronda < opciones.rondas`
+      (si no, 400 `ronda_invalida`); se guarda en `rondasBasta[ronda]` y solo cuenta el primer `basta` de
+      cada ronda. Sin `ronda` se acepta el formato anterior `{ palabras, basta }`;
+    - `{ final, podio }`: totales hasta 10000.
   - `GET /juegos/sala/<código>`: sala, jugadores y `ahora` (hora del servidor), solo para sus jugadores y
     el admin. Caché de 2 s.
   - Juegos permitidos: los 9 de preguntas (incluye `en-preguntas`), Basta (es/en) y Lotería.
+    `opciones.rondas` va en Basta (`5`, `10` por defecto o `12`; otro valor → 400 `rondas_invalidas`).
     `opciones.modo` va en Lotería (`linea` o `llena`), y `respuesta` con `{ loteria: true }` guarda la hora
     del primer grito.
   - ¡Una! (`una`): `respuesta` con `{ jugada: { n, accion, carta?, color?, una? } }` se guarda con `t`

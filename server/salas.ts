@@ -36,12 +36,16 @@ interface EnSala {
   respuestas: Record<string, { correcta: boolean; puntos: number; ms: number }>;
   palabras?: Record<string, string>;
   basta?: number;
+  rondasBasta?: Record<string, { palabras: Record<string, string>; basta?: number }>; // Basta por rondas
   loteria?: number; // hora del servidor del primer "¡Lotería!"
   unas?: { paso: number; t: number }[]; // ¡Una!: botón UNA por paso
   jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; t: number }[]; // ¡Una!
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
 }
+
+const RONDAS_BASTA = ["5", "10", "12"]; // Basta por rondas (openspec: basta-rondas)
+const MAX_FINAL = 10_000; // total final y podio (10–12 rondas de Basta suman más que un quiz)
 
 const cache = new Map<string, { t: number; v: unknown }>();
 export function clearCacheSalas() {
@@ -123,6 +127,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (op.modo !== undefined && op.modo !== "linea" && op.modo !== "llena") return json({ error: "modo_invalido" }, 400);
       opciones.modo = (op.modo as string) || "linea";
     }
+    if (juego.startsWith("basta")) {
+      const rondas = op.rondas === undefined ? "10" : String(op.rondas);
+      if (!RONDAS_BASTA.includes(rondas)) return json({ error: "rondas_invalidas" }, 400);
+      opciones.rondas = rondas;
+    }
     let codigo = "";
     for (let i = 0; i < 10 && !codigo; i++) {
       const cand = [...aleatorio(4)].map((x) => LETRAS_CODIGO[x % LETRAS_CODIGO.length]).join("");
@@ -192,16 +201,27 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       cambiar = (e) => e.loteria ? e : { ...e, loteria: ahora };
     } else if (body.final !== undefined || body.podio !== undefined) {
       // Cierre: total final de cada jugador y, del host, el podio completo (con bots).
-      const final = Math.max(0, Math.min(3000, Math.round(Number(body.final) || 0)));
+      const final = Math.max(0, Math.min(MAX_FINAL, Math.round(Number(body.final) || 0)));
       const podio = sala.host === jugador.id && Array.isArray(body.podio)
-        ? (body.podio as Record<string, unknown>[]).slice(0, 32).map((x) => ({ nombre: String(x?.nombre ?? "").slice(0, 30), total: Math.max(0, Math.min(3000, Math.round(Number(x?.total) || 0))), ...(x?.bot ? { bot: true } : {}) }))
+        ? (body.podio as Record<string, unknown>[]).slice(0, 32).map((x) => ({ nombre: String(x?.nombre ?? "").slice(0, 30), total: Math.max(0, Math.min(MAX_FINAL, Math.round(Number(x?.total) || 0))), ...(x?.bot ? { bot: true } : {}) }))
         : undefined;
       cambiar = (e) => ({ ...e, ...(body.final !== undefined ? { final } : {}), ...(podio ? { podio } : {}) });
     } else if (sala.juego.startsWith("basta")) {
       if (body.palabras !== undefined && (typeof body.palabras !== "object" || body.palabras === null || Array.isArray(body.palabras))) return json({ error: "palabras_invalidas" }, 400);
       const palabras = Object.fromEntries(Object.entries((body.palabras || {}) as Record<string, unknown>).slice(0, 10)
         .map(([k, v]) => [String(k).slice(0, 20), String(v ?? "").trim().slice(0, 40)]));
-      cambiar = (e) => ({ ...e, palabras: body.palabras !== undefined ? palabras : e.palabras, basta: body.basta === true && !e.basta ? ahora : e.basta });
+      if (body.ronda !== undefined) {
+        // Basta por rondas: palabras y primer ¡Basta! de cada ronda.
+        const ronda = Number(body.ronda);
+        if (!Number.isInteger(ronda) || ronda < 0 || ronda >= Number(sala.opciones.rondas || 1)) return json({ error: "ronda_invalida" }, 400);
+        cambiar = (e) => {
+          const previa = (e.rondasBasta || {})[ronda];
+          const r = { palabras: body.palabras !== undefined ? palabras : (previa?.palabras ?? {}), ...(previa?.basta ? { basta: previa.basta } : body.basta === true ? { basta: ahora } : {}) };
+          return { ...e, rondasBasta: { ...(e.rondasBasta || {}), [ronda]: r } };
+        };
+      } else {
+        cambiar = (e) => ({ ...e, palabras: body.palabras !== undefined ? palabras : e.palabras, basta: body.basta === true && !e.basta ? ahora : e.basta });
+      }
     } else {
       const q = Number(body.q);
       if (!Number.isInteger(q) || q < 0 || q >= PREGUNTAS || typeof body.correcta !== "boolean") return json({ error: "respuesta_invalida" }, 400);
@@ -211,7 +231,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     }
     const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
     if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
-    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas });
+    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas });
   }
 
   if (!accion && req.method === "GET") {
