@@ -12,6 +12,9 @@
   - admin lista y quita; alumno 403; semana actualizada sin la foto.
 - [x] 1.2 Implementación en `server/juegos.ts` (ruta pública de la foto antes de exigir correo)
 
+- [x] 1.3 Post-apply (verificación en producción): la caché en memoria de fotos vence a los 60 s, para que
+  una foto quitada deje de servirse aunque otro isolate la tenga en memoria. Prueba que falla primero.
+
 ## 2. Frontend
 
 - [x] 2.1 `juegos.html`: "📷 Subir foto" con recorte 128×128, casilla de permiso, vista previa;

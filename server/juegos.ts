@@ -54,7 +54,9 @@ interface Foto {
   en: string;
 }
 type IndiceFotos = Record<string, { nombre: string; token: string; en: string }>;
-const cacheFotos = new Map<string, Uint8Array<ArrayBuffer> | null>();
+// En memoria 60 s como máximo: otro isolate de Deno Deploy pudo borrar la foto.
+const cacheFotos = new Map<string, { t: number; b: Uint8Array<ArrayBuffer> | null }>();
+const TTL_FOTO_MS = 60_000;
 
 function bytesJpeg(imagen: unknown): Uint8Array<ArrayBuffer> | null {
   if (typeof imagen !== "string" || imagen.length > MAX_FOTO || !imagen.startsWith(PREFIJO_JPEG)) return null;
@@ -89,7 +91,7 @@ async function guardarAvatar(store: Store, jugador: Jugador, avatar: Avatar, lun
   if (previo === avatar.foto) return;
   if (previo) {
     await store.remove(rutaFoto(previo), `juegos: se quita foto de ${quien}`);
-    cacheFotos.set(previo, null);
+    cacheFotos.delete(previo);
   }
   for (let i = 0; i < 3; i++) {
     const doc = await store.get<IndiceFotos>(RUTA_INDICE_FOTOS);
@@ -191,6 +193,7 @@ export interface DepsJuegos {
   filasSecundaria(): Promise<FilaConUsuarios[]>;
   hoy?: () => string; // AAAA-MM-DD en CDMX (inyectable en pruebas)
   ahora?: () => string; // ISO
+  ms?: () => number; // reloj en ms para la caché de fotos (inyectable en pruebas)
 }
 
 const cache = new Map<string, { t: number; v: unknown }>();
@@ -222,11 +225,13 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
   // GET /juegos/foto/<token> → imagen del avatar, sin correo (un <img> no manda encabezados).
   const mFoto = sub.match(/^\/foto\/([0-9a-f]{24})$/);
   if (mFoto && req.method === "GET") {
-    let bytes = cacheFotos.get(mFoto[1]);
-    if (bytes === undefined) {
-      bytes = bytesJpeg((await deps.store.get<Foto>(rutaFoto(mFoto[1])))?.data?.imagen);
-      cacheFotos.set(mFoto[1], bytes);
+    const ms = deps.ms ? deps.ms() : Date.now();
+    let memo = cacheFotos.get(mFoto[1]);
+    if (!memo || ms - memo.t >= TTL_FOTO_MS) {
+      memo = { t: ms, b: bytesJpeg((await deps.store.get<Foto>(rutaFoto(mFoto[1])))?.data?.imagen) };
+      cacheFotos.set(mFoto[1], memo);
     }
+    const bytes = memo.b;
     if (!bytes) return json({ error: "not_found" }, 404);
     return new Response(bytes, { headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600", "Access-Control-Allow-Origin": "*" } });
   }

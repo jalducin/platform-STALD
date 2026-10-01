@@ -14,8 +14,8 @@
   así el ranking y el sondeo de salas no cargan imágenes.
 - `GET /juegos/foto/<token>`: no requiere correo (un `<img>` no manda encabezados); responde los bytes
   JPEG con `Cache-Control: public, max-age=3600` (una foto quitada deja de verse en ≤ 1 h aun en caché),
-  guardados en memoria tras la primera
-  lectura. Token inválido o borrado → 404.
+  guardados en memoria **60 s** como máximo (Deno Deploy corre varios isolates: uno puede borrar la foto
+  mientras otro la tiene en memoria; con el vencimiento, una foto quitada deja de servirse en ≤ 1 min). Token inválido o borrado → 404.
 - Validación: prefijo `data:image/jpeg;base64,`, base64 válido, bytes que empiezan con `FF D8 FF`,
   ≤ 40 000 caracteres.
 

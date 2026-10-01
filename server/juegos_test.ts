@@ -251,3 +251,16 @@ Deno.test("juegos: el admin lista y quita fotos; alumnos 403", async () => {
   assertEquals((await call("GET", "/yo", "marisol@example.com")).body.jugador.avatar.foto, undefined);
   assertEquals((await call("POST", "/fotos/quitar", ADMIN, { id: "a-nadie" })).status, 404);
 });
+
+Deno.test("juegos: la caché de fotos vence a los 60 s (otro isolate pudo borrarla)", async () => {
+  const { call, deps, store } = ctx();
+  let reloj = 1_000_000;
+  (deps as any).ms = () => reloj;
+  const t = (await call("POST", "/foto", "marisol@example.com", { imagen: JPEG, acepto: true })).body.avatar.foto;
+  assertEquals((await verFoto(deps, t)).status, 200);
+  await store.remove(`juegos/fotos/${t}.json`);
+  reloj += 30_000;
+  assertEquals((await verFoto(deps, t)).status, 200, "aún en memoria");
+  reloj += 31_000;
+  assertEquals((await verFoto(deps, t)).status, 404, "vencida: se vuelve a leer");
+});
