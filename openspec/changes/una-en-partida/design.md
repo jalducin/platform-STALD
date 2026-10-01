@@ -1,5 +1,20 @@
 ## Decisiones
 
+### 0. Post-apply: castigo por segundos en UNA
+- **Servidor:** `respuesta` acepta `{ una: { paso } }` y guarda `unas[]` `{ paso, t }` (la primera por paso,
+  hasta 100). `paso` es el paso de la jugada que dejó una carta.
+- **Reproducción:**
+  - al aplicar una jugada que deja una carta en `t0`, el reloj de la partida queda en espera hasta
+    resolver el UNA;
+  - con `d = tUna - t0`: ≤ 2 s 0 cartas; ≤ 3 s 1; ≤ 4 s 2; ≤ 5 s 3; sin UNA con `ahora ≥ t0 + 5 s`, 4
+    cartas;
+  - el siguiente turno empieza en `min(tUna, t0 + 5 s)`;
+  - los bots presionan en `t0 + 0.8..1.8 s`, con `rngDe(seed, 'una' + paso)`;
+  - `jugada.una` ya no se usa.
+- **Solitario:** misma escala, con la ventana de 5 s contada desde que se tira la penúltima carta.
+- Los tiempos se escalan con `__TIEMPO_JUEGOS` en pruebas.
+
+
 ### 1. Estado reconstruido por reproducción (cliente, determinista)
 `estadoUna(sala, orden, jugadas, ahora)`:
 - **Mazo:** las 108 cartas con `id` 0..107, barajadas con `rngDe(seed, 'una-mazo')`.

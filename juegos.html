@@ -998,6 +998,8 @@
     for (let k = 0; k < 4; k++) m.push({ c: null, v: 'wild' }, { c: null, v: '+4' });
     return barajar(m);
   }
+  // Castigo por tardar en presionar UNA (segundos desde que se tira la penúltima carta).
+  const castigoUna = seg => seg <= 2 ? 0 : seg <= 3 ? 1 : seg <= 4 ? 2 : seg <= 5 ? 3 : 4;
   const unaSimbolo = v => ({ skip: '⊘', rev: '⇄', '+2': '+2', wild: '★', '+4': '+4' }[v] || v);
 
   function elegirUna() {
@@ -1019,6 +1021,7 @@
     const T = UNA_TXT[lang];
     const m = marco('una');
     const nombres = ['Tú', 'Ajolote 🦎', 'Colibrí 🐦', 'Tlacuache 🐀'];
+    let resolverUna = () => {};
     let mazo = unaMazo(), pila = [], dir = 1, turno = 0, color = null, terminado = false, esperandoUna = false, dijoUna = false, jugadas = 0, robada = null, msg = '';
     const manos = Array.from({ length: numBots + 1 }, () => []);
     const t0 = Date.now();
@@ -1104,12 +1107,19 @@
         esperandoUna = true; dijoUna = false;
         pila.push(c); if (c.c) color = c.c;
         anunciar(nombreCarta(c));
+        const tJugada = Date.now();
+        msg = lang === 'en' ? '📣 Press UNA now! The longer you wait, the more cards you draw' : '📣 ¡Presiona UNA ya! Entre más tardes, más cartas robas';
         dibujar();
-        const t = setTimeout(() => {
-          esperandoUna = false; pila.pop();
-          if (!dijoUna) { robar(0, 2); msg = lang === 'en' ? '⚠️ You forgot to press UNA! +2 cards' : '⚠️ ¡Olvidaste presionar UNA! Robas 2'; sonidoMal(); }
+        // Castigo por segundos: ≤2 s 0, ≤3 s +1, ≤4 s +2, ≤5 s +3, sin presionar +4
+        resolverUna = presiono => {
+          if (!esperandoUna) return;
+          esperandoUna = false; clearTimeout(t); pila.pop();
+          const n = castigoUna(presiono ? (Date.now() - tJugada) / (1000 * TIEMPO) : Infinity);
+          if (n) { robar(0, n); msg = (lang === 'en' ? '⚠️ Too slow on UNA! +' : '⚠️ ¡Tardaste en presionar UNA! +') + n + (lang === 'en' ? ' card(s)' : ' carta(s)'); sonidoMal(); }
+          else { msg = lang === 'en' ? '✔ UNA on time!' : '✔ ¡UNA a tiempo!'; sonidoOk(); }
           aplicar(0, c);
-        }, 3000 * TIEMPO);
+        };
+        const t = setTimeout(() => resolverUna(false), 5000 * TIEMPO);
         limpiezas.push(() => clearTimeout(t));
         return;
       }
@@ -1119,7 +1129,7 @@
     m.body.addEventListener('click', e => {
       if (terminado) return;
       const a = e.target.closest('[data-una]'), k = e.target.closest('[data-una-card]'), col = e.target.closest('[data-una-color]');
-      if (a && a.dataset.una === 'una' && esperandoUna) { dijoUna = true; sonidoOk(); document.getElementById('una-msg').textContent = '📣 ' + T.una; a.disabled = true; return; }
+      if (a && a.dataset.una === 'una' && esperandoUna) { dijoUna = true; resolverUna(true); return; }
       if (turno !== 0 || esperandoUna) return;
       if (col) return jugarCarta(Number(col.dataset.idx), col.dataset.unaColor);
       if (a && a.dataset.una === 'robar' && !robada) {
@@ -1350,7 +1360,7 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaDecl: false, unaElegir: null, unaEnviando: false, unaAnunciada: null, finAciertos: undefined, finTotal: undefined });
+    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, finAciertos: undefined, finTotal: undefined });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
@@ -1668,7 +1678,7 @@
         st.pendiente = null; st.jugadas[j]++;
         st.ultima = { j, accion: 'jugar', carta: mv.carta, color: st.color, paso: st.paso };
         if (!st.manos[j].length) { st.fin = { ganador: j, t }; return; }
-        if (st.manos[j].length === 1 && !mv.una) { robar(j, 2); st.ultima.castigo = true; st.castigos.push(j); }
+        if (st.manos[j].length === 1) st.esperaUna = { j, paso: st.paso - 1, t0: t }; // se resuelve antes del siguiente turno
         let pasos = 1;
         if (c.v === 'skip') pasos = 2;
         if (c.v === 'rev') { if (orden.length === 2) pasos = 2; else st.dir *= -1; }
@@ -1703,8 +1713,23 @@
       const c = sigN <= 2 && accion.length && r() < 0.4 ? accion[0] : (nums.length ? nums[0] : (ops.find(id => UNA_CARTAS[id].c) ?? ops[0]));
       return { accion: 'jugar', carta: c, color: colorMas(mano.filter(x => x !== c)), una: true };
     };
+    const unasDe = id => ((e.jugadores.find(x => x.id === id) || {}).unas || []);
     const ahora = ahoraServidor();
     for (let guard = 0; guard < 4000 && !st.fin; guard++) {
+      if (st.esperaUna) {
+        const w = st.esperaUna, quien = orden[w.j], lim = w.t0 + dur(5000);
+        let tUna = null;
+        if (quien.bot) tUna = w.t0 + dur(800 + rngDe(s.seed, 'una' + w.paso)() * 1000);
+        else { const u = unasDe(quien.id).find(x => x.paso === w.paso); if (u && u.t <= lim) tUna = u.t; }
+        let seg;
+        if (tUna !== null) { if (ahora < tUna) break; seg = (tUna - w.t0) / dur(1000); }
+        else if (ahora >= lim) { seg = Infinity; tUna = lim; }
+        else break; // esperando a que presione UNA
+        const n = castigoUna(seg);
+        if (n) { robar(w.j, n); st.castigos.push({ j: w.j, n }); if (st.ultima) st.ultima.castigo = n; }
+        st.esperaUna = null; st.T0 = tUna;
+        continue;
+      }
       const j = st.turno, p = orden[j];
       if (p.bot) {
         const t = st.T0 + dur(U_BOT_MS); if (ahora < t) break;
@@ -1745,20 +1770,24 @@
       return pintarFinalSala(body, filas, null, '🃏 ¡Ganó ' + st.orden[st.fin.ganador].nombre + '!');
     }
     const yo = st.orden.findIndex(p => p.id === e.yo);
-    const miTurno = st.turno === yo && !sala.unaEnviando;
-    const limite = st.T0 + dur(st.orden[st.turno].bot ? U_BOT_MS : U_TURNO_MS);
-    bar.hidden = false; bar.firstChild.style.width = Math.max(0, Math.min(100, (limite - ahora) / dur(st.orden[st.turno].bot ? U_BOT_MS : U_TURNO_MS) * 100)) + '%';
+    if (sala.unaLocal && st.paso > sala.unaLocal.paso && !st.esperaUna) sala.unaLocal = null; // UNA ya resuelto
+    const miTurno = st.turno === yo && !sala.unaEnviando && !st.esperaUna;
+    const miUna = st.esperaUna && st.esperaUna.j === yo;
+    const ventana = st.esperaUna ? dur(5000) : dur(st.orden[st.turno].bot ? U_BOT_MS : U_TURNO_MS);
+    const limite = (st.esperaUna ? st.esperaUna.t0 : st.T0) + ventana;
+    bar.hidden = false; bar.firstChild.style.width = Math.max(0, Math.min(100, (limite - ahora) / ventana * 100)) + '%';
     // Anunciar la última jugada (voz) una sola vez
     if (st.ultima && st.ultima.paso !== sala.unaAnunciada) {
       sala.unaAnunciada = st.ultima.paso;
       if (st.ultima.accion === 'jugar') hablar(unaNombre(UNA_CARTAS[st.ultima.carta], lang), lang === 'en' ? 'en-US' : 'es-MX', 1);
     }
-    const clave = 'una:' + st.paso + ':' + (sala.unaElegir ?? '') + ':' + (sala.unaDecl ? 1 : 0) + ':' + (sala.unaEnviando ? 1 : 0) + ':' + lang;
-    if (sala.vista === clave) return;
+    const quedaUna = st.esperaUna ? Math.max(0, (st.esperaUna.t0 + dur(5000) - ahora) / dur(1000)) : 0;
+    const clave = 'una:' + st.paso + ':' + (sala.unaLocal ? (sala.unaLocal.presionado ? 'P' : 'L') : '') + ':' + (sala.unaElegir ?? '') + ':' + (st.esperaUna ? 'U' + st.esperaUna.paso : '') + ':' + (sala.unaEnviando ? 1 : 0) + ':' + lang + ':' + st.castigos.length;
+    if (sala.vista === clave) { const cu = document.getElementById('una-cuenta'); if (cu) cu.textContent = quedaUna.toFixed(1); return; } // la cuenta del UNA se actualiza sin redibujar el botón
     sala.vista = clave;
     const u = st.ultima;
     const ult = !u ? (lang === 'en' ? 'The game begins!' : '¡Empieza la partida!') :
-      escapeHtml(st.orden[u.j].nombre) + ': ' + (u.accion === 'jugar' ? escapeHtml(unaNombre(UNA_CARTAS[u.carta], lang)) + (u.castigo ? ' · ⚠️ ' + (lang === 'en' ? 'forgot to press UNA +2' : 'no presionó UNA +2') : '') :
+      escapeHtml(st.orden[u.j].nombre) + ': ' + (u.accion === 'jugar' ? escapeHtml(unaNombre(UNA_CARTAS[u.carta], lang)) + (u.castigo ? ' · ⚠️ ' + (lang === 'en' ? 'slow on UNA +' : 'tardó en presionar UNA +') + u.castigo : '') :
         u.accion === 'robar' ? (lang === 'en' ? 'draws' : 'roba') + (u.auto ? ' ⏰' : '') : (lang === 'en' ? 'passes' : 'pasa') + (u.auto ? ' ⏰' : ''));
     const mano = yo >= 0 ? st.manos[yo] : [];
     const jugable = id => miTurno && st.valida(id) && (st.pendiente === null || st.pendiente === id);
@@ -1768,21 +1797,35 @@
       '<div class="una-mesa"><div>' + unaCartaHtml(st.top(), ' grande') + '<div class="muted" style="text-align:center">' + escapeHtml(T.color[st.color]) + ' <span class="una-dot" style="background:' + UNA_COLOR[st.color] + '"></span></div></div>' +
       '<button class="una-mazo" data-usala="robar"' + (miTurno && st.pendiente === null ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + st.mazo.length + ')</small></button></div>' +
       '<div class="feedback" id="una-msg">' + (sala.unaElegir != null ? (lang === 'en' ? 'Choose a color: ' : 'Elige color: ') + ['r', 'y', 'g', 'b'].map(x => '<button class="una-color" data-usala-color="' + x + '" style="background:' + UNA_COLOR[x] + '" aria-label="' + T.color[x] + '"></button>').join('')
+        : miUna ? '📣 ' + (lang === 'en' ? 'Press UNA now! ' : '¡Presiona UNA ya! ') + '<b id="una-cuenta">' + quedaUna.toFixed(1) + '</b> s'
+        : st.esperaUna ? '⏳ ' + escapeHtml(st.orden[st.esperaUna.j].nombre) + (lang === 'en' ? ' must press UNA…' : ' debe presionar UNA…')
         : (miTurno ? '👉 ' + escapeHtml(T.tu) : '⏳ ' + escapeHtml(st.orden[st.turno].nombre)) + ' · ' + ult) + '</div>' +
       '<div class="una-mano">' + mano.map(id => '<button class="una-btn" data-usala-carta="' + id + '"' + (jugable(id) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(unaNombre(UNA_CARTAS[id], lang)) + '">' + unaCartaHtml(UNA_CARTAS[id], jugable(id) ? ' jugable' : '') + '</button>').join('') + '</div>' +
       '<div class="row-btns">' + (miTurno && st.pendiente !== null ? '<button class="btn ghost" data-usala="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
-      (mano.length === 2 ? '<button class="btn una-grito' + (sala.unaDecl ? '' : ' pulsa') + '" data-usala="una" aria-pressed="' + !!sala.unaDecl + '">📣 ' + escapeHtml(T.una) + (sala.unaDecl ? ' ✔' : '') + '</button>' : '') + '</div>' +
+      ((sala.unaLocal ? !sala.unaLocal.presionado : miUna) ? '<button class="btn una-grito pulsa" data-usala="una">📣 ' + escapeHtml(T.una) + '</button>' : (sala.unaLocal && sala.unaLocal.presionado && (miUna || !sala.unaLocal.enviado) ? '<span class="feedback ok">📣 ¡UNA!</span>' : '')) + '</div>' +
       '<div class="row-btns" style="margin-top:6px"><button class="btn ghost sm" data-usala-lang="es" aria-pressed="' + (lang === 'es') + '">🇲🇽 Español</button><button class="btn ghost sm" data-usala-lang="en" aria-pressed="' + (lang === 'en') + '">🇺🇸 English</button></div>';
     sala.unaSt = st;
   }
 
   async function jugadaUnaSala(jugada) {
+    const st = sala.unaSt; const yo = st.orden.findIndex(p => p.id === sala.estado.yo);
+    const n = st.paso;
+    // Tirar la penúltima carta: el botón UNA aparece ya (sin esperar al servidor).
+    sala.unaLocal = jugada.accion === 'jugar' && st.manos[yo].length === 2 ? { paso: n, presionado: false, enviado: false, jugadaOk: false } : null;
     sala.unaEnviando = true; sala.vista = null; pintarSala();
-    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n: sala.unaSt.paso }, jugada) });
+    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n }, jugada) });
+    if (sala.unaLocal && sala.unaLocal.paso === n) { sala.unaLocal.jugadaOk = r.ok; enviarUnaLocal(); }
     await traerSala();
-    sala.unaEnviando = false; sala.unaElegir = null; if (jugada.accion === 'jugar') sala.unaDecl = false;
+    sala.unaEnviando = false; sala.unaElegir = null;
     sala.vista = null; pintarSala();
     if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');
+  }
+
+  function enviarUnaLocal() {
+    const u = sala.unaLocal;
+    if (!u || !u.presionado || !u.jugadaOk || u.enviado) return;
+    u.enviado = true;
+    post('/juegos/sala/' + sala.codigo + '/respuesta', { una: { paso: u.paso } }).then(() => traerSala()).then(() => { sala.vista = null; pintarSala(); });
   }
 
   function clicUnaSala(e) {
@@ -1790,10 +1833,15 @@
     const yo = st.orden.findIndex(p => p.id === sala.estado.yo);
     const lg = e.target.closest('[data-usala-lang]'); if (lg) { sala.unaLang = lg.dataset.usalaLang; sala.vista = null; pintarSala(); return true; }
     const b = e.target.closest('[data-usala]');
-    if (b && b.dataset.usala === 'una') { sala.unaDecl = !sala.unaDecl; sonidoOk(); sala.vista = null; pintarSala(); return true; }
+    if (b && b.dataset.usala === 'una') {
+      if (sala.unaLocal && !sala.unaLocal.presionado) { sala.unaLocal.presionado = true; sonidoOk(); enviarUnaLocal(); sala.vista = null; pintarSala(); return true; }
+      if (!st.esperaUna || st.esperaUna.j !== yo) return true;
+      sonidoOk(); sala.unaLocal = { paso: st.esperaUna.paso, presionado: true, enviado: false, jugadaOk: true }; enviarUnaLocal(); sala.vista = null; pintarSala();
+      return true;
+    }
     if (st.turno !== yo || sala.unaEnviando) return !!(b || e.target.closest('[data-usala-carta]'));
     const col = e.target.closest('[data-usala-color]');
-    if (col && sala.unaElegir != null) { jugadaUnaSala({ accion: 'jugar', carta: sala.unaElegir, color: col.dataset.usalaColor, una: !!sala.unaDecl }); return true; }
+    if (col && sala.unaElegir != null) { jugadaUnaSala({ accion: 'jugar', carta: sala.unaElegir, color: col.dataset.usalaColor }); return true; }
     if (b && b.dataset.usala === 'robar' && st.pendiente === null) { jugadaUnaSala({ accion: 'robar' }); return true; }
     if (b && b.dataset.usala === 'pasar' && st.pendiente !== null) { jugadaUnaSala({ accion: 'pasar' }); return true; }
     const k = e.target.closest('[data-usala-carta]');
@@ -1806,7 +1854,7 @@
         return true;
       }
       if (!UNA_CARTAS[id].c) { sala.unaElegir = id; sala.vista = null; pintarSala(); return true; }
-      jugadaUnaSala({ accion: 'jugar', carta: id, una: !!sala.unaDecl });
+      jugadaUnaSala({ accion: 'jugar', carta: id });
       return true;
     }
     return false;

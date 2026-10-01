@@ -37,6 +37,7 @@ interface EnSala {
   palabras?: Record<string, string>;
   basta?: number;
   loteria?: number; // hora del servidor del primer "¡Lotería!"
+  unas?: { paso: number; t: number }[]; // ¡Una!: botón UNA por paso
   jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; t: number }[]; // ¡Una!
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
@@ -168,7 +169,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (!dentro) return json({ error: "no_en_sala" }, 403);
     if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
     let cambiar: (e: EnSala) => EnSala;
-    if (body.jugada !== undefined) {
+    if (body.una !== undefined && body.jugada === undefined) {
+      const paso = Number((body.una as Record<string, unknown>)?.paso);
+      if (!Number.isInteger(paso) || paso < 0 || paso > 2000) return json({ error: "una_invalida" }, 400);
+      cambiar = (e) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
+    } else if (body.jugada !== undefined) {
       // ¡Una!: cada jugada con su paso n; nadie más puede tener ese paso.
       const j = (body.jugada && typeof body.jugada === "object") ? body.jugada as Record<string, unknown> : {};
       const n = Number(j.n);
@@ -206,7 +211,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     }
     const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
     if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
-    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, loteria: nuevo.loteria, jugadas: nuevo.jugadas });
+    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas });
   }
 
   if (!accion && req.method === "GET") {

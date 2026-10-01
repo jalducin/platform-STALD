@@ -60,6 +60,8 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
   - ¡Una! (`una`): `respuesta` con `{ jugada: { n, accion, carta?, color?, una? } }` se guarda con `t`
     (hora del servidor). Si otro jugador ya tiene ese paso `n`, responde 409 `turno_tomado`. El servidor
     no reproduce la partida: la reconstruye cada cliente con la semilla.
+    `{ una: { paso } }` guarda `unas[]` `{ paso, t }`, el botón UNA. El castigo por segundos se calcula al
+    reproducir: ≤ 2 s 0, ≤ 3 s 1, ≤ 4 s 2, ≤ 5 s 3 y sin UNA 4.
   - Al terminar, `respuesta` acepta `{ final }` de cada jugador y `{ podio }`, que solo guarda el del host.
   - Cada sala nueva se agrega al índice `juegos/salas-semana/<lunes>.json`.
 - **`GET /juegos/admin/resumen?semana=`** (solo admin, 403 para los demás):
