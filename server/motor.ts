@@ -13,11 +13,13 @@ export interface Tema {
 export interface Ejercicio {
   id: string;
   tema: string;
-  tipo: "opcion" | "escribir";
+  tipo: "opcion" | "escribir" | "pronunciar";
   enunciado: string;
   opciones?: string[];
   correcta?: number; // opcion
   aceptadas?: string[]; // escribir
+  frase?: string; // pronunciar: lo que se dice en voz alta (público)
+  audio?: string; // cualquier tipo: texto que la página lee en voz alta (público)
   explicacion: string;
 }
 
@@ -236,7 +238,33 @@ export function nivelTexto(it: Item, porcentaje: number): string {
   return (niveles.find((n) => porcentaje >= n.min) || niveles[niveles.length - 1]).texto;
 }
 
+// ---------- Pronunciación (openspec: pronunciacion) ----------
+const CONTRACCIONES: [RegExp, string][] = [
+  [/\bcan't\b/g, "can not"], [/\bcannot\b/g, "can not"], [/\bwon't\b/g, "will not"], [/\blet's\b/g, "let us"],
+  [/\b(it|that|there|he|she|what|where|who)'s\b/g, "$1 is"],
+  [/n't\b/g, " not"], [/'ve\b/g, " have"], [/'ll\b/g, " will"], [/'re\b/g, " are"], [/'m\b/g, " am"], [/'d\b/g, " would"],
+];
+function palabras(s: string): string[] {
+  let t = normalizeText(s).replace(/[’‘`]/g, "'");
+  for (const [re, por] of CONTRACCIONES) t = t.replace(re, por);
+  return t.replace(/[^a-z0-9' ]+/g, " ").replace(/'/g, "").split(/\s+/).filter(Boolean);
+}
+// Proporción de palabras de la frase que aparecen en orden en lo reconocido (LCS / palabras de la frase).
+export function similitudPronunciacion(frase: string, oido: string): number {
+  const a = palabras(frase), b = palabras(oido);
+  if (!a.length || !b.length) return 0;
+  const dp = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+  return dp[a.length][b.length] / a.length;
+}
+export const UMBRAL_PRONUNCIACION = 0.8;
+
 function esCorrecta(e: Ejercicio, r: unknown): boolean {
+  if (e.tipo === "pronunciar") {
+    if (r === "auto:ok") return true;
+    if (typeof r !== "string" || r.startsWith("auto:")) return false;
+    return similitudPronunciacion(e.frase || "", r) >= UMBRAL_PRONUNCIACION;
+  }
   if (e.tipo === "escribir") {
     const v = normalizeText(r);
     return v !== "" && (e.aceptadas || []).some((a) => normalizeText(a) === v);
@@ -246,11 +274,13 @@ function esCorrecta(e: Ejercicio, r: unknown): boolean {
 
 function textoRespuesta(e: Ejercicio, r: unknown): string | null {
   if (r === undefined || r === null || r === "") return null;
+  if (e.tipo === "pronunciar") return r === "auto:ok" ? "Autoevaluación: me salió bien" : r === "auto:repetir" ? "Autoevaluación: necesito repetir" : String(r);
   if (e.tipo === "escribir") return String(r);
   return typeof r === "number" && e.opciones ? e.opciones[r] ?? null : null;
 }
 
 function textoCorrecta(e: Ejercicio): string {
+  if (e.tipo === "pronunciar") return e.frase || "";
   return e.tipo === "escribir" ? (e.aceptadas || [""])[0] : (e.opciones || [])[e.correcta ?? 0];
 }
 
@@ -261,6 +291,7 @@ export function sanitizeRespuestas(preguntas: Ejercicio[], raw: unknown): Record
   for (const e of preguntas) {
     const v = (raw as Record<string, unknown>)[e.id];
     if (e.tipo === "escribir" && typeof v === "string" && v.trim()) out[e.id] = v.slice(0, 200);
+    if (e.tipo === "pronunciar" && typeof v === "string" && v.trim()) out[e.id] = v.trim().slice(0, 300);
     if (e.tipo === "opcion" && Number.isInteger(v) && (v as number) >= 0 && (v as number) < (e.opciones || []).length) out[e.id] = v;
   }
   return out;
@@ -386,6 +417,8 @@ export function validateItem(it: Item): string[] {
     if (!e.explicacion) errs.push(`${it.id}/${e.id}: falta explicacion`);
     if (e.tipo === "opcion" && !((e.correcta ?? -1) >= 0 && (e.correcta ?? -1) < (e.opciones || []).length)) errs.push(`${it.id}/${e.id}: correcta inválida`);
     if (e.tipo === "escribir" && !(e.aceptadas || []).length) errs.push(`${it.id}/${e.id}: sin aceptadas`);
+    if (e.tipo === "pronunciar" && !(e.frase || "").trim()) errs.push(`${it.id}/${e.id}: pronunciar sin frase`);
+    if (e.audio !== undefined && !String(e.audio).trim()) errs.push(`${it.id}/${e.id}: audio vacío`);
   }
   if (it.tipo !== "refuerzo" && it.preguntasPorIntento && (it.banco || []).length < it.preguntasPorIntento) errs.push(`${it.id}: banco menor que preguntasPorIntento`);
   return errs;

@@ -226,6 +226,17 @@
   .ruta-reparto { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: .86rem; margin: 6px 0; }
   .ruta-reparto span:nth-child(2n) { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .ruta-body { padding: 8px; }
+  /* Audio y pronunciación (openspec: pronunciacion) */
+  .tts { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .tts button, .pron-btns button { font: inherit; font-size: .85rem; font-weight: 700; border-radius: 99px; border: 1px solid var(--border); background: var(--chip); color: var(--accent); padding: 6px 12px; cursor: pointer; }
+  .pron-frase { font-size: 1.15rem; font-weight: 700; margin: 6px 0; line-height: 1.4; }
+  .pron-btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .pron-btns button.rec { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .pron-btns button.rec.on { animation: pulso 1s infinite; }
+  @keyframes pulso { 50% { opacity: .55; } }
+  @media (prefers-reduced-motion: reduce) { .pron-btns button.rec.on { animation: none; } }
+  .pron-oido { font-size: .86rem; margin-top: 4px; }
+  .pron-oido.ok { color: var(--green); } .pron-oido.mal { color: var(--overdue); }
   .profe-link { display: inline-block; margin: 0 0 12px; font-weight: 700; color: var(--accent); text-decoration: none; }
 </style>
 </head>
@@ -786,11 +797,19 @@
     const pregunta = (p, n, total, fija) => {
       const v = fija ? fijas[p.id] : undefined;
       const dis = fija ? ' disabled' : '';
-      const cuerpo = p.tipo === 'escribir'
-        ? '<input class="q-text" type="text" name="' + escapeHtml(p.id) + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe tu respuesta"' + (fija ? ' value="' + escapeHtml(v) + '"' : '') + dis + '>'
-        : p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"' + (fija && v === i ? ' checked' : '') + dis + '> ' + escapeHtml(o) + '</label>').join('');
+      const tts = t => '<div class="tts"><button type="button" data-action="tts" data-texto="' + escapeHtml(t) + '">🔊 Escuchar</button><button type="button" data-action="tts" data-lento="1" data-texto="' + escapeHtml(t) + '">🐢 Lento</button></div>';
+      const cuerpo = p.tipo === 'pronunciar'
+        ? '<div class="pron-frase">' + escapeHtml(p.frase) + '</div>' + tts(p.frase) +
+          '<input class="q-text" type="hidden" name="' + escapeHtml(p.id) + '"' + (fija ? ' value="' + escapeHtml(v) + '"' : '') + dis + '>' +
+          (fija ? '' : Reconocedor
+            ? '<div class="pron-btns"><button type="button" class="rec" data-action="grabar">🎙️ Decirlo</button></div>'
+            : '<div class="pron-btns"><button type="button" data-action="auto" data-valor="auto:ok">✔ Me salió bien</button><button type="button" data-action="auto" data-valor="auto:repetir">↺ Necesito repetir</button></div><div class="s" style="font-size:.78rem">Tu navegador no reconoce voz: usa Chrome o Edge para calificarla. Mientras, escucha el modelo, repítelo y autoevalúate.</div>') +
+          '<div class="pron-oido">' + (fija ? 'Ya te salió bien ✔' : '') + '</div>'
+        : p.tipo === 'escribir'
+        ? (p.audio ? tts(p.audio) : '') + '<input class="q-text" type="text" name="' + escapeHtml(p.id) + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe tu respuesta"' + (fija ? ' value="' + escapeHtml(v) + '"' : '') + dis + '>'
+        : (p.audio ? tts(p.audio) : '') + p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"' + (fija && v === i ? ' checked' : '') + dis + '> ' + escapeHtml(o) + '</label>').join('');
       const antes = corr && !fija ? '<div class="antes">Antes respondiste: ' + escapeHtml(corr.anteriores[p.id] || 'Sin responder') + ' ✗</div>' : '';
-      return '<div class="q' + (fija ? ' fija answered' : '') + '" data-q="' + escapeHtml(p.id) + '"><div class="n">' + (fija ? '✓ Ya la tenías bien' : 'Ejercicio ' + n + ' de ' + total) + '</div>' +
+      return '<div class="q' + (fija ? ' fija answered' : '') + '" data-q="' + escapeHtml(p.id) + '"' + (p.tipo === 'pronunciar' ? ' data-frase="' + escapeHtml(p.frase) + '"' : '') + '><div class="n">' + (fija ? '✓ Ya la tenías bien' : 'Ejercicio ' + n + ' de ' + total) + '</div>' +
         '<div class="e">' + escapeHtml(p.enunciado) + '</div>' + antes + cuerpo + '</div>';
     };
     const conTemas = (lista, fija) => {
@@ -819,6 +838,55 @@
       '<div class="exam-bar">' + volverBtn() + '<span class="progress-text" id="exam-count" style="margin:0">0/' + porCorregir.length + ' respondidas</span>' +
       '<button class="btn" type="submit" id="exam-send" disabled>Enviar</button></div></form>';
     window.scrollTo(0, 0);
+  }
+
+  // ---------- Voz: modelo (speechSynthesis) y reconocimiento (SpeechRecognition) ----------
+  function hablar(texto, lento) {
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'en-US'; u.rate = lento ? 0.7 : 1;
+    const voz = speechSynthesis.getVoices().find(v => /^en[-_]US/i.test(v.lang)) || speechSynthesis.getVoices().find(v => /^en/i.test(v.lang));
+    if (voz) u.voice = voz;
+    speechSynthesis.speak(u);
+  }
+  const Reconocedor = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  const CONTRACCIONES = [[/\bcan't\b/g, 'can not'], [/\bcannot\b/g, 'can not'], [/\bwon't\b/g, 'will not'], [/\blet's\b/g, 'let us'], [/\b(it|that|there|he|she|what|where|who)'s\b/g, '$1 is'],
+    [/n't\b/g, ' not'], [/'ve\b/g, ' have'], [/'ll\b/g, ' will'], [/'re\b/g, ' are'], [/'m\b/g, ' am'], [/'d\b/g, ' would']];
+  function palabrasPron(t) {
+    t = String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/[’‘`]/g, "'");
+    for (const [re, por] of CONTRACCIONES) t = t.replace(re, por);
+    return t.replace(/[^a-z0-9' ]+/g, ' ').replace(/'/g, '').split(/\s+/).filter(Boolean);
+  }
+  function similitudPron(frase, oido) {
+    const a = palabrasPron(frase), b = palabrasPron(oido);
+    if (!a.length || !b.length) return 0;
+    const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    return dp[a.length][b.length] / a.length;
+  }
+  function ponerRespuestaPron(q, valor, texto, ok) {
+    const inp = q.querySelector('input.q-text');
+    inp.value = valor;
+    const o = q.querySelector('.pron-oido');
+    o.textContent = texto; o.className = 'pron-oido ' + (ok ? 'ok' : 'mal');
+    updateExamProgress(q.closest('#exam-form'));
+  }
+  function grabarPron(btn) {
+    const q = btn.closest('.q'); const frase = q.dataset.frase;
+    if (!Reconocedor) return;
+    const r = new Reconocedor();
+    r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 3;
+    btn.classList.add('on'); btn.textContent = '🎙️ Escuchando…';
+    r.onresult = ev => {
+      const alts = Array.from(ev.results[0] || []).map(x => x.transcript);
+      const mejor = alts.sort((x, y) => similitudPron(frase, y) - similitudPron(frase, x))[0] || '';
+      const p = Math.round(similitudPron(frase, mejor) * 100);
+      ponerRespuestaPron(q, mejor, 'Te escuché: «' + mejor + '» · coincide ' + p + ' % ' + (p >= 80 ? '✔' : '↺ inténtalo otra vez'), p >= 80);
+    };
+    r.onerror = ev => { const o = q.querySelector('.pron-oido'); o.textContent = ev.error === 'not-allowed' ? 'Permite el micrófono para calificar tu voz.' : 'No te escuché bien; inténtalo otra vez.'; o.className = 'pron-oido mal'; };
+    r.onend = () => { btn.classList.remove('on'); btn.textContent = '🎙️ Decirlo otra vez'; };
+    r.start();
   }
 
   function examAnswers(form) {
@@ -1055,6 +1123,9 @@
     if (act === 'ver-todo') aplicarFiltro(b.closest('.board'), null);
     if (act === 'marcar') { e.preventDefault(); marcarTarea(b); }
     if (act === 'quitar-alumno') { e.preventDefault(); quitarAlumno(b); }
+    if (act === 'tts') { e.preventDefault(); hablar(b.dataset.texto, !!b.dataset.lento); }
+    if (act === 'grabar') { e.preventDefault(); grabarPron(b); }
+    if (act === 'auto') { e.preventDefault(); const q = b.closest('.q'); const okv = b.dataset.valor === 'auto:ok'; ponerRespuestaPron(q, b.dataset.valor, okv ? '✔ Marcaste que te salió bien' : '↺ Marcaste que necesitas repetir', okv); }
     if (act === 'abrir-item') { e.preventDefault(); openItem(b.dataset.id); }
     if (act === 'ver-resultado') {
       const it = ((state.act && state.act.items) || []).find(x => x.id === b.dataset.id);

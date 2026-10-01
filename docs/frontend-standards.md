@@ -58,6 +58,12 @@ Cada página debe manejar y mostrar de forma explícita:
   por alumno o alumna. Junta las de en línea (mejor intento, fecha del último envío) y las de Notion
   (fecha de edición). El color va por nivel: ≥ 80, 60–79 y < 60; una calificación de Notion ≤ 10 se
   escala × 10.
+- Voz en `ingles.html` (cambio `pronunciacion`):
+  - 🔊 / 🐢 con `speechSynthesis` (en-US) en ejercicios con `audio` y `pronunciar`;
+  - 🎙️ con `SpeechRecognition` / `webkitSpeechRecognition`: muestra «Te escuché…» y la coincidencia (misma regla que
+    el servidor); sin reconocimiento, autoevaluación;
+  - privacidad: el reconocimiento de Chrome/Edge manda el audio a su proveedor para transcribirlo; la plataforma no
+    guarda audio, solo el texto reconocido como respuesta.
 - Vista de admin de `ingles.html`: tarjeta "🎮 Juegos de la semana" (`#juegos-admin`), con el ranking
   completo y las partidas con su podio, desde `/juegos/admin/resumen`. En el bloque de cada alumno o alumna
   va su línea de juegos.

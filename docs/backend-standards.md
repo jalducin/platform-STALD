@@ -95,6 +95,13 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 - **Catálogo (`CATALOGO`):** 20 juegos (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
+**Pronunciación** (`server/motor.ts`, cambio `pronunciacion`):
+  - `similitudPronunciacion(frase, oido)`: LCS de palabras ÷ palabras de la frase, tras normalizar (minúsculas,
+    sin acentos ni puntuación) y expandir contracciones (I've = I have, can't = can not…).
+  - Correcta si ≥ `UMBRAL_PRONUNCIACION` (0.8); `auto:ok` cuenta como correcta y `auto:repetir` no. Respuesta ≤ 300
+    caracteres. La revisión muestra lo reconocido y la frase.
+  - El patrón de la ruta del profe incluye el viernes (pronunciación).
+
 **Ruta `/ingles/profe/actividades[/<id>]`** (`handleProfe` en `server/actividades.ts`, cambio `ruta-profe`):
   - solo admin (si no, 403); atiende al admin como el alumno "Profe" (estado, intentos, corrección y guardado);
   - usa el ámbito `AMBITO_PROFE` (`contenido/profe/`); el listado agrega `plan`;

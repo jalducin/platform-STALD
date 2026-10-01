@@ -120,6 +120,8 @@ mes siguiente:
    (`resultados/profe-*/profe.json`) y el examen mensual anterior.
 3. Mes 2 sugerido (B2): tiempos avanzados en contraste, inversión y énfasis (cleft sentences), gerundio vs.
    infinitivo, artículos avanzados, colocaciones y register (formal/informal), escritura de ensayos y emails.
-4. Ejecuta el generador y valida cada semana con `--profe`:
+4. Cada semana lleva su **pronunciación del viernes** (`profe-pron-<fecha>`, ver `contenido_pron.py`): 4 ejercicios
+   de escuchar con `audio`, 3 de teoría de sonidos y 5 frases `pronunciar` ligadas a la gramática de la semana.
+5. Ejecuta el generador y valida cada semana con `--profe`:
    `npx -y deno run --allow-read server/validar_semana.ts "$DATA" <lunes> --profe` (0 errores).
-5. Actualiza `plan.json` con el mes nuevo (el generador lo reescribe). Muestra el resumen al profe y sube.
+6. Actualiza `plan.json` con el mes nuevo (el generador lo reescribe). Muestra el resumen al profe y sube.
