@@ -38,8 +38,8 @@
 
 ## 5. Verificación manual y migración — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Migración de la semana 2026-09-28 (marcar partidas de sala) tras el deploy, con respaldo en git
-- [ ] 5.2 Producción:
+- [x] 5.1 Migración de la semana 2026-09-28 (marcar partidas de sala) tras el deploy, con respaldo en git
+- [x] 5.2 Producción:
   - totales de Sofy y del profe = suma de sus partidas;
   - ranking por tipo;
   - guardar con una sala inexistente → 400 (sin escribir).

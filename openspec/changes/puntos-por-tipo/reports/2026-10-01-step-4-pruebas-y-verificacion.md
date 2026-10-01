@@ -43,3 +43,17 @@
 ## Resultado
 - Estado Step 4: PASS
 - Bloqueos: ninguno
+
+## Step 5 — Migración y verificación en producción (EL AGENTE EJECUTA)
+- La migración corrió después de que terminó el despliegue (`build` y `deploy` en verde), con `pull`, `--aplicar`,
+  commit y push inmediato (con reintento si alguien jugaba en medio). Commit `9ed7a93` del repo de datos; el
+  commit anterior queda como respaldo.
+  - Sofy: 3 partidas de sala (FBKE, HNGR, VCRP) → ⭐ 25,749 · 👥 1,242 (antes 9,669).
+  - Profe: 8 partidas de sala → ⭐ 6,939 · 👥 4,778 (antes 8,283).
+- Script Python contra `https://stald.jalducin.deno.net`: 6/6 PASS.
+  - Ranking individual: Sofy 25,749 y Profe 6,939.
+  - Ranking de partidas: Profe 4,778 y Sofy 1,242.
+  - `/yo` del profe con total = individuales + partidas.
+  - Sala inexistente → 400 `sala_invalida`, sin escribir.
+  - Tipo inválido → 400.
+  - GitHub Pages sirve las pestañas del ranking.
