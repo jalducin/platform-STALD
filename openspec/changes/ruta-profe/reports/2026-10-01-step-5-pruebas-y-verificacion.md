@@ -36,3 +36,15 @@
 ## Resultado
 - Estado Step 5: PASS
 - Bloqueos: ninguno
+
+## Step 6 — Verificación manual en producción (EL AGENTE EJECUTA)
+- Contenido subido al repo de datos (`contenido/profe/`, `herramientas/profe-mes-1/`, README); se quitó un
+  `__pycache__` subido por error y se agregó a `.gitignore`.
+- Script Python (solo GET) contra `https://stald.jalducin.deno.net`: 7/7 PASS.
+  - Como admin: plan "Ruta B1 → C1 · Mes 1", semana 0 y 2 elementos disponibles (examen directo y
+    diagnóstico); plan con 5 semanas.
+  - Otro correo → 403.
+  - Abrir el examen directo sin enviar: 27 preguntas, intento 1 y sin respuestas expuestas.
+  - La vista del grupo no incluye elementos del profe.
+  - GitHub Pages sirve `ingles.html` con el modo profe.
+- Estado: sin escrituras. El intento del profe sigue sin usar.
