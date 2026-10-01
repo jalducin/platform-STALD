@@ -34,3 +34,12 @@
 ## Resultado
 - Estado Step 5: PASS
 - Bloqueos: ninguno
+
+## Step 6 — Verificación manual en producción (EL AGENTE EJECUTA)
+- El contenido se subió después de que terminó el despliegue de Deno (`build` y `deploy` en verde), para
+  que el servidor viejo nunca recibiera ejercicios `pronunciar`.
+- Script Python (solo GET) contra `https://stald.jalducin.deno.net`: 4/4 PASS.
+  - La ruta lista `profe-pron-2026-10-02` disponible y sin intentos; el plan suma 23 tareas.
+  - El elemento trae 12 ejercicios: 5 `pronunciar` con `frase` y 4 con `audio`.
+  - No expone `correcta`, `aceptadas` ni `explicacion`.
+- Estado: sin escrituras. El intento del profe sigue sin usar.
