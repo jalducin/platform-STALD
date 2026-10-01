@@ -31,3 +31,14 @@
 ## Resultado
 - Estado Step 4: PASS
 - Bloqueos: ninguno
+
+## Step 5 — Verificación manual en producción (EL AGENTE EJECUTA)
+- Tras el despliegue, un script Python (solo GET) contra `https://stald.jalducin.deno.net`: 3/3 PASS.
+  - La ruta del profe lista los 5 elementos del grupo, sin Meet:
+    - `diagnostico-a1` → 25 sep;
+    - `act-2026-09-29` y `act-2026-10-01` → 27 sep;
+    - `examen-2026-10-02` → 1 oct;
+    - `refuerzo-2026-10-03` → 2 oct.
+  - Abrir `act-2026-09-29` sin enviar: intento 1, 12 preguntas y sin respuestas expuestas.
+  - La vista del grupo no tiene resultados de Profe ni lo incluye en el resumen.
+- Estado: sin escrituras. Los intentos del profe siguen sin usar.
