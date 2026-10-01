@@ -43,7 +43,7 @@
 
 ## 6. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Producción, solo lectura:
+- [x] 6.1 Producción, solo lectura:
   - la ruta lista la pronunciación del viernes 2 con sus 12 ejercicios;
   - la vista pública trae `frase` y `audio` sin respuestas.
 
