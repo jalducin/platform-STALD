@@ -264,3 +264,11 @@ Deno.test("juegos: la caché de fotos vence a los 60 s (otro isolate pudo borrar
   reloj += 31_000;
   assertEquals((await verFoto(deps, t)).status, 404, "vencida: se vuelve a leer");
 });
+
+Deno.test("juegos: Sudoku por niveles en el catálogo (openspec: sudoku-niveles)", async () => {
+  assertEquals(CATALOGO["mente-sudoku"], { categoria: "mente", titulo: "Sudoku", max: 2000 });
+  const { call } = ctx();
+  const p = await call("POST", "/partida", "marisol@example.com", partida("mente-sudoku", 99999));
+  assertEquals([p.status, p.body.puntos], [200, 2000]);
+  assert((await call("GET", "/yo", "marisol@example.com")).body.catalogo.some((j: any) => j.id === "mente-sudoku"));
+});
