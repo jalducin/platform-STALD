@@ -160,6 +160,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.
   - Son los únicos correos que guarda el repo de datos. El invitado aceptó el aviso al registrarse.
   - Solo el admin los ve (`/juegos/invitados`).
+- `alumnos.json`: `{ "<correo>": { nombre, alta } }`, alumnos y alumnas dados de alta desde `ingles.html`
+  (cambio `alta-alumnos`). Se suman a los de Notion. Solo el admin ve los correos.
 - `avance/<slug-alumno>.json`: avance fuera de las actividades en línea.
   - `{ alumno, notion: { <pageId>: { titulo, completado, en, por } }, historial: [...] }`.
   - `por` es `alumno` o `admin`. `historial` guarda como máximo las 200 entradas más recientes. Sin correos.

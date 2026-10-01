@@ -415,11 +415,13 @@
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(r);
     });
+    // Alta desde la página (fila de identidad, sin tarea): también tiene su bloque.
+    rows.filter(r => r.source === 'registro' && r.alumno && !groups.has(r.alumno)).forEach(r => groups.set(r.alumno, []));
     const items = (state.act && state.act.items) || [];
     const resumen = (state.act && state.act.resumen) || {};
     const diag = items.find(i => i.id === 'diagnostico-a1');
     const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es'));
-    contentEl.innerHTML = renderUltimasAdmin(names, groups, items) + renderJuegosAdmin() + renderAdminWeek(state.act) + names.map(name => {
+    contentEl.innerHTML = renderAlumnosAdmin() + renderUltimasAdmin(names, groups, items) + renderJuegosAdmin() + renderAdminWeek(state.act) + names.map(name => {
       const list = groups.get(name);
       const g = buildGroups(list);
       const ultima = lastGraded(list);
@@ -658,6 +660,50 @@
   }
 
   // Resumen de juegos de la semana (solo admin): jugadores y partidas con su podio.
+  // ---------- Alta de alumnos y alumnas (admin, openspec: alta-alumnos) ----------
+  async function loadAlumnosAdmin() {
+    try {
+      const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email));
+      state.alumnosAdmin = r.ok ? r.body.alumnos : { error: r.body.error || r.status };
+    } catch (e) { state.alumnosAdmin = { error: e.message }; }
+  }
+
+  function renderAlumnosAdmin() {
+    const a = state.alumnosAdmin;
+    const lista = Array.isArray(a) ? a : [];
+    return '<details class="section" id="alumnos-admin"' + (state.altaAbierta ? ' open' : '') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Alumnos y alumnas</span><span class="count">' + lista.length + '</span></div></summary><div class="scroll">' +
+      '<form id="alta-alumno" autocomplete="off" style="display:grid;gap:8px;margin:6px 0 12px">' +
+        '<div class="progress-text" style="margin:0">➕ Nuevo alumno o alumna: entra con su correo a Inglés, al portal y a Juegos, y ve las actividades de la semana.</div>' +
+        '<input id="alta-nombre" type="text" maxlength="40" placeholder="Nombre (como aparecerá en sus calificaciones)" required style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' +
+        '<input id="alta-correo" type="email" maxlength="80" placeholder="correo@ejemplo.com" required style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' +
+        '<button class="btn" type="submit">Dar de alta</button><div id="alta-msg"></div></form>' +
+      (a && a.error ? '<div class="empty">No se pudo cargar la lista (' + escapeHtml(a.error) + ').</div>' : '') +
+      lista.map(x => '<div class="ultimas-lista" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div>👤 <b>' + escapeHtml(x.nombre) + '</b><br><small>' +
+        escapeHtml(x.emails.join(', ') || 'sin correo en Notion') + ' · ' + (x.origen === 'registro' ? 'alta en la página' : 'Notion') + '</small></div>' +
+        (x.origen === 'registro' ? '<button class="btn ghost" data-action="quitar-alumno" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">Quitar</button>' : '') + '</div>').join('') +
+      '</div></details>';
+  }
+
+  const ERRORES_ALTA = { correo_invalido: 'Escribe un correo válido.', nombre_invalido: 'Escribe un nombre de 2 a 40 letras.', correo_en_uso: 'Ese correo ya tiene acceso.', nombre_en_uso: 'Ya hay alguien con ese nombre y correo. Usa otro nombre (por ejemplo, con apellido).' };
+  async function altaAlumno(form) {
+    const msg = document.getElementById('alta-msg');
+    const nombre = document.getElementById('alta-nombre').value, email = document.getElementById('alta-correo').value;
+    form.querySelector('button').disabled = true;
+    const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nombre, email }) });
+    if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="empty" style="color:var(--bad)">' + escapeHtml(ERRORES_ALTA[r.body.error] || ('No se pudo dar de alta (' + (r.body.error || r.status) + ').')) + '</div>'; return; }
+    state.altaAbierta = true;
+    state.altaAviso = '✅ ' + r.body.alumno.nombre + ' ya puede entrar con ' + r.body.alumno.email + '.';
+    await loadFor(state.email);
+  }
+  async function quitarAlumno(b) {
+    if (!confirm('¿Quitar el acceso de ' + b.dataset.nombre + '? Sus resultados se conservan.')) return;
+    b.disabled = true;
+    const r = await fetchJson(API_BASE + '/ingles/alumnos/quitar?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: b.dataset.email }) });
+    if (!r.ok) { b.disabled = false; alert('No se pudo quitar (' + (r.body.error || r.status) + ').'); return; }
+    state.altaAbierta = true; state.altaAviso = '🗑️ Se quitó el acceso de ' + b.dataset.nombre + '.';
+    await loadFor(state.email);
+  }
+
   async function loadJuegosAdmin() {
     try {
       const r = await fetchJson(API_BASE + '/juegos/admin/resumen?email=' + encodeURIComponent(state.email));
@@ -980,6 +1026,7 @@
     show();
   }
 
+  contentEl.addEventListener('submit', (e) => { if (e.target.id === 'alta-alumno') { e.preventDefault(); altaAlumno(e.target); } });
   contentEl.addEventListener('click', (e) => {
     const b = e.target.closest('[data-action]');
     if (!b) return;
@@ -987,6 +1034,7 @@
     if (act === 'filtrar') { const board = b.closest('.board'); aplicarFiltro(board, b.getAttribute('aria-pressed') === 'true' ? null : b.dataset.grupo); }
     if (act === 'ver-todo') aplicarFiltro(b.closest('.board'), null);
     if (act === 'marcar') { e.preventDefault(); marcarTarea(b); }
+    if (act === 'quitar-alumno') { e.preventDefault(); quitarAlumno(b); }
     if (act === 'abrir-item') { e.preventDefault(); openItem(b.dataset.id); }
     if (act === 'ver-resultado') {
       const it = ((state.act && state.act.items) || []).find(x => x.id === b.dataset.id);
@@ -1025,8 +1073,9 @@
       appEl.style.display = 'block';
       state.data = data;
       await actividadesP;
-      if (data.isAdmin) await loadJuegosAdmin();
+      if (data.isAdmin) await Promise.all([loadJuegosAdmin(), loadAlumnosAdmin()]);
       render(data);
+      if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; state.altaAviso = null; }
     } catch (e) {
       loginError.textContent = '⚠️ ' + e.message;
       loginError.style.display = 'block';

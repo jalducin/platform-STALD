@@ -6,6 +6,7 @@ import { handleActividades } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados } from "./juegos.ts";
+import { aplicarAlumnos, handleAlumnos, leerRegistro } from "./alumnos.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 
 const NOTION_VERSION = "2022-06-28";
@@ -64,7 +65,12 @@ async function loadRows<T extends { userIds: string[]; userEmails: string[]; use
 // En modo fixture (pruebas locales) las marcas se guardan en memoria y se aplican al leer.
 const marcasFixture = new Map<string, { completado: boolean; en: string }>();
 
+// Filas de Inglés con los alumnos y alumnas dados de alta en la página (alumnos.json).
 async function filasIngles(): Promise<InglesRow[]> {
+  return aplicarAlumnos(await filasNotion(), await leerRegistro(await getStore()));
+}
+
+async function filasNotion(): Promise<InglesRow[]> {
   const rows = await loadRows<InglesRow>(CLASES_INGLES_DB_ID, extractInglesRow, "ingles");
   if (env("ROWS_FIXTURE")) {
     for (const r of rows) {
@@ -118,6 +124,12 @@ export async function handler(req: Request): Promise<Response> {
   const admin = normalizeEmail(env("SUPER_ADMIN_EMAIL"));
 
   try {
+    // /ingles/alumnos[/quitar] → alta de alumnos y alumnas (solo admin, server/alumnos.ts)
+    const iAl = url.pathname.indexOf("/ingles/alumnos");
+    if (iAl !== -1) {
+      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion }, json);
+    }
+
     const idx = url.pathname.indexOf("/ingles/actividades");
     if (idx !== -1) {
       if (!email) return json({ error: "missing_email" }, 400);

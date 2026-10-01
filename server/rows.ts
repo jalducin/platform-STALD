@@ -25,7 +25,7 @@ export interface SecundariaRow extends WithUsers {
 }
 
 export interface InglesRow extends WithUsers {
-  source: "clases_ingles";
+  source: "clases_ingles" | "registro"; // "registro": fila de identidad de un alumno dado de alta en la página (sin tarea)
   id: string; // id de la página de Notion (para marcar "Completado")
   name: string;
   label: string;
