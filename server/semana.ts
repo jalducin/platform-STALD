@@ -1,5 +1,5 @@
 // Validador de una semana completa antes de subirla al repo de datos (ver openspec: nueva-semana-ingles).
-import { loadItem } from "./actividades.ts";
+import { AMBITO_CLASE, type Ambito, loadItem } from "./actividades.ts";
 import { maxIntentos, validateItem } from "./motor.ts";
 import type { Store } from "./store.ts";
 
@@ -10,25 +10,30 @@ export interface ReporteSemana {
 
 interface Semana { id: string; titulo: string; elementos: { id: string; tipo: string; fecha: string }[] }
 
-// Patrón semanal: mar/jue actividad, vie examen, sáb refuerzo, dom Meet (0 = domingo).
-const PATRON: Record<number, string> = { 2: "actividad", 4: "actividad", 5: "examen", 6: "refuerzo", 0: "meet" };
+// Patrón semanal del grupo: mar/jue actividad, vie examen, sáb refuerzo, dom Meet (0 = domingo).
+// Ruta del profe: lun actividad A, mié examen A, jue actividad B, sáb examen B.
+const PATRONES: Record<string, Record<number, string>> = {
+  clase: { 2: "actividad", 4: "actividad", 5: "examen", 6: "refuerzo", 0: "meet" },
+  profe: { 1: "actividad", 3: "examen", 4: "actividad", 6: "examen" },
+};
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 const CORREO = /[\w.+-]+@[\w-]+\.[\w.-]+/;
 
 const diaSemana = (fecha: string) => new Date(`${fecha}T12:00:00Z`).getUTCDay();
 
-export async function validarSemana(store: Store, lunes: string): Promise<ReporteSemana> {
+export async function validarSemana(store: Store, lunes: string, ambito: Ambito = AMBITO_CLASE): Promise<ReporteSemana> {
+  const PATRON = PATRONES[ambito.clave] ?? PATRONES.clase;
   const errores: string[] = [], avisos: string[] = [];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(lunes) || diaSemana(lunes) !== 1) errores.push(`${lunes}: el id de la semana no es lunes`);
-  const doc = await store.get<Semana>(`contenido/semanas/${lunes}.json`);
-  if (!doc) return { errores: [...errores, `contenido/semanas/${lunes}.json no existe`], avisos };
+  const doc = await store.get<Semana>(`${ambito.contenido}/semanas/${lunes}.json`);
+  if (!doc) return { errores: [...errores, `${ambito.contenido}/semanas/${lunes}.json no existe`], avisos };
   const semana = doc.data;
   if (semana.id !== lunes) errores.push(`${lunes}: el campo id dice ${semana.id}`);
 
   const ids = new Set(semana.elementos.map((e) => e.id));
   for (const el of semana.elementos) {
-    const it = await loadItem(store, el.id);
-    if (!it) { errores.push(`${el.id}: no existe el archivo en contenido/actividades ni contenido/examenes`); continue; }
+    const it = await loadItem(store, el.id, ambito);
+    if (!it) { errores.push(`${el.id}: no existe el archivo en ${ambito.contenido}/actividades ni ${ambito.contenido}/examenes`); continue; }
     if (it.tipo !== el.tipo) errores.push(`${el.id}: tipo ${it.tipo} en el archivo y ${el.tipo} en la semana`);
     if (it.fechaLimite !== el.fecha) errores.push(`${el.id}: fechaLimite ${it.fechaLimite} distinta de la fecha de la semana ${el.fecha}`);
     if (it.disponibleDesde < lunes || it.disponibleDesde > it.fechaLimite) errores.push(`${el.id}: disponibleDesde ${it.disponibleDesde} fuera de ${lunes}…${it.fechaLimite}`);
@@ -44,8 +49,8 @@ export async function validarSemana(store: Store, lunes: string): Promise<Report
     if ((it.tipo === "actividad" || it.tipo === "refuerzo") && (!(it.teoria || []).length || !(it.tips || []).length)) avisos.push(`${el.id}: sin teoría o sin tips`);
 
     if (it.tipo === "refuerzo") {
-      for (const b of it.bancoDe || []) if (!(await loadItem(store, b))) errores.push(`${el.id}: bancoDe ${b} no existe`);
-      if (it.basadoEn && !(await loadItem(store, it.basadoEn))) errores.push(`${el.id}: basadoEn ${it.basadoEn} no existe`);
+      for (const b of it.bancoDe || []) if (!(await loadItem(store, b, ambito))) errores.push(`${el.id}: bancoDe ${b} no existe`);
+      if (it.basadoEn && !(await loadItem(store, it.basadoEn, ambito))) errores.push(`${el.id}: basadoEn ${it.basadoEn} no existe`);
       const temas = new Set((it.temas || []).map((t) => t.id));
       for (const [de, a] of Object.entries(it.mapeoTemas || {})) if (!temas.has(a)) errores.push(`${el.id}: mapeoTemas ${de} → ${a}, tema inexistente en el refuerzo`);
       for (const t of temas) if (!(it.banco || []).some((e) => e.tema === t)) errores.push(`${el.id}: tema ${t} sin ejercicios en el banco combinado`);

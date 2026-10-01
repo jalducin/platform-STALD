@@ -160,6 +160,11 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.
   - Son los únicos correos que guarda el repo de datos. El invitado aceptó el aviso al registrarse.
   - Solo el admin los ve (`/juegos/invitados`).
+- `contenido/profe/`: ruta de estudio del profe (cambio `ruta-profe`), mismo formato que `contenido/`:
+  - `plan.json`: `{ titulo, subtitulo, nivelActual, meta, horizonte, horasSemana, reparto[], rutinaDiaria[], reglas[],
+    semanas[{ id, n, titulo, objetivo, temas[], busuu, extra, elementos[{ id, tipo, titulo, fecha }] }] }`;
+  - `semanas/<lunes>.json`, `actividades/profe-act-<fecha>.json` y `examenes/profe-examen-<fecha>.json`;
+  - resultados en `resultados/<id>/profe.json` (alumno "Profe").
 - `alumnos.json`: `{ "<correo>": { nombre, alta } }`, alumnos y alumnas dados de alta desde `ingles.html`
   (cambio `alta-alumnos`). Se suman a los de Notion. Solo el admin ve los correos.
 - `avance/<slug-alumno>.json`: avance fuera de las actividades en línea.

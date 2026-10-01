@@ -216,12 +216,23 @@
   #app { display: none; }
   .home-link { display: inline-block; font-size: .8rem; font-weight: 600; color: var(--accent); text-decoration: none; margin-bottom: 8px; }
   .home-link:hover { text-decoration: underline; }
+  /* Ruta del profe (openspec: ruta-profe) */
+  .ruta-sem { border-top: 1px solid var(--border); padding: 10px 0; display: grid; gap: 4px; }
+  .ruta-sem:first-of-type { border-top: 0; }
+  .ruta-sem.actual { background: var(--chip); border-radius: 10px; padding: 10px; border-top: 0; }
+  .ruta-sem .h { font-weight: 800; }
+  .ruta-sem .meta { font-size: .82rem; color: var(--muted); }
+  .ruta-lista { margin: 4px 0 0; padding-left: 18px; font-size: .86rem; display: grid; gap: 3px; }
+  .ruta-reparto { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: .86rem; margin: 6px 0; }
+  .ruta-reparto span:nth-child(2n) { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ruta-body { padding: 8px; }
+  .profe-link { display: inline-block; margin: 0 0 12px; font-weight: 700; color: var(--accent); text-decoration: none; }
 </style>
 </head>
 <body>
   <a class="home-link" href="./">← Inicio</a> <a class="home-link games-link" href="juegos.html" style="margin-left:12px">🎮 Juegos</a>
-  <h1>📗 Clases de Inglés</h1>
-  <div class="subtitle">Progreso de alumnos y alumnas, actualizado desde Notion</div>
+  <h1 id="titulo">📗 Clases de Inglés</h1>
+  <div class="subtitle" id="subtitulo">Progreso de alumnos y alumnas, actualizado desde Notion</div>
 
   <div id="login" class="login-box">
     <label for="email-input">Tu correo</label>
@@ -243,6 +254,14 @@
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
   const API_BASE = (new URLSearchParams(location.search).get('api') || DEFAULT_API).replace(/\/$/, '');
   const DATA_URL_BASE = API_BASE + '/ingles/data';
+  // ?modo=profe → ruta de estudio del profe (solo admin, openspec: ruta-profe).
+  const MODO_PROFE = new URLSearchParams(location.search).get('modo') === 'profe';
+  const conApiParam = href => { const a = new URLSearchParams(location.search).get('api'); return a ? href + (href.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(a) : href; };
+  if (MODO_PROFE) {
+    document.title = 'Mi ruta B1 → C1';
+    document.getElementById('titulo').textContent = '🎓 Mi ruta B1 → C1';
+    document.getElementById('subtitulo').textContent = 'Temas de estudio, práctica y 2 exámenes por semana. Solo tú la ves.';
+  }
   const STORAGE_KEY = 'ingles_email';
   // Claves de sesión compartidas con el portal (index.html): solo el correo.
   const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
@@ -404,7 +423,8 @@
     }
 
     if (!data.isAdmin) {
-      contentEl.innerHTML = renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
+      contentEl.innerHTML = (MODO_PROFE ? '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html')) + '">← Vista de mi grupo</a>' + renderPlanProfe(state.act) : '') +
+        renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
       return;
     }
 
@@ -421,7 +441,7 @@
     const resumen = (state.act && state.act.resumen) || {};
     const diag = items.find(i => i.id === 'diagnostico-a1');
     const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es'));
-    contentEl.innerHTML = renderAlumnosAdmin() + renderUltimasAdmin(names, groups, items) + renderJuegosAdmin() + renderAdminWeek(state.act) + names.map(name => {
+    contentEl.innerHTML = '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html?modo=profe')) + '">🎓 Mi ruta B1 → C1 →</a>' + renderAlumnosAdmin() + renderUltimasAdmin(names, groups, items) + renderJuegosAdmin() + renderAdminWeek(state.act) + names.map(name => {
       const list = groups.get(name);
       const g = buildGroups(list);
       const ultima = lastGraded(list);
@@ -456,7 +476,7 @@
   }
 
   // ---------- Actividades y exámenes (servidor: /ingles/actividades) ----------
-  const ACT_URL = API_BASE + '/ingles/actividades';
+  const ACT_URL = API_BASE + (MODO_PROFE ? '/ingles/profe/actividades' : '/ingles/actividades');
   const state = { email: null, data: null, act: null };
 
   function isAdminView() { return !!(state.data && state.data.isAdmin); }
@@ -1048,12 +1068,56 @@
   contentEl.addEventListener('input', (e) => { const f = e.target.closest('#exam-form'); if (f && e.target.classList.contains('q-text')) updateExamProgress(f); });
   contentEl.addEventListener('submit', (e) => { const f = e.target.closest('#exam-form'); if (f) { e.preventDefault(); submitExam(f); } });
 
+  async function loadProfe(email) {
+    const r = await fetchJson(ACT_URL + '?email=' + encodeURIComponent(email));
+    if (!r.ok) {
+      loginError.textContent = r.status === 403 ? 'Esta ruta es solo para el profe. Entra con el correo de administrador.' : '⚠️ No se pudo cargar (' + (r.body.error || r.status) + ').';
+      loginError.style.display = 'block'; loginEl.style.display = 'block'; appEl.style.display = 'none';
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, email);
+    loginEl.style.display = 'none'; appEl.style.display = 'block';
+    state.act = r.body; state.data = { isAdmin: false, rows: [] };
+    render(state.data);
+  }
+
+  // Tarjeta "Ruta del mes": semanas con objetivo, temas, Busuu, rutina y resultados.
+  function renderPlanProfe(act) {
+    const plan = act && act.plan;
+    if (!plan) return '';
+    const items = new Map(((act && act.items) || []).map(it => [it.id, it]));
+    const actual = act.semana && act.semana.id;
+    const estadoDe = id => {
+      const it = items.get(id);
+      if (!it) return '<span class="pill wait">🔒 abre su lunes</span>';
+      if (it.mejor) return '<span class="pill ok">⭐ ' + it.mejor.porcentaje + '%</span>';
+      if (it.estado === 'proximamente') return '<span class="pill wait">🔒 ' + escapeHtml(formatFecha(it.disponibleDesde)) + '</span>';
+      return '<span class="pill">pendiente</span>';
+    };
+    const semanas = (plan.semanas || []).map(s => {
+      const elementos = (s.elementos || []).map(e => '<li>' + icono(e.tipo) + ' ' + escapeHtml(e.titulo) + ' · <span class="meta">' + escapeHtml(formatFecha(e.fecha)) + '</span> · ' + estadoDe(e.id) + '</li>').join('');
+      return '<div class="ruta-sem' + (s.id === actual ? ' actual' : '') + '"><div class="h">' + (s.id === actual ? '👉 ' : '') + escapeHtml(s.titulo) + '</div>' +
+        '<div>' + escapeHtml(s.objetivo) + '</div>' +
+        '<div class="chips">' + (s.temas || []).map(t => '<span class="chip neutra">' + escapeHtml(t) + '</span>').join('') + '</div>' +
+        '<div class="meta">📗 ' + escapeHtml(s.busuu) + '</div><div class="meta">✍️ ' + escapeHtml(s.extra) + '</div>' +
+        '<ul class="ruta-lista">' + elementos + '</ul></div>';
+    }).join('');
+    return '<details class="section" id="ruta-plan" open><summary><div class="section-head"><span><span class="chevron">▶</span>🗺️ ' + escapeHtml(plan.titulo) + '</span><span class="count">' + escapeHtml(plan.nivelActual + ' → ' + plan.meta) + '</span></div></summary><div class="ruta-body">' +
+      '<div class="progress-text" style="margin:0 0 6px">' + escapeHtml(plan.subtitulo || '') + '</div>' +
+      '<div class="progress-text">🎯 ' + escapeHtml(plan.horizonte || '') + '</div>' +
+      '<div class="progress-text" style="margin-top:8px"><b>⏱️ ' + escapeHtml(plan.horasSemana || '') + '</b></div><div class="ruta-reparto">' + (plan.reparto || []).map(x => '<span>' + escapeHtml(x.que) + '</span><span>' + escapeHtml(x.tiempo) + '</span>').join('') + '</div>' +
+      '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>☀️ Rutina diaria y reglas</span></div></summary><div class="scroll"><ul class="ruta-lista">' +
+        (plan.rutinaDiaria || []).map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul><ul class="ruta-lista" style="margin-top:8px">' + (plan.reglas || []).map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul></div></details>' +
+      semanas + '</div></details>';
+  }
+
   async function loadFor(email) {
     contentEl.innerHTML = '<div class="loading">Cargando…</div>';
     loginError.style.display = 'none';
     try {
       // Tablero y exámenes en paralelo para no sumar las dos esperas.
       state.email = email;
+      if (MODO_PROFE) return await loadProfe(email);
       const actividadesP = loadActividades();
       const res = await fetch(DATA_URL_BASE + '?email=' + encodeURIComponent(email), { cache: 'no-store' });
       const data = await res.json();

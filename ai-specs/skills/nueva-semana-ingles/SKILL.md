@@ -108,3 +108,18 @@ git -C "$DATA" add -A && git -C "$DATA" commit -m "contenido: semana N (<lunes>)
 - El lunes, si el usuario lo pide, confirma que aparece: `semana` = `<lunes>` y 5 elementos nuevos.
 - Recuerda al usuario el enlace y la hora del Meet si faltan. Se editan en `meet-<dom>.json`, y el
   servidor lo toma en menos de un minuto.
+
+## Ruta del profe (mes siguiente)
+
+El profe tiene su propia ruta B1 → C1 en `contenido/profe/` (spec: `openspec/changes/ruta-profe`). Para armar el
+mes siguiente:
+
+1. Copia `herramientas/profe-mes-1/` a `herramientas/profe-mes-<N>/` y escribe sus `contenido_*.py`. Usa el
+   mismo formato y los ids `profe-act-<fecha>` (lunes y jueves) y `profe-examen-<fecha>` (miércoles y sábado).
+2. Toma como punto de partida los temas en «debilidad» de sus resultados
+   (`resultados/profe-*/profe.json`) y el examen mensual anterior.
+3. Mes 2 sugerido (B2): tiempos avanzados en contraste, inversión y énfasis (cleft sentences), gerundio vs.
+   infinitivo, artículos avanzados, colocaciones y register (formal/informal), escritura de ensayos y emails.
+4. Ejecuta el generador y valida cada semana con `--profe`:
+   `npx -y deno run --allow-read server/validar_semana.ts "$DATA" <lunes> --profe` (0 errores).
+5. Actualiza `plan.json` con el mes nuevo (el generador lo reescribe). Muestra el resumen al profe y sube.

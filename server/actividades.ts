@@ -29,6 +29,14 @@ export interface Identidad {
   alumno: string | null;
 }
 
+// Ámbito de contenido: el del grupo (contenido/) o la ruta de estudio del profe (contenido/profe/, openspec: ruta-profe).
+export interface Ambito {
+  contenido: string;
+  clave: string;
+}
+export const AMBITO_CLASE: Ambito = { contenido: "contenido", clave: "clase" };
+export const AMBITO_PROFE: Ambito = { contenido: "contenido/profe", clave: "profe" };
+
 const CACHE_MS = 60_000;
 const cache = new Map<string, { t: number; v: unknown }>();
 
@@ -44,18 +52,18 @@ export function clearCache() {
   cache.clear();
 }
 
-async function loadRaw(store: Store, id: string): Promise<Item | null> {
-  return await cached(`item:${id}`, async () => {
-    const doc = (await store.get(`contenido/actividades/${id}.json`)) || (await store.get(`contenido/examenes/${id}.json`));
+async function loadRaw(store: Store, id: string, ambito: Ambito): Promise<Item | null> {
+  return await cached(`${ambito.clave}:item:${id}`, async () => {
+    const doc = (await store.get(`${ambito.contenido}/actividades/${id}.json`)) || (await store.get(`${ambito.contenido}/examenes/${id}.json`));
     return doc ? normalizeItem(doc.data) : null;
   });
 }
 
 // El refuerzo arma su banco con los bancos de otras actividades.
-export async function loadItem(store: Store, id: string): Promise<Item | null> {
-  const it = await loadRaw(store, id);
+export async function loadItem(store: Store, id: string, ambito: Ambito = AMBITO_CLASE): Promise<Item | null> {
+  const it = await loadRaw(store, id, ambito);
   if (!it || !it.bancoDe?.length) return it;
-  const bancos = await Promise.all(it.bancoDe.map((b) => loadRaw(store, b)));
+  const bancos = await Promise.all(it.bancoDe.map((b) => loadRaw(store, b, ambito)));
   const vistos = new Set<string>();
   const banco: Ejercicio[] = [];
   for (const b of bancos) for (const e of b?.banco || []) if (!vistos.has(e.id)) { vistos.add(e.id); banco.push(e); }
@@ -66,15 +74,15 @@ interface Semana { id: string; titulo: string; elementos: { id: string; tipo: st
 
 // Elementos visibles: los de semanas ya iniciadas + exámenes sueltos (p. ej. el diagnóstico).
 // Suelto = ninguna semana lo referencia, aunque no haya iniciado (las semanas se suben por adelantado).
-export async function visibleItems(store: Store, hoy: string): Promise<{ items: Item[]; semanaActual: Semana | null }> {
-  return await cached(`visibles:${hoy}`, async () => {
-    const nombres = (await store.list("contenido/semanas")).filter((n) => n.endsWith(".json")).map((n) => n.slice(0, -5)).sort();
-    const todas = (await Promise.all(nombres.map((id) => store.get<Semana>(`contenido/semanas/${id}.json`)))).map((d) => d!.data);
+export async function visibleItems(store: Store, hoy: string, ambito: Ambito = AMBITO_CLASE): Promise<{ items: Item[]; semanaActual: Semana | null }> {
+  return await cached(`${ambito.clave}:visibles:${hoy}`, async () => {
+    const nombres = (await store.list(`${ambito.contenido}/semanas`)).filter((n) => n.endsWith(".json")).map((n) => n.slice(0, -5)).sort();
+    const todas = (await Promise.all(nombres.map((id) => store.get<Semana>(`${ambito.contenido}/semanas/${id}.json`)))).map((d) => d!.data);
     const semanas = todas.filter((_s, i) => nombres[i] <= hoy);
     const enSemana = new Set(todas.flatMap((s) => s.elementos.map((e) => e.id)));
-    const sueltos = (await store.list("contenido/examenes")).map((n) => n.replace(/\.json$/, "")).filter((id) => !enSemana.has(id));
+    const sueltos = (await store.list(`${ambito.contenido}/examenes`)).map((n) => n.replace(/\.json$/, "")).filter((id) => !enSemana.has(id));
     const ids = [...semanas.flatMap((s) => s.elementos.map((e) => e.id)), ...sueltos];
-    const items = (await Promise.all(ids.map((id) => loadItem(store, id)))).filter((x): x is Item => !!x);
+    const items = (await Promise.all(ids.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x);
     items.sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
     return { items, semanaActual: semanas[semanas.length - 1] || null };
   });
@@ -113,7 +121,7 @@ async function preguntasPara(store: Store, it: Item, alumno: string | null, n: n
   return { preguntas: selectQuestions(it.banco || [], it, slug, n, temas), enfoque: temas || [] };
 }
 
-export async function handleActividades(req: Request, subpath: string, quien: Identidad, store: Store, json: Json): Promise<Response> {
+export async function handleActividades(req: Request, subpath: string, quien: Identidad, store: Store, json: Json, ambito: Ambito = AMBITO_CLASE): Promise<Response> {
   if (!quien.isAdmin && !quien.alumno) return json({ error: "sin_acceso" }, 403);
   const url = new URL(req.url);
   const hoy = url.searchParams.get("hoy") && Deno.env.get("PERMITIR_HOY") === "1" ? url.searchParams.get("hoy")! : mxToday();
@@ -122,7 +130,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
 
   // GET /ingles/actividades → elementos con estado (alumno) o con resultados y resumen (admin)
   if (partes.length === 0 && req.method === "GET") {
-    const { items, semanaActual } = await visibleItems(store, hoy);
+    const { items, semanaActual } = await visibleItems(store, hoy, ambito);
     const semana = semanaActual ? { id: semanaActual.id, titulo: semanaActual.titulo, ids: semanaActual.elementos.map((e) => e.id) } : null;
     if (quien.isAdmin) {
       const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), resultados: tieneReto(it) ? await resultadosDe(store, it.id) : [] })));
@@ -135,10 +143,11 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
       const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
       return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null };
     }));
-    return json({ isAdmin: false, hoy, semana, items: conEstado });
+    const plan = ambito.clave === "profe" ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
+    return json({ isAdmin: false, hoy, semana, items: conEstado, ...(plan !== undefined ? { plan } : {}) });
   }
 
-  const base = await loadItem(store, partes[0]);
+  const base = await loadItem(store, partes[0], ambito);
   if (!base) return json({ error: "no_encontrado" }, 404);
   const it = slug && !quien.isAdmin ? paraAlumno(base, slug) : base;
   if (!tieneReto(it)) return json({ error: "no_aplica" }, 400);
@@ -206,4 +215,11 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
   }
 
   return json({ error: "metodo_no_permitido" }, 405);
+}
+
+// /ingles/profe/actividades[/<id>] → ruta de estudio del profe: solo el admin, atendido como el alumno "Profe".
+export const ALUMNO_PROFE = "Profe";
+export async function handleProfe(req: Request, subpath: string, email: string, admin: string, store: Store, json: Json): Promise<Response> {
+  if (!admin || (email || "").trim().toLowerCase() !== admin) return json({ error: "solo_admin" }, 403);
+  return await handleActividades(req, subpath, { isAdmin: false, alumno: ALUMNO_PROFE }, store, json, AMBITO_PROFE);
 }
