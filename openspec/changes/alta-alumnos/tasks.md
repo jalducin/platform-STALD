@@ -25,7 +25,7 @@
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Producción: alta de un correo de prueba, acceso con `/perfil` e `/ingles/data`, duplicado 409,
+- [x] 5.1 Producción: alta de un correo de prueba, acceso con `/perfil` e `/ingles/data`, duplicado 409,
   quitar; **restaurar** `alumnos.json`
 
 ## 6. Documentación (OBLIGATORIO)
