@@ -106,6 +106,7 @@ export async function handleAlumnos(req: Request, sub: string, deps: DepsAlumnos
     if (!NOMBRE.test(nombre)) return json({ error: "nombre_invalido" }, 400);
     if (correo === deps.admin || registro[correo] || filas.some((r) => r.userEmails.includes(correo))) return json({ error: "correo_en_uso" }, 409);
     const slug = slugAlumno(nombre);
+    if (slug === "profe") return json({ error: "nombre_en_uso" }, 409); // reservado para la ruta del profe
     const conCorreo = filas.some((r) => r.alumno && slugAlumno(r.alumno) === slug && r.userEmails.length) ||
       Object.values(registro).some((a) => slugAlumno(a.nombre) === slug);
     if (conCorreo) return json({ error: "nombre_en_uso" }, 409);

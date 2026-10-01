@@ -2,7 +2,7 @@
 // Variables: NOTION_TOKEN, SUPER_ADMIN_EMAIL, GITHUB_TOKEN, DATA_REPO (p. ej. jalducin/platform-STALD-data).
 // Pruebas locales: DATA_DIR (carpeta con una copia del repo de datos) y ROWS_FIXTURE (filas simuladas).
 import { attachUsers, extractInglesRow, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type UserInfo } from "./rows.ts";
-import { handleActividades } from "./actividades.ts";
+import { handleActividades, handleProfe } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados } from "./juegos.ts";
@@ -128,6 +128,12 @@ export async function handler(req: Request): Promise<Response> {
     const iAl = url.pathname.indexOf("/ingles/alumnos");
     if (iAl !== -1) {
       return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion }, json);
+    }
+
+    // /ingles/profe/actividades[/<id>] → ruta de estudio del profe (solo admin, server/actividades.ts)
+    const iProfe = url.pathname.indexOf("/ingles/profe/actividades");
+    if (iProfe !== -1) {
+      return await handleProfe(req, url.pathname.slice(iProfe + "/ingles/profe/actividades".length), email, admin, await getStore(), json);
     }
 
     const idx = url.pathname.indexOf("/ingles/actividades");

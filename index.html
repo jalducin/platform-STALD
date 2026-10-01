@@ -170,10 +170,11 @@
   }
 
   // Conserva ?api= al navegar (pruebas locales).
-  const conApi = (href) => API_PARAM ? href + '?api=' + encodeURIComponent(API_PARAM) : href;
+  const conApi = (href) => API_PARAM ? href + (href.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(API_PARAM) : href;
 
   const ESPACIOS = [
     { id: 'ingles', clase: 'ingles', href: 'ingles.html', ico: '📘', t: 'Clases de Inglés', d: 'Actividades de la semana, exámenes y tu avance.' },
+    { id: 'profe', clase: 'ingles', href: 'ingles.html?modo=profe', ico: '🎓', t: 'Mi ruta B1 → C1', d: 'Tu plan de estudio: temas, práctica y 2 exámenes por semana.', soloAdmin: true },
     { id: 'secundaria', clase: 'secundaria', href: 'secundaria.html', ico: '📚', t: 'Secundaria', d: 'Tus tareas y clases por materia.' },
     { id: 'juegos', clase: 'juegos wide', href: 'juegos.html', ico: '🎮', t: 'Juegos', d: 'Aprende jugando: inglés, español, cultura, Basta, ¡Una!, Lotería y ranking semanal.' },
   ];
@@ -199,7 +200,7 @@
     $('date').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
     $('admin-tag').hidden = !p.isAdmin;
     $('who').textContent = p.email;
-    $('tiles').innerHTML = ESPACIOS.filter(e => p.accesos[e.id]).map(e => e.pronto
+    $('tiles').innerHTML = ESPACIOS.filter(e => e.soloAdmin ? p.isAdmin : p.accesos[e.id]).map(e => e.pronto
       ? '<div class="tile ' + e.clase + ' soon" aria-disabled="true" data-espacio="' + e.id + '"><span class="ico" aria-hidden="true">' + e.ico + '</span>' +
         '<span class="t">' + escapeHtml(e.t) + '</span><span class="d">' + escapeHtml(e.d) + '</span><span class="pill">Muy pronto</span></div>'
       : '<a class="tile ' + e.clase + '" href="' + escapeHtml(conApi(e.href)) + '" data-espacio="' + e.id + '"><span class="ico" aria-hidden="true">' + e.ico + '</span>' +

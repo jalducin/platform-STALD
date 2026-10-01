@@ -95,12 +95,21 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 - **Catálogo (`CATALOGO`):** 20 juegos (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
+**Ruta `/ingles/profe/actividades[/<id>]`** (`handleProfe` en `server/actividades.ts`, cambio `ruta-profe`):
+  - solo admin (si no, 403); atiende al admin como el alumno "Profe" (estado, intentos, corrección y guardado);
+  - usa el ámbito `AMBITO_PROFE` (`contenido/profe/`); el listado agrega `plan`;
+  - `handleActividades`, `loadItem`, `visibleItems` y `validarSemana` reciben el ámbito (por defecto
+    `AMBITO_CLASE`). El grupo nunca ve los elementos del profe, ni en su lista ni por id.
+  - Validar una semana del profe: `deno run --allow-read server/validar_semana.ts <datos> <lunes> --profe`
+    (patrón lun actividad, mié examen, jue actividad, sáb examen).
+
 **Rutas `/ingles/alumnos`** (`server/alumnos.ts`, cambio `alta-alumnos`), solo admin (si no, 403):
   - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "notion" | "registro", alta? }] }`;
   - `POST /ingles/alumnos` `{ nombre, email }` → alta en `alumnos.json`. 400 `correo_invalido` o
     `nombre_invalido`; 409 `correo_en_uso` (ya tiene acceso) o `nombre_en_uso` (ese nombre ya tiene correo;
     un nombre de Notion sin correo sí se liga);
   - `POST /ingles/alumnos/quitar` `{ email }`: solo altas de la página (404 para los de Notion).
+  - El nombre "Profe" está reservado para la ruta del profe (409 `nombre_en_uso`).
   - `filasIngles()` suma el registro (`aplicarAlumnos`): liga el correo a las filas con ese "Nombre" o agrega
     una fila de identidad `source: "registro"` (sin tarea). Portal, `/ingles/data`, actividades y Juegos lo
     reconocen sin cambios.
