@@ -95,6 +95,16 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 - **Catálogo (`CATALOGO`):** 20 juegos (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
+**Rutas `/ingles/alumnos`** (`server/alumnos.ts`, cambio `alta-alumnos`), solo admin (si no, 403):
+  - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "notion" | "registro", alta? }] }`;
+  - `POST /ingles/alumnos` `{ nombre, email }` → alta en `alumnos.json`. 400 `correo_invalido` o
+    `nombre_invalido`; 409 `correo_en_uso` (ya tiene acceso) o `nombre_en_uso` (ese nombre ya tiene correo;
+    un nombre de Notion sin correo sí se liga);
+  - `POST /ingles/alumnos/quitar` `{ email }`: solo altas de la página (404 para los de Notion).
+  - `filasIngles()` suma el registro (`aplicarAlumnos`): liga el correo a las filas con ese "Nombre" o agrega
+    una fila de identidad `source: "registro"` (sin tarea). Portal, `/ingles/data`, actividades y Juegos lo
+    reconocen sin cambios.
+
 **Ruta `GET /perfil?email=`** (`server/perfil.ts`):
 - Devuelve `{ email, isAdmin, nombre, conocido, invitado, accesos: { ingles, secundaria, juegos } }` para
   el portal. Un invitado registrado (`juegos/invitados.json`) llega con `invitado: true` y solo Juegos.
