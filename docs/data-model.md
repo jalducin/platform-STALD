@@ -170,7 +170,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `plan.json`: `{ titulo, subtitulo, nivelActual, meta, horizonte, horasSemana, reparto[], rutinaDiaria[], reglas[],
     semanas[{ id, n, titulo, objetivo, temas[], busuu, extra, elementos[{ id, tipo, titulo, fecha }] }] }`;
   - `semanas/<lunes>.json`, `actividades/profe-act-<fecha>.json` y `examenes/profe-examen-<fecha>.json`;
-  - resultados en `resultados/<id>/profe.json` (alumno "Profe").
+  - resultados en `resultados/<id>/profe.json` (alumno "Profe"), también para los elementos del grupo que resuelve
+    antes que ellos; esos archivos se excluyen de todas las vistas de resultados del grupo.
 - `alumnos.json`: `{ "<correo>": { nombre, alta } }`, alumnos y alumnas dados de alta desde `ingles.html`
   (cambio `alta-alumnos`). Se suman a los de Notion. Solo el admin ve los correos.
 - `avance/<slug-alumno>.json`: avance fuera de las actividades en línea.

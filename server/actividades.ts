@@ -88,14 +88,38 @@ export async function visibleItems(store: Store, hoy: string, ambito: Ambito = A
   });
 }
 
+// Elementos del grupo en la ruta del profe (openspec: profe-actividades-grupo): actividades, exámenes y refuerzos de
+// todas las semanas subidas y los exámenes sueltos. El profe los resuelve antes: abren ya y vencen un día antes de
+// que se abran al grupo.
+const TIPOS_GRUPO = new Set(["actividad", "examen", "refuerzo"]);
+function diaAnterior(fecha: string): string {
+  const d = new Date(`${fecha}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+export function paraProfe(it: Item): Item {
+  return { ...it, disponibleDesde: "2000-01-01", fechaLimite: diaAnterior(it.disponibleDesde) };
+}
+async function itemsDelGrupo(store: Store): Promise<Item[]> {
+  return await cached("clase:grupo-profe", async () => {
+    const nombres = (await store.list("contenido/semanas")).filter((n) => n.endsWith(".json"));
+    const semanas = (await Promise.all(nombres.map((n) => store.get<Semana>(`contenido/semanas/${n}`)))).map((d) => d!.data);
+    const enSemana = new Set(semanas.flatMap((s) => s.elementos.map((e) => e.id)));
+    const sueltos = (await store.list("contenido/examenes")).map((n) => n.replace(/\.json$/, "")).filter((id) => !enSemana.has(id));
+    const ids = [...semanas.flatMap((s) => s.elementos.filter((e) => TIPOS_GRUPO.has(e.tipo)).map((e) => e.id)), ...sueltos];
+    return (await Promise.all(ids.map((id) => loadItem(store, id)))).filter((x): x is Item => !!x && TIPOS_GRUPO.has(x.tipo));
+  });
+}
+
 const rutaResultado = (id: string, slug: string) => `resultados/${id}/${slug}.json`;
+const ARCHIVO_PROFE = "profe.json"; // intentos del profe en elementos del grupo: nunca cuentan como alumno
 
 async function leerResultado(store: Store, id: string, slug: string) {
   return await store.get<Resultado>(rutaResultado(id, slug));
 }
 
 async function resultadosDe(store: Store, id: string): Promise<Resultado[]> {
-  const nombres = (await store.list(`resultados/${id}`)).filter((n) => n.endsWith(".json") && !n.startsWith("_"));
+  const nombres = (await store.list(`resultados/${id}`)).filter((n) => n.endsWith(".json") && !n.startsWith("_") && n !== ARCHIVO_PROFE);
   return (await Promise.all(nombres.map((n) => store.get<Resultado>(`resultados/${id}/${n}`)))).map((d) => d!.data);
 }
 
@@ -139,15 +163,22 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
       const resumen = Object.fromEntries([...porAlumno].map(([a, rs]) => [a, { temasAReforzar: temasAReforzar(rs) }]));
       return json({ isAdmin: true, hoy, semana, items: conRes, resumen });
     }
-    const conEstado = await Promise.all(items.map((base) => paraAlumno(base, slug!)).map(async (it) => {
+    const grupo = ambito.clave === "profe" ? (await itemsDelGrupo(store)).map(paraProfe) : [];
+    const deGrupo = new Set(grupo.map((g) => g.id));
+    const todos = [...items, ...grupo].sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
+    const conEstado = await Promise.all(todos.map((base) => paraAlumno(base, slug!)).map(async (it) => {
       const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
-      return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null };
+      return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
     }));
     const plan = ambito.clave === "profe" ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
     return json({ isAdmin: false, hoy, semana, items: conEstado, ...(plan !== undefined ? { plan } : {}) });
   }
 
-  const base = await loadItem(store, partes[0], ambito);
+  let base = await loadItem(store, partes[0], ambito);
+  if (!base && ambito.clave === "profe") {
+    const g = await loadItem(store, partes[0]);
+    if (g && TIPOS_GRUPO.has(g.tipo)) base = paraProfe(g);
+  }
   if (!base) return json({ error: "no_encontrado" }, 404);
   const it = slug && !quien.isAdmin ? paraAlumno(base, slug) : base;
   if (!tieneReto(it)) return json({ error: "no_aplica" }, 400);
