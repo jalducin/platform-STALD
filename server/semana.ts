@@ -11,10 +11,10 @@ export interface ReporteSemana {
 interface Semana { id: string; titulo: string; elementos: { id: string; tipo: string; fecha: string }[] }
 
 // Patrón semanal del grupo: mar/jue actividad, vie examen, sáb refuerzo, dom Meet (0 = domingo).
-// Ruta del profe: lun actividad A, mié examen A, jue actividad B, sáb examen B.
+// Ruta del profe: lun actividad A, mié examen A, jue actividad B, vie pronunciación, sáb examen B.
 const PATRONES: Record<string, Record<number, string>> = {
   clase: { 2: "actividad", 4: "actividad", 5: "examen", 6: "refuerzo", 0: "meet" },
-  profe: { 1: "actividad", 3: "examen", 4: "actividad", 6: "examen" },
+  profe: { 1: "actividad", 3: "examen", 4: "actividad", 5: "actividad", 6: "examen" },
 };
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 const CORREO = /[\w.+-]+@[\w-]+\.[\w.-]+/;

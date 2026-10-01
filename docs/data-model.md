@@ -127,8 +127,12 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `temas[]`: con `retroalimentacion` por estado.
   - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }] }`.
   - `tips[]`: `{ tipo: "libreta" | "video", texto, url? }`. Los videos son enlaces de **búsqueda** de YouTube.
-  - `banco[]`: ejercicios `{ id, tema, tipo: "opcion" | "escribir", enunciado, opciones? + correcta? |
-    aceptadas?, explicacion }`.
+  - `banco[]`: ejercicios `{ id, tema, tipo: "opcion" | "escribir" | "pronunciar", enunciado, opciones? + correcta? |
+    aceptadas? | frase?, audio?, explicacion }`.
+    - `audio` (opcional, cualquier tipo): texto que la página lee en voz alta (en-US, 🔊 normal y 🐢 lento). Es
+      público; úsalo en práctica (pares mínimos), no donde revele la respuesta de un examen.
+    - `pronunciar`: `frase` (pública) que se dice en voz alta; la respuesta es lo reconocido o `auto:ok` /
+      `auto:repetir` (cambio `pronunciacion`).
   - Refuerzo: `bancoDe[]`, `basadoEn` (examen de la semana), `respaldo` (diagnóstico) y `mapeoTemas`.
   - Meet: `meetUrl` y `hora`. Además, para la clase del domingo, `guion` (solo admin), `teoria`, `tips`,
     `banco` (reto en vivo) y `presentacion.diapositivas` (solo admin), con tipos `portada`, `agenda`, `retro`
