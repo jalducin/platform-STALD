@@ -138,7 +138,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `{ id, nombre, tipo, partidas: [{ juego, puntos, aciertos, total, segundos, en }], mejores, total }`.
   - Sin correos. Guarda las últimas 300 partidas.
 - `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots }` y
-  `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta? }`.
+  `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta?, rondasBasta? }`.
+  - En Basta por rondas (`opciones.rondas`: 5, 10 o 12), `rondasBasta{ <ronda>: { palabras, basta? } }`.
+    Las letras (sin repetir) y el calendario de rondas salen de la semilla y de las horas de `basta`.
   - Partidas multijugador. Cada jugador escribe solo su archivo y no hay correos.
   - Las salas vencen a las 3 h y se pueden borrar sin afectar el ranking.
   - Al terminar, el archivo de cada jugador guarda `final`, y el del host, además, `podio`.

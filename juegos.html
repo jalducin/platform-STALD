@@ -1315,7 +1315,7 @@
   const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-preguntas', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en', 'loteria', 'una'];
   const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
   const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
-  const P_BASTA = 60000, P_GRACIA = 3000;
+  const P_BASTA = 60000, P_GRACIA = 3000, P_PAUSA = 10000; // Basta por rondas: escribir, gracia tras ¡Basta!, resultados
   const dur = ms => ms * TIEMPO;
 
   // Diez preguntas iguales para todos a partir de la semilla.
@@ -1357,8 +1357,8 @@
   }
 
   // Palabras de un bot en Basta: 75 % de las categorías con una palabra del diccionario al azar.
-  function botBasta(seed, bot, letra, d) {
-    const r = rngDe(seed, bot.id + '|basta');
+  function botBasta(seed, bot, letra, d, ronda = 0) {
+    const r = rngDe(seed, bot.id + '|basta' + (ronda ? '|' + ronda : ''));
     const L = normBasta(letra);
     return Object.fromEntries(d.categorias.map(c => {
       const opciones = (d.palabras[c.id] || []).filter(w => normBasta(w).startsWith(L));
@@ -1405,6 +1405,7 @@
       '<div class="card" style="margin-bottom:12px"><h2 style="margin-top:0">➕ Crear partida</h2>' +
       '<form id="f-crear"><label for="p-juego">Juego</label><select id="p-juego" class="sel">' + opcionesJuego + '</select>' +
       '<div id="p-modo-wrap" hidden><label for="p-modo">Modo</label><select id="p-modo" class="sel"><option value="linea">➖ Línea (rápido)</option><option value="llena">🟩 Tabla llena</option></select></div>' +
+      '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select></div>' +
       '<div id="p-cat-wrap" hidden><label for="p-cat">Maratón</label><select id="p-cat" class="sel"><option value="todas">🌈 Todas mezcladas</option></select></div>' +
       '<label class="check"><input id="p-bots" type="checkbox" checked><span>Incluir 2 bots (BOT-VACHIRA y BOT-ISAGII) que contestan al azar</span></label>' +
       '<div class="row-btns"><button class="btn" type="submit">Crear partida</button></div></form></div>' +
@@ -1419,7 +1420,7 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, finAciertos: undefined, finTotal: undefined });
+    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0 });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
@@ -1437,7 +1438,7 @@
 
   function participantes() {
     const e = sala.estado;
-    const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, loteria: x.loteria }));
+    const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, rondasBasta: x.rondasBasta || {}, loteria: x.loteria }));
     return e.sala.bots ? humanos.concat(BOTS.map(b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b, avatar: b.avatar }))) : humanos;
   }
 
@@ -1529,50 +1530,99 @@
     await post('/juegos/sala/' + sala.codigo + '/respuesta', { q, correcta, puntos, ms: Math.round(ms / TIEMPO) });
   }
 
-  // ---- Basta en sala ----
-  function letraSala() { const d = sala.contenido[sala.estado.sala.juego === 'basta-en' ? 'en' : 'es']; return d.letras[Math.floor(rngDe(sala.estado.sala.seed, 'letra')() * d.letras.length)]; }
-
-  function cierreBasta() {
-    const e = sala.estado; const s = e.sala;
-    const gritos = e.jugadores.map(x => x.basta).filter(Boolean);
-    const fin = s.inicio + dur(P_BASTA);
-    return gritos.length ? Math.min(fin, Math.min(...gritos) + dur(P_GRACIA)) : fin;
+  // ---- Basta en sala por rondas (openspec: basta-rondas) ----
+  const rondasDeSala = () => Number(sala.estado.sala.opciones.rondas || 1);
+  const datosBasta = () => sala.contenido[sala.estado.sala.juego === 'basta-en' ? 'en' : 'es'];
+  // Letras sin repetir, iguales para todos (semilla de la sala).
+  function letrasBasta() {
+    if (!sala.letrasBasta) sala.letrasBasta = barajar(datosBasta().letras, rngDe(sala.estado.sala.seed, 'letras')).slice(0, rondasDeSala());
+    return sala.letrasBasta;
+  }
+  // Calendario: cierre_r = min(inicio_r + 60 s, primer ¡Basta! + 3 s); inicio_{r+1} = cierre_r + 10 s.
+  function calendarioBasta() {
+    const e = sala.estado; const cal = []; let ini = e.sala.inicio;
+    for (let r = 0; r < rondasDeSala(); r++) {
+      const gritos = e.jugadores.map(x => ((x.rondasBasta || {})[r] || {}).basta).filter(t => t && t >= ini);
+      const limite = ini + dur(P_BASTA);
+      const cierre = gritos.length ? Math.min(limite, Math.min(...gritos) + dur(P_GRACIA)) : limite;
+      cal.push({ ini, cierre });
+      ini = cierre + dur(P_PAUSA);
+    }
+    return cal;
+  }
+  const palabrasForm = () => Object.fromEntries(datosBasta().categorias.map(c => [c.id, ((document.getElementById('pb-' + c.id) || {}).value || '').trim()]));
+  function enviarRonda(r, palabras) {
+    sala.bastaEnviado[r] = true; sala.misRondas[r] = palabras;
+    post('/juegos/sala/' + sala.codigo + '/respuesta', { ronda: r, palabras }).then(() => traerSala());
+  }
+  // Todos enviaron, o pasaron 6 s reales (el sondeo es cada 2.5 s; sin escalar en pruebas aceleradas).
+  const rondaLista = (r, cal) => sala.estado.jugadores.every(x => (x.rondasBasta || {})[r]) || ahoraServidor() > cal[r].cierre + 6000;
+  // Puntos de cada ronda (hasta la ronda `hasta`) y acumulado por participante.
+  function marcadorBasta(hasta) {
+    const e = sala.estado, d = datosBasta(), letras = letrasBasta();
+    const ps = participantes();
+    const acum = Object.fromEntries(ps.map(p => [p.id, { id: p.id, nombre: p.nombre, tipo: p.bot ? 'bot' : '', avatar: p.avatar, total: 0, ultimo: 0, porRonda: [], aciertos: 0, detalle: {} }]));
+    for (let r = 0; r <= hasta; r++) {
+      const parts = ps.map(p => ({ id: p.id, nombre: p.nombre, palabras: p.bot ? botBasta(e.sala.seed, p.bot, letras[r], d, r) : p.id === e.yo && sala.misRondas[r] ? sala.misRondas[r] : ((p.rondasBasta || {})[r] || {}).palabras || {} }));
+      for (const x of puntuarBasta(d, letras[r], parts)) {
+        const a = acum[x.id]; a.total += x.total; a.ultimo = x.total; a.porRonda[r] = x.total; a.detalle = x.detalle;
+        a.aciertos += Object.values(x.detalle).filter(y => y.pts > 0).length;
+      }
+    }
+    return Object.values(acum).sort((a, b) => b.total - a.total);
   }
 
   function pintarBastaSala(body) {
     const e = sala.estado; const s = e.sala;
     const idioma = s.juego === 'basta-en' ? 'en' : 'es';
-    const d = sala.contenido[idioma];
-    const letra = letraSala();
+    const d = datosBasta(), letras = letrasBasta(), n = rondasDeSala();
     const ahora = ahoraServidor();
     const bar = document.getElementById('m-bar');
-    if (ahora < s.inicio) { bar.hidden = true; const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate!</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
-    const cierre = cierreBasta();
-    const gritador = e.jugadores.filter(x => x.basta).sort((a, b) => a.basta - b.basta)[0];
-    if (ahora < cierre) {
-      bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cierre - ahora) / dur(P_BASTA) * 100) + '%';
-      if (sala.vista !== 'basta') {
-        sala.vista = 'basta';
-        body.innerHTML = '<div class="q-card"><div class="sub">' + (idioma === 'en' ? 'Letter' : 'Letra') + '</div><div class="letra">' + escapeHtml(letra) + '</div><div class="sub" id="pb-aviso">Todos tienen la misma letra</div></div>' +
-          '<form id="pb-form" autocomplete="off" class="basta-grid">' + d.categorias.map(c => '<label for="pb-' + c.id + '">' + escapeHtml(c.emoji + ' ' + c.titulo) + '</label><input id="pb-' + c.id + '" data-pbcat="' + c.id + '" type="text" maxlength="40" autocapitalize="off" spellcheck="false" placeholder="' + escapeHtml(letra) + '…">').join('') +
+    if (ahora < s.inicio) { bar.hidden = true; const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate! · ' + n + (n === 1 ? ' ronda' : ' rondas') + '</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
+    const cal = calendarioBasta();
+    // Al cerrar cada ronda, enviar mis palabras una sola vez (antes de redibujar el formulario).
+    for (let r = 0; r < n; r++) if (ahora >= cal[r].cierre && !sala.bastaEnviado[r]) enviarRonda(r, sala.vista === 'basta' + r ? palabrasForm() : {});
+    const r = cal.findIndex(c => ahora < c.cierre + dur(P_PAUSA));
+    const ultima = n - 1;
+    if (r === -1 || (ahora >= cal[ultima].cierre && rondaLista(ultima, cal))) {
+      const filas = marcadorBasta(ultima);
+      const mio = filas.find(f => f.id === e.yo);
+      if (mio) { sala.finAciertos = mio.aciertos; sala.finTotal = d.categorias.length * n; }
+      return pintarFinalSala(body, filas, { d, letras, porRonda: true });
+    }
+    sala.rondaActual = r;
+    const cab = '<div class="sub">' + (idioma === 'en' ? 'Round ' : 'Ronda ') + (r + 1) + (idioma === 'en' ? ' of ' : ' de ') + n + ' · ' + (idioma === 'en' ? 'Letter' : 'Letra') + '</div><div class="letra">' + escapeHtml(letras[r]) + '</div>';
+    if (ahora < cal[r].cierre) {
+      bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cal[r].cierre - ahora) / dur(P_BASTA) * 100) + '%';
+      if (sala.vista !== 'basta' + r) {
+        sala.vista = 'basta' + r;
+        body.innerHTML = '<div class="q-card">' + cab + '<div class="sub" id="pb-aviso">Todos tienen la misma letra</div></div>' +
+          '<form id="pb-form" autocomplete="off" class="basta-grid">' + d.categorias.map(c => '<label for="pb-' + c.id + '">' + escapeHtml(c.emoji + ' ' + c.titulo) + '</label><input id="pb-' + c.id + '" data-pbcat="' + c.id + '" type="text" maxlength="40" autocapitalize="off" spellcheck="false" placeholder="' + escapeHtml(letras[r]) + '…">').join('') +
           '<div class="row-btns" style="grid-column:1/-1"><button class="btn" type="submit" id="pb-basta" disabled>✋ ¡Basta!</button></div></form>';
+        const primero = document.getElementById('pb-' + d.categorias[0].id); if (primero && r > 0) primero.focus();
       }
-      if (gritador) { const a = document.getElementById('pb-aviso'); if (a) { a.textContent = '✋ ¡' + gritador.nombre + ' gritó BASTA! Cierra en ' + Math.max(0, Math.ceil((cierre - ahora) / 1000 / TIEMPO)) + ' s'; a.style.color = 'var(--bad)'; } }
+      const gritador = e.jugadores.filter(x => ((x.rondasBasta || {})[r] || {}).basta).sort((a, b) => a.rondasBasta[r].basta - b.rondasBasta[r].basta)[0];
+      if (gritador) { const a = document.getElementById('pb-aviso'); if (a) { a.textContent = '✋ ¡' + gritador.nombre + ' gritó BASTA! Cierra en ' + Math.max(0, Math.ceil((cal[r].cierre - ahora) / 1000 / TIEMPO)) + ' s'; a.style.color = 'var(--bad)'; } }
       return;
     }
-    // Cerrado: enviar lo mío una sola vez y mostrar resultados cuando estén todos (o tras 6 s).
-    if (!sala.enviado) {
-      sala.enviado = true;
-      const palabras = Object.fromEntries(d.categorias.map(c => [c.id, ((document.getElementById('pb-' + c.id) || {}).value || '').trim()]));
-      sala.misPalabras = palabras;
-      post('/juegos/sala/' + sala.codigo + '/respuesta', { palabras }).then(() => traerSala());
+    // Pausa: resultados de la ronda y marcador acumulado; luego sigue sola la siguiente letra.
+    bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cal[r].cierre + dur(P_PAUSA) - ahora) / dur(P_PAUSA) * 100) + '%';
+    const lista = rondaLista(r, cal);
+    const k = 'res' + r + ':' + (lista ? e.jugadores.filter(x => (x.rondasBasta || {})[r]).length : 'esperando');
+    if (sala.vista !== k) {
+      sala.vista = k;
+      if (!lista) { body.innerHTML = '<div class="q-card">' + cab + '<div class="big">✋</div><div class="sub">Juntando las palabras de todos…</div></div>'; }
+      else {
+        const filas = marcadorBasta(r);
+        const mio = filas.find(f => f.id === e.yo);
+        body.innerHTML = '<div class="q-card">' + cab + '<div class="sub">' + (mio ? '+' + mio.ultimo + ' en esta ronda' : '') + ' · <span id="pb-sig"></span></div></div>' +
+          (mio ? '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
+            d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>' : '') +
+          '<h2>📊 Marcador acumulado</h2>' + marcadorHtml(filas, e.yo, 28);
+      }
     }
-    const listos = e.jugadores.every(x => x.palabras) || ahora > cierre + 6000;
-    if (!listos) { if (sala.vista !== 'esperando') { sala.vista = 'esperando'; bar.hidden = true; body.innerHTML = '<div class="q-card"><div class="big">✋</div><div class="q">¡Basta!</div><div class="sub">Juntando las palabras de todos…</div></div>'; } return; }
-    const parts = participantes().map(p => p.bot ? { id: p.id, nombre: p.nombre, palabras: botBasta(s.seed, p.bot, letra, d) } : { id: p.id, nombre: p.nombre, palabras: p.id === e.yo ? (sala.misPalabras || p.palabras) : p.palabras });
-    const res = puntuarBasta(d, letra, parts);
-    const avs = Object.fromEntries(participantes().map(p => [p.id, p.avatar]));
-    pintarFinalSala(body, res.map(r => ({ id: r.id, nombre: r.nombre, tipo: r.id.startsWith('bot-') ? 'bot' : '', avatar: avs[r.id], total: r.total, ultimo: 0, detalle: r.detalle })), { d, letra });
+    const sig = document.getElementById('pb-sig');
+    if (sig) sig.textContent = 'Siguiente letra en ' + Math.max(0, Math.ceil((cal[r].cierre + dur(P_PAUSA) - ahora) / 1000 / TIEMPO)) + ' s';
   }
 
   function pintarFinalSala(body, todas, basta, titulo) {
@@ -1582,7 +1632,9 @@
     document.getElementById('m-bar').hidden = true;
     const e = sala.estado; const juego = e.sala.juego;
     const mio = filas.find(f => f.id === e.yo);
-    const detalle = basta && mio ? '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
+    const detalle = basta && basta.porRonda && mio ? '<h2>🔤 Tus puntos por ronda</h2><div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Ronda</th><th>Letra</th><th>Pts</th></tr></thead><tbody>' +
+      basta.letras.map((l, i) => '<tr><td>' + (i + 1) + '</td><td><b>' + escapeHtml(l) + '</b></td><td>' + (mio.porRonda[i] || 0) + '</td></tr>').join('') + '</tbody></table></div>'
+      : basta && mio ? '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
       basta.d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>' : '';
     body.innerHTML = '<div class="card result"><div style="font-size:2.4rem">🏆</div><h1>' + escapeHtml(titulo || '¡Fin de la partida!') + '</h1>' +
       (mio ? '<div class="score">' + fmt(mio.total) + '</div><div class="muted">tus puntos · lugar ' + (filas.indexOf(mio) + 1) + ' de ' + filas.length + '</div>' : '') +
@@ -1921,7 +1973,7 @@
 
   async function crearPartida() {
     const juego = document.getElementById('p-juego').value;
-    const opciones = juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : {};
+    const opciones = juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : {};
     const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
     if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     entrarSala(r.body.codigo);
@@ -2097,7 +2149,7 @@
     if (a.dataset.a === 'csv') descargarCsv();
     if (a.dataset.a === 'otro-correo') { SESSION_KEYS.forEach(k => localStorage.removeItem(k)); pantallaLogin(); }
   });
-  app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; } });
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); } });
   app.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
   });
@@ -2106,10 +2158,9 @@
     if (e.target.id === 'f-unirse') { e.preventDefault(); return unirsePartida(); }
     if (e.target.id === 'pb-form') {
       e.preventDefault();
-      const d = sala.contenido[sala.estado.sala.juego === 'basta-en' ? 'en' : 'es'];
-      const palabras = Object.fromEntries(d.categorias.map(c => [c.id, document.getElementById('pb-' + c.id).value.trim()]));
+      const palabras = palabrasForm();
       document.getElementById('pb-basta').disabled = true;
-      return post('/juegos/sala/' + sala.codigo + '/respuesta', { palabras, basta: true }).then(() => traerSala());
+      return post('/juegos/sala/' + sala.codigo + '/respuesta', { ronda: sala.rondaActual, palabras, basta: true }).then(() => traerSala());
     }
     if (e.target.id === 'f-login') {
       e.preventDefault();
