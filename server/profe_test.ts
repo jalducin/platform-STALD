@@ -47,7 +47,7 @@ Deno.test("profe: lista su ámbito con plan y solo sus elementos", async () => {
   assertEquals(r.status, 200);
   assertEquals(r.body.plan.titulo, "Ruta B1 → C1 · Mes 1");
   assertEquals(r.body.semana.id, "2026-09-28");
-  assertEquals(r.body.items.map((i: any) => [i.id, i.estado]), [["profe-examen-directo-s1", "disponible"]]);
+  assertEquals(r.body.items.filter((i: any) => !i.grupo).map((i: any) => [i.id, i.estado]), [["profe-examen-directo-s1", "disponible"]]);
   const lunes = await profe(store, "GET", "", ADMIN, undefined, "2026-10-07");
   assertEquals(lunes.body.semana.id, "2026-10-05");
   assertEquals(lunes.body.items.find((i: any) => i.id === "profe-examen-2026-10-10").estado, "proximamente", "el examen B abre el sábado");
@@ -96,4 +96,37 @@ Deno.test("profe: el nombre Profe queda reservado en altas", async () => {
   const req = new Request("http://x/ingles/alumnos", { method: "POST", body: JSON.stringify({ nombre: "profe", email: "otro@example.com" }) });
   const res = await handleAlumnos(req, "", { email: ADMIN, admin: ADMIN, store, filas: () => Promise.resolve([]) }, json);
   assertEquals([res.status, (await res.json()).error], [409, "nombre_en_uso"]);
+});
+
+// ---- Actividades del grupo en la ruta del profe (openspec: profe-actividades-grupo) ----
+Deno.test("profe: su ruta incluye lo del grupo (sin Meet), abierto ya y con fecha el día antes de abrir al grupo", async () => {
+  clearCache();
+  const store = datos();
+  const r = await profe(store, "GET", "", ADMIN, undefined, "2026-10-01");
+  const grupo = r.body.items.filter((i: any) => i.grupo).map((i: any) => [i.id, i.fechaLimite, i.estado]);
+  assertEquals(grupo, [
+    ["act-2026-10-06", "2026-10-04", "disponible"],
+    ["act-2026-10-08", "2026-10-04", "disponible"],
+    ["examen-2026-10-09", "2026-10-08", "disponible"],
+    ["refuerzo-2026-10-10", "2026-10-09", "disponible"],
+  ], "semana futura del grupo: el profe ya la puede resolver; sin el Meet");
+  const tarde = await profe(store, "GET", "", ADMIN, undefined, "2026-10-07");
+  assertEquals(tarde.body.items.find((i: any) => i.id === "act-2026-10-06").fechaLimite < "2026-10-07", true, "queda en atraso");
+});
+
+Deno.test("profe: resuelve una actividad del grupo y no aparece en las vistas del grupo", async () => {
+  clearCache();
+  const store = datos();
+  const g = await profe(store, "GET", "/act-2026-10-06");
+  assertEquals([g.status, g.body.intento, g.body.vistaPrevia], [200, 1, false]);
+  const resp = Object.fromEntries(g.body.preguntas.map((q: any) => [q.id, 0]));
+  const p = await profe(store, "POST", "/act-2026-10-06", ADMIN, { intento: 1, respuestas: resp });
+  assertEquals([p.status, p.body.guardado], [200, true]);
+  assertEquals((await store.get<any>("resultados/act-2026-10-06/profe.json"))!.data.alumno, "Profe");
+  assertEquals((await profe(store, "GET", "/meet-2026-10-11")).status, 404, "el Meet no es del profe");
+  Deno.env.set("PERMITIR_HOY", "1");
+  const req = new Request("http://x/ingles/actividades?email=x&hoy=2026-10-07");
+  const admin = await (await handleActividades(req, "", { isAdmin: true, alumno: null }, store, json)).json();
+  const act = admin.items.find((i: any) => i.id === "act-2026-10-06");
+  assertEquals([act.resultados.length, Object.keys(admin.resumen)], [0, []], "el profe no cuenta como alumno");
 });

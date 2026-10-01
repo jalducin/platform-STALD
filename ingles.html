@@ -434,7 +434,7 @@
     }
 
     if (!data.isAdmin) {
-      contentEl.innerHTML = (MODO_PROFE ? '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html')) + '">← Vista de mi grupo</a>' + renderPlanProfe(state.act) : '') +
+      contentEl.innerHTML = (MODO_PROFE ? '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html')) + '">← Vista de mi grupo</a>' + renderGrupoProfe(state.act) + renderPlanProfe(state.act) : '') +
         renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
       return;
     }
@@ -1150,6 +1150,23 @@
     loginEl.style.display = 'none'; appEl.style.display = 'block';
     state.act = r.body; state.data = { isAdmin: false, rows: [] };
     render(state.data);
+  }
+
+  // Tarjeta "Lo de tu grupo": actividades del grupo que el profe resuelve antes (openspec: profe-actividades-grupo).
+  function renderGrupoProfe(act) {
+    const lista = ((act && act.items) || []).filter(it => it.grupo);
+    if (!lista.length) return '';
+    const hoy = todayStr();
+    const pendientes = lista.filter(it => it.estado !== 'completo'), hechas = lista.filter(it => it.estado === 'completo');
+    const fila = it => {
+      const atraso = it.estado !== 'completo' && it.fechaLimite < hoy;
+      let sub = 'Para ti: ' + escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + ' · ' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)';
+      if (atraso) sub += ' · <span class="pill" style="background:var(--overdue-bg);color:var(--overdue)">⏰ En atraso</span>';
+      if (it.mejor) sub += ' · <span class="pill ok">⭐ ' + it.mejor.porcentaje + '%</span>';
+      return '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + sub + '</div></div>' + accionItem(it, it.estado) + '</div>';
+    };
+    return '<div class="exam-card" id="grupo-profe"><h3>📚 Lo de tu grupo · resuélvelo antes que ellos (' + pendientes.length + ' pendiente' + (pendientes.length === 1 ? '' : 's') + ')</h3>' +
+      pendientes.map(fila).join('') + (hechas.length ? '<div class="s" style="font-size:.8rem;margin-top:6px">✅ Hechas: ' + hechas.length + '</div>' + hechas.map(fila).join('') : '') + '</div>';
   }
 
   // Tarjeta "Ruta del mes": semanas con objetivo, temas, Busuu, rutina y resultados.
