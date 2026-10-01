@@ -26,7 +26,7 @@
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Producción: crear sala Basta (10 por defecto y 7 inválido) y responder por ronda con curl;
+- [x] 5.1 Producción: crear sala Basta (10 por defecto y 7 inválido) y responder por ronda con curl;
   **borrar** la sala de prueba y su entrada del índice
 
 ## 6. Documentación (OBLIGATORIO)
