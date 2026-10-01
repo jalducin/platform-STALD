@@ -184,3 +184,70 @@ Deno.test("juegos: avatar por defecto, cambio validado y propagado", async () =>
   const res = await call("GET", "/admin/resumen", "admin@example.com");
   assertEquals(res.body.jugadores[0].avatar.emoji, AVATARES[3]);
 });
+
+// ---- Foto como avatar (openspec: avatar-foto) ----
+const JPEG = "data:image/jpeg;base64," + btoa(String.fromCharCode(0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 0xff, 0xd9));
+async function verFoto(deps: any, token: string) {
+  const res = await handleJuegos(new Request(`http://x/juegos/foto/${token}`), `/foto/${token}`, "", deps, json);
+  return { status: res.status, tipo: res.headers.get("content-type"), bytes: res.status === 200 ? new Uint8Array(await res.arrayBuffer()) : null };
+}
+
+Deno.test("juegos: subir foto con permiso y verla sin correo", async () => {
+  const { call, deps, store } = ctx();
+  await call("POST", "/partida", "marisol@example.com", partida("en-vocab", 100));
+  const antes = (await call("GET", "/yo", "marisol@example.com")).body.jugador.avatar;
+  const r = await call("POST", "/foto", "marisol@example.com", { imagen: JPEG, acepto: true });
+  assertEquals(r.status, 200);
+  const token = r.body.avatar.foto;
+  assert(/^[0-9a-f]{24}$/.test(token), "token aleatorio");
+  assertEquals([r.body.avatar.emoji, r.body.avatar.color], [antes.emoji, antes.color], "conserva el personaje");
+  assertEquals((await call("GET", "/yo", "marisol@example.com")).body.jugador.avatar.foto, token);
+  assertEquals((await call("GET", "/ranking", "marisol@example.com")).body.top[0].avatar.foto, token);
+  const f = await verFoto(deps, token);
+  assertEquals([f.status, f.tipo, f.bytes![0], f.bytes![1]], [200, "image/jpeg", 0xff, 0xd8]);
+  assertEquals((await verFoto(deps, "0".repeat(24))).status, 404);
+  const archivo = (await store.get<any>(`juegos/fotos/${token}.json`))!.data;
+  assertEquals([archivo.id, JSON.stringify(archivo).includes("@")], ["a-marisol", false]);
+});
+
+Deno.test("juegos: foto sin permiso, no JPEG o grande se rechaza", async () => {
+  const { call } = ctx();
+  assertEquals((await call("POST", "/foto", "marisol@example.com", { imagen: JPEG })).body.error, "debe_aceptar");
+  const png = "data:image/png;base64," + btoa("\x89PNG....");
+  assertEquals((await call("POST", "/foto", "marisol@example.com", { imagen: png, acepto: true })).status, 400);
+  const falso = "data:image/jpeg;base64," + btoa("hola mundo");
+  assertEquals((await call("POST", "/foto", "marisol@example.com", { imagen: falso, acepto: true })).status, 400);
+  const grande = JPEG + "A".repeat(41000);
+  assertEquals((await call("POST", "/foto", "marisol@example.com", { imagen: grande, acepto: true })).status, 400);
+  assertEquals((await call("GET", "/yo", "marisol@example.com")).body.jugador.avatar.foto, undefined);
+});
+
+Deno.test("juegos: nueva foto borra la anterior y elegir personaje la quita", async () => {
+  const { call, deps } = ctx();
+  const t1 = (await call("POST", "/foto", "marisol@example.com", { imagen: JPEG, acepto: true })).body.avatar.foto;
+  const t2 = (await call("POST", "/foto", "marisol@example.com", { imagen: JPEG, acepto: true })).body.avatar.foto;
+  assert(t1 !== t2);
+  assertEquals([(await verFoto(deps, t1)).status, (await verFoto(deps, t2)).status], [404, 200]);
+  const a = await call("POST", "/avatar", "marisol@example.com", { emoji: AVATARES[1], color: COLORES[1] });
+  assertEquals(a.body.avatar, { emoji: AVATARES[1], color: COLORES[1] });
+  assertEquals((await verFoto(deps, t2)).status, 404);
+});
+
+Deno.test("juegos: el admin lista y quita fotos; alumnos 403", async () => {
+  const { call, deps, store } = ctx();
+  await call("POST", "/partida", "marisol@example.com", partida("en-vocab", 100));
+  const t = (await call("POST", "/foto", "marisol@example.com", { imagen: JPEG, acepto: true })).body.avatar.foto;
+  assertEquals((await call("GET", "/fotos", "angel@example.com")).status, 403);
+  assertEquals((await call("POST", "/fotos/quitar", "angel@example.com", { id: "a-marisol" })).status, 403);
+  const l = await call("GET", "/fotos", ADMIN);
+  assertEquals([l.status, l.body.fotos.length, l.body.fotos[0].id, l.body.fotos[0].nombre, l.body.fotos[0].token], [200, 1, "a-marisol", "Marisol", t]);
+  const q = await call("POST", "/fotos/quitar", ADMIN, { id: "a-marisol" });
+  assertEquals([q.status, q.body.ok], [200, true]);
+  assertEquals((await verFoto(deps, t)).status, 404);
+  assertEquals((await call("GET", "/fotos", ADMIN)).body.fotos.length, 0);
+  assertEquals((await store.get<any>("juegos/perfiles/a-marisol.json"))!.data.foto, undefined);
+  assertEquals((await store.get<any>("juegos/semanas/2026-09-28/a-marisol.json"))!.data.avatar.foto, undefined, "semana sin la foto");
+  clearCacheJuegos();
+  assertEquals((await call("GET", "/yo", "marisol@example.com")).body.jugador.avatar.foto, undefined);
+  assertEquals((await call("POST", "/fotos/quitar", ADMIN, { id: "a-nadie" })).status, 404);
+});

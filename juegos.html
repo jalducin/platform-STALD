@@ -37,7 +37,11 @@
   .chip { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 700; background: var(--card); border: 1px solid var(--border);
     padding: 6px 12px; border-radius: 99px; box-shadow: var(--shadow); }
   .chip-btn { font: inherit; font-size: .8rem; font-weight: 700; color: var(--text); cursor: pointer; }
-  .av { display: inline-grid; place-items: center; border-radius: 50%; background: var(--avc); flex-shrink: 0; line-height: 1; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+  .av { display: inline-grid; place-items: center; border-radius: 50%; background: var(--avc); flex-shrink: 0; line-height: 1; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); overflow: hidden; }
+  .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .fotos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
+  .fotos-grid .card { text-align: center; padding: 10px; margin: 0; }
+  .fotos-grid img { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
   .av-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 6px; }
   .av-grid button, .col-grid button { font: inherit; font-size: 1.4rem; aspect-ratio: 1; border-radius: 12px; border: 2px solid var(--border); background: var(--card); cursor: pointer; }
   .av-grid button[aria-pressed="true"], .col-grid button[aria-pressed="true"] { border-color: var(--accent-2); box-shadow: 0 0 0 3px var(--mente-soft); }
@@ -307,31 +311,64 @@
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
 
   // ---------- Sesión ----------
-  const avatarHtml = (av, px = 26) => av ? '<span class="av" style="--avc:' + escapeHtml(av.color) + ';width:' + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * 0.58) + 'px" aria-hidden="true">' + escapeHtml(av.emoji) + '</span>' : '';
+  // Foto del avatar (openspec: avatar-foto): si ya no existe, queda el personaje.
+  const fotoSrc = av => av.fotoUrl || (API_BASE + '/juegos/foto/' + encodeURIComponent(av.foto));
+  const avatarHtml = (av, px = 26) => av ? '<span class="av" style="--avc:' + escapeHtml(av.color) + ';width:' + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * 0.58) + 'px" aria-hidden="true">' +
+    (av.foto || av.fotoUrl ? '<img src="' + escapeHtml(fotoSrc(av)) + '" alt="" data-e="' + escapeHtml(av.emoji) + '" onerror="this.replaceWith(document.createTextNode(this.dataset.e))">' : escapeHtml(av.emoji)) + '</span>' : '';
+
+  // Recorta al centro y reduce a 128×128 JPEG (≤ 40 KB); el canvas descarta los metadatos.
+  async function fotoAvatar(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((ok, mal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => mal(new Error('formato')); i.src = url; });
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const g = c.getContext('2d'), lado = Math.min(img.naturalWidth, img.naturalHeight);
+      g.fillStyle = '#fff'; g.fillRect(0, 0, 128, 128);
+      g.drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, 128, 128);
+      for (const q of [0.82, 0.6, 0.4]) { const d = c.toDataURL('image/jpeg', q); if (d.length <= 40000) return d; }
+      throw new Error('grande');
+    } finally { URL.revokeObjectURL(url); }
+  }
 
   function pantallaAvatar() {
     limpiar();
     const listas = state.avatares || { emojis: [], colores: [] };
     let sel = Object.assign({}, state.jugador.avatar || { emoji: listas.emojis[0], color: listas.colores[0] });
+    let fotoNueva = null, permiso = false; // modo foto: sel.foto (actual) o fotoNueva (data URL)
     const pintar = () => {
-      app.innerHTML = '<div class="card"><h1>🎨 Tu avatar</h1><p class="lead">Elige un personaje y un color. Así te verán en el ranking y en las partidas.</p>' +
-        '<div style="display:flex;justify-content:center;margin:6px 0 14px">' + avatarHtml(sel, 96) + '</div>' +
+      const vista = fotoNueva ? Object.assign({}, sel, { fotoUrl: fotoNueva }) : sel;
+      app.innerHTML = '<div class="card"><h1>🎨 Tu avatar</h1><p class="lead">Elige un personaje y un color, o sube una foto. Así te verán en el ranking y en las partidas.</p>' +
+        '<div style="display:flex;justify-content:center;margin:6px 0 14px" id="av-vista">' + avatarHtml(vista, 96) + '</div>' +
         '<label>Personaje</label><div class="av-grid">' + listas.emojis.map(e => '<button type="button" data-av-emoji="' + escapeHtml(e) + '" aria-pressed="' + (e === sel.emoji) + '">' + escapeHtml(e) + '</button>').join('') + '</div>' +
         '<label>Color</label><div class="col-grid">' + listas.colores.map(c => '<button type="button" data-av-color="' + escapeHtml(c) + '" aria-pressed="' + (c === sel.color) + '" style="background:' + escapeHtml(c) + '" aria-label="Color ' + escapeHtml(c) + '"></button>').join('') + '</div>' +
+        '<label>📷 O sube una foto de tu galería</label><input type="file" id="av-file" accept="image/*">' +
+        '<label class="check"><input id="av-permiso" type="checkbox"' + (permiso ? ' checked' : '') + '><span>Tengo permiso de mi mamá, papá o tutor para usar esta imagen.</span></label>' +
+        '<p class="muted" style="margin:4px 0 0">Se ve pequeña en el ranking y las partidas. Elegir un personaje o color quita la foto.</p>' +
         '<div class="row-btns"><button class="btn ghost" data-a="hub">Cancelar</button><button class="btn" data-av-guardar>Guardar</button></div><div id="av-msg"></div></div>';
     };
     pintar();
+    const avMsg = t => { document.getElementById('av-msg').innerHTML = '<div class="alert">' + escapeHtml(t) + '</div>'; };
+    app.onchange = async e => {
+      if (e.target.id === 'av-permiso') permiso = e.target.checked;
+      if (e.target.id === 'av-file' && e.target.files[0]) {
+        try { fotoNueva = await fotoAvatar(e.target.files[0]); pintar(); }
+        catch (err) { avMsg(err.message === 'grande' ? 'La imagen es demasiado pesada. Prueba con otra.' : 'No se pudo leer esa imagen. Prueba con una foto JPG o PNG.'); }
+      }
+    };
     app.onclick = async e => {
       const em = e.target.closest('[data-av-emoji]'), co = e.target.closest('[data-av-color]'), gu = e.target.closest('[data-av-guardar]');
-      if (em) { sel.emoji = em.dataset.avEmoji; pintar(); }
-      if (co) { sel.color = co.dataset.avColor; pintar(); }
+      if (em) { sel.emoji = em.dataset.avEmoji; delete sel.foto; fotoNueva = null; pintar(); }
+      if (co) { sel.color = co.dataset.avColor; delete sel.foto; fotoNueva = null; pintar(); }
       if (gu) {
+        if (fotoNueva && !permiso) { avMsg('Marca la casilla de permiso para usar tu foto.'); return; }
         gu.disabled = true;
-        const r = await post('/juegos/avatar', sel);
+        const r = fotoNueva ? await post('/juegos/foto', { imagen: fotoNueva, acepto: true })
+          : sel.foto ? { ok: true, body: { avatar: state.jugador.avatar } } // sin cambios: conserva su foto
+          : await post('/juegos/avatar', { emoji: sel.emoji, color: sel.color });
         if (!r.ok) { document.getElementById('av-msg').innerHTML = '<div class="alert">No se pudo guardar (' + escapeHtml(r.body.error || r.status) + ').</div>'; gu.disabled = false; return; }
-        state.jugador.avatar = r.body.avatar; pintarChip(); app.onclick = null; pantallaHub();
+        state.jugador.avatar = r.body.avatar; pintarChip(); app.onclick = null; app.onchange = null; pantallaHub();
       }
-      if (e.target.closest('[data-a="hub"]')) app.onclick = null;
+      if (e.target.closest('[data-a="hub"]')) { app.onclick = null; app.onchange = null; }
     };
   }
 
@@ -389,7 +426,7 @@
     state.tab = tab || state.tab || 'juegos';
     const admin = state.jugador && state.jugador.tipo === 'admin';
     const tabs = '<div class="tabs" role="tablist">' +
-      ['juegos:🎮 Juegos', 'partidas:👥 Partidas', 'ranking:🏆 Ranking'].concat(admin ? ['invitados:📋 Invitados'] : []).map(x => {
+      ['juegos:🎮 Juegos', 'partidas:👥 Partidas', 'ranking:🏆 Ranking'].concat(admin ? ['invitados:📋 Invitados', 'fotos:📷 Fotos'] : []).map(x => {
         const [id, t] = x.split(':');
         return '<button class="tab" role="tab" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + t + '</button>';
       }).join('') + '</div>';
@@ -397,6 +434,7 @@
     if (state.tab === 'ranking') return pintarRanking();
     if (state.tab === 'partidas') return pintarPartidas();
     if (state.tab === 'invitados') return pintarInvitados();
+    if (state.tab === 'fotos') return pintarFotos();
     document.getElementById('tab-body').innerHTML = CATEGORIAS.map(c => {
       const js = JUEGOS.filter(j => j.cat === c.id);
       if (!js.length) return '';
@@ -441,6 +479,27 @@
         lista.map(x => '<tr><td>' + escapeHtml(x.email) + '</td><td>' + escapeHtml(x.nombre) + '</td><td>' + x.visitas + '</td><td>' + escapeHtml(fecha(x.ultimaVisita)) + '</td><td>' + fmt(x.puntosSemana) + '</td></tr>').join('') +
         '</tbody></table></div><div class="row-btns"><button class="btn ghost" data-a="csv">⬇️ Descargar CSV</button></div>' : '');
     state.invitadosLista = lista;
+  }
+
+  // Moderación de fotos de avatar (solo admin).
+  async function pintarFotos() {
+    const body = document.getElementById('tab-body');
+    body.innerHTML = '<div class="loading">Cargando fotos…</div>';
+    const r = await api('/juegos/fotos');
+    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const fecha = s => new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+    body.innerHTML = '<p class="muted" style="margin:10px 0">' + r.body.fotos.length + ' foto(s) de avatar. Si alguna no es adecuada, quítala: vuelve a su personaje.</p>' +
+      '<div class="fotos-grid">' + r.body.fotos.map(f => '<div class="card"><img src="' + escapeHtml(fotoSrc({ foto: f.token })) + '" alt="Foto de ' + escapeHtml(f.nombre) + '"><div><b>' + escapeHtml(f.nombre) + '</b></div>' +
+        '<small class="muted">' + escapeHtml(fecha(f.en)) + '</small><div><button class="btn ghost sm" data-quitar-foto="' + escapeHtml(f.id) + '">🗑️ Quitar</button></div></div>').join('') + '</div>';
+  }
+
+  async function quitarFoto(b) {
+    if (!confirm('¿Quitar esta foto? El jugador volverá a su personaje.')) return;
+    b.disabled = true;
+    const r = await post('/juegos/fotos/quitar', { id: b.dataset.quitarFoto });
+    if (!r.ok) { b.disabled = false; alert('No se pudo quitar (' + (r.body.error || r.status) + ').'); return; }
+    if (b.dataset.quitarFoto === state.jugador.id) { delete state.jugador.avatar.foto; pintarChip(); }
+    pintarFotos();
   }
 
   function descargarCsv() {
@@ -2029,6 +2088,7 @@
     const pa = e.target.closest('[data-p]');
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(() => traerSala()).then(() => { sala.vista = null; pintarSala(); }); }
+    const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
     const g = e.target.closest('[data-juego]');
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
     const a = e.target.closest('[data-a]'); if (!a) return;
