@@ -33,7 +33,7 @@
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Producción con curl: subir foto como admin, leerla sin correo, casos inválidos, quitarla;
+- [x] 5.1 Producción con curl: subir foto como admin, leerla sin correo, casos inválidos, quitarla;
   **restaurar** el perfil del admin y borrar los archivos de prueba
 
 ## 6. Documentación (OBLIGATORIO)
