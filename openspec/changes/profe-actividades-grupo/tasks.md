@@ -32,7 +32,7 @@
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Producción, solo lectura:
+- [x] 5.1 Producción, solo lectura:
   - la ruta lista los 5 elementos del grupo con sus fechas del profe;
   - abrir uno sin enviar;
   - la vista del grupo sin "Profe".
