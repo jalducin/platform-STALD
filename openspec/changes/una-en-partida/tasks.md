@@ -14,6 +14,13 @@
 - [x] 2.3 Final: podio, `final` y ranking
 - [x] 2.4 Portal: avatar en el saludo y "🎨 Cambiar avatar" (`juegos.html?avatar=1`)
 
+## 2b. Post-apply: castigo por segundos en UNA
+
+- [x] 2b.1 Servidor: `{ una: { paso } }` → `unas[]` con `t` (prueba que falla primero)
+- [x] 2b.2 Reproducción en sala: espera del UNA, escala por segundos y bots que presionan UNA
+- [x] 2b.3 Solitario: misma escala por segundos
+- [x] 2b.4 E2E: tiempos de UNA en sala (rápido 0, lento +N) iguales en ambos y en solitario; regresiones
+
 ## 3. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 3.1 `deno test`, `check` y `lint`; E2E con dos navegadores y bots:

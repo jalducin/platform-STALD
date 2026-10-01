@@ -185,3 +185,16 @@ Deno.test("salas: ¡Una! en partida (jugadas con hora y turno tomado)", async ()
   const g = await c.call("GET", `/sala/${codigo}`, "marisol@example.com");
   assertEquals(g.body.jugadores.map((x: any) => (x.jugadas || []).map((j: any) => j.n)), [[0], [1]]);
 });
+
+Deno.test("salas: ¡Una! registra el botón UNA con su hora (una vez por paso)", async () => {
+  const c = ctx();
+  const codigo = (await c.call("POST", "/sala", "marisol@example.com", { juego: "una" })).body.codigo;
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(9000);
+  const u1 = await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { una: { paso: 12 } });
+  const t1 = c.ahora();
+  c.avanzar(2000);
+  const u2 = await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { una: { paso: 12 } });
+  assertEquals([u1.status, u1.body.unas, u2.body.unas], [200, [{ paso: 12, t: t1 }], [{ paso: 12, t: t1 }]]);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { una: { paso: -1 } })).status, 400);
+});

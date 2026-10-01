@@ -30,6 +30,14 @@ El usuario pidió (2026-09-30) que **¡Una!** (cartas tipo UNO) también se pued
     servidor;
   - rechaza un paso `n` que ya tenga otro jugador (409 `turno_tomado`).
 
+- **Post-apply (pedido del usuario, 2026-09-30): castigo por segundos en UNA**, en solitario y en partida.
+  - Al tirar la penúltima carta, se presiona el botón **UNA**.
+  - El castigo depende de cuánto se tarde: ≤ 2 s ninguno; 2–3 s +1; 3–4 s +2; 4–5 s +3; sin presionar en
+    5 s +4.
+  - En partida, el siguiente turno espera a que se resuelva (máx. 5 s). Los bots presionan UNA entre 0.8 y
+    1.8 s.
+  - Reemplaza al interruptor 📣 previo.
+
 ## Capabilities
 
 ### Modified Capabilities

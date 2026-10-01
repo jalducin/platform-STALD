@@ -34,6 +34,28 @@
 - **Regresiones:** clásicos 11/11 (castigo en solitario 1 → 3), partidas 15/15, Lotería 10/10 y portal
   16/16.
 
+## Post-apply: castigo por segundos en UNA (2b)
+- **Servidor:** la prueba nueva (`unas` con `t`, una por paso, paso inválido → 400) falló antes de
+  implementar. Después, 83 pasaron y 6 omitidas.
+- **Bugs reales encontrados y corregidos:**
+  - La mesa se redibujaba dos veces por segundo durante la ventana del UNA y reemplazaba el botón mientras
+    se tocaba. Ahora la cuenta regresiva se actualiza sin redibujar.
+  - El botón UNA salía hasta confirmar la jugada con el servidor, dos viajes de red que le restaban
+    tiempo a quien jugaba. Ahora aparece al instante y el UNA se envía al confirmarse la jugada.
+- **Notas de prueba:**
+  - El botón tiene una animación de pulso y Playwright espera a que deje de moverse, así que en las
+    pruebas se usa un clic forzado.
+  - Con los relojes acelerados, la ventana de 2 s era irrealizable con la red de por medio; estas pruebas
+    corren a velocidad real.
+- **E2E determinista** (`e2e-una-segundos.js`, sala de una persona), 2 corridas: a los 3.3 s → +2; al
+  instante → 0.
+- **E2E de dos navegadores:** estado idéntico en cada paso común.
+- **Solitario** (`e2e-una-solo-segundos.js`): unos 3.5 s → +2; sin presionar → +4.
+- **Regresiones:** clásicos 11/11, partidas 15/15, Lotería 10/10, avatar y música 12/12.
+- **Producción de PR #39:** la primera jugada coincidió con el cambio de versión en Deno Deploy, que
+  respondió "no_empezo". Al repetir, empezar → jugada guardada con `t`. Las salas de prueba (HGSV y ECPH)
+  se borraron.
+
 ## Verificación de estado
 - Sin datos reales modificados. Las copias se borraron y el servidor local se detuvo.
 - Estado restaurado: Sí.

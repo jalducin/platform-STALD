@@ -15,9 +15,13 @@ el castigo de "¡Una!".
 - **WHEN** alguien envía una jugada para un paso que ya jugó otro jugador
 - **THEN** el servidor responde 409 `turno_tomado`
 
-#### Scenario: Olvida decir ¡Una!
-- **WHEN** alguien tira su penúltima carta sin marcar 📣 "¡Una!"
+#### Scenario: Tarda en presionar UNA
+- **WHEN** alguien tira su penúltima carta y presiona UNA a los 3.5 s
 - **THEN** roba 2 cartas, igual en todos los dispositivos
+- **WHEN** la presiona antes de 2 s
+- **THEN** no roba
+- **WHEN** no la presiona en 5 s
+- **THEN** roba 4
 
 #### Scenario: Nadie juega
 - **WHEN** a una persona se le acaban los 30 s de su turno
