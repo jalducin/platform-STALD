@@ -78,6 +78,16 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
   - Se guarda en `juegos/perfiles/<id>.json`; mientras no se elige, hay uno por defecto a partir del id.
   - `/juegos/yo` incluye `jugador.avatar` y las listas.
   - El ranking, las salas y el resumen del admin incluyen `avatar`.
+- **Foto como avatar** (`avatar-foto`):
+  - `POST /juegos/foto` `{ imagen, acepto: true }`: `imagen` es un data URL JPEG (`FF D8 FF`) de hasta
+    40 000 caracteres, ya reducido a 128×128 por el navegador. Sin `acepto` → 400 `debe_aceptar`; si no es
+    JPEG o es grande → 400 `imagen_invalida`.
+  - El avatar queda `{ emoji, color, foto: <token> }` (24 hex aleatorios). Subir otra foto, elegir
+    personaje (`POST /juegos/avatar`) o que el admin la quite borra el archivo anterior.
+  - `GET /juegos/foto/<token>`: sin correo (lo pide un `<img>`); bytes JPEG, `Cache-Control: max-age=3600`;
+    404 si no existe.
+  - Solo admin: `GET /juegos/fotos` (lista activa) y `POST /juegos/fotos/quitar` `{ id }` (403 para el
+    resto; 404 si ese jugador no tiene foto).
 - **Catálogo (`CATALOGO`):** 19 juegos (`en-preguntas`, "Responde en inglés", tope 2000). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 

@@ -2,6 +2,7 @@
 // Datos en el repo privado: juegos/semanas/<lunes>/<id>.json (sin correos) y juegos/invitados.json (correos
 // de invitados, solo para análisis del admin). Ver openspec: juegos-plataforma.
 import { mxToday, slugAlumno } from "./motor.ts";
+import { decodeBase64 } from "jsr:@std/encoding@1/base64";
 import type { Store } from "./store.ts";
 import { handleSalas, resumenSalas } from "./salas.ts";
 
@@ -16,6 +17,7 @@ interface FilaConUsuarios {
 export interface Avatar {
   emoji: string;
   color: string;
+  foto?: string; // token de juegos/fotos/<token>.json (openspec: avatar-foto)
 }
 
 export interface Jugador {
@@ -39,6 +41,64 @@ function fnv(s: string): number {
 }
 export const avatarPorDefecto = (id: string): Avatar => ({ emoji: AVATARES[fnv(id) % AVATARES.length], color: COLORES[fnv(id + "|c") % COLORES.length] });
 const rutaPerfil = (id: string) => `juegos/perfiles/${id}.json`;
+
+// Fotos de avatar: JPEG 128×128 hecho en el navegador; el token aleatorio es el único enlace.
+const rutaFoto = (token: string) => `juegos/fotos/${token}.json`;
+const RUTA_INDICE_FOTOS = "juegos/fotos/indice.json";
+const MAX_FOTO = 40_000;
+const PREFIJO_JPEG = "data:image/jpeg;base64,";
+interface Foto {
+  id: string;
+  nombre: string;
+  imagen: string;
+  en: string;
+}
+type IndiceFotos = Record<string, { nombre: string; token: string; en: string }>;
+const cacheFotos = new Map<string, Uint8Array<ArrayBuffer> | null>();
+
+function bytesJpeg(imagen: unknown): Uint8Array<ArrayBuffer> | null {
+  if (typeof imagen !== "string" || imagen.length > MAX_FOTO || !imagen.startsWith(PREFIJO_JPEG)) return null;
+  try {
+    const b = new Uint8Array(decodeBase64(imagen.slice(PREFIJO_JPEG.length)));
+    return b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff ? b : null;
+  } catch {
+    return null;
+  }
+}
+
+function nuevoToken(): string {
+  return [...crypto.getRandomValues(new Uint8Array(12))].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Guarda el avatar en el perfil, la semana actual, el índice de fotos y la caché; borra la foto anterior si cambió.
+async function guardarAvatar(store: Store, jugador: Jugador, avatar: Avatar, lunes: string, ahora: string, quien: string) {
+  const previo = (await store.get<Avatar>(rutaPerfil(jugador.id)))?.data?.foto ?? jugador.avatar?.foto;
+  for (let i = 0; i < 3; i++) {
+    const doc = await store.get<Avatar>(rutaPerfil(jugador.id));
+    if (await store.put(rutaPerfil(jugador.id), avatar, doc?.sha ?? null, `juegos: avatar de ${quien}`)) break;
+  }
+  jugador.avatar = avatar;
+  for (const [k, m] of cacheJugadores) if (m.j.id === jugador.id) cacheJugadores.set(k, { ...m, j: { ...m.j, avatar } });
+  // Que el ranking lo muestre ya: actualizar la semana si existe.
+  const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
+  for (let i = 0; i < 3; i++) {
+    const doc = await store.get<Semana>(ruta);
+    if (!doc || await store.put(ruta, { ...doc.data, avatar }, doc.sha, `juegos: avatar de ${quien}`)) break;
+  }
+  cache.delete(lunes);
+  if (previo === avatar.foto) return;
+  if (previo) {
+    await store.remove(rutaFoto(previo), `juegos: se quita foto de ${quien}`);
+    cacheFotos.set(previo, null);
+  }
+  for (let i = 0; i < 3; i++) {
+    const doc = await store.get<IndiceFotos>(RUTA_INDICE_FOTOS);
+    const idx: IndiceFotos = { ...(doc?.data ?? {}) };
+    if (avatar.foto) idx[jugador.id] = { nombre: jugador.nombre, token: avatar.foto, en: ahora };
+    else delete idx[jugador.id];
+    if (await store.put(RUTA_INDICE_FOTOS, idx, doc?.sha ?? null, "juegos: índice de fotos")) break;
+  }
+}
 
 export interface Invitado {
   nombre: string;
@@ -159,6 +219,17 @@ function posicionDe(docs: Semana[], id: string): number | null {
 }
 
 export async function handleJuegos(req: Request, sub: string, correo: string, deps: DepsJuegos, json: Json): Promise<Response> {
+  // GET /juegos/foto/<token> → imagen del avatar, sin correo (un <img> no manda encabezados).
+  const mFoto = sub.match(/^\/foto\/([0-9a-f]{24})$/);
+  if (mFoto && req.method === "GET") {
+    let bytes = cacheFotos.get(mFoto[1]);
+    if (bytes === undefined) {
+      bytes = bytesJpeg((await deps.store.get<Foto>(rutaFoto(mFoto[1])))?.data?.imagen);
+      cacheFotos.set(mFoto[1], bytes);
+    }
+    if (!bytes) return json({ error: "not_found" }, 404);
+    return new Response(bytes, { headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600", "Access-Control-Allow-Origin": "*" } });
+  }
   const email = (correo || "").trim().toLowerCase();
   if (!email) return json({ error: "missing_email" }, 400);
   const hoy = deps.hoy ? deps.hoy() : mxToday();
@@ -212,21 +283,44 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
     let body: { emoji?: unknown; color?: unknown } = {};
     try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
     if (!AVATARES.includes(String(body.emoji)) || !COLORES.includes(String(body.color))) return json({ error: "avatar_invalido" }, 400);
-    const avatar: Avatar = { emoji: String(body.emoji), color: String(body.color) };
-    for (let i = 0; i < 3; i++) {
-      const doc = await store.get<Avatar>(rutaPerfil(jugador.id));
-      if (await store.put(rutaPerfil(jugador.id), avatar, doc?.sha ?? null, `juegos: avatar de ${jugador.nombre}`)) break;
-    }
-    jugador.avatar = avatar;
-    for (const [k, m] of cacheJugadores) if (m.j.id === jugador.id) cacheJugadores.set(k, { ...m, j: { ...m.j, avatar } });
-    // Que el ranking lo muestre ya: actualizar la semana si existe.
-    const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
-    for (let i = 0; i < 3; i++) {
-      const doc = await store.get<Semana>(ruta);
-      if (!doc || await store.put(ruta, { ...doc.data, avatar }, doc.sha, `juegos: avatar de ${jugador.nombre}`)) break;
-    }
-    cache.delete(lunes);
+    const avatar: Avatar = { emoji: String(body.emoji), color: String(body.color) }; // elegir personaje quita la foto
+    await guardarAvatar(store, jugador, avatar, lunes, ahora, jugador.nombre);
     return json({ ok: true, avatar });
+  }
+
+  // POST /juegos/foto → subir foto como avatar (con permiso de mamá, papá o tutor)
+  if (sub === "/foto" && req.method === "POST") {
+    let body: { imagen?: unknown; acepto?: unknown } = {};
+    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+    if (body.acepto !== true) return json({ error: "debe_aceptar" }, 400);
+    if (!bytesJpeg(body.imagen)) return json({ error: "imagen_invalida" }, 400);
+    const token = nuevoToken();
+    const foto: Foto = { id: jugador.id, nombre: jugador.nombre, imagen: String(body.imagen), en: ahora };
+    if (!await store.put(rutaFoto(token), foto, null, `juegos: foto de ${jugador.nombre}`)) return json({ error: "conflicto_escritura" }, 503);
+    const base = jugador.avatar ?? avatarPorDefecto(jugador.id);
+    const avatar: Avatar = { emoji: base.emoji, color: base.color, foto: token };
+    await guardarAvatar(store, jugador, avatar, lunes, ahora, jugador.nombre);
+    return json({ ok: true, avatar });
+  }
+
+  // GET /juegos/fotos y POST /juegos/fotos/quitar → moderación de fotos (solo admin)
+  if (sub === "/fotos" || sub === "/fotos/quitar") {
+    if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
+    const idx = (await store.get<IndiceFotos>(RUTA_INDICE_FOTOS))?.data ?? {};
+    if (sub === "/fotos" && req.method === "GET") {
+      return json({ fotos: Object.entries(idx).map(([id, f]) => ({ id, ...f })).sort((a, b) => b.en.localeCompare(a.en)) });
+    }
+    if (sub === "/fotos/quitar" && req.method === "POST") {
+      let body: { id?: unknown } = {};
+      try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+      const id = String(body.id || "");
+      const f = idx[id];
+      if (!f) return json({ error: "not_found" }, 404);
+      const perfil = (await store.get<Avatar>(rutaPerfil(id)))?.data ?? avatarPorDefecto(id);
+      const otro: Jugador = { id, nombre: f.nombre, tipo: "alumno", avatar: { ...perfil, foto: perfil.foto ?? f.token } };
+      await guardarAvatar(store, otro, { emoji: perfil.emoji, color: perfil.color }, lunes, ahora, `${f.nombre} (admin)`);
+      return json({ ok: true });
+    }
   }
 
   // /juegos/sala… → partidas multijugador (server/salas.ts)
