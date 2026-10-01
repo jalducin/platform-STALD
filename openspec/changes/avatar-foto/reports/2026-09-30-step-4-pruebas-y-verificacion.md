@@ -33,3 +33,8 @@
 ## Resultado
 - Estado Step 4: PASS
 - Bloqueos: ninguno
+
+## Post-apply: caché de fotos con vencimiento (1.3)
+- Hallazgo en producción: tras quitar una foto, otro isolate la seguía sirviendo desde memoria (200).
+- Prueba nueva en rojo y luego en verde: "la caché de fotos vence a los 60 s".
+- Suite del servidor: 88 pasaron, 0 fallaron, 6 omitidas; `lint` y `check` sin errores.
