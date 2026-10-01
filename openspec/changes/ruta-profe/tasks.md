@@ -47,11 +47,11 @@
 
 ## 6. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Producción:
+- [x] 6.1 Producción:
   - listar la ruta como admin (plan y semana 0);
   - 403 con otro correo;
   - abrir un elemento sin enviar, para no gastar el intento del profe.
-- [ ] 6.2 Subir el contenido al repo de datos tras la aprobación del profe
+- [x] 6.2 Subir el contenido al repo de datos tras la aprobación del profe
 
 ## 7. Documentación (OBLIGATORIO)
 
