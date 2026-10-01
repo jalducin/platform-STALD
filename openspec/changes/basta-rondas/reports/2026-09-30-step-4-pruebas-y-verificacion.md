@@ -37,3 +37,11 @@
 ## Resultado
 - Estado Step 4: PASS
 - Bloqueos: ninguno
+
+## Step 5 — Verificación manual en producción (EL AGENTE EJECUTA)
+- Script Python (`urllib`) contra `https://stald.jalducin.deno.net` como admin: 6/6 PASS.
+  - Basta sin opciones → `rondas: "10"`; `rondas: "7"` → 400 `rondas_invalidas`;
+  - empezar; `{ ronda: 0, palabras, basta: true }` → guardado con la hora del servidor;
+  - `ronda: 10` en una sala de 10 → 400 `ronda_invalida`; `GET` incluye `rondasBasta`.
+- Estado restaurado: Sí. Se borró solo la sala de prueba `NABE` y su entrada del índice
+  `juegos/salas-semana/2026-09-28.json`; las salas reales siguen intactas.
