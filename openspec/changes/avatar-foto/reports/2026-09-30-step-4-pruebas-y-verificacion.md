@@ -38,3 +38,13 @@
 - Hallazgo en producción: tras quitar una foto, otro isolate la seguía sirviendo desde memoria (200).
 - Prueba nueva en rojo y luego en verde: "la caché de fotos vence a los 60 s".
 - Suite del servidor: 88 pasaron, 0 fallaron, 6 omitidas; `lint` y `check` sin errores.
+
+## Step 5 — Verificación manual en producción (EL AGENTE EJECUTA)
+- Script Python (`urllib`, UTF-8) contra `https://stald.jalducin.deno.net` como admin: 11/11 PASS.
+  - sin permiso → 400 `debe_aceptar`; PNG → 400 `imagen_invalida`;
+  - subir JPEG → 200 con token de 24 hex; `GET /juegos/foto/<token>` sin correo → 200 `image/jpeg`,
+    `Cache-Control: public, max-age=3600`;
+  - el admin la lista y la quita; la foto responde 404 a los 37 s (con la caché de 60 s);
+  - la foto de la primera corrida (antes del arreglo 1.3) ya no se sirve; quitar inexistente → 404.
+- Estado restaurado: Sí. Avatar del admin igual al previo (🚀, `#64748b`); `juegos/fotos/indice.json`
+  vacío y sin archivos de foto de prueba en el repo de datos.
