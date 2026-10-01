@@ -117,6 +117,8 @@ interface Partida {
   total: number;
   segundos: number;
   en: string;
+  modo?: "sala"; // partida multijugador (openspec: puntos-por-tipo); sin modo = individual
+  sala?: string; // código de la sala
 }
 
 interface Semana {
@@ -125,7 +127,9 @@ interface Semana {
   tipo: Jugador["tipo"];
   partidas: Partida[];
   mejores: Record<string, number>;
-  total: number;
+  total: number; // totalIndividual + totalPartidas
+  totalIndividual?: number;
+  totalPartidas?: number;
   actualizado?: string;
   avatar?: Avatar;
 }
@@ -155,7 +159,8 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
 };
 
 const LIMITE_DIARIO = 100;
-const MAX_PARTIDAS_GUARDADAS = 300;
+const MAX_PARTIDAS_GUARDADAS = 1000; // los totales salen del historial: 7 días × 100 al día caben
+const MAX_SALA = 10_000; // tope por partida de sala (como el total final de la sala)
 const MAX_INVITADOS = 500;
 const RUTA_INVITADOS = "juegos/invitados.json";
 const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -204,21 +209,34 @@ export function clearCacheJuegos() {
   cacheJugadores.clear();
 }
 
+// Puntos por tipo (openspec: puntos-por-tipo): todo suma, separado en individuales y partidas (salas).
+function conTotales(s: Semana): Semana {
+  let ind = 0, sal = 0;
+  for (const p of s.partidas) { if (p.modo === "sala") sal += p.puntos; else ind += p.puntos; }
+  return { ...s, totalIndividual: ind, totalPartidas: sal, total: ind + sal };
+}
+
+type TipoRanking = "individual" | "partidas";
+const puntosDe = (d: Semana, tipo: TipoRanking) => (tipo === "partidas" ? d.totalPartidas : d.totalIndividual) ?? 0;
+
 async function leerSemana(store: Store, lunes: string): Promise<Semana[]> {
   const c = cache.get(lunes);
   if (c && Date.now() - c.t < 30_000) return c.v as Semana[];
   const nombres = (await store.list(`juegos/semanas/${lunes}`)).filter((n) => n.endsWith(".json"));
-  const docs = (await Promise.all(nombres.map((n) => store.get<Semana>(`juegos/semanas/${lunes}/${n}`)))).map((d) => d!.data);
+  const docs = (await Promise.all(nombres.map((n) => store.get<Semana>(`juegos/semanas/${lunes}/${n}`)))).map((d) => conTotales(d!.data));
   cache.set(lunes, { t: Date.now(), v: docs });
   return docs;
 }
 
-function ordenar(docs: Semana[]) {
-  return [...docs].sort((a, b) => b.total - a.total || (a.actualizado || "").localeCompare(b.actualizado || ""));
+// Solo entran al ranking de un tipo quienes jugaron al menos una partida de ese tipo (aunque sea con 0 puntos).
+const jugoTipo = (d: Semana, tipo: TipoRanking) => d.partidas.some((p) => (p.modo === "sala") === (tipo === "partidas"));
+function ordenar(docs: Semana[], tipo: TipoRanking = "individual") {
+  return docs.filter((d) => jugoTipo(d, tipo))
+    .sort((a, b) => puntosDe(b, tipo) - puntosDe(a, tipo) || (a.actualizado || "").localeCompare(b.actualizado || ""));
 }
 
-function posicionDe(docs: Semana[], id: string): number | null {
-  const i = ordenar(docs).findIndex((d) => d.id === id);
+function posicionDe(docs: Semana[], id: string, tipo: TipoRanking = "individual"): number | null {
+  const i = ordenar(docs, tipo).findIndex((d) => d.id === id);
   return i === -1 ? null : i + 1;
 }
 
@@ -338,8 +356,8 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
     const semana = new URL(req.url).searchParams.get("semana") || lunes;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
     const l = lunesDe(semana);
-    const docs = ordenar(await leerSemana(store, l));
-    const jugadores = docs.map((d) => ({ nombre: d.nombre, tipo: d.tipo, total: d.total, mejores: d.mejores, partidas: d.partidas.length, ultima: d.partidas.at(-1)?.en ?? null, avatar: d.avatar ?? avatarPorDefecto(d.id) }));
+    const docs = [...await leerSemana(store, l)].sort((a, b) => b.total - a.total);
+    const jugadores = docs.map((d) => ({ nombre: d.nombre, tipo: d.tipo, total: d.total, totalIndividual: d.totalIndividual, totalPartidas: d.totalPartidas, mejores: d.mejores, partidas: d.partidas.length, ultima: d.partidas.at(-1)?.en ?? null, avatar: d.avatar ?? avatarPorDefecto(d.id) }));
     const catalogo = Object.fromEntries(Object.entries(CATALOGO).map(([id, d]) => [id, d.titulo]));
     return json({ semana: l, jugadores, salas: await resumenSalas(store, l), catalogo });
   }
@@ -353,8 +371,16 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
     if (!def) return json({ error: "juego_invalido" }, 400);
     if (typeof body.puntos !== "number" || !Number.isFinite(body.puntos)) return json({ error: "puntos_invalidos" }, 400);
     const entero = (v: unknown, max: number) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
+    // Partida de sala: la sala existe, es de este juego, ya empezó y el jugador está dentro.
+    const sala = body.sala === undefined ? null : String(body.sala);
+    if (sala !== null) {
+      if (!/^[A-Z]{4}$/.test(sala)) return json({ error: "sala_invalida" }, 400);
+      const sd = (await store.get<{ juego: string; inicio: number | null }>(`juegos/salas/${sala}/sala.json`))?.data;
+      if (!sd || sd.juego !== juego || sd.inicio === null) return json({ error: "sala_invalida" }, 400);
+      if (!(await store.get(`juegos/salas/${sala}/${jugador.id}.json`))) return json({ error: "no_en_sala" }, 403);
+    }
     const nueva: Partida = {
-      juego, puntos: entero(body.puntos, def.max), aciertos: entero(body.aciertos, 1000), total: entero(body.total, 1000),
+      juego, puntos: entero(body.puntos, sala ? MAX_SALA : def.max), ...(sala ? { modo: "sala" as const, sala } : {}), aciertos: entero(body.aciertos, 1000), total: entero(body.total, 1000),
       segundos: entero(body.segundos, 36000), en: ahora,
     };
     const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
@@ -362,18 +388,23 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
       const doc = await store.get<Semana>(ruta);
       const s: Semana = doc?.data ?? { id: jugador.id, nombre: jugador.nombre, tipo: jugador.tipo, partidas: [], mejores: {}, total: 0 };
       if (s.partidas.filter((p) => p.en.slice(0, 10) === ahora.slice(0, 10)).length >= LIMITE_DIARIO) return json({ error: "limite_diario" }, 429);
+      if (sala && s.partidas.some((p) => p.sala === sala)) return json({ error: "ya_guardada" }, 409);
       const anterior = s.mejores[juego] ?? 0;
       const nuevoRecord = nueva.puntos > anterior;
       s.nombre = jugador.nombre;
       s.avatar = jugador.avatar;
       s.partidas = [...s.partidas, nueva].slice(-MAX_PARTIDAS_GUARDADAS);
       s.mejores = { ...s.mejores, [juego]: Math.max(anterior, nueva.puntos) };
-      s.total = Object.values(s.mejores).reduce((a, b) => a + b, 0);
       s.actualizado = ahora;
-      if (await store.put(ruta, s, doc?.sha ?? null, `juegos: ${jugador.nombre} ${juego} ${nueva.puntos}`)) {
+      const t = conTotales(s);
+      if (await store.put(ruta, t, doc?.sha ?? null, `juegos: ${jugador.nombre} ${juego} ${nueva.puntos}${sala ? ` (sala ${sala})` : ""}`)) {
         cache.delete(lunes);
         const docs = await leerSemana(store, lunes);
-        return json({ guardado: true, puntos: nueva.puntos, mejor: s.mejores[juego], nuevoRecord, total: s.total, pos: posicionDe(docs, jugador.id), semana: lunes });
+        const tipo: TipoRanking = sala ? "partidas" : "individual";
+        return json({
+          guardado: true, puntos: nueva.puntos, modo: sala ? "sala" : "individual", mejor: t.mejores[juego], nuevoRecord,
+          totalIndividual: t.totalIndividual, totalPartidas: t.totalPartidas, total: t.total, pos: posicionDe(docs, jugador.id, tipo), semana: lunes,
+        });
       }
     }
     return json({ error: "conflicto_escritura" }, 503);
@@ -381,12 +412,23 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
 
   // GET /juegos/ranking → top 20 de la semana y la posición propia
   if (sub === "/ranking" && req.method === "GET") {
-    const semana = new URL(req.url).searchParams.get("semana") || lunes;
+    const q = new URL(req.url).searchParams;
+    const semana = q.get("semana") || lunes;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
-    const docs = ordenar(await leerSemana(store, lunesDe(semana)));
-    const top = docs.slice(0, 20).map((d, i) => ({ pos: i + 1, nombre: d.nombre, tipo: d.tipo, total: d.total, juegos: Object.keys(d.mejores).length, yo: d.id === jugador.id, avatar: d.avatar ?? avatarPorDefecto(d.id) }));
-    const mio = docs.find((d) => d.id === jugador.id);
-    return json({ semana: lunesDe(semana), top, jugadores: docs.length, yo: { pos: posicionDe(docs, jugador.id), total: mio?.total ?? 0, mejores: mio?.mejores ?? {} } });
+    const tipo = (q.get("tipo") || "individual") as TipoRanking;
+    if (tipo !== "individual" && tipo !== "partidas") return json({ error: "tipo_invalido" }, 400);
+    const todos = await leerSemana(store, lunesDe(semana));
+    const docs = ordenar(todos, tipo);
+    const top = docs.slice(0, 20).map((d, i) => ({
+      pos: i + 1, nombre: d.nombre, tipo: d.tipo, total: puntosDe(d, tipo), totalIndividual: d.totalIndividual ?? 0, totalPartidas: d.totalPartidas ?? 0,
+      juegos: Object.keys(d.mejores).length, partidas: d.partidas.filter((p) => (p.modo === "sala") === (tipo === "partidas")).length,
+      yo: d.id === jugador.id, avatar: d.avatar ?? avatarPorDefecto(d.id),
+    }));
+    const mio = todos.find((d) => d.id === jugador.id);
+    return json({
+      semana: lunesDe(semana), tipo, top, jugadores: docs.length,
+      yo: { pos: posicionDe(todos, jugador.id, tipo), total: mio ? puntosDe(mio, tipo) : 0, totalIndividual: mio?.totalIndividual ?? 0, totalPartidas: mio?.totalPartidas ?? 0, mejores: mio?.mejores ?? {} },
+    });
   }
 
   // GET /juegos/yo → jugador, mejores de la semana y catálogo
@@ -394,7 +436,10 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
     const docs = await leerSemana(store, lunes);
     const mio = docs.find((d) => d.id === jugador.id);
     const catalogo = Object.entries(CATALOGO).map(([id, d]) => ({ id, ...d }));
-    return json({ jugador, semana: lunes, total: mio?.total ?? 0, mejores: mio?.mejores ?? {}, pos: posicionDe(docs, jugador.id), catalogo, avatares: { emojis: AVATARES, colores: COLORES } });
+    return json({
+      jugador, semana: lunes, total: mio?.total ?? 0, totalIndividual: mio?.totalIndividual ?? 0, totalPartidas: mio?.totalPartidas ?? 0,
+      mejores: mio?.mejores ?? {}, pos: posicionDe(docs, jugador.id), posPartidas: posicionDe(docs, jugador.id, "partidas"), catalogo, avatares: { emojis: AVATARES, colores: COLORES },
+    });
   }
 
   // GET /juegos/invitados → solo admin: lista para análisis (con correos)

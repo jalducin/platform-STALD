@@ -138,9 +138,11 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     `banco` (reto en vivo) y `presentacion.diapositivas` (solo admin), con tipos `portada`, `agenda`, `retro`
     (grupal, sin nombres), `teoria` (con `ref` al índice de la teoría), `practica`, `juego`, `reto`,
     `libreta` y `cierre`.
-- `juegos/semanas/<lunes>/<id-jugador>.json`: partidas de la semana.
+- `juegos/semanas/<lunes>/<id-jugador>.json`: partidas de la semana. Cada partida puede llevar `modo: "sala"` y `sala`
+  (multijugador); sin `modo` es individual. `totalIndividual` y `totalPartidas` suman **todas** las partidas de su
+  tipo y `total` es la suma de ambos (cambio `puntos-por-tipo`); `mejores` guarda el récord por juego.
   - `{ id, nombre, tipo, partidas: [{ juego, puntos, aciertos, total, segundos, en }], mejores, total }`.
-  - Sin correos. Guarda las últimas 300 partidas.
+  - Sin correos. Guarda hasta 1,000 partidas (los totales salen del historial).
 - `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots }` y
   `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta?, rondasBasta? }`.
   - En Basta por rondas (`opciones.rondas`: 5, 10 o 12), `rondasBasta{ <ronda>: { palabras, basta? } }`.
