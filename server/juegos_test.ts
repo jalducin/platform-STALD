@@ -36,16 +36,16 @@ Deno.test("juegos: identidad del jugador", async () => {
   assertEquals(await resolverJugador("nadie@example.com", ADMIN, ingles, secundaria, inv), null);
 });
 
-Deno.test("juegos: partida con récord, mejor por juego y total semanal", async () => {
+Deno.test("juegos: todo suma a los puntos individuales; el récord por juego se conserva (puntos-por-tipo)", async () => {
   const { call, store } = ctx();
   const p1 = await call("POST", "/partida", "marisol@example.com", partida("en-vocab", 850));
-  assertEquals([p1.status, p1.body.puntos, p1.body.total, p1.body.nuevoRecord], [200, 850, 850, true]);
+  assertEquals([p1.status, p1.body.puntos, p1.body.modo, p1.body.totalIndividual, p1.body.nuevoRecord], [200, 850, "individual", 850, true]);
   const p2 = await call("POST", "/partida", "marisol@example.com", partida("en-vocab", 400));
-  assertEquals([p2.body.total, p2.body.nuevoRecord, p2.body.mejor], [850, false, 850]);
+  assertEquals([p2.body.totalIndividual, p2.body.nuevoRecord, p2.body.mejor], [1250, false, 850], "volver a jugar suma aunque no sea récord");
   const p3 = await call("POST", "/partida", "marisol@example.com", partida("cultura", 300));
-  assertEquals(p3.body.total, 1150);
+  assertEquals([p3.body.totalIndividual, p3.body.totalPartidas, p3.body.total], [1550, 0, 1550]);
   const doc = (await store.get<any>("juegos/semanas/2026-09-28/a-marisol.json"))!.data;
-  assertEquals([doc.nombre, doc.partidas.length, doc.mejores["en-vocab"], doc.total], ["Marisol", 3, 850, 1150]);
+  assertEquals([doc.nombre, doc.partidas.length, doc.mejores["en-vocab"], doc.totalIndividual, doc.total], ["Marisol", 3, 850, 1550, 1550]);
   assertEquals(JSON.stringify(doc).includes("@"), false, "sin correos");
 });
 
@@ -271,4 +271,68 @@ Deno.test("juegos: Sudoku por niveles en el catálogo (openspec: sudoku-niveles)
   const p = await call("POST", "/partida", "marisol@example.com", partida("mente-sudoku", 99999));
   assertEquals([p.status, p.body.puntos], [200, 2000]);
   assert((await call("GET", "/yo", "marisol@example.com")).body.catalogo.some((j: any) => j.id === "mente-sudoku"));
+});
+
+
+// ---- Puntos por tipo: individuales vs. partidas (openspec: puntos-por-tipo) ----
+async function salaEmpezada(call: any, juego = "basta-es") {
+  const c = await call("POST", "/sala", "marisol@example.com", { juego, opciones: {}, bots: true });
+  await call("POST", `/sala/${c.body.codigo}/unirse`, "angel@example.com");
+  await call("POST", `/sala/${c.body.codigo}/empezar`, "marisol@example.com");
+  return c.body.codigo as string;
+}
+
+Deno.test("juegos: partida de sala suma a partidas, con validaciones", async () => {
+  const { call } = ctx();
+  const codigo = await salaEmpezada(call);
+  const r = await call("POST", "/partida", "marisol@example.com", { ...partida("basta-es", 2350), sala: codigo });
+  assertEquals([r.status, r.body.modo, r.body.puntos, r.body.totalPartidas, r.body.totalIndividual], [200, "sala", 2350, 2350, 0], "tope de sala 10,000, no el del catálogo");
+  assertEquals((await call("POST", "/partida", "marisol@example.com", { ...partida("basta-es", 100), sala: codigo })).body.error, "ya_guardada");
+  assertEquals((await call("POST", "/partida", "valeria@example.com", { ...partida("basta-es", 100), sala: codigo })).body.error, "no_en_sala");
+  assertEquals((await call("POST", "/partida", "angel@example.com", { ...partida("cultura", 100), sala: codigo })).body.error, "sala_invalida", "otro juego");
+  assertEquals((await call("POST", "/partida", "angel@example.com", { ...partida("basta-es", 100), sala: "ZZZZ" })).body.error, "sala_invalida");
+  assertEquals((await call("POST", "/partida", "angel@example.com", { ...partida("basta-es", 100), sala: "abc" })).body.error, "sala_invalida");
+  const sinEmpezar = (await call("POST", "/sala", "angel@example.com", { juego: "cultura", opciones: {}, bots: true })).body.codigo;
+  assertEquals((await call("POST", "/partida", "angel@example.com", { ...partida("cultura", 100), sala: sinEmpezar })).body.error, "sala_invalida", "no ha empezado");
+  const big = await call("POST", "/partida", "angel@example.com", { ...partida("basta-es", 99999), sala: codigo });
+  assertEquals(big.body.puntos, 10000);
+});
+
+Deno.test("juegos: ranking por tipo, yo y resumen del admin con los dos totales", async () => {
+  const { call } = ctx();
+  const codigo = await salaEmpezada(call);
+  await call("POST", "/partida", "marisol@example.com", partida("en-vocab", 500));
+  await call("POST", "/partida", "marisol@example.com", partida("en-vocab", 500));
+  await call("POST", "/partida", "angel@example.com", partida("cultura", 700));
+  await call("POST", "/partida", "angel@example.com", { ...partida("basta-es", 3000), sala: codigo });
+  await call("POST", "/partida", "marisol@example.com", { ...partida("basta-es", 1200), sala: codigo });
+  const ind = await call("GET", "/ranking", "angel@example.com");
+  assertEquals(ind.body.tipo, "individual");
+  assertEquals(ind.body.top.map((x: any) => [x.pos, x.nombre, x.total, x.totalIndividual, x.totalPartidas]), [[1, "Marisol", 1000, 1000, 1200], [2, "Angel", 700, 700, 3000]]);
+  const par = await call("GET", "/ranking", "angel@example.com", undefined, "&tipo=partidas");
+  assertEquals(par.body.top.map((x: any) => [x.pos, x.nombre, x.total]), [[1, "Angel", 3000], [2, "Marisol", 1200]]);
+  assertEquals([par.body.yo.pos, par.body.yo.totalPartidas], [1, 3000]);
+  assertEquals((await call("GET", "/ranking", "angel@example.com", undefined, "&tipo=otro")).status, 400);
+  const yo = await call("GET", "/yo", "marisol@example.com");
+  assertEquals([yo.body.totalIndividual, yo.body.totalPartidas, yo.body.total, yo.body.pos, yo.body.posPartidas], [1000, 1200, 2200, 1, 2]);
+  const res = await call("GET", "/admin/resumen", ADMIN);
+  assertEquals(res.body.jugadores.find((j: any) => j.nombre === "Angel").totalPartidas, 3000);
+});
+
+Deno.test("juegos: semana guardada con el formato viejo se lee como individual", async () => {
+  const { call, store } = ctx();
+  const viejas = [700, 300, 900].map((p) => ({ juego: "mente-simon", puntos: p, aciertos: 1, total: 1, segundos: 1, en: "2026-09-29T10:00:00.000Z" }));
+  await store.put("juegos/semanas/2026-09-28/a-marisol.json", { id: "a-marisol", nombre: "Marisol", tipo: "alumno", partidas: viejas, mejores: { "mente-simon": 900 }, total: 900 }, null);
+  const r = await call("GET", "/ranking", "marisol@example.com");
+  assertEquals([r.body.top[0].total, r.body.yo.totalIndividual], [1900, 1900]);
+});
+
+Deno.test("juegos: en cada ranking aparece quien jugó ese tipo, aunque sea con 0 puntos", async () => {
+  const { call } = ctx();
+  await call("POST", "/partida", "marisol@example.com", partida("en-vocab", 500));
+  await call("POST", "/partida", "angel@example.com", partida("en-vocab", 0));
+  const r = await call("GET", "/ranking", "marisol@example.com", undefined, "&tipo=partidas");
+  assertEquals([r.body.top.length, r.body.yo.pos], [0, null], "nadie jugó partidas");
+  const i = await call("GET", "/ranking", "angel@example.com");
+  assertEquals([i.body.top.map((x: any) => [x.nombre, x.total]), i.body.yo.pos], [[["Marisol", 500], ["Angel", 0]], 2]);
 });

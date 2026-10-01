@@ -243,7 +243,8 @@
 
   const app = document.getElementById('app');
   const chip = document.getElementById('chip');
-  const state = { email: null, jugador: null, total: 0, pos: null, mejores: {}, semana: null, tab: 'juegos' };
+  // Puntos por tipo (openspec: puntos-por-tipo): ⭐ individuales y 👥 partidas; todo suma.
+  const state = { email: null, jugador: null, totalIndividual: 0, totalPartidas: 0, pos: null, posPartidas: null, mejores: {}, semana: null, tab: 'juegos', rtipo: 'individual' };
   let limpiezas = []; // timers del juego en curso
   function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) speechSynthesis.cancel(); }
 
@@ -391,13 +392,13 @@
     if (!state.jugador) { chip.hidden = true; return; }
     chip.hidden = false;
     chip.innerHTML = avatarHtml(state.jugador.avatar, 22) + ' ' + escapeHtml(state.jugador.nombre) + (state.jugador.tipo === 'invitado' ? ' <span class="inv">INVITADO</span>' : '') +
-      ' · ⭐ ' + fmt(state.total) + (state.pos ? ' · #' + state.pos : '');
+      ' · ⭐ ' + fmt(state.totalIndividual) + ' · 👥 ' + fmt(state.totalPartidas) + (state.pos ? ' · #' + state.pos : '');
   }
 
   async function cargarYo() {
     const r = await api('/juegos/yo');
     if (r.ok) {
-      Object.assign(state, { jugador: r.body.jugador, total: r.body.total, pos: r.body.pos, mejores: r.body.mejores, semana: r.body.semana, avatares: r.body.avatares });
+      Object.assign(state, { jugador: r.body.jugador, totalIndividual: r.body.totalIndividual || 0, totalPartidas: r.body.totalPartidas || 0, pos: r.body.pos, posPartidas: r.body.posPartidas, mejores: r.body.mejores, semana: r.body.semana, avatares: r.body.avatares });
       pintarChip();
     }
     return r;
@@ -471,15 +472,20 @@
   async function pintarRanking() {
     const body = document.getElementById('tab-body');
     body.innerHTML = '<div class="loading">Cargando ranking…</div>';
-    const r = await api('/juegos/ranking');
+    const tipo = state.rtipo;
+    const r = await api('/juegos/ranking?tipo=' + tipo);
     if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar el ranking (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     const medalla = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
-    body.innerHTML = '<p class="muted" style="margin:10px 0">Semana del ' + escapeHtml(rangoSemana(r.body.semana)) + ' · cuenta tu mejor puntaje de cada juego.</p>' +
+    const ico = tipo === 'partidas' ? '👥' : '⭐';
+    const pestanas = '<div class="opts" style="margin-top:10px">' + [['individual', '⭐ Individuales'], ['partidas', '👥 Partidas']].map(([id, t]) =>
+      '<button class="opt" data-rtipo="' + id + '" aria-pressed="' + (tipo === id) + '">' + t + '</button>').join('') + '</div>';
+    body.innerHTML = pestanas + '<p class="muted" style="margin:10px 0">Semana del ' + escapeHtml(rangoSemana(r.body.semana)) + ' · ' +
+      (tipo === 'partidas' ? 'suman todas tus partidas con otros jugadores.' : 'suman todos tus juegos individuales.') + '</p>' +
       (r.body.top.length
         ? '<ol class="rank">' + r.body.top.map(x => '<li class="' + (x.yo ? 'yo' : '') + '"><span class="pos">' + medalla(x.pos) + '</span>' + avatarHtml(x.avatar, 30) + '<span class="n">' + escapeHtml(x.nombre) +
-          (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '<br><small>' + x.juegos + ' juego(s)</small></span><span class="pts">⭐ ' + fmt(x.total) + '</span></li>').join('') + '</ol>'
-        : '<div class="card muted" style="text-align:center">Nadie ha jugado esta semana. ¡Estrena el ranking! 🚀</div>') +
-      (r.body.yo.pos && r.body.yo.pos > 20 ? '<p class="muted">Tu lugar: #' + r.body.yo.pos + ' con ⭐ ' + fmt(r.body.yo.total) + '</p>' : '');
+          (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '<br><small>' + x.partidas + ' partida(s)</small></span><span class="pts">' + ico + ' ' + fmt(x.total) + '</span></li>').join('') + '</ol>'
+        : '<div class="card muted" style="text-align:center">' + (tipo === 'partidas' ? 'Nadie ha jugado partidas esta semana. ¡Crea una en 👥 Partidas! 🚀' : 'Nadie ha jugado esta semana. ¡Estrena el ranking! 🚀') + '</div>') +
+      (r.body.yo.pos && r.body.yo.pos > 20 ? '<p class="muted">Tu lugar: #' + r.body.yo.pos + ' con ' + ico + ' ' + fmt(r.body.yo.total) + '</p>' : '');
   }
 
   async function pintarInvitados() {
@@ -571,13 +577,13 @@
       s = res.ok ? res.body : { error: res.body.error || res.status };
     } catch (e) { s = { error: e.message }; }
     if (s && s.guardado) {
-      state.total = s.total; state.pos = s.pos; state.mejores[id] = s.mejor; pintarChip();
+      state.totalIndividual = s.totalIndividual; state.totalPartidas = s.totalPartidas; state.pos = s.pos; state.mejores[id] = s.mejor; pintarChip();
     }
     app.innerHTML = '<div class="card result"><div style="font-size:2.4rem">' + j.emoji + '</div><h1>' + escapeHtml(r.titulo || '¡Terminaste!') + '</h1>' +
       '<div class="score">' + fmt(s && s.guardado ? s.puntos : puntos) + '</div><div class="muted">puntos</div>' +
       (s && s.nuevoRecord ? '<div class="record">🏅 ¡Nuevo récord personal!</div>' : '') +
       '<div class="pills">' + (r.total ? '<span class="stat">✅ ' + r.aciertos + ' de ' + r.total + '</span>' : '') +
-      (s && s.guardado ? '<span class="stat">🏆 #' + s.pos + ' de la semana</span><span class="stat">⭐ ' + fmt(s.total) + ' en total</span>' : '') + '</div>' +
+      (s && s.guardado ? '<span class="stat">➕ ' + fmt(s.puntos) + ' a tus individuales</span><span class="stat">⭐ ' + fmt(s.totalIndividual) + ' en la semana</span>' + (s.pos ? '<span class="stat">🏆 #' + s.pos + ' de la semana</span>' : '') : '') + '</div>' +
       (r.detalle ? '<div class="muted" style="margin-top:12px">' + r.detalle + '</div>' : '') +
       (s && s.guardado ? '' : '<div class="alert">No se guardaron tus puntos (' + escapeHtml(s && s.error) + '). ' + (s && s.error === 'limite_diario' ? 'Llegaste al límite de partidas de hoy.' : 'Revisa tu conexión.') + '</div>') +
       '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn" data-juego="' + id + '">🔁 Jugar otra vez</button></div></div>';
@@ -1800,9 +1806,10 @@
       post('/juegos/sala/' + sala.codigo + '/respuesta', Object.assign({ final: mio.total }, e.soyHost ? { podio: filas.map(f => Object.assign({ nombre: f.nombre, total: f.total }, f.tipo === 'bot' ? { bot: true } : {})) } : {}));
       const n = sala.finTotal !== undefined ? sala.finTotal : basta ? basta.d.categorias.length : juego === 'loteria' ? 16 : P_N;
       const aciertos = sala.finAciertos !== undefined ? sala.finAciertos : juego === 'loteria' ? (sala.aciertosLoteria || 0) : basta ? Object.values(mio.detalle).filter(x => x.pts > 0).length : Object.values((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {}).filter(x => x.correcta).length;
-      post('/juegos/partida', { juego, puntos: mio.total, aciertos, total: n, segundos: 0 }).then(r => {
+      post('/juegos/partida', { juego, puntos: mio.total, aciertos, total: n, segundos: 0, sala: sala.codigo }).then(r => {
         const g = document.getElementById('p-guardado');
-        if (r.ok) { state.total = r.body.total; state.pos = r.body.pos; state.mejores[juego] = r.body.mejor; pintarChip(); if (g) g.textContent = '✔ Guardado en tu ranking de la semana (#' + r.body.pos + ')'; }
+        if (r.ok) { state.totalIndividual = r.body.totalIndividual; state.totalPartidas = r.body.totalPartidas; state.posPartidas = r.body.pos; state.mejores[juego] = r.body.mejor; pintarChip(); if (g) g.textContent = '✔ +' + fmt(r.body.puntos) + ' a tus puntos de partidas · 👥 ' + fmt(r.body.totalPartidas) + ' en la semana (#' + r.body.pos + ')'; }
+        else if (g && r.body.error === 'ya_guardada') g.textContent = '✔ Esta partida ya estaba guardada en tus puntos de partidas';
         else if (g) g.textContent = 'No se guardó en el ranking (' + (r.body.error || r.status) + ')';
       });
     }
@@ -2294,6 +2301,7 @@
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(() => traerSala()).then(() => { sala.vista = null; pintarSala(); }); }
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
+    const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
     const g = e.target.closest('[data-juego]');
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
     const a = e.target.closest('[data-a]'); if (!a) return;

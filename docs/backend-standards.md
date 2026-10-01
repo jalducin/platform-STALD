@@ -35,9 +35,9 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 
 | Ruta | Método | Respuesta |
 |---|---|---|
-| `/juegos/yo` | GET | Jugador, total, mejores y posición de la semana, y catálogo |
-| `/juegos/partida` | POST `{ juego, puntos, aciertos, total, segundos }` | `{ guardado, puntos, mejor, nuevoRecord, total, pos }`. Puntos recortados al tope del juego. 400 si el juego es inválido, 403 `no_registrado`, 429 `limite_diario` (100 por día) |
-| `/juegos/ranking` | GET (`?semana=<lunes>`) | Top 20 `{ pos, nombre, tipo, total, juegos }` y `yo`. Sin correos |
+| `/juegos/yo` | GET | Jugador, `totalIndividual`, `totalPartidas`, `total`, mejores, `pos` (individual), `posPartidas` y catálogo |
+| `/juegos/partida` | POST `{ juego, puntos, aciertos, total, segundos, sala? }` | `{ guardado, puntos, modo, mejor, nuevoRecord, totalIndividual, totalPartidas, total, pos }`. **Todo suma** (`puntos-por-tipo`): sin `sala` → puntos individuales (tope del juego); con `sala` → puntos de partidas (tope 10,000; la sala debe existir, ser de ese juego, haber empezado y tener al jugador: 400 `sala_invalida`, 403 `no_en_sala`, 409 `ya_guardada`). 400 si el juego es inválido, 403 `no_registrado`, 429 `limite_diario` (100 por día) |
+| `/juegos/ranking` | GET (`?semana=<lunes>&tipo=individual\|partidas`) | Top 20 del tipo (solo quien tiene puntos de ese tipo) `{ pos, nombre, tipo, total, totalIndividual, totalPartidas, partidas, juegos }` y `yo`. 400 `tipo_invalido`. Sin correos |
 | `/juegos/invitado` | POST `{ nombre, acepto: true }` | Registra o hace entrar a un invitado; `{ ya: true }` si el correo ya es alumno o alumna. 400 si falta aceptar o el apodo es inválido; 429 con 500 invitados |
 | `/juegos/invitados` | GET | Solo admin: correos, apodos, visitas y puntos de la semana, para análisis |
 
@@ -69,7 +69,7 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
   - Al terminar, `respuesta` acepta `{ final }` de cada jugador y `{ podio }`, que solo guarda el del host.
   - Cada sala nueva se agrega al índice `juegos/salas-semana/<lunes>.json`.
 - **`GET /juegos/admin/resumen?semana=`** (solo admin, 403 para los demás):
-  - `jugadores`: todos los de la semana, con total, mejores, partidas y última vez;
+  - `jugadores`: todos los de la semana, con `total`, `totalIndividual`, `totalPartidas`, mejores, partidas y última vez;
   - `salas`: juego, anfitrión, fecha, jugadores con su `final` y el podio;
   - `catalogo`: nombre de cada juego.
   - No incluye correos.
