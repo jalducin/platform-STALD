@@ -95,6 +95,17 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 - **Catálogo (`CATALOGO`):** 21 juegos (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
+**Almacén y límite de GitHub** (`server/store.ts`, cambio `github-etag-cache`):
+  - `GitHubStore.get` y `list` usan peticiones condicionales: guardan el `ETag` por ruta y mandan
+    `If-None-Match`. Un 304 usa la copia en memoria y **no cuenta contra el límite** de 5,000 por hora.
+  - Si GitHub responde por límite agotado (403/429 con `x-ratelimit-remaining: 0`, `retry-after` o el mensaje de
+    *rate limit*), se sirve la última copia; sin copia se lanza `github_rate_limit` y `main.ts` responde
+    `503 { error: "mucho_trafico" }`. Juegos e Inglés lo muestran como "Hay mucha actividad…".
+  - `put` y `remove` invalidan la copia de la ruta y la lista de su carpeta. La caché es por instancia, con tope
+    de 3,000 entradas.
+  - Incidente que lo motivó (2026-10-02): las partidas consultan cada 2.5 s y cada consulta leía varios
+    archivos; con varias instancias de Deno se superó el límite y cayeron todas las rutas.
+
 **Pronunciación** (`server/motor.ts`, cambio `pronunciacion`):
   - `similitudPronunciacion(frase, oido)`: LCS de palabras ÷ palabras de la frase, tras normalizar (minúsculas,
     sin acentos ni puntuación) y expandir contracciones (I've = I have, can't = can not…).

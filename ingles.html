@@ -1213,7 +1213,7 @@
       const actividadesP = loadActividades();
       const res = await fetch(DATA_URL_BASE + '?email=' + encodeURIComponent(email), { cache: 'no-store' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      if (!res.ok) throw new Error(data.error === 'mucho_trafico' ? 'Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : (data.error || ('HTTP ' + res.status)));
 
       if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {
         loginError.textContent = 'No encontré clases asociadas a ese correo.';

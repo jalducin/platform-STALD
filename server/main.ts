@@ -181,7 +181,10 @@ export async function handler(req: Request): Promise<Response> {
     const { rows, isAdmin } = filterForEmail(all, email, admin);
     return json({ rows, isAdmin, generatedAt: new Date().toISOString() });
   } catch (e) {
-    console.error("error:", e instanceof Error ? e.message : "desconocido");
+    const msg = e instanceof Error ? e.message : "desconocido";
+    console.error("error:", msg);
+    // Límite de la API de GitHub agotado y sin copia en memoria (openspec: github-etag-cache).
+    if (msg === "github_rate_limit") return json({ error: "mucho_trafico" }, 503);
     return json({ error: "upstream_error" }, 500);
   }
 }

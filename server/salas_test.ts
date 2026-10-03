@@ -231,3 +231,15 @@ Deno.test("salas: Basta guarda palabras y el primer ¡Basta! por ronda", async (
   const g = await c.call("GET", `/sala/${codigo}`, "marisol@example.com");
   assertEquals(Object.keys(g.body.jugadores.find((j: any) => j.nombre === "Angel").rondasBasta), ["0", "3"]);
 });
+
+Deno.test("salas: una sala vencida responde 410 sin leer a sus jugadores (openspec: github-etag-cache)", async () => {
+  const c = ctx();
+  const codigo = await salaCon(c);
+  await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com");
+  c.avanzar(3 * 3600 * 1000 + 1000);
+  let listados = 0;
+  const list = c.store.list.bind(c.store);
+  c.store.list = (dir: string) => { listados++; return list(dir); };
+  const r = await c.call("GET", `/sala/${codigo}`, "marisol@example.com");
+  assertEquals([r.status, r.body.error, listados], [410, "sala_vencida", 0]);
+});
