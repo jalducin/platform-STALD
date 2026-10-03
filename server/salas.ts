@@ -55,11 +55,14 @@ export function clearCacheSalas() {
 const ruta = (codigo: string, archivo = "sala") => `juegos/salas/${codigo}/${archivo}.json`;
 const aleatorio = (n: number) => crypto.getRandomValues(new Uint32Array(n));
 
-async function estado(store: Store, codigo: string) {
+// ahora (ms): una sala vencida se responde sin leer a sus jugadores (pestañas olvidadas siguen consultando;
+// openspec: github-etag-cache).
+async function estado(store: Store, codigo: string, ahora?: number) {
   const c = cache.get(codigo);
   if (c && Date.now() - c.t < 2000) return c.v as { sala: Sala; jugadores: EnSala[] } | null;
   const doc = await store.get<Sala>(ruta(codigo));
   if (!doc) return null;
+  if (ahora !== undefined && ahora - doc.data.creada > VIGENCIA_MS) return { sala: doc.data, jugadores: [] as EnSala[] };
   const nombres = (await store.list(`juegos/salas/${codigo}`)).filter((n) => n.endsWith(".json") && n !== "sala.json");
   const jugadores = (await Promise.all(nombres.map((n) => store.get<EnSala>(`juegos/salas/${codigo}/${n}`)))).map((d) => d!.data)
     .sort((a, b) => a.unido - b.unido);
@@ -148,7 +151,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   const m = sub.match(/^\/([A-Z]{4})(\/(unirse|empezar|respuesta))?$/);
   if (!m) return json({ error: "not_found" }, 404);
   const [, codigo, , accion] = m;
-  const est = await estado(store, codigo);
+  const est = await estado(store, codigo, ahora);
   if (!est) return json({ error: "sala_no_existe" }, 404);
   const { sala, jugadores } = est;
   if (ahora - sala.creada > VIGENCIA_MS) return json({ error: "sala_vencida" }, 410);
