@@ -34,3 +34,10 @@
 ## Resultado
 - Estado Step 4: PASS
 - Bloqueos: ninguno
+
+## Step 5 — Verificación manual en producción (EL AGENTE EJECUTA)
+- Tras el despliegue de Deno y de GitHub Pages, solo lectura:
+  - `/juegos/yo` (admin) lista `dragon-run` en el catálogo;
+  - GitHub Pages sirve `juegos/dragon-run.html` con la integración (`EMBED`);
+  - `juegos.html` publicado incluye `jugarDragonRun` (la entrada del hub).
+- Estado: sin escrituras.

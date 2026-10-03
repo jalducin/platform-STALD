@@ -32,7 +32,7 @@
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Producción, solo lectura:
+- [x] 5.1 Producción, solo lectura:
   - `/juegos/yo` lista `dragon-run`;
   - GitHub Pages sirve `juegos/dragon-run.html`;
   - el hub lo muestra.
