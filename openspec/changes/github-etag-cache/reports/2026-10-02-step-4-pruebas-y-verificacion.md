@@ -34,3 +34,13 @@
 ## Resultado
 - Estado Step 4: PASS
 - Bloqueos: ninguno
+
+## Step 5 — Verificación manual en producción (EL AGENTE EJECUTA)
+- Tras el reinicio del límite y el despliegue: `/juegos/yo`, `/perfil` e `/ingles/data` responden 200.
+- Medición con una sala de prueba (FGMA) creada como admin y consultada 24 veces en 60 s, igual que la página:
+  `gh api rate_limit` marcó 0 lecturas contadas.
+  - Salvedad: durante el incidente ese contador también marcaba 0 cuando GitHub ya bloqueaba, así que no
+    refleja con certeza el token del servidor.
+  - La evidencia firme son las pruebas del almacén (las lecturas repetidas van con `If-None-Match` y usan la copia
+    con 304) y la documentación de GitHub (los 304 no cuentan contra el límite).
+- Estado restaurado: se borró la sala FGMA y su entrada del índice semanal (commit `74df635` del repo de datos).

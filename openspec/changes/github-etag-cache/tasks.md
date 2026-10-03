@@ -31,7 +31,7 @@
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Tras el reinicio del límite y el despliegue:
+- [x] 5.1 Tras el reinicio del límite y el despliegue:
   - Juegos, Inglés y el portal responden;
   - una sala consultada varias veces no consume el límite.
   - Se mide con `x-ratelimit-used`, sin `gh` innecesario.
