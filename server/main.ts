@@ -7,6 +7,7 @@ import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados } from "./juegos.ts";
 import { aplicarAlumnos, handleAlumnos, leerRegistro } from "./alumnos.ts";
+import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 
 const NOTION_VERSION = "2022-06-28";
@@ -124,6 +125,14 @@ export async function handler(req: Request): Promise<Response> {
   const admin = normalizeEmail(env("SUPER_ADMIN_EMAIL"));
 
   try {
+    // GET /salud → límite de GitHub y repo de datos, sin correo ni datos privados (openspec: vigilancia-servidor).
+    if (url.pathname.endsWith("/salud")) {
+      const salud = env("DATA_DIR")
+        ? { ok: true, estado: "ok", github: null, revisado: new Date().toISOString() }
+        : await revisarSalud({ token: env("GITHUB_TOKEN"), store: await getStore() });
+      return json(salud, salud.ok ? 200 : 503);
+    }
+
     // /ingles/alumnos[/quitar] → alta de alumnos y alumnas (solo admin, server/alumnos.ts)
     const iAl = url.pathname.indexOf("/ingles/alumnos");
     if (iAl !== -1) {

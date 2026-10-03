@@ -95,6 +95,14 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 - **Catálogo (`CATALOGO`):** 21 juegos (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
+**Salud y vigilancia** (`server/salud.ts`, `server/vigilancia.ts`, cambio `vigilancia-servidor`):
+  - `GET /salud` (sin correo) responde `{ ok, estado, motivo?, github: { limite, usadas, restantes, reinicio }, revisado }`.
+    `estado`: `ok`, `advertencia` (menos del 10 % restante) o `bloqueado` (0 restantes o el repo no responde, 503).
+    Consulta `/rate_limit` de GitHub, que no cuenta contra el límite, y nunca expone el token.
+  - El workflow `.github/workflows/vigilancia.yml` la revisa cada 15 min. Si hay bloqueo o caída, abre un issue con la
+    etiqueta `vigilancia` que menciona a @jalducin (GitHub le manda el correo) y lo cierra al recuperarse, sin repetir
+    avisos. Para probarlo a mano: Actions → "Vigilancia del servidor" → Run workflow con `forzar`.
+
 **Almacén y límite de GitHub** (`server/store.ts`, cambio `github-etag-cache`):
   - `GitHubStore.get` y `list` usan peticiones condicionales: guardan el `ETag` por ruta y mandan
     `If-None-Match`. Un 304 usa la copia en memoria y **no cuenta contra el límite** de 5,000 por hora.
