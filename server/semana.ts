@@ -37,6 +37,7 @@ export async function validarSemana(store: Store, lunes: string, ambito: Ambito 
     if (it.tipo !== el.tipo) errores.push(`${el.id}: tipo ${it.tipo} en el archivo y ${el.tipo} en la semana`);
     if (it.fechaLimite !== el.fecha) errores.push(`${el.id}: fechaLimite ${it.fechaLimite} distinta de la fecha de la semana ${el.fecha}`);
     if (it.disponibleDesde < lunes || it.disponibleDesde > it.fechaLimite) errores.push(`${el.id}: disponibleDesde ${it.disponibleDesde} fuera de ${lunes}…${it.fechaLimite}`);
+    if (it.tipo === "examen" && maxIntentos(it) === 2 && !it.segundaOportunidad && !ambito.clave.startsWith("profe")) avisos.push(`${el.id}: examen con 2 intentos sin segundaOportunidad (se sugiere el domingo)`);
     if (it.tipo === "examen" && it.disponibleDesde !== it.fechaLimite) errores.push(`${el.id}: el examen debe quedar bloqueado hasta su día (disponibleDesde = ${it.fechaLimite})`);
     errores.push(...validateItem(it));
 

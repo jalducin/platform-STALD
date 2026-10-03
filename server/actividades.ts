@@ -3,6 +3,7 @@ import {
   addIntento,
   type Ejercicio,
   estadoItem,
+  fueraDeTiempoDe,
   grade,
   type Intento,
   type Item,
@@ -98,7 +99,8 @@ function diaAnterior(fecha: string): string {
   return d.toISOString().slice(0, 10);
 }
 export function paraProfe(it: Item): Item {
-  return { ...it, disponibleDesde: "2000-01-01", fechaLimite: diaAnterior(it.disponibleDesde) };
+  const { segundaOportunidad: _s, ...resto } = it; // el profe no espera la 2.ª oportunidad
+  return { ...resto, disponibleDesde: "2000-01-01", fechaLimite: diaAnterior(it.disponibleDesde) };
 }
 async function itemsDelGrupo(store: Store): Promise<Item[]> {
   return await cached("clase:grupo-profe", async () => {
@@ -130,6 +132,7 @@ function meta(it: Item) {
     intentosMax: tieneReto(it) ? maxIntentos(it) : 0,
     preguntas: tieneReto(it) ? (it.preguntasPorIntento || (it.banco || []).length) : 0,
     meetUrl: it.meetUrl ?? null, hora: it.hora ?? null, tieneReto: it.tipo === "meet" && tieneReto(it),
+    ...(it.segundaOportunidad ? { segundaOportunidad: it.segundaOportunidad } : {}),
   };
 }
 
@@ -201,6 +204,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const estado = estadoItem(it, hoy, doc?.data ?? null);
     if (estado === "proximamente") return json({ error: "no_disponible", disponibleDesde: it.disponibleDesde }, 403);
     if (estado === "completo") return json({ error: "sin_intentos", resultado: doc!.data }, 409);
+    if (estado === "en-espera") return json({ error: "segunda_pronto", desde: it.segundaOportunidad }, 403);
   }
 
   // Corrección: a partir del intento anterior (del alumno o alumna, o del que ve el admin en vista previa).
@@ -233,7 +237,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const calificacion = grade(it, preguntas, respuestas);
     if (quien.isAdmin) return json({ guardado: false, intento: n, intentosMax: maxIntentos(it), calificacion });
 
-    const intento: Intento = { n, enviadoEn: new Date().toISOString(), fueraDeTiempo: hoy > it.fechaLimite, preguntas: preguntas.map((p) => p.id), respuestas, calificacion };
+    const intento: Intento = { n, enviadoEn: new Date().toISOString(), fueraDeTiempo: fueraDeTiempoDe(it, n, hoy), preguntas: preguntas.map((p) => p.id), respuestas, calificacion };
     for (let i = 0; i < 3; i++) {
       const actual = await leerResultado(store, it.id, slug!);
       if ((actual?.data.intentos.length || 0) !== n - 1) return json({ error: "intento_invalido", esperado: (actual?.data.intentos.length || 0) + 1 }, 409);

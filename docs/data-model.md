@@ -122,6 +122,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
 - `contenido/actividades/<id>.json` y `contenido/examenes/<id>.json`:
   - Campos generales: `id`, `tipo`, `titulo`, `nivel`, `descripcion`, `disponibleDesde`, `fechaLimite`,
     `intentos` (actividad y refuerzo 2, examen 1), `preguntasPorIntento`.
+  - `segundaOportunidad` (opcional, exámenes con `intentos: 2`): fecha AAAA-MM-DD posterior a `fechaLimite` en la que
+    abre el 2.º intento con una selección nueva de preguntas; entre ambos el estado es `en-espera` y cuenta la mejor
+    (cambio `examen-segunda-oportunidad`). La ruta del profe no espera.
   - `prorrogas` (opcional): `{ "<slug-alumno>": "AAAA-MM-DD" }`, la fecha límite propia de un alumno o alumna
     (p. ej. quien se integra tarde). No adelanta `disponibleDesde`. El slug es el de `resultados/`, nunca el correo.
   - `temas[]`: con `retroalimentacion` por estado.
