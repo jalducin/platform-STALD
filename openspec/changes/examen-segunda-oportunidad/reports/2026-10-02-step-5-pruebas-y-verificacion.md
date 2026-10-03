@@ -36,3 +36,13 @@
 ## Resultado
 - Estado Step 5: PASS
 - Bloqueos: ninguno
+
+## Step 6 — Verificación manual en producción (EL AGENTE EJECUTA)
+- El contenido se subió después de que terminó el despliegue, para que el servidor viejo nunca ofreciera el
+  reintento inmediato.
+- Solo GET contra `https://stald.jalducin.deno.net`:
+  - Vista del grupo: `examen-2026-10-02` con `intentosMax` 2 y `segundaOportunidad` 2026-10-04. Ya tiene 1
+    resultado del grupo (Sofy, 1 intento, 55 %), que podrá mejorar el domingo.
+  - Ruta del profe: el mismo examen sin espera (`en-curso`, 1/2): el profe puede hacer su 2.ª oportunidad cuando
+    quiera.
+- Estado: sin escrituras de prueba.

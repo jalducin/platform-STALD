@@ -36,7 +36,7 @@
 
 ## 6. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Producción, solo lectura: el examen de la semana 1 lista `segundaOportunidad` 2026-10-04 e `intentosMax` 2
+- [x] 6.1 Producción, solo lectura: el examen de la semana 1 lista `segundaOportunidad` 2026-10-04 e `intentosMax` 2
 
 ## 7. Documentación (OBLIGATORIO)
 
