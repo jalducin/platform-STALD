@@ -72,6 +72,10 @@ Cada página debe manejar y mostrar de forma explícita:
   - **Sudoku** (`sudoku-niveles`): el tablero se genera en el navegador con solución única (`generarSudoku`,
     `contarSoluciones`); niveles Fácil 40, Medio 32, Difícil 27 y Experto ~24 pistas; 3 vidas; puntos con
     `puntosSudoku` (base por nivel + rapidez − errores);
+  - **Dragon Run** (`dragon-run`): juego del profe en `juegos/dragon-run.html`, embebido con un iframe del mismo
+    origen. Al terminar avisa con `postMessage` (solo a `location.origin`) y `juegos.html` lo acepta solo si viene de
+    su iframe y de su origen, y luego llama a `terminar`. Conserva su propia música; la de Juegos se pausa mientras se
+    juega. `?auto=1` es solo para pruebas;
   - **música de fondo:** generada con WebAudio (Alegre, Relajante, Fiesta); empieza solo tras un gesto y
     baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el

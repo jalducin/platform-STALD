@@ -319,6 +319,7 @@
     { id: 'mente-simon', cat: 'mente', emoji: '🟢', t: 'Simón dice', d: 'Repite la secuencia de colores.', jugar: () => jugarSimon() },
     { id: 'mente-sopa', cat: 'mente', emoji: '🔎', t: 'Sopa de letras', d: 'Encuentra las palabras en inglés.', jugar: () => jugarSopa() },
     { id: 'mente-sudoku', cat: 'mente', emoji: '🔢', t: 'Sudoku', d: 'Por niveles: fácil, medio, difícil y experto.', jugar: () => elegirSudoku() },
+    { id: 'dragon-run', cat: 'mente', emoji: '🐉', t: 'Dragon Run', d: 'Corre, salta (¡doble salto!) y llega al castillo.', jugar: () => jugarDragonRun() },
     { id: 'basta-es', cat: 'clasicos', emoji: '✋', t: 'Basta', d: 'Nombre, animal, fruta, país… ¡con la letra que salga!', jugar: () => jugarBasta('es') },
     { id: 'basta-en', cat: 'clasicos', emoji: '🗽', t: 'Basta en inglés', d: 'Name, animal, food… in English!', jugar: () => jugarBasta('en') },
     { id: 'una', cat: 'clasicos', emoji: '🃏', t: '¡Una!', d: 'Cartas de colores. Con una carta, ¡presiona el botón UNA!', jugar: () => elegirUna() },
@@ -1005,6 +1006,32 @@
         if (encontradas === puestas.length) setTimeout(fin, 700);
       } else sonidoMal();
     });
+  }
+
+  // ---------- Mente ágil: Dragon Run (juego del profe en iframe del mismo origen; openspec: dragon-run) ----------
+  function jugarDragonRun() {
+    const m = marco('dragon-run');
+    document.getElementById('m-puntos').hidden = true;
+    const auto = new URLSearchParams(location.search).get('dragonAuto') === '1'; // solo pruebas E2E
+    m.body.innerHTML = '<div style="position:relative;width:100%;aspect-ratio:2/1;border-radius:16px;overflow:hidden;box-shadow:var(--shadow)">' +
+      '<iframe id="dragon-frame" src="juegos/dragon-run.html' + (auto ? '?auto=1' : '') + '" title="Dragon Run" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay"></iframe></div>' +
+      '<p class="muted" style="text-align:center;margin:8px 0 0">Toca el juego o presiona ESPACIO para saltar · vuelve a tocar en el aire para el doble salto · 🏰 a los 600 m: +200</p>';
+    const frame = document.getElementById('dragon-frame');
+    frame.addEventListener('load', () => { try { frame.focus(); } catch (e) { /* sin foco */ } });
+    // La música de Juegos se pausa mientras corre el dragón (el juego trae la suya).
+    const estilo = musica.estilo;
+    detenerMusica();
+    const alMensaje = ev => {
+      const d = ev.data || {};
+      if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'dragon-run' || !d.fin) return;
+      terminar('dragon-run', {
+        puntos: d.puntos, aciertos: d.monedas, total: 0, segundos: d.segundos,
+        titulo: d.gano ? '🏰 ¡Llegaste al castillo!' : '🐉 Dragon Run',
+        detalle: '📏 ' + d.metros + ' m · 🪙 ' + d.monedas + ' monedas' + (d.gano ? ' · bono castillo +200' : ''),
+      });
+    };
+    window.addEventListener('message', alMensaje);
+    limpiezas.push(() => window.removeEventListener('message', alMensaje), () => { if (estilo) iniciarMusica(estilo); });
   }
 
   // ---------- Mente ágil: Sudoku por niveles (openspec: sudoku-niveles) ----------
