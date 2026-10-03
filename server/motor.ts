@@ -52,6 +52,7 @@ export interface Item {
   guion?: unknown[]; // solo admin (clase del domingo)
   presentacion?: unknown; // solo admin: diapositivas para proyectar en el Meet
   prorrogas?: Record<string, string>; // slug del alumno → fecha límite propia (AAAA-MM-DD)
+  segundaOportunidad?: string; // examen con 2 intentos: el 2.º abre esta fecha (openspec: examen-segunda-oportunidad)
 }
 
 // El elemento como lo ve un alumno o alumna: con su prórroga, si tiene (no adelanta la apertura).
@@ -365,12 +366,14 @@ export function correccionDe(it: Item, previo: Intento | undefined): Correccion 
   return { preguntas, fijas, anteriores };
 }
 
-export type EstadoItem = "proximamente" | "disponible" | "en-curso" | "completo";
+export type EstadoItem = "proximamente" | "disponible" | "en-curso" | "en-espera" | "completo";
 
 export function estadoItem(it: Item, hoy: string, r: Resultado | null): EstadoItem {
   if (!tieneReto(it)) return hoy >= it.disponibleDesde ? "disponible" : "proximamente";
   const usados = r?.intentos.length || 0;
   if (usados >= maxIntentos(it)) return "completo";
+  // Examen con 2.ª oportunidad: tras el 1.er intento espera hasta su fecha (el domingo).
+  if (it.tipo === "examen" && it.segundaOportunidad && usados === 1 && hoy < it.segundaOportunidad) return "en-espera";
   // Sin nada que corregir: una actividad con 100 % queda completa.
   if (it.tipo !== "examen" && r?.intentos.at(-1)?.calificacion.porcentaje === 100) return "completo";
   if (hoy < it.disponibleDesde) return "proximamente";
@@ -397,8 +400,18 @@ export function slugAlumno(nombre: string): string {
 }
 
 // Validación del contenido (pruebas y carga).
+// El 2.º intento de un examen con segunda oportunidad vence en su propia fecha.
+export function fueraDeTiempoDe(it: Item, n: number, hoy: string): boolean {
+  return hoy > (n === 2 && it.segundaOportunidad ? it.segundaOportunidad : it.fechaLimite);
+}
+
 export function validateItem(it: Item): string[] {
   const errs: string[] = [];
+  if (it.segundaOportunidad !== undefined) {
+    const f = it.segundaOportunidad;
+    if (it.tipo !== "examen" || maxIntentos(it) !== 2) errs.push(`${it.id}: segundaOportunidad solo en exámenes con intentos 2`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f || "") || f <= it.fechaLimite) errs.push(`${it.id}: segundaOportunidad ${f} debe ser una fecha posterior a ${it.fechaLimite}`);
+  }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.disponibleDesde || "")) errs.push(`${it.id}: disponibleDesde inválida`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.fechaLimite || "")) errs.push(`${it.id}: fechaLimite inválida`);
   for (const [slug, f] of Object.entries(it.prorrogas || {})) {

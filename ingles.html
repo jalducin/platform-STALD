@@ -534,7 +534,9 @@
       return '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' + enlace + reto + '</span>';
     }
     if (estado === 'completo') return '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver resultado</button>';
-    if (estado === 'en-curso') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">' + (it.tipo === 'examen' ? 'Reintentar' : 'Corregir errores') + '</button>';
+    // Examen con 2.ª oportunidad (openspec: examen-segunda-oportunidad): en espera hasta su fecha.
+    if (estado === 'en-espera') return '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center"><span class="pill wait">2.ª oportunidad ' + escapeHtml(formatFecha(it.segundaOportunidad)) + '</span><button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver resultado</button></span>';
+    if (estado === 'en-curso') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">' + (it.tipo === 'examen' ? (it.segundaOportunidad ? '2.ª oportunidad' : 'Reintentar') : 'Corregir errores') + '</button>';
     if (estado === 'disponible') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">' + (it.tipo === 'examen' ? 'Resolver' : 'Empezar') + '</button>';
     return '<span class="pill wait">Abre ' + escapeHtml(formatFecha(it.disponibleDesde)) + '</span>';
   }
@@ -929,9 +931,11 @@
     if (i.vistaPrevia) head += ' · vista previa (no se guardó)';
     else if (i.intento) head += ' · intento ' + i.intento + ' de ' + i.intentosMax + (i.mejor ? ' · mejor: ' + i.mejor.porcentaje + '%' : '');
     const corrige = it ? it.tipo !== 'examen' : true;
-    const reintento = i.restantes > 0 ? '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(i.id) + '">' + (corrige ? 'Corregir errores' : 'Reintentar') + ' (' + i.restantes + ' intento restante)</button>' : '';
-    contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' +
-      renderResultado(calificacion, false) + (it ? '' : '') +
+    const espera = it && it.tipo === 'examen' && it.segundaOportunidad && i.restantes > 0 && !i.vistaPrevia && todayStr() < it.segundaOportunidad;
+    const reintento = espera ? '' : i.restantes > 0 ? '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(i.id) + '">' + (corrige ? 'Corregir errores' : (it && it.segundaOportunidad ? '2.ª oportunidad' : 'Reintentar')) + ' (' + i.restantes + ' intento restante)</button>' : '';
+    const aviso = espera ? '<div class="aviso-corr" id="aviso-segunda">📅 Tienes una 2.ª oportunidad el ' + escapeHtml(formatFecha(it.segundaOportunidad)) + ' con preguntas nuevas. Estudia el sábado con tu refuerzo; cuenta la mejor de las dos.</div>' : '';
+    contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' + aviso +
+      renderResultado(calificacion, false) +
       '<div class="exam-bar">' + volverBtn() + reintento + '</div>';
     window.scrollTo(0, 0);
   }

@@ -55,7 +55,7 @@ Escribe un generador en `$DATA/herramientas/semana-<lunes>/`. Usa como modelo
 |---|---|
 | `contenido/semanas/<lunes>.json` | `id` = lunes, `titulo` "Semana N · <tema>", 5 `elementos` `{ id, tipo, fecha }` |
 | `actividades/act-<mar>.json`, `act-<jue>.json` | `disponibleDesde` = lunes, `intentos` 2, `preguntasPorIntento` 12 (el intento 2 es corrección de los mismos ejercicios), banco ≥ 36 (≥ 12 por tema) para variar entre alumnos y alumnas, 2–3 `temas`, `teoria` (tablas + puntos), `tips` (≥ 2 `libreta` y ≥ 2 `video`) |
-| `examenes/examen-<vie>.json` | `disponibleDesde` = `fechaLimite` = viernes, `intentos` 1, `preguntasPorIntento` 20, banco ~30 **nuevo** que cubra todos los temas de mar y jue |
+| `examenes/examen-<vie>.json` | `disponibleDesde` = `fechaLimite` = viernes, `intentos` 2 con `segundaOportunidad` = domingo (2.ª oportunidad con preguntas nuevas; cuenta la mejor), `preguntasPorIntento` 20, banco ~40 **nuevo** que cubra todos los temas de mar y jue (con 40, la 2.ª oportunidad cambia hasta 20 preguntas) |
 | `actividades/refuerzo-<sáb>.json` | `basadoEn` examen del viernes, `respaldo` `diagnostico-a1`, `bancoDe` [act mar, act jue, examen], `mapeoTemas` (tema del examen o del diagnóstico → tema del refuerzo), `temas` de la semana, `banco: []` |
 | `actividades/meet-<dom>.json` | `guion` (bloques con `tiempo`, `titulo`, `objetivo`, `pasos`), `teoria` de lo nuevo, `tips`, banco ≥ 20 del reto (10 por intento), `presentacion.diapositivas` |
 
