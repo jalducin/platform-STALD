@@ -28,7 +28,7 @@
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Producción:
+- [x] 5.1 Producción:
   - `/salud` responde ok con los números del límite;
   - correr el workflow a mano (ok, sin issue);
   - probar el aviso con una corrida forzada (`forzar=bloqueado`): abre el issue, llega el aviso y se cierra con la
