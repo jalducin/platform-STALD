@@ -32,3 +32,13 @@
 ## Resultado
 - Estado Step 4: PASS
 - Bloqueos: ninguno
+
+## Step 5 — Verificación manual en producción (EL AGENTE EJECUTA)
+- `GET /salud` → 200 `{ ok: true, estado: "ok", github: { limite: 5000, usadas: 0, restantes: 5000 } }`. El token del
+  servidor no había gastado lecturas en la hora, lo que concuerda con el arreglo de ETag.
+- Corridas a mano del workflow "Vigilancia del servidor":
+  1. revisión real → `estado: ok`, decisión `nada` (sin aviso);
+  2. `forzar=bloqueado` → se abrió el issue #65 «🔴 Servidor bloqueado» mencionando a @jalducin (correo de prueba
+     de GitHub);
+  3. `forzar=ok` → comentó «✅ Recuperado» y cerró el #65.
+- La programación cada 15 min queda activa en `main`.
