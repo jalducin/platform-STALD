@@ -1,0 +1,2396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Juegos · STALD</title>
+<meta name="description" content="Aprende jugando: inglés, español, cultura, mente ágil y más.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23db2777'/><text x='32' y='44' font-size='34' text-anchor='middle'>🎮</text></svg>">
+<style>
+  :root {
+    --bg: #f7f5fb; --card: #ffffff; --text: #1e1b2e; --muted: #6b6880; --border: #e6e4f0;
+    --accent: #db2777; --accent-2: #7c3aed; --accent-soft: #fce7f3; --ok: #16a34a; --ok-soft: #dcfce7; --bad: #dc2626; --bad-soft: #fee2e2;
+    --gold: #f59e0b; --shadow: 0 1px 2px rgba(30, 27, 46, .06), 0 8px 24px rgba(30, 27, 46, .07); --radius: 18px;
+    --ingles: #2563eb; --ingles-soft: #dbeafe; --espanol: #ea580c; --espanol-soft: #ffedd5; --cultura: #0d9488; --cultura-soft: #ccfbf1;
+    --mente: #7c3aed; --mente-soft: #ede9fe; --clasicos: #db2777; --clasicos-soft: #fce7f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #13111c; --card: #1e1b2e; --text: #f4f3fa; --muted: #a8a5bd; --border: #2e2a45; --accent-soft: #45162f;
+      --ok-soft: #12351f; --bad-soft: #3b1414; --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+      --ingles-soft: #1e2a4d; --espanol-soft: #432411; --cultura-soft: #113b37; --mente-soft: #2e2159; --clasicos-soft: #45162f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: radial-gradient(800px 420px at 110% -10%, rgba(219, 39, 119, .14), transparent 60%),
+      radial-gradient(700px 400px at -10% 0%, rgba(124, 58, 237, .12), transparent 60%), var(--bg);
+    color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45; -webkit-font-smoothing: antialiased;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  [hidden] { display: none !important; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .home-link { font-size: .84rem; font-weight: 700; color: var(--accent-2); text-decoration: none; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 700; background: var(--card); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 99px; box-shadow: var(--shadow); }
+  .chip-btn { font: inherit; font-size: .8rem; font-weight: 700; color: var(--text); cursor: pointer; }
+  .av { display: inline-grid; place-items: center; border-radius: 50%; background: var(--avc); flex-shrink: 0; line-height: 1; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); overflow: hidden; }
+  .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .fotos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
+  .fotos-grid .card { text-align: center; padding: 10px; margin: 0; }
+  .fotos-grid img { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+  .av-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 6px; }
+  .av-grid button, .col-grid button { font: inherit; font-size: 1.4rem; aspect-ratio: 1; border-radius: 12px; border: 2px solid var(--border); background: var(--card); cursor: pointer; }
+  .av-grid button[aria-pressed="true"], .col-grid button[aria-pressed="true"] { border-color: var(--accent-2); box-shadow: 0 0 0 3px var(--mente-soft); }
+  .col-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(28px, 1fr)); gap: 6px; }
+  .menu-musica { position: absolute; right: 0; top: 40px; z-index: 20; background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 10px; width: 210px; display: flex; flex-direction: column; gap: 6px; }
+  .mus-opt { flex: 1; font: inherit; font-weight: 700; font-size: .88rem; padding: 9px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; text-align: left; }
+  .mus-opt[aria-pressed="true"] { border-color: var(--accent-2); background: var(--mente-soft); }
+  .chip .inv { font-size: .66rem; color: var(--muted); font-weight: 700; }
+  h1 { font-size: 1.55rem; margin: 0 0 4px; letter-spacing: -.01em; }
+  h2 { font-size: 1.05rem; margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; }
+  .lead { color: var(--muted); margin: 0 0 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+  .tabs { display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 4px; margin: 10px 0 6px; }
+  .tab { flex: 1; font: inherit; font-weight: 700; font-size: .86rem; padding: 9px 6px; border-radius: 10px; border: none; background: none; color: var(--muted); cursor: pointer; }
+  .tab[aria-selected="true"] { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+  .grid { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+  @media (min-width: 620px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }
+  .game { position: relative; display: flex; flex-direction: column; gap: 4px; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; box-shadow: var(--shadow); transition: transform .12s, border-color .12s; }
+  .game:hover { transform: translateY(-2px); border-color: var(--tone); }
+  .game:focus-visible, .btn:focus-visible, .opt:focus-visible, .tab:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+  .game .ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 1.4rem; background: var(--tone-soft); }
+  .game .t { font-weight: 800; font-size: .95rem; line-height: 1.2; margin-top: 4px; }
+  .game .d { font-size: .76rem; color: var(--muted); }
+  .game .best { position: absolute; top: 12px; right: 12px; font-size: .7rem; font-weight: 800; color: var(--gold); }
+  .cat-ingles { --tone: var(--ingles); --tone-soft: var(--ingles-soft); }
+  .cat-espanol { --tone: var(--espanol); --tone-soft: var(--espanol-soft); }
+  .cat-cultura { --tone: var(--cultura); --tone-soft: var(--cultura-soft); }
+  .cat-mente { --tone: var(--mente); --tone-soft: var(--mente-soft); }
+  .cat-clasicos { --tone: var(--clasicos); --tone-soft: var(--clasicos-soft); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 800; font-size: .95rem; border: none; border-radius: 12px;
+    padding: 12px 16px; cursor: pointer; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px rgba(219, 39, 119, .25); }
+  .btn.ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+  .btn.sm { padding: 7px 11px; font-size: .8rem; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .row-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .row-btns .btn { flex: 1; }
+  label { display: block; font-size: .82rem; font-weight: 700; margin: 10px 0 6px; }
+  input[type=email], input[type=text] { width: 100%; font: inherit; font-size: 1rem; padding: 12px 13px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+  input:focus { border-color: var(--accent-2); }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: .84rem; font-weight: 500; margin: 12px 0; }
+  .check input { width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0; }
+  .alert { margin-top: 12px; padding: 10px 12px; border-radius: 12px; font-size: .86rem; background: var(--bad-soft); color: var(--bad); }
+  .muted { color: var(--muted); font-size: .84rem; }
+  .loading { padding: 40px; text-align: center; color: var(--muted); }
+  /* Marco de juego */
+  .play-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .play-top .t { flex: 1; font-weight: 800; font-size: 1rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stat { font-size: .82rem; font-weight: 800; background: var(--card); border: 1px solid var(--border); border-radius: 99px; padding: 5px 10px; white-space: nowrap; }
+  .stat.warn { color: var(--bad); border-color: var(--bad); }
+  .bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+  .bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .25s linear; }
+  .q-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 16px; text-align: center; margin-bottom: 12px; }
+  .q-card .big { font-size: 3rem; line-height: 1.1; margin-bottom: 6px; }
+  .q-card .q { font-size: 1.2rem; font-weight: 800; }
+  .q-card .sub { color: var(--muted); font-size: .88rem; margin-top: 4px; }
+  .opts { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+  .opts.una-col { grid-template-columns: 1fr; }
+  .opt { font: inherit; font-weight: 700; font-size: 1rem; padding: 14px 10px; border-radius: 14px; border: 1.5px solid var(--border); background: var(--card); color: var(--text);
+    cursor: pointer; transition: transform .08s, background .12s, border-color .12s; }
+  .opt:hover { border-color: var(--accent-2); }
+  .opt:active { transform: scale(.98); }
+  .opt .k { display: inline-block; font-size: .7rem; color: var(--muted); margin-right: 6px; }
+  .opt.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+  .opt.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  .feedback { min-height: 22px; text-align: center; font-size: .86rem; font-weight: 700; margin-top: 10px; }
+  .feedback.ok { color: var(--ok); } .feedback.bad { color: var(--bad); }
+  .flash-ok { animation: pop .35s; } @keyframes pop { 50% { transform: scale(1.04); } }
+  /* Memorama */
+  .memo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .memo button { aspect-ratio: 1; font: inherit; font-weight: 800; font-size: .82rem; border-radius: 12px; border: 1.5px solid var(--border); cursor: pointer; padding: 4px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: transparent; transition: background .15s; word-break: break-word; }
+  .memo button.up, .memo button.done { background: var(--card); color: var(--text); }
+  .memo button.done { border-color: var(--ok); background: var(--ok-soft); cursor: default; }
+  .memo button .em { display: block; font-size: 1.5rem; }
+  /* Ordena */
+  .slots { min-height: 58px; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border: 2px dashed var(--border); border-radius: 14px; margin-bottom: 10px; background: var(--card); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .word { font: inherit; font-weight: 700; font-size: .95rem; padding: 9px 12px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; }
+  .slots .word { background: var(--mente-soft); border-color: var(--mente); }
+  /* Simón */
+  .simon { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 320px; margin: 0 auto; }
+  .simon button { aspect-ratio: 1; border: none; border-radius: 22px; cursor: pointer; opacity: .55; transition: opacity .1s, transform .1s; }
+  .simon button.on { opacity: 1; transform: scale(1.04); box-shadow: 0 0 24px currentColor; }
+  .simon button:disabled { cursor: default; }
+  /* Sopa */
+  .sopa { display: grid; gap: 3px; user-select: none; margin: 0 auto 10px; max-width: 420px; }
+  .sopa button { aspect-ratio: 1; font: inherit; font-weight: 800; font-size: .9rem; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); cursor: pointer; padding: 0; }
+  .sopa button.sel { background: var(--mente-soft); border-color: var(--mente); }
+  .sopa button.found { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+  .lista-sopa { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; font-size: .82rem; }
+  .lista-sopa span { padding: 4px 9px; border-radius: 99px; background: var(--card); border: 1px solid var(--border); }
+  .lista-sopa span.found { text-decoration: line-through; color: var(--ok); border-color: var(--ok); }
+  /* Resultado */
+  .result { text-align: center; }
+  .result .score { font-size: 3rem; font-weight: 900; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; }
+  .result .record { display: inline-block; margin-top: 8px; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--gold), #ef4444); padding: 4px 12px; border-radius: 99px; }
+  .result .pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  .burst { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .burst span { position: absolute; top: -40px; font-size: 1.6rem; animation: fall 1.8s ease-in forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: .2; } }
+  /* Ranking */
+  .rank { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .rank li { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; }
+  .rank li.yo { border: 2px solid var(--accent-2); }
+  .rank .pos { width: 34px; text-align: center; font-weight: 900; font-size: 1.05rem; }
+  .rank .n { flex: 1; font-weight: 700; }
+  .rank .n small { color: var(--muted); font-weight: 600; }
+  .rank .pts { font-weight: 900; }
+  table.inv { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  table.inv th, table.inv td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--border); }
+  .scroll-x { overflow-x: auto; }
+  .kbd-hint { text-align: center; font-size: .72rem; color: var(--muted); margin-top: 8px; }
+  .p-share { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 12px; text-align: left; }
+  #p-qr { background: #fff; padding: 6px; border-radius: 10px; min-width: 162px; min-height: 162px; }
+  .sel { width: 100%; font: inherit; font-size: .95rem; padding: 11px 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
+  /* Sudoku */
+  .sdk { display: grid; grid-template-columns: repeat(9, 1fr); max-width: 430px; margin: 8px auto; border: 2px solid var(--text); border-radius: 10px; overflow: hidden; background: var(--card); }
+  .sdk button { aspect-ratio: 1; border: 0; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--card); font: inherit; font-size: clamp(1rem, 5.2vw, 1.45rem); font-weight: 700; color: var(--accent-2); padding: 0; cursor: pointer; }
+  .sdk button.fija { color: var(--text); }
+  .sdk button.bd { border-right: 2px solid var(--text); }
+  .sdk button.bb { border-bottom: 2px solid var(--text); }
+  .sdk button.zona { background: var(--mente-soft); }
+  .sdk button.igual { background: var(--accent-soft); }
+  .sdk button.sel { box-shadow: inset 0 0 0 3px var(--accent-2); }
+  .sdk button.mal { color: var(--bad); background: var(--bad-soft); }
+  .sdk-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 430px; margin: 10px auto; }
+  .sdk-pad button { font: inherit; font-size: 1.25rem; font-weight: 800; padding: 8px 0; border-radius: 12px; border: 2px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; }
+  .sdk-pad button small { display: block; font-size: .65rem; color: var(--muted); font-weight: 600; }
+  .sdk-pad button:disabled { opacity: .35; cursor: default; }
+  /* Basta */
+  .letra { font-size: 4rem; font-weight: 900; line-height: 1; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .basta-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; }
+  .basta-grid label { margin: 0; }
+  .basta-res td small { color: var(--muted); }
+  /* ¡Una! */
+  .una-bots { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .una-bot { flex: 1; min-width: 100px; display: flex; flex-direction: column; font-size: .8rem; font-weight: 700; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; }
+  .una-bot.activo { border: 2px solid var(--accent-2); }
+  .una-dijo { color: var(--accent); }
+  .una-mesa { display: flex; align-items: center; justify-content: center; gap: 22px; margin: 6px 0; }
+  .una-card { position: relative; display: inline-grid; place-items: center; width: 54px; height: 80px; border-radius: 10px; background: var(--c); color: #fff; font-size: 1.3rem;
+    border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); overflow: hidden; }
+  .una-card b { position: relative; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .una-card.grande { width: 84px; height: 124px; font-size: 2rem; }
+  .una-wild { position: absolute; inset: 0; background: conic-gradient(#ef4444 0 25%, #eab308 0 50%, #22c55e 0 75%, #3b82f6 0); opacity: .9; }
+  .una-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: middle; }
+  .una-mazo { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 2.4rem; background: var(--card); border: 1.5px dashed var(--border); border-radius: 12px; padding: 6px 12px; cursor: pointer; color: var(--text); }
+  .una-mazo small { font-size: .7rem; font-weight: 700; }
+  .una-mazo:disabled { opacity: .5; cursor: default; }
+  .una-mano { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 8px; }
+  .una-btn { background: none; border: none; padding: 0; cursor: pointer; transition: transform .12s; }
+  .una-btn[data-no] .una-card { opacity: .55; }
+  .una-btn .jugable { transform: translateY(-6px); box-shadow: 0 6px 14px rgba(0,0,0,.3); }
+  .una-color { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; margin: 0 4px; cursor: pointer; vertical-align: middle; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  .una-grito.pulsa { animation: pulsa .6s infinite alternate; }
+  @keyframes pulsa { to { transform: scale(1.06); box-shadow: 0 0 0 6px rgba(219, 39, 119, .25); } }
+  .opt[aria-pressed="true"] { border-color: var(--accent-2); background: var(--mente-soft); }
+  /* Lotería */
+  .lot-top { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .lot-carta { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px; text-align: center; min-height: 150px; }
+  .lot-carta .big { font-size: 2.6rem; }
+  .lot-carta .q { font-size: 1rem; font-weight: 900; }
+  .lot-carta .sub { font-size: .76rem; color: var(--muted); }
+  .lot-lado { display: flex; flex-direction: column; gap: 6px; font-size: .8rem; }
+  .lot-hist { display: flex; gap: 4px; font-size: 1.2rem; flex-wrap: wrap; min-height: 28px; }
+  .lot-bot { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; font-weight: 700; }
+  .lot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .lot-cell { position: relative; aspect-ratio: .78; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit; cursor: pointer;
+    background: var(--card); border: 2px solid var(--border); border-radius: 10px; color: var(--text); padding: 4px; }
+  .lot-cell .em { font-size: 1.6rem; }
+  .lot-cell .nm { font-size: .6rem; font-weight: 700; text-align: center; line-height: 1.1; }
+  .lot-cell.marcada::after { content: "🫘"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 2rem; background: rgba(22, 163, 74, .18); border-radius: 8px; }
+  .lot-cell.marcada { border-color: var(--ok); }
+  .tiembla { animation: tiembla .35s; }
+  @keyframes tiembla { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="home-link" href="./">← Inicio</a>
+    <span style="display:flex;gap:6px;align-items:center;position:relative"><button class="chip chip-btn" id="btn-musica" type="button" aria-label="Música">🔇</button><button class="chip chip-btn" id="chip" type="button" hidden title="Cambiar mi avatar"></button><span id="menu-musica-wrap"></span></span>
+  </div>
+  <main id="app"><div class="loading">Cargando juegos…</div></main>
+</div>
+
+<script>
+  // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
+  const DEFAULT_API = 'https://stald.jalducin.deno.net';
+  const API_PARAM = new URLSearchParams(location.search).get('api');
+  const API_BASE = (API_PARAM || DEFAULT_API).replace(/\/$/, '');
+  const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
+  if (API_PARAM) document.querySelector('.home-link').href = './?api=' + encodeURIComponent(API_PARAM);
+  // Enlace de partida: juegos.html?sala=KXQP entra (o registra al invitado) y se une solo.
+  const SALA_URL = (new URLSearchParams(location.search).get('sala') || '').trim().toUpperCase();
+  let salaPendiente = /^[A-Z]{4}$/.test(SALA_URL) ? SALA_URL : null;
+  let abrirAvatar = new URLSearchParams(location.search).get('avatar') === '1';
+
+  const app = document.getElementById('app');
+  const chip = document.getElementById('chip');
+  // Puntos por tipo (openspec: puntos-por-tipo): ⭐ individuales y 👥 partidas; todo suma.
+  const state = { email: null, jugador: null, totalIndividual: 0, totalPartidas: 0, pos: null, posPartidas: null, mejores: {}, semana: null, tab: 'juegos', rtipo: 'individual' };
+  let limpiezas = []; // timers del juego en curso
+  function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) speechSynthesis.cancel(); }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  const fmt = n => Number(n || 0).toLocaleString('es-MX');
+  const barajar = (a, rnd = Math.random) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  const tomar = (a, n, rnd = Math.random) => barajar(a, rnd).slice(0, n);
+  const sinAcentos = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  async function api(ruta, opts) {
+    const res = await fetch(API_BASE + ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(state.email), Object.assign({ cache: 'no-store' }, opts || {}));
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, body };
+  }
+  const post = (ruta, datos) => api(ruta, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(datos) });
+
+  const cacheDatos = {};
+  async function datos(nombre) {
+    if (!cacheDatos[nombre]) cacheDatos[nombre] = fetch('juegos/datos/' + nombre + '.json').then(r => { if (!r.ok) throw new Error('datos ' + nombre); return r.json(); });
+    return cacheDatos[nombre];
+  }
+
+  // ---------- Sonido (WebAudio, sin archivos) ----------
+  let audioCtx = null;
+  function tono(freq, ms = 120, tipo = 'sine', vol = .08) {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = tipo; o.frequency.value = freq; g.gain.value = vol;
+      o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + ms / 1000);
+    } catch (e) { /* sin audio */ }
+  }
+  const sonidoOk = () => { tono(660, 90); setTimeout(() => tono(880, 120), 90); };
+  const sonidoMal = () => tono(180, 220, 'square', .05);
+
+  function hablar(texto, lang = 'en-US', rate = .9) {
+    if (!window.speechSynthesis) return false;
+    if (typeof bajarMusica === 'function') bajarMusica();
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = lang; u.rate = rate;
+    const v = speechSynthesis.getVoices().find(x => x.lang && x.lang.toLowerCase().startsWith(lang.slice(0, 2).toLowerCase()));
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+    return true;
+  }
+
+  // ---------- Catálogo ----------
+  const CATEGORIAS = [
+    { id: 'ingles', titulo: '📘 Inglés', clase: 'cat-ingles' },
+    { id: 'espanol', titulo: '📝 Español', clase: 'cat-espanol' },
+    { id: 'cultura', titulo: '🧠 Maratón de cultura', clase: 'cat-cultura' },
+    { id: 'mente', titulo: '⚡ Mente ágil', clase: 'cat-mente' },
+    { id: 'clasicos', titulo: '🎲 Clásicos', clase: 'cat-clasicos' },
+  ];
+  const JUEGOS = [
+    { id: 'en-vocab', cat: 'ingles', emoji: '⏱️', t: 'Vocabulario contra reloj', d: '60 segundos: elige la palabra en inglés.', jugar: () => jugarVocab() },
+    { id: 'en-spelling', cat: 'ingles', emoji: '🐝', t: 'Spelling bee', d: 'Escucha y escribe la palabra.', jugar: () => jugarSpelling() },
+    { id: 'en-frases', cat: 'ingles', emoji: '🧩', t: 'Completa la frase', d: 'To be, presente simple, WH y más.', jugar: () => jugarFrases() },
+    { id: 'en-preguntas', cat: 'ingles', emoji: '💬', t: 'Responde en inglés', d: 'Elige la respuesta correcta a una pregunta en inglés.', jugar: () => jugarPreguntasEn() },
+    { id: 'en-memorama', cat: 'ingles', emoji: '🃏', t: 'Memorama', d: 'Une cada palabra con su significado.', jugar: () => jugarMemorama() },
+    { id: 'en-ordena', cat: 'ingles', emoji: '🔀', t: 'Ordena la oración', d: 'Arma la oración en inglés.', jugar: () => jugarOrdena('en') },
+    { id: 'es-ortografia', cat: 'espanol', emoji: '✍️', t: 'Ortografía', d: 'b/v, c/s/z, g/j, h, ll/y…', jugar: () => jugarQuizEspanol('ortografia') },
+    { id: 'es-acentos', cat: 'espanol', emoji: 'á', t: 'Acentos', d: '¿Lleva tilde o no?', jugar: () => jugarQuizEspanol('acentos') },
+    { id: 'es-sinonimos', cat: 'espanol', emoji: '🔁', t: 'Sinónimos y antónimos', d: 'Palabras que significan lo mismo… o lo contrario.', jugar: () => jugarSinonimos() },
+    { id: 'es-ordena', cat: 'espanol', emoji: '🔀', t: 'Ordena la oración', d: 'Pon las palabras en orden.', jugar: () => jugarOrdena('es') },
+    { id: 'cultura', cat: 'cultura', emoji: '🏃', t: 'Maratón de cultura', d: 'Historia, geografía, ciencias, arte… 3 vidas.', jugar: () => elegirCultura() },
+    { id: 'mente-calculo', cat: 'mente', emoji: '🧮', t: 'Cálculo mental', d: '60 segundos de operaciones.', jugar: () => jugarCalculo() },
+    { id: 'mente-secuencias', cat: 'mente', emoji: '🔢', t: 'Secuencias', d: '¿Qué número sigue?', jugar: () => jugarSecuencias() },
+    { id: 'mente-simon', cat: 'mente', emoji: '🟢', t: 'Simón dice', d: 'Repite la secuencia de colores.', jugar: () => jugarSimon() },
+    { id: 'mente-sopa', cat: 'mente', emoji: '🔎', t: 'Sopa de letras', d: 'Encuentra las palabras en inglés.', jugar: () => jugarSopa() },
+    { id: 'mente-sudoku', cat: 'mente', emoji: '🔢', t: 'Sudoku', d: 'Por niveles: fácil, medio, difícil y experto.', jugar: () => elegirSudoku() },
+    { id: 'dragon-run', cat: 'mente', emoji: '🐉', t: 'Dragon Run', d: 'Corre, salta (¡doble salto!) y llega al castillo.', jugar: () => jugarDragonRun() },
+    { id: 'basta-es', cat: 'clasicos', emoji: '✋', t: 'Basta', d: 'Nombre, animal, fruta, país… ¡con la letra que salga!', jugar: () => jugarBasta('es') },
+    { id: 'basta-en', cat: 'clasicos', emoji: '🗽', t: 'Basta en inglés', d: 'Name, animal, food… in English!', jugar: () => jugarBasta('en') },
+    { id: 'una', cat: 'clasicos', emoji: '🃏', t: '¡Una!', d: 'Cartas de colores. Con una carta, ¡presiona el botón UNA!', jugar: () => elegirUna() },
+    { id: 'loteria', cat: 'clasicos', emoji: '🎴', t: 'Lotería', d: 'Lotería mexicana bilingüe con gritón.', jugar: () => elegirLoteria() },
+  ];
+  const juegoPorId = id => JUEGOS.find(j => j.id === id);
+
+  // ---------- Sesión ----------
+  // Foto del avatar (openspec: avatar-foto): si ya no existe, queda el personaje.
+  const fotoSrc = av => av.fotoUrl || (API_BASE + '/juegos/foto/' + encodeURIComponent(av.foto));
+  const avatarHtml = (av, px = 26) => av ? '<span class="av" style="--avc:' + escapeHtml(av.color) + ';width:' + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * 0.58) + 'px" aria-hidden="true">' +
+    (av.foto || av.fotoUrl ? '<img src="' + escapeHtml(fotoSrc(av)) + '" alt="" data-e="' + escapeHtml(av.emoji) + '" onerror="this.replaceWith(document.createTextNode(this.dataset.e))">' : escapeHtml(av.emoji)) + '</span>' : '';
+
+  // Recorta al centro y reduce a 128×128 JPEG (≤ 40 KB); el canvas descarta los metadatos.
+  async function fotoAvatar(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((ok, mal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => mal(new Error('formato')); i.src = url; });
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const g = c.getContext('2d'), lado = Math.min(img.naturalWidth, img.naturalHeight);
+      g.fillStyle = '#fff'; g.fillRect(0, 0, 128, 128);
+      g.drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, 128, 128);
+      for (const q of [0.82, 0.6, 0.4]) { const d = c.toDataURL('image/jpeg', q); if (d.length <= 40000) return d; }
+      throw new Error('grande');
+    } finally { URL.revokeObjectURL(url); }
+  }
+
+  function pantallaAvatar() {
+    limpiar();
+    const listas = state.avatares || { emojis: [], colores: [] };
+    let sel = Object.assign({}, state.jugador.avatar || { emoji: listas.emojis[0], color: listas.colores[0] });
+    let fotoNueva = null, permiso = false; // modo foto: sel.foto (actual) o fotoNueva (data URL)
+    const pintar = () => {
+      const vista = fotoNueva ? Object.assign({}, sel, { fotoUrl: fotoNueva }) : sel;
+      app.innerHTML = '<div class="card"><h1>🎨 Tu avatar</h1><p class="lead">Elige un personaje y un color, o sube una foto. Así te verán en el ranking y en las partidas.</p>' +
+        '<div style="display:flex;justify-content:center;margin:6px 0 14px" id="av-vista">' + avatarHtml(vista, 96) + '</div>' +
+        '<label>Personaje</label><div class="av-grid">' + listas.emojis.map(e => '<button type="button" data-av-emoji="' + escapeHtml(e) + '" aria-pressed="' + (e === sel.emoji) + '">' + escapeHtml(e) + '</button>').join('') + '</div>' +
+        '<label>Color</label><div class="col-grid">' + listas.colores.map(c => '<button type="button" data-av-color="' + escapeHtml(c) + '" aria-pressed="' + (c === sel.color) + '" style="background:' + escapeHtml(c) + '" aria-label="Color ' + escapeHtml(c) + '"></button>').join('') + '</div>' +
+        '<label>📷 O sube una foto de tu galería</label><input type="file" id="av-file" accept="image/*">' +
+        '<label class="check"><input id="av-permiso" type="checkbox"' + (permiso ? ' checked' : '') + '><span>Tengo permiso de mi mamá, papá o tutor para usar esta imagen.</span></label>' +
+        '<p class="muted" style="margin:4px 0 0">Se ve pequeña en el ranking y las partidas. Elegir un personaje o color quita la foto.</p>' +
+        '<div class="row-btns"><button class="btn ghost" data-a="hub">Cancelar</button><button class="btn" data-av-guardar>Guardar</button></div><div id="av-msg"></div></div>';
+    };
+    pintar();
+    const avMsg = t => { document.getElementById('av-msg').innerHTML = '<div class="alert">' + escapeHtml(t) + '</div>'; };
+    app.onchange = async e => {
+      if (e.target.id === 'av-permiso') permiso = e.target.checked;
+      if (e.target.id === 'av-file' && e.target.files[0]) {
+        try { fotoNueva = await fotoAvatar(e.target.files[0]); pintar(); }
+        catch (err) { avMsg(err.message === 'grande' ? 'La imagen es demasiado pesada. Prueba con otra.' : 'No se pudo leer esa imagen. Prueba con una foto JPG o PNG.'); }
+      }
+    };
+    app.onclick = async e => {
+      const em = e.target.closest('[data-av-emoji]'), co = e.target.closest('[data-av-color]'), gu = e.target.closest('[data-av-guardar]');
+      if (em) { sel.emoji = em.dataset.avEmoji; delete sel.foto; fotoNueva = null; pintar(); }
+      if (co) { sel.color = co.dataset.avColor; delete sel.foto; fotoNueva = null; pintar(); }
+      if (gu) {
+        if (fotoNueva && !permiso) { avMsg('Marca la casilla de permiso para usar tu foto.'); return; }
+        gu.disabled = true;
+        const r = fotoNueva ? await post('/juegos/foto', { imagen: fotoNueva, acepto: true })
+          : sel.foto ? { ok: true, body: { avatar: state.jugador.avatar } } // sin cambios: conserva su foto
+          : await post('/juegos/avatar', { emoji: sel.emoji, color: sel.color });
+        if (!r.ok) { document.getElementById('av-msg').innerHTML = '<div class="alert">No se pudo guardar (' + escapeHtml(r.body.error || r.status) + ').</div>'; gu.disabled = false; return; }
+        state.jugador.avatar = r.body.avatar; pintarChip(); app.onclick = null; app.onchange = null; pantallaHub();
+      }
+      if (e.target.closest('[data-a="hub"]')) { app.onclick = null; app.onchange = null; }
+    };
+  }
+
+  function pintarChip() {
+    if (!state.jugador) { chip.hidden = true; return; }
+    chip.hidden = false;
+    chip.innerHTML = avatarHtml(state.jugador.avatar, 22) + ' ' + escapeHtml(state.jugador.nombre) + (state.jugador.tipo === 'invitado' ? ' <span class="inv">INVITADO</span>' : '') +
+      ' · ⭐ ' + fmt(state.totalIndividual) + ' · 👥 ' + fmt(state.totalPartidas) + (state.pos ? ' · #' + state.pos : '');
+  }
+
+  async function cargarYo() {
+    const r = await api('/juegos/yo');
+    if (r.ok) {
+      Object.assign(state, { jugador: r.body.jugador, totalIndividual: r.body.totalIndividual || 0, totalPartidas: r.body.totalPartidas || 0, pos: r.body.pos, posPartidas: r.body.posPartidas, mejores: r.body.mejores, semana: r.body.semana, avatares: r.body.avatares });
+      pintarChip();
+    }
+    return r;
+  }
+
+  async function iniciar() {
+    state.email = SESSION_KEYS.map(k => localStorage.getItem(k)).find(Boolean) || null;
+    if (!state.email) return pantallaLogin();
+    app.innerHTML = '<div class="loading">Cargando juegos…</div>';
+    try {
+      const r = await cargarYo();
+      if (r.status === 403 && r.body.error === 'no_registrado') return pantallaInvitado();
+      if (!r.ok) throw new Error(r.body.error || ('HTTP ' + r.status));
+      if (salaPendiente) { const c = salaPendiente; salaPendiente = null; return unirseCodigo(c); }
+      if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
+      pantallaHub();
+    } catch (e) {
+      const txt = e.message === 'mucho_trafico' ? '⏳ Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : '⚠️ No pude conectarme (' + escapeHtml(e.message) + ').';
+      app.innerHTML = '<div class="card"><div class="alert">' + txt + '</div><div class="row-btns"><button class="btn" data-a="reintentar">Reintentar</button></div></div>';
+    }
+  }
+
+  function pantallaLogin(msg) {
+    limpiar(); chip.hidden = true;
+    app.innerHTML = '<div class="card"><h1>🎮 Juegos</h1><p class="lead">' + (salaPendiente ? '🎉 Te invitaron a la partida <b>' + escapeHtml(salaPendiente) + '</b>. Entra con tu correo para unirte.' : 'Aprende jugando. Entra con tu correo.') + '</p>' +
+      '<form id="f-login" novalidate><label for="correo">Tu correo</label><input id="correo" type="email" autocomplete="email" placeholder="tucorreo@gmail.com">' +
+      '<div class="row-btns"><button class="btn" type="submit">Entrar →</button></div></form>' + (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
+  }
+
+  function pantallaInvitado(msg) {
+    limpiar(); chip.hidden = true;
+    app.innerHTML = '<div class="card"><h1>👋 ¡Hola!</h1><p class="lead">Tu correo <b>' + escapeHtml(state.email) + '</b> no está en las clases, pero puedes jugar como invitado' + (salaPendiente ? ' en la partida <b>' + escapeHtml(salaPendiente) + '</b>' : '') + '.</p>' +
+      '<form id="f-invitado" novalidate><label for="apodo">¿Cómo te llamamos? (apodo)</label><input id="apodo" type="text" maxlength="20" placeholder="Ej. Leo" autocomplete="nickname">' +
+      '<label class="check"><input id="acepto" type="checkbox"><span>Acepto que se guarde mi correo y mis puntos para registrar mi avance y mejorar la plataforma.</span></label>' +
+      '<div class="row-btns"><button class="btn ghost" type="button" data-a="otro-correo">Usar otro correo</button><button class="btn" type="submit">Entrar a jugar</button></div></form>' +
+      (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
+  }
+
+  // ---------- Hub ----------
+  function pantallaHub(tab) {
+    limpiar();
+    state.tab = tab || state.tab || 'juegos';
+    const admin = state.jugador && state.jugador.tipo === 'admin';
+    const tabs = '<div class="tabs" role="tablist">' +
+      ['juegos:🎮 Juegos', 'partidas:👥 Partidas', 'ranking:🏆 Ranking'].concat(admin ? ['invitados:📋 Invitados', 'fotos:📷 Fotos'] : []).map(x => {
+        const [id, t] = x.split(':');
+        return '<button class="tab" role="tab" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + t + '</button>';
+      }).join('') + '</div>';
+    app.innerHTML = '<h1>🎮 Juegos</h1><p class="lead">Aprende jugando y suma puntos para el ranking de la semana.</p>' + tabs + '<div id="tab-body"></div>';
+    if (state.tab === 'ranking') return pintarRanking();
+    if (state.tab === 'partidas') return pintarPartidas();
+    if (state.tab === 'invitados') return pintarInvitados();
+    if (state.tab === 'fotos') return pintarFotos();
+    document.getElementById('tab-body').innerHTML = CATEGORIAS.map(c => {
+      const js = JUEGOS.filter(j => j.cat === c.id);
+      if (!js.length) return '';
+      return '<h2>' + c.titulo + '</h2><div class="grid">' + js.map(j => {
+        const best = state.mejores[j.id];
+        return '<button class="game ' + c.clase + '" data-juego="' + j.id + '"><span class="ico" aria-hidden="true">' + j.emoji + '</span>' +
+          '<span class="t">' + escapeHtml(j.t) + '</span><span class="d">' + escapeHtml(j.d) + '</span>' +
+          (best ? '<span class="best" title="Tu mejor de la semana">⭐ ' + fmt(best) + '</span>' : '') + '</button>';
+      }).join('') + '</div>';
+    }).join('');
+  }
+
+  function rangoSemana(lunes) {
+    const d = new Date(lunes + 'T12:00:00'); const f = new Date(d); f.setDate(d.getDate() + 6);
+    const o = { day: 'numeric', month: 'short' };
+    return d.toLocaleDateString('es-MX', o) + ' al ' + f.toLocaleDateString('es-MX', o);
+  }
+
+  async function pintarRanking() {
+    const body = document.getElementById('tab-body');
+    body.innerHTML = '<div class="loading">Cargando ranking…</div>';
+    const tipo = state.rtipo;
+    const r = await api('/juegos/ranking?tipo=' + tipo);
+    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar el ranking (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const medalla = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
+    const ico = tipo === 'partidas' ? '👥' : '⭐';
+    const pestanas = '<div class="opts" style="margin-top:10px">' + [['individual', '⭐ Individuales'], ['partidas', '👥 Partidas']].map(([id, t]) =>
+      '<button class="opt" data-rtipo="' + id + '" aria-pressed="' + (tipo === id) + '">' + t + '</button>').join('') + '</div>';
+    body.innerHTML = pestanas + '<p class="muted" style="margin:10px 0">Semana del ' + escapeHtml(rangoSemana(r.body.semana)) + ' · ' +
+      (tipo === 'partidas' ? 'suman todas tus partidas con otros jugadores.' : 'suman todos tus juegos individuales.') + '</p>' +
+      (r.body.top.length
+        ? '<ol class="rank">' + r.body.top.map(x => '<li class="' + (x.yo ? 'yo' : '') + '"><span class="pos">' + medalla(x.pos) + '</span>' + avatarHtml(x.avatar, 30) + '<span class="n">' + escapeHtml(x.nombre) +
+          (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '<br><small>' + x.partidas + ' partida(s)</small></span><span class="pts">' + ico + ' ' + fmt(x.total) + '</span></li>').join('') + '</ol>'
+        : '<div class="card muted" style="text-align:center">' + (tipo === 'partidas' ? 'Nadie ha jugado partidas esta semana. ¡Crea una en 👥 Partidas! 🚀' : 'Nadie ha jugado esta semana. ¡Estrena el ranking! 🚀') + '</div>') +
+      (r.body.yo.pos && r.body.yo.pos > 20 ? '<p class="muted">Tu lugar: #' + r.body.yo.pos + ' con ' + ico + ' ' + fmt(r.body.yo.total) + '</p>' : '');
+  }
+
+  async function pintarInvitados() {
+    const body = document.getElementById('tab-body');
+    body.innerHTML = '<div class="loading">Cargando invitados…</div>';
+    const r = await api('/juegos/invitados');
+    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const lista = r.body.invitados;
+    const fecha = s => s ? new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+    body.innerHTML = '<p class="muted" style="margin:10px 0">' + lista.length + ' invitado(s). Sus correos solo los ves tú.</p>' +
+      (lista.length ? '<div class="card scroll-x"><table class="inv"><thead><tr><th>Correo</th><th>Apodo</th><th>Visitas</th><th>Última visita</th><th>Puntos semana</th></tr></thead><tbody>' +
+        lista.map(x => '<tr><td>' + escapeHtml(x.email) + '</td><td>' + escapeHtml(x.nombre) + '</td><td>' + x.visitas + '</td><td>' + escapeHtml(fecha(x.ultimaVisita)) + '</td><td>' + fmt(x.puntosSemana) + '</td></tr>').join('') +
+        '</tbody></table></div><div class="row-btns"><button class="btn ghost" data-a="csv">⬇️ Descargar CSV</button></div>' : '');
+    state.invitadosLista = lista;
+  }
+
+  // Moderación de fotos de avatar (solo admin).
+  async function pintarFotos() {
+    const body = document.getElementById('tab-body');
+    body.innerHTML = '<div class="loading">Cargando fotos…</div>';
+    const r = await api('/juegos/fotos');
+    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const fecha = s => new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+    body.innerHTML = '<p class="muted" style="margin:10px 0">' + r.body.fotos.length + ' foto(s) de avatar. Si alguna no es adecuada, quítala: vuelve a su personaje.</p>' +
+      '<div class="fotos-grid">' + r.body.fotos.map(f => '<div class="card"><img src="' + escapeHtml(fotoSrc({ foto: f.token })) + '" alt="Foto de ' + escapeHtml(f.nombre) + '"><div><b>' + escapeHtml(f.nombre) + '</b></div>' +
+        '<small class="muted">' + escapeHtml(fecha(f.en)) + '</small><div><button class="btn ghost sm" data-quitar-foto="' + escapeHtml(f.id) + '">🗑️ Quitar</button></div></div>').join('') + '</div>';
+  }
+
+  async function quitarFoto(b) {
+    if (!confirm('¿Quitar esta foto? El jugador volverá a su personaje.')) return;
+    b.disabled = true;
+    const r = await post('/juegos/fotos/quitar', { id: b.dataset.quitarFoto });
+    if (!r.ok) { b.disabled = false; alert('No se pudo quitar (' + (r.body.error || r.status) + ').'); return; }
+    if (b.dataset.quitarFoto === state.jugador.id) { delete state.jugador.avatar.foto; pintarChip(); }
+    pintarFotos();
+  }
+
+  function descargarCsv() {
+    const filas = [['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana]));
+    const csv = filas.map(f => f.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+    a.download = 'invitados-juegos.csv'; a.click();
+  }
+
+  // ---------- Marco común y resultado ----------
+  function marco(id, extra) {
+    const j = juegoPorId(id);
+    const tone = (CATEGORIAS.find(c => c.id === j.cat) || {}).clase || '';
+    app.innerHTML = '<div class="' + tone + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + '</span>' +
+      '<span class="stat" id="m-tiempo" hidden></span><span class="stat" id="m-vidas" hidden></span><span class="stat" id="m-puntos">⭐ 0</span></div>' +
+      '<div class="bar" id="m-bar" hidden><span style="width:100%"></span></div><div id="m-body"></div></div>';
+    const $ = s => document.getElementById(s);
+    return {
+      body: $('m-body'),
+      puntos: n => { $('m-puntos').textContent = '⭐ ' + fmt(n); },
+      vidas: n => { const e = $('m-vidas'); e.hidden = false; e.textContent = '❤️'.repeat(Math.max(0, n)) + '🖤'.repeat(Math.max(0, (extra && extra.vidas || 3) - n)); },
+      tiempo: (s, total) => {
+        const e = $('m-tiempo'); e.hidden = false; e.textContent = '⏱ ' + Math.max(0, Math.ceil(s)); e.classList.toggle('warn', s <= 10);
+        if (total) { $('m-bar').hidden = false; $('m-bar').firstChild.style.width = Math.max(0, s / total * 100) + '%'; }
+      },
+    };
+  }
+
+  // Cuenta regresiva; devuelve la función para detenerla.
+  // Las pruebas E2E pueden acelerar los relojes con window.__TIEMPO_JUEGOS (p. ej. 0.1); para quien juega vale 1.
+  const TIEMPO = Number(window.__TIEMPO_JUEGOS) || 1;
+  function reloj(segundos, onTick, onFin) {
+    const fin = Date.now() + segundos * 1000 * TIEMPO;
+    const t = setInterval(() => {
+      const quedan = (fin - Date.now()) / 1000 / TIEMPO;
+      onTick(quedan);
+      if (quedan <= 0) { clearInterval(t); onFin(); }
+    }, 200);
+    onTick(segundos);
+    const stop = () => clearInterval(t);
+    limpiezas.push(stop);
+    return stop;
+  }
+
+  async function terminar(id, r) {
+    limpiar();
+    const j = juegoPorId(id);
+    app.innerHTML = '<div class="card result"><div class="loading">Guardando tus puntos…</div></div>';
+    const puntos = Math.max(0, Math.round(r.puntos));
+    let s = null;
+    try {
+      const res = await post('/juegos/partida', { juego: id, puntos, aciertos: r.aciertos || 0, total: r.total || 0, segundos: Math.round(r.segundos || 0) });
+      s = res.ok ? res.body : { error: res.body.error || res.status };
+    } catch (e) { s = { error: e.message }; }
+    if (s && s.guardado) {
+      state.totalIndividual = s.totalIndividual; state.totalPartidas = s.totalPartidas; state.pos = s.pos; state.mejores[id] = s.mejor; pintarChip();
+    }
+    app.innerHTML = '<div class="card result"><div style="font-size:2.4rem">' + j.emoji + '</div><h1>' + escapeHtml(r.titulo || '¡Terminaste!') + '</h1>' +
+      '<div class="score">' + fmt(s && s.guardado ? s.puntos : puntos) + '</div><div class="muted">puntos</div>' +
+      (s && s.nuevoRecord ? '<div class="record">🏅 ¡Nuevo récord personal!</div>' : '') +
+      '<div class="pills">' + (r.total ? '<span class="stat">✅ ' + r.aciertos + ' de ' + r.total + '</span>' : '') +
+      (s && s.guardado ? '<span class="stat">➕ ' + fmt(s.puntos) + ' a tus individuales</span><span class="stat">⭐ ' + fmt(s.totalIndividual) + ' en la semana</span>' + (s.pos ? '<span class="stat">🏆 #' + s.pos + ' de la semana</span>' : '') : '') + '</div>' +
+      (r.detalle ? '<div class="muted" style="margin-top:12px">' + r.detalle + '</div>' : '') +
+      (s && s.guardado ? '' : '<div class="alert">No se guardaron tus puntos (' + escapeHtml(s && s.error) + '). ' + (s && s.error === 'limite_diario' ? 'Llegaste al límite de partidas de hoy.' : 'Revisa tu conexión.') + '</div>') +
+      '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn" data-juego="' + id + '">🔁 Jugar otra vez</button></div></div>';
+    if (s && s.nuevoRecord) confeti();
+  }
+
+  function confeti() {
+    const b = document.createElement('div'); b.className = 'burst';
+    b.innerHTML = Array.from({ length: 24 }, () => '<span style="left:' + Math.random() * 100 + '%;animation-delay:' + Math.random() * .6 + 's">' + ['🎉', '⭐', '✨', '🏅'][Math.floor(Math.random() * 4)] + '</span>').join('');
+    document.body.appendChild(b); setTimeout(() => b.remove(), 2600);
+  }
+
+  // ---------- Motor quiz (opción múltiple) ----------
+  // opts: id, modo 'reloj' | 'vidas', segundos (reloj), porPregunta (vidas), siguiente() → { big, q, sub, opciones, correcta, explicacion } | null
+  function quiz(opts) {
+    const m = marco(opts.id, { vidas: 3 });
+    let puntos = 0, aciertos = 0, total = 0, racha = 0, vidas = 3, actual = null, bloqueado = false, inicioQ = 0, stopQ = null, terminado = false;
+    const t0 = Date.now();
+    const acabar = (titulo) => {
+      if (terminado) return; terminado = true;
+      terminar(opts.id, { puntos, aciertos, total, segundos: (Date.now() - t0) / 1000, titulo, detalle: opts.detalle ? opts.detalle({ aciertos, total }) : '' });
+    };
+    if (opts.modo === 'vidas') m.vidas(vidas);
+    else reloj(opts.segundos || 60, s => m.tiempo(s, opts.segundos || 60), () => acabar('⏰ ¡Se acabó el tiempo!'));
+    function pintar() {
+      actual = opts.siguiente(total);
+      if (!actual) return acabar(opts.modo === 'vidas' ? '🏁 ¡Llegaste a la meta!' : '¡Terminaste!');
+      bloqueado = false; inicioQ = Date.now();
+      const opciones = actual.opciones;
+      m.body.innerHTML = '<div class="q-card">' + (actual.big ? '<div class="big">' + escapeHtml(actual.big) + '</div>' : '') +
+        '<div class="q">' + escapeHtml(actual.q) + '</div>' + (actual.sub ? '<div class="sub">' + escapeHtml(actual.sub) + '</div>' : '') + '</div>' +
+        '<div class="opts' + (opciones.some(o => String(o).length > 18) ? ' una-col' : '') + '">' +
+        opciones.map((o, i) => '<button class="opt" data-opt="' + i + '"><span class="k">' + (i + 1) + '</span>' + escapeHtml(o) + '</button>').join('') + '</div>' +
+        '<div class="feedback" id="fb"></div><div class="kbd-hint">Tip: usa las teclas 1–' + opciones.length + '</div>';
+      if (opts.modo === 'vidas') {
+        if (stopQ) stopQ();
+        const seg = opts.porPregunta || 15;
+        stopQ = reloj(seg, s => m.tiempo(s, seg), () => responder(-1));
+      }
+    }
+    function responder(i) {
+      if (bloqueado || terminado) return;
+      bloqueado = true; total++;
+      if (stopQ && opts.modo === 'vidas') stopQ();
+      const btns = m.body.querySelectorAll('.opt');
+      const bien = i === actual.correcta;
+      const fb = document.getElementById('fb');
+      if (btns[actual.correcta]) btns[actual.correcta].classList.add('ok');
+      if (bien) {
+        aciertos++; racha++;
+        const rapidez = opts.modo === 'vidas' ? Math.max(0, Math.round(((opts.porPregunta || 15) * 1000 - (Date.now() - inicioQ)) / 100)) : 0;
+        const gana = 100 + Math.min(racha - 1, 10) * 10 + rapidez;
+        puntos += gana; m.puntos(puntos); sonidoOk();
+        fb.className = 'feedback ok'; fb.textContent = '✔ +' + gana + (racha > 2 ? ' · racha ×' + racha + ' 🔥' : '');
+      } else {
+        racha = 0; sonidoMal();
+        if (i >= 0 && btns[i]) btns[i].classList.add('bad');
+        fb.className = 'feedback bad'; fb.textContent = (i < 0 ? '⏰ ¡Tiempo! ' : '✘ ') + (actual.explicacion || ('Era: ' + actual.opciones[actual.correcta]));
+        if (opts.modo === 'vidas') { vidas--; m.vidas(vidas); if (vidas <= 0) return setTimeout(() => acabar('💔 ¡Sin vidas!'), 1400); }
+      }
+      setTimeout(() => { if (!terminado) pintar(); }, bien ? 550 : 1400);
+    }
+    const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= (actual ? actual.opciones.length : 0)) responder(n - 1); };
+    document.addEventListener('keydown', onKey);
+    limpiezas.push(() => document.removeEventListener('keydown', onKey));
+    m.body.addEventListener('click', e => { const b = e.target.closest('[data-opt]'); if (b) responder(Number(b.dataset.opt)); });
+    pintar();
+  }
+
+  // Mezcla opciones y devuelve la pregunta con el índice correcto recalculado.
+  function conOpciones(base, correcta, distractores, rnd = Math.random) {
+    const opciones = barajar([correcta, ...distractores], rnd);
+    return Object.assign(base, { opciones, correcta: opciones.indexOf(correcta) });
+  }
+
+  // ---------- Juegos de Inglés ----------
+  async function jugarVocab() {
+    const d = await datos('ingles');
+    const pool = barajar(d.vocabulario);
+    let i = 0;
+    quiz({
+      id: 'en-vocab', modo: 'reloj', segundos: 60,
+      siguiente: () => {
+        const w = pool[i++ % pool.length];
+        const mismos = d.vocabulario.filter(x => x.en !== w.en && x.tema === w.tema);
+        const otros = d.vocabulario.filter(x => x.en !== w.en && x.tema !== w.tema);
+        const dis = tomar(mismos, 2).concat(tomar(otros, 3)).map(x => x.en).filter((v, k, a) => a.indexOf(v) === k).slice(0, 3);
+        return conOpciones({ big: w.emoji, q: w.es, sub: '¿Cómo se dice en inglés?', explicacion: w.es + ' = ' + w.en }, w.en, dis);
+      },
+    });
+  }
+
+  async function jugarFrases() {
+    const d = await datos('ingles');
+    const pool = barajar(d.verbos);
+    quiz({
+      id: 'en-frases', modo: 'reloj', segundos: 90,
+      siguiente: n => {
+        const f = pool[n % pool.length];
+        return { big: '🧩', q: f.frase, sub: f.es, opciones: f.opciones, correcta: f.correcta, explicacion: 'Era: ' + f.frase.replace('___', f.opciones[f.correcta]) };
+      },
+    });
+  }
+
+  async function jugarPreguntasEn() {
+    const d = await datos('ingles');
+    const pool = barajar(d.preguntas);
+    quiz({
+      id: 'en-preguntas', modo: 'reloj', segundos: 90,
+      siguiente: n => {
+        const f = pool[n % pool.length];
+        return conOpciones({ big: '💬', q: f.pregunta, sub: f.es, explicacion: 'Respuesta: ' + f.opciones[f.correcta] }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta));
+      },
+    });
+  }
+
+  async function jugarSpelling() {
+    const d = await datos('ingles');
+    const usadas = new Set(); const lista = [];
+    for (const nv of [1, 1, 1, 2, 2, 2, 2, 3, 3, 3]) { const w = barajar(d.spelling.filter(s => s.nivel === nv && !usadas.has(s.en)))[0]; if (w) { usadas.add(w.en); lista.push(w); } }
+    const m = marco('en-spelling');
+    let i = 0, puntos = 0, aciertos = 0, pista = false;
+    const t0 = Date.now();
+    const voz = !!window.speechSynthesis;
+    function pintar() {
+      if (i >= lista.length) return terminar('en-spelling', { puntos, aciertos, total: lista.length, segundos: (Date.now() - t0) / 1000, titulo: '🐝 ¡Spelling bee terminado!' });
+      const w = lista[i]; pista = false;
+      m.body.innerHTML = '<div class="q-card"><div class="big">🐝</div><div class="q">Palabra ' + (i + 1) + ' de ' + lista.length + '</div>' +
+        '<div class="sub" id="sp-pista">' + (voz ? 'Escucha y escríbela en inglés' : 'Tu navegador no tiene voz: usa la pista 💡') + '</div></div>' +
+        '<div class="row-btns" style="margin-top:0"><button class="btn ghost" data-sp="oir">🔊 Escuchar</button><button class="btn ghost" data-sp="lento">🐢 Lento</button><button class="btn ghost" data-sp="pista">💡 Pista</button></div>' +
+        '<form id="sp-form" autocomplete="off"><label for="sp-in">Escribe la palabra</label><input id="sp-in" type="text" autocapitalize="off" spellcheck="false" autocomplete="off">' +
+        '<div class="row-btns"><button class="btn" type="submit">Revisar</button></div></form><div class="feedback" id="fb"></div>';
+      document.getElementById('sp-in').focus();
+      if (voz) setTimeout(() => hablar(w.en), 250);
+      else darPista();
+    }
+    function darPista() {
+      const w = lista[i]; pista = true;
+      document.getElementById('sp-pista').textContent = '💡 ' + w.es + ' · empieza con «' + w.en[0] + '» · ' + w.en.length + ' letras';
+    }
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-sp]'); if (!b) return;
+      if (b.dataset.sp === 'oir') hablar(lista[i].en);
+      if (b.dataset.sp === 'lento') hablar(lista[i].en, 'en-US', .55);
+      if (b.dataset.sp === 'pista') darPista();
+    });
+    m.body.addEventListener('submit', e => {
+      e.preventDefault();
+      const w = lista[i]; const v = document.getElementById('sp-in').value.trim();
+      if (!v) return;
+      const fb = document.getElementById('fb');
+      if (v.toLowerCase() === w.en.toLowerCase()) {
+        const gana = pista ? 75 : 150; puntos += gana; aciertos++; m.puntos(puntos); sonidoOk();
+        fb.className = 'feedback ok'; fb.textContent = '✔ ¡Perfecto! +' + gana;
+      } else {
+        sonidoMal(); fb.className = 'feedback bad'; fb.textContent = '✘ Se escribe: ' + w.en + ' (' + w.es + ')';
+      }
+      document.querySelector('#sp-form button').disabled = true;
+      i++; setTimeout(pintar, 1300);
+    });
+    pintar();
+  }
+
+  async function jugarMemorama() {
+    const d = await datos('ingles');
+    const pares = tomar(d.vocabulario, 8);
+    const cartas = barajar(pares.flatMap((p, k) => [{ k, lado: 'en', txt: p.en }, { k, lado: 'es', txt: p.es, em: p.emoji }]));
+    const m = marco('en-memorama');
+    let abiertas = [], encontrados = 0, movs = 0, bloqueado = false;
+    const t0 = Date.now();
+    m.body.innerHTML = '<p class="muted" style="text-align:center;margin-top:0">Une cada palabra en inglés con su significado.</p><div class="memo">' +
+      cartas.map((c, i) => '<button data-memo="' + i + '" aria-label="Carta ' + (i + 1) + '">' + (c.em ? '<span class="em">' + escapeHtml(c.em) + '</span>' : '') + escapeHtml(c.txt) + '</button>').join('') + '</div>';
+    const btns = [...m.body.querySelectorAll('[data-memo]')];
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-memo]'); if (!b || bloqueado || b.classList.contains('up') || b.classList.contains('done')) return;
+      b.classList.add('up'); abiertas.push(Number(b.dataset.memo));
+      if (abiertas.length < 2) return;
+      movs++;
+      const [a, c] = abiertas.map(x => cartas[x]);
+      if (a.k === c.k && a.lado !== c.lado) {
+        abiertas.forEach(x => btns[x].classList.add('done')); abiertas = []; encontrados++; sonidoOk();
+        if (encontrados === pares.length) {
+          const seg = (Date.now() - t0) / 1000;
+          const puntos = Math.max(100, 1000 - Math.max(0, movs - pares.length) * 25 - Math.round(seg) * 2);
+          m.puntos(puntos);
+          setTimeout(() => terminar('en-memorama', { puntos, aciertos: pares.length, total: pares.length, segundos: seg, titulo: '🃏 ¡Memorama completo!', detalle: movs + ' movimientos en ' + Math.round(seg) + ' s' }), 600);
+        }
+      } else {
+        bloqueado = true; sonidoMal();
+        setTimeout(() => { abiertas.forEach(x => btns[x].classList.remove('up')); abiertas = []; bloqueado = false; }, 900);
+      }
+    });
+  }
+
+  async function jugarOrdena(idioma) {
+    const id = idioma === 'en' ? 'en-ordena' : 'es-ordena';
+    const fuente = idioma === 'en' ? (await datos('ingles')).oraciones.map(o => ({ txt: o.en, pista: o.es })) : (await datos('espanol')).oraciones.map(o => ({ txt: o, pista: '' }));
+    const lista = tomar(fuente, 6);
+    const m = marco(id);
+    let i = 0, puntos = 0, aciertos = 0, intento = 1, puestas = [], quedan = [];
+    const t0 = Date.now();
+    function pintar() {
+      if (i >= lista.length) return terminar(id, { puntos, aciertos, total: lista.length, segundos: (Date.now() - t0) / 1000, titulo: '🔀 ¡Listo!' });
+      const o = lista[i]; intento = 1; puestas = [];
+      const palabras = o.txt.split(/\s+/);
+      do { quedan = barajar(palabras.map((w, k) => ({ w, k }))); } while (palabras.length > 1 && quedan.map(x => x.w).join(' ') === o.txt);
+      dibujar();
+    }
+    function dibujar() {
+      const o = lista[i];
+      m.body.innerHTML = '<div class="q-card"><div class="q">Oración ' + (i + 1) + ' de ' + lista.length + '</div>' + (o.pista ? '<div class="sub">💬 ' + escapeHtml(o.pista) + '</div>' : '<div class="sub">Toca las palabras en orden</div>') + '</div>' +
+        '<div class="slots" id="slots">' + puestas.map((x, j) => '<button class="word" data-quitar="' + j + '">' + escapeHtml(x.w) + '</button>').join('') + '</div>' +
+        '<div class="chips">' + quedan.map((x, j) => '<button class="word" data-poner="' + j + '">' + escapeHtml(x.w) + '</button>').join('') + '</div>' +
+        '<div class="row-btns"><button class="btn ghost" data-ord="borrar">↺ Borrar</button><button class="btn" data-ord="revisar"' + (quedan.length ? ' disabled' : '') + '>Revisar</button></div><div class="feedback" id="fb"></div>';
+    }
+    m.body.addEventListener('click', e => {
+      const p = e.target.closest('[data-poner]'), q = e.target.closest('[data-quitar]'), b = e.target.closest('[data-ord]');
+      if (p) { puestas.push(quedan.splice(Number(p.dataset.poner), 1)[0]); dibujar(); }
+      if (q) { quedan.push(puestas.splice(Number(q.dataset.quitar), 1)[0]); dibujar(); }
+      if (b && b.dataset.ord === 'borrar') { quedan = quedan.concat(puestas); puestas = []; dibujar(); }
+      if (b && b.dataset.ord === 'revisar') {
+        const o = lista[i]; const fb = document.getElementById('fb');
+        if (puestas.map(x => x.w).join(' ') === o.txt) {
+          const gana = intento === 1 ? 150 : 75; puntos += gana; aciertos++; m.puntos(puntos); sonidoOk();
+          fb.className = 'feedback ok'; fb.textContent = '✔ ¡Correcto! +' + gana; b.disabled = true;
+          i++; setTimeout(pintar, 900);
+        } else if (intento === 1) {
+          intento = 2; sonidoMal(); fb.className = 'feedback bad'; fb.textContent = '✘ Casi. Inténtalo otra vez (último intento).';
+        } else {
+          sonidoMal(); fb.className = 'feedback bad'; fb.textContent = '✘ Era: ' + o.txt; b.disabled = true;
+          i++; setTimeout(pintar, 1800);
+        }
+      }
+    });
+    pintar();
+  }
+
+  // ---------- Juegos de Español ----------
+  async function jugarQuizEspanol(tipo) {
+    const d = await datos('espanol');
+    const pool = barajar(d[tipo]);
+    quiz({
+      id: tipo === 'ortografia' ? 'es-ortografia' : 'es-acentos', modo: 'reloj', segundos: 90,
+      siguiente: n => {
+        const f = pool[n % pool.length];
+        const opciones = barajar(f.opciones.map((o, k) => ({ o, k })));
+        return { big: tipo === 'ortografia' ? '✍️' : 'á', q: f.frase, sub: f.regla ? 'Regla: ' + f.regla : '', opciones: opciones.map(x => x.o), correcta: opciones.findIndex(x => x.k === f.correcta), explicacion: f.explicacion };
+      },
+    });
+  }
+
+  async function jugarSinonimos() {
+    const d = await datos('espanol');
+    const pool = barajar(d.sinonimos.map(x => Object.assign({ tipo: 'sinónimo' }, x)).concat(d.antonimos.map(x => Object.assign({ tipo: 'antónimo' }, x))));
+    quiz({
+      id: 'es-sinonimos', modo: 'reloj', segundos: 75,
+      siguiente: n => {
+        const f = pool[n % pool.length];
+        return conOpciones({ big: f.tipo === 'sinónimo' ? '🟰' : '↔️', q: '«' + f.palabra + '»', sub: 'Elige el ' + f.tipo, explicacion: f.tipo + ' de «' + f.palabra + '»: ' + f.respuesta }, f.respuesta, f.distractores);
+      },
+    });
+  }
+
+  // ---------- Maratón de cultura ----------
+  async function elegirCultura() {
+    const d = await datos('cultura');
+    marco('cultura');
+    const m = document.getElementById('m-body');
+    m.innerHTML = '<div class="q-card"><div class="big">🏃</div><div class="q">Elige tu maratón</div><div class="sub">3 vidas · 15 segundos por pregunta · sube de nivel</div></div>' +
+      '<div class="opts">' + [{ id: 'todas', titulo: 'Todas mezcladas', emoji: '🌈' }].concat(d.categorias).map(c =>
+        '<button class="opt" data-cat="' + escapeHtml(c.id) + '">' + escapeHtml(c.emoji) + ' ' + escapeHtml(c.titulo) + '</button>').join('') + '</div>';
+    m.addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (b) jugarCultura(d, b.dataset.cat); }, { once: false });
+  }
+
+  function jugarCultura(d, cat) {
+    const del = d.preguntas.filter(p => cat === 'todas' || p.cat === cat);
+    const orden = [].concat(barajar(del.filter(p => p.nivel === 1)).slice(0, 10), barajar(del.filter(p => p.nivel === 2)).slice(0, 12), barajar(del.filter(p => p.nivel === 3)));
+    const nombreCat = cat === 'todas' ? 'Todas' : (d.categorias.find(c => c.id === cat) || {}).titulo;
+    quiz({
+      id: 'cultura', modo: 'vidas', porPregunta: 15,
+      detalle: r => 'Maratón: ' + escapeHtml(nombreCat) + ' · llegaste a la pregunta ' + r.total,
+      siguiente: n => {
+        const p = orden[n]; if (!p) return null;
+        const niv = ['', 'Nivel fácil', 'Nivel medio', 'Nivel difícil'][p.nivel];
+        return { q: p.pregunta, sub: niv + ' · ' + (d.categorias.find(c => c.id === p.cat) || {}).titulo, opciones: p.opciones, correcta: p.correcta, explicacion: '💡 ' + p.dato };
+      },
+    });
+  }
+
+  // ---------- Mente ágil ----------
+  // Operación n (la dificultad sube con n). `aleatorio` permite semilla en partidas.
+  function genCalculo(n, aleatorio = Math.random) {
+    const rnd = (a, b) => a + Math.floor(aleatorio() * (b - a + 1));
+    const nivel = Math.min(4, Math.floor(n / 5));
+    const ops = nivel < 1 ? ['+', '−'] : nivel < 2 ? ['+', '−', '×'] : ['+', '−', '×', '÷'];
+    const op = ops[rnd(0, ops.length - 1)];
+    let a, b, r;
+    const max = [10, 20, 50, 100, 200][nivel];
+    if (op === '+') { a = rnd(1, max); b = rnd(1, max); r = a + b; }
+    if (op === '−') { a = rnd(2, max); b = rnd(1, a); r = a - b; }
+    if (op === '×') { a = rnd(2, nivel < 3 ? 10 : 15); b = rnd(2, 10); r = a * b; }
+    if (op === '÷') { b = rnd(2, 10); r = rnd(2, 12); a = b * r; }
+    const dis = new Set();
+    while (dis.size < 3) { const x = r + [1, -1, 2, -2, 10, -10, 5][rnd(0, 6)]; if (x !== r && x >= 0) dis.add(x); }
+    return conOpciones({ big: '🧮', q: a + ' ' + op + ' ' + b + ' = ?', explicacion: a + ' ' + op + ' ' + b + ' = ' + r }, String(r), [...dis].map(String), aleatorio);
+  }
+  function jugarCalculo() {
+    quiz({ id: 'mente-calculo', modo: 'reloj', segundos: 60, siguiente: n => genCalculo(n) });
+  }
+
+  function genSecuencia(n, aleatorio = Math.random) {
+    const rnd = (a, b) => a + Math.floor(aleatorio() * (b - a + 1));
+    const tipos = [
+      () => { const a = rnd(1, 20), k = rnd(2, 9); return { s: [0, 1, 2, 3].map(i => a + k * i), r: a + 4 * k, regla: 'sumar ' + k }; },
+      () => { const a = rnd(60, 99), k = rnd(2, 9); return { s: [0, 1, 2, 3].map(i => a - k * i), r: a - 4 * k, regla: 'restar ' + k }; },
+      () => { const a = rnd(1, 5), k = rnd(2, 3); return { s: [0, 1, 2, 3].map(i => a * k ** i), r: a * k ** 4, regla: 'multiplicar por ' + k }; },
+      () => { const a = rnd(1, 6); return { s: [0, 1, 2, 3].map(i => (a + i) ** 2), r: (a + 4) ** 2, regla: 'cuadrados' }; },
+      () => { let x = rnd(1, 4), y = rnd(1, 5); const s = [x, y]; while (s.length < 5) s.push(s[s.length - 1] + s[s.length - 2]); return { s: s.slice(0, 4), r: s[4], regla: 'sumar los dos anteriores' }; },
+      () => { const a = rnd(1, 9), k = rnd(1, 4); return { s: [a, a + k, a + 3 * k, a + 6 * k], r: a + 10 * k, regla: 'sumar ' + k + ', ' + 2 * k + ', ' + 3 * k + '…' }; },
+    ];
+    const g = tipos[rnd(0, Math.min(tipos.length - 1, 1 + Math.floor(n / 3)))]();
+    const dis = new Set();
+    while (dis.size < 3) { const x = g.r + [1, -1, 2, -2, 3, 5, -5, 10][rnd(0, 7)]; if (x !== g.r) dis.add(x); }
+    return conOpciones({ big: '🔢', q: g.s.join(', ') + ', ?', sub: '¿Qué número sigue?', explicacion: 'Era ' + g.r + ' (' + g.regla + ')' }, String(g.r), [...dis].map(String), aleatorio);
+  }
+  function jugarSecuencias() {
+    quiz({ id: 'mente-secuencias', modo: 'vidas', porPregunta: 20, siguiente: n => n >= 30 ? null : genSecuencia(n) });
+  }
+
+  function jugarSimon() {
+    const m = marco('mente-simon');
+    const colores = [{ c: '#22c55e', f: 330 }, { c: '#ef4444', f: 262 }, { c: '#eab308', f: 392 }, { c: '#3b82f6', f: 494 }];
+    let seq = [], paso = 0, turno = false, nivel = 0, terminado = false;
+    const t0 = Date.now();
+    m.body.innerHTML = '<div class="q-card"><div class="q" id="sim-msg">Mira la secuencia…</div><div class="sub">Nivel <b id="sim-niv">1</b></div></div>' +
+      '<div class="simon">' + colores.map((x, i) => '<button data-sim="' + i + '" aria-label="Color ' + (i + 1) + '" style="background:' + x.c + ';color:' + x.c + '"></button>').join('') + '</div>';
+    const pads = [...m.body.querySelectorAll('[data-sim]')];
+    const encender = (i, ms = 420) => new Promise(ok => { pads[i].classList.add('on'); tono(colores[i].f, ms - 60, 'triangle', .1); setTimeout(() => { pads[i].classList.remove('on'); setTimeout(ok, 140); }, ms); });
+    async function ronda() {
+      nivel++; paso = 0; turno = false;
+      document.getElementById('sim-niv').textContent = nivel;
+      document.getElementById('sim-msg').textContent = 'Mira la secuencia…';
+      seq.push(Math.floor(Math.random() * 4));
+      pads.forEach(p => { p.disabled = true; });
+      await new Promise(r => setTimeout(r, 600));
+      const vel = Math.max(220, 480 - nivel * 20);
+      for (const i of seq) { if (terminado) return; await encender(i, vel); }
+      turno = true; pads.forEach(p => { p.disabled = false; });
+      document.getElementById('sim-msg').textContent = '¡Tu turno!';
+    }
+    m.body.addEventListener('click', async e => {
+      const b = e.target.closest('[data-sim]'); if (!b || !turno || terminado) return;
+      const i = Number(b.dataset.sim);
+      encender(i, 220);
+      if (i !== seq[paso]) {
+        terminado = true; sonidoMal();
+        const puntos = (nivel - 1) * 100;
+        document.getElementById('sim-msg').textContent = '✘ ¡Uy! Llegaste al nivel ' + nivel;
+        return setTimeout(() => terminar('mente-simon', { puntos, aciertos: nivel - 1, total: nivel, segundos: (Date.now() - t0) / 1000, titulo: '🟢 Simón dice', detalle: 'Repetiste ' + (nivel - 1) + ' secuencia(s)' }), 1200);
+      }
+      paso++;
+      if (paso === seq.length) { turno = false; m.puntos(nivel * 100); setTimeout(ronda, 600); }
+    });
+    limpiezas.push(() => { terminado = true; });
+    ronda();
+  }
+
+  async function jugarSopa() {
+    const d = await datos('ingles');
+    const N = 10;
+    const candidatas = barajar(d.vocabulario.filter(v => /^[a-z]{3,8}$/.test(v.en)));
+    const grid = Array.from({ length: N }, () => Array(N).fill(''));
+    const dirs = [[0, 1], [1, 0], [1, 1], [-1, 1]];
+    const puestas = [];
+    for (const w of candidatas) {
+      if (puestas.length >= 6) break;
+      const W = w.en.toUpperCase();
+      for (let intento = 0; intento < 60; intento++) {
+        const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
+        const r0 = Math.floor(Math.random() * N), c0 = Math.floor(Math.random() * N);
+        const celdas = [...W].map((_, k) => [r0 + dr * k, c0 + dc * k]);
+        if (celdas.every(([r, c], k) => r >= 0 && r < N && c >= 0 && c < N && (!grid[r][c] || grid[r][c] === W[k]))) {
+          celdas.forEach(([r, c], k) => { grid[r][c] = W[k]; });
+          puestas.push({ w, W, celdas, found: false });
+          break;
+        }
+      }
+    }
+    const letras = 'ABCDEFGHIJKLMNOPRSTUVWY';
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!grid[r][c]) grid[r][c] = letras[Math.floor(Math.random() * letras.length)];
+    const m = marco('mente-sopa');
+    const TOT = 180;
+    let inicio = null, encontradas = 0, terminado = false;
+    const t0 = Date.now();
+    const fin = () => {
+      if (terminado) return; terminado = true;
+      const seg = (Date.now() - t0) / 1000;
+      const bono = encontradas === puestas.length ? Math.max(0, Math.round(TOT - seg)) * 3 : 0;
+      terminar('mente-sopa', { puntos: encontradas * 150 + bono, aciertos: encontradas, total: puestas.length, segundos: seg, titulo: '🔎 Sopa de letras', detalle: encontradas === puestas.length ? '¡Las encontraste todas! Bono de tiempo: ' + bono : '' });
+    };
+    reloj(TOT, s => m.tiempo(s, TOT), fin);
+    m.body.innerHTML = '<p class="muted" style="text-align:center;margin-top:0">Toca la primera y la última letra de cada palabra en inglés.</p>' +
+      '<div class="sopa" style="grid-template-columns:repeat(' + N + ',1fr)">' + grid.flatMap((fila, r) => fila.map((l, c) => '<button data-r="' + r + '" data-c="' + c + '">' + l + '</button>')).join('') + '</div>' +
+      '<div class="lista-sopa">' + puestas.map((p, i) => '<span id="sopa-w' + i + '">' + escapeHtml(p.w.emoji + ' ' + p.w.es) + '</span>').join('') + '</div>';
+    const celda = (r, c) => m.body.querySelector('[data-r="' + r + '"][data-c="' + c + '"]');
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-r]'); if (!b || terminado) return;
+      const r = Number(b.dataset.r), c = Number(b.dataset.c);
+      if (!inicio) { inicio = [r, c]; b.classList.add('sel'); return; }
+      celda(inicio[0], inicio[1]).classList.remove('sel');
+      const [r0, c0] = inicio; inicio = null;
+      const hit = puestas.findIndex(p => !p.found && ((p.celdas[0][0] === r0 && p.celdas[0][1] === c0 && p.celdas.at(-1)[0] === r && p.celdas.at(-1)[1] === c) ||
+        (p.celdas.at(-1)[0] === r0 && p.celdas.at(-1)[1] === c0 && p.celdas[0][0] === r && p.celdas[0][1] === c)));
+      if (hit >= 0) {
+        const p = puestas[hit]; p.found = true; encontradas++;
+        p.celdas.forEach(([rr, cc]) => celda(rr, cc).classList.add('found'));
+        const s = document.getElementById('sopa-w' + hit); s.classList.add('found'); s.textContent = p.w.emoji + ' ' + p.w.es + ' = ' + p.W;
+        m.puntos(encontradas * 150); sonidoOk();
+        if (encontradas === puestas.length) setTimeout(fin, 700);
+      } else sonidoMal();
+    });
+  }
+
+  // ---------- Mente ágil: Dragon Run (juego del profe en iframe del mismo origen; openspec: dragon-run) ----------
+  function jugarDragonRun() {
+    const m = marco('dragon-run');
+    document.getElementById('m-puntos').hidden = true;
+    const auto = new URLSearchParams(location.search).get('dragonAuto') === '1'; // solo pruebas E2E
+    m.body.innerHTML = '<div style="position:relative;width:100%;aspect-ratio:2/1;border-radius:16px;overflow:hidden;box-shadow:var(--shadow)">' +
+      '<iframe id="dragon-frame" src="juegos/dragon-run.html' + (auto ? '?auto=1' : '') + '" title="Dragon Run" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay"></iframe></div>' +
+      '<p class="muted" style="text-align:center;margin:8px 0 0">Toca el juego o presiona ESPACIO para saltar · vuelve a tocar en el aire para el doble salto · 🏰 a los 600 m: +200</p>';
+    const frame = document.getElementById('dragon-frame');
+    frame.addEventListener('load', () => { try { frame.focus(); } catch (e) { /* sin foco */ } });
+    // La música de Juegos se pausa mientras corre el dragón (el juego trae la suya).
+    const estilo = musica.estilo;
+    detenerMusica();
+    const alMensaje = ev => {
+      const d = ev.data || {};
+      if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'dragon-run' || !d.fin) return;
+      terminar('dragon-run', {
+        puntos: d.puntos, aciertos: d.monedas, total: 0, segundos: d.segundos,
+        titulo: d.gano ? '🏰 ¡Llegaste al castillo!' : '🐉 Dragon Run',
+        detalle: '📏 ' + d.metros + ' m · 🪙 ' + d.monedas + ' monedas' + (d.gano ? ' · bono castillo +200' : ''),
+      });
+    };
+    window.addEventListener('message', alMensaje);
+    limpiezas.push(() => window.removeEventListener('message', alMensaje), () => { if (estilo) iniciarMusica(estilo); });
+  }
+
+  // ---------- Mente ágil: Sudoku por niveles (openspec: sudoku-niveles) ----------
+  const SUDOKU_NIVELES = {
+    facil: { t: 'Fácil', emoji: '🟢', pistas: 40, base: 400, limite: 600 },
+    medio: { t: 'Medio', emoji: '🟡', pistas: 32, base: 700, limite: 900 },
+    dificil: { t: 'Difícil', emoji: '🟠', pistas: 27, base: 1000, limite: 1200 },
+    experto: { t: 'Experto', emoji: '🔴', pistas: 23, base: 1400, limite: 1500 },
+  };
+  const sdkPuede = (g, i, v) => {
+    const r = Math.floor(i / 9), c = i % 9, br = r - r % 3, bc = c - c % 3;
+    for (let k = 0; k < 9; k++) if (g[r * 9 + k] === v || g[k * 9 + c] === v || g[(br + Math.floor(k / 3)) * 9 + bc + k % 3] === v) return false;
+    return true;
+  };
+  // Tablero resuelto al azar (backtracking con números barajados).
+  function sudokuResuelto(rnd = Math.random) {
+    const g = Array(81).fill(0);
+    const llenar = i => {
+      if (i === 81) return true;
+      for (const v of barajar([1, 2, 3, 4, 5, 6, 7, 8, 9], rnd)) if (sdkPuede(g, i, v)) { g[i] = v; if (llenar(i + 1)) return true; g[i] = 0; }
+      return false;
+    };
+    llenar(0);
+    return g;
+  }
+  // Cuenta soluciones hasta `tope` (la celda con menos candidatos primero).
+  function contarSoluciones(g0, tope = 2) {
+    const g = g0.slice(); let n = 0;
+    const buscar = () => {
+      let mejor = -1, cands = null;
+      for (let i = 0; i < 81; i++) {
+        if (g[i]) continue;
+        const cs = []; for (let v = 1; v <= 9; v++) if (sdkPuede(g, i, v)) cs.push(v);
+        if (!cs.length) return;
+        if (!cands || cs.length < cands.length) { mejor = i; cands = cs; if (cs.length === 1) break; }
+      }
+      if (mejor === -1) { n++; return; }
+      for (const v of cands) { g[mejor] = v; buscar(); g[mejor] = 0; if (n >= tope) return; }
+    };
+    buscar();
+    return n;
+  }
+  // Quita números al azar mientras haya una sola solución, hasta las pistas del nivel.
+  function generarSudoku(nivel, rnd = Math.random) {
+    const sol = sudokuResuelto(rnd), g = sol.slice();
+    let pistas = 81;
+    for (const i of barajar([...Array(81).keys()], rnd)) {
+      if (pistas <= SUDOKU_NIVELES[nivel].pistas) break;
+      const v = g[i]; g[i] = 0;
+      if (contarSoluciones(g, 2) === 1) pistas--; else g[i] = v;
+    }
+    return { puzzle: g, sol };
+  }
+  const puntosSudoku = (nivel, seg, errores) => {
+    const n = SUDOKU_NIVELES[nivel];
+    return Math.max(Math.round(n.base * 0.2), Math.round(n.base * (1 + 0.4 * Math.max(0, 1 - seg / n.limite))) - 40 * errores);
+  };
+
+  function elegirSudoku() {
+    const m = marco('mente-sudoku');
+    let nivel = 'facil';
+    m.body.innerHTML = '<div class="q-card"><div class="big">🔢</div><div class="q">Sudoku</div><div class="sub">Llena el tablero: cada fila, columna y caja de 3×3 lleva los números del 1 al 9 sin repetir. Tienes 3 vidas.</div></div>' +
+      '<label>Nivel</label><div class="opts">' + Object.entries(SUDOKU_NIVELES).map(([id, n]) => '<button class="opt" data-sdk-nivel="' + id + '" aria-pressed="' + (id === nivel) + '">' + n.emoji + ' ' + n.t + '<br><small>' + n.pistas + ' pistas · hasta ⭐ ' + fmt(puntosSudoku(id, 0, 0)) + '</small></button>').join('') + '</div>' +
+      '<div class="row-btns"><button class="btn" data-sdk-go>Empezar</button></div>';
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-sdk-nivel]');
+      if (b) { nivel = b.dataset.sdkNivel; m.body.querySelectorAll('[data-sdk-nivel]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }
+      if (e.target.closest('[data-sdk-go]')) { m.body.innerHTML = '<div class="loading">Armando tu tablero…</div>'; setTimeout(() => jugarSudoku(nivel), 30); }
+    });
+  }
+
+  function jugarSudoku(nivel) {
+    const N = SUDOKU_NIVELES[nivel];
+    const { puzzle, sol } = generarSudoku(nivel);
+    window.__sudoku = { puzzle, sol, nivel }; // para pruebas E2E
+    const m = marco('mente-sudoku', { vidas: 3 });
+    const g = puzzle.slice();
+    let sel = g.findIndex(v => !v), errores = 0, terminado = false;
+    const t0 = Date.now();
+    m.vidas(3);
+    const segundos = () => (Date.now() - t0) / 1000 / TIEMPO;
+    const tTimer = setInterval(() => { const e = document.getElementById('m-tiempo'); if (!e) return; const sg = Math.floor(segundos()); e.hidden = false; e.textContent = '⏱ ' + Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0'); }, 500);
+    limpiezas.push(() => clearInterval(tTimer));
+    m.body.innerHTML = '<p class="muted" style="text-align:center;margin:0">' + N.emoji + ' ' + N.t + ' · faltan <b id="sdk-faltan"></b></p>' +
+      '<div class="sdk" id="sdk">' + g.map((v, i) => { const r = Math.floor(i / 9), c = i % 9; return '<button data-sdk-i="' + i + '" class="' + [v ? 'fija' : '', c % 3 === 2 && c < 8 ? 'bd' : '', r % 3 === 2 && r < 8 ? 'bb' : ''].join(' ').trim() + '" aria-label="Fila ' + (r + 1) + ', columna ' + (c + 1) + '">' + (v || '') + '</button>'; }).join('') + '</div>' +
+      '<div class="sdk-pad">' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => '<button data-sdk-n="' + n + '">' + n + '<small id="sdk-q' + n + '"></small></button>').join('') + '<button data-sdk-n="0" aria-label="Borrar">⌫<small>borrar</small></button></div>';
+    const celdas = [...m.body.querySelectorAll('[data-sdk-i]')];
+    const pintar = () => {
+      const r = Math.floor(sel / 9), c = sel % 9, br = r - r % 3, bc = c - c % 3, v = g[sel];
+      celdas.forEach((b, i) => {
+        const ri = Math.floor(i / 9), ci = i % 9;
+        b.classList.toggle('sel', i === sel);
+        b.classList.toggle('zona', i !== sel && (ri === r || ci === c || (ri - ri % 3 === br && ci - ci % 3 === bc)));
+        b.classList.toggle('igual', i !== sel && !!v && g[i] === v);
+      });
+      const faltan = g.filter(x => !x).length;
+      document.getElementById('sdk-faltan').textContent = faltan;
+      for (let n = 1; n <= 9; n++) { const q = 9 - g.filter(x => x === n).length; document.getElementById('sdk-q' + n).textContent = q ? q : '✓'; m.body.querySelector('[data-sdk-n="' + n + '"]').disabled = !q; }
+    };
+    const fin = gano => {
+      if (terminado) return; terminado = true;
+      const seg = segundos();
+      if (gano) terminar('mente-sudoku', { puntos: puntosSudoku(nivel, seg, errores), aciertos: 81 - puzzle.filter(Boolean).length, total: 81 - puzzle.filter(Boolean).length, segundos: seg, titulo: '🔢 ¡Sudoku resuelto!', detalle: N.emoji + ' ' + N.t + ' · ' + Math.floor(seg / 60) + ' min ' + Math.round(seg % 60) + ' s · ' + errores + ' error(es)' });
+      else terminar('mente-sudoku', { puntos: 0, aciertos: g.filter(Boolean).length - puzzle.filter(Boolean).length, total: 81 - puzzle.filter(Boolean).length, segundos: seg, titulo: '💔 Sin vidas', detalle: 'Te equivocaste 3 veces. ¡Inténtalo de nuevo!' });
+    };
+    const poner = n => {
+      if (terminado || sel < 0 || puzzle[sel]) return;
+      const b = celdas[sel];
+      if (n === 0) { g[sel] = 0; b.textContent = ''; pintar(); return; }
+      if (sol[sel] === n) {
+        g[sel] = n; b.textContent = n; b.classList.remove('mal'); sonidoOk(); pintar();
+        m.puntos(puntosSudoku(nivel, segundos(), errores));
+        if (g.every((v, i) => v === sol[i])) setTimeout(() => fin(true), 600);
+      } else {
+        errores++; sonidoMal(); m.vidas(3 - errores);
+        b.textContent = n; b.classList.add('mal');
+        const idx = sel;
+        setTimeout(() => { celdas[idx].textContent = g[idx] || ''; celdas[idx].classList.remove('mal'); }, 700);
+        if (errores >= 3) setTimeout(() => fin(false), 800);
+      }
+    };
+    m.body.addEventListener('click', e => {
+      const c = e.target.closest('[data-sdk-i]'), n = e.target.closest('[data-sdk-n]');
+      if (c) { sel = Number(c.dataset.sdkI); pintar(); }
+      if (n && !n.disabled) poner(Number(n.dataset.sdkN));
+    });
+    const onKey = e => {
+      if (terminado) return;
+      if (/^[1-9]$/.test(e.key)) { poner(Number(e.key)); e.preventDefault(); }
+      else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') { poner(0); e.preventDefault(); }
+      else {
+        const d = { ArrowUp: -9, ArrowDown: 9, ArrowLeft: -1, ArrowRight: 1 }[e.key];
+        if (d !== undefined) { sel = (sel + d + 81) % 81; pintar(); e.preventDefault(); }
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    limpiezas.push(() => document.removeEventListener('keydown', onKey));
+    pintar();
+  }
+
+  // ---------- Clásicos: Basta ----------
+  // Compara sin mayúsculas ni acentos, pero conserva la ñ como letra propia.
+  const normBasta = s => String(s || '').trim().toLowerCase().replace(/ñ/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'ñ').replace(/\s+/g, ' ');
+
+  async function jugarBasta(idioma) {
+    const id = idioma === 'en' ? 'basta-en' : 'basta-es';
+    const d = (await datos('basta'))[idioma];
+    const letra = d.letras[Math.floor(Math.random() * d.letras.length)];
+    const L = normBasta(letra);
+    const dic = Object.fromEntries(d.categorias.map(c => [c.id, new Set((d.palabras[c.id] || []).map(normBasta))]));
+    const m = marco(id);
+    const TOT = 60;
+    let terminado = false;
+    const t0 = Date.now();
+    m.body.innerHTML = '<div class="q-card"><div class="sub">' + (idioma === 'en' ? 'Letter' : 'Letra') + '</div><div class="letra">' + escapeHtml(letra) + '</div>' +
+      '<div class="sub">' + (idioma === 'en' ? 'Write one word in English for each category.' : 'Escribe una palabra por categoría.') + '</div></div>' +
+      '<form id="basta-form" autocomplete="off" class="basta-grid">' + d.categorias.map(c =>
+        '<label for="b-' + c.id + '">' + escapeHtml(c.emoji + ' ' + c.titulo) + '</label><input id="b-' + c.id + '" data-bcat="' + c.id + '" type="text" autocapitalize="off" spellcheck="false" maxlength="40" placeholder="' + escapeHtml(letra) + '…">').join('') +
+      '<div class="row-btns" style="grid-column:1/-1"><button class="btn" type="submit">✋ ¡Basta!</button></div></form>';
+    const primero = m.body.querySelector('input'); if (primero) primero.focus();
+    const calificar = (porBasta, quedan) => {
+      if (terminado) return; terminado = true; limpiar();
+      const vistas = new Set();
+      let puntos = 0, aciertos = 0;
+      const filas = d.categorias.map(c => {
+        const valor = (document.getElementById('b-' + c.id) || {}).value || '';
+        const n = normBasta(valor);
+        let estado, pts = 0;
+        if (!n) estado = '—';
+        else if (!n.startsWith(L) || n.length < 2) estado = '✘ ' + (idioma === 'en' ? 'no empieza con ' : 'no empieza con ') + letra;
+        else if (vistas.has(n)) estado = '✘ repetida';
+        else if (dic[c.id].has(n)) { estado = '✔ verificada'; pts = 100; aciertos++; }
+        else if (n.length >= 3) { estado = '¿? no la conozco'; pts = 50; }
+        else estado = '✘ muy corta';
+        if (n) vistas.add(n);
+        puntos += pts;
+        const ej = pts === 100 ? '' : (d.palabras[c.id] || []).find(w => normBasta(w).startsWith(L));
+        return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(valor || '—') + '</b>' + (ej ? '<br><small>p. ej. ' + escapeHtml(ej) + '</small>' : '') + '</td><td>' + escapeHtml(estado) + '</td><td>' + pts + '</td></tr>';
+      });
+      const llenas = d.categorias.every(c => ((document.getElementById('b-' + c.id) || {}).value || '').trim());
+      const bono = porBasta && llenas ? Math.max(0, Math.round(quedan)) * 5 : 0;
+      terminar(id, {
+        puntos: puntos + bono, aciertos, total: d.categorias.length, segundos: (Date.now() - t0) / 1000,
+        titulo: porBasta ? '✋ ¡Basta!' : '⏰ ¡Se acabó el tiempo!',
+        detalle: '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' + filas.join('') + '</tbody></table></div>' +
+          (bono ? '<p>⚡ Bono por decir ¡Basta! a tiempo: +' + bono + '</p>' : ''),
+      });
+    };
+    let quedan = TOT;
+    reloj(TOT, s => { quedan = s; m.tiempo(s, TOT); }, () => calificar(false, 0));
+    m.body.addEventListener('submit', e => { e.preventDefault(); calificar(true, quedan); });
+  }
+
+  // ---------- Clásicos: ¡Una! (cartas de colores) ----------
+  const UNA_COLOR = { r: '#ef4444', y: '#eab308', g: '#22c55e', b: '#3b82f6' };
+  const UNA_TXT = {
+    es: { color: { r: 'Rojo', y: 'Amarillo', g: 'Verde', b: 'Azul' }, skip: 'Salta', rev: 'Reversa', '+2': 'Más dos', wild: 'Comodín', '+4': 'Más cuatro', tu: 'Tu turno', robar: 'Robar', pasar: 'Pasar', una: 'UNA' },
+    en: { color: { r: 'Red', y: 'Yellow', g: 'Green', b: 'Blue' }, skip: 'Skip', rev: 'Reverse', '+2': 'Draw two', wild: 'Wild', '+4': 'Wild draw four', tu: 'Your turn', robar: 'Draw', pasar: 'Pass', una: 'UNA' },
+  };
+  const NUM_EN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+  const NUM_ES = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
+
+  function unaMazo() {
+    const m = [];
+    for (const c of ['r', 'y', 'g', 'b']) {
+      m.push({ c, v: '0' });
+      for (let k = 0; k < 2; k++) { for (let n = 1; n <= 9; n++) m.push({ c, v: String(n) }); m.push({ c, v: 'skip' }, { c, v: 'rev' }, { c, v: '+2' }); }
+    }
+    for (let k = 0; k < 4; k++) m.push({ c: null, v: 'wild' }, { c: null, v: '+4' });
+    return barajar(m);
+  }
+  // Castigo por tardar en presionar UNA (segundos desde que se tira la penúltima carta).
+  const castigoUna = seg => seg <= 2 ? 0 : seg <= 3 ? 1 : seg <= 4 ? 2 : seg <= 5 ? 3 : 4;
+  const unaSimbolo = v => ({ skip: '⊘', rev: '⇄', '+2': '+2', wild: '★', '+4': '+4' }[v] || v);
+
+  function elegirUna() {
+    const m = marco('una');
+    m.body.innerHTML = '<div class="q-card"><div class="big">🃏</div><div class="q">¡Una!</div><div class="sub">Iguala el color o el número. Cuando te quede una carta, ¡presiona el botón UNA!</div></div>' +
+      '<label>Rivales</label><div class="opts" style="grid-template-columns:repeat(3,1fr)">' + [1, 2, 3].map(n => '<button class="opt" data-una-bots="' + n + '"' + (n === 2 ? ' aria-pressed="true"' : '') + '>' + n + ' bot' + (n > 1 ? 's' : '') + '</button>').join('') + '</div>' +
+      '<label>Idioma</label><div class="opts"><button class="opt" data-una-lang="es" aria-pressed="true">🇲🇽 Español</button><button class="opt" data-una-lang="en">🇺🇸 English</button></div>' +
+      '<div class="row-btns"><button class="btn" data-una-go>Repartir cartas</button></div>';
+    let bots = 2, lang = 'es';
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-una-bots]'), l = e.target.closest('[data-una-lang]');
+      if (b) { bots = Number(b.dataset.unaBots); m.body.querySelectorAll('[data-una-bots]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }
+      if (l) { lang = l.dataset.unaLang; m.body.querySelectorAll('[data-una-lang]').forEach(x => x.setAttribute('aria-pressed', String(x === l))); }
+      if (e.target.closest('[data-una-go]')) jugarUna(bots, lang);
+    });
+  }
+
+  function jugarUna(numBots, lang) {
+    const T = UNA_TXT[lang];
+    const m = marco('una');
+    const nombres = ['Tú', 'Ajolote 🦎', 'Colibrí 🐦', 'Tlacuache 🐀'];
+    let resolverUna = () => {};
+    let mazo = unaMazo(), pila = [], dir = 1, turno = 0, color = null, terminado = false, esperandoUna = false, dijoUna = false, jugadas = 0, robada = null, msg = '';
+    const manos = Array.from({ length: numBots + 1 }, () => []);
+    const t0 = Date.now();
+    const robar = (j, n) => { for (let k = 0; k < n; k++) { if (!mazo.length) { const top = pila.pop(); mazo = barajar(pila); pila = [top]; } if (mazo.length) manos[j].push(mazo.pop()); } };
+    for (let k = 0; k < 7; k++) manos.forEach((_, j) => robar(j, 1));
+    let primera = mazo.pop(); while (primera.v === '+4') { mazo.unshift(primera); primera = mazo.pop(); }
+    pila.push(primera); color = primera.c || ['r', 'y', 'g', 'b'][Math.floor(Math.random() * 4)];
+    const top = () => pila[pila.length - 1];
+    const valida = c => !c.c || c.c === color || c.v === top().v;
+    const nombreCarta = c => {
+      if (c.v === 'wild' || c.v === '+4') return T[c.v];
+      const num = /^\d$/.test(c.v) ? (lang === 'en' ? NUM_EN : NUM_ES)[Number(c.v)] : T[c.v];
+      return lang === 'en' ? T.color[c.c] + ' ' + num : num + ' ' + T.color[c.c].toLowerCase();
+    };
+    const anunciar = texto => hablar(texto, lang === 'en' ? 'en-US' : 'es-MX', 1);
+    const sig = (desde, pasos = 1) => ((desde + dir * pasos) % manos.length + manos.length) % manos.length;
+    const cartaHtml = (c, extra) => '<span class="una-card' + (extra || '') + '" style="--c:' + (c.c ? UNA_COLOR[c.c] : '#1e1b2e') + '">' + (c.c ? '' : '<span class="una-wild"></span>') + '<b>' + escapeHtml(unaSimbolo(c.v)) + '</b></span>';
+
+    function dibujar() {
+      if (terminado) return;
+      const tuTurno = turno === 0 && !esperandoUna;
+      m.body.innerHTML =
+        '<div class="una-bots">' + manos.slice(1).map((h, k) => '<div class="una-bot' + (turno === k + 1 ? ' activo' : '') + '"><span>' + escapeHtml(nombres[k + 1]) + '</span><span>🂠 × ' + h.length + (h.length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
+        '<div class="una-mesa"><div>' + cartaHtml(top(), ' grande') + '<div class="muted" style="text-align:center">' + escapeHtml(T.color[color]) + ' <span class="una-dot" style="background:' + UNA_COLOR[color] + '"></span></div></div>' +
+        '<button class="una-mazo" data-una="robar"' + (tuTurno && !robada ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + mazo.length + ')</small></button></div>' +
+        '<div class="feedback" id="una-msg">' + escapeHtml(msg || (tuTurno ? T.tu + ' · ' + (lang === 'en' ? 'dir ' : 'sentido ') + (dir === 1 ? '↻' : '↺') : '…')) + '</div>' +
+        '<div class="una-mano">' + manos[0].map((c, i) => '<button class="una-btn" data-una-card="' + i + '"' + (tuTurno && valida(c) && (!robada || robada === c) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(nombreCarta(c)) + '">' + cartaHtml(c, tuTurno && valida(c) && (!robada || robada === c) ? ' jugable' : '') + '</button>').join('') + '</div>' +
+        '<div class="row-btns">' + (robada ? '<button class="btn ghost" data-una="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
+        '<button class="btn una-grito' + (esperandoUna ? ' pulsa' : '') + '" data-una="una"' + (esperandoUna ? '' : ' disabled') + '>📣 ' + escapeHtml(T.una) + '</button></div>';
+    }
+
+    function fin(ganador) {
+      terminado = true; limpiar();
+      const restantes = manos.slice(1).reduce((a, h) => a + h.length, 0);
+      const gano = ganador === 0;
+      const puntos = gano ? Math.min(1000, 400 + restantes * 10) : jugadas * 5;
+      terminar('una', { puntos, aciertos: jugadas, total: jugadas + manos[0].length, segundos: (Date.now() - t0) / 1000,
+        titulo: gano ? '🏆 ¡Ganaste la partida!' : '😅 Ganó ' + nombres[ganador], detalle: gano ? 'A tus rivales les quedaron ' + restantes + ' cartas.' : 'Jugaste ' + jugadas + ' cartas. ¡La próxima es tuya!' });
+    }
+
+    function aplicar(j, c) {
+      pila.push(c); if (c.c) color = c.c;
+      anunciar(nombreCarta(c) + (c.c ? '' : (lang === 'en' ? ', ' : ', ') + T.color[color]));
+      if (!manos[j].length) return fin(j);
+      let pasos = 1;
+      if (c.v === 'skip') pasos = 2;
+      if (c.v === 'rev') { if (manos.length === 2) pasos = 2; else dir *= -1; }
+      if (c.v === '+2') { robar(sig(j), 2); pasos = 2; }
+      if (c.v === '+4') { robar(sig(j), 4); pasos = 2; }
+      turno = sig(j, pasos);
+      programar();
+    }
+
+    function programar() {
+      if (terminado) return;
+      dibujar();
+      if (turno !== 0) { const t = setTimeout(turnoBot, 1100 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+    }
+
+    function turnoBot() {
+      if (terminado) return;
+      const j = turno, mano = manos[j];
+      const siguiente = manos[sig(j)].length;
+      let opciones = mano.filter(valida);
+      if (!opciones.length) { robar(j, 1); const n = mano[mano.length - 1]; if (valida(n)) opciones = [n]; else { msg = nombres[j] + (lang === 'en' ? ' draws a card' : ' roba una carta'); turno = sig(j); return programar(); } }
+      const accion = opciones.filter(c => ['skip', '+2', '+4', 'rev'].includes(c.v));
+      const numeros = opciones.filter(c => c.c && /^\d$/.test(c.v));
+      // Bots amables: solo a veces castigan a quien tiene pocas cartas, para que el juego sea retador pero ganable.
+      const castiga = siguiente <= 2 && accion.length && Math.random() < 0.4;
+      const c = castiga ? accion[0] : (numeros[0] || opciones.find(x => x.c) || opciones[0]);
+      mano.splice(mano.indexOf(c), 1);
+      if (!c.c) { const cuenta = { r: 0, y: 0, g: 0, b: 0 }; mano.forEach(x => { if (x.c) cuenta[x.c]++; }); color = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0][0]; }
+      msg = nombres[j] + ': ' + nombreCarta(c) + (mano.length === 1 ? ' · ' + T.una : '');
+      aplicar(j, c);
+    }
+
+    function jugarCarta(i, colorElegido) {
+      const c = manos[0][i];
+      manos[0].splice(i, 1); jugadas++; robada = null;
+      if (!c.c) color = colorElegido;
+      msg = (lang === 'en' ? 'You: ' : 'Tú: ') + nombreCarta(c);
+      if (manos[0].length === 1) {
+        esperandoUna = true; dijoUna = false;
+        pila.push(c); if (c.c) color = c.c;
+        anunciar(nombreCarta(c));
+        const tJugada = Date.now();
+        msg = lang === 'en' ? '📣 Press UNA now! The longer you wait, the more cards you draw' : '📣 ¡Presiona UNA ya! Entre más tardes, más cartas robas';
+        dibujar();
+        // Castigo por segundos: ≤2 s 0, ≤3 s +1, ≤4 s +2, ≤5 s +3, sin presionar +4
+        resolverUna = presiono => {
+          if (!esperandoUna) return;
+          esperandoUna = false; clearTimeout(t); pila.pop();
+          const n = castigoUna(presiono ? (Date.now() - tJugada) / (1000 * TIEMPO) : Infinity);
+          if (n) { robar(0, n); msg = (lang === 'en' ? '⚠️ Too slow on UNA! +' : '⚠️ ¡Tardaste en presionar UNA! +') + n + (lang === 'en' ? ' card(s)' : ' carta(s)'); sonidoMal(); }
+          else { msg = lang === 'en' ? '✔ UNA on time!' : '✔ ¡UNA a tiempo!'; sonidoOk(); }
+          aplicar(0, c);
+        };
+        const t = setTimeout(() => resolverUna(false), 5000 * TIEMPO);
+        limpiezas.push(() => clearTimeout(t));
+        return;
+      }
+      aplicar(0, c);
+    }
+
+    m.body.addEventListener('click', e => {
+      if (terminado) return;
+      const a = e.target.closest('[data-una]'), k = e.target.closest('[data-una-card]'), col = e.target.closest('[data-una-color]');
+      if (a && a.dataset.una === 'una' && esperandoUna) { dijoUna = true; resolverUna(true); return; }
+      if (turno !== 0 || esperandoUna) return;
+      if (col) return jugarCarta(Number(col.dataset.idx), col.dataset.unaColor);
+      if (a && a.dataset.una === 'robar' && !robada) {
+        robar(0, 1); const n = manos[0][manos[0].length - 1];
+        if (valida(n)) { robada = n; msg = lang === 'en' ? 'You can play the card you drew or pass' : 'Puedes jugar la carta que robaste o pasar'; dibujar(); }
+        else { msg = lang === 'en' ? 'No luck. Next player' : 'No sirvió. Sigue el siguiente'; turno = sig(0); programar(); }
+        return;
+      }
+      if (a && a.dataset.una === 'pasar') { robada = null; turno = sig(0); msg = ''; return programar(); }
+      if (k) {
+        const i = Number(k.dataset.unaCard), c = manos[0][i];
+        if (!valida(c) || (robada && robada !== c)) {
+          sonidoMal(); document.getElementById('una-msg').className = 'feedback bad';
+          document.getElementById('una-msg').textContent = robada ? (lang === 'en' ? 'Play the card you drew or pass' : 'Solo puedes jugar la que robaste o pasar') :
+            (lang === 'en' ? 'Match ' + T.color[color].toLowerCase() + ' or ' + unaSimbolo(top().v) : 'Debe ser ' + T.color[color].toLowerCase() + ' o ' + unaSimbolo(top().v));
+          return;
+        }
+        if (!c.c) {
+          document.getElementById('una-msg').innerHTML = (lang === 'en' ? 'Choose a color: ' : 'Elige color: ') + ['r', 'y', 'g', 'b'].map(x => '<button class="una-color" data-una-color="' + x + '" data-idx="' + i + '" style="background:' + UNA_COLOR[x] + '" aria-label="' + T.color[x] + '"></button>').join('');
+          return;
+        }
+        jugarCarta(i);
+      }
+    });
+    limpiezas.push(() => { terminado = true; });
+    programar();
+  }
+
+  // ---------- Clásicos: Lotería ----------
+  function elegirLoteria() {
+    const m = marco('loteria');
+    m.body.innerHTML = '<div class="q-card"><div class="big">🎴</div><div class="q">Lotería mexicana</div><div class="sub">Escucha al gritón, marca con 🫘 las cartas que salgan en tu tabla y grita «¡Lotería!»</div></div>' +
+      '<label>Modo</label><div class="opts"><button class="opt" data-lot-modo="linea" aria-pressed="true">➖ Línea (rápido)</button><button class="opt" data-lot-modo="llena">🟩 Tabla llena</button></div>' +
+      '<label>Voz del gritón</label><div class="opts" style="grid-template-columns:repeat(3,1fr)"><button class="opt" data-lot-voz="es">Español</button><button class="opt" data-lot-voz="ambos" aria-pressed="true">Bilingüe</button><button class="opt" data-lot-voz="en">English</button></div>' +
+      '<div class="row-btns"><button class="btn" data-lot-go>¡Corre y se va!</button></div>';
+    let modo = 'linea', voz = 'ambos';
+    m.body.addEventListener('click', e => {
+      const a = e.target.closest('[data-lot-modo]'), v = e.target.closest('[data-lot-voz]');
+      if (a) { modo = a.dataset.lotModo; m.body.querySelectorAll('[data-lot-modo]').forEach(x => x.setAttribute('aria-pressed', String(x === a))); }
+      if (v) { voz = v.dataset.lotVoz; m.body.querySelectorAll('[data-lot-voz]').forEach(x => x.setAttribute('aria-pressed', String(x === v))); }
+      if (e.target.closest('[data-lot-go]')) jugarLoteria(modo, voz);
+    });
+  }
+
+  // Líneas de una tabla 4×4: 4 filas, 4 columnas y 2 diagonales.
+  const LINEAS = [0, 1, 2, 3].map(r => [0, 1, 2, 3].map(c => r * 4 + c)).concat([0, 1, 2, 3].map(c => [0, 1, 2, 3].map(r => r * 4 + c)), [[0, 5, 10, 15], [3, 6, 9, 12]]);
+  const cumple = (marcas, modo) => modo === 'llena' ? marcas.every(Boolean) : LINEAS.some(l => l.every(i => marcas[i]));
+
+  async function jugarLoteria(modo, voz) {
+    const d = await datos('loteria');
+    const cartas = d.cartas;
+    const m = marco('loteria');
+    const tabla = tomar(cartas.map((_, i) => i), 16);
+    const bots = [{ n: 'Doña Tere 👵' }, { n: 'Don Beto 👴' }].map(b => Object.assign(b, { tabla: tomar(cartas.map((_, i) => i), 16), marcas: Array(16).fill(false) }));
+    const marcas = Array(16).fill(false);
+    const orden = barajar(cartas.map((_, i) => i));
+    const salidas = new Set();
+    let k = 0, terminado = false, botGrito = null;
+    const t0 = Date.now();
+    const cantar = c => {
+      if (voz === 'es') hablar(c.es, 'es-MX', 1);
+      else if (voz === 'en') hablar(c.en, 'en-US', .95);
+      else { hablar(c.es, 'es-MX', 1); setTimeout(() => { if (!terminado && window.speechSynthesis) { const u = new SpeechSynthesisUtterance(c.en); u.lang = 'en-US'; u.rate = .95; speechSynthesis.speak(u); } }, 50); }
+    };
+    m.body.innerHTML = '<div class="lot-top"><div class="lot-carta" id="lot-carta"><div class="big">🎴</div><div class="q">¡Atención!</div></div>' +
+      '<div class="lot-lado"><div class="muted">Salieron <b id="lot-n">0</b>/54</div><div class="lot-hist" id="lot-hist"></div>' + bots.map((b, i) => '<div class="lot-bot">' + escapeHtml(b.n) + ' <b id="lot-b' + i + '">0</b>/16</div>').join('') + '</div></div>' +
+      '<div class="lot-grid">' + tabla.map((ci, i) => '<button class="lot-cell" data-lot="' + i + '"><span class="em">' + escapeHtml(cartas[ci].emoji) + '</span><span class="nm">' + escapeHtml(cartas[ci].es) + '</span></button>').join('') + '</div>' +
+      '<div class="feedback" id="lot-msg">' + (modo === 'llena' ? 'Modo: tabla llena' : 'Modo: una línea (fila, columna o diagonal)') + '</div>' +
+      '<div class="row-btns"><button class="btn una-grito" data-lot-grito>🎉 ¡Lotería!</button></div>';
+    const $m = document.getElementById('lot-msg');
+    function acabar(gano, quien) {
+      if (terminado) return; terminado = true; limpiar();
+      const bien = marcas.filter(Boolean).length;
+      const faltan = 54 - salidas.size;
+      const puntos = gano ? Math.min(1000, (modo === 'llena' ? 500 : 300) + faltan * 10) : bien * 10;
+      terminar('loteria', { puntos, aciertos: bien, total: 16, segundos: (Date.now() - t0) / 1000,
+        titulo: gano ? '🎉 ¡LOTERÍA!' : (quien ? '😮 ¡Lotería de ' + quien + '!' : '🎴 Se acabaron las cartas'),
+        detalle: gano ? 'Ganaste con ' + salidas.size + ' cartas cantadas.' : 'Marcaste ' + bien + ' de 16 casillas.' });
+    }
+    function siguiente() {
+      if (terminado) return;
+      if (k >= orden.length) return acabar(false, null);
+      const ci = orden[k++]; salidas.add(ci);
+      const c = cartas[ci];
+      document.getElementById('lot-carta').innerHTML = '<div class="big">' + escapeHtml(c.emoji) + '</div><div class="q">' + c.n + '. ' + escapeHtml(c.es) + '</div><div class="sub"><i>' + escapeHtml(c.en) + '</i></div><div class="sub">«' + escapeHtml(c.verso) + '»</div>';
+      document.getElementById('lot-n').textContent = salidas.size;
+      document.getElementById('lot-hist').innerHTML = orden.slice(Math.max(0, k - 6), k - 1).reverse().map(i => '<span title="' + escapeHtml(cartas[i].es) + '">' + escapeHtml(cartas[i].emoji) + '</span>').join('');
+      cantar(c);
+      bots.forEach((b, i) => {
+        const p = b.tabla.indexOf(ci); if (p >= 0) b.marcas[p] = true;
+        document.getElementById('lot-b' + i).textContent = b.marcas.filter(Boolean).length;
+        if (!botGrito && cumple(b.marcas, modo)) {
+          botGrito = b.n;
+          const t = setTimeout(() => acabar(false, b.n), 1500 * TIEMPO);
+          limpiezas.push(() => clearTimeout(t));
+        }
+      });
+    }
+    m.body.addEventListener('click', e => {
+      if (terminado) return;
+      const cel = e.target.closest('[data-lot]');
+      if (cel) {
+        const i = Number(cel.dataset.lot);
+        if (salidas.has(tabla[i])) { marcas[i] = true; cel.classList.add('marcada'); tono(520, 60); }
+        else { cel.classList.remove('tiembla'); void cel.offsetWidth; cel.classList.add('tiembla'); $m.className = 'feedback bad'; $m.textContent = '¡Esa carta todavía no sale!'; }
+        return;
+      }
+      if (e.target.closest('[data-lot-grito]')) {
+        if (cumple(marcas, modo)) { sonidoOk(); acabar(true); }
+        else { sonidoMal(); $m.className = 'feedback bad'; $m.textContent = 'Aún no tienes lotería 😉 ' + (modo === 'llena' ? 'Necesitas la tabla llena.' : 'Necesitas una línea completa.'); }
+      }
+    });
+    const iv = setInterval(siguiente, 4500 * TIEMPO);
+    limpiezas.push(() => clearInterval(iv));
+    siguiente();
+  }
+
+  // ---------- Partidas multijugador (openspec: juegos-partidas) ----------
+  // Aleatorio con semilla: todos los dispositivos de una partida generan lo mismo.
+  function fnv(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
+
+  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-preguntas', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en', 'loteria', 'una'];
+  const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
+  const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
+  const P_BASTA = 60000, P_GRACIA = 3000, P_PAUSA = 10000; // Basta por rondas: escribir, gracia tras ¡Basta!, resultados
+  const dur = ms => ms * TIEMPO;
+
+  // Diez preguntas iguales para todos a partir de la semilla.
+  async function preguntasPartida(juego, seed, opciones) {
+    const rnd = rngDe(seed, 'preguntas');
+    const d = juego.startsWith('en-') ? await datos('ingles') : juego.startsWith('es-') ? await datos('espanol') : juego === 'cultura' ? await datos('cultura') : null;
+    const lista = [];
+    if (juego === 'en-vocab') for (const w of tomar(d.vocabulario, P_N, rnd)) {
+      const dis = tomar(d.vocabulario.filter(x => x.en !== w.en && x.tema === w.tema), 2, rnd).concat(tomar(d.vocabulario.filter(x => x.tema !== w.tema), 3, rnd)).map(x => x.en).filter((v, k, a) => a.indexOf(v) === k).slice(0, 3);
+      lista.push(conOpciones({ big: w.emoji, q: w.es, sub: '¿Cómo se dice en inglés?' }, w.en, dis, rnd));
+    }
+    if (juego === 'en-preguntas') for (const f of tomar(d.preguntas, P_N, rnd)) lista.push(conOpciones({ big: '💬', q: f.pregunta, sub: f.es }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd));
+    if (juego === 'en-frases') for (const f of tomar(d.verbos, P_N, rnd)) lista.push(conOpciones({ big: '🧩', q: f.frase, sub: f.es }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd));
+    if (juego === 'es-ortografia' || juego === 'es-acentos') for (const f of tomar(d[juego === 'es-ortografia' ? 'ortografia' : 'acentos'], P_N, rnd))
+      lista.push(conOpciones({ big: juego === 'es-ortografia' ? '✍️' : 'á', q: f.frase, sub: f.regla ? 'Regla: ' + f.regla : '' }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd));
+    if (juego === 'es-sinonimos') {
+      const pool = d.sinonimos.map(x => Object.assign({ tipo: 'sinónimo' }, x)).concat(d.antonimos.map(x => Object.assign({ tipo: 'antónimo' }, x)));
+      for (const f of tomar(pool, P_N, rnd)) lista.push(conOpciones({ big: f.tipo === 'sinónimo' ? '🟰' : '↔️', q: '«' + f.palabra + '»', sub: 'Elige el ' + f.tipo }, f.respuesta, f.distractores, rnd));
+    }
+    if (juego === 'cultura') {
+      const del = d.preguntas.filter(p => !opciones.cat || opciones.cat === 'todas' || p.cat === opciones.cat);
+      const orden = tomar(del.filter(p => p.nivel === 1), 4, rnd).concat(tomar(del.filter(p => p.nivel === 2), 4, rnd), tomar(del.filter(p => p.nivel === 3), 2, rnd));
+      for (const p of orden.concat(tomar(del.filter(x => !orden.includes(x)), P_N, rnd)).slice(0, P_N))
+        lista.push(conOpciones({ q: p.pregunta, sub: (d.categorias.find(c => c.id === p.cat) || {}).titulo, dato: p.dato }, p.opciones[p.correcta], p.opciones.filter((_, k) => k !== p.correcta), rnd));
+    }
+    if (juego === 'mente-calculo') for (let n = 0; n < P_N; n++) lista.push(genCalculo(n * 2, rnd));
+    if (juego === 'mente-secuencias') for (let n = 0; n < P_N; n++) lista.push(genSecuencia(n, rnd));
+    return lista;
+  }
+
+  // Respuesta de un bot a la pregunta q: al azar con su % de acierto y un tiempo de 2 a 13 s.
+  function botPregunta(seed, bot, q, pregunta) {
+    const r = rngDe(seed, bot.id + '|q' + q);
+    const correcta = r() < bot.acierto;
+    const ms = Math.round((2 + r() * 11) * 1000);
+    const malas = pregunta.opciones.map((_, k) => k).filter(k => k !== pregunta.correcta);
+    const opcion = correcta ? pregunta.correcta : malas[Math.floor(r() * malas.length)];
+    return { correcta, opcion, ms, puntos: correcta ? 100 + Math.round(100 * Math.max(0, 1 - ms / P_Q)) : 0 };
+  }
+
+  // Palabras de un bot en Basta: 75 % de las categorías con una palabra del diccionario al azar.
+  function botBasta(seed, bot, letra, d, ronda = 0) {
+    const r = rngDe(seed, bot.id + '|basta' + (ronda ? '|' + ronda : ''));
+    const L = normBasta(letra);
+    return Object.fromEntries(d.categorias.map(c => {
+      const opciones = (d.palabras[c.id] || []).filter(w => normBasta(w).startsWith(L));
+      return [c.id, r() < 0.75 && opciones.length ? opciones[Math.floor(r() * opciones.length)] : ''];
+    }));
+  }
+
+  // Puntuación de Basta en sala: única/verificada 100, repetida 50; no verificada 25/10; inválida 0.
+  function puntuarBasta(d, letra, participantes) {
+    const L = normBasta(letra);
+    const dic = Object.fromEntries(d.categorias.map(c => [c.id, new Set((d.palabras[c.id] || []).map(normBasta))]));
+    const res = participantes.map(p => ({ nombre: p.nombre, id: p.id, total: 0, detalle: {} }));
+    for (const c of d.categorias) {
+      const norm = participantes.map(p => normBasta((p.palabras || {})[c.id] || ''));
+      norm.forEach((n, i) => {
+        let pts = 0, estado = '—';
+        const valida = n && n.startsWith(L) && n.length >= 2;
+        if (valida) {
+          const repetida = norm.filter(x => x === n).length > 1;
+          if (dic[c.id].has(n)) { pts = repetida ? 50 : 100; estado = repetida ? 'repetida' : 'única'; }
+          else if (n.length >= 3) { pts = repetida ? 10 : 25; estado = 'no verificada'; }
+          else estado = 'inválida';
+        } else if (n) estado = 'inválida';
+        res[i].total += pts;
+        res[i].detalle[c.id] = { palabra: (participantes[i].palabras || {})[c.id] || '', pts, estado };
+      });
+    }
+    return res.sort((a, b) => b.total - a.total);
+  }
+
+  const sala = { codigo: null, estado: null, offset: 0, poll: null, guardado: false };
+  const ahoraServidor = () => Date.now() + sala.offset;
+
+  async function traerSala() {
+    const r = await api('/juegos/sala/' + sala.codigo);
+    if (r.ok) { sala.estado = r.body; sala.offset = r.body.ahora - Date.now(); }
+    return r;
+  }
+
+  function pintarPartidas() {
+    const body = document.getElementById('tab-body');
+    const opcionesJuego = JUEGOS_PARTIDA.map(id => { const j = juegoPorId(id); return '<option value="' + id + '">' + j.emoji + ' ' + escapeHtml(j.t) + '</option>'; }).join('');
+    body.innerHTML = '<p class="muted" style="margin:10px 0">Juega con tus compañeros y compañeras al mismo tiempo. Crea una partida y comparte el código.</p>' +
+      '<div class="card" style="margin-bottom:12px"><h2 style="margin-top:0">➕ Crear partida</h2>' +
+      '<form id="f-crear"><label for="p-juego">Juego</label><select id="p-juego" class="sel">' + opcionesJuego + '</select>' +
+      '<div id="p-modo-wrap" hidden><label for="p-modo">Modo</label><select id="p-modo" class="sel"><option value="linea">➖ Línea (rápido)</option><option value="llena">🟩 Tabla llena</option></select></div>' +
+      '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select></div>' +
+      '<div id="p-cat-wrap" hidden><label for="p-cat">Maratón</label><select id="p-cat" class="sel"><option value="todas">🌈 Todas mezcladas</option></select></div>' +
+      '<label class="check"><input id="p-bots" type="checkbox" checked><span>Incluir 2 bots (BOT-VACHIRA y BOT-ISAGII) que contestan al azar</span></label>' +
+      '<div class="row-btns"><button class="btn" type="submit">Crear partida</button></div></form></div>' +
+      '<div class="card"><h2 style="margin-top:0">🔑 Unirme con código</h2><form id="f-unirse" autocomplete="off"><label for="p-codigo">Código de 4 letras</label>' +
+      '<input id="p-codigo" type="text" maxlength="4" placeholder="KXQP" style="text-transform:uppercase;letter-spacing:.3em;font-weight:800;text-align:center">' +
+      '<div class="row-btns"><button class="btn" type="submit">Unirme</button></div></form><div id="p-msg"></div></div>';
+    datos('cultura').then(d => {
+      const sel = document.getElementById('p-cat'); if (!sel) return;
+      sel.innerHTML += d.categorias.map(c => '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.emoji + ' ' + c.titulo) + '</option>').join('');
+    }).catch(() => {});
+  }
+
+  async function entrarSala(codigo) {
+    limpiar();
+    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0 });
+    app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
+    const r = await traerSala();
+    if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const j = juegoPorId(sala.estado.sala.juego);
+    const preparar = sala.estado.sala.juego === 'una' ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+    sala.contenido = await preparar;
+    // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
+    // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
+    const t0 = Date.now();
+    let tick;
+    const parar = msg => { clearTimeout(tick); const pb = document.getElementById('p-body'); if (msg && pb && sala.vista !== 'final') pb.innerHTML = '<div class="card muted" style="text-align:center">' + msg + '</div>'; };
+    // Intervalo adaptativo (openspec: github-etag-cache / ahorro de requests): 2.5s mientras se espera a que
+    // entren jugadores (hay que verse entrar rápido), 5s una vez que la partida ya empezó (cada quien juega a
+    // su ritmo y solo importa ver el resultado). Recorta ~50% del tráfico en la fase más larga de la sesión.
+    const programarTick = () => {
+      const esperando = sala.estado && sala.estado.sala.inicio === null;
+      tick = setTimeout(() => {
+        if (document.hidden) return programarTick();
+        if (sala.vista === 'final') return parar();
+        if (Date.now() - t0 > 60 * 60000) return parar('⏸️ La partida se pausó por inactividad. Vuelve a entrar con el código 🔑 ' + escapeHtml(codigo) + '.');
+        traerSala().then(r => {
+          if (r && !r.ok && [403, 404, 410].includes(r.status)) return parar(r.status === 410 ? '⌛ Esta partida ya terminó (vencen a las 3 horas).' : 'Esta partida ya no está disponible.');
+          if (r && r.status === 503) { /* mucho tráfico: se reintenta en el siguiente ciclo */ } else pintarSala();
+          programarTick();
+        });
+      }, esperando ? 2500 : 5000);
+    };
+    programarTick();
+    const reloj = setInterval(() => pintarSala(), 250);
+    limpiezas.push(() => clearTimeout(tick), () => clearInterval(reloj));
+    app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + ' · partida</span>' +
+      '<span class="stat" id="p-codigo-chip">🔑 ' + escapeHtml(codigo) + '</span></div><div class="bar" id="m-bar" hidden><span style="width:100%"></span></div><div id="p-body"></div></div>';
+    sala.vista = null;
+    pintarSala();
+  }
+
+  function participantes() {
+    const e = sala.estado;
+    const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, rondasBasta: x.rondasBasta || {}, loteria: x.loteria }));
+    return e.sala.bots ? humanos.concat(BOTS.map(b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b, avatar: b.avatar }))) : humanos;
+  }
+
+  function pintarSala() {
+    const e = sala.estado; if (!e) return;
+    const body = document.getElementById('p-body'); if (!body) return;
+    const s = e.sala;
+    if (s.inicio === null) return pintarEspera(body);
+    if (s.juego.startsWith('basta')) return pintarBastaSala(body);
+    if (s.juego === 'loteria') return pintarLoteriaSala(body);
+    if (s.juego === 'una') return pintarUnaSala(body);
+    return pintarPreguntaSala(body);
+  }
+
+  function pintarEspera(body) {
+    const e = sala.estado;
+    const lista = participantes();
+    const html = '<div class="q-card"><div class="sub">Código de la partida</div><div class="letra" style="letter-spacing:.15em">' + escapeHtml(e.sala.codigo) + '</div>' +
+      '<div class="sub">Compártelo en el Meet o por WhatsApp · entran desde 🎮 Juegos → 👥 Partidas</div>' +
+      '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
+      '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
+      '<h2>👥 Jugadores (' + lista.length + ')</h2><ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
+        (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
+      '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
+    if (sala.vista !== 'espera:' + lista.length + ':' + e.soyHost) { body.innerHTML = html; sala.vista = 'espera:' + lista.length + ':' + e.soyHost; pintarQr(document.getElementById('p-qr'), enlaceSala(e.sala.codigo)); }
+  }
+
+  function totalesPreguntas(hasta) {
+    const e = sala.estado; const s = e.sala;
+    return participantes().map(p => {
+      let total = 0, ultimo = 0;
+      for (let q = 0; q <= hasta; q++) {
+        const r = p.bot ? botPregunta(s.seed, p.bot, q, sala.contenido[q]) : p.respuestas[q];
+        if (r) { total += r.puntos; if (q === hasta) ultimo = r.puntos; }
+      }
+      return { id: p.id, nombre: p.nombre, tipo: p.tipo, avatar: p.avatar, total, ultimo };
+    }).sort((a, b) => b.total - a.total);
+  }
+
+  function marcadorHtml(filas, yo, max = 6) {
+    return '<ol class="rank">' + filas.slice(0, max).map((f, i) => '<li class="' + (f.id === yo ? 'yo' : '') + '"><span class="pos">' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1) + '</span>' +
+      avatarHtml(f.avatar, 28) + '<span class="n">' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' <small>🤖</small>' : '') + (f.ultimo ? ' <small>+' + f.ultimo + '</small>' : '') + '</span><span class="pts">⭐ ' + fmt(f.total) + '</span></li>').join('') + '</ol>';
+  }
+
+  function pintarPreguntaSala(body) {
+    const e = sala.estado; const s = e.sala;
+    const t = ahoraServidor() - s.inicio;
+    const ciclo = dur(P_Q + P_REV);
+    const bar = document.getElementById('m-bar');
+    if (t < 0) { bar.hidden = true; const k = 'cuenta:' + Math.ceil(-t / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate!</div><div class="letra">' + Math.ceil(-t / 1000) + '</div><div class="sub">' + participantes().length + ' jugadores</div></div>'; sala.vista = k; } return; }
+    const q = Math.floor(t / ciclo);
+    if (q >= P_N) return pintarFinalSala(body, totalesPreguntas(P_N - 1));
+    const enQ = t - q * ciclo;
+    const p = sala.contenido[q];
+    const mia = (e.jugadores.find(x => x.id === e.yo) || { respuestas: {} }).respuestas[q] || sala.mias && sala.mias[q];
+    if (enQ < dur(P_Q)) {
+      bar.hidden = false; bar.firstChild.style.width = Math.max(0, 100 - enQ / dur(P_Q) * 100) + '%';
+      const k = 'q:' + q + ':' + (mia ? 'r' : '');
+      if (sala.vista !== k) {
+        sala.vista = k;
+        body.innerHTML = '<div class="muted" style="text-align:center;margin-bottom:6px">Pregunta ' + (q + 1) + ' de ' + P_N + '</div><div class="q-card">' + (p.big ? '<div class="big">' + escapeHtml(p.big) + '</div>' : '') +
+          '<div class="q">' + escapeHtml(p.q) + '</div>' + (p.sub ? '<div class="sub">' + escapeHtml(p.sub) + '</div>' : '') + '</div>' +
+          (mia ? '<div class="feedback ok">✔ Respuesta enviada · esperando a los demás…</div>'
+            : '<div class="opts' + (p.opciones.some(o => String(o).length > 18) ? ' una-col' : '') + '">' + p.opciones.map((o, i) => '<button class="opt" data-pq="' + q + '" data-po="' + i + '"><span class="k">' + (i + 1) + '</span>' + escapeHtml(o) + '</button>').join('') + '</div>');
+        sala.inicioQ = s.inicio + q * ciclo;
+      }
+    } else {
+      bar.hidden = true;
+      const k = 'rev:' + q + ':' + e.jugadores.map(x => Object.keys(x.respuestas || {}).length).join(',');
+      if (sala.vista !== k) {
+        sala.vista = k;
+        body.innerHTML = '<div class="q-card"><div class="q">' + escapeHtml(p.q) + '</div><div class="sub">Respuesta correcta: <b>' + escapeHtml(p.opciones[p.correcta]) + '</b></div>' +
+          (mia ? '<div class="feedback ' + (mia.correcta ? 'ok">✔ ¡Bien! +' + mia.puntos : 'bad">✘ Esta vez no') + '</div>' : '<div class="feedback bad">⏰ No respondiste</div>') +
+          (p.dato ? '<div class="sub">💡 ' + escapeHtml(p.dato) + '</div>' : '') + '</div><h2>🏆 Marcador</h2>' + marcadorHtml(totalesPreguntas(q), e.yo);
+      }
+    }
+  }
+
+  async function responderSala(q, i) {
+    const s = sala.estado.sala; const p = sala.contenido[q];
+    if (sala.mias && sala.mias[q]) return;
+    const ms = Math.max(0, ahoraServidor() - (s.inicio + q * dur(P_Q + P_REV)));
+    if (ms > dur(P_Q)) return;
+    const correcta = i === p.correcta;
+    const puntos = correcta ? 100 + Math.round(100 * Math.max(0, 1 - ms / dur(P_Q))) : 0;
+    sala.mias = sala.mias || {}; sala.mias[q] = { correcta, puntos, ms };
+    correcta ? sonidoOk() : sonidoMal();
+    sala.vista = null; pintarSala();
+    await post('/juegos/sala/' + sala.codigo + '/respuesta', { q, correcta, puntos, ms: Math.round(ms / TIEMPO) });
+  }
+
+  // ---- Basta en sala por rondas (openspec: basta-rondas) ----
+  const rondasDeSala = () => Number(sala.estado.sala.opciones.rondas || 1);
+  const datosBasta = () => sala.contenido[sala.estado.sala.juego === 'basta-en' ? 'en' : 'es'];
+  // Letras sin repetir, iguales para todos (semilla de la sala).
+  function letrasBasta() {
+    if (!sala.letrasBasta) sala.letrasBasta = barajar(datosBasta().letras, rngDe(sala.estado.sala.seed, 'letras')).slice(0, rondasDeSala());
+    return sala.letrasBasta;
+  }
+  // Calendario: cierre_r = min(inicio_r + 60 s, primer ¡Basta! + 3 s); inicio_{r+1} = cierre_r + 10 s.
+  function calendarioBasta() {
+    const e = sala.estado; const cal = []; let ini = e.sala.inicio;
+    for (let r = 0; r < rondasDeSala(); r++) {
+      const gritos = e.jugadores.map(x => ((x.rondasBasta || {})[r] || {}).basta).filter(t => t && t >= ini);
+      const limite = ini + dur(P_BASTA);
+      const cierre = gritos.length ? Math.min(limite, Math.min(...gritos) + dur(P_GRACIA)) : limite;
+      cal.push({ ini, cierre });
+      ini = cierre + dur(P_PAUSA);
+    }
+    return cal;
+  }
+  const palabrasForm = () => Object.fromEntries(datosBasta().categorias.map(c => [c.id, ((document.getElementById('pb-' + c.id) || {}).value || '').trim()]));
+  function enviarRonda(r, palabras) {
+    sala.bastaEnviado[r] = true; sala.misRondas[r] = palabras;
+    post('/juegos/sala/' + sala.codigo + '/respuesta', { ronda: r, palabras }).then(() => traerSala());
+  }
+  // Todos enviaron, o pasaron 6 s reales (el sondeo es cada 2.5 s; sin escalar en pruebas aceleradas).
+  const rondaLista = (r, cal) => sala.estado.jugadores.every(x => (x.rondasBasta || {})[r]) || ahoraServidor() > cal[r].cierre + 6000;
+  // Puntos de cada ronda (hasta la ronda `hasta`) y acumulado por participante.
+  function marcadorBasta(hasta) {
+    const e = sala.estado, d = datosBasta(), letras = letrasBasta();
+    const ps = participantes();
+    const acum = Object.fromEntries(ps.map(p => [p.id, { id: p.id, nombre: p.nombre, tipo: p.bot ? 'bot' : '', avatar: p.avatar, total: 0, ultimo: 0, porRonda: [], aciertos: 0, detalle: {} }]));
+    for (let r = 0; r <= hasta; r++) {
+      const parts = ps.map(p => ({ id: p.id, nombre: p.nombre, palabras: p.bot ? botBasta(e.sala.seed, p.bot, letras[r], d, r) : p.id === e.yo && sala.misRondas[r] ? sala.misRondas[r] : ((p.rondasBasta || {})[r] || {}).palabras || {} }));
+      for (const x of puntuarBasta(d, letras[r], parts)) {
+        const a = acum[x.id]; a.total += x.total; a.ultimo = x.total; a.porRonda[r] = x.total; a.detalle = x.detalle;
+        a.aciertos += Object.values(x.detalle).filter(y => y.pts > 0).length;
+      }
+    }
+    return Object.values(acum).sort((a, b) => b.total - a.total);
+  }
+
+  function pintarBastaSala(body) {
+    const e = sala.estado; const s = e.sala;
+    const idioma = s.juego === 'basta-en' ? 'en' : 'es';
+    const d = datosBasta(), letras = letrasBasta(), n = rondasDeSala();
+    const ahora = ahoraServidor();
+    const bar = document.getElementById('m-bar');
+    if (ahora < s.inicio) { bar.hidden = true; const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate! · ' + n + (n === 1 ? ' ronda' : ' rondas') + '</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
+    const cal = calendarioBasta();
+    // Al cerrar cada ronda, enviar mis palabras una sola vez (antes de redibujar el formulario).
+    for (let r = 0; r < n; r++) if (ahora >= cal[r].cierre && !sala.bastaEnviado[r]) enviarRonda(r, sala.vista === 'basta' + r ? palabrasForm() : {});
+    const r = cal.findIndex(c => ahora < c.cierre + dur(P_PAUSA));
+    const ultima = n - 1;
+    if (r === -1 || (ahora >= cal[ultima].cierre && rondaLista(ultima, cal))) {
+      const filas = marcadorBasta(ultima);
+      const mio = filas.find(f => f.id === e.yo);
+      if (mio) { sala.finAciertos = mio.aciertos; sala.finTotal = d.categorias.length * n; }
+      return pintarFinalSala(body, filas, { d, letras, porRonda: true });
+    }
+    sala.rondaActual = r;
+    const cab = '<div class="sub">' + (idioma === 'en' ? 'Round ' : 'Ronda ') + (r + 1) + (idioma === 'en' ? ' of ' : ' de ') + n + ' · ' + (idioma === 'en' ? 'Letter' : 'Letra') + '</div><div class="letra">' + escapeHtml(letras[r]) + '</div>';
+    if (ahora < cal[r].cierre) {
+      bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cal[r].cierre - ahora) / dur(P_BASTA) * 100) + '%';
+      if (sala.vista !== 'basta' + r) {
+        sala.vista = 'basta' + r;
+        body.innerHTML = '<div class="q-card">' + cab + '<div class="sub" id="pb-aviso">Todos tienen la misma letra</div></div>' +
+          '<form id="pb-form" autocomplete="off" class="basta-grid">' + d.categorias.map(c => '<label for="pb-' + c.id + '">' + escapeHtml(c.emoji + ' ' + c.titulo) + '</label><input id="pb-' + c.id + '" data-pbcat="' + c.id + '" type="text" maxlength="40" autocapitalize="off" spellcheck="false" placeholder="' + escapeHtml(letras[r]) + '…">').join('') +
+          '<div class="row-btns" style="grid-column:1/-1"><button class="btn" type="submit" id="pb-basta" disabled>✋ ¡Basta!</button></div></form>';
+        const primero = document.getElementById('pb-' + d.categorias[0].id); if (primero && r > 0) primero.focus();
+      }
+      const gritador = e.jugadores.filter(x => ((x.rondasBasta || {})[r] || {}).basta).sort((a, b) => a.rondasBasta[r].basta - b.rondasBasta[r].basta)[0];
+      if (gritador) { const a = document.getElementById('pb-aviso'); if (a) { a.textContent = '✋ ¡' + gritador.nombre + ' gritó BASTA! Cierra en ' + Math.max(0, Math.ceil((cal[r].cierre - ahora) / 1000 / TIEMPO)) + ' s'; a.style.color = 'var(--bad)'; } }
+      return;
+    }
+    // Pausa: resultados de la ronda y marcador acumulado; luego sigue sola la siguiente letra.
+    bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cal[r].cierre + dur(P_PAUSA) - ahora) / dur(P_PAUSA) * 100) + '%';
+    const lista = rondaLista(r, cal);
+    const k = 'res' + r + ':' + (lista ? e.jugadores.filter(x => (x.rondasBasta || {})[r]).length : 'esperando');
+    if (sala.vista !== k) {
+      sala.vista = k;
+      if (!lista) { body.innerHTML = '<div class="q-card">' + cab + '<div class="big">✋</div><div class="sub">Juntando las palabras de todos…</div></div>'; }
+      else {
+        const filas = marcadorBasta(r);
+        const mio = filas.find(f => f.id === e.yo);
+        body.innerHTML = '<div class="q-card">' + cab + '<div class="sub">' + (mio ? '+' + mio.ultimo + ' en esta ronda' : '') + ' · <span id="pb-sig"></span></div></div>' +
+          (mio ? '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
+            d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>' : '') +
+          '<h2>📊 Marcador acumulado</h2>' + marcadorHtml(filas, e.yo, 28);
+      }
+    }
+    const sig = document.getElementById('pb-sig');
+    if (sig) sig.textContent = 'Siguiente letra en ' + Math.max(0, Math.ceil((cal[r].cierre + dur(P_PAUSA) - ahora) / 1000 / TIEMPO)) + ' s';
+  }
+
+  function pintarFinalSala(body, todas, basta, titulo) {
+    if (sala.vista === 'final') return;
+    sala.vista = 'final';
+    const filas = todas.map(f => Object.assign({}, f, { ultimo: 0 })); // en el podio no se muestra el +puntos de la última pregunta
+    document.getElementById('m-bar').hidden = true;
+    const e = sala.estado; const juego = e.sala.juego;
+    const mio = filas.find(f => f.id === e.yo);
+    const detalle = basta && basta.porRonda && mio ? '<h2>🔤 Tus puntos por ronda</h2><div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Ronda</th><th>Letra</th><th>Pts</th></tr></thead><tbody>' +
+      basta.letras.map((l, i) => '<tr><td>' + (i + 1) + '</td><td><b>' + escapeHtml(l) + '</b></td><td>' + (mio.porRonda[i] || 0) + '</td></tr>').join('') + '</tbody></table></div>'
+      : basta && mio ? '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
+      basta.d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>' : '';
+    body.innerHTML = '<div class="card result"><div style="font-size:2.4rem">🏆</div><h1>' + escapeHtml(titulo || '¡Fin de la partida!') + '</h1>' +
+      (mio ? '<div class="score">' + fmt(mio.total) + '</div><div class="muted">tus puntos · lugar ' + (filas.indexOf(mio) + 1) + ' de ' + filas.length + '</div>' : '') +
+      '<div id="p-guardado" class="muted" style="margin-top:8px"></div></div><h2>🥇 Podio</h2>' + marcadorHtml(filas, e.yo, 30) + detalle +
+      '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn" data-tab="partidas">👥 Otra partida</button></div>';
+    if (mio && mio.total > 0) confeti();
+    if (mio && !sala.guardado) {
+      sala.guardado = true;
+      // Registro de la partida para el admin: total final de cada quien y, del anfitrión, el podio con bots.
+      post('/juegos/sala/' + sala.codigo + '/respuesta', Object.assign({ final: mio.total }, e.soyHost ? { podio: filas.map(f => Object.assign({ nombre: f.nombre, total: f.total }, f.tipo === 'bot' ? { bot: true } : {})) } : {}));
+      const n = sala.finTotal !== undefined ? sala.finTotal : basta ? basta.d.categorias.length : juego === 'loteria' ? 16 : P_N;
+      const aciertos = sala.finAciertos !== undefined ? sala.finAciertos : juego === 'loteria' ? (sala.aciertosLoteria || 0) : basta ? Object.values(mio.detalle).filter(x => x.pts > 0).length : Object.values((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {}).filter(x => x.correcta).length;
+      post('/juegos/partida', { juego, puntos: mio.total, aciertos, total: n, segundos: 0, sala: sala.codigo }).then(r => {
+        const g = document.getElementById('p-guardado');
+        if (r.ok) { state.totalIndividual = r.body.totalIndividual; state.totalPartidas = r.body.totalPartidas; state.posPartidas = r.body.pos; state.mejores[juego] = r.body.mejor; pintarChip(); if (g) g.textContent = '✔ +' + fmt(r.body.puntos) + ' a tus puntos de partidas · 👥 ' + fmt(r.body.totalPartidas) + ' en la semana (#' + r.body.pos + ')'; }
+        else if (g && r.body.error === 'ya_guardada') g.textContent = '✔ Esta partida ya estaba guardada en tus puntos de partidas';
+        else if (g) g.textContent = 'No se guardó en el ranking (' + (r.body.error || r.status) + ')';
+      });
+    }
+  }
+
+  // ---- Lotería en sala (openspec: juegos-loteria-preguntas) ----
+  const L_CANTO = 4500, L_GRITO_BOT = 1500;
+  function loteriaSala() {
+    if (sala.lot) return sala.lot;
+    const s = sala.estado.sala; const idx = sala.contenido.cartas.map((_, i) => i);
+    const lot = { orden: barajar(idx, rngDe(s.seed, 'orden')), modo: s.opciones.modo || 'linea', marcas: Array(16).fill(false), voz: 'ambos', cantadas: 0 };
+    lot.tablaDe = id => tomar(idx, 16, rngDe(s.seed, 'tabla|' + id));
+    lot.mia = lot.tablaDe(sala.estado.yo);
+    sala.lot = lot;
+    return lot;
+  }
+  // Cartas cantadas a la hora t (la carta k sale en inicio + k·canto).
+  const cantadasA = t => { const s = sala.estado.sala; return t < s.inicio ? 0 : Math.min(54, Math.floor((t - s.inicio) / dur(L_CANTO)) + 1); };
+  const cumpleTabla = (tabla, n) => { const set = new Set(sala.lot.orden.slice(0, n)); return cumple(tabla.map(ci => set.has(ci)), sala.lot.modo); };
+
+  // Ganador: el grito válido más temprano (humanos por su hora; bots 1.5 s después de completar).
+  function ganadorLoteria() {
+    const lot = loteriaSala(); const s = sala.estado.sala;
+    const gritos = sala.estado.jugadores.filter(x => x.loteria && cumpleTabla(lot.tablaDe(x.id), cantadasA(x.loteria))).map(x => ({ id: x.id, nombre: x.nombre, t: x.loteria }));
+    if (s.bots) for (const b of BOTS) {
+      const tabla = lot.tablaDe(b.id);
+      for (let k = 1; k <= 54; k++) if (cumpleTabla(tabla, k)) { gritos.push({ id: b.id, nombre: b.nombre, t: s.inicio + (k - 1) * dur(L_CANTO) + dur(L_GRITO_BOT), bot: true }); break; }
+    }
+    return gritos.sort((a, b) => a.t - b.t)[0] || null;
+  }
+
+  function cantarCarta(c) {
+    const v = sala.lot.voz;
+    if (v === 'es') hablar(c.es, 'es-MX', 1);
+    else if (v === 'en') hablar(c.en, 'en-US', .95);
+    else { hablar(c.es, 'es-MX', 1); if (window.speechSynthesis) { const u = new SpeechSynthesisUtterance(c.en); u.lang = 'en-US'; u.rate = .95; speechSynthesis.speak(u); } }
+  }
+
+  function pintarLoteriaSala(body) {
+    const e = sala.estado; const s = e.sala; const lot = loteriaSala(); const cartas = sala.contenido.cartas;
+    const ahora = ahoraServidor();
+    document.getElementById('m-bar').hidden = true;
+    if (ahora < s.inicio) { const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate! Modo: ' + (lot.modo === 'llena' ? 'tabla llena' : 'línea') + '</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
+    const n = cantadasA(ahora);
+    const gan = ganadorLoteria();
+    const fin = (gan && gan.t <= ahora) || (n >= 54 && ahora > s.inicio + 54 * dur(L_CANTO) + 3000);
+    if (fin) {
+      const nFin = gan ? cantadasA(gan.t) : 54;
+      const conteo = id => { const set = new Set(lot.orden.slice(0, nFin)); return lot.tablaDe(id).filter(ci => set.has(ci)).length; };
+      const filas = participantes().map(p => {
+        const esGan = gan && gan.id === p.id;
+        const total = esGan ? Math.min(1000, (lot.modo === 'llena' ? 500 : 300) + (54 - nFin) * 10) : conteo(p.id) * 10;
+        return { id: p.id, nombre: p.nombre + (esGan ? ' 🎉' : ''), tipo: p.tipo, avatar: p.avatar, total, ultimo: 0 };
+      }).sort((a, b) => b.total - a.total);
+      sala.aciertosLoteria = lot.marcas.filter(Boolean).length;
+      return pintarFinalSala(body, filas, null, gan ? '🎴 ¡Lotería de ' + gan.nombre + '! (' + nFin + ' cartas cantadas)' : '🎴 Se acabaron las cartas');
+    }
+    if (sala.vista !== 'loteria') {
+      sala.vista = 'loteria';
+      body.innerHTML = '<div class="lot-top"><div class="lot-carta" id="lot-carta"><div class="big">🎴</div></div><div class="lot-lado"><div class="muted">Salieron <b id="lot-n">0</b>/54 · ' + (lot.modo === 'llena' ? 'tabla llena' : 'línea') + '</div>' +
+        '<div class="lot-hist" id="lot-hist"></div><div id="lot-jug"></div></div></div>' +
+        '<div class="lot-grid">' + lot.mia.map((ci, i) => '<button class="lot-cell" data-lsc="' + i + '"><span class="em">' + escapeHtml(cartas[ci].emoji) + '</span><span class="nm">' + escapeHtml(cartas[ci].es) + '</span></button>').join('') + '</div>' +
+        '<div class="feedback" id="lot-msg"></div>' +
+        '<div class="row-btns"><button class="btn una-grito" data-lsgrito>🎉 ¡Lotería!</button></div>' +
+        '<div class="row-btns" style="margin-top:6px">' + ['es:🇲🇽 Voz español', 'ambos:🔀 Bilingüe', 'en:🇺🇸 English'].map(x => { const [v, t] = x.split(':'); return '<button class="btn ghost sm" data-lsvoz="' + v + '" aria-pressed="' + (lot.voz === v) + '">' + t + '</button>'; }).join('') + '</div>';
+      lot.cantadas = 0;
+    }
+    if (n !== lot.cantadas) {
+      const nueva = n > lot.cantadas;
+      lot.cantadas = n;
+      const c = cartas[lot.orden[n - 1]];
+      document.getElementById('lot-carta').innerHTML = '<div class="big">' + escapeHtml(c.emoji) + '</div><div class="q">' + c.n + '. ' + escapeHtml(c.es) + '</div><div class="sub"><i>' + escapeHtml(c.en) + '</i></div><div class="sub">«' + escapeHtml(c.verso) + '»</div>';
+      document.getElementById('lot-n').textContent = n;
+      document.getElementById('lot-hist').innerHTML = lot.orden.slice(Math.max(0, n - 6), n - 1).reverse().map(i => '<span title="' + escapeHtml(cartas[i].es) + '">' + escapeHtml(cartas[i].emoji) + '</span>').join('');
+      if (nueva) cantarCarta(c);
+    }
+    // Progreso de cada quien (cartas de su tabla que ya salieron)
+    const set = new Set(lot.orden.slice(0, n));
+    const prog = participantes().map(p => escapeHtml(p.nombre) + ' <b>' + lot.tablaDe(p.id).filter(ci => set.has(ci)).length + '</b>/16' + (p.loteria ? ' 📣' : '')).join('<br>');
+    const jug = document.getElementById('lot-jug'); if (jug && jug.innerHTML !== prog) jug.innerHTML = prog;
+  }
+
+  function marcarLoteriaSala(i, cel) {
+    const lot = sala.lot; const n = cantadasA(ahoraServidor());
+    const $m = document.getElementById('lot-msg');
+    if (new Set(lot.orden.slice(0, n)).has(lot.mia[i])) { lot.marcas[i] = true; cel.classList.add('marcada'); tono(520, 60); }
+    else { cel.classList.remove('tiembla'); void cel.offsetWidth; cel.classList.add('tiembla'); $m.className = 'feedback bad'; $m.textContent = '¡Esa carta todavía no sale!'; }
+  }
+
+  function gritarLoteriaSala() {
+    const lot = sala.lot; const $m = document.getElementById('lot-msg');
+    if (!cumple(lot.marcas, lot.modo)) { sonidoMal(); $m.className = 'feedback bad'; $m.textContent = 'Aún no tienes lotería 😉 ' + (lot.modo === 'llena' ? 'Necesitas la tabla llena.' : 'Necesitas una línea completa.'); return; }
+    sonidoOk(); $m.className = 'feedback ok'; $m.textContent = '📣 ¡LOTERÍA! Revisando…';
+    post('/juegos/sala/' + sala.codigo + '/respuesta', { loteria: true }).then(() => traerSala());
+  }
+
+  // ---- ¡Una! en sala (openspec: una-en-partida) ----
+  // Estado reconstruido reproduciendo las jugadas sobre el mazo de la semilla: igual en todos los dispositivos.
+  const U_BOT_MS = 1500, U_TURNO_MS = 30000;
+  const UNA_CARTAS = (() => {
+    const m = []; let id = 0;
+    for (const c of ['r', 'y', 'g', 'b']) {
+      m.push({ id: id++, c, v: '0' });
+      for (let k = 0; k < 2; k++) { for (let n = 1; n <= 9; n++) m.push({ id: id++, c, v: String(n) }); m.push({ id: id++, c, v: 'skip' }, { id: id++, c, v: 'rev' }, { id: id++, c, v: '+2' }); }
+    }
+    for (let k = 0; k < 4; k++) m.push({ id: id++, c: null, v: 'wild' }, { id: id++, c: null, v: '+4' });
+    return m;
+  })();
+  const colorMas = ids => { const q = { r: 0, y: 0, g: 0, b: 0 }; ids.forEach(id => { const c = UNA_CARTAS[id].c; if (c) q[c]++; }); return Object.entries(q).sort((a, b) => b[1] - a[1])[0][0]; };
+
+  function estadoUna() {
+    const e = sala.estado, s = e.sala;
+    const orden = participantes();
+    const jugs = new Map();
+    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+    const mazo = barajar(UNA_CARTAS.map(c => c.id), rngDe(s.seed, 'una-mazo'));
+    const manos = orden.map(() => []);
+    for (let k = 0; k < 7; k++) for (let j = 0; j < orden.length; j++) manos[j].push(mazo.pop());
+    let pila = [mazo.pop()];
+    while (UNA_CARTAS[pila[0]].v === '+4') { mazo.unshift(pila[0]); pila = [mazo.pop()]; }
+    const st = { orden, manos, mazo, pila, color: UNA_CARTAS[pila[0]].c || 'r', dir: 1, turno: 0, paso: 0, T0: s.inicio, pendiente: null, fin: null, jugadas: orden.map(() => 0), ultima: null, castigos: [] };
+    const top = () => UNA_CARTAS[st.pila[st.pila.length - 1]];
+    const valida = id => { const c = UNA_CARTAS[id]; return !c.c || c.c === st.color || c.v === top().v; };
+    const sig = (d, pasos = 1) => ((d + st.dir * pasos) % orden.length + orden.length) % orden.length;
+    const robar = (j, n) => {
+      for (let k = 0; k < n; k++) {
+        if (!st.mazo.length) { const t = st.pila.pop(); st.mazo = barajar(st.pila, rngDe(s.seed, 'rebaraja' + st.paso)); st.pila = [t]; }
+        if (st.mazo.length) st.manos[j].push(st.mazo.pop());
+      }
+    };
+    const aplicar = (j, mv, t) => {
+      st.paso++; st.T0 = t;
+      if (mv.accion === 'jugar') {
+        const c = UNA_CARTAS[mv.carta];
+        st.manos[j].splice(st.manos[j].indexOf(mv.carta), 1); st.pila.push(mv.carta);
+        st.color = c.c || (['r', 'y', 'g', 'b'].includes(mv.color) ? mv.color : 'r');
+        st.pendiente = null; st.jugadas[j]++;
+        st.ultima = { j, accion: 'jugar', carta: mv.carta, color: st.color, paso: st.paso };
+        if (!st.manos[j].length) { st.fin = { ganador: j, t }; return; }
+        if (st.manos[j].length === 1) st.esperaUna = { j, paso: st.paso - 1, t0: t }; // se resuelve antes del siguiente turno
+        let pasos = 1;
+        if (c.v === 'skip') pasos = 2;
+        if (c.v === 'rev') { if (orden.length === 2) pasos = 2; else st.dir *= -1; }
+        if (c.v === '+2') { robar(sig(j), 2); pasos = 2; }
+        if (c.v === '+4') { robar(sig(j), 4); pasos = 2; }
+        st.turno = sig(j, pasos);
+      } else if (mv.accion === 'robar') {
+        robar(j, 1);
+        const n = st.manos[j][st.manos[j].length - 1];
+        st.ultima = { j, accion: 'robar', auto: !!mv.auto, paso: st.paso };
+        if (!mv.auto && n !== undefined && valida(n)) st.pendiente = n; else st.turno = sig(j);
+      } else {
+        st.ultima = { j, accion: 'pasar', auto: !!mv.auto, paso: st.paso };
+        st.pendiente = null; st.turno = sig(j);
+      }
+    };
+    const esValida = (j, mv) => {
+      if (mv.accion === 'jugar') return st.manos[j].includes(mv.carta) && valida(mv.carta) && (st.pendiente === null || st.pendiente === mv.carta);
+      if (mv.accion === 'robar') return st.pendiente === null;
+      if (mv.accion === 'pasar') return st.pendiente !== null;
+      return false;
+    };
+    const bot = j => {
+      const mano = st.manos[j];
+      if (st.pendiente !== null) return { accion: 'jugar', carta: st.pendiente, color: colorMas(mano.filter(x => x !== st.pendiente)), una: true };
+      const ops = mano.filter(valida);
+      if (!ops.length) return { accion: 'robar' };
+      const r = rngDe(s.seed, 'bot' + st.paso);
+      const sigN = st.manos[sig(j)].length;
+      const accion = ops.filter(id => ['skip', '+2', '+4', 'rev'].includes(UNA_CARTAS[id].v));
+      const nums = ops.filter(id => UNA_CARTAS[id].c && /^\d$/.test(UNA_CARTAS[id].v));
+      const c = sigN <= 2 && accion.length && r() < 0.4 ? accion[0] : (nums.length ? nums[0] : (ops.find(id => UNA_CARTAS[id].c) ?? ops[0]));
+      return { accion: 'jugar', carta: c, color: colorMas(mano.filter(x => x !== c)), una: true };
+    };
+    const unasDe = id => ((e.jugadores.find(x => x.id === id) || {}).unas || []);
+    const ahora = ahoraServidor();
+    for (let guard = 0; guard < 4000 && !st.fin; guard++) {
+      if (st.esperaUna) {
+        const w = st.esperaUna, quien = orden[w.j], lim = w.t0 + dur(5000);
+        let tUna = null;
+        if (quien.bot) tUna = w.t0 + dur(800 + rngDe(s.seed, 'una' + w.paso)() * 1000);
+        else { const u = unasDe(quien.id).find(x => x.paso === w.paso); if (u && u.t <= lim) tUna = u.t; }
+        let seg;
+        if (tUna !== null) { if (ahora < tUna) break; seg = (tUna - w.t0) / dur(1000); }
+        else if (ahora >= lim) { seg = Infinity; tUna = lim; }
+        else break; // esperando a que presione UNA
+        const n = castigoUna(seg);
+        if (n) { robar(w.j, n); st.castigos.push({ j: w.j, n }); if (st.ultima) st.ultima.castigo = n; }
+        st.esperaUna = null; st.T0 = tUna;
+        continue;
+      }
+      const j = st.turno, p = orden[j];
+      if (p.bot) {
+        const t = st.T0 + dur(U_BOT_MS); if (ahora < t) break;
+        aplicar(j, bot(j), t);
+      } else {
+        const mv = jugs.get(st.paso); const limite = st.T0 + dur(U_TURNO_MS);
+        if (mv && mv.jugador === p.id && mv.t <= limite && esValida(j, mv)) aplicar(j, mv, mv.t);
+        else if (ahora >= limite) aplicar(j, st.pendiente !== null ? { accion: 'pasar', auto: true } : { accion: 'robar', auto: true }, limite);
+        else break;
+      }
+    }
+    st.valida = valida; st.top = top;
+    return st;
+  }
+
+  function unaNombre(c, lang) {
+    const T = UNA_TXT[lang];
+    if (c.v === 'wild' || c.v === '+4') return T[c.v];
+    const num = /^\d$/.test(c.v) ? (lang === 'en' ? NUM_EN : NUM_ES)[Number(c.v)] : T[c.v];
+    return lang === 'en' ? T.color[c.c] + ' ' + num : num + ' ' + T.color[c.c].toLowerCase();
+  }
+  const unaCartaHtml = (c, extra) => '<span class="una-card' + (extra || '') + '" style="--c:' + (c.c ? UNA_COLOR[c.c] : '#1e1b2e') + '">' + (c.c ? '' : '<span class="una-wild"></span>') + '<b>' + escapeHtml(unaSimbolo(c.v)) + '</b></span>';
+
+  function pintarUnaSala(body) {
+    const e = sala.estado, s = e.sala;
+    const lang = sala.unaLang || 'es'; const T = UNA_TXT[lang];
+    const bar = document.getElementById('m-bar');
+    const ahora = ahoraServidor();
+    if (ahora < s.inicio) { bar.hidden = true; const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate! Se reparten 7 cartas</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
+    const st = estadoUna();
+    if (st.fin) {
+      bar.hidden = true;
+      const restantes = st.manos.reduce((a, h, j) => a + (j === st.fin.ganador ? 0 : h.length), 0);
+      const filas = st.orden.map((p, j) => ({ id: p.id, nombre: p.nombre + (j === st.fin.ganador ? ' 🏆' : ''), tipo: p.tipo, avatar: p.avatar,
+        total: j === st.fin.ganador ? Math.min(1000, 400 + restantes * 10) : st.jugadas[j] * 5, ultimo: 0 })).sort((a, b) => b.total - a.total);
+      const yo = st.orden.findIndex(p => p.id === e.yo);
+      sala.finAciertos = yo >= 0 ? st.jugadas[yo] : 0; sala.finTotal = yo >= 0 ? st.jugadas[yo] + st.manos[yo].length : 0;
+      return pintarFinalSala(body, filas, null, '🃏 ¡Ganó ' + st.orden[st.fin.ganador].nombre + '!');
+    }
+    const yo = st.orden.findIndex(p => p.id === e.yo);
+    if (sala.unaLocal && st.paso > sala.unaLocal.paso && !st.esperaUna) sala.unaLocal = null; // UNA ya resuelto
+    const miTurno = st.turno === yo && !sala.unaEnviando && !st.esperaUna;
+    const miUna = st.esperaUna && st.esperaUna.j === yo;
+    const ventana = st.esperaUna ? dur(5000) : dur(st.orden[st.turno].bot ? U_BOT_MS : U_TURNO_MS);
+    const limite = (st.esperaUna ? st.esperaUna.t0 : st.T0) + ventana;
+    bar.hidden = false; bar.firstChild.style.width = Math.max(0, Math.min(100, (limite - ahora) / ventana * 100)) + '%';
+    // Anunciar la última jugada (voz) una sola vez
+    if (st.ultima && st.ultima.paso !== sala.unaAnunciada) {
+      sala.unaAnunciada = st.ultima.paso;
+      if (st.ultima.accion === 'jugar') hablar(unaNombre(UNA_CARTAS[st.ultima.carta], lang), lang === 'en' ? 'en-US' : 'es-MX', 1);
+    }
+    const quedaUna = st.esperaUna ? Math.max(0, (st.esperaUna.t0 + dur(5000) - ahora) / dur(1000)) : 0;
+    const clave = 'una:' + st.paso + ':' + (sala.unaLocal ? (sala.unaLocal.presionado ? 'P' : 'L') : '') + ':' + (sala.unaElegir ?? '') + ':' + (st.esperaUna ? 'U' + st.esperaUna.paso : '') + ':' + (sala.unaEnviando ? 1 : 0) + ':' + lang + ':' + st.castigos.length;
+    if (sala.vista === clave) { const cu = document.getElementById('una-cuenta'); if (cu) cu.textContent = quedaUna.toFixed(1); return; } // la cuenta del UNA se actualiza sin redibujar el botón
+    sala.vista = clave;
+    const u = st.ultima;
+    const ult = !u ? (lang === 'en' ? 'The game begins!' : '¡Empieza la partida!') :
+      escapeHtml(st.orden[u.j].nombre) + ': ' + (u.accion === 'jugar' ? escapeHtml(unaNombre(UNA_CARTAS[u.carta], lang)) + (u.castigo ? ' · ⚠️ ' + (lang === 'en' ? 'slow on UNA +' : 'tardó en presionar UNA +') + u.castigo : '') :
+        u.accion === 'robar' ? (lang === 'en' ? 'draws' : 'roba') + (u.auto ? ' ⏰' : '') : (lang === 'en' ? 'passes' : 'pasa') + (u.auto ? ' ⏰' : ''));
+    const mano = yo >= 0 ? st.manos[yo] : [];
+    const jugable = id => miTurno && st.valida(id) && (st.pendiente === null || st.pendiente === id);
+    body.innerHTML =
+      '<div class="una-bots">' + st.orden.map((p, j) => j === yo ? '' : '<div class="una-bot' + (st.turno === j ? ' activo' : '') + '"><span>' + avatarHtml(p.avatar, 20) + ' ' + escapeHtml(p.nombre) + '</span><span>🂠 × ' + st.manos[j].length +
+        (st.manos[j].length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
+      '<div class="una-mesa"><div>' + unaCartaHtml(st.top(), ' grande') + '<div class="muted" style="text-align:center">' + escapeHtml(T.color[st.color]) + ' <span class="una-dot" style="background:' + UNA_COLOR[st.color] + '"></span></div></div>' +
+      '<button class="una-mazo" data-usala="robar"' + (miTurno && st.pendiente === null ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + st.mazo.length + ')</small></button></div>' +
+      '<div class="feedback" id="una-msg">' + (sala.unaElegir != null ? (lang === 'en' ? 'Choose a color: ' : 'Elige color: ') + ['r', 'y', 'g', 'b'].map(x => '<button class="una-color" data-usala-color="' + x + '" style="background:' + UNA_COLOR[x] + '" aria-label="' + T.color[x] + '"></button>').join('')
+        : miUna ? '📣 ' + (lang === 'en' ? 'Press UNA now! ' : '¡Presiona UNA ya! ') + '<b id="una-cuenta">' + quedaUna.toFixed(1) + '</b> s'
+        : st.esperaUna ? '⏳ ' + escapeHtml(st.orden[st.esperaUna.j].nombre) + (lang === 'en' ? ' must press UNA…' : ' debe presionar UNA…')
+        : (miTurno ? '👉 ' + escapeHtml(T.tu) : '⏳ ' + escapeHtml(st.orden[st.turno].nombre)) + ' · ' + ult) + '</div>' +
+      '<div class="una-mano">' + mano.map(id => '<button class="una-btn" data-usala-carta="' + id + '"' + (jugable(id) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(unaNombre(UNA_CARTAS[id], lang)) + '">' + unaCartaHtml(UNA_CARTAS[id], jugable(id) ? ' jugable' : '') + '</button>').join('') + '</div>' +
+      '<div class="row-btns">' + (miTurno && st.pendiente !== null ? '<button class="btn ghost" data-usala="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
+      ((sala.unaLocal ? !sala.unaLocal.presionado : miUna) ? '<button class="btn una-grito pulsa" data-usala="una">📣 ' + escapeHtml(T.una) + '</button>' : (sala.unaLocal && sala.unaLocal.presionado && (miUna || !sala.unaLocal.enviado) ? '<span class="feedback ok">📣 ¡UNA!</span>' : '')) + '</div>' +
+      '<div class="row-btns" style="margin-top:6px"><button class="btn ghost sm" data-usala-lang="es" aria-pressed="' + (lang === 'es') + '">🇲🇽 Español</button><button class="btn ghost sm" data-usala-lang="en" aria-pressed="' + (lang === 'en') + '">🇺🇸 English</button></div>';
+    sala.unaSt = st;
+  }
+
+  async function jugadaUnaSala(jugada) {
+    const st = sala.unaSt; const yo = st.orden.findIndex(p => p.id === sala.estado.yo);
+    const n = st.paso;
+    // Tirar la penúltima carta: el botón UNA aparece ya (sin esperar al servidor).
+    sala.unaLocal = jugada.accion === 'jugar' && st.manos[yo].length === 2 ? { paso: n, presionado: false, enviado: false, jugadaOk: false } : null;
+    sala.unaEnviando = true; sala.vista = null; pintarSala();
+    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n }, jugada) });
+    if (sala.unaLocal && sala.unaLocal.paso === n) { sala.unaLocal.jugadaOk = r.ok; enviarUnaLocal(); }
+    await traerSala();
+    sala.unaEnviando = false; sala.unaElegir = null;
+    sala.vista = null; pintarSala();
+    if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');
+  }
+
+  function enviarUnaLocal() {
+    const u = sala.unaLocal;
+    if (!u || !u.presionado || !u.jugadaOk || u.enviado) return;
+    u.enviado = true;
+    post('/juegos/sala/' + sala.codigo + '/respuesta', { una: { paso: u.paso } }).then(() => traerSala()).then(() => { sala.vista = null; pintarSala(); });
+  }
+
+  function clicUnaSala(e) {
+    const st = sala.unaSt; if (!st) return false;
+    const yo = st.orden.findIndex(p => p.id === sala.estado.yo);
+    const lg = e.target.closest('[data-usala-lang]'); if (lg) { sala.unaLang = lg.dataset.usalaLang; sala.vista = null; pintarSala(); return true; }
+    const b = e.target.closest('[data-usala]');
+    if (b && b.dataset.usala === 'una') {
+      if (sala.unaLocal && !sala.unaLocal.presionado) { sala.unaLocal.presionado = true; sonidoOk(); enviarUnaLocal(); sala.vista = null; pintarSala(); return true; }
+      if (!st.esperaUna || st.esperaUna.j !== yo) return true;
+      sonidoOk(); sala.unaLocal = { paso: st.esperaUna.paso, presionado: true, enviado: false, jugadaOk: true }; enviarUnaLocal(); sala.vista = null; pintarSala();
+      return true;
+    }
+    if (st.turno !== yo || sala.unaEnviando) return !!(b || e.target.closest('[data-usala-carta]'));
+    const col = e.target.closest('[data-usala-color]');
+    if (col && sala.unaElegir != null) { jugadaUnaSala({ accion: 'jugar', carta: sala.unaElegir, color: col.dataset.usalaColor }); return true; }
+    if (b && b.dataset.usala === 'robar' && st.pendiente === null) { jugadaUnaSala({ accion: 'robar' }); return true; }
+    if (b && b.dataset.usala === 'pasar' && st.pendiente !== null) { jugadaUnaSala({ accion: 'pasar' }); return true; }
+    const k = e.target.closest('[data-usala-carta]');
+    if (k) {
+      const id = Number(k.dataset.usalaCarta);
+      if (!st.valida(id) || (st.pendiente !== null && st.pendiente !== id)) {
+        sonidoMal(); const m = document.getElementById('una-msg'); m.className = 'feedback bad';
+        const T = UNA_TXT[sala.unaLang || 'es'];
+        m.textContent = st.pendiente !== null ? 'Solo puedes jugar la que robaste o pasar' : 'Debe ser ' + T.color[st.color].toLowerCase() + ' o ' + unaSimbolo(st.top().v);
+        return true;
+      }
+      if (!UNA_CARTAS[id].c) { sala.unaElegir = id; sala.vista = null; pintarSala(); return true; }
+      jugadaUnaSala({ accion: 'jugar', carta: id });
+      return true;
+    }
+    return false;
+  }
+
+  async function crearPartida() {
+    const juego = document.getElementById('p-juego').value;
+    const opciones = juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : {};
+    const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
+    if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    entrarSala(r.body.codigo);
+  }
+
+  async function unirsePartida() {
+    const codigo = document.getElementById('p-codigo').value.trim().toUpperCase();
+    if (!/^[A-Z]{4}$/.test(codigo)) { document.getElementById('p-msg').innerHTML = '<div class="alert">El código tiene 4 letras.</div>'; return; }
+    unirseCodigo(codigo);
+  }
+
+  async function unirseCodigo(codigo) {
+    const r = await post('/juegos/sala/' + codigo + '/unirse', {});
+    if (!r.ok) {
+      const txt = { sala_no_existe: 'No existe una partida con ese código.', ya_empezo: 'Esa partida ya empezó.', sala_llena: 'La partida está llena.', sala_vencida: 'La partida ya venció.' }[r.body.error] || ('Error ' + (r.body.error || r.status));
+      if (!document.getElementById('p-msg')) pantallaHub('partidas');
+      document.getElementById('p-msg').innerHTML = '<div class="alert">' + escapeHtml(txt) + '</div>'; return;
+    }
+    entrarSala(codigo);
+  }
+
+  const enlaceSala = codigo => location.origin + location.pathname + '?sala=' + codigo + (API_PARAM ? '&api=' + encodeURIComponent(API_PARAM) : '');
+  let qrLib = null;
+  function pintarQr(el, texto) {
+    qrLib = qrLib || new Promise((ok, fail) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = ok; sc.onerror = fail; document.head.appendChild(sc); });
+    qrLib.then(() => { if (el.isConnected && !el.childNodes.length) new QRCode(el, { text: texto, width: 150, height: 150, correctLevel: QRCode.CorrectLevel.M }); }).catch(() => { el.textContent = ''; });
+  }
+  async function compartirSala(btn) {
+    const url = enlaceSala(sala.codigo);
+    const j = juegoPorId(sala.estado.sala.juego);
+    const texto = '🎮 ¡Juega conmigo ' + j.t + '! Entra con este enlace (código ' + sala.codigo + '):';
+    if (navigator.share) { try { await navigator.share({ title: 'Partida ' + sala.codigo, text: texto, url }); return; } catch (e) { /* cancelado: copiar */ } }
+    try { await navigator.clipboard.writeText(texto + ' ' + url); btn.textContent = '✔ ¡Enlace copiado!'; } catch (e) { btn.textContent = 'Copia el enlace de arriba'; }
+    setTimeout(() => { if (btn.isConnected) btn.textContent = '📤 Compartir'; }, 2500);
+  }
+
+  // ---------- Música de fondo generada (WebAudio, sin archivos ni derechos) ----------
+  const ESTILOS_MUSICA = {
+    alegre: { nombre: '🎵 Alegre', bpm: 118 },
+    relajante: { nombre: '😌 Relajante', bpm: 72 },
+    fiesta: { nombre: '🎉 Fiesta', bpm: 126 },
+  };
+  const PROG = [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]]; // I–V–vi–IV (semitonos sobre Do)
+  const hz = st => 261.63 * Math.pow(2, st / 12);
+  const musica = { estilo: null, volumen: 'bajo', ctx: null, master: null, timer: null, paso: 0, siguiente: 0 };
+
+  function leerPrefMusica() { try { return JSON.parse(localStorage.getItem('juegos_pref') || '{}'); } catch (e) { return {}; } }
+  function guardarPrefMusica() { try { localStorage.setItem('juegos_pref', JSON.stringify({ musica: musica.estilo, volumen: musica.volumen })); } catch (e) { /* sin almacenamiento */ } }
+  const volMusica = () => musica.volumen === 'medio' ? 0.16 : 0.08;
+
+  function notaMusica(t, freq, dur, tipo, vol, filtro) {
+    const c = musica.ctx; const o = c.createOscillator(); const g = c.createGain();
+    o.type = tipo; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    let salida = g;
+    if (filtro) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = filtro; g.connect(f); salida = f; }
+    o.connect(g); salida.connect(musica.master); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function ruidoMusica(t, dur, vol, agudo) {
+    const c = musica.ctx; const n = Math.floor(c.sampleRate * dur); const buf = c.createBuffer(1, n, c.sampleRate); const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = vol;
+    const f = c.createBiquadFilter(); f.type = agudo ? 'highpass' : 'lowpass'; f.frequency.value = agudo ? 7000 : 900;
+    src.connect(f); f.connect(g); g.connect(musica.master); src.start(t);
+  }
+  function bomboMusica(t) {
+    const c = musica.ctx; const o = c.createOscillator(); const g = c.createGain();
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+    g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    o.connect(g); g.connect(musica.master); o.start(t); o.stop(t + 0.2);
+  }
+
+  // Un paso = corchea. 8 pasos por compás, 4 compases por vuelta.
+  function pasoMusica(t, paso) {
+    const est = musica.estilo; const acorde = PROG[Math.floor(paso / 8) % 4]; const i = paso % 8; const corchea = 30 / ESTILOS_MUSICA[est].bpm;
+    if (est === 'alegre') {
+      const penta = [0, 2, 4, 7, 9, 12, 14, 16];
+      notaMusica(t, hz(penta[(paso * 3 + acorde[0]) % penta.length] + 12), corchea * 0.9, 'square', 0.05, 2500);
+      if (i % 2 === 0) notaMusica(t, hz(acorde[0] - 12), corchea * 1.8, 'triangle', 0.22);
+      if (i % 2 === 1) ruidoMusica(t, 0.04, 0.05, true);
+    } else if (est === 'relajante') {
+      if (i === 0) acorde.forEach((st, k) => notaMusica(t, hz(st) * (1 + (k - 1) * 0.002), corchea * 8, 'sine', 0.07));
+      if (i % 2 === 0) notaMusica(t, hz(acorde[(i / 2) % 3] + 12), corchea * 2.5, 'triangle', 0.035);
+      if (i === 0 || i === 4) notaMusica(t, hz(acorde[0] - 24), corchea * 4, 'sine', 0.18);
+      if (Math.random() < 0.3) ruidoMusica(t, 0.02, 0.012, true);
+    } else if (est === 'fiesta') {
+      if (i % 2 === 0) bomboMusica(t);
+      if (i % 2 === 1) notaMusica(t, hz(acorde[0] - 12), corchea * 0.9, 'sawtooth', 0.12, 700);
+      if (i === 2 || i === 6) acorde.forEach(st => notaMusica(t, hz(st + 12), corchea * 0.6, 'sawtooth', 0.035, 1800));
+      if (i % 2 === 1) ruidoMusica(t, 0.03, 0.06, true);
+    }
+  }
+
+  function iniciarMusica(estilo) {
+    detenerMusica();
+    musica.estilo = estilo; guardarPrefMusica(); pintarBotonMusica();
+    if (!estilo) return;
+    try {
+      musica.ctx = musica.ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (musica.ctx.state === 'suspended') musica.ctx.resume();
+      musica.master = musica.ctx.createGain(); musica.master.gain.value = volMusica(); musica.master.connect(musica.ctx.destination);
+      musica.paso = 0; musica.siguiente = musica.ctx.currentTime + 0.1;
+      musica.timer = setInterval(() => {
+        const corchea = 30 / ESTILOS_MUSICA[musica.estilo].bpm;
+        while (musica.siguiente < musica.ctx.currentTime + 0.12) { pasoMusica(musica.siguiente, musica.paso++); musica.siguiente += corchea; }
+      }, 25);
+    } catch (e) { musica.estilo = null; pintarBotonMusica(); }
+  }
+  function detenerMusica() {
+    if (musica.timer) clearInterval(musica.timer);
+    musica.timer = null;
+    if (musica.master) { try { musica.master.disconnect(); } catch (e) { /* ya desconectado */ } musica.master = null; }
+  }
+  // Mientras habla la voz (gritón, Spelling), la música baja.
+  function bajarMusica(ms = 2500) {
+    if (!musica.master || !musica.ctx) return;
+    const g = musica.master.gain, t = musica.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setTargetAtTime(volMusica() * 0.25, t, 0.05); g.setTargetAtTime(volMusica(), t + ms / 1000, 0.3);
+  }
+  function pintarBotonMusica() {
+    const b = document.getElementById('btn-musica'); if (!b) return;
+    b.textContent = musica.estilo ? ESTILOS_MUSICA[musica.estilo].nombre.split(' ')[0] + ' ♪' : '🔇';
+    b.setAttribute('aria-label', 'Música: ' + (musica.estilo ? ESTILOS_MUSICA[musica.estilo].nombre : 'apagada'));
+    const menu = document.getElementById('menu-musica');
+    if (menu) menu.querySelectorAll('[data-mus]').forEach(x => x.setAttribute('aria-pressed', String((x.dataset.mus || null) === (musica.estilo || '') || (x.dataset.mus === '' && !musica.estilo))));
+    if (menu) menu.querySelectorAll('[data-vol]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.vol === musica.volumen)));
+  }
+  function menuMusicaHtml() {
+    return '<div class="menu-musica" id="menu-musica" hidden><div class="muted" style="margin-bottom:6px">Música de fondo</div>' +
+      '<button class="mus-opt" data-mus="">🔇 Apagada</button>' + Object.entries(ESTILOS_MUSICA).map(([k, v]) => '<button class="mus-opt" data-mus="' + k + '">' + v.nombre + '</button>').join('') +
+      '<div class="muted" style="margin:8px 0 4px">Volumen</div><div style="display:flex;gap:6px"><button class="mus-opt" data-vol="bajo">Bajo</button><button class="mus-opt" data-vol="medio">Medio</button></div></div>';
+  }
+  (() => {
+    const pref = leerPrefMusica();
+    if (pref.volumen === 'medio') musica.volumen = 'medio';
+    // Los navegadores exigen un gesto: si había música guardada, empieza con el primer toque.
+    if (pref.musica && ESTILOS_MUSICA[pref.musica]) {
+      musica.estilo = pref.musica;
+      const arrancar = () => { document.removeEventListener('pointerdown', arrancar); if (musica.estilo && !musica.timer) iniciarMusica(musica.estilo); };
+      document.addEventListener('pointerdown', arrancar);
+    }
+  })();
+
+  document.getElementById('menu-musica-wrap').innerHTML = menuMusicaHtml();
+  pintarBotonMusica();
+  document.getElementById('btn-musica').addEventListener('click', e => { e.stopPropagation(); const m = document.getElementById('menu-musica'); m.hidden = !m.hidden; pintarBotonMusica(); });
+  document.getElementById('menu-musica').addEventListener('click', e => {
+    e.stopPropagation();
+    const b = e.target.closest('[data-mus]'), v = e.target.closest('[data-vol]');
+    if (b) iniciarMusica(b.dataset.mus || null);
+    if (v) { musica.volumen = v.dataset.vol; guardarPrefMusica(); if (musica.master) musica.master.gain.value = volMusica(); pintarBotonMusica(); }
+  });
+  document.addEventListener('click', () => { const m = document.getElementById('menu-musica'); if (m) m.hidden = true; });
+  chip.addEventListener('click', () => { if (state.jugador) pantallaAvatar(); });
+
+  // ---------- Eventos ----------
+  app.addEventListener('click', e => {
+    const t = e.target.closest('[data-tab]'); if (t) { limpiar(); return pantallaHub(t.dataset.tab); }
+    const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
+    if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
+    const lsc = e.target.closest('[data-lsc]'); if (lsc) return marcarLoteriaSala(Number(lsc.dataset.lsc), lsc);
+    if (e.target.closest('[data-lsgrito]')) return gritarLoteriaSala();
+    const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }
+    const pa = e.target.closest('[data-p]');
+    if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
+    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(() => traerSala()).then(() => { sala.vista = null; pintarSala(); }); }
+    const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
+    const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
+    const g = e.target.closest('[data-juego]');
+    if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); pantallaHub(); }
+    if (a.dataset.a === 'reintentar') iniciar();
+    if (a.dataset.a === 'csv') descargarCsv();
+    if (a.dataset.a === 'otro-correo') { SESSION_KEYS.forEach(k => localStorage.removeItem(k)); pantallaLogin(); }
+  });
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); } });
+  app.addEventListener('input', e => {
+    if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
+  });
+  app.addEventListener('submit', async e => {
+    if (e.target.id === 'f-crear') { e.preventDefault(); return crearPartida(); }
+    if (e.target.id === 'f-unirse') { e.preventDefault(); return unirsePartida(); }
+    if (e.target.id === 'pb-form') {
+      e.preventDefault();
+      const palabras = palabrasForm();
+      document.getElementById('pb-basta').disabled = true;
+      return post('/juegos/sala/' + sala.codigo + '/respuesta', { ronda: sala.rondaActual, palabras, basta: true }).then(() => traerSala());
+    }
+    if (e.target.id === 'f-login') {
+      e.preventDefault();
+      const email = document.getElementById('correo').value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return pantallaLogin('Escribe un correo válido.');
+      localStorage.setItem('stald_email', email); iniciar();
+    }
+    if (e.target.id === 'f-invitado') {
+      e.preventDefault();
+      const nombre = document.getElementById('apodo').value.trim();
+      if (!document.getElementById('acepto').checked) return pantallaInvitado('Para jugar como invitado necesitas aceptar el aviso.');
+      if (!/^[\p{L}\p{N} ]{2,20}$/u.test(nombre)) return pantallaInvitado('Tu apodo debe tener de 2 a 20 letras o números.');
+      const r = await post('/juegos/invitado', { nombre, acepto: true });
+      if (!r.ok) return pantallaInvitado('No se pudo registrar (' + (r.body.error || r.status) + ').');
+      localStorage.setItem('stald_email', state.email);
+      iniciar();
+    }
+  });
+
+  iniciar();
+</script>
+</body>
+</html>
