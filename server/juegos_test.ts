@@ -336,3 +336,10 @@ Deno.test("juegos: en cada ranking aparece quien jugó ese tipo, aunque sea con 
   const i = await call("GET", "/ranking", "angel@example.com");
   assertEquals([i.body.top.map((x: any) => [x.nombre, x.total]), i.body.yo.pos], [[["Marisol", 500], ["Angel", 0]], 2]);
 });
+
+Deno.test("juegos: Dragon Run en el catálogo (openspec: dragon-run)", async () => {
+  assertEquals(CATALOGO["dragon-run"], { categoria: "mente", titulo: "Dragon Run", max: 2000 });
+  const { call } = ctx();
+  const p = await call("POST", "/partida", "marisol@example.com", partida("dragon-run", 5000));
+  assertEquals([p.status, p.body.puntos, p.body.modo], [200, 2000, "individual"]);
+});
