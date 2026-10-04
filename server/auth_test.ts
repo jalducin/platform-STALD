@@ -152,9 +152,20 @@ Deno.test("enlace: solo el admin con sesión verificada; correo válido; sin cue
   const get = await handleEnlace(new Request("http://x/auth/enlace"), { ok: true, email: ADMIN, verificado: true }, enlaceDeps(api.f), json);
   assertEquals(get.status, 405);
   assertEquals(api.llamadas.length, 0, "no llama a Supabase si no procede");
-  const noExiste = adminApiFalsa(404);
-  const r = await handleEnlace(postEnlace({ email: "nadie@example.com" }), { ok: true, email: ADMIN, verificado: true }, enlaceDeps(noExiste.f), json);
-  assertEquals([r.status, (await r.json()).error], [404, "sin_cuenta"]);
+  // Sin cuenta en Auth: se da de alta (email confirmado) y se vuelve a pedir el enlace (ajuste post-apply).
+  const llamadas: { url: string; body: Record<string, unknown> }[] = [];
+  let existe = false;
+  const sinUsuario = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input), body = JSON.parse(String(init?.body || "{}"));
+    llamadas.push({ url, body });
+    if (url.endsWith("/admin/users")) { existe = true; return json({ id: "u2", email: body.email }); }
+    if (!existe) return json({ msg: "User not found", error_code: "user_not_found" }, 404);
+    return json({ action_link: "https://ref.supabase.co/auth/v1/verify?token=nuevo", email_otp: "654321" });
+  }) as typeof fetch;
+  const r = await handleEnlace(postEnlace({ email: "Nueva@Example.com" }), { ok: true, email: ADMIN, verificado: true }, enlaceDeps(sinUsuario), json);
+  assertEquals([r.status, (await r.json()).enlace], [200, "https://ref.supabase.co/auth/v1/verify?token=nuevo"]);
+  assertEquals(llamadas.map((l) => l.url.replace("https://ref.supabase.co/auth/v1", "")), ["/admin/generate_link", "/admin/users", "/admin/generate_link"]);
+  assertEquals(llamadas[1].body, { email: "nueva@example.com", email_confirm: true });
   const caido = adminApiFalsa(500);
   const c = await handleEnlace(postEnlace({ email: "luz@example.com" }), { ok: true, email: ADMIN, verificado: true }, enlaceDeps(caido.f), json);
   assertEquals([c.status, (await c.json()).error], [503, "auth_no_disponible"]);

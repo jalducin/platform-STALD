@@ -117,20 +117,31 @@ export async function handleEnlace(req: Request, quien: Quien, deps: DepsEnlace,
   const email = normalizeEmail(typeof body.email === "string" ? body.email : null);
   if (!CORREO.test(email)) return json({ error: "correo_invalido" }, 400);
   if (!deps.supabaseUrl || !deps.serviceKey) return json({ error: "auth_no_disponible" }, 503);
+  const base = deps.supabaseUrl.replace(/\/$/, "");
+  const admin = (ruta: string, body: unknown) => (deps.fetch ?? fetch)(`${base}/auth/v1/admin/${ruta}`, {
+    method: "POST",
+    headers: { "apikey": deps.serviceKey!, "Authorization": `Bearer ${deps.serviceKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000),
+  });
+  const pedirEnlace = () => admin("generate_link", { type: "magiclink", email, redirect_to: deps.redirect });
   let res: Response;
+  let j: Record<string, unknown> & { properties?: Record<string, unknown> };
   try {
-    res = await (deps.fetch ?? fetch)(`${deps.supabaseUrl.replace(/\/$/, "")}/auth/v1/admin/generate_link`, {
-      method: "POST",
-      headers: { "apikey": deps.serviceKey, "Authorization": `Bearer ${deps.serviceKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "magiclink", email, redirect_to: deps.redirect }),
-      signal: AbortSignal.timeout(8000),
-    });
+    res = await pedirEnlace();
+    j = await res.json().catch(() => ({}));
+    // Aún no existe en Auth: se da de alta con el correo confirmado y se pide el enlace otra vez (ajuste post-apply).
+    if (res.status === 404 || res.status === 422 || j?.error_code === "user_not_found") {
+      const alta = await admin("users", { email, email_confirm: true });
+      await alta.body?.cancel();
+      if (!alta.ok && alta.status !== 422) { console.error("auth alta:", alta.status); return json({ error: "auth_no_disponible" }, 503); }
+      res = await pedirEnlace();
+      j = await res.json().catch(() => ({}));
+    }
   } catch (e) {
     console.error("auth enlace:", e instanceof Error ? e.message : e);
     return json({ error: "auth_no_disponible" }, 503);
   }
-  const j = await res.json().catch(() => ({}));
-  if (res.status === 404 || res.status === 422 || j?.error_code === "user_not_found") return json({ error: "sin_cuenta" }, 404);
   if (!res.ok) {
     console.error("auth enlace:", res.status);
     return json({ error: "auth_no_disponible" }, 503);
