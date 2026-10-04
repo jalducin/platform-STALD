@@ -261,7 +261,7 @@
     const body = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, body };
   }
-  const post = (ruta, datos) => api(ruta, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(datos) });
+  const post = (ruta, datos) => api(ruta, { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(datos) });
 
   const cacheDatos = {};
   async function datos(nombre) {
@@ -1579,6 +1579,7 @@
   const sala = { codigo: null, estado: null, offset: 0, poll: null, guardado: false };
   const ahoraServidor = () => Date.now() + sala.offset;
 
+  const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria']);
   async function traerSala() {
     const r = await api('/juegos/sala/' + sala.codigo);
     if (r.ok) { sala.estado = r.body; sala.offset = r.body.ahora - Date.now(); }
@@ -1617,19 +1618,27 @@
     // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
     // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
     const t0 = Date.now();
-    const parar = msg => { clearInterval(tick); const pb = document.getElementById('p-body'); if (msg && pb && sala.vista !== 'final') pb.innerHTML = '<div class="card muted" style="text-align:center">' + msg + '</div>'; };
-    const tick = setInterval(() => {
-      if (document.hidden) return;
-      if (sala.vista === 'final') return parar();
-      if (Date.now() - t0 > 60 * 60000) return parar('⏸️ La partida se pausó por inactividad. Vuelve a entrar con el código 🔑 ' + escapeHtml(codigo) + '.');
-      traerSala().then(r => {
-        if (r && !r.ok && [403, 404, 410].includes(r.status)) return parar(r.status === 410 ? '⌛ Esta partida ya terminó (vencen a las 3 horas).' : 'Esta partida ya no está disponible.');
-        if (r && r.status === 503) return; // mucho tráfico: se reintenta en el siguiente ciclo
-        pintarSala();
-      });
-    }, 2500);
+    let tick;
+    const parar = msg => { clearTimeout(tick); const pb = document.getElementById('p-body'); if (msg && pb && sala.vista !== 'final') pb.innerHTML = '<div class="card muted" style="text-align:center">' + msg + '</div>'; };
+    // Intervalo por tipo de juego (openspec: ahorro-peticiones): 2.5 s en la sala de espera y en los juegos que
+    // necesitan verse en tiempo real (¡Una!, Basta, Lotería); 5 s en los de preguntas (van sincronizados por
+    // reloj). La sala de espera deja de consultar a los 15 min si nadie empieza.
+    const programarTick = () => {
+      const esperando = sala.estado && sala.estado.sala.inicio === null;
+      tick = setTimeout(() => {
+        if (document.hidden) return programarTick();
+        if (sala.vista === 'final') return parar();
+        if (Date.now() - t0 > 60 * 60000 || (sala.estado.sala.inicio === null && Date.now() - t0 > 15 * 60000)) return parar('⏸️ La partida se pausó por inactividad. Vuelve a entrar con el código 🔑 ' + escapeHtml(codigo) + '.');
+        traerSala().then(r => {
+          if (r && !r.ok && [403, 404, 410].includes(r.status)) return parar(r.status === 410 ? '⌛ Esta partida ya terminó (vencen a las 3 horas).' : 'Esta partida ya no está disponible.');
+          if (r && r.status === 503) { /* mucho tráfico: se reintenta en el siguiente ciclo */ } else pintarSala();
+          programarTick();
+        });
+      }, esperando || TIEMPO_REAL.has(sala.estado.sala.juego) ? 2500 : 5000);
+    };
+    programarTick();
     const reloj = setInterval(() => pintarSala(), 250);
-    limpiezas.push(() => clearInterval(tick), () => clearInterval(reloj));
+    limpiezas.push(() => clearTimeout(tick), () => clearInterval(reloj));
     app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + ' · partida</span>' +
       '<span class="stat" id="p-codigo-chip">🔑 ' + escapeHtml(codigo) + '</span></div><div class="bar" id="m-bar" hidden><span style="width:100%"></span></div><div id="p-body"></div></div>';
     sala.vista = null;

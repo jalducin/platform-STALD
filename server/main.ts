@@ -99,6 +99,7 @@ function corsHeaders(extra: Record<string, string> = {}): Headers {
   h.set("Access-Control-Allow-Origin", "*");
   h.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
   h.set("Access-Control-Allow-Headers", "content-type");
+  h.set("Access-Control-Max-Age", "86400"); // el navegador recuerda la verificación previa un día (openspec: ahorro-peticiones)
   h.set("Cache-Control", "no-store, no-cache, must-revalidate");
   for (const [k, v] of Object.entries(extra)) h.set(k, v);
   return h;

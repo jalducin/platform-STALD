@@ -561,7 +561,7 @@
     if (!confirm((hecha ? '¿Marcar como hecha "' : '¿Desmarcar "') + btn.dataset.titulo + '"?')) return;
     btn.disabled = true; btn.textContent = 'Guardando…';
     const r = await fetchJson(DATA_URL_BASE + '/' + encodeURIComponent(btn.dataset.id) + '/completado?email=' + encodeURIComponent(state.email), {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ completado: hecha }),
+      method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ completado: hecha }),
     });
     if (!r.ok) {
       btn.disabled = false; btn.textContent = hecha ? '✓ Marcar hecha' : '↩ Desmarcar';
@@ -722,7 +722,7 @@
     const msg = document.getElementById('alta-msg');
     const nombre = document.getElementById('alta-nombre').value, email = document.getElementById('alta-correo').value;
     form.querySelector('button').disabled = true;
-    const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nombre, email }) });
+    const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ nombre, email }) });
     if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="empty" style="color:var(--bad)">' + escapeHtml(ERRORES_ALTA[r.body.error] || ('No se pudo dar de alta (' + (r.body.error || r.status) + ').')) + '</div>'; return; }
     state.altaAbierta = true;
     state.altaAviso = '✅ ' + r.body.alumno.nombre + ' ya puede entrar con ' + r.body.alumno.email + '.';
@@ -731,7 +731,7 @@
   async function quitarAlumno(b) {
     if (!confirm('¿Quitar el acceso de ' + b.dataset.nombre + '? Sus resultados se conservan.')) return;
     b.disabled = true;
-    const r = await fetchJson(API_BASE + '/ingles/alumnos/quitar?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: b.dataset.email }) });
+    const r = await fetchJson(API_BASE + '/ingles/alumnos/quitar?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ email: b.dataset.email }) });
     if (!r.ok) { b.disabled = false; alert('No se pudo quitar (' + (r.body.error || r.status) + ').'); return; }
     state.altaAbierta = true; state.altaAviso = '🗑️ Se quitó el acceso de ' + b.dataset.nombre + '.';
     await loadFor(state.email);
@@ -913,7 +913,7 @@
     btn.disabled = true; btn.textContent = 'Enviando…';
     const id = form.dataset.id;
     const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email), {
-      method: 'POST', headers: { 'content-type': 'application/json' },
+      method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' },
       body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas: examAnswers(form) }),
     });
     if (r.ok) {
