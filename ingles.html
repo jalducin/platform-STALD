@@ -264,6 +264,14 @@
   .ruta-sem summary::-webkit-details-marker { display: none; }
   .ruta-sem .pf-avance { font-size: .72rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--border); white-space: nowrap; }
   .ruta-sem[open] summary { margin-bottom: 6px; }
+  /* Grupos (openspec: ingles-grupos) */
+  .grupo-sw { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: middle; margin-right: 6px; }
+  .grupo-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--accent); }
+  .grupos-barra { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+  .grupos-barra select, .grupo-form input, .grupo-form select, select.mover-grupo { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); font: inherit; background: var(--card, #fff); color: inherit; }
+  .grupo-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin: 8px 0 12px; }
+  .grupo-fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .mi-grupo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--card, #fff); border: 1px solid var(--border); border-left: 5px solid var(--gc, var(--accent)); border-radius: 12px; padding: 10px 12px; margin: 10px 0; }
 </style>
 </head>
 <body>
@@ -464,7 +472,7 @@
 
     if (!data.isAdmin) {
       if (MODO_PROFE) { contentEl.innerHTML = renderProfe(state.act); return; }
-      contentEl.innerHTML = porEmpezar + renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
+      contentEl.innerHTML = renderMiGrupo(state.act) + porEmpezar + renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
       return;
     }
 
@@ -480,8 +488,8 @@
     const items = (state.act && state.act.items) || [];
     const resumen = (state.act && state.act.resumen) || {};
     const diag = items.find(i => i.id === 'diagnostico-a1');
-    const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es'));
-    contentEl.innerHTML = '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html?modo=profe')) + '">🎓 Mi ruta B1 → C1 →</a>' + renderAlumnosAdmin() + renderUltimasAdmin(names, groups, items) + renderJuegosAdmin() + renderAdminWeek(state.act) + names.map(name => {
+    const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es')).filter(n => !state.grupoFiltro || (grupoDeNombre(n) || {}).id === state.grupoFiltro);
+    contentEl.innerHTML = '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html?modo=profe')) + '">🎓 Mi ruta B1 → C1 →</a>' + renderFiltroGrupo() + renderGruposAdmin() + renderAlumnosAdmin() + renderUltimasAdmin(names, groups, items) + renderJuegosAdmin() + renderAdminWeek(state.act) + names.map(name => {
       const list = groups.get(name);
       const g = buildGroups(list);
       const ultima = lastGraded(list);
@@ -489,7 +497,7 @@
       const temas = (resumen[name] && resumen[name].temasAReforzar) || [];
       const suyos = items.map(it => ({ it, r: (it.resultados || []).find(r => r.alumno === name) })).filter(x => x.r);
       return '<details class="student" data-alumno="' + escapeHtml(name) + '">' +
-        '<summary><span>👤 ' + escapeHtml(name) + '</span>' +
+        '<summary><span>👤 ' + escapeHtml(name) + ' ' + chipGrupo(grupoDeNombre(name)) + '</span>' +
           '<span class="mini"><span>' + g.completed + '/' + g.total + '</span>' +
           '<span class="o">⏰ ' + g.overdue.length + '</span><span class="t">📌 ' + g.today.length + '</span>' +
           '<span class="g" title="Última actividad calificada (Notion)">⭐ ' + escapeHtml(ultima ? ultima.calificacion : '—') + '</span>' +
@@ -723,6 +731,71 @@
 
   // Resumen de juegos de la semana (solo admin): jugadores y partidas con su podio.
   // ---------- Alta de alumnos y alumnas (admin, openspec: alta-alumnos) ----------
+  // ---------- Grupos de clase (openspec: ingles-grupos) ----------
+  const slugAlumno = n => (n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9]/).filter(Boolean).join('-') || 'sin-nombre';
+  async function loadGruposAdmin() {
+    try {
+      const r = await fetchJson(API_BASE + '/ingles/grupos?email=' + encodeURIComponent(state.email));
+      state.grupos = r.ok ? r.body : null; // 503 sin_base: los grupos aún no están activos
+    } catch (e) { state.grupos = null; }
+  }
+  const gruposActivos = () => (state.grupos && state.grupos.grupos || []).filter(g => g.activo);
+  // Grupo de un alumno o alumna: su inscripción vigente o, si no tiene, el primer grupo activo.
+  function grupoDeNombre(nombre) {
+    if (!state.grupos) return null;
+    const id = state.grupos.miembros[slugAlumno(nombre)] || (gruposActivos()[0] || {}).id;
+    return (state.grupos.grupos || []).find(g => g.id === id) || null;
+  }
+  const chipGrupo = g => g ? '<span class="grupo-chip"><span class="grupo-sw" style="background:' + escapeHtml(g.color) + ';margin:0"></span>' + escapeHtml(g.nombre) + '</span>' : '';
+  const opcionesGrupo = sel => gruposActivos().map(g => '<option value="' + escapeHtml(g.id) + '"' + (g.id === sel ? ' selected' : '') + '>' + escapeHtml(g.nombre) + '</option>').join('');
+  function renderFiltroGrupo() {
+    if (!state.grupos) return '';
+    return '<div class="grupos-barra"><label for="grupo-filtro">👥 Grupo</label><select id="grupo-filtro"><option value="">Todos los grupos</option>' + opcionesGrupo(state.grupoFiltro) + '</select></div>';
+  }
+  function renderGruposAdmin() {
+    if (!state.grupos) return '';
+    const lista = state.grupos.grupos || [];
+    const cuantos = id => Object.values(state.grupos.miembros).filter(x => x === id).length;
+    const e = state.grupoEdicion || {};
+    return '<details class="section" id="grupos-admin"' + (state.gruposAbierto ? ' open' : '') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Grupos</span><span class="count">' + lista.length + '</span></div></summary><div class="scroll">' +
+      '<form class="grupo-form" id="grupo-form" autocomplete="off"><input type="hidden" id="g-id" value="' + escapeHtml(e.id || '') + '">' +
+        '<input id="g-nombre" maxlength="60" placeholder="Nombre (Sábado A1)" required value="' + escapeHtml(e.nombre || '') + '">' +
+        '<input id="g-nivel" maxlength="20" placeholder="Nivel (A1)" value="' + escapeHtml(e.nivel || '') + '">' +
+        '<input id="g-horario" maxlength="60" placeholder="Horario (Sáb 10:00)" value="' + escapeHtml(e.horario || '') + '">' +
+        '<input id="g-meet" maxlength="200" placeholder="https://meet.google.com/…" value="' + escapeHtml(e.meet_url || '') + '">' +
+        '<input id="g-color" type="color" value="' + escapeHtml(e.color || '#4f46e5') + '" aria-label="Color del grupo">' +
+        '<button class="btn" type="submit">' + (e.id ? '💾 Guardar cambios' : '➕ Crear grupo') + '</button><div id="grupo-msg"></div></form>' +
+      lista.map(g => '<div class="grupo-fila"><div><span class="grupo-sw" style="background:' + escapeHtml(g.color) + '"></span><b>' + escapeHtml(g.nombre) + '</b>' + (g.activo ? '' : ' <small>(inactivo)</small>') +
+        '<br><small>' + [g.nivel, g.horario].filter(Boolean).map(escapeHtml).join(' · ') + (g.meet_url ? ' · <a class="link" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') + ' · 👤 ' + cuantos(g.id) + ' inscritos</small></div>' +
+        '<button class="btn ghost sm" data-action="editar-grupo" data-id="' + escapeHtml(g.id) + '">✏️ Editar</button></div>').join('') +
+      '<div class="progress-text">Quien no tiene inscripción cuenta en el primer grupo activo. Las semanas con <code>"grupos"</code> en su JSON solo las ve ese grupo.</div>' +
+      '</div></details>';
+  }
+  async function guardarGrupo(form) {
+    const msg = document.getElementById('grupo-msg');
+    const val = id => document.getElementById(id).value.trim();
+    const body = { nombre: val('g-nombre'), nivel: val('g-nivel'), horario: val('g-horario'), meet_url: val('g-meet'), color: val('g-color') };
+    if (val('g-id')) body.id = val('g-id');
+    form.querySelector('button').disabled = true;
+    const r = await fetchJson(API_BASE + '/ingles/grupos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(body) });
+    if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="empty" style="color:var(--bad)">No se pudo guardar (' + escapeHtml({ nombre_invalido: 'escribe un nombre', meet_invalido: 'el enlace de Meet debe empezar con https://', color_invalido: 'color inválido' }[r.body.error] || r.body.error || r.status) + ').</div>'; return; }
+    state.grupoEdicion = null; state.gruposAbierto = true;
+    await loadGruposAdmin(); render(state.data);
+  }
+  async function moverGrupo(sel) {
+    sel.disabled = true;
+    const r = await fetchJson(API_BASE + '/ingles/grupos/mover?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ alumno: sel.dataset.alumno, grupo: sel.value }) });
+    if (!r.ok) { sel.disabled = false; alert('No se pudo mover (' + (r.body.error || r.status) + ').'); return; }
+    state.altaAbierta = true; state.altaAviso = '⇄ ' + sel.dataset.alumno + ' ahora está en ' + ((state.grupos.grupos.find(g => g.id === sel.value) || {}).nombre || sel.value) + '.';
+    await loadFor(state.email); // recarga alumnos y grupos, y muestra el aviso
+  }
+  // Tarjeta del grupo para alumnos y alumnas: nombre, horario y Meet.
+  function renderMiGrupo(act) {
+    const g = act && act.grupo; if (!g) return '';
+    return '<div class="mi-grupo" style="--gc:' + escapeHtml(g.color) + '"><b>👥 ' + escapeHtml(g.nombre) + '</b>' + (g.nivel ? '<span class="grupo-chip">' + escapeHtml(g.nivel) + '</span>' : '') +
+      (g.horario ? '<span>🗓️ ' + escapeHtml(g.horario) + '</span>' : '') + (g.meet_url ? '<a class="btn" style="margin-left:auto" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Unirme a la clase</a>' : '') + '</div>';
+  }
+
   async function loadAlumnosAdmin() {
     try {
       const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email));
@@ -738,10 +811,12 @@
         '<div class="progress-text" style="margin:0">➕ Nuevo alumno o alumna: entra con su correo a Inglés, al portal y a Juegos. Empieza su curso el lunes siguiente, sin actividades en atraso.</div>' +
         '<input id="alta-nombre" type="text" maxlength="40" placeholder="Nombre (como aparecerá en sus calificaciones)" required style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' +
         '<input id="alta-correo" type="email" maxlength="80" placeholder="correo@ejemplo.com" required style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' +
+        (state.grupos ? '<select id="alta-grupo" aria-label="Grupo" style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' + opcionesGrupo(state.grupoFiltro || (gruposActivos()[0] || {}).id) + '</select>' : '') +
         '<button class="btn" type="submit">Dar de alta</button><div id="alta-msg"></div></form>' +
       (a && a.error ? '<div class="empty">No se pudo cargar la lista (' + escapeHtml(a.error) + ').</div>' : '') +
       lista.map(x => '<div class="ultimas-lista" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div>👤 <b>' + escapeHtml(x.nombre) + '</b><br><small>' +
         escapeHtml(x.emails.join(', ') || 'sin correo en Notion') + ' · ' + (x.origen === 'registro' ? 'alta en la página' : 'Notion') + (x.inicio ? ' · 📅 inicia el lunes ' + escapeHtml(fechaCorta(x.inicio)) : '') + '</small></div>' +
+        (state.grupos ? '<select class="mover-grupo" data-mover="1" data-alumno="' + escapeHtml(x.nombre) + '" aria-label="Grupo de ' + escapeHtml(x.nombre) + '">' + opcionesGrupo((grupoDeNombre(x.nombre) || {}).id) + '</select>' : '') +
         (x.origen === 'registro' ? '<button class="btn ghost" data-action="quitar-alumno" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">Quitar</button>' : '') + '</div>').join('') +
       '</div></details>';
   }
@@ -751,7 +826,8 @@
     const msg = document.getElementById('alta-msg');
     const nombre = document.getElementById('alta-nombre').value, email = document.getElementById('alta-correo').value;
     form.querySelector('button').disabled = true;
-    const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ nombre, email }) });
+    const grupoSel = document.getElementById('alta-grupo');
+    const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(Object.assign({ nombre, email }, grupoSel && grupoSel.value ? { grupo: grupoSel.value } : {})) });
     if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="empty" style="color:var(--bad)">' + escapeHtml(ERRORES_ALTA[r.body.error] || ('No se pudo dar de alta (' + (r.body.error || r.status) + ').')) + '</div>'; return; }
     state.altaAbierta = true;
     state.altaAviso = '✅ ' + r.body.alumno.nombre + ' ya puede entrar con ' + r.body.alumno.email + '.' + (r.body.alumno.inicio ? ' Empieza el lunes ' + fechaCorta(r.body.alumno.inicio) + ', sin actividades en atraso.' : '');
@@ -1148,6 +1224,11 @@
   }
 
   contentEl.addEventListener('submit', (e) => { if (e.target.id === 'alta-alumno') { e.preventDefault(); altaAlumno(e.target); } });
+  contentEl.addEventListener('submit', (e) => { if (e.target.id === 'grupo-form') { e.preventDefault(); guardarGrupo(e.target); } });
+  contentEl.addEventListener('change', (e) => {
+    if (e.target.id === 'grupo-filtro') { state.grupoFiltro = e.target.value || null; render(state.data); }
+    if (e.target.dataset && e.target.dataset.mover) moverGrupo(e.target);
+  });
   contentEl.addEventListener('click', (e) => {
     const b = e.target.closest('[data-action]');
     if (!b) return;
@@ -1156,6 +1237,7 @@
     if (act === 'ver-todo') aplicarFiltro(b.closest('.board'), null);
     if (act === 'marcar') { e.preventDefault(); marcarTarea(b); }
     if (act === 'quitar-alumno') { e.preventDefault(); quitarAlumno(b); }
+    if (act === 'editar-grupo') { e.preventDefault(); state.grupoEdicion = (state.grupos.grupos || []).find(g => g.id === b.dataset.id) || null; state.gruposAbierto = true; render(state.data); document.getElementById('g-nombre').focus(); }
     if (act === 'tts') { e.preventDefault(); hablar(b.dataset.texto, !!b.dataset.lento); }
     if (act === 'grabar') { e.preventDefault(); grabarPron(b); }
     if (act === 'auto') { e.preventDefault(); const q = b.closest('.q'); const okv = b.dataset.valor === 'auto:ok'; ponerRespuestaPron(q, b.dataset.valor, okv ? '✔ Marcaste que te salió bien' : '↺ Marcaste que necesitas repetir', okv); }
@@ -1310,7 +1392,7 @@
       appEl.style.display = 'block';
       state.data = data;
       await actividadesP;
-      if (data.isAdmin) await Promise.all([loadJuegosAdmin(), loadAlumnosAdmin()]);
+      if (data.isAdmin) await Promise.all([loadJuegosAdmin(), loadAlumnosAdmin(), loadGruposAdmin()]);
       render(data);
       if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; state.altaAviso = null; }
     } catch (e) {

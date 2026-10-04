@@ -113,6 +113,27 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - "El Ajolote", "El Colibrí" y "El Tlacuache" sustituyen a tres cartas tradicionales poco apropiadas
     para menores.
 
+## Inglés en Postgres (Supabase, cambio `ingles-grupos`)
+
+- El proyecto Supabase *Portafolio* es compartido con el portafolio. Todas las tablas de Inglés llevan el prefijo
+  `stald_` en `public` y tienen RLS sin políticas, así que solo la llave de servicio (Deno) las lee.
+  - Las tablas `stald_test_*` son para pruebas E2E.
+  - Definición: `supabase/migrations/001_stald_ingles.sql`.
+- `stald_docs(path, data jsonb, version, actualizado)`: documentos 1 a 1 con el repo de datos.
+  - Rutas: `alumnos.json`, `resultados/<item>/<slug>.json` y `avance/<slug>.json`.
+  - `version` es el `sha` de la concurrencia optimista.
+  - La fila `meta/migrado` activa `PgStore`.
+- `stald_grupos(id, nombre, nivel, horario, meet_url, color, activo, orden)`. El grupo inicial es `grupo-1`
+  («Grupo 1»).
+- `stald_inscripciones(alumno, grupo_id, desde, hasta)`:
+  - `alumno` es el slug del nombre, la misma llave que `resultados/`;
+  - solo puede haber una inscripción vigente (`hasta` null) por persona;
+  - quien no tiene inscripción cuenta en el primer grupo activo.
+- El contenido sigue en el repo: actividades, exámenes, semanas y ruta del profe. Una semana puede declarar
+  `"grupos": ["<id>"]`; si no lo declara, aplica a todos.
+- La migración se hace con `herramientas/migrar-ingles.ts` (opciones `--prueba`, `--delta` y `--forzar`). Los JSON de
+  GitHub quedan como respaldo de lectura.
+
 ## Actividades semanales (repo privado `platform-STALD-data`)
 
 Fuente canónica del formato. El contenido **incluye las respuestas** y por eso vive en el repo privado.

@@ -176,6 +176,31 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - Validar una semana del profe: `deno run --allow-read server/validar_semana.ts <datos> <lunes> --profe`
     (patrón lun actividad, mié examen, jue actividad, sáb examen).
 
+**Postgres de Inglés** (`server/db.ts`, `server/grupos.ts`, cambio `ingles-grupos`):
+  - `createDb({ url, key, prefijo })` es un cliente PostgREST hecho con `fetch`:
+    - operaciones `select`, `insert`, `upsert`, `update` y `remove`;
+    - límite de 5 s por petición;
+    - si falla, lanza `DbError`.
+  - `PgStore(db, base)` implementa `Store` para `alumnos.json`, `resultados/**` y `avance/**`. Las demás rutas
+    (contenido, juegos) van al almacén base.
+    - Si una lectura de Postgres falla, lee del respaldo y marca el sha como `gh:`; con ese sha no deja escribir.
+  - `getStore()` usa `PgStore` solo si se cumplen dos condiciones:
+    - existen `SUPABASE_URL` y `SUPABASE_SERVICE_KEY`;
+    - la fila `meta/migrado` existe (se revisa cada 60 s).
+    Si alguna falta, se usa GitHub como antes.
+  - Rutas de grupos, solo admin:
+    - `GET /ingles/grupos` → `{ grupos, miembros: { slug: grupo } }`;
+    - `POST /ingles/grupos` crea o edita un grupo. Errores: `nombre_invalido`, `meet_invalido` (debe ser
+      `https://`), `color_invalido`, `id_invalido`;
+    - `POST /ingles/grupos/mover { alumno, grupo }` cierra la inscripción vigente y abre una nueva. Si es el mismo
+      día, solo corrige el grupo. Error: `grupo_inexistente`.
+    - Sin base migrada responden 503 `sin_base`.
+  - `POST /ingles/alumnos` acepta `grupo`, que inscribe a la persona desde su `inicio`.
+  - `GET /ingles/actividades`, vista de alumno o alumna:
+    - filtra por el `grupos` de cada semana;
+    - devuelve `grupo { id, nombre, nivel, horario, meet_url, color }`.
+  - En la vista de admin, cada elemento trae `grupos` cuando su semana los declara.
+
 **Rutas `/ingles/alumnos`** (`server/alumnos.ts`, cambio `alta-alumnos`), solo admin (si no, 403):
   - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "notion" | "registro", alta?, inicio? }] }`;
   - alta nueva: `inicio` es el lunes siguiente en CDMX (`lunesDeInicio`). `GET /ingles/actividades` omite, para esa

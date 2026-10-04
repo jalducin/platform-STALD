@@ -9,6 +9,9 @@ import { handleJuegos, type Invitados } from "./juegos.ts";
 import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro, sinHuerfanas } from "./alumnos.ts";
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
+import { createDb, PgStore, v as pgv } from "./db.ts";
+import { mxToday, slugAlumno } from "./motor.ts";
+import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
@@ -115,13 +118,35 @@ function json(body: unknown, status = 200): Response {
 }
 
 let storePromise: Promise<Store> | null = null;
-function getStore(): Promise<Store> {
+function baseStore(): Promise<Store> {
   if (!storePromise) {
     storePromise = env("DATA_DIR")
       ? MemoryStore.fromDir(env("DATA_DIR"))
       : Promise.resolve(new GitHubStore(env("DATA_REPO"), env("GITHUB_TOKEN")));
   }
   return storePromise;
+}
+
+// Postgres de Inglés (openspec: ingles-grupos): se usa cuando hay llaves y la migración dejó la marca meta/migrado.
+// STALD_TABLAS elige el prefijo (las pruebas E2E usan stald_test_). Sin marca, todo sigue en GitHub como antes.
+const db = env("SUPABASE_URL") && env("SUPABASE_SERVICE_KEY")
+  ? createDb({ url: env("SUPABASE_URL"), key: env("SUPABASE_SERVICE_KEY"), prefijo: env("STALD_TABLAS") || "stald_" })
+  : null;
+let migrado: { t: number; v: boolean } | null = null;
+async function inglesEnPg(): Promise<boolean> {
+  if (!db) return false;
+  if (migrado && Date.now() - migrado.t < 60_000) return migrado.v;
+  let v = false;
+  try { v = (await db.select("docs", `path=eq.${pgv("meta/migrado")}&select=path`)).length === 1; } catch (e) { console.error("marca migrado:", e instanceof Error ? e.message : e); v = migrado?.v ?? false; }
+  migrado = { t: Date.now(), v };
+  return v;
+}
+let pgStore: PgStore | null = null;
+async function getStore(): Promise<Store> {
+  const base = await baseStore();
+  if (!await inglesEnPg()) return base;
+  if (!pgStore) pgStore = new PgStore(db!, base);
+  return pgStore;
 }
 
 export async function handler(req: Request): Promise<Response> {
@@ -142,7 +167,19 @@ export async function handler(req: Request): Promise<Response> {
     // /ingles/alumnos[/quitar] → alta de alumnos y alumnas (solo admin, server/alumnos.ts)
     const iAl = url.pathname.indexOf("/ingles/alumnos");
     if (iAl !== -1) {
-      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion }, json);
+      const conGrupos = await inglesEnPg();
+      const inscribir = conGrupos ? async (nombre: string, grupo: string, desde: string) => {
+        const r = await handleGrupos(new Request("http://x", { method: "POST", body: JSON.stringify({ alumno: nombre, grupo }) }), "/mover", { email: admin, admin, db: db!, hoy: () => desde }, json);
+        return r.ok;
+      } : undefined;
+      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion, inscribir }, json);
+    }
+
+    // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada)
+    const iGr = url.pathname.indexOf("/ingles/grupos");
+    if (iGr !== -1) {
+      if (!await inglesEnPg()) return json({ error: "sin_base" }, 503);
+      return await handleGrupos(req, url.pathname.slice(iGr + "/ingles/grupos".length), { email, admin, db: db!, hoy: () => mxToday() }, json);
     }
 
     // /ingles/profe/actividades[/<id>] → ruta de estudio del profe (solo admin, server/actividades.ts)
@@ -159,7 +196,11 @@ export async function handler(req: Request): Promise<Response> {
       const alumno = isAdmin ? null : (rows.find((r) => r.alumno)?.alumno ?? null);
       const store = await getStore();
       const inicio = inicioDe(await leerRegistro(store), alumno);
-      return await handleActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), { isAdmin, alumno, ...(inicio ? { inicio } : {}) }, store, json);
+      // Grupo vigente (openspec: ingles-grupos): filtra el calendario y da horario y Meet a la página.
+      const grupo = alumno && await inglesEnPg() ? await grupoDe(db!, slugAlumno(alumno), mxToday()) : null;
+      const info = grupo ? await grupoInfo(db!, grupo) : null;
+      const quien = { isAdmin, alumno, ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
+      return await handleActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), quien, store, json);
     }
 
     // GET /perfil → accesos del portal (sin filas ni correos ajenos).
