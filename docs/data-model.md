@@ -161,6 +161,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - En póker (cambio `poker`), `jugadas[]` `{ n, accion, monto?, t }`, con `accion` de
     `retirarse | pasar | igualar | subir | todo`. `opciones.equipos: "1"` divide la mesa en A/B. La mano `k`
     sale de la semilla (`poker-mano-k`).
+  - En Brisca, `jugadas[]` `{ n, accion: "jugar", carta, t }`. En Conquián, `jugadas[]` `{ n, accion, carta?, con?, a?, t }`.
+    El mazo sale de la semilla (`brisca-mazo` y `conquian-mazo`), según el cambio `cartas-espanolas`.
   - En Lotería, `loteria` guarda la hora del primer grito. Las tablas y el orden de las cartas salen de
     la semilla.
 - `juegos/salas-semana/<lunes>.json`: `{ salas: [{ codigo, juego, host, creada }] }`, índice para el

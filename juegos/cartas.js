@@ -235,6 +235,191 @@
     return { accion: 'retirarse' };
   }
 
+  // ---------- Baraja española (openspec: cartas-espanolas): ids 0..39; palo ⌊id/10⌋, orden id % 10 ----------
+  const ESP_PALOS = ['oros', 'copas', 'espadas', 'bastos'];
+  const ESP_EMOJI = ['🪙', '🏆', '⚔️', '🪵'];
+  const ESP_VALORES = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
+  const ESP_FIGURA = { 1: 'As', 10: 'Sota', 11: 'Caballo', 12: 'Rey' };
+  const espPalo = id => Math.floor(id / 10);
+  const espOrden = id => id % 10; // secuencia: el 7 y la sota van seguidos
+  const espValor = id => ESP_VALORES[id % 10];
+  const nombreEsp = id => (ESP_FIGURA[espValor(id)] || String(espValor(id))) + ' de ' + ESP_PALOS[espPalo(id)];
+
+  // ---------- Brisca ----------
+  const BR_PUNTOS = { 1: 11, 3: 10, 12: 4, 11: 3, 10: 2 };
+  const BR_ORDEN = [1, 3, 12, 11, 10, 7, 6, 5, 4, 2]; // de mayor a menor fuerza
+  const briscaPuntos = id => BR_PUNTOS[espValor(id)] || 0;
+  const briscaFuerza = id => 10 - BR_ORDEN.indexOf(espValor(id));
+
+  function briscaNueva(jugadores, rng) {
+    const n = jugadores.length;
+    let mazo = barajar([...Array(40).keys()].filter(id => n !== 3 || id !== 1), rng); // con 3 se quita el 2 de oros
+    const manos = jugadores.map(() => []);
+    for (let r = 0; r < 3; r++) for (let j = 0; j < n; j++) manos[j].push(mazo.pop());
+    const triunfo = mazo.pop();
+    mazo = [triunfo].concat(mazo); // al fondo: se roba al final
+    return { jugadores, n, manos, mazo, triunfo, paloTriunfo: espPalo(triunfo), baza: [], lider: 0, turno: 0, puntos: Array(n).fill(0),
+      ganadas: jugadores.map(() => []), equipos: n === 4 ? [0, 1, 0, 1] : null, ultimaBaza: null, terminada: false };
+  }
+
+  function briscaGanador(baza, paloTriunfo) {
+    const triunfos = baza.filter(b => espPalo(b.carta) === paloTriunfo);
+    const pool = triunfos.length ? triunfos : baza.filter(b => espPalo(b.carta) === espPalo(baza[0].carta));
+    return pool.reduce((m, b) => briscaFuerza(b.carta) > briscaFuerza(m.carta) ? b : m).j;
+  }
+
+  function briscaJugar(st, carta) {
+    if (st.terminada) return false;
+    const j = st.turno, mano = st.manos[j], k = mano.indexOf(carta);
+    if (k < 0) return false;
+    mano.splice(k, 1);
+    st.baza.push({ j, carta });
+    if (st.baza.length < st.n) { st.turno = (j + 1) % st.n; return true; }
+    const gan = briscaGanador(st.baza, st.paloTriunfo);
+    const pts = st.baza.reduce((a, b) => a + briscaPuntos(b.carta), 0);
+    st.puntos[gan] += pts; st.ganadas[gan].push(...st.baza.map(b => b.carta));
+    st.ultimaBaza = { cartas: st.baza.slice(), ganador: gan, puntos: pts };
+    st.baza = [];
+    for (let k2 = 0; k2 < st.n && st.mazo.length; k2++) st.manos[(gan + k2) % st.n].push(st.mazo.pop());
+    st.lider = st.turno = gan;
+    if (st.manos.every(m => !m.length)) st.terminada = true;
+    return true;
+  }
+
+  function briscaResultado(st) {
+    const totales = st.equipos ? [0, 1].map(e => st.puntos.reduce((a, p, j) => a + (st.equipos[j] === e ? p : 0), 0)) : st.puntos.slice();
+    const max = Math.max(...totales);
+    const ganador = totales.filter(t => t === max).length > 1 ? -1 : totales.indexOf(max);
+    return { totales, ganador, equipos: st.equipos };
+  }
+
+  function briscaBot(st, rng) {
+    const r = rng || Math.random;
+    const j = st.turno, mano = st.manos[j].slice();
+    const barata = cs => cs.slice().sort((a, b) => briscaPuntos(a) - briscaPuntos(b) || (espPalo(a) === st.paloTriunfo) - (espPalo(b) === st.paloTriunfo) || briscaFuerza(a) - briscaFuerza(b))[0];
+    if (!st.baza.length) return barata(mano);
+    const enMesa = st.baza.reduce((a, b) => a + briscaPuntos(b.carta), 0);
+    const va = briscaGanador(st.baza, st.paloTriunfo);
+    const companero = st.equipos && st.equipos[va] === st.equipos[j];
+    if (companero) { // cargarle puntos a la pareja si no es triunfo valioso
+      const carga = mano.filter(c => espPalo(c) !== st.paloTriunfo).sort((a, b) => briscaPuntos(b) - briscaPuntos(a))[0];
+      return carga !== undefined && r() < 0.85 ? carga : barata(mano);
+    }
+    const ganan = mano.filter(c => briscaGanador(st.baza.concat({ j, carta: c }), st.paloTriunfo) === j);
+    if (ganan.length && (enMesa >= 10 || ganan.some(c => espPalo(c) !== st.paloTriunfo && briscaPuntos(c) > 0) || r() < 0.25)) return barata(ganan);
+    return barata(mano);
+  }
+
+  // ---------- Conquián (2 jugadores) ----------
+  function esJuego(ids) {
+    if (!ids || ids.length < 3 || new Set(ids).size !== ids.length) return false;
+    if (ids.every(id => espValor(id) === espValor(ids[0]))) return ids.length <= 4 && new Set(ids.map(espPalo)).size === ids.length;
+    if (!ids.every(id => espPalo(id) === espPalo(ids[0]))) return false;
+    const o = ids.map(espOrden).sort((a, b) => a - b);
+    return o.every((x, i) => i === 0 || x === o[i - 1] + 1);
+  }
+
+  function conquianNueva(jugadores, rng) {
+    const mazo = barajar([...Array(40).keys()], rng);
+    const manos = [[], []];
+    for (let r = 0; r < 8; r++) for (let j = 0; j < 2; j++) manos[j].push(mazo.pop());
+    return { jugadores, manos, bajados: [[], []], mazo, muertas: [], oferta: { carta: mazo.pop(), para: 0, origen: 'mazo', segunda: false },
+      fase: 'oferta', turno: 0, terminada: false, ganador: null, ultima: null };
+  }
+  const bajadas = (st, j) => st.bajados[j].reduce((a, m) => a + m.length, 0);
+  function voltear(st, j) {
+    if (!st.mazo.length) { st.oferta = null; st.terminada = true; st.ganador = -1; return; }
+    st.oferta = { carta: st.mazo.pop(), para: j, origen: 'mazo', segunda: false }; st.turno = j; st.fase = 'oferta';
+  }
+  // Cartas `con` (de la mano) + extra forman un juego nuevo o extienden el juego `a`.
+  function armar(st, j, con, extra, a) {
+    if (!Array.isArray(con) || !con.every(id => st.manos[j].includes(id)) || new Set(con).size !== con.length) return null;
+    const base = a === undefined || a === null ? [] : st.bajados[j][a];
+    if (!base) return null;
+    const juego = base.concat(extra, con);
+    return esJuego(juego) ? juego : null;
+  }
+  function aplicarJuego(st, j, con, juego, a) {
+    st.manos[j] = st.manos[j].filter(id => !con.includes(id));
+    if (a === undefined || a === null) st.bajados[j].push(juego); else st.bajados[j][a] = juego;
+    if (bajadas(st, j) >= 9) { st.terminada = true; st.ganador = j; }
+  }
+
+  function conquianActuar(st, mv) {
+    if (st.terminada || !mv) return false;
+    const j = st.turno, otro = 1 - j, acc = mv.accion;
+    if (st.fase === 'oferta') {
+      if (acc === 'pasar') {
+        const o = st.oferta;
+        st.ultima = { j, accion: 'pasar', carta: o.carta };
+        if (o.origen === 'mazo' && !o.segunda) { st.oferta = Object.assign({}, o, { para: otro, segunda: true }); st.turno = otro; return true; }
+        st.muertas.push(o.carta); voltear(st, j); return true;
+      }
+      if (acc === 'tomar') {
+        const con = mv.con || [];
+        const juego = armar(st, j, con, [st.oferta.carta], mv.a);
+        if (!juego) return false;
+        st.ultima = { j, accion: 'tomar', carta: st.oferta.carta };
+        st.oferta = null; st.fase = 'bajar';
+        aplicarJuego(st, j, con, juego, mv.a);
+        return true;
+      }
+      return false;
+    }
+    if (acc === 'bajar') {
+      const con = mv.con || [];
+      if (!con.length) return false;
+      const juego = armar(st, j, con, [], mv.a);
+      if (!juego) return false;
+      st.ultima = { j, accion: 'bajar' };
+      aplicarJuego(st, j, con, juego, mv.a);
+      return true;
+    }
+    if (acc === 'descartar') {
+      const k = st.manos[j].indexOf(mv.carta);
+      if (k < 0) return false;
+      st.manos[j].splice(k, 1);
+      st.ultima = { j, accion: 'descartar', carta: mv.carta };
+      st.oferta = { carta: mv.carta, para: otro, origen: 'descarte', segunda: false }; st.fase = 'oferta'; st.turno = otro;
+      return true;
+    }
+    return false;
+  }
+
+  // Opciones para bajar con una carta extra (o solo de la mano): extender un juego propio o formar uno nuevo.
+  function opcionesJuego(st, j, extra) {
+    const mano = st.manos[j], ops = [];
+    st.bajados[j].forEach((m, a) => {
+      if (extra.length && esJuego(m.concat(extra))) ops.push({ con: [], a });
+      mano.forEach(c => { if (esJuego(m.concat(extra, [c]))) ops.push({ con: [c], a }); });
+    });
+    const n = mano.length;
+    for (let x = 0; x < n; x++) for (let y = x + 1; y < n; y++) {
+      if (extra.length && esJuego(extra.concat([mano[x], mano[y]]))) ops.push({ con: [mano[x], mano[y]] });
+      for (let z = y + 1; z < n; z++) if (esJuego(extra.concat([mano[x], mano[y], mano[z]]))) ops.push({ con: [mano[x], mano[y], mano[z]] });
+    }
+    return ops.filter(o => extra.length || o.con.length).sort((p, q) => q.con.length - p.con.length);
+  }
+  function conquianBot(st, rng) {
+    const r = rng || Math.random;
+    const j = st.turno;
+    if (st.fase === 'oferta') {
+      const ops = opcionesJuego(st, j, [st.oferta.carta]);
+      if (!ops.length) return { accion: 'pasar' };
+      const mejor = ops.filter(o => o.con.length === ops[0].con.length);
+      return Object.assign({ accion: 'tomar' }, mejor[Math.floor(r() * mejor.length)]);
+    }
+    const bajar = opcionesJuego(st, j, []);
+    if (bajar.length) return Object.assign({ accion: 'bajar' }, bajar[0]);
+    const mano = st.manos[j];
+    const liga = c => mano.filter(x => x !== c && (espValor(x) === espValor(c) || (espPalo(x) === espPalo(c) && Math.abs(espOrden(x) - espOrden(c)) <= 2))).length;
+    const carta = mano.slice().sort((a, b) => liga(a) - liga(b) || espOrden(b) - espOrden(a))[0];
+    return { accion: 'descartar', carta };
+  }
+
   g.Cartas = { PALOS, RANGOS, rango, palo, nombreCarta, esRoja, barajar, valor5, mejorMano, NOMBRES_MANO, CIEGAS,
-    pokerNueva, pokerMano, pokerActuar, pokerBot, opciones, bote };
+    pokerNueva, pokerMano, pokerActuar, pokerBot, opciones, bote,
+    ESP_PALOS, ESP_EMOJI, espPalo, espOrden, espValor, nombreEsp,
+    briscaNueva, briscaJugar, briscaGanador, briscaPuntos, briscaResultado, briscaBot,
+    esJuego, conquianNueva, conquianActuar, conquianBot, opcionesJuego, bajadas };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -152,3 +152,135 @@ Deno.test("póker: 200 partidas de bots con jugadas siempre válidas y fichas co
     assert(st.terminada, `semilla ${s}: termina`);
   }
 });
+
+// ---------- Baraja española: Brisca y Conquián (openspec: cartas-espanolas) ----------
+const ESP_V = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
+// "1o" = as de oros; palos o, c, e, b
+const e = (s: string) => "ocebb".indexOf(s.slice(-1)) * 10 + ESP_V.indexOf(Number(s.slice(0, -1)));
+const es = (s: string) => s.split(" ").map(e);
+
+Deno.test("española: 40 cartas con nombre, palo y valor", () => {
+  assertEquals([C.nombreEsp(e("1o")), C.nombreEsp(e("10c")), C.nombreEsp(e("11e")), C.nombreEsp(e("12b")), C.nombreEsp(e("7b"))],
+    ["As de oros", "Sota de copas", "Caballo de espadas", "Rey de bastos", "7 de bastos"]);
+  assertEquals([C.espPalo(e("3e")), C.espValor(e("3e")), C.espOrden(e("10e")) - C.espOrden(e("7e"))], [2, 3, 1]);
+  assertEquals([...Array(40).keys()].reduce((a, id) => a + C.briscaPuntos(id), 0), 120, "la brisca suma 120");
+});
+
+Deno.test("brisca: quién gana la baza", () => {
+  const baza = (s: string) => es(s).map((carta, j) => ({ j, carta }));
+  assertEquals(C.briscaGanador(baza("1o 2c"), 1), 1, "el triunfo (copas) gana aunque sea un 2");
+  assertEquals(C.briscaGanador(baza("5e 12b 7e"), 0), 2, "sin triunfo gana el palo que salió; el rey de bastos no sigue");
+  assertEquals(C.briscaGanador(baza("12o 3o"), 2), 1, "el tres vence al rey");
+  assertEquals(C.briscaGanador(baza("3c 1c"), 3), 1, "el as vence al tres");
+  assertEquals(C.briscaGanador(baza("2b 4b 6e 5b"), 3), 3, "con triunfo bastos gana el 5 (vence al 4 y al 2)");
+});
+
+Deno.test("brisca: reparto, triunfo al fondo y flujo de una baza", () => {
+  const st3 = C.briscaNueva([{ id: "a" }, { id: "b" }, { id: "c" }], mulberry(5));
+  assertEquals(st3.manos.flat().length + st3.mazo.length, 39, "con 3 jugadores se quita el 2 de oros");
+  assert(![...st3.manos.flat(), ...st3.mazo].includes(e("2o")));
+  assertEquals(st3.mazo[0], st3.triunfo, "el triunfo se roba al final");
+  const st = C.briscaNueva([{ id: "a" }, { id: "b" }], mulberry(9));
+  st.manos = [es("1o 4c 5e"), es("3o 6c 7e")]; st.triunfo = e("2b"); st.paloTriunfo = 3; st.mazo = es("2b 10c 11e 12c 1b");
+  assertEquals(C.briscaJugar(st, e("3o")), false, "no es su turno");
+  assert(C.briscaJugar(st, e("4c")));
+  assert(C.briscaJugar(st, e("3o")));
+  // Salió copas y el 3 de oros no sigue el palo ni es triunfo: gana el 4 de copas y se lleva los 10 del tres.
+  assertEquals([st.puntos, st.lider, st.turno], [[10, 0], 0, 0]);
+  assertEquals([st.manos[0].includes(e("1b")), st.manos[1].includes(e("12c"))], [true, true], "roba primero quien ganó");
+  assertEquals(st.ultimaBaza.ganador, 0);
+});
+
+Deno.test("brisca: parejas con 4 y 200 partidas de bots que suman 120", () => {
+  const p4 = C.briscaNueva([0, 1, 2, 3].map((i) => ({ id: "j" + i })), mulberry(1));
+  assertEquals(p4.equipos, [0, 1, 0, 1]);
+  for (let s = 1; s <= 200; s++) {
+    const rng = mulberry(s), n = 2 + (s % 3);
+    const st = C.briscaNueva(Array.from({ length: n }, (_, i) => ({ id: "b" + i, bot: true })), rng);
+    let pasos = 0;
+    while (!st.terminada) {
+      const carta = C.briscaBot(st, rng);
+      if (!C.briscaJugar(st, carta)) throw new Error(`semilla ${s}: carta inválida ${carta}`);
+      if (++pasos > 60) throw new Error(`semilla ${s}: sin fin`);
+    }
+    assertEquals(st.puntos.reduce((a: number, x: number) => a + x, 0), 120, `semilla ${s}`);
+    assertEquals(pasos, n === 3 ? 39 : 40);
+    const r = C.briscaResultado(st);
+    assert(r.ganador === -1 || r.totales[r.ganador] > 60 || n === 3, `semilla ${s}: gana con más de 60`);
+  }
+});
+
+Deno.test("conquián: juegos válidos e inválidos", () => {
+  assert(C.esJuego(es("3o 3c 3e")), "tercia");
+  assert(C.esJuego(es("3o 3c 3e 3b")), "cuarteta");
+  assert(C.esJuego(es("5o 6o 7o")), "escalera");
+  assert(C.esJuego(es("6o 7o 10o 11o")), "7 y sota van seguidos");
+  assert(C.esJuego(es("1b 2b 3b 4b 5b")), "escalera larga");
+  assert(!C.esJuego(es("3o 3c")), "dos cartas no son juego");
+  assert(!C.esJuego(es("3o 4c 5o")), "escalera de palos distintos");
+  assert(!C.esJuego(es("12o 1o 2o")), "no da la vuelta");
+  assert(!C.esJuego(es("5o 7o 10o")), "con hueco");
+});
+
+function conquian() {
+  const st = C.conquianNueva([{ id: "a" }, { id: "b" }], mulberry(4));
+  return st;
+}
+
+Deno.test("conquián: reparto, tomar para bajar, descartar y pasar", () => {
+  const s0 = conquian();
+  assertEquals([s0.manos[0].length, s0.manos[1].length, s0.mazo.length, s0.oferta.para, s0.oferta.origen, s0.fase], [8, 8, 23, 0, "mazo", "oferta"]);
+  const st = conquian();
+  st.manos[0] = es("3o 4o 7c 10c 1e 2e 12b 11b"); st.oferta = { carta: e("5o"), para: 0, origen: "mazo", segunda: false };
+  assertEquals(C.conquianActuar(st, { accion: "tomar", con: es("3o 7c") }), false, "3-5-7 no es juego");
+  assertEquals(C.conquianActuar(st, { accion: "descartar", carta: e("7c") }), false, "primero se toma o se pasa");
+  assert(C.conquianActuar(st, { accion: "tomar", con: es("3o 4o") }));
+  assertEquals([st.bajados[0].length, st.manos[0].length, st.fase, st.turno], [1, 6, "bajar", 0]);
+  assert(C.conquianActuar(st, { accion: "descartar", carta: e("12b") }));
+  assertEquals([st.oferta.carta, st.oferta.para, st.oferta.origen, st.turno, st.fase], [e("12b"), 1, "descarte", 1, "oferta"]);
+  // El rival no quiere el descarte: queda muerta y voltea una para sí
+  const antes = st.mazo.length;
+  assert(C.conquianActuar(st, { accion: "pasar" }));
+  assertEquals([st.muertas.length, st.oferta.para, st.oferta.origen, st.mazo.length], [1, 1, "mazo", antes - 1]);
+  // La volteada pasa al otro (segunda); si tampoco la quiere, queda muerta y él voltea
+  assert(C.conquianActuar(st, { accion: "pasar" }));
+  assertEquals([st.oferta.para, st.oferta.segunda], [0, true]);
+  assert(C.conquianActuar(st, { accion: "pasar" }));
+  assertEquals([st.muertas.length, st.oferta.para, st.oferta.segunda], [2, 0, false]);
+});
+
+Deno.test("conquián: agregar a un juego propio, ganar con 9 y empate sin mazo", () => {
+  const st = conquian();
+  st.bajados[0] = [es("3o 4o 5o")]; st.manos[0] = es("1c 1e 2b 3b 4b"); st.oferta = { carta: e("6o"), para: 0, origen: "mazo", segunda: false };
+  assert(C.conquianActuar(st, { accion: "tomar", con: [], a: 0 }));
+  assertEquals(st.bajados[0][0].length, 4);
+  const w = conquian();
+  w.manos[0] = es("1c 1e 2o 3o 4o 7b 10b 11b"); w.oferta = { carta: e("1o"), para: 0, origen: "descarte", segunda: false };
+  assert(C.conquianActuar(w, { accion: "tomar", con: es("1c 1e") }));
+  assert(C.conquianActuar(w, { accion: "bajar", con: es("2o 3o 4o") }));
+  assertEquals(w.terminada, false);
+  assert(C.conquianActuar(w, { accion: "bajar", con: es("7b 10b 11b") }));
+  assertEquals([w.terminada, w.ganador], [true, 0], "9 cartas bajadas");
+  const t = conquian();
+  t.mazo = []; t.oferta = { carta: e("12c"), para: 0, origen: "descarte", segunda: false };
+  assert(C.conquianActuar(t, { accion: "pasar" }));
+  assertEquals([t.terminada, t.ganador], [true, -1], "empate: se acabó el mazo");
+});
+
+Deno.test("conquián: 200 partidas de bots válidas que conservan las 40 cartas", () => {
+  let ganadas = 0;
+  for (let s = 1; s <= 200; s++) {
+    const rng = mulberry(s);
+    const st = C.conquianNueva([{ id: "a", bot: true }, { id: "b", bot: true }], rng);
+    let pasos = 0;
+    while (!st.terminada) {
+      const mv = C.conquianBot(st, rng);
+      if (!C.conquianActuar(st, mv)) throw new Error(`semilla ${s}: jugada inválida ${JSON.stringify(mv)} en ${st.fase}`);
+      if (++pasos > 400) throw new Error(`semilla ${s}: sin fin`);
+      const total = st.manos.flat().length + st.bajados.flat(2).length + st.mazo.length + st.muertas.length + (st.oferta ? 1 : 0);
+      if (total !== 40) throw new Error(`semilla ${s}: ${total} cartas`);
+    }
+    if (st.ganador >= 0) { ganadas++; assertEquals(st.bajados[st.ganador].flat().length >= 9, true); }
+  }
+  assert(ganadas > 20, `los bots ganan algunas (${ganadas}/200)`);
+});
