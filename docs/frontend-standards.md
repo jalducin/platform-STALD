@@ -93,12 +93,28 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Publicada: tras el merge, abrir la URL de Pages (ver `openspec/project.md`) y repetir login admin y
   login de alumna. Pages tarda de 1 a 2 minutos en publicar.
 
+## Juegos de cartas (cambio `poker`)
+
+- `juegos/cartas.js` es el motor sin DOM. Define `globalThis.Cartas` y lo usan `juegos.html` y
+  `server/cartas_test.ts`.
+  - Incluye la baraja, `valor5` y `mejorMano`, y el Texas Hold'em: `pokerNueva`, `pokerMano`, `pokerActuar`,
+    `opciones` y `pokerBot`. Los botes laterales se calculan por niveles.
+  - Toda regla nueva va aquí con su prueba. La página solo pinta y envía jugadas.
+- Para cambiar el motor, sube `?v=` en `<script src="juegos/cartas.js?v=…">`; así se evita la caché de GitHub Pages.
+- La mesa compartida es `pkMesaHtml(st, { yo, nombre, avatar, equipos, miTurno, pie })`. La usan el modo individual
+  (`jugarPoker`) y la sala (`pintarPokerSala`).
+- `estadoPoker()` reproduce la sala igual que `estadoUna()`:
+  - semilla `poker-mano-k` y bots con `pbot<paso>`;
+  - turnos de 30 s y pausa de 5 s entre manos.
+- 📖 Cómo se juega: `AYUDA[id]` (HTML) más `ayuda(id)`, que abre un `<dialog>` que se cierra con Esc o con el botón.
+  Cualquier botón con `data-ayuda="<id>"` lo abre.
+
 ## Peticiones al servidor (cambio `ahorro-peticiones`)
 
 - Los POST van con `{ 'content-type': 'text/plain;charset=UTF-8' }` y el body en JSON: así el navegador no hace la
   verificación previa de CORS y cada envío cuesta 1 petición en lugar de 2. No agregues encabezados personalizados.
 - Sondeo de salas:
-  - 2.5 s en la sala de espera y en ¡Una!, Basta y Lotería (`TIEMPO_REAL`);
+  - 2.5 s en la sala de espera y en ¡Una!, Basta, Lotería y Póker (`TIEMPO_REAL`);
   - 5 s en los juegos de preguntas;
   - se detiene al terminar, al vencer la sala, a 1 h o, en la sala de espera, a los 15 min sin empezar.
 - Realtime (cambio `salas-realtime`): si el GET de la sala trae `rt`, `conectarRealtime` carga supabase-js 2.45.4

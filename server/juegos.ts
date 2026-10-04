@@ -158,6 +158,7 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "basta-en": { categoria: "clasicos", titulo: "Basta en inglés", max: 1500 },
   "una": { categoria: "clasicos", titulo: "¡Una!", max: 1000 },
   "loteria": { categoria: "clasicos", titulo: "Lotería", max: 1000 },
+  "poker": { categoria: "clasicos", titulo: "Póker Texas Hold'em", max: 1000 }, // openspec: poker
 };
 
 const LIMITE_DIARIO = 100;

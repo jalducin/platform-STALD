@@ -66,6 +66,13 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
     no reproduce la partida: la reconstruye cada cliente con la semilla.
     `{ una: { paso } }` guarda `unas[]` `{ paso, t }`, el botón UNA. El castigo por segundos se calcula al
     reproducir: ≤ 2 s 0, ≤ 3 s 1, ≤ 4 s 2, ≤ 5 s 3 y sin UNA 4.
+  - Póker (`poker`, cambio `poker`): misma `jugada { n, accion, monto? }`.
+    - `accion` ∈ `retirarse | pasar | igualar | subir | todo`;
+    - `monto` es un entero de 0 a 1,000,000;
+    - no se permite `carta` (400 `jugada_invalida`);
+    - se permite `opciones.equipos: "1"` al crear la sala.
+    - Al reproducir, cada cliente valida la jugada con `juegos/cartas.js`. Una jugada inválida se ignora y, al vencer
+      los 30 s, el jugador pasa o se retira.
   - Al terminar, `respuesta` acepta `{ final }` de cada jugador y `{ podio }`, que solo guarda el del host.
   - Cada sala nueva se agrega al índice `juegos/salas-semana/<lunes>.json`.
 - **`GET /juegos/admin/resumen?semana=`** (solo admin, 403 para los demás):
