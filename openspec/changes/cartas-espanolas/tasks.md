@@ -53,3 +53,10 @@
 - [x] 8.2 Página: `participantes()` completa con bots hasta 4 y la casilla de bots se oculta.
 - [x] 8.3 E2E: sala con 2 personas y 2 bots en parejas; regresiones.
 - [x] 8.4 Verificar en producción; actualizar la documentación y el reporte.
+
+## 9. Ajuste post-apply del profe: ritmo más lento de la Brisca
+
+- [x] 9.1 Aplicar la pausa tras la baza y los nuevos tiempos de los bots, en el modo individual y en sala
+- [x] 9.2 Correr E2E de cartas y regresiones
+- [ ] 9.3 Verificar en producción
+- [x] 9.4 Conquián: bot a 2.5 s (individual y sala) y regresión

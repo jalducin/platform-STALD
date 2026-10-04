@@ -47,3 +47,9 @@
   - `docs/frontend-standards.md` (motor de cartas y ayuda);
   - `docs/backend-standards.md`;
   - `docs/data-model.md`.
+
+## 8. Ajuste post-apply del profe: ritmo más lento
+
+- [x] 8.1 Aplicar los nuevos tiempos en el modo individual y en sala
+- [x] 8.2 Correr E2E del póker y regresiones
+- [ ] 8.3 Verificar en producción

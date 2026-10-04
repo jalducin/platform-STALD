@@ -118,3 +118,13 @@
   - cada juego en individual, con ayuda y puntos guardados;
   - Brisca en partida con dos navegadores;
   - Conquián en partida, humano contra bot.
+
+## Ajuste post-apply (profe): ritmo de la Brisca más lento
+- La baza terminada se queda en la mesa unos 4 s más:
+  - individual: la última baza se ve 5.3 s (antes 1.3 s) y cada bot tira a los 1.5 s (antes 0.9 s);
+  - en sala:
+    - después de cada baza completa, el siguiente turno empieza 4 s más tarde (`CS_PAUSA_BAZA_MS`, sumado a `T0`
+      al repetir la partida; es determinista);
+    - cada bot tira a los 2.5 s (`CS_BOT_MS`; antes 1.5 s).
+- Conquián, con el mismo ajuste de ritmo: el bot espera 2.5 s entre cada acción (tomar, bajar, descartar o pasar).
+  - En individual antes eran 1 s; en sala, `botMs` 2500 (antes 1.5 s).

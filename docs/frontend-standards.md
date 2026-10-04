@@ -93,6 +93,20 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Publicada: tras el merge, abrir la URL de Pages (ver `openspec/project.md`) y repetir login admin y
   login de alumna. Pages tarda de 1 a 2 minutos en publicar.
 
+## Ritmo de los juegos de cartas (ajuste del profe, sprint final)
+
+| Juego | Individual | Sala |
+|---|---|---|
+| Póker | resultado de la mano 10 s; bots 2 s | `PK_PAUSA_MS` 9 s; `PK_BOT_MS` 2.5 s |
+| Brisca | baza completa 5.3 s; bots 1.5 s | `CS_PAUSA_BAZA_MS` 4 s tras cada baza (sumado a `T0`, determinista; durante la pausa aún no es tu turno); `botMs` 2.5 s |
+| Conquián | bot 2.5 s por acción | `botMs` 2.5 s |
+| ¡Una! | bots 2.5 s | `U_BOT_MS` 3 s |
+
+- ¡Una!: `robar` devuelve cuántas cartas llegaron.
+  - Sin mazo ni pila no hay carta «robada» y el turno pasa con el aviso «No quedan cartas para robar».
+  - Si alguien se queda sin cartas que sirvan y sin nada que robar, puede **Pasar**.
+  - La carta robada se marca con 🆕 y el mensaje muestra su nombre.
+
 ## Juegos fusionados (cambio `juegos-fusion`)
 
 - 🧩 **Completa y responde** (`en-frases`): alterna `preguntaFrase` y `preguntaEn`.

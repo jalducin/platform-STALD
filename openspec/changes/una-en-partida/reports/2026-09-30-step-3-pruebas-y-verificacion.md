@@ -63,3 +63,23 @@
 ## Resultado
 - Estado Step 3: PASS
 - Bloqueos: ninguno
+
+## Sprint final (2026-10-04): ritmo más lento y robo de ¡Una!
+- Los artefactos se actualizaron primero: `poker` (§8), `cartas-espanolas` (§9), `una-en-partida` y
+  `juegos-clasicos` (§A).
+- E2E (pruebas de punta a punta):
+  - `e2e-ritmo`: 2/2. Con el tiempo real, la baza completa de la Brisca se ve 5.3 s (antes 1.3 s) y el resultado
+    del Póker unos 9.7 s (antes 6 s).
+  - `e2e-una-robo`: 3/3. Se jugaron 5 partidas con 60 robos: cada robo sumó exactamente una carta, no hubo errores
+    de JS y nada se trabó.
+- Regresiones:
+
+  | E2E | Resultado |
+  |---|---|
+  | `e2e-una-sala` | 11/11 (141 pasos idénticos entre navegadores) |
+  | `e2e-clasicos` | 11/11 |
+  | `e2e-cartas-espanolas` | 12/12 |
+  | `e2e-poker` | 10/10 |
+  | `e2e-ajustes-salas` | 8/8 |
+
+- La copia temporal `data-rt2` se borró y los servidores locales se apagaron.

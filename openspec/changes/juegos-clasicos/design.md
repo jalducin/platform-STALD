@@ -63,3 +63,18 @@
 ### 4. Catálogo del servidor
 Se agregan `basta-es`, `basta-en`, `una` y `loteria` (categoría `clasicos`) con sus topes. El resto no
 cambia.
+
+## Ajuste post-apply (profe, 2026-10-04): ritmo de ¡Una! y robo de cartas
+- **Ritmo:**
+  - en individual, cada bot tira a los 2.5 s (antes 1.1 s);
+  - en sala, cada bot tira a los 3 s (`U_BOT_MS`; antes 1.5 s);
+  - así se alcanza a ver qué tiró cada quien.
+- **Robo sin cartas (error):** si el mazo y la pila ya no tienen cartas, robar no traía nada nuevo y el juego tomaba
+  como "robada" la última carta que ya tenías en la mano. Corrección:
+  - `robar` cuenta las cartas que realmente llegan;
+  - si no llega ninguna, se pasa el turno y aparece el aviso "No quedan cartas para robar";
+  - en individual, el botón se desactiva cuando no hay nada que robar;
+  - en sala, `pendiente` solo se asigna si de verdad llegó una carta.
+- **Robo más claro** (segunda petición del profe):
+  - al robar aparece «🆕 Robaste: <carta>» y la carta robada se resalta en la mano;
+  - en sala, quien robó ve el nombre de la carta en el mensaje de la última jugada.

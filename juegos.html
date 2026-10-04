@@ -196,6 +196,7 @@
   .una-btn { background: none; border: none; padding: 0; cursor: pointer; transition: transform .12s; }
   .una-btn[data-no] .una-card { opacity: .55; }
   .una-btn .jugable { transform: translateY(-6px); box-shadow: 0 6px 14px rgba(0,0,0,.3); }
+  .una-btn.robada { position: relative; } .una-btn.robada::after { content: "🆕"; position: absolute; top: -14px; right: -6px; font-size: .9rem; }
   .una-color { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; margin: 0 4px; cursor: pointer; vertical-align: middle; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
   .una-grito.pulsa { animation: pulsa .6s infinite alternate; }
   @keyframes pulsa { to { transform: scale(1.06); box-shadow: 0 0 0 6px rgba(219, 39, 119, .25); } }
@@ -1322,7 +1323,9 @@
     let mazo = unaMazo(), pila = [], dir = 1, turno = 0, color = null, terminado = false, esperandoUna = false, dijoUna = false, jugadas = 0, robada = null, msg = '';
     const manos = Array.from({ length: numBots + 1 }, () => []);
     const t0 = Date.now();
-    const robar = (j, n) => { for (let k = 0; k < n; k++) { if (!mazo.length) { const top = pila.pop(); mazo = barajar(pila); pila = [top]; } if (mazo.length) manos[j].push(mazo.pop()); } };
+    // Devuelve cuántas cartas llegaron de verdad (0 si ya no hay mazo ni pila para rebarajar).
+    const robar = (j, n) => { let r = 0; for (let k = 0; k < n; k++) { if (!mazo.length) { const top = pila.pop(); mazo = barajar(pila); pila = [top]; } if (mazo.length) { manos[j].push(mazo.pop()); r++; } } return r; };
+    const hayParaRobar = () => mazo.length > 0 || pila.length > 1;
     for (let k = 0; k < 7; k++) manos.forEach((_, j) => robar(j, 1));
     let primera = mazo.pop(); while (primera.v === '+4') { mazo.unshift(primera); primera = mazo.pop(); }
     pila.push(primera); color = primera.c || ['r', 'y', 'g', 'b'][Math.floor(Math.random() * 4)];
@@ -1343,10 +1346,10 @@
       m.body.innerHTML =
         '<div class="una-bots">' + manos.slice(1).map((h, k) => '<div class="una-bot' + (turno === k + 1 ? ' activo' : '') + '"><span>' + escapeHtml(nombres[k + 1]) + '</span><span>🂠 × ' + h.length + (h.length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
         '<div class="una-mesa"><div>' + cartaHtml(top(), ' grande') + '<div class="muted" style="text-align:center">' + escapeHtml(T.color[color]) + ' <span class="una-dot" style="background:' + UNA_COLOR[color] + '"></span></div></div>' +
-        '<button class="una-mazo" data-una="robar"' + (tuTurno && !robada ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + mazo.length + ')</small></button></div>' +
+        '<button class="una-mazo" data-una="robar"' + (tuTurno && !robada && hayParaRobar() ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + mazo.length + ')</small></button></div>' +
         '<div class="feedback" id="una-msg">' + escapeHtml(msg || (tuTurno ? T.tu + ' · ' + (lang === 'en' ? 'dir ' : 'sentido ') + (dir === 1 ? '↻' : '↺') : '…')) + '</div>' +
-        '<div class="una-mano">' + manos[0].map((c, i) => '<button class="una-btn" data-una-card="' + i + '"' + (tuTurno && valida(c) && (!robada || robada === c) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(nombreCarta(c)) + '">' + cartaHtml(c, tuTurno && valida(c) && (!robada || robada === c) ? ' jugable' : '') + '</button>').join('') + '</div>' +
-        '<div class="row-btns">' + (robada ? '<button class="btn ghost" data-una="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
+        '<div class="una-mano">' + manos[0].map((c, i) => '<button class="una-btn' + (c === robada ? ' robada' : '') + '" data-una-card="' + i + '"' + (tuTurno && valida(c) && (!robada || robada === c) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(nombreCarta(c)) + '">' + cartaHtml(c, tuTurno && valida(c) && (!robada || robada === c) ? ' jugable' : '') + '</button>').join('') + '</div>' +
+        '<div class="row-btns">' + (robada || (tuTurno && !hayParaRobar() && !manos[0].some(valida)) ? '<button class="btn ghost" data-una="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
         '<button class="btn una-grito' + (esperandoUna ? ' pulsa' : '') + '" data-una="una"' + (esperandoUna ? '' : ' disabled') + '>📣 ' + escapeHtml(T.una) + '</button></div>';
     }
 
@@ -1375,7 +1378,7 @@
     function programar() {
       if (terminado) return;
       dibujar();
-      if (turno !== 0) { const t = setTimeout(turnoBot, 1100 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+      if (turno !== 0) { const t = setTimeout(turnoBot, 2500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); } /* ritmo más lento (ajuste del profe) */
     }
 
     function turnoBot() {
@@ -1383,7 +1386,7 @@
       const j = turno, mano = manos[j];
       const siguiente = manos[sig(j)].length;
       let opciones = mano.filter(valida);
-      if (!opciones.length) { robar(j, 1); const n = mano[mano.length - 1]; if (valida(n)) opciones = [n]; else { msg = nombres[j] + (lang === 'en' ? ' draws a card' : ' roba una carta'); turno = sig(j); return programar(); } }
+      if (!opciones.length) { const llego = robar(j, 1); const n = llego ? mano[mano.length - 1] : null; if (n && valida(n)) opciones = [n]; else { msg = nombres[j] + (lang === 'en' ? ' draws a card' : ' roba una carta'); turno = sig(j); return programar(); } }
       const accion = opciones.filter(c => ['skip', '+2', '+4', 'rev'].includes(c.v));
       const numeros = opciones.filter(c => c.c && /^\d$/.test(c.v));
       // Bots amables: solo a veces castigan a quien tiene pocas cartas, para que el juego sea retador pero ganable.
@@ -1430,9 +1433,10 @@
       if (turno !== 0 || esperandoUna) return;
       if (col) return jugarCarta(Number(col.dataset.idx), col.dataset.unaColor);
       if (a && a.dataset.una === 'robar' && !robada) {
-        robar(0, 1); const n = manos[0][manos[0].length - 1];
-        if (valida(n)) { robada = n; msg = lang === 'en' ? 'You can play the card you drew or pass' : 'Puedes jugar la carta que robaste o pasar'; dibujar(); }
-        else { msg = lang === 'en' ? 'No luck. Next player' : 'No sirvió. Sigue el siguiente'; turno = sig(0); programar(); }
+        if (!robar(0, 1)) { msg = lang === 'en' ? 'No cards left to draw. Next player' : 'No quedan cartas para robar. Sigue el siguiente'; turno = sig(0); return programar(); }
+        const n = manos[0][manos[0].length - 1];
+        if (valida(n)) { robada = n; msg = (lang === 'en' ? '🆕 You drew: ' : '🆕 Robaste: ') + nombreCarta(n) + (lang === 'en' ? '. Play it or pass' : '. Puedes jugarla o pasar'); dibujar(); }
+        else { msg = (lang === 'en' ? '🆕 You drew: ' : '🆕 Robaste: ') + nombreCarta(n) + (lang === 'en' ? '. No luck, next player' : '. No sirve; sigue el siguiente'); turno = sig(0); programar(); }
         return;
       }
       if (a && a.dataset.una === 'pasar') { robada = null; turno = sig(0); msg = ''; return programar(); }
@@ -1565,10 +1569,10 @@
       pintar();
       if (st.fase === 'fin') {
         if (st.resultado.premios[0] > 0) sonidoOk();
-        auto = setTimeout(() => { if (!terminado) siguienteMano(); }, 6000 * TIEMPO); limpiezas.push(() => clearTimeout(auto));
+        auto = setTimeout(() => { if (!terminado) siguienteMano(); }, 10000 * TIEMPO); /* ritmo más lento (ajuste del profe) */ limpiezas.push(() => clearTimeout(auto));
         return;
       }
-      if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; Cartas.pokerActuar(st, Cartas.pokerBot(st)); tono(440, 60); programar(); }, 1100 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+      if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; Cartas.pokerActuar(st, Cartas.pokerBot(st)); tono(440, 60); programar(); }, 2000 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
     }
     m.body.addEventListener('click', e => {
       if (terminado) return;
@@ -1687,8 +1691,8 @@
       if (terminado) return;
       pintar();
       if (st.terminada) { const t = setTimeout(fin, 1500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); return; }
-      if (verUltima) { const t = setTimeout(() => { verUltima = false; programar(); }, 1300 * TIEMPO); limpiezas.push(() => clearTimeout(t)); return; }
-      if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; jugar(Cartas.briscaBot(st)); }, 900 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+      if (verUltima) { const t = setTimeout(() => { verUltima = false; programar(); }, 5300 * TIEMPO); /* la baza se ve ~4 s más (ajuste del profe) */ limpiezas.push(() => clearTimeout(t)); return; }
+      if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; jugar(Cartas.briscaBot(st)); }, 1500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
     }
     function jugar(carta) {
       if (!Cartas.briscaJugar(st, carta)) return false;
@@ -1729,7 +1733,7 @@
       if (terminado) return;
       pintar();
       if (st.terminada) { const t = setTimeout(fin, 1800 * TIEMPO); limpiezas.push(() => clearTimeout(t)); return; }
-      if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; Cartas.conquianActuar(st, Cartas.conquianBot(st)); tono(440, 50); programar(); }, 1000 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+      if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; Cartas.conquianActuar(st, Cartas.conquianBot(st)); tono(440, 50); programar(); }, 2500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
     }
     m.body.addEventListener('click', e => {
       if (terminado || st.terminada) return;
@@ -2472,7 +2476,7 @@
 
   // ---- ¡Una! en sala (openspec: una-en-partida) ----
   // Estado reconstruido reproduciendo las jugadas sobre el mazo de la semilla: igual en todos los dispositivos.
-  const U_BOT_MS = 1500, U_TURNO_MS = 30000;
+  const U_BOT_MS = 3000, U_TURNO_MS = 30000; // ritmo más lento (ajuste del profe)
   const UNA_CARTAS = (() => {
     const m = []; let id = 0;
     for (const c of ['r', 'y', 'g', 'b']) {
@@ -2498,12 +2502,16 @@
     const top = () => UNA_CARTAS[st.pila[st.pila.length - 1]];
     const valida = id => { const c = UNA_CARTAS[id]; return !c.c || c.c === st.color || c.v === top().v; };
     const sig = (d, pasos = 1) => ((d + st.dir * pasos) % orden.length + orden.length) % orden.length;
+    // Devuelve cuántas cartas llegaron de verdad (0 si ya no hay mazo ni pila para rebarajar).
     const robar = (j, n) => {
+      let r = 0;
       for (let k = 0; k < n; k++) {
         if (!st.mazo.length) { const t = st.pila.pop(); st.mazo = barajar(st.pila, rngDe(s.seed, 'rebaraja' + st.paso)); st.pila = [t]; }
-        if (st.mazo.length) st.manos[j].push(st.mazo.pop());
+        if (st.mazo.length) { st.manos[j].push(st.mazo.pop()); r++; }
       }
+      return r;
     };
+    const hayParaRobar = () => st.mazo.length > 0 || st.pila.length > 1;
     const aplicar = (j, mv, t) => {
       st.paso++; st.T0 = t;
       if (mv.accion === 'jugar') {
@@ -2521,8 +2529,7 @@
         if (c.v === '+4') { robar(sig(j), 4); pasos = 2; }
         st.turno = sig(j, pasos);
       } else if (mv.accion === 'robar') {
-        robar(j, 1);
-        const n = st.manos[j][st.manos[j].length - 1];
+        const n = robar(j, 1) ? st.manos[j][st.manos[j].length - 1] : undefined; // sin cartas no hay "robada"
         st.ultima = { j, accion: 'robar', auto: !!mv.auto, paso: st.paso };
         if (!mv.auto && n !== undefined && valida(n)) st.pendiente = n; else st.turno = sig(j);
       } else {
@@ -2533,7 +2540,7 @@
     const esValida = (j, mv) => {
       if (mv.accion === 'jugar') return st.manos[j].includes(mv.carta) && valida(mv.carta) && (st.pendiente === null || st.pendiente === mv.carta);
       if (mv.accion === 'robar') return st.pendiente === null;
-      if (mv.accion === 'pasar') return st.pendiente !== null;
+      if (mv.accion === 'pasar') return st.pendiente !== null || (!hayParaRobar() && !st.manos[j].some(valida)); // atorado sin cartas: puede pasar
       return false;
     };
     const bot = j => {
@@ -2576,7 +2583,7 @@
         else break;
       }
     }
-    st.valida = valida; st.top = top;
+    st.valida = valida; st.top = top; st.hayParaRobar = hayParaRobar;
     return st;
   }
 
@@ -2623,20 +2630,20 @@
     const u = st.ultima;
     const ult = !u ? (lang === 'en' ? 'The game begins!' : '¡Empieza la partida!') :
       escapeHtml(st.orden[u.j].nombre) + ': ' + (u.accion === 'jugar' ? escapeHtml(unaNombre(UNA_CARTAS[u.carta], lang)) + (u.castigo ? ' · ⚠️ ' + (lang === 'en' ? 'slow on UNA +' : 'tardó en presionar UNA +') + u.castigo : '') :
-        u.accion === 'robar' ? (lang === 'en' ? 'draws' : 'roba') + (u.auto ? ' ⏰' : '') : (lang === 'en' ? 'passes' : 'pasa') + (u.auto ? ' ⏰' : ''));
+        u.accion === 'robar' ? (lang === 'en' ? 'draws' : 'roba') + (u.auto ? ' ⏰' : '') + (u.j === yo && !u.auto && st.manos[yo].length ? ' · 🆕 ' + escapeHtml(unaNombre(UNA_CARTAS[st.manos[yo][st.manos[yo].length - 1]], lang)) : '') : (lang === 'en' ? 'passes' : 'pasa') + (u.auto ? ' ⏰' : ''));
     const mano = yo >= 0 ? st.manos[yo] : [];
     const jugable = id => miTurno && st.valida(id) && (st.pendiente === null || st.pendiente === id);
     body.innerHTML =
       '<div class="una-bots">' + st.orden.map((p, j) => j === yo ? '' : '<div class="una-bot' + (st.turno === j ? ' activo' : '') + '"><span>' + avatarHtml(p.avatar, 20) + ' ' + escapeHtml(p.nombre) + '</span><span>🂠 × ' + st.manos[j].length +
         (st.manos[j].length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
       '<div class="una-mesa"><div>' + unaCartaHtml(st.top(), ' grande') + '<div class="muted" style="text-align:center">' + escapeHtml(T.color[st.color]) + ' <span class="una-dot" style="background:' + UNA_COLOR[st.color] + '"></span></div></div>' +
-      '<button class="una-mazo" data-usala="robar"' + (miTurno && st.pendiente === null ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + st.mazo.length + ')</small></button></div>' +
+      '<button class="una-mazo" data-usala="robar"' + (miTurno && st.pendiente === null && st.hayParaRobar() ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + st.mazo.length + ')</small></button></div>' +
       '<div class="feedback" id="una-msg">' + (sala.unaElegir != null ? (lang === 'en' ? 'Choose a color: ' : 'Elige color: ') + ['r', 'y', 'g', 'b'].map(x => '<button class="una-color" data-usala-color="' + x + '" style="background:' + UNA_COLOR[x] + '" aria-label="' + T.color[x] + '"></button>').join('')
         : miUna ? '📣 ' + (lang === 'en' ? 'Press UNA now! ' : '¡Presiona UNA ya! ') + '<b id="una-cuenta">' + quedaUna.toFixed(1) + '</b> s'
         : st.esperaUna ? '⏳ ' + escapeHtml(st.orden[st.esperaUna.j].nombre) + (lang === 'en' ? ' must press UNA…' : ' debe presionar UNA…')
         : (miTurno ? '👉 ' + escapeHtml(T.tu) : '⏳ ' + escapeHtml(st.orden[st.turno].nombre)) + ' · ' + ult) + '</div>' +
-      '<div class="una-mano">' + mano.map(id => '<button class="una-btn" data-usala-carta="' + id + '"' + (jugable(id) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(unaNombre(UNA_CARTAS[id], lang)) + '">' + unaCartaHtml(UNA_CARTAS[id], jugable(id) ? ' jugable' : '') + '</button>').join('') + '</div>' +
-      '<div class="row-btns">' + (miTurno && st.pendiente !== null ? '<button class="btn ghost" data-usala="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
+      '<div class="una-mano">' + mano.map(id => '<button class="una-btn' + (st.pendiente === id && miTurno ? ' robada' : '') + '" data-usala-carta="' + id + '"' + (jugable(id) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(unaNombre(UNA_CARTAS[id], lang)) + '">' + unaCartaHtml(UNA_CARTAS[id], jugable(id) ? ' jugable' : '') + '</button>').join('') + '</div>' +
+      '<div class="row-btns">' + (miTurno && (st.pendiente !== null || (!st.hayParaRobar() && !mano.some(st.valida))) ? '<button class="btn ghost" data-usala="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
       ((sala.unaLocal ? !sala.unaLocal.presionado : miUna) ? '<button class="btn una-grito pulsa" data-usala="una">📣 ' + escapeHtml(T.una) + '</button>' : (sala.unaLocal && sala.unaLocal.presionado && (miUna || !sala.unaLocal.enviado) ? '<span class="feedback ok">📣 ¡UNA!</span>' : '')) + '</div>' +
       '<div class="row-btns" style="margin-top:6px"><button class="btn ghost sm" data-usala-lang="es" aria-pressed="' + (lang === 'es') + '">🇲🇽 Español</button><button class="btn ghost sm" data-usala-lang="en" aria-pressed="' + (lang === 'en') + '">🇺🇸 English</button></div>';
     sala.unaSt = st;
@@ -2677,8 +2684,8 @@
     if (st.turno !== yo || sala.unaEnviando) return !!(b || e.target.closest('[data-usala-carta]'));
     const col = e.target.closest('[data-usala-color]');
     if (col && sala.unaElegir != null) { jugadaUnaSala({ accion: 'jugar', carta: sala.unaElegir, color: col.dataset.usalaColor }); return true; }
-    if (b && b.dataset.usala === 'robar' && st.pendiente === null) { jugadaUnaSala({ accion: 'robar' }); return true; }
-    if (b && b.dataset.usala === 'pasar' && st.pendiente !== null) { jugadaUnaSala({ accion: 'pasar' }); return true; }
+    if (b && b.dataset.usala === 'robar' && st.pendiente === null && st.hayParaRobar()) { jugadaUnaSala({ accion: 'robar' }); return true; }
+    if (b && b.dataset.usala === 'pasar' && (st.pendiente !== null || (!st.hayParaRobar() && !st.manos[yo].some(st.valida)))) { jugadaUnaSala({ accion: 'pasar' }); return true; }
     const k = e.target.closest('[data-usala-carta]');
     if (k) {
       const id = Number(k.dataset.usalaCarta);
@@ -2696,7 +2703,7 @@
   }
 
   // ---- Póker en sala (openspec: poker): cada jugada lleva su paso n; todos reconstruyen la mesa desde la semilla ----
-  const PK_BOT_MS = 1500, PK_TURNO_MS = 30000, PK_PAUSA_MS = 5000;
+  const PK_BOT_MS = 2500, PK_TURNO_MS = 30000, PK_PAUSA_MS = 9000; // ritmo más lento (ajuste del profe)
   function estadoPoker() {
     const e = sala.estado, s = e.sala;
     const orden = participantes();
@@ -2765,10 +2772,10 @@
   }
 
   // ---- Brisca y Conquián en sala (openspec: cartas-espanolas): reproducción genérica por pasos ----
-  const CS_BOT_MS = 1500, CS_TURNO_MS = 30000;
+  const CS_BOT_MS = 1500, CS_TURNO_MS = 30000, CS_PAUSA_BAZA_MS = 4000; // Brisca: la baza se ve 4 s antes del siguiente turno
   const CFG_CARTAS = {
-    brisca: { max: 4, nueva: (js, rng) => Cartas.briscaNueva(js, rng), actuar: (st, mv) => mv.accion === 'jugar' && Cartas.briscaJugar(st, mv.carta), bot: (st, rng) => ({ accion: 'jugar', carta: Cartas.briscaBot(st, rng) }) },
-    conquian: { max: 2, nueva: (js, rng) => Cartas.conquianNueva(js, rng), actuar: (st, mv) => Cartas.conquianActuar(st, mv), bot: (st, rng) => Cartas.conquianBot(st, rng) },
+    brisca: { max: 4, botMs: 2500, pausa: st => !st.baza.length && st.ultimaBaza && !st.terminada ? CS_PAUSA_BAZA_MS : 0, nueva: (js, rng) => Cartas.briscaNueva(js, rng), actuar: (st, mv) => mv.accion === 'jugar' && Cartas.briscaJugar(st, mv.carta), bot: (st, rng) => ({ accion: 'jugar', carta: Cartas.briscaBot(st, rng) }) },
+    conquian: { max: 2, botMs: 2500, nueva: (js, rng) => Cartas.conquianNueva(js, rng), actuar: (st, mv) => Cartas.conquianActuar(st, mv), bot: (st, rng) => Cartas.conquianBot(st, rng) },
   };
   function estadoCartasSala(juego) {
     const cfg = CFG_CARTAS[juego];
@@ -2783,12 +2790,12 @@
     for (let guard = 0; guard < 3000 && !st.terminada; guard++) {
       const p = orden[st.turno];
       if (p.bot) {
-        const t = T0 + dur(CS_BOT_MS); if (ahora < t) break;
-        cfg.actuar(st, cfg.bot(st, rngDe(s.seed, juego + 'bot' + paso))); paso++; T0 = t;
+        const t = T0 + dur(cfg.botMs || CS_BOT_MS); if (ahora < t) break;
+        cfg.actuar(st, cfg.bot(st, rngDe(s.seed, juego + 'bot' + paso))); paso++; T0 = t + dur(cfg.pausa ? cfg.pausa(st) : 0);
       } else {
         const mv = jugs.get(paso), lim = T0 + dur(CS_TURNO_MS);
-        if (mv && mv.jugador === p.id && mv.t <= lim && cfg.actuar(st, mv)) { paso++; T0 = Math.max(T0, mv.t); }
-        else if (ahora >= lim) { cfg.actuar(st, cfg.bot(st, rngDe(s.seed, juego + 'auto' + paso))); st.auto = true; paso++; T0 = lim; }
+        if (mv && mv.jugador === p.id && mv.t <= lim && cfg.actuar(st, mv)) { paso++; T0 = Math.max(T0, mv.t) + dur(cfg.pausa ? cfg.pausa(st) : 0); }
+        else if (ahora >= lim) { cfg.actuar(st, cfg.bot(st, rngDe(s.seed, juego + 'auto' + paso))); st.auto = true; paso++; T0 = lim + dur(cfg.pausa ? cfg.pausa(st) : 0); }
         else break;
       }
     }
@@ -2815,11 +2822,11 @@
         (st.ganador < 0 ? '🤝 Se acabó el mazo: empate' : '🎉 ¡Conquián de ' + nombre(st.ganador) + '!');
       return pintarFinalSala(body, filas, null, titulo);
     }
-    const miTurno = st.turno === yo && !sala.csEnviando;
-    const ventana = dur(st.orden[st.turno].bot ? CS_BOT_MS : CS_TURNO_MS);
+    const miTurno = st.turno === yo && !sala.csEnviando && ahora >= st.T0;
+    const ventana = dur(st.orden[st.turno].bot ? (CFG_CARTAS[juego].botMs || CS_BOT_MS) : CS_TURNO_MS);
     bar.hidden = false; bar.firstChild.style.width = Math.max(0, Math.min(100, (st.T0 + ventana - ahora) / ventana * 100)) + '%';
     const sel = sala.cqSel || (sala.cqSel = new Set());
-    const clave = 'cs:' + st.paso + ':' + (sala.csEnviando ? 1 : 0) + ':' + [...sel].join(',') + ':' + sala.cqDestino + ':' + (sala.cqMsg || '');
+    const clave = 'cs:' + st.paso + ':' + (miTurno ? 1 : 0) + ':' + (sala.csEnviando ? 1 : 0) + ':' + [...sel].join(',') + ':' + sala.cqDestino + ':' + (sala.cqMsg || '');
     if (sala.vista === clave) return;
     sala.vista = clave;
     const pie = miTurno ? '<div class="feedback ok">👉 ¡Tu turno! Tienes 30 s</div>' : '<div class="feedback">⏳ Turno de ' + escapeHtml(nombre(st.turno)) + '</div>';
