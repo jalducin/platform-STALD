@@ -37,3 +37,6 @@ yarn-error.log*
 
 # git worktrees
 .worktrees/
+
+# salidas de las pruebas E2E (capturas, logs, resumen)
+tests/e2e/salida/
