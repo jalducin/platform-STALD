@@ -23,7 +23,7 @@ SHALL responder 503 `mucho_trafico` con un mensaje claro, en lugar de un error g
 
 ### Requirement: Aviso por correo cuando el servidor se bloquea
 El servidor SHALL exponer `GET /salud` con el estado del límite de GitHub y del repo de datos, sin datos privados.
-Un vigilante SHALL revisarlo cada 15 minutos y SHALL avisar por correo al profe (vía un issue que lo menciona)
+Un vigilante SHALL revisarlo cada 30 minutos (antes 15; cambio `ahorro-peticiones`) y SHALL avisar por correo al profe (vía un issue que lo menciona)
 cuando el servidor esté bloqueado o cerca del límite, y SHALL avisar cuando se recupere.
 
 #### Scenario: Servidor bloqueado
