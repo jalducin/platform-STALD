@@ -177,8 +177,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `semanas/<lunes>.json`, `actividades/profe-act-<fecha>.json` y `examenes/profe-examen-<fecha>.json`;
   - resultados en `resultados/<id>/profe.json` (alumno "Profe"), también para los elementos del grupo que resuelve
     antes que ellos; esos archivos se excluyen de todas las vistas de resultados del grupo.
-- `alumnos.json`: `{ "<correo>": { nombre, alta } }`, alumnos y alumnas dados de alta desde `ingles.html`
+- `alumnos.json`: `{ "<correo>": { nombre, alta, inicio? } }`, alumnos y alumnas dados de alta desde `ingles.html`
   (cambio `alta-alumnos`). Se suman a los de Notion. Solo el admin ve los correos.
+  - `inicio` (`AAAA-MM-DD`): el lunes siguiente al alta (cambio `inicio-lunes-alumnos`). Las actividades que
+    vencen antes no aparecen. Si el alta liga un nombre que ya existe en Notion, no lleva `inicio`.
 - `avance/<slug-alumno>.json`: avance fuera de las actividades en línea.
   - `{ alumno, notion: { <pageId>: { titulo, completado, en, por } }, historial: [...] }`.
   - `por` es `alumno` o `admin`. `historial` guarda como máximo las 200 entradas más recientes. Sin correos.

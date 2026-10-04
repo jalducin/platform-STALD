@@ -38,7 +38,7 @@ Deno.test("alumnos: aplicarAlumnos une el correo a sus filas de Notion o crea un
 Deno.test("alumnos: el admin da de alta con nombre y correo", async () => {
   const { call, store } = ctx();
   const r = await call("POST", "", ADMIN, { nombre: "  Luz   María ", email: "Luz@Example.com " });
-  assertEquals([r.status, r.body.alumno], [200, { email: "luz@example.com", nombre: "Luz María", alta: "2026-09-30T23:00:00.000Z" }]);
+  assertEquals([r.status, r.body.alumno], [200, { email: "luz@example.com", nombre: "Luz María", alta: "2026-09-30T23:00:00.000Z", inicio: "2026-10-05" }]);
   assertEquals((await store.get<any>("alumnos.json"))!.data["luz@example.com"].nombre, "Luz María");
   assertEquals((await leerRegistro(store))["luz@example.com"].nombre, "Luz María", "la caché se actualiza");
   const l = await call("GET", "", ADMIN);
