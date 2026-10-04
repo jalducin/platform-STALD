@@ -1,6 +1,7 @@
 // Rutas /ingles/actividades[/<id>[/resultados/<alumno>]] sobre el almacén JSON.
 import {
   addIntento,
+  calcularRacha,
   type Ejercicio,
   estadoItem,
   fueraDeTiempoDe,
@@ -168,7 +169,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const { items, semanaActual } = await visibleItems(store, hoy, ambito);
     const semana = semanaActual ? { id: semanaActual.id, titulo: semanaActual.titulo, ids: semanaActual.elementos.map((e) => e.id) } : null;
     if (quien.isAdmin) {
-      const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), resultados: tieneReto(it) ? await resultadosDe(store, it.id) : [] })));
+      const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), ...(it.prorrogas ? { prorrogas: it.prorrogas } : {}), resultados: tieneReto(it) ? await resultadosDe(store, it.id) : [] })));
       const porAlumno = new Map<string, Resultado[]>();
       for (const it of conRes) for (const r of it.resultados) { if (!porAlumno.has(r.alumno)) porAlumno.set(r.alumno, []); porAlumno.get(r.alumno)!.push(r); }
       const resumen = Object.fromEntries([...porAlumno].map(([a, rs]) => [a, { temasAReforzar: temasAReforzar(rs) }]));
@@ -180,12 +181,14 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     // Alumnos y alumnas nuevos: lo que venció antes de su lunes de inicio no aparece (openspec: inicio-lunes-alumnos).
     const suyos = todos.filter((it: ConGrupos) => !quien.grupo || !it.grupos || it.grupos.includes(quien.grupo)) // calendario por grupo
       .map((base) => paraAlumno(base, slug!)).filter((it) => !quien.inicio || it.fechaLimite >= quien.inicio);
+    const diasConEntrega = new Set<string>(); // racha (openspec: ingles-pro)
     const conEstado = await Promise.all(suyos.map(async (it) => {
       const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
+      for (const i of r?.intentos || []) diasConEntrega.add(mxToday(new Date(i.enviadoEn)));
       return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
     }));
     const plan = ambito.clave === "profe" ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
-    return json({ isAdmin: false, hoy, semana, items: conEstado, ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
+    return json({ isAdmin: false, hoy, semana, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
   }
 
   let base = await loadItem(store, partes[0], ambito);
@@ -202,6 +205,32 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     if (!quien.isAdmin) return json({ error: "solo_admin" }, 403);
     await store.remove(rutaResultado(it.id, slugAlumno(partes[2])), `Reinicio de ${it.id} para ${partes[2]}`);
     return json({ borrado: true });
+  }
+  // POST /ingles/actividades/<id>/prorroga { alumno, fecha|null } → prórroga por alumno o alumna (solo admin,
+  // openspec: ingles-pro). Se guarda en el JSON del elemento (`prorrogas`), igual que si se editara a mano.
+  if (req.method === "POST" && partes[1] === "prorroga" && partes.length === 2) {
+    if (!quien.isAdmin || ambito.clave !== "clase") return json({ error: "solo_admin" }, 403);
+    let body: { alumno?: unknown; fecha?: unknown } = {};
+    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+    const alumnoSlug = String(body.alumno ?? "").trim() ? slugAlumno(String(body.alumno)) : "";
+    if (!alumnoSlug || alumnoSlug === "sin-nombre") return json({ error: "alumno_invalido" }, 400);
+    const fecha = body.fecha === null || body.fecha === undefined || body.fecha === "" ? null : String(body.fecha);
+    if (fecha !== null && (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || isNaN(Date.parse(fecha)) || fecha < base.disponibleDesde)) return json({ error: "fecha_invalida" }, 400);
+    for (let i = 0; i < 3; i++) {
+      const ruta = (await store.get(`${ambito.contenido}/actividades/${base.id}.json`)) ? `${ambito.contenido}/actividades/${base.id}.json` : `${ambito.contenido}/examenes/${base.id}.json`;
+      const doc = await store.get<Record<string, unknown>>(ruta);
+      if (!doc) return json({ error: "no_encontrado" }, 404);
+      const prorrogas = { ...((doc.data.prorrogas as Record<string, string>) || {}) };
+      if (fecha) prorrogas[alumnoSlug] = fecha;
+      else delete prorrogas[alumnoSlug];
+      const data: Record<string, unknown> = { ...doc.data, prorrogas };
+      if (!Object.keys(prorrogas).length) delete data.prorrogas;
+      if (await store.put(ruta, data, doc.sha, `${base.id}: prórroga de ${alumnoSlug} → ${fecha ?? "sin prórroga"}`)) {
+        clearCache();
+        return json({ ok: true, id: base.id, alumno: alumnoSlug, fecha, prorrogas });
+      }
+    }
+    return json({ error: "conflicto_escritura" }, 503);
   }
   if (partes.length !== 1) return json({ error: "not_found" }, 404);
 

@@ -34,6 +34,15 @@ La vista del profe SHALL mostrar, para el grupo elegido:
 - **THEN** ve quién va atrasado en cada actividad
 - **AND** puede abrir el detalle de una alumna para darle prórroga
 
+#### Scenario: Dar y quitar una prórroga desde el cajón
+- **WHEN** el profe elige una fecha y toca «Dar prórroga» para Marisol en una actividad
+- **THEN** Marisol ve esa actividad con su nueva fecha límite y los demás la siguen viendo con la original
+- **AND** con «Quitar prórroga» vuelve la fecha original
+
+#### Scenario: El resumen es solo del profe
+- **WHEN** una alumna pide `GET /ingles/resumen` o intenta dar una prórroga
+- **THEN** el servidor responde 403
+
 ### Requirement: Diseño profesional y accesible
 Inglés SHALL usar el mismo sistema de diseño que Juegos, en modo claro y oscuro, con accesibilidad AA y sin
 desplazamiento horizontal en celular.

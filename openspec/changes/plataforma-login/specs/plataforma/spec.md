@@ -19,3 +19,24 @@ un código enviado a su correo. El servidor SHALL tomar el correo de la sesión 
 #### Scenario: Cerrar sesión
 - **WHEN** Luz toca 🚪 Cerrar sesión
 - **THEN** vuelve a la pantalla de entrada y la sesión ya no sirve en ese dispositivo
+
+#### Scenario: Transición para alumnos y alumnas
+- **WHEN** un alumno o alumna con el correo guardado de antes entra sin sesión, antes de que termine
+  `LOGIN_TRANSICION_HASTA`
+- **THEN** sigue viendo sus clases y la página le invita a activar su acceso seguro
+
+#### Scenario: Sesión vencida o inválida
+- **WHEN** el servidor responde 401 (`sesion_invalida` o `inicia_sesion`)
+- **THEN** la página muestra la pantalla de entrada en lugar de un error
+
+### Requirement: Enlace de acceso generado por el profe
+El admin con sesión SHALL poder generar un enlace de acceso para una persona ya dada de alta en Supabase Auth, sin
+enviar correo, para compartirlo por WhatsApp. Nadie más SHALL poder generarlo.
+
+#### Scenario: El profe genera un enlace
+- **WHEN** el profe, con sesión, pide el enlace de `luz@…`
+- **THEN** recibe un enlace de un solo uso (y su código) para mandárselo
+
+#### Scenario: Un alumno intenta generar un enlace
+- **WHEN** alguien que no es el admin, o el admin sin sesión, llama a `POST /auth/enlace`
+- **THEN** el servidor responde 403 `solo_admin` o 401 y no genera nada

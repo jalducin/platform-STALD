@@ -88,10 +88,8 @@
   <h1>📚 Tareas pendientes</h1>
   <div class="subtitle">Estudio Secundaria — actualizado desde Notion</div>
 
-  <div id="login" class="login-box">
-    <label for="email-input">Tu correo</label>
-    <input id="email-input" type="email" placeholder="tucorreo@gmail.com" autocomplete="email">
-    <button id="login-btn">Entrar</button>
+  <div id="login">
+    <div id="login-auth"></div>
     <div class="login-error" id="login-error">No encontré clases asociadas a ese correo.</div>
   </div>
 
@@ -121,6 +119,7 @@
     <div class="fallback-note">Se basa en la última edición de cada clase marcada como Completada.</div>
   </div>
 
+<script src="comun/auth.js?v=1"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md).
   // `?api=` permite probar contra un servidor local, igual que ingles.html.
@@ -133,8 +132,7 @@
 
   const loginEl = document.getElementById('login');
   const appEl = document.getElementById('app');
-  const emailInput = document.getElementById('email-input');
-  const loginBtn = document.getElementById('login-btn');
+  const loginAuth = document.getElementById('login-auth');
   const loginError = document.getElementById('login-error');
   const whoLabel = document.getElementById('who-label');
   const logoutBtn = document.getElementById('logout-btn');
@@ -241,19 +239,44 @@
       : '<div class="empty">Nada entregado en los últimos 2 días todavía.</div>';
   }
 
+  // Sesión con Supabase Auth (comun/auth.js, openspec: plataforma-login). Sin sesión, durante la transición, se usa el
+  // correo guardado de antes como ?email=.
+  const API_BASE = DATA_URL_BASE.replace(/\/data$/, '');
+  let correoActual = null;
+
+  // Pantalla de entrada (enlace mágico o código). `msg` explica por qué se pide.
+  function pedirEntrada(msg) {
+    appEl.style.display = 'none';
+    loginEl.style.display = 'block';
+    loginError.style.display = 'none';
+    StaldAuth.pintarEntrada(loginAuth, {
+      titulo: '📚 Secundaria',
+      texto: 'Escribe tu correo y te mandamos un enlace para entrar, sin contraseña.',
+      correo: correoActual || '',
+      aviso: msg,
+      alEntrar: (c) => loadFor(c),
+    });
+  }
+
   async function loadFor(email) {
+    correoActual = email;
     contentEl.innerHTML = '<div class="loading">Cargando…</div>';
     loginError.style.display = 'none';
     try {
-      const res = await fetch(DATA_URL_BASE + '?email=' + encodeURIComponent(email), { cache: 'no-store' });
-      const data = await res.json();
+      const res = await StaldAuth.fetchConSesion(DATA_URL_BASE + (StaldAuth.email() ? '' : '?email=' + encodeURIComponent(email)));
+      const data = await res.json().catch(() => ({}));
+      if (StaldAuth.esSesionVencida(res, data)) {
+        const eraViejo = !StaldAuth.email();
+        await StaldAuth.salir();
+        return pedirEntrada(eraViejo ? '🔒 Por seguridad, ahora entras con un enlace que te mandamos a tu correo.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.');
+      }
       if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
 
       if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {
-        loginError.style.display = 'block';
         localStorage.removeItem(STORAGE_KEY);
-        loginEl.style.display = 'block';
-        appEl.style.display = 'none';
+        pedirEntrada();
+        loginError.textContent = 'No encontré clases asociadas a ese correo.';
+        loginError.style.display = 'block';
         return;
       }
 
@@ -268,30 +291,22 @@
     }
   }
 
-  loginBtn.addEventListener('click', () => {
-    const email = emailInput.value.trim().toLowerCase();
-    if (!email) return;
-    loadFor(email);
-  });
-  emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
-
-  logoutBtn.addEventListener('click', () => {
-    SESSION_KEYS.forEach(k => localStorage.removeItem(k));
-    appEl.style.display = 'none';
-    loginEl.style.display = 'block';
-    emailInput.value = '';
+  logoutBtn.textContent = '🚪 Cerrar sesión';
+  logoutBtn.addEventListener('click', async () => {
+    await StaldAuth.salir();
+    correoActual = null;
+    pedirEntrada();
   });
 
   refreshBtn.addEventListener('click', () => {
-    const email = localStorage.getItem(STORAGE_KEY);
-    if (email) loadFor(email);
+    if (correoActual) loadFor(correoActual);
   });
 
-  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('stald_email');
-  if (saved) {
-    emailInput.value = saved;
-    loadFor(saved);
-  }
+  (async () => {
+    await StaldAuth.iniciar(API_BASE);
+    const email = StaldAuth.email() || localStorage.getItem(STORAGE_KEY) || StaldAuth.correoViejo();
+    if (email) loadFor(email); else pedirEntrada();
+  })();
 </script>
 </body>
 </html>

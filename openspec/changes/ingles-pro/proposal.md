@@ -60,10 +60,15 @@ El profe pidió llevar Inglés al mismo nivel de diseño. Este cambio es el Spri
 
 ## Impact
 
-- Archivos nuevos: `estilos/stald.css`.
+- Archivos nuevos: `estilos/stald.css`, `ingles/ingles.css`, `ingles/*.js` y `server/resumen.ts`.
 - Archivos que cambian:
-  - `ingles.html` (se separa en `ingles/alumno.js`, `ingles/admin.js` e `ingles/reproductor.js`);
-  - rutas de solo lectura con datos agregados, que salen de Postgres (`ingles-grupos`):
-    - `GET /ingles/resumen?grupo=`: indicadores y mapa de calor;
-    - `GET /ingles/racha`.
+  - `ingles.html` (queda como shell; el código pasa a `ingles/comun.js`, `alumno.js`, `admin.js`, `tablero.js`,
+    `reproductor.js`, `presentacion.js`, `profe.js` y `app.js`);
+  - servidor:
+    - `GET /ingles/resumen?grupo=` (solo admin): indicadores y mapa de calor, calculados sobre el almacén (con
+      Postgres, una consulta por elemento);
+    - la racha viaja en `GET /ingles/actividades` (`racha: { dias, hoy }`), sin ruta aparte;
+    - `POST /ingles/actividades/<id>/prorroga` (solo admin) para dar o quitar una prórroga desde el cajón.
+- Matriz de acceso: `/ingles/resumen` y la prórroga, solo el admin (403 a cualquier otro correo); la racha, cada
+  alumno o alumna solo la suya.
 - Los E2E de Inglés se ajustan a los nuevos selectores; los datos y el comportamiento no cambian.
