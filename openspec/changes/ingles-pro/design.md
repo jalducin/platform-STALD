@@ -16,6 +16,18 @@
   - `ingles/comun.js` con la API, el formato y los componentes.
 - Así se reducen las ~1,300 líneas actuales en un solo archivo y cada vista se puede probar por separado.
 
+### 2b. Navegación
+- Ruteo por hash (`#inicio`, `#semana`, `#resultados`, `#perfil` y, para el profe, `#grupos`, `#alumnos`…):
+  - `hashchange` pinta la sección;
+  - la pestaña activa lleva `aria-current="page"`;
+  - el botón Atrás funciona.
+- Barra inferior en celular (menos de 720 px):
+  - `position: fixed`, con `env(safe-area-inset-bottom)`;
+  - botones de 56 px de alto, con el emoji arriba y la etiqueta abajo.
+- En escritorio se usan pestañas arriba para la vista de alumno o alumna y un menú lateral para la del profe.
+- Catálogo único de secciones (`SECCIONES`: id, emoji, título y rol): la barra, el menú y los encabezados salen
+  de ahí, así que no se repiten ni se contradicen.
+
 ### 3. Vista de alumno o alumna
 - **Encabezado:**
   - anillo SVG con el avance de la semana;

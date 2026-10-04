@@ -11,6 +11,7 @@
 
 - [ ] 2.1 `estilos/stald.css`: tokens, modo oscuro y componentes
 - [ ] 2.2 Separar `ingles.html` en módulos (`comun`, `alumno`, `admin` y `reproductor`) sin cambiar su comportamiento
+- [ ] 2.2b Navegación con `SECCIONES`: barra inferior en celular, pestañas o menú lateral en escritorio, ruteo por hash y botón Atrás
 - [ ] 2.3 Vista de alumno o alumna: encabezado con anillo, nivel y racha; Próxima clase; Para hoy; Semana; Resultados;
   e insignias
 - [ ] 2.4 Vista del profe: barra lateral de grupos, indicadores, mapa de calor y cajón de alumno o alumna

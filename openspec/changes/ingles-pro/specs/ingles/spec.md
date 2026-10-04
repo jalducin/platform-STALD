@@ -15,6 +15,14 @@ La vista de alumno o alumna SHALL mostrar al entrar:
 - **WHEN** Luz entregó actividades tres días seguidos
 - **THEN** ve «🔥 3»
 
+### Requirement: Navegación con íconos
+Inglés SHALL tener una navegación por secciones con emoji y nombre. En celular SHALL usar una barra inferior fija.
+Cada sección SHALL tener su dirección propia, para que el botón Atrás funcione.
+
+#### Scenario: Cambiar de sección en el celular
+- **WHEN** Luz toca «⭐ Resultados» en la barra inferior y luego presiona Atrás
+- **THEN** ve sus resultados y después regresa a «🏠 Inicio»
+
 ### Requirement: Tablero del profe por grupo
 La vista del profe SHALL mostrar, para el grupo elegido:
 - indicadores;

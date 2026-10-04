@@ -17,6 +17,14 @@ El profe pidió llevar Inglés al mismo nivel de diseño. Este cambio es el Spri
   - componentes: tarjeta, botón, pestaña, chip, anillo de progreso, barra, tabla, cajón lateral, esqueleto de
     carga y estado vacío.
   - Lo usan `ingles.html` y, poco a poco, el portal.
+- **Navegación fácil con íconos** (pedido del profe):
+  - celular: barra inferior fija con 5 pestañas: 🏠 Inicio · 📅 Semana · ⭐ Resultados · 🎮 Juegos · 👤 Perfil;
+  - escritorio: las mismas secciones como pestañas arriba;
+  - profe: menú lateral con un emoji por sección: 🏠 Resumen · 👥 Grupos · 🧑‍🎓 Alumnos · 📅 Semana · ⭐ Resultados ·
+    🎬 Presentar · 🎓 Mi ruta · 🎮 Juegos. En celular es una barra inferior con 4 secciones y «☰ Más»;
+  - cada sección tiene su dirección (`#inicio`, `#semana`…), así que el botón Atrás del celular funciona y se pueden
+    compartir enlaces;
+  - cada encabezado de sección lleva su emoji, el mismo de su pestaña, para que se ubique igual en todos lados.
 - **Vista de alumno o alumna** (enfocada en celular):
   - encabezado con avatar, nivel (A1→B1…), anillo de avance de la semana y **racha** 🔥 de días con entregas;
   - tarjeta **"Próxima clase"**: grupo, día, hora, cuenta regresiva y botón de Meet;
@@ -41,11 +49,9 @@ El profe pidió llevar Inglés al mismo nivel de diseño. Este cambio es el Spri
   - sin desplazamiento horizontal;
   - Lighthouse ≥ 90 en Accesibilidad y Buenas prácticas.
 
-## Fuera de alcance (se propone aparte)
+## Siguiente
 
-- **Inicio de sesión real** con Supabase Auth (enlace mágico por correo). Hoy la plataforma identifica a cada
-  persona solo por su correo, sin contraseña. Es la mejora de seguridad más importante y queda como Sprint 3
-  opcional.
+- **Sprint 3 · `plataforma-login`** (aprobado por el profe): inicio de sesión real con Supabase Auth.
 
 ## Capabilities
 
