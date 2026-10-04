@@ -14,8 +14,8 @@
 ## 3. Pruebas y verificación (OBLIGATORIO) — EL AGENTE EJECUTA
 
 - [x] 3.1 Correr `deno test`, `check` y `lint`
-- [ ] 3.2 Verificar en producción, solo lectura: `/ingles/data` como admin con 0 filas sin alumno
-- [ ] 3.3 Escribir el reporte `openspec/changes/ingles-sin-nombre/reports/2026-10-03-pruebas-y-verificacion.md`
+- [x] 3.2 Verificar en producción, solo lectura: `/ingles/data` como admin con 0 filas sin alumno
+- [x] 3.3 Escribir el reporte `openspec/changes/ingles-sin-nombre/reports/2026-10-03-pruebas-y-verificacion.md`
 
 ## 4. Documentación (OBLIGATORIO)
 
