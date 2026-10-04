@@ -40,4 +40,17 @@
 
 ## Resultado
 - Estado Step 4: PASS
-- Bloqueos: ninguno. La verificación en producción (Step 5.2) depende de que se configuren las variables en Deno.
+- Bloqueos: ninguno.
+
+## Verificación en producción (Step 5.2) — 2026-10-03
+- Variables configuradas por el profe en Deno: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` y `SUPABASE_SERVICE_KEY`
+  (`service_role` legacy, entregada por portapapeles, sin mostrarla).
+- `node prod-realtime.js` contra GitHub Pages y `stald.jalducin.deno.net`, con el correo de admin: 4/4.
+  - el GET entrega `rt` del proyecto Portafolio y el canal no sale en `sala`;
+  - WebSocket abierto;
+  - 2 avisos recibidos por Realtime (empezar y responder);
+  - 1 GET en 35 s de juego (antes, ~7).
+- Restauración:
+  - sala `CWZL` borrada del repo de datos y del índice `salas-semana/2026-09-28.json` (28 → 27);
+  - no se guardó ninguna partida;
+  - `llaves.tmp.json` borrado y portapapeles vaciado.

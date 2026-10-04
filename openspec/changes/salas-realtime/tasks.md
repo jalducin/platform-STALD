@@ -34,9 +34,9 @@
 
 ## 5. Configuración y verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Entregar al profe los valores de `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` y cómo obtener
+- [x] 5.1 Entregar al profe los valores de `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` y cómo obtener
   `SUPABASE_SERVICE_KEY`. No van en el repo.
-- [ ] 5.2 Con las variables en Deno:
+- [x] 5.2 Con las variables en Deno:
   - sala de prueba en producción con dos navegadores por Realtime;
   - borrar la sala de prueba.
 
