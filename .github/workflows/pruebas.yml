@@ -1,0 +1,35 @@
+# Pruebas del servidor (openspec: pruebas-en-repo).
+# En cada push a main y en cada PR: pruebas unitarias, revisión de tipos y lint del servidor Deno.
+# No usa secretos: las pruebas unitarias trabajan con dobles (server/test_datos.ts, server/test_postgrest.ts).
+# Las E2E (tests/e2e) NO corren aquí: necesitan una copia del repo privado de datos (datos de alumnos y alumnas),
+# que no debe viajar a un runner. Se corren en local con tests/e2e/correr.sh; ver docs/pruebas.md.
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pruebas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  servidor:
+    name: Pruebas del servidor
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Pruebas unitarias
+        run: deno test -A server/
+      - name: Revisión de tipos
+        run: deno check server/main.ts
+      - name: Lint
+        run: deno lint server/
