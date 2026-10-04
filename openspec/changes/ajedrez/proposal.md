@@ -8,8 +8,8 @@ El profe pidió ajedrez de dos formas: individual contra el bot y en partida 1 v
   - Jugadas legales completas: enroque, captura al paso, coronación y prohibición de dejar al rey en jaque.
   - Detección de jaque, jaque mate, ahogado y tablas (50 jugadas, triple repetición y material insuficiente).
   - Notación algebraica en español: R rey, D dama, T torre, A alfil, C caballo; `O-O`, `x`, `+` y `#`.
-  - Bot con 3 niveles: 🐣 Fácil (1 jugada con azar), 🦊 Medio (2 jugadas) y 🦉 Difícil (3 jugadas y capturas en
-    quietud). Evalúa material y posición de las piezas, con poda alfa-beta.
+  - Bot con 3 niveles: 🐣 Básico (1 jugada con azar), 🦊 Intermedio (2 jugadas) y 🦉 Avanzado (3 jugadas y capturas
+    en quietud). Ajuste del profe: el bot es solo para el modo individual. Evalúa material y posición de las piezas, con poda alfa-beta.
 - **Individual (Mente ágil → ♟️ Ajedrez):**
   - eliges nivel y color (blancas, negras o al azar);
   - tablero que se voltea si juegas con negras;
@@ -19,7 +19,8 @@ El profe pidió ajedrez de dos formas: individual contra el bot y en partida 1 v
   - Puntos por ganar: 400, 700 o 1000 según el nivel. Tablas valen la mitad. Si pierdes, 10 por punto de material
     capturado, con tope de 200.
 - **En partida 1 vs 1** (👥 Partidas):
-  - juegan los 2 primeros participantes; si no hay un segundo humano, juega el bot nivel Medio;
+  - **solo 2 personas** (quien crea y quien se une), **sin bots**: la sala admite 2, el tercero recibe `sala_llena` y
+    no se puede empezar sin rival (`faltan_jugadores`). Ajuste del profe, post-apply;
   - blancas para quien creó la sala;
   - reloj por jugador de 5, 10 o 15 min; quien se queda sin tiempo pierde;
   - jugada `{ n, accion: 'mover', de, a, promo? }` o `{ n, accion: 'rendirse' }`;

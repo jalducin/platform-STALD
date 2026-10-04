@@ -27,7 +27,11 @@ y usa el motor del Sprint 1 (`juegos/cartas.js`).
 - **En partida**:
   - las jugadas se reconstruyen desde la semilla, como en ¡Una! y el póker. El turno dura 30 s y, si se acaba, se
     hace la jugada automática;
-  - Brisca usa hasta los primeros 4 jugadores de la sala y, si son 4, se juega en parejas;
+  - Brisca en partida, ajustada por el profe después de publicarse:
+    - siempre se juega entre 4, en parejas;
+    - si hay menos de 4 personas, se completa con bots;
+    - con 4 personas no entran bots;
+    - la sala admite hasta 4 personas;
   - Conquián usa a los primeros 2; si hay más, ven la partida;
   - la validación del servidor se hace por juego.
 - **📖 Cómo se juega** de cada juego: reglas, valor de las cartas y ejemplos de juegos válidos.

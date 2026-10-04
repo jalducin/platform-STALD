@@ -33,3 +33,10 @@
 
 ## Resultado
 - PASS
+
+## Verificación en producción (Step 5.1)
+- `node prod-fusion.js` contra Pages, en solo lectura: 4/4.
+  - El menú tiene 21 juegos y muestra los títulos fusionados.
+  - El Maratón incluye las categorías IA y Tecnología.
+  - No hubo escrituras.
+- `POST /juegos/sala` con `es-acentos` devuelve `{"error":"juego_no_permitido"}`.

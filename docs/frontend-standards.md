@@ -118,6 +118,11 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   sala.
   - Las piezas son glifos sólidos con `U+FE0E`, para que no se vean como emoji.
   - `ajClic` resuelve la selección: destino, coronación o cambio de pieza.
+- `participantes()` arma la lista de jugadores según el juego:
+  - ajedrez: solo personas (las 2 primeras);
+  - Brisca: hasta 4 personas, y si faltan se completa con BOT-VACHIRA, BOT-ISAGII y `BOT_EXTRA` (BOT-CHONITA);
+  - en esos dos juegos la casilla de bots se oculta y en su lugar aparece `#p-bots-nota` con la regla.
+- Niveles del bot de ajedrez: 🐣 Básico, 🦊 Intermedio y 🦉 Avanzado. Solo existen en el modo individual.
 - `estadoAjedrez()` reproduce la sala:
   - el participante 0 juega con blancas;
   - el reloj de cada jugador es `opciones.reloj` minutos;

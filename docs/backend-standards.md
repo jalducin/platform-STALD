@@ -74,6 +74,10 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
     reproducir: ≤ 2 s 0, ≤ 3 s 1, ≤ 4 s 2, ≤ 5 s 3 y sin UNA 4.
   - `validarJugada(juego, jugada)` valida cada juego por turnos y guarda solo los campos permitidos (cambio
     `cartas-espanolas`):
+    - Cupo y bots por juego (ajuste post-apply del profe):
+      - `CUPO = { ajedrez: 2, brisca: 4 }`: si la sala ya está completa, quien intenta unirse recibe 409 `sala_llena`;
+      - `BOTS_FIJOS`: el ajedrez se crea siempre con `bots: false` y la Brisca con `bots: true`;
+      - el ajedrez no empieza con menos de 2 personas: 409 `faltan_jugadores`.
     - Ajedrez (`ajedrez`, cambio `ajedrez`): acepta dos formas de jugada.
       - `{ n, accion: "mover", de, a, promo? }`, donde `de` y `a` son casillas `a1`–`h8` y `promo` es `q`, `r`, `b`
         o `n`.

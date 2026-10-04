@@ -1749,7 +1749,7 @@
 
   // ---------- Mente ágil: Ajedrez (openspec: ajedrez). Motor en juegos/ajedrez.js ----------
   const AJ_GLIFO = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
-  const AJ_NIVEL = { 1: { t: '🐣 Fácil', pts: 400 }, 2: { t: '🦊 Medio', pts: 700 }, 3: { t: '🦉 Difícil', pts: 1000 } };
+  const AJ_NIVEL = { 1: { t: '🐣 Básico', pts: 400 }, 2: { t: '🦊 Intermedio', pts: 700 }, 3: { t: '🦉 Avanzado', pts: 1000 } };
   const ajPieza = p => p ? '<span class="aj-p ' + Ajedrez.colorDe(p) + '">' + AJ_GLIFO[p.toLowerCase()] + '\uFE0E</span>' : '';
   // Tablero: abajo = color que juega abajo; sel = casilla elegida; destinos = jugadas legales de esa pieza.
   function ajTableroHtml(st, o) {
@@ -1944,6 +1944,7 @@
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
   const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'es-ortografia', 'cultura', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez'];
+  const BOT_EXTRA = { id: 'bot-chonita', nombre: 'BOT-CHONITA', acierto: 0.5, avatar: { emoji: '👵', color: '#a855f7' } }; // 3.er bot para completar la Brisca
   const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
   const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
   const P_BASTA = 60000, P_GRACIA = 3000, P_PAUSA = 10000; // Basta por rondas: escribir, gracia tras ¡Basta!, resultados
@@ -2098,7 +2099,8 @@
       '<div id="p-equipos-wrap" hidden><label class="check"><input id="p-equipos" type="checkbox"><span>👥 Por equipos (A y B, alternados por orden de entrada)</span></label></div>' +
       '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select></div>' +
       '<div id="p-cat-wrap" hidden><label for="p-cat">Maratón</label><select id="p-cat" class="sel"><option value="todas">🌈 Todas mezcladas</option></select></div>' +
-      '<label class="check"><input id="p-bots" type="checkbox" checked><span>Incluir 2 bots (BOT-VACHIRA y BOT-ISAGII) que contestan al azar</span></label>' +
+      '<label class="check" id="p-bots-wrap"><input id="p-bots" type="checkbox" checked><span>Incluir 2 bots (BOT-VACHIRA y BOT-ISAGII) que contestan al azar</span></label>' +
+      '<div class="muted" id="p-bots-nota" hidden style="font-size:.82rem;margin:6px 0"></div>' +
       '<div class="row-btns"><button class="btn" type="submit">Crear partida</button></div></form></div>' +
       '<div class="card"><h2 style="margin-top:0">🔑 Unirme con código</h2><form id="f-unirse" autocomplete="off"><label for="p-codigo">Código de 4 letras</label>' +
       '<input id="p-codigo" type="text" maxlength="4" placeholder="KXQP" style="text-transform:uppercase;letter-spacing:.3em;font-weight:800;text-align:center">' +
@@ -2153,7 +2155,11 @@
   function participantes() {
     const e = sala.estado;
     const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, rondasBasta: x.rondasBasta || {}, loteria: x.loteria }));
-    return e.sala.bots ? humanos.concat(BOTS.map(b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b, avatar: b.avatar }))) : humanos;
+    const comoBot = b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b, avatar: b.avatar });
+    // Ajuste del profe: ajedrez 1 vs 1 solo entre personas; Brisca siempre entre 4 (se completa con bots).
+    if (e.sala.juego === 'ajedrez') return humanos.slice(0, 2);
+    if (e.sala.juego === 'brisca') { const h = humanos.slice(0, 4); return h.concat(BOTS.concat(BOT_EXTRA).slice(0, 4 - h.length).map(comoBot)); }
+    return e.sala.bots ? humanos.concat(BOTS.map(comoBot)) : humanos;
   }
 
   function pintarSala() {
@@ -2902,7 +2908,7 @@
     const ahora = ahoraServidor();
     if (ahora < s.inicio) { const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárense! Blancas: ' + escapeHtml((participantes()[0] || {}).nombre || '') + '</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
     const a = estadoAjedrez();
-    if (a.faltan) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">Se necesitan 2 jugadores (activa los bots al crear la partida para jugar contra uno).</div>'; sala.vista = 'faltan'; } return; }
+    if (a.faltan) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">♟️ Esperando a que se una tu rival: el ajedrez en partida es solo entre 2 personas.</div>'; sala.vista = 'faltan'; } return; }
     const yo = a.orden.findIndex(p => p.id === e.yo), color = yo === 1 ? 'b' : 'w';
     if (a.fin) {
       const filas = a.orden.map((p, j) => ({ id: p.id, nombre: p.nombre + (j ? ' ♚' : ' ♔'), tipo: p.tipo, avatar: p.avatar, total: ajPuntosSala(a, j), ultimo: 0 })).sort((x, y) => y.total - x.total);
@@ -3124,7 +3130,7 @@
       '<li><b>Captura al paso:</b> si un peón rival avanza 2 y queda junto al tuyo, puedes capturarlo como si hubiera avanzado 1 (solo en la jugada siguiente).</li><li><b>Coronación:</b> el peón que llega al final se convierte en dama, torre, alfil o caballo (tú eliges).</li></ul>' +
       '<h3>Cómo termina</h3><ul><li><b>Jaque mate:</b> gana quien lo da.</li><li><b>Tablas (empate):</b> rey ahogado (no hay jugadas pero no está en jaque), triple repetición, 50 jugadas sin capturas ni peones, o material insuficiente (por ejemplo, rey contra rey).</li><li>En partida 1 vs 1 cada quien tiene <b>reloj</b>: si se te acaba el tiempo, pierdes. También puedes rendirte en tu turno.</li></ul>' +
       '<h3>Notación</h3><p>R rey · D dama · T torre · A alfil · C caballo; los peones no llevan letra. «x» es captura, «+» jaque y «#» mate. Ejemplo: <b>Cf3</b>, <b>exd5</b>, <b>Dh4#</b>.</p>' +
-      '<h3>Niveles del bot</h3><p>🐣 Fácil se equivoca a propósito · 🦊 Medio piensa 2 jugadas · 🦉 Difícil piensa 3 jugadas y revisa capturas.</p>',
+      '<h3>Niveles del bot (solo en individual)</h3><p>🐣 Básico se equivoca a propósito · 🦊 Intermedio piensa 2 jugadas · 🦉 Avanzado piensa 3 jugadas y revisa capturas.</p><p>En <b>partida</b> juegan solo 2 personas: quien crea la sala (blancas) y quien se une (negras).</p>',
     brisca: '<h2>🏆 Brisca</h2><p><b>Baraja española</b> de 40 cartas: oros 🪙, copas 🏆, espadas ⚔️ y bastos 🪵, del 1 al 7 más sota (10), caballo (11) y rey (12).</p>' +
       '<h3>Cómo se juega</h3><ol><li>Cada quien recibe 3 cartas. Se voltea una carta: su palo es el <b>triunfo</b> y queda bajo el mazo (se roba al final).</li>' +
       '<li>En tu turno tiras una carta. <b>No es obligatorio seguir el palo.</b></li><li>Gana la baza el <b>triunfo más alto</b>; si nadie tiró triunfo, la carta más alta del <b>palo que salió primero</b>.</li>' +
@@ -3162,7 +3168,7 @@
     const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }
     const pa = e.target.closest('[data-p]');
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
-    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(() => traerSala()).then(() => { sala.vista = null; pintarSala(); }); }
+    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('♟️ Espera a que se una tu rival: el ajedrez en partida es 1 vs 1.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
     const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
     const g = e.target.closest('[data-juego]');
@@ -3173,7 +3179,9 @@
     if (a.dataset.a === 'csv') descargarCsv();
     if (a.dataset.a === 'otro-correo') { SESSION_KEYS.forEach(k => localStorage.removeItem(k)); pantallaLogin(); }
   });
-  app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez'; } });
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez';
+    const nota = { ajedrez: '♟️ Partida 1 vs 1 solo entre dos personas: quien crea y quien se une. Sin bots.', brisca: '🏆 Se juega entre 4 en parejas: si faltan personas, se completa con bots. Máximo 4.' }[e.target.value];
+    document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || ''; } });
   app.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
   });

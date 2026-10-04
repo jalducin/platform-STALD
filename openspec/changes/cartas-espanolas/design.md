@@ -91,6 +91,14 @@
     - `descartar` con `carta`.
 - Catálogo: `brisca` y `conquian`, categoría clásicos, máximo 1000.
 
+## Ajuste post-apply (profe): Brisca en sala siempre con 4
+- `participantes()` para Brisca:
+  - toma hasta 4 humanos y completa con bots hasta llegar a 4: BOT-VACHIRA, BOT-ISAGII y BOT-CHONITA;
+  - ignora la casilla de bots, que se oculta en Brisca.
+- Servidor:
+  - `CUPO.brisca = 4` → quien llega con la sala llena recibe `sala_llena`;
+  - `bots: true` se fuerza al crear la sala.
+
 ## Pruebas
 - Motor:
   - baraja y nombres;
