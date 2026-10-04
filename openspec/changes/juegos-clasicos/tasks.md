@@ -34,3 +34,9 @@
 
 - [x] 5.1 `docs/backend-standards.md` (catálogo) y `docs/data-model.md` (`basta.json`, `loteria.json`)
 - [x] 5.2 Commit, push, PR y merge a `main` (PR #27)
+
+## Ajuste post-apply del profe: ritmo y robo sin cartas (sprint final)
+
+- [x] A.1 Aplicar el nuevo ritmo de los bots (individual y sala) y corregir el robo cuando ya no hay cartas
+- [x] A.2 E2E: partida larga de puro robar, sin errores de JS, y sin robo posible con el mazo vacío; regresiones de ¡Una!
+- [ ] A.3 Verificar en producción

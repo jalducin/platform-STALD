@@ -71,3 +71,12 @@
 - E2E:
   - individual: ayuda, 10 manos y puntos guardados;
   - en partida: dos navegadores con bots, la misma mesa en ambos y jugadas por turno.
+
+## Ajuste post-apply (profe): ritmo más lento
+- Iba tan rápido que se perdían. Se agregan unos 4 s de pausa para ver qué pasó:
+  - individual:
+    - el resultado de cada mano se ve 10 s antes de avanzar solo (antes 6 s);
+    - cada bot tarda 2 s en actuar (antes 1.1 s);
+  - en sala:
+    - pausa entre manos de 9 s (`PK_PAUSA_MS`; antes 5 s);
+    - cada bot tarda 2.5 s (`PK_BOT_MS`; antes 1.5 s).
