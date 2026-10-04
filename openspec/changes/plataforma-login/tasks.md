@@ -45,3 +45,4 @@
   - `docs/frontend-standards.md`;
   - `docs/deno-deploy-setup.md`;
   - README.
+- [ ] 1.2 Dar de alta en Supabase Auth a las personas actuales y agregar el botón «🔗 Enlace de acceso» en la vista del profe

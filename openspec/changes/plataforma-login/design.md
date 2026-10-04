@@ -51,3 +51,13 @@
   - enlace mágico real al correo del profe;
   - entrar, ver Inglés y cerrar sesión;
   - `?email=` del admin rechazado.
+
+## Ajuste del profe (2026-10-04): alumnos actuales registrados de una vez
+
+- Las personas que ya están en la plataforma (alumnos, alumnas, invitados de Juegos y el profe) se dan de alta
+  directamente en Supabase Auth con la API de admin (`createUser`, con `email_confirm: true`). No tienen que
+  registrarse.
+- Para entrar la primera vez en un dispositivo, el profe genera desde su vista un **🔗 enlace de acceso** por
+  persona (`generateLink` de tipo `magiclink`) y se lo manda por WhatsApp. No se usa el correo, así que no cuenta
+  para el límite del SMTP.
+- Las altas nuevas reciben el enlace por correo, con el flujo normal.

@@ -95,3 +95,35 @@ alter table stald.grupos enable row level security; -- igual en todas: sin polí
   - el admin crea "Sábado A1", da de alta a una alumna en ese grupo, mueve a otra y filtra resultados;
   - una alumna resuelve una actividad y el resultado queda en Postgres.
 - Producción: migración real con cuadre de conteos y verificación de lectura, con limpieza de datos de prueba.
+
+## Revisión antes de implementar (2026-10-04, aprobado el arranque)
+
+Se simplifica el modelo para bajar el riesgo de la migración. Esta sección **reemplaza** las secciones 2, 3 y 5 donde
+se contradigan:
+
+- **Tablas en el esquema `public` con prefijo `stald_`**:
+  - PostgREST ya expone `public`, así que no hace falta tocar la configuración del proyecto compartido;
+  - RLS activo y sin políticas, de modo que solo la llave de servicio las lee.
+- **Documentos de Inglés en `stald_docs(path, data jsonb, version, actualizado)`**:
+  - `alumnos.json`, `resultados/**` y `avance/**` se copian 1 a 1;
+  - `PgStore` implementa la interfaz `Store` (`get`, `put` con versión como `sha`, `list` y `remove`) para esas
+    rutas y delega el resto (contenido y juegos) al `GitHubStore`;
+  - el motor y las rutas no cambian.
+- **Grupos relacionales:**
+  - `stald_grupos(id, nombre, nivel, horario, meet_url, color, activo, orden)`;
+  - `stald_inscripciones(alumno, grupo_id, desde, hasta)`, donde `alumno` es el slug del nombre (la misma llave que
+    `resultados/`), con índice único de la inscripción vigente.
+  - Quien no tenga inscripción cae en el primer grupo activo («Grupo 1»).
+- **Corte automático:**
+  - `PgStore` se activa cuando existen las variables `SUPABASE_*` y además la fila `stald_docs['meta/migrado']`;
+  - la marca se revisa cada 60 s;
+  - la migración escribe esa marca al final;
+  - el profe no configura nada.
+- **Datos de prueba aislados:** el prefijo de tablas es configurable (`STALD_TABLAS`, por omisión `stald_`). Las
+  pruebas E2E locales usan `stald_test_*` y las vacían al terminar, sin tocar datos reales.
+- **Migración en 2 pasadas:**
+  1. Copia todo y escribe la marca.
+  2. A los 90 s copia de nuevo solo lo que falte o tenga más intentos en GitHub, por si alguien entregó justo
+     durante el corte.
+- **SQL:** `supabase/migrations/001_stald_ingles.sql` se aplica con `supabase db query --linked` (Management API)
+  desde una carpeta de trabajo fuera del repo.
