@@ -33,7 +33,7 @@
 
 ## 6. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Producción, sin escrituras:
+- [x] 6.1 Producción, sin escrituras:
   - `OPTIONS` con `Max-Age`;
   - un POST `text/plain` a una ruta de solo validación responde como antes (400 con body inválido).
 
