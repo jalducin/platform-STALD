@@ -78,6 +78,8 @@ export interface DepsAlumnos {
   store: Store;
   filas(): Promise<InglesRow[]>; // filas de Notion (sin el registro)
   ahora?: () => string;
+  // Inscribe al grupo elegido en el alta (openspec: ingles-grupos); ausente si no hay base de datos.
+  inscribir?: (nombre: string, grupo: string, desde: string) => Promise<boolean>;
 }
 
 async function escribir(store: Store, cambiar: (r: RegistroAlumnos) => RegistroAlumnos, mensaje: string): Promise<boolean> {
@@ -133,7 +135,10 @@ export async function handleAlumnos(req: Request, sub: string, deps: DepsAlumnos
     // Liga a un alumno que ya lleva el curso en Notion: sin inicio (sus atrasos son reales).
     const existente = filas.some((r) => r.alumno && slugAlumno(r.alumno) === slug);
     const alumno: AlumnoRegistrado = existente ? { nombre, alta } : { nombre, alta, inicio: lunesDeInicio(alta) };
+    const grupo = body.grupo === undefined || body.grupo === "" ? null : String(body.grupo);
+    if (grupo && (!deps.inscribir || !/^[a-z0-9-]{1,60}$/.test(grupo))) return json({ error: "grupo_invalido" }, 400);
     if (!await escribir(deps.store, (r) => ({ ...r, [correo]: alumno }), `alumnos: alta de ${nombre}`)) return json({ error: "conflicto_escritura" }, 503);
+    if (grupo && !await deps.inscribir!(nombre, grupo, alumno.inicio ?? alta.slice(0, 10))) return json({ error: "grupo_inexistente", alumno: { email: correo, ...alumno } }, 400);
     return json({ ok: true, alumno: { email: correo, ...alumno } });
   }
 

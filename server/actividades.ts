@@ -29,6 +29,8 @@ export interface Identidad {
   isAdmin: boolean;
   alumno: string | null;
   inicio?: string; // lunes de inicio de un alta nueva (openspec: inicio-lunes-alumnos)
+  grupo?: string; // grupo vigente (openspec: ingles-grupos); sin base de datos no se filtra
+  grupoInfo?: { id: string; nombre: string; nivel: string | null; horario: string | null; meet_url: string | null; color: string } | null;
 }
 
 // Ámbito de contenido: el del grupo (contenido/) o la ruta de estudio del profe (contenido/profe/, openspec: ruta-profe).
@@ -72,11 +74,13 @@ export async function loadItem(store: Store, id: string, ambito: Ambito = AMBITO
   return { ...it, banco: [...(it.banco || []), ...banco] };
 }
 
-interface Semana { id: string; titulo: string; elementos: { id: string; tipo: string; fecha: string }[] }
+interface Semana { id: string; titulo: string; grupos?: string[]; elementos: { id: string; tipo: string; fecha: string }[] }
+// Grupos a los que aplica cada elemento (de su semana; openspec: ingles-grupos). Sin grupos = todos.
+type ConGrupos = Item & { grupos?: string[] };
 
 // Elementos visibles: los de semanas ya iniciadas + exámenes sueltos (p. ej. el diagnóstico).
 // Suelto = ninguna semana lo referencia, aunque no haya iniciado (las semanas se suben por adelantado).
-export async function visibleItems(store: Store, hoy: string, ambito: Ambito = AMBITO_CLASE): Promise<{ items: Item[]; semanaActual: Semana | null }> {
+export async function visibleItems(store: Store, hoy: string, ambito: Ambito = AMBITO_CLASE): Promise<{ items: ConGrupos[]; semanaActual: Semana | null }> {
   return await cached(`${ambito.clave}:visibles:${hoy}`, async () => {
     const nombres = (await store.list(`${ambito.contenido}/semanas`)).filter((n) => n.endsWith(".json")).map((n) => n.slice(0, -5)).sort();
     const todas = (await Promise.all(nombres.map((id) => store.get<Semana>(`${ambito.contenido}/semanas/${id}.json`)))).map((d) => d!.data);
@@ -84,7 +88,9 @@ export async function visibleItems(store: Store, hoy: string, ambito: Ambito = A
     const enSemana = new Set(todas.flatMap((s) => s.elementos.map((e) => e.id)));
     const sueltos = (await store.list(`${ambito.contenido}/examenes`)).map((n) => n.replace(/\.json$/, "")).filter((id) => !enSemana.has(id));
     const ids = [...semanas.flatMap((s) => s.elementos.map((e) => e.id)), ...sueltos];
-    const items = (await Promise.all(ids.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x);
+    const gruposDe = new Map(todas.flatMap((s) => s.grupos?.length ? s.elementos.map((e) => [e.id, s.grupos!] as const) : []));
+    const items: ConGrupos[] = (await Promise.all(ids.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x)
+      .map((it) => gruposDe.has(it.id) ? { ...it, grupos: gruposDe.get(it.id) } : it);
     items.sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
     return { items, semanaActual: semanas[semanas.length - 1] || null };
   });
@@ -126,7 +132,7 @@ async function resultadosDe(store: Store, id: string): Promise<Resultado[]> {
   return (await Promise.all(nombres.map((n) => store.get<Resultado>(`resultados/${id}/${n}`)))).map((d) => d!.data);
 }
 
-function meta(it: Item) {
+function meta(it: ConGrupos) {
   return {
     id: it.id, tipo: it.tipo, titulo: it.titulo, nivel: it.nivel, descripcion: it.descripcion,
     disponibleDesde: it.disponibleDesde, fechaLimite: it.fechaLimite,
@@ -134,6 +140,7 @@ function meta(it: Item) {
     preguntas: tieneReto(it) ? (it.preguntasPorIntento || (it.banco || []).length) : 0,
     meetUrl: it.meetUrl ?? null, hora: it.hora ?? null, tieneReto: it.tipo === "meet" && tieneReto(it),
     ...(it.segundaOportunidad ? { segundaOportunidad: it.segundaOportunidad } : {}),
+    ...(it.grupos ? { grupos: it.grupos } : {}),
   };
 }
 
@@ -171,13 +178,14 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const deGrupo = new Set(grupo.map((g) => g.id));
     const todos = [...items, ...grupo].sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
     // Alumnos y alumnas nuevos: lo que venció antes de su lunes de inicio no aparece (openspec: inicio-lunes-alumnos).
-    const suyos = todos.map((base) => paraAlumno(base, slug!)).filter((it) => !quien.inicio || it.fechaLimite >= quien.inicio);
+    const suyos = todos.filter((it: ConGrupos) => !quien.grupo || !it.grupos || it.grupos.includes(quien.grupo)) // calendario por grupo
+      .map((base) => paraAlumno(base, slug!)).filter((it) => !quien.inicio || it.fechaLimite >= quien.inicio);
     const conEstado = await Promise.all(suyos.map(async (it) => {
       const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
       return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
     }));
     const plan = ambito.clave === "profe" ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
-    return json({ isAdmin: false, hoy, semana, items: conEstado, ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}) });
+    return json({ isAdmin: false, hoy, semana, items: conEstado, ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
   }
 
   let base = await loadItem(store, partes[0], ambito);

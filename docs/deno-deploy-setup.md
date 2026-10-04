@@ -32,6 +32,7 @@ privado `jalducin/platform-STALD-data`. No usa Supabase. Necesitas 3 datos y uno
 | `DATA_REPO` | `jalducin/platform-STALD-data` |
 | `SUPABASE_URL` | `https://eolsklubeywfmuyrtxla.supabase.co` (opcional: partidas en tiempo real, cambio `salas-realtime`) |
 | `SUPABASE_PUBLISHABLE_KEY` | llave *publishable* del proyecto (va al navegador) |
+| `STALD_TABLAS` | opcional; prefijo de las tablas de Inglés en Postgres. Por omisión `stald_`; solo las pruebas usan `stald_test_` (cambio `ingles-grupos`) |
 | `SUPABASE_SERVICE_KEY` | llave `service_role` (Legacy API keys) o *secret*; solo servidor |
 
 5. Copia la URL del proyecto (algo como `https://platform-stald.deno.dev`) y pásamela. Con ella cambio
