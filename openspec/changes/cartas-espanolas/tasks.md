@@ -36,7 +36,7 @@
 
 ## 6. Verificación en producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Verificar en producción:
+- [x] 6.1 Verificar en producción:
   - probar los dos juegos en individual sin terminar la partida, para no guardar puntos;
   - abrir una sala de Brisca con bots;
   - borrar la sala.

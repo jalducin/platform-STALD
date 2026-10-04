@@ -58,3 +58,14 @@
 ## Resultado
 - Estado Step 5: PASS
 - Bloqueos: ninguno
+
+## Verificación en producción (Step 6.1) — 2026-10-03
+- `node prod-espanolas.js` contra Pages y `stald.jalducin.deno.net` con el correo de admin: 6/6.
+  - Brisca y Conquián aparecen en Clásicos.
+  - Brisca individual: 3 cartas jugadas.
+  - Conquián: ayuda y 8 cartas en la mano.
+  - No se terminó ninguna partida individual, así que no se guardaron puntos.
+  - Sala de Brisca `DZCD` con 2 bots: producción aceptó 2 jugadas.
+- Restauración:
+  - sala `DZCD` borrada del repo de datos y del índice `salas-semana`;
+  - no se guardó ninguna partida.
