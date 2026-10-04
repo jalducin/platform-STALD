@@ -34,6 +34,13 @@ privado `jalducin/platform-STALD-data`. No usa Supabase. Necesitas 3 datos y uno
 | `SUPABASE_PUBLISHABLE_KEY` | llave *publishable* del proyecto (va al navegador) |
 | `STALD_TABLAS` | opcional; prefijo de las tablas de Inglés en Postgres. Por omisión `stald_`; solo las pruebas usan `stald_test_` (cambio `ingles-grupos`) |
 | `SUPABASE_SERVICE_KEY` | llave `service_role` (Legacy API keys) o *secret*; solo servidor |
+| `LOGIN_TRANSICION_HASTA` | opcional (`AAAA-MM-DD`); último día en que se acepta `?email=` sin sesión. Por omisión `2026-10-12` (constante en `server/auth.ts`, cambio `plataforma-login`) |
+| `SITIO_URL` | opcional; a dónde llevan los enlaces de acceso que genera el profe. Por omisión `https://jalducin.github.io/platform-STALD/` |
+
+**Inicio de sesión (cambio `plataforma-login`):** usa las mismas `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` para
+validar las sesiones (`/auth/v1/user`) y `SUPABASE_SERVICE_KEY` para el «🔗 Enlace de acceso» del profe. La
+configuración de Supabase Auth (URL del sitio, redirecciones, plantilla y SMTP) está en el reporte
+`openspec/changes/plataforma-login/reports/2026-10-04-step-5-pruebas-y-verificacion.md`.
 
 5. Copia la URL del proyecto (algo como `https://platform-stald.deno.dev`) y pásamela. Con ella cambio
    `DEFAULT_API` en `ingles.html` y verifico todo en producción.
@@ -48,5 +55,9 @@ SUPER_ADMIN_EMAIL=admin@example.com PORT=8787 \
 npx -y deno run --allow-net --allow-env --allow-read server/main.ts
 # y abrir ingles.html?api=http://127.0.0.1:8787
 ```
+
+Con `ROWS_FIXTURE`, `GET /config` responde `{ prueba: true }`: la pantalla de entrada no manda correos y acepta
+cualquier código de 6 dígitos; la sesión es `Bearer prueba:<correo>`. Para entrar directo en un E2E:
+`localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email, token: 'prueba:' + email }))`.
 
 Con `DATA_DIR` el almacén es en memoria: no escribe en GitHub.

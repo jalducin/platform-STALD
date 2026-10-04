@@ -117,8 +117,10 @@
 - **Token robado**: dura lo que la sesión de Supabase (1 h el de acceso; se renueva). Cerrar sesión lo revoca en
   Supabase, pero el servidor puede aceptarlo hasta 5 min más por la caché.
 - **Mismo origen en GitHub Pages**: `jalducin.github.io` es el mismo origen para todos los sitios Pages de la cuenta;
-  cualquier otra página publicada ahí podría leer `localStorage` (y la sesión). No publicar páginas de terceros en
-  esa cuenta.
+  cualquier otra página publicada ahí (incluido el portafolio `jalducin.github.io`) podría leer `localStorage` (y la
+  sesión). Aceptado: son sitios del mismo dueño; no publicar ahí código de terceros. Mitigación futura: dominio propio.
+- **Proyecto de Supabase compartido** con el portafolio (*Portafolio*): la URL del sitio y las redirecciones de Auth
+  son del proyecto entero. El portafolio no usa Auth hoy; si algún día lo usa, agregar su URL a las redirecciones.
 - **Llaves**: la publishable va al navegador (es pública por diseño); la de servicio solo en Deno y en el proceso
   de la herramienta, nunca en el repo.
 - **Registro abierto**: cualquiera puede pedir un enlace, pero sin registro en Notion/invitados no ve datos

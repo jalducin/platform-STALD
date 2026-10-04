@@ -23,11 +23,21 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
 - Todo texto que venga de Notion se inserta con `escapeHtml()` o con `textContent`. Nunca concatenar
   datos crudos en `innerHTML`.
 - Los enlaces externos llevan `target="_blank" rel="noopener"`.
-- `localStorage` solo guarda el correo de sesión: `stald_email` (portal), `ingles_email` y
-  `secundaria_email`.
-  - El portal escribe las de los espacios a los que el correo tiene acceso, así que las páginas entran
-    solas.
-  - "Cerrar sesión" en cualquier página borra las tres.
+- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=1">` y usan
+  `window.StaldAuth`:
+  - al arrancar, `await StaldAuth.iniciar(API_BASE)`; el correo es `StaldAuth.email()` (sesión) o, solo durante la
+    transición, `StaldAuth.correoViejo()`;
+  - toda petición al backend va con `StaldAuth.fetchConSesion(url, opts)` (`Authorization: Bearer`). Con sesión no
+    se manda `?email=`; sin sesión (transición) sí;
+  - si `StaldAuth.esSesionVencida(res, body)` (401 `inicia_sesion` o `sesion_invalida`), `StaldAuth.salir()` y la
+    pantalla de entrada (`StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar })`, o la propia del
+    portal), nunca un error crudo;
+  - 🚪 Cerrar sesión llama a `StaldAuth.salir()`.
+  - supabase-js guarda la sesión en `localStorage` (clave `stald-auth`); en pruebas locales, `stald_sesion_prueba`.
+- `localStorage` guarda además el correo de antes: `stald_email` (portal), `ingles_email` y `secundaria_email`.
+  - El portal las sigue escribiendo para las páginas que aún no usan la sesión; dejan de servir para entrar después
+    de `LOGIN_TRANSICION_HASTA`.
+  - "Cerrar sesión" en cualquier página borra las tres (y la sesión).
   - Además del correo, se permiten preferencias de interfaz sin datos personales, como
     `juegos_pref = { musica, volumen }` (música de fondo de `juegos.html`).
   - No guardar filas ni otros datos personales.
@@ -38,7 +48,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
 
 Cada página debe manejar y mostrar de forma explícita:
 
-1. Sin sesión → formulario de correo.
+1. Sin sesión → pantalla de entrada (correo → «📧 Enviarme el enlace» → «Revisa tu correo ✉️» con código de 6
+   dígitos). Un 401 de sesión lleva aquí.
 2. Cargando.
 3. Correo sin filas asignadas → mensaje claro y vuelta al login.
 4. Error de red o backend (4xx/5xx) → mensaje con el error, sin romper la página.

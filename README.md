@@ -24,6 +24,15 @@ Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:f
 | [docs/deno-deploy-setup.md](docs/deno-deploy-setup.md) | Configurar el backend en Deno Deploy y el repo privado de datos |
 | [ai-specs/skills/nueva-semana-ingles/SKILL.md](ai-specs/skills/nueva-semana-ingles/SKILL.md) | Flujo semanal: armar, validar y subir la clase de Inglés de la semana siguiente |
 
+## Inicio de sesión (Supabase Auth)
+
+Se entra con un **enlace mágico** al correo (o su código de 6 dígitos), sin contraseña; la sesión dura semanas en
+el dispositivo y es la misma en portal, Inglés, Juegos y Secundaria (`comun/auth.js`). El servidor valida el token y
+toma el correo verificado. Hasta el 2026-10-12 se acepta todavía el correo sin sesión (salvo el admin, que siempre
+requiere sesión). El profe puede generar un «🔗 Enlace de acceso» desde el portal para mandarlo por WhatsApp.
+Detalle en [docs/backend-standards.md](docs/backend-standards.md) y
+[docs/frontend-standards.md](docs/frontend-standards.md).
+
 ## Vigilancia del servidor
 
 Cada 30 minutos, GitHub Actions revisa `https://stald.jalducin.deno.net/salud`. Si el servidor se bloquea (límite de
