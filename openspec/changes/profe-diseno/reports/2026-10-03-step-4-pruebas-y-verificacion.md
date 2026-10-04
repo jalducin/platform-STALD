@@ -50,3 +50,12 @@
 ## Resultado
 - Estado del Step 4: PASS
 - Bloqueos: ninguno
+
+## Verificación en producción (Step 5.1) — 2026-10-03
+- Se corrió `node prod-profe.js` contra GitHub Pages con el correo de admin, en modo de solo lectura: 5/5.
+  - Encabezado con 4 contadores: 5 hechas y 3 atrasadas.
+  - "Pendiente ahora" con 4 elementos.
+  - Acordeón del plan con solo la semana actual abierta.
+  - Dos columnas en escritorio.
+  - 0 escrituras.
+- Restauración: no aplica, porque no se modificaron datos.
