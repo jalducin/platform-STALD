@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Vista de alumno o alumna orientada a su avance
 La vista de alumno o alumna SHALL mostrar al entrar:
