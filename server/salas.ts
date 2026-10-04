@@ -9,8 +9,9 @@ type Json = (body: unknown, status?: number) => Response;
 
 // Juegos que se pueden jugar en partida (los de preguntas y Basta).
 export const JUEGOS_PARTIDA = new Set([
-  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria", "una",
+  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria", "una", "poker",
 ]);
+const ACCIONES_POKER = ["retirarse", "pasar", "igualar", "subir", "todo"]; // openspec: poker
 const LETRAS_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const MAX_JUGADORES = 30;
 const VIGENCIA_MS = 3 * 3600 * 1000;
@@ -41,7 +42,7 @@ interface EnSala {
   rondasBasta?: Record<string, { palabras: Record<string, string>; basta?: number }>; // Basta por rondas
   loteria?: number; // hora del servidor del primer "¡Lotería!"
   unas?: { paso: number; t: number }[]; // ¡Una!: botón UNA por paso
-  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; t: number }[]; // ¡Una!
+  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; t: number }[]; // ¡Una! y póker
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
   v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
@@ -132,6 +133,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     const opciones: Record<string, string> = {};
     const op = (body.opciones && typeof body.opciones === "object") ? body.opciones as Record<string, unknown> : {};
     if (typeof op.cat === "string" && op.cat.length <= 30) opciones.cat = op.cat;
+    if (juego === "poker" && op.equipos === "1") opciones.equipos = "1"; // póker por equipos A/B
     if (juego === "loteria") {
       if (op.modo !== undefined && op.modo !== "linea" && op.modo !== "llena") return json({ error: "modo_invalido" }, 400);
       opciones.modo = (op.modo as string) || "linea";
@@ -207,13 +209,19 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       const accion = String(j.accion || "");
       const carta = j.carta === undefined ? undefined : Number(j.carta);
       const color = j.color === undefined ? undefined : String(j.color);
-      if (!Number.isInteger(n) || n < 0 || n > 2000 || !["jugar", "robar", "pasar"].includes(accion) ||
+      const monto = j.monto === undefined ? undefined : Number(j.monto);
+      const esPoker = sala.juego === "poker";
+      if (esPoker && (!Number.isInteger(n) || n < 0 || n > 2000 || !ACCIONES_POKER.includes(accion) || j.carta !== undefined ||
+        (monto !== undefined && (!Number.isInteger(monto) || monto < 0 || monto > 1_000_000)))) {
+        return json({ error: "jugada_invalida" }, 400);
+      }
+      if (!esPoker && (!Number.isInteger(n) || n < 0 || n > 2000 || !["jugar", "robar", "pasar"].includes(accion) ||
         (carta !== undefined && (!Number.isInteger(carta) || carta < 0 || carta > 107)) ||
-        (color !== undefined && !["r", "y", "g", "b"].includes(color)) || (j.una !== undefined && typeof j.una !== "boolean")) {
+        (color !== undefined && !["r", "y", "g", "b"].includes(color)) || (j.una !== undefined && typeof j.una !== "boolean"))) {
         return json({ error: "jugada_invalida" }, 400);
       }
       if (jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409);
-      const nueva = { n, accion, ...(carta !== undefined ? { carta } : {}), ...(color ? { color } : {}), ...(j.una !== undefined ? { una: j.una as boolean } : {}), t: ahora };
+      const nueva = { n, accion, ...(esPoker && monto !== undefined ? { monto } : {}), ...(carta !== undefined ? { carta } : {}), ...(color ? { color } : {}), ...(j.una !== undefined ? { una: j.una as boolean } : {}), t: ahora };
       cambiar = (e) => (e.jugadas || []).some((y) => y.n === n) ? e : { ...e, jugadas: [...(e.jugadas || []), nueva].slice(-600) };
     } else if (body.loteria === true) {
       cambiar = (e) => e.loteria ? e : { ...e, loteria: ahora };

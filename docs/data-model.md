@@ -158,6 +158,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - En ¡Una!, `jugadas[]` `{ n, accion, carta, color, t }` (hasta 600) y `unas[]` `{ paso, t }`, el botón
     UNA con su hora. El mazo y el reparto salen de la
     semilla.
+  - En póker (cambio `poker`), `jugadas[]` `{ n, accion, monto?, t }`, con `accion` de
+    `retirarse | pasar | igualar | subir | todo`. `opciones.equipos: "1"` divide la mesa en A/B. La mano `k`
+    sale de la semilla (`poker-mano-k`).
   - En Lotería, `loteria` guarda la hora del primer grito. Las tablas y el orden de las cartas salen de
     la semilla.
 - `juegos/salas-semana/<lunes>.json`: `{ salas: [{ codigo, juego, host, creada }] }`, índice para el
