@@ -66,3 +66,21 @@
 
 ## Resultado
 - PASS
+
+## Migración en producción (Step 7) — 2026-10-04
+1. Se desplegó el código. `/ingles/grupos` respondió 503 `sin_base`, así que producción seguía en GitHub. Se tomó una
+   foto de las calificaciones desde la vista del admin: 6 elementos y 16 resultados.
+2. Se marcó el respaldo con la etiqueta `antes-de-postgres` en `platform-STALD-data`.
+3. `migrar-ingles.ts --prueba` contó 23 archivos. La corrida real copió los 23 a `stald_docs`; la muestra de 3 salió
+   idéntica y se escribió la marca `meta/migrado`.
+4. El corte fue automático, en menos de 60 s:
+   - `/ingles/grupos` devolvió «Grupo 1»;
+   - las calificaciones de producción quedaron **idénticas** a la foto previa (6 elementos y 16 resultados).
+5. La pasada `--delta` dio 0 nuevos y 0 actualizados, con 3/3 idénticos.
+6. `prod-grupos.js` (solo lectura): 3/3.
+   - Aparece la tarjeta de grupos.
+   - Funciona el filtro.
+   - Los 8 alumnos tienen su chip de grupo.
+   - No hubo errores de JS ni escrituras.
+- Reversa disponible: si se borra la fila `meta/migrado` de `stald_docs`, el servidor regresa a GitHub en 60 s o
+  menos. Los JSON siguen ahí, con la etiqueta de respaldo.
