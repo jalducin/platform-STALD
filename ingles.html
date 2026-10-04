@@ -238,6 +238,32 @@
   .pron-oido { font-size: .86rem; margin-top: 4px; }
   .pron-oido.ok { color: var(--green); } .pron-oido.mal { color: var(--overdue); }
   .profe-link { display: inline-block; margin: 0 0 12px; font-weight: 700; color: var(--accent); text-decoration: none; }
+  /* Vista del profe (openspec: profe-diseno) */
+  body.profe { max-width: 1080px; }
+  .pf-hero { background: linear-gradient(135deg, var(--card), var(--card)); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin: 10px 0 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .pf-hero .pf-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+  .pf-hero .pf-sem { font-weight: 800; font-size: 1rem; }
+  .pf-hero .pf-sig { font-size: .82rem; color: var(--muted); }
+  .pf-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  .pf-stat { border-radius: 12px; padding: 8px 6px; text-align: center; background: var(--bg); border: 1px solid var(--border); }
+  .pf-stat b { display: block; font-size: 1.35rem; line-height: 1.1; }
+  .pf-stat span { font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; }
+  .pf-stat.atraso b { color: var(--overdue); } .pf-stat.hecho b { color: var(--done, #16a34a); }
+  .pf-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .pf-main, .pf-side { min-width: 0; }
+  @media (min-width: 960px) { .pf-grid { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; } .pf-side { position: sticky; top: 12px; } }
+  .pf-tag { font-size: .66rem; font-weight: 800; padding: 1px 6px; border-radius: 6px; margin-left: 4px; vertical-align: middle; }
+  .pf-tag.ruta { background: #ede9fe; color: #6d28d9; } .pf-tag.grupo { background: #dbeafe; color: #1d4ed8; }
+  .pf-ok { text-align: center; padding: 10px; color: var(--muted); }
+  .pf-tabs { display: flex; gap: 6px; overflow-x: auto; margin: 4px 0 10px; padding-bottom: 2px; scrollbar-width: none; }
+  .pf-tabs button { flex: 0 0 auto; font: inherit; font-size: .85rem; font-weight: 700; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; }
+  .pf-tabs button[aria-selected="true"] { background: var(--accent, #4f46e5); border-color: transparent; color: #fff; }
+  .pf-side .exam-card { margin-top: 0; }
+  .pf-side .ruta-reparto { font-size: .8rem; }
+  .ruta-sem summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 8px; align-items: center; font-weight: 800; }
+  .ruta-sem summary::-webkit-details-marker { display: none; }
+  .ruta-sem .pf-avance { font-size: .72rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--border); white-space: nowrap; }
+  .ruta-sem[open] summary { margin-bottom: 6px; }
 </style>
 </head>
 <body>
@@ -269,6 +295,7 @@
   const MODO_PROFE = new URLSearchParams(location.search).get('modo') === 'profe';
   const conApiParam = href => { const a = new URLSearchParams(location.search).get('api'); return a ? href + (href.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(a) : href; };
   if (MODO_PROFE) {
+    document.body.classList.add('profe');
     document.title = 'Mi ruta B1 → C1';
     document.getElementById('titulo').textContent = '🎓 Mi ruta B1 → C1';
     document.getElementById('subtitulo').textContent = 'Temas de estudio, práctica y 2 exámenes por semana. Solo tú la ves.';
@@ -436,8 +463,8 @@
     }
 
     if (!data.isAdmin) {
-      contentEl.innerHTML = (MODO_PROFE ? '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html')) + '">← Vista de mi grupo</a>' + renderGrupoProfe(state.act) + renderPlanProfe(state.act) : '') +
-        porEmpezar + renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
+      if (MODO_PROFE) { contentEl.innerHTML = renderProfe(state.act); return; }
+      contentEl.innerHTML = porEmpezar + renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
       return;
     }
 
@@ -1158,6 +1185,60 @@
     render(state.data);
   }
 
+  // ---------- Vista del profe (openspec: profe-diseno): avance, lo urgente arriba y el resto en pestañas ----------
+  const PF_TABS = [['semana', '📅 Esta semana'], ['plan', '🗺️ Plan del mes'], ['grupo', '👥 Mi grupo'], ['hechas', '✅ Hechas']];
+  function pfTabGuardada() { try { const t = localStorage.getItem('profe_tab'); return PF_TABS.some(x => x[0] === t) ? t : 'semana'; } catch (e) { return 'semana'; } }
+  function pfFila(it) {
+    const tag = it.grupo ? '<span class="pf-tag grupo">👥 Grupo</span>' : '<span class="pf-tag ruta">🎓 Ruta</span>';
+    let sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + ' · ' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)';
+    if (it.mejor) sub += ' · <span class="pill ok">⭐ ' + it.mejor.porcentaje + '%</span>';
+    return '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + tag + '</div><div class="s">' + sub + '</div></div>' + accionItem(it, it.estado) + '</div>';
+  }
+  function renderProfe(act) {
+    const items = (act && act.items) || [];
+    const hoy = (act && act.hoy) || todayStr();
+    const g = buildGroups(itemRowsAlumno(act));
+    const plan = act && act.plan;
+    const delPlan = new Set(plan ? (plan.semanas || []).flatMap(s => (s.elementos || []).map(e => e.id)) : []);
+    const hechosPlan = items.filter(it => delPlan.has(it.id) && it.estado === 'completo').length;
+    const pct = delPlan.size ? Math.round(hechosPlan / delPlan.size * 100) : 0;
+    const pendientes = items.filter(it => it.estado !== 'completo' && it.estado !== 'proximamente');
+    const urgentes = pendientes.filter(it => it.fechaLimite <= hoy).sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
+    const futuras = items.filter(it => it.estado !== 'completo' && it.fechaLimite > hoy).sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
+    const sig = futuras[0];
+    const semPlan = plan && act.semana ? (plan.semanas || []).find(s => s.id === act.semana.id) : null;
+    const tab = pfTabGuardada();
+    const hero = '<section class="pf-hero"><div class="pf-top"><span class="pf-sem">' + (act && act.semana ? '👉 ' + escapeHtml(act.semana.titulo) : '🎓 Tu ruta') + '</span>' +
+      '<span class="pf-sig">' + (sig ? 'Siguiente: ' + icono(sig.tipo) + ' ' + escapeHtml(sig.titulo) + ' · ' + escapeHtml(formatFecha(sig.fechaLimite)) : 'Sin entregas próximas') + '</span></div>' +
+      '<div class="progress-bar" style="margin-top:10px"><span style="width:' + pct + '%"></span></div><div class="progress-text" style="margin:4px 0 0">Ruta del mes: ' + hechosPlan + '/' + delPlan.size + ' (' + pct + '%)</div>' +
+      '<div class="pf-stats"><div class="pf-stat hecho"><b>' + (g.recent.length + g.older.length) + '</b><span>Hechas</span></div><div class="pf-stat atraso"><b>' + g.overdue.length + '</b><span>Atrasadas</span></div>' +
+      '<div class="pf-stat"><b>' + g.today.length + '</b><span>Hoy</span></div><div class="pf-stat"><b>' + g.upcoming.length + '</b><span>Próximas</span></div></div></section>';
+    const urgente = '<div class="exam-card" id="pf-urgente"><h3>🔥 Pendiente ahora' + (urgentes.length ? ' (' + urgentes.length + ')' : '') + '</h3>' +
+      (urgentes.length ? urgentes.map(pfFila).join('') : '<div class="pf-ok">¡Al día! 🎉 No tienes nada atrasado ni para hoy.</div>') + '</div>';
+    const semana = (semPlan ? '<div class="exam-card"><h3>🎯 Objetivo de la semana</h3><div>' + escapeHtml(semPlan.objetivo) + '</div><div class="chips" style="margin-top:6px">' + (semPlan.temas || []).map(t => '<span class="chip neutra">' + escapeHtml(t) + '</span>').join('') + '</div>' +
+      '<div class="meta" style="margin-top:6px">📗 ' + escapeHtml(semPlan.busuu) + '</div><div class="meta">✍️ ' + escapeHtml(semPlan.extra) + '</div></div>' : '') + renderWeekCard(act);
+    const hechas = items.filter(it => it.estado === 'completo').sort((a, b) => (b.ultimoEnvio || '').localeCompare(a.ultimoEnvio || ''));
+    const panelHechas = '<div class="exam-card"><h3>✅ Hechas (' + hechas.length + ')</h3>' + (hechas.length ? hechas.map(pfFila).join('') : '<div class="pf-ok">Todavía no hay entregas.</div>') + '</div>';
+    const paneles = { semana: semana || '<div class="pf-ok">Sin actividades esta semana.</div>', plan: renderPlanProfe(act) || '<div class="pf-ok">Sin plan.</div>', grupo: renderGrupoProfe(act) || '<div class="pf-ok">Sin actividades del grupo.</div>', hechas: panelHechas };
+    const tabs = '<div class="pf-tabs" role="tablist" aria-label="Secciones de mi ruta">' + PF_TABS.map(([id, t]) => '<button type="button" role="tab" id="pf-tab-' + id + '" data-pf-tab="' + id + '" aria-controls="pf-panel-' + id + '" aria-selected="' + (id === tab) + '">' + t + '</button>').join('') + '</div>' +
+      PF_TABS.map(([id]) => '<div role="tabpanel" id="pf-panel-' + id + '" data-pf-panel="' + id + '" aria-labelledby="pf-tab-' + id + '"' + (id === tab ? '' : ' hidden') + '>' + paneles[id] + '</div>').join('');
+    const lado = '<aside class="pf-side">' +
+      (plan ? '<div class="exam-card"><h3>⏱️ ' + escapeHtml(plan.horasSemana || 'Horas por semana') + '</h3><div class="ruta-reparto">' + (plan.reparto || []).map(x => '<span>' + escapeHtml(x.que) + '</span><span>' + escapeHtml(x.tiempo) + '</span>').join('') + '</div>' +
+        '<details class="section" style="margin-top:8px"><summary><div class="section-head"><span><span class="chevron">▶</span>☀️ Rutina y reglas</span></div></summary><div class="scroll"><ul class="ruta-lista">' +
+        (plan.rutinaDiaria || []).map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul><ul class="ruta-lista" style="margin-top:8px">' + (plan.reglas || []).map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul></div></details></div>' : '') +
+      '<div class="exam-card"><h3>📅 Próximas</h3>' + (futuras.length ? futuras.slice(0, 3).map(it => '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + escapeHtml(formatFecha(it.fechaLimite)) + (it.grupo ? ' · 👥 Grupo' : '') + '</div></div></div>').join('') : '<div class="pf-ok">Nada próximo.</div>') + '</div>' +
+      '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html')) + '">← Vista de mi grupo</a></aside>';
+    return hero + '<div class="pf-grid"><div class="pf-main">' + urgente + tabs + '</div>' + lado + '</div>';
+  }
+  // Cambio de pestaña sin redibujar (se conserva el scroll); se recuerda en este navegador.
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-pf-tab]'); if (!b) return;
+    const id = b.dataset.pfTab;
+    document.querySelectorAll('[data-pf-tab]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    document.querySelectorAll('[data-pf-panel]').forEach(x => { x.hidden = x.dataset.pfPanel !== id; });
+    try { localStorage.setItem('profe_tab', id); } catch (err) { /* sin almacenamiento: solo esta vez */ }
+  });
+
   // Tarjeta "Lo de tu grupo": actividades del grupo que el profe resuelve antes (openspec: profe-actividades-grupo).
   function renderGrupoProfe(act) {
     const lista = ((act && act.items) || []).filter(it => it.grupo);
@@ -1190,18 +1271,16 @@
     };
     const semanas = (plan.semanas || []).map(s => {
       const elementos = (s.elementos || []).map(e => '<li>' + icono(e.tipo) + ' ' + escapeHtml(e.titulo) + ' · <span class="meta">' + escapeHtml(formatFecha(e.fecha)) + '</span> · ' + estadoDe(e.id) + '</li>').join('');
-      return '<div class="ruta-sem' + (s.id === actual ? ' actual' : '') + '"><div class="h">' + (s.id === actual ? '👉 ' : '') + escapeHtml(s.titulo) + '</div>' +
+      const hechos = (s.elementos || []).filter(e => { const it = items.get(e.id); return it && it.estado === 'completo'; }).length;
+      return '<details class="ruta-sem' + (s.id === actual ? ' actual' : '') + '"' + (s.id === actual ? ' open' : '') + '><summary><span>' + (s.id === actual ? '👉 ' : '') + escapeHtml(s.titulo) + '</span><span class="pf-avance">' + hechos + '/' + (s.elementos || []).length + '</span></summary>' +
         '<div>' + escapeHtml(s.objetivo) + '</div>' +
         '<div class="chips">' + (s.temas || []).map(t => '<span class="chip neutra">' + escapeHtml(t) + '</span>').join('') + '</div>' +
         '<div class="meta">📗 ' + escapeHtml(s.busuu) + '</div><div class="meta">✍️ ' + escapeHtml(s.extra) + '</div>' +
-        '<ul class="ruta-lista">' + elementos + '</ul></div>';
+        '<ul class="ruta-lista">' + elementos + '</ul></details>';
     }).join('');
     return '<details class="section" id="ruta-plan" open><summary><div class="section-head"><span><span class="chevron">▶</span>🗺️ ' + escapeHtml(plan.titulo) + '</span><span class="count">' + escapeHtml(plan.nivelActual + ' → ' + plan.meta) + '</span></div></summary><div class="ruta-body">' +
       '<div class="progress-text" style="margin:0 0 6px">' + escapeHtml(plan.subtitulo || '') + '</div>' +
       '<div class="progress-text">🎯 ' + escapeHtml(plan.horizonte || '') + '</div>' +
-      '<div class="progress-text" style="margin-top:8px"><b>⏱️ ' + escapeHtml(plan.horasSemana || '') + '</b></div><div class="ruta-reparto">' + (plan.reparto || []).map(x => '<span>' + escapeHtml(x.que) + '</span><span>' + escapeHtml(x.tiempo) + '</span>').join('') + '</div>' +
-      '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>☀️ Rutina diaria y reglas</span></div></summary><div class="scroll"><ul class="ruta-lista">' +
-        (plan.rutinaDiaria || []).map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul><ul class="ruta-lista" style="margin-top:8px">' + (plan.reglas || []).map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul></div></details>' +
       semanas + '</div></details>';
   }
 

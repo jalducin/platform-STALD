@@ -93,6 +93,25 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Publicada: tras el merge, abrir la URL de Pages (ver `openspec/project.md`) y repetir login admin y
   login de alumna. Pages tarda de 1 a 2 minutos en publicar.
 
+## Vista del profe en Inglés (cambio `profe-diseno`)
+
+- `ingles.html?modo=profe` agrega `body.profe`, que amplía la página a 1,080 px, y dibuja `renderProfe(act)`, no el
+  tablero de alumnos:
+  - encabezado `.pf-hero`: semana actual, siguiente entrega, barra de la ruta del mes y 4 contadores. Los contadores
+    salen de `buildGroups`;
+  - `#pf-urgente`: lo atrasado y lo de hoy, de la ruta (🎓) y del grupo (👥), con el `accionItem` de siempre;
+  - pestañas: Esta semana, Plan del mes, Mi grupo y Hechas.
+    - Son `role="tab"` y `role="tabpanel"` con `hidden`.
+    - Cambiar de pestaña no redibuja la página.
+    - La pestaña se guarda en `localStorage.profe_tab`.
+  - `#ruta-plan`: acordeón de `details.ruta-sem`. Solo la semana actual va abierta, y cada una muestra su avance en
+    `.pf-avance`.
+  - `.pf-side`: horas por semana, rutina y reglas, y las próximas 3 entregas. Es pegajosa en escritorio y va al final
+    en celular.
+- `.pf-grid` usa una columna. Desde 960 px pasa a `minmax(0,1fr) 300px`.
+- Los E2E deben abrir la pestaña antes de hacer clic en su contenido. Por ejemplo,
+  `click('[data-pf-tab="grupo"]')`.
+
 ## Juegos de cartas (cambio `poker`)
 
 - `juegos/cartas.js` es el motor sin DOM. Define `globalThis.Cartas` y lo usan `juegos.html` y
