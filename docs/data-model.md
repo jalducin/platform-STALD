@@ -26,6 +26,8 @@ backend: tratarlo como un cambio OpenSpec.
 - Consumida por: `/ingles/data` → `ingles.html` (`source: "clases_ingles"`). Cada fila trae `id` (id de la
   página), que usa `POST /ingles/data/<id>/completado` para escribir `Completado` desde la página.
 - Fuera de alcance: el hub "Ingles Aguilar" (excluido a pedido del usuario).
+- Las filas sin `Nombre` (alumno vacío) se ignoran con `sinHuerfanas`; no pertenecen a nadie (cambio
+  `ingles-sin-nombre`). Inglés ya no se gestiona en Notion: no se editan filas desde aquí.
 - **Modelo: una fila por (clase, alumno).** El mismo catálogo de clases se repite para cada alumno.
   Alumnos actuales: Fernando, Marisol, Angel, Laura y Jesus (51 clases cada uno). Una clase nueva se
   agrega una vez por alumno.

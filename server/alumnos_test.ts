@@ -1,7 +1,7 @@
 // Alta de alumnos y alumnas de Inglés desde la página (openspec: alta-alumnos), sin red.
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { aplicarAlumnos, clearCacheAlumnos, handleAlumnos, leerRegistro } from "./alumnos.ts";
+import { aplicarAlumnos, clearCacheAlumnos, handleAlumnos, leerRegistro, sinHuerfanas } from "./alumnos.ts";
 import type { InglesRow } from "./rows.ts";
 import { MemoryStore } from "./store.ts";
 
@@ -71,4 +71,10 @@ Deno.test("alumnos: solo el admin; quitar solo los registrados", async () => {
   const q = await call("POST", "/quitar", ADMIN, { email: "LUZ@example.com" });
   assertEquals([q.status, q.body.ok], [200, true]);
   assert(!(await call("GET", "", ADMIN)).body.alumnos.some((a: any) => a.nombre === "Luz"));
+});
+
+Deno.test("alumnos: sinHuerfanas descarta filas de Notion sin alumno (openspec: ingles-sin-nombre)", () => {
+  const vacia = { ...fila("", []), alumno: null, name: "(sin título)", id: "p-vacia", completado: true } as InglesRow;
+  const filas = sinHuerfanas([fila("Marisol", ["marisol@example.com"]), vacia, fila("Pedro", [], "p-pedro")]);
+  assertEquals(filas.map((r) => r.id), ["p-Marisol", "p-pedro"]);
 });

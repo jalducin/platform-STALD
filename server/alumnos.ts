@@ -46,6 +46,9 @@ export async function leerRegistro(store: Store): Promise<RegistroAlumnos> {
   return v;
 }
 
+// Filas de Notion sin alumno (campo "Nombre" vacío) no pertenecen a nadie: se ignoran (openspec: ingles-sin-nombre).
+export const sinHuerfanas = (filas: InglesRow[]): InglesRow[] => filas.filter((r) => !!r.alumno);
+
 // Liga cada correo registrado a las filas con su "Nombre"; si no tiene filas, agrega una fila de identidad
 // (source "registro", sin tarea) para que el portal, Inglés, actividades y Juegos lo reconozcan.
 export function aplicarAlumnos(filas: InglesRow[], registro: RegistroAlumnos): InglesRow[] {
