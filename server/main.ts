@@ -6,7 +6,7 @@ import { handleActividades, handleProfe } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados } from "./juegos.ts";
-import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro } from "./alumnos.ts";
+import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro, sinHuerfanas } from "./alumnos.ts";
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 
@@ -84,7 +84,7 @@ async function filasNotion(): Promise<InglesRow[]> {
       if (m) { r.completado = m.completado; r.editadoEn = m.en; } // como Notion: marcar actualiza la última edición
     }
   }
-  return rows;
+  return sinHuerfanas(rows);
 }
 
 async function parcheCompletado(id: string, completado: boolean): Promise<{ ok: boolean; status: number }> {
