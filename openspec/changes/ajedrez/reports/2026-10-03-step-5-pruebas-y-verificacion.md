@@ -57,3 +57,24 @@
   - Individual: 1.d4 y el bot respondió. No se guardaron puntos porque la partida no se terminó.
   - Sala `WMCT` contra el bot: el servidor aceptó 1.e4 y el bot respondió.
 - Restauración: se borró la sala `WMCT` del repo de datos y del índice. No se guardó ninguna partida.
+
+## Ajuste post-apply del profe (2026-10-03): sala sin bots en ajedrez y Brisca completa a 4
+- Primero se actualizaron los artefactos: proposal, spec, design y tasks (sección 8).
+- La prueba de servidor `cupos: ajedrez 2 personas sin bots y Brisca hasta 4 con bots` se escribió primero y falló
+  (rojo). Después, la suite completa pasó: 164 pasaron, 0 fallaron.
+  - La prueba anterior del ajedrez se ajustó: ahora Angel se une antes de empezar.
+- E2E `e2e-ajustes-salas`: 8/8.
+  - Niveles Básico, Intermedio y Avanzado.
+  - La casilla de bots se oculta y aparecen las notas.
+  - La sala de ajedrez no muestra bots. Sin rival aparece el aviso y la partida no empieza. Un tercer jugador recibe
+    «La partida está llena». La partida queda entre Marisol y Angel.
+  - En Brisca, 2 personas más 2 bots juegan en parejas.
+- Regresiones:
+
+  | E2E | Resultado |
+  |---|---|
+  | `e2e-ajedrez` | 12/12 |
+  | `e2e-cartas-espanolas` | 12/12 |
+  | `e2e-partidas` | 15/15 |
+  | `e2e-una-sala` | 12/12 |
+  | `e2e-poker` | 10/10 |

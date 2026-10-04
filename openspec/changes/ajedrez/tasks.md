@@ -42,3 +42,16 @@
 ## 7. Documentación (OBLIGATORIO)
 
 - [x] 7.1 Actualizar `docs/frontend-standards.md`, `docs/backend-standards.md` y `docs/data-model.md`
+
+## 8. Ajuste post-apply del profe: sala sin bots y niveles renombrados
+
+- [x] 8.1 Servidor:
+  - pruebas en rojo de cupo 2, `bots: false` y `faltan_jugadores`;
+  - implementar `CUPO`.
+- [x] 8.2 Página:
+  - `participantes()` devuelve solo humanos en ajedrez;
+  - la casilla de bots se oculta en ajedrez;
+  - los niveles se llaman Básico, Intermedio y Avanzado;
+  - aviso cuando falta el rival.
+- [x] 8.3 E2E: sala con dos personas, el tercero queda fuera y no se puede empezar sin rival; regresiones
+- [ ] 8.4 Verificar en producción; actualizar la documentación y el reporte

@@ -20,9 +20,15 @@ El sistema SHALL ofrecer ajedrez con reglas completas en dos modos:
 - **THEN** la partida termina con su resultado: gana quien dio mate o hay tablas
 
 #### Scenario: Contra el bot
-- **WHEN** un jugador elige el nivel 🦊 Medio y juega con blancas
+- **WHEN** un jugador elige el nivel 🦊 Intermedio y juega con blancas
 - **THEN** el bot responde con jugadas legales
 - **AND** si el jugador gana, suma 700 puntos
+
+#### Scenario: Partida solo entre dos personas
+- **WHEN** alguien crea una sala de ajedrez
+- **THEN** no entran bots
+- **AND** la sala admite 2 personas: el tercero recibe "sala llena"
+- **AND** el anfitrión no puede empezar hasta que se une su rival
 
 #### Scenario: Partida 1 vs 1 con reloj
 - **WHEN** dos personas juegan en una sala con reloj de 10 min

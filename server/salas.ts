@@ -51,6 +51,9 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
 }
 const LETRAS_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const MAX_JUGADORES = 30;
+// Cupo de personas por juego (ajuste del profe): ajedrez 1 vs 1 sin bots; Brisca hasta 4 (se completa con bots).
+const CUPO: Record<string, number> = { ajedrez: 2, brisca: 4 };
+const BOTS_FIJOS: Record<string, boolean> = { ajedrez: false, brisca: true };
 const VIGENCIA_MS = 3 * 3600 * 1000;
 const CUENTA_REGRESIVA_MS = 5000;
 const PREGUNTAS = 10;
@@ -187,7 +190,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (!(await store.get(ruta(cand)))) codigo = cand;
     }
     if (!codigo) return json({ error: "sin_codigo" }, 503);
-    const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: body.bots !== false, canal: canalNuevo() };
+    const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: BOTS_FIJOS[juego] ?? body.bots !== false, canal: canalNuevo() };
     await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`);
     await guardarJugador(store, codigo, jugador, (e) => e, ahora);
     await indexar(store, lunes, { codigo, juego, host: jugador.nombre, creada: ahora });
@@ -213,7 +216,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (accion === "unirse" && req.method === "POST") {
     if (dentro) return json({ ok: true, codigo });
     if (sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
-    if (jugadores.length >= MAX_JUGADORES) return json({ error: "sala_llena" }, 409);
+    if (jugadores.length >= (CUPO[sala.juego] ?? MAX_JUGADORES)) return json({ error: "sala_llena" }, 409);
     await guardarJugador(store, codigo, jugador, (e) => e, ahora);
     await publicar();
     return json({ ok: true, codigo });
@@ -221,6 +224,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
 
   if (accion === "empezar" && req.method === "POST") {
     if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
+    if (sala.inicio === null && sala.juego === "ajedrez" && jugadores.length < 2) return json({ error: "faltan_jugadores" }, 409);
     if (sala.inicio === null) {
       const doc = await store.get<Sala>(ruta(codigo));
       const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS };

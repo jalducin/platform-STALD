@@ -14,6 +14,11 @@ El sistema SHALL ofrecer Brisca:
 - **THEN** gana el 7 de espadas: es la carta más alta del palo que salió. El rey de bastos no sigue el palo, así que
   no gana
 
+#### Scenario: Brisca en partida siempre con 4
+- **WHEN** en la sala de Brisca hay 2 personas
+- **THEN** se completa con 2 bots y se juega en parejas
+- **AND** si hay 4 personas, no entran bots y una quinta recibe "sala llena"
+
 #### Scenario: Fin de la partida
 - **WHEN** ya se jugaron todas las cartas
 - **THEN** se suman los puntos de cada quien o de cada pareja (120 en total) y gana quien junta más de 60

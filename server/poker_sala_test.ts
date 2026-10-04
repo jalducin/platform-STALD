@@ -93,6 +93,7 @@ Deno.test("ajedrez en sala: reloj y jugadas válidas e inválidas", async () => 
   const d = await c.call("POST", "/sala", "marisol@example.com", { juego: "ajedrez", opciones: { reloj: "99" }, bots: true });
   assertEquals(d.body.sala.opciones, { reloj: "10" }, "reloj por omisión");
   const codigo = r.body.codigo;
+  await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com"); // 1 vs 1: sin rival no empieza
   await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
   c.avanzar(6000);
   const jug = (jugada: unknown) => c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { jugada });
@@ -104,4 +105,23 @@ Deno.test("ajedrez en sala: reloj y jugadas válidas e inválidas", async () => 
     assertEquals((await jug(mala)).body.error, "jugada_invalida", JSON.stringify(mala));
   }
   assertEquals((await c.call("POST", "/partida", "marisol@example.com", { juego: "ajedrez", puntos: 700, aciertos: 1, total: 1, segundos: 600 })).status, 200);
+});
+
+// Ajuste post-apply (openspec: ajedrez, cartas-espanolas): ajedrez solo 2 personas sin bots; Brisca cupo 4 con bots.
+Deno.test("cupos: ajedrez 2 personas sin bots y Brisca hasta 4 con bots", async () => {
+  const c = ctx();
+  const extra = ["laura@example.com", "jesus@example.com", "sofy@example.com"];
+  for (const e of extra) ingles.push({ alumno: e.split("@")[0], userEmails: [e], userNames: [e.split("@")[0]] });
+  try {
+    const aj = await c.call("POST", "/sala", "marisol@example.com", { juego: "ajedrez", opciones: {}, bots: true });
+    assertEquals(aj.body.sala.bots, false, "el ajedrez nunca lleva bots");
+    assertEquals((await c.call("POST", `/sala/${aj.body.codigo}/empezar`, "marisol@example.com")).body.error, "faltan_jugadores");
+    assertEquals((await c.call("POST", `/sala/${aj.body.codigo}/unirse`, "angel@example.com")).status, 200);
+    assertEquals((await c.call("POST", `/sala/${aj.body.codigo}/unirse`, "laura@example.com")).body.error, "sala_llena");
+    assertEquals((await c.call("POST", `/sala/${aj.body.codigo}/empezar`, "marisol@example.com")).status, 200);
+    const br = await c.call("POST", "/sala", "marisol@example.com", { juego: "brisca", opciones: {}, bots: false });
+    assertEquals(br.body.sala.bots, true, "la Brisca siempre completa con bots");
+    for (const e of ["angel@example.com", "laura@example.com", "jesus@example.com"]) assertEquals((await c.call("POST", `/sala/${br.body.codigo}/unirse`, e)).status, 200, e);
+    assertEquals((await c.call("POST", `/sala/${br.body.codigo}/unirse`, "sofy@example.com")).body.error, "sala_llena");
+  } finally { ingles.splice(2); }
 });

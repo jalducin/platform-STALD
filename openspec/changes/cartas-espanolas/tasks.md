@@ -44,3 +44,12 @@
 ## 7. Documentación (OBLIGATORIO)
 
 - [x] 7.1 Actualizar `docs/frontend-standards.md`, `docs/backend-standards.md` y `docs/data-model.md`
+
+## 8. Ajuste post-apply del profe: Brisca en sala siempre con 4
+
+- [x] 8.1 Servidor: en rojo y luego en verde:
+  - cupo de 4;
+  - `bots: true` al crear la sala.
+- [x] 8.2 Página: `participantes()` completa con bots hasta 4 y la casilla de bots se oculta.
+- [x] 8.3 E2E: sala con 2 personas y 2 bots en parejas; regresiones.
+- [ ] 8.4 Verificar en producción; actualizar la documentación y el reporte.

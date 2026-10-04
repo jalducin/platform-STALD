@@ -34,7 +34,7 @@
 
 ## 5. Verificación en producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 En producción, revisar el menú con 21 juegos y las categorías nuevas, solo lectura y sin terminar
+- [x] 5.1 En producción, revisar el menú con 21 juegos y las categorías nuevas, solo lectura y sin terminar
   partidas
 
 ## 6. Documentación (OBLIGATORIO)

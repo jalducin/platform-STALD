@@ -40,7 +40,12 @@
   - cada jugada humana se aplica solo si es legal y llega antes de que se acabe el reloj de quien juega;
   - el tiempo usado es `mv.t - T0`;
   - si se acaba el reloj, pierde por tiempo;
-  - el bot de la sala juega a los 1.5 s, nivel 2, y su jugada se guarda en caché por `paso` y `FEN`.
+  - ajuste post-apply: la sala no usa bots:
+    - `participantes()` devuelve solo humanos;
+    - `bots: false` se fuerza al crear la sala;
+    - el cupo es de 2 personas;
+    - `empezar` responde 409 `faltan_jugadores` si hay menos de 2;
+    - el código del bot en sala queda solo como respaldo y no se ejecuta.
 
 ### 3. Servidor
 - `validarJugada("ajedrez")` acepta:
