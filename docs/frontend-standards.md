@@ -92,3 +92,12 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Local: servir la raíz (`npx serve .`) y recorrer los estados del §3.
 - Publicada: tras el merge, abrir la URL de Pages (ver `openspec/project.md`) y repetir login admin y
   login de alumna. Pages tarda de 1 a 2 minutos en publicar.
+
+## Peticiones al servidor (cambio `ahorro-peticiones`)
+
+- Los POST van con `{ 'content-type': 'text/plain;charset=UTF-8' }` y el body en JSON: así el navegador no hace la
+  verificación previa de CORS y cada envío cuesta 1 petición en lugar de 2. No agregues encabezados personalizados.
+- Sondeo de salas:
+  - 2.5 s en la sala de espera y en ¡Una!, Basta y Lotería (`TIEMPO_REAL`);
+  - 5 s en los juegos de preguntas;
+  - se detiene al terminar, al vencer la sala, a 1 h o, en la sala de espera, a los 15 min sin empezar.

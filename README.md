@@ -26,7 +26,7 @@ Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:f
 
 ## Vigilancia del servidor
 
-Cada 15 minutos, GitHub Actions revisa `https://stald.jalducin.deno.net/salud`. Si el servidor se bloquea (límite de
+Cada 30 minutos, GitHub Actions revisa `https://stald.jalducin.deno.net/salud`. Si el servidor se bloquea (límite de
 la API de GitHub agotado) o no responde, abre un issue **"🔴 Servidor bloqueado"** que menciona a @jalducin, y GitHub
 manda el aviso por correo. Cuando se recupera, lo cierra con "✅ Recuperado". Detalle en
 [docs/backend-standards.md](docs/backend-standards.md).

@@ -1,12 +1,12 @@
 # Vigilante del servidor (openspec: vigilancia-servidor).
-# Cada 15 min revisa https://stald.jalducin.deno.net/salud. Si el servidor se bloquea (límite de GitHub agotado) o
+# Cada 30 min revisa https://stald.jalducin.deno.net/salud. Si el servidor se bloquea (límite de GitHub agotado) o
 # no responde, abre un issue "🔴 Servidor bloqueado" que menciona a @jalducin: GitHub le manda el correo.
 # Cuando se recupera, comenta y lo cierra. No repite comentarios mientras el estado no cambie.
 name: Vigilancia del servidor
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       forzar:
