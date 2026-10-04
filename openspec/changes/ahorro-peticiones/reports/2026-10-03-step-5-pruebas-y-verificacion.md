@@ -37,3 +37,9 @@
 ## Resultado
 - Estado Step 5: PASS
 - Bloqueos: ninguno
+
+## Step 6 — Verificación manual en producción (EL AGENTE EJECUTA)
+- `OPTIONS /juegos/sala/ABCD/respuesta` → 200 con `access-control-max-age: 86400`.
+- `POST /juegos/avatar` con `text/plain` y un body inválido → 400 `json_invalido`: el servidor lee el body sin
+  importar el `content-type` y no se escribió nada.
+- GitHub Pages sirve `juegos.html` con `TIEMPO_REAL` (sondeo por tipo de juego).
