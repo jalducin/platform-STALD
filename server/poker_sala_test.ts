@@ -84,3 +84,24 @@ Deno.test("cartas españolas en sala: brisca y conquián con sus jugadas", async
     assertEquals(p.status, 200, juego);
   }
 });
+
+// Ajedrez 1 vs 1 (openspec: ajedrez): reloj y validación de la jugada.
+Deno.test("ajedrez en sala: reloj y jugadas válidas e inválidas", async () => {
+  const c = ctx();
+  const r = await c.call("POST", "/sala", "marisol@example.com", { juego: "ajedrez", opciones: { reloj: "5" }, bots: true });
+  assertEquals([r.status, r.body.sala.opciones], [200, { reloj: "5" }]);
+  const d = await c.call("POST", "/sala", "marisol@example.com", { juego: "ajedrez", opciones: { reloj: "99" }, bots: true });
+  assertEquals(d.body.sala.opciones, { reloj: "10" }, "reloj por omisión");
+  const codigo = r.body.codigo;
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(6000);
+  const jug = (jugada: unknown) => c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { jugada });
+  const ok = await jug({ n: 0, accion: "mover", de: "e2", a: "e4" });
+  assertEquals([ok.status, ok.body.jugadas[0].de, ok.body.jugadas[0].a], [200, "e2", "e4"]);
+  assertEquals((await jug({ n: 2, accion: "mover", de: "e7", a: "e8", promo: "q" })).status, 200);
+  assertEquals((await jug({ n: 4, accion: "rendirse" })).status, 200);
+  for (const mala of [{ n: 6, accion: "mover", de: "e9", a: "e4" }, { n: 6, accion: "mover", de: "e2" }, { n: 6, accion: "mover", de: "e7", a: "e8", promo: "k" }, { n: 6, accion: "jugar", carta: 1 }]) {
+    assertEquals((await jug(mala)).body.error, "jugada_invalida", JSON.stringify(mala));
+  }
+  assertEquals((await c.call("POST", "/partida", "marisol@example.com", { juego: "ajedrez", puntos: 700, aciertos: 1, total: 1, segundos: 600 })).status, 200);
+});
