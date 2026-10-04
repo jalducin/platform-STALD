@@ -9,7 +9,7 @@ type Json = (body: unknown, status?: number) => Response;
 
 // Juegos que se pueden jugar en partida (los de preguntas y Basta).
 export const JUEGOS_PARTIDA = new Set([
-  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian",
+  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
 ]);
 const ACCIONES_POKER = ["retirarse", "pasar", "igualar", "subir", "todo"]; // openspec: poker
 const ACCIONES_CONQUIAN = ["tomar", "bajar", "descartar", "pasar"]; // openspec: cartas-espanolas
@@ -26,6 +26,12 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
   if (juego === "poker") {
     if (!ACCIONES_POKER.includes(accion) || j.carta !== undefined || (j.monto !== undefined && !entero(j.monto, 0, 1_000_000))) return null;
     return { ...base, ...(j.monto !== undefined ? { monto: j.monto as number } : {}) };
+  }
+  if (juego === "ajedrez") { // openspec: ajedrez
+    if (accion === "rendirse") return base;
+    const casilla = (x: unknown) => typeof x === "string" && /^[a-h][1-8]$/.test(x);
+    if (accion !== "mover" || !casilla(j.de) || !casilla(j.a) || (j.promo !== undefined && !["q", "r", "b", "n"].includes(String(j.promo)))) return null;
+    return { ...base, de: j.de as string, a: j.a as string, ...(j.promo !== undefined ? { promo: String(j.promo) } : {}) };
   }
   if (juego === "brisca") return accion === "jugar" && entero(j.carta, 0, 39) ? { ...base, carta: j.carta as number } : null;
   if (juego === "conquian") {
@@ -72,7 +78,7 @@ interface EnSala {
   rondasBasta?: Record<string, { palabras: Record<string, string>; basta?: number }>; // Basta por rondas
   loteria?: number; // hora del servidor del primer "¡Lotería!"
   unas?: { paso: number; t: number }[]; // ¡Una!: botón UNA por paso
-  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number; t: number }[]; // juegos por turnos
+  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number | string; de?: string; promo?: string; t: number }[]; // juegos por turnos
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
   v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
@@ -164,6 +170,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     const op = (body.opciones && typeof body.opciones === "object") ? body.opciones as Record<string, unknown> : {};
     if (typeof op.cat === "string" && op.cat.length <= 30) opciones.cat = op.cat;
     if (juego === "poker" && op.equipos === "1") opciones.equipos = "1"; // póker por equipos A/B
+    if (juego === "ajedrez") opciones.reloj = ["5", "10", "15"].includes(String(op.reloj)) ? String(op.reloj) : "10"; // minutos por jugador
     if (juego === "loteria") {
       if (op.modo !== undefined && op.modo !== "linea" && op.modo !== "llena") return json({ error: "modo_invalido" }, 400);
       opciones.modo = (op.modo as string) || "linea";

@@ -93,6 +93,25 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Publicada: tras el merge, abrir la URL de Pages (ver `openspec/project.md`) y repetir login admin y
   login de alumna. Pages tarda de 1 a 2 minutos en publicar.
 
+## Ajedrez (cambio `ajedrez`)
+
+- `juegos/ajedrez.js` es el motor sin DOM y expone `globalThis.Ajedrez`.
+  - Tablero 0x88; cada jugada devuelve un estado nuevo: `aplicar(st, m, sinClave)`.
+  - Funciones: `legales`, `resultado` (mate, ahogado, 50 jugadas, repetición, material), `san` (notación en español
+    R/D/T/A/C), `buscarJugada` y `bot(st, nivel)`.
+  - El bot es negamax con poda alfa-beta: el nivel 1 incluye azar y el nivel 3 busca a profundidad 3 más capturas
+    en quietud.
+  - Lo prueba `server/ajedrez_test.ts` con perft de 5 posiciones conocidas.
+- `ajTableroHtml(st, { abajo, sel, destinos, ultima })` dibuja el tablero y lo comparten el modo individual y la
+  sala.
+  - Las piezas son glifos sólidos con `U+FE0E`, para que no se vean como emoji.
+  - `ajClic` resuelve la selección: destino, coronación o cambio de pieza.
+- `estadoAjedrez()` reproduce la sala:
+  - el participante 0 juega con blancas;
+  - el reloj de cada jugador es `opciones.reloj` minutos;
+  - una jugada ilegal se ignora y el turno sigue;
+  - el bot de respaldo es de nivel 2, con su jugada en caché por FEN.
+
 ## Vista del profe en Inglés (cambio `profe-diseno`)
 
 - `ingles.html?modo=profe` agrega `body.profe`, que amplía la página a 1,080 px, y dibuja `renderProfe(act)`, no el

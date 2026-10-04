@@ -68,6 +68,11 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
     reproducir: ≤ 2 s 0, ≤ 3 s 1, ≤ 4 s 2, ≤ 5 s 3 y sin UNA 4.
   - `validarJugada(juego, jugada)` valida cada juego por turnos y guarda solo los campos permitidos (cambio
     `cartas-espanolas`):
+    - Ajedrez (`ajedrez`, cambio `ajedrez`): acepta dos formas de jugada.
+      - `{ n, accion: "mover", de, a, promo? }`, donde `de` y `a` son casillas `a1`–`h8` y `promo` es `q`, `r`, `b`
+        o `n`.
+      - `{ n, accion: "rendirse" }`.
+      - `opciones.reloj` puede ser `5`, `10` o `15`; si no se indica, vale `10`.
     - Brisca (`brisca`): `{ n, accion: "jugar", carta: 0..39 }`.
     - Conquián (`conquian`):
       - `pasar`;

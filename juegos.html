@@ -271,6 +271,29 @@
   .es-juego { display: flex; gap: 2px; padding: 4px; border-radius: 10px; border: 1.5px dashed var(--border); background: var(--card); font: inherit; cursor: pointer; }
   .es-juego.destino { border: 2px solid var(--accent-2); background: var(--mente-soft); }
   .es-seccion { font-size: .75rem; font-weight: 800; color: var(--muted); margin-top: 8px; }
+  /* Ajedrez (openspec: ajedrez) */
+  .aj-wrap { max-width: 480px; margin: 0 auto; }
+  .aj-tablero { display: grid; grid-template-columns: repeat(8, 1fr); border-radius: 8px; overflow: hidden; border: 5px solid #5b3a1e; box-shadow: var(--shadow); user-select: none; touch-action: manipulation; }
+  .aj-c { position: relative; display: grid; place-items: center; border: none; padding: 0; margin: 0; font: inherit; cursor: pointer; aspect-ratio: 1; }
+  .aj-c.cl { background: #f0d9b5; } .aj-c.os { background: #b58863; }
+  .aj-c.ult::before, .aj-c.sel::before { content: ""; position: absolute; inset: 0; }
+  .aj-c.ult::before { background: rgba(250, 204, 21, .42); } .aj-c.sel::before { background: rgba(124, 58, 237, .38); }
+  .aj-c.jaque::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle, rgba(239,68,68,.95) 0%, rgba(239,68,68,.45) 45%, transparent 72%); }
+  .aj-c .dest { position: absolute; width: 30%; height: 30%; border-radius: 50%; background: rgba(20, 20, 20, .28); }
+  .aj-c .dest.come { width: 86%; height: 86%; background: transparent; border: 4px solid rgba(20, 20, 20, .3); }
+  .aj-p { position: relative; font-size: clamp(1.45rem, 8.6vw, 2.55rem); line-height: 1; font-family: "Segoe UI Symbol", "Noto Sans Symbols2", "DejaVu Sans", "Arial Unicode MS", serif; }
+  .aj-p.w { color: #fffdf7; -webkit-text-stroke: 1.3px #1f1f1f; text-shadow: 0 2px 2px rgba(0,0,0,.35); }
+  .aj-p.b { color: #161616; text-shadow: 0 1px 0 rgba(255,255,255,.3); }
+  .aj-coord { position: absolute; font-size: .55rem; font-weight: 800; opacity: .75; color: #3b2a1a; }
+  .aj-coord.f { left: 3px; top: 2px; } .aj-coord.c { right: 3px; bottom: 1px; }
+  .aj-info { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 6px 0; font-size: .85rem; font-weight: 700; }
+  .aj-reloj { font-variant-numeric: tabular-nums; font-weight: 900; padding: 3px 9px; border-radius: 8px; background: var(--card); border: 2px solid var(--border); }
+  .aj-reloj.activo { border-color: var(--accent-2); } .aj-reloj.poco { color: var(--bad); }
+  .aj-capt { font-size: 1rem; min-height: 1.3em; letter-spacing: -.05em; }
+  .aj-jugadas { font-size: .8rem; max-height: 110px; overflow: auto; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; margin-top: 8px; }
+  .aj-jugadas b { color: var(--muted); font-weight: 700; }
+  .aj-promo { display: flex; gap: 8px; justify-content: center; margin: 8px 0; }
+  .aj-promo button { font-size: 2rem; padding: 4px 10px; border-radius: 10px; border: 2px solid var(--accent-2); background: #f0d9b5; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -283,6 +306,7 @@
 </div>
 
 <script src="juegos/cartas.js?v=2"></script>
+<script src="juegos/ajedrez.js?v=1"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -374,6 +398,7 @@
     { id: 'mente-sopa', cat: 'mente', emoji: '🔎', t: 'Sopa de letras', d: 'Encuentra las palabras en inglés.', jugar: () => jugarSopa() },
     { id: 'mente-sudoku', cat: 'mente', emoji: '🔢', t: 'Sudoku', d: 'Por niveles: fácil, medio, difícil y experto.', jugar: () => elegirSudoku() },
     { id: 'dragon-run', cat: 'mente', emoji: '🐉', t: 'Dragon Run', d: 'Corre, salta (¡doble salto!) y llega al castillo.', jugar: () => jugarDragonRun() },
+    { id: 'ajedrez', cat: 'mente', emoji: '♟️', t: 'Ajedrez', d: 'Contra el bot (3 niveles) o 1 vs 1 en partida.', jugar: () => elegirAjedrez() },
     { id: 'basta-es', cat: 'clasicos', emoji: '✋', t: 'Basta', d: 'Nombre, animal, fruta, país… ¡con la letra que salga!', jugar: () => jugarBasta('es') },
     { id: 'basta-en', cat: 'clasicos', emoji: '🗽', t: 'Basta en inglés', d: 'Name, animal, food… in English!', jugar: () => jugarBasta('en') },
     { id: 'una', cat: 'clasicos', emoji: '🃏', t: '¡Una!', d: 'Cartas de colores. Con una carta, ¡presiona el botón UNA!', jugar: () => elegirUna() },
@@ -1753,6 +1778,107 @@
     programar();
   }
 
+  // ---------- Mente ágil: Ajedrez (openspec: ajedrez). Motor en juegos/ajedrez.js ----------
+  const AJ_GLIFO = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+  const AJ_NIVEL = { 1: { t: '🐣 Fácil', pts: 400 }, 2: { t: '🦊 Medio', pts: 700 }, 3: { t: '🦉 Difícil', pts: 1000 } };
+  const ajPieza = p => p ? '<span class="aj-p ' + Ajedrez.colorDe(p) + '">' + AJ_GLIFO[p.toLowerCase()] + '\uFE0E</span>' : '';
+  // Tablero: abajo = color que juega abajo; sel = casilla elegida; destinos = jugadas legales de esa pieza.
+  function ajTableroHtml(st, o) {
+    const dest = new Map((o.destinos || []).map(m => [m.a, m]));
+    const rey = Ajedrez.enJaque(st) ? st.t.findIndex(p => p === (st.turno === 'w' ? 'K' : 'k')) : -1;
+    let h = '<div class="aj-tablero" role="grid" aria-label="Tablero de ajedrez">';
+    for (let i = 0; i < 8; i++) for (let k = 0; k < 8; k++) {
+      const f = o.abajo === 'w' ? i : 7 - i, c = o.abajo === 'w' ? k : 7 - k, sq = f * 16 + c;
+      const cls = ((f + c) % 2 ? 'os' : 'cl') + (o.ultima && (o.ultima.de === sq || o.ultima.a === sq) ? ' ult' : '') + (o.sel === sq ? ' sel' : '') + (sq === rey ? ' jaque' : '');
+      const m = dest.get(sq);
+      h += '<button class="aj-c ' + cls + '" data-aj="' + sq + '" aria-label="' + Ajedrez.casilla(sq) + (st.t[sq] ? ' ' + st.t[sq] : '') + '">' +
+        (k === 0 ? '<span class="aj-coord f">' + (8 - f) + '</span>' : '') + (i === 7 ? '<span class="aj-coord c">' + 'abcdefgh'[c] + '</span>' : '') +
+        ajPieza(st.t[sq]) + (m ? '<span class="dest' + (m.captura ? ' come' : '') + '"></span>' : '') + '</button>';
+    }
+    return h + '</div>';
+  }
+  const ajCapturasHtml = (lista) => lista.map(p => '<span class="aj-p ' + Ajedrez.colorDe(p) + '" style="font-size:1rem">' + AJ_GLIFO[p.toLowerCase()] + '\uFE0E</span>').join('');
+  const ajJugadasHtml = sanes => sanes.length ? '<div class="aj-jugadas">' + sanes.reduce((a, x, i) => a + (i % 2 ? ' ' + escapeHtml(x) + ' &nbsp;' : '<b>' + (i / 2 + 1) + '.</b> ' + escapeHtml(x)), '') + '</div>' : '';
+  const ajPromoHtml = color => '<div class="aj-promo" role="group" aria-label="Elige la pieza para coronar">' + ['q', 'r', 'b', 'n'].map(x => '<button data-aj-promo="' + x + '" aria-label="' + Ajedrez.LETRA[x] + '">' + ajPieza(color === 'w' ? x.toUpperCase() : x) + '</button>').join('') + '</div>';
+  const AJ_FIN = { mate: 'jaque mate', ahogado: 'rey ahogado (tablas)', '50': '50 jugadas sin captura (tablas)', repeticion: 'triple repetición (tablas)', material: 'material insuficiente (tablas)', tiempo: 'se acabó el tiempo', rendicion: 'rendición' };
+  // Selección de casilla común al individual y a la sala; devuelve { sel, promo, jugada }.
+  function ajClic(st, color, sel, sq) {
+    const mias = sq2 => st.t[sq2] && Ajedrez.colorDe(st.t[sq2]) === color;
+    if (sel !== null) {
+      const ms = Ajedrez.legales(st).filter(m => m.de === sel && m.a === sq);
+      if (ms.length > 1) return { sel, promo: { de: sel, a: sq } };
+      if (ms.length === 1) return { sel: null, jugada: ms[0] };
+    }
+    return { sel: mias(sq) && sel !== sq ? sq : null };
+  }
+
+  function elegirAjedrez() {
+    const m = marco('ajedrez');
+    m.body.innerHTML = '<div class="q-card"><div class="big">♚♛♞</div><div class="q">Ajedrez</div><div class="sub">Juega contra Gambito 🤖. Gana dando jaque mate.</div></div>' +
+      '<label>Nivel</label><div class="opts" style="grid-template-columns:repeat(3,1fr)">' + [1, 2, 3].map(n => '<button class="opt" data-aj-nivel="' + n + '"' + (n === 2 ? ' aria-pressed="true"' : '') + '>' + AJ_NIVEL[n].t + '</button>').join('') + '</div>' +
+      '<label>Juegas con</label><div class="opts" style="grid-template-columns:repeat(3,1fr)"><button class="opt" data-aj-color="w" aria-pressed="true">♔ Blancas</button><button class="opt" data-aj-color="b">♚ Negras</button><button class="opt" data-aj-color="azar">🎲 Al azar</button></div>' +
+      '<div class="row-btns"><button class="btn ghost" data-ayuda="ajedrez">📖 Cómo se juega</button><button class="btn" data-aj-go>♟️ Jugar</button></div>';
+    let nivel = 2, color = 'w';
+    m.body.addEventListener('click', e => {
+      const n = e.target.closest('[data-aj-nivel]'), c = e.target.closest('[data-aj-color]');
+      if (n) { nivel = Number(n.dataset.ajNivel); m.body.querySelectorAll('[data-aj-nivel]').forEach(x => x.setAttribute('aria-pressed', String(x === n))); }
+      if (c) { color = c.dataset.ajColor; m.body.querySelectorAll('[data-aj-color]').forEach(x => x.setAttribute('aria-pressed', String(x === c))); }
+      if (e.target.closest('[data-aj-go]')) jugarAjedrez(nivel, color === 'azar' ? (Math.random() < .5 ? 'w' : 'b') : color);
+    });
+  }
+
+  function jugarAjedrez(nivel, yo) {
+    const m = marco('ajedrez');
+    let st = Ajedrez.desdeFEN(Ajedrez.INICIAL), sel = null, promo = null, ultima = null, pensando = false, terminado = false;
+    const sanes = [], t0 = Date.now();
+    const pintar = msg => {
+      const cap = Ajedrez.capturas(st), bot = yo === 'w' ? 'b' : 'w';
+      const turnoYo = st.turno === yo && !pensando;
+      m.body.innerHTML = '<div class="aj-wrap"><div class="aj-info"><span>🤖 Gambito · ' + AJ_NIVEL[nivel].t + '</span><span class="aj-capt">' + ajCapturasHtml(cap[bot]) + '</span></div>' +
+        ajTableroHtml(st, { abajo: yo, sel, destinos: sel !== null && turnoYo ? Ajedrez.legales(st).filter(x => x.de === sel) : [], ultima }) +
+        '<div class="aj-info"><span>🙂 Tú (' + (yo === 'w' ? 'blancas' : 'negras') + ')</span><span class="aj-capt">' + ajCapturasHtml(cap[yo]) + '</span></div>' +
+        (promo ? ajPromoHtml(yo) : '') +
+        '<div class="feedback' + (Ajedrez.enJaque(st) ? ' bad' : '') + '" id="aj-msg">' + (msg || (pensando ? '🤔 Gambito está pensando…' : turnoYo ? (Ajedrez.enJaque(st) ? '⚠️ ¡Jaque! Protege a tu rey' : '👉 Tu turno: toca una pieza y luego su destino') : '')) + '</div>' +
+        ajJugadasHtml(sanes) + '<div class="row-btns"><button class="btn ghost sm" data-ayuda="ajedrez">📖 Cómo se juega</button><button class="btn ghost sm" data-aj-rendir>🏳️ Rendirme</button></div></div>';
+      m.puntos(Ajedrez.capturas(st)['puntos' + yo.toUpperCase()]);
+    };
+    const fin = res => {
+      terminado = true;
+      const cap = Ajedrez.capturas(st)['puntos' + yo.toUpperCase()];
+      const gane = res.gana === yo, tablas = !res.gana;
+      const puntos = gane ? AJ_NIVEL[nivel].pts : tablas ? Math.round(AJ_NIVEL[nivel].pts / 2) : Math.min(200, cap * 10);
+      setTimeout(() => terminar('ajedrez', { puntos, aciertos: cap, total: 39, segundos: (Date.now() - t0) / 1000,
+        titulo: gane ? '🏆 ¡Ganaste por ' + AJ_FIN[res.fin] + '!' : tablas ? '🤝 Tablas: ' + AJ_FIN[res.fin] : '😅 Ganó Gambito por ' + AJ_FIN[res.fin],
+        detalle: sanes.length + ' jugadas · nivel ' + AJ_NIVEL[nivel].t + (sanes.length ? ' · última: ' + escapeHtml(sanes[sanes.length - 1]) : '') }), res.fin === 'rendicion' ? 0 : 1600 * TIEMPO);
+    };
+    const mover = mv => {
+      sanes.push(Ajedrez.san(st, mv)); st = Ajedrez.aplicar(st, mv); ultima = mv; sel = null; promo = null;
+      tono(mv.captura ? 330 : 520, 60);
+      const res = Ajedrez.resultado(st);
+      if (res) { pintar(res.fin === 'mate' ? '♚ ¡Jaque mate!' : '🤝 ' + AJ_FIN[res.fin]); return fin(res); }
+      turnoBot();
+    };
+    function turnoBot() {
+      if (terminado || st.turno === yo) return pintar();
+      pensando = true; pintar();
+      const t = setTimeout(() => { if (terminado) return; pensando = false; mover(Ajedrez.bot(st, nivel)); }, 450 * TIEMPO);
+      limpiezas.push(() => clearTimeout(t));
+    }
+    m.body.addEventListener('click', e => {
+      if (terminado) return;
+      if (e.target.closest('[data-aj-rendir]')) { if (confirm('¿Rendirte? Gambito gana la partida.')) { fin({ fin: 'rendicion', gana: yo === 'w' ? 'b' : 'w' }); } return; }
+      if (st.turno !== yo || pensando) return;
+      const pr = e.target.closest('[data-aj-promo]');
+      if (pr && promo) { const mv = Ajedrez.legales(st).find(x => x.de === promo.de && x.a === promo.a && x.promo === pr.dataset.ajPromo); if (mv) mover(mv); return; }
+      const c = e.target.closest('[data-aj]'); if (!c) return;
+      const r = ajClic(st, yo, sel, Number(c.dataset.aj));
+      if (r.jugada) return mover(r.jugada);
+      sel = r.sel; promo = r.promo || null; pintar();
+    });
+    limpiezas.push(() => { terminado = true; });
+    turnoBot();
+  }
+
   // ---------- Clásicos: Lotería ----------
   function elegirLoteria() {
     const m = marco('loteria');
@@ -1848,7 +1974,7 @@
   function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
-  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-preguntas', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian'];
+  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-preguntas', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez'];
   const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
   const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
   const P_BASTA = 60000, P_GRACIA = 3000, P_PAUSA = 10000; // Basta por rondas: escribir, gracia tras ¡Basta!, resultados
@@ -1928,7 +2054,7 @@
   const sala = { codigo: null, estado: null, offset: 0, poll: null, guardado: false };
   const ahoraServidor = () => Date.now() + sala.offset;
 
-  const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker', 'brisca', 'conquian']);
+  const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker', 'brisca', 'conquian', 'ajedrez']);
 
   // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
   // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -1988,6 +2114,7 @@
       '<div class="card" style="margin-bottom:12px"><h2 style="margin-top:0">➕ Crear partida</h2>' +
       '<form id="f-crear"><label for="p-juego">Juego</label><select id="p-juego" class="sel">' + opcionesJuego + '</select>' +
       '<div id="p-modo-wrap" hidden><label for="p-modo">Modo</label><select id="p-modo" class="sel"><option value="linea">➖ Línea (rápido)</option><option value="llena">🟩 Tabla llena</option></select></div>' +
+      '<div id="p-reloj-wrap" hidden><label for="p-reloj">Reloj por jugador</label><select id="p-reloj" class="sel"><option value="5">⚡ 5 min</option><option value="10" selected>⏱ 10 min</option><option value="15">🐢 15 min</option></select></div>' +
       '<div id="p-equipos-wrap" hidden><label class="check"><input id="p-equipos" type="checkbox"><span>👥 Por equipos (A y B, alternados por orden de entrada)</span></label></div>' +
       '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select></div>' +
       '<div id="p-cat-wrap" hidden><label for="p-cat">Maratón</label><select id="p-cat" class="sel"><option value="todas">🌈 Todas mezcladas</option></select></div>' +
@@ -2004,12 +2131,12 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0 });
+    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0 });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     const j = juegoPorId(sala.estado.sala.juego);
-    const preparar = ['una', 'poker', 'brisca', 'conquian'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+    const preparar = ['una', 'poker', 'brisca', 'conquian', 'ajedrez'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
     sala.contenido = await preparar;
     // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
     // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
@@ -2059,6 +2186,7 @@
     if (s.juego === 'una') return pintarUnaSala(body);
     if (s.juego === 'poker') return pintarPokerSala(body);
     if (s.juego === 'brisca' || s.juego === 'conquian') return pintarCartasSala(body, s.juego);
+    if (s.juego === 'ajedrez') return pintarAjedrezSala(body);
     return pintarPreguntaSala(body);
   }
 
@@ -2742,9 +2870,109 @@
     return true;
   }
 
+  // ---- Ajedrez 1 vs 1 en sala (openspec: ajedrez): reloj por jugador; todos reproducen las jugadas ----
+  const AJ_BOT_MS = 1500;
+  function estadoAjedrez() {
+    const e = sala.estado, s = e.sala;
+    const orden = participantes().slice(0, 2);
+    if (orden.length < 2) return { faltan: true, orden };
+    const R = dur(Number(s.opciones.reloj || 10) * 60000);
+    const jugs = new Map();
+    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+    const cache = sala.ajCache || (sala.ajCache = new Map());
+    let st = Ajedrez.desdeFEN(Ajedrez.INICIAL), paso = 0, T0 = s.inicio, fin = null, ultima = null;
+    const usado = [0, 0], sanes = [];
+    const ahora = ahoraServidor();
+    for (let guard = 0; guard < 1200 && !fin; guard++) {
+      const res = Ajedrez.resultado(st);
+      if (res) { fin = res; break; }
+      const j = st.turno === 'w' ? 0 : 1, p = orden[j], lim = T0 + (R - usado[j]);
+      const aplicar = (mv, t) => { const k = Ajedrez.aFEN(st) + mv.de + mv.a + (mv.promo || ''); if (!cache.has(k)) cache.set(k, Ajedrez.san(st, mv)); sanes.push(cache.get(k)); st = Ajedrez.aplicar(st, mv); ultima = mv; usado[j] += Math.max(0, t - T0); T0 = Math.max(T0, t); };
+      if (p.bot) {
+        const t = T0 + dur(AJ_BOT_MS); if (ahora < t) break;
+        const k = 'bot:' + Ajedrez.aFEN(st);
+        if (!cache.has(k)) cache.set(k, Ajedrez.bot(st, 2, rngDe(s.seed, 'aj' + paso)));
+        aplicar(cache.get(k), t); paso++;
+      } else {
+        const mv = jugs.get(paso);
+        if (mv && mv.jugador === p.id && mv.t <= lim) {
+          paso++;
+          if (mv.accion === 'rendirse') { fin = { fin: 'rendicion', gana: j ? 'w' : 'b' }; usado[j] += Math.max(0, mv.t - T0); break; }
+          const m = Ajedrez.buscarJugada(st, mv.de, mv.a, mv.promo);
+          if (m) aplicar(m, mv.t); // una jugada ilegal se ignora: sigue el mismo turno con el siguiente paso
+        } else if (ahora >= lim) { fin = { fin: 'tiempo', gana: j ? 'w' : 'b' }; usado[j] = R; break; }
+        else break;
+      }
+    }
+    const turnoIdx = st.turno === 'w' ? 0 : 1;
+    const quedan = [0, 1].map(k => Math.max(0, R - usado[k] - (!fin && k === turnoIdx ? Math.max(0, ahora - T0) : 0)));
+    return { st, orden, paso, T0, fin, ultima, sanes, quedan, turnoIdx, R };
+  }
+  const ajFmtReloj = ms => { const sg = Math.ceil(ms / 1000 / TIEMPO); return Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0'); };
+  function ajPuntosSala(a, j) {
+    const color = j ? 'b' : 'w', cap = Ajedrez.capturas(a.st)['puntos' + color.toUpperCase()];
+    if (a.fin.gana === color) return Math.min(1000, 800 + (a.fin.fin === 'mate' ? 200 : 0));
+    if (!a.fin.gana) return 400;
+    return Math.min(300, cap * 10);
+  }
+
+  function pintarAjedrezSala(body) {
+    const e = sala.estado, s = e.sala;
+    const bar = document.getElementById('m-bar'); bar.hidden = true;
+    const ahora = ahoraServidor();
+    if (ahora < s.inicio) { const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárense! Blancas: ' + escapeHtml((participantes()[0] || {}).nombre || '') + '</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
+    const a = estadoAjedrez();
+    if (a.faltan) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">Se necesitan 2 jugadores (activa los bots al crear la partida para jugar contra uno).</div>'; sala.vista = 'faltan'; } return; }
+    const yo = a.orden.findIndex(p => p.id === e.yo), color = yo === 1 ? 'b' : 'w';
+    if (a.fin) {
+      const filas = a.orden.map((p, j) => ({ id: p.id, nombre: p.nombre + (j ? ' ♚' : ' ♔'), tipo: p.tipo, avatar: p.avatar, total: ajPuntosSala(a, j), ultimo: 0 })).sort((x, y) => y.total - x.total);
+      sala.finAciertos = yo >= 0 ? Ajedrez.capturas(a.st)['puntos' + color.toUpperCase()] : 0; sala.finTotal = 39;
+      const quien = a.fin.gana ? a.orden[a.fin.gana === 'w' ? 0 : 1].nombre : null;
+      return pintarFinalSala(body, filas, null, quien ? '♟️ ¡Ganó ' + quien + ' por ' + AJ_FIN[a.fin.fin] + '!' : '🤝 Tablas: ' + AJ_FIN[a.fin.fin]);
+    }
+    const miTurno = yo === a.turnoIdx && !sala.ajEnviando;
+    const relojHtml = j => '<span class="aj-reloj' + (j === a.turnoIdx ? ' activo' : '') + (a.quedan[j] < dur(30000) ? ' poco' : '') + '" id="aj-reloj-' + j + '">⏱ ' + ajFmtReloj(a.quedan[j]) + '</span>';
+    const clave = 'aj:' + a.paso + ':' + sala.ajSel + ':' + (sala.ajPromo ? 1 : 0) + ':' + (sala.ajEnviando ? 1 : 0);
+    if (sala.vista === clave) { [0, 1].forEach(j => { const r = document.getElementById('aj-reloj-' + j); if (r) { r.textContent = '⏱ ' + ajFmtReloj(a.quedan[j]); r.classList.toggle('poco', a.quedan[j] < dur(30000)); } }); return; }
+    sala.vista = clave;
+    const arriba = yo === 1 ? 0 : 1, abajo = 1 - arriba;
+    const cap = Ajedrez.capturas(a.st);
+    const fila = j => '<div class="aj-info"><span>' + avatarHtml(a.orden[j].avatar, 18) + ' ' + escapeHtml(a.orden[j].nombre) + (j ? ' ♚' : ' ♔') + ' <span class="aj-capt">' + ajCapturasHtml(cap[j ? 'b' : 'w']) + '</span></span>' + relojHtml(j) + '</div>';
+    const sel = sala.ajSel ?? null;
+    body.innerHTML = '<div class="aj-wrap">' + fila(arriba) + ajTableroHtml(a.st, { abajo: yo === 1 ? 'b' : 'w', sel, destinos: sel !== null && miTurno ? Ajedrez.legales(a.st).filter(x => x.de === sel) : [], ultima: a.ultima }) + fila(abajo) +
+      (sala.ajPromo && miTurno ? ajPromoHtml(color) : '') +
+      '<div class="feedback' + (Ajedrez.enJaque(a.st) ? ' bad' : '') + '">' + (yo < 0 ? '👀 Estás viendo la partida' : miTurno ? (Ajedrez.enJaque(a.st) ? '⚠️ ¡Jaque! Protege a tu rey' : '👉 Tu turno') : '⏳ Turno de ' + escapeHtml(a.orden[a.turnoIdx].nombre)) + '</div>' +
+      ajJugadasHtml(a.sanes) + '<div class="row-btns"><button class="btn ghost sm" data-ayuda="ajedrez">📖 Cómo se juega</button>' + (miTurno ? '<button class="btn ghost sm" data-aj-rendir>🏳️ Rendirme</button>' : '') + '</div></div>';
+    sala.ajA = a;
+  }
+
+  async function enviarAjedrez(jugada) {
+    const a = sala.ajA;
+    sala.ajEnviando = true; sala.ajSel = null; sala.ajPromo = null; sala.vista = null; pintarSala();
+    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n: a.paso }, jugada) });
+    await traerSala();
+    sala.ajEnviando = false; sala.vista = null; pintarSala();
+    if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');
+  }
+  function clicAjedrezSala(e) {
+    const a = sala.ajA; if (!a || a.fin) return false;
+    const yo = a.orden.findIndex(p => p.id === sala.estado.yo);
+    const enTablero = e.target.closest('[data-aj], [data-aj-promo], [data-aj-rendir]');
+    if (!enTablero) return false;
+    if (yo !== a.turnoIdx || sala.ajEnviando) return true;
+    if (e.target.closest('[data-aj-rendir]')) { if (confirm('¿Rendirte? Tu rival gana la partida.')) enviarAjedrez({ accion: 'rendirse' }); return true; }
+    const pr = e.target.closest('[data-aj-promo]');
+    if (pr && sala.ajPromo) { enviarAjedrez({ accion: 'mover', de: Ajedrez.casilla(sala.ajPromo.de), a: Ajedrez.casilla(sala.ajPromo.a), promo: pr.dataset.ajPromo }); return true; }
+    const c = e.target.closest('[data-aj]');
+    const r = ajClic(a.st, yo === 1 ? 'b' : 'w', sala.ajSel ?? null, Number(c.dataset.aj));
+    if (r.jugada) { enviarAjedrez({ accion: 'mover', de: Ajedrez.casilla(r.jugada.de), a: Ajedrez.casilla(r.jugada.a) }); return true; }
+    sala.ajSel = r.sel; sala.ajPromo = r.promo || null; sala.vista = null; pintarSala();
+    return true;
+  }
+
   async function crearPartida() {
     const juego = document.getElementById('p-juego').value;
-    const opciones = juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : {};
+    const opciones = juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : {};
     const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
     if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     entrarSala(r.body.codigo);
@@ -2910,6 +3138,13 @@
       '<h3>Manos, de mayor a menor</h3><table>' + [['Escalera real', '10♠ J♠ Q♠ K♠ A♠'], ['Escalera de color', '5♥ 6♥ 7♥ 8♥ 9♥'], ['Póker', '4 cartas iguales: 9♠ 9♥ 9♦ 9♣'], ['Full', 'tercia + par: K K K 7 7'], ['Color', '5 del mismo palo'], ['Escalera', '5 seguidas: 4 5 6 7 8 (A-2-3-4-5 también)'], ['Tercia', '3 iguales: Q Q Q'], ['Doble par', 'J J 4 4'], ['Par', '2 iguales: 8 8'], ['Carta alta', 'si nadie tiene nada, gana la carta más alta']].map(x => '<tr><td><b>' + x[0] + '</b></td><td>' + x[1] + '</td></tr>').join('') + '</table>' +
       '<h3>En equipo</h3><p>En pareja o por equipos (A y B) se suman las fichas de cada equipo al final; el equipo con más fichas gana +150 puntos para cada integrante.</p>' +
       '<div class="aviso">🪙 Las fichas son solo de juego: no se compran, no se cambian y no tienen valor real. Aquí se juega por diversión y por puntos del ranking.</div>',
+    ajedrez: '<h2>♟️ Ajedrez</h2><p><b>Objetivo:</b> dar <b>jaque mate</b>: atacar al rey rival de forma que no pueda escapar. Juegan blancas y negras por turnos; empiezan las blancas.</p>' +
+      '<h3>Cómo mueve cada pieza</h3><table>' + [['♚', 'Rey', '1 casilla en cualquier dirección. Nunca puede quedar en jaque.'], ['♛', 'Dama', 'Las casillas que quiera en línea recta o diagonal.'], ['♜', 'Torre', 'En línea recta (horizontal o vertical).'], ['♝', 'Alfil', 'En diagonal; siempre se queda en su color.'], ['♞', 'Caballo', 'En «L» (2 + 1). Es la única que salta piezas.'], ['♟', 'Peón', 'Avanza 1 (2 en su primer movimiento) y captura en diagonal.']].map(x => '<tr><td style="font-size:1.4rem">' + x[0] + '\uFE0E</td><td><b>' + x[1] + '</b></td><td>' + x[2] + '</td></tr>').join('') + '</table>' +
+      '<h3>Jugadas especiales</h3><ul><li><b>Enroque (O-O / O-O-O):</b> el rey se mueve 2 casillas hacia una torre y la torre salta a su lado. Solo si ninguno se ha movido, no hay piezas en medio y el rey no está ni pasa por jaque. Toca al rey y luego su casilla destino.</li>' +
+      '<li><b>Captura al paso:</b> si un peón rival avanza 2 y queda junto al tuyo, puedes capturarlo como si hubiera avanzado 1 (solo en la jugada siguiente).</li><li><b>Coronación:</b> el peón que llega al final se convierte en dama, torre, alfil o caballo (tú eliges).</li></ul>' +
+      '<h3>Cómo termina</h3><ul><li><b>Jaque mate:</b> gana quien lo da.</li><li><b>Tablas (empate):</b> rey ahogado (no hay jugadas pero no está en jaque), triple repetición, 50 jugadas sin capturas ni peones, o material insuficiente (por ejemplo, rey contra rey).</li><li>En partida 1 vs 1 cada quien tiene <b>reloj</b>: si se te acaba el tiempo, pierdes. También puedes rendirte en tu turno.</li></ul>' +
+      '<h3>Notación</h3><p>R rey · D dama · T torre · A alfil · C caballo; los peones no llevan letra. «x» es captura, «+» jaque y «#» mate. Ejemplo: <b>Cf3</b>, <b>exd5</b>, <b>Dh4#</b>.</p>' +
+      '<h3>Niveles del bot</h3><p>🐣 Fácil se equivoca a propósito · 🦊 Medio piensa 2 jugadas · 🦉 Difícil piensa 3 jugadas y revisa capturas.</p>',
     brisca: '<h2>🏆 Brisca</h2><p><b>Baraja española</b> de 40 cartas: oros 🪙, copas 🏆, espadas ⚔️ y bastos 🪵, del 1 al 7 más sota (10), caballo (11) y rey (12).</p>' +
       '<h3>Cómo se juega</h3><ol><li>Cada quien recibe 3 cartas. Se voltea una carta: su palo es el <b>triunfo</b> y queda bajo el mazo (se roba al final).</li>' +
       '<li>En tu turno tiras una carta. <b>No es obligatorio seguir el palo.</b></li><li>Gana la baza el <b>triunfo más alto</b>; si nadie tiró triunfo, la carta más alta del <b>palo que salió primero</b>.</li>' +
@@ -2941,6 +3176,7 @@
     if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
     if (sala.estado && sala.estado.sala.juego === 'poker' && document.getElementById('p-body') && e.target.closest('[data-pk]')) { clicPokerSala(e); return; }
     if (sala.estado && ['brisca', 'conquian'].includes(sala.estado.sala.juego) && document.getElementById('p-body') && clicCartasSala(e)) return;
+    if (sala.estado && sala.estado.sala.juego === 'ajedrez' && document.getElementById('p-body') && clicAjedrezSala(e)) return;
     const lsc = e.target.closest('[data-lsc]'); if (lsc) return marcarLoteriaSala(Number(lsc.dataset.lsc), lsc);
     if (e.target.closest('[data-lsgrito]')) return gritarLoteriaSala();
     const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }
@@ -2957,7 +3193,7 @@
     if (a.dataset.a === 'csv') descargarCsv();
     if (a.dataset.a === 'otro-correo') { SESSION_KEYS.forEach(k => localStorage.removeItem(k)); pantallaLogin(); }
   });
-  app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; } });
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez'; } });
   app.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
   });
