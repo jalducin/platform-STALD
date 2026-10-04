@@ -139,7 +139,7 @@ interface Semana {
 export const CATALOGO: Record<string, { categoria: string; titulo: string; max: number }> = {
   "en-vocab": { categoria: "ingles", titulo: "Vocabulario contra reloj", max: 2000 },
   "en-spelling": { categoria: "ingles", titulo: "Spelling bee", max: 1500 },
-  "en-frases": { categoria: "ingles", titulo: "Completa la frase", max: 2000 },
+  "en-frases": { categoria: "ingles", titulo: "Completa y responde", max: 2000 }, // fusión con en-preguntas (openspec: juegos-fusion)
   "en-memorama": { categoria: "ingles", titulo: "Memorama inglés–español", max: 1000 },
   "en-ordena": { categoria: "ingles", titulo: "Ordena la oración (inglés)", max: 1000 },
   "en-preguntas": { categoria: "ingles", titulo: "Responde en inglés", max: 2000 },
@@ -148,7 +148,7 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "es-sinonimos": { categoria: "espanol", titulo: "Sinónimos y antónimos", max: 2000 },
   "es-ordena": { categoria: "espanol", titulo: "Ordena la oración", max: 1000 },
   "cultura": { categoria: "cultura", titulo: "Maratón de cultura", max: 3000 },
-  "mente-calculo": { categoria: "mente", titulo: "Cálculo mental", max: 2000 },
+  "mente-calculo": { categoria: "mente", titulo: "Cálculo y secuencias", max: 2000 }, // fusión con mente-secuencias
   "mente-secuencias": { categoria: "mente", titulo: "Secuencias", max: 2000 },
   "mente-simon": { categoria: "mente", titulo: "Simón dice", max: 1500 },
   "mente-sopa": { categoria: "mente", titulo: "Sopa de letras", max: 1500 },

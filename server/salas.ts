@@ -7,9 +7,10 @@ import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realti
 
 type Json = (body: unknown, status?: number) => Response;
 
-// Juegos que se pueden jugar en partida (los de preguntas y Basta).
+// Juegos que se pueden crear en partida. Los absorbidos por la fusión (openspec: juegos-fusion) ya no: en-preguntas,
+// es-acentos, es-sinonimos y mente-secuencias (sus puntos anteriores siguen en el catálogo).
 export const JUEGOS_PARTIDA = new Set([
-  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
+  "en-vocab", "en-frases", "es-ortografia", "cultura", "mente-calculo", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
 ]);
 const ACCIONES_POKER = ["retirarse", "pasar", "igualar", "subir", "todo"]; // openspec: poker
 const ACCIONES_CONQUIAN = ["tomar", "bajar", "descartar", "pasar"]; // openspec: cartas-espanolas

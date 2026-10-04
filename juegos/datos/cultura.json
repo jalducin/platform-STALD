@@ -39,6 +39,16 @@
       "id": "cuerpo-humano",
       "titulo": "Cuerpo humano",
       "emoji": "🫀"
+    },
+    {
+      "id": "ia",
+      "titulo": "Inteligencia artificial",
+      "emoji": "🤖"
+    },
+    {
+      "id": "tecnologia",
+      "titulo": "Tecnología",
+      "emoji": "💻"
     }
   ],
   "preguntas": [
@@ -4617,6 +4627,422 @@
       ],
       "correcta": 3,
       "dato": "Un esguince es una lesión de los ligamentos."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué significan las siglas IA?",
+      "opciones": [
+        "Internet avanzado",
+        "Inteligencia artificial",
+        "Información automática",
+        "Interfaz animada"
+      ],
+      "correcta": 1,
+      "dato": "La IA busca que las computadoras hagan tareas que normalmente requieren inteligencia humana."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama un programa que conversa contigo por texto o voz?",
+      "opciones": [
+        "Chatbot",
+        "Antivirus",
+        "Navegador",
+        "Hoja de cálculo"
+      ],
+      "correcta": 0,
+      "dato": "Los chatbots usan IA para entender preguntas y responder como en una conversación."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué necesita una IA para aprender a reconocer gatos en fotos?",
+      "opciones": [
+        "Una impresora",
+        "Un micrófono",
+        "Un control remoto",
+        "Muchos ejemplos de fotos (datos)"
+      ],
+      "correcta": 3,
+      "dato": "El aprendizaje automático aprende patrones a partir de muchos ejemplos."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Cuál de estos es un asistente de voz con IA?",
+      "opciones": [
+        "Excel",
+        "Paint",
+        "Alexa",
+        "Bloc de notas"
+      ],
+      "correcta": 2,
+      "dato": "Alexa, Siri y Google Assistant entienden órdenes habladas."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué es un robot?",
+      "opciones": [
+        "Un tipo de virus",
+        "Una máquina programable que realiza tareas",
+        "Una página web",
+        "Un videojuego"
+      ],
+      "correcta": 1,
+      "dato": "La palabra «robot» viene del checo «robota», que significa trabajo forzado."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué debes hacer con una respuesta de una IA para tu tarea?",
+      "opciones": [
+        "Verificarla con otras fuentes",
+        "Copiarla sin leer",
+        "Creerla siempre",
+        "Compartirla sin revisar"
+      ],
+      "correcta": 0,
+      "dato": "Las IA pueden equivocarse; revisar en fuentes confiables es parte de usarlas bien."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Quién propuso en 1950 una prueba para saber si una máquina puede «pensar»?",
+      "opciones": [
+        "Albert Einstein",
+        "Bill Gates",
+        "Isaac Newton",
+        "Alan Turing"
+      ],
+      "correcta": 3,
+      "dato": "Se le llama la prueba de Turing: si no distingues a la máquina de una persona, la pasa."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llama la rama de la IA en la que las computadoras aprenden de datos sin programar cada regla?",
+      "opciones": [
+        "Robótica industrial",
+        "Ciberseguridad",
+        "Aprendizaje automático",
+        "Realidad virtual"
+      ],
+      "correcta": 2,
+      "dato": "En inglés se dice «machine learning»."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué computadora de IBM venció en 1997 al campeón mundial de ajedrez Garry Kasparov?",
+      "opciones": [
+        "Watson",
+        "Deep Blue",
+        "AlphaGo",
+        "Cortana"
+      ],
+      "correcta": 1,
+      "dato": "Fue la primera vez que una máquina venció a un campeón mundial en un match a reglas de torneo."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué significa «GPT» en ChatGPT?",
+      "opciones": [
+        "Transformador generativo preentrenado",
+        "Programa general de texto",
+        "Traductor personal global",
+        "Gráficos por tecnología"
+      ],
+      "correcta": 0,
+      "dato": "Viene del inglés «Generative Pre-trained Transformer»."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Cómo se le llama cuando una IA inventa un dato falso pero lo dice con seguridad?",
+      "opciones": [
+        "Virus",
+        "Spam",
+        "Error 404",
+        "Alucinación"
+      ],
+      "correcta": 3,
+      "dato": "Por eso conviene pedir fuentes y comprobar lo que responde."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué programa de DeepMind venció en 2016 al campeón de Go Lee Sedol?",
+      "opciones": [
+        "Deep Blue",
+        "Watson",
+        "AlphaGo",
+        "Siri"
+      ],
+      "correcta": 2,
+      "dato": "El Go tiene más posiciones posibles que átomos en el universo observable."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿En qué año se acuñó el término «inteligencia artificial» en la conferencia de Dartmouth?",
+      "opciones": [
+        "1945",
+        "1956",
+        "1969",
+        "1984"
+      ],
+      "correcta": 1,
+      "dato": "John McCarthy propuso el nombre para ese taller de verano."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Cómo se llaman los modelos de IA inspirados en las neuronas del cerebro?",
+      "opciones": [
+        "Redes neuronales artificiales",
+        "Árboles binarios",
+        "Bases de datos relacionales",
+        "Hojas de estilo"
+      ],
+      "correcta": 0,
+      "dato": "Cada «neurona» artificial suma señales con pesos que se ajustan al aprender."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Qué arquitectura, presentada en 2017 en el artículo «Attention Is All You Need», usan los grandes modelos de lenguaje?",
+      "opciones": [
+        "Perceptrón",
+        "Máquina de Turing",
+        "Autómata celular",
+        "Transformer"
+      ],
+      "correcta": 3,
+      "dato": "Su mecanismo de «atención» relaciona cada palabra con las demás del texto."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Qué Premio Nobel recibieron en 2024 John Hopfield y Geoffrey Hinton por sus bases de las redes neuronales?",
+      "opciones": [
+        "Química",
+        "Medicina",
+        "Física",
+        "Economía"
+      ],
+      "correcta": 2,
+      "dato": "El Nobel de Física 2024 reconoció descubrimientos que hicieron posible el aprendizaje automático."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué significa «WWW»?",
+      "opciones": [
+        "World Wide Wireless",
+        "World Wide Web",
+        "Web World Window",
+        "Wide Web Work"
+      ],
+      "correcta": 1,
+      "dato": "Es la red de páginas enlazadas que visitas con un navegador."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué componente es el «cerebro» de la computadora?",
+      "opciones": [
+        "El procesador (CPU)",
+        "El monitor",
+        "El teclado",
+        "La bocina"
+      ],
+      "correcta": 0,
+      "dato": "La CPU ejecuta las instrucciones de los programas."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué empresa creó el iPhone?",
+      "opciones": [
+        "Samsung",
+        "Microsoft",
+        "Nokia",
+        "Apple"
+      ],
+      "correcta": 3,
+      "dato": "El primer iPhone se presentó en 2007."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es una contraseña más segura?",
+      "opciones": [
+        "Tu fecha de nacimiento",
+        "123456",
+        "Una larga con letras, números y símbolos",
+        "Tu nombre"
+      ],
+      "correcta": 2,
+      "dato": "Entre más larga y variada, más difícil de adivinar."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué aparato reparte el internet por Wi-Fi en tu casa?",
+      "opciones": [
+        "La impresora",
+        "El router (módem)",
+        "El proyector",
+        "El escáner"
+      ],
+      "correcta": 1,
+      "dato": "El router crea la red inalámbrica a la que se conectan tus dispositivos."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Cuántos bits forman un byte?",
+      "opciones": [
+        "8",
+        "2",
+        "10",
+        "16"
+      ],
+      "correcta": 0,
+      "dato": "Un bit es un 0 o un 1; con 8 bits se pueden formar 256 combinaciones."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Quién creó la World Wide Web en 1989?",
+      "opciones": [
+        "Steve Jobs",
+        "Bill Gates",
+        "Mark Zuckerberg",
+        "Tim Berners-Lee"
+      ],
+      "correcta": 3,
+      "dato": "La propuso en el CERN, en Suiza, para compartir documentos entre científicos."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué sistema operativo usan la mayoría de los celulares del mundo?",
+      "opciones": [
+        "iOS",
+        "Windows",
+        "Android",
+        "Linux Mint"
+      ],
+      "correcta": 2,
+      "dato": "Android lo desarrolla Google y lo usan muchas marcas."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es el «phishing»?",
+      "opciones": [
+        "Un videojuego de pesca",
+        "Un engaño para robar tus datos con mensajes falsos",
+        "Un tipo de cable",
+        "Una red social"
+      ],
+      "correcta": 1,
+      "dato": "Desconfía de mensajes urgentes que te piden contraseñas o códigos."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿En qué sistema numérico trabajan internamente las computadoras?",
+      "opciones": [
+        "Binario (0 y 1)",
+        "Decimal",
+        "Romano",
+        "Maya"
+      ],
+      "correcta": 0,
+      "dato": "Todo, desde fotos hasta música, se guarda como ceros y unos."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es «la nube» en tecnología?",
+      "opciones": [
+        "El cielo nublado",
+        "Un tipo de pantalla",
+        "Una memoria USB",
+        "Servidores en internet que guardan tus datos"
+      ],
+      "correcta": 3,
+      "dato": "Tus archivos «en la nube» están en centros de datos de otras empresas."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué mexicano inventó un sistema de televisión a color, patentado en 1940?",
+      "opciones": [
+        "Mario Molina",
+        "Rodolfo Neri Vela",
+        "Guillermo González Camarena",
+        "Luis E. Miramontes"
+      ],
+      "correcta": 2,
+      "dato": "Su sistema tricromático se patentó cuando tenía 23 años."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué ley dice que los transistores de un chip se duplican aproximadamente cada dos años?",
+      "opciones": [
+        "Ley de Ohm",
+        "Ley de Moore",
+        "Ley de Murphy",
+        "Ley de Newton"
+      ],
+      "correcta": 1,
+      "dato": "Gordon Moore, cofundador de Intel, la planteó en 1965."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Cómo se llamó la red precursora de internet, creada en 1969 en EE. UU.?",
+      "opciones": [
+        "ARPANET",
+        "Ethernet",
+        "Bluetooth",
+        "Intranet"
+      ],
+      "correcta": 0,
+      "dato": "Su primer mensaje entre universidades fue «LO»: el sistema se cayó al escribir «LOGIN»."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Quién escribió en el siglo XIX el primer algoritmo para una máquina, por lo que se le considera la primera programadora?",
+      "opciones": [
+        "Marie Curie",
+        "Grace Hopper",
+        "Hedy Lamarr",
+        "Ada Lovelace"
+      ],
+      "correcta": 3,
+      "dato": "Lo hizo para la máquina analítica de Charles Babbage."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué significan las siglas HTTP?",
+      "opciones": [
+        "Herramienta de texto para teléfonos",
+        "Hoja técnica de programación",
+        "Protocolo de transferencia de hipertexto",
+        "Hipervínculo de transmisión total"
+      ],
+      "correcta": 2,
+      "dato": "Del inglés «HyperText Transfer Protocol»; la «S» de HTTPS significa segura."
     }
   ]
 }

@@ -156,7 +156,7 @@ Deno.test("salas: Lotería (modo y grito único) y Responde en inglés", async (
   c.avanzar(5000);
   const g2 = await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { loteria: true });
   assertEquals([g1.status, g1.body.loteria, g2.body.loteria], [200, t1, t1]);
-  assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "en-preguntas" })).status, 200);
+  assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "en-preguntas" })).status, 400, "absorbido por la fusión (openspec: juegos-fusion)");
 });
 
 Deno.test("salas: los jugadores llevan su avatar", async () => {
