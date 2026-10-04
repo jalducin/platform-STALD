@@ -38,7 +38,7 @@
 
 ## 6. Verificación en producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Jugar en producción una partida individual y una sala de póker con bots. Después, borrar la sala y la
+- [x] 6.1 Jugar en producción una partida individual y una sala de póker con bots. Después, borrar la sala y la
   partida de prueba.
 
 ## 7. Documentación (OBLIGATORIO)

@@ -52,3 +52,11 @@
 ## Resultado
 - Estado Step 5: PASS
 - Bloqueos: ninguno
+
+## Verificación en producción (Step 6.1) — 2026-10-03
+- Se corrió `node prod-poker.js` contra GitHub Pages y `stald.jalducin.deno.net` con el correo de admin. Resultado: 6/6.
+  - El póker aparece en Clásicos y la ayuda abre.
+  - En la mesa individual se hicieron 4 jugadas. Se salió sin terminar a propósito, así que no se guardaron puntos ni
+    quedó ruido en el ranking (0 POST a `/juegos/partida`).
+  - Se creó una sala `DZDE` con 2 bots: el servidor aceptó 2 jugadas y la mesa mostró 3 asientos.
+- Restauración: se borró la sala `DZDE` del repo de datos y del índice `salas-semana`. No se guardó ninguna partida.
