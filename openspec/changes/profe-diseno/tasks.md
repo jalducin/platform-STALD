@@ -28,7 +28,7 @@
 
 ## 5. Verificación en producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Abrir la vista del profe en producción, revisar el encabezado, las pestañas y las dos columnas, y no
+- [x] 5.1 Abrir la vista del profe en producción, revisar el encabezado, las pestañas y las dos columnas, y no
   modificar datos
 
 ## 6. Documentación (OBLIGATORIO)
