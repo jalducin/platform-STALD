@@ -38,9 +38,9 @@
 
 ## 7. Migración en producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 7.1 Etiquetar el respaldo `antes-de-postgres`, correr el modo de prueba y luego la migración real
-- [ ] 7.2 Cuadrar los conteos, verificar 3 documentos y dejar a todos en el "Grupo 1"
-- [ ] 7.3 Hacer el corte a `ResultadosStore` y verificar en producción con una sola lectura
+- [x] 7.1 Etiquetar el respaldo `antes-de-postgres`, correr el modo de prueba y luego la migración real
+- [x] 7.2 Cuadrar los conteos, verificar 3 documentos y dejar a todos en el "Grupo 1"
+- [x] 7.3 Hacer el corte a `ResultadosStore` y verificar en producción con una sola lectura
 
 ## 8. Documentación (OBLIGATORIO)
 
