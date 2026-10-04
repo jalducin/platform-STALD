@@ -78,3 +78,10 @@
   | `e2e-partidas` | 15/15 |
   | `e2e-una-sala` | 12/12 |
   | `e2e-poker` | 10/10 |
+
+## Verificación en producción del ajuste (8.4) — 2026-10-03
+- Se ejecutó `python prod-cupos.py` contra `stald.jalducin.deno.net` con el correo de admin:
+  - una sala de ajedrez creada con `bots: true` quedó en `bots: false`;
+  - al intentar empezar sin rival, el servidor respondió 409 `faltan_jugadores`;
+  - una sala de Brisca creada con `bots: false` quedó en `bots: true`.
+- Restauración: se borraron del repo de datos y del índice las salas de prueba `XEMG` y `ULVD`.

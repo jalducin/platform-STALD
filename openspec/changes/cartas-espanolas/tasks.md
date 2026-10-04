@@ -52,4 +52,4 @@
   - `bots: true` al crear la sala.
 - [x] 8.2 Página: `participantes()` completa con bots hasta 4 y la casilla de bots se oculta.
 - [x] 8.3 E2E: sala con 2 personas y 2 bots en parejas; regresiones.
-- [ ] 8.4 Verificar en producción; actualizar la documentación y el reporte.
+- [x] 8.4 Verificar en producción; actualizar la documentación y el reporte.
