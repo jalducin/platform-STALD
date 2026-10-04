@@ -89,8 +89,34 @@ export class PgStore implements Store {
     return filas.map((f) => f.path).filter((p) => p.startsWith(d + "/") && !p.slice(d.length + 1).includes("/")).map((p) => p.slice(d.length + 1));
   }
 
+  // Todos los documentos hijos directos de una carpeta en una sola consulta (tablero del profe, openspec: ingles-pro).
+  async leerCarpeta<T = unknown>(dir: string): Promise<{ nombre: string; data: T }[]> {
+    const d = dir.replace(/\/+$/, "");
+    if (!esRutaPg(d + "/x")) return await leerCarpetaGenerica<T>(this.base, d);
+    try {
+      const filas = await this.db.select<{ path: string; data: unknown }>("docs", `path=like.${v(d + "/*")}&select=path,data`);
+      return filas.filter((f) => f.path.startsWith(d + "/") && !f.path.slice(d.length + 1).includes("/"))
+        .map((f) => ({ nombre: f.path.slice(d.length + 1), data: f.data as T }));
+    } catch (e) {
+      console.error("PgStore.leerCarpeta, respaldo:", e instanceof Error ? e.message : e);
+      return await leerCarpetaGenerica<T>(this.base, d);
+    }
+  }
+
   async remove(path: string, message: string): Promise<void> {
     if (!esRutaPg(path)) return await this.base.remove(path, message);
     await this.db.remove("docs", `path=eq.${v(path)}`);
   }
+}
+
+// Lectura de una carpeta con cualquier almacén: list + get de cada documento.
+export async function leerCarpetaGenerica<T = unknown>(store: Store, dir: string): Promise<{ nombre: string; data: T }[]> {
+  const nombres = await store.list(dir);
+  const docs = await Promise.all(nombres.map((n) => store.get<T>(`${dir}/${n}`)));
+  return nombres.map((nombre, i) => ({ nombre, data: docs[i]?.data as T })).filter((x) => x.data !== undefined);
+}
+
+// La carpeta con el camino rápido de PgStore cuando existe.
+export async function leerCarpeta<T = unknown>(store: Store, dir: string): Promise<{ nombre: string; data: T }[]> {
+  return store instanceof PgStore ? await store.leerCarpeta<T>(dir) : await leerCarpetaGenerica<T>(store, dir);
 }

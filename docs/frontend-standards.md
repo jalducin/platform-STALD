@@ -6,6 +6,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
 
 - Cada página es **un solo archivo HTML autocontenido** en la raíz del repo: CSS en `<style>`, JS en
   `<script>`. Sin build, sin frameworks y sin dependencias de CDN salvo que un cambio lo justifique en su `design.md`.
+  - **Excepción (`ingles.html`, cambio `ingles-pro`):** es un shell que enlaza `estilos/stald.css` (sistema de diseño
+    compartido), `ingles/ingles.css` y scripts en `ingles/*.js`. Ver "Inglés pro" al final.
 - Una página = una ruta del backend. La URL del backend va en una constante al inicio del script
   (`DATA_URL_BASE`); no repetirla en varios lugares.
 - `index.html` es el **portal** (lo que Pages sirve en `/`):
@@ -98,6 +100,9 @@ Cada página debe manejar y mostrar de forma explícita:
 **un cambio en la lógica común debe aplicarse a ambos en el mismo cambio** y la tarea de verificación
 debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio OpenSpec propio.
 
+- `estilos/stald.css` (cambio `ingles-pro`) es la fuente única de tokens y componentes base. Hoy lo usa
+  `ingles.html`; el portal y las demás páginas lo adoptan poco a poco, cada una en su propio cambio.
+
 ## 6. Verificación
 
 - Local: servir la raíz (`npx serve .`) y recorrer los estados del §3.
@@ -156,8 +161,9 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 
 ## Vista del profe en Inglés (cambio `profe-diseno`)
 
-- `ingles.html?modo=profe` agrega `body.profe`, que amplía la página a 1,080 px, y dibuja `renderProfe(act)`, no el
-  tablero de alumnos:
+- `ingles.html?modo=profe` agrega `body.profe` y dibuja `renderProfe(act)` (`ingles/profe.js`), no el tablero de
+  alumnos. Desde `ingles-pro` va dentro del mismo marco del admin (menú lateral con «🎓 Mi ruta» marcada, hasta
+  1,280 px):
   - encabezado `.pf-hero`: semana actual, siguiente entrega, barra de la ruta del mes y 4 contadores. Los contadores
     salen de `buildGroups`;
   - `#pf-urgente`: lo atrasado y lo de hoy, de la ruta (🎓) y del grupo (👥), con el `accionItem` de siempre;
@@ -211,3 +217,51 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   - al quedar `SUBSCRIBED`: una consulta para ponerse al día y respaldo cada 30 s;
   - si el canal falla, vuelve el sondeo normal;
   - `limpiar` hace `removeChannel`.
+
+## Inglés pro (cambio `ingles-pro`)
+
+- **Archivos.** `ingles.html` es el shell (encabezado, acceso, `#nav`, `#content` y `<dialog id="cajon">`). Enlaza:
+  - `estilos/stald.css`: tokens (`--bg`, `--card`, `--text`, `--muted`, `--border`, `--accent`, `--accent-bg`, `--ok`,
+    `--warn`, `--bad` y sus `-soft`; radios 12/18/24; sombras en 2 niveles; espacio de 4 px) y componentes
+    (`.card`, `.btn`, `.chip`, `.tabs`, `.anillo`, `.barra`, `.tabla`, `.kpis`, `dialog.cajon`, `.esqueleto`, `.vacio`,
+    `.nav-item` y `.nav-barra`);
+  - `ingles/ingles.css`: estilos propios de Inglés (incluida la presentación del Meet);
+  - scripts clásicos con `defer`, en este orden: `comun.js` (configuración, `SECCIONES`, `api()`, formato y
+    componentes), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, alumnos y alumnas, juegos), `tablero.js`
+    (vista del admin por secciones, mapa de calor y cajón), `alumno.js`, `profe.js` y `app.js` (sesión, ruteo y
+    eventos). No son módulos ES: comparten el ámbito global, así que un nombre de nivel superior no se puede repetir
+    entre archivos.
+- **Modo oscuro.** Sigue a `prefers-color-scheme` salvo que `<html data-theme="light|dark">` lo fije. La preferencia
+  se guarda en `localStorage.stald_tema` (`auto`, `claro` u `oscuro`; preferencia de interfaz sin datos personales) y se
+  aplica en un `<script>` del `<head>` para no parpadear. Se cambia con 🌓 en el encabezado o en 👤 Perfil.
+- **Navegación.** Catálogo único `SECCIONES` (`id`, `emoji`, `titulo`, `encabezado`, `rol`, `href`, `accion`, `barra`);
+  de ahí salen la barra, el menú y el `<h2>` de cada sección (`seccionHtml`).
+  - Ruteo por hash: `#inicio`, `#semana`, `#resultados`, `#perfil` (alumno o alumna) y `#resumen`, `#grupos`,
+    `#alumnos`, `#semana`, `#resultados`, `#presentar`, `#juegos` (admin). Todas las secciones se dibujan a la vez
+    y `aplicarRuta()` deja visible solo la del hash; la pestaña lleva `aria-current="page"`.
+  - Abrir una actividad, un resultado o un guion agrega `#ver/<id>` al historial: Atrás regresa a la sección.
+  - Menos de 720 px: `.nav-barra` fija abajo (botones de 56 px, `safe-area-inset-bottom`). El admin ve Resumen,
+    Alumnos, Semana y Resultados, y el resto en «☰ Más» (`#nav-mas`). Desde 720 px: pestañas arriba (alumno o
+    alumna) o menú lateral pegajoso de 232 px (admin).
+  - Los E2E deben abrir la sección antes de interactuar con ella, p. ej. `ingles.html?api=…#alumnos`.
+- **Alumno o alumna (`alumno.js`).** 🏠 Inicio: encabezado con anillo de la semana (`#anillo`), nivel (`#nivel`, de su
+  último examen o de su grupo) y racha (`#racha`, del servidor); «Próxima clase» (`.mi-grupo.proxima-clase`): horario del
+  grupo (`Sáb 10:00`, se entienden `dom…sáb` y `am/pm`) o el Meet de la semana, cuenta regresiva cada 30 s y botón al Meet;
+  «Para hoy» (`#para-hoy`, filas `.hoy-item`); insignias (`#insignias`, calculadas en el cliente, no se guardan).
+  📅 Semana: línea de lunes a domingo (`#semana-linea`, tocar un día filtra los `.exam-item[data-fecha]`), la tarjeta
+  de la semana y el tablero de siempre. ⭐ Resultados: temas a reforzar y calificaciones. 👤 Perfil: grupo, insignias,
+  tema y cerrar sesión.
+- **Admin (`tablero.js`).** `#grupo-filtro` arriba de todas las secciones. 🏠 Resumen: `#kpis` y `#mapa-calor` desde
+  `GET /ingles/resumen?grupo=`; cada celda y cada nombre abren el cajón. El cajón (`dialog#cajon`, se cierra con Esc o
+  ✕) tiene grupo (mover), la semana con «⏳ Dar prórroga» / «Quitar prórroga» / «↺ Reiniciar intentos», historial y
+  temas a reforzar. Las tarjetas `#grupos-admin` y `#alumnos-admin` van abiertas en su sección.
+- **Reproductor (`reproductor.js`).** Barra de progreso (`#player-bar`). Con menos de 600 px y más de una pregunta, el
+  formulario lleva `.paso`: una pregunta por pantalla (`.q.actual`), con ← / «Siguiente →» y «📋 Ver todas las
+  preguntas» (`[data-action="ver-todas"]`), que vuelve a la lista completa. Atajos: 1–9 eligen la opción de la
+  pregunta activa y Enter avanza (o envía cuando todo está respondido). El resultado muestra un anillo y barras por tema.
+- **Peticiones.** Todas salen por `api(url, opts)` en `comun.js` (`fetchJson` es un alias). El inicio de sesión del
+  Sprint 3 agrega ahí el encabezado `Authorization`.
+- **Accesibilidad.** Foco visible (`:focus-visible`), enlace «Saltar al contenido», botones de al menos 44 px en
+  pantallas táctiles, `role="progressbar"`, `aria-live` en avisos y sin desplazamiento horizontal a 390 px (las tablas
+  anchas se desplazan dentro de `.tabla-wrap`).
+

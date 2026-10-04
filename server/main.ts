@@ -16,6 +16,7 @@ import { createDb, PgStore, v as pgv } from "./db.ts";
 import { mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
 import { configPublica, handleEnlace, LOGIN_TRANSICION_HASTA, quienEs } from "./auth.ts";
+import { handleResumen } from "./resumen.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
@@ -208,6 +209,22 @@ export async function handler(req: Request): Promise<Response> {
     if (iGr !== -1) {
       if (!await inglesEnPg()) return json({ error: "sin_base" }, 503);
       return await handleGrupos(req, url.pathname.slice(iGr + "/ingles/grupos".length), { email, admin, db: db!, hoy: () => mxToday() }, json);
+    }
+
+    // GET /ingles/resumen?grupo=<id> → tablero del profe: indicadores y mapa de calor (solo admin, server/resumen.ts,
+    // openspec: ingles-pro). La racha del alumno o alumna va dentro de /ingles/actividades (sin ruta aparte).
+    if (url.pathname.endsWith("/ingles/resumen")) {
+      const store = await getStore();
+      const conGrupos = await inglesEnPg();
+      return await handleResumen(req, {
+        email, admin, store,
+        alumnos: async () => {
+          const registro = await leerRegistro(store);
+          const nombres = [...new Set((await filasIngles()).map((r) => r.alumno).filter((n): n is string => !!n))];
+          return nombres.map((nombre) => ({ nombre, ...(inicioDe(registro, nombre) ? { inicio: inicioDe(registro, nombre) } : {}) }));
+        },
+        ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()), grupoInfo: (id: string) => grupoInfo(db!, id) } : {}),
+      }, json);
     }
 
     // /ingles/profe/actividades[/<id>] → ruta de estudio del profe (solo admin, server/actividades.ts)

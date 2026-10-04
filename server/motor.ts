@@ -436,3 +436,19 @@ export function validateItem(it: Item): string[] {
   if (it.tipo !== "refuerzo" && it.preguntasPorIntento && (it.banco || []).length < it.preguntasPorIntento) errs.push(`${it.id}: banco menor que preguntasPorIntento`);
   return errs;
 }
+
+// Racha (openspec: ingles-pro): días seguidos con al menos una entrega, contando hacia atrás desde hoy o, si hoy aún
+// no entrega, desde ayer (la racha sigue viva hasta que termina el día). Fechas AAAA-MM-DD en hora de CDMX.
+export function calcularRacha(fechas: Iterable<string>, hoy: string): { dias: number; hoy: boolean } {
+  const dias = new Set(fechas);
+  const antes = (f: string) => {
+    const d = new Date(`${f}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  };
+  const conHoy = dias.has(hoy);
+  let f = conHoy ? hoy : antes(hoy);
+  let n = 0;
+  while (dias.has(f)) { n++; f = antes(f); }
+  return { dias: n, hoy: conHoy };
+}

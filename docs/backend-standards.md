@@ -16,6 +16,7 @@
 | `server/store.ts` | `GitHubStore` (API de contenidos, escritura con `sha`) y `MemoryStore` (pruebas) |
 | `server/rows.ts` | Extracción de filas de Notion y filtrado por correo |
 | `server/auth.ts` | Sesión con Supabase Auth: `quienEs`, `GET /config` y `POST /auth/enlace` (cambio `plataforma-login`) |
+| `server/resumen.ts` | `GET /ingles/resumen`: indicadores y mapa de calor del tablero del profe (cambio `ingles-pro`) |
 | `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
 | `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes>` (código 1 si hay errores) |
 
@@ -53,6 +54,8 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
 | `/ingles/actividades/<id>` | GET | Con `prorrogas`, el alumno o alumna recibe su propia `fechaLimite` aquí, en la lista y en `fueraDeTiempo`; el admin ve la base. Teoría, tips, temas, `enfoque` (refuerzo) y los ejercicios del intento que toca, **sin respuestas**. 403 `no_disponible`, 409 `sin_intentos`. El admin puede usar `?alumno=` y `?intento=`. En el intento de corrección (no examen) agrega `correccion: { fijas, anteriores }`: `fijas` son sus respuestas correctas y `anteriores` el texto de lo que contestó mal, nunca la respuesta correcta |
 | `/ingles/actividades/<id>` | POST `{ intento, respuestas }` | Calificación inmediata, `mejor` y `restantes` (0 si una actividad llega a 100 %). En la corrección, las `fijas` mandan sobre lo que envíe el cliente. 409 `intento_invalido` / `sin_intentos`. El admin no guarda |
 | `/ingles/actividades/<id>/resultados/<alumno>` | DELETE | Solo admin: reinicia los intentos |
+| `/ingles/actividades/<id>/prorroga` | POST `{ alumno, fecha \| null }` | Solo admin: da o quita una prórroga (ver "Tablero del profe, racha y prórroga") |
+| `/ingles/resumen` | GET (`?grupo=`) | Solo admin: indicadores y mapa de calor de la semana (cambio `ingles-pro`) |
 
 **Rutas `/juegos/…`** (`server/juegos.ts`, cambio `juegos-plataforma`):
 
@@ -223,6 +226,28 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     - filtra por el `grupos` de cada semana;
     - devuelve `grupo { id, nombre, nivel, horario, meet_url, color }`.
   - En la vista de admin, cada elemento trae `grupos` cuando su semana los declara.
+
+**Tablero del profe, racha y prórroga** (`server/resumen.ts`, cambio `ingles-pro`):
+  - `GET /ingles/resumen?grupo=<id>` (solo admin; si no, 403 `solo_admin`) →
+    `{ hoy, grupo, semana: { id, titulo }, columnas, filas, kpis }`:
+    - `columnas`: elementos con entrega de la semana actual (`{ id, tipo, titulo, disponibleDesde, fechaLimite }`);
+    - `filas`: una por alumno o alumna (Notion + altas, sin el profe), en orden alfabético, con `grupo` y
+      `celdas[id] = { estado, porcentaje?, fueraDeTiempo?, intentos?, prorroga? }`. `estado`: `hecho`, `atrasado`,
+      `hoy`, `pendiente`, `proximamente` o `no-aplica` (la semana es de otro grupo, o vence antes de su lunes de inicio).
+      Usa la fecha propia de cada quien (`prorrogas`);
+    - `kpis`: `alumnos`, `aTiempo` (% de lo vencido o entregado que se entregó a tiempo; `null` si no hay nada),
+      `promedio` (del mejor intento de lo entregado), `atrasos` y `sinEntregas` (nombres sin entregas esta semana que ya
+      tienen algo abierto; no se registran visitas, así que "quién no ha entrado" se aproxima así).
+    - `?grupo=` filtra solo con la base migrada (sin ella se ignora). Acepta `?hoy=` con `PERMITIR_HOY=1`.
+    - Se calcula en el servidor sobre el almacén: con `PgStore`, `leerCarpeta` trae los resultados de cada columna en
+      una sola consulta (`path=like.resultados/<id>/*`). No agrega tablas, vistas ni funciones a Postgres.
+  - Racha: `GET /ingles/actividades` (alumno o alumna) agrega `racha: { dias, hoy }`, calculada con `calcularRacha`
+    (`motor.ts`) sobre los `enviadoEn` de sus intentos, en fecha de CDMX. Cuenta días seguidos hasta hoy o, si hoy aún no
+    entrega, hasta ayer. No hay ruta `/ingles/racha`: viaja con la lista para no gastar otra petición.
+  - `POST /ingles/actividades/<id>/prorroga` `{ alumno, fecha | null }` (solo admin) escribe `prorrogas[slug]` en el
+    JSON del elemento (`contenido/actividades` o `contenido/examenes`, con su `sha`); `fecha: null` la quita. Errores:
+    403 `solo_admin`, 400 `alumno_invalido` / `fecha_invalida` (formato o antes de `disponibleDesde`), 404, 503
+    `conflicto_escritura`. La lista del admin trae `prorrogas` por elemento.
 
 **Rutas `/ingles/alumnos`** (`server/alumnos.ts`, cambio `alta-alumnos`), solo admin (si no, 403):
   - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "notion" | "registro", alta?, inicio? }] }`;
