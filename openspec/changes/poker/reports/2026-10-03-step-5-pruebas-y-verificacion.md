@@ -80,3 +80,11 @@
   | `e2e-ajustes-salas` | 8/8 |
 
 - La copia temporal `data-rt2` se borró y los servidores locales se apagaron.
+
+## Verificación en producción (sprint final) — 2026-10-04
+- Pages sirve los tiempos nuevos (`CS_PAUSA_BAZA_MS` y `U_BOT_MS = 3000`).
+- `prod-ritmo.js` contra producción, sin terminar partidas ni guardar puntos:
+  - baza de la Brisca a la vista 5,293 ms;
+  - resultado del Póker a la vista 9,693 ms.
+- Adela Peñasco e Irving Moreno Candia quedaron con inicio el 2026-10-05 en `alumnos.json` y no tienen elementos
+  anteriores a esa fecha (verificado en `/ingles/actividades`).

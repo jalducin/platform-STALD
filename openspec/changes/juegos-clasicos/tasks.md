@@ -39,4 +39,4 @@
 
 - [x] A.1 Aplicar el nuevo ritmo de los bots (individual y sala) y corregir el robo cuando ya no hay cartas
 - [x] A.2 E2E: partida larga de puro robar, sin errores de JS, y sin robo posible con el mazo vacío; regresiones de ¡Una!
-- [ ] A.3 Verificar en producción
+- [x] A.3 Verificar en producción

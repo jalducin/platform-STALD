@@ -58,5 +58,5 @@
 
 - [x] 9.1 Aplicar la pausa tras la baza y los nuevos tiempos de los bots, en el modo individual y en sala
 - [x] 9.2 Correr E2E de cartas y regresiones
-- [ ] 9.3 Verificar en producción
+- [x] 9.3 Verificar en producción
 - [x] 9.4 Conquián: bot a 2.5 s (individual y sala) y regresión
