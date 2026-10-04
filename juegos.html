@@ -308,6 +308,7 @@
 
 <script src="juegos/cartas.js?v=2"></script>
 <script src="juegos/ajedrez.js?v=1"></script>
+<script src="comun/auth.js?v=1"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -335,9 +336,17 @@
   const tomar = (a, n, rnd = Math.random) => barajar(a, rnd).slice(0, n);
   const sinAcentos = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+  // Cada petición lleva la sesión (Authorization: Bearer, comun/auth.js; openspec: plataforma-login). Sin sesión, durante
+  // la transición, se manda el correo guardado de antes como ?email=. Un 401 de sesión lleva a la pantalla de entrada.
   async function api(ruta, opts) {
-    const res = await fetch(API_BASE + ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(state.email), Object.assign({ cache: 'no-store' }, opts || {}));
+    const url = API_BASE + (StaldAuth.email() ? ruta : ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(state.email));
+    const res = await StaldAuth.fetchConSesion(url, opts);
     const body = await res.json().catch(() => ({}));
+    if (StaldAuth.esSesionVencida(res, body) && !state.pidiendoSesion) {
+      state.pidiendoSesion = true;
+      const eraViejo = !StaldAuth.email();
+      StaldAuth.salir().then(() => pantallaLogin(eraViejo ? '🔒 Por seguridad, ahora entras con un enlace que te mandamos a tu correo.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.'));
+    }
     return { ok: res.ok, status: res.status, body };
   }
   const post = (ruta, datos) => api(ruta, { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(datos) });
@@ -485,11 +494,14 @@
   }
 
   async function iniciar() {
-    state.email = SESSION_KEYS.map(k => localStorage.getItem(k)).find(Boolean) || null;
-    if (!state.email) return pantallaLogin();
     app.innerHTML = '<div class="loading">Cargando juegos…</div>';
+    await StaldAuth.iniciar(API_BASE);
+    state.pidiendoSesion = false;
+    state.email = StaldAuth.email() || StaldAuth.correoViejo();
+    if (!state.email) return pantallaLogin();
     try {
       const r = await cargarYo();
+      if (state.pidiendoSesion) return; // 401: ya se muestra la pantalla de entrada
       if (r.status === 403 && r.body.error === 'no_registrado') return pantallaInvitado();
       if (!r.ok) throw new Error(r.body.error || ('HTTP ' + r.status));
       if (salaPendiente) { const c = salaPendiente; salaPendiente = null; return unirseCodigo(c); }
@@ -501,11 +513,16 @@
     }
   }
 
+  // Entrada con enlace mágico o código (comun/auth.js). El enlace regresa a esta misma URL (conserva ?sala=).
   function pantallaLogin(msg) {
     limpiar(); chip.hidden = true;
-    app.innerHTML = '<div class="card"><h1>🎮 Juegos</h1><p class="lead">' + (salaPendiente ? '🎉 Te invitaron a la partida <b>' + escapeHtml(salaPendiente) + '</b>. Entra con tu correo para unirte.' : 'Aprende jugando. Entra con tu correo.') + '</p>' +
-      '<form id="f-login" novalidate><label for="correo">Tu correo</label><input id="correo" type="email" autocomplete="email" placeholder="tucorreo@gmail.com">' +
-      '<div class="row-btns"><button class="btn" type="submit">Entrar →</button></div></form>' + (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
+    StaldAuth.pintarEntrada(app, {
+      titulo: '🎮 Juegos',
+      texto: salaPendiente ? '🎉 Te invitaron a la partida ' + salaPendiente + '. Escribe tu correo y te mandamos un enlace para entrar y unirte.' : 'Aprende jugando. Escribe tu correo y te mandamos un enlace para entrar, sin contraseña.',
+      correo: state.email || '',
+      aviso: msg,
+      alEntrar: () => iniciar(),
+    });
   }
 
   function pantallaInvitado(msg) {
@@ -3184,7 +3201,7 @@
     if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); pantallaHub(); }
     if (a.dataset.a === 'reintentar') iniciar();
     if (a.dataset.a === 'csv') descargarCsv();
-    if (a.dataset.a === 'otro-correo') { SESSION_KEYS.forEach(k => localStorage.removeItem(k)); pantallaLogin(); }
+    if (a.dataset.a === 'otro-correo') { StaldAuth.salir().then(() => { state.email = null; pantallaLogin(); }); }
   });
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez';
     const nota = { ajedrez: '♟️ Partida 1 vs 1 solo entre dos personas: quien crea y quien se une. Sin bots.', brisca: '🏆 Se juega entre 4 en parejas: si faltan personas, se completa con bots. Máximo 4.' }[e.target.value];
@@ -3200,12 +3217,6 @@
       const palabras = palabrasForm();
       document.getElementById('pb-basta').disabled = true;
       return post('/juegos/sala/' + sala.codigo + '/respuesta', { ronda: sala.rondaActual, palabras, basta: true }).then(() => traerSala());
-    }
-    if (e.target.id === 'f-login') {
-      e.preventDefault();
-      const email = document.getElementById('correo').value.trim().toLowerCase();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return pantallaLogin('Escribe un correo válido.');
-      localStorage.setItem('stald_email', email); iniciar();
     }
     if (e.target.id === 'f-invitado') {
       e.preventDefault();

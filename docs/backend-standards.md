@@ -15,12 +15,35 @@
 | `server/motor.ts` | Lógica pura: selección por alumno e intento, calificación, mejor intento, refuerzo |
 | `server/store.ts` | `GitHubStore` (API de contenidos, escritura con `sha`) y `MemoryStore` (pruebas) |
 | `server/rows.ts` | Extracción de filas de Notion y filtrado por correo |
+| `server/auth.ts` | Sesión con Supabase Auth: `quienEs`, `GET /config` y `POST /auth/enlace` (cambio `plataforma-login`) |
 | `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
 | `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes>` (código 1 si hay errores) |
 
 **Variables:** `NOTION_TOKEN`, `SUPER_ADMIN_EMAIL`, `GITHUB_TOKEN` (token fino, solo Contents del repo
-de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PERMITIR_HOY=1` (permite
-`?hoy=`).
+de datos) y `DATA_REPO`. Sesión: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_KEY` y, opcionales,
+`LOGIN_TRANSICION_HASTA` y `SITIO_URL`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE` (también activa el verificador
+falso de sesión), `PORT` y `PERMITIR_HOY=1` (permite `?hoy=`).
+
+**Identidad y sesión (`server/auth.ts`, cambio `plataforma-login`):**
+
+- Cada petición pasa por `quienEs(req, deps)` **una vez** en `main.ts`; todas las rutas usan el correo que devuelve,
+  nunca el de la URL. Excepciones sin identidad: `OPTIONS`, `GET /salud`, `GET /config` y `GET /juegos/foto/<token>`.
+- Con `Authorization: Bearer <token>`: se valida con `GET {SUPABASE_URL}/auth/v1/user` (`apikey` = publishable) y se
+  usa el correo verificado. Caché de 5 min por SHA-256 del token (tope 2,000). Token rechazado → 401
+  `sesion_invalida`; Supabase sin responder o sin configurar → 503 `auth_no_disponible` (no se guarda en caché).
+- Sin token: se acepta `?email=` (sin verificar) hasta `LOGIN_TRANSICION_HASTA` (constante `2026-10-12`, inclusive,
+  hora de CDMX; la variable de entorno la sobreescribe). Después → 401 `inicia_sesion`. El correo del admin
+  (`SUPER_ADMIN_EMAIL`) **siempre** requiere token: sin él → 401 `inicia_sesion`.
+- Con `ROWS_FIXTURE` (solo local), `Bearer prueba:<correo>` es una sesión válida falsa. Sin `ROWS_FIXTURE` no existe.
+- CORS: `Access-Control-Allow-Headers: content-type, authorization`.
+
+| Ruta | Método | Respuesta |
+|---|---|---|
+| `/config` | GET (sin sesión) | `{ supabaseUrl, publishableKey }`; con `ROWS_FIXTURE`, `{ prueba: true }`; sin variables, 503 `sin_config` |
+| `/auth/enlace` | POST `{ email }` | Solo admin **con token**: `{ email, enlace, codigo }` (Admin API `generate_link`, tipo `magiclink`, `redirect_to` = `SITIO_URL` o el portal). 401 sin token, 403 `solo_admin`, 400 `correo_invalido`, 404 `sin_cuenta`, 503 `auth_no_disponible` |
+
+Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth.ts --correos <archivo> [--prueba]`
+(Admin API `POST /auth/v1/admin/users` con `email_confirm: true`; el archivo de correos no va al repo).
 
 **Rutas `/ingles/actividades`:**
 
@@ -214,7 +237,7 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     una fila de identidad `source: "registro"` (sin tarea). Portal, `/ingles/data`, actividades y Juegos lo
     reconocen sin cambios.
 
-**Ruta `GET /perfil?email=`** (`server/perfil.ts`):
+**Ruta `GET /perfil`** (`server/perfil.ts`; correo de la sesión o, en la transición, `?email=`):
 - Devuelve `{ email, isAdmin, nombre, conocido, invitado, accesos: { ingles, secundaria, juegos } }` para
   el portal. Un invitado registrado (`juegos/invitados.json`) llega con `invitado: true` y solo Juegos.
 - Mismas reglas que `/data` e `/ingles/data`; sin filas ni correos ajenos.

@@ -100,6 +100,16 @@
   .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .av-link { font-size: .82rem; font-weight: 700; color: var(--juegos); text-decoration: none; margin-left: 6px; }
   footer { text-align: center; font-size: .74rem; color: var(--muted); margin-top: 36px; }
+  .notice { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--accent-soft); font-size: .88rem; }
+  .notice b { display: block; margin-bottom: 4px; }
+  .notice .btn { margin-top: 10px; }
+  .ok-msg { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .88rem; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  input.code { width: 100%; font: inherit; font-size: 1.4rem; letter-spacing: .4em; text-align: center; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
+  .admin-box { margin-top: 18px; padding: 16px; }
+  .admin-box h2 { font-size: 1rem; margin: 0 0 4px; }
+  .admin-box input { width: 100%; font: inherit; padding: 11px 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
+  .admin-box .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .admin-box .row .btn { width: auto; flex: 1; margin-top: 0; text-decoration: none; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -118,9 +128,17 @@
       <form id="login-form" novalidate>
         <label for="email">Tu correo</label>
         <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com" required>
-        <button class="btn" id="login-btn" type="submit">Entrar →</button>
+        <button class="btn" id="login-btn" type="submit">📧 Enviarme el enlace</button>
       </form>
-      <p class="hint">Usa el mismo correo con el que te registraron en tus clases.</p>
+      <p class="hint" id="login-hint">Te mandamos un enlace a tu correo para entrar, sin contraseña. Usa el mismo correo con el que te registraron en tus clases.</p>
+      <form id="code-form" novalidate hidden>
+        <div class="ok-msg" id="code-sent">Revisa tu correo ✉️</div>
+        <p class="hint">Toca el enlace del correo para entrar. Si lo abres en otro aparato, escribe aquí el código de 6 números que viene en el mismo correo.</p>
+        <label for="code">Código</label>
+        <input id="code" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+        <button class="btn" id="code-btn" type="submit">Entrar →</button>
+        <button class="link-btn" id="code-back" type="button">Usar otro correo</button>
+      </form>
       <div class="alert" id="login-error" role="alert" hidden></div>
       <div class="guest" id="guest" hidden>
         <div class="guest-t">🎮 ¿Vienes a jugar?</div>
@@ -144,9 +162,24 @@
         <span class="tag" id="admin-tag" hidden>Modo maestro</span>
       </div>
       <nav class="tiles" id="tiles" aria-label="Espacios"></nav>
+      <div class="notice" id="secure-notice" hidden>
+        <b>🔒 Activa tu acceso seguro</b>
+        Muy pronto se entrará solo con un enlace a tu correo. Actívalo ahora: te lo mandamos y lo tocas.
+        <button class="btn" id="secure-btn" type="button">📧 Mandarme el enlace</button>
+      </div>
+      <section class="card admin-box" id="admin-link" hidden aria-labelledby="admin-link-t">
+        <h2 id="admin-link-t">🔗 Enlace de acceso</h2>
+        <p class="hint" style="margin:0 0 10px">Genera un enlace de un solo uso para alguien ya registrado y mándaselo por WhatsApp. No se envía correo.</p>
+        <form id="admin-link-form" novalidate>
+          <label for="admin-link-email">Correo de la persona</label>
+          <input id="admin-link-email" type="email" inputmode="email" placeholder="alumna@gmail.com">
+          <button class="btn" id="admin-link-btn" type="submit">🔗 Generar enlace</button>
+        </form>
+        <div id="admin-link-out"></div>
+      </section>
       <div class="foot">
         <span class="who" id="who"></span>
-        <button class="link-btn" id="logout" type="button">Cerrar sesión</button>
+        <button class="link-btn" id="logout" type="button">🚪 Cerrar sesión</button>
       </div>
     </section>
   </main>
@@ -154,13 +187,17 @@
   <footer>STALD · aprender también puede ser divertido</footer>
 </div>
 
+<script src="comun/auth.js?v=1"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` permite probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
   const API_PARAM = new URLSearchParams(location.search).get('api');
   const API_BASE = (API_PARAM || DEFAULT_API).replace(/\/$/, '');
-  // Solo se guarda el correo. Las páginas de cada espacio leen su propia clave (frontend-standards §2).
+  // Sesión con Supabase Auth (comun/auth.js, openspec: plataforma-login). Las claves de correo de antes solo se usan
+  // durante la transición y para que las páginas que aún no usan la sesión sepan quién entró (frontend-standards §2).
   const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
+  let viejo = false; // true: entró con el correo guardado de antes (sin sesión), solo durante la transición
+  const conCorreo = (ruta, email) => viejo ? ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(email) : ruta;
 
   const $ = (id) => document.getElementById(id);
   const show = (id) => ['login', 'loading', 'home'].forEach(s => { $(s).hidden = s !== id; });
@@ -183,7 +220,7 @@
   async function pintarAvatar(p) {
     if (!p.accesos.juegos) return;
     try {
-      const r = await fetch(API_BASE + '/juegos/yo?email=' + encodeURIComponent(p.email), { cache: 'no-store' });
+      const r = await StaldAuth.fetchConSesion(API_BASE + conCorreo('/juegos/yo', p.email));
       const y = await r.json();
       const av = r.ok && y.jugador && y.jugador.avatar;
       if (!av) return;
@@ -200,6 +237,8 @@
     $('date').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
     $('admin-tag').hidden = !p.isAdmin;
     $('who').textContent = p.email;
+    $('secure-notice').hidden = !viejo;
+    $('admin-link').hidden = !(p.isAdmin && !viejo);
     $('tiles').innerHTML = ESPACIOS.filter(e => e.soloAdmin ? p.isAdmin : p.accesos[e.id]).map(e => e.pronto
       ? '<div class="tile ' + e.clase + ' soon" aria-disabled="true" data-espacio="' + e.id + '"><span class="ico" aria-hidden="true">' + e.ico + '</span>' +
         '<span class="t">' + escapeHtml(e.t) + '</span><span class="d">' + escapeHtml(e.d) + '</span><span class="pill">Muy pronto</span></div>'
@@ -215,56 +254,135 @@
     show('login');
   }
 
+  // Pantalla de entrada: paso del correo (enlace) o del código.
+  function pedirEntrada(msg, correo) {
+    $('login-form').hidden = false; $('login-hint').hidden = false; $('code-form').hidden = true;
+    $('login-btn').disabled = false;
+    if (correo) $('email').value = correo;
+    $('guest').hidden = true;
+    if (msg) error(msg); else { $('login-error').hidden = true; show('login'); }
+  }
+  function pasoCodigo(correo) {
+    $('login-form').hidden = true; $('login-hint').hidden = true; $('code-form').hidden = false;
+    $('code-sent').textContent = 'Revisa tu correo ✉️ Te mandamos un enlace a ' + correo + '.';
+    $('code').value = ''; $('code-btn').disabled = false; $('login-error').hidden = true; $('guest').hidden = true;
+    show('login'); $('code').focus();
+  }
+
   let pendiente = null; // correo desconocido que puede entrar como invitado
   async function entrar(email) {
     show('loading');
     $('login-error').hidden = true;
     $('guest').hidden = true;
     try {
-      const res = await fetch(API_BASE + '/perfil?email=' + encodeURIComponent(email), { cache: 'no-store' });
+      const res = await StaldAuth.fetchConSesion(API_BASE + conCorreo('/perfil', email));
       const p = await res.json().catch(() => ({}));
+      if (StaldAuth.esSesionVencida(res, p)) {
+        const eraViejo = viejo;
+        viejo = false;
+        await StaldAuth.salir();
+        return pedirEntrada(eraViejo ? '🔒 Por seguridad, ahora entras con un enlace que te mandamos a tu correo.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.', email);
+      }
       if (!res.ok) throw new Error(p.error || ('HTTP ' + res.status));
       if (!p.conocido) {
         SESSION_KEYS.forEach(k => localStorage.removeItem(k));
-        $('email').value = email;
+        pedirEntrada('No encontré clases con ese correo. Revisa que esté bien escrito o pide a quien te da clases que te registre.', email);
         pendiente = email;
-        error('No encontré clases con ese correo. Revisa que esté bien escrito o pide a quien te da clases que te registre.');
-        $('guest').hidden = false;
+        $('guest').hidden = viejo; // el invitado entra a Juegos con su sesión
         return;
       }
-      localStorage.setItem('stald_email', email);
-      if (p.accesos.ingles) localStorage.setItem('ingles_email', email);
-      if (p.accesos.secundaria) localStorage.setItem('secundaria_email', email);
+      // Compatibilidad: las páginas que aún no usan la sesión leen estas claves.
+      localStorage.setItem('stald_email', p.email || email);
+      if (p.accesos.ingles) localStorage.setItem('ingles_email', p.email || email);
+      if (p.accesos.secundaria) localStorage.setItem('secundaria_email', p.email || email);
       renderHome(p);
     } catch (e) {
       error('⚠️ No pude conectarme (' + e.message + '). Revisa tu internet e intenta de nuevo.');
     }
   }
 
-  $('login-form').addEventListener('submit', (e) => {
+  $('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = $('email').value.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error('Escribe un correo válido, por ejemplo tucorreo@gmail.com.');
-    entrar(email);
+    $('login-btn').disabled = true;
+    try { await StaldAuth.enviarEnlace(email); pasoCodigo(email); } catch (err) { $('login-btn').disabled = false; error(err.message); }
   });
 
-  // Invitado: Juegos pide su apodo y la aceptación del aviso.
+  $('code-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('code-btn').disabled = true;
+    try {
+      const correo = await StaldAuth.verificarCodigo($('email').value.trim().toLowerCase(), $('code').value);
+      viejo = false;
+      entrar(correo);
+    } catch (err) {
+      $('code-btn').disabled = false;
+      $('login-error').textContent = err.message; $('login-error').hidden = false;
+    }
+  });
+  $('code-back').addEventListener('click', () => pedirEntrada());
+
+  // Invitado: Juegos pide su apodo y la aceptación del aviso (con su sesión).
   $('guest-btn').addEventListener('click', () => {
     if (!pendiente) return;
-    localStorage.setItem('stald_email', pendiente);
     location.href = conApi('juegos.html');
   });
 
-  $('logout').addEventListener('click', () => {
-    SESSION_KEYS.forEach(k => localStorage.removeItem(k));
+  // Aviso de transición: quien entró con el correo de antes activa su acceso seguro.
+  $('secure-btn').addEventListener('click', async () => {
+    const email = $('who').textContent;
+    $('secure-btn').disabled = true;
+    try { await StaldAuth.enviarEnlace(email); $('email').value = email; pasoCodigo(email); }
+    catch (err) { alert(err.message); }
+    finally { $('secure-btn').disabled = false; }
+  });
+
+  // 🔗 Enlace de acceso (solo admin con sesión): POST /auth/enlace.
+  $('admin-link-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const out = $('admin-link-out');
+    const email = $('admin-link-email').value.trim().toLowerCase();
+    $('admin-link-btn').disabled = true;
+    out.innerHTML = '<p class="hint">Generando…</p>';
+    try {
+      const res = await StaldAuth.fetchConSesion(API_BASE + '/auth/enlace', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const txt = { correo_invalido: 'Escribe un correo válido.', sin_cuenta: 'Ese correo aún no está dado de alta en el inicio de sesión (herramientas/alta-usuarios-auth.ts).', solo_admin: 'Solo el profe puede generar enlaces.', inicia_sesion: 'Vuelve a entrar con tu enlace para generar enlaces.', auth_no_disponible: 'El servicio de inicio de sesión no respondió. Intenta de nuevo.' }[j.error] || ('Error ' + (j.error || res.status));
+        out.innerHTML = '<div class="alert">' + escapeHtml(txt) + '</div>';
+        return;
+      }
+      const msg = 'Hola 👋 Este es tu enlace para entrar a STALD (es de un solo uso): ' + j.enlace + (j.codigo ? ' · Si te pide código: ' + j.codigo : '');
+      out.innerHTML = '<label for="admin-link-url" style="margin-top:12px">Enlace para ' + escapeHtml(j.email) + '</label>' +
+        '<input id="admin-link-url" readonly value="' + escapeHtml(j.enlace) + '">' +
+        (j.codigo ? '<p class="hint">Código: <b>' + escapeHtml(j.codigo) + '</b></p>' : '') +
+        '<div class="row"><button class="btn" type="button" id="admin-link-copy">📋 Copiar</button>' +
+        '<a class="btn" id="admin-link-wa" target="_blank" rel="noopener" href="' + escapeHtml('https://wa.me/?text=' + encodeURIComponent(msg)) + '">💬 WhatsApp</a></div>';
+      $('admin-link-copy').addEventListener('click', () => { if (navigator.clipboard) navigator.clipboard.writeText(j.enlace); $('admin-link-copy').textContent = '✅ Copiado'; });
+    } catch (err) {
+      out.innerHTML = '<div class="alert">' + escapeHtml('No pude conectarme (' + err.message + ').') + '</div>';
+    } finally { $('admin-link-btn').disabled = false; }
+  });
+
+  $('logout').addEventListener('click', async () => {
+    await StaldAuth.salir();
+    viejo = false;
     $('email').value = '';
-    show('login');
+    pedirEntrada();
     $('email').focus();
   });
 
-  // Sesión recordada: del portal o de una página que ya tenía sesión.
-  const saved = SESSION_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
-  if (saved) entrar(saved); else show('login');
+  // Arranque: sesión de Supabase (o del enlace recién abierto); si no, el correo guardado de antes (transición).
+  (async () => {
+    show('loading');
+    await StaldAuth.iniciar(API_BASE);
+    const sesion = StaldAuth.email();
+    if (sesion) { viejo = false; return entrar(sesion); }
+    const saved = StaldAuth.correoViejo();
+    if (saved) { viejo = true; return entrar(saved); }
+    pedirEntrada();
+  })();
 </script>
 </body>
 </html>
