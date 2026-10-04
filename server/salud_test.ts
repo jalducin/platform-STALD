@@ -1,5 +1,5 @@
 // /salud: estado del límite de GitHub y del repo de datos (openspec: vigilancia-servidor). Sin red.
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any require-await
 import { assertEquals } from "jsr:@std/assert@1";
 import { revisarSalud } from "./salud.ts";
 

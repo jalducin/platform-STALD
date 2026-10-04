@@ -146,8 +146,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   tipo y `total` es la suma de ambos (cambio `puntos-por-tipo`); `mejores` guarda el récord por juego.
   - `{ id, nombre, tipo, partidas: [{ juego, puntos, aciertos, total, segundos, en }], mejores, total }`.
   - Sin correos. Guarda hasta 1,000 partidas (los totales salen del historial).
-- `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots }` y
-  `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta?, rondasBasta? }`.
+- `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots, canal? }` y
+  `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta?, rondasBasta?, v? }`.
+  - `canal`: topic secreto de Supabase Realtime; nunca sale en las respuestas. `v`: versión del jugador, sube en
+    cada guardado (cambio `salas-realtime`).
   - En Basta por rondas (`opciones.rondas`: 5, 10 o 12), `rondasBasta{ <ronda>: { palabras, basta? } }`.
     Las letras (sin repetir) y el calendario de rondas salen de la semilla y de las horas de `basta`.
   - Partidas multijugador. Cada jugador escribe solo su archivo y no hay correos.

@@ -1,5 +1,5 @@
 // GitHubStore con peticiones condicionales y respaldo ante el límite (openspec: github-etag-cache). Sin red: fetch falso.
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any require-await
 import { assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { encodeBase64 } from "jsr:@std/encoding@1/base64";
 import { GitHubStore } from "./store.ts";

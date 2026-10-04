@@ -101,3 +101,9 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   - 2.5 s en la sala de espera y en ¡Una!, Basta y Lotería (`TIEMPO_REAL`);
   - 5 s en los juegos de preguntas;
   - se detiene al terminar, al vencer la sala, a 1 h o, en la sala de espera, a los 15 min sin empezar.
+- Realtime (cambio `salas-realtime`): si el GET de la sala trae `rt`, `conectarRealtime` carga supabase-js 2.45.4
+  (jsdelivr, diferido) y escucha el evento `estado`:
+  - `mezclarEstado`: por jugador gana la `v` más alta y una sala empezada no regresa a la espera;
+  - al quedar `SUBSCRIBED`: una consulta para ponerse al día y respaldo cada 30 s;
+  - si el canal falla, vuelve el sondeo normal;
+  - `limpiar` hace `removeChannel`.

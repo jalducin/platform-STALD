@@ -1580,6 +1580,52 @@
   const ahoraServidor = () => Date.now() + sala.offset;
 
   const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria']);
+
+  // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
+  // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
+  let supabaseLib = null;
+  function cargarSupabase() {
+    if (window.supabase) return Promise.resolve(window.supabase);
+    if (supabaseLib) return supabaseLib;
+    supabaseLib = new Promise((ok, mal) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+      s.onload = () => ok(window.supabase); s.onerror = () => { supabaseLib = null; mal(new Error('supabase')); };
+      document.head.appendChild(s);
+    });
+    return supabaseLib;
+  }
+  // Los avisos pueden llegar fuera de orden: por jugador gana la versión `v` más alta, se conservan los jugadores que
+  // solo existen localmente y una sala ya empezada no vuelve a la espera.
+  function mezclarEstado(local, p) {
+    const previos = new Map(local.jugadores.map(j => [j.id, j]));
+    const jugadores = p.jugadores.map(j => { const l = previos.get(j.id); previos.delete(j.id); return l && (l.v || 0) > (j.v || 0) ? l : j; }).concat([...previos.values()]);
+    const salaNueva = local.sala.inicio !== null && p.sala.inicio === null ? local.sala : p.sala;
+    return { sala: salaNueva, jugadores };
+  }
+  async function conectarRealtime(rt, codigo, alCambiar) {
+    try {
+      const lib = await cargarSupabase();
+      if (sala.codigo !== codigo) return;
+      const cliente = lib.createClient(rt.url, rt.key, { auth: { persistSession: false, autoRefreshToken: false } });
+      const canal = cliente.channel(rt.topic);
+      canal.on('broadcast', { event: 'estado' }, ({ payload: p }) => {
+        if (sala.codigo !== codigo || !sala.estado || !p || !p.sala) return;
+        sala.estado = Object.assign({}, sala.estado, mezclarEstado(sala.estado, p), { ahora: p.ahora });
+        sala.offset = p.ahora - Date.now();
+        sala.rtRecibidos = (sala.rtRecibidos || 0) + 1;
+        pintarSala();
+      }).subscribe(st => {
+        const antes = sala.rtVivo;
+        sala.rtVivo = st === 'SUBSCRIBED';
+        if (antes !== sala.rtVivo) alCambiar();
+        // Ponerse al día con lo que cambió mientras se conectaba (un aviso previo a la suscripción no llega).
+        if (sala.rtVivo && !antes) traerSala().then(r => { if (r.ok && sala.codigo === codigo) pintarSala(); });
+      });
+      limpiezas.push(() => { sala.rtVivo = false; cliente.removeChannel(canal); });
+    } catch (e) { sala.rtVivo = false; /* sin Realtime: sigue el sondeo normal */ }
+  }
+
   async function traerSala() {
     const r = await api('/juegos/sala/' + sala.codigo);
     if (r.ok) { sala.estado = r.body; sala.offset = r.body.ahora - Date.now(); }
@@ -1608,7 +1654,7 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0 });
+    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0 });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
@@ -1618,8 +1664,8 @@
     // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
     // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
     const t0 = Date.now();
-    let tick;
-    const parar = msg => { clearTimeout(tick); const pb = document.getElementById('p-body'); if (msg && pb && sala.vista !== 'final') pb.innerHTML = '<div class="card muted" style="text-align:center">' + msg + '</div>'; };
+    let tick, detenido = false;
+    const parar = msg => { detenido = true; clearTimeout(tick); const pb = document.getElementById('p-body'); if (msg && pb && sala.vista !== 'final') pb.innerHTML = '<div class="card muted" style="text-align:center">' + msg + '</div>'; };
     // Intervalo por tipo de juego (openspec: ahorro-peticiones): 2.5 s en la sala de espera y en los juegos que
     // necesitan verse en tiempo real (¡Una!, Basta, Lotería); 5 s en los de preguntas (van sincronizados por
     // reloj). La sala de espera deja de consultar a los 15 min si nadie empieza.
@@ -1634,11 +1680,13 @@
           if (r && r.status === 503) { /* mucho tráfico: se reintenta en el siguiente ciclo */ } else pintarSala();
           programarTick();
         });
-      }, esperando || TIEMPO_REAL.has(sala.estado.sala.juego) ? 2500 : 5000);
+      }, sala.rtVivo ? 30000 : esperando || TIEMPO_REAL.has(sala.estado.sala.juego) ? 2500 : 5000);
     };
     programarTick();
+    // Al cambiar el estado del canal se reprograma el siguiente ciclo con el intervalo que corresponde.
+    if (sala.estado.rt) conectarRealtime(sala.estado.rt, codigo, () => { if (detenido) return; clearTimeout(tick); programarTick(); });
     const reloj = setInterval(() => pintarSala(), 250);
-    limpiezas.push(() => clearTimeout(tick), () => clearInterval(reloj));
+    limpiezas.push(() => { detenido = true; clearTimeout(tick); }, () => clearInterval(reloj));
     app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + ' · partida</span>' +
       '<span class="stat" id="p-codigo-chip">🔑 ' + escapeHtml(codigo) + '</span></div><div class="bar" id="m-bar" hidden><span style="width:100%"></span></div><div id="p-body"></div></div>';
     sala.vista = null;
