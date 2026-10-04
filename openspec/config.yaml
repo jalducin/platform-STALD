@@ -5,26 +5,43 @@ schema: spec-driven
 # Este bloque se muestra a la IA al crear cualquier artefacto OpenSpec.
 # ---------------------------------------------------------------------------
 context: |
-  Proyecto: platform-STALD — dashboards de tareas escolares alimentados desde Notion.
-  Detalle y URLs: openspec/project.md.
+  Proyecto: platform-STALD — plataforma escolar con portal, Inglés en línea (actividades, exámenes y grupos),
+  Juegos (individuales y multijugador) y el tablero de Secundaria. Detalle y URLs: openspec/project.md.
 
   Stack tecnológico:
-  - Frontend: páginas HTML estáticas autocontenidas (HTML + CSS + JS vanilla, sin build),
-    publicadas con GitHub Pages desde la raíz de `main` (https://jalducin.github.io/platform-STALD/).
-  - Backend: Deno Deploy (Deno + TypeScript), `server/main.ts`, https://stald.jalducin.deno.net.
+  - Frontend: páginas HTML estáticas (HTML + CSS + JS vanilla, sin build) con módulos compartidos en
+    `comun/`, `ingles/`, `juegos/` y `estilos/`, publicadas con GitHub Pages desde la raíz de `main`
+    (https://jalducin.github.io/platform-STALD/).
+  - Backend: Deno Deploy (plan Pro; Deno + TypeScript), `server/main.ts`, https://stald.jalducin.deno.net.
     La Supabase Edge Function `tareas-estudio-secundaria` (proyecto "Fidello QAS") es legado: no tocarla.
-  - Datos: bases de Notion (API 2022-06-28) leídas en vivo con un token de integración (`NOTION_TOKEN`)
-    y JSON en el repo privado `jalducin/platform-STALD-data` (actividades con respuestas y resultados).
-    No hay base de datos propia.
+  - Datos:
+    - Postgres de Supabase (proyecto *Portafolio*): datos vivos de Inglés (alumnos y alumnas, grupos,
+      inscripciones, resultados y avance) en tablas `stald_*` del esquema `public`, con RLS sin políticas
+      públicas; solo el servidor las lee con la llave de servicio (`server/db.ts`). Ver docs/data-model.md.
+    - Repo privado `jalducin/platform-STALD-data` (JSON): contenido de Inglés (semanas, actividades y exámenes
+      con respuestas) y datos de Juegos; respaldo de lectura de Inglés durante la transición.
+    - Notion (API 2022-06-28, `NOTION_TOKEN`): bases de Secundaria y "📖 Clases Inglés". Inglés ya no se
+      gestiona en Notion en la práctica: sus filas solo se leen como historial.
+  - Supabase Realtime: canal secreto por sala para las partidas multijugador (`server/realtime.ts`);
+    sin las variables `SUPABASE_*` las salas usan sondeo.
+  - Supabase Auth: inicio de sesión con enlace mágico o código (`comun/auth.js`, `server/auth.ts`); el
+    servidor toma el correo de la sesión verificada. Hasta `LOGIN_TRANSICION_HASTA` (2026-10-12) se acepta
+    `?email=` sin sesión, salvo para el admin.
 
-  Arquitectura: navegador → Deno Deploy (filtro por correo; actividades en el repo de datos) → Notion API.
-  Cada página HTML consume una ruta del backend:
-  - index.html  → /perfil       (portal: accesos por correo)
-  - secundaria.html → /data     (base "📖 Clases", Secundaria)
-  - ingles.html → /ingles/data  (base "📖 Clases Inglés")
+  Arquitectura: navegador (GitHub Pages, sesión de Supabase Auth) → Deno Deploy (identidad con `quienEs`
+  y reglas de acceso) → Postgres / repo de datos / Notion; el servidor publica el estado de las salas en
+  Supabase Realtime. Páginas y rutas principales:
+  - index.html      → /perfil, /config, /auth/enlace (portal y «🔗 Enlace de acceso» del profe)
+  - ingles.html     → /ingles/actividades, /ingles/alumnos, /ingles/grupos, /ingles/resumen,
+                      /ingles/profe/actividades, /ingles/data (filas de Notion, solo lectura)
+  - juegos.html     → /juegos/… (partidas, ranking, salas, avatar)
+  - secundaria.html → /data (base "📖 Clases", Secundaria)
+  - /salud          → vigilancia del servidor (GitHub Actions)
 
-  Dominio: seguimiento de tareas/clases de alumnas (menores de edad). Los datos son personales:
-  tratar privacidad y control de acceso como requisitos de primer nivel, no como detalles.
+  Specs vivas: openspec/specs/ (fuente de verdad de los requisitos ya archivados).
+
+  Dominio: seguimiento de tareas, clases y juegos de alumnos y alumnas (menores de edad). Los datos son
+  personales: tratar privacidad y control de acceso como requisitos de primer nivel, no como detalles.
 
   Idioma: documentación, comentarios, commits y artefactos OpenSpec en español; identificadores en inglés.
   Control de versiones: conventional commits; ramas `feature/<change-name>`.
@@ -33,8 +50,9 @@ context: |
   - docs/base-standards.md — principios base, idioma, skills, planificación y reglas OpenSpec.
   - docs/documentation-standards.md — estructura y mantenimiento de la documentación.
   - docs/frontend-standards.md — páginas HTML estáticas / GitHub Pages.
-  - docs/backend-standards.md — backend Deno, contrato HTTP, integración con Notion y seguridad.
-  - docs/data-model.md — bases de Notion y propiedades que consume el sistema.
+  - docs/backend-standards.md — backend Deno, contrato HTTP, sesión, integración con Notion y seguridad.
+  - docs/data-model.md — bases de Notion, formatos JSON del repo de datos y tablas `stald_*` de Postgres.
+  - docs/deno-deploy-setup.md — variables de entorno de Deno Deploy (GitHub, Notion y Supabase).
 
   Para implementar: adopta el agente relevante de ai-specs/agents/ (frontend-developer para *.html,
   backend-developer para `server/`).
@@ -47,8 +65,8 @@ rules:
     - Antes de crear cualquier artefacto, leer y aplicar docs/base-standards.md
     - Aplicar los docs/*-standards.md que correspondan al área del cambio
     - Mantener consistencia con los specs existentes en openspec/specs/
-    - El repositorio es la fuente de verdad. Nada se despliega (Edge Function) ni se publica (Pages)
-      si no está versionado en el repo dentro del mismo cambio
+    - El repositorio es la fuente de verdad. Nada se despliega (Deno Deploy, migraciones de Supabase) ni se
+      publica (Pages) si no está versionado en el repo dentro del mismo cambio
     - Todo cambio que toque datos de alumnas debe declarar explícitamente quién puede ver qué
       (matriz de acceso) y cómo se verifica
     - Nunca escribir en el repo correos, nombres o datos personales de alumnas/guests; tampoco secretos
@@ -56,15 +74,16 @@ rules:
       todas las páginas consumidoras en el mismo cambio
 
   proposal:
-    - "Indicar qué superficies toca el cambio: index.html (portal), secundaria.html, ingles.html, servidor Deno, bases de Notion"
-    - Si hay cambios manuales fuera del repo (Notion, Supabase secrets, Pages), listarlos como
+    - "Indicar qué superficies toca el cambio: index.html (portal), ingles.html, juegos.html, secundaria.html, servidor Deno, Postgres/Realtime/Auth de Supabase, repo de datos, bases de Notion"
+    - Si hay cambios manuales fuera del repo (Notion, Supabase, variables de Deno Deploy, Pages), listarlos como
       "Acciones externas" con responsable (agente o usuario)
 
   spec:
     - Definir QUÉ debe hacer el sistema en términos de requisitos y escenarios verificables
     - Cada capability nueva genera un specs/<nombre>/spec.md en kebab-case
-    - "Capabilities de referencia: dashboard-secundaria, dashboard-ingles, notion-data-api, acceso-por-correo"
-    - Incluir escenarios de acceso denegado / correo no asignado / error de Notion cuando apliquen
+    - "Capabilities vivas (openspec/specs/): actividades-online, calendario-entregas-ingles, carga-semanal, clases-ingles-por-alumno, dashboard-ingles, examenes-ingles, ingles, juegos, notion-data-api, plataforma, plataforma-sin-fidello, portal. Reutilizarlas con deltas antes de crear una nueva"
+    - "MODIFIED solo para requisitos que ya existen en openspec/specs/ (con el bloque completo); un requisito nuevo va en ADDED"
+    - Incluir escenarios de acceso denegado / sin sesión / correo no asignado / error de la fuente de datos cuando apliquen
 
   design:
     - "Documentar el CÓMO: decisiones técnicas, alternativas consideradas y trade-offs"
@@ -76,8 +95,9 @@ rules:
     - El primer paso (Step 0) SIEMPRE es crear la feature branch
     - Toda lista de tareas debe incluir los pasos obligatorios definidos en
       .claude/rules/openspec-tasks-mandatory-steps.md (rama, pruebas, verificación manual, documentación)
-    - Verificación de backend = curl contra la función desplegada (casos válidos, sin email, email no
-      asignado, admin); verificación de frontend = abrir la página publicada o servida localmente
-    - Si el cambio despliega la Edge Function, incluir tarea de despliegue desde el archivo del repo y
-      comprobar que la versión desplegada coincide con el repo
-    - Si el cambio afecta a Notion, la tarea de verificación debe restaurar cualquier fila de prueba
+    - Verificación de backend = curl contra el servidor de Deno Deploy o uno local (casos válidos, sin sesión,
+      correo no asignado, admin); verificación de frontend = abrir la página publicada o servida localmente
+    - Deno Deploy publica solo con el merge a `main`; incluir la verificación en producción tras el merge
+    - Si el cambio afecta a Notion, Postgres o el repo de datos, la verificación debe restaurar cualquier dato
+      de prueba (en Postgres, usar el prefijo `stald_test_`)
+    - El último paso del cambio es `openspec archive` (consolida los deltas en openspec/specs/)
