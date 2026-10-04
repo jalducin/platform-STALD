@@ -15,6 +15,11 @@ const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
 const CLASES_INGLES_DB_ID = "3c41c6b4f8b580f888d8d122cbb5c613"; // 📖 Clases Inglés
 const env = (k: string) => Deno.env.get(k) || "";
 
+// Supabase Realtime para salas (openspec: salas-realtime). Sin las tres variables, las salas usan sondeo.
+const realtime = env("SUPABASE_URL") && env("SUPABASE_PUBLISHABLE_KEY") && env("SUPABASE_SERVICE_KEY")
+  ? { url: env("SUPABASE_URL").replace(/\/$/, ""), publica: env("SUPABASE_PUBLISHABLE_KEY"), servicio: env("SUPABASE_SERVICE_KEY") }
+  : undefined;
+
 // ---------- Notion ----------
 // deno-lint-ignore no-explicit-any
 async function queryDatabase(dbId: string): Promise<any[]> {
@@ -167,7 +172,7 @@ export async function handler(req: Request): Promise<Response> {
     const iJuegos = url.pathname.indexOf("/juegos/");
     if (iJuegos !== -1) {
       return await handleJuegos(req, url.pathname.slice(iJuegos + "/juegos".length), email, {
-        store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"),
+        store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), realtime,
       }, json);
     }
 

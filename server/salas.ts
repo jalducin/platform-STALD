@@ -3,6 +3,7 @@
 // calculan en el cliente con la semilla. Ver openspec: juegos-partidas.
 import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
+import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realtime.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -25,6 +26,7 @@ interface Sala {
   creada: number; // ms
   inicio: number | null; // ms del servidor
   bots: boolean;
+  canal?: string; // topic secreto de Supabase Realtime (openspec: salas-realtime); nunca va en el cuerpo de la sala
 }
 
 interface EnSala {
@@ -42,6 +44,7 @@ interface EnSala {
   jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; t: number }[]; // ¡Una!
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
+  v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
 }
 
 const RONDAS_BASTA = ["5", "10", "12"]; // Basta por rondas (openspec: basta-rondas)
@@ -75,7 +78,7 @@ async function guardarJugador(store: Store, codigo: string, j: Jugador, cambiar:
   for (let i = 0; i < 3; i++) {
     const doc = await store.get<EnSala>(ruta(codigo, j.id));
     const base: EnSala = doc?.data ?? { id: j.id, nombre: j.nombre, tipo: j.tipo, unido: ahora, respuestas: {} };
-    const nuevo = { ...cambiar(base), avatar: j.avatar };
+    const nuevo = { ...cambiar(base), avatar: j.avatar, v: (base.v ?? 0) + 1 };
     if (await store.put(ruta(codigo, j.id), nuevo, doc?.sha ?? null, `sala ${codigo}: ${j.nombre}`)) {
       cache.delete(codigo);
       return nuevo;
@@ -111,7 +114,10 @@ export async function resumenSalas(store: Store, lunes: string) {
 }
 
 // sub: "" (crear) o "/<código>[/unirse|/empezar|/respuesta]"
-export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string): Promise<Response> {
+// La sala que se devuelve o se publica, sin el canal secreto.
+const sinCanal = (s: Sala): Sala => { const { canal: _c, ...resto } = s; return resto; };
+
+export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string, rt?: ConfigRealtime): Promise<Response> {
   const ahora = Date.parse(ahoraIso);
   let body: Record<string, unknown> = {};
   if (req.method === "POST") {
@@ -141,11 +147,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (!(await store.get(ruta(cand)))) codigo = cand;
     }
     if (!codigo) return json({ error: "sin_codigo" }, 503);
-    const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: body.bots !== false };
+    const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: body.bots !== false, canal: canalNuevo() };
     await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`);
     await guardarJugador(store, codigo, jugador, (e) => e, ahora);
     await indexar(store, lunes, { codigo, juego, host: jugador.nombre, creada: ahora });
-    return json({ codigo, sala });
+    return json({ codigo, sala: sinCanal(sala) });
   }
 
   const m = sub.match(/^\/([A-Z]{4})(\/(unirse|empezar|respuesta))?$/);
@@ -156,12 +162,20 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   const { sala, jugadores } = est;
   if (ahora - sala.creada > VIGENCIA_MS) return json({ error: "sala_vencida" }, 410);
   const dentro = jugadores.some((j) => j.id === jugador.id);
+  // Tras un cambio: publicar el estado fresco en el canal de la sala (si hay Realtime configurado).
+  const publicar = async () => {
+    if (!rt || !sala.canal) return;
+    cache.delete(codigo);
+    const fresco = await estado(store, codigo, ahora);
+    if (fresco) await publicarSala(rt, sala.canal, { sala: sinCanal(fresco.sala), jugadores: fresco.jugadores, ahora: Date.now() });
+  };
 
   if (accion === "unirse" && req.method === "POST") {
     if (dentro) return json({ ok: true, codigo });
     if (sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
     if (jugadores.length >= MAX_JUGADORES) return json({ error: "sala_llena" }, 409);
     await guardarJugador(store, codigo, jugador, (e) => e, ahora);
+    await publicar();
     return json({ ok: true, codigo });
   }
 
@@ -172,9 +186,10 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS };
       await store.put(ruta(codigo), nueva, doc!.sha, `sala ${codigo}: empieza`);
       cache.delete(codigo);
-      return json({ ok: true, sala: nueva, ahora });
+      await publicar();
+      return json({ ok: true, sala: sinCanal(nueva), ahora });
     }
-    return json({ ok: true, sala, ahora });
+    return json({ ok: true, sala: sinCanal(sala), ahora });
   }
 
   if (accion === "respuesta" && req.method === "POST") {
@@ -234,12 +249,14 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     }
     const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
     if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
+    await publicar();
     return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas });
   }
 
   if (!accion && req.method === "GET") {
     if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
-    return json({ sala, jugadores, ahora, yo: jugador.id, soyHost: sala.host === jugador.id });
+    const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
+    return json({ sala: sinCanal(sala), jugadores, ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo });
   }
 
   return json({ error: "metodo_no_permitido" }, 405);

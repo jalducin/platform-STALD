@@ -30,6 +30,9 @@ privado `jalducin/platform-STALD-data`. No usa Supabase. Necesitas 3 datos y uno
 | `SUPER_ADMIN_EMAIL` | tu correo de admin |
 | `GITHUB_TOKEN` | el token de GitHub (paso 1) |
 | `DATA_REPO` | `jalducin/platform-STALD-data` |
+| `SUPABASE_URL` | `https://eolsklubeywfmuyrtxla.supabase.co` (opcional: partidas en tiempo real, cambio `salas-realtime`) |
+| `SUPABASE_PUBLISHABLE_KEY` | llave *publishable* del proyecto (va al navegador) |
+| `SUPABASE_SERVICE_KEY` | llave `service_role` (Legacy API keys) o *secret*; solo servidor |
 
 5. Copia la URL del proyecto (algo como `https://platform-stald.deno.dev`) y pásamela. Con ella cambio
    `DEFAULT_API` en `ingles.html` y verifico todo en producción.

@@ -5,6 +5,7 @@ import { mxToday, slugAlumno } from "./motor.ts";
 import { decodeBase64 } from "jsr:@std/encoding@1/base64";
 import type { Store } from "./store.ts";
 import { handleSalas, resumenSalas } from "./salas.ts";
+import type { ConfigRealtime } from "./realtime.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -201,6 +202,7 @@ export interface DepsJuegos {
   hoy?: () => string; // AAAA-MM-DD en CDMX (inyectable en pruebas)
   ahora?: () => string; // ISO
   ms?: () => number; // reloj en ms para la caché de fotos (inyectable en pruebas)
+  realtime?: ConfigRealtime; // Supabase Realtime para salas (openspec: salas-realtime)
 }
 
 const cache = new Map<string, { t: number; v: unknown }>();
@@ -349,7 +351,7 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
   }
 
   // /juegos/sala… → partidas multijugador (server/salas.ts)
-  if (sub === "/sala" || sub.startsWith("/sala/")) return await handleSalas(req, sub.slice("/sala".length), jugador, store, ahora, json, lunes);
+  if (sub === "/sala" || sub.startsWith("/sala/")) return await handleSalas(req, sub.slice("/sala".length), jugador, store, ahora, json, lunes, deps.realtime);
 
   // GET /juegos/admin/resumen → jugadores y partidas de la semana (solo admin, sin correos)
   if (sub === "/admin/resumen" && req.method === "GET") {

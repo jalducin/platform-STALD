@@ -99,6 +99,16 @@ de datos) y `DATA_REPO`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE`, `PORT` y `PER
 simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.text()` sin importar el `content-type`, y
 `OPTIONS` responde con `Access-Control-Max-Age: 86400`. Al agregar rutas POST, no exijas `application/json`.
 
+**Salas en tiempo real** (`server/realtime.ts`, cambio `salas-realtime`): con `SUPABASE_URL`,
+`SUPABASE_PUBLISHABLE_KEY` y `SUPABASE_SERVICE_KEY` (proyecto Supabase *Portafolio*, compartido con el portafolio):
+  - cada sala nace con `canal` (24 hex secretos). Solo se entrega dentro de `rt: { url, key, topic }` en
+    `GET /juegos/sala/<código>`, y solo a quien está en la sala;
+  - tras `unirse`, `empezar` y `respuesta`, `publicarSala` hace un broadcast REST
+    (`POST /realtime/v1/api/broadcast`, evento `estado`, payload `{ sala, jugadores, ahora }`, sin correos), con
+    tope de 3 s. Si falla, se registra y la respuesta sigue igual;
+  - la llave de servicio debe ser un JWT (`service_role`) o una `sb_secret_…` completa; nunca va al navegador ni al repo;
+  - sin las tres variables no hay `rt` y las salas funcionan con sondeo.
+
 **Salud y vigilancia** (`server/salud.ts`, `server/vigilancia.ts`, cambio `vigilancia-servidor`):
   - `GET /salud` (sin correo) responde `{ ok, estado, motivo?, github: { limite, usadas, restantes, reinicio }, revisado }`.
     `estado`: `ok`, `advertencia` (menos del 10 % restante) o `bloqueado` (0 restantes o el repo no responde, 503).

@@ -33,3 +33,11 @@ manda el aviso por correo. Cuando se recupera, lo cierra con "✅ Recuperado". D
 
 El correo llega a la dirección de notificaciones de la cuenta de GitHub. Para dirigirlo a otra, configúralo en
 GitHub → Settings → Notifications → **Custom routing** (y en Settings → Emails, verifica esa dirección).
+
+## Partidas en tiempo real (Supabase)
+
+Las partidas multijugador usan Supabase Realtime del proyecto **Portafolio** (el mismo que usa el formulario de
+contacto del portafolio `jalducin.github.io`; son dos repos apuntando al mismo proyecto, sin tablas compartidas).
+Deno publica cada cambio de la sala en un canal secreto y las páginas lo reciben al instante, con una consulta de
+respaldo cada 30 s. Sin las variables `SUPABASE_*` en Deno, las partidas funcionan con sondeo. Variables en
+[docs/deno-deploy-setup.md](docs/deno-deploy-setup.md); detalle en [docs/backend-standards.md](docs/backend-standards.md).
