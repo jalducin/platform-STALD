@@ -30,7 +30,7 @@
 
 ## 5. Verificación manual en producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Hacer un alta de prueba en producción:
+- [x] 5.1 Hacer un alta de prueba en producción:
   - comprobar `inicio` y la lista;
   - borrar el alta.
 

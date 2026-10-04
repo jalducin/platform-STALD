@@ -31,3 +31,10 @@
 ## Resultado
 - Estado del Step 4: PASS
 - Bloqueos: ninguno
+
+## Verificación en producción (Step 5.1) — 2026-10-03
+- `python prod-inicio.py` contra `stald.jalducin.deno.net`, con el correo de admin:
+  - alta de "Prueba Lunes" → 200 con `inicio: 2026-10-05`;
+  - `GET /ingles/actividades` como esa alumna → `inicio: 2026-10-05` y ningún elemento vencido antes;
+  - se quitó el alta (`/ingles/alumnos/quitar` → 200) y la lista quedó sin "Prueba".
+- Estado restaurado: Sí.
