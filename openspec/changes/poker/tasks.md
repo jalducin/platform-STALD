@@ -52,4 +52,4 @@
 
 - [x] 8.1 Aplicar los nuevos tiempos en el modo individual y en sala
 - [x] 8.2 Correr E2E del póker y regresiones
-- [ ] 8.3 Verificar en producción
+- [x] 8.3 Verificar en producción
