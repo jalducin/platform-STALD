@@ -93,6 +93,18 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Publicada: tras el merge, abrir la URL de Pages (ver `openspec/project.md`) y repetir login admin y
   login de alumna. Pages tarda de 1 a 2 minutos en publicar.
 
+## Juegos fusionados (cambio `juegos-fusion`)
+
+- 🧩 **Completa y responde** (`en-frases`): alterna `preguntaFrase` y `preguntaEn`.
+- ✍️ **Ortografía** (`es-ortografia`): mezcla `ortografia`, `acentos` y `poolSinonimos` con `preguntaOrto` y
+  `preguntaSinonimo`.
+- 🧮 **Cálculo y secuencias** (`mente-calculo`): dura 75 s. Una de cada tres preguntas es de `genSecuencia`.
+- En partida, `preguntasPartida` reparte las 10 preguntas así:
+  - Completa y responde: 5 y 5;
+  - Ortografía: 4, 3 y 3, en orden barajado con semilla;
+  - Cálculo y secuencias: 1 de cada 3 es secuencia.
+- El Maratón de cultura suma las categorías `ia` y `tecnologia`, cada una con 6, 6 y 4 preguntas.
+
 ## Ajedrez (cambio `ajedrez`)
 
 - `juegos/ajedrez.js` es el motor sin DOM y expone `globalThis.Ajedrez`.
