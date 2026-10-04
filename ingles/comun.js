@@ -390,10 +390,13 @@ function renderTips(tips) {
 
 // Única salida de peticiones de la página (openspec: ingles-pro). Sprint 3 (plataforma-login): aquí se agrega el
 // encabezado Authorization con el token de sesión; ninguna otra función llama a fetch() directamente.
+// Todas las peticiones salen por aquí: con sesión mandan Authorization: Bearer (openspec: plataforma-login).
+// Si el servidor dice que la sesión no sirve, la página regresa a la pantalla de entrada (sesionVencida, app.js).
 async function api(url, opts) {
   const o = Object.assign({ cache: 'no-store' }, opts || {});
-  const res = await fetch(url, o);
+  const res = await (window.StaldAuth ? StaldAuth.fetchConSesion(url, o) : fetch(url, o));
   const body = await res.json().catch(() => ({}));
+  if (window.StaldAuth && StaldAuth.esSesionVencida(res, body) && typeof sesionVencida === 'function') sesionVencida(body);
   return { ok: res.ok, status: res.status, body };
 }
 const fetchJson = api; // nombre anterior, usado en todo el código

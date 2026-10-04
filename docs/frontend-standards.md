@@ -265,3 +265,14 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   pantallas táctiles, `role="progressbar"`, `aria-live` en avisos y sin desplazamiento horizontal a 390 px (las tablas
   anchas se desplazan dentro de `.tabla-wrap`).
 
+## Inglés con sesión (integración `ingles-pro` + `plataforma-login`)
+
+- `ingles.html` carga `comun/auth.js` antes de los módulos de `ingles/`.
+- Todas las peticiones pasan por `api()` (`ingles/comun.js`):
+  - mandan `Authorization: Bearer` con `StaldAuth.fetchConSesion`;
+  - si el servidor responde 401 de sesión, llaman a `sesionVencida()` (`ingles/app.js`), que cierra la sesión y
+    muestra la entrada con un aviso.
+- Arranque (`ingles/app.js`): `StaldAuth.iniciar(API_BASE)` → `StaldAuth.email()` o, durante la transición,
+  `StaldAuth.correoViejo()` → `loadFor`. Sin correo se muestra `mostrarEntrada()`, que usa
+  `StaldAuth.pintarEntrada`.
+- 🚪 Cerrar sesión (encabezado, menú y ☰ Más) usa `StaldAuth.salir()` y regresa a la entrada.

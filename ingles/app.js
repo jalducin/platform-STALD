@@ -160,18 +160,15 @@ async function loadFor(email) {
     const actividadesP = loadActividades();
     const r = await api(DATA_URL_BASE + '?email=' + encodeURIComponent(email));
     const data = r.body;
+    if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // sesionVencida ya pintó la entrada
     if (!r.ok) throw new Error(data.error === 'mucho_trafico' ? 'Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : (data.error || ('HTTP ' + r.status)));
 
+    if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // ya se mostró la entrada
     if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {
-      loginError.textContent = 'No encontré clases asociadas a ese correo.';
-      loginError.style.display = 'block';
-      localStorage.removeItem(STORAGE_KEY);
-      loginEl.style.display = 'block';
-      appEl.style.display = 'none';
-      return;
+      await StaldAuth.salir();
+      return mostrarEntrada('No encontré clases asociadas a ' + email + '. Revisa que sea el correo que te dio tu profe.');
     }
 
-    localStorage.setItem(STORAGE_KEY, email);
     loginEl.style.display = 'none';
     appEl.style.display = 'block';
     state.data = data;
@@ -181,31 +178,36 @@ async function loadFor(email) {
     if (data.isAdmin) cargarResumen(); // idempotente; el cajón también lo usa
     if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; state.altaAviso = null; }
   } catch (e) {
-    loginError.textContent = '⚠️ ' + e.message;
-    loginError.style.display = 'block';
+    if (appEl.style.display === 'none') mostrarEntrada('⚠️ ' + e.message);
+    else contentEl.innerHTML = vacio('⚠️', e.message);
   }
 }
 
-loginBtn.addEventListener('click', () => {
-  const email = emailInput.value.trim().toLowerCase();
-  if (!email) return;
-  loadFor(email);
-});
-emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
-
-function cerrarSesion() {
-  SESSION_KEYS.forEach(k => localStorage.removeItem(k));
+// ---------- Inicio de sesión con enlace mágico (comun/auth.js, openspec: plataforma-login) ----------
+function mostrarEntrada(aviso) {
   if (cajonEl.open) cajonEl.close();
-  appEl.style.display = 'none';
-  loginEl.style.display = 'block';
-  navEl.hidden = true;
-  emailInput.value = '';
+  appEl.style.display = 'none'; navEl.hidden = true; loginEl.style.display = 'block';
   state.data = null;
+  StaldAuth.pintarEntrada(loginEl, { titulo: '📗 Clases de Inglés', texto: 'Te mandamos un enlace a tu correo para entrar, sin contraseña.', aviso, alEntrar: c => loadFor(c) });
+}
+let saliendo = false;
+function sesionVencida(body) {
+  if (saliendo) return;
+  saliendo = true;
+  StaldAuth.salir().then(() => {
+    saliendo = false;
+    mostrarEntrada(body && body.error === 'inicia_sesion' ? '🔒 Por seguridad, ahora entras con un enlace que te llega a tu correo.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.');
+  });
+}
+async function cerrarSesion() {
+  await StaldAuth.salir();
+  mostrarEntrada();
 }
 logoutBtn.addEventListener('click', cerrarSesion);
 
-const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('stald_email');
-if (saved) {
-  emailInput.value = saved;
-  loadFor(saved);
-}
+(async () => {
+  try { await StaldAuth.iniciar(API_BASE); } catch (e) { /* sin configuración: la entrada muestra el aviso */ }
+  // Con sesión: su correo verificado. En la transición (hasta el 12 de octubre): el correo guardado de antes.
+  const email = StaldAuth.email() || StaldAuth.correoViejo();
+  if (email) loadFor(email); else mostrarEntrada();
+})();

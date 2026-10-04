@@ -33,6 +33,12 @@
 - [x] 3.2 Integrarlo en el portal (entrada con enlace, 🚪 Cerrar sesión, aviso de transición y «🔗 Enlace de acceso»
   del admin), Juegos y Secundaria. **Inglés** lo integra quien rediseña `ingles.html` (Sprint 2), con las
   instrucciones del reporte
+- [x] 3.3 Integración en Inglés, rama `feature/integracion-ingles-pro-login`:
+  - `ingles.html` carga `comun/auth.js`;
+  - `api()` de `ingles/comun.js` manda el token y, si la sesión vence, llama a `sesionVencida()`;
+  - `ingles/app.js` arranca con `StaldAuth.iniciar`, usa la sesión o, durante la transición, el correo de antes;
+  - si no hay ninguno, `mostrarEntrada()` muestra la entrada con enlace;
+  - 🚪 Cerrar sesión usa `StaldAuth.salir()`.
 
 ## 4. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
