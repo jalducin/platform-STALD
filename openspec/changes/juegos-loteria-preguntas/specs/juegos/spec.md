@@ -27,8 +27,16 @@ SHALL competir con su propia tabla.
 - **WHEN** un jugador envía "¡Lotería!" dos veces
 - **THEN** el servidor conserva la hora del primero
 
-### Requirement: Nombres de los bots
-Los bots de las partidas SHALL llamarse "BOT-VACHIRA" (60 % de acierto) y "BOT-ISAGII" (45 %).
+## MODIFIED Requirements
+
+### Requirement: Bots aleatorios
+Una partida con bots SHALL incluir a "BOT-VACHIRA" y "BOT-ISAGII". Contestan al azar, con 60 % y 45 % de acierto
+y tiempos variables, y SHALL verse igual en todos los dispositivos, porque se calculan con la semilla de la
+partida. En Basta llenan palabras del diccionario al azar. (Antes se llamaban "Bot Ajolote 🦎" y "Bot Colibrí 🐦".)
+
+#### Scenario: Bots consistentes
+- **WHEN** dos jugadores ven el marcador de la misma partida
+- **THEN** los bots tienen los mismos puntos en ambos
 
 #### Scenario: Sala con bots
 - **WHEN** se crea una partida con bots

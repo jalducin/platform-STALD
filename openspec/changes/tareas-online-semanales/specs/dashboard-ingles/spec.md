@@ -64,3 +64,17 @@ y Esc sale.
 #### Scenario: Navegación
 - **WHEN** el admin presiona → en la diapositiva 1
 - **THEN** pasa a la diapositiva 2 y el contador lo refleja
+
+## MODIFIED Requirements
+
+### Requirement: Raíz de la función sin HTML
+Cualquier ruta que el servidor no defina SHALL responder 404 JSON `{ "error": "not_found" }`. La raíz SHALL NOT
+servir HTML: las páginas viven en GitHub Pages.
+
+#### Scenario: Raíz
+- **WHEN** se hace GET a la raíz del servidor
+- **THEN** la respuesta es 404 con `{ "error": "not_found" }`
+
+#### Scenario: Ruta desconocida
+- **WHEN** se hace GET a una ruta que no existe, p. ej. `/ingles/nada`
+- **THEN** la respuesta es 404 con `{ "error": "not_found" }`

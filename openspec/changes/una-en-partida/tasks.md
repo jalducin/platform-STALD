@@ -31,14 +31,16 @@
 
 ## 4. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Producción:
+- [x] 4.1 Producción:
   - curl de sala de `una` y de una jugada;
   - **restaurar** la sala de prueba.
+  - Evidencia: «Producción de PR #39» en `reports/2026-09-30-step-3-pruebas-y-verificacion.md` (jugada guardada;
+    salas HGSV y ECPH borradas).
 
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/backend-standards.md` y `docs/data-model.md`
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #39, `feature/una-en-partida`, fusionado el 2026-09-30)
 
 ## Ajuste post-apply del profe: ritmo y robo sin cartas (sprint final)
 

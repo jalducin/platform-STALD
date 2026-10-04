@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Juegos de preguntas fusionados
 El menú SHALL mostrar un solo juego por tema:
@@ -27,3 +27,16 @@ niveles.
 #### Scenario: Elegir la categoría de IA
 - **WHEN** alguien elige 🤖 Inteligencia artificial
 - **THEN** recibe preguntas de IA que van de nivel fácil a difícil, cada una con su dato
+
+## MODIFIED Requirements
+
+### Requirement: Responde en inglés
+Las preguntas de "Responde en inglés" SHALL mostrar una pregunta en inglés, con su traducción como apoyo, y 4
+respuestas en inglés, de las que una sola es la respuesta natural. Desde la fusión SHALL jugarse dentro de
+🧩 Completa y responde (`en-frases`), en solitario y en partida; el juego suelto `en-preguntas` SHALL NOT aparecer
+en el menú ni crearse en partidas nuevas.
+
+#### Scenario: Pregunta de edad
+- **WHEN** en Completa y responde sale "How old are you?"
+- **THEN** la respuesta correcta es "I am twelve." y los distractores son respuestas en inglés a otras
+  preguntas

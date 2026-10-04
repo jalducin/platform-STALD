@@ -23,9 +23,12 @@
 
 - [x] 4.1 CLI contra la semana 1 real (código 0) y contra una copia alterada (código 1 con los errores esperados)
 - [x] 4.2 Servidor local con una semana futura de prueba: curl con `hoy` antes y después del lunes; borrar la semana de prueba
-- [ ] 4.3 Tras el merge: curl a producción, la lista sigue igual (6 elementos de la semana 1 + diagnóstico)
+- [x] 4.3 Tras el merge: curl a producción, la lista sigue igual (6 elementos de la semana 1 + diagnóstico)
+  - Evidencia (cierre 2026-10-04): curl a producción del 2026-09-28, tras los PR #13 y #14, con `semana = 2026-09-28`,
+    los 5 elementos de la semana y el diagnóstico (`prorroga-por-alumno/reports/2026-09-28-step-3-pruebas-y-verificacion.md`,
+    «Verificación en producción»).
 
 ## 5. Documentación (OBLIGATORIO)
 
 - [x] 5.1 `docs/backend-standards.md` (validador y semanas por adelantado), `docs/data-model.md` y README (flujo semanal)
-- [ ] 5.2 Commit, push, PR y merge a `main`
+- [x] 5.2 Commit, push, PR y merge a `main` (PR #13, `feature/nueva-semana-ingles`, fusionado el 2026-09-28)
