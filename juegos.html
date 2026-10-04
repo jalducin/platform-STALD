@@ -251,6 +251,26 @@
   dialog.ayuda table { width: 100%; border-collapse: collapse; font-size: .82rem; }
   dialog.ayuda td { padding: 4px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
   dialog.ayuda .aviso { background: var(--accent-soft); border-radius: 10px; padding: 8px 10px; font-size: .82rem; margin-top: 12px; }
+  /* Baraja española: Brisca y Conquián (openspec: cartas-espanolas) */
+  .es-carta { display: inline-flex; flex-direction: column; align-items: center; justify-content: space-between; width: 50px; height: 74px; border-radius: 8px;
+    background: #fffdf5; border: 2px solid var(--pc); color: var(--pc); font-weight: 900; padding: 4px 2px 3px; box-shadow: 0 2px 6px rgba(0,0,0,.25); line-height: 1; vertical-align: middle; }
+  .es-carta .v { font-size: 1.15rem; } .es-carta .p { font-size: 1.25rem; } .es-carta .f { font-size: .5rem; font-weight: 800; letter-spacing: .02em; }
+  .es-carta.chica { width: 36px; height: 54px; padding: 2px 1px; } .es-carta.chica .v { font-size: .85rem; } .es-carta.chica .p { font-size: .9rem; } .es-carta.chica .f { display: none; }
+  .es-carta.oculta { background: repeating-linear-gradient(45deg, #1e3a8a 0 6px, #1d4ed8 6px 12px); border-color: #fff; color: transparent; }
+  .es-carta.vacia { background: rgba(255,255,255,.1); border: 1.5px dashed rgba(255,255,255,.4); box-shadow: none; }
+  .es-carta.triunfo { transform: rotate(90deg); margin: 0 12px; }
+  .es-btn { background: none; border: none; padding: 0; cursor: pointer; transition: transform .12s; font: inherit; }
+  .es-btn[data-no] { opacity: .6; cursor: default; }
+  .es-btn.sel .es-carta { transform: translateY(-9px); box-shadow: 0 0 0 3px var(--accent-2), 0 6px 14px rgba(0,0,0,.3); }
+  .es-btn.jugable .es-carta { transform: translateY(-5px); box-shadow: 0 6px 14px rgba(0,0,0,.3); }
+  .es-mano { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin: 10px 0 6px; padding-top: 8px; }
+  .es-mesa { background: radial-gradient(ellipse at center, #1e6f8f 0%, #155e75 60%, #0e3f50 100%); }
+  .es-baza { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; min-height: 92px; align-items: flex-end; }
+  .es-baza figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: .62rem; font-weight: 700; }
+  .es-juegos { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+  .es-juego { display: flex; gap: 2px; padding: 4px; border-radius: 10px; border: 1.5px dashed var(--border); background: var(--card); font: inherit; cursor: pointer; }
+  .es-juego.destino { border: 2px solid var(--accent-2); background: var(--mente-soft); }
+  .es-seccion { font-size: .75rem; font-weight: 800; color: var(--muted); margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -262,7 +282,7 @@
   <main id="app"><div class="loading">Cargando juegos…</div></main>
 </div>
 
-<script src="juegos/cartas.js?v=1"></script>
+<script src="juegos/cartas.js?v=2"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -359,6 +379,8 @@
     { id: 'una', cat: 'clasicos', emoji: '🃏', t: '¡Una!', d: 'Cartas de colores. Con una carta, ¡presiona el botón UNA!', jugar: () => elegirUna() },
     { id: 'loteria', cat: 'clasicos', emoji: '🎴', t: 'Lotería', d: 'Lotería mexicana bilingüe con gritón.', jugar: () => elegirLoteria() },
     { id: 'poker', cat: 'clasicos', emoji: '♠️', t: 'Póker', d: "Texas Hold'em estilo Casino Royale, con fichas de juego.", jugar: () => elegirPoker() },
+    { id: 'brisca', cat: 'clasicos', emoji: '🏆', t: 'Brisca', d: 'Baraja española: gana bazas con el triunfo. Solo, contra 2 o en pareja.', jugar: () => elegirBrisca() },
+    { id: 'conquian', cat: 'clasicos', emoji: '🪙', t: 'Conquián', d: 'Baraja española: baja tercias y escaleras hasta juntar 9 cartas.', jugar: () => elegirConquian() },
   ];
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
 
@@ -1566,6 +1588,171 @@
     siguienteMano();
   }
 
+  // ---------- Clásicos: baraja española — Brisca y Conquián (openspec: cartas-espanolas) ----------
+  const ES_COLOR = ['#b45309', '#dc2626', '#1d4ed8', '#15803d']; // oros, copas, espadas, bastos
+  const ES_FIG = { 1: 'AS', 10: 'SOTA', 11: 'CABALLO', 12: 'REY' };
+  function esCarta(id, extra) {
+    if (id === null) return '<span class="es-carta vacia' + (extra || '') + '"></span>';
+    if (id === undefined) return '<span class="es-carta oculta' + (extra || '') + '"></span>';
+    const v = Cartas.espValor(id), pl = Cartas.espPalo(id);
+    return '<span class="es-carta' + (extra || '') + '" style="--pc:' + ES_COLOR[pl] + '" aria-label="' + escapeHtml(Cartas.nombreEsp(id)) + '"><span class="v">' + v + '</span><span class="p">' + Cartas.ESP_EMOJI[pl] + '</span><span class="f">' + (ES_FIG[v] || '') + '</span></span>';
+  }
+  const ordenMano = ids => ids.slice().sort((a, b) => Cartas.espPalo(a) - Cartas.espPalo(b) || Cartas.espOrden(a) - Cartas.espOrden(b));
+  const ES_BOTS = [{ nombre: 'La Güera', emoji: '💃' }, { nombre: 'El Compadre', emoji: '🤠' }, { nombre: 'Doña Chonita', emoji: '👵' }];
+
+  // Puntos de la Brisca: puntos de cartas (o de la pareja) sobre 120 → 800, +200 si gana.
+  function brPuntos(st, j) {
+    const r = Cartas.briscaResultado(st);
+    const k = st.equipos ? st.equipos[j] : j;
+    return { puntos: Math.min(1000, Math.round(r.totales[k] * 800 / 120) + (r.ganador === k ? 200 : 0)), mios: r.totales[k], gano: r.ganador === k, empate: r.ganador === -1, r };
+  }
+  // Puntos del Conquián: ganar = 700 + 15 por carta que queda en el mazo; si no, 50 por carta bajada.
+  const cqPuntos = (st, j) => st.ganador === j ? Math.min(1000, 700 + st.mazo.length * 15) : Math.min(1000, Cartas.bajadas(st, j) * 50);
+
+  function briscaHtml(st, o) {
+    const yo = o.yo, n = st.n;
+    const otros = [...Array(n).keys()].filter(i => i !== yo);
+    const tagEq = i => st.equipos ? ' <span class="pk-tag eq' + 'AB'[st.equipos[i]] + '">' + (yo >= 0 && st.equipos[i] === st.equipos[yo] ? 'pareja' : 'rival') + '</span>' : '';
+    const asientos = '<div class="pk-asientos">' + otros.map(i => '<div class="pk-asiento' + (!st.terminada && st.turno === i ? ' turno' : '') + '"><span class="n">' + o.avatar(i) + escapeHtml(o.nombre(i)) + tagEq(i) + '</span><span>' +
+      st.manos[i].map(() => esCarta(undefined, ' chica')).join(' ') + '</span><span class="muted">' + st.ganadas[i].length / n + ' baza(s)</span></div>').join('') + '</div>';
+    const baza = st.baza.length ? st.baza : (o.verUltima && st.ultimaBaza ? st.ultimaBaza.cartas : []);
+    const u = st.ultimaBaza;
+    const msg = st.baza.length ? '' : u ? '🏆 ' + escapeHtml(o.nombre(u.ganador)) + ' gana la baza' + (u.puntos ? ' (+' + u.puntos + ')' : '') : '¡A jugar! Abre ' + escapeHtml(o.nombre(st.turno));
+    const mesa = '<div class="pk-mesa es-mesa"><div class="pk-titulo">🏆 Brisca · triunfo ' + Cartas.ESP_PALOS[st.paloTriunfo] + ' ' + Cartas.ESP_EMOJI[st.paloTriunfo] + '</div>' +
+      '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0">' + (st.mazo.length ? esCarta(st.triunfo, ' chica triunfo') + '<span class="pk-bote">🂠 ' + st.mazo.length + '</span>' : '<span class="pk-bote">Mazo agotado</span>') + '</div>' +
+      '<div class="es-baza">' + baza.map(b => '<figure>' + esCarta(b.carta) + '<figcaption>' + escapeHtml(o.nombre(b.j)) + '</figcaption></figure>').join('') + '</div>' +
+      '<div class="pk-msg">' + msg + '</div></div>';
+    const mio = yo >= 0 ? '<div class="pk-yo"><div class="pk-asiento' + (!st.terminada && st.turno === yo ? ' turno' : '') + '"><span class="n">' + o.avatar(yo) + escapeHtml(o.nombre(yo)) + tagEq(yo) + '</span><span class="muted">' + st.ganadas[yo].length / n + ' baza(s) · ' + st.puntos[yo] + ' pts</span></div></div>' +
+      '<div class="es-mano">' + st.manos[yo].map(c => '<button class="es-btn' + (o.miTurno ? ' jugable' : '') + '" data-br-carta="' + c + '"' + (o.miTurno ? '' : ' data-no="1"') + '>' + esCarta(c) + '</button>').join('') + '</div>' : '';
+    return asientos + mesa + mio + (o.pie || '') + '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-ayuda="brisca">📖 Cómo se juega</button></div>';
+  }
+
+  function conquianHtml(st, o) {
+    const yo = o.yo, rival = yo >= 0 ? 1 - yo : 1, ver = yo >= 0 ? yo : 0;
+    const juegos = (j, propios) => '<div class="es-juegos">' + (st.bajados[j].length ? st.bajados[j].map((m, a) => (propios ? '<button class="es-juego' + (o.destino === a ? ' destino' : '') + '" data-cq-juego="' + a + '" aria-label="Juego ' + (a + 1) + '">' : '<span class="es-juego">') +
+      ordenMano(m).map(c => esCarta(c, ' chica')).join('') + (propios ? '</button>' : '</span>')).join('') : '<span class="muted" style="font-size:.78rem">Sin juegos bajados</span>') + '</div>';
+    const of = st.oferta;
+    const deQuien = !of ? '' : of.origen === 'descarte' ? 'Descarte de ' + escapeHtml(o.nombre(1 - of.para)) : of.segunda ? escapeHtml(o.nombre(1 - of.para)) + ' no la quiso' : 'Volteada del mazo';
+    const u = st.ultima;
+    const ult = !u ? '' : escapeHtml(o.nombre(u.j)) + ' ' + ({ pasar: 'no quiso ' + Cartas.nombreEsp(u.carta), tomar: 'tomó ' + Cartas.nombreEsp(u.carta), bajar: 'bajó un juego', descartar: 'descartó ' + Cartas.nombreEsp(u.carta) })[u.accion];
+    const mesa = '<div class="pk-mesa es-mesa"><div class="pk-titulo">🪙 Conquián · gana quien baja 9</div>' +
+      '<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0"><span' + (of ? ' data-cq-oferta="' + of.carta + '"' : '') + '>' + esCarta(of ? of.carta : null) + '</span>' +
+      '<div style="text-align:left;font-size:.8rem"><b>' + (of ? 'Para ' + escapeHtml(o.nombre(of.para)) : st.terminada ? 'Fin' : 'Bajando…') + '</b><br>' + deQuien + '<br>🂠 ' + st.mazo.length + ' en el mazo · 💀 ' + st.muertas.length + '</div></div>' +
+      '<div class="pk-msg">' + ult + '</div></div>';
+    let botones = '';
+    if (o.miTurno) {
+      botones = st.fase === 'oferta'
+        ? '<div class="muted" style="font-size:.8rem;text-align:center">Elige cartas de tu mano que hagan juego con la carta de la mesa, o toca uno de tus juegos para agregarla.</div><div class="row-btns"><button class="btn ghost" data-cq="pasar">🙅 No la quiero</button><button class="btn" data-cq="tomar">✅ Tomar y bajar</button></div>'
+        : '<div class="muted" style="font-size:.8rem;text-align:center">Puedes bajar más juegos con tu mano. Para terminar tu turno, elige 1 carta y descártala.</div><div class="row-btns"><button class="btn ghost" data-cq="bajar">⬇️ Bajar juego</button><button class="btn" data-cq="descartar">🗑️ Descartar</button></div>';
+    }
+    const mano = yo >= 0 ? '<div class="es-mano">' + ordenMano(st.manos[yo]).map(c => '<button class="es-btn' + (o.sel && o.sel.has(c) ? ' sel' : '') + '" data-cq-carta="' + c + '">' + esCarta(c) + '</button>').join('') + '</div>' : '';
+    return '<div class="pk-asientos"><div class="pk-asiento' + (!st.terminada && st.turno === rival ? ' turno' : '') + '"><span class="n">' + o.avatar(rival) + escapeHtml(o.nombre(rival)) + '</span><span>' + st.manos[rival].map(() => esCarta(undefined, ' chica')).join('') +
+      '</span><span class="muted">' + Cartas.bajadas(st, rival) + ' de 9 bajadas</span>' + juegos(rival, false) + '</div></div>' + mesa +
+      (yo >= 0 ? '<div class="es-seccion">Tus juegos · ' + Cartas.bajadas(st, ver) + ' de 9' + (o.destino !== null && o.destino !== undefined ? ' · destino: juego ' + (o.destino + 1) : '') + '</div>' + juegos(yo, true) + mano : '') +
+      '<div class="feedback" id="cq-msg">' + (o.msg || '') + '</div>' + botones + (o.pie || '') +
+      '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-ayuda="conquian">📖 Cómo se juega</button></div>';
+  }
+  const CQ_INVALIDA = 'Eso no forma un juego: 3 o 4 del mismo número (de palos distintos), o 3 o más seguidas del mismo palo (el 7 y la sota van seguidas).';
+  // Jugada de Conquián a partir de los botones, la selección y el destino; null si falta algo.
+  function cqJugadaDe(accion, sel, destino) {
+    if (accion === 'pasar') return { accion };
+    if (accion === 'descartar') return sel.size === 1 ? { accion, carta: [...sel][0] } : null;
+    return Object.assign({ accion, con: [...sel] }, destino !== null && destino !== undefined ? { a: destino } : {});
+  }
+
+  function elegirBrisca() {
+    const m = marco('brisca');
+    m.body.innerHTML = '<div class="q-card"><div class="big">🪙🏆⚔️🪵</div><div class="q">Brisca</div><div class="sub">Baraja española de 40 cartas. Gana quien junta más de 60 de los 120 puntos.</div></div>' +
+      '<label>Modo</label><div class="opts" style="grid-template-columns:repeat(3,1fr)"><button class="opt" data-br-modo="1" aria-pressed="true">🙂 vs 1</button><button class="opt" data-br-modo="2">👥 vs 2</button><button class="opt" data-br-modo="pareja">🤝 En pareja</button></div>' +
+      '<div class="row-btns"><button class="btn ghost" data-ayuda="brisca">📖 Cómo se juega</button><button class="btn" data-br-go>🃏 Repartir</button></div>';
+    let modo = '1';
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-br-modo]');
+      if (b) { modo = b.dataset.brModo; m.body.querySelectorAll('[data-br-modo]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }
+      if (e.target.closest('[data-br-go]')) jugarBrisca(modo);
+    });
+  }
+
+  function jugarBrisca(modo) {
+    const m = marco('brisca');
+    const bots = modo === 'pareja' ? [ES_BOTS[0], ES_BOTS[1], ES_BOTS[2]] : ES_BOTS.slice(0, Number(modo));
+    // En pareja: tú (0) y El Compadre (2) contra La Güera (1) y Doña Chonita (3).
+    const lugares = modo === 'pareja' ? [null, ES_BOTS[0], ES_BOTS[1], ES_BOTS[2]] : [null].concat(bots);
+    const st = Cartas.briscaNueva(lugares.map((b, i) => ({ id: 'j' + i, nombre: b ? b.nombre : 'Tú' })));
+    const nombre = i => i === 0 ? 'Tú' : lugares[i].nombre, avatar = i => i === 0 ? '🙂 ' : lugares[i].emoji + ' ';
+    const t0 = Date.now(); let terminado = false, verUltima = false;
+    const pintar = () => { m.body.innerHTML = briscaHtml(st, { yo: 0, nombre, avatar, miTurno: !st.terminada && st.turno === 0 && !verUltima, verUltima }); m.puntos(st.puntos[0]); };
+    const fin = () => {
+      terminado = true;
+      const b = brPuntos(st, 0);
+      terminar('brisca', { puntos: b.puntos, aciertos: st.ganadas[0].length / st.n, total: 40 / st.n | 0, segundos: (Date.now() - t0) / 1000,
+        titulo: b.empate ? '🤝 ¡Empate a 60!' : b.gano ? (st.equipos ? '🤝 ¡Ganó tu pareja!' : '🏆 ¡Ganaste la Brisca!') : '😅 Esta vez no',
+        detalle: (st.equipos ? 'Tu pareja juntó ' : 'Juntaste ') + b.mios + ' de 120 puntos · ' + b.r.totales.join(' vs ') + '.' });
+    };
+    function programar() {
+      if (terminado) return;
+      pintar();
+      if (st.terminada) { const t = setTimeout(fin, 1500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); return; }
+      if (verUltima) { const t = setTimeout(() => { verUltima = false; programar(); }, 1300 * TIEMPO); limpiezas.push(() => clearTimeout(t)); return; }
+      if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; jugar(Cartas.briscaBot(st)); }, 900 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+    }
+    function jugar(carta) {
+      if (!Cartas.briscaJugar(st, carta)) return false;
+      tono(480, 50);
+      if (!st.baza.length) { verUltima = true; if (st.ultimaBaza.ganador === 0 || (st.equipos && st.equipos[st.ultimaBaza.ganador] === 0)) sonidoOk(); }
+      programar(); return true;
+    }
+    m.body.addEventListener('click', e => {
+      const b = e.target.closest('[data-br-carta]');
+      if (!b || terminado || verUltima || st.turno !== 0 || st.terminada) return;
+      jugar(Number(b.dataset.brCarta));
+    });
+    limpiezas.push(() => { terminado = true; });
+    programar();
+  }
+
+  function elegirConquian() {
+    const m = marco('conquian');
+    m.body.innerHTML = '<div class="q-card"><div class="big">🪙🏆⚔️🪵</div><div class="q">Conquián</div><div class="sub">El rummy mexicano: forma tercias y escaleras con la carta de la mesa hasta bajar 9 cartas.</div></div>' +
+      '<div class="row-btns"><button class="btn ghost" data-ayuda="conquian">📖 Cómo se juega</button><button class="btn" data-cq-go>🃏 Repartir contra El Compadre 🤠</button></div>';
+    m.body.addEventListener('click', e => { if (e.target.closest('[data-cq-go]')) jugarConquian(); });
+  }
+
+  function jugarConquian() {
+    const m = marco('conquian');
+    const st = Cartas.conquianNueva([{ id: 'yo', nombre: 'Tú' }, { id: 'bot', nombre: 'El Compadre' }]);
+    const nombre = i => i === 0 ? 'Tú' : 'El Compadre', avatar = i => i === 0 ? '🙂 ' : '🤠 ';
+    const sel = new Set(); let destino = null, msg = '', terminado = false;
+    const t0 = Date.now();
+    const pintar = () => { m.body.innerHTML = conquianHtml(st, { yo: 0, nombre, avatar, miTurno: !st.terminada && st.turno === 0, sel, destino, msg }); m.puntos(Cartas.bajadas(st, 0)); };
+    const fin = () => {
+      terminado = true;
+      terminar('conquian', { puntos: cqPuntos(st, 0), aciertos: Cartas.bajadas(st, 0), total: 9, segundos: (Date.now() - t0) / 1000,
+        titulo: st.ganador === 0 ? '🎉 ¡Conquián! Bajaste 9' : st.ganador === -1 ? '🤝 Se acabó el mazo: empate' : '😅 Ganó El Compadre',
+        detalle: 'Bajaste ' + Cartas.bajadas(st, 0) + ' de 9 cartas · quedaron ' + st.mazo.length + ' en el mazo.' });
+    };
+    function programar() {
+      if (terminado) return;
+      pintar();
+      if (st.terminada) { const t = setTimeout(fin, 1800 * TIEMPO); limpiezas.push(() => clearTimeout(t)); return; }
+      if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; Cartas.conquianActuar(st, Cartas.conquianBot(st)); tono(440, 50); programar(); }, 1000 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+    }
+    m.body.addEventListener('click', e => {
+      if (terminado || st.terminada) return;
+      const c = e.target.closest('[data-cq-carta]'), jg = e.target.closest('[data-cq-juego]'), b = e.target.closest('[data-cq]');
+      if (c) { const id = Number(c.dataset.cqCarta); if (sel.has(id)) sel.delete(id); else sel.add(id); msg = ''; return pintar(); }
+      if (jg) { const a = Number(jg.dataset.cqJuego); destino = destino === a ? null : a; msg = ''; return pintar(); }
+      if (!b || st.turno !== 0) return;
+      const mv = cqJugadaDe(b.dataset.cq, sel, destino);
+      if (!mv) { msg = 'Elige exactamente 1 carta para descartar.'; sonidoMal(); return pintar(); }
+      if (!Cartas.conquianActuar(st, mv)) { msg = CQ_INVALIDA; sonidoMal(); return pintar(); }
+      sel.clear(); destino = null; msg = ''; if (mv.accion === 'tomar' || mv.accion === 'bajar') sonidoOk();
+      programar();
+    });
+    limpiezas.push(() => { terminado = true; });
+    programar();
+  }
+
   // ---------- Clásicos: Lotería ----------
   function elegirLoteria() {
     const m = marco('loteria');
@@ -1661,7 +1848,7 @@
   function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
-  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-preguntas', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en', 'loteria', 'una', 'poker'];
+  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-preguntas', 'es-ortografia', 'es-acentos', 'es-sinonimos', 'cultura', 'mente-calculo', 'mente-secuencias', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian'];
   const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
   const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
   const P_BASTA = 60000, P_GRACIA = 3000, P_PAUSA = 10000; // Basta por rondas: escribir, gracia tras ¡Basta!, resultados
@@ -1741,7 +1928,7 @@
   const sala = { codigo: null, estado: null, offset: 0, poll: null, guardado: false };
   const ahoraServidor = () => Date.now() + sala.offset;
 
-  const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker']);
+  const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker', 'brisca', 'conquian']);
 
   // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
   // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -1817,12 +2004,12 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0 });
+    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0 });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     const j = juegoPorId(sala.estado.sala.juego);
-    const preparar = ['una', 'poker'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+    const preparar = ['una', 'poker', 'brisca', 'conquian'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
     sala.contenido = await preparar;
     // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
     // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
@@ -1871,6 +2058,7 @@
     if (s.juego === 'loteria') return pintarLoteriaSala(body);
     if (s.juego === 'una') return pintarUnaSala(body);
     if (s.juego === 'poker') return pintarPokerSala(body);
+    if (s.juego === 'brisca' || s.juego === 'conquian') return pintarCartasSala(body, s.juego);
     return pintarPreguntaSala(body);
   }
 
@@ -2462,6 +2650,98 @@
     return true;
   }
 
+  // ---- Brisca y Conquián en sala (openspec: cartas-espanolas): reproducción genérica por pasos ----
+  const CS_BOT_MS = 1500, CS_TURNO_MS = 30000;
+  const CFG_CARTAS = {
+    brisca: { max: 4, nueva: (js, rng) => Cartas.briscaNueva(js, rng), actuar: (st, mv) => mv.accion === 'jugar' && Cartas.briscaJugar(st, mv.carta), bot: (st, rng) => ({ accion: 'jugar', carta: Cartas.briscaBot(st, rng) }) },
+    conquian: { max: 2, nueva: (js, rng) => Cartas.conquianNueva(js, rng), actuar: (st, mv) => Cartas.conquianActuar(st, mv), bot: (st, rng) => Cartas.conquianBot(st, rng) },
+  };
+  function estadoCartasSala(juego) {
+    const cfg = CFG_CARTAS[juego];
+    const e = sala.estado, s = e.sala;
+    const orden = participantes().slice(0, cfg.max);
+    if (orden.length < 2) return { faltan: true, orden };
+    const jugs = new Map();
+    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+    const st = cfg.nueva(orden.map(p => ({ id: p.id, nombre: p.nombre })), rngDe(s.seed, juego + '-mazo'));
+    let paso = 0, T0 = s.inicio;
+    const ahora = ahoraServidor();
+    for (let guard = 0; guard < 3000 && !st.terminada; guard++) {
+      const p = orden[st.turno];
+      if (p.bot) {
+        const t = T0 + dur(CS_BOT_MS); if (ahora < t) break;
+        cfg.actuar(st, cfg.bot(st, rngDe(s.seed, juego + 'bot' + paso))); paso++; T0 = t;
+      } else {
+        const mv = jugs.get(paso), lim = T0 + dur(CS_TURNO_MS);
+        if (mv && mv.jugador === p.id && mv.t <= lim && cfg.actuar(st, mv)) { paso++; T0 = Math.max(T0, mv.t); }
+        else if (ahora >= lim) { cfg.actuar(st, cfg.bot(st, rngDe(s.seed, juego + 'auto' + paso))); st.auto = true; paso++; T0 = lim; }
+        else break;
+      }
+    }
+    return Object.assign(st, { orden, paso, T0 });
+  }
+
+  function pintarCartasSala(body, juego) {
+    const e = sala.estado, s = e.sala;
+    const bar = document.getElementById('m-bar');
+    const ahora = ahoraServidor();
+    if (ahora < s.inicio) { bar.hidden = true; const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárense! Se reparten las cartas</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
+    const st = estadoCartasSala(juego);
+    if (st.faltan) { bar.hidden = true; if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">Se necesitan al menos 2 jugadores (activa los bots al crear la partida).</div>'; sala.vista = 'faltan'; } return; }
+    const yo = st.orden.findIndex(p => p.id === e.yo);
+    const nombre = i => st.orden[i].nombre, avatar = i => avatarHtml(st.orden[i].avatar, 18) + ' ';
+    if (st.terminada) {
+      bar.hidden = true;
+      const pts = j => juego === 'brisca' ? brPuntos(st, j).puntos : cqPuntos(st, j);
+      const filas = st.orden.map((p, j) => ({ id: p.id, nombre: p.nombre + (st.equipos ? ' (' + 'AB'[st.equipos[j]] + ')' : ''), tipo: p.tipo, avatar: p.avatar, total: pts(j), ultimo: 0 })).sort((a, b) => b.total - a.total);
+      if (juego === 'brisca') { sala.finAciertos = yo >= 0 ? st.ganadas[yo].length / st.n : 0; sala.finTotal = 40 / st.n | 0; }
+      else { sala.finAciertos = yo >= 0 ? Cartas.bajadas(st, yo) : 0; sala.finTotal = 9; }
+      const r = juego === 'brisca' ? Cartas.briscaResultado(st) : null;
+      const titulo = juego === 'brisca' ? (r.ganador < 0 ? '🤝 ¡Empate!' : '🏆 Gana ' + (st.equipos ? 'el equipo ' + 'AB'[r.ganador] : nombre(r.ganador)) + ' · ' + r.totales.join(' vs ')) :
+        (st.ganador < 0 ? '🤝 Se acabó el mazo: empate' : '🎉 ¡Conquián de ' + nombre(st.ganador) + '!');
+      return pintarFinalSala(body, filas, null, titulo);
+    }
+    const miTurno = st.turno === yo && !sala.csEnviando;
+    const ventana = dur(st.orden[st.turno].bot ? CS_BOT_MS : CS_TURNO_MS);
+    bar.hidden = false; bar.firstChild.style.width = Math.max(0, Math.min(100, (st.T0 + ventana - ahora) / ventana * 100)) + '%';
+    const sel = sala.cqSel || (sala.cqSel = new Set());
+    const clave = 'cs:' + st.paso + ':' + (sala.csEnviando ? 1 : 0) + ':' + [...sel].join(',') + ':' + sala.cqDestino + ':' + (sala.cqMsg || '');
+    if (sala.vista === clave) return;
+    sala.vista = clave;
+    const pie = miTurno ? '<div class="feedback ok">👉 ¡Tu turno! Tienes 30 s</div>' : '<div class="feedback">⏳ Turno de ' + escapeHtml(nombre(st.turno)) + '</div>';
+    body.innerHTML = juego === 'brisca' ? briscaHtml(st, { yo, nombre, avatar, miTurno, verUltima: true, pie }) :
+      conquianHtml(st, { yo, nombre, avatar, miTurno, sel, destino: sala.cqDestino ?? null, msg: sala.cqMsg, pie });
+    sala.csSt = st;
+  }
+
+  async function enviarCartasSala(jugada) {
+    const st = sala.csSt;
+    sala.csEnviando = true; sala.vista = null; pintarSala();
+    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n: st.paso }, jugada) });
+    await traerSala();
+    sala.csEnviando = false; sala.cqSel = new Set(); sala.cqDestino = null; sala.cqMsg = ''; sala.vista = null; pintarSala();
+    if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');
+  }
+
+  function clicCartasSala(e) {
+    const st = sala.csSt; if (!st || st.terminada) return false;
+    const yo = st.orden.findIndex(p => p.id === sala.estado.yo);
+    const br = e.target.closest('[data-br-carta]');
+    if (br) { if (st.turno === yo && !sala.csEnviando && st.manos[yo].includes(Number(br.dataset.brCarta))) enviarCartasSala({ accion: 'jugar', carta: Number(br.dataset.brCarta) }); return true; }
+    const c = e.target.closest('[data-cq-carta]'), jg = e.target.closest('[data-cq-juego]'), b = e.target.closest('[data-cq]');
+    if (c) { const id = Number(c.dataset.cqCarta); const sel = sala.cqSel || (sala.cqSel = new Set()); if (sel.has(id)) sel.delete(id); else sel.add(id); sala.cqMsg = ''; sala.vista = null; pintarSala(); return true; }
+    if (jg) { const a = Number(jg.dataset.cqJuego); sala.cqDestino = sala.cqDestino === a ? null : a; sala.cqMsg = ''; sala.vista = null; pintarSala(); return true; }
+    if (!b) return false;
+    if (st.turno !== yo || sala.csEnviando) return true;
+    const mv = cqJugadaDe(b.dataset.cq, sala.cqSel || new Set(), sala.cqDestino ?? null);
+    // Se valida en local antes de enviar, para explicar por qué no se puede
+    if (!mv) { sala.cqMsg = 'Elige exactamente 1 carta para descartar.'; sonidoMal(); sala.vista = null; pintarSala(); return true; }
+    const prueba = JSON.parse(JSON.stringify(st));
+    if (!Cartas.conquianActuar(prueba, mv)) { sala.cqMsg = CQ_INVALIDA; sonidoMal(); sala.vista = null; pintarSala(); return true; }
+    enviarCartasSala(mv);
+    return true;
+  }
+
   async function crearPartida() {
     const juego = document.getElementById('p-juego').value;
     const opciones = juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : {};
@@ -2630,6 +2910,19 @@
       '<h3>Manos, de mayor a menor</h3><table>' + [['Escalera real', '10♠ J♠ Q♠ K♠ A♠'], ['Escalera de color', '5♥ 6♥ 7♥ 8♥ 9♥'], ['Póker', '4 cartas iguales: 9♠ 9♥ 9♦ 9♣'], ['Full', 'tercia + par: K K K 7 7'], ['Color', '5 del mismo palo'], ['Escalera', '5 seguidas: 4 5 6 7 8 (A-2-3-4-5 también)'], ['Tercia', '3 iguales: Q Q Q'], ['Doble par', 'J J 4 4'], ['Par', '2 iguales: 8 8'], ['Carta alta', 'si nadie tiene nada, gana la carta más alta']].map(x => '<tr><td><b>' + x[0] + '</b></td><td>' + x[1] + '</td></tr>').join('') + '</table>' +
       '<h3>En equipo</h3><p>En pareja o por equipos (A y B) se suman las fichas de cada equipo al final; el equipo con más fichas gana +150 puntos para cada integrante.</p>' +
       '<div class="aviso">🪙 Las fichas son solo de juego: no se compran, no se cambian y no tienen valor real. Aquí se juega por diversión y por puntos del ranking.</div>',
+    brisca: '<h2>🏆 Brisca</h2><p><b>Baraja española</b> de 40 cartas: oros 🪙, copas 🏆, espadas ⚔️ y bastos 🪵, del 1 al 7 más sota (10), caballo (11) y rey (12).</p>' +
+      '<h3>Cómo se juega</h3><ol><li>Cada quien recibe 3 cartas. Se voltea una carta: su palo es el <b>triunfo</b> y queda bajo el mazo (se roba al final).</li>' +
+      '<li>En tu turno tiras una carta. <b>No es obligatorio seguir el palo.</b></li><li>Gana la baza el <b>triunfo más alto</b>; si nadie tiró triunfo, la carta más alta del <b>palo que salió primero</b>.</li>' +
+      '<li>Quien gana la baza se lleva las cartas, roba primero y abre la siguiente. Se juega hasta acabar todas las cartas.</li></ol>' +
+      '<h3>Fuerza y puntos de las cartas</h3><table><tr><td><b>As</b></td><td>11 puntos</td></tr><tr><td><b>Tres</b></td><td>10 puntos</td></tr><tr><td><b>Rey (12)</b></td><td>4 puntos</td></tr><tr><td><b>Caballo (11)</b></td><td>3 puntos</td></tr><tr><td><b>Sota (10)</b></td><td>2 puntos</td></tr><tr><td>7, 6, 5, 4, 2</td><td>0 puntos (en ese orden de fuerza)</td></tr></table>' +
+      '<p>En total hay <b>120 puntos</b>: gana quien (o la pareja que) junta <b>más de 60</b>. Con 60 y 60 es empate.</p>' +
+      '<h3>Consejos</h3><ul><li>Guarda tus triunfos para ganar bazas con ases o treses.</li><li>Si tu pareja va ganando la baza, ¡cárgale puntos!</li><li>En pareja, los compañeros se sientan alternados (A, B, A, B).</li></ul>',
+    conquian: '<h2>🪙 Conquián</h2><p>El rummy mexicano para 2 jugadores, con baraja española de 40 cartas. <b>Gana quien baja 9 cartas</b> en juegos.</p>' +
+      '<h3>Qué es un juego</h3><table><tr><td><b>Tercia o cuarteta</b></td><td>3 o 4 cartas del mismo número, de palos distintos: 5🪙 5🏆 5⚔️</td></tr><tr><td><b>Escalera</b></td><td>3 o más seguidas del mismo palo: 3⚔️ 4⚔️ 5⚔️. Ojo: <b>el 7 y la sota (10) van seguidas</b>: 6🏆 7🏆 10🏆</td></tr></table>' +
+      '<h3>Tu turno</h3><ol><li>Se voltea una carta del mazo para ti. Si te sirve, <b>tómala</b>: debes bajarla en ese momento formando un juego con cartas de tu mano, o agregarla a uno de tus juegos.</li>' +
+      '<li>Después de tomar, puedes bajar más juegos y al final <b>descartas</b> una carta: se la ofreces a tu rival.</li><li>Si no la quieres, di <b>«No la quiero»</b>: la carta volteada se le ofrece a tu rival; si nadie la toma, queda muerta y se voltea otra.</li></ol>' +
+      '<h3>Cómo lo haces aquí</h3><ul><li>Toca cartas de tu mano para seleccionarlas (suben).</li><li>Toca uno de tus juegos bajados si quieres agregarle cartas (se marca como destino).</li><li>Usa ✅ Tomar y bajar, ⬇️ Bajar juego, 🗑️ Descartar (1 carta seleccionada) o 🙅 No la quiero.</li></ul>' +
+      '<p>Empiezas con 8 cartas: para ganar necesitas bajar las 8 más la que tomes (9). Si se acaba el mazo, es empate.</p>',
   };
   function ayuda(id) {
     const d = document.createElement('dialog'); d.className = 'ayuda'; d.setAttribute('aria-label', 'Cómo se juega');
@@ -2647,6 +2940,7 @@
     const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
     if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
     if (sala.estado && sala.estado.sala.juego === 'poker' && document.getElementById('p-body') && e.target.closest('[data-pk]')) { clicPokerSala(e); return; }
+    if (sala.estado && ['brisca', 'conquian'].includes(sala.estado.sala.juego) && document.getElementById('p-body') && clicCartasSala(e)) return;
     const lsc = e.target.closest('[data-lsc]'); if (lsc) return marcarLoteriaSala(Number(lsc.dataset.lsc), lsc);
     if (e.target.closest('[data-lsgrito]')) return gritarLoteriaSala();
     const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }

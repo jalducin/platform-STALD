@@ -9,9 +9,39 @@ type Json = (body: unknown, status?: number) => Response;
 
 // Juegos que se pueden jugar en partida (los de preguntas y Basta).
 export const JUEGOS_PARTIDA = new Set([
-  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria", "una", "poker",
+  "en-vocab", "en-frases", "en-preguntas", "es-ortografia", "es-acentos", "es-sinonimos", "cultura", "mente-calculo", "mente-secuencias", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian",
 ]);
 const ACCIONES_POKER = ["retirarse", "pasar", "igualar", "subir", "todo"]; // openspec: poker
+const ACCIONES_CONQUIAN = ["tomar", "bajar", "descartar", "pasar"]; // openspec: cartas-espanolas
+
+type Jugada = NonNullable<EnSala["jugadas"]>[number];
+const entero = (x: unknown, min: number, max: number) => typeof x === "number" && Number.isInteger(x) && x >= min && x <= max;
+
+// Valida la jugada según el juego y devuelve solo sus campos permitidos (sin t), o null.
+function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null {
+  const j = crudo && typeof crudo === "object" ? crudo as Record<string, unknown> : {};
+  const n = j.n, accion = String(j.accion ?? "");
+  if (!entero(n, 0, 2000)) return null;
+  const base = { n: n as number, accion };
+  if (juego === "poker") {
+    if (!ACCIONES_POKER.includes(accion) || j.carta !== undefined || (j.monto !== undefined && !entero(j.monto, 0, 1_000_000))) return null;
+    return { ...base, ...(j.monto !== undefined ? { monto: j.monto as number } : {}) };
+  }
+  if (juego === "brisca") return accion === "jugar" && entero(j.carta, 0, 39) ? { ...base, carta: j.carta as number } : null;
+  if (juego === "conquian") {
+    if (!ACCIONES_CONQUIAN.includes(accion)) return null;
+    if (accion === "descartar") return entero(j.carta, 0, 39) ? { ...base, carta: j.carta as number } : null;
+    if (accion === "pasar") return base;
+    const con = j.con;
+    if (!Array.isArray(con) || con.length > 8 || !con.every((x) => entero(x, 0, 39)) || new Set(con).size !== con.length) return null;
+    if (j.a !== undefined && !entero(j.a, 0, 20)) return null;
+    return { ...base, con: con as number[], ...(j.a !== undefined ? { a: j.a as number } : {}) };
+  }
+  // ¡Una!
+  if (!["jugar", "robar", "pasar"].includes(accion) || (j.carta !== undefined && !entero(j.carta, 0, 107)) ||
+    (j.color !== undefined && !["r", "y", "g", "b"].includes(String(j.color))) || (j.una !== undefined && typeof j.una !== "boolean")) return null;
+  return { ...base, ...(j.carta !== undefined ? { carta: j.carta as number } : {}), ...(j.color !== undefined ? { color: String(j.color) } : {}), ...(j.una !== undefined ? { una: j.una as boolean } : {}) };
+}
 const LETRAS_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const MAX_JUGADORES = 30;
 const VIGENCIA_MS = 3 * 3600 * 1000;
@@ -42,7 +72,7 @@ interface EnSala {
   rondasBasta?: Record<string, { palabras: Record<string, string>; basta?: number }>; // Basta por rondas
   loteria?: number; // hora del servidor del primer "¡Lotería!"
   unas?: { paso: number; t: number }[]; // ¡Una!: botón UNA por paso
-  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; t: number }[]; // ¡Una! y póker
+  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number; t: number }[]; // juegos por turnos
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
   v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
@@ -203,25 +233,12 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (!Number.isInteger(paso) || paso < 0 || paso > 2000) return json({ error: "una_invalida" }, 400);
       cambiar = (e) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
     } else if (body.jugada !== undefined) {
-      // ¡Una!: cada jugada con su paso n; nadie más puede tener ese paso.
-      const j = (body.jugada && typeof body.jugada === "object") ? body.jugada as Record<string, unknown> : {};
-      const n = Number(j.n);
-      const accion = String(j.accion || "");
-      const carta = j.carta === undefined ? undefined : Number(j.carta);
-      const color = j.color === undefined ? undefined : String(j.color);
-      const monto = j.monto === undefined ? undefined : Number(j.monto);
-      const esPoker = sala.juego === "poker";
-      if (esPoker && (!Number.isInteger(n) || n < 0 || n > 2000 || !ACCIONES_POKER.includes(accion) || j.carta !== undefined ||
-        (monto !== undefined && (!Number.isInteger(monto) || monto < 0 || monto > 1_000_000)))) {
-        return json({ error: "jugada_invalida" }, 400);
-      }
-      if (!esPoker && (!Number.isInteger(n) || n < 0 || n > 2000 || !["jugar", "robar", "pasar"].includes(accion) ||
-        (carta !== undefined && (!Number.isInteger(carta) || carta < 0 || carta > 107)) ||
-        (color !== undefined && !["r", "y", "g", "b"].includes(color)) || (j.una !== undefined && typeof j.una !== "boolean"))) {
-        return json({ error: "jugada_invalida" }, 400);
-      }
+      // Juegos por turnos (¡Una!, póker, Brisca, Conquián): cada jugada con su paso n; nadie más puede tener ese paso.
+      const v = validarJugada(sala.juego, body.jugada);
+      if (!v) return json({ error: "jugada_invalida" }, 400);
+      const n = v.n;
       if (jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409);
-      const nueva = { n, accion, ...(esPoker && monto !== undefined ? { monto } : {}), ...(carta !== undefined ? { carta } : {}), ...(color ? { color } : {}), ...(j.una !== undefined ? { una: j.una as boolean } : {}), t: ahora };
+      const nueva = { ...v, t: ahora };
       cambiar = (e) => (e.jugadas || []).some((y) => y.n === n) ? e : { ...e, jugadas: [...(e.jugadas || []), nueva].slice(-600) };
     } else if (body.loteria === true) {
       cambiar = (e) => e.loteria ? e : { ...e, loteria: ahora };

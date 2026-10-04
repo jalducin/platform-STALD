@@ -1,5 +1,4 @@
 // Póker en partida (openspec: poker): sala permitida, opción de equipos y validación de la jugada.
-// deno-lint-ignore-file no-explicit-any
 import { assertEquals } from "jsr:@std/assert@1";
 import { clearCacheJuegos, handleJuegos } from "./juegos.ts";
 import { clearCacheSalas } from "./salas.ts";
@@ -54,4 +53,34 @@ Deno.test("póker en sala: ¡Una! no acepta acciones de póker y el póker está
   assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { jugada: { n: 0, accion: "subir", monto: 60 } })).body.error, "jugada_invalida");
   const p = await c.call("POST", "/partida", "marisol@example.com", { juego: "poker", puntos: 800, aciertos: 6, total: 10, segundos: 300 });
   assertEquals([p.status, p.body.puntos], [200, 800]);
+});
+
+// Brisca y Conquián en partida (openspec: cartas-espanolas): validación de la jugada por juego.
+Deno.test("cartas españolas en sala: brisca y conquián con sus jugadas", async () => {
+  const c = ctx();
+  const abrir = async (juego: string) => {
+    const r = await c.call("POST", "/sala", "marisol@example.com", { juego, opciones: {}, bots: true });
+    assertEquals(r.status, 200, juego + " " + JSON.stringify(r.body));
+    await c.call("POST", `/sala/${r.body.codigo}/empezar`, "marisol@example.com");
+    return r.body.codigo as string;
+  };
+  const br = await abrir("brisca"), cq = await abrir("conquian");
+  c.avanzar(6000);
+  const jug = (codigo: string, jugada: unknown) => c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { jugada });
+  assertEquals((await jug(br, { n: 0, accion: "jugar", carta: 39 })).status, 200);
+  for (const mala of [{ n: 1, accion: "jugar", carta: 40 }, { n: 1, accion: "jugar" }, { n: 1, accion: "subir", monto: 5 }]) {
+    assertEquals((await jug(br, mala)).body.error, "jugada_invalida", "brisca " + JSON.stringify(mala));
+  }
+  const t = await jug(cq, { n: 0, accion: "tomar", con: [1, 2], a: 0 });
+  assertEquals([t.status, t.body.jugadas[0].con, t.body.jugadas[0].a], [200, [1, 2], 0]);
+  assertEquals((await jug(cq, { n: 1, accion: "descartar", carta: 7 })).status, 200);
+  assertEquals((await jug(cq, { n: 2, accion: "pasar" })).status, 200);
+  for (const mala of [{ n: 3, accion: "tomar", con: [1, 1] }, { n: 3, accion: "tomar", con: [50] }, { n: 3, accion: "bajar", con: Array(9).fill(0).map((_, i) => i) },
+    { n: 3, accion: "descartar" }, { n: 3, accion: "jugar", carta: 3 }, { n: 3, accion: "tomar", con: [1, 2, 3], a: 99 }]) {
+    assertEquals((await jug(cq, mala)).body.error, "jugada_invalida", "conquián " + JSON.stringify(mala));
+  }
+  for (const juego of ["brisca", "conquian"]) {
+    const p = await c.call("POST", "/partida", "marisol@example.com", { juego, puntos: 700, aciertos: 1, total: 1, segundos: 60 });
+    assertEquals(p.status, 200, juego);
+  }
 });
