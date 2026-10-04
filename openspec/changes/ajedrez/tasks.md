@@ -54,4 +54,4 @@
   - los niveles se llaman Básico, Intermedio y Avanzado;
   - aviso cuando falta el rival.
 - [x] 8.3 E2E: sala con dos personas, el tercero queda fuera y no se puede empezar sin rival; regresiones
-- [ ] 8.4 Verificar en producción; actualizar la documentación y el reporte
+- [x] 8.4 Verificar en producción; actualizar la documentación y el reporte
