@@ -20,7 +20,8 @@ El profe aprobó resolverlo en el Sprint 3, aprovechando Supabase, que ya usamos
   - las reglas de quién puede ver qué no cambian: alumno o alumna por su registro, admin por `SUPER_ADMIN_EMAIL`,
     invitados de Juegos e integrantes de Secundaria.
 - **Transición sin cortes:**
-  - durante una semana conviven el modo actual (`?email=`) y el nuevo;
+  - durante una semana conviven el modo actual (`?email=`) y el nuevo (hasta `LOGIN_TRANSICION_HASTA`, 2026-10-12,
+    sin variable que activar; ver design §4);
   - la página empieza a pedir el enlace;
   - después, `?email=` deja de aceptarse;
   - el admin siempre requiere sesión desde el primer día.
@@ -44,12 +45,14 @@ El profe aprobó resolverlo en el Sprint 3, aprovechando Supabase, que ya usamos
 - Archivos que cambian:
   - `index.html`, `ingles.html`, `juegos.html` y `secundaria.html`;
   - `server/main.ts`: `quienEs(req)`.
-- Archivo nuevo: `server/auth.ts`.
+- Archivos nuevos: `server/auth.ts`, `comun/auth.js` y `herramientas/alta-usuarios-auth.ts`.
+- Rutas nuevas: `GET /config` y `POST /auth/enlace` (solo admin con sesión).
 - Configuración de Supabase Auth:
   - URL del sitio;
   - redirecciones permitidas a GitHub Pages;
   - plantilla del correo en español;
   - SMTP.
-- Variables de Deno: ninguna nueva.
-- Se ajustan los E2E: un modo de prueba local acepta un token falso solo si `PERMITIR_HOY=1` / `ROWS_FIXTURE`, nunca
+- Variables de Deno: ninguna obligatoria nueva (opcionales: `LOGIN_TRANSICION_HASTA` y `SITIO_URL`). Se usan las
+  que ya existen: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` y `SUPABASE_SERVICE_KEY`.
+- Se ajustan los E2E: un modo de prueba local acepta un token falso solo si `ROWS_FIXTURE` está definido, nunca
   en producción.

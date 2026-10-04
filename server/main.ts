@@ -1,6 +1,9 @@
 // Backend de platform-STALD para Deno Deploy (sin Supabase).
 // Variables: NOTION_TOKEN, SUPER_ADMIN_EMAIL, GITHUB_TOKEN, DATA_REPO (p. ej. jalducin/platform-STALD-data).
-// Pruebas locales: DATA_DIR (carpeta con una copia del repo de datos) y ROWS_FIXTURE (filas simuladas).
+// Pruebas locales: DATA_DIR (carpeta con una copia del repo de datos) y ROWS_FIXTURE (filas simuladas; también activa
+// el verificador falso de sesión `Bearer prueba:<correo>`, openspec: plataforma-login).
+// Sesión: SUPABASE_URL + SUPABASE_PUBLISHABLE_KEY (validar tokens), SUPABASE_SERVICE_KEY (enlace de acceso del admin),
+// opcionales LOGIN_TRANSICION_HASTA (AAAA-MM-DD) y SITIO_URL (a dónde llevan los enlaces).
 import { attachUsers, extractInglesRow, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type UserInfo } from "./rows.ts";
 import { handleActividades, handleProfe } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
@@ -12,6 +15,7 @@ import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, v as pgv } from "./db.ts";
 import { mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
+import { configPublica, handleEnlace, LOGIN_TRANSICION_HASTA, quienEs } from "./auth.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
@@ -106,7 +110,7 @@ function corsHeaders(extra: Record<string, string> = {}): Headers {
   const h = new Headers();
   h.set("Access-Control-Allow-Origin", "*");
   h.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-  h.set("Access-Control-Allow-Headers", "content-type");
+  h.set("Access-Control-Allow-Headers", "content-type, authorization"); // authorization: sesión (plataforma-login)
   h.set("Access-Control-Max-Age", "86400"); // el navegador recuerda la verificación previa un día (openspec: ahorro-peticiones)
   h.set("Cache-Control", "no-store, no-cache, must-revalidate");
   for (const [k, v] of Object.entries(extra)) h.set(k, v);
@@ -152,10 +156,34 @@ async function getStore(): Promise<Store> {
 export async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders() });
-  const email = normalizeEmail(url.searchParams.get("email"));
   const admin = normalizeEmail(env("SUPER_ADMIN_EMAIL"));
 
+  // GET /config → configuración pública para comun/auth.js (sin sesión; openspec: plataforma-login).
+  if (url.pathname.endsWith("/config")) {
+    const c = configPublica({ ROWS_FIXTURE: env("ROWS_FIXTURE"), SUPABASE_URL: env("SUPABASE_URL"), SUPABASE_PUBLISHABLE_KEY: env("SUPABASE_PUBLISHABLE_KEY") });
+    return json(c.body, c.status);
+  }
+
+  // Rutas sin identidad: /salud y la foto de avatar (la pide un <img>, sin encabezados).
+  const sinIdentidad = url.pathname.endsWith("/salud") || /\/juegos\/foto\/[^/]+$/.test(url.pathname);
+  // Quién hace la petición: correo verificado por la sesión o, en la transición, `?email=` (nunca el admin).
+  const quien = sinIdentidad ? { ok: true as const, email: "", verificado: false } : await quienEs(req, {
+    supabaseUrl: env("SUPABASE_URL"),
+    publishableKey: env("SUPABASE_PUBLISHABLE_KEY"),
+    admin,
+    transicionHasta: env("LOGIN_TRANSICION_HASTA") || LOGIN_TRANSICION_HASTA,
+    hoy: () => mxToday(),
+    prueba: !!env("ROWS_FIXTURE"),
+  });
+  if (!quien.ok) return json({ error: quien.error }, quien.status);
+  const email = quien.email;
+
   try {
+    // POST /auth/enlace → enlace de acceso para mandar por WhatsApp (solo admin con sesión).
+    if (url.pathname.endsWith("/auth/enlace")) {
+      return await handleEnlace(req, quien, { admin, supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY"), redirect: env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/" }, json);
+    }
+
     // GET /salud → límite de GitHub y repo de datos, sin correo ni datos privados (openspec: vigilancia-servidor).
     if (url.pathname.endsWith("/salud")) {
       const salud = env("DATA_DIR")
