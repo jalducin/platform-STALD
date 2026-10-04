@@ -125,3 +125,16 @@
   de la herramienta, nunca en el repo.
 - **Registro abierto**: cualquiera puede pedir un enlace, pero sin registro en Notion/invitados no ve datos
   (`/perfil` → `conocido: false`; Juegos le ofrece entrar como invitado).
+
+## Ajuste post-apply (2026-10-04): el enlace de acceso da de alta si hace falta
+
+- Problema: `POST /auth/enlace` respondía 404 `sin_cuenta` cuando la persona aún no existía en Supabase Auth. Para
+  evitarlo había que dar de alta antes a todos con `alta-usuarios-auth.ts`, y para eso se necesitaba la lista de
+  correos de Notion, que ya no se usa para Inglés.
+- Ahora, si `generate_link` responde «usuario no encontrado», el servidor hace dos pasos:
+  1. Crea a la persona con `POST /auth/v1/admin/users { email, email_confirm: true }`.
+  2. Vuelve a pedir el enlace.
+- El admin solo escribe el correo, sin alta previa.
+- Esto no amplía permisos: qué ve cada quien sigue dependiendo del registro de la plataforma (`quienEs` + reglas de
+  siempre). Una cuenta de Auth sin registro solo ve «No encontré tus clases».
+- `alta-usuarios-auth.ts` se queda como herramienta opcional para dar de alta en lote.

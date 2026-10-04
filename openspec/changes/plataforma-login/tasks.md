@@ -64,3 +64,4 @@
   - `docs/frontend-standards.md`;
   - `docs/deno-deploy-setup.md`;
   - README.
+- [x] 7.1 Ajuste post-apply: `/auth/enlace` da de alta en Auth si la persona no existe (prueba en rojo → verde, 199 pruebas; verificación en producción con el profe)
