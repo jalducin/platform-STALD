@@ -428,14 +428,16 @@
     }
 
     const clases = rows.filter(r => r.source === 'clases_ingles');
+    // Alta nueva antes de su lunes de inicio (openspec: inicio-lunes-alumnos).
+    const porEmpezar = state.act && state.act.inicio && state.act.hoy < state.act.inicio ? '<div class="card" style="text-align:center;margin:12px 0">📅 <b>Tu curso empieza el lunes ' + escapeHtml(formatFecha(state.act.inicio).replace(/^\S+\s/, '')) + '.</b><br><span class="muted">Ese día aparecen tus primeras actividades. ¡Bienvenido o bienvenida!</span></div>' : '';
     if (!clases.length && !(state.act && state.act.items && state.act.items.length)) {
-      contentEl.innerHTML = '<div class="empty">No hay clases registradas todavía.</div>';
+      contentEl.innerHTML = porEmpezar || '<div class="empty">No hay clases registradas todavía.</div>';
       return;
     }
 
     if (!data.isAdmin) {
       contentEl.innerHTML = (MODO_PROFE ? '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html')) + '">← Vista de mi grupo</a>' + renderGrupoProfe(state.act) + renderPlanProfe(state.act) : '') +
-        renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
+        porEmpezar + renderWeekCard(state.act) + renderBoard(clases.concat(itemRowsAlumno(state.act)), false);
       return;
     }
 
@@ -706,13 +708,13 @@
     const lista = Array.isArray(a) ? a : [];
     return '<details class="section" id="alumnos-admin"' + (state.altaAbierta ? ' open' : '') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Alumnos y alumnas</span><span class="count">' + lista.length + '</span></div></summary><div class="scroll">' +
       '<form id="alta-alumno" autocomplete="off" style="display:grid;gap:8px;margin:6px 0 12px">' +
-        '<div class="progress-text" style="margin:0">➕ Nuevo alumno o alumna: entra con su correo a Inglés, al portal y a Juegos, y ve las actividades de la semana.</div>' +
+        '<div class="progress-text" style="margin:0">➕ Nuevo alumno o alumna: entra con su correo a Inglés, al portal y a Juegos. Empieza su curso el lunes siguiente, sin actividades en atraso.</div>' +
         '<input id="alta-nombre" type="text" maxlength="40" placeholder="Nombre (como aparecerá en sus calificaciones)" required style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' +
         '<input id="alta-correo" type="email" maxlength="80" placeholder="correo@ejemplo.com" required style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' +
         '<button class="btn" type="submit">Dar de alta</button><div id="alta-msg"></div></form>' +
       (a && a.error ? '<div class="empty">No se pudo cargar la lista (' + escapeHtml(a.error) + ').</div>' : '') +
       lista.map(x => '<div class="ultimas-lista" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div>👤 <b>' + escapeHtml(x.nombre) + '</b><br><small>' +
-        escapeHtml(x.emails.join(', ') || 'sin correo en Notion') + ' · ' + (x.origen === 'registro' ? 'alta en la página' : 'Notion') + '</small></div>' +
+        escapeHtml(x.emails.join(', ') || 'sin correo en Notion') + ' · ' + (x.origen === 'registro' ? 'alta en la página' : 'Notion') + (x.inicio ? ' · 📅 inicia el lunes ' + escapeHtml(fechaCorta(x.inicio)) : '') + '</small></div>' +
         (x.origen === 'registro' ? '<button class="btn ghost" data-action="quitar-alumno" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">Quitar</button>' : '') + '</div>').join('') +
       '</div></details>';
   }
@@ -725,7 +727,7 @@
     const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ nombre, email }) });
     if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="empty" style="color:var(--bad)">' + escapeHtml(ERRORES_ALTA[r.body.error] || ('No se pudo dar de alta (' + (r.body.error || r.status) + ').')) + '</div>'; return; }
     state.altaAbierta = true;
-    state.altaAviso = '✅ ' + r.body.alumno.nombre + ' ya puede entrar con ' + r.body.alumno.email + '.';
+    state.altaAviso = '✅ ' + r.body.alumno.nombre + ' ya puede entrar con ' + r.body.alumno.email + '.' + (r.body.alumno.inicio ? ' Empieza el lunes ' + fechaCorta(r.body.alumno.inicio) + ', sin actividades en atraso.' : '');
     await loadFor(state.email);
   }
   async function quitarAlumno(b) {

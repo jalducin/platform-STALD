@@ -6,7 +6,7 @@ import { handleActividades, handleProfe } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados } from "./juegos.ts";
-import { aplicarAlumnos, handleAlumnos, leerRegistro } from "./alumnos.ts";
+import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro } from "./alumnos.ts";
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 
@@ -157,7 +157,9 @@ export async function handler(req: Request): Promise<Response> {
       const all = await filasIngles();
       const { rows, isAdmin } = filterForEmail(all, email, admin);
       const alumno = isAdmin ? null : (rows.find((r) => r.alumno)?.alumno ?? null);
-      return await handleActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), { isAdmin, alumno }, await getStore(), json);
+      const store = await getStore();
+      const inicio = inicioDe(await leerRegistro(store), alumno);
+      return await handleActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), { isAdmin, alumno, ...(inicio ? { inicio } : {}) }, store, json);
     }
 
     // GET /perfil → accesos del portal (sin filas ni correos ajenos).

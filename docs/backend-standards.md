@@ -148,7 +148,9 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     (patrón lun actividad, mié examen, jue actividad, sáb examen).
 
 **Rutas `/ingles/alumnos`** (`server/alumnos.ts`, cambio `alta-alumnos`), solo admin (si no, 403):
-  - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "notion" | "registro", alta? }] }`;
+  - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "notion" | "registro", alta?, inicio? }] }`;
+  - alta nueva: `inicio` es el lunes siguiente en CDMX (`lunesDeInicio`). `GET /ingles/actividades` omite, para esa
+    persona, lo que vence antes de `inicio` y devuelve `inicio` (cambio `inicio-lunes-alumnos`);
   - `POST /ingles/alumnos` `{ nombre, email }` → alta en `alumnos.json`. 400 `correo_invalido` o
     `nombre_invalido`; 409 `correo_en_uso` (ya tiene acceso) o `nombre_en_uso` (ese nombre ya tiene correo;
     un nombre de Notion sin correo sí se liga);

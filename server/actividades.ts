@@ -28,6 +28,7 @@ type Json = (body: unknown, status?: number) => Response;
 export interface Identidad {
   isAdmin: boolean;
   alumno: string | null;
+  inicio?: string; // lunes de inicio de un alta nueva (openspec: inicio-lunes-alumnos)
 }
 
 // Ámbito de contenido: el del grupo (contenido/) o la ruta de estudio del profe (contenido/profe/, openspec: ruta-profe).
@@ -169,12 +170,14 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const grupo = ambito.clave === "profe" ? (await itemsDelGrupo(store)).map(paraProfe) : [];
     const deGrupo = new Set(grupo.map((g) => g.id));
     const todos = [...items, ...grupo].sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
-    const conEstado = await Promise.all(todos.map((base) => paraAlumno(base, slug!)).map(async (it) => {
+    // Alumnos y alumnas nuevos: lo que venció antes de su lunes de inicio no aparece (openspec: inicio-lunes-alumnos).
+    const suyos = todos.map((base) => paraAlumno(base, slug!)).filter((it) => !quien.inicio || it.fechaLimite >= quien.inicio);
+    const conEstado = await Promise.all(suyos.map(async (it) => {
       const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
       return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
     }));
     const plan = ambito.clave === "profe" ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
-    return json({ isAdmin: false, hoy, semana, items: conEstado, ...(plan !== undefined ? { plan } : {}) });
+    return json({ isAdmin: false, hoy, semana, items: conEstado, ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}) });
   }
 
   let base = await loadItem(store, partes[0], ambito);

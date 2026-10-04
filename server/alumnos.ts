@@ -10,6 +10,22 @@ type Json = (body: unknown, status?: number) => Response;
 export interface AlumnoRegistrado {
   nombre: string;
   alta: string;
+  inicio?: string; // lunes en que empieza (AAAA-MM-DD); antes no ve atrasos (openspec: inicio-lunes-alumnos)
+}
+
+// Lunes siguiente (estrictamente posterior) a la fecha del alta en CDMX (UTC−6, sin horario de verano).
+export function lunesDeInicio(altaIso: string): string {
+  const d = new Date(Date.parse(altaIso) - 6 * 3600_000);
+  const dia = d.getUTCDay(); // 0 domingo … 1 lunes
+  d.setUTCDate(d.getUTCDate() + ((8 - dia) % 7 || 7));
+  return d.toISOString().slice(0, 10);
+}
+
+// Lunes de inicio del alumno o alumna con ese nombre, si su alta lo tiene.
+export function inicioDe(registro: RegistroAlumnos, alumno: string | null): string | undefined {
+  if (!alumno) return undefined;
+  const slug = slugAlumno(alumno);
+  return Object.values(registro).find((a) => slugAlumno(a.nombre) === slug)?.inicio;
 }
 export type RegistroAlumnos = Record<string, AlumnoRegistrado>;
 
@@ -89,7 +105,7 @@ export async function handleAlumnos(req: Request, sub: string, deps: DepsAlumnos
     }
     const alumnos = [
       ...[...notion].map(([nombre, emails]) => ({ nombre, emails: [...emails], origen: "notion" as const })),
-      ...Object.entries(registro).map(([e, a]) => ({ nombre: a.nombre, emails: [e], origen: "registro" as const, alta: a.alta })),
+      ...Object.entries(registro).map(([e, a]) => ({ nombre: a.nombre, emails: [e], origen: "registro" as const, alta: a.alta, ...(a.inicio ? { inicio: a.inicio } : {}) })),
     ].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
     return json({ alumnos });
   }
@@ -110,7 +126,10 @@ export async function handleAlumnos(req: Request, sub: string, deps: DepsAlumnos
     const conCorreo = filas.some((r) => r.alumno && slugAlumno(r.alumno) === slug && r.userEmails.length) ||
       Object.values(registro).some((a) => slugAlumno(a.nombre) === slug);
     if (conCorreo) return json({ error: "nombre_en_uso" }, 409);
-    const alumno = { nombre, alta: deps.ahora ? deps.ahora() : new Date().toISOString() };
+    const alta = deps.ahora ? deps.ahora() : new Date().toISOString();
+    // Liga a un alumno que ya lleva el curso en Notion: sin inicio (sus atrasos son reales).
+    const existente = filas.some((r) => r.alumno && slugAlumno(r.alumno) === slug);
+    const alumno: AlumnoRegistrado = existente ? { nombre, alta } : { nombre, alta, inicio: lunesDeInicio(alta) };
     if (!await escribir(deps.store, (r) => ({ ...r, [correo]: alumno }), `alumnos: alta de ${nombre}`)) return json({ error: "conflicto_escritura" }, 503);
     return json({ ok: true, alumno: { email: correo, ...alumno } });
   }
