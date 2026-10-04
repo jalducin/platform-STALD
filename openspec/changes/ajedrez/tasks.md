@@ -34,7 +34,7 @@
 
 ## 6. Verificación en producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Probar en producción:
+- [x] 6.1 Probar en producción:
   - individual sin terminar, para que no se guarden puntos;
   - sala 1 vs bot con jugadas aceptadas;
   - borrar la sala al terminar.

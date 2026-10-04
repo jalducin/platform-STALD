@@ -50,3 +50,10 @@
 ## Resultado
 - Estado del Step 5: PASS
 - Bloqueos: ninguno
+
+## Verificación en producción (Step 6.1) — 2026-10-03
+- Se corrió `node prod-ajedrez.js` contra Pages y `stald.jalducin.deno.net` con el correo de admin: 4/4.
+  - El ajedrez aparece en Mente ágil.
+  - Individual: 1.d4 y el bot respondió. No se guardaron puntos porque la partida no se terminó.
+  - Sala `WMCT` contra el bot: el servidor aceptó 1.e4 y el bot respondió.
+- Restauración: se borró la sala `WMCT` del repo de datos y del índice. No se guardó ninguna partida.
