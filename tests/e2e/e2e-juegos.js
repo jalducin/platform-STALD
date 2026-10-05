@@ -139,7 +139,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   await p.goto(BASE + '/' + Q); await p.fill('#email', 'leo.invitado@example.com'); await p.click('#login-btn');
   await p.waitForSelector('#code-form:not([hidden])'); await p.fill('#code', '123456'); await p.click('#code-btn'); // enlace mágico simulado
   await p.waitForSelector('#guest:not([hidden])', { timeout: 60000 });
-  ok('portal: ofrece entrar como invitado', true);
+  ok('portal: ofrece crear la cuenta de Juegos', (await p.textContent('#guest')).includes('Crear mi cuenta de Juegos'));
   await p.click('#guest-btn'); await p.waitForSelector('#f-invitado', { timeout: 60000 });
   await p.fill('#apodo', 'Leo'); await p.click('#f-invitado button[type=submit]');
   ok('invitado: sin aceptar no entra', (await p.textContent('main')).includes('necesitas aceptar'));

@@ -518,7 +518,7 @@
     limpiar(); chip.hidden = true;
     StaldAuth.pintarEntrada(app, {
       titulo: '🎮 Juegos',
-      texto: salaPendiente ? '🎉 Te invitaron a la partida ' + salaPendiente + '. Escribe tu correo y te mandamos un enlace para entrar y unirte.' : 'Aprende jugando. Escribe tu correo y te mandamos un enlace para entrar, sin contraseña.',
+      texto: salaPendiente ? '🎉 Te invitaron a la partida ' + salaPendiente + '. Escribe tu correo y te mandamos un enlace para entrar y unirte.' : 'Aprende jugando. Escribe tu correo y te mandamos un enlace para entrar, sin contraseña. ¿Primera vez? Así también creas tu cuenta de Juegos en un minuto.',
       correo: state.email || '',
       aviso: msg,
       alEntrar: () => iniciar(),
@@ -527,10 +527,10 @@
 
   function pantallaInvitado(msg) {
     limpiar(); chip.hidden = true;
-    app.innerHTML = '<div class="card"><h1>👋 ¡Hola!</h1><p class="lead">Tu correo <b>' + escapeHtml(state.email) + '</b> no está en las clases, pero puedes jugar como invitado' + (salaPendiente ? ' en la partida <b>' + escapeHtml(salaPendiente) + '</b>' : '') + '.</p>' +
+    app.innerHTML = '<div class="card"><h1>🎮 Crea tu cuenta de Juegos</h1><p class="lead">Tu correo <b>' + escapeHtml(state.email) + '</b> todavía no tiene cuenta. Elige tu apodo y empieza a jugar' + (salaPendiente ? ' en la partida <b>' + escapeHtml(salaPendiente) + '</b>' : '') + '.</p>' +
       '<form id="f-invitado" novalidate><label for="apodo">¿Cómo te llamamos? (apodo)</label><input id="apodo" type="text" maxlength="20" placeholder="Ej. Leo" autocomplete="nickname">' +
       '<label class="check"><input id="acepto" type="checkbox"><span>Acepto que se guarde mi correo y mis puntos para registrar mi avance y mejorar la plataforma.</span></label>' +
-      '<div class="row-btns"><button class="btn ghost" type="button" data-a="otro-correo">Usar otro correo</button><button class="btn" type="submit">Entrar a jugar</button></div></form>' +
+      '<div class="row-btns"><button class="btn ghost" type="button" data-a="otro-correo">Usar otro correo</button><button class="btn" type="submit">Crear mi cuenta y jugar</button></div></form>' +
       (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
   }
 
@@ -3221,7 +3221,7 @@
     if (e.target.id === 'f-invitado') {
       e.preventDefault();
       const nombre = document.getElementById('apodo').value.trim();
-      if (!document.getElementById('acepto').checked) return pantallaInvitado('Para jugar como invitado necesitas aceptar el aviso.');
+      if (!document.getElementById('acepto').checked) return pantallaInvitado('Para crear tu cuenta de Juegos necesitas aceptar el aviso.');
       if (!/^[\p{L}\p{N} ]{2,20}$/u.test(nombre)) return pantallaInvitado('Tu apodo debe tener de 2 a 20 letras o números.');
       const r = await post('/juegos/invitado', { nombre, acepto: true });
       if (!r.ok) return pantallaInvitado('No se pudo registrar (' + (r.body.error || r.status) + ').');

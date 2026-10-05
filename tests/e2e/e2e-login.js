@@ -26,7 +26,7 @@ async function entrarConCodigo(p, correo) {
   await p.fill('#email', correo); await p.click('#login-btn');
   await p.waitForSelector('#code-form:not([hidden])', { timeout: 10000 });
   await p.fill('#code', '123456'); await p.click('#code-btn');
-  await p.waitForSelector('#home:not([hidden]), #login-error:not([hidden])', { timeout: 60000 });
+  await p.waitForSelector('#home:not([hidden]), #login-error:not([hidden]), #guest:not([hidden])', { timeout: 60000 });
 }
 
 async function api(ruta, token) {
@@ -166,11 +166,24 @@ async function api(ruta, token) {
   ({ ctx, p } = await contexto(b));
   await p.goto(BASE + '/' + Q);
   await entrarConCodigo(p, 'nuevo' + Date.now() + '@example.com'); // único por corrida: el servidor guarda invitados en memoria
-  ok('desconocido: «No encontré» y botón de invitado', (await p.textContent('#login-error')).includes('No encontré') && await p.isVisible('#guest'));
+  // openspec: registro-juegos → invitación a crear la cuenta de Juegos, no un error.
+  ok('desconocido: invitación sin error', await p.isHidden('#login-error') && await p.isVisible('#guest') && (await p.textContent('#guest')).includes('Crear mi cuenta de Juegos'));
   await p.click('#guest-btn'); await p.waitForSelector('#f-invitado', { timeout: 60000 });
+  ok('Juegos: «Crea tu cuenta de Juegos»', (await p.textContent('#app')).includes('Crea tu cuenta de Juegos'));
   await p.fill('#apodo', 'Nuevo'); await p.check('#acepto'); await p.click('#f-invitado button[type=submit]');
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
   ok('invitado registrado con su sesión', (await p.textContent('#chip')).includes('Nuevo'));
+  await ctx.close();
+
+  // ---- Cuenta de Juegos desde el botón visible del portal y desde ?juegos=1 ----
+  ({ ctx, p } = await contexto(b));
+  await p.goto(BASE + '/' + Q); await p.waitForSelector('#login:not([hidden])', { timeout: 30000 });
+  ok('portal: botón visible «Crea tu cuenta de Juegos»', await p.isVisible('#juegos-cta') && (await p.textContent('#juegos-cta')).includes('Crea tu cuenta de Juegos'));
+  await p.click('#juegos-cta-btn'); await p.waitForURL(/juegos\.html/, { timeout: 30000 });
+  await p.waitForFunction(() => document.body.innerText.includes('cuenta de Juegos'), null, { timeout: 30000 });
+  ok('botón → entrada de Juegos con su API', p.url().includes('api='));
+  await p.goto(BASE + '/index.html?juegos=1&api=' + encodeURIComponent(API)); await p.waitForURL(/juegos\.html/, { timeout: 30000 });
+  ok('?juegos=1 → Juegos con su API', p.url().includes('api='));
   await ctx.close();
 
   await b.close();

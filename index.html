@@ -141,9 +141,14 @@
       </form>
       <div class="alert" id="login-error" role="alert" hidden></div>
       <div class="guest" id="guest" hidden>
-        <div class="guest-t">🎮 ¿Vienes a jugar?</div>
-        <p class="hint" style="margin:4px 0 10px">Puedes entrar a Juegos como invitado con este correo.</p>
-        <button class="btn ghost-btn" id="guest-btn" type="button">Entrar como invitado a Juegos →</button>
+        <div class="guest-t">🎮 Ese correo no tiene clases registradas</div>
+        <p class="hint" style="margin:4px 0 10px">Si vienes a jugar, crea tu cuenta de Juegos con este correo. Si eres alumno o alumna, revisa que esté bien escrito o pide a quien te da clases que te registre.</p>
+        <button class="btn ghost-btn" id="guest-btn" type="button">🎮 Crear mi cuenta de Juegos →</button>
+      </div>
+      <div class="guest" id="juegos-cta">
+        <div class="guest-t">🎮 ¿Solo vienes a jugar?</div>
+        <p class="hint" style="margin:4px 0 10px">Crea tu cuenta de Juegos con tu correo, sin contraseña y sin estar en las clases.</p>
+        <button class="btn ghost-btn" id="juegos-cta-btn" type="button">Crea tu cuenta de Juegos →</button>
       </div>
     </section>
 
@@ -208,6 +213,8 @@
 
   // Conserva ?api= al navegar (pruebas locales).
   const conApi = (href) => API_PARAM ? href + (href.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(API_PARAM) : href;
+  // Enlace para compartir (openspec: registro-juegos): index.html?juegos=1 lleva directo a crear la cuenta de Juegos.
+  if (new URLSearchParams(location.search).get('juegos') === '1') location.replace(conApi('juegos.html'));
 
   const ESPACIOS = [
     { id: 'ingles', clase: 'ingles', href: 'ingles.html', ico: '📘', t: 'Clases de Inglés', d: 'Actividades de la semana, exámenes y tu avance.' },
@@ -259,13 +266,13 @@
     $('login-form').hidden = false; $('login-hint').hidden = false; $('code-form').hidden = true;
     $('login-btn').disabled = false;
     if (correo) $('email').value = correo;
-    $('guest').hidden = true;
+    $('guest').hidden = true; $('juegos-cta').hidden = false;
     if (msg) error(msg); else { $('login-error').hidden = true; show('login'); }
   }
   function pasoCodigo(correo) {
     $('login-form').hidden = true; $('login-hint').hidden = true; $('code-form').hidden = false;
     $('code-sent').textContent = 'Revisa tu correo ✉️ Te mandamos un enlace a ' + correo + '.';
-    $('code').value = ''; $('code-btn').disabled = false; $('login-error').hidden = true; $('guest').hidden = true;
+    $('code').value = ''; $('code-btn').disabled = false; $('login-error').hidden = true; $('guest').hidden = true; $('juegos-cta').hidden = true;
     show('login'); $('code').focus();
   }
 
@@ -286,9 +293,12 @@
       if (!res.ok) throw new Error(p.error || ('HTTP ' + res.status));
       if (!p.conocido) {
         SESSION_KEYS.forEach(k => localStorage.removeItem(k));
-        pedirEntrada('No encontré clases con ese correo. Revisa que esté bien escrito o pide a quien te da clases que te registre.', email);
         pendiente = email;
-        $('guest').hidden = viejo; // el invitado entra a Juegos con su sesión
+        // Con sesión: invitación a crear la cuenta de Juegos, no un error (openspec: registro-juegos). Sin sesión
+        // (correo de antes) no hay cuenta que crear: se explica como antes.
+        if (viejo) return pedirEntrada('No encontré clases con ese correo. Revisa que esté bien escrito o pide a quien te da clases que te registre.', email);
+        pedirEntrada(null, email);
+        $('guest').hidden = false; $('juegos-cta').hidden = true;
         return;
       }
       // Compatibilidad: las páginas que aún no usan la sesión leen estas claves.
@@ -328,6 +338,8 @@
     if (!pendiente) return;
     location.href = conApi('juegos.html');
   });
+  // Cuenta de Juegos sin pasar por las clases: Juegos pide el correo, manda el enlace y luego el apodo.
+  $('juegos-cta-btn').addEventListener('click', () => { location.href = conApi('juegos.html'); });
 
   // Aviso de transición: quien entró con el correo de antes activa su acceso seguro.
   $('secure-btn').addEventListener('click', async () => {
