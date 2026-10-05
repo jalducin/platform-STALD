@@ -5,7 +5,7 @@
 //   StaldAuth.email()                            // correo de la sesión o null
 //   StaldAuth.fetchConSesion(url, opts)          // fetch con Authorization: Bearer <token>
 //   StaldAuth.esSesionVencida(res, body)         // true si el servidor respondió 401 de sesión
-//   StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar })
+//   StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar, pie })  // pie: HTML propio bajo el formulario
 //   StaldAuth.salir()                            // cierra la sesión y borra las claves viejas de correo
 // La sesión se comparte entre portal, Inglés, Juegos y Secundaria (mismo origen, localStorage).
 (function () {
@@ -165,7 +165,7 @@
         '<form novalidate><label for="stald-auth-correo">Tu correo</label>' +
         '<input id="stald-auth-correo" type="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com" value="' + esc(op.correo || '') + '">' +
         '<button type="submit" id="stald-auth-enviar">📧 Enviarme el enlace</button></form>' +
-        (msg ? '<div class="msg" role="alert">' + esc(msg) + '</div>' : '') + '</div>';
+        (msg ? '<div class="msg" role="alert">' + esc(msg) + '</div>' : '') + '</div>' + (op.pie || '');
       el.querySelector('form').addEventListener('submit', function (e) {
         e.preventDefault();
         var correo = el.querySelector('#stald-auth-correo').value.trim().toLowerCase();
