@@ -29,7 +29,7 @@
 
 ## 6. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Tras el merge y la subida del contenido:
+- [x] 6.1 Tras el merge y la subida del contenido:
   - verificar en solo lectura que la página abre;
   - verificar que el contenido está en el repo de datos.
 
