@@ -157,6 +157,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     (cambio `examen-segunda-oportunidad`). La ruta del profe no espera.
   - `prorrogas` (opcional): `{ "<slug-alumno>": "AAAA-MM-DD" }`, la fecha límite propia de un alumno o alumna
     (p. ej. quien se integra tarde). No adelanta `disponibleDesde`. El slug es el de `resultados/`, nunca el correo.
+  - `alumnos` (opcional): `["<slug>", …]`. Solo esas personas ven y abren el elemento (examen exclusivo, cambio
+    `examen-secundaria`). Las demás no lo ven en su lista y reciben 404 al abrirlo. Sin el campo, lo ve todo el
+    ámbito.
   - `temas[]`: con `retroalimentacion` por estado.
   - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }] }`.
   - `tips[]`: `{ tipo: "libreta" | "video", texto, url? }`. Los videos son enlaces de **búsqueda** de YouTube.
@@ -214,6 +217,15 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `semanas/<lunes>.json`, `actividades/profe-act-<fecha>.json` y `examenes/profe-examen-<fecha>.json`;
   - resultados en `resultados/<id>/profe.json` (alumno "Profe"), también para los elementos del grupo que resuelve
     antes que ellos; esos archivos se excluyen de todas las vistas de resultados del grupo.
+- `contenido/secundaria/`: exámenes de Secundaria (cambio `examen-secundaria`), mismo formato que `contenido/`:
+  - `semanas/<lunes>.json` y `examenes/<id>.json`;
+  - se ven en `ingles.html?modo=secundaria` (enlace «📝 Exámenes» de `secundaria.html`) y el servidor los atiende
+    en `/secundaria/actividades`;
+  - la identidad es el primer nombre de la persona en las filas de Secundaria; su slug es el de `alumnos` y
+    `resultados/`;
+  - resultados en `resultados/<id>/<slug>.json`, en Postgres igual que Inglés; con `intentos: 2` y sin
+    `segundaOportunidad`, el 2.º intento abre de inmediato y cuenta la mejor;
+  - generador del examen mensual: `herramientas/secundaria-<AAAA-MM>/`.
 - `alumnos.json`: `{ "<correo>": { nombre, alta, inicio? } }`, alumnos y alumnas dados de alta desde `ingles.html`
   (cambio `alta-alumnos`). Se suman a los de Notion. Solo el admin ve los correos.
   - `inicio` (`AAAA-MM-DD`): el lunes siguiente al alta (cambio `inicio-lunes-alumnos`). Las actividades que

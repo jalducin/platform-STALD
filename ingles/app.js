@@ -31,6 +31,7 @@ function navItem(s, actual, extra) {
   return '<a class="' + cls + '" href="' + escapeHtml(href) + '" data-nav="' + s.id + '"' + cur + '>' + cuerpo + '</a>';
 }
 function pintarNav() {
+  if (MODO_SECUNDARIA) { navEl.hidden = true; return; } // página de una sola vista
   const rol = rolActual(), actual = MODO_PROFE ? 'ruta' : seccionActual();
   document.body.classList.toggle('vista-admin', rol === 'admin');
   document.body.classList.toggle('vista-alumno', rol === 'alumno');
@@ -49,7 +50,7 @@ function pintarNav() {
 // Muestra la sección del hash, marca su pestaña (aria-current) y pone el título de la pestaña del navegador.
 function aplicarRuta() {
   pintarNav();
-  if (MODO_PROFE) return;
+  if (MODO_PROFE || MODO_SECUNDARIA) return;
   const id = seccionActual();
   contentEl.querySelectorAll('[data-seccion]').forEach(s => { s.hidden = s.dataset.seccion !== id; });
   const s = seccion(rolActual(), id);
@@ -86,7 +87,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') document.get
 function render(data) {
   state.vista = 'secciones';
   if (location.hash.startsWith('#ver/')) history.replaceState(null, '', location.pathname + location.search + '#' + seccionActual());
-  whoLabel.textContent = MODO_PROFE ? 'Ruta del profe' : data.isAdmin ? 'Modo maestro' : '';
+  whoLabel.textContent = MODO_PROFE ? 'Ruta del profe' : MODO_SECUNDARIA ? 'Secundaria' : data.isAdmin ? 'Modo maestro' : '';
   if (data.isAdmin) {
     const tag = document.createElement('span');
     tag.className = 'admin-tag';
@@ -94,10 +95,11 @@ function render(data) {
     whoLabel.appendChild(tag);
   }
   if (MODO_PROFE) contentEl.innerHTML = renderProfe(state.act);
+  else if (MODO_SECUNDARIA) contentEl.innerHTML = renderSecundaria(state.act);
   else if (!data.isAdmin) contentEl.innerHTML = renderAlumno(data, state.act);
   else contentEl.innerHTML = renderAdmin(data);
   aplicarRuta();
-  if (!MODO_PROFE && !data.isAdmin) iniciarCuentaRegresiva();
+  if (!MODO_PROFE && !MODO_SECUNDARIA && !data.isAdmin) iniciarCuentaRegresiva();
 }
 
 // ---------- Eventos del contenido (y del cajón, que vive fuera de #content) ----------
@@ -157,6 +159,7 @@ async function loadFor(email) {
     // Tablero y exámenes en paralelo para no sumar las dos esperas.
     state.email = email;
     if (MODO_PROFE) return await loadProfe(email);
+    if (MODO_SECUNDARIA) return await loadSecundaria(email);
     const actividadesP = loadActividades();
     const r = await api(DATA_URL_BASE + '?email=' + encodeURIComponent(email));
     const data = r.body;
@@ -188,7 +191,7 @@ function mostrarEntrada(aviso) {
   if (cajonEl.open) cajonEl.close();
   appEl.style.display = 'none'; navEl.hidden = true; loginEl.style.display = 'block';
   state.data = null;
-  StaldAuth.pintarEntrada(loginEl, { titulo: '📗 Clases de Inglés', texto: 'Te mandamos un enlace a tu correo para entrar, sin contraseña.', aviso, alEntrar: c => loadFor(c) });
+  StaldAuth.pintarEntrada(loginEl, { titulo: MODO_SECUNDARIA ? '📝 Exámenes de Secundaria' : '📗 Clases de Inglés', texto: 'Te mandamos un enlace a tu correo para entrar, sin contraseña.', aviso, alEntrar: c => loadFor(c) });
 }
 let saliendo = false;
 function sesionVencida(body) {

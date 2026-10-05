@@ -1,0 +1,11 @@
+{
+  "id": "2026-09-21",
+  "titulo": "Prueba E2E",
+  "elementos": [
+    {
+      "id": "sec-e2e",
+      "tipo": "examen",
+      "fecha": "2026-12-31"
+    }
+  ]
+}

@@ -32,7 +32,7 @@ PEDIDAS=()
 
 # Orden canónico: Inglés (comparten servidor), las que necesitan datos propios, plataforma y juegos, y al final
 # la de login con la transición terminada.
-ORDEN=(alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno
+ORDEN=(alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno examen-secundaria
   grupos ingles-pro
   login portal juegos partidas enlace-sala
   conquian-estres clasicos fusion sudoku dragon-run puntos-tipo basta-rondas loteria-sala una-sala una-robo
@@ -47,7 +47,7 @@ ORDEN=(alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo r
 #   despues sin Postgres y con LOGIN_TRANSICION_HASTA en el pasado
 fase_de() {
   case $1 in
-    alta-alumnos | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno) echo ingles ;;
+    alta-alumnos | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | examen-secundaria) echo ingles ;;
     grupos) echo grupos ;;
     ingles-pro) echo pro ;;
     login-despues) echo despues ;;
@@ -178,6 +178,9 @@ filas_pg() { # cuántas filas quedan en stald_test_* (máx. 1 por tabla)
 # --- Datos ---
 preparar() { # $1 = fase
   rm -rf "$COPIA" && mkdir -p "$COPIA" && cp -r "$DATOS_ORIGEN/." "$COPIA/" && rm -rf "$COPIA/.git"
+  # Contenido de prueba del repo (tests/fixtures/datos, solo datos de ejemplo): se superpone antes de arrancar el
+  # servidor, que carga la copia en memoria una sola vez (MemoryStore.fromDir).
+  cp -r "$RAIZ/tests/fixtures/datos/." "$COPIA/"
   # Las pruebas parten de cero: sin resultados del profe ni del examen del viernes 2026-10-02.
   [ -d "$COPIA/resultados" ] && find "$COPIA/resultados" -name profe.json -delete
   rm -f "$COPIA"/resultados/examen-2026-10-02/*.json

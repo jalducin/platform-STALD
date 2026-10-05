@@ -1,0 +1,83 @@
+{
+  "id": "sec-e2e",
+  "tipo": "examen",
+  "titulo": "Examen mensual de prueba",
+  "nivel": "Secundaria",
+  "disponibleDesde": "2026-09-21",
+  "fechaLimite": "2026-12-31",
+  "intentos": 2,
+  "preguntasPorIntento": 4,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "historia",
+      "titulo": "🏛️ Historia",
+      "retroalimentacion": {
+        "fortaleza": "bien",
+        "en-progreso": "casi",
+        "debilidad": "repasa"
+      }
+    },
+    {
+      "id": "ingles",
+      "titulo": "🗣️ Inglés",
+      "retroalimentacion": {
+        "fortaleza": "bien",
+        "en-progreso": "casi",
+        "debilidad": "repasa"
+      }
+    }
+  ],
+  "banco": [
+    {
+      "id": "e-h1",
+      "tema": "historia",
+      "tipo": "opcion",
+      "enunciado": "¿e-h1?",
+      "opciones": [
+        "uno",
+        "dos"
+      ],
+      "correcta": 0,
+      "explicacion": "x"
+    },
+    {
+      "id": "e-h2",
+      "tema": "historia",
+      "tipo": "opcion",
+      "enunciado": "¿e-h2?",
+      "opciones": [
+        "uno",
+        "dos"
+      ],
+      "correcta": 1,
+      "explicacion": "x"
+    },
+    {
+      "id": "e-i1",
+      "tema": "ingles",
+      "tipo": "opcion",
+      "enunciado": "¿e-i1?",
+      "opciones": [
+        "uno",
+        "dos"
+      ],
+      "correcta": 0,
+      "explicacion": "x"
+    },
+    {
+      "id": "e-i2",
+      "tema": "ingles",
+      "tipo": "opcion",
+      "enunciado": "¿e-i2?",
+      "opciones": [
+        "uno",
+        "dos"
+      ],
+      "correcta": 1,
+      "explicacion": "x"
+    }
+  ]
+}
