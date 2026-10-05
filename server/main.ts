@@ -9,10 +9,10 @@ import { handleActividades, handleProfe } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados } from "./juegos.ts";
-import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro, sinHuerfanas } from "./alumnos.ts";
+import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro, sinHuerfanas, importarNotion, clearCacheAlumnos, RUTA_ALUMNOS, type RegistroAlumnos } from "./alumnos.ts";
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
-import { createDb, PgStore, v as pgv } from "./db.ts";
+import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
 import { mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
 import { configPublica, handleEnlace, LOGIN_TRANSICION_HASTA, quienEs } from "./auth.ts";
@@ -137,21 +137,31 @@ function baseStore(): Promise<Store> {
 const db = env("SUPABASE_URL") && env("SUPABASE_SERVICE_KEY")
   ? createDb({ url: env("SUPABASE_URL"), key: env("SUPABASE_SERVICE_KEY"), prefijo: env("STALD_TABLAS") || "stald_" })
   : null;
-let migrado: { t: number; v: boolean } | null = null;
-async function inglesEnPg(): Promise<boolean> {
-  if (!db) return false;
-  if (migrado && Date.now() - migrado.t < 60_000) return migrado.v;
-  let v = false;
-  try { v = (await db.select("docs", `path=eq.${pgv("meta/migrado")}&select=path`)).length === 1; } catch (e) { console.error("marca migrado:", e instanceof Error ? e.message : e); v = migrado?.v ?? false; }
-  migrado = { t: Date.now(), v };
-  return v;
+// Marcas de migración (se revisan cada 60 s): meta/migrado → Inglés; meta/migrado-juegos → juegos/
+// (openspec: ingles-grupos, cierre-tecnico). Si no se pueden leer, se conserva lo último conocido.
+let marcas: { t: number; ingles: boolean; juegos: boolean } | null = null;
+async function leerMarcas(): Promise<{ ingles: boolean; juegos: boolean }> {
+  if (!db) return { ingles: false, juegos: false };
+  if (marcas && Date.now() - marcas.t < 60_000) return marcas;
+  try {
+    const filas = await db.select<{ path: string }>("docs", `path=like.${pgv("meta/migrado*")}&select=path`);
+    marcas = { t: Date.now(), ingles: filas.some((f) => f.path === "meta/migrado"), juegos: filas.some((f) => f.path === "meta/migrado-juegos") };
+  } catch (e) {
+    console.error("marcas de migración:", e instanceof Error ? e.message : e);
+    marcas = { t: Date.now(), ingles: marcas?.ingles ?? false, juegos: marcas?.juegos ?? false };
+  }
+  return marcas;
 }
-let pgStore: PgStore | null = null;
+const inglesEnPg = async () => (await leerMarcas()).ingles;
+let pgStore: { clave: string; store: PgStore } | null = null;
 async function getStore(): Promise<Store> {
   const base = await baseStore();
-  if (!await inglesEnPg()) return base;
-  if (!pgStore) pgStore = new PgStore(db!, base);
-  return pgStore;
+  const m = await leerMarcas();
+  const prefijos = [...(m.ingles ? PREFIJOS_INGLES : []), ...(m.juegos ? [PREFIJO_JUEGOS] : [])];
+  if (!prefijos.length) return base;
+  const clave = prefijos.join(",");
+  if (!pgStore || pgStore.clave !== clave) pgStore = { clave, store: new PgStore(db!, base, prefijos) };
+  return pgStore.store;
 }
 
 export async function handler(req: Request): Promise<Response> {
@@ -201,6 +211,16 @@ export async function handler(req: Request): Promise<Response> {
         const r = await handleGrupos(new Request("http://x", { method: "POST", body: JSON.stringify({ alumno: nombre, grupo }) }), "/mover", { email: admin, admin, db: db!, hoy: () => desde }, json);
         return r.ok;
       } : undefined;
+      // Fase 1 de «Inglés sin Notion» (openspec: cierre-tecnico): al abrir la lista, el admin copia al registro a
+      // quien solo estaba en Notion con correo. Idempotente; si falla, la lista se muestra igual.
+      if (req.method === "GET" && admin && email === admin && conGrupos) {
+        try {
+          const store = await getStore();
+          const doc = await store.get<RegistroAlumnos>(RUTA_ALUMNOS);
+          const { registro, importados } = importarNotion(doc?.data ?? {}, await filasNotion(), new Date().toISOString());
+          if (importados && await store.put(RUTA_ALUMNOS, registro, doc?.sha ?? null, `alumnos: ${importados} importados de Notion`)) clearCacheAlumnos();
+        } catch (e) { console.error("importar Notion:", e instanceof Error ? e.message : e); }
+      }
       return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion, inscribir }, json);
     }
 

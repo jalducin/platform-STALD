@@ -11,6 +11,7 @@ export interface AlumnoRegistrado {
   nombre: string;
   alta: string;
   inicio?: string; // lunes en que empieza (AAAA-MM-DD); antes no ve atrasos (openspec: inicio-lunes-alumnos)
+  origen?: "notion"; // importada de Notion (openspec: cierre-tecnico)
 }
 
 // Lunes siguiente (estrictamente posterior) a la fecha del alta en CDMX (UTC−6, sin horario de verano).
@@ -44,6 +45,23 @@ export async function leerRegistro(store: Store): Promise<RegistroAlumnos> {
   const v = (await store.get<RegistroAlumnos>(RUTA_ALUMNOS))?.data ?? {};
   cache = { t: Date.now(), v };
   return v;
+}
+
+// Copia al registro a cada persona de Notion con nombre y correo que aún no esté (openspec: cierre-tecnico, fase 1).
+// Nunca pisa ni borra; sin `inicio`, porque ya llevaba el curso. Idempotente.
+export function importarNotion(registro: RegistroAlumnos, filas: InglesRow[], ahora: string): { registro: RegistroAlumnos; importados: number } {
+  const r: RegistroAlumnos = { ...registro };
+  let importados = 0;
+  for (const f of filas) {
+    if (!f.alumno) continue;
+    for (const email of f.userEmails) {
+      const e = email.trim().toLowerCase();
+      if (!e || r[e]) continue;
+      r[e] = { nombre: f.alumno, alta: ahora, origen: "notion" };
+      importados++;
+    }
+  }
+  return { registro: r, importados };
 }
 
 // Filas de Notion sin alumno (campo "Nombre" vacío) no pertenecen a nadie: se ignoran (openspec: ingles-sin-nombre).
