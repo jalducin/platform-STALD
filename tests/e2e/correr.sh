@@ -5,6 +5,7 @@
 #   --datos <ruta>          carpeta del repo privado de datos (se copia; la original nunca se modifica)
 #   --pg                    Inglés contra Postgres de prueba (tablas stald_test_*). Requiere SUPABASE_URL y
 #                           SUPABASE_SERVICE_KEY en el entorno (nunca en archivos). Al terminar vacía stald_test_*.
+#   --pg-vaciar             con --pg: vacía stald_test_* aunque ya tenga filas (si no, se detiene sin tocarlas)
 #   --puerto-api <n>        puerto del servidor Deno (8817)
 #   --puerto-web <n>        puerto de los estáticos (8795)
 #   --transicion-terminada  el servidor corre con LOGIN_TRANSICION_HASTA=2026-01-01 en todas las fases
@@ -24,6 +25,7 @@ PUERTO_API=8817
 PUERTO_WEB=8795
 DATOS_ORIGEN=""
 PG=0
+PG_VACIAR=0
 TRANSICION=""
 TIEMPO_MAX=${TIEMPO_MAX:-600} # segundos por prueba
 PEDIDAS=()
@@ -54,13 +56,14 @@ fase_de() {
 }
 solo_pg() { [ "$1" = grupos ] || [ "$1" = pro ]; }
 
-uso() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; }
+uso() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; }
 error() { echo "ERROR: $*" >&2; exit 2; }
 
 while [ $# -gt 0 ]; do
   case $1 in
     --datos) DATOS_ORIGEN=${2:-}; shift 2 ;;
     --pg) PG=1; shift ;;
+    --pg-vaciar) PG_VACIAR=1; shift ;;
     --puerto-api) PUERTO_API=${2:-}; shift 2 ;;
     --puerto-web) PUERTO_WEB=${2:-}; shift 2 ;;
     --transicion-terminada) TRANSICION=2026-01-01; shift ;;
@@ -194,6 +197,12 @@ PY
     pg POST stald_test_grupos '{"id":"grupo-1","nombre":"Grupo 1","orden":0}' >/dev/null
   fi
 }
+
+# stald_test_* es compartida: si ya tiene filas, otra corrida podría estar usándola. No se toca sin --pg-vaciar.
+if [ $PG = 1 ] && [ $PG_VACIAR = 0 ] && [ "$(filas_pg)" != 0 ]; then
+  rm -rf "$TMP_BASE"
+  error "stald_test_* ya tiene filas (¿otra corrida en curso?). Si son restos de una corrida cortada, repite con --pg-vaciar"
+fi
 
 cerrar() {
   apagar

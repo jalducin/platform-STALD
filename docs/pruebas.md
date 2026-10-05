@@ -74,6 +74,9 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
 
 - La llave vive **solo** en el entorno del proceso; nunca en archivos ni en el repo.
 - `correr.sh --pg` fuerza `STALD_TABLAS=stald_test_` y se niega si recibe otro prefijo: **nunca** toca `stald_*`.
+- `stald_test_*` es **compartida** por todo el que pruebe contra ese proyecto: no corras dos baterías `--pg` a la
+  vez. Si al empezar las tablas ya tienen filas, `correr.sh` se detiene sin tocarlas (otra corrida podría estar
+  en curso); si sabes que son restos de una corrida cortada, repite con `--pg-vaciar`.
 - Antes de cada fase de Inglés vacía `stald_test_*`, migra la copia con `herramientas/migrar-ingles.ts` y crea
   `grupo-1`. Al terminar las vacía e imprime cuántas filas quedan (debe ser 0).
 - Limpieza a mano, si una corrida se cortó de golpe (p. ej. se cerró la terminal): borra las filas de

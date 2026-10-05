@@ -65,7 +65,7 @@ async function jugarCalculo(p) {
 
   // Admin: tarjeta de juegos en Inglés
   const ctx = await b.newContext(); await ctx.addInitScript(() => (localStorage.setItem('ingles_email', 'admin@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'admin@example.com', token: 'prueba:admin@example.com' }))));
-  const ad = await ctx.newPage(); await ad.goto(BASE + '/ingles.html' + Q); await ad.waitForSelector('#juegos-admin', { timeout: 60000 });
+  const ad = await ctx.newPage(); await ad.goto(BASE + '/ingles.html' + Q); await ad.waitForSelector('#juegos-admin', { state: 'attached', timeout: 60000 }); // en la página nueva es un <details> plegado
   ok('admin: juegos de la semana con individuales y partidas', (await ad.textContent('#juegos-admin')).includes('individuales') && (await ad.textContent('#juegos-admin')).includes('partidas'));
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

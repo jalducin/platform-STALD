@@ -37,7 +37,7 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
   ok('la anfitriona ve entrar a la invitada', (await host.textContent('#p-body')).includes('Amiga'));
   // Enlace a una sala que no existe
   const x = await (await b.newContext()).newPage();
-  await x.addInitScript(() => localStorage.setItem('stald_email', 'angel@example.com'));
+  await x.addInitScript(() => (localStorage.setItem('stald_email', 'angel@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'angel@example.com', token: 'prueba:angel@example.com' }))));
   await x.goto(BASE + '/juegos.html?sala=ZZZZ&api=' + encodeURIComponent(API)); await x.waitForSelector('#p-msg .alert', { timeout: 30000 }).catch(() => {});
   ok('enlace a sala inexistente: aviso claro', ((await x.textContent('#p-msg').catch(() => '')) || '').includes('No existe'));
   await b.close();

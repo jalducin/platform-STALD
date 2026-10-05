@@ -41,6 +41,10 @@ ignorada por git. El repo SHALL NOT contener datos del repo privado, correos que
 - **THEN** el servidor usa `STALD_TABLAS=stald_test_` (nunca `stald_`), los datos se migran a esas tablas antes de
   cada fase, y al terminar (también si falla o se interrumpe) las tablas `stald_test_*` quedan vacías
 
+#### Scenario: Tablas de prueba en uso
+- **WHEN** se corre con `--pg` y `stald_test_*` ya tiene filas (otra corrida podría estar usándolas)
+- **THEN** termina con código distinto de cero sin tocar las tablas, salvo que se pase `--pg-vaciar`
+
 ### Requirement: Sesión de prueba en E2E
 Las E2E SHALL autenticarse con la sesión de prueba (`localStorage.stald_sesion_prueba = {email, token:'prueba:'+email}`
 en el navegador y `Authorization: Bearer prueba:<correo>` en las llamadas directas), que el servidor acepta solo

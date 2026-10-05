@@ -52,7 +52,8 @@ tests/
   `--pg` se vacían `SUPABASE_URL`/`SUPABASE_SERVICE_KEY`/`SUPABASE_PUBLISHABLE_KEY` para que nunca toque una base
   real. Estáticos: `python -m http.server --directory <repo>`.
 - `--pg`: exige `SUPABASE_URL` y `SUPABASE_SERVICE_KEY` en el entorno, fuerza `STALD_TABLAS=stald_test_` y se
-  niega si alguien pasó otro prefijo. Antes de cada fase vacía `stald_test_*`, migra con
+  niega si alguien pasó otro prefijo. Como `stald_test_*` es compartida (otras ramas o agentes pueden estar
+  probando contra ella), si al empezar tiene filas se detiene sin tocarla, salvo con `--pg-vaciar`. Antes de cada fase vacía `stald_test_*`, migra con
   `herramientas/migrar-ingles.ts` y crea `grupo-1`. Un `trap` en `EXIT`/`INT`/`TERM` apaga servidores, vacía
   las tablas y borra la copia de datos.
 - Apagar: mata los PID lanzados y, por si `npx` dejó un proceso hijo, lo que escuche en los dos puertos
