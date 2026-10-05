@@ -1100,7 +1100,7 @@
   },
   {
    "en": "car",
-   "es": "coche",
+   "es": "carro",
    "emoji": "🚗",
    "tema": "transporte"
   },
@@ -1267,7 +1267,7 @@
   },
   {
    "en": "car",
-   "es": "coche",
+   "es": "carro",
    "nivel": 1
   },
   {
@@ -2967,7 +2967,7 @@
   },
   {
    "en": "I don't have a car",
-   "es": "No tengo coche"
+   "es": "No tengo carro"
   },
   {
    "en": "Birds can fly",
@@ -3980,7 +3980,7 @@
     "No, it isn't. It is gray."
    ],
    "correcta": 3,
-   "es": "¿Tu coche es rojo?",
+   "es": "¿Tu carro es rojo?",
    "tema": "cosas-colores"
   },
   {

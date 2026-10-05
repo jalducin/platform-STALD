@@ -8,7 +8,7 @@
       ],
       "correcta": 0,
       "regla": "b/v",
-      "explicacion": "Vaca (animal) va con v; baca es la parrilla del techo de un coche."
+      "explicacion": "Vaca (animal) va con v; baca es la parrilla del techo de un carro."
     },
     {
       "frase": "Ayer mi hermano ___ fiebre.",
@@ -1854,7 +1854,7 @@
     },
     {
       "palabra": "auto",
-      "respuesta": "coche",
+      "respuesta": "carro",
       "distractores": [
         "avión",
         "barco",
@@ -2263,7 +2263,7 @@
       "distractores": [
         "avión",
         "tren",
-        "coche"
+        "carro"
       ]
     },
     {
