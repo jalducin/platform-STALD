@@ -9,6 +9,8 @@
   registrar nada.
 - **`pie` en `pintarEntrada`.** Es HTML de confianza de la página, solo en el paso del correo; el clic se atiende
   con la delegación de eventos de Juegos (`data-a`).
+- **Invitar desde el hub.** Quien ya tiene sesión no se registra otra vez: comparte `juegos.html?registro=1` con
+  `navigator.share` o lo copia al portapapeles, igual que el enlace de una partida. Conserva `?api=` en pruebas.
 - Portal: el botón «Crea tu cuenta de Juegos» lleva a `juegos.html?registro=1`, y `?juegos=1` también.
 
 ## Pruebas
