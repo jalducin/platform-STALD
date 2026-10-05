@@ -204,9 +204,15 @@ async function api(ruta, token) {
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
   ok('registro: entra con su apodo sin volver a pedirlo', (await p.textContent('#chip')).includes('Registro'));
   ok('registro: se borra el pendiente', await p.evaluate(() => localStorage.getItem('juegos_registro') === null));
-  // Ya con sesión: invitar a otra persona a registrarse desde el hub.
-  ok('hub: botón «Invitar a alguien a registrarse» con el enlace de registro', await p.isVisible('#invitar-registro') &&
-    (await p.getAttribute('#invitar-registro', 'data-url')).includes('juegos.html?registro=1'));
+  // Ya con sesión: «🆕 Registrar» cierra la sesión en este aparato y otra persona se registra ahí (openspec: registro-juegos-hub).
+  ok('hub: botón «Registrar»', (await p.textContent('#registrar-btn')).includes('Registrar'));
+  await p.click('#registrar-btn'); await p.waitForSelector('#f-registro', { timeout: 30000 });
+  ok('Registrar: cierra la sesión y abre el registro', await p.evaluate(() => localStorage.getItem('stald_sesion_prueba') === null));
+  await p.fill('#reg-apodo', 'Segunda'); await p.check('#reg-acepto'); await p.click('#f-registro button[type=submit]');
+  await p.waitForSelector('#stald-auth-correo'); await p.fill('#stald-auth-correo', 'segunda' + Date.now() + '@example.com'); await p.click('#stald-auth-enviar');
+  await p.waitForSelector('#stald-auth-codigo'); await p.fill('#stald-auth-codigo', '123456'); await p.click('#stald-auth-verificar');
+  await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  ok('Registrar: la segunda persona entra con su apodo', (await p.textContent('#chip')).includes('Segunda'));
   await ctx.close();
 
   await b.close();
