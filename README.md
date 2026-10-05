@@ -51,8 +51,10 @@ Deno publica cada cambio de la sala en un canal secreto y las páginas lo recibe
 respaldo cada 30 s. Sin las variables `SUPABASE_*` en Deno, las partidas funcionan con sondeo. Variables en
 [docs/deno-deploy-setup.md](docs/deno-deploy-setup.md); detalle en [docs/backend-standards.md](docs/backend-standards.md).
 
-## Inglés en grupos (Postgres)
+## Datos vivos en Postgres
 
 Los grupos de clase y los datos vivos de Inglés (alumnos, resultados y avance) están en el Postgres de Supabase. Es
 el mismo proyecto *Portafolio*, con tablas `stald_*`, protegidas con RLS y accesibles solo desde el servidor. El
-contenido (actividades, exámenes y semanas) sigue en el repo. Detalle en [docs/data-model.md](docs/data-model.md).
+contenido (actividades, exámenes y semanas) sigue en el repo. Juegos (salas, partidas, ranking, perfiles) pasa a
+Postgres al migrarse con `herramientas/migrar-ingles.ts --juegos`. Si Postgres no responde, el servidor responde 503
+en lugar de mostrar datos viejos. Detalle en [docs/data-model.md](docs/data-model.md).

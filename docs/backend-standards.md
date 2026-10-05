@@ -207,13 +207,19 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     - operaciones `select`, `insert`, `upsert`, `update` y `remove`;
     - límite de 5 s por petición;
     - si falla, lanza `DbError`.
-  - `PgStore(db, base)` implementa `Store` para `alumnos.json`, `resultados/**` y `avance/**`. Las demás rutas
-    (contenido, juegos) van al almacén base.
-    - Si una lectura de Postgres falla, lee del respaldo y marca el sha como `gh:`; con ese sha no deja escribir.
-  - `getStore()` usa `PgStore` solo si se cumplen dos condiciones:
-    - existen `SUPABASE_URL` y `SUPABASE_SERVICE_KEY`;
-    - la fila `meta/migrado` existe (se revisa cada 60 s).
-    Si alguna falta, se usa GitHub como antes.
+  - `PgStore(db, base, prefijos)` implementa `Store` para los prefijos activos:
+    - `PREFIJOS_INGLES`: `alumnos.json`, `resultados/` y `avance/`;
+    - `PREFIJO_JUEGOS`: `juegos/`.
+    - Las demás rutas, como el contenido, van al almacén base.
+    - Sin respaldo (cambio `cierre-tecnico`): los errores de Postgres se propagan y la ruta responde 503.
+  - `getStore()` usa `PgStore` solo si existen `SUPABASE_URL` y `SUPABASE_SERVICE_KEY`. Los prefijos se activan
+    según las marcas, que se revisan cada 60 s:
+    - `meta/migrado` activa Inglés;
+    - `meta/migrado-juegos` activa `juegos/`.
+    - Sin marcas, se usa GitHub como antes.
+  - `GET /ingles/alumnos` del admin también importa al registro a las personas de Notion que aún no están
+    (`importarNotion`): solo las que tienen correo, sin pisar y de forma idempotente. Es la fase 1 de
+    «Inglés sin Notion».
   - Rutas de grupos, solo admin:
     - `GET /ingles/grupos` → `{ grupos, miembros: { slug: grupo } }`;
     - `POST /ingles/grupos` crea o edita un grupo. Errores: `nombre_invalido`, `meet_invalido` (debe ser

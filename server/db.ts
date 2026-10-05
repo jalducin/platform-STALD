@@ -50,31 +50,29 @@ export function createDb(cfg: ConfigDb): Db {
   };
 }
 
-// Rutas de Inglés que viven en Postgres (documentos 1 a 1); el resto (contenido, juegos) sigue en el almacén base.
-export const esRutaPg = (path: string) => path === "alumnos.json" || path.startsWith("resultados/") || path.startsWith("avance/");
+// Rutas que viven en Postgres (documentos 1 a 1), según las marcas de migración (openspec: ingles-grupos,
+// cierre-tecnico): Inglés con meta/migrado y Juegos con meta/migrado-juegos. El contenido sigue en el repo.
+export const PREFIJOS_INGLES = ["alumnos.json", "resultados/", "avance/"];
+export const PREFIJO_JUEGOS = "juegos/";
+export const esRutaPg = (path: string, prefijos: string[] = PREFIJOS_INGLES) =>
+  prefijos.some((p) => p.endsWith("/") ? path.startsWith(p) : path === p);
 
 interface FilaDoc { path: string; data: unknown; version: number }
 
-// Store sobre stald_docs: el sha es la versión (concurrencia optimista). Si Postgres falla al leer, usa el almacén
-// base como respaldo (transición) y marca el sha con "gh:" para que esa copia no se pueda escribir.
+// Store sobre stald_docs: el sha es la versión (concurrencia optimista). Sin respaldo (openspec: cierre-tecnico):
+// si Postgres falla, el error sube y la ruta responde 503 en lugar de mostrar una copia vieja de GitHub.
 export class PgStore implements Store {
-  constructor(private db: Db, private base: Store) {}
+  constructor(private db: Db, private base: Store, private prefijos: string[] = PREFIJOS_INGLES) {}
+  private enPg(path: string) { return esRutaPg(path, this.prefijos); }
 
   async get<T = unknown>(path: string): Promise<Doc<T> | null> {
-    if (!esRutaPg(path)) return await this.base.get<T>(path);
-    try {
-      const filas = await this.db.select<FilaDoc>("docs", `path=eq.${v(path)}&select=data,version`);
-      return filas[0] ? { data: filas[0].data as T, sha: String(filas[0].version) } : null;
-    } catch (e) {
-      console.error("PgStore.get, respaldo:", e instanceof Error ? e.message : e);
-      const d = await this.base.get<T>(path);
-      return d ? { data: d.data, sha: "gh:" + (d.sha ?? "") } : null;
-    }
+    if (!this.enPg(path)) return await this.base.get<T>(path);
+    const filas = await this.db.select<FilaDoc>("docs", `path=eq.${v(path)}&select=data,version`);
+    return filas[0] ? { data: filas[0].data as T, sha: String(filas[0].version) } : null;
   }
 
   async put(path: string, data: unknown, sha: string | null, message: string): Promise<boolean> {
-    if (!esRutaPg(path)) return await this.base.put(path, data, sha, message);
-    if (sha?.startsWith("gh:")) return false; // copia de respaldo: no se escribe sobre ella
+    if (!this.enPg(path)) return await this.base.put(path, data, sha, message);
     const ahora = new Date().toISOString();
     if (sha === null) return (await this.db.insert("docs", { path, data, version: 1, actualizado: ahora }, { ignorarDuplicados: true })).length === 1;
     const n = Number(sha);
@@ -84,7 +82,7 @@ export class PgStore implements Store {
 
   async list(dir: string): Promise<string[]> {
     const d = dir.replace(/\/+$/, "");
-    if (!esRutaPg(d + "/x")) return await this.base.list(dir);
+    if (!this.enPg(d + "/x")) return await this.base.list(dir);
     const filas = await this.db.select<{ path: string }>("docs", `path=like.${v(d + "/*")}&select=path`);
     return filas.map((f) => f.path).filter((p) => p.startsWith(d + "/") && !p.slice(d.length + 1).includes("/")).map((p) => p.slice(d.length + 1));
   }
@@ -92,19 +90,14 @@ export class PgStore implements Store {
   // Todos los documentos hijos directos de una carpeta en una sola consulta (tablero del profe, openspec: ingles-pro).
   async leerCarpeta<T = unknown>(dir: string): Promise<{ nombre: string; data: T }[]> {
     const d = dir.replace(/\/+$/, "");
-    if (!esRutaPg(d + "/x")) return await leerCarpetaGenerica<T>(this.base, d);
-    try {
-      const filas = await this.db.select<{ path: string; data: unknown }>("docs", `path=like.${v(d + "/*")}&select=path,data`);
-      return filas.filter((f) => f.path.startsWith(d + "/") && !f.path.slice(d.length + 1).includes("/"))
-        .map((f) => ({ nombre: f.path.slice(d.length + 1), data: f.data as T }));
-    } catch (e) {
-      console.error("PgStore.leerCarpeta, respaldo:", e instanceof Error ? e.message : e);
-      return await leerCarpetaGenerica<T>(this.base, d);
-    }
+    if (!this.enPg(d + "/x")) return await leerCarpetaGenerica<T>(this.base, d);
+    const filas = await this.db.select<{ path: string; data: unknown }>("docs", `path=like.${v(d + "/*")}&select=path,data`);
+    return filas.filter((f) => f.path.startsWith(d + "/") && !f.path.slice(d.length + 1).includes("/"))
+      .map((f) => ({ nombre: f.path.slice(d.length + 1), data: f.data as T }));
   }
 
   async remove(path: string, message: string): Promise<void> {
-    if (!esRutaPg(path)) return await this.base.remove(path, message);
+    if (!this.enPg(path)) return await this.base.remove(path, message);
     await this.db.remove("docs", `path=eq.${v(path)}`);
   }
 }

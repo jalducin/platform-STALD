@@ -48,15 +48,7 @@ Deno.test("PgStore: resultados, avance y alumnos.json van a Postgres; el resto a
   assertEquals(fake.tabla("stald_docs").some((f) => String(f.path).startsWith("contenido/")), false);
 });
 
-Deno.test("PgStore: si Postgres falla, lee del respaldo y no permite escribir con esa copia", async () => {
-  const { fake, store, base } = pg();
-  await base.put("resultados/act-1/luz.json", { intentos: [7] }, null);
-  fake.caer(true);
-  const d = await store.get<any>("resultados/act-1/luz.json");
-  assertEquals(d!.data.intentos, [7]);
-  assert(d!.sha!.startsWith("gh:"));
-  assertEquals(await store.put("resultados/act-1/luz.json", { intentos: [7, 8] }, d!.sha, "x"), false);
-});
+// El respaldo de lectura a GitHub se quitó (openspec: cierre-tecnico); ver server/cierre_test.ts.
 
 function grupos() {
   clearCacheGrupos();
