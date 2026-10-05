@@ -1284,12 +1284,16 @@
   // Compara sin mayúsculas ni acentos, pero conserva la ñ como letra propia.
   const normBasta = s => String(s || '').trim().toLowerCase().replace(/ñ/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'ñ').replace(/\s+/g, ' ');
 
+  // Diccionario para validar: palabras de México (también ejemplos y bots) + `soloAceptar`, palabras de España que
+  // valen pero no se muestran (openspec: basta-mexicano).
+  const dicBasta = d => Object.fromEntries(d.categorias.map(c => [c.id, new Set([...(d.palabras[c.id] || []), ...((d.soloAceptar || {})[c.id] || [])].map(normBasta))]));
+
   async function jugarBasta(idioma) {
     const id = idioma === 'en' ? 'basta-en' : 'basta-es';
     const d = (await datos('basta'))[idioma];
     const letra = d.letras[Math.floor(Math.random() * d.letras.length)];
     const L = normBasta(letra);
-    const dic = Object.fromEntries(d.categorias.map(c => [c.id, new Set((d.palabras[c.id] || []).map(normBasta))]));
+    const dic = dicBasta(d);
     const m = marco(id);
     const TOT = 60;
     let terminado = false;
@@ -2071,7 +2075,7 @@
   // Puntuación de Basta en sala: única/verificada 100, repetida 50; no verificada 25/10; inválida 0.
   function puntuarBasta(d, letra, participantes) {
     const L = normBasta(letra);
-    const dic = Object.fromEntries(d.categorias.map(c => [c.id, new Set((d.palabras[c.id] || []).map(normBasta))]));
+    const dic = dicBasta(d);
     const res = participantes.map(p => ({ nombre: p.nombre, id: p.id, total: 0, detalle: {} }));
     for (const c of d.categorias) {
       const norm = participantes.map(p => normBasta((p.palabras || {})[c.id] || ''));

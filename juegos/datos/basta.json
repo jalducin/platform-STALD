@@ -1320,7 +1320,6 @@
         "acelga",
         "alfalfa",
         "aceituna",
-        "albaricoque",
         "almendra",
         "anona",
         "arveja",
@@ -1470,7 +1469,6 @@
         "malanga",
         "mamoncillo",
         "macadamia",
-        "melocotón",
         "mijo",
         "miltomate",
         "mangaba",
@@ -2252,7 +2250,6 @@
         "billete",
         "billetera",
         "biombo",
-        "bolígrafo",
         "bolsa",
         "bombilla",
         "bota",
@@ -2435,14 +2432,11 @@
         "figura",
         "flotador",
         "fonógrafo",
-        "fichero",
-        "gafas",
         "gancho",
         "garrafón",
         "gorra",
         "gorro",
         "grapa",
-        "grifo",
         "guante",
         "guitarra",
         "globo",
@@ -2495,7 +2489,6 @@
         "joya",
         "juguete",
         "jícara",
-        "jersey",
         "jarro",
         "jorongo",
         "joyero",
@@ -2576,7 +2569,6 @@
         "mandolina",
         "metrónomo",
         "navaja",
-        "nevera",
         "nave",
         "neumático",
         "naipe",
@@ -2589,7 +2581,6 @@
         "ocarina",
         "oboe",
         "ornamento",
-        "ordenador",
         "orejera",
         "ojal",
         "pala",
@@ -2920,11 +2911,28 @@
         "azul cielo",
         "ultravioleta",
         "anaranjado",
-        "albaricoque",
         "jaspeado",
         "kaki",
         "lapislázuli",
         "neón"
+      ]
+    },
+    "soloAceptar": {
+      "fruta": [
+        "albaricoque",
+        "melocotón"
+      ],
+      "cosa": [
+        "bolígrafo",
+        "fichero",
+        "gafas",
+        "grifo",
+        "jersey",
+        "nevera",
+        "ordenador"
+      ],
+      "color": [
+        "albaricoque"
       ]
     }
   },
