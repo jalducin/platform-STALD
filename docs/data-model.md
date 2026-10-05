@@ -160,6 +160,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `alumnos` (opcional): `["<slug>", …]`. Solo esas personas ven y abren el elemento (examen exclusivo, cambio
     `examen-secundaria`). Las demás no lo ven en su lista y reciben 404 al abrirlo. Sin el campo, lo ve todo el
     ámbito.
+  - `porSecciones` (opcional, `true`): las preguntas salen agrupadas por tema en el orden de `temas`, con un
+    encabezado por sección, y se barajan solo dentro de cada sección (cambio `examen-por-secciones`).
   - `temas[]`: con `retroalimentacion` por estado.
   - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }] }`.
   - `tips[]`: `{ tipo: "libreta" | "video", texto, url? }`. Los videos son enlaces de **búsqueda** de YouTube.
