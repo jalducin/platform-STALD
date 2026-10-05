@@ -25,7 +25,7 @@
 
 ## 5. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 CI en verde antes del merge; luego, captura sin sesión de Juegos en producción con el botón
+- [x] 5.1 CI en verde antes del merge; luego, captura sin sesión de Juegos en producción con el botón
 
 ## 6. Documentación (OBLIGATORIO)
 
