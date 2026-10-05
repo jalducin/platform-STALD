@@ -416,7 +416,7 @@
     { id: 'una', cat: 'clasicos', emoji: '🃏', t: '¡Una!', d: 'Cartas de colores. Con una carta, ¡presiona el botón UNA!', jugar: () => elegirUna() },
     { id: 'loteria', cat: 'clasicos', emoji: '🎴', t: 'Lotería', d: 'Lotería mexicana bilingüe con gritón.', jugar: () => elegirLoteria() },
     { id: 'poker', cat: 'clasicos', emoji: '♠️', t: 'Póker', d: "Texas Hold'em estilo Casino Royale, con fichas de juego.", jugar: () => elegirPoker() },
-    { id: 'brisca', cat: 'clasicos', emoji: '🏆', t: 'Brisca', d: 'Baraja española: gana bazas con el triunfo. Solo, contra 2 o en pareja.', jugar: () => elegirBrisca() },
+    { id: 'brisca', cat: 'clasicos', emoji: '🏆', t: 'Brisca', d: 'Baraja española: gana rondas con el triunfo. Solo, contra 2 o en pareja.', jugar: () => elegirBrisca() },
     { id: 'conquian', cat: 'clasicos', emoji: '🪙', t: 'Conquián', d: 'Baraja española: baja tercias y escaleras hasta juntar 9 cartas.', jugar: () => elegirConquian() },
   ];
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
@@ -1667,15 +1667,15 @@
     const otros = [...Array(n).keys()].filter(i => i !== yo);
     const tagEq = i => st.equipos ? ' <span class="pk-tag eq' + 'AB'[st.equipos[i]] + '">' + (yo >= 0 && st.equipos[i] === st.equipos[yo] ? 'pareja' : 'rival') + '</span>' : '';
     const asientos = '<div class="pk-asientos">' + otros.map(i => '<div class="pk-asiento' + (!st.terminada && st.turno === i ? ' turno' : '') + '"><span class="n">' + o.avatar(i) + escapeHtml(o.nombre(i)) + tagEq(i) + '</span><span>' +
-      st.manos[i].map(() => esCarta(undefined, ' chica')).join(' ') + '</span><span class="muted">' + st.ganadas[i].length / n + ' baza(s)</span></div>').join('') + '</div>';
+      st.manos[i].map(() => esCarta(undefined, ' chica')).join(' ') + '</span><span class="muted">' + st.ganadas[i].length / n + ' ronda(s)</span></div>').join('') + '</div>';
     const baza = st.baza.length ? st.baza : (o.verUltima && st.ultimaBaza ? st.ultimaBaza.cartas : []);
     const u = st.ultimaBaza;
-    const msg = st.baza.length ? '' : u ? '🏆 ' + escapeHtml(o.nombre(u.ganador)) + ' gana la baza' + (u.puntos ? ' (+' + u.puntos + ')' : '') : '¡A jugar! Abre ' + escapeHtml(o.nombre(st.turno));
+    const msg = st.baza.length ? '' : u ? '🏆 ' + escapeHtml(o.nombre(u.ganador)) + ' gana la ronda' + (u.puntos ? ' (+' + u.puntos + ')' : '') : '¡A jugar! Abre ' + escapeHtml(o.nombre(st.turno));
     const mesa = '<div class="pk-mesa es-mesa"><div class="pk-titulo">🏆 Brisca · triunfo ' + Cartas.ESP_PALOS[st.paloTriunfo] + ' ' + Cartas.ESP_EMOJI[st.paloTriunfo] + '</div>' +
       '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0">' + (st.mazo.length ? esCarta(st.triunfo, ' chica triunfo') + '<span class="pk-bote">🂠 ' + st.mazo.length + '</span>' : '<span class="pk-bote">Mazo agotado</span>') + '</div>' +
       '<div class="es-baza">' + baza.map(b => '<figure>' + esCarta(b.carta) + '<figcaption>' + escapeHtml(o.nombre(b.j)) + '</figcaption></figure>').join('') + '</div>' +
       '<div class="pk-msg">' + msg + '</div></div>';
-    const mio = yo >= 0 ? '<div class="pk-yo"><div class="pk-asiento' + (!st.terminada && st.turno === yo ? ' turno' : '') + '"><span class="n">' + o.avatar(yo) + escapeHtml(o.nombre(yo)) + tagEq(yo) + '</span><span class="muted">' + st.ganadas[yo].length / n + ' baza(s) · ' + st.puntos[yo] + ' pts</span></div></div>' +
+    const mio = yo >= 0 ? '<div class="pk-yo"><div class="pk-asiento' + (!st.terminada && st.turno === yo ? ' turno' : '') + '"><span class="n">' + o.avatar(yo) + escapeHtml(o.nombre(yo)) + tagEq(yo) + '</span><span class="muted">' + st.ganadas[yo].length / n + ' ronda(s) · ' + st.puntos[yo] + ' pts</span></div></div>' +
       '<div class="es-mano">' + st.manos[yo].map(c => '<button class="es-btn' + (o.miTurno ? ' jugable' : '') + '" data-br-carta="' + c + '"' + (o.miTurno ? '' : ' data-no="1"') + '>' + esCarta(c) + '</button>').join('') + '</div>' : '';
     return asientos + mesa + mio + (o.pie || '') + '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-ayuda="brisca">📖 Cómo se juega</button></div>';
   }
@@ -3195,11 +3195,11 @@
       '<h3>Niveles del bot (solo en individual)</h3><p>🐣 Básico se equivoca a propósito · 🦊 Intermedio piensa 2 jugadas · 🦉 Avanzado piensa 3 jugadas y revisa capturas.</p><p>En <b>partida</b> juegan solo 2 personas: quien crea la sala (blancas) y quien se une (negras).</p>',
     brisca: '<h2>🏆 Brisca</h2><p><b>Baraja española</b> de 40 cartas: oros 🪙, copas 🏆, espadas ⚔️ y bastos 🪵, del 1 al 7 más sota (10), caballo (11) y rey (12).</p>' +
       '<h3>Cómo se juega</h3><ol><li>Cada quien recibe 3 cartas. Se voltea una carta: su palo es el <b>triunfo</b> y queda bajo el mazo (se roba al final).</li>' +
-      '<li>En tu turno tiras una carta. <b>No es obligatorio seguir el palo.</b></li><li>Gana la baza el <b>triunfo más alto</b>; si nadie tiró triunfo, la carta más alta del <b>palo que salió primero</b>.</li>' +
-      '<li>Quien gana la baza se lleva las cartas, roba primero y abre la siguiente. Se juega hasta acabar todas las cartas.</li></ol>' +
+      '<li>En tu turno tiras una carta. <b>No es obligatorio seguir el palo.</b></li><li>Gana la ronda quien tire el <b>triunfo más alto</b>. Si nadie tiró triunfo, gana la carta más alta <b>del mismo palo que la primera carta de la ronda</b>.</li>' +
+      '<li>Quien gana la ronda se lleva las cartas, roba primero y abre la siguiente. Se juega hasta acabar todas las cartas.</li></ol>' +
       '<h3>Fuerza y puntos de las cartas</h3><table><tr><td><b>As</b></td><td>11 puntos</td></tr><tr><td><b>Tres</b></td><td>10 puntos</td></tr><tr><td><b>Rey (12)</b></td><td>4 puntos</td></tr><tr><td><b>Caballo (11)</b></td><td>3 puntos</td></tr><tr><td><b>Sota (10)</b></td><td>2 puntos</td></tr><tr><td>7, 6, 5, 4, 2</td><td>0 puntos (en ese orden de fuerza)</td></tr></table>' +
       '<p>En total hay <b>120 puntos</b>: gana quien (o la pareja que) junta <b>más de 60</b>. Con 60 y 60 es empate.</p>' +
-      '<h3>Consejos</h3><ul><li>Guarda tus triunfos para ganar bazas con ases o treses.</li><li>Si tu pareja va ganando la baza, ¡cárgale puntos!</li><li>En pareja, los compañeros se sientan alternados (A, B, A, B).</li></ul>',
+      '<h3>Consejos</h3><ul><li>Guarda tus triunfos para ganar rondas con ases o treses.</li><li>Si tu pareja va ganando la ronda, ¡cárgale puntos!</li><li>En pareja, los compañeros se sientan alternados (A, B, A, B).</li></ul>',
     conquian: '<h2>🪙 Conquián</h2><p>El rummy mexicano para 2 jugadores, con baraja española de 40 cartas. <b>Gana quien baja 9 cartas</b> en juegos.</p>' +
       '<h3>Qué es un juego</h3><table><tr><td><b>Tercia o cuarteta</b></td><td>3 o 4 cartas del mismo número, de palos distintos: 5🪙 5🏆 5⚔️</td></tr><tr><td><b>Escalera</b></td><td>3 o más seguidas del mismo palo: 3⚔️ 4⚔️ 5⚔️. Ojo: <b>el 7 y la sota (10) van seguidas</b>: 6🏆 7🏆 10🏆</td></tr></table>' +
       '<h3>Tu turno</h3><ol><li>Se voltea una carta del mazo para ti. Si te sirve, <b>tómala</b>: debes bajarla en ese momento formando un juego con cartas de tu mano, o agregarla a uno de tus juegos.</li>' +
