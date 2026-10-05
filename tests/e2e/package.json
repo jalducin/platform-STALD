@@ -1,0 +1,13 @@
+{
+  "name": "platform-stald-e2e",
+  "private": true,
+  "description": "Pruebas E2E de platform-STALD (Node + Playwright). Ver docs/pruebas.md.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "navegador": "playwright install chromium",
+    "e2e": "bash correr.sh"
+  },
+  "devDependencies": {
+    "playwright": "1.60.0"
+  }
+}
