@@ -581,7 +581,7 @@
         return '<button class="tab" role="tab" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + t + '</button>';
       }).join('') + '</div>';
     app.innerHTML = '<h1>🎮 Juegos</h1><p class="lead">Aprende jugando y suma puntos para el ranking de la semana.</p>' +
-      '<div class="row-btns" style="margin:-6px 0 12px"><button class="btn ghost" type="button" id="invitar-registro" data-a="invitar-registro" data-url="' + escapeHtml(enlaceRegistro()) + '">🆕 Invitar a alguien a registrarse</button></div>' +
+      '<div class="row-btns" style="margin:-6px 0 12px"><button class="btn ghost" type="button" id="registrar-btn" data-a="registrar">🆕 Registrar</button></div>' +
       tabs + '<div id="tab-body"></div>';
     if (state.tab === 'ranking') return pintarRanking();
     if (state.tab === 'partidas') return pintarPartidas();
@@ -3048,17 +3048,6 @@
     qrLib = qrLib || new Promise((ok, fail) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = ok; sc.onerror = fail; document.head.appendChild(sc); });
     qrLib.then(() => { if (el.isConnected && !el.childNodes.length) new QRCode(el, { text: texto, width: 150, height: 150, correctLevel: QRCode.CorrectLevel.M }); }).catch(() => { el.textContent = ''; });
   }
-  // Enlace de registro para compartir desde el hub (openspec: registro-juegos-boton); conserva ?api= en pruebas.
-  function enlaceRegistro() {
-    const api = new URLSearchParams(location.search).get('api');
-    return location.origin + location.pathname + '?registro=1' + (api ? '&api=' + encodeURIComponent(api) : '');
-  }
-  async function compartirRegistro(btn) {
-    const url = btn.dataset.url, texto = '🎮 ¡Crea tu cuenta de Juegos en STALD y juega conmigo! Es gratis y sin contraseña:';
-    if (navigator.share) { try { await navigator.share({ title: 'Juegos STALD', text: texto, url }); return; } catch (e) { /* cancelado: copiar */ } }
-    try { await navigator.clipboard.writeText(texto + ' ' + url); btn.textContent = '✔ ¡Enlace copiado!'; } catch (e) { btn.textContent = url; }
-    setTimeout(() => { if (btn.isConnected) btn.textContent = '🆕 Invitar a alguien a registrarse'; }, 2500);
-  }
   async function compartirSala(btn) {
     const url = enlaceSala(sala.codigo);
     const j = juegoPorId(sala.estado.sala.juego);
@@ -3251,7 +3240,12 @@
     if (a.dataset.a === 'reintentar') iniciar();
     if (a.dataset.a === 'csv') descargarCsv();
     if (a.dataset.a === 'registro') return pantallaRegistro();
-    if (a.dataset.a === 'invitar-registro') return compartirRegistro(a);
+    // «🆕 Registrar» (openspec: registro-juegos-hub): cierra la sesión en este aparato y abre el registro para otra persona.
+    if (a.dataset.a === 'registrar') {
+      if (!confirm('¿Cerrar tu sesión en este aparato para que otra persona cree su cuenta de Juegos?')) return;
+      StaldAuth.salir().then(() => { state.email = null; borrarRegistro(); pantallaRegistro(); });
+      return;
+    }
     if (a.dataset.a === 'ya-tengo') { borrarRegistro(); return pantallaLogin(); }
     if (a.dataset.a === 'otro-correo') { StaldAuth.salir().then(() => { state.email = null; pantallaLogin(); }); }
   });
