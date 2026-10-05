@@ -53,6 +53,7 @@ export interface Item {
   presentacion?: unknown; // solo admin: diapositivas para proyectar en el Meet
   prorrogas?: Record<string, string>; // slug del alumno → fecha límite propia (AAAA-MM-DD)
   alumnos?: string[]; // slugs: solo esas personas lo ven y lo abren (openspec: examen-secundaria)
+  porSecciones?: boolean; // preguntas agrupadas por tema en el orden de `temas` (openspec: examen-por-secciones)
   segundaOportunidad?: string; // examen con 2 intentos: el 2.º abre esta fecha (openspec: examen-segunda-oportunidad)
 }
 
@@ -201,7 +202,11 @@ export function selectQuestions(banco: Ejercicio[], it: Item, slug: string, inte
       if (e) out.push(e);
     }
   }
-  return shuffle(out, rnd);
+  const barajadas = shuffle(out, rnd);
+  if (!it.porSecciones) return barajadas;
+  // Por secciones: orden estable por la posición del tema; cada sección conserva su orden barajado.
+  const orden = new Map((it.temas || []).map((t, i) => [t.id, i]));
+  return barajadas.sort((a, b) => (orden.get(a.tema) ?? orden.size) - (orden.get(b.tema) ?? orden.size));
 }
 
 // Temas para el refuerzo: débiles o en progreso del examen base; si no hay, del respaldo (mapeados).

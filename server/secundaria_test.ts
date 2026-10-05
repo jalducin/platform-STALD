@@ -83,3 +83,18 @@ Deno.test("secundaria: el admin ve los resultados de todas las personas", async 
   assert(it, "el admin ve el examen exclusivo");
   assertEquals([it.alumnos, it.resultados.length, it.resultados[0].alumno], [["luz"], 1, "Luz"]);
 });
+
+Deno.test("secundaria: con porSecciones las preguntas salen agrupadas por materia, en el orden de temas", async () => {
+  clearCache();
+  const store = datos();
+  const ruta = "contenido/secundaria/examenes/sec-mensual.json";
+  const ex = (await store.get<any>(ruta))!.data;
+  const banco = ["h1", "i1", "h2", "i2", "h3", "i3"].map((id) => pregunta(id, id[0] === "h" ? "historia" : "ingles"));
+  await store.put(ruta, { ...ex, banco, preguntasPorIntento: 6, porSecciones: true, temas: [tema("ingles"), tema("historia")] }, (await store.get(ruta))!.sha);
+  for (const intento of [1, 2]) {
+    const g = await sec(store, "GET", "/sec-mensual", "luz@example.com");
+    const temas = g.body.preguntas.map((p: any) => p.tema);
+    assertEquals(temas, ["ingles", "ingles", "ingles", "historia", "historia", "historia"], `intento ${intento}`);
+    if (intento === 1) await sec(store, "POST", "/sec-mensual", "luz@example.com", { intento: 1, respuestas: Object.fromEntries(g.body.preguntas.map((p: any) => [p.id, 0])) });
+  }
+});
