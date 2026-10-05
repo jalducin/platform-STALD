@@ -107,7 +107,9 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - `categorias[]` `{ id, titulo, emoji }`;
   - `letras[]` que pueden salir;
   - `palabras{ <categoria>: [...] }`, el diccionario para verificar respuestas; se compara sin
-    mayúsculas ni acentos, y la ñ cuenta aparte.
+    mayúsculas ni acentos, y la ñ cuenta aparte; de aquí salen también los ejemplos y las respuestas de los bots;
+  - `soloAceptar{ <categoria>: [...] }` (opcional): palabras de España que valen como respuesta pero nunca se
+    muestran (cambio `basta-mexicano`).
 - `loteria.json`: `cartas[]` `{ n, es, en, emoji, verso }`.
   - 54 cartas, con versos originales.
   - "El Ajolote", "El Colibrí" y "El Tlacuache" sustituyen a tres cartas tradicionales poco apropiadas
