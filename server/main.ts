@@ -5,7 +5,7 @@
 // Sesión: SUPABASE_URL + SUPABASE_PUBLISHABLE_KEY (validar tokens), SUPABASE_SERVICE_KEY (enlace de acceso del admin),
 // opcionales LOGIN_TRANSICION_HASTA (AAAA-MM-DD) y SITIO_URL (a dónde llevan los enlaces).
 import { attachUsers, extractInglesRow, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type UserInfo } from "./rows.ts";
-import { handleActividades, handleProfe } from "./actividades.ts";
+import { handleActividades, handleProfe, handleSecundaria } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados } from "./juegos.ts";
@@ -251,6 +251,13 @@ export async function handler(req: Request): Promise<Response> {
     const iProfe = url.pathname.indexOf("/ingles/profe/actividades");
     if (iProfe !== -1) {
       return await handleProfe(req, url.pathname.slice(iProfe + "/ingles/profe/actividades".length), email, admin, await getStore(), json);
+    }
+
+    // /secundaria/actividades[/<id>] → exámenes de Secundaria (openspec: examen-secundaria)
+    const iSec = url.pathname.indexOf("/secundaria/actividades");
+    if (iSec !== -1) {
+      return await handleSecundaria(req, url.pathname.slice(iSec + "/secundaria/actividades".length), email, admin, await getStore(),
+        () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), json);
     }
 
     const idx = url.pathname.indexOf("/ingles/actividades");

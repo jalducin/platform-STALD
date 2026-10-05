@@ -6,12 +6,20 @@ const API_BASE = (new URLSearchParams(location.search).get('api') || DEFAULT_API
 const DATA_URL_BASE = API_BASE + '/ingles/data';
 // ?modo=profe → ruta de estudio del profe (solo admin, openspec: ruta-profe).
 const MODO_PROFE = new URLSearchParams(location.search).get('modo') === 'profe';
+// ?modo=secundaria → exámenes de Secundaria (openspec: examen-secundaria).
+const MODO_SECUNDARIA = new URLSearchParams(location.search).get('modo') === 'secundaria';
 const conApiParam = href => { const a = new URLSearchParams(location.search).get('api'); return a ? href + (href.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(a) : href; };
 if (MODO_PROFE) {
   document.body.classList.add('profe');
   document.title = 'Mi ruta B1 → C1';
   document.getElementById('titulo').textContent = '🎓 Mi ruta B1 → C1';
   document.getElementById('subtitulo').textContent = 'Temas de estudio, práctica y 2 exámenes por semana. Solo tú la ves.';
+}
+if (MODO_SECUNDARIA) {
+  document.body.classList.add('secundaria');
+  document.title = 'Exámenes de Secundaria';
+  document.getElementById('titulo').textContent = '📝 Exámenes de Secundaria';
+  document.getElementById('subtitulo').textContent = 'Exámenes mensuales: tienes dos oportunidades y se queda tu mejor calificación.';
 }
 const STORAGE_KEY = 'ingles_email';
 // Claves de sesión compartidas con el portal (index.html): solo el correo.
@@ -188,7 +196,7 @@ function aplicarFiltro(board, grupo) {
   if (todo) todo.hidden = !grupo;
 }
 // ---------- Actividades y exámenes (servidor: /ingles/actividades) ----------
-const ACT_URL = API_BASE + (MODO_PROFE ? '/ingles/profe/actividades' : '/ingles/actividades');
+const ACT_URL = API_BASE + (MODO_PROFE ? '/ingles/profe/actividades' : MODO_SECUNDARIA ? '/secundaria/actividades' : '/ingles/actividades');
 const state = { email: null, data: null, act: null };
 
 function isAdminView() { return !!(state.data && state.data.isAdmin); }

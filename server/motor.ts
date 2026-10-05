@@ -52,10 +52,14 @@ export interface Item {
   guion?: unknown[]; // solo admin (clase del domingo)
   presentacion?: unknown; // solo admin: diapositivas para proyectar en el Meet
   prorrogas?: Record<string, string>; // slug del alumno → fecha límite propia (AAAA-MM-DD)
+  alumnos?: string[]; // slugs: solo esas personas lo ven y lo abren (openspec: examen-secundaria)
   segundaOportunidad?: string; // examen con 2 intentos: el 2.º abre esta fecha (openspec: examen-segunda-oportunidad)
 }
 
 // El elemento como lo ve un alumno o alumna: con su prórroga, si tiene (no adelanta la apertura).
+// Elemento exclusivo (openspec: examen-secundaria): sin `alumnos` es para todo el ámbito.
+export const esPara = (it: Item, slug: string) => !it.alumnos?.length || it.alumnos.includes(slug);
+
 export function paraAlumno(it: Item, slug: string): Item {
   const f = it.prorrogas?.[slug];
   return f ? { ...it, fechaLimite: f } : it;

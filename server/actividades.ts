@@ -3,6 +3,7 @@ import {
   addIntento,
   calcularRacha,
   type Ejercicio,
+  esPara,
   estadoItem,
   fueraDeTiempoDe,
   grade,
@@ -41,6 +42,7 @@ export interface Ambito {
 }
 export const AMBITO_CLASE: Ambito = { contenido: "contenido", clave: "clase" };
 export const AMBITO_PROFE: Ambito = { contenido: "contenido/profe", clave: "profe" };
+export const AMBITO_SECUNDARIA: Ambito = { contenido: "contenido/secundaria", clave: "secundaria" }; // openspec: examen-secundaria
 
 const CACHE_MS = 60_000;
 const cache = new Map<string, { t: number; v: unknown }>();
@@ -142,6 +144,7 @@ function meta(it: ConGrupos) {
     meetUrl: it.meetUrl ?? null, hora: it.hora ?? null, tieneReto: it.tipo === "meet" && tieneReto(it),
     ...(it.segundaOportunidad ? { segundaOportunidad: it.segundaOportunidad } : {}),
     ...(it.grupos ? { grupos: it.grupos } : {}),
+    ...(it.alumnos ? { alumnos: it.alumnos } : {}),
   };
 }
 
@@ -180,6 +183,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const todos = [...items, ...grupo].sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
     // Alumnos y alumnas nuevos: lo que venció antes de su lunes de inicio no aparece (openspec: inicio-lunes-alumnos).
     const suyos = todos.filter((it: ConGrupos) => !quien.grupo || !it.grupos || it.grupos.includes(quien.grupo)) // calendario por grupo
+      .filter((it) => esPara(it, slug!)) // exclusivos (openspec: examen-secundaria)
       .map((base) => paraAlumno(base, slug!)).filter((it) => !quien.inicio || it.fechaLimite >= quien.inicio);
     const diasConEntrega = new Set<string>(); // racha (openspec: ingles-pro)
     const conEstado = await Promise.all(suyos.map(async (it) => {
@@ -196,7 +200,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const g = await loadItem(store, partes[0]);
     if (g && TIPOS_GRUPO.has(g.tipo)) base = paraProfe(g);
   }
-  if (!base) return json({ error: "no_encontrado" }, 404);
+  if (!base || (slug && !quien.isAdmin && !esPara(base, slug))) return json({ error: "no_encontrado" }, 404);
   const it = slug && !quien.isAdmin ? paraAlumno(base, slug) : base;
   if (!tieneReto(it)) return json({ error: "no_aplica" }, 400);
 
@@ -297,4 +301,16 @@ export const ALUMNO_PROFE = "Profe";
 export async function handleProfe(req: Request, subpath: string, email: string, admin: string, store: Store, json: Json): Promise<Response> {
   if (!admin || (email || "").trim().toLowerCase() !== admin) return json({ error: "solo_admin" }, 403);
   return await handleActividades(req, subpath, { isAdmin: false, alumno: ALUMNO_PROFE }, store, json, AMBITO_PROFE);
+}
+
+// /secundaria/actividades[/<id>] → exámenes de Secundaria (openspec: examen-secundaria). El admin ve resultados; quien
+// tiene filas de Secundaria entra con su primer nombre (el mismo de /perfil); nadie más.
+export async function handleSecundaria(req: Request, subpath: string, email: string, admin: string, store: Store,
+  filas: () => Promise<{ userEmails: string[]; userNames: string[] }[]>, json: Json): Promise<Response> {
+  const correo = (email || "").trim().toLowerCase();
+  if (!correo) return json({ error: "missing_email" }, 400);
+  if (admin && correo === admin) return await handleActividades(req, subpath, { isAdmin: true, alumno: null }, store, json, AMBITO_SECUNDARIA);
+  const nombre = (await filas()).filter((r) => r.userEmails.includes(correo)).flatMap((r) => r.userNames)[0]?.trim().split(/\s+/)[0];
+  if (!nombre) return json({ error: "sin_acceso" }, 403);
+  return await handleActividades(req, subpath, { isAdmin: false, alumno: nombre }, store, json, AMBITO_SECUNDARIA);
 }

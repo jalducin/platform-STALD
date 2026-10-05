@@ -200,7 +200,7 @@ a.link { color: var(--accent); text-decoration: none; font-size: .78rem; font-we
 .q { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow-1); }
 .q .n { font-size: .7rem; color: var(--muted); font-weight: 800; text-transform: uppercase; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .q .tema-q { display: none; }
-.q .e { font-weight: 700; margin: 6px 0 10px; font-size: 1rem; }
+.q .e { font-weight: 700; margin: 6px 0 10px; font-size: 1rem; white-space: pre-wrap; } /* respeta saltos y sangría (código de Python, openspec: examen-secundaria) */
 .q label { display: flex; gap: 10px; align-items: center; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; margin-top: 8px; cursor: pointer; font-size: .92rem; }
 .q label .tecla { margin-left: auto; font-size: .7rem; font-weight: 800; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0 6px; }
 .q label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
