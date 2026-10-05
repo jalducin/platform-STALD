@@ -5,6 +5,7 @@ Dashboards de tareas escolares alimentados desde Notion (Secundaria e Inglés).
 - Portal (entrada única): https://jalducin.github.io/platform-STALD/
 - Secundaria: https://jalducin.github.io/platform-STALD/secundaria.html
 - Juegos: https://jalducin.github.io/platform-STALD/juegos.html
+- Crear cuenta de Juegos (para quien no está en las clases; enlace para compartir): https://jalducin.github.io/platform-STALD/index.html?juegos=1
 - Inglés: https://jalducin.github.io/platform-STALD/ingles.html
 
 Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:ff` → `/opsx:apply` →

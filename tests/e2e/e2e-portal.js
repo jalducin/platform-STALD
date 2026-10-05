@@ -17,7 +17,7 @@ async function entrar(p, email) {
   await p.fill('#email', email); await p.click('#login-btn');
   // Enlace mágico simulado (plataforma-login): paso del código con el verificador falso local.
   await p.waitForSelector('#code-form:not([hidden])'); await p.fill('#code', '123456'); await p.click('#code-btn');
-  await p.waitForSelector('#home:not([hidden]), #login-error:not([hidden])', { timeout: 60000 });
+  await p.waitForSelector('#home:not([hidden]), #login-error:not([hidden]), #guest:not([hidden])', { timeout: 60000 });
 }
 
 (async () => {
@@ -30,7 +30,7 @@ async function entrar(p, email) {
   await p.fill('#email', 'no-es-correo'); await p.click('#login-btn');
   ok('correo inválido: aviso', (await p.textContent('#login-error')).includes('correo válido'));
   await entrar(p, 'nadie@example.com');
-  ok('desconocido: mensaje claro y sigue en login', await p.isVisible('#login') && (await p.textContent('#login-error')).includes('No encontré'));
+  ok('desconocido: sigue en login con la invitación a crear su cuenta de Juegos', await p.isVisible('#login') && await p.isVisible('#guest') && (await p.textContent('#guest')).includes('no tiene clases'));
   await entrar(p, ALUMNA);
   ok('alumna: saludo con nombre', (await p.textContent('#hello')).includes(NOMBRE));
   ok('alumna: tarjetas Inglés + Juegos (pronto)', JSON.stringify(await tiles(p)) === '["ingles","juegos"]', (await tiles(p)).join(','));
