@@ -131,8 +131,15 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - quien no tiene inscripción cuenta en el primer grupo activo.
 - El contenido sigue en el repo: actividades, exámenes, semanas y ruta del profe. Una semana puede declarar
   `"grupos": ["<id>"]`; si no lo declara, aplica a todos.
-- La migración se hace con `herramientas/migrar-ingles.ts` (opciones `--prueba`, `--delta` y `--forzar`). Los JSON de
-  GitHub quedan como respaldo de lectura.
+- La migración se hace con `herramientas/migrar-ingles.ts`, con las opciones `--prueba`, `--delta`, `--forzar` y
+  `--juegos`. El repo de datos conserva la etiqueta `antes-de-postgres`.
+- **Juegos en Postgres** (cambio `cierre-tecnico`):
+  - `juegos/**` (salas, partidas por semana, perfiles, fotos e invitados) vive en `stald_docs` desde la marca
+    `meta/migrado-juegos`;
+  - ya no gasta del límite de la API de GitHub;
+  - **no hay respaldo**: si Postgres falla, la ruta responde 503 en lugar de leer una copia vieja.
+- **Identidad de Inglés:** `alumnos.json` puede traer `origen: "notion"` en las personas importadas desde Notion. La
+  fase 1 de `cierre-tecnico` las copia al abrir la lista de alumnos y alumnas como admin.
 
 ## Actividades semanales (repo privado `platform-STALD-data`)
 

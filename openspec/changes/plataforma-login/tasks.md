@@ -9,8 +9,14 @@
   - Site URL y redirecciones;
   - plantilla del correo en español, con enlace y código de 6 dígitos;
   - SMTP propio (lo da de alta el profe; las credenciales no van en el repo).
-- [ ] 1.2 Dar de alta en Supabase Auth a las personas actuales con `herramientas/alta-usuarios-auth.ts` (el agente la
-  deja probada con `--prueba` y con `fetch` falso; el profe la corre contra producción)
+  - Estado (2026-10-04): **a medias**.
+    - Hecho: el profe configuró en Supabase la Site URL y las redirecciones.
+    - Pendiente: la plantilla en español y el SMTP propio. Supabase exige SMTP propio para editar las plantillas,
+      así que la plantilla espera al SMTP.
+- [x] 1.2 ~~Dar de alta en Supabase Auth a las personas actuales con `herramientas/alta-usuarios-auth.ts` (el agente la
+  deja probada con `--prueba` y con `fetch` falso; el profe la corre contra producción)~~
+  - **Ya no aplica** (2026-10-04): `/auth/enlace` da de alta en Supabase Auth a quien no existe (ver `design.md`,
+    ajuste post-apply, y la tarea 7.1). La herramienta queda probada para un alta masiva opcional.
 
 ## 2. Servidor (TDD)
 
@@ -52,10 +58,14 @@
   regresa a la entrada; admin con `?email=` sin token → 401; alumno con `?email=` sin token funciona en la
   transición y recibe 401 con una fecha posterior simulada
 - [x] 5.3 Escribir el reporte en `openspec/changes/plataforma-login/reports/2026-10-04-step-5-pruebas-y-verificacion.md`
-- [ ] 5.4 Producción, primera parte (la ejecuta el profe tras el merge y la configuración de 1.1):
+- [x] 5.4 Producción, primera parte (la ejecuta el profe tras el merge y la configuración de 1.1):
   - el profe recibe y usa el enlace mágico;
   - el admin sin sesión recibe 401.
+  - Hecho (2026-10-04): el profe entró con el enlace mágico en producción y vio el modo maestro y la tarjeta
+    🔗 Enlace de acceso.
 - [ ] 5.5 Producción, segunda parte (después del 2026-10-12): comprobar que `?email=` sin token se rechaza
+  - Pendiente: se hace después del 2026-10-12, cuando termina `LOGIN_TRANSICION_HASTA`. Por eso este cambio sigue
+    abierto (sin archivar).
 
 ## 6. Documentación (OBLIGATORIO)
 

@@ -30,12 +30,18 @@ un código enviado a su correo. El servidor SHALL tomar el correo de la sesión 
 - **THEN** la página muestra la pantalla de entrada en lugar de un error
 
 ### Requirement: Enlace de acceso generado por el profe
-El admin con sesión SHALL poder generar un enlace de acceso para una persona ya dada de alta en Supabase Auth, sin
-enviar correo, para compartirlo por WhatsApp. Nadie más SHALL poder generarlo.
+El admin con sesión SHALL poder generar un enlace de acceso para cualquier correo, sin enviar correo, para
+compartirlo por WhatsApp. Si la persona aún no existe en Supabase Auth, el servidor SHALL darla de alta antes de
+generar el enlace. Esto SHALL NOT ampliar permisos: lo que ve cada quien sigue dependiendo de su registro en la
+plataforma. Nadie más SHALL poder generarlo.
 
 #### Scenario: El profe genera un enlace
 - **WHEN** el profe, con sesión, pide el enlace de `luz@…`
 - **THEN** recibe un enlace de un solo uso (y su código) para mandárselo
+
+#### Scenario: Persona sin cuenta de Auth
+- **WHEN** el profe pide el enlace de un correo que todavía no existe en Supabase Auth
+- **THEN** el servidor da de alta a esa persona y entrega el enlace, sin alta previa en lote
 
 #### Scenario: Un alumno intenta generar un enlace
 - **WHEN** alguien que no es el admin, o el admin sin sesión, llama a `POST /auth/enlace`
