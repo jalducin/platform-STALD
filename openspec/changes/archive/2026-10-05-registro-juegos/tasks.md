@@ -26,7 +26,7 @@
 
 ## 5. Verificación manual en producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Tras el merge, la página publicada muestra el botón y `?juegos=1` lleva a Juegos (solo lectura)
+- [x] 5.1 Tras el merge, la página publicada muestra el botón y `?juegos=1` lleva a Juegos (solo lectura)
 
 ## 6. Documentación (OBLIGATORIO)
 
