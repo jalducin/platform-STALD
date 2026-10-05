@@ -214,7 +214,7 @@
   // Conserva ?api= al navegar (pruebas locales).
   const conApi = (href) => API_PARAM ? href + (href.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(API_PARAM) : href;
   // Enlace para compartir (openspec: registro-juegos): index.html?juegos=1 lleva directo a crear la cuenta de Juegos.
-  if (new URLSearchParams(location.search).get('juegos') === '1') location.replace(conApi('juegos.html'));
+  if (new URLSearchParams(location.search).get('juegos') === '1') location.replace(conApi('juegos.html?registro=1'));
 
   const ESPACIOS = [
     { id: 'ingles', clase: 'ingles', href: 'ingles.html', ico: '📘', t: 'Clases de Inglés', d: 'Actividades de la semana, exámenes y tu avance.' },
@@ -339,7 +339,7 @@
     location.href = conApi('juegos.html');
   });
   // Cuenta de Juegos sin pasar por las clases: Juegos pide el correo, manda el enlace y luego el apodo.
-  $('juegos-cta-btn').addEventListener('click', () => { location.href = conApi('juegos.html'); });
+  $('juegos-cta-btn').addEventListener('click', () => { location.href = conApi('juegos.html?registro=1'); });
 
   // Aviso de transición: quien entró con el correo de antes activa su acceso seguro.
   $('secure-btn').addEventListener('click', async () => {

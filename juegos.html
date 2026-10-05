@@ -320,6 +320,12 @@
   const SALA_URL = (new URLSearchParams(location.search).get('sala') || '').trim().toUpperCase();
   let salaPendiente = /^[A-Z]{4}$/.test(SALA_URL) ? SALA_URL : null;
   let abrirAvatar = new URLSearchParams(location.search).get('avatar') === '1';
+  // Registro de Juegos en 2 pasos (openspec: registro-juegos-boton): apodo y aviso primero, luego el correo. El
+  // apodo espera en este navegador (sin correo) hasta que el enlace confirma la sesión.
+  let abrirRegistro = new URLSearchParams(location.search).get('registro') === '1';
+  const REGISTRO_KEY = 'juegos_registro';
+  const registroPendiente = () => { try { const r = JSON.parse(localStorage.getItem(REGISTRO_KEY) || 'null'); return r && r.apodo && r.acepto === true ? r : null; } catch (e) { return null; } };
+  const borrarRegistro = () => { try { localStorage.removeItem(REGISTRO_KEY); } catch (e) { /* sin almacenamiento */ } };
 
   const app = document.getElementById('app');
   const chip = document.getElementById('chip');
@@ -498,12 +504,21 @@
     await StaldAuth.iniciar(API_BASE);
     state.pidiendoSesion = false;
     state.email = StaldAuth.email() || StaldAuth.correoViejo();
-    if (!state.email) return pantallaLogin();
+    if (!state.email) { if (abrirRegistro) { abrirRegistro = false; return pantallaRegistro(); } return pantallaLogin(); }
     try {
       const r = await cargarYo();
       if (state.pidiendoSesion) return; // 401: ya se muestra la pantalla de entrada
-      if (r.status === 403 && r.body.error === 'no_registrado') return pantallaInvitado();
+      if (r.status === 403 && r.body.error === 'no_registrado') {
+        const reg = registroPendiente();
+        if (!reg) return pantallaInvitado();
+        // Correo confirmado: se crea la cuenta con el apodo que eligió antes.
+        const alta = await post('/juegos/invitado', { nombre: reg.apodo, acepto: true });
+        borrarRegistro();
+        if (!alta.ok) return pantallaInvitado('No se pudo crear tu cuenta (' + (alta.body.error || alta.status) + '). Intenta de nuevo.');
+        return iniciar();
+      }
       if (!r.ok) throw new Error(r.body.error || ('HTTP ' + r.status));
+      borrarRegistro(); // ya tenía cuenta (alumno, alumna o invitado): no hay nada que registrar
       if (salaPendiente) { const c = salaPendiente; salaPendiente = null; return unirseCodigo(c); }
       if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
       pantallaHub();
@@ -521,6 +536,27 @@
       texto: salaPendiente ? '🎉 Te invitaron a la partida ' + salaPendiente + '. Escribe tu correo y te mandamos un enlace para entrar y unirte.' : 'Aprende jugando. Escribe tu correo y te mandamos un enlace para entrar, sin contraseña. ¿Primera vez? Así también creas tu cuenta de Juegos en un minuto.',
       correo: state.email || '',
       aviso: msg,
+      alEntrar: () => iniciar(),
+      pie: salaPendiente ? '' : '<div class="card registro-cta" id="registro-cta"><b>🆕 ¿Primera vez en Juegos?</b><p class="muted" style="margin:4px 0 10px">Crea tu cuenta con tu correo y un apodo, sin contraseña y sin estar en las clases.</p><button class="btn ghost" type="button" data-a="registro">🆕 Registrarme en Juegos</button></div>',
+    });
+  }
+
+  // Registro, paso 1: apodo y aviso. Paso 2: la entrada con correo (enlace o código) de comun/auth.js.
+  function pantallaRegistro(msg) {
+    limpiar(); chip.hidden = true;
+    let r = null; try { r = JSON.parse(localStorage.getItem(REGISTRO_KEY) || 'null'); } catch (e) { /* sin almacenamiento */ }
+    app.innerHTML = '<div class="card"><h1>🆕 Crea tu cuenta de Juegos</h1><p class="lead">Paso 1 de 2: elige cómo te llamamos en el ranking.</p>' +
+      '<form id="f-registro" novalidate><label for="reg-apodo">Tu apodo</label><input id="reg-apodo" type="text" maxlength="20" placeholder="Ej. Leo" autocomplete="nickname" value="' + escapeHtml(r ? r.apodo : '') + '">' +
+      '<label class="check"><input id="reg-acepto" type="checkbox"><span>Acepto que se guarde mi correo y mis puntos para registrar mi avance y mejorar la plataforma.</span></label>' +
+      '<div class="row-btns"><button class="btn ghost" type="button" data-a="ya-tengo">Ya tengo cuenta</button><button class="btn" type="submit">Continuar →</button></div></form>' +
+      (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
+  }
+  function pantallaRegistroCorreo(apodo) {
+    limpiar(); chip.hidden = true;
+    StaldAuth.pintarEntrada(app, {
+      titulo: '🆕 Crea tu cuenta de Juegos',
+      texto: 'Paso 2 de 2: ' + apodo + ', escribe tu correo y te mandamos un enlace para confirmarlo, sin contraseña.',
+      correo: '',
       alEntrar: () => iniciar(),
     });
   }
@@ -3201,6 +3237,8 @@
     if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); pantallaHub(); }
     if (a.dataset.a === 'reintentar') iniciar();
     if (a.dataset.a === 'csv') descargarCsv();
+    if (a.dataset.a === 'registro') return pantallaRegistro();
+    if (a.dataset.a === 'ya-tengo') { borrarRegistro(); return pantallaLogin(); }
     if (a.dataset.a === 'otro-correo') { StaldAuth.salir().then(() => { state.email = null; pantallaLogin(); }); }
   });
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez';
@@ -3217,6 +3255,14 @@
       const palabras = palabrasForm();
       document.getElementById('pb-basta').disabled = true;
       return post('/juegos/sala/' + sala.codigo + '/respuesta', { ronda: sala.rondaActual, palabras, basta: true }).then(() => traerSala());
+    }
+    if (e.target.id === 'f-registro') {
+      e.preventDefault();
+      const apodo = document.getElementById('reg-apodo').value.trim().replace(/\s+/g, ' ');
+      if (!/^[\p{L}\p{N} ]{2,20}$/u.test(apodo)) return pantallaRegistro('Tu apodo debe tener de 2 a 20 letras o números.');
+      if (!document.getElementById('reg-acepto').checked) { try { localStorage.setItem(REGISTRO_KEY, JSON.stringify({ apodo, acepto: false })); } catch (err) { /* sin almacenamiento */ } return pantallaRegistro('Para crear tu cuenta de Juegos necesitas aceptar el aviso.'); }
+      try { localStorage.setItem(REGISTRO_KEY, JSON.stringify({ apodo, acepto: true })); } catch (err) { /* sin almacenamiento: se pedirá el apodo después */ }
+      return pantallaRegistroCorreo(apodo);
     }
     if (e.target.id === 'f-invitado') {
       e.preventDefault();

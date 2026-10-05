@@ -175,15 +175,35 @@ async function api(ruta, token) {
   ok('invitado registrado con su sesión', (await p.textContent('#chip')).includes('Nuevo'));
   await ctx.close();
 
-  // ---- Cuenta de Juegos desde el botón visible del portal y desde ?juegos=1 ----
+  // ---- Cuenta de Juegos desde el botón visible del portal y desde ?juegos=1 (openspec: registro-juegos-boton) ----
   ({ ctx, p } = await contexto(b));
   await p.goto(BASE + '/' + Q); await p.waitForSelector('#login:not([hidden])', { timeout: 30000 });
   ok('portal: botón visible «Crea tu cuenta de Juegos»', await p.isVisible('#juegos-cta') && (await p.textContent('#juegos-cta')).includes('Crea tu cuenta de Juegos'));
-  await p.click('#juegos-cta-btn'); await p.waitForURL(/juegos\.html/, { timeout: 30000 });
-  await p.waitForFunction(() => document.body.innerText.includes('cuenta de Juegos'), null, { timeout: 30000 });
-  ok('botón → entrada de Juegos con su API', p.url().includes('api='));
-  await p.goto(BASE + '/index.html?juegos=1&api=' + encodeURIComponent(API)); await p.waitForURL(/juegos\.html/, { timeout: 30000 });
-  ok('?juegos=1 → Juegos con su API', p.url().includes('api='));
+  await p.click('#juegos-cta-btn'); await p.waitForURL(/juegos\.html\?registro=1/, { timeout: 30000 });
+  await p.waitForSelector('#f-registro', { timeout: 30000 });
+  ok('botón del portal → registro de Juegos con su API', p.url().includes('api='));
+  await p.goto(BASE + '/index.html?juegos=1&api=' + encodeURIComponent(API)); await p.waitForURL(/juegos\.html\?registro=1/, { timeout: 30000 });
+  ok('?juegos=1 → registro de Juegos con su API', p.url().includes('api='));
+  await ctx.close();
+
+  // ---- Registro completo desde la entrada de Juegos: apodo → correo → código → dentro con su apodo ----
+  ({ ctx, p } = await contexto(b));
+  await p.goto(BASE + '/juegos.html' + Q);
+  await p.waitForSelector('[data-a="registro"]', { timeout: 30000 });
+  ok('Juegos sin sesión: botón «Registrarme en Juegos»', (await p.textContent('[data-a="registro"]')).includes('Registrarme en Juegos'));
+  await p.click('[data-a="registro"]'); await p.waitForSelector('#f-registro');
+  await p.fill('#reg-apodo', 'x'); await p.click('#f-registro button[type=submit]');
+  ok('registro: apodo inválido avisa', (await p.textContent('#app')).includes('de 2 a 20 letras'));
+  await p.fill('#reg-apodo', 'Registro'); await p.click('#f-registro button[type=submit]');
+  ok('registro: sin aceptar avisa', (await p.textContent('#app')).includes('aceptar el aviso'));
+  await p.fill('#reg-apodo', 'Registro'); await p.check('#reg-acepto'); await p.click('#f-registro button[type=submit]');
+  await p.waitForSelector('#stald-auth-correo');
+  ok('registro paso 2: pide el correo con el apodo', (await p.textContent('#app')).includes('Crea tu cuenta de Juegos') && (await p.textContent('#app')).includes('Registro'));
+  await p.fill('#stald-auth-correo', 'registro' + Date.now() + '@example.com'); await p.click('#stald-auth-enviar');
+  await p.waitForSelector('#stald-auth-codigo'); await p.fill('#stald-auth-codigo', '123456'); await p.click('#stald-auth-verificar');
+  await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  ok('registro: entra con su apodo sin volver a pedirlo', (await p.textContent('#chip')).includes('Registro'));
+  ok('registro: se borra el pendiente', await p.evaluate(() => localStorage.getItem('juegos_registro') === null));
   await ctx.close();
 
   await b.close();
