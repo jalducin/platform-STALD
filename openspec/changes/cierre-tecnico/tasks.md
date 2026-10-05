@@ -27,7 +27,7 @@
 
 ## 4. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 Publicar la fase 1 y la migración de Juegos:
+- [x] 4.1 Publicar la fase 1 y la migración de Juegos:
   - no debe haber salas vigentes;
   - correr `--prueba`, la migración real y `--delta`;
   - cuadrar los conteos;
