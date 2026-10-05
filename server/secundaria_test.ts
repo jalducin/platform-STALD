@@ -8,10 +8,10 @@ import { storeCon, tema } from "./test_datos.ts";
 const ADMIN = "admin@example.com";
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s });
 const pregunta = (id: string, t: string) => ({ id, tema: t, tipo: "opcion", enunciado: `¿${id}?`, opciones: ["bien", "mal"], correcta: 0, explicacion: "x" });
-const filas = async () => [
+const filas = () => Promise.resolve([
   { userEmails: ["luz@example.com"], userNames: ["Luz María Pérez"] },
   { userEmails: ["beto@example.com"], userNames: ["Beto Ruiz"] },
-];
+]);
 
 function datos() {
   return storeCon({
