@@ -204,6 +204,9 @@ async function api(ruta, token) {
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
   ok('registro: entra con su apodo sin volver a pedirlo', (await p.textContent('#chip')).includes('Registro'));
   ok('registro: se borra el pendiente', await p.evaluate(() => localStorage.getItem('juegos_registro') === null));
+  // Ya con sesión: invitar a otra persona a registrarse desde el hub.
+  ok('hub: botón «Invitar a alguien a registrarse» con el enlace de registro', await p.isVisible('#invitar-registro') &&
+    (await p.getAttribute('#invitar-registro', 'data-url')).includes('juegos.html?registro=1'));
   await ctx.close();
 
   await b.close();

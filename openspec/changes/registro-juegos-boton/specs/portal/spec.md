@@ -10,6 +10,10 @@ directo.
 - **WHEN** alguien sin cuenta toca «Registrarme en Juegos», pone su apodo, acepta y confirma su correo
 - **THEN** entra a Juegos con su apodo
 
+#### Scenario: Invitar desde el hub
+- **WHEN** alguien con sesión toca «🆕 Invitar a alguien a registrarse» en Juegos
+- **THEN** comparte o copia el enlace `juegos.html?registro=1`
+
 #### Scenario: Desde el portal
 - **WHEN** alguien toca «Crea tu cuenta de Juegos» en el portal
 - **THEN** llega directo al registro de Juegos

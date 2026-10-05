@@ -26,3 +26,9 @@
 
 ## Resultado
 - Estado Step 4: PASS
+
+## Actualización (post-apply): invitar desde el hub
+- Petición: «falta el botón de registrarse en juegos… aquí justo», con una captura del hub de Juegos ya con
+  sesión. Primero se actualizaron la propuesta, el diseño, el spec y las tareas (1.2 y 2.4).
+- TDD: `login` falló en el paso nuevo antes de implementar (45/46).
+- E2E después: login 46/46, portal 16/16, juegos 26/26 y partidas 15/15.

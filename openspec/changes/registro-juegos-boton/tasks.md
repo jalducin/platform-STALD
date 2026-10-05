@@ -5,12 +5,14 @@
 ## 1. Pruebas que fallan (TDD)
 
 - [x] 1.1 `e2e-login.js`: botón en Juegos, registro completo y enlaces desde el portal
+- [x] 1.2 `e2e-login.js`: en el hub, el botón de invitar lleva el enlace de registro
 
 ## 2. Implementación
 
 - [x] 2.1 `comun/auth.js`: agregar la opción `pie` en `pintarEntrada`
 - [x] 2.2 `juegos.html`: bloque y botón, registro en 2 pasos, alta automática al volver y `?registro=1`
 - [x] 2.3 Portal: el botón y `?juegos=1` llevan a `juegos.html?registro=1`
+- [x] 2.4 Hub de Juegos: botón «🆕 Invitar a alguien a registrarse» (compartir o copiar el enlace de registro)
 
 ## 3. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
