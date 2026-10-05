@@ -9,6 +9,8 @@ await Deno.writeTextFile(fixture, JSON.stringify({
   secundaria: [],
 }));
 await Deno.mkdir(dir + "/datos");
+// Inglés ya no lee Notion (cierre-tecnico, fase 2): Luz entra por el registro de la plataforma.
+await Deno.writeTextFile(dir + "/datos/alumnos.json", JSON.stringify({ "luz@example.com": { nombre: "Luz", alta: "2026-09-01T00:00:00.000Z", origen: "notion" } }));
 Deno.env.set("ROWS_FIXTURE", fixture);
 Deno.env.set("DATA_DIR", dir + "/datos");
 Deno.env.set("SUPER_ADMIN_EMAIL", "admin@example.com");

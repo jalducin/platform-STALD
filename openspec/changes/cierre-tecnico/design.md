@@ -36,6 +36,7 @@
 - **Fase 2:**
   - `filasIngles()` = `aplicarAlumnos([], registro)`, sin Notion;
   - `handleAlumnos` recibe `filas: () => []`;
+  - se retira la importación de la fase 1 de `GET /ingles/alumnos`, porque ya no hay nada que leer de Notion;
   - la ruta de marcar clases de Notion (`/ingles/data/<id>/completado`) queda sin filas de Inglés y responde
     404 como siempre que no encuentra la fila;
   - Secundaria no cambia.

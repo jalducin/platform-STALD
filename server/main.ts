@@ -9,7 +9,7 @@ import { handleActividades, handleProfe } from "./actividades.ts";
 import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados } from "./juegos.ts";
-import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro, sinHuerfanas, importarNotion, clearCacheAlumnos, RUTA_ALUMNOS, type RegistroAlumnos } from "./alumnos.ts";
+import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro } from "./alumnos.ts";
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
@@ -79,20 +79,10 @@ async function loadRows<T extends { userIds: string[]; userEmails: string[]; use
 // En modo fixture (pruebas locales) las marcas se guardan en memoria y se aplican al leer.
 const marcasFixture = new Map<string, { completado: boolean; en: string }>();
 
-// Filas de Inglés con los alumnos y alumnas dados de alta en la página (alumnos.json).
+// Filas de Inglés: solo los alumnos y alumnas del registro (alumnos.json); Inglés ya no lee Notion
+// (openspec: cierre-tecnico, fase 2).
 async function filasIngles(): Promise<InglesRow[]> {
-  return aplicarAlumnos(await filasNotion(), await leerRegistro(await getStore()));
-}
-
-async function filasNotion(): Promise<InglesRow[]> {
-  const rows = await loadRows<InglesRow>(CLASES_INGLES_DB_ID, extractInglesRow, "ingles");
-  if (env("ROWS_FIXTURE")) {
-    for (const r of rows) {
-      const m = marcasFixture.get(r.id);
-      if (m) { r.completado = m.completado; r.editadoEn = m.en; } // como Notion: marcar actualiza la última edición
-    }
-  }
-  return sinHuerfanas(rows);
+  return aplicarAlumnos([], await leerRegistro(await getStore()));
 }
 
 async function parcheCompletado(id: string, completado: boolean): Promise<{ ok: boolean; status: number }> {
@@ -211,17 +201,7 @@ export async function handler(req: Request): Promise<Response> {
         const r = await handleGrupos(new Request("http://x", { method: "POST", body: JSON.stringify({ alumno: nombre, grupo }) }), "/mover", { email: admin, admin, db: db!, hoy: () => desde }, json);
         return r.ok;
       } : undefined;
-      // Fase 1 de «Inglés sin Notion» (openspec: cierre-tecnico): al abrir la lista, el admin copia al registro a
-      // quien solo estaba en Notion con correo. Idempotente; si falla, la lista se muestra igual.
-      if (req.method === "GET" && admin && email === admin && conGrupos) {
-        try {
-          const store = await getStore();
-          const doc = await store.get<RegistroAlumnos>(RUTA_ALUMNOS);
-          const { registro, importados } = importarNotion(doc?.data ?? {}, await filasNotion(), new Date().toISOString());
-          if (importados && await store.put(RUTA_ALUMNOS, registro, doc?.sha ?? null, `alumnos: ${importados} importados de Notion`)) clearCacheAlumnos();
-        } catch (e) { console.error("importar Notion:", e instanceof Error ? e.message : e); }
-      }
-      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion, inscribir }, json);
+      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: () => Promise.resolve([]), inscribir }, json);
     }
 
     // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada)

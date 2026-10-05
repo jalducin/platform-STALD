@@ -56,3 +56,14 @@ Deno.test("cierre: importarNotion agrega solo personas con correo, sin pisar ni 
   assertEquals(Object.keys(r).length, 2, "sin correo o sin nombre no se importa");
   assertEquals(importarNotion(r, filas, "otra").importados, 0, "idempotente");
 });
+
+Deno.test("cierre fase 2: sin Notion, el registro basta para la identidad de Inglés", async () => {
+  const { aplicarAlumnos } = await import("./alumnos.ts");
+  const registro = {
+    "marisol@example.com": { nombre: "Marisol", alta: "x", origen: "notion" as const },
+    "adela@example.com": { nombre: "Adela", alta: "y", inicio: "2026-10-05" },
+  };
+  const filas = aplicarAlumnos([], registro);
+  assertEquals(filas.map((f) => [f.alumno, f.userEmails]), [["Marisol", ["marisol@example.com"]], ["Adela", ["adela@example.com"]]]);
+  assert(filas.every((f) => f.source === "registro"));
+});
