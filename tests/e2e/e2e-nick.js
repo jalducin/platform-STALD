@@ -2,17 +2,11 @@
 // ranking, el admin lo ve en «Jugadores», y al quitarlo vuelve su nombre.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE;
 const API = process.env.API;
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 
-async function pagina(b, email, ruta) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e })); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
-  await p.goto(BASE + ruta + (ruta.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(API));
-  return p;
-}
+const pagina = (b, email, ruta) => abrirPagina(b, { email, out, ruta });
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });

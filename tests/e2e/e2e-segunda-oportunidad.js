@@ -3,22 +3,18 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const fs = require('fs');
-const BASE = process.env.BASE;
+const { abrirPagina, urlDe } = require('./lib/navegador');
 const API = process.env.API;
 const DATA = process.env.DATA;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const ex = JSON.parse(fs.readFileSync(DATA + '/contenido/examenes/examen-2026-10-02.json', 'utf8'));
 const porId = Object.fromEntries(ex.banco.map(e => [e.id, e]));
+// Fija el reloj del navegador en `f` (AAAA-MM-DD) a las 17:00 UTC.
+const fijarReloj = f => { const fijo = new Date(f + 'T17:00:00Z').getTime(); const D = Date; window.Date = class extends D { constructor(...a) { super(...(a.length ? a : [fijo])); } static now() { return fijo; } }; };
 async function dia(b, fecha) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(f => {
-    (localStorage.setItem('ingles_email', 'marisol@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'marisol@example.com', token: 'prueba:' + 'marisol@example.com' })));
-    const fijo = new Date(f + 'T17:00:00Z').getTime(); const D = Date;
-    window.Date = class extends D { constructor(...a) { super(...(a.length ? a : [fijo])); } static now() { return fijo; } };
-  }, fecha);
-  await ctx.route('**/ingles/actividades**', r => { const u = new URL(r.request().url()); u.searchParams.set('hoy', fecha); r.continue({ url: u.toString() }); });
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS: ' + e.message)); p.on('dialog', d => d.accept());
-  await p.goto(BASE + '/ingles.html?api=' + encodeURIComponent(API) + '#semana');
+  const p = await abrirPagina(b, { email: 'marisol@example.com', ingles: true, init: [fijarReloj, fecha], out, etiqueta: '', dialogos: 'aceptar' });
+  await p.context().route('**/ingles/actividades**', r => { const u = new URL(r.request().url()); u.searchParams.set('hoy', fecha); r.continue({ url: u.toString() }); });
+  await p.goto(urlDe('/ingles.html#semana'));
   await p.waitForSelector('.exam-card', { timeout: 60000 });
   return p;
 }

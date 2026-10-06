@@ -1,15 +1,12 @@
 // E2E: enlace de partida para una invitada nueva, QR y botón Compartir.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE;
-const API = process.env.API;
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const hctx = await b.newContext({ viewport: { width: 390, height: 844 }, permissions: ['clipboard-read', 'clipboard-write'] });
-  await hctx.addInitScript(() => { localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'marisol@example.com', token: 'prueba:marisol@example.com' })); });
-  const host = await hctx.newPage(); host.on('pageerror', e => out.push('FAIL error JS: ' + e.message));
-  await host.goto(BASE + '/juegos.html?api=' + encodeURIComponent(API)); await host.waitForSelector('[data-juego]');
+  const host = await abrirPagina(b, { email: 'marisol@example.com', contexto: { permissions: ['clipboard-read', 'clipboard-write'] }, out, etiqueta: '', ruta: '/juegos.html' });
+  await host.waitForSelector('[data-juego]');
   await host.click('[data-tab="partidas"]'); await host.selectOption('#p-juego', 'basta-es'); await host.click('#f-crear button[type=submit]');
   await host.waitForSelector('[data-p="empezar"]');
   const codigo = (await host.textContent('.letra')).trim();
@@ -23,7 +20,7 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
   const clip = await host.evaluate(() => navigator.clipboard.readText().catch(() => ''));
   ok('Compartir: comparte o copia el enlace', tras.includes('copiado') ? clip.includes('?sala=' + codigo) : true, tras + ' | ' + clip.slice(0, 80));
   // Invitada nueva sin sesión abre el enlace
-  const g = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); g.on('pageerror', e => out.push('FAIL error JS (invitada): ' + e.message));
+  const g = await abrirPagina(b, { out, etiqueta: 'invitada' });
   await g.goto(enlace); await g.waitForSelector('[data-stald-auth]');
   ok('enlace sin sesión: avisa la invitación', (await g.textContent('main')).includes('Te invitaron a la partida ' + codigo));
   await g.fill('#stald-auth-correo', 'amiga.sofy@example.com'); await g.click('#stald-auth-enviar'); await g.waitForSelector('#stald-auth-codigo'); await g.fill('#stald-auth-codigo', '123456'); await g.click('#stald-auth-verificar');
@@ -36,9 +33,7 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
   await host.waitForTimeout(3200);
   ok('la anfitriona ve entrar a la invitada', (await host.textContent('#p-body')).includes('Amiga'));
   // Enlace a una sala que no existe
-  const x = await (await b.newContext()).newPage();
-  await x.addInitScript(() => (localStorage.setItem('stald_email', 'angel@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'angel@example.com', token: 'prueba:angel@example.com' }))));
-  await x.goto(BASE + '/juegos.html?sala=ZZZZ&api=' + encodeURIComponent(API)); await x.waitForSelector('#p-msg .alert', { timeout: 30000 }).catch(() => {});
+  const x = await abrirPagina(b, { email: 'angel@example.com', viejo: true, viewport: { width: 1280, height: 720 }, ruta: '/juegos.html?sala=ZZZZ' }); await x.waitForSelector('#p-msg .alert', { timeout: 30000 }).catch(() => {});
   ok('enlace a sala inexistente: aviso claro', ((await x.textContent('#p-msg').catch(() => '')) || '').includes('No existe'));
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

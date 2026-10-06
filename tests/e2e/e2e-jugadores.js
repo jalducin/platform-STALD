@@ -3,18 +3,11 @@
 // auth_no_disponible, así que se comprueba que la petición pide destino «juegos» y que el aviso se muestra.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE;
 const API = process.env.API;
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 
-async function pagina(b, email) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e })); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
-  await p.goto(BASE + '/juegos.html?api=' + encodeURIComponent(API));
-  await p.waitForSelector('[data-tab]', { timeout: 60000 });
-  return p;
-}
+const pagina = (b, email) => abrirPagina(b, { email, out, ruta: '/juegos.html', esperar: '[data-tab]' });
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });

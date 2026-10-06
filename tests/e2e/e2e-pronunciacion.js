@@ -2,28 +2,22 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const fs = require('fs');
-const BASE = process.env.BASE;
+const { abrirPagina } = require('./lib/navegador');
 const API = process.env.API;
 const DATA = process.env.DATA;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function pagina(b, conVoz) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(conVoz => {
-    (localStorage.setItem('ingles_email', 'admin@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'admin@example.com', token: 'prueba:' + 'admin@example.com' })));
-    window.__habladas = [];
-    const sp = window.speechSynthesis;
-    if (sp) sp.speak = u => { window.__habladas.push({ texto: u.text, rate: u.rate, lang: u.lang }); };
-    if (conVoz) {
-      window.__oir = '';
-      window.webkitSpeechRecognition = window.SpeechRecognition = class { start() { setTimeout(() => { this.onresult({ results: [[{ transcript: window.__oir }]] }); if (this.onend) this.onend(); }, 30); } };
-    } else { window.webkitSpeechRecognition = undefined; window.SpeechRecognition = undefined; }
-  }, conVoz);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS: ' + e.message)); p.on('dialog', d => d.accept());
-  await p.goto(BASE + '/ingles.html?modo=profe&api=' + encodeURIComponent(API));
-  await p.waitForSelector('#ruta-plan', { timeout: 60000, state: 'attached' });
-  return p;
-}
+// Voz espiada (speechSynthesis) y reconocimiento simulado (conVoz) o ausente.
+const simularVoz = conVoz => {
+  window.__habladas = [];
+  const sp = window.speechSynthesis;
+  if (sp) sp.speak = u => { window.__habladas.push({ texto: u.text, rate: u.rate, lang: u.lang }); };
+  if (conVoz) {
+    window.__oir = '';
+    window.webkitSpeechRecognition = window.SpeechRecognition = class { start() { setTimeout(() => { this.onresult({ results: [[{ transcript: window.__oir }]] }); if (this.onend) this.onend(); }, 30); } };
+  } else { window.webkitSpeechRecognition = undefined; window.SpeechRecognition = undefined; }
+};
+const pagina = (b, conVoz) => abrirPagina(b, { email: 'admin@example.com', ingles: true, init: [simularVoz, conVoz], out, etiqueta: '', dialogos: 'aceptar', ruta: '/ingles.html?modo=profe', esperar: ['#ruta-plan', { state: 'attached' }] });
 (async () => {
   const act = JSON.parse(fs.readFileSync(DATA + '/contenido/profe/actividades/profe-pron-2026-10-02.json', 'utf8'));
   const porId = Object.fromEntries(act.banco.map(e => [e.id, e]));

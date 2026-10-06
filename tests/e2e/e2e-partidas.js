@@ -2,18 +2,14 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const fs = require('fs');
-const BASE = process.env.BASE;
-const Q = '?api=' + encodeURIComponent(process.env.API);
+const { abrirPagina } = require('./lib/navegador');
 const basta = JSON.parse(fs.readFileSync(process.env.DATOS + '/basta.json', 'utf8'));
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'ñ');
 
 async function jugador(b, email) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { window.__TIEMPO_JUEGOS = 0.4; localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e })); }, email); // verificador falso (plataforma-login)
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  const p = await abrirPagina(b, { email, tiempo: 0.4, out, ruta: '/juegos.html', esperar: '[data-juego]' }); // verificador falso (plataforma-login)
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear');
   return p;
 }

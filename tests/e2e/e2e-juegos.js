@@ -1,6 +1,7 @@
 // E2E de la plataforma de juegos: los 14 juegos terminan y guardan; récord, ranking, invitado y panel admin.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
+const { abrirPagina } = require('./lib/navegador');
 const fs = require('fs');
 const BASE = process.env.BASE;
 const API = process.env.API;
@@ -11,14 +12,8 @@ const espanol = JSON.parse(fs.readFileSync(DATOS + '/espanol.json', 'utf8'));
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-async function nuevaPagina(b, email) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { window.__TIEMPO_JUEGOS = 0.08; if (e) localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e })); }, email); // verificador falso (plataforma-login)
-  const p = await ctx.newPage();
-  p.on('dialog', d => d.accept());
-  p.on('pageerror', err => out.push('FAIL error JS: ' + err.message));
-  return p;
-}
+// verificador falso (plataforma-login); sin email abre como invitado
+const nuevaPagina = (b, email) => abrirPagina(b, { email, tiempo: 0.08, out, etiqueta: '', dialogos: 'aceptar' });
 const enResultado = p => p.waitForSelector('.result .score', { timeout: 60000 });
 
 async function jugarHastaFin(p, id, accion) {

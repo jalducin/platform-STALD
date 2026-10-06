@@ -1,18 +1,12 @@
 // E2E ajuste post-apply: ajedrez 1 vs 1 solo personas; Brisca completa a 4 con bots; niveles renombrados.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
+const { abrirPagina } = require('./lib/navegador');
 const BASE = process.env.BASE, API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function pagina(b, email) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 900 } });
-  await ctx.addInitScript(e => { window.__TIEMPO_JUEGOS = 0.3; (localStorage.setItem('stald_email', e), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e }))); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
-  p.alertas = []; p.on('dialog', d => { p.alertas.push(d.message()); d.accept(); });
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  return p;
-}
+const pagina = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.3, viewport: { width: 390, height: 900 }, out, dialogos: 'registrar', ruta: '/juegos.html', esperar: '[data-juego]' });
 const unirse = async (q, codigo) => { await q.click('[data-tab="partidas"]'); await q.fill('#p-codigo', codigo); await q.click('#f-unirse button[type=submit]'); };
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });

@@ -2,17 +2,11 @@
 // moderación del admin, fallback al personaje y volver a un personaje.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE;
 const API = process.env.API;
-const Q = '?api=' + encodeURIComponent(API);
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function jugador(b, email, ruta = '/juegos.html') {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { (localStorage.setItem('stald_email', e), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e }))); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message)); p.on('dialog', d => d.accept());
-  await p.goto(BASE + ruta + Q); if (ruta === '/juegos.html') await p.waitForSelector('[data-juego]', { timeout: 60000 }); return p;
-}
+const jugador = (b, email, ruta = '/juegos.html') => abrirPagina(b, { email, viejo: true, out, dialogos: 'aceptar', ruta, esperar: ruta === '/juegos.html' ? '[data-juego]' : null });
 const imgCargada = (p, sel) => p.$eval(sel, i => i.complete && i.naturalWidth > 0).catch(() => false);
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
@@ -69,8 +63,7 @@ const imgCargada = (p, sel) => p.$eval(sel, i => i.complete && i.naturalWidth > 
   const st = await (await fetch(API + '/juegos/foto/' + token)).status;
   ok('la foto quitada responde 404', st === 404, String(st));
   // Fallback: una página con el token viejo muestra el personaje
-  const nuevo = await b.newContext(); await nuevo.addInitScript(() => (localStorage.setItem('stald_email', 'jesus@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'jesus@example.com', token: 'prueba:' + 'jesus@example.com' }))));
-  const fb = await nuevo.newPage(); await fb.goto(BASE + '/juegos.html' + Q); await fb.waitForSelector('[data-juego]', { timeout: 60000 });
+  const fb = await abrirPagina(b, { email: 'jesus@example.com', viejo: true, viewport: { width: 1280, height: 720 }, ruta: '/juegos.html', esperar: '[data-juego]' });
   await fb.evaluate(t => { state.jugador.avatar = { emoji: '🦊', color: '#22c55e', foto: t }; pintarChip(); }, token); await sleep(1500);
   ok('fallback: avatar con foto borrada muestra el personaje', !(await fb.$('#chip .av img')) && (await fb.textContent('#chip .av')).trim() === '🦊');
   await m.evaluate(() => { limpiar(); pantallaHub('juegos'); }); await m.waitForSelector('[data-juego]');

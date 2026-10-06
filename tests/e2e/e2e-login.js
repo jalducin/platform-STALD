@@ -2,6 +2,7 @@
 // FASE=transicion (servidor normal) o FASE=despues (servidor con LOGIN_TRANSICION_HASTA en el pasado).
 require('./lib/entorno').sinSesionEnFetch(); // BASE, API, CHROME y carpeta de salida; el token lo maneja la prueba
 const { chromium } = require('playwright');
+const { abrirPagina } = require('./lib/navegador');
 const BASE = process.env.BASE;
 const API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
@@ -11,14 +12,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const tiles = p => p.$$eval('#tiles [data-espacio]', xs => xs.map(x => x.dataset.espacio));
 
 async function contexto(b, init) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(i => { window.__TIEMPO_JUEGOS = 0.4; window.__REENVIO_SEGUNDOS = 3; if (i && i.viejo) localStorage.setItem('stald_email', i.viejo); if (i && i.sesion) localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: i.sesion, token: 'prueba:' + i.sesion })); }, init || null);
-  const p = await ctx.newPage();
-  p.on('pageerror', e => out.push('FAIL error JS: ' + e.message));
-  p.on('dialog', d => d.accept());
+  const i = init || {};
+  const p = await abrirPagina(b, { email: i.sesion, viejo: i.viejo, tiempo: 0.4, init: [() => { window.__REENVIO_SEGUNDOS = 3; }], out, etiqueta: '', dialogos: 'aceptar' });
   const peticiones = [];
   p.on('request', r => { if (r.url().startsWith(API) && r.method() !== 'OPTIONS') peticiones.push({ url: r.url(), auth: r.headers()['authorization'] || '' }); });
-  return { ctx, p, peticiones };
+  return { ctx: p.context(), p, peticiones };
 }
 
 async function entrarConCodigo(p, correo) {

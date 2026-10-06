@@ -1,16 +1,12 @@
 // E2E: Sudoku por niveles (openspec: sudoku-niveles).
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE;
-const Q = '?api=' + encodeURIComponent(process.env.API);
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(() => (localStorage.setItem('stald_email', 'marisol@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'marisol@example.com', token: 'prueba:' + 'marisol@example.com' }))));
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS: ' + e.message));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego="mente-sudoku"]', { timeout: 60000 });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-juego="mente-sudoku"]' });
   ok('Sudoku aparece en Mente ágil', true);
   // Generador: pistas por nivel, solución única y tiempo
   const gen = await p.evaluate(() => Object.keys(SUDOKU_NIVELES).map(nv => {

@@ -1,18 +1,12 @@
 // E2E: puntos por tipo (openspec: puntos-por-tipo). Todo suma: ⭐ individuales y 👥 partidas.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE;
 const API = process.env.API;
-const Q = '?api=' + encodeURIComponent(API);
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const num = t => Number(String(t).replace(/[^0-9]/g, '')) || 0;
-async function jugador(b, email) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { window.__TIEMPO_JUEGOS = 0.2; (localStorage.setItem('stald_email', e), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e }))); localStorage.setItem('ingles_email', e); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message)); p.on('dialog', d => d.accept());
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 }); return p;
-}
+const jugador = (b, email) => abrirPagina(b, { email, viejo: true, ingles: true, tiempo: 0.2, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
 async function jugarCalculo(p) {
   await p.click('[data-juego="mente-calculo"]');
   const t0 = Date.now(); while (!(await p.$('.result .score')) && Date.now() - t0 < 60000) { const o = await p.$('.opt:not(.ok):not(.bad)'); if (o) await o.click().catch(() => {}); await sleep(120); }
@@ -64,8 +58,7 @@ async function jugarCalculo(p) {
   await m.screenshot({ path: 'ranking-partidas.png' });
 
   // Admin: tarjeta de juegos en Inglés
-  const ctx = await b.newContext(); await ctx.addInitScript(() => (localStorage.setItem('ingles_email', 'admin@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'admin@example.com', token: 'prueba:admin@example.com' }))));
-  const ad = await ctx.newPage(); await ad.goto(BASE + '/ingles.html' + Q); await ad.waitForSelector('#juegos-admin', { state: 'attached', timeout: 60000 }); // en la página nueva es un <details> plegado
+  const ad = await abrirPagina(b, { email: 'admin@example.com', ingles: true, viewport: { width: 1280, height: 720 }, ruta: '/ingles.html', esperar: ['#juegos-admin', { state: 'attached' }] }); // en la página nueva es un <details> plegado
   ok('admin: juegos de la semana con individuales y partidas', (await ad.textContent('#juegos-admin')).includes('individuales') && (await ad.textContent('#juegos-admin')).includes('partidas'));
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

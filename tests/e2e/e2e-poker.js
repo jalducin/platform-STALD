@@ -1,18 +1,11 @@
 // E2E póker (openspec: poker): individual con ayuda y partida por equipos con dos navegadores.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE, API = process.env.API;
-const Q = '?api=' + encodeURIComponent(API);
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-async function pagina(b, email, tiempo) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 900 } });
-  await ctx.addInitScript(([e, t]) => { window.__TIEMPO_JUEGOS = t; (localStorage.setItem('stald_email', e), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e }))); }, [email, tiempo]);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  return p;
-}
+const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, viewport: { width: 390, height: 900 }, out, ruta: '/juegos.html', esperar: '[data-juego]' });
 // Juega lo seguro: pasar si se puede; si no, igualar.
 async function jugarTurno(p) {
   const pasar = await p.$('[data-pk="pasar"]'); if (pasar) { await pasar.click().catch(() => {}); return true; }

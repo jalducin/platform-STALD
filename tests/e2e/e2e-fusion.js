@@ -1,16 +1,14 @@
 // E2E Sprint 4 (openspec: juegos-fusion): menú fusionado, mezclas, categorías nuevas y partida de Ortografía.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
+const { abrirPagina } = require('./lib/navegador');
 const BASE = process.env.BASE, API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const ctx = await b.newContext({ viewport: { width: 390, height: 900 } });
-  await ctx.addInitScript(() => { window.__TIEMPO_JUEGOS = 1; (localStorage.setItem('stald_email', 'marisol@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'marisol@example.com', token: 'prueba:' + 'marisol@example.com' }))); });
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS: ' + e.message));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 1, viewport: { width: 390, height: 900 }, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-juego]' });
   const ids = await p.$$eval('[data-juego]', bs => bs.map(x => x.dataset.juego));
   ok('menú: 21 juegos sin los absorbidos', ids.length === 21 && !ids.some(i => ['en-preguntas', 'es-acentos', 'es-sinonimos', 'mente-secuencias'].includes(i)), ids.length + ' juegos');
   ok('menú: títulos fusionados', /Completa y responde/.test(await p.textContent('[data-juego="en-frases"]')) && /Cálculo y secuencias/.test(await p.textContent('[data-juego="mente-calculo"]')) && /acentos, sinónimos/.test(await p.textContent('[data-juego="es-ortografia"]')));

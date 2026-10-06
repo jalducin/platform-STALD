@@ -2,8 +2,7 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const fs = require('fs');
-const BASE = process.env.BASE;
-const Q = '?api=' + encodeURIComponent(process.env.API);
+const { abrirPagina } = require('./lib/navegador');
 const basta = JSON.parse(fs.readFileSync(process.env.DATOS + '/basta.json', 'utf8'));
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`); const info = (n, x = '') => out.push(`INFO ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -11,11 +10,7 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(() => { window.__TIEMPO_JUEGOS = 0.08; (localStorage.setItem('stald_email', 'marisol@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'marisol@example.com', token: 'prueba:' + 'marisol@example.com' }))); });
-  const p = await ctx.newPage();
-  p.on('dialog', d => d.accept()); p.on('pageerror', e => out.push('FAIL error JS: ' + e.message));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.08, out, etiqueta: '', dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
   ok('hub: categoría Clásicos con 7 juegos (con Póker, Brisca y Conquián)', (await p.$$('.cat-clasicos[data-juego]')).length === 7 && (await p.$$('[data-juego]')).length === 21);
 
   // Basta (es): verificada, desconocida y con otra letra

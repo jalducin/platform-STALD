@@ -1,16 +1,10 @@
 // E2E: Lotería en partida (dos navegadores + bots) y "Responde en inglés" en solitario.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE;
-const Q = '?api=' + encodeURIComponent(process.env.API);
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function jugador(b, email) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { window.__TIEMPO_JUEGOS = 0.2; (localStorage.setItem('stald_email', e), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e }))); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 }); return p;
-}
+const jugador = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.2, out, ruta: '/juegos.html', esperar: '[data-juego]' });
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const host = await jugador(b, 'marisol@example.com');

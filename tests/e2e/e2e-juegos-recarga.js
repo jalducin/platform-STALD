@@ -4,19 +4,14 @@
 // (c) al salir de la sala (o al terminar), recargar ya no mete de nuevo.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
+const { abrirPagina } = require('./lib/navegador');
 const BASE = process.env.BASE;
 const API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-async function jugador(b, email) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { window.__TIEMPO_JUEGOS = 0.4; localStorage.setItem('stald_email', e); localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e })); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  return p;
-}
+const jugador = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.4, out, ruta: '/juegos.html', esperar: '[data-juego]' });
 const salaApi = async (codigo, email) => (await fetch(API + '/juegos/sala/' + codigo + '?email=' + encodeURIComponent(email))).json();
 const parametros = p => new URL(p.url()).searchParams;
 const guardada = (p, k) => p.evaluate(k => localStorage.getItem(k), k);
