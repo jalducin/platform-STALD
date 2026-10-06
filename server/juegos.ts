@@ -25,7 +25,8 @@ export interface Avatar {
 
 export interface Jugador {
   id: string;
-  nombre: string;
+  nombre: string; // el nick si tiene uno (openspec: nick-jugadores)
+  nombreReal?: string; // nombre de las clases o apodo de registro, solo cuando hay nick
   tipo: "alumno" | "invitado" | "admin";
   avatar?: Avatar;
 }
@@ -44,6 +45,9 @@ function fnv(s: string): number {
 }
 export const avatarPorDefecto = (id: string): Avatar => ({ emoji: AVATARES[fnv(id) % AVATARES.length], color: COLORES[fnv(id + "|c") % COLORES.length] });
 const rutaPerfil = (id: string) => `juegos/perfiles/${id}.json`;
+// Nicks de jugadores: { "<id>": "<nick>" }, sin correos (openspec: nick-jugadores).
+export const RUTA_NICKS = "juegos/nicks.json";
+export type Nicks = Record<string, string>;
 
 // Fotos de avatar: JPEG 128×128 hecho en el navegador; el token aleatorio es el único enlace.
 const rutaFoto = (token: string) => `juegos/fotos/${token}.json`;
@@ -312,7 +316,9 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
 
   const base = await resolverJugador(email, deps.admin, ingles, secundaria, invitados);
   if (!base) return json({ error: "no_registrado" }, 403);
-  const jugador: Jugador = { ...base, avatar: (await store.get<Avatar>(rutaPerfil(base.id)))?.data ?? avatarPorDefecto(base.id) };
+  const [perfil, nicks] = await Promise.all([store.get<Avatar>(rutaPerfil(base.id)), store.get<Nicks>(RUTA_NICKS)]);
+  const nick = nicks?.data?.[base.id];
+  const jugador: Jugador = { ...base, ...(nick ? { nombre: nick, nombreReal: base.nombre } : {}), avatar: perfil?.data ?? avatarPorDefecto(base.id) };
   cacheJugadores.set(email, { t: Date.now(), j: jugador, invitados });
   return await rutasDeJugador(req, sub, jugador, deps, hoy, ahora, json, invitados);
 }
@@ -320,6 +326,32 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
 async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps: DepsJuegos, hoy: string, ahora: string, json: Json, invitados: Invitados): Promise<Response> {
   const store = deps.store;
   const lunes = lunesDe(hoy);
+
+  // POST /juegos/nick { nick } → nick del jugador; vacío lo quita (openspec: nick-jugadores).
+  if (sub === "/nick" && req.method === "POST") {
+    let body: { nick?: unknown } = {};
+    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+    const nick = typeof body.nick === "string" ? body.nick.trim().replace(/\s+/g, " ") : "";
+    if (nick && !APODO.test(nick)) return json({ error: "nick_invalido" }, 400);
+    let guardado = false;
+    for (let i = 0; i < 3 && !guardado; i++) {
+      const doc = await store.get<Nicks>(RUTA_NICKS);
+      const nicks: Nicks = { ...(doc?.data ?? {}) };
+      if (nick) nicks[jugador.id] = nick; else delete nicks[jugador.id];
+      guardado = await store.put(RUTA_NICKS, nicks, doc?.sha ?? null, `juegos: nick de ${jugador.id}`);
+    }
+    if (!guardado) return json({ error: "conflicto_escritura" }, 503);
+    const real = jugador.nombreReal ?? jugador.nombre;
+    const nuevo: Jugador = { id: jugador.id, nombre: nick || real, tipo: jugador.tipo, ...(nick ? { nombreReal: real } : {}), avatar: jugador.avatar };
+    // Que el ranking lo muestre ya: actualizar la semana si existe.
+    const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
+    for (let i = 0; i < 3; i++) {
+      const doc = await store.get<Semana>(ruta);
+      if (!doc || await store.put(ruta, { ...doc.data, nombre: nuevo.nombre }, doc.sha, `juegos: nick de ${jugador.id}`)) break;
+    }
+    clearCacheJuegos();
+    return json({ ok: true, jugador: nuevo });
+  }
 
   // POST /juegos/avatar → cambiar personaje y color (solo de la lista)
   if (sub === "/avatar" && req.method === "POST") {
@@ -468,7 +500,8 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
     const [docs, ingles, secundaria] = await Promise.all([leerSemana(store, lunes), deps.filasIngles(), deps.filasSecundaria()]);
     let cuentas: Cuenta[] = [], cuentasError = false;
     try { cuentas = deps.cuentas ? await deps.cuentas() : []; } catch (e) { cuentasError = true; console.error("cuentas:", e instanceof Error ? e.message : e); }
-    const r = await armarJugadores({ admin: deps.admin, ingles, secundaria, invitados, semana: docs, cuentas });
+    const nicks = (await store.get<Nicks>(RUTA_NICKS))?.data ?? {};
+    const r = await armarJugadores({ admin: deps.admin, ingles, secundaria, invitados, semana: docs, cuentas, nicks });
     return json({ semana: lunes, ...r, cuentasError });
   }
 

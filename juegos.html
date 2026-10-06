@@ -490,10 +490,16 @@
     const listas = state.avatares || { emojis: [], colores: [] };
     let sel = Object.assign({}, state.jugador.avatar || { emoji: listas.emojis[0], color: listas.colores[0] });
     let fotoNueva = null, permiso = false; // modo foto: sel.foto (actual) o fotoNueva (data URL)
+    // Nick (openspec: nick-jugadores): se conserva lo escrito aunque la pantalla se vuelva a dibujar.
+    const nombreReal = state.jugador.nombreReal || state.jugador.nombre;
+    let nickVal = state.jugador.nombreReal ? state.jugador.nombre : '';
     const pintar = () => {
       const vista = fotoNueva ? Object.assign({}, sel, { fotoUrl: fotoNueva }) : sel;
       app.innerHTML = '<div class="card"><h1>🎨 Tu avatar</h1><p class="lead">Elige un personaje y un color, o sube una foto. Así te verán en el ranking y en las partidas.</p>' +
         '<div style="display:flex;justify-content:center;margin:6px 0 14px" id="av-vista">' + avatarHtml(vista, 96) + '</div>' +
+        '<label for="av-nick">✏️ Tu nick <small class="muted">(así te ven en el ranking y las partidas; vacío = tu nombre)</small></label>' +
+        '<div class="row-btns" style="margin-top:4px"><input id="av-nick" maxlength="20" autocomplete="nickname" value="' + escapeHtml(nickVal) + '" placeholder="' + escapeHtml(nombreReal) + '" style="flex:1;min-width:0">' +
+        '<button class="btn ghost" type="button" data-nick-guardar>Guardar nick</button></div><div id="nick-msg"></div>' +
         '<label>Personaje</label><div class="av-grid">' + listas.emojis.map(e => '<button type="button" data-av-emoji="' + escapeHtml(e) + '" aria-pressed="' + (e === sel.emoji) + '">' + escapeHtml(e) + '</button>').join('') + '</div>' +
         '<label>Color</label><div class="col-grid">' + listas.colores.map(c => '<button type="button" data-av-color="' + escapeHtml(c) + '" aria-pressed="' + (c === sel.color) + '" style="background:' + escapeHtml(c) + '" aria-label="Color ' + escapeHtml(c) + '"></button>').join('') + '</div>' +
         '<label>📷 O sube una foto de tu galería</label><input type="file" id="av-file" accept="image/*">' +
@@ -510,7 +516,23 @@
         catch (err) { avMsg(err.message === 'grande' ? 'La imagen es demasiado pesada. Prueba con otra.' : 'No se pudo leer esa imagen. Prueba con una foto JPG o PNG.'); }
       }
     };
+    app.oninput = e => { if (e.target.id === 'av-nick') nickVal = e.target.value; };
     app.onclick = async e => {
+      const ng = e.target.closest('[data-nick-guardar]');
+      if (ng) {
+        const nick = nickVal.trim().replace(/\s+/g, ' ');
+        const msg = document.getElementById('nick-msg');
+        if (nick && !/^[\p{L}\p{N} ]{2,20}$/u.test(nick)) { msg.innerHTML = '<div class="alert">Tu nick debe tener de 2 a 20 letras o números.</div>'; return; }
+        ng.disabled = true;
+        const r = await post('/juegos/nick', { nick });
+        ng.disabled = false;
+        if (!r.ok) { msg.innerHTML = '<div class="alert">No se pudo guardar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+        state.jugador.nombre = r.body.jugador.nombre;
+        if (r.body.jugador.nombreReal) state.jugador.nombreReal = r.body.jugador.nombreReal; else delete state.jugador.nombreReal;
+        nickVal = nick; pintarChip();
+        msg.innerHTML = '<p class="muted" style="margin:4px 0 0">✔ ' + escapeHtml(nick ? 'Ahora te ven como «' + nick + '».' : 'Listo: te ven con tu nombre.') + '</p>';
+        return;
+      }
       const em = e.target.closest('[data-av-emoji]'), co = e.target.closest('[data-av-color]'), gu = e.target.closest('[data-av-guardar]');
       if (em) { sel.emoji = em.dataset.avEmoji; delete sel.foto; fotoNueva = null; pintar(); }
       if (co) { sel.color = co.dataset.avColor; delete sel.foto; fotoNueva = null; pintar(); }
@@ -521,9 +543,9 @@
           : sel.foto ? { ok: true, body: { avatar: state.jugador.avatar } } // sin cambios: conserva su foto
           : await post('/juegos/avatar', { emoji: sel.emoji, color: sel.color });
         if (!r.ok) { document.getElementById('av-msg').innerHTML = '<div class="alert">No se pudo guardar (' + escapeHtml(r.body.error || r.status) + ').</div>'; gu.disabled = false; return; }
-        state.jugador.avatar = r.body.avatar; pintarChip(); app.onclick = null; app.onchange = null; pantallaHub();
+        state.jugador.avatar = r.body.avatar; pintarChip(); app.onclick = null; app.onchange = null; app.oninput = null; pantallaHub();
       }
-      if (e.target.closest('[data-a="hub"]')) { app.onclick = null; app.onchange = null; }
+      if (e.target.closest('[data-a="hub"]')) { app.onclick = null; app.onchange = null; app.oninput = null; }
     };
   }
 
@@ -724,8 +746,8 @@
         pendientes.map(p => '<tr' + busca(p.email) + '><td>' + escapeHtml(p.email) + '</td><td>' + (p.estado === 'sin confirmar' ? '✉️ No confirmó su correo' : '🙈 Entró sin elegir apodo') + '</td><td>' + escapeHtml(fecha(p.creada)) + '</td>' +
           '<td><button class="btn ghost sm" data-enlace="' + escapeHtml(p.email) + '">🔗 Enlace de acceso</button></td></tr>').join('') + '</tbody></table></div><div id="jug-enlace"></div>' : '') +
       '<h3>✅ Jugadores registrados</h3>' +
-      (jugadores.length ? '<div class="card scroll-x"><table class="inv" id="jug-tabla"><thead><tr><th>Nombre</th><th>Correo</th><th>Tipo</th><th>Puntos semana</th><th>Partidas</th><th>Última visita</th></tr></thead><tbody>' +
-        jugadores.map(j => '<tr' + busca(j.nombre, j.email) + '><td>' + escapeHtml(j.nombre) + '</td><td>' + escapeHtml(j.email) + '</td><td>' + tipo(j) + '</td><td>' + fmt(j.puntosSemana) + '</td><td>' + j.partidasSemana + '</td><td>' + escapeHtml(fecha(j.ultimaVisita)) + '</td></tr>').join('') +
+      (jugadores.length ? '<div class="card scroll-x"><table class="inv" id="jug-tabla"><thead><tr><th>Nombre</th><th>Nick</th><th>Correo</th><th>Tipo</th><th>Puntos semana</th><th>Partidas</th><th>Última visita</th></tr></thead><tbody>' +
+        jugadores.map(j => '<tr' + busca(j.nombre, j.nick || '', j.email) + '><td>' + escapeHtml(j.nombre) + '</td><td>' + escapeHtml(j.nick || '—') + '</td><td>' + escapeHtml(j.email) + '</td><td>' + tipo(j) + '</td><td>' + fmt(j.puntosSemana) + '</td><td>' + j.partidasSemana + '</td><td>' + escapeHtml(fecha(j.ultimaVisita)) + '</td></tr>').join('') +
         '</tbody></table></div>' : '<p class="muted">Todavía no hay jugadores.</p>') +
       '<div class="row-btns"><button class="btn ghost" data-a="csv-jugadores">⬇️ Descargar CSV</button></div>';
     state.jugadoresLista = { jugadores, pendientes };
@@ -3436,7 +3458,7 @@
     if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); pantallaHub(); }
     if (a.dataset.a === 'reintentar') iniciar();
     if (a.dataset.a === 'csv') descargarCsv([['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana])), 'invitados-juegos.csv');
-    if (a.dataset.a === 'csv-jugadores') { const l = state.jugadoresLista || { jugadores: [], pendientes: [] }; descargarCsv([['estado', 'nombre', 'correo', 'tipo', 'puntos_semana', 'partidas_semana', 'ultima_visita_o_registro']].concat(l.jugadores.map(j => ['registrado', j.nombre, j.email, j.espacio, j.puntosSemana, j.partidasSemana, j.ultimaVisita]), l.pendientes.map(p => [p.estado, '', p.email, '', '', '', p.creada])), 'jugadores-juegos.csv'); }
+    if (a.dataset.a === 'csv-jugadores') { const l = state.jugadoresLista || { jugadores: [], pendientes: [] }; descargarCsv([['estado', 'nombre', 'nick', 'correo', 'tipo', 'puntos_semana', 'partidas_semana', 'ultima_visita_o_registro']].concat(l.jugadores.map(j => ['registrado', j.nombre, j.nick || '', j.email, j.espacio, j.puntosSemana, j.partidasSemana, j.ultimaVisita]), l.pendientes.map(p => [p.estado, '', '', p.email, '', '', '', p.creada])), 'jugadores-juegos.csv'); }
     if (a.dataset.a === 'registro') return pantallaRegistro();
     // «🆕 Registrar» (openspec: registro-juegos-hub): cierra la sesión en este aparato y abre el registro para otra persona.
     if (a.dataset.a === 'registrar') {

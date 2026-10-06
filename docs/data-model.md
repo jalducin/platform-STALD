@@ -212,6 +212,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   con permiso de mamá, papá o tutor. Sin correos.
 - `juegos/fotos/indice.json`: `{ "<id-jugador>": { nombre, token, en } }`, fotos activas para la
   moderación del admin.
+- `juegos/nicks.json`: `{ "<id-jugador>": "<nick>" }`, sin correos (cambio `nick-jugadores`). El nick reemplaza al
+  nombre en Juegos (chip, ranking y partidas); el admin ve ambos en «Jugadores».
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.
   - Son los únicos correos que guarda el repo de datos. El invitado aceptó el aviso al registrarse.
   - Solo el admin los ve (`/juegos/invitados` y la pestaña «Jugadores», `/juegos/jugadores`, que suma alumnos,

@@ -22,6 +22,7 @@ export interface Jugador {
   puntosSemana: number;
   partidasSemana: number;
   ultimaVisita: string | null;
+  nick?: string; // openspec: nick-jugadores
 }
 
 export interface Pendiente {
@@ -38,6 +39,7 @@ export async function armarJugadores(e: {
   invitados: Invitados;
   semana: { id: string; total: number; partidas?: unknown[] }[];
   cuentas: Cuenta[];
+  nicks?: Record<string, string>;
 }): Promise<{ jugadores: Jugador[]; pendientes: Pendiente[] }> {
   const porCorreo = new Map(e.cuentas.map((c) => [c.email, c]));
   const correos = [...new Set([...e.ingles.flatMap((r) => r.userEmails), ...e.secundaria.flatMap((r) => r.userEmails), ...Object.keys(e.invitados)])];
@@ -52,6 +54,7 @@ export async function armarJugadores(e: {
       espacio: j.tipo === "invitado" ? "Juegos" : j.id.startsWith("s-") ? "Secundaria" : "Inglés",
       puntosSemana: sem?.total ?? 0, partidasSemana: sem?.partidas?.length ?? 0,
       ultimaVisita: inv?.ultimaVisita ?? porCorreo.get(email)?.ultimoAcceso ?? null,
+      ...(e.nicks?.[j.id] ? { nick: e.nicks[j.id] } : {}),
     });
   }
   const orden = { "Inglés": 0, "Secundaria": 1, "Juegos": 2 };
