@@ -22,7 +22,7 @@
 
 ## 5. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 CI en verde antes del merge; luego, verificar en solo lectura que `POST /juegos/nick` sin sesión responde
+- [x] 5.1 CI en verde antes del merge; luego, verificar en solo lectura que `POST /juegos/nick` sin sesión responde
   401 o 403
 
 ## 6. Documentación (OBLIGATORIO)

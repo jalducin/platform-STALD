@@ -1,4 +1,5 @@
 // Rutas /ingles/actividades[/<id>[/resultados/<alumno>]] sobre el almacén JSON.
+import { crearMemo } from "./cache.ts";
 import {
   addIntento,
   calcularRacha,
@@ -44,19 +45,16 @@ export const AMBITO_CLASE: Ambito = { contenido: "contenido", clave: "clase" };
 export const AMBITO_PROFE: Ambito = { contenido: "contenido/profe", clave: "profe" };
 export const AMBITO_SECUNDARIA: Ambito = { contenido: "contenido/secundaria", clave: "secundaria" }; // openspec: examen-secundaria
 
-const CACHE_MS = 60_000;
-const cache = new Map<string, { t: number; v: unknown }>();
+// Contenido en caché 60 s con single-flight (openspec: cache-estabilidad): las cargas simultáneas de una clave
+// vencida esperan una sola lectura del almacén.
+const cache = crearMemo<unknown>({ ttlMs: 60_000 });
 
 async function cached<T>(key: string, fn: () => Promise<T>): Promise<T> {
-  const c = cache.get(key);
-  if (c && Date.now() - c.t < CACHE_MS) return c.v as T;
-  const v = await fn();
-  cache.set(key, { t: Date.now(), v });
-  return v;
+  return await cache.get(key, fn) as T;
 }
 
 export function clearCache() {
-  cache.clear();
+  cache.borrar();
 }
 
 async function loadRaw(store: Store, id: string, ambito: Ambito): Promise<Item | null> {
