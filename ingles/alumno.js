@@ -90,16 +90,14 @@ function iniciarCuentaRegresiva() {
 }
 
 // ---------- Para hoy: lo atrasado y lo de hoy arriba; si no hay, lo siguiente disponible ----------
-function renderParaHoy(act, clases) {
+function renderParaHoy(act) {
   const hoy = (act && act.hoy) || todayStr();
   const items = ((act && act.items) || []).filter(it => conReto(it) && ['disponible', 'en-curso'].includes(it.estado));
   const urgentes = items.filter(it => it.fechaLimite <= hoy).sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
   const siguientes = items.filter(it => it.fechaLimite > hoy).sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
   const lista = urgentes.concat(siguientes).slice(0, Math.max(3, urgentes.length));
-  const notion = (clases || []).filter(r => !r.completado && r.fecha && r.fecha <= hoy);
   const etiqueta = it => it.fechaLimite < hoy ? '<span class="chip bad">⏰ Atrasada</span>' : it.fechaLimite === hoy ? '<span class="chip warn">📌 Hoy</span>' : '<span class="chip">' + escapeHtml(formatFecha(it.fechaLimite)) + '</span>';
-  const filas = lista.map(it => '<div class="hoy-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + etiqueta(it) + ' · ' + tipoTexto(it.tipo) + '</div></div>' + accionItem(it, it.estado) + '</div>').join('') +
-    notion.map(r => '<div class="hoy-item"><div><div class="t">📓 ' + escapeHtml(r.name) + '</div><div class="s">' + (r.fecha < hoy ? '<span class="chip bad">⏰ Atrasada</span>' : '<span class="chip warn">📌 Hoy</span>') + ' · Notion</div></div>' + rowAction(r) + '</div>').join('');
+  const filas = lista.map(it => '<div class="hoy-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + etiqueta(it) + ' · ' + tipoTexto(it.tipo) + '</div></div>' + accionItem(it, it.estado) + '</div>').join('');
   return '<section class="card" id="para-hoy" aria-labelledby="ph-titulo"><h3 class="card-titulo" id="ph-titulo">🔥 Para hoy</h3>' +
     (filas || vacio('🎉', '¡Al día! No tienes nada atrasado ni para hoy.')) + '</section>';
 }
@@ -121,7 +119,7 @@ const renderInsignias = (act, id = 'insignias') => '<div class="chips" id="' + i
 
 // ---------- Semana de lunes a domingo ----------
 function lunesDe(fecha) { const d = new Date(fecha + 'T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return fmtDate(d); }
-function renderLineaSemana(act, clases) {
+function renderLineaSemana(act) {
   const hoy = (act && act.hoy) || todayStr();
   const lunes = act && act.semana && /^\d{4}-\d{2}-\d{2}$/.test(act.semana.id) ? lunesDe(act.semana.id) : lunesDe(hoy);
   const items = ((act && act.items) || []).filter(conReto);
@@ -129,8 +127,8 @@ function renderLineaSemana(act, clases) {
   const dias = letras.map((l, i) => {
     const d = new Date(lunes + 'T12:00:00'); d.setDate(d.getDate() + i);
     const f = fmtDate(d);
-    const delDia = items.filter(it => it.fechaLimite === f), notion = (clases || []).filter(r => r.fecha === f);
-    const total = delDia.length + notion.length, hechos = delDia.filter(entregado).length + notion.filter(r => r.completado).length;
+    const delDia = items.filter(it => it.fechaLimite === f);
+    const total = delDia.length, hechos = delDia.filter(entregado).length;
     let estado = 'libre', icono = '';
     if (total && hechos === total) { estado = 'hecho'; icono = '✓'; }
     else if (total && f < hoy) { estado = 'atrasado'; icono = '!'; }
@@ -150,14 +148,13 @@ function filtrarDia(b) {
 }
 
 // ---------- Resultados ----------
-function renderResultadosAlumno(act, clases) {
+function renderResultadosAlumno(act) {
   const items = ((act && act.items) || []).filter(it => it.mejor).sort((a, b) => String(b.ultimoEnvio || '').localeCompare(String(a.ultimoEnvio || '')));
   const temas = new Map();
   items.forEach(it => {
     (it.mejor.debilidades || []).forEach(t => temas.set(t, 'debilidad'));
     (it.mejor.enProgreso || []).forEach(t => { if (!temas.has(t)) temas.set(t, 'en-progreso'); });
   });
-  const notion = (clases || []).filter(r => r.calificacion);
   const reforzar = '<section class="card" aria-labelledby="tr-titulo"><h3 class="card-titulo" id="tr-titulo">🎯 Temas a reforzar</h3>' +
     (temas.size ? '<div class="chips" id="temas-reforzar">' + [...temas].map(([t, e]) => '<span class="chip ' + e + '">' + escapeHtml(t) + '</span>').join('') + '</div>' : '<div class="muted">¡Nada por reforzar por ahora! 💪</div>') + '</section>';
   const lista = items.length ? '<section class="card" aria-labelledby="mr-titulo"><h3 class="card-titulo" id="mr-titulo">⭐ Calificaciones en línea</h3>' + items.map(it => {
@@ -167,9 +164,7 @@ function renderResultadosAlumno(act, clases) {
       '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><span class="muted" style="font-size:.78rem">' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)' + (it.ultimoEnvio ? ' · ' + escapeHtml(fechaCorta(it.ultimoEnvio)) : '') + '</span>' +
       '<button class="btn ghost sm" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver detalle</button></div></div>';
   }).join('') + '</section>' : '<div class="card">' + vacio('⭐', 'Cuando entregues tu primera actividad, aquí verás tus resultados.') + '</div>';
-  const deNotion = notion.length ? '<section class="card" aria-labelledby="rn-titulo"><h3 class="card-titulo" id="rn-titulo">📓 Calificaciones de Notion</h3>' +
-    notion.map(r => '<div class="res-item"><div class="h"><span>' + escapeHtml(r.name) + '</span><span class="pct">' + escapeHtml(r.calificacion) + '</span></div></div>').join('') + '</section>' : '';
-  return reforzar + lista + deNotion;
+  return reforzar + lista;
 }
 
 // ---------- Perfil ----------
@@ -187,9 +182,8 @@ function renderPerfil(data, act) {
 
 // ---------- Vista completa ----------
 function renderAlumno(data, act) {
-  const rows = data.rows || [];
-  const clases = rows.filter(r => r.source === 'clases_ingles');
-  const hayAlgo = clases.length || (act && act.items && act.items.length);
+  // Inglés ya no trae tareas de Notion (openspec: cierre-tecnico, fase 2): todo sale de las actividades en línea.
+  const hayAlgo = !!(act && act.items && act.items.length);
   // Alta nueva antes de su lunes de inicio (openspec: inicio-lunes-alumnos).
   const porEmpezar = act && act.inicio && act.hoy < act.inicio ? '<div class="card" style="text-align:center">📅 <b>Tu curso empieza el lunes ' + escapeHtml(formatFecha(act.inicio).replace(/^\S+\s/, '')) + '.</b><br><span class="muted">Ese día aparecen tus primeras actividades. ¡Bienvenido o bienvenida!</span></div>' : '';
   const nombre = nombreAlumno(data), nivel = nivelAlumno(act), av = avanceSemana(act);
@@ -202,12 +196,12 @@ function renderAlumno(data, act) {
     '<span class="chip racha" id="racha" title="Días seguidos con entregas" aria-label="Racha: ' + racha.dias + ' día(s) seguidos con entregas">🔥 ' + racha.dias + '</span>' +
     '<span class="chip gris">' + av.hechos + ' de ' + av.total + ' esta semana</span></div></div>' +
     '<div id="anillo">' + anillo(av.pct, 'semana') + '</div></section>';
-  const inicio = (porEmpezar || '') + (hayAlgo || !porEmpezar ? hero + renderProximaClase(act) + renderParaHoy(act, clases) + '<section class="card"><h3 class="card-titulo">🏅 Insignias</h3>' + renderInsignias(act) + '</section>' : renderProximaClase(act)) +
+  const inicio = (porEmpezar || '') + (hayAlgo || !porEmpezar ? hero + renderProximaClase(act) + renderParaHoy(act) + '<section class="card"><h3 class="card-titulo">🏅 Insignias</h3>' + renderInsignias(act) + '</section>' : renderProximaClase(act)) +
     (!hayAlgo && !porEmpezar ? '<div class="card">' + vacio('🗒️', 'No hay clases registradas todavía.') + '</div>' : '');
-  const semana = hayAlgo ? renderLineaSemana(act, clases) + renderWeekCard(act) +
-    '<h3 class="card-titulo" style="margin-top:16px">📋 Todas mis tareas</h3>' + renderBoard(clases.concat(itemRowsAlumno(act)), false) : '<div class="card">' + vacio('📅', 'Aún no hay actividades en tu semana.') + '</div>';
+  const semana = hayAlgo ? renderLineaSemana(act) + renderWeekCard(act) +
+    '<h3 class="card-titulo" style="margin-top:16px">📋 Todas mis tareas</h3>' + renderBoard(itemRowsAlumno(act)) : '<div class="card">' + vacio('📅', 'Aún no hay actividades en tu semana.') + '</div>';
   return seccionHtml('alumno', 'inicio', inicio) +
     seccionHtml('alumno', 'semana', semana) +
-    seccionHtml('alumno', 'resultados', renderResultadosAlumno(act, clases)) +
+    seccionHtml('alumno', 'resultados', renderResultadosAlumno(act)) +
     seccionHtml('alumno', 'perfil', renderPerfil(data, act));
 }

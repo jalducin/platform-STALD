@@ -79,9 +79,9 @@ Cada página debe manejar y mostrar de forma explícita:
   y cada sección del tablero lleva `data-grupo`. El filtro se aplica en el DOM al `.board` más cercano (en
   admin, por alumno o alumna), no se guarda y se quita con la misma tarjeta o con "Ver todo".
 - Vista de admin de `ingles.html`: tarjeta "📊 Últimas calificaciones" (`#ultimas`), con las 5 más recientes
-  por alumno o alumna. Junta las de en línea (mejor intento, fecha del último envío) y las de Notion
-  (fecha de edición). El color va por nivel: ≥ 80, 60–79 y < 60; una calificación de Notion ≤ 10 se
-  escala × 10.
+  por alumno o alumna, de las actividades y exámenes en línea (mejor intento, fecha del último envío). El color va
+  por nivel: ≥ 80, 60–79 y < 60. Inglés ya no muestra tareas ni calificaciones de Notion (cambio `cierre-tecnico`,
+  fase 2): los bloques del admin salen del registro (filas `source: "registro"` de `/ingles/data`).
 - Voz en `ingles.html` (cambio `pronunciacion`):
   - 🔊 / 🐢 con `speechSynthesis` (en-US) en ejercicios con `audio` y `pronunciar`;
   - 🎙️ con `SpeechRecognition` / `webkitSpeechRecognition`: muestra «Te escuché…» y la coincidencia (misma regla que

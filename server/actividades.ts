@@ -2,6 +2,7 @@
 import { crearMemo } from "./cache.ts";
 import {
   addIntento,
+  ahoraIso,
   calcularRacha,
   type Ejercicio,
   esPara,
@@ -279,7 +280,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const calificacion = grade(it, preguntas, respuestas);
     if (quien.isAdmin) return json({ guardado: false, intento: n, intentosMax: maxIntentos(it), calificacion });
 
-    const intento: Intento = { n, enviadoEn: new Date().toISOString(), fueraDeTiempo: fueraDeTiempoDe(it, n, hoy), preguntas: preguntas.map((p) => p.id), respuestas, calificacion };
+    const intento: Intento = { n, enviadoEn: ahoraIso(), fueraDeTiempo: fueraDeTiempoDe(it, n, hoy), preguntas: preguntas.map((p) => p.id), respuestas, calificacion };
     for (let i = 0; i < 3; i++) {
       const actual = await leerResultado(store, it.id, slug!);
       if ((actual?.data.intentos.length || 0) !== n - 1) return json({ error: "intento_invalido", esperado: (actual?.data.intentos.length || 0) + 1 }, 409);

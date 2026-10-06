@@ -4,11 +4,11 @@ import { assertEquals } from "jsr:@std/assert@1";
 
 const dir = await Deno.makeTempDir();
 const fixture = dir + "/rows.json";
-await Deno.writeTextFile(fixture, JSON.stringify({
-  ingles: [{ source: "clases_ingles", name: "Tarea", label: "x", completado: false, fecha: "2026-10-05", alumno: "Luz", calificacion: null, dificultad: "A1", editadoEn: "2026-10-01T00:00:00.000Z", userIds: ["u1"], userEmails: ["luz@example.com"], userNames: ["Luz"], url: "https://notion.so/x", id: "a37c7131415b08ad608e72e00a2690f2" }],
-  secundaria: [],
-}));
+await Deno.writeTextFile(fixture, JSON.stringify({ secundaria: [] }));
+
 await Deno.mkdir(dir + "/datos");
+// Inglés sin Notion (cierre-tecnico, fase 2): Luz entra por el registro de la plataforma.
+await Deno.writeTextFile(dir + "/datos/alumnos.json", JSON.stringify({ "luz@example.com": { nombre: "Luz", alta: "2026-09-01T00:00:00.000Z", origen: "notion" } }));
 Deno.env.set("ROWS_FIXTURE", fixture);
 Deno.env.set("DATA_DIR", dir + "/datos");
 Deno.env.set("SUPER_ADMIN_EMAIL", "admin@example.com");

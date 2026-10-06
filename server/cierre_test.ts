@@ -1,10 +1,9 @@
 // Cierre técnico (openspec: cierre-tecnico): prefijos de PgStore (Juegos en Postgres), sin respaldo de GitHub e
-// importación de identidades de Notion al registro de Inglés.
+// identidad de Inglés solo desde el registro (fase 2 de «Inglés sin Notion»).
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { createDb, esRutaPg, PgStore, PREFIJOS_INGLES, PREFIJO_JUEGOS } from "./db.ts";
-import { importarNotion } from "./alumnos.ts";
-import type { InglesRow } from "./rows.ts";
+import { aplicarAlumnos, type RegistroAlumnos } from "./alumnos.ts";
 import { MemoryStore } from "./store.ts";
 import { postgrestFalso } from "./test_postgrest.ts";
 
@@ -41,18 +40,16 @@ Deno.test("cierre: si Postgres falla, el error se propaga (sin copia vieja de Gi
   await assertRejects(() => store.list("resultados/act-1"));
 });
 
-const fila = (alumno: string | null, emails: string[]): InglesRow => ({
-  source: "clases_ingles", id: "p-" + alumno, name: "Clase", label: "", completado: false, fecha: null, alumno,
-  calificacion: null, dificultad: null, editadoEn: null, userIds: [], userEmails: emails, userNames: [], url: "",
-});
-
-Deno.test("cierre: importarNotion agrega solo personas con correo, sin pisar ni duplicar", () => {
-  const registro = { "adela@example.com": { nombre: "Adela", alta: "x", inicio: "2026-10-05" } };
-  const filas = [fila("Marisol", ["marisol@example.com"]), fila("Marisol", ["marisol@example.com"]), fila("Pedro", []), fila(null, ["x@example.com"]), fila("Adela", ["adela@example.com"])];
-  const { registro: r, importados } = importarNotion(registro, filas, "2026-10-04T20:00:00.000Z");
-  assertEquals(importados, 1);
-  assertEquals(r["marisol@example.com"], { nombre: "Marisol", alta: "2026-10-04T20:00:00.000Z", origen: "notion" });
-  assertEquals(r["adela@example.com"], registro["adela@example.com"], "no pisa altas existentes");
-  assertEquals(Object.keys(r).length, 2, "sin correo o sin nombre no se importa");
-  assertEquals(importarNotion(r, filas, "otra").importados, 0, "idempotente");
+Deno.test("cierre: fase 2 — filasIngles = aplicarAlumnos([], registro) conserva la identidad del registro", () => {
+  const registro: RegistroAlumnos = {
+    "marisol@example.com": { nombre: "Marisol", alta: "2026-10-04T20:00:00.000Z", origen: "notion" },
+    "adela@example.com": { nombre: "Adela", alta: "x", inicio: "2026-10-05" },
+  };
+  const filas = aplicarAlumnos([], registro);
+  assertEquals(filas.map((r) => [r.source, r.alumno, r.userEmails]), [
+    ["registro", "Marisol", ["marisol@example.com"]],
+    ["registro", "Adela", ["adela@example.com"]],
+  ]);
+  assert(filas.every((r) => r.name === "" && r.fecha === null && !r.completado), "filas de identidad, sin tareas");
+  assertEquals(aplicarAlumnos([], {}), [], "sin registro no hay nadie");
 });
