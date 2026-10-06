@@ -355,11 +355,16 @@ function renderTips(tips) {
 // encabezado Authorization con el token de sesión; ninguna otra función llama a fetch() directamente.
 // Todas las peticiones salen por aquí: con sesión mandan Authorization: Bearer (openspec: plataforma-login).
 // Si el servidor dice que la sesión no sirve, la página regresa a la pantalla de entrada (sesionVencida, app.js).
-async function api(url, opts) {
-  const o = Object.assign({ cache: 'no-store' }, opts || {});
-  const res = await (window.StaldAuth ? StaldAuth.fetchConSesion(url, o) : fetch(url, o));
+// Con StaldAuth sale por pedirJson (openspec: cache-estabilidad): GET iguales en vuelo se juntan, las lecturas se
+// reintentan ante fallas pasajeras, los envíos vacían la caché y, sin red, responde status 0 en lugar de lanzar.
+async function api(url, opts, cfg) {
+  if (window.StaldAuth && StaldAuth.pedirJson) {
+    const r = await StaldAuth.pedirJson(url, opts, cfg);
+    if (StaldAuth.esSesionVencida({ status: r.status }, r.body) && typeof sesionVencida === 'function') sesionVencida(r.body);
+    return r;
+  }
+  const res = await fetch(url, opts || {});
   const body = await res.json().catch(() => ({}));
-  if (window.StaldAuth && StaldAuth.esSesionVencida(res, body) && typeof sesionVencida === 'function') sesionVencida(body);
   return { ok: res.ok, status: res.status, body };
 }
 const fetchJson = api; // nombre anterior, usado en todo el código

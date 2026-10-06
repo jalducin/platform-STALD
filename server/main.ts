@@ -18,6 +18,8 @@ import { configPublica, generarEnlace, handleEnlace, listarCuentas, LOGIN_TRANSI
 import { handleRegistroJuegos } from "./registro.ts";
 import type { Cuenta } from "./jugadores.ts";
 import { handleResumen } from "./resumen.ts";
+import { crearMemo, unaALaVez } from "./cache.ts";
+import { aplicarCacheHttp, politicaCache } from "./http_cache.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
@@ -50,7 +52,13 @@ async function queryDatabase(dbId: string): Promise<any[]> {
   return pages;
 }
 
-async function resolveUser(userId: string): Promise<UserInfo> {
+// Usuarios de Notion en caché 10 min (openspec: cache-estabilidad): cada carga de filas resolvía a cada persona.
+const memoUsuarios = crearMemo<UserInfo>({ ttlMs: 10 * 60_000, max: 2000 });
+function resolveUser(userId: string): Promise<UserInfo> {
+  return memoUsuarios.get(userId, () => resolveUserNotion(userId));
+}
+
+async function resolveUserNotion(userId: string): Promise<UserInfo> {
   try {
     const res = await fetch(`https://api.notion.com/v1/users/${userId}`, {
       headers: { "Authorization": `Bearer ${env("NOTION_TOKEN")}`, "Notion-Version": NOTION_VERSION },
@@ -63,17 +71,25 @@ async function resolveUser(userId: string): Promise<UserInfo> {
   }
 }
 
+// Filas de Notion por base en caché 60 s, con single-flight y la última copia hasta 10 min si Notion falla
+// (openspec: cache-estabilidad). Antes, cada /perfil, /ingles/data, /ingles/actividades… consultaba la base completa.
+// Se entrega una copia: quien la recibe puede modificar sus filas sin tocar la guardada. Marcar «Completado» la borra.
+// deno-lint-ignore no-explicit-any
+const memoFilas = crearMemo<any[]>({ ttlMs: 60_000, staleMs: 10 * 60_000 });
 async function loadRows<T extends { userIds: string[]; userEmails: string[]; userNames: string[] }>(
   dbId: string,
   // deno-lint-ignore no-explicit-any
   extract: (page: any) => T,
   fixtureKey: "secundaria",
 ): Promise<T[]> {
-  if (env("ROWS_FIXTURE")) return JSON.parse(await Deno.readTextFile(env("ROWS_FIXTURE")))[fixtureKey] as T[];
-  const rows = (await queryDatabase(dbId)).map(extract);
-  const ids = Array.from(new Set(rows.flatMap((r) => r.userIds)));
-  const infos = await Promise.all(ids.map(resolveUser));
-  return attachUsers(rows, new Map(ids.map((id, i) => [id, infos[i]])));
+  const filas = await memoFilas.get(fixtureKey, async () => {
+    if (env("ROWS_FIXTURE")) return JSON.parse(await Deno.readTextFile(env("ROWS_FIXTURE")))[fixtureKey] as T[];
+    const rows = (await queryDatabase(dbId)).map(extract);
+    const ids = Array.from(new Set(rows.flatMap((r) => r.userIds)));
+    const infos = await Promise.all(ids.map(resolveUser));
+    return attachUsers(rows, new Map(ids.map((id, i) => [id, infos[i]])));
+  });
+  return structuredClone(filas) as T[];
 }
 
 // Cuentas de acceso para la vista de jugadores del admin (openspec: jugadores-admin): Supabase Auth con la llave de
@@ -127,12 +143,17 @@ const db = env("SUPABASE_URL") && env("SUPABASE_SERVICE_KEY")
   : null;
 // Marcas de migración (se revisan cada 60 s): meta/migrado → Inglés; meta/migrado-juegos → juegos/
 // (openspec: ingles-grupos, cierre-tecnico). Si no se pueden leer, se conserva lo último conocido.
+// Single-flight (openspec: cache-estabilidad): al vencer, las peticiones simultáneas esperan una sola consulta.
 let marcas: { t: number; ingles: boolean; juegos: boolean } | null = null;
-async function leerMarcas(): Promise<{ ingles: boolean; juegos: boolean }> {
-  if (!db) return { ingles: false, juegos: false };
-  if (marcas && Date.now() - marcas.t < 60_000) return marcas;
+const unaMarca = unaALaVez<{ ingles: boolean; juegos: boolean }>();
+function leerMarcas(): Promise<{ ingles: boolean; juegos: boolean }> {
+  if (!db) return Promise.resolve({ ingles: false, juegos: false });
+  if (marcas && Date.now() - marcas.t < 60_000) return Promise.resolve(marcas);
+  return unaMarca("marcas", consultarMarcas);
+}
+async function consultarMarcas(): Promise<{ ingles: boolean; juegos: boolean }> {
   try {
-    const filas = await db.select<{ path: string }>("docs", `path=like.${pgv("meta/migrado*")}&select=path`);
+    const filas = await db!.select<{ path: string }>("docs", `path=like.${pgv("meta/migrado*")}&select=path`);
     marcas = { t: Date.now(), ingles: filas.some((f) => f.path === "meta/migrado"), juegos: filas.some((f) => f.path === "meta/migrado-juegos") };
   } catch (e) {
     console.error("marcas de migración:", e instanceof Error ? e.message : e);
@@ -152,7 +173,13 @@ async function getStore(): Promise<Store> {
   return pgStore.store;
 }
 
+// Caché HTTP por ruta (openspec: cache-estabilidad, server/http_cache.ts): /config se puede guardar y el ranking
+// responde 304 si no cambió; lo demás sigue no-store.
 export async function handler(req: Request): Promise<Response> {
+  return await aplicarCacheHttp(req, await atender(req), politicaCache(new URL(req.url).pathname));
+}
+
+async function atender(req: Request): Promise<Response> {
   const url = new URL(req.url);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders() });
   const admin = normalizeEmail(env("SUPER_ADMIN_EMAIL"));

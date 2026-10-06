@@ -7,6 +7,7 @@ import type { Doc, Store } from "./store.ts";
 import { handleSalas, resumenSalas } from "./salas.ts";
 import type { ConfigRealtime } from "./realtime.ts";
 import { armarJugadores, type Cuenta } from "./jugadores.ts";
+import { crearMemo } from "./cache.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -93,7 +94,7 @@ async function guardarAvatar(store: Store, jugador: Jugador, avatar: Avatar, lun
     const doc = await store.get<Semana>(ruta);
     if (!doc || await store.put(ruta, { ...doc.data, avatar }, doc.sha, `juegos: avatar de ${quien}`)) break;
   }
-  cache.delete(lunes);
+  cache.borrar(lunes);
   if (previo === avatar.foto) return;
   if (previo) {
     await store.remove(rutaFoto(previo), `juegos: se quita foto de ${quien}`);
@@ -235,10 +236,11 @@ export interface DepsJuegos {
   cuentas?: () => Promise<Cuenta[]>; // cuentas de acceso de Auth para la vista de jugadores (openspec: jugadores-admin)
 }
 
-const cache = new Map<string, { t: number; v: unknown }>();
+// Semana de juegos en caché 30 s con single-flight (openspec: cache-estabilidad).
+const cache = crearMemo<Semana[]>({ ttlMs: 30_000 });
 const cacheJugadores = new Map<string, { t: number; j: Jugador; invitados: Invitados }>();
 export function clearCacheJuegos() {
-  cache.clear();
+  cache.borrar();
   cacheJugadores.clear();
 }
 
@@ -252,13 +254,11 @@ function conTotales(s: Semana): Semana {
 type TipoRanking = "individual" | "partidas";
 const puntosDe = (d: Semana, tipo: TipoRanking) => (tipo === "partidas" ? d.totalPartidas : d.totalIndividual) ?? 0;
 
-async function leerSemana(store: Store, lunes: string): Promise<Semana[]> {
-  const c = cache.get(lunes);
-  if (c && Date.now() - c.t < 30_000) return c.v as Semana[];
-  const nombres = (await store.list(`juegos/semanas/${lunes}`)).filter((n) => n.endsWith(".json"));
-  const docs = (await Promise.all(nombres.map((n) => store.get<Semana>(`juegos/semanas/${lunes}/${n}`)))).map((d) => conTotales(d!.data));
-  cache.set(lunes, { t: Date.now(), v: docs });
-  return docs;
+function leerSemana(store: Store, lunes: string): Promise<Semana[]> {
+  return cache.get(lunes, async () => {
+    const nombres = (await store.list(`juegos/semanas/${lunes}`)).filter((n) => n.endsWith(".json"));
+    return (await Promise.all(nombres.map((n) => store.get<Semana>(`juegos/semanas/${lunes}/${n}`)))).map((d) => conTotales(d!.data));
+  });
 }
 
 // Solo entran al ranking de un tipo quienes jugaron al menos una partida de ese tipo (aunque sea con 0 puntos).
@@ -449,7 +449,7 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
       s.actualizado = ahora;
       const t = conTotales(s);
       if (await store.put(ruta, t, doc?.sha ?? null, `juegos: ${jugador.nombre} ${juego} ${nueva.puntos}${sala ? ` (sala ${sala})` : ""}`)) {
-        cache.delete(lunes);
+        cache.borrar(lunes);
         const docs = await leerSemana(store, lunes);
         const tipo: TipoRanking = sala ? "partidas" : "individual";
         return json({

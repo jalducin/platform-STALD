@@ -12,6 +12,8 @@
 |---|---|
 | `server/main.ts` | Entrypoint: Notion (solo Secundaria), CORS y rutas `/data`, `/ingles/data`, `/ingles/actividades…` |
 | `server/actividades.ts` | Rutas de actividades y exámenes sobre el almacén JSON (caché de contenido de 60 s) |
+| `server/cache.ts` | `crearMemo` y `unaALaVez`: cachés en memoria con single-flight (cambio `cache-estabilidad`) |
+| `server/http_cache.ts` | Política de caché HTTP por ruta, `ETag` y 304 (cambio `cache-estabilidad`) |
 | `server/motor.ts` | Lógica pura: selección por alumno e intento, calificación, mejor intento, refuerzo |
 | `server/store.ts` | `GitHubStore` (API de contenidos, escritura con `sha`) y `MemoryStore` (pruebas) |
 | `server/rows.ts` | Extracción de filas de Notion (Secundaria) y filtrado por correo |
@@ -186,6 +188,20 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     de 3,000 entradas.
   - Incidente que lo motivó (2026-10-02): las partidas consultan cada 2.5 s y cada consulta leía varios
     archivos; con varias instancias de Deno se superó el límite y cayeron todas las rutas.
+
+**Caché y single-flight** (`server/cache.ts`, `server/http_cache.ts`, cambio `cache-estabilidad`; decisiones en su
+`design.md`). Fuente canónica de las reglas de caché del servidor:
+  - Toda caché en memoria nueva usa `crearMemo({ ttlMs, staleMs?, max? })`: vigencia, **single-flight** (las cargas
+    simultáneas de una clave comparten una promesa) y, si se pide, la última copia cuando la fuente falla. `borrar(clave)`
+    quita también la carga en vuelo. Para coalescer sin guardar, `unaALaVez()`. No escribas otro `Map` con `Date.now()`.
+  - Vigencias: filas de Notion 60 s por base (copia hasta 10 min si Notion falla; marcar «Completado» las borra),
+    usuarios de Notion 10 min, contenido de actividades 60 s, semana de Juegos 30 s, marcas de migración 60 s. Las
+    lecturas de `GitHubStore` coalescen por ruta (además del ETag) y `put`/`remove` olvidan la lectura en vuelo.
+  - `loadRows` entrega una copia (`structuredClone`): quien la recibe puede modificar sus filas.
+  - Caché HTTP: `handler` pasa cada respuesta por `aplicarCacheHttp` con `politicaCache(ruta)`. Por omisión todo es
+    `no-store` (datos personales: no se guardan en el aparato). Solo `GET` con 200 de estas rutas:
+    `/config` → `public, max-age=600`; `/juegos/ranking` → `private, no-cache`, `Vary: Authorization`, `ETag` débil y
+    304 si `If-None-Match` coincide. Una ruta nueva entra a la lista solo si no lleva datos de una persona.
 
 **Pronunciación** (`server/motor.ts`, cambio `pronunciacion`):
   - `similitudPronunciacion(frase, oido)`: LCS de palabras ÷ palabras de la frase, tras normalizar (minúsculas,
