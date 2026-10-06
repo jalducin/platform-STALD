@@ -1,5 +1,6 @@
 // Almacén JSON: repo privado de GitHub (producción) o memoria (pruebas locales).
 import { decodeBase64, encodeBase64 } from "jsr:@std/encoding@1/base64";
+import { unaALaVez } from "./cache.ts";
 
 export interface Doc<T = unknown> {
   data: T;
@@ -20,6 +21,8 @@ export interface Store {
 export class GitHubStore implements Store {
   private cache = new Map<string, { etag: string; valor: unknown }>();
   private maxCache: number;
+  // Lecturas simultáneas de la misma ruta comparten un solo fetch (openspec: cache-estabilidad).
+  private enVuelo = unaALaVez<unknown>();
 
   constructor(private repo: string, private token: string, private branch = "main", opciones: { maxCache?: number } = {}) {
     this.maxCache = opciones.maxCache ?? 3000;
@@ -46,8 +49,12 @@ export class GitHubStore implements Store {
   }
 
   private invalidar(path: string) {
+    const lista = `list:${path.split("/").slice(0, -1).join("/")}`;
     this.cache.delete(`get:${path}`);
-    this.cache.delete(`list:${path.split("/").slice(0, -1).join("/")}`);
+    this.cache.delete(lista);
+    // Quien lea después de escribir no se une a una lectura que empezó antes.
+    this.enVuelo.olvidar(`get:${path}`);
+    this.enVuelo.olvidar(lista);
   }
 
   private static async esLimite(res: Response): Promise<boolean> {
@@ -56,8 +63,12 @@ export class GitHubStore implements Store {
     try { return /rate limit/i.test(await res.clone().text()); } catch { return false; }
   }
 
-  // GET condicional: 304 → copia; límite → copia o github_rate_limit.
-  private async leer<V>(clave: string, url: string, convertir: (j: unknown) => V, vacio: V, error: string): Promise<V> {
+  // GET condicional: 304 → copia; límite → copia o github_rate_limit. Una sola lectura en vuelo por ruta.
+  private leer<V>(clave: string, url: string, convertir: (j: unknown) => V, vacio: V, error: string): Promise<V> {
+    return this.enVuelo(clave, () => this.leerAhora(clave, url, convertir, vacio, error)) as Promise<V>;
+  }
+
+  private async leerAhora<V>(clave: string, url: string, convertir: (j: unknown) => V, vacio: V, error: string): Promise<V> {
     const previo = this.cache.get(clave);
     const res = await fetch(url, { headers: { ...this.headers(), ...(previo ? { "If-None-Match": previo.etag } : {}) } });
     if (res.status === 304 && previo) {

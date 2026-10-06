@@ -1,6 +1,7 @@
-# Modelo de datos (Notion)
+# Modelo de datos
 
-Fuente canónica de las bases de Notion y de las propiedades que lee el backend. Los nombres de
+Fuente canónica de las bases de Notion (hoy solo Secundaria), de los formatos JSON del repo de datos y de las
+tablas `stald_*` de Postgres. En Notion, los nombres de
 propiedad son **literales** (incluyen acentos y espacios). Renombrar una propiedad en Notion rompe el
 backend: tratarlo como un cambio OpenSpec.
 
@@ -20,47 +21,24 @@ backend: tratarlo como un cambio OpenSpec.
 | `Día ` (sic, con espacio final) | select | `dia` |
 | `Usuario` | people | resuelto a `userNames` (el correo solo se usa en el servidor para filtrar) |
 
-## Base "📖 Clases Inglés"
+## Base "📖 Clases Inglés" (histórica, ya no se lee)
 
-- ID: `3c41c6b4f8b580f888d8d122cbb5c613` (data source `9581c6b4-f8b5-8283-bf7e-878652c0d17e`)
-- Consumida por: `/ingles/data` → `ingles.html` (`source: "clases_ingles"`). Cada fila trae `id` (id de la
-  página), que usa `POST /ingles/data/<id>/completado` para escribir `Completado` desde la página.
-- Fuera de alcance: el hub "Ingles Aguilar" (excluido a pedido del usuario).
-- Las filas sin `Nombre` (alumno vacío) se ignoran con `sinHuerfanas`; no pertenecen a nadie (cambio
-  `ingles-sin-nombre`). Inglés ya no se gestiona en Notion: no se editan filas desde aquí.
-- **Modelo: una fila por (clase, alumno).** El mismo catálogo de clases se repite para cada alumno.
-  Alumnos actuales: Fernando, Marisol, Angel, Laura y Jesus (51 clases cada uno). Una clase nueva se
-  agrega una vez por alumno.
-- Calendario de entregas: una actividad por día desde 2026-09-26 (hasta 2026-11-14), ordenadas por
-  `Dificultad` (A1 → A2 → B1), luego por `Módulo` y por número de lección; el mismo para todos los alumnos.
-  "📋 REGLA — Dónde anotar cada tipo de clase" no lleva fecha. Detalle: cambio OpenSpec `ingles-fechas-y-avance`.
-- Vistas: "Mis clases" (`Usuario` = me; pestaña de la base y vista en "Vistas Alumnos") para que cada
-  alumno vea sus filas, y una vista por alumno filtrada por `Nombre` para el admin. Las vistas no son
-  control de acceso: un guest con acceso a la base puede quitar el filtro.
-
-| Propiedad Notion | Tipo | Campo en `InglesRow` |
-|---|---|---|
-| `Name` | title | `name` |
-| `Nombre` | select (alumno) | `alumno` |
-| `Módulo` | select | parte de `label` |
-| `Tipo` | select | parte de `label` (`"Módulo · Tipo"`) |
-| `Completado` | checkbox | `completado` |
-| `Fecha Entrega ` (sic, con espacio final) | date | `fecha` |
-| `Usuario` | people | resuelto a `userNames` (el correo solo se usa en el servidor para filtrar) |
-| `Dificultad` | select (A1–C2) | `dificultad` |
-| `Calificación` | text | `calificacion` (null si está vacía) |
-| `Observaciones` | text | — (solo en Notion) |
-| (página) `last_edited_time` | sistema | `editadoEn`: se usa como fecha de realización |
+- ID: `3c41c6b4f8b580f888d8d122cbb5c613`.
+- Desde la fase 2 de «Inglés sin Notion» (cambio `cierre-tecnico`), el servidor **no la consulta**: la identidad de
+  Inglés sale solo del registro (`alumnos.json`) y las tareas y calificaciones salen de las actividades en línea.
+  Ya no existe `POST /ingles/data/<id>/completado` (responde 404).
+- Antes de apagarla, la fase 1 copió al registro a cada alumno o alumna que tenía correo en ella
+  (`origen: "notion"`). La base queda en Notion solo como historial.
 
 ## Acceso por correo
 
-- Una fila es visible para una alumna si su correo está entre los correos de los usuarios de `Usuario`.
-  En Inglés, las filas nuevas se crean con `Usuario` vacío: el admin asigna el guest de cada alumno
-  (en la vista del alumno, seleccionar todas las filas y asignar `Usuario` en bloque).
+- Secundaria: una fila es visible para una alumna si su correo está entre los correos de los usuarios de `Usuario`.
 - Para que el correo se resuelva, la persona debe ser **miembro o guest** del workspace de Notion y la
   integración debe tener la capability de leer correos de usuarios.
 - El administrador (correo en el secreto `SUPER_ADMIN_EMAIL`) ve todas las filas.
-- La lista de alumnas y sus correos **vive solo en Notion**; no se copia al repo.
+- La lista de alumnas de Secundaria y sus correos **vive solo en Notion**; no se copia al repo.
+- Inglés: la identidad es el registro (`alumnos.json`, en Postgres en producción); `GET /ingles/data` devuelve solo
+  filas de identidad (`source: "registro"`), sin tareas.
 
 ## Exámenes (JSON, sin base de datos)
 
@@ -140,8 +118,8 @@ Sin datos personales. Se sirve junto a `juegos.html`.
     `meta/migrado-juegos`;
   - ya no gasta del límite de la API de GitHub;
   - **no hay respaldo**: si Postgres falla, la ruta responde 503 en lugar de leer una copia vieja.
-- **Identidad de Inglés:** `alumnos.json` puede traer `origen: "notion"` en las personas importadas desde Notion. La
-  fase 1 de `cierre-tecnico` las copia al abrir la lista de alumnos y alumnas como admin.
+- **Identidad de Inglés:** `alumnos.json` es la única fuente (fase 2 de `cierre-tecnico`). Puede traer
+  `origen: "notion"` en las personas que la fase 1 importó de Notion; hoy es solo informativo.
 
 ## Actividades semanales (repo privado `platform-STALD-data`)
 
@@ -233,11 +211,13 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - resultados en `resultados/<id>/<slug>.json`, en Postgres igual que Inglés; con `intentos: 2` y sin
     `segundaOportunidad`, el 2.º intento abre de inmediato y cuenta la mejor;
   - generador del examen mensual: `herramientas/secundaria-<AAAA-MM>/`.
-- `alumnos.json`: `{ "<correo>": { nombre, alta, inicio? } }`, alumnos y alumnas dados de alta desde `ingles.html`
-  (cambio `alta-alumnos`). Se suman a los de Notion. Solo el admin ve los correos.
+- `alumnos.json`: `{ "<correo>": { nombre, alta, inicio?, origen? } }`, el registro de alumnos y alumnas de Inglés:
+  altas desde `ingles.html` (cambio `alta-alumnos`) y personas importadas de Notion (`origen: "notion"`, cambio
+  `cierre-tecnico`). Es la única fuente de identidad de Inglés. Solo el admin ve los correos.
   - `inicio` (`AAAA-MM-DD`): el lunes siguiente al alta (cambio `inicio-lunes-alumnos`). Las actividades que
-    vencen antes no aparecen. Si el alta liga un nombre que ya existe en Notion, no lleva `inicio`.
-- `avance/<slug-alumno>.json`: avance fuera de las actividades en línea.
+    vencen antes no aparecen. Las personas importadas de Notion no llevan `inicio` (ya llevaban el curso).
+- `avance/<slug-alumno>.json`: historial de las marcas de tareas de Notion de Inglés. Desde la fase 2 de
+  `cierre-tecnico` nadie lo escribe; se conserva como historial.
   - `{ alumno, notion: { <pageId>: { titulo, completado, en, por } }, historial: [...] }`.
   - `por` es `alumno` o `admin`. `historial` guarda como máximo las 200 entradas más recientes. Sin correos.
 - `resultados/<id>/<slug-alumno>.json`: `{ id, titulo, alumno, intentos: [{ n, enviadoEn, fueraDeTiempo,

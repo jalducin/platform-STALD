@@ -10,11 +10,13 @@
 
 | Archivo | Rol |
 |---|---|
-| `server/main.ts` | Entrypoint: Notion, CORS y rutas `/data`, `/ingles/data`, `/ingles/actividades…` |
+| `server/main.ts` | Entrypoint: Notion (solo Secundaria), CORS y rutas `/data`, `/ingles/data`, `/ingles/actividades…` |
 | `server/actividades.ts` | Rutas de actividades y exámenes sobre el almacén JSON (caché de contenido de 60 s) |
+| `server/cache.ts` | `crearMemo` y `unaALaVez`: cachés en memoria con single-flight (cambio `cache-estabilidad`) |
+| `server/http_cache.ts` | Política de caché HTTP por ruta, `ETag` y 304 (cambio `cache-estabilidad`) |
 | `server/motor.ts` | Lógica pura: selección por alumno e intento, calificación, mejor intento, refuerzo |
 | `server/store.ts` | `GitHubStore` (API de contenidos, escritura con `sha`) y `MemoryStore` (pruebas) |
-| `server/rows.ts` | Extracción de filas de Notion y filtrado por correo |
+| `server/rows.ts` | Extracción de filas de Notion (Secundaria) y filtrado por correo |
 | `server/auth.ts` | Sesión con Supabase Auth: `quienEs`, `GET /config` y `POST /auth/enlace` (cambio `plataforma-login`) |
 | `server/resumen.ts` | `GET /ingles/resumen`: indicadores y mapa de calor del tablero del profe (cambio `ingles-pro`) |
 | `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
@@ -132,7 +134,8 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
   - `catalogo`: nombre de cada juego.
   - No incluye correos.
   - Sincronía por reloj; los bots los calcula el cliente con la semilla.
-  - La identidad del jugador se guarda en caché 60 s para no consultar Notion en cada sondeo. La lista de
+  - La identidad del jugador se guarda en caché 60 s para no releer el registro de Inglés ni Notion (Secundaria) en
+    cada sondeo. La lista de
     invitados siempre se lee fresca.
 - **Avatar:**
   - `POST /juegos/avatar` `{ emoji, color }`, solo con valores de `AVATARES` (32) y `COLORES` (10); si no,
@@ -186,6 +189,20 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - Incidente que lo motivó (2026-10-02): las partidas consultan cada 2.5 s y cada consulta leía varios
     archivos; con varias instancias de Deno se superó el límite y cayeron todas las rutas.
 
+**Caché y single-flight** (`server/cache.ts`, `server/http_cache.ts`, cambio `cache-estabilidad`; decisiones en su
+`design.md`). Fuente canónica de las reglas de caché del servidor:
+  - Toda caché en memoria nueva usa `crearMemo({ ttlMs, staleMs?, max? })`: vigencia, **single-flight** (las cargas
+    simultáneas de una clave comparten una promesa) y, si se pide, la última copia cuando la fuente falla. `borrar(clave)`
+    quita también la carga en vuelo. Para coalescer sin guardar, `unaALaVez()`. No escribas otro `Map` con `Date.now()`.
+  - Vigencias: filas de Notion 60 s por base (copia hasta 10 min si Notion falla; marcar «Completado» las borra),
+    usuarios de Notion 10 min, contenido de actividades 60 s, semana de Juegos 30 s, marcas de migración 60 s. Las
+    lecturas de `GitHubStore` coalescen por ruta (además del ETag) y `put`/`remove` olvidan la lectura en vuelo.
+  - `loadRows` entrega una copia (`structuredClone`): quien la recibe puede modificar sus filas.
+  - Caché HTTP: `handler` pasa cada respuesta por `aplicarCacheHttp` con `politicaCache(ruta)`. Por omisión todo es
+    `no-store` (datos personales: no se guardan en el aparato). Solo `GET` con 200 de estas rutas:
+    `/config` → `public, max-age=600`; `/juegos/ranking` → `private, no-cache`, `Vary: Authorization`, `ETag` débil y
+    304 si `If-None-Match` coincide. Una ruta nueva entra a la lista solo si no lleva datos de una persona.
+
 **Pronunciación** (`server/motor.ts`, cambio `pronunciacion`):
   - `similitudPronunciacion(frase, oido)`: LCS de palabras ÷ palabras de la frase, tras normalizar (minúsculas,
     sin acentos ni puntuación) y expandir contracciones (I've = I have, can't = can not…).
@@ -220,9 +237,8 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     - `meta/migrado` activa Inglés;
     - `meta/migrado-juegos` activa `juegos/`.
     - Sin marcas, se usa GitHub como antes.
-  - `GET /ingles/alumnos` del admin también importa al registro a las personas de Notion que aún no están
-    (`importarNotion`): solo las que tienen correo, sin pisar y de forma idempotente. Es la fase 1 de
-    «Inglés sin Notion».
+  - Inglés sin Notion (cambio `cierre-tecnico`): la fase 1 importó al registro a las personas de Notion con correo
+    (`origen: "notion"`); desde la fase 2 Inglés ya no lee Notion y esa importación se retiró.
   - Rutas de grupos, solo admin:
     - `GET /ingles/grupos` → `{ grupos, miembros: { slug: grupo } }`;
     - `POST /ingles/grupos` crea o edita un grupo. Errores: `nombre_invalido`, `meet_invalido` (debe ser
@@ -240,7 +256,7 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - `GET /ingles/resumen?grupo=<id>` (solo admin; si no, 403 `solo_admin`) →
     `{ hoy, grupo, semana: { id, titulo }, columnas, filas, kpis }`:
     - `columnas`: elementos con entrega de la semana actual (`{ id, tipo, titulo, disponibleDesde, fechaLimite }`);
-    - `filas`: una por alumno o alumna (Notion + altas, sin el profe), en orden alfabético, con `grupo` y
+    - `filas`: una por alumno o alumna del registro (sin el profe), en orden alfabético, con `grupo` y
       `celdas[id] = { estado, porcentaje?, fueraDeTiempo?, intentos?, prorroga? }`. `estado`: `hecho`, `atrasado`,
       `hoy`, `pendiente`, `proximamente` o `no-aplica` (la semana es de otro grupo, o vence antes de su lunes de inicio).
       Usa la fecha propia de cada quien (`prorrogas`);
@@ -259,17 +275,17 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     `conflicto_escritura`. La lista del admin trae `prorrogas` por elemento.
 
 **Rutas `/ingles/alumnos`** (`server/alumnos.ts`, cambio `alta-alumnos`), solo admin (si no, 403):
-  - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "notion" | "registro", alta?, inicio? }] }`;
+  - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "registro", alta, inicio? }] }`: solo el registro
+    (`handleAlumnos` recibe `filas: () => Promise.resolve([])`; Inglés ya no lee Notion);
   - alta nueva: `inicio` es el lunes siguiente en CDMX (`lunesDeInicio`). `GET /ingles/actividades` omite, para esa
     persona, lo que vence antes de `inicio` y devuelve `inicio` (cambio `inicio-lunes-alumnos`);
   - `POST /ingles/alumnos` `{ nombre, email }` → alta en `alumnos.json`. 400 `correo_invalido` o
-    `nombre_invalido`; 409 `correo_en_uso` (ya tiene acceso) o `nombre_en_uso` (ese nombre ya tiene correo;
-    un nombre de Notion sin correo sí se liga);
-  - `POST /ingles/alumnos/quitar` `{ email }`: solo altas de la página (404 para los de Notion).
+    `nombre_invalido`; 409 `correo_en_uso` (ya tiene acceso) o `nombre_en_uso` (ese nombre ya tiene correo);
+  - `POST /ingles/alumnos/quitar` `{ email }`: quita a una persona del registro (404 si no está).
   - El nombre "Profe" está reservado para la ruta del profe (409 `nombre_en_uso`).
-  - `filasIngles()` suma el registro (`aplicarAlumnos`): liga el correo a las filas con ese "Nombre" o agrega
-    una fila de identidad `source: "registro"` (sin tarea). Portal, `/ingles/data`, actividades y Juegos lo
-    reconocen sin cambios.
+  - `filasIngles()` = `aplicarAlumnos([], registro)` (fase 2 de `cierre-tecnico`): una fila de identidad
+    `source: "registro"` (sin tarea) por persona del registro, sin consultar Notion. Portal, `/ingles/data`,
+    actividades, resumen y Juegos la reconocen. `GET /ingles/data` devuelve solo esas filas.
 
 **Ruta `GET /perfil`** (`server/perfil.ts`; correo de la sesión o, en la transición, `?email=`):
 - Devuelve `{ email, isAdmin, nombre, conocido, invitado, accesos: { ingles, secundaria, juegos } }` para
@@ -277,17 +293,9 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
 - Mismas reglas que `/data` e `/ingles/data`; sin filas ni correos ajenos.
 - Sin `email` responde 400.
 
-**Ruta `/ingles/data/<pageId>/completado`** (`server/completar.ts`), método POST con `{ completado: boolean }`:
-- Marca o desmarca "Completado" en Notion.
-- Solo sobre filas visibles para el correo: las del alumno o alumna, o cualquiera para el admin.
-- Registra la marca en `avance/<slug>.json`.
-- Respuestas:
-  - 200 `{ ok, id, completado, registrado }`;
-  - 400 `missing_email` / `json_invalido`;
-  - 403 `sin_acceso`;
-  - 502 `sin_permiso_notion` / `notion_<status>`.
-- Requiere que la integración de Notion tenga permiso de actualizar contenido.
-- Con `ROWS_FIXTURE`, las marcas se guardan en memoria.
+**Ruta `/ingles/data/<pageId>/completado`**: retirada en la fase 2 de `cierre-tecnico` junto con
+`server/completar.ts` (Inglés ya no tiene tareas de Notion); responde 404 `not_found`. Los `avance/<slug>.json` que
+escribía quedan como historial.
 
 **Pruebas:** `DATA_DIR=<copia del repo de datos> npx -y deno test --allow-env --allow-read` en `server/`
 (sin `DATA_DIR` se omiten las de integración; `semana_test.ts` usa datos inline y corre siempre).

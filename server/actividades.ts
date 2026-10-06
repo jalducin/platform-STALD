@@ -1,6 +1,8 @@
 // Rutas /ingles/actividades[/<id>[/resultados/<alumno>]] sobre el almacén JSON.
+import { crearMemo } from "./cache.ts";
 import {
   addIntento,
+  ahoraIso,
   calcularRacha,
   type Ejercicio,
   esPara,
@@ -44,19 +46,16 @@ export const AMBITO_CLASE: Ambito = { contenido: "contenido", clave: "clase" };
 export const AMBITO_PROFE: Ambito = { contenido: "contenido/profe", clave: "profe" };
 export const AMBITO_SECUNDARIA: Ambito = { contenido: "contenido/secundaria", clave: "secundaria" }; // openspec: examen-secundaria
 
-const CACHE_MS = 60_000;
-const cache = new Map<string, { t: number; v: unknown }>();
+// Contenido en caché 60 s con single-flight (openspec: cache-estabilidad): las cargas simultáneas de una clave
+// vencida esperan una sola lectura del almacén.
+const cache = crearMemo<unknown>({ ttlMs: 60_000 });
 
 async function cached<T>(key: string, fn: () => Promise<T>): Promise<T> {
-  const c = cache.get(key);
-  if (c && Date.now() - c.t < CACHE_MS) return c.v as T;
-  const v = await fn();
-  cache.set(key, { t: Date.now(), v });
-  return v;
+  return await cache.get(key, fn) as T;
 }
 
 export function clearCache() {
-  cache.clear();
+  cache.borrar();
 }
 
 async function loadRaw(store: Store, id: string, ambito: Ambito): Promise<Item | null> {
@@ -281,7 +280,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const calificacion = grade(it, preguntas, respuestas);
     if (quien.isAdmin) return json({ guardado: false, intento: n, intentosMax: maxIntentos(it), calificacion });
 
-    const intento: Intento = { n, enviadoEn: new Date().toISOString(), fueraDeTiempo: fueraDeTiempoDe(it, n, hoy), preguntas: preguntas.map((p) => p.id), respuestas, calificacion };
+    const intento: Intento = { n, enviadoEn: ahoraIso(), fueraDeTiempo: fueraDeTiempoDe(it, n, hoy), preguntas: preguntas.map((p) => p.id), respuestas, calificacion };
     for (let i = 0; i < 3; i++) {
       const actual = await leerResultado(store, it.id, slug!);
       if ((actual?.data.intentos.length || 0) !== n - 1) return json({ error: "intento_invalido", esperado: (actual?.data.intentos.length || 0) + 1 }, 409);

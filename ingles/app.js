@@ -120,7 +120,6 @@ function onClick(e) {
   const act = b.dataset.action;
   if (act === 'filtrar') { const board = b.closest('.board'); aplicarFiltro(board, b.getAttribute('aria-pressed') === 'true' ? null : b.dataset.grupo); }
   if (act === 'ver-todo') aplicarFiltro(b.closest('.board'), null);
-  if (act === 'marcar') { e.preventDefault(); marcarTarea(b); }
   if (act === 'quitar-alumno') { e.preventDefault(); quitarAlumno(b); }
   if (act === 'editar-grupo') { e.preventDefault(); state.grupoEdicion = (state.grupos.grupos || []).find(g => g.id === b.dataset.id) || null; state.gruposAbierto = true; render(state.data); document.getElementById('g-nombre').focus(); }
   if (act === 'tts') { e.preventDefault(); hablar(b.dataset.texto, !!b.dataset.lento); }
@@ -164,7 +163,7 @@ async function loadFor(email) {
     const r = await api(DATA_URL_BASE + '?email=' + encodeURIComponent(email));
     const data = r.body;
     if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // sesionVencida ya pintó la entrada
-    if (!r.ok) throw new Error(data.error === 'mucho_trafico' ? 'Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : (data.error || ('HTTP ' + r.status)));
+    if (!r.ok) throw new Error(data.error === 'mucho_trafico' ? 'Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : (data.mensaje || data.error || ('HTTP ' + r.status)));
 
     if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // ya se mostró la entrada
     if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {

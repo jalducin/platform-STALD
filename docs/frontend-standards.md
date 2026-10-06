@@ -25,7 +25,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
 - Todo texto que venga de Notion se inserta con `escapeHtml()` o con `textContent`. Nunca concatenar
   datos crudos en `innerHTML`.
 - Los enlaces externos llevan `target="_blank" rel="noopener"`.
-- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=2">` y usan
+- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=5">` (sube `?v=` en las
+  cuatro cada vez que cambie) y usan
   `window.StaldAuth`:
   - al arrancar, `await StaldAuth.iniciar(API_BASE)`; el correo es `StaldAuth.email()` (sesión) o, solo durante la
     transición, `StaldAuth.correoViejo()`;
@@ -79,9 +80,9 @@ Cada página debe manejar y mostrar de forma explícita:
   y cada sección del tablero lleva `data-grupo`. El filtro se aplica en el DOM al `.board` más cercano (en
   admin, por alumno o alumna), no se guarda y se quita con la misma tarjeta o con "Ver todo".
 - Vista de admin de `ingles.html`: tarjeta "📊 Últimas calificaciones" (`#ultimas`), con las 5 más recientes
-  por alumno o alumna. Junta las de en línea (mejor intento, fecha del último envío) y las de Notion
-  (fecha de edición). El color va por nivel: ≥ 80, 60–79 y < 60; una calificación de Notion ≤ 10 se
-  escala × 10.
+  por alumno o alumna, de las actividades y exámenes en línea (mejor intento, fecha del último envío). El color va
+  por nivel: ≥ 80, 60–79 y < 60. Inglés ya no muestra tareas ni calificaciones de Notion (cambio `cierre-tecnico`,
+  fase 2): los bloques del admin salen del registro (filas `source: "registro"` de `/ingles/data`).
 - Voz en `ingles.html` (cambio `pronunciacion`):
   - 🔊 / 🐢 con `speechSynthesis` (en-US) en ejercicios con `audio` y `pronunciar`;
   - 🎙️ con `SpeechRecognition` / `webkitSpeechRecognition`: muestra «Te escuché…» y la coincidencia (misma regla que
@@ -239,13 +240,37 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Sondeo de salas:
   - 2.5 s en la sala de espera y en ¡Una!, Basta, Lotería, Póker, Brisca y Conquián (`TIEMPO_REAL`);
   - 5 s en los juegos de preguntas;
-  - se detiene al terminar, al vencer la sala, a 1 h o, en la sala de espera, a los 15 min sin empezar.
+  - se detiene al terminar, al vencer la sala, a 1 h o, en la sala de espera, a los 15 min sin empezar;
+  - fallas de red y pestaña oculta: ver «Caché y estabilidad del cliente».
 - Realtime (cambio `salas-realtime`): si el GET de la sala trae `rt`, `conectarRealtime` carga supabase-js 2.45.4
   (jsdelivr, diferido) y escucha el evento `estado`:
   - `mezclarEstado`: por jugador gana la `v` más alta y una sala empezada no regresa a la espera;
   - al quedar `SUBSCRIBED`: una consulta para ponerse al día y respaldo cada 30 s;
   - si el canal falla, vuelve el sondeo normal;
   - `limpiar` hace `removeChannel`.
+
+## Caché y estabilidad del cliente (cambio `cache-estabilidad`)
+
+Fuente canónica de las reglas de caché del cliente (decisiones y medición en el `design.md` del cambio; las del
+servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flight»):
+- **Nunca `cache: 'no-store'` ni `'no-cache'` en peticiones al API:** en Chromium se saltan también la caché de la
+  verificación previa y cada petición con `Authorization` paga un `OPTIONS`. `fetchConSesion` usa `cache: 'default'`; la
+  frescura la da el servidor (`no-store` en datos personales).
+- **Peticiones JSON por `StaldAuth.pedirJson(url, opts, { ttl? })`** → `{ ok, status, body }` (Juegos e Inglés lo usan
+  dentro de su `api()`):
+  - junta en una sola las peticiones `GET` idénticas en vuelo;
+  - guarda en memoria solo lo que pide `ttl` (ms), con el correo de la sesión en la clave. Hoy: el ranking de Juegos,
+    30 s. Nunca pongas `ttl` a algo que la persona acaba de cambiar sin pasar por un envío;
+  - cualquier envío (`POST`, `DELETE`), `salir()` y `limpiarCache()` vacían esa memoria;
+  - reintenta los `GET` ante red caída, 429, 502, 503 y 504 (2 veces, espera creciente, `Retry-After` ≤ 5 s), salvo
+    errores que no cambian al reintentar (`sin_base`, `sin_config`, `auth_no_disponible`, `limite_diario`,
+    `cupo_lleno`). Los envíos **no** se reintentan solos;
+  - sin red responde `status: 0`, `error: 'sin_conexion'` y `mensaje` amable, sin lanzar.
+- **Sondeo de salas:** un error nunca lo detiene; mientras falle, la espera se duplica (hasta 30 s) y se muestra `#p-red`
+  «📶 Reconectando…»; al primer éxito vuelve a su ritmo. Con la pestaña oculta no consulta; al volver, consulta enseguida.
+- `juegos/datos/*.json` se piden una vez por página (`datos()`); si la descarga falla, se reintenta la próxima vez.
+- Medición: `tests/e2e/e2e-peticiones.js` cuenta en un proxy las peticiones por flujo (con `OPTIONS`) y falla si un flujo
+  pasa su umbral. Si un cambio agrega peticiones a un flujo, ajusta el umbral en el mismo PR y explica por qué.
 
 ## Inglés pro (cambio `ingles-pro`)
 
@@ -298,8 +323,8 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
       los 14 días. La vista previa del admin no guarda.
     - Mientras existe `#exam-form`, `html.examen-abierto` aplica `overscroll-behavior-y: contain` (sin «jalar para
       recargar») y `beforeunload` pide confirmar si hay respuestas sin enviar.
-- **Peticiones.** Todas salen por `api(url, opts)` en `comun.js` (`fetchJson` es un alias). El inicio de sesión del
-  Sprint 3 agrega ahí el encabezado `Authorization`.
+- **Peticiones.** Todas salen por `api(url, opts, cfg?)` en `comun.js` (`fetchJson` es un alias), que usa
+  `StaldAuth.pedirJson` (ver «Caché y estabilidad del cliente»).
 - **Accesibilidad.** Foco visible (`:focus-visible`), enlace «Saltar al contenido», botones de al menos 44 px en
   pantallas táctiles, `role="progressbar"`, `aria-live` en avisos y sin desplazamiento horizontal a 390 px (las tablas
   anchas se desplazan dentro de `.tabla-wrap`).

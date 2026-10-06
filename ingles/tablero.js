@@ -3,34 +3,23 @@
 
 function renderAdmin(data) {
   const rows = data.rows || [];
-  const clases = rows.filter(r => r.source === 'clases_ingles');
-  // Un bloque plegable por alumno o alumna (campo "Nombre" de Notion) con su tablero dentro.
-  const groups = new Map();
-  clases.forEach(r => {
-    const key = r.alumno || 'Sin nombre asignado';
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(r);
-  });
-  // Alta desde la página (fila de identidad, sin tarea): también tiene su bloque.
-  rows.filter(r => r.source === 'registro' && r.alumno && !groups.has(r.alumno)).forEach(r => groups.set(r.alumno, []));
-  state.adminGroups = groups;
+  // Un bloque plegable por alumno o alumna del registro (filas de identidad, sin tarea). Inglés ya no trae tareas
+  // de Notion (openspec: cierre-tecnico, fase 2): su tablero sale de las actividades en línea.
   const items = (state.act && state.act.items) || [];
   const resumen = (state.act && state.act.resumen) || {};
   const diag = items.find(i => i.id === 'diagnostico-a1');
-  const names = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, 'es')).filter(n => !state.grupoFiltro || (grupoDeNombre(n) || {}).id === state.grupoFiltro);
+  const names = [...new Set(rows.filter(r => r.source === 'registro' && r.alumno).map(r => r.alumno))].sort((a, b) => a.localeCompare(b, 'es')).filter(n => !state.grupoFiltro || (grupoDeNombre(n) || {}).id === state.grupoFiltro);
   const bloques = names.map(name => {
-    const list = groups.get(name);
-    const g = buildGroups(list);
-    const ultima = lastGraded(list);
+    const filas = itemRowsAdmin(items, name);
+    const g = buildGroups(filas);
     const resDiag = diag && (diag.resultados || []).find(r => r.alumno === name);
     const temas = (resumen[name] && resumen[name].temasAReforzar) || [];
     const suyos = items.map(it => ({ it, r: (it.resultados || []).find(r => r.alumno === name) })).filter(x => x.r);
-    const u = ultimasCalificaciones(name, list, items);
+    const u = ultimasCalificaciones(name, items);
     return '<details class="student" data-alumno="' + escapeHtml(name) + '">' +
       '<summary><span>👤 ' + escapeHtml(name) + ' ' + chipGrupo(grupoDeNombre(name)) + '</span>' +
         '<span class="mini"><span>' + g.completed + '/' + g.total + '</span>' +
         '<span class="o">⏰ ' + g.overdue.length + '</span><span class="t">📌 ' + g.today.length + '</span>' +
-        '<span class="g" title="Última actividad calificada (Notion)">⭐ ' + escapeHtml(ultima ? ultima.calificacion : '—') + '</span>' +
         '<span title="Diagnóstico">📝 ' + (resDiag && resDiag.mejor ? resDiag.mejor.porcentaje + '%' : 'pendiente') + '</span>' +
         '<span class="o" title="Temas a reforzar">🎯 ' + temas.length + '</span></span></summary>' +
       '<div class="student-body">' +
@@ -40,12 +29,11 @@ function renderAdmin(data) {
           u.map(x => '<div>• ' + x.icono + ' ' + escapeHtml(x.titulo) + ' · <span class="chip ' + claseNota(x.pct) + '">' + escapeHtml(x.valor) + '</span> · ' + escapeHtml(fechaCorta(x.fecha)) + '</div>').join('') + '</div>' : '') +
         (temas.length ? '<div class="progress-text" style="margin:4px 0 2px">🎯 Temas a reforzar (para armar su clase)</div><div class="chips">' +
           temas.map(t => '<span class="chip ' + t.estado + '" title="' + escapeHtml(t.fuente) + '">' + escapeHtml(t.titulo) + '</span>').join('') + '</div>' : '') +
-        (ultima ? '<div class="progress-text">⭐ Última actividad calificada en Notion: <b>' + escapeHtml(ultima.calificacion) + '</b> · ' + escapeHtml(ultima.name) + '</div>' : '') +
         suyos.map(({ it, r }) => '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) +
           ' · ' + (r.mejor ? r.mejor.porcentaje + '%' : '—') + '</span><span class="count">' + r.intentos.length + '/' + it.intentosMax + ' intento(s)</span></div></summary><div class="scroll">' +
           (r.intentos.length > 1 ? '<div class="progress-text">Intentos: ' + r.intentos.map(x => x.calificacion.porcentaje + '%').join(' → ') + ' · cuenta el mejor</div>' : '') +
           (r.mejor ? renderResultado(r.mejor, true) : '') + '</div></details>').join('') +
-        renderBoard(list.concat(itemRowsAdmin(items, name)), true) +
+        renderBoard(filas) +
       '</div>' +
     '</details>';
   }).join('');
@@ -54,7 +42,7 @@ function renderAdmin(data) {
     seccionHtml('admin', 'grupos', renderGruposAdmin() || vacio('👥', 'Los grupos se activan cuando Inglés usa la base de datos.')) +
     seccionHtml('admin', 'alumnos', renderAlumnosAdmin() + (bloques || vacio('🧑‍🎓', 'Aún no hay alumnos ni alumnas en este grupo.'))) +
     seccionHtml('admin', 'semana', renderAdminWeek(state.act) || vacio('📅', 'Sin actividades esta semana.')) +
-    seccionHtml('admin', 'resultados', renderUltimasAdmin(names, groups, items)) +
+    seccionHtml('admin', 'resultados', renderUltimasAdmin(names, items)) +
     seccionHtml('admin', 'presentar', renderPresentar()) +
     seccionHtml('admin', 'juegos', renderJuegosAdmin() + '<a class="btn ghost" href="' + escapeHtml(conApiParam('juegos.html')) + '">🎮 Abrir Juegos</a>');
 }
@@ -156,7 +144,7 @@ function pintarCajon(nombre, aviso) {
   const r = state.resumen && !state.resumen.error ? state.resumen : null;
   const fila = r && r.filas.find(f => f.alumno === nombre);
   const temas = (((state.act && state.act.resumen) || {})[nombre] || {}).temasAReforzar || [];
-  const ult = ultimasCalificaciones(nombre, (state.adminGroups && state.adminGroups.get(nombre)) || [], items);
+  const ult = ultimasCalificaciones(nombre, items);
   let semana = esqueleto();
   if (r) semana = fila ? r.columnas.map(c => filaCajon(c, fila.celdas[c.id] || { estado: 'no-aplica' }, items.find(i => i.id === c.id) || {}, nombre)).join('') : vacio('🗓️', 'No aparece en el grupo elegido.');
   cajonEl.innerHTML = '<div class="cajon-cab" style="--gc:' + escapeHtml((g && g.color) || '#4f46e5') + '"><span class="avatar" aria-hidden="true">' + escapeHtml(iniciales(nombre)) + '</span>' +

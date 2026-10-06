@@ -104,7 +104,7 @@ function badgeText(c) {
   return 'Sin fecha';
 }
 
-function renderRow(r, isAdmin) {
+function renderRow(r) {
   const c = r._c;
   const parts = [];
   if (r.fecha) parts.push('<span class="fecha">📅 ' + escapeHtml(formatFecha(r.fecha)) + '</span>');
@@ -112,17 +112,11 @@ function renderRow(r, isAdmin) {
   if (r.dificultad) parts.push('<span class="level">' + escapeHtml(r.dificultad) + '</span>');
   if (r.label) parts.push('<span>' + escapeHtml(r.label) + '</span>');
   if (r.calificacion) parts.push('<span class="grade">⭐ ' + escapeHtml(r.calificacion) + '</span>');
-  let whoStr = '';
-  if (isAdmin) {
-    const who = (r.userNames && r.userNames.length) ? r.userNames.join(', ') : 'Usuario sin asignar en Notion';
-    whoStr = '<div class="who">👤 ' + escapeHtml(who) + '</div>';
-  }
   return '<div class="row ' + c.status + '">' +
     '<span class="badge ' + c.status + '">' + badgeText(c) + '</span>' +
     '<div class="meta">' +
       '<div class="name">' + escapeHtml(r.name) + '</div>' +
       '<div class="row2">' + parts.join('') + '</div>' +
-      whoStr +
     '</div>' +
     rowAction(r) +
   '</div>';
@@ -149,12 +143,12 @@ function buildGroups(rows) {
   };
 }
 
-function section(title, items, isAdmin, opts) {
+function section(title, items, opts) {
   const o = opts || {};
   const grupo = o.grupo ? ' data-grupo="' + o.grupo + '"' : '';
   if (!items.length && o.hideEmpty) return '';
   const body = items.length
-    ? '<div class="scroll"><div class="list">' + items.map(r => renderRow(r, isAdmin)).join('') + '</div></div>'
+    ? '<div class="scroll"><div class="list">' + items.map(renderRow).join('') + '</div></div>'
     : '<div class="empty">' + escapeHtml(o.empty || 'Nada por aquí.') + '</div>';
   const head = '<div class="section-head"><span>' + (o.collapsible ? '<span class="chevron">▶</span>' : '') + escapeHtml(title) + '</span><span class="count">' + items.length + '</span></div>';
   return o.collapsible
@@ -177,15 +171,15 @@ function renderStats(g) {
     '<div class="progress-text">' + g.completed + '/' + g.total + ' completadas (' + pct + '%)</div>';
 }
 
-function renderBoard(rows, isAdmin) {
+function renderBoard(rows) {
   const g = buildGroups(rows);
   return '<div class="board">' + renderStats(g) +
-    section('✅ Realizadas · últimos 3 días', g.recent, isAdmin, { grupo: 'recent', empty: 'Aún no hay entregas en los últimos 3 días.' }) +
-    section('⏰ Atrasadas', g.overdue, isAdmin, { grupo: 'overdue', empty: '¡Nada atrasado! 🎉' }) +
-    section('📌 Hoy', g.today, isAdmin, { grupo: 'today', empty: 'No hay entrega para hoy.' }) +
-    section('📅 Próximas', g.upcoming, isAdmin, { grupo: 'upcoming', empty: 'No hay entregas próximas.' }) +
-    section('✔️ Realizadas anteriores', g.older, isAdmin, { grupo: 'older', collapsible: true, hideEmpty: true }) +
-    section('🗒️ Sin fecha', g.nodate, isAdmin, { grupo: 'nodate', collapsible: true, hideEmpty: true }) + '</div>';
+    section('✅ Realizadas · últimos 3 días', g.recent, { grupo: 'recent', empty: 'Aún no hay entregas en los últimos 3 días.' }) +
+    section('⏰ Atrasadas', g.overdue, { grupo: 'overdue', empty: '¡Nada atrasado! 🎉' }) +
+    section('📌 Hoy', g.today, { grupo: 'today', empty: 'No hay entrega para hoy.' }) +
+    section('📅 Próximas', g.upcoming, { grupo: 'upcoming', empty: 'No hay entregas próximas.' }) +
+    section('✔️ Realizadas anteriores', g.older, { grupo: 'older', collapsible: true, hideEmpty: true }) +
+    section('🗒️ Sin fecha', g.nodate, { grupo: 'nodate', collapsible: true, hideEmpty: true }) + '</div>';
 }
 
 // Filtro por tarjeta: solo afecta a su tablero (en admin, a ese alumno o alumna). null = ver todo.
@@ -250,72 +244,33 @@ function accionItem(it, estado) {
   return '<span class="pill wait">Abre ' + escapeHtml(formatFecha(it.disponibleDesde)) + '</span>';
 }
 
+// Acción de una fila del tablero: solo actividades en línea (Inglés ya no trae tareas de Notion; openspec: cierre-tecnico).
 function rowAction(r) {
-  if (r._item) {
-    if (isAdminView()) return '';
-    const it = ((state.act && state.act.items) || []).find(x => x.id === r._item);
-    return it ? accionItem(it, it.estado) : '';
-  }
-  const abrir = r.url ? '<a class="link" href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '';
-  if (!r.id) return abrir;
-  const marcar = r.completado
-    ? '<button class="btn ghost sm" data-action="marcar" data-id="' + escapeHtml(r.id) + '" data-valor="false" data-titulo="' + escapeHtml(r.name) + '" title="Desmarcar (no hecha)">↩ Desmarcar</button>'
-    : '<button class="btn sm" data-action="marcar" data-id="' + escapeHtml(r.id) + '" data-valor="true" data-titulo="' + escapeHtml(r.name) + '">✓ Marcar hecha</button>';
-  return '<span class="row-actions">' + marcar + abrir + '</span>';
+  if (!r._item || isAdminView()) return '';
+  const it = ((state.act && state.act.items) || []).find(x => x.id === r._item);
+  return it ? accionItem(it, it.estado) : '';
 }
 
-// Marca o desmarca "Completado" en Notion y vuelve a dibujar conservando la vista (alumnos abiertos, scroll).
-async function marcarTarea(btn) {
-  const hecha = btn.dataset.valor === 'true';
-  if (!confirm((hecha ? '¿Marcar como hecha "' : '¿Desmarcar "') + btn.dataset.titulo + '"?')) return;
-  btn.disabled = true; btn.textContent = 'Guardando…';
-  const r = await fetchJson(DATA_URL_BASE + '/' + encodeURIComponent(btn.dataset.id) + '/completado?email=' + encodeURIComponent(state.email), {
-    method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ completado: hecha }),
-  });
-  if (!r.ok) {
-    btn.disabled = false; btn.textContent = hecha ? '✓ Marcar hecha' : '↩ Desmarcar';
-    alert('No se pudo guardar (' + (r.body.error || r.status) + '). Intenta de nuevo.');
-    return;
-  }
-  const abiertos = [...document.querySelectorAll('details.student[open]')].map(d => d.dataset.alumno);
-  const y = window.scrollY;
-  const d = await fetchJson(DATA_URL_BASE + '?email=' + encodeURIComponent(state.email));
-  if (d.ok) state.data = d.body;
-  render(state.data);
-  document.querySelectorAll('details.student').forEach(det => { if (abiertos.includes(det.dataset.alumno)) det.open = true; });
-  window.scrollTo(0, y);
-}
-
-// Última actividad completada con calificación en Notion (la de edición más reciente).
-// Últimas calificaciones de un alumno o alumna: actividades/exámenes en línea (mejor, fecha del último envío)
-// y filas de Notion con "Calificación" (fecha de edición). De la más reciente a la más antigua.
-function ultimasCalificaciones(name, filas, items, n = 5) {
-  const enLinea = items.map(it => ({ it, r: (it.resultados || []).find(r => r.alumno === name) }))
+// Últimas calificaciones de un alumno o alumna: actividades y exámenes en línea (mejor intento, fecha del último
+// envío). De la más reciente a la más antigua.
+function ultimasCalificaciones(name, items, n = 5) {
+  return items.map(it => ({ it, r: (it.resultados || []).find(r => r.alumno === name) }))
     .filter(x => x.r && x.r.mejor && x.r.intentos.length)
-    .map(({ it, r }) => ({ icono: icono(it.tipo), titulo: it.titulo, valor: r.mejor.porcentaje + '%', pct: r.mejor.porcentaje, fecha: r.intentos[r.intentos.length - 1].enviadoEn }));
-  const notion = filas.filter(r => r.calificacion && !r._item).map(r => {
-    const num = Number(String(r.calificacion).replace(',', '.'));
-    return { icono: '📓', titulo: r.name, valor: String(r.calificacion), pct: Number.isFinite(num) ? (num <= 10 ? num * 10 : num) : null, fecha: r.editadoEn || r.fecha || '' };
-  });
-  return enLinea.concat(notion).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, n);
+    .map(({ it, r }) => ({ icono: icono(it.tipo), titulo: it.titulo, valor: r.mejor.porcentaje + '%', pct: r.mejor.porcentaje, fecha: r.intentos[r.intentos.length - 1].enviadoEn }))
+    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, n);
 }
 const claseNota = pct => pct === null ? 'neutra' : pct >= 80 ? 'fortaleza' : pct >= 60 ? 'en-progreso' : 'debilidad';
 const fechaCorta = f => f ? new Date(f.length === 10 ? f + 'T12:00:00' : f).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : '';
 
-function renderUltimasAdmin(names, groups, items) {
+function renderUltimasAdmin(names, items) {
   return '<details class="section" id="ultimas" open><summary><div class="section-head"><span><span class="chevron">▶</span>📊 Últimas calificaciones</span><span class="count">' + names.length + '</span></div></summary>' +
-    '<div style="padding:4px 12px 10px"><div class="progress-text" style="margin:4px 0">Las 5 más recientes de cada alumno o alumna · en línea (mejor intento) y Notion</div>' +
+    '<div style="padding:4px 12px 10px"><div class="progress-text" style="margin:4px 0">Las 5 más recientes de cada alumno o alumna · en línea (mejor intento)</div>' +
     '<table class="ultimas-tabla"><tbody>' + names.map(name => {
-      const u = ultimasCalificaciones(name, groups.get(name), items);
+      const u = ultimasCalificaciones(name, items);
       return '<tr data-alumno="' + escapeHtml(name) + '"><td>' + escapeHtml(name) + '</td><td>' + (u.length
         ? '<div class="chips">' + u.map(x => '<span class="chip ' + claseNota(x.pct) + '" data-fecha="' + escapeHtml(x.fecha) + '" title="' + escapeHtml(x.titulo + ' · ' + fechaCorta(x.fecha)) + '">' + escapeHtml(x.valor) + '</span>').join('') + '</div>'
         : '<span class="progress-text">—</span>') + '</td></tr>';
     }).join('') + '</tbody></table></div></details>';
-}
-
-function lastGraded(rows) {
-  return rows.filter(r => r.completado && r.calificacion && !r._item)
-    .sort((a, b) => String(b.editadoEn || '').localeCompare(String(a.editadoEn || '')))[0] || null;
 }
 
 function semanaItems(act) {
@@ -400,11 +355,16 @@ function renderTips(tips) {
 // encabezado Authorization con el token de sesión; ninguna otra función llama a fetch() directamente.
 // Todas las peticiones salen por aquí: con sesión mandan Authorization: Bearer (openspec: plataforma-login).
 // Si el servidor dice que la sesión no sirve, la página regresa a la pantalla de entrada (sesionVencida, app.js).
-async function api(url, opts) {
-  const o = Object.assign({ cache: 'no-store' }, opts || {});
-  const res = await (window.StaldAuth ? StaldAuth.fetchConSesion(url, o) : fetch(url, o));
+// Con StaldAuth sale por pedirJson (openspec: cache-estabilidad): GET iguales en vuelo se juntan, las lecturas se
+// reintentan ante fallas pasajeras, los envíos vacían la caché y, sin red, responde status 0 en lugar de lanzar.
+async function api(url, opts, cfg) {
+  if (window.StaldAuth && StaldAuth.pedirJson) {
+    const r = await StaldAuth.pedirJson(url, opts, cfg);
+    if (StaldAuth.esSesionVencida({ status: r.status }, r.body) && typeof sesionVencida === 'function') sesionVencida(r.body);
+    return r;
+  }
+  const res = await fetch(url, opts || {});
   const body = await res.json().catch(() => ({}));
-  if (window.StaldAuth && StaldAuth.esSesionVencida(res, body) && typeof sesionVencida === 'function') sesionVencida(body);
   return { ok: res.ok, status: res.status, body };
 }
 const fetchJson = api; // nombre anterior, usado en todo el código

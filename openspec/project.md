@@ -24,8 +24,8 @@ resolver actividades, consultar su avance y jugar.
     `supabase/migrations/001_stald_ingles.sql`.
   - **Repo privado `jalducin/platform-STALD-data`** (JSON): contenido de Inglés (semanas, actividades y exámenes
     con respuestas) y datos de Juegos. Es también el respaldo de lectura de Inglés durante la transición.
-  - **Notion** (API 2022-06-28): base de Secundaria y la base histórica «📖 Clases Inglés». En la práctica, Inglés
-    ya no se gestiona en Notion: sus filas solo se leen.
+  - **Notion** (API 2022-06-28): base de Secundaria. Inglés ya no lee Notion (cambio `cierre-tecnico`, fase 2):
+    la base «📖 Clases Inglés» queda solo como historial y la identidad sale del registro `alumnos.json`.
 - Otros:
   - **Supabase Realtime**: canal secreto por sala para las partidas multijugador (`server/realtime.ts`). Sin las
     variables `SUPABASE_*`, las salas usan sondeo.

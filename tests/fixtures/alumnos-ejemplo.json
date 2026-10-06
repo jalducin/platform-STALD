@@ -1,0 +1,27 @@
+{
+  "marisol@example.com": {
+    "nombre": "Marisol",
+    "alta": "2026-09-01T12:00:00.000Z",
+    "origen": "notion"
+  },
+  "angel@example.com": {
+    "nombre": "Angel",
+    "alta": "2026-09-01T12:00:00.000Z",
+    "origen": "notion"
+  },
+  "jesus@example.com": {
+    "nombre": "Jesus",
+    "alta": "2026-09-01T12:00:00.000Z",
+    "origen": "notion"
+  },
+  "laura@example.com": {
+    "nombre": "Laura",
+    "alta": "2026-09-01T12:00:00.000Z",
+    "origen": "notion"
+  },
+  "fernando@example.com": {
+    "nombre": "Fernando",
+    "alta": "2026-09-01T12:00:00.000Z",
+    "origen": "notion"
+  }
+}
