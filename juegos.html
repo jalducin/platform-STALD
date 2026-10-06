@@ -576,7 +576,7 @@
     state.tab = tab || state.tab || 'juegos';
     const admin = state.jugador && state.jugador.tipo === 'admin';
     const tabs = '<div class="tabs" role="tablist">' +
-      ['juegos:🎮 Juegos', 'partidas:👥 Partidas', 'ranking:🏆 Ranking'].concat(admin ? ['invitados:📋 Invitados', 'fotos:📷 Fotos'] : []).map(x => {
+      ['juegos:🎮 Juegos', 'partidas:👥 Partidas', 'ranking:🏆 Ranking'].concat(admin ? ['jugadores:🧑‍🤝‍🧑 Jugadores', 'invitados:📋 Invitados', 'fotos:📷 Fotos'] : []).map(x => {
         const [id, t] = x.split(':');
         return '<button class="tab" role="tab" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + t + '</button>';
       }).join('') + '</div>';
@@ -585,6 +585,7 @@
       tabs + '<div id="tab-body"></div>';
     if (state.tab === 'ranking') return pintarRanking();
     if (state.tab === 'partidas') return pintarPartidas();
+    if (state.tab === 'jugadores') return pintarJugadores();
     if (state.tab === 'invitados') return pintarInvitados();
     if (state.tab === 'fotos') return pintarFotos();
     document.getElementById('tab-body').innerHTML = CATEGORIAS.map(c => {
@@ -638,6 +639,52 @@
     state.invitadosLista = lista;
   }
 
+  // Jugadores registrados y registros pendientes (solo admin, openspec: jugadores-admin). Los correos solo los ve el admin.
+  async function pintarJugadores() {
+    const body = document.getElementById('tab-body');
+    body.innerHTML = '<div class="loading">Cargando jugadores…</div>';
+    const r = await api('/juegos/jugadores');
+    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const { jugadores, pendientes, cuentasError } = r.body;
+    const fecha = s => s ? new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+    const busca = (...xs) => ' data-busca="' + escapeHtml(xs.join(' ').toLowerCase()) + '"';
+    const tipo = j => j.tipo === 'invitado' ? '🎮 Juegos' : j.espacio === 'Secundaria' ? '📚 Secundaria' : '📘 Inglés';
+    body.innerHTML = '<p class="muted" style="margin:10px 0">' + jugadores.length + ' jugador(es) registrado(s)' + (pendientes.length ? ' · ' + pendientes.length + ' registro(s) pendiente(s)' : '') + '. Los correos solo los ves tú.</p>' +
+      '<input id="jug-buscar" type="search" placeholder="🔎 Buscar por nombre o correo" autocomplete="off" style="width:100%;box-sizing:border-box;margin-bottom:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--border, #e6e4f0);font:inherit">' +
+      (cuentasError ? '<div class="alert">No pude leer las cuentas de acceso; los registros pendientes no aparecen por ahora.</div>' : '') +
+      (pendientes.length ? '<h3 id="jug-pendientes">⏳ Registros pendientes</h3><p class="muted" style="margin:0 0 8px">Se registraron pero no terminaron. Genera su enlace y mándaselo por WhatsApp.</p><div class="card scroll-x"><table class="inv"><thead><tr><th>Correo</th><th>Estado</th><th>Intentó</th><th></th></tr></thead><tbody>' +
+        pendientes.map(p => '<tr' + busca(p.email) + '><td>' + escapeHtml(p.email) + '</td><td>' + (p.estado === 'sin confirmar' ? '✉️ No confirmó su correo' : '🙈 Entró sin elegir apodo') + '</td><td>' + escapeHtml(fecha(p.creada)) + '</td>' +
+          '<td><button class="btn ghost sm" data-enlace="' + escapeHtml(p.email) + '">🔗 Enlace de acceso</button></td></tr>').join('') + '</tbody></table></div><div id="jug-enlace"></div>' : '') +
+      '<h3>✅ Jugadores registrados</h3>' +
+      (jugadores.length ? '<div class="card scroll-x"><table class="inv" id="jug-tabla"><thead><tr><th>Nombre</th><th>Correo</th><th>Tipo</th><th>Puntos semana</th><th>Partidas</th><th>Última visita</th></tr></thead><tbody>' +
+        jugadores.map(j => '<tr' + busca(j.nombre, j.email) + '><td>' + escapeHtml(j.nombre) + '</td><td>' + escapeHtml(j.email) + '</td><td>' + tipo(j) + '</td><td>' + fmt(j.puntosSemana) + '</td><td>' + j.partidasSemana + '</td><td>' + escapeHtml(fecha(j.ultimaVisita)) + '</td></tr>').join('') +
+        '</tbody></table></div>' : '<p class="muted">Todavía no hay jugadores.</p>') +
+      '<div class="row-btns"><button class="btn ghost" data-a="csv-jugadores">⬇️ Descargar CSV</button></div>';
+    state.jugadoresLista = { jugadores, pendientes };
+    document.getElementById('jug-buscar').addEventListener('input', e => {
+      const q = e.target.value.trim().toLowerCase();
+      body.querySelectorAll('tr[data-busca]').forEach(tr => { tr.hidden = !!q && !tr.dataset.busca.includes(q); });
+    });
+  }
+
+  // Enlace de acceso para un registro pendiente: lleva directo a Juegos (POST /auth/enlace con destino «juegos»).
+  async function enlacePendiente(b) {
+    const caja = document.getElementById('jug-enlace');
+    b.disabled = true; b.textContent = 'Generando…';
+    const r = await post('/auth/enlace', { email: b.dataset.enlace, destino: 'juegos' });
+    b.disabled = false; b.textContent = '🔗 Enlace de acceso';
+    if (!r.ok) { caja.innerHTML = '<div class="alert">No se pudo generar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const texto = '🎮 ¡Hola! Este es tu enlace para entrar a Juegos de STALD (es de un solo uso y vence en 1 hora): ' + r.body.enlace;
+    caja.innerHTML = '<div class="card" id="jug-enlace-caja"><b>Enlace para ' + escapeHtml(r.body.email) + '</b><input readonly value="' + escapeHtml(r.body.enlace) + '" style="margin:8px 0">' +
+      '<div class="row-btns"><button class="btn ghost" type="button" data-copiar="' + escapeHtml(r.body.enlace) + '">📋 Copiar</button>' +
+      '<a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(texto) + '">📤 Mandar por WhatsApp</a></div>' +
+      '<small class="muted">Es de un solo uso y vence en 1 hora.</small></div>';
+  }
+  async function copiarEnlace(b) {
+    try { await navigator.clipboard.writeText(b.dataset.copiar); b.textContent = '✔ ¡Copiado!'; } catch (e) { b.textContent = 'Selecciónalo y cópialo'; }
+    setTimeout(() => { if (b.isConnected) b.textContent = '📋 Copiar'; }, 2500);
+  }
+
   // Moderación de fotos de avatar (solo admin).
   async function pintarFotos() {
     const body = document.getElementById('tab-body');
@@ -659,13 +706,13 @@
     pintarFotos();
   }
 
-  function descargarCsv() {
-    const filas = [['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana]));
-    const csv = filas.map(f => f.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  function descargarCsv(filas, nombre) {
+    const csv = filas.map(f => f.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
-    a.download = 'invitados-juegos.csv'; a.click();
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' }));
+    a.download = nombre; a.click();
   }
+
 
   // ---------- Marco común y resultado ----------
   function marco(id, extra) {
@@ -3236,13 +3283,16 @@
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('♟️ Espera a que se una tu rival: el ajedrez en partida es 1 vs 1.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
+    const en = e.target.closest('[data-enlace]'); if (en) return enlacePendiente(en);
+    const cp = e.target.closest('[data-copiar]'); if (cp) return copiarEnlace(cp);
     const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
     const g = e.target.closest('[data-juego]');
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); pantallaHub(); }
     if (a.dataset.a === 'reintentar') iniciar();
-    if (a.dataset.a === 'csv') descargarCsv();
+    if (a.dataset.a === 'csv') descargarCsv([['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana])), 'invitados-juegos.csv');
+    if (a.dataset.a === 'csv-jugadores') { const l = state.jugadoresLista || { jugadores: [], pendientes: [] }; descargarCsv([['estado', 'nombre', 'correo', 'tipo', 'puntos_semana', 'partidas_semana', 'ultima_visita_o_registro']].concat(l.jugadores.map(j => ['registrado', j.nombre, j.email, j.espacio, j.puntosSemana, j.partidasSemana, j.ultimaVisita]), l.pendientes.map(p => [p.estado, '', p.email, '', '', '', p.creada])), 'jugadores-juegos.csv'); }
     if (a.dataset.a === 'registro') return pantallaRegistro();
     // «🆕 Registrar» (openspec: registro-juegos-hub): cierra la sesión en este aparato y abre el registro para otra persona.
     if (a.dataset.a === 'registrar') {

@@ -172,3 +172,22 @@ Deno.test("enlace: solo el admin con sesión verificada; correo válido; sin cue
   const sinLlave = await handleEnlace(postEnlace({ email: "luz@example.com" }), { ok: true, email: ADMIN, verificado: true }, { ...enlaceDeps(api.f), serviceKey: "" }, json);
   assertEquals(sinLlave.status, 503);
 });
+
+Deno.test("enlace: destino «juegos» lleva a juegos.html (openspec: jugadores-admin)", async () => {
+  const api = adminApiFalsa();
+  const r = await handleEnlace(postEnlace({ email: "leo@example.com", destino: "juegos" }), { ok: true, email: ADMIN, verificado: true }, enlaceDeps(api.f), json);
+  assertEquals(r.status, 200);
+  assertEquals(api.llamadas[0].body.redirect_to, "https://jalducin.github.io/platform-STALD/juegos.html");
+});
+
+Deno.test("cuentas: listarCuentas lee la Admin API con la llave de servicio y normaliza", async () => {
+  const { listarCuentas } = await import("./auth.ts");
+  const llamadas: string[] = [];
+  const f = (async (input: string | URL | Request, init?: RequestInit) => {
+    llamadas.push(String(input) + "|" + new Headers(init?.headers).get("apikey"));
+    return json({ users: [{ email: "Leo@Example.com", created_at: "c", email_confirmed_at: null, last_sign_in_at: null, confirmation_sent_at: "e" }] });
+  }) as typeof fetch;
+  const cs = await listarCuentas({ supabaseUrl: "https://ref.supabase.co/", serviceKey: "srv", fetch: f });
+  assertEquals(cs, [{ email: "leo@example.com", creada: "c", confirmada: false, ultimoAcceso: null, ultimoEnvio: "e" }]);
+  assertEquals(llamadas[0], "https://ref.supabase.co/auth/v1/admin/users?page=1&per_page=1000|srv");
+});
