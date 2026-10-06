@@ -12,6 +12,7 @@ async function openItem(id) {
   entrarVista('actividad', id);
   contentEl.innerHTML = esqueleto();
   const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email));
+  if (r.status === 409) limpiarBorradores(claveBorrador(id, ''), null); // ya terminado: su borrador sobra
   if (r.status === 409 && r.body.resultado) return showResult(r.body.resultado.mejor, { titulo: r.body.resultado.titulo });
   if (!r.ok) {
     const msg = r.body.error === 'no_disponible' ? 'Se abre el ' + formatFecha(r.body.disponibleDesde) + '.' : 'No se pudo abrir (' + (r.body.error || r.status) + ').';
@@ -61,6 +62,9 @@ async function openItem(id) {
     (it.enfoque && it.enfoque.length ? ' · Enfocado en: ' + it.enfoque.join(', ') : '');
   // En celular, una pregunta por pantalla (openspec: ingles-pro); «Ver todas» vuelve a la lista completa.
   const paso = window.matchMedia('(max-width: 599.98px)').matches && porCorregir.length > 1;
+  // Autoguardado (openspec: examen-autoguardado): sin vista previa ni almacenamiento no hay borrador.
+  const kb = !it.vistaPrevia && almacenDisponible() ? claveBorrador(it.id, it.intento) : '';
+  if (kb) limpiarBorradores(claveBorrador(it.id, ''), kb); // intentos anteriores y caducados
   contentEl.innerHTML =
     '<div class="exam-card"><h3>' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</h3>' +
     '<div class="s" style="font-size:.82rem">' + escapeHtml(info) + '</div>' +
@@ -68,8 +72,9 @@ async function openItem(id) {
     (it.descripcion ? '<div class="s" style="font-size:.8rem;margin-top:4px">' + escapeHtml(it.descripcion) + '</div>' : '') + '</div>' +
     (it.teoria && it.teoria.length ? '<details class="section"' + (corr ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
     renderTips(it.tips) +
-    '<form id="exam-form"' + (paso ? ' class="paso"' : '') + ' data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + porCorregir.length + '">' +
+    '<form id="exam-form"' + (paso ? ' class="paso"' : '') + ' data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + porCorregir.length + '" data-borrador="' + escapeHtml(kb) + '">' +
     '<div class="player-progreso"><div class="barra accent" role="progressbar" aria-label="Avance" aria-valuemin="0" aria-valuemax="' + porCorregir.length + '" aria-valuenow="0" id="player-barra"><span id="player-bar" style="width:0%"></span></div><span class="num" id="player-num">0/' + porCorregir.length + '</span></div>' +
+    (kb ? '<div class="autoguardado muted" id="autoguardado">Tu avance se guarda solo en este aparato ✔</div><div class="autoguardado-aviso" id="autoguardado-aviso" aria-live="polite"></div>' : '') +
     (paso ? '<button type="button" class="btn ghost sm ver-todas" data-action="ver-todas">📋 Ver todas las preguntas</button>' : '') +
     '<div class="exam-sec" style="font-size:.9rem">✏️ ' + (corr ? 'Ejercicios por corregir' : 'Ejercicios') + '</div>' + qs +
     '<div class="exam-bar">' + volverBtn() + '<span class="paso-nav"><button type="button" class="btn ghost icono" data-action="q-ant" aria-label="Pregunta anterior">←</button><button type="button" class="btn ghost" data-action="q-sig">Siguiente →</button></span>' +
@@ -77,8 +82,93 @@ async function openItem(id) {
     '<button class="btn" type="submit" id="exam-send" disabled>Enviar</button></div></form>';
   state.paso = 0;
   if (paso) mostrarPaso(0);
+  restaurarBorrador(document.getElementById('exam-form'));
   window.scrollTo(0, 0);
 }
+
+// ---------- Autoguardado del avance en este aparato (openspec: examen-autoguardado) ----------
+// Un borrador por ámbito + persona (hash corto del correo, no el correo) + elemento + intento, en localStorage.
+// Nunca viaja al servidor. Valor: { v: 1, t: <ms>, r: <lo mismo que examAnswers> }.
+const BORRADOR = 'stald_borrador:';
+const BORRADOR_DIAS = 14;
+const BORRADOR_AMBITO = MODO_PROFE ? 'profe' : MODO_SECUNDARIA ? 'secundaria' : 'ingles';
+function hashCorto(s) { // FNV-1a de 32 bits en base 36: separa personas sin dejar el correo en claro
+  let h = 0x811c9dc5;
+  for (const c of String(s || '').toLowerCase()) { h ^= c.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(36);
+}
+function claveBorrador(id, intento) { return BORRADOR + BORRADOR_AMBITO + ':' + hashCorto(state.email) + ':' + id + ':' + intento; }
+function almacenDisponible() {
+  try { localStorage.setItem(BORRADOR + 'prueba', '1'); localStorage.removeItem(BORRADOR + 'prueba'); return true; } catch (e) { return false; }
+}
+function clavesBorrador() { try { return Object.keys(localStorage).filter(k => k.startsWith(BORRADOR)); } catch (e) { return []; } }
+function leerBorrador(k) {
+  try { const d = JSON.parse(localStorage.getItem(k) || 'null'); return d && d.r && typeof d.r === 'object' ? d : null; } catch (e) { return null; }
+}
+function quitarBorrador(k) { try { if (k) localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } }
+// Borra los caducados o ilegibles y, con `prefijo`, los de ese elemento salvo `conservar`.
+function limpiarBorradores(prefijo, conservar) {
+  const limite = Date.now() - BORRADOR_DIAS * 864e5;
+  for (const k of clavesBorrador()) {
+    const d = leerBorrador(k);
+    if (!d || !(d.t > limite) || (prefijo && k.startsWith(prefijo) && k !== conservar)) quitarBorrador(k);
+  }
+}
+function borrarBorradores() { clavesBorrador().forEach(quitarBorrador); } // «Cerrar sesión»
+function guardarBorrador(form, answers) {
+  const k = form.dataset.borrador;
+  if (!k) return;
+  try {
+    if (Object.keys(answers).length) localStorage.setItem(k, JSON.stringify({ v: 1, t: Date.now(), r: answers }));
+    else localStorage.removeItem(k);
+  } catch (e) { return; }
+  form.dataset.guardado = String(Date.now());
+  pintarGuardado();
+}
+function pintarGuardado() {
+  const el = document.getElementById('autoguardado'), f = document.getElementById('exam-form');
+  if (!el || !f || !f.dataset.guardado) return;
+  const min = Math.floor((Date.now() - Number(f.dataset.guardado)) / 60000);
+  el.textContent = 'Tu avance se guarda solo en este aparato ✔ · Guardado hace ' + (min < 1 ? 'un momento' : min + ' min');
+}
+setInterval(pintarGuardado, 30000);
+// Aplica el borrador del intento abierto por id de pregunta; ignora ids que ya no están y las fijas de la corrección.
+function restaurarBorrador(form) {
+  const d = form && leerBorrador(form.dataset.borrador || '');
+  if (!d) return;
+  const qs = new Map(preguntasPorContestar().map(q => [q.dataset.q, q]));
+  let n = 0;
+  for (const [id, v] of Object.entries(d.r)) {
+    const q = qs.get(id);
+    if (!q) continue;
+    const radio = [...q.querySelectorAll('input[type=radio]:not(:disabled)')].find(i => i.value === String(v));
+    const txt = q.querySelector('input.q-text:not(:disabled)');
+    if (radio) radio.checked = true;
+    else if (txt && typeof v === 'string' && v.trim()) {
+      txt.value = v;
+      const o = q.querySelector('.pron-oido');
+      if (o) { o.textContent = 'Respuesta recuperada ✔'; o.className = 'pron-oido ok'; }
+    } else continue;
+    n++;
+  }
+  if (!n) return;
+  updateExamProgress(form);
+  document.getElementById('autoguardado-aviso').textContent = '↺ ' + (n === 1 ? 'Recuperamos tu respuesta' : 'Recuperamos tus ' + n + ' respuestas') + '. Sigue donde te quedaste.';
+  if (form.classList.contains('paso')) {
+    const i = preguntasPorContestar().findIndex(q => !q.classList.contains('answered'));
+    mostrarPaso(i < 0 ? preguntasPorContestar().length - 1 : i);
+  }
+}
+limpiarBorradores(); // caducados, al cargar la página
+// Con el examen abierto: sin «jalar para recargar» (CSS) y confirmación al salir si hay respuestas sin enviar.
+new MutationObserver(() => document.documentElement.classList.toggle('examen-abierto', !!document.getElementById('exam-form')))
+  .observe(contentEl, { childList: true });
+window.addEventListener('beforeunload', e => {
+  const f = document.getElementById('exam-form');
+  if (!f || !f.dataset.borrador || !Object.keys(examAnswers(f)).length) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
 
 // ---------- Una pregunta por pantalla y atajos de teclado (openspec: ingles-pro) ----------
 const preguntasPorContestar = () => [...document.querySelectorAll('#exam-form .q:not(.fija)')];
@@ -199,6 +289,7 @@ function updateExamProgress(form) {
     document.getElementById('player-num').textContent = count + '/' + total;
   }
   document.getElementById('exam-send').disabled = count < total;
+  guardarBorrador(form, answers);
 }
 
 async function submitExam(form) {
@@ -211,6 +302,7 @@ async function submitExam(form) {
     body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas: examAnswers(form) }),
   });
   if (r.ok) {
+    quitarBorrador(form.dataset.borrador); // enviado: el borrador ya no hace falta
     await loadActividades();
     return showResult(r.body.calificacion, { id, intento: r.body.intento, intentosMax: r.body.intentosMax, restantes: r.body.restantes, mejor: r.body.mejor, vistaPrevia: !r.body.guardado });
   }

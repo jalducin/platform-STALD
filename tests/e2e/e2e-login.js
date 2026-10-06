@@ -12,7 +12,7 @@ const tiles = p => p.$$eval('#tiles [data-espacio]', xs => xs.map(x => x.dataset
 
 async function contexto(b, init) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(i => { window.__TIEMPO_JUEGOS = 0.4; if (i && i.viejo) localStorage.setItem('stald_email', i.viejo); if (i && i.sesion) localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: i.sesion, token: 'prueba:' + i.sesion })); }, init || null);
+  await ctx.addInitScript(i => { window.__TIEMPO_JUEGOS = 0.4; window.__REENVIO_SEGUNDOS = 3; if (i && i.viejo) localStorage.setItem('stald_email', i.viejo); if (i && i.sesion) localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: i.sesion, token: 'prueba:' + i.sesion })); }, init || null);
   const p = await ctx.newPage();
   p.on('pageerror', e => out.push('FAIL error JS: ' + e.message));
   p.on('dialog', d => d.accept());
@@ -78,6 +78,17 @@ async function api(ruta, token) {
   await p.fill('#email', 'marisol@example.com'); await p.click('#login-btn');
   await p.waitForSelector('#code-form:not([hidden])');
   ok('paso 2: «Revisa tu correo ✉️»', (await p.textContent('#code-sent')).includes('Revisa tu correo'));
+  // «¿No te llegó?» (openspec: examen-autoguardado): ayuda y reenvío con espera (acortada a 3 s en la prueba).
+  const ayuda = (await p.textContent('#code-ayuda')) || '';
+  ok('paso 2: ayuda «¿No te llegó?» con spam y WhatsApp', ayuda.includes('¿No te llegó?') && ayuda.includes('spam') && ayuda.includes('WhatsApp'), ayuda.slice(0, 120));
+  const reenviar = '#code-ayuda [data-stald-reenviar]';
+  ok('reenviar: deshabilitado con cuenta regresiva tras el envío', await p.$eval(reenviar, x => x.disabled && /Puedes pedir otro en \d+ s/.test(x.textContent)), await p.textContent(reenviar));
+  await p.waitForFunction(s => { const x = document.querySelector(s); return x && !x.disabled; }, reenviar, { timeout: 10000 });
+  ok('reenviar: se habilita al terminar la espera', (await p.textContent(reenviar)).includes('Reenviarme el enlace'));
+  await p.click(reenviar);
+  await p.waitForFunction(() => (document.querySelector('#code-ayuda [data-stald-reenvio-msg]') || {}).textContent, null, { timeout: 10000 });
+  ok('reenviar: avisa el envío al mismo correo', (await p.textContent('#code-ayuda [data-stald-reenvio-msg]')).includes('Te mandamos otro enlace a marisol@example.com'));
+  ok('reenviar: vuelve a la cuenta regresiva', await p.$eval(reenviar, x => x.disabled && x.textContent.includes('Puedes pedir otro en')));
   await p.screenshot({ path: 'login-codigo.png' });
   await p.fill('#code', '12'); await p.click('#code-btn');
   ok('código incompleto: aviso', (await p.textContent('#login-error')).includes('6 números'));
@@ -120,7 +131,11 @@ async function api(ruta, token) {
   ok('Juegos después de cerrar sesión: pide entrar', (await p.textContent('.stald-auth')).includes('enlace'));
   // Juegos: entrar con el código desde su propia pantalla
   await p.fill('#stald-auth-correo', 'marisol@example.com'); await p.click('#stald-auth-enviar');
-  await p.waitForSelector('#stald-auth-codigo'); await p.fill('#stald-auth-codigo', '654321'); await p.click('#stald-auth-verificar');
+  await p.waitForSelector('#stald-auth-codigo');
+  const ayudaJ = (await p.textContent('.stald-auth')) || '';
+  ok('Juegos paso 2: ayuda «¿No te llegó?» y botón de reenvío en espera', ayudaJ.includes('¿No te llegó?') && ayudaJ.includes('WhatsApp') && await p.$eval('.stald-auth [data-stald-reenviar]', x => x.disabled && x.textContent.includes('Puedes pedir otro en')));
+  await p.screenshot({ path: 'login-reenviar.png' });
+  await p.fill('#stald-auth-codigo', '654321'); await p.click('#stald-auth-verificar');
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
   ok('Juegos: entrada con código desde la propia página', (await p.textContent('#chip')).includes('Marisol'));
   await ctx.close();

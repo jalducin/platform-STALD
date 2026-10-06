@@ -1,0 +1,40 @@
+{
+  "id": "sec-e2e-guardado",
+  "tipo": "examen",
+  "titulo": "Examen de prueba del autoguardado",
+  "nivel": "Secundaria",
+  "disponibleDesde": "2026-09-21",
+  "fechaLimite": "2026-12-31",
+  "intentos": 2,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "historia",
+      "titulo": "🏛️ Historia",
+      "retroalimentacion": {
+        "fortaleza": "bien",
+        "en-progreso": "casi",
+        "debilidad": "repasa"
+      }
+    },
+    {
+      "id": "ingles",
+      "titulo": "🗣️ Inglés",
+      "retroalimentacion": {
+        "fortaleza": "bien",
+        "en-progreso": "casi",
+        "debilidad": "repasa"
+      }
+    }
+  ],
+  "banco": [
+    { "id": "g-h1", "tema": "historia", "tipo": "opcion", "enunciado": "¿g-h1?", "opciones": ["uno", "dos"], "correcta": 0, "explicacion": "x" },
+    { "id": "g-h2", "tema": "historia", "tipo": "escribir", "enunciado": "Escribe cinco", "aceptadas": ["cinco"], "explicacion": "x" },
+    { "id": "g-h3", "tema": "historia", "tipo": "opcion", "enunciado": "¿g-h3?", "opciones": ["uno", "dos"], "correcta": 1, "explicacion": "x" },
+    { "id": "g-i1", "tema": "ingles", "tipo": "opcion", "enunciado": "¿g-i1?", "opciones": ["uno", "dos"], "correcta": 0, "explicacion": "x" },
+    { "id": "g-i2", "tema": "ingles", "tipo": "escribir", "enunciado": "Escribe dog", "aceptadas": ["dog"], "explicacion": "x" },
+    { "id": "g-i3", "tema": "ingles", "tipo": "opcion", "enunciado": "¿g-i3?", "opciones": ["uno", "dos"], "correcta": 1, "explicacion": "x" }
+  ]
+}
