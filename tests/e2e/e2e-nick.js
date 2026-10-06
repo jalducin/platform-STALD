@@ -1,5 +1,5 @@
 // E2E: nick de jugador (openspec: nick-jugadores). Una alumna pone su nick en «Tu avatar», lo ve en el chip y en el
-// ranking, el admin lo ve en «Jugadores», y al quitarlo vuelve su nombre.
+// ranking, el admin lo ve en «🛡️ Admin › Jugadores», y al quitarlo vuelve su nombre.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const BASE = process.env.BASE;

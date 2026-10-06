@@ -132,7 +132,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   const rank = (await p.textContent('#tab-body')).replace(/\s+/g, ' ');
   ok('ranking: Marisol con juegos y marcada como yo', rank.includes('Marisol') && !!(await p.$('.rank li.yo')), rank.slice(0, 120));
   await p.screenshot({ path: 'juegos-ranking.png' });
-  ok('alumna: sin pestaña de invitados', !(await p.$('[data-tab="invitados"]')));
+  ok('alumna: sin pestaña de invitados ni «🛡️ Admin»', !(await p.$('[data-tab="invitados"]')) && !(await p.$('[data-tab="admin"]')));
 
   // Invitado desde el portal
   p = await nuevaPagina(b, null);
