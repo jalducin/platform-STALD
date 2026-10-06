@@ -154,9 +154,13 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
 
   // Admin: panel de invitados
   p = await nuevaPagina(b, 'admin@example.com');
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-tab="invitados"]', { timeout: 60000 });
-  await p.click('[data-tab="invitados"]'); await p.waitForSelector('table.inv', { timeout: 30000 }).catch(() => {});
-  ok('admin: ve al invitado con su correo', (await p.textContent('#tab-body')).includes('leo.invitado@example.com'));
+  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-tab="admin"]', { timeout: 60000 });
+  ok('admin: Invitados vive en «🛡️ Admin» (sin pestaña suelta)', !(await p.$('[data-tab="invitados"]')));
+  await p.click('[data-tab="admin"]'); await p.click('[data-adm="invitados"]'); await p.waitForSelector('#inv-tabla', { timeout: 30000 }).catch(() => {});
+  ok('admin: ve al invitado con su correo', (await p.textContent('#adm-panel')).includes('leo.invitado@example.com'));
+  { const dl = p.waitForEvent('download', { timeout: 15000 }); await p.click('[data-a="csv"]'); const d = await dl;
+    const csv = require('node:fs').readFileSync(await d.path(), 'utf8');
+    ok('admin: CSV de invitados con el invitado', d.suggestedFilename() === 'invitados-juegos.csv' && csv.includes('leo.invitado@example.com'), d.suggestedFilename()); }
   await p.screenshot({ path: 'juegos-invitados.png' });
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

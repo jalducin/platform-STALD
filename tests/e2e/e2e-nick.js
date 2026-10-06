@@ -30,8 +30,8 @@ async function pagina(b, email, ruta) {
   ok('servidor: nombre = nick y nombreReal = Marisol', yo.nombre === 'Mari Star' && yo.nombreReal === 'Marisol', JSON.stringify(yo).slice(0, 120));
 
   const ad = await pagina(b, 'admin@example.com', '/juegos.html');
-  await ad.waitForSelector('[data-tab="jugadores"]', { timeout: 60000 });
-  await ad.click('[data-tab="jugadores"]'); await ad.waitForSelector('#jug-tabla', { timeout: 30000 });
+  await ad.waitForSelector('[data-tab="admin"]', { timeout: 60000 });
+  await ad.click('[data-tab="admin"]'); await ad.click('[data-adm="jugadores"]'); await ad.waitForSelector('#jug-tabla', { timeout: 30000 });
   const fila = await ad.$eval('#jug-tabla', t => [...t.querySelectorAll('tr')].map(r => r.textContent).find(x => x.includes('marisol@example.com')) || '');
   ok('admin: Marisol con su nick', fila.includes('Marisol') && fila.includes('Mari Star'), fila.replace(/\s+/g, ' '));
 
