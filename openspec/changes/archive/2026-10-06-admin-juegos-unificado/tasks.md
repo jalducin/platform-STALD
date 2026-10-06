@@ -34,7 +34,7 @@
 
 - [x] 5.1 UI local con Playwright: recorrer las 4 sub-secciones como admin a 390 px y en escritorio, buscador, error
   simulado de una fuente con «Reintentar», y alumna sin pestaña; revisar las capturas
-- [ ] 5.2 Producción (tras el merge, integrador): abrir `juegos.html` publicada como admin y ver «🛡️ Admin» con sus
+- [ ] 5.2 [verificado en parte 2026-10-06: la página publicada trae el menú Admin y /juegos/jugadores rechaza a quien no es admin; falta que el profe lo vea con su sesión] Producción (tras el merge, integrador): abrir `juegos.html` publicada como admin y ver «🛡️ Admin» con sus
   contadores; como alumna, sin la pestaña
 
 ## 6. Documentación (OBLIGATORIO)
@@ -43,4 +43,4 @@
 
 ## 7. Archivo
 
-- [ ] 7.1 `openspec archive admin-juegos-unificado` tras la verificación en producción (integrador)
+- [x] 7.1 `openspec archive admin-juegos-unificado` tras la verificación en producción (integrador)

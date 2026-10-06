@@ -254,19 +254,6 @@ Las tarjetas "Hechas 3 días", "Atrasadas", "Hoy" y "Próximas" SHALL ser botone
 - **WHEN** el admin filtra "Hoy" en el tablero de Marisol
 - **THEN** el tablero de los demás alumnos y alumnas no cambia
 
-### Requirement: Marcar hecha desde el tablero
-Cada tarea de Notion del tablero de Inglés SHALL tener un botón "✓ Marcar hecha" si no está completada, y
-"↩" para desmarcar si lo está. Al confirmar, la página SHALL llamar a la ruta de completado, recargar los
-datos y mostrar la tarea en su nueva sección.
-
-#### Scenario: Marcar
-- **WHEN** la alumna toca "✓ Marcar hecha" en una tarea atrasada y confirma
-- **THEN** la tarea pasa a "✅ Realizadas · últimos 3 días"
-
-#### Scenario: Desmarcar
-- **WHEN** toca "↩" en una tarea realizada y confirma
-- **THEN** la tarea vuelve a su sección según su fecha
-
 ### Requirement: Actividad con intento cuenta como hecha
 Una actividad en línea (actividad, refuerzo, reto) con al menos un intento enviado SHALL contar como hecha
 en el tablero y en el progreso, con su calificación. El botón "Corregir errores" SHALL seguir disponible
@@ -279,13 +266,12 @@ mientras quede intento, porque la corrección es opcional.
 ### Requirement: Últimas 5 calificaciones por alumno o alumna (admin)
 La vista de admin de `ingles.html` SHALL mostrar una tarjeta "📊 Últimas calificaciones", con una fila
 por alumno o alumna y hasta 5 calificaciones de la más reciente a la más antigua. Toma las actividades y
-exámenes en línea (mejor calificación y fecha del último envío) y las filas de Notion con "Calificación"
-(fecha de edición). El mismo detalle SHALL aparecer en el bloque de cada alumno o alumna.
+exámenes en línea (mejor calificación y fecha del último envío); Inglés ya no muestra calificaciones de Notion.
+El mismo detalle SHALL aparecer en el bloque de cada alumno o alumna.
 
-#### Scenario: Mezcla de fuentes en orden
-- **WHEN** Marisol tiene el diagnóstico (70 %, 27 sep), una actividad (92 %, 29 sep) y una clase de
-  Notion calificada con 9 (26 sep)
-- **THEN** su fila muestra 92%, 70% y 9, en ese orden
+#### Scenario: Orden por fecha
+- **WHEN** Marisol tiene el diagnóstico (70 %, 27 sep) y una actividad (92 %, 29 sep)
+- **THEN** su fila muestra 92% y 70%, en ese orden
 
 #### Scenario: Más de 5
 - **WHEN** un alumno o alumna tiene 7 calificaciones

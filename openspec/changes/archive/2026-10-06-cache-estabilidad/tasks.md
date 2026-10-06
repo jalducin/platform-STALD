@@ -59,7 +59,7 @@
   (200 → 304), `/perfil` sin `ETag`, `OPTIONS` con `Access-Control-Max-Age`. Estado: servidor local sobre copia
   temporal, se apaga al terminar
 - [x] 7.2 UI: la E2E `peticiones` recorre los flujos en el navegador y prueba 503 pasajero, red caída y pestaña oculta
-- [ ] 7.3 Tras el merge (lo hace el usuario): abrir Juegos publicado y revisar en DevTools que el sondeo de una sala
+- [ ] 7.3 [pendiente del usuario: en producción solo se verificó /config max-age=600, /perfil no-store y OPTIONS con Access-Control-Max-Age 86400; falta revisar el sondeo de una sala real en DevTools] Tras el merge (lo hace el usuario): abrir Juegos publicado y revisar en DevTools que el sondeo de una sala
   ya no paga un `OPTIONS` por consulta
 
 ## 8. Documentación (OBLIGATORIO)
@@ -71,4 +71,4 @@
 
 ## 9. Archivo
 
-- [ ] 9.1 `openspec archive cache-estabilidad` después del merge (lo integra el usuario)
+- [x] 9.1 `openspec archive cache-estabilidad` después del merge (lo integra el usuario)
