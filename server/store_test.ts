@@ -104,3 +104,42 @@ Deno.test("store: tope de entradas en la caché", async () => {
     assertEquals(g.llamadas[0].status, 200, "la más antigua salió de la caché (descarga completa)");
   } finally { globalThis.fetch = original; }
 });
+
+// Single-flight (openspec: cache-estabilidad): lecturas simultáneas de la misma ruta comparten un solo fetch.
+Deno.test("store: lecturas simultáneas de la misma ruta → un solo fetch", async () => {
+  const g = githubFalso();
+  try {
+    g.archivos.set("juegos/salas/ABCD/sala.json", { data: { codigo: "ABCD" }, v: 1 });
+    const s = store();
+    const docs = await Promise.all(Array.from({ length: 5 }, () => s.get<any>("juegos/salas/ABCD/sala.json")));
+    assertEquals(docs.map((d) => d!.data.codigo), ["ABCD", "ABCD", "ABCD", "ABCD", "ABCD"]);
+    const listas = await Promise.all([s.list("juegos/salas/ABCD"), s.list("juegos/salas/ABCD")]);
+    assertEquals(listas, [["sala.json"], ["sala.json"]]);
+    assertEquals(g.llamadas.map((l) => l.method + " " + l.status), ["GET 200", "GET 200"], "1 get + 1 list");
+  } finally { globalThis.fetch = original; }
+});
+
+Deno.test("store: una escritura durante una lectura en vuelo → quien lee después lee fresco", async () => {
+  const g = githubFalso();
+  const falso = globalThis.fetch;
+  try {
+    g.archivos.set("a/x.json", { data: { n: 1 }, v: 1 });
+    const s = store();
+    const doc = (await s.get<any>("a/x.json"))!;
+    // La próxima lectura se queda «en vuelo» hasta que la soltemos.
+    let soltar!: () => void;
+    const espera = new Promise<void>((ok) => { soltar = ok; });
+    let retener = true;
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      if (retener && (init?.method || "GET") === "GET") { retener = false; const r = await falso(input, init); await espera; return r; }
+      return await falso(input, init);
+    }) as typeof fetch;
+    const vieja = s.get<any>("a/x.json");
+    await new Promise((r) => setTimeout(r, 0));
+    assertEquals(await s.put("a/x.json", { n: 2 }, doc.sha, "m"), true);
+    const nueva = s.get<any>("a/x.json");
+    soltar();
+    assertEquals((await vieja)!.data.n, 1);
+    assertEquals((await nueva)!.data.n, 2, "no se cuelga de la lectura vieja");
+  } finally { globalThis.fetch = original; }
+});
