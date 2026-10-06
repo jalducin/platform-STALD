@@ -1,9 +1,11 @@
 // Inicio de sesión de STALD con Supabase Auth (openspec: plataforma-login). Script clásico: expone window.StaldAuth.
 // Uso en una página:
-//   <script src="comun/auth.js?v=2"></script>
+//   <script src="comun/auth.js?v=5"></script>
 //   await StaldAuth.iniciar(API_BASE);           // lee /config, carga supabase-js y recupera la sesión
 //   StaldAuth.email()                            // correo de la sesión o null
 //   StaldAuth.fetchConSesion(url, opts)          // fetch con Authorization: Bearer <token>
+//   StaldAuth.pedirJson(url, opts, { ttl })      // { ok, status, body }: en vuelo, caché por persona y reintentos de GET
+//   StaldAuth.limpiarCache()                     // vacía la caché de pedirJson (también al cerrar sesión o tras un envío)
 //   StaldAuth.esSesionVencida(res, body)         // true si el servidor respondió 401 de sesión
 //   StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar, pie })  // pie: HTML propio bajo el formulario
 //   StaldAuth.ayudaReenvio(el, correo)           // «¿No te llegó?» y botón para reenviar el enlace (espera de 60 s)
@@ -48,7 +50,8 @@
   function iniciar(apiBase) {
     if (estado.listo) return estado.listo;
     revisarErrorEnlace();
-    estado.listo = fetch(String(apiBase).replace(/\/$/, '') + '/config', { cache: 'no-store' })
+    // Sin no-store: el servidor deja guardar /config 10 min (openspec: cache-estabilidad).
+    estado.listo = fetch(String(apiBase).replace(/\/$/, '') + '/config')
       .then(function (r) { return r.json().then(function (c) { if (!r.ok) throw new Error(c.error || ('HTTP ' + r.status)); return c; }); })
       .then(function (c) {
         if (c.prueba) {
@@ -88,14 +91,71 @@
     });
   }
 
+  // cache: 'default' (openspec: cache-estabilidad): con 'no-store' o 'no-cache' Chromium se salta también la caché de
+  // verificaciones previas y cada petición con Authorization paga un OPTIONS. Las respuestas con datos personales
+  // siguen llegando con Cache-Control: no-store, así que el navegador no las guarda y siempre va a la red.
   function fetchConSesion(url, opts) {
     return getToken().then(function (t) {
-      var o = Object.assign({ cache: 'no-store' }, opts || {});
+      var o = Object.assign({ cache: 'default' }, opts || {});
       var h = new Headers(o.headers || {});
       if (t) h.set('Authorization', 'Bearer ' + t);
       o.headers = h;
       return fetch(url, o);
     });
+  }
+
+  // ---------- Peticiones JSON con caché por persona y reintentos (openspec: cache-estabilidad) ----------
+  // - GET idénticos en vuelo se juntan en uno; con { ttl } (ms) el resultado ok se guarda en memoria esa vigencia.
+  // - La clave lleva el correo de la sesión: nunca se sirve lo de otra persona. salir() y cualquier envío la vacían.
+  // - Los GET se reintentan ante red caída, 429, 502, 503 y 504 (2 veces, espera creciente, Retry-After ≤ 5 s).
+  //   Los envíos (POST, DELETE) no se reintentan solos: si el servidor alcanzó a procesarlo, se duplicaría.
+  // - Sin red responde { ok: false, status: 0, body: { error: 'sin_conexion', mensaje } } en lugar de lanzar.
+  var memoria = {}; // clave → { t, ttl, r }
+  var enVuelo = {}; // clave → promesa
+  var REINTENTABLE = { 429: 1, 502: 1, 503: 1, 504: 1 };
+  // Respuestas que no cambian por reintentar (configuración, cupos): se entregan tal cual.
+  var PERMANENTE = { sin_base: 1, sin_config: 1, auth_no_disponible: 1, limite_diario: 1, cupo_lleno: 1 };
+  var SIN_CONEXION = 'Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.';
+  function limpiarCache() { memoria = {}; enVuelo = {}; }
+  function copia(r) { return { ok: r.ok, status: r.status, body: JSON.parse(JSON.stringify(r.body)) }; }
+  function esperar(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
+  function pedirUnaVez(url, opts) {
+    return fetchConSesion(url, opts).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (body) {
+        return { ok: res.ok, status: res.status, body: body, reintentarEn: Number(res.headers.get('Retry-After')) };
+      });
+    }, function () { return { ok: false, status: 0, body: { error: 'sin_conexion', mensaje: SIN_CONEXION } }; });
+  }
+  function pedirConReintentos(url, opts, intento) {
+    return pedirUnaVez(url, opts).then(function (r) {
+      if (intento >= 2 || !(r.status === 0 || REINTENTABLE[r.status]) || PERMANENTE[r.body && r.body.error]) return r;
+      var base = typeof window.__REINTENTO_MS === 'number' ? window.__REINTENTO_MS : 600;
+      var ms = r.reintentarEn > 0 ? Math.min(5000, r.reintentarEn * 1000) : base * Math.pow(3, intento);
+      return esperar(ms).then(function () { return pedirConReintentos(url, opts, intento + 1); });
+    });
+  }
+  function pedirJson(url, opts, cfg) {
+    opts = opts || {};
+    var metodo = String(opts.method || 'GET').toUpperCase();
+    var limpio = function (r) { return { ok: r.ok, status: r.status, body: r.body }; };
+    if (metodo !== 'GET') {
+      return pedirUnaVez(url, opts).then(function (r) { limpiarCache(); return limpio(r); });
+    }
+    var clave = (email() || 'anon') + ' ' + url;
+    var ttl = cfg && cfg.ttl > 0 ? cfg.ttl : 0;
+    var m = memoria[clave];
+    if (m && Date.now() - m.t < m.ttl) return Promise.resolve(copia(m.r));
+    if (enVuelo[clave]) return enVuelo[clave].then(copia);
+    var p = pedirConReintentos(url, opts, 0).then(function (r) {
+      r = limpio(r);
+      if (enVuelo[clave] === p) {
+        delete enVuelo[clave];
+        if (ttl && r.ok) memoria[clave] = { t: Date.now(), ttl: ttl, r: copia(r) };
+      }
+      return r;
+    });
+    enVuelo[clave] = p;
+    return p.then(copia);
   }
 
   function esSesionVencida(res, body) {
@@ -156,6 +216,7 @@
     CLAVES_VIEJAS.concat(CLAVES_JUEGOS).forEach(function (k) { escribir(k, null); });
     escribir(CLAVE_PRUEBA, null);
     estado.sesion = null;
+    limpiarCache();
     if (!estado.cliente) return Promise.resolve();
     return estado.cliente.auth.signOut().catch(function () { /* la sesión local ya se borró */ });
   }
@@ -269,6 +330,8 @@
     correoViejo: correoViejo,
     getToken: getToken,
     fetchConSesion: fetchConSesion,
+    pedirJson: pedirJson,
+    limpiarCache: limpiarCache,
     esSesionVencida: esSesionVencida,
     enviarEnlace: enviarEnlace,
     verificarCodigo: verificarCodigo,

@@ -20,7 +20,7 @@ const UMBRAL = {
   'portal (alumna)': 5,
   'navegar portal → inglés → portal → juegos (alumna)': 12,
   'juegos + 1 juego individual': 5,
-  'ranking: abrir y alternar pestañas 4 veces': 3,
+  'ranking: abrir y alternar pestañas 4 veces': 6, // 2 son las fotos de avatar (<img>, caché de 1 h)
   'sala de 2 personas (30 s, ambas)': 40,
   'inglés (alumna)': 5,
   'inglés (admin)': 15,
