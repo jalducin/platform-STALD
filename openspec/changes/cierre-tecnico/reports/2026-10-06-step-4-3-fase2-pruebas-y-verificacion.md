@@ -139,3 +139,22 @@ Diferencia 228 → 217 (−13 retiradas, +2 nuevas):
 - Estado Step 4.3.8: PASS (unitarias, lint, check y E2E; la única falla fue la intermitente `loteria-sala`, que pasa
   sola).
 - Bloqueos: ninguno.
+
+## Integración (agente integrador, 2026-10-06)
+- Unión con `main` (sprint 4, caché): había un conflicto en `server/main.ts`; quedó la versión de la fase 2 (sin
+  `filasNotion` ni `parcheCompletado`).
+- `cache_main_test.ts` (sprint 4) armaba su usuaria con filas de Notion de Inglés; ahora usa `alumnos.json`.
+  Unitarias: 237 pasaron, 0 fallaron.
+- E2E tras la unión: 15/15. actividades-datos, alta-alumnos, inicio-lunes, segunda-oportunidad, pronunciacion,
+  profe-grupo, ruta-profe, profe-diseno, examen-secundaria, autoguardado, login, portal, juegos, jugadores y
+  peticiones.
+- Con Postgres de prueba (`--pg`, tablas `stald_test_*`; 0 filas al terminar):
+  - `grupos` 11/11;
+  - `ingles-pro` falló 1 paso, «racha: entregar hoy».
+  - Causa: la entrega guardaba `enviadoEn` con la hora real, y el «hoy» del servidor de pruebas está fijo
+    (`HOY_FIJO`, cambio `pruebas-fecha-fija`).
+  - Se cambió a `ahoraIso()`, que en producción es idéntico; después pasó 32/32.
+- 4.2 verificada en producción, en solo lectura:
+  - `alumnos.json` tiene 8 personas: las 6 importadas de Notion (Angel, Fernando, Jesus, Laura, Marisol y Sofy) y
+    las altas Adela e Irving;
+  - incluye a todas las que tienen resultados (angel, jesus, laura, marisol y sofy).

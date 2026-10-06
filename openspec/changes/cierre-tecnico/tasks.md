@@ -32,7 +32,7 @@
   - correr `--prueba`, la migración real y `--delta`;
   - cuadrar los conteos;
   - jugar una partida de prueba y borrarla.
-- [ ] 4.2 Importar Notion: el profe abre Inglés y se verifica en la base que el registro tenga a todas las personas
+- [x] 4.2 Importar Notion: el profe abre Inglés y se verifica en la base que el registro tenga a todas las personas
   con correo
 - [ ] 4.3 Fase 2 (Inglés sin Notion), cambio post-apply (ver design §4 «Fase 2»):
   - [x] 4.3.0 Crear y usar la rama `feature/ingles-sin-notion-fase2` desde `origin/main` (OBLIGATORIO, primero)
