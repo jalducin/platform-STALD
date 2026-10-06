@@ -20,7 +20,7 @@
 
 ## 4. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 4.1 CI en verde antes del merge; confirmar que producción no define `HOY_FIJO` (sin efecto sin `ROWS_FIXTURE`)
+- [x] 4.1 CI en verde antes del merge; confirmar que producción no define `HOY_FIJO` (sin efecto sin `ROWS_FIXTURE`)
 
 ## 5. Documentación (OBLIGATORIO)
 

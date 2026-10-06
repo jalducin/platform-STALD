@@ -51,5 +51,5 @@
 
 ## 8. Producción (tras el merge, la integra el coordinador)
 
-- [ ] 8.1 Verificar en GitHub Pages: abrir un examen, contestar, recargar y ver las respuestas restauradas
-- [ ] 8.2 `openspec archive examen-autoguardado`
+- [ ] 8.1 Verificar en GitHub Pages: abrir un examen, contestar, recargar y ver las respuestas restauradas. Pendiente: el agente solo verificó que el código está publicado; falta la prueba en vivo
+- [x] 8.2 `openspec archive examen-autoguardado`

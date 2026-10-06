@@ -23,7 +23,7 @@
 
 ## 5. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 CI en verde antes del merge; luego, registro real de prueba con un correo `@example.com` y limpieza
+- [x] 5.1 CI en verde antes del merge; luego, registro real de prueba con un correo `@example.com` y limpieza
   (borrar el invitado y la cuenta de Auth)
 
 ## 6. Documentación (OBLIGATORIO)

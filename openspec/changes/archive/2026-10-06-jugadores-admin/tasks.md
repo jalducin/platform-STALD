@@ -22,7 +22,7 @@
 
 ## 5. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 CI en verde antes del merge; luego, verificar en solo lectura que `/juegos/jugadores` rechaza a quien no es admin
+- [x] 5.1 CI en verde antes del merge; luego, verificar en solo lectura que `/juegos/jugadores` rechaza a quien no es admin
 
 ## 6. Documentación (OBLIGATORIO)
 

@@ -48,7 +48,7 @@
 
 - [x] 6.1 UI: la E2E recorre el flujo en el navegador (recargar en sala, reanudar, descartar y salir) con capturas
   en `tests/e2e/salida/`. Estado: `correr.sh` trabaja sobre una copia temporal que borra al terminar
-- [ ] 6.2 Tras el merge (lo hace el usuario): abrir la página publicada, entrar a una sala y recargar
+- [ ] 6.2 Tras el merge (lo hace el usuario): abrir la página publicada, entrar a una sala y recargar. Pendiente: el agente solo verificó que el código está publicado (GitHub Pages sirve la versión nueva); falta la prueba con una sala real
 
 ## 7. Documentación (OBLIGATORIO)
 
@@ -57,4 +57,4 @@
 
 ## 8. Archivo
 
-- [ ] 8.1 `openspec archive juegos-recarga` después del merge (lo integra el usuario)
+- [x] 8.1 `openspec archive juegos-recarga` después del merge (lo integra el usuario)
