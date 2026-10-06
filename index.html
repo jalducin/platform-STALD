@@ -133,9 +133,9 @@
       <p class="hint" id="login-hint">Te mandamos un enlace a tu correo para entrar, sin contraseña. Usa el mismo correo con el que te registraron en tus clases.</p>
       <form id="code-form" novalidate hidden>
         <div class="ok-msg" id="code-sent">Revisa tu correo ✉️</div>
-        <p class="hint">Toca el enlace del correo para entrar. Si lo abres en otro aparato, escribe aquí el código de 6 números que viene en el mismo correo.</p>
+        <p class="hint">Toca el enlace del correo para entrar. Si lo abres en otro aparato, escribe aquí el código de números que viene en el mismo correo.</p>
         <label for="code">Código</label>
-        <input id="code" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+        <input id="code" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Código">
         <button class="btn" id="code-btn" type="submit">Entrar →</button>
         <button class="link-btn" id="code-back" type="button">Usar otro correo</button>
         <div id="code-ayuda"></div> <!-- «¿No te llegó?» y reenvío (comun/auth.js, openspec: examen-autoguardado) -->

@@ -25,7 +25,7 @@ async function entrarConCodigo(p, correo) {
   await p.waitForSelector('#login:not([hidden])', { timeout: 30000 });
   await p.fill('#email', correo); await p.click('#login-btn');
   await p.waitForSelector('#code-form:not([hidden])', { timeout: 10000 });
-  await p.fill('#code', '123456'); await p.click('#code-btn');
+  await p.fill('#code', '12345678'); await p.click('#code-btn'); // Supabase manda 8 dígitos
   await p.waitForSelector('#home:not([hidden]), #login-error:not([hidden]), #guest:not([hidden])', { timeout: 60000 });
 }
 
@@ -91,8 +91,8 @@ async function api(ruta, token) {
   ok('reenviar: vuelve a la cuenta regresiva', await p.$eval(reenviar, x => x.disabled && x.textContent.includes('Puedes pedir otro en')));
   await p.screenshot({ path: 'login-codigo.png' });
   await p.fill('#code', '12'); await p.click('#code-btn');
-  ok('código incompleto: aviso', (await p.textContent('#login-error')).includes('6 números'));
-  await p.fill('#code', '123456'); await p.click('#code-btn');
+  ok('código incompleto: aviso', (await p.textContent('#login-error')).includes('código de números'));
+  await p.fill('#code', '12345678'); await p.click('#code-btn'); // Supabase manda 8 dígitos
   await p.waitForSelector('#home:not([hidden])', { timeout: 60000 });
   ok('con sesión: saludo y tarjetas', (await p.textContent('#hello')).includes('Marisol') && JSON.stringify(await tiles(p)) === '["ingles","juegos"]');
   ok('sin aviso de transición ni panel de admin', (await p.$eval('#secure-notice', e => e.hidden)) && (await p.$eval('#admin-link', e => e.hidden)));
@@ -201,7 +201,7 @@ async function api(ruta, token) {
   ok('?juegos=1 → registro de Juegos con su API', p.url().includes('api='));
   await ctx.close();
 
-  // ---- Registro completo desde la entrada de Juegos: apodo → correo → código → dentro con su apodo ----
+  // ---- Registro directo desde la entrada de Juegos: apodo → correo → dentro, sin enlace ni código (openspec: registro-directo-juegos) ----
   ({ ctx, p } = await contexto(b));
   await p.goto(BASE + '/juegos.html' + Q);
   await p.waitForSelector('[data-a="registro"]', { timeout: 30000 });
@@ -212,20 +212,31 @@ async function api(ruta, token) {
   await p.fill('#reg-apodo', 'Registro'); await p.click('#f-registro button[type=submit]');
   ok('registro: sin aceptar avisa', (await p.textContent('#app')).includes('aceptar el aviso'));
   await p.fill('#reg-apodo', 'Registro'); await p.check('#reg-acepto'); await p.click('#f-registro button[type=submit]');
-  await p.waitForSelector('#stald-auth-correo');
-  ok('registro paso 2: pide el correo con el apodo', (await p.textContent('#app')).includes('Crea tu cuenta de Juegos') && (await p.textContent('#app')).includes('Registro'));
-  await p.fill('#stald-auth-correo', 'registro' + Date.now() + '@example.com'); await p.click('#stald-auth-enviar');
-  await p.waitForSelector('#stald-auth-codigo'); await p.fill('#stald-auth-codigo', '123456'); await p.click('#stald-auth-verificar');
+  await p.waitForSelector('#f-registro-correo');
+  ok('registro paso 2: pide el correo con el apodo y «Entrar a jugar»', (await p.textContent('#app')).includes('Registro') && (await p.textContent('#reg-entrar')).includes('Entrar a jugar'));
+  await p.fill('#reg-correo', 'no-es-correo'); await p.click('#reg-entrar');
+  ok('registro: correo inválido avisa', (await p.textContent('#app')).includes('correo válido'));
+  // Correo de una alumna: no hay registro directo, pasa a la entrada con enlace.
+  await p.fill('#reg-correo', 'marisol@example.com'); await p.click('#reg-entrar');
+  await p.waitForSelector('#stald-auth-correo', { timeout: 30000 });
+  ok('registro: correo de clase → entrada con enlace', (await p.textContent('#app')).includes('Ese correo es de las clases') && (await p.inputValue('#stald-auth-correo')) === 'marisol@example.com');
+  ok('registro: correo de clase sin sesión', await p.evaluate(() => localStorage.getItem('stald_sesion_prueba') === null));
+  // Correo nuevo: entra al instante, sin enlace ni código.
+  await p.goto(BASE + '/juegos.html?registro=1&' + Q.slice(1)); await p.waitForSelector('#f-registro');
+  await p.fill('#reg-apodo', 'Registro'); await p.check('#reg-acepto'); await p.click('#f-registro button[type=submit]');
+  await p.waitForSelector('#f-registro-correo');
+  const altas = []; p.on('request', q => { if (q.url().includes('/juegos/registro')) altas.push(q.postData()); });
+  await p.fill('#reg-correo', 'registro' + Date.now() + '@example.com'); await p.click('#reg-entrar');
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  ok('registro: entra con su apodo sin volver a pedirlo', (await p.textContent('#chip')).includes('Registro'));
+  ok('registro directo: entra con su apodo sin enlace ni código', (await p.textContent('#chip')).includes('Registro') && !(await p.$('#stald-auth-codigo')));
+  ok('registro directo: una sola petición con apodo y aviso', altas.length === 1 && altas[0].includes('"nombre":"Registro"') && altas[0].includes('"acepto":true'), String(altas.length));
   ok('registro: se borra el pendiente', await p.evaluate(() => localStorage.getItem('juegos_registro') === null));
   // Ya con sesión: «🆕 Registrar» cierra la sesión en este aparato y otra persona se registra ahí (openspec: registro-juegos-hub).
   ok('hub: botón «Registrar»', (await p.textContent('#registrar-btn')).includes('Registrar'));
   await p.click('#registrar-btn'); await p.waitForSelector('#f-registro', { timeout: 30000 });
   ok('Registrar: cierra la sesión y abre el registro', await p.evaluate(() => localStorage.getItem('stald_sesion_prueba') === null));
   await p.fill('#reg-apodo', 'Segunda'); await p.check('#reg-acepto'); await p.click('#f-registro button[type=submit]');
-  await p.waitForSelector('#stald-auth-correo'); await p.fill('#stald-auth-correo', 'segunda' + Date.now() + '@example.com'); await p.click('#stald-auth-enviar');
-  await p.waitForSelector('#stald-auth-codigo'); await p.fill('#stald-auth-codigo', '123456'); await p.click('#stald-auth-verificar');
+  await p.waitForSelector('#f-registro-correo'); await p.fill('#reg-correo', 'segunda' + Date.now() + '@example.com'); await p.click('#reg-entrar');
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
   ok('Registrar: la segunda persona entra con su apodo', (await p.textContent('#chip')).includes('Segunda'));
   await ctx.close();

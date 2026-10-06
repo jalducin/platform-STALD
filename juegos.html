@@ -551,15 +551,36 @@
       '<div class="row-btns"><button class="btn ghost" type="button" data-a="ya-tengo">Ya tengo cuenta</button><button class="btn" type="submit">Continuar →</button></div></form>' +
       (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
   }
-  function pantallaRegistroCorreo(apodo) {
+  function pantallaRegistroCorreo(apodo, msg) {
     limpiar(); chip.hidden = true;
-    StaldAuth.pintarEntrada(app, {
-      titulo: '🆕 Crea tu cuenta de Juegos',
-      texto: 'Paso 2 de 2: ' + apodo + ', escribe tu correo y te mandamos un enlace para confirmarlo, sin contraseña.',
-      correo: '',
-      alEntrar: () => iniciar(),
-    });
+    app.innerHTML = '<div class="card"><h1>🆕 Crea tu cuenta de Juegos</h1><p class="lead">Paso 2 de 2: ' + escapeHtml(apodo) + ', escribe tu correo y entra a jugar al instante.</p>' +
+      '<form id="f-registro-correo" novalidate><label for="reg-correo">Tu correo</label><input id="reg-correo" type="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com">' +
+      '<div class="row-btns"><button class="btn ghost" type="button" data-a="registro">← Cambiar apodo</button><button class="btn" type="submit" id="reg-entrar">🎮 Entrar a jugar</button></div></form>' +
+      (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
+    const i = document.getElementById('reg-correo'); if (i) i.focus();
   }
+  // Registro directo (sin abrir enlaces): el servidor crea la cuenta y da una llave de sesión de un solo uso. Los
+  // correos de las clases pasan a la entrada con enlace (esas cuentas ven calificaciones).
+  async function registrarDirecto(apodo, correo) {
+    const b = document.getElementById('reg-entrar'); if (b) { b.disabled = true; b.textContent = 'Entrando…'; }
+    let r;
+    try {
+      const res = await fetch(API_BASE + '/juegos/registro', { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ email: correo, nombre: apodo, acepto: true }) });
+      r = { ok: res.ok, status: res.status, body: await res.json().catch(() => ({})) };
+    } catch (e) { return pantallaRegistroCorreo(apodo, '⚠️ No pude conectarme. Revisa tu internet e intenta de nuevo.'); }
+    if (r.status === 409 && r.body.error === 'correo_de_clase') {
+      borrarRegistro(); limpiar(); chip.hidden = true;
+      return StaldAuth.pintarEntrada(app, { titulo: '📘 Ese correo es de las clases', texto: 'Para cuidar tus calificaciones, entra con el enlace que te mandamos a tu correo, sin contraseña.', correo, alEntrar: () => iniciar() });
+    }
+    if (!r.ok) {
+      const txt = { correo_invalido: 'Escribe un correo válido, por ejemplo tucorreo@gmail.com.', cupo_lleno: 'Ya no hay lugares para cuentas nuevas. Avísale a tu profe.', apodo_invalido: 'Tu apodo debe tener de 2 a 20 letras o números.' }[r.body.error];
+      return pantallaRegistroCorreo(apodo, txt || 'No se pudo crear tu cuenta (' + (r.body.error || r.status) + '). Intenta de nuevo.');
+    }
+    try { await StaldAuth.entrarConToken(r.body.token_hash, correo); } catch (e) { return pantallaRegistroCorreo(apodo, e.message); }
+    borrarRegistro();
+    iniciar();
+  }
+
 
   function pantallaInvitado(msg) {
     limpiar(); chip.hidden = true;
@@ -3325,6 +3346,14 @@
       if (!document.getElementById('reg-acepto').checked) { try { localStorage.setItem(REGISTRO_KEY, JSON.stringify({ apodo, acepto: false })); } catch (err) { /* sin almacenamiento */ } return pantallaRegistro('Para crear tu cuenta de Juegos necesitas aceptar el aviso.'); }
       try { localStorage.setItem(REGISTRO_KEY, JSON.stringify({ apodo, acepto: true })); } catch (err) { /* sin almacenamiento: se pedirá el apodo después */ }
       return pantallaRegistroCorreo(apodo);
+    }
+    if (e.target.id === 'f-registro-correo') {
+      e.preventDefault();
+      const correo = document.getElementById('reg-correo').value.trim().toLowerCase();
+      const reg = registroPendiente();
+      if (!reg) return pantallaRegistro();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return pantallaRegistroCorreo(reg.apodo, 'Escribe un correo válido, por ejemplo tucorreo@gmail.com.');
+      return registrarDirecto(reg.apodo, correo);
     }
     if (e.target.id === 'f-invitado') {
       e.preventDefault();
