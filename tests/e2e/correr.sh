@@ -21,7 +21,8 @@ set -u
 E2E=$(cd "$(dirname "$0")" && pwd)
 RAIZ=$(cd "$E2E/../.." && pwd)
 SALIDA=$E2E/salida
-FIXTURE=$RAIZ/tests/fixtures/rows-fixture.json
+FIXTURE=$RAIZ/tests/fixtures/rows-fixture.json        # Secundaria y cuentas (Inglés ya no lee Notion)
+ALUMNOS_EJEMPLO=$RAIZ/tests/fixtures/alumnos-ejemplo.json # alumnos y alumnas de ejemplo de Inglés (registro)
 PUERTO_API=8817
 PUERTO_WEB=8795
 DATOS_ORIGEN=""
@@ -186,6 +187,20 @@ preparar() { # $1 = fase
   # Contenido de prueba del repo (tests/fixtures/datos, solo datos de ejemplo): se superpone antes de arrancar el
   # servidor, que carga la copia en memoria una sola vez (MemoryStore.fromDir).
   cp -r "$RAIZ/tests/fixtures/datos/." "$COPIA/"
+  # Inglés ya no lee Notion (openspec: cierre-tecnico, fase 2): las personas de ejemplo (@example.com) entran por el
+  # registro. Se combinan con el alumnos.json de la copia: solo se agregan los correos que falten; nunca se pisan ni se
+  # borran las entradas de la copia.
+  "$PY" - "$(nativo "$COPIA")/alumnos.json" "$(nativo "$ALUMNOS_EJEMPLO")" <<'PY' || return 1
+import json, sys
+destino, ejemplo = sys.argv[1], sys.argv[2]
+try:
+    registro = json.load(open(destino, encoding="utf-8"))
+except FileNotFoundError:
+    registro = {}
+for correo, alumno in json.load(open(ejemplo, encoding="utf-8")).items():
+    registro.setdefault(correo, alumno)
+json.dump(registro, open(destino, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+PY
   # Las pruebas parten de cero: sin resultados del profe ni del examen del viernes 2026-10-02.
   [ -d "$COPIA/resultados" ] && find "$COPIA/resultados" -name profe.json -delete
   rm -f "$COPIA"/resultados/examen-2026-10-02/*.json
