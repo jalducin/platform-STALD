@@ -1,17 +1,14 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { attachUsers, extractInglesRow, filterForEmail, normalizeEmail } from "./rows.ts";
+import { attachUsers, extractSecundariaRow, filterForEmail, normalizeEmail } from "./rows.ts";
 
-function inglesPage(overrides: Record<string, unknown> = {}) {
+// Página de la base «📖 Clases» (Secundaria). Inglés ya no lee Notion (openspec: cierre-tecnico, fase 2).
+function secundariaPage(overrides: Record<string, unknown> = {}) {
   return {
     url: "https://notion.so/x",
-    last_edited_time: "2026-09-25T18:30:00.000Z",
     properties: {
-      "Name": { title: [{ plain_text: "Lesson 28" }] },
-      "Módulo": { select: { name: "Fonetica 1B" } },
-      "Tipo": { select: { name: "🖥️ Virtual QL" } },
+      "Name": { title: [{ plain_text: "Lunes - Matemáticas" }] },
       "Completado": { checkbox: false },
-      "Fecha Entrega ": { date: { start: "2026-10-01" } },
-      "Nombre": { select: { name: "Marisol" } },
+      "Fecha entrega": { date: { start: "2026-10-01" } },
       "Usuario": { people: [{ id: "u1" }] },
       ...overrides,
     },
@@ -23,40 +20,9 @@ const users = new Map([
   ["u2", { email: "otra@example.com", name: "Otra" }],
 ]);
 
-Deno.test("extractInglesRow lee 'Fecha Entrega ' (con espacio) y 'Nombre'", () => {
-  const row = extractInglesRow(inglesPage());
-  assertEquals(row.fecha, "2026-10-01");
-  assertEquals(row.alumno, "Marisol");
-  assertEquals(row.label, "Fonetica 1B · 🖥️ Virtual QL");
-});
-
-Deno.test("extractInglesRow tolera propiedades vacías", () => {
-  const row = extractInglesRow(inglesPage({ "Fecha Entrega ": { date: null }, "Nombre": { select: null }, "Tipo": { select: null } }));
-  assertEquals(row.fecha, null);
-  assertEquals(row.alumno, null);
-  assertEquals(row.label, "Fonetica 1B");
-  assertEquals(row.calificacion, null);
-  assertEquals(row.dificultad, null);
-});
-
-Deno.test("extractInglesRow lee calificación, dificultad y última edición", () => {
-  const row = extractInglesRow(inglesPage({
-    "Calificación": { rich_text: [{ plain_text: "93% " }, { plain_text: "✅" }] },
-    "Dificultad": { select: { name: "A2" } },
-  }));
-  assertEquals(row.calificacion, "93% ✅");
-  assertEquals(row.dificultad, "A2");
-  assertEquals(row.editadoEn, "2026-09-25T18:30:00.000Z");
-});
-
-Deno.test("calificación vacía se normaliza a null", () => {
-  const row = extractInglesRow(inglesPage({ "Calificación": { rich_text: [] } }));
-  assertEquals(row.calificacion, null);
-});
-
 Deno.test("alumna ve solo sus filas y sin correos", () => {
   const rows = attachUsers(
-    [extractInglesRow(inglesPage()), extractInglesRow(inglesPage({ "Usuario": { people: [{ id: "u2" }] } }))],
+    [extractSecundariaRow(secundariaPage()), extractSecundariaRow(secundariaPage({ "Usuario": { people: [{ id: "u2" }] } }))],
     users,
   );
   const res = filterForEmail(rows, "alumna@example.com", "admin@example.com");
@@ -68,14 +34,14 @@ Deno.test("alumna ve solo sus filas y sin correos", () => {
 });
 
 Deno.test("admin ve todo", () => {
-  const rows = attachUsers([extractInglesRow(inglesPage()), extractInglesRow(inglesPage({ "Usuario": { people: [] } }))], users);
+  const rows = attachUsers([extractSecundariaRow(secundariaPage()), extractSecundariaRow(secundariaPage({ "Usuario": { people: [] } }))], users);
   const res = filterForEmail(rows, "admin@example.com", "admin@example.com");
   assertEquals(res.isAdmin, true);
   assertEquals(res.rows.length, 2);
 });
 
 Deno.test("sin admin configurado nadie es admin", () => {
-  const rows = attachUsers([extractInglesRow(inglesPage())], users);
+  const rows = attachUsers([extractSecundariaRow(secundariaPage())], users);
   const res = filterForEmail(rows, "", "");
   assertEquals(res.isAdmin, false);
   assertEquals(res.rows.length, 0);
@@ -87,12 +53,8 @@ Deno.test("normalizeEmail recorta y pasa a minúsculas", () => {
 });
 
 Deno.test("título: se lee de la propiedad de tipo title aunque no se llame 'Name'", () => {
-  const page = inglesPage({ "": { type: "title", title: [{ plain_text: "📋 A1 Test #1 — " }, { plain_text: "Verbo TO BE" }] } });
+  const page = secundariaPage({ "": { type: "title", title: [{ plain_text: "Lunes - " }, { plain_text: "Matemáticas" }] } });
   delete (page.properties as Record<string, unknown>)["Name"];
-  assertEquals(extractInglesRow(page).name, "📋 A1 Test #1 — Verbo TO BE");
-  assertEquals(extractInglesRow(inglesPage({ "Name": { type: "title", title: [] } })).name, "(sin título)");
-});
-
-Deno.test("extractInglesRow incluye el id de la página", () => {
-  assertEquals(extractInglesRow({ ...inglesPage(), id: "3ea1c6b4-f8b5-812b" }).id, "3ea1c6b4-f8b5-812b");
+  assertEquals(extractSecundariaRow(page).name, "Lunes - Matemáticas");
+  assertEquals(extractSecundariaRow(secundariaPage({ "Name": { type: "title", title: [] } })).name, "(sin título)");
 });

@@ -1,6 +1,6 @@
 // Alta de alumnos y alumnas de Inglés desde la página (openspec: alta-alumnos).
-// Registro en el repo privado: alumnos.json → { "<correo>": { nombre, alta } }. Se suma a la identidad que
-// viene de Notion (campo "Nombre" + persona): sin cuenta de Notion, el correo queda ligado a ese nombre.
+// Registro: alumnos.json → { "<correo>": { nombre, alta, inicio?, origen? } } (en Postgres en producción). Desde la
+// fase 2 de «Inglés sin Notion» (openspec: cierre-tecnico) es la única fuente de identidad de Inglés.
 import { slugAlumno } from "./motor.ts";
 import type { InglesRow } from "./rows.ts";
 import type { Store } from "./store.ts";
@@ -11,7 +11,7 @@ export interface AlumnoRegistrado {
   nombre: string;
   alta: string;
   inicio?: string; // lunes en que empieza (AAAA-MM-DD); antes no ve atrasos (openspec: inicio-lunes-alumnos)
-  origen?: "notion"; // importada de Notion (openspec: cierre-tecnico)
+  origen?: "notion"; // importada de Notion en la fase 1 (openspec: cierre-tecnico); hoy solo informativo
 }
 
 // Lunes siguiente (estrictamente posterior) a la fecha del alta en CDMX (UTC−6, sin horario de verano).
@@ -47,28 +47,9 @@ export async function leerRegistro(store: Store): Promise<RegistroAlumnos> {
   return v;
 }
 
-// Copia al registro a cada persona de Notion con nombre y correo que aún no esté (openspec: cierre-tecnico, fase 1).
-// Nunca pisa ni borra; sin `inicio`, porque ya llevaba el curso. Idempotente.
-export function importarNotion(registro: RegistroAlumnos, filas: InglesRow[], ahora: string): { registro: RegistroAlumnos; importados: number } {
-  const r: RegistroAlumnos = { ...registro };
-  let importados = 0;
-  for (const f of filas) {
-    if (!f.alumno) continue;
-    for (const email of f.userEmails) {
-      const e = email.trim().toLowerCase();
-      if (!e || r[e]) continue;
-      r[e] = { nombre: f.alumno, alta: ahora, origen: "notion" };
-      importados++;
-    }
-  }
-  return { registro: r, importados };
-}
-
-// Filas de Notion sin alumno (campo "Nombre" vacío) no pertenecen a nadie: se ignoran (openspec: ingles-sin-nombre).
-export const sinHuerfanas = (filas: InglesRow[]): InglesRow[] => filas.filter((r) => !!r.alumno);
-
 // Liga cada correo registrado a las filas con su "Nombre"; si no tiene filas, agrega una fila de identidad
-// (source "registro", sin tarea) para que el portal, Inglés, actividades y Juegos lo reconozcan.
+// (source "registro", sin tarea) para que el portal, Inglés, actividades y Juegos lo reconozcan. En producción se
+// llama con `filas = []` (Inglés ya no lee Notion).
 export function aplicarAlumnos(filas: InglesRow[], registro: RegistroAlumnos): InglesRow[] {
   const entradas = Object.entries(registro);
   if (!entradas.length) return filas;
@@ -94,7 +75,7 @@ export interface DepsAlumnos {
   email: string;
   admin: string;
   store: Store;
-  filas(): Promise<InglesRow[]>; // filas de Notion (sin el registro)
+  filas(): Promise<InglesRow[]>; // filas externas al registro; en producción, [] (Inglés ya no lee Notion)
   ahora?: () => string;
   // Inscribe al grupo elegido en el alta (openspec: ingles-grupos); ausente si no hay base de datos.
   inscribir?: (nombre: string, grupo: string, desde: string) => Promise<boolean>;

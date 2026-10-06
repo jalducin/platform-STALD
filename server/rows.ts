@@ -1,4 +1,4 @@
-// Lógica pura: extracción de filas de Notion y filtrado por correo.
+// Lógica pura: extracción de filas de Notion (Secundaria) y filtrado por correo.
 // Sin llamadas de red, para poder probarla con `deno test`.
 
 export interface UserInfo {
@@ -24,9 +24,12 @@ export interface SecundariaRow extends WithUsers {
   url: string;
 }
 
+// Fila de Inglés. Desde la fase 2 de «Inglés sin Notion» (openspec: cierre-tecnico) el servidor solo produce filas
+// "registro" (identidad de un alumno o alumna del registro, sin tarea); "clases_ingles" queda para pruebas de
+// funciones que aceptan filas externas al registro.
 export interface InglesRow extends WithUsers {
-  source: "clases_ingles" | "registro"; // "registro": fila de identidad de un alumno dado de alta en la página (sin tarea)
-  id: string; // id de la página de Notion (para marcar "Completado")
+  source: "clases_ingles" | "registro";
+  id: string;
   name: string;
   label: string;
   completado: boolean;
@@ -47,13 +50,7 @@ function peopleIds(p: NotionPage): string[] {
   return (p?.["Usuario"]?.people || []).map((u: any) => u.id);
 }
 
-// Texto plano de una propiedad rich_text de Notion.
-function plainText(prop: NotionPage): string {
-  // deno-lint-ignore no-explicit-any
-  return (prop?.rich_text || []).map((t: any) => t.plain_text || "").join("").trim();
-}
-
-// La propiedad de título puede llamarse como sea (en "📖 Clases Inglés" hoy no tiene nombre).
+// La propiedad de título puede llamarse como sea (no siempre se llama "Name").
 function title(p: NotionPage): string {
   // deno-lint-ignore no-explicit-any
   const prop = Object.values(p || {}).find((v: any) => v?.type === "title" || Array.isArray(v?.title)) as NotionPage | undefined;
@@ -75,29 +72,6 @@ export function extractSecundariaRow(page: NotionPage): SecundariaRow {
       : (real?.date?.start || null),
     semana: p["Semana"]?.select?.name || null,
     dia: p["Día "]?.select?.name || null,
-    userIds: peopleIds(p),
-    userEmails: [],
-    userNames: [],
-    url: page.url,
-  };
-}
-
-// Base "📖 Clases Inglés". Ojo: "Fecha Entrega " lleva espacio final.
-export function extractInglesRow(page: NotionPage): InglesRow {
-  const p = page.properties;
-  const modulo = p["Módulo"]?.select?.name || "";
-  const tipo = p["Tipo"]?.select?.name || "";
-  return {
-    source: "clases_ingles",
-    id: page.id,
-    name: title(p),
-    label: [modulo, tipo].filter(Boolean).join(" · "),
-    completado: !!p["Completado"]?.checkbox,
-    fecha: p["Fecha Entrega "]?.date?.start || null,
-    alumno: p["Nombre"]?.select?.name || null,
-    calificacion: plainText(p["Calificación"]) || null,
-    dificultad: p["Dificultad"]?.select?.name || null,
-    editadoEn: page.last_edited_time || null,
     userIds: peopleIds(p),
     userEmails: [],
     userNames: [],
