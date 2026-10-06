@@ -42,6 +42,9 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - "Cerrar sesión" en cualquier página borra las tres (y la sesión).
   - Además del correo, se permiten preferencias de interfaz sin datos personales, como
     `juegos_pref = { musica, volumen }` (música de fondo de `juegos.html`).
+  - Estado de juego para no perderlo al recargar (`juegos.html`, openspec: juegos-recarga), con el id opaco del
+    jugador (`quien`), nunca el correo, y caducidad de 3 h: `juegos_sala_activa = { codigo, quien, t, marcas? }`
+    (sala en curso) y `juegos_partida_individual = { juego, quien, t, … }` (instantánea del juego individual).
   - No guardar filas ni otros datos personales.
 - La página **no decide permisos**: muestra lo que devuelve el backend. Ocultar algo en el cliente no
   cuenta como control de acceso.
@@ -93,6 +96,14 @@ Cada página debe manejar y mostrar de forma explícita:
     baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el
   enlace, "📤 Compartir" y un QR (qrcodejs de cdnjs, cargado solo en esa pantalla).
+- **Recargar no pierde la partida** (openspec: juegos-recarga; detalle y tabla de juegos en su `design.md`):
+  - en una sala, la URL queda con `?sala=<código>` (`history.replaceState`, conserva `?api=`) y recargar vuelve a
+    ella; si se abre Juegos sin el código, reconecta con `juegos_sala_activa` solo si el servidor confirma que la
+    persona sigue dentro. Salir o terminar limpia la URL y la clave;
+  - los juegos de preguntas individuales (motor `quiz`) y el Sudoku se reanudan («¿Continuar tu partida de X?»);
+    los demás individuales piden confirmar con `beforeunload`. Las pantallas de elegir nivel o modo usan
+    `marco(id, { menu: true })` y no cuentan como partida;
+  - durante una partida, `html.jugando` aplica `overscroll-behavior-y: contain` (sin «jalar para recargar»).
 
 ## 5. Código compartido
 
