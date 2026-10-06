@@ -89,3 +89,14 @@
 ## Resultado
 - Estado Step 4: PASS
 - Bloqueos: ninguno. Pendiente: migrar `grupos` e `ingles-pro` cuando se pueda correr con `--pg`.
+
+## Integración (agente integrador, 2026-10-06)
+- Unión con `main`, que ya traía el sprint 4 (caché), la fase 2 de Inglés sin Notion y el sprint 6 (menú Admin).
+  - Hubo un conflicto en `e2e-jugadores.js`, que el sprint 6 había reescrito: quedó su versión, migrada al ayudante
+    (`abrirPagina` con `contexto: { colorScheme, acceptDownloads }`).
+- `node --check` limpio en todas las pruebas y en `lib/`.
+- Suite E2E completa con todo integrado, en los puertos 8867/8845: **36 corridas, 36 PASS, 0 FAIL**, 2 omitidas
+  (`grupos` e `ingles-pro` requieren `--pg`; las dos pasaron con `--pg` en la integración de la fase 2).
+- Siguen con su función propia, porque no se migraron: `e2e-ingles-pro.js` (solo con `--pg`), `e2e-login.js` (su
+  `contexto` registra las peticiones de cada página) y `e2e-peticiones.js` (sprint 4: mide peticiones con su propio
+  proxy).
