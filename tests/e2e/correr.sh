@@ -32,7 +32,7 @@ PEDIDAS=()
 
 # Orden canónico: Inglés (comparten servidor), las que necesitan datos propios, plataforma y juegos, y al final
 # la de login con la transición terminada.
-ORDEN=(alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno examen-secundaria
+ORDEN=(alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno examen-secundaria autoguardado
   grupos ingles-pro
   login portal juegos partidas enlace-sala
   conquian-estres clasicos fusion sudoku dragon-run puntos-tipo basta-rondas loteria-sala una-sala una-robo
@@ -47,7 +47,7 @@ ORDEN=(alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo r
 #   despues sin Postgres y con LOGIN_TRANSICION_HASTA en el pasado
 fase_de() {
   case $1 in
-    alta-alumnos | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | examen-secundaria) echo ingles ;;
+    alta-alumnos | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | examen-secundaria | autoguardado) echo ingles ;;
     grupos) echo grupos ;;
     ingles-pro) echo pro ;;
     login-despues) echo despues ;;
