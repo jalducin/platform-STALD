@@ -8,8 +8,8 @@ const BASE = process.env.BASE;
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 
-async function pagina(b, email, viewport = { width: 390, height: 844 }) {
-  const ctx = await b.newContext({ viewport, acceptDownloads: true });
+async function pagina(b, email, viewport = { width: 390, height: 844 }, colorScheme = 'light') {
+  const ctx = await b.newContext({ viewport, colorScheme, acceptDownloads: true });
   await ctx.addInitScript(e => { localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e })); }, email);
   const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
   await p.goto(BASE + '/juegos.html?api=' + encodeURIComponent(API));
@@ -62,7 +62,7 @@ const sinScrollLateral = p => p.evaluate(() => document.documentElement.scrollWi
   let v = await visibles(ad);
   ok('buscador: solo coincide Valeria', v.length === 1 && v[0].includes('valeria'), v.join(' | '));
   ok('buscador: dice cuántas coinciden', (await ad.textContent('#adm-resumen')).includes('1 de'), await ad.textContent('#adm-resumen'));
-  await ad.fill('#adm-buscar', 'VALERIA GÓMEZ');
+  await ad.fill('#adm-buscar', 'VALERÍA');
   v = await visibles(ad);
   ok('buscador: sin importar mayúsculas ni acentos', v.length === 1, v.join(' | '));
   await ad.fill('#adm-buscar', 'zzzz');
@@ -102,6 +102,7 @@ const sinScrollLateral = p => p.evaluate(() => document.documentElement.scrollWi
   await ad.click('[data-adm="fotos"]');
   ok('fotos: lista o aviso de que no hay', !!(await ad.$('#adm-panel .fotos-grid, #adm-panel .adm-vacio')));
   ok('fotos: sin botón de CSV', !(await ad.$('#adm-tools [data-a^="csv"]')));
+  await ad.screenshot({ path: 'admin-fotos-390.png', fullPage: true });
   await ad.click('[data-adm="invitados"]');
 
   // Preferencia guardada
@@ -110,8 +111,8 @@ const sinScrollLateral = p => p.evaluate(() => document.documentElement.scrollWi
   await abrirAdmin(ad);
   ok('preferencia: al volver abre en «Invitados»', (await activa(ad)) === 'invitados');
 
-  // Escritorio: encabezados fijos y una fuente con error que no tapa a las demás
-  const es = await pagina(b, 'admin@example.com', { width: 1280, height: 800 });
+  // Escritorio (modo oscuro): encabezados fijos y una fuente con error que no tapa a las demás
+  const es = await pagina(b, 'admin@example.com', { width: 1280, height: 800 }, 'dark');
   let fallar = true;
   await es.route('**/juegos/invitados*', r => fallar ? r.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"falla_de_prueba"}' }) : r.continue());
   await es.evaluate(() => localStorage.setItem('juegos_admin_sub', 'jugadores'));
