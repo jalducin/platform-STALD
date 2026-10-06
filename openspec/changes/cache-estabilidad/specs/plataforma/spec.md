@@ -44,7 +44,8 @@ memoria. El ranking de Juegos SHALL guardarse 30 s.
 
 #### Scenario: Alternar pestañas del ranking
 - **WHEN** una jugadora abre el ranking y alterna 4 veces entre Individuales y Partidas
-- **THEN** la página pide cada tipo una vez (el flujo hace como máximo 3 peticiones al API, antes 12)
+- **THEN** la página pide cada tipo una vez (el flujo hace como máximo 6 peticiones al API contando las 2 fotos de
+  avatar; antes 12)
 
 #### Scenario: Otra persona en el mismo aparato
 - **WHEN** alguien cierra sesión y otra persona entra en la misma pestaña
