@@ -13,9 +13,10 @@ import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro, sinHuerfanas, im
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
-import { mxToday, slugAlumno } from "./motor.ts";
+import { ahoraIso, mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
-import { configPublica, handleEnlace, LOGIN_TRANSICION_HASTA, quienEs } from "./auth.ts";
+import { configPublica, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, quienEs } from "./auth.ts";
+import type { Cuenta } from "./jugadores.ts";
 import { handleResumen } from "./resumen.ts";
 
 const NOTION_VERSION = "2022-06-28";
@@ -78,6 +79,18 @@ async function loadRows<T extends { userIds: string[]; userEmails: string[]; use
 
 // En modo fixture (pruebas locales) las marcas se guardan en memoria y se aplican al leer.
 const marcasFixture = new Map<string, { completado: boolean; en: string }>();
+
+// Cuentas de acceso para la vista de jugadores del admin (openspec: jugadores-admin): Supabase Auth con la llave de
+// servicio, 60 s en memoria; en pruebas, la clave `cuentas` de ROWS_FIXTURE.
+let cacheCuentas: { t: number; v: Cuenta[] } | null = null;
+async function cuentas(): Promise<Cuenta[]> {
+  if (env("ROWS_FIXTURE")) return (JSON.parse(await Deno.readTextFile(env("ROWS_FIXTURE"))).cuentas ?? []) as Cuenta[];
+  if (!env("SUPABASE_URL") || !env("SUPABASE_SERVICE_KEY")) return [];
+  if (cacheCuentas && Date.now() - cacheCuentas.t < 60_000) return cacheCuentas.v;
+  const v = await listarCuentas({ supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY") });
+  cacheCuentas = { t: Date.now(), v };
+  return v;
+}
 
 // Filas de Inglés con los alumnos y alumnas dados de alta en la página (alumnos.json).
 async function filasIngles(): Promise<InglesRow[]> {
@@ -221,7 +234,7 @@ export async function handler(req: Request): Promise<Response> {
           if (importados && await store.put(RUTA_ALUMNOS, registro, doc?.sha ?? null, `alumnos: ${importados} importados de Notion`)) clearCacheAlumnos();
         } catch (e) { console.error("importar Notion:", e instanceof Error ? e.message : e); }
       }
-      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion, inscribir }, json);
+      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion, inscribir, ahora: ahoraIso }, json);
     }
 
     // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada)
@@ -287,7 +300,7 @@ export async function handler(req: Request): Promise<Response> {
     const iJuegos = url.pathname.indexOf("/juegos/");
     if (iJuegos !== -1) {
       return await handleJuegos(req, url.pathname.slice(iJuegos + "/juegos".length), email, {
-        store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), realtime,
+        store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), realtime, cuentas,
       }, json);
     }
 

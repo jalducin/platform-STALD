@@ -41,7 +41,7 @@ falso de sesión), `PORT` y `PERMITIR_HOY=1` (permite `?hoy=`).
 | Ruta | Método | Respuesta |
 |---|---|---|
 | `/config` | GET (sin sesión) | `{ supabaseUrl, publishableKey }`; con `ROWS_FIXTURE`, `{ prueba: true }`; sin variables, 503 `sin_config` |
-| `/auth/enlace` | POST `{ email }` | Solo admin **con token**: `{ email, enlace, codigo }` (Admin API `generate_link`, tipo `magiclink`, `redirect_to` = `SITIO_URL` o el portal). 401 sin token, 403 `solo_admin`, 400 `correo_invalido`, 404 `sin_cuenta`, 503 `auth_no_disponible` |
+| `/auth/enlace` | POST `{ email, destino? }` | Solo admin **con token**: `{ email, enlace, codigo }` (Admin API `generate_link`, tipo `magiclink`, `redirect_to` = `SITIO_URL` o el portal; con `destino: "juegos"`, `<sitio>/juegos.html`). 401 sin token, 403 `solo_admin`, 400 `correo_invalido`, 404 `sin_cuenta`, 503 `auth_no_disponible` |
 
 Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth.ts --correos <archivo> [--prueba]`
 (Admin API `POST /auth/v1/admin/users` con `email_confirm: true`; el archivo de correos no va al repo).
@@ -66,6 +66,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
 | `/juegos/ranking` | GET (`?semana=<lunes>&tipo=individual\|partidas`) | Top 20 del tipo (solo quien tiene puntos de ese tipo) `{ pos, nombre, tipo, total, totalIndividual, totalPartidas, partidas, juegos }` y `yo`. 400 `tipo_invalido`. Sin correos |
 | `/juegos/invitado` | POST `{ nombre, acepto: true }` | Registra o hace entrar a un invitado; `{ ya: true }` si el correo ya es alumno o alumna. 400 si falta aceptar o el apodo es inválido; 429 con 500 invitados |
 | `/juegos/invitados` | GET | Solo admin: correos, apodos, visitas y puntos de la semana, para análisis |
+| `/juegos/jugadores` | GET | Solo admin: `{ semana, jugadores[], pendientes[], cuentasError }`. Jugadores = alumnos, alumnas e invitados con puntos y partidas de la semana; pendientes = cuentas de Supabase Auth (`listarCuentas`, 60 s en memoria) que no terminaron: `sin confirmar` o `sin apodo`. Con `ROWS_FIXTURE`, las cuentas salen de su clave `cuentas` (cambio `jugadores-admin`) |
 
 - **Semana:** de lunes a domingo, hora de CDMX.
 - **Total:** suma del mejor puntaje de cada juego.

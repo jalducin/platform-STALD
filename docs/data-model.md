@@ -214,7 +214,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   moderación del admin.
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.
   - Son los únicos correos que guarda el repo de datos. El invitado aceptó el aviso al registrarse.
-  - Solo el admin los ve (`/juegos/invitados`).
+  - Solo el admin los ve (`/juegos/invitados` y la pestaña «Jugadores», `/juegos/jugadores`, que suma alumnos,
+    alumnas y registros pendientes de las cuentas de acceso).
 - `contenido/profe/`: ruta de estudio del profe (cambio `ruta-profe`), mismo formato que `contenido/`:
   - `plan.json`: `{ titulo, subtitulo, nivelActual, meta, horizonte, horasSemana, reparto[], rutinaDiaria[], reglas[],
     semanas[{ id, n, titulo, objetivo, temas[], busuu, extra, elementos[{ id, tipo, titulo, fecha }] }] }`;

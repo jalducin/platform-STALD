@@ -9,6 +9,7 @@
 #   --puerto-api <n>        puerto del servidor Deno (8817)
 #   --puerto-web <n>        puerto de los estáticos (8795)
 #   --transicion-terminada  el servidor corre con LOGIN_TRANSICION_HASTA=2026-01-01 en todas las fases
+#   --hoy <AAAA-MM-DD|real> «hoy» del servidor de pruebas (HOY_FIJO; por omisión 2026-10-04, el día de las E2E)
 #   --lista                 lista las pruebas y su fase, y sale
 #   prueba ...              nombres cortos (poker, ingles-pro, ...); sin nombres corre todas
 #
@@ -32,9 +33,9 @@ PEDIDAS=()
 
 # Orden canónico: Inglés (comparten servidor), las que necesitan datos propios, plataforma y juegos, y al final
 # la de login con la transición terminada.
-ORDEN=(alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno examen-secundaria
+ORDEN=(actividades-datos alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno examen-secundaria autoguardado
   grupos ingles-pro
-  login portal juegos partidas enlace-sala juegos-recarga
+  login portal juegos jugadores partidas enlace-sala juegos-recarga
   conquian-estres clasicos fusion sudoku dragon-run puntos-tipo basta-rondas loteria-sala una-sala una-robo
   poker cartas-espanolas ajedrez ajustes-salas ritmo avatar-foto
   login-despues)
@@ -47,7 +48,7 @@ ORDEN=(alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo r
 #   despues sin Postgres y con LOGIN_TRANSICION_HASTA en el pasado
 fase_de() {
   case $1 in
-    alta-alumnos | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | examen-secundaria) echo ingles ;;
+    actividades-datos | alta-alumnos | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | examen-secundaria | autoguardado) echo ingles ;;
     grupos) echo grupos ;;
     ingles-pro) echo pro ;;
     login-despues) echo despues ;;
@@ -56,8 +57,11 @@ fase_de() {
 }
 solo_pg() { [ "$1" = grupos ] || [ "$1" = pro ]; }
 
-uso() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; }
+uso() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; }
 error() { echo "ERROR: $*" >&2; exit 2; }
+
+# «Hoy» del servidor de pruebas (openspec: pruebas-fecha-fija): las E2E se escribieron con este día.
+HOY=2026-10-04
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -67,6 +71,7 @@ while [ $# -gt 0 ]; do
     --puerto-api) PUERTO_API=${2:-}; shift 2 ;;
     --puerto-web) PUERTO_WEB=${2:-}; shift 2 ;;
     --transicion-terminada) TRANSICION=2026-01-01; shift ;;
+    --hoy) HOY=${2:-}; [ "$HOY" = real ] && HOY=; shift 2 ;;
     --lista) for t in "${ORDEN[@]}"; do printf '%-22s %s\n' "$t" "$(fase_de "$t")"; done; exit 0 ;;
     -h | --help) uso; exit 0 ;;
     -*) uso; error "opción desconocida: $1" ;;
@@ -148,7 +153,7 @@ levantar() { # $1 = fase
   (cd "$RAIZ" && exec env DATA_DIR="$(nativo "$COPIA")" ROWS_FIXTURE="$(nativo "$FIXTURE")" \
     SUPER_ADMIN_EMAIL=admin@example.com PERMITIR_HOY=1 PORT="$PUERTO_API" \
     SUPABASE_URL="$supa_url" SUPABASE_SERVICE_KEY="$supa_key" SUPABASE_PUBLISHABLE_KEY= \
-    STALD_TABLAS=stald_test_ LOGIN_TRANSICION_HASTA="$hasta" NOTION_TOKEN= GITHUB_TOKEN= \
+    STALD_TABLAS=stald_test_ LOGIN_TRANSICION_HASTA="$hasta" HOY_FIJO="$HOY" NOTION_TOKEN= GITHUB_TOKEN= \
     "${DENO[@]}" run -A server/main.ts) > "$SALIDA/servidor-$fase.log" 2>&1 &
   PIDS+=($!)
   "$PY" -m http.server "$PUERTO_WEB" --bind 127.0.0.1 --directory "$(nativo "$RAIZ")" > "$SALIDA/estaticos.log" 2>&1 &
@@ -238,7 +243,7 @@ for t in "${ORDEN[@]}"; do
 done
 
 : > "$SALIDA/resumen.txt"
-echo "== E2E $(date '+%Y-%m-%d %H:%M') · API $API · estáticos $BASE · Postgres de prueba: $([ $PG = 1 ] && echo sí || echo no)" | tee -a "$SALIDA/resumen.txt"
+echo "== E2E $(date '+%Y-%m-%d %H:%M') · hoy del servidor ${HOY:-real} · API $API · estáticos $BASE · Postgres de prueba: $([ $PG = 1 ] && echo sí || echo no)" | tee -a "$SALIDA/resumen.txt"
 FALLAS=0; OMITIDAS=0; TOTAL=0; ACTUAL=""
 for t in "${SELECCION[@]}"; do
   fase=$(fase_de "$t")
