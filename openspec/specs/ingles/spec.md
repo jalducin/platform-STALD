@@ -164,14 +164,6 @@ Después SHALL organizar el resto en pestañas: Esta semana, Plan del mes, Mi gr
 - **WHEN** el profe abre su vista en el celular
 - **THEN** todo va en una sola columna, sin desplazamiento horizontal de la página
 
-### Requirement: Sin filas huérfanas en Inglés
-El sistema SHALL ignorar las filas de Notion de Inglés que no tienen un alumno o alumna asignado.
-
-#### Scenario: Fila vacía en Notion
-- **WHEN** la base de Notion tiene una fila sin nombre de alumno
-- **THEN** el admin no ve el grupo "Sin nombre asignado"
-- **AND** esa fila no cuenta en ningún tablero
-
 ### Requirement: Grupos de clase
 El sistema SHALL permitir al admin crear y editar grupos, con nombre, nivel, horario, enlace de Meet y color. Cada
 alumno o alumna SHALL pertenecer a un solo grupo vigente.
