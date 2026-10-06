@@ -310,7 +310,7 @@
 
 <script src="juegos/cartas.js?v=2"></script>
 <script src="juegos/ajedrez.js?v=1"></script>
-<script src="comun/auth.js?v=4"></script>
+<script src="comun/auth.js?v=5"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -384,22 +384,26 @@
 
   // Cada petición lleva la sesión (Authorization: Bearer, comun/auth.js; openspec: plataforma-login). Sin sesión, durante
   // la transición, se manda el correo guardado de antes como ?email=. Un 401 de sesión lleva a la pantalla de entrada.
-  async function api(ruta, opts) {
+  // Sale por StaldAuth.pedirJson (openspec: cache-estabilidad): junta GET iguales en vuelo, guarda los que piden
+  // `cfg.ttl`, reintenta lecturas ante fallas pasajeras y, sin red, responde status 0 en lugar de lanzar.
+  async function api(ruta, opts, cfg) {
     const url = API_BASE + (StaldAuth.email() ? ruta : ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(state.email));
-    const res = await StaldAuth.fetchConSesion(url, opts);
-    const body = await res.json().catch(() => ({}));
+    const { ok, status, body } = await StaldAuth.pedirJson(url, opts, cfg);
+    const res = { ok, status };
     if (StaldAuth.esSesionVencida(res, body) && !state.pidiendoSesion) {
       state.pidiendoSesion = true;
       const eraViejo = !StaldAuth.email();
       StaldAuth.salir().then(() => pantallaLogin(eraViejo ? '🔒 Por seguridad, ahora entras con un enlace que te mandamos a tu correo.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.'));
     }
-    return { ok: res.ok, status: res.status, body };
+    return { ok, status, body };
   }
   const post = (ruta, datos) => api(ruta, { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(datos) });
 
   const cacheDatos = {};
   async function datos(nombre) {
-    if (!cacheDatos[nombre]) cacheDatos[nombre] = fetch('juegos/datos/' + nombre + '.json').then(r => { if (!r.ok) throw new Error('datos ' + nombre); return r.json(); });
+    // Si la descarga falla, se olvida la promesa para reintentar la próxima vez (openspec: cache-estabilidad).
+    if (!cacheDatos[nombre]) cacheDatos[nombre] = fetch('juegos/datos/' + nombre + '.json').then(r => { if (!r.ok) throw new Error('datos ' + nombre); return r.json(); })
+      .catch(e => { delete cacheDatos[nombre]; throw e; });
     return cacheDatos[nombre];
   }
 
@@ -696,7 +700,7 @@
     const body = document.getElementById('tab-body');
     body.innerHTML = '<div class="loading">Cargando ranking…</div>';
     const tipo = state.rtipo;
-    const r = await api('/juegos/ranking?tipo=' + tipo);
+    const r = await api('/juegos/ranking?tipo=' + tipo, null, { ttl: 30000 }); // 30 s; un envío lo vacía
     if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar el ranking (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     const medalla = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
     const ico = tipo === 'partidas' ? '👥' : '⭐';
@@ -2344,31 +2348,47 @@
     // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
     // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
     const t0 = Date.now();
-    let tick, detenido = false;
+    let tick, detenido = false, fallos = 0, consultando = false;
     const parar = msg => { detenido = true; clearTimeout(tick); const pb = document.getElementById('p-body'); if (msg && pb && sala.vista !== 'final') pb.innerHTML = '<div class="card muted" style="text-align:center">' + msg + '</div>'; };
+    const avisoRed = ver => { const e = document.getElementById('p-red'); if (e) e.hidden = !ver; };
     // Intervalo por tipo de juego (openspec: ahorro-peticiones): 2.5 s en la sala de espera y en los juegos que
     // necesitan verse en tiempo real (¡Una!, Basta, Lotería); 5 s en los de preguntas (van sincronizados por
-    // reloj). La sala de espera deja de consultar a los 15 min si nadie empieza.
-    const programarTick = () => {
+    // reloj); 30 s de respaldo con Realtime. La sala de espera deja de consultar a los 15 min si nadie empieza.
+    // Sondeo resistente (openspec: cache-estabilidad): un error de red nunca lo detiene; mientras falle, la espera
+    // se duplica hasta 30 s y se avisa «Reconectando…»; al primer éxito vuelve a su ritmo.
+    const intervalo = () => {
       const esperando = sala.estado && sala.estado.sala.inicio === null;
-      tick = setTimeout(() => {
-        if (document.hidden) return programarTick();
-        if (sala.vista === 'final') return parar();
-        if (Date.now() - t0 > 60 * 60000 || (sala.estado.sala.inicio === null && Date.now() - t0 > 15 * 60000)) return parar('⏸️ La partida se pausó por inactividad. Vuelve a entrar con el código 🔑 ' + escapeHtml(codigo) + '.');
-        traerSala().then(r => {
-          if (r && !r.ok && [403, 404, 410].includes(r.status)) return parar(r.status === 410 ? '⌛ Esta partida ya terminó (vencen a las 3 horas).' : 'Esta partida ya no está disponible.');
-          if (r && r.status === 503) { /* mucho tráfico: se reintenta en el siguiente ciclo */ } else pintarSala();
-          programarTick();
-        });
-      }, sala.rtVivo ? 30000 : esperando || TIEMPO_REAL.has(sala.estado.sala.juego) ? 2500 : 5000);
+      const base = sala.rtVivo ? 30000 : esperando || TIEMPO_REAL.has(sala.estado.sala.juego) ? 2500 : 5000;
+      return fallos ? Math.min(30000, base * Math.pow(2, fallos)) : base;
     };
+    const ciclo = () => {
+      if (detenido) return;
+      if (document.hidden) return programarTick(); // pestaña oculta: no consulta (al volver, alVolver)
+      if (sala.vista === 'final') return parar();
+      if (Date.now() - t0 > 60 * 60000 || (sala.estado.sala.inicio === null && Date.now() - t0 > 15 * 60000)) return parar('⏸️ La partida se pausó por inactividad. Vuelve a entrar con el código 🔑 ' + escapeHtml(codigo) + '.');
+      consultando = true;
+      traerSala().catch(() => ({ ok: false, status: 0, body: {} })).then(r => {
+        consultando = false;
+        if (detenido) return;
+        if (!r.ok && [403, 404, 410].includes(r.status)) return parar(r.status === 410 ? '⌛ Esta partida ya terminó (vencen a las 3 horas).' : 'Esta partida ya no está disponible.');
+        if (r.ok) { fallos = 0; avisoRed(false); pintarSala(); }
+        else if (r.status === 0 || r.status === 429 || r.status >= 500) { fallos++; avisoRed(true); }
+        else pintarSala();
+        programarTick();
+      });
+    };
+    const programarTick = () => { clearTimeout(tick); tick = setTimeout(ciclo, intervalo()); };
     programarTick();
+    // Al volver a la pestaña se consulta enseguida (si no hay una consulta en vuelo).
+    const alVolver = () => { if (!document.hidden && !detenido && !consultando) { clearTimeout(tick); ciclo(); } };
+    document.addEventListener('visibilitychange', alVolver);
     // Al cambiar el estado del canal se reprograma el siguiente ciclo con el intervalo que corresponde.
-    if (sala.estado.rt) conectarRealtime(sala.estado.rt, codigo, () => { if (detenido) return; clearTimeout(tick); programarTick(); });
+    if (sala.estado.rt) conectarRealtime(sala.estado.rt, codigo, () => { if (detenido) return; programarTick(); });
     const reloj = setInterval(() => pintarSala(), 250);
-    limpiezas.push(() => { detenido = true; clearTimeout(tick); }, () => clearInterval(reloj));
+    limpiezas.push(() => { detenido = true; clearTimeout(tick); document.removeEventListener('visibilitychange', alVolver); }, () => clearInterval(reloj));
     app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + ' · partida</span>' +
-      '<span class="stat" id="p-codigo-chip">🔑 ' + escapeHtml(codigo) + '</span></div><div class="bar" id="m-bar" hidden><span style="width:100%"></span></div><div id="p-body"></div></div>';
+      '<span class="stat" id="p-codigo-chip">🔑 ' + escapeHtml(codigo) + '</span></div><div class="bar" id="m-bar" hidden><span style="width:100%"></span></div>' +
+      '<div id="p-red" class="muted" role="status" hidden style="text-align:center;font-size:.85rem;margin:6px 0">📶 Reconectando… tu partida sigue guardada.</div><div id="p-body"></div></div>';
     sala.vista = null;
     pintarSala();
   }

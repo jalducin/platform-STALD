@@ -164,7 +164,7 @@ async function loadFor(email) {
     const r = await api(DATA_URL_BASE + '?email=' + encodeURIComponent(email));
     const data = r.body;
     if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // sesionVencida ya pintó la entrada
-    if (!r.ok) throw new Error(data.error === 'mucho_trafico' ? 'Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : (data.error || ('HTTP ' + r.status)));
+    if (!r.ok) throw new Error(data.error === 'mucho_trafico' ? 'Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : (data.mensaje || data.error || ('HTTP ' + r.status)));
 
     if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // ya se mostró la entrada
     if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {
