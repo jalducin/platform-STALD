@@ -42,7 +42,7 @@ const imgCargada = (p, sel) => p.$eval(sel, i => i.complete && i.naturalWidth > 
   await a.click('[data-tab="ranking"]'); await a.waitForSelector('.rank li'); await sleep(600);
   const enRank = await a.$$eval('.rank li', ls => ls.filter(l => l.textContent.includes('Marisol')).map(l => !!l.querySelector('.av img') && l.querySelector('.av img').naturalWidth > 0));
   ok('otro navegador ve la foto en el ranking', enRank[0] === true, JSON.stringify(enRank));
-  ok('alumno no ve la pestaña de fotos', !(await a.$('[data-tab="fotos"]')));
+  ok('alumno no ve la pestaña de fotos', !(await a.$('[data-tab="fotos"]')) && !(await a.$('[data-tab="admin"]')));
   // Sala: la foto aparece en la sala de espera del otro
   await m.click('[data-tab="partidas"]'); await m.waitForSelector('#f-crear'); await m.uncheck('#p-bots'); await m.click('#f-crear button[type=submit]'); await m.waitForSelector('[data-p="empezar"]');
   const codigo = (await m.textContent('.letra')).trim();
@@ -54,12 +54,15 @@ const imgCargada = (p, sel) => p.$eval(sel, i => i.complete && i.naturalWidth > 
 
   // Admin: modera
   const ad = await jugador(b, 'admin@example.com');
-  await ad.click('[data-tab="fotos"]'); await ad.waitForSelector('.fotos-grid'); await sleep(500);
+  await ad.click('[data-tab="admin"]'); await ad.click('[data-adm="fotos"]'); await ad.waitForSelector('#adm-panel .fotos-grid'); await sleep(500);
   const lista = await ad.$$eval('[data-quitar-foto]', xs => xs.map(x => x.dataset.quitarFoto));
-  ok('admin ve la foto en "📷 Fotos"', lista.includes('a-marisol'), JSON.stringify(lista));
+  ok('admin ve la foto en «🛡️ Admin › Fotos»', lista.includes('a-marisol'), JSON.stringify(lista));
+  ok('la foto muestra el correo de su jugador (para buscarla)', (await ad.textContent('#adm-panel .fotos-grid')).includes('marisol@example.com'));
+  const nFotos = Number(await ad.textContent('[data-adm="fotos"] .adm-n'));
   await ad.screenshot({ path: 'fotos-admin.png' });
   await ad.click('[data-quitar-foto="a-marisol"]'); await sleep(1500);
   ok('admin quita la foto', !(await ad.$('[data-quitar-foto="a-marisol"]')));
+  ok('el contador de fotos baja y sigue en «Fotos»', Number(await ad.textContent('[data-adm="fotos"] .adm-n')) === nFotos - 1 && (await ad.getAttribute('[data-adm="fotos"]', 'aria-selected')) === 'true');
   const st = await (await fetch(API + '/juegos/foto/' + token)).status;
   ok('la foto quitada responde 404', st === 404, String(st));
   // Fallback: una página con el token viejo muestra el personaje

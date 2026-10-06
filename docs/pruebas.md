@@ -57,7 +57,10 @@ Qué hace `correr.sh`:
    `SUPER_ADMIN_EMAIL=admin@example.com`, `PERMITIR_HOY=1` y `HOY_FIJO=2026-10-04` (el día con el que se escribieron
    las E2E, para que no dependan del calendario; `--hoy` lo cambia), sin Notion ni GitHub, y los estáticos con
    `python -m http.server`. `HOY_FIJO` solo tiene efecto con `ROWS_FIXTURE`, nunca en producción.
-   Antes de arrancar, superpone `tests/fixtures/datos/` (contenido de ejemplo) sobre la copia.
+   `rows-fixture.json` solo trae Secundaria y las cuentas de Supabase Auth: Inglés ya no lee Notion (cambio
+   `cierre-tecnico`, fase 2). Antes de arrancar, superpone `tests/fixtures/datos/` (contenido de ejemplo) sobre la
+   copia y **combina** `tests/fixtures/alumnos-ejemplo.json` (Marisol, Angel, Jesus, Laura y Fernando,
+   `@example.com`) con su `alumnos.json`: agrega solo los correos que falten, sin pisar ni borrar los de la copia.
 4. Corre las pruebas por **fase** (ver `--lista`); reinicia datos y servidor cuando la fase cambia.
 5. Imprime `PASS`/`FAIL`/`OMIT` por prueba y el total; sale con 1 si alguna falla.
 6. Siempre (también con error o Ctrl+C) apaga los servidores, vacía `stald_test_*` si usó `--pg` y borra la copia.

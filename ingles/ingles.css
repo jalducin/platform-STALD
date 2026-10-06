@@ -158,7 +158,6 @@ details[open] > summary .chevron { transform: rotate(90deg); }
 .meta .fecha { font-weight: 700; color: var(--text); }
 .grade { background: var(--ok-soft); color: var(--ok); border: 1px solid var(--ok); border-radius: 6px; padding: 1px 6px; font-weight: 800; font-size: .72rem; }
 .level { background: var(--accent-soft); color: var(--accent); border-radius: 6px; padding: 1px 6px; font-weight: 800; font-size: .68rem; }
-.meta .who { font-size: .74rem; color: var(--accent); font-weight: 700; margin-top: 2px; }
 a.link { color: var(--accent); text-decoration: none; font-size: .78rem; font-weight: 700; flex-shrink: 0; }
 .empty, .error, .loading { text-align: center; color: var(--muted); padding: 18px 12px; font-size: .88rem; }
 .error { color: var(--bad); }
@@ -168,7 +167,7 @@ a.link { color: var(--accent); text-decoration: none; font-size: .78rem; font-we
 .student > summary { cursor: pointer; padding: 12px 14px; min-height: 48px; font-weight: 800; font-size: .92rem; display: flex; justify-content: space-between; gap: 8px; align-items: center; list-style: none; flex-wrap: wrap; }
 .student > summary::-webkit-details-marker { display: none; }
 .student > summary .mini { font-weight: 700; font-size: .74rem; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
-.student > summary .mini .o { color: var(--bad); } .student > summary .mini .t { color: var(--warn); } .student > summary .mini .g { color: var(--ok); }
+.student > summary .mini .o { color: var(--bad); } .student > summary .mini .t { color: var(--warn); }
 .student .student-body { padding: 0 10px 10px; }
 .student .section { background: var(--bg); box-shadow: none; }
 

@@ -1,6 +1,7 @@
 # platform-STALD
 
-Dashboards de tareas escolares alimentados desde Notion (Secundaria e Inglés).
+Plataforma escolar: portal, Inglés en línea (actividades, exámenes y grupos; alumnos y alumnas en el registro de la
+plataforma, sin Notion), Juegos y el tablero de Secundaria (alimentado desde Notion).
 
 - Portal (entrada única): https://jalducin.github.io/platform-STALD/
 - Secundaria: https://jalducin.github.io/platform-STALD/secundaria.html
@@ -22,7 +23,7 @@ Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:f
 | [docs/documentation-standards.md](docs/documentation-standards.md) | Mantenimiento de la documentación |
 | [docs/frontend-standards.md](docs/frontend-standards.md) | Páginas HTML / GitHub Pages |
 | [docs/backend-standards.md](docs/backend-standards.md) | Backend Deno Deploy, contrato HTTP, seguridad |
-| [docs/data-model.md](docs/data-model.md) | Bases de Notion, exámenes y actividades semanales (formatos JSON) |
+| [docs/data-model.md](docs/data-model.md) | Base de Notion de Secundaria, registro de Inglés, exámenes y actividades semanales (formatos JSON) y tablas `stald_*` |
 | [docs/deno-deploy-setup.md](docs/deno-deploy-setup.md) | Configurar el backend en Deno Deploy y el repo privado de datos |
 | [docs/pruebas.md](docs/pruebas.md) | Pruebas unitarias (CI) y E2E en local (`tests/e2e/correr.sh`), sesión de prueba y `stald_test_*` |
 | [ai-specs/skills/nueva-semana-ingles/SKILL.md](ai-specs/skills/nueva-semana-ingles/SKILL.md) | Flujo semanal: armar, validar y subir la clase de Inglés de la semana siguiente |
@@ -56,7 +57,8 @@ respaldo cada 30 s. Sin las variables `SUPABASE_*` en Deno, las partidas funcion
 
 ## Datos vivos en Postgres
 
-Los grupos de clase y los datos vivos de Inglés (alumnos, resultados y avance) están en el Postgres de Supabase. Es
+Los grupos de clase y los datos vivos de Inglés (alumnos, resultados y avance) están en el Postgres de Supabase. El
+registro de alumnos y alumnas (`alumnos.json`) es la única fuente de identidad de Inglés: Inglés ya no lee Notion. Es
 el mismo proyecto *Portafolio*, con tablas `stald_*`, protegidas con RLS y accesibles solo desde el servidor. El
 contenido (actividades, exámenes y semanas) sigue en el repo. Juegos (salas, partidas, ranking, perfiles) pasa a
 Postgres al migrarse con `herramientas/migrar-ingles.ts --juegos`. Si Postgres no responde, el servidor responde 503

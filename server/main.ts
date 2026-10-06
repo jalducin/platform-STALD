@@ -4,12 +4,11 @@
 // el verificador falso de sesión `Bearer prueba:<correo>`, openspec: plataforma-login).
 // Sesión: SUPABASE_URL + SUPABASE_PUBLISHABLE_KEY (validar tokens), SUPABASE_SERVICE_KEY (enlace de acceso del admin),
 // opcionales LOGIN_TRANSICION_HASTA (AAAA-MM-DD) y SITIO_URL (a dónde llevan los enlaces).
-import { attachUsers, extractInglesRow, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type UserInfo } from "./rows.ts";
+import { attachUsers, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type SecundariaRow, type UserInfo } from "./rows.ts";
 import { handleActividades, handleProfe, handleSecundaria } from "./actividades.ts";
-import { handleCompletar } from "./completar.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados } from "./juegos.ts";
-import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro, sinHuerfanas, importarNotion, clearCacheAlumnos, RUTA_ALUMNOS, type RegistroAlumnos } from "./alumnos.ts";
+import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro } from "./alumnos.ts";
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
@@ -24,7 +23,6 @@ import { aplicarCacheHttp, politicaCache } from "./http_cache.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
-const CLASES_INGLES_DB_ID = "3c41c6b4f8b580f888d8d122cbb5c613"; // 📖 Clases Inglés
 const env = (k: string) => Deno.env.get(k) || "";
 
 // Supabase Realtime para salas (openspec: salas-realtime). Sin las tres variables, las salas usan sondeo.
@@ -82,7 +80,7 @@ async function loadRows<T extends { userIds: string[]; userEmails: string[]; use
   dbId: string,
   // deno-lint-ignore no-explicit-any
   extract: (page: any) => T,
-  fixtureKey: "ingles" | "secundaria",
+  fixtureKey: "secundaria",
 ): Promise<T[]> {
   const filas = await memoFilas.get(fixtureKey, async () => {
     if (env("ROWS_FIXTURE")) return JSON.parse(await Deno.readTextFile(env("ROWS_FIXTURE")))[fixtureKey] as T[];
@@ -93,9 +91,6 @@ async function loadRows<T extends { userIds: string[]; userEmails: string[]; use
   });
   return structuredClone(filas) as T[];
 }
-
-// En modo fixture (pruebas locales) las marcas se guardan en memoria y se aplican al leer.
-const marcasFixture = new Map<string, { completado: boolean; en: string }>();
 
 // Cuentas de acceso para la vista de jugadores del admin (openspec: jugadores-admin): Supabase Auth con la llave de
 // servicio, 60 s en memoria; en pruebas, la clave `cuentas` de ROWS_FIXTURE.
@@ -109,32 +104,10 @@ async function cuentas(): Promise<Cuenta[]> {
   return v;
 }
 
-// Filas de Inglés con los alumnos y alumnas dados de alta en la página (alumnos.json).
+// Filas de Inglés: solo los alumnos y alumnas del registro (alumnos.json). Inglés ya no lee Notion
+// (openspec: cierre-tecnico, fase 2); Secundaria sí.
 async function filasIngles(): Promise<InglesRow[]> {
-  return aplicarAlumnos(await filasNotion(), await leerRegistro(await getStore()));
-}
-
-async function filasNotion(): Promise<InglesRow[]> {
-  const rows = await loadRows<InglesRow>(CLASES_INGLES_DB_ID, extractInglesRow, "ingles");
-  if (env("ROWS_FIXTURE")) {
-    for (const r of rows) {
-      const m = marcasFixture.get(r.id);
-      if (m) { r.completado = m.completado; r.editadoEn = m.en; } // como Notion: marcar actualiza la última edición
-    }
-  }
-  return sinHuerfanas(rows);
-}
-
-async function parcheCompletado(id: string, completado: boolean): Promise<{ ok: boolean; status: number }> {
-  if (env("ROWS_FIXTURE")) { marcasFixture.set(id, { completado, en: new Date().toISOString() }); return { ok: true, status: 200 }; }
-  const res = await fetch(`https://api.notion.com/v1/pages/${id}`, {
-    method: "PATCH",
-    headers: { "Authorization": `Bearer ${env("NOTION_TOKEN")}`, "Notion-Version": NOTION_VERSION, "Content-Type": "application/json" },
-    body: JSON.stringify({ properties: { "Completado": { checkbox: completado } } }),
-  });
-  await res.body?.cancel();
-  if (res.ok) memoFilas.borrar("ingles");
-  return { ok: res.ok, status: res.status };
+  return aplicarAlumnos([], await leerRegistro(await getStore()));
 }
 
 // ---------- HTTP ----------
@@ -269,17 +242,7 @@ async function atender(req: Request): Promise<Response> {
         const r = await handleGrupos(new Request("http://x", { method: "POST", body: JSON.stringify({ alumno: nombre, grupo }) }), "/mover", { email: admin, admin, db: db!, hoy: () => desde }, json);
         return r.ok;
       } : undefined;
-      // Fase 1 de «Inglés sin Notion» (openspec: cierre-tecnico): al abrir la lista, el admin copia al registro a
-      // quien solo estaba en Notion con correo. Idempotente; si falla, la lista se muestra igual.
-      if (req.method === "GET" && admin && email === admin && conGrupos) {
-        try {
-          const store = await getStore();
-          const doc = await store.get<RegistroAlumnos>(RUTA_ALUMNOS);
-          const { registro, importados } = importarNotion(doc?.data ?? {}, await filasNotion(), new Date().toISOString());
-          if (importados && await store.put(RUTA_ALUMNOS, registro, doc?.sha ?? null, `alumnos: ${importados} importados de Notion`)) clearCacheAlumnos();
-        } catch (e) { console.error("importar Notion:", e instanceof Error ? e.message : e); }
-      }
-      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion, inscribir, ahora: ahoraIso }, json);
+      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: () => Promise.resolve([]), inscribir, ahora: ahoraIso }, json);
     }
 
     // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada)
@@ -349,23 +312,12 @@ async function atender(req: Request): Promise<Response> {
       }, json);
     }
 
-    // POST /ingles/data/<pageId>/completado → marcar o desmarcar una tarea de Notion.
-    const marca = url.pathname.match(/\/ingles\/data\/([0-9a-fA-F-]{32,36})\/completado$/);
-    if (marca) {
-      if (req.method !== "POST") return json({ error: "metodo_no_permitido" }, 405);
-      return await handleCompletar(req, marca[1], email, { filas: filasIngles, parche: parcheCompletado, store: await getStore(), admin }, json);
-    }
-
-    // "/ingles/data" también termina en "/data": evaluarlo primero.
-    const route = url.pathname.endsWith("/ingles/data")
-      ? { db: CLASES_INGLES_DB_ID, extract: extractInglesRow, key: "ingles" as const }
-      : url.pathname.endsWith("/data")
-      ? { db: SECUNDARIA_DB_ID, extract: extractSecundariaRow, key: "secundaria" as const }
-      : null;
-    if (!route) return json({ error: "not_found" }, 404);
+    // GET /ingles/data → filas de identidad del registro (Inglés ya no trae tareas de Notion); GET /data → base
+    // «📖 Clases» de Secundaria. "/ingles/data" también termina en "/data": evaluarlo primero.
+    const deIngles = url.pathname.endsWith("/ingles/data");
+    if (!deIngles && !url.pathname.endsWith("/data")) return json({ error: "not_found" }, 404);
     if (!email) return json({ error: "missing_email" }, 400);
-    // deno-lint-ignore no-explicit-any
-    const all = route.key === "ingles" ? await filasIngles() : await loadRows(route.db, route.extract as (p: any) => any, route.key);
+    const all: (InglesRow | SecundariaRow)[] = deIngles ? await filasIngles() : await loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria");
     const { rows, isAdmin } = filterForEmail(all, email, admin);
     return json({ rows, isAdmin, generatedAt: new Date().toISOString() });
   } catch (e) {

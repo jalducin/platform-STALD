@@ -295,6 +295,79 @@
   .aj-jugadas b { color: var(--muted); font-weight: 700; }
   .aj-promo { display: flex; gap: 8px; justify-content: center; margin: 8px 0; }
   .aj-promo button { font-size: 2rem; padding: 4px 10px; border-radius: 10px; border: 2px solid var(--accent-2); background: #f0d9b5; cursor: pointer; }
+  /* Barra principal: 4 pestañas que caben en 390 px (openspec: admin-juegos-unificado). */
+  .tab { white-space: nowrap; }
+  @media (max-width: 420px) { .tab { font-size: .8rem; padding: 9px 3px; } }
+  /* 🛡️ Admin: Jugadores, Pendientes, Invitados y Fotos en una sola pestaña. */
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .adm-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 12px 0 10px; }
+  .adm-cab p { margin: 0; }
+  .adm-subs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 5px; box-shadow: var(--shadow); }
+  @media (min-width: 560px) { .adm-subs { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .adm-sub { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 44px; font: inherit; font-weight: 700; font-size: .84rem; color: var(--muted);
+    background: none; border: 1.5px solid transparent; border-radius: 12px; padding: 8px 10px; cursor: pointer; text-align: left; transition: background .15s, color .15s, border-color .15s; }
+  .adm-sub:hover { color: var(--text); background: var(--bg); }
+  .adm-sub[aria-selected="true"] { color: var(--accent-2); background: var(--mente-soft); border-color: var(--accent-2); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .adm-sub[aria-selected="true"], :root:not([data-theme="light"]) .adm-nick { color: #ddd6fe; } } /* contraste en oscuro */
+  .adm-sub .adm-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .adm-n { flex-shrink: 0; min-width: 26px; text-align: center; font-size: .74rem; font-weight: 800; font-variant-numeric: tabular-nums; padding: 2px 7px; border-radius: 99px; background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  .adm-sub[aria-selected="true"] .adm-n { background: var(--accent-2); border-color: var(--accent-2); color: #fff; }
+  .adm-sub.atender .adm-n { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .adm-sub.falla .adm-n { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  .adm-tools { display: flex; gap: 8px; align-items: center; margin: 12px 0 6px; }
+  .adm-buscar { position: relative; flex: 1; min-width: 0; }
+  .adm-buscar::before { content: "🔎"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: .9rem; pointer-events: none; opacity: .7; }
+  .adm-buscar input { width: 100%; font: inherit; font-size: 1rem; padding: 11px 12px 11px 38px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card); color: var(--text); outline: none; }
+  .adm-buscar input:focus-visible { border-color: var(--accent-2); box-shadow: 0 0 0 3px var(--mente-soft); }
+  .adm-tools .btn { flex-shrink: 0; min-height: 44px; }
+  .adm-resumen { min-height: 1.2em; margin: 0 0 8px; }
+  .adm-lista { max-height: min(62vh, 560px); overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .adm-lista::-webkit-scrollbar { width: 8px; } .adm-lista::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  .adm-lista:focus-visible, .adm-sub:focus-visible, [data-adm-a]:focus-visible, .btn.sm:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+  .adm-lista.fotos { padding: 10px; }
+  .adm-tabla { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .84rem; }
+  .adm-tabla th { position: sticky; top: 0; z-index: 1; background: var(--card); text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+    padding: 10px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .adm-tabla td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .adm-tabla tbody tr:last-child td { border-bottom: none; }
+  .adm-tabla tbody tr:hover td { background: var(--bg); }
+  .adm-tabla .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .adm-quien { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .adm-quien b { display: block; font-weight: 800; }
+  .adm-nick { display: inline-block; font-size: .72rem; font-weight: 800; color: var(--accent-2); background: var(--mente-soft); border-radius: 99px; padding: 1px 8px; margin-top: 2px; }
+  .adm-correo { color: var(--muted); overflow-wrap: anywhere; }
+  .adm-cab .btn, .adm-tabla td.accion .btn { white-space: nowrap; }
+  .adm-ini { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; font-weight: 900; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); overflow: hidden; }
+  .adm-ini img { width: 100%; height: 100%; object-fit: cover; }
+  .adm-tipo { display: inline-block; font-size: .74rem; font-weight: 700; white-space: nowrap; padding: 2px 8px; border-radius: 99px; background: var(--bg); border: 1px solid var(--border); }
+  .adm-estado { font-weight: 700; white-space: nowrap; }
+  .adm-vacio { text-align: center; padding: 34px 16px; color: var(--muted); }
+  .adm-vacio .e { display: block; font-size: 2rem; margin-bottom: 6px; }
+  .adm-vacio b { display: block; color: var(--text); margin-bottom: 4px; }
+  .adm-esq { height: 54px; margin: 10px; border-radius: 12px; background: linear-gradient(90deg, var(--bg) 25%, var(--border) 50%, var(--bg) 75%); background-size: 200% 100%; animation: adm-brillo 1.2s infinite linear; }
+  @keyframes adm-brillo { to { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) { .adm-esq { animation: none; } .adm-lista { scroll-behavior: auto; } }
+  #jug-enlace .card { margin-bottom: 10px; }
+  #jug-enlace input { width: 100%; font: inherit; font-size: .85rem; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
+  .adm-lista .fotos-grid { margin-top: 0; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .adm-lista .fotos-grid .card { box-shadow: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .adm-lista .fotos-grid img { width: 84px; height: 84px; border: 3px solid var(--mente-soft); }
+  .adm-lista .fotos-grid .adm-correo { font-size: .72rem; }
+  /* Celular: cada fila es una tarjeta; sin desplazamiento horizontal. */
+  @media (max-width: 639px) {
+    .adm-tabla thead { display: none; } /* cada celda lleva su etiqueta en data-label */
+    .adm-tabla, .adm-tabla tbody { display: block; }
+    .adm-tabla tbody tr { display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); gap: 8px 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .adm-tabla tbody tr:last-child { border-bottom: none; }
+    .adm-tabla tbody tr:hover td { background: none; }
+    .adm-tabla td { display: block; padding: 0; border: none; min-width: 0; }
+    .adm-tabla td { font-size: .8rem; }
+    .adm-tabla td[data-label]::before { content: attr(data-label); display: block; font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    .adm-tabla td.ancho { grid-column: 1 / -1; }
+    .adm-tabla .num { text-align: left; }
+    .adm-tabla td.accion .btn { width: 100%; min-height: 44px; }
+  }
   /* Durante una partida, sin «jalar para recargar» en el celular (openspec: juegos-recarga). */
   html.jugando, html.jugando body { overscroll-behavior-y: contain; }
 </style>
@@ -665,8 +738,11 @@
     limpiar(); olvidarSala();
     state.tab = tab || state.tab || 'juegos';
     const admin = state.jugador && state.jugador.tipo === 'admin';
+    // Pestañas viejas del admin: ahora son sub-secciones de «🛡️ Admin» (openspec: admin-juegos-unificado).
+    if (subAdmin(state.tab)) { state.admSub = state.tab; state.tab = 'admin'; }
+    if (state.tab === 'admin' && !admin) state.tab = 'juegos';
     const tabs = '<div class="tabs" role="tablist">' +
-      ['juegos:🎮 Juegos', 'partidas:👥 Partidas', 'ranking:🏆 Ranking'].concat(admin ? ['jugadores:🧑‍🤝‍🧑 Jugadores', 'invitados:📋 Invitados', 'fotos:📷 Fotos'] : []).map(x => {
+      ['juegos:🎮 Juegos', 'partidas:👥 Partidas', 'ranking:🏆 Ranking'].concat(admin ? ['admin:🛡️ Admin'] : []).map(x => {
         const [id, t] = x.split(':');
         return '<button class="tab" role="tab" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + t + '</button>';
       }).join('') + '</div>';
@@ -675,9 +751,7 @@
       tabs + '<div id="tab-body"></div>';
     if (state.tab === 'ranking') return pintarRanking();
     if (state.tab === 'partidas') return pintarPartidas();
-    if (state.tab === 'jugadores') return pintarJugadores();
-    if (state.tab === 'invitados') return pintarInvitados();
-    if (state.tab === 'fotos') return pintarFotos();
+    if (state.tab === 'admin') return pintarAdmin();
     document.getElementById('tab-body').innerHTML = CATEGORIAS.map(c => {
       const js = JUEGOS.filter(j => j.cat === c.id);
       if (!js.length) return '';
@@ -715,46 +789,156 @@
       (r.body.yo.pos && r.body.yo.pos > 20 ? '<p class="muted">Tu lugar: #' + r.body.yo.pos + ' con ' + ico + ' ' + fmt(r.body.yo.total) + '</p>' : '');
   }
 
-  async function pintarInvitados() {
-    const body = document.getElementById('tab-body');
-    body.innerHTML = '<div class="loading">Cargando invitados…</div>';
-    const r = await api('/juegos/invitados');
-    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
-    const lista = r.body.invitados;
-    const fecha = s => s ? new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—';
-    body.innerHTML = '<p class="muted" style="margin:10px 0">' + lista.length + ' invitado(s). Sus correos solo los ves tú.</p>' +
-      (lista.length ? '<div class="card scroll-x"><table class="inv"><thead><tr><th>Correo</th><th>Apodo</th><th>Visitas</th><th>Última visita</th><th>Puntos semana</th></tr></thead><tbody>' +
-        lista.map(x => '<tr><td>' + escapeHtml(x.email) + '</td><td>' + escapeHtml(x.nombre) + '</td><td>' + x.visitas + '</td><td>' + escapeHtml(fecha(x.ultimaVisita)) + '</td><td>' + fmt(x.puntosSemana) + '</td></tr>').join('') +
-        '</tbody></table></div><div class="row-btns"><button class="btn ghost" data-a="csv">⬇️ Descargar CSV</button></div>' : '');
-    state.invitadosLista = lista;
+  // ---------- 🛡️ Admin (openspec: jugadores-admin, avatar-foto y admin-juegos-unificado) ----------
+  // Una sola pestaña con 4 sub-secciones. Las tres rutas se piden en paralelo al abrirla (así salen los contadores);
+  // cambiar de sub-sección o buscar no vuelve a pedir nada. Los correos solo los ve el admin (lo decide el servidor).
+  // localStorage.juegos_admin_sub guarda solo el id de la sub-sección (preferencia de interfaz, sin datos personales).
+  const ADM_SUBS = [
+    { id: 'jugadores', e: '🧑‍🤝‍🧑', t: 'Jugadores', fuente: 'jugadores' },
+    { id: 'pendientes', e: '⏳', t: 'Pendientes', fuente: 'jugadores' },
+    { id: 'invitados', e: '📋', t: 'Invitados', fuente: 'invitados' },
+    { id: 'fotos', e: '📷', t: 'Fotos', fuente: 'fotos' },
+  ];
+  const ADM_FUENTES = ['jugadores', 'invitados', 'fotos'];
+  const ADM_KEY = 'juegos_admin_sub';
+  const subAdmin = id => ADM_SUBS.find(s => s.id === id);
+  const leerSubAdmin = () => { try { const v = localStorage.getItem(ADM_KEY); return subAdmin(v) ? v : 'jugadores'; } catch (e) { return 'jugadores'; } };
+  const guardarSubAdmin = id => { try { localStorage.setItem(ADM_KEY, id); } catch (e) { /* sin almacenamiento */ } };
+  const normaliza = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const fechaCorta = s => s ? new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+  const buscaAttr = (...xs) => ' data-busca="' + escapeHtml(normaliza(xs.filter(Boolean).join(' '))) + '"';
+  let admCarga = 0;
+
+  function pintarAdmin() {
+    state.admSub = subAdmin(state.admSub) ? state.admSub : leerSubAdmin();
+    state.adm = {};
+    document.getElementById('tab-body').innerHTML = '<div class="adm">' +
+      '<div class="adm-cab"><p class="muted">🔒 Los correos solo los ves tú.</p>' +
+      '<button class="btn ghost sm" type="button" data-a="adm-actualizar" aria-label="Actualizar las listas">↻ Actualizar</button></div>' +
+      '<div id="adm-subs" class="adm-subs" role="tablist" aria-label="Secciones de administración"></div>' +
+      '<div id="adm-tools" class="adm-tools"><div class="adm-buscar"><label for="adm-buscar" class="sr-only">Buscar por nombre, nick o correo</label>' +
+      '<input id="adm-buscar" type="search" placeholder="Nombre, nick o correo" autocomplete="off" spellcheck="false"></div><span id="adm-csv"></span></div>' +
+      '<p id="adm-resumen" class="muted adm-resumen" aria-live="polite"></p>' +
+      '<div id="adm-panel" role="tabpanel"></div></div>';
+    document.getElementById('adm-buscar').addEventListener('input', aplicarBusqueda);
+    document.getElementById('adm-subs').addEventListener('keydown', teclaSubAdmin);
+    cargarAdmin(ADM_FUENTES);
   }
 
-  // Jugadores registrados y registros pendientes (solo admin, openspec: jugadores-admin). Los correos solo los ve el admin.
-  async function pintarJugadores() {
-    const body = document.getElementById('tab-body');
-    body.innerHTML = '<div class="loading">Cargando jugadores…</div>';
-    const r = await api('/juegos/jugadores');
-    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
-    const { jugadores, pendientes, cuentasError } = r.body;
-    const fecha = s => s ? new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—';
-    const busca = (...xs) => ' data-busca="' + escapeHtml(xs.join(' ').toLowerCase()) + '"';
-    const tipo = j => j.tipo === 'invitado' ? '🎮 Juegos' : j.espacio === 'Secundaria' ? '📚 Secundaria' : '📘 Inglés';
-    body.innerHTML = '<p class="muted" style="margin:10px 0">' + jugadores.length + ' jugador(es) registrado(s)' + (pendientes.length ? ' · ' + pendientes.length + ' registro(s) pendiente(s)' : '') + '. Los correos solo los ves tú.</p>' +
-      '<input id="jug-buscar" type="search" placeholder="🔎 Buscar por nombre o correo" autocomplete="off" style="width:100%;box-sizing:border-box;margin-bottom:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--border, #e6e4f0);font:inherit">' +
-      (cuentasError ? '<div class="alert">No pude leer las cuentas de acceso; los registros pendientes no aparecen por ahora.</div>' : '') +
-      (pendientes.length ? '<h3 id="jug-pendientes">⏳ Registros pendientes</h3><p class="muted" style="margin:0 0 8px">Se registraron pero no terminaron. Genera su enlace y mándaselo por WhatsApp.</p><div class="card scroll-x"><table class="inv"><thead><tr><th>Correo</th><th>Estado</th><th>Intentó</th><th></th></tr></thead><tbody>' +
-        pendientes.map(p => '<tr' + busca(p.email) + '><td>' + escapeHtml(p.email) + '</td><td>' + (p.estado === 'sin confirmar' ? '✉️ No confirmó su correo' : '🙈 Entró sin elegir apodo') + '</td><td>' + escapeHtml(fecha(p.creada)) + '</td>' +
-          '<td><button class="btn ghost sm" data-enlace="' + escapeHtml(p.email) + '">🔗 Enlace de acceso</button></td></tr>').join('') + '</tbody></table></div><div id="jug-enlace"></div>' : '') +
-      '<h3>✅ Jugadores registrados</h3>' +
-      (jugadores.length ? '<div class="card scroll-x"><table class="inv" id="jug-tabla"><thead><tr><th>Nombre</th><th>Nick</th><th>Correo</th><th>Tipo</th><th>Puntos semana</th><th>Partidas</th><th>Última visita</th></tr></thead><tbody>' +
-        jugadores.map(j => '<tr' + busca(j.nombre, j.nick || '', j.email) + '><td>' + escapeHtml(j.nombre) + '</td><td>' + escapeHtml(j.nick || '—') + '</td><td>' + escapeHtml(j.email) + '</td><td>' + tipo(j) + '</td><td>' + fmt(j.puntosSemana) + '</td><td>' + j.partidasSemana + '</td><td>' + escapeHtml(fecha(j.ultimaVisita)) + '</td></tr>').join('') +
-        '</tbody></table></div>' : '<p class="muted">Todavía no hay jugadores.</p>') +
-      '<div class="row-btns"><button class="btn ghost" data-a="csv-jugadores">⬇️ Descargar CSV</button></div>';
-    state.jugadoresLista = { jugadores, pendientes };
-    document.getElementById('jug-buscar').addEventListener('input', e => {
-      const q = e.target.value.trim().toLowerCase();
-      body.querySelectorAll('tr[data-busca]').forEach(tr => { tr.hidden = !!q && !tr.dataset.busca.includes(q); });
-    });
+  // Pide las fuentes indicadas en paralelo; cada una guarda su resultado o su error sin tapar a las demás.
+  function cargarAdmin(fuentes) {
+    const adm = state.adm;
+    fuentes.forEach(f => { adm[f] = { cargando: true, tok: ++admCarga }; });
+    refrescarAdmin();
+    return Promise.all(fuentes.map(async f => {
+      const tok = adm[f].tok;
+      let r; try { r = await api('/juegos/' + f); } catch (e) { r = { ok: false, body: { error: 'sin_conexion' } }; }
+      if (state.adm !== adm || adm[f].tok !== tok) return; // respuesta vieja: ya se pidió otra vez
+      state.adm[f] = r.ok ? { body: r.body } : { error: r.body.error || r.status };
+      if (f === 'jugadores' && r.ok) state.jugadoresLista = { jugadores: r.body.jugadores, pendientes: r.body.pendientes };
+      if (f === 'invitados' && r.ok) state.invitadosLista = r.body.invitados;
+      if (document.getElementById('adm-panel')) refrescarAdmin();
+    }));
+  }
+
+  // Lista de elementos de una sub-sección, o null si su fuente aún carga o falló.
+  function listaAdmin(id) {
+    const f = state.adm[subAdmin(id).fuente];
+    if (!f || !f.body) return null;
+    return id === 'jugadores' ? f.body.jugadores : id === 'pendientes' ? f.body.pendientes : id === 'invitados' ? f.body.invitados : f.body.fotos;
+  }
+
+  function refrescarAdmin() {
+    if (!document.getElementById('adm-panel')) return;
+    const sub = state.admSub;
+    const subs = document.getElementById('adm-subs'); const conFoco = subs.contains(document.activeElement);
+    subs.innerHTML = ADM_SUBS.map(s => {
+      const f = state.adm[s.fuente] || { cargando: true }; const l = listaAdmin(s.id);
+      const n = f.cargando ? '…' : f.error ? '!' : String(l.length);
+      const clase = 'adm-sub' + (f.error ? ' falla' : s.id === 'pendientes' && l && l.length ? ' atender' : '');
+      return '<button type="button" class="' + clase + '" role="tab" id="adm-tab-' + s.id + '" data-adm="' + s.id + '" aria-controls="adm-panel" aria-selected="' + (s.id === sub) + '" tabindex="' + (s.id === sub ? 0 : -1) + '">' +
+        '<span class="adm-t"><span aria-hidden="true">' + s.e + '</span> ' + s.t + '</span><span class="adm-n">' + n + '</span></button>';
+    }).join('');
+    if (conFoco) document.getElementById('adm-tab-' + sub).focus(); // redibujar no le quita el foco al teclado
+    document.getElementById('adm-panel').setAttribute('aria-labelledby', 'adm-tab-' + sub);
+    const csv = { jugadores: ['csv-jugadores', 'jugadores'], pendientes: ['csv-jugadores', 'jugadores'], invitados: ['csv', 'invitados'] }[sub];
+    document.getElementById('adm-csv').innerHTML = csv ? '<button class="btn ghost" type="button" data-a="' + csv[0] + '" title="Descargar CSV de ' + csv[1] + '" aria-label="Descargar CSV de ' + csv[1] + '"' + (listaAdmin(sub) ? '' : ' disabled') + '>⬇️ CSV</button>' : '';
+    pintarPanelAdmin();
+  }
+
+  function pintarPanelAdmin() {
+    const panel = document.getElementById('adm-panel'); const sub = state.admSub;
+    const s = subAdmin(sub); const f = state.adm[s.fuente] || { cargando: true };
+    if (f.cargando) { panel.innerHTML = '<div class="adm-lista" aria-busy="true" aria-label="Cargando ' + s.t.toLowerCase() + '">' + '<div class="adm-esq"></div>'.repeat(4) + '</div>'; return aplicarBusqueda(); }
+    if (f.error) { panel.innerHTML = '<div class="alert" role="alert">No se pudo cargar ' + s.t.toLowerCase() + ' (' + escapeHtml(f.error) + '). <button class="btn ghost sm" type="button" data-a="adm-reintentar" data-fuente="' + s.fuente + '">↻ Reintentar</button></div>'; return aplicarBusqueda(); }
+    const l = listaAdmin(sub);
+    const vacio = (e, t, x) => '<div class="adm-lista"><div class="adm-vacio"><span class="e" aria-hidden="true">' + e + '</span><b>' + t + '</b>' + (x || '') + '</div></div>';
+    const lista = (cuerpo, etiqueta, clase) => '<div class="adm-lista' + (clase ? ' ' + clase : '') + '" tabindex="0" aria-label="' + etiqueta + '">' + cuerpo + '</div>';
+    const ini = (nombre, foto) => '<span class="adm-ini" aria-hidden="true">' + (foto ? '<img src="' + escapeHtml(fotoSrc({ foto })) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + escapeHtml((nombre || '?').trim().charAt(0).toUpperCase()) + '</span>';
+    if (sub === 'jugadores') {
+      const fotos = Object.fromEntries(((state.adm.fotos && state.adm.fotos.body && state.adm.fotos.body.fotos) || []).map(x => [x.id, x.token]));
+      const tipo = j => j.tipo === 'invitado' ? '🎮 Juegos' : j.espacio === 'Secundaria' ? '📚 Secundaria' : '📘 Inglés';
+      panel.innerHTML = l.length ? lista('<table class="adm-tabla" id="jug-tabla" style="--cols:4"><thead><tr><th scope="col">Jugador</th><th scope="col">Tipo</th><th scope="col" class="num">Puntos</th><th scope="col" class="num">Partidas</th><th scope="col">Última visita</th></tr></thead><tbody>' +
+        l.map(j => '<tr' + buscaAttr(j.nombre, j.nick, j.email) + '><td class="ancho"><div class="adm-quien">' + ini(j.nick || j.nombre, fotos[j.id]) + '<div><b>' + escapeHtml(j.nombre) + '</b>' +
+          (j.nick ? '<span class="adm-nick" title="Nick">✏️ ' + escapeHtml(j.nick) + '</span>' : '') + '<div class="adm-correo">' + escapeHtml(j.email) + '</div></div></div></td>' +
+          '<td data-label="Tipo"><span class="adm-tipo">' + tipo(j) + '</span></td><td data-label="Puntos" class="num">⭐ ' + fmt(j.puntosSemana) + '</td><td data-label="Partidas" class="num">' + j.partidasSemana + '</td>' +
+          '<td data-label="Visita">' + escapeHtml(fechaCorta(j.ultimaVisita)) + '</td></tr>').join('') + '</tbody></table>', 'Lista de jugadores registrados')
+        : vacio('🧑‍🤝‍🧑', 'Todavía no hay jugadores registrados.', 'Aparecen cuando alumnos, alumnas o invitados entran a Juegos.');
+    } else if (sub === 'pendientes') {
+      const aviso = f.body.cuentasError ? '<div class="alert">No pude leer las cuentas de acceso; los registros pendientes no aparecen por ahora.</div>' : '';
+      panel.innerHTML = aviso + '<div id="jug-enlace" aria-live="polite"></div>' + (l.length ? lista('<table class="adm-tabla" id="jug-pendientes"><thead><tr><th scope="col">Correo</th><th scope="col">Estado</th><th scope="col">Intentó</th><th scope="col"><span class="sr-only">Acción</span></th></tr></thead><tbody>' +
+        l.map(p => '<tr' + buscaAttr(p.email) + '><td class="ancho"><b class="adm-correo" style="color:var(--text)">' + escapeHtml(p.email) + '</b></td>' +
+          '<td data-label="Estado" class="adm-estado">' + (p.estado === 'sin confirmar' ? '✉️ No confirmó su correo' : '🙈 Entró sin elegir apodo') + '</td>' +
+          '<td data-label="Intentó">' + escapeHtml(fechaCorta(p.creada)) + '</td>' +
+          '<td class="ancho accion"><button class="btn ghost sm" type="button" data-enlace="' + escapeHtml(p.email) + '">🔗 Enlace de acceso</button></td></tr>').join('') + '</tbody></table>', 'Lista de registros pendientes')
+        : vacio('🎉', 'Sin registros pendientes.', 'Todos los que se registraron ya pueden jugar.'));
+    } else if (sub === 'invitados') {
+      panel.innerHTML = l.length ? lista('<table class="adm-tabla" id="inv-tabla" style="--cols:3"><thead><tr><th scope="col">Invitado</th><th scope="col" class="num">Visitas</th><th scope="col">Última visita</th><th scope="col" class="num">Puntos semana</th></tr></thead><tbody>' +
+        l.map(x => '<tr' + buscaAttr(x.nombre, x.email) + '><td class="ancho"><div class="adm-quien">' + ini(x.nombre) + '<div><b>' + escapeHtml(x.nombre) + '</b><div class="adm-correo">' + escapeHtml(x.email) + '</div></div></div></td>' +
+          '<td data-label="Visitas" class="num">' + x.visitas + '</td><td data-label="Última">' + escapeHtml(fechaCorta(x.ultimaVisita)) + '</td>' +
+          '<td data-label="Puntos" class="num">⭐ ' + fmt(x.puntosSemana) + '</td></tr>').join('') + '</tbody></table>', 'Lista de invitados')
+        : vacio('📋', 'Todavía no hay invitados.', 'Aparecen cuando alguien que no es de las clases crea su cuenta de Juegos.');
+    } else {
+      const porId = Object.fromEntries(((state.adm.jugadores && state.adm.jugadores.body && state.adm.jugadores.body.jugadores) || []).map(j => [j.id, j]));
+      panel.innerHTML = l.length ? lista('<div class="fotos-grid">' + l.map(x => {
+        const j = porId[x.id] || {};
+        return '<div class="card"' + buscaAttr(x.nombre, j.nombre, j.nick, j.email) + '><img src="' + escapeHtml(fotoSrc({ foto: x.token })) + '" alt="Foto de ' + escapeHtml(x.nombre) + '" loading="lazy"><b>' + escapeHtml(x.nombre) + '</b>' +
+          (j.email ? '<span class="adm-correo">' + escapeHtml(j.email) + '</span>' : '') + '<small class="muted">' + escapeHtml(fechaCorta(x.en)) + '</small>' +
+          '<button class="btn ghost sm" type="button" data-quitar-foto="' + escapeHtml(x.id) + '" aria-label="Quitar la foto de ' + escapeHtml(x.nombre) + '">🗑️ Quitar</button></div>';
+      }).join('') + '</div>', 'Fotos de avatar', 'fotos')
+        : vacio('📷', 'No hay fotos de avatar.', 'Cuando alguien suba su foto, aquí podrás revisarla.');
+    }
+    aplicarBusqueda();
+  }
+
+  // Filtra la sub-sección activa por nombre, nick o correo (sin mayúsculas ni acentos) y dice cuántos coinciden.
+  function aplicarBusqueda() {
+    const input = document.getElementById('adm-buscar'); const panel = document.getElementById('adm-panel');
+    if (!input || !panel) return;
+    const q = normaliza(input.value.trim()); const items = [...panel.querySelectorAll('[data-busca]')];
+    let n = 0; items.forEach(x => { x.hidden = !!q && !x.dataset.busca.includes(q); if (!x.hidden) n++; });
+    const lista = panel.querySelector('.adm-lista[tabindex]'); const sin = panel.querySelector('#adm-sin');
+    if (lista) lista.hidden = !!q && !n;
+    if (sin) sin.remove();
+    if (q && items.length && !n) panel.insertAdjacentHTML('beforeend', '<div id="adm-sin" class="adm-lista"><div class="adm-vacio"><span class="e" aria-hidden="true">🔎</span><b>Nada coincide con «' + escapeHtml(input.value.trim()) + '».</b><button class="btn ghost sm" type="button" data-a="adm-limpiar" style="margin-top:8px">Limpiar búsqueda</button></div></div>');
+    const sub = state.admSub; const l = listaAdmin(sub);
+    const nombres = { jugadores: ['jugador registrado', 'jugadores registrados'], pendientes: ['registro pendiente', 'registros pendientes'], invitados: ['invitado', 'invitados'], fotos: ['foto de avatar', 'fotos de avatar'] }[sub];
+    const extra = { pendientes: ' Se registraron pero no terminaron: genera su enlace y mándaselo por WhatsApp.', fotos: ' Si alguna no es adecuada, quítala: vuelve a su personaje.' }[sub] || '';
+    document.getElementById('adm-resumen').textContent = !l ? '' : q ? n + ' de ' + l.length + ' coinciden con «' + input.value.trim() + '».'
+      : l.length + ' ' + nombres[l.length === 1 ? 0 : 1] + '.' + (l.length ? extra : '');
+  }
+
+  function cambiarSubAdmin(id, foco) {
+    if (!subAdmin(id)) return;
+    state.admSub = id; guardarSubAdmin(id); refrescarAdmin();
+    if (foco) document.getElementById('adm-tab-' + id).focus();
+  }
+  // ← → Inicio Fin entre sub-secciones (patrón de pestañas de WAI-ARIA).
+  function teclaSubAdmin(e) {
+    const i = ADM_SUBS.findIndex(s => s.id === state.admSub); const k = ADM_SUBS.length;
+    const j = { ArrowRight: (i + 1) % k, ArrowLeft: (i - 1 + k) % k, Home: 0, End: k - 1 }[e.key];
+    if (j === undefined) return;
+    e.preventDefault(); cambiarSubAdmin(ADM_SUBS[j].id, true);
   }
 
   // Enlace de acceso para un registro pendiente: lleva directo a Juegos (POST /auth/enlace con destino «juegos»).
@@ -763,37 +947,27 @@
     b.disabled = true; b.textContent = 'Generando…';
     const r = await post('/auth/enlace', { email: b.dataset.enlace, destino: 'juegos' });
     b.disabled = false; b.textContent = '🔗 Enlace de acceso';
-    if (!r.ok) { caja.innerHTML = '<div class="alert">No se pudo generar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    if (!r.ok) { caja.innerHTML = '<div class="alert">No se pudo generar (' + escapeHtml(r.body.error || r.status) + ').</div>'; caja.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
     const texto = '🎮 ¡Hola! Este es tu enlace para entrar a Juegos de STALD (es de un solo uso y vence en 1 hora): ' + r.body.enlace;
-    caja.innerHTML = '<div class="card" id="jug-enlace-caja"><b>Enlace para ' + escapeHtml(r.body.email) + '</b><input readonly value="' + escapeHtml(r.body.enlace) + '" style="margin:8px 0">' +
+    caja.innerHTML = '<div class="card" id="jug-enlace-caja"><b>Enlace para ' + escapeHtml(r.body.email) + '</b><input readonly aria-label="Enlace de acceso" value="' + escapeHtml(r.body.enlace) + '" style="margin:8px 0">' +
       '<div class="row-btns"><button class="btn ghost" type="button" data-copiar="' + escapeHtml(r.body.enlace) + '">📋 Copiar</button>' +
       '<a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(texto) + '">📤 Mandar por WhatsApp</a></div>' +
       '<small class="muted">Es de un solo uso y vence en 1 hora.</small></div>';
+    caja.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
   async function copiarEnlace(b) {
     try { await navigator.clipboard.writeText(b.dataset.copiar); b.textContent = '✔ ¡Copiado!'; } catch (e) { b.textContent = 'Selecciónalo y cópialo'; }
     setTimeout(() => { if (b.isConnected) b.textContent = '📋 Copiar'; }, 2500);
   }
 
-  // Moderación de fotos de avatar (solo admin).
-  async function pintarFotos() {
-    const body = document.getElementById('tab-body');
-    body.innerHTML = '<div class="loading">Cargando fotos…</div>';
-    const r = await api('/juegos/fotos');
-    if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
-    const fecha = s => new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
-    body.innerHTML = '<p class="muted" style="margin:10px 0">' + r.body.fotos.length + ' foto(s) de avatar. Si alguna no es adecuada, quítala: vuelve a su personaje.</p>' +
-      '<div class="fotos-grid">' + r.body.fotos.map(f => '<div class="card"><img src="' + escapeHtml(fotoSrc({ foto: f.token })) + '" alt="Foto de ' + escapeHtml(f.nombre) + '"><div><b>' + escapeHtml(f.nombre) + '</b></div>' +
-        '<small class="muted">' + escapeHtml(fecha(f.en)) + '</small><div><button class="btn ghost sm" data-quitar-foto="' + escapeHtml(f.id) + '">🗑️ Quitar</button></div></div>').join('') + '</div>';
-  }
-
+  // Moderación de fotos de avatar: al quitar una, se vuelve a pedir solo la lista de fotos.
   async function quitarFoto(b) {
     if (!confirm('¿Quitar esta foto? El jugador volverá a su personaje.')) return;
     b.disabled = true;
     const r = await post('/juegos/fotos/quitar', { id: b.dataset.quitarFoto });
     if (!r.ok) { b.disabled = false; alert('No se pudo quitar (' + (r.body.error || r.status) + ').'); return; }
     if (b.dataset.quitarFoto === state.jugador.id) { delete state.jugador.avatar.foto; pintarChip(); }
-    pintarFotos();
+    return cargarAdmin(['fotos']);
   }
 
   function descargarCsv(filas, nombre) {
@@ -3447,6 +3621,7 @@
     const pa = e.target.closest('[data-p]');
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('♟️ Espera a que se una tu rival: el ajedrez en partida es 1 vs 1.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
+    const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
     const en = e.target.closest('[data-enlace]'); if (en) return enlacePendiente(en);
     const cp = e.target.closest('[data-copiar]'); if (cp) return copiarEnlace(cp);
@@ -3455,6 +3630,9 @@
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === 'reanudar') return reanudarPartida();
+    if (a.dataset.a === 'adm-actualizar') return cargarAdmin(ADM_FUENTES);
+    if (a.dataset.a === 'adm-reintentar') return cargarAdmin([a.dataset.fuente]);
+    if (a.dataset.a === 'adm-limpiar') { const q = document.getElementById('adm-buscar'); q.value = ''; aplicarBusqueda(); return q.focus(); }
     if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); pantallaHub(); }
     if (a.dataset.a === 'reintentar') iniciar();
     if (a.dataset.a === 'csv') descargarCsv([['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana])), 'invitados-juegos.csv');

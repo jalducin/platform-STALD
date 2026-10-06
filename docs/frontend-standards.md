@@ -47,7 +47,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - "Cerrar sesión" en cualquier página borra las tres (y la sesión), y también las claves de Juegos
     `juegos_sala_activa` y `juegos_partida_individual` (`StaldAuth.salir()`).
   - Además del correo, se permiten preferencias de interfaz sin datos personales, como
-    `juegos_pref = { musica, volumen }` (música de fondo de `juegos.html`).
+    `juegos_pref = { musica, volumen }` (música de fondo de `juegos.html`) y `juegos_admin_sub` (sub-sección abierta de
+    «🛡️ Admin» en `juegos.html`).
   - Estado de juego para no perderlo al recargar (`juegos.html`, openspec: juegos-recarga), con el id opaco del
     jugador (`quien`), nunca el correo, y caducidad de 3 h: `juegos_sala_activa = { codigo, quien, t, marcas? }`
     (sala en curso) y `juegos_partida_individual = { juego, quien, t, … }` (instantánea del juego individual).
@@ -79,9 +80,9 @@ Cada página debe manejar y mostrar de forma explícita:
   y cada sección del tablero lleva `data-grupo`. El filtro se aplica en el DOM al `.board` más cercano (en
   admin, por alumno o alumna), no se guarda y se quita con la misma tarjeta o con "Ver todo".
 - Vista de admin de `ingles.html`: tarjeta "📊 Últimas calificaciones" (`#ultimas`), con las 5 más recientes
-  por alumno o alumna. Junta las de en línea (mejor intento, fecha del último envío) y las de Notion
-  (fecha de edición). El color va por nivel: ≥ 80, 60–79 y < 60; una calificación de Notion ≤ 10 se
-  escala × 10.
+  por alumno o alumna, de las actividades y exámenes en línea (mejor intento, fecha del último envío). El color va
+  por nivel: ≥ 80, 60–79 y < 60. Inglés ya no muestra tareas ni calificaciones de Notion (cambio `cierre-tecnico`,
+  fase 2): los bloques del admin salen del registro (filas `source: "registro"` de `/ingles/data`).
 - Voz en `ingles.html` (cambio `pronunciacion`):
   - 🔊 / 🐢 con `speechSynthesis` (en-US) en ejercicios con `audio` y `pronunciar`;
   - 🎙️ con `SpeechRecognition` / `webkitSpeechRecognition`: muestra «Te escuché…» y la coincidencia (misma regla que
@@ -92,6 +93,16 @@ Cada página debe manejar y mostrar de forma explícita:
   completo y las partidas con su podio, desde `/juegos/admin/resumen`. En el bloque de cada alumno o alumna
   va su línea de juegos.
 - `juegos.html`:
+  - **🛡️ Admin** (`admin-juegos-unificado`): la barra tiene 4 pestañas (🎮 Juegos, 👥 Partidas, 🏆 Ranking y, solo para
+    el admin, 🛡️ Admin). Admin junta Jugadores, Pendientes, Invitados y Fotos:
+    - sub-secciones `role="tab"` (`data-adm`, ← → Inicio Fin) con contador (`…` cargando, `!` error); las tres rutas se
+      piden en paralelo al abrir y una que falla no tapa a las demás («↻ Reintentar»);
+    - buscador único `#adm-buscar` sobre la sub-sección activa (`data-busca`, sin mayúsculas ni acentos) con resumen
+      `aria-live` y «Nada coincide» + «Limpiar búsqueda»;
+    - listas `.adm-lista` con altura máxima y scroll propio; `table.adm-tabla` con encabezado pegajoso desde 640 px y,
+      abajo de eso, filas como tarjetas (`td[data-label]`, columnas con `--cols`), sin scroll horizontal;
+    - CSV por sub-sección (`csv-jugadores` en Jugadores y Pendientes, `csv` en Invitados); el enlace de acceso de un
+      pendiente sale en `#jug-enlace`, arriba de la lista. Detalle en el `design.md` del cambio.
   - **avatar:** personaje y color de las listas que envía `/juegos/yo`, o foto propia (`avatar-foto`): se recorta y reduce a 128×128 JPEG en el navegador, exige la casilla de permiso de mamá, papá o tutor y, si la foto ya no existe, se muestra el personaje (`onerror`);
   - **Sudoku** (`sudoku-niveles`): el tablero se genera en el navegador con solución única (`generarSudoku`,
     `contarSoluciones`); niveles Fácil 40, Medio 32, Difícil 27 y Experto ~24 pistas; 3 vidas; puntos con

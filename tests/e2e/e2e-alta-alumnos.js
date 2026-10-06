@@ -11,13 +11,13 @@ const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, ingles: 
   const ad = await pagina(b, 'admin@example.com', '/ingles.html#alumnos');
   await ad.waitForSelector('#alumnos-admin', { timeout: 60000 });
   const antes = Number(await ad.textContent('#alumnos-admin .count'));
-  ok('tarjeta "Alumnos y alumnas" con la lista de Notion', antes >= 5, String(antes));
+  ok('tarjeta "Alumnos y alumnas" con la lista del registro', antes >= 5, String(antes));
   await ad.fill('#alta-nombre', 'Luz María'); await ad.fill('#alta-correo', 'Luz.Prueba@Example.com');
   await ad.click('#alta-alumno button[type=submit]');
   await ad.waitForFunction(() => (document.getElementById('alta-msg') || {}).textContent?.includes('ya puede entrar'), null, { timeout: 30000 });
   ok('alta con aviso', (await ad.textContent('#alta-msg')).includes('luz.prueba@example.com'), await ad.textContent('#alta-msg'));
   ok('la lista crece y marca "alta en la página"', Number(await ad.textContent('#alumnos-admin .count')) === antes + 1 && (await ad.textContent('#alumnos-admin')).includes('alta en la página'));
-  ok('el admin ve su bloque aunque no tenga tareas en Notion', !!(await ad.$('details.student[data-alumno="Luz María"]')));
+  ok('el admin ve su bloque aunque no tenga actividades entregadas', !!(await ad.$('details.student[data-alumno="Luz María"]')));
   // Duplicado
   await ad.fill('#alta-nombre', 'Otra'); await ad.fill('#alta-correo', 'luz.prueba@example.com'); await ad.click('#alta-alumno button[type=submit]');
   await ad.waitForFunction(() => (document.getElementById('alta-msg') || {}).textContent?.includes('ya tiene acceso'), null, { timeout: 15000 }).catch(() => {});
