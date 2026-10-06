@@ -33,9 +33,15 @@ Este es el Sprint 5, de cierre técnico. Atiende tres deudas que aún pueden cau
 
 ### Modified Capabilities
 - `plataforma`: almacenamiento de Juegos y origen de la identidad en Inglés.
+- Fase 2 de «Inglés sin Notion» (post-apply): se retiran requisitos que dependían de las tareas de Notion de Inglés
+  en `notion-data-api` (marcar completadas), `dashboard-ingles` (botón «Marcar hecha»; las últimas calificaciones
+  quedan solo en línea), `actividades-online` (registro de avance en JSON) e `ingles` (filas huérfanas).
 
 ## Impact
 
 - `server/db.ts`, `server/main.ts`, `server/alumnos.ts`, `herramientas/migrar-ingles.ts` y pruebas.
-- Documentación: `docs/data-model.md`, `docs/backend-standards.md` y `README.md`.
+- Fase 2: `server/main.ts`, `server/alumnos.ts`, `server/rows.ts`, se elimina `server/completar.ts`; páginas
+  `ingles/*.js`; E2E (`tests/fixtures/alumnos-ejemplo.json`, `tests/e2e/correr.sh`).
+- Documentación: `docs/data-model.md`, `docs/backend-standards.md` y `README.md`; en la fase 2 también
+  `docs/frontend-standards.md`, `docs/pruebas.md`, `openspec/config.yaml` y `openspec/project.md`.
 - Migración en producción de `juegos/**`, unos 120 archivos (350 KB), con cuadre y respaldo.
