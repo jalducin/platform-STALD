@@ -20,6 +20,10 @@ duplicar al jugador. Al salir de la sala o al terminar la partida, SHALL limpiar
 - **WHEN** quien abre Juegos no es el jugador que guardó la sala
 - **THEN** la página no intenta entrar a esa sala
 
+#### Scenario: Cerrar sesión
+- **WHEN** alguien cierra sesión en cualquier página (portal, Inglés, Secundaria o Juegos)
+- **THEN** se borran la sala guardada y la partida individual guardada, y al volver a entrar ve el inicio de Juegos
+
 #### Scenario: Salir de la sala
 - **WHEN** la jugadora sale con ✕ y recarga
 - **THEN** ve el inicio de Juegos, la URL ya no trae `sala` y no vuelve a la sala

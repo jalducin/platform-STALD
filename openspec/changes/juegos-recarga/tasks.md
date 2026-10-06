@@ -19,6 +19,8 @@
 - [ ] 2.2 Al cargar: reconectar por la URL (como antes) o por la clave (vigente, mismo `quien`, con `GET`)
 - [ ] 2.3 Limpiar en `pantallaHub`, `pantallaAvatar` y `pintarFinalSala`
 - [ ] 2.4 Basta por rondas: no reenviar rondas que el servidor ya tiene; Lotería: guardar y restaurar las marcas
+- [ ] 2.5 `StaldAuth.salir()` borra `juegos_sala_activa` y `juegos_partida_individual` (cerrar sesión en
+  cualquier página); `auth.js?v=2` en las cuatro páginas
 
 ## 3. Juegos individuales (`juegos.html`)
 

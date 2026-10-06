@@ -29,7 +29,8 @@ Diagnóstico (verificado en el código):
   en salas el servidor ya rechaza el segundo registro (`ya_guardada`).
 
 ## Superficies
-- `juegos.html` (único archivo de página que cambia).
+- `juegos.html`; `comun/auth.js` (cerrar sesión borra las claves de Juegos), con `?v=2` en `index.html`,
+  `ingles.html`, `juegos.html` y `secundaria.html`.
 - Servidor Deno: **sin cambios de código**. Se agrega una prueba unitaria en `server/salas_test.ts` que fija el
   comportamiento de volver a unirse del que depende este cambio.
 - Pruebas E2E: nueva `tests/e2e/e2e-juegos-recarga.js`, registrada en `correr.sh` (fase `base`).

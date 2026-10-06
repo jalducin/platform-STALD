@@ -20,7 +20,9 @@ casillas de Lotería.
   así nunca se agrega a alguien que no estaba en la sala.
 - **Limpieza.** `olvidarSala()` borra la clave y quita `sala` de la URL. Se llama en `pantallaHub`, que es el
   destino de ✕, de «Otros juegos», de cambiar de pestaña y de los errores al entrar; en `pantallaAvatar`; y en
-  `pintarFinalSala`, cuando la partida termina.
+  `pintarFinalSala`, cuando la partida termina. Además, `StaldAuth.salir()` (`comun/auth.js`, usado al cerrar
+  sesión en todas las páginas) borra `juegos_sala_activa` y `juegos_partida_individual`: cerrar sesión indica que
+  otra persona puede usar el aparato. Por eso `auth.js` sube a `?v=2` en las cuatro páginas.
 - **Servidor.** No cambia. Volver a unirse no duplica: `if (dentro) return { ok: true }` va antes de las
   revisiones de «ya empezó» y «llena». `guardarJugador` conserva respuestas y jugadas. El registro en el ranking
   de una sala es único (`ya_guardada`). Una prueba unitaria nueva fija este comportamiento.
