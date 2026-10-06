@@ -7,6 +7,7 @@
 //   StaldAuth.esSesionVencida(res, body)         // true si el servidor respondió 401 de sesión
 //   StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar, pie })  // pie: HTML propio bajo el formulario
 //   StaldAuth.ayudaReenvio(el, correo)           // «¿No te llegó?» y botón para reenviar el enlace (espera de 60 s)
+//   StaldAuth.entrarConToken(tokenHash, correo)    // sesión con la llave de un solo uso del servidor (registro de Juegos)
 //   StaldAuth.salir()                            // cierra la sesión y borra las claves viejas de correo y las de Juegos
 // La sesión se comparte entre portal, Inglés, Juegos y Secundaria (mismo origen, localStorage).
 (function () {
@@ -113,10 +114,28 @@
     });
   }
 
+  // Llave de sesión de un solo uso que da el servidor (registro de Juegos sin validar el correo, openspec:
+  // registro-directo-juegos). En modo de prueba, la sesión falsa de siempre.
+  function entrarConToken(tokenHash, correo) {
+    correo = String(correo || '').trim().toLowerCase();
+    if (estado.prueba) {
+      estado.sesion = { email: correo, token: 'prueba:' + correo };
+      escribir(CLAVE_PRUEBA, JSON.stringify(estado.sesion));
+      return Promise.resolve(correo);
+    }
+    if (!estado.cliente) return Promise.reject(new Error('El inicio de sesión no está disponible.'));
+    return estado.cliente.auth.verifyOtp({ token_hash: tokenHash, type: 'magiclink' }).then(function (r) {
+      if (r.error) throw new Error('No pude abrir tu sesión (' + r.error.message + '). Intenta de nuevo.');
+      var ses = r.data && r.data.session;
+      estado.sesion = ses ? { email: ses.user && ses.user.email, token: ses.access_token } : null;
+      return email();
+    });
+  }
+
   function verificarCodigo(correo, codigo) {
     correo = String(correo || '').trim().toLowerCase();
     codigo = String(codigo || '').replace(/\s/g, '');
-    if (!/^\d{6}$/.test(codigo)) return Promise.reject(new Error('El código tiene 6 números.'));
+    if (!/^\d{6,8}$/.test(codigo)) return Promise.reject(new Error('Escribe el código de números que viene en tu correo.'));
     if (estado.prueba) {
       estado.sesion = { email: correo, token: 'prueba:' + correo };
       escribir(CLAVE_PRUEBA, JSON.stringify(estado.sesion));
@@ -224,9 +243,9 @@
     }
     function paso2(correo, msg) {
       el.innerHTML = '<div class="stald-auth" data-stald-auth="codigo"><h2>Revisa tu correo ✉️</h2>' +
-        '<p>Te mandamos un enlace a <b>' + esc(correo) + '</b>. Tócalo para entrar. Si lo abres en otro aparato, escribe aquí el código de 6 números que viene en el mismo correo.</p>' +
+        '<p>Te mandamos un enlace a <b>' + esc(correo) + '</b>. Tócalo para entrar. Si lo abres en otro aparato, escribe aquí el código de números que viene en el mismo correo.</p>' +
         '<form novalidate><label for="stald-auth-codigo">Código</label>' +
-        '<input id="stald-auth-codigo" class="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">' +
+        '<input id="stald-auth-codigo" class="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Código">' +
         '<button type="submit" id="stald-auth-verificar">Entrar →</button></form>' +
         '<button type="button" class="sec" data-stald-auth-otro>Usar otro correo</button>' +
         (msg ? '<div class="msg" role="alert">' + esc(msg) + '</div>' : '') + '<div data-stald-auth-ayuda></div></div>';
@@ -256,6 +275,7 @@
     salir: salir,
     pintarEntrada: pintarEntrada,
     ayudaReenvio: ayudaReenvio,
+    entrarConToken: entrarConToken,
     modoPrueba: function () { return estado.prueba; },
     disponible: function () { return estado.prueba || !!estado.cliente; },
   };

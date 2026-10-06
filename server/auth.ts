@@ -117,42 +117,47 @@ export async function handleEnlace(req: Request, quien: Quien, deps: DepsEnlace,
   const email = normalizeEmail(typeof body.email === "string" ? body.email : null);
   if (!CORREO.test(email)) return json({ error: "correo_invalido" }, 400);
   if (!deps.supabaseUrl || !deps.serviceKey) return json({ error: "auth_no_disponible" }, 503);
-  const base = deps.supabaseUrl.replace(/\/$/, "");
-  const admin = (ruta: string, body: unknown) => (deps.fetch ?? fetch)(`${base}/auth/v1/admin/${ruta}`, {
-    method: "POST",
-    headers: { "apikey": deps.serviceKey!, "Authorization": `Bearer ${deps.serviceKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(8000),
-  });
   // destino «juegos»: el enlace lleva directo a Juegos (openspec: jugadores-admin).
   const redirect = body.destino === "juegos" ? deps.redirect.replace(/\/?$/, "/") + "juegos.html" : deps.redirect;
-  const pedirEnlace = () => admin("generate_link", { type: "magiclink", email, redirect_to: redirect });
-  let res: Response;
-  let j: Record<string, unknown> & { properties?: Record<string, unknown> };
   try {
-    res = await pedirEnlace();
-    j = await res.json().catch(() => ({}));
-    // Aún no existe en Auth: se da de alta con el correo confirmado y se pide el enlace otra vez (ajuste post-apply).
-    if (res.status === 404 || res.status === 422 || j?.error_code === "user_not_found") {
-      const alta = await admin("users", { email, email_confirm: true });
-      await alta.body?.cancel();
-      if (!alta.ok && alta.status !== 422) { console.error("auth alta:", alta.status); return json({ error: "auth_no_disponible" }, 503); }
-      res = await pedirEnlace();
-      j = await res.json().catch(() => ({}));
-    }
+    const r = await generarEnlace(deps, email, redirect);
+    return json({ email, enlace: r.enlace, codigo: r.codigo });
   } catch (e) {
     console.error("auth enlace:", e instanceof Error ? e.message : e);
     return json({ error: "auth_no_disponible" }, 503);
   }
-  if (!res.ok) {
-    console.error("auth enlace:", res.status);
-    return json({ error: "auth_no_disponible" }, 503);
+}
+
+// Enlace de acceso de un solo uso con la Admin API (generate_link, tipo magiclink), sin mandar correo. Si la cuenta
+// no existe, la da de alta con el correo confirmado y lo pide otra vez. Devuelve también `tokenHash`, que la página
+// canjea con verifyOtp para entrar sin abrir el enlace (openspec: registro-directo-juegos). Lanza error si Auth falla.
+export async function generarEnlace(deps: { supabaseUrl: string; serviceKey: string; fetch?: typeof fetch }, email: string, redirect: string):
+  Promise<{ enlace: string; codigo: string | null; tokenHash: string | null }> {
+  const base = deps.supabaseUrl.replace(/\/$/, "");
+  const admin = (ruta: string, body: unknown) => (deps.fetch ?? fetch)(`${base}/auth/v1/admin/${ruta}`, {
+    method: "POST",
+    headers: { "apikey": deps.serviceKey, "Authorization": `Bearer ${deps.serviceKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000),
+  });
+  const pedirEnlace = () => admin("generate_link", { type: "magiclink", email, redirect_to: redirect });
+  let res = await pedirEnlace();
+  let j: Record<string, unknown> & { properties?: Record<string, unknown> } = await res.json().catch(() => ({}));
+  // Aún no existe en Auth: se da de alta con el correo confirmado y se pide el enlace otra vez.
+  if (res.status === 404 || res.status === 422 || j?.error_code === "user_not_found") {
+    const alta = await admin("users", { email, email_confirm: true });
+    await alta.body?.cancel();
+    if (!alta.ok && alta.status !== 422) throw new Error(`auth alta ${alta.status}`);
+    res = await pedirEnlace();
+    j = await res.json().catch(() => ({}));
   }
+  if (!res.ok) throw new Error(`auth enlace ${res.status}`);
   // GoTrue devuelve las propiedades del enlace en la raíz; supabase-js las agrupa en `properties`.
   const enlace = j?.action_link ?? j?.properties?.action_link;
-  const codigo = j?.email_otp ?? j?.properties?.email_otp ?? null;
-  if (typeof enlace !== "string") return json({ error: "auth_no_disponible" }, 503);
-  return json({ email, enlace, codigo });
+  if (typeof enlace !== "string") throw new Error("auth enlace sin action_link");
+  const codigo = (j?.email_otp ?? j?.properties?.email_otp ?? null) as string | null;
+  const tokenHash = (j?.hashed_token ?? j?.properties?.hashed_token ?? null) as string | null;
+  return { enlace, codigo, tokenHash };
 }
 
 // Cuentas de acceso de Supabase Auth (Admin API, llave de servicio; solo servidor) para la vista de jugadores del

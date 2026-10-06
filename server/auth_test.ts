@@ -173,6 +173,22 @@ Deno.test("enlace: solo el admin con sesión verificada; correo válido; sin cue
   assertEquals(sinLlave.status, 503);
 });
 
+Deno.test("generarEnlace: devuelve hashed_token y da de alta la cuenta si falta (openspec: registro-directo-juegos)", async () => {
+  const { generarEnlace } = await import("./auth.ts");
+  let existe = false;
+  const rutas: string[] = [];
+  const f = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input), body = JSON.parse(String(init?.body || "{}"));
+    rutas.push(url.replace("https://ref.supabase.co/auth/v1", ""));
+    if (url.endsWith("/admin/users")) { existe = true; return json({ id: "u", email: body.email }); }
+    if (!existe) return json({ error_code: "user_not_found" }, 404);
+    return json({ action_link: "https://ref/verify?token=t", email_otp: "12345678", hashed_token: "hash-1" });
+  }) as typeof fetch;
+  const r = await generarEnlace({ supabaseUrl: "https://ref.supabase.co", serviceKey: "srv", fetch: f }, "leo@example.com", "https://sitio/juegos.html");
+  assertEquals(r, { enlace: "https://ref/verify?token=t", codigo: "12345678", tokenHash: "hash-1" });
+  assertEquals(rutas, ["/admin/generate_link", "/admin/users", "/admin/generate_link"]);
+});
+
 Deno.test("enlace: destino «juegos» lleva a juegos.html (openspec: jugadores-admin)", async () => {
   const api = adminApiFalsa();
   const r = await handleEnlace(postEnlace({ email: "leo@example.com", destino: "juegos" }), { ok: true, email: ADMIN, verificado: true }, enlaceDeps(api.f), json);

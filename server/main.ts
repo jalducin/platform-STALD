@@ -15,7 +15,8 @@ import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
 import { ahoraIso, mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
-import { configPublica, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, quienEs } from "./auth.ts";
+import { configPublica, generarEnlace, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, quienEs } from "./auth.ts";
+import { handleRegistroJuegos } from "./registro.ts";
 import type { Cuenta } from "./jugadores.ts";
 import { handleResumen } from "./resumen.ts";
 
@@ -189,7 +190,8 @@ export async function handler(req: Request): Promise<Response> {
   }
 
   // Rutas sin identidad: /salud y la foto de avatar (la pide un <img>, sin encabezados).
-  const sinIdentidad = url.pathname.endsWith("/salud") || /\/juegos\/foto\/[^/]+$/.test(url.pathname);
+  // /juegos/registro crea la cuenta de Juegos sin sesión previa (openspec: registro-directo-juegos).
+  const sinIdentidad = url.pathname.endsWith("/salud") || url.pathname.endsWith("/juegos/registro") || /\/juegos\/foto\/[^/]+$/.test(url.pathname);
   // Quién hace la petición: correo verificado por la sesión o, en la transición, `?email=` (nunca el admin).
   const quien = sinIdentidad ? { ok: true as const, email: "", verificado: false } : await quienEs(req, {
     supabaseUrl: env("SUPABASE_URL"),
@@ -203,6 +205,21 @@ export async function handler(req: Request): Promise<Response> {
   const email = quien.email;
 
   try {
+    // POST /juegos/registro → cuenta de Juegos con correo y apodo, sin validar el correo (openspec: registro-directo-juegos).
+    if (url.pathname.endsWith("/juegos/registro")) {
+      const sitio = (env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/").replace(/\/?$/, "/");
+      return await handleRegistroJuegos(req, {
+        store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"),
+        ahora: ahoraIso,
+        sesion: async (correo) => {
+          if (env("ROWS_FIXTURE")) return { prueba: true as const };
+          const r = await generarEnlace({ supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY") }, correo, sitio + "juegos.html");
+          if (!r.tokenHash) throw new Error("sin hashed_token");
+          return { token_hash: r.tokenHash };
+        },
+      }, json);
+    }
+
     // POST /auth/enlace → enlace de acceso para mandar por WhatsApp (solo admin con sesión).
     if (url.pathname.endsWith("/auth/enlace")) {
       return await handleEnlace(req, quien, { admin, supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY"), redirect: env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/" }, json);

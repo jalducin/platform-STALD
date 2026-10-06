@@ -3,7 +3,7 @@
 // de invitados, solo para análisis del admin). Ver openspec: juegos-plataforma.
 import { mxToday, slugAlumno } from "./motor.ts";
 import { decodeBase64 } from "jsr:@std/encoding@1/base64";
-import type { Store } from "./store.ts";
+import type { Doc, Store } from "./store.ts";
 import { handleSalas, resumenSalas } from "./salas.ts";
 import type { ConfigRealtime } from "./realtime.ts";
 import { armarJugadores, type Cuenta } from "./jugadores.ts";
@@ -170,8 +170,8 @@ const MAX_PARTIDAS_GUARDADAS = 1000; // los totales salen del historial: 7 días
 const MAX_SALA = 10_000; // tope por partida de sala (como el total final de la sala)
 const MAX_INVITADOS = 500;
 const RUTA_INVITADOS = "juegos/invitados.json";
-const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const APODO = /^[\p{L}\p{N} ]{2,20}$/u;
+export const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const APODO = /^[\p{L}\p{N} ]{2,20}$/u;
 
 // Lunes (AAAA-MM-DD) de la semana de una fecha.
 export function lunesDe(fecha: string): string {
@@ -197,6 +197,26 @@ export async function resolverJugador(email: string, admin: string, ingles: Fila
   const inv = invitados[email];
   if (inv) return { id: `i-${await hash10(email)}`, nombre: inv.nombre, tipo: "invitado" };
   return null;
+}
+
+// Alta o regreso de un invitado (apodo, cupo de 500, reintentos por concurrencia). La usan POST /juegos/invitado y
+// POST /juegos/registro (openspec: registro-directo-juegos). `nombre` ya validado con APODO.
+export async function registrarInvitado(store: Store, email: string, nombre: string, ahora: string, docPrevio?: Doc<Invitados> | null):
+  Promise<{ invitados: Invitados } | { error: string; status: number }> {
+  for (let i = 0; i < 3; i++) {
+    const doc = i === 0 && docPrevio !== undefined ? docPrevio : await store.get<Invitados>(RUTA_INVITADOS);
+    const reg: Invitados = { ...(doc?.data ?? {}) };
+    const previo = reg[email];
+    if (!previo && Object.keys(reg).length >= MAX_INVITADOS) return { error: "cupo_lleno", status: 429 };
+    reg[email] = previo
+      ? { ...previo, nombre, ultimaVisita: ahora, visitas: previo.visitas + 1 }
+      : { nombre, registradoEn: ahora, ultimaVisita: ahora, visitas: 1 };
+    if (await store.put(RUTA_INVITADOS, reg, doc?.sha ?? null, `juegos: invitado ${previo ? "regresa" : "nuevo"}`)) {
+      clearCacheJuegos();
+      return { invitados: reg };
+    }
+  }
+  return { error: "conflicto_escritura", status: 503 };
 }
 
 export interface DepsJuegos {
@@ -285,19 +305,9 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
     const nombre = typeof body.nombre === "string" ? body.nombre.trim().replace(/\s+/g, " ") : "";
     if (body.acepto !== true) return json({ error: "debe_aceptar" }, 400);
     if (!APODO.test(nombre)) return json({ error: "apodo_invalido" }, 400);
-    for (let i = 0; i < 3; i++) {
-      const doc = i === 0 ? invDoc : await store.get<Invitados>(RUTA_INVITADOS);
-      const reg: Invitados = { ...(doc?.data ?? {}) };
-      const previo = reg[email];
-      if (!previo && Object.keys(reg).length >= MAX_INVITADOS) return json({ error: "cupo_lleno" }, 429);
-      reg[email] = previo
-        ? { ...previo, nombre, ultimaVisita: ahora, visitas: previo.visitas + 1 }
-        : { nombre, registradoEn: ahora, ultimaVisita: ahora, visitas: 1 };
-      if (await store.put(RUTA_INVITADOS, reg, doc?.sha ?? null, `juegos: invitado ${previo ? "regresa" : "nuevo"}`)) {
-        return json({ ya: false, jugador: await resolverJugador(email, deps.admin, ingles, secundaria, reg) });
-      }
-    }
-    return json({ error: "conflicto_escritura" }, 503);
+    const r = await registrarInvitado(store, email, nombre, ahora, invDoc);
+    if ("error" in r) return json({ error: r.error }, r.status);
+    return json({ ya: false, jugador: await resolverJugador(email, deps.admin, ingles, secundaria, r.invitados) });
   }
 
   const base = await resolverJugador(email, deps.admin, ingles, secundaria, invitados);
