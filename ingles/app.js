@@ -120,7 +120,6 @@ function onClick(e) {
   const act = b.dataset.action;
   if (act === 'filtrar') { const board = b.closest('.board'); aplicarFiltro(board, b.getAttribute('aria-pressed') === 'true' ? null : b.dataset.grupo); }
   if (act === 'ver-todo') aplicarFiltro(b.closest('.board'), null);
-  if (act === 'marcar') { e.preventDefault(); marcarTarea(b); }
   if (act === 'quitar-alumno') { e.preventDefault(); quitarAlumno(b); }
   if (act === 'editar-grupo') { e.preventDefault(); state.grupoEdicion = (state.grupos.grupos || []).find(g => g.id === b.dataset.id) || null; state.gruposAbierto = true; render(state.data); document.getElementById('g-nombre').focus(); }
   if (act === 'tts') { e.preventDefault(); hablar(b.dataset.texto, !!b.dataset.lento); }
