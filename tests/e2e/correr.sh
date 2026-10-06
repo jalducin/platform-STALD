@@ -194,12 +194,15 @@ preparar() { # $1 = fase
 import json, sys
 destino, ejemplo = sys.argv[1], sys.argv[2]
 try:
-    registro = json.load(open(destino, encoding="utf-8"))
+    with open(destino, encoding="utf-8") as f:
+        registro = json.load(f)
 except FileNotFoundError:
     registro = {}
-for correo, alumno in json.load(open(ejemplo, encoding="utf-8")).items():
-    registro.setdefault(correo, alumno)
-json.dump(registro, open(destino, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+with open(ejemplo, encoding="utf-8") as f:
+    for correo, alumno in json.load(f).items():
+        registro.setdefault(correo, alumno)  # nunca pisa una entrada de la copia
+with open(destino, "w", encoding="utf-8") as f:
+    json.dump(registro, f, ensure_ascii=False, indent=2)
 PY
   # Las pruebas parten de cero: sin resultados del profe ni del examen del viernes 2026-10-02.
   [ -d "$COPIA/resultados" ] && find "$COPIA/resultados" -name profe.json -delete
