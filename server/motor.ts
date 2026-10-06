@@ -118,8 +118,20 @@ const NIVELES_DEFAULT: Nivel[] = [
 ];
 
 // ---------- Fechas ----------
-export function mxToday(now: Date = new Date()): string {
-  return now.toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" });
+// Momento actual en ISO; en pruebas con HOY_FIJO, ese día a mediodía de la Ciudad de México (openspec: pruebas-fecha-fija).
+export function ahoraIso(): string {
+  const hoy = mxToday();
+  return hoy === mxToday(new Date()) ? new Date().toISOString() : `${hoy}T18:00:00.000Z`;
+}
+
+export function mxToday(now?: Date): string {
+  // Pruebas locales (openspec: pruebas-fecha-fija): con ROWS_FIXTURE, HOY_FIJO congela «hoy» para que las E2E no
+  // dependan del calendario. Una fecha explícita (`now`) nunca se cambia.
+  if (!now && Deno.env.get("ROWS_FIXTURE")) {
+    const fijo = Deno.env.get("HOY_FIJO") || "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fijo)) return fijo;
+  }
+  return (now ?? new Date()).toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" });
 }
 
 export function maxIntentos(it: Item): number {

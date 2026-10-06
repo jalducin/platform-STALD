@@ -17,7 +17,8 @@ deno lint server/
 
 - No necesitan llaves ni red propia: usan dobles (`server/test_datos.ts`, `server/test_postgrest.ts`).
 - 6 pruebas de `server/actividades_test.ts` se **omiten** si no hay `DATA_DIR`; para correrlas, apunta a una
-  **copia** del repo privado de datos: `DATA_DIR=<copia> deno test -A server/`.
+  **copia** del repo privado de datos: `DATA_DIR=<copia> deno test -A server/`. `correr.sh` las corre solo como la
+  prueba `actividades-datos` (cambio `pruebas-fecha-fija`), así que no se quedan sin revisar.
 - El workflow **Pruebas** corre los tres comandos; si uno falla, el check del PR queda en rojo.
 
 ## E2E (Node + Playwright)
@@ -45,6 +46,7 @@ bash tests/e2e/correr.sh --datos <ruta> login portal juegos poker               
 bash tests/e2e/correr.sh --lista                                                      # pruebas y su fase
 bash tests/e2e/correr.sh --datos <ruta> --puerto-api 8817 --puerto-web 8795           # puertos (por omisión)
 bash tests/e2e/correr.sh --datos <ruta> --transicion-terminada poker                  # como tras el fin de la transición del login
+bash tests/e2e/correr.sh --datos <ruta> --hoy 2026-10-11 ruta-profe                  # otro «hoy» del servidor (o --hoy real)
 ```
 
 Qué hace `correr.sh`:
@@ -52,8 +54,10 @@ Qué hace `correr.sh`:
 2. Copia `--datos` a una carpeta temporal, sin `.git`, y borra los `profe.json` de resultados y los resultados del
    examen 2026-10-02 (las pruebas parten de cero). **La carpeta original nunca se modifica.**
 3. Levanta el servidor (`server/main.ts`) con `DATA_DIR=<copia>`, `ROWS_FIXTURE=tests/fixtures/rows-fixture.json`,
-   `SUPER_ADMIN_EMAIL=admin@example.com` y `PERMITIR_HOY=1`, sin Notion ni GitHub, y los estáticos con
-   `python -m http.server`.
+   `SUPER_ADMIN_EMAIL=admin@example.com`, `PERMITIR_HOY=1` y `HOY_FIJO=2026-10-04` (el día con el que se escribieron
+   las E2E, para que no dependan del calendario; `--hoy` lo cambia), sin Notion ni GitHub, y los estáticos con
+   `python -m http.server`. `HOY_FIJO` solo tiene efecto con `ROWS_FIXTURE`, nunca en producción.
+   Antes de arrancar, superpone `tests/fixtures/datos/` (contenido de ejemplo) sobre la copia.
 4. Corre las pruebas por **fase** (ver `--lista`); reinicia datos y servidor cuando la fase cambia.
 5. Imprime `PASS`/`FAIL`/`OMIT` por prueba y el total; sale con 1 si alguna falla.
 6. Siempre (también con error o Ctrl+C) apaga los servidores, vacía `stald_test_*` si usó `--pg` y borra la copia.

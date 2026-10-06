@@ -66,15 +66,18 @@ Deno.test({ name: "flujo: teoría → intento 1 → intento 2 (corrección, mism
   assertEquals([diag.estado, diag.mejor.porcentaje], ["completo", 70]); // resultado migrado
 }});
 
-Deno.test({ name: "examen: 1 intento, solo desde su fecha; admin no guarda; reinicio solo admin", ignore, fn: async () => {
+Deno.test({ name: "examen: solo desde su fecha; 2.ª oportunidad el domingo; admin no guarda; reinicio solo admin", ignore, fn: async () => {
   clearCache();
   const store = await MemoryStore.fromDir(DATA_DIR!);
+  await store.remove("resultados/examen-2026-10-02/angel.json"); // la copia puede traer su resultado real
   const angel = { isAdmin: false, alumno: "Angel" }, admin = { isAdmin: true, alumno: null };
   assertEquals((await call(store, "GET", "/examen-2026-10-02", angel, undefined, "2026-10-01")).status, 403);
   const g = await call(store, "GET", "/examen-2026-10-02", angel, undefined, "2026-10-02");
-  assertEquals([g.status, g.body.preguntas.length, g.body.intentosMax], [200, 20, 1]);
+  assertEquals([g.status, g.body.preguntas.length, g.body.intentosMax], [200, 20, 2]);
   assertEquals((await call(store, "POST", "/examen-2026-10-02", angel, { intento: 1, respuestas: {} }, "2026-10-02")).body.guardado, true);
-  assertEquals((await call(store, "POST", "/examen-2026-10-02", angel, { intento: 2, respuestas: {} }, "2026-10-02")).status, 409);
+  assertEquals((await call(store, "GET", "/examen-2026-10-02", angel, undefined, "2026-10-03")).status, 403, "la 2.ª oportunidad espera al domingo");
+  assertEquals((await call(store, "POST", "/examen-2026-10-02", angel, { intento: 2, respuestas: {} }, "2026-10-04")).body.guardado, true);
+  assertEquals((await call(store, "POST", "/examen-2026-10-02", angel, { intento: 3, respuestas: {} }, "2026-10-04")).status, 409);
   const pa = await call(store, "POST", "/examen-2026-10-02", admin, { respuestas: {} }, "2026-09-29");
   assertEquals(pa.body.guardado, false);
   assertEquals((await call(store, "DELETE", "/examen-2026-10-02/resultados/angel", angel)).status, 403);

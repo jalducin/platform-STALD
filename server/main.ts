@@ -13,7 +13,7 @@ import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro, sinHuerfanas, im
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
-import { mxToday, slugAlumno } from "./motor.ts";
+import { ahoraIso, mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
 import { configPublica, handleEnlace, LOGIN_TRANSICION_HASTA, quienEs } from "./auth.ts";
 import { handleResumen } from "./resumen.ts";
@@ -221,7 +221,7 @@ export async function handler(req: Request): Promise<Response> {
           if (importados && await store.put(RUTA_ALUMNOS, registro, doc?.sha ?? null, `alumnos: ${importados} importados de Notion`)) clearCacheAlumnos();
         } catch (e) { console.error("importar Notion:", e instanceof Error ? e.message : e); }
       }
-      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion, inscribir }, json);
+      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: filasNotion, inscribir, ahora: ahoraIso }, json);
     }
 
     // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada)
