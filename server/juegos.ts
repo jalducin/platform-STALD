@@ -6,6 +6,7 @@ import { decodeBase64 } from "jsr:@std/encoding@1/base64";
 import type { Store } from "./store.ts";
 import { handleSalas, resumenSalas } from "./salas.ts";
 import type { ConfigRealtime } from "./realtime.ts";
+import { armarJugadores, type Cuenta } from "./jugadores.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -207,6 +208,7 @@ export interface DepsJuegos {
   ahora?: () => string; // ISO
   ms?: () => number; // reloj en ms para la caché de fotos (inyectable en pruebas)
   realtime?: ConfigRealtime; // Supabase Realtime para salas (openspec: salas-realtime)
+  cuentas?: () => Promise<Cuenta[]>; // cuentas de acceso de Auth para la vista de jugadores (openspec: jugadores-admin)
 }
 
 const cache = new Map<string, { t: number; v: unknown }>();
@@ -450,6 +452,16 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
   }
 
   // GET /juegos/invitados → solo admin: lista para análisis (con correos)
+  // GET /juegos/jugadores → todos los jugadores y los registros pendientes (solo admin, openspec: jugadores-admin).
+  if (sub === "/jugadores" && req.method === "GET") {
+    if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
+    const [docs, ingles, secundaria] = await Promise.all([leerSemana(store, lunes), deps.filasIngles(), deps.filasSecundaria()]);
+    let cuentas: Cuenta[] = [], cuentasError = false;
+    try { cuentas = deps.cuentas ? await deps.cuentas() : []; } catch (e) { cuentasError = true; console.error("cuentas:", e instanceof Error ? e.message : e); }
+    const r = await armarJugadores({ admin: deps.admin, ingles, secundaria, invitados, semana: docs, cuentas });
+    return json({ semana: lunes, ...r, cuentasError });
+  }
+
   if (sub === "/invitados" && req.method === "GET") {
     if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
     const docs = await leerSemana(store, lunes);

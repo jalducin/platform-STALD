@@ -112,7 +112,7 @@ export async function handleEnlace(req: Request, quien: Quien, deps: DepsEnlace,
   if (!quien.ok) return json({ error: quien.error }, quien.status);
   if (!quien.verificado) return json({ error: "inicia_sesion" }, 401);
   if (!deps.admin || quien.email !== deps.admin) return json({ error: "solo_admin" }, 403);
-  let body: { email?: unknown } = {};
+  let body: { email?: unknown; destino?: unknown } = {};
   try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
   const email = normalizeEmail(typeof body.email === "string" ? body.email : null);
   if (!CORREO.test(email)) return json({ error: "correo_invalido" }, 400);
@@ -124,7 +124,9 @@ export async function handleEnlace(req: Request, quien: Quien, deps: DepsEnlace,
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(8000),
   });
-  const pedirEnlace = () => admin("generate_link", { type: "magiclink", email, redirect_to: deps.redirect });
+  // destino «juegos»: el enlace lleva directo a Juegos (openspec: jugadores-admin).
+  const redirect = body.destino === "juegos" ? deps.redirect.replace(/\/?$/, "/") + "juegos.html" : deps.redirect;
+  const pedirEnlace = () => admin("generate_link", { type: "magiclink", email, redirect_to: redirect });
   let res: Response;
   let j: Record<string, unknown> & { properties?: Record<string, unknown> };
   try {
@@ -151,4 +153,20 @@ export async function handleEnlace(req: Request, quien: Quien, deps: DepsEnlace,
   const codigo = j?.email_otp ?? j?.properties?.email_otp ?? null;
   if (typeof enlace !== "string") return json({ error: "auth_no_disponible" }, 503);
   return json({ email, enlace, codigo });
+}
+
+// Cuentas de acceso de Supabase Auth (Admin API, llave de servicio; solo servidor) para la vista de jugadores del
+// admin (openspec: jugadores-admin). Sin correo normalizado no se incluye.
+export async function listarCuentas(deps: { supabaseUrl: string; serviceKey: string; fetch?: typeof fetch }): Promise<import("./jugadores.ts").Cuenta[]> {
+  const base = deps.supabaseUrl.replace(/\/$/, "");
+  const res = await (deps.fetch ?? fetch)(`${base}/auth/v1/admin/users?page=1&per_page=1000`, {
+    headers: { "apikey": deps.serviceKey, "Authorization": `Bearer ${deps.serviceKey}` },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) { await res.body?.cancel(); throw new Error(`auth users ${res.status}`); }
+  const j = await res.json() as { users?: Record<string, string | null>[] };
+  return (j.users || []).map((u) => ({
+    email: normalizeEmail(u.email ?? null), creada: u.created_at ?? "", confirmada: !!u.email_confirmed_at,
+    ultimoAcceso: u.last_sign_in_at ?? null, ultimoEnvio: u.recovery_sent_at ?? u.confirmation_sent_at ?? null,
+  })).filter((c) => c.email);
 }
