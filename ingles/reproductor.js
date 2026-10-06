@@ -74,7 +74,7 @@ async function openItem(id) {
     renderTips(it.tips) +
     '<form id="exam-form"' + (paso ? ' class="paso"' : '') + ' data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + porCorregir.length + '" data-borrador="' + escapeHtml(kb) + '">' +
     '<div class="player-progreso"><div class="barra accent" role="progressbar" aria-label="Avance" aria-valuemin="0" aria-valuemax="' + porCorregir.length + '" aria-valuenow="0" id="player-barra"><span id="player-bar" style="width:0%"></span></div><span class="num" id="player-num">0/' + porCorregir.length + '</span></div>' +
-    (kb ? '<div class="autoguardado muted" id="autoguardado">Tu avance se guarda solo en este aparato ✔</div><div class="aviso-corr autoguardado-aviso" id="autoguardado-aviso" aria-live="polite"></div>' : '') +
+    (kb ? '<div class="autoguardado muted" id="autoguardado">Tu avance se guarda solo en este aparato ✔</div><div class="autoguardado-aviso" id="autoguardado-aviso" aria-live="polite"></div>' : '') +
     (paso ? '<button type="button" class="btn ghost sm ver-todas" data-action="ver-todas">📋 Ver todas las preguntas</button>' : '') +
     '<div class="exam-sec" style="font-size:.9rem">✏️ ' + (corr ? 'Ejercicios por corregir' : 'Ejercicios') + '</div>' + qs +
     '<div class="exam-bar">' + volverBtn() + '<span class="paso-nav"><button type="button" class="btn ghost icono" data-action="q-ant" aria-label="Pregunta anterior">←</button><button type="button" class="btn ghost" data-action="q-sig">Siguiente →</button></span>' +

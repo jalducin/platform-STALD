@@ -62,6 +62,7 @@ const texto = async (p, sel) => ((await p.textContent(sel)) || '').replace(/\s+/
   ok('tras recargar: respuesta escrita restaurada', (await p.inputValue('input[name="g-h2"]')) === 'cinco');
   ok('avance 2/6 respondidas', (await texto(p, '#exam-count')).startsWith('2/6'), await texto(p, '#exam-count'));
   ok('aviso «Recuperamos tus 2 respuestas»', (await texto(p, '#autoguardado-aviso')).includes('Recuperamos tus 2 respuestas'), await texto(p, '#autoguardado-aviso'));
+  ok('el aviso de recuperación no se confunde con la corrección (.aviso-corr)', !(await p.$('.aviso-corr')));
   ok('modo paso: continúa en la primera sin contestar', await p.$eval('#exam-form .q.actual', q => q.dataset.q) === 'g-h3');
   await p.screenshot({ path: 'autoguardado-restaurado.png' });
 

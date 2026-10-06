@@ -20,7 +20,8 @@
      recuperada»);
    - ids que ya no existen o preguntas fijas de la corrección se ignoran (las fijas están deshabilitadas y
      `examAnswers` tampoco las lee);
-   - aviso «Recuperamos tus N respuestas» (`#autoguardado-aviso`), y en modo paso `mostrarPaso` a la primera sin
+   - aviso «Recuperamos tus N respuestas» (`#autoguardado-aviso`, con clase propia `.autoguardado-aviso`: no usa
+     `.aviso-corr`, que identifica la corrección del intento 2), y en modo paso `mostrarPaso` a la primera sin
      contestar.
    La selección de preguntas es determinista por intento (semilla en el servidor), así que mapear por id basta.
 6. **Borrado.** Al enviar con éxito (`submitExam`, `r.ok`). Al abrir el intento N se borran los de intentos

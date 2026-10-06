@@ -88,6 +88,11 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
 - La primera línea es `require('./lib/entorno')`: pone `BASE`, `API`, `DATOS` (por omisión `juegos/datos`) y la
   carpeta `SALIDA`, y se cambia a ella (las capturas usan rutas relativas). Nada de rutas absolutas ni puertos fijos.
 - `DATA` (la copia de datos) la pasa `correr.sh`; las pruebas de Inglés leen de ahí actividades y exámenes.
+- `tests/fixtures/datos/` se superpone a la copia: exámenes de Secundaria exclusivos de `valeria@example.com`
+  (`sec-e2e` para `examen-secundaria` y `sec-e2e-guardado` para `autoguardado`). Cada prueba usa el suyo para no
+  gastarle las oportunidades a otra en la misma fase.
+- Relojes acortados solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos) y `window.__REENVIO_SEGUNDOS` (espera del
+  botón «Reenviarme el enlace»), con `addInitScript`.
 - Solo correos `@example.com`. El usuario admin de prueba es `admin@example.com`. Nada de datos reales.
 - Para correr una prueba suelta sin `correr.sh`, levanta tú los servidores y exporta `BASE`, `API`, `DATA` y,
   si quieres, `CHROME`: `cd tests/e2e && node e2e-poker.js`.

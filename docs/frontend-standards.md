@@ -34,6 +34,10 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - si `StaldAuth.esSesionVencida(res, body)` (401 `inicia_sesion` o `sesion_invalida`), `StaldAuth.salir()` y la
     pantalla de entrada (`StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar })`, o la propia del
     portal), nunca un error crudo;
+  - el paso del código (el de `pintarEntrada` y el propio del portal, `#code-ayuda`) lleva
+    `StaldAuth.ayudaReenvio(el, correo)`: «¿No te llegó?» (spam o promociones, pedir otro, pedir el enlace al profe
+    por WhatsApp) y «📧 Reenviarme el enlace», que espera 60 s desde el último envío a ese correo
+    (`window.__REENVIO_SEGUNDOS` la acorta solo en pruebas E2E) y muestra el resultado o el error tal cual;
   - 🚪 Cerrar sesión llama a `StaldAuth.salir()`.
   - supabase-js guarda la sesión en `localStorage` (clave `stald-auth`); en pruebas locales, `stald_sesion_prueba`.
 - `localStorage` guarda además el correo de antes: `stald_email` (portal), `ingles_email` y `secundaria_email`.
@@ -42,7 +46,9 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - "Cerrar sesión" en cualquier página borra las tres (y la sesión).
   - Además del correo, se permiten preferencias de interfaz sin datos personales, como
     `juegos_pref = { musica, volumen }` (música de fondo de `juegos.html`).
-  - No guardar filas ni otros datos personales.
+  - No guardar filas ni otros datos personales. Única excepción: el borrador del examen abierto (ver «Reproductor»),
+    que vive solo en el aparato de quien contesta, sin el correo en claro, y se borra al enviar, al cerrar sesión o
+    a los 14 días.
 - La página **no decide permisos**: muestra lo que devuelve el backend. Ocultar algo en el cliente no
   cuenta como control de acceso.
 
@@ -259,6 +265,16 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   formulario lleva `.paso`: una pregunta por pantalla (`.q.actual`), con ← / «Siguiente →» y «📋 Ver todas las
   preguntas» (`[data-action="ver-todas"]`), que vuelve a la lista completa. Atajos: 1–9 eligen la opción de la
   pregunta activa y Enter avanza (o envía cuando todo está respondido). El resultado muestra un anillo y barras por tema.
+  - **Autoguardado** (cambio `examen-autoguardado`): cada respuesta se guarda en
+    `localStorage['stald_borrador:<ingles|profe|secundaria>:<hash FNV-1a del correo>:<id>:<intento>']` =
+    `{ v: 1, t, r }` (`r` con la forma de `examAnswers`). Nunca se manda al servidor.
+    - Al reabrir el mismo intento se restaura por id de pregunta (ignora las que ya no están y las fijas de la
+      corrección), avisa «Recuperamos tus N respuestas» (`#autoguardado-aviso`) y, en modo paso, va a la primera sin
+      contestar. `#autoguardado` dice «Tu avance se guarda solo en este aparato ✔ · Guardado hace …».
+    - Se borra al enviar con éxito, al abrir un intento posterior o un elemento terminado, con 🚪 Cerrar sesión y a
+      los 14 días. La vista previa del admin no guarda.
+    - Mientras existe `#exam-form`, `html.examen-abierto` aplica `overscroll-behavior-y: contain` (sin «jalar para
+      recargar») y `beforeunload` pide confirmar si hay respuestas sin enviar.
 - **Peticiones.** Todas salen por `api(url, opts)` en `comun.js` (`fetchJson` es un alias). El inicio de sesión del
   Sprint 3 agrega ahí el encabezado `Authorization`.
 - **Accesibilidad.** Foco visible (`:focus-visible`), enlace «Saltar al contenido», botones de al menos 44 px en
