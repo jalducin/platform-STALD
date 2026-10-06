@@ -138,6 +138,7 @@
         <input id="code" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
         <button class="btn" id="code-btn" type="submit">Entrar →</button>
         <button class="link-btn" id="code-back" type="button">Usar otro correo</button>
+        <div id="code-ayuda"></div> <!-- «¿No te llegó?» y reenvío (comun/auth.js, openspec: examen-autoguardado) -->
       </form>
       <div class="alert" id="login-error" role="alert" hidden></div>
       <div class="guest" id="guest" hidden>
@@ -192,7 +193,7 @@
   <footer>STALD · aprender también puede ser divertido</footer>
 </div>
 
-<script src="comun/auth.js?v=1"></script>
+<script src="comun/auth.js?v=2"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` permite probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -273,6 +274,7 @@
     $('login-form').hidden = true; $('login-hint').hidden = true; $('code-form').hidden = false;
     $('code-sent').textContent = 'Revisa tu correo ✉️ Te mandamos un enlace a ' + correo + '.';
     $('code').value = ''; $('code-btn').disabled = false; $('login-error').hidden = true; $('guest').hidden = true; $('juegos-cta').hidden = true;
+    StaldAuth.ayudaReenvio($('code-ayuda'), correo);
     show('login'); $('code').focus();
   }
 

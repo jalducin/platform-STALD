@@ -230,6 +230,10 @@ form.paso .q .tema-q { display: inline; }
 .q .antes { font-size: .82rem; color: var(--bad); margin: -4px 0 6px; }
 .q.fija { opacity: .85; } .q.fija label, .q.fija input { cursor: default; }
 .aviso-corr { background: var(--accent-soft); color: var(--accent); border-radius: 12px; padding: 10px 12px; font-size: .88rem; font-weight: 700; margin: 8px 0; }
+/* Autoguardado del examen (openspec: examen-autoguardado): aviso discreto y sin «jalar para recargar». */
+.autoguardado { font-size: .74rem; margin: 0 0 4px; }
+.autoguardado-aviso:empty { display: none; }
+html.examen-abierto, html.examen-abierto body { overscroll-behavior-y: contain; }
 table.teo { width: 100%; border-collapse: collapse; font-size: .84rem; }
 table.teo th, table.teo td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; }
 table.teo th { background: var(--accent-soft); color: var(--accent); }

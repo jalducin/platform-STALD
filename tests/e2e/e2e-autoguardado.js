@@ -55,6 +55,7 @@ const texto = async (p, sel) => ((await p.textContent(sel)) || '').replace(/\s+/
 
   // 2) Recargar (como jalar la pantalla hacia abajo) y volver a abrir.
   await p.reload();
+  ok('recargar con respuestas: el navegador pidió confirmar (beforeunload)', dialogos.includes('beforeunload'), dialogos.join(','));
   await abrir(p);
   ok('borrador caducado (15 días) se borra al cargar', !(await borradores(p)).some(([k]) => k.includes('otro-examen')));
   ok('tras recargar: radio restaurado', await p.isChecked('input[name="g-h1"][value="0"]'));

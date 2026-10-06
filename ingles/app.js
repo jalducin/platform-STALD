@@ -203,6 +203,7 @@ function sesionVencida(body) {
   });
 }
 async function cerrarSesion() {
+  borrarBorradores(); // el avance guardado en este aparato se va con la sesión (openspec: examen-autoguardado)
   await StaldAuth.salir();
   mostrarEntrada();
 }

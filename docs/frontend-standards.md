@@ -25,7 +25,7 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
 - Todo texto que venga de Notion se inserta con `escapeHtml()` o con `textContent`. Nunca concatenar
   datos crudos en `innerHTML`.
 - Los enlaces externos llevan `target="_blank" rel="noopener"`.
-- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=1">` y usan
+- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=2">` y usan
   `window.StaldAuth`:
   - al arrancar, `await StaldAuth.iniciar(API_BASE)`; el correo es `StaldAuth.email()` (sesión) o, solo durante la
     transición, `StaldAuth.correoViejo()`;
