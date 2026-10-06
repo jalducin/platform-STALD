@@ -4,18 +4,14 @@
 // enlace responde auth_no_disponible, así que se comprueba que la petición pide destino «juegos» y que el aviso se ve.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
+const { abrirPagina, CELULAR } = require('./lib/navegador');
 const BASE = process.env.BASE;
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 
-async function pagina(b, email, viewport = { width: 390, height: 844 }, colorScheme = 'light') {
-  const ctx = await b.newContext({ viewport, colorScheme, acceptDownloads: true });
-  await ctx.addInitScript(e => { localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e })); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
-  await p.goto(BASE + '/juegos.html?api=' + encodeURIComponent(API));
-  await p.waitForSelector('[data-tab]', { timeout: 60000 });
-  return p;
-}
+// Página con sesión de prueba (ayudante común, openspec: e2e-ayudantes); descargas permitidas para los CSV.
+const pagina = (b, email, viewport = CELULAR, colorScheme = 'light') =>
+  abrirPagina(b, { email, out, viewport, contexto: { colorScheme, acceptDownloads: true }, ruta: '/juegos.html', esperar: '[data-tab]' });
 // Abre «🛡️ Admin» y espera a que los 4 contadores dejen de decir «…».
 async function abrirAdmin(p) {
   await p.click('[data-tab="admin"]');

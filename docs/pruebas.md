@@ -107,13 +107,23 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
 ### Sesión de prueba
 Desde `plataforma-login`, el servidor exige sesión. Con `ROWS_FIXTURE` (y solo entonces) acepta el verificador
 falso `Authorization: Bearer prueba:<correo>`:
-- En el navegador, las pruebas guardan `localStorage.stald_sesion_prueba = { email, token: 'prueba:' + email }`
-  (las de juegos, además, `stald_email`).
+- En el navegador, `abrirPagina` de `lib/navegador.js` guarda `localStorage.stald_sesion_prueba = { email, token:
+  'prueba:' + email }` (y, si se pide, las claves viejas `stald_email` / `ingles_email`) antes de cargar la página.
 - En las llamadas directas de Node, `lib/entorno.js` agrega el encabezado a toda petición a `API` con `?email=`.
 - Las de login (`login`, `login-despues`) manejan el token a mano porque prueban justo eso (p. ej. cuándo se rechaza `?email=`
   sin token); llaman a `sinSesionEnFetch()`.
 
 ### Agregar una prueba
 1. Crea `tests/e2e/e2e-<nombre>.js` con `require('./lib/entorno')` en la primera línea.
-2. Agrégala a `ORDEN` en `correr.sh` (y a `fase_de` si no es de fase `base`).
-3. Córrela con `correr.sh` y documenta el resultado en el reporte del cambio.
+2. Abre las páginas con el ayudante `lib/navegador.js` (cambio `e2e-ayudantes`), no con un `newContext` +
+   `addInitScript` propio. Sus opciones (`email`, `viejo`, `ingles`, `tiempo`, `init`, `viewport`, `contexto`, `out`,
+   `etiqueta`, `dialogos`, `ruta`, `esperar`) están documentadas en el encabezado del archivo:
+
+   ```js
+   const { abrirPagina, urlDe } = require('./lib/navegador');
+   const p = await abrirPagina(b, { email: 'marisol@example.com', tiempo: 0.4, out, ruta: '/juegos.html', esperar: '[data-juego]' });
+   // Sin `ruta`, la página queda en blanco: agrega rutas o escuchas y luego `await p.goto(urlDe('/ingles.html#semana'))`.
+   ```
+
+3. Agrégala a `ORDEN` en `correr.sh` (y a `fase_de` si no es de fase `base`).
+4. Córrela con `correr.sh` y documenta el resultado en el reporte del cambio.

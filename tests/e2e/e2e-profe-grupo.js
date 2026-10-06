@@ -1,6 +1,7 @@
 // E2E: actividades del grupo en la ruta del profe (openspec: profe-actividades-grupo), con el contenido real de la semana 1.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
+const { abrirPagina } = require('./lib/navegador');
 const fs = require('fs');
 const BASE = process.env.BASE;
 const API = process.env.API;
@@ -11,11 +12,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const act = JSON.parse(fs.readFileSync(DATA + '/contenido/actividades/act-2026-09-29.json', 'utf8'));
   const porId = Object.fromEntries(act.banco.map(e => [e.id, e]));
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(() => (localStorage.setItem('ingles_email', 'admin@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'admin@example.com', token: 'prueba:' + 'admin@example.com' }))));
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS: ' + e.message)); p.on('dialog', d => d.accept());
-  await p.goto(BASE + '/ingles.html?modo=profe&api=' + encodeURIComponent(API));
-  await p.waitForSelector('#grupo-profe', { timeout: 60000, state: 'attached' }); await p.click('[data-pf-tab="grupo"]'); // pestaña (openspec: profe-diseno)
+  const p = await abrirPagina(b, { email: 'admin@example.com', ingles: true, out, etiqueta: '', dialogos: 'aceptar', ruta: '/ingles.html?modo=profe', esperar: ['#grupo-profe', { state: 'attached' }] });
+  await p.click('[data-pf-tab="grupo"]'); // pestaña (openspec: profe-diseno)
+  const ctx = p.context();
   const card = await p.textContent('#grupo-profe');
   ok('tarjeta "Lo de tu grupo" con las actividades, el examen, el refuerzo y el diagnóstico', ['Alfabeto', 'Verbos con -s', 'Examen semanal 1', 'diagnóstico'].every(t => card.includes(t)) && !card.includes('Repaso por Meet'), card.slice(0, 200));
   const atraso = (card.match(/En atraso/g) || []).length;

@@ -4,8 +4,7 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const fs = require('fs');
-const BASE = process.env.BASE;
-const API = process.env.API;
+const { abrirPagina } = require('./lib/navegador');
 const DATA = process.env.DATA;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const ALUMNA = 'valeria@example.com';
@@ -14,12 +13,7 @@ const ALUMNA = 'valeria@example.com';
 // arrancar el servidor.
 const examen = JSON.parse(fs.readFileSync(DATA + '/contenido/secundaria/examenes/sec-e2e.json', 'utf8'));
 
-async function pagina(b, email, ruta) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { localStorage.setItem('stald_email', e); localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e })); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message)); p.on('dialog', d => d.accept());
-  await p.goto(BASE + ruta + (ruta.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(API)); return p;
-}
+const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, out, dialogos: 'aceptar', ruta });
 // Contesta el examen abierto con `buenas` respuestas correctas (en el orden en que aparecen).
 async function resolver(p, buenas) {
   await p.waitForSelector('#exam-form', { timeout: 60000 });

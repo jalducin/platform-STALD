@@ -2,18 +2,12 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const fs = require('fs');
-const BASE = process.env.BASE;
 const API = process.env.API;
-const Q = '&api=' + encodeURIComponent(API);
+const { abrirPagina } = require('./lib/navegador');
 const DATA = process.env.DATA;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function pagina(b, email, ruta) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { (localStorage.setItem('stald_email', e), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e }))); localStorage.setItem('ingles_email', e); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message)); p.on('dialog', d => d.accept());
-  const [r, h] = ruta.split('#'); await p.goto(BASE + r + (r.includes('?') ? Q : '?' + Q.slice(1)) + (h ? '#' + h : '')); return p;
-}
+const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, ingles: true, out, dialogos: 'aceptar', ruta });
 (async () => {
   const examen = JSON.parse(fs.readFileSync(DATA + '/contenido/profe/examenes/profe-examen-directo-s1.json', 'utf8'));
   const resp = Object.fromEntries(examen.banco.map(e => [e.id, e.tipo === 'opcion' ? e.correcta : e.aceptadas[0]]));

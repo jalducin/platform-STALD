@@ -1,19 +1,11 @@
 // E2E ajedrez (openspec: ajedrez): individual contra el bot y 1 vs 1 con dos navegadores (mate del tonto).
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE, API = process.env.API;
-const Q = '?api=' + encodeURIComponent(API);
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const sq = s => (8 - Number(s[1])) * 16 + 'abcdefgh'.indexOf(s[0]);
-async function pagina(b, email, tiempo) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 900 } });
-  await ctx.addInitScript(([e, t]) => { window.__TIEMPO_JUEGOS = t; (localStorage.setItem('stald_email', e), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e }))); }, [email, tiempo]);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message));
-  p.on('dialog', d => d.accept());
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  return p;
-}
+const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, viewport: { width: 390, height: 900 }, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
 const mover = async (p, de, a) => { await p.click('[data-aj="' + sq(de) + '"]'); await sleep(120); await p.click('[data-aj="' + sq(a) + '"]'); };
 
 (async () => {

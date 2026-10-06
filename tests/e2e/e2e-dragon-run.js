@@ -2,7 +2,7 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const BASE = process.env.BASE;
-const API = process.env.API;
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
@@ -20,11 +20,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok('texto de inicio menciona el doble salto', (await sola.textContent('#ovS')).includes('doble salto'));
 
   // 2) En Juegos: modo auto juega y termina; se guarda en ⭐ individuales
-  const ctx = await b.newContext({ viewport: { width: 900, height: 900 } });
-  await ctx.addInitScript(() => (localStorage.setItem('stald_email', 'marisol@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'marisol@example.com', token: 'prueba:' + 'marisol@example.com' }))));
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (juegos): ' + e.message));
-  await p.goto(BASE + '/juegos.html?dragonAuto=1&api=' + encodeURIComponent(API));
-  await p.waitForSelector('[data-juego="dragon-run"]', { timeout: 60000 });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, viewport: { width: 900, height: 900 }, out, etiqueta: 'juegos', ruta: '/juegos.html?dragonAuto=1', esperar: '[data-juego="dragon-run"]' });
   ok('Dragon Run en Mente ágil', (await p.textContent('[data-juego="dragon-run"]')).includes('Dragon Run'));
   const antes = await p.evaluate(() => state.totalIndividual);
   await p.click('[data-juego="dragon-run"]');

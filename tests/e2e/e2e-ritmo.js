@@ -1,16 +1,14 @@
 // E2E ritmo más lento (ajuste del profe): con el tiempo real, la baza de la Brisca y el resultado del póker se ven ~4 s más.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
+const { abrirPagina } = require('./lib/navegador');
 const BASE = process.env.BASE, API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const ctx = await b.newContext({ viewport: { width: 390, height: 900 } });
-  await ctx.addInitScript(() => (localStorage.setItem('stald_email', 'marisol@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'marisol@example.com', token: 'prueba:' + 'marisol@example.com' }))));
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS: ' + e.message));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, viewport: { width: 390, height: 900 }, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-juego]' });
   // Brisca individual contra 1 bot: tiro yo, responde el bot y la baza completa sigue a la vista ≥ 4 s
   await p.click('[data-juego="brisca"]'); await p.click('[data-br-modo="1"]'); await p.click('[data-br-go]');
   await p.waitForSelector('.es-btn.jugable[data-br-carta]', { timeout: 15000 }).catch(() => {});

@@ -4,8 +4,7 @@
 // Usa un examen propio para no gastar las oportunidades de `sec-e2e`, que comprueba `examen-secundaria`.
 require('./lib/entorno'); // BASE, API, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE;
-const API = process.env.API;
+const { abrirPagina, urlDe } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const ALUMNA = 'valeria@example.com';
 const ID = 'sec-e2e-guardado';
@@ -23,13 +22,10 @@ const texto = async (p, sel) => ((await p.textContent(sel)) || '').replace(/\s+/
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e })); }, ALUMNA);
-  const p = await ctx.newPage();
-  p.on('pageerror', e => out.push('FAIL error JS: ' + e.message));
+  const p = await abrirPagina(b, { email: ALUMNA, out, etiqueta: '' });
   const dialogos = [];
   p.on('dialog', d => { dialogos.push(d.type()); d.accept(); });
-  await p.goto(BASE + '/ingles.html?modo=secundaria&api=' + encodeURIComponent(API));
+  await p.goto(urlDe('/ingles.html?modo=secundaria'));
 
   // 1) Abrir y contestar una de opción múltiple y una escrita (modo paso: una por pantalla).
   await abrir(p);

@@ -1,15 +1,11 @@
 // E2E: ¡Una! en partida con dos navegadores + bots. Mismo estado en cada paso, castigo por no gritar y mismo final.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE;
-const Q = '?api=' + encodeURIComponent(process.env.API);
+const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function jugador(b, email) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(e => { window.__TIEMPO_JUEGOS = 1; (localStorage.setItem('stald_email', e), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: e, token: 'prueba:' + e }))); }, email);
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS (' + email + '): ' + e.message)); p.on('dialog', d => d.dismiss());
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  const p = await abrirPagina(b, { email, viejo: true, tiempo: 1, out, dialogos: 'rechazar', ruta: '/juegos.html', esperar: '[data-juego]' });
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear'); return p;
 }
 const foto = p => p.evaluate(() => { if (!sala.estado || !sala.estado.sala.inicio) return null; const st = estadoUna(); return { paso: st.paso + (st.esperaUna ? ':esperando-UNA' : ''), top: st.pila[st.pila.length - 1], color: st.color, manos: st.manos.map(h => h.length), turno: st.turno, castigo: !!(st.ultima && st.ultima.castigo), fin: st.fin && st.fin.ganador }; });
@@ -76,8 +72,7 @@ const foto = p => p.evaluate(() => { if (!sala.estado || !sala.estado.sala.inici
   ok('guardado en el ranking', (await host.textContent('#p-guardado')).includes('puntos de partidas'));
   await host.screenshot({ path: 'una-sala-fin.png' });
   // Avatar desde el portal
-  const pc = await b.newContext(); await pc.addInitScript(() => (localStorage.setItem('stald_email', 'marisol@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'marisol@example.com', token: 'prueba:' + 'marisol@example.com' }))));
-  const pp = await pc.newPage(); await pp.goto(BASE + '/' + Q); await pp.waitForSelector('#av-link:not([hidden])', { timeout: 60000 }).catch(() => {});
+  const pp = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, viewport: { width: 1280, height: 720 }, ruta: '/' }); await pp.waitForSelector('#av-link:not([hidden])', { timeout: 60000 }).catch(() => {});
   ok('portal: avatar en el saludo y enlace para cambiarlo', !!(await pp.$('#hello .av')) && !!(await pp.$('#av-link:not([hidden])')));
   await pp.click('#av-link'); await pp.waitForSelector('[data-av-emoji]', { timeout: 60000 }).catch(() => {});
   ok('el enlace abre directo el selector de avatar', !!(await pp.$('[data-av-emoji]')));

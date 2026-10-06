@@ -1,16 +1,14 @@
 // E2E ¡Una! robo de cartas (ajuste del profe): partida de puro robar que vacía el mazo; cada robo suma 1 carta o pasa el turno.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const BASE = process.env.BASE, API = process.env.API;
-const Q = '?api=' + encodeURIComponent(API);
+const { abrirPagina, urlDe } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const ctx = await b.newContext({ viewport: { width: 390, height: 900 } });
-  await ctx.addInitScript(() => { window.__TIEMPO_JUEGOS = 0.04; (localStorage.setItem('stald_email', 'marisol@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'marisol@example.com', token: 'prueba:' + 'marisol@example.com' }))); });
-  const p = await ctx.newPage(); const errores = []; p.on('pageerror', e => errores.push(e.message));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.04, viewport: { width: 390, height: 900 } });
+  const errores = []; p.on('pageerror', e => errores.push(e.message));
+  await p.goto(urlDe('/juegos.html')); await p.waitForSelector('[data-juego]', { timeout: 60000 });
   await p.click('[data-juego="una"]'); await p.click('[data-una-bots="3"]'); await p.click('[data-una-go]');
   await p.waitForSelector('.una-mano');
   let robos = 0, malos = 0, sinCartas = 0, deshabilitado = 0, pasadas = 0; const detalle = [];

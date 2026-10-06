@@ -1,16 +1,13 @@
 // E2E profe-diseno: encabezado, Pendiente ahora, pestañas recordadas, acordeón y dos columnas en escritorio.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const API = process.env.API, BASE = process.env.BASE;
-const URL = BASE + '/ingles.html?modo=profe&api=' + encodeURIComponent(API);
+const { abrirPagina } = require('./lib/navegador');
+const RUTA = '/ingles.html?modo=profe';
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   // Escritorio
-  const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
-  await ctx.addInitScript(() => (localStorage.setItem('stald_email', 'admin@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'admin@example.com', token: 'prueba:' + 'admin@example.com' }))));
-  const p = await ctx.newPage(); p.on('pageerror', e => out.push('FAIL error JS: ' + e.message));
-  await p.goto(URL);
+  const p = await abrirPagina(b, { email: 'admin@example.com', viejo: true, viewport: { width: 1280, height: 900 }, out, etiqueta: '', ruta: RUTA });
   const hero = await p.waitForSelector('.pf-hero', { timeout: 15000 }).catch(() => null);
   ok('encabezado de progreso con contadores y barra del mes', !!hero && (await p.$$('.pf-hero .pf-stat')).length === 4 && !!(await p.$('.pf-hero .progress-bar')));
   const urg = await p.textContent('#pf-urgente').catch(() => '');
@@ -31,11 +28,9 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
   ok('escritorio: más corta que antes (3,579 px)', alto < 2600, alto + ' px');
   await p.click('[data-pf-tab="hechas"]');
   ok('pestaña Hechas con resultados', (await p.$$('[data-pf-panel="hechas"] [data-action="ver-resultado"]')).length >= 1);
-  await ctx.close();
+  await p.context().close();
   // Celular
-  const cm = await b.newContext({ viewport: { width: 390, height: 860 } });
-  await cm.addInitScript(() => { (localStorage.setItem('stald_email', 'admin@example.com'), localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email: 'admin@example.com', token: 'prueba:' + 'admin@example.com' }))); localStorage.removeItem('profe_tab'); });
-  const m = await cm.newPage(); await m.goto(URL); await m.waitForSelector('.pf-hero');
+  const m = await abrirPagina(b, { email: 'admin@example.com', viejo: true, init: [() => { localStorage.removeItem('profe_tab'); }], viewport: { width: 390, height: 860 }, ruta: RUTA, esperar: '.pf-hero' });
   const mv = await m.evaluate(() => ({ scrollX: document.documentElement.scrollWidth <= window.innerWidth + 1, abajo: document.querySelector('.pf-side').getBoundingClientRect().top > document.querySelector('.pf-main').getBoundingClientRect().bottom - 1 }));
   ok('celular: una columna, sin desplazamiento horizontal', mv.scrollX && mv.abajo, JSON.stringify(mv));
   await m.screenshot({ path: 'profe-despues-movil.png', fullPage: true });
