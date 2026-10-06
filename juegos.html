@@ -295,6 +295,8 @@
   .aj-jugadas b { color: var(--muted); font-weight: 700; }
   .aj-promo { display: flex; gap: 8px; justify-content: center; margin: 8px 0; }
   .aj-promo button { font-size: 2rem; padding: 4px 10px; border-radius: 10px; border: 2px solid var(--accent-2); background: #f0d9b5; cursor: pointer; }
+  /* Durante una partida, sin «jalar para recargar» en el celular (openspec: juegos-recarga). */
+  html.jugando, html.jugando body { overscroll-behavior-y: contain; }
 </style>
 </head>
 <body>
@@ -308,7 +310,7 @@
 
 <script src="juegos/cartas.js?v=2"></script>
 <script src="juegos/ajedrez.js?v=1"></script>
-<script src="comun/auth.js?v=2"></script>
+<script src="comun/auth.js?v=4"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -332,7 +334,45 @@
   // Puntos por tipo (openspec: puntos-por-tipo): ⭐ individuales y 👥 partidas; todo suma.
   const state = { email: null, jugador: null, totalIndividual: 0, totalPartidas: 0, pos: null, posPartidas: null, mejores: {}, semana: null, tab: 'juegos', rtipo: 'individual' };
   let limpiezas = []; // timers del juego en curso
-  function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) speechSynthesis.cancel(); }
+  // Al dejar un juego (terminar, salir, empezar otro): detiene timers y descarta la partida individual guardada.
+  function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) speechSynthesis.cancel(); soltarPartida(); modoPartida(false); }
+
+  // ---------- Recarga del navegador (openspec: juegos-recarga) ----------
+  // Sala activa: la URL lleva ?sala= y localStorage.juegos_sala_activa = { codigo, quien, t, marcas? }. Juego
+  // individual: localStorage.juegos_partida_individual = { juego, quien, t, ...instantánea }. `quien` es el id opaco del
+  // jugador (nunca el correo); ambas caducan a las 3 h (vigencia de las salas).
+  const SALA_KEY = 'juegos_sala_activa', PARTIDA_KEY = 'juegos_partida_individual', RECARGA_MS = 3 * 3600 * 1000;
+  const leerLocal = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+  const escribirLocal = (k, v) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } };
+  const vigente = x => !!x && !!state.jugador && x.quien === state.jugador.id && Math.abs(Date.now() - Number(x.t)) < RECARGA_MS;
+  const numEntre = (x, max) => Math.max(0, Math.min(max, Math.round(Number(x) || 0)));
+  const modoPartida = on => document.documentElement.classList.toggle('jugando', !!on);
+  function urlConSala(codigo) { const u = new URL(location.href); if (codigo) u.searchParams.set('sala', codigo); else u.searchParams.delete('sala'); return u.pathname + u.search + u.hash; }
+  function recordarSala(codigo, extra) {
+    const previa = leerLocal(SALA_KEY);
+    escribirLocal(SALA_KEY, Object.assign({}, previa && previa.codigo === codigo ? previa : {}, extra, { codigo, quien: state.jugador && state.jugador.id, t: Date.now() }));
+  }
+  function olvidarSala() {
+    escribirLocal(SALA_KEY, null);
+    if (new URLSearchParams(location.search).has('sala')) { try { history.replaceState(history.state, '', urlConSala(null)); } catch (e) { /* sin historial */ } }
+  }
+  const salaGuardada = () => { const s = leerLocal(SALA_KEY); return vigente(s) && /^[A-Z]{4}$/.test(s.codigo) ? s : null; };
+
+  // Juego individual en curso: { id, foto? }. `foto()` (solo en los que se reanudan) devuelve su instantánea o null.
+  let enCurso = null, reanudacion = null;
+  function guardarPartida() {
+    if (!enCurso || !enCurso.foto || !state.jugador) return;
+    const f = enCurso.foto();
+    escribirLocal(PARTIDA_KEY, f ? Object.assign({}, f, { juego: enCurso.id, quien: state.jugador.id, t: Date.now() }) : null);
+  }
+  function soltarPartida() { enCurso = null; escribirLocal(PARTIDA_KEY, null); }
+  const partidaGuardada = () => { const p = leerLocal(PARTIDA_KEY); return vigente(p) && Object.prototype.hasOwnProperty.call(REANUDAR, p.juego) ? p : null; };
+  // La instantánea que se va a reanudar: una sola vez y solo para su juego.
+  function tomarReanudacion(id) { const r = reanudacion && reanudacion.juego === id ? reanudacion : null; reanudacion = null; return r; }
+  window.addEventListener('pagehide', guardarPartida);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) guardarPartida(); });
+  // Los juegos que no se reanudan piden confirmación antes de recargar o salir.
+  window.addEventListener('beforeunload', e => { if (enCurso && !enCurso.foto) { e.preventDefault(); e.returnValue = ''; } });
 
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -442,7 +482,7 @@
   }
 
   function pantallaAvatar() {
-    limpiar();
+    limpiar(); olvidarSala();
     const listas = state.avatares || { emojis: [], colores: [] };
     let sel = Object.assign({}, state.jugador.avatar || { emoji: listas.emojis[0], color: listas.colores[0] });
     let fotoNueva = null, permiso = false; // modo foto: sel.foto (actual) o fotoNueva (data URL)
@@ -521,6 +561,9 @@
       borrarRegistro(); // ya tenía cuenta (alumno, alumna o invitado): no hay nada que registrar
       if (salaPendiente) { const c = salaPendiente; salaPendiente = null; return unirseCodigo(c); }
       if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
+      // Recarga (openspec: juegos-recarga): primero la sala guardada; luego, el juego individual a medias.
+      const enSala = salaGuardada(); if (enSala) return volverASala(enSala.codigo);
+      const previa = partidaGuardada(); if (previa) return pantallaReanudar(previa);
       pantallaHub();
     } catch (e) {
       const txt = e.message === 'mucho_trafico' ? '⏳ Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : '⚠️ No pude conectarme (' + escapeHtml(e.message) + ').';
@@ -593,7 +636,7 @@
 
   // ---------- Hub ----------
   function pantallaHub(tab) {
-    limpiar();
+    limpiar(); olvidarSala();
     state.tab = tab || state.tab || 'juegos';
     const admin = state.jugador && state.jugador.tipo === 'admin';
     const tabs = '<div class="tabs" role="tablist">' +
@@ -736,8 +779,10 @@
 
 
   // ---------- Marco común y resultado ----------
+  // extra.menu: pantalla de elegir nivel o modo (aún no hay partida que guardar ni avisar).
   function marco(id, extra) {
     const j = juegoPorId(id);
+    enCurso = extra && extra.menu ? null : { id }; modoPartida(true);
     const tone = (CATEGORIAS.find(c => c.id === j.cat) || {}).clase || '';
     app.innerHTML = '<div class="' + tone + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + '</span>' +
       '<span class="stat" id="m-tiempo" hidden></span><span class="stat" id="m-vidas" hidden></span><span class="stat" id="m-puntos">⭐ 0</span></div>' +
@@ -802,16 +847,26 @@
 
   // ---------- Motor quiz (opción múltiple) ----------
   // opts: id, modo 'reloj' | 'vidas', segundos (reloj), porPregunta (vidas), siguiente() → { big, q, sub, opciones, correcta, explicacion } | null
+  // opts.foto: datos extra de la instantánea (p. ej. la categoría del maratón). Se reanuda con contadores, vidas y
+  // segundos que quedaban; la pregunta siguiente se genera de nuevo (openspec: juegos-recarga).
   function quiz(opts) {
+    const previo = tomarReanudacion(opts.id);
     const m = marco(opts.id, { vidas: 3 });
-    let puntos = 0, aciertos = 0, total = 0, racha = 0, vidas = 3, actual = null, bloqueado = false, inicioQ = 0, stopQ = null, terminado = false;
-    const t0 = Date.now();
+    const seg = opts.segundos || 60;
+    let puntos = 0, aciertos = 0, total = 0, racha = 0, vidas = 3, actual = null, bloqueado = false, inicioQ = 0, stopQ = null, terminado = false, quedan = seg;
+    if (previo) {
+      puntos = numEntre(previo.puntos, 1e6); aciertos = numEntre(previo.aciertos, 1e4); total = Math.max(aciertos, numEntre(previo.total, 1e4)); racha = numEntre(previo.racha, 1e4);
+      vidas = Math.max(1, numEntre(previo.vidas, 3)); if (previo.quedan > 0) quedan = Math.min(seg, Number(previo.quedan));
+      m.puntos(puntos);
+    }
+    const t0 = Date.now() - (previo ? numEntre(previo.segundos, 86400) * 1000 : 0);
+    enCurso.foto = () => terminado || vidas <= 0 ? null : Object.assign({ puntos, aciertos, total, racha, vidas, quedan: opts.modo === 'vidas' ? null : quedan, segundos: (Date.now() - t0) / 1000 }, opts.foto);
     const acabar = (titulo) => {
       if (terminado) return; terminado = true;
       terminar(opts.id, { puntos, aciertos, total, segundos: (Date.now() - t0) / 1000, titulo, detalle: opts.detalle ? opts.detalle({ aciertos, total }) : '' });
     };
     if (opts.modo === 'vidas') m.vidas(vidas);
-    else reloj(opts.segundos || 60, s => m.tiempo(s, opts.segundos || 60), () => acabar('⏰ ¡Se acabó el tiempo!'));
+    else reloj(quedan, s => { quedan = s; m.tiempo(s, seg); }, () => acabar('⏰ ¡Se acabó el tiempo!'));
     function pintar() {
       actual = opts.siguiente(total);
       if (!actual) return acabar(opts.modo === 'vidas' ? '🏁 ¡Llegaste a la meta!' : '¡Terminaste!');
@@ -846,8 +901,9 @@
         racha = 0; sonidoMal();
         if (i >= 0 && btns[i]) btns[i].classList.add('bad');
         fb.className = 'feedback bad'; fb.textContent = (i < 0 ? '⏰ ¡Tiempo! ' : '✘ ') + (actual.explicacion || ('Era: ' + actual.opciones[actual.correcta]));
-        if (opts.modo === 'vidas') { vidas--; m.vidas(vidas); if (vidas <= 0) return setTimeout(() => acabar('💔 ¡Sin vidas!'), 1400); }
+        if (opts.modo === 'vidas') { vidas--; m.vidas(vidas); if (vidas <= 0) { guardarPartida(); return setTimeout(() => acabar('💔 ¡Sin vidas!'), 1400); } }
       }
+      guardarPartida();
       setTimeout(() => { if (!terminado) pintar(); }, bien ? 550 : 1400);
     }
     const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= (actual ? actual.opciones.length : 0)) responder(n - 1); };
@@ -1030,7 +1086,7 @@
   // ---------- Maratón de cultura ----------
   async function elegirCultura() {
     const d = await datos('cultura');
-    marco('cultura');
+    marco('cultura', { menu: true });
     const m = document.getElementById('m-body');
     m.innerHTML = '<div class="q-card"><div class="big">🏃</div><div class="q">Elige tu maratón</div><div class="sub">3 vidas · 15 segundos por pregunta · sube de nivel</div></div>' +
       '<div class="opts">' + [{ id: 'todas', titulo: 'Todas mezcladas', emoji: '🌈' }].concat(d.categorias).map(c =>
@@ -1043,7 +1099,7 @@
     const orden = [].concat(barajar(del.filter(p => p.nivel === 1)).slice(0, 10), barajar(del.filter(p => p.nivel === 2)).slice(0, 12), barajar(del.filter(p => p.nivel === 3)));
     const nombreCat = cat === 'todas' ? 'Todas' : (d.categorias.find(c => c.id === cat) || {}).titulo;
     quiz({
-      id: 'cultura', modo: 'vidas', porPregunta: 15,
+      id: 'cultura', modo: 'vidas', porPregunta: 15, foto: { cat },
       detalle: r => 'Maratón: ' + escapeHtml(nombreCat) + ' · llegaste a la pregunta ' + r.total,
       siguiente: n => {
         const p = orden[n]; if (!p) return null;
@@ -1267,7 +1323,7 @@
   };
 
   function elegirSudoku() {
-    const m = marco('mente-sudoku');
+    const m = marco('mente-sudoku', { menu: true }); // menú: aún no es partida (openspec: juegos-recarga)
     let nivel = 'facil';
     m.body.innerHTML = '<div class="q-card"><div class="big">🔢</div><div class="q">Sudoku</div><div class="sub">Llena el tablero: cada fila, columna y caja de 3×3 lleva los números del 1 al 9 sin repetir. Tienes 3 vidas.</div></div>' +
       '<label>Nivel</label><div class="opts">' + Object.entries(SUDOKU_NIVELES).map(([id, n]) => '<button class="opt" data-sdk-nivel="' + id + '" aria-pressed="' + (id === nivel) + '">' + n.emoji + ' ' + n.t + '<br><small>' + n.pistas + ' pistas · hasta ⭐ ' + fmt(puntosSudoku(id, 0, 0)) + '</small></button>').join('') + '</div>' +
@@ -1280,19 +1336,26 @@
   }
 
   function jugarSudoku(nivel) {
+    // Reanudar (openspec: juegos-recarga): tablero, solución, casillas llenas, errores y segundos jugados.
+    const previo = tomarReanudacion('mente-sudoku');
+    const tablero = a => Array.isArray(a) && a.length === 81 && a.every(v => Number.isInteger(v) && v >= 0 && v <= 9);
+    const sigue = !!previo && !!SUDOKU_NIVELES[previo.nivel] && tablero(previo.puzzle) && tablero(previo.sol) && tablero(previo.g);
+    if (sigue) nivel = previo.nivel;
     const N = SUDOKU_NIVELES[nivel];
-    const { puzzle, sol } = generarSudoku(nivel);
+    const { puzzle, sol } = sigue ? { puzzle: previo.puzzle, sol: previo.sol } : generarSudoku(nivel);
     window.__sudoku = { puzzle, sol, nivel }; // para pruebas E2E
     const m = marco('mente-sudoku', { vidas: 3 });
-    const g = puzzle.slice();
-    let sel = g.findIndex(v => !v), errores = 0, terminado = false;
-    const t0 = Date.now();
-    m.vidas(3);
+    const g = sigue ? previo.g.map((v, i) => puzzle[i] || (v === sol[i] ? v : 0)) : puzzle.slice();
+    let sel = g.findIndex(v => !v), errores = sigue ? Math.min(2, numEntre(previo.errores, 2)) : 0, terminado = false;
+    const t0 = Date.now() - (sigue ? numEntre(previo.segundos, 86400) * 1000 * TIEMPO : 0);
+    m.vidas(3 - errores);
     const segundos = () => (Date.now() - t0) / 1000 / TIEMPO;
+    enCurso.foto = () => terminado || errores >= 3 ? null : { nivel, puzzle, sol, g: g.slice(), errores, segundos: segundos(), faltan: g.filter(x => !x).length };
+    if (g.some((v, i) => v && !puzzle[i])) m.puntos(puntosSudoku(nivel, segundos(), errores));
     const tTimer = setInterval(() => { const e = document.getElementById('m-tiempo'); if (!e) return; const sg = Math.floor(segundos()); e.hidden = false; e.textContent = '⏱ ' + Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0'); }, 500);
     limpiezas.push(() => clearInterval(tTimer));
     m.body.innerHTML = '<p class="muted" style="text-align:center;margin:0">' + N.emoji + ' ' + N.t + ' · faltan <b id="sdk-faltan"></b></p>' +
-      '<div class="sdk" id="sdk">' + g.map((v, i) => { const r = Math.floor(i / 9), c = i % 9; return '<button data-sdk-i="' + i + '" class="' + [v ? 'fija' : '', c % 3 === 2 && c < 8 ? 'bd' : '', r % 3 === 2 && r < 8 ? 'bb' : ''].join(' ').trim() + '" aria-label="Fila ' + (r + 1) + ', columna ' + (c + 1) + '">' + (v || '') + '</button>'; }).join('') + '</div>' +
+      '<div class="sdk" id="sdk">' + g.map((v, i) => { const r = Math.floor(i / 9), c = i % 9; return '<button data-sdk-i="' + i + '" class="' + [puzzle[i] ? 'fija' : '', c % 3 === 2 && c < 8 ? 'bd' : '', r % 3 === 2 && r < 8 ? 'bb' : ''].join(' ').trim() + '" aria-label="Fila ' + (r + 1) + ', columna ' + (c + 1) + '">' + (v || '') + '</button>'; }).join('') + '</div>' +
       '<div class="sdk-pad">' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => '<button data-sdk-n="' + n + '">' + n + '<small id="sdk-q' + n + '"></small></button>').join('') + '<button data-sdk-n="0" aria-label="Borrar">⌫<small>borrar</small></button></div>';
     const celdas = [...m.body.querySelectorAll('[data-sdk-i]')];
     const pintar = () => {
@@ -1316,13 +1379,14 @@
     const poner = n => {
       if (terminado || sel < 0 || puzzle[sel]) return;
       const b = celdas[sel];
-      if (n === 0) { g[sel] = 0; b.textContent = ''; pintar(); return; }
+      if (n === 0) { g[sel] = 0; b.textContent = ''; pintar(); guardarPartida(); return; }
       if (sol[sel] === n) {
         g[sel] = n; b.textContent = n; b.classList.remove('mal'); sonidoOk(); pintar();
         m.puntos(puntosSudoku(nivel, segundos(), errores));
         if (g.every((v, i) => v === sol[i])) setTimeout(() => fin(true), 600);
+        guardarPartida();
       } else {
-        errores++; sonidoMal(); m.vidas(3 - errores);
+        errores++; sonidoMal(); m.vidas(3 - errores); guardarPartida();
         b.textContent = n; b.classList.add('mal');
         const idx = sel;
         setTimeout(() => { celdas[idx].textContent = g[idx] || ''; celdas[idx].classList.remove('mal'); }, 700);
@@ -1428,7 +1492,7 @@
   const unaSimbolo = v => ({ skip: '⊘', rev: '⇄', '+2': '+2', wild: '★', '+4': '+4' }[v] || v);
 
   function elegirUna() {
-    const m = marco('una');
+    const m = marco('una', { menu: true }); // menú: aún no es partida (openspec: juegos-recarga)
     m.body.innerHTML = '<div class="q-card"><div class="big">🃏</div><div class="q">¡Una!</div><div class="sub">Iguala el color o el número. Cuando te quede una carta, ¡presiona el botón UNA!</div></div>' +
       '<label>Rivales</label><div class="opts" style="grid-template-columns:repeat(3,1fr)">' + [1, 2, 3].map(n => '<button class="opt" data-una-bots="' + n + '"' + (n === 2 ? ' aria-pressed="true"' : '') + '>' + n + ' bot' + (n > 1 ? 's' : '') + '</button>').join('') + '</div>' +
       '<label>Idioma</label><div class="opts"><button class="opt" data-una-lang="es" aria-pressed="true">🇲🇽 Español</button><button class="opt" data-una-lang="en">🇺🇸 English</button></div>' +
@@ -1644,7 +1708,7 @@
   const pkJugadaDe = b => b.dataset.pk === 'subir' ? { accion: 'subir', monto: Number(document.getElementById('pk-monto').value) } : { accion: b.dataset.pk };
 
   function elegirPoker() {
-    const m = marco('poker');
+    const m = marco('poker', { menu: true }); // menú: aún no es partida (openspec: juegos-recarga)
     m.body.innerHTML = '<div class="q-card"><div class="big">♠️♥️♣️♦️</div><div class="q">Póker Texas Hold\'em</div><div class="sub">Estilo Casino Royale: 1,000 fichas cada quien y 10 manos. Las fichas son de juego, no tienen valor.</div></div>' +
       '<label>Modo</label><div class="opts"><button class="opt" data-pk-modo="solo" aria-pressed="true">🎩 Solo contra la mesa</button><button class="opt" data-pk-modo="pareja">🤝 En pareja con Vesper</button></div>' +
       '<div id="pk-rivales"><label>Rivales</label><div class="opts" style="grid-template-columns:repeat(4,1fr)">' + [1, 2, 3, 4].map(n => '<button class="opt" data-pk-bots="' + n + '"' + (n === 3 ? ' aria-pressed="true"' : '') + '>' + n + '</button>').join('') + '</div></div>' +
@@ -1786,7 +1850,7 @@
   }
 
   function elegirBrisca() {
-    const m = marco('brisca');
+    const m = marco('brisca', { menu: true }); // menú: aún no es partida (openspec: juegos-recarga)
     m.body.innerHTML = '<div class="q-card"><div class="big">🪙🏆⚔️🪵</div><div class="q">Brisca</div><div class="sub">Baraja española de 40 cartas. Gana quien junta más de 60 de los 120 puntos.</div></div>' +
       '<label>Modo</label><div class="opts" style="grid-template-columns:repeat(3,1fr)"><button class="opt" data-br-modo="1" aria-pressed="true">🙂 vs 1</button><button class="opt" data-br-modo="2">👥 vs 2</button><button class="opt" data-br-modo="pareja">🤝 En pareja</button></div>' +
       '<div class="row-btns"><button class="btn ghost" data-ayuda="brisca">📖 Cómo se juega</button><button class="btn" data-br-go>🃏 Repartir</button></div>';
@@ -1837,7 +1901,7 @@
   }
 
   function elegirConquian() {
-    const m = marco('conquian');
+    const m = marco('conquian', { menu: true }); // menú: aún no es partida (openspec: juegos-recarga)
     m.body.innerHTML = '<div class="q-card"><div class="big">🪙🏆⚔️🪵</div><div class="q">Conquián</div><div class="sub">El rummy mexicano: forma tercias y escaleras con la carta de la mesa hasta bajar 9 cartas.</div></div>' +
       '<div class="row-btns"><button class="btn ghost" data-ayuda="conquian">📖 Cómo se juega</button><button class="btn" data-cq-go>🃏 Repartir contra El Compadre 🤠</button></div>';
     m.body.addEventListener('click', e => { if (e.target.closest('[data-cq-go]')) jugarConquian(); });
@@ -1913,7 +1977,7 @@
   }
 
   function elegirAjedrez() {
-    const m = marco('ajedrez');
+    const m = marco('ajedrez', { menu: true }); // menú: aún no es partida (openspec: juegos-recarga)
     m.body.innerHTML = '<div class="q-card"><div class="big">♚♛♞</div><div class="q">Ajedrez</div><div class="sub">Juega contra Gambito 🤖. Gana dando jaque mate.</div></div>' +
       '<label>Nivel</label><div class="opts" style="grid-template-columns:repeat(3,1fr)">' + [1, 2, 3].map(n => '<button class="opt" data-aj-nivel="' + n + '"' + (n === 2 ? ' aria-pressed="true"' : '') + '>' + AJ_NIVEL[n].t + '</button>').join('') + '</div>' +
       '<label>Juegas con</label><div class="opts" style="grid-template-columns:repeat(3,1fr)"><button class="opt" data-aj-color="w" aria-pressed="true">♔ Blancas</button><button class="opt" data-aj-color="b">♚ Negras</button><button class="opt" data-aj-color="azar">🎲 Al azar</button></div>' +
@@ -1981,7 +2045,7 @@
 
   // ---------- Clásicos: Lotería ----------
   function elegirLoteria() {
-    const m = marco('loteria');
+    const m = marco('loteria', { menu: true }); // menú: aún no es partida (openspec: juegos-recarga)
     m.body.innerHTML = '<div class="q-card"><div class="big">🎴</div><div class="q">Lotería mexicana</div><div class="sub">Escucha al gritón, marca con 🫘 las cartas que salgan en tu tabla y grita «¡Lotería!»</div></div>' +
       '<label>Modo</label><div class="opts"><button class="opt" data-lot-modo="linea" aria-pressed="true">➖ Línea (rápido)</button><button class="opt" data-lot-modo="llena">🟩 Tabla llena</button></div>' +
       '<label>Voz del gritón</label><div class="opts" style="grid-template-columns:repeat(3,1fr)"><button class="opt" data-lot-voz="es">Español</button><button class="opt" data-lot-voz="ambos" aria-pressed="true">Bilingüe</button><button class="opt" data-lot-voz="en">English</button></div>' +
@@ -2248,6 +2312,10 @@
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    // Recargar regresa aquí (openspec: juegos-recarga): código en la URL y sala activa guardada.
+    recordarSala(codigo);
+    try { history.replaceState(history.state, '', urlConSala(codigo)); } catch (e) { /* sin historial */ }
+    modoPartida(true);
     const j = juegoPorId(sala.estado.sala.juego);
     const preparar = ['una', 'poker', 'brisca', 'conquian', 'ajedrez'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
     sala.contenido = await preparar;
@@ -2435,7 +2503,9 @@
     if (ahora < s.inicio) { bar.hidden = true; const k = 'cuenta:' + Math.ceil((s.inicio - ahora) / 1000); if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">¡Prepárate! · ' + n + (n === 1 ? ' ronda' : ' rondas') + '</div><div class="letra">' + Math.ceil((s.inicio - ahora) / 1000) + '</div></div>'; sala.vista = k; } return; }
     const cal = calendarioBasta();
     // Al cerrar cada ronda, enviar mis palabras una sola vez (antes de redibujar el formulario).
-    for (let r = 0; r < n; r++) if (ahora >= cal[r].cierre && !sala.bastaEnviado[r]) enviarRonda(r, sala.vista === 'basta' + r ? palabrasForm() : {});
+    // Tras recargar, las rondas que el servidor ya tiene no se reenvían vacías (openspec: juegos-recarga).
+    const yaEnviadas = (e.jugadores.find(x => x.id === e.yo) || {}).rondasBasta || {};
+    for (let r = 0; r < n; r++) if (ahora >= cal[r].cierre && !sala.bastaEnviado[r] && !yaEnviadas[r]) enviarRonda(r, sala.vista === 'basta' + r ? palabrasForm() : {});
     const r = cal.findIndex(c => ahora < c.cierre + dur(P_PAUSA));
     const ultima = n - 1;
     if (r === -1 || (ahora >= cal[ultima].cierre && rondaLista(ultima, cal))) {
@@ -2482,6 +2552,7 @@
   function pintarFinalSala(body, todas, basta, titulo) {
     if (sala.vista === 'final') return;
     sala.vista = 'final';
+    olvidarSala(); // terminó: recargar ya no vuelve a la sala
     const filas = todas.map(f => Object.assign({}, f, { ultimo: 0 })); // en el podio no se muestra el +puntos de la última pregunta
     document.getElementById('m-bar').hidden = true;
     const e = sala.estado; const juego = e.sala.juego;
@@ -2518,6 +2589,8 @@
     const lot = { orden: barajar(idx, rngDe(s.seed, 'orden')), modo: s.opciones.modo || 'linea', marcas: Array(16).fill(false), voz: 'ambos', cantadas: 0 };
     lot.tablaDe = id => tomar(idx, 16, rngDe(s.seed, 'tabla|' + id));
     lot.mia = lot.tablaDe(sala.estado.yo);
+    const guardada = salaGuardada(); // marcas de antes de recargar (openspec: juegos-recarga)
+    if (guardada && guardada.codigo === sala.codigo && Array.isArray(guardada.marcas) && guardada.marcas.length === 16) lot.marcas = guardada.marcas.map(Boolean);
     sala.lot = lot;
     return lot;
   }
@@ -2566,7 +2639,7 @@
       sala.vista = 'loteria';
       body.innerHTML = '<div class="lot-top"><div class="lot-carta" id="lot-carta"><div class="big">🎴</div></div><div class="lot-lado"><div class="muted">Salieron <b id="lot-n">0</b>/54 · ' + (lot.modo === 'llena' ? 'tabla llena' : 'línea') + '</div>' +
         '<div class="lot-hist" id="lot-hist"></div><div id="lot-jug"></div></div></div>' +
-        '<div class="lot-grid">' + lot.mia.map((ci, i) => '<button class="lot-cell" data-lsc="' + i + '"><span class="em">' + escapeHtml(cartas[ci].emoji) + '</span><span class="nm">' + escapeHtml(cartas[ci].es) + '</span></button>').join('') + '</div>' +
+        '<div class="lot-grid">' + lot.mia.map((ci, i) => '<button class="lot-cell' + (lot.marcas[i] ? ' marcada' : '') + '" data-lsc="' + i + '"><span class="em">' + escapeHtml(cartas[ci].emoji) + '</span><span class="nm">' + escapeHtml(cartas[ci].es) + '</span></button>').join('') + '</div>' +
         '<div class="feedback" id="lot-msg"></div>' +
         '<div class="row-btns"><button class="btn una-grito" data-lsgrito>🎉 ¡Lotería!</button></div>' +
         '<div class="row-btns" style="margin-top:6px">' + ['es:🇲🇽 Voz español', 'ambos:🔀 Bilingüe', 'en:🇺🇸 English'].map(x => { const [v, t] = x.split(':'); return '<button class="btn ghost sm" data-lsvoz="' + v + '" aria-pressed="' + (lot.voz === v) + '">' + t + '</button>'; }).join('') + '</div>';
@@ -2590,7 +2663,7 @@
   function marcarLoteriaSala(i, cel) {
     const lot = sala.lot; const n = cantadasA(ahoraServidor());
     const $m = document.getElementById('lot-msg');
-    if (new Set(lot.orden.slice(0, n)).has(lot.mia[i])) { lot.marcas[i] = true; cel.classList.add('marcada'); tono(520, 60); }
+    if (new Set(lot.orden.slice(0, n)).has(lot.mia[i])) { lot.marcas[i] = true; cel.classList.add('marcada'); tono(520, 60); recordarSala(sala.codigo, { marcas: lot.marcas }); }
     else { cel.classList.remove('tiembla'); void cel.offsetWidth; cel.classList.add('tiembla'); $m.className = 'feedback bad'; $m.textContent = '¡Esa carta todavía no sale!'; }
   }
 
@@ -3104,6 +3177,35 @@
     unirseCodigo(codigo);
   }
 
+  // ---- Volver tras recargar (openspec: juegos-recarga) ----
+  // Sala guardada sin ?sala= en la URL: solo entra si el servidor confirma que sigue dentro (GET, nunca unirse).
+  async function volverASala(codigo) {
+    app.innerHTML = '<div class="loading">Volviendo a tu partida ' + escapeHtml(codigo) + '…</div>';
+    const r = await api('/juegos/sala/' + codigo);
+    if (state.pidiendoSesion) return;
+    if (!r.ok) { olvidarSala(); return pantallaHub(); }
+    return entrarSala(codigo);
+  }
+  // Juegos individuales que se reanudan y cómo volver a lanzarlos con su instantánea; los demás solo avisan.
+  const REANUDAR = {
+    'en-vocab': () => jugarVocab(), 'en-frases': () => jugarFrases(), 'es-ortografia': () => jugarOrtografia(), 'mente-calculo': () => jugarCalculo(),
+    cultura: async p => jugarCultura(await datos('cultura'), typeof p.cat === 'string' ? p.cat : 'todas'),
+    'mente-sudoku': p => jugarSudoku(SUDOKU_NIVELES[p.nivel] ? p.nivel : 'facil'),
+  };
+  function pantallaReanudar(p) {
+    const j = juegoPorId(p.juego);
+    app.innerHTML = '<div class="card result" id="reanudar"><div style="font-size:2.4rem">' + j.emoji + '</div><h1>¿Continuar tu partida de ' + escapeHtml(j.t) + '?</h1>' +
+      '<p class="muted">Se recargó la página a mitad del juego. Puedes seguir donde ibas.</p><div class="pills">' +
+      (p.puntos ? '<span class="stat">⭐ ' + fmt(p.puntos) + '</span>' : '') + (p.total ? '<span class="stat">✅ ' + fmt(p.aciertos) + ' de ' + fmt(p.total) + '</span>' : '') +
+      (p.faltan ? '<span class="stat">🔢 Faltan ' + fmt(p.faltan) + ' casillas</span>' : '') + '</div>' +
+      '<div class="row-btns"><button class="btn ghost" data-a="hub">No, ir a los juegos</button><button class="btn" data-a="reanudar">▶️ Continuar</button></div></div>';
+  }
+  function reanudarPartida() {
+    const p = partidaGuardada(); if (!p) return pantallaHub();
+    reanudacion = p; app.innerHTML = '<div class="loading">Preparando…</div>';
+    return Promise.resolve(REANUDAR[p.juego](p)).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; });
+  }
+
   async function unirseCodigo(codigo) {
     const r = await post('/juegos/sala/' + codigo + '/unirse', {});
     if (!r.ok) {
@@ -3310,6 +3412,7 @@
     const g = e.target.closest('[data-juego]');
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
     const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === 'reanudar') return reanudarPartida();
     if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); pantallaHub(); }
     if (a.dataset.a === 'reintentar') iniciar();
     if (a.dataset.a === 'csv') descargarCsv([['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana])), 'invitados-juegos.csv');

@@ -67,6 +67,25 @@ Deno.test("salas: unirse, sala inexistente, tras empezar y cupo", async () => {
   assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, "admin@example.com")).status, 409);
 });
 
+// openspec: juegos-recarga — al recargar, la página vuelve a unirse; quien ya está dentro no se duplica ni pierde nada.
+Deno.test("salas: volver a unirse tras recargar (empezada o llena) no duplica ni borra respuestas", async () => {
+  const c = ctx();
+  const codigo = await salaCon(c, "ajedrez"); // cupo 2: la sala queda llena con Angel
+  await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com");
+  assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com")).status, 200, "llena, pero ya está dentro");
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(6000);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { jugada: { n: 1, accion: "mover", de: "e7", a: "e5" } })).status, 200);
+  for (const email of ["angel@example.com", "marisol@example.com"]) {
+    const u = await c.call("POST", `/sala/${codigo}/unirse`, email);
+    assertEquals([u.status, u.body.ok, u.body.codigo], [200, true, codigo], `${email}: empezada, pero ya está dentro`);
+  }
+  const g = await c.call("GET", `/sala/${codigo}`, "angel@example.com");
+  assertEquals(g.body.jugadores.map((j: any) => j.nombre), ["Marisol", "Angel"], "sin duplicados");
+  assertEquals(g.body.jugadores[1].jugadas.map((j: any) => [j.n, j.de, j.a]), [[1, "e7", "e5"]], "conserva sus jugadas");
+  assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, "admin@example.com")).body.error, "ya_empezo", "quien no estaba no entra");
+});
+
 Deno.test("salas: cupo de 30 jugadores", async () => {
   const c = ctx();
   const codigo = await salaCon(c);

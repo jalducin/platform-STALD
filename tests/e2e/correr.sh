@@ -35,7 +35,7 @@ PEDIDAS=()
 # la de login con la transición terminada.
 ORDEN=(actividades-datos alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno examen-secundaria autoguardado
   grupos ingles-pro
-  login portal juegos jugadores partidas enlace-sala
+  login portal juegos jugadores partidas enlace-sala juegos-recarga
   conquian-estres clasicos fusion sudoku dragon-run puntos-tipo basta-rondas loteria-sala una-sala una-robo
   poker cartas-espanolas ajedrez ajustes-salas ritmo avatar-foto
   login-despues)
