@@ -7,7 +7,7 @@
 //   StaldAuth.esSesionVencida(res, body)         // true si el servidor respondió 401 de sesión
 //   StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar, pie })  // pie: HTML propio bajo el formulario
 //   StaldAuth.ayudaReenvio(el, correo)           // «¿No te llegó?» y botón para reenviar el enlace (espera de 60 s)
-//   StaldAuth.salir()                            // cierra la sesión y borra las claves viejas de correo
+//   StaldAuth.salir()                            // cierra la sesión y borra las claves viejas de correo y las de Juegos
 // La sesión se comparte entre portal, Inglés, Juegos y Secundaria (mismo origen, localStorage).
 (function () {
   'use strict';
@@ -131,8 +131,10 @@
     });
   }
 
+  // Cerrar sesión también olvida la partida que Juegos guardó para recargar (openspec: juegos-recarga).
+  var CLAVES_JUEGOS = ['juegos_sala_activa', 'juegos_partida_individual'];
   function salir() {
-    CLAVES_VIEJAS.forEach(function (k) { escribir(k, null); });
+    CLAVES_VIEJAS.concat(CLAVES_JUEGOS).forEach(function (k) { escribir(k, null); });
     escribir(CLAVE_PRUEBA, null);
     estado.sesion = null;
     if (!estado.cliente) return Promise.resolve();

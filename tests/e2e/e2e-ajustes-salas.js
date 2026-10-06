@@ -37,9 +37,9 @@ const unirse = async (q, codigo) => { await q.click('[data-tab="partidas"]'); aw
   await host.waitForSelector('.aj-tablero', { timeout: 20000 });
   const nombres = await host.$$eval('.aj-info span:first-child', xs => xs.map(x => x.textContent));
   ok('ajedrez: juegan Marisol y Angel, sin bots', nombres.join(' ').includes('Marisol') && nombres.join(' ').includes('Angel') && !/BOT/.test(nombres.join(' ')), nombres.join(' / '));
-  // Brisca con 2 personas → 2 bots
-  await host.goto(BASE + '/juegos.html' + Q); await host.waitForSelector('[data-juego]');
-  await otro.goto(BASE + '/juegos.html' + Q); await otro.waitForSelector('[data-juego]');
+  // Brisca con 2 personas → 2 bots. Salen con ✕: navegar sin salir regresaría a la sala (openspec: juegos-recarga).
+  await host.click('[data-a="salir"]'); await host.goto(BASE + '/juegos.html' + Q); await host.waitForSelector('[data-juego]');
+  await otro.click('[data-a="salir"]'); await otro.goto(BASE + '/juegos.html' + Q); await otro.waitForSelector('[data-juego]');
   await host.click('[data-tab="partidas"]'); await host.selectOption('#p-juego', 'brisca');
   ok('brisca: nota de 4 en parejas', /Se juega entre 4 en parejas/.test(await host.textContent('#p-bots-nota')) && await host.$eval('#p-bots-wrap', e => e.hidden));
   await host.click('#f-crear button[type=submit]'); await host.waitForSelector('[data-p="empezar"]');
