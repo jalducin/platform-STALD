@@ -25,7 +25,11 @@ function renderFiltroGrupo() {
 function renderGruposAdmin() {
   if (!state.grupos) return '';
   const lista = state.grupos.grupos || [];
-  const cuantos = id => Object.values(state.grupos.miembros).filter(x => x === id).length;
+  // Grupo efectivo (openspec: grupos-conteo): inscripción o, sin ella, el primer grupo activo, como en «Registro».
+  const registro = Array.isArray(state.alumnosAdmin) ? state.alumnosAdmin : null;
+  const cuantos = id => registro ? registro.filter(x => (grupoDeNombre(x.nombre) || {}).id === id).length
+    : Object.values(state.grupos.miembros).filter(x => x === id).length;
+  const personas = n => n === 1 ? '1 alumno o alumna' : n + ' alumnos y alumnas';
   const e = state.grupoEdicion || {};
   return '<details class="section" id="grupos-admin"' + (state.gruposAbierto === false ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Grupos</span><span class="count">' + lista.length + '</span></div></summary><div class="scroll">' +
     '<form class="grupo-form" id="grupo-form" autocomplete="off"><input type="hidden" id="g-id" value="' + escapeHtml(e.id || '') + '">' +
@@ -36,7 +40,7 @@ function renderGruposAdmin() {
       '<input id="g-color" type="color" value="' + escapeHtml(e.color || '#4f46e5') + '" aria-label="Color del grupo">' +
       '<button class="btn" type="submit">' + (e.id ? '💾 Guardar cambios' : '➕ Crear grupo') + '</button><div id="grupo-msg"></div></form>' +
     lista.map(g => '<div class="grupo-fila"><div><span class="grupo-sw" style="background:' + escapeHtml(g.color) + '"></span><b>' + escapeHtml(g.nombre) + '</b>' + (g.activo ? '' : ' <small>(inactivo)</small>') +
-      '<br><small>' + [g.nivel, g.horario].filter(Boolean).map(escapeHtml).join(' · ') + (g.meet_url ? ' · <a class="link" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') + ' · 👤 ' + cuantos(g.id) + ' inscritos</small></div>' +
+      '<br><small>' + [g.nivel, g.horario].filter(Boolean).map(escapeHtml).join(' · ') + (g.meet_url ? ' · <a class="link" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') + ' · 👤 ' + personas(cuantos(g.id)) + '</small></div>' +
       '<button class="btn ghost sm" data-action="editar-grupo" data-id="' + escapeHtml(g.id) + '">✏️ Editar</button></div>').join('') +
     '<div class="progress-text">Quien no tiene inscripción cuenta en el primer grupo activo. Las semanas con <code>"grupos"</code> en su JSON solo las ve ese grupo.</div>' +
     '</div></details>';

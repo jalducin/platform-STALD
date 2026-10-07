@@ -36,6 +36,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await p.selectOption('select.mover-grupo[data-alumno="Marisol"]', 'sabado-a1');
     await p.waitForFunction(() => /Marisol ahora está en Sábado A1/.test((document.getElementById('alta-msg') || {}).textContent || ''), null, { timeout: 15000 });
     ok('mover a Marisol a Sábado A1', (await pg('stald_test_inscripciones?alumno=eq.marisol&hasta=is.null&select=grupo_id'))[0].grupo_id === 'sabado-a1');
+    // Conteo por grupo efectivo (openspec: grupos-conteo): la suma de los contadores es el total del registro.
+    const total = Number(await p.textContent('#alumnos-admin .count'));
+    const conteos = await p.$$eval('#grupos-admin .grupo-fila', fs => fs.map(f => Number((f.textContent.match(/👤\s*(\d+)/) || [])[1] || 0)));
+    ok('grupos: la suma de los contadores es el total del registro', conteos.reduce((x, y) => x + y, 0) === total && total > 1, conteos.join('+') + ' vs ' + total);
     // Filtro por grupo
     await p.selectOption('#grupo-filtro', 'sabado-a1'); await sleep(300);
     const bloques = await p.$$eval('details.student', ds => ds.map(d => d.dataset.alumno));
