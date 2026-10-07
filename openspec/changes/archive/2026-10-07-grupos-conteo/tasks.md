@@ -20,7 +20,7 @@
 
 ## 5. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 CI en verde antes del merge; verificar que la página publicada usa el conteo nuevo
+- [x] 5.1 CI en verde antes del merge; verificar que la página publicada usa el conteo nuevo
 
 ## 6. Documentación (OBLIGATORIO)
 
