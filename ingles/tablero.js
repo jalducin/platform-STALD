@@ -48,16 +48,21 @@ function renderAdmin(data) {
     seccionHtml('admin', 'juegos', renderJuegosAdmin() + '<a class="btn ghost" href="' + escapeHtml(conApiParam('juegos.html')) + '">🎮 Abrir Juegos</a>');
 }
 
-// Clases por Meet de la semana: presentar, guion y reto.
+// Clases por Meet: la de esta semana y las anteriores, para presentarlas a grupos nuevos (openspec: presentar-anteriores).
 function renderPresentar() {
-  const meets = semanaItems(state.act).filter(it => it.tipo === 'meet');
-  if (!meets.length) return vacio('🎬', 'No hay clase por Meet esta semana.');
-  return '<div class="exam-card">' + meets.map(it => {
+  const deSemana = new Set(semanaItems(state.act).map(it => it.id));
+  const meets = ((state.act && state.act.items) || []).filter(it => it.tipo === 'meet');
+  const semana = meets.filter(it => deSemana.has(it.id));
+  const anteriores = meets.filter(it => !deSemana.has(it.id)).sort((a, b) => b.fechaLimite.localeCompare(a.fechaLimite));
+  const fila = it => {
     const btn = it.tieneReto
       ? '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button><button class="btn ghost" data-action="abrir-guion" data-id="' + escapeHtml(it.id) + '">📋 Guion</button></span>'
       : (it.meetUrl ? '<a class="btn ghost" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">🎥 Abrir Meet</a>' : '');
     return '<div class="exam-item"><div><div class="t">🎥 ' + escapeHtml(it.titulo) + '</div><div class="s">' + escapeHtml(formatFecha(it.fechaLimite)) + (it.hora ? ' · ' + escapeHtml(it.hora) : '') + '</div></div>' + btn + '</div>';
-  }).join('') + '</div>';
+  };
+  return '<div class="exam-card" id="pres-semana"><h3>📅 Esta semana</h3>' + (semana.length ? semana.map(fila).join('') : '<div class="empty">No hay clase por Meet esta semana.</div>') + '</div>' +
+    (anteriores.length ? '<div class="exam-card" id="pres-anteriores"><h3>📚 Clases anteriores (' + anteriores.length + ')</h3>' +
+      '<p class="progress-text" style="margin:0 0 6px">Para un grupo nuevo, empieza por la primera clase (la de más abajo).</p>' + anteriores.map(fila).join('') + '</div>' : '');
 }
 
 // ---------- Indicadores y mapa de calor ----------
