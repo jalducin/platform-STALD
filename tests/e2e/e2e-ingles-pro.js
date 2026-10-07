@@ -120,7 +120,7 @@ async function contexto(b, email, ancho, opciones = {}) {
   const { ctx: c4, p: d } = await contexto(b, ADMIN, 1280);
   await d.goto(BASE + '/ingles.html' + Q);
   await d.waitForSelector('#mapa-calor', { timeout: 60000 });
-  ok('escritorio: menú lateral con 9 secciones', await d.evaluate(() => getComputedStyle(document.getElementById('nav')).position === 'sticky') && (await d.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).length)) === 9);
+  ok('escritorio: menú lateral con 10 secciones (con ➕ Registro)', await d.evaluate(() => getComputedStyle(document.getElementById('nav')).position === 'sticky') && (await d.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).length)) === 10);
   ok('indicadores del grupo', (await d.$$('#kpis .kpi')).length === 4);
   await d.selectOption('#grupo-filtro', 'sabado-a1');
   await d.waitForFunction(() => { const t = document.getElementById('mapa-calor'); return t && [...t.querySelectorAll('tbody tr')].map(r => r.dataset.alumno).join() === 'Marisol'; }, null, { timeout: 15000 });

@@ -42,7 +42,7 @@ const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, ingles: 
   ok('servidor: examen directo completo', r.items.find(i => i.id === 'profe-examen-directo-s1').estado === 'completo');
 
   // Admin: enlace desde la vista del grupo y en el portal
-  const grupo = await pagina(b, 'admin@example.com', '/ingles.html#alumnos');
+  const grupo = await pagina(b, 'admin@example.com', '/ingles.html#registro');
   await grupo.waitForSelector('#alumnos-admin', { timeout: 60000 });
   ok('vista del grupo con enlace a Mi ruta', !!(await grupo.$('a.profe-link[href*="modo=profe"]')));
   ok('la vista del grupo no lista elementos del profe', !(await grupo.textContent('#content')).includes('Examen directo'));

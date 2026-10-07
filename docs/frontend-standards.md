@@ -281,7 +281,7 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `.nav-item` y `.nav-barra`);
   - `ingles/ingles.css`: estilos propios de Inglés (incluida la presentación del Meet);
   - scripts clásicos con `defer`, en este orden: `comun.js` (configuración, `SECCIONES`, `api()`, formato y
-    componentes), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, alumnos y alumnas, juegos), `tablero.js`
+    componentes), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, registro de alumnos y alumnas, juegos; el registro va en su propia opción «➕ Registro», separado del avance en «Alumnos»), `tablero.js`
     (vista del admin por secciones, mapa de calor y cajón), `alumno.js`, `profe.js` y `app.js` (sesión, ruteo y
     eventos). No son módulos ES: comparten el ámbito global, así que un nombre de nivel superior no se puede repetir
     entre archivos.

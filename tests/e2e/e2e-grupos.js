@@ -27,7 +27,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await p.fill('#g-nombre', 'Malo'); await p.fill('#g-meet', 'javascript:alert(1)'); await p.click('#grupo-form button[type=submit]'); await sleep(800);
     ok('Meet inválido se rechaza con mensaje', /https/.test(await p.textContent('#grupo-msg')));
     // Alta en grupo
-    await p.goto(BASE + '/ingles.html' + Q + '#alumnos'); await p.waitForSelector('#alumnos-admin');
+    await p.goto(BASE + '/ingles.html' + Q + '#registro'); await p.waitForSelector('#alumnos-admin');
     await p.fill('#alta-nombre', 'Prueba Grupo'); await p.fill('#alta-correo', 'prueba.grupo@example.com'); await p.selectOption('#alta-grupo', 'sabado-a1');
     await p.click('#alta-alumno button[type=submit]'); await p.waitForFunction(() => /ya puede entrar/.test((document.getElementById('alta-msg') || {}).textContent || ''), null, { timeout: 20000 });
     const ins = await pg('stald_test_inscripciones?alumno=eq.prueba-grupo&select=grupo_id,desde,hasta');

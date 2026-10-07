@@ -40,7 +40,8 @@ function renderAdmin(data) {
   return renderFiltroGrupo() +
     seccionHtml('admin', 'resumen', '<div id="tablero" aria-live="polite">' + renderTablero() + '</div>') +
     seccionHtml('admin', 'grupos', renderGruposAdmin() || vacio('👥', 'Los grupos se activan cuando Inglés usa la base de datos.')) +
-    seccionHtml('admin', 'alumnos', renderAlumnosAdmin() + (bloques || vacio('🧑‍🎓', 'Aún no hay alumnos ni alumnas en este grupo.'))) +
+    seccionHtml('admin', 'alumnos', bloques || vacio('🧑‍🎓', 'Aún no hay alumnos ni alumnas en este grupo. Dalos de alta en ➕ Registro.')) +
+    seccionHtml('admin', 'registro', renderAlumnosAdmin()) +
     seccionHtml('admin', 'semana', renderAdminWeek(state.act) || vacio('📅', 'Sin actividades esta semana.')) +
     seccionHtml('admin', 'resultados', renderUltimasAdmin(names, items)) +
     seccionHtml('admin', 'presentar', renderPresentar()) +
