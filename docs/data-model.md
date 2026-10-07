@@ -216,6 +216,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   `cierre-tecnico`). Es la única fuente de identidad de Inglés. Solo el admin ve los correos.
   - `inicio` (`AAAA-MM-DD`): el lunes siguiente al alta (cambio `inicio-lunes-alumnos`). Las actividades que
     vencen antes no aparecen. Las personas importadas de Notion no llevan `inicio` (ya llevaban el curso).
+- `borradores/<id>/<slug-alumno>.json`: `{ intento, respuestas, actualizado }`, el avance del intento abierto de
+  Inglés, la ruta del profe o Secundaria. Vive en Postgres, como `resultados/`, y se borra al enviar el intento
+  (cambio `borrador-en-servidor`). Sin correos.
 - `avance/<slug-alumno>.json`: historial de las marcas de tareas de Notion de Inglés. Desde la fase 2 de
   `cierre-tecnico` nadie lo escribe; se conserva como historial.
   - `{ alumno, notion: { <pageId>: { titulo, completado, en, por } }, historial: [...] }`.

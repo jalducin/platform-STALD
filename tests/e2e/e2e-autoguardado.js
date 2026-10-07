@@ -19,6 +19,8 @@ const abrir = async p => {
 // ¿El navegador pediría confirmar al salir? (evento sintético: no depende de cómo Playwright trate los diálogos)
 const pideConfirmar = p => p.evaluate(() => { const e = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(e); return e.defaultPrevented; });
 const texto = async (p, sel) => ((await p.textContent(sel)) || '').replace(/\s+/g, ' ');
+// Borrador guardado en la cuenta (openspec: borrador-en-servidor), visto por la API con la sesión de prueba.
+const borradorCuenta = p => p.evaluate(async ([api, email, id]) => (await (await fetch(api + '/secundaria/actividades/' + id, { headers: { Authorization: 'Bearer prueba:' + email } })).json()).borrador || null, [process.env.API, ALUMNA, ID]);
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
@@ -30,7 +32,7 @@ const texto = async (p, sel) => ((await p.textContent(sel)) || '').replace(/\s+/
   // 1) Abrir y contestar una de opción múltiple y una escrita (modo paso: una por pantalla).
   await abrir(p);
   ok('modo paso en celular', await p.$eval('#exam-form', f => f.classList.contains('paso')));
-  ok('aviso «Tu avance se guarda solo en este aparato ✔»', (await texto(p, '#autoguardado')).includes('Tu avance se guarda solo en este aparato ✔'), await texto(p, '#autoguardado'));
+  ok('aviso «Tu avance se guarda en tu cuenta ✔»', (await texto(p, '#autoguardado')).includes('Tu avance se guarda en tu cuenta ✔'), await texto(p, '#autoguardado'));
   ok('examen abierto: html.examen-abierto y overscroll contain', await p.evaluate(() => document.documentElement.classList.contains('examen-abierto') && getComputedStyle(document.documentElement).overscrollBehaviorY === 'contain'));
   ok('sin respuestas no pide confirmar al salir', !(await pideConfirmar(p)));
   await p.check('input[name="g-h1"][value="0"]');
@@ -69,6 +71,19 @@ const texto = async (p, sel) => ((await p.textContent(sel)) || '').replace(/\s+/
   await abrir(p);
   ok('volver y reabrir: respuestas restauradas', await p.isChecked('input[name="g-h1"][value="0"]') && (await p.inputValue('input[name="g-h2"]')) === 'cinco');
 
+  // 3b) Otro aparato (otro contexto, sin localStorage): recupera desde la cuenta (openspec: borrador-en-servidor).
+  await p.waitForFunction(() => /en tu cuenta ✔ · Guardado/.test(document.getElementById('autoguardado').textContent), null, { timeout: 15000 })
+    .then(() => ok('el avance se sube a la cuenta', true), async () => ok('el avance se sube a la cuenta', false, await texto(p, '#autoguardado')));
+  const enCuenta = await borradorCuenta(p);
+  ok('la cuenta guarda solo preguntas del intento', !!enCuenta && JSON.stringify(enCuenta.respuestas) === '{"g-h1":0,"g-h2":"cinco"}', JSON.stringify(enCuenta));
+  const otro = await abrirPagina(b, { email: ALUMNA, out, etiqueta: 'otro aparato' });
+  otro.on('dialog', d => d.accept());
+  await otro.goto(urlDe('/ingles.html?modo=secundaria'));
+  await abrir(otro);
+  ok('otro aparato: respuestas recuperadas de la cuenta', await otro.isChecked('input[name="g-h1"][value="0"]') && (await otro.inputValue('input[name="g-h2"]')) === 'cinco');
+  ok('otro aparato: aviso de recuperación', (await texto(otro, '#autoguardado-aviso')).includes('Recuperamos tus 2 respuestas'), await texto(otro, '#autoguardado-aviso'));
+  await otro.context().close();
+
   // 4) Contestar el resto y enviar: el borrador se borra.
   await p.click('[data-action="ver-todas"]');
   await p.check('input[name="g-h3"][value="1"]');
@@ -79,6 +94,7 @@ const texto = async (p, sel) => ((await p.textContent(sel)) || '').replace(/\s+/
   await p.waitForSelector('.score', { timeout: 60000 });
   ok('envío: 100 % con lo restaurado', (await texto(p, '.score')).includes('100'), await texto(p, '.score'));
   ok('tras enviar: sin borrador', (await borradores(p)).length === 0, JSON.stringify(await borradores(p)));
+  ok('tras enviar: sin borrador en la cuenta', (await borradorCuenta(p)) === null, JSON.stringify(await borradorCuenta(p)));
   ok('tras enviar: sin examen-abierto ni confirmación', !(await p.evaluate(() => document.documentElement.classList.contains('examen-abierto'))) && !(await pideConfirmar(p)));
   await p.screenshot({ path: 'autoguardado-resultado.png' });
 

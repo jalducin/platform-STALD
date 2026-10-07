@@ -315,10 +315,15 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   pregunta activa y Enter avanza (o envía cuando todo está respondido). El resultado muestra un anillo y barras por tema.
   - **Autoguardado** (cambio `examen-autoguardado`): cada respuesta se guarda en
     `localStorage['stald_borrador:<ingles|profe|secundaria>:<hash FNV-1a del correo>:<id>:<intento>']` =
-    `{ v: 1, t, r }` (`r` con la forma de `examAnswers`). Nunca se manda al servidor.
+    `{ v: 1, t, r }` (`r` con la forma de `examAnswers`). Es la copia inmediata en el aparato.
+    - Copia en la cuenta (cambio `borrador-en-servidor`): `PUT …/<id>/borrador { intento, respuestas }` 2.5 s después
+      del último cambio, al ocultar la pestaña (`keepalive`) y, si falló, al volver la conexión (`online`). Al abrir el
+      intento gana la copia más reciente entre la del aparato y la de la cuenta (`borrador.actualizado`), así que se
+      recupera desde cualquier aparato o navegador. `#autoguardado` dice «Tu avance se guarda en tu cuenta ✔ · …» o,
+      sin conexión, que se subirá al reconectar.
     - Al reabrir el mismo intento se restaura por id de pregunta (ignora las que ya no están y las fijas de la
       corrección), avisa «Recuperamos tus N respuestas» (`#autoguardado-aviso`) y, en modo paso, va a la primera sin
-      contestar. `#autoguardado` dice «Tu avance se guarda solo en este aparato ✔ · Guardado hace …».
+      contestar.
     - Se borra al enviar con éxito, al abrir un intento posterior o un elemento terminado, con 🚪 Cerrar sesión y a
       los 14 días. La vista previa del admin no guarda.
     - Mientras existe `#exam-form`, `html.examen-abierto` aplica `overscroll-behavior-y: contain` (sin «jalar para
