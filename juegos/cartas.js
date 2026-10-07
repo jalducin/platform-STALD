@@ -60,11 +60,14 @@
   }
 
   // ---------- Texas Hold'em sin límite ----------
-  const CIEGAS = [[10, 20], [20, 40], [40, 80], [75, 150]];
+  // openspec: poker-fichas — 500 fichas y ciegas a la mitad (la grande sigue siendo el 2 % de la pila al empezar).
+  // Todo va en múltiplos de FICHA (la ficha más chica del selector: 5, 10, 20, 50 y 100).
+  const FICHAS_INICIALES = 500, FICHA = 5;
+  const CIEGAS = [[5, 10], [10, 20], [20, 40], [40, 80]];
 
   function pokerNueva(jugadores, op) {
     const o = op || {};
-    return { jugadores: jugadores.map(j => Object.assign({}, j, { fichas: o.fichas || 1000 })), manos: o.manos || 10, mano: -1, boton: -1, fase: 'espera', terminada: false, aportado: jugadores.map(() => 0), apuesta: jugadores.map(() => 0), resultado: null, ultima: null };
+    return { jugadores: jugadores.map(j => Object.assign({}, j, { fichas: o.fichas || FICHAS_INICIALES })), manos: o.manos || 10, mano: -1, boton: -1, fase: 'espera', terminada: false, aportado: jugadores.map(() => 0), apuesta: jugadores.map(() => 0), resultado: null, ultima: null };
   }
 
   function sigIdx(st, desde, cond) {
@@ -130,6 +133,7 @@
     else if (a === 'subir') {
       const m = Math.round(Number(mv.monto));
       if (!o.puedeSubir || !Number.isFinite(m) || m < o.minSubir || m > o.maxSubir) return false;
+      if (m % FICHA !== 0 && m !== o.maxSubir) return false; // se arma con fichas; solo «todo» puede ser otra cantidad
       subirA(st, i, m);
     } else if (a === 'todo') { if (st.jugadores[i].fichas <= 0) return false; subirA(st, i, o.maxSubir); }
     else return false;
@@ -173,7 +177,8 @@
     cerrar(st, premios, false);
   }
 
-  // Botes por niveles de aportación; empate: partes iguales y lo que sobra al primero después del botón.
+  // Botes por niveles de aportación; empate: partes iguales en múltiplos de FICHA y lo que sobra, de FICHA en FICHA,
+  // a partir del primero después del botón (openspec: poker-fichas).
   function mostrar(st) {
     const n = st.jugadores.length;
     const manos = st.jugadores.map((_, i) => st.fuera[i] ? null : mejorMano(st.cartas[i].concat(st.comunes)));
@@ -187,9 +192,9 @@
       const elegibles = ordenBoton.filter(i => !st.fuera[i] && st.aportado[i] >= nivel);
       const mejor = Math.max(...elegibles.map(i => manos[i].valor));
       const gan = elegibles.filter(i => manos[i].valor === mejor);
-      const parte = Math.floor(monto / gan.length);
+      const parte = Math.floor(monto / gan.length / FICHA) * FICHA;
       let resto = monto - parte * gan.length;
-      gan.forEach(i => { premios[i] += parte + (resto > 0 ? 1 : 0); if (resto > 0) resto--; });
+      gan.forEach(i => { const extra = Math.min(FICHA, resto); premios[i] += parte + extra; resto -= extra; });
       repartido += monto; previo = nivel;
     }
     const sobra = bote(st) - repartido; // aportes de retirados por encima del último nivel
@@ -417,7 +422,7 @@
     return { accion: 'descartar', carta };
   }
 
-  g.Cartas = { PALOS, RANGOS, rango, palo, nombreCarta, esRoja, barajar, valor5, mejorMano, NOMBRES_MANO, CIEGAS,
+  g.Cartas = { PALOS, RANGOS, rango, palo, nombreCarta, esRoja, barajar, valor5, mejorMano, NOMBRES_MANO, CIEGAS, FICHAS_INICIALES, FICHA,
     pokerNueva, pokerMano, pokerActuar, pokerBot, opciones, bote,
     ESP_PALOS, ESP_EMOJI, espPalo, espOrden, espValor, nombreEsp,
     briscaNueva, briscaJugar, briscaGanador, briscaPuntos, briscaResultado, briscaBot,

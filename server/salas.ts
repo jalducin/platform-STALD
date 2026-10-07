@@ -13,6 +13,7 @@ export const JUEGOS_PARTIDA = new Set([
   "en-vocab", "en-frases", "es-ortografia", "cultura", "mente-calculo", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
 ]);
 const ACCIONES_POKER = ["retirarse", "pasar", "igualar", "subir", "todo"]; // openspec: poker
+const FICHA_POKER = 5; // la ficha más chica; igual que Cartas.FICHA en juegos/cartas.js (openspec: poker-fichas)
 const ACCIONES_CONQUIAN = ["tomar", "bajar", "descartar", "pasar"]; // openspec: cartas-espanolas
 
 type Jugada = NonNullable<EnSala["jugadas"]>[number];
@@ -25,7 +26,9 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
   if (!entero(n, 0, 2000)) return null;
   const base = { n: n as number, accion };
   if (juego === "poker") {
-    if (!ACCIONES_POKER.includes(accion) || j.carta !== undefined || (j.monto !== undefined && !entero(j.monto, 0, 1_000_000))) return null;
+    // openspec: poker-fichas — la subida se arma con fichas de 5 a 100: entero múltiplo de FICHA_POKER y obligatorio.
+    const montoOk = entero(j.monto, FICHA_POKER, 1_000_000) && (j.monto as number) % FICHA_POKER === 0;
+    if (!ACCIONES_POKER.includes(accion) || j.carta !== undefined || (j.monto !== undefined && !montoOk) || (accion === "subir" && j.monto === undefined)) return null;
     return { ...base, ...(j.monto !== undefined ? { monto: j.monto as number } : {}) };
   }
   if (juego === "ajedrez") { // openspec: ajedrez
