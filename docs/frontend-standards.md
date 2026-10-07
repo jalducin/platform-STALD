@@ -219,6 +219,15 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Para cambiar el motor, sube `?v=` en `<script src="juegos/cartas.js?v=…">`; así se evita la caché de GitHub Pages.
 - La mesa compartida es `pkMesaHtml(st, { yo, nombre, avatar, equipos, miTurno, pie })`. La usan el modo individual
   (`jugarPoker`) y la sala (`pintarPokerSala`).
+- Fichas (cambio `poker-fichas`; decisiones en su `design.md`):
+  - `Cartas.FICHAS_INICIALES` = 500 y `Cartas.CIEGAS` = 5/10, 10/20, 20/40 y 40/80 (cada 4 manos); la página no
+    escribe esos números, los toma del motor. Todo va en múltiplos de `Cartas.FICHA` (5).
+  - Puntos: `pkPuntos` = fichas × (1000 ÷ `FICHAS_INICIALES`) ÷ jugadores, tope 1000; +150 al equipo ganador.
+  - «⬆️ Subir» (`data-pk-abrir`) abre `#pk-subir`: fichas `.pk-ficha[data-pk-ficha]` de 5/10/20/50/100 (CSS puro,
+    `aria-label="Ficha de N"`), aumento `#pk-aum`, `#pk-total`, `#pk-pila`, «↺ Limpiar» (`data-pk-limpiar`) y
+    «✅ Apostar» (`data-pk="subir"`, `monto = data-base + data-aum`). Un escucha único en `document` lo maneja en
+    individual y en sala.
+  - `pkPilaHtml(monto, chica)` dibuja pilas de fichas (pozo y apuesta de cada asiento); son `aria-hidden`.
 - `estadoPoker()` reproduce la sala igual que `estadoUna()`:
   - semilla `poker-mano-k` y bots con `pbot<paso>`;
   - turnos de 30 s y pausa de 5 s entre manos.

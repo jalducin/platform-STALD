@@ -45,6 +45,22 @@ Deno.test("póker en sala: se crea con equipos y acepta jugadas de póker válid
   assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { jugada: { n: 1, accion: "todo" } })).status, 200);
 });
 
+// openspec: poker-fichas — la subida se arma con fichas de 5, 10, 20, 50 y 100: entero, múltiplo de 5 y con monto.
+Deno.test("póker en sala: la subida es un monto múltiplo de 5 (fichas de 5 a 100)", async () => {
+  const c = ctx();
+  const codigo = (await c.call("POST", "/sala", "marisol@example.com", { juego: "poker", opciones: {}, bots: true })).body.codigo;
+  await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com");
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(6000);
+  const jug = (email: string, jugada: unknown) => c.call("POST", `/sala/${codigo}/respuesta`, email, { jugada });
+  for (const mala of [{ n: 0, accion: "subir" }, { n: 0, accion: "subir", monto: 23 }, { n: 0, accion: "subir", monto: 0 }, { n: 0, accion: "subir", monto: "135" }, { n: 0, accion: "igualar", monto: 7 }]) {
+    assertEquals((await jug("marisol@example.com", mala)).body.error, "jugada_invalida", JSON.stringify(mala));
+  }
+  const ok = await jug("marisol@example.com", { n: 0, accion: "subir", monto: 100 + 20 + 10 + 5 });
+  assertEquals([ok.status, ok.body.jugadas[0].monto], [200, 135]);
+  assertEquals((await jug("angel@example.com", { n: 1, accion: "subir", monto: 285 })).status, 200, "285 = 100 + 100 + 50 + 20 + 10 + 5");
+});
+
 Deno.test("póker en sala: ¡Una! no acepta acciones de póker y el póker está en el catálogo", async () => {
   const c = ctx();
   const codigo = (await c.call("POST", "/sala", "marisol@example.com", { juego: "una", opciones: {}, bots: true })).body.codigo;

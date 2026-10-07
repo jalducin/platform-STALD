@@ -242,9 +242,49 @@
   .pk-tag { font-size: .62rem; font-weight: 900; padding: 1px 5px; border-radius: 6px; background: var(--mente-soft); color: var(--accent-2); }
   .pk-tag.eqA { background: #dbeafe; color: #1d4ed8; } .pk-tag.eqB { background: #fee2e2; color: #b91c1c; }
   .pk-yo { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0; flex-wrap: wrap; }
-  .pk-botones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .pk-subir { display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: .85rem; }
-  .pk-subir input[type=range] { flex: 1; accent-color: var(--accent-2); }
+  .pk-botones { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  @media (min-width: 480px) { .pk-botones { grid-template-columns: repeat(4, 1fr); } }
+  .pk-botones .btn[aria-expanded="true"] { background: #13603a; color: #fde68a; border-color: #0b3d26; }
+  /* Fichas de casino (openspec: poker-fichas): CSS puro; --c color, --s franjas del canto, --t número */
+  .pk-subir { margin-top: 10px; padding: 12px 12px 10px; border-radius: 18px; color: #fff; border: 4px solid #6b4423;
+    background: radial-gradient(ellipse at 50% 0%, #22874f 0%, #13603a 55%, #0b3d26 100%); box-shadow: inset 0 2px 12px rgba(0,0,0,.4), 0 6px 16px rgba(0,0,0,.18); }
+  .pk-subir[hidden] { display: none; }
+  .pk-subir-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .85rem; }
+  .pk-aum { font-size: 1.7rem; font-weight: 900; color: #fde68a; font-variant-numeric: tabular-nums; text-shadow: 0 2px 0 rgba(0,0,0,.35); margin-left: 6px; }
+  .pk-total { opacity: .92; font-weight: 700; }
+  .pk-pila-sel { min-height: 54px; display: flex; align-items: flex-end; justify-content: center; margin: 6px 0 2px; }
+  .pk-pila-sel .pk-vacio { font-size: .78rem; opacity: .75; align-self: center; }
+  .pk-fichero { display: flex; justify-content: center; gap: clamp(4px, 2.4vw, 18px); margin: 8px 0 6px; }
+  .pk-ficha { --c: #dc2626; --s: #fff; --t: #fff; flex: 0 0 auto; width: min(58px, 17vw); aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+    display: grid; place-items: center; font: 900 clamp(.8rem, 3.6vw, .98rem)/1 system-ui, sans-serif; color: var(--t); text-shadow: 0 1px 2px rgba(0,0,0,.55);
+    background: radial-gradient(circle closest-side, var(--c) 0 56%, var(--s) 57% 61%, var(--c) 62% 70%, transparent 71%), repeating-conic-gradient(from 8deg, var(--s) 0 16deg, var(--c) 16deg 60deg);
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.22), 0 4px 0 rgba(0,0,0,.38), 0 6px 10px rgba(0,0,0,.3); transition: transform .12s, box-shadow .12s, opacity .15s, filter .15s; -webkit-tap-highlight-color: transparent; }
+  .pk-ficha span { display: grid; place-items: center; width: 52%; aspect-ratio: 1; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,.55); }
+  .pk-ficha:hover:not(:disabled) { transform: translateY(-2px); }
+  .pk-ficha:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 0 0 0 2px rgba(0,0,0,.22), 0 1px 0 rgba(0,0,0,.38); }
+  .pk-ficha:focus-visible { outline: 3px solid #fde68a; outline-offset: 3px; }
+  .pk-ficha:disabled { opacity: .32; filter: grayscale(.7); cursor: not-allowed; box-shadow: inset 0 0 0 2px rgba(0,0,0,.22); }
+  .pk-ficha.toque { animation: pk-toque .32s ease-out; }
+  @keyframes pk-toque { 0% { transform: scale(1); } 40% { transform: scale(1.16) rotate(18deg); } 100% { transform: scale(1) rotate(0); } }
+  .pk-subir-ayuda { font-size: .75rem; opacity: .85; text-align: center; }
+  .pk-subir-pie { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; margin-top: 8px; }
+  .pk-subir-pie .btn.ghost { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.35); }
+  .pk-subir-pie [data-pk="subir"]:disabled { opacity: .5; cursor: not-allowed; }
+  /* Pilas de fichas vistas de lado: una columna por color (pozo, apuestas y selector) */
+  .pk-pila { display: inline-flex; align-items: flex-end; gap: 3px; vertical-align: bottom; }
+  .pk-col { --c: #dc2626; --s: #fff; display: inline-flex; flex-direction: column-reverse; align-items: center; }
+  .pk-mini { display: block; width: 26px; height: 7px; margin-top: -2px; border-radius: 4px / 3px; background: repeating-linear-gradient(90deg, var(--c) 0 5px, var(--s) 5px 8px);
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,.35), 0 1px 1px rgba(0,0,0,.35); }
+  .pk-col i { font-style: normal; font-size: .6rem; font-weight: 900; color: #fde68a; line-height: 1; margin-bottom: 1px; }
+  .pk-pila.chica .pk-mini { width: 15px; height: 5px; margin-top: -1.5px; }
+  .pk-pila.chica .pk-col i { color: var(--muted); }
+  .pk-mini.nueva { animation: pk-cae .3s cubic-bezier(.3,1.4,.6,1); }
+  @keyframes pk-cae { from { transform: translateY(-22px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .pk-pozo { display: flex; justify-content: center; margin: 2px 0 4px; }
+  .pk-pozo .pk-mini { width: 30px; height: 8px; }
+  .pk-pila-sel .pk-pila { gap: 6px; }
+  .pk-pila-sel .pk-mini { width: 42px; height: 11px; margin-top: -3px; border-radius: 6px / 4px; background: repeating-linear-gradient(90deg, var(--c) 0 7px, var(--s) 7px 11px); }
+  @media (prefers-reduced-motion: reduce) { .pk-ficha, .pk-ficha.toque, .pk-mini.nueva { animation: none; transition: none; } }
   /* Cómo se juega */
   dialog.ayuda { max-width: 560px; width: calc(100% - 32px); max-height: 85vh; border: none; border-radius: var(--radius); padding: 18px; background: var(--card); color: var(--text); box-shadow: var(--shadow); }
   dialog.ayuda::backdrop { background: rgba(0,0,0,.55); }
@@ -459,7 +499,7 @@
   <main id="app"><div class="loading">Cargando juegos…</div></main>
 </div>
 
-<script src="juegos/cartas.js?v=2"></script>
+<script src="juegos/cartas.js?v=3"></script>
 <script src="juegos/ajedrez.js?v=1"></script>
 <script src="comun/auth.js?v=5"></script>
 <script>
@@ -1933,10 +1973,11 @@
   const PK_VERBO = { retirarse: 'se retira', pasar: 'pasa', igualar: 'iguala', subir: 'sube a', todo: '¡va con todo!' };
   const pkCarta = (id, extra) => id === null ? '<span class="pk-carta vacia' + (extra || '') + '"></span>' : id === undefined ? '<span class="pk-carta oculta' + (extra || '') + '">·</span>' :
     '<span class="pk-carta' + (Cartas.esRoja(id) ? ' roja' : '') + (extra || '') + '" aria-label="' + Cartas.nombreCarta(id) + '">' + Cartas.nombreCarta(id) + '</span>';
-  // Puntos del póker: fichas ÷ jugadores (tope 1000) y +150 al equipo o pareja ganadora.
+  // Puntos del póker: fichas × 2 ÷ jugadores (tope 1000) y +150 al equipo o pareja ganadora. El × 2 (1000 ÷ 500 fichas
+  // iniciales) deja la escala igual que cuando se empezaba con 1,000 (openspec: poker-fichas).
   function pkPuntos(st, equipos) {
-    const n = st.jugadores.length;
-    const base = st.jugadores.map(j => Math.min(1000, Math.round(j.fichas / n)));
+    const n = st.jugadores.length, factor = 1000 / Cartas.FICHAS_INICIALES;
+    const base = st.jugadores.map(j => Math.min(1000, Math.round(j.fichas * factor / n)));
     if (!equipos) return { puntos: base, eq: null };
     const tot = [0, 1].map(k => st.jugadores.reduce((a, j, i) => a + (equipos[i] === k ? j.fichas : 0), 0));
     const gana = tot[0] === tot[1] ? -1 : tot[0] > tot[1] ? 0 : 1;
@@ -1958,7 +1999,7 @@
         (j.fichas === 0 && !fuera && st.cartas && st.cartas[i].length && !fin ? '<span class="pk-tag">ALL-IN</span>' : '');
       const cartas = st.cartas && st.cartas[i] && st.cartas[i].length ? st.cartas[i].map(c => pkCarta(ver(i) ? c : undefined, ' chica' + (ganadorCartas.has(c) ? ' gana' : ''))).join(' ') : '';
       const extra = fin && res ? (res.premios[i] > 0 ? '<b style="color:var(--ok)">+' + fmt(res.premios[i]) + '</b>' + (res.mostrar && res.manos[i] ? ' · ' + escapeHtml(res.manos[i].nombre) : '') : res.mostrar && res.manos[i] ? escapeHtml(res.manos[i].nombre) : '')
-        : st.apuesta && st.apuesta[i] ? 'apuesta ' + fmt(st.apuesta[i]) : fuera ? 'retirado' : '';
+        : st.apuesta && st.apuesta[i] ? pkPilaHtml(st.apuesta[i], true) + ' apuesta ' + fmt(st.apuesta[i]) : fuera ? 'retirado' : '';
       return '<div class="pk-asiento' + (!fin && st.turno === i && !st.terminada ? ' turno' : '') + (fuera || j.fichas === 0 && (!st.cartas || !st.cartas[i].length) ? ' fuera' : '') + '"><span class="n">' + o.avatar(i) + escapeHtml(o.nombre(i)) + tags + '</span>' +
         '<span class="pk-fichas">🪙 ' + fmt(j.fichas) + '</span><span>' + cartas + '</span><span class="muted">' + extra + '</span></div>';
     };
@@ -1968,26 +2009,83 @@
     let botones = '';
     if (o.miTurno) {
       const op = Cartas.opciones(st);
-      const paso = st.ciegas[1];
+      const conFichas = op.puedeSubir && op.minSubir < op.maxSubir; // si solo cabe todo, queda «🔥 Todo»
       botones = '<div class="pk-botones"><button class="btn ghost" data-pk="retirarse">🏳️ Retirarme</button>' +
         (op.pasar ? '<button class="btn ghost" data-pk="pasar">✋ Pasar</button>' : '<button class="btn ghost" data-pk="igualar">🤝 Igualar ' + fmt(op.igualar) + '</button>') +
+        (conFichas ? '<button class="btn ghost" data-pk-abrir aria-expanded="false" aria-controls="pk-subir">⬆️ Subir</button>' : '') +
         '<button class="btn" data-pk="todo">🔥 Todo (' + fmt(op.maxSubir) + ')</button></div>' +
-        (op.puedeSubir && op.minSubir < op.maxSubir ? '<div class="pk-subir"><span>Subir a</span><input type="range" id="pk-monto" min="' + op.minSubir + '" max="' + op.maxSubir + '" step="' + paso + '" value="' + op.minSubir + '" aria-label="Monto de la subida">' +
-          '<b id="pk-monto-v">' + fmt(op.minSubir) + '</b><button class="btn sm" data-pk="subir">⬆️ Subir</button></div>' : '');
+        (conFichas ? pkSelectorHtml(st.apuestaMax, op.minSubir - st.apuestaMax, op.maxSubir - st.apuestaMax) : '');
     }
     return '<div class="pk-asientos">' + st.jugadores.map((_, i) => i).filter(i => i !== yo).map(asiento).join('') + '</div>' +
       '<div class="pk-mesa"><div class="pk-titulo">♠ Casino Royale ♥</div><div class="pk-comunes">' + comunes + '</div>' +
+      (bote > 0 ? '<div class="pk-pozo">' + pkPilaHtml(bote) + '</div>' : '') +
       '<div class="pk-bote">🪙 Pozo ' + fmt(bote) + ' · ciegas ' + st.ciegas.join('/') + ' · mano ' + (st.mano + 1) + '/' + st.manos + '</div><div class="pk-msg" id="pk-msg">' + msg + '</div></div>' +
       (yo >= 0 ? '<div class="pk-yo">' + asiento(yo) + '</div>' : '') + (o.pie || '') + botones +
       '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-ayuda="poker">📖 Cómo se juega</button></div>';
   }
-  function pkMontoVivo(e) { if (e.target.id === 'pk-monto') { const v = document.getElementById('pk-monto-v'); if (v) v.textContent = fmt(Number(e.target.value)); } }
-  document.addEventListener('input', pkMontoVivo);
-  const pkJugadaDe = b => b.dataset.pk === 'subir' ? { accion: 'subir', monto: Number(document.getElementById('pk-monto').value) } : { accion: b.dataset.pk };
+  // ---- Fichas de 5, 10, 20, 50 y 100 (openspec: poker-fichas) ----
+  // c: color, s: franjas del canto, t: número. Colores clásicos de casino.
+  const PK_FICHAS = [{ v: 5, c: '#dc2626', s: '#fff', t: '#fff' }, { v: 10, c: '#2563eb', s: '#fff', t: '#fff' }, { v: 20, c: '#16a34a', s: '#fff', t: '#fff' },
+    { v: 50, c: '#ea580c', s: '#fff', t: '#fff' }, { v: 100, c: '#111827', s: '#fbbf24', t: '#fde68a' }];
+  const pkEstiloFicha = f => '--c:' + f.c + ';--s:' + f.s + ';--t:' + f.t;
+  // Pila vista de lado: una columna por color, hasta 6 fichas visibles (con «×n» si hay más). Decorativa: el número va
+  // escrito al lado. `cuenta` = { valor: cuántas }; sin ella se arma `monto` de la ficha más grande a la más chica.
+  function pkPilaHtml(monto, chica, cuenta, nueva) {
+    let resto = monto;
+    const c = cuenta || {};
+    if (!cuenta) for (const f of PK_FICHAS.slice().reverse()) { c[f.v] = Math.floor(resto / f.v); resto -= c[f.v] * f.v; }
+    const cols = PK_FICHAS.filter(f => c[f.v] > 0).map(f => {
+      const n = c[f.v], vis = Math.min(n, 6);
+      return '<span class="pk-col" style="' + pkEstiloFicha(f) + '">' + Array.from({ length: vis }, (_, k) => '<span class="pk-mini' + (nueva === f.v && k === vis - 1 ? ' nueva' : '') + '"></span>').join('') + (n > 6 ? '<i>×' + n + '</i>' : '') + '</span>';
+    });
+    return cols.length ? '<span class="pk-pila' + (chica ? ' chica' : '') + '" aria-hidden="true">' + cols.join('') + '</span>' : '';
+  }
+  // Selector: base = apuesta más alta; el aumento va de min a max (de Cartas.opciones). Estado en data-* del propio panel.
+  function pkSelectorHtml(base, min, max) {
+    return '<section class="pk-subir" id="pk-subir" hidden aria-label="Subir con fichas" data-base="' + base + '" data-min="' + min + '" data-max="' + max + '" data-aum="0" data-fichas="{}">' +
+      '<div class="pk-subir-cab"><span>Subes<b class="pk-aum" id="pk-aum" aria-live="polite">+0</b></span><span class="pk-total" id="pk-total">Tu apuesta: ' + fmt(base) + '</span></div>' +
+      '<div class="pk-pila-sel" id="pk-pila"><span class="pk-vacio">Toca las fichas para armar tu subida</span></div>' +
+      '<div class="pk-fichero" role="group" aria-label="Fichas">' + PK_FICHAS.map(f => '<button type="button" class="pk-ficha" data-pk-ficha="' + f.v + '" aria-label="Ficha de ' + f.v + '" style="' + pkEstiloFicha(f) + '"' + (f.v > max ? ' disabled' : '') + '><span>' + f.v + '</span></button>').join('') + '</div>' +
+      '<div class="pk-subir-ayuda" id="pk-subir-ayuda">Mínimo +' + fmt(min) + ' · máximo +' + fmt(max) + '</div>' +
+      '<div class="pk-subir-pie"><button type="button" class="btn ghost sm" data-pk-limpiar>↺ Limpiar</button><button class="btn sm" data-pk="subir" disabled>✅ Apostar</button></div></section>';
+  }
+  function pkSelectorPintar(s, cuenta, nueva) {
+    const aum = PK_FICHAS.reduce((a, f) => a + (cuenta[f.v] || 0) * f.v, 0);
+    const base = Number(s.dataset.base), min = Number(s.dataset.min), max = Number(s.dataset.max);
+    s.dataset.aum = aum; s.dataset.fichas = JSON.stringify(cuenta);
+    s.querySelector('#pk-aum').textContent = '+' + fmt(aum);
+    s.querySelector('#pk-total').textContent = 'Tu apuesta: ' + fmt(base + aum);
+    s.querySelector('#pk-pila').innerHTML = pkPilaHtml(aum, false, cuenta, nueva) || '<span class="pk-vacio">Toca las fichas para armar tu subida</span>';
+    s.querySelectorAll('[data-pk-ficha]').forEach(b => { b.disabled = aum + Number(b.dataset.pkFicha) > max; });
+    s.querySelector('[data-pk="subir"]').disabled = aum < min;
+  }
+  // Un solo escucha para individual y sala: abrir, agregar una ficha y limpiar. «✅ Apostar» es data-pk="subir".
+  document.addEventListener('click', e => {
+    const s = document.getElementById('pk-subir'); if (!s) return;
+    const abrir = e.target.closest('[data-pk-abrir]');
+    if (abrir) {
+      s.hidden = !s.hidden; abrir.setAttribute('aria-expanded', String(!s.hidden));
+      if (!s.hidden) { const f = s.querySelector('[data-pk-ficha]:not(:disabled)'); if (f) f.focus({ preventScroll: true }); s.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+      return;
+    }
+    if (e.target.closest('[data-pk-limpiar]')) { pkSelectorPintar(s, {}); tono(330, 60); return; }
+    const b = e.target.closest('[data-pk-ficha]'); if (!b || b.disabled) return;
+    const v = Number(b.dataset.pkFicha), cuenta = JSON.parse(s.dataset.fichas || '{}');
+    if (Number(s.dataset.aum) + v > Number(s.dataset.max)) return;
+    cuenta[v] = (cuenta[v] || 0) + 1;
+    pkSelectorPintar(s, cuenta, v);
+    b.classList.remove('toque'); void b.offsetWidth; b.classList.add('toque');
+    tono(620 + v * 2, 45, 'triangle', .06);
+  });
+  const pkJugadaDe = b => {
+    if (b.dataset.pk !== 'subir') return { accion: b.dataset.pk };
+    const s = document.getElementById('pk-subir');
+    return { accion: 'subir', monto: Number(s.dataset.base) + Number(s.dataset.aum) };
+  };
 
   function elegirPoker() {
     const m = marco('poker', { menu: true }); // menú: aún no es partida (openspec: juegos-recarga)
-    m.body.innerHTML = '<div class="q-card"><div class="big">♠️♥️♣️♦️</div><div class="q">Póker Texas Hold\'em</div><div class="sub">Estilo Casino Royale: 1,000 fichas cada quien y 10 manos. Las fichas son de juego, no tienen valor.</div></div>' +
+    m.body.innerHTML = '<div class="q-card"><div class="big">♠️♥️♣️♦️</div><div class="q">Póker Texas Hold\'em</div><div class="sub">Estilo Casino Royale: 500 fichas cada quien y 10 manos. Para subir, usa fichas de 5, 10, 20, 50 y 100. Las fichas son de juego, no tienen valor.</div></div>' +
       '<label>Modo</label><div class="opts"><button class="opt" data-pk-modo="solo" aria-pressed="true">🎩 Solo contra la mesa</button><button class="opt" data-pk-modo="pareja">🤝 En pareja con Vesper</button></div>' +
       '<div id="pk-rivales"><label>Rivales</label><div class="opts" style="grid-template-columns:repeat(4,1fr)">' + [1, 2, 3, 4].map(n => '<button class="opt" data-pk-bots="' + n + '"' + (n === 3 ? ' aria-pressed="true"' : '') + '>' + n + '</button>').join('') + '</div></div>' +
       '<div class="row-btns"><button class="btn ghost" data-ayuda="poker">📖 Cómo se juega</button><button class="btn" data-pk-go>🃏 Repartir</button></div>';
@@ -2003,7 +2101,7 @@
   function jugarPoker(numBots, pareja) {
     const m = marco('poker');
     const bots = PK_BOTS.slice(0, numBots);
-    const st = Cartas.pokerNueva([{ id: 'yo', nombre: 'Tú' }].concat(bots.map((b, i) => ({ id: 'b' + i, nombre: b.nombre, bot: true }))), { fichas: 1000, manos: 10 });
+    const st = Cartas.pokerNueva([{ id: 'yo', nombre: 'Tú' }].concat(bots.map((b, i) => ({ id: 'b' + i, nombre: b.nombre, bot: true }))), { manos: 10 }); // 500 fichas (Cartas.FICHAS_INICIALES)
     const equipos = pareja ? [0, 0, 1, 1] : null;
     const nombre = i => i === 0 ? 'Tú' : bots[i - 1].nombre;
     const avatar = i => i === 0 ? '🙂 ' : bots[i - 1].emoji + ' ';
@@ -3240,7 +3338,7 @@
     const orden = participantes();
     const jugs = new Map();
     e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
-    const st = Cartas.pokerNueva(orden.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot })), { fichas: 1000, manos: 10 });
+    const st = Cartas.pokerNueva(orden.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot })), { manos: 10 }); // 500 fichas
     Cartas.pokerMano(st, rngDe(s.seed, 'poker-mano-0'));
     const ganadas = {}; let paso = 0, T0 = s.inicio;
     const ahora = ahoraServidor();
@@ -3683,13 +3781,14 @@
 
   // ---------- 📖 Cómo se juega (openspec: poker; Sprint 2 suma Brisca y Conquián) ----------
   const AYUDA = {
-    poker: '<h2>♠️ Póker Texas Hold\'em</h2><p><b>Objetivo:</b> quedarte con más fichas al final de las 10 manos. Gana cada mano quien tenga la mejor combinación de 5 cartas, o quien siga en pie cuando los demás se retiran.</p>' +
-      '<h3>Cómo va una mano</h3><ol><li><b>Ciegas:</b> los dos jugadores después del botón (D) ponen la ciega chica y la grande. Suben cada 4 manos.</li><li><b>Preflop:</b> recibes 2 cartas solo para ti y se apuesta.</li>' +
+    poker: '<h2>♠️ Póker Texas Hold\'em</h2><p><b>Objetivo:</b> quedarte con más fichas al final de las 10 manos. Cada quien empieza con 500 fichas. Gana cada mano quien tenga la mejor combinación de 5 cartas, o quien siga en pie cuando los demás se retiran.</p>' +
+      '<h3>Cómo va una mano</h3><ol><li><b>Ciegas:</b> los dos jugadores después del botón (D) ponen la ciega chica y la grande. Empiezan en 5/10 y suben cada 4 manos (10/20 y luego 20/40).</li><li><b>Preflop:</b> recibes 2 cartas solo para ti y se apuesta.</li>' +
       '<li><b>Flop:</b> salen 3 cartas comunes a la mesa, y otra ronda de apuestas.</li><li><b>Turn</b> (4.ª carta) y <b>river</b> (5.ª carta), cada una con su ronda.</li><li><b>Muestra:</b> se muestran las cartas y gana la mejor mano usando 5 de tus 7 cartas (tus 2 + las 5 comunes).</li></ol>' +
       '<h3>Qué puedes hacer en tu turno</h3><table><tr><td>✋ Pasar</td><td>Si nadie ha apostado en esta ronda, sigues sin poner fichas.</td></tr><tr><td>🤝 Igualar</td><td>Pones lo mismo que la apuesta más alta.</td></tr>' +
-      '<tr><td>⬆️ Subir</td><td>Apuestas más; los demás tendrán que igualarte o retirarse.</td></tr><tr><td>🔥 Todo (all-in)</td><td>Apuestas todas tus fichas. Si tienes menos que otros, solo puedes ganar lo que igualaste (pozo principal).</td></tr><tr><td>🏳️ Retirarme</td><td>Dejas la mano y pierdes lo que ya apostaste.</td></tr></table>' +
+      '<tr><td>⬆️ Subir</td><td>Apuestas más: toca fichas de 5, 10, 20, 50 y 100 para armar cuánto subes y luego ✅ Apostar (↺ Limpiar para empezar de nuevo). Las fichas que pasan de lo que tienes se apagan. Los demás tendrán que igualarte o retirarse.</td></tr><tr><td>🔥 Todo (all-in)</td><td>Apuestas todas tus fichas. Si tienes menos que otros, solo puedes ganar lo que igualaste (pozo principal).</td></tr><tr><td>🏳️ Retirarme</td><td>Dejas la mano y pierdes lo que ya apostaste.</td></tr></table>' +
       '<h3>Manos, de mayor a menor</h3><table>' + [['Escalera real', '10♠ J♠ Q♠ K♠ A♠'], ['Escalera de color', '5♥ 6♥ 7♥ 8♥ 9♥'], ['Póker', '4 cartas iguales: 9♠ 9♥ 9♦ 9♣'], ['Full', 'tercia + par: K K K 7 7'], ['Color', '5 del mismo palo'], ['Escalera', '5 seguidas: 4 5 6 7 8 (A-2-3-4-5 también)'], ['Tercia', '3 iguales: Q Q Q'], ['Doble par', 'J J 4 4'], ['Par', '2 iguales: 8 8'], ['Carta alta', 'si nadie tiene nada, gana la carta más alta']].map(x => '<tr><td><b>' + x[0] + '</b></td><td>' + x[1] + '</td></tr>').join('') + '</table>' +
       '<h3>En equipo</h3><p>En pareja o por equipos (A y B) se suman las fichas de cada equipo al final; el equipo con más fichas gana +150 puntos para cada integrante.</p>' +
+      '<h3>Puntos</h3><p>Al final, tus puntos son tus fichas × 2 ÷ el número de jugadores (máximo 1,000).</p>' +
       '<div class="aviso">🪙 Las fichas son solo de juego: no se compran, no se cambian y no tienen valor real. Aquí se juega por diversión y por puntos del ranking.</div>',
     ajedrez: '<h2>♟️ Ajedrez</h2><p><b>Objetivo:</b> dar <b>jaque mate</b>: atacar al rey rival de forma que no pueda escapar. Juegan blancas y negras por turnos; empiezan las blancas.</p>' +
       '<h3>Cómo mueve cada pieza</h3><table>' + [['♚', 'Rey', '1 casilla en cualquier dirección. Nunca puede quedar en jaque.'], ['♛', 'Reina (dama)', 'Las casillas que quiera en línea recta o diagonal.'], ['♜', 'Torre', 'En línea recta (horizontal o vertical).'], ['♝', 'Alfil', 'En diagonal; siempre se queda en su color.'], ['♞', 'Caballo', 'En «L» (2 + 1). Es la única que salta piezas.'], ['♟', 'Peón', 'Avanza 1 (2 en su primer movimiento) y captura en diagonal.']].map(x => '<tr><td style="font-size:1.4rem">' + x[0] + '\uFE0E</td><td><b>' + x[1] + '</b></td><td>' + x[2] + '</td></tr>').join('') + '</table>' +

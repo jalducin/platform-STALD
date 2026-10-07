@@ -46,30 +46,51 @@ Deno.test("cartas: mejor mano de 7 cartas con su nombre", () => {
   assertEquals(C.nombreCarta(c("10♥")), "10♥");
 });
 
+// Fichas iniciales por omisión (openspec: poker-fichas): 500; las pilas de la prueba se fijan a mano.
 function mesa(fichas: number[], rng = mulberry(7)) {
-  const st = C.pokerNueva(fichas.map((_, i) => ({ id: "j" + i, nombre: "J" + i })), { fichas: 1000, manos: 10 });
+  const st = C.pokerNueva(fichas.map((_, i) => ({ id: "j" + i, nombre: "J" + i })), { manos: 10 });
   fichas.forEach((f, i) => st.jugadores[i].fichas = f);
   C.pokerMano(st, rng);
   return st;
 }
 
+Deno.test("póker: 500 fichas por omisión y ciegas 5/10 → 10/20 → 20/40 → 40/80 (openspec: poker-fichas)", () => {
+  assertEquals([C.FICHAS_INICIALES, C.FICHA], [500, 5]);
+  assertEquals(C.CIEGAS, [[5, 10], [10, 20], [20, 40], [40, 80]]);
+  const st = C.pokerNueva([{ id: "a", nombre: "A" }, { id: "b", nombre: "B" }]);
+  assertEquals(st.jugadores.map((j: any) => j.fichas), [500, 500]);
+  assertEquals(st.manos, 10);
+});
+
 Deno.test("póker: ciegas, turnos y todos se retiran ante la ciega grande", () => {
-  const st = mesa([1000, 1000, 1000]);
-  // Botón 0 → ciega chica 1 (10), ciega grande 2 (20); habla primero el 0.
-  assertEquals([st.boton, st.apuesta, st.turno, st.fase], [0, [0, 10, 20], 0, "preflop"]);
+  const st = mesa([500, 500, 500]);
+  // Botón 0 → ciega chica 1 (5), ciega grande 2 (10); habla primero el 0.
+  assertEquals([st.boton, st.apuesta, st.turno, st.fase], [0, [0, 5, 10], 0, "preflop"]);
   assertEquals(st.cartas.map((x: number[]) => x.length), [2, 2, 2]);
-  assertEquals(C.pokerActuar(st, { accion: "pasar" }), false, "no puede pasar con 20 por igualar");
-  assertEquals(C.pokerActuar(st, { accion: "subir", monto: 30 }), false, "la subida mínima es a 40");
+  assertEquals(C.pokerActuar(st, { accion: "pasar" }), false, "no puede pasar con 10 por igualar");
+  assertEquals(C.pokerActuar(st, { accion: "subir", monto: 15 }), false, "la subida mínima es a 20");
   assert(C.pokerActuar(st, { accion: "retirarse" }));
   assert(C.pokerActuar(st, { accion: "retirarse" }));
   assertEquals(st.fase, "fin");
   assertEquals(st.resultado.ganadores, [2]);
-  assertEquals(st.jugadores.map((j: any) => j.fichas), [1000, 990, 1010]);
+  assertEquals(st.jugadores.map((j: any) => j.fichas), [500, 495, 505]);
+});
+
+Deno.test("póker: la subida va en múltiplos de 5, salvo ir con todo (openspec: poker-fichas)", () => {
+  const st = mesa([500, 500, 500]);
+  assertEquals(C.pokerActuar(st, { accion: "subir", monto: 23 }), false, "23 no se arma con fichas");
+  assertEquals(C.pokerActuar(st, { accion: "subir", monto: 137 }), false, "137 tampoco");
+  assert(C.pokerActuar(st, { accion: "subir", monto: 135 }), "135 = 100 + 20 + 10 + 5");
+  assertEquals(st.apuesta[0], 135);
+  // Con una pila rara (no debería pasar), subir justo todo lo que tiene sí vale.
+  const r = mesa([237, 500, 500]);
+  assertEquals(C.opciones(r).maxSubir, 237);
+  assert(C.pokerActuar(r, { accion: "subir", monto: 237 }), "subir el máximo es ir con todo");
 });
 
 Deno.test("póker: cara a cara el botón pone la chica y habla primero antes del flop", () => {
-  const st = mesa([1000, 1000]);
-  assertEquals([st.boton, st.apuesta, st.turno], [0, [10, 20], 0]);
+  const st = mesa([500, 500]);
+  assertEquals([st.boton, st.apuesta, st.turno], [0, [5, 10], 0]);
   assert(C.pokerActuar(st, { accion: "igualar" }));
   assertEquals(st.turno, 1, "la ciega grande tiene opción");
   assert(C.pokerActuar(st, { accion: "pasar" }));
@@ -77,10 +98,10 @@ Deno.test("póker: cara a cara el botón pone la chica y habla primero antes del
 });
 
 Deno.test("póker: una subida reabre la ronda y se llega a la muestra", () => {
-  const st = mesa([1000, 1000, 1000]);
-  assert(C.pokerActuar(st, { accion: "igualar" })); // 0 iguala 20
-  assert(C.pokerActuar(st, { accion: "igualar" })); // 1 completa 20
-  assert(C.pokerActuar(st, { accion: "subir", monto: 60 })); // 2 sube a 60
+  const st = mesa([500, 500, 500]);
+  assert(C.pokerActuar(st, { accion: "igualar" })); // 0 iguala 10
+  assert(C.pokerActuar(st, { accion: "igualar" })); // 1 completa 10
+  assert(C.pokerActuar(st, { accion: "subir", monto: 30 })); // 2 sube a 30
   assertEquals(st.turno, 0, "se reabre para el 0");
   assert(C.pokerActuar(st, { accion: "igualar" }));
   assert(C.pokerActuar(st, { accion: "igualar" }));
@@ -90,52 +111,66 @@ Deno.test("póker: una subida reabre la ronda y se llega a la muestra", () => {
     assertEquals(st.fase, fase);
   }
   assertEquals(st.resultado.mostrar, true);
-  assertEquals(st.jugadores.reduce((a: number, j: any) => a + j.fichas, 0), 3000, "se conservan las fichas");
+  assertEquals(st.jugadores.reduce((a: number, j: any) => a + j.fichas, 0), 1500, "se conservan las fichas");
 });
 
 Deno.test("póker: bote lateral con all-in corto y empate dividido", () => {
-  const st = mesa([1000, 100, 1000]);
-  // Mano fija: el 1 (all-in de 100) tiene la mejor mano; el 0 vence al 2 en el bote lateral.
+  const st = mesa([500, 50, 500]);
+  // Mano fija: el 1 (all-in de 50) tiene la mejor mano; el 0 vence al 2 en el bote lateral.
   st.cartas = [cs("K♠ K♥"), cs("A♠ A♥"), cs("Q♠ Q♥")];
   st.mazo = cs("3♣ 8♦ 2♣ 7♦ 9♣"); // salen del final: flop 9♣ 7♦ 2♣, turn 8♦, river 3♣
-  assert(C.pokerActuar(st, { accion: "subir", monto: 300 })); // 0
-  assert(C.pokerActuar(st, { accion: "todo" })); // 1: 100 en total
-  assert(C.pokerActuar(st, { accion: "igualar" })); // 2: 300
+  assert(C.pokerActuar(st, { accion: "subir", monto: 150 })); // 0
+  assert(C.pokerActuar(st, { accion: "todo" })); // 1: 50 en total
+  assert(C.pokerActuar(st, { accion: "igualar" })); // 2: 150
   for (let k = 0; k < 10 && st.fase !== "fin"; k++) assert(C.pokerActuar(st, { accion: "pasar" }));
   assertEquals(st.comunes.length, 5);
-  // Principal: 100×3 = 300 para el 1. Lateral: 200×2 = 400 para el 0.
-  assertEquals(st.resultado.premios, [400, 300, 0]);
-  assertEquals(st.jugadores.map((j: any) => j.fichas), [1100, 300, 700]);
+  // Principal: 50×3 = 150 para el 1. Lateral: 100×2 = 200 para el 0.
+  assertEquals(st.resultado.premios, [200, 150, 0]);
+  assertEquals(st.jugadores.map((j: any) => j.fichas), [550, 150, 350]);
 
-  const e = mesa([1000, 1000, 1000]);
+  const e = mesa([500, 500, 500]);
   e.cartas = [cs("2♠ 3♥"), cs("2♦ 3♣"), cs("4♠ 5♥")];
   e.mazo = cs("A♣ K♣ Q♦ J♥ 10♠"); // escalera en la mesa: empate entre todos
   assert(C.pokerActuar(e, { accion: "igualar" }));
   assert(C.pokerActuar(e, { accion: "igualar" }));
   for (let k = 0; k < 10 && e.fase !== "fin"; k++) assert(C.pokerActuar(e, { accion: "pasar" }));
-  assertEquals(e.resultado.premios, [20, 20, 20], "empate a tres");
+  assertEquals(e.resultado.premios, [10, 10, 10], "empate a tres");
+});
+
+Deno.test("póker: un pozo empatado de 25 se reparte de 5 en 5 (openspec: poker-fichas)", () => {
+  const st = mesa([500, 500, 500]);
+  st.cartas = [cs("2♠ 3♥"), cs("7♦ 8♣"), cs("2♦ 3♣")];
+  st.mazo = cs("A♣ K♣ Q♦ J♥ 10♠"); // escalera en la mesa
+  assert(C.pokerActuar(st, { accion: "igualar" })); // 0 pone 10
+  assert(C.pokerActuar(st, { accion: "retirarse" })); // 1 deja su ciega chica de 5
+  assert(C.pokerActuar(st, { accion: "pasar" })); // 2: ciega grande
+  for (let k = 0; k < 10 && st.fase !== "fin"; k++) assert(C.pokerActuar(st, { accion: "pasar" }));
+  // Pozo 25 entre el 0 y el 2: el primero después del botón (el 2) se lleva los 5 que sobran.
+  assertEquals(st.resultado.premios, [10, 0, 15]);
+  assert(st.jugadores.every((j: any) => j.fichas % 5 === 0), "pilas en múltiplos de 5");
 });
 
 Deno.test("póker: la partida avanza el botón, sube ciegas y termina a las N manos", () => {
   const rng = mulberry(3);
-  const st = C.pokerNueva([{ id: "a", nombre: "A" }, { id: "b", nombre: "B" }, { id: "c", nombre: "C" }], { fichas: 1000, manos: 5 });
+  const st = C.pokerNueva([{ id: "a", nombre: "A" }, { id: "b", nombre: "B" }, { id: "c", nombre: "C" }], { manos: 5 });
   const botones: number[] = [];
   while (!st.terminada) {
     C.pokerMano(st, rng);
     if (st.terminada) break;
     botones.push(st.boton);
-    if (st.mano === 4) assertEquals(st.ciegas, [20, 40], "las ciegas suben en la mano 5");
+    if (st.mano === 0) assertEquals(st.ciegas, [5, 10], "empiezan en 5/10");
+    if (st.mano === 4) assertEquals(st.ciegas, [10, 20], "las ciegas suben en la mano 5");
     while (st.fase !== "fin") assert(C.pokerActuar(st, C.pokerBot(st, rng)));
   }
   assert(botones.length <= 5);
   assertEquals(botones.slice(0, 3).length === new Set(botones.slice(0, 3)).size, true, "el botón rota");
 });
 
-Deno.test("póker: 200 partidas de bots con jugadas siempre válidas y fichas conservadas", () => {
+Deno.test("póker: 200 partidas de bots con jugadas siempre válidas, fichas conservadas y en múltiplos de 5", () => {
   for (let s = 1; s <= 200; s++) {
     const rng = mulberry(s);
     const n = 2 + (s % 4);
-    const st = C.pokerNueva(Array.from({ length: n }, (_, i) => ({ id: "b" + i, nombre: "B" + i, bot: true })), { fichas: 1000, manos: 10 });
+    const st = C.pokerNueva(Array.from({ length: n }, (_, i) => ({ id: "b" + i, nombre: "B" + i, bot: true })), { manos: 10 });
     let guard = 0;
     while (!st.terminada && guard++ < 200) {
       C.pokerMano(st, rng);
@@ -143,11 +178,12 @@ Deno.test("póker: 200 partidas de bots con jugadas siempre válidas y fichas co
       let pasos = 0;
       while (st.fase !== "fin") {
         const mv = C.pokerBot(st, rng);
+        if (mv.accion === "subir" && mv.monto % 5 !== 0) throw new Error(`semilla ${s}: subida de ${mv.monto}`);
         if (!C.pokerActuar(st, mv)) throw new Error(`semilla ${s}: jugada inválida ${JSON.stringify(mv)} en ${st.fase}`);
         if (++pasos > 500) throw new Error(`semilla ${s}: mano sin fin`);
       }
-      assertEquals(fichasTotales(st), n * 1000, `semilla ${s}: fichas`);
-      assert(st.jugadores.every((j: any) => j.fichas >= 0));
+      assertEquals(fichasTotales(st), n * 500, `semilla ${s}: fichas`);
+      assert(st.jugadores.every((j: any) => j.fichas >= 0 && j.fichas % 5 === 0), `semilla ${s}: pilas en múltiplos de 5`);
     }
     assert(st.terminada, `semilla ${s}: termina`);
   }
