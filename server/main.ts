@@ -114,7 +114,7 @@ async function filasIngles(): Promise<InglesRow[]> {
 function corsHeaders(extra: Record<string, string> = {}): Headers {
   const h = new Headers();
   h.set("Access-Control-Allow-Origin", "*");
-  h.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  h.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   h.set("Access-Control-Allow-Headers", "content-type, authorization"); // authorization: sesión (plataforma-login)
   h.set("Access-Control-Max-Age", "86400"); // el navegador recuerda la verificación previa un día (openspec: ahorro-peticiones)
   h.set("Cache-Control", "no-store, no-cache, must-revalidate");

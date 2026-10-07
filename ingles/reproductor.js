@@ -20,6 +20,7 @@ async function openItem(id) {
     return;
   }
   const it = r.body;
+  state.borradorCuenta = it.vistaPrevia ? null : (it.borrador || null); // copia del servidor (openspec: borrador-en-servidor)
   const titulos = new Map(it.temas.map(t => [t.id, t.titulo]));
   // Corrección (actividades): las correctas del intento anterior vienen fijas; solo se contestan las falladas.
   const corr = it.correccion || null;
@@ -72,9 +73,9 @@ async function openItem(id) {
     (it.descripcion ? '<div class="s" style="font-size:.8rem;margin-top:4px">' + escapeHtml(it.descripcion) + '</div>' : '') + '</div>' +
     (it.teoria && it.teoria.length ? '<details class="section"' + (corr ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
     renderTips(it.tips) +
-    '<form id="exam-form"' + (paso ? ' class="paso"' : '') + ' data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + porCorregir.length + '" data-borrador="' + escapeHtml(kb) + '">' +
+    '<form id="exam-form"' + (paso ? ' class="paso"' : '') + ' data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + porCorregir.length + '" data-borrador="' + escapeHtml(kb) + '" data-cuenta="' + (it.vistaPrevia ? '' : '1') + '">' +
     '<div class="player-progreso"><div class="barra accent" role="progressbar" aria-label="Avance" aria-valuemin="0" aria-valuemax="' + porCorregir.length + '" aria-valuenow="0" id="player-barra"><span id="player-bar" style="width:0%"></span></div><span class="num" id="player-num">0/' + porCorregir.length + '</span></div>' +
-    (kb ? '<div class="autoguardado muted" id="autoguardado">Tu avance se guarda solo en este aparato ✔</div><div class="autoguardado-aviso" id="autoguardado-aviso" aria-live="polite"></div>' : '') +
+    (kb || !it.vistaPrevia ? '<div class="autoguardado muted" id="autoguardado">Tu avance se guarda en tu cuenta ✔</div><div class="autoguardado-aviso" id="autoguardado-aviso" aria-live="polite"></div>' : '') +
     (paso ? '<button type="button" class="btn ghost sm ver-todas" data-action="ver-todas">📋 Ver todas las preguntas</button>' : '') +
     '<div class="exam-sec" style="font-size:.9rem">✏️ ' + (corr ? 'Ejercicios por corregir' : 'Ejercicios') + '</div>' + qs +
     '<div class="exam-bar">' + volverBtn() + '<span class="paso-nav"><button type="button" class="btn ghost icono" data-action="q-ant" aria-label="Pregunta anterior">←</button><button type="button" class="btn ghost" data-action="q-sig">Siguiente →</button></span>' +
@@ -117,28 +118,71 @@ function limpiarBorradores(prefijo, conservar) {
 function borrarBorradores() { clavesBorrador().forEach(quitarBorrador); } // «Cerrar sesión»
 function guardarBorrador(form, answers) {
   const k = form.dataset.borrador;
-  if (!k) return;
-  try {
-    if (Object.keys(answers).length) localStorage.setItem(k, JSON.stringify({ v: 1, t: Date.now(), r: answers }));
-    else localStorage.removeItem(k);
-  } catch (e) { return; }
-  form.dataset.guardado = String(Date.now());
+  if (k) {
+    try {
+      if (Object.keys(answers).length) localStorage.setItem(k, JSON.stringify({ v: 1, t: Date.now(), r: answers }));
+      else localStorage.removeItem(k);
+      form.dataset.guardado = String(Date.now());
+    } catch (e) { /* sin almacenamiento: queda la copia en la cuenta */ }
+  }
+  if (form.dataset.cuenta) programarCuenta(form, answers);
   pintarGuardado();
 }
+// Copia en la cuenta (servidor): 2.5 s después del último cambio, al ocultar la pestaña y al volver la conexión.
+const CUENTA_ESPERA_MS = 2500;
+function programarCuenta(form, answers) {
+  form._respuestas = answers;
+  clearTimeout(form._tCuenta);
+  form._tCuenta = setTimeout(() => subirCuenta(form), CUENTA_ESPERA_MS);
+}
+async function subirCuenta(form, keepalive) {
+  clearTimeout(form._tCuenta); form._tCuenta = null;
+  if (!form.isConnected || !form._respuestas) return;
+  const respuestas = form._respuestas;
+  try {
+    const res = await StaldAuth.fetchConSesion(ACT_URL + '/' + encodeURIComponent(form.dataset.id) + '/borrador?email=' + encodeURIComponent(state.email), {
+      method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, keepalive: !!keepalive,
+      body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas }),
+    });
+    if (res.ok) { form.dataset.enCuenta = String(Date.now()); delete form.dataset.pendiente; if (form._respuestas === respuestas) form._respuestas = null; }
+    else if (res.status >= 500 || res.status === 429) form.dataset.pendiente = '1'; // pasajero: se reintenta
+    else form._respuestas = null; // 4xx: intento cerrado o sin acceso, no insistir
+  } catch (e) { form.dataset.pendiente = '1'; }
+  pintarGuardado();
+}
+document.addEventListener('visibilitychange', () => {
+  const f = document.getElementById('exam-form');
+  if (document.visibilityState === 'hidden' && f && f._respuestas) subirCuenta(f, true);
+});
+window.addEventListener('online', () => {
+  const f = document.getElementById('exam-form');
+  if (f && f.dataset.pendiente && f._respuestas) subirCuenta(f);
+});
 function pintarGuardado() {
   const el = document.getElementById('autoguardado'), f = document.getElementById('exam-form');
-  if (!el || !f || !f.dataset.guardado) return;
-  const min = Math.floor((Date.now() - Number(f.dataset.guardado)) / 60000);
-  el.textContent = 'Tu avance se guarda solo en este aparato ✔ · Guardado hace ' + (min < 1 ? 'un momento' : min + ' min');
+  if (!el || !f) return;
+  const ref = Number(f.dataset.enCuenta || f.dataset.guardado || 0);
+  if (!ref) return;
+  const min = Math.floor((Date.now() - ref) / 60000);
+  const cuando = 'Guardado hace ' + (min < 1 ? 'un momento' : min + ' min');
+  el.textContent = f.dataset.pendiente ? '📴 Sin conexión: tu avance está en este aparato y se subirá a tu cuenta al reconectar'
+    : f.dataset.enCuenta ? 'Tu avance se guarda en tu cuenta ✔ · ' + cuando
+    : 'Guardando en tu cuenta… · ' + cuando + ' en este aparato';
 }
 setInterval(pintarGuardado, 30000);
 // Aplica el borrador del intento abierto por id de pregunta; ignora ids que ya no están y las fijas de la corrección.
+// Entre la copia de este aparato y la de la cuenta gana la más reciente (openspec: borrador-en-servidor).
 function restaurarBorrador(form) {
-  const d = form && leerBorrador(form.dataset.borrador || '');
-  if (!d) return;
+  if (!form) return;
+  const local = leerBorrador(form.dataset.borrador || '');
+  const cuenta = state.borradorCuenta;
+  const deCuenta = cuenta && cuenta.respuestas && (!local || Date.parse(cuenta.actualizado) > local.t);
+  const r = deCuenta ? cuenta.respuestas : local && local.r;
+  if (!r) return;
+  if (deCuenta) form.dataset.enCuenta = String(Date.parse(cuenta.actualizado) || Date.now());
   const qs = new Map(preguntasPorContestar().map(q => [q.dataset.q, q]));
   let n = 0;
-  for (const [id, v] of Object.entries(d.r)) {
+  for (const [id, v] of Object.entries(r)) {
     const q = qs.get(id);
     if (!q) continue;
     const radio = [...q.querySelectorAll('input[type=radio]:not(:disabled)')].find(i => i.value === String(v));
@@ -303,6 +347,7 @@ async function submitExam(form) {
   });
   if (r.ok) {
     quitarBorrador(form.dataset.borrador); // enviado: el borrador ya no hace falta
+    clearTimeout(form._tCuenta); form._respuestas = null; // el servidor ya borró la copia de la cuenta
     await loadActividades();
     return showResult(r.body.calificacion, { id, intento: r.body.intento, intentosMax: r.body.intentosMax, restantes: r.body.restantes, mejor: r.body.mejor, vistaPrevia: !r.body.guardado });
   }

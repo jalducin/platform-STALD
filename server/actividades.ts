@@ -123,6 +123,9 @@ async function itemsDelGrupo(store: Store): Promise<Item[]> {
 }
 
 const rutaResultado = (id: string, slug: string) => `resultados/${id}/${slug}.json`;
+// Borrador del intento abierto: { intento, respuestas, actualizado } (openspec: borrador-en-servidor).
+const rutaBorrador = (id: string, slug: string) => `borradores/${id}/${slug}.json`;
+interface Borrador { intento: number; respuestas: Record<string, unknown>; actualizado: string }
 const ARCHIVO_PROFE = "profe.json"; // intentos del profe en elementos del grupo: nunca cuentan como alumno
 
 async function leerResultado(store: Store, id: string, slug: string) {
@@ -235,7 +238,8 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     }
     return json({ error: "conflicto_escritura" }, 503);
   }
-  if (partes.length !== 1) return json({ error: "not_found" }, 404);
+  const esBorrador = partes.length === 2 && partes[1] === "borrador";
+  if (partes.length !== 1 && !esBorrador) return json({ error: "not_found" }, 404);
 
   // Intento que toca: alumno = usados + 1; admin = ?intento (vista previa) como ?alumno o como "admin".
   const alumnoVista = quien.isAdmin ? url.searchParams.get("alumno") : quien.alumno;
@@ -257,8 +261,31 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
   const preguntas = correccion ? correccion.preguntas : seleccion.preguntas;
   const enfoque = seleccion.enfoque;
 
+  // PUT /<id>/borrador { intento, respuestas } → avance del intento abierto en el servidor; vacío lo borra.
+  if (esBorrador) {
+    if (req.method !== "PUT") return json({ error: "metodo_no_permitido" }, 405);
+    if (quien.isAdmin) return json({ error: "solo_alumno" }, 403);
+    let body: { intento?: number; respuestas?: unknown } = {};
+    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+    if (body.intento !== n) return json({ error: "intento_invalido", esperado: n }, 409);
+    const fijas = new Set(Object.keys(correccion?.fijas || {}));
+    const respuestas = Object.fromEntries(Object.entries(sanitizeRespuestas(preguntas, body.respuestas)).filter(([id]) => !fijas.has(id)));
+    const ruta = rutaBorrador(it.id, slug!);
+    if (!Object.keys(respuestas).length) {
+      if (await store.get(ruta)) await store.remove(ruta, `${it.id}: borrador vacío de ${quien.alumno}`);
+      return json({ guardado: true, vacio: true });
+    }
+    const borrador: Borrador = { intento: n, respuestas, actualizado: ahoraIso() };
+    for (let i = 0; i < 3; i++) {
+      const actual = await store.get<Borrador>(ruta);
+      if (await store.put(ruta, borrador, actual?.sha ?? null, `${it.id}: borrador de ${quien.alumno}`)) return json({ guardado: true, actualizado: borrador.actualizado });
+    }
+    return json({ error: "conflicto_escritura" }, 503);
+  }
+
   if (req.method === "GET") {
     const titulos = new Map((it.temas || []).map((t) => [t.id, t.titulo]));
+    const bor = !quien.isAdmin && slug ? (await store.get<Borrador>(rutaBorrador(it.id, slug)))?.data : null;
     return json({
       ...meta(it), teoria: it.teoria || [], tips: it.tips || [],
       ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}),
@@ -268,6 +295,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
       intento: n, intentosUsados: usados, vistaPrevia: quien.isAdmin,
       ...(correccion ? { correccion: { fijas: correccion.fijas, anteriores: correccion.anteriores } } : {}),
       preguntas: preguntas.map(publicQuestion),
+      ...(bor && bor.intento === n ? { borrador: { respuestas: bor.respuestas, actualizado: bor.actualizado } } : {}),
     });
   }
 
@@ -287,7 +315,12 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
       const nuevo = addIntento(actual?.data ?? null, it, quien.alumno!, intento);
       const ok = await store.put(rutaResultado(it.id, slug!), nuevo, actual?.sha ?? null, `${it.id}: intento ${n} de ${quien.alumno}`);
       const restantes = estadoItem(it, hoy, nuevo) === "completo" ? 0 : maxIntentos(it) - n;
-      if (ok) return json({ guardado: true, intento: n, intentosMax: maxIntentos(it), restantes, calificacion, mejor: nuevo.mejor });
+      if (ok) {
+        // Enviado: el borrador sobra. Si no se puede borrar, la calificación ya quedó guardada.
+        try { if (await store.get(rutaBorrador(it.id, slug!))) await store.remove(rutaBorrador(it.id, slug!), `${it.id}: borrador enviado de ${quien.alumno}`); }
+        catch (e) { console.error("borrador:", e instanceof Error ? e.message : e); }
+        return json({ guardado: true, intento: n, intentosMax: maxIntentos(it), restantes, calificacion, mejor: nuevo.mejor });
+      }
     }
     return json({ error: "conflicto_escritura" }, 503);
   }
