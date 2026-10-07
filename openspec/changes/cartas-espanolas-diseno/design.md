@@ -31,6 +31,9 @@ Solo interfaz. `esCarta(id, extra)` en `juegos.html` arma el HTML de una carta y
 ### Mano en abanico
 - `.es-mano` es una fila sin saltos. Cada `.es-btn` se encima con `margin-left: min(6px, (100% - n·w) / (n - 1))`:
   el porcentaje se resuelve contra el ancho de la mano, así que la superposición aparece solo cuando no caben.
+  La mano lleva 14 px de margen lateral y, con más de 5 cartas, el giro es de 1.6° por carta, para que las cartas de
+  los extremos no salgan de la pantalla (9 cartas a 360 px quedan entre 16 y 344 px).
+- La regla genérica `.sel` de la página (los selects, `width: 100%`) se anula en `.es-btn.sel`.
   El giro del abanico (`rotate`) y el arco (`translate`) se calculan en `esManoHtml` y van en variables CSS; al
   pasar, enfocar o seleccionar, la carta sube y queda encima (`z-index`).
 - Se usan las propiedades individuales `rotate` y `translate` para que el abanico y la elevación no se pisen.

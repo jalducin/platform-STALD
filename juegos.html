@@ -307,7 +307,7 @@
   .es-dorsos { display: inline-flex; padding: 2px 0; }
   .es-dorsos .es-carta + .es-carta { margin-left: calc(var(--w) * -.58); }
   /* Mano en abanico: una sola fila; se encima solo cuando no cabe (100% = ancho de la mano) */
-  .es-mano { --cw: 64px; display: flex; flex-wrap: nowrap; justify-content: center; margin: 6px 0 4px; padding: 22px 0 12px; }
+  .es-mano { --cw: 64px; display: flex; flex-wrap: nowrap; justify-content: center; margin: 6px 0 4px; padding: 22px 14px 12px; } /* el lateral deja lugar al giro del abanico */
   .es-btn { position: relative; background: none; border: none; padding: 0; margin: 0; cursor: pointer; font: inherit; color: inherit; flex-shrink: 0; border-radius: .55em;
     rotate: var(--r, 0deg); translate: 0 var(--y, 0px); transform-origin: 50% 130%; transition: rotate .18s, translate .18s; -webkit-tap-highlight-color: transparent; }
   .es-mano > .es-btn + .es-btn { margin-left: min(6px, calc((100% - var(--n) * var(--cw)) / (var(--n) - 1))); }
@@ -2080,7 +2080,7 @@
   }
   // Mano en abanico: lista de { c, cls, attrs, extra }; el giro y el arco van en --r y --y, la superposición la pone el CSS.
   function esManoHtml(lista) {
-    const n = lista.length, paso = n > 5 ? 2 : 3, arco = n > 5 ? .55 : 1.4;
+    const n = lista.length, paso = n > 5 ? 1.6 : 3, arco = n > 5 ? .5 : 1.4;
     return '<div class="es-mano" style="--n:' + n + '">' + lista.map((x, i) => {
       const k = i - (n - 1) / 2;
       return '<button type="button" class="es-btn' + (x.cls || '') + '"' + (x.attrs || '') + ' style="--r:' + (k * paso).toFixed(1) + 'deg;--y:' + (k * k * arco).toFixed(1) + 'px">' + esCarta(x.c, x.extra) + '</button>';
