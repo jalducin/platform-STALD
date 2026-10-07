@@ -220,3 +220,11 @@ su inscripción vigente o, si no tiene, el primer grupo activo.
 - **WHEN** el Grupo 1 es el primer grupo activo y 6 personas no tienen inscripción, más 1 inscrita en él
 - **THEN** el Grupo 1 dice «👤 7 alumnos y alumnas»
 
+### Requirement: Presentar clases anteriores
+«🎬 Presentar» SHALL mostrar, además de la clase de la semana actual, todas las clases por Meet anteriores, con sus
+botones para presentar y ver el guion, para usarlas con grupos nuevos.
+
+#### Scenario: Grupo nuevo
+- **WHEN** el profe abre «Presentar» para dar la primera clase a un grupo nuevo
+- **THEN** encuentra la clase de la Semana 1 en «Clases anteriores» y puede presentarla
+
