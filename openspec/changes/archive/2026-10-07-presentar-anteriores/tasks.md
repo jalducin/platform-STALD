@@ -4,19 +4,19 @@
 
 ## 1. Pruebas que fallan (TDD)
 
-- [ ] 1.1 Fixture del Meet anterior y `e2e-presentar.js` en rojo
+- [x] 1.1 Fixture del Meet anterior y `e2e-presentar.js` en rojo
 
 ## 2. Implementación
 
-- [ ] 2.1 `renderPresentar` con «Esta semana» y «Clases anteriores»
+- [x] 2.1 `renderPresentar` con «Esta semana» y «Clases anteriores»
 
 ## 3. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
-- [ ] 3.1 Fase `ingles` completa sin regresiones (el fixture nuevo es exclusivo)
+- [x] 3.1 Fase `ingles` completa sin regresiones (el fixture nuevo es exclusivo)
 
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
-- [ ] 4.1 Reporte en `openspec/changes/presentar-anteriores/reports/`
+- [x] 4.1 Reporte en `openspec/changes/presentar-anteriores/reports/`
 
 ## 5. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
@@ -24,4 +24,4 @@
 
 ## 6. Documentación (OBLIGATORIO)
 
-- [ ] 6.1 `docs/pruebas.md`: el fixture nuevo de `tests/fixtures/datos`
+- [x] 6.1 `docs/pruebas.md`: el fixture nuevo de `tests/fixtures/datos`

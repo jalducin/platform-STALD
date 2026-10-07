@@ -97,7 +97,8 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
 - `DATA` (la copia de datos) la pasa `correr.sh`; las pruebas de Inglés leen de ahí actividades y exámenes.
 - `tests/fixtures/datos/` se superpone a la copia: exámenes de Secundaria exclusivos de `valeria@example.com`
   (`sec-e2e` para `examen-secundaria` y `sec-e2e-guardado` para `autoguardado`). Cada prueba usa el suyo para no
-  gastarle las oportunidades a otra en la misma fase.
+  gastarle las oportunidades a otra en la misma fase. También trae una clase por Meet anterior (`meet-2026-09-27`,
+  semana `2026-09-21`, exclusiva de `nadie-e2e`) para la prueba `presentar`; solo la ve el admin.
 - Relojes acortados solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos) y `window.__REENVIO_SEGUNDOS` (espera del
   botón «Reenviarme el enlace»), con `addInitScript`.
 - Solo correos `@example.com`. El usuario admin de prueba es `admin@example.com`. Nada de datos reales.
