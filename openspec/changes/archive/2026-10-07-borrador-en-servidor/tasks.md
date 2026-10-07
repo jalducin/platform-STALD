@@ -22,7 +22,7 @@
 
 ## 5. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 CI en verde antes del merge; verificar en producción que `PUT …/borrador` sin sesión se rechaza y que la
+- [x] 5.1 CI en verde antes del merge; verificar en producción que `PUT …/borrador` sin sesión se rechaza y que la
   página publicada trae el guardado en la cuenta
 
 ## 6. Documentación (OBLIGATORIO)
