@@ -38,7 +38,9 @@ const SECCIONES = [
   { id: 'perfil', emoji: '👤', titulo: 'Perfil', encabezado: 'Mi perfil', rol: 'alumno' },
   { id: 'resumen', emoji: '🏠', titulo: 'Resumen', encabezado: 'Resumen del grupo', rol: 'admin', barra: true },
   { id: 'grupos', emoji: '👥', titulo: 'Grupos', rol: 'admin' },
-  { id: 'alumnos', emoji: '🧑‍🎓', titulo: 'Alumnos', encabezado: 'Alumnos y alumnas', rol: 'admin', barra: true },
+  { id: 'alumnos', emoji: '🧑‍🎓', titulo: 'Alumnos', encabezado: 'Avance de alumnos y alumnas', rol: 'admin', barra: true },
+  // Alta y administración (grupo, quitar) separadas del avance (openspec: ingles-menu-registro).
+  { id: 'registro', emoji: '➕', titulo: 'Registro', encabezado: 'Registro de alumnos y alumnas', rol: 'admin' },
   { id: 'semana', emoji: '📅', titulo: 'Semana', encabezado: 'Esta semana', rol: 'admin', barra: true },
   { id: 'resultados', emoji: '⭐', titulo: 'Resultados', encabezado: 'Últimas calificaciones', rol: 'admin', barra: true },
   { id: 'presentar', emoji: '🎬', titulo: 'Presentar', encabezado: 'Presentar la clase', rol: 'admin' },

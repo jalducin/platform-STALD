@@ -7,7 +7,7 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
 const lista = async email => (await (await fetch(API + '/ingles/actividades?email=' + encodeURIComponent(email))).json()).items || [];
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const p = await abrirPagina(b, { email: 'admin@example.com', viejo: true, viewport: { width: 1280, height: 720 }, out, etiqueta: '', ruta: '/ingles.html#alumnos', esperar: '#alumnos-admin' });
+  const p = await abrirPagina(b, { email: 'admin@example.com', viejo: true, viewport: { width: 1280, height: 720 }, out, etiqueta: '', ruta: '/ingles.html#registro', esperar: '#alumnos-admin' });
   await p.fill('#alta-nombre', 'Prueba Lunes'); await p.fill('#alta-correo', 'prueba.lunes@example.com'); await p.click('#alta-alumno button[type=submit]');
   await p.waitForFunction(() => /Empieza el lunes/.test((document.getElementById('alta-msg') || {}).textContent || ''), null, { timeout: 20000 });
   const aviso = await p.textContent('#alta-msg');

@@ -8,9 +8,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, ingles: true, out, dialogos: 'aceptar', ruta });
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const ad = await pagina(b, 'admin@example.com', '/ingles.html#alumnos');
+  const ad = await pagina(b, 'admin@example.com', '/ingles.html#registro');
   await ad.waitForSelector('#alumnos-admin', { timeout: 60000 });
   const antes = Number(await ad.textContent('#alumnos-admin .count'));
+  // Registro y avance separados en el menú (openspec: ingles-menu-registro).
+  ok('menú: opciones «Registro» y «Alumnos» separadas', !!(await ad.$('[data-nav="registro"]')) && !!(await ad.$('[data-nav="alumnos"]')));
+  ok('«Registro» tiene el alta y «Alumnos» no', !!(await ad.$('[data-seccion="registro"] #alta-alumno')) && !(await ad.$('[data-seccion="alumnos"] #alta-alumno')));
   ok('tarjeta "Alumnos y alumnas" con la lista del registro', antes >= 5, String(antes));
   await ad.fill('#alta-nombre', 'Luz María'); await ad.fill('#alta-correo', 'Luz.Prueba@Example.com');
   await ad.click('#alta-alumno button[type=submit]');
