@@ -19,8 +19,11 @@ const correctas = (qs: { id: string; tipo: string; correcta?: number; aceptadas?
 Deno.test({ name: "contenido de la semana 1 válido", ignore, fn: async () => {
   clearCache();
   const store = await MemoryStore.fromDir(DATA_DIR!);
-  const { items, semanaActual } = await visibleItems(store, "2026-09-29");
+  const { items: todos, semanaActual } = await visibleItems(store, "2026-09-29");
   assertEquals(semanaActual?.id, "2026-09-28");
+  // La semana 1 y los exámenes sueltos (la copia de las E2E agrega clases de prueba de otras semanas).
+  const deSemana = new Set(semanaActual!.elementos.map((e) => e.id));
+  const items = todos.filter((i) => deSemana.has(i.id) || i.tipo === "examen");
   assertEquals(items.map((i) => i.tipo).sort(), ["actividad", "actividad", "examen", "examen", "meet", "refuerzo"]);
   for (const it of items) assertEquals(validateItem(it), [], it.id);
   const ref = await loadItem(store, "refuerzo-2026-10-03");

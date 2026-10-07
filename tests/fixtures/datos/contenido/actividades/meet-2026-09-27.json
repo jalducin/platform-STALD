@@ -1,0 +1,92 @@
+{
+  "id": "meet-2026-09-27",
+  "tipo": "meet",
+  "titulo": "Repaso por Meet (clase anterior de prueba)",
+  "nivel": "A1",
+  "descripcion": "Clase anterior de ejemplo para las E2E de «Presentar».",
+  "disponibleDesde": "2026-09-27",
+  "fechaLimite": "2026-09-27",
+  "meetUrl": null,
+  "hora": null,
+  "intentos": 2,
+  "preguntasPorIntento": 2,
+  "alumnos": [
+    "nadie-e2e"
+  ],
+  "temas": [
+    {
+      "id": "repaso",
+      "titulo": "Repaso",
+      "retroalimentacion": {
+        "fortaleza": "bien",
+        "en-progreso": "casi",
+        "debilidad": "repasa"
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Teoría de prueba",
+      "texto": "Texto de prueba."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "libreta",
+      "texto": "Tip de prueba."
+    }
+  ],
+  "guion": [
+    {
+      "tiempo": "5 min",
+      "titulo": "1. Bienvenida",
+      "objetivo": "Saludar.",
+      "pasos": [
+        "Saluda."
+      ]
+    }
+  ],
+  "banco": [
+    {
+      "id": "ma-1",
+      "tema": "repaso",
+      "tipo": "opcion",
+      "enunciado": "¿ma-1?",
+      "opciones": [
+        "uno",
+        "dos"
+      ],
+      "correcta": 0,
+      "explicacion": "x"
+    },
+    {
+      "id": "ma-2",
+      "tema": "repaso",
+      "tipo": "opcion",
+      "enunciado": "¿ma-2?",
+      "opciones": [
+        "uno",
+        "dos"
+      ],
+      "correcta": 0,
+      "explicacion": "x"
+    }
+  ],
+  "presentacion": {
+    "diapositivas": [
+      {
+        "tipo": "portada",
+        "emoji": "🎥",
+        "titulo": "Clase anterior de prueba",
+        "subtitulo": "Semana 0",
+        "texto": "Clases de Inglés"
+      },
+      {
+        "tipo": "cierre",
+        "emoji": "👋",
+        "titulo": "See you!",
+        "subtitulo": "Fin"
+      }
+    ]
+  }
+}
