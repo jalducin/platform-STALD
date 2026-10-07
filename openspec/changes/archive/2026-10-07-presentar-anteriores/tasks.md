@@ -20,7 +20,7 @@
 
 ## 5. Producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 CI en verde antes del merge; verificar que la página publicada trae «Clases anteriores»
+- [x] 5.1 CI en verde antes del merge; verificar que la página publicada trae «Clases anteriores»
 
 ## 6. Documentación (OBLIGATORIO)
 
