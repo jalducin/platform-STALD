@@ -122,7 +122,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       - `descartar` con `carta`.
   - Póker (`poker`, cambio `poker`): misma `jugada { n, accion, monto? }`.
     - `accion` ∈ `retirarse | pasar | igualar | subir | todo`;
-    - `monto` es un entero de 0 a 1,000,000;
+    - `monto` es un entero múltiplo de 5, de 5 a 1,000,000 (fichas de 5 a 100, cambio `poker-fichas`), y `subir` lo exige;
     - no se permite `carta` (400 `jugada_invalida`);
     - se permite `opciones.equipos: "1"` al crear la sala.
     - Al reproducir, cada cliente valida la jugada con `juegos/cartas.js`. Una jugada inválida se ignora y, al vencer
