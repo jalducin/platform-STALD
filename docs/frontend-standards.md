@@ -239,6 +239,12 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   - `estadoCartasSala(juego)` reproduce la sala con `CFG_CARTAS`: bots a 1.5 s y turnos de 30 s. Si se vence el
     turno, el bot hace la jugada;
   - Brisca usa hasta 4 jugadores (con 4 se juega en parejas `[0,1,0,1]`) y Conquián usa a los 2 primeros.
+  - Diseño de la carta (cambio `cartas-espanolas-diseno`; detalle en su `design.md`): `esCarta` dibuja con el sprite SVG
+    del `<body>` (palos `es-s0..3`, figuras `es-f10..12`), sin imágenes externas; `role="img"` y `aria-label` con
+    `nombreEsp`. Tamaño con `--cw`/`--w` (mano, mesa y `.chica`). La mano se arma con `esManoHtml` (abanico en una
+    fila que se encima solo si no cabe), el mazo con `esMazoHtml` y los dorsos de rivales con `esDorsosHtml`;
+    `esNuevas(zona, ids)` anima solo las cartas que llegan a la mesa (sin animación con `prefers-reduced-motion`).
+    Ojo: la regla genérica `.sel` (selects) se anula en `.es-btn.sel`.
 - 📖 Cómo se juega: `AYUDA[id]` (HTML) más `ayuda(id)`, que abre un `<dialog>` que se cierra con Esc o con el botón.
   Cualquier botón con `data-ayuda="<id>"` lo abre.
 

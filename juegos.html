@@ -292,22 +292,84 @@
   dialog.ayuda table { width: 100%; border-collapse: collapse; font-size: .82rem; }
   dialog.ayuda td { padding: 4px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
   dialog.ayuda .aviso { background: var(--accent-soft); border-radius: 10px; padding: 8px 10px; font-size: .82rem; margin-top: 12px; }
-  /* Baraja española: Brisca y Conquián (openspec: cartas-espanolas) */
-  .es-carta { display: inline-flex; flex-direction: column; align-items: center; justify-content: space-between; width: 50px; height: 74px; border-radius: 8px;
-    background: #fffdf5; border: 2px solid var(--pc); color: var(--pc); font-weight: 900; padding: 4px 2px 3px; box-shadow: 0 2px 6px rgba(0,0,0,.25); line-height: 1; vertical-align: middle; }
-  .es-carta .v { font-size: 1.15rem; } .es-carta .p { font-size: 1.25rem; } .es-carta .f { font-size: .5rem; font-weight: 800; letter-spacing: .02em; }
-  .es-carta.chica { width: 36px; height: 54px; padding: 2px 1px; } .es-carta.chica .v { font-size: .85rem; } .es-carta.chica .p { font-size: .9rem; } .es-carta.chica .f { display: none; }
-  .es-carta.oculta { background: repeating-linear-gradient(45deg, #1e3a8a 0 6px, #1d4ed8 6px 12px); border-color: #fff; color: transparent; }
-  .es-carta.vacia { background: rgba(255,255,255,.1); border: 1.5px dashed rgba(255,255,255,.4); box-shadow: none; }
-  .es-carta.triunfo { transform: rotate(90deg); margin: 0 12px; }
-  .es-btn { background: none; border: none; padding: 0; cursor: pointer; transition: transform .12s; font: inherit; }
-  .es-btn[data-no] { opacity: .6; cursor: default; }
-  .es-btn.sel .es-carta { transform: translateY(-9px); box-shadow: 0 0 0 3px var(--accent-2), 0 6px 14px rgba(0,0,0,.3); }
-  .es-btn.jugable .es-carta { transform: translateY(-5px); box-shadow: 0 6px 14px rgba(0,0,0,.3); }
-  .es-mano { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin: 10px 0 6px; padding-top: 8px; }
-  .es-mesa { background: radial-gradient(ellipse at center, #1e6f8f 0%, #155e75 60%, #0e3f50 100%); }
-  .es-baza { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; min-height: 92px; align-items: flex-end; }
-  .es-baza figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: .62rem; font-weight: 700; }
+  /* Baraja española: Brisca y Conquián (openspec: cartas-espanolas; diseño: cartas-espanolas-diseno).
+     Todo se mide en em sobre --w (ancho de la carta): mano 64/78 px, mesa 60/70 px, miniatura .chica 34/38 px. */
+  .es-carta { --w: var(--cw, 60px); --pc: #a16207; position: relative; display: inline-block; vertical-align: middle; flex-shrink: 0;
+    width: var(--w); height: calc(var(--w) * 1.5); font-size: calc(var(--w) * .2); border-radius: .55em; overflow: hidden;
+    background: radial-gradient(120% 80% at 30% 15%, #fffef9 0%, #fbf4e2 60%, #f1e5c6 100%); border: 1px solid rgba(70, 48, 12, .38);
+    box-shadow: 0 1px 1.5px rgba(0,0,0,.28), 0 3px 9px rgba(0,0,0,.2); color: var(--pc);
+    font-family: Georgia, "Times New Roman", serif; font-weight: 700; line-height: 1; user-select: none; -webkit-user-select: none; }
+  .es-carta::before { content: ""; position: absolute; inset: .24em; border: .07em solid var(--pc); border-radius: .36em; opacity: .5; pointer-events: none; }
+  .es-carta.es-p0 { --pc: #a16207; } .es-carta.es-p1 { --pc: #b91c1c; } .es-carta.es-p2 { --pc: #1d4ed8; } .es-carta.es-p3 { --pc: #15803d; }
+  .es-carta svg { display: block; overflow: visible; }
+  .es-esq { position: absolute; top: .42em; left: .4em; display: flex; align-items: center; gap: .1em; z-index: 1; }
+  .es-esq b { font-size: 1.12em; letter-spacing: -.06em; font-weight: 800; }
+  .es-esq svg { width: .7em; height: .7em; }
+  .es-esq.z { top: auto; left: auto; bottom: .42em; right: .38em; transform: rotate(180deg); }
+  .es-centro { position: absolute; inset: 1.75em 1.1em; }
+  .es-pip { position: absolute; width: .92em; height: .92em; transform: translate(-50%, -50%); filter: drop-shadow(0 .04em .04em rgba(0,0,0,.25)); }
+  .es-pip.es-as { width: 2.5em; height: 2.5em; left: 50%; top: 50%; filter: drop-shadow(0 .08em .1em rgba(0,0,0,.3)); }
+  /* Figuras: panel con el retrato, el palo que sostiene y el nombre */
+  .es-fig .es-esq .es-ico { display: none; } /* en las figuras el palo va en el retrato */
+  .es-fig .es-centro { inset: 1.68em .55em; border-radius: .3em; overflow: hidden; display: flex; flex-direction: column;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 10%, #fff8e6), color-mix(in srgb, var(--pc) 22%, #fbf1d6));
+    box-shadow: inset 0 0 0 .07em color-mix(in srgb, var(--pc) 55%, transparent); }
+  .es-retrato { position: relative; flex: 1; min-height: 0; }
+  .es-figura { position: absolute; left: .1em; top: .2em; width: calc(100% - .2em); height: calc(100% - .2em); }
+  .es-sostiene { position: absolute; left: .15em; bottom: .12em; width: .95em; height: .95em; filter: drop-shadow(0 .04em .05em rgba(0,0,0,.35)); }
+  .es-nombre { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: .5em; font-weight: 900; letter-spacing: .06em; text-align: center;
+    background: var(--pc); color: #fffbeb; padding: .28em 0 .22em; }
+  /* Miniatura: solo la esquina de arriba y un palo (o la figura) al centro */
+  .es-carta.chica { --w: 34px; border-radius: .6em; }
+  .es-carta.chica::before { inset: .3em; }
+  .es-carta.chica .es-esq { top: .45em; left: .45em; } .es-carta.chica .es-esq b { font-size: 1.5em; } .es-carta.chica .es-esq svg, .es-carta.chica .es-esq.z { display: none; }
+  .es-carta.chica .es-centro { inset: 2.2em .5em .5em; }
+  .es-carta.chica .es-pip.es-as { width: 2.2em; height: 2.2em; }
+  .es-carta.chica.es-fig .es-centro { inset: 2.1em .45em .45em; }
+  /* Dorso: vino con enrejado dorado, filete interior y medallón */
+  .es-carta.oculta { background:
+      radial-gradient(ellipse 1.05em 1.5em at 50% 50%, #f4d58d 0 26%, #8c2433 30% 64%, #f4d58d 68% 78%, transparent 82%),
+      repeating-linear-gradient(45deg, rgba(244, 213, 141, .26) 0 .08em, transparent .08em .6em),
+      repeating-linear-gradient(-45deg, rgba(244, 213, 141, .26) 0 .08em, transparent .08em .6em),
+      linear-gradient(160deg, #96283a, #5a1220);
+    border-color: #3b0b14; }
+  .es-carta.oculta::before { border-color: #f4d58d; opacity: .75; }
+  .es-carta.vacia { background: rgba(255,255,255,.08); border: 1.5px dashed rgba(255,255,255,.45); box-shadow: none; }
+  .es-carta.vacia::before { display: none; }
+  /* Marca discreta de triunfo (Brisca) en las cartas de la mano */
+  .es-carta.es-triunfo::after { content: "★"; position: absolute; top: .3em; right: .38em; font-size: .78em; color: #d4a017; text-shadow: 0 0 .15em #fff; font-family: system-ui, sans-serif; }
+  /* Mazo: pila de dorsos con contador; en Brisca el triunfo va girado debajo, como en la mesa */
+  .es-mazo { --cw: 40px; position: relative; display: inline-flex; align-items: center; vertical-align: middle; }
+  .es-mazo .oculta { box-shadow: .1em .1em 0 -.02em #f1e5c6, .2em .2em 0 -.02em #5a1220, .3em .3em 0 -.02em #f1e5c6, .4em .4em 0 -.02em #5a1220, 0 4px 10px rgba(0,0,0,.4); }
+  .es-carta.triunfo { transform: rotate(90deg); margin: 0 -2px 0 10px; }
+  .es-cuenta { position: absolute; right: -10px; bottom: -6px; min-width: 22px; padding: 2px 5px; border-radius: 99px; background: #1f2937; color: #fde68a;
+    font-size: .7rem; font-weight: 900; text-align: center; box-shadow: 0 0 0 2px rgba(253, 230, 138, .55); font-family: system-ui, sans-serif; }
+  .es-dorsos { display: inline-flex; padding: 2px 0; }
+  .es-dorsos .es-carta + .es-carta { margin-left: calc(var(--w) * -.58); }
+  /* Mano en abanico: una sola fila; se encima solo cuando no cabe (100% = ancho de la mano) */
+  .es-mano { --cw: 64px; display: flex; flex-wrap: nowrap; justify-content: center; margin: 6px 0 4px; padding: 22px 14px 12px; } /* el lateral deja lugar al giro del abanico */
+  .es-btn { position: relative; background: none; border: none; padding: 0; margin: 0; cursor: pointer; font: inherit; color: inherit; flex-shrink: 0; border-radius: .55em;
+    rotate: var(--r, 0deg); translate: 0 var(--y, 0px); transform-origin: 50% 130%; transition: rotate .18s, translate .18s; -webkit-tap-highlight-color: transparent; }
+  .es-mano > .es-btn + .es-btn { margin-left: min(6px, calc((100% - var(--n) * var(--cw)) / (var(--n) - 1))); }
+  .es-btn .es-carta { transition: translate .16s ease, box-shadow .16s ease, filter .16s; }
+  .es-btn:not([data-no]):hover, .es-btn:focus-visible, .es-btn.sel { z-index: 5; }
+  .es-btn:not([data-no]):hover .es-carta, .es-btn:focus-visible .es-carta { translate: 0 -9px; box-shadow: 0 10px 18px rgba(0,0,0,.3); }
+  .es-btn:focus-visible { outline: none; } .es-btn:focus-visible .es-carta { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+  .es-btn.jugable .es-carta { box-shadow: 0 0 0 2px #f5c542, 0 4px 12px rgba(0,0,0,.28); }
+  .es-btn.jugable:hover .es-carta, .es-btn.jugable:focus-visible .es-carta { box-shadow: 0 0 0 2.5px #f5c542, 0 0 14px rgba(245, 197, 66, .7), 0 12px 20px rgba(0,0,0,.3); }
+  .es-btn.sel { width: auto; padding: 0; border: none; background: none; font-size: inherit; } /* anula la regla genérica .sel (selects) */
+  .es-btn.sel .es-carta, .es-btn.sel:hover .es-carta { translate: 0 -16px; box-shadow: 0 0 0 3px var(--accent-2), 0 12px 20px rgba(0,0,0,.32); }
+  .es-btn[data-no] { cursor: default; }
+  .es-btn[data-no] .es-carta { filter: saturate(.7) brightness(.94); }
+  .es-mesa { --cw: 60px; background: radial-gradient(ellipse at center, #1e6f8f 0%, #155e75 60%, #0e3f50 100%); }
+  .es-fila-mesa { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 8px 0 6px; }
+  .es-baza { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; min-height: 112px; align-items: flex-end; }
+  .es-baza figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: .64rem; font-weight: 700; }
+  /* Llegada a la mesa (una vez por carta) */
+  @keyframes es-entra { from { opacity: 0; transform: translateY(28px) scale(.82) rotate(-6deg); } to { opacity: 1; transform: none; } }
+  .es-carta.entra { animation: es-entra .28s cubic-bezier(.2, .8, .3, 1.15) both; }
+  @media (min-width: 640px) { .es-mano { --cw: 78px; } .es-mesa { --cw: 70px; } .es-mazo { --cw: 46px; } .es-carta.chica { --w: 38px; } }
+  @media (prefers-reduced-motion: reduce) { .es-carta.entra { animation: none; } .es-btn, .es-btn .es-carta { transition: none; } }
   .es-juegos { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
   .es-juego { display: flex; gap: 2px; padding: 4px; border-radius: 10px; border: 1.5px dashed var(--border); background: var(--card); font: inherit; cursor: pointer; }
   .es-juego.destino { border: 2px solid var(--accent-2); background: var(--mente-soft); }
@@ -413,6 +475,22 @@
 </style>
 </head>
 <body>
+<!-- Baraja española (openspec: cartas-espanolas-diseno): palos es-s0..3 (oros, copas, espadas, bastos) y figuras es-f10..12 (sota, caballo, rey). -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id="es-g-oro" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#e8b52e"/><stop offset="1" stop-color="#a86b0c"/></radialGradient>
+    <linearGradient id="es-g-copa" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ef4444"/><stop offset=".45" stop-color="#c62828"/><stop offset="1" stop-color="#7f1d1d"/></linearGradient>
+    <linearGradient id="es-g-hoja" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f1f5f9"/><stop offset=".5" stop-color="#cbd5e1"/><stop offset="1" stop-color="#94a3b8"/></linearGradient>
+    <linearGradient id="es-g-basto" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4ade80"/><stop offset=".5" stop-color="#2f8f3a"/><stop offset="1" stop-color="#14532d"/></linearGradient>
+  </defs>
+  <symbol id="es-s0" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.4" fill="url(#es-g-oro)" stroke="#8a5a00" stroke-width="1.2"/><circle cx="12" cy="12" r="7.4" fill="none" stroke="#8a5a00" stroke-width=".8" stroke-dasharray="1.2 .9"/><path d="M12 6.6l1.5 3.4 3.7.4-2.8 2.5.8 3.6L12 14.6l-3.2 1.9.8-3.6-2.8-2.5 3.7-.4z" fill="#b7791f" stroke="#8a5a00" stroke-width=".6" stroke-linejoin="round"/></symbol>
+  <symbol id="es-s1" viewBox="0 0 24 24"><path d="M4.4 3.2h15.2c0 5-2.7 8.4-6.1 9.3v4.2c0 .9 1.1 1.6 3.4 2v2.4H7.1v-2.4c2.3-.4 3.4-1.1 3.4-2v-4.2C7.1 11.6 4.4 8.2 4.4 3.2z" fill="url(#es-g-copa)" stroke="#6b1010" stroke-width="1" stroke-linejoin="round"/><path d="M4.9 5.5h14.2" stroke="#fbbf24" stroke-width="1.4"/><path d="M7.4 7.6c.5 1.8 1.6 3 3 3.6" stroke="#fecaca" stroke-width=".9" fill="none" stroke-linecap="round"/><rect x="9.7" y="13.8" width="4.6" height="1.4" rx=".7" fill="#fbbf24"/></symbol>
+  <symbol id="es-s2" viewBox="0 0 24 24"><path d="M12 .6l2.6 3.1v11.8H9.4V3.7z" fill="url(#es-g-hoja)" stroke="#1e3a8a" stroke-width=".9" stroke-linejoin="round"/><path d="M12 3v12" stroke="#64748b" stroke-width=".6"/><path d="M5.2 15.3h13.6c.7 0 1 .9.4 1.3l-.9.6H5.7l-.9-.6c-.6-.4-.3-1.3.4-1.3z" fill="#2563eb" stroke="#1e3a8a" stroke-width=".8"/><rect x="10.9" y="17.2" width="2.2" height="3.7" rx=".4" fill="#1e3a8a"/><circle cx="12" cy="21.8" r="1.5" fill="#fbbf24" stroke="#1e3a8a" stroke-width=".7"/></symbol>
+  <symbol id="es-s3" viewBox="0 0 24 24"><g transform="rotate(-16 12 12)"><path d="M8.9 21.3 10 10C8.6 9 8.2 6.6 9.2 4.7 10.4 2.5 13.2 1.8 15 3.2 16.8 4.6 16.8 7.3 15.5 9 15.1 9.6 14.6 10 14 10.3L12.4 21.6C12.2 23 8.8 22.8 8.9 21.3z" fill="url(#es-g-basto)" stroke="#14532d" stroke-width="1" stroke-linejoin="round"/><path d="M10.6 13.6 8.6 12.5M12.6 16.2l1.9-.8" stroke="#14532d" stroke-width="1.3" stroke-linecap="round"/><ellipse cx="12.4" cy="6.4" rx=".8" ry=".6" fill="#14532d"/><ellipse cx="11.2" cy="18.6" rx=".6" ry=".45" fill="#14532d"/><path d="M11 4.7c.5-.9 1.3-1.3 2-1.1" stroke="#bbf7d0" stroke-width=".9" fill="none" stroke-linecap="round"/></g></symbol>
+  <symbol id="es-f10" viewBox="0 0 24 30"><path d="M4 30c.5-6.3 3.7-10.1 8-10.1s7.5 3.8 8 10.1z" fill="currentColor"/><path d="M8.8 20.6 12 23.4l3.2-2.8" fill="none" stroke="#fffbeb" stroke-width="1.3" stroke-linejoin="round"/><circle cx="12" cy="14" r="3.7" fill="#f6dcc0" stroke="#7c5a3a" stroke-width=".6"/><path d="M8.3 13.4c0-2.3 1.6-3.5 3.7-3.5s3.7 1.2 3.7 3.5c-.9-.9-2.2-1.4-3.7-1.4s-2.8.5-3.7 1.4z" fill="#7c4a1e"/><path d="M6.6 11.3c.4-3.7 2.7-5.8 5.7-5.8 2.8 0 4.7 1.7 5.3 4.4-3.7-.6-7.4-.2-11 1.4z" fill="currentColor" stroke="#00000033" stroke-width=".4"/><path d="M15.8 7.2c2.2-3 4.6-3.9 6.4-3.4-1.4.8-3 2.4-4.1 4.6" fill="#f5c542" stroke="#a16207" stroke-width=".5"/><circle cx="10.6" cy="14.3" r=".45" fill="#3b2a1a"/><circle cx="13.4" cy="14.3" r=".45" fill="#3b2a1a"/></symbol>
+  <symbol id="es-f11" viewBox="0 0 24 30"><path d="M6 29.5h13.4l-.5-2.7c-.4-2-1.1-3.9-2.1-5.6 1.8-2.6 1.8-6.1.2-9.2-1.5-3-4.5-5.4-8.1-6l-.9-2.4-1.7 2.8C4.6 7.4 3.1 9 2.3 10.9L.9 14.5c-.3.9.1 1.8 1 2.1l1.2.4c.7.2 1.4 0 1.8-.6l1.5-1.9 1.8-.3c-1 2-2.6 3.9-4 6-1.4 2.2-1.6 4.8-1 7.3z" fill="currentColor" transform="translate(1.5 0)"/><path d="M14.4 7.8c2.4 1.4 4 3.7 4.5 6.5M15.3 10.9c1.3 1 2.1 2.4 2.4 4" fill="none" stroke="#f5c542" stroke-width="1.2" stroke-linecap="round"/><path d="M4.3 14.6 8.3 10.2l1.6 3.8" fill="none" stroke="#f5c542" stroke-width=".9" stroke-linejoin="round"/><circle cx="8.6" cy="10.4" r="1" fill="#fffbeb"/><circle cx="8.8" cy="10.5" r=".45" fill="#1f2937"/><rect x="5.5" y="27.6" width="15" height="2" rx=".6" fill="#f5c542"/></symbol>
+  <symbol id="es-f12" viewBox="0 0 24 30"><path d="M3.5 30c.6-6.5 4-10.6 8.5-10.6s7.9 4.1 8.5 10.6z" fill="currentColor"/><path d="M6.6 21.9c3.3 2.3 7.5 2.3 10.8 0" fill="none" stroke="#fffbeb" stroke-width="2" stroke-linecap="round"/><path d="M6.6 21.9c3.3 2.3 7.5 2.3 10.8 0" fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-dasharray=".5 2.2"/><circle cx="12" cy="13.8" r="3.7" fill="#f6dcc0" stroke="#7c5a3a" stroke-width=".6"/><path d="M8.2 14.2c.3 3.8 1.9 5.9 3.8 5.9s3.5-2.1 3.8-5.9c-1.1 1-2.4 1.4-3.8 1.4s-2.7-.4-3.8-1.4z" fill="#e5e7eb" stroke="#9ca3af" stroke-width=".4"/><circle cx="10.6" cy="13.3" r=".45" fill="#3b2a1a"/><circle cx="13.4" cy="13.3" r=".45" fill="#3b2a1a"/><path d="M6.6 10.2 7.6 3.8l2.6 3 1.8-4.6 1.8 4.6 2.6-3 1 6.4z" fill="#f5c542" stroke="#a16207" stroke-width=".7" stroke-linejoin="round"/><circle cx="12" cy="7.6" r=".9" fill="#dc2626"/><circle cx="9" cy="8.4" r=".6" fill="#2563eb"/><circle cx="15" cy="8.4" r=".6" fill="#16a34a"/></symbol>
+</svg>
 <div class="wrap">
   <div class="top">
     <a class="home-link" href="./">← Inicio</a>
@@ -2076,14 +2154,49 @@
   }
 
   // ---------- Clásicos: baraja española — Brisca y Conquián (openspec: cartas-espanolas) ----------
-  const ES_COLOR = ['#b45309', '#dc2626', '#1d4ed8', '#15803d']; // oros, copas, espadas, bastos
-  const ES_FIG = { 1: 'AS', 10: 'SOTA', 11: 'CABALLO', 12: 'REY' };
+  // Diseño de la carta (openspec: cartas-espanolas-diseno): palos y figuras del sprite SVG del <body> (es-s0..3, es-f10..12).
+  const ES_FIG = { 10: 'SOTA', 11: 'CABALLO', 12: 'REY' };
+  // Posición (% del centro de la carta) de cada palo del 2 al 7, como en la baraja.
+  const ES_PIPS = {
+    2: [[50, 16], [50, 84]], 3: [[50, 12], [50, 50], [50, 88]], 4: [[24, 16], [76, 16], [24, 84], [76, 84]],
+    5: [[24, 14], [76, 14], [50, 50], [24, 86], [76, 86]], 6: [[24, 12], [76, 12], [24, 50], [76, 50], [24, 88], [76, 88]],
+    7: [[24, 8], [76, 8], [50, 31], [24, 54], [76, 54], [24, 92], [76, 92]],
+  };
+  const esUso = (sym, cls, style) => '<svg class="' + cls + '"' + (style ? ' style="' + style + '"' : '') + ' aria-hidden="true" focusable="false"><use href="#' + sym + '"/></svg>';
+  // extra: clases (' chica', ' triunfo', ' entra', ' es-triunfo'…). null = lugar vacío; undefined = dorso.
   function esCarta(id, extra) {
-    if (id === null) return '<span class="es-carta vacia' + (extra || '') + '"></span>';
-    if (id === undefined) return '<span class="es-carta oculta' + (extra || '') + '"></span>';
-    const v = Cartas.espValor(id), pl = Cartas.espPalo(id);
-    return '<span class="es-carta' + (extra || '') + '" style="--pc:' + ES_COLOR[pl] + '" aria-label="' + escapeHtml(Cartas.nombreEsp(id)) + '"><span class="v">' + v + '</span><span class="p">' + Cartas.ESP_EMOJI[pl] + '</span><span class="f">' + (ES_FIG[v] || '') + '</span></span>';
+    extra = extra || '';
+    if (id === null) return '<span class="es-carta vacia' + extra + '" aria-hidden="true"></span>';
+    if (id === undefined) return '<span class="es-carta oculta' + extra + '" aria-hidden="true"></span>';
+    const v = Cartas.espValor(id), pl = Cartas.espPalo(id), palo = 'es-s' + pl, mini = / chica\b/.test(extra);
+    const esq = lado => '<span class="es-esq ' + lado + '"><b>' + v + '</b>' + esUso(palo, 'es-ico') + '</span>';
+    const centro = ES_FIG[v] ? '<span class="es-retrato">' + esUso('es-f' + v, 'es-figura') + esUso(palo, 'es-sostiene') + '</span>' + (mini ? '' : '<span class="es-nombre">' + ES_FIG[v] + '</span>')
+      : v === 1 || mini ? esUso(palo, 'es-pip es-as')
+      : ES_PIPS[v].map(([x, y]) => esUso(palo, 'es-pip', 'left:' + x + '%;top:' + y + '%')).join('');
+    return '<span class="es-carta es-p' + pl + (ES_FIG[v] ? ' es-fig' : '') + extra + '" role="img" aria-label="' + escapeHtml(Cartas.nombreEsp(id)) + '">' +
+      esq('a') + '<span class="es-centro">' + centro + '</span>' + esq('z') + '</span>';
   }
+  // Mano en abanico: lista de { c, cls, attrs, extra }; el giro y el arco van en --r y --y, la superposición la pone el CSS.
+  function esManoHtml(lista) {
+    const n = lista.length, paso = n > 5 ? 1.6 : 3, arco = n > 5 ? .5 : 1.4;
+    return '<div class="es-mano" style="--n:' + n + '">' + lista.map((x, i) => {
+      const k = i - (n - 1) / 2;
+      return '<button type="button" class="es-btn' + (x.cls || '') + '"' + (x.attrs || '') + ' style="--r:' + (k * paso).toFixed(1) + 'deg;--y:' + (k * k * arco).toFixed(1) + 'px">' + esCarta(x.c, x.extra) + '</button>';
+    }).join('') + '</div>';
+  }
+  const esCuantas = n => n + ' carta' + (n === 1 ? '' : 's');
+  const esDorsosHtml = n => '<span class="es-dorsos" role="img" aria-label="' + esCuantas(n) + '">' + Array(n).fill(esCarta(undefined, ' chica')).join('') + '</span>';
+  // Mazo como pila de dorsos con contador; en Brisca el triunfo va girado debajo.
+  function esMazoHtml(n, triunfo) {
+    const conTriunfo = triunfo !== undefined; // en Brisca, el triunfo es la última carta del mazo
+    const etiqueta = 'Mazo: ' + esCuantas(n) + (conTriunfo ? '; triunfo: ' + Cartas.nombreEsp(triunfo) : '');
+    const pila = n > (conTriunfo ? 1 : 0) ? esCarta(undefined) : esCarta(null);
+    return '<span class="es-mazo" role="img" aria-label="' + escapeHtml(etiqueta) + '">' + (conTriunfo ? esCarta(triunfo, ' triunfo') : '') + pila +
+      '<span class="es-cuenta" aria-hidden="true">' + n + '</span></span>';
+  }
+  // Animación de llegada a la mesa: solo las cartas que no estaban en el último pintado de esa zona (el sondeo de la sala repinta).
+  const ES_VISTAS = {};
+  function esNuevas(zona, ids) { const antes = ES_VISTAS[zona] || []; ES_VISTAS[zona] = ids; return id => !antes.includes(id); }
   const ordenMano = ids => ids.slice().sort((a, b) => Cartas.espPalo(a) - Cartas.espPalo(b) || Cartas.espOrden(a) - Cartas.espOrden(b));
   const ES_BOTS = [{ nombre: 'La Güera', emoji: '💃' }, { nombre: 'El Compadre', emoji: '🤠' }, { nombre: 'Doña Chonita', emoji: '👵' }];
 
@@ -2101,16 +2214,17 @@
     const otros = [...Array(n).keys()].filter(i => i !== yo);
     const tagEq = i => st.equipos ? ' <span class="pk-tag eq' + 'AB'[st.equipos[i]] + '">' + (yo >= 0 && st.equipos[i] === st.equipos[yo] ? 'pareja' : 'rival') + '</span>' : '';
     const asientos = '<div class="pk-asientos">' + otros.map(i => '<div class="pk-asiento' + (!st.terminada && st.turno === i ? ' turno' : '') + '"><span class="n">' + o.avatar(i) + escapeHtml(o.nombre(i)) + tagEq(i) + '</span><span>' +
-      st.manos[i].map(() => esCarta(undefined, ' chica')).join(' ') + '</span><span class="muted">' + st.ganadas[i].length / n + ' ronda(s)</span></div>').join('') + '</div>';
+      esDorsosHtml(st.manos[i].length) + '</span><span class="muted">' + st.ganadas[i].length / n + ' ronda(s)</span></div>').join('') + '</div>';
     const baza = st.baza.length ? st.baza : (o.verUltima && st.ultimaBaza ? st.ultimaBaza.cartas : []);
-    const u = st.ultimaBaza;
+    const u = st.ultimaBaza, nueva = esNuevas('baza', baza.map(b => b.carta));
     const msg = st.baza.length ? '' : u ? '🏆 ' + escapeHtml(o.nombre(u.ganador)) + ' gana la ronda' + (u.puntos ? ' (+' + u.puntos + ')' : '') : '¡A jugar! Abre ' + escapeHtml(o.nombre(st.turno));
     const mesa = '<div class="pk-mesa es-mesa"><div class="pk-titulo">🏆 Brisca · triunfo ' + Cartas.ESP_PALOS[st.paloTriunfo] + ' ' + Cartas.ESP_EMOJI[st.paloTriunfo] + '</div>' +
-      '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0">' + (st.mazo.length ? esCarta(st.triunfo, ' chica triunfo') + '<span class="pk-bote">🂠 ' + st.mazo.length + '</span>' : '<span class="pk-bote">Mazo agotado</span>') + '</div>' +
-      '<div class="es-baza">' + baza.map(b => '<figure>' + esCarta(b.carta) + '<figcaption>' + escapeHtml(o.nombre(b.j)) + '</figcaption></figure>').join('') + '</div>' +
+      '<div class="es-fila-mesa">' + (st.mazo.length ? esMazoHtml(st.mazo.length, st.triunfo) : '<span class="pk-bote">Mazo agotado</span>') + '</div>' +
+      '<div class="es-baza">' + baza.map(b => '<figure>' + esCarta(b.carta, nueva(b.carta) ? ' entra' : '') + '<figcaption>' + escapeHtml(o.nombre(b.j)) + '</figcaption></figure>').join('') + '</div>' +
       '<div class="pk-msg">' + msg + '</div></div>';
     const mio = yo >= 0 ? '<div class="pk-yo"><div class="pk-asiento' + (!st.terminada && st.turno === yo ? ' turno' : '') + '"><span class="n">' + o.avatar(yo) + escapeHtml(o.nombre(yo)) + tagEq(yo) + '</span><span class="muted">' + st.ganadas[yo].length / n + ' ronda(s) · ' + st.puntos[yo] + ' pts</span></div></div>' +
-      '<div class="es-mano">' + st.manos[yo].map(c => '<button class="es-btn' + (o.miTurno ? ' jugable' : '') + '" data-br-carta="' + c + '"' + (o.miTurno ? '' : ' data-no="1"') + '>' + esCarta(c) + '</button>').join('') + '</div>' : '';
+      esManoHtml(st.manos[yo].map(c => ({ c, cls: o.miTurno ? ' jugable' : '', attrs: ' data-br-carta="' + c + '"' + (o.miTurno ? '' : ' data-no="1" aria-disabled="true"'),
+        extra: Cartas.espPalo(c) === st.paloTriunfo ? ' es-triunfo' : '' }))) : '';
     return asientos + mesa + mio + (o.pie || '') + '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-ayuda="brisca">📖 Cómo se juega</button></div>';
   }
 
@@ -2118,13 +2232,13 @@
     const yo = o.yo, rival = yo >= 0 ? 1 - yo : 1, ver = yo >= 0 ? yo : 0;
     const juegos = (j, propios) => '<div class="es-juegos">' + (st.bajados[j].length ? st.bajados[j].map((m, a) => (propios ? '<button class="es-juego' + (o.destino === a ? ' destino' : '') + '" data-cq-juego="' + a + '" aria-label="Juego ' + (a + 1) + '">' : '<span class="es-juego">') +
       ordenMano(m).map(c => esCarta(c, ' chica')).join('') + (propios ? '</button>' : '</span>')).join('') : '<span class="muted" style="font-size:.78rem">Sin juegos bajados</span>') + '</div>';
-    const of = st.oferta;
+    const of = st.oferta, nuevaOf = esNuevas('oferta', of ? [of.carta] : []);
     const deQuien = !of ? '' : of.origen === 'descarte' ? 'Descarte de ' + escapeHtml(o.nombre(1 - of.para)) : of.segunda ? escapeHtml(o.nombre(1 - of.para)) + ' no la quiso' : 'Volteada del mazo';
     const u = st.ultima;
     const ult = !u ? '' : escapeHtml(o.nombre(u.j)) + ' ' + ({ pasar: 'no quiso ' + Cartas.nombreEsp(u.carta), tomar: 'tomó ' + Cartas.nombreEsp(u.carta), bajar: 'bajó un juego', descartar: 'descartó ' + Cartas.nombreEsp(u.carta) })[u.accion];
     const mesa = '<div class="pk-mesa es-mesa"><div class="pk-titulo">🪙 Conquián · gana quien baja 9</div>' +
-      '<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0"><span' + (of ? ' data-cq-oferta="' + of.carta + '"' : '') + '>' + esCarta(of ? of.carta : null) + '</span>' +
-      '<div style="text-align:left;font-size:.8rem"><b>' + (of ? 'Para ' + escapeHtml(o.nombre(of.para)) : st.terminada ? 'Fin' : 'Bajando…') + '</b><br>' + deQuien + '<br>🂠 ' + st.mazo.length + ' en el mazo · 💀 ' + st.muertas.length + '</div></div>' +
+      '<div class="es-fila-mesa">' + esMazoHtml(st.mazo.length) + '<span' + (of ? ' data-cq-oferta="' + of.carta + '"' : '') + '>' + esCarta(of ? of.carta : null, of && nuevaOf(of.carta) ? ' entra' : '') + '</span>' +
+      '<div style="text-align:left;font-size:.8rem"><b>' + (of ? 'Para ' + escapeHtml(o.nombre(of.para)) : st.terminada ? 'Fin' : 'Bajando…') + '</b><br>' + deQuien + '<br>' + st.mazo.length + ' en el mazo · 💀 ' + st.muertas.length + '</div></div>' +
       '<div class="pk-msg">' + ult + '</div></div>';
     let botones = '';
     if (o.miTurno) {
@@ -2132,8 +2246,9 @@
         ? '<div class="muted" style="font-size:.8rem;text-align:center">Elige cartas de tu mano que hagan juego con la carta de la mesa, o toca uno de tus juegos para agregarla.</div><div class="row-btns"><button class="btn ghost" data-cq="pasar">🙅 No la quiero</button><button class="btn" data-cq="tomar">✅ Tomar y bajar</button></div>'
         : '<div class="muted" style="font-size:.8rem;text-align:center">Puedes bajar más juegos con tu mano. Para terminar tu turno, elige 1 carta y descártala.</div><div class="row-btns"><button class="btn ghost" data-cq="bajar">⬇️ Bajar juego</button><button class="btn" data-cq="descartar">🗑️ Descartar</button></div>';
     }
-    const mano = yo >= 0 ? '<div class="es-mano">' + ordenMano(st.manos[yo]).map(c => '<button class="es-btn' + (o.sel && o.sel.has(c) ? ' sel' : '') + '" data-cq-carta="' + c + '">' + esCarta(c) + '</button>').join('') + '</div>' : '';
-    return '<div class="pk-asientos"><div class="pk-asiento' + (!st.terminada && st.turno === rival ? ' turno' : '') + '"><span class="n">' + o.avatar(rival) + escapeHtml(o.nombre(rival)) + '</span><span>' + st.manos[rival].map(() => esCarta(undefined, ' chica')).join('') +
+    const elegida = c => !!(o.sel && o.sel.has(c));
+    const mano = yo >= 0 ? esManoHtml(ordenMano(st.manos[yo]).map(c => ({ c, cls: elegida(c) ? ' sel' : '', attrs: ' data-cq-carta="' + c + '" aria-pressed="' + elegida(c) + '"' }))) : '';
+    return '<div class="pk-asientos"><div class="pk-asiento' + (!st.terminada && st.turno === rival ? ' turno' : '') + '"><span class="n">' + o.avatar(rival) + escapeHtml(o.nombre(rival)) + '</span><span>' + esDorsosHtml(st.manos[rival].length) +
       '</span><span class="muted">' + Cartas.bajadas(st, rival) + ' de 9 bajadas</span>' + juegos(rival, false) + '</div></div>' + mesa +
       (yo >= 0 ? '<div class="es-seccion">Tus juegos · ' + Cartas.bajadas(st, ver) + ' de 9' + (o.destino !== null && o.destino !== undefined ? ' · destino: juego ' + (o.destino + 1) : '') + '</div>' + juegos(yo, true) + mano : '') +
       '<div class="feedback" id="cq-msg">' + (o.msg || '') + '</div>' + botones + (o.pie || '') +
