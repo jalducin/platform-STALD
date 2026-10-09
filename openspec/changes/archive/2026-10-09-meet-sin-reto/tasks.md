@@ -29,11 +29,11 @@
 
 ## 5. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
-- [ ] 5.1 Datos: quitar el reto de `meet-2026-10-04` y `meet-2026-10-11` en el repo de datos; abrir en local, como
+- [x] 5.1 Datos: quitar el reto de `meet-2026-10-04` y `meet-2026-10-11` en el repo de datos; abrir en local, como
   admin y como alumna, la semana con los datos reales
 
 ## 6. Documentación técnica (OBLIGATORIO)
 
 - [x] 6.1 `docs/data-model.md` (campos del Meet) y skill `nueva-semana-ingles` (Meet sin reto y Tecnología e IA;
   copia en `.claude/skills`)
-- [ ] 6.2 PR, CI, merge y archivo
+- [x] 6.2 PR, CI, merge y archivo

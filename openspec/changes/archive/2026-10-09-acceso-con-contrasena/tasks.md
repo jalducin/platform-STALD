@@ -40,10 +40,10 @@
 
 ## 5. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
-- [ ] 5.1 En producción: `/auth/preparar` con contraseña equivocada → 401; con un correo que no es de clase → 401
-- [ ] 5.2 La página publicada muestra la entrada con contraseña, sin enlaces
+- [x] 5.1 En producción: `/auth/preparar` con contraseña equivocada → 401; con un correo que no es de clase → 401
+- [x] 5.2 La página publicada muestra la entrada con contraseña, sin enlaces
 
 ## 6. Documentación técnica (OBLIGATORIO)
 
 - [x] 6.1 `docs/backend-standards.md` (rutas de contraseña) y `openspec/config.yaml` (contexto de Supabase Auth)
-- [ ] 6.2 PR, CI, merge y archivo del cambio
+- [x] 6.2 PR, CI, merge y archivo del cambio

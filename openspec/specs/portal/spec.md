@@ -68,14 +68,13 @@ apodo y una casilla de aceptación del uso del correo. `/perfil` SHALL reconocer
 - **THEN** no se registra y ve el aviso de que debe aceptarla
 
 ### Requirement: Registro desde la entrada de Juegos
-La entrada de `juegos.html` SHALL mostrar el botón «🆕 Registrarme en Juegos». El registro SHALL pedir primero el
-apodo y la aceptación del aviso, y después el correo con su enlace o código. Al confirmar el correo, la cuenta de
-Juegos SHALL quedar creada con ese apodo, sin volver a pedirlo. `juegos.html?registro=1` SHALL abrir el registro
-directo.
+La entrada de `juegos.html` SHALL mostrar el botón «🆕 Registrarme en Juegos». El registro SHALL pedir el nick, la
+aceptación del aviso y el correo. La cuenta de Juegos SHALL quedar creada con ese nick al instante, sin enlace ni
+código. `juegos.html?registro=1` SHALL abrir el registro directo.
 
 #### Scenario: Registro completo desde Juegos
-- **WHEN** alguien sin cuenta toca «Registrarme en Juegos», pone su apodo, acepta y confirma su correo
-- **THEN** entra a Juegos con su apodo
+- **WHEN** alguien sin cuenta toca «Registrarme en Juegos», pone su nick, acepta el aviso y escribe su correo
+- **THEN** entra a Juegos con su nick
 
 #### Scenario: Invitar desde el hub
 - **WHEN** alguien con sesión toca «🆕 Invitar a alguien a registrarse» en Juegos

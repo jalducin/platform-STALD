@@ -75,24 +75,28 @@ sus intentos, su mejor calificación y los temas a reforzar, acumulados de todas
 - **THEN** su resumen admin lista ambos temas a reforzar
 
 ### Requirement: Clase del domingo (Meet)
-El elemento `meet` SHALL poder traer:
+El elemento `meet` SHALL ser solo la clase: el enlace del Meet (`meetUrl`, `hora`) y el material del profe.
+El material del profe puede incluir:
 - `guion` (solo admin): bloques con tiempo, objetivo y pasos para dar la clase. El primero es la
   retroalimentación, que la vista admin completa con los datos de cada alumno o alumna.
-- `teoria` y `tips` de libreta, visibles para alumnos y alumnas desde `disponibleDesde`.
-- `banco` para un **reto interactivo en vivo**, con las mismas reglas que una actividad (2 intentos, cuenta
-  el mejor).
+- `presentacion` (solo admin): las diapositivas para proyectar.
+- `teoria` y `tips` de libreta, que el profe comparte en pantalla.
 
-El `guion` NO SHALL enviarse a quien no sea admin. Semana 1: presente simple negativo y en pregunta, WH
-questions, adjetivos (van antes del sustantivo) y adjetivos posesivos (my, your, his, her, its, our,
-their).
+El Meet NO SHALL traer reto ni preguntas. Su actividad para alumnos y alumnas SHALL ser **leer el material**:
+desde `disponibleDesde`, el Meet SHALL mostrar «📖 Material», que abre la teoría y los tips de la clase, sin
+preguntas, junto al enlace. El `guion` y la `presentacion` NO SHALL enviarse a quien no sea admin.
 
-#### Scenario: Guion solo para admin
-- **WHEN** una alumna abre la clase del domingo
-- **THEN** recibe la teoría, los tips y el reto, pero no el `guion`
+#### Scenario: Material para leer
+- **WHEN** una alumna toca «📖 Material» en la clase del domingo
+- **THEN** lee la teoría y los tips de la clase, sin preguntas, y no recibe el `guion` ni la `presentacion`
 
-#### Scenario: Reto en vivo
-- **WHEN** el alumno resuelve el reto durante el Meet
-- **THEN** ve su calificación inmediata y el admin ve su resultado al recargar
+#### Scenario: Antes de su fecha
+- **WHEN** una alumna pide el material antes de `disponibleDesde`
+- **THEN** recibe 403 `no_disponible`
+
+#### Scenario: Sin reto en vivo
+- **WHEN** el profe publica un Meet sin `banco`
+- **THEN** no hay «Reto en vivo» para alumnos y alumnas, y el Meet no cuenta en sus calificaciones
 
 ### Requirement: Semanas publicadas por adelantado
 Una semana subida antes de su lunes SHALL permanecer invisible: sus elementos (incluido el examen) no
