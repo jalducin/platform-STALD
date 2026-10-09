@@ -18,6 +18,7 @@
 | `server/store.ts` | `GitHubStore` (API de contenidos, escritura con `sha`) y `MemoryStore` (pruebas) |
 | `server/rows.ts` | Extracción de filas de Notion (Secundaria) y filtrado por correo |
 | `server/auth.ts` | Sesión con Supabase Auth: `quienEs`, `GET /config` y `POST /auth/enlace` (cambio `plataforma-login`) |
+| `server/contrasena.ts` | Entrada con contraseña: `POST /auth/preparar`, `/auth/contrasena` y `/auth/restablecer` (cambio `acceso-con-contrasena`) |
 | `server/resumen.ts` | `GET /ingles/resumen`: indicadores y mapa de calor del tablero del profe (cambio `ingles-pro`) |
 | `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
 | `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes>` (código 1 si hay errores) |
@@ -43,7 +44,11 @@ falso de sesión), `PORT` y `PERMITIR_HOY=1` (permite `?hoy=`).
 | Ruta | Método | Respuesta |
 |---|---|---|
 | `/config` | GET (sin sesión) | `{ supabaseUrl, publishableKey }`; con `ROWS_FIXTURE`, `{ prueba: true }`; sin variables, 503 `sin_config` |
-| `/auth/enlace` | POST `{ email, destino? }` | Solo admin **con token**: `{ email, enlace, codigo }` (Admin API `generate_link`, tipo `magiclink`, `redirect_to` = `SITIO_URL` o el portal; con `destino: "juegos"`, `<sitio>/juegos.html`). 401 sin token, 403 `solo_admin`, 400 `correo_invalido`, 404 `sin_cuenta`, 503 `auth_no_disponible` |
+| `/auth/preparar` | POST `{ email, password }` (sin sesión) | Si es la contraseña inicial de esa persona («sensei» el admin, «clase» alumnos y alumnas de Inglés o Secundaria) y su cuenta no tiene `app_metadata.contrasena_propia`, crea la cuenta de Auth (correo confirmado) o le pone la inicial: `{ listo: true }`. 401 `credenciales`, 400 `correo_invalido`, 429 tras 10 intentos por correo en 10 min, 503 `auth_no_disponible`. En Auth la contraseña es `stald·` + lo que se escribe |
+| `/auth/contrasena` | POST `{ nueva }` (con token) | 6 a 60 caracteres, distinta de las iniciales; la pone y marca `contrasena_propia`. 400 `contrasena_invalida`, 401 sin token |
+| `/auth/restablecer` | POST `{ email }` | Solo admin **con token**: contraseña aleatoria y `contrasena_propia = false` (vuelve a entrar con la inicial). `{ ok, email, sinCuenta? }`; 403 `solo_admin` |
+| `/auth/olvide` | POST `{ email }` (sin sesión) | «¿Olvidaste tu contraseña?»: manda un enlace de acceso por correo (Supabase `/auth/v1/otp`, `redirect_to` = `SITIO_URL`) solo a correos de las clases y del admin; máximo 3 por correo cada hora. `{ enviado: true }`; 404 `no_es_de_clase`, 429 `demasiados_intentos` o `limite_correo` (correo de Supabase agotado), 503 `auth_no_disponible` |
+| `/auth/enlace` | POST `{ email, destino? }` | (Sin uso en las páginas desde `acceso-con-contrasena`.) Solo admin **con token**: `{ email, enlace, codigo }` (Admin API `generate_link`, tipo `magiclink`, `redirect_to` = `SITIO_URL` o el portal; con `destino: "juegos"`, `<sitio>/juegos.html`). 401 sin token, 403 `solo_admin`, 400 `correo_invalido`, 404 `sin_cuenta`, 503 `auth_no_disponible` |
 
 Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth.ts --correos <archivo> [--prueba]`
 (Admin API `POST /auth/v1/admin/users` con `email_confirm: true`; el archivo de correos no va al repo).

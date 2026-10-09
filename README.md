@@ -30,10 +30,12 @@ Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:f
 
 ## Inicio de sesión (Supabase Auth)
 
-Se entra con un **enlace mágico** al correo (o su código de 6 dígitos), sin contraseña; la sesión dura semanas en
-el dispositivo y es la misma en portal, Inglés, Juegos y Secundaria (`comun/auth.js`). El servidor valida el token y
+Las clases entran con **correo y contraseña**, sin enlaces por correo. La contraseña inicial la da el profe y se pide
+cambiarla al entrar; si alguien la olvida, el profe la restablece desde el portal («🔑 Restablecer contraseña»).
+En Juegos, quien no es de las clases entra o se registra con su correo y su nick. La sesión dura semanas en el
+dispositivo y es la misma en portal, Inglés, Juegos y Secundaria (`comun/auth.js`). El servidor valida el token y
 toma el correo verificado. Hasta el 2026-10-12 se acepta todavía el correo sin sesión (salvo el admin, que siempre
-requiere sesión). El profe puede generar un «🔗 Enlace de acceso» desde el portal para mandarlo por WhatsApp.
+requiere sesión).
 Detalle en [docs/backend-standards.md](docs/backend-standards.md) y
 [docs/frontend-standards.md](docs/frontend-standards.md).
 

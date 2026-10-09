@@ -35,10 +35,9 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - si `StaldAuth.esSesionVencida(res, body)` (401 `inicia_sesion` o `sesion_invalida`), `StaldAuth.salir()` y la
     pantalla de entrada (`StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar })`, o la propia del
     portal), nunca un error crudo;
-  - el paso del código (el de `pintarEntrada` y el propio del portal, `#code-ayuda`) lleva
-    `StaldAuth.ayudaReenvio(el, correo)`: «¿No te llegó?» (spam o promociones, pedir otro, pedir el enlace al profe
-    por WhatsApp) y «📧 Reenviarme el enlace», que espera 60 s desde el último envío a ese correo
-    (`window.__REENVIO_SEGUNDOS` la acorta solo en pruebas E2E) y muestra el resultado o el error tal cual;
+  - se entra con correo y contraseña (`StaldAuth.entrarConContrasena`; cambio `acceso-con-contrasena`), sin
+    enlaces ni códigos por correo. Con la contraseña inicial se muestra `StaldAuth.pintarCambio` (obligatorio con
+    «sensei»; «Ahora no» con «clase»). Juegos pide correo y nick a quien no es de las clases (`/juegos/registro`);
   - 🚪 Cerrar sesión llama a `StaldAuth.salir()`.
   - supabase-js guarda la sesión en `localStorage` (clave `stald-auth`); en pruebas locales, `stald_sesion_prueba`.
 - `localStorage` guarda además el correo de antes: `stald_email` (portal), `ingles_email` y `secundaria_email`.

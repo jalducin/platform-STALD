@@ -24,14 +24,15 @@ context: |
       `cierre-tecnico`, fase 2): su identidad sale del registro `alumnos.json`.
   - Supabase Realtime: canal secreto por sala para las partidas multijugador (`server/realtime.ts`);
     sin las variables `SUPABASE_*` las salas usan sondeo.
-  - Supabase Auth: inicio de sesión con enlace mágico o código (`comun/auth.js`, `server/auth.ts`); el
+  - Supabase Auth: inicio de sesión con correo y contraseña (`comun/auth.js`, `server/auth.ts`,
+    `server/contrasena.ts`; cambio `acceso-con-contrasena`), sin depender del correo de Supabase; el
     servidor toma el correo de la sesión verificada. Hasta `LOGIN_TRANSICION_HASTA` (2026-10-12) se acepta
     `?email=` sin sesión, salvo para el admin.
 
   Arquitectura: navegador (GitHub Pages, sesión de Supabase Auth) → Deno Deploy (identidad con `quienEs`
   y reglas de acceso) → Postgres / repo de datos / Notion; el servidor publica el estado de las salas en
   Supabase Realtime. Páginas y rutas principales:
-  - index.html      → /perfil, /config, /auth/enlace (portal y «🔗 Enlace de acceso» del profe)
+  - index.html      → /perfil, /config, /auth/preparar, /auth/contrasena, /auth/restablecer (portal)
   - ingles.html     → /ingles/actividades, /ingles/alumnos, /ingles/grupos, /ingles/resumen,
                       /ingles/profe/actividades, /ingles/data (identidad del registro, solo lectura)
   - juegos.html     → /juegos/… (partidas, ranking, salas, avatar)
