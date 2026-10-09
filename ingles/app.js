@@ -132,6 +132,7 @@ function onClick(e) {
   }
   if (act === 'abrir-guion') { e.preventDefault(); openGuion(b.dataset.id); }
   if (act === 'abrir-material') { e.preventDefault(); openMaterial(b.dataset.id); }
+  if (act === 'ver-pendientes') { e.preventDefault(); openPendientes(); }
   if (act === 'presentar') { e.preventDefault(); openPresentacion(b.dataset.id); }
   if (act === 'volver') { e.preventDefault(); salirVista(); }
   if (act === 'dia') { e.preventDefault(); filtrarDia(b); }
