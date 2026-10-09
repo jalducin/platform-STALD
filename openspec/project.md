@@ -29,8 +29,8 @@ resolver actividades, consultar su avance y jugar.
 - Otros:
   - **Supabase Realtime**: canal secreto por sala para las partidas multijugador (`server/realtime.ts`). Sin las
     variables `SUPABASE_*`, las salas usan sondeo.
-  - **Supabase Auth**: inicio de sesión con enlace mágico o código de 6 dígitos (`comun/auth.js`,
-    `server/auth.ts`). El servidor toma el correo de la sesión verificada. Hasta el 2026-10-12
+  - **Supabase Auth**: inicio de sesión con correo y contraseña (`comun/auth.js`, `server/auth.ts`,
+    `server/contrasena.ts`). El servidor toma el correo de la sesión verificada. Hasta el 2026-10-12
     (`LOGIN_TRANSICION_HASTA`) acepta todavía `?email=` sin sesión, salvo para el admin.
   - **GitHub Pages** (hosting del frontend) y **GitHub Actions** (vigilancia de `/salud` cada 30 min, con aviso
     por correo mediante un issue).
@@ -39,7 +39,7 @@ resolver actividades, consultar su avance y jugar.
 
 ```
 Navegador (GitHub Pages, sesión de Supabase Auth)
-  ├─ index.html      ── /perfil, /config, /auth/enlace ───────────────┤  (portal)
+  ├─ index.html      ── /perfil, /config, /auth/preparar… ────────────┤  (portal)
   ├─ ingles.html     ── /ingles/actividades, /ingles/alumnos,          │
   │                     /ingles/grupos, /ingles/resumen,               │
   │                     /ingles/profe/actividades, /ingles/data ───────┤

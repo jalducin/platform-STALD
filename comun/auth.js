@@ -7,8 +7,10 @@
 //   StaldAuth.pedirJson(url, opts, { ttl })      // { ok, status, body }: en vuelo, caché por persona y reintentos de GET
 //   StaldAuth.limpiarCache()                     // vacía la caché de pedirJson (también al cerrar sesión o tras un envío)
 //   StaldAuth.esSesionVencida(res, body)         // true si el servidor respondió 401 de sesión
-//   StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar, pie })  // pie: HTML propio bajo el formulario
-//   StaldAuth.ayudaReenvio(el, correo)           // «¿No te llegó?» y botón para reenviar el enlace (espera de 60 s)
+//   StaldAuth.pintarEntrada(el, { titulo, texto, correo, aviso, alEntrar, pie })  // correo y contraseña; pie: HTML propio
+//   StaldAuth.entrarConContrasena(correo, pwd)   // → { email, inicial }; prepara la cuenta si es la contraseña inicial
+//   StaldAuth.pintarCambio(el, { obligatorio, alListo })  // pide la contraseña nueva (openspec: acceso-con-contrasena)
+//   StaldAuth.cambiarContrasena(nueva)           // POST /auth/contrasena con la sesión
 //   StaldAuth.entrarConToken(tokenHash, correo)    // sesión con la llave de un solo uso del servidor (registro de Juegos)
 //   StaldAuth.salir()                            // cierra la sesión y borra las claves viejas de correo y las de Juegos
 // La sesión se comparte entre portal, Inglés, Juegos y Secundaria (mismo origen, localStorage).
@@ -19,7 +21,9 @@
   var CLAVE_PRUEBA = 'stald_sesion_prueba'; // solo si el servidor local responde /config { prueba: true }
   var CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  var estado = { listo: null, cliente: null, prueba: false, sesion: null, error: null, errorEnlace: null, enviadoEn: {} };
+  var estado = { listo: null, api: '', cliente: null, prueba: false, sesion: null, error: null, errorEnlace: null };
+  var PREFIJO = 'stald·'; // la contraseña en Auth es PREFIJO + lo que se escribe (mínimo de 6 de Supabase)
+  var INICIALES = { clase: 1, sensei: 1 };
 
   function leer(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function escribir(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } }
@@ -49,6 +53,7 @@
 
   function iniciar(apiBase) {
     if (estado.listo) return estado.listo;
+    estado.api = String(apiBase).replace(/\/$/, '');
     revisarErrorEnlace();
     // Sin no-store: el servidor deja guardar /config 10 min (openspec: cache-estabilidad).
     estado.listo = fetch(String(apiBase).replace(/\/$/, '') + '/config')
@@ -162,16 +167,60 @@
     return !!res && res.status === 401 && (!body || !body.error || body.error === 'inicia_sesion' || body.error === 'sesion_invalida');
   }
 
-  function enviarEnlace(correo) {
+  // Los celulares ponen mayúscula inicial: «Clase» cuenta como la contraseña inicial.
+  function normalizar(p) { var t = String(p || '').trim().toLowerCase(); return INICIALES[t] ? t : String(p || ''); }
+  var ERROR_CREDENCIALES = 'Correo o contraseña incorrectos. Si la olvidaste, pídele a tu profe que la restablezca.';
+
+  // Entrada con contraseña (openspec: acceso-con-contrasena). Si Supabase la rechaza, pide al servidor preparar la
+  // cuenta (solo acepta la contraseña inicial de quien aún no tiene una propia) y lo intenta otra vez.
+  // Devuelve { email, inicial }; inicial es 'clase', 'sensei' o null, para pedir el cambio.
+  function entrarConContrasena(correo, pwd) {
     correo = String(correo || '').trim().toLowerCase();
+    var p = normalizar(pwd);
     if (!CORREO.test(correo)) return Promise.reject(new Error('Escribe un correo válido, por ejemplo tucorreo@gmail.com.'));
-    if (estado.prueba) { estado.enviadoEn[correo] = Date.now(); return Promise.resolve(); }
+    if (!p) return Promise.reject(new Error('Escribe tu contraseña.'));
+    var inicial = INICIALES[p] ? p : null;
+    if (estado.prueba) {
+      estado.sesion = { email: correo, token: 'prueba:' + correo };
+      escribir(CLAVE_PRUEBA, JSON.stringify(estado.sesion));
+      limpiarCache();
+      return Promise.resolve({ email: correo, inicial: inicial });
+    }
     if (!estado.cliente) return Promise.reject(new Error('El inicio de sesión no está disponible (' + (estado.error || 'sin configuración') + ').'));
-    var destino = location.origin + location.pathname + location.search;
-    return estado.cliente.auth.signInWithOtp({ email: correo, options: { emailRedirectTo: destino, shouldCreateUser: true } }).then(function (r) {
-      if (r.error) throw new Error(/rate|seconds/i.test(r.error.message) ? 'Ya te mandamos un enlace hace poco. Espera un minuto y vuelve a intentar.' : r.error.message);
-      estado.enviadoEn[correo] = Date.now();
+    function intentar() {
+      return estado.cliente.auth.signInWithPassword({ email: correo, password: PREFIJO + p }).then(function (r) {
+        if (r.error) return null;
+        var s = r.data && r.data.session;
+        estado.sesion = s ? { email: s.user && s.user.email, token: s.access_token } : null;
+        limpiarCache();
+        var propia = s && s.user && s.user.app_metadata && s.user.app_metadata.contrasena_propia === true;
+        return { email: email(), inicial: propia ? null : inicial };
+      });
+    }
+    return intentar().then(function (ok) {
+      if (ok) return ok;
+      return fetch(estado.api + '/auth/preparar', { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ email: correo, password: p }) })
+        .then(function (res) {
+          if (res.status === 429) throw new Error('Demasiados intentos con ese correo. Espera 10 minutos o pídele a tu profe que restablezca tu contraseña.');
+          if (res.status === 401 || res.status === 400) throw new Error(ERROR_CREDENCIALES);
+          if (!res.ok) throw new Error('El inicio de sesión no respondió. Intenta de nuevo en un momento.');
+          return intentar();
+        }, function () { throw new Error('Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.'); })
+        .then(function (r) { if (!r) throw new Error(ERROR_CREDENCIALES); return r; });
     });
+  }
+
+  function cambiarContrasena(nueva) {
+    nueva = String(nueva || '');
+    if (nueva.length < 6) return Promise.reject(new Error('Usa al menos 6 caracteres.'));
+    if (INICIALES[nueva.trim().toLowerCase()]) return Promise.reject(new Error('Elige una contraseña distinta de la inicial.'));
+    return fetchConSesion(estado.api + '/auth/contrasena', { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ nueva: nueva }) })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (j) {
+          if (res.ok) return true;
+          throw new Error(j.error === 'contrasena_invalida' ? 'Usa de 6 a 60 caracteres, distinta de la inicial.' : 'No pude cambiar tu contraseña (' + (j.error || res.status) + '). Intenta de nuevo.');
+        });
+      });
   }
 
   // Llave de sesión de un solo uso que da el servidor (registro de Juegos sin validar el correo, openspec:
@@ -192,24 +241,6 @@
     });
   }
 
-  function verificarCodigo(correo, codigo) {
-    correo = String(correo || '').trim().toLowerCase();
-    codigo = String(codigo || '').replace(/\s/g, '');
-    if (!/^\d{6,8}$/.test(codigo)) return Promise.reject(new Error('Escribe el código de números que viene en tu correo.'));
-    if (estado.prueba) {
-      estado.sesion = { email: correo, token: 'prueba:' + correo };
-      escribir(CLAVE_PRUEBA, JSON.stringify(estado.sesion));
-      return Promise.resolve(correo);
-    }
-    if (!estado.cliente) return Promise.reject(new Error('El inicio de sesión no está disponible.'));
-    return estado.cliente.auth.verifyOtp({ email: correo, token: codigo, type: 'email' }).then(function (r) {
-      if (r.error) throw new Error(/expired|invalid/i.test(r.error.message) ? 'El código no es válido o ya venció. Pide otro enlace.' : r.error.message);
-      var s = r.data && r.data.session;
-      estado.sesion = s ? { email: s.user && s.user.email, token: s.access_token } : null;
-      return email();
-    });
-  }
-
   // Cerrar sesión también olvida la partida que Juegos guardó para recargar (openspec: juegos-recarga).
   var CLAVES_JUEGOS = ['juegos_sala_activa', 'juegos_partida_individual'];
   function salir() {
@@ -226,102 +257,73 @@
     '.stald-auth h2{margin:0 0 6px;font-size:1.3rem}.stald-auth p{margin:0 0 14px;color:var(--muted,#6b6880);font-size:.92rem}' +
     '.stald-auth label{display:block;font-size:.82rem;font-weight:700;margin:0 0 6px}' +
     '.stald-auth input{width:100%;box-sizing:border-box;font:inherit;font-size:1rem;padding:12px 13px;border-radius:12px;border:1.5px solid var(--border,#d4d2e0);background:var(--bg,#fff);color:inherit}' +
-    '.stald-auth input.codigo{letter-spacing:.4em;text-align:center;font-size:1.3rem}' +
     '.stald-auth button{display:block;width:100%;margin-top:12px;font:inherit;font-weight:700;font-size:1rem;padding:12px 14px;border-radius:12px;border:none;cursor:pointer;color:#fff;background:var(--accent,#4f46e5)}' +
     '.stald-auth button.sec{background:none;color:var(--muted,#6b6880);font-weight:600;font-size:.88rem;padding:8px}' +
     '.stald-auth button:disabled{opacity:.6;cursor:default}' +
     '.stald-auth .msg{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:.88rem;background:#fef2f2;color:#991b1b}' +
-    '.stald-auth .ok{background:#ecfdf5;color:#065f46}' +
-    '.stald-ayuda{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border,#d4d2e0);font-size:.86rem;color:var(--muted,#6b6880)}' +
-    '.stald-ayuda p{margin:0 0 8px;font-size:.86rem}' +
-    '.stald-ayuda button.stald-ayuda-btn{display:block;width:100%;margin-top:4px;font:inherit;font-weight:700;font-size:.92rem;padding:10px 14px;border-radius:12px;cursor:pointer;background:none;color:var(--accent,#4f46e5);border:1.5px solid currentColor}' +
-    '.stald-ayuda button.stald-ayuda-btn:disabled{opacity:.6;cursor:default}' +
-    '.stald-ayuda .stald-ayuda-msg{margin-top:8px;font-size:.84rem}.stald-ayuda .stald-ayuda-msg:empty{display:none}';
+    '.stald-auth .ok{background:#ecfdf5;color:#065f46}';
   function ponerCss() {
     if (document.getElementById('stald-auth-css')) return;
     var st = document.createElement('style'); st.id = 'stald-auth-css'; st.textContent = CSS; document.head.appendChild(st);
   }
 
-  // «¿No te llegó?» (openspec: examen-autoguardado): ayuda y botón para reenviar el enlace a `correo`. Tras cada
-  // envío (también el que acaba de ocurrir; se cuenta desde estado.enviadoEn, así que volver a pintar el paso no la
-  // reinicia) el botón espera 60 s; las pruebas la acortan con window.__REENVIO_SEGUNDOS.
-  var REENVIAR = '📧 Reenviarme el enlace';
-  function ayudaReenvio(el, correo) {
-    ponerCss();
-    correo = String(correo || '').trim().toLowerCase();
-    el.classList.add('stald-ayuda');
-    el.innerHTML = '<p>¿No te llegó? Revisa tu carpeta de spam o promociones. Si en un par de minutos no aparece, pide uno nuevo. ' +
-      'También puedes pedirle a tu profe tu enlace de acceso por WhatsApp.</p>' +
-      '<button type="button" class="stald-ayuda-btn" data-stald-reenviar>' + REENVIAR + '</button>' +
-      '<div class="stald-ayuda-msg" data-stald-reenvio-msg role="status" aria-live="polite"></div>';
-    var b = el.querySelector('[data-stald-reenviar]'), msg = el.querySelector('[data-stald-reenvio-msg]');
-    var reloj = null;
-    function esperar() {
-      var espera = (Number(window.__REENVIO_SEGUNDOS) > 0 ? Number(window.__REENVIO_SEGUNDOS) : 60) * 1000;
-      var desde = estado.enviadoEn[correo] || 0;
-      clearInterval(reloj);
-      function pintar() {
-        if (!b.isConnected) { clearInterval(reloj); return; } // la pantalla ya cambió
-        var faltan = Math.ceil((desde + espera - Date.now()) / 1000);
-        if (faltan <= 0) { clearInterval(reloj); b.disabled = false; b.textContent = REENVIAR; return; }
-        b.disabled = true; b.textContent = 'Puedes pedir otro en ' + faltan + ' s';
-      }
-      pintar();
-      reloj = setInterval(pintar, 500);
-    }
-    b.addEventListener('click', function () {
-      b.disabled = true; b.textContent = 'Enviando…'; msg.textContent = ''; msg.className = 'stald-ayuda-msg';
-      enviarEnlace(correo).then(function () {
-        msg.textContent = '✔ Te mandamos otro enlace a ' + correo + '.';
-        esperar();
-      }, function (err) {
-        msg.textContent = err.message; msg.className = 'stald-ayuda-msg msg';
-        b.disabled = false; b.textContent = REENVIAR;
-      });
-    });
-    esperar();
-  }
-
-  // Pinta en `el` el paso 1 (correo) y luego el paso 2 (código). `alEntrar(correo)` se llama al tener sesión.
+  // Pinta en el la entrada con correo y contraseña. alEntrar(correo) se llama al tener sesión; si entró con la
+  // contraseña inicial, antes pide la nueva (obligatoria con «sensei»).
   function pintarEntrada(el, op) {
     op = op || {};
     ponerCss();
     var aviso = op.aviso || estado.errorEnlace || (estado.error ? 'No pude preparar el inicio de sesión (' + estado.error + '). Revisa tu internet.' : '');
     estado.errorEnlace = null;
-    function paso1(msg) {
-      el.innerHTML = '<div class="stald-auth" data-stald-auth="correo"><h2>' + esc(op.titulo || '🔐 Entra a STALD') + '</h2>' +
-        '<p>' + esc(op.texto || 'Te mandamos un enlace a tu correo para entrar, sin contraseña.') + '</p>' +
+    function paso(msg) {
+      el.innerHTML = '<div class="stald-auth" data-stald-auth="contrasena"><h2>' + esc(op.titulo || '🔐 Entra a STALD') + '</h2>' +
+        '<p>' + esc(op.texto || 'Entra con tu correo y tu contraseña. Si es tu primera vez, usa la que te dio tu profe.') + '</p>' +
         '<form novalidate><label for="stald-auth-correo">Tu correo</label>' +
-        '<input id="stald-auth-correo" type="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com" value="' + esc(op.correo || '') + '">' +
-        '<button type="submit" id="stald-auth-enviar">📧 Enviarme el enlace</button></form>' +
+        '<input id="stald-auth-correo" type="email" inputmode="email" autocomplete="username" autocapitalize="none" placeholder="tucorreo@gmail.com" value="' + esc(op.correo || '') + '">' +
+        '<label for="stald-auth-clave" style="margin-top:10px">Tu contraseña</label>' +
+        '<input id="stald-auth-clave" type="password" autocomplete="current-password" autocapitalize="none">' +
+        '<button type="submit" id="stald-auth-entrar">Entrar →</button></form>' +
         (msg ? '<div class="msg" role="alert">' + esc(msg) + '</div>' : '') + '</div>' + (op.pie || '');
       el.querySelector('form').addEventListener('submit', function (e) {
         e.preventDefault();
         var correo = el.querySelector('#stald-auth-correo').value.trim().toLowerCase();
-        var b = el.querySelector('#stald-auth-enviar'); b.disabled = true; b.textContent = 'Enviando…';
-        enviarEnlace(correo).then(function () { paso2(correo); }, function (err) { op.correo = correo; paso1(err.message); });
+        var b = el.querySelector('#stald-auth-entrar'); b.disabled = true; b.textContent = 'Entrando…';
+        entrarConContrasena(correo, el.querySelector('#stald-auth-clave').value).then(function (r) {
+          var listo = function () { if (op.alEntrar) op.alEntrar(r.email); };
+          if (r.inicial) pintarCambio(el, { obligatorio: r.inicial === 'sensei', alListo: listo }); else listo();
+        }, function (err) { op.correo = correo; paso(err.message); });
       });
+      var i = el.querySelector(op.correo ? '#stald-auth-clave' : '#stald-auth-correo'); if (i) i.focus();
     }
-    function paso2(correo, msg) {
-      el.innerHTML = '<div class="stald-auth" data-stald-auth="codigo"><h2>Revisa tu correo ✉️</h2>' +
-        '<p>Te mandamos un enlace a <b>' + esc(correo) + '</b>. Tócalo para entrar. Si lo abres en otro aparato, escribe aquí el código de números que viene en el mismo correo.</p>' +
-        '<form novalidate><label for="stald-auth-codigo">Código</label>' +
-        '<input id="stald-auth-codigo" class="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Código">' +
-        '<button type="submit" id="stald-auth-verificar">Entrar →</button></form>' +
-        '<button type="button" class="sec" data-stald-auth-otro>Usar otro correo</button>' +
-        (msg ? '<div class="msg" role="alert">' + esc(msg) + '</div>' : '') + '<div data-stald-auth-ayuda></div></div>';
-      ayudaReenvio(el.querySelector('[data-stald-auth-ayuda]'), correo);
-      el.querySelector('[data-stald-auth-otro]').addEventListener('click', function () { op.correo = correo; paso1(); });
+    paso(aviso);
+  }
+
+  // Pide la contraseña nueva. obligatorio: sin «Ahora no» (el profe con «sensei»). alListo() al terminar u omitir.
+  // texto y omitir cambian el mensaje y el botón de omitir (p. ej. «Cancelar» desde el portal).
+  function pintarCambio(el, op) {
+    op = op || {};
+    ponerCss();
+    function paso(msg) {
+      el.innerHTML = '<div class="stald-auth" data-stald-auth="cambio"><h2>🔑 Cambia tu contraseña</h2>' +
+        '<p>' + esc(op.texto || (op.obligatorio ? 'Por seguridad, pon una contraseña nueva para seguir.' : 'Estás usando la contraseña inicial. Pon una tuya para que nadie más entre a tu cuenta.')) + '</p>' +
+        '<form novalidate><label for="stald-auth-nueva">Contraseña nueva (mínimo 6)</label>' +
+        '<input id="stald-auth-nueva" type="password" autocomplete="new-password" autocapitalize="none">' +
+        '<label for="stald-auth-nueva2" style="margin-top:10px">Repítela</label>' +
+        '<input id="stald-auth-nueva2" type="password" autocomplete="new-password" autocapitalize="none">' +
+        '<button type="submit" id="stald-auth-guardar">Guardar</button></form>' +
+        (op.obligatorio ? '' : '<button type="button" class="sec" data-stald-auth-despues>' + esc(op.omitir || 'Ahora no') + '</button>') +
+        (msg ? '<div class="msg" role="alert">' + esc(msg) + '</div>' : '') + '</div>';
+      var despues = el.querySelector('[data-stald-auth-despues]');
+      if (despues) despues.addEventListener('click', function () { if (op.alListo) op.alListo(); });
       el.querySelector('form').addEventListener('submit', function (e) {
         e.preventDefault();
-        var b = el.querySelector('#stald-auth-verificar'); b.disabled = true;
-        verificarCodigo(correo, el.querySelector('#stald-auth-codigo').value).then(function (c) {
-          if (op.alEntrar) op.alEntrar(c);
-        }, function (err) { paso2(correo, err.message); });
+        var a = el.querySelector('#stald-auth-nueva').value, b2 = el.querySelector('#stald-auth-nueva2').value;
+        if (a !== b2) return paso('Las dos contraseñas no son iguales.');
+        var b = el.querySelector('#stald-auth-guardar'); b.disabled = true; b.textContent = 'Guardando…';
+        cambiarContrasena(a).then(function () { if (op.alListo) op.alListo(); }, function (err) { paso(err.message); });
       });
-      var i = el.querySelector('#stald-auth-codigo'); if (i) i.focus();
+      var i = el.querySelector('#stald-auth-nueva'); if (i) i.focus();
     }
-    paso1(aviso);
+    paso('');
   }
 
   window.StaldAuth = {
@@ -333,11 +335,11 @@
     pedirJson: pedirJson,
     limpiarCache: limpiarCache,
     esSesionVencida: esSesionVencida,
-    enviarEnlace: enviarEnlace,
-    verificarCodigo: verificarCodigo,
+    entrarConContrasena: entrarConContrasena,
+    cambiarContrasena: cambiarContrasena,
     salir: salir,
     pintarEntrada: pintarEntrada,
-    ayudaReenvio: ayudaReenvio,
+    pintarCambio: pintarCambio,
     entrarConToken: entrarConToken,
     modoPrueba: function () { return estado.prueba; },
     disponible: function () { return estado.prueba || !!estado.cliente; },

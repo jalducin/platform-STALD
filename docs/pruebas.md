@@ -99,8 +99,9 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   (`sec-e2e` para `examen-secundaria` y `sec-e2e-guardado` para `autoguardado`). Cada prueba usa el suyo para no
   gastarle las oportunidades a otra en la misma fase. También trae una clase por Meet anterior (`meet-2026-09-27`,
   semana `2026-09-21`, exclusiva de `nadie-e2e`) para la prueba `presentar`; solo la ve el admin.
-- Relojes acortados solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos) y `window.__REENVIO_SEGUNDOS` (espera del
-  botón «Reenviarme el enlace»), con `addInitScript`.
+- Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
+- Con el verificador falso local, cualquier contraseña no vacía abre la sesión; «clase» o «sensei» cuentan como la
+  inicial y piden cambiarla (cambio `acceso-con-contrasena`).
 - Solo correos `@example.com`. El usuario admin de prueba es `admin@example.com`. Nada de datos reales.
 - Para correr una prueba suelta sin `correr.sh`, levanta tú los servidores y exporta `BASE`, `API`, `DATA` y,
   si quieres, `CHROME`: `cd tests/e2e && node e2e-poker.js`.

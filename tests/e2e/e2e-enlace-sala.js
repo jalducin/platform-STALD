@@ -21,12 +21,9 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
   ok('Compartir: comparte o copia el enlace', tras.includes('copiado') ? clip.includes('?sala=' + codigo) : true, tras + ' | ' + clip.slice(0, 80));
   // Invitada nueva sin sesión abre el enlace
   const g = await abrirPagina(b, { out, etiqueta: 'invitada' });
-  await g.goto(enlace); await g.waitForSelector('[data-stald-auth]');
-  ok('enlace sin sesión: avisa la invitación', (await g.textContent('main')).includes('Te invitaron a la partida ' + codigo));
-  await g.fill('#stald-auth-correo', 'amiga.sofy@example.com'); await g.click('#stald-auth-enviar'); await g.waitForSelector('#stald-auth-codigo'); await g.fill('#stald-auth-codigo', '123456'); await g.click('#stald-auth-verificar');
-  await g.waitForSelector('#f-invitado', { timeout: 30000 });
-  ok('registro de invitada menciona la partida', (await g.textContent('main')).includes('en la partida ' + codigo));
-  await g.fill('#apodo', 'Amiga'); await g.check('#acepto'); await g.click('#f-invitado button[type=submit]');
+  await g.goto(enlace); await g.waitForSelector('#f-entrada');
+  ok('enlace sin sesión: avisa la invitación y pide correo y nick', (await g.textContent('main')).includes('Te invitaron a la partida ' + codigo) && await g.isVisible('#ent-nick'));
+  await g.fill('#ent-correo', 'amiga.sofy' + Date.now() + '@example.com'); await g.fill('#ent-nick', 'Amiga'); await g.check('#ent-acepto'); await g.click('#reg-entrar');
   await g.waitForSelector('#p-body .rank li', { timeout: 30000 }).catch(() => {});
   const lobby = (await g.textContent('#p-body').catch(() => '')).replace(/\s+/g, ' ');
   ok('invitada cae directo en la sala de espera', lobby.includes(codigo) && lobby.includes('Marisol') && lobby.includes('Amiga'), lobby.slice(0, 160));

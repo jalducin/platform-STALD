@@ -127,19 +127,12 @@
       <p class="lead">Tus clases, tareas y juegos en un solo lugar.</p>
       <form id="login-form" novalidate>
         <label for="email">Tu correo</label>
-        <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com" required>
-        <button class="btn" id="login-btn" type="submit">📧 Enviarme el enlace</button>
+        <input id="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" placeholder="tucorreo@gmail.com" required>
+        <label for="password" style="margin-top:10px">Tu contraseña</label>
+        <input id="password" type="password" autocomplete="current-password" autocapitalize="none" required>
+        <button class="btn" id="login-btn" type="submit">Entrar →</button>
       </form>
-      <p class="hint" id="login-hint">Te mandamos un enlace a tu correo para entrar, sin contraseña. Usa el mismo correo con el que te registraron en tus clases.</p>
-      <form id="code-form" novalidate hidden>
-        <div class="ok-msg" id="code-sent">Revisa tu correo ✉️</div>
-        <p class="hint">Toca el enlace del correo para entrar. Si lo abres en otro aparato, escribe aquí el código de números que viene en el mismo correo.</p>
-        <label for="code">Código</label>
-        <input id="code" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Código">
-        <button class="btn" id="code-btn" type="submit">Entrar →</button>
-        <button class="link-btn" id="code-back" type="button">Usar otro correo</button>
-        <div id="code-ayuda"></div> <!-- «¿No te llegó?» y reenvío (comun/auth.js, openspec: examen-autoguardado) -->
-      </form>
+      <p class="hint" id="login-hint">Entra con el correo con el que te registraron en tus clases. Si es tu primera vez, usa la contraseña que te dio tu profe. ¿La olvidaste? Pídele a tu profe que la restablezca.</p>
       <div class="alert" id="login-error" role="alert" hidden></div>
       <div class="guest" id="guest" hidden>
         <div class="guest-t">🎮 Ese correo no tiene clases registradas</div>
@@ -148,10 +141,12 @@
       </div>
       <div class="guest" id="juegos-cta">
         <div class="guest-t">🎮 ¿Solo vienes a jugar?</div>
-        <p class="hint" style="margin:4px 0 10px">Crea tu cuenta de Juegos con tu correo, sin contraseña y sin estar en las clases.</p>
+        <p class="hint" style="margin:4px 0 10px">Entra o crea tu cuenta de Juegos con tu correo y tu nick, sin contraseña y sin estar en las clases.</p>
         <button class="btn ghost-btn" id="juegos-cta-btn" type="button">Crea tu cuenta de Juegos →</button>
       </div>
     </section>
+
+    <section id="cambio" hidden></section> <!-- cambio de contraseña (comun/auth.js pintarCambio) -->
 
     <section id="loading" class="card loading" hidden>
       <div class="spinner" aria-hidden="true"></div>
@@ -170,21 +165,22 @@
       <nav class="tiles" id="tiles" aria-label="Espacios"></nav>
       <div class="notice" id="secure-notice" hidden>
         <b>🔒 Activa tu acceso seguro</b>
-        Muy pronto se entrará solo con un enlace a tu correo. Actívalo ahora: te lo mandamos y lo tocas.
-        <button class="btn" id="secure-btn" type="button">📧 Mandarme el enlace</button>
+        Ahora se entra con tu correo y una contraseña. Si es tu primera vez, usa la que te dio tu profe.
+        <button class="btn" id="secure-btn" type="button">🔐 Entrar con contraseña</button>
       </div>
       <section class="card admin-box" id="admin-link" hidden aria-labelledby="admin-link-t">
-        <h2 id="admin-link-t">🔗 Enlace de acceso</h2>
-        <p class="hint" style="margin:0 0 10px">Genera un enlace de un solo uso para alguien ya registrado y mándaselo por WhatsApp. No se envía correo.</p>
+        <h2 id="admin-link-t">🔑 Restablecer contraseña</h2>
+        <p class="hint" style="margin:0 0 10px">Si alguien olvidó su contraseña, restablécela: vuelve a entrar con la inicial («clase» para alumnos y alumnas) y se le pide una nueva. No se envía correo.</p>
         <form id="admin-link-form" novalidate>
           <label for="admin-link-email">Correo de la persona</label>
-          <input id="admin-link-email" type="email" inputmode="email" placeholder="alumna@gmail.com">
-          <button class="btn" id="admin-link-btn" type="submit">🔗 Generar enlace</button>
+          <input id="admin-link-email" type="email" inputmode="email" autocapitalize="none" placeholder="alumna@gmail.com">
+          <button class="btn" id="admin-link-btn" type="submit">🔑 Restablecer</button>
         </form>
         <div id="admin-link-out"></div>
       </section>
       <div class="foot">
         <span class="who" id="who"></span>
+        <button class="link-btn" id="cambiar-btn" type="button">🔑 Cambiar contraseña</button>
         <button class="link-btn" id="logout" type="button">🚪 Cerrar sesión</button>
       </div>
     </section>
@@ -193,7 +189,7 @@
   <footer>STALD · aprender también puede ser divertido</footer>
 </div>
 
-<script src="comun/auth.js?v=5"></script>
+<script src="comun/auth.js?v=6"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` permite probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -206,7 +202,7 @@
   const conCorreo = (ruta, email) => viejo ? ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(email) : ruta;
 
   const $ = (id) => document.getElementById(id);
-  const show = (id) => ['login', 'loading', 'home'].forEach(s => { $(s).hidden = s !== id; });
+  const show = (id) => ['login', 'cambio', 'loading', 'home'].forEach(s => { $(s).hidden = s !== id; });
 
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -262,20 +258,19 @@
     show('login');
   }
 
-  // Pantalla de entrada: paso del correo (enlace) o del código.
+  // Pantalla de entrada: correo y contraseña (openspec: acceso-con-contrasena).
   function pedirEntrada(msg, correo) {
-    $('login-form').hidden = false; $('login-hint').hidden = false; $('code-form').hidden = true;
-    $('login-btn').disabled = false;
+    $('login-form').hidden = false; $('login-hint').hidden = false;
+    $('login-btn').disabled = false; $('login-btn').textContent = 'Entrar →';
+    $('password').value = '';
     if (correo) $('email').value = correo;
     $('guest').hidden = true; $('juegos-cta').hidden = false;
     if (msg) error(msg); else { $('login-error').hidden = true; show('login'); }
   }
-  function pasoCodigo(correo) {
-    $('login-form').hidden = true; $('login-hint').hidden = true; $('code-form').hidden = false;
-    $('code-sent').textContent = 'Revisa tu correo ✉️ Te mandamos un enlace a ' + correo + '.';
-    $('code').value = ''; $('code-btn').disabled = false; $('login-error').hidden = true; $('guest').hidden = true; $('juegos-cta').hidden = true;
-    StaldAuth.ayudaReenvio($('code-ayuda'), correo);
-    show('login'); $('code').focus();
+  // Contraseña nueva: obligatoria con la inicial del profe, opcional («Ahora no») para alumnos y alumnas.
+  function pedirCambio(obligatorio, alListo) {
+    StaldAuth.pintarCambio($('cambio'), { obligatorio, alListo });
+    show('cambio');
   }
 
   let pendiente = null; // correo desconocido que puede entrar como invitado
@@ -290,7 +285,7 @@
         const eraViejo = viejo;
         viejo = false;
         await StaldAuth.salir();
-        return pedirEntrada(eraViejo ? '🔒 Por seguridad, ahora entras con un enlace que te mandamos a tu correo.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.', email);
+        return pedirEntrada(eraViejo ? '🔒 Por seguridad, ahora entras con tu correo y tu contraseña.' : 'Tu sesión terminó. Vuelve a entrar con tu correo y tu contraseña.', email);
       }
       if (!res.ok) throw new Error(p.error || ('HTTP ' + res.status));
       if (!p.conocido) {
@@ -316,67 +311,59 @@
   $('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = $('email').value.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error('Escribe un correo válido, por ejemplo tucorreo@gmail.com.');
-    $('login-btn').disabled = true;
-    try { await StaldAuth.enviarEnlace(email); pasoCodigo(email); } catch (err) { $('login-btn').disabled = false; error(err.message); }
-  });
-
-  $('code-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    $('code-btn').disabled = true;
+    $('login-btn').disabled = true; $('login-btn').textContent = 'Entrando…';
     try {
-      const correo = await StaldAuth.verificarCodigo($('email').value.trim().toLowerCase(), $('code').value);
+      const r = await StaldAuth.entrarConContrasena(email, $('password').value);
       viejo = false;
-      entrar(correo);
+      if (r.inicial) return pedirCambio(r.inicial === 'sensei', () => entrar(r.email));
+      entrar(r.email);
     } catch (err) {
-      $('code-btn').disabled = false;
-      $('login-error').textContent = err.message; $('login-error').hidden = false;
+      $('login-btn').disabled = false; $('login-btn').textContent = 'Entrar →';
+      error(err.message);
     }
   });
-  $('code-back').addEventListener('click', () => pedirEntrada());
 
   // Invitado: Juegos pide su apodo y la aceptación del aviso (con su sesión).
   $('guest-btn').addEventListener('click', () => {
     if (!pendiente) return;
     location.href = conApi('juegos.html');
   });
-  // Cuenta de Juegos sin pasar por las clases: Juegos pide el correo, manda el enlace y luego el apodo.
+  // Cuenta de Juegos sin pasar por las clases: Juegos pide el nick y el correo.
   $('juegos-cta-btn').addEventListener('click', () => { location.href = conApi('juegos.html?registro=1'); });
 
-  // Aviso de transición: quien entró con el correo de antes activa su acceso seguro.
+  // Aviso de transición: quien entró con el correo de antes pasa a entrar con contraseña.
   $('secure-btn').addEventListener('click', async () => {
     const email = $('who').textContent;
-    $('secure-btn').disabled = true;
-    try { await StaldAuth.enviarEnlace(email); $('email').value = email; pasoCodigo(email); }
-    catch (err) { alert(err.message); }
-    finally { $('secure-btn').disabled = false; }
+    await StaldAuth.salir();
+    viejo = false;
+    pedirEntrada(null, email);
+    $('password').focus();
   });
 
-  // 🔗 Enlace de acceso (solo admin con sesión): POST /auth/enlace.
+  // 🔑 Restablecer contraseña (solo admin con sesión): POST /auth/restablecer.
   $('admin-link-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const out = $('admin-link-out');
     const email = $('admin-link-email').value.trim().toLowerCase();
     $('admin-link-btn').disabled = true;
-    out.innerHTML = '<p class="hint">Generando…</p>';
+    out.innerHTML = '<p class="hint">Restableciendo…</p>';
     try {
-      const res = await StaldAuth.fetchConSesion(API_BASE + '/auth/enlace', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) });
+      const res = await StaldAuth.fetchConSesion(API_BASE + '/auth/restablecer', { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ email }) });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const txt = { correo_invalido: 'Escribe un correo válido.', sin_cuenta: 'Ese correo aún no está dado de alta en el inicio de sesión (herramientas/alta-usuarios-auth.ts).', solo_admin: 'Solo el profe puede generar enlaces.', inicia_sesion: 'Vuelve a entrar con tu enlace para generar enlaces.', auth_no_disponible: 'El servicio de inicio de sesión no respondió. Intenta de nuevo.' }[j.error] || ('Error ' + (j.error || res.status));
+        const txt = { correo_invalido: 'Escribe un correo válido.', solo_admin: 'Solo el profe puede restablecer contraseñas.', inicia_sesion: 'Vuelve a entrar para restablecer contraseñas.', auth_no_disponible: 'El servicio de inicio de sesión no respondió. Intenta de nuevo.' }[j.error] || ('Error ' + (j.error || res.status));
         out.innerHTML = '<div class="alert">' + escapeHtml(txt) + '</div>';
         return;
       }
-      const msg = 'Hola 👋 Este es tu enlace para entrar a STALD (es de un solo uso): ' + j.enlace + (j.codigo ? ' · Si te pide código: ' + j.codigo : '');
-      out.innerHTML = '<label for="admin-link-url" style="margin-top:12px">Enlace para ' + escapeHtml(j.email) + '</label>' +
-        '<input id="admin-link-url" readonly value="' + escapeHtml(j.enlace) + '">' +
-        (j.codigo ? '<p class="hint">Código: <b>' + escapeHtml(j.codigo) + '</b></p>' : '') +
-        '<div class="row"><button class="btn" type="button" id="admin-link-copy">📋 Copiar</button>' +
-        '<a class="btn" id="admin-link-wa" target="_blank" rel="noopener" href="' + escapeHtml('https://wa.me/?text=' + encodeURIComponent(msg)) + '">💬 WhatsApp</a></div>';
-      $('admin-link-copy').addEventListener('click', () => { if (navigator.clipboard) navigator.clipboard.writeText(j.enlace); $('admin-link-copy').textContent = '✅ Copiado'; });
+      out.innerHTML = '<div class="ok-msg" style="margin-top:12px">✅ Listo: ' + escapeHtml(j.email) + ' ya puede entrar con la contraseña inicial y se le pedirá una nueva.</div>';
     } catch (err) {
       out.innerHTML = '<div class="alert">' + escapeHtml('No pude conectarme (' + err.message + ').') + '</div>';
     } finally { $('admin-link-btn').disabled = false; }
+  });
+
+  $('cambiar-btn').addEventListener('click', () => {
+    StaldAuth.pintarCambio($('cambio'), { texto: 'Pon una contraseña nueva para tu cuenta.', omitir: 'Cancelar', alListo: () => entrar(StaldAuth.email()) });
+    show('cambio');
   });
 
   $('logout').addEventListener('click', async () => {
