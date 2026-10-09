@@ -131,6 +131,7 @@ function onClick(e) {
     if (it && it.mejor) showResult(it.mejor, { titulo: it.titulo + ' · mejor intento (' + it.intentosUsados + '/' + it.intentosMax + ')' });
   }
   if (act === 'abrir-guion') { e.preventDefault(); openGuion(b.dataset.id); }
+  if (act === 'abrir-material') { e.preventDefault(); openMaterial(b.dataset.id); }
   if (act === 'presentar') { e.preventDefault(); openPresentacion(b.dataset.id); }
   if (act === 'volver') { e.preventDefault(); salirVista(); }
   if (act === 'dia') { e.preventDefault(); filtrarDia(b); }

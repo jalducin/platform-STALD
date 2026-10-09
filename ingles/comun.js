@@ -205,7 +205,7 @@ function itemRow(it, estado, mejor, ultimoEnvio, intentosUsados) {
   return {
     _item: it.id, _tipo: it.tipo, _estado: estado, _meetUrl: it.meetUrl, source: 'item',
     name: icono(it.tipo) + ' ' + it.titulo,
-    label: tipoTexto(it.tipo) + (esMeet ? (it.hora ? ' · ' + it.hora : '') + (it.tieneReto ? ' · reto en vivo ' + (intentosUsados || 0) + '/' + it.intentosMax : '') : ' · ' + it.preguntas + ' ejercicios · ' + (intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)'),
+    label: tipoTexto(it.tipo) + (esMeet ? (it.hora ? ' · ' + it.hora : '') + (it.tieneReto ? ' · reto en vivo ' + (intentosUsados || 0) + '/' + it.intentosMax : it.tieneMaterial ? ' · material para leer' : '') : ' · ' + it.preguntas + ' ejercicios · ' + (intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)'),
     dificultad: it.nivel,
     fecha: it.fechaLimite,
     // Con un intento enviado ya está hecha: la corrección (2.º intento) es opcional.
@@ -231,7 +231,10 @@ function itemRowsAdmin(items, alumno) {
 function accionItem(it, estado) {
   if (it.tipo === 'meet') {
     const enlace = it.meetUrl ? '<a class="btn" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">Unirme</a>' : '<span class="pill wait">Enlace por WhatsApp</span>';
-    if (!it.tieneReto) return enlace;
+    // Sin reto (openspec: meet-sin-reto): su actividad es leer el material de la clase.
+    if (!it.tieneReto) return it.tieneMaterial && estado === 'disponible'
+      ? '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' + enlace + '<button class="btn ghost" data-action="abrir-material" data-id="' + escapeHtml(it.id) + '">📖 Material</button></span>'
+      : enlace;
     let reto = '';
     if (estado === 'completo') reto = '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver reto</button>';
     else if (estado === 'en-curso') reto = '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">Corregir reto</button>';

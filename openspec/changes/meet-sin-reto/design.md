@@ -12,7 +12,9 @@ Por eso quitar solo el banco dejaría al profe sin su material.
    - `meta`, `teoria`, `tips`, `guion` y `presentacion`;
    - `preguntas: []` y `vistaPrevia: true`.
 
-   Para alumnos y alumnas sigue el 400 `no_aplica`: no hay nada que resolver.
+   Para alumnos y alumnas, desde `disponibleDesde`, responde el material de lectura (`material: true`, `teoria`,
+   `tips`, sin `guion` ni `presentacion`); antes, 403 `no_disponible`. La página lo abre con «📖 Material»
+   (`openMaterial` en `ingles/presentacion.js`).
 3. **Botones del profe:**
    - «🎬 Presentar» y «📋 Guion» se muestran con `tieneReto || tieneMaterial`;
    - «👁 Reto» y «Probar el reto» solo se muestran con `tieneReto`.

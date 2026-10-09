@@ -121,7 +121,8 @@ Deno.test({ name: "clase del domingo: solo la clase y el material del profe, sin
   const store = await MemoryStore.fromDir(DATA_DIR!);
   const jesus = { isAdmin: false, alumno: "Jesus" }, admin = { isAdmin: true, alumno: null };
   const g = await call(store, "GET", "/meet-2026-10-04", jesus, undefined, "2026-10-04");
-  assertEquals([g.status, g.body.error, "guion" in g.body], [400, "no_aplica", false]);
+  assertEquals([g.status, g.body.material, g.body.preguntas.length, "guion" in g.body, "presentacion" in g.body], [200, true, 0, false, false]);
+  assert(g.body.teoria.length >= 5 && g.body.tips.length >= 4, "material de lectura");
   const ga = await call(store, "GET", "/meet-2026-10-04", admin, undefined, "2026-10-01");
   assert(Array.isArray(ga.body.guion) && ga.body.guion.length === 5);
   assertEquals([ga.body.presentacion.diapositivas.length, ga.body.preguntas.length], [13, 0]);

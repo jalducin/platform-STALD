@@ -14,10 +14,10 @@ const store = () => storeCon({
   "contenido/semanas/2026-10-05.json": { id: "2026-10-05", titulo: "Semana 2", elementos: [{ id: "meet-x", tipo: "meet", fecha: "2026-10-11" }] },
   "contenido/actividades/meet-x.json": structuredClone(meet),
 });
-const call = async (s: ReturnType<typeof store>, alumno: string | null, sub = "") => {
+const call = async (s: ReturnType<typeof store>, alumno: string | null, sub = "", hoy = "2026-10-09") => {
   Deno.env.set("PERMITIR_HOY", "1");
   clearCache();
-  const req = new Request(`http://x/ingles/actividades${sub}?email=x&hoy=2026-10-09`);
+  const req = new Request(`http://x/ingles/actividades${sub}?email=x&hoy=${hoy}`);
   const res = await handleActividades(req, sub, { isAdmin: !alumno, alumno }, s, json);
   return { status: res.status, body: await res.json() };
 };
@@ -30,11 +30,18 @@ Deno.test("meet sin reto: la lista marca tieneMaterial y sin reto para el admin 
   assertEquals([alu.tieneReto, alu.meetUrl, alu.guion, alu.presentacion], [false, "https://meet.google.com/abc", undefined, undefined]);
 });
 
-Deno.test("meet sin reto: el admin abre su material (guion, presentación, teoría); la alumna no", async () => {
+Deno.test("meet sin reto: el admin abre su material (guion, presentación, teoría)", async () => {
   const s = store();
   const a = await call(s, null, "/meet-x");
   assertEquals(a.status, 200);
   assertEquals([a.body.guion.length, a.body.presentacion.diapositivas.length, a.body.teoria.length, a.body.preguntas.length, a.body.vistaPrevia], [1, 1, 1, 0, true]);
-  const b = await call(s, "Sofy", "/meet-x");
-  assertEquals([b.status, b.body.error, b.body.guion], [400, "no_aplica", undefined]);
+});
+
+Deno.test("meet sin reto: la alumna lee el material (teoría y tips) desde su fecha, sin guion ni presentación", async () => {
+  const s = store();
+  const antes = await call(s, "Sofy", "/meet-x", "2026-10-10");
+  assertEquals([antes.status, antes.body.error], [403, "no_disponible"]);
+  const b = await call(s, "Sofy", "/meet-x", "2026-10-11");
+  assertEquals([b.status, b.body.material, b.body.teoria.length, b.body.tips.length, b.body.preguntas.length], [200, true, 1, 1, 0]);
+  assertEquals([b.body.guion, b.body.presentacion], [undefined, undefined]);
 });

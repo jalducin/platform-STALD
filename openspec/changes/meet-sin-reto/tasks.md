@@ -12,6 +12,8 @@
 
 ## 2. Página
 
+- [x] 2.2 «📖 Material» para alumnos y alumnas: `openMaterial` (teoría y tips, sin preguntas) y la etiqueta
+  «material para leer»; E2E `presentar` con la alumna
 - [x] 2.1 `ingles/comun.js`, `ingles/tablero.js` e `ingles/presentacion.js`: «🎬 Presentar» y «📋 Guion» con
   `tieneReto || tieneMaterial`; «👁 Reto» y «Probar el reto» solo con reto
 

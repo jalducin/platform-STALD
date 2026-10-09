@@ -7,11 +7,12 @@ refuerzo y las tres de Tecnología e IA de la semana.
 ## What Changes
 
 - Los Meet del domingo ya no traen reto: sin banco, temas ni intentos, y sin la diapositiva «⚡ Reto en vivo».
-- Alumnos y alumnas ven el Meet en su semana solo con el enlace («Unirme» o «Enlace por WhatsApp»).
+- Alumnos y alumnas tienen, como actividad del domingo, el **material para leer**: «📖 Material» abre la teoría y
+  los tips de la clase, sin preguntas, junto al enlace del Meet.
 - El profe conserva su material: «🎬 Presentar» y «📋 Guion» dependen de que el Meet tenga presentación o guion
   (`tieneMaterial`), ya no del reto. «👁 Reto» y «Probar el reto» solo aparecen si hay reto.
-- `GET /ingles/actividades/<id>` de un Meet sin reto responde al profe con su material, en lugar de 400
-  `no_aplica`.
+- `GET /ingles/actividades/<id>` de un Meet sin reto responde con el material (`material: true`): al profe, con
+  guion y presentación; a alumnos y alumnas, desde su fecha, solo teoría y tips.
 - Datos: se quita el reto de `meet-2026-10-04` y `meet-2026-10-11`.
 
 ## Capabilities

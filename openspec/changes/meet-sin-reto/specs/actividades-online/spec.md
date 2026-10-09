@@ -8,12 +8,17 @@ El material del profe puede incluir:
 - `presentacion` (solo admin): las diapositivas para proyectar.
 - `teoria` y `tips` de libreta, que el profe comparte en pantalla.
 
-El Meet NO SHALL traer reto ni otra actividad de repaso para alumnos y alumnas. En su semana, alumnos y alumnas
-SHALL ver el Meet solo con su enlace. El `guion` y la `presentacion` NO SHALL enviarse a quien no sea admin.
+El Meet NO SHALL traer reto ni preguntas. Su actividad para alumnos y alumnas SHALL ser **leer el material**:
+desde `disponibleDesde`, el Meet SHALL mostrar «📖 Material», que abre la teoría y los tips de la clase, sin
+preguntas, junto al enlace. El `guion` y la `presentacion` NO SHALL enviarse a quien no sea admin.
 
-#### Scenario: Guion solo para admin
-- **WHEN** una alumna ve la clase del domingo en su semana
-- **THEN** ve el enlace del Meet («Unirme» o «Enlace por WhatsApp»), sin reto, y no recibe el `guion`
+#### Scenario: Material para leer
+- **WHEN** una alumna toca «📖 Material» en la clase del domingo
+- **THEN** lee la teoría y los tips de la clase, sin preguntas, y no recibe el `guion` ni la `presentacion`
+
+#### Scenario: Antes de su fecha
+- **WHEN** una alumna pide el material antes de `disponibleDesde`
+- **THEN** recibe 403 `no_disponible`
 
 #### Scenario: Sin reto en vivo
 - **WHEN** el profe publica un Meet sin `banco`
