@@ -131,7 +131,9 @@
         <label for="password" style="margin-top:10px">Tu contraseña</label>
         <input id="password" type="password" autocomplete="current-password" autocapitalize="none" required>
         <button class="btn" id="login-btn" type="submit">Entrar →</button>
+        <button class="link-btn" id="olvide-btn" type="button">¿Olvidaste tu contraseña?</button>
       </form>
+      <div class="ok-msg" id="olvide-ok" role="status" hidden></div>
       <p class="hint" id="login-hint">Entra con el correo con el que te registraron en tus clases. Si es tu primera vez, usa la contraseña que te dio tu profe. ¿La olvidaste? Pídele a tu profe que la restablezca.</p>
       <div class="alert" id="login-error" role="alert" hidden></div>
       <div class="guest" id="guest" hidden>
@@ -262,7 +264,7 @@
   function pedirEntrada(msg, correo) {
     $('login-form').hidden = false; $('login-hint').hidden = false;
     $('login-btn').disabled = false; $('login-btn').textContent = 'Entrar →';
-    $('password').value = '';
+    $('password').value = ''; $('olvide-ok').hidden = true;
     if (correo) $('email').value = correo;
     $('guest').hidden = true; $('juegos-cta').hidden = false;
     if (msg) error(msg); else { $('login-error').hidden = true; show('login'); }
@@ -361,6 +363,16 @@
     } finally { $('admin-link-btn').disabled = false; }
   });
 
+  // ¿Olvidaste tu contraseña? → enlace por correo (solo clases y profe); al volver con él se pide una nueva.
+  $('olvide-btn').addEventListener('click', async () => {
+    $('olvide-ok').hidden = true;
+    try {
+      const t = await StaldAuth.olvideContrasena($('email').value);
+      $('login-error').hidden = true;
+      $('olvide-ok').textContent = t; $('olvide-ok').hidden = false;
+    } catch (err) { error(err.message); }
+  });
+
   $('cambiar-btn').addEventListener('click', () => {
     StaldAuth.pintarCambio($('cambio'), { texto: 'Pon una contraseña nueva para tu cuenta.', omitir: 'Cancelar', alListo: () => entrar(StaldAuth.email()) });
     show('cambio');
@@ -379,6 +391,11 @@
     show('loading');
     await StaldAuth.iniciar(API_BASE);
     const sesion = StaldAuth.email();
+    if (sesion && StaldAuth.entroPorEnlace()) {
+      viejo = false;
+      StaldAuth.pintarCambio($('cambio'), { texto: 'Entraste con el enlace de tu correo. Pon una contraseña nueva para la próxima vez.', alListo: () => entrar(sesion) });
+      return show('cambio');
+    }
     if (sesion) { viejo = false; return entrar(sesion); }
     const saved = StaldAuth.correoViejo();
     if (saved) { viejo = true; return entrar(saved); }

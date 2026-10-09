@@ -91,6 +91,13 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
   ok('correo inválido: aviso', (await p.textContent('#login-error')).includes('correo válido'));
   await p.fill('#email', 'marisol@example.com'); await p.fill('#password', ''); await p.click('#login-btn');
   ok('sin contraseña: aviso', (await p.textContent('#login-error')).includes('contraseña'));
+  // ¿Olvidaste tu contraseña? → enlace por correo solo a las clases (en local no se manda nada).
+  await p.fill('#email', 'nadie.juegos@example.com'); await p.click('#olvide-btn');
+  await p.waitForFunction(() => (document.querySelector('#login-error') || {}).textContent.includes('no es de las clases'), null, { timeout: 10000 }).catch(() => {});
+  ok('olvidé: un correo que no es de las clases avisa', (await p.textContent('#login-error')).includes('no es de las clases'));
+  await p.fill('#email', 'marisol@example.com'); await p.click('#olvide-btn');
+  await p.waitForSelector('#olvide-ok:not([hidden])', { timeout: 10000 });
+  ok('olvidé: a la alumna le avisa que le mandamos un enlace', (await p.textContent('#olvide-ok')).includes('Te mandamos un enlace a marisol@example.com'));
   await p.fill('#email', 'marisol@example.com'); await p.fill('#password', 'Clase'); await p.click('#login-btn');
   await p.waitForSelector('#cambio:not([hidden])', { timeout: 30000 });
   ok('con «Clase»: pide cambiarla y ofrece «Ahora no»', (await p.textContent('#cambio')).includes('Cambia tu contraseña') && await p.isVisible('#cambio [data-stald-auth-despues]'));
@@ -139,6 +146,7 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
   ok('Juegos después de cerrar sesión: correo y nick, sin enlace', await p.isVisible('#ent-nick') && !(await p.textContent('#app')).includes('enlace'));
   await p.fill('#ent-correo', 'marisol@example.com'); await p.fill('#ent-nick', 'Mari'); await p.check('#ent-acepto'); await p.click('#reg-entrar');
   await p.waitForSelector('#stald-auth-clave', { timeout: 30000 });
+  ok('Juegos: la pantalla de contraseña ofrece «¿Olvidaste tu contraseña?»', await p.isVisible('[data-stald-auth-olvide]'));
   ok('Juegos: correo de clase → pide su contraseña', (await p.textContent('#app')).includes('Ese correo es de las clases') && (await p.inputValue('#stald-auth-correo')) === 'marisol@example.com');
   ok('Juegos: correo de clase sin sesión todavía', await p.evaluate(() => localStorage.getItem('stald_sesion_prueba') === null));
   await p.fill('#stald-auth-clave', 'mari2026'); await p.click('#stald-auth-entrar');

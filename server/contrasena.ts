@@ -4,6 +4,8 @@
 //   profe, «clase» alumnos y alumnas) y aún no tiene una propia, crea o ajusta su cuenta de Auth; la página reintenta.
 // - POST /auth/contrasena { nueva } (con sesión): cambia la contraseña y la marca como propia.
 // - POST /auth/restablecer { email } (solo el profe): la deja otra vez con la inicial.
+// - POST /auth/olvide { email } (sin sesión): «¿Olvidaste tu contraseña?» manda un enlace de acceso por correo, solo a
+//   las clases y al profe (el correo de Supabase es escaso: máximo 3 por correo cada hora).
 // En Auth se guarda `derivar(contraseña)`: el prefijo hace que «clase» cumpla el mínimo de 6 de Supabase.
 import { normalizeEmail } from "./rows.ts";
 import type { Quien } from "./auth.ts";
@@ -23,6 +25,7 @@ export interface DepsContrasena {
   admin: string; // SUPER_ADMIN_EMAIL normalizado
   esDeClase(email: string): Promise<boolean>; // alumno o alumna de Inglés o Secundaria (no invitado de Juegos)
   prueba?: boolean; // ROWS_FIXTURE: sin Supabase
+  redirect?: string; // a dónde lleva el enlace de «¿Olvidaste tu contraseña?» (SITIO_URL)
   fetch?: typeof fetch;
   ahora?: () => number;
 }
@@ -35,8 +38,10 @@ export function normalizarInicial(p: string): string {
 }
 
 const intentos = new Map<string, number[]>();
+const olvidos = new Map<string, number[]>();
 export function limpiarIntentos() {
   intentos.clear();
+  olvidos.clear();
 }
 
 interface UsuarioAuth { id: string; email: string; app_metadata?: Record<string, unknown> }
@@ -148,6 +153,40 @@ export async function handleRestablecer(req: Request, quien: Quien, deps: DepsCo
     return json({ ok: true, email });
   } catch (e) {
     console.error("auth restablecer:", e instanceof Error ? e.message : e);
+    return json({ error: "auth_no_disponible" }, 503);
+  }
+}
+
+// POST /auth/olvide { email } → 200 { enviado } | 404 no_es_de_clase | 429 demasiados_intentos | 429 limite_correo.
+// Entra con el enlace y la página pide una contraseña nueva. Los invitados de Juegos no lo necesitan (correo y nick).
+export async function handleOlvide(req: Request, deps: DepsContrasena, json: Json): Promise<Response> {
+  if (req.method !== "POST") return json({ error: "metodo_no_permitido" }, 405);
+  const b = await cuerpo<{ email?: unknown }>(req);
+  if (!b) return json({ error: "json_invalido" }, 400);
+  const email = normalizeEmail(typeof b.email === "string" ? b.email : null);
+  if (!CORREO.test(email)) return json({ error: "correo_invalido" }, 400);
+  const esProfe = !!deps.admin && email === deps.admin;
+  if (!esProfe && !(await deps.esDeClase(email))) return json({ error: "no_es_de_clase" }, 404);
+  const ahora = deps.ahora ? deps.ahora() : Date.now();
+  const previos = (olvidos.get(email) || []).filter((t) => ahora - t < 60 * 60_000);
+  if (previos.length >= 3) return json({ error: "demasiados_intentos" }, 429);
+  olvidos.set(email, [...previos, ahora]);
+  if (deps.prueba) return json({ enviado: true });
+  if (!deps.supabaseUrl || !deps.serviceKey) return json({ error: "auth_no_disponible" }, 503);
+  try {
+    const base = deps.supabaseUrl.replace(/\/$/, "");
+    const destino = deps.redirect ? `?redirect_to=${encodeURIComponent(deps.redirect)}` : "";
+    const res = await (deps.fetch ?? fetch)(`${base}/auth/v1/otp${destino}`, {
+      method: "POST", signal: AbortSignal.timeout(8000),
+      headers: { "apikey": deps.serviceKey, "Authorization": `Bearer ${deps.serviceKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ email, create_user: true }),
+    });
+    await res.body?.cancel();
+    if (res.status === 429) return json({ error: "limite_correo" }, 429);
+    if (!res.ok) throw new Error(`auth otp ${res.status}`);
+    return json({ enviado: true });
+  } catch (e) {
+    console.error("auth olvide:", e instanceof Error ? e.message : e);
     return json({ error: "auth_no_disponible" }, 503);
   }
 }

@@ -23,6 +23,8 @@
   «🔗 Enlace de acceso»)
 - [x] 2.3 `juegos.html`: entrada con correo y nick, que registra o reingresa; si es un correo de clase, pide la
   contraseña. Quitar «🔗 Enlace de acceso» de la vista de jugadores del admin.
+- [x] 2.5 «¿Olvidaste tu contraseña?»: `POST /auth/olvide` (clases y profe, 3 por hora), enlace en `pintarEntrada` y en el
+  portal; al volver con el enlace, el portal pide una contraseña nueva
 - [x] 2.4 `ingles/app.js` y `secundaria.html`: pasar al flujo nuevo; subir la versión de `comun/auth.js`
 
 ## 3. Revisar y actualizar pruebas existentes (OBLIGATORIO)

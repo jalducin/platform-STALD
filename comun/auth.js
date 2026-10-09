@@ -11,6 +11,8 @@
 //   StaldAuth.entrarConContrasena(correo, pwd)   // → { email, inicial }; prepara la cuenta si es la contraseña inicial
 //   StaldAuth.pintarCambio(el, { obligatorio, alListo })  // pide la contraseña nueva (openspec: acceso-con-contrasena)
 //   StaldAuth.cambiarContrasena(nueva)           // POST /auth/contrasena con la sesión
+//   StaldAuth.olvideContrasena(correo)           // POST /auth/olvide: enlace por correo (clases y profe)
+//   StaldAuth.entroPorEnlace()                   // true si la sesión vino del enlace del correo (pedir contraseña nueva)
 //   StaldAuth.entrarConToken(tokenHash, correo)    // sesión con la llave de un solo uso del servidor (registro de Juegos)
 //   StaldAuth.salir()                            // cierra la sesión y borra las claves viejas de correo y las de Juegos
 // La sesión se comparte entre portal, Inglés, Juegos y Secundaria (mismo origen, localStorage).
@@ -21,7 +23,7 @@
   var CLAVE_PRUEBA = 'stald_sesion_prueba'; // solo si el servidor local responde /config { prueba: true }
   var CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  var estado = { listo: null, api: '', cliente: null, prueba: false, sesion: null, error: null, errorEnlace: null };
+  var estado = { listo: null, api: '', cliente: null, prueba: false, sesion: null, error: null, errorEnlace: null, porEnlace: false };
   var PREFIJO = 'stald·'; // la contraseña en Auth es PREFIJO + lo que se escribe (mínimo de 6 de Supabase)
   var INICIALES = { clase: 1, sensei: 1 };
 
@@ -54,6 +56,8 @@
   function iniciar(apiBase) {
     if (estado.listo) return estado.listo;
     estado.api = String(apiBase).replace(/\/$/, '');
+    // El enlace de «¿Olvidaste tu contraseña?» regresa con #access_token=…&type=magiclink; supabase-js lo canjea.
+    estado.porEnlace = /access_token=/.test(location.hash) && /type=(magiclink|signup|recovery)/.test(location.hash);
     revisarErrorEnlace();
     // Sin no-store: el servidor deja guardar /config 10 min (openspec: cache-estabilidad).
     estado.listo = fetch(String(apiBase).replace(/\/$/, '') + '/config')
@@ -210,6 +214,24 @@
     });
   }
 
+  // «¿Olvidaste tu contraseña?»: el servidor manda un enlace de acceso al correo, solo a las clases y al profe.
+  function olvideContrasena(correo) {
+    correo = String(correo || '').trim().toLowerCase();
+    if (!CORREO.test(correo)) return Promise.reject(new Error('Escribe tu correo arriba y vuelve a tocar «¿Olvidaste tu contraseña?».'));
+    return fetch(estado.api + '/auth/olvide', { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ email: correo }) })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (j) {
+          if (res.ok) return 'Te mandamos un enlace a ' + correo + '. Ábrelo para entrar y pon una contraseña nueva. Revisa también spam o promociones.';
+          var txt = {
+            no_es_de_clase: 'Ese correo no es de las clases. Si vienes a Juegos, entras con tu correo y tu nick.',
+            limite_correo: 'Ahorita no se pueden mandar más correos. Pídele a tu profe que restablezca tu contraseña.',
+            demasiados_intentos: 'Ya te mandamos varios enlaces. Revisa tu correo (también spam) o pídele a tu profe que restablezca tu contraseña.',
+          }[j.error];
+          throw new Error(txt || 'No pude mandar el enlace. Pídele a tu profe que restablezca tu contraseña.');
+        });
+      }, function () { throw new Error('Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.'); });
+  }
+
   function cambiarContrasena(nueva) {
     nueva = String(nueva || '');
     if (nueva.length < 6) return Promise.reject(new Error('Usa al menos 6 caracteres.'));
@@ -282,7 +304,14 @@
         '<label for="stald-auth-clave" style="margin-top:10px">Tu contraseña</label>' +
         '<input id="stald-auth-clave" type="password" autocomplete="current-password" autocapitalize="none">' +
         '<button type="submit" id="stald-auth-entrar">Entrar →</button></form>' +
-        (msg ? '<div class="msg" role="alert">' + esc(msg) + '</div>' : '') + '</div>' + (op.pie || '');
+        '<button type="button" class="sec" data-stald-auth-olvide>¿Olvidaste tu contraseña?</button>' +
+        (msg ? '<div class="msg' + (op.msgOk ? ' ok' : '') + '" role="alert">' + esc(msg) + '</div>' : '') + '</div>' + (op.pie || '');
+      op.msgOk = false;
+      el.querySelector('[data-stald-auth-olvide]').addEventListener('click', function () {
+        var correo = el.querySelector('#stald-auth-correo').value.trim().toLowerCase();
+        op.correo = correo;
+        olvideContrasena(correo).then(function (t) { op.msgOk = true; paso(t); }, function (err) { paso(err.message); });
+      });
       el.querySelector('form').addEventListener('submit', function (e) {
         e.preventDefault();
         var correo = el.querySelector('#stald-auth-correo').value.trim().toLowerCase();
@@ -337,6 +366,8 @@
     esSesionVencida: esSesionVencida,
     entrarConContrasena: entrarConContrasena,
     cambiarContrasena: cambiarContrasena,
+    olvideContrasena: olvideContrasena,
+    entroPorEnlace: function () { return estado.porEnlace; },
     salir: salir,
     pintarEntrada: pintarEntrada,
     pintarCambio: pintarCambio,

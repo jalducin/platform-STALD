@@ -15,6 +15,8 @@ quedaran fuera. Depender del correo para entrar es frágil para un grupo que ent
   - El portal ofrece «🔑 Cambiar contraseña».
   - Si alguien olvida su contraseña, el profe la **restablece** a la inicial desde el portal. Esto reemplaza a
     «🔗 Enlace de acceso».
+  - «¿Olvidaste tu contraseña?» manda un enlace por correo, solo a las clases y al profe (máximo 3 por correo cada
+    hora). Al volver con él, se pide una contraseña nueva. Es el respaldo del profe si no acierta la suya.
 - **Juegos**: quien no es de las clases se registra o entra con **correo y nick**, sin contraseña ni correo, como
   el registro directo de hoy. Si el correo es de las clases, Juegos pide su contraseña.
 - **BREAKING**: se quitan el enlace mágico, el código por correo y la ayuda «¿No te llegó? / Reenviarme el enlace».

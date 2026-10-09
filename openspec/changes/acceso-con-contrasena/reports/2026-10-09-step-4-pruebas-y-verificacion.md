@@ -42,6 +42,11 @@
   - con una contraseña equivocada responde `invalid_credentials`;
   - la cuenta de prueba se borró (200).
 
+## Ampliación: «¿Olvidaste tu contraseña?» (mismo día)
+- Unitarias: 254 pasaron, 0 fallaron (2 pruebas nuevas de `/auth/olvide`: clases y profe sí, otros 404, 429 del
+  correo y 3 por hora). Lint sin problemas.
+- E2E: `login` 66/66; `portal` 16/16, `juegos` 28/28, `jugadores` 33/33, `enlace-sala` 7/7 y `login-despues` 6/6.
+
 ## Verificación de estado
 - Antes: sin cuentas de prueba en Supabase Auth.
 - Después: la cuenta `stald.e2e.contrasena@example.com` se borró; no se escribió en tablas `stald_*`.

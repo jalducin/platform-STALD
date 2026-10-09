@@ -1,6 +1,6 @@
 // Entrada con contraseña (openspec: acceso-con-contrasena). Sin red: Supabase Auth falsa en memoria.
 import { assertEquals } from "jsr:@std/assert@1";
-import { derivar, handleCambio, handlePreparar, handleRestablecer, limpiarIntentos, normalizarInicial } from "./contrasena.ts";
+import { derivar, handleCambio, handleOlvide, handlePreparar, handleRestablecer, limpiarIntentos, normalizarInicial } from "./contrasena.ts";
 
 const ADMIN = "profe@example.com";
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s });
@@ -123,4 +123,32 @@ Deno.test("modo de prueba: cambio y restablecer responden sin Supabase", async (
   const d = { supabaseUrl: "", serviceKey: "", admin: ADMIN, esDeClase: () => Promise.resolve(true), prueba: true };
   assertEquals((await handleCambio(post("/auth/contrasena", { nueva: "nueva2026" }), { ok: true, email: "sofy@example.com", verificado: true }, d, json)).status, 200);
   assertEquals((await handleRestablecer(post("/auth/restablecer", { email: "sofy@example.com" }), { ok: true, email: ADMIN, verificado: true }, d, json)).status, 200);
+});
+
+Deno.test("olvidé: a las clases y al profe les manda el enlace por correo (Supabase /otp); a otros no; 429 del correo", async () => {
+  limpiarIntentos();
+  const pedidas: string[] = [];
+  let respuesta = 200;
+  const f = ((url: string | URL | Request, init?: RequestInit) => {
+    pedidas.push(`${new URL(String(url)).pathname}?${new URL(String(url)).searchParams.get("redirect_to")} ${init?.body}`);
+    return Promise.resolve(json({}, respuesta));
+  }) as typeof fetch;
+  const d = { ...deps(authFalsa()), fetch: f, redirect: "https://sitio/" };
+  const r = await leer(await handleOlvide(post("/auth/olvide", { email: " Sofy@Example.com " }), d, json));
+  assertEquals([r.status, r.body.enviado], [200, true]);
+  assertEquals(pedidas, ['/auth/v1/otp?https://sitio/ {"email":"sofy@example.com","create_user":true}']);
+  assertEquals((await handleOlvide(post("/auth/olvide", { email: ADMIN }), d, json)).status, 200);
+  const otro = await leer(await handleOlvide(post("/auth/olvide", { email: "osvaldo@example.com" }), d, json));
+  assertEquals([otro.status, otro.body.error], [404, "no_es_de_clase"]);
+  respuesta = 429;
+  const lim = await leer(await handleOlvide(post("/auth/olvide", { email: "marisol@example.com" }), d, json));
+  assertEquals([lim.status, lim.body.error], [429, "limite_correo"]);
+  assertEquals(pedidas.length, 3, "a quien no es de clase no se le manda nada");
+});
+
+Deno.test("olvidé: máximo 3 por correo cada hora; en modo de prueba no llama a Supabase", async () => {
+  limpiarIntentos();
+  const d = { ...deps(authFalsa()), prueba: true, redirect: "https://sitio/" };
+  for (let i = 0; i < 3; i++) assertEquals((await handleOlvide(post("/auth/olvide", { email: "sofy@example.com" }), d, json)).status, 200);
+  assertEquals((await handleOlvide(post("/auth/olvide", { email: "sofy@example.com" }), d, json)).status, 429);
 });

@@ -45,6 +45,25 @@ cuenta SHALL volver a entrar con su contraseña inicial.
 - **WHEN** el profe restablece el correo de Sofía
 - **THEN** Sofía entra con «clase» y se le pide una nueva
 
+### Requirement: ¿Olvidaste tu contraseña?
+Las pantallas de entrada SHALL ofrecer «¿Olvidaste tu contraseña?». `POST /auth/olvide { email }` (sin sesión)
+SHALL mandar un enlace de acceso por correo (Supabase `/auth/v1/otp`) solo a los correos de las clases y del
+profe, como máximo 3 por correo cada hora. Para otro correo SHALL responder 404 `no_es_de_clase`; si el correo de
+Supabase se agotó, 429 `limite_correo`, y la página SHALL sugerir pedirle al profe que restablezca la contraseña.
+Al volver con el enlace, el portal SHALL pedir una contraseña nueva.
+
+#### Scenario: Alumna que olvidó su contraseña
+- **WHEN** Sofía escribe su correo y toca «¿Olvidaste tu contraseña?»
+- **THEN** le llega un enlace; al abrirlo entra al portal y se le pide una contraseña nueva
+
+#### Scenario: El profe no acierta su contraseña
+- **WHEN** el profe toca «¿Olvidaste tu contraseña?» con su correo
+- **THEN** le llega su enlace de acceso
+
+#### Scenario: Correo de Juegos
+- **WHEN** alguien que no es de las clases lo pide
+- **THEN** no se manda correo y se le recuerda que en Juegos entra con su correo y nick
+
 ## REMOVED Requirements
 
 ### Requirement: Ayuda y reenvío cuando no llega el enlace
