@@ -201,8 +201,8 @@ filtrando por el correo de quien pide.
 Las clases (alumnos, alumnas y el profe) SHALL entrar con correo y contraseña en `pintarEntrada` de
 `comun/auth.js` y en el portal, sin enlaces ni códigos por correo. La contraseña inicial SHALL ser «clase» para
 alumnos y alumnas y «sensei» para el profe. Si el inicio de sesión falla, la página SHALL llamar a
-`POST /auth/preparar`. El servidor SHALL preparar la cuenta (crearla con el correo confirmado o ponerle la
-contraseña inicial) solo si la contraseña es la inicial de esa persona y aún no tiene una propia. Con otra
+`POST /auth/preparar`. El servidor SHALL preparar la cuenta (crearla con el correo confirmado, o ponerle la
+contraseña inicial y confirmar su correo) solo si la contraseña es la inicial de esa persona y aún no tiene una propia. Con otra
 contraseña, o con un correo que no es de las clases, SHALL responder 401. Tras 10 intentos por correo en 10
 minutos SHALL responder 429. El error en la página SHALL ser «Correo o contraseña incorrectos. Si la olvidaste,
 pídele a tu profe que la restablezca.»
@@ -218,6 +218,10 @@ pídele a tu profe que la restablezca.»
 #### Scenario: Ya tiene contraseña propia
 - **WHEN** alguien que ya cambió su contraseña escribe «clase»
 - **THEN** no entra
+
+#### Scenario: Cuenta con el correo sin confirmar
+- **WHEN** Jesús, cuya cuenta quedó sin confirmar por un enlace que nunca abrió, entra con su correo y «clase»
+- **THEN** el servidor confirma su correo al prepararla y él entra
 
 ### Requirement: Cambio de contraseña
 Al entrar con la contraseña inicial, la página SHALL pedir una nueva. Con «sensei», el cambio SHALL ser

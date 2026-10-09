@@ -23,4 +23,4 @@
 
 ## 5. Documentación técnica (OBLIGATORIO)
 
-- [ ] 5.1 `docs/backend-standards.md` (`/auth/preparar` confirma el correo); PR, CI, merge y archivo
+- [x] 5.1 `docs/backend-standards.md` (`/auth/preparar` confirma el correo); PR, CI, merge y archivo
