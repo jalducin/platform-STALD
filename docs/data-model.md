@@ -152,10 +152,11 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     - `pronunciar`: `frase` (pública) que se dice en voz alta; la respuesta es lo reconocido o `auto:ok` /
       `auto:repetir` (cambio `pronunciacion`).
   - Refuerzo: `bancoDe[]`, `basadoEn` (examen de la semana), `respaldo` (diagnóstico) y `mapeoTemas`.
-  - Meet: `meetUrl` y `hora`. Además, para la clase del domingo, `guion` (solo admin), `teoria`, `tips`,
-    `banco` (reto en vivo) y `presentacion.diapositivas` (solo admin), con tipos `portada`, `agenda`, `retro`
-    (grupal, sin nombres), `teoria` (con `ref` al índice de la teoría), `practica`, `juego`, `reto`,
-    `libreta` y `cierre`.
+  - Meet: `meetUrl` y `hora`. Además, para la clase del domingo, el material del profe: `guion` (solo admin),
+    `teoria`, `tips` y `presentacion.diapositivas` (solo admin), con tipos `portada`, `agenda`, `retro`
+    (grupal, sin nombres), `teoria` (con `ref` al índice de la teoría), `practica`, `juego`, `libreta` y `cierre`.
+    Desde el cambio `meet-sin-reto` el Meet **no lleva `banco` ni reto**: alumnos y alumnas solo ven el enlace.
+    (El motor aún acepta `banco` y la diapositiva `reto` en Meet viejos.)
 - `juegos/semanas/<lunes>/<id-jugador>.json`: partidas de la semana. Cada partida puede llevar `modo: "sala"` y `sala`
   (multijugador); sin `modo` es individual. `totalIndividual` y `totalPartidas` suman **todas** las partidas de su
   tipo y `total` es la suma de ambos (cambio `puntos-por-tipo`); `mejores` guarda el récord por juego.

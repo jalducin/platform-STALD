@@ -144,6 +144,8 @@ function meta(it: ConGrupos) {
     intentosMax: tieneReto(it) ? maxIntentos(it) : 0,
     preguntas: tieneReto(it) ? (it.preguntasPorIntento || (it.banco || []).length) : 0,
     meetUrl: it.meetUrl ?? null, hora: it.hora ?? null, tieneReto: it.tipo === "meet" && tieneReto(it),
+    // Material del profe en el Meet (guion o presentación), con o sin reto (openspec: meet-sin-reto).
+    tieneMaterial: it.tipo === "meet" && !!(it.presentacion || (it.guion || []).length),
     ...(it.segundaOportunidad ? { segundaOportunidad: it.segundaOportunidad } : {}),
     ...(it.grupos ? { grupos: it.grupos } : {}),
     ...(it.alumnos ? { alumnos: it.alumnos } : {}),
@@ -204,7 +206,19 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
   }
   if (!base || (slug && !quien.isAdmin && !esPara(base, slug))) return json({ error: "no_encontrado" }, 404);
   const it = slug && !quien.isAdmin ? paraAlumno(base, slug) : base;
-  if (!tieneReto(it)) return json({ error: "no_aplica" }, 400);
+  if (!tieneReto(it)) {
+    // Meet sin reto (openspec: meet-sin-reto): el profe abre su material (guion, presentación, teoría); alumnos y
+    // alumnas, desde su fecha, el material de lectura (teoría y tips), que es su actividad. No hay nada que resolver.
+    if (req.method === "GET" && partes.length === 1 && it.tipo === "meet") {
+      if (!quien.isAdmin && hoy < it.disponibleDesde) return json({ error: "no_disponible", disponibleDesde: it.disponibleDesde }, 403);
+      return json({
+        ...meta(it), material: true, teoria: it.teoria || [], tips: it.tips || [],
+        ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}), ...(quien.isAdmin && it.presentacion ? { presentacion: it.presentacion } : {}),
+        temas: [], enfoque: [], intento: 0, intentosUsados: 0, vistaPrevia: quien.isAdmin, preguntas: [],
+      });
+    }
+    return json({ error: "no_aplica" }, 400);
+  }
 
   // DELETE /ingles/actividades/<id>/resultados/<alumno> → reiniciar (solo admin)
   if (req.method === "DELETE" && partes[1] === "resultados" && partes[2]) {

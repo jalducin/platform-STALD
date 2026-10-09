@@ -25,6 +25,28 @@ function retroAlumnos() {
   return html;
 }
 
+// Material de lectura del Meet para alumnos y alumnas (openspec: meet-sin-reto): teoría y tips de la clase, sin
+// preguntas. Esa lectura es su actividad del domingo.
+async function openMaterial(id) {
+  entrarVista('material', id);
+  contentEl.innerHTML = esqueleto();
+  const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email));
+  if (!r.ok) {
+    const txt = r.body && r.body.error === 'no_disponible' ? 'El material se abre el ' + formatFecha(r.body.disponibleDesde) + '.' : 'No se pudo abrir el material.';
+    contentEl.innerHTML = '<div class="exam-card"><div class="empty">' + escapeHtml(txt) + '</div>' + volverBtn() + '</div>';
+    return;
+  }
+  const it = r.body;
+  contentEl.innerHTML =
+    '<div class="exam-card"><h3>📖 Material de la clase · ' + escapeHtml(it.titulo) + '</h3><div class="s" style="font-size:.86rem">' + escapeHtml(it.descripcion || '') + '</div>' +
+    '<div class="s" style="font-size:.82rem;margin-top:6px">Léelo con calma y haz las tareas de libreta: esa es tu actividad de la clase.</div>' +
+    (it.meetUrl ? '<div style="margin-top:8px"><a class="btn" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">🎥 Unirme al Meet</a></div>' : '') + '</div>' +
+    '<details class="section" open><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + (it.teoria || []).length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria || []) + '</div></details>' +
+    renderTips(it.tips) +
+    '<div class="exam-bar">' + volverBtn() + '</div>';
+  window.scrollTo(0, 0);
+}
+
 async function openGuion(id) {
   entrarVista('guion', id);
   contentEl.innerHTML = esqueleto();
@@ -41,7 +63,7 @@ async function openGuion(id) {
     '<details class="section" open><summary><div class="section-head"><span><span class="chevron">▶</span>🗒️ Bloques de la clase</span><span class="count">' + it.guion.length + '</span></div></summary><div style="padding:8px">' + bloques + '</div></details>' +
     '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría para compartir en pantalla</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' +
     renderTips(it.tips) +
-    '<div class="exam-bar">' + volverBtn() + '<span style="display:flex;gap:6px"><button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Probar el reto</button><button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button></span></div>';
+    '<div class="exam-bar">' + volverBtn() + '<span style="display:flex;gap:6px">' + (it.tieneReto ? '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Probar el reto</button>' : '') + '<button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button></span></div>';
   window.scrollTo(0, 0);
 }
 
