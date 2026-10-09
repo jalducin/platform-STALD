@@ -31,6 +31,25 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
     ok('alumna: abre la teoría para leer, sin preguntas', txt.includes('Material de la clase') && txt.includes('Teoría') && !(await al.$('#exam-form')), txt.slice(0, 120));
     await al.screenshot({ path: 'meet-material.png', fullPage: true });
   }
+  // «📌 Para ponerte al día» (openspec: semana-ponerse-al-dia): lo de otra semana que vence esta semana.
+  const html = await al.evaluate(() => renderWeekCard({
+    semana: { id: '2026-10-05', titulo: 'Semana 2', ids: ['act-2026-10-06'] },
+    items: [
+      { id: 'act-2026-10-06', tipo: 'actividad', titulo: 'De esta semana', fechaLimite: '2026-10-06', estado: 'disponible', intentosMax: 2 },
+      { id: 'act-2026-09-29', tipo: 'actividad', titulo: 'Semana 1 con prórroga', fechaLimite: '2026-10-09', estado: 'disponible', intentosMax: 2 },
+      { id: 'act-2026-09-30', tipo: 'actividad', titulo: 'Semana 1 vencida', fechaLimite: '2026-09-30', estado: 'disponible', intentosMax: 2 },
+    ],
+  }));
+  ok('semana: «Para ponerte al día» con lo de otra semana que vence esta semana', html.includes('Para ponerte al día') && html.includes('Semana 1 con prórroga') && html.includes('data-fecha="2026-10-09"'));
+  ok('semana: lo que venció antes de esta semana no entra en esa tarjeta', !html.includes('Semana 1 vencida'));
+  // Aviso «hoy y atrasadas» y su vista (sin entregas, la alumna de prueba tiene pendientes de la semana 1).
+  await al.goto(al.url().replace(/#.*$/, '#semana')); await al.waitForSelector('[data-seccion="semana"]', { timeout: 30000 });
+  const aviso = al.locator('[data-seccion="semana"] .aviso-pendientes');
+  ok('semana: aviso «Tienes … atrasadas» con su botón', await aviso.count() === 1 && /Tienes .*(para hoy|atrasada)/.test(await aviso.textContent()), (await aviso.textContent().catch(() => '')).trim().slice(0, 80));
+  await aviso.locator('[data-action="ver-pendientes"]').click(); await al.waitForSelector('#pendientes', { timeout: 15000 });
+  const filas = await al.$$eval('#pendientes .hoy-item', xs => xs.map(x => x.textContent.replace(/\s+/g, ' ')));
+  ok('pendientes: solo hoy y atrasadas, cada una con su acción', filas.length > 0 && filas.every(t => /Atrasada|Hoy/.test(t)) && (await al.$$('#pendientes .hoy-item .btn')).length >= filas.length, filas.length + ' filas');
+  await al.screenshot({ path: 'pendientes.png', fullPage: true });
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 400)); process.exit(2); });

@@ -284,15 +284,29 @@ function semanaItems(act) {
   return (act.items || []).filter(i => ids.has(i.id));
 }
 
+function filaSemana(it) {
+  let sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo);
+  if (it.tipo !== 'meet') sub += ' · ' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)';
+  if (it.mejor) sub += ' · <span class="pill ok">⭐ ' + it.mejor.porcentaje + '%</span>';
+  return '<div class="exam-item" data-fecha="' + escapeHtml(it.fechaLimite) + '"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + sub + '</div></div>' + accionItem(it, it.estado) + '</div>';
+}
+// «📌 Para ponerte al día» (openspec: semana-ponerse-al-dia): elementos de otras semanas cuya fecha (con prórroga)
+// cae entre el lunes y el domingo de esta semana.
+function alDiaItems(act) {
+  if (!act || !act.semana) return [];
+  const ids = new Set(act.semana.ids);
+  const lunes = new Date((/^\d{4}-\d{2}-\d{2}$/.test(act.semana.id) ? act.semana.id : (act.hoy || todayStr())) + 'T12:00:00');
+  lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7));
+  const domingo = new Date(lunes); domingo.setDate(domingo.getDate() + 6);
+  const ini = fmtDate(lunes), fin = fmtDate(domingo);
+  return (act.items || []).filter(i => !ids.has(i.id) && i.fechaLimite >= ini && i.fechaLimite <= fin)
+    .sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
+}
 function renderWeekCard(act) {
-  const lista = semanaItems(act);
-  if (!lista.length) return '';
-  return '<div class="exam-card"><h3>📚 Esta semana · ' + escapeHtml(act.semana.titulo) + '</h3>' + lista.map(it => {
-    let sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo);
-    if (it.tipo !== 'meet') sub += ' · ' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)';
-    if (it.mejor) sub += ' · <span class="pill ok">⭐ ' + it.mejor.porcentaje + '%</span>';
-    return '<div class="exam-item" data-fecha="' + escapeHtml(it.fechaLimite) + '"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + sub + '</div></div>' + accionItem(it, it.estado) + '</div>';
-  }).join('') + '</div>';
+  const lista = semanaItems(act), alDia = alDiaItems(act);
+  if (!lista.length && !alDia.length) return '';
+  return (lista.length ? '<div class="exam-card"><h3>📚 Esta semana · ' + escapeHtml(act.semana.titulo) + '</h3>' + lista.map(filaSemana).join('') + '</div>' : '') +
+    (alDia.length ? '<div class="exam-card" id="al-dia"><h3>📌 Para ponerte al día</h3><div class="s" style="font-size:.82rem;margin-bottom:6px">De semanas anteriores, con fecha esta semana.</div>' + alDia.map(filaSemana).join('') + '</div>' : '');
 }
 
 function renderAdminWeek(act) {

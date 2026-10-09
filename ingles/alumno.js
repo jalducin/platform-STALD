@@ -102,6 +102,31 @@ function renderParaHoy(act) {
     (filas || vacio('🎉', '¡Al día! No tienes nada atrasado ni para hoy.')) + '</section>';
 }
 
+// ---------- Aviso «hoy y atrasadas» (openspec: semana-ponerse-al-dia) ----------
+// Lo que toca hoy o ya venció y sigue pendiente, de cualquier semana (incluye el material de lectura del Meet).
+function pendientesHoy(act) {
+  const hoy = (act && act.hoy) || todayStr();
+  return ((act && act.items) || []).filter(it => (conReto(it) || it.tieneMaterial) && ['disponible', 'en-curso'].includes(it.estado) && it.fechaLimite <= hoy && !entregado(it))
+    .sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
+}
+function renderAvisoPendientes(act) {
+  const hoy = (act && act.hoy) || todayStr(), lista = pendientesHoy(act);
+  if (!lista.length) return '';
+  const deHoy = lista.filter(it => it.fechaLimite === hoy).length, atrasadas = lista.length - deHoy;
+  const partes = [deHoy ? deHoy + ' para hoy' : '', atrasadas ? atrasadas + (atrasadas === 1 ? ' atrasada' : ' atrasadas') : ''].filter(Boolean).join(' y ');
+  return '<section class="card aviso-pendientes" role="status" style="border-left:4px solid ' + (atrasadas ? '#dc2626' : '#f59e0b') + '"><div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">' +
+    '<b>' + (atrasadas ? '⏰' : '📌') + ' Tienes ' + partes + '</b><button class="btn" data-action="ver-pendientes">Ver solo hoy y atrasadas →</button></div></section>';
+}
+function openPendientes() {
+  entrarVista('pendientes');
+  const act = state.act, hoy = (act && act.hoy) || todayStr(), lista = pendientesHoy(act);
+  const etiqueta = it => it.fechaLimite < hoy ? '<span class="chip bad">⏰ Atrasada · ' + escapeHtml(formatFecha(it.fechaLimite)) + '</span>' : '<span class="chip warn">📌 Hoy</span>';
+  contentEl.innerHTML = '<div class="exam-card" id="pendientes"><h3>🔥 Hoy y atrasadas (' + lista.length + ')</h3>' +
+    (lista.length ? lista.map(it => '<div class="hoy-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + etiqueta(it) + ' · ' + tipoTexto(it.tipo) + '</div></div>' + accionItem(it, it.estado) + '</div>').join('')
+      : vacio('🎉', '¡Al día! No tienes nada atrasado ni para hoy.')) + '</div>' + volverBtn();
+  window.scrollTo(0, 0);
+}
+
 // ---------- Insignias (se calculan aquí con sus resultados; no se guardan) ----------
 function insignias(act) {
   const items = (act && act.items) || [];
@@ -196,9 +221,10 @@ function renderAlumno(data, act) {
     '<span class="chip racha" id="racha" title="Días seguidos con entregas" aria-label="Racha: ' + racha.dias + ' día(s) seguidos con entregas">🔥 ' + racha.dias + '</span>' +
     '<span class="chip gris">' + av.hechos + ' de ' + av.total + ' esta semana</span></div></div>' +
     '<div id="anillo">' + anillo(av.pct, 'semana') + '</div></section>';
-  const inicio = (porEmpezar || '') + (hayAlgo || !porEmpezar ? hero + renderProximaClase(act) + renderParaHoy(act) + '<section class="card"><h3 class="card-titulo">🏅 Insignias</h3>' + renderInsignias(act) + '</section>' : renderProximaClase(act)) +
+  const aviso = hayAlgo ? renderAvisoPendientes(act) : '';
+  const inicio = (porEmpezar || '') + aviso + (hayAlgo || !porEmpezar ? hero + renderProximaClase(act) + renderParaHoy(act) + '<section class="card"><h3 class="card-titulo">🏅 Insignias</h3>' + renderInsignias(act) + '</section>' : renderProximaClase(act)) +
     (!hayAlgo && !porEmpezar ? '<div class="card">' + vacio('🗒️', 'No hay clases registradas todavía.') + '</div>' : '');
-  const semana = hayAlgo ? renderLineaSemana(act) + renderWeekCard(act) +
+  const semana = hayAlgo ? aviso + renderLineaSemana(act) + renderWeekCard(act) +
     '<h3 class="card-titulo" style="margin-top:16px">📋 Todas mis tareas</h3>' + renderBoard(itemRowsAlumno(act)) : '<div class="card">' + vacio('📅', 'Aún no hay actividades en tu semana.') + '</div>';
   return seccionHtml('alumno', 'inicio', inicio) +
     seccionHtml('alumno', 'semana', semana) +
