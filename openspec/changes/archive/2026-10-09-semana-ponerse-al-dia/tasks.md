@@ -20,9 +20,9 @@
 
 ## 4. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
-- [ ] 4.1 En producción, la página publicada trae «Para ponerte al día»; con los datos de Fernando, la regla
+- [x] 4.1 En producción, la página publicada trae «Para ponerte al día»; con los datos de Fernando, la regla
   incluye las 5 de la semana 1
 
 ## 5. Documentación técnica (OBLIGATORIO)
 
-- [ ] 5.1 Sin docs técnicos afectados (solo vista); PR, CI, merge y archivo
+- [x] 5.1 Sin docs técnicos afectados (solo vista); PR, CI, merge y archivo
