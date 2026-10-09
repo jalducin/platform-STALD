@@ -131,8 +131,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
 
   // Invitado desde el portal
   p = await nuevaPagina(b, null);
-  await p.goto(BASE + '/' + Q); await p.fill('#email', 'leo.invitado@example.com'); await p.click('#login-btn');
-  await p.waitForSelector('#code-form:not([hidden])'); await p.fill('#code', '123456'); await p.click('#code-btn'); // enlace mágico simulado
+  await p.goto(BASE + '/' + Q); await p.fill('#email', 'leo.invitado@example.com'); await p.fill('#password', 'algo123'); await p.click('#login-btn'); // contraseña: verificador falso local
   await p.waitForSelector('#guest:not([hidden])', { timeout: 60000 });
   ok('portal: ofrece crear la cuenta de Juegos', (await p.textContent('#guest')).includes('Crear mi cuenta de Juegos'));
   await p.click('#guest-btn'); await p.waitForSelector('#f-invitado', { timeout: 60000 });

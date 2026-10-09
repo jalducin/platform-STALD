@@ -7,7 +7,8 @@
 import { attachUsers, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type SecundariaRow, type UserInfo } from "./rows.ts";
 import { handleActividades, handleProfe, handleSecundaria } from "./actividades.ts";
 import { armarPerfil } from "./perfil.ts";
-import { handleJuegos, type Invitados } from "./juegos.ts";
+import { handleJuegos, type Invitados, resolverJugador } from "./juegos.ts";
+import { handleCambio, handleOlvide, handlePreparar, handleRestablecer } from "./contrasena.ts";
 import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro } from "./alumnos.ts";
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
@@ -192,7 +193,7 @@ async function atender(req: Request): Promise<Response> {
 
   // Rutas sin identidad: /salud y la foto de avatar (la pide un <img>, sin encabezados).
   // /juegos/registro crea la cuenta de Juegos sin sesión previa (openspec: registro-directo-juegos).
-  const sinIdentidad = url.pathname.endsWith("/salud") || url.pathname.endsWith("/juegos/registro") || /\/juegos\/foto\/[^/]+$/.test(url.pathname);
+  const sinIdentidad = url.pathname.endsWith("/salud") || url.pathname.endsWith("/juegos/registro") || url.pathname.endsWith("/auth/preparar") || url.pathname.endsWith("/auth/olvide") || /\/juegos\/foto\/[^/]+$/.test(url.pathname);
   // Quién hace la petición: correo verificado por la sesión o, en la transición, `?email=` (nunca el admin).
   const quien = sinIdentidad ? { ok: true as const, email: "", verificado: false } : await quienEs(req, {
     supabaseUrl: env("SUPABASE_URL"),
@@ -219,6 +220,23 @@ async function atender(req: Request): Promise<Response> {
           return { token_hash: r.tokenHash };
         },
       }, json);
+    }
+
+    // Entrada con contraseña (openspec: acceso-con-contrasena): preparar (sin sesión), cambiar y restablecer.
+    if (url.pathname.endsWith("/auth/preparar") || url.pathname.endsWith("/auth/contrasena") || url.pathname.endsWith("/auth/restablecer") || url.pathname.endsWith("/auth/olvide")) {
+      const deps = {
+        supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY"), admin, prueba: !!env("ROWS_FIXTURE"),
+        redirect: env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/",
+        esDeClase: async (correo: string) => {
+          const [ingles, secundaria] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria")]);
+          const j = await resolverJugador(correo, admin, ingles, secundaria, {});
+          return !!j && j.tipo !== "invitado";
+        },
+      };
+      if (url.pathname.endsWith("/auth/preparar")) return await handlePreparar(req, deps, json);
+      if (url.pathname.endsWith("/auth/olvide")) return await handleOlvide(req, deps, json);
+      if (url.pathname.endsWith("/auth/contrasena")) return await handleCambio(req, quien, deps, json);
+      return await handleRestablecer(req, quien, deps, json);
     }
 
     // POST /auth/enlace → enlace de acceso para mandar por WhatsApp (solo admin con sesión).

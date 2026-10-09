@@ -501,7 +501,7 @@
 
 <script src="juegos/cartas.js?v=3"></script>
 <script src="juegos/ajedrez.js?v=1"></script>
-<script src="comun/auth.js?v=5"></script>
+<script src="comun/auth.js?v=6"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -584,7 +584,7 @@
     if (StaldAuth.esSesionVencida(res, body) && !state.pidiendoSesion) {
       state.pidiendoSesion = true;
       const eraViejo = !StaldAuth.email();
-      StaldAuth.salir().then(() => pantallaLogin(eraViejo ? '🔒 Por seguridad, ahora entras con un enlace que te mandamos a tu correo.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.'));
+      StaldAuth.salir().then(() => pantallaLogin(eraViejo ? '🔒 Por seguridad, vuelve a entrar con tu correo.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.'));
     }
     return { ok, status, body };
   }
@@ -788,56 +788,44 @@
     }
   }
 
-  // Entrada con enlace mágico o código (comun/auth.js). El enlace regresa a esta misma URL (conserva ?sala=).
+  // Entrada y registro en una sola pantalla (openspec: acceso-con-contrasena): correo y nick, sin enlaces ni
+  // contraseña. Si el correo es de las clases, se pide su contraseña (esas cuentas ven calificaciones).
+  const ACEPTO_KEY = 'juegos_acepto';
+  const aceptoGuardado = () => { try { return localStorage.getItem(ACEPTO_KEY) === '1'; } catch (e) { return false; } };
+  let entradaPrevia = { correo: '', nick: '' };
   function pantallaLogin(msg) {
     limpiar(); chip.hidden = true;
-    StaldAuth.pintarEntrada(app, {
-      titulo: '🎮 Juegos',
-      texto: salaPendiente ? '🎉 Te invitaron a la partida ' + salaPendiente + '. Escribe tu correo y te mandamos un enlace para entrar y unirte.' : 'Aprende jugando. Escribe tu correo y te mandamos un enlace para entrar, sin contraseña. ¿Primera vez? Así también creas tu cuenta de Juegos en un minuto.',
-      correo: state.email || '',
-      aviso: msg,
-      alEntrar: () => iniciar(),
-      pie: salaPendiente ? '' : '<div class="card registro-cta" id="registro-cta"><b>🆕 ¿Primera vez en Juegos?</b><p class="muted" style="margin:4px 0 10px">Crea tu cuenta con tu correo y un apodo, sin contraseña y sin estar en las clases.</p><button class="btn ghost" type="button" data-a="registro">🆕 Registrarme en Juegos</button></div>',
-    });
+    const correo = entradaPrevia.correo || (state.email || '');
+    app.innerHTML = '<div class="card"><h1>🎮 Juegos</h1><p class="lead">' + (salaPendiente ? '🎉 Te invitaron a la partida <b>' + escapeHtml(salaPendiente) + '</b>. Escribe tu correo y tu nick para unirte.' : 'Aprende jugando. Escribe tu correo y tu nick: si es tu primera vez, así creas tu cuenta; si ya tienes, entras.') + '</p>' +
+      '<form id="f-entrada" novalidate><label for="ent-correo">Tu correo</label><input id="ent-correo" type="email" inputmode="email" autocomplete="email" autocapitalize="none" placeholder="tucorreo@gmail.com" value="' + escapeHtml(correo) + '">' +
+      '<label for="ent-nick">Tu nick</label><input id="ent-nick" type="text" maxlength="20" placeholder="Ej. Leo" autocomplete="nickname" value="' + escapeHtml(entradaPrevia.nick) + '">' +
+      '<label class="check"><input id="ent-acepto" type="checkbox"' + (aceptoGuardado() ? ' checked' : '') + '><span>Acepto que se guarde mi correo y mis puntos para registrar mi avance y mejorar la plataforma.</span></label>' +
+      '<div class="row-btns"><button class="btn" type="submit" id="reg-entrar">🎮 Entrar a jugar</button></div></form>' +
+      '<p class="muted" style="margin-top:10px;font-size:.86rem">¿Eres alumno o alumna? Escribe el correo de tus clases y te pediremos tu contraseña.</p>' +
+      (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
+    const i = document.getElementById(correo ? 'ent-nick' : 'ent-correo'); if (i) i.focus();
   }
+  const pantallaRegistro = pantallaLogin; // ?registro=1 y «🆕 Registrar» abren la misma pantalla
 
-  // Registro, paso 1: apodo y aviso. Paso 2: la entrada con correo (enlace o código) de comun/auth.js.
-  function pantallaRegistro(msg) {
-    limpiar(); chip.hidden = true;
-    let r = null; try { r = JSON.parse(localStorage.getItem(REGISTRO_KEY) || 'null'); } catch (e) { /* sin almacenamiento */ }
-    app.innerHTML = '<div class="card"><h1>🆕 Crea tu cuenta de Juegos</h1><p class="lead">Paso 1 de 2: elige cómo te llamamos en el ranking.</p>' +
-      '<form id="f-registro" novalidate><label for="reg-apodo">Tu apodo</label><input id="reg-apodo" type="text" maxlength="20" placeholder="Ej. Leo" autocomplete="nickname" value="' + escapeHtml(r ? r.apodo : '') + '">' +
-      '<label class="check"><input id="reg-acepto" type="checkbox"><span>Acepto que se guarde mi correo y mis puntos para registrar mi avance y mejorar la plataforma.</span></label>' +
-      '<div class="row-btns"><button class="btn ghost" type="button" data-a="ya-tengo">Ya tengo cuenta</button><button class="btn" type="submit">Continuar →</button></div></form>' +
-      (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
-  }
-  function pantallaRegistroCorreo(apodo, msg) {
-    limpiar(); chip.hidden = true;
-    app.innerHTML = '<div class="card"><h1>🆕 Crea tu cuenta de Juegos</h1><p class="lead">Paso 2 de 2: ' + escapeHtml(apodo) + ', escribe tu correo y entra a jugar al instante.</p>' +
-      '<form id="f-registro-correo" novalidate><label for="reg-correo">Tu correo</label><input id="reg-correo" type="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com">' +
-      '<div class="row-btns"><button class="btn ghost" type="button" data-a="registro">← Cambiar apodo</button><button class="btn" type="submit" id="reg-entrar">🎮 Entrar a jugar</button></div></form>' +
-      (msg ? '<div class="alert">' + escapeHtml(msg) + '</div>' : '') + '</div>';
-    const i = document.getElementById('reg-correo'); if (i) i.focus();
-  }
-  // Registro directo (sin abrir enlaces): el servidor crea la cuenta y da una llave de sesión de un solo uso. Los
-  // correos de las clases pasan a la entrada con enlace (esas cuentas ven calificaciones).
+  // Registro o regreso directo: el servidor crea o actualiza la cuenta y da una llave de sesión de un solo uso.
   async function registrarDirecto(apodo, correo) {
+    entradaPrevia = { correo, nick: apodo };
     const b = document.getElementById('reg-entrar'); if (b) { b.disabled = true; b.textContent = 'Entrando…'; }
     let r;
     try {
       const res = await fetch(API_BASE + '/juegos/registro', { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ email: correo, nombre: apodo, acepto: true }) });
       r = { ok: res.ok, status: res.status, body: await res.json().catch(() => ({})) };
-    } catch (e) { return pantallaRegistroCorreo(apodo, '⚠️ No pude conectarme. Revisa tu internet e intenta de nuevo.'); }
+    } catch (e) { return pantallaLogin('⚠️ No pude conectarme. Revisa tu internet e intenta de nuevo.'); }
     if (r.status === 409 && r.body.error === 'correo_de_clase') {
       borrarRegistro(); limpiar(); chip.hidden = true;
-      return StaldAuth.pintarEntrada(app, { titulo: '📘 Ese correo es de las clases', texto: 'Para cuidar tus calificaciones, entra con el enlace que te mandamos a tu correo, sin contraseña.', correo, alEntrar: () => iniciar() });
+      return StaldAuth.pintarEntrada(app, { titulo: '📘 Ese correo es de las clases', texto: 'Para cuidar tus calificaciones, entra con tu contraseña de las clases. Si es tu primera vez, usa la que te dio tu profe.', correo, alEntrar: () => iniciar() });
     }
     if (!r.ok) {
-      const txt = { correo_invalido: 'Escribe un correo válido, por ejemplo tucorreo@gmail.com.', cupo_lleno: 'Ya no hay lugares para cuentas nuevas. Avísale a tu profe.', apodo_invalido: 'Tu apodo debe tener de 2 a 20 letras o números.' }[r.body.error];
-      return pantallaRegistroCorreo(apodo, txt || 'No se pudo crear tu cuenta (' + (r.body.error || r.status) + '). Intenta de nuevo.');
+      const txt = { correo_invalido: 'Escribe un correo válido, por ejemplo tucorreo@gmail.com.', cupo_lleno: 'Ya no hay lugares para cuentas nuevas. Avísale a tu profe.', apodo_invalido: 'Tu nick debe tener de 2 a 20 letras o números.' }[r.body.error];
+      return pantallaLogin(txt || 'No se pudo entrar (' + (r.body.error || r.status) + '). Intenta de nuevo.');
     }
-    try { await StaldAuth.entrarConToken(r.body.token_hash, correo); } catch (e) { return pantallaRegistroCorreo(apodo, e.message); }
-    borrarRegistro();
+    try { await StaldAuth.entrarConToken(r.body.token_hash, correo); } catch (e) { return pantallaLogin(e.message); }
+    borrarRegistro(); entradaPrevia = { correo: '', nick: '' };
     iniciar();
   }
 
@@ -1004,11 +992,10 @@
         : vacio('🧑‍🤝‍🧑', 'Todavía no hay jugadores registrados.', 'Aparecen cuando alumnos, alumnas o invitados entran a Juegos.');
     } else if (sub === 'pendientes') {
       const aviso = f.body.cuentasError ? '<div class="alert">No pude leer las cuentas de acceso; los registros pendientes no aparecen por ahora.</div>' : '';
-      panel.innerHTML = aviso + '<div id="jug-enlace" aria-live="polite"></div>' + (l.length ? lista('<table class="adm-tabla" id="jug-pendientes"><thead><tr><th scope="col">Correo</th><th scope="col">Estado</th><th scope="col">Intentó</th><th scope="col"><span class="sr-only">Acción</span></th></tr></thead><tbody>' +
+      panel.innerHTML = aviso + '<p class="muted">Pueden entrar a Juegos con su correo y su nick; no hace falta mandarles nada.</p>' + (l.length ? lista('<table class="adm-tabla" id="jug-pendientes"><thead><tr><th scope="col">Correo</th><th scope="col">Estado</th><th scope="col">Intentó</th></tr></thead><tbody>' +
         l.map(p => '<tr' + buscaAttr(p.email) + '><td class="ancho"><b class="adm-correo" style="color:var(--text)">' + escapeHtml(p.email) + '</b></td>' +
           '<td data-label="Estado" class="adm-estado">' + (p.estado === 'sin confirmar' ? '✉️ No confirmó su correo' : '🙈 Entró sin elegir apodo') + '</td>' +
-          '<td data-label="Intentó">' + escapeHtml(fechaCorta(p.creada)) + '</td>' +
-          '<td class="ancho accion"><button class="btn ghost sm" type="button" data-enlace="' + escapeHtml(p.email) + '">🔗 Enlace de acceso</button></td></tr>').join('') + '</tbody></table>', 'Lista de registros pendientes')
+          '<td data-label="Intentó">' + escapeHtml(fechaCorta(p.creada)) + '</td></tr>').join('') + '</tbody></table>', 'Lista de registros pendientes')
         : vacio('🎉', 'Sin registros pendientes.', 'Todos los que se registraron ya pueden jugar.'));
     } else if (sub === 'invitados') {
       panel.innerHTML = l.length ? lista('<table class="adm-tabla" id="inv-tabla" style="--cols:3"><thead><tr><th scope="col">Invitado</th><th scope="col" class="num">Visitas</th><th scope="col">Última visita</th><th scope="col" class="num">Puntos semana</th></tr></thead><tbody>' +
@@ -1057,25 +1044,6 @@
     const j = { ArrowRight: (i + 1) % k, ArrowLeft: (i - 1 + k) % k, Home: 0, End: k - 1 }[e.key];
     if (j === undefined) return;
     e.preventDefault(); cambiarSubAdmin(ADM_SUBS[j].id, true);
-  }
-
-  // Enlace de acceso para un registro pendiente: lleva directo a Juegos (POST /auth/enlace con destino «juegos»).
-  async function enlacePendiente(b) {
-    const caja = document.getElementById('jug-enlace');
-    b.disabled = true; b.textContent = 'Generando…';
-    const r = await post('/auth/enlace', { email: b.dataset.enlace, destino: 'juegos' });
-    b.disabled = false; b.textContent = '🔗 Enlace de acceso';
-    if (!r.ok) { caja.innerHTML = '<div class="alert">No se pudo generar (' + escapeHtml(r.body.error || r.status) + ').</div>'; caja.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
-    const texto = '🎮 ¡Hola! Este es tu enlace para entrar a Juegos de STALD (es de un solo uso y vence en 1 hora): ' + r.body.enlace;
-    caja.innerHTML = '<div class="card" id="jug-enlace-caja"><b>Enlace para ' + escapeHtml(r.body.email) + '</b><input readonly aria-label="Enlace de acceso" value="' + escapeHtml(r.body.enlace) + '" style="margin:8px 0">' +
-      '<div class="row-btns"><button class="btn ghost" type="button" data-copiar="' + escapeHtml(r.body.enlace) + '">📋 Copiar</button>' +
-      '<a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(texto) + '">📤 Mandar por WhatsApp</a></div>' +
-      '<small class="muted">Es de un solo uso y vence en 1 hora.</small></div>';
-    caja.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
-  async function copiarEnlace(b) {
-    try { await navigator.clipboard.writeText(b.dataset.copiar); b.textContent = '✔ ¡Copiado!'; } catch (e) { b.textContent = 'Selecciónalo y cópialo'; }
-    setTimeout(() => { if (b.isConnected) b.textContent = '📋 Copiar'; }, 2500);
   }
 
   // Moderación de fotos de avatar: al quitar una, se vuelve a pedir solo la lista de fotos.
@@ -3837,8 +3805,6 @@
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('♟️ Espera a que se una tu rival: el ajedrez en partida es 1 vs 1.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
-    const en = e.target.closest('[data-enlace]'); if (en) return enlacePendiente(en);
-    const cp = e.target.closest('[data-copiar]'); if (cp) return copiarEnlace(cp);
     const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
     const g = e.target.closest('[data-juego]');
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
@@ -3858,7 +3824,6 @@
       StaldAuth.salir().then(() => { state.email = null; borrarRegistro(); pantallaRegistro(); });
       return;
     }
-    if (a.dataset.a === 'ya-tengo') { borrarRegistro(); return pantallaLogin(); }
     if (a.dataset.a === 'otro-correo') { StaldAuth.salir().then(() => { state.email = null; pantallaLogin(); }); }
   });
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez';
@@ -3876,21 +3841,16 @@
       document.getElementById('pb-basta').disabled = true;
       return post('/juegos/sala/' + sala.codigo + '/respuesta', { ronda: sala.rondaActual, palabras, basta: true }).then(() => traerSala());
     }
-    if (e.target.id === 'f-registro') {
+    if (e.target.id === 'f-entrada') {
       e.preventDefault();
-      const apodo = document.getElementById('reg-apodo').value.trim().replace(/\s+/g, ' ');
-      if (!/^[\p{L}\p{N} ]{2,20}$/u.test(apodo)) return pantallaRegistro('Tu apodo debe tener de 2 a 20 letras o números.');
-      if (!document.getElementById('reg-acepto').checked) { try { localStorage.setItem(REGISTRO_KEY, JSON.stringify({ apodo, acepto: false })); } catch (err) { /* sin almacenamiento */ } return pantallaRegistro('Para crear tu cuenta de Juegos necesitas aceptar el aviso.'); }
-      try { localStorage.setItem(REGISTRO_KEY, JSON.stringify({ apodo, acepto: true })); } catch (err) { /* sin almacenamiento: se pedirá el apodo después */ }
-      return pantallaRegistroCorreo(apodo);
-    }
-    if (e.target.id === 'f-registro-correo') {
-      e.preventDefault();
-      const correo = document.getElementById('reg-correo').value.trim().toLowerCase();
-      const reg = registroPendiente();
-      if (!reg) return pantallaRegistro();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return pantallaRegistroCorreo(reg.apodo, 'Escribe un correo válido, por ejemplo tucorreo@gmail.com.');
-      return registrarDirecto(reg.apodo, correo);
+      const correo = document.getElementById('ent-correo').value.trim().toLowerCase();
+      const apodo = document.getElementById('ent-nick').value.trim().replace(/\s+/g, ' ');
+      entradaPrevia = { correo, nick: apodo };
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return pantallaLogin('Escribe un correo válido, por ejemplo tucorreo@gmail.com.');
+      if (!/^[\p{L}\p{N} ]{2,20}$/u.test(apodo)) return pantallaLogin('Tu nick debe tener de 2 a 20 letras o números.');
+      if (!document.getElementById('ent-acepto').checked) return pantallaLogin('Para entrar a Juegos necesitas aceptar el aviso.');
+      try { localStorage.setItem(ACEPTO_KEY, '1'); } catch (err) { /* sin almacenamiento */ }
+      return registrarDirecto(apodo, correo);
     }
     if (e.target.id === 'f-invitado') {
       e.preventDefault();

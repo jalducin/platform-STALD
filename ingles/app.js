@@ -186,12 +186,12 @@ async function loadFor(email) {
   }
 }
 
-// ---------- Inicio de sesión con enlace mágico (comun/auth.js, openspec: plataforma-login) ----------
+// ---------- Inicio de sesión con correo y contraseña (comun/auth.js, openspec: acceso-con-contrasena) ----------
 function mostrarEntrada(aviso) {
   if (cajonEl.open) cajonEl.close();
   appEl.style.display = 'none'; navEl.hidden = true; loginEl.style.display = 'block';
   state.data = null;
-  StaldAuth.pintarEntrada(loginEl, { titulo: MODO_SECUNDARIA ? '📝 Exámenes de Secundaria' : '📗 Clases de Inglés', texto: 'Te mandamos un enlace a tu correo para entrar, sin contraseña.', aviso, alEntrar: c => loadFor(c) });
+  StaldAuth.pintarEntrada(loginEl, { titulo: MODO_SECUNDARIA ? '📝 Exámenes de Secundaria' : '📗 Clases de Inglés', texto: 'Entra con tu correo y tu contraseña. Si es tu primera vez, usa la que te dio tu profe.', aviso, alEntrar: c => loadFor(c) });
 }
 let saliendo = false;
 function sesionVencida(body) {
@@ -199,7 +199,7 @@ function sesionVencida(body) {
   saliendo = true;
   StaldAuth.salir().then(() => {
     saliendo = false;
-    mostrarEntrada(body && body.error === 'inicia_sesion' ? '🔒 Por seguridad, ahora entras con un enlace que te llega a tu correo.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.');
+    mostrarEntrada(body && body.error === 'inicia_sesion' ? '🔒 Por seguridad, ahora entras con tu correo y tu contraseña.' : 'Tu sesión terminó. Vuelve a entrar con tu correo.');
   });
 }
 async function cerrarSesion() {

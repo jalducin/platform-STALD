@@ -71,7 +71,7 @@ const sinScrollLateral = p => p.evaluate(() => document.documentElement.scrollWi
   await ad.click('[data-a="csv-jugadores"]');
   ok('CSV de jugadores', (await dl).suggestedFilename() === 'jugadores-juegos.csv');
 
-  // Pendientes: enlace de acceso
+  // Pendientes: sin enlaces de acceso (openspec: acceso-con-contrasena; entran con correo y nick)
   await ad.click('[data-adm="pendientes"]');
   const txtP = (await ad.textContent('#adm-panel')).replace(/\s+/g, ' ');
   ok('pendientes «sin confirmar» y «sin apodo»', txtP.includes('pendiente.confirmar@example.com') && txtP.includes('No confirmó su correo') && txtP.includes('pendiente.apodo@example.com') && txtP.includes('Entró sin elegir apodo'));
@@ -80,12 +80,7 @@ const sinScrollLateral = p => p.evaluate(() => document.documentElement.scrollWi
   ok('buscador filtra la sub-sección activa (Pendientes)', v.length === 1 && v[0].includes('pendiente.apodo'), v.join(' | '));
   await ad.fill('#adm-buscar', '');
   await ad.screenshot({ path: 'admin-pendientes-390.png', fullPage: true });
-  let cuerpo = null;
-  ad.on('request', q => { if (q.url().includes('/auth/enlace')) cuerpo = q.postData(); });
-  await ad.click('[data-enlace="pendiente.confirmar@example.com"]');
-  await ad.waitForSelector('#jug-enlace .alert, #jug-enlace-caja', { timeout: 15000 });
-  ok('enlace: pide destino «juegos» para ese correo', !!cuerpo && cuerpo.includes('"destino":"juegos"') && cuerpo.includes('pendiente.confirmar@example.com'), String(cuerpo));
-  ok('enlace sin Supabase local: aviso claro', (await ad.textContent('#jug-enlace')).includes('No se pudo generar'));
+  ok('pendientes: sin botón de enlace y con la nota de correo y nick', !(await ad.$('[data-enlace]')) && txtP.includes('correo y su nick'));
 
   // Teclado: → pasa a Invitados
   await ad.focus('#adm-subs [aria-selected="true"]'); await ad.keyboard.press('ArrowRight');

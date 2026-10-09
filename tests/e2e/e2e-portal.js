@@ -14,9 +14,8 @@ const tiles = p => p.$$eval('#tiles [data-espacio]', xs => xs.map(x => x.dataset
 async function entrar(p, email) {
   await p.goto(BASE + '/' + Q); await p.waitForSelector('#login:not([hidden]), #home:not([hidden])');
   if (await p.$('#home:not([hidden])')) { await p.click('#logout'); }
-  await p.fill('#email', email); await p.click('#login-btn');
-  // Enlace mágico simulado (plataforma-login): paso del código con el verificador falso local.
-  await p.waitForSelector('#code-form:not([hidden])'); await p.fill('#code', '123456'); await p.click('#code-btn');
+  // Correo y contraseña (openspec: acceso-con-contrasena) con el verificador falso local; una propia: no pide cambio.
+  await p.fill('#email', email); await p.fill('#password', 'propia123'); await p.click('#login-btn');
   await p.waitForSelector('#home:not([hidden]), #login-error:not([hidden]), #guest:not([hidden])', { timeout: 60000 });
 }
 
