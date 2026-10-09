@@ -1,6 +1,6 @@
 ---
 name: nueva-semana-ingles
-description: Prepara, valida y sube la clase de Inglés de la semana siguiente (actividades mar/jue, examen vie, refuerzo sáb, Meet dom con guion y presentación) al repo privado de datos. Úsala cuando pidan "armar/cargar la semana N", "la clase de la próxima semana" o den temas nuevos de Inglés.
+description: Prepara, valida y sube la clase de Inglés de la semana siguiente (actividades mar/jue, examen vie, refuerzo sáb, Meet dom con guion y presentación, y tres de Tecnología e IA jue/sáb/dom) al repo privado de datos. Úsala cuando pidan "armar/cargar la semana N", "la clase de la próxima semana" o den temas nuevos de Inglés.
 author: platform-STALD
 version: 1.0.0
 ---
@@ -28,7 +28,8 @@ Flujo para armar la clase de la semana siguiente, normalmente el fin de semana a
    - jue: `act-<fecha>`
    - vie: `examen-<fecha>`
    - sáb: `refuerzo-<fecha>`
-   - dom: `meet-<fecha>`
+   - dom: `meet-<fecha>` (solo la clase y el material del profe, **sin reto**)
+   - jue, sáb y dom: `tec-<fecha>` (Tecnología e IA 1, 2 y 3; todas disponibles desde el jueves)
 2. Pide o confirma los temas de martes, jueves y domingo (texto o fotos del libro). Pregunta por días sin
    clase; si hay alguno, ajusta la semana. El validador avisará que el día no sigue el patrón, y eso es
    aceptable.
@@ -46,18 +47,19 @@ curl -s "https://stald.jalducin.deno.net/ingles/actividades?email=<correo-admin>
   la actividad del martes como mini-repaso (2–3 ejercicios) y en el guion del domingo.
 - Revisa la semana anterior en `$DATA/contenido/` para no repetir ejercicios y mantener el estilo.
 
-## Paso 3: Generar los 6 JSON
+## Paso 3: Generar los 9 JSON
 
 Escribe un generador en `$DATA/herramientas/semana-<lunes>/`. Usa como modelo
 `herramientas/semana-2026-09-28/` (`gen_semana1.py` y `gen_meet.py`). El generador escribe:
 
 | Archivo | Contenido clave |
 |---|---|
-| `contenido/semanas/<lunes>.json` | `id` = lunes, `titulo` "Semana N · <tema>", 5 `elementos` `{ id, tipo, fecha }` |
+| `contenido/semanas/<lunes>.json` | `id` = lunes, `titulo` "Semana N · <tema>", 8 `elementos` `{ id, tipo, fecha }` (los `tec-` como `actividad`) |
 | `actividades/act-<mar>.json`, `act-<jue>.json` | `disponibleDesde` = lunes, `intentos` 2, `preguntasPorIntento` 12 (el intento 2 es corrección de los mismos ejercicios), banco ≥ 36 (≥ 12 por tema) para variar entre alumnos y alumnas, 2–3 `temas`, `teoria` (tablas + puntos), `tips` (≥ 2 `libreta` y ≥ 2 `video`) |
 | `examenes/examen-<vie>.json` | `disponibleDesde` = `fechaLimite` = viernes, `intentos` 2 con `segundaOportunidad` = domingo (2.ª oportunidad con preguntas nuevas; cuenta la mejor), `preguntasPorIntento` 20, banco ~40 **nuevo** que cubra todos los temas de mar y jue (con 40, la 2.ª oportunidad cambia hasta 20 preguntas) |
 | `actividades/refuerzo-<sáb>.json` | `basadoEn` examen del viernes, `respaldo` `diagnostico-a1`, `bancoDe` [act mar, act jue, examen], `mapeoTemas` (tema del examen o del diagnóstico → tema del refuerzo), `temas` de la semana, `banco: []` |
-| `actividades/meet-<dom>.json` | `guion` (bloques con `tiempo`, `titulo`, `objetivo`, `pasos`), `teoria` de lo nuevo, `tips`, banco ≥ 20 del reto (10 por intento), `presentacion.diapositivas` |
+| `actividades/meet-<dom>.json` | Solo material del profe: `guion` (bloques con `tiempo`, `titulo`, `objetivo`, `pasos`), `teoria` de lo nuevo, `tips` y `presentacion.diapositivas`. **Sin `banco` ni reto** (cambio `meet-sin-reto`): alumnos y alumnas solo ven el enlace |
+| `actividades/tec-<jue>.json`, `tec-<sáb>.json`, `tec-<dom>.json` | Tecnología e IA para el trabajo y la vida diaria, ligada a la gramática de la semana (bases de IA generativa, prompts en inglés y uso seguro, la gramática con tecnología…). `disponibleDesde` = jueves, `intentos` 2, `preguntasPorIntento` 10, banco ~20, 2 `temas`, `teoria` y `tips` con ≥ 2 `libreta`, videos y **documentación oficial verificada** (`{ tipo: "lectura", texto, url }`; comprobar cada URL con curl) |
 
 Cada **tema** lleva `retroalimentacion` con `fortaleza`, `en-progreso` y `debilidad`. Cada **ejercicio**
 lleva:
@@ -65,15 +67,16 @@ lleva:
 - tipo `opcion` con `opciones` + `correcta`, o tipo `escribir` con `aceptadas`, que incluye variantes
   como contracciones ("don't", "do not").
 
-Mezcla alrededor de 70 % `opcion` y 30 % `escribir`.
+Mezcla alrededor de 70 % `opcion` y 30 % `escribir`. La plataforma baraja las preguntas pero **no las opciones**:
+reparte la posición de la respuesta correcta.
 
 **Diapositivas soportadas** (`ingles.html`):
 - `portada`, `agenda`, `retro` (automática, sin nombres);
 - `teoria` con `ref` = índice en `teoria`;
 - `practica` (`instrucciones`, `frases`), `juego` (`reglas`);
-- `reto` (`url`, `pasos`), `libreta`, `cierre`.
+- `libreta`, `cierre` (la diapositiva `reto` existe solo para Meet viejos; ya no se usa).
 
-Orden sugerido: portada → agenda → retro → (teoría → práctica)× → juego → reto → libreta → cierre.
+Orden sugerido: portada → agenda → retro → (teoría → práctica)× → juego → libreta → cierre.
 
 ## Paso 4: Validar
 

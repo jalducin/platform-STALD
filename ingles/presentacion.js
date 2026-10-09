@@ -41,7 +41,7 @@ async function openGuion(id) {
     '<details class="section" open><summary><div class="section-head"><span><span class="chevron">▶</span>🗒️ Bloques de la clase</span><span class="count">' + it.guion.length + '</span></div></summary><div style="padding:8px">' + bloques + '</div></details>' +
     '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría para compartir en pantalla</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' +
     renderTips(it.tips) +
-    '<div class="exam-bar">' + volverBtn() + '<span style="display:flex;gap:6px"><button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Probar el reto</button><button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button></span></div>';
+    '<div class="exam-bar">' + volverBtn() + '<span style="display:flex;gap:6px">' + (it.tieneReto ? '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Probar el reto</button>' : '') + '<button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button></span></div>';
   window.scrollTo(0, 0);
 }
 

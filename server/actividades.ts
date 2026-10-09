@@ -144,6 +144,8 @@ function meta(it: ConGrupos) {
     intentosMax: tieneReto(it) ? maxIntentos(it) : 0,
     preguntas: tieneReto(it) ? (it.preguntasPorIntento || (it.banco || []).length) : 0,
     meetUrl: it.meetUrl ?? null, hora: it.hora ?? null, tieneReto: it.tipo === "meet" && tieneReto(it),
+    // Material del profe en el Meet (guion o presentación), con o sin reto (openspec: meet-sin-reto).
+    tieneMaterial: it.tipo === "meet" && !!(it.presentacion || (it.guion || []).length),
     ...(it.segundaOportunidad ? { segundaOportunidad: it.segundaOportunidad } : {}),
     ...(it.grupos ? { grupos: it.grupos } : {}),
     ...(it.alumnos ? { alumnos: it.alumnos } : {}),
@@ -204,7 +206,17 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
   }
   if (!base || (slug && !quien.isAdmin && !esPara(base, slug))) return json({ error: "no_encontrado" }, 404);
   const it = slug && !quien.isAdmin ? paraAlumno(base, slug) : base;
-  if (!tieneReto(it)) return json({ error: "no_aplica" }, 400);
+  if (!tieneReto(it)) {
+    // Meet sin reto: el profe abre su material (guion, presentación, teoría); no hay nada que resolver (openspec: meet-sin-reto).
+    if (req.method === "GET" && partes.length === 1 && quien.isAdmin && it.tipo === "meet") {
+      return json({
+        ...meta(it), teoria: it.teoria || [], tips: it.tips || [],
+        ...(it.guion ? { guion: it.guion } : {}), ...(it.presentacion ? { presentacion: it.presentacion } : {}),
+        temas: [], enfoque: [], intento: 0, intentosUsados: 0, vistaPrevia: true, preguntas: [],
+      });
+    }
+    return json({ error: "no_aplica" }, 400);
+  }
 
   // DELETE /ingles/actividades/<id>/resultados/<alumno> → reiniciar (solo admin)
   if (req.method === "DELETE" && partes[1] === "resultados" && partes[2]) {

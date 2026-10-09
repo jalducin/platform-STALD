@@ -55,7 +55,7 @@ function renderPresentar() {
   const semana = meets.filter(it => deSemana.has(it.id));
   const anteriores = meets.filter(it => !deSemana.has(it.id)).sort((a, b) => b.fechaLimite.localeCompare(a.fechaLimite));
   const fila = it => {
-    const btn = it.tieneReto
+    const btn = it.tieneReto || it.tieneMaterial // material del profe con o sin reto (openspec: meet-sin-reto)
       ? '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button><button class="btn ghost" data-action="abrir-guion" data-id="' + escapeHtml(it.id) + '">📋 Guion</button></span>'
       : (it.meetUrl ? '<a class="btn ghost" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">🎥 Abrir Meet</a>' : '');
     return '<div class="exam-item"><div><div class="t">🎥 ' + escapeHtml(it.titulo) + '</div><div class="s">' + escapeHtml(formatFecha(it.fechaLimite)) + (it.hora ? ' · ' + escapeHtml(it.hora) : '') + '</div></div>' + btn + '</div>';
