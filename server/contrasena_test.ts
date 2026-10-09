@@ -6,10 +6,10 @@ const ADMIN = "profe@example.com";
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s });
 
 // Auth falsa: usuarios por correo con contraseña y app_metadata; registra las llamadas.
-function authFalsa(iniciales: Record<string, { password?: string; propia?: boolean }> = {}) {
-  const usuarios = new Map<string, { id: string; email: string; password?: string; app_metadata: Record<string, unknown> }>();
+function authFalsa(iniciales: Record<string, { password?: string; propia?: boolean; confirmado?: boolean }> = {}) {
+  const usuarios = new Map<string, { id: string; email: string; password?: string; confirmado: boolean; app_metadata: Record<string, unknown> }>();
   let n = 0;
-  for (const [email, u] of Object.entries(iniciales)) usuarios.set(email, { id: `u${++n}`, email, password: u.password, app_metadata: u.propia === undefined ? {} : { contrasena_propia: u.propia } });
+  for (const [email, u] of Object.entries(iniciales)) usuarios.set(email, { id: `u${++n}`, email, password: u.password, confirmado: u.confirmado ?? true, app_metadata: u.propia === undefined ? {} : { contrasena_propia: u.propia } });
   const llamadas: string[] = [];
   const fetchFalso = (url: string | URL | Request, init?: RequestInit) => Promise.resolve(responder(url, init));
   const responder = (url: string | URL | Request, init?: RequestInit): Response => {
@@ -18,7 +18,7 @@ function authFalsa(iniciales: Record<string, { password?: string; propia?: boole
     if (m === "GET" && u.pathname === "/auth/v1/admin/users") return json({ users: [...usuarios.values()].map((x) => ({ id: x.id, email: x.email, app_metadata: x.app_metadata })) });
     const body = init?.body ? JSON.parse(String(init.body)) : {};
     if (m === "POST" && u.pathname === "/auth/v1/admin/users") {
-      const nuevo = { id: `u${++n}`, email: body.email, password: body.password, app_metadata: body.app_metadata ?? {} };
+      const nuevo = { id: `u${++n}`, email: body.email, password: body.password, confirmado: body.email_confirm === true, app_metadata: body.app_metadata ?? {} };
       usuarios.set(body.email, nuevo);
       return json(nuevo);
     }
@@ -27,6 +27,7 @@ function authFalsa(iniciales: Record<string, { password?: string; propia?: boole
       const x = [...usuarios.values()].find((y) => y.id === mm[1]);
       if (!x) return json({ error: "not_found" }, 404);
       if (body.password) x.password = body.password;
+      if (body.email_confirm === true) x.confirmado = true;
       if (body.app_metadata) x.app_metadata = { ...x.app_metadata, ...body.app_metadata };
       return json(x);
     }
@@ -151,4 +152,15 @@ Deno.test("olvidé: máximo 3 por correo cada hora; en modo de prueba no llama a
   const d = { ...deps(authFalsa()), prueba: true, redirect: "https://sitio/" };
   for (let i = 0; i < 3; i++) assertEquals((await handleOlvide(post("/auth/olvide", { email: "sofy@example.com" }), d, json)).status, 200);
   assertEquals((await handleOlvide(post("/auth/olvide", { email: "sofy@example.com" }), d, json)).status, 429);
+});
+
+Deno.test("preparar: una cuenta con el correo sin confirmar (enlace que nunca abrió) queda confirmada", async () => {
+  limpiarIntentos();
+  const a = authFalsa({ "sofy@example.com": { confirmado: false } });
+  assertEquals((await handlePreparar(post("/auth/preparar", { email: "sofy@example.com", password: "clase" }), deps(a), json)).status, 200);
+  const u = a.usuarios.get("sofy@example.com")!;
+  assertEquals([u.password, u.confirmado], ["stald·clase", true]);
+  const b = authFalsa();
+  await handlePreparar(post("/auth/preparar", { email: "marisol@example.com", password: "clase" }), deps(b), json);
+  assertEquals(b.usuarios.get("marisol@example.com")!.confirmado, true, "las nuevas nacen confirmadas");
 });

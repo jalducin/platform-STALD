@@ -63,9 +63,11 @@ function api(deps: DepsContrasena) {
       await res.body?.cancel();
       if (!res.ok) throw new Error(`auth alta ${res.status}`);
     },
-    async actualizar(id: string, password: string, propia: boolean) {
+    // confirmar: al preparar, también confirma el correo (cuentas que quedaron sin confirmar por un enlace que nunca
+    // se abrió; Supabase no deja entrar con contraseña a una cuenta sin confirmar; openspec: confirmar-al-preparar).
+    async actualizar(id: string, password: string, propia: boolean, confirmar = false) {
       const res = await f(`${base}/auth/v1/admin/users/${encodeURIComponent(id)}`, { method: "PUT", headers: h, signal: AbortSignal.timeout(8000),
-        body: JSON.stringify({ password, app_metadata: { contrasena_propia: propia } }) });
+        body: JSON.stringify({ password, app_metadata: { contrasena_propia: propia }, ...(confirmar ? { email_confirm: true } : {}) }) });
       await res.body?.cancel();
       if (!res.ok) throw new Error(`auth actualizar ${res.status}`);
     },
@@ -98,7 +100,7 @@ export async function handlePreparar(req: Request, deps: DepsContrasena, json: J
     const a = api(deps);
     const u = await a.buscar(email);
     if (u?.app_metadata?.contrasena_propia === true) return json({ error: "credenciales" }, 401);
-    if (u) await a.actualizar(u.id, derivar(inicial), false);
+    if (u) await a.actualizar(u.id, derivar(inicial), false, true);
     else await a.crear(email, derivar(inicial), false);
     return json({ listo: true });
   } catch (e) {
