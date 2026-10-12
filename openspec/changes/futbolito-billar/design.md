@@ -125,6 +125,17 @@ El juego vive en el iframe (como Arcade). `juegos.html`:
   agrega error según el nivel. Puntos: 30 por bola propia metida + al ganar 500 y 10 por bola del rival que quedó
   (+100/+200 en Medio/Difícil individual); tope 1000.
 
+### 9. Capa de acciones (pedido del integrador: mando común de Arcade)
+La entrada de los dos juegos pasa por `MesaUI.crearAcciones` (acciones con nombre: sostenidas, de pulso y un eje
+analógico −1…1). El teclado es un adaptador; un mando (el futuro `juegos/mando.js`, que aún no está en `main`) se
+conectará con un adaptador que llame `window.accionesJuego.presionar(nombre, on)` y `ponerEje(v)`, sin depender de él
+ahora. Los toques directos (arrastrar, tocar, resortera) siguen aparte.
+- Futbolito: `barraMenos`/`barraMas` (o el eje) mueven la barra a lo largo de su eje (← → en vertical, ↑ ↓ en
+  horizontal), `cambiarBarra` (K; la automática espera 1.5 s), `patear` (Espacio/J; en sala, tirar) y `pausa`
+  (P/Esc/Enter).
+- Billar: `apuntarMenos`/`apuntarMas` o el eje (← →; giro fino cerca del centro), `fuerzaMenos`/`fuerzaMas` (↓ ↑),
+  `tirar` (Espacio/J), `efecto` (K) y `pausa` (P/Esc/Enter).
+
 ## Risks / Trade-offs
 
 - [Diferencias de punto flotante entre navegadores] → matemática propia, paso fijo, redondeo tras cada tiro y

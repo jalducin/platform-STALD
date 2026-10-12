@@ -77,6 +77,12 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__billar.firma(
   await fr.tap('#b-efecto');
   ok('efecto: el botón cambia a «Seguir»', (await estado(fr)).efecto === 70 && /Seguir/.test(await fr.textContent('#b-efecto')));
   await fr.tap('#b-efecto'); await fr.tap('#b-efecto');
+  // Capa de acciones (para un mando): el eje gira la mira y «fuerzaMas» sube la fuerza.
+  const a0 = (await estado(fr)).aim, f0 = (await estado(fr)).fuerza;
+  await fr.evaluate(() => { window.accionesJuego.ponerEje(1); window.accionesJuego.presionar('fuerzaMas', true); }); await sleep(400);
+  await fr.evaluate(() => { window.accionesJuego.ponerEje(0); window.accionesJuego.presionar('fuerzaMas', false); });
+  const ea = await estado(fr);
+  ok('acciones: el eje gira la mira y «fuerzaMas» sube la fuerza', ea.aim !== a0 && ea.fuerza > f0, JSON.stringify({ a0, aim: ea.aim, f0, fuerza: ea.fuerza }));
   // Rompe con resortera (jalón largo = fuerza alta).
   await resortera(p, fr, 0, 220);
   e = await estado(fr);

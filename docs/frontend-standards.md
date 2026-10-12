@@ -171,6 +171,8 @@ Cada página debe manejar y mostrar de forma explícita:
       activa es la propia más cercana detrás de la pelota; teclado ← → / ↑ ↓ (según la orientación) y Espacio.
     - Billar: arrastrar apunta hacia el dedo con línea guía (bola fantasma, salida de la bola y de la blanca);
       jalar desde la blanca (resortera) tira con la fuerza del jalón; barra de fuerza, ⟲ ⟳ y efecto ⬆ ● ⬇.
+    - Teclado y mandos pasan por la capa de acciones `MesaUI.crearAcciones` (`window.accionesJuego.presionar(nombre,
+      on)` / `ponerEje(v)`); un mando nuevo se conecta con un adaptador, sin tocar el juego (design §9).
     - Sala: `pintarFisicaSala` manda `inicio { modo: "sala", seed, inicio, ahora, yo, orden, jugadas }` y
       `jugadas { jugadas, ahora }` cuando cambian; el iframe responde `jugada { jugada }` (la página hace el `POST` y
       contesta `jugada-ok`) y `fin { gana, puntos, aciertos, total, titulo }` → `pintarFinalSala`. En Futbolito cada

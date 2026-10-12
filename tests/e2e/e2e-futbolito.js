@@ -87,6 +87,17 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
   await sleep(250);
   e = await estado(fr);
   ok('toque real: deslizar a la izquierda mueve la barra activa a la izquierda', e.s[4] < s0 - 10, JSON.stringify({ antes: s0, despues: e.s[4] }));
+  // Capa de acciones (para un mando): mantener «barraMas» corre la barra; «cambiarBarra» cambia la activa.
+  await fr.evaluate(() => window.__futbolito.ponerPelota(150, 235));
+  const sA = (await estado(fr)).s[4];
+  await fr.evaluate(() => window.accionesJuego.presionar('barraMas', true)); await sleep(300);
+  await fr.evaluate(() => window.accionesJuego.presionar('barraMas', false));
+  const sB = (await estado(fr)).s[4];
+  await fr.evaluate(() => window.accionesJuego.presionar('cambiarBarra', true)); await fr.evaluate(() => window.accionesJuego.presionar('cambiarBarra', false));
+  const tras = await estado(fr);
+  ok('acciones: «barraMas» mueve la barra y «cambiarBarra» cambia la activa', sB > sA + 10 && tras.activa !== 4, JSON.stringify({ sA, sB, activa: tras.activa }));
+  await fr.evaluate(() => window.__futbolito.pelotaEnfrente());
+  await sleep(1600); // la barra automática vuelve a mandar tras el cambio manual
   await fr.evaluate(() => window.__futbolito.pelotaEnfrente());
   await sleep(60);
   await tocar(p, c.x + c.width / 2, c.y + c.height * 0.8);
@@ -98,7 +109,8 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
   await sleep(100);
   e = await estado(fr);
   ok('cambio automático: con la pelota atrás de los medios la barra activa es la defensa', e.puesto === 'defensa', e.puesto);
-  ok('individual: 60 cuadros por segundo', e.fps >= 50, String(e.fps));
+  await sleep(2500); // medir con el juego corriendo solo (sin llamadas de la prueba en medio), como en Karts
+  ok('individual: 60 cuadros por segundo', (await estado(fr)).fps >= 50, String((await estado(fr)).fps));
   for (let i = 0; i < 5; i++) await fr.evaluate(() => window.__futbolito.anotar(0));
   await fr.waitForSelector('#ov-res:not(.hide)', { timeout: 10000 });
   await fr.waitForFunction(() => /individuales|No se guardaron/.test(document.getElementById('res-guardado').textContent), null, { timeout: 20000 });

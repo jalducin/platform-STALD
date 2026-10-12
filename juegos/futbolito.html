@@ -71,7 +71,7 @@ html.tactil #teclas{display:none}
     <div id="estado" class="hide" role="status"></div>
     <div id="cuenta" aria-live="polite"></div>
     <div id="aviso" role="status"></div>
-    <div id="teclas" class="hide">← → mueven tu barra · Espacio patea</div>
+    <div id="teclas" class="hide">← → mueven tu barra · Espacio patea · K cambia de barra · P pausa</div>
 
     <div class="ov" id="ov-carga"><h1>⚽ Futbolito</h1><p>Cargando…</p></div>
     <div class="ov hide" id="ov-menu">
@@ -116,7 +116,7 @@ const NIVEL_TXT = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
 let modo = 'carga', nivel = 'medio', st = null, mem = {}, activa = 4, objetivo = [], golHasta = 0, t0 = 0, rnd = Math.random;
 let sala = null; // controlador de sala (MesaUI.crearSala)
 let posSala = null; // corrimiento elegido para el tiro de sala
-const tecla = { izq: false, der: false };
+let manualHasta = 0; // «cambiar barra» manual: la automática espera un momento
 
 /* ---------- Vista: mesa → pantalla (vertical u horizontal; en sala, tu portería siempre abajo/izquierda) ---------- */
 const MARCO = 16, CAB = 24; // marco de madera y fondo de las porterías (unidades de mesa)
@@ -241,9 +241,8 @@ function pintarMarcador() { const m = vistaMarcador(); $('g0').textContent = m[0
 function pasoVivo() {
   if (golHasta) { if (performance.now() < golHasta) return; golHasta = 0; T.saque(st, st.ultimoGol === 0 ? 1 : 0, (Math.random() * 2 - 1) * 20); }
   const nueva = T.barraActiva(st, 0);
-  if (nueva !== activa) { activa = nueva; objetivo[activa] = st.s[activa]; }
-  if (tecla.izq) objetivo[activa] -= 380 * PASO * signoTecla;
-  if (tecla.der) objetivo[activa] += 380 * PASO * signoTecla;
+  if (nueva !== activa && performance.now() > manualHasta) { activa = nueva; objetivo[activa] = st.s[activa]; }
+  objetivo[activa] += 380 * PASO * acciones.direccion('barraMenos', 'barraMas') * signoTecla;
   const b = T.BARRAS[activa]; objetivo[activa] = F.acotar(objetivo[activa], -b.rango, b.rango);
   const mando = { obj: st.s.slice(), vmax: T.BARRAS.map(() => 0), fantasma: T.BARRAS.map(() => false) };
   T.BARRAS.forEach((x, i) => { if (x.eq === 0) { mando.obj[i] = i === activa ? objetivo[i] : T.seguir(st, i, st.pelota.x).s; mando.vmax[i] = i === activa ? 900 : 170; } });
@@ -365,21 +364,34 @@ U.tactil(cv, {
     if (d.mov < 12 && performance.now() - d.t < 300 && modo === 'juego') patearActiva();
   },
 });
-const TECLAS = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'izq', KeyW: 'izq', ArrowDown: 'der', KeyS: 'der' };
-addEventListener('keydown', e => {
-  if (e.code === 'Space') { e.preventDefault(); if (modo === 'juego') patearActiva(); else if (modo === 'sala') tirarSala(); return; }
-  if (e.code === 'Escape' || e.code === 'KeyP') { if (modo === 'juego') pausar(); else if (modo === 'pausa') seguir(); return; }
-  const k = TECLAS[e.code]; if (!k) return;
-  e.preventDefault();
-  // En horizontal las barras van de arriba abajo: ↑ ↓ las mueven; en vertical, ← →.
-  const vertical = e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'KeyW' || e.code === 'KeyS';
-  if (vertical !== horizontal) return;
+/* Acciones (capa para teclado y para un mando): mover la barra a lo largo de su eje (barraMenos/barraMas o el eje
+   analógico), cambiar de barra, patear (en sala: tirar) y pausa. ← → en vertical; ↑ ↓ en horizontal, que es como se
+   ven las barras en cada vista. */
+function cambiarBarra() {
+  if (modo !== 'juego') return;
+  const mias = T.BARRAS.map((b, i) => i).filter(i => T.BARRAS[i].eq === 0);
+  activa = mias[(mias.indexOf(activa) + 1) % mias.length]; objetivo[activa] = st.s[activa];
+  manualHasta = performance.now() + 1500;
+}
+const acciones = U.crearAcciones({
+  barraMenos: {}, barraMas: {},
+  cambiarBarra: { pulso: cambiarBarra },
+  patear: { pulso: () => { if (modo === 'juego') patearActiva(); else if (modo === 'sala') tirarSala(); } },
+  pausa: { pulso: () => { if (modo === 'juego') pausar(); else if (modo === 'pausa') seguir(); } },
+}, code => {
   signoTecla = Math.sign(horizontal ? (M[1] || 1) : (M[0] || 1));
-  if (modo === 'sala' && sala && sala.miTurno() && posSala !== null) { const b = T.BARRAS[sala.estado.posesion.barra]; posSala = F.acotar(posSala + (k === 'izq' ? -6 : 6) * signoTecla, -b.rango, b.rango); return; }
-  tecla[k] = true;
+  const vertical = { ArrowUp: 'barraMenos', KeyW: 'barraMenos', ArrowDown: 'barraMas', KeyS: 'barraMas' }[code];
+  const lateral = { ArrowLeft: 'barraMenos', KeyA: 'barraMenos', ArrowRight: 'barraMas', KeyD: 'barraMas' }[code];
+  if (vertical || lateral) return horizontal ? vertical : lateral;
+  return { Space: 'patear', KeyJ: 'patear', KeyK: 'cambiarBarra', Escape: 'pausa', KeyP: 'pausa', Enter: 'pausa' }[code];
 });
-addEventListener('keyup', e => { const k = TECLAS[e.code]; if (k) tecla[k] = false; });
-addEventListener('blur', () => { tecla.izq = false; tecla.der = false; });
+window.accionesJuego = acciones; // para conectar un mando (adaptador) sin tocar el juego
+// En sala, las acciones de la barra corren la barra con la pelota antes de tirar.
+setInterval(() => {
+  if (modo !== 'sala' || !sala || !sala.miTurno() || posSala === null) return;
+  const d = acciones.direccion('barraMenos', 'barraMas'); if (!d) return;
+  const b = T.BARRAS[sala.estado.posesion.barra]; posSala = F.acotar(posSala + d * 4 * signoTecla, -b.rango, b.rango);
+}, 33);
 $('r-angulo').addEventListener('input', () => { $('v-angulo').textContent = $('r-angulo').value + '°'; });
 $('r-fuerza').addEventListener('input', () => { $('v-fuerza').textContent = $('r-fuerza').value; });
 $('b-tirar').onclick = tirarSala;

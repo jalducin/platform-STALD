@@ -400,17 +400,30 @@ function ponerFuerza(v) { $('r-fuerza').value = v; $('v-fuerza').textContent = v
 $('r-fuerza').addEventListener('input', () => { $('v-fuerza').textContent = $('r-fuerza').value; });
 $('b-izq').onclick = () => { aim = (aim + 3597) % 3600; };
 $('b-der').onclick = () => { aim = (aim + 3) % 3600; };
-$('b-efecto').onclick = () => { efectoI = (efectoI + 1) % EFECTOS.length; $('b-efecto').textContent = EFECTOS[efectoI].t; };
+function cambiarEfecto() { efectoI = (efectoI + 1) % EFECTOS.length; $('b-efecto').textContent = EFECTOS[efectoI].t; }
+$('b-efecto').onclick = cambiarEfecto;
 $('b-tirar').onclick = tirar;
 $('b-rendir').onclick = () => { if (sala && sala.miTurno() && confirm('¿Rendirte? Tu rival gana la partida.')) sala.tirar({ accion: 'rendirse' }); };
-addEventListener('keydown', e => {
+/* Acciones (capa para teclado y para un mando): apuntar con el eje analógico o apuntarMenos/apuntarMas (sostenidas),
+   fuerzaMenos/fuerzaMas, tirar, efecto y pausa. Los toques directos (arrastrar, resortera) siguen aparte. */
+function pausarBillar() { if (modo === 'juego') { modo = 'pausa'; mostrar('ov-pausa'); } else if (modo === 'pausa') { ocultar(); modo = 'juego'; } }
+const acciones = U.crearAcciones({
+  apuntarMenos: {}, apuntarMas: {}, fuerzaMenos: {}, fuerzaMas: {},
+  tirar: { pulso: () => { if (puedoApuntar()) tirar(); } },
+  efecto: { pulso: () => { if (puedoApuntar()) cambiarEfecto(); } },
+  pausa: { pulso: pausarBillar },
+}, code => ({ ArrowLeft: 'apuntarMenos', KeyA: 'apuntarMenos', ArrowRight: 'apuntarMas', KeyD: 'apuntarMas', ArrowUp: 'fuerzaMas', KeyW: 'fuerzaMas',
+  ArrowDown: 'fuerzaMenos', KeyS: 'fuerzaMenos', Space: 'tirar', KeyJ: 'tirar', KeyK: 'efecto', Escape: 'pausa', KeyP: 'pausa', Enter: 'pausa' })[code]);
+// Cada cuadro de 1/30 s: la mira gira hasta 6°/s con el eje (más fino cerca del centro) y la fuerza sube o baja.
+let fuerzaAcum = 0;
+setInterval(() => {
   if (!puedoApuntar()) return;
-  if (e.code === 'ArrowLeft') { aim = (aim + 3590) % 3600; e.preventDefault(); }
-  else if (e.code === 'ArrowRight') { aim = (aim + 10) % 3600; e.preventDefault(); }
-  else if (e.code === 'ArrowUp') { ponerFuerza(Math.min(100, fuerza() + 5)); e.preventDefault(); }
-  else if (e.code === 'ArrowDown') { ponerFuerza(Math.max(1, fuerza() - 5)); e.preventDefault(); }
-  else if (e.code === 'Space' || e.code === 'Enter') { tirar(); e.preventDefault(); }
-});
+  const d = acciones.direccion('apuntarMenos', 'apuntarMas');
+  if (d) aim = ((aim + Math.round(d * Math.abs(d) * 20)) % 3600 + 3600) % 3600;
+  fuerzaAcum += acciones.direccion('fuerzaMenos', 'fuerzaMas') * 1.5;
+  if (Math.abs(fuerzaAcum) >= 1) { ponerFuerza(F.acotar(fuerza() + Math.trunc(fuerzaAcum), 1, 100)); fuerzaAcum -= Math.trunc(fuerzaAcum); }
+}, 33);
+window.accionesJuego = acciones; // para conectar un mando (adaptador) sin tocar el juego
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-nivel],[data-ir]'); if (!b) return;
   if (b.dataset.nivel) return nuevaPartida(b.dataset.nivel);
@@ -419,7 +432,7 @@ document.addEventListener('click', e => {
   if (b.dataset.ir === 'seguir') { ocultar(); modo = 'juego'; }
 });
 U.botonSonido($('b-sonido'));
-$('b-salir').onclick = e => { e.currentTarget.blur(); if (modo === 'juego') { modo = 'pausa'; mostrar('ov-pausa'); } };
+$('b-salir').onclick = e => { e.currentTarget.blur(); if (modo === 'juego') pausarBillar(); };
 
 const OVERLAYS = ['ov-carga', 'ov-menu', 'ov-pausa', 'ov-res', 'ov-sala'];
 function mostrar(id) { OVERLAYS.forEach(o => $(o).classList.toggle('hide', o !== id)); }

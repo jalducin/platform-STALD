@@ -31,6 +31,9 @@
 - [ ] 3.3 `juegos.html`: tarjetas en Arcade, `jugarArcade` sin avance para estos juegos, `JUEGOS_PARTIDA`,
   `TIEMPO_REAL` y puente `pintarFisicaSala` (inicio, jugadas, jugada-ok, fin → `pintarFinalSala`)
 
+- [x] 3.4 Capa de acciones (`MesaUI.crearAcciones`, `window.accionesJuego`) para teclado y un mando futuro, sin
+  depender de `juegos/mando.js` (pedido del integrador; design §9); prueba E2E de las acciones en los dos juegos
+
 ## 4. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
 - [ ] 4.1 Conteo del menú robusto (igual a `JUEGOS.length` de la página, con Futbolito y Billar) en `e2e-juegos`,

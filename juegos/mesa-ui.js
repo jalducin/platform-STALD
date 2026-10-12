@@ -71,6 +71,34 @@
     el.addEventListener('pointerup', soltar(false)); el.addEventListener('pointercancel', soltar(true));
   }
 
+  /* ---- Capa de acciones (futbolito-billar) ----
+     El juego solo lee acciones con nombre (sostenidas, de pulso y un eje analógico −1…1). El teclado es un adaptador
+     más; un mando (por ejemplo el de Arcade) se conecta igual: `acciones.presionar(nombre, true|false)` y
+     `acciones.ponerEje(v)`. Los toques directos sobre la mesa (arrastrar) siguen aparte. */
+  function crearAcciones(defs, teclas) {
+    const est = {}; let eje = 0;
+    const a = {
+      nombres: Object.keys(defs),
+      presionar(n, on) {
+        if (!defs[n]) return;
+        const antes = !!est[n]; est[n] = !!on;
+        if (on && !antes && defs[n].pulso) defs[n].pulso();
+      },
+      presionado: n => !!est[n],
+      ponerEje: v => { eje = F.acotar(Number(v) || 0, -1, 1); },
+      eje: () => eje,
+      // −1…1: eje analógico más el par de acciones sostenidas (menos, más).
+      direccion: (menos, mas) => F.acotar(eje + (est[mas] ? 1 : 0) - (est[menos] ? 1 : 0), -1, 1),
+      soltarTodo: () => { for (const k in est) est[k] = false; eje = 0; },
+    };
+    if (teclas) {
+      addEventListener('keydown', e => { const n = teclas(e.code); if (!n) return; e.preventDefault(); if (!e.repeat) a.presionar(n, true); });
+      addEventListener('keyup', e => { const n = teclas(e.code); if (n) a.presionar(n, false); });
+      addEventListener('blur', () => a.soltarTodo());
+    }
+    return a;
+  }
+
   // ---- Mensajes con juegos.html (solo mismo origen) ----
   let juego = '';
   const oyentes = [];
@@ -141,7 +169,7 @@
 
   raiz.MesaUI = {
     Q, EMBED, PRUEBA, REDUCIR, TOQUES, TACTIL, $, esc, leerLS, guardarLS,
-    audio, tono, botonSonido, avisar, confeti, tactil, crearSala,
+    audio, tono, botonSonido, avisar, confeti, tactil, crearSala, crearAcciones,
     enviar, alMensaje: f => oyentes.push(f), usarJuego: id => { juego = id; },
   };
 })(window);

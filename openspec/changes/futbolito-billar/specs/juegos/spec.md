@@ -91,6 +91,14 @@ la pantalla), SHALL atender toques con *touch events* no pasivos dentro del ifra
 `prefers-reduced-motion` (sin confeti ni sacudidas) y SHALL usar arte propio sin marcas y textos en español de
 México. Los dos SHALL aparecer en el ranking «🔥 Juegos» con su título del catálogo.
 
+Además, la entrada de teclado (y de un mando futuro) SHALL pasar por una capa de acciones con nombre (Futbolito:
+mover barra, cambiar barra, patear, pausa; Billar: apuntar con eje, fuerza, tirar, efecto, pausa) expuesta como
+`window.accionesJuego`, sin quitar los controles táctiles directos.
+
+#### Scenario: Acciones para un mando
+- **WHEN** un adaptador mantiene la acción «barraMas» en Futbolito o pone el eje a la derecha en Billar
+- **THEN** la barra activa se corre o la mira gira, igual que con el teclado
+
 #### Scenario: Celular en horizontal
 - **WHEN** alguien juega Billar con el celular de lado (844×390)
 - **THEN** la mesa se ve horizontal y completa, con los controles a la vista y sin encimarse
