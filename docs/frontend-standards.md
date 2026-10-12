@@ -88,6 +88,23 @@ Cada página debe manejar y mostrar de forma explícita:
     el servidor); sin reconocimiento, autoevaluación;
   - privacidad: el reconocimiento de Chrome/Edge manda el audio a su proveedor para transcribirlo; la plataforma no
     guarda audio, solo el texto reconocido como respuesta.
+- Fichas y pares en `ingles.html` (`ingles/reproductor.js`, cambio `ejercicios-ordenar-emparejar`):
+  - `ordenar`:
+    - fichas `<button class="ficha" data-action="ficha">` en `.ord-banco`; al tocarla pasa a `.ord-linea` y al
+      tocarla ahí regresa a su lugar; «⌫ Borrar» las regresa todas;
+    - la respuesta va en `input.q-text` oculto, como `pronunciar`.
+  - `emparejar`:
+    - botones `.emp-btn[data-lado=izq|der]` en dos columnas; se toca uno y luego el del otro lado. El par queda con
+      la clase `par-<n>` (color) y un número, para no depender solo del color;
+    - tocar uno unido deshace su par;
+    - la respuesta (JSON) va en `input.q-par` oculto. La pregunta cuenta como respondida solo con todos los pares,
+      pero el borrador guarda el avance parcial.
+  - Accesibilidad:
+    - todo es botón nativo (Tab, Enter, Espacio) con `aria-label` que dice el estado («ficha 2 de tu oración»,
+      «unida con…»);
+    - un `aria-live` por ejercicio anuncia cada cambio;
+    - el foco pasa a la siguiente ficha;
+    - objetivos de 44 px o más, sin desborde a 390 px.
 - Vista de admin de `ingles.html`: tarjeta "🎮 Juegos de la semana" (`#juegos-admin`), con el ranking
   completo y las partidas con su podio, desde `/juegos/admin/resumen`. En el bloque de cada alumno o alumna
   va su línea de juegos.
