@@ -144,6 +144,12 @@ Cada página debe manejar y mostrar de forma explícita:
     (`localStorage.arcade_sonido`), controles táctiles grandes (pointer events) y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
+    **Dibujo de «Axo y los 12 mundos»** (cambio `axo-diseno`): arte vectorial en canvas a la resolución real (`K`),
+    sin imágenes externas. Los tiles se pre-dibujan una vez por combinación (tipo, mundo, lados expuestos y variante)
+    y los fondos son franjas de paralaje que se repiten (cachés fuera de pantalla a `min(K, 4)`); en cada cuadro solo
+    se copian las columnas visibles. En celular vertical el canvas crece a `VH` y el nivel se desplaza `OY`: el
+    sobrante es cielo (donde va el HUD) y subsuelo, sin cambiar lo que se ve del nivel. Con `prefers-reduced-motion`
+    no hay paralaje ni partículas. El mapa es una escena SVG en línea con los mismos botones `[data-nivel]`;
   - **música de fondo:** generada con WebAudio (Alegre, Relajante, Fiesta); empieza solo tras un gesto y
     baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el
