@@ -242,7 +242,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     const alumnoSlug = String(body.alumno ?? "").trim() ? slugAlumno(String(body.alumno)) : "";
     if (!alumnoSlug || alumnoSlug === "sin-nombre") return json({ error: "alumno_invalido" }, 400);
     const fecha = body.fecha === null || body.fecha === undefined || body.fecha === "" ? null : String(body.fecha);
-    if (fecha !== null && (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || isNaN(Date.parse(fecha)) || fecha < base.disponibleDesde)) return json({ error: "fecha_invalida" }, 400);
+    if (fecha !== null && (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || Number.isNaN(Date.parse(fecha)) || fecha < base.disponibleDesde)) return json({ error: "fecha_invalida" }, 400);
     for (let i = 0; i < 3; i++) {
       const ruta = (await store.get(`${ambito.contenido}/actividades/${base.id}.json`)) ? `${ambito.contenido}/actividades/${base.id}.json` : `${ambito.contenido}/examenes/${base.id}.json`;
       const doc = await store.get<Record<string, unknown>>(ruta);

@@ -2,7 +2,7 @@
 // Resumen de juegos de la semana (solo admin): jugadores y partidas con su podio.
 // ---------- Alta de alumnos y alumnas (admin, openspec: alta-alumnos) ----------
 // ---------- Grupos de clase (openspec: ingles-grupos) ----------
-const slugAlumno = n => (n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9]/).filter(Boolean).join('-') || 'sin-nombre';
+const slugAlumno = n => (n || '').normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9]/).filter(Boolean).join('-') || 'sin-nombre';
 async function loadGruposAdmin() {
   try {
     const r = await fetchJson(API_BASE + '/ingles/grupos?email=' + encodeURIComponent(state.email));
@@ -101,7 +101,7 @@ async function altaAlumno(form) {
   const nombre = document.getElementById('alta-nombre').value, email = document.getElementById('alta-correo').value;
   form.querySelector('button').disabled = true;
   const grupoSel = document.getElementById('alta-grupo');
-  const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(Object.assign({ nombre, email }, grupoSel && grupoSel.value ? { grupo: grupoSel.value } : {})) });
+  const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ nombre, email, ...(grupoSel && grupoSel.value ? { grupo: grupoSel.value } : {}) }) });
   if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="empty" style="color:var(--bad)">' + escapeHtml(ERRORES_ALTA[r.body.error] || ('No se pudo dar de alta (' + (r.body.error || r.status) + ').')) + '</div>'; return; }
   state.altaAbierta = true;
   state.altaAviso = '✅ ' + r.body.alumno.nombre + ' ya puede entrar con ' + r.body.alumno.email + '.' + (r.body.alumno.inicio ? ' Empieza el lunes ' + fechaCorta(r.body.alumno.inicio) + ', sin actividades en atraso.' : '');

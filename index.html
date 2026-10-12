@@ -207,7 +207,7 @@
   const show = (id) => ['login', 'cambio', 'loading', 'home'].forEach(s => { $(s).hidden = s !== id; });
 
   function escapeHtml(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    return String(s == null ? '' : s).replaceAll(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   // Conserva ?api= al navegar (pruebas locales).

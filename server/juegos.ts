@@ -364,7 +364,7 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
     if (!CORREO.test(email)) return json({ error: "correo_invalido" }, 400);
     const conocido = await resolverJugador(email, deps.admin, ingles, secundaria, {});
     if (conocido) return json({ ya: true, jugador: conocido });
-    const nombre = typeof body.nombre === "string" ? body.nombre.trim().replace(/\s+/g, " ") : "";
+    const nombre = typeof body.nombre === "string" ? body.nombre.trim().replaceAll(/\s+/g, " ") : "";
     if (body.acepto !== true) return json({ error: "debe_aceptar" }, 400);
     if (!APODO.test(nombre)) return json({ error: "apodo_invalido" }, 400);
     const r = await registrarInvitado(store, email, nombre, ahora, invDoc);
@@ -389,7 +389,7 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
   if (sub === "/nick" && req.method === "POST") {
     let body: { nick?: unknown } = {};
     try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
-    const nick = typeof body.nick === "string" ? body.nick.trim().replace(/\s+/g, " ") : "";
+    const nick = typeof body.nick === "string" ? body.nick.trim().replaceAll(/\s+/g, " ") : "";
     if (nick && !APODO.test(nick)) return json({ error: "nick_invalido" }, 400);
     let guardado = false;
     for (let i = 0; i < 3 && !guardado; i++) {

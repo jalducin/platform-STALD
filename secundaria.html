@@ -151,7 +151,7 @@
   function daysAgoStr(n) { const d = new Date(); d.setDate(d.getDate()-n); return fmtDate(d); }
   function classify(fecha, today) { if (fecha < today) { return 'overdue'; } if (fecha === today) { return 'today'; } return 'upcoming'; }
   function diffDays(fecha, today) { const a = new Date(fecha+'T00:00:00'); const b = new Date(today+'T00:00:00'); return Math.round((b-a)/86400000); }
-  function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeHtml(s) { return String(s ?? '').replaceAll(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
   function currentWeekRange() {
     const d = new Date();
@@ -218,11 +218,11 @@
     renderWeekStrip(rows);
 
     const pending = rows.filter(r => !r.completado && r.fecha)
-      .map(r => ({...r, _status: classify(r.fecha, today), _diff: diffDays(r.fecha, today)}))
+      .map(r => ({ ...r, _status: classify(r.fecha, today), _diff: diffDays(r.fecha, today) }))
       .sort((a,b) => a.fecha.localeCompare(b.fecha));
 
     const recent = rows.filter(r => r.completado && r.fechaReal && r.fechaReal >= cutoff && r.fechaReal <= today)
-      .map(r => ({...r, fecha: r.fechaReal}))
+      .map(r => ({ ...r, fecha: r.fechaReal }))
       .sort((a,b) => b.fecha.localeCompare(a.fecha));
 
     const counts = {overdue:0, today:0, upcoming:0};

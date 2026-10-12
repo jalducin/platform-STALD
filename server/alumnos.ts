@@ -121,7 +121,7 @@ export async function handleAlumnos(req: Request, sub: string, deps: DepsAlumnos
 
   if (sub === "" && req.method === "POST") {
     const correo = String(body.email ?? "").trim().toLowerCase();
-    const nombre = String(body.nombre ?? "").trim().replace(/\s+/g, " ");
+    const nombre = String(body.nombre ?? "").trim().replaceAll(/\s+/g, " ");
     if (!CORREO.test(correo)) return json({ error: "correo_invalido" }, 400);
     if (!NOMBRE.test(nombre)) return json({ error: "nombre_invalido" }, 400);
     if (correo === deps.admin || registro[correo] || filas.some((r) => r.userEmails.includes(correo))) return json({ error: "correo_en_uso" }, 409);

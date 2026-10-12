@@ -89,7 +89,7 @@
   // si estaba ocupada). Devuelve { confirmar, revelar, boton, orden }.
   function tablero(cont, linea, opts) {
     const n = linea.sucesos.length;
-    const casillas = Array(n).fill(null); // índice del suceso en cada casilla
+    const casillas = new Array(n).fill(null); // índice del suceso en cada casilla
     let confirmado = false, rev = null, sig = null, arr = null, ignorarClick = false;
     cont.innerHTML = '<div class="lt-tablero"></div>';
     const raiz = cont.firstChild;

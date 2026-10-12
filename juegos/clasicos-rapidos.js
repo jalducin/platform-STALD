@@ -6,7 +6,7 @@
 
   // ---------- Azar con semilla (igual que rngDe en juegos.html) ----------
   function fnv(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
-  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; } // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
   const rng = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
   const alAzar = (lista, r) => lista[Math.floor(r() * lista.length)];
 
@@ -53,7 +53,7 @@
 
   // ---------- 🔴 Conecta 4 (7 × 6; índice = fila × 7 + columna, fila 0 arriba) ----------
   const C4_COLS = 7, C4_FILAS = 6;
-  const c4Vacio = () => Array(C4_COLS * C4_FILAS).fill(null);
+  const c4Vacio = () => new Array(C4_COLS * C4_FILAS).fill(null);
   function c4Fila(t, col) { for (let f = C4_FILAS - 1; f >= 0; f--) { if (!t[f * C4_COLS + col]) return f; } return -1; }
   function c4Soltar(t, col, ficha) {
     if (!Number.isInteger(col) || col < 0 || col >= C4_COLS) return null;
@@ -215,7 +215,7 @@
   const GATO_SALA = { rondas: 3, turno: 20000, bot: 1200, pausa: 3000, gana: 300, empate: 120 };
   function salaGato(ctx) {
     const C = GATO_SALA, ficha = j => j === 0 ? 'X' : 'O';
-    const st = { juego: 'gato', t: Array(9).fill(null), ronda: 0, turnoIdx: 0, paso: 0, T0: ctx.inicio, puntos: [0, 0], victorias: [0, 0], empates: 0, resultados: [], ultima: null, esperaHasta: null, fin: null, ficha };
+    const st = { juego: 'gato', t: new Array(9).fill(null), ronda: 0, turnoIdx: 0, paso: 0, T0: ctx.inicio, puntos: [0, 0], victorias: [0, 0], empates: 0, resultados: [], ultima: null, esperaHasta: null, fin: null, ficha };
     return recorrer(ctx, st, {
       turnoMs: C.turno, botMs: C.bot,
       bot: (s, j, n) => ({ accion: 'marcar', casilla: memo(ctx, 'gato-bot' + n + s.t.join(), () => gatoBot(s.t, ficha(j), 3, ctx.rng('gato-bot' + n))) }),
@@ -230,7 +230,7 @@
         if (s.ronda + 1 >= C.rondas) s.fin = { t, gana: s.puntos[0] === s.puntos[1] ? null : s.puntos[0] > s.puntos[1] ? 0 : 1 };
         else s.esperaHasta = t + ctx.dur(C.pausa);
       },
-      reanudar: s => { s.ronda++; s.t = Array(9).fill(null); s.turnoIdx = s.ronda % 2; s.ultima = null; },
+      reanudar: s => { s.ronda++; s.t = new Array(9).fill(null); s.turnoIdx = s.ronda % 2; s.ultima = null; },
     });
   }
 
@@ -298,7 +298,7 @@
     const st = { juego: 'ahorcado', w: 0, letras: [], turnoIdx: 0, paso: 0, T0: ctx.inicio, puntos: ctx.orden.map(() => 0), aciertos: ctx.orden.map(() => 0), resultados: [], ultima: null, esperaHasta: null, fin: null, modo: coop ? 'coop' : 'compite' };
     const palabra = s => ctx.palabras[s.w].en;
     const cerrar = (s, t, datos) => {
-      s.resultados.push(Object.assign({ w: s.w, palabra: palabra(s), t }, datos));
+      s.resultados.push({ w: s.w, palabra: palabra(s), t, ...datos });
       if (s.w + 1 >= ctx.palabras.length) s.fin = { t }; else s.esperaHasta = t + ctx.dur(C.pausa);
     };
     recorrer(ctx, st, {
@@ -342,7 +342,7 @@
         const dado = serpDado(ctx.rng('dado' + n));
         const m = serpMover(s.pos[j], dado);
         s.pos[j] = m.hasta; s.tiros++;
-        s.ultima = Object.assign({ j, dado, n, auto: !!mv.auto, t }, m);
+        s.ultima = { j, dado, n, auto: !!mv.auto, t, ...m };
         if (m.hasta === 100) s.fin = { t, gana: j };
         else if (s.tiros >= C.maxTiros) { const max = Math.max(...s.pos); s.fin = { t, gana: s.pos.indexOf(max) }; }
         else if (dado !== 6) s.turnoIdx = (j + 1) % N;

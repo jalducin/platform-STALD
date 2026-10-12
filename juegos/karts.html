@@ -254,7 +254,7 @@ const COPA = { id: 'fiesta', nombre: 'Copa Fiesta', pistas: ['pradera', 'desiert
 const ITEMS = { cascara: '🍌', bola: '🟢', turbo: '🌶️', cohete: '🚀', estrella: '⭐', monedas: '🪙', rayo: '⚡' };
 const NOMBRE_ITEM = { cascara: 'Cáscara', bola: 'Bola rebotadora', turbo: 'Turbo picante', cohete: 'Cohete guiado', estrella: 'Estrella', monedas: 'Monedas', rayo: 'Rayo' };
 const NIVEL_COLOR = ['', '#60a5fa', '#fb923c', '#c084fc'];
-const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const esc = s => String(s).replaceAll(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 const leerLS = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const guardarLS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } };
 
@@ -533,11 +533,11 @@ if (window.ResizeObserver) new ResizeObserver(() => ajustar()).observe($('pantal
 /* ================= Utilidades de dibujo ================= */
 function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
 function matiz(hex, f) { // f > 0 aclara, f < 0 oscurece
-  const n = parseInt(hex.slice(1), 16), m = v => Math.round(f >= 0 ? v + (255 - v) * f : v * (1 + f));
+  const n = Number.parseInt(hex.slice(1), 16), m = v => Math.round(f >= 0 ? v + (255 - v) * f : v * (1 + f));
   return 'rgb(' + m(n >> 16) + ',' + m((n >> 8) & 255) + ',' + m(n & 255) + ')';
 }
 // #rrggbb → entero de 32 bits en el orden de ImageData (ABGR en little endian).
-function colorU32(hex) { const n = parseInt(hex.slice(1), 16); return (255 << 24 | (n & 255) << 16 | ((n >> 8) & 255) << 8 | (n >> 16)) >>> 0; }
+function colorU32(hex) { const n = Number.parseInt(hex.slice(1), 16); return (255 << 24 | (n & 255) << 16 | ((n >> 8) & 255) << 8 | (n >> 16)) >>> 0; }
 
 /* ================= Temas: cielo, montañas y franjas del pasto de cada pista ================= */
 const TEMAS = {
@@ -1458,8 +1458,8 @@ let avisoT = null;
 function avisar(txt, ms) { const a = $('aviso'); a.textContent = txt; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms || 1500); }
 
 /* ================= Plataforma ================= */
-function enviar(m) { if (!EMBED) { return; } try { parent.postMessage(Object.assign({ juego: 'karts' }, m), location.origin); } catch (e) { /* nada */ } }
-function guardar() { if (sala || !EMBED) { return; } enviar({ tipo: 'guardar', datos: JSON.parse(JSON.stringify(prog)) }); }
+function enviar(m) { if (!EMBED) { return; } try { parent.postMessage({ juego: 'karts', ...m }, location.origin); } catch (e) { /* nada */ } }
+function guardar() { if (sala || !EMBED) { return; } enviar({ tipo: 'guardar', datos: structuredClone(prog) }); }
 addEventListener('message', ev => {
   if (ev.origin !== location.origin || ev.source !== parent) return;
   const d = ev.data || {};
@@ -1503,7 +1503,7 @@ function emitir(k) {
   }
   if (k === yo && k.turbo > 0 && !REDUCIR && Math.random() < 0.45) { // partícula del personaje (solo cosmética)
     const forma = Personajes.porId(k.personaje).particula, cols = ESTELA[forma];
-    particulas.push({ tipo: 'estela', forma, x: k.x - ca * 18 + (Math.random() - 0.5) * 10, y: k.y - sa * 18 + (Math.random() - 0.5) * 10, vx: -ca * 30 + (Math.random() - 0.5) * 20, vy: -sa * 30 + (Math.random() - 0.5) * 20, vida: 0.7, max: 0.7, c: cols[(Math.random() * cols.length) | 0], tam: 2.2 });
+    particulas.push({ tipo: 'estela', forma, x: k.x - ca * 18 + (Math.random() - 0.5) * 10, y: k.y - sa * 18 + (Math.random() - 0.5) * 10, vx: -ca * 30 + (Math.random() - 0.5) * 20, vy: -sa * 30 + (Math.random() - 0.5) * 20, vida: 0.7, max: 0.7, c: cols[Math.trunc(Math.random() * cols.length)], tam: 2.2 });
   }
   if (k.turbo > 0 && Math.random() < f) for (const s of [-3, 3]) {
     const c = k.turboNivel ? NIVEL_COLOR[k.turboNivel] : (Math.random() < 0.5 ? '#f97316' : '#facc15');
@@ -1571,7 +1571,7 @@ function pintarSuelo() {
     const stx = -s * paso / f, sty = c * paso / f;
     let o = by * w;
     for (let bx = 0; bx < w; bx++, o++) {
-      buf[o] = tx >= 0 && ty >= 0 && tx < tw && ty < th ? d[(ty | 0) * tw + (tx | 0)] : fondo;
+      buf[o] = tx >= 0 && ty >= 0 && tx < tw && ty < th ? d[(ty | 0) * tw + (tx | 0)] : fondo; // NOSONAR: índice entero en el bucle por píxel del piso; los valores ya están acotados
       tx += stx; ty += sty;
     }
   }
@@ -1880,7 +1880,7 @@ if (EMBED) enviar({ tipo: 'listo' }); else abrirMenu();
 if (PRUEBA) {
   // Ganchos solo para pruebas E2E (?prueba=1).
   window.__karts = {
-    estado: () => ({ modo, pista: pista && pista.id, vuelta: yo ? yo.vuelta : null, pos: yo ? posDe(yo) : null, monedas: yo ? yo.monedas : 0, tiempo: Math.round(tCarrera * 1000), termino: yo ? yo.termino : null, turbo: yo ? yo.turbo : 0, ultimoTurbo, prog: JSON.parse(JSON.stringify(prog)), sala: !!sala, karts: karts.length, vel: yo ? Math.round(yo.vel) : 0, lw: LW, lh: LH,
+    estado: () => ({ modo, pista: pista && pista.id, vuelta: yo ? yo.vuelta : null, pos: yo ? posDe(yo) : null, monedas: yo ? yo.monedas : 0, tiempo: Math.round(tCarrera * 1000), termino: yo ? yo.termino : null, turbo: yo ? yo.turbo : 0, ultimoTurbo, prog: structuredClone(prog), sala: !!sala, karts: karts.length, vel: yo ? Math.round(yo.vel) : 0, lw: LW, lh: LH,
       ang: yo ? yo.ang : 0, giro: leerEntrada().giro, freno: leerEntrada().freno, derrape: activo('derrape'), acel: acelModo, acelera: leerEntrada().acel,
       vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
       item: yo ? yo.item : null, mando: mando.estado(),

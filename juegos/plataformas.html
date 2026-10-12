@@ -384,7 +384,7 @@ const CASTILLO = {
 };
 const pal = () => ARTE[mundo.clave] || ARTE.pradera;
 const pcs = () => CASTILLO[mundo.clave] || CASTILLO.pradera;
-const azar = (a, b) => { let h = Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263) | 0; h = Math.imul(h ^ h >>> 13, 1274126177); return ((h ^ h >>> 16) >>> 0) / 4294967296; };
+const azar = (a, b) => { let h = Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263) | 0; h = Math.imul(h ^ h >>> 13, 1274126177); return ((h ^ h >>> 16) >>> 0) / 4294967296; }; // NOSONAR: hash entero de 32 bits (Math.imul), no es truncado
 function lienzo(w, h) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; }
 function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
 function elipse(c, x, y, rx, ry, rot = 0) { c.beginPath(); c.ellipse(x, y, Math.max(0.01, rx), Math.max(0.01, ry), rot, 0, Math.PI * 2); }
@@ -399,7 +399,7 @@ function prepararArte() { const id = mundo.clave + (castillo ? '-c' : ''); if (i
 function claveTile(c, r) {
   const t = grid[r * W + c];
   if (t === VACIO || t === LAVA) return null;
-  const v = (azar(c, r) * 3) | 0;
+  const v = Math.trunc(azar(c, r) * 3);
   if (t !== SUELO) return t + '|' + v + '|0';
   const arriba = SOLIDO(tile(c, r - 1)) ? 0 : 1, izq = SOLIDO(tile(c - 1, r)) ? 0 : 1, der = SOLIDO(tile(c + 1, r)) ? 0 : 1;
   let d = 0; while (d < 3 && r - d - 1 >= 0 && SOLIDO(grid[(r - d - 1) * W + c])) d++;
@@ -448,7 +448,7 @@ function tierra(x, a, cl, rnd, d, arriba) {
   } else if (cl === 'volcan') {
     x.strokeStyle = 'rgba(255,100,30,.4)'; x.lineWidth = 1.3;
     const linea = () => { x.beginPath(); let px = rnd() * 4, py = y0 + 2 + rnd() * 4; x.moveTo(px, py); for (let k = 0; k < 3; k++) { px += 3 + rnd() * 3; py += (rnd() - 0.4) * 5; x.lineTo(px, py); } return x; };
-    const sem = rnd(); linea().stroke(); x.strokeStyle = '#140b0b'; x.lineWidth = 0.6; void sem; linea().stroke();
+    rnd(); /* se consume para no mover la secuencia del azar con semilla */ linea().stroke(); x.strokeStyle = '#140b0b'; x.lineWidth = 0.6; linea().stroke();
     x.fillStyle = 'rgba(255,255,255,.06)'; elipse(x, 4 + rnd() * 8, y0 + 4 + rnd() * 6, 2.5, 1.4); x.fill();
   } else {
     x.fillStyle = a.tierra2; x.globalAlpha = 0.55; x.fillRect(0, y0 + 5 + rnd() * 3, T, 1.2); x.globalAlpha = 1;
@@ -754,7 +754,7 @@ function escenarioActual() {
   for (const def of capasDe()) {
     const c = lienzo(def.per * kc, def.h * kc), xc = c.getContext('2d'); xc.scale(kc, kc); xc.lineJoin = 'round';
     def.pintar(xc, def.per, def.h);
-    E.capas.push(Object.assign({}, def, { img: c }));
+    E.capas.push({ ...def, img: c });
   }
   return (escenario = E);
 }
@@ -1312,11 +1312,11 @@ function avisar(txt, ms) { const a = $('aviso'); const ubicar = () => { a.style.
   a.textContent = txt; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms || 1500); }
 
 /* ================= Comunicación con la plataforma ================= */
-function enviar(m) { if (!EMBED) { return; } try { parent.postMessage(Object.assign({ juego: 'plataformas' }, m), location.origin); } catch (e) { /* nada */ } }
+function enviar(m) { if (!EMBED) { return; } try { parent.postMessage({ juego: 'plataformas', ...m }, location.origin); } catch (e) { /* nada */ } }
 function guardar() {
   if (sala) return;
   if (!EMBED) return;
-  enviar({ tipo: 'guardar', datos: JSON.parse(JSON.stringify(prog)) });
+  enviar({ tipo: 'guardar', datos: structuredClone(prog) });
 }
 addEventListener('message', ev => {
   if (ev.origin !== location.origin || ev.source !== parent) return;
@@ -1441,7 +1441,7 @@ function rastro(n) {
   for (let k = 0; k < n; k++) {
     const cols = COLOR_RASTRO[forma];
     efectos.push({ tipo: 'rastro', forma, x: P.x + P.w / 2 - P.mira * 3 + (Math.random() - 0.5) * 6, y: P.y + P.h * (0.3 + Math.random() * 0.5), vx: -P.mira * (6 + Math.random() * 10), vy: sube ? -(10 + Math.random() * 12) : 6 + Math.random() * 8,
-      rot: Math.random() * 6, r: 0.9 + Math.random() * 0.7, c: cols ? cols[(Math.random() * cols.length) | 0] : '', vida: 0.9, v0: 0.9 });
+      rot: Math.random() * 6, r: 0.9 + Math.random() * 0.7, c: cols ? cols[Math.trunc(Math.random() * cols.length)] : '', vida: 0.9, v0: 0.9 });
   }
 }
 function dibujarRastro(e, k) {
@@ -1524,7 +1524,7 @@ function dibujarItem(it, t) {
   }
 }
 const accesorio = { // detalle por mundo de los enemigos
-  pradera: (x, y, t) => { g.fillStyle = '#4ade80'; g.beginPath(); g.ellipse(x + 2.5, y - 2, 2.6, 1.2, -0.6, 0, 7); g.fill(); g.strokeStyle = '#15803d'; g.lineWidth = 0.6; g.beginPath(); g.moveTo(x, y + 0.5); g.lineTo(x + 1, y - 1.5); g.stroke(); void t; },
+  pradera: (x, y) => { g.fillStyle = '#4ade80'; g.beginPath(); g.ellipse(x + 2.5, y - 2, 2.6, 1.2, -0.6, 0, 7); g.fill(); g.strokeStyle = '#15803d'; g.lineWidth = 0.6; g.beginPath(); g.moveTo(x, y + 0.5); g.lineTo(x + 1, y - 1.5); g.stroke(); },
   desierto: (x, y) => { g.fillStyle = '#7f1d1d'; for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(x + k * 2.4 - 0.9, y + 1.4); g.lineTo(x + k * 2.4, y - 1.6); g.lineTo(x + k * 2.4 + 0.9, y + 1.4); g.fill(); } },
   hielo: (x, y) => { g.fillStyle = '#ef4444'; rrect(g, x - 5.5, y + 6.5, 11, 2.2, 1); g.fill(); g.fillStyle = '#fff'; g.fillRect(x - 3, y + 6.5, 1.2, 2.2); g.fillRect(x + 1, y + 6.5, 1.2, 2.2); g.fillStyle = '#ef4444'; g.fillRect(x - 5, y + 8, 2, 3.5); },
   volcan: (x, y, t) => { const f = REDUCIR ? 1 : 0.8 + 0.2 * Math.sin(t * 16 + x); g.fillStyle = '#ff7b00'; elipse(g, x, y - 1.5 * f, 1.9, 3 * f); g.fill(); g.fillStyle = '#ffd166'; elipse(g, x, y - 0.6 * f, 0.9, 1.6 * f); g.fill(); },
@@ -1607,7 +1607,7 @@ function dibujarTiles(c0, c1, t) {
       if (grid[r * W + c] === CAE) { const cp = colapsos.get(r * W + c); if (cp && cp.fase === 'tiembla' && !REDUCIR) dx = Math.sin(t * 60) * 0.8; }
       g.drawImage(sprite(k), c * T + dx, r * T - MARGEN, T, T + MARGEN);
     }
-    if (abajo > 0 && fondo !== VACIO && fondo !== LAVA) { const sp = sprite(fondo === SUELO ? SUELO + '|' + ((azar(c, 99) * 3) | 0) + '|0003' : PIEDRA + '|0|0'); for (let k = 0; k < abajo; k++) g.drawImage(sp, c * T, LH + k * T - MARGEN, T, T + MARGEN); }
+    if (abajo > 0 && fondo !== VACIO && fondo !== LAVA) { const sp = sprite(fondo === SUELO ? SUELO + '|' + Math.trunc(azar(c, 99) * 3) + '|0003' : PIEDRA + '|0|0'); for (let k = 0; k < abajo; k++) g.drawImage(sp, c * T, LH + k * T - MARGEN, T, T + MARGEN); }
   }
   if (abajo > 0) { const gr = g.createLinearGradient(0, LH, 0, LH + abajo * T); gr.addColorStop(0, 'rgba(0,0,0,.1)'); gr.addColorStop(1, 'rgba(0,0,0,.7)'); g.fillStyle = gr; g.fillRect(c0 * T, LH, (c1 - c0 + 1) * T, abajo * T); }
 }
@@ -1729,7 +1729,7 @@ else { mostrar('ov-titulo'); }
 if (PRUEBA) {
   // Ganchos solo para pruebas E2E (?prueba=1).
   window.__plat = {
-    estado: () => ({ modo, nivel: nivelId, x: P.x, y: P.y, ancho: W * T, vidas: prog.vidas, monedas: prog.monedas, poder: P.poder, prog: JSON.parse(JSON.stringify(prog)), sala: !!sala, lw: LW, k: K, vh: VH, oy: OY, dibujoMs: costoDibujo, jefe: jefe ? jefe.hp : null,
+    estado: () => ({ modo, nivel: nivelId, x: P.x, y: P.y, ancho: W * T, vidas: prog.vidas, monedas: prog.monedas, poder: P.poder, prog: structuredClone(prog), sala: !!sala, lw: LW, k: K, vh: VH, oy: OY, dibujoMs: costoDibujo, jefe: jefe ? jefe.hp : null,
       personaje, rastro: efectos.filter(e => e.tipo === 'rastro').length }),
     // Caja del personaje en px del lienzo (incluye penachos, cola y branquias), para revisar su dibujo y capturas de cerca.
     cajaJugador: () => { const s = P.h / ALTO.base, cx = P.x + P.w / 2 - Math.round(cam.x * K) / K, pie = P.y + P.h + OY; return { x: (cx - 12 * s) * K, y: (pie - 21 * s) * K, w: 24 * s * K, h: 22 * s * K }; },
@@ -1742,7 +1742,7 @@ if (PRUEBA) {
     danar,
     control: () => control,
     mando: () => mando.estado(),
-    tecla: () => Object.assign({}, tecla),
+    tecla: () => ({ ...tecla }),
   };
 }
 </script>

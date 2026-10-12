@@ -29,7 +29,7 @@
 
   function leer(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function escribir(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } }
-  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); } // NOSONAR: script clásico en ES5 a propósito (lo cargan todas las páginas)
 
   function cargarLib() {
     if (window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
@@ -105,7 +105,7 @@
   // siguen llegando con Cache-Control: no-store, así que el navegador no las guarda y siempre va a la red.
   function fetchConSesion(url, opts) {
     return getToken().then(function (t) {
-      var o = Object.assign({ cache: 'default' }, opts || {});
+      var o = Object.assign({ cache: 'default' }, opts || {}); // NOSONAR: script clásico en ES5 a propósito (lo cargan todas las páginas)
       var h = new Headers(o.headers || {});
       if (t) h.set('Authorization', 'Bearer ' + t);
       o.headers = h;
@@ -126,7 +126,7 @@
   var PERMANENTE = { sin_base: 1, sin_config: 1, auth_no_disponible: 1, limite_diario: 1, cupo_lleno: 1 };
   var SIN_CONEXION = 'Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.';
   function limpiarCache() { memoria = {}; enVuelo = {}; }
-  function copia(r) { return { ok: r.ok, status: r.status, body: JSON.parse(JSON.stringify(r.body)) }; }
+  function copia(r) { return { ok: r.ok, status: r.status, body: JSON.parse(JSON.stringify(r.body)) }; } // NOSONAR: script clásico en ES5 a propósito (lo cargan todas las páginas)
   function esperar(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
   function pedirUnaVez(url, opts) {
     return fetchConSesion(url, opts).then(function (res) {

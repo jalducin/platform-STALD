@@ -260,7 +260,7 @@ export function publicQuestion(e: Ejercicio, semilla = "") {
 
 // ---------- Calificación ----------
 export function normalizeText(s: unknown): string {
-  return String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim().split(/\s+/).join(" ");
+  return String(s ?? "").normalize("NFD").replaceAll(/[̀-ͯ]/g, "").toLowerCase().trim().replaceAll(/\s+/g, ' ');
 }
 
 export function estadoTema(p: number): EstadoTema {
@@ -285,9 +285,9 @@ const CONTRACCIONES: [RegExp, string][] = [
   [/n't\b/g, " not"], [/'ve\b/g, " have"], [/'ll\b/g, " will"], [/'re\b/g, " are"], [/'m\b/g, " am"], [/'d\b/g, " would"],
 ];
 function palabras(s: string): string[] {
-  let t = normalizeText(s).replace(/[’‘`]/g, "'");
+  let t = normalizeText(s).replaceAll(/[’‘`]/g, "'");
   for (const [re, por] of CONTRACCIONES) t = t.replace(re, por);
-  return t.replace(/[^a-z0-9' ]+/g, " ").replace(/'/g, "").split(/\s+/).filter(Boolean);
+  return t.replaceAll(/[^a-z0-9' ]+/g, " ").replaceAll("'", "").split(/\s+/).filter(Boolean);
 }
 // Proporción de palabras de la frase que aparecen en orden en lo reconocido (LCS / palabras de la frase).
 export function similitudPronunciacion(frase: string, oido: string): number {
@@ -467,7 +467,7 @@ export function temasAReforzar(resultados: Resultado[]): { titulo: string; estad
 }
 
 export function slugAlumno(nombre: string): string {
-  const partes = nombre.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().split(/[^a-z0-9]/).filter(Boolean);
+  const partes = nombre.normalize("NFD").replaceAll(/[̀-ͯ]/g, "").toLowerCase().split(/[^a-z0-9]/).filter(Boolean);
   return partes.join("-") || "sin-nombre";
 }
 

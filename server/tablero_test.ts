@@ -399,7 +399,7 @@ Deno.test("salas de tablero: dominó y parchís admiten 4 personas y bots opcion
 Deno.test("salas de tablero: forma de las jugadas de damas, dominó y parchís", async () => {
   const casos: [string, unknown[], unknown[]][] = [
     ["damas", [{ n: 0, accion: "mover", ruta: [21, 17] }, { n: 0, accion: "mover", ruta: [21, 14, 7] }, { n: 0, accion: "rendirse" }],
-      [{ n: 0, accion: "mover", ruta: [21] }, { n: 0, accion: "mover", ruta: [21, 32] }, { n: 0, accion: "mover", ruta: "21-17" }, { n: 0, accion: "mover", ruta: Array(14).fill(1) }, { n: 0, accion: "volar" }, { n: 0, accion: "mover", ruta: [1.5, 2] }]],
+      [{ n: 0, accion: "mover", ruta: [21] }, { n: 0, accion: "mover", ruta: [21, 32] }, { n: 0, accion: "mover", ruta: "21-17" }, { n: 0, accion: "mover", ruta: new Array(14).fill(1) }, { n: 0, accion: "volar" }, { n: 0, accion: "mover", ruta: [1.5, 2] }]],
     ["domino", [{ n: 0, accion: "jugar", ficha: 27, lado: "d" }, { n: 0, accion: "jugar", ficha: 0, lado: "i" }],
       [{ n: 0, accion: "jugar", ficha: 28, lado: "d" }, { n: 0, accion: "jugar", ficha: 3, lado: "x" }, { n: 0, accion: "jugar", ficha: 3 }, { n: 0, accion: "pasar" }]],
     ["parchis", [{ n: 0, accion: "mover", ficha: 0 }, { n: 0, accion: "mover", ficha: 3 }],

@@ -17,7 +17,7 @@ const ADM_KEY = 'juegos_admin_sub';
 const subAdmin = id => ADM_SUBS.find(s => s.id === id);
 const leerSubAdmin = () => { try { const v = localStorage.getItem(ADM_KEY); return subAdmin(v) ? v : 'jugadores'; } catch { /* sin almacenamiento: sección por omisión */ return 'jugadores'; } };
 const guardarSubAdmin = id => { try { localStorage.setItem(ADM_KEY, id); } catch (e) { /* sin almacenamiento */ } };
-const normaliza = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const normaliza = s => String(s || '').normalize('NFD').replaceAll(/[̀-ͯ]/g, '').toLowerCase();
 const fechaCorta = s => s ? new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—';
 const buscaAttr = (...xs) => ' data-busca="' + escapeHtml(normaliza(xs.filter(Boolean).join(' '))) + '"';
 let admCarga = 0;
@@ -164,7 +164,7 @@ async function quitarFoto(b) {
 }
 
 function descargarCsv(filas, nombre) {
-  const csv = filas.map(f => f.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const csv = filas.map(f => f.map(v => '"' + String(v ?? '').replaceAll('"', '""') + '"').join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' }));
   a.download = nombre; a.click();

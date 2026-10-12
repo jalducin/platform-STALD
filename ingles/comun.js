@@ -69,7 +69,7 @@ const contentEl = document.getElementById('content');
 const navEl = document.getElementById('nav');
 const cajonEl = document.getElementById('cajon');
 
-function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeHtml(s) { return String(s ?? '').replaceAll(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 // Días que cuentan como "realizadas recientes": hoy y los 2 anteriores.
 const RECENT_DAYS = 3;
@@ -79,7 +79,7 @@ function todayStr() { return fmtDate(new Date()); }
 function daysAgoStr(n) { const d = new Date(); d.setDate(d.getDate() - n); return fmtDate(d); }
 function diffDays(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
 // Fecha local (AAAA-MM-DD) de la última edición; se usa como fecha de realización.
-function localDateOf(iso) { if (!iso) { return null; } const d = new Date(iso); return isNaN(d) ? null : fmtDate(d); }
+function localDateOf(iso) { if (!iso) { return null; } const d = new Date(iso); return Number.isNaN(d.getTime()) ? null : fmtDate(d); }
 
 function formatFecha(fecha) {
   try { return new Date(fecha + 'T00:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric', month:'short'}); }

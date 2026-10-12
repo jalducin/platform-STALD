@@ -293,8 +293,8 @@ async function jugarLoteria(modo, voz) {
   const cartas = d.cartas;
   const m = marco('loteria');
   const tabla = tomar(cartas.map((_, i) => i), 16);
-  const bots = [{ n: 'Doña Tere 👵' }, { n: 'Don Beto 👴' }].map(b => Object.assign(b, { tabla: tomar(cartas.map((_, i) => i), 16), marcas: Array(16).fill(false) }));
-  const marcas = Array(16).fill(false);
+  const bots = [{ n: 'Doña Tere 👵' }, { n: 'Don Beto 👴' }].map(b => Object.assign(b, { tabla: tomar(cartas.map((_, i) => i), 16), marcas: new Array(16).fill(false) }));
+  const marcas = new Array(16).fill(false);
   const orden = barajar(cartas.map((_, i) => i));
   const salidas = new Set();
   let k = 0, terminado = false, botGrito = null;
@@ -344,7 +344,7 @@ async function jugarLoteria(modo, voz) {
     if (cel) {
       const i = Number(cel.dataset.lot);
       if (salidas.has(tabla[i])) { marcas[i] = true; cel.classList.add('marcada'); tono(520, 60); }
-      else { cel.classList.remove('tiembla'); void cel.offsetWidth; cel.classList.add('tiembla'); $m.className = 'feedback bad'; $m.textContent = '¡Esa carta todavía no sale!'; }
+      else { cel.classList.remove('tiembla'); cel.getBoundingClientRect(); /* reflujo: reinicia la animación */ cel.classList.add('tiembla'); $m.className = 'feedback bad'; $m.textContent = '¡Esa carta todavía no sale!'; }
       return;
     }
     if (e.target.closest('[data-lot-grito]')) {

@@ -223,7 +223,7 @@
     const d = await datos('ingles');
     const previo = typeof reanudacion !== 'undefined' && reanudacion && reanudacion.juego === 'en-tiempos' ? reanudacion : null;
     const pool = barajar(d.tiempos);
-    const foto = { fallos: Object.assign({}, previo && previo.fallos && typeof previo.fallos === 'object' ? previo.fallos : {}) };
+    const foto = { fallos: { ...(previo && previo.fallos && typeof previo.fallos === 'object' ? previo.fallos : {}) } };
     for (const k of Object.keys(foto.fallos)) if (typeof foto.fallos[k] !== 'number' || k.length > 60) delete foto.fallos[k];
     let par = null;
     quiz({

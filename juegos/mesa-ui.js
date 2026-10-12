@@ -11,7 +11,7 @@
   const TACTIL = TOQUES || matchMedia('(any-pointer: coarse)').matches;
   if (TACTIL) document.documentElement.classList.add('tactil');
   const $ = id => document.getElementById(id);
-  const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const esc = s => String(s).replaceAll(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const leerLS = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const guardarLS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } };
 
@@ -130,7 +130,7 @@
   // ---- Mensajes con juegos.html (solo mismo origen) ----
   let juego = '';
   const oyentes = [];
-  function enviar(m) { if (!EMBED) { return; } try { parent.postMessage(Object.assign({ juego }, m), location.origin); } catch (e) { /* nada */ } }
+  function enviar(m) { if (!EMBED) { return; } try { parent.postMessage({ juego, ...m }, location.origin); } catch (e) { /* nada */ } }
   addEventListener('message', ev => {
     if (ev.origin !== location.origin || ev.source !== parent) return;
     for (const f of oyentes) f(ev.data || {});
@@ -186,8 +186,8 @@
     s.miTurno = () => !s.anim && s.linea && !s.linea.fin && s.linea.espera && s.linea.espera.tipo === 'persona' && s.linea.espera.idx === s.idx && s.mostrado.length === s.linea.historia.length && !s.propia;
     s.tirar = tiro => {
       if (!s.miTurno()) return false;
-      const jugada = Object.assign({ n: s.linea.paso }, tiro);
-      s.propia = Object.assign({ t: s.ahora(), jugador: s.yo }, jugada);
+      const jugada = { n: s.linea.paso, ...tiro };
+      s.propia = { t: s.ahora(), jugador: s.yo, ...jugada };
       enviar({ tipo: 'jugada', jugada });
       return true;
     };

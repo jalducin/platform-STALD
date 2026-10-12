@@ -4,7 +4,7 @@
 (function (g) {
   'use strict';
   function fnv(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
-  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; } // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
   const rng = semilla => mulberry(fnv(semilla));
   const barajar = (a, rnd) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
   const tope = n => Math.max(0, Math.min(1000, Math.round(n)));
@@ -25,13 +25,13 @@
     const SIN_AVANCE = 40; // medios movimientos sin captura ni avance de peón → empate
 
     function nueva() {
-      const t = Array(32).fill('');
+      const t = new Array(32).fill('');
       for (let i = 0; i < 12; i++) t[i] = 'n';
       for (let i = 20; i < 32; i++) t[i] = 'b';
       return { t, turno: 'b', sinAvance: 0, jugadas: 0 };
     }
     function desdeFilas(filas, turno) {
-      const t = Array(32).fill('');
+      const t = new Array(32).fill('');
       filas.forEach((s, f) => [...s].forEach((ch, c) => { const i = idx(f, c); if (i >= 0 && 'bBnN'.includes(ch)) t[i] = ch; }));
       return { t, turno: turno || 'b', sinAvance: 0, jugadas: 0 };
     }
@@ -209,7 +209,7 @@
     const dado = (seed, k) => 1 + Math.floor(rng(seed + '|dado|' + k)() * 6);
     function nueva(n, seed, cuantas) {
       cuantas = cuantas === 2 ? 2 : 4;
-      const st = { n, colores: n === 2 ? [0, 2] : [0, 1, 2, 3].slice(0, n), cuantas, fichas: Array.from({ length: n }, () => Array(cuantas).fill(-1)), seed, k: 0, turno: 0, dado: 0, fin: null, log: [], forzar: [] };
+      const st = { n, colores: n === 2 ? [0, 2] : [0, 1, 2, 3].slice(0, n), cuantas, fichas: Array.from({ length: n }, () => new Array(cuantas).fill(-1)), seed, k: 0, turno: 0, dado: 0, fin: null, log: [], forzar: [] };
       tirar(st); resolver(st);
       return st;
     }
@@ -366,7 +366,7 @@
     // server/naval.ts. Empieza el jugador 0; tras «agua» cambia el turno; gana quien junta 17 aciertos.
     function estado(jugadores) {
       const orden = jugadores.slice(0, 2).map(j => j.id);
-      const todas = jugadores.slice(0, 2).flatMap(j => (j.jugadas || []).map(x => Object.assign({ id: j.id }, x))).sort((a, b) => a.n - b.n);
+      const todas = jugadores.slice(0, 2).flatMap(j => (j.jugadas || []).map(x => ({ id: j.id, ...x }))).sort((a, b) => a.n - b.n);
       let turno = 0, fin = null, ultimo = 0;
       const aciertos = [0, 0];
       for (const x of todas) {

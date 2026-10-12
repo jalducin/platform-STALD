@@ -91,7 +91,7 @@ Deno.test("cartas españolas en sala: brisca y conquián con sus jugadas", async
   assertEquals([t.status, t.body.jugadas[0].con, t.body.jugadas[0].a], [200, [1, 2], 0]);
   assertEquals((await jug(cq, { n: 1, accion: "descartar", carta: 7 })).status, 200);
   assertEquals((await jug(cq, { n: 2, accion: "pasar" })).status, 200);
-  for (const mala of [{ n: 3, accion: "tomar", con: [1, 1] }, { n: 3, accion: "tomar", con: [50] }, { n: 3, accion: "bajar", con: Array(9).fill(0).map((_, i) => i) },
+  for (const mala of [{ n: 3, accion: "tomar", con: [1, 1] }, { n: 3, accion: "tomar", con: [50] }, { n: 3, accion: "bajar", con: new Array(9).fill(0).map((_, i) => i) },
     { n: 3, accion: "descartar" }, { n: 3, accion: "jugar", carta: 3 }, { n: 3, accion: "tomar", con: [1, 2, 3], a: 99 }]) {
     assertEquals((await jug(cq, mala)).body.error, "jugada_invalida", "conquián " + JSON.stringify(mala));
   }

@@ -35,7 +35,7 @@
     for (let k = 0; k < q.length - 2; k += (MAX_PUNTOS - 1) * 2) partes.push(q.slice(k, k + MAX_PUNTOS * 2));
     return partes.map(x => x.map(v => Math.max(0, Math.min(255, v))));
   }
-  const normalizar = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+  const normalizar = s => String(s).normalize('NFD').replaceAll(/[̀-ͯ]/g, '').toLowerCase().replaceAll(/[^a-z ]/g, '').replaceAll(/\s+/g, ' ').trim();
   g.Dibuja = { DIBUJO_MS, PAUSA_MS, calendario, turnoEn, simplificar, normalizar };
   if (typeof document === 'undefined') return;
 

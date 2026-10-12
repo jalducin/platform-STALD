@@ -650,7 +650,7 @@ if (U.PRUEBA) {
       return {
         modo, nivel, horizontal, tactil: U.TACTIL, fps, w: W, h: H, control,
         marcador: vistaMarcador().slice(), activa, puesto: T.BARRAS[activa] && T.BARRAS[activa].puesto, s: st ? st.s.slice() : null, objetivo: objetivo.slice(),
-        pelota: st ? Object.assign({}, st.pelota) : null, patada: st ? st.patada.slice() : null,
+        pelota: st ? ({ ...st.pelota }) : null, patada: st ? st.patada.slice() : null,
         sala: !!sala, miTurno: !!(sala && sala.miTurno()), paso: l ? l.paso : 0, fin: l ? l.fin : null,
         animando: !!(sala && sala.anim), posSala, angulo: anguloSala, yo: sala ? sala.idx : 0, mostrados: sala ? sala.mostrado.length : 0, finEnviado: !!(sala && sala.finEnviado),
         asientos: sala ? sala.orden.map((p, i) => ({ nombre: p.nombre, bot: !!p.bot, eq: reparto[i].eq, rol: reparto[i].rol, barras: reparto[i].barras, color: colores[i] })) : [],

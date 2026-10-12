@@ -91,7 +91,7 @@ export class GitHubStore implements Store {
     return await this.leer<Doc<T> | null>(`get:${path}`, `${this.url(path)}?ref=${this.branch}`, (j) => {
       // deno-lint-ignore no-explicit-any
       const x = j as any;
-      const text = new TextDecoder().decode(decodeBase64(String(x.content).replace(/\n/g, "")));
+      const text = new TextDecoder().decode(decodeBase64(String(x.content).replaceAll("\n", "")));
       return { data: JSON.parse(text) as T, sha: x.sha };
     }, null, "github_get");
   }

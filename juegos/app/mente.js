@@ -16,7 +16,7 @@ const sdkPuede = (g, i, v) => {
 };
 // Tablero resuelto al azar (backtracking con números barajados).
 function sudokuResuelto(rnd = Math.random) {
-  const g = Array(81).fill(0);
+  const g = new Array(81).fill(0);
   const llenar = i => {
     if (i === 81) return true;
     for (const v of barajar([1, 2, 3, 4, 5, 6, 7, 8, 9], rnd)) if (sdkPuede(g, i, v)) { g[i] = v; if (llenar(i + 1)) { return true; } g[i] = 0; }
@@ -46,7 +46,7 @@ function contarSoluciones(g0, tope = 2) {
 function generarSudoku(nivel, rnd = Math.random) {
   const sol = sudokuResuelto(rnd), g = sol.slice();
   let pistas = 81;
-  for (const i of barajar([...Array(81).keys()], rnd)) {
+  for (const i of barajar([...new Array(81).keys()], rnd)) {
     if (pistas <= SUDOKU_NIVELES[nivel].pistas) break;
     const v = g[i]; g[i] = 0;
     if (contarSoluciones(g, 2) === 1) pistas--; else g[i] = v;

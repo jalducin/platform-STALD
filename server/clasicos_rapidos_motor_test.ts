@@ -37,7 +37,7 @@ Deno.test("gato: el bot gana si puede, bloquea y el difícil nunca pierde", () =
     if (turno === O) { const c = C.gatoBot(t, O, 3, Math.random); assert(!t[c]); const u = t.slice(); u[c] = O; explorar(u, X); return; }
     t.forEach((v, i) => { if (!v) { const u = t.slice(); u[i] = X; explorar(u, O); } });
   };
-  explorar(Array(9).fill(null), X);
+  explorar(new Array(9).fill(null), X);
   assert(partidas > 100, String(partidas));
   // El fácil juega una casilla libre al azar.
   assertEquals(C.gatoBot([X, O, X, O, X, O, O, X, _], X, 1, Math.random), 8);

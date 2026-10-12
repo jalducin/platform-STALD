@@ -40,7 +40,7 @@
   }
   // Mapa de teclas por omisión con los cambios del juego ({ Code: boton | null }; null quita la tecla).
   function mapaTeclas(cambios) {
-    const m = Object.assign({}, TECLAS);
+    const m = { ...TECLAS };
     for (const [code, b] of Object.entries(cambios || {})) {
       if (b === null) { delete m[code]; continue; }
       if (!ES_BOTON.has(b)) throw new Error('Mando: botón desconocido «' + b + '» para la tecla ' + code);
@@ -100,7 +100,7 @@
   function controlABotones(gp, opciones) {
     const o = opciones || {};
     if (!gp || gp.connected === false) return { botones: [], eje: { x: 0, y: 0 } };
-    const indices = Object.assign({}, CONTROL_ESTANDAR);
+    const indices = { ...CONTROL_ESTANDAR };
     for (const [i, b] of Object.entries(o.indices || {})) { if (b === null) delete indices[i]; else indices[i] = b; }
     const s = new Set();
     (gp.buttons || []).forEach((bt, i) => {
@@ -303,7 +303,7 @@
     const etiqueta = b => {
       if (!nombres) return '';
       const l = Object.keys(acciones).filter(a => acciones[a].includes(b)).map(a => nombres[a] || a);
-      return l.length ? '<small>' + l.join(' / ').replace(/[&<>"']/g, '') + '</small>' : '';
+      return l.length ? '<small>' + l.join(' / ').replaceAll(/[&<>"']/g, '') + '</small>' : '';
     };
     const vis = b => usados.has(b) ? '' : ' mando-oculto';
     const hayDir = DIRECCIONES.some(d => usados.has(d)) && !(op.analogico && !DIRECCIONES.some(d => Object.values(acciones).some(l => l.includes(d))));

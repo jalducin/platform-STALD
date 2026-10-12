@@ -449,7 +449,7 @@ function guardarAvance(hoyo, golpes, recogida) {
     const tot = G.total(juego.st.jug[0]);
     progreso.mejorRecorrido = progreso.mejorRecorrido === null ? tot : Math.min(progreso.mejorRecorrido, tot);
   }
-  U.enviar({ tipo: 'guardar', datos: JSON.parse(JSON.stringify(progreso)) });
+  U.enviar({ tipo: 'guardar', datos: structuredClone(progreso) });
 }
 
 /* ---------- Individual ---------- */

@@ -144,7 +144,7 @@ addEventListener('message',ev=>{
 });
 if(EMBED){try{parent.postMessage({juego:'dragon-run',tipo:'listo'},location.origin)}catch(e){}}
 function avisar1(txt){$('aviso').textContent=txt;$('aviso').classList.toggle('hide',!txt)}
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s).replaceAll(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=DM.fmt;
 const ICONO_ESTELA={fuego:'🔥',estrellas:'⭐',burbujas:'🫧',hojas:'🍃',arcoiris:'🌈'};
 function pintarMenu(){
@@ -253,7 +253,7 @@ aplicarControl();
 /* ---------- estelas ---------- */
 const NEON=['#ff4d4d','#ffa94d','#ffe14d','#5ef07a','#4dc3ff','#a06bff'];
 function estela(n,salto){const k=prog.equipo.estela;for(let i=0;i<n;i++){const p={x:DX+8+Math.random()*14,y:dr.y-4-(salto?0:Math.random()*20),vx:-60-Math.random()*160,vy:salto?-Math.random()*130+20:(Math.random()-.5)*40,l:.5+Math.random()*.4,m:.9,k};
- if(k==='burbujas'){p.vy=-30-Math.random()*50;p.l+=.3;p.m+=.3}if(k==='hojas'){p.r=Math.random()*6}if(k==='arcoiris'){ p.h=NEON[(Math.random()*NEON.length)|0]; }pt.push(p)}}
+ if(k==='burbujas'){p.vy=-30-Math.random()*50;p.l+=.3;p.m+=.3}if(k==='hojas'){p.r=Math.random()*6}if(k==='arcoiris'){ p.h=NEON[Math.trunc(Math.random()*NEON.length)]; }pt.push(p)}}
 function drawP(p){const a=Math.max(0,p.l/p.m);x.globalAlpha=Math.min(1,a+.2);
  if(p.c){x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,3,0,7);x.fill();return}
  if(p.k==='estrellas'){const r=3+a*4;x.fillStyle=a>.5?'#fff7b0':'#ffd23f';x.beginPath();for(let i=0;i<10;i++){const ang=i*Math.PI/5-Math.PI/2,rr=i%2?r*.45:r;x.lineTo(p.x+Math.cos(ang)*rr,p.y+Math.sin(ang)*rr)}x.fill()}
@@ -270,7 +270,7 @@ function update(dt){
  inv=Math.max(0,inv-dt);shake=Math.max(0,shake-dt);
  trailT-=dt;if(trailT<=0){trailT=REDUCIR?.2:.07;estela(1,false)}
  while(nextAt-dist<W+80&&nextAt<GOAL*PX-700){
-  const k=['rock','log','spike','slime'][Math.random()*4|0],S={rock:[38,30],log:[64,28],spike:[48,24],slime:[38,30]}[k];
+  const k=['rock','log','spike','slime'][Math.trunc(Math.random()*4)],S={rock:[38,30],log:[64,28],spike:[48,24],slime:[38,30]}[k];
   ob.push({k,wx:nextAt,w:S[0],h:S[1]});
   if(k==='rock'&&Math.random()<.3)ob.push({k,wx:nextAt+44,w:38,h:30});
   const gap=sp*(.95+Math.random()*.8)+170;
@@ -370,7 +370,7 @@ if(PRUEBA)window.__dragonPrueba={
  // Suma a la carrera en curso lo justo para cumplir la misión i del día.
  cumplir(i){const c=DM.carreraParaCumplir(DM.misionesDelDia(fecha,semilla)[i]);run.extraM+=c.metros;coins+=c.monedas;run.esq+=c.esquivados;run.mejorRacha=Math.max(run.mejorRacha,c.mejorRacha);run.dobles+=c.dobles;if(c.castillo){ run.castillo=true; }revisarMisiones()},
  terminar(gano){if(st==='play')gano?win():lose()},
- progreso:()=>JSON.parse(JSON.stringify(prog)),
+ progreso:()=>structuredClone(prog),
  semilla:()=>semilla,
  control:()=>control,
  mando:()=>mando.estado(),

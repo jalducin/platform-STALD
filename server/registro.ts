@@ -17,7 +17,7 @@ export async function handleRegistroJuegos(req: Request, deps: DepsRegistro, jso
   try { body = await req.json() ?? {}; } catch { return json({ error: "json_invalido" }, 400); }
   const email = normalizeEmail(typeof body.email === "string" ? body.email : null);
   if (!CORREO.test(email)) return json({ error: "correo_invalido" }, 400);
-  const nombre = typeof body.nombre === "string" ? body.nombre.trim().replace(/\s+/g, " ") : "";
+  const nombre = typeof body.nombre === "string" ? body.nombre.trim().replaceAll(/\s+/g, " ") : "";
   if (!APODO.test(nombre)) return json({ error: "apodo_invalido" }, 400);
   if (body.acepto !== true) return json({ error: "debe_aceptar" }, 400);
   const [ingles, secundaria] = await Promise.all([deps.filasIngles(), deps.filasSecundaria()]);

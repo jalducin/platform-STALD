@@ -117,7 +117,7 @@
   function jugarGato(nivel) {
     const m = marco('gato'), t0 = Date.now(), PTS = { 1: [100, 30], 2: [200, 80], 3: [300, 150] }[nivel];
     let t, ronda = 0, turno, res = null, ult = null, puntos = 0, gan = 0, perd = 0, emp = 0, terminado = false;
-    const empezar = () => { t = Array(9).fill(null); res = null; ult = null; turno = ronda % 2 ? 'O' : 'X'; pintar(); if (turno === 'O') botJuega(); };
+    const empezar = () => { t = new Array(9).fill(null); res = null; ult = null; turno = ronda % 2 ? 'O' : 'X'; pintar(); if (turno === 'O') botJuega(); };
     function pintar(msg) {
       const tuTurno = !res && turno === 'X' && !terminado;
       m.body.innerHTML = '<div class="cr-wrap"><div class="cr-marcador"><span class="cr-jug' + (turno === 'X' && !res ? ' activo' : '') + '"><span class="cr-ficha-chica">' + svgX + '</span><span class="nom">Tú</span><span class="pts">' + gan + '</span></span>' +
@@ -312,9 +312,9 @@
       let y = j;
       if (j.eleccion !== undefined) { // ppt: recordar las elecciones ya vistas (son inmutables)
         const k = x.id + '|' + j.n;
-        if (j.eleccion !== '?') c.vistas.set(k, j.eleccion); else if (c.vistas.has(k)) y = Object.assign({}, j, { eleccion: c.vistas.get(k) });
+        if (j.eleccion !== '?') c.vistas.set(k, j.eleccion); else if (c.vistas.has(k)) y = { ...j, eleccion: c.vistas.get(k) };
       }
-      jugadas.push(Object.assign({ jugador: x.id }, y));
+      jugadas.push({ jugador: x.id, ...y });
     }));
     const orden = participantes();
     return {

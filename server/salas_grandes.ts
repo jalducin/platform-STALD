@@ -55,7 +55,7 @@ function fnv(s: string): number {
 }
 function mulberry(a: number) {
   return () => {
-    a |= 0; a = a + 0x6D2B79F5 | 0;
+    a |= 0; a = a + 0x6D2B79F5 | 0; // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
     let t = Math.imul(a ^ a >>> 15, 1 | a);
     t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
@@ -111,7 +111,7 @@ export function palabraDibuja(secreto: string, turno: number) {
   return PALABRAS_DIBUJA[orden[turno % orden.length]];
 }
 // Minúsculas, sin acentos, solo letras y espacios sencillos.
-export const normalizarPalabra = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
+export const normalizarPalabra = (s: string) => s.normalize("NFD").replaceAll(/[̀-ͯ]/g, "").toLowerCase().replaceAll(/[^a-z ]/g, "").replaceAll(/\s+/g, " ").trim();
 const esLaPalabra = (texto: string, palabra: string) => { const n = normalizarPalabra(texto), w = normalizarPalabra(palabra); return n === w || n === w + "s" || n + "s" === w || n === w + "es"; };
 
 export interface TurnoDibuja {
@@ -254,7 +254,7 @@ export function respuestaGrande<E extends JugadorGrande>(sala: SalaGrande, jugad
       return { cambiar: (e) => e.aciertos?.[turno] ? e : { ...e, aciertos: { ...(e.aciertos ?? {}), [turno]: { t: ahora, pts } } }, respuesta: { correcta: true, pts } };
     }
     const casi = normalizarPalabra(a.texto).includes(normalizarPalabra(palabra));
-    const intento = casi ? { turno, casi: true as const, t: ahora } : { turno, texto: a.texto.trim().replace(/\s+/g, " ").slice(0, 30), t: ahora };
+    const intento = casi ? { turno, casi: true as const, t: ahora } : { turno, texto: a.texto.trim().replaceAll(/\s+/g, " ").slice(0, 30), t: ahora };
     return { cambiar: (e) => ({ ...e, intentos: [...(e.intentos ?? []), intento].slice(-DIBUJA.MAX_INTENTOS) }), respuesta: { correcta: false, ...(casi ? { casi: true } : {}) } };
   }
   if (LIMITES_RESULTADO[sala.juego] && body.resultado !== undefined) {
@@ -283,7 +283,7 @@ export function vistaGrande(sala: SalaGrande, jugadores: JugadorGrande[], yo: st
   const mia = actual.turno.dibuja === yo && actual.fase === "dibujo";
   return {
     dibuja: {
-      turno: actual.turno.i, fase: actual.fase, letras: p.en.replace(/ /g, "").length, forma: p.en.split(" ").map((w) => w.length),
+      turno: actual.turno.i, fase: actual.fase, letras: p.en.replaceAll(" ", "").length, forma: p.en.split(" ").map((w) => w.length),
       ...(mia ? renombrar(p) : {}), reveladas,
     },
   };

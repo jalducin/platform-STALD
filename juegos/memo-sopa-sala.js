@@ -13,7 +13,7 @@
   }
   // Sopa de 10×10 con exactamente 6 palabras (sigue probando candidatas hasta acomodarlas).
   function sopa(vocab, r) {
-    const grid = Array.from({ length: N_SOPA }, () => Array(N_SOPA).fill('')), puestas = [];
+    const grid = Array.from({ length: N_SOPA }, () => new Array(N_SOPA).fill('')), puestas = [];
     for (const w of barajarCon(vocab.filter(v => /^[a-z]{3,8}$/.test(v.en)), r)) {
       if (puestas.length >= PALABRAS) break;
       const W = w.en.toUpperCase();
@@ -180,9 +180,7 @@
     return contenido;
   }
   const registro = { preparar, pintar, clic };
-  g.SALAS_GRANDES['en-memorama'] = Object.assign({}, registro, {
-    opcionesHtml: '<label for="p-gana">¿Quién gana?</label><select id="p-gana" class="sel"><option value="tiempo">⏱ El menor tiempo</option><option value="errores">🎯 Menos errores</option></select>',
-    opciones: () => ({ gana: document.getElementById('p-gana').value }),
-  });
+  g.SALAS_GRANDES['en-memorama'] = { ...registro, opcionesHtml: '<label for="p-gana">¿Quién gana?</label><select id="p-gana" class="sel"><option value="tiempo">⏱ El menor tiempo</option><option value="errores">🎯 Menos errores</option></select>',
+    opciones: () => ({ gana: document.getElementById('p-gana').value }),};
   g.SALAS_GRANDES['mente-sopa'] = registro;
 })(globalThis);

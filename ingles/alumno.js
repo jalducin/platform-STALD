@@ -24,7 +24,7 @@ function avanceSemana(act) {
 const DIAS_HORARIO = { dom: 0, lun: 1, mar: 2, mie: 3, jue: 4, vie: 5, sab: 6 };
 const DURACION_CLASE_MIN = 60;
 function siguienteDesdeHorario(horario, ahora) {
-  const t = String(horario || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const t = String(horario || '').normalize('NFD').replaceAll(/[̀-ͯ]/g, '').toLowerCase();
   const dias = [...t.matchAll(/\b(dom|lun|mar|mie|jue|vie|sab)/g)].map(m => DIAS_HORARIO[m[1]]);
   const h = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
   if (!dias.length || !h) return null;

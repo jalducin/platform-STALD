@@ -41,7 +41,7 @@ const modoPartida = on => document.documentElement.classList.toggle('jugando', !
 function urlConSala(codigo) { const u = new URL(location.href); if (codigo) u.searchParams.set('sala', codigo); else { u.searchParams.delete('sala'); } return u.pathname + u.search + u.hash; }
 function recordarSala(codigo, extra) {
   const previa = leerLocal(SALA_KEY);
-  escribirLocal(SALA_KEY, Object.assign({}, previa && previa.codigo === codigo ? previa : {}, extra, { codigo, quien: state.jugador && state.jugador.id, t: Date.now() }));
+  escribirLocal(SALA_KEY, { ...(previa && previa.codigo === codigo ? previa : {}), ...extra, codigo, quien: state.jugador && state.jugador.id, t: Date.now() });
 }
 function olvidarSala() {
   escribirLocal(SALA_KEY, null);
@@ -59,10 +59,10 @@ let enCurso = null, reanudacion = null;
 function guardarPartida() {
   if (!enCurso || !enCurso.foto || !state.jugador) return;
   const f = enCurso.foto();
-  escribirLocal(PARTIDA_KEY, f ? Object.assign({}, f, { juego: enCurso.id, quien: state.jugador.id, t: Date.now() }) : null);
+  escribirLocal(PARTIDA_KEY, f ? ({ ...f, juego: enCurso.id, quien: state.jugador.id, t: Date.now() }) : null);
 }
 function soltarPartida() { enCurso = null; escribirLocal(PARTIDA_KEY, null); }
-const partidaGuardada = () => { const p = leerLocal(PARTIDA_KEY); return vigente(p) && Object.prototype.hasOwnProperty.call(REANUDAR, p.juego) ? p : null; };
+const partidaGuardada = () => { const p = leerLocal(PARTIDA_KEY); return vigente(p) && Object.hasOwn(REANUDAR, p.juego) ? p : null; };
 // La instantánea que se va a reanudar: una sola vez y solo para su juego.
 function tomarReanudacion(id) { const r = reanudacion && reanudacion.juego === id ? reanudacion : null; reanudacion = null; return r; }
 window.addEventListener('pagehide', guardarPartida);
@@ -71,12 +71,12 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) guard
 window.addEventListener('beforeunload', e => { if (enCurso && !enCurso.foto) { e.preventDefault(); e.returnValue = ''; } });
 
 function escapeHtml(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return String(s == null ? '' : s).replaceAll(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 const fmt = n => Number(n || 0).toLocaleString('es-MX');
 const barajar = (a, rnd = Math.random) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const tomar = (a, n, rnd = Math.random) => barajar(a, rnd).slice(0, n);
-const sinAcentos = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+const sinAcentos = s => String(s).normalize('NFD').replaceAll(/[̀-ͯ]/g, '');
 
 // Cada petición lleva la sesión (Authorization: Bearer, comun/auth.js; openspec: plataforma-login). Sin sesión, durante
 // la transición, se manda el correo guardado de antes como ?email=. Un 401 de sesión lleva a la pantalla de entrada.

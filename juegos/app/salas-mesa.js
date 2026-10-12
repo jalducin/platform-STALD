@@ -7,7 +7,7 @@ const L_CANTO = 4500, L_GRITO_BOT = 1500;
 function loteriaSala() {
   if (sala.lot) return sala.lot;
   const s = sala.estado.sala; const idx = sala.contenido.cartas.map((_, i) => i);
-  const lot = { orden: barajar(idx, rngDe(s.seed, 'orden')), modo: s.opciones.modo || 'linea', marcas: Array(16).fill(false), voz: 'ambos', cantadas: 0 };
+  const lot = { orden: barajar(idx, rngDe(s.seed, 'orden')), modo: s.opciones.modo || 'linea', marcas: new Array(16).fill(false), voz: 'ambos', cantadas: 0 };
   lot.tablaDe = id => tomar(idx, 16, rngDe(s.seed, 'tabla|' + id));
   lot.mia = lot.tablaDe(sala.estado.yo);
   const guardada = salaGuardada(); // marcas de antes de recargar (openspec: juegos-recarga)
@@ -85,7 +85,7 @@ function marcarLoteriaSala(i, cel) {
   const lot = sala.lot; const n = cantadasA(ahoraServidor());
   const $m = document.getElementById('lot-msg');
   if (new Set(lot.orden.slice(0, n)).has(lot.mia[i])) { lot.marcas[i] = true; cel.classList.add('marcada'); tono(520, 60); recordarSala(sala.codigo, { marcas: lot.marcas }); }
-  else { cel.classList.remove('tiembla'); void cel.offsetWidth; cel.classList.add('tiembla'); $m.className = 'feedback bad'; $m.textContent = '¡Esa carta todavía no sale!'; }
+  else { cel.classList.remove('tiembla'); cel.getBoundingClientRect(); /* reflujo: reinicia la animación */ cel.classList.add('tiembla'); $m.className = 'feedback bad'; $m.textContent = '¡Esa carta todavía no sale!'; }
 }
 
 function gritarLoteriaSala() {
@@ -113,7 +113,7 @@ function estadoUna() {
   const e = sala.estado, s = e.sala;
   const orden = participantes();
   const jugs = new Map();
-  e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+  e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, { jugador: x.id, ...j }); }));
   const mazo = barajar(UNA_CARTAS.map(c => c.id), rngDe(s.seed, 'una-mazo'));
   const manos = orden.map(() => []);
   for (let k = 0; k < 7; k++) for (let j = 0; j < orden.length; j++) manos[j].push(mazo.pop());
@@ -282,7 +282,7 @@ async function jugadaUnaSala(jugada) {
   // Tirar la penúltima carta: el botón UNA aparece ya (sin esperar al servidor).
   sala.unaLocal = jugada.accion === 'jugar' && st.manos[yo].length === 2 ? { paso: n, presionado: false, enviado: false, jugadaOk: false } : null;
   sala.unaEnviando = true; sala.vista = null; pintarSala();
-  const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n }, jugada) });
+  const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: { n, ...jugada } });
   if (sala.unaLocal && sala.unaLocal.paso === n) { sala.unaLocal.jugadaOk = r.ok; enviarUnaLocal(); }
   await traerSala();
   sala.unaEnviando = false; sala.unaElegir = null;
@@ -335,7 +335,7 @@ function estadoPoker() {
   const e = sala.estado, s = e.sala;
   const orden = participantes();
   const jugs = new Map();
-  e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+  e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, { jugador: x.id, ...j }); }));
   const st = Cartas.pokerNueva(orden.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot })), { manos: 10 }); // 500 fichas
   Cartas.pokerMano(st, rngDe(s.seed, 'poker-mano-0'));
   const ganadas = {}; let paso = 0, T0 = s.inicio;
@@ -391,7 +391,7 @@ async function clicPokerSala(e) {
   if (st.fase === 'fin' || st.turno !== yo || sala.pkEnviando) return true;
   const jugada = pkJugadaDe(b);
   sala.pkEnviando = true; sala.vista = null; pintarSala();
-  const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n: st.paso }, jugada) });
+  const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: { n: st.paso, ...jugada } });
   await traerSala();
   sala.pkEnviando = false; sala.vista = null; pintarSala();
   if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');
@@ -410,7 +410,7 @@ function estadoCartasSala(juego) {
   const orden = participantes().slice(0, cfg.max);
   if (orden.length < 2) return { faltan: true, orden };
   const jugs = new Map();
-  e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+  e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, { jugador: x.id, ...j }); }));
   const st = cfg.nueva(orden.map(p => ({ id: p.id, nombre: p.nombre })), rngDe(s.seed, juego + '-mazo'));
   let paso = 0, T0 = s.inicio;
   const ahora = ahoraServidor();
@@ -442,7 +442,7 @@ function pintarCartasSala(body, juego) {
     bar.hidden = true;
     const pts = j => juego === 'brisca' ? brPuntos(st, j).puntos : cqPuntos(st, j);
     const filas = st.orden.map((p, j) => ({ id: p.id, nombre: p.nombre + (st.equipos ? ' (' + 'AB'[st.equipos[j]] + ')' : ''), tipo: p.tipo, avatar: p.avatar, total: pts(j), ultimo: 0 })).sort((a, b) => b.total - a.total);
-    if (juego === 'brisca') { sala.finAciertos = yo >= 0 ? st.ganadas[yo].length / st.n : 0; sala.finTotal = 40 / st.n | 0; }
+    if (juego === 'brisca') { sala.finAciertos = yo >= 0 ? st.ganadas[yo].length / st.n : 0; sala.finTotal = Math.trunc(40 / st.n); }
     else { sala.finAciertos = yo >= 0 ? Cartas.bajadas(st, yo) : 0; sala.finTotal = 9; }
     const r = juego === 'brisca' ? Cartas.briscaResultado(st) : null;
     const titulo = juego === 'brisca' ? (r.ganador < 0 ? '🤝 ¡Empate!' : '🏆 Gana ' + (st.equipos ? 'el equipo ' + 'AB'[r.ganador] : nombre(r.ganador)) + ' · ' + r.totales.join(' vs ')) :
@@ -465,7 +465,7 @@ function pintarCartasSala(body, juego) {
 async function enviarCartasSala(jugada) {
   const st = sala.csSt;
   sala.csEnviando = true; sala.vista = null; pintarSala();
-  const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n: st.paso }, jugada) });
+  const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: { n: st.paso, ...jugada } });
   await traerSala();
   sala.csEnviando = false; sala.cqSel = new Set(); sala.cqDestino = null; sala.cqMsg = ''; sala.vista = null; pintarSala();
   if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');
@@ -484,7 +484,7 @@ function clicCartasSala(e) {
   const mv = cqJugadaDe(b.dataset.cq, sala.cqSel || new Set(), sala.cqDestino ?? null);
   // Se valida en local antes de enviar, para explicar por qué no se puede
   if (!mv) { sala.cqMsg = 'Elige exactamente 1 carta para descartar.'; sonidoMal(); sala.vista = null; pintarSala(); return true; }
-  const prueba = JSON.parse(JSON.stringify(st));
+  const prueba = JSON.parse(JSON.stringify(st)); // NOSONAR: copia con JSON a propósito: la validación local ve el estado igual que el servidor
   if (!Cartas.conquianActuar(prueba, mv)) { sala.cqMsg = CQ_INVALIDA; sonidoMal(); sala.vista = null; pintarSala(); return true; }
   enviarCartasSala(mv);
   return true;
@@ -498,7 +498,7 @@ function estadoAjedrez() {
   if (orden.length < 2) return { faltan: true, orden };
   const R = dur(Number(s.opciones.reloj || 10) * 60000);
   const jugs = new Map();
-  e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+  e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, { jugador: x.id, ...j }); }));
   const cache = sala.ajCache || (sala.ajCache = new Map());
   let st = Ajedrez.desdeFEN(Ajedrez.INICIAL), paso = 0, T0 = s.inicio, fin = null, ultima = null;
   const usado = [0, 0], sanes = [];
@@ -569,7 +569,7 @@ function pintarAjedrezSala(body) {
 async function enviarAjedrez(jugada) {
   const a = sala.ajA;
   sala.ajEnviando = true; sala.ajSel = null; sala.ajPromo = null; sala.vista = null; pintarSala();
-  const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n: a.paso }, jugada) });
+  const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: { n: a.paso, ...jugada } });
   await traerSala();
   sala.ajEnviando = false; sala.vista = null; pintarSala();
   if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');

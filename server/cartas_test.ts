@@ -11,7 +11,7 @@ const c = (s: string) => PALOS.indexOf(s.slice(-1)) * 13 + RANGOS.indexOf(s.slic
 const cs = (s: string) => s.split(" ").map(c);
 const v = (s: string) => C.valor5(cs(s));
 const mulberry = (a: number) => () => {
-  a |= 0; a = a + 0x6D2B79F5 | 0;
+  a |= 0; a = a + 0x6D2B79F5 | 0; // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
   let t = Math.imul(a ^ a >>> 15, 1 | a);
   t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
   return ((t ^ t >>> 14) >>> 0) / 4294967296;
@@ -199,7 +199,7 @@ Deno.test("española: 40 cartas con nombre, palo y valor", () => {
   assertEquals([C.nombreEsp(e("1o")), C.nombreEsp(e("10c")), C.nombreEsp(e("11e")), C.nombreEsp(e("12b")), C.nombreEsp(e("7b"))],
     ["As de oros", "Sota de copas", "Caballo de espadas", "Rey de bastos", "7 de bastos"]);
   assertEquals([C.espPalo(e("3e")), C.espValor(e("3e")), C.espOrden(e("10e")) - C.espOrden(e("7e"))], [2, 3, 1]);
-  assertEquals([...Array(40).keys()].reduce((a, id) => a + C.briscaPuntos(id), 0), 120, "la brisca suma 120");
+  assertEquals([...new Array(40).keys()].reduce((a, id) => a + C.briscaPuntos(id), 0), 120, "la brisca suma 120");
 });
 
 Deno.test("brisca: quién gana la baza", () => {

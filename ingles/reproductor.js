@@ -288,9 +288,9 @@ const Reconocedor = window.SpeechRecognition || window.webkitSpeechRecognition |
 const CONTRACCIONES = [[/\bcan't\b/g, 'can not'], [/\bcannot\b/g, 'can not'], [/\bwon't\b/g, 'will not'], [/\blet's\b/g, 'let us'], [/\b(it|that|there|he|she|what|where|who)'s\b/g, '$1 is'],
   [/n't\b/g, ' not'], [/'ve\b/g, ' have'], [/'ll\b/g, ' will'], [/'re\b/g, ' are'], [/'m\b/g, ' am'], [/'d\b/g, ' would']];
 function palabrasPron(t) {
-  t = String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/[’‘`]/g, "'");
+  t = String(t || '').normalize('NFD').replaceAll(/[̀-ͯ]/g, '').toLowerCase().trim().replaceAll(/[’‘`]/g, "'");
   for (const [re, por] of CONTRACCIONES) t = t.replace(re, por);
-  return t.replace(/[^a-z0-9' ]+/g, ' ').replace(/'/g, '').split(/\s+/).filter(Boolean);
+  return t.replaceAll(/[^a-z0-9' ]+/g, ' ').replaceAll('\'', '').split(/\s+/).filter(Boolean);
 }
 function similitudPron(frase, oido) {
   const a = palabrasPron(frase), b = palabrasPron(oido);

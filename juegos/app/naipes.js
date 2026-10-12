@@ -43,7 +43,7 @@ function pkMesaHtml(st, o) {
   let botones = '';
   if (o.miTurno) {
     const op = Cartas.opciones(st);
-    const conFichas = op.puedeSubir && op.minSubir < op.maxSubir; // si solo cabe todo, queda «🔥 Todo»
+    const conFichas = op.puedeSubir && op.minSubir < op.maxSubir; // si solo cabe ir con todas las fichas, queda solo el botón «🔥»
     botones = '<div class="pk-botones"><button class="btn ghost" data-pk="retirarse">🏳️ Retirarme</button>' +
       (op.pasar ? '<button class="btn ghost" data-pk="pasar">✋ Pasar</button>' : '<button class="btn ghost" data-pk="igualar">🤝 Igualar ' + fmt(op.igualar) + '</button>') +
       (conFichas ? '<button class="btn ghost" data-pk-abrir aria-expanded="false" aria-controls="pk-subir">⬆️ Subir</button>' : '') +
@@ -108,7 +108,7 @@ document.addEventListener('click', e => {
   if (Number(s.dataset.aum) + v > Number(s.dataset.max)) return;
   cuenta[v] = (cuenta[v] || 0) + 1;
   pkSelectorPintar(s, cuenta, v);
-  b.classList.remove('toque'); void b.offsetWidth; b.classList.add('toque');
+  b.classList.remove('toque'); b.getBoundingClientRect(); /* reflujo: reinicia la animación */ b.classList.add('toque');
   tono(620 + v * 2, 45, 'triangle', .06);
 });
 const pkJugadaDe = b => {
@@ -219,7 +219,7 @@ function esManoHtml(lista) {
   }).join('') + '</div>';
 }
 const esCuantas = n => n + ' carta' + (n === 1 ? '' : 's');
-const esDorsosHtml = n => '<span class="es-dorsos" role="img" aria-label="' + esCuantas(n) + '">' + Array(n).fill(esCarta(undefined, ' chica')).join('') + '</span>';
+const esDorsosHtml = n => '<span class="es-dorsos" role="img" aria-label="' + esCuantas(n) + '">' + new Array(n).fill(esCarta(undefined, ' chica')).join('') + '</span>';
 // Mazo como pila de dorsos con contador; en Brisca el triunfo va girado debajo.
 function esMazoHtml(n, triunfo) {
   const conTriunfo = triunfo !== undefined; // en Brisca, el triunfo es la última carta del mazo
@@ -245,7 +245,7 @@ const cqPuntos = (st, j) => st.ganador === j ? Math.min(1000, 700 + st.mazo.leng
 
 function briscaHtml(st, o) {
   const yo = o.yo, n = st.n;
-  const otros = [...Array(n).keys()].filter(i => i !== yo);
+  const otros = [...new Array(n).keys()].filter(i => i !== yo);
   const tagEq = i => st.equipos ? ' <span class="pk-tag eq' + 'AB'[st.equipos[i]] + '">' + (yo >= 0 && st.equipos[i] === st.equipos[yo] ? 'pareja' : 'rival') + '</span>' : '';
   const asientos = '<div class="pk-asientos">' + otros.map(i => '<div class="pk-asiento' + (!st.terminada && st.turno === i ? ' turno' : '') + '"><span class="n">' + o.avatar(i) + escapeHtml(o.nombre(i)) + tagEq(i) + '</span><span>' +
     esDorsosHtml(st.manos[i].length) + '</span><span class="muted">' + st.ganadas[i].length / n + ' ronda(s)</span></div>').join('') + '</div>';
@@ -293,7 +293,7 @@ const CQ_INVALIDA = 'Eso no forma un juego: 3 o 4 del mismo número (de palos di
 function cqJugadaDe(accion, sel, destino) {
   if (accion === 'pasar') return { accion };
   if (accion === 'descartar') return sel.size === 1 ? { accion, carta: [...sel][0] } : null;
-  return Object.assign({ accion, con: [...sel] }, destino !== null && destino !== undefined ? { a: destino } : {});
+  return { accion, con: [...sel], ...(destino !== null && destino !== undefined ? { a: destino } : {}) };
 }
 
 function elegirBrisca() {
@@ -321,7 +321,7 @@ function jugarBrisca(modo) {
   const fin = () => {
     terminado = true;
     const b = brPuntos(st, 0);
-    terminar('brisca', { puntos: b.puntos, aciertos: st.ganadas[0].length / st.n, total: 40 / st.n | 0, segundos: (Date.now() - t0) / 1000,
+    terminar('brisca', { puntos: b.puntos, aciertos: st.ganadas[0].length / st.n, total: Math.trunc(40 / st.n), segundos: (Date.now() - t0) / 1000,
       titulo: b.empate ? '🤝 ¡Empate a 60!' : b.gano ? (st.equipos ? '🤝 ¡Ganó tu pareja!' : '🏆 ¡Ganaste la Brisca!') : '😅 Esta vez no',
       detalle: (st.equipos ? 'Tu pareja juntó ' : 'Juntaste ') + b.mios + ' de 120 puntos · ' + b.r.totales.join(' vs ') + '.' });
   };

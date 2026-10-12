@@ -53,14 +53,14 @@
   function pseudo(st) {
     const t = st.t, c = st.turno, ms = [];
     const enemigo = x => t[x] && colorDe(t[x]) !== c;
-    const agregar = (de, a, extra) => ms.push(Object.assign({ de, a, captura: !!t[a] }, extra));
+    const agregar = (de, a, extra) => ms.push({ de, a, captura: !!t[a], ...extra });
     for (let s = 0; s < 128; s++) {
       if (s & 0x88) { s += 7; continue; }
       const p = t[s]; if (!p || colorDe(p) !== c) continue;
       const tipo = p.toLowerCase();
       if (tipo === 'p') {
         const dir = c === 'w' ? -16 : 16, ini = c === 'w' ? 6 : 1, ult = c === 'w' ? 0 : 7;
-        const coronar = (a, extra) => { if ((a >> 4) === ult) for (const pr of 'qrbn') agregar(s, a, Object.assign({ promo: pr }, extra)); else agregar(s, a, extra); };
+        const coronar = (a, extra) => { if ((a >> 4) === ult) for (const pr of 'qrbn') agregar(s, a, { promo: pr, ...extra }); else agregar(s, a, extra); };
         const uno = s + dir;
         if (!(uno & 0x88) && !t[uno]) {
           coronar(uno);
@@ -93,7 +93,7 @@
     if (m.ep) t[m.a + (blanco ? 16 : -16)] = null;
     if (m.enroque) { const fila = blanco ? 7 : 0, r = blanco ? 'R' : 'r'; if (m.enroque === 'K') { t[fila * 16 + 7] = null; t[fila * 16 + 5] = r; } else { t[fila * 16] = null; t[fila * 16 + 3] = r; } }
     let en = st.enroques;
-    if (p === 'K') { en = en.replace(/[KQ]/g, ''); } if (p === 'k') en = en.replace(/[kq]/g, '');
+    if (p === 'K') { en = en.replaceAll(/[KQ]/g, ''); } if (p === 'k') en = en.replaceAll(/[kq]/g, '');
     for (const [sq, l] of [[sqDe('a1'), 'Q'], [sqDe('h1'), 'K'], [sqDe('a8'), 'q'], [sqDe('h8'), 'k']]) if (m.de === sq || m.a === sq) en = en.replace(l, '');
     const n = { t, turno: otro(c), enroques: en, ep: m.doble ? (m.de + m.a) / 2 : -1, medio: p.toLowerCase() === 'p' || m.captura ? 0 : st.medio + 1, num: c === 'b' ? st.num + 1 : st.num, claves: st.claves };
     if (!sinClave) n.claves = st.claves.concat(clave(n));
@@ -222,7 +222,7 @@
   function capturas(st) {
     const cuenta = { P: 8, N: 2, B: 2, R: 2, Q: 1, p: 8, n: 2, b: 2, r: 2, q: 1 };
     for (let s = 0; s < 128; s++) if (!(s & 0x88) && st.t[s] && cuenta[st.t[s]] !== undefined) cuenta[st.t[s]]--;
-    const de = c => Object.entries(cuenta).filter(([p, n]) => n > 0 && colorDe(p) !== c).flatMap(([p, n]) => Array(n).fill(p));
+    const de = c => Object.entries(cuenta).filter(([p, n]) => n > 0 && colorDe(p) !== c).flatMap(([p, n]) => new Array(n).fill(p));
     const pts = lista => lista.reduce((a, p) => a + PUNTOS[p.toLowerCase()], 0);
     const w = de('w'), b = de('b'); // piezas que capturó cada color (si hubo coronación puede salir negativo; se ignora)
     return { w, b, puntosW: pts(w), puntosB: pts(b) };

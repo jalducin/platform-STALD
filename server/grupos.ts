@@ -71,7 +71,7 @@ export async function handleGrupos(req: Request, sub: string, deps: DepsGrupos, 
   try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
 
   if (sub === "" && req.method === "POST") {
-    const nombre = String(body.nombre ?? "").trim().replace(/\s+/g, " ");
+    const nombre = String(body.nombre ?? "").trim().replaceAll(/\s+/g, " ");
     if (!NOMBRE.test(nombre)) return json({ error: "nombre_invalido" }, 400);
     const meet = texto(body.meet_url, 200);
     if (meet && !/^https:\/\/[\w.-]+\/\S*$/.test(meet)) return json({ error: "meet_invalido" }, 400);
