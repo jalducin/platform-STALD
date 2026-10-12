@@ -47,4 +47,4 @@
 - [x] 6.1 `docs/backend-standards.md`: ruta `/juegos/ranking/juegos` y su caché HTTP
 - [x] 6.2 `docs/frontend-standards.md`: sub-pestaña «🔥 Juegos»
 - [x] 6.3 `npx -y @fission-ai/openspec@1.4.1 validate ranking-juegos-populares --strict`
-- [ ] 6.4 Tras el merge (integrador): verificar en producción y `openspec archive`
+- [x] 6.4 Tras el merge (integrador): verificar en producción y `openspec archive`
