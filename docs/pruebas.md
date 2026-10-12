@@ -126,13 +126,18 @@ falso `Authorization: Bearer prueba:<correo>`:
 
    ```js
    const { abrirPagina, urlDe } = require('./lib/navegador');
-   const p = await abrirPagina(b, { email: 'marisol@example.com', tiempo: 0.4, out, ruta: '/juegos.html', esperar: '[data-juego]' });
+   const p = await abrirPagina(b, { email: 'marisol@example.com', tiempo: 0.4, out, ruta: '/juegos.html', esperar: '[data-menu]' });
    // Sin `ruta`, la página queda en blanco: agrega rutas o escuchas y luego `await p.goto(urlDe('/ingles.html#semana'))`.
    ```
 
-   Para comparar el menú de `juegos.html` con su catálogo usa `contarMenu(p)` de `lib/menu.js` (cambio
-   `organizar-codigo`): devuelve `ids`, `tarjetas`, `juegos` (`JUEGOS.length`), `secciones`, `categorias`
-   (`CATEGORIAS.length`) y `completo` (el hub pinta todo el catálogo). No repitas `p.evaluate(() => JUEGOS.length)`.
+   El menú de `juegos.html` abre en las categorías (cambio `juegos-categorias`): espera `[data-menu]` (existe en las
+   dos vistas) y usa los ayudantes de `lib/menu.js` en lugar de tocar `[data-juego="…"]` directo:
+   `abrirJuego(p, id, { tap })` (abre la categoría del juego si hace falta y toca su tarjeta), `abrirCategoria`,
+   `irACategorias`, `idsDe(p, cat)`, `textoTarjeta(p, id)` y `recorrerMenu(p)`. Para comparar el menú con su catálogo
+   usa `contarMenu(p)` (cambio `organizar-codigo`): entra a cada categoría y devuelve `ids`, `tarjetas`, `juegos`
+   (`JUEGOS.length`), `secciones` (tarjetas de categoría), `categorias` (`CATEGORIAS.length`), `porCategoria` y
+   `completo` (cada categoría pinta exactamente sus juegos y la suma es todo el catálogo). No repitas
+   `p.evaluate(() => JUEGOS.length)`. Los botones `.result [data-juego]` («Jugar otra vez») no cambian.
 3. Agrégala a `ORDEN` en `correr.sh` (y a `fase_de` si no es de fase `base`).
 4. Córrela con `correr.sh` y documenta el resultado en el reporte del cambio.
 

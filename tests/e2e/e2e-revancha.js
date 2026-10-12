@@ -8,7 +8,7 @@ const { abrirPagina } = require('./lib/navegador');
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 
-const jugador = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.3, out, ruta: '/juegos.html', esperar: '[data-juego]' });
+const jugador = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.3, out, ruta: '/juegos.html', esperar: '[data-menu]' });
 const salaApi = async (codigo, email) => (await fetch(API + '/juegos/sala/' + codigo + '?email=' + encodeURIComponent(email))).json();
 const revanchaApi = async (codigo, email) => { const r = await fetch(API + '/juegos/sala/' + codigo + '/revancha?email=' + encodeURIComponent(email), { method: 'POST', body: '{}' }); return { status: r.status, body: await r.json() }; };
 const codigoDe = async p => ((await p.textContent('#p-codigo-chip').catch(() => '')) || '').replace(/[^A-Z]/g, '');
@@ -71,7 +71,7 @@ async function enSalaNueva(p, viejo) {
   // ---- La cuarta recarga en el podio y se une desde el inicio ----
   await lau.reload(); await lau.waitForSelector('#revancha-inicio', { timeout: 30000 });
   const tarjeta = await lau.textContent('#revancha-inicio');
-  ok('al recargar en el podio, el inicio ofrece la revancha', tarjeta.includes('abrió la revancha') && !!(await lau.$('[data-juego]')) && !new URL(lau.url()).searchParams.get('sala'), tarjeta);
+  ok('al recargar en el podio, el inicio ofrece la revancha', tarjeta.includes('abrió la revancha') && !!(await lau.$('[data-menu]')) && !new URL(lau.url()).searchParams.get('sala'), tarjeta);
   await lau.screenshot({ path: 'revancha-recarga.png', fullPage: true });
   await lau.click('[data-a="revancha-inicio"]');
   ok('Laura entra a la misma sala tras recargar', (await enSalaNueva(lau, viejo)) === nuevo);

@@ -1,4 +1,4 @@
-// Juegos para salas grandes (openspec: juegos-salas-grandes): registro común de 🎱 Bingo, 🂡 Blackjack, 🎨 Dibuja y
+// Juegos para salas grandes (openspec: juegos-salas-grandes): registro común de 🎱 Bingo, ♣️ Blackjack, 🎨 Dibuja y
 // adivina, y 🃏 Memorama y 🔎 Sopa de letras en partida. Script clásico cargado antes de los scripts de
 // juegos/app/ (el código de juegos.html); sus funciones usan los helpers globales de juegos/app/ (sala, post, pintarFinalSala…) al llamarse.
 //

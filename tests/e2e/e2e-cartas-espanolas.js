@@ -2,10 +2,11 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, viewport: { width: 390, height: 900 }, out, ruta: '/juegos.html', esperar: '[data-juego]' });
+const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, viewport: { width: 390, height: 900 }, out, ruta: '/juegos.html', esperar: '[data-menu]' });
 const brTurno = async p => { const c = await p.$('.es-btn.jugable[data-br-carta]'); if (c) { await c.click().catch(() => {}); return true; } return false; };
 // Conquián: si hay una jugada válida con la carta ofrecida (pareja de la mano), la toma; si no, pasa. En fase bajar, descarta.
 async function cqTurno(p) {
@@ -30,7 +31,7 @@ async function cqTurno(p) {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   // ---- Brisca individual en pareja ----
   const p = await pagina(b, 'marisol@example.com', 0.15);
-  await p.click('[data-juego="brisca"]'); await p.click('[data-ayuda="brisca"]');
+  await abrirJuego(p, 'brisca'); await p.click('[data-ayuda="brisca"]');
   ok('ayuda Brisca: valor de las cartas y 120 puntos', /As[\s\S]*11 puntos/.test(await (await p.waitForSelector('dialog.ayuda[open]')).innerText()));
   await p.keyboard.press('Escape');
   await p.click('[data-br-modo="pareja"]'); await p.click('[data-br-go]'); await p.waitForSelector('.es-mano');
@@ -71,8 +72,8 @@ async function cqTurno(p) {
   ok('Brisca individual: 10 cartas jugadas, termina y guarda', jug === 10 && /a tus individuales/.test(rb), 'jugadas=' + jug + ' ' + rb.replace(/\s+/g, ' ').slice(0, 120));
 
   // ---- Conquián individual ----
-  await p.click('[data-a="hub"]').catch(() => {}); await p.waitForSelector('[data-juego="conquian"]');
-  await p.click('[data-juego="conquian"]'); await p.click('[data-ayuda="conquian"]');
+  await p.click('[data-a="hub"]').catch(() => {}); await p.waitForSelector('[data-menu]');
+  await abrirJuego(p, 'conquian'); await p.click('[data-ayuda="conquian"]');
   ok('ayuda Conquián: juegos válidos y 7-sota', /el 7 y la sota \(10\) van seguidas/i.test(await (await p.waitForSelector('dialog.ayuda[open]')).innerText()));
   await p.keyboard.press('Escape');
   await p.click('[data-cq-go]'); await p.waitForSelector('.es-mano');

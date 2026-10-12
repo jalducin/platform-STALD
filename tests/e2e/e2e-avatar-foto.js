@@ -4,9 +4,10 @@ require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y
 const { chromium } = require('playwright');
 const API = process.env.API;
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const jugador = (b, email, ruta = '/juegos.html') => abrirPagina(b, { email, viejo: true, out, dialogos: 'aceptar', ruta, esperar: ruta === '/juegos.html' ? '[data-juego]' : null });
+const jugador = (b, email, ruta = '/juegos.html') => abrirPagina(b, { email, viejo: true, out, dialogos: 'aceptar', ruta, esperar: ruta === '/juegos.html' ? '[data-menu]' : null });
 const imgCargada = (p, sel) => p.$eval(sel, i => i.complete && i.naturalWidth > 0).catch(() => false);
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
@@ -26,15 +27,15 @@ const imgCargada = (p, sel) => p.$eval(sel, i => i.complete && i.naturalWidth > 
   ok('recorte 128×128', dims[0] === 128 && dims[1] === 128, JSON.stringify(dims));
   await m.click('[data-av-guardar]'); await sleep(400);
   ok('sin permiso no guarda y avisa', (await m.textContent('#av-msg')).includes('permiso') && !!(await m.$('#av-file')));
-  await m.check('#av-permiso'); await m.click('[data-av-guardar]'); await m.waitForSelector('[data-juego]');
+  await m.check('#av-permiso'); await m.click('[data-av-guardar]'); await m.waitForSelector('[data-menu]');
   await m.waitForSelector('#chip .av img'); await sleep(500);
   ok('chip con la foto (servida por el backend)', await imgCargada(m, '#chip .av img'), await m.$eval('#chip .av img', i => i.src));
   const token = await m.evaluate(() => state.jugador.avatar.foto);
   // Reabrir y guardar sin cambios conserva la foto
-  await m.click('#chip'); await m.waitForSelector('[data-av-guardar]'); await m.click('[data-av-guardar]'); await m.waitForSelector('[data-juego]');
+  await m.click('#chip'); await m.waitForSelector('[data-av-guardar]'); await m.click('[data-av-guardar]'); await m.waitForSelector('[data-menu]');
   ok('guardar sin cambios conserva la foto', (await m.evaluate(() => state.jugador.avatar.foto)) === token);
   // Partida para aparecer en el ranking
-  await m.click('[data-juego="mente-calculo"]');
+  await abrirJuego(m, 'mente-calculo');
   const t0 = Date.now(); while (!(await m.$('.result .score')) && Date.now() - t0 < 90000) { const o = await m.$('.opt:not(.ok):not(.bad)'); if (o) await o.click().catch(() => {}); await sleep(150); }
   await m.click('[data-a="hub"]');
 
@@ -66,18 +67,18 @@ const imgCargada = (p, sel) => p.$eval(sel, i => i.complete && i.naturalWidth > 
   const st = await (await fetch(API + '/juegos/foto/' + token)).status;
   ok('la foto quitada responde 404', st === 404, String(st));
   // Fallback: una página con el token viejo muestra el personaje
-  const fb = await abrirPagina(b, { email: 'jesus@example.com', viejo: true, viewport: { width: 1280, height: 720 }, ruta: '/juegos.html', esperar: '[data-juego]' });
+  const fb = await abrirPagina(b, { email: 'jesus@example.com', viejo: true, viewport: { width: 1280, height: 720 }, ruta: '/juegos.html', esperar: '[data-menu]' });
   await fb.evaluate(t => { state.jugador.avatar = { emoji: '🦊', color: '#22c55e', foto: t }; pintarChip(); }, token); await sleep(1500);
   ok('fallback: avatar con foto borrada muestra el personaje', !(await fb.$('#chip .av img')) && (await fb.textContent('#chip .av')).trim() === '🦊');
-  await m.evaluate(() => { limpiar(); pantallaHub('juegos'); }); await m.waitForSelector('[data-juego]');
+  await m.evaluate(() => { limpiar(); pantallaHub('juegos'); }); await m.waitForSelector('[data-menu]');
   // Volver a un personaje quita la foto
   await m.click('#chip'); await m.waitForSelector('#av-file');
   await m.setInputFiles('#av-file', { name: 'yo.png', mimeType: 'image/png', buffer: png }); await m.waitForSelector('#av-vista img');
-  await m.check('#av-permiso'); await m.click('[data-av-guardar]'); await m.waitForSelector('[data-juego]');
+  await m.check('#av-permiso'); await m.click('[data-av-guardar]'); await m.waitForSelector('[data-menu]');
   const t2 = await m.evaluate(() => state.jugador.avatar.foto);
   await m.click('#chip'); await m.waitForSelector('[data-av-emoji]'); await m.click('[data-av-emoji]:nth-child(3)');
   ok('elegir personaje quita la vista de foto', !(await m.$('#av-vista img')));
-  await m.click('[data-av-guardar]'); await m.waitForSelector('[data-juego]');
+  await m.click('[data-av-guardar]'); await m.waitForSelector('[data-menu]');
   ok('volver a personaje: sin foto en el chip y la foto ya no existe', !(await m.$('#chip .av img')) && (await fetch(API + '/juegos/foto/' + t2)).status === 404);
   await m.screenshot({ path: 'avatar-foto-chip.png' });
   await b.close();

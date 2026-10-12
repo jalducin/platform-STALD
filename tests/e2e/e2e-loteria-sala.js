@@ -2,15 +2,16 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego, idsDe } = require('./lib/menu'); // menú por categorías (openspec: juegos-categorias)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const jugador = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.2, out, ruta: '/juegos.html', esperar: '[data-juego]' });
+const jugador = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.2, out, ruta: '/juegos.html', esperar: '[data-menu]' });
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const host = await jugador(b, 'marisol@example.com');
   // Responde en inglés (solitario)
-  ok('catálogo: Completa y responde', !!(await host.$('[data-juego="en-frases"]')));
-  await host.click('[data-juego="en-frases"]'); await host.waitForSelector('[data-tema="todo"]'); await host.click('[data-tema="todo"]'); await host.waitForSelector('[data-opt]'); // selector de tema (juegos-ingles-gramatica)
+  ok('catálogo: Completa y responde', (await idsDe(host, 'ingles')).includes('en-frases'));
+  await abrirJuego(host, 'en-frases'); await host.waitForSelector('[data-tema="todo"]'); await host.click('[data-tema="todo"]'); await host.waitForSelector('[data-opt]'); // selector de tema (juegos-ingles-gramatica)
   const q = await host.textContent('.q-card .q');
   ok('pregunta en inglés con traducción', /\?|!|\./.test(q) && (await host.textContent('.q-card .sub')).length > 3, q);
   await host.screenshot({ path: 'preguntas-en.png' });

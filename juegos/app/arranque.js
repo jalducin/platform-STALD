@@ -69,9 +69,11 @@ app.addEventListener('click', e => {
   const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
   const rjt = e.target.closest('#rj-todos'); // top 10 ↔ todos (openspec: ranking-juegos-top10)
   if (rjt) { const ol = document.getElementById('rank-juegos'), abre = !ol.classList.contains('todos'); ol.classList.toggle('todos', abre); rjt.setAttribute('aria-expanded', String(abre)); rjt.textContent = abre ? 'Ver solo el top 10 ▴' : 'Ver los ' + rjt.dataset.total + ' juegos ▾'; return; }
+  const cc = e.target.closest('[data-categoria]'); if (cc) return abrirCategoria(cc.dataset.categoria); // juegos-categorias
   const g = e.target.closest('[data-juego]');
   if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
   const a = e.target.closest('[data-a]'); if (!a) return;
+  if (a.dataset.a === 'categorias') return verCategorias(); // juegos-categorias: «← Categorías»
   if (a.dataset.a === 'reanudar') return reanudarPartida();
   if (a.dataset.a === 'revancha-no') { olvidarRevancha(); const c = document.getElementById('revancha-inicio'); if (c) c.remove(); return; }
   if (a.dataset.a === 'revancha-inicio') {

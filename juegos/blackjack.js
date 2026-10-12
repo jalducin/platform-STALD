@@ -1,4 +1,4 @@
-// 🂡 Blackjack (21) con fichas sin valor real (openspec: juegos-salas-grandes).
+// ♣️ Blackjack (21) con fichas sin valor real (openspec: juegos-salas-grandes).
 // - `globalThis.Blackjack`: motor puro (sin DOM), con las cartas de juegos/cartas.js (ids 0–51, rango id % 13).
 // - Pantallas: `elegirBlackjack` / individual contra la banca, y SALAS_GRANDES.blackjack (2 a 6 jugadores contra la
 //   banca; cada jugada lleva su paso n y todos reproducen la mesa con la semilla, como el póker).
@@ -128,7 +128,7 @@
   .bj-aviso { font-size: .76rem; color: var(--muted); text-align: center; margin-top: 8px; }
   @media (prefers-reduced-motion: reduce) { .bj-cartas .pk-carta.entra { animation: none; } }
   `);
-  const ESTADO_TXT = { pasado: '💥 Se pasó', bj: '🂡 ¡Blackjack!', planta: '✋ Se plantó', fuera: 'Sin fichas', apuesta: 'Apostando…', juega: 'Jugando' };
+  const ESTADO_TXT = { pasado: '💥 Se pasó', bj: '♣️ ¡Blackjack!', planta: '✋ Se plantó', fuera: 'Sin fichas', apuesta: 'Apostando…', juega: 'Jugando' };
   const VERBO = { apostar: 'apuesta', pedir: 'pide carta', plantarse: 'se planta', doblar: 'dobla' };
   const totalHtml = (cartas, e) => { if (!cartas.length) return ''; const t = total(cartas); return '<span class="bj-total' + (t.v > 21 ? ' pasado' : e === 'bj' ? ' bj' : '') + '">' + (t.suave && t.v < 21 ? (t.v - 10) + '/' : '') + t.v + '</span>'; };
   const cartasHtml = (cartas, ocultar, vistas) => '<div class="bj-cartas">' + (cartas.length ? cartas.map((c, k) => pkCarta(ocultar && k === 1 ? undefined : c, vistas && k >= vistas ? ' entra' : '')).join('') : pkCarta(null) + pkCarta(null)) + '</div>';
@@ -164,7 +164,7 @@
         '<span>' + c.map(x => pkCarta(x, ' chica')).join(' ') + ' ' + totalHtml(c, e) + '</span><span class="muted">' + (ESTADO_TXT[e] && e !== 'juega' && e !== 'apuesta' ? ESTADO_TXT[e] + ' · ' : '') + extra + '</span></div>';
     };
     const u = st.ultima;
-    const msg = fin && res ? (res.bjBanca ? '🂡 ¡La banca tiene blackjack!' : res.banca > 21 ? '💥 La banca se pasó con ' + res.banca : '🏦 La banca se queda con ' + res.banca)
+    const msg = fin && res ? (res.bjBanca ? '♣️ ¡La banca tiene blackjack!' : res.banca > 21 ? '💥 La banca se pasó con ' + res.banca : '🏦 La banca se queda con ' + res.banca)
       : u ? escapeHtml(o.nombre(u.j)) + ' ' + VERBO[u.accion] + (u.monto ? ' ' + fmt(u.monto) : '') + (u.auto ? ' ⏰' : '') : st.fase === 'apuestas' ? '🪙 ¡Hagan sus apuestas!' : '';
     const otros = st.jugadores.map((_, i) => i).filter(i => i !== yo);
     let botones = '';
@@ -189,7 +189,7 @@
 
   g.elegirBlackjack = function () {
     const m = marco('blackjack', { menu: true });
-    m.body.innerHTML = '<div class="q-card"><div class="big">🂡🃏</div><div class="q">Blackjack (21)</div><div class="sub">Acércate a 21 sin pasarte y gánale a la banca. 500 fichas y ' + MANOS + ' manos. Las fichas son de juego: no tienen valor.</div></div>' +
+    m.body.innerHTML = '<div class="q-card"><div class="big">' + (typeof g.icoJuego === 'function' ? g.icoJuego('blackjack') : '♣️') + '</div><div class="q">Blackjack (21)</div><div class="sub">Acércate a 21 sin pasarte y gánale a la banca. 500 fichas y ' + MANOS + ' manos. Las fichas son de juego: no tienen valor.</div></div>' +
       '<div class="row-btns"><button class="btn ghost" data-ayuda="blackjack">📖 Cómo se juega</button><button class="btn" data-bj-go>🃏 Sentarme a la mesa</button></div>' +
       '<p class="muted" style="text-align:center;font-size:.85rem">¿Con amigos? En 👥 Partidas crea una sala de Blackjack (de 2 a 6 contra la banca).</p>';
     m.body.addEventListener('click', e => { if (e.target.closest('[data-bj-go]')) jugarBlackjack(); });
@@ -208,7 +208,7 @@
       terminado = true;
       const f = st.jugadores[0].fichas;
       terminar('blackjack', { puntos: puntos(f), aciertos: ganadas, total: st.mano + (st.terminada ? 0 : 1), segundos: (Date.now() - t0) / 1000,
-        titulo: f <= 0 ? '💸 Te quedaste sin fichas' : f > FICHAS_INICIALES ? '🂡 ¡Le ganaste a la banca!' : '🂡 Fin de la partida',
+        titulo: f <= 0 ? '💸 Te quedaste sin fichas' : f > FICHAS_INICIALES ? '♣️ ¡Le ganaste a la banca!' : '♣️ Fin de la partida',
         detalle: 'Terminaste con 🪙 ' + fmt(f) + ' fichas · ganaste ' + ganadas + ' mano' + (ganadas === 1 ? '' : 's') + '.' });
     };
     const siguienteMano = () => { clearTimeout(auto); mano(st); if (st.terminada) return fin(); pintar(); };
@@ -269,7 +269,7 @@
       if (sala.vista === 'final') return;
       const filas = st.orden.map((p, j) => ({ id: p.id, nombre: p.nombre, tipo: p.tipo, avatar: p.avatar, total: puntos(st.jugadores[j].fichas), ultimo: 0 })).sort((a, b) => b.total - a.total);
       sala.finAciertos = yo >= 0 ? (st.ganadas[yo] || 0) : 0; sala.finTotal = st.manos;
-      return pintarFinalSala(body, filas, null, '🂡 ¡Fin del Blackjack!');
+      return pintarFinalSala(body, filas, null, '♣️ ¡Fin del Blackjack!');
     }
     const enJuego = st.fase !== 'fin';
     const miTurno = enJuego && st.turno === yo && !sala.bjEnviando;
@@ -300,12 +300,12 @@
   }
 
   g.SALAS_GRANDES.blackjack = { preparar: () => { sala.bjSt = null; sala.bjEnviando = false; return null; }, pintar, clic };
-  g.AYUDA_GRANDES.blackjack = '<h2>🂡 Blackjack (21)</h2><p><b>Objetivo:</b> que tus cartas sumen más que las de la banca <b>sin pasarte de 21</b>. Cada quien empieza con 500 fichas y se juegan ' + MANOS + ' manos.</p>' +
+  g.AYUDA_GRANDES.blackjack = '<h2>♣️ Blackjack (21)</h2><p><b>Objetivo:</b> que tus cartas sumen más que las de la banca <b>sin pasarte de 21</b>. Cada quien empieza con 500 fichas y se juegan ' + MANOS + ' manos.</p>' +
     '<h3>Cuánto vale cada carta</h3><table><tr><td>2 a 10</td><td>lo que dice la carta</td></tr><tr><td>J, Q, K</td><td>10</td></tr><tr><td>A (as)</td><td>11 o 1, lo que más te convenga</td></tr></table>' +
     '<h3>Cómo va una mano</h3><ol><li><b>Apuesta:</b> arma tu apuesta con fichas de 5, 10, 20, 50 y 100.</li><li>Recibes 2 cartas; la banca, una boca arriba y otra boca abajo.</li>' +
     '<li>En tu turno: <b>🃏 Pedir</b> otra carta, <b>✋ Plantarte</b> o <b>✌️ Doblar</b> (con tus 2 primeras cartas: duplicas tu apuesta y recibes solo una carta más).</li>' +
     '<li>La banca voltea su carta y <b>pide hasta tener 17 o más</b>.</li></ol>' +
-    '<h3>Pagos</h3><table><tr><td>Le ganas a la banca</td><td>recibes el doble de tu apuesta</td></tr><tr><td>Empate</td><td>recuperas tu apuesta</td></tr><tr><td>🂡 Blackjack (A + 10 con tus 2 primeras cartas)</td><td>paga 3 a 2</td></tr><tr><td>Te pasas de 21</td><td>pierdes tu apuesta</td></tr></table>' +
+    '<h3>Pagos</h3><table><tr><td>Le ganas a la banca</td><td>recibes el doble de tu apuesta</td></tr><tr><td>Empate</td><td>recuperas tu apuesta</td></tr><tr><td>♣️ Blackjack (A + 10 con tus 2 primeras cartas)</td><td>paga 3 a 2</td></tr><tr><td>Te pasas de 21</td><td>pierdes tu apuesta</td></tr></table>' +
     '<p>En partida, cada quien juega contra la banca (no contra los demás) y tiene 30 segundos por turno; si se acaba, se planta solo.</p><h3>Puntos</h3><p>Tus puntos son las fichas con las que terminas (máximo 1,000).</p>' +
     '<div class="aviso">🪙 Las fichas son solo de juego: no se compran, no se cambian y no tienen valor real. Aquí se juega por diversión y por puntos del ranking.</div>';
 })(globalThis);

@@ -2,15 +2,16 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const BASE = process.env.BASE, API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, viewport: { width: 390, height: 900 }, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-juego]' });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, viewport: { width: 390, height: 900 }, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-menu]' });
   // Brisca individual contra 1 bot: tiro yo, responde el bot y la baza completa sigue a la vista ≥ 4 s
-  await p.click('[data-juego="brisca"]'); await p.click('[data-br-modo="1"]'); await p.click('[data-br-go]');
+  await abrirJuego(p, 'brisca'); await p.click('[data-br-modo="1"]'); await p.click('[data-br-go]');
   await p.waitForSelector('.es-btn.jugable[data-br-carta]', { timeout: 15000 }).catch(() => {});
   if (!(await p.$('.es-btn.jugable[data-br-carta]'))) await p.waitForSelector('.es-btn.jugable[data-br-carta]', { timeout: 15000 });
   await p.click('.es-btn.jugable[data-br-carta]');
@@ -20,8 +21,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const visible = Date.now() - t0;
   ok('Brisca individual: la baza completa se ve ~5 s (antes 1.3 s)', visible >= 4500, visible + ' ms');
   // Póker individual: el resultado de la mano se queda ~10 s antes de avanzar solo
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]');
-  await p.click('[data-juego="poker"]'); await p.click('[data-pk-bots="1"]'); await p.click('[data-pk-go]');
+  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-menu]');
+  await abrirJuego(p, 'poker'); await p.click('[data-pk-bots="1"]'); await p.click('[data-pk-go]');
   const t1 = Date.now();
   while (Date.now() - t1 < 60000 && !(await p.$('[data-pk-sig]'))) { const r = await p.$('[data-pk="retirarse"]'); if (r) await r.click().catch(() => {}); await sleep(300); }
   const tFin = Date.now(); await p.waitForFunction(() => !document.querySelector('[data-pk-sig]'), null, { timeout: 20000 });

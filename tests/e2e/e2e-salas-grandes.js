@@ -5,15 +5,17 @@ require('./lib/entorno'); // BASE, API, DATOS, carpeta de salida y sesión de pr
 const path = require('node:path');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego, idsDe } = require('./lib/menu'); // menú por categorías (openspec: juegos-categorias)
 const VOCAB = require(path.join(process.env.DATOS, 'ingles.json')).vocabulario;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const correo = n => n + '@example.com';
-const jugador = (b, n, tiempo) => abrirPagina(b, { email: correo(n), viejo: true, tiempo, out, ruta: '/juegos.html', esperar: '[data-juego]' });
+const jugador = (b, n, tiempo) => abrirPagina(b, { email: correo(n), viejo: true, tiempo, out, ruta: '/juegos.html', esperar: '[data-menu]' });
 const api = async (n, ruta, body) => {
   const r = await fetch(process.env.API + ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(correo(n)), body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) });
   return { status: r.status, body: await r.json() };
 };
+const iconoSala = p => p.waitForFunction(() => { const i = document.querySelector('.play-top .t img.ico-img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 10000 }).then(() => true, () => false); // juegos-categorias
 async function crear(p, juego, antes) {
   await p.click('[data-tab="partidas"]'); await p.selectOption('#p-juego', juego);
   if (antes) await antes();
@@ -47,11 +49,12 @@ async function mismoPodio(nombre, pags, n) {
 
   // ---------------- Inicio: tarjetas ----------------
   const marisol = await jugador(b, 'marisol', 0.1);
-  for (const id of ['bingo', 'blackjack', 'dibuja']) ok('tarjeta ' + id, !!(await marisol.$('[data-juego="' + id + '"]')));
-  ok('Bingo y Blackjack en Clásicos; Dibuja en Inglés', !!(await marisol.$('.cat-clasicos[data-juego="bingo"]')) && !!(await marisol.$('.cat-clasicos[data-juego="blackjack"]')) && !!(await marisol.$('.cat-ingles[data-juego="dibuja"]')));
+  const clasicos = await idsDe(marisol, 'clasicos'), ingles = await idsDe(marisol, 'ingles'); // tarjetas por categoría (juegos-categorias)
+  for (const id of ['bingo', 'blackjack', 'dibuja']) ok('tarjeta ' + id, clasicos.concat(ingles).includes(id));
+  ok('Bingo y Blackjack en Clásicos; Dibuja en Inglés', clasicos.includes('bingo') && clasicos.includes('blackjack') && ingles.includes('dibuja'));
 
   // ---------------- Blackjack individual ----------------
-  await marisol.click('[data-juego="blackjack"]'); await marisol.click('[data-bj-go]');
+  await abrirJuego(marisol, 'blackjack'); await marisol.click('[data-bj-go]');
   await marisol.waitForSelector('[data-bj-ficha]');
   ok('blackjack: aviso de fichas sin valor', /no tienen valor real/.test(await marisol.textContent('#m-body')));
   await marisol.click('[data-bj-ficha="20"]'); await marisol.click('[data-bj-ficha="5"]');
@@ -76,6 +79,7 @@ async function mismoPodio(nombre, pags, n) {
   const m2 = await jugador(b, 'marisol', 0.2);
   await marisol.close();
   const cbj = await crear(m2, 'blackjack');
+  ok('blackjack sala: el encabezado trae el ícono SVG cargado (juegos-categorias)', await iconoSala(m2));
   const mesa1 = await m2.textContent('#p-mesa').catch(() => '');
   ok('mesa: 1 persona + 2 bots', /1 persona \+ 2 bots/.test(mesa1) && (await m2.$$('#p-body .rank li')).length === 3, mesa1);
   await unirse(angel, cbj);
@@ -250,13 +254,13 @@ async function mismoPodio(nombre, pags, n) {
   // ---------------- Práctica individual de Dibuja y Bingo individual (vistazo) ----------------
   await dm.click('.result ~ .row-btns [data-a="hub"], #p-body [data-a="hub"]');
   await dm.click('[data-tab="juegos"]'); // el inicio recuerda la pestaña de Partidas
-  await dm.click('[data-juego="dibuja"]'); await dm.click('[data-dj-practica]');
+  await abrirJuego(dm, 'dibuja'); await dm.click('[data-dj-practica]');
   await dm.waitForSelector('#dj-ptexto');
   await sleep(1500);
   await dm.screenshot({ path: 'salas-grandes-390-dibuja-practica.png' });
   ok('dibuja práctica: el lienzo se aclara', await dm.$eval('#dj-lienzo', c => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 0; i < d.length; i += 4) if (d[i] < 240 || d[i + 1] < 240 || d[i + 2] < 240) return true; return false; }));
   await dm.click('[data-a="salir"]');
-  await dm.click('[data-juego="bingo"]'); await dm.click('[data-bg-go]');
+  await abrirJuego(dm, 'bingo'); await dm.click('[data-bg-go]');
   await dm.waitForSelector('.bg-cell');
   await sleep(1200);
   ok('bingo individual: cartón de 25 con la libre al centro', (await dm.$$('.bg-cell')).length === 25 && (await dm.textContent('.bg-cell.libre')).includes('⭐'));

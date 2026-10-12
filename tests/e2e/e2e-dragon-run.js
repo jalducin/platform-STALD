@@ -6,6 +6,7 @@ require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y
 const { chromium } = require('playwright');
 const BASE = process.env.BASE, API = process.env.API;
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego, idsDe, textoTarjeta } = require('./lib/menu'); // menú por categorías (openspec: juegos-categorias)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const EMAIL = 'laura@example.com'; // sin avance previo de Dragon Run
@@ -18,7 +19,7 @@ async function esperarProgreso(cond, ms = 15000, email = EMAIL) {
 }
 // Abre Dragon Run desde Juegos y espera la pantalla de misiones con el avance ya cargado.
 async function abrirDragon(p) {
-  await p.click('[data-juego="dragon-run"]');
+  await abrirJuego(p, 'dragon-run');
   const fr = await (await p.waitForSelector('#dragon-frame', { timeout: 20000 })).contentFrame();
   await fr.waitForFunction(() => window.__dragonPrueba && document.querySelectorAll('#misiones .mis[data-tipo]').length === 3 && !/Cargando/.test(document.getElementById('misiones').textContent), null, { timeout: 20000 });
   await fr.evaluate(f => window.__dragonPrueba.fecha(f), FECHA);
@@ -41,11 +42,11 @@ async function abrirDragon(p) {
   ok('texto de inicio menciona el doble salto', (await sola.textContent('#ovS')).includes('doble salto'));
 
   // 2) Catálogo a 390 px: Dragon Run en Arcade, no en Mente ágil
-  const p = await abrirPagina(b, { email: EMAIL, viejo: true, out, etiqueta: 'misiones', ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-juego="dragon-run"]' });
-  const arcade = await p.$$eval('.cat-arcade[data-juego]', xs => xs.map(x => x.dataset.juego));
+  const p = await abrirPagina(b, { email: EMAIL, viejo: true, out, etiqueta: 'misiones', ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
+  const mente = await idsDe(p, 'mente'), arcade = await idsDe(p, 'arcade'); // termina con 🕹️ Arcade abierta
   ok('catálogo: Dragon Run en 🕹️ Arcade con Axo y Karts', ['plataformas', 'karts', 'dragon-run'].every(id => arcade.includes(id)), arcade.join(','));
-  ok('catálogo: Dragon Run ya no está en Mente ágil', !(await p.$('.cat-mente[data-juego="dragon-run"]')));
-  await (await p.$('[data-juego="dragon-run"]')).scrollIntoViewIfNeeded();
+  ok('catálogo: Dragon Run ya no está en Mente ágil', mente.length > 0 && !mente.includes('dragon-run'), mente.join(','));
+  await (await p.$('.game[data-juego="dragon-run"]')).scrollIntoViewIfNeeded();
   await p.screenshot({ path: 'dragon-390-catalogo.png' });
   const antes = await progreso();
   ok('sin avance al empezar', antes.v === 0 && antes.datos === null, JSON.stringify(antes));
@@ -101,7 +102,7 @@ async function abrirDragon(p) {
   await fr.click('[data-estela="burbujas"]');
   const g2 = await esperarProgreso(r => r.datos && r.datos.equipo.estela === 'burbujas');
   ok('elegir la estela se guarda en el servidor', g2.datos && g2.datos.equipo.estela === 'burbujas' && g2.v === g1.v + 1, JSON.stringify(g2.datos && g2.datos.equipo) + ' v' + g2.v);
-  await p.reload(); await p.waitForSelector('[data-juego="dragon-run"]', { timeout: 60000 });
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('recargar no deja el juego abierto', !(await p.$('#dragon-frame')));
   fr = await abrirDragon(p);
   const tras = await fr.evaluate(() => window.__dragonPrueba.progreso());
@@ -127,10 +128,10 @@ async function abrirDragon(p) {
   await rm.context().close();
 
   // 7) Escritorio: modo auto juega y termina; se guarda en ⭐ individuales
-  const pe = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, viewport: { width: 900, height: 900 }, out, etiqueta: 'juegos', ruta: '/juegos.html?dragonAuto=1', esperar: '[data-juego="dragon-run"]' });
-  ok('Dragon Run en Arcade (escritorio)', (await pe.textContent('.cat-arcade[data-juego="dragon-run"]')).includes('Dragon Run'));
+  const pe = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, viewport: { width: 900, height: 900 }, out, etiqueta: 'juegos', ruta: '/juegos.html?dragonAuto=1', esperar: '[data-menu]' });
+  ok('Dragon Run en Arcade (escritorio)', (await idsDe(pe, 'arcade')).includes('dragon-run') && (await textoTarjeta(pe, 'dragon-run')).includes('Dragon Run'));
   const antesE = await pe.evaluate(() => state.totalIndividual);
-  await pe.click('[data-juego="dragon-run"]');
+  await abrirJuego(pe, 'dragon-run');
   const fe = await (await pe.waitForSelector('#dragon-frame', { timeout: 20000 })).contentFrame();
   await fe.waitForSelector('#bS'); await fe.waitForFunction(() => document.querySelectorAll('#misiones .mis[data-tipo]').length === 3);
   await pe.screenshot({ path: 'dragon-escritorio-misiones.png' });
@@ -149,7 +150,7 @@ async function abrirDragon(p) {
   const gm = await esperarProgreso(r => r.v >= 1, 15000, 'marisol@example.com');
   ok('la carrera automática también suma a su avance', gm.datos && gm.datos.totales.carreras >= 1, JSON.stringify(gm.datos && gm.datos.totales));
   // 8) Un mensaje falso desde otra ventana no guarda nada
-  await pe.click('[data-juego="dragon-run"]'); await pe.waitForSelector('#dragon-frame');
+  await pe.click('.result [data-juego="dragon-run"]'); await pe.waitForSelector('#dragon-frame'); // «Jugar otra vez» del resultado
   await pe.evaluate(() => window.postMessage({ juego: 'dragon-run', fin: true, gano: true, puntos: 2000, monedas: 0, metros: 600, segundos: 1 }, '*'));
   await sleep(1200);
   ok('mensaje que no viene del juego se ignora', !(await pe.$('.result')) && !!(await pe.$('#dragon-frame')));

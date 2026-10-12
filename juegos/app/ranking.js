@@ -21,7 +21,7 @@ async function pintarRankingJuegos(body, pestanas) {
     (lista.length
       ? '<ol class="rank" id="rank-juegos" aria-label="Juegos más jugados de la semana">' + lista.map(x => {
         const j = juegoPorId(x.id);
-        return '<li data-rj="' + escapeHtml(x.id) + '"' + (x.pos > 10 ? ' class="rj-extra"' : '') + '><span class="pos">' + medalla(x.pos) + '</span><span class="rj-ico" aria-hidden="true">' + (j ? j.emoji : '🎮') + '</span>' +
+        return '<li data-rj="' + escapeHtml(x.id) + '"' + (x.pos > 10 ? ' class="rj-extra"' : '') + '><span class="pos">' + medalla(x.pos) + '</span><span class="rj-ico" aria-hidden="true">' + icoJuego(j) + '</span>' +
           '<span class="n">' + escapeHtml(x.titulo) + '<br><small>' + plural(x.jugadores, 'jugador', 'jugadores') + ' · ' + plural(x.partidas, 'partida', 'partidas') + '</small>' +
           '<span class="rj-barra" aria-hidden="true"><span style="width:' + Math.max(4, Math.round(x.jugadores / lider * 100)) + '%"></span></span>' +
           (x.mejor ? '<small>👑 Mejor puntaje: ' + escapeHtml(x.mejor.nombre) + ' · ' + plural(x.mejor.puntos, 'punto', 'puntos') + '</small>' : '') + '</span></li>';

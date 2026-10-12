@@ -3,11 +3,12 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const FICHAS = [5, 10, 20, 50, 100];
 
-const pagina = (b, email, tiempo, viewport) => abrirPagina(b, { email, viejo: true, tiempo, viewport: viewport || { width: 390, height: 900 }, out, ruta: '/juegos.html', esperar: '[data-juego]' });
+const pagina = (b, email, tiempo, viewport) => abrirPagina(b, { email, viejo: true, tiempo, viewport: viewport || { width: 390, height: 900 }, out, ruta: '/juegos.html', esperar: '[data-menu]' });
 // Juega lo seguro: pasar si se puede; si no, igualar.
 async function jugarTurno(p) {
   const pasar = await p.$('[data-pk="pasar"]'); if (pasar) { await pasar.click().catch(() => {}); return true; }
@@ -32,7 +33,7 @@ async function armar(p, monto) {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   // ---- Individual ----
   const p = await pagina(b, 'marisol@example.com', 0.15);
-  await p.click('[data-juego="poker"]'); await p.waitForSelector('[data-pk-go]');
+  await abrirJuego(p, 'poker'); await p.waitForSelector('[data-pk-go]');
   const portada = await p.textContent('.q-card');
   ok('portada: 500 fichas y fichas para subir', /500 fichas/.test(portada) && /5, 10, 20, 50 y 100/.test(portada), portada.replace(/\s+/g, ' ').slice(0, 160));
   await p.click('[data-ayuda="poker"]');
@@ -90,7 +91,7 @@ async function armar(p, monto) {
 
   // ---- Escritorio: el selector también se ve bien en una ventana ancha ----
   const d = await pagina(b, 'marisol@example.com', 1, { width: 1280, height: 900 });
-  await d.click('[data-juego="poker"]'); await d.click('[data-pk-bots="3"]'); await d.click('[data-pk-go]');
+  await abrirJuego(d, 'poker'); await d.click('[data-pk-bots="3"]'); await d.click('[data-pk-go]');
   await d.waitForSelector('[data-pk-abrir], [data-pk-sig]', { timeout: 30000 });
   if (await d.$('[data-pk-abrir]')) {
     await d.click('[data-pk-abrir]'); await armar(d, 85);

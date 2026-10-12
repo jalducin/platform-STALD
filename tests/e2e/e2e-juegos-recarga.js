@@ -5,13 +5,14 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const BASE = process.env.BASE;
 const API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const jugador = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.4, out, ruta: '/juegos.html', esperar: '[data-juego]' });
+const jugador = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.4, out, ruta: '/juegos.html', esperar: '[data-menu]' });
 const salaApi = async (codigo, email) => (await fetch(API + '/juegos/sala/' + codigo + '?email=' + encodeURIComponent(email))).json();
 const parametros = p => new URL(p.url()).searchParams;
 const guardada = (p, k) => p.evaluate(k => localStorage.getItem(k), k);
@@ -63,7 +64,7 @@ async function responderVisibles(pares, hechas) {
   const podio = await otro.$$eval('.rank li .n', ls => ls.map(l => l.childNodes[0].textContent.trim()));
   ok('(a) podio con Angel una sola vez', podio.filter(n => n === 'Angel').length === 1 && podio.length === 4, podio.join(' | '));
   ok('(c) al terminar se limpian la URL y la sala guardada', !parametros(otro).get('sala') && (await guardada(otro, 'juegos_sala_activa')) === null, otro.url());
-  await otro.reload(); await otro.waitForSelector('[data-juego]', { timeout: 30000 });
+  await otro.reload(); await otro.waitForSelector('[data-menu]', { timeout: 30000 });
   ok('(c) recargar tras terminar no vuelve a la sala', !(await otro.$('#p-codigo-chip')));
 
   // ---- (c) Sala de espera: recargar, abrir sin ?sala= y salir ----
@@ -72,26 +73,26 @@ async function responderVisibles(pares, hechas) {
   const cod2 = (await host.textContent('.letra')).trim();
   await host.reload(); await host.waitForSelector('[data-p="empezar"]', { timeout: 30000 });
   ok('(c) recargar en la sala de espera regresa a ella', (await host.textContent('.letra')).trim() === cod2);
-  await host.goto(BASE + '/juegos.html' + Q); await host.waitForSelector('#p-codigo-chip, [data-juego]', { timeout: 30000 });
+  await host.goto(BASE + '/juegos.html' + Q); await host.waitForSelector('#p-codigo-chip, [data-menu]', { timeout: 30000 });
   ok('(c) abrir Juegos sin ?sala= reconecta con la sala guardada', ((await host.textContent('#p-codigo-chip').catch(() => '')) || '').includes(cod2) && parametros(host).get('sala') === cod2, host.url());
   ok('(c) la anfitriona no se duplica', (await salaApi(cod2, 'marisol@example.com')).jugadores.length === 1);
-  await host.click('[data-a="salir"]'); await host.waitForSelector('[data-juego]');
+  await host.click('[data-a="salir"]'); await host.waitForSelector('[data-menu]');
   ok('(c) al salir se limpian la URL y la sala guardada', !parametros(host).get('sala') && parametros(host).get('api') === API && (await guardada(host, 'juegos_sala_activa')) === null, host.url());
   ok('(c) sin sala, vuelve el «jalar para recargar»', (await overscroll(host)) !== 'contain', await overscroll(host));
-  await host.reload(); await host.waitForSelector('[data-juego]', { timeout: 30000 }); await sleep(800);
+  await host.reload(); await host.waitForSelector('[data-menu]', { timeout: 30000 }); await sleep(800);
   ok('(c) recargar después de salir ya no entra', !(await host.$('#p-codigo-chip')));
   // Clave de una sala en la que no está (otra persona en el mismo aparato): no entra y se borra.
   await otro.evaluate(c => localStorage.setItem('juegos_sala_activa', JSON.stringify({ codigo: c, quien: 'i-otra', t: Date.now() })), cod2);
-  await otro.reload(); await otro.waitForSelector('[data-juego]', { timeout: 30000 }); await sleep(800);
+  await otro.reload(); await otro.waitForSelector('[data-menu]', { timeout: 30000 }); await sleep(800);
   ok('(c) la sala guardada de otra persona no se abre', !(await otro.$('#p-codigo-chip')));
   await otro.evaluate(c => localStorage.setItem('juegos_sala_activa', JSON.stringify({ codigo: c, quien: state.jugador.id, t: Date.now() })), cod2);
-  await otro.reload(); await otro.waitForSelector('[data-juego]', { timeout: 30000 }); await sleep(800);
+  await otro.reload(); await otro.waitForSelector('[data-menu]', { timeout: 30000 }); await sleep(800);
   ok('(c) sala guardada en la que no estaba: inicio sin error y clave borrada', !(await otro.$('#p-codigo-chip')) && !(await otro.$('.alert')) && (await guardada(otro, 'juegos_sala_activa')) === null);
 
   // ---- (b) Sudoku: reanudar y contar una vez ----
   const p = host;
   const partidas = []; p.on('request', r => { if (r.method() === 'POST' && r.url().includes('/juegos/partida')) partidas.push(r.url()); });
-  await p.click('[data-juego="mente-sudoku"]'); await p.waitForSelector('[data-sdk-nivel]');
+  await abrirJuego(p, 'mente-sudoku'); await p.waitForSelector('[data-sdk-nivel]');
   ok('(b) el menú de niveles no cuenta como partida guardada', (await guardada(p, 'juegos_partida_individual')) === null);
   await p.click('[data-sdk-nivel="facil"]'); await p.click('[data-sdk-go]'); await p.waitForSelector('#sdk');
   ok('(b) sin «jalar para recargar» en el juego', (await overscroll(p)) === 'contain');
@@ -114,7 +115,7 @@ async function responderVisibles(pares, hechas) {
   await p.waitForSelector('.result', { timeout: 15000 }); await sleep(1500);
   ok('(b) termina el Sudoku reanudado y guarda puntos', (await p.textContent('.result h1')).includes('resuelto') && (await p.textContent('.result')).includes('de la semana'));
   ok('(b) un solo POST /juegos/partida', partidas.length === 1, String(partidas.length));
-  await p.reload(); await p.waitForSelector('[data-juego]', { timeout: 30000 }); await sleep(500);
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 30000 }); await sleep(500);
   ok('(b) tras terminar, recargar ya no ofrece continuar', !(await p.$('[data-a="reanudar"]')) && (await guardada(p, 'juegos_partida_individual')) === null);
 
   // ---- (b) Cálculo y secuencias: mismos puntos y tiempo ----
@@ -127,7 +128,7 @@ async function responderVisibles(pares, hechas) {
     const r = op === '+' ? a + c : op === '−' ? a - c : op === '×' ? a * c : a / c;
     return Math.max(0, opciones.indexOf(String(r)));
   };
-  await p.click('[data-juego="mente-calculo"]'); await p.waitForSelector('[data-opt]');
+  await abrirJuego(p, 'mente-calculo'); await p.waitForSelector('[data-opt]');
   for (let k = 0; k < 3; k++) { await p.waitForSelector('[data-opt]:not(.ok):not(.bad)'); await p.click(`[data-opt="${await correcta()}"]`); await sleep(1600); }
   const ptsAntes = (await p.textContent('#m-puntos')).trim(), segAntes = Number((await p.textContent('#m-tiempo')).replace(/\D/g, ''));
   await p.reload(); await p.waitForSelector('[data-a="reanudar"]', { timeout: 30000 });
@@ -136,22 +137,22 @@ async function responderVisibles(pares, hechas) {
   const ptsDespues = (await p.textContent('#m-puntos')).trim(), segDespues = Number((await p.textContent('#m-tiempo')).replace(/\D/g, ''));
   ok('(b) Cálculo: mismos puntos al continuar', ptsAntes === ptsDespues && ptsAntes !== '⭐ 0', ptsAntes + ' → ' + ptsDespues);
   ok('(b) Cálculo: sigue con el tiempo que quedaba', segDespues <= segAntes + 1 && segDespues >= segAntes - 3, segAntes + ' → ' + segDespues);
-  await p.click('[data-a="salir"]'); await p.waitForSelector('[data-juego]');
-  await p.reload(); await p.waitForSelector('[data-juego]', { timeout: 30000 }); await sleep(500);
+  await p.click('[data-a="salir"]'); await p.waitForSelector('[data-menu]');
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 30000 }); await sleep(500);
   ok('(b) salir con ✕ borra la partida guardada', !(await p.$('[data-a="reanudar"]')) && (await guardada(p, 'juegos_partida_individual')) === null);
 
   // ---- (b) Descartar ----
-  await p.click('[data-juego="mente-calculo"]'); await p.waitForSelector('[data-opt]'); await p.click('[data-opt="0"]'); await sleep(1600);
+  await abrirJuego(p, 'mente-calculo'); await p.waitForSelector('[data-opt]'); await p.click('[data-opt="0"]'); await sleep(1600);
   await p.reload(); await p.waitForSelector('[data-a="reanudar"]', { timeout: 30000 });
-  await p.click('[data-a="hub"]'); await p.waitForSelector('[data-juego]');
-  await p.reload(); await p.waitForSelector('[data-juego]', { timeout: 30000 }); await sleep(500);
+  await p.click('[data-a="hub"]'); await p.waitForSelector('[data-menu]');
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 30000 }); await sleep(500);
   ok('(b) «No, ir a los juegos» descarta la partida guardada', !(await p.$('[data-a="reanudar"]')));
 
   // ---- (b) Memorama: no se reanuda, pero avisa ----
-  await p.click('[data-juego="en-memorama"]'); await p.waitForSelector('[data-memo]'); await p.click('[data-memo="0"]');
+  await abrirJuego(p, 'en-memorama'); await p.waitForSelector('[data-memo]'); await p.click('[data-memo="0"]');
   let dialogo = null;
   p.once('dialog', d => { dialogo = d.type(); d.accept().catch(() => {}); });
-  await p.reload().catch(() => {}); await p.waitForSelector('[data-juego]', { timeout: 30000 });
+  await p.reload().catch(() => {}); await p.waitForSelector('[data-menu]', { timeout: 30000 });
   ok('(b) Memorama en curso: el navegador pide confirmar al recargar', dialogo === 'beforeunload', String(dialogo));
   ok('(b) Memorama no ofrece continuar', !(await p.$('[data-a="reanudar"]')));
 
