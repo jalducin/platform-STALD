@@ -25,7 +25,7 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
 - Todo texto que venga de Notion se inserta con `escapeHtml()` o con `textContent`. Nunca concatenar
   datos crudos en `innerHTML`.
 - Los enlaces externos llevan `target="_blank" rel="noopener"`.
-- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=5">` (sube `?v=` en las
+- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=7">` (sube `?v=` en las
   cuatro cada vez que cambie) y usan
   `window.StaldAuth`:
   - al arrancar, `await StaldAuth.iniciar(API_BASE)`; el correo es `StaldAuth.email()` (sesión) o, solo durante la
@@ -44,7 +44,7 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - El portal las sigue escribiendo para las páginas que aún no usan la sesión; dejan de servir para entrar después
     de `LOGIN_TRANSICION_HASTA`.
   - "Cerrar sesión" en cualquier página borra las tres (y la sesión), y también las claves de Juegos
-    `juegos_sala_activa` y `juegos_partida_individual` (`StaldAuth.salir()`).
+    `juegos_sala_activa`, `juegos_partida_individual` y `juegos_revancha` (`StaldAuth.salir()`).
   - Además del correo, se permiten preferencias de interfaz sin datos personales, como
     `juegos_pref = { musica, volumen }` (música de fondo de `juegos.html`) y `juegos_admin_sub` (sub-sección abierta de
     «🛡️ Admin» en `juegos.html`).
@@ -88,6 +88,23 @@ Cada página debe manejar y mostrar de forma explícita:
     el servidor); sin reconocimiento, autoevaluación;
   - privacidad: el reconocimiento de Chrome/Edge manda el audio a su proveedor para transcribirlo; la plataforma no
     guarda audio, solo el texto reconocido como respuesta.
+- Fichas y pares en `ingles.html` (`ingles/reproductor.js`, cambio `ejercicios-ordenar-emparejar`):
+  - `ordenar`:
+    - fichas `<button class="ficha" data-action="ficha">` en `.ord-banco`; al tocarla pasa a `.ord-linea` y al
+      tocarla ahí regresa a su lugar; «⌫ Borrar» las regresa todas;
+    - la respuesta va en `input.q-text` oculto, como `pronunciar`.
+  - `emparejar`:
+    - botones `.emp-btn[data-lado=izq|der]` en dos columnas; se toca uno y luego el del otro lado. El par queda con
+      la clase `par-<n>` (color) y un número, para no depender solo del color;
+    - tocar uno unido deshace su par;
+    - la respuesta (JSON) va en `input.q-par` oculto. La pregunta cuenta como respondida solo con todos los pares,
+      pero el borrador guarda el avance parcial.
+  - Accesibilidad:
+    - todo es botón nativo (Tab, Enter, Espacio) con `aria-label` que dice el estado («ficha 2 de tu oración»,
+      «unida con…»);
+    - un `aria-live` por ejercicio anuncia cada cambio;
+    - el foco pasa a la siguiente ficha;
+    - objetivos de 44 px o más, sin desborde a 390 px.
 - Vista de admin de `ingles.html`: tarjeta "🎮 Juegos de la semana" (`#juegos-admin`), con el ranking
   completo y las partidas con su podio, desde `/juegos/admin/resumen`. En el bloque de cada alumno o alumna
   va su línea de juegos.
@@ -122,6 +139,12 @@ Cada página debe manejar y mostrar de forma explícita:
     los demás individuales piden confirmar con `beforeunload`. Las pantallas de elegir nivel o modo usan
     `marco(id, { menu: true })` y no cuentan como partida;
   - durante una partida, `html.jugando` aplica `overscroll-behavior-y: contain` (sin «jalar para recargar»).
+- **Revancha** (openspec: revancha-partidas; detalle en su `design.md`): el podio de toda partida
+  (`pintarFinalSala`) muestra «🔁 Otra con los mismos» (`POST /juegos/sala/<código>/revancha`); si alguien ya la
+  abrió (`sala.siguiente`), «🔁 {Nombre} abrió la revancha · Unirme». Al terminar se guarda
+  `juegos_revancha = { codigo, quien, t }` (15 min); si se recarga en el podio, el inicio de Juegos muestra la
+  tarjeta `#revancha-inicio`. Se borra al entrar a la revancha, al salir del podio, con «No, gracias» y al cerrar
+  sesión.
 
 ## 5. Código compartido
 
@@ -274,7 +297,9 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Sondeo de salas:
   - 2.5 s en la sala de espera y en ¡Una!, Basta, Lotería, Póker, Brisca y Conquián (`TIEMPO_REAL`);
   - 5 s en los juegos de preguntas;
-  - se detiene al terminar, al vencer la sala, a 1 h o, en la sala de espera, a los 15 min sin empezar;
+  - en el podio sigue cada 5 s (30 s con Realtime) hasta ver la revancha (`siguiente`) o 15 min
+    (`revancha-partidas`);
+  - se detiene tras el podio, al vencer la sala, a 1 h o, en la sala de espera, a los 15 min sin empezar;
   - fallas de red y pestaña oculta: ver «Caché y estabilidad del cliente».
 - Realtime (cambio `salas-realtime`): si el GET de la sala trae `rt`, `conectarRealtime` carga supabase-js 2.45.4
   (jsdelivr, diferido) y escucha el evento `estado`:

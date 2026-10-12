@@ -308,7 +308,8 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
       enfoque: enfoque.map((t) => titulos.get(t) || t),
       intento: n, intentosUsados: usados, vistaPrevia: quien.isAdmin,
       ...(correccion ? { correccion: { fijas: correccion.fijas, anteriores: correccion.anteriores } } : {}),
-      preguntas: preguntas.map(publicQuestion),
+      // Fichas y pares barajados con la misma base que la selección: elemento + alumno (o admin) + intento.
+      preguntas: preguntas.map((p) => publicQuestion(p, `${it.id}|${alumnoVista ? slugAlumno(alumnoVista) : "admin"}|${n}`)),
       ...(bor && bor.intento === n ? { borrador: { respuestas: bor.respuestas, actualizado: bor.actualizado } } : {}),
     });
   }

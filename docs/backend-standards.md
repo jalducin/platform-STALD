@@ -92,6 +92,13 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       (si no, 400 `ronda_invalida`); se guarda en `rondasBasta[ronda]` y solo cuenta el primer `basta` de
       cada ronda. Sin `ronda` se acepta el formato anterior `{ palabras, basta }`;
     - `{ final, podio }`: totales hasta 10000.
+  - `POST /juegos/sala/<código>/revancha` (cambio `revancha-partidas`) → `{ ok, codigo }` de la sala nueva, con
+    quien la pidió dentro. Solo jugadores de la sala (403 `no_en_sala`) y con la partida terminada: empezada y con
+    algún `final` o `podio` (409 `no_termino`); 404/410 como las demás. La primera petición reserva en la sala vieja
+    `siguiente` (código nuevo) y `siguienteHost` (id de quien la abrió) con escritura condicional; la sala nueva se
+    crea una sola vez (`put` con sha `null`) con el mismo juego, opciones y bots, y `siguienteHost` de anfitrión.
+    Peticiones a la vez caen en la misma sala. Unirse a la nueva sigue las reglas de `unirse` (409 `ya_empezo` o
+    `sala_llena`, con `codigo`). Publica en Realtime la sala vieja y la nueva. Detalle en el `design.md` del cambio.
   - `GET /juegos/sala/<código>`: sala, jugadores y `ahora` (hora del servidor), solo para sus jugadores y
     el admin. Caché de 2 s.
   - Juegos permitidos (`JUEGOS_PARTIDA`):
@@ -218,6 +225,21 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - Correcta si ≥ `UMBRAL_PRONUNCIACION` (0.8); `auto:ok` cuenta como correcta y `auto:repetir` no. Respuesta ≤ 300
     caracteres. La revisión muestra lo reconocido y la frase.
   - El patrón de la ruta del profe incluye el viernes (pronunciación).
+
+**Ordenar y emparejar** (`server/motor.ts`, cambio `ejercicios-ordenar-emparejar`):
+  - `publicQuestion(e, semilla)`: `server/actividades.ts` pasa `"<id>|<slug o admin>|<intento>"`. `ordenar` publica
+    `fichas` (`palabras` + `distractores`) y `emparejar` publica `izquierda` en orden y `derecha` barajada. Ambas se
+    barajan con `mulberry32(hashSeed(semilla|id))` y nunca quedan en el orden correcto (si coincide, se rota una
+    posición). Nunca salen `palabras`, `distractores`, `aceptadas` ni `pares`.
+  - `ordenar`: la respuesta es un texto (≤ 300). Es correcta si `normalizeText` coincide con `palabras` unidas o con
+    una de `aceptadas`.
+  - `emparejar`: la respuesta es un arreglo del largo exacto de `pares`, con `""` (sin unir) u opciones de la
+    derecha, y al menos un par. Si no cumple, se descarta completa. Es correcta solo si coinciden todos los pares.
+  - Revisión: `ordenar` muestra lo armado y la oración correcta; `emparejar`, `"this → este / esta · that → — · …"`
+    con los pares propios y los correctos.
+  - `validateItem` revisa:
+    - `ordenar`: al menos 2 `palabras`, sin fichas repetidas entre `palabras` y `distractores`;
+    - `emparejar`: de 3 a 6 pares de 2 textos, sin textos repetidos en un mismo lado.
 
 **Ruta `/ingles/profe/actividades[/<id>]`** (`handleProfe` en `server/actividades.ts`, cambio `ruta-profe`):
   - solo admin (si no, 403); atiende al admin como el alumno "Profe" (estado, intentos, corrección y guardado);

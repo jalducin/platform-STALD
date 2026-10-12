@@ -6,6 +6,11 @@
       "id": "meet-2026-09-27",
       "tipo": "meet",
       "fecha": "2026-09-27"
+    },
+    {
+      "id": "fichas-e2e",
+      "tipo": "actividad",
+      "fecha": "2026-10-04"
     }
   ]
 }

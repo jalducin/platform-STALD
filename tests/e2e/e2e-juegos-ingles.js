@@ -185,6 +185,12 @@ async function correctaTiempos(p) {
   const fallos = (await p.textContent('#p-fallos').catch(() => '')).replace(/\s+/g, ' ');
   ok('partida: resumen de lo que más se complicó', /Lo que más se te complicó/.test(fallos), fallos.slice(0, 160));
   await p.screenshot({ path: 'ingles-sala-podio.png', fullPage: true });
+  // Revancha (revancha-partidas): la Máquina del tiempo usa el mismo final de partida, con «🔁 Otra con los mismos».
+  const codigoViejo = await p.evaluate(() => sala.codigo);
+  await p.click('[data-p="revancha"]');
+  await p.waitForFunction(v => sala.codigo && sala.codigo !== v && sala.estado && sala.estado.sala.codigo === sala.codigo, codigoViejo, { timeout: 30000 });
+  const rev = await p.evaluate(() => ({ juego: sala.estado.sala.juego, inicio: sala.estado.sala.inicio }));
+  ok('revancha: sala nueva de la Máquina del tiempo, en espera', rev.juego === 'en-tiempos' && rev.inicio === null, JSON.stringify(rev));
 
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

@@ -50,6 +50,20 @@ Deno.test("en-frases: el tema va en las opciones de la sala; por omisión «todo
   assertEquals(sin.body.sala.opciones.tema, "todo");
 });
 
+Deno.test("revancha: copia opciones.tema de en-frases y sirve para en-tiempos", async () => {
+  const { pedir } = preparar();
+  for (const [juego, opciones, tema] of [["en-frases", { tema: "pasado" }, "pasado"], ["en-tiempos", {}, undefined]] as const) {
+    const c = await pedir("/sala", { juego, opciones, bots: true });
+    const codigo = c.body.codigo;
+    await pedir(`/sala/${codigo}/empezar`, {});
+    await pedir(`/sala/${codigo}/respuesta`, { final: 500 });
+    const r = await pedir(`/sala/${codigo}/revancha`, {});
+    assertEquals(r.status, 200, juego);
+    const nueva = await pedir(`/sala/${r.body.codigo}`, undefined, "GET");
+    assertEquals([nueva.body.sala.juego, nueva.body.sala.opciones.tema], [juego, tema]);
+  }
+});
+
 Deno.test("en-frases: tema inválido → 400 tema_invalido; otros juegos ignoran el tema", async () => {
   const { pedir } = preparar();
   for (const tema of ["marciano", "", 3, "TODO"]) {
