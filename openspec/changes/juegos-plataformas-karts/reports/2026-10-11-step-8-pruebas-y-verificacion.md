@@ -6,16 +6,20 @@
 
 ## Comandos ejecutados
 - `npx -y deno test -A server/` · `npx -y deno lint server/` · `npx -y deno check server/main.ts`
-- `bash tests/e2e/correr.sh --datos <copia de prueba> --puerto-api 8947 --puerto-web 8925 plataformas karts juegos partidas juegos-recarga ajustes-salas ritmo dragon-run peticiones clasicos fusion revancha`
+- `bash tests/e2e/correr.sh --datos <copia de prueba> --puerto-api 8947 --puerto-web 8925 plataformas karts juegos juegos-ingles partidas juegos-recarga ajustes-salas ritmo dragon-run peticiones clasicos fusion revancha ranking-juegos`
+- Tras integrar `origin/main` tres veces (ordenar/emparejar y revancha #148/#150, juegos de inglés #152 y ranking de juegos #154) se repitió todo.
 - Verificación manual (Step 9): `curl` contra un servidor local en el puerto 8961 con otra copia de los datos.
 
 ## Resultados de pruebas
 - Dirigidas (`server/progreso_test.ts`, `server/carreras_test.ts`): 17 pasaron, 0 fallaron.
-- Suite del servidor: 289 pasaron, 0 fallaron, 6 omitidas (las de siempre). `lint`: 70 archivos sin avisos. `check`: OK.
-- E2E (fase `base`): 12 corridas, 12 PASS, 0 FAIL, 0 omitidas:
+- Suite del servidor (tras el último merge): 310 pasaron, 0 fallaron, 6 omitidas (las de siempre). `lint`: 73 archivos sin avisos. `check`: OK.
+- E2E (fase `base`, tras el último merge): 14 corridas, 14 PASS, 0 FAIL, 0 omitidas:
   - nuevas: `plataformas` 24/24 pasos y `karts` 15/15 pasos;
-  - regresión: `juegos` 28, `partidas` 15, `juegos-recarga` 37, `revancha` 20, `clasicos` 11, `fusion` 10, `dragon-run` 9,
-    `ajustes-salas` 8, `ritmo` 2 y `peticiones` 11 pasos.
+  - regresión: `juegos` 28, `juegos-ingles` 25, `partidas` 15, `juegos-recarga` 37, `revancha` 20, `clasicos` 11,
+    `fusion` 10, `dragon-run` 9, `ajustes-salas` 8, `ritmo` 2, `peticiones` 11 y `ranking-juegos` 39 pasos.
+  - Conteo del menú en `e2e-juegos`, `e2e-clasicos`, `e2e-fusion` y `e2e-karts`: 24 juegos en 6 categorías.
+  - Incidente: una corrida intermedia se pisó con otra que seguía viva en los mismos puertos (connection refused);
+    se detuvieron los procesos sobrantes y se repitió completa y limpia.
 - Duración de la suite E2E: ~25 min.
 
 ## Capturas revisadas (tests/e2e/salida/)
