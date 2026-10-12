@@ -262,3 +262,94 @@ Deno.test("salas: una sala vencida responde 410 sin leer a sus jugadores (opensp
   const r = await c.call("GET", `/sala/${codigo}`, "marisol@example.com");
   assertEquals([r.status, r.body.error, listados], [410, "sala_vencida", 0]);
 });
+
+// ---- Revancha (openspec: revancha-partidas) ----
+// Partida de Marisol y Angel con bots, empezada y con el total final de Marisol (llegó al podio).
+async function partidaTerminada(c: ReturnType<typeof ctx>, juego = "cultura", opciones: Record<string, unknown> = { cat: "todas" }) {
+  const r = await c.call("POST", "/sala", "marisol@example.com", { juego, opciones, bots: true });
+  const codigo = r.body.codigo as string;
+  await c.call("POST", `/sala/${codigo}/unirse`, "angel@example.com");
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(60_000);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { final: 900, podio: [{ nombre: "Marisol", total: 900 }] })).status, 200);
+  return codigo;
+}
+
+Deno.test("salas: revancha crea una sala igual, con quien la pidió de anfitrión, y la vieja la apunta", async () => {
+  const c = ctx();
+  const viejo = await partidaTerminada(c);
+  const r = await c.call("POST", `/sala/${viejo}/revancha`, "angel@example.com");
+  assertEquals(r.status, 200, JSON.stringify(r.body));
+  const nuevo = r.body.codigo as string;
+  assert(/^[A-HJ-NP-Z]{4}$/.test(nuevo) && nuevo !== viejo, nuevo);
+  const g = await c.call("GET", `/sala/${nuevo}`, "angel@example.com");
+  assertEquals([g.status, g.body.sala.juego, g.body.sala.opciones, g.body.sala.bots, g.body.sala.inicio, g.body.soyHost], [200, "cultura", { cat: "todas" }, true, null, true]);
+  assertEquals(g.body.jugadores.map((j: any) => j.nombre), ["Angel"]);
+  assertEquals(JSON.stringify(g.body).includes("canal"), false, "sin el canal secreto");
+  const v = await c.call("GET", `/sala/${viejo}`, "marisol@example.com");
+  assertEquals([v.body.sala.siguiente, v.body.sala.siguienteHost], [nuevo, g.body.yo]);
+  // Marisol se une después desde el aviso: misma sala, no es anfitriona.
+  const m = await c.call("POST", `/sala/${viejo}/revancha`, "marisol@example.com");
+  assertEquals([m.status, m.body.codigo], [200, nuevo]);
+  const g2 = await c.call("GET", `/sala/${nuevo}`, "marisol@example.com");
+  assertEquals([g2.body.soyHost, g2.body.jugadores.map((j: any) => j.nombre)], [false, ["Angel", "Marisol"]]);
+  // Pedirla otra vez no duplica.
+  assertEquals((await c.call("POST", `/sala/${viejo}/revancha`, "angel@example.com")).body.codigo, nuevo);
+  assertEquals((await c.call("GET", `/sala/${nuevo}`, "angel@example.com")).body.jugadores.length, 2);
+  const idx = (await c.store.get<any>("juegos/salas-semana/2026-09-28.json"))!.data.salas;
+  assertEquals(idx.map((s: any) => s.codigo), [viejo, nuevo]);
+});
+
+Deno.test("salas: revancha pedida a la vez por dos personas crea una sola sala", async () => {
+  const c = ctx();
+  const viejo = await partidaTerminada(c);
+  const [a, b] = await Promise.all([
+    c.call("POST", `/sala/${viejo}/revancha`, "marisol@example.com"),
+    c.call("POST", `/sala/${viejo}/revancha`, "angel@example.com"),
+  ]);
+  assertEquals([a.status, b.status], [200, 200], JSON.stringify([a.body, b.body]));
+  assertEquals(a.body.codigo, b.body.codigo);
+  const salas = [...c.store.files.keys()].filter((k) => k.endsWith("/sala.json"));
+  assertEquals(salas.length, 2, salas.join(","));
+  const g = await c.call("GET", `/sala/${a.body.codigo}`, "marisol@example.com");
+  assertEquals(g.body.jugadores.map((j: any) => j.nombre).sort(), ["Angel", "Marisol"]);
+  assertEquals((await c.store.get<any>("juegos/salas-semana/2026-09-28.json"))!.data.salas.length, 2);
+});
+
+Deno.test("salas: revancha solo para jugadores de una partida terminada y vigente", async () => {
+  const c = ctx();
+  assertEquals((await c.call("POST", `/sala/ZZZZ/revancha`, "marisol@example.com")).status, 404);
+  // Sin empezar y empezada sin podio: 409 no_termino.
+  const r = await c.call("POST", "/sala", "marisol@example.com", { juego: "cultura", opciones: { cat: "todas" }, bots: true });
+  const codigo = r.body.codigo as string;
+  const espera = await c.call("POST", `/sala/${codigo}/revancha`, "marisol@example.com");
+  assertEquals([espera.status, espera.body.error], [409, "no_termino"]);
+  await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com");
+  c.avanzar(10_000);
+  assertEquals((await c.call("POST", `/sala/${codigo}/revancha`, "marisol@example.com")).body.error, "no_termino");
+  // Quien no jugó: 403 y no se crea nada.
+  const viejo = await partidaTerminada(c);
+  const antes = c.store.files.size;
+  const fuera = await c.call("POST", `/sala/${viejo}/revancha`, "admin@example.com");
+  assertEquals([fuera.status, fuera.body.error, c.store.files.size], [403, "no_en_sala", antes]);
+  // La revancha ya empezó: quien llega tarde recibe 409 ya_empezo.
+  const nuevo = (await c.call("POST", `/sala/${viejo}/revancha`, "marisol@example.com")).body.codigo;
+  await c.call("POST", `/sala/${nuevo}/empezar`, "marisol@example.com");
+  const tarde = await c.call("POST", `/sala/${viejo}/revancha`, "angel@example.com");
+  assertEquals([tarde.status, tarde.body.error, tarde.body.codigo], [409, "ya_empezo", nuevo]);
+  // Solo POST.
+  assertEquals((await c.call("GET", `/sala/${viejo}/revancha`, "marisol@example.com")).status, 405);
+  // Vencida: 410.
+  c.avanzar(3 * 3600 * 1000 + 1000);
+  assertEquals((await c.call("POST", `/sala/${viejo}/revancha`, "marisol@example.com")).status, 410);
+});
+
+Deno.test("salas: revancha de ajedrez conserva el reloj, sin bots y con cupo de 2", async () => {
+  const c = ctx();
+  const viejo = await partidaTerminada(c, "ajedrez", { reloj: "5" });
+  const nuevo = (await c.call("POST", `/sala/${viejo}/revancha`, "angel@example.com")).body.codigo;
+  const g = await c.call("GET", `/sala/${nuevo}`, "angel@example.com");
+  assertEquals([g.body.sala.juego, g.body.sala.opciones, g.body.sala.bots], ["ajedrez", { reloj: "5" }, false]);
+  assertEquals((await c.call("POST", `/sala/${viejo}/revancha`, "marisol@example.com")).status, 200);
+  assertEquals((await c.call("GET", `/sala/${nuevo}`, "marisol@example.com")).body.jugadores.length, 2);
+});
