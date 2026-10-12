@@ -102,13 +102,16 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
   - `GET /juegos/sala/<código>`: sala, jugadores y `ahora` (hora del servidor), solo para sus jugadores y
     el admin. Caché de 2 s.
   - Juegos permitidos (`JUEGOS_PARTIDA`):
-    - de preguntas: `en-vocab`, `en-frases`, `es-ortografia`, `cultura` y `mente-calculo`;
+    - de preguntas: `en-vocab`, `en-frases`, `en-tiempos` (⏳ Máquina del tiempo, cambio `juegos-ingles-gramatica`;
+      tope individual 2,000 en el catálogo), `es-ortografia`, `cultura` y `mente-calculo`;
     - Basta (es/en) y Lotería;
     - ¡Una!, póker, Brisca, Conquián y ajedrez.
     - Los juegos absorbidos en el Sprint 4 (`en-preguntas`, `es-acentos`, `es-sinonimos` y `mente-secuencias`, del
       cambio `juegos-fusion`) responden 400 `juego_no_permitido`, pero siguen en el catálogo para conservar sus
       puntos.
     `opciones.rondas` va en Basta (`5`, `10` por defecto o `12`; otro valor → 400 `rondas_invalidas`).
+    `opciones.tema` va en `en-frases` (`todo` por defecto, `tobe`, `presente`, `pasado` o `futuro`; otro valor → 400
+    `tema_invalido`); los demás juegos lo ignoran.
     `opciones.modo` va en Lotería (`linea` o `llena`), y `respuesta` con `{ loteria: true }` guarda la hora
     del primer grito.
   - ¡Una! (`una`): `respuesta` con `{ jugada: { n, accion, carta?, color?, una? } }` se guarda con `t`

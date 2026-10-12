@@ -177,7 +177,8 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 
 ## Juegos fusionados (cambio `juegos-fusion`)
 
-- 🧩 **Completa y responde** (`en-frases`): alterna `preguntaFrase` y `preguntaEn`.
+- 🧩 **Completa y responde** (`en-frases`): alterna `preguntaFrase` y `preguntaEn` (en `juegos/ingles-gramatica.js`
+  desde `juegos-ingles-gramatica`).
 - ✍️ **Ortografía** (`es-ortografia`): mezcla `ortografia`, `acentos` y `poolSinonimos` con `preguntaOrto` y
   `preguntaSinonimo`.
 - 🧮 **Cálculo y secuencias** (`mente-calculo`): dura 75 s. Una de cada tres preguntas es de `genSecuencia`.
@@ -186,6 +187,25 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   - Ortografía: 4, 3 y 3, en orden barajado con semilla;
   - Cálculo y secuencias: 1 de cada 3 es secuencia.
 - El Maratón de cultura suma las categorías `ia` y `tecnologia`, cada una con 6, 6 y 4 preguntas.
+
+## Gramática de inglés en Juegos (cambio `juegos-ingles-gramatica`)
+
+- La lógica vive en `juegos/ingles-gramatica.js`, script clásico cargado antes del script principal de
+  `juegos.html` (sube `?v=` al cambiarlo):
+  - `globalThis.InglesGramatica`: funciones puras (temas, grupos, filtros, reglas, preguntas de partida), también
+    probadas con Deno en `server/ingles_datos_test.ts`;
+  - pantallas `elegirTemaIngles(id)`, `jugarFrasesTema(tema)`, `jugarTiempos()` y `resumenFallosSala(sala, n)`,
+    que usan los helpers globales de la página (`quiz`, `marco`, `datos`, `barajar`, `escapeHtml`…).
+- **Selector de tema** (Todo · To be · Presente · Pasado · Futuro (will)): botones `.opt[data-tema]` antes de 🧩
+  Completa y responde y 🔀 Ordena la oración; en partida, `#p-tema` (solo con `en-frases`) va en `opciones.tema`
+  y el título de la partida muestra el tema. Los grupos están en `docs/data-model.md`.
+- **Regla al fallar**: Completa y responde muestra «Era: … · 📌 regla»; Ordena la oración, la regla de orden del
+  tema; en partida, la revelación muestra la regla como `💡` (`dato`). Las pausas no cambian.
+- ⏳ **Máquina del tiempo** (`en-tiempos`): motor `quiz`, 90 s contra reloj con racha; cada oración en dos
+  preguntas (¿en qué tiempo está? y cámbiala a otro tiempo, con la forma correcta, la original y un error típico).
+  Cada pregunta trae `fallo` (tipo de error) y el gancho `quiz(opts).alResponder(pregunta, bien)` los cuenta para
+  «🧠 Lo que más se te complicó» (también en el final de la partida, `#p-fallos`). En partida son 5 oraciones × 2
+  pasos con la semilla de la sala.
 
 ## Ajedrez (cambio `ajedrez`)
 
