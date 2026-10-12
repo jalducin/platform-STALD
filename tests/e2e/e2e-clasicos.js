@@ -42,8 +42,11 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
   const le = norm((await p.textContent('.letra')).trim());
   const extrasEn = basta.extras.filter(x => ['kitchen', 'pokemon'].includes(x.id));
   ok('basta individual: 6 de siempre + 2 divertidas', (await p.$$('#basta-form input')).length === 8 && !!(await p.$('#b-kitchen')) && !!(await p.$('#b-pokemon')));
-  for (const c of basta.en.categorias) await p.fill('#b-' + c.id, basta.en.palabras[c.id].find(w => norm(w).startsWith(le)));
-  for (const x of extrasEn) await p.fill('#b-' + x.id, x.palabras.find(w => norm(w).startsWith(le)) || '');
+  // Palabras distintas entre sí: una repetida no cuenta (p. ej. «pan» en Thing y en la cocina con la P).
+  const usadas = new Set();
+  const elegir = lista => { const w = lista.find(x => norm(x).startsWith(le) && !usadas.has(norm(x))) || ''; usadas.add(norm(w)); return w; };
+  for (const c of basta.en.categorias) await p.fill('#b-' + c.id, elegir(basta.en.palabras[c.id]));
+  for (const x of extrasEn) await p.fill('#b-' + x.id, elegir(x.palabras));
   await p.screenshot({ path: 'basta-individual-extras.png', fullPage: true });
   await p.click('#basta-form button[type=submit]'); await p.waitForSelector('.result .score');
   const re = (await p.textContent('.result')).replace(/\s+/g, ' ');
