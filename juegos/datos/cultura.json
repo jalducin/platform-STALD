@@ -6,6 +6,11 @@
       "emoji": "🇲🇽"
     },
     {
+      "id": "cultura-mexico",
+      "titulo": "Cultura general de México",
+      "emoji": "🌮"
+    },
+    {
       "id": "historia-mundial",
       "titulo": "Historia universal",
       "emoji": "🏛️"
@@ -31,9 +36,9 @@
       "emoji": "🔬"
     },
     {
-      "id": "arte",
-      "titulo": "Arte y literatura",
-      "emoji": "🎨"
+      "id": "naturaleza",
+      "titulo": "Naturaleza y animales",
+      "emoji": "🦎"
     },
     {
       "id": "cuerpo-humano",
@@ -41,14 +46,29 @@
       "emoji": "🫀"
     },
     {
-      "id": "ia",
-      "titulo": "Inteligencia artificial",
-      "emoji": "🤖"
+      "id": "arte",
+      "titulo": "Arte y literatura",
+      "emoji": "🎨"
+    },
+    {
+      "id": "matematicas",
+      "titulo": "Matemáticas básicas",
+      "emoji": "🔢"
     },
     {
       "id": "tecnologia",
       "titulo": "Tecnología",
       "emoji": "💻"
+    },
+    {
+      "id": "ia",
+      "titulo": "Inteligencia artificial",
+      "emoji": "🤖"
+    },
+    {
+      "id": "deportes",
+      "titulo": "Deportes",
+      "emoji": "⚽"
     }
   ],
   "preguntas": [
@@ -5043,6 +5063,5891 @@
       ],
       "correcta": 2,
       "dato": "Del inglés «HyperText Transfer Protocol»; la «S» de HTTPS significa segura."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué pueblo prehispánico construyó la ciudad de Monte Albán?",
+      "opciones": [
+        "Los mayas",
+        "Los zapotecas",
+        "Los mexicas",
+        "Los olmecas"
+      ],
+      "correcta": 1,
+      "dato": "Fue una de las primeras ciudades de Mesoamérica; se fundó hacia el año 500 a. C."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "Según la leyenda, ¿qué señal indicó a los mexicas dónde fundar su ciudad?",
+      "opciones": [
+        "Un jaguar junto a un río",
+        "Un volcán en erupción",
+        "Una pirámide de oro",
+        "Un águila sobre un nopal devorando una serpiente"
+      ],
+      "correcta": 3,
+      "dato": "La encontraron en un islote del lago de Texcoco."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llamaba la mujer indígena que fue intérprete de Hernán Cortés?",
+      "opciones": [
+        "Malintzin",
+        "Josefa Ortiz",
+        "Leona Vicario",
+        "Juana de Asbaje"
+      ],
+      "correcta": 0,
+      "dato": "Hablaba náhuatl y maya, y después aprendió español."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué insurgente usó su fortuna para apoyar la Independencia y enviaba información a los rebeldes?",
+      "opciones": [
+        "Josefa Ortiz de Domínguez",
+        "Gertrudis Bocanegra",
+        "Mariana Rodríguez del Toro",
+        "Leona Vicario"
+      ],
+      "correcta": 3,
+      "dato": "Fue declarada «Benemérita y Dulcísima Madre de la Patria»."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué presidente expidió las Leyes de Reforma?",
+      "opciones": [
+        "Benito Juárez",
+        "Porfirio Díaz",
+        "Antonio López de Santa Anna",
+        "Venustiano Carranza"
+      ],
+      "correcta": 0,
+      "dato": "Separaron a la Iglesia del Estado y crearon el Registro Civil."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 1,
+      "pregunta": "¿Quién encabezó el Ejército Constitucionalista contra Victoriano Huerta?",
+      "opciones": [
+        "Francisco I. Madero",
+        "Álvaro Obregón",
+        "Venustiano Carranza",
+        "Plutarco Elías Calles"
+      ],
+      "correcta": 2,
+      "dato": "Con el Plan de Guadalupe, de 1913, desconoció al gobierno de Huerta."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "Según la tradición, ¿en qué año se fundó México-Tenochtitlan?",
+      "opciones": [
+        "1325",
+        "1521",
+        "1492",
+        "1200"
+      ],
+      "correcta": 0,
+      "dato": "Se fundó en un islote del lago de Texcoco."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué general mexicano fue derrotado en la Batalla de San Jacinto, en 1836?",
+      "opciones": [
+        "Ignacio Zaragoza",
+        "Antonio López de Santa Anna",
+        "Mariano Arista",
+        "Guadalupe Victoria"
+      ],
+      "correcta": 1,
+      "dato": "Fue capturado y firmó los Tratados de Velasco; Texas se separó de México."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué tlatoani mexica gobernaba cuando llegaron los españoles en 1519?",
+      "opciones": [
+        "Moctezuma Xocoyotzin",
+        "Cuauhtémoc",
+        "Cuitláhuac",
+        "Itzcóatl"
+      ],
+      "correcta": 0,
+      "dato": "Recibió a Hernán Cortés en Tenochtitlan."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué ciudad se promulgó la Constitución de 1917?",
+      "opciones": [
+        "Querétaro",
+        "Ciudad de México",
+        "Puebla",
+        "Guadalajara"
+      ],
+      "correcta": 0,
+      "dato": "Se promulgó el 5 de febrero de 1917 en el Teatro de la República."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué año abolió la esclavitud en México el presidente Vicente Guerrero?",
+      "opciones": [
+        "1810",
+        "1857",
+        "1829",
+        "1917"
+      ],
+      "correcta": 2,
+      "dato": "Miguel Hidalgo ya había declarado abolida la esclavitud en 1810, en Guadalajara."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué ferrocarril, inaugurado en 1873, unió la Ciudad de México con Veracruz?",
+      "opciones": [
+        "El Ferrocarril Mexicano",
+        "El Tren Maya",
+        "El Chepe",
+        "El Tren Interoceánico"
+      ],
+      "correcta": 0,
+      "dato": "Lo inauguró el presidente Sebastián Lerdo de Tejada."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué presidente fundó el Banco de México en 1925?",
+      "opciones": [
+        "Álvaro Obregón",
+        "Plutarco Elías Calles",
+        "Lázaro Cárdenas",
+        "Manuel Ávila Camacho"
+      ],
+      "correcta": 1,
+      "dato": "El Banco de México es el único que puede emitir billetes en el país."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿En qué año se fundó la Real y Pontificia Universidad de México, antecedente de la UNAM?",
+      "opciones": [
+        "1492",
+        "1810",
+        "1910",
+        "1551"
+      ],
+      "correcta": 3,
+      "dato": "Fue una de las primeras universidades de América."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué ciudad formó la Triple Alianza con Tenochtitlan y Tlacopan?",
+      "opciones": [
+        "Tlaxcala",
+        "Cholula",
+        "Texcoco",
+        "Tula"
+      ],
+      "correcta": 2,
+      "dato": "Su gobernante más famoso fue el poeta Nezahualcóyotl."
+    },
+    {
+      "cat": "historia-mexico",
+      "nivel": 3,
+      "pregunta": "¿Quién encabezó en 1517 la primera expedición española que exploró las costas de Yucatán?",
+      "opciones": [
+        "Hernán Cortés",
+        "Juan de Grijalva",
+        "Pánfilo de Narváez",
+        "Francisco Hernández de Córdoba"
+      ],
+      "correcta": 3,
+      "dato": "En 1518 llegó Juan de Grijalva y, en 1519, Hernán Cortés."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué ave aparece en el Escudo Nacional de México?",
+      "opciones": [
+        "Quetzal",
+        "Águila real",
+        "Halcón",
+        "Cóndor"
+      ],
+      "correcta": 1,
+      "dato": "Está parada sobre un nopal devorando una serpiente, como en la leyenda de la fundación de Tenochtitlan."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué colores tiene la bandera de México?",
+      "opciones": [
+        "Verde, blanco y rojo",
+        "Azul, blanco y rojo",
+        "Verde, amarillo y rojo",
+        "Rojo, blanco y negro"
+      ],
+      "correcta": 0,
+      "dato": "El Día de la Bandera se celebra el 24 de febrero."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Cuándo se da el Grito de Independencia en las plazas de México?",
+      "opciones": [
+        "El 20 de noviembre",
+        "El 5 de mayo",
+        "La noche del 15 de septiembre",
+        "El 24 de febrero"
+      ],
+      "correcta": 2,
+      "dato": "El 16 de septiembre es el día de la fiesta nacional y del desfile militar."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué celebración mexicana honra a quienes ya murieron con ofrendas y flores de cempasúchil?",
+      "opciones": [
+        "Las posadas",
+        "La Candelaria",
+        "El carnaval",
+        "Día de Muertos"
+      ],
+      "correcta": 3,
+      "dato": "La UNESCO la reconoció como Patrimonio Cultural Inmaterial en 2008."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Con qué grano se hace la tortilla tradicional mexicana?",
+      "opciones": [
+        "Maíz",
+        "Trigo",
+        "Arroz",
+        "Sorgo"
+      ],
+      "correcta": 0,
+      "dato": "El maíz se domesticó en México hace unos 9,000 años."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué platillo lleva una salsa de chiles, especias y chocolate?",
+      "opciones": [
+        "Pozole",
+        "Cochinita pibil",
+        "Mole poblano",
+        "Tamal"
+      ],
+      "correcta": 2,
+      "dato": "Puede llevar más de 20 ingredientes."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿De qué estado es originaria la cochinita pibil?",
+      "opciones": [
+        "Oaxaca",
+        "Yucatán",
+        "Jalisco",
+        "Sonora"
+      ],
+      "correcta": 1,
+      "dato": "«Pibil» viene del maya y se refiere a cocinar en un horno bajo tierra."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué agrupación musical mexicana toca con trompetas, violines y guitarrón?",
+      "opciones": [
+        "Banda",
+        "Marimba",
+        "Mariachi",
+        "Conjunto norteño"
+      ],
+      "correcta": 2,
+      "dato": "El mariachi es Patrimonio Cultural Inmaterial de la UNESCO desde 2011."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué se rompe con los ojos vendados en las posadas?",
+      "opciones": [
+        "La rosca",
+        "La alcancía",
+        "La piñata",
+        "La calaverita"
+      ],
+      "correcta": 2,
+      "dato": "La piñata tradicional tiene siete picos."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué pan se come el 6 de enero, Día de Reyes?",
+      "opciones": [
+        "Pan de muerto",
+        "Buñuelos",
+        "Conchas",
+        "Rosca de Reyes"
+      ],
+      "correcta": 3,
+      "dato": "A quien le sale el muñequito le toca invitar los tamales el 2 de febrero."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿En qué temporada se preparan tradicionalmente los chiles en nogada?",
+      "opciones": [
+        "En diciembre",
+        "En agosto y septiembre",
+        "En abril",
+        "En enero"
+      ],
+      "correcta": 1,
+      "dato": "Es la temporada de la granada y la nuez de Castilla; sus colores recuerdan a la bandera."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la lengua indígena con más hablantes en México?",
+      "opciones": [
+        "Maya",
+        "Náhuatl",
+        "Zapoteco",
+        "Mixteco"
+      ],
+      "correcta": 1,
+      "dato": "Palabras como chocolate, tomate y aguacate vienen del náhuatl."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué baile tradicional de Jalisco se baila alrededor de un sombrero?",
+      "opciones": [
+        "Danza del venado",
+        "Jarabe tapatío",
+        "La bamba",
+        "Huapango"
+      ],
+      "correcta": 1,
+      "dato": "Muchas personas lo consideran el baile nacional de México."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué bebida prehispánica se preparaba con cacao?",
+      "opciones": [
+        "Pulque",
+        "Tepache",
+        "Horchata",
+        "Chocolate"
+      ],
+      "correcta": 3,
+      "dato": "Mayas y mexicas la bebían amarga y espumosa."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué día se conmemora el inicio de la Revolución Mexicana?",
+      "opciones": [
+        "16 de septiembre",
+        "5 de febrero",
+        "1 de mayo",
+        "20 de noviembre"
+      ],
+      "correcta": 3,
+      "dato": "Francisco I. Madero llamó a levantarse en armas ese día de 1910."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué luchador era conocido como «el Enmascarado de Plata»?",
+      "opciones": [
+        "El Santo",
+        "Blue Demon",
+        "Mil Máscaras",
+        "Huracán Ramírez"
+      ],
+      "correcta": 0,
+      "dato": "También fue estrella del cine mexicano en decenas de películas."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué artesanía de Puebla es famosa por su cerámica blanca con azul?",
+      "opciones": [
+        "Talavera",
+        "Barro negro",
+        "Alebrijes",
+        "Papel picado"
+      ],
+      "correcta": 0,
+      "dato": "La talavera es Patrimonio Cultural Inmaterial de la UNESCO desde 2019."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llaman las figuras fantásticas de colores hechas de cartón o madera?",
+      "opciones": [
+        "Catrinas",
+        "Judas",
+        "Calaveritas",
+        "Alebrijes"
+      ],
+      "correcta": 3,
+      "dato": "El cartonero Pedro Linares creó los primeros alebrijes en la Ciudad de México en 1936."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Qué comida se hace con masa de maíz envuelta en hoja de maíz o de plátano?",
+      "opciones": [
+        "Tlacoyo",
+        "Sope",
+        "Tamal",
+        "Gordita"
+      ],
+      "correcta": 2,
+      "dato": "En México hay cientos de variedades de tamales según la región."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la moneda de México?",
+      "opciones": [
+        "Dólar",
+        "Peso mexicano",
+        "Sol",
+        "Colón"
+      ],
+      "correcta": 1,
+      "dato": "El Banco de México es el único que puede emitir billetes en el país."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué grabador creó la calavera que hoy conocemos como «La Catrina»?",
+      "opciones": [
+        "Diego Rivera",
+        "José Guadalupe Posada",
+        "Rufino Tamayo",
+        "David Alfaro Siqueiros"
+      ],
+      "correcta": 1,
+      "dato": "Posada la llamó «La Calavera Garbancera»; Diego Rivera le dio el nombre de Catrina."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Quién escribió la letra del Himno Nacional Mexicano?",
+      "opciones": [
+        "Jaime Nunó",
+        "Francisco González Bocanegra",
+        "Guillermo Prieto",
+        "Amado Nervo"
+      ],
+      "correcta": 1,
+      "dato": "La música es de Jaime Nunó, y el himno se estrenó en 1854."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué escritora mexicana ganó el Premio Cervantes en 2013?",
+      "opciones": [
+        "Rosario Castellanos",
+        "Ángeles Mastretta",
+        "Elena Poniatowska",
+        "Laura Esquivel"
+      ],
+      "correcta": 2,
+      "dato": "Entre sus libros están «La noche de Tlatelolco» y «Hasta no verte Jesús mío»."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué ciudad es conocida como «la Perla Tapatía»?",
+      "opciones": [
+        "Puebla",
+        "Guadalajara",
+        "Morelia",
+        "Querétaro"
+      ],
+      "correcta": 1,
+      "dato": "A las personas de Guadalajara se les dice tapatías."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué estado se celebra la Guelaguetza?",
+      "opciones": [
+        "Oaxaca",
+        "Chiapas",
+        "Guerrero",
+        "Veracruz"
+      ],
+      "correcta": 0,
+      "dato": "Se celebra en julio en el cerro del Fortín, con danzas de las regiones de Oaxaca."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué actor creó al personaje «Cantinflas»?",
+      "opciones": [
+        "Germán Valdés",
+        "Mario Moreno",
+        "Roberto Gómez Bolaños",
+        "Pedro Infante"
+      ],
+      "correcta": 1,
+      "dato": "Ganó el Globo de Oro por «La vuelta al mundo en ochenta días»."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué actor y cantante protagonizó «Nosotros los pobres» (1948)?",
+      "opciones": [
+        "Jorge Negrete",
+        "Mario Moreno",
+        "Germán Valdés",
+        "Pedro Infante"
+      ],
+      "correcta": 3,
+      "dato": "Es una de las películas más famosas de la Época de Oro del cine mexicano."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué cineasta mexicano ganó el Óscar a mejor dirección por «Gravity»?",
+      "opciones": [
+        "Guillermo del Toro",
+        "Alfonso Cuarón",
+        "Alejandro González Iñárritu",
+        "Emilio Fernández"
+      ],
+      "correcta": 1,
+      "dato": "Volvió a ganarlo en 2019 por «Roma»."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué es el son jarocho?",
+      "opciones": [
+        "Un baile de Jalisco",
+        "Música tradicional de Veracruz",
+        "Una danza prehispánica de Yucatán",
+        "Música norteña"
+      ],
+      "correcta": 1,
+      "dato": "«La bamba» es uno de los sones jarochos más famosos."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué estado está Taxco, famoso por su plata?",
+      "opciones": [
+        "Zacatecas",
+        "Guerrero",
+        "Hidalgo",
+        "Guanajuato"
+      ],
+      "correcta": 1,
+      "dato": "En Taxco se trabaja la plata desde la época virreinal."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llama el ritual de Veracruz en el que giran personas colgadas de un palo muy alto?",
+      "opciones": [
+        "Danza de los viejitos",
+        "Voladores de Papantla",
+        "Danza del venado",
+        "Concheros"
+      ],
+      "correcta": 1,
+      "dato": "Es Patrimonio Cultural Inmaterial de la UNESCO desde 2009."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿De qué estado es típica la Danza de los Viejitos?",
+      "opciones": [
+        "Oaxaca",
+        "Jalisco",
+        "Michoacán",
+        "Sonora"
+      ],
+      "correcta": 2,
+      "dato": "Nació en la región purépecha."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llama la técnica de cocer el maíz en agua con cal?",
+      "opciones": [
+        "Fermentación",
+        "Germinación",
+        "Nixtamalización",
+        "Ahumado"
+      ],
+      "correcta": 2,
+      "dato": "Hace al maíz más nutritivo y permite hacer la masa para tortillas."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Quién compuso la canción «Cielito lindo»?",
+      "opciones": [
+        "Agustín Lara",
+        "José Alfredo Jiménez",
+        "Quirino Mendoza y Cortés",
+        "Juventino Rosas"
+      ],
+      "correcta": 2,
+      "dato": "La compuso en 1882 y hoy se canta en todo el mundo."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué compositor mexicano escribió el vals «Sobre las olas»?",
+      "opciones": [
+        "Juventino Rosas",
+        "Agustín Lara",
+        "Manuel M. Ponce",
+        "Carlos Chávez"
+      ],
+      "correcta": 0,
+      "dato": "Mucha gente en el mundo cree que es un vals europeo."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué cantautor escribió «El Rey» y «Si nos dejan»?",
+      "opciones": [
+        "Juan Gabriel",
+        "José Alfredo Jiménez",
+        "Vicente Fernández",
+        "Agustín Lara"
+      ],
+      "correcta": 1,
+      "dato": "Nació en Dolores Hidalgo, Guanajuato, y componía sin saber leer música."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué edificio de la UNAM está cubierto por un gran mural de mosaico de Juan O'Gorman?",
+      "opciones": [
+        "Torre de Rectoría",
+        "Estadio Olímpico Universitario",
+        "Museo Universitario de Ciencias",
+        "Biblioteca Central"
+      ],
+      "correcta": 3,
+      "dato": "Ciudad Universitaria es Patrimonio Mundial de la UNESCO desde 2007."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué es el papel picado?",
+      "opciones": [
+        "Papel para envolver tamales",
+        "Papel de colores con figuras recortadas para adornar fiestas",
+        "Un tipo de piñata",
+        "Papel para pintar murales"
+      ],
+      "correcta": 1,
+      "dato": "En San Salvador Huixcolotla, Puebla, es una artesanía muy tradicional."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué bebida fermentada se obtiene del aguamiel del maguey?",
+      "opciones": [
+        "Tequila",
+        "Tepache",
+        "Mezcal",
+        "Pulque"
+      ],
+      "correcta": 3,
+      "dato": "El tequila y el mezcal se destilan; el pulque solo se fermenta."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué estado es famoso por su artesanía de barro negro?",
+      "opciones": [
+        "Puebla",
+        "Michoacán",
+        "Oaxaca",
+        "Tlaxcala"
+      ],
+      "correcta": 2,
+      "dato": "Se hace en San Bartolo Coyotepec; doña Rosa Real descubrió cómo darle brillo."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿Qué instrumento de teclas de madera es emblema de Chiapas?",
+      "opciones": [
+        "Arpa",
+        "Jarana",
+        "Vihuela",
+        "Marimba"
+      ],
+      "correcta": 3,
+      "dato": "La marimba suena en fiestas y plazas de todo Chiapas."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 2,
+      "pregunta": "¿En qué ciudad se celebra el Festival Internacional Cervantino?",
+      "opciones": [
+        "Querétaro",
+        "San Miguel de Allende",
+        "Guanajuato",
+        "Zacatecas"
+      ],
+      "correcta": 2,
+      "dato": "Se celebra cada octubre desde 1972."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué zona arqueológica de Yucatán fue elegida en 2007 una de las nuevas siete maravillas del mundo?",
+      "opciones": [
+        "Uxmal",
+        "Tulum",
+        "Chichén Itzá",
+        "Palenque"
+      ],
+      "correcta": 2,
+      "dato": "En los equinoccios, la sombra en la pirámide de Kukulcán parece una serpiente que baja."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué arquitecto mexicano ganó el Premio Pritzker en 1980?",
+      "opciones": [
+        "Pedro Ramírez Vázquez",
+        "Teodoro González de León",
+        "Juan O'Gorman",
+        "Luis Barragán"
+      ],
+      "correcta": 3,
+      "dato": "Su casa-estudio en Tacubaya es Patrimonio Mundial de la UNESCO."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué arquitecto diseñó el Museo Nacional de Antropología y el Estadio Azteca?",
+      "opciones": [
+        "Pedro Ramírez Vázquez",
+        "Luis Barragán",
+        "Félix Candela",
+        "Mario Pani"
+      ],
+      "correcta": 0,
+      "dato": "El Museo Nacional de Antropología se inauguró en 1964."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué gran monolito circular mexica se exhibe en el Museo Nacional de Antropología?",
+      "opciones": [
+        "Piedra del Sol",
+        "Coatlicue",
+        "Coyolxauhqui",
+        "Chac Mool"
+      ],
+      "correcta": 0,
+      "dato": "Se encontró en 1790 en el Zócalo de la Ciudad de México."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué cocina fue reconocida por la UNESCO como Patrimonio Cultural Inmaterial en 2010?",
+      "opciones": [
+        "La cocina italiana",
+        "La cocina japonesa",
+        "La cocina peruana",
+        "La cocina tradicional mexicana"
+      ],
+      "correcta": 3,
+      "dato": "Se reconoció el modelo de Michoacán, con el maíz, el frijol y el chile como base."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué cantante conocido como «el Divo de Juárez» compuso «Amor eterno»?",
+      "opciones": [
+        "José José",
+        "Juan Gabriel",
+        "Marco Antonio Solís",
+        "Joan Sebastian"
+      ],
+      "correcta": 1,
+      "dato": "Compuso cientos de canciones para él y para otros artistas."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué libro de cuentos publicó Juan Rulfo en 1953?",
+      "opciones": [
+        "Pedro Páramo",
+        "El llano en llamas",
+        "Aura",
+        "Balún Canán"
+      ],
+      "correcta": 1,
+      "dato": "Dos años después publicó su novela «Pedro Páramo»."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué escritora escribió «Balún Canán», novela sobre los pueblos de Chiapas?",
+      "opciones": [
+        "Rosario Castellanos",
+        "Elena Garro",
+        "Elena Poniatowska",
+        "Nellie Campobello"
+      ],
+      "correcta": 0,
+      "dato": "La novela se publicó en 1957."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Entre qué estados está la Reserva de la Biosfera de la Mariposa Monarca?",
+      "opciones": [
+        "Jalisco y Colima",
+        "Michoacán y Estado de México",
+        "Puebla y Tlaxcala",
+        "Hidalgo y Querétaro"
+      ],
+      "correcta": 1,
+      "dato": "Es Patrimonio Mundial de la UNESCO desde 2008."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Qué cultura hizo el Códice de Dresde, uno de los pocos libros prehispánicos que se conservan?",
+      "opciones": [
+        "Maya",
+        "Mexica",
+        "Olmeca",
+        "Zapoteca"
+      ],
+      "correcta": 0,
+      "dato": "Tiene tablas astronómicas del planeta Venus y hoy está en Alemania."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la segunda lengua indígena con más hablantes en México?",
+      "opciones": [
+        "Tsotsil",
+        "Otomí",
+        "Maya",
+        "Totonaco"
+      ],
+      "correcta": 2,
+      "dato": "Se habla sobre todo en la península de Yucatán."
+    },
+    {
+      "cat": "cultura-mexico",
+      "nivel": 3,
+      "pregunta": "¿Cuántas agrupaciones lingüísticas indígenas reconoce el catálogo del INALI?",
+      "opciones": [
+        "68",
+        "12",
+        "30",
+        "150"
+      ],
+      "correcta": 0,
+      "dato": "Esas 68 agrupaciones tienen 364 variantes."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué civilización construyó el Coliseo?",
+      "opciones": [
+        "Los griegos",
+        "Los romanos",
+        "Los egipcios",
+        "Los persas"
+      ],
+      "correcta": 1,
+      "dato": "Se inauguró en el año 80 y le cabían unas 50,000 personas."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿En qué país está el Taj Mahal?",
+      "opciones": [
+        "India",
+        "Pakistán",
+        "Irán",
+        "Turquía"
+      ],
+      "correcta": 0,
+      "dato": "Lo mandó construir el emperador Shah Jahan en memoria de su esposa."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué científico italiano observó con un telescopio las lunas de Júpiter en 1610?",
+      "opciones": [
+        "Isaac Newton",
+        "Galileo Galilei",
+        "Nicolás Copérnico",
+        "Johannes Kepler"
+      ],
+      "correcta": 1,
+      "dato": "Hoy esas cuatro lunas se llaman lunas galileanas."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué templo de Atenas estaba dedicado a la diosa Atenea?",
+      "opciones": [
+        "El Panteón",
+        "El Partenón",
+        "El Coliseo",
+        "El Faro de Alejandría"
+      ],
+      "correcta": 1,
+      "dato": "Está en la Acrópolis y se construyó en el siglo V a. C."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué guerra enfrentó de 1939 a 1945 a los Aliados contra el Eje?",
+      "opciones": [
+        "La Segunda Guerra Mundial",
+        "La Primera Guerra Mundial",
+        "La Guerra Fría",
+        "La Guerra de los Cien Años"
+      ],
+      "correcta": 0,
+      "dato": "Fue el conflicto más grande de la historia."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 1,
+      "pregunta": "¿Qué país lanzó el primer satélite artificial?",
+      "opciones": [
+        "La Unión Soviética",
+        "Estados Unidos",
+        "China",
+        "Francia"
+      ],
+      "correcta": 0,
+      "dato": "El Sputnik 1 se lanzó en 1957."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llamó la rivalidad entre Estados Unidos y la Unión Soviética de 1947 a 1991?",
+      "opciones": [
+        "La Gran Guerra",
+        "La Guerra Fría",
+        "La Guerra de Secesión",
+        "La Guerra de Corea"
+      ],
+      "correcta": 1,
+      "dato": "Se le dice «fría» porque las dos potencias no se enfrentaron directamente."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué reina gobernó el Reino Unido de 1837 a 1901?",
+      "opciones": [
+        "Victoria",
+        "Isabel I",
+        "Ana",
+        "María I"
+      ],
+      "correcta": 0,
+      "dato": "A su época se le llama época victoriana."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué mercader veneciano viajó a China en el siglo XIII?",
+      "opciones": [
+        "Cristóbal Colón",
+        "Vasco da Gama",
+        "Américo Vespucio",
+        "Marco Polo"
+      ],
+      "correcta": 3,
+      "dato": "Su libro de viajes despertó el interés de Europa por Asia."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿A qué dinastía pertenecía Luis XVI, rey de Francia durante la Revolución?",
+      "opciones": [
+        "Tudor",
+        "Habsburgo",
+        "Románov",
+        "Borbón"
+      ],
+      "correcta": 3,
+      "dato": "Fue ejecutado en 1793."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué imperio construyó la red de caminos Qhapaq Ñan en los Andes?",
+      "opciones": [
+        "El Imperio inca",
+        "El Imperio mexica",
+        "El Imperio romano",
+        "El Imperio maya"
+      ],
+      "correcta": 0,
+      "dato": "Medía unos 30,000 km y es Patrimonio Mundial desde 2014."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 2,
+      "pregunta": "¿Qué astrónomo polaco propuso que la Tierra gira alrededor del Sol?",
+      "opciones": [
+        "Galileo Galilei",
+        "Nicolás Copérnico",
+        "Claudio Ptolomeo",
+        "Tycho Brahe"
+      ],
+      "correcta": 1,
+      "dato": "Publicó su teoría en 1543, el año de su muerte."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué ciudad tallada en roca rosada está en Jordania?",
+      "opciones": [
+        "Palmira",
+        "Petra",
+        "Babilonia",
+        "Cartago"
+      ],
+      "correcta": 1,
+      "dato": "Es una de las nuevas siete maravillas del mundo desde 2007."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué código de leyes de Babilonia es uno de los más antiguos que se conservan?",
+      "opciones": [
+        "La Ley de las XII Tablas",
+        "La Carta Magna",
+        "El Código de Hammurabi",
+        "El Código Napoleónico"
+      ],
+      "correcta": 2,
+      "dato": "Está grabado en una estela de piedra que hoy está en el Museo del Louvre."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué piedra permitió descifrar los jeroglíficos egipcios?",
+      "opciones": [
+        "La Piedra de Rosetta",
+        "La Piedra del Sol",
+        "La Piedra de Behistún",
+        "La estela de Hammurabi"
+      ],
+      "correcta": 0,
+      "dato": "Jean-François Champollion la descifró en 1822."
+    },
+    {
+      "cat": "historia-mundial",
+      "nivel": 3,
+      "pregunta": "¿Qué ruta comercial unía a China con el mar Mediterráneo?",
+      "opciones": [
+        "La Ruta de la Seda",
+        "El Camino Real",
+        "La Vía Apia",
+        "La Ruta 66"
+      ],
+      "correcta": 0,
+      "dato": "Además de seda, por ella viajaban ideas, inventos y religiones."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿En qué continente está Brasil?",
+      "opciones": [
+        "América",
+        "África",
+        "Europa",
+        "Asia"
+      ],
+      "correcta": 0,
+      "dato": "Es el país más grande de América del Sur."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Qué océano está entre América y Europa?",
+      "opciones": [
+        "Pacífico",
+        "Atlántico",
+        "Índico",
+        "Ártico"
+      ],
+      "correcta": 1,
+      "dato": "Es el segundo océano más grande del planeta."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el país con más habitantes de América?",
+      "opciones": [
+        "Brasil",
+        "Estados Unidos",
+        "México",
+        "Canadá"
+      ],
+      "correcta": 1,
+      "dato": "Le siguen Brasil y México."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el río más largo de África?",
+      "opciones": [
+        "Congo",
+        "Níger",
+        "Nilo",
+        "Zambeze"
+      ],
+      "correcta": 2,
+      "dato": "El Nilo y el Amazonas compiten por el título de río más largo del mundo."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿En qué continente está Japón?",
+      "opciones": [
+        "Oceanía",
+        "Asia",
+        "Europa",
+        "América"
+      ],
+      "correcta": 1,
+      "dato": "Es un archipiélago de miles de islas."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Qué volcán, cuyo nombre en náhuatl significa «cerro que humea», está entre Puebla, Morelos y el Estado de México?",
+      "opciones": [
+        "Popocatépetl",
+        "Iztaccíhuatl",
+        "Pico de Orizaba",
+        "Nevado de Toluca"
+      ],
+      "correcta": 0,
+      "dato": "Es uno de los volcanes activos más vigilados del mundo."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 1,
+      "pregunta": "¿Cuántos océanos hay en la Tierra según la clasificación más usada hoy?",
+      "opciones": [
+        "5",
+        "3",
+        "4",
+        "7"
+      ],
+      "correcta": 0,
+      "dato": "Pacífico, Atlántico, Índico, Ártico y Antártico (o Austral)."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué país tiene más habitantes en el mundo?",
+      "opciones": [
+        "China",
+        "India",
+        "Estados Unidos",
+        "Indonesia"
+      ],
+      "correcta": 1,
+      "dato": "Rebasó a China en 2023, según la ONU."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué río pasa por más países?",
+      "opciones": [
+        "Rin",
+        "Nilo",
+        "Danubio",
+        "Amazonas"
+      ],
+      "correcta": 2,
+      "dato": "Atraviesa o toca 10 países, de Alemania al mar Negro."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿En la frontera de qué países están las cataratas del Iguazú?",
+      "opciones": [
+        "Chile y Perú",
+        "Argentina y Brasil",
+        "Venezuela y Colombia",
+        "Bolivia y Paraguay"
+      ],
+      "correcta": 1,
+      "dato": "Son cerca de 275 saltos de agua."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el río más largo de Asia?",
+      "opciones": [
+        "Ganges",
+        "Mekong",
+        "Yangtsé",
+        "Éufrates"
+      ],
+      "correcta": 2,
+      "dato": "Atraviesa China y en él está la presa de las Tres Gargantas."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué país de América del Sur no tiene costa?",
+      "opciones": [
+        "Chile",
+        "Perú",
+        "Uruguay",
+        "Paraguay"
+      ],
+      "correcta": 3,
+      "dato": "Junto con Bolivia, es uno de los dos países sin mar de América del Sur."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué cordillera recorre el oeste de México, de norte a sur?",
+      "opciones": [
+        "Sierra Madre Occidental",
+        "Sierra Madre Oriental",
+        "Eje Neovolcánico",
+        "Sierra Madre de Chiapas"
+      ],
+      "correcta": 0,
+      "dato": "En ella están las Barrancas del Cobre, en Chihuahua."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 2,
+      "pregunta": "¿Qué río marca parte de la frontera entre México y Guatemala?",
+      "opciones": [
+        "Usumacinta",
+        "Lerma",
+        "Balsas",
+        "Pánuco"
+      ],
+      "correcta": 0,
+      "dato": "Es el río más caudaloso de México."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el país más poblado de África?",
+      "opciones": [
+        "Egipto",
+        "Etiopía",
+        "Sudáfrica",
+        "Nigeria"
+      ],
+      "correcta": 3,
+      "dato": "Tiene más de 200 millones de habitantes."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿En qué país nace el río Amazonas?",
+      "opciones": [
+        "Brasil",
+        "Colombia",
+        "Perú",
+        "Bolivia"
+      ],
+      "correcta": 2,
+      "dato": "Nace en los Andes peruanos y desemboca en el océano Atlántico, en Brasil."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Qué continente tiene más países?",
+      "opciones": [
+        "Asia",
+        "Europa",
+        "África",
+        "América"
+      ],
+      "correcta": 2,
+      "dato": "Tiene 54 países reconocidos por la ONU."
+    },
+    {
+      "cat": "geografia",
+      "nivel": 3,
+      "pregunta": "¿Qué «mar», que en realidad es un lago, está en el punto más bajo de tierra firme?",
+      "opciones": [
+        "Mar Caspio",
+        "Mar de Aral",
+        "Mar Rojo",
+        "Mar Muerto"
+      ],
+      "correcta": 3,
+      "dato": "Su orilla está a más de 400 metros bajo el nivel del mar."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Venezuela?",
+      "opciones": [
+        "Maracaibo",
+        "Caracas",
+        "Bogotá",
+        "Quito"
+      ],
+      "correcta": 1,
+      "dato": "Simón Bolívar nació en Caracas en 1783."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la capital de Oaxaca?",
+      "opciones": [
+        "Salina Cruz",
+        "Juchitán",
+        "Puerto Escondido",
+        "Oaxaca de Juárez"
+      ],
+      "correcta": 3,
+      "dato": "Su centro histórico es Patrimonio Mundial de la UNESCO desde 1987."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Sinaloa?",
+      "opciones": [
+        "Mazatlán",
+        "Culiacán",
+        "Los Mochis",
+        "Hermosillo"
+      ],
+      "correcta": 1,
+      "dato": "Mazatlán es su puerto más famoso, pero la capital es Culiacán."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la capital de Noruega?",
+      "opciones": [
+        "Estocolmo",
+        "Helsinki",
+        "Copenhague",
+        "Oslo"
+      ],
+      "correcta": 3,
+      "dato": "En Oslo se entrega cada año el Premio Nobel de la Paz."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Hidalgo?",
+      "opciones": [
+        "Tula",
+        "Tulancingo",
+        "Pachuca",
+        "Huejutla"
+      ],
+      "correcta": 2,
+      "dato": "Le dicen «la Bella Airosa» por sus fuertes vientos."
+    },
+    {
+      "cat": "capitales",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la capital de Vietnam?",
+      "opciones": [
+        "Hanói",
+        "Ho Chi Minh",
+        "Bangkok",
+        "Phnom Penh"
+      ],
+      "correcta": 0,
+      "dato": "Ho Chi Minh es la ciudad más poblada, pero la capital es Hanói."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇵🇦",
+      "opciones": [
+        "Chile",
+        "Cuba",
+        "Costa Rica",
+        "Panamá"
+      ],
+      "correcta": 3,
+      "dato": "Sus cuadros azul y rojo representaban a los dos partidos de la época, y el blanco, la paz entre ellos."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 1,
+      "pregunta": "¿De qué país es esta bandera? 🇪🇬",
+      "opciones": [
+        "Siria",
+        "Irak",
+        "Egipto",
+        "Yemen"
+      ],
+      "correcta": 2,
+      "dato": "En el centro lleva un águila dorada, el águila de Saladino."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇫🇮",
+      "opciones": [
+        "Suecia",
+        "Finlandia",
+        "Islandia",
+        "Grecia"
+      ],
+      "correcta": 1,
+      "dato": "Su cruz azul sobre blanco recuerda a sus lagos y a la nieve."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 2,
+      "pregunta": "¿De qué país es esta bandera? 🇵🇾",
+      "opciones": [
+        "Países Bajos",
+        "Croacia",
+        "Luxemburgo",
+        "Paraguay"
+      ],
+      "correcta": 3,
+      "dato": "Es de las pocas banderas con un escudo distinto en cada lado."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇧🇹",
+      "opciones": [
+        "Bután",
+        "Nepal",
+        "Sri Lanka",
+        "Bangladés"
+      ],
+      "correcta": 0,
+      "dato": "Tiene un dragón blanco llamado Druk, el «dragón del trueno»."
+    },
+    {
+      "cat": "banderas",
+      "nivel": 3,
+      "pregunta": "¿De qué país es esta bandera? 🇳🇵",
+      "opciones": [
+        "Nepal",
+        "Bután",
+        "Brunéi",
+        "Laos"
+      ],
+      "correcta": 0,
+      "dato": "Es la única bandera nacional que no es rectangular: son dos triángulos."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la estrella más cercana a la Tierra?",
+      "opciones": [
+        "El Sol",
+        "Próxima Centauri",
+        "Sirio",
+        "La Estrella Polar"
+      ],
+      "correcta": 0,
+      "dato": "Su luz tarda unos 8 minutos en llegar a la Tierra."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué instrumento mide la temperatura?",
+      "opciones": [
+        "Termómetro",
+        "Barómetro",
+        "Microscopio",
+        "Velocímetro"
+      ],
+      "correcta": 0,
+      "dato": "El barómetro mide la presión del aire."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué energía se capta con paneles que reciben la luz del Sol?",
+      "opciones": [
+        "Energía eólica",
+        "Energía geotérmica",
+        "Energía solar",
+        "Energía nuclear"
+      ],
+      "correcta": 2,
+      "dato": "La eólica viene del viento, y la geotérmica, del calor del interior de la Tierra."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué instrumento sirve para ver cosas muy pequeñas, como las células?",
+      "opciones": [
+        "Telescopio",
+        "Periscopio",
+        "Microscopio",
+        "Estetoscopio"
+      ],
+      "correcta": 2,
+      "dato": "Robert Hooke llamó «células» a las celdillas que vio en un trozo de corcho en 1665."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el planeta más lejano del Sol?",
+      "opciones": [
+        "Urano",
+        "Plutón",
+        "Saturno",
+        "Neptuno"
+      ],
+      "correcta": 3,
+      "dato": "Plutón se considera planeta enano desde 2006."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 1,
+      "pregunta": "¿Qué fuerza hace que un imán atraiga clavos de hierro?",
+      "opciones": [
+        "Gravedad",
+        "Fricción",
+        "Magnetismo",
+        "Flotación"
+      ],
+      "correcta": 2,
+      "dato": "La Tierra también es un gran imán: por eso funcionan las brújulas."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿De qué gas está hecho principalmente el Sol?",
+      "opciones": [
+        "Helio",
+        "Oxígeno",
+        "Hidrógeno",
+        "Nitrógeno"
+      ],
+      "correcta": 2,
+      "dato": "En su núcleo, el hidrógeno se fusiona y se convierte en helio."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué es el ADN?",
+      "opciones": [
+        "La molécula que guarda la información genética",
+        "Un tipo de vitamina",
+        "Un hueso del oído",
+        "Una enfermedad"
+      ],
+      "correcta": 0,
+      "dato": "Su forma de doble hélice se describió en 1953."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué tipo de cambio ocurre al quemar papel?",
+      "opciones": [
+        "Químico",
+        "Físico",
+        "Nuclear",
+        "Magnético"
+      ],
+      "correcta": 0,
+      "dato": "En un cambio químico se forman sustancias nuevas, como la ceniza y el humo."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué científico ordenó los elementos en la primera tabla periódica, en 1869?",
+      "opciones": [
+        "Antoine Lavoisier",
+        "Dmitri Mendeléiev",
+        "John Dalton",
+        "Niels Bohr"
+      ],
+      "correcta": 1,
+      "dato": "Dejó huecos para elementos que aún no se conocían, y acertó."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Qué es una galaxia?",
+      "opciones": [
+        "Un planeta muy grande",
+        "Un enorme conjunto de estrellas, gas y polvo",
+        "Una nube de lluvia",
+        "Un cometa"
+      ],
+      "correcta": 1,
+      "dato": "Nuestra galaxia se llama Vía Láctea."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la fórmula química de la sal de mesa?",
+      "opciones": [
+        "KCl",
+        "NaCl",
+        "H₂O",
+        "CO₂"
+      ],
+      "correcta": 1,
+      "dato": "Está formada por sodio y cloro."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 2,
+      "pregunta": "¿Por qué no se oye el sonido en el espacio?",
+      "opciones": [
+        "Porque hace mucho frío",
+        "Porque está oscuro",
+        "Porque no hay aire por donde viaje",
+        "Porque hay mucha gravedad"
+      ],
+      "correcta": 2,
+      "dato": "El sonido necesita un medio, como el aire o el agua, para propagarse."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Qué científico propuso en 1913 un modelo del átomo con electrones en niveles de energía?",
+      "opciones": [
+        "John Dalton",
+        "Ernest Rutherford",
+        "J. J. Thomson",
+        "Niels Bohr"
+      ],
+      "correcta": 3,
+      "dato": "Ganó el Premio Nobel de Física en 1922."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la galaxia espiral grande más cercana a la Vía Láctea?",
+      "opciones": [
+        "Galaxia del Triángulo",
+        "Galaxia del Sombrero",
+        "Galaxia del Remolino",
+        "Andrómeda"
+      ],
+      "correcta": 3,
+      "dato": "Está a unos 2.5 millones de años luz."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Qué gas noble da el color rojo anaranjado de los letreros luminosos?",
+      "opciones": [
+        "Argón",
+        "Neón",
+        "Helio",
+        "Kriptón"
+      ],
+      "correcta": 1,
+      "dato": "Cada gas da un color distinto cuando pasa la electricidad por él."
+    },
+    {
+      "cat": "ciencias",
+      "nivel": 3,
+      "pregunta": "¿Qué científica obtuvo la «Fotografía 51», clave para descubrir la forma del ADN?",
+      "opciones": [
+        "Marie Curie",
+        "Ada Lovelace",
+        "Jane Goodall",
+        "Rosalind Franklin"
+      ],
+      "correcta": 3,
+      "dato": "Su imagen de rayos X fue fundamental para el modelo de la doble hélice."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el animal terrestre más grande?",
+      "opciones": [
+        "Jirafa",
+        "Rinoceronte",
+        "Hipopótamo",
+        "Elefante africano"
+      ],
+      "correcta": 3,
+      "dato": "Un macho adulto puede pesar más de 6 toneladas."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el animal más grande que ha existido?",
+      "opciones": [
+        "Tiburón ballena",
+        "Elefante africano",
+        "Ballena azul",
+        "Megalodón"
+      ],
+      "correcta": 2,
+      "dato": "Puede medir unos 30 metros, más que muchos dinosaurios."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el animal terrestre más rápido?",
+      "opciones": [
+        "León",
+        "Guepardo",
+        "Caballo",
+        "Antílope"
+      ],
+      "correcta": 1,
+      "dato": "En carreras cortas puede rebasar los 100 km/h."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué anfibio mexicano puede regenerar partes de su cuerpo y vive en los canales de Xochimilco?",
+      "opciones": [
+        "Rana toro",
+        "Sapo",
+        "Iguana verde",
+        "Ajolote"
+      ],
+      "correcta": 3,
+      "dato": "El ajolote conserva sus branquias toda la vida y está en peligro crítico de extinción."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué mariposa migra cada año hasta los bosques de Michoacán y el Estado de México?",
+      "opciones": [
+        "Morfo azul",
+        "Mariposa cebra",
+        "Mariposa cometa",
+        "Monarca"
+      ],
+      "correcta": 3,
+      "dato": "Viajan miles de kilómetros desde Canadá y Estados Unidos para pasar el invierno en los oyameles."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Cuántas patas tiene una araña?",
+      "opciones": [
+        "8",
+        "6",
+        "10",
+        "12"
+      ],
+      "correcta": 0,
+      "dato": "Las arañas son arácnidos, no insectos: los insectos tienen 6 patas."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué animal tiene pico de pato y pone huevos, pero es mamífero?",
+      "opciones": [
+        "Ornitorrinco",
+        "Pingüino",
+        "Pato",
+        "Murciélago"
+      ],
+      "correcta": 0,
+      "dato": "Vive en Australia, y los machos tienen espolones con veneno."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama el cambio en el que una oruga se convierte en mariposa?",
+      "opciones": [
+        "Fotosíntesis",
+        "Metamorfosis",
+        "Hibernación",
+        "Migración"
+      ],
+      "correcta": 1,
+      "dato": "Dentro de la crisálida, el cuerpo de la oruga se reorganiza por completo."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama el letargo en el que algunos animales pasan el invierno?",
+      "opciones": [
+        "Migración",
+        "Muda",
+        "Metamorfosis",
+        "Hibernación"
+      ],
+      "correcta": 3,
+      "dato": "Durante la hibernación bajan su temperatura y su ritmo cardiaco para ahorrar energía."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿De qué se alimenta principalmente el panda gigante?",
+      "opciones": [
+        "Peces",
+        "Bambú",
+        "Frutas",
+        "Insectos"
+      ],
+      "correcta": 1,
+      "dato": "Puede pasar unas 12 horas al día comiendo bambú."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué felino vive en grupos llamados manadas?",
+      "opciones": [
+        "Tigre",
+        "Jaguar",
+        "León",
+        "Leopardo"
+      ],
+      "correcta": 2,
+      "dato": "Es el único felino que vive en grupos; las leonas cazan juntas."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el felino más grande de América?",
+      "opciones": [
+        "Puma",
+        "Jaguar",
+        "Ocelote",
+        "Lince"
+      ],
+      "correcta": 1,
+      "dato": "En México vive en selvas de la península de Yucatán, Chiapas y Oaxaca, entre otros lugares."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué parte de la planta absorbe el agua del suelo?",
+      "opciones": [
+        "Hoja",
+        "Flor",
+        "Raíz",
+        "Tallo"
+      ],
+      "correcta": 2,
+      "dato": "Las raíces también fijan la planta al suelo."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué insecto produce la miel?",
+      "opciones": [
+        "Avispa",
+        "Abeja",
+        "Hormiga",
+        "Mosca"
+      ],
+      "correcta": 1,
+      "dato": "Las abejas también polinizan muchas de las plantas que comemos."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llaman los animales que solo comen plantas?",
+      "opciones": [
+        "Carnívoros",
+        "Herbívoros",
+        "Omnívoros",
+        "Carroñeros"
+      ],
+      "correcta": 1,
+      "dato": "La vaca, el venado y el conejo son herbívoros."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué animal marino tiene ocho brazos y ningún tentáculo largo?",
+      "opciones": [
+        "Pulpo",
+        "Calamar",
+        "Medusa",
+        "Estrella de mar"
+      ],
+      "correcta": 0,
+      "dato": "El calamar tiene ocho brazos y, además, dos tentáculos largos."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el ave más grande del mundo?",
+      "opciones": [
+        "Emú",
+        "Avestruz",
+        "Pingüino emperador",
+        "Cóndor"
+      ],
+      "correcta": 1,
+      "dato": "No puede volar, pero corre muy rápido y pone los huevos más grandes de todas las aves."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Dónde viven los pingüinos en estado silvestre?",
+      "opciones": [
+        "En el Polo Norte",
+        "En Alaska",
+        "En el hemisferio sur",
+        "En Groenlandia"
+      ],
+      "correcta": 2,
+      "dato": "El pingüino de Galápagos vive casi en el ecuador."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué tipo de animal es la tortuga?",
+      "opciones": [
+        "Reptil",
+        "Anfibio",
+        "Mamífero",
+        "Pez"
+      ],
+      "correcta": 0,
+      "dato": "En las playas de México anidan seis de las siete especies de tortugas marinas."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué árbol produce las bellotas?",
+      "opciones": [
+        "Encino",
+        "Pino",
+        "Ahuehuete",
+        "Ceiba"
+      ],
+      "correcta": 0,
+      "dato": "México es uno de los países con más especies de encinos en el mundo."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué reptil cambia de color y mueve cada ojo por separado?",
+      "opciones": [
+        "Iguana",
+        "Gecko",
+        "Lagartija",
+        "Camaleón"
+      ],
+      "correcta": 3,
+      "dato": "Cambia de color sobre todo para comunicarse y regular su temperatura."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 1,
+      "pregunta": "¿Qué mamífero puede volar?",
+      "opciones": [
+        "Colibrí",
+        "Murciélago",
+        "Búho",
+        "Pájaro carpintero"
+      ],
+      "correcta": 1,
+      "dato": "Los murciélagos son los únicos mamíferos que vuelan de verdad; algunos polinizan el agave."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué ave puede volar hacia atrás?",
+      "opciones": [
+        "Golondrina",
+        "Gaviota",
+        "Colibrí",
+        "Halcón"
+      ],
+      "correcta": 2,
+      "dato": "Sus alas pueden batir decenas de veces por segundo."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Cuántos corazones tiene un pulpo?",
+      "opciones": [
+        "3",
+        "1",
+        "2",
+        "8"
+      ],
+      "correcta": 0,
+      "dato": "Dos bombean sangre a las branquias y uno al resto del cuerpo; su sangre es azul."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué mamífero marino en peligro crítico vive solo en el Alto Golfo de California?",
+      "opciones": [
+        "Ballena gris",
+        "Delfín nariz de botella",
+        "Orca",
+        "Vaquita marina"
+      ],
+      "correcta": 3,
+      "dato": "Es la marsopa más pequeña del mundo y quedan muy pocos ejemplares."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué gas liberan las plantas durante la fotosíntesis?",
+      "opciones": [
+        "Dióxido de carbono",
+        "Nitrógeno",
+        "Metano",
+        "Oxígeno"
+      ],
+      "correcta": 3,
+      "dato": "Las algas del océano producen buena parte del oxígeno del planeta."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué es un ecosistema?",
+      "opciones": [
+        "Los seres vivos de un lugar y su ambiente, que se relacionan",
+        "Solo las plantas de un lugar",
+        "Un tipo de clima",
+        "Un grupo de animales de la misma especie"
+      ],
+      "correcta": 0,
+      "dato": "Un arrecife, un bosque o una laguna son ecosistemas."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llaman los animales que comen plantas y otros animales?",
+      "opciones": [
+        "Omnívoros",
+        "Herbívoros",
+        "Carnívoros",
+        "Insectívoros"
+      ],
+      "correcta": 0,
+      "dato": "Los osos, los cerdos y los seres humanos son omnívoros."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el arrecife de coral más grande del mundo?",
+      "opciones": [
+        "Gran Barrera de Coral",
+        "Arrecife Mesoamericano",
+        "Arrecife Alacranes",
+        "Arrecife de Tubbataha"
+      ],
+      "correcta": 0,
+      "dato": "Está frente a la costa de Australia y mide más de 2,000 km."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué gran arrecife pasa frente a las costas de Quintana Roo?",
+      "opciones": [
+        "Sistema Arrecifal Mesoamericano",
+        "Gran Barrera de Coral",
+        "Arrecife de Ningaloo",
+        "Arrecife de Tubbataha"
+      ],
+      "correcta": 0,
+      "dato": "Es el segundo arrecife más grande del mundo y va de la península de Yucatán a Honduras."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué tipo de animal es el tiburón ballena?",
+      "opciones": [
+        "Pez",
+        "Mamífero",
+        "Ballena",
+        "Reptil"
+      ],
+      "correcta": 0,
+      "dato": "Es el pez más grande del mundo, come plancton y visita las costas de Quintana Roo y Baja California Sur."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué mamífero de las selvas de México tiene una trompa corta y puede pesar unos 300 kg?",
+      "opciones": [
+        "Jabalí",
+        "Tapir",
+        "Pecarí",
+        "Oso hormiguero"
+      ],
+      "correcta": 1,
+      "dato": "El tapir centroamericano es el mamífero terrestre más grande de las selvas de México."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Cuántos años puede vivir una tortuga gigante de Galápagos?",
+      "opciones": [
+        "Más de 100",
+        "Unos 20",
+        "Unos 40",
+        "Unos 60"
+      ],
+      "correcta": 0,
+      "dato": "Están entre los animales terrestres que más tiempo viven."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué es la polinización?",
+      "opciones": [
+        "El paso del polen de una flor a otra",
+        "La caída de las hojas",
+        "La germinación de una semilla",
+        "El riego de una planta"
+      ],
+      "correcta": 0,
+      "dato": "Abejas, colibríes, murciélagos y el viento ayudan a polinizar."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llama el conjunto de plantas de un lugar?",
+      "opciones": [
+        "Fauna",
+        "Gea",
+        "Flora",
+        "Biota"
+      ],
+      "correcta": 2,
+      "dato": "El conjunto de animales de un lugar se llama fauna."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Con qué planta mexicana se elabora el tequila?",
+      "opciones": [
+        "Agave azul",
+        "Nopal",
+        "Maíz",
+        "Caña de azúcar"
+      ],
+      "correcta": 0,
+      "dato": "El tequila solo se puede elaborar con agave azul (Agave tequilana)."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué ave de plumas verdes y cola larga era sagrada para mayas y mexicas?",
+      "opciones": [
+        "Guacamaya",
+        "Tucán",
+        "Quetzal",
+        "Loro"
+      ],
+      "correcta": 2,
+      "dato": "Sus plumas adornaban los penachos de los gobernantes."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Por qué son tan importantes las abejas para la agricultura?",
+      "opciones": [
+        "Porque comen plagas",
+        "Porque abonan la tierra",
+        "Porque polinizan muchos cultivos",
+        "Porque riegan las plantas"
+      ],
+      "correcta": 2,
+      "dato": "Sin polinizadores bajaría la cosecha de frutas como la manzana o el aguacate."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Cómo respiran los peces?",
+      "opciones": [
+        "Con pulmones",
+        "Con branquias",
+        "Solo por la piel",
+        "Con tráqueas"
+      ],
+      "correcta": 1,
+      "dato": "Las branquias toman el oxígeno disuelto en el agua."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué mamífero marino usa piedras para abrir conchas?",
+      "opciones": [
+        "Nutria marina",
+        "Foca",
+        "Morsa",
+        "Manatí"
+      ],
+      "correcta": 0,
+      "dato": "Es uno de los pocos mamíferos que usan herramientas."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué mamífero acuático come plantas y vive en ríos y costas de Quintana Roo y Tabasco?",
+      "opciones": [
+        "Foca",
+        "Delfín",
+        "Nutria",
+        "Manatí"
+      ],
+      "correcta": 3,
+      "dato": "Le dicen «vaca marina» y es pariente lejano del elefante."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el árbol nacional de México?",
+      "opciones": [
+        "Ceiba",
+        "Oyamel",
+        "Ahuehuete",
+        "Jacaranda"
+      ],
+      "correcta": 2,
+      "dato": "Es el árbol nacional desde 1921; el Árbol del Tule, en Oaxaca, es un ahuehuete."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Qué insecto hace una «danza» para avisar a las demás dónde hay flores?",
+      "opciones": [
+        "Hormiga",
+        "Mariposa",
+        "Abeja",
+        "Libélula"
+      ],
+      "correcta": 2,
+      "dato": "Karl von Frisch ganó el Nobel en 1973 por descubrir el significado de esa danza."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el felino más grande del mundo?",
+      "opciones": [
+        "León",
+        "Jaguar",
+        "Tigre",
+        "Leopardo"
+      ],
+      "correcta": 2,
+      "dato": "El tigre siberiano es la subespecie más grande."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Cómo se llaman los árboles que pierden sus hojas en una época del año?",
+      "opciones": [
+        "Perennifolios",
+        "Suculentos",
+        "Coníferos",
+        "Caducifolios"
+      ],
+      "correcta": 3,
+      "dato": "Los que conservan sus hojas todo el año se llaman perennifolios."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Qué es la bioluminiscencia?",
+      "opciones": [
+        "El reflejo de la luna en el agua",
+        "El brillo de algunos minerales",
+        "El calor de los volcanes",
+        "La luz que producen algunos seres vivos"
+      ],
+      "correcta": 3,
+      "dato": "En la laguna de Manialtepec, Oaxaca, el agua brilla de noche por microorganismos."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Qué significa que México sea un país megadiverso?",
+      "opciones": [
+        "Que tiene una enorme variedad de especies",
+        "Que tiene muchos volcanes",
+        "Que tiene mucha población",
+        "Que tiene muchos climas fríos"
+      ],
+      "correcta": 0,
+      "dato": "Forma parte de un grupo de 17 países que reúnen la mayor parte de las especies del planeta."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Qué mamífero terrestre tiene el embarazo más largo?",
+      "opciones": [
+        "Jirafa",
+        "Elefante",
+        "Rinoceronte",
+        "Camello"
+      ],
+      "correcta": 1,
+      "dato": "La gestación del elefante dura alrededor de 22 meses."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Cómo se llama la relación en la que dos especies se benefician mutuamente?",
+      "opciones": [
+        "Parasitismo",
+        "Depredación",
+        "Competencia",
+        "Mutualismo"
+      ],
+      "correcta": 3,
+      "dato": "El pez payaso y la anémona son un ejemplo de mutualismo."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Qué parte de la flor produce el polen?",
+      "opciones": [
+        "Pistilo",
+        "Pétalo",
+        "Estambre",
+        "Sépalo"
+      ],
+      "correcta": 2,
+      "dato": "El pistilo es la parte femenina de la flor, donde se forman las semillas."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Cuál de estos animales es un marsupial?",
+      "opciones": [
+        "Mapache",
+        "Zorrillo",
+        "Tlacuache",
+        "Armadillo"
+      ],
+      "correcta": 2,
+      "dato": "Es pariente de los canguros: sus crías nacen muy pequeñas y terminan de crecer en la bolsa de su madre."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el nombre científico del ser humano?",
+      "opciones": [
+        "Homo erectus",
+        "Homo habilis",
+        "Homo sapiens",
+        "Australopithecus"
+      ],
+      "correcta": 2,
+      "dato": "Significa «humano sabio»; Carlos Linneo creó el sistema de nombres de dos palabras."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Qué tienen en común el coral, la medusa y la anémona?",
+      "opciones": [
+        "Son peces",
+        "Son plantas",
+        "Son cnidarios, con células urticantes",
+        "Son moluscos"
+      ],
+      "correcta": 2,
+      "dato": "Las células urticantes les sirven para cazar y defenderse."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Dónde crecen los manglares?",
+      "opciones": [
+        "En la cima de las montañas",
+        "En costas donde se mezclan agua dulce y salada",
+        "En los desiertos",
+        "En los bosques de pino"
+      ],
+      "correcta": 1,
+      "dato": "México está entre los países con más manglares; protegen las costas de los huracanes."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿A qué reino pertenecen los hongos?",
+      "opciones": [
+        "Plantae",
+        "Animalia",
+        "Monera",
+        "Fungi"
+      ],
+      "correcta": 3,
+      "dato": "Los hongos no hacen fotosíntesis: se alimentan descomponiendo materia."
+    },
+    {
+      "cat": "naturaleza",
+      "nivel": 3,
+      "pregunta": "¿Qué conejo endémico y en peligro de extinción vive en los volcanes del centro de México?",
+      "opciones": [
+        "Teporingo",
+        "Liebre torda",
+        "Conejo castellano",
+        "Pika"
+      ],
+      "correcta": 0,
+      "dato": "Es uno de los conejos más pequeños del mundo y vive en las faldas del Popocatépetl y el Iztaccíhuatl."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué sentido usamos con la lengua?",
+      "opciones": [
+        "Tacto",
+        "Olfato",
+        "Oído",
+        "Gusto"
+      ],
+      "correcta": 3,
+      "dato": "En la lengua hay miles de papilas gustativas."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿En qué parte del cuerpo están los tres huesos más pequeños?",
+      "opciones": [
+        "En la mano",
+        "En el pie",
+        "En el oído",
+        "En la nariz"
+      ],
+      "correcta": 2,
+      "dato": "Se llaman martillo, yunque y estribo."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 1,
+      "pregunta": "¿Qué sistema del cuerpo forman los huesos?",
+      "opciones": [
+        "Sistema nervioso",
+        "Sistema óseo",
+        "Sistema digestivo",
+        "Sistema circulatorio"
+      ],
+      "correcta": 1,
+      "dato": "El esqueleto sostiene el cuerpo y protege órganos como el cerebro y el corazón."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Qué abertura del ojo se hace más grande en la oscuridad?",
+      "opciones": [
+        "Pupila",
+        "Retina",
+        "Córnea",
+        "Cristalino"
+      ],
+      "correcta": 0,
+      "dato": "El iris es el músculo de color que la abre y la cierra."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 2,
+      "pregunta": "¿Cuántos litros de sangre tiene, más o menos, una persona adulta?",
+      "opciones": [
+        "1",
+        "10",
+        "5",
+        "15"
+      ],
+      "correcta": 2,
+      "dato": "La sangre equivale a cerca del 7 % del peso del cuerpo."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el músculo más grande del cuerpo humano?",
+      "opciones": [
+        "Cuádriceps",
+        "Glúteo mayor",
+        "Bíceps",
+        "Dorsal ancho"
+      ],
+      "correcta": 1,
+      "dato": "Nos ayuda a mantenernos de pie y a subir escaleras."
+    },
+    {
+      "cat": "cuerpo-humano",
+      "nivel": 3,
+      "pregunta": "¿Cómo se llaman las bolsitas de los pulmones donde el oxígeno pasa a la sangre?",
+      "opciones": [
+        "Alvéolos",
+        "Bronquios",
+        "Tráquea",
+        "Capilares"
+      ],
+      "correcta": 0,
+      "dato": "Los pulmones tienen cientos de millones de alvéolos."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Quién escribió «Harry Potter»?",
+      "opciones": [
+        "J. R. R. Tolkien",
+        "J. K. Rowling",
+        "C. S. Lewis",
+        "Roald Dahl"
+      ],
+      "correcta": 1,
+      "dato": "El primer libro se publicó en 1997."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Qué personaje de Carlo Collodi tiene una nariz que crece al mentir?",
+      "opciones": [
+        "Peter Pan",
+        "Pinocho",
+        "Gulliver",
+        "Aladino"
+      ],
+      "correcta": 1,
+      "dato": "El libro se publicó en Italia en 1883."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿A qué familia de instrumentos pertenece el violín?",
+      "opciones": [
+        "Viento",
+        "Percusión",
+        "Teclado",
+        "Cuerdas"
+      ],
+      "correcta": 3,
+      "dato": "Sus parientes son la viola, el violonchelo y el contrabajo."
+    },
+    {
+      "cat": "arte",
+      "nivel": 1,
+      "pregunta": "¿Qué escritor creó a Alicia, la niña que cae por la madriguera de un conejo?",
+      "opciones": [
+        "Charles Dickens",
+        "Mark Twain",
+        "Oscar Wilde",
+        "Lewis Carroll"
+      ],
+      "correcta": 3,
+      "dato": "«Alicia en el país de las maravillas» se publicó en 1865."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué escritor francés escribió «Veinte mil leguas de viaje submarino»?",
+      "opciones": [
+        "Victor Hugo",
+        "Alejandro Dumas",
+        "H. G. Wells",
+        "Julio Verne"
+      ],
+      "correcta": 3,
+      "dato": "Imaginó submarinos y viajes a la Luna mucho antes de que existieran."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Quiénes son conocidos como «los tres grandes» del muralismo mexicano?",
+      "opciones": [
+        "Rivera, Orozco y Siqueiros",
+        "Rivera, Kahlo y Tamayo",
+        "Orozco, Tamayo y Toledo",
+        "Siqueiros, Velasco y Dr. Atl"
+      ],
+      "correcta": 0,
+      "dato": "El muralismo llevó el arte a los edificios públicos después de la Revolución."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué pintor neerlandés pintó «La joven de la perla»?",
+      "opciones": [
+        "Johannes Vermeer",
+        "Rembrandt",
+        "Vincent van Gogh",
+        "Pedro Pablo Rubens"
+      ],
+      "correcta": 0,
+      "dato": "Lo pintó hacia 1665 y está en un museo de La Haya."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué compositor polaco es famoso por sus obras para piano, como los nocturnos?",
+      "opciones": [
+        "Franz Liszt",
+        "Frédéric Chopin",
+        "Johann Sebastian Bach",
+        "Piotr Ilich Chaikovski"
+      ],
+      "correcta": 1,
+      "dato": "Casi toda su obra es para piano solo."
+    },
+    {
+      "cat": "arte",
+      "nivel": 2,
+      "pregunta": "¿Qué compositor ruso escribió la música del ballet «El cascanueces»?",
+      "opciones": [
+        "Ígor Stravinski",
+        "Serguéi Rajmáninov",
+        "Piotr Ilich Chaikovski",
+        "Modest Músorgski"
+      ],
+      "correcta": 2,
+      "dato": "El ballet se estrenó en 1892 en San Petersburgo."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué escritora mexicana escribió «Los recuerdos del porvenir»?",
+      "opciones": [
+        "Rosario Castellanos",
+        "Elena Poniatowska",
+        "Elena Garro",
+        "Laura Esquivel"
+      ],
+      "correcta": 2,
+      "dato": "La novela ganó el Premio Xavier Villaurrutia en 1963."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué artista de Juchitán, Oaxaca, es famoso por sus grabados llenos de animales?",
+      "opciones": [
+        "Rufino Tamayo",
+        "Rodolfo Morales",
+        "Francisco Toledo",
+        "Gerardo Murillo"
+      ],
+      "correcta": 2,
+      "dato": "También fundó museos y bibliotecas en Oaxaca."
+    },
+    {
+      "cat": "arte",
+      "nivel": 3,
+      "pregunta": "¿Qué movimiento artístico, encabezado por André Breton, buscaba plasmar los sueños?",
+      "opciones": [
+        "Cubismo",
+        "Impresionismo",
+        "Barroco",
+        "Surrealismo"
+      ],
+      "correcta": 3,
+      "dato": "Breton publicó el «Manifiesto del surrealismo» en 1924."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuánto es 7 × 8?",
+      "opciones": [
+        "54",
+        "56",
+        "63",
+        "48"
+      ],
+      "correcta": 1,
+      "dato": "Truco para recordarlo: 5, 6, 7, 8 → 56 = 7 × 8."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuánto es 144 ÷ 12?",
+      "opciones": [
+        "11",
+        "14",
+        "12",
+        "10"
+      ],
+      "correcta": 2,
+      "dato": "144 es el cuadrado de 12: 12 × 12 = 144."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuántos lados tiene un hexágono?",
+      "opciones": [
+        "5",
+        "7",
+        "6",
+        "8"
+      ],
+      "correcta": 2,
+      "dato": "Las celdas de los panales de abeja tienen forma de hexágono."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuántos grados suman los ángulos interiores de un triángulo?",
+      "opciones": [
+        "90°",
+        "360°",
+        "180°",
+        "270°"
+      ],
+      "correcta": 2,
+      "dato": "No importa su forma: en un plano, los tres ángulos siempre suman 180°."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuánto es el 50 % de 80?",
+      "opciones": [
+        "20",
+        "40",
+        "50",
+        "30"
+      ],
+      "correcta": 1,
+      "dato": "El 50 % de una cantidad es su mitad."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuántos centímetros tiene un metro?",
+      "opciones": [
+        "10",
+        "1,000",
+        "100",
+        "60"
+      ],
+      "correcta": 2,
+      "dato": "El prefijo «centi» significa centésima parte."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuántos segundos tiene una hora?",
+      "opciones": [
+        "360",
+        "6,000",
+        "1,200",
+        "3,600"
+      ],
+      "correcta": 3,
+      "dato": "60 minutos × 60 segundos = 3,600 segundos."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Qué número representa la letra romana X?",
+      "opciones": [
+        "5",
+        "50",
+        "100",
+        "10"
+      ],
+      "correcta": 3,
+      "dato": "En números romanos, V vale 5, L vale 50, C vale 100 y M vale 1,000."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuánto es 2³ (dos al cubo)?",
+      "opciones": [
+        "6",
+        "9",
+        "5",
+        "8"
+      ],
+      "correcta": 3,
+      "dato": "2³ = 2 × 2 × 2. Elevar al cubo es multiplicar el número tres veces por sí mismo."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuál es la raíz cuadrada de 81?",
+      "opciones": [
+        "9",
+        "8",
+        "7",
+        "18"
+      ],
+      "correcta": 0,
+      "dato": "9 × 9 = 81; por eso 81 es un cuadrado perfecto."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuántos lados tiene un pentágono?",
+      "opciones": [
+        "6",
+        "4",
+        "5",
+        "8"
+      ],
+      "correcta": 2,
+      "dato": "El edificio del Departamento de Defensa de EE. UU. se llama Pentágono por su forma."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuánto es 1/2 + 1/4?",
+      "opciones": [
+        "3/4",
+        "2/6",
+        "1/6",
+        "2/4"
+      ],
+      "correcta": 0,
+      "dato": "1/2 es lo mismo que 2/4, y 2/4 + 1/4 = 3/4."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama el resultado de una multiplicación?",
+      "opciones": [
+        "Cociente",
+        "Suma",
+        "Producto",
+        "Diferencia"
+      ],
+      "correcta": 2,
+      "dato": "El resultado de una división es el cociente y el de una resta, la diferencia."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuántos gramos tiene un kilogramo?",
+      "opciones": [
+        "1,000",
+        "100",
+        "10",
+        "10,000"
+      ],
+      "correcta": 0,
+      "dato": "El prefijo «kilo» significa mil."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Qué figura tiene cuatro lados iguales y cuatro ángulos rectos?",
+      "opciones": [
+        "Rombo",
+        "Rectángulo",
+        "Cuadrado",
+        "Trapecio"
+      ],
+      "correcta": 2,
+      "dato": "El rombo también tiene cuatro lados iguales, pero sus ángulos no siempre son rectos."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuál es el número primo más pequeño?",
+      "opciones": [
+        "1",
+        "3",
+        "2",
+        "0"
+      ],
+      "correcta": 2,
+      "dato": "El 2 es el único número primo par; el 1 no se considera primo."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuánto es 15 × 4?",
+      "opciones": [
+        "60",
+        "45",
+        "50",
+        "65"
+      ],
+      "correcta": 0,
+      "dato": "Multiplicar por 4 es duplicar dos veces: 15 → 30 → 60."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuántos días tiene un año bisiesto?",
+      "opciones": [
+        "366",
+        "365",
+        "364",
+        "360"
+      ],
+      "correcta": 0,
+      "dato": "El día extra es el 29 de febrero y se agrega casi cada cuatro años."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama un ángulo que mide 90°?",
+      "opciones": [
+        "Recto",
+        "Agudo",
+        "Obtuso",
+        "Llano"
+      ],
+      "correcta": 0,
+      "dato": "Un ángulo agudo mide menos de 90° y uno obtuso, más de 90° y menos de 180°."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuántas aristas tiene un cubo?",
+      "opciones": [
+        "12",
+        "8",
+        "6",
+        "10"
+      ],
+      "correcta": 0,
+      "dato": "Un cubo tiene 6 caras, 8 vértices y 12 aristas."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Qué número sigue en la serie 2, 4, 8, 16…?",
+      "opciones": [
+        "24",
+        "20",
+        "30",
+        "32"
+      ],
+      "correcta": 3,
+      "dato": "Cada número es el doble del anterior: son potencias de 2."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 1,
+      "pregunta": "¿Cuántos milímetros tiene un centímetro?",
+      "opciones": [
+        "100",
+        "10",
+        "1,000",
+        "5"
+      ],
+      "correcta": 1,
+      "dato": "En la regla escolar hay 10 rayitas pequeñas por cada centímetro."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuánto es el 25 % de 200?",
+      "opciones": [
+        "25",
+        "40",
+        "75",
+        "50"
+      ],
+      "correcta": 3,
+      "dato": "El 25 % es la cuarta parte: 200 ÷ 4 = 50."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el área de un rectángulo de 6 cm por 4 cm?",
+      "opciones": [
+        "24 cm²",
+        "20 cm²",
+        "10 cm²",
+        "48 cm²"
+      ],
+      "correcta": 0,
+      "dato": "El área del rectángulo es base × altura."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el perímetro de un cuadrado de 5 cm de lado?",
+      "opciones": [
+        "20 cm",
+        "25 cm",
+        "10 cm",
+        "15 cm"
+      ],
+      "correcta": 0,
+      "dato": "El perímetro es la suma de los lados: 4 × 5 = 20."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el valor aproximado del número pi (π)?",
+      "opciones": [
+        "2.7182",
+        "3.1416",
+        "1.4142",
+        "3.0000"
+      ],
+      "correcta": 1,
+      "dato": "Pi es la razón entre el perímetro de un círculo y su diámetro."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "Si 3x = 21, ¿cuánto vale x?",
+      "opciones": [
+        "7",
+        "6",
+        "18",
+        "63"
+      ],
+      "correcta": 0,
+      "dato": "Para despejar x se divide 21 entre 3."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuánto es (−4) × (−5)?",
+      "opciones": [
+        "−20",
+        "20",
+        "−9",
+        "9"
+      ],
+      "correcta": 1,
+      "dato": "En la multiplicación, menos por menos da más."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el mínimo común múltiplo de 4 y 6?",
+      "opciones": [
+        "12",
+        "24",
+        "2",
+        "10"
+      ],
+      "correcta": 0,
+      "dato": "Los múltiplos de 4 (4, 8, 12…) y de 6 (6, 12…) coinciden primero en el 12."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el máximo común divisor de 18 y 24?",
+      "opciones": [
+        "6",
+        "3",
+        "12",
+        "2"
+      ],
+      "correcta": 0,
+      "dato": "El 6 es el número más grande que divide exactamente a 18 y a 24."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cómo se escribe 0.75 como fracción simplificada?",
+      "opciones": [
+        "7/5",
+        "75/10",
+        "1/4",
+        "3/4"
+      ],
+      "correcta": 3,
+      "dato": "0.75 = 75/100 y, al simplificar entre 25, queda 3/4."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuánto mide cada ángulo interior de un triángulo equilátero?",
+      "opciones": [
+        "90°",
+        "45°",
+        "120°",
+        "60°"
+      ],
+      "correcta": 3,
+      "dato": "Los tres ángulos son iguales: 180° ÷ 3 = 60°."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuántos grados suman los ángulos interiores de un cuadrilátero?",
+      "opciones": [
+        "180°",
+        "540°",
+        "360°",
+        "270°"
+      ],
+      "correcta": 2,
+      "dato": "Todo cuadrilátero se divide en dos triángulos: 2 × 180° = 360°."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Qué número es MCMLXVIII en números romanos?",
+      "opciones": [
+        "1986",
+        "1868",
+        "2068",
+        "1968"
+      ],
+      "correcta": 3,
+      "dato": "M = 1000, CM = 900, LX = 60 y VIII = 8: el año de los Juegos Olímpicos en México."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuál es el promedio de 4, 8 y 12?",
+      "opciones": [
+        "6",
+        "24",
+        "10",
+        "8"
+      ],
+      "correcta": 3,
+      "dato": "Se suman los datos (24) y se divide entre cuántos son (3)."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llama el lado más largo de un triángulo rectángulo?",
+      "opciones": [
+        "Cateto",
+        "Mediana",
+        "Hipotenusa",
+        "Bisectriz"
+      ],
+      "correcta": 2,
+      "dato": "Los dos lados que forman el ángulo recto se llaman catetos."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "Un triángulo rectángulo tiene catetos de 3 y 4. ¿Cuánto mide la hipotenusa?",
+      "opciones": [
+        "5",
+        "7",
+        "6",
+        "12"
+      ],
+      "correcta": 0,
+      "dato": "Teorema de Pitágoras: 3² + 4² = 9 + 16 = 25, y √25 = 5."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuántos centímetros cúbicos caben en un litro?",
+      "opciones": [
+        "100",
+        "1,000",
+        "10",
+        "10,000"
+      ],
+      "correcta": 1,
+      "dato": "Un litro es el volumen de un cubo de 10 cm de lado: 10 × 10 × 10."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuál es la fórmula del área de un triángulo?",
+      "opciones": [
+        "Base × altura",
+        "Lado × 3",
+        "Base × altura ÷ 2",
+        "π × radio²"
+      ],
+      "correcta": 2,
+      "dato": "Un triángulo es la mitad de un rectángulo con la misma base y la misma altura."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuántos números primos hay entre 1 y 10?",
+      "opciones": [
+        "5",
+        "3",
+        "6",
+        "4"
+      ],
+      "correcta": 3,
+      "dato": "Son el 2, el 3, el 5 y el 7."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "Si un artículo de $400 tiene 10 % de descuento, ¿cuánto pagas?",
+      "opciones": [
+        "$360",
+        "$390",
+        "$340",
+        "$40"
+      ],
+      "correcta": 0,
+      "dato": "El 10 % de 400 es 40, y 400 − 40 = 360."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Qué número sigue en la serie de Fibonacci 1, 1, 2, 3, 5, 8…?",
+      "opciones": [
+        "11",
+        "12",
+        "16",
+        "13"
+      ],
+      "correcta": 3,
+      "dato": "Cada número es la suma de los dos anteriores: 5 + 8 = 13."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Qué es un polígono regular?",
+      "opciones": [
+        "Uno con todos sus lados y ángulos iguales",
+        "Uno con lados curvos",
+        "Uno con cuatro lados",
+        "Uno con un ángulo recto"
+      ],
+      "correcta": 0,
+      "dato": "El triángulo equilátero y el cuadrado son polígonos regulares."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 2,
+      "pregunta": "¿Cuánto es 10⁰ (diez a la potencia cero)?",
+      "opciones": [
+        "0",
+        "1",
+        "10",
+        "100"
+      ],
+      "correcta": 1,
+      "dato": "Cualquier número distinto de cero elevado a la potencia 0 es igual a 1."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el área de un círculo de 10 cm de radio (usa π ≈ 3.14)?",
+      "opciones": [
+        "62.8 cm²",
+        "31.4 cm²",
+        "628 cm²",
+        "314 cm²"
+      ],
+      "correcta": 3,
+      "dato": "El área del círculo es π × radio²: 3.14 × 100 = 314."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Qué pueblo de la antigua América usó un símbolo para el cero en su numeración?",
+      "opciones": [
+        "Los romanos",
+        "Los mayas",
+        "Los griegos",
+        "Los egipcios"
+      ],
+      "correcta": 1,
+      "dato": "Los mayas contaban de 20 en 20 y dibujaban el cero como una concha."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Cuántas diagonales tiene un hexágono?",
+      "opciones": [
+        "6",
+        "12",
+        "9",
+        "3"
+      ],
+      "correcta": 2,
+      "dato": "Fórmula: n(n − 3) ÷ 2 = 6 × 3 ÷ 2 = 9."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Cuánto suman los ángulos interiores de un hexágono?",
+      "opciones": [
+        "540°",
+        "360°",
+        "1080°",
+        "720°"
+      ],
+      "correcta": 3,
+      "dato": "Fórmula: (n − 2) × 180° = 4 × 180° = 720°."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la probabilidad de sacar un número par al lanzar un dado común?",
+      "opciones": [
+        "1/6",
+        "1/2",
+        "1/3",
+        "2/3"
+      ],
+      "correcta": 1,
+      "dato": "Hay 3 caras pares (2, 4 y 6) de 6 posibles: 3/6 = 1/2."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Qué matemático griego da nombre al teorema de los triángulos rectángulos?",
+      "opciones": [
+        "Euclides",
+        "Pitágoras",
+        "Arquímedes",
+        "Platón"
+      ],
+      "correcta": 1,
+      "dato": "Aunque lleva su nombre, los babilonios ya conocían esa relación siglos antes."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Cuánto es 2¹⁰ (dos a la décima potencia)?",
+      "opciones": [
+        "1,000",
+        "512",
+        "2,048",
+        "1,024"
+      ],
+      "correcta": 3,
+      "dato": "Por eso un kilobyte se ha definido a veces como 1,024 bytes."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Cuál es el volumen de un cubo de 3 cm de arista?",
+      "opciones": [
+        "9 cm³",
+        "27 cm³",
+        "18 cm³",
+        "81 cm³"
+      ],
+      "correcta": 1,
+      "dato": "El volumen del cubo es arista × arista × arista: 3 × 3 × 3 = 27."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Cómo se llama un número que solo se divide exactamente entre 1 y entre sí mismo?",
+      "opciones": [
+        "Número par",
+        "Número compuesto",
+        "Número racional",
+        "Número primo"
+      ],
+      "correcta": 3,
+      "dato": "Euclides demostró hace más de 2,000 años que hay infinitos números primos."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "Resuelve: 2x + 5 = 17. ¿Cuánto vale x?",
+      "opciones": [
+        "11",
+        "8",
+        "5",
+        "6"
+      ],
+      "correcta": 3,
+      "dato": "Se resta 5 a los dos lados (2x = 12) y se divide entre 2."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "En español, ¿cuántos ceros tiene un billón (un millón de millones)?",
+      "opciones": [
+        "9",
+        "6",
+        "15",
+        "12"
+      ],
+      "correcta": 3,
+      "dato": "En inglés «billion» significa mil millones; en español, un billón es un millón de millones."
+    },
+    {
+      "cat": "matematicas",
+      "nivel": 3,
+      "pregunta": "¿Cuál es la mediana de los datos 3, 7, 9, 12 y 20?",
+      "opciones": [
+        "10.2",
+        "7",
+        "12",
+        "9"
+      ],
+      "correcta": 3,
+      "dato": "La mediana es el valor del centro cuando los datos están ordenados."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué significan las siglas USB?",
+      "opciones": [
+        "Unidad de sistema básico",
+        "Usuario de servicio básico",
+        "Bus serie universal",
+        "Unidad sin batería"
+      ],
+      "correcta": 2,
+      "dato": "Se creó para conectar muchos aparatos con un solo tipo de conector."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Para qué sirve un antivirus?",
+      "opciones": [
+        "Para acelerar el internet",
+        "Para detectar y quitar programas maliciosos",
+        "Para cargar la batería",
+        "Para imprimir documentos"
+      ],
+      "correcta": 1,
+      "dato": "Mantenerlo actualizado ayuda a reconocer amenazas nuevas."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué es un navegador web?",
+      "opciones": [
+        "Un programa para visitar páginas de internet",
+        "Un tipo de cable",
+        "Una red social",
+        "Un mapa de calles"
+      ],
+      "correcta": 0,
+      "dato": "Chrome, Firefox, Safari y Edge son navegadores."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué empresa creó el sistema operativo Windows?",
+      "opciones": [
+        "Apple",
+        "Microsoft",
+        "Google",
+        "IBM"
+      ],
+      "correcta": 1,
+      "dato": "Bill Gates y Paul Allen fundaron Microsoft en 1975."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué atajo de teclado deshace la última acción en Windows?",
+      "opciones": [
+        "Ctrl + C",
+        "Ctrl + V",
+        "Ctrl + Z",
+        "Ctrl + P"
+      ],
+      "correcta": 2,
+      "dato": "Ctrl + C copia, Ctrl + V pega y Ctrl + P imprime."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué es la verificación en dos pasos?",
+      "opciones": [
+        "Pedir un segundo código además de la contraseña",
+        "Escribir la contraseña dos veces",
+        "Tener dos celulares",
+        "Cambiar de contraseña cada día"
+      ],
+      "correcta": 0,
+      "dato": "Aunque alguien sepa tu contraseña, no puede entrar sin el segundo paso."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué tecnología conecta tus aparatos a internet sin cables dentro de casa?",
+      "opciones": [
+        "Wi-Fi",
+        "Ethernet",
+        "HDMI",
+        "USB"
+      ],
+      "correcta": 0,
+      "dato": "El cable de red se llama Ethernet."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Dónde nacieron los emojis?",
+      "opciones": [
+        "En Estados Unidos",
+        "En Japón",
+        "En Corea del Sur",
+        "En Francia"
+      ],
+      "correcta": 1,
+      "dato": "Se popularizaron a finales de los años 90; «emoji» significa algo como «imagen + letra»."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Cuál de estos es un buscador de internet?",
+      "opciones": [
+        "Excel",
+        "Photoshop",
+        "Word",
+        "Google"
+      ],
+      "correcta": 3,
+      "dato": "Google se fundó en 1998."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Cuál de estas unidades guarda más información?",
+      "opciones": [
+        "Megabyte",
+        "Kilobyte",
+        "Gigabyte",
+        "Byte"
+      ],
+      "correcta": 2,
+      "dato": "Un gigabyte equivale a unos mil megabytes."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Para qué sirve la memoria RAM?",
+      "opciones": [
+        "Guarda lo que estás usando en ese momento",
+        "Guarda archivos aunque se apague",
+        "Conecta a internet",
+        "Enfría el procesador"
+      ],
+      "correcta": 0,
+      "dato": "Al apagar la computadora, la RAM se borra."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué es el ciberacoso?",
+      "opciones": [
+        "Un videojuego",
+        "Un tipo de virus",
+        "Una red social",
+        "Molestar o humillar a alguien por internet"
+      ],
+      "correcta": 3,
+      "dato": "Si lo vives o lo ves, guarda pruebas y avisa a una persona adulta de confianza."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué inventó Alexander Graham Bell, patentado en 1876?",
+      "opciones": [
+        "La radio",
+        "El teléfono",
+        "El foco",
+        "El telégrafo"
+      ],
+      "correcta": 1,
+      "dato": "Su primera frase fue para su asistente: «Señor Watson, venga, quiero verlo»."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 1,
+      "pregunta": "¿Qué es un código QR?",
+      "opciones": [
+        "Un tipo de virus",
+        "Una contraseña secreta",
+        "Un cable de datos",
+        "Un código de cuadritos que se lee con la cámara"
+      ],
+      "correcta": 3,
+      "dato": "Se inventó en Japón en 1994 para la industria automotriz."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es el software?",
+      "opciones": [
+        "Los programas y aplicaciones de un aparato",
+        "Las piezas que se pueden tocar",
+        "Los cables",
+        "La pantalla"
+      ],
+      "correcta": 0,
+      "dato": "Las piezas físicas se llaman hardware."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué significan las siglas GPS?",
+      "opciones": [
+        "Sistema de posicionamiento global",
+        "Guía personal de servicios",
+        "Grupo de pantallas satelitales",
+        "Gran programa de seguridad"
+      ],
+      "correcta": 0,
+      "dato": "Usa una red de satélites para calcular tu ubicación."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es un sistema operativo?",
+      "opciones": [
+        "El programa principal que administra el aparato",
+        "Un videojuego",
+        "Un antivirus",
+        "Un navegador"
+      ],
+      "correcta": 0,
+      "dato": "Windows, macOS, Android, iOS y Linux son sistemas operativos."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es el software de código abierto?",
+      "opciones": [
+        "Programas sin contraseña",
+        "Programas que solo funcionan sin internet",
+        "Programas cuyo código cualquiera puede ver y mejorar",
+        "Código escrito en papel"
+      ],
+      "correcta": 2,
+      "dato": "Linux y Firefox son de código abierto."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es una dirección IP?",
+      "opciones": [
+        "Tu correo electrónico",
+        "El nombre de tu red Wi-Fi",
+        "La contraseña del módem",
+        "Un número que identifica a un aparato en una red"
+      ],
+      "correcta": 3,
+      "dato": "Es como la dirección postal de tu equipo en internet."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es el 5G?",
+      "opciones": [
+        "Un Wi-Fi de 5 gigas",
+        "Un celular de cinco cámaras",
+        "Un cable de 5 metros",
+        "La quinta generación de redes de telefonía móvil"
+      ],
+      "correcta": 3,
+      "dato": "Permite conexiones más rápidas y con menos retraso que el 4G."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es tu huella digital en internet?",
+      "opciones": [
+        "La marca de tu dedo en la pantalla",
+        "Un tipo de contraseña",
+        "El rastro de lo que publicas y haces en línea",
+        "Tu foto de perfil"
+      ],
+      "correcta": 2,
+      "dato": "Lo que publicas puede quedar visible por años: piensa antes de subirlo."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Quiénes fundaron Apple en 1976?",
+      "opciones": [
+        "Steve Jobs, Steve Wozniak y Ronald Wayne",
+        "Bill Gates y Paul Allen",
+        "Larry Page y Sergey Brin",
+        "Mark Zuckerberg y amigos"
+      ],
+      "correcta": 0,
+      "dato": "Su primera computadora fue la Apple I."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué lenguaje da estructura a las páginas web?",
+      "opciones": [
+        "Python",
+        "Excel",
+        "HTML",
+        "SQL"
+      ],
+      "correcta": 2,
+      "dato": "El estilo se da con CSS y la interacción con JavaScript."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es un píxel?",
+      "opciones": [
+        "Un tipo de cámara",
+        "El punto más pequeño de una imagen digital",
+        "Un archivo de música",
+        "Una tecla"
+      ],
+      "correcta": 1,
+      "dato": "Una pantalla Full HD tiene 1920 × 1080 píxeles: más de 2 millones."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Cómo se llamó la computadora electrónica de 1946 que ocupaba un cuarto entero?",
+      "opciones": [
+        "UNIVAC",
+        "Macintosh",
+        "ENIAC",
+        "Commodore 64"
+      ],
+      "correcta": 2,
+      "dato": "Pesaba unas 27 toneladas."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es el spam?",
+      "opciones": [
+        "Mensajes no deseados enviados a muchas personas",
+        "Un tipo de antivirus",
+        "Una red social",
+        "Una copia de seguridad"
+      ],
+      "correcta": 0,
+      "dato": "No abras enlaces ni archivos de mensajes que no esperabas."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué inventó Thomas Edison en 1877?",
+      "opciones": [
+        "El teléfono",
+        "El fonógrafo",
+        "La radio",
+        "La televisión"
+      ],
+      "correcta": 1,
+      "dato": "Fue el primer aparato capaz de grabar y reproducir sonido."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Para qué sirve actualizar una aplicación?",
+      "opciones": [
+        "Para borrar tus fotos",
+        "Para gastar más batería",
+        "Para corregir fallas y agregar funciones",
+        "Para cambiar tu contraseña"
+      ],
+      "correcta": 2,
+      "dato": "Tener tus apps al día te protege de fallas de seguridad."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 2,
+      "pregunta": "¿Qué es la impresión 3D?",
+      "opciones": [
+        "Imprimir fotos para ver con lentes 3D",
+        "Escanear documentos",
+        "Crear objetos capa por capa a partir de un modelo digital",
+        "Imprimir en tres hojas"
+      ],
+      "correcta": 2,
+      "dato": "Se usa para hacer prótesis, piezas y prototipos."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué es la criptografía?",
+      "opciones": [
+        "El estudio de las monedas",
+        "Un tipo de dibujo",
+        "El arte de cifrar la información para protegerla",
+        "La ciencia de las criptas"
+      ],
+      "correcta": 2,
+      "dato": "El candado del navegador indica que tu conexión va cifrada."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué indica la «S» de HTTPS?",
+      "opciones": [
+        "Que la conexión es segura, con cifrado",
+        "Que el sitio es súper rápido",
+        "Que es un servidor",
+        "Que funciona sin internet"
+      ],
+      "correcta": 0,
+      "dato": "La «S» viene de «secure», seguro en inglés."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué científico británico describió en 1936 una máquina teórica que es base de la computación?",
+      "opciones": [
+        "Charles Babbage",
+        "Tim Berners-Lee",
+        "Isaac Newton",
+        "Alan Turing"
+      ],
+      "correcta": 3,
+      "dato": "Su «máquina de Turing» describe lo que cualquier computadora puede calcular."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué diseñó Charles Babbage en el siglo XIX?",
+      "opciones": [
+        "La máquina analítica, una computadora mecánica",
+        "El telégrafo",
+        "La calculadora de bolsillo",
+        "La máquina de escribir"
+      ],
+      "correcta": 0,
+      "dato": "Ada Lovelace escribió para ella el primer algoritmo."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué es un transistor?",
+      "opciones": [
+        "Un pequeño interruptor electrónico, base de los chips",
+        "Una batería",
+        "Un tipo de cable",
+        "Una bocina"
+      ],
+      "correcta": 0,
+      "dato": "Se inventó en 1947 en los Laboratorios Bell."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué es un circuito integrado o chip?",
+      "opciones": [
+        "Una tarjeta de memoria de papel",
+        "Un cable muy largo",
+        "Un tipo de pantalla",
+        "Muchos componentes electrónicos en una pieza de silicio"
+      ],
+      "correcta": 3,
+      "dato": "Un procesador moderno tiene miles de millones de transistores."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Cómo se escribe el número 5 en binario?",
+      "opciones": [
+        "110",
+        "100",
+        "101",
+        "111"
+      ],
+      "correcta": 2,
+      "dato": "101 = 1 × 4 + 0 × 2 + 1 × 1 = 5."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿En qué se basa la computación cuántica?",
+      "opciones": [
+        "En computadoras muy pequeñas",
+        "En cúbits, que pueden combinar 0 y 1 a la vez",
+        "En internet por satélite",
+        "En energía solar"
+      ],
+      "correcta": 1,
+      "dato": "Un cúbit está en superposición hasta que se mide."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué es una URL?",
+      "opciones": [
+        "Un tipo de virus",
+        "Un programa de dibujo",
+        "Un cable de red",
+        "La dirección de un recurso en internet"
+      ],
+      "correcta": 3,
+      "dato": "Sus siglas en inglés significan «localizador uniforme de recursos»."
+    },
+    {
+      "cat": "tecnologia",
+      "nivel": 3,
+      "pregunta": "¿Qué es Linux?",
+      "opciones": [
+        "Un sistema operativo de código abierto",
+        "Un antivirus",
+        "Un navegador",
+        "Un lenguaje de marcado"
+      ],
+      "correcta": 0,
+      "dato": "Lo creó Linus Torvalds en 1991; Android se basa en él."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué es un algoritmo?",
+      "opciones": [
+        "Un tipo de virus",
+        "Una pieza del celular",
+        "Un idioma antiguo",
+        "Una serie de pasos para resolver un problema"
+      ],
+      "correcta": 3,
+      "dato": "Una receta de cocina también es un algoritmo."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué hace un traductor automático como el de tu celular?",
+      "opciones": [
+        "Cambia el tamaño de la letra",
+        "Traduce textos entre idiomas usando IA",
+        "Guarda tus contraseñas",
+        "Carga la batería"
+      ],
+      "correcta": 1,
+      "dato": "Aprendió de millones de textos ya traducidos."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué datos NO debes compartir con un chatbot?",
+      "opciones": [
+        "Una duda de matemáticas",
+        "Una idea para un cuento",
+        "Tu dirección, tus contraseñas y tus datos personales",
+        "Una pregunta de historia"
+      ],
+      "correcta": 2,
+      "dato": "Lo que escribes puede guardarse: protege tu información."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué hace el reconocimiento facial?",
+      "opciones": [
+        "Identifica a una persona por su cara",
+        "Mide la temperatura",
+        "Cuenta los pasos",
+        "Traduce lo que dices"
+      ],
+      "correcta": 0,
+      "dato": "Algunos celulares lo usan para desbloquearse."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué tipo de IA te sugiere videos o canciones?",
+      "opciones": [
+        "Un antivirus",
+        "Una calculadora",
+        "Un sistema de recomendación",
+        "Un procesador de texto"
+      ],
+      "correcta": 2,
+      "dato": "Aprende de lo que ves o escuchas para sugerirte cosas parecidas."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué es un «prompt»?",
+      "opciones": [
+        "Un error del sistema",
+        "La instrucción o pregunta que le das a una IA",
+        "Una contraseña",
+        "Un tipo de robot"
+      ],
+      "correcta": 1,
+      "dato": "Un prompt claro y con contexto da mejores respuestas."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Qué es un «deepfake»?",
+      "opciones": [
+        "Un video o audio falso creado con IA",
+        "Una red social",
+        "Un juego en línea",
+        "Un tipo de antivirus"
+      ],
+      "correcta": 0,
+      "dato": "Por eso conviene revisar la fuente antes de creer o compartir un video."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Puede equivocarse una IA?",
+      "opciones": [
+        "No, nunca se equivoca",
+        "Sí, puede dar respuestas incorrectas",
+        "Solo cuando se apaga",
+        "Solo cuando responde en inglés"
+      ],
+      "correcta": 1,
+      "dato": "Revisa siempre lo importante en fuentes confiables."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama el asistente de voz de Apple?",
+      "opciones": [
+        "Alexa",
+        "Cortana",
+        "Siri",
+        "Bixby"
+      ],
+      "correcta": 2,
+      "dato": "Siri llegó al iPhone en 2011."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama un auto que se maneja solo con ayuda de IA?",
+      "opciones": [
+        "Auto a control remoto",
+        "Auto de carreras",
+        "Auto eléctrico",
+        "Vehículo autónomo"
+      ],
+      "correcta": 3,
+      "dato": "Usa cámaras, sensores e IA para «ver» el camino."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama la IA que convierte tu voz en texto?",
+      "opciones": [
+        "Síntesis de imágenes",
+        "Compresión de archivos",
+        "Reconocimiento de voz",
+        "Cifrado"
+      ],
+      "correcta": 2,
+      "dato": "Sirve para dictar mensajes o poner subtítulos a los videos."
+    },
+    {
+      "cat": "ia",
+      "nivel": 1,
+      "pregunta": "¿Está bien entregar como tuya una tarea hecha completa por una IA?",
+      "opciones": [
+        "Sí, siempre",
+        "No: haz tu trabajo y di si usaste IA",
+        "Sí, si nadie se da cuenta",
+        "Solo los viernes"
+      ],
+      "correcta": 1,
+      "dato": "La IA puede ayudarte a aprender, pero la honestidad académica sigue contando."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué es el aprendizaje profundo (deep learning)?",
+      "opciones": [
+        "Aprendizaje automático con redes neuronales de muchas capas",
+        "Estudiar muchas horas seguidas",
+        "Un buscador de internet",
+        "Programar sin computadora"
+      ],
+      "correcta": 0,
+      "dato": "Desde 2012 impulsó grandes avances en reconocimiento de imágenes y de voz."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué son los datos de entrenamiento?",
+      "opciones": [
+        "Ejercicios de educación física",
+        "Los ejemplos con los que aprende un modelo de IA",
+        "Las piezas de un robot",
+        "Las contraseñas del sistema"
+      ],
+      "correcta": 1,
+      "dato": "Si los datos tienen errores o sesgos, la IA también los aprende."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "En IA, ¿qué es un sesgo?",
+      "opciones": [
+        "Una mejora de velocidad",
+        "Un tipo de pantalla",
+        "Un cable de conexión",
+        "Un error que favorece o perjudica a ciertos grupos"
+      ],
+      "correcta": 3,
+      "dato": "Puede venir de datos que no representan a todas las personas."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué escritor propuso las Tres Leyes de la Robótica?",
+      "opciones": [
+        "Isaac Asimov",
+        "Julio Verne",
+        "H. G. Wells",
+        "Ray Bradbury"
+      ],
+      "correcta": 0,
+      "dato": "Aparecieron en su cuento «Círculo vicioso», de 1942."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿De dónde viene la palabra «robot»?",
+      "opciones": [
+        "Del latín",
+        "Del japonés",
+        "Del inglés antiguo",
+        "De una obra de teatro checa"
+      ],
+      "correcta": 3,
+      "dato": "Karel Čapek la usó en 1920 en «R.U.R.»; viene de «robota», trabajo forzado."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué empresa creó ChatGPT?",
+      "opciones": [
+        "Google",
+        "Microsoft",
+        "Meta",
+        "OpenAI"
+      ],
+      "correcta": 3,
+      "dato": "Se lanzó en noviembre de 2022."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué es la visión por computadora?",
+      "opciones": [
+        "Unos lentes especiales",
+        "La IA que interpreta imágenes y videos",
+        "Una pantalla 3D",
+        "La cámara del celular por sí sola"
+      ],
+      "correcta": 1,
+      "dato": "Sirve, por ejemplo, para detectar enfermedades en radiografías."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué es el procesamiento de lenguaje natural?",
+      "opciones": [
+        "Un curso de gramática",
+        "Un teclado especial",
+        "Un lenguaje de programación",
+        "La IA que entiende y produce lenguaje humano"
+      ],
+      "correcta": 3,
+      "dato": "Lo usan los chatbots y los traductores automáticos."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué es una IA generativa?",
+      "opciones": [
+        "Una IA que crea textos, imágenes o audios nuevos",
+        "Una IA que solo hace cuentas",
+        "Una IA que genera electricidad",
+        "Una IA que repara computadoras"
+      ],
+      "correcta": 0,
+      "dato": "Aprende patrones de muchos ejemplos y produce contenido nuevo."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué es un modelo de lenguaje grande (LLM)?",
+      "opciones": [
+        "Una IA entrenada con enormes cantidades de texto",
+        "Un diccionario muy grande",
+        "Un libro de texto",
+        "Un servidor de correo"
+      ],
+      "correcta": 0,
+      "dato": "Genera su respuesta eligiendo, paso a paso, las siguientes palabras más probables."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué vehículo robótico de la NASA llegó a Marte en 2021?",
+      "opciones": [
+        "Curiosity",
+        "Spirit",
+        "Perseverance",
+        "Sojourner"
+      ],
+      "correcta": 2,
+      "dato": "Llevó al helicóptero Ingenuity, el primero en volar en otro planeta."
+    },
+    {
+      "cat": "ia",
+      "nivel": 2,
+      "pregunta": "¿Qué programa de IA de DeepMind predijo la forma de casi todas las proteínas conocidas?",
+      "opciones": [
+        "AlphaGo",
+        "Deep Blue",
+        "AlphaFold",
+        "Watson"
+      ],
+      "correcta": 2,
+      "dato": "Sus creadores compartieron el Premio Nobel de Química en 2024."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Qué es el aprendizaje por refuerzo?",
+      "opciones": [
+        "La IA copia respuestas de un libro",
+        "La IA memoriza contraseñas",
+        "La IA solo aprende con fotos etiquetadas",
+        "La IA aprende probando y recibiendo recompensas"
+      ],
+      "correcta": 3,
+      "dato": "Así aprendieron a jugar Go los programas de DeepMind, jugando contra sí mismos."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Qué es el aprendizaje supervisado?",
+      "opciones": [
+        "Aprender sin ningún dato",
+        "Entrenar con ejemplos que ya traen la respuesta correcta",
+        "Que una persona vigile la computadora",
+        "Copiar el código de otro programa"
+      ],
+      "correcta": 1,
+      "dato": "Por ejemplo, fotos etiquetadas como «gato» o «perro»."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Qué computadora de IBM ganó el concurso de televisión «Jeopardy!» en 2011?",
+      "opciones": [
+        "Deep Blue",
+        "ELIZA",
+        "ENIAC",
+        "Watson"
+      ],
+      "correcta": 3,
+      "dato": "Venció a dos de los mejores campeones del programa."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Cómo se llamó uno de los primeros chatbots, creado en el MIT en 1966?",
+      "opciones": [
+        "Siri",
+        "ELIZA",
+        "Alexa",
+        "Watson"
+      ],
+      "correcta": 1,
+      "dato": "Imitaba a una terapeuta repitiendo frases de quien escribía."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "En un modelo de lenguaje, ¿qué es un «token»?",
+      "opciones": [
+        "Una moneda digital",
+        "Una contraseña",
+        "Un pedazo de texto, como una palabra o parte de ella",
+        "Un tipo de virus"
+      ],
+      "correcta": 2,
+      "dato": "Los modelos leen y escriben el texto token por token."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Quién construyó en 1958 el perceptrón, una de las primeras redes neuronales?",
+      "opciones": [
+        "Alan Turing",
+        "John McCarthy",
+        "Marvin Minsky",
+        "Frank Rosenblatt"
+      ],
+      "correcta": 3,
+      "dato": "Era una máquina que aprendía a reconocer patrones sencillos."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Por qué las GPU ayudan a entrenar modelos de IA?",
+      "opciones": [
+        "Porque guardan más fotos",
+        "Porque hacen muchísimos cálculos en paralelo",
+        "Porque se conectan sin cables",
+        "Porque no usan electricidad"
+      ],
+      "correcta": 1,
+      "dato": "Se crearon para los gráficos de los videojuegos."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Qué es el sobreajuste (overfitting)?",
+      "opciones": [
+        "Cuando un modelo memoriza los ejemplos y falla con datos nuevos",
+        "Cuando la computadora se calienta",
+        "Cuando hay demasiados usuarios",
+        "Cuando se acaba la batería"
+      ],
+      "correcta": 0,
+      "dato": "Es como memorizar las respuestas del examen sin entender el tema."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "¿Qué investigador acuñó el término «inteligencia artificial» y creó el lenguaje Lisp?",
+      "opciones": [
+        "Alan Turing",
+        "John McCarthy",
+        "Marvin Minsky",
+        "Claude Shannon"
+      ],
+      "correcta": 1,
+      "dato": "Organizó la conferencia de Dartmouth de 1956."
+    },
+    {
+      "cat": "ia",
+      "nivel": 3,
+      "pregunta": "En IA, ¿para qué sirve un conjunto de prueba?",
+      "opciones": [
+        "Para guardar las preguntas del usuario",
+        "Para medir el modelo con datos que no vio al entrenar",
+        "Para escribir el manual del programa",
+        "Para listar los errores de ortografía"
+      ],
+      "correcta": 1,
+      "dato": "Se guarda aparte para saber si el modelo funciona con datos nuevos."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Cuántos jugadores tiene en la cancha un equipo de futbol?",
+      "opciones": [
+        "11",
+        "10",
+        "9",
+        "12"
+      ],
+      "correcta": 0,
+      "dato": "Uno de los 11 es el portero, el único que puede tocar el balón con las manos dentro de su área."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Cada cuántos años se celebran los Juegos Olímpicos de verano?",
+      "opciones": [
+        "2",
+        "4",
+        "5",
+        "3"
+      ],
+      "correcta": 1,
+      "dato": "A ese periodo de cuatro años se le llama olimpiada."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Cuántos aros tiene el símbolo olímpico?",
+      "opciones": [
+        "4",
+        "6",
+        "5",
+        "7"
+      ],
+      "correcta": 2,
+      "dato": "Los cinco aros entrelazados representan la unión de los continentes."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿En qué deporte se cuenta 15, 30, 40 y se juega con raqueta y red?",
+      "opciones": [
+        "Bádminton",
+        "Tenis",
+        "Ping-pong",
+        "Squash"
+      ],
+      "correcta": 1,
+      "dato": "Wimbledon, en Londres, es el torneo de tenis más antiguo: empezó en 1877."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Cuántos jugadores de un equipo de basquetbol están en la cancha?",
+      "opciones": [
+        "6",
+        "5",
+        "7",
+        "11"
+      ],
+      "correcta": 1,
+      "dato": "El basquetbol lo inventó James Naismith en 1891."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Qué país ha ganado más Copas del Mundo de futbol varonil?",
+      "opciones": [
+        "Alemania",
+        "Argentina",
+        "Italia",
+        "Brasil"
+      ],
+      "correcta": 3,
+      "dato": "Brasil tiene cinco títulos: 1958, 1962, 1970, 1994 y 2002."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿En qué deporte se batea un «jonrón»?",
+      "opciones": [
+        "Futbol americano",
+        "Golf",
+        "Beisbol",
+        "Hockey sobre hielo"
+      ],
+      "correcta": 2,
+      "dato": "Con un jonrón, quien batea recorre las cuatro bases y anota una carrera."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "En basquetbol, ¿cuántos puntos vale una canasta desde detrás de la línea de tres?",
+      "opciones": [
+        "2",
+        "3",
+        "4",
+        "1"
+      ],
+      "correcta": 1,
+      "dato": "Los tiros libres valen 1 punto y las canastas dentro de la línea, 2."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿En qué deporte se busca meter la pelota en hoyos con el menor número de golpes?",
+      "opciones": [
+        "Boliche",
+        "Polo",
+        "Golf",
+        "Hockey"
+      ],
+      "correcta": 2,
+      "dato": "Meter la pelota con un solo golpe se llama «hoyo en uno»."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Cuántos jugadores de un equipo de voleibol están en la cancha?",
+      "opciones": [
+        "5",
+        "7",
+        "9",
+        "6"
+      ],
+      "correcta": 3,
+      "dato": "El voleibol lo inventó William G. Morgan en 1895, en Estados Unidos."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Cuántos pinos se acomodan al inicio de cada turno en el boliche?",
+      "opciones": [
+        "9",
+        "10",
+        "12",
+        "8"
+      ],
+      "correcta": 1,
+      "dato": "Derribar los 10 pinos en el primer tiro se llama chuza."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Qué deporte se compite en el Tour de Francia?",
+      "opciones": [
+        "Atletismo",
+        "Automovilismo",
+        "Triatlón",
+        "Ciclismo"
+      ],
+      "correcta": 3,
+      "dato": "El Tour de Francia se corrió por primera vez en 1903."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Cómo se llama el juego de pelota de origen prehispánico que todavía se juega en Sinaloa?",
+      "opciones": [
+        "Lacrosse",
+        "Charrería",
+        "Ulama",
+        "Lucha libre"
+      ],
+      "correcta": 2,
+      "dato": "En la ulama, la pelota de hule se golpea con la cadera."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿En qué deporte fue número uno del mundo la mexicana Lorena Ochoa?",
+      "opciones": [
+        "Tenis",
+        "Golf",
+        "Atletismo",
+        "Natación"
+      ],
+      "correcta": 1,
+      "dato": "Lorena Ochoa, de Guadalajara, encabezó el ranking mundial de golf de 2007 a 2010."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Cuánto dura un partido de futbol profesional, sin contar el tiempo agregado?",
+      "opciones": [
+        "90 minutos",
+        "60 minutos",
+        "80 minutos",
+        "120 minutos"
+      ],
+      "correcta": 0,
+      "dato": "Se juega en dos tiempos de 45 minutos."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿En qué deporte se usa un disco llamado «puck»?",
+      "opciones": [
+        "Curling",
+        "Hockey sobre hielo",
+        "Patinaje artístico",
+        "Lacrosse"
+      ],
+      "correcta": 1,
+      "dato": "El puck es de hule y se congela antes del partido para que rebote menos."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿En qué país nació el judo?",
+      "opciones": [
+        "China",
+        "Corea del Sur",
+        "Tailandia",
+        "Japón"
+      ],
+      "correcta": 3,
+      "dato": "Jigoro Kano creó el judo en 1882; su nombre significa «camino suave»."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Cuántas bases hay en un campo de beisbol, contando el home?",
+      "opciones": [
+        "3",
+        "5",
+        "6",
+        "4"
+      ],
+      "correcta": 3,
+      "dato": "Primera, segunda, tercera y home forman un diamante."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Qué deporte combina natación, ciclismo y carrera?",
+      "opciones": [
+        "Pentatlón",
+        "Decatlón",
+        "Heptatlón",
+        "Triatlón"
+      ],
+      "correcta": 3,
+      "dato": "Es deporte olímpico desde Sídney 2000."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Qué atleta jamaicano tiene el récord mundial de los 100 metros planos?",
+      "opciones": [
+        "Usain Bolt",
+        "Carl Lewis",
+        "Yohan Blake",
+        "Asafa Powell"
+      ],
+      "correcta": 0,
+      "dato": "Corrió los 100 metros en 9.58 segundos en Berlín, en 2009."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Qué espectáculo deportivo mexicano es famoso por sus máscaras?",
+      "opciones": [
+        "Box",
+        "Karate",
+        "Lucha libre",
+        "Esgrima"
+      ],
+      "correcta": 2,
+      "dato": "Para muchos luchadores, perder la máscara en una lucha de apuestas es la mayor derrota."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 1,
+      "pregunta": "¿Qué país organizó el primer Mundial de futbol, en 1930?",
+      "opciones": [
+        "Brasil",
+        "Italia",
+        "Francia",
+        "Uruguay"
+      ],
+      "correcta": 3,
+      "dato": "Uruguay también ganó ese primer Mundial."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué país fue sede del Mundial de 2026 junto con México y Canadá?",
+      "opciones": [
+        "Estados Unidos",
+        "Brasil",
+        "Guatemala",
+        "Colombia"
+      ],
+      "correcta": 0,
+      "dato": "Fue el primer Mundial con 48 selecciones y con tres países sede."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Cuántas veces ha sido México sede de un Mundial de futbol varonil?",
+      "opciones": [
+        "3",
+        "2",
+        "1",
+        "4"
+      ],
+      "correcta": 0,
+      "dato": "Fue sede en 1970, 1986 y 2026."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué tenista suizo ganó 20 torneos de Grand Slam, 8 de ellos en Wimbledon?",
+      "opciones": [
+        "Rafael Nadal",
+        "Roger Federer",
+        "Novak Djokovic",
+        "Andy Murray"
+      ],
+      "correcta": 1,
+      "dato": "Sus 8 títulos de Wimbledon son récord en la rama varonil."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué nadador estadounidense ganó 23 medallas de oro olímpicas?",
+      "opciones": [
+        "Mark Spitz",
+        "Michael Phelps",
+        "Ryan Lochte",
+        "Ian Thorpe"
+      ],
+      "correcta": 1,
+      "dato": "En Pekín 2008 ganó 8 oros en unos mismos Juegos."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué futbolista mexicano del Real Madrid hacía la «huguina» al anotar?",
+      "opciones": [
+        "Rafael Márquez",
+        "Hugo Sánchez",
+        "Javier Hernández",
+        "Cuauhtémoc Blanco"
+      ],
+      "correcta": 1,
+      "dato": "Fue cinco veces campeón de goleo de la liga española."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿En qué ciudad se celebraron los Juegos Olímpicos de 2020, realizados en 2021?",
+      "opciones": [
+        "Pekín",
+        "Tokio",
+        "París",
+        "Seúl"
+      ],
+      "correcta": 1,
+      "dato": "Se aplazaron un año por la pandemia de COVID-19."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Cuántos sets debe ganar una tenista para ganar un partido de Grand Slam?",
+      "opciones": [
+        "3",
+        "1",
+        "4",
+        "2"
+      ],
+      "correcta": 3,
+      "dato": "Los partidos femeniles son a ganar 2 de 3 sets; los varoniles de Grand Slam, 3 de 5."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué deporte se juega en el Super Bowl?",
+      "opciones": [
+        "Beisbol",
+        "Basquetbol",
+        "Futbol americano",
+        "Hockey"
+      ],
+      "correcta": 2,
+      "dato": "Es la final de la NFL y se juega desde 1967."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Quién fue la primera mujer mexicana en ganar una medalla de oro olímpica?",
+      "opciones": [
+        "Soraya Jiménez",
+        "Ana Guevara",
+        "María del Rosario Espinoza",
+        "Paola Espinosa"
+      ],
+      "correcta": 0,
+      "dato": "La ganó en halterofilia (levantamiento de pesas) en Sídney 2000."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿En qué deporte ganó Ana Guevara la medalla de plata en Atenas 2004?",
+      "opciones": [
+        "Natación",
+        "Atletismo",
+        "Taekwondo",
+        "Ciclismo"
+      ],
+      "correcta": 1,
+      "dato": "Corría los 400 metros; fue campeona mundial de esa prueba en 2003."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué deporte practica María del Rosario Espinoza, medallista en tres Juegos Olímpicos?",
+      "opciones": [
+        "Taekwondo",
+        "Judo",
+        "Box",
+        "Clavados"
+      ],
+      "correcta": 0,
+      "dato": "Ganó oro en Pekín 2008, bronce en Londres 2012 y plata en Río 2016."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Cuántos jugadores de un equipo de beisbol están en el campo a la defensiva?",
+      "opciones": [
+        "10",
+        "11",
+        "9",
+        "8"
+      ],
+      "correcta": 2,
+      "dato": "Pícher, cácher, cuatro jugadores de cuadro y tres jardineros."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué distancia recorre un maratón?",
+      "opciones": [
+        "40 km",
+        "21.097 km",
+        "50 km",
+        "42.195 km"
+      ],
+      "correcta": 3,
+      "dato": "Recuerda la leyenda del mensajero griego que corrió de Maratón a Atenas."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué piloto mexicano de Fórmula 1 es conocido como «Checo»?",
+      "opciones": [
+        "Esteban Gutiérrez",
+        "Sergio Pérez",
+        "Pedro Rodríguez",
+        "Ricardo Rodríguez"
+      ],
+      "correcta": 1,
+      "dato": "El autódromo de la Ciudad de México lleva el nombre de los hermanos Ricardo y Pedro Rodríguez."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿En qué deporte se usan las palabras «birdie», «par» y «bogey»?",
+      "opciones": [
+        "Golf",
+        "Tenis",
+        "Boliche",
+        "Billar"
+      ],
+      "correcta": 0,
+      "dato": "Un birdie es terminar un hoyo con un golpe menos que el par."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué basquetbolista fue seis veces campeón de la NBA con los Chicago Bulls?",
+      "opciones": [
+        "LeBron James",
+        "Kobe Bryant",
+        "Magic Johnson",
+        "Michael Jordan"
+      ],
+      "correcta": 3,
+      "dato": "Ganó en 1991, 1992, 1993, 1996, 1997 y 1998."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué gimnasta rumana obtuvo el primer 10 perfecto de la historia olímpica?",
+      "opciones": [
+        "Simone Biles",
+        "Olga Kórbut",
+        "Larisa Latýnina",
+        "Nadia Comăneci"
+      ],
+      "correcta": 3,
+      "dato": "Lo logró en Montreal 1976, con 14 años; el marcador mostró 1.00 porque no estaba hecho para el 10."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "En futbol, ¿qué es un «hat-trick»?",
+      "opciones": [
+        "Un gol de chilena",
+        "Un penal fallado",
+        "Un autogol",
+        "Tres goles de un jugador en un mismo partido"
+      ],
+      "correcta": 3,
+      "dato": "La expresión viene del críquet inglés."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿En qué deporte se juega la Serie Mundial?",
+      "opciones": [
+        "Basquetbol",
+        "Futbol americano",
+        "Hockey",
+        "Beisbol"
+      ],
+      "correcta": 3,
+      "dato": "Es la final de las Grandes Ligas y se juega desde 1903."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué arte marcial coreano entró como deporte olímpico oficial en Sídney 2000?",
+      "opciones": [
+        "Karate",
+        "Judo",
+        "Kung fu",
+        "Taekwondo"
+      ],
+      "correcta": 3,
+      "dato": "Su nombre significa, más o menos, «el camino del pie y el puño»."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Qué futbolista argentino levantó la Copa del Mundo de 2022 como capitán?",
+      "opciones": [
+        "Diego Maradona",
+        "Ángel Di María",
+        "Lionel Messi",
+        "Sergio Agüero"
+      ],
+      "correcta": 2,
+      "dato": "Argentina venció a Francia en penales en la final de Qatar 2022."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 2,
+      "pregunta": "¿Cuántos jugadores tiene en el campo un equipo de futbol americano?",
+      "opciones": [
+        "9",
+        "11",
+        "12",
+        "15"
+      ],
+      "correcta": 1,
+      "dato": "Cada equipo tiene unidades distintas de ataque, defensa y equipos especiales."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿Qué marchista mexicano ganó el oro olímpico en 20 km en Montreal 1976?",
+      "opciones": [
+        "Raúl González",
+        "Ernesto Canto",
+        "Bernardo Segura",
+        "Daniel Bautista"
+      ],
+      "correcta": 3,
+      "dato": "Fue la primera medalla de oro olímpica de México en atletismo."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿En qué deporte ganó México la medalla de oro en Londres 2012?",
+      "opciones": [
+        "Box",
+        "Futbol",
+        "Clavados",
+        "Taekwondo"
+      ],
+      "correcta": 1,
+      "dato": "La selección sub-23 venció 2-1 a Brasil en el estadio de Wembley."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿Qué país ha ganado más medallas en la historia de los Juegos Olímpicos de verano?",
+      "opciones": [
+        "China",
+        "Rusia",
+        "Estados Unidos",
+        "Gran Bretaña"
+      ],
+      "correcta": 2,
+      "dato": "Ha encabezado el medallero en la mayoría de los Juegos de verano."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿Cuántos metros de largo mide una alberca olímpica?",
+      "opciones": [
+        "25",
+        "50",
+        "100",
+        "40"
+      ],
+      "correcta": 1,
+      "dato": "Mide 50 metros de largo por 25 de ancho."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "En futbol americano, ¿cuántos puntos vale un touchdown?",
+      "opciones": [
+        "7",
+        "3",
+        "5",
+        "6"
+      ],
+      "correcta": 3,
+      "dato": "Después del touchdown se puede intentar un punto extra o una conversión de dos."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿En qué año se jugó el primer Mundial de futbol femenil?",
+      "opciones": [
+        "1971",
+        "1999",
+        "1991",
+        "2003"
+      ],
+      "correcta": 2,
+      "dato": "Se jugó en China y lo ganó Estados Unidos."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿Qué boxeador mexicano es conocido como «el Canelo»?",
+      "opciones": [
+        "Julio César Chávez",
+        "Saúl Álvarez",
+        "Juan Manuel Márquez",
+        "Érik Morales"
+      ],
+      "correcta": 1,
+      "dato": "Ha sido campeón mundial en cuatro divisiones de peso."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿Qué piloto alemán ganó siete campeonatos mundiales de Fórmula 1?",
+      "opciones": [
+        "Sebastian Vettel",
+        "Nico Rosberg",
+        "Michael Schumacher",
+        "Ayrton Senna"
+      ],
+      "correcta": 2,
+      "dato": "Comparte el récord de siete títulos con el británico Lewis Hamilton."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿Cuántos jugadores tiene en el campo un equipo de rugby a XV?",
+      "opciones": [
+        "11",
+        "13",
+        "15",
+        "12"
+      ],
+      "correcta": 2,
+      "dato": "La versión de siete jugadores (rugby 7) es olímpica desde Río 2016."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿Qué deporte practicaba Joaquín Capilla, medallista mexicano en tres Juegos Olímpicos?",
+      "opciones": [
+        "Natación",
+        "Box",
+        "Equitación",
+        "Clavados"
+      ],
+      "correcta": 3,
+      "dato": "Ganó el oro en plataforma de 10 metros en Melbourne 1956."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿En qué ciudad se celebraron los primeros Juegos Olímpicos modernos, en 1896?",
+      "opciones": [
+        "París",
+        "Londres",
+        "Roma",
+        "Atenas"
+      ],
+      "correcta": 3,
+      "dato": "Los impulsó el francés Pierre de Coubertin."
+    },
+    {
+      "cat": "deportes",
+      "nivel": 3,
+      "pregunta": "¿En qué deporte compiten los países por la Copa Davis?",
+      "opciones": [
+        "Tenis",
+        "Golf",
+        "Vela",
+        "Polo"
+      ],
+      "correcta": 0,
+      "dato": "Es un torneo de tenis entre países que se juega desde 1900."
     }
-  ]
+  ],
+  "linea": {
+    "temas": [
+      {
+        "id": "historia-mexico",
+        "titulo": "Historia de México",
+        "emoji": "🇲🇽"
+      },
+      {
+        "id": "historia-universal",
+        "titulo": "Historia universal",
+        "emoji": "🏛️"
+      },
+      {
+        "id": "inventos",
+        "titulo": "Inventos",
+        "emoji": "💡"
+      },
+      {
+        "id": "ciencia",
+        "titulo": "Ciencia",
+        "emoji": "🔬"
+      }
+    ],
+    "sets": [
+      {
+        "tema": "historia-mexico",
+        "titulo": "De Tenochtitlan a la Independencia",
+        "sucesos": [
+          {
+            "txt": "Fundación de México-Tenochtitlan",
+            "anio": 1325,
+            "dato": "Según la tradición, en un islote del lago de Texcoco."
+          },
+          {
+            "txt": "Hernán Cortés llega a Tenochtitlan",
+            "anio": 1519,
+            "dato": "Moctezuma Xocoyotzin lo recibió en la ciudad."
+          },
+          {
+            "txt": "Caída de México-Tenochtitlan",
+            "anio": 1521,
+            "dato": "Cuauhtémoc, el último tlatoani, fue capturado."
+          },
+          {
+            "txt": "Se funda la Real y Pontificia Universidad de México",
+            "anio": 1551,
+            "dato": "Es el antecedente de la UNAM."
+          },
+          {
+            "txt": "Se encuentra la Piedra del Sol en el Zócalo",
+            "anio": 1790,
+            "dato": "Hoy se exhibe en el Museo Nacional de Antropología."
+          },
+          {
+            "txt": "Grito de Dolores",
+            "anio": 1810,
+            "dato": "Miguel Hidalgo llamó a luchar por la Independencia."
+          }
+        ]
+      },
+      {
+        "tema": "historia-mexico",
+        "titulo": "Independencia y Reforma",
+        "sucesos": [
+          {
+            "txt": "Morelos presenta los Sentimientos de la Nación",
+            "anio": 1813,
+            "dato": "Propuso abolir la esclavitud y las castas."
+          },
+          {
+            "txt": "Agustín de Iturbide proclama el Plan de Iguala",
+            "anio": 1821,
+            "dato": "Sus tres garantías dieron origen a los colores de la bandera."
+          },
+          {
+            "txt": "Vicente Guerrero decreta la abolición de la esclavitud",
+            "anio": 1829,
+            "dato": "Hidalgo ya la había declarado abolida en 1810."
+          },
+          {
+            "txt": "Batalla de San Jacinto: Texas se separa",
+            "anio": 1836,
+            "dato": "Santa Anna fue capturado tras la batalla."
+          },
+          {
+            "txt": "Defensa del Castillo de Chapultepec",
+            "anio": 1847,
+            "dato": "Ahí se recuerda a los Niños Héroes."
+          },
+          {
+            "txt": "Benito Juárez expide las Leyes de Reforma",
+            "anio": 1859,
+            "dato": "Separaron a la Iglesia del Estado."
+          },
+          {
+            "txt": "Termina el Segundo Imperio de Maximiliano",
+            "anio": 1867,
+            "dato": "La República se restauró con Benito Juárez."
+          }
+        ]
+      },
+      {
+        "tema": "historia-mexico",
+        "titulo": "El siglo XIX en México",
+        "sucesos": [
+          {
+            "txt": "Se consuma la Independencia",
+            "anio": 1821,
+            "dato": "El Ejército Trigarante entró a la Ciudad de México el 27 de septiembre."
+          },
+          {
+            "txt": "Guadalupe Victoria, primer presidente, toma posesión",
+            "anio": 1824,
+            "dato": "Ese mismo año se promulgó la primera Constitución federal."
+          },
+          {
+            "txt": "Se firma el Tratado de Guadalupe Hidalgo",
+            "anio": 1848,
+            "dato": "Terminó la guerra entre México y Estados Unidos."
+          },
+          {
+            "txt": "Se promulga la Constitución liberal",
+            "anio": 1857,
+            "dato": "Estuvo vigente hasta la Constitución de 1917."
+          },
+          {
+            "txt": "Batalla de Puebla",
+            "anio": 1862,
+            "dato": "Ignacio Zaragoza venció al ejército francés el 5 de mayo."
+          },
+          {
+            "txt": "Se inaugura el ferrocarril México–Veracruz",
+            "anio": 1873,
+            "dato": "Lo inauguró Sebastián Lerdo de Tejada."
+          }
+        ]
+      },
+      {
+        "tema": "historia-mexico",
+        "titulo": "El siglo XX en México",
+        "sucesos": [
+          {
+            "txt": "Inicia la Revolución Mexicana",
+            "anio": 1910,
+            "dato": "Francisco I. Madero llamó a levantarse el 20 de noviembre."
+          },
+          {
+            "txt": "Se promulga la Constitución en Querétaro",
+            "anio": 1917,
+            "dato": "Es la Constitución que rige hoy en México."
+          },
+          {
+            "txt": "Se crea la Secretaría de Educación Pública",
+            "anio": 1921,
+            "dato": "José Vasconcelos fue su primer titular."
+          },
+          {
+            "txt": "Expropiación petrolera",
+            "anio": 1938,
+            "dato": "La decretó el presidente Lázaro Cárdenas."
+          },
+          {
+            "txt": "Las mujeres obtienen el voto en elecciones federales",
+            "anio": 1953,
+            "dato": "Votaron por primera vez en una elección federal en 1955."
+          },
+          {
+            "txt": "Juegos Olímpicos en la Ciudad de México",
+            "anio": 1968,
+            "dato": "Fueron los primeros Juegos Olímpicos en América Latina."
+          },
+          {
+            "txt": "Se inaugura el Metro de la Ciudad de México",
+            "anio": 1969,
+            "dato": "La primera línea iba de Zaragoza a Chapultepec."
+          }
+        ]
+      },
+      {
+        "tema": "historia-mexico",
+        "titulo": "México moderno",
+        "sucesos": [
+          {
+            "txt": "Se nacionaliza la industria eléctrica",
+            "anio": 1960,
+            "dato": "La nacionalizó el presidente Adolfo López Mateos."
+          },
+          {
+            "txt": "México organiza por primera vez el Mundial de futbol",
+            "anio": 1970,
+            "dato": "La final se jugó en el Estadio Azteca."
+          },
+          {
+            "txt": "Rodolfo Neri Vela viaja al espacio",
+            "anio": 1985,
+            "dato": "Fue el primer astronauta mexicano, a bordo del transbordador Atlantis."
+          },
+          {
+            "txt": "Octavio Paz gana el Premio Nobel de Literatura",
+            "anio": 1990,
+            "dato": "Es el único mexicano con el Nobel de Literatura."
+          },
+          {
+            "txt": "Mario Molina gana el Premio Nobel de Química",
+            "anio": 1995,
+            "dato": "Estudió cómo algunos gases dañan la capa de ozono."
+          },
+          {
+            "txt": "Ciudad Universitaria es declarada Patrimonio Mundial",
+            "anio": 2007,
+            "dato": "La UNESCO reconoció su arquitectura y sus murales."
+          }
+        ]
+      },
+      {
+        "tema": "historia-universal",
+        "titulo": "La Antigüedad",
+        "sucesos": [
+          {
+            "txt": "Primeros Juegos Olímpicos de la antigua Grecia",
+            "anio": -776,
+            "dato": "Se celebraban en Olimpia en honor a Zeus."
+          },
+          {
+            "txt": "Muere Alejandro Magno",
+            "anio": -323,
+            "dato": "Su imperio llegaba de Grecia hasta la India."
+          },
+          {
+            "txt": "Asesinato de Julio César",
+            "anio": -44,
+            "dato": "Ocurrió en los idus de marzo, el día 15."
+          },
+          {
+            "txt": "Erupción del Vesubio sepulta Pompeya",
+            "anio": 79,
+            "dato": "La ceniza conservó la ciudad casi intacta."
+          },
+          {
+            "txt": "Cae el Imperio romano de Occidente",
+            "anio": 476,
+            "dato": "Se toma como el inicio de la Edad Media."
+          },
+          {
+            "txt": "Carlomagno es coronado emperador",
+            "anio": 800,
+            "dato": "Fue coronado en Roma el día de Navidad."
+          }
+        ]
+      },
+      {
+        "tema": "historia-universal",
+        "titulo": "De la Edad Media al Renacimiento",
+        "sucesos": [
+          {
+            "txt": "Se firma la Carta Magna en Inglaterra",
+            "anio": 1215,
+            "dato": "Limitó el poder del rey Juan sin Tierra."
+          },
+          {
+            "txt": "Constantinopla cae ante el Imperio otomano",
+            "anio": 1453,
+            "dato": "Hoy la ciudad se llama Estambul."
+          },
+          {
+            "txt": "Cristóbal Colón llega a América",
+            "anio": 1492,
+            "dato": "Desembarcó en una isla de las Bahamas el 12 de octubre."
+          },
+          {
+            "txt": "Vasco da Gama llega a la India por mar",
+            "anio": 1498,
+            "dato": "Rodeó África por el cabo de Buena Esperanza."
+          },
+          {
+            "txt": "Inicia la primera vuelta al mundo, con Magallanes",
+            "anio": 1519,
+            "dato": "Juan Sebastián Elcano la completó en 1522."
+          },
+          {
+            "txt": "Copérnico publica que la Tierra gira alrededor del Sol",
+            "anio": 1543,
+            "dato": "Lo publicó el año de su muerte."
+          }
+        ]
+      },
+      {
+        "tema": "historia-universal",
+        "titulo": "La era de las revoluciones",
+        "sucesos": [
+          {
+            "txt": "Independencia de Estados Unidos",
+            "anio": 1776,
+            "dato": "Se declaró el 4 de julio."
+          },
+          {
+            "txt": "Inicia la Revolución francesa",
+            "anio": 1789,
+            "dato": "Comenzó con la toma de la Bastilla, el 14 de julio."
+          },
+          {
+            "txt": "Batalla de Waterloo",
+            "anio": 1815,
+            "dato": "Ahí fue derrotado Napoleón Bonaparte."
+          },
+          {
+            "txt": "Estados Unidos abole la esclavitud",
+            "anio": 1865,
+            "dato": "Lo hizo con la Decimotercera Enmienda a su Constitución."
+          },
+          {
+            "txt": "Se unifica Alemania",
+            "anio": 1871,
+            "dato": "Guillermo I fue proclamado emperador."
+          },
+          {
+            "txt": "Se hunde el Titanic",
+            "anio": 1912,
+            "dato": "Chocó contra un iceberg en su viaje inaugural."
+          }
+        ]
+      },
+      {
+        "tema": "historia-universal",
+        "titulo": "El siglo XX",
+        "sucesos": [
+          {
+            "txt": "Inicia la Primera Guerra Mundial",
+            "anio": 1914,
+            "dato": "Duró hasta 1918."
+          },
+          {
+            "txt": "Se firma el Tratado de Versalles",
+            "anio": 1919,
+            "dato": "Puso fin a la guerra entre Alemania y los Aliados."
+          },
+          {
+            "txt": "Inicia la Segunda Guerra Mundial",
+            "anio": 1939,
+            "dato": "Duró hasta 1945."
+          },
+          {
+            "txt": "Se funda la ONU",
+            "anio": 1945,
+            "dato": "Hoy la forman 193 países."
+          },
+          {
+            "txt": "El ser humano llega a la Luna",
+            "anio": 1969,
+            "dato": "Neil Armstrong fue el primero en pisarla."
+          },
+          {
+            "txt": "Cae el Muro de Berlín",
+            "anio": 1989,
+            "dato": "Alemania se reunificó al año siguiente."
+          },
+          {
+            "txt": "Se disuelve la Unión Soviética",
+            "anio": 1991,
+            "dato": "De ella surgieron 15 países independientes."
+          }
+        ]
+      },
+      {
+        "tema": "historia-universal",
+        "titulo": "El mundo contemporáneo",
+        "sucesos": [
+          {
+            "txt": "Se inaugura el Canal de Panamá",
+            "anio": 1914,
+            "dato": "Une los océanos Atlántico y Pacífico."
+          },
+          {
+            "txt": "Termina la Segunda Guerra Mundial",
+            "anio": 1945,
+            "dato": "Ese mismo año se fundó la ONU."
+          },
+          {
+            "txt": "Independencia de la India",
+            "anio": 1947,
+            "dato": "Mahatma Gandhi encabezó la lucha no violenta."
+          },
+          {
+            "txt": "Se construye el Muro de Berlín",
+            "anio": 1961,
+            "dato": "Dividió la ciudad durante 28 años."
+          },
+          {
+            "txt": "Nelson Mandela llega a la presidencia de Sudáfrica",
+            "anio": 1994,
+            "dato": "Fue el primer presidente negro del país."
+          },
+          {
+            "txt": "Empiezan a circular los billetes y monedas de euro",
+            "anio": 2002,
+            "dato": "Hoy los usan millones de personas en Europa."
+          }
+        ]
+      },
+      {
+        "tema": "inventos",
+        "titulo": "Comunicación",
+        "sucesos": [
+          {
+            "txt": "Samuel Morse envía un mensaje por telégrafo entre dos ciudades",
+            "anio": 1844,
+            "dato": "El mensaje viajó de Washington a Baltimore."
+          },
+          {
+            "txt": "Alexander Graham Bell patenta el teléfono",
+            "anio": 1876,
+            "dato": "Su primera llamada fue a su asistente, Thomas Watson."
+          },
+          {
+            "txt": "Thomas Edison inventa el fonógrafo",
+            "anio": 1877,
+            "dato": "Fue el primer aparato que grababa y reproducía sonido."
+          },
+          {
+            "txt": "Marconi envía una señal de radio a través del Atlántico",
+            "anio": 1901,
+            "dato": "La señal era la letra «S» en código Morse."
+          },
+          {
+            "txt": "Guillermo González Camarena patenta la televisión a color",
+            "anio": 1940,
+            "dato": "Era un sistema tricromático, creado por un inventor mexicano."
+          },
+          {
+            "txt": "Tim Berners-Lee propone la World Wide Web",
+            "anio": 1989,
+            "dato": "La propuso en el CERN, en Suiza."
+          },
+          {
+            "txt": "Se presenta el primer iPhone",
+            "anio": 2007,
+            "dato": "Popularizó los teléfonos con pantalla táctil."
+          }
+        ]
+      },
+      {
+        "tema": "inventos",
+        "titulo": "Transporte",
+        "sucesos": [
+          {
+            "txt": "Primera locomotora de vapor sobre rieles",
+            "anio": 1804,
+            "dato": "La construyó Richard Trevithick en Gales."
+          },
+          {
+            "txt": "Karl Drais presenta su «máquina para correr»",
+            "anio": 1817,
+            "dato": "Era una bicicleta sin pedales, la abuela de la bicicleta."
+          },
+          {
+            "txt": "Se inaugura el Metro de Londres",
+            "anio": 1863,
+            "dato": "Fue el primer metro del mundo."
+          },
+          {
+            "txt": "Karl Benz patenta su automóvil",
+            "anio": 1886,
+            "dato": "Tenía tres ruedas y motor de gasolina."
+          },
+          {
+            "txt": "Los hermanos Wright hacen el primer vuelo en avión",
+            "anio": 1903,
+            "dato": "El primer vuelo duró 12 segundos."
+          },
+          {
+            "txt": "Ford lanza el Modelo T",
+            "anio": 1908,
+            "dato": "Fabricado en serie, hizo que más familias tuvieran auto."
+          }
+        ]
+      },
+      {
+        "tema": "inventos",
+        "titulo": "Inventos de la vida diaria",
+        "sucesos": [
+          {
+            "txt": "Peter Durand patenta la lata de conservas",
+            "anio": 1810,
+            "dato": "Al principio se abrían con martillo y cincel."
+          },
+          {
+            "txt": "Se presenta el daguerrotipo",
+            "anio": 1839,
+            "dato": "Fue uno de los primeros procesos de fotografía."
+          },
+          {
+            "txt": "Thomas Edison prueba con éxito su foco eléctrico",
+            "anio": 1879,
+            "dato": "Su filamento de carbón duraba muchas horas encendido."
+          },
+          {
+            "txt": "Percy Spencer patenta el horno de microondas",
+            "anio": 1945,
+            "dato": "Lo descubrió cuando un chocolate se derritió en su bolsa cerca de un radar."
+          },
+          {
+            "txt": "Sale a la venta «Pong», uno de los primeros videojuegos",
+            "anio": 1972,
+            "dato": "Era una especie de tenis de mesa en la pantalla."
+          },
+          {
+            "txt": "Sale a la venta el disco compacto (CD)",
+            "anio": 1982,
+            "dato": "Lo desarrollaron Philips y Sony."
+          }
+        ]
+      },
+      {
+        "tema": "inventos",
+        "titulo": "Computación",
+        "sucesos": [
+          {
+            "txt": "Charles Babbage diseña su máquina analítica",
+            "anio": 1837,
+            "dato": "Ada Lovelace escribió para ella el primer algoritmo."
+          },
+          {
+            "txt": "Alan Turing describe su «máquina de Turing»",
+            "anio": 1936,
+            "dato": "Es una idea que explica lo que una computadora puede calcular."
+          },
+          {
+            "txt": "Se presenta la computadora ENIAC",
+            "anio": 1946,
+            "dato": "Pesaba unas 27 toneladas."
+          },
+          {
+            "txt": "Se inventa el transistor",
+            "anio": 1947,
+            "dato": "Se creó en los Laboratorios Bell."
+          },
+          {
+            "txt": "Se conecta ARPANET, antecesora de internet",
+            "anio": 1969,
+            "dato": "Enlazó computadoras de universidades de Estados Unidos."
+          },
+          {
+            "txt": "Linus Torvalds crea Linux",
+            "anio": 1991,
+            "dato": "Hoy Android se basa en Linux."
+          },
+          {
+            "txt": "Se lanza ChatGPT",
+            "anio": 2022,
+            "dato": "Popularizó los chatbots con modelos de lenguaje grandes."
+          }
+        ]
+      },
+      {
+        "tema": "inventos",
+        "titulo": "Medicina",
+        "sucesos": [
+          {
+            "txt": "Edward Jenner prueba la vacuna contra la viruela",
+            "anio": 1796,
+            "dato": "Fue la primera vacuna de la historia."
+          },
+          {
+            "txt": "René Laennec inventa el estetoscopio",
+            "anio": 1816,
+            "dato": "El primero era un tubo de madera."
+          },
+          {
+            "txt": "Wilhelm Röntgen descubre los rayos X",
+            "anio": 1895,
+            "dato": "La primera radiografía fue de la mano de su esposa."
+          },
+          {
+            "txt": "Alexander Fleming descubre la penicilina",
+            "anio": 1928,
+            "dato": "Fue el primer antibiótico."
+          },
+          {
+            "txt": "Se anuncia que la vacuna de Jonas Salk contra la polio es segura",
+            "anio": 1955,
+            "dato": "Salk no patentó su vacuna."
+          },
+          {
+            "txt": "Christiaan Barnard hace el primer trasplante de corazón",
+            "anio": 1967,
+            "dato": "Fue en Ciudad del Cabo, Sudáfrica."
+          }
+        ]
+      },
+      {
+        "tema": "ciencia",
+        "titulo": "Astronomía",
+        "sucesos": [
+          {
+            "txt": "Galileo observa las lunas de Júpiter",
+            "anio": 1610,
+            "dato": "Hoy se llaman lunas galileanas."
+          },
+          {
+            "txt": "Isaac Newton publica la ley de la gravitación universal",
+            "anio": 1687,
+            "dato": "Apareció en su libro «Principia»."
+          },
+          {
+            "txt": "William Herschel descubre Urano",
+            "anio": 1781,
+            "dato": "Fue el primer planeta descubierto con telescopio."
+          },
+          {
+            "txt": "Se descubre Neptuno",
+            "anio": 1846,
+            "dato": "Se encontró gracias a cálculos matemáticos."
+          },
+          {
+            "txt": "Clyde Tombaugh descubre Plutón",
+            "anio": 1930,
+            "dato": "Tenía 24 años cuando lo descubrió."
+          },
+          {
+            "txt": "Plutón pasa a ser planeta enano",
+            "anio": 2006,
+            "dato": "Lo decidió la Unión Astronómica Internacional."
+          }
+        ]
+      },
+      {
+        "tema": "ciencia",
+        "titulo": "La carrera espacial",
+        "sucesos": [
+          {
+            "txt": "Se lanza el Sputnik 1, el primer satélite artificial",
+            "anio": 1957,
+            "dato": "Lo lanzó la Unión Soviética."
+          },
+          {
+            "txt": "Yuri Gagarin viaja al espacio",
+            "anio": 1961,
+            "dato": "Fue el primer ser humano en el espacio."
+          },
+          {
+            "txt": "La misión Apolo 11 llega a la Luna",
+            "anio": 1969,
+            "dato": "Neil Armstrong y Buzz Aldrin caminaron en la Luna."
+          },
+          {
+            "txt": "Despega el primer transbordador espacial",
+            "anio": 1981,
+            "dato": "Se llamaba Columbia."
+          },
+          {
+            "txt": "Se lanza el telescopio espacial Hubble",
+            "anio": 1990,
+            "dato": "Ha tomado imágenes de galaxias muy lejanas."
+          },
+          {
+            "txt": "Se lanza el primer módulo de la Estación Espacial Internacional",
+            "anio": 1998,
+            "dato": "La construyeron varios países."
+          },
+          {
+            "txt": "Se lanza el telescopio espacial James Webb",
+            "anio": 2021,
+            "dato": "Observa el universo en luz infrarroja."
+          }
+        ]
+      },
+      {
+        "tema": "ciencia",
+        "titulo": "Química y física",
+        "sucesos": [
+          {
+            "txt": "Lavoisier publica su tratado de química",
+            "anio": 1789,
+            "dato": "Enunció que en una reacción la masa se conserva."
+          },
+          {
+            "txt": "Mendeléiev presenta la tabla periódica",
+            "anio": 1869,
+            "dato": "Dejó huecos para elementos aún desconocidos."
+          },
+          {
+            "txt": "J. J. Thomson descubre el electrón",
+            "anio": 1897,
+            "dato": "Fue la primera partícula subatómica que se descubrió."
+          },
+          {
+            "txt": "Marie Curie gana su primer Premio Nobel",
+            "anio": 1903,
+            "dato": "Lo compartió con Pierre Curie y Henri Becquerel."
+          },
+          {
+            "txt": "Albert Einstein publica la relatividad especial",
+            "anio": 1905,
+            "dato": "De ahí viene la famosa fórmula E = mc²."
+          },
+          {
+            "txt": "Niels Bohr propone su modelo del átomo",
+            "anio": 1913,
+            "dato": "Los electrones giran en niveles de energía."
+          }
+        ]
+      },
+      {
+        "tema": "ciencia",
+        "titulo": "Biología",
+        "sucesos": [
+          {
+            "txt": "Robert Hooke observa y nombra las células",
+            "anio": 1665,
+            "dato": "Las vio en un trozo de corcho."
+          },
+          {
+            "txt": "Charles Darwin publica «El origen de las especies»",
+            "anio": 1859,
+            "dato": "Explicó la evolución por selección natural."
+          },
+          {
+            "txt": "Gregor Mendel publica sus leyes de la herencia",
+            "anio": 1866,
+            "dato": "Las descubrió cruzando plantas de chícharo."
+          },
+          {
+            "txt": "Se describe la doble hélice del ADN",
+            "anio": 1953,
+            "dato": "La imagen de Rosalind Franklin fue clave."
+          },
+          {
+            "txt": "Nace la oveja Dolly, el primer mamífero clonado",
+            "anio": 1996,
+            "dato": "Fue clonada a partir de una célula adulta."
+          },
+          {
+            "txt": "Se completa la secuencia del genoma humano",
+            "anio": 2003,
+            "dato": "Participaron laboratorios de varios países."
+          }
+        ]
+      },
+      {
+        "tema": "ciencia",
+        "titulo": "Ciencia en México",
+        "sucesos": [
+          {
+            "txt": "La Universidad Nacional obtiene su autonomía",
+            "anio": 1929,
+            "dato": "Desde entonces es la UNAM, Universidad Nacional Autónoma de México."
+          },
+          {
+            "txt": "Se funda el Instituto Politécnico Nacional",
+            "anio": 1936,
+            "dato": "Lo impulsó el presidente Lázaro Cárdenas."
+          },
+          {
+            "txt": "González Camarena patenta la televisión a color",
+            "anio": 1940,
+            "dato": "Tenía 23 años cuando obtuvo la patente."
+          },
+          {
+            "txt": "Nace el volcán Paricutín en un campo de cultivo",
+            "anio": 1943,
+            "dato": "Creció más de 300 metros en un año."
+          },
+          {
+            "txt": "Rodolfo Neri Vela viaja al espacio",
+            "anio": 1985,
+            "dato": "Hizo experimentos a bordo del transbordador Atlantis."
+          },
+          {
+            "txt": "Mario Molina gana el Premio Nobel de Química",
+            "anio": 1995,
+            "dato": "Advirtió del daño a la capa de ozono."
+          }
+        ]
+      }
+    ]
+  }
 }

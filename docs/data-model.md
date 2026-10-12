@@ -95,8 +95,20 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - `ortografia[]` y `acentos[]` `{ frase, opciones, correcta, regla?, explicacion }`;
   - `sinonimos[]` y `antonimos[]` `{ palabra, respuesta, distractores }`;
   - `oraciones[]` (texto).
-- `cultura.json`: `categorias[]` `{ id, titulo, emoji }` y `preguntas[]`
-  `{ cat, nivel (1–3), pregunta, opciones (4), correcta, dato }`.
+- `cultura.json` (sección «🧠 Cultura y Conocimiento», cambio `cultura-conocimiento`; su forma la valida
+  `server/cultura_datos_test.ts`):
+  - `categorias[]` `{ id, titulo, emoji }`: `historia-mexico`, `cultura-mexico`, `historia-mundial`, `geografia`,
+    `capitales`, `banderas`, `ciencias`, `naturaleza`, `cuerpo-humano`, `arte`, `matematicas`, `tecnologia`, `ia` y
+    `deportes`;
+  - `preguntas[]` `{ cat, nivel (1–3), pregunta, opciones (4, sin repetir), correcta (0–3), dato }` para 🏃 Maratón de
+    cultura: al menos 768 en total, 50 por categoría y 10 por nivel; `dato` es breve (máx. 160 caracteres), verificable
+    y se muestra al responder; sin preguntas repetidas;
+  - `linea` para 📜 Línea del tiempo:
+    - `temas[]` `{ id, titulo, emoji }`: `historia-mexico`, `historia-universal`, `inventos` y `ciencia` (iguales a
+      `TEMAS_LINEA` de `server/salas.ts` sin `todos`);
+    - `sets[]` `{ tema, titulo, sucesos[] }`: al menos 5 sets por tema, cada uno con 6 a 8 sucesos
+      `{ txt (máx. 80), anio (entero; negativo = antes de Cristo), dato (máx. 140) }`, sin años repetidos dentro del
+      set (así cualquier selección tiene un solo orden correcto).
 - `basta.json`: `{ es, en }`, cada uno con:
   - `categorias[]` `{ id, titulo, emoji }`;
   - `letras[]` que pueden salir;

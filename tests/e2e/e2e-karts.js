@@ -55,7 +55,7 @@ async function correrRapida(fr, pista) {
   const p = await abrir(b);
   const tarjeta = await p.textContent('[data-juego="karts"]');
   ok('catálogo: Karts Turbo con ícono y descripción', tarjeta.includes('🏎️') && tarjeta.includes('Karts Turbo') && tarjeta.includes('copa'), tarjeta);
-  ok('catálogo: 6 categorías y todos los juegos de la página', (await p.$$('main h2')).length === 6 && (await p.$$('[data-juego]')).length === await p.evaluate(() => JUEGOS.length));
+  ok('catálogo: todas las categorías (CATEGORIAS) y todos los juegos de la página', (await p.$$('main h2')).length === await p.evaluate(() => CATEGORIAS.length) && (await p.$$('[data-juego]')).length === await p.evaluate(() => JUEGOS.length));
   const puntosAntes = await p.evaluate(() => state.totalIndividual);
 
   // ---- Copa: carrera 1 (teclado) ----

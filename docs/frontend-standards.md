@@ -231,7 +231,33 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   - Completa y responde: 5 y 5;
   - Ortografía: 4, 3 y 3, en orden barajado con semilla;
   - Cálculo y secuencias: 1 de cada 3 es secuencia.
-- El Maratón de cultura suma las categorías `ia` y `tecnologia`, cada una con 6, 6 y 4 preguntas.
+- El Maratón de cultura suma las categorías `ia` y `tecnologia` (desde `cultura-conocimiento`, con más preguntas; ver
+  `docs/data-model.md`).
+
+## Cultura y Conocimiento (cambio `cultura-conocimiento`)
+
+- **Sección única** «🧠 Cultura y Conocimiento» en `CATEGORIAS` (`id: 'cultura'`): 🏃 Maratón de cultura, 📜 Línea del
+  tiempo, ✍️ Ortografía y 🔀 Ordena la oración. Ya no hay secciones «📝 Español» ni «🧠 Maratón de cultura»; los ids de
+  los juegos no cambian. Las E2E cuentan juegos y secciones sin un número fijo (otros cambios suman juegos).
+- **Dato al acertar**: `quiz(opts)` acepta `datoAlAcertar`; con él, al acertar se muestra `explicacion` en
+  `.quiz-dato` y la siguiente pregunta llega a los 1.6 s. Solo lo usa el Maratón.
+- **📜 Línea del tiempo** (`cultura-linea`): la lógica vive en `juegos/linea-tiempo.js`, script clásico cargado antes
+  del script principal (sube `?v=` al cambiarlo):
+  - `globalThis.LineaTiempo`: funciones puras (temas, líneas por semilla, aciertos, puntos, bots y podio), probadas
+    con Deno en `server/linea_tiempo_test.ts`;
+  - pantallas `elegirLineaTiempo()`, `jugarLineaTiempo(d, tema)`, `pintarLineaSala(body)` y `lineasDeSala(seed,
+    opciones)`, que usan los helpers globales de la página (`marco`, `reloj`, `terminar`, `rngDe`, `sala`,
+    `pintarFinalSala`…).
+  - Tablero: lista vertical de casillas («⬆ Más antiguo» a «⬇ Más reciente») y tarjetas debajo. Tocar una tarjeta la
+    pone en la primera casilla libre; tocar una casilla llena la regresa; arrastrar con Pointer Events (dedo o mouse,
+    `touch-action: none` en tarjetas y casillas llenas) la deja en la casilla soltada e intercambia si estaba ocupada;
+    menos de 8 px cuenta como toque. «✔ Confirmar» se habilita con todo colocado.
+  - Revelación: año y ✔/✘ en cada casilla, y «📜 Orden correcto» con el dato 💡 de cada suceso. La animación
+    `.lt-revela` se apaga con `prefers-reduced-motion`.
+  - Individual: tema, 3 vidas, 45 s por línea (`reloj`), hasta 10 líneas de 4, 5 y 6 sucesos; puntos con racha y
+    rapidez (ver el `design.md` del cambio). En sala: 5 líneas (4, 5, 5, 6 y 6) de 40 s + 8 s de revelación,
+    sincronizadas por reloj; si se acaba el tiempo se envía lo colocado; el podio desempata por aciertos y tiempo, y
+    `pintarFinalSala` da la revancha. El selector `#p-ltema` aparece al elegir el juego al crear la partida.
 
 ## Gramática de inglés en Juegos (cambio `juegos-ingles-gramatica`)
 

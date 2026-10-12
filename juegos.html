@@ -488,6 +488,35 @@
   }
   /* Durante una partida, sin «jalar para recargar» en el celular (openspec: juegos-recarga). */
   html.jugando, html.jugando body { overscroll-behavior-y: contain; }
+  /* cultura-conocimiento: dato del Maratón al acertar y 📜 Línea del tiempo (juegos/linea-tiempo.js). */
+  .quiz-dato { color: var(--muted); font-size: .84rem; font-weight: 600; margin-top: 4px; }
+  .lt-cab { padding: 14px 14px 12px; }
+  .lt-cab .q { font-size: 1.02rem; }
+  .lt-extremo { font-size: .76rem; font-weight: 800; color: var(--muted); text-align: center; margin: 6px 0; }
+  .lt-linea { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .lt-casilla { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 8px 10px; text-align: left; font: inherit; color: var(--text);
+    border: 2px dashed var(--border); border-radius: 12px; background: var(--card); cursor: default; }
+  .lt-casilla.llena { border-style: solid; border-color: var(--tone); background: var(--tone-soft); cursor: grab; touch-action: none; }
+  .lt-casilla.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .lt-casilla.bad { border-color: var(--bad); background: var(--bad-soft); }
+  .lt-casilla:disabled { opacity: 1; }
+  .lt-num { flex: 0 0 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .8rem; background: var(--tone); color: #fff; }
+  .lt-txt { flex: 1; min-width: 0; font-weight: 700; font-size: .9rem; line-height: 1.25; overflow-wrap: anywhere; }
+  .lt-vacia { color: var(--muted); font-weight: 600; font-size: .82rem; }
+  .lt-anio { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; font-size: .86rem; }
+  .lt-pool { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; min-height: 8px; }
+  .lt-tarjeta { font: inherit; font-weight: 700; font-size: .86rem; line-height: 1.25; text-align: left; padding: 10px 12px; border-radius: 12px; max-width: 100%;
+    border: 1.5px solid var(--tone); background: var(--card); color: var(--text); cursor: grab; touch-action: none; box-shadow: var(--shadow); overflow-wrap: anywhere; }
+  .lt-arrastrando { position: relative; z-index: 30; pointer-events: none; opacity: .92; cursor: grabbing; }
+  .lt-destino { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+  .lt-titulo { font-size: .95rem; margin: 14px 0 6px; }
+  .lt-correcto { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .lt-correcto li { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 9px 12px; font-size: .88rem; line-height: 1.3; }
+  .lt-correcto .lt-anio { color: var(--tone); }
+  .lt-correcto .sub { color: var(--muted); font-size: .8rem; margin-top: 2px; }
+  .lt-revela { animation: lt-entra .35s ease-out both; }
+  @keyframes lt-entra { from { opacity: 0; transform: translateY(6px); } }
+  @media (prefers-reduced-motion: reduce) { .lt-revela { animation: none; } .lt-arrastrando { transition: none; } }
 </style>
 <link rel="stylesheet" href="juegos/clasicos-rapidos.css?v=1"> <!-- clasicos-rapidos -->
 </head>
@@ -531,6 +560,7 @@
 <script src="juegos/blackjack.js?v=1"></script>
 <script src="juegos/dibuja.js?v=1"></script>
 <script src="juegos/memo-sopa-sala.js?v=1"></script>
+<script src="juegos/linea-tiempo.js?v=1"></script> <!-- cultura-conocimiento: 📜 Línea del tiempo -->
 <script src="comun/auth.js?v=7"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
@@ -661,8 +691,7 @@
   // ---------- Catálogo ----------
   const CATEGORIAS = [
     { id: 'ingles', titulo: '📘 Inglés', clase: 'cat-ingles' },
-    { id: 'espanol', titulo: '📝 Español', clase: 'cat-espanol' },
-    { id: 'cultura', titulo: '🧠 Maratón de cultura', clase: 'cat-cultura' },
+    { id: 'cultura', titulo: '🧠 Cultura y Conocimiento', clase: 'cat-cultura' }, // cultura-conocimiento: junta Español y Maratón
     { id: 'mente', titulo: '⚡ Mente ágil', clase: 'cat-mente' },
     { id: 'clasicos', titulo: '🎲 Clásicos', clase: 'cat-clasicos' },
     { id: 'arcade', titulo: '🕹️ Arcade', clase: 'cat-arcade' },
@@ -674,9 +703,11 @@
     { id: 'en-memorama', cat: 'ingles', emoji: '🃏', t: 'Memorama', d: 'Une cada palabra con su significado.', jugar: () => jugarMemorama() },
     { id: 'en-ordena', cat: 'ingles', emoji: '🔀', t: 'Ordena la oración', d: 'Arma la oración en inglés. Elige el tema.', jugar: () => elegirTemaIngles('en-ordena') },
     { id: 'en-tiempos', cat: 'ingles', emoji: '⏳', t: 'Máquina del tiempo', d: '¿Pasado, presente o futuro? Cambia el verbo contra reloj.', jugar: () => jugarTiempos() }, // openspec: juegos-ingles-gramatica
-    { id: 'es-ortografia', cat: 'espanol', emoji: '✍️', t: 'Ortografía', d: 'Letras, acentos, sinónimos y antónimos.', jugar: () => jugarOrtografia() },
-    { id: 'es-ordena', cat: 'espanol', emoji: '🔀', t: 'Ordena la oración', d: 'Pon las palabras en orden.', jugar: () => jugarOrdena('es') },
-    { id: 'cultura', cat: 'cultura', emoji: '🏃', t: 'Maratón de cultura', d: 'Historia, geografía, ciencias, arte… 3 vidas.', jugar: () => elegirCultura() },
+    // cultura-conocimiento: sección «🧠 Cultura y Conocimiento» (ids sin cambio: los puntos anteriores siguen contando).
+    { id: 'cultura', cat: 'cultura', emoji: '🏃', t: 'Maratón de cultura', d: 'Historia, ciencias, deportes, México… 3 vidas.', jugar: () => elegirCultura() },
+    { id: 'cultura-linea', cat: 'cultura', emoji: '📜', t: 'Línea del tiempo', d: 'Ordena sucesos e inventos del más antiguo al más reciente.', jugar: () => elegirLineaTiempo() },
+    { id: 'es-ortografia', cat: 'cultura', emoji: '✍️', t: 'Ortografía', d: 'Letras, acentos, sinónimos y antónimos.', jugar: () => jugarOrtografia() },
+    { id: 'es-ordena', cat: 'cultura', emoji: '🔀', t: 'Ordena la oración', d: 'Pon las palabras en orden.', jugar: () => jugarOrdena('es') },
     { id: 'mente-calculo', cat: 'mente', emoji: '🧮', t: 'Cálculo y secuencias', d: '75 segundos: operaciones y ¿qué número sigue?', jugar: () => jugarCalculo() },
     { id: 'mente-simon', cat: 'mente', emoji: '🟢', t: 'Simón dice', d: 'Repite la secuencia de colores.', jugar: () => jugarSimon() },
     { id: 'mente-sopa', cat: 'mente', emoji: '🔎', t: 'Sopa de letras', d: 'Encuentra las palabras en inglés.', jugar: () => jugarSopa() },
@@ -1252,6 +1283,7 @@
         const gana = 100 + Math.min(racha - 1, 10) * 10 + rapidez;
         puntos += gana; m.puntos(puntos); sonidoOk();
         fb.className = 'feedback ok'; fb.textContent = '✔ +' + gana + (racha > 2 ? ' · racha ×' + racha + ' 🔥' : '');
+        if (opts.datoAlAcertar && actual.explicacion) { const x = document.createElement('div'); x.className = 'quiz-dato'; x.textContent = actual.explicacion; fb.appendChild(x); } // cultura-conocimiento
       } else {
         racha = 0; sonidoMal();
         if (i >= 0 && btns[i]) btns[i].classList.add('bad');
@@ -1259,7 +1291,7 @@
         if (opts.modo === 'vidas') { vidas--; m.vidas(vidas); if (vidas <= 0) { guardarPartida(); return setTimeout(() => acabar('💔 ¡Sin vidas!'), 1400); } }
       }
       guardarPartida();
-      setTimeout(() => { if (!terminado) pintar(); }, bien ? 550 : 1400);
+      setTimeout(() => { if (!terminado) pintar(); }, bien ? (opts.datoAlAcertar ? 1600 : 550) : 1400);
     }
     const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= (actual ? actual.opciones.length : 0)) responder(n - 1); };
     document.addEventListener('keydown', onKey);
@@ -1446,7 +1478,7 @@
     const orden = [].concat(barajar(del.filter(p => p.nivel === 1)).slice(0, 10), barajar(del.filter(p => p.nivel === 2)).slice(0, 12), barajar(del.filter(p => p.nivel === 3)));
     const nombreCat = cat === 'todas' ? 'Todas' : (d.categorias.find(c => c.id === cat) || {}).titulo;
     quiz({
-      id: 'cultura', modo: 'vidas', porPregunta: 15, foto: { cat },
+      id: 'cultura', modo: 'vidas', porPregunta: 15, foto: { cat }, datoAlAcertar: true, // cultura-conocimiento: el dato también al acertar
       detalle: r => 'Maratón: ' + escapeHtml(nombreCat) + ' · llegaste a la pregunta ' + r.total,
       siguiente: n => {
         const p = orden[n]; if (!p) return null;
@@ -2663,7 +2695,7 @@
   function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
-  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts'];
+  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'cultura-linea', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts'];
   JUEGOS_PARTIDA.push(...TableroUI.SALA); // juegos-tablero
   JUEGOS_PARTIDA.push(...Object.keys(SALAS_GRANDES)); // juegos-salas-grandes: bingo, blackjack, dibuja, en-memorama, mente-sopa
   const ARCADE = new Set(['plataformas', 'karts']); // carreras en sala (openspec: juegos-plataformas-karts)
@@ -2675,6 +2707,7 @@
 
   // Diez preguntas iguales para todos a partir de la semilla.
   async function preguntasPartida(juego, seed, opciones) {
+    if (juego === 'cultura-linea') return lineasDeSala(seed, opciones); // cultura-conocimiento: 5 líneas del tiempo
     const rnd = rngDe(seed, 'preguntas');
     const d = juego.startsWith('en-') ? await datos('ingles') : juego.startsWith('es-') ? await datos('espanol') : juego === 'cultura' ? await datos('cultura') : null;
     const lista = [];
@@ -2826,6 +2859,7 @@
       '<div id="p-tema-wrap" hidden><label for="p-tema">Tema</label><select id="p-tema" class="sel">' + InglesGramatica.TEMAS.map(t => '<option value="' + t.id + '">' + t.emoji + ' ' + escapeHtml(t.t) + '</option>').join('') + '</select></div>' +
       '<div id="p-grandes-wrap" hidden></div>' + // juegos-salas-grandes: figura del Bingo, criterio del Memorama
       '<div id="p-cat-wrap" hidden><label for="p-cat">Maratón</label><select id="p-cat" class="sel"><option value="todas">🌈 Todas mezcladas</option></select></div>' +
+      '<div id="p-ltema-wrap" hidden><label for="p-ltema">Tema de la línea del tiempo</label><select id="p-ltema" class="sel">' + LineaTiempo.TEMAS.map(t => '<option value="' + t.id + '">' + escapeHtml(t.emoji + ' ' + t.titulo) + '</option>').join('') + '</select></div>' + // cultura-conocimiento
       '<label class="check" id="p-bots-wrap"><input id="p-bots" type="checkbox" checked><span>Incluir 2 bots (BOT-VACHIRA y BOT-ISAGII) que contestan al azar</span></label>' +
       '<div class="muted" id="p-bots-nota" hidden style="font-size:.82rem;margin:6px 0"></div>' +
       '<div class="row-btns"><button class="btn" type="submit">Crear partida</button></div></form></div>' +
@@ -2930,6 +2964,7 @@
     if (TableroUI.esSala(s.juego)) return TableroUI.pintarSala(body); // juegos-tablero
     if (ARCADE.has(s.juego)) return pintarArcadeSala(body);
     if (SALAS_GRANDES[s.juego]) return SALAS_GRANDES[s.juego].pintar(body); // juegos-salas-grandes
+    if (s.juego === 'cultura-linea') return pintarLineaSala(body); // cultura-conocimiento
     return pintarPreguntaSala(body);
   }
 
@@ -3836,7 +3871,7 @@
 
   async function crearPartida() {
     const juego = document.getElementById('p-juego').value;
-    const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
+    const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'cultura-linea' ? { cat: document.getElementById('p-ltema').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
     Object.assign(opciones, ClasicosRapidosUI.opcionesCrear(juego)); // clasicos-rapidos: modo del Ahorcado
     Object.assign(opciones, SalasGrandes.opciones(juego)); // juegos-salas-grandes
     const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
@@ -4119,6 +4154,8 @@
     document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || '';
     TableroUI.alCambiarJuego(e.target.value); } }); // juegos-tablero
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') SalasGrandes.formulario(e.target.value); }); // juegos-salas-grandes
+  // cultura-conocimiento: el tema de la Línea del tiempo solo se ve al elegirla.
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-ltema-wrap').hidden = e.target.value !== 'cultura-linea'; });
   app.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
   });

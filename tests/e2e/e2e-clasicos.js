@@ -11,7 +11,9 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.08, out, etiqueta: '', dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
-  ok('hub: categoría Clásicos con 16 juegos (con Póker, Brisca, Conquián, los clásicos rápidos, Dominó, Parchís, Bingo y Blackjack)', (await p.$$('.cat-clasicos[data-juego]')).length === 16 && (await p.$$('[data-juego]')).length === await p.evaluate(() => JUEGOS.length));
+  // Clásicos de este lote: los 7 de siempre, 5 clásicos rápidos, Dominó, Parchís, Bingo y Blackjack; el total, igual a JUEGOS.length.
+  const clasicos = await p.$$eval('.cat-clasicos[data-juego]', bs => bs.map(x => x.dataset.juego));
+  ok('hub: categoría Clásicos con 16 juegos (Basta, ¡Una!, Lotería, Póker, Brisca, Conquián, clásicos rápidos, Dominó, Parchís, Bingo y Blackjack)', clasicos.length === 16 && ['basta-es', 'basta-en', 'una', 'loteria', 'poker', 'brisca', 'conquian'].every(i => clasicos.includes(i)) && (await p.$$('[data-juego]')).length === await p.evaluate(() => JUEGOS.length), clasicos.join(','));
 
   // Basta (es): verificada, desconocida y con otra letra
   await p.click('[data-juego="basta-es"]'); await p.waitForSelector('#basta-form');

@@ -137,6 +137,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
   - Juegos permitidos (`JUEGOS_PARTIDA`):
     - de preguntas: `en-vocab`, `en-frases`, `en-tiempos` (⏳ Máquina del tiempo, cambio `juegos-ingles-gramatica`;
       tope individual 2,000 en el catálogo), `es-ortografia`, `cultura` y `mente-calculo`;
+    - 📜 Línea del tiempo (`cultura-linea`, ver «Línea del tiempo en sala»);
     - Basta (es/en) y Lotería;
     - ¡Una!, póker, Brisca, Conquián y ajedrez;
     - Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (cambio `clasicos-rapidos`; ver la sección propia).
@@ -517,3 +518,17 @@ dos archivos.**
   `ahorcado` `{ max: 8, min: 1 }` y `serpientes` `{ max: 4, asientos: 4, min: 2 }`.
 - El servidor no reproduce la partida: valida forma y turno. Las reglas viven en `juegos/clasicos-rapidos.js` y las
   prueba `server/clasicos_rapidos_motor_test.ts`; el servidor, `server/clasicos_rapidos_test.ts`.
+## Línea del tiempo en sala (cambio `cultura-conocimiento`)
+
+- `cultura-linea` está en `JUEGOS_PARTIDA` y en `MESAS` como `{ max: 30, min: 1 }` (sin `asientos`: los bots se suman
+  aparte, como en el quiz). En `CATALOGO` es de la categoría `cultura`, con tope individual de 3,000; los `es-*` también
+  pasan a la categoría `cultura` (sus ids y topes no cambian).
+- Al crear la sala, `opciones.cat` es el tema: `todos` (por omisión), `historia-mexico`, `historia-universal`,
+  `inventos` o `ciencia` (`TEMAS_LINEA`); otro valor → 400 `tema_invalido`.
+- `respuesta` usa la forma del quiz más `aciertos`: `{ q, correcta, puntos, ms, aciertos }`.
+  - `q` de 0 a 4 (5 líneas), `correcta` booleano y `aciertos` entero de 0 a 6, obligatorio; si no → 400
+    `respuesta_invalida`.
+  - `ms` se recorta a 60,000 y `puntos` a `20 × aciertos + (correcta ? 80 : 0)` (máximo 200).
+  - Solo cuenta la primera respuesta de cada línea. Los demás juegos de preguntas no cambian (10 preguntas, sin
+    `aciertos`).
+- Pruebas: `server/linea_tiempo_test.ts` (sala y funciones puras) y `server/cultura_datos_test.ts` (contenido).

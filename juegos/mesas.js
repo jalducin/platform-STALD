@@ -27,6 +27,7 @@
     dibuja: { max: 12, min: 3, bots: 'nunca' }, // los bots no dibujan
     'en-memorama': { max: 30, min: 1 },
     'mente-sopa': { max: 30, min: 1 },
+    'cultura-linea': { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
   };
   const de = juego => MESAS[juego] || null;
   // Lugares que ocupan los bots con `humanos` personas: solo en mesas con asientos y si la sala lleva bots.
