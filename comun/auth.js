@@ -61,7 +61,7 @@
     revisarErrorEnlace();
     // Sin no-store: el servidor deja guardar /config 10 min (openspec: cache-estabilidad).
     estado.listo = fetch(String(apiBase).replace(/\/$/, '') + '/config')
-      .then(function (r) { return r.json().then(function (c) { if (!r.ok) throw new Error(c.error || ('HTTP ' + r.status)); return c; }); })
+      .then(function (r) { return r.json().then(function (c) { if (!r.ok) { throw new Error(c.error || ('HTTP ' + r.status)); } return c; }); })
       .then(function (c) {
         if (c.prueba) {
           estado.prueba = true;
@@ -210,7 +210,7 @@
           if (!res.ok) throw new Error('El inicio de sesión no respondió. Intenta de nuevo en un momento.');
           return intentar();
         }, function () { throw new Error('Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.'); })
-        .then(function (r) { if (!r) throw new Error(ERROR_CREDENCIALES); return r; });
+        .then(function (r) { if (!r) { throw new Error(ERROR_CREDENCIALES); } return r; });
     });
   }
 

@@ -7,7 +7,7 @@ async function loadGruposAdmin() {
   try {
     const r = await fetchJson(API_BASE + '/ingles/grupos?email=' + encodeURIComponent(state.email));
     state.grupos = r.ok ? r.body : null; // 503 sin_base: los grupos aún no están activos
-  } catch (e) { state.grupos = null; }
+  } catch { /* sin conexión: se pinta sin grupos */ state.grupos = null; }
 }
 const gruposActivos = () => (state.grupos && state.grupos.grupos || []).filter(g => g.activo);
 // Grupo de un alumno o alumna: su inscripción vigente o, si no tiene, el primer grupo activo.

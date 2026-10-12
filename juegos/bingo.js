@@ -133,7 +133,7 @@
       '<div class="feedback" id="bg-msg">Toca los números que salgan en tu cartón.</div><div class="row-btns"><button class="btn una-grito" data-bg-grito>🎉 ¡Bingo!</button></div>' + '<div id="bg-tab"></div>';
     const $ = id => document.getElementById(id);
     function acabar(gane, quien) {
-      if (terminado) return; terminado = true; limpiar();
+      if (terminado) { return; } terminado = true; limpiar();
       const n = set.size, ac = aciertos(mio, set);
       terminar('bingo', { puntos: gane ? puntosGanador(figura, n) : ac * 10, aciertos: ac, total: 24, segundos: (Date.now() - t0) / 1000,
         titulo: gane ? '🎉 ¡BINGO!' : quien ? '😮 ¡Bingo de ' + quien + '!' : '🎱 Se acabaron los números',

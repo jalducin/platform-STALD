@@ -260,8 +260,8 @@
     const salidas = geo.portales.map(p => ({ i: celda(p.a.x, p.a.y), p }));
     // Dijkstra con montículo binario (orden determinista).
     const heap = [];
-    const push = (d, i) => { heap.push([d, i]); let k = heap.length - 1; while (k > 0) { const p = (k - 1) >> 1; if (heap[p][0] < heap[k][0] || (heap[p][0] === heap[k][0] && heap[p][1] <= heap[k][1])) break; [heap[p], heap[k]] = [heap[k], heap[p]]; k = p; } };
-    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let k = 0; for (;;) { const l = 2 * k + 1, r = l + 1; let m = k; const menor = (a, b) => heap[a][0] < heap[b][0] || (heap[a][0] === heap[b][0] && heap[a][1] < heap[b][1]); if (l < heap.length && menor(l, m)) m = l; if (r < heap.length && menor(r, m)) m = r; if (m === k) break; [heap[m], heap[k]] = [heap[k], heap[m]]; k = m; } } return top; };
+    const push = (d, i) => { heap.push([d, i]); let k = heap.length - 1; while (k > 0) { const p = (k - 1) >> 1; if (heap[p][0] < heap[k][0] || (heap[p][0] === heap[k][0] && heap[p][1] <= heap[k][1])) { break; } [heap[p], heap[k]] = [heap[k], heap[p]]; k = p; } };
+    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let k = 0; for (;;) { const l = 2 * k + 1, r = l + 1; let m = k; const menor = (a, b) => heap[a][0] < heap[b][0] || (heap[a][0] === heap[b][0] && heap[a][1] < heap[b][1]); if (l < heap.length && menor(l, m)) { m = l; } if (r < heap.length && menor(r, m)) { m = r; } if (m === k) { break; } [heap[m], heap[k]] = [heap[k], heap[m]]; k = m; } } return top; };
     const ini = celda(hoyo.hoyo.x, hoyo.hoyo.y); dist[ini] = 0; push(0, ini);
     const VEC = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.4142135623730951], [1, -1, 1.4142135623730951], [-1, 1, 1.4142135623730951], [-1, -1, 1.4142135623730951]];
     while (heap.length) {

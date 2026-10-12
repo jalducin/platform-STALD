@@ -99,7 +99,7 @@ document.addEventListener('click', e => {
   const abrir = e.target.closest('[data-pk-abrir]');
   if (abrir) {
     s.hidden = !s.hidden; abrir.setAttribute('aria-expanded', String(!s.hidden));
-    if (!s.hidden) { const f = s.querySelector('[data-pk-ficha]:not(:disabled)'); if (f) f.focus({ preventScroll: true }); s.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    if (!s.hidden) { const f = s.querySelector('[data-pk-ficha]:not(:disabled)'); if (f) { f.focus({ preventScroll: true }); } s.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
     return;
   }
   if (e.target.closest('[data-pk-limpiar]')) { pkSelectorPintar(s, {}); tono(330, 60); return; }
@@ -173,7 +173,7 @@ function jugarPoker(numBots, pareja) {
       auto = setTimeout(() => { if (!terminado) siguienteMano(); }, 10000 * TIEMPO); /* ritmo más lento (ajuste del profe) */ limpiezas.push(() => clearTimeout(auto));
       return;
     }
-    if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; Cartas.pokerActuar(st, Cartas.pokerBot(st)); tono(440, 60); programar(); }, 2000 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+    if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) { return; } Cartas.pokerActuar(st, Cartas.pokerBot(st)); tono(440, 60); programar(); }, 2000 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
   }
   m.body.addEventListener('click', e => {
     if (terminado) return;
@@ -330,7 +330,7 @@ function jugarBrisca(modo) {
     pintar();
     if (st.terminada) { const t = setTimeout(fin, 1500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); return; }
     if (verUltima) { const t = setTimeout(() => { verUltima = false; programar(); }, 5300 * TIEMPO); /* la baza se ve ~4 s más (ajuste del profe) */ limpiezas.push(() => clearTimeout(t)); return; }
-    if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; jugar(Cartas.briscaBot(st)); }, 1500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+    if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) { return; } jugar(Cartas.briscaBot(st)); }, 1500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
   }
   function jugar(carta) {
     if (!Cartas.briscaJugar(st, carta)) return false;
@@ -371,12 +371,12 @@ function jugarConquian() {
     if (terminado) return;
     pintar();
     if (st.terminada) { const t = setTimeout(fin, 1800 * TIEMPO); limpiezas.push(() => clearTimeout(t)); return; }
-    if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) return; Cartas.conquianActuar(st, Cartas.conquianBot(st)); tono(440, 50); programar(); }, 2500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
+    if (st.turno !== 0) { const t = setTimeout(() => { if (terminado) { return; } Cartas.conquianActuar(st, Cartas.conquianBot(st)); tono(440, 50); programar(); }, 2500 * TIEMPO); limpiezas.push(() => clearTimeout(t)); }
   }
   m.body.addEventListener('click', e => {
     if (terminado || st.terminada) return;
     const c = e.target.closest('[data-cq-carta]'), jg = e.target.closest('[data-cq-juego]'), b = e.target.closest('[data-cq]');
-    if (c) { const id = Number(c.dataset.cqCarta); if (sel.has(id)) sel.delete(id); else sel.add(id); msg = ''; return pintar(); }
+    if (c) { const id = Number(c.dataset.cqCarta); if (sel.has(id)) sel.delete(id); else { sel.add(id); } msg = ''; return pintar(); }
     if (jg) { const a = Number(jg.dataset.cqJuego); destino = destino === a ? null : a; msg = ''; return pintar(); }
     if (!b || st.turno !== 0) return;
     const mv = cqJugadaDe(b.dataset.cq, sel, destino);

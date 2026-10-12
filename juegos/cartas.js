@@ -129,13 +129,13 @@
     const i = st.turno, o = opciones(st), a = mv.accion;
     if (a === 'retirarse') st.fuera[i] = true;
     else if (a === 'pasar') { if (!o.pasar) return false; }
-    else if (a === 'igualar') { if (o.pasar) return false; poner(st, i, o.igualar); }
+    else if (a === 'igualar') { if (o.pasar) { return false; } poner(st, i, o.igualar); }
     else if (a === 'subir') {
       const m = Math.round(Number(mv.monto));
       if (!o.puedeSubir || !Number.isFinite(m) || m < o.minSubir || m > o.maxSubir) return false;
       if (m % FICHA !== 0 && m !== o.maxSubir) return false; // se arma con fichas; solo «todo» puede ser otra cantidad
       subirA(st, i, m);
-    } else if (a === 'todo') { if (st.jugadores[i].fichas <= 0) return false; subirA(st, i, o.maxSubir); }
+    } else if (a === 'todo') { if (st.jugadores[i].fichas <= 0) { return false; } subirA(st, i, o.maxSubir); }
     else return false;
     st.pendientes = st.pendientes.filter(k => k !== i);
     st.ultima = { j: i, accion: a, apuesta: st.apuesta[i] };

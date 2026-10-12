@@ -2,7 +2,7 @@
 
 // ---------- Tema claro / oscuro (preferencia de interfaz, sin datos personales) ----------
 const TEMAS = ['auto', 'oscuro', 'claro'];
-function temaGuardado() { try { const t = localStorage.getItem('stald_tema'); return TEMAS.includes(t) ? t : 'auto'; } catch (e) { return 'auto'; } }
+function temaGuardado() { try { const t = localStorage.getItem('stald_tema'); return TEMAS.includes(t) ? t : 'auto'; } catch { /* sin almacenamiento: tema automático */ return 'auto'; } }
 function aplicarTema(t) {
   const html = document.documentElement;
   if (t === 'oscuro') html.dataset.theme = 'dark'; else if (t === 'claro') html.dataset.theme = 'light'; else delete html.dataset.theme;
@@ -77,7 +77,7 @@ function salirVista() {
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-nav-accion]');
   const mas = document.getElementById('nav-mas');
-  if (!b) { if (!e.target.closest('#nav-mas')) mas.hidden = true; return; }
+  if (!b) { if (!e.target.closest('#nav-mas')) { mas.hidden = true; } return; }
   if (b.dataset.navAccion === 'mas') { mas.hidden = !mas.hidden; b.setAttribute('aria-expanded', String(!mas.hidden)); return; }
   if (b.dataset.navAccion === 'salir') { mas.hidden = true; cerrarSesion(); }
 });
@@ -128,7 +128,7 @@ function onClick(e) {
   if (act === 'ficha') { e.preventDefault(); ordenarMover(b); }
   if (act === 'ord-borrar') { e.preventDefault(); ordenarBorrar(b); }
   if (act === 'emp') { e.preventDefault(); empClick(b); }
-  if (act === 'abrir-item') { e.preventDefault(); if (cajonEl.open) cajonEl.close(); openItem(b.dataset.id, b.dataset.alumno); }
+  if (act === 'abrir-item') { e.preventDefault(); if (cajonEl.open) { cajonEl.close(); } openItem(b.dataset.id, b.dataset.alumno); }
   if (act === 'ver-resultado') {
     const it = ((state.act && state.act.items) || []).find(x => x.id === b.dataset.id);
     if (it && it.mejor) showResult(it.mejor, { titulo: it.titulo + ' · mejor intento (' + it.intentosUsados + '/' + it.intentosMax + ')' });
@@ -183,7 +183,7 @@ async function loadFor(email) {
     if (data.isAdmin) { state.resumen = null; await Promise.all([loadJuegosAdmin(), loadAlumnosAdmin(), loadGruposAdmin()]); }
     render(data);
     if (data.isAdmin) cargarResumen(); // idempotente; el cajón también lo usa
-    if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; state.altaAviso = null; }
+    if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) { m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; } state.altaAviso = null; }
   } catch (e) {
     if (appEl.style.display === 'none') mostrarEntrada('⚠️ ' + e.message);
     else contentEl.innerHTML = vacio('⚠️', e.message);

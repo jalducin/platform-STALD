@@ -72,7 +72,7 @@ function iniciarMusica(estilo) {
       const corchea = 30 / ESTILOS_MUSICA[musica.estilo].bpm;
       while (musica.siguiente < musica.ctx.currentTime + 0.12) { pasoMusica(musica.siguiente, musica.paso++); musica.siguiente += corchea; }
     }, 25);
-  } catch (e) { musica.estilo = null; pintarBotonMusica(); }
+  } catch { /* sin audio en este navegador: música apagada */ musica.estilo = null; pintarBotonMusica(); }
 }
 function detenerMusica() {
   if (musica.timer) clearInterval(musica.timer);
@@ -116,7 +116,7 @@ document.getElementById('menu-musica').addEventListener('click', e => {
   e.stopPropagation();
   const b = e.target.closest('[data-mus]'), v = e.target.closest('[data-vol]');
   if (b) iniciarMusica(b.dataset.mus || null);
-  if (v) { musica.volumen = v.dataset.vol; guardarPrefMusica(); if (musica.master) musica.master.gain.value = volMusica(); pintarBotonMusica(); }
+  if (v) { musica.volumen = v.dataset.vol; guardarPrefMusica(); if (musica.master) { musica.master.gain.value = volMusica(); } pintarBotonMusica(); }
 });
 document.addEventListener('click', () => { const m = document.getElementById('menu-musica'); if (m) m.hidden = true; });
 chip.addEventListener('click', () => { if (state.jugador) pantallaAvatar(); });

@@ -54,7 +54,7 @@
   // ---------- 🔴 Conecta 4 (7 × 6; índice = fila × 7 + columna, fila 0 arriba) ----------
   const C4_COLS = 7, C4_FILAS = 6;
   const c4Vacio = () => Array(C4_COLS * C4_FILAS).fill(null);
-  function c4Fila(t, col) { for (let f = C4_FILAS - 1; f >= 0; f--) if (!t[f * C4_COLS + col]) return f; return -1; }
+  function c4Fila(t, col) { for (let f = C4_FILAS - 1; f >= 0; f--) { if (!t[f * C4_COLS + col]) return f; } return -1; }
   function c4Soltar(t, col, ficha) {
     if (!Number.isInteger(col) || col < 0 || col >= C4_COLS) return null;
     const fila = c4Fila(t, col); if (fila < 0) return null;
@@ -68,7 +68,7 @@
       const f = Math.floor(i / C4_COLS), c = i % C4_COLS;
       for (const [df, dc] of C4_DIRS) {
         const linea = [];
-        for (let k = 0; k < 4; k++) { const ff = f + df * k, cc = c + dc * k; if (ff < 0 || ff >= C4_FILAS || cc < 0 || cc >= C4_COLS || t[ff * C4_COLS + cc] !== t[i]) break; linea.push(ff * C4_COLS + cc); }
+        for (let k = 0; k < 4; k++) { const ff = f + df * k, cc = c + dc * k; if (ff < 0 || ff >= C4_FILAS || cc < 0 || cc >= C4_COLS || t[ff * C4_COLS + cc] !== t[i]) { break; } linea.push(ff * C4_COLS + cc); }
         if (linea.length === 4) return { gana: t[i], linea };
       }
     }
@@ -267,7 +267,7 @@
     let ini = ctx.inicio;
     for (let r = 0; r < C.rondas; r++) {
       const lim = ini + ctx.dur(C.ventana);
-      const subs = orden.map(p => { if (p.bot) return null; const x = porJugador.get(p.id).get(r); return x && x.t <= lim ? x : null; });
+      const subs = orden.map(p => { if (p.bot) { return null; } const x = porJugador.get(p.id).get(r); return x && x.t <= lim ? x : null; });
       const humanos = orden.map((_p, i) => i).filter(i => !orden[i].bot);
       const todos = humanos.length > 0 && humanos.every(i => subs[i]);
       const cierre = todos ? Math.max(ini, Math.min(lim, Math.max(...humanos.map(i => subs[i].t)))) : lim;

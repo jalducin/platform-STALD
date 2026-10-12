@@ -102,7 +102,7 @@ const UNA_CARTAS = (() => {
   const m = []; let id = 0;
   for (const c of ['r', 'y', 'g', 'b']) {
     m.push({ id: id++, c, v: '0' });
-    for (let k = 0; k < 2; k++) { for (let n = 1; n <= 9; n++) m.push({ id: id++, c, v: String(n) }); m.push({ id: id++, c, v: 'skip' }, { id: id++, c, v: 'rev' }, { id: id++, c, v: '+2' }); }
+    for (let k = 0; k < 2; k++) { for (let n = 1; n <= 9; n++) { m.push({ id: id++, c, v: String(n) }); } m.push({ id: id++, c, v: 'skip' }, { id: id++, c, v: 'rev' }, { id: id++, c, v: '+2' }); }
   }
   for (let k = 0; k < 4; k++) m.push({ id: id++, c: null, v: 'wild' }, { id: id++, c: null, v: '+4' });
   return m;
@@ -186,7 +186,7 @@ function estadoUna() {
       if (quien.bot) tUna = w.t0 + dur(800 + rngDe(s.seed, 'una' + w.paso)() * 1000);
       else { const u = unasDe(quien.id).find(x => x.paso === w.paso); if (u && u.t <= lim) tUna = u.t; }
       let seg;
-      if (tUna !== null) { if (ahora < tUna) break; seg = (tUna - w.t0) / dur(1000); }
+      if (tUna !== null) { if (ahora < tUna) { break; } seg = (tUna - w.t0) / dur(1000); }
       else if (ahora >= lim) { seg = Infinity; tUna = lim; }
       else break; // esperando a que presione UNA
       const n = castigoUna(seg);
@@ -247,7 +247,7 @@ function pintarUnaSala(body) {
   }
   const quedaUna = st.esperaUna ? Math.max(0, (st.esperaUna.t0 + dur(5000) - ahora) / dur(1000)) : 0;
   const clave = 'una:' + st.paso + ':' + (sala.unaLocal ? (sala.unaLocal.presionado ? 'P' : 'L') : '') + ':' + (sala.unaElegir ?? '') + ':' + (st.esperaUna ? 'U' + st.esperaUna.paso : '') + ':' + (sala.unaEnviando ? 1 : 0) + ':' + lang + ':' + st.castigos.length;
-  if (sala.vista === clave) { const cu = document.getElementById('una-cuenta'); if (cu) cu.textContent = quedaUna.toFixed(1); return; } // la cuenta del UNA se actualiza sin redibujar el botón
+  if (sala.vista === clave) { const cu = document.getElementById('una-cuenta'); if (cu) { cu.textContent = quedaUna.toFixed(1); } return; } // la cuenta del UNA se actualiza sin redibujar el botón
   sala.vista = clave;
   const u = st.ultima;
   const ult = !u ? (lang === 'en' ? 'The game begins!' : '¡Empieza la partida!') :
@@ -342,7 +342,7 @@ function estadoPoker() {
   const ahora = ahoraServidor();
   for (let guard = 0; guard < 6000 && !st.terminada; guard++) {
     pkContar(st, ganadas);
-    if (st.fase === 'fin') { const t = T0 + dur(PK_PAUSA_MS); if (ahora < t) break; Cartas.pokerMano(st, rngDe(s.seed, 'poker-mano-' + (st.mano + 1))); T0 = t; continue; }
+    if (st.fase === 'fin') { const t = T0 + dur(PK_PAUSA_MS); if (ahora < t) { break; } Cartas.pokerMano(st, rngDe(s.seed, 'poker-mano-' + (st.mano + 1))); T0 = t; continue; }
     const j = st.turno, p = orden[j];
     if (p.bot) {
       const t = T0 + dur(PK_BOT_MS); if (ahora < t) break;
@@ -475,9 +475,9 @@ function clicCartasSala(e) {
   const st = sala.csSt; if (!st || st.terminada) return false;
   const yo = st.orden.findIndex(p => p.id === sala.estado.yo);
   const br = e.target.closest('[data-br-carta]');
-  if (br) { if (st.turno === yo && !sala.csEnviando && st.manos[yo].includes(Number(br.dataset.brCarta))) enviarCartasSala({ accion: 'jugar', carta: Number(br.dataset.brCarta) }); return true; }
+  if (br) { if (st.turno === yo && !sala.csEnviando && st.manos[yo].includes(Number(br.dataset.brCarta))) { enviarCartasSala({ accion: 'jugar', carta: Number(br.dataset.brCarta) }); } return true; }
   const c = e.target.closest('[data-cq-carta]'), jg = e.target.closest('[data-cq-juego]'), b = e.target.closest('[data-cq]');
-  if (c) { const id = Number(c.dataset.cqCarta); const sel = sala.cqSel || (sala.cqSel = new Set()); if (sel.has(id)) sel.delete(id); else sel.add(id); sala.cqMsg = ''; sala.vista = null; pintarSala(); return true; }
+  if (c) { const id = Number(c.dataset.cqCarta); const sel = sala.cqSel || (sala.cqSel = new Set()); if (sel.has(id)) sel.delete(id); else { sel.add(id); } sala.cqMsg = ''; sala.vista = null; pintarSala(); return true; }
   if (jg) { const a = Number(jg.dataset.cqJuego); sala.cqDestino = sala.cqDestino === a ? null : a; sala.cqMsg = ''; sala.vista = null; pintarSala(); return true; }
   if (!b) return false;
   if (st.turno !== yo || sala.csEnviando) return true;
@@ -507,7 +507,7 @@ function estadoAjedrez() {
     const res = Ajedrez.resultado(st);
     if (res) { fin = res; break; }
     const j = st.turno === 'w' ? 0 : 1, p = orden[j], lim = T0 + (R - usado[j]);
-    const aplicar = (mv, t) => { const k = Ajedrez.aFEN(st) + mv.de + mv.a + (mv.promo || ''); if (!cache.has(k)) cache.set(k, Ajedrez.san(st, mv)); sanes.push(cache.get(k)); st = Ajedrez.aplicar(st, mv); ultima = mv; usado[j] += Math.max(0, t - T0); T0 = Math.max(T0, t); };
+    const aplicar = (mv, t) => { const k = Ajedrez.aFEN(st) + mv.de + mv.a + (mv.promo || ''); if (!cache.has(k)) { cache.set(k, Ajedrez.san(st, mv)); } sanes.push(cache.get(k)); st = Ajedrez.aplicar(st, mv); ultima = mv; usado[j] += Math.max(0, t - T0); T0 = Math.max(T0, t); };
     if (p.bot) {
       const t = T0 + dur(AJ_BOT_MS); if (ahora < t) break;
       const k = 'bot:' + Ajedrez.aFEN(st);
@@ -580,7 +580,7 @@ function clicAjedrezSala(e) {
   const enTablero = e.target.closest('[data-aj], [data-aj-promo], [data-aj-rendir]');
   if (!enTablero) return false;
   if (yo !== a.turnoIdx || sala.ajEnviando) return true;
-  if (e.target.closest('[data-aj-rendir]')) { if (confirm('¿Rendirte? Tu rival gana la partida.')) enviarAjedrez({ accion: 'rendirse' }); return true; }
+  if (e.target.closest('[data-aj-rendir]')) { if (confirm('¿Rendirte? Tu rival gana la partida.')) { enviarAjedrez({ accion: 'rendirse' }); } return true; }
   const pr = e.target.closest('[data-aj-promo]');
   if (pr && sala.ajPromo) { enviarAjedrez({ accion: 'mover', de: Ajedrez.casilla(sala.ajPromo.de), a: Ajedrez.casilla(sala.ajPromo.a), promo: pr.dataset.ajPromo }); return true; }
   const c = e.target.closest('[data-aj]');

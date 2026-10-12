@@ -90,7 +90,7 @@
       poner(id, botones) { dedos.set(id, (botones || []).slice()); },
       mover(id, botones) { if (dedos.has(id)) dedos.set(id, (botones || []).slice()); },
       quitar(id) { dedos.delete(id); },
-      botones() { const s = new Set(); for (const l of dedos.values()) for (const b of l) s.add(b); return s; },
+      botones() { const s = new Set(); for (const l of dedos.values()) { for (const b of l) s.add(b); } return s; },
       dedos: () => dedos.size,
       tiene: id => dedos.has(id),
       limpiar() { dedos.clear(); },
@@ -125,7 +125,7 @@
     if (op.analogico) for (const d of DIRECCIONES) usados.add(d);
     const fuentes = new Map(), ejes = new Map(), manejadores = { al: new Map(), suelta: new Map() };
     let activas = new Set(), activo = true;
-    const union = () => { const s = new Set(); for (const f of fuentes.values()) for (const b of f) s.add(b); return s; };
+    const union = () => { const s = new Set(); for (const f of fuentes.values()) { for (const b of f) s.add(b); } return s; };
     function recalcular() {
       const u = union(), ahora = new Set();
       for (const [a, lista] of Object.entries(acciones)) if (lista.some(b => u.has(b))) ahora.add(a);

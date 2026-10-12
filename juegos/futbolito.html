@@ -363,7 +363,7 @@ function nombreBarra() {
   if ($('c-barra-n').textContent !== txt) $('c-barra-n').textContent = txt;
 }
 function pasoVivo() {
-  if (golHasta) { if (performance.now() < golHasta) return; golHasta = 0; T.saque(st, st.ultimoGol === 0 ? 1 : 0, (Math.random() * 2 - 1) * 20); }
+  if (golHasta) { if (performance.now() < golHasta) { return; } golHasta = 0; T.saque(st, st.ultimoGol === 0 ? 1 : 0, (Math.random() * 2 - 1) * 20); }
   if (performance.now() > manualHasta) {
     const nueva = T.barraActivaCon(st, 0, activa);
     if (nueva !== activa) { activa = nueva; objetivo[activa] = st.s[activa]; }
@@ -595,8 +595,8 @@ document.addEventListener('click', e => {
 });
 U.botonSonido($('b-sonido'));
 $('b-pausa').onclick = e => { e.currentTarget.blur(); pausar(); };
-function pausar() { if (modo !== 'juego') return; ponerModo('pausa'); acciones.soltarTodo(); mostrar('ov-pausa'); }
-function seguir() { if (modo !== 'pausa') return; ocultar(); ponerModo('juego'); }
+function pausar() { if (modo !== 'juego') { return; } ponerModo('pausa'); acciones.soltarTodo(); mostrar('ov-pausa'); }
+function seguir() { if (modo !== 'pausa') { return; } ocultar(); ponerModo('juego'); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pausar(); });
 
 /* ---------- Pantallas y sonido ---------- */
@@ -627,7 +627,12 @@ function cuadro(ahora) {
   if (modo === 'juego' || modo === 'sala') leerMando();
   if ((modo === 'juego' || modo === 'sala') && !(modo === 'juego' && document.hidden)) {
     acum += dt; let n = 0;
-    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoVivo(); else if (modo === 'sala' && sala) pasoSala(); else break; /* un paso pudo cambiar de modo */ acum -= PASO; n++; }
+    while (acum >= PASO && n < 6) {
+      if (modo === 'juego') pasoVivo();
+      else if (modo === 'sala' && sala) pasoSala();
+      else break; /* un paso pudo cambiar de modo */
+      acum -= PASO; n++;
+    }
     if (n === 6) acum = 0;
   } else acum = 0;
   dibujar();

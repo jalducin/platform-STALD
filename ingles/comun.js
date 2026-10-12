@@ -25,7 +25,7 @@ const STORAGE_KEY = 'ingles_email';
 // Claves de sesión compartidas con el portal (index.html): solo el correo.
 const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
 // "← Inicio" y "🎮 Juegos" conservan ?api= (pruebas locales).
-(() => { const api = new URLSearchParams(location.search).get('api'); const l = document.querySelector('.home-link'); if (api && l) l.href = './?api=' + encodeURIComponent(api); const g = document.querySelector('.games-link'); if (api && g) g.href = 'juegos.html?api=' + encodeURIComponent(api); })();
+(() => { const api = new URLSearchParams(location.search).get('api'); const l = document.querySelector('.home-link'); if (api && l) { l.href = './?api=' + encodeURIComponent(api); } const g = document.querySelector('.games-link'); if (api && g) g.href = 'juegos.html?api=' + encodeURIComponent(api); })();
 
 // Catálogo único de secciones (openspec: ingles-pro, design 2b): la barra inferior, las pestañas, el menú lateral
 // y los encabezados de cada sección salen de aquí. `href` = enlace a otra página; `accion` = botón.
@@ -79,7 +79,7 @@ function todayStr() { return fmtDate(new Date()); }
 function daysAgoStr(n) { const d = new Date(); d.setDate(d.getDate() - n); return fmtDate(d); }
 function diffDays(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
 // Fecha local (AAAA-MM-DD) de la última edición; se usa como fecha de realización.
-function localDateOf(iso) { if (!iso) return null; const d = new Date(iso); return isNaN(d) ? null : fmtDate(d); }
+function localDateOf(iso) { if (!iso) { return null; } const d = new Date(iso); return isNaN(d) ? null : fmtDate(d); }
 
 function formatFecha(fecha) {
   try { return new Date(fecha + 'T00:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric', month:'short'}); }

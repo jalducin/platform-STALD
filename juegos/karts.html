@@ -265,9 +265,9 @@ function audio() {
     if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.connect(AC.destination); }
     master.gain.value = sonido ? 0.9 : 0;
     if (AC.state === 'suspended' && !document.hidden) AC.resume();
-  } catch (e) { AC = null; }
+  } catch { /* sin audio en este navegador: juego sin sonido */ AC = null; }
 }
-function tono(f, d, tipo = 'square', v = 0.05, hasta, retraso = 0) {
+function tono(f, d, tipo = 'square', v = 0.05, hasta = 0, retraso = 0) { // hasta = 0: sin barrido de frecuencia
   if (!AC || !sonido) return;
   const o = AC.createOscillator(), ga = AC.createGain(), s = AC.currentTime + retraso;
   o.type = tipo; o.frequency.setValueAtTime(f, s); if (hasta) o.frequency.exponentialRampToValueAtTime(hasta, s + d);
@@ -292,7 +292,7 @@ const S = {
   ahogo: () => tono(120, 0.5, 'square', 0.06, 50),
 };
 function pintarSonido() { $('b-sonido').textContent = sonido ? '🔊' : '🔇'; $('b-sonido').setAttribute('aria-pressed', String(!sonido)); }
-$('b-sonido').onclick = e => { sonido = !sonido; guardarLS('arcade_sonido', sonido ? '1' : '0'); audio(); if (!sonido) motorOn(false); pintarSonido(); e.currentTarget.blur(); };
+$('b-sonido').onclick = e => { sonido = !sonido; guardarLS('arcade_sonido', sonido ? '1' : '0'); audio(); if (!sonido) { motorOn(false); } pintarSonido(); e.currentTarget.blur(); };
 pintarSonido();
 addEventListener('pointerdown', audio, { passive: true });
 addEventListener('touchend', audio, { passive: true });
@@ -362,7 +362,7 @@ function tactil(el, h) {
   el.addEventListener('touchend', finT, { passive: false });
   el.addEventListener('touchcancel', finT, { passive: false });
   const propio = e => e.pointerType !== 'touch' || !TOQUES;
-  el.addEventListener('pointerdown', e => { if (!propio(e)) return; e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (x) { /* nada */ } ini('p' + e.pointerId, e.clientX, e.clientY); });
+  el.addEventListener('pointerdown', e => { if (!propio(e)) { return; } e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (x) { /* nada */ } ini('p' + e.pointerId, e.clientX, e.clientY); });
   el.addEventListener('pointermove', e => { if (propio(e)) mov('p' + e.pointerId, e.clientX, e.clientY); });
   const finP = e => { if (propio(e)) fin('p' + e.pointerId); };
   el.addEventListener('pointerup', finP); el.addEventListener('pointercancel', finP);
@@ -421,12 +421,12 @@ function alOrientar(e) {
   const v = inclinacion(e); sensor.ultimo = v;
   if (sensor.esperando) { const listo = sensor.esperando; sensor.esperando = null; listo(true); }
   if (sensor.centro === null) sensor.centro = v;
-  let d = v - sensor.centro; if (d > 180) d -= 360; if (d < -180) d += 360;
+  let d = v - sensor.centro; if (d > 180) { d -= 360; } if (d < -180) d += 360;
   const max = SENSIBILIDAD[sensibilidad] || 24;
   sensor.giro = Math.abs(d) < 3 ? 0 : Math.max(-1, Math.min(1, (d - Math.sign(d) * 3) / (max - 3)));
   $('volante').style.transform = 'rotate(' + Math.round(sensor.giro * 90) + 'deg)';
 }
-function centrarSensor() { if (sensor.ultimo !== null) sensor.centro = sensor.ultimo; sensor.giro = 0; }
+function centrarSensor() { if (sensor.ultimo !== null) { sensor.centro = sensor.ultimo; } sensor.giro = 0; }
 addEventListener('orientationchange', () => { sensor.centro = null; });
 if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', () => { sensor.centro = null; });
 let activando = null;
@@ -572,7 +572,7 @@ function prepararPista(id) {
     c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.lineTo(b2.x, b2.y); c.lineTo(a2.x, a2.y); c.closePath(); c.fill();
   }
   c.globalAlpha = 1;
-  const linea = lado => { const L = []; for (let i = 0; i < N; i++) L.push(punto(i, lado)); return L; };
+  const linea = lado => { const L = []; for (let i = 0; i < N; i++) { L.push(punto(i, lado)); } return L; };
   const trazo = (ctx, pts, ancho, color, guion) => {
     ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
     ctx.lineWidth = ancho; ctx.strokeStyle = color; ctx.lineJoin = 'round'; ctx.lineCap = 'butt'; ctx.setLineDash(guion || []); ctx.stroke(); ctx.setLineDash([]);
@@ -635,7 +635,7 @@ function pintarFondo(c, W, H, r, id, col) {
     for (let k = 0; k < 500; k++) { c.fillStyle = ['#f472b6', '#fde047', '#ffffff', '#a78bfa'][Math.floor(r() * 4)]; c.fillRect(r() * W, r() * H, 3, 3); }
   } else if (id === 'desierto') {
     c.strokeStyle = 'rgba(150,100,40,.25)'; c.lineWidth = 3; // ondas de arena
-    for (let y = 0; y < H; y += 22) { c.beginPath(); for (let x = 0; x <= W; x += 24) c.lineTo(x, y + Math.sin(x / 70 + y * 0.3) * 6); c.stroke(); }
+    for (let y = 0; y < H; y += 22) { c.beginPath(); for (let x = 0; x <= W; x += 24) { c.lineTo(x, y + Math.sin(x / 70 + y * 0.3) * 6); } c.stroke(); }
     for (let k = 0; k < 5000; k++) { c.fillStyle = r() < 0.5 ? 'rgba(120,80,40,.25)' : 'rgba(255,255,255,.15)'; c.fillRect(r() * W, r() * H, 3, 2); }
   } else if (id === 'hielo') {
     for (let k = 0; k < 60; k++) { c.fillStyle = 'rgba(180,215,240,.4)'; c.beginPath(); c.ellipse(r() * W, r() * H, 30 + r() * 70, 18 + r() * 40, r() * 3, 0, 7); c.fill(); }
@@ -988,7 +988,7 @@ function prepararCarrera(id, opciones) {
     for (let i = skills.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [skills[i], skills[j]] = [skills[j], skills[i]]; }
     const slotYo = 5;
     let s = 0;
-    RIVALES.forEach((nombre, k) => { if (s === slotYo) s++; const b = nuevoKart('bot-' + k, nombre, otros[k % otros.length], false, s++, perOtros[k % perOtros.length]); b.skill = Math.max(0.78, Math.min(1.0, skills[k])); karts.push(b); });
+    RIVALES.forEach((nombre, k) => { if (s === slotYo) { s++; } const b = nuevoKart('bot-' + k, nombre, otros[k % otros.length], false, s++, perOtros[k % perOtros.length]); b.skill = Math.max(0.78, Math.min(1.0, skills[k])); karts.push(b); });
     yo = nuevoKart('yo', 'Tú', colorYo, true, slotYo, perYo);
     karts.splice(slotYo, 0, yo);
   }
@@ -1445,8 +1445,8 @@ $('b-pausa').onclick = e => { e.currentTarget.blur(); alternarPausa(); };
 $('b-seguir').onclick = () => pausar(false);
 $('b-salir-carrera').onclick = () => { modo = 'carrera'; yo.termino = null; abrirMenu(); };
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { if (modo === 'carrera' && !sala) pausar(true); motorOn(false); if (AC) AC.suspend().catch(() => {}); }
-  else { if (AC && sonido) AC.resume().catch(() => {}); ultimo = performance.now(); }
+  if (document.hidden) { if (modo === 'carrera' && !sala) { pausar(true); } motorOn(false); if (AC) AC.suspend().catch(() => {}); }
+  else { if (AC && sonido) { AC.resume().catch(() => {}); } ultimo = performance.now(); }
 });
 
 /* ================= Overlays ================= */
@@ -1457,8 +1457,8 @@ let avisoT = null;
 function avisar(txt, ms) { const a = $('aviso'); a.textContent = txt; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms || 1500); }
 
 /* ================= Plataforma ================= */
-function enviar(m) { if (!EMBED) return; try { parent.postMessage(Object.assign({ juego: 'karts' }, m), location.origin); } catch (e) { /* nada */ } }
-function guardar() { if (sala || !EMBED) return; enviar({ tipo: 'guardar', datos: JSON.parse(JSON.stringify(prog)) }); }
+function enviar(m) { if (!EMBED) { return; } try { parent.postMessage(Object.assign({ juego: 'karts' }, m), location.origin); } catch (e) { /* nada */ } }
+function guardar() { if (sala || !EMBED) { return; } enviar({ tipo: 'guardar', datos: JSON.parse(JSON.stringify(prog)) }); }
 addEventListener('message', ev => {
   if (ev.origin !== location.origin || ev.source !== parent) return;
   const d = ev.data || {};
@@ -1601,7 +1601,7 @@ function prepararPano() {
   const altura = (x, frec, fase) => { const u = x / PW * Math.PI * 2; return 0.55 + 0.25 * Math.sin(u * frec[0] + fase) + 0.13 * Math.sin(u * frec[1] + fase * 2) + 0.07 * Math.sin(u * frec[2] + fase * 3); };
   const capaMontes = (alto, frec, color, fase, plano) => {
     c.fillStyle = color; c.beginPath(); c.moveTo(0, PH);
-    for (let x = 0; x <= TW; x += 2) { let y = altura(x, frec, fase); if (plano) y = Math.min(y, plano); c.lineTo(x, PH - Math.max(0.05, y) * alto); }
+    for (let x = 0; x <= TW; x += 2) { let y = altura(x, frec, fase); if (plano) { y = Math.min(y, plano); } c.lineTo(x, PH - Math.max(0.05, y) * alto); }
     c.lineTo(TW, PH); c.closePath(); c.fill();
   };
   capaMontes(PH * 0.62, [3, 7, 13], t.lejos, 0.7, id === 'desierto' ? 0.62 : 0);
@@ -1675,7 +1675,7 @@ function pintarEscena(t, conKarts) {
       g.save(); g.translate(p.x, p.y - w * 0.85 - 4 * p.s + sube); if (!REDUCIR) g.rotate(Math.sin(t * 2 + cj.x) * 0.25);
       g.drawImage(imgDecor('caja'), -w / 2, -w / 2, w, w); g.restore();
     } else if (e.obj) dibujarObjeto(e.obj);
-    else if (e.kart) { if (e.cerca) g.globalAlpha = 0.45; dibujarKart(e.kart, t); }
+    else if (e.kart) { if (e.cerca) { g.globalAlpha = 0.45; } dibujarKart(e.kart, t); }
     else if (e.part) dibujarParticula(e.part);
     else if (e.arco) dibujarArco(e.arco);
   }

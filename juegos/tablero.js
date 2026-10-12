@@ -307,8 +307,8 @@
       if (!largos.every((x, i) => x === FLOTA[i])) return false;
       return new Set(fl.flat()).size === TOTAL;
     }
-    const vecinas = c => { const f = Math.floor(c / 10), k = c % 10, out = []; if (f > 0) out.push(c - 10); if (f < 9) out.push(c + 10); if (k > 0) out.push(c - 1); if (k < 9) out.push(c + 1); return out; };
-    const alrededor = c => { const f = Math.floor(c / 10), k = c % 10, out = []; for (let df = -1; df <= 1; df++) for (let dk = -1; dk <= 1; dk++) { const ff = f + df, kk = k + dk; if (ff >= 0 && ff < 10 && kk >= 0 && kk < 10) out.push(ff * 10 + kk); } return out; };
+    const vecinas = c => { const f = Math.floor(c / 10), k = c % 10, out = []; if (f > 0) { out.push(c - 10); } if (f < 9) { out.push(c + 10); } if (k > 0) { out.push(c - 1); } if (k < 9) { out.push(c + 1); } return out; };
+    const alrededor = c => { const f = Math.floor(c / 10), k = c % 10, out = []; for (let df = -1; df <= 1; df++) { for (let dk = -1; dk <= 1; dk++) { const ff = f + df, kk = k + dk; if (ff >= 0 && ff < 10 && kk >= 0 && kk < 10) out.push(ff * 10 + kk); } } return out; };
     // Acomodo al azar; procura que los barcos no se toquen (si no se puede, se permite).
     function autoFlota(rnd) {
       const r = rnd || Math.random;

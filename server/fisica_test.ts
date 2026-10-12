@@ -114,7 +114,7 @@ Deno.test("billar: partidas bot contra bot terminan y se reproducen idénticas (
 Deno.test("billar: la animación por subpasos da lo mismo que la reproducción instantánea", () => {
   const st = B.inicial(5), tiro = { angulo: 3, fuerza: 95, efecto: 20 };
   const sim = B.crearSim(st, tiro); let cuadros = 0;
-  while (!sim.termino) { for (let i = 0; i < B.SUB; i++) sim.paso(); cuadros++; }
+  while (!sim.termino) { for (let i = 0; i < B.SUB; i++) { sim.paso(); } cuadros++; }
   assertEquals(JSON.stringify(sim.resultado()), JSON.stringify(B.aplicar(st, tiro)));
   assert(cuadros > 10);
 });

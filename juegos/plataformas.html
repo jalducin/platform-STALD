@@ -167,9 +167,9 @@ function audio() {
     if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.connect(AC.destination); }
     master.gain.value = sonido ? 0.9 : 0;
     if (AC.state === 'suspended' && !document.hidden) AC.resume();
-  } catch (e) { AC = null; }
+  } catch { /* sin audio en este navegador: juego sin sonido */ AC = null; }
 }
-function tono(f, d, tipo = 'square', v = 0.05, hasta, retraso = 0) {
+function tono(f, d, tipo = 'square', v = 0.05, hasta = 0, retraso = 0) { // hasta = 0: sin barrido de frecuencia
   if (!AC || !sonido) return;
   const o = AC.createOscillator(), ga = AC.createGain(), s = AC.currentTime + retraso;
   o.type = tipo; o.frequency.setValueAtTime(f, s); if (hasta) o.frequency.exponentialRampToValueAtTime(hasta, s + d);
@@ -207,7 +207,7 @@ const MAPA_TECLAS = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'd
 addEventListener('keydown', e => {
   if (control === 'mando') return; // con el mando, el teclado lo lee juegos/mando.js
   const k = MAPA_TECLAS[e.code];
-  if (k && modo === 'nivel') { e.preventDefault(); if (!e.repeat) presionar(k, true); return; }
+  if (k && modo === 'nivel') { e.preventDefault(); if (!e.repeat) { presionar(k, true); } return; }
   if ((e.code === 'KeyP' || e.code === 'Escape') && modo === 'nivel' && !sala) { e.preventDefault(); pausar(true); }
 });
 addEventListener('keyup', e => { const k = control === 'botones' && MAPA_TECLAS[e.code]; if (k) presionar(k, false); });
@@ -304,8 +304,8 @@ const ARENA = { s: '3'.repeat(32), o: { 8: '.......===..........===........X', 2
 let mundo = A.MUNDOS[0], nivelId = '1-1', W = 0, grid = null, monedasMapa = new Set(), enemigos = [], items = [], fuegos = [], particulas = [], proyectiles = [];
 let checkX = 0, metaX = 0, arenaX = -1, jefe = null, checkTomado = false, colapsos = new Map(), castillo = false;
 
-function tile(c, r) { if (c < 0 || c >= W) return PIEDRA; if (r < 0 || r >= FIL) return VACIO; return grid[r * W + c]; }
-function ponerTile(c, r, t) { if (c < 0 || c >= W || r < 0 || r >= FIL) return; grid[r * W + c] = t; }
+function tile(c, r) { if (c < 0 || c >= W) { return PIEDRA; } if (r < 0 || r >= FIL) { return VACIO; } return grid[r * W + c]; }
+function ponerTile(c, r, t) { if (c < 0 || c >= W || r < 0 || r >= FIL) { return; } grid[r * W + c] = t; }
 
 function generar(m, n) {
   mundo = A.MUNDOS[m - 1]; castillo = A.esCastillo(n); nivelId = m + '-' + n;
@@ -468,7 +468,7 @@ function lado(x, derecha, color) {
 function tope(x, a, cl, rnd, v) {
   if (cl === 'pradera') {
     x.fillStyle = 'rgba(50,25,5,.3)'; x.fillRect(0, 4, T, 3.5);
-    const pasto = (col, dy) => { x.fillStyle = col; x.beginPath(); x.moveTo(0, -0.4); x.lineTo(T, -0.4); x.lineTo(T, 4 + dy); for (let px = T - 4; px >= 0; px -= 4) x.quadraticCurveTo(px + 2, 6.8 + dy - ((px / 4 + v) % 2) * 1.8, px, 4 + dy); x.closePath(); x.fill(); };
+    const pasto = (col, dy) => { x.fillStyle = col; x.beginPath(); x.moveTo(0, -0.4); x.lineTo(T, -0.4); x.lineTo(T, 4 + dy); for (let px = T - 4; px >= 0; px -= 4) { x.quadraticCurveTo(px + 2, 6.8 + dy - ((px / 4 + v) % 2) * 1.8, px, 4 + dy); } x.closePath(); x.fill(); };
     pasto(a.toque, 1); pasto(a.tope, 0);
     x.fillStyle = a.tope2; x.fillRect(0, -0.4, T, 1.3);
     x.fillStyle = 'rgba(20,70,25,.55)'; x.fillRect(0, -0.9, T, 0.6);
@@ -476,7 +476,7 @@ function tope(x, a, cl, rnd, v) {
     if (v === 0) { const fx = 3 + rnd() * 10; x.strokeStyle = a.toque; x.lineWidth = 0.5; x.beginPath(); x.moveTo(fx, 0); x.lineTo(fx, -2.5); x.stroke(); x.fillStyle = rnd() < 0.5 ? '#fff' : '#ffd6e8'; for (let k = 0; k < 5; k++) { elipse(x, fx + Math.cos(k * 1.257) * 0.9, -3 + Math.sin(k * 1.257) * 0.9, 0.6, 0.6); x.fill(); } x.fillStyle = '#ffd43b'; elipse(x, fx, -3, 0.5, 0.5); x.fill(); }
   } else if (cl === 'desierto') {
     x.fillStyle = 'rgba(120,70,20,.25)'; x.fillRect(0, 3.5, T, 3);
-    x.fillStyle = a.tope; x.beginPath(); x.moveTo(0, 0); for (let px = 0; px <= T; px += 2) x.lineTo(px, -0.3 + Math.sin((px + v * 5) / T * Math.PI * 2) * 0.5); x.lineTo(T, 4); x.lineTo(0, 4); x.closePath(); x.fill();
+    x.fillStyle = a.tope; x.beginPath(); x.moveTo(0, 0); for (let px = 0; px <= T; px += 2) { x.lineTo(px, -0.3 + Math.sin((px + v * 5) / T * Math.PI * 2) * 0.5); } x.lineTo(T, 4); x.lineTo(0, 4); x.closePath(); x.fill();
     x.strokeStyle = 'rgba(170,110,45,.45)'; x.lineWidth = 0.5; x.beginPath(); x.moveTo(2, 2.4); x.quadraticCurveTo(5, 1.6, 8, 2.4); x.moveTo(9, 3.2); x.quadraticCurveTo(12, 2.4, 15, 3.2); x.stroke();
     x.fillStyle = a.tope2; x.fillRect(0, -0.5, T, 0.9);
     if (v === 1) { x.fillStyle = '#a77b4f'; elipse(x, 5 + rnd() * 6, -0.6, 1.4, 0.9); x.fill(); }
@@ -484,7 +484,7 @@ function tope(x, a, cl, rnd, v) {
     x.fillStyle = 'rgba(60,110,175,.38)'; x.fillRect(0, 4, T, 3);
     x.fillStyle = '#fff'; x.beginPath(); x.moveTo(0, 1);
     x.quadraticCurveTo(4, -2.4 + v * 0.3, 8, 0.4); x.quadraticCurveTo(12, -2 - v * 0.3, T, 1);
-    x.lineTo(T, 4.4); for (let px = T - 4; px >= 0; px -= 4) x.quadraticCurveTo(px + 2, 7.6 - ((px / 4 + v) % 2) * 2.2, px, 4.4); x.closePath(); x.fill();
+    x.lineTo(T, 4.4); for (let px = T - 4; px >= 0; px -= 4) { x.quadraticCurveTo(px + 2, 7.6 - ((px / 4 + v) % 2) * 2.2, px, 4.4); } x.closePath(); x.fill();
     x.fillStyle = a.tope2; x.fillRect(0, 3.6, T, 0.8);
     x.fillStyle = 'rgba(150,200,240,.9)'; x.fillRect(2 + v * 4, 0.6, 2.4, 0.5);
   } else {
@@ -598,9 +598,9 @@ function pinchos(x, cl) {
 // Ondas periódicas: cada término [amplitud, k (entero, vueltas por periodo), fase]; así la franja se repite sin cortes.
 const ondas = (per, base, ...tt) => px => base - tt.reduce((s, [am, k, f]) => s + am * Math.sin(2 * Math.PI * k * px / per + f), 0);
 function silueta(x, per, h, fy, relleno, borde) {
-  x.beginPath(); x.moveTo(0, h + 1); for (let px = 0; px <= per; px += 2) x.lineTo(px, fy(px)); x.lineTo(per, h + 1); x.closePath();
+  x.beginPath(); x.moveTo(0, h + 1); for (let px = 0; px <= per; px += 2) { x.lineTo(px, fy(px)); } x.lineTo(per, h + 1); x.closePath();
   x.fillStyle = relleno; x.fill();
-  if (borde) { x.beginPath(); for (let px = 0; px <= per; px += 2) x.lineTo(px, fy(px) + 0.6); x.strokeStyle = borde; x.lineWidth = 1.2; x.stroke(); }
+  if (borde) { x.beginPath(); for (let px = 0; px <= per; px += 2) { x.lineTo(px, fy(px) + 0.6); } x.strokeStyle = borde; x.lineWidth = 1.2; x.stroke(); }
 }
 const envolver = (per, px, fn) => { fn(px); fn(px - per); fn(px + per); };
 function degradado(x, y0, y1, ...cols) { const gr = x.createLinearGradient(0, y0, 0, y1); cols.forEach((c, i) => gr.addColorStop(i / (cols.length - 1), c)); return gr; }
@@ -865,7 +865,7 @@ function moverY(o, dy, alTecho) {
   } else if (dy < 0) {
     const r = Math.floor(o.y / T), centro = Math.floor((o.x + o.w / 2) / T);
     const cols = [centro, izq, der];
-    for (const c of cols) if (SOLIDO(tile(c, r))) { o.y = (r + 1) * T; o.vy = 0; if (alTecho) alTecho(c, r); return 'techo'; }
+    for (const c of cols) if (SOLIDO(tile(c, r))) { o.y = (r + 1) * T; o.vy = 0; if (alTecho) { alTecho(c, r); } return 'techo'; }
   }
   return null;
 }
@@ -1298,8 +1298,8 @@ $('b-pausa').onclick = e => { e.currentTarget.blur(); if (modo === 'nivel') paus
 $('b-seguir').onclick = () => pausar(false);
 $('b-al-mapa').onclick = () => { prog.poder = P.poder; guardar(); abrirMapa(Number(nivelId.split('-')[0])); };
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { if (modo === 'nivel' && !sala) pausar(true); if (AC) AC.suspend().catch(() => {}); }
-  else { if (AC && sonido) AC.resume().catch(() => {}); ultimo = performance.now(); }
+  if (document.hidden) { if (modo === 'nivel' && !sala) { pausar(true); } if (AC) AC.suspend().catch(() => {}); }
+  else { if (AC && sonido) { AC.resume().catch(() => {}); } ultimo = performance.now(); }
 });
 
 /* ================= Overlays y avisos ================= */
@@ -1311,7 +1311,7 @@ function avisar(txt, ms) { const a = $('aviso'); const ubicar = () => { a.style.
   a.textContent = txt; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms || 1500); }
 
 /* ================= Comunicación con la plataforma ================= */
-function enviar(m) { if (!EMBED) return; try { parent.postMessage(Object.assign({ juego: 'plataformas' }, m), location.origin); } catch (e) { /* nada */ } }
+function enviar(m) { if (!EMBED) { return; } try { parent.postMessage(Object.assign({ juego: 'plataformas' }, m), location.origin); } catch (e) { /* nada */ } }
 function guardar() {
   if (sala) return;
   if (!EMBED) return;
@@ -1355,7 +1355,7 @@ function terminarSala(ms) {
 
 /* ================= Efectos y partículas ligeras (sin nada con movimiento reducido) ================= */
 let efectos = [], ambiente = [], festejado = false, camPrevia = 0;
-function polvo(x, y, n) { if (REDUCIR) return; for (let k = 0; k < n; k++) efectos.push({ tipo: 'polvo', x: x + (Math.random() - 0.5) * 6, y, vx: (Math.random() - 0.5) * 46, vy: -Math.random() * 16, r: 1.2 + Math.random() * 1.4, vida: 0.4, v0: 0.4 }); }
+function polvo(x, y, n) { if (REDUCIR) { return; } for (let k = 0; k < n; k++) efectos.push({ tipo: 'polvo', x: x + (Math.random() - 0.5) * 6, y, vx: (Math.random() - 0.5) * 46, vy: -Math.random() * 16, r: 1.2 + Math.random() * 1.4, vida: 0.4, v0: 0.4 }); }
 function brillo(x, y) {
   if (REDUCIR) return;
   efectos.push({ tipo: 'brillo', x, y, vida: 0.35, v0: 0.35 });
@@ -1556,7 +1556,7 @@ function dibujarEnemigo(e, t) {
     (accesorio[mundo.clave] || accesorio.pradera)(cx, e.y + 1, t);
   } else { // resorte saltarín
     const est = e.suelo ? 0.6 : Math.min(1.6, 1 + Math.abs(e.vy) / 300);
-    g.strokeStyle = '#94a3b8'; g.lineWidth = 1; g.beginPath(); g.moveTo(cx - 2.5, e.y + 12); for (let k = 1; k <= 4; k++) g.lineTo(cx + (k % 2 ? 2.5 : -2.5), e.y + 12 - k * est); g.stroke();
+    g.strokeStyle = '#94a3b8'; g.lineWidth = 1; g.beginPath(); g.moveTo(cx - 2.5, e.y + 12); for (let k = 1; k <= 4; k++) { g.lineTo(cx + (k % 2 ? 2.5 : -2.5), e.y + 12 - k * est); } g.stroke();
     const top = e.y + 12 - 4 * est - 8;
     g.fillStyle = col; rrect(g, e.x + 1, top, 10, 9, 3); g.fill();
     g.fillStyle = 'rgba(255,255,255,.3)'; g.fillRect(e.x + 2.5, top + 1, 5, 1.2);
@@ -1732,10 +1732,10 @@ if (PRUEBA) {
       personaje, rastro: efectos.filter(e => e.tipo === 'rastro').length }),
     // Caja del personaje en px del lienzo (incluye penachos, cola y branquias), para revisar su dibujo y capturas de cerca.
     cajaJugador: () => { const s = P.h / ALTO.base, cx = P.x + P.w / 2 - Math.round(cam.x * K) / K, pie = P.y + P.h + OY; return { x: (cx - 12 * s) * K, y: (pie - 21 * s) * K, w: 24 * s * K, h: 22 * s * K }; },
-    irAMeta: () => { if (jefe && jefe.vivo) golpearJefe(jefe.hp); const x = (metaX || (arenaX + 27) * T) - 24; P.x = x; P.y = (FIL - 3) * T - P.h - 1; P.vy = 0; },
+    irAMeta: () => { if (jefe && jefe.vivo) { golpearJefe(jefe.hp); } const x = (metaX || (arenaX + 27) * T) - 24; P.x = x; P.y = (FIL - 3) * T - P.h - 1; P.vy = 0; },
     nivel: id => iniciarNivel(id, false), // capturas por mundo (no cambia lo desbloqueado)
     alMapa: () => abrirMapa(Number(nivelId.split('-')[0])),
-    irAlJefe: () => { if (arenaX < 0) return false; P.x = (arenaX + 8) * T; P.y = (FIL - 3) * T - P.h - 1; return true; },
+    irAlJefe: () => { if (arenaX < 0) { return false; } P.x = (arenaX + 8) * T; P.y = (FIL - 3) * T - P.h - 1; return true; },
     darMonedas: n => { for (let i = 0; i < n; i++) sumarMoneda(); },
     poder: p => cambiarPoder(p),
     danar,

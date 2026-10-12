@@ -190,8 +190,8 @@ function cerrarCarrera(){
 }
 
 /* ---------- audio ---------- */
-function initAudio(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination);master.gain.value=muted?0:1}if(AC.state==='suspended')AC.resume()}catch(e){AC=null}}
-function tone(f,d,ty='square',v=.06,to,dl=0){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+dl;o.type=ty;o.frequency.setValueAtTime(f,s);if(to)o.frequency.exponentialRampToValueAtTime(to,s+d);g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(master);o.start(s);o.stop(s+d+.02)}
+function initAudio(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination);master.gain.value=muted?0:1}if(AC.state==='suspended')AC.resume()}catch{/* sin audio en este navegador */AC=null}}
+function tone(f,d,ty='square',v=.06,to=0,dl=0){if(!AC){ return; }const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+dl;o.type=ty;o.frequency.setValueAtTime(f,s);if(to){ o.frequency.exponentialRampToValueAtTime(to,s+d); }g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(master);o.start(s);o.stop(s+d+.02)}
 const sJump=()=>tone(300,.18,'square',.07,720);
 const sCoin=()=>{tone(988,.07,'square',.06);tone(1318,.18,'square',.06,undefined,.07)};
 const sHit=()=>tone(220,.35,'sawtooth',.1,45);
@@ -199,35 +199,35 @@ const sWin=()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.25,'squar
 const sLose=()=>[392,330,262,196].forEach((f,i)=>tone(f,.3,'triangle',.1,undefined,i*.18));
 const mel=[0,4,7,9,7,4,2,4,0,4,7,12,9,7,4,2,5,9,12,9,5,9,7,4,2,7,11,7,4,2,0,null];
 const bas=[0,0,-3,-5,0,0,-5,-3];
-function startMusic(){stopMusic();if(!AC)return;mi=setInterval(()=>{const n=mel[step%32];if(n!=null)tone(262*2**(n/12),.18,'square',.03);if(step%4===0)tone(131*2**(bas[(step/4)%8]/12),.5,'triangle',.07);step++},170)}
+function startMusic(){stopMusic();if(!AC){ return; }mi=setInterval(()=>{const n=mel[step%32];if(n!=null){ tone(262*2**(n/12),.18,'square',.03); }if(step%4===0){ tone(131*2**(bas[(step/4)%8]/12),.5,'triangle',.07); }step++},170)}
 function stopMusic(){clearInterval(mi);mi=null}
 // Ocultar la pestaña a mitad de carrera la pausa (openspec: mando-arcade).
-document.addEventListener('visibilitychange',()=>{if(document.hidden){if(st==='play')pausar(true);stopMusic()}else if(st==='play')startMusic()});
-$('mute').onclick=function(){muted=!muted;this.textContent=muted?'🔇':'🔊';if(master)master.gain.value=muted?0:1;this.blur()};
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(st==='play'){ pausar(true); }stopMusic()}else if(st==='play')startMusic()});
+$('mute').onclick=function(){muted=!muted;this.textContent=muted?'🔇':'🔊';if(master){ master.gain.value=muted?0:1; }this.blur()};
 
 /* ---------- flow ---------- */
 function show(id){['ovS','ovO','ovW','ovP'].forEach(i=>$(i).classList.toggle('hide',i!==id));document.body.classList.toggle('jugando',!id)}
-function startGame(){const n=performance.now();if(n-lastStart<400)return;lastStart=n;initAudio();
+function startGame(){const n=performance.now();if(n-lastStart<400){ return; }lastStart=n;initAudio();
  if(!PRUEBA)fecha=DM.fechaHoy();
  reset();run.antes=DM.vistaMisiones(prog,fecha,semilla).map(m=>m.cumplida);st='play';show(null);startMusic()}
 function saveBest(){if(score()>best){best=score();try{localStorage.setItem('dragonBest',best)}catch(e){}}}
 // Embebido: la plataforma guarda los puntos y muestra el resultado (con las misiones cumplidas).
-function avisar(gano,msgs){if(!EMBED)return false;try{parent.postMessage({juego:'dragon-run',fin:true,gano,puntos:score()+(gano?BONO:0),monedas:coins,metros:Math.floor(dist/PX),segundos:Math.round(t),misiones:msgs},location.origin)}catch(e){}return true}
-function lose(){st='over';stopMusic();saveBest();sLose();const msgs=cerrarCarrera();if(avisar(false,msgs))return;$('oS').textContent='Puntuación: '+score()+' · Distancia: '+Math.floor(dist/PX)+' m';$('oB').textContent='🏆 Récord: '+best;$('oM').innerHTML=msgs.map(esc).join('<br>');show('ovO')}
-function win(){st='win';stopMusic();saveBest();sWin();const msgs=cerrarCarrera();if(avisar(true,msgs))return;$('wS').textContent='Puntuación: '+(score()+BONO)+' (bono castillo +'+BONO+') · Monedas: '+coins;$('wB').textContent='🏆 Récord: '+best;$('wM').innerHTML=msgs.map(esc).join('<br>');show('ovW')}
+function avisar(gano,msgs){if(!EMBED){ return false; }try{parent.postMessage({juego:'dragon-run',fin:true,gano,puntos:score()+(gano?BONO:0),monedas:coins,metros:Math.floor(dist/PX),segundos:Math.round(t),misiones:msgs},location.origin)}catch(e){}return true}
+function lose(){st='over';stopMusic();saveBest();sLose();const msgs=cerrarCarrera();if(avisar(false,msgs)){ return; }$('oS').textContent='Puntuación: '+score()+' · Distancia: '+Math.floor(dist/PX)+' m';$('oB').textContent='🏆 Récord: '+best;$('oM').innerHTML=msgs.map(esc).join('<br>');show('ovO')}
+function win(){st='win';stopMusic();saveBest();sWin();const msgs=cerrarCarrera();if(avisar(true,msgs)){ return; }$('wS').textContent='Puntuación: '+(score()+BONO)+' (bono castillo +'+BONO+') · Monedas: '+coins;$('wB').textContent='🏆 Récord: '+best;$('wM').innerHTML=msgs.map(esc).join('<br>');show('ovW')}
 function alMenu(){st='start';reset();pintarMenu();show('ovS');$('bS').focus()}
 $('bS').onclick=function(){this.blur();startGame()};
 ['bO','bW'].forEach(i=>$(i).onclick=function(){this.blur();alMenu()});
-function jump(){if(st!=='play'||dr.saltos>=2)return;dr.vy=dr.saltos?-600:-720;dr.air=true;dr.saltos++;if(dr.saltos===2)run.dobles++;sJump();estela(P(16),true)}
+function jump(){if(st!=='play'||dr.saltos>=2){ return; }dr.vy=dr.saltos?-600:-720;dr.air=true;dr.saltos++;if(dr.saltos===2){ run.dobles++; }sJump();estela(P(16),true)}
 addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){
  if(st!=='play'&&e.target.closest&&e.target.closest('.sw'))return; // espacio sobre un premio: lo elige
- e.preventDefault();if(e.repeat)return;if(st==='play')jump();else if(st==='pause')pausar(false);else if(st==='start')startGame();else alMenu()}});
+ e.preventDefault();if(e.repeat){ return; }if(st==='play')jump();else if(st==='pause')pausar(false);else if(st==='start')startGame();else alMenu()}});
 // En el celular vertical, tocar cualquier parte (fuera de los botones y del mando) también salta.
-document.addEventListener('pointerdown',e=>{if(st!=='play'||e.target.closest('button,.mando'))return;e.preventDefault();jump()});
+document.addEventListener('pointerdown',e=>{if(st!=='play'||e.target.closest('button,.mando')){ return; }e.preventDefault();jump()});
 
 /* ---------- pausa (START, ⏸ u ocultar la pestaña) ---------- */
 function pausar(on){
- if(on){if(st!=='play')return;st='pause';stopMusic();$('ovP').classList.remove('hide');$('bP').focus()}
+ if(on){if(st!=='play'){ return; }st='pause';stopMusic();$('ovP').classList.remove('hide');$('bP').focus()}
  else if(st==='pause'){st='play';$('ovP').classList.add('hide');$('bP').blur();last=performance.now();startMusic()}
 }
 $('bP').onclick=()=>pausar(false);
@@ -252,7 +252,7 @@ aplicarControl();
 /* ---------- estelas ---------- */
 const NEON=['#ff4d4d','#ffa94d','#ffe14d','#5ef07a','#4dc3ff','#a06bff'];
 function estela(n,salto){const k=prog.equipo.estela;for(let i=0;i<n;i++){const p={x:DX+8+Math.random()*14,y:dr.y-4-(salto?0:Math.random()*20),vx:-60-Math.random()*160,vy:salto?-Math.random()*130+20:(Math.random()-.5)*40,l:.5+Math.random()*.4,m:.9,k};
- if(k==='burbujas'){p.vy=-30-Math.random()*50;p.l+=.3;p.m+=.3}if(k==='hojas'){p.r=Math.random()*6}if(k==='arcoiris')p.h=NEON[(Math.random()*NEON.length)|0];pt.push(p)}}
+ if(k==='burbujas'){p.vy=-30-Math.random()*50;p.l+=.3;p.m+=.3}if(k==='hojas'){p.r=Math.random()*6}if(k==='arcoiris'){ p.h=NEON[(Math.random()*NEON.length)|0]; }pt.push(p)}}
 function drawP(p){const a=Math.max(0,p.l/p.m);x.globalAlpha=Math.min(1,a+.2);
  if(p.c){x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,3,0,7);x.fill();return}
  if(p.k==='estrellas'){const r=3+a*4;x.fillStyle=a>.5?'#fff7b0':'#ffd23f';x.beginPath();for(let i=0;i<10;i++){const ang=i*Math.PI/5-Math.PI/2,rr=i%2?r*.45:r;x.lineTo(p.x+Math.cos(ang)*rr,p.y+Math.sin(ang)*rr)}x.fill()}
@@ -306,8 +306,8 @@ function bg(){
  rep(280,.06,(sx,k)=>{const y=40+hash(k)*80+Math.sin(t*.5+k)*3;x.beginPath();x.arc(sx,y,20,0,7);x.arc(sx+24,y-10,26,0,7);x.arc(sx+52,y,20,0,7);x.fill()});
  rep(330,.12,(sx,k)=>{const h=100+hash(k)*80;x.fillStyle='#8f7ee0';x.beginPath();x.moveTo(sx-110,GY);x.lineTo(sx+30,GY-h);x.lineTo(sx+170,GY);x.fill();x.fillStyle='#fff';x.beginPath();x.moveTo(sx+30,GY-h);x.lineTo(sx+8,GY-h+34);x.lineTo(sx+52,GY-h+34);x.fill()});
  rep(900,.2,(sx,k)=>castle(sx+hash(k)*300,GY-20,1.1,'#a79bd8','#c77bb5'));
- x.fillStyle='#74cf86';x.beginPath();x.moveTo(0,H);for(let i=0;i<=W;i+=20)x.lineTo(i,GY-26+Math.sin((i+dist*.3)/80)*14);x.lineTo(W,H);x.fill();
- rep(120,.55,(sx,k)=>{if(hash(k+9)<.3)return;const s=.8+hash(k)*.6;x.fillStyle='#7a4e2a';x.fillRect(sx-4*s,GY-40*s,8*s,40*s);x.fillStyle='#2f9e57';x.beginPath();x.arc(sx,GY-52*s,22*s,0,7);x.arc(sx-12*s,GY-38*s,16*s,0,7);x.arc(sx+12*s,GY-38*s,16*s,0,7);x.fill()});
+ x.fillStyle='#74cf86';x.beginPath();x.moveTo(0,H);for(let i=0;i<=W;i+=20){ x.lineTo(i,GY-26+Math.sin((i+dist*.3)/80)*14); }x.lineTo(W,H);x.fill();
+ rep(120,.55,(sx,k)=>{if(hash(k+9)<.3){ return; }const s=.8+hash(k)*.6;x.fillStyle='#7a4e2a';x.fillRect(sx-4*s,GY-40*s,8*s,40*s);x.fillStyle='#2f9e57';x.beginPath();x.arc(sx,GY-52*s,22*s,0,7);x.arc(sx-12*s,GY-38*s,16*s,0,7);x.arc(sx+12*s,GY-38*s,16*s,0,7);x.fill()});
  x.fillStyle='#6b4a2b';x.fillRect(0,GY,W,H-GY);x.fillStyle='#4fbf4f';x.fillRect(0,GY,W,12);x.fillStyle='#57391f';
  rep(60,1,(sx,k)=>x.fillRect(sx,GY+22+hash(k)*30,22,6));
 }
@@ -367,7 +367,7 @@ if(PRUEBA)window.__dragonPrueba={
  fecha(f){fecha=f;pintarMenu()},
  misiones:()=>DM.vistaMisiones(prog,fecha,semilla),
  // Suma a la carrera en curso lo justo para cumplir la misión i del día.
- cumplir(i){const c=DM.carreraParaCumplir(DM.misionesDelDia(fecha,semilla)[i]);run.extraM+=c.metros;coins+=c.monedas;run.esq+=c.esquivados;run.mejorRacha=Math.max(run.mejorRacha,c.mejorRacha);run.dobles+=c.dobles;if(c.castillo)run.castillo=true;revisarMisiones()},
+ cumplir(i){const c=DM.carreraParaCumplir(DM.misionesDelDia(fecha,semilla)[i]);run.extraM+=c.metros;coins+=c.monedas;run.esq+=c.esquivados;run.mejorRacha=Math.max(run.mejorRacha,c.mejorRacha);run.dobles+=c.dobles;if(c.castillo){ run.castillo=true; }revisarMisiones()},
  terminar(gano){if(st==='play')gano?win():lose()},
  progreso:()=>JSON.parse(JSON.stringify(prog)),
  semilla:()=>semilla,

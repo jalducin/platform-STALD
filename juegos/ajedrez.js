@@ -42,12 +42,12 @@
     for (const d of K_OFF) { const x = sq + d; if (!(x & 0x88) && t[x] === (blanco ? 'K' : 'k')) return true; }
     for (const [dirs, piezas] of [[DIAG, blanco ? 'BQ' : 'bq'], [ORTO, blanco ? 'RQ' : 'rq']]) {
       for (const d of dirs) {
-        for (let x = sq + d; !(x & 0x88); x += d) { const p = t[x]; if (p) { if (piezas.includes(p)) return true; break; } }
+        for (let x = sq + d; !(x & 0x88); x += d) { const p = t[x]; if (p) { if (piezas.includes(p)) { return true; } break; } }
       }
     }
     return false;
   }
-  const reyDe = (t, c) => { const k = c === 'w' ? 'K' : 'k'; for (let s = 0; s < 128; s++) if (!(s & 0x88) && t[s] === k) return s; return -1; };
+  const reyDe = (t, c) => { const k = c === 'w' ? 'K' : 'k'; for (let s = 0; s < 128; s++) { if (!(s & 0x88) && t[s] === k) return s; } return -1; };
   const enJaque = st => atacada(st.t, reyDe(st.t, st.turno), otro(st.turno));
 
   function pseudo(st) {
@@ -81,7 +81,7 @@
         }
       } else {
         const dirs = tipo === 'b' ? DIAG : tipo === 'r' ? ORTO : DIAG.concat(ORTO);
-        for (const d of dirs) for (let a = s + d; !(a & 0x88); a += d) { if (!t[a]) agregar(s, a); else { if (enemigo(a)) agregar(s, a); break; } }
+        for (const d of dirs) for (let a = s + d; !(a & 0x88); a += d) { if (!t[a]) agregar(s, a); else { if (enemigo(a)) { agregar(s, a); } break; } }
       }
     }
     return ms;
@@ -93,7 +93,7 @@
     if (m.ep) t[m.a + (blanco ? 16 : -16)] = null;
     if (m.enroque) { const fila = blanco ? 7 : 0, r = blanco ? 'R' : 'r'; if (m.enroque === 'K') { t[fila * 16 + 7] = null; t[fila * 16 + 5] = r; } else { t[fila * 16] = null; t[fila * 16 + 3] = r; } }
     let en = st.enroques;
-    if (p === 'K') en = en.replace(/[KQ]/g, ''); if (p === 'k') en = en.replace(/[kq]/g, '');
+    if (p === 'K') { en = en.replace(/[KQ]/g, ''); } if (p === 'k') en = en.replace(/[kq]/g, '');
     for (const [sq, l] of [[sqDe('a1'), 'Q'], [sqDe('h1'), 'K'], [sqDe('a8'), 'q'], [sqDe('h8'), 'k']]) if (m.de === sq || m.a === sq) en = en.replace(l, '');
     const n = { t, turno: otro(c), enroques: en, ep: m.doble ? (m.de + m.a) / 2 : -1, medio: p.toLowerCase() === 'p' || m.captura ? 0 : st.medio + 1, num: c === 'b' ? st.num + 1 : st.num, claves: st.claves };
     if (!sinClave) n.claves = st.claves.concat(clave(n));

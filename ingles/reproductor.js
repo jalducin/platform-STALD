@@ -3,7 +3,7 @@ async function loadActividades() {
   try {
     const r = await fetchJson(ACT_URL + '?email=' + encodeURIComponent(state.email));
     state.act = r.ok ? r.body : null;
-  } catch (e) { state.act = null; }
+  } catch { /* sin conexión: se pinta sin actividad */ state.act = null; }
 }
 
 function volverBtn() { return '<button class="btn ghost" data-action="volver">← Volver</button>'; }
@@ -107,11 +107,11 @@ function hashCorto(s) { // FNV-1a de 32 bits en base 36: separa personas sin dej
 }
 function claveBorrador(id, intento) { return BORRADOR + BORRADOR_AMBITO + ':' + hashCorto(state.email) + ':' + id + ':' + intento; }
 function almacenDisponible() {
-  try { localStorage.setItem(BORRADOR + 'prueba', '1'); localStorage.removeItem(BORRADOR + 'prueba'); return true; } catch (e) { return false; }
+  try { localStorage.setItem(BORRADOR + 'prueba', '1'); localStorage.removeItem(BORRADOR + 'prueba'); return true; } catch { /* almacenamiento bloqueado o lleno */ return false; }
 }
 function clavesBorrador() { try { return Object.keys(localStorage).filter(k => k.startsWith(BORRADOR)); } catch (e) { return []; } }
 function leerBorrador(k) {
-  try { const d = JSON.parse(localStorage.getItem(k) || 'null'); return d && d.r && typeof d.r === 'object' ? d : null; } catch (e) { return null; }
+  try { const d = JSON.parse(localStorage.getItem(k) || 'null'); return d && d.r && typeof d.r === 'object' ? d : null; } catch { /* borrador ilegible o sin almacenamiento: se ignora */ return null; }
 }
 function quitarBorrador(k) { try { if (k) localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } }
 // Borra los caducados o ilegibles y, con `prefijo`, los de ese elemento salvo `conservar`.
@@ -154,7 +154,7 @@ async function subirCuenta(form, keepalive) {
     if (res.ok) { form.dataset.enCuenta = String(Date.now()); delete form.dataset.pendiente; if (form._respuestas === respuestas) form._respuestas = null; }
     else if (res.status >= 500 || res.status === 429) form.dataset.pendiente = '1'; // pasajero: se reintenta
     else form._respuestas = null; // 4xx: intento cerrado o sin acceso, no insistir
-  } catch (e) { form.dataset.pendiente = '1'; }
+  } catch { /* sin conexión: queda pendiente y se reintenta */ form.dataset.pendiente = '1'; }
   pintarGuardado();
 }
 document.addEventListener('visibilitychange', () => {
@@ -195,7 +195,7 @@ function restaurarBorrador(form) {
     const radio = [...q.querySelectorAll('input[type=radio]:not(:disabled)')].find(i => i.value === String(v));
     const txt = q.querySelector('input.q-text:not(:disabled)');
     const par = q.querySelector('input.q-par:not(:disabled)');
-    if (par) { if (!Array.isArray(v) || !v.some(x => x)) continue; empPintar(q, v, '', true); }
+    if (par) { if (!Array.isArray(v) || !v.some(x => x)) { continue; } empPintar(q, v, '', true); }
     else if (radio) radio.checked = true;
     else if (txt && typeof v === 'string' && v.trim()) {
       txt.value = v;
@@ -395,7 +395,7 @@ function bloqueEmparejar(p, fija) {
     '<div class="sr-only" aria-live="polite" data-anuncio></div></div>';
 }
 function leerPares(valor) {
-  try { const r = JSON.parse(valor || '[]'); return Array.isArray(r) ? r.map(x => typeof x === 'string' ? x : '') : []; } catch (e) { return []; }
+  try { const r = JSON.parse(valor || '[]'); return Array.isArray(r) ? r.map(x => typeof x === 'string' ? x : '') : []; } catch { /* valor ilegible: sin pares */ return []; }
 }
 function empPintar(q, r, anuncio, sinProgreso) {
   const izqs = [...q.querySelectorAll('.emp-btn[data-lado="izq"]')], ders = [...q.querySelectorAll('.emp-btn[data-lado="der"]')];

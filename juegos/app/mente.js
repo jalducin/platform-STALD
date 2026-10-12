@@ -19,7 +19,7 @@ function sudokuResuelto(rnd = Math.random) {
   const g = Array(81).fill(0);
   const llenar = i => {
     if (i === 81) return true;
-    for (const v of barajar([1, 2, 3, 4, 5, 6, 7, 8, 9], rnd)) if (sdkPuede(g, i, v)) { g[i] = v; if (llenar(i + 1)) return true; g[i] = 0; }
+    for (const v of barajar([1, 2, 3, 4, 5, 6, 7, 8, 9], rnd)) if (sdkPuede(g, i, v)) { g[i] = v; if (llenar(i + 1)) { return true; } g[i] = 0; }
     return false;
   };
   llenar(0);
@@ -88,7 +88,7 @@ function jugarSudoku(nivel) {
   const segundos = () => (Date.now() - t0) / 1000 / TIEMPO;
   enCurso.foto = () => terminado || errores >= 3 ? null : { nivel, puzzle, sol, g: g.slice(), errores, segundos: segundos(), faltan: g.filter(x => !x).length };
   if (g.some((v, i) => v && !puzzle[i])) m.puntos(puntosSudoku(nivel, segundos(), errores));
-  const tTimer = setInterval(() => { const e = document.getElementById('m-tiempo'); if (!e) return; const sg = Math.floor(segundos()); e.hidden = false; e.textContent = '⏱ ' + Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0'); }, 500);
+  const tTimer = setInterval(() => { const e = document.getElementById('m-tiempo'); if (!e) { return; } const sg = Math.floor(segundos()); e.hidden = false; e.textContent = '⏱ ' + Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0'); }, 500);
   limpiezas.push(() => clearInterval(tTimer));
   m.body.innerHTML = '<p class="muted" style="text-align:center;margin:0">' + N.emoji + ' ' + N.t + ' · faltan <b id="sdk-faltan"></b></p>' +
     '<div class="sdk" id="sdk">' + g.map((v, i) => { const r = Math.floor(i / 9), c = i % 9; return '<button data-sdk-i="' + i + '" class="' + [puzzle[i] ? 'fija' : '', c % 3 === 2 && c < 8 ? 'bd' : '', r % 3 === 2 && r < 8 ? 'bb' : ''].join(' ').trim() + '" aria-label="Fila ' + (r + 1) + ', columna ' + (c + 1) + '">' + (v || '') + '</button>'; }).join('') + '</div>' +
@@ -107,7 +107,7 @@ function jugarSudoku(nivel) {
     for (let n = 1; n <= 9; n++) { const q = 9 - g.filter(x => x === n).length; document.getElementById('sdk-q' + n).textContent = q ? q : '✓'; m.body.querySelector('[data-sdk-n="' + n + '"]').disabled = !q; }
   };
   const fin = gano => {
-    if (terminado) return; terminado = true;
+    if (terminado) { return; } terminado = true;
     const seg = segundos();
     if (gano) terminar('mente-sudoku', { puntos: puntosSudoku(nivel, seg, errores), aciertos: 81 - puzzle.filter(Boolean).length, total: 81 - puzzle.filter(Boolean).length, segundos: seg, titulo: '🔢 ¡Sudoku resuelto!', detalle: N.emoji + ' ' + N.t + ' · ' + Math.floor(seg / 60) + ' min ' + Math.round(seg % 60) + ' s · ' + errores + ' error(es)' });
     else terminar('mente-sudoku', { puntos: 0, aciertos: g.filter(Boolean).length - puzzle.filter(Boolean).length, total: 81 - puzzle.filter(Boolean).length, segundos: seg, titulo: '💔 Sin vidas', detalle: 'Te equivocaste 3 veces. ¡Inténtalo de nuevo!' });
@@ -231,7 +231,7 @@ function jugarAjedrez(nivel, yo) {
   function turnoBot() {
     if (terminado || st.turno === yo) return pintar();
     pensando = true; pintar();
-    const t = setTimeout(() => { if (terminado) return; pensando = false; mover(Ajedrez.bot(st, nivel)); }, 450 * TIEMPO);
+    const t = setTimeout(() => { if (terminado) { return; } pensando = false; mover(Ajedrez.bot(st, nivel)); }, 450 * TIEMPO);
     limpiezas.push(() => clearTimeout(t));
   }
   m.body.addEventListener('click', e => {
@@ -239,7 +239,7 @@ function jugarAjedrez(nivel, yo) {
     if (e.target.closest('[data-aj-rendir]')) { if (confirm('¿Rendirte? Gambito gana la partida.')) { fin({ fin: 'rendicion', gana: yo === 'w' ? 'b' : 'w' }); } return; }
     if (st.turno !== yo || pensando) return;
     const pr = e.target.closest('[data-aj-promo]');
-    if (pr && promo) { const mv = Ajedrez.legales(st).find(x => x.de === promo.de && x.a === promo.a && x.promo === pr.dataset.ajPromo); if (mv) mover(mv); return; }
+    if (pr && promo) { const mv = Ajedrez.legales(st).find(x => x.de === promo.de && x.a === promo.a && x.promo === pr.dataset.ajPromo); if (mv) { mover(mv); } return; }
     const c = e.target.closest('[data-aj]'); if (!c) return;
     const r = ajClic(st, yo, sel, Number(c.dataset.aj));
     if (r.jugada) return mover(r.jugada);

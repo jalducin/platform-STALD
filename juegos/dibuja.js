@@ -114,7 +114,7 @@
   const nombreDe = id => (sala.estado.jugadores.find(j => j.id === id) || {}).nombre || '?';
 
   function pintar(body) {
-    const e = sala.estado, s = e.sala, st = est();
+    const e = sala.estado, st = est();
     if (SG.cuenta(body, '¡Prepárense! Dibuja primero ' + escapeHtml(nombreDe(humanosOrden()[0] && humanosOrden()[0].id)))) return;
     const ahora = ahoraServidor(), cal = calendarioSala(), act = turnoEn(cal, ahora);
     if (!act) {

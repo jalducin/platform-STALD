@@ -15,7 +15,7 @@ function en(hoyo: number, x?: number, y?: number, reloj = 0, n = 1) {
   st.reloj = reloj;
   return st;
 }
-const correr = (st: any, tiro: any) => { const s = G.crearSim(st, tiro); while (!s.termino) s.paso(); return s; };
+const correr = (st: any, tiro: any) => { const s = G.crearSim(st, tiro); while (!s.termino) { s.paso(); } return s; };
 
 Deno.test("golf: el motor solo usa + − * / y Math.sqrt", () => {
   const fuente = Deno.readTextFileSync(new URL("../juegos/golf-motor.js", import.meta.url));
@@ -168,7 +168,7 @@ Deno.test("golf: la animación por subpasos da lo mismo que la reproducción ins
   const tiro = { angulo: 2690, fuerza: 70 };
   const sim = G.crearSim(st, tiro);
   let cuadros = 0;
-  while (!sim.termino) { for (let i = 0; i < G.SUB && !sim.termino; i++) sim.paso(); cuadros++; }
+  while (!sim.termino) { for (let i = 0; i < G.SUB && !sim.termino; i++) { sim.paso(); } cuadros++; }
   assertEquals(JSON.stringify(sim.resultado()), JSON.stringify(G.aplicar(st, tiro)));
   assert(cuadros > 10);
 });

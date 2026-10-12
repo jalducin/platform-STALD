@@ -492,7 +492,7 @@ function pasoIndividual() {
     if (!sim.termino) return;
     const antes = juego.st, r = sim.resultado().st;
     juego.sim = null;
-    if (sim.evento === 'agua' || sim.evento === 'fuera') { if (sim.donde && !U.REDUCIR) efectos.push({ x: sim.donde.x, y: sim.donde.y, t: performance.now() }); avisoEvento(sim.evento); }
+    if (sim.evento === 'agua' || sim.evento === 'fuera') { if (sim.donde && !U.REDUCIR) { efectos.push({ x: sim.donde.x, y: sim.donde.y, t: performance.now() }); } avisoEvento(sim.evento); }
     if (sim.evento === 'hoyo') sonarHoyo();
     juego.st = r;
     if (r.ultimo.recogida) U.avisar('🫳 Llegaste al límite: se recoge la pelota', 1600);
@@ -526,7 +526,7 @@ function terminarHoyo(k, st) {
   U.enviar({ tipo: 'puntos', puntos: pts, aciertos: est, total: 3, segundos: seg });
 }
 // Golpes contra el par hasta el hoyo k (incluido).
-function totalVsPar(st, idx, k) { let d = 0; for (let i = 0; i <= k; i++) d += st.jug[idx].golpes[i] - G.HOYOS[st.hoyos[i]].par; return d; }
+function totalVsPar(st, idx, k) { let d = 0; for (let i = 0; i <= k; i++) { d += st.jug[idx].golpes[i] - G.HOYOS[st.hoyos[i]].par; } return d; }
 function siguienteHoyo() {
   juego.mostrar = null; cam = null; modo = 'juego'; ocultar();
   apuntarAlHoyo(juego.st, 0); presentarHoyo(juego.st);
@@ -751,7 +751,12 @@ function cuadro(ahora) {
   cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
   if (modo === 'juego' || modo === 'sala') {
     acum += dt; let n = 0;
-    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoIndividual(); else if (modo === 'sala' && sala) pasoSala(); else break; /* un paso pudo volver al menú (sala = null) */ entradaContinua(); acum -= PASO; n++; }
+    while (acum >= PASO && n < 6) {
+      if (modo === 'juego') pasoIndividual();
+      else if (modo === 'sala' && sala) pasoSala();
+      else break; /* un paso pudo volver al menú (sala = null) */
+      entradaContinua(); acum -= PASO; n++;
+    }
     if (n === 6) acum = 0;
     if (modo === 'juego' && juego) {
       $('panel').classList.toggle('hide', !puedoApuntar());

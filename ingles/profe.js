@@ -14,7 +14,7 @@ async function loadProfe(email) {
 
 // ---------- Vista del profe (openspec: profe-diseno): avance, lo urgente arriba y el resto en pestañas ----------
 const PF_TABS = [['semana', '📅 Esta semana'], ['plan', '🗺️ Plan del mes'], ['grupo', '👥 Mi grupo'], ['hechas', '✅ Hechas']];
-function pfTabGuardada() { try { const t = localStorage.getItem('profe_tab'); return PF_TABS.some(x => x[0] === t) ? t : 'semana'; } catch (e) { return 'semana'; } }
+function pfTabGuardada() { try { const t = localStorage.getItem('profe_tab'); return PF_TABS.some(x => x[0] === t) ? t : 'semana'; } catch { /* sin almacenamiento: pestaña por omisión */ return 'semana'; } }
 function pfFila(it) {
   const tag = it.grupo ? '<span class="pf-tag grupo">👥 Grupo</span>' : '<span class="pf-tag ruta">🎓 Ruta</span>';
   let sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + ' · ' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)';

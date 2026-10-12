@@ -162,7 +162,7 @@
       if (b && b.dataset.lt === 'siguiente' && sig) { const f = sig.fn; sig = null; b.disabled = true; return f(); }
       if (ignorarClick || confirmado) return;
       const t = e.target.closest('[data-lt-tarjeta]'), c = e.target.closest('[data-lt-casilla]');
-      if (t) { const k = casillas.indexOf(null); if (k >= 0) mover({ tipo: 'pool', i: Number(t.dataset.ltTarjeta) }, { tipo: 'casilla', i: k }); return; }
+      if (t) { const k = casillas.indexOf(null); if (k >= 0) { mover({ tipo: 'pool', i: Number(t.dataset.ltTarjeta) }, { tipo: 'casilla', i: k }); } return; }
       if (c && casillas[Number(c.dataset.ltCasilla)] !== null) return mover({ tipo: 'casilla', i: Number(c.dataset.ltCasilla) }, { tipo: 'pool' });
       if (b && b.dataset.lt === 'borrar') { casillas.fill(null); pintar(); }
       if (b && b.dataset.lt === 'confirmar') confirmar(false);
@@ -193,7 +193,7 @@
     const t0 = Date.now();
     m.vidas(vidas);
     const acabar = titulo => {
-      if (terminado) return; terminado = true; if (stop) stop();
+      if (terminado) { return; } terminado = true; if (stop) stop();
       terminar('cultura-linea', { puntos, aciertos: perfectas, total: i, segundos: (Date.now() - t0) / 1000, titulo,
         detalle: 'Tema: <b>' + esc(nombreTema(tema)) + '</b> · ' + plural(perfectas, 'línea perfecta', 'líneas perfectas') + ' de ' + i });
     };

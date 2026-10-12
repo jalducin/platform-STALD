@@ -17,7 +17,7 @@ let abrirAvatar = new URLSearchParams(location.search).get('avatar') === '1';
 // apodo espera en este navegador (sin correo) hasta que el enlace confirma la sesión.
 let abrirRegistro = new URLSearchParams(location.search).get('registro') === '1';
 const REGISTRO_KEY = 'juegos_registro';
-const registroPendiente = () => { try { const r = JSON.parse(localStorage.getItem(REGISTRO_KEY) || 'null'); return r && r.apodo && r.acepto === true ? r : null; } catch (e) { return null; } };
+const registroPendiente = () => { try { const r = JSON.parse(localStorage.getItem(REGISTRO_KEY) || 'null'); return r && r.apodo && r.acepto === true ? r : null; } catch { /* registro ilegible o sin almacenamiento: no hay pendiente */ return null; } };
 const borrarRegistro = () => { try { localStorage.removeItem(REGISTRO_KEY); } catch (e) { /* sin almacenamiento */ } };
 
 const app = document.getElementById('app');
@@ -26,7 +26,7 @@ const chip = document.getElementById('chip');
 const state = { email: null, jugador: null, totalIndividual: 0, totalPartidas: 0, pos: null, posPartidas: null, mejores: {}, semana: null, tab: 'juegos', rtipo: 'individual' };
 let limpiezas = []; // timers del juego en curso
 // Al dejar un juego (terminar, salir, empezar otro): detiene timers y descarta la partida individual guardada.
-function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) speechSynthesis.cancel(); soltarPartida(); modoPartida(false); }
+function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) { speechSynthesis.cancel(); } soltarPartida(); modoPartida(false); }
 
 // ---------- Recarga del navegador (openspec: juegos-recarga) ----------
 // Sala activa: la URL lleva ?sala= y localStorage.juegos_sala_activa = { codigo, quien, t, marcas? }. Juego
@@ -38,7 +38,7 @@ const escribirLocal = (k, v) => { try { if (v === null) localStorage.removeItem(
 const vigente = x => !!x && !!state.jugador && x.quien === state.jugador.id && Math.abs(Date.now() - Number(x.t)) < RECARGA_MS;
 const numEntre = (x, max) => Math.max(0, Math.min(max, Math.round(Number(x) || 0)));
 const modoPartida = on => document.documentElement.classList.toggle('jugando', !!on);
-function urlConSala(codigo) { const u = new URL(location.href); if (codigo) u.searchParams.set('sala', codigo); else u.searchParams.delete('sala'); return u.pathname + u.search + u.hash; }
+function urlConSala(codigo) { const u = new URL(location.href); if (codigo) u.searchParams.set('sala', codigo); else { u.searchParams.delete('sala'); } return u.pathname + u.search + u.hash; }
 function recordarSala(codigo, extra) {
   const previa = leerLocal(SALA_KEY);
   escribirLocal(SALA_KEY, Object.assign({}, previa && previa.codigo === codigo ? previa : {}, extra, { codigo, quien: state.jugador && state.jugador.id, t: Date.now() }));
@@ -98,7 +98,7 @@ const post = (ruta, datos) => api(ruta, { method: 'POST', headers: { 'content-ty
 const cacheDatos = {};
 async function datos(nombre) {
   // Si la descarga falla, se olvida la promesa para reintentar la próxima vez (openspec: cache-estabilidad).
-  if (!cacheDatos[nombre]) cacheDatos[nombre] = fetch('juegos/datos/' + nombre + '.json').then(r => { if (!r.ok) throw new Error('datos ' + nombre); return r.json(); })
+  if (!cacheDatos[nombre]) cacheDatos[nombre] = fetch('juegos/datos/' + nombre + '.json').then(r => { if (!r.ok) { throw new Error('datos ' + nombre); } return r.json(); })
     .catch(e => { delete cacheDatos[nombre]; throw e; });
   return cacheDatos[nombre];
 }

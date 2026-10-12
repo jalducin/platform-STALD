@@ -15,7 +15,7 @@ const ADM_SUBS = [
 const ADM_FUENTES = ['jugadores', 'invitados', 'fotos'];
 const ADM_KEY = 'juegos_admin_sub';
 const subAdmin = id => ADM_SUBS.find(s => s.id === id);
-const leerSubAdmin = () => { try { const v = localStorage.getItem(ADM_KEY); return subAdmin(v) ? v : 'jugadores'; } catch (e) { return 'jugadores'; } };
+const leerSubAdmin = () => { try { const v = localStorage.getItem(ADM_KEY); return subAdmin(v) ? v : 'jugadores'; } catch { /* sin almacenamiento: sección por omisión */ return 'jugadores'; } };
 const guardarSubAdmin = id => { try { localStorage.setItem(ADM_KEY, id); } catch (e) { /* sin almacenamiento */ } };
 const normaliza = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const fechaCorta = s => s ? new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—';

@@ -102,7 +102,7 @@
   function ponerFicha(i, pos) {
     const el = document.getElementById('cr-ficha-' + i); if (!el) return;
     const c = CR.serpCelda(Math.max(1, pos)), off = [[0, 0], [3, 0], [0, 3], [3, 3]][i];
-    el.style.left = (c.col * 10 + 1 + off[0] - (pos ? 0 : 0)) + '%'; el.style.top = (c.fila * 10 + 1 + off[1] + (pos ? 0 : 0)) + '%';
+    el.style.left = (c.col * 10 + 1 + off[0]) + '%'; el.style.top = (c.fila * 10 + 1 + off[1]) + '%';
     el.style.opacity = pos ? '1' : '.85';
   }
   const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
@@ -130,11 +130,11 @@
     function poner(i, f) {
       t[i] = f; ult = i;
       const r = CR.gatoGanador(t);
-      if (!r) { turno = f === 'X' ? 'O' : 'X'; pintar(); if (turno === 'O') botJuega(); return; }
+      if (!r) { turno = f === 'X' ? 'O' : 'X'; pintar(); if (turno === 'O') { botJuega(); } return; }
       res = r;
       if (r.empate) { emp++; puntos += PTS[1]; sonidoOk(); } else if (r.gana === 'X') { gan++; puntos += PTS[0]; sonidoOk(); } else { perd++; sonidoMal(); }
       pintar(r.empate ? '🤝 ¡Empate! +' + PTS[1] : r.gana === 'X' ? '🎉 ¡Ganaste la ronda! +' + PTS[0] : '🐱 Michi ganó esta ronda');
-      espera(1600, () => { if (++ronda < 3) return empezar(); terminado = true; terminar('gato', { puntos, aciertos: gan, total: 3, segundos: tiempoDesde(t0), titulo: gan > perd ? '🏆 ¡Le ganaste a Michi!' : gan === perd ? '🤝 ¡Quedaron parejos!' : '🐱 Michi ganó la serie', detalle: 'Nivel ' + NIVELES[nivel] + ' · ' + gan + ' ganadas, ' + emp + ' empates y ' + perd + ' perdidas.' }); });
+      espera(1600, () => { if (++ronda < 3) { return empezar(); } terminado = true; terminar('gato', { puntos, aciertos: gan, total: 3, segundos: tiempoDesde(t0), titulo: gan > perd ? '🏆 ¡Le ganaste a Michi!' : gan === perd ? '🤝 ¡Quedaron parejos!' : '🐱 Michi ganó la serie', detalle: 'Nivel ' + NIVELES[nivel] + ' · ' + gan + ' ganadas, ' + emp + ' empates y ' + perd + ' perdidas.' }); });
     }
     function botJuega() { espera(550, () => { if (!terminado && !res) poner(CR.gatoBot(t, 'O', nivel, Math.random), 'O'); }); }
     m.body.addEventListener('click', e => { const b = e.target.closest('[data-cr-g]'); if (b && !b.disabled && turno === 'X' && !res) poner(Number(b.dataset.crG), 'X'); });
@@ -159,7 +159,7 @@
       const s = CR.c4Soltar(t, col, f); if (!s) return;
       t = s.t; ult = { col, fila: s.fila }; tono(f === 'R' ? 520 : 400, 70);
       const r = CR.c4Ganador(t);
-      if (!r) { turno = f === 'R' ? 'A' : 'R'; pintar(); if (turno === 'A') espera(650, () => { if (!terminado) soltar(CR.c4Bot(t, 'A', nivel, Math.random), 'A'); }); return; }
+      if (!r) { turno = f === 'R' ? 'A' : 'R'; pintar(); if (turno === 'A') { espera(650, () => { if (!terminado) soltar(CR.c4Bot(t, 'A', nivel, Math.random), 'A'); }); } return; }
       res = r; terminado = true;
       const puntos = r.empate ? PTS[1] : r.gana === 'R' ? PTS[0] : 50;
       r.gana === 'R' || r.empate ? sonidoOk() : sonidoMal();
@@ -282,7 +282,7 @@
         msg((quien ? jug[quien].nombre : 'Sacaste') + (quien ? ' sacó ' : ' ') + dado + (mv.salto === 'escalera' ? ' · 🪜 ¡sube a la ' + mv.hasta + '!' : mv.salto === 'serpiente' ? ' · 🐍 ¡baja a la ' + mv.hasta + '!' : ''));
         espera(mv.salto ? 550 : 50, () => {
           pos[quien] = mv.hasta; ponerFicha(quien, mv.hasta);
-          if (mv.salto === 'escalera' && quien === 0) sonidoOk(); if (mv.salto === 'serpiente' && quien === 0) sonidoMal();
+          if (mv.salto === 'escalera' && quien === 0) { sonidoOk(); } if (mv.salto === 'serpiente' && quien === 0) sonidoMal();
           if (mv.hasta === 100) {
             terminado = true; refrescar();
             const puntos = quien === 0 ? 700 : pos[0] * 4;
@@ -319,7 +319,7 @@
     const orden = participantes();
     return {
       orden: orden.map(p => ({ id: p.id, bot: !!p.bot })), jugadas, inicio: s.inicio, ahora: ahoraServidor(), dur, rng: et => rngDe(s.seed, et),
-      memo: (k, f) => { if (!c.memo.has(k)) c.memo.set(k, f()); return c.memo.get(k); }, modo: s.opciones.modo, palabras: c.palabras, participantes: orden,
+      memo: (k, f) => { if (!c.memo.has(k)) { c.memo.set(k, f()); } return c.memo.get(k); }, modo: s.opciones.modo, palabras: c.palabras, participantes: orden,
     };
   }
   async function enviar(jugada) {
@@ -330,7 +330,7 @@
     c.enviando = false; sala.vista = null; pintarSala();
     if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');
   }
-  const barra = (lim, total) => { const bar = document.getElementById('m-bar'); if (!bar) return; if (lim === null) { bar.hidden = true; return; } bar.hidden = false; bar.firstChild.style.width = Math.max(0, Math.min(100, (lim - ahoraServidor()) / total * 100)) + '%'; };
+  const barra = (lim, total) => { const bar = document.getElementById('m-bar'); if (!bar) { return; } if (lim === null) { bar.hidden = true; return; } bar.hidden = false; bar.firstChild.style.width = Math.max(0, Math.min(100, (lim - ahoraServidor()) / total * 100)) + '%'; };
   function cuenta(body, texto) {
     const k = 'cuenta:' + Math.ceil((sala.estado.sala.inicio - ahoraServidor()) / 1000);
     if (sala.vista !== k) { body.innerHTML = '<div class="q-card"><div class="sub">' + texto + '</div><div class="letra">' + Math.ceil((sala.estado.sala.inicio - ahoraServidor()) / 1000) + '</div></div>'; sala.vista = k; }

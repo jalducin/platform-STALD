@@ -200,7 +200,7 @@ function dibujarMesa() {
   g.fillStyle = gr; g.fillRect(0, 0, A, L);
   // Diamantes
   g.fillStyle = '#f5e7c8';
-  for (let i = 1; i < 8; i++) { if (i === 4) continue; for (const y of [-BANDA / 2 - 4, L + BANDA / 2 + 4]) { g.beginPath(); g.arc(i * A / 8, y, 4, 0, Math.PI * 2); g.fill(); } }
+  for (let i = 1; i < 8; i++) { if (i === 4) { continue; } for (const y of [-BANDA / 2 - 4, L + BANDA / 2 + 4]) { g.beginPath(); g.arc(i * A / 8, y, 4, 0, Math.PI * 2); g.fill(); } }
   for (let i = 1; i < 4; i++) for (const x of [-BANDA / 2 - 4, A + BANDA / 2 + 4]) { g.beginPath(); g.arc(x, i * L / 4, 4, 0, Math.PI * 2); g.fill(); }
   // Línea de salida y punto del pie
   g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 2;
@@ -519,7 +519,7 @@ function leerMando() {
     else if (performance.now() - finoDesde[a] > 300 && puedoApuntar()) girar(d);
   }
 }
-function elegirControl(c) { if (!CONTROLES.includes(c)) return; control = c; U.guardarLS('billar_control', c); acciones.soltarTodo(); pintarControles(); }
+function elegirControl(c) { if (!CONTROLES.includes(c)) { return; } control = c; U.guardarLS('billar_control', c); acciones.soltarTodo(); pintarControles(); }
 const AYUDA = {
   tactil: '👆 <b>Arrastra sobre la mesa</b> para apuntar (línea guía y bola fantasma) y afina con <b>⟲ ⟳</b> (sostenlos para girar más). Elige la fuerza en la <b>barra vertical</b> y toca <b>🎱 TIRAR</b>. O <b>jala desde la bola blanca</b> como resortera: suelta para tirar o regresa a la blanca para cancelar. Efecto opcional: ⬆ seguir o ⬇ retroceder.',
   mando: '🎮 Cruceta ◀ ▶: apuntar · <b>L</b> / <b>R</b>: fino · <b>X</b> / <b>Y</b> (o ▲ ▼): fuerza · <b>B</b>: efecto · <b>A</b>: tirar · <b>START</b>: menú. También puedes jalar la resortera con el dedo.',
@@ -578,7 +578,12 @@ function cuadro(ahora) {
   if (modo === 'juego' || modo === 'sala') leerMando();
   if (modo === 'juego' || modo === 'sala') {
     acum += dt; let n = 0;
-    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoIndividual(); else if (modo === 'sala' && sala) pasoSala(); else break; /* un paso pudo cambiar de modo */ acum -= PASO; n++; }
+    while (acum >= PASO && n < 6) {
+      if (modo === 'juego') pasoIndividual();
+      else if (modo === 'sala' && sala) pasoSala();
+      else break; /* un paso pudo cambiar de modo */
+      acum -= PASO; n++;
+    }
     if (n === 6) acum = 0;
     if (modo === 'juego' && st) {
       pintarHud(st, sim ? (simOrigen === 'bot' ? 1 : 0) : st.turno);

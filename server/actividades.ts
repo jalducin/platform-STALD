@@ -185,7 +185,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     if (quien.isAdmin) {
       const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), ...(it.prorrogas ? { prorrogas: it.prorrogas } : {}), resultados: tieneReto(it) ? await resultadosDe(store, it.id) : [] })));
       const porAlumno = new Map<string, Resultado[]>();
-      for (const it of conRes) for (const r of it.resultados) { if (!porAlumno.has(r.alumno)) porAlumno.set(r.alumno, []); porAlumno.get(r.alumno)!.push(r); }
+      for (const it of conRes) for (const r of it.resultados) { if (!porAlumno.has(r.alumno)) { porAlumno.set(r.alumno, []); } porAlumno.get(r.alumno)!.push(r); }
       const resumen = Object.fromEntries([...porAlumno].map(([a, rs]) => [a, { temasAReforzar: temasAReforzar(rs) }]));
       return json({ isAdmin: true, hoy, semana, ...siguiente, items: conRes, resumen });
     }

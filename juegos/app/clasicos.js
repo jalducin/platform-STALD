@@ -49,7 +49,7 @@ async function empezarBasta(idioma, d) {
     '<div class="row-btns" style="grid-column:1/-1"><button class="btn" type="submit">✋ ¡Basta!</button></div></form>';
   const primero = m.body.querySelector('input'); if (primero) primero.focus();
   const calificar = (porBasta, quedan) => {
-    if (terminado) return; terminado = true; limpiar();
+    if (terminado) { return; } terminado = true; limpiar();
     const vistas = new Set();
     let puntos = 0, aciertos = 0;
     const filas = d.categorias.map(c => {
@@ -57,7 +57,7 @@ async function empezarBasta(idioma, d) {
       const n = normBasta(valor);
       let estado, pts = 0;
       if (!n) estado = '—';
-      else if (!n.startsWith(L) || n.length < 2) estado = '✘ ' + (idioma === 'en' ? 'no empieza con ' : 'no empieza con ') + letra;
+      else if (!n.startsWith(L) || n.length < 2) estado = '✘ no empieza con ' + letra;
       else if (vistas.has(n)) estado = '✘ repetida';
       else if (dic[c.id].has(n)) { estado = '✔ verificada'; pts = 100; aciertos++; }
       else if (n.length >= 3) { estado = '¿? no la conozco'; pts = 50; }
@@ -94,7 +94,7 @@ function unaMazo() {
   const m = [];
   for (const c of ['r', 'y', 'g', 'b']) {
     m.push({ c, v: '0' });
-    for (let k = 0; k < 2; k++) { for (let n = 1; n <= 9; n++) m.push({ c, v: String(n) }); m.push({ c, v: 'skip' }, { c, v: 'rev' }, { c, v: '+2' }); }
+    for (let k = 0; k < 2; k++) { for (let n = 1; n <= 9; n++) { m.push({ c, v: String(n) }); } m.push({ c, v: 'skip' }, { c, v: 'rev' }, { c, v: '+2' }); }
   }
   for (let k = 0; k < 4; k++) m.push({ c: null, v: 'wild' }, { c: null, v: '+4' });
   return barajar(m);
@@ -123,7 +123,7 @@ function jugarUna(numBots, lang) {
   const m = marco('una');
   const nombres = ['Tú', 'Ajolote 🦎', 'Colibrí 🐦', 'Tlacuache 🐀'];
   let resolverUna = () => {};
-  let mazo = unaMazo(), pila = [], dir = 1, turno = 0, color = null, terminado = false, esperandoUna = false, dijoUna = false, jugadas = 0, robada = null, msg = '';
+  let mazo = unaMazo(), pila = [], dir = 1, turno = 0, color = null, terminado = false, esperandoUna = false, jugadas = 0, robada = null, msg = '';
   let nuevas = []; // basta-divertida-una-robo: cartas recién robadas por ti (se animan una vez)
   const manos = Array.from({ length: numBots + 1 }, () => []);
   const t0 = Date.now();
@@ -170,7 +170,7 @@ function jugarUna(numBots, lang) {
 
   function aplicar(j, c) {
     pila.push(c); if (c.c) color = c.c;
-    anunciar(nombreCarta(c) + (c.c ? '' : (lang === 'en' ? ', ' : ', ') + T.color[color]));
+    anunciar(nombreCarta(c) + (c.c ? '' : ', ' + T.color[color]));
     if (!manos[j].length) return fin(j);
     let pasos = 1;
     if (c.v === 'skip') pasos = 2;
@@ -212,7 +212,7 @@ function jugarUna(numBots, lang) {
     if (!c.c) color = colorElegido;
     msg = (lang === 'en' ? 'You: ' : 'Tú: ') + nombreCarta(c);
     if (manos[0].length === 1) {
-      esperandoUna = true; dijoUna = false;
+      esperandoUna = true;
       pila.push(c); if (c.c) color = c.c;
       anunciar(nombreCarta(c));
       const tJugada = Date.now();
@@ -237,7 +237,7 @@ function jugarUna(numBots, lang) {
   m.body.addEventListener('click', e => {
     if (terminado) return;
     const a = e.target.closest('[data-una]'), k = e.target.closest('[data-una-card]'), col = e.target.closest('[data-una-color]');
-    if (a && a.dataset.una === 'una' && esperandoUna) { dijoUna = true; resolverUna(true); return; }
+    if (a && a.dataset.una === 'una' && esperandoUna) { resolverUna(true); return; }
     if (turno !== 0 || esperandoUna) return;
     if (col) return jugarCarta(Number(col.dataset.idx), col.dataset.unaColor);
     if (a && a.dataset.una === 'robar' && !robada) {
@@ -311,7 +311,7 @@ async function jugarLoteria(modo, voz) {
     '<div class="row-btns"><button class="btn una-grito" data-lot-grito>🎉 ¡Lotería!</button></div>';
   const $m = document.getElementById('lot-msg');
   function acabar(gano, quien) {
-    if (terminado) return; terminado = true; limpiar();
+    if (terminado) { return; } terminado = true; limpiar();
     const bien = marcas.filter(Boolean).length;
     const faltan = 54 - salidas.size;
     const puntos = gano ? Math.min(1000, (modo === 'llena' ? 500 : 300) + faltan * 10) : bien * 10;
