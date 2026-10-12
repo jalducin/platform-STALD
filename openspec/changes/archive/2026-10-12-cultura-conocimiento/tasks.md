@@ -50,5 +50,6 @@
 - [x] 7.2 `docs/backend-standards.md` (juegos de sala, validación de `cultura-linea` y mesa) y
   `docs/frontend-standards.md` (sección única, `juegos/linea-tiempo.js`, interacción)
 - [x] 7.3 Validar con `npx -y @fission-ai/openspec@1.4.1 validate cultura-conocimiento --strict`
-- [ ] 7.4 Tras el merge (usuario): verificar en producción que la sección y la Línea del tiempo cargan; luego
+- [x] 7.4 Tras el merge (usuario): verificar en producción que la sección y la Línea del tiempo cargan; luego
   `openspec archive`
+  - Verificado el 2026-10-12 por el agente integrador, solo lectura: Pages sirve la sección «🧠 Cultura y Conocimiento» y `juegos/linea-tiempo.js`, y `/juegos/yo` lista `cultura-linea`. Archivado en `chore/archivar-lote-juegos`.

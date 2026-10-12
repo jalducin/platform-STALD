@@ -46,8 +46,9 @@
 - [x] 5.1 `curl` contra un servidor local: crear salas de los cinco juegos (opciones válidas e inválidas), bingo falso,
   jugada de blackjack con monto inválido, empezar Dibuja con 2 personas, GET de quien adivina sin la palabra y
   resultado imposible de Sopa; sin sesión y correo sin registro
-- [ ] 5.2 Tras el merge (usuario): redeploy y Pages; en producción, solo lectura: el inicio muestra los 27 juegos y
+- [x] 5.2 Tras el merge (usuario): redeploy y Pages; en producción, solo lectura: el inicio muestra los 27 juegos y
   `/juegos/yo` lista `bingo`, `blackjack` y `dibuja`
+  - Verificado el 2026-10-12 por el agente integrador, solo lectura: con el lote son 39 juegos en el menú; Pages sirve `juegos/salas-grandes.js` y `/juegos/yo` lista `bingo`, `blackjack` y `dibuja`.
 
 ## 6. Documentación (OBLIGATORIO)
 
@@ -57,4 +58,5 @@
 
 ## 7. Cierre
 
-- [ ] 7.1 Commits en español; sin push, PR ni merge (los hace el usuario). Tras el merge: `openspec archive`
+- [x] 7.1 Commits en español; sin push, PR ni merge (los hace el usuario). Tras el merge: `openspec archive`
+  - Integrado en el lote #172 (el commit «wip» `0f85b03` se conservó sin reescribir la historia); archivado en `chore/archivar-lote-juegos`.

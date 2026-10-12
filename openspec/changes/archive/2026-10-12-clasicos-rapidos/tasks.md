@@ -45,8 +45,9 @@
 
 - [x] 6.1 `curl` contra un servidor local con una copia de datos: crear sala de cada juego, jugada válida e inválida,
   `ppt` oculto y revelado, sala llena, `faltan_jugadores`, modo inválido y sin sesión; restaurar (copia descartada)
-- [ ] 6.2 Tras el merge (usuario): redeploy y Pages; en producción, solo lectura: el inicio muestra los 5 juegos y
+- [x] 6.2 Tras el merge (usuario): redeploy y Pages; en producción, solo lectura: el inicio muestra los 5 juegos y
   `/juegos/yo` los lista en el catálogo
+  - Verificado el 2026-10-12 por el agente integrador, solo lectura: Deno «Build succeeded» en `main` (#168), Pages sirve `juegos/clasicos-rapidos*.js` y `/juegos/yo` lista `gato`, `conecta4`, `ppt`, `ahorcado` y `serpientes`.
 
 ## 7. Documentación (OBLIGATORIO)
 
@@ -56,4 +57,5 @@
 ## 8. Cierre
 
 - [x] 8.1 `npx -y @fission-ai/openspec@1.4.1 validate clasicos-rapidos --strict`
-- [ ] 8.2 Tras el merge (usuario): `openspec archive clasicos-rapidos`
+- [x] 8.2 Tras el merge (usuario): `openspec archive clasicos-rapidos`
+  - Archivado en el PR `chore/archivar-lote-juegos`.
