@@ -61,7 +61,7 @@
 
 - [x] 9.1 `curl` contra el servidor local: GET/PUT de progreso (válido, versión vieja, forma inválida, sin registro,
   juego sin progreso) y envío de carrera en sala (válido e imposible)
-- [ ] 9.2 Tras el merge (usuario): redeploy y Pages; en producción, solo lectura: el inicio muestra Arcade y
+- [x] 9.2 Tras el merge (usuario): redeploy y Pages; en producción, solo lectura: el inicio muestra Arcade y
   `/juegos/yo` lista `plataformas` y `karts`
 
 ## 10. Documentación (OBLIGATORIO)
@@ -73,4 +73,4 @@
 
 ## 11. Cierre
 
-- [ ] 11.1 Commits en español; sin push, PR ni merge (los hace el usuario). Tras el merge: `openspec archive`
+- [x] 11.1 Commits en español; sin push, PR ni merge (los hace el usuario). Tras el merge: `openspec archive`
