@@ -4,8 +4,9 @@
 Plataforma de Juegos (`juegos.html` y `/juegos/…`): catálogo, puntajes y ranking semanal por tipo, invitados, avatares, partidas multijugador (también en tiempo real) y cada juego individual o de sala. Origen: juegos-plataforma y cambios posteriores.
 ## Requirements
 ### Requirement: Catálogo de juegos
-`juegos.html` SHALL mostrar los juegos por categoría: Inglés, Español, Maratón de cultura, Mente ágil, Clásicos
-(desde juegos-clasicos) y Arcade (desde juegos-plataformas-karts), cada uno con su ícono y su descripción.
+`juegos.html` SHALL mostrar los juegos por categoría: Inglés, Cultura y Conocimiento (desde cultura-conocimiento, que
+junta las antiguas secciones Español y Maratón de cultura), Mente ágil, Clásicos (desde juegos-clasicos) y Arcade
+(desde juegos-plataformas-karts), cada uno con su ícono y su descripción.
 Cada tarjeta muestra el mejor puntaje de la semana del jugador. Cada juego SHALL terminar en una pantalla
 de resultado con puntos y aciertos; los de Arcade muestran el resultado de cada nivel o carrera dentro del juego.
 
@@ -15,8 +16,17 @@ de resultado con puntos y aciertos; los de Arcade muestran el resultado de cada 
 
 #### Scenario: Categoría Arcade
 - **WHEN** un alumno abre el inicio de Juegos
-- **THEN** ve la categoría «🕹️ Arcade» con «Axo y los 12 mundos», «Karts Turbo» y «Dragon Run», con su ícono y su
-  descripción, y Dragon Run ya no aparece en «⚡ Mente ágil»
+- **THEN** ve la categoría «🕹️ Arcade» con «Axo y los 12 mundos» y «Karts Turbo», con su ícono y su descripción
+
+#### Scenario: Sección Cultura y Conocimiento
+- **WHEN** una alumna abre el inicio de Juegos
+- **THEN** ve una sola sección «🧠 Cultura y Conocimiento» con Maratón de cultura, Línea del tiempo, Ortografía y
+  Ordena la oración
+- **AND** ya no ve las secciones «📝 Español» ni «🧠 Maratón de cultura»
+
+#### Scenario: Los puntos anteriores siguen contando
+- **WHEN** un alumno ya tenía su mejor puntaje de la semana en Ortografía
+- **THEN** lo sigue viendo en la tarjeta de Ortografía, ahora dentro de Cultura y Conocimiento
 
 ### Requirement: Guardar partidas con tope
 El sistema SHALL exponer `POST /juegos/partida?email=` con `{ juego, puntos, aciertos, total, segundos }` y,
@@ -1304,4 +1314,557 @@ Dragon Run SHALL tener misiones y premios cosméticos sin valor real, guardados 
 #### Scenario: Sin conexión al cargar
 - **WHEN** no se pudo leer el avance
 - **THEN** puede jugar igual, ve un aviso y el avance se guarda cuando vuelve la conexión
+
+### Requirement: Clásicos rápidos en el catálogo
+`juegos.html` SHALL mostrar en la categoría 🎲 Clásicos cinco juegos más, con su ícono y una descripción corta:
+«❌⭕ Gato», «🔴 Conecta 4», «✊ Piedra, papel o tijera», «🪢 Ahorcado en inglés» y «🐍 Serpientes y escaleras».
+- El servidor SHALL aceptar `gato`, `conecta4`, `ppt`, `ahorcado` y `serpientes` en `/juegos/partida` con tope 1000
+  y con sus títulos en el catálogo (para el ranking 🔥 Juegos).
+- Los cinco SHALL poder crearse en partida (`POST /juegos/sala`).
+
+#### Scenario: Ver los clásicos rápidos
+- **WHEN** una alumna abre el inicio de Juegos
+- **THEN** ve los cinco juegos nuevos en 🎲 Clásicos, con su ícono y su descripción
+
+#### Scenario: Tope de puntos
+- **WHEN** se envía una partida individual de `gato` con 5000 puntos
+- **THEN** se guardan 1000
+
+### Requirement: Jugadas de los clásicos rápidos en partida
+El servidor SHALL validar la forma de cada jugada de los clásicos rápidos y guardar solo sus campos permitidos:
+- `gato`: `{ n, accion: "marcar", casilla: 0–8 }`;
+- `conecta4`: `{ n, accion: "soltar", col: 0–6 }`;
+- `ppt`: `{ n: ronda 0–4, accion: "elegir", eleccion: "piedra" | "papel" | "tijera" }` o `{ n, accion: "pasar" }`;
+- `ahorcado`: `{ n, accion: "letra", letra: una letra de la a a la z }` o `{ n, accion: "pasar" }`;
+- `serpientes`: `{ n, accion: "tirar" }`.
+Cualquier otra forma SHALL responder 400 `jugada_invalida`. En `gato`, `conecta4`, `ahorcado` y `serpientes` el paso
+`n` es único en la sala (409 `turno_tomado`); en `ppt` cada persona juega la misma ronda y solo cuenta su primera
+elección.
+
+#### Scenario: Jugada fuera del tablero
+- **WHEN** alguien manda `{ n: 0, accion: "marcar", casilla: 9 }` en una sala de Gato
+- **THEN** responde 400 `jugada_invalida` y no se guarda nada
+
+#### Scenario: Turno tomado
+- **WHEN** en Conecta 4 Angel manda el paso 0 que Marisol ya jugó
+- **THEN** responde 409 `turno_tomado`
+
+#### Scenario: Misma ronda para todas y todos
+- **WHEN** en Piedra, papel o tijera Marisol y Angel eligen en la ronda 0
+- **THEN** se guardan las dos elecciones
+- **AND** si Marisol vuelve a elegir en la ronda 0, se conserva la primera
+
+### Requirement: Mesas de los clásicos rápidos en partida
+Los clásicos rápidos SHALL declarar su mesa en la tabla común (`MESAS` de `server/salas.ts` y `juegos/mesas.js`,
+openspec: mesas-con-bots):
+- Gato y Conecta 4: `{ max: 2, asientos: 2, min: 2 }`: 1 vs 1 entre dos personas o una persona contra un bot;
+- Piedra, papel o tijera: `{ max: 8, asientos: 4, min: 2 }`: con bots, completan 4 lugares y cada persona que entra
+  quita un bot;
+- Ahorcado: `{ max: 8, min: 1 }`: los bots, si se piden, se suman aparte;
+- Serpientes y escaleras: `{ max: 4, asientos: 4, min: 2 }`.
+`max` da 409 `sala_llena` y `min` (personas más bots) da 409 `faltan_jugadores` al empezar.
+
+#### Scenario: Tercera persona en Gato
+- **WHEN** una tercera persona intenta unirse a una sala de Gato con 2 personas
+- **THEN** responde 409 `sala_llena`
+
+#### Scenario: Conecta 4 sin rival
+- **WHEN** el anfitrión de una sala de Conecta 4 sin bots intenta empezar solo
+- **THEN** responde 409 `faltan_jugadores`
+- **AND** si la sala lleva bots, empieza contra un bot
+
+#### Scenario: Una persona más, un bot menos
+- **WHEN** en una sala de Piedra, papel o tijera con bots hay una persona y entra otra
+- **THEN** la mesa pasa de 1 persona + 3 bots a 2 personas + 2 bots
+
+### Requirement: Elección simultánea en Piedra, papel o tijera
+La partida de Piedra, papel o tijera SHALL revelar las elecciones de una ronda a la vez para todas las personas.
+- `GET /juegos/sala/<código>` SHALL mostrar `eleccion: "?"` para la elección de otra persona en una ronda en la que
+  quien pregunta todavía no tiene jugada, salvo que todas las personas ya eligieron en esa ronda.
+- El estado publicado en Realtime SHALL ocultar las elecciones de las rondas que no están completas.
+
+#### Scenario: No se puede espiar
+- **WHEN** Marisol eligió papel en la ronda 0 y Angel pide el estado sin haber elegido
+- **THEN** Angel ve la jugada de Marisol con `eleccion: "?"`
+- **AND** al elegir Angel, ambos ven las dos elecciones
+
+### Requirement: Gato
+El sistema SHALL ofrecer Gato (tres en línea) en dos modos:
+- individual: serie de 3 rondas contra el bot, con 3 niveles: 🐣 fácil (al azar), 🦊 medio (gana o bloquea y a veces
+  minimax) y 🦉 difícil (minimax: nunca pierde);
+- partida 1 vs 1 (dos personas o una persona contra el bot) por turnos de 20 s, al mejor de 3 rondas, alternando
+  quién empieza.
+Gana la ronda quien completa una línea de 3 (fila, columna o diagonal); si el tablero se llena sin línea, es empate.
+
+#### Scenario: Línea de tres
+- **WHEN** un jugador completa una diagonal
+- **THEN** la ronda termina, se marca la línea ganadora y suma su punto
+
+#### Scenario: Empate
+- **WHEN** se llenan las 9 casillas sin línea
+- **THEN** la ronda es empate y nadie suma la victoria
+
+#### Scenario: Bot difícil
+- **WHEN** alguien juega contra el nivel 🦉 difícil
+- **THEN** el bot nunca pierde
+
+#### Scenario: Tiempo agotado en partida
+- **WHEN** a una persona se le acaban los 20 s de su turno
+- **THEN** se marca una casilla libre al azar (igual en todos los dispositivos) y sigue la partida
+
+### Requirement: Conecta 4
+El sistema SHALL ofrecer Conecta 4 en un tablero de 7 columnas × 6 filas: la ficha cae animada a la casilla libre más
+baja de la columna elegida y gana quien alinea 4 en horizontal, vertical o diagonal; con el tablero lleno, empate.
+- Individual contra el bot, con 3 niveles (heurística, minimax a 4 y a 6 jugadas).
+- Partida 1 vs 1 (dos personas o una persona contra el bot) por turnos de 25 s.
+
+#### Scenario: Columna llena
+- **WHEN** alguien toca una columna llena
+- **THEN** la jugada no se aplica
+
+#### Scenario: Cuatro en diagonal
+- **WHEN** un jugador completa 4 fichas en diagonal
+- **THEN** gana y se resaltan las 4 fichas en ambos dispositivos
+
+### Requirement: Piedra, papel o tijera
+El sistema SHALL ofrecer Piedra, papel o tijera con elección simultánea y revelación a la vez:
+- individual: al mejor de 5 contra el bot (gana quien llega a 3; los empates se repiten);
+- partida de 2 a 8 participantes, todos contra todos en 5 rondas: cada quien suma una victoria por cada rival al que
+  vence en la ronda; no elegir a tiempo pierde contra cualquier elección.
+
+#### Scenario: Revelación a la vez
+- **WHEN** todas las personas eligen en una ronda
+- **THEN** todas ven a la vez la animación «¡Piedra, papel o tijera… ya!» y las elecciones de todos
+
+#### Scenario: Partida con bots
+- **WHEN** se crea una partida con bots
+- **THEN** BOT-VACHIRA y BOT-ISAGII eligen en cada ronda igual en todos los dispositivos
+- **AND** al final se ve el podio con las victorias de cada participante
+
+### Requirement: Ahorcado en inglés sin violencia
+El sistema SHALL ofrecer un Ahorcado con palabras del vocabulario de `juegos/datos/ingles.json`, mostrando la pista en
+español y su emoji. Cada error desinfla un globo con carita amable (6 errores por palabra); no se dibuja a ninguna
+persona colgada.
+- Individual: 5 palabras.
+- Partida: las mismas 3 palabras para todos, por turnos, en modo 🤝 cooperativo (el turno rota y todas y todos ganan
+  +50 si la adivinan) o ⚔️ competitivo (quien acierta sigue y quien completa la palabra gana +50); +10 por cada
+  aparición de la letra acertada.
+
+#### Scenario: Letra acertada
+- **WHEN** alguien elige la «e» en «apple»
+- **THEN** se descubre la letra y suma 10 puntos
+
+#### Scenario: Globo desinflado
+- **WHEN** se acumulan 6 errores en una palabra
+- **THEN** el globo termina de desinflarse, se muestra la palabra y se pasa a la siguiente
+
+### Requirement: Serpientes y escaleras
+El sistema SHALL ofrecer Serpientes y escaleras en un tablero de 100 casillas, con dado animado:
+- la escalera sube y la serpiente baja; con 6 se vuelve a tirar; gana quien llega a la casilla 100;
+- individual contra 1, 2 o 3 bots;
+- partida de 2 a 4 participantes (personas y bots); el dado sale de la semilla de la sala y del paso, así nadie puede
+  escoger su número y todos ven lo mismo.
+
+#### Scenario: Escalera
+- **WHEN** una ficha cae en la casilla 4
+- **THEN** sube a la 14
+
+#### Scenario: Serpiente
+- **WHEN** una ficha cae en la casilla 16
+- **THEN** baja a la 6
+
+### Requirement: Calidad visual de los clásicos rápidos
+Los cinco juegos SHALL dibujarse con CSS y SVG propios, verse completos a 390 px de ancho sin desplazamiento
+horizontal, tener botones de al menos 44 px y animaciones suaves que se apagan con `prefers-reduced-motion`. Cada uno
+SHALL tener su «📖 Cómo se juega» en español de México.
+
+#### Scenario: Celular
+- **WHEN** un alumno juega Conecta 4 en un celular de 390 px
+- **THEN** ve el tablero completo y puede tocar cada columna sin hacer zoom
+
+### Requirement: Damas
+El sistema SHALL ofrecer Damas (`damas`, categoría Mente ágil, tope 1,000) en un tablero de 8×8 con las reglas
+inglesas:
+- el peón avanza y captura en diagonal hacia adelante;
+- la captura es obligatoria y los saltos múltiples siguen mientras se pueda;
+- el peón que llega a la última fila se corona dama, y la dama mueve y captura 1 casilla en cualquier diagonal;
+- pierde quien no tiene jugadas;
+- hay empate tras 40 medios movimientos sin captura ni avance de peón.
+
+SHALL jugarse en individual contra un bot de 2 niveles y en sala con una mesa de 2: 1 vs 1 entre personas o, si la
+sala lleva bots y solo hay una persona, contra un bot.
+
+#### Scenario: Captura obligatoria
+- **WHEN** en su turno una alumna puede capturar una pieza
+- **THEN** solo se marcan como posibles las jugadas que capturan
+
+#### Scenario: Salto múltiple
+- **WHEN** después de saltar una pieza el peón puede saltar otra
+- **THEN** la jugada sigue con el segundo salto y se quitan las dos piezas
+
+#### Scenario: Coronación
+- **WHEN** un peón blanco llega a la fila de arriba
+- **THEN** se convierte en dama, con corona, y termina su turno
+
+#### Scenario: Contra el bot
+- **WHEN** un alumno elige el nivel 🦊 Difícil y gana
+- **THEN** suma 800 más 20 por cada pieza que le quedó (máximo 1,000) en sus puntos individuales
+
+#### Scenario: Sala 1 vs 1
+- **WHEN** dos personas juegan Damas en una sala
+- **THEN** ambas ven el mismo tablero, juegan por turnos de 60 s y la tercera recibe «sala llena»
+- **AND** si se vence el turno, el bot mueve por quien no jugó
+- **AND** si alguien se rinde, gana su rival y las dos llegan al podio con «🔁 Otra con los mismos»
+
+#### Scenario: Jugada con forma inválida
+- **WHEN** en una sala de Damas alguien envía una ruta con casillas fuera de 0–31 o con una sola casilla
+- **THEN** el servidor responde 400 `jugada_invalida` y no la guarda
+
+### Requirement: Dominó
+El sistema SHALL ofrecer Dominó doble seis (`domino`, categoría Clásicos, tope 1,000) para 2 a 4 jugadores:
+- cada quien recibe 7 fichas;
+- sale quien tiene la mula más alta y se juega por turnos, embonando fichas en los extremos;
+- quien no tiene ficha que embone pasa;
+- gana quien se queda sin fichas;
+- si todos pasan seguido (juego cerrado), gana quien tiene menos puntos en la mano.
+
+SHALL jugarse en individual contra 3 bots y en sala con personas y bots (hasta 4).
+
+#### Scenario: Embonar en un extremo
+- **WHEN** la mesa tiene 6 a la izquierda y 3 a la derecha, y Sofy tira el 3-5
+- **THEN** la ficha queda a la derecha y el extremo derecho pasa a ser 5
+
+#### Scenario: Pasar sin ficha
+- **WHEN** a un jugador le toca y ninguna de sus fichas embona
+- **THEN** pasa su turno y todos ven «pasó»
+
+#### Scenario: Juego cerrado
+- **WHEN** nadie puede tirar
+- **THEN** la partida termina y gana quien suma menos puntos; si dos empatan, ganan los dos
+
+#### Scenario: Sala con bots
+- **WHEN** en una sala de Dominó con bots hay 3 personas
+- **THEN** la mesa es de 3 personas + 1 bot
+- **AND** al entrar la cuarta persona ya no hay bot, y todas ven la misma mesa
+
+#### Scenario: Sin bots ni rival
+- **WHEN** alguien crea una sala de Dominó sin bots y quiere empezar sin nadie más
+- **THEN** el servidor responde 409 `faltan_jugadores`
+
+#### Scenario: Jugada con forma inválida
+- **WHEN** en una sala de Dominó alguien envía una ficha fuera de 0–27 o un lado que no es «i» ni «d»
+- **THEN** el servidor responde 400 `jugada_invalida`
+
+### Requirement: Parchís
+El sistema SHALL ofrecer Parchís (`parchis`, categoría Clásicos, tope 1,000), estilo Ludo, de 2 a 4 jugadores con un
+dado:
+- la ficha sale de casa con 5;
+- con 6, o al comer, se vuelve a tirar;
+- hay 8 casillas seguras (las 4 salidas y 4 estrellas) donde no se come;
+- al caer en una casilla no segura con fichas de otro color, esas fichas vuelven a casa;
+- a la meta se entra por el pasillo de cada color con el tiro exacto;
+- gana quien mete primero todas sus fichas.
+
+SHALL jugarse en individual contra bots (partida rápida con 2 fichas o completa con 4) y en sala (4 fichas).
+
+#### Scenario: Salir con 5
+- **WHEN** todas las fichas de un jugador están en casa y saca 3
+- **THEN** no puede mover y el turno pasa al siguiente
+- **AND** si saca 5, puede sacar una ficha a su salida
+
+#### Scenario: Comer una ficha
+- **WHEN** una ficha roja cae en una casilla no segura donde hay una ficha azul
+- **THEN** la ficha azul vuelve a su casa y el jugador rojo vuelve a tirar
+
+#### Scenario: Casilla segura
+- **WHEN** una ficha cae en una estrella o en una salida donde hay una ficha rival
+- **THEN** no la come y las dos comparten la casilla
+
+#### Scenario: Tiro exacto
+- **WHEN** a una ficha le faltan 2 casillas para la meta y el dado da 4
+- **THEN** esa ficha no puede moverse
+
+#### Scenario: Mismo dado para todos en sala
+- **WHEN** tres personas y un bot juegan Parchís en una sala
+- **THEN** todos ven el mismo dado y las mismas posiciones, porque el dado sale de la semilla de la sala
+
+### Requirement: Batalla naval
+El sistema SHALL ofrecer Batalla naval (`naval`, categoría Mente ágil, tope 1,000):
+- cada quien tiene un tablero oculto de 10×10 con 5 barcos de 5, 4, 3, 3 y 2 casillas, acomodados en automático o
+  a mano;
+- se dispara por coordenadas A1…J10 y cada disparo muestra «agua», «tocado» o «hundido»;
+- quien toca vuelve a disparar;
+- gana quien hunde toda la flota rival.
+
+SHALL jugarse en individual contra un bot y en sala 1 vs 1, sin bots.
+
+#### Scenario: Acomodo manual
+- **WHEN** un alumno elige el barco de 4, toca «↻ Girar» y una casilla
+- **THEN** el barco queda vertical desde esa casilla, si cabe y no se encima con otro
+
+#### Scenario: Acomodo automático
+- **WHEN** una alumna toca «🎲 Acomodo automático»
+- **THEN** quedan los 5 barcos dentro del tablero, sin encimarse
+
+#### Scenario: El bot caza después de tocar
+- **WHEN** el bot toca un barco
+- **THEN** sus siguientes disparos van a las casillas vecinas y siguen la línea hasta hundirlo
+
+#### Scenario: Ganar contra el bot
+- **WHEN** un alumno hunde los 5 barcos en 40 disparos
+- **THEN** gana 600 + 400 × 17 ÷ 40 = 770 puntos individuales
+
+### Requirement: Batalla naval sin revelar la flota rival
+En las salas de Batalla naval, el servidor SHALL:
+- guardar la flota de cada jugador;
+- validar cada disparo (turno, casilla nueva, flotas listas y partida en juego);
+- resolverlo con la flota del rival;
+- guardar en la jugada solo el resultado (y, al hundir, las casillas de ese barco).
+
+El servidor SHALL NOT entregar la flota de un jugador a otra persona mientras la partida siga en juego: ni en
+`GET /juegos/sala/<código>`, ni en el broadcast de Realtime, ni al admin. Al terminar, SHALL revelar ambas flotas.
+
+#### Scenario: El rival no ve mi flota
+- **WHEN** Marisol y Angel ya acomodaron sus flotas y Angel consulta la sala
+- **THEN** la respuesta trae la flota de Angel y no la de Marisol
+- **AND** el aviso de Realtime no trae ninguna flota
+
+#### Scenario: Disparo resuelto en el servidor
+- **WHEN** Marisol dispara a B3 y ahí hay un barco de Angel
+- **THEN** el servidor guarda `r: "tocado"` y Marisol vuelve a disparar
+- **AND** si con ese disparo se hunde el barco, guarda `r: "hundido"` y las casillas del barco
+
+#### Scenario: Disparo inválido
+- **WHEN** alguien dispara fuera de su turno, a una casilla repetida, antes de que las dos flotas estén listas o
+  después de terminar
+- **THEN** el servidor responde 409 `no_es_tu_turno`, 400 `ya_disparaste`, 409 `falta_flota` o 409
+  `partida_terminada`, y no guarda nada
+
+#### Scenario: Flota inválida
+- **WHEN** alguien envía una flota con barcos encimados, en diagonal, fuera del tablero o con otros tamaños
+- **THEN** el servidor responde 400 `flota_invalida`; si ya había enviado su flota, responde 409 `flota_lista`
+
+#### Scenario: Rival que se fue
+- **WHEN** a Angel le toca disparar y lleva 90 s sin hacerlo
+- **THEN** Marisol puede tocar «⏰ Reclamar victoria» y gana la partida
+- **AND** antes de los 90 s el servidor responde 409 `aun_no`
+
+#### Scenario: Fin de la partida
+- **WHEN** se hunde el último barco
+- **THEN** las dos personas ven el podio y ambas flotas quedan reveladas
+- **AND** si se ganó porque el rival se rindió o dejó de jugar, el ganador suma 500 + 20 por casilla tocada
+
+### Requirement: Juegos de tablero en celular
+Damas, Dominó, Parchís y Batalla naval SHALL verse completos a 390 px de ancho, sin desplazamiento horizontal: el
+tablero cabe en la pantalla. Las acciones principales SHALL tener botones de 44 px o más. Cada juego SHALL tener
+«📖 Cómo se juega» en español de México, con lenguaje inclusivo. Su arte SHALL ser propio (CSS o SVG), con
+animaciones suaves que se apagan con `prefers-reduced-motion`.
+
+#### Scenario: Tablero a 390 px
+- **WHEN** una alumna abre Parchís en un celular de 390 px
+- **THEN** ve el tablero completo y los botones para mover cada ficha, sin desplazamiento horizontal
+
+#### Scenario: Movimiento reducido
+- **WHEN** el sistema pide `prefers-reduced-motion`
+- **THEN** las fichas, el dado y los disparos cambian sin animación
+
+### Requirement: Bingo
+Juegos SHALL ofrecer en Clásicos el **🎱 Bingo** (`bingo`) con 75 números y un cartón de 5×5 (columnas B 1–15,
+I 16–30, N 31–45, G 46–60 y O 61–75) con la casilla del centro libre.
+- En individual se juega contra 2 bots; en partida, con hasta 30 personas y, si se activan, 2 bots.
+- Al crear la partida se elige la figura (`opciones.figura`): `linea` (fila, columna o diagonal), `esquinas`
+  (cuatro esquinas) o `lleno` (cartón lleno). Otra figura SHALL responder 400 `figura_invalida`.
+- El servidor SHALL cantar un número cada 4.5 s desde el inicio, en un orden que sale de la semilla de la sala; todos
+  los dispositivos ven el mismo número y cada persona tiene su propio cartón, también por semilla.
+- Al tocar «¡Bingo!», el servidor SHALL validar la figura del cartón de esa persona con los números ya cantados a su
+  hora: si la cumple guarda `bingo: { t, n }`; si no, SHALL responder 409 `bingo_falso` sin registrar el bingo.
+- Gana el bingo válido más temprano (los bots gritan 1.5 s después de completar); todos ven el mismo ganador y podio.
+- Puntos: quien gana 300 (línea), 400 (esquinas) o 600 (lleno) más 5 por cada número que faltaba cantar (tope
+  1000); los demás, 10 por cada número de su cartón que salió.
+
+#### Scenario: Bingo verdadero
+- **WHEN** Marisol completa una línea con números ya cantados y toca «¡Bingo!»
+- **THEN** el servidor guarda su bingo y todas las personas de la sala ven «¡Bingo de Marisol!» con el mismo podio
+
+#### Scenario: Bingo falso
+- **WHEN** Angel toca «¡Bingo!» antes de tener la figura con los números cantados
+- **THEN** el servidor responde 409 `bingo_falso`, no registra su bingo y la página le avisa que todavía no tiene bingo
+
+#### Scenario: Mismo canto para todos
+- **WHEN** tres personas siguen la misma partida
+- **THEN** las tres ven el mismo número cantado en el mismo momento y cartones distintos
+
+### Requirement: Blackjack con fichas sin valor
+Juegos SHALL ofrecer en Clásicos el **🂡 Blackjack (21)** (`blackjack`) con fichas de juego sin valor real, 500 fichas
+y 8 manos.
+- En cada mano se apuesta con fichas de 5, 10, 20, 50 y 100 (múltiplos de 5, de 5 hasta las fichas que tengas); luego
+  cada quien puede **pedir**, **plantarse** o **doblar** (solo con 2 cartas y fichas suficientes); 21 o pasarse
+  termina el turno.
+- La banca SHALL pedir mientras tenga menos de 17. Ganar paga el doble de la apuesta, el empate la devuelve y el
+  blackjack natural paga 3 a 2 (en múltiplos de 5).
+- Individual contra la banca; en partida, hasta 6 personas contra la banca en una mesa de 3 asientos: con bots, cada
+  persona que entra quita un bot (1 persona + 2 bots, 2 + 1); turnos de 30 s (al vencer: apuesta mínima o plantarse).
+- En partida, el servidor SHALL aceptar solo `apostar`, `pedir`, `plantarse` y `doblar`; `apostar` SHALL traer un
+  `monto` entero, múltiplo de 5 y de al menos 5, y las demás acciones no llevan monto; si no, 400 `jugada_invalida`.
+- Puntos: las fichas con que terminas (tope 1000).
+- La pantalla SHALL aclarar que las fichas no se compran, no se cambian y no tienen valor real.
+
+#### Scenario: Plantarse y ganarle a la banca
+- **WHEN** Laura apuesta 20, se planta con 19 y la banca termina con 18
+- **THEN** recibe 40 fichas (su apuesta más 20)
+
+#### Scenario: Monto inválido en partida
+- **WHEN** alguien envía `apostar` con `monto: 7` o sin monto
+- **THEN** el servidor responde 400 `jugada_invalida`
+
+#### Scenario: Cada persona que entra quita un bot
+- **WHEN** Marisol crea una sala de Blackjack con bots y luego entra Angel
+- **THEN** la sala de espera pasa de «1 persona + 2 bots» a «2 personas + 1 bot»
+
+#### Scenario: Mesa compartida
+- **WHEN** dos personas y un bot juegan en la misma sala
+- **THEN** todos ven las mismas cartas, apuestas y resultados de cada mano
+
+### Requirement: Dibuja y adivina
+Juegos SHALL ofrecer en Inglés **🎨 Dibuja y adivina** (`dibuja`), una partida por turnos de 3 a 12 personas, sin
+bots.
+- Empezar con menos de 3 personas SHALL responder 409 `faltan_jugadores`; la sala admite hasta 12.
+- Cada persona dibuja una vez, en orden de llegada, una palabra del vocabulario de inglés de
+  `juegos/datos/ingles.json`. El turno dura 60 s, termina antes si todas las demás personas adivinan, y le siguen
+  5 s en los que se revela la palabra.
+- La palabra SHALL salir de un secreto que solo conoce el servidor: solo quien dibuja la recibe (en el GET de la sala)
+  durante su turno; ni el cuerpo de la sala, ni los archivos de jugadores, ni Realtime la contienen. Al terminar el
+  turno se revela a todos.
+- El trazo SHALL viajar como puntos simplificados (enteros de 0 a 255, de 2 a 64 puntos por trazo, color y grosor)
+  en el archivo de quien dibuja, y llegar a los demás por Supabase Realtime, con el sondeo de respaldo.
+- El servidor SHALL aceptar trazos solo de quien dibuja en su turno, con máximo 6 trazos por envío, 200 trazos y 8000
+  números por turno (413 `dibujo_lleno`) y un envío cada 300 ms (429 `muy_rapido`).
+- Las demás personas escriben en inglés; el servidor SHALL validar la respuesta (sin importar mayúsculas, acentos ni
+  la «s» final) y dar 100 a 200 puntos según la rapidez; quien dibuja gana 50 por cada acierto. Un intento fallido se
+  muestra a todos, salvo si contiene la palabra (se guarda sin texto). Quien dibuja no puede adivinar; un intento
+  cada 700 ms (429 `muy_rapido`); fuera del turno → 409 `turno_cerrado`.
+- Práctica individual opcional: adivinar la palabra en inglés mientras su dibujo se aclara.
+
+#### Scenario: Una dibuja y otro adivina
+- **WHEN** Marisol dibuja en su turno y Angel escribe la palabra correcta
+- **THEN** el servidor responde `correcta: true` con sus puntos, y todos ven que Angel adivinó sin ver la palabra
+
+#### Scenario: La palabra no se filtra
+- **WHEN** Laura (que no dibuja) pide el estado de la sala durante el turno de Marisol
+- **THEN** recibe cuántas letras tiene la palabra pero no la palabra
+
+#### Scenario: Trazo de alguien que no dibuja o demasiado grande
+- **WHEN** Angel envía un trazo en el turno de Marisol, o Marisol envía un trazo con 65 puntos
+- **THEN** el servidor lo rechaza sin guardarlo
+
+#### Scenario: Pocas personas
+- **WHEN** el anfitrión intenta empezar con 2 personas
+- **THEN** responde 409 `faltan_jugadores`
+
+### Requirement: Memorama y Sopa de letras en partida
+🃏 Memorama (`en-memorama`) y 🔎 Sopa de letras (`mente-sopa`) SHALL poderse jugar también en partida, contra bots y
+amigos, con 180 s de límite.
+- Todas las personas de la sala resuelven el mismo tablero (misma semilla).
+- Memorama: al crear se elige si gana el **menor tiempo** (`opciones.gana = tiempo`, por omisión) o **menos errores**
+  (`errores`); el otro criterio desempata. Otro valor → 400 `criterio_invalido`.
+- Sopa de letras: carrera por encontrar las palabras; todos ven cuántas lleva cada quien; gana quien encuentra más y,
+  a la par, quien termina antes.
+- Cada quien envía `resultado` al servidor, que SHALL validarlo contra el reloj del servidor (no más de 3 s adelante ni
+  20 s atrás) y sus límites; un resultado imposible → 400 `resultado_invalido`. Tras el resultado final se ignoran
+  los siguientes.
+- Podio cuando todas las personas terminan o se vence el límite; puntos por lugar (600, 480, 400…).
+
+#### Scenario: Mismo tablero
+- **WHEN** Marisol y Angel entran a la misma partida de Memorama
+- **THEN** ven las mismas cartas en el mismo orden y el podio los ordena por tiempo
+
+#### Scenario: Tiempo imposible
+- **WHEN** alguien envía haber terminado la sopa en 2 s a los 40 s de empezar
+- **THEN** el servidor responde 400 `resultado_invalido`
+
+### Requirement: Puntos de los juegos de salas grandes
+`bingo`, `blackjack` y `dibuja` SHALL estar en el catálogo del servidor con su título (para el ranking «🔥 Juegos») y
+tope de 1000 por partida individual; en partida, cuentan en los 👥 puntos de partidas con el tope de sala.
+
+#### Scenario: Ranking de juegos
+- **WHEN** alguien termina un Bingo
+- **THEN** «Bingo» aparece en el ranking de los juegos más jugados de la semana
+
+### Requirement: Cultura y Conocimiento con más contenido
+El Maratón de cultura SHALL tener al menos 768 preguntas, en 14 categorías con al menos 50 preguntas cada una y al
+menos 10 por nivel: Historia de México, Cultura general de México, Historia universal, Geografía, Capitales,
+Banderas, Ciencias, Naturaleza y animales, Cuerpo humano, Arte y literatura, Matemáticas básicas, Tecnología,
+Inteligencia artificial y Deportes.
+- Cada pregunta SHALL tener 4 opciones distintas, una correcta y un dato breve.
+- El dato SHALL mostrarse al responder, tanto al acertar como al fallar.
+- El contenido SHALL ser de nivel secundaria y verificable, sin fechas dudosas ni temas polémicos.
+- `server/cultura_datos_test.ts` SHALL validar la forma, las categorías, los mínimos y el dato de cada pregunta.
+
+#### Scenario: Categorías nuevas
+- **WHEN** alguien abre el Maratón de cultura
+- **THEN** puede elegir, además de las de siempre, Matemáticas básicas, Deportes, Naturaleza y animales, y Cultura
+  general de México
+
+#### Scenario: Dato al acertar
+- **WHEN** una alumna acierta una pregunta del Maratón
+- **THEN** ve sus puntos y el dato 💡 de esa pregunta antes de pasar a la siguiente
+
+#### Scenario: Datos inválidos
+- **WHEN** una pregunta tiene opciones repetidas, `correcta` fuera de rango o el dato vacío
+- **THEN** la prueba de datos falla
+
+### Requirement: Línea del tiempo
+El juego «📜 Línea del tiempo» (`cultura-linea`) SHALL pedir ordenar de 4 a 6 sucesos o inventos del más antiguo al
+más reciente.
+- Antes de jugar se elige el tema: todos, historia de México, historia universal, inventos o ciencia.
+- Las tarjetas se colocan en la línea tocándolas o arrastrándolas. Al confirmar, cada suceso SHALL mostrar su año,
+  si quedó bien o mal, y un dato curioso.
+- La partida individual tiene 3 vidas y 45 s por línea, con racha y puntos según el design; termina sin vidas o tras
+  10 líneas. Los puntos se guardan con el tope del catálogo (3,000).
+- El contenido SHALL vivir en la clave `linea` de `juegos/datos/cultura.json`: sets de 6 a 8 sucesos de un tema, cada
+  uno con año entero, texto y dato, sin años repetidos dentro de un set.
+- SHALL verse bien a 390 px y respetar `prefers-reduced-motion`.
+
+#### Scenario: Línea perfecta
+- **WHEN** un alumno coloca los 4 sucesos en orden y confirma
+- **THEN** ve los años, un ✔ en cada suceso, los puntos con su racha y el dato de cada suceso
+
+#### Scenario: Línea con errores
+- **WHEN** una alumna confirma una línea con dos sucesos fuera de lugar
+- **THEN** pierde una vida, la racha vuelve a 0 y ve el orden correcto con los años
+
+#### Scenario: Sin vidas
+- **WHEN** alguien falla tres líneas
+- **THEN** la partida termina y sus puntos se guardan en sus individuales
+
+#### Scenario: Se acaba el tiempo
+- **WHEN** pasan 45 s sin confirmar
+- **THEN** se califica lo que estaba colocado y las casillas vacías cuentan como error
+
+### Requirement: Línea del tiempo en partida
+En una partida de Línea del tiempo, todos SHALL ordenar las mismas 5 líneas (4, 5, 5, 6 y 6 sucesos), generadas con
+la semilla de la sala, con 40 s por línea y 8 s de revelación.
+- Cada línea vale 20 por suceso en su lugar y, si es perfecta, hasta 80 más por rapidez (máximo 200).
+- El podio SHALL ordenar por puntos, luego por sucesos acertados y luego por menor tiempo, y SHALL ofrecer la revancha.
+- El servidor SHALL aceptar `cultura-linea` en `JUEGOS_PARTIDA` y validar la respuesta: `q` de 0 a 4, `aciertos`
+  entero de 0 a 6 y `ms` hasta 60,000; recorta `puntos` a `20 × aciertos + 80` si la línea es perfecta o a
+  `20 × aciertos` si no. Otro valor → 400 `respuesta_invalida`.
+- `opciones.cat` es el tema; un tema que no existe → 400 `tema_invalido`.
+- La mesa es `{ max: 30, min: 1 }`, con los bots aparte.
+
+#### Scenario: Misma línea para todos
+- **WHEN** dos jugadores están en la misma partida de Línea del tiempo
+- **THEN** ven los mismos sucesos, en el mismo orden inicial, al mismo tiempo
+
+#### Scenario: Respuesta con aciertos de más
+- **WHEN** alguien envía 200 puntos con 2 aciertos en una línea que no es perfecta
+- **THEN** el servidor guarda 40 puntos
+
+#### Scenario: Línea fuera de rango
+- **WHEN** alguien envía la respuesta de la línea 5 (la sexta) o sin `aciertos`
+- **THEN** el servidor responde 400 `respuesta_invalida`
+
+#### Scenario: Podio y revancha
+- **WHEN** termina la partida con bots
+- **THEN** se ve el podio con personas y bots, y el botón «🔁 Otra con los mismos»
 

@@ -76,4 +76,5 @@
 
 ## 8. Cierre
 
-- [ ] 8.1 Tras el merge (usuario): redeploy de Deno Deploy, verificación en producción y `openspec archive juegos-tablero`
+- [x] 8.1 Tras el merge (usuario): redeploy de Deno Deploy, verificación en producción y `openspec archive juegos-tablero`
+  - Verificado el 2026-10-12 por el agente integrador, solo lectura: Deno «Build succeeded» en `main` (#172), Pages sirve `juegos/tablero.js` y `/juegos/yo` lista `damas`, `domino`, `parchis` y `naval`. Archivado en `chore/archivar-lote-juegos`.
