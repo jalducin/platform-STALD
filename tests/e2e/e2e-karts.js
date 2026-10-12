@@ -13,10 +13,15 @@
 // con «Con botón», R + ◀ → mini-turbo, X usa el ítem, START pausa y sigue, el teclado de Karts sin cambios, control
 // físico simulado (navigator.getGamepads en addInitScript) con cualquier control elegido, y distribución a 320×640,
 // 390×844 y 844×390, suelto (juegos/karts.html?prueba=1) y dentro de Juegos.
+// Personajes (openspec: personajes-xalli): «🏁 Piloto» con Xalli, Itzae, Yahui y Xochiquetzal (nombre y título), Xalli
+// por omisión, la elección se recuerda tras recargar, los bots y fantasmas usan los otros personajes, cada personaje se
+// dibuja en su kart (color de firma, capturas de cerca y hoja de vistas) y termina una carrera; valor desconocido → Xalli;
+// estela del turbo solo sin movimiento reducido; el selector cabe a 320×640 y 844×390.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
 const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
+const { PERSONAJES, contarColor, recorte } = require('./lib/personajes');
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -52,6 +57,71 @@ async function revisarLayout(fr, nombre) {
   ok(nombre + ': mandos completos dentro de la pantalla', c.ctl.length >= 4 && c.ctl.every(x => dentro(x, c.vw, c.vh)), JSON.stringify({ vw: c.vw, vh: c.vh, ctl: c.ctl.map(x => x.sel + ':' + Math.round(x.r) + 'x' + Math.round(x.b)) }));
   ok(nombre + ': el minimapa no tapa los mandos', c.mapa && c.ctl.every(x => !cruza(c.mapa, x)) && dentro(c.mapa, c.vw, c.vh), JSON.stringify(c.mapa));
   ok(nombre + ': el HUD no tapa los mandos', c.hud.every(h => c.ctl.every(x => !cruza(h, x))));
+}
+// ---- Personajes (openspec: personajes-xalli) ----
+const IDS = PERSONAJES.map(x => x.id);
+const elegido = fr => fr.evaluate(() => [...document.querySelectorAll('#menu-piloto [data-personaje]')].filter(b => b.getAttribute('aria-pressed') === 'true').map(b => b.dataset.personaje).join(','));
+async function revisarSelector(fr, nombre) {
+  const tarjetas = await fr.$$eval('#menu-piloto [data-personaje]', bs => bs.map(b => ({ id: b.dataset.personaje, txt: b.textContent, img: !!b.querySelector('img[src^="data:image"]') })));
+  ok(nombre + ': «🏁 Piloto» muestra a los 4 con nombre, título y retrato', tarjetas.length === 4 && PERSONAJES.every((x, i) => tarjetas[i].id === x.id && tarjetas[i].txt.includes(x.nombre) && tarjetas[i].txt.includes(x.titulo) && tarjetas[i].img), JSON.stringify(tarjetas.map(t => t.id + ':' + t.txt)));
+}
+// Tu kart con tu personaje; los bots solo con los otros (y, si hay 3 o más, con los 3).
+function revisarRivales(e, mio, nombre) {
+  const otros = e.personajes.slice(); otros.splice(e.yoIndice, 1);
+  ok(nombre + ': tu kart lleva a ' + mio + ' y los rivales a los otros personajes', e.personaje === mio && e.personajes[e.yoIndice] === mio && otros.every(x => IDS.includes(x) && x !== mio) && (otros.length < 3 || new Set(otros).size === 3), JSON.stringify(e.personajes));
+}
+async function probarPersonajes(b) {
+  const q = await abrirPagina(b, { viewport: { width: 390, height: 844 }, contexto: { deviceScaleFactor: 2 }, out, etiqueta: 'karts suelto', ruta: '/juegos/karts.html?prueba=1', esperar: '#ov-menu:not(.hide)' });
+  const f = q.mainFrame();
+  await revisarSelector(f, 'suelto');
+  // Hoja de revisión: cada piloto de espaldas, de lado, de tres cuartos y de frente.
+  const hoja = await f.evaluate(() => window.__karts.hojaPilotos());
+  require('fs').writeFileSync('karts-personajes-hoja.png', Buffer.from(hoja.split(',')[1], 'base64'));
+  for (const x of PERSONAJES) {
+    await f.click('[data-personaje="' + x.id + '"]');
+    ok('suelto: elegir a ' + x.nombre + ' lo marca', await elegido(f) === x.id);
+    await f.click('[data-ir="pistas"]'); await f.click('[data-ir="rapida:pradera"]');
+    await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 1200, null, { timeout: 15000 });
+    const e = await estado(f);
+    revisarRivales(e, x.id, 'suelto');
+    const caja = await f.evaluate(() => window.__karts.cajaYo());
+    const firma = await contarColor(f, caja, x.kart);
+    ok('suelto: se dibuja el kart de ' + x.nombre + ' (color de firma en tu kart)', firma >= 20, JSON.stringify({ firma, caja }));
+    await recorte(q, f, caja, 'karts-personaje-' + x.id + '-carrera.png', 30);
+    await q.screenshot({ path: 'karts-personaje-' + x.id + '.png' });
+    if (x.id === 'xochiquetzal') {
+      await f.evaluate(() => window.__karts.darItem('turbo')); await q.keyboard.press('KeyE'); await sleep(250);
+      ok('suelto: con turbo tu kart suelta la partícula de tu personaje', (await estado(f)).estela > 0);
+      await recorte(q, f, await f.evaluate(() => window.__karts.cajaYo()), 'karts-personaje-' + x.id + '-turbo.png', 30);
+    }
+    await f.evaluate(() => window.__karts.adelantar());
+    await f.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
+    ok('suelto: ' + x.nombre + ' termina la carrera con resultados', /lugar|Ganaste|podio/.test(await f.textContent('#res-titulo')) && (await f.$$('#res-tabla tr')).length === 9);
+    await f.click('#res-botones [data-ir="menu"]'); await f.waitForSelector('#ov-menu:not(.hide)');
+  }
+  await q.reload(); await q.waitForSelector('#ov-menu:not(.hide)');
+  ok('suelto: tras recargar sigue elegida Xochiquetzal', await elegido(f) === 'xochiquetzal');
+  await q.context().close();
+  // Selector a 320×640 y 844×390: los 4 caben a lo ancho, sin desplazamiento horizontal.
+  for (const vp of [{ width: 320, height: 640 }, { width: 844, height: 390 }]) {
+    const r = await abrirSuelto(b, vp);
+    const m = await r.evaluate(() => ({ vw: innerWidth, ancho: document.documentElement.scrollWidth, cajas: [...document.querySelectorAll('#menu-piloto [data-personaje]')].map(e => { const c = e.getBoundingClientRect(); return { l: c.left, r: c.right, w: c.width }; }) }));
+    ok(vp.width + '×' + vp.height + ': las 4 tarjetas del piloto caben a lo ancho', m.cajas.length === 4 && m.cajas.every(c => c.l >= -0.5 && c.r <= m.vw + 0.5 && c.w >= 60) && m.ancho <= m.vw, JSON.stringify(m));
+    await r.screenshot({ path: 'karts-selector-' + vp.width + 'x' + vp.height + '.png', fullPage: true });
+    await r.context().close();
+  }
+  // Valor desconocido → Xalli; movimiento reducido → sin estela.
+  const raro = [() => { try { localStorage.setItem('arcade_personaje', 'pikachu'); } catch { /* nada */ } }];
+  const r1 = await abrirSuelto(b, { width: 390, height: 844 }, raro);
+  ok('valor desconocido en arcade_personaje → Xalli', await elegido(r1.mainFrame()) === 'xalli');
+  await r1.context().close();
+  const r2b = await abrirPagina(b, { viewport: { width: 390, height: 844 }, contexto: { reducedMotion: 'reduce' }, out, etiqueta: 'karts reducido', ruta: '/juegos/karts.html?prueba=1', esperar: '#ov-menu:not(.hide)' });
+  const g = r2b.mainFrame();
+  await g.click('[data-personaje="yahui"]'); await g.click('[data-ir="pistas"]'); await g.click('[data-ir="rapida:pradera"]');
+  await g.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 600, null, { timeout: 15000 });
+  await g.evaluate(() => window.__karts.darItem('turbo')); await r2b.keyboard.press('KeyE'); await sleep(250);
+  ok('movimiento reducido: sin estela del personaje', (await estado(g)).estela === 0 && (await estado(g)).personaje === 'yahui');
+  await r2b.context().close();
 }
 async function correrRapida(fr, pista) {
   await fr.tap('[data-ir="pistas"]'); await fr.tap('[data-ir="rapida:' + pista + '"]');
@@ -256,10 +326,14 @@ async function probarMando(b) {
   await p.click('[data-juego="karts"]');
   let fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  await revisarSelector(fr, 'menú');
+  ok('menú: Xalli elegido por omisión', await elegido(fr) === 'xalli');
+  await p.screenshot({ path: 'karts-390-menu-piloto.png', fullPage: true });
   await fr.click('[data-ir="copa-nueva"]');
   await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera');
   const e0 = await estado(fr);
   ok('carrera con 8 corredores en la primera pista', e0.karts === 8 && e0.pista === 'pradera', JSON.stringify({ karts: e0.karts, pista: e0.pista }));
+  revisarRivales(e0, 'xalli', 'copa');
   await sleep(3600); // cuenta regresiva
   await fr.click('canvas', { force: true });
   await sleep(1500);
@@ -293,9 +367,20 @@ async function probarMando(b) {
   const menu = await fr.textContent('#menu-ops');
   ok('tras recargar: «Continuar Copa Fiesta» en la carrera 2 de 4', menu.includes('Continuar Copa Fiesta') && menu.includes('Carrera 2 de 4'), menu);
   await p.screenshot({ path: 'karts-390-menu.png' });
+  ok('avance viejo: Xalli sigue elegido', await elegido(fr) === 'xalli');
+  await fr.click('[data-personaje="itzae"]');
+  ok('elegir a Itzae lo marca', await elegido(fr) === 'itzae');
+  await p.reload(); await p.waitForSelector('[data-juego="karts"]', { timeout: 60000 });
+  await p.click('[data-juego="karts"]');
+  fr = await marcoDe(p);
+  await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  ok('tras recargar Juegos sigue elegido Itzae', await elegido(fr) === 'itzae');
   await fr.click('[data-ir="copa"]');
   await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera');
   ok('continúa en la segunda pista (desierto)', (await estado(fr)).pista === 'desierto');
+  revisarRivales(await estado(fr), 'itzae', 'copa tras recargar');
+  const prog2 = await progreso();
+  ok('el progreso de karts no cambia de forma (sin personaje)', prog2.datos && !('personaje' in prog2.datos) && Object.keys(prog2.datos).length === 5, Object.keys(prog2.datos || {}).join(','));
   await p.click('[data-a="salir"]').catch(() => {});
 
   // ---- Celular (toques reales): botones ⬅ ➡ por omisión, vista 3D, multitáctil y layout a 390×844 vertical ----
@@ -510,6 +595,9 @@ async function probarMando(b) {
   // ---- Mando clásico (openspec: karts-mando) ----
   await probarMando(b);
 
+  // ---- Personajes (openspec: personajes-xalli) ----
+  await probarPersonajes(b);
+
   // ---- Partida en sala con bots fantasma ----
   const vAntes = (await progreso()).v;
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear');
@@ -520,6 +608,7 @@ async function probarMando(b) {
   await fsala.waitForFunction(() => window.__karts && window.__karts.estado().sala && window.__karts.estado().modo === 'carrera', null, { timeout: 30000 });
   const es = await estado(fsala);
   ok('sala: la pista elegida (hielo) con 2 fantasmas', es.pista === 'hielo' && es.karts === 3, JSON.stringify({ pista: es.pista, karts: es.karts }));
+  revisarRivales(es, 'itzae', 'sala');
   await sleep(9000);
   const es2 = await estado(fsala);
   ok('sala: el minimapa muestra a los 2 fantasmas y a ti', es2.marcasMapa === 3 && es2.yoEnMapa, JSON.stringify({ marcas: es2.marcasMapa }));

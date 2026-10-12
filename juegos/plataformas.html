@@ -86,6 +86,18 @@ body.ctl-mando #mandos,body:not(.jugando) .mando{display:none!important}
 .sel{font:inherit;font-weight:800;font-size:15px;min-height:44px;padding:6px 14px;border-radius:999px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer}
 .sel[aria-pressed="true"]{border-color:var(--acento);background:rgba(255,183,3,.24)}
 .ctl-fila{align-items:center}
+/* Personajes (openspec: personajes-xalli): 4 tarjetas con retrato, nombre y título; 2×2 en celular */
+#personajes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:min(100%,560px)}
+.pers{font:inherit;color:#fff;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);border-radius:14px;padding:4px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-width:0;min-height:44px;text-align:center}
+.pers img{width:52px;height:52px;flex:0 0 auto;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+.pers span{display:flex;flex-direction:column;min-width:0}
+.pers b{font-size:14px;line-height:1.1}
+.pers small{font-size:11px;line-height:1.15;opacity:.85}
+.pers[aria-pressed="true"]{border-color:var(--acento);background:rgba(255,183,3,.22);box-shadow:0 0 0 2px rgba(255,183,3,.3)}
+.pers:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+@media (max-width:520px){#personajes{grid-template-columns:repeat(2,minmax(0,1fr))}.pers{flex-direction:row;text-align:left;gap:4px;padding:3px 6px 3px 2px}.pers img{width:44px;height:44px}.pers small{font-size:10.5px}}
+@media (max-height:560px){.portada-axo{width:76px;height:76px}#ov-titulo>p:not(#teclas){display:none}.pers img{width:40px;height:40px}}
+@media (max-height:430px){.portada-axo{display:none}#ov-titulo h1{font-size:28px}}
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.nodo.sigue,.marca img,.portada-axo{animation:none}.m{transition:none}}
 </style></head><body>
 <div id="juego">
@@ -100,9 +112,10 @@ body.ctl-mando #mandos,body:not(.jugando) .mando{display:none!important}
 
     <div class="ov" id="ov-carga"><h1>🦎 Axo</h1><p>Cargando tu avance…</p></div>
     <div class="ov hide" id="ov-titulo">
-      <img class="portada-axo" id="portada-axo" alt="Axo, el ajolote" width="132" height="132">
+      <img class="portada-axo" id="portada-axo" alt="Xalli, Guardián de los Canales" width="132" height="132">
       <h1>Axo <b>y los 12 mundos</b></h1>
-      <p>Ayuda a Axo, el ajolote, a cruzar los mundos: junta monedas, pisa a los bichos y vence al jefe de cada castillo.</p>
+      <p id="portada-txt">Elige a tu personaje y cruza los mundos: junta monedas, pisa a los bichos y vence al jefe de cada castillo.</p>
+      <div id="personajes" role="group" aria-label="Personaje"></div>
       <div class="fila"><button class="btn" id="b-jugar">▶ Jugar</button></div>
       <div class="fila ctl-fila" role="group" aria-label="Controles"><button class="sel" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="sel" data-control="botones" aria-pressed="false">🔘 Botones</button><span class="guia-lugar"></span></div>
       <p id="teclas">⌨️ ← → para moverte · ESPACIO o ↑ para saltar · X para lanzar fuego · P para pausa</p>
@@ -132,6 +145,7 @@ body.ctl-mando #mandos,body:not(.jugando) .mando{display:none!important}
 </div>
 <script src="arcade.js?v=1"></script>
 <script src="mando.js?v=1"></script>
+<script src="personajes.js?v=1"></script>
 <script>
 /* Axo y los 12 mundos — plataformas 2D en canvas (openspec: juegos-plataformas-karts).
    Embebido en juegos.html: la plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage, solo
@@ -261,7 +275,7 @@ const SOLIDO = t => t >= 1 && t <= 5;
 const PISABLE = t => t === SEMI || t === CAE;
 // Tramos de 16 columnas. s = alto del suelo por columna (0 = hoyo; 3 = filas 12–14). o = filas con objetos:
 // X piedra, ? caja con moneda, P caja con poder, = plataforma (cae en el volcán si está sobre un hoyo), ^ pinchos,
-// o moneda, e caminante, j saltarín. d = dificultad 1–3. Todos se pueden pasar con el salto de Axo.
+// o moneda, e caminante, j saltarín. d = dificultad 1–3. Todos se pueden pasar con el salto del personaje.
 const TRAMOS = [
   { d: 1, s: '3333333333333333', o: { 9: '....oooo........', 11: '..........e.....' } },
   { d: 1, s: '3333333333333333', o: { 4: '.....o..........', 8: '...?.P.?........', 11: '...........e....' } },
@@ -942,7 +956,7 @@ function paso(dt) {
   // Salto con coyote time y búfer.
   P.coyote = P.suelo ? 0.09 : Math.max(0, P.coyote - dt);
   if (pulso.saltar) { P.bufer = 0.12; pulso.saltar = false; } else P.bufer = Math.max(0, P.bufer - dt);
-  if (P.bufer > 0 && P.coyote > 0) { P.vy = -SALTO; P.coyote = 0; P.bufer = 0; P.suelo = false; S.salto(); }
+  if (P.bufer > 0 && P.coyote > 0) { P.vy = -SALTO; P.coyote = 0; P.bufer = 0; P.suelo = false; S.salto(); rastro(3); }
   P.vy = Math.min(CAIDA_MAX, P.vy + (P.vy < 0 && tecla.saltar ? GRAV_SUBIDA : GRAV) * dt);
   // Fuego.
   if (pulso.fuego) {
@@ -1255,13 +1269,13 @@ function pintarMapa() {
     nodos.push('<button class="nodo' + (hecho ? ' hecho' : '') + (cast ? ' castillo' : '') + (abierto && n === sigue && !hecho ? ' sigue' : '') + '" style="' + pos(n) + '" data-nivel="' + id + '"' + (abierto ? '' : ' disabled') + ' aria-label="Nivel ' + id + (cast ? ', castillo del jefe' : '') + (hecho ? ', superado' : abierto ? '' : ', bloqueado') + '">' +
       (cast ? '🏰' : '') + id + '<small>' + (hecho ? '✔ ' + (prog.mejores[id] ? prog.mejores[id] + ' s' : '') : abierto ? 'Jugar' : '🔒') + '</small></button>');
   }
-  if (sigue) nodos.push('<div class="marca" style="' + pos(sigue) + '"><img src="' + retratoAxo(prog.poder, 'quieto') + '" alt=""></div>');
+  if (sigue) nodos.push('<div class="marca" style="' + pos(sigue) + '"><img src="' + Personajes.retrato(personaje, 'quieto', prog.poder) + '" alt="" data-personaje="' + personaje + '"></div>');
   $('mapa-nodos').innerHTML = nodos.join('');
   $('mapa-stats').innerHTML = '<span>❤️ ' + prog.vidas + '</span><span>🪙 ' + prog.monedas + '</span><span>' + nombrePoder(prog.poder) + '</span><span>⭐ ' + prog.completados.length + ' niveles</span>';
   const ec = prog.enCurso;
   $('mapa-continuar').innerHTML = ec ? '<button class="btn" data-continuar="' + ec.nivel + '">▶ Continuar ' + ec.nivel + (ec.checkpoint ? ' desde la bandera 🚩' : '') + '</button>' : '';
 }
-const nombrePoder = p => p === 'fuego' ? '🌶️ Fuego' : p === 'grande' ? '🍄 Grande' : '🦎 Base';
+const nombrePoder = p => p === 'fuego' ? '🌶️ Fuego' : p === 'grande' ? '🍄 Grande' : Personajes.porId(personaje).emoji + ' Base';
 $('mapa-nodos').addEventListener('click', e => { const b = e.target.closest('[data-nivel]'); if (b && !b.disabled) iniciarNivel(b.dataset.nivel, false); });
 $('mapa-continuar').addEventListener('click', e => { const b = e.target.closest('[data-continuar]'); if (b) iniciarNivel(b.dataset.continuar, !!(prog.enCurso && prog.enCurso.checkpoint)); });
 $('b-mundo-ant').onclick = () => { mundoVista = Math.max(1, mundoVista - 1); pintarMapa(); };
@@ -1358,6 +1372,7 @@ function pasoEfectos(dt) {
   if (!REDUCIR && modo === 'nivel' && P.suelo && !P.muerto) { // polvo al correr o derrapar
     const dir = (tecla.der ? 1 : 0) - (tecla.izq ? 1 : 0), derrapa = dir && Math.sign(P.vx) === -dir && Math.abs(P.vx) > 50;
     if ((derrapa && Math.random() < dt * 30) || (Math.abs(P.vx) > 100 && Math.random() < dt * 5)) polvo(P.x + P.w / 2 - Math.sign(P.vx) * 4, P.y + P.h, 1);
+    if (Math.abs(P.vx) > 60 && Math.random() < dt * 3) rastro(1);
   }
   if (finalizado && !festejado && metaX && P.x + P.w > metaX + 6) { festejado = true; confeti(metaX + 8, (FIL - 3) * T - 60); }
   for (const e of efectos) {
@@ -1365,6 +1380,7 @@ function pasoEfectos(dt) {
     if (e.tipo === 'polvo') { e.x += e.vx * dt; e.y += e.vy * dt; e.vx *= 0.9; e.r += dt * 6; }
     else if (e.tipo === 'chispa') { e.x += e.vx * dt; e.y += e.vy * dt; e.vy += 260 * dt; }
     else if (e.tipo === 'confeti') { e.x += e.vx * dt; e.y += e.vy * dt; e.vy += 380 * dt; e.vx *= 0.985; e.rot += dt * 9; }
+    else if (e.tipo === 'rastro') { e.x += (e.vx + Math.sin(e.vida * 9 + e.rot) * 8) * dt; e.y += e.vy * dt; e.rot += dt * 3; }
   }
   if (efectos.length) efectos = efectos.filter(e => e.vida > 0);
   pasoAmbiente(dt);
@@ -1413,78 +1429,42 @@ function dibujarEfectos() {
     else if (e.tipo === 'brillo') { g.fillStyle = 'rgba(255,240,150,' + k.toFixed(3) + ')'; estrella(g, e.x, e.y, 3 + (1 - k) * 5, 1, 4); g.fill(); }
     else if (e.tipo === 'chispa') { g.fillStyle = 'rgba(255,215,90,' + k.toFixed(3) + ')'; g.fillRect(e.x - 0.7, e.y - 0.7, 1.4, 1.4); }
     else if (e.tipo === 'confeti') { g.save(); g.translate(e.x, e.y); g.rotate(e.rot); g.globalAlpha = Math.min(1, k * 2); g.fillStyle = e.c; g.fillRect(-1.5, -0.8, 3, 1.6); g.restore(); }
+    else if (e.tipo === 'rastro') dibujarRastro(e, k);
   }
 }
+// Partícula cosmética de cada personaje (openspec: personajes-xalli): burbujas, glifos, hojas o pétalos. No da ventajas.
+const COLOR_RASTRO = { hojas: ['#22c55e', '#16a34a', '#84cc16'], petalos: ['#f59e0b', '#db2777', '#a855f7'] };
+function rastro(n) {
+  if (REDUCIR || modo !== 'nivel') return;
+  const forma = Personajes.porId(personaje).particula, sube = forma === 'burbujas' || forma === 'glifos';
+  for (let k = 0; k < n; k++) {
+    const cols = COLOR_RASTRO[forma];
+    efectos.push({ tipo: 'rastro', forma, x: P.x + P.w / 2 - P.mira * 3 + (Math.random() - 0.5) * 6, y: P.y + P.h * (0.3 + Math.random() * 0.5), vx: -P.mira * (6 + Math.random() * 10), vy: sube ? -(10 + Math.random() * 12) : 6 + Math.random() * 8,
+      rot: Math.random() * 6, r: 0.9 + Math.random() * 0.7, c: cols ? cols[(Math.random() * cols.length) | 0] : '', vida: 0.9, v0: 0.9 });
+  }
+}
+function dibujarRastro(e, k) {
+  g.save(); g.translate(e.x, e.y); g.globalAlpha = Math.min(1, k * 1.6);
+  if (e.forma === 'burbujas') { g.strokeStyle = 'rgba(200,245,255,.95)'; g.lineWidth = 0.4; elipse(g, 0, 0, e.r, e.r); g.stroke(); g.fillStyle = 'rgba(200,245,255,.3)'; g.fill(); g.fillStyle = '#fff'; elipse(g, -e.r * 0.35, -e.r * 0.35, e.r * 0.25, e.r * 0.25); g.fill(); }
+  else if (e.forma === 'glifos') { g.rotate(e.rot * 0.3); g.strokeStyle = '#f5c542'; g.lineWidth = 0.35; g.beginPath(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; g.moveTo(Math.cos(a) * e.r, Math.sin(a) * e.r); g.lineTo(Math.cos(a) * e.r * 1.7, Math.sin(a) * e.r * 1.7); } g.stroke(); g.fillStyle = '#ffe08a'; elipse(g, 0, 0, e.r * 0.7, e.r * 0.7); g.fill(); }
+  else { g.rotate(e.rot); g.fillStyle = e.c; elipse(g, 0, 0, e.r * 1.3, e.r * 0.55); g.fill(); }
+  g.restore();
+}
 
-/* ================= Axo: el ajolote (un solo dibujo para el juego, la portada y el mapa) ================= */
-const PIEL = {
-  base: { cuerpo: '#ffa3c7', sombra: '#ef75a8', vientre: '#ffdae9', bran: '#ff4f9a', bran2: '#ffa6cf', linea: '#b23a72' },
-  grande: { cuerpo: '#ff98c1', sombra: '#e8649c', vientre: '#ffd3e5', bran: '#ff3d8f', bran2: '#ff9ccb', linea: '#a8326a', manchas: '#2dd4bf' },
-  fuego: { cuerpo: '#ffb07a', sombra: '#f2793f', vientre: '#ffe4c8', bran: '#ff5a1f', bran2: '#ffd23f', linea: '#ad4518' },
-};
-// Origen en los pies, mirando a la derecha; mide ~15 px lógicos de alto en tamaño base.
-function pintarAxo(c, o) {
-  const p = PIEL[o.poder] || PIEL.base, t = o.t, pose = o.pose, quieto = REDUCIR;
-  const anda = pose === 'camina' ? Math.sin(o.fase) : 0;
-  c.lineJoin = c.lineCap = 'round';
-  // Cola con aleta
-  const meneo = quieto ? 0 : Math.sin(t * (pose === 'camina' ? 11 : 3)) * (pose === 'camina' ? 1.3 : 0.6);
-  c.fillStyle = p.sombra; c.beginPath(); c.moveTo(-2.4, -6); c.quadraticCurveTo(-7.5, -9 + meneo, -10.4, -5.8 + meneo); c.quadraticCurveTo(-7, -2, -2.2, -2.6); c.closePath(); c.fill();
-  c.strokeStyle = p.bran2; c.lineWidth = 0.6; c.beginPath(); c.moveTo(-3.5, -6.6); c.quadraticCurveTo(-7.5, -9.2 + meneo, -10, -6 + meneo); c.stroke();
-  if (o.poder === 'fuego') { const fl = quieto ? 1 : 0.8 + 0.25 * Math.sin(t * 18); c.fillStyle = '#ffb703'; elipse(c, -10.8, -7.6 + meneo, 1.3, 2.4 * fl, -0.5); c.fill(); c.fillStyle = '#fff3b0'; elipse(c, -10.6, -7 + meneo, 0.6, 1.2 * fl, -0.5); c.fill(); }
-  // Patas
-  c.fillStyle = p.sombra;
-  const pata = (x, y) => { elipse(c, x, y, 1.7, 1.15); c.fill(); };
-  if (pose === 'salta') { pata(-2.4, -1.8); pata(2.6, -2); }
-  else if (pose === 'cae' || pose === 'pierde') { pata(-3.6, -0.9); pata(3.8, -0.9); }
-  else { pata(-2.6 + anda * 1.4, -0.9 - Math.max(0, anda) * 1.1); pata(2.5 - anda * 1.4, -0.9 - Math.max(0, -anda) * 1.1); }
-  // Cuerpo y panza
-  c.fillStyle = p.cuerpo; elipse(c, 0, -4.4, 4.7, 3.7); c.fill(); c.strokeStyle = p.linea; c.lineWidth = 0.5; c.stroke();
-  c.fillStyle = p.vientre; elipse(c, 1.1, -3.7, 2.9, 2.2); c.fill();
-  if (p.manchas) { c.fillStyle = p.manchas; for (const [x, y] of [[-2.6, -6.4], [-1, -7.4], [-3.4, -4.6]]) { elipse(c, x, y, 0.65, 0.55); c.fill(); } }
-  // Bracito
-  const brazo = (x, y, rot) => { c.fillStyle = p.sombra; elipse(c, x, y, 1.7, 0.95, rot); c.fill(); };
-  if (pose === 'gana') { brazo(3.3, -8.6, -1.2); brazo(-2.6, -8.6, 1.2); }
-  else if (pose === 'salta') brazo(3.6, -7, -1);
-  else if (pose === 'cae' || pose === 'dano' || pose === 'pierde') brazo(4.6, -5.4, -0.3);
-  else brazo(3, -3.4 + anda * 0.4, 0.9);
-  // Branquias (tres por lado, se mecen)
-  const barre = pose === 'salta' ? 0.3 : pose === 'cae' ? -0.3 : 0;
-  const ramas = [[-4.7, -12.6, Math.PI + 0.6], [-5.5, -10.3, Math.PI + 0.12], [-4.9, -8.1, Math.PI - 0.38], [6.3, -12.6, -0.6], [7.1, -10.3, -0.12], [6.5, -8.1, 0.38]];
-  ramas.forEach(([x, y, ang], i) => {
-    const lado = i < 3 ? -1 : 1, sw = quieto ? 0 : Math.sin(t * 4 + i * 1.3) * 0.13;
-    c.save(); c.translate(x, y); c.rotate(ang + sw - lado * barre);
-    c.fillStyle = p.bran; elipse(c, 2, 0, 2.4, 1.05); c.fill();
-    c.fillStyle = p.bran2; for (const [nx, ny] of [[1.1, -0.85], [2.3, -0.9], [3.4, -0.6]]) { elipse(c, nx, ny, 0.55, 0.55); c.fill(); }
-    c.restore();
-  });
-  // Cabeza
-  c.fillStyle = p.cuerpo; elipse(c, 0.8, -10.2, 6.3, 4.8); c.fill(); c.strokeStyle = p.linea; c.lineWidth = 0.5; c.stroke();
-  c.fillStyle = 'rgba(255,255,255,.4)'; elipse(c, -0.8, -13.2, 2.4, 0.95); c.fill();
-  // Cara
-  const ojos = [[-1.3, -10.5], [3.3, -10.5]];
-  c.strokeStyle = '#2a1222'; c.lineWidth = 0.6; c.fillStyle = '#2a1222';
-  const parpadea = !quieto && pose !== 'gana' && (t % 3.7) < 0.12;
-  if (pose === 'dano') { c.beginPath(); c.moveTo(-2.2, -11.3); c.lineTo(-0.6, -10.5); c.lineTo(-2.2, -9.7); c.moveTo(4.2, -11.3); c.lineTo(2.6, -10.5); c.lineTo(4.2, -9.7); c.stroke(); }
-  else if (pose === 'pierde') { for (const [x, y] of ojos) { c.beginPath(); c.moveTo(x - 0.9, y - 0.9); c.lineTo(x + 0.9, y + 0.9); c.moveTo(x + 0.9, y - 0.9); c.lineTo(x - 0.9, y + 0.9); c.stroke(); } }
-  else if (pose === 'gana') { for (const [x, y] of ojos) { c.beginPath(); c.arc(x, y + 0.5, 1.1, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); } }
-  else if (parpadea) { for (const [x, y] of ojos) { c.beginPath(); c.moveTo(x - 1, y); c.lineTo(x + 1, y); c.stroke(); } }
-  else for (const [x, y] of ojos) { c.fillStyle = '#2a1222'; elipse(c, x, y, 1.05, 1.3); c.fill(); c.fillStyle = '#fff'; elipse(c, x + 0.35, y - 0.5, 0.45, 0.45); c.fill(); }
-  c.fillStyle = 'rgba(255,80,140,.45)'; elipse(c, -3.1, -8.7, 1, 0.6); c.fill(); elipse(c, 5.2, -8.7, 1, 0.6); c.fill();
-  c.strokeStyle = p.linea; c.lineWidth = 0.55;
-  if (pose === 'gana') { c.fillStyle = '#c2185b'; c.beginPath(); c.arc(1.1, -8.6, 1.5, 0, Math.PI); c.fill(); c.fillStyle = '#ff8fab'; elipse(c, 1.1, -7.6, 0.8, 0.45); c.fill(); }
-  else if (pose === 'dano' || pose === 'pierde') { c.fillStyle = p.linea; elipse(c, 1.1, -8.1, 0.7, 0.55); c.fill(); }
-  else { c.beginPath(); c.arc(1.1, -8.9, 1.5, Math.PI * 0.2, Math.PI * 0.8); c.stroke(); }
+/* ================= Personaje (openspec: personajes-xalli) =================
+   Xalli (el ajolote de siempre), Itzae, Yahui o Xochiquetzal: un solo dibujo de perfil en juegos/personajes.js para el
+   juego, la portada, el mapa y el selector. Solo cosmético: la física, el tamaño de choque y los puntos no cambian. */
+let personaje = Personajes.preferencia();
+function pintarPortada() {
+  const per = Personajes.porId(personaje);
+  $('portada-axo').src = Personajes.retrato(personaje, 'gana');
+  $('portada-axo').alt = per.nombre + ', ' + per.titulo;
+  document.querySelectorAll('#personajes [data-personaje]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.personaje === personaje)));
 }
-let retratos = {};
-function retratoAxo(poder, pose) {
-  const k = poder + '|' + pose;
-  if (retratos[k]) return retratos[k];
-  const c = lienzo(128, 128), x = c.getContext('2d'); x.translate(62, 116); x.scale(5.6, 5.6);
-  pintarAxo(x, { pose, fase: 0, t: 0.5, poder });
-  return (retratos[k] = c.toDataURL());
-}
-function dibujarAxo(t) {
+function elegirPersonaje(id) { personaje = Personajes.preferencia(id); pintarPortada(); }
+$('personajes').innerHTML = Personajes.LISTA.map(per => '<button class="pers" data-personaje="' + per.id + '" aria-pressed="false"><img src="' + Personajes.retrato(per.id, 'quieto') + '" alt="" width="52" height="52"><span><b>' + per.nombre + '</b><small>' + per.titulo + '</small></span></button>').join('');
+$('personajes').addEventListener('click', e => { const b = e.target.closest('[data-personaje]'); if (b) elegirPersonaje(b.dataset.personaje); });
+function dibujarPersonaje(t) {
   if (!grid || modo === 'carga' || modo === 'titulo' || modo === 'mapa') return;
   const s = P.h / ALTO.base, gana = finalizado && metaX && P.x + P.w > metaX + 6 && !P.muerto;
   let pose = 'quieto', sx = 1, sy = 1, dy = 0;
@@ -1500,7 +1480,7 @@ function dibujarAxo(t) {
   // Invulnerable: translúcido con un vaivén suave (sin parpadeo fuerte); con movimiento reducido, fijo.
   if (P.inv > 0 && !P.muerto) g.globalAlpha = REDUCIR ? 0.6 : 0.675 + 0.125 * Math.sin(t * 25);
   g.save(); g.translate(cx, pie + dy); g.scale(P.mira * s * sx * 0.95, s * sy * 0.95);
-  pintarAxo(g, { pose, fase: P.paso / 5, t, poder: P.poder });
+  Personajes.pintar(g, personaje, { pose, fase: P.paso / 5, t, poder: P.poder, quieto: REDUCIR });
   g.restore(); g.globalAlpha = 1;
 }
 
@@ -1671,7 +1651,7 @@ function dibujar(t) {
     g.fillStyle = '#3b1d14'; elipse(g, p.x + 4, p.y + 4, 4.4, 4.4); g.fill();
     g.fillStyle = '#ff6a00'; elipse(g, p.x + 4, p.y + 4, 2.8, 2.8); g.fill(); g.fillStyle = '#ffd166'; elipse(g, p.x + 3.2, p.y + 3.2, 1.2, 1.2); g.fill();
   }
-  dibujarAxo(t);
+  dibujarPersonaje(t);
   for (const p of particulas) {
     if (p.tipo === 'moneda') dibujarMoneda(p.x + 4, p.y + 4, t * 3, 0);
     else if (p.tipo === 'roca') g.drawImage(sprite(CAE + '|0|0'), p.x, p.y - MARGEN, T, T + MARGEN);
@@ -1741,14 +1721,17 @@ function cuadro(ahora) {
 ajustar();
 aplicarControl();
 generar(1, 1); cam.x = 0; // fondo de la portada
-$('portada-axo').src = retratoAxo('base', 'gana');
+pintarPortada();
 requestAnimationFrame(t => { ultimo = t; cuadro(t); });
 if (EMBED) enviar({ tipo: 'listo' });
 else { mostrar('ov-titulo'); }
 if (PRUEBA) {
   // Ganchos solo para pruebas E2E (?prueba=1).
   window.__plat = {
-    estado: () => ({ modo, nivel: nivelId, x: P.x, y: P.y, ancho: W * T, vidas: prog.vidas, monedas: prog.monedas, poder: P.poder, prog: JSON.parse(JSON.stringify(prog)), sala: !!sala, lw: LW, k: K, vh: VH, oy: OY, dibujoMs: costoDibujo, jefe: jefe ? jefe.hp : null }),
+    estado: () => ({ modo, nivel: nivelId, x: P.x, y: P.y, ancho: W * T, vidas: prog.vidas, monedas: prog.monedas, poder: P.poder, prog: JSON.parse(JSON.stringify(prog)), sala: !!sala, lw: LW, k: K, vh: VH, oy: OY, dibujoMs: costoDibujo, jefe: jefe ? jefe.hp : null,
+      personaje, rastro: efectos.filter(e => e.tipo === 'rastro').length }),
+    // Caja del personaje en px del lienzo (incluye penachos, cola y branquias), para revisar su dibujo y capturas de cerca.
+    cajaJugador: () => { const s = P.h / ALTO.base, cx = P.x + P.w / 2 - Math.round(cam.x * K) / K, pie = P.y + P.h + OY; return { x: (cx - 12 * s) * K, y: (pie - 21 * s) * K, w: 24 * s * K, h: 22 * s * K }; },
     irAMeta: () => { if (jefe && jefe.vivo) golpearJefe(jefe.hp); const x = (metaX || (arenaX + 27) * T) - 24; P.x = x; P.y = (FIL - 3) * T - P.h - 1; P.vy = 0; },
     nivel: id => iniciarNivel(id, false), // capturas por mundo (no cambia lo desbloqueado)
     alMapa: () => abrirMapa(Number(nivelId.split('-')[0])),
