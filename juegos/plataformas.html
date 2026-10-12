@@ -147,6 +147,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <script src="arcade.js?v=2"></script>
 <script src="mando.js?v=2"></script>
 <script src="personajes.js?v=2"></script>
+<script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script>
 /* Axo y los 12 mundos — plataformas 2D en canvas (openspec: juegos-plataformas-karts).
    Embebido en juegos.html: la plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage, solo
@@ -823,6 +824,7 @@ function dibujarFondo(cx, t) {
 const VMAX = A.VEL_AXO, GRAV = 1500, GRAV_SUBIDA = 800, SALTO = 330, CAIDA_MAX = 400;
 const P = { x: 0, y: 0, w: 10, h: 13, vx: 0, vy: 0, suelo: false, mira: 1, coyote: 0, bufer: 0, inv: 0, muerto: 0, paso: 0, poder: 'base', aterriza: 0 };
 let prog = progresoNuevo(), progV = 0;
+let relojEmocion = false; // emocion-sonora: ya sonaron los últimos 5 s del reloj
 let modo = 'carga', sala = null, tNivel = 0, monedasNivel = 0, enemigosNivel = 0, jefeVencido = false, viento = 0, finalizado = false;
 let cam = { x: 0 }, pausaPrevia = null;
 function progresoNuevo() { return { mundo: 1, nivel: 1, vidas: 5, monedas: 0, poder: 'base', completados: [], mejores: {}, enCurso: null }; }
@@ -837,7 +839,7 @@ function cambiarPoder(p) {
 function iniciarNivel(id, desdeCheck) {
   const [m, n] = id.split('-').map(Number);
   generar(m, n);
-  tNivel = 0; monedasNivel = 0; enemigosNivel = 0; jefeVencido = false; finalizado = false;
+  tNivel = 0; monedasNivel = 0; enemigosNivel = 0; jefeVencido = false; finalizado = false; relojEmocion = false;
   P.vx = 0; P.vy = 0; P.inv = 0; P.muerto = 0; P.mira = 1; P.coyote = 0; P.bufer = 0;
   P.poder = sala ? 'base' : prog.poder; P.h = ALTO[P.poder];
   if (desdeCheck && checkX) checkTomado = true;
@@ -923,7 +925,7 @@ function danar() {
 }
 function morir() {
   if (P.muerto || finalizado) return;
-  P.muerto = 1.2; P.vy = -300; P.vx = 0; S.muere();
+  P.muerto = 1.2; P.vy = -300; P.vx = 0; S.muere(); window.Emocion?.intensidad(0); // emocion-sonora
 }
 function trasMorir() {
   if (sala) { P.muerto = 0; cambiarPoder('base'); colocarEnInicio(); P.inv = 1.5; return; }
@@ -955,6 +957,7 @@ function paso(dt) {
     return;
   }
   // Tiempo límite.
+  if (!sala && !relojEmocion && tNivel >= 295) { relojEmocion = true; window.Emocion?.ultimoSegundos(5); } // emocion-sonora
   if (!sala && tNivel >= 300) { avisar('⏰ ¡Se acabó el tiempo!', 1500); morir(); return; }
   if (sala && performance.now() - sala.inicioLocal >= A.LIMITE_SALA.plataformas) { terminarSala(null); return; }
   correr(dt);
@@ -1125,6 +1128,7 @@ function entrarArena() {
   // Se cierra la entrada.
   for (let r = 6; r <= 11; r++) ponerTile(arenaX, r, PIEDRA);
   avisar('👑 ¡Llegó el jefe! Písalo o lánzale fuego', 2200);
+  window.Emocion?.intensidad(0.6); // emocion-sonora
 }
 function golpearJefe(d) {
   jefe.hp -= d; jefe.inv = d >= 2 ? 1 : 0.5; S.golpeJefe();
@@ -1134,6 +1138,7 @@ function golpearJefe(d) {
     for (let k = 0; k < (REDUCIR ? 0 : 20); k++) particulas.push({ tipo: 'chispa', x: jefe.x + 14, y: jefe.y + 14, vx: (Math.random() - 0.5) * 240, vy: -Math.random() * 240, vida: 0.8 }); // NOSONAR: azar de juego, no criptográfico
     metaX = (arenaX + 27) * T; // aparece la bandera de la meta
     avisar('🏆 ¡Venciste al jefe! Llega a la bandera', 2000);
+    window.Emocion?.intensidad(0); window.Emocion?.logro(); // emocion-sonora
   }
 }
 function pasoJefe(dt) {
@@ -1169,12 +1174,14 @@ function pasoProyectiles(dt) {
 
 /* ================= Fin de nivel ================= */
 function llegarMeta() {
-  finalizado = true; S.meta();
+  finalizado = true; window.Emocion?.intensidad(0);
+  if (!window.Emocion?.nivelSuperado()) S.meta(); // emocion-sonora: sustituye el jingle de meta
   if (sala) { terminarSala(Math.round(performance.now() - sala.inicioLocal)); return; }
   const segs = Math.max(1, Math.round(tNivel));
   const puntos = 300 + monedasNivel * 10 + enemigosNivel * 20 + 2 * Math.max(0, 300 - segs) + (jefeVencido ? 500 : 0);
   const [m, n] = nivelId.split('-').map(Number);
   if (!prog.completados.includes(nivelId)) prog.completados.push(nivelId);
+  if (prog.mejores[nivelId] && segs < prog.mejores[nivelId]) setTimeout(() => window.Emocion?.record(), 1200); // emocion-sonora: mejor tiempo
   prog.mejores[nivelId] = Math.min(prog.mejores[nivelId] || 999, Math.min(999, segs));
   if (m === prog.mundo && n === prog.nivel) {
     if (n < A.NIVELES_POR_MUNDO) prog.nivel = n + 1;

@@ -26,15 +26,18 @@ function marco(id, extra) {
 // Cuenta regresiva; devuelve la función para detenerla.
 // Las pruebas E2E pueden acelerar los relojes con window.__TIEMPO_JUEGOS (p. ej. 0.1); para quien juega vale 1.
 const TIEMPO = Number(window.__TIEMPO_JUEGOS) || 1;
+// emocion-sonora: en un reloj de 10 s o más, los últimos 5 s suenan con latido; al detenerse, calma.
 function reloj(segundos, onTick, onFin) {
   const fin = Date.now() + segundos * 1000 * TIEMPO;
+  let tension = false;
   const t = setInterval(() => {
     const quedan = (fin - Date.now()) / 1000 / TIEMPO;
+    if (!tension && segundos >= 10 && quedan > 0 && quedan <= 5) { tension = true; window.Emocion?.ultimoSegundos(Math.ceil(quedan)); }
     onTick(quedan);
     if (quedan <= 0) { clearInterval(t); onFin(); }
   }, 200);
   onTick(segundos);
-  const stop = () => clearInterval(t);
+  const stop = () => { clearInterval(t); if (tension) window.Emocion?.calma(); };
   limpiezas.push(stop);
   return stop;
 }
@@ -64,6 +67,7 @@ async function terminar(id, r) {
     (s && s.guardado ? '' : noGuardadoHtml()) +
     '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn" data-juego="' + id + '">🔁 Jugar otra vez</button></div></div>';
   if (s && s.nuevoRecord) confeti();
+  if (s && s.nuevoRecord) window.Emocion?.record(); else window.Emocion?.revelacion(); // emocion-sonora
 }
 
 function confeti() {
@@ -123,7 +127,8 @@ function quiz(opts) {
       aciertos++; racha++;
       const rapidez = opts.modo === 'vidas' ? Math.max(0, Math.round(((opts.porPregunta || 15) * 1000 - (Date.now() - inicioQ)) / 100)) : 0;
       const gana = 100 + Math.min(racha - 1, 10) * 10 + rapidez;
-      puntos += gana; m.puntos(puntos); sonidoOk();
+      puntos += gana; m.puntos(puntos);
+      if (!(racha >= 3 && window.Emocion?.racha(racha))) sonidoOk(); // emocion-sonora: racha que sube de tono
       fb.className = 'feedback ok'; fb.textContent = '✔ +' + gana + (racha > 2 ? ' · racha ×' + racha + ' 🔥' : '');
       if (opts.datoAlAcertar && actual.explicacion) { const x = document.createElement('div'); x.className = 'quiz-dato'; x.textContent = actual.explicacion; fb.appendChild(x); } // cultura-conocimiento
     } else {

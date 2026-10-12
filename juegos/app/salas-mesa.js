@@ -74,7 +74,7 @@ function pintarLoteriaSala(body) {
     document.getElementById('lot-carta').innerHTML = '<div class="big">' + escapeHtml(c.emoji) + '</div><div class="q">' + c.n + '. ' + escapeHtml(c.es) + '</div><div class="sub"><i>' + escapeHtml(c.en) + '</i></div><div class="sub">«' + escapeHtml(c.verso) + '»</div>';
     document.getElementById('lot-n').textContent = n;
     document.getElementById('lot-hist').innerHTML = lot.orden.slice(Math.max(0, n - 6), n - 1).reverse().map(i => '<span title="' + escapeHtml(cartas[i].es) + '">' + escapeHtml(cartas[i].emoji) + '</span>').join('');
-    if (nueva) cantarCarta(c);
+    if (nueva) { window.Emocion?.canto(); cantarCarta(c); } // emocion-sonora
   }
   // Progreso de cada quien (cartas de su tabla que ya salieron)
   const set = new Set(lot.orden.slice(0, n));
@@ -92,7 +92,8 @@ function marcarLoteriaSala(i, cel) {
 function gritarLoteriaSala() {
   const lot = sala.lot; const $m = document.getElementById('lot-msg');
   if (!cumple(lot.marcas, lot.modo)) { sonidoMal(); $m.className = 'feedback bad'; $m.textContent = 'Aún no tienes lotería 😉 ' + (lot.modo === 'llena' ? 'Necesitas la tabla llena.' : 'Necesitas una línea completa.'); return; }
-  sonidoOk(); $m.className = 'feedback ok'; $m.textContent = '📣 ¡LOTERÍA! Revisando…';
+  if (!window.Emocion?.logro()) sonidoOk(); // emocion-sonora: «¡Lotería!»
+  $m.className = 'feedback ok'; $m.textContent = '📣 ¡LOTERÍA! Revisando…';
   post('/juegos/sala/' + sala.codigo + '/respuesta', { loteria: true }).then(() => traerSala());
 }
 
@@ -361,15 +362,17 @@ function enviarUnaLocal() {
   post('/juegos/sala/' + sala.codigo + '/respuesta', { una: { paso: u.paso } }).then(() => traerSala()).then(() => { sala.vista = null; pintarSala(); });
 }
 
+// emocion-sonora: «¡UNA!» suena como logro (sin efectos de emoción, el sonido clásico).
+const gritoUna = () => { if (!window.Emocion?.logro()) sonidoOk(); };
 function clicUnaSala(e) {
   const st = sala.unaSt; if (!st) return false;
   const yo = st.orden.findIndex(p => p.id === sala.estado.yo);
   const lg = e.target.closest('[data-usala-lang]'); if (lg) { sala.unaLang = lg.dataset.usalaLang; sala.vista = null; pintarSala(); return true; }
   const b = e.target.closest('[data-usala]');
   if (b && b.dataset.usala === 'una') {
-    if (sala.unaLocal && !sala.unaLocal.presionado) { sala.unaLocal.presionado = true; sonidoOk(); enviarUnaLocal(); sala.vista = null; pintarSala(); return true; }
+    if (sala.unaLocal && !sala.unaLocal.presionado) { sala.unaLocal.presionado = true; gritoUna(); enviarUnaLocal(); sala.vista = null; pintarSala(); return true; }
     if (!st.esperaUna || st.esperaUna.j !== yo) return true;
-    sonidoOk(); sala.unaLocal = { paso: st.esperaUna.paso, presionado: true, enviado: false, jugadaOk: true }; enviarUnaLocal(); sala.vista = null; pintarSala();
+    gritoUna(); sala.unaLocal = { paso: st.esperaUna.paso, presionado: true, enviado: false, jugadaOk: true }; enviarUnaLocal(); sala.vista = null; pintarSala();
     return true;
   }
   if (st.turno !== yo || sala.unaEnviando) return !!(b || e.target.closest('[data-usala-carta]'));

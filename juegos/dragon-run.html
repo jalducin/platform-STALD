@@ -103,6 +103,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <p id="tip">👆 Toca en cualquier parte para saltar</p>
 <script src="dragon-misiones.js?v=2"></script>
 <script src="mando.js?v=2"></script>
+<script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script>
 /* Dragon Run — juego del profe, integrado a Juegos en Arcade (openspec: dragon-run, dragon-run-misiones).
    Embebido en juegos.html: el juego nunca llama al servidor. Avisa a la página con postMessage:
@@ -180,7 +181,7 @@ function siguienteToast(){
 const carrera=()=>({metros:Math.floor(dist/PX)+run.extraM,monedas:coins,esquivados:run.esq,mejorRacha:run.mejorRacha,dobles:run.dobles,castillo:run.castillo||st==='win'});
 // Durante la carrera: aviso en cuanto una misión del día cruza su meta.
 function revisarMisiones(){
- DM.vistaMisiones(prog,fecha,semilla,carrera()).forEach((m,i)=>{if(m.cumplida&&!run.antes[i]&&!run.avisadas.has(i)){run.avisadas.add(i);toast('🎯 ¡Misión cumplida! '+m.texto);sCoin()}});
+ DM.vistaMisiones(prog,fecha,semilla,carrera()).forEach((m,i)=>{if(m.cumplida&&!run.antes[i]&&!run.avisadas.has(i)){run.avisadas.add(i);toast('🎯 ¡Misión cumplida! '+m.texto);if(!window.Emocion?.logro())sCoin()}});
 }
 // Al terminar: suma la carrera, guarda y devuelve los mensajes (misiones, logros y premios).
 function cerrarCarrera(){
@@ -204,19 +205,22 @@ function startMusic(){stopMusic();if(!AC){ return; }mi=setInterval(()=>{const n=
 function stopMusic(){clearInterval(mi);mi=null}
 // Ocultar la pestaña a mitad de carrera la pausa (openspec: mando-arcade).
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(st==='play'){ pausar(true); }stopMusic()}else if(st==='play')startMusic()});
-$('mute').onclick=function(){muted=!muted;this.textContent=muted?'🔇':'🔊';if(master){ master.gain.value=muted?0:1; }this.blur()};
+$('mute').onclick=function(){muted=!muted;this.textContent=muted?'🔇':'🔊';if(master){ master.gain.value=muted?0:1; }window.Emocion?.silencio(muted);this.blur()}; // emocion-sonora: el 🔊 propio también calla la emoción
 
 /* ---------- flow ---------- */
 function show(id){['ovS','ovO','ovW','ovP'].forEach(i=>$(i).classList.toggle('hide',i!==id));document.body.classList.toggle('jugando',!id)}
 function startGame(){const n=performance.now();if(n-lastStart<400){ return; }lastStart=n;initAudio();
  if(!PRUEBA)fecha=DM.fechaHoy();
  reset();run.antes=DM.vistaMisiones(prog,fecha,semilla).map(m=>m.cumplida);st='play';show(null);startMusic()}
-function saveBest(){if(score()>best){best=score();try{localStorage.setItem('dragonBest',best)}catch(e){}}}
+// Devuelve true si superó un récord anterior (el primero no cuenta como récord).
+function saveBest(){if(score()>best){const habia=best>0;best=score();try{localStorage.setItem('dragonBest',best)}catch(e){}return habia}return false}
+// emocion-sonora: al terminar, victoria en el castillo; si no, récord o derrota amable. true si sonó.
+function emoFin(gano,rec){window.Emocion?.intensidad(0);if(gano){ return !!window.Emocion?.victoria(); }return !!(rec?window.Emocion?.record():window.Emocion?.derrota())}
 // Embebido: la plataforma guarda los puntos y muestra el resultado (con las misiones cumplidas).
 function avisar(gano,msgs){if(!EMBED){ return false; }try{parent.postMessage({juego:'dragon-run',fin:true,gano,puntos:score()+(gano?BONO:0),monedas:coins,metros:Math.floor(dist/PX),segundos:Math.round(t),misiones:msgs},location.origin)}catch(e){}return true}
-function lose(){st='over';stopMusic();saveBest();sLose();const msgs=cerrarCarrera();if(avisar(false,msgs)){ return; }$('oS').textContent='Puntuación: '+score()+' · Distancia: '+Math.floor(dist/PX)+' m';$('oB').textContent='🏆 Récord: '+best;$('oM').innerHTML=msgs.map(esc).join('<br>');show('ovO')}
-function win(){st='win';stopMusic();saveBest();sWin();const msgs=cerrarCarrera();if(avisar(true,msgs)){ return; }$('wS').textContent='Puntuación: '+(score()+BONO)+' (bono castillo +'+BONO+') · Monedas: '+coins;$('wB').textContent='🏆 Récord: '+best;$('wM').innerHTML=msgs.map(esc).join('<br>');show('ovW')}
-function alMenu(){st='start';reset();pintarMenu();show('ovS');$('bS').focus()}
+function lose(){st='over';stopMusic();if(!emoFin(false,saveBest()))sLose();const msgs=cerrarCarrera();if(avisar(false,msgs)){ return; }$('oS').textContent='Puntuación: '+score()+' · Distancia: '+Math.floor(dist/PX)+' m';$('oB').textContent='🏆 Récord: '+best;$('oM').innerHTML=msgs.map(esc).join('<br>');show('ovO')}
+function win(){st='win';stopMusic();if(!emoFin(true,saveBest()))sWin();const msgs=cerrarCarrera();if(avisar(true,msgs)){ return; }$('wS').textContent='Puntuación: '+(score()+BONO)+' (bono castillo +'+BONO+') · Monedas: '+coins;$('wB').textContent='🏆 Récord: '+best;$('wM').innerHTML=msgs.map(esc).join('<br>');show('ovW')}
+function alMenu(){st='start';window.Emocion?.calma();reset();pintarMenu();show('ovS');$('bS').focus()}
 $('bS').onclick=function(){this.blur();startGame()};
 ['bO','bW'].forEach(i=>$(i).onclick=function(){this.blur();alMenu()});
 function jump(){if(st!=='play'||dr.saltos>=2){ return; }dr.vy=dr.saltos?-600:-720;dr.air=true;dr.saltos++;if(dr.saltos===2){ run.dobles++; }sJump();estela(P(16),true)}
@@ -228,8 +232,8 @@ document.addEventListener('pointerdown',e=>{if(st!=='play'||e.target.closest('bu
 
 /* ---------- pausa (START, ⏸ u ocultar la pestaña) ---------- */
 function pausar(on){
- if(on){if(st!=='play'){ return; }st='pause';stopMusic();$('ovP').classList.remove('hide');$('bP').focus()}
- else if(st==='pause'){st='play';$('ovP').classList.add('hide');$('bP').blur();last=performance.now();startMusic()}
+ if(on){if(st!=='play'){ return; }st='pause';stopMusic();window.Emocion?.intensidad(0);$('ovP').classList.remove('hide');$('bP').focus()}
+ else if(st==='pause'){st='play';$('ovP').classList.add('hide');$('bP').blur();last=performance.now();startMusic();if(run.final){ window.Emocion?.intensidad(0.5); }}
 }
 $('bP').onclick=()=>pausar(false);
 $('bPausa').onclick=function(){this.blur();if(st==='play')pausar(true);else pausar(false)};
@@ -279,6 +283,7 @@ function update(dt){
  recogerMonedas(db);
  ob=ob.filter(o=>!o.dead&&o.wx-dist+DX>-120);cn=cn.filter(c=>!c.got&&c.wx-dist+DX>-60);
  chequeo-=dt;if(chequeo<=0){chequeo=.25;revisarMisiones()}
+ if(!run.final&&dist>=500*PX){run.final=true;window.Emocion?.intensidad(0.5)} // emocion-sonora: tramo final
  if(dist>=GOAL*PX-20)win();
 }
 // Coloca obstáculos y monedas por delante hasta cubrir la pantalla (antes de la meta).

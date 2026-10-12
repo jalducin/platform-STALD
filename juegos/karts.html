@@ -235,6 +235,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <script src="mando.js?v=2"></script>
 <script src="arcade.js?v=2"></script>
 <script src="personajes.js?v=2"></script>
+<script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script>
 /* Karts Turbo — carreras con vista cenital en canvas (openspec: juegos-plataformas-karts, karts-controles-diseno).
    Embebido en juegos.html: la plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage,
@@ -1071,7 +1072,10 @@ function alCruzar(k) {
   if (k.vuelta >= A.VUELTAS && k.termino === null) {
     k.termino = Math.round(tCarrera * 1000);
     if (k === yo) llegarMeta();
-  } else if (k === yo && k.vuelta >= 1) { S.vuelta(); avisar(k.vuelta === A.VUELTAS - 1 ? '🏁 ¡Última vuelta!' : 'Vuelta ' + (k.vuelta + 1) + ' de ' + A.VUELTAS, 1400); }
+  } else if (k === yo && k.vuelta >= 1) {
+    S.vuelta(); avisar(k.vuelta === A.VUELTAS - 1 ? '🏁 ¡Última vuelta!' : 'Vuelta ' + (k.vuelta + 1) + ' de ' + A.VUELTAS, 1400);
+    if (k.vuelta === A.VUELTAS - 1) { window.Emocion?.campana(); window.Emocion?.intensidad(0.5); } // emocion-sonora: última vuelta
+  }
 }
 
 function pasoKart(k, dt) {
@@ -1324,12 +1328,12 @@ function cuentaRegresiva(ahora) {
   if ((pulso.derrape || pulso.acel) && arranque.presiono === null) arranque.presiono = -falta;
   pulso.derrape = false; pulso.item = false; pulso.acel = false;
   const n = Math.ceil(falta);
-  if (n !== carreraDe.ultimoNum && n <= 3) { carreraDe.ultimoNum = n; S.bip(); }
+  if (n !== carreraDe.ultimoNum && n <= 3) { carreraDe.ultimoNum = n; if (!window.Emocion?.cuenta(n)) S.bip(); } // emocion-sonora: 3-2-1
   $('cuenta').textContent = n <= 3 ? String(n) : '';
 }
 // ¡YA!: turbo o motor ahogado según cuándo aceleraste, y algunos bots salen con turbo.
 function arrancar() {
-  carreraDe.salio = true; S.ya(); motorOn(true);
+  carreraDe.salio = true; if (!window.Emocion?.cuenta(0)) S.ya(); motorOn(true); // emocion-sonora: ¡YA!
   if (sensor.activo) centrarSensor(); // el centro es como se sostiene el celular al arrancar
   $('cuenta').textContent = '¡YA!'; setTimeout(() => { if ($('cuenta').textContent === '¡YA!') $('cuenta').textContent = ''; }, 800);
   const p = arranque.presiono;
@@ -1366,7 +1370,7 @@ function mostrarTutorial() {
   mostrarTutorial.t = setTimeout(() => { $('tuto').classList.remove('ver'); document.body.classList.remove('tuto'); }, 3000);
 }
 function llegarMeta() {
-  S.meta(); motorOn(false);
+  S.meta(); motorOn(false); window.Emocion?.intensidad(0); // emocion-sonora
   avisar('🏁 ¡Meta! ' + posDe(yo) + '.º lugar', 1600);
   if (sala) { terminarSala(yo.termino); return; }
   terminada = true; cuentaFin = 2.2;
@@ -1426,6 +1430,7 @@ function mostrarResultados() {
   $('hud').classList.add('hide');
   mostrar('ov-res');
   if (ms !== null && lugar <= 3) lanzarConfeti(); else $('confeti').innerHTML = '';
+  window.Emocion?.intensidad(0); window.Emocion?.podio(ms === null ? 0 : lugar); // emocion-sonora
   const b = $('res-botones').querySelector('.btn'); if (b) b.focus();
   if (ms !== null) enviar({ tipo: 'puntos', puntos, aciertos: yo.monedas, total: 0, segundos: Math.round(ms / 1000), titulo: '🏎️ ' + pista.nombre + ': ' + lugar + '.º lugar', detalle: '⏱ ' + A.formatoTiempo(ms) + ' · 🪙 ' + yo.monedas + (bono ? ' · copa +' + bono : '') });
 }
@@ -1506,7 +1511,7 @@ pintarPilotos();
 
 /* ================= Menús ================= */
 function abrirMenu() {
-  modo = 'menu'; motorOn(false); soltarTodo(); $('hud').classList.add('hide'); $('cuenta').textContent = '';
+  modo = 'menu'; motorOn(false); soltarTodo(); $('hud').classList.add('hide'); $('cuenta').textContent = ''; window.Emocion?.calma(); // emocion-sonora
   const cc = prog.copaEnCurso, copa = prog.copas[COPA.id];
   $('menu-ops').innerHTML =
     (cc ? '<button class="op" data-ir="copa">▶ Continuar ' + COPA.nombre + '<small>Carrera ' + (cc.carrera + 1) + ' de 4</small></button>' : '') +
@@ -1989,7 +1994,10 @@ function pintarHud() {
   if (modo !== 'carrera' && modo !== 'pausa') return;
   const n = karts.length, pos = posDe(yo);
   hud('h-pos', pos + '.º'); hud('h-de', '/' + n);
-  if (hudPrevio.lugar !== pos) { hudPrevio.lugar = pos; $('h-pos').dataset.lugar = pos; }
+  if (hudPrevio.lugar !== pos) {
+    if (pos === 1 && hudPrevio.lugar > 1 && modo === 'carrera' && yo.termino === null) window.Emocion?.logro(); // emocion-sonora: rebasaste al 1.er lugar
+    hudPrevio.lugar = pos; $('h-pos').dataset.lugar = pos;
+  }
   hud('h-vuelta', 'Vuelta ' + Math.max(1, Math.min(A.VUELTAS, yo.vuelta + 1)) + '/' + A.VUELTAS);
   hud('h-tiempo', '⏱ ' + A.formatoTiempo(Math.max(0, Math.round(tCarrera * 1000))));
   hud('h-monedas', '🪙 ' + yo.monedas + '/10');
@@ -2035,6 +2043,8 @@ ajustar();
 requestAnimationFrame(t => { ultimo = t; cuadro(t); });
 if (EMBED) enviar({ tipo: 'listo' }); else abrirMenu();
 if (PRUEBA) {
+  // Lleva al jugador al final de la vuelta v (al cruzar la meta, la vuelta v termina).
+  const alFinalDeVuelta = v => { yo.vuelta = v; yo.mitadOk = true; const i = N - 14; const p = punto(i, 0); yo.idx = i; yo.x = p.x; yo.y = p.y; yo.ang = M.pts[i].a; yo.vel = A.VEL_KART; yo.vx = Math.cos(yo.ang) * yo.vel; yo.vy = Math.sin(yo.ang) * yo.vel; };
   // Ganchos solo para pruebas E2E (?prueba=1).
   window.__karts = {
     estado: () => ({ modo, pista: pista && pista.id, vuelta: yo ? yo.vuelta : null, pos: yo ? posDe(yo) : null, monedas: yo ? yo.monedas : 0, tiempo: Math.round(tCarrera * 1000), termino: yo ? yo.termino : null, turbo: yo ? yo.turbo : 0, ultimoTurbo, prog: structuredClone(prog), sala: !!sala, karts: karts.length, vel: yo ? Math.round(yo.vel) : 0, lw: LW, lh: LH,
@@ -2054,7 +2064,8 @@ if (PRUEBA) {
     darItem: t => { if (yo && ITEMS[t]) yo.item = t; }, // ítem en la mano (E2E del mando)
     // Lleva al jugador al final de la última vuelta (cruza la meta en un momento).
     piloto: on => { pilotoPrueba = !!on; },
-    adelantar: () => { yo.vuelta = A.VUELTAS - 1; yo.mitadOk = true; const i = N - 14; const p = punto(i, 0); yo.idx = i; yo.x = p.x; yo.y = p.y; yo.ang = M.pts[i].a; yo.vel = A.VEL_KART; yo.vx = Math.cos(yo.ang) * yo.vel; yo.vy = Math.sin(yo.ang) * yo.vel; },
+    adelantar: () => alFinalDeVuelta(A.VUELTAS - 1),
+    casiVuelta: () => alFinalDeVuelta(A.VUELTAS - 2), // emocion-sonora: al cruzar empieza la última vuelta
   };
 }
 </script>

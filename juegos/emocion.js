@@ -128,8 +128,8 @@
       return 1.5;
     },
     nivelSuperado(c, out, t) {
-      [12, 16, 19, 24, 19, 24].forEach((s, i) => tono(c, out, t + i * 0.09, nota(s), 0.12, { tipo: 'square', vol: 0.06, filtro: 2600 }));
-      tono(c, out, t + 0.54, nota(28), 0.45, { tipo: 'square', vol: 0.06, filtro: 2600 });
+      [12, 16, 19, 24, 19, 24].forEach((s, i) => tono(c, out, t + i * 0.09, nota(s), 0.12, { tipo: 'square', vol: 0.1, filtro: 2600 }));
+      tono(c, out, t + 0.54, nota(28), 0.45, { tipo: 'square', vol: 0.1, filtro: 2600 });
       return 1.1;
     },
     logro(c, out, t) {
@@ -137,8 +137,8 @@
       return 1.2;
     },
     cuenta(c, out, t, a) {
-      if ((a.k || 0) > 0) { tono(c, out, t, 440, 0.16, { tipo: 'square', vol: 0.1, filtro: 2000 }); return 0.2; }
-      tono(c, out, t, 880, 0.5, { tipo: 'square', vol: 0.1, filtro: 2400 });
+      if ((a.k || 0) > 0) { tono(c, out, t, 440, 0.16, { tipo: 'square', vol: 0.16, filtro: 2000 }); return 0.2; }
+      tono(c, out, t, 880, 0.5, { tipo: 'square', vol: 0.14, filtro: 2400 });
       [12, 19].forEach(s => metal(c, out, t, nota(s), 0.4, 0.05));
       return 0.6;
     },

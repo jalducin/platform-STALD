@@ -92,11 +92,20 @@ function pintarBotonMusica() {
   const menu = document.getElementById('menu-musica');
   if (menu) menu.querySelectorAll('[data-mus]').forEach(x => x.setAttribute('aria-pressed', String((x.dataset.mus || null) === (musica.estilo || '') || (x.dataset.mus === '' && !musica.estilo))));
   if (menu) menu.querySelectorAll('[data-vol]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.vol === musica.volumen)));
+  if (menu) menu.querySelectorAll('[data-emo]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.emo === (emocionEncendida() ? '1' : '0'))));
+}
+// «Efectos de emoción» (openspec: emocion-sonora): localStorage.juegos_emocion; vale también en los iframes de Arcade.
+function emocionEncendida() { try { return localStorage.getItem('juegos_emocion') !== '0'; } catch (e) { return true; } }
+function ponerEmocion(on) {
+  try { localStorage.setItem('juegos_emocion', on ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }
+  if (!on) window.Emocion?.calma();
+  else window.Emocion?.acierto();
 }
 function menuMusicaHtml() {
   return '<div class="menu-musica" id="menu-musica" hidden><div class="muted" style="margin-bottom:6px">Música de fondo</div>' +
     '<button class="mus-opt" data-mus="">🔇 Apagada</button>' + Object.entries(ESTILOS_MUSICA).map(([k, v]) => '<button class="mus-opt" data-mus="' + k + '">' + v.nombre + '</button>').join('') +
-    '<div class="muted" style="margin:8px 0 4px">Volumen</div><div style="display:flex;gap:6px"><button class="mus-opt" data-vol="bajo">Bajo</button><button class="mus-opt" data-vol="medio">Medio</button></div></div>';
+    '<div class="muted" style="margin:8px 0 4px">Volumen</div><div style="display:flex;gap:6px"><button class="mus-opt" data-vol="bajo">Bajo</button><button class="mus-opt" data-vol="medio">Medio</button></div>' +
+    '<div class="muted" style="margin:8px 0 4px">Efectos de emoción</div><div style="display:flex;gap:6px"><button class="mus-opt" data-emo="1">🎉 Sí</button><button class="mus-opt" data-emo="0">No</button></div></div>';
 }
 (() => {
   const pref = leerPrefMusica();
@@ -114,8 +123,9 @@ pintarBotonMusica();
 document.getElementById('btn-musica').addEventListener('click', e => { e.stopPropagation(); const m = document.getElementById('menu-musica'); m.hidden = !m.hidden; pintarBotonMusica(); });
 document.getElementById('menu-musica').addEventListener('click', e => {
   e.stopPropagation();
-  const b = e.target.closest('[data-mus]'), v = e.target.closest('[data-vol]');
+  const b = e.target.closest('[data-mus]'), v = e.target.closest('[data-vol]'), emo = e.target.closest('[data-emo]');
   if (b) iniciarMusica(b.dataset.mus || null);
+  if (emo) { ponerEmocion(emo.dataset.emo === '1'); pintarBotonMusica(); }
   if (v) { musica.volumen = v.dataset.vol; guardarPrefMusica(); if (musica.master) { musica.master.gain.value = volMusica(); } pintarBotonMusica(); }
 });
 document.addEventListener('click', () => { const m = document.getElementById('menu-musica'); if (m) m.hidden = true; });
