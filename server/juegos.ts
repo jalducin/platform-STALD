@@ -8,6 +8,7 @@ import { handleSalas, resumenSalas } from "./salas.ts";
 import type { ConfigRealtime } from "./realtime.ts";
 import { armarJugadores, type Cuenta } from "./jugadores.ts";
 import { crearMemo } from "./cache.ts";
+import { leerCarpeta } from "./db.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -254,11 +255,48 @@ function conTotales(s: Semana): Semana {
 type TipoRanking = "individual" | "partidas";
 const puntosDe = (d: Semana, tipo: TipoRanking) => (tipo === "partidas" ? d.totalPartidas : d.totalIndividual) ?? 0;
 
+// Con Juegos en Postgres, leerCarpeta es una sola consulta (openspec: ranking-juegos-populares).
 function leerSemana(store: Store, lunes: string): Promise<Semana[]> {
-  return cache.get(lunes, async () => {
-    const nombres = (await store.list(`juegos/semanas/${lunes}`)).filter((n) => n.endsWith(".json"));
-    return (await Promise.all(nombres.map((n) => store.get<Semana>(`juegos/semanas/${lunes}/${n}`)))).map((d) => conTotales(d!.data));
-  });
+  return cache.get(lunes, async () =>
+    (await leerCarpeta<Semana>(store, `juegos/semanas/${lunes}`)).filter((d) => d.nombre.endsWith(".json")).map((d) => conTotales(d.data)));
+}
+
+// Juegos más jugados de la semana (openspec: ranking-juegos-populares): por jugadores distintos, luego partidas y
+// título. Solo documentos de personas (los bots no envían partidas) y juegos del catálogo.
+export interface JuegoPopular {
+  pos: number;
+  id: string;
+  titulo: string;
+  jugadores: number;
+  partidas: number;
+  mejor: { nombre: string; puntos: number } | null;
+}
+const TIPOS_PERSONA = new Set(["alumno", "invitado", "admin"]);
+export function juegosPopulares(semana: Semana[]): JuegoPopular[] {
+  const por = new Map<string, { ids: Set<string>; partidas: number; mejor: { nombre: string; puntos: number; en: string } | null }>();
+  for (const d of semana) {
+    if (!TIPOS_PERSONA.has(d.tipo)) continue;
+    for (const p of d.partidas) {
+      if (!CATALOGO[p.juego]) continue;
+      const g = por.get(p.juego) ?? { ids: new Set<string>(), partidas: 0, mejor: null };
+      g.ids.add(d.id);
+      g.partidas++;
+      if (p.puntos > 0 && (!g.mejor || p.puntos > g.mejor.puntos || (p.puntos === g.mejor.puntos && p.en < g.mejor.en))) {
+        g.mejor = { nombre: d.nombre, puntos: p.puntos, en: p.en };
+      }
+      por.set(p.juego, g);
+    }
+  }
+  return [...por].map(([id, g]) => ({ id, titulo: CATALOGO[id].titulo, jugadores: g.ids.size, partidas: g.partidas, mejor: g.mejor && { nombre: g.mejor.nombre, puntos: g.mejor.puntos } }))
+    .sort((a, b) => b.jugadores - a.jugadores || b.partidas - a.partidas || a.titulo.localeCompare(b.titulo, "es-MX"))
+    .map((x, i) => ({ pos: i + 1, ...x }));
+}
+// Se calcula una vez por carga de la semana: la llave es el arreglo que guarda la caché.
+const memoPopulares = new WeakMap<Semana[], JuegoPopular[]>();
+function populares(semana: Semana[]): JuegoPopular[] {
+  let r = memoPopulares.get(semana);
+  if (!r) memoPopulares.set(semana, r = juegosPopulares(semana));
+  return r;
 }
 
 // Solo entran al ranking de un tipo quienes jugaron al menos una partida de ese tipo (aunque sea con 0 puntos).
@@ -459,6 +497,15 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
       }
     }
     return json({ error: "conflicto_escritura" }, 503);
+  }
+
+  // GET /juegos/ranking/juegos → juegos más jugados de la semana, sin correos (openspec: ranking-juegos-populares)
+  if (sub === "/ranking/juegos" && req.method === "GET") {
+    const semana = new URL(req.url).searchParams.get("semana") || lunes;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
+    const l = lunesDe(semana);
+    const docs = await leerSemana(store, l);
+    return json({ semana: l, jugadores: docs.filter((d) => d.partidas.length && TIPOS_PERSONA.has(d.tipo)).length, juegos: populares(docs) });
   }
 
   // GET /juegos/ranking → top 20 de la semana y la posición propia
