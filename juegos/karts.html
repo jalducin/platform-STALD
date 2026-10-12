@@ -1173,7 +1173,7 @@ function botAjuste(k) {
 }
 function pilotoBot(k) {
   k.carrilT -= 1 / 60;
-  if (k.carrilT <= 0) { k.carrilT = 2 + Math.random() * 3; k.carril = (Math.random() - 0.5) * pista.mitad * 0.9; }
+  if (k.carrilT <= 0) { k.carrilT = 2 + Math.random() * 3; k.carril = (Math.random() - 0.5) * pista.mitad * 0.9; } // NOSONAR: azar de juego, no criptográfico
   const mira = 10 + Math.floor(k.vel * 0.12);
   const obj = punto(k.idx + mira, k.carril);
   const dAng = Math.atan2(Math.sin(Math.atan2(obj.y - k.y, obj.x - k.x) - k.ang), Math.cos(Math.atan2(obj.y - k.y, obj.x - k.x) - k.ang));
@@ -1203,7 +1203,7 @@ function sortearItem(k) {
   else if (r < 0.75) tabla = { bola: 15, turbo: 35, cohete: 30, estrella: 10, monedas: 10 };
   else tabla = { turbo: 30, cohete: 30, estrella: 25, rayo: 15 };
   const total = Object.values(tabla).reduce((a, b) => a + b, 0);
-  let x = Math.random() * total;
+  let x = Math.random() * total; // NOSONAR: azar de juego, no criptográfico
   for (const [it, p] of Object.entries(tabla)) { x -= p; if (x <= 0) return it; }
   return 'turbo';
 }
@@ -1254,7 +1254,7 @@ function moverCohete(o, dt) {
   if (o.blanco) o.carril += (lateralDe(o.blanco) - o.carril) * Math.min(1, dt * 4);
   const p = punto(Math.floor(o.idx), o.carril); o.x = p.x; o.y = p.y;
   if (o.blanco && o.blanco.termino !== null) o.blanco = null;
-  if (!REDUCIR && Math.random() < 0.6) particulas.push({ tipo: 'fuego', x: o.x, y: o.y, vx: 0, vy: 0, vida: 0.25, max: 0.25, c: '#fb923c', tam: 2 });
+  if (!REDUCIR && Math.random() < 0.6) particulas.push({ tipo: 'fuego', x: o.x, y: o.y, vx: 0, vy: 0, vida: 0.25, max: 0.25, c: '#fb923c', tam: 2 }); // NOSONAR: azar de juego, no criptográfico
 }
 // Golpe del objeto a los karts que toca (el cohete solo a su blanco; el dueño es inmune al soltarlo).
 function chocarObjeto(o) {
@@ -1278,7 +1278,7 @@ function pasoRecolectar(dt) {
 function tomarCajas(k) {
   for (const c of cajas) if (c.t <= 0 && (k.x - c.x) ** 2 + (k.y - c.y) ** 2 < 15 * 15) {
     c.t = 3;
-    if (!k.item) { k.item = sortearItem(k); if (k === yo) { S.item(); avisar(ITEMS[k.item] + ' ' + NOMBRE_ITEM[k.item], 1000); } else k.usoT = 0.6 + Math.random() * 1.5; }
+    if (!k.item) { k.item = sortearItem(k); if (k === yo) { S.item(); avisar(ITEMS[k.item] + ' ' + NOMBRE_ITEM[k.item], 1000); } else k.usoT = 0.6 + Math.random() * 1.5; } // NOSONAR: azar de juego, no criptográfico
   }
 }
 function tomarMonedas(k) {
@@ -1335,7 +1335,7 @@ function arrancar() {
   const p = arranque.presiono;
   if (p !== null && p >= -0.5) { yo.turbo = p >= -0.25 ? 1.3 : 0.8; yo.turboNivel = 0; avisar(p >= -0.25 ? '🚀 ¡Súper arranque!' : '🚀 ¡Buen arranque!', 1100); S.turbo(); }
   else if (p !== null) { yo.ahogado = 0.8; avisar('💨 Se ahogó el motor: espera la última luz', 1300); S.ahogo(); }
-  for (const k of karts) if (!k.humano && !k.fantasma && Math.random() < 0.35) k.turbo = 0.5;
+  for (const k of karts) if (!k.humano && !k.fantasma && Math.random() < 0.35) k.turbo = 0.5; // NOSONAR: azar de juego, no criptográfico
 }
 // Si vas en sentido contrario más de 0.8 s, un aviso te dice que des la vuelta (solo visual: no cambia reglas).
 let revesT = 0, revesAviso = -10;
@@ -1388,7 +1388,7 @@ function lanzarConfeti() {
   if (REDUCIR) return;
   const colores = ['#facc15', '#ef4444', '#22c55e', '#3b82f6', '#f472b6', '#c084fc', '#fb923c'];
   let html = '';
-  for (let i = 0; i < 40; i++) html += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;background:' + colores[i % colores.length] + ';animation-delay:' + (Math.random() * 1.2).toFixed(2) + 's;animation-duration:' + (2 + Math.random() * 1.5).toFixed(2) + 's"></i>';
+  for (let i = 0; i < 40; i++) html += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;background:' + colores[i % colores.length] + ';animation-delay:' + (Math.random() * 1.2).toFixed(2) + 's;animation-duration:' + (2 + Math.random() * 1.5).toFixed(2) + 's"></i>'; // NOSONAR: azar de juego, no criptográfico
   caja.innerHTML = html;
 }
 let ultimoRes = null;
@@ -1631,21 +1631,22 @@ function emitir(k) {
   const rueda = s => ({ x: k.x - ca * 12 - sa * 10 * s, y: k.y - sa * 12 + ca * 10 * s });
   if (k.derrape) for (const s of [-1, 1]) {
     const p = rueda(s);
-    if (!REDUCIR && Math.random() < 0.35) particulas.push({ tipo: 'humo', x: p.x, y: p.y, vx: -ca * 25 + (Math.random() - 0.5) * 24, vy: -sa * 25 + (Math.random() - 0.5) * 24, vida: 0.55, max: 0.55, c: '#e5e7eb', tam: 3 });
-    if (k.derrape.nivel && Math.random() < 0.8 * f) {
-      const a = k.ang + Math.PI + (Math.random() - 0.5) * 1.6, v = 60 + Math.random() * 90;
+    if (!REDUCIR && Math.random() < 0.35) particulas.push({ tipo: 'humo', x: p.x, y: p.y, vx: -ca * 25 + (Math.random() - 0.5) * 24, vy: -sa * 25 + (Math.random() - 0.5) * 24, vida: 0.55, max: 0.55, c: '#e5e7eb', tam: 3 }); // NOSONAR: azar de juego, no criptográfico
+    if (k.derrape.nivel && Math.random() < 0.8 * f) { // NOSONAR: azar de juego, no criptográfico
+      const a = k.ang + Math.PI + (Math.random() - 0.5) * 1.6, v = 60 + Math.random() * 90; // NOSONAR: azar de juego, no criptográfico
       particulas.push({ tipo: 'chispa', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vida: 0.22, max: 0.22, c: NIVEL_COLOR[k.derrape.nivel], tam: 1.6 });
     }
   }
-  if (k === yo && k.turbo > 0 && !REDUCIR && Math.random() < 0.45) { // partícula del personaje (solo cosmética)
+  if (k === yo && k.turbo > 0 && !REDUCIR && Math.random() < 0.45) { // partícula del personaje (solo cosmética) // NOSONAR: azar de juego, no criptográfico
     const forma = Personajes.porId(k.personaje).particula, cols = ESTELA[forma];
-    particulas.push({ tipo: 'estela', forma, x: k.x - ca * 18 + (Math.random() - 0.5) * 10, y: k.y - sa * 18 + (Math.random() - 0.5) * 10, vx: -ca * 30 + (Math.random() - 0.5) * 20, vy: -sa * 30 + (Math.random() - 0.5) * 20, vida: 0.7, max: 0.7, c: cols[Math.trunc(Math.random() * cols.length)], tam: 2.2 });
+    particulas.push({ tipo: 'estela', forma, x: k.x - ca * 18 + (Math.random() - 0.5) * 10, y: k.y - sa * 18 + (Math.random() - 0.5) * 10, vx: -ca * 30 + (Math.random() - 0.5) * 20, vy: -sa * 30 + (Math.random() - 0.5) * 20, vida: 0.7, max: 0.7, c: cols[Math.trunc(Math.random() * cols.length)], tam: 2.2 }); // NOSONAR: azar de juego, no criptográfico
   }
-  if (k.turbo > 0 && Math.random() < f) for (const s of [-3, 3]) {
-    const c = k.turboNivel ? NIVEL_COLOR[k.turboNivel] : (Math.random() < 0.5 ? '#f97316' : '#facc15');
+  if (k.turbo > 0 && Math.random() < f) for (const s of [-3, 3]) { // NOSONAR: azar de juego, no criptográfico
+    const c = k.turboNivel ? NIVEL_COLOR[k.turboNivel] : fuegoAlAzar();
     particulas.push({ tipo: 'fuego', x: k.x - ca * 16 - sa * s, y: k.y - sa * 16 + ca * s, vx: -ca * 60, vy: -sa * 60, vida: 0.18, max: 0.18, c, tam: 2.6 });
   }
 }
+const fuegoAlAzar = () => (Math.random() < 0.5 ? '#f97316' : '#facc15'); // NOSONAR: azar de juego, no criptográfico
 const ESTELA = { burbujas: ['#c8f5ff', '#7dd3fc'], glifos: ['#f5c542', '#ffe08a'], hojas: ['#22c55e', '#84cc16'], petalos: ['#f59e0b', '#db2777', '#a855f7'] };
 function pasoParticulas(dt) {
   for (const p of particulas) { p.vida -= dt; p.x += p.vx * dt; p.y += p.vy * dt; }

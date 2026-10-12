@@ -26,7 +26,7 @@ function notaMusica(t, freq, dur, tipo, vol, filtro) {
 }
 function ruidoMusica(t, dur, vol, agudo) {
   const c = musica.ctx; const n = Math.floor(c.sampleRate * dur); const buf = c.createBuffer(1, n, c.sampleRate); const d = buf.getChannelData(0);
-  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); // NOSONAR: azar de juego, no criptográfico
   const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = vol;
   const f = c.createBiquadFilter(); f.type = agudo ? 'highpass' : 'lowpass'; f.frequency.value = agudo ? 7000 : 900;
   src.connect(f); f.connect(g); g.connect(musica.master); src.start(t);
@@ -50,7 +50,7 @@ function pasoMusica(t, paso) {
     if (i === 0) acorde.forEach((st, k) => notaMusica(t, hz(st) * (1 + (k - 1) * 0.002), corchea * 8, 'sine', 0.07));
     if (i % 2 === 0) notaMusica(t, hz(acorde[(i / 2) % 3] + 12), corchea * 2.5, 'triangle', 0.035);
     if (i === 0 || i === 4) notaMusica(t, hz(acorde[0] - 24), corchea * 4, 'sine', 0.18);
-    if (Math.random() < 0.3) ruidoMusica(t, 0.02, 0.012, true);
+    if (Math.random() < 0.3) ruidoMusica(t, 0.02, 0.012, true); // NOSONAR: azar de juego, no criptográfico
   } else if (est === 'fiesta') {
     if (i % 2 === 0) bomboMusica(t);
     if (i % 2 === 1) notaMusica(t, hz(acorde[0] - 12), corchea * 0.9, 'sawtooth', 0.12, 700);

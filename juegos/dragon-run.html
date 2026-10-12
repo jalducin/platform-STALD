@@ -252,8 +252,8 @@ aplicarControl();
 
 /* ---------- estelas ---------- */
 const NEON=['#ff4d4d','#ffa94d','#ffe14d','#5ef07a','#4dc3ff','#a06bff'];
-function estela(n,salto){const k=prog.equipo.estela;for(let i=0;i<n;i++){const p={x:DX+8+Math.random()*14,y:dr.y-4-(salto?0:Math.random()*20),vx:-60-Math.random()*160,vy:salto?-Math.random()*130+20:(Math.random()-.5)*40,l:.5+Math.random()*.4,m:.9,k};
- if(k==='burbujas'){p.vy=-30-Math.random()*50;p.l+=.3;p.m+=.3}if(k==='hojas'){p.r=Math.random()*6}if(k==='arcoiris'){ p.h=NEON[Math.trunc(Math.random()*NEON.length)]; }pt.push(p)}}
+function estela(n,salto){const k=prog.equipo.estela;for(let i=0;i<n;i++){const p={x:DX+8+Math.random()*14,y:dr.y-4-(salto?0:Math.random()*20),vx:-60-Math.random()*160,vy:salto?-Math.random()*130+20:(Math.random()-.5)*40,l:.5+Math.random()*.4,m:.9,k}; // NOSONAR: azar de juego, no criptográfico
+ if(k==='burbujas'){p.vy=-30-Math.random()*50;p.l+=.3;p.m+=.3}if(k==='hojas'){p.r=Math.random()*6}if(k==='arcoiris'){ p.h=NEON[Math.trunc(Math.random()*NEON.length)]; }pt.push(p)}} // NOSONAR: azar de juego, no criptográfico
 function drawP(p){const a=Math.max(0,p.l/p.m);x.globalAlpha=Math.min(1,a+.2);
  if(p.c){x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,3,0,7);x.fill();return}
  if(p.k==='estrellas'){const r=3+a*4;x.fillStyle=a>.5?'#fff7b0':'#ffd23f';x.beginPath();for(let i=0;i<10;i++){const ang=i*Math.PI/5-Math.PI/2,rr=i%2?r*.45:r;x.lineTo(p.x+Math.cos(ang)*rr,p.y+Math.sin(ang)*rr)}x.fill()}
@@ -284,12 +284,12 @@ function update(dt){
 // Coloca obstáculos y monedas por delante hasta cubrir la pantalla (antes de la meta).
 function generarObstaculos(){
  while(nextAt-dist<W+80&&nextAt<GOAL*PX-700){
-  const k=['rock','log','spike','slime'][Math.trunc(Math.random()*4)],S={rock:[38,30],log:[64,28],spike:[48,24],slime:[38,30]}[k];
+  const k=['rock','log','spike','slime'][Math.trunc(Math.random()*4)],S={rock:[38,30],log:[64,28],spike:[48,24],slime:[38,30]}[k]; // NOSONAR: azar de juego, no criptográfico
   ob.push({k,wx:nextAt,w:S[0],h:S[1]});
-  if(k==='rock'&&Math.random()<.3)ob.push({k,wx:nextAt+44,w:38,h:30});
-  const gap=sp*(.95+Math.random()*.8)+170;
-  if(Math.random()<.6)for(let i=0;i<3;i++)cn.push({wx:nextAt+S[0]/2+(i-1)*42,y:GY-100-(i==1?22:0)});
-  else if(Math.random()<.7)for(let i=0;i<2;i++)cn.push({wx:nextAt+gap/2+i*36,y:GY-28});
+  if(k==='rock'&&Math.random()<.3)ob.push({k,wx:nextAt+44,w:38,h:30}); // NOSONAR: azar de juego, no criptográfico
+  const gap=sp*(.95+Math.random()*.8)+170; // NOSONAR: azar de juego, no criptográfico
+  if(Math.random()<.6)for(let i=0;i<3;i++)cn.push({wx:nextAt+S[0]/2+(i-1)*42,y:GY-100-(i==1?22:0)}); // NOSONAR: azar de juego, no criptográfico
+  else if(Math.random()<.7)for(let i=0;i<2;i++)cn.push({wx:nextAt+gap/2+i*36,y:GY-28}); // NOSONAR: azar de juego, no criptográfico
   nextAt+=gap;
  }
 }
@@ -299,7 +299,7 @@ function chocarObstaculos(db){
   if(hit(db,box)){
    if(inv>0){o.tocado=1;continue} // lo atravesó parpadeando: no cuenta como esquivado
    lives--;inv=1.5;shake=REDUCIR?0:.3;sHit();o.dead=1;run.racha=0;
-   for(let i=0;i<P(10);i++)pt.push({x:DX+30,y:dr.y-20,vx:(Math.random()-.5)*300,vy:-Math.random()*200,l:.5,m:.5,c:'#fff'});
+   for(let i=0;i<P(10);i++)pt.push({x:DX+30,y:dr.y-20,vx:(Math.random()-.5)*300,vy:-Math.random()*200,l:.5,m:.5,c:'#fff'}); // NOSONAR: azar de juego, no criptográfico
    if(lives<=0){lose();return true}}
   // Esquivado: el obstáculo quedó atrás del dragón sin golpearlo. Un golpe reinicia la racha.
   else if(!o.pasado&&sx+o.w<DX+4){o.pasado=1;if(!o.tocado){run.esq++;run.racha++;run.mejorRacha=Math.max(run.mejorRacha,run.racha)}}}
@@ -307,7 +307,7 @@ function chocarObstaculos(db){
 }
 // Monedas que toca el dragón: suma, suena y suelta chispas.
 function recogerMonedas(db){
- for(const c of cn){const sx=c.wx-dist+DX;if(!c.got&&hit(db,{x:sx-10,y:c.y-10,w:20,h:20})){c.got=1;coins++;sCoin();for(let i=0;i<P(6);i++)pt.push({x:sx,y:c.y,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,l:.4,m:.4,c:'#ffd23f'})}}
+ for(const c of cn){const sx=c.wx-dist+DX;if(!c.got&&hit(db,{x:sx-10,y:c.y-10,w:20,h:20})){c.got=1;coins++;sCoin();for(let i=0;i<P(6);i++)pt.push({x:sx,y:c.y,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,l:.4,m:.4,c:'#ffd23f'})}} // NOSONAR: azar de juego, no criptográfico
 }
 
 /* ---------- draw ---------- */
@@ -364,7 +364,7 @@ function hud(){
  const bx=270,bw=260,r=Math.min(1,dist/(GOAL*PX));x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.roundRect(bx,16,bw,8,4);x.fill();x.fillStyle='#ffd23f';x.beginPath();x.roundRect(bx,16,Math.max(8,bw*r),8,4);x.fill();
  x.font='20px system-ui';x.textAlign='center';x.fillText('🐉',bx+bw*r,36);x.fillText('🏰',bx+bw+14,26)}
 function render(){
- x.save();if(shake>0)x.translate((Math.random()-.5)*8,(Math.random()-.5)*8);
+ x.save();if(shake>0)x.translate((Math.random()-.5)*8,(Math.random()-.5)*8); // NOSONAR: azar de juego, no criptográfico
  bg();goal();cn.forEach(drawCoin);ob.forEach(drawOb);
  pt.forEach(drawP);x.globalAlpha=1;
  drawDragon();x.restore();hud()}

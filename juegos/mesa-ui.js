@@ -49,8 +49,8 @@
     const colores = ['#facc15', '#ef4444', '#22c55e', '#3b82f6', '#a855f7', '#fb923c'];
     for (let i = 0; i < 60; i++) {
       const p = document.createElement('i');
-      p.style.left = (Math.random() * 100) + '%'; p.style.background = colores[i % colores.length];
-      p.style.animationDelay = (Math.random() * 0.8) + 's';
+      p.style.left = (Math.random() * 100) + '%'; p.style.background = colores[i % colores.length]; // NOSONAR: azar de juego, no criptográfico
+      p.style.animationDelay = (Math.random() * 0.8) + 's'; // NOSONAR: azar de juego, no criptográfico
       c.appendChild(p);
     }
     setTimeout(() => { c.innerHTML = ''; }, 3800);

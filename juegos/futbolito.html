@@ -359,7 +359,7 @@ function abrirMenu() {
 }
 function nuevaPartida(n) {
   nivel = n; st = T.nuevo(); mem = {}; objetivo = st.s.slice(); activa = 4; golHasta = 0; manualHasta = 0; t0 = performance.now();
-  T.saque(st, Math.random() < 0.5 ? 0 : 1, (Math.random() * 2 - 1) * 20);
+  T.saque(st, Math.random() < 0.5 ? 0 : 1, (Math.random() * 2 - 1) * 20); // NOSONAR: azar de juego, no criptográfico
   $('n0').textContent = 'Tú'; $('n1').textContent = 'Bot ' + NIVEL_TXT[n];
   pintarMarcador(); ocultar(); $('hud').classList.remove('hide'); if (!U.TACTIL) $('teclas').classList.remove('hide');
   ponerModo('juego'); U.avisar('¡A jugar! Primero a 5', 1200);
@@ -370,7 +370,7 @@ function nombreBarra() {
   if ($('c-barra-n').textContent !== txt) $('c-barra-n').textContent = txt;
 }
 function pasoVivo() {
-  if (golHasta) { if (performance.now() < golHasta) { return; } golHasta = 0; T.saque(st, st.ultimoGol === 0 ? 1 : 0, (Math.random() * 2 - 1) * 20); }
+  if (golHasta) { if (performance.now() < golHasta) { return; } golHasta = 0; T.saque(st, st.ultimoGol === 0 ? 1 : 0, (Math.random() * 2 - 1) * 20); } // NOSONAR: azar de juego, no criptográfico
   if (performance.now() > manualHasta) {
     const nueva = T.barraActivaCon(st, 0, activa);
     if (nueva !== activa) { activa = nueva; objetivo[activa] = st.s[activa]; }

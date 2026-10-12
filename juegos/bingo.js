@@ -131,7 +131,7 @@
 
   function jugarBingo(figura, voz) {
     const m = marco('bingo');
-    const seed = Math.floor(Math.random() * 2147483646) + 1;
+    const seed = Math.floor(Math.random() * 2147483646) + 1; // NOSONAR: azar de juego, no criptográfico
     const ord = orden(seed), mio = carton(seed, 'yo');
     const bots = BOTS.map(b => ({ nombre: b.nombre, t: carton(seed, b.id) })).map(b => Object.assign(b, { en: completaEn(b.t, ord, figura) }));
     const marcas = mio.map(n => n === 0);

@@ -191,11 +191,12 @@ function elegirAjedrez() {
     '<label>Juegas con</label><div class="opts" style="grid-template-columns:repeat(3,1fr)"><button class="opt" data-aj-color="w" aria-pressed="true">♔ Blancas</button><button class="opt" data-aj-color="b">♚ Negras</button><button class="opt" data-aj-color="azar">🎲 Al azar</button></div>' +
     '<div class="row-btns"><button class="btn ghost" data-ayuda="ajedrez">📖 Cómo se juega</button><button class="btn" data-aj-go>♟️ Jugar</button></div>';
   let nivel = 2, color = 'w';
+  const colorAlAzar = () => (Math.random() < .5 ? 'w' : 'b'); // NOSONAR: azar de juego, no criptográfico
   m.body.addEventListener('click', e => {
     const n = e.target.closest('[data-aj-nivel]'), c = e.target.closest('[data-aj-color]');
     if (n) { nivel = Number(n.dataset.ajNivel); m.body.querySelectorAll('[data-aj-nivel]').forEach(x => x.setAttribute('aria-pressed', String(x === n))); }
     if (c) { color = c.dataset.ajColor; m.body.querySelectorAll('[data-aj-color]').forEach(x => x.setAttribute('aria-pressed', String(x === c))); }
-    if (e.target.closest('[data-aj-go]')) jugarAjedrez(nivel, color === 'azar' ? (Math.random() < .5 ? 'w' : 'b') : color);
+    if (e.target.closest('[data-aj-go]')) jugarAjedrez(nivel, color === 'azar' ? colorAlAzar() : color);
   });
 }
 

@@ -346,7 +346,7 @@ function ponerModo(m) {
 }
 function abrirMenu() { ponerModo('menu'); sim = null; $('hud').classList.add('hide'); $('panel').classList.add('hide'); $('datos').classList.add('hide'); $('estado').textContent = ''; pintarControles(); mostrar('ov-menu'); }
 function nuevaPartida(n) {
-  nivel = n; st = B.inicial(Math.floor(Math.random() * 1e9)); sim = null; botEn = 0; t0 = performance.now();
+  nivel = n; st = B.inicial(Math.floor(Math.random() * 1e9)); sim = null; botEn = 0; t0 = performance.now(); // NOSONAR: azar de juego, no criptográfico
   aim = 0; $('n0').textContent = 'Tú'; $('n1').textContent = 'Bot ' + NIVEL_TXT[n];
   ocultar(); $('hud').classList.remove('hide'); ponerModo('juego');
   U.avisar('🎱 Rompe tú', 1200);

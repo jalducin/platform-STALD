@@ -366,7 +366,7 @@ function ponerTramo(tr, ox, volcan) {
     }
   }
 }
-function nuevoEnemigo(tipo, x, y) { return { tipo, x, y, w: 12, h: 12, vx: -28, vy: 0, suelo: false, vivo: true, aplastado: 0, salto: 1 + Math.random(), activo: false }; }
+function nuevoEnemigo(tipo, x, y) { return { tipo, x, y, w: 12, h: 12, vx: -28, vy: 0, suelo: false, vivo: true, aplastado: 0, salto: 1 + Math.random(), activo: false }; } // NOSONAR: azar de juego, no criptográfico
 
 /* ================= Arte: paletas, cachés fuera de pantalla y tiles (openspec: axo-diseno) =================
    Todo se dibuja con trazos de canvas a la resolución real (K). Los tiles se pre-dibujan una vez por combinación
@@ -1131,7 +1131,7 @@ function golpearJefe(d) {
   jefe.vx = -Math.sign(P.x - jefe.x || 1) * 120;
   if (jefe.hp <= 0) {
     jefe.vivo = false; jefeVencido = true; enemigosNivel++;
-    for (let k = 0; k < (REDUCIR ? 0 : 20); k++) particulas.push({ tipo: 'chispa', x: jefe.x + 14, y: jefe.y + 14, vx: (Math.random() - 0.5) * 240, vy: -Math.random() * 240, vida: 0.8 });
+    for (let k = 0; k < (REDUCIR ? 0 : 20); k++) particulas.push({ tipo: 'chispa', x: jefe.x + 14, y: jefe.y + 14, vx: (Math.random() - 0.5) * 240, vy: -Math.random() * 240, vida: 0.8 }); // NOSONAR: azar de juego, no criptográfico
     metaX = (arenaX + 27) * T; // aparece la bandera de la meta
     avisar('🏆 ¡Venciste al jefe! Llega a la bandera', 2000);
   }
@@ -1144,10 +1144,10 @@ function pasoJefe(dt) {
   const acel = cl === 'hielo' ? 120 : 600;
   j.vx += Math.max(-acel * dt, Math.min(acel * dt, velObj - j.vx));
   j.salto -= dt;
-  if (j.suelo && j.salto <= 0) { j.vy = cl === 'desierto' ? -440 : -340; j.salto = 1.8 + Math.random(); }
+  if (j.suelo && j.salto <= 0) { j.vy = cl === 'desierto' ? -440 : -340; j.salto = 1.8 + Math.random(); } // NOSONAR: azar de juego, no criptográfico
   if (cl === 'volcan') {
     j.lanza -= dt;
-    if (j.lanza <= 0) { j.lanza = 2.6; const d = Math.sign(P.x - j.x || 1); proyectiles.push({ x: j.x + 12, y: j.y, w: 8, h: 8, vx: d * (60 + Math.random() * 60), vy: -320, vida: 3 }); }
+    if (j.lanza <= 0) { j.lanza = 2.6; const d = Math.sign(P.x - j.x || 1); proyectiles.push({ x: j.x + 12, y: j.y, w: 8, h: 8, vx: d * (60 + Math.random() * 60), vy: -320, vida: 3 }); } // NOSONAR: azar de juego, no criptográfico
   }
   j.vy = Math.min(CAIDA_MAX, j.vy + GRAV * dt);
   if (moverX(j, j.vx * dt)) j.vx = -j.vx * 0.5;
@@ -1430,24 +1430,24 @@ function terminarSala(ms) {
 
 /* ================= Efectos y partículas ligeras (sin nada con movimiento reducido) ================= */
 let efectos = [], ambiente = [], festejado = false, camPrevia = 0;
-function polvo(x, y, n) { if (REDUCIR) { return; } for (let k = 0; k < n; k++) efectos.push({ tipo: 'polvo', x: x + (Math.random() - 0.5) * 6, y, vx: (Math.random() - 0.5) * 46, vy: -Math.random() * 16, r: 1.2 + Math.random() * 1.4, vida: 0.4, v0: 0.4 }); }
+function polvo(x, y, n) { if (REDUCIR) { return; } for (let k = 0; k < n; k++) efectos.push({ tipo: 'polvo', x: x + (Math.random() - 0.5) * 6, y, vx: (Math.random() - 0.5) * 46, vy: -Math.random() * 16, r: 1.2 + Math.random() * 1.4, vida: 0.4, v0: 0.4 }); } // NOSONAR: azar de juego, no criptográfico
 function brillo(x, y) {
   if (REDUCIR) return;
   efectos.push({ tipo: 'brillo', x, y, vida: 0.35, v0: 0.35 });
-  for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + Math.random() * 0.4; efectos.push({ tipo: 'chispa', x, y, vx: Math.cos(a) * 70, vy: Math.sin(a) * 70 - 20, vida: 0.32, v0: 0.32 }); }
+  for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + Math.random() * 0.4; efectos.push({ tipo: 'chispa', x, y, vx: Math.cos(a) * 70, vy: Math.sin(a) * 70 - 20, vida: 0.32, v0: 0.32 }); } // NOSONAR: azar de juego, no criptográfico
 }
 function confeti(x, y) {
   if (REDUCIR) return;
   const cols = ['#ff6fae', '#ffd43b', '#4ade80', '#60a5fa', '#fb923c'];
-  for (let k = 0; k < 28; k++) efectos.push({ tipo: 'confeti', x, y, vx: (Math.random() - 0.5) * 170, vy: -110 - Math.random() * 140, rot: Math.random() * 6, c: cols[k % 5], vida: 1.5, v0: 1.5 });
+  for (let k = 0; k < 28; k++) efectos.push({ tipo: 'confeti', x, y, vx: (Math.random() - 0.5) * 170, vy: -110 - Math.random() * 140, rot: Math.random() * 6, c: cols[k % 5], vida: 1.5, v0: 1.5 }); // NOSONAR: azar de juego, no criptográfico
 }
 function aterrizar(vy) { P.aterriza = 0.14; if (vy > 200) polvo(P.x + P.w / 2, P.y + P.h, vy > 330 ? 7 : 4); }
 function pasoEfectos(dt) {
   P.aterriza = Math.max(0, (P.aterriza || 0) - dt);
   if (!REDUCIR && modo === 'nivel' && P.suelo && !P.muerto) { // polvo al correr o derrapar
     const dir = (tecla.der ? 1 : 0) - (tecla.izq ? 1 : 0), derrapa = dir && Math.sign(P.vx) === -dir && Math.abs(P.vx) > 50;
-    if ((derrapa && Math.random() < dt * 30) || (Math.abs(P.vx) > 100 && Math.random() < dt * 5)) polvo(P.x + P.w / 2 - Math.sign(P.vx) * 4, P.y + P.h, 1);
-    if (Math.abs(P.vx) > 60 && Math.random() < dt * 3) rastro(1);
+    if ((derrapa && Math.random() < dt * 30) || (Math.abs(P.vx) > 100 && Math.random() < dt * 5)) polvo(P.x + P.w / 2 - Math.sign(P.vx) * 4, P.y + P.h, 1); // NOSONAR: azar de juego, no criptográfico
+    if (Math.abs(P.vx) > 60 && Math.random() < dt * 3) rastro(1); // NOSONAR: azar de juego, no criptográfico
   }
   if (finalizado && !festejado && metaX && P.x + P.w > metaX + 6) { festejado = true; confeti(metaX + 8, (FIL - 3) * T - 60); }
   for (const e of efectos) {
@@ -1480,13 +1480,14 @@ function tipoAmbiente() {
   return castillo ? 'motas' : pal().ambiente;
 }
 function nuevaMota(tipo, enCualquierY) {
-  const z = 0.35 + Math.random() * 0.8, brasa = tipo === 'ceniza' && Math.random() < 0.3;
-  const m = { tipo, brasa, z, x: Math.random() * LW, s: Math.random() * 6, f: 0.8 + Math.random(), r: 0.5 + z * 0.8, vx: 0, vy: 0, ox: 4 };
+  const z = 0.35 + Math.random() * 0.8, brasa = tipo === 'ceniza' && Math.random() < 0.3; // NOSONAR: azar de juego, no criptográfico
+  const m = { tipo, brasa, z, x: Math.random() * LW, s: Math.random() * 6, f: 0.8 + Math.random(), r: 0.5 + z * 0.8, vx: 0, vy: 0, ox: 4 }; // NOSONAR: azar de juego, no criptográfico
   if (tipo === 'nieve') { m.vx = -5; m.vy = 12 + 20 * z; m.ox = 10; }
   else if (tipo === 'ceniza') { m.vy = brasa ? -(12 + 14 * z) : 7 + 10 * z; m.ox = 6; m.r = brasa ? 0.5 + z * 0.5 : 0.5 + z * 0.6; }
-  else if (tipo === 'polen') { m.vy = (Math.random() - 0.5) * 6; m.ox = 9; m.r = 0.6; }
+  else if (tipo === 'polen') { m.vy = (Math.random() - 0.5) * 6; m.ox = 9; m.r = 0.6; } // NOSONAR: azar de juego, no criptográfico
   else { m.vy = 3; m.ox = 3; m.r = 0.5; }
-  m.y = enCualquierY ? -OY + Math.random() * VH : m.vy < 0 ? VH - OY + 4 : -OY - 4;
+  if (enCualquierY) m.y = -OY + Math.random() * VH; // NOSONAR: azar de juego, no criptográfico
+  else m.y = m.vy < 0 ? VH - OY + 4 : -OY - 4;
   return m;
 }
 function dibujarAmbiente() {
@@ -1524,8 +1525,8 @@ function rastro(n) {
   const forma = Personajes.porId(personaje).particula, sube = forma === 'burbujas' || forma === 'glifos';
   for (let k = 0; k < n; k++) {
     const cols = COLOR_RASTRO[forma];
-    efectos.push({ tipo: 'rastro', forma, x: P.x + P.w / 2 - P.mira * 3 + (Math.random() - 0.5) * 6, y: P.y + P.h * (0.3 + Math.random() * 0.5), vx: -P.mira * (6 + Math.random() * 10), vy: sube ? -(10 + Math.random() * 12) : 6 + Math.random() * 8,
-      rot: Math.random() * 6, r: 0.9 + Math.random() * 0.7, c: cols ? cols[Math.trunc(Math.random() * cols.length)] : '', vida: 0.9, v0: 0.9 });
+    efectos.push({ tipo: 'rastro', forma, x: P.x + P.w / 2 - P.mira * 3 + (Math.random() - 0.5) * 6, y: P.y + P.h * (0.3 + Math.random() * 0.5), vx: -P.mira * (6 + Math.random() * 10), vy: sube ? -(10 + Math.random() * 12) : 6 + Math.random() * 8, // NOSONAR: azar de juego, no criptográfico
+      rot: Math.random() * 6, r: 0.9 + Math.random() * 0.7, c: cols ? cols[Math.trunc(Math.random() * cols.length)] : '', vida: 0.9, v0: 0.9 }); // NOSONAR: azar de juego, no criptográfico
   }
 }
 function dibujarRastro(e, k) {

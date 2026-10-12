@@ -35,7 +35,7 @@ async function jugarBasta(idioma) {
 
 async function empezarBasta(idioma, d) {
   const id = idioma === 'en' ? 'basta-en' : 'basta-es';
-  const letra = d.letras[Math.floor(Math.random() * d.letras.length)];
+  const letra = d.letras[Math.floor(Math.random() * d.letras.length)]; // NOSONAR: azar de juego, no criptográfico
   const L = normBasta(letra);
   const dic = dicBasta(d);
   const m = marco(id);
@@ -138,7 +138,7 @@ function jugarUna(numBots, lang) {
   const hayParaRobar = () => mazo.length > 0; // basta-divertida-una-robo: el robo no rebaraja el descarte
   for (let k = 0; k < 7; k++) manos.forEach((_, j) => robar(j, 1));
   let primera = mazo.pop(); while (primera.v === '+4') { mazo.unshift(primera); primera = mazo.pop(); }
-  pila.push(primera); color = primera.c || ['r', 'y', 'g', 'b'][Math.floor(Math.random() * 4)];
+  pila.push(primera); color = primera.c || ['r', 'y', 'g', 'b'][Math.floor(Math.random() * 4)]; // NOSONAR: azar de juego, no criptográfico
   const top = () => pila[pila.length - 1];
   const valida = c => !c.c || c.c === color || c.v === top().v;
   const nombreCarta = c => {
@@ -218,7 +218,7 @@ function jugarUna(numBots, lang) {
     const accion = opciones.filter(c => ['skip', '+2', '+4', 'rev'].includes(c.v));
     const numeros = opciones.filter(c => c.c && /^\d$/.test(c.v));
     // Bots amables: solo a veces castigan a quien tiene pocas cartas, para que el juego sea retador pero ganable.
-    const castiga = siguiente <= 2 && accion.length && Math.random() < 0.4;
+    const castiga = siguiente <= 2 && accion.length && Math.random() < 0.4; // NOSONAR: azar de juego, no criptográfico
     const c = castiga ? accion[0] : (numeros[0] || opciones.find(x => x.c) || opciones[0]);
     mano.splice(mano.indexOf(c), 1);
     if (!c.c) { const cuenta = { r: 0, y: 0, g: 0, b: 0 }; mano.forEach(x => { if (x.c) cuenta[x.c]++; }); color = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0][0]; }
