@@ -235,6 +235,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - En Futbolito, `jugadas[]` `{ n, accion: "tiro" | "rendirse", pos?, angulo?, fuerza?, t }`; en Billar,
     `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, efecto?, t }` (cambio `futbolito-billar`). El triángulo del
     billar sale de la semilla (`billar-triangulo`); los tiros de bots y los automáticos, de `bot|<paso>` y `auto|<paso>`.
+  - En Golf (cambio `golf`), `jugadas[]` `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, t }`. Los 3 hoyos de la
+    sala salen de la semilla (`golf-hoyos`) y los tiros automáticos por tiempo, de `auto|<paso>`.
   - En Brisca, `jugadas[]` `{ n, accion: "jugar", carta, t }`. En Conquián, `jugadas[]` `{ n, accion, carta?, con?, a?, t }`.
   - Clásicos rápidos (cambio `clasicos-rapidos`), `jugadas[]`: Gato `{ n, accion: "marcar", casilla, t }`, Conecta 4
     `{ n, accion: "soltar", col, t }`, Piedra-papel-tijera `{ n: ronda, accion: "elegir" | "pasar", eleccion?, t }`,
@@ -283,6 +285,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     - `premios` ⊂ `color-azul|morado|rojo|rosa|dorado|noche`, `estela-estrellas|burbujas|hojas|arcoiris` (cosméticos,
       sin valor); `equipo.color` ∈ `verde` + colores y `equipo.estela` ∈ `fuego` + estelas, y lo equipado debe estar
       en `premios` (salvo `verde` y `fuego`). Fechas reales; llaves exactas.
+  - `golf` (cambio `golf`): `{ mejores { "1"…"9": golpes 1–20 }, estrellas { "1"…"9": 0–3 }, recorridos 0–100000,
+    mejorRecorrido: null | 9–200 }`. Llaves de hoyo `"1"`…`"9"` (las que falten = hoyo sin terminar); `mejores` es el
+    menor número de golpes con la pelota adentro (una recogida no cuenta), `estrellas` la mejor marca (3 bajo par, 2
+    en par, 1 terminado), `recorridos` los recorridos de 9 hoyos terminados y `mejorRecorrido` su menor total.
 - `juegos/nicks.json`: `{ "<id-jugador>": "<nick>" }`, sin correos (cambio `nick-jugadores`). El nick reemplaza al
   nombre en Juegos (chip, ranking y partidas); el admin ve ambos en «🛡️ Admin › Jugadores».
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.
