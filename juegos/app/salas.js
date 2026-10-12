@@ -6,7 +6,7 @@
 // ---------- Partidas multijugador (openspec: juegos-partidas) ----------
 // Aleatorio con semilla: todos los dispositivos de una partida generan lo mismo.
 function fnv(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
-function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; } // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
 const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
 const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'cultura-linea', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts', 'futbolito', 'billar'];
@@ -43,7 +43,7 @@ async function preguntasPartida(juego, seed, opciones) {
   if (juego === 'es-acentos') for (const f of tomar(d.acentos, P_N, rnd))
     lista.push(conOpciones({ big: 'á', q: f.frase, sub: f.regla ? 'Regla: ' + f.regla : '' }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd));
   if (juego === 'es-sinonimos') {
-    const pool = d.sinonimos.map(x => Object.assign({ tipo: 'sinónimo' }, x)).concat(d.antonimos.map(x => Object.assign({ tipo: 'antónimo' }, x)));
+    const pool = d.sinonimos.map(x => ({ tipo: 'sinónimo', ...x })).concat(d.antonimos.map(x => ({ tipo: 'antónimo', ...x })));
     for (const f of tomar(pool, P_N, rnd)) lista.push(conOpciones({ big: f.tipo === 'sinónimo' ? '🟰' : '↔️', q: '«' + f.palabra + '»', sub: 'Elige el ' + f.tipo }, f.respuesta, f.distractores, rnd));
   }
   if (juego === 'cultura') {
@@ -120,7 +120,7 @@ async function conectarRealtime(rt, codigo, alCambiar) {
     const canal = cliente.channel(rt.topic);
     canal.on('broadcast', { event: 'estado' }, ({ payload: p }) => {
       if (sala.codigo !== codigo || !sala.estado || !p || !p.sala) return;
-      sala.estado = Object.assign({}, sala.estado, mezclarEstado(sala.estado, p), { ahora: p.ahora });
+      sala.estado = { ...sala.estado, ...mezclarEstado(sala.estado, p), ahora: p.ahora };
       sala.offset = p.ahora - Date.now();
       sala.rtRecibidos = (sala.rtRecibidos || 0) + 1;
       pintarSala();
@@ -132,7 +132,7 @@ async function conectarRealtime(rt, codigo, alCambiar) {
       if (sala.rtVivo && !antes) traerSala().then(r => { if (r.ok && sala.codigo === codigo) pintarSala(); });
     });
     limpiezas.push(() => { sala.rtVivo = false; cliente.removeChannel(canal); });
-  } catch (e) { sala.rtVivo = false; /* sin Realtime: sigue el sondeo normal */ }
+  } catch { sala.rtVivo = false; /* sin Realtime: sigue el sondeo normal */ }
 }
 
 async function traerSala() {
@@ -176,7 +176,7 @@ async function entrarSala(codigo) {
   Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, finT: 0, revEnviando: false, revMsg: '' });
   app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
   const r = await traerSala();
-  if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+  if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) { m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; } return; }
   // Recargar regresa aquí (openspec: juegos-recarga): código en la URL y sala activa guardada.
   recordarSala(codigo);
   try { history.replaceState(history.state, '', urlConSala(codigo)); } catch (e) { /* sin historial */ }
@@ -224,7 +224,7 @@ async function entrarSala(codigo) {
   const alVolver = () => { if (!document.hidden && !detenido && !consultando) { clearTimeout(tick); ciclo(); } };
   document.addEventListener('visibilitychange', alVolver);
   // Al cambiar el estado del canal se reprograma el siguiente ciclo con el intervalo que corresponde.
-  if (sala.estado.rt) conectarRealtime(sala.estado.rt, codigo, () => { if (detenido) return; programarTick(); });
+  if (sala.estado.rt) conectarRealtime(sala.estado.rt, codigo, () => { if (detenido) { return; } programarTick(); });
   const reloj = setInterval(() => pintarSala(), 250);
   limpiezas.push(() => { detenido = true; clearTimeout(tick); document.removeEventListener('visibilitychange', alVolver); }, () => clearInterval(reloj));
   app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + icoJuego(j) + ' ' + escapeHtml(j.t) + (sala.estado.sala.opciones.tema ? ' · ' + escapeHtml(InglesGramatica.nombreTema(sala.estado.sala.opciones.tema)) : '') + ' · partida</span>' +
@@ -460,7 +460,7 @@ function pintarFinalSala(body, todas, basta, titulo) {
   sala.vista = 'final';
   olvidarSala(); // terminó: recargar ya no vuelve a la sala
   sala.finT = Date.now(); escribirLocal(REVANCHA_KEY, { codigo: sala.codigo, quien: state.jugador && state.jugador.id, t: sala.finT }); // pero sí ofrece la revancha
-  const filas = todas.map(f => Object.assign({}, f, { ultimo: 0 })); // en el podio no se muestra el +puntos de la última pregunta
+  const filas = todas.map(f => ({ ...f, ultimo: 0 })); // en el podio no se muestra el +puntos de la última pregunta
   document.getElementById('m-bar').hidden = true;
   const e = sala.estado; const juego = e.sala.juego;
   const mio = filas.find(f => f.id === e.yo);
@@ -477,7 +477,7 @@ function pintarFinalSala(body, todas, basta, titulo) {
   if (mio && !sala.guardado) {
     sala.guardado = true;
     // Registro de la partida para el admin: total final de cada quien y, del anfitrión, el podio con bots.
-    post('/juegos/sala/' + sala.codigo + '/respuesta', Object.assign({ final: mio.total }, e.soyHost ? { podio: filas.map(f => Object.assign({ nombre: f.nombre, total: f.total }, f.tipo === 'bot' ? { bot: true } : {})) } : {}));
+    post('/juegos/sala/' + sala.codigo + '/respuesta', { final: mio.total, ...(e.soyHost ? { podio: filas.map(f => ({ nombre: f.nombre, total: f.total, ...(f.tipo === 'bot' ? { bot: true } : {}) })) } : {}) });
     const n = sala.finTotal !== undefined ? sala.finTotal : basta ? basta.d.categorias.length : juego === 'loteria' ? 16 : P_N;
     const aciertos = sala.finAciertos !== undefined ? sala.finAciertos : juego === 'loteria' ? (sala.aciertosLoteria || 0) : basta ? Object.values(mio.detalle).filter(x => x.pts > 0).length : Object.values((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {}).filter(x => x.correcta).length;
     post('/juegos/partida', { juego, puntos: mio.total, aciertos, total: n, segundos: 0, sala: sala.codigo }).then(r => {
@@ -598,6 +598,6 @@ async function compartirSala(btn) {
   const j = juegoPorId(sala.estado.sala.juego);
   const texto = '🎮 ¡Juega conmigo ' + j.t + '! Entra con este enlace (código ' + sala.codigo + '):';
   if (navigator.share) { try { await navigator.share({ title: 'Partida ' + sala.codigo, text: texto, url }); return; } catch (e) { /* cancelado: copiar */ } }
-  try { await navigator.clipboard.writeText(texto + ' ' + url); btn.textContent = '✔ ¡Enlace copiado!'; } catch (e) { btn.textContent = 'Copia el enlace de arriba'; }
+  try { await navigator.clipboard.writeText(texto + ' ' + url); btn.textContent = '✔ ¡Enlace copiado!'; } catch { /* sin permiso de portapapeles */ btn.textContent = 'Copia el enlace de arriba'; }
   setTimeout(() => { if (btn.isConnected) btn.textContent = '📤 Compartir'; }, 2500);
 }

@@ -83,13 +83,13 @@ async function fotoAvatar(file) {
 function pantallaAvatar() {
   limpiar(); olvidarSala();
   const listas = state.avatares || { emojis: [], colores: [] };
-  let sel = Object.assign({}, state.jugador.avatar || { emoji: listas.emojis[0], color: listas.colores[0] });
+  let sel = { ...(state.jugador.avatar || { emoji: listas.emojis[0], color: listas.colores[0] }) };
   let fotoNueva = null, permiso = false; // modo foto: sel.foto (actual) o fotoNueva (data URL)
   // Nick (openspec: nick-jugadores): se conserva lo escrito aunque la pantalla se vuelva a dibujar.
   const nombreReal = state.jugador.nombreReal || state.jugador.nombre;
   let nickVal = state.jugador.nombreReal ? state.jugador.nombre : '';
   const pintar = () => {
-    const vista = fotoNueva ? Object.assign({}, sel, { fotoUrl: fotoNueva }) : sel;
+    const vista = fotoNueva ? ({ ...sel, fotoUrl: fotoNueva }) : sel;
     app.innerHTML = '<div class="card"><h1>🎨 Tu avatar</h1><p class="lead">Elige un personaje y un color, o sube una foto. Así te verán en el ranking y en las partidas.</p>' +
       '<div style="display:flex;justify-content:center;margin:6px 0 14px" id="av-vista">' + avatarHtml(vista, 96) + '</div>' +
       '<label for="av-nick">✏️ Tu nick <small class="muted">(así te ven en el ranking y las partidas; vacío = tu nombre)</small></label>' +
@@ -115,7 +115,7 @@ function pantallaAvatar() {
   app.onclick = async e => {
     const ng = e.target.closest('[data-nick-guardar]');
     if (ng) {
-      const nick = nickVal.trim().replace(/\s+/g, ' ');
+      const nick = nickVal.trim().replaceAll(/\s+/g, ' ');
       const msg = document.getElementById('nick-msg');
       if (nick && !/^[\p{L}\p{N} ]{2,20}$/u.test(nick)) { msg.innerHTML = '<div class="alert">Tu nick debe tener de 2 a 20 letras o números.</div>'; return; }
       ng.disabled = true;
@@ -220,7 +220,7 @@ async function registrarDirecto(apodo, correo) {
   try {
     const res = await fetch(API_BASE + '/juegos/registro', { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ email: correo, nombre: apodo, acepto: true }) });
     r = { ok: res.ok, status: res.status, body: await res.json().catch(() => ({})) };
-  } catch (e) { return pantallaLogin('⚠️ No pude conectarme. Revisa tu internet e intenta de nuevo.'); }
+  } catch { /* sin conexión: se vuelve a la entrada con el aviso */ return pantallaLogin('⚠️ No pude conectarme. Revisa tu internet e intenta de nuevo.'); }
   if (r.status === 409 && r.body.error === 'correo_de_clase') {
     borrarRegistro(); limpiar(); chip.hidden = true;
     return StaldAuth.pintarEntrada(app, { titulo: '📘 Ese correo es de las clases', texto: 'Para cuidar tus calificaciones, entra con tu contraseña de las clases. Si es tu primera vez, usa la que te dio tu profe.', correo, alEntrar: () => iniciar() });
@@ -285,7 +285,7 @@ function categoriaInicial() {
   if (catValida(h)) return h;
   if (location.hash.startsWith('#cat=')) return null; // #cat= de una categoría que no existe: categorías
   if (state.cat !== undefined) return catValida(state.cat) ? state.cat : null;
-  if (history.state && Object.prototype.hasOwnProperty.call(history.state, 'cat')) return catValida(history.state.cat) ? history.state.cat : null;
+  if (history.state && Object.hasOwn(history.state, 'cat')) return catValida(history.state.cat) ? history.state.cat : null;
   let guardada = null;
   try { guardada = sessionStorage.getItem(CATEGORIA_KEY); } catch (e) { /* sin almacenamiento: solo URL y memoria */ }
   return catValida(guardada) ? guardada : null;
@@ -301,10 +301,10 @@ function recordarCategoria(id) {
 function marcarHistorial(id) {
   try {
     const actual = (history.state && history.state.cat) || null;
-    if (!id) { if (actual || location.hash.startsWith('#cat=')) history.replaceState(Object.assign({}, history.state, { cat: null }), '', rutaSinHash()); return; }
+    if (!id) { if (actual || location.hash.startsWith('#cat=')) { history.replaceState({ ...history.state, cat: null }, '', rutaSinHash()); } return; }
     if (actual === id && location.hash === '#cat=' + id) return;
-    if (actual) { history.replaceState(Object.assign({}, history.state, { cat: id }), '', rutaSinHash() + '#cat=' + id); return; }
-    history.replaceState(Object.assign({}, history.state, { cat: null }), '', rutaSinHash());
+    if (actual) { history.replaceState({ ...history.state, cat: id }, '', rutaSinHash() + '#cat=' + id); return; }
+    history.replaceState({ ...history.state, cat: null }, '', rutaSinHash());
     history.pushState({ cat: id }, '', rutaSinHash() + '#cat=' + id);
   } catch (e) { /* sin historial: queda la vista */ }
 }

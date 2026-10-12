@@ -99,7 +99,7 @@
     const pintar = () => {
       const turnoYo = st.turno === yo && !pensando && !terminado;
       m.body.innerHTML = '<div class="tb-wrap"><div class="tb-info"><span>🤖 Gambito · ' + (nivel === 1 ? '🐣 Fácil' : '🦊 Difícil') + '</span>' + contarHtml(Damas.piezas(st, bot), bot) + '</div>' +
-        damasHtml(st, Object.assign({ abajo: yo, sel, ultima, anima }, damasOpciones(st, sel, turnoYo))) +
+        damasHtml(st, { abajo: yo, sel, ultima, anima, ...damasOpciones(st, sel, turnoYo) }) +
         '<div class="tb-info"><span>🙂 Tú (' + (yo === 'b' ? 'blancas' : 'negras') + ')</span>' + contarHtml(Damas.piezas(st, yo), yo) + '</div>' +
         '<div class="feedback" role="status">' + (msg || (pensando ? '🤔 Gambito está pensando…' : turnoYo ? '👉 Tu turno: toca una pieza y luego su destino' : '')) + '</div>' +
         '<div class="row-btns"><button class="btn ghost sm" data-ayuda="damas">📖 Cómo se juega</button><button class="btn ghost sm" data-tb-rendir>🏳️ Rendirme</button></div></div>';
@@ -124,23 +124,23 @@
     function turnoBot() {
       if (terminado || st.turno === yo) return pintar();
       pensando = true; pintar();
-      esperar(550, () => { if (terminado) return; pensando = false; mover(Damas.bot(st, nivel, Math.random)); });
+      esperar(550, () => { if (terminado) { return; } pensando = false; mover(Damas.bot(st, nivel, Math.random)); });
     }
     m.body.addEventListener('click', e => {
       if (terminado) return;
-      if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? Gambito gana la partida.')) fin({ gana: bot, fin: 'rendicion' }); return; }
+      if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? Gambito gana la partida.')) { fin({ gana: bot, fin: 'rendicion' }); } return; }
       const c = e.target.closest('[data-tb-d]');
       if (!c || st.turno !== yo || pensando) return;
       const r = damasClic(st, yo, sel, Number(c.dataset.tbD));
       if (r.jugada) return mover(r.jugada);
-      sel = r.sel; msg = r.msg || ''; if (r.msg) sonidoMal(); pintar();
+      sel = r.sel; msg = r.msg || ''; if (r.msg) { sonidoMal(); } pintar();
     });
     limpiezas.push(() => { terminado = true; });
     turnoBot();
   }
 
   // ======================= Dominó =======================
-  const ultimaDe = (st, j) => { for (let i = st.log.length - 1; i >= 0; i--) if (st.log[i].j === j) return st.log[i]; return null; };
+  const ultimaDe = (st, j) => { for (let i = st.log.length - 1; i >= 0; i--) { if (st.log[i].j === j) return st.log[i]; } return null; };
   const accionTxt = x => !x ? '' : x.pasa ? '🙅 pasó' : 'tiró ' + Domino.FICHAS[x.ficha].join('-');
   function mesaDominoHtml(st) {
     const nueva = st.log.length && !st.log[st.log.length - 1].pasa ? st.log[st.log.length - 1].ficha : -1;
@@ -193,7 +193,7 @@
     };
     const siguiente = () => {
       if (st.fin) {
-        if (terminado) return; terminado = true; pintar();
+        if (terminado) { return; } terminado = true; pintar();
         const puntos = puntosDomino(st, 0);
         return esperar(1800, () => terminar('domino', { puntos, aciertos: 7 - st.manos[0].length, total: 7, segundos: (Date.now() - t0) / 1000,
           titulo: tituloDomino(st, j => orden[j].nombre), detalle: 'Te quedaron ' + Domino.pips(st, 0) + ' puntos en la mano.' }));
@@ -264,7 +264,7 @@
     return '🎲 ' + n + ' sacó ' + x.dado + (x.de === -1 ? ' y sacó una ficha' : x.a === Parchis.META ? ' y metió una ficha 🏁' : ' y avanzó') + (x.comio ? ' · ¡comió! 😋 y vuelve a tirar' : x.dado === 6 ? ' · con 6 vuelve a tirar' : '');
   }
   // Última jugada con movimiento (para animarla).
-  const ultimoMov = st => { for (let i = st.log.length - 1; i >= 0; i--) if (!st.log[i].sin) return st.log[i]; return null; };
+  const ultimoMov = st => { for (let i = st.log.length - 1; i >= 0; i--) { if (!st.log[i].sin) return st.log[i]; } return null; };
 
   function jugarParchis(cuantas, rivales) {
     const m = marco('parchis');
@@ -284,7 +284,7 @@
     const siguiente = () => {
       pintar();
       if (st.fin) {
-        if (terminado) return; terminado = true;
+        if (terminado) { return; } terminado = true;
         const meta = Parchis.enMeta(st, 0), gane = st.fin.ganador === 0;
         return esperar(1800, () => terminar('parchis', { puntos: T.puntos.parchis(meta, cuantas, gane), aciertos: meta, total: cuantas, segundos: (Date.now() - t0) / 1000,
           titulo: gane ? '🏆 ¡Ganaste! Metiste todas tus fichas' : '🎲 Ganó ' + orden[st.fin.ganador].nombre, detalle: 'Metiste ' + meta + ' de ' + cuantas + ' fichas a la meta.' }));
@@ -386,7 +386,7 @@
       esperar(750, () => {
         if (terminado) return;
         const c = Naval.bot(suyos, Math.random), r = Naval.disparo(miFlota, suyos.map(x => x.c), c);
-        suyos.push(Object.assign({ c }, r)); msg = '🤖 ' + textoTiro(suyos[suyos.length - 1]);
+        suyos.push({ c, ...r }); msg = '🤖 ' + textoTiro(suyos[suyos.length - 1]);
         tono(r.r === 'agua' ? 300 : 180, 90, r.r === 'agua' ? 'sine' : 'square', 0.05);
         if (Naval.todoHundido(miFlota, suyos.map(x => x.c))) return fin(false);
         if (r.r === 'agua') { pensando = false; return pintar(); }
@@ -399,13 +399,13 @@
         if (colocacionClic(col, e)) { miFlota = col.barcos; rival = Naval.autoFlota(Math.random); fase = 'batalla'; msg = '⚓ ¡A la batalla! Empiezas tú.'; }
         return pintar();
       }
-      if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? El Almirante Bot gana la partida.')) fin(false); return; }
+      if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? El Almirante Bot gana la partida.')) { fin(false); } return; }
       const n = e.target.closest('[data-tb-n]');
       if (!n || pensando) return;
       const c = Number(n.dataset.tbN);
       if (mis.some(x => x.c === c)) { msg = 'Ya disparaste a ' + Naval.nombre(c) + '.'; return pintar(); }
       const r = Naval.disparo(rival, mis.map(x => x.c), c);
-      mis.push(Object.assign({ c }, r)); msg = textoTiro(mis[mis.length - 1]) + (r.r === 'hundido' ? ' (' + Naval.NOMBRES[Naval.FLOTA.indexOf(r.barco.length)].toLowerCase() + ')' : '');
+      mis.push({ c, ...r }); msg = textoTiro(mis[mis.length - 1]) + (r.r === 'hundido' ? ' (' + Naval.NOMBRES[Naval.FLOTA.indexOf(r.barco.length)].toLowerCase() + ')' : '');
       if (r.r === 'agua') sonidoMal(); else sonidoOk();
       if (Naval.todoHundido(rival, mis.map(x => x.c))) return fin(true);
       if (r.r === 'agua') turnoBot(); else { msg += ' · ¡Dispara otra vez!'; pintar(); }
@@ -420,10 +420,10 @@
   // jugada ilegal se ignora. En Damas, «rendirse» termina la partida.
   const CFG = {
     damas: { max: 2, turnoMs: 60000, nueva: () => ({ s: Damas.nueva(), ultima: null }), turno: st => st.s.turno === 'b' ? 0 : 1, fin: st => Damas.resultado(st.s),
-      actuar: (st, mv) => { const m = Damas.buscar(st.s, mv.ruta); if (!m) return false; st.s = Damas.aplicar(st.s, m); st.ultima = m; return true; },
+      actuar: (st, mv) => { const m = Damas.buscar(st.s, mv.ruta); if (!m) { return false; } st.s = Damas.aplicar(st.s, m); st.ultima = m; return true; },
       bot: (st, rnd) => ({ accion: 'mover', ruta: Damas.bot(st.s, 1, rnd).ruta }) },
     domino: { max: 4, turnoMs: 30000, nueva: (n, seed) => Domino.nueva(n, T.rng(seed + '|domino')), turno: st => st.turno, fin: st => st.fin,
-      actuar: (st, mv) => Domino.jugar(st, mv), bot: (st, rnd) => Object.assign({ accion: 'jugar' }, Domino.bot(st, rnd)) },
+      actuar: (st, mv) => Domino.jugar(st, mv), bot: (st, rnd) => ({ accion: 'jugar', ...Domino.bot(st, rnd) }) },
     parchis: { max: 4, turnoMs: 30000, nueva: (n, seed) => Parchis.nueva(n, seed, 4), turno: st => st.turno, fin: st => st.fin,
       actuar: (st, mv) => Parchis.mover(st, mv.ficha), bot: (st, rnd) => ({ accion: 'mover', ficha: Parchis.bot(st, rnd) }) },
   };
@@ -432,13 +432,13 @@
     const orden = participantes().slice(0, cfg.max);
     if (orden.length < 2) return { faltan: true, orden };
     const jugs = new Map();
-    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, { jugador: x.id, ...j }); }));
     const st = cfg.nueva(orden.length, s.seed);
     let paso = 0, T0 = s.inicio, rendido = null;
     const ahora = ahoraServidor();
     for (let guard = 0; guard < 4000 && !cfg.fin(st); guard++) {
       const i = cfg.turno(st), p = orden[i];
-      if (p.bot) { const t = T0 + dur(BOT_MS); if (ahora < t) break; cfg.actuar(st, cfg.bot(st, rngDe(s.seed, juego + 'bot' + paso))); paso++; T0 = t; continue; }
+      if (p.bot) { const t = T0 + dur(BOT_MS); if (ahora < t) { break; } cfg.actuar(st, cfg.bot(st, rngDe(s.seed, juego + 'bot' + paso))); paso++; T0 = t; continue; }
       const mv = jugs.get(paso), lim = T0 + dur(cfg.turnoMs);
       if (mv && mv.jugador === p.id && mv.t <= lim) {
         paso++;
@@ -450,11 +450,11 @@
     const turnoIdx = cfg.turno(st);
     return { st, orden, paso, T0, rendido, turnoIdx, ventana: dur(orden[turnoIdx] && orden[turnoIdx].bot ? BOT_MS : cfg.turnoMs) };
   }
-  const estadoTb = () => { if (!sala.tb || sala.tb.codigo !== sala.codigo) sala.tb = { codigo: sala.codigo, sel: null, enviando: false, msg: '', col: null, miFlota: null, logVisto: -1, kVisto: -1 }; return sala.tb; };
+  const estadoTb = () => { if (!sala.tb || sala.tb.codigo !== sala.codigo) { sala.tb = { codigo: sala.codigo, sel: null, enviando: false, msg: '', col: null, miFlota: null, logVisto: -1, kVisto: -1 }; } return sala.tb; };
   async function enviar(jugada, n) {
     const tb = estadoTb();
     tb.enviando = true; tb.sel = null; sala.vista = null; pintarSala();
-    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n }, jugada) });
+    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: { n, ...jugada } });
     await traerSala();
     tb.enviando = false; sala.vista = null;
     if (!r.ok && r.body.error !== 'turno_tomado') tb.msg = TXT_ERROR[r.body.error] || 'No se pudo enviar la jugada (' + (r.body.error || r.status) + ').';
@@ -512,7 +512,7 @@
       const st = a.st, color = yo === 1 ? 'n' : 'b', arriba = yo === 1 ? 0 : 1, abajo = 1 - arriba;
       const anima = st.s.jugadas !== tb.logVisto; tb.logVisto = st.s.jugadas;
       const fila = i => '<div class="tb-info"><span>' + avatarHtml(a.orden[i].avatar, 18) + ' ' + esc(a.orden[i].nombre) + (i ? ' ⚫' : ' ⚪') + '</span>' + contarHtml(Damas.piezas(st.s, i ? 'n' : 'b'), i ? 'n' : 'b') + '</div>';
-      body.innerHTML = '<div class="tb-wrap">' + fila(arriba) + damasHtml(st.s, Object.assign({ abajo: color, sel: tb.sel, ultima: st.ultima, anima }, damasOpciones(st.s, tb.sel, miTurno))) + fila(abajo) + pie +
+      body.innerHTML = '<div class="tb-wrap">' + fila(arriba) + damasHtml(st.s, { abajo: color, sel: tb.sel, ultima: st.ultima, anima, ...damasOpciones(st.s, tb.sel, miTurno) }) + fila(abajo) + pie +
         '<div class="row-btns"><button class="btn ghost sm" data-ayuda="damas">📖 Cómo se juega</button>' + (miTurno ? '<button class="btn ghost sm" data-tb-rendir>🏳️ Rendirme</button>' : '') + '</div></div>';
     } else if (juego === 'domino') {
       body.innerHTML = '<div class="tb-wrap">' + rivalesDominoHtml(a.st, a.orden, yo) + mesaDominoHtml(a.st) + pie + manoDominoHtml(a.st, yo, miTurno, tb.sel) +
@@ -600,7 +600,7 @@
     }
     // Rendirse y reclamar valen en cualquier paso: si otro disparo ganó el paso (turno_tomado), se reintenta con el nuevo.
     const sinTurno = async jugada => { const r = await enviar(jugada, est.pasos); if (!r.ok && r.body.error === 'turno_tomado') await enviar(jugada, Naval.estado(sala.estado.jugadores).pasos); };
-    if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? Tu rival gana la partida.')) sinTurno({ accion: 'rendirse' }); return true; }
+    if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? Tu rival gana la partida.')) { sinTurno({ accion: 'rendirse' }); } return true; }
     if (e.target.closest('[data-tb-reclamar]')) { sinTurno({ accion: 'reclamar' }); return true; }
     const n = e.target.closest('[data-tb-n]'); if (!n) return false;
     if (est.turno !== sala.estado.yo) return true;
@@ -618,7 +618,7 @@
     if (!propio) return false;
     if (yo < 0 || a.turnoIdx !== yo || tb.enviando || finSala(juego, a)) return true;
     if (juego === 'damas') {
-      if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? Tu rival gana la partida.')) enviar({ accion: 'rendirse' }, a.paso); return true; }
+      if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? Tu rival gana la partida.')) { enviar({ accion: 'rendirse' }, a.paso); } return true; }
       const c = e.target.closest('[data-tb-d]'); if (!c) return true;
       const r = damasClic(a.st.s, yo === 1 ? 'n' : 'b', tb.sel, Number(c.dataset.tbD));
       if (r.jugada) { tb.msg = ''; tono(520, 60); enviar({ accion: 'mover', ruta: r.jugada.ruta }, a.paso); return true; }

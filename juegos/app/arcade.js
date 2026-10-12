@@ -175,7 +175,7 @@ function pintarArcadeSala(body) {
 // El juego vive en su iframe y reproduce los tiros con su motor determinista. Esta página le pasa la mesa (los 2 de
 // participantes(): personas y, si falta, el bot), las jugadas del servidor cuando cambian, envía sus tiros y pinta
 // el podio con pintarFinalSala (puntos topados a 1000) cuando el juego avisa el fin.
-const jugadasFisica = () => sala.estado.jugadores.flatMap(x => (x.jugadas || []).map(j => Object.assign({ jugador: x.id }, j))).sort((a, b) => a.n - b.n);
+const jugadasFisica = () => sala.estado.jugadores.flatMap(x => (x.jugadas || []).map(j => ({ jugador: x.id, ...j }))).sort((a, b) => a.n - b.n);
 // futbolito-equipos: equipos de Futbolito 2v2 en la sala de espera (mismo reparto que el juego: Futbolito.repartir).
 function equiposFutbolito(lista) {
   const e = sala.estado;

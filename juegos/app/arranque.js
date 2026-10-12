@@ -75,10 +75,10 @@ app.addEventListener('click', e => {
   const a = e.target.closest('[data-a]'); if (!a) return;
   if (a.dataset.a === 'categorias') return verCategorias(); // juegos-categorias: «← Categorías»
   if (a.dataset.a === 'reanudar') return reanudarPartida();
-  if (a.dataset.a === 'revancha-no') { olvidarRevancha(); const c = document.getElementById('revancha-inicio'); if (c) c.remove(); return; }
+  if (a.dataset.a === 'revancha-no') { olvidarRevancha(); const c = document.getElementById('revancha-inicio'); if (c) { c.remove(); } return; }
   if (a.dataset.a === 'revancha-inicio') {
     a.disabled = true;
-    return pedirRevancha(a.dataset.codigo).then(msg => { if (msg === null) return; a.disabled = false; const m = document.getElementById('revancha-msg'); if (m) m.innerHTML = '<div class="alert">' + escapeHtml(msg) + '</div>'; });
+    return pedirRevancha(a.dataset.codigo).then(msg => { if (msg === null) { return; } a.disabled = false; const m = document.getElementById('revancha-msg'); if (m) m.innerHTML = '<div class="alert">' + escapeHtml(msg) + '</div>'; });
   }
   if (a.dataset.a === 'adm-actualizar') return cargarAdmin(ADM_FUENTES);
   if (a.dataset.a === 'adm-reintentar') return cargarAdmin([a.dataset.fuente]);
@@ -120,7 +120,7 @@ app.addEventListener('submit', async e => {
   if (e.target.id === 'f-entrada') {
     e.preventDefault();
     const correo = document.getElementById('ent-correo').value.trim().toLowerCase();
-    const apodo = document.getElementById('ent-nick').value.trim().replace(/\s+/g, ' ');
+    const apodo = document.getElementById('ent-nick').value.trim().replaceAll(/\s+/g, ' ');
     entradaPrevia = { correo, nick: apodo };
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return pantallaLogin('Escribe un correo válido, por ejemplo tucorreo@gmail.com.');
     if (!/^[\p{L}\p{N} ]{2,20}$/u.test(apodo)) return pantallaLogin('Tu nick debe tener de 2 a 20 letras o números.');

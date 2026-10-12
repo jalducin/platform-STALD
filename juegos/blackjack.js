@@ -19,18 +19,18 @@
 
   function nueva(jugadores, o) {
     o = o || {};
-    return { jugadores: jugadores.map(j => Object.assign({}, j, { fichas: o.fichas || FICHAS_INICIALES })), manos: o.manos || MANOS, mano: -1, fase: 'espera', terminada: false,
+    return { jugadores: jugadores.map(j => ({ ...j, fichas: o.fichas || FICHAS_INICIALES })), manos: o.manos || MANOS, mano: -1, fase: 'espera', terminada: false,
       turno: -1, apuesta: [], cartas: [], estado: [], banca: [], mazo: [], resultado: null, ultima: null };
   }
   // estado por jugador: fuera (sin fichas), apuesta (debe apostar), juega, planta, pasado, bj.
   const pendiente = (st, i) => st.estado[i] === (st.fase === 'apuestas' ? 'apuesta' : 'juega');
-  function siguiente(st, desde) { for (let i = desde + 1; i < st.jugadores.length; i++) if (pendiente(st, i)) return i; return -1; }
+  function siguiente(st, desde) { for (let i = desde + 1; i < st.jugadores.length; i++) { if (pendiente(st, i)) return i; } return -1; }
   function mano(st, rng) {
     st.mano++;
     if (st.mano >= st.manos || !st.jugadores.some(j => j.fichas >= FICHA)) { st.terminada = true; st.fase = 'fin'; st.turno = -1; return; }
-    st.mazo = barajar([...Array(104).keys()].map(x => x % 52), rng || Math.random);
+    st.mazo = barajar([...new Array(104).keys()].map(x => x % 52), rng || Math.random);
     const n = st.jugadores.length;
-    Object.assign(st, { apuesta: Array(n).fill(0), cartas: st.jugadores.map(() => []), estado: st.jugadores.map(j => j.fichas >= FICHA ? 'apuesta' : 'fuera'), banca: [], resultado: null, ultima: null, fase: 'apuestas' });
+    Object.assign(st, { apuesta: new Array(n).fill(0), cartas: st.jugadores.map(() => []), estado: st.jugadores.map(j => j.fichas >= FICHA ? 'apuesta' : 'fuera'), banca: [], resultado: null, ultima: null, fase: 'apuestas' });
     st.turno = siguiente(st, -1);
   }
   const sacar = st => st.mazo.pop();
@@ -130,7 +130,7 @@
   `);
   const ESTADO_TXT = { pasado: '💥 Se pasó', bj: '♣️ ¡Blackjack!', planta: '✋ Se plantó', fuera: 'Sin fichas', apuesta: 'Apostando…', juega: 'Jugando' };
   const VERBO = { apostar: 'apuesta', pedir: 'pide carta', plantarse: 'se planta', doblar: 'dobla' };
-  const totalHtml = (cartas, e) => { if (!cartas.length) return ''; const t = total(cartas); return '<span class="bj-total' + (t.v > 21 ? ' pasado' : e === 'bj' ? ' bj' : '') + '">' + (t.suave && t.v < 21 ? (t.v - 10) + '/' : '') + t.v + '</span>'; };
+  const totalHtml = (cartas, e) => { if (!cartas.length) { return ''; } const t = total(cartas); return '<span class="bj-total' + (t.v > 21 ? ' pasado' : e === 'bj' ? ' bj' : '') + '">' + (t.suave && t.v < 21 ? (t.v - 10) + '/' : '') + t.v + '</span>'; };
   const cartasHtml = (cartas, ocultar, vistas) => '<div class="bj-cartas">' + (cartas.length ? cartas.map((c, k) => pkCarta(ocultar && k === 1 ? undefined : c, vistas && k >= vistas ? ' entra' : '')).join('') : pkCarta(null) + pkCarta(null)) + '</div>';
   // Selector de apuesta con fichas de 5 a 100 (las del póker). Estado en data-* del propio panel.
   const apuestaHtml = max => '<section class="bj-apuesta" id="bj-apuesta" data-monto="0" data-max="' + max + '" aria-label="Arma tu apuesta con fichas">' +
@@ -211,7 +211,7 @@
         titulo: f <= 0 ? '💸 Te quedaste sin fichas' : f > FICHAS_INICIALES ? '♣️ ¡Le ganaste a la banca!' : '♣️ Fin de la partida',
         detalle: 'Terminaste con 🪙 ' + fmt(f) + ' fichas · ganaste ' + ganadas + ' mano' + (ganadas === 1 ? '' : 's') + '.' });
     };
-    const siguienteMano = () => { clearTimeout(auto); mano(st); if (st.terminada) return fin(); pintar(); };
+    const siguienteMano = () => { clearTimeout(auto); mano(st); if (st.terminada) { return fin(); } pintar(); };
     const tras = () => {
       if (st.fase === 'fin') {
         if (st.resultado.neto[0] > 0) { ganadas++; sonidoOk(); } else if (st.resultado.neto[0] < 0) sonidoMal();
@@ -235,7 +235,7 @@
   function estadoSala() {
     const e = sala.estado, s = e.sala, orden = participantes();
     const jugs = new Map();
-    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, { jugador: x.id, ...j }); }));
     const st = nueva(orden.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot })));
     mano(st, rngDe(s.seed, 'bj-mano-0'));
     const ganadas = {}; let paso = 0, T0 = s.inicio, contada = -1;
@@ -243,7 +243,7 @@
     const contar = () => { if (st.fase === 'fin' && st.resultado && contada !== st.mano) { contada = st.mano; st.resultado.neto.forEach((n, i) => { if (n > 0) ganadas[i] = (ganadas[i] || 0) + 1; }); } };
     for (let guard = 0; guard < 6000 && !st.terminada; guard++) {
       contar();
-      if (st.fase === 'fin') { const t = T0 + dur(BJ_PAUSA_MS); if (ahora < t) break; mano(st, rngDe(s.seed, 'bj-mano-' + (st.mano + 1))); T0 = t; continue; }
+      if (st.fase === 'fin') { const t = T0 + dur(BJ_PAUSA_MS); if (ahora < t) { break; } mano(st, rngDe(s.seed, 'bj-mano-' + (st.mano + 1))); T0 = t; continue; }
       const p = orden[st.turno];
       if (p.bot) {
         const t = T0 + dur(BJ_BOT_MS); if (ahora < t) break;
@@ -251,7 +251,7 @@
       } else {
         const mv = jugs.get(paso), lim = T0 + dur(BJ_TURNO_MS);
         if (mv && mv.jugador === p.id && mv.t <= lim && actuar(st, mv)) { paso++; T0 = Math.max(T0, mv.t); }
-        else if (ahora >= lim) { actuar(st, auto(st)); if (st.ultima) st.ultima.auto = true; paso++; T0 = lim; }
+        else if (ahora >= lim) { actuar(st, auto(st)); if (st.ultima) { st.ultima.auto = true; } paso++; T0 = lim; }
         else break;
       }
     }
@@ -291,7 +291,7 @@
     if (b.disabled || st.fase === 'fin' || st.turno !== yo || sala.bjEnviando) return true;
     const jugada = jugadaDe(b);
     sala.bjEnviando = true; sala.vista = null; pintarSala();
-    post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n: st.paso }, jugada) }).then(async r => {
+    post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: { n: st.paso, ...jugada } }).then(async r => {
       await traerSala();
       sala.bjEnviando = false; sala.vista = null; pintarSala();
       if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');

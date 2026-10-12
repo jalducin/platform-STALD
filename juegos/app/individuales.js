@@ -84,9 +84,9 @@ function quiz(opts) {
     m.puntos(puntos);
   }
   const t0 = Date.now() - (previo ? numEntre(previo.segundos, 86400) * 1000 : 0);
-  enCurso.foto = () => terminado || vidas <= 0 ? null : Object.assign({ puntos, aciertos, total, racha, vidas, quedan: opts.modo === 'vidas' ? null : quedan, segundos: (Date.now() - t0) / 1000 }, opts.foto);
+  enCurso.foto = () => terminado || vidas <= 0 ? null : ({ puntos, aciertos, total, racha, vidas, quedan: opts.modo === 'vidas' ? null : quedan, segundos: (Date.now() - t0) / 1000, ...opts.foto });
   const acabar = (titulo) => {
-    if (terminado) return; terminado = true;
+    if (terminado) { return; } terminado = true;
     terminar(opts.id, { puntos, aciertos, total, segundos: (Date.now() - t0) / 1000, titulo, detalle: opts.detalle ? opts.detalle({ aciertos, total }) : '' });
   };
   if (opts.modo === 'vidas') m.vidas(vidas);
@@ -291,7 +291,7 @@ async function jugarOrdena(idioma, tema) {
 // Ortografía (openspec: juegos-fusion): letras, acentos, sinónimos y antónimos mezclados.
 const preguntaOrto = (f, tipo, rnd) => { const op = barajar(f.opciones.map((o, k) => ({ o, k })), rnd); return { big: tipo === 'acentos' ? 'á' : '✍️', q: f.frase, sub: f.regla ? 'Regla: ' + f.regla : '', opciones: op.map(x => x.o), correcta: op.findIndex(x => x.k === f.correcta), explicacion: f.explicacion }; };
 const preguntaSinonimo = (f, rnd) => conOpciones({ big: f.tipo === 'sinónimo' ? '🟰' : '↔️', q: '«' + f.palabra + '»', sub: 'Elige el ' + f.tipo, explicacion: f.tipo + ' de «' + f.palabra + '»: ' + f.respuesta }, f.respuesta, f.distractores, rnd);
-const poolSinonimos = d => d.sinonimos.map(x => Object.assign({ tipo: 'sinónimo' }, x)).concat(d.antonimos.map(x => Object.assign({ tipo: 'antónimo' }, x)));
+const poolSinonimos = d => d.sinonimos.map(x => ({ tipo: 'sinónimo', ...x })).concat(d.antonimos.map(x => ({ tipo: 'antónimo', ...x })));
 async function jugarOrtografia() {
   const d = await datos('espanol');
   const mezcla = barajar(d.ortografia.map(f => ({ t: 'ortografia', f })).concat(d.acentos.map(f => ({ t: 'acentos', f })), poolSinonimos(d).map(f => ({ t: 'sin', f }))));
@@ -356,7 +356,7 @@ function genSecuencia(n, aleatorio = Math.random) {
     () => { const a = rnd(60, 99), k = rnd(2, 9); return { s: [0, 1, 2, 3].map(i => a - k * i), r: a - 4 * k, regla: 'restar ' + k }; },
     () => { const a = rnd(1, 5), k = rnd(2, 3); return { s: [0, 1, 2, 3].map(i => a * k ** i), r: a * k ** 4, regla: 'multiplicar por ' + k }; },
     () => { const a = rnd(1, 6); return { s: [0, 1, 2, 3].map(i => (a + i) ** 2), r: (a + 4) ** 2, regla: 'cuadrados' }; },
-    () => { let x = rnd(1, 4), y = rnd(1, 5); const s = [x, y]; while (s.length < 5) s.push(s[s.length - 1] + s[s.length - 2]); return { s: s.slice(0, 4), r: s[4], regla: 'sumar los dos anteriores' }; },
+    () => { let x = rnd(1, 4), y = rnd(1, 5); const s = [x, y]; while (s.length < 5) { s.push(s[s.length - 1] + s[s.length - 2]); } return { s: s.slice(0, 4), r: s[4], regla: 'sumar los dos anteriores' }; },
     () => { const a = rnd(1, 9), k = rnd(1, 4); return { s: [a, a + k, a + 3 * k, a + 6 * k], r: a + 10 * k, regla: 'sumar ' + k + ', ' + 2 * k + ', ' + 3 * k + '…' }; },
   ];
   const g = tipos[rnd(0, Math.min(tipos.length - 1, 1 + Math.floor(n / 3)))]();
@@ -381,7 +381,7 @@ function jugarSimon() {
     pads.forEach(p => { p.disabled = true; });
     await new Promise(r => setTimeout(r, 600));
     const vel = Math.max(220, 480 - nivel * 20);
-    for (const i of seq) { if (terminado) return; await encender(i, vel); }
+    for (const i of seq) { if (terminado) { return; } await encender(i, vel); }
     turno = true; pads.forEach(p => { p.disabled = false; });
     document.getElementById('sim-msg').textContent = '¡Tu turno!';
   }
@@ -406,7 +406,7 @@ async function jugarSopa() {
   const d = await datos('ingles');
   const N = 10;
   const candidatas = barajar(d.vocabulario.filter(v => /^[a-z]{3,8}$/.test(v.en)));
-  const grid = Array.from({ length: N }, () => Array(N).fill(''));
+  const grid = Array.from({ length: N }, () => new Array(N).fill(''));
   const dirs = [[0, 1], [1, 0], [1, 1], [-1, 1]];
   const puestas = [];
   for (const w of candidatas) {
@@ -430,7 +430,7 @@ async function jugarSopa() {
   let inicio = null, encontradas = 0, terminado = false;
   const t0 = Date.now();
   const fin = () => {
-    if (terminado) return; terminado = true;
+    if (terminado) { return; } terminado = true;
     const seg = (Date.now() - t0) / 1000;
     const bono = encontradas === puestas.length ? Math.max(0, Math.round(TOT - seg)) * 3 : 0;
     terminar('mente-sopa', { puntos: encontradas * 150 + bono, aciertos: encontradas, total: puestas.length, segundos: seg, titulo: '🔎 Sopa de letras', detalle: encontradas === puestas.length ? '¡Las encontraste todas! Bono de tiempo: ' + bono : '' });
