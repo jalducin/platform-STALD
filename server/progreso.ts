@@ -7,7 +7,7 @@ import type { Store } from "./store.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
-export const JUEGOS_PROGRESO = ["plataformas", "karts", "dragon-run"] as const; // dragon-run: openspec dragon-run-misiones
+export const JUEGOS_PROGRESO = ["plataformas", "karts", "dragon-run", "golf"] as const; // dragon-run: openspec dragon-run-misiones; golf
 export const MAX_PROGRESO = 4096; // bytes de `datos` serializado
 
 export interface DocProgreso {
@@ -117,10 +117,20 @@ function validarDragon(d: unknown): boolean {
   return true;
 }
 
+// ---------- Golf: mejor resultado y estrellas por hoyo (openspec: golf) ----------
+const HOYO_GOLF = /^[1-9]$/;
+const porHoyo = (x: unknown, min: number, max: number) => esObj(x) && Object.keys(x).length <= 9 && Object.entries(x).every(([k, v]) => HOYO_GOLF.test(k) && entero(v, min, max));
+function validarGolf(d: unknown): boolean {
+  if (!esObj(d) || !llaves(d, ["mejores", "estrellas", "recorridos", "mejorRecorrido"])) return false;
+  if (!porHoyo(d.mejores, 1, 20) || !porHoyo(d.estrellas, 0, 3) || !entero(d.recorridos, 0, 100_000)) return false;
+  return d.mejorRecorrido === null || entero(d.mejorRecorrido, 9, 200);
+}
+
 export function validarProgreso(juego: string, datos: unknown): boolean {
   if (juego === "plataformas") return validarPlataformas(datos);
   if (juego === "karts") return validarKarts(datos);
   if (juego === "dragon-run") return validarDragon(datos);
+  if (juego === "golf") return validarGolf(datos);
   return false;
 }
 
