@@ -29,7 +29,10 @@ export async function revisarSalud(deps: { token: string; store: Store; fetch?: 
   } catch (e) {
     motivo = e instanceof Error ? e.message : "repo_no_responde";
   }
-  const estado: Salud["estado"] = motivo || github?.restantes === 0 ? "bloqueado"
-    : github && github.restantes < github.limite * 0.1 ? "advertencia" : "ok";
-  return { ok: estado !== "bloqueado", estado, ...(motivo ? { motivo } : github?.restantes === 0 ? { motivo: "limite_github" } : {}), github, revisado: new Date().toISOString() };
+  let estado: Salud["estado"] = "ok";
+  if (motivo || github?.restantes === 0) estado = "bloqueado";
+  else if (github && github.restantes < github.limite * 0.1) estado = "advertencia";
+  // El motivo del repo manda; si no hay, el límite de GitHub agotado.
+  const motivoFinal = motivo || (github?.restantes === 0 ? "limite_github" : "");
+  return { ok: estado !== "bloqueado", estado, ...(motivoFinal ? { motivo: motivoFinal } : {}), github, revisado: new Date().toISOString() };
 }

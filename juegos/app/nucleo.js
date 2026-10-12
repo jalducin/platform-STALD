@@ -17,7 +17,7 @@ let abrirAvatar = new URLSearchParams(location.search).get('avatar') === '1';
 // apodo espera en este navegador (sin correo) hasta que el enlace confirma la sesión.
 let abrirRegistro = new URLSearchParams(location.search).get('registro') === '1';
 const REGISTRO_KEY = 'juegos_registro';
-const registroPendiente = () => { try { const r = JSON.parse(localStorage.getItem(REGISTRO_KEY) || 'null'); return r && r.apodo && r.acepto === true ? r : null; } catch (e) { return null; } };
+const registroPendiente = () => { try { const r = JSON.parse(localStorage.getItem(REGISTRO_KEY) || 'null'); return r && r.apodo && r.acepto === true ? r : null; } catch { /* registro ilegible o sin almacenamiento: no hay pendiente */ return null; } };
 const borrarRegistro = () => { try { localStorage.removeItem(REGISTRO_KEY); } catch (e) { /* sin almacenamiento */ } };
 
 const app = document.getElementById('app');
@@ -26,7 +26,7 @@ const chip = document.getElementById('chip');
 const state = { email: null, jugador: null, totalIndividual: 0, totalPartidas: 0, pos: null, posPartidas: null, mejores: {}, semana: null, tab: 'juegos', rtipo: 'individual' };
 let limpiezas = []; // timers del juego en curso
 // Al dejar un juego (terminar, salir, empezar otro): detiene timers y descarta la partida individual guardada.
-function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) speechSynthesis.cancel(); soltarPartida(); modoPartida(false); }
+function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) { speechSynthesis.cancel(); } soltarPartida(); modoPartida(false); }
 
 // ---------- Recarga del navegador (openspec: juegos-recarga) ----------
 // Sala activa: la URL lleva ?sala= y localStorage.juegos_sala_activa = { codigo, quien, t, marcas? }. Juego
@@ -38,10 +38,10 @@ const escribirLocal = (k, v) => { try { if (v === null) localStorage.removeItem(
 const vigente = x => !!x && !!state.jugador && x.quien === state.jugador.id && Math.abs(Date.now() - Number(x.t)) < RECARGA_MS;
 const numEntre = (x, max) => Math.max(0, Math.min(max, Math.round(Number(x) || 0)));
 const modoPartida = on => document.documentElement.classList.toggle('jugando', !!on);
-function urlConSala(codigo) { const u = new URL(location.href); if (codigo) u.searchParams.set('sala', codigo); else u.searchParams.delete('sala'); return u.pathname + u.search + u.hash; }
+function urlConSala(codigo) { const u = new URL(location.href); if (codigo) u.searchParams.set('sala', codigo); else { u.searchParams.delete('sala'); } return u.pathname + u.search + u.hash; }
 function recordarSala(codigo, extra) {
   const previa = leerLocal(SALA_KEY);
-  escribirLocal(SALA_KEY, Object.assign({}, previa && previa.codigo === codigo ? previa : {}, extra, { codigo, quien: state.jugador && state.jugador.id, t: Date.now() }));
+  escribirLocal(SALA_KEY, { ...(previa && previa.codigo === codigo ? previa : {}), ...extra, codigo, quien: state.jugador && state.jugador.id, t: Date.now() });
 }
 function olvidarSala() {
   escribirLocal(SALA_KEY, null);
@@ -59,10 +59,10 @@ let enCurso = null, reanudacion = null;
 function guardarPartida() {
   if (!enCurso || !enCurso.foto || !state.jugador) return;
   const f = enCurso.foto();
-  escribirLocal(PARTIDA_KEY, f ? Object.assign({}, f, { juego: enCurso.id, quien: state.jugador.id, t: Date.now() }) : null);
+  escribirLocal(PARTIDA_KEY, f ? ({ ...f, juego: enCurso.id, quien: state.jugador.id, t: Date.now() }) : null);
 }
 function soltarPartida() { enCurso = null; escribirLocal(PARTIDA_KEY, null); }
-const partidaGuardada = () => { const p = leerLocal(PARTIDA_KEY); return vigente(p) && Object.prototype.hasOwnProperty.call(REANUDAR, p.juego) ? p : null; };
+const partidaGuardada = () => { const p = leerLocal(PARTIDA_KEY); return vigente(p) && Object.hasOwn(REANUDAR, p.juego) ? p : null; };
 // La instantánea que se va a reanudar: una sola vez y solo para su juego.
 function tomarReanudacion(id) { const r = reanudacion && reanudacion.juego === id ? reanudacion : null; reanudacion = null; return r; }
 window.addEventListener('pagehide', guardarPartida);
@@ -71,19 +71,20 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) guard
 window.addEventListener('beforeunload', e => { if (enCurso && !enCurso.foto) { e.preventDefault(); e.returnValue = ''; } });
 
 function escapeHtml(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return String(s == null ? '' : s).replaceAll(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 const fmt = n => Number(n || 0).toLocaleString('es-MX');
 const barajar = (a, rnd = Math.random) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const tomar = (a, n, rnd = Math.random) => barajar(a, rnd).slice(0, n);
-const sinAcentos = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+const sinAcentos = s => String(s).normalize('NFD').replaceAll(/[̀-ͯ]/g, '');
 
 // Cada petición lleva la sesión (Authorization: Bearer, comun/auth.js; openspec: plataforma-login). Sin sesión, durante
 // la transición, se manda el correo guardado de antes como ?email=. Un 401 de sesión lleva a la pantalla de entrada.
 // Sale por StaldAuth.pedirJson (openspec: cache-estabilidad): junta GET iguales en vuelo, guarda los que piden
 // `cfg.ttl`, reintenta lecturas ante fallas pasajeras y, sin red, responde status 0 en lugar de lanzar.
 async function api(ruta, opts, cfg) {
-  const url = API_BASE + (StaldAuth.email() ? ruta : ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(state.email));
+  let url = API_BASE + ruta;
+  if (!StaldAuth.email()) url += (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(state.email);
   const { ok, status, body } = await StaldAuth.pedirJson(url, opts, cfg);
   const res = { ok, status };
   if (StaldAuth.esSesionVencida(res, body) && !state.pidiendoSesion) {
@@ -98,7 +99,7 @@ const post = (ruta, datos) => api(ruta, { method: 'POST', headers: { 'content-ty
 const cacheDatos = {};
 async function datos(nombre) {
   // Si la descarga falla, se olvida la promesa para reintentar la próxima vez (openspec: cache-estabilidad).
-  if (!cacheDatos[nombre]) cacheDatos[nombre] = fetch('juegos/datos/' + nombre + '.json').then(r => { if (!r.ok) throw new Error('datos ' + nombre); return r.json(); })
+  if (!cacheDatos[nombre]) cacheDatos[nombre] = fetch('juegos/datos/' + nombre + '.json').then(r => { if (!r.ok) { throw new Error('datos ' + nombre); } return r.json(); })
     .catch(e => { delete cacheDatos[nombre]; throw e; });
   return cacheDatos[nombre];
 }

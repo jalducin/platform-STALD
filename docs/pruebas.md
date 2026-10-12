@@ -6,6 +6,7 @@ Cómo correr las pruebas del proyecto, qué cubren y qué cuidar. Cambio de orig
 |---|---|---|
 | Unitarias del servidor | `server/*_test.ts` | GitHub Actions en cada push a `main` y en cada PR (`.github/workflows/pruebas.yml`), y tú en local |
 | E2E (navegador) | `tests/e2e/e2e-*.js` | Solo en local, con `tests/e2e/correr.sh` |
+| Análisis de calidad (reglas tipo SonarQube) | `tests/calidad/` | En local, con `npm run calidad` (ver [Análisis de calidad](#análisis-de-calidad)) |
 
 ## Unitarias (Deno)
 
@@ -139,3 +140,36 @@ falso `Authorization: Bearer prueba:<correo>`:
    `p.evaluate(() => JUEGOS.length)`. Los botones `.result [data-juego]` («Jugar otra vez») no cambian.
 3. Agrégala a `ORDEN` en `correr.sh` (y a `fase_de` si no es de fase `base`).
 4. Córrela con `correr.sh` y documenta el resultado en el reporte del cambio.
+
+## Análisis de calidad
+
+Mide desde la terminal los mismos avisos que SonarQube for IDE (SonarLint) muestra en el panel «Problemas» de VS Code,
+para saber si suben o bajan sin abrir cada archivo. Cambio de origen: `openspec/changes/calidad-sonar` (decisiones y
+conteos antes/después en su `design.md` y su reporte).
+
+```bash
+cd tests/calidad
+npm install                                      # una vez: ESLint, Stylelint y sus plugins (solo aquí, no en la raíz)
+npm run calidad                                  # avisos por regla de Sonar y por archivo
+node calidad.mjs --detalle --regla S3358         # cada aviso de una regla (archivo:línea y mensaje)
+node calidad.mjs --detalle --contexto 2 --archivo juegos/golf.html   # con el código alrededor, solo ese archivo
+node calidad.mjs --json salida.json              # resultado completo en JSON (para comparar antes y después)
+```
+
+- **Qué revisa:** el JS del navegador (`juegos/`, `juegos/app/`, `ingles/`, `comun/` y los `<script>` de los HTML de la
+  raíz y de `juegos/`), el CSS (`estilos/`, archivos `.css` y `<style>`) y `server/*.ts`. No revisa `tests/`,
+  `supabase/` ni `herramientas/`.
+- **Cómo:** `eslint.config.mjs` activa solo las reglas equivalentes de `eslint-plugin-sonarjs` (el mismo código que usa
+  SonarLint) y `eslint-plugin-unicorn`, con su clave de Sonar al lado (`S3358`, `S3776`, `S2681`, `S2245`, …). Stylelint
+  cubre `css:S4666` (selectores duplicados) y `css:S1874` (valores obsoletos), y `calidad.mjs` agrega dos revisiones
+  propias: contraste WCAG AA de reglas con `color` y fondo literales (`css:S7924`) y roles ARIA que tienen elemento
+  nativo (`Web:S6819`, p. ej. `role="group"` → `<fieldset>`).
+- **`NOSONAR`:** igual que SonarLint, un aviso en una línea con `// NOSONAR: <motivo>` no cuenta; se lista aparte como
+  «revisados con NOSONAR», por regla. Úsalo solo con el motivo escrito, p. ej. `// NOSONAR: azar de juego, no
+  criptográfico` en `Math.random()` (S2245) o en la aritmética entera de 32 bits de los generadores con semilla
+  (S7767).
+- **No es una compuerta:** sale con 0 aunque haya avisos y no corre en CI. Córrelo antes de un PR que toque mucho código
+  y no subas los conteos sin motivo.
+- **Diferencias con SonarLint:** VS Code solo analiza los archivos abiertos (y también las copias de los worktrees de
+  `.claude/`); este análisis recorre todo el código vivo y nada más. Las revisiones propias de contraste y roles son
+  aproximadas: no resuelven variables CSS (`var(--x)`) ni roles dentro de cadenas de JS.

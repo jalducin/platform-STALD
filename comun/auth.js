@@ -1,6 +1,6 @@
 // Inicio de sesión de STALD con Supabase Auth (openspec: plataforma-login). Script clásico: expone window.StaldAuth.
 // Uso en una página:
-//   <script src="comun/auth.js?v=7"></script>
+//   <script src="comun/auth.js?v=8"></script>
 //   await StaldAuth.iniciar(API_BASE);           // lee /config, carga supabase-js y recupera la sesión
 //   StaldAuth.email()                            // correo de la sesión o null
 //   StaldAuth.fetchConSesion(url, opts)          // fetch con Authorization: Bearer <token>
@@ -29,7 +29,7 @@
 
   function leer(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function escribir(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } }
-  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); } // NOSONAR: script clásico en ES5 a propósito (lo cargan todas las páginas)
 
   function cargarLib() {
     if (window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
@@ -61,7 +61,7 @@
     revisarErrorEnlace();
     // Sin no-store: el servidor deja guardar /config 10 min (openspec: cache-estabilidad).
     estado.listo = fetch(String(apiBase).replace(/\/$/, '') + '/config')
-      .then(function (r) { return r.json().then(function (c) { if (!r.ok) throw new Error(c.error || ('HTTP ' + r.status)); return c; }); })
+      .then(function (r) { return r.json().then(function (c) { if (!r.ok) { throw new Error(c.error || ('HTTP ' + r.status)); } return c; }); })
       .then(function (c) {
         if (c.prueba) {
           estado.prueba = true;
@@ -105,7 +105,7 @@
   // siguen llegando con Cache-Control: no-store, así que el navegador no las guarda y siempre va a la red.
   function fetchConSesion(url, opts) {
     return getToken().then(function (t) {
-      var o = Object.assign({ cache: 'default' }, opts || {});
+      var o = Object.assign({ cache: 'default' }, opts || {}); // NOSONAR: script clásico en ES5 a propósito (lo cargan todas las páginas)
       var h = new Headers(o.headers || {});
       if (t) h.set('Authorization', 'Bearer ' + t);
       o.headers = h;
@@ -126,7 +126,7 @@
   var PERMANENTE = { sin_base: 1, sin_config: 1, auth_no_disponible: 1, limite_diario: 1, cupo_lleno: 1 };
   var SIN_CONEXION = 'Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.';
   function limpiarCache() { memoria = {}; enVuelo = {}; }
-  function copia(r) { return { ok: r.ok, status: r.status, body: JSON.parse(JSON.stringify(r.body)) }; }
+  function copia(r) { return { ok: r.ok, status: r.status, body: JSON.parse(JSON.stringify(r.body)) }; } // NOSONAR: script clásico en ES5 a propósito (lo cargan todas las páginas)
   function esperar(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
   function pedirUnaVez(url, opts) {
     return fetchConSesion(url, opts).then(function (res) {
@@ -210,7 +210,7 @@
           if (!res.ok) throw new Error('El inicio de sesión no respondió. Intenta de nuevo en un momento.');
           return intentar();
         }, function () { throw new Error('Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.'); })
-        .then(function (r) { if (!r) throw new Error(ERROR_CREDENCIALES); return r; });
+        .then(function (r) { if (!r) { throw new Error(ERROR_CREDENCIALES); } return r; });
     });
   }
 
@@ -297,6 +297,7 @@
     var aviso = op.aviso || estado.errorEnlace || (estado.error ? 'No pude preparar el inicio de sesión (' + estado.error + '). Revisa tu internet.' : '');
     estado.errorEnlace = null;
     function paso(msg) {
+      var claseOk = op.msgOk ? ' ok' : '';
       el.innerHTML = '<div class="stald-auth" data-stald-auth="contrasena"><h2>' + esc(op.titulo || '🔐 Entra a STALD') + '</h2>' +
         '<p>' + esc(op.texto || 'Entra con tu correo y tu contraseña. Si es tu primera vez, usa la que te dio tu profe.') + '</p>' +
         '<form novalidate><label for="stald-auth-correo">Tu correo</label>' +
@@ -305,7 +306,7 @@
         '<input id="stald-auth-clave" type="password" autocomplete="current-password" autocapitalize="none">' +
         '<button type="submit" id="stald-auth-entrar">Entrar →</button></form>' +
         '<button type="button" class="sec" data-stald-auth-olvide>¿Olvidaste tu contraseña?</button>' +
-        (msg ? '<div class="msg' + (op.msgOk ? ' ok' : '') + '" role="alert">' + esc(msg) + '</div>' : '') + '</div>' + (op.pie || '');
+        (msg ? '<div class="msg' + claseOk + '" role="alert">' + esc(msg) + '</div>' : '') + '</div>' + (op.pie || '');
       op.msgOk = false;
       el.querySelector('[data-stald-auth-olvide]').addEventListener('click', function () {
         var correo = el.querySelector('#stald-auth-correo').value.trim().toLowerCase();

@@ -19,7 +19,9 @@ function ctx() {
     hoy: () => "2026-10-11", ahora: () => "2026-10-11T18:00:00.000Z",
   };
   const call = async (method: string, sub: string, email: string, body?: unknown) => {
-    const req = new Request(`http://x/juegos${sub}?email=${encodeURIComponent(email)}`, { method, body: body === undefined ? undefined : typeof body === "string" ? body : JSON.stringify(body) });
+    let cuerpo: string | undefined;
+    if (body !== undefined) cuerpo = typeof body === "string" ? body : JSON.stringify(body);
+    const req = new Request(`http://x/juegos${sub}?email=${encodeURIComponent(email)}`, { method, body: cuerpo });
     const res = await handleJuegos(req, sub, email, deps, json);
     return { status: res.status, body: await res.json() };
   };

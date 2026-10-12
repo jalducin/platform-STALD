@@ -8,7 +8,16 @@ const DATA_URL_BASE = API_BASE + '/ingles/data';
 const MODO_PROFE = new URLSearchParams(location.search).get('modo') === 'profe';
 // ?modo=secundaria → exámenes de Secundaria (openspec: examen-secundaria).
 const MODO_SECUNDARIA = new URLSearchParams(location.search).get('modo') === 'secundaria';
-const conApiParam = href => { const a = new URLSearchParams(location.search).get('api'); return a ? href + (href.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(a) : href; };
+// Valor según el modo de la página: ruta del profe, Secundaria o Inglés (el normal).
+function segunModo(profe, secundaria, ingles) {
+  if (MODO_PROFE) return profe;
+  return MODO_SECUNDARIA ? secundaria : ingles;
+}
+const conApiParam = href => {
+  const a = new URLSearchParams(location.search).get('api');
+  if (!a) return href;
+  return href + (href.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(a);
+};
 if (MODO_PROFE) {
   document.body.classList.add('profe');
   document.title = 'Mi ruta B1 → C1';
@@ -25,7 +34,7 @@ const STORAGE_KEY = 'ingles_email';
 // Claves de sesión compartidas con el portal (index.html): solo el correo.
 const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
 // "← Inicio" y "🎮 Juegos" conservan ?api= (pruebas locales).
-(() => { const api = new URLSearchParams(location.search).get('api'); const l = document.querySelector('.home-link'); if (api && l) l.href = './?api=' + encodeURIComponent(api); const g = document.querySelector('.games-link'); if (api && g) g.href = 'juegos.html?api=' + encodeURIComponent(api); })();
+(() => { const api = new URLSearchParams(location.search).get('api'); const l = document.querySelector('.home-link'); if (api && l) { l.href = './?api=' + encodeURIComponent(api); } const g = document.querySelector('.games-link'); if (api && g) g.href = 'juegos.html?api=' + encodeURIComponent(api); })();
 
 // Catálogo único de secciones (openspec: ingles-pro, design 2b): la barra inferior, las pestañas, el menú lateral
 // y los encabezados de cada sección salen de aquí. `href` = enlace a otra página; `accion` = botón.
@@ -69,7 +78,7 @@ const contentEl = document.getElementById('content');
 const navEl = document.getElementById('nav');
 const cajonEl = document.getElementById('cajon');
 
-function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeHtml(s) { return String(s ?? '').replaceAll(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 // Días que cuentan como "realizadas recientes": hoy y los 2 anteriores.
 const RECENT_DAYS = 3;
@@ -79,7 +88,7 @@ function todayStr() { return fmtDate(new Date()); }
 function daysAgoStr(n) { const d = new Date(); d.setDate(d.getDate() - n); return fmtDate(d); }
 function diffDays(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
 // Fecha local (AAAA-MM-DD) de la última edición; se usa como fecha de realización.
-function localDateOf(iso) { if (!iso) return null; const d = new Date(iso); return isNaN(d) ? null : fmtDate(d); }
+function localDateOf(iso) { if (!iso) { return null; } const d = new Date(iso); return Number.isNaN(d.getTime()) ? null : fmtDate(d); }
 
 function formatFecha(fecha) {
   try { return new Date(fecha + 'T00:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric', month:'short'}); }
@@ -192,7 +201,7 @@ function aplicarFiltro(board, grupo) {
   if (todo) todo.hidden = !grupo;
 }
 // ---------- Actividades y exámenes (servidor: /ingles/actividades) ----------
-const ACT_URL = API_BASE + (MODO_PROFE ? '/ingles/profe/actividades' : MODO_SECUNDARIA ? '/secundaria/actividades' : '/ingles/actividades');
+const ACT_URL = API_BASE + segunModo('/ingles/profe/actividades', '/secundaria/actividades', '/ingles/actividades');
 const state = { email: null, data: null, act: null };
 
 function isAdminView() { return !!(state.data && state.data.isAdmin); }
@@ -202,10 +211,17 @@ function tipoTexto(tipo) { return ({ actividad: 'Actividad', refuerzo: 'Refuerzo
 // Un elemento (actividad, examen, refuerzo, Meet) como fila del tablero.
 function itemRow(it, estado, mejor, ultimoEnvio, intentosUsados) {
   const esMeet = it.tipo === 'meet';
+  // Detalle del Meet: hora y, si hay, reto en vivo o material para leer.
+  const detalleMeet = () => {
+    let extra = '';
+    if (it.tieneReto) extra = ' · reto en vivo ' + (intentosUsados || 0) + '/' + it.intentosMax;
+    else if (it.tieneMaterial) extra = ' · material para leer';
+    return (it.hora ? ' · ' + it.hora : '') + extra;
+  };
   return {
     _item: it.id, _tipo: it.tipo, _estado: estado, _meetUrl: it.meetUrl, source: 'item',
     name: icono(it.tipo) + ' ' + it.titulo,
-    label: tipoTexto(it.tipo) + (esMeet ? (it.hora ? ' · ' + it.hora : '') + (it.tieneReto ? ' · reto en vivo ' + (intentosUsados || 0) + '/' + it.intentosMax : it.tieneMaterial ? ' · material para leer' : '') : ' · ' + it.preguntas + ' ejercicios · ' + (intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)'),
+    label: tipoTexto(it.tipo) + (esMeet ? detalleMeet() : ' · ' + it.preguntas + ' ejercicios · ' + (intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)'),
     dificultad: it.nivel,
     fecha: it.fechaLimite,
     // Con un intento enviado ya está hecha: la corrección (2.º intento) es opcional.
@@ -219,11 +235,17 @@ function itemRowsAlumno(act) {
   return ((act && act.items) || []).map(it => itemRow(it, it.estado, it.mejor, it.ultimoEnvio, it.intentosUsados));
 }
 function itemRowsAdmin(items, alumno) {
+  // Estado para el admin: el Meet siempre disponible; lo demás, por intentos usados (o perfecto si no es examen).
+  const estadoDe = (it, usados, perfecto) => {
+    if (it.tipo === 'meet') return 'disponible';
+    if (usados >= it.intentosMax || perfecto) return 'completo';
+    return usados ? 'en-curso' : 'disponible';
+  };
   return items.map(it => {
     const r = (it.resultados || []).find(x => x.alumno === alumno);
     const usados = r ? r.intentos.length : 0;
     const perfecto = it.tipo !== 'examen' && r && r.intentos.length && r.intentos[r.intentos.length - 1].calificacion.porcentaje === 100;
-    const estado = it.tipo === 'meet' ? 'disponible' : (usados >= it.intentosMax || perfecto ? 'completo' : (usados ? 'en-curso' : 'disponible'));
+    const estado = estadoDe(it, usados, perfecto);
     return itemRow(it, estado, r && r.mejor, r && r.intentos.length ? r.intentos[r.intentos.length - 1].enviadoEn : null, usados);
   });
 }
@@ -244,7 +266,10 @@ function accionItem(it, estado) {
   if (estado === 'completo') return '<button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver resultado</button>';
   // Examen con 2.ª oportunidad (openspec: examen-segunda-oportunidad): en espera hasta su fecha.
   if (estado === 'en-espera') return '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center"><span class="pill wait">2.ª oportunidad ' + escapeHtml(formatFecha(it.segundaOportunidad)) + '</span><button class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver resultado</button></span>';
-  if (estado === 'en-curso') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">' + (it.tipo === 'examen' ? (it.segundaOportunidad ? '2.ª oportunidad' : 'Reintentar') : 'Corregir errores') + '</button>';
+  if (estado === 'en-curso') {
+    const reintento = it.segundaOportunidad ? '2.ª oportunidad' : 'Reintentar';
+    return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">' + (it.tipo === 'examen' ? reintento : 'Corregir errores') + '</button>';
+  }
   if (estado === 'disponible') return '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">' + (it.tipo === 'examen' ? 'Resolver' : 'Empezar') + '</button>';
   return '<span class="pill wait">Abre ' + escapeHtml(formatFecha(it.disponibleDesde)) + '</span>';
 }
@@ -264,8 +289,15 @@ function ultimasCalificaciones(name, items, n = 5) {
     .map(({ it, r }) => ({ icono: icono(it.tipo), titulo: it.titulo, valor: r.mejor.porcentaje + '%', pct: r.mejor.porcentaje, fecha: r.intentos[r.intentos.length - 1].enviadoEn }))
     .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, n);
 }
-const claseNota = pct => pct === null ? 'neutra' : pct >= 80 ? 'fortaleza' : pct >= 60 ? 'en-progreso' : 'debilidad';
-const fechaCorta = f => f ? new Date(f.length === 10 ? f + 'T12:00:00' : f).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : '';
+const claseNota = pct => {
+  if (pct === null) return 'neutra';
+  if (pct >= 80) return 'fortaleza';
+  return pct >= 60 ? 'en-progreso' : 'debilidad';
+};
+const fechaCorta = f => {
+  if (!f) return '';
+  return new Date(f.length === 10 ? f + 'T12:00:00' : f).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+};
 
 function renderUltimasAdmin(names, items) {
   return '<details class="section" id="ultimas" open><summary><div class="section-head"><span><span class="chevron">▶</span>📊 Últimas calificaciones</span><span class="count">' + names.length + '</span></div></summary>' +
@@ -317,7 +349,8 @@ function renderAdminWeek(act) {
   if (!lista.length) return '';
   return '<div class="exam-card"><h3>📚 Esta semana · ' + escapeHtml(act.semana.titulo) + '</h3>' + lista.map(it => {
     const n = (it.resultados || []).length;
-    const sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + (it.tipo === 'meet' ? (it.meetUrl ? ' · con enlace' : ' · sin enlace (meetUrl)') : ' · ' + n + ' con intentos');
+    const enlace = it.meetUrl ? ' · con enlace' : ' · sin enlace (meetUrl)';
+    const sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + (it.tipo === 'meet' ? enlace : ' · ' + n + ' con intentos');
     let btn = it.tipo === 'meet' ? '' : '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Vista previa</button>';
     // Material del profe con o sin reto (openspec: meet-sin-reto); «👁 Reto» solo si lo hay.
     if (it.tipo === 'meet' && (it.tieneReto || it.tieneMaterial)) btn = '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button><button class="btn ghost" data-action="abrir-guion" data-id="' + escapeHtml(it.id) + '">📋 Guion</button>' + (it.tieneReto ? '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Reto</button>' : '') + '</span>';
@@ -396,7 +429,9 @@ const fetchJson = api; // nombre anterior, usado en todo el código
 // Anillo de progreso (SVG): porcentaje 0–100, texto pequeño debajo y tono (fortaleza / en-progreso / debilidad).
 function anillo(pct, etiqueta, tono) {
   const r = 34, c = 2 * Math.PI * r, p = Math.max(0, Math.min(100, Number(pct) || 0));
-  const color = tono === 'debilidad' ? 'var(--bad)' : tono === 'en-progreso' ? 'var(--warn)' : 'var(--ok)';
+  let color = 'var(--ok)';
+  if (tono === 'debilidad') color = 'var(--bad)';
+  else if (tono === 'en-progreso') color = 'var(--warn)';
   return '<div class="anillo" role="img" aria-label="' + escapeHtml(p + ' %' + (etiqueta ? ' ' + etiqueta : '')) + '"><svg viewBox="0 0 80 80" aria-hidden="true">' +
     '<circle class="pista" cx="40" cy="40" r="' + r + '" fill="none" stroke-width="8"/>' +
     '<circle class="valor" cx="40" cy="40" r="' + r + '" fill="none" stroke-width="8" style="stroke:' + color + '" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + (c * (1 - p / 100)).toFixed(1) + '"/></svg>' +

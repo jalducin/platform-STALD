@@ -16,10 +16,10 @@ const sdkPuede = (g, i, v) => {
 };
 // Tablero resuelto al azar (backtracking con números barajados).
 function sudokuResuelto(rnd = Math.random) {
-  const g = Array(81).fill(0);
+  const g = new Array(81).fill(0);
   const llenar = i => {
     if (i === 81) return true;
-    for (const v of barajar([1, 2, 3, 4, 5, 6, 7, 8, 9], rnd)) if (sdkPuede(g, i, v)) { g[i] = v; if (llenar(i + 1)) return true; g[i] = 0; }
+    for (const v of barajar([1, 2, 3, 4, 5, 6, 7, 8, 9], rnd)) if (sdkPuede(g, i, v)) { g[i] = v; if (llenar(i + 1)) { return true; } g[i] = 0; }
     return false;
   };
   llenar(0);
@@ -46,7 +46,7 @@ function contarSoluciones(g0, tope = 2) {
 function generarSudoku(nivel, rnd = Math.random) {
   const sol = sudokuResuelto(rnd), g = sol.slice();
   let pistas = 81;
-  for (const i of barajar([...Array(81).keys()], rnd)) {
+  for (const i of barajar([...new Array(81).keys()], rnd)) {
     if (pistas <= SUDOKU_NIVELES[nivel].pistas) break;
     const v = g[i]; g[i] = 0;
     if (contarSoluciones(g, 2) === 1) pistas--; else g[i] = v;
@@ -88,7 +88,7 @@ function jugarSudoku(nivel) {
   const segundos = () => (Date.now() - t0) / 1000 / TIEMPO;
   enCurso.foto = () => terminado || errores >= 3 ? null : { nivel, puzzle, sol, g: g.slice(), errores, segundos: segundos(), faltan: g.filter(x => !x).length };
   if (g.some((v, i) => v && !puzzle[i])) m.puntos(puntosSudoku(nivel, segundos(), errores));
-  const tTimer = setInterval(() => { const e = document.getElementById('m-tiempo'); if (!e) return; const sg = Math.floor(segundos()); e.hidden = false; e.textContent = '⏱ ' + Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0'); }, 500);
+  const tTimer = setInterval(() => { const e = document.getElementById('m-tiempo'); if (!e) { return; } const sg = Math.floor(segundos()); e.hidden = false; e.textContent = '⏱ ' + Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0'); }, 500);
   limpiezas.push(() => clearInterval(tTimer));
   m.body.innerHTML = '<p class="muted" style="text-align:center;margin:0">' + N.emoji + ' ' + N.t + ' · faltan <b id="sdk-faltan"></b></p>' +
     '<div class="sdk" id="sdk">' + g.map((v, i) => { const r = Math.floor(i / 9), c = i % 9; return '<button data-sdk-i="' + i + '" class="' + [puzzle[i] ? 'fija' : '', c % 3 === 2 && c < 8 ? 'bd' : '', r % 3 === 2 && r < 8 ? 'bb' : ''].join(' ').trim() + '" aria-label="Fila ' + (r + 1) + ', columna ' + (c + 1) + '">' + (v || '') + '</button>'; }).join('') + '</div>' +
@@ -107,7 +107,7 @@ function jugarSudoku(nivel) {
     for (let n = 1; n <= 9; n++) { const q = 9 - g.filter(x => x === n).length; document.getElementById('sdk-q' + n).textContent = q ? q : '✓'; m.body.querySelector('[data-sdk-n="' + n + '"]').disabled = !q; }
   };
   const fin = gano => {
-    if (terminado) return; terminado = true;
+    if (terminado) { return; } terminado = true;
     const seg = segundos();
     if (gano) terminar('mente-sudoku', { puntos: puntosSudoku(nivel, seg, errores), aciertos: 81 - puzzle.filter(Boolean).length, total: 81 - puzzle.filter(Boolean).length, segundos: seg, titulo: '🔢 ¡Sudoku resuelto!', detalle: N.emoji + ' ' + N.t + ' · ' + Math.floor(seg / 60) + ' min ' + Math.round(seg % 60) + ' s · ' + errores + ' error(es)' });
     else terminar('mente-sudoku', { puntos: 0, aciertos: g.filter(Boolean).length - puzzle.filter(Boolean).length, total: 81 - puzzle.filter(Boolean).length, segundos: seg, titulo: '💔 Sin vidas', detalle: 'Te equivocaste 3 veces. ¡Inténtalo de nuevo!' });
@@ -161,9 +161,11 @@ function ajTableroHtml(st, o) {
     const f = o.abajo === 'w' ? i : 7 - i, c = o.abajo === 'w' ? k : 7 - k, sq = f * 16 + c;
     const cls = ((f + c) % 2 ? 'os' : 'cl') + (o.ultima && (o.ultima.de === sq || o.ultima.a === sq) ? ' ult' : '') + (o.sel === sq ? ' sel' : '') + (sq === rey ? ' jaque' : '');
     const m = dest.get(sq);
+    let destHtml = '';
+    if (m) destHtml = '<span class="dest' + (m.captura ? ' come' : '') + '"></span>';
     h += '<button class="aj-c ' + cls + '" data-aj="' + sq + '" aria-label="' + Ajedrez.casilla(sq) + (st.t[sq] ? ' ' + st.t[sq] : '') + '">' +
       (k === 0 ? '<span class="aj-coord f">' + (8 - f) + '</span>' : '') + (i === 7 ? '<span class="aj-coord c">' + 'abcdefgh'[c] + '</span>' : '') +
-      ajPieza(st.t[sq]) + (m ? '<span class="dest' + (m.captura ? ' come' : '') + '"></span>' : '') + '</button>';
+      ajPieza(st.t[sq]) + destHtml + '</button>';
   }
   return h + '</div>';
 }
@@ -189,11 +191,12 @@ function elegirAjedrez() {
     '<label>Juegas con</label><div class="opts" style="grid-template-columns:repeat(3,1fr)"><button class="opt" data-aj-color="w" aria-pressed="true">♔ Blancas</button><button class="opt" data-aj-color="b">♚ Negras</button><button class="opt" data-aj-color="azar">🎲 Al azar</button></div>' +
     '<div class="row-btns"><button class="btn ghost" data-ayuda="ajedrez">📖 Cómo se juega</button><button class="btn" data-aj-go>♟️ Jugar</button></div>';
   let nivel = 2, color = 'w';
+  const colorAlAzar = () => (Math.random() < .5 ? 'w' : 'b'); // NOSONAR: azar de juego, no criptográfico
   m.body.addEventListener('click', e => {
     const n = e.target.closest('[data-aj-nivel]'), c = e.target.closest('[data-aj-color]');
     if (n) { nivel = Number(n.dataset.ajNivel); m.body.querySelectorAll('[data-aj-nivel]').forEach(x => x.setAttribute('aria-pressed', String(x === n))); }
     if (c) { color = c.dataset.ajColor; m.body.querySelectorAll('[data-aj-color]').forEach(x => x.setAttribute('aria-pressed', String(x === c))); }
-    if (e.target.closest('[data-aj-go]')) jugarAjedrez(nivel, color === 'azar' ? (Math.random() < .5 ? 'w' : 'b') : color);
+    if (e.target.closest('[data-aj-go]')) jugarAjedrez(nivel, color === 'azar' ? colorAlAzar() : color);
   });
 }
 
@@ -204,11 +207,14 @@ function jugarAjedrez(nivel, yo) {
   const pintar = msg => {
     const cap = Ajedrez.capturas(st), bot = yo === 'w' ? 'b' : 'w';
     const turnoYo = st.turno === yo && !pensando;
+    let estado = '';
+    if (pensando) estado = '🤔 Gambito está pensando…';
+    else if (turnoYo) estado = Ajedrez.enJaque(st) ? '⚠️ ¡Jaque! Protege a tu rey' : '👉 Tu turno: toca una pieza y luego su destino';
     m.body.innerHTML = '<div class="aj-wrap"><div class="aj-info"><span>🤖 Gambito · ' + AJ_NIVEL[nivel].t + '</span><span class="aj-capt">' + ajCapturasHtml(cap[bot]) + '</span></div>' +
       ajTableroHtml(st, { abajo: yo, sel, destinos: sel !== null && turnoYo ? Ajedrez.legales(st).filter(x => x.de === sel) : [], ultima }) +
       '<div class="aj-info"><span>🙂 Tú (' + (yo === 'w' ? 'blancas' : 'negras') + ')</span><span class="aj-capt">' + ajCapturasHtml(cap[yo]) + '</span></div>' +
       (promo ? ajPromoHtml(yo) : '') +
-      '<div class="feedback' + (Ajedrez.enJaque(st) ? ' bad' : '') + '" id="aj-msg">' + (msg || (pensando ? '🤔 Gambito está pensando…' : turnoYo ? (Ajedrez.enJaque(st) ? '⚠️ ¡Jaque! Protege a tu rey' : '👉 Tu turno: toca una pieza y luego su destino') : '')) + '</div>' +
+      '<div class="feedback' + (Ajedrez.enJaque(st) ? ' bad' : '') + '" id="aj-msg">' + (msg || estado) + '</div>' +
       ajJugadasHtml(sanes) + '<div class="row-btns"><button class="btn ghost sm" data-ayuda="ajedrez">📖 Cómo se juega</button><button class="btn ghost sm" data-aj-rendir>🏳️ Rendirme</button></div></div>';
     m.puntos(Ajedrez.capturas(st)['puntos' + yo.toUpperCase()]);
   };
@@ -216,9 +222,12 @@ function jugarAjedrez(nivel, yo) {
     terminado = true;
     const cap = Ajedrez.capturas(st)['puntos' + yo.toUpperCase()];
     const gane = res.gana === yo, tablas = !res.gana;
-    const puntos = gane ? AJ_NIVEL[nivel].pts : tablas ? Math.round(AJ_NIVEL[nivel].pts / 2) : Math.min(200, cap * 10);
+    let puntos, titulo;
+    if (gane) { puntos = AJ_NIVEL[nivel].pts; titulo = '🏆 ¡Ganaste por ' + AJ_FIN[res.fin] + '!'; }
+    else if (tablas) { puntos = Math.round(AJ_NIVEL[nivel].pts / 2); titulo = '🤝 Tablas: ' + AJ_FIN[res.fin]; }
+    else { puntos = Math.min(200, cap * 10); titulo = '😅 Ganó Gambito por ' + AJ_FIN[res.fin]; }
     setTimeout(() => terminar('ajedrez', { puntos, aciertos: cap, total: 39, segundos: (Date.now() - t0) / 1000,
-      titulo: gane ? '🏆 ¡Ganaste por ' + AJ_FIN[res.fin] + '!' : tablas ? '🤝 Tablas: ' + AJ_FIN[res.fin] : '😅 Ganó Gambito por ' + AJ_FIN[res.fin],
+      titulo,
       detalle: sanes.length + ' jugadas · nivel ' + AJ_NIVEL[nivel].t + (sanes.length ? ' · última: ' + escapeHtml(sanes[sanes.length - 1]) : '') }), res.fin === 'rendicion' ? 0 : 1600 * TIEMPO);
   };
   const mover = mv => {
@@ -231,7 +240,7 @@ function jugarAjedrez(nivel, yo) {
   function turnoBot() {
     if (terminado || st.turno === yo) return pintar();
     pensando = true; pintar();
-    const t = setTimeout(() => { if (terminado) return; pensando = false; mover(Ajedrez.bot(st, nivel)); }, 450 * TIEMPO);
+    const t = setTimeout(() => { if (terminado) { return; } pensando = false; mover(Ajedrez.bot(st, nivel)); }, 450 * TIEMPO);
     limpiezas.push(() => clearTimeout(t));
   }
   m.body.addEventListener('click', e => {
@@ -239,7 +248,7 @@ function jugarAjedrez(nivel, yo) {
     if (e.target.closest('[data-aj-rendir]')) { if (confirm('¿Rendirte? Gambito gana la partida.')) { fin({ fin: 'rendicion', gana: yo === 'w' ? 'b' : 'w' }); } return; }
     if (st.turno !== yo || pensando) return;
     const pr = e.target.closest('[data-aj-promo]');
-    if (pr && promo) { const mv = Ajedrez.legales(st).find(x => x.de === promo.de && x.a === promo.a && x.promo === pr.dataset.ajPromo); if (mv) mover(mv); return; }
+    if (pr && promo) { const mv = Ajedrez.legales(st).find(x => x.de === promo.de && x.a === promo.a && x.promo === pr.dataset.ajPromo); if (mv) { mover(mv); } return; }
     const c = e.target.closest('[data-aj]'); if (!c) return;
     const r = ajClic(st, yo, sel, Number(c.dataset.aj));
     if (r.jugada) return mover(r.jugada);

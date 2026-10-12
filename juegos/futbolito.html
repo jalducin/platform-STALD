@@ -96,6 +96,7 @@ html.tactil #teclas{display:none}
   #c-barra{min-width:84px}
 }
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
+fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
 </style></head><body class="ctl-botones">
 <div id="juego">
   <div id="pantalla">
@@ -104,9 +105,9 @@ html.tactil #teclas{display:none}
       <div class="marcador" aria-live="polite"><span class="ficha f0"></span><span class="n" id="n0">Tú</span><b id="g0">0</b><span>–</span><b id="g1">0</b><span class="n" id="n1">Bot</span><span class="ficha f1"></span></div>
       <div class="der"><button class="mini" id="b-control" aria-label="Cambiar controles">🎮</button><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
     </div>
-    <div id="estado" class="hide" role="status"></div>
+    <output id="estado" class="hide"></output>
     <div id="cuenta" aria-live="polite"></div>
-    <div id="aviso" role="status"></div>
+    <output id="aviso"></output>
     <div id="zonas" aria-hidden="true"><span>⬅ desliza aquí</span><span>toca aquí para patear ➡</span></div>
     <div id="teclas" class="hide">↑ ↓ / ← → mueven tu barra · Espacio patea · Tab, Q y E cambian de barra · P pausa</div>
 
@@ -114,18 +115,18 @@ html.tactil #teclas{display:none}
     <div class="ov hide" id="ov-menu">
       <h1>⚽ Futbolito</h1>
       <p>Futbolito de mesa contra el bot. Gana quien meta <b>5 goles</b> primero.</p>
-      <div class="ops" role="group" aria-label="Nivel del bot">
+      <fieldset class="ops" aria-label="Nivel del bot">
         <button class="op" data-nivel="facil">🟢 Fácil<small>bot tranquilo</small></button>
         <button class="op" data-nivel="medio">🟡 Medio<small>bot atento</small></button>
         <button class="op" data-nivel="dificil">🔴 Difícil<small>bot crack</small></button>
-      </div>
+      </fieldset>
       <div id="menu-control">
         <div class="ctl-titulo">🎮 Controles</div>
-        <div class="ctl-ops" role="group" aria-label="Controles">
+        <fieldset class="ctl-ops" aria-label="Controles">
           <button class="ctl" data-control="botones" aria-pressed="true">🔘 Botones</button>
           <button class="ctl" data-control="deslizar" aria-pressed="false">👆 Deslizar</button>
           <button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button>
-        </div>
+        </fieldset>
       </div>
       <p class="ayuda" id="ayuda-menu"></p>
     </div>
@@ -151,10 +152,10 @@ html.tactil #teclas{display:none}
     <div class="grupo"><button class="cb" id="c-barra" aria-label="Cambiar de barra"><span>🔄 BARRA</span><small id="c-barra-n">Medios · auto</small></button><button class="cb" id="c-patea" aria-label="Patear">⚽ PATEA</button></div>
   </div>
 </div>
-<script src="fisica.js?v=2"></script>
-<script src="futbolito-motor.js?v=2"></script>
-<script src="mesa-ui.js?v=2"></script>
-<script src="mando.js?v=1"></script>
+<script src="fisica.js?v=3"></script>
+<script src="futbolito-motor.js?v=3"></script>
+<script src="mesa-ui.js?v=3"></script>
+<script src="mando.js?v=2"></script>
 <script>
 /* Futbolito (openspec: futbolito-billar; controles y equipos: futbolito-equipos-controles). Individual: tiempo real
    contra el bot con 🔘 Botones, 👆 Deslizar o 🎮 Mando clásico. En sala: por tiros deterministas (MesaUI.crearSala),
@@ -263,12 +264,17 @@ function dibujarBarras(s, opciones) {
     g.fillStyle = dueno >= 0 ? colores[dueno] : COLOR_OSC[b.eq]; rr(mx, b.y - 6, 14, 12, 4); g.fill();
     if (mia) { g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke(); }
     const giro = s.patada[i] > 0 ? Math.sin((1 - s.patada[i] / T.PATADA) * Math.PI) : 0;
+    // Contorno de los muñecos: amarillo si es la barra activa; en sala, del color de quien la maneja.
+    let trazo = 'rgba(0,0,0,.35)', grosor = 1;
+    if (dueno >= 0) { trazo = colores[dueno]; grosor = 1.6; }
+    if (resaltada) { trazo = '#facc15'; }
+    if (resaltada || mia) { grosor = 2.5; }
     b.h.forEach((_, k) => {
       const x = A / 2 + b.h[k] + s.s[i], d = T.dir(b.eq);
       g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x + 2, b.y + 3, 10, 6, 0, 0, Math.PI * 2); g.fill();
       if (giro > 0.05) { g.fillStyle = '#1f2937'; g.beginPath(); g.ellipse(x, b.y + d * (5 + giro * 9), 3.5, 3 + giro * 5, 0, 0, Math.PI * 2); g.fill(); }
       g.fillStyle = COLOR[b.eq]; g.beginPath(); g.ellipse(x, b.y, 9.5, 6, 0, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = resaltada ? '#facc15' : dueno >= 0 ? colores[dueno] : 'rgba(0,0,0,.35)'; g.lineWidth = resaltada || mia ? 2.5 : dueno >= 0 ? 1.6 : 1; g.stroke();
+      g.strokeStyle = trazo; g.lineWidth = grosor; g.stroke();
       g.fillStyle = '#fde2c4'; g.beginPath(); g.arc(x, b.y, 4.2, 0, Math.PI * 2); g.fill();
       g.fillStyle = '#3b2412'; g.beginPath(); g.arc(x, b.y - d * 0.8, 3.3, Math.PI * (d > 0 ? 1 : 0), Math.PI * (d > 0 ? 2 : 1)); g.fill();
     });
@@ -285,8 +291,9 @@ function dibujarNombres() {
     const txt = (dueno === sala.idx ? 'Tú' : String((sala.orden[dueno] || {}).nombre || '').slice(0, 9));
     const w = g.measureText(txt).width + 10, izq = p.x < W / 2;
     // Vertical: arriba del mango; horizontal: hacia dentro de la mesa (los mangos quedan arriba y abajo).
-    const x = horizontal ? F.acotar(p.x - w / 2, 2, W - w - 2) : F.acotar(izq ? p.x : p.x - w, 2, W - w - 2);
-    const y = horizontal ? F.acotar(p.y + (p.y < H / 2 ? 18 : -18), 50, H - 10) : F.acotar(p.y - 12, 44, H - 10);
+    const xVertical = izq ? p.x : p.x - w, dyHorizontal = p.y < H / 2 ? 18 : -18;
+    const x = horizontal ? F.acotar(p.x - w / 2, 2, W - w - 2) : F.acotar(xVertical, 2, W - w - 2);
+    const y = horizontal ? F.acotar(p.y + dyHorizontal, 50, H - 10) : F.acotar(p.y - 12, 44, H - 10);
     g.fillStyle = 'rgba(0,0,0,.6)'; rr(x, y - 8, w, 16, 7); g.fill();
     g.strokeStyle = colores[dueno]; g.lineWidth = 1.5; g.stroke();
     g.fillStyle = colores[dueno]; g.textAlign = 'left'; g.fillText(txt, x + 5, y + 0.5);
@@ -352,7 +359,7 @@ function abrirMenu() {
 }
 function nuevaPartida(n) {
   nivel = n; st = T.nuevo(); mem = {}; objetivo = st.s.slice(); activa = 4; golHasta = 0; manualHasta = 0; t0 = performance.now();
-  T.saque(st, Math.random() < 0.5 ? 0 : 1, (Math.random() * 2 - 1) * 20);
+  T.saque(st, Math.random() < 0.5 ? 0 : 1, (Math.random() * 2 - 1) * 20); // NOSONAR: azar de juego, no criptográfico
   $('n0').textContent = 'Tú'; $('n1').textContent = 'Bot ' + NIVEL_TXT[n];
   pintarMarcador(); ocultar(); $('hud').classList.remove('hide'); if (!U.TACTIL) $('teclas').classList.remove('hide');
   ponerModo('juego'); U.avisar('¡A jugar! Primero a 5', 1200);
@@ -363,7 +370,7 @@ function nombreBarra() {
   if ($('c-barra-n').textContent !== txt) $('c-barra-n').textContent = txt;
 }
 function pasoVivo() {
-  if (golHasta) { if (performance.now() < golHasta) return; golHasta = 0; T.saque(st, st.ultimoGol === 0 ? 1 : 0, (Math.random() * 2 - 1) * 20); }
+  if (golHasta) { if (performance.now() < golHasta) { return; } golHasta = 0; T.saque(st, st.ultimoGol === 0 ? 1 : 0, (Math.random() * 2 - 1) * 20); } // NOSONAR: azar de juego, no criptográfico
   if (performance.now() > manualHasta) {
     const nueva = T.barraActivaCon(st, 0, activa);
     if (nueva !== activa) { activa = nueva; objetivo[activa] = st.s[activa]; }
@@ -414,7 +421,12 @@ function cambiarBarra(paso = 1) {
 /* ---------- Sala (por tiros; 1 vs 1 o por equipos) ---------- */
 const nombreAsiento = i => (sala.orden[i] || {}).nombre || '—';
 // Marcador: «Tú + Angel» contra «🤖 + 🤖» (los nombres completos van junto a las barras).
-const nombreEquipo = eq => sala.orden.map((p, i) => ({ p, i })).filter(x => reparto[x.i].eq === eq).map(x => x.i === sala.idx ? 'Tú' : x.p.bot && sala.orden.length > 2 ? '🤖' : x.p.nombre).join(' + ');
+const nombreEquipo = eq => sala.orden.map((p, i) => ({ p, i })).filter(x => reparto[x.i].eq === eq).map(x => etiquetaMarcador(x.p, x.i)).join(' + ');
+// Cada asiento en el marcador: «Tú», 🤖 si es bot en partido por equipos, o su nombre.
+function etiquetaMarcador(p, i) {
+  if (i === sala.idx) { return 'Tú'; }
+  return p.bot && sala.orden.length > 2 ? '🤖' : p.nombre;
+}
 function empezarSala(d) {
   const orden = (d.orden || []).map(p => ({ id: p.id, bot: !!p.bot, ...(p.equipo === 0 || p.equipo === 1 ? { equipo: p.equipo } : {}) }));
   reparto = T.repartir(orden);
@@ -451,14 +463,27 @@ function pasoSala() {
   if (mio && posSala === null) { posSala = sala.estado.s[sala.estado.posesion.barra]; anguloSala = 0; pintarAngulo(); }
   let txt = '';
   const puesto = () => sala.estado.posesion ? PUESTO[T.BARRAS[sala.estado.posesion.barra].puesto].toLowerCase() : '';
-  if (sala.anim) txt = sala.anim.h.origen === 'bot' ? '🤖 Tira ' + nombreAsiento(sala.anim.h.idx) + '…' : sala.anim.h.origen === 'auto' ? '⏰ Tiro automático' : '⚽ Tiro de ' + nombreAsiento(sala.anim.h.idx);
+  if (sala.anim) txt = textoTiroSala(sala.anim.h);
   else if (l && l.fin) txt = '🏁 ¡Fin del partido!';
   else if (l && l.espera) {
     const seg = l.espera.tipo === 'persona' ? Math.max(0, Math.ceil((l.espera.limite - ahora) / 1000)) : 0;
-    txt = mio ? '👉 Te toca · ' + puesto() + ' · ⏱ ' + seg + ' s' : l.espera.tipo === 'bot' ? '🤖 ' + nombreAsiento(l.espera.idx) + ' está pensando…' : sala.propia ? '📨 Enviando…' : '⏳ Tira ' + nombreAsiento(l.espera.idx) + ' · ' + puesto() + ' · ⏱ ' + seg + ' s';
+    txt = textoEsperaSala(l.espera, mio, seg, puesto);
   }
   if ($('estado').textContent !== txt) $('estado').textContent = txt;
   if (sala.finDesde && performance.now() - sala.finDesde > 1500 && !sala.finEnviado) terminarSala();
+}
+// Aviso mientras se anima un tiro de la sala: de un bot, automático (se acabó el tiempo) o de una persona.
+function textoTiroSala(h) {
+  if (h.origen === 'bot') { return '🤖 Tira ' + nombreAsiento(h.idx) + '…'; }
+  if (h.origen === 'auto') { return '⏰ Tiro automático'; }
+  return '⚽ Tiro de ' + nombreAsiento(h.idx);
+}
+// Aviso mientras la sala espera el siguiente tiro; puesto() da la posición de la barra con la pelota.
+function textoEsperaSala(espera, mio, seg, puesto) {
+  if (mio) { return '👉 Te toca · ' + puesto() + ' · ⏱ ' + seg + ' s'; }
+  if (espera.tipo === 'bot') { return '🤖 ' + nombreAsiento(espera.idx) + ' está pensando…'; }
+  if (sala.propia) { return '📨 Enviando…'; }
+  return '⏳ Tira ' + nombreAsiento(espera.idx) + ' · ' + puesto() + ' · ⏱ ' + seg + ' s';
 }
 function terminarSala() {
   sala.finEnviado = true;
@@ -467,7 +492,9 @@ function terminarSala() {
   const aciertos = sala.orden.map((_, i) => s.marcador[reparto[i].eq]);
   const equipos = sala.orden.length > 2;
   const quien = equipos ? 'el equipo ' + EQUIPO_TXT[fin.gana] + ' (' + sala.orden.filter((_, i) => reparto[i].eq === fin.gana).map(p => p.nombre).join(' y ') + ')' : nombreAsiento(reparto.findIndex(x => x.eq === fin.gana));
-  const titulo = fin.motivo === 'rendicion' ? '🏳️ ' + (equipos ? 'Gana ' : '') + quien + (equipos ? '' : ' gana') + ' por rendición' : '⚽ ¡Ganó ' + quien + ' ' + Math.max(...s.marcador) + '–' + Math.min(...s.marcador) + '!';
+  let titulo;
+  if (fin.motivo === 'rendicion') { titulo = '🏳️ ' + (equipos ? 'Gana ' : '') + quien + (equipos ? '' : ' gana') + ' por rendición'; }
+  else { titulo = '⚽ ¡Ganó ' + quien + ' ' + Math.max(...s.marcador) + '–' + Math.min(...s.marcador) + '!'; }
   U.enviar({ tipo: 'fin', gana: fin.gana, puntos, aciertos, total: T.META, titulo });
   $('sala-titulo').textContent = titulo; $('sala-txt').textContent = 'Esperando el podio…';
   $('panel').classList.add('hide'); mostrar('ov-sala');
@@ -488,7 +515,10 @@ function tirarSala() {
 }
 
 /* ---------- Qué se dibuja ---------- */
-function vistaMarcador() { return modo === 'sala' && sala ? sala.estado.marcador : st ? st.marcador : [0, 0]; }
+function vistaMarcador() {
+  if (modo === 'sala' && sala) { return sala.estado.marcador; }
+  return st ? st.marcador : [0, 0];
+}
 function vistaActual() {
   if (modo === 'sala' && sala) {
     if (sala.anim) return { st: sala.anim.sim.st, activa: sala.anim.h.tiro.pos !== undefined ? sala.anim.h.antes.posesion.barra : -1 };
@@ -568,7 +598,11 @@ mando.al('pausa', alternarPausa);
 const ejeMando = U.ejeDeMando(acciones);
 function leerMando() {
   const e = mando.eje(), largo = horizontal ? e.y : e.x, corto = horizontal ? e.x : e.y;
-  ejeMando(Math.abs(largo) >= 0.3 ? largo : Math.abs(corto) >= 0.3 ? corto : 0);
+  // Manda el eje largo de la mesa; si está quieto, el corto (con zona muerta de 0.3).
+  let valor = 0;
+  if (Math.abs(largo) >= 0.3) { valor = largo; }
+  else if (Math.abs(corto) >= 0.3) { valor = corto; }
+  ejeMando(valor);
 }
 // En sala, cada 1/30 s: correr la barra, girar y cambiar la fuerza con lo que esté sostenido.
 let pasoAng = 0;
@@ -595,8 +629,8 @@ document.addEventListener('click', e => {
 });
 U.botonSonido($('b-sonido'));
 $('b-pausa').onclick = e => { e.currentTarget.blur(); pausar(); };
-function pausar() { if (modo !== 'juego') return; ponerModo('pausa'); acciones.soltarTodo(); mostrar('ov-pausa'); }
-function seguir() { if (modo !== 'pausa') return; ocultar(); ponerModo('juego'); }
+function pausar() { if (modo !== 'juego') { return; } ponerModo('pausa'); acciones.soltarTodo(); mostrar('ov-pausa'); }
+function seguir() { if (modo !== 'pausa') { return; } ocultar(); ponerModo('juego'); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pausar(); });
 
 /* ---------- Pantallas y sonido ---------- */
@@ -614,8 +648,14 @@ U.alMensaje(d => {
   else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
   else if (d.tipo === 'jugadas' && sala) sala.recibir(d.jugadas, d.ahora);
   else if (d.tipo === 'jugada-ok' && sala && !d.ok) { sala.rechazo(); U.avisar('⚠️ No se envió tu tiro (' + (d.error || 'sin conexión') + ')', 2200); }
-  else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = d.guardado ? '✔ +' + d.puntos + ' a tus ⭐ individuales' + (d.pos ? ' · #' + d.pos + ' de la semana' : '') : 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').';
+  else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = textoGuardado(d);
 });
+// Resultado de guardar los puntos individuales (con el lugar de la semana si viene).
+function textoGuardado(d) {
+  if (!d.guardado) { return 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').'; }
+  const lugar = d.pos ? ' · #' + d.pos + ' de la semana' : '';
+  return '✔ +' + d.puntos + ' a tus ⭐ individuales' + lugar;
+}
 
 /* ---------- Bucle de paso fijo ---------- */
 let ultimo = performance.now(), acum = 0, cuadros = 0, fpsDesde = performance.now(), fps = 0;
@@ -627,7 +667,12 @@ function cuadro(ahora) {
   if (modo === 'juego' || modo === 'sala') leerMando();
   if ((modo === 'juego' || modo === 'sala') && !(modo === 'juego' && document.hidden)) {
     acum += dt; let n = 0;
-    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoVivo(); else if (modo === 'sala' && sala) pasoSala(); else break; /* un paso pudo cambiar de modo */ acum -= PASO; n++; }
+    while (acum >= PASO && n < 6) {
+      if (modo === 'juego') pasoVivo();
+      else if (modo === 'sala' && sala) pasoSala();
+      else break; /* un paso pudo cambiar de modo */
+      acum -= PASO; n++;
+    }
     if (n === 6) acum = 0;
   } else acum = 0;
   dibujar();
@@ -644,7 +689,7 @@ if (U.PRUEBA) {
       return {
         modo, nivel, horizontal, tactil: U.TACTIL, fps, w: W, h: H, control,
         marcador: vistaMarcador().slice(), activa, puesto: T.BARRAS[activa] && T.BARRAS[activa].puesto, s: st ? st.s.slice() : null, objetivo: objetivo.slice(),
-        pelota: st ? Object.assign({}, st.pelota) : null, patada: st ? st.patada.slice() : null,
+        pelota: st ? ({ ...st.pelota }) : null, patada: st ? st.patada.slice() : null,
         sala: !!sala, miTurno: !!(sala && sala.miTurno()), paso: l ? l.paso : 0, fin: l ? l.fin : null,
         animando: !!(sala && sala.anim), posSala, angulo: anguloSala, yo: sala ? sala.idx : 0, mostrados: sala ? sala.mostrado.length : 0, finEnviado: !!(sala && sala.finEnviado),
         asientos: sala ? sala.orden.map((p, i) => ({ nombre: p.nombre, bot: !!p.bot, eq: reparto[i].eq, rol: reparto[i].rol, barras: reparto[i].barras, color: colores[i] })) : [],

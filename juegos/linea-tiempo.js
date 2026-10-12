@@ -21,7 +21,10 @@
 
   const mezclar = (a, rnd) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
   // Individual: 4 sucesos en las líneas 1–3, 5 en las 4–6 y 6 desde la 7.
-  const sucesosDeLinea = i => i < 3 ? 4 : i < 6 ? 5 : 6;
+  const sucesosDeLinea = i => {
+    if (i < 3) return 4;
+    return i < 6 ? 5 : 6;
+  };
   const setsDe = (d, tema) => { const t = temaValido(tema); return d.linea.sets.filter(s => t === 'todos' || s.tema === t); };
   const ordenar = lista => lista.slice().sort((a, b) => a.anio - b.anio);
 
@@ -89,11 +92,16 @@
   // si estaba ocupada). Devuelve { confirmar, revelar, boton, orden }.
   function tablero(cont, linea, opts) {
     const n = linea.sucesos.length;
-    const casillas = Array(n).fill(null); // índice del suceso en cada casilla
+    const casillas = new Array(n).fill(null); // índice del suceso en cada casilla
     let confirmado = false, rev = null, sig = null, arr = null, ignorarClick = false;
     cont.innerHTML = '<div class="lt-tablero"></div>';
     const raiz = cont.firstChild;
     const orden = () => casillas.map(j => j === null ? null : linea.sucesos[j]);
+    // Partes del tablero que solo existen antes o después de revelar.
+    const anioRevelado = (x, estado) => '<span class="lt-anio">' + (x ? esc(anioTexto(x.anio)) : '—') + ' ' + (estado === ' ok' ? '✔' : '✘') + '</span>';
+    const poolHtml = libres => '<div class="lt-pool" aria-label="Sucesos por colocar">' + libres.map(j => '<button type="button" class="lt-tarjeta" data-lt-tarjeta="' + j + '">' + esc(linea.sucesos[j].txt) + '</button>').join('') + '</div>' +
+      '<div class="row-btns"><button type="button" class="btn ghost" data-lt="borrar">↺ Borrar</button><button type="button" class="btn" data-lt="confirmar"' + (libres.length ? ' disabled' : '') + '>✔ Confirmar</button></div>';
+    const revelacionHtml = () => '<div class="feedback ' + (rev.ok ? 'ok' : 'bad') + '" id="lt-fb" role="status">' + esc(rev.msg) + '</div>' + htmlCorrecto(linea);
     function pintar() {
       const bien = ordenar(linea.sucesos);
       const libres = linea.sucesos.map((_, j) => j).filter(j => !casillas.includes(j));
@@ -101,15 +109,15 @@
         (rev ? esc(linea.titulo) : 'Ordena del más antiguo al más reciente: toca o arrastra cada tarjeta a su lugar.') + '</div></div>' +
         '<div class="lt-extremo">⬆ Más antiguo</div><ol class="lt-linea" aria-label="Línea del tiempo">' + casillas.map((j, k) => {
           const x = j === null ? null : linea.sucesos[j];
-          const estado = rev ? (x && x.anio === bien[k].anio ? ' ok' : ' bad') : '';
+          let estado = '';
+          if (rev) estado = x && x.anio === bien[k].anio ? ' ok' : ' bad';
           return '<li><button type="button" class="lt-casilla' + (x ? ' llena' : '') + estado + (rev ? ' lt-revela' : '') + '" data-lt-casilla="' + k + '"' + (rev ? ' disabled' : '') +
             ' aria-label="Lugar ' + (k + 1) + (x ? ': ' + esc(x.txt) : ', vacío') + '"><span class="lt-num">' + (k + 1) + '</span>' +
             (x ? '<span class="lt-txt">' + esc(x.txt) + '</span>' : '<span class="lt-txt lt-vacia">Toca o arrastra un suceso aquí</span>') +
-            (rev ? '<span class="lt-anio">' + (x ? esc(anioTexto(x.anio)) : '—') + ' ' + (estado === ' ok' ? '✔' : '✘') + '</span>' : '') + '</button></li>';
+            (rev ? anioRevelado(x, estado) : '') + '</button></li>';
         }).join('') + '</ol><div class="lt-extremo">⬇ Más reciente</div>' +
-        (rev ? '' : '<div class="lt-pool" aria-label="Sucesos por colocar">' + libres.map(j => '<button type="button" class="lt-tarjeta" data-lt-tarjeta="' + j + '">' + esc(linea.sucesos[j].txt) + '</button>').join('') + '</div>' +
-          '<div class="row-btns"><button type="button" class="btn ghost" data-lt="borrar">↺ Borrar</button><button type="button" class="btn" data-lt="confirmar"' + (libres.length ? ' disabled' : '') + '>✔ Confirmar</button></div>') +
-        (rev ? '<div class="feedback ' + (rev.ok ? 'ok' : 'bad') + '" id="lt-fb" role="status">' + esc(rev.msg) + '</div>' + htmlCorrecto(linea) : '') +
+        (rev ? '' : poolHtml(libres)) +
+        (rev ? revelacionHtml() : '') +
         (sig ? '<div class="row-btns"><button type="button" class="btn" data-lt="siguiente">' + esc(sig.texto) + '</button></div>' : '');
     }
     function mover(origen, destino) {
@@ -162,7 +170,7 @@
       if (b && b.dataset.lt === 'siguiente' && sig) { const f = sig.fn; sig = null; b.disabled = true; return f(); }
       if (ignorarClick || confirmado) return;
       const t = e.target.closest('[data-lt-tarjeta]'), c = e.target.closest('[data-lt-casilla]');
-      if (t) { const k = casillas.indexOf(null); if (k >= 0) mover({ tipo: 'pool', i: Number(t.dataset.ltTarjeta) }, { tipo: 'casilla', i: k }); return; }
+      if (t) { const k = casillas.indexOf(null); if (k >= 0) { mover({ tipo: 'pool', i: Number(t.dataset.ltTarjeta) }, { tipo: 'casilla', i: k }); } return; }
       if (c && casillas[Number(c.dataset.ltCasilla)] !== null) return mover({ tipo: 'casilla', i: Number(c.dataset.ltCasilla) }, { tipo: 'pool' });
       if (b && b.dataset.lt === 'borrar') { casillas.fill(null); pintar(); }
       if (b && b.dataset.lt === 'confirmar') confirmar(false);
@@ -193,7 +201,7 @@
     const t0 = Date.now();
     m.vidas(vidas);
     const acabar = titulo => {
-      if (terminado) return; terminado = true; if (stop) stop();
+      if (terminado) { return; } terminado = true; if (stop) stop();
       terminar('cultura-linea', { puntos, aciertos: perfectas, total: i, segundos: (Date.now() - t0) / 1000, titulo,
         detalle: 'Tema: <b>' + esc(nombreTema(tema)) + '</b> · ' + plural(perfectas, 'línea perfecta', 'líneas perfectas') + ' de ' + i });
     };
@@ -213,10 +221,15 @@
       const gana = puntosIndividual({ aciertos: a, n, racha, segundosSobran: quedan });
       puntos += gana; m.puntos(puntos); i++;
       if (perfecta) { perfectas++; sonidoOk(); } else { sonidoMal(); vidas--; m.vidas(vidas); }
-      tab.revelar((porTiempo ? '⏰ ¡Tiempo! ' : '') + (perfecta ? '✔ ¡Línea perfecta! +' + gana + (racha > 1 ? ' · racha ×' + racha + ' 🔥' : '')
-        : '✘ ' + a + ' de ' + n + ' en su lugar · +' + gana + ' · pierdes una vida'), perfecta);
+      let texto;
+      if (perfecta) texto = '✔ ¡Línea perfecta! +' + gana + (racha > 1 ? ' · racha ×' + racha + ' 🔥' : '');
+      else texto = '✘ ' + a + ' de ' + n + ' en su lugar · +' + gana + ' · pierdes una vida';
+      tab.revelar((porTiempo ? '⏰ ¡Tiempo! ' : '') + texto, perfecta);
       const fin = vidas <= 0 || i >= plan.length;
-      tab.boton(fin ? '🏁 Ver mi resultado' : '▶ Siguiente línea', () => fin ? acabar(vidas <= 0 ? '💔 ¡Sin vidas!' : '🏁 ¡Completaste la línea del tiempo!') : siguiente());
+      tab.boton(fin ? '🏁 Ver mi resultado' : '▶ Siguiente línea', () => {
+        if (!fin) return siguiente();
+        return acabar(vidas <= 0 ? '💔 ¡Sin vidas!' : '🏁 ¡Completaste la línea del tiempo!');
+      });
     }
     siguiente();
   };
@@ -254,6 +267,11 @@
       }
       return { id: p.id, nombre: p.nombre, tipo: p.tipo, avatar: p.avatar, total, ultimo, aciertos: ac, ms };
     }));
+  }
+  // Letrero de mi respuesta en la revelación de la sala (o aviso de que no respondí).
+  function feedbackSala(r, n) {
+    if (!r) return '<div class="feedback bad">⏰ No respondiste</div>';
+    return '<div class="feedback ' + (r.correcta ? 'ok">✔ ¡Línea perfecta! +' + r.puntos : 'bad">✘ ' + r.aciertos + ' de ' + n + ' en su lugar · +' + r.puntos) + '</div>';
   }
   const miRespuesta = q => { const s = sala, e = s.estado; return ((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {})[q] || (s.mias && s.mias[q]); };
 
@@ -295,7 +313,7 @@
       s.vista = k;
       const r = miRespuesta(q), n = linea.sucesos.length;
       body.innerHTML = '<div class="q-card lt-cab"><div class="q">' + esc(cab) + '</div><div class="sub">' + esc(linea.titulo) + '</div></div>' +
-        (r ? '<div class="feedback ' + (r.correcta ? 'ok">✔ ¡Línea perfecta! +' + r.puntos : 'bad">✘ ' + r.aciertos + ' de ' + n + ' en su lugar · +' + r.puntos) + '</div>' : '<div class="feedback bad">⏰ No respondiste</div>') +
+        feedbackSala(r, n) +
         htmlCorrecto(linea) + '<h2>🏆 Marcador</h2>' + marcadorHtml(totalesLinea(q), e.yo);
     }
   };

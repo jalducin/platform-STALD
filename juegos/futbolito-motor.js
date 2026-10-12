@@ -76,21 +76,39 @@
   // patadas: bool (si false, nadie patea: modo tiros) }. Devuelve el equipo que anotó o null.
   function paso(st, dt, mando) {
     const p = st.pelota;
+    moverBarras(st, dt, mando);
+    const v = friccion(p, dt);
+    pendiente(p, v, dt);
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    // Paredes laterales
+    if (p.x < RB) { p.x = RB + (RB - p.x); p.vx = -p.vx * E_PARED; } else if (p.x > ANCHO - RB) { p.x = (ANCHO - RB) - (p.x - (ANCHO - RB)); p.vx = -p.vx * E_PARED; }
+    const gol = cabeceras(p);
+    if (gol !== null) return gol;
+    chocarJugadores(st, p, mando);
+    return null;
+  }
+  // Partes de `paso`, en el orden en que las corre.
+  function moverBarras(st, dt, mando) {
     for (let i = 0; i < BARRAS.length; i++) {
       const b = BARRAS[i], obj = F.acotar(mando.obj[i], -b.rango, b.rango), mx = mando.vmax[i] * dt;
       const mv = F.acotar(obj - st.s[i], -mx, mx);
       st.s[i] += mv; st.vs[i] = mv / dt;
       if (st.patada[i] > 0) st.patada[i] = Math.max(0, st.patada[i] - dt);
     }
-    // Fricción
-    let v = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+  }
+  // Fricción. Devuelve la rapidez de la pelota antes de frenarla (la usa la pendiente).
+  function friccion(p, dt) {
+    const v = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
     if (v > 0) {
       let nv = v * (1 - 0.35 * dt) - 12 * dt;
       if (nv > VMAX_PELOTA) nv = VMAX_PELOTA;
       if (nv <= 0) { p.vx = 0; p.vy = 0; } else { const f = nv / v; p.vx *= f; p.vy *= f; }
     }
-    // Pendiente: con la pelota lenta, la mesa la lleva hacia la línea de barra más cercana; en las cabeceras y junto a
-    // las bandas, hacia adentro (como las mesas reales), para que nunca quede donde nadie la alcanza.
+    return v;
+  }
+  // Pendiente: con la pelota lenta, la mesa la lleva hacia la línea de barra más cercana; en las cabeceras y junto a
+  // las bandas, hacia adentro (como las mesas reales), para que nunca quede donde nadie la alcanza.
+  function pendiente(p, v, dt) {
     const enBoca = p.x > PX0 && p.x < PX1;
     if (!enBoca && p.y < 24) p.vy += 160 * dt;
     else if (!enBoca && p.y > LARGO - 24) p.vy -= 160 * dt;
@@ -99,16 +117,14 @@
       const ly = BARRAS[barraCercana(p.y)].y, dy = ly - p.y;
       if (dy > 2) p.vy += 70 * dt; else if (dy < -2) p.vy -= 70 * dt;
     }
-    p.x += p.vx * dt; p.y += p.vy * dt;
-    // Paredes laterales
-    if (p.x < RB) { p.x = RB + (RB - p.x); p.vx = -p.vx * E_PARED; } else if (p.x > ANCHO - RB) { p.x = (ANCHO - RB) - (p.x - (ANCHO - RB)); p.vx = -p.vx * E_PARED; }
-    // Cabeceras y porterías
-    let gol = null;
+  }
+  // Cabeceras, porterías y postes. Devuelve el equipo que anotó o null.
+  function cabeceras(p) {
     for (const lado of [0, 1]) {
       const fuera = lado === 0 ? -p.y : p.y - LARGO; // > 0: pasó la línea de su cabecera
       const borde = lado === 0 ? RB : LARGO - RB;
       if (p.x > PX0 && p.x < PX1) {
-        if (fuera > RB) { gol = lado === 0 ? 0 : 1; break; } // arriba anota el equipo 0, abajo el 1
+        if (fuera > RB) return lado === 0 ? 0 : 1; // arriba anota el equipo 0, abajo el 1
         // dentro de la portería: paredes de la caja
         if (fuera > -RB) { if (p.x < PX0 + RB) { p.x = PX0 + RB; p.vx = Math.abs(p.vx) * E_PARED; } else if (p.x > PX1 - RB) { p.x = PX1 - RB; p.vx = -Math.abs(p.vx) * E_PARED; } }
       } else if ((lado === 0 && p.y < borde) || (lado === 1 && p.y > borde)) {
@@ -124,8 +140,10 @@
         }
       }
     }
-    if (gol !== null) return gol;
-    // Jugadores
+    return null;
+  }
+  // Jugadores: patadas y choques con la pelota.
+  function chocarJugadores(st, p, mando) {
     for (let i = 0; i < BARRAS.length; i++) {
       const b = BARRAS[i];
       if (mando.fantasma && mando.fantasma[i]) continue;
@@ -153,7 +171,6 @@
         if (vn < 0) { p.vx -= (1 + E_JUGADOR) * vn * nx; p.vy -= (1 + E_JUGADOR) * vn * ny; }
       }
     }
-    return null;
   }
 
   // ---------- Modo vivo: bot ----------
@@ -250,6 +267,10 @@
   const tiroDe = j => ({ pos: j.pos, angulo: j.angulo, fuerza: j.fuerza });
   // Tiro del bot (sala): se corre un poco y apunta a la portería con error según el nivel.
   const ERROR_TIRO = { facil: 20, medio: 10, dificil: 4, auto: 25 };
+  const fuerzaBase = nivel => {
+    if (nivel === 'dificil') return 85;
+    return nivel === 'facil' ? 60 : 72;
+  };
   function tiroBot(st, nivel, rnd) {
     const { barra } = st.posesion, b = BARRAS[barra], eq = st.turno;
     const pos = Math.round(F.acotar(st.s[barra] + (rnd() * 2 - 1) * b.rango, -b.rango, b.rango));
@@ -258,7 +279,7 @@
     let a = F.atan2Dec(tx - pp.x, frente); if (a > 1800) a -= 3600;
     const err = ERROR_TIRO[nivel] === undefined ? ERROR_TIRO.medio : ERROR_TIRO[nivel];
     const angulo = F.acotar(Math.round(a / 10 + (rnd() * 2 - 1) * err), -60, 60);
-    const fuerza = F.acotar(Math.round((nivel === 'dificil' ? 85 : nivel === 'facil' ? 60 : 72) + rnd() * 15), 10, 100);
+    const fuerza = F.acotar(Math.round(fuerzaBase(nivel) + rnd() * 15), 10, 100);
     return { pos, angulo, fuerza };
   }
   // Puntos: 60 por gol; al ganar, bono (individual por nivel; en sala 350). Tope 1000.
@@ -313,7 +334,8 @@
     });
     return asientos.map((_, i) => {
       const e = eq[i], miembros = asientos.map((_, k) => k).filter(k => eq[k] === e);
-      const rol = miembros.length === 1 ? 'todas' : miembros.indexOf(i) === 0 ? 'adelante' : 'atras';
+      let rol = 'todas';
+      if (miembros.length !== 1) rol = miembros.indexOf(i) === 0 ? 'adelante' : 'atras';
       return { eq: e, rol, barras: BARRAS_ROL[e][rol].slice() };
     });
   }

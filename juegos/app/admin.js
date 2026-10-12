@@ -15,9 +15,9 @@ const ADM_SUBS = [
 const ADM_FUENTES = ['jugadores', 'invitados', 'fotos'];
 const ADM_KEY = 'juegos_admin_sub';
 const subAdmin = id => ADM_SUBS.find(s => s.id === id);
-const leerSubAdmin = () => { try { const v = localStorage.getItem(ADM_KEY); return subAdmin(v) ? v : 'jugadores'; } catch (e) { return 'jugadores'; } };
+const leerSubAdmin = () => { try { const v = localStorage.getItem(ADM_KEY); return subAdmin(v) ? v : 'jugadores'; } catch { /* sin almacenamiento: sección por omisión */ return 'jugadores'; } };
 const guardarSubAdmin = id => { try { localStorage.setItem(ADM_KEY, id); } catch (e) { /* sin almacenamiento */ } };
-const normaliza = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const normaliza = s => String(s || '').normalize('NFD').replaceAll(/[̀-ͯ]/g, '').toLowerCase();
 const fechaCorta = s => s ? new Date(s).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—';
 const buscaAttr = (...xs) => ' data-busca="' + escapeHtml(normaliza(xs.filter(Boolean).join(' '))) + '"';
 let admCarga = 0;
@@ -58,7 +58,10 @@ function cargarAdmin(fuentes) {
 function listaAdmin(id) {
   const f = state.adm[subAdmin(id).fuente];
   if (!f || !f.body) return null;
-  return id === 'jugadores' ? f.body.jugadores : id === 'pendientes' ? f.body.pendientes : id === 'invitados' ? f.body.invitados : f.body.fotos;
+  if (id === 'jugadores') return f.body.jugadores;
+  if (id === 'pendientes') return f.body.pendientes;
+  if (id === 'invitados') return f.body.invitados;
+  return f.body.fotos;
 }
 
 function refrescarAdmin() {
@@ -67,15 +70,22 @@ function refrescarAdmin() {
   const subs = document.getElementById('adm-subs'); const conFoco = subs.contains(document.activeElement);
   subs.innerHTML = ADM_SUBS.map(s => {
     const f = state.adm[s.fuente] || { cargando: true }; const l = listaAdmin(s.id);
-    const n = f.cargando ? '…' : f.error ? '!' : String(l.length);
-    const clase = 'adm-sub' + (f.error ? ' falla' : s.id === 'pendientes' && l && l.length ? ' atender' : '');
+    let n;
+    if (f.cargando) n = '…';
+    else if (f.error) n = '!';
+    else n = String(l.length);
+    let clase = 'adm-sub';
+    if (f.error) clase += ' falla';
+    else if (s.id === 'pendientes' && l && l.length) clase += ' atender';
     return '<button type="button" class="' + clase + '" role="tab" id="adm-tab-' + s.id + '" data-adm="' + s.id + '" aria-controls="adm-panel" aria-selected="' + (s.id === sub) + '" tabindex="' + (s.id === sub ? 0 : -1) + '">' +
       '<span class="adm-t"><span aria-hidden="true">' + s.e + '</span> ' + s.t + '</span><span class="adm-n">' + n + '</span></button>';
   }).join('');
   if (conFoco) document.getElementById('adm-tab-' + sub).focus(); // redibujar no le quita el foco al teclado
   document.getElementById('adm-panel').setAttribute('aria-labelledby', 'adm-tab-' + sub);
   const csv = { jugadores: ['csv-jugadores', 'jugadores'], pendientes: ['csv-jugadores', 'jugadores'], invitados: ['csv', 'invitados'] }[sub];
-  document.getElementById('adm-csv').innerHTML = csv ? '<button class="btn ghost" type="button" data-a="' + csv[0] + '" title="Descargar CSV de ' + csv[1] + '" aria-label="Descargar CSV de ' + csv[1] + '"' + (listaAdmin(sub) ? '' : ' disabled') + '>⬇️ CSV</button>' : '';
+  let csvHtml = '';
+  if (csv) csvHtml = '<button class="btn ghost" type="button" data-a="' + csv[0] + '" title="Descargar CSV de ' + csv[1] + '" aria-label="Descargar CSV de ' + csv[1] + '"' + (listaAdmin(sub) ? '' : ' disabled') + '>⬇️ CSV</button>';
+  document.getElementById('adm-csv').innerHTML = csvHtml;
   pintarPanelAdmin();
 }
 
@@ -90,7 +100,10 @@ function pintarPanelAdmin() {
   const ini = (nombre, foto) => '<span class="adm-ini" aria-hidden="true">' + (foto ? '<img src="' + escapeHtml(fotoSrc({ foto })) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + escapeHtml((nombre || '?').trim().charAt(0).toUpperCase()) + '</span>';
   if (sub === 'jugadores') {
     const fotos = Object.fromEntries(((state.adm.fotos && state.adm.fotos.body && state.adm.fotos.body.fotos) || []).map(x => [x.id, x.token]));
-    const tipo = j => j.tipo === 'invitado' ? '🎮 Juegos' : j.espacio === 'Secundaria' ? '📚 Secundaria' : '📘 Inglés';
+    const tipo = j => {
+      if (j.tipo === 'invitado') return '🎮 Juegos';
+      return j.espacio === 'Secundaria' ? '📚 Secundaria' : '📘 Inglés';
+    };
     panel.innerHTML = l.length ? lista('<table class="adm-tabla" id="jug-tabla" style="--cols:4"><thead><tr><th scope="col">Jugador</th><th scope="col">Tipo</th><th scope="col" class="num">Puntos</th><th scope="col" class="num">Partidas</th><th scope="col">Última visita</th></tr></thead><tbody>' +
       l.map(j => '<tr' + buscaAttr(j.nombre, j.nick, j.email) + '><td class="ancho"><div class="adm-quien">' + ini(j.nick || j.nombre, fotos[j.id]) + '<div><b>' + escapeHtml(j.nombre) + '</b>' +
         (j.nick ? '<span class="adm-nick" title="Nick">✏️ ' + escapeHtml(j.nick) + '</span>' : '') + '<div class="adm-correo">' + escapeHtml(j.email) + '</div></div></div></td>' +
@@ -136,8 +149,10 @@ function aplicarBusqueda() {
   const sub = state.admSub; const l = listaAdmin(sub);
   const nombres = { jugadores: ['jugador registrado', 'jugadores registrados'], pendientes: ['registro pendiente', 'registros pendientes'], invitados: ['invitado', 'invitados'], fotos: ['foto de avatar', 'fotos de avatar'] }[sub];
   const extra = { pendientes: ' Se registraron pero no terminaron: genera su enlace y mándaselo por WhatsApp.', fotos: ' Si alguna no es adecuada, quítala: vuelve a su personaje.' }[sub] || '';
-  document.getElementById('adm-resumen').textContent = !l ? '' : q ? n + ' de ' + l.length + ' coinciden con «' + input.value.trim() + '».'
-    : l.length + ' ' + nombres[l.length === 1 ? 0 : 1] + '.' + (l.length ? extra : '');
+  let resumen = '';
+  if (l && q) resumen = n + ' de ' + l.length + ' coinciden con «' + input.value.trim() + '».';
+  else if (l) resumen = l.length + ' ' + nombres[l.length === 1 ? 0 : 1] + '.' + (l.length ? extra : '');
+  document.getElementById('adm-resumen').textContent = resumen;
 }
 
 function cambiarSubAdmin(id, foco) {
@@ -164,7 +179,7 @@ async function quitarFoto(b) {
 }
 
 function descargarCsv(filas, nombre) {
-  const csv = filas.map(f => f.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const csv = filas.map(f => f.map(v => '"' + String(v ?? '').replaceAll('"', '""') + '"').join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' }));
   a.download = nombre; a.click();

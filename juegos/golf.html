@@ -94,6 +94,7 @@ body.ctl-mando #hud-fuerza{display:inline}
   #b-golpear{font-size:20px}
 }
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
+fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
 </style></head><body>
 <div id="juego">
   <div id="pantalla">
@@ -104,9 +105,9 @@ body.ctl-mando #hud-fuerza{display:inline}
       <div class="der"><button class="mini" id="b-tarjeta" aria-label="Ver la tarjeta">📋</button><button class="mini" id="b-salir" aria-label="Pausa y menú">☰</button></div>
     </div>
     <div id="jugadores" class="hide"></div>
-    <div id="estado" role="status"></div>
+    <output id="estado"></output>
     <div id="cuenta" aria-live="polite"></div>
-    <div id="aviso" role="status"></div>
+    <output id="aviso"></output>
 
     <div class="ov" id="ov-carga"><h1>⛳ Golf</h1><p>Cargando…</p></div>
     <div class="ov hide" id="ov-menu">
@@ -114,11 +115,11 @@ body.ctl-mando #hud-fuerza{display:inline}
       <p>Minigolf de 9 hoyos: mete la pelota con los menos golpes posibles.</p>
       <div class="tarjetas" id="menu-resumen"></div>
       <div class="fila"><button class="btn" data-ir="recorrido">🏌️ Recorrido de 9 hoyos</button><button class="btn sec" data-ir="practica">🎯 Práctica</button></div>
-      <div class="ctl-caja" role="group" aria-label="Control">
+      <fieldset class="ctl-caja" aria-label="Control">
         <b>Control</b>
         <div class="ctl-ops"><button class="ctl" data-control="toques" aria-pressed="true">👆 Toques</button><button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button></div>
         <button class="mini" id="b-sonido" aria-label="Sonido">🔊</button>
-      </div>
+      </fieldset>
       <p class="ayuda">👆 <b>Jala hacia atrás</b> desde cualquier parte, como resortera: la línea muestra a dónde va y el número es la fuerza. Ajusta con ⟲ ⟳ y − +, y toca <b>⛳ GOLPEAR</b>.</p>
       <p class="ayuda">🎮 Mando: ◀ ▶ apuntan, L R ajuste fino, X Y fuerza, A golpea, START pausa. ⌨️ Teclado: ← → apuntan, ↑ ↓ fuerza, Espacio golpea.</p>
       <p class="ayuda">🏖️ La arena frena, 💦 el agua suma un golpe, 🌀 los portales te llevan lejos y el molino abre y cierra.</p>
@@ -158,10 +159,10 @@ body.ctl-mando #hud-fuerza{display:inline}
     <div class="nota" id="nota">Jala hacia atrás desde cualquier parte</div>
   </div>
 </div>
-<script src="fisica.js?v=2"></script>
-<script src="golf-motor.js?v=1"></script>
-<script src="mesa-ui.js?v=2"></script>
-<script src="mando.js?v=1"></script>
+<script src="fisica.js?v=3"></script>
+<script src="golf-motor.js?v=2"></script>
+<script src="mesa-ui.js?v=3"></script>
+<script src="mando.js?v=2"></script>
 <script>
 /* ⛳ Golf (openspec: golf). Recorrido de 9 hoyos y práctica con avance guardado; sala de 2 a 4 personas por turnos con
    tiros deterministas (MesaUI.crearSala + Golf.motorSala). Embebido en juegos.html por un iframe del mismo origen
@@ -225,29 +226,9 @@ function dibujarHoyo(h, reloj) {
   // Zonas
   for (const z of h.zonas) {
     zonaCamino(z);
-    if (z.tipo === 'arena') {
-      g.fillStyle = '#ecd393'; g.fill(); g.save(); g.clip(); g.fillStyle = 'rgba(160,120,50,.35)';
-      const [bx, by] = z.rect ? [z.rect[0], z.rect[1]] : [z.circ[0] - z.circ[2], z.circ[1] - z.circ[2]];
-      const [bw, bh] = z.rect ? [z.rect[2], z.rect[3]] : [2 * z.circ[2], 2 * z.circ[2]];
-      for (let y = by + 6; y < by + bh; y += 12) for (let x = bx + ((y / 12) % 2 ? 4 : 10); x < bx + bw; x += 14) g.fillRect(x, y, 2, 2);
-      g.restore();
-    } else if (z.tipo === 'agua') {
-      g.fillStyle = '#1c7ed6'; g.fill(); g.save(); g.clip(); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2;
-      const [bx, by, bw, bh] = z.rect || [z.circ[0] - z.circ[2], z.circ[1] - z.circ[2], 2 * z.circ[2], 2 * z.circ[2]];
-      const off = U.REDUCIR ? 0 : (tAnim * 12) % 24;
-      for (let y = by + 10; y < by + bh; y += 22) { g.beginPath(); for (let x = bx - 24 + off; x < bx + bw + 24; x += 24) { g.moveTo(x, y); g.quadraticCurveTo(x + 6, y - 5, x + 12, y); } g.stroke(); }
-      g.restore();
-    } else if (z.tipo === 'pendiente') {
-      g.fillStyle = 'rgba(20,83,45,.28)'; g.fill(); g.save(); g.clip();
-      const [bx, by, bw, bh] = z.rect, l = Math.sqrt(z.ax * z.ax + z.ay * z.ay), ux = z.ax / l, uy = z.ay / l;
-      const fuerte = l > 200, paso = fuerte ? 34 : 44, desliza = U.REDUCIR ? 0 : (tAnim * 20) % paso;
-      g.strokeStyle = fuerte ? 'rgba(254,240,138,.75)' : 'rgba(255,255,255,.45)'; g.lineWidth = 3; g.lineCap = 'round';
-      for (let y = by + 18; y < by + bh; y += paso) for (let x = bx + 18; x < bx + bw; x += paso) {
-        const cx = x + ux * desliza - ux * paso / 2, cy = y + uy * desliza - uy * paso / 2;
-        g.beginPath(); g.moveTo(cx - ux * 7 - uy * 7, cy - uy * 7 + ux * 7); g.lineTo(cx, cy); g.lineTo(cx - ux * 7 + uy * 7, cy - uy * 7 - ux * 7); g.stroke();
-      }
-      g.restore();
-    }
+    if (z.tipo === 'arena') dibujarArena(z);
+    else if (z.tipo === 'agua') dibujarAgua(z);
+    else if (z.tipo === 'pendiente') dibujarPendiente(z);
   }
   // Salida (tapete)
   g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(h.salida.x - 16, h.salida.y - 10, 32, 20);
@@ -257,40 +238,72 @@ function dibujarHoyo(h, reloj) {
   poli(h.borde); g.strokeStyle = '#6b3f1d'; g.lineWidth = 12; g.stroke(); g.strokeStyle = '#a0612f'; g.lineWidth = 5; g.stroke();
   for (const m of h.muros) { poli(m); g.fillStyle = '#7c4a24'; g.fill(); g.strokeStyle = '#a0612f'; g.lineWidth = 4; g.stroke(); }
   // Portales
-  for (const p of h.portales) {
-    const giro = U.REDUCIR ? 0 : tAnim * 3;
-    g.save(); g.translate(p.de.x, p.de.y);
-    for (let k = 3; k >= 1; k--) { g.fillStyle = ['#2e1065', '#6d28d9', '#a78bfa'][k - 1]; g.beginPath(); g.arc(0, 0, p.de.r * k / 3 + 2, 0, Math.PI * 2); g.fill(); }
-    g.rotate(giro); g.strokeStyle = '#f5f3ff'; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, p.de.r * 0.7, 0, Math.PI * 1.3); g.stroke(); g.restore();
-    const [sn, cs] = F.senCos(p.dir);
-    g.strokeStyle = '#a78bfa'; g.lineWidth = 3; g.beginPath(); g.arc(p.a.x, p.a.y, 13, 0, Math.PI * 2); g.stroke();
-    g.beginPath(); g.moveTo(p.a.x + cs * 14, p.a.y + sn * 14); g.lineTo(p.a.x + cs * 26, p.a.y + sn * 26); g.stroke();
-  }
+  for (const p of h.portales) dibujarPortal(p);
   // Hoyo
   g.fillStyle = '#0b0f0c'; g.beginPath(); g.arc(h.hoyo.x, h.hoyo.y, G.HOYO_R, 0, Math.PI * 2); g.fill();
   g.strokeStyle = '#e2e8f0'; g.lineWidth = 2; g.stroke();
   // Obstáculos móviles
   for (const m of h.moviles) {
     const e = G.estadoMovil(m, reloj);
-    if (m.tipo === 'molino') {
-      const [x1, y1, x2, y2] = m.puerta;
-      g.strokeStyle = e.cerrada ? '#ef4444' : '#22c55e'; g.lineWidth = 4; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
-      g.fillStyle = '#b91c1c'; g.beginPath(); g.moveTo(m.cx - 34, m.cy - 6); g.lineTo(m.cx, m.cy - 30); g.lineTo(m.cx + 34, m.cy - 6); g.closePath(); g.fill(); // techo
-      for (let k = 0; k < 4; k++) {
-        const [sn, cs] = F.senCos(e.angulo + k * 900);
-        g.save(); g.translate(m.cx, m.cy); g.transform(cs, sn, -sn, cs, 0, 0);
-        g.fillStyle = '#f5f5f4'; g.fillRect(6, -6, m.largo - 6, 12); g.strokeStyle = '#78716c'; g.lineWidth = 1.5; g.strokeRect(6, -6, m.largo - 6, 12);
-        g.beginPath(); g.moveTo(10, 0); g.lineTo(m.largo, 0); g.stroke();
-        g.restore();
-      }
-      g.fillStyle = '#44403c'; g.beginPath(); g.arc(m.cx, m.cy, 7, 0, Math.PI * 2); g.fill();
-    } else {
-      g.fillStyle = '#facc15'; g.fillRect(e.x, m.y, m.w, m.h);
-      g.save(); g.beginPath(); g.rect(e.x, m.y, m.w, m.h); g.clip(); g.fillStyle = '#1f2937';
-      for (let x = e.x - m.h; x < e.x + m.w; x += 12) { g.beginPath(); g.moveTo(x, m.y + m.h); g.lineTo(x + 6, m.y + m.h); g.lineTo(x + 6 + m.h, m.y); g.lineTo(x + m.h, m.y); g.closePath(); g.fill(); }
-      g.restore(); g.strokeStyle = '#78350f'; g.lineWidth = 2; g.strokeRect(e.x, m.y, m.w, m.h);
-    }
+    if (m.tipo === 'molino') dibujarMolino(m, e);
+    else dibujarCompuerta(m, e);
   }
+}
+// Zonas del hoyo (ya trazado su camino con zonaCamino): arena con puntitos, agua con olas, pendiente con flechas.
+function dibujarArena(z) {
+  g.fillStyle = '#ecd393'; g.fill(); g.save(); g.clip(); g.fillStyle = 'rgba(160,120,50,.35)';
+  const [bx, by] = z.rect ? [z.rect[0], z.rect[1]] : [z.circ[0] - z.circ[2], z.circ[1] - z.circ[2]];
+  const [bw, bh] = z.rect ? [z.rect[2], z.rect[3]] : [2 * z.circ[2], 2 * z.circ[2]];
+  for (let y = by + 6; y < by + bh; y += 12) for (let x = bx + ((y / 12) % 2 ? 4 : 10); x < bx + bw; x += 14) g.fillRect(x, y, 2, 2);
+  g.restore();
+}
+function dibujarAgua(z) {
+  g.fillStyle = '#1c7ed6'; g.fill(); g.save(); g.clip(); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2;
+  const [bx, by, bw, bh] = z.rect || [z.circ[0] - z.circ[2], z.circ[1] - z.circ[2], 2 * z.circ[2], 2 * z.circ[2]];
+  const off = U.REDUCIR ? 0 : (tAnim * 12) % 24;
+  for (let y = by + 10; y < by + bh; y += 22) { g.beginPath(); for (let x = bx - 24 + off; x < bx + bw + 24; x += 24) { g.moveTo(x, y); g.quadraticCurveTo(x + 6, y - 5, x + 12, y); } g.stroke(); }
+  g.restore();
+}
+function dibujarPendiente(z) {
+  g.fillStyle = 'rgba(20,83,45,.28)'; g.fill(); g.save(); g.clip();
+  const [bx, by, bw, bh] = z.rect, l = Math.sqrt(z.ax * z.ax + z.ay * z.ay), ux = z.ax / l, uy = z.ay / l;
+  const fuerte = l > 200, paso = fuerte ? 34 : 44, desliza = U.REDUCIR ? 0 : (tAnim * 20) % paso;
+  g.strokeStyle = fuerte ? 'rgba(254,240,138,.75)' : 'rgba(255,255,255,.45)'; g.lineWidth = 3; g.lineCap = 'round';
+  for (let y = by + 18; y < by + bh; y += paso) for (let x = bx + 18; x < bx + bw; x += paso) {
+    const cx = x + ux * desliza - ux * paso / 2, cy = y + uy * desliza - uy * paso / 2;
+    g.beginPath(); g.moveTo(cx - ux * 7 - uy * 7, cy - uy * 7 + ux * 7); g.lineTo(cx, cy); g.lineTo(cx - ux * 7 + uy * 7, cy - uy * 7 - ux * 7); g.stroke();
+  }
+  g.restore();
+}
+// Portal: remolino que gira en la entrada y aro con flecha en la salida.
+function dibujarPortal(p) {
+  const giro = U.REDUCIR ? 0 : tAnim * 3;
+  g.save(); g.translate(p.de.x, p.de.y);
+  for (let k = 3; k >= 1; k--) { g.fillStyle = ['#2e1065', '#6d28d9', '#a78bfa'][k - 1]; g.beginPath(); g.arc(0, 0, p.de.r * k / 3 + 2, 0, Math.PI * 2); g.fill(); }
+  g.rotate(giro); g.strokeStyle = '#f5f3ff'; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, p.de.r * 0.7, 0, Math.PI * 1.3); g.stroke(); g.restore();
+  const [sn, cs] = F.senCos(p.dir);
+  g.strokeStyle = '#a78bfa'; g.lineWidth = 3; g.beginPath(); g.arc(p.a.x, p.a.y, 13, 0, Math.PI * 2); g.stroke();
+  g.beginPath(); g.moveTo(p.a.x + cs * 14, p.a.y + sn * 14); g.lineTo(p.a.x + cs * 26, p.a.y + sn * 26); g.stroke();
+}
+// Obstáculos móviles; e = G.estadoMovil(m, reloj).
+function dibujarMolino(m, e) {
+  const [x1, y1, x2, y2] = m.puerta;
+  g.strokeStyle = e.cerrada ? '#ef4444' : '#22c55e'; g.lineWidth = 4; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+  g.fillStyle = '#b91c1c'; g.beginPath(); g.moveTo(m.cx - 34, m.cy - 6); g.lineTo(m.cx, m.cy - 30); g.lineTo(m.cx + 34, m.cy - 6); g.closePath(); g.fill(); // techo
+  for (let k = 0; k < 4; k++) {
+    const [sn, cs] = F.senCos(e.angulo + k * 900);
+    g.save(); g.translate(m.cx, m.cy); g.transform(cs, sn, -sn, cs, 0, 0);
+    g.fillStyle = '#f5f5f4'; g.fillRect(6, -6, m.largo - 6, 12); g.strokeStyle = '#78716c'; g.lineWidth = 1.5; g.strokeRect(6, -6, m.largo - 6, 12);
+    g.beginPath(); g.moveTo(10, 0); g.lineTo(m.largo, 0); g.stroke();
+    g.restore();
+  }
+  g.fillStyle = '#44403c'; g.beginPath(); g.arc(m.cx, m.cy, 7, 0, Math.PI * 2); g.fill();
+}
+function dibujarCompuerta(m, e) {
+  g.fillStyle = '#facc15'; g.fillRect(e.x, m.y, m.w, m.h);
+  g.save(); g.beginPath(); g.rect(e.x, m.y, m.w, m.h); g.clip(); g.fillStyle = '#1f2937';
+  for (let x = e.x - m.h; x < e.x + m.w; x += 12) { g.beginPath(); g.moveTo(x, m.y + m.h); g.lineTo(x + 6, m.y + m.h); g.lineTo(x + 6 + m.h, m.y); g.lineTo(x + m.h, m.y); g.closePath(); g.fill(); }
+  g.restore(); g.strokeStyle = '#78350f'; g.lineWidth = 2; g.strokeRect(e.x, m.y, m.w, m.h);
 }
 // Bandera, pelotas, mira y efectos en coordenadas de pantalla (siempre derechos).
 function dibujarBandera(h) {
@@ -336,7 +349,10 @@ function dibujarEfectos() {
 function escena() {
   if (modo === 'sala' && sala && sala.estado) {
     const an = sala.anim, st = an ? an.h.antes : sala.estado, h = G.hoyoActual(st);
-    const l = sala.linea, activa = an ? an.h.idx : l && !l.fin ? l.turno : -1;
+    const l = sala.linea;
+    let activa = -1;
+    if (an) { activa = an.h.idx; }
+    else if (l && !l.fin) { activa = l.turno; }
     const bolas = st.jug.map((j, i) => ({ x: an && i === an.h.idx ? an.sim.bola.x : j.x, y: an && i === an.h.idx ? an.sim.bola.y : j.y, color: COLORES[i % 4], dentro: j.dentro && !(an && i === an.h.idx), retirado: j.retirado, i }));
     return { st, h, reloj: an ? an.sim.reloj : st.reloj, bolas, activa, apuntar: sala.miTurno() };
   }
@@ -368,7 +384,9 @@ function dibujar() {
 }
 function dibujarMinimapa(e) {
   const h = e.h, aw = horizontal ? h.alto : h.ancho, ah = horizontal ? h.ancho : h.alto;
-  const ancho = horizontal ? 104 : W < 360 ? 58 : 72, alto = Math.round(ancho * ah / aw), dpr = DPR;
+  let ancho = 104;
+  if (!horizontal) { ancho = W < 360 ? 58 : 72; }
+  const alto = Math.round(ancho * ah / aw), dpr = DPR;
   if (mm.width !== Math.round(ancho * dpr) || mm.height !== Math.round(alto * dpr)) { mm.width = Math.round(ancho * dpr); mm.height = Math.round(alto * dpr); mm.style.width = ancho + 'px'; mm.style.height = alto + 'px'; }
   mm.style.top = (arriba + 4) + 'px';
   const k = ancho / aw;
@@ -396,7 +414,10 @@ function dibujarMinimapa(e) {
 
 /* ---------- HUD ---------- */
 function ponerTexto(id, t) { const el = $(id); if (el.textContent !== t) el.textContent = t; }
-const conSigno = d => d === 0 ? 'par' : (d > 0 ? '+' : '') + d;
+const conSigno = d => {
+  if (d === 0) { return 'par'; }
+  return (d > 0 ? '+' : '') + d;
+};
 function pintarHud(e) {
   if (!e) return;
   const st = e.st, h = e.h;
@@ -436,8 +457,13 @@ function pintarMenu() {
   $('lista-hoyos').innerHTML = G.HOYOS.map(h => {
     const k = String(h.n), libre = desbloqueado(h.n), mejor = progreso.mejores[k];
     return '<button class="op" data-hoyo="' + (h.n - 1) + '"' + (libre ? '' : ' disabled aria-label="Hoyo ' + h.n + ' bloqueado"') + '>' + (libre ? '' : '🔒 ') + h.n + ' · ' + U.esc(h.nombre) +
-      '<small>Par ' + h.par + '</small><small>' + (mejor ? 'Mejor: ' + mejor : libre ? 'Sin jugar' : 'Bloqueado') + '</small><span class="est">' + estrellasTxt(progreso.estrellas[k] || 0) + '</span></button>';
+      '<small>Par ' + h.par + '</small><small>' + estadoHoyoTxt(mejor, libre) + '</small><span class="est">' + estrellasTxt(progreso.estrellas[k] || 0) + '</span></button>';
   }).join('');
+}
+// Nota de cada hoyo en el menú: su mejor marca, si falta jugarlo o si sigue bloqueado.
+function estadoHoyoTxt(mejor, libre) {
+  if (mejor) { return 'Mejor: ' + mejor; }
+  return libre ? 'Sin jugar' : 'Bloqueado';
 }
 function guardarAvance(hoyo, golpes, recogida) {
   const k = String(hoyo.n), est = G.estrellas(golpes, hoyo.par, recogida);
@@ -448,7 +474,7 @@ function guardarAvance(hoyo, golpes, recogida) {
     const tot = G.total(juego.st.jug[0]);
     progreso.mejorRecorrido = progreso.mejorRecorrido === null ? tot : Math.min(progreso.mejorRecorrido, tot);
   }
-  U.enviar({ tipo: 'guardar', datos: JSON.parse(JSON.stringify(progreso)) });
+  U.enviar({ tipo: 'guardar', datos: structuredClone(progreso) });
 }
 
 /* ---------- Individual ---------- */
@@ -492,7 +518,7 @@ function pasoIndividual() {
     if (!sim.termino) return;
     const antes = juego.st, r = sim.resultado().st;
     juego.sim = null;
-    if (sim.evento === 'agua' || sim.evento === 'fuera') { if (sim.donde && !U.REDUCIR) efectos.push({ x: sim.donde.x, y: sim.donde.y, t: performance.now() }); avisoEvento(sim.evento); }
+    if (sim.evento === 'agua' || sim.evento === 'fuera') { if (sim.donde && !U.REDUCIR) { efectos.push({ x: sim.donde.x, y: sim.donde.y, t: performance.now() }); } avisoEvento(sim.evento); }
     if (sim.evento === 'hoyo') sonarHoyo();
     juego.st = r;
     if (r.ultimo.recogida) U.avisar('🫳 Llegaste al límite: se recoge la pelota', 1600);
@@ -518,15 +544,20 @@ function terminarHoyo(k, st) {
   $('hoyo-tarjetas').innerHTML = '<div>+' + pts + '<small>Puntos</small></div>' + (juego.tipo === 'recorrido' ? '<div>' + conSigno(totalVsPar(st, 0, k)) + '<small>Recorrido</small></div>' : '');
   $('hoyo-guardado').textContent = U.EMBED ? 'Guardando tus puntos…' : '';
   const ultimo = !!st.fin;
-  $('hoyo-botones').innerHTML = juego.tipo === 'recorrido'
-    ? (ultimo ? '<button class="btn" data-ir="ver-tarjeta">📋 Ver la tarjeta</button>' : '<button class="btn" data-ir="siguiente">▶ Siguiente hoyo</button><button class="btn sec chico" data-ir="tarjeta">📋 Tarjeta</button>')
-    : '<button class="btn" data-ir="otra">🔁 Otra vez</button>' + (hoyo.n < 9 && desbloqueado(hoyo.n + 1) ? '<button class="btn sec" data-ir="practicar-sig">▶ Hoyo ' + (hoyo.n + 1) + '</button>' : '') + '<button class="btn sec chico" data-ir="practica">🎯 Hoyos</button>';
+  $('hoyo-botones').innerHTML = botonesHoyo(hoyo, ultimo);
   setTimeout(() => { if (modo === 'hoyo') { mostrar('ov-hoyo'); $('panel').classList.add('hide'); } }, U.REDUCIR ? 200 : 900);
   if (est === 3 || golpes === 1) U.confeti();
   U.enviar({ tipo: 'puntos', puntos: pts, aciertos: est, total: 3, segundos: seg });
 }
+// Botones al terminar un hoyo: en recorrido, seguir o ver la tarjeta; en práctica, repetir o pasar al siguiente.
+function botonesHoyo(hoyo, ultimo) {
+  if (juego.tipo === 'recorrido') {
+    return ultimo ? '<button class="btn" data-ir="ver-tarjeta">📋 Ver la tarjeta</button>' : '<button class="btn" data-ir="siguiente">▶ Siguiente hoyo</button><button class="btn sec chico" data-ir="tarjeta">📋 Tarjeta</button>';
+  }
+  return '<button class="btn" data-ir="otra">🔁 Otra vez</button>' + (hoyo.n < 9 && desbloqueado(hoyo.n + 1) ? '<button class="btn sec" data-ir="practicar-sig">▶ Hoyo ' + (hoyo.n + 1) + '</button>' : '') + '<button class="btn sec chico" data-ir="practica">🎯 Hoyos</button>';
+}
 // Golpes contra el par hasta el hoyo k (incluido).
-function totalVsPar(st, idx, k) { let d = 0; for (let i = 0; i <= k; i++) d += st.jug[idx].golpes[i] - G.HOYOS[st.hoyos[i]].par; return d; }
+function totalVsPar(st, idx, k) { let d = 0; for (let i = 0; i <= k; i++) { d += st.jug[idx].golpes[i] - G.HOYOS[st.hoyos[i]].par; } return d; }
 function siguienteHoyo() {
   juego.mostrar = null; cam = null; modo = 'juego'; ocultar();
   apuntarAlHoyo(juego.st, 0); presentarHoyo(juego.st);
@@ -541,14 +572,23 @@ function tablaTarjeta(st, nombres, hasta) {
     const tot = j.golpes.slice(0, n).reduce((a, b) => a + b, 0), parT = hoyos.reduce((a, h) => a + h.par, 0);
     return fila(['<td class="izq">' + U.esc(nombres[i] || '—') + (j.retirado ? ' 🏳️' : '') + '</td>'].concat(hoyos.map((h, k) => {
       const gk = j.golpes[k], d = gk - h.par, rec = j.recogidas.includes(k);
-      return '<td class="' + (rec ? 'sobre' : d < 0 ? 'bajo' : d > 0 ? 'sobre' : '') + '" title="' + U.esc(G.resultado(gk, h.par, rec).t) + '">' + (gk || '—') + '</td>';
+      return '<td class="' + claseGolpes(rec, d) + '" title="' + U.esc(G.resultado(gk, h.par, rec).t) + '">' + (gk || '—') + '</td>';
     })).concat(['<td>' + tot + ' (' + conSigno(tot - parT) + ')</td>']));
   });
   return '<table class="tarjeta"><thead>' + fila([cab]) + '</thead><tbody>' + fila([par]) + filas.join('') + '</tbody></table>';
 }
+// Clase de la casilla en la tarjeta: «bajo» si quedó bajo par, «sobre» si pasó del par o se recogió la pelota.
+function claseGolpes(recogida, d) {
+  if (recogida || d > 0) { return 'sobre'; }
+  return d < 0 ? 'bajo' : '';
+}
 function verTarjeta(final) {
-  const st = juego.st, hasta = final ? undefined : (juego.mostrar ? juego.mostrar.h : st.h - (st.jug[0].dentro ? 0 : 1));
-  modo = final ? 'tarjeta' : modo === 'juego' ? 'pausa-tarjeta' : modo;
+  const st = juego.st;
+  let hasta; // en la tarjeta final se queda sin definir: todos los hoyos
+  if (!final && juego.mostrar) { hasta = juego.mostrar.h; }
+  else if (!final) { hasta = st.h - (st.jug[0].dentro ? 0 : 1); }
+  if (final) { modo = 'tarjeta'; }
+  else if (modo === 'juego') { modo = 'pausa-tarjeta'; }
   $('tarjeta-titulo').textContent = final ? '🏁 ¡Terminaste el recorrido!' : '📋 Tarjeta';
   $('tarjeta-tabla').innerHTML = hasta !== undefined && hasta < 0 ? '<p>Aún no terminas ningún hoyo.</p>' : tablaTarjeta(st, ['Tú'], hasta);
   if (final) {
@@ -587,39 +627,60 @@ function pasoSala() {
     if (sala.anim.sim.portales > port) U.tono(500, 0.25, 'sine', 0.05, 1400);
     if (sala.anim.sim.pasos === G.SUB) sonarGolpe(sala.anim.h.tiro.fuerza || 40);
   }
-  if (h) {
-    const nom = i => i === sala.idx ? '' : (sala.orden[i] || {}).nombre || '';
-    const u = h.despues.ultimo;
-    if (u && u.evento === 'hoyo') { sonarHoyo(); const r = G.resultado(u.golpes, u.par, false); U.avisar(r.emoji + ' ' + (nom(u.quien) ? nom(u.quien) + ': ' : '') + r.t, 1600); }
-    else if (u && (u.evento === 'agua' || u.evento === 'fuera')) avisoEvento(u.evento, nom(u.quien));
-    else if (u && u.recogida) U.avisar('🫳 ' + (nom(u.quien) || 'Tu pelota') + ': se recoge', 1500);
-    else if (u && u.evento === 'rendirse') U.avisar('🏳️ ' + (nom(u.quien) || 'Te') + ' rindió', 1500);
-  }
+  if (h) avisarJugadaSala(h);
   const st = sala.estado;
   if (st.h !== hoyoSalaVisto && !sala.anim && !st.fin) { hoyoSalaVisto = st.h; cam = null; presentarHoyo(st); }
   const l = sala.linea, mio = sala.miTurno();
   if (mio && pasoAim !== l.paso) { pasoAim = l.paso; apuntarAlHoyo(st, sala.idx); }
   $('panel').classList.toggle('hide', !mio || modo !== 'sala');
-  let txt = '';
-  if (sala.anim) txt = sala.anim.h.origen === 'auto' ? '⏰ Tiro automático' : '⛳ Tira ' + (sala.anim.h.idx === sala.idx ? 'tú' : (sala.orden[sala.anim.h.idx] || {}).nombre || '');
-  else if (l && l.fin) txt = '🏁 ¡Fin de la partida!';
-  else if (l && l.espera) {
-    const seg = l.espera.tipo === 'persona' ? Math.max(0, Math.ceil((l.espera.limite - ahora) / 1000)) : 0;
-    txt = mio ? '👉 Tu turno · ⏱ ' + seg + ' s' : sala.propia ? '📨 Enviando…' : '⏳ Turno de ' + ((sala.orden[l.espera.idx] || {}).nombre || 'otra persona') + ' · ⏱ ' + seg + ' s';
-  }
-  ponerTexto('estado', txt);
+  ponerTexto('estado', textoSala(l, mio, ahora));
   if (sala.finDesde && performance.now() - sala.finDesde > 1500 && !sala.finEnviado) terminarSala();
+}
+// Aviso y sonido de lo que pasó en la jugada que se acaba de mostrar (h = jugada de sala.cuadro()).
+function avisarJugadaSala(h) {
+  const nom = i => i === sala.idx ? '' : (sala.orden[i] || {}).nombre || '';
+  const u = h.despues.ultimo;
+  if (u && u.evento === 'hoyo') { sonarHoyo(); const r = G.resultado(u.golpes, u.par, false); U.avisar(r.emoji + ' ' + (nom(u.quien) ? nom(u.quien) + ': ' : '') + r.t, 1600); }
+  else if (u && (u.evento === 'agua' || u.evento === 'fuera')) avisoEvento(u.evento, nom(u.quien));
+  else if (u && u.recogida) U.avisar('🫳 ' + (nom(u.quien) || 'Tu pelota') + ': se recoge', 1500);
+  else if (u && u.evento === 'rendirse') U.avisar('🏳️ ' + (nom(u.quien) || 'Te') + ' rindió', 1500);
+}
+// Texto de estado de la sala: quién tira, fin de la partida o a quién se espera (con su cuenta regresiva).
+function textoSala(l, mio, ahora) {
+  if (sala.anim) { return textoTiroSala(sala.anim.h); }
+  if (l && l.fin) { return '🏁 ¡Fin de la partida!'; }
+  if (l && l.espera) {
+    const seg = l.espera.tipo === 'persona' ? Math.max(0, Math.ceil((l.espera.limite - ahora) / 1000)) : 0;
+    return textoEsperaSala(l.espera, mio, seg);
+  }
+  return '';
+}
+function textoTiroSala(h) {
+  if (h.origen === 'auto') { return '⏰ Tiro automático'; }
+  const quien = h.idx === sala.idx ? 'tú' : (sala.orden[h.idx] || {}).nombre || '';
+  return '⛳ Tira ' + quien;
+}
+function textoEsperaSala(espera, mio, seg) {
+  if (mio) { return '👉 Tu turno · ⏱ ' + seg + ' s'; }
+  if (sala.propia) { return '📨 Enviando…'; }
+  return '⏳ Turno de ' + ((sala.orden[espera.idx] || {}).nombre || 'otra persona') + ' · ⏱ ' + seg + ' s';
 }
 function terminarSala() {
   sala.finEnviado = true;
   const st = sala.estado, rk = st.fin.ranking, puntos = G.puntosSala(st), nombres = sala.orden.map(p => p.nombre);
   const est = st.jug.map((j, i) => G.estrellasDe(st, i));
   const primeros = rk.filter(r => r.lugar === 1 && !r.retirado);
-  const titulo = primeros.length > 1 ? '⛳ ¡Empate con ' + primeros[0].total + ' golpes!' : primeros.length ? '⛳ ¡Ganó ' + (nombres[primeros[0].idx] || '') + ' con ' + primeros[0].total + ' golpes!' : '⛳ ¡Fin de la partida!';
+  const titulo = tituloSala(primeros, nombres);
   U.enviar({ tipo: 'fin', gana: primeros.length ? primeros[0].idx : -1, puntos, aciertos: est, total: st.hoyos.length * 3, titulo, tarjeta: { hoyos: st.hoyos.map(i => ({ n: G.HOYOS[i].n, par: G.HOYOS[i].par })), golpes: st.jug.map(j => j.golpes.slice()) } });
   $('sala-titulo').textContent = titulo; $('sala-tabla').innerHTML = tablaTarjeta(st, nombres); $('sala-txt').textContent = 'Esperando el podio…';
   $('panel').classList.add('hide'); mostrar('ov-sala'); activarMando();
   if (primeros.some(r => r.idx === sala.idx)) U.confeti();
+}
+// Título del final de la sala: empate, quién ganó o (si todos se rindieron) solo el fin.
+function tituloSala(primeros, nombres) {
+  if (primeros.length > 1) { return '⛳ ¡Empate con ' + primeros[0].total + ' golpes!'; }
+  if (primeros.length) { return '⛳ ¡Ganó ' + (nombres[primeros[0].idx] || '') + ' con ' + primeros[0].total + ' golpes!'; }
+  return '⛳ ¡Fin de la partida!';
 }
 function golpearSala() {
   if (!sala || !sala.miTurno()) return;
@@ -696,10 +757,15 @@ let sostenido = 0, fuerzaAcum = 0;
 function entradaContinua() {
   if (!puedoApuntar()) { sostenido = 0; return; }
   const dir = F.acotar(acciones.direccion('apuntarMenos', 'apuntarMas') + (mando.presionado('apuntarMas') ? 1 : 0) - (mando.presionado('apuntarMenos') ? 1 : 0), -1, 1);
-  if (dir) { sostenido++; girar(dir * (acciones.presionado('fino') ? 1 : sostenido > 36 ? 12 : 4)); } else sostenido = 0;
+  if (dir) { sostenido++; girar(dir * pasoGiro()); } else sostenido = 0;
   const df = acciones.direccion('fuerzaMenos', 'fuerzaMas') + (mando.presionado('fuerzaMas') ? 1 : 0) - (mando.presionado('fuerzaMenos') ? 1 : 0);
   fuerzaAcum += F.acotar(df, -1, 1) * 0.5;
   if (Math.abs(fuerzaAcum) >= 1) { ponerFuerza(fuerzaV + Math.trunc(fuerzaAcum)); fuerzaAcum -= Math.trunc(fuerzaAcum); }
+}
+// Décimas de grado por cuadro: 1 en fino (Shift), 4 al empezar y 12 si se mantiene más de 36 cuadros.
+function pasoGiro() {
+  if (acciones.presionado('fino')) { return 1; }
+  return sostenido > 36 ? 12 : 4;
 }
 
 document.addEventListener('click', e => {
@@ -737,9 +803,15 @@ U.alMensaje(d => {
   } else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
   else if (d.tipo === 'jugadas' && sala) sala.recibir(d.jugadas, d.ahora);
   else if (d.tipo === 'jugada-ok' && sala && !d.ok) { sala.rechazo(); U.avisar('⚠️ No se envió tu tiro (' + (d.error || 'sin conexión') + ')', 2200); }
-  else if (d.tipo === 'puntos-ok') $('hoyo-guardado').textContent = d.guardado ? '✔ +' + d.puntos + ' a tus ⭐ individuales' + (d.pos ? ' · #' + d.pos + ' de la semana' : '') : 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').';
+  else if (d.tipo === 'puntos-ok') $('hoyo-guardado').textContent = textoGuardado(d);
   else if (d.tipo === 'guardado') { const t = d.ok ? '💾 Avance guardado' : '⚠️ No se pudo guardar el avance'; $('tarjeta-guardado').textContent = t; if (!d.ok) U.avisar(t, 1800); }
 });
+// Resultado de guardar los puntos individuales (con el lugar de la semana si viene).
+function textoGuardado(d) {
+  if (!d.guardado) { return 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').'; }
+  const lugar = d.pos ? ' · #' + d.pos + ' de la semana' : '';
+  return '✔ +' + d.puntos + ' a tus ⭐ individuales' + lugar;
+}
 
 /* ---------- Bucle de paso fijo ---------- */
 let ultimo = performance.now(), acum = 0, cuadros = 0, fpsDesde = performance.now(), fps = 0;
@@ -751,11 +823,18 @@ function cuadro(ahora) {
   cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
   if (modo === 'juego' || modo === 'sala') {
     acum += dt; let n = 0;
-    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoIndividual(); else if (modo === 'sala' && sala) pasoSala(); else break; /* un paso pudo volver al menú (sala = null) */ entradaContinua(); acum -= PASO; n++; }
+    while (acum >= PASO && n < 6) {
+      if (modo === 'juego') pasoIndividual();
+      else if (modo === 'sala' && sala) pasoSala();
+      else break; /* un paso pudo volver al menú (sala = null) */
+      entradaContinua(); acum -= PASO; n++;
+    }
     if (n === 6) acum = 0;
     if (modo === 'juego' && juego) {
       $('panel').classList.toggle('hide', !puedoApuntar());
-      const txt = juego.sim ? '' : puedoApuntar() && juego.st.jug[0].golpes[juego.st.h] === 0 ? '👆 Jala y toca GOLPEAR' : '';
+      // Pista solo antes del primer golpe del hoyo.
+      let txt = '';
+      if (!juego.sim && puedoApuntar() && juego.st.jug[0].golpes[juego.st.h] === 0) { txt = '👆 Jala y toca GOLPEAR'; }
       ponerTexto('estado', txt);
     }
   } else acum = 0;
@@ -771,7 +850,9 @@ if (U.PRUEBA) {
   // Ganchos solo para pruebas E2E (?prueba=1).
   window.__golf = {
     estado: () => {
-      const st = modo === 'sala' && sala ? sala.estado : juego ? juego.st : null; // estado real (no el que se muestra)
+      let st = null; // estado real (no el que se muestra)
+      if (modo === 'sala' && sala) { st = sala.estado; }
+      else if (juego) { st = juego.st; }
       return {
         modo, horizontal, tactil: U.TACTIL, fps, w: W, alto: H, k: K, aim, fuerza: fuerzaV, control, completa,
         hoyo: st ? G.hoyoActual(st).n : null, h: st ? st.h : null, golpes: st ? st.jug.map(j => j.golpes.slice()) : null, fin: st ? !!st.fin : false,

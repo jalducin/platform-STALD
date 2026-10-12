@@ -11,7 +11,7 @@
   const TACTIL = TOQUES || matchMedia('(any-pointer: coarse)').matches;
   if (TACTIL) document.documentElement.classList.add('tactil');
   const $ = id => document.getElementById(id);
-  const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const esc = s => String(s).replaceAll(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const leerLS = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const guardarLS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } };
 
@@ -22,9 +22,9 @@
       if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.connect(AC.destination); }
       master.gain.value = sonido ? 0.9 : 0;
       if (AC.state === 'suspended' && !document.hidden) AC.resume();
-    } catch (e) { AC = null; }
+    } catch { /* sin audio en este navegador: juego sin sonido */ AC = null; }
   }
-  function tono(f, d, tipo = 'square', v = 0.05, hasta, retraso = 0) {
+  function tono(f, d, tipo = 'square', v = 0.05, hasta = 0, retraso = 0) { // hasta = 0: sin barrido de frecuencia
     if (!AC || !sonido) return;
     const o = AC.createOscillator(), ga = AC.createGain(), s = AC.currentTime + retraso;
     o.type = tipo; o.frequency.setValueAtTime(f, s); if (hasta) o.frequency.exponentialRampToValueAtTime(hasta, s + d);
@@ -42,15 +42,15 @@
 
   // ---- Avisos y confeti ----
   let avisoT = null;
-  function avisar(txt, ms) { const a = $('aviso'); if (!a) return; a.textContent = txt; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms || 1600); }
+  function avisar(txt, ms) { const a = $('aviso'); if (!a) { return; } a.textContent = txt; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms || 1600); }
   function confeti() {
     const c = $('confeti'); if (!c || REDUCIR) return;
     c.innerHTML = '';
     const colores = ['#facc15', '#ef4444', '#22c55e', '#3b82f6', '#a855f7', '#fb923c'];
     for (let i = 0; i < 60; i++) {
       const p = document.createElement('i');
-      p.style.left = (Math.random() * 100) + '%'; p.style.background = colores[i % colores.length];
-      p.style.animationDelay = (Math.random() * 0.8) + 's';
+      p.style.left = (Math.random() * 100) + '%'; p.style.background = colores[i % colores.length]; // NOSONAR: azar de juego, no criptográfico
+      p.style.animationDelay = (Math.random() * 0.8) + 's'; // NOSONAR: azar de juego, no criptográfico
       c.appendChild(p);
     }
     setTimeout(() => { c.innerHTML = ''; }, 3800);
@@ -65,9 +65,9 @@
     el.addEventListener('touchend', acabar, opt); el.addEventListener('touchcancel', acabar, opt);
     let abajo = null;
     const deMouse = e => !(e.pointerType === 'touch' && TOQUES);
-    el.addEventListener('pointerdown', e => { if (!deMouse(e)) return; abajo = 'p' + e.pointerId; try { el.setPointerCapture(e.pointerId); } catch (x) { /* nada */ } h.inicio(abajo, e.clientX, e.clientY); });
+    el.addEventListener('pointerdown', e => { if (!deMouse(e)) { return; } abajo = 'p' + e.pointerId; try { el.setPointerCapture(e.pointerId); } catch (x) { /* nada */ } h.inicio(abajo, e.clientX, e.clientY); });
     el.addEventListener('pointermove', e => { if (abajo && deMouse(e)) h.mover(abajo, e.clientX, e.clientY); });
-    const soltar = cancel => e => { if (!abajo || !deMouse(e)) return; const id = abajo; abajo = null; h.fin(id, e.clientX, e.clientY, cancel); };
+    const soltar = cancel => e => { if (!abajo || !deMouse(e)) { return; } const id = abajo; abajo = null; h.fin(id, e.clientX, e.clientY, cancel); };
     el.addEventListener('pointerup', soltar(false)); el.addEventListener('pointercancel', soltar(true));
   }
 
@@ -81,15 +81,15 @@
     tactil(el, {
       inicio: id => { abajo.add(id); if (abajo.size === 1) { el.classList.add('on'); on(true); } },
       mover: () => {},
-      fin: id => { if (!abajo.delete(id) || abajo.size) return; el.classList.remove('on'); on(false); },
+      fin: id => { if (!abajo.delete(id) || abajo.size) { return; } el.classList.remove('on'); on(false); },
     });
-    el.addEventListener('keydown', e => { if (e.code !== 'Enter' && e.code !== 'Space') return; e.preventDefault(); e.stopPropagation(); if (!e.repeat) { on(true); on(false); } });
+    el.addEventListener('keydown', e => { if (e.code !== 'Enter' && e.code !== 'Space') { return; } e.preventDefault(); e.stopPropagation(); if (!e.repeat) { on(true); on(false); } });
   }
   function sostener(el, paso) {
     let t = null, k = 0;
     const parar = () => { clearTimeout(t); t = null; };
     const tic = () => { k++; paso(k); t = setTimeout(tic, 60); };
-    boton(el, on => { parar(); if (!on) return; k = 0; paso(0); t = setTimeout(tic, 300); });
+    boton(el, on => { parar(); if (!on) { return; } k = 0; paso(0); t = setTimeout(tic, 300); });
     return parar;
   }
   // Mando común (juegos/mando.js) → eje de la capa de acciones sin pisar el de otro adaptador: solo escribe cuando el
@@ -117,10 +117,10 @@
       eje: () => eje,
       // −1…1: eje analógico más el par de acciones sostenidas (menos, más).
       direccion: (menos, mas) => F.acotar(eje + (est[mas] ? 1 : 0) - (est[menos] ? 1 : 0), -1, 1),
-      soltarTodo: () => { for (const k in est) est[k] = false; eje = 0; },
+      soltarTodo: () => { for (const k in est) { est[k] = false; } eje = 0; },
     };
     if (teclas) {
-      addEventListener('keydown', e => { const n = teclas(e.code); if (!n) return; e.preventDefault(); if (!e.repeat) a.presionar(n, true); });
+      addEventListener('keydown', e => { const n = teclas(e.code); if (!n) { return; } e.preventDefault(); if (!e.repeat) a.presionar(n, true); });
       addEventListener('keyup', e => { const n = teclas(e.code); if (n) a.presionar(n, false); });
       addEventListener('blur', () => a.soltarTodo());
     }
@@ -130,7 +130,7 @@
   // ---- Mensajes con juegos.html (solo mismo origen) ----
   let juego = '';
   const oyentes = [];
-  function enviar(m) { if (!EMBED) return; try { parent.postMessage(Object.assign({ juego }, m), location.origin); } catch (e) { /* nada */ } }
+  function enviar(m) { if (!EMBED) { return; } try { parent.postMessage({ juego, ...m }, location.origin); } catch (e) { /* nada */ } }
   addEventListener('message', ev => {
     if (ev.origin !== location.origin || ev.source !== parent) return;
     for (const f of oyentes) f(ev.data || {});
@@ -186,8 +186,8 @@
     s.miTurno = () => !s.anim && s.linea && !s.linea.fin && s.linea.espera && s.linea.espera.tipo === 'persona' && s.linea.espera.idx === s.idx && s.mostrado.length === s.linea.historia.length && !s.propia;
     s.tirar = tiro => {
       if (!s.miTurno()) return false;
-      const jugada = Object.assign({ n: s.linea.paso }, tiro);
-      s.propia = Object.assign({ t: s.ahora(), jugador: s.yo }, jugada);
+      const jugada = { n: s.linea.paso, ...tiro };
+      s.propia = { t: s.ahora(), jugador: s.yo, ...jugada };
       enviar({ tipo: 'jugada', jugada });
       return true;
     };

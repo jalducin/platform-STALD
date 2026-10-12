@@ -4,7 +4,7 @@
 (function (g) {
   'use strict';
   function fnv(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
-  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; } // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
   const rng = semilla => mulberry(fnv(semilla));
   const barajar = (a, rnd) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
   const tope = n => Math.max(0, Math.min(1000, Math.round(n)));
@@ -21,17 +21,20 @@
     const esDama = p => p === p.toUpperCase();
     const otro = c => c === 'b' ? 'n' : 'b';
     const llega = (p, i) => color(p) === 'b' ? fila(i) === 0 : fila(i) === 7;
-    const dirs = p => esDama(p) ? [[-1, -1], [-1, 1], [1, -1], [1, 1]] : color(p) === 'b' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]];
+    const dirs = p => {
+      if (esDama(p)) return [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+      return color(p) === 'b' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]];
+    };
     const SIN_AVANCE = 40; // medios movimientos sin captura ni avance de peón → empate
 
     function nueva() {
-      const t = Array(32).fill('');
+      const t = new Array(32).fill('');
       for (let i = 0; i < 12; i++) t[i] = 'n';
       for (let i = 20; i < 32; i++) t[i] = 'b';
       return { t, turno: 'b', sinAvance: 0, jugadas: 0 };
     }
     function desdeFilas(filas, turno) {
-      const t = Array(32).fill('');
+      const t = new Array(32).fill('');
       filas.forEach((s, f) => [...s].forEach((ch, c) => { const i = idx(f, c); if (i >= 0 && 'bBnN'.includes(ch)) t[i] = ch; }));
       return { t, turno: turno || 'b', sinAvance: 0, jugadas: 0 };
     }
@@ -79,14 +82,18 @@
       let v = 0;
       st.t.forEach((p, i) => {
         if (!p) return;
-        const avance = esDama(p) ? 0 : (color(p) === 'b' ? 7 - fila(i) : fila(i)) * 0.04;
+        let avance = 0;
+        if (!esDama(p)) avance = (color(p) === 'b' ? 7 - fila(i) : fila(i)) * 0.04;
         v += (color(p) === yo ? 1 : -1) * ((esDama(p) ? 2.5 : 1) + avance);
       });
       return v;
     }
     function minimax(st, prof, yo, alfa, beta) {
       const res = resultado(st);
-      if (res) return res.empate ? 0 : (res.gana === yo ? 100 + prof : -100 - prof);
+      if (res) {
+        if (res.empate) return 0;
+        return res.gana === yo ? 100 + prof : -100 - prof;
+      }
       if (!prof) return evaluar(st, yo);
       const max = st.turno === yo;
       let mejor = max ? -Infinity : Infinity;
@@ -209,7 +216,7 @@
     const dado = (seed, k) => 1 + Math.floor(rng(seed + '|dado|' + k)() * 6);
     function nueva(n, seed, cuantas) {
       cuantas = cuantas === 2 ? 2 : 4;
-      const st = { n, colores: n === 2 ? [0, 2] : [0, 1, 2, 3].slice(0, n), cuantas, fichas: Array.from({ length: n }, () => Array(cuantas).fill(-1)), seed, k: 0, turno: 0, dado: 0, fin: null, log: [], forzar: [] };
+      const st = { n, colores: n === 2 ? [0, 2] : [0, 1, 2, 3].slice(0, n), cuantas, fichas: Array.from({ length: n }, () => new Array(cuantas).fill(-1)), seed, k: 0, turno: 0, dado: 0, fin: null, log: [], forzar: [] };
       tirar(st); resolver(st);
       return st;
     }
@@ -307,8 +314,8 @@
       if (!largos.every((x, i) => x === FLOTA[i])) return false;
       return new Set(fl.flat()).size === TOTAL;
     }
-    const vecinas = c => { const f = Math.floor(c / 10), k = c % 10, out = []; if (f > 0) out.push(c - 10); if (f < 9) out.push(c + 10); if (k > 0) out.push(c - 1); if (k < 9) out.push(c + 1); return out; };
-    const alrededor = c => { const f = Math.floor(c / 10), k = c % 10, out = []; for (let df = -1; df <= 1; df++) for (let dk = -1; dk <= 1; dk++) { const ff = f + df, kk = k + dk; if (ff >= 0 && ff < 10 && kk >= 0 && kk < 10) out.push(ff * 10 + kk); } return out; };
+    const vecinas = c => { const f = Math.floor(c / 10), k = c % 10, out = []; if (f > 0) { out.push(c - 10); } if (f < 9) { out.push(c + 10); } if (k > 0) { out.push(c - 1); } if (k < 9) { out.push(c + 1); } return out; };
+    const alrededor = c => { const f = Math.floor(c / 10), k = c % 10, out = []; for (let df = -1; df <= 1; df++) { for (let dk = -1; dk <= 1; dk++) { const ff = f + df, kk = k + dk; if (ff >= 0 && ff < 10 && kk >= 0 && kk < 10) out.push(ff * 10 + kk); } } return out; };
     // Acomodo al azar; procura que los barcos no se toquen (si no se puede, se permite).
     function autoFlota(rnd) {
       const r = rnd || Math.random;
@@ -348,7 +355,9 @@
         const mismaFila = pend.every(c => Math.floor(c / 10) === Math.floor(pend[0] / 10));
         const mismaCol = pend.every(c => c % 10 === pend[0] % 10);
         const a = pend[0], z = pend[pend.length - 1];
-        const linea = mismaFila ? [a % 10 > 0 ? a - 1 : -1, z % 10 < 9 ? z + 1 : -1] : mismaCol ? [a - 10, z + 10] : [];
+        let linea = [];
+        if (mismaFila) linea = [a % 10 > 0 ? a - 1 : -1, z % 10 < 9 ? z + 1 : -1];
+        else if (mismaCol) linea = [a - 10, z + 10];
         const ok = linea.filter(libre);
         if (ok.length) return azar(ok);
       }
@@ -366,7 +375,7 @@
     // server/naval.ts. Empieza el jugador 0; tras «agua» cambia el turno; gana quien junta 17 aciertos.
     function estado(jugadores) {
       const orden = jugadores.slice(0, 2).map(j => j.id);
-      const todas = jugadores.slice(0, 2).flatMap(j => (j.jugadas || []).map(x => Object.assign({ id: j.id }, x))).sort((a, b) => a.n - b.n);
+      const todas = jugadores.slice(0, 2).flatMap(j => (j.jugadas || []).map(x => ({ id: j.id, ...x }))).sort((a, b) => a.n - b.n);
       let turno = 0, fin = null, ultimo = 0;
       const aciertos = [0, 0];
       for (const x of todas) {
@@ -385,8 +394,14 @@
 
   // ======================= Puntos (tope 1,000) =======================
   const puntos = {
-    damas: (res, nivel, propias, capturas) => res === 'gana' ? tope((nivel === 1 ? 600 : 800) + 20 * propias) : res === 'empate' ? 300 : Math.min(300, tope(25 * capturas)),
-    domino: (res, rivales, mios) => res === 'gana' ? tope(500 + 10 * rivales) : res === 'empate' ? 400 : tope(200 - 5 * mios),
+    damas: (res, nivel, propias, capturas) => {
+      if (res === 'gana') return tope((nivel === 1 ? 600 : 800) + 20 * propias);
+      return res === 'empate' ? 300 : Math.min(300, tope(25 * capturas));
+    },
+    domino: (res, rivales, mios) => {
+      if (res === 'gana') return tope(500 + 10 * rivales);
+      return res === 'empate' ? 400 : tope(200 - 5 * mios);
+    },
     parchis: (meta, cuantas, gana) => tope(800 * meta / cuantas + (gana ? 200 : 0)),
     naval: (gana, disparos, tocados) => gana ? tope(600 + 400 * Naval.TOTAL / Math.max(Naval.TOTAL, disparos)) : tope(20 * tocados),
   };

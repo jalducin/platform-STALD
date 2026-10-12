@@ -21,6 +21,11 @@
   const NOMBRES_MANO = ['Carta alta', 'Par', 'Doble par', 'Tercia', 'Escalera', 'Color', 'Full', 'Póker', 'Escalera de color'];
   const B5 = 13 ** 5;
 
+  // Desempate: carta alta de la escalera, todas las cartas (color o carta alta) o los grupos en orden.
+  function desempate(cat, alta, r, grupos) {
+    if (cat === 8 || cat === 4) return [alta];
+    return cat === 5 || cat === 0 ? r : grupos.map(x => x[0]);
+  }
   function valor5(ids) {
     const r = ids.map(rango).sort((a, b) => b - a);
     const color = ids.every(id => palo(id) === palo(ids[0]));
@@ -41,7 +46,7 @@
     else if (grupos[0][1] === 2 && grupos[1][1] === 2) cat = 2;
     else if (grupos[0][1] === 2) cat = 1;
     else cat = 0;
-    const des = cat === 8 || cat === 4 ? [alta] : cat === 5 || cat === 0 ? r : grupos.map(x => x[0]);
+    const des = desempate(cat, alta, r, grupos);
     let v = cat;
     for (let i = 0; i < 5; i++) v = v * 13 + (des[i] || 0);
     return v;
@@ -67,7 +72,7 @@
 
   function pokerNueva(jugadores, op) {
     const o = op || {};
-    return { jugadores: jugadores.map(j => Object.assign({}, j, { fichas: o.fichas || FICHAS_INICIALES })), manos: o.manos || 10, mano: -1, boton: -1, fase: 'espera', terminada: false, aportado: jugadores.map(() => 0), apuesta: jugadores.map(() => 0), resultado: null, ultima: null };
+    return { jugadores: jugadores.map(j => ({ ...j, fichas: o.fichas || FICHAS_INICIALES })), manos: o.manos || 10, mano: -1, boton: -1, fase: 'espera', terminada: false, aportado: jugadores.map(() => 0), apuesta: jugadores.map(() => 0), resultado: null, ultima: null };
   }
 
   function sigIdx(st, desde, cond) {
@@ -90,9 +95,9 @@
     st.mano++;
     st.boton = sigIdx(st, st.boton < 0 ? n - 1 : st.boton, i => st.jugadores[i].fichas > 0);
     st.ciegas = CIEGAS[Math.min(CIEGAS.length - 1, Math.floor(st.mano / 4))].slice();
-    st.mazo = barajar([...Array(52).keys()], rng);
+    st.mazo = barajar([...new Array(52).keys()], rng);
     st.comunes = []; st.cartas = st.jugadores.map(() => []);
-    st.apuesta = Array(n).fill(0); st.aportado = Array(n).fill(0);
+    st.apuesta = new Array(n).fill(0); st.aportado = new Array(n).fill(0);
     st.fuera = st.jugadores.map(j => j.fichas <= 0);
     st.resultado = null; st.ultima = null; st.fase = 'preflop';
     for (let r = 0; r < 2; r++) for (let k = 1; k <= n; k++) { const i = (st.boton + k) % n; if (!st.fuera[i]) st.cartas[i].push(st.mazo.pop()); }
@@ -129,13 +134,13 @@
     const i = st.turno, o = opciones(st), a = mv.accion;
     if (a === 'retirarse') st.fuera[i] = true;
     else if (a === 'pasar') { if (!o.pasar) return false; }
-    else if (a === 'igualar') { if (o.pasar) return false; poner(st, i, o.igualar); }
+    else if (a === 'igualar') { if (o.pasar) { return false; } poner(st, i, o.igualar); }
     else if (a === 'subir') {
       const m = Math.round(Number(mv.monto));
       if (!o.puedeSubir || !Number.isFinite(m) || m < o.minSubir || m > o.maxSubir) return false;
       if (m % FICHA !== 0 && m !== o.maxSubir) return false; // se arma con fichas; solo «todo» puede ser otra cantidad
       subirA(st, i, m);
-    } else if (a === 'todo') { if (st.jugadores[i].fichas <= 0) return false; subirA(st, i, o.maxSubir); }
+    } else if (a === 'todo') { if (st.jugadores[i].fichas <= 0) { return false; } subirA(st, i, o.maxSubir); }
     else return false;
     st.pendientes = st.pendientes.filter(k => k !== i);
     st.ultima = { j: i, accion: a, apuesta: st.apuesta[i] };
@@ -182,9 +187,9 @@
   function mostrar(st) {
     const n = st.jugadores.length;
     const manos = st.jugadores.map((_, i) => st.fuera[i] ? null : mejorMano(st.cartas[i].concat(st.comunes)));
-    const premios = Array(n).fill(0);
+    const premios = new Array(n).fill(0);
     const niveles = [...new Set(st.aportado.filter((a, i) => a > 0 && !st.fuera[i]))].sort((a, b) => a - b);
-    const ordenBoton = [...Array(n).keys()].map(k => (st.boton + 1 + k) % n);
+    const ordenBoton = [...new Array(n).keys()].map(k => (st.boton + 1 + k) % n);
     let previo = 0, repartido = 0;
     for (const nivel of niveles) {
       let monto = 0;
@@ -258,12 +263,12 @@
 
   function briscaNueva(jugadores, rng) {
     const n = jugadores.length;
-    let mazo = barajar([...Array(40).keys()].filter(id => n !== 3 || id !== 1), rng); // con 3 se quita el 2 de oros
+    let mazo = barajar([...new Array(40).keys()].filter(id => n !== 3 || id !== 1), rng); // con 3 se quita el 2 de oros
     const manos = jugadores.map(() => []);
     for (let r = 0; r < 3; r++) for (let j = 0; j < n; j++) manos[j].push(mazo.pop());
     const triunfo = mazo.pop();
     mazo = [triunfo].concat(mazo); // al fondo: se roba al final
-    return { jugadores, n, manos, mazo, triunfo, paloTriunfo: espPalo(triunfo), baza: [], lider: 0, turno: 0, puntos: Array(n).fill(0),
+    return { jugadores, n, manos, mazo, triunfo, paloTriunfo: espPalo(triunfo), baza: [], lider: 0, turno: 0, puntos: new Array(n).fill(0),
       ganadas: jugadores.map(() => []), equipos: n === 4 ? [0, 1, 0, 1] : null, ultimaBaza: null, terminada: false };
   }
 
@@ -325,7 +330,7 @@
   }
 
   function conquianNueva(jugadores, rng) {
-    const mazo = barajar([...Array(40).keys()], rng);
+    const mazo = barajar([...new Array(40).keys()], rng);
     const manos = [[], []];
     for (let r = 0; r < 8; r++) for (let j = 0; j < 2; j++) manos[j].push(mazo.pop());
     return { jugadores, manos, bajados: [[], []], mazo, muertas: [], oferta: { carta: mazo.pop(), para: 0, origen: 'mazo', segunda: false },
@@ -357,7 +362,7 @@
       if (acc === 'pasar') {
         const o = st.oferta;
         st.ultima = { j, accion: 'pasar', carta: o.carta };
-        if (o.origen === 'mazo' && !o.segunda) { st.oferta = Object.assign({}, o, { para: otro, segunda: true }); st.turno = otro; return true; }
+        if (o.origen === 'mazo' && !o.segunda) { st.oferta = { ...o, para: otro, segunda: true }; st.turno = otro; return true; }
         st.muertas.push(o.carta); voltear(st, j); return true;
       }
       if (acc === 'tomar') {
@@ -412,10 +417,10 @@
       const ops = opcionesJuego(st, j, [st.oferta.carta]);
       if (!ops.length) return { accion: 'pasar' };
       const mejor = ops.filter(o => o.con.length === ops[0].con.length);
-      return Object.assign({ accion: 'tomar' }, mejor[Math.floor(r() * mejor.length)]);
+      return { accion: 'tomar', ...mejor[Math.floor(r() * mejor.length)] };
     }
     const bajar = opcionesJuego(st, j, []);
-    if (bajar.length) return Object.assign({ accion: 'bajar' }, bajar[0]);
+    if (bajar.length) return { accion: 'bajar', ...bajar[0] };
     const mano = st.manos[j];
     const liga = c => mano.filter(x => x !== c && (espValor(x) === espValor(c) || (espPalo(x) === espPalo(c) && Math.abs(espOrden(x) - espOrden(c)) <= 2))).length;
     const carta = mano.slice().sort((a, b) => liga(a) - liga(b) || espOrden(b) - espOrden(a))[0];

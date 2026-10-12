@@ -1,0 +1,22 @@
+{
+  "name": "platform-stald-calidad",
+  "private": true,
+  "description": "Análisis de calidad reproducible (reglas equivalentes a SonarQube for IDE). Ver docs/pruebas.md.",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "eslint": "10.12.0",
+    "eslint-plugin-html": "8.2.1",
+    "eslint-plugin-sonarjs": "4.2.2",
+    "eslint-plugin-unicorn": "77.0.0",
+    "globals": "17.13.0",
+    "postcss": "8.5.29",
+    "postcss-html": "2.0.0",
+    "stylelint": "17.16.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.2"
+  },
+  "scripts": {
+    "calidad": "node calidad.mjs",
+    "calidad:detalle": "node calidad.mjs --detalle"
+  }
+}

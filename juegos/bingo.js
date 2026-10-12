@@ -7,7 +7,7 @@
 
   // ---------- Reglas puras ----------
   function fnv(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
-  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; } // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
   const rng = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
   const barajar = (a, r) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
   const rango = (de, n) => Array.from({ length: n }, (_, i) => de + i);
@@ -24,8 +24,14 @@
   function carton(seed, id) {
     const r = rng(seed, 'bingo-carton|' + id);
     const cols = rango(0, 5).map(c => barajar(rango(c * 15 + 1, 15), r).slice(0, c === 2 ? 4 : 5));
+    // Número de la fila f y columna c: la columna N tiene 4 números y la casilla libre (0) en medio.
+    const numero = (f, c) => {
+      if (c !== 2) return cols[c][f];
+      if (f === 2) return 0;
+      return cols[2][f < 2 ? f : f - 1];
+    };
     const t = [];
-    for (let f = 0; f < 5; f++) for (let c = 0; c < 5; c++) t.push(c === 2 ? (f === 2 ? 0 : cols[2][f < 2 ? f : f - 1]) : cols[c][f]);
+    for (let f = 0; f < 5; f++) for (let c = 0; c < 5; c++) t.push(numero(f, c));
     return t;
   }
   const cantadosA = (inicio, t, canto = CANTO_MS) => t < inicio ? 0 : Math.min(75, Math.floor((t - inicio) / canto) + 1);
@@ -88,10 +94,13 @@
   const bolaHtml = n => n ? '<div class="bg-bola entra" id="bg-bola" style="--bgc:' + colorDe(n) + '" aria-live="polite" aria-label="' + letraDe(n) + ' ' + n + '"><span><small>' + letraDe(n) + '</small>' + n + '</span></div>'
     : '<div class="bg-bola" id="bg-bola"><span>🎱</span></div>';
   const histHtml = lista => lista.map(n => '<span style="--bgc:' + colorDe(n) + '">' + letraDe(n) + n + '</span>').join('');
+  function celdaHtml(n, i, marcas, attr) {
+    if (n === 0) return '<button class="bg-cell libre" ' + attr + '="' + i + '" aria-label="Casilla libre" disabled>⭐</button>';
+    return '<button class="bg-cell' + (marcas[i] ? ' marcada' : '') + '" ' + attr + '="' + i + '" aria-label="' + letraDe(n) + ' ' + n + '">' + n + '</button>';
+  }
   function cartonHtml(t, marcas, attr) {
     return '<div class="bg-carton" role="grid" aria-label="Tu cartón">' + LETRAS.split('').map(l => '<div class="bg-cab" aria-hidden="true">' + l + '</div>').join('') +
-      t.map((n, i) => n === 0 ? '<button class="bg-cell libre" ' + attr + '="' + i + '" aria-label="Casilla libre" disabled>⭐</button>'
-        : '<button class="bg-cell' + (marcas[i] ? ' marcada' : '') + '" ' + attr + '="' + i + '" aria-label="' + letraDe(n) + ' ' + n + '">' + n + '</button>').join('') + '</div>';
+      t.map((n, i) => celdaHtml(n, i, marcas, attr)).join('') + '</div>';
   }
   const tableroHtml = set => '<details><summary class="muted" style="cursor:pointer;font-size:.85rem">🔢 Ver los 75 números</summary><div class="bg-tablero">' +
     rango(1, 75).map(n => '<span style="--bgc:' + colorDe(n) + '"' + (set.has(n) ? ' class="si"' : '') + '>' + n + '</span>').join('') + '</div></details>';
@@ -103,7 +112,7 @@
   }
   const VOCES = [['es', '🇲🇽 Español'], ['ambos', '🔀 Bilingüe'], ['en', '🇺🇸 English'], ['no', '🔇']];
   const vozHtml = (attr, voz) => '<div class="row-btns" style="margin-top:6px">' + VOCES.map(([v, t]) => '<button class="btn ghost sm" ' + attr + '="' + v + '" aria-pressed="' + (voz === v) + '">' + t + '</button>').join('') + '</div>';
-  function sacudir(cel) { cel.classList.remove('tiembla'); void cel.offsetWidth; cel.classList.add('tiembla'); }
+  function sacudir(cel) { cel.classList.remove('tiembla'); cel.getBoundingClientRect(); /* reflujo: reinicia la animación */ cel.classList.add('tiembla'); }
 
   g.elegirBingo = function () {
     const m = marco('bingo', { menu: true });
@@ -122,7 +131,7 @@
 
   function jugarBingo(figura, voz) {
     const m = marco('bingo');
-    const seed = Math.floor(Math.random() * 2147483646) + 1;
+    const seed = Math.floor(Math.random() * 2147483646) + 1; // NOSONAR: azar de juego, no criptográfico
     const ord = orden(seed), mio = carton(seed, 'yo');
     const bots = BOTS.map(b => ({ nombre: b.nombre, t: carton(seed, b.id) })).map(b => Object.assign(b, { en: completaEn(b.t, ord, figura) }));
     const marcas = mio.map(n => n === 0);
@@ -133,10 +142,12 @@
       '<div class="feedback" id="bg-msg">Toca los números que salgan en tu cartón.</div><div class="row-btns"><button class="btn una-grito" data-bg-grito>🎉 ¡Bingo!</button></div>' + '<div id="bg-tab"></div>';
     const $ = id => document.getElementById(id);
     function acabar(gane, quien) {
-      if (terminado) return; terminado = true; limpiar();
+      if (terminado) { return; } terminado = true; limpiar();
       const n = set.size, ac = aciertos(mio, set);
+      let titulo = '🎱 Se acabaron los números';
+      if (gane) titulo = '🎉 ¡BINGO!'; else if (quien) titulo = '😮 ¡Bingo de ' + quien + '!';
       terminar('bingo', { puntos: gane ? puntosGanador(figura, n) : ac * 10, aciertos: ac, total: 24, segundos: (Date.now() - t0) / 1000,
-        titulo: gane ? '🎉 ¡BINGO!' : quien ? '😮 ¡Bingo de ' + quien + '!' : '🎱 Se acabaron los números',
+        titulo,
         detalle: (gane ? 'Ganaste con ' + n + ' números cantados.' : 'Te salieron ' + ac + ' de 24 números.') + ' Figura: ' + escapeHtml(FIGURAS[figura].t) + '.' });
     }
     function siguiente() {

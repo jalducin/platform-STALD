@@ -37,7 +37,7 @@ Deno.test("gato: el bot gana si puede, bloquea y el difícil nunca pierde", () =
     if (turno === O) { const c = C.gatoBot(t, O, 3, Math.random); assert(!t[c]); const u = t.slice(); u[c] = O; explorar(u, X); return; }
     t.forEach((v, i) => { if (!v) { const u = t.slice(); u[i] = X; explorar(u, O); } });
   };
-  explorar(Array(9).fill(null), X);
+  explorar(new Array(9).fill(null), X);
   assert(partidas > 100, String(partidas));
   // El fácil juega una casilla libre al azar.
   assertEquals(C.gatoBot([X, O, X, O, X, O, O, X, _], X, 1, Math.random), 8);
@@ -66,7 +66,7 @@ Deno.test("conecta4: caída, columna llena, 4 en línea y empate", () => {
   for (const [col, f] of [[6, "R"], [5, "A"], [5, "R"], [4, "A"], [4, "A"], [4, "R"], [3, "A"], [3, "A"], [3, "A"], [3, "R"]] as [number, string][]) e = C.c4Soltar(e, col, f).t;
   assertEquals(C.c4Ganador(e).gana, "R");
   // Tablero lleno sin 4 en línea: patrón por pares de columnas que nunca alinea 4.
-  const lleno = Array.from({ length: 42 }, (_, i) => { const f = Math.floor(i / 7), c = i % 7; return (Math.floor(c / 2) + f + (c === 6 ? 1 : 0)) % 2 ? "R" : "A"; });
+  const lleno = Array.from({ length: 42 }, (_, i) => { const f = Math.floor(i / 7), c = i % 7; return (Math.floor(c / 2) + f + Number(c === 6)) % 2 ? "R" : "A"; });
   assertEquals(C.c4Ganador(lleno), { empate: true });
 });
 

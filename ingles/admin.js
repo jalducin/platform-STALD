@@ -2,12 +2,12 @@
 // Resumen de juegos de la semana (solo admin): jugadores y partidas con su podio.
 // ---------- Alta de alumnos y alumnas (admin, openspec: alta-alumnos) ----------
 // ---------- Grupos de clase (openspec: ingles-grupos) ----------
-const slugAlumno = n => (n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9]/).filter(Boolean).join('-') || 'sin-nombre';
+const slugAlumno = n => (n || '').normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9]/).filter(Boolean).join('-') || 'sin-nombre';
 async function loadGruposAdmin() {
   try {
     const r = await fetchJson(API_BASE + '/ingles/grupos?email=' + encodeURIComponent(state.email));
     state.grupos = r.ok ? r.body : null; // 503 sin_base: los grupos aún no están activos
-  } catch (e) { state.grupos = null; }
+  } catch { /* sin conexión: se pinta sin grupos */ state.grupos = null; }
 }
 const gruposActivos = () => (state.grupos && state.grupos.grupos || []).filter(g => g.activo);
 // Grupo de un alumno o alumna: su inscripción vigente o, si no tiene, el primer grupo activo.
@@ -101,7 +101,7 @@ async function altaAlumno(form) {
   const nombre = document.getElementById('alta-nombre').value, email = document.getElementById('alta-correo').value;
   form.querySelector('button').disabled = true;
   const grupoSel = document.getElementById('alta-grupo');
-  const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(Object.assign({ nombre, email }, grupoSel && grupoSel.value ? { grupo: grupoSel.value } : {})) });
+  const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ nombre, email, ...(grupoSel && grupoSel.value ? { grupo: grupoSel.value } : {}) }) });
   if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="empty" style="color:var(--bad)">' + escapeHtml(ERRORES_ALTA[r.body.error] || ('No se pudo dar de alta (' + (r.body.error || r.status) + ').')) + '</div>'; return; }
   state.altaAbierta = true;
   state.altaAviso = '✅ ' + r.body.alumno.nombre + ' ya puede entrar con ' + r.body.alumno.email + '.' + (r.body.alumno.inicio ? ' Empieza el lunes ' + fechaCorta(r.body.alumno.inicio) + ', sin actividades en atraso.' : '');
@@ -130,10 +130,15 @@ function renderJuegosAdmin() {
   if (!j || j.error) return cab + '<div class="progress-text">No se pudieron cargar los juegos (' + escapeHtml(j && j.error) + ').</div></div></details>';
   if (!j.jugadores.length && !j.salas.length) return cab + '<div class="progress-text">Aún no hay juegos esta semana.</div></div></details>';
   const cuando = ms => new Date(ms).toLocaleString('es-MX', { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const medalla = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
+  const MEDALLAS = ['🥇', '🥈', '🥉'];
+  const medalla = i => MEDALLAS[i] || (i + 1) + '.';
+  // Avatar en un círculo de su color: la foto (si no carga, el emoji) o el emoji.
+  const caraDe = av => av.foto
+    ? '<img src="' + escapeHtml(API_BASE + '/juegos/foto/' + encodeURIComponent(av.foto)) + '" alt="" style="width:100%;height:100%;object-fit:cover" data-e="' + escapeHtml(av.emoji) + '" onerror="this.replaceWith(document.createTextNode(this.dataset.e))">'
+    : escapeHtml(av.emoji);
+  const avatarDe = av => '<span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-size:13px;vertical-align:middle;overflow:hidden;background:' + escapeHtml(av.color) + '">' + caraDe(av) + '</span> ';
   const ranking = '<div class="progress-text" style="margin:4px 0">🏆 Ranking de la semana (suma del mejor de cada juego)</div><table class="ultimas-tabla"><tbody>' +
-    j.jugadores.map((x, i) => '<tr data-jugador="' + escapeHtml(x.nombre) + '"><td>' + medalla(i) + ' ' + (x.avatar ? '<span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-size:13px;vertical-align:middle;overflow:hidden;background:' + escapeHtml(x.avatar.color) + '">' +
-      (x.avatar.foto ? '<img src="' + escapeHtml(API_BASE + '/juegos/foto/' + encodeURIComponent(x.avatar.foto)) + '" alt="" style="width:100%;height:100%;object-fit:cover" data-e="' + escapeHtml(x.avatar.emoji) + '" onerror="this.replaceWith(document.createTextNode(this.dataset.e))">' : escapeHtml(x.avatar.emoji)) + '</span> ' : '') + escapeHtml(x.nombre) + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</td>' +
+    j.jugadores.map((x, i) => '<tr data-jugador="' + escapeHtml(x.nombre) + '"><td>' + medalla(i) + ' ' + (x.avatar ? avatarDe(x.avatar) : '') + escapeHtml(x.nombre) + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</td>' +
       '<td>⭐ <b>' + (x.totalIndividual ?? x.total).toLocaleString('es-MX') + '</b> individuales · 👥 <b>' + (x.totalPartidas || 0).toLocaleString('es-MX') + '</b> partidas · ' + x.partidas + ' juego(s) jugados' + (x.ultima ? ' · ' + escapeHtml(cuando(Date.parse(x.ultima))) : '') + '</td></tr>').join('') + '</tbody></table>';
   const salas = j.salas.length ? '<div class="progress-text" style="margin:12px 0 4px">👥 Partidas de la semana</div>' + j.salas.map(s => {
     const podio = s.podio || s.jugadores.filter(x => x.final !== null).map(x => ({ nombre: x.nombre, total: x.final })).sort((a, b) => b.total - a.total);

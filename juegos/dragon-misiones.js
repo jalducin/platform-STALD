@@ -39,7 +39,7 @@
   // FNV-1a de 32 bits y mulberry32: la misma fecha y el mismo jugador dan las mismas misiones en cualquier equipo.
   const hash = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
   const rng = semilla => () => {
-    semilla = (semilla + 0x6d2b79f5) | 0;
+    semilla = (semilla + 0x6d2b79f5) | 0; // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
     let t = Math.imul(semilla ^ (semilla >>> 15), 1 | semilla);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -124,7 +124,7 @@
     }
     return p;
   }
-  const clonar = p => JSON.parse(JSON.stringify(p));
+  const clonar = p => structuredClone(p);
   const ayer = f => { const d = new Date(f + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); };
   const avanceDelDia = (p, fecha) => (p.diaria && p.diaria.fecha === fecha ? p.diaria.avance.slice() : [0, 0, 0]);
   // Avance de las 3 misiones del día si la carrera `c` (completa o en curso) terminara ahora.
@@ -138,7 +138,7 @@
   function vistaMisiones(prog, fecha, semilla, c) {
     const p = normalizar(prog);
     const av = c ? avanceCon(p, c, fecha, semilla) : avanceDelDia(p, fecha);
-    return misionesDelDia(fecha, semilla).map((m, i) => Object.assign({}, m, { avance: av[i], cumplida: av[i] >= m.meta }));
+    return misionesDelDia(fecha, semilla).map((m, i) => ({ ...m, avance: av[i], cumplida: av[i] >= m.meta }));
   }
   // Suma una carrera terminada: { metros, monedas, esquivados, mejorRacha, dobles, castillo }. Devuelve el avance
   // nuevo y los mensajes de lo que se cumplió en esta carrera (misiones, logros y premios).

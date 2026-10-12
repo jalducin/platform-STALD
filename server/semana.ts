@@ -21,8 +21,61 @@ const CORREO = /[\w.+-]+@[\w-]+\.[\w.-]+/;
 
 const diaSemana = (fecha: string) => new Date(`${fecha}T12:00:00Z`).getUTCDay();
 
-export async function validarSemana(store: Store, lunes: string, ambito: Ambito = AMBITO_CLASE): Promise<ReporteSemana> {
+type Elemento = NonNullable<Awaited<ReturnType<typeof loadItem>>>;
+
+// Refuerzo: sus bancos y su base existen, los temas mapeados existen y cada tema tiene ejercicios.
+async function revisarRefuerzo(store: Store, it: Elemento, id: string, ids: Set<string>, ambito: Ambito, r: ReporteSemana) {
+  const { errores, avisos } = r;
+  for (const b of it.bancoDe || []) if (!(await loadItem(store, b, ambito))) errores.push(`${id}: bancoDe ${b} no existe`);
+  if (it.basadoEn && !(await loadItem(store, it.basadoEn, ambito))) errores.push(`${id}: basadoEn ${it.basadoEn} no existe`);
+  const temas = new Set((it.temas || []).map((t) => t.id));
+  for (const [de, a] of Object.entries(it.mapeoTemas || {})) if (!temas.has(a)) errores.push(`${id}: mapeoTemas ${de} → ${a}, tema inexistente en el refuerzo`);
+  for (const t of temas) if (!(it.banco || []).some((e) => e.tema === t)) errores.push(`${id}: tema ${t} sin ejercicios en el banco combinado`);
+  if (it.basadoEn && !ids.has(it.basadoEn)) avisos.push(`${id}: basadoEn ${it.basadoEn} no es de esta semana`);
+}
+
+// Meet: liga, hora, guion y presentación con referencias a teoría válidas.
+function revisarMeet(it: Elemento, id: string, r: ReporteSemana) {
+  const { errores, avisos } = r;
+  if (!it.meetUrl || !it.hora) avisos.push(`${id}: falta meetUrl u hora (pídelas al admin)`);
+  if (!(it.guion || []).length) avisos.push(`${id}: sin guion`);
+  // deno-lint-ignore no-explicit-any
+  const diapositivas = ((it.presentacion as any)?.diapositivas || []) as { tipo: string; ref?: number }[];
+  if (!diapositivas.length) avisos.push(`${id}: sin presentacion`);
+  for (const d of diapositivas) {
+    if (d.tipo === "teoria" && !(Number.isInteger(d.ref) && d.ref! >= 0 && d.ref! < (it.teoria || []).length)) errores.push(`${id}: diapositiva teoria con ref ${d.ref} fuera de rango`);
+  }
+}
+
+// Revisa un elemento de la semana y agrega sus errores y avisos al reporte.
+async function revisarElemento(store: Store, el: Semana["elementos"][number], lunes: string, ambito: Ambito, ids: Set<string>, r: ReporteSemana) {
+  const { errores, avisos } = r;
   const PATRON = PATRONES[ambito.clave] ?? PATRONES.clase;
+  const it = await loadItem(store, el.id, ambito);
+  if (!it) { errores.push(`${el.id}: no existe el archivo en ${ambito.contenido}/actividades ni ${ambito.contenido}/examenes`); return; }
+  if (it.tipo !== el.tipo) errores.push(`${el.id}: tipo ${it.tipo} en el archivo y ${el.tipo} en la semana`);
+  if (it.fechaLimite !== el.fecha) errores.push(`${el.id}: fechaLimite ${it.fechaLimite} distinta de la fecha de la semana ${el.fecha}`);
+  if (it.disponibleDesde < lunes || it.disponibleDesde > it.fechaLimite) errores.push(`${el.id}: disponibleDesde ${it.disponibleDesde} fuera de ${lunes}…${it.fechaLimite}`);
+  if (it.tipo === "examen" && maxIntentos(it) === 2 && !it.segundaOportunidad && !ambito.clave.startsWith("profe")) avisos.push(`${el.id}: examen con 2 intentos sin segundaOportunidad (se sugiere el domingo)`);
+  if (it.tipo === "examen" && it.disponibleDesde !== it.fechaLimite) errores.push(`${el.id}: el examen debe quedar bloqueado hasta su día (disponibleDesde = ${it.fechaLimite})`);
+  errores.push(...validateItem(it));
+
+  const esperado = PATRON[diaSemana(el.fecha)];
+  if (esperado !== el.tipo) avisos.push(`${el.id}: ${el.tipo} el ${DIAS[diaSemana(el.fecha)]}; se esperaba ${esperado ?? "ningún elemento"}`);
+  const banco = (it.banco || []).length, ppi = it.preguntasPorIntento || 0;
+  if (ppi && it.tipo !== "examen" && (it.tipo !== "meet" || banco) && banco < ppi * maxIntentos(it)) {
+    avisos.push(`${el.id}: banco de ${banco} ejercicios, menor que ${ppi} × ${maxIntentos(it)} (poca variedad entre alumnos y alumnas)`);
+  }
+  if ((it.tipo === "actividad" || it.tipo === "refuerzo") && (!(it.teoria || []).length || !(it.tips || []).length)) avisos.push(`${el.id}: sin teoría o sin tips`);
+
+  if (it.tipo === "refuerzo") await revisarRefuerzo(store, it, el.id, ids, ambito, r);
+  if (it.tipo === "meet") revisarMeet(it, el.id, r);
+  // El texto crudo, sin el banco combinado del refuerzo (ya se revisa en su propio archivo).
+  const crudo = JSON.stringify({ ...it, banco: it.tipo === "refuerzo" ? [] : it.banco });
+  if (CORREO.test(crudo)) errores.push(`${el.id}: contiene un correo electrónico (${crudo.match(CORREO)![0]}); no se permiten datos personales`);
+}
+
+export async function validarSemana(store: Store, lunes: string, ambito: Ambito = AMBITO_CLASE): Promise<ReporteSemana> {
   const errores: string[] = [], avisos: string[] = [];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(lunes) || diaSemana(lunes) !== 1) errores.push(`${lunes}: el id de la semana no es lunes`);
   const doc = await store.get<Semana>(`${ambito.contenido}/semanas/${lunes}.json`);
@@ -31,46 +84,7 @@ export async function validarSemana(store: Store, lunes: string, ambito: Ambito 
   if (semana.id !== lunes) errores.push(`${lunes}: el campo id dice ${semana.id}`);
 
   const ids = new Set(semana.elementos.map((e) => e.id));
-  for (const el of semana.elementos) {
-    const it = await loadItem(store, el.id, ambito);
-    if (!it) { errores.push(`${el.id}: no existe el archivo en ${ambito.contenido}/actividades ni ${ambito.contenido}/examenes`); continue; }
-    if (it.tipo !== el.tipo) errores.push(`${el.id}: tipo ${it.tipo} en el archivo y ${el.tipo} en la semana`);
-    if (it.fechaLimite !== el.fecha) errores.push(`${el.id}: fechaLimite ${it.fechaLimite} distinta de la fecha de la semana ${el.fecha}`);
-    if (it.disponibleDesde < lunes || it.disponibleDesde > it.fechaLimite) errores.push(`${el.id}: disponibleDesde ${it.disponibleDesde} fuera de ${lunes}…${it.fechaLimite}`);
-    if (it.tipo === "examen" && maxIntentos(it) === 2 && !it.segundaOportunidad && !ambito.clave.startsWith("profe")) avisos.push(`${el.id}: examen con 2 intentos sin segundaOportunidad (se sugiere el domingo)`);
-    if (it.tipo === "examen" && it.disponibleDesde !== it.fechaLimite) errores.push(`${el.id}: el examen debe quedar bloqueado hasta su día (disponibleDesde = ${it.fechaLimite})`);
-    errores.push(...validateItem(it));
-
-    const esperado = PATRON[diaSemana(el.fecha)];
-    if (esperado !== el.tipo) avisos.push(`${el.id}: ${el.tipo} el ${DIAS[diaSemana(el.fecha)]}; se esperaba ${esperado ?? "ningún elemento"}`);
-    const banco = (it.banco || []).length, ppi = it.preguntasPorIntento || 0;
-    if (ppi && it.tipo !== "examen" && (it.tipo !== "meet" || banco) && banco < ppi * maxIntentos(it)) {
-      avisos.push(`${el.id}: banco de ${banco} ejercicios, menor que ${ppi} × ${maxIntentos(it)} (poca variedad entre alumnos y alumnas)`);
-    }
-    if ((it.tipo === "actividad" || it.tipo === "refuerzo") && (!(it.teoria || []).length || !(it.tips || []).length)) avisos.push(`${el.id}: sin teoría o sin tips`);
-
-    if (it.tipo === "refuerzo") {
-      for (const b of it.bancoDe || []) if (!(await loadItem(store, b, ambito))) errores.push(`${el.id}: bancoDe ${b} no existe`);
-      if (it.basadoEn && !(await loadItem(store, it.basadoEn, ambito))) errores.push(`${el.id}: basadoEn ${it.basadoEn} no existe`);
-      const temas = new Set((it.temas || []).map((t) => t.id));
-      for (const [de, a] of Object.entries(it.mapeoTemas || {})) if (!temas.has(a)) errores.push(`${el.id}: mapeoTemas ${de} → ${a}, tema inexistente en el refuerzo`);
-      for (const t of temas) if (!(it.banco || []).some((e) => e.tema === t)) errores.push(`${el.id}: tema ${t} sin ejercicios en el banco combinado`);
-      if (it.basadoEn && !ids.has(it.basadoEn)) avisos.push(`${el.id}: basadoEn ${it.basadoEn} no es de esta semana`);
-    }
-    if (it.tipo === "meet") {
-      if (!it.meetUrl || !it.hora) avisos.push(`${el.id}: falta meetUrl u hora (pídelas al admin)`);
-      if (!(it.guion || []).length) avisos.push(`${el.id}: sin guion`);
-      // deno-lint-ignore no-explicit-any
-      const diapositivas = ((it.presentacion as any)?.diapositivas || []) as { tipo: string; ref?: number }[];
-      if (!diapositivas.length) avisos.push(`${el.id}: sin presentacion`);
-      for (const d of diapositivas) {
-        if (d.tipo === "teoria" && !(Number.isInteger(d.ref) && d.ref! >= 0 && d.ref! < (it.teoria || []).length)) errores.push(`${el.id}: diapositiva teoria con ref ${d.ref} fuera de rango`);
-      }
-    }
-    // El texto crudo, sin el banco combinado del refuerzo (ya se revisa en su propio archivo).
-    const crudo = JSON.stringify({ ...it, banco: it.tipo === "refuerzo" ? [] : it.banco });
-    if (CORREO.test(crudo)) errores.push(`${el.id}: contiene un correo electrónico (${crudo.match(CORREO)![0]}); no se permiten datos personales`);
-  }
+  for (const el of semana.elementos) await revisarElemento(store, el, lunes, ambito, ids, { errores, avisos });
   if (CORREO.test(JSON.stringify(semana))) errores.push(`${lunes}: la semana contiene un correo electrónico`);
   return { errores, avisos };
 }

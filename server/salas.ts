@@ -49,47 +49,64 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
   if (Clasicos.esClasicoRapido(juego)) return Clasicos.validarJugadaClasicos(juego, j); // clasicos-rapidos
   const tablero = validarJugadaTablero(juego, j, base); // juegos-tablero
   if (tablero !== undefined) return tablero as Omit<Jugada, "t"> | null;
-  if (juego === "poker") {
-    // openspec: poker-fichas — la subida se arma con fichas de 5 a 100: entero múltiplo de FICHA_POKER y obligatorio.
-    const montoOk = entero(j.monto, FICHA_POKER, 1_000_000) && (j.monto as number) % FICHA_POKER === 0;
-    if (!ACCIONES_POKER.includes(accion) || j.carta !== undefined || (j.monto !== undefined && !montoOk) || (accion === "subir" && j.monto === undefined)) return null;
-    return { ...base, ...(j.monto !== undefined ? { monto: j.monto as number } : {}) };
-  }
+  if (juego === "poker") return jugadaPoker(j, base);
   if (juego === "blackjack") return Grandes.validarJugadaBlackjack(j, base); // juegos-salas-grandes
-  if (juego === "ajedrez") { // openspec: ajedrez
-    if (accion === "rendirse") return base;
-    const casilla = (x: unknown) => typeof x === "string" && /^[a-h][1-8]$/.test(x);
-    if (accion !== "mover" || !casilla(j.de) || !casilla(j.a) || (j.promo !== undefined && !["q", "r", "b", "n"].includes(String(j.promo)))) return null;
-    return { ...base, de: j.de as string, a: j.a as string, ...(j.promo !== undefined ? { promo: String(j.promo) } : {}) };
-  }
+  if (juego === "ajedrez") return jugadaAjedrez(j, base);
   if (juego === "brisca") return accion === "jugar" && entero(j.carta, 0, 39) ? { ...base, carta: j.carta as number } : null;
-  if (juego === "conquian") {
-    if (!ACCIONES_CONQUIAN.includes(accion)) return null;
-    if (accion === "descartar") return entero(j.carta, 0, 39) ? { ...base, carta: j.carta as number } : null;
-    if (accion === "pasar") return base;
-    const con = j.con;
-    if (!Array.isArray(con) || con.length > 8 || !con.every((x) => entero(x, 0, 39)) || new Set(con).size !== con.length) return null;
-    if (j.a !== undefined && !entero(j.a, 0, 20)) return null;
-    return { ...base, con: con as number[], ...(j.a !== undefined ? { a: j.a as number } : {}) };
+  if (juego === "conquian") return jugadaConquian(j, base);
+  if (juego === "futbolito" || juego === "billar") return jugadaFisica(juego, j, base);
+  if (juego === "golf") return jugadaGolf(j, base);
+  return jugadaUna(j, base);
+}
+type BaseJugada = { n: number; accion: string };
+// openspec: poker-fichas — la subida se arma con fichas de 5 a 100: entero múltiplo de FICHA_POKER y obligatorio.
+function jugadaPoker(j: Record<string, unknown>, base: BaseJugada): Omit<Jugada, "t"> | null {
+  const accion = base.accion;
+  const montoOk = entero(j.monto, FICHA_POKER, 1_000_000) && (j.monto as number) % FICHA_POKER === 0;
+  if (!ACCIONES_POKER.includes(accion) || j.carta !== undefined || (j.monto !== undefined && !montoOk) || (accion === "subir" && j.monto === undefined)) return null;
+  return { ...base, ...(j.monto !== undefined ? { monto: j.monto as number } : {}) };
+}
+// openspec: ajedrez
+function jugadaAjedrez(j: Record<string, unknown>, base: BaseJugada): Omit<Jugada, "t"> | null {
+  const accion = base.accion;
+  if (accion === "rendirse") return base;
+  const casilla = (x: unknown) => typeof x === "string" && /^[a-h][1-8]$/.test(x);
+  if (accion !== "mover" || !casilla(j.de) || !casilla(j.a) || (j.promo !== undefined && !["q", "r", "b", "n"].includes(String(j.promo)))) return null;
+  return { ...base, de: j.de as string, a: j.a as string, ...(j.promo !== undefined ? { promo: String(j.promo) } : {}) };
+}
+// openspec: cartas-espanolas
+function jugadaConquian(j: Record<string, unknown>, base: BaseJugada): Omit<Jugada, "t"> | null {
+  const accion = base.accion;
+  if (!ACCIONES_CONQUIAN.includes(accion)) return null;
+  if (accion === "descartar") return entero(j.carta, 0, 39) ? { ...base, carta: j.carta as number } : null;
+  if (accion === "pasar") return base;
+  const con = j.con;
+  if (!Array.isArray(con) || con.length > 8 || !con.every((x) => entero(x, 0, 39)) || new Set(con).size !== con.length) return null;
+  if (j.a !== undefined && !entero(j.a, 0, 20)) return null;
+  return { ...base, con: con as number[], ...(j.a !== undefined ? { a: j.a as number } : {}) };
+}
+// futbolito-billar: tiros de física (enteros; se simulan igual en cada cliente) o rendirse.
+function jugadaFisica(juego: string, j: Record<string, unknown>, base: BaseJugada): Omit<Jugada, "t"> | null {
+  const accion = base.accion;
+  if (accion === "rendirse") return base;
+  if (accion !== "tiro") return null;
+  if (juego === "futbolito") {
+    if (j.barra !== undefined && !entero(j.barra, 0, 7)) return null; // futbolito-equipos: barra que tira (0…7)
+    return entero(j.pos, -150, 150) && entero(j.angulo, -60, 60) && entero(j.fuerza, 10, 100)
+      ? { ...base, pos: j.pos as number, angulo: j.angulo as number, fuerza: j.fuerza as number, ...(j.barra !== undefined ? { barra: j.barra as number } : {}) } : null;
   }
-  // futbolito-billar: tiros de física (enteros; se simulan igual en cada cliente) o rendirse.
-  if (juego === "futbolito" || juego === "billar") {
-    if (accion === "rendirse") return base;
-    if (accion !== "tiro") return null;
-    if (juego === "futbolito") {
-      if (j.barra !== undefined && !entero(j.barra, 0, 7)) return null; // futbolito-equipos: barra que tira (0…7)
-      return entero(j.pos, -150, 150) && entero(j.angulo, -60, 60) && entero(j.fuerza, 10, 100)
-        ? { ...base, pos: j.pos as number, angulo: j.angulo as number, fuerza: j.fuerza as number, ...(j.barra !== undefined ? { barra: j.barra as number } : {}) } : null;
-    }
-    if (!entero(j.angulo, 0, 3599) || !entero(j.fuerza, 1, 100) || (j.efecto !== undefined && !entero(j.efecto, -100, 100))) return null;
-    return { ...base, angulo: j.angulo as number, fuerza: j.fuerza as number, ...(j.efecto !== undefined ? { efecto: j.efecto as number } : {}) };
-  }
-  // golf: tiro determinista (ángulo en décimas de grado y fuerza enteros; se simula igual en cada cliente) o rendirse.
-  if (juego === "golf") {
-    if (accion === "rendirse") return base;
-    return accion === "tiro" && entero(j.angulo, 0, 3599) && entero(j.fuerza, 1, 100) ? { ...base, angulo: j.angulo as number, fuerza: j.fuerza as number } : null;
-  }
-  // ¡Una! Robar (hasta poder tirar) y pasar no llevan carta ni color: el robo se reproduce del mazo de la semilla.
+  if (!entero(j.angulo, 0, 3599) || !entero(j.fuerza, 1, 100) || (j.efecto !== undefined && !entero(j.efecto, -100, 100))) return null;
+  return { ...base, angulo: j.angulo as number, fuerza: j.fuerza as number, ...(j.efecto !== undefined ? { efecto: j.efecto as number } : {}) };
+}
+// golf: tiro determinista (ángulo en décimas de grado y fuerza enteros; se simula igual en cada cliente) o rendirse.
+function jugadaGolf(j: Record<string, unknown>, base: BaseJugada): Omit<Jugada, "t"> | null {
+  const accion = base.accion;
+  if (accion === "rendirse") return base;
+  return accion === "tiro" && entero(j.angulo, 0, 3599) && entero(j.fuerza, 1, 100) ? { ...base, angulo: j.angulo as number, fuerza: j.fuerza as number } : null;
+}
+// ¡Una! Robar (hasta poder tirar) y pasar no llevan carta ni color: el robo se reproduce del mazo de la semilla.
+function jugadaUna(j: Record<string, unknown>, base: BaseJugada): Omit<Jugada, "t"> | null {
+  const accion = base.accion;
   if (accion !== "jugar" && (j.carta !== undefined || j.color !== undefined)) return null; // basta-divertida-una-robo
   if (!["jugar", "robar", "pasar"].includes(accion) || (j.carta !== undefined && !entero(j.carta, 0, 107)) ||
     (j.color !== undefined && !["r", "y", "g", "b"].includes(String(j.color))) || (j.una !== undefined && typeof j.una !== "boolean")) return null;
@@ -135,7 +152,9 @@ export function mesaDe(juego: string, opciones?: Record<string, string>): Mesa |
   return f ? { ...m, ...f } : m;
 }
 const cupo = (juego: string, opciones?: Record<string, string>) => mesaDe(juego, opciones)?.max ?? MAX_JUGADORES;
-const botsFijos = (juego: string) => MESAS[juego]?.bots === "siempre" ? true : MESAS[juego]?.bots === "nunca" ? false : undefined;
+// Bots fijos de la mesa: true (siempre), false (nunca) o undefined (los decide el anfitrión).
+const BOTS_FIJOS: Record<string, boolean> = { siempre: true, nunca: false };
+const botsFijos = (juego: string): boolean | undefined => BOTS_FIJOS[MESAS[juego]?.bots ?? ""];
 // Personas + bots que ocuparían la mesa al empezar (los bots completan los asientos libres).
 export function enMesa(juego: string, humanos: number, conBots: boolean, opciones?: Record<string, string>): number {
   const m = mesaDe(juego, opciones); // futbolito-equipos
@@ -189,7 +208,9 @@ export const MAX_EXTRAS_BASTA = 2;
 // Normaliza `opciones.extra` (arreglo o texto "a,b") a "a,b"; "" sin extras; null si es inválida.
 function extrasBasta(x: unknown): string | null {
   if (x === undefined || x === null || x === "") return "";
-  const ids = Array.isArray(x) ? x : typeof x === "string" ? x.split(",") : null;
+  let ids: unknown[] | null = null;
+  if (Array.isArray(x)) ids = x;
+  else if (typeof x === "string") ids = x.split(",");
   if (!ids || ids.length > MAX_EXTRAS_BASTA || new Set(ids).size !== ids.length) return null;
   if (!ids.every((id) => typeof id === "string" && (EXTRAS_BASTA as readonly string[]).includes(id))) return null;
   return ids.join(",");
@@ -306,6 +327,268 @@ async function reservarRevancha(store: Store, codigo: string, jugador: Jugador, 
 // La sala que se devuelve o se publica, sin el canal secreto.
 const sinCanal = (s: Sala): Sala => { const { canal: _c, secreto: _s, ...resto } = s; return resto; }; // juegos-salas-grandes: sin secreto
 
+// Contexto de una sala que ya existe, compartido por sus acciones (unirse, empezar, respuesta, revancha y ver).
+interface CtxSala {
+  body: Record<string, unknown>;
+  jugador: Jugador;
+  store: Store;
+  ahora: number;
+  json: Json;
+  codigo: string;
+  sala: Sala;
+  jugadores: EnSala[];
+  dentro: boolean;
+  publicar: () => Promise<void>;
+}
+type CambioJugador = (e: EnSala) => EnSala;
+
+// POST /juegos/sala: opciones del juego nuevo ya validadas, o el código de error (todos se responden con 400).
+function opcionesNuevaSala(juego: string, op: Record<string, unknown>): Record<string, string> | string {
+  const opciones: Record<string, string> = {};
+  if (typeof op.cat === "string" && op.cat.length <= 30) opciones.cat = op.cat;
+  if (juego === "poker" && op.equipos === "1") opciones.equipos = "1"; // póker por equipos A/B
+  if (juego === "ajedrez") opciones.reloj = ["5", "10", "15"].includes(String(op.reloj)) ? String(op.reloj) : "10"; // minutos por jugador
+  if (juego === "loteria") {
+    if (op.modo !== undefined && op.modo !== "linea" && op.modo !== "llena") return "modo_invalido";
+    opciones.modo = (op.modo as string) || "linea";
+  }
+  if (juego.startsWith("basta")) {
+    const rondas = op.rondas === undefined ? "10" : String(op.rondas);
+    if (!RONDAS_BASTA.includes(rondas)) return "rondas_invalidas";
+    opciones.rondas = rondas;
+    const extra = extrasBasta(op.extra); // basta-divertida-una-robo
+    if (extra === null) return "extras_invalidas";
+    if (extra) opciones.extra = extra;
+  }
+  if (CARRERAS[juego]) { // Arcade: nivel o pista en las opciones (openspec: juegos-plataformas-karts)
+    const mapa = mapaDeSala(juego, op.mapa, aleatorio(1)[0]);
+    if (!mapa) return "mapa_invalido";
+    opciones.mapa = mapa;
+  }
+  if (juego === "futbolito") { // futbolito-equipos: 1v1 (por omisión) o 2v2
+    const f = Futbolito.formatoDe(op);
+    if (!f) return "formato_invalido";
+    opciones.formato = f;
+  }
+  if (juego === "cultura-linea") { // cultura-conocimiento: el tema de la Línea del tiempo va en opciones.cat
+    if (op.cat !== undefined && !TEMAS_LINEA.includes(op.cat as string)) return "tema_invalido";
+    opciones.cat = (op.cat as string) ?? "todos";
+  }
+  if (juego === "en-frases") {
+    if (op.tema !== undefined && !TEMAS_INGLES.includes(op.tema as string)) return "tema_invalido";
+    opciones.tema = (op.tema as string) ?? "todo";
+  }
+  if (Clasicos.esClasicoRapido(juego)) { // clasicos-rapidos: modo del Ahorcado
+    const o = Clasicos.opcionesClasicos(juego, op);
+    if (typeof o === "string") return o;
+    Object.assign(opciones, o);
+  }
+  { const e = Grandes.opcionesGrandes(juego, op, opciones); if (e) return e; } // juegos-salas-grandes
+  return opciones;
+}
+
+// POST /juegos/sala → crear
+async function crearSala(body: Record<string, unknown>, jugador: Jugador, store: Store, ahora: number, json: Json, lunes: string): Promise<Response> {
+  const juego = String(body.juego || "");
+  if (!JUEGOS_PARTIDA.has(juego)) return json({ error: "juego_no_permitido" }, 400);
+  const op = (body.opciones && typeof body.opciones === "object") ? body.opciones as Record<string, unknown> : {};
+  const opciones = opcionesNuevaSala(juego, op);
+  if (typeof opciones === "string") return json({ error: opciones }, 400);
+  const codigo = await codigoLibre(store);
+  if (!codigo) return json({ error: "sin_codigo" }, 503);
+  const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: botsFijos(juego) ?? body.bots !== false, canal: canalNuevo() };
+  await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`);
+  await guardarJugador(store, codigo, jugador, (e) => e, ahora);
+  await indexar(store, lunes, { codigo, juego, host: jugador.nombre, creada: ahora });
+  return json({ codigo, sala: sinCanal(sala) });
+}
+
+// POST /juegos/sala/<código>/unirse
+async function unirseSala(c: CtxSala): Promise<Response> {
+  const { body, jugador, store, ahora, json, codigo, sala, jugadores, dentro, publicar } = c;
+  // futbolito-equipos: { equipo } guarda la preferencia de equipo (también para quien ya está dentro).
+  const equipo = body.equipo === undefined ? undefined : Futbolito.validarEquipo(sala.opciones?.formato, sala.inicio !== null, jugadores, jugador.id, body.equipo);
+  if (equipo !== undefined && typeof equipo === "object") return json({ error: equipo.error }, equipo.status);
+  if (dentro && equipo === undefined) return json({ ok: true, codigo });
+  if (!dentro && sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
+  if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
+  const guardado = await guardarJugador(store, codigo, jugador, (e) => equipo === undefined ? e : { ...e, equipo }, ahora);
+  if (equipo !== undefined) { // futbolito-equipos
+    if (!guardado) return json({ error: "conflicto_escritura" }, 503);
+    await publicar(); return json({ ok: true, codigo, equipo });
+  }
+  await publicar();
+  return json({ ok: true, codigo });
+}
+
+// POST /juegos/sala/<código>/empezar (solo el anfitrión)
+async function empezarSala(c: CtxSala): Promise<Response> {
+  const { jugador, store, ahora, json, codigo, sala, jugadores, publicar } = c;
+  if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
+  const minimo = mesaDe(sala.juego, sala.opciones)?.min ?? 1; // futbolito-equipos: mesa por formato
+  if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots, sala.opciones) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
+  if (sala.inicio === null) {
+    const doc = await store.get<Sala>(ruta(codigo));
+    const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc!.data, canalNuevo) }; // + secreto de Dibuja
+    await store.put(ruta(codigo), nueva, doc!.sha, `sala ${codigo}: empieza`);
+    cache.delete(codigo);
+    await publicar();
+    return json({ ok: true, sala: sinCanal(nueva), ahora });
+  }
+  return json({ ok: true, sala: sinCanal(sala), ahora });
+}
+
+// Juegos por turnos (¡Una!, póker, Brisca, Conquián): cada jugada con su paso n; nadie más puede tener ese paso.
+function cambioDeJugada(c: CtxSala): CambioJugador | Response {
+  const { body, jugador, ahora, json, sala, jugadores } = c;
+  const v = validarJugada(sala.juego, body.jugada);
+  if (!v) return json({ error: "jugada_invalida" }, 400);
+  // futbolito-billar: con un final registrado la partida ya terminó.
+  if (FISICA.has(sala.juego) && jugadores.some((x) => x.final !== undefined || x.podio !== undefined)) return json({ error: "partida_terminada" }, 409);
+  if (sala.juego === "futbolito") { // futbolito-equipos: el tiro debe usar una barra de quien lo manda
+    const e = Futbolito.validarTiro(sala.opciones?.formato, Futbolito.asientosDe(jugadores, mesaDe(sala.juego, sala.opciones)!, sala.bots), jugador.id, v);
+    if (e) return json({ error: e.error }, e.status);
+  }
+  const n = v.n;
+  if (!Clasicos.sinTurnoUnico(sala.juego) && jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409); // clasicos-rapidos: ppt juega la misma ronda
+  const nueva = { ...v, t: ahora };
+  return (e: EnSala) => (e.jugadas || []).some((y) => y.n === n) ? e : { ...e, jugadas: [...(e.jugadas || []), nueva].slice(-600) };
+}
+
+// Cierre: total final de cada jugador y, del host, el podio completo (con bots).
+function cambioDeCierre(c: CtxSala): CambioJugador {
+  const { body, jugador, sala } = c;
+  const final = Math.max(0, Math.min(MAX_FINAL, Math.round(Number(body.final) || 0)));
+  const podio = sala.host === jugador.id && Array.isArray(body.podio)
+    ? (body.podio as Record<string, unknown>[]).slice(0, 32).map((x) => ({ nombre: String(x?.nombre ?? "").slice(0, 30), total: Math.max(0, Math.min(MAX_FINAL, Math.round(Number(x?.total) || 0))), ...(x?.bot ? { bot: true } : {}) }))
+    : undefined;
+  return (e: EnSala) => ({ ...e, ...(body.final !== undefined ? { final } : {}), ...(podio ? { podio } : {}) });
+}
+
+// Basta: palabras y ¡Basta! de la partida o, en Basta por rondas, de cada ronda.
+function cambioDeBasta(c: CtxSala): CambioJugador | Response {
+  const { body, ahora, json, sala } = c;
+  if (body.palabras !== undefined && (typeof body.palabras !== "object" || body.palabras === null || Array.isArray(body.palabras))) return json({ error: "palabras_invalidas" }, 400);
+  const palabras = Object.fromEntries(Object.entries((body.palabras || {}) as Record<string, unknown>).slice(0, 10)
+    .map(([k, v]) => [String(k).slice(0, 20), String(v ?? "").trim().slice(0, 40)]));
+  if (body.ronda !== undefined) {
+    // Basta por rondas: palabras y primer ¡Basta! de cada ronda.
+    const ronda = Number(body.ronda);
+    if (!Number.isInteger(ronda) || ronda < 0 || ronda >= Number(sala.opciones.rondas || 1)) return json({ error: "ronda_invalida" }, 400);
+    return (e: EnSala) => {
+      const previa = (e.rondasBasta || {})[ronda];
+      // El primer ¡Basta! de la ronda se conserva; si no hay, cuenta el de ahora.
+      let basta: { basta?: number } = {};
+      if (previa?.basta) basta = { basta: previa.basta };
+      else if (body.basta === true) basta = { basta: ahora };
+      const r = { palabras: body.palabras !== undefined ? palabras : (previa?.palabras ?? {}), ...basta };
+      return { ...e, rondasBasta: { ...(e.rondasBasta || {}), [ronda]: r } };
+    };
+  }
+  return (e: EnSala) => ({ ...e, palabras: body.palabras !== undefined ? palabras : e.palabras, basta: body.basta === true && !e.basta ? ahora : e.basta });
+}
+
+// cultura-conocimiento: Línea del tiempo — 5 líneas, aciertos 0–6 obligatorios, hasta 60 s, y puntos recortados a
+// 20 por acierto + 80 si la línea es perfecta.
+function cambioDeLinea(c: CtxSala): CambioJugador | Response {
+  const { body, json } = c;
+  const q = Number(body.q), aciertos = body.aciertos;
+  if (!Number.isInteger(q) || q < 0 || q >= RONDAS_LINEA || typeof body.correcta !== "boolean" || !entero(aciertos, 0, SUCESOS_MAX_LINEA)) return json({ error: "respuesta_invalida" }, 400);
+  const tope = 20 * (aciertos as number) + (body.correcta ? 80 : 0);
+  const puntos = Math.max(0, Math.min(tope, Math.round(Number(body.puntos) || 0)));
+  const ms = Math.max(0, Math.min(MS_MAX_LINEA, Math.round(Number(body.ms) || 0)));
+  return (e: EnSala) => e.respuestas[q] ? e : ({ ...e, respuestas: { ...e.respuestas, [q]: { correcta: body.correcta as boolean, puntos, ms, aciertos: aciertos as number } } });
+}
+
+// Quiz (preguntas): respuesta de la pregunta q; solo cuenta la primera.
+function cambioDeQuiz(c: CtxSala): CambioJugador | Response {
+  const { body, json } = c;
+  const q = Number(body.q);
+  if (!Number.isInteger(q) || q < 0 || q >= PREGUNTAS || typeof body.correcta !== "boolean") return json({ error: "respuesta_invalida" }, 400);
+  const puntos = Math.max(0, Math.min(200, Math.round(Number(body.puntos) || 0)));
+  const ms = Math.max(0, Math.min(20000, Math.round(Number(body.ms) || 0)));
+  return (e: EnSala) => e.respuestas[q] ? e : ({ ...e, respuestas: { ...e.respuestas, [q]: { correcta: body.correcta as boolean, puntos, ms } } });
+}
+
+// Elige cómo cambia el archivo del jugador según lo que trae la respuesta, o la respuesta de error.
+// deGrande: el cambio que ya resolvió juegos-salas-grandes (si aplica).
+function cambioDeRespuesta(c: CtxSala, inicio: number, deGrande: CambioJugador | undefined): CambioJugador | Response {
+  const { body, jugador, ahora, json, sala, jugadores } = c;
+  // juegos-tablero: Batalla naval guarda la flota y resuelve cada disparo en el servidor (server/naval.ts).
+  const naval = sala.juego === "naval" ? respuestaNaval(inicio, jugadores, jugador.id, body, ahora) : null;
+  if (naval && "error" in naval) return json({ error: naval.error }, naval.status);
+  if (naval) return naval.cambiar;
+  if (deGrande) return deGrande;
+  if (body.una !== undefined && body.jugada === undefined) {
+    const paso = Number((body.una as Record<string, unknown>)?.paso);
+    if (!Number.isInteger(paso) || paso < 0 || paso > 2000) return json({ error: "una_invalida" }, 400);
+    return (e: EnSala) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
+  }
+  if (body.jugada !== undefined) return cambioDeJugada(c);
+  if (body.carrera !== undefined) {
+    // Carreras de Arcade (server/carreras.ts): tiempo validado con el reloj del servidor; solo cuenta el primero.
+    const carrera = validarCarrera(sala.juego, body.carrera, inicio, ahora);
+    if (!carrera) return json({ error: "carrera_invalida" }, 400);
+    return (e: EnSala) => e.carrera ? e : { ...e, carrera: { ...carrera, t: ahora } };
+  }
+  if (body.loteria === true) return (e: EnSala) => e.loteria ? e : { ...e, loteria: ahora };
+  if (body.final !== undefined || body.podio !== undefined) return cambioDeCierre(c);
+  if (sala.juego.startsWith("basta")) return cambioDeBasta(c);
+  if (sala.juego === "cultura-linea") return cambioDeLinea(c);
+  return cambioDeQuiz(c);
+}
+
+// POST /juegos/sala/<código>/respuesta
+async function responderSala(c: CtxSala): Promise<Response> {
+  const { body, jugador, store, ahora, json, codigo, sala, jugadores, dentro, publicar } = c;
+  if (!dentro) return json({ error: "no_en_sala" }, 403);
+  if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
+  // juegos-salas-grandes: ¡Bingo!, trazo y adivina de Dibuja, y resultado de Memorama y Sopa
+  const grande = Grandes.respuestaGrande(sala, jugadores, jugador.id, body, ahora);
+  if (grande && "error" in grande) {
+    if (grande.cambiar && await guardarJugador(store, codigo, jugador, grande.cambiar, ahora)) await publicar();
+    return json({ error: grande.error }, grande.status);
+  }
+  const cambiar = cambioDeRespuesta(c, sala.inicio, grande?.cambiar);
+  if (typeof cambiar !== "function") return cambiar;
+  const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
+  if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
+  await publicar();
+  return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas,
+    ...(grande ? { ...grande.respuesta, bingo: nuevo.bingo, resultado: nuevo.resultado } : {}) }); // juegos-salas-grandes
+}
+
+// POST /juegos/sala/<código>/revancha → { codigo } de la sala nueva, con quien la pidió dentro.
+async function revanchaSala(c: CtxSala, lunes: string, rt?: ConfigRealtime): Promise<Response> {
+  const { jugador, store, ahora, json, codigo, sala, jugadores, dentro, publicar } = c;
+  if (!dentro) return json({ error: "no_en_sala" }, 403);
+  // Terminó: algún jugador ya mandó su total final (lo envía la página al pintar el podio, en todos los juegos).
+  const terminada = sala.inicio !== null && jugadores.some((j) => j.final !== undefined || j.podio !== undefined);
+  const base = await reservarRevancha(store, codigo, jugador, terminada, ahora, lunes, (id) => jugadores.find((j) => j.id === id)?.nombre);
+  if (typeof base === "string") return json({ error: base }, base === "no_termino" ? 409 : 503);
+  const sig = base.siguiente!;
+  cache.delete(sig);
+  const nueva = await estado(store, sig, ahora);
+  if (!nueva) return json({ error: "conflicto_escritura" }, 503);
+  if (!nueva.jugadores.some((j) => j.id === jugador.id)) {
+    if (nueva.sala.inicio !== null) return json({ error: "ya_empezo", codigo: sig }, 409);
+    if (nueva.jugadores.length >= cupo(nueva.sala.juego, nueva.sala.opciones)) return json({ error: "sala_llena", codigo: sig }, 409);
+    await guardarJugador(store, sig, jugador, (e) => e, ahora);
+  }
+  await publicar();
+  await publicarEstado(store, sig, ahora, rt);
+  return json({ ok: true, codigo: sig });
+}
+
+// GET /juegos/sala/<código>: estado de la sala para quien está dentro (o el admin).
+function verSala(c: CtxSala, rt?: ConfigRealtime): Response {
+  const { jugador, ahora, json, sala, jugadores, dentro } = c;
+  if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
+  const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
+  return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
+    ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora) }); // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
+}
+
 export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string, rt?: ConfigRealtime): Promise<Response> {
   const ahora = Date.parse(ahoraIso);
   let body: Record<string, unknown> = {};
@@ -315,58 +598,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   }
 
   // POST /juegos/sala → crear
-  if (sub === "" && req.method === "POST") {
-    const juego = String(body.juego || "");
-    if (!JUEGOS_PARTIDA.has(juego)) return json({ error: "juego_no_permitido" }, 400);
-    const opciones: Record<string, string> = {};
-    const op = (body.opciones && typeof body.opciones === "object") ? body.opciones as Record<string, unknown> : {};
-    if (typeof op.cat === "string" && op.cat.length <= 30) opciones.cat = op.cat;
-    if (juego === "poker" && op.equipos === "1") opciones.equipos = "1"; // póker por equipos A/B
-    if (juego === "ajedrez") opciones.reloj = ["5", "10", "15"].includes(String(op.reloj)) ? String(op.reloj) : "10"; // minutos por jugador
-    if (juego === "loteria") {
-      if (op.modo !== undefined && op.modo !== "linea" && op.modo !== "llena") return json({ error: "modo_invalido" }, 400);
-      opciones.modo = (op.modo as string) || "linea";
-    }
-    if (juego.startsWith("basta")) {
-      const rondas = op.rondas === undefined ? "10" : String(op.rondas);
-      if (!RONDAS_BASTA.includes(rondas)) return json({ error: "rondas_invalidas" }, 400);
-      opciones.rondas = rondas;
-      const extra = extrasBasta(op.extra); // basta-divertida-una-robo
-      if (extra === null) return json({ error: "extras_invalidas" }, 400);
-      if (extra) opciones.extra = extra;
-    }
-    if (CARRERAS[juego]) { // Arcade: nivel o pista en las opciones (openspec: juegos-plataformas-karts)
-      const mapa = mapaDeSala(juego, op.mapa, aleatorio(1)[0]);
-      if (!mapa) return json({ error: "mapa_invalido" }, 400);
-      opciones.mapa = mapa;
-    }
-    if (juego === "futbolito") { // futbolito-equipos: 1v1 (por omisión) o 2v2
-      const f = Futbolito.formatoDe(op);
-      if (!f) return json({ error: "formato_invalido" }, 400);
-      opciones.formato = f;
-    }
-    if (juego === "cultura-linea") { // cultura-conocimiento: el tema de la Línea del tiempo va en opciones.cat
-      if (op.cat !== undefined && !TEMAS_LINEA.includes(op.cat as string)) return json({ error: "tema_invalido" }, 400);
-      opciones.cat = (op.cat as string) ?? "todos";
-    }
-    if (juego === "en-frases") {
-      if (op.tema !== undefined && !TEMAS_INGLES.includes(op.tema as string)) return json({ error: "tema_invalido" }, 400);
-      opciones.tema = (op.tema as string) ?? "todo";
-    }
-    if (Clasicos.esClasicoRapido(juego)) { // clasicos-rapidos: modo del Ahorcado
-      const o = Clasicos.opcionesClasicos(juego, op);
-      if (typeof o === "string") return json({ error: o }, 400);
-      Object.assign(opciones, o);
-    }
-    { const e = Grandes.opcionesGrandes(juego, op, opciones); if (e) return json({ error: e }, 400); } // juegos-salas-grandes
-    const codigo = await codigoLibre(store);
-    if (!codigo) return json({ error: "sin_codigo" }, 503);
-    const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: botsFijos(juego) ?? body.bots !== false, canal: canalNuevo() };
-    await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`);
-    await guardarJugador(store, codigo, jugador, (e) => e, ahora);
-    await indexar(store, lunes, { codigo, juego, host: jugador.nombre, creada: ahora });
-    return json({ codigo, sala: sinCanal(sala) });
-  }
+  if (sub === "" && req.method === "POST") return crearSala(body, jugador, store, ahora, json, lunes);
 
   const m = sub.match(/^\/([A-Z]{4})(\/(unirse|empezar|respuesta|revancha))?$/);
   if (!m) return json({ error: "not_found" }, 404);
@@ -378,151 +610,13 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   const dentro = jugadores.some((j) => j.id === jugador.id);
   // Tras un cambio: publicar el estado fresco en el canal de la sala (si hay Realtime configurado).
   const publicar = () => publicarEstado(store, codigo, ahora, rt);
+  const c: CtxSala = { body, jugador, store, ahora, json, codigo, sala, jugadores, dentro, publicar };
 
-  if (accion === "unirse" && req.method === "POST") {
-    // futbolito-equipos: { equipo } guarda la preferencia de equipo (también para quien ya está dentro).
-    const equipo = body.equipo === undefined ? undefined : Futbolito.validarEquipo(sala.opciones?.formato, sala.inicio !== null, jugadores, jugador.id, body.equipo);
-    if (equipo !== undefined && typeof equipo === "object") return json({ error: equipo.error }, equipo.status);
-    if (dentro && equipo === undefined) return json({ ok: true, codigo });
-    if (!dentro && sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
-    if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
-    const guardado = await guardarJugador(store, codigo, jugador, (e) => equipo === undefined ? e : { ...e, equipo }, ahora);
-    if (equipo !== undefined) { // futbolito-equipos
-      if (!guardado) return json({ error: "conflicto_escritura" }, 503);
-      await publicar(); return json({ ok: true, codigo, equipo });
-    }
-    await publicar();
-    return json({ ok: true, codigo });
-  }
-
-  if (accion === "empezar" && req.method === "POST") {
-    if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
-    const minimo = mesaDe(sala.juego, sala.opciones)?.min ?? 1; // futbolito-equipos: mesa por formato
-    if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots, sala.opciones) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
-    if (sala.inicio === null) {
-      const doc = await store.get<Sala>(ruta(codigo));
-      const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc!.data, canalNuevo) }; // + secreto de Dibuja
-      await store.put(ruta(codigo), nueva, doc!.sha, `sala ${codigo}: empieza`);
-      cache.delete(codigo);
-      await publicar();
-      return json({ ok: true, sala: sinCanal(nueva), ahora });
-    }
-    return json({ ok: true, sala: sinCanal(sala), ahora });
-  }
-
-  if (accion === "respuesta" && req.method === "POST") {
-    if (!dentro) return json({ error: "no_en_sala" }, 403);
-    if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
-    // juegos-salas-grandes: ¡Bingo!, trazo y adivina de Dibuja, y resultado de Memorama y Sopa
-    const grande = Grandes.respuestaGrande(sala, jugadores, jugador.id, body, ahora);
-    if (grande && "error" in grande) {
-      if (grande.cambiar && await guardarJugador(store, codigo, jugador, grande.cambiar, ahora)) await publicar();
-      return json({ error: grande.error }, grande.status);
-    }
-    let cambiar: (e: EnSala) => EnSala;
-    // juegos-tablero: Batalla naval guarda la flota y resuelve cada disparo en el servidor (server/naval.ts).
-    const naval = sala.juego === "naval" ? respuestaNaval(sala.inicio, jugadores, jugador.id, body, ahora) : null;
-    if (naval && "error" in naval) return json({ error: naval.error }, naval.status);
-    if (naval) cambiar = naval.cambiar;
-    else if (grande) cambiar = grande.cambiar;
-    else if (body.una !== undefined && body.jugada === undefined) {
-      const paso = Number((body.una as Record<string, unknown>)?.paso);
-      if (!Number.isInteger(paso) || paso < 0 || paso > 2000) return json({ error: "una_invalida" }, 400);
-      cambiar = (e) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
-    } else if (body.jugada !== undefined) {
-      // Juegos por turnos (¡Una!, póker, Brisca, Conquián): cada jugada con su paso n; nadie más puede tener ese paso.
-      const v = validarJugada(sala.juego, body.jugada);
-      if (!v) return json({ error: "jugada_invalida" }, 400);
-      // futbolito-billar: con un final registrado la partida ya terminó.
-      if (FISICA.has(sala.juego) && jugadores.some((x) => x.final !== undefined || x.podio !== undefined)) return json({ error: "partida_terminada" }, 409);
-      if (sala.juego === "futbolito") { // futbolito-equipos: el tiro debe usar una barra de quien lo manda
-        const e = Futbolito.validarTiro(sala.opciones?.formato, Futbolito.asientosDe(jugadores, mesaDe(sala.juego, sala.opciones)!, sala.bots), jugador.id, v);
-        if (e) return json({ error: e.error }, e.status);
-      }
-      const n = v.n;
-      if (!Clasicos.sinTurnoUnico(sala.juego) && jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409); // clasicos-rapidos: ppt juega la misma ronda
-      const nueva = { ...v, t: ahora };
-      cambiar = (e) => (e.jugadas || []).some((y) => y.n === n) ? e : { ...e, jugadas: [...(e.jugadas || []), nueva].slice(-600) };
-    } else if (body.carrera !== undefined) {
-      // Carreras de Arcade (server/carreras.ts): tiempo validado con el reloj del servidor; solo cuenta el primero.
-      const c = validarCarrera(sala.juego, body.carrera, sala.inicio, ahora);
-      if (!c) return json({ error: "carrera_invalida" }, 400);
-      cambiar = (e) => e.carrera ? e : { ...e, carrera: { ...c, t: ahora } };
-    } else if (body.loteria === true) {
-      cambiar = (e) => e.loteria ? e : { ...e, loteria: ahora };
-    } else if (body.final !== undefined || body.podio !== undefined) {
-      // Cierre: total final de cada jugador y, del host, el podio completo (con bots).
-      const final = Math.max(0, Math.min(MAX_FINAL, Math.round(Number(body.final) || 0)));
-      const podio = sala.host === jugador.id && Array.isArray(body.podio)
-        ? (body.podio as Record<string, unknown>[]).slice(0, 32).map((x) => ({ nombre: String(x?.nombre ?? "").slice(0, 30), total: Math.max(0, Math.min(MAX_FINAL, Math.round(Number(x?.total) || 0))), ...(x?.bot ? { bot: true } : {}) }))
-        : undefined;
-      cambiar = (e) => ({ ...e, ...(body.final !== undefined ? { final } : {}), ...(podio ? { podio } : {}) });
-    } else if (sala.juego.startsWith("basta")) {
-      if (body.palabras !== undefined && (typeof body.palabras !== "object" || body.palabras === null || Array.isArray(body.palabras))) return json({ error: "palabras_invalidas" }, 400);
-      const palabras = Object.fromEntries(Object.entries((body.palabras || {}) as Record<string, unknown>).slice(0, 10)
-        .map(([k, v]) => [String(k).slice(0, 20), String(v ?? "").trim().slice(0, 40)]));
-      if (body.ronda !== undefined) {
-        // Basta por rondas: palabras y primer ¡Basta! de cada ronda.
-        const ronda = Number(body.ronda);
-        if (!Number.isInteger(ronda) || ronda < 0 || ronda >= Number(sala.opciones.rondas || 1)) return json({ error: "ronda_invalida" }, 400);
-        cambiar = (e) => {
-          const previa = (e.rondasBasta || {})[ronda];
-          const r = { palabras: body.palabras !== undefined ? palabras : (previa?.palabras ?? {}), ...(previa?.basta ? { basta: previa.basta } : body.basta === true ? { basta: ahora } : {}) };
-          return { ...e, rondasBasta: { ...(e.rondasBasta || {}), [ronda]: r } };
-        };
-      } else {
-        cambiar = (e) => ({ ...e, palabras: body.palabras !== undefined ? palabras : e.palabras, basta: body.basta === true && !e.basta ? ahora : e.basta });
-      }
-    } else if (sala.juego === "cultura-linea") {
-      // cultura-conocimiento: Línea del tiempo — 5 líneas, aciertos 0–6 obligatorios, hasta 60 s, y puntos recortados a
-      // 20 por acierto + 80 si la línea es perfecta.
-      const q = Number(body.q), aciertos = body.aciertos;
-      if (!Number.isInteger(q) || q < 0 || q >= RONDAS_LINEA || typeof body.correcta !== "boolean" || !entero(aciertos, 0, SUCESOS_MAX_LINEA)) return json({ error: "respuesta_invalida" }, 400);
-      const tope = 20 * (aciertos as number) + (body.correcta ? 80 : 0);
-      const puntos = Math.max(0, Math.min(tope, Math.round(Number(body.puntos) || 0)));
-      const ms = Math.max(0, Math.min(MS_MAX_LINEA, Math.round(Number(body.ms) || 0)));
-      cambiar = (e) => e.respuestas[q] ? e : ({ ...e, respuestas: { ...e.respuestas, [q]: { correcta: body.correcta as boolean, puntos, ms, aciertos: aciertos as number } } });
-    } else {
-      const q = Number(body.q);
-      if (!Number.isInteger(q) || q < 0 || q >= PREGUNTAS || typeof body.correcta !== "boolean") return json({ error: "respuesta_invalida" }, 400);
-      const puntos = Math.max(0, Math.min(200, Math.round(Number(body.puntos) || 0)));
-      const ms = Math.max(0, Math.min(20000, Math.round(Number(body.ms) || 0)));
-      cambiar = (e) => e.respuestas[q] ? e : ({ ...e, respuestas: { ...e.respuestas, [q]: { correcta: body.correcta as boolean, puntos, ms } } });
-    }
-    const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
-    if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
-    await publicar();
-    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas,
-      ...(grande ? { ...grande.respuesta, bingo: nuevo.bingo, resultado: nuevo.resultado } : {}) }); // juegos-salas-grandes
-  }
-
-  // POST /juegos/sala/<código>/revancha → { codigo } de la sala nueva, con quien la pidió dentro.
-  if (accion === "revancha" && req.method === "POST") {
-    if (!dentro) return json({ error: "no_en_sala" }, 403);
-    // Terminó: algún jugador ya mandó su total final (lo envía la página al pintar el podio, en todos los juegos).
-    const terminada = sala.inicio !== null && jugadores.some((j) => j.final !== undefined || j.podio !== undefined);
-    const base = await reservarRevancha(store, codigo, jugador, terminada, ahora, lunes, (id) => jugadores.find((j) => j.id === id)?.nombre);
-    if (typeof base === "string") return json({ error: base }, base === "no_termino" ? 409 : 503);
-    const sig = base.siguiente!;
-    cache.delete(sig);
-    const nueva = await estado(store, sig, ahora);
-    if (!nueva) return json({ error: "conflicto_escritura" }, 503);
-    if (!nueva.jugadores.some((j) => j.id === jugador.id)) {
-      if (nueva.sala.inicio !== null) return json({ error: "ya_empezo", codigo: sig }, 409);
-      if (nueva.jugadores.length >= cupo(nueva.sala.juego, nueva.sala.opciones)) return json({ error: "sala_llena", codigo: sig }, 409);
-      await guardarJugador(store, sig, jugador, (e) => e, ahora);
-    }
-    await publicar();
-    await publicarEstado(store, sig, ahora, rt);
-    return json({ ok: true, codigo: sig });
-  }
-
-  if (!accion && req.method === "GET") {
-    if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
-    const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
-    return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
-      ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora) }); // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
-  }
+  if (accion === "unirse" && req.method === "POST") return unirseSala(c);
+  if (accion === "empezar" && req.method === "POST") return empezarSala(c);
+  if (accion === "respuesta" && req.method === "POST") return responderSala(c);
+  if (accion === "revancha" && req.method === "POST") return revanchaSala(c, lunes, rt);
+  if (!accion && req.method === "GET") return verSala(c, rt);
 
   return json({ error: "metodo_no_permitido" }, 405);
 }

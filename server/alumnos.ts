@@ -93,6 +93,44 @@ async function escribir(store: Store, cambiar: (r: RegistroAlumnos) => RegistroA
   return false;
 }
 
+// GET /ingles/alumnos → alumnos y alumnas de las filas externas y del registro, por nombre.
+function listarAlumnos(filas: InglesRow[], registro: RegistroAlumnos, json: Json): Response {
+  const notion = new Map<string, Set<string>>();
+  for (const r of filas) {
+    if (!r.alumno) continue;
+    if (!notion.has(r.alumno)) notion.set(r.alumno, new Set());
+    r.userEmails.forEach((e) => notion.get(r.alumno!)!.add(e));
+  }
+  const alumnos = [
+    ...[...notion].map(([nombre, emails]) => ({ nombre, emails: [...emails], origen: "notion" as const })),
+    ...Object.entries(registro).map(([e, a]) => ({ nombre: a.nombre, emails: [e], origen: "registro" as const, alta: a.alta, ...(a.inicio ? { inicio: a.inicio } : {}) })),
+  ].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  return json({ alumnos });
+}
+
+// POST /ingles/alumnos { email, nombre, grupo? } → alta en el registro (y en su grupo, si se eligió).
+async function altaAlumno(body: Record<string, unknown>, filas: InglesRow[], registro: RegistroAlumnos, deps: DepsAlumnos, json: Json): Promise<Response> {
+  const correo = String(body.email ?? "").trim().toLowerCase();
+  const nombre = String(body.nombre ?? "").trim().replaceAll(/\s+/g, " ");
+  if (!CORREO.test(correo)) return json({ error: "correo_invalido" }, 400);
+  if (!NOMBRE.test(nombre)) return json({ error: "nombre_invalido" }, 400);
+  if (correo === deps.admin || registro[correo] || filas.some((r) => r.userEmails.includes(correo))) return json({ error: "correo_en_uso" }, 409);
+  const slug = slugAlumno(nombre);
+  if (slug === "profe") return json({ error: "nombre_en_uso" }, 409); // reservado para la ruta del profe
+  const conCorreo = filas.some((r) => r.alumno && slugAlumno(r.alumno) === slug && r.userEmails.length) ||
+    Object.values(registro).some((a) => slugAlumno(a.nombre) === slug);
+  if (conCorreo) return json({ error: "nombre_en_uso" }, 409);
+  const alta = deps.ahora ? deps.ahora() : new Date().toISOString();
+  // Liga a un alumno que ya lleva el curso en Notion: sin inicio (sus atrasos son reales).
+  const existente = filas.some((r) => r.alumno && slugAlumno(r.alumno) === slug);
+  const alumno: AlumnoRegistrado = existente ? { nombre, alta } : { nombre, alta, inicio: lunesDeInicio(alta) };
+  const grupo = body.grupo === undefined || body.grupo === "" ? null : String(body.grupo);
+  if (grupo && (!deps.inscribir || !/^[a-z0-9-]{1,60}$/.test(grupo))) return json({ error: "grupo_invalido" }, 400);
+  if (!await escribir(deps.store, (r) => ({ ...r, [correo]: alumno }), `alumnos: alta de ${nombre}`)) return json({ error: "conflicto_escritura" }, 503);
+  if (grupo && !await deps.inscribir!(nombre, grupo, alumno.inicio ?? alta.slice(0, 10))) return json({ error: "grupo_inexistente", alumno: { email: correo, ...alumno } }, 400);
+  return json({ ok: true, alumno: { email: correo, ...alumno } });
+}
+
 // sub: "" (GET lista, POST alta) o "/quitar" (POST). Solo admin.
 export async function handleAlumnos(req: Request, sub: string, deps: DepsAlumnos, json: Json): Promise<Response> {
   const email = (deps.email || "").trim().toLowerCase();
@@ -100,46 +138,14 @@ export async function handleAlumnos(req: Request, sub: string, deps: DepsAlumnos
   const filas = await deps.filas();
   const registro = (await deps.store.get<RegistroAlumnos>(RUTA_ALUMNOS))?.data ?? {};
 
-  if (sub === "" && req.method === "GET") {
-    const notion = new Map<string, Set<string>>();
-    for (const r of filas) {
-      if (!r.alumno) continue;
-      if (!notion.has(r.alumno)) notion.set(r.alumno, new Set());
-      r.userEmails.forEach((e) => notion.get(r.alumno!)!.add(e));
-    }
-    const alumnos = [
-      ...[...notion].map(([nombre, emails]) => ({ nombre, emails: [...emails], origen: "notion" as const })),
-      ...Object.entries(registro).map(([e, a]) => ({ nombre: a.nombre, emails: [e], origen: "registro" as const, alta: a.alta, ...(a.inicio ? { inicio: a.inicio } : {}) })),
-    ].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
-    return json({ alumnos });
-  }
+  if (sub === "" && req.method === "GET") return listarAlumnos(filas, registro, json);
 
   let body: Record<string, unknown> = {};
   if (req.method === "POST") {
     try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
   }
 
-  if (sub === "" && req.method === "POST") {
-    const correo = String(body.email ?? "").trim().toLowerCase();
-    const nombre = String(body.nombre ?? "").trim().replace(/\s+/g, " ");
-    if (!CORREO.test(correo)) return json({ error: "correo_invalido" }, 400);
-    if (!NOMBRE.test(nombre)) return json({ error: "nombre_invalido" }, 400);
-    if (correo === deps.admin || registro[correo] || filas.some((r) => r.userEmails.includes(correo))) return json({ error: "correo_en_uso" }, 409);
-    const slug = slugAlumno(nombre);
-    if (slug === "profe") return json({ error: "nombre_en_uso" }, 409); // reservado para la ruta del profe
-    const conCorreo = filas.some((r) => r.alumno && slugAlumno(r.alumno) === slug && r.userEmails.length) ||
-      Object.values(registro).some((a) => slugAlumno(a.nombre) === slug);
-    if (conCorreo) return json({ error: "nombre_en_uso" }, 409);
-    const alta = deps.ahora ? deps.ahora() : new Date().toISOString();
-    // Liga a un alumno que ya lleva el curso en Notion: sin inicio (sus atrasos son reales).
-    const existente = filas.some((r) => r.alumno && slugAlumno(r.alumno) === slug);
-    const alumno: AlumnoRegistrado = existente ? { nombre, alta } : { nombre, alta, inicio: lunesDeInicio(alta) };
-    const grupo = body.grupo === undefined || body.grupo === "" ? null : String(body.grupo);
-    if (grupo && (!deps.inscribir || !/^[a-z0-9-]{1,60}$/.test(grupo))) return json({ error: "grupo_invalido" }, 400);
-    if (!await escribir(deps.store, (r) => ({ ...r, [correo]: alumno }), `alumnos: alta de ${nombre}`)) return json({ error: "conflicto_escritura" }, 503);
-    if (grupo && !await deps.inscribir!(nombre, grupo, alumno.inicio ?? alta.slice(0, 10))) return json({ error: "grupo_inexistente", alumno: { email: correo, ...alumno } }, 400);
-    return json({ ok: true, alumno: { email: correo, ...alumno } });
-  }
+  if (sub === "" && req.method === "POST") return await altaAlumno(body, filas, registro, deps, json);
 
   if (sub === "/quitar" && req.method === "POST") {
     const correo = String(body.email ?? "").trim().toLowerCase();

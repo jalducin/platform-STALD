@@ -97,9 +97,10 @@ function slideHtml(d, ctx) {
   const tono = TONOS[d.tipo] || 'indigo';
   const wrap = (titulo, cuerpo, extra) => '<div class="slide" data-tone="' + tono + '"><div class="slide-top"><span>' + escapeHtml(titulo) + '</span><small>' + escapeHtml(extra || ctx.titulo) + '</small></div><div class="slide-body">' + cuerpo + '</div></div>';
   if (d.tipo === 'portada' || d.tipo === 'cierre') {
+    const horaCtx = ctx.hora ? ' · ' + escapeHtml(ctx.hora) : '';
     return '<div class="slide hero" data-tone="' + tono + '"><div class="big-emoji">' + escapeHtml(d.emoji || '🎥') + '</div><h1>' + escapeHtml(d.titulo) + '</h1>' +
       (d.subtitulo ? '<h2>' + escapeHtml(d.subtitulo) + '</h2>' : '') + (d.texto ? '<div class="pill-hero">' + escapeHtml(d.texto) + '</div>' : '') +
-      (d.tipo === 'portada' ? '<div class="pill-hero">' + escapeHtml(formatFecha(ctx.fecha)) + (ctx.hora ? ' · ' + escapeHtml(ctx.hora) : '') + '</div>' : '') + '</div>';
+      (d.tipo === 'portada' ? '<div class="pill-hero">' + escapeHtml(formatFecha(ctx.fecha)) + horaCtx + '</div>' : '') + '</div>';
   }
   if (d.tipo === 'agenda') {
     return wrap(d.titulo, '<div class="s-grid">' + (ctx.guion || []).map((b, i) => '<div class="s-card"><span class="s-num">' + (i + 1) + '</span><span>' + escapeHtml(String(b.titulo).replace(/^\d+\.\s*/, '')) + '</span><span class="s-time">' + escapeHtml(b.tiempo) + '</span></div>').join('') + '</div>');
@@ -151,7 +152,7 @@ function slideHtml(d, ctx) {
 let qrLib = null;
 function ensureQr(el) {
   if (!el || el.dataset.done) return;
-  const draw = () => { try { el.innerHTML = ''; new window.QRCode(el, { text: el.dataset.url, width: 256, height: 256, correctLevel: window.QRCode.CorrectLevel.M }); el.dataset.done = '1'; } catch (e) { el.textContent = el.dataset.url; } };
+  const draw = () => { try { el.innerHTML = ''; new window.QRCode(el, { text: el.dataset.url, width: 256, height: 256, correctLevel: window.QRCode.CorrectLevel.M }); el.dataset.done = '1'; } catch { /* sin QR: se muestra el enlace */ el.textContent = el.dataset.url; } };
   if (window.QRCode) return draw();
   if (!qrLib) {
     qrLib = new Promise((ok, fail) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = ok; sc.onerror = fail; document.head.appendChild(sc); });
@@ -181,7 +182,7 @@ async function openPresentacion(id) {
     ensureQr(document.getElementById('deck-qr'));
   };
   const go = (n) => { i = Math.max(0, Math.min(slides.length - 1, n)); show(); };
-  const salir = () => { document.removeEventListener('keydown', onKey); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); deck.remove(); };
+  const salir = () => { document.removeEventListener('keydown', onKey); if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); } deck.remove(); };
   const full = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else deck.requestFullscreen && deck.requestFullscreen().catch(() => {}); };
   function onKey(e) {
     if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(i + 1); }
@@ -194,7 +195,7 @@ async function openPresentacion(id) {
   document.addEventListener('keydown', onKey);
   deck.addEventListener('click', (e) => {
     const b = e.target.closest('[data-deck]');
-    if (b) { const a = b.dataset.deck; if (a === 'prev') go(i - 1); if (a === 'next') go(i + 1); if (a === 'full') full(); if (a === 'exit') salir(); return; }
+    if (b) { const a = b.dataset.deck; if (a === 'prev') { go(i - 1); } if (a === 'next') { go(i + 1); } if (a === 'full') { full(); } if (a === 'exit') { salir(); } return; }
     if (e.target.closest('.slide')) go(i + 1);
   });
   show();

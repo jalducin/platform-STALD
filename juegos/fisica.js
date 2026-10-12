@@ -10,11 +10,14 @@
   const PI = 3.141592653589793;
 
   function fnv(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
-  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; } // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
   const rng = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
   // Redondeo a milésimas: el estado de cada tiro empieza exactamente igual en todos los aparatos.
   const q = v => Math.round(v * 1000) / 1000;
-  const acotar = (v, a, b) => v < a ? a : v > b ? b : v;
+  const acotar = (v, a, b) => {
+    if (v < a) return a;
+    return v > b ? b : v;
+  };
 
   // [seno, coseno] de un ángulo en décimas de grado (entero). Serie de Taylor en [0°, 90°) y cuadrantes.
   function senCos(decimas) {
@@ -22,7 +25,9 @@
     const cuad = Math.floor(a / 900), x = (a - cuad * 900) * PI / 1800, x2 = x * x;
     let s = x, c = 1, ts = x, tc = 1;
     for (let k = 1; k <= 10; k++) { ts = -ts * x2 / ((2 * k) * (2 * k + 1)); s += ts; tc = -tc * x2 / ((2 * k - 1) * (2 * k)); c += tc; }
-    return cuad === 0 ? [s, c] : cuad === 1 ? [c, -s] : cuad === 2 ? [-s, -c] : [-c, s];
+    if (cuad === 0) return [s, c];
+    if (cuad === 1) return [c, -s];
+    return cuad === 2 ? [-s, -c] : [-c, s];
   }
   // atan para |t| ≤ tan 22.5°.
   function atanSerie(t) { const t2 = t * t; let term = t, suma = t; for (let k = 1; k <= 16; k++) { term = -term * t2; suma += term / (2 * k + 1); } return suma; }
@@ -44,7 +49,7 @@
     const ex = ax + dx * t - px, ey = ay + dy * t - py;
     return Math.sqrt(ex * ex + ey * ey);
   }
-  const clonar = o => JSON.parse(JSON.stringify(o));
+  const clonar = o => JSON.parse(JSON.stringify(o)); // NOSONAR: copia con JSON a propósito: normaliza -0, NaN e Infinity como la red; la simulación es determinista
 
   /* Línea de turnos de una partida de sala 1 vs 1 por tiros (design.md §4).
      o.motor: { inicial(seed), turno(st) → 0|1, fin(st), aplicar(st, tiro) → { st, ms }, rendir(st, idx), tiroBot(st, nivel, rnd) }

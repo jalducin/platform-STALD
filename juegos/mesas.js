@@ -37,7 +37,7 @@
   // futbolito-equipos: con `opciones.formato` la mesa puede cambiar (igual que mesaDe en server/salas.ts).
   const de = (juego, opciones) => {
     const m = MESAS[juego] || null, f = m && opciones && opciones.formato && m.formatos ? m.formatos[opciones.formato] : null;
-    return f ? Object.assign({}, m, f) : m;
+    return f ? ({ ...m, ...f }) : m;
   };
   // Lugares que ocupan los bots con `humanos` personas: solo en mesas con asientos y si la sala lleva bots.
   const botsEnMesa = (juego, humanos, conBots, opciones) => {

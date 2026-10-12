@@ -55,7 +55,7 @@ function fnv(s: string): number {
 }
 function mulberry(a: number) {
   return () => {
-    a |= 0; a = a + 0x6D2B79F5 | 0;
+    a |= 0; a = a + 0x6D2B79F5 | 0; // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
     let t = Math.imul(a ^ a >>> 15, 1 | a);
     t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
@@ -83,8 +83,14 @@ export const BINGO = {
   carton(seed: number, id: string): number[] {
     const r = rng(seed, "bingo-carton|" + id);
     const cols = rango(0, 5).map((c) => barajar(rango(c * 15 + 1, 15), r).slice(0, c === 2 ? 4 : 5));
+    // Columna central: el centro es libre (0) y las otras 4 filas toman sus números en orden.
+    const celda = (f: number, c: number) => {
+      if (c !== 2) return cols[c][f];
+      if (f === 2) return 0;
+      return cols[2][f < 2 ? f : f - 1];
+    };
     const t: number[] = [];
-    for (let f = 0; f < 5; f++) for (let c = 0; c < 5; c++) t.push(c === 2 ? (f === 2 ? 0 : cols[2][f < 2 ? f : f - 1]) : cols[c][f]);
+    for (let f = 0; f < 5; f++) for (let c = 0; c < 5; c++) t.push(celda(f, c));
     return t;
   },
   cantadosA: (inicio: number, t: number) => t < inicio ? 0 : Math.min(75, Math.floor((t - inicio) / BINGO.CANTO_MS) + 1),
@@ -111,7 +117,7 @@ export function palabraDibuja(secreto: string, turno: number) {
   return PALABRAS_DIBUJA[orden[turno % orden.length]];
 }
 // Minúsculas, sin acentos, solo letras y espacios sencillos.
-export const normalizarPalabra = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
+export const normalizarPalabra = (s: string) => s.normalize("NFD").replaceAll(/[̀-ͯ]/g, "").toLowerCase().replaceAll(/[^a-z ]/g, "").replaceAll(/\s+/g, " ").trim();
 const esLaPalabra = (texto: string, palabra: string) => { const n = normalizarPalabra(texto), w = normalizarPalabra(palabra); return n === w || n === w + "s" || n + "s" === w || n === w + "es"; };
 
 export interface TurnoDibuja {
@@ -211,65 +217,79 @@ export function validarJugadaBlackjack(j: Rec, base: { n: number; accion: string
 export function respuestaGrande<E extends JugadorGrande>(sala: SalaGrande, jugadores: E[], yo: string, body: Rec, ahora: number): Cambio<E> | Falla<E> | null {
   const inicio = sala.inicio!;
   const mio = jugadores.find((x) => x.id === yo);
-  if (sala.juego === "bingo" && body.bingo === true) {
-    if (ahora < inicio) return { error: "no_empezo", status: 409 };
-    if (mio?.bingo) return { cambiar: (e) => e };
-    const n = BINGO.cantadosA(inicio, ahora);
-    if (!BINGO.cumple(BINGO.carton(sala.seed, yo), new Set(BINGO.orden(sala.seed).slice(0, n)), sala.opciones.figura || "linea")) {
-      return { error: "bingo_falso", status: 409, cambiar: (e) => ({ ...e, bingoFalsos: Math.min(99, (e.bingoFalsos ?? 0) + 1) }) };
-    }
-    return { cambiar: (e) => e.bingo ? e : { ...e, bingo: { t: ahora, n } } };
-  }
+  if (sala.juego === "bingo" && body.bingo === true) return respuestaBingo<E>(sala, mio, yo, inicio, ahora);
   if (sala.juego === "dibuja" && (body.trazo !== undefined || body.adivina !== undefined)) {
     const cal = calendarioDe(sala, jugadores);
     const ahoraTurno = turnoEn(cal, ahora);
-    if (body.trazo !== undefined) {
-      const t = body.trazo;
-      if (!esObjeto(t) || !llaves(t, ["turno", "nuevos", "borrar"], ["turno"]) || !entero(t.turno, 0, 20)) return { error: "trazo_invalido", status: 400 };
-      const borrar = t.borrar === true;
-      const nuevos = Array.isArray(t.nuevos) ? t.nuevos.map(validarTrazo) : null;
-      if ((t.borrar !== undefined && !borrar) || (!borrar && (!nuevos || !nuevos.length || nuevos.length > DIBUJA.MAX_POR_ENVIO || nuevos.some((x) => !x)))) return { error: "trazo_invalido", status: 400 };
-      if (!ahoraTurno || ahoraTurno.fase !== "dibujo" || ahoraTurno.turno.i !== t.turno) return { error: "turno_cerrado", status: 409 };
-      if (ahoraTurno.turno.dibuja !== yo) return { error: "no_dibujas", status: 409 };
-      const previo = mio?.dibujo?.turno === t.turno ? mio.dibujo : null;
-      if (previo && ahora - previo.t < DIBUJA.TRAZO_CADA_MS) return { error: "muy_rapido", status: 429 };
-      const lista = borrar ? [] : [...(previo?.trazos ?? []), ...nuevos as Trazo[]];
-      if (lista.length > DIBUJA.MAX_TRAZOS || lista.reduce((a, x) => a + x.p.length, 0) > DIBUJA.MAX_NUMEROS) return { error: "dibujo_lleno", status: 413 };
-      const turno = t.turno as number;
-      return { cambiar: (e) => ({ ...e, dibujo: { turno, trazos: lista, t: ahora } }) };
-    }
-    const a = body.adivina;
-    if (!esObjeto(a) || !llaves(a, ["turno", "texto"], ["turno", "texto"]) || !entero(a.turno, 0, 20) || typeof a.texto !== "string" || a.texto.length > DIBUJA.MAX_TEXTO || !a.texto.trim()) {
-      return { error: "adivina_invalida", status: 400 };
-    }
-    if (!ahoraTurno || ahoraTurno.fase !== "dibujo" || ahoraTurno.turno.i !== a.turno) return { error: "turno_cerrado", status: 409 };
-    if (ahoraTurno.turno.dibuja === yo) return { error: "eres_quien_dibuja", status: 409 };
-    const turno = a.turno as number;
-    if (mio?.aciertos?.[turno]) return { error: "ya_adivinaste", status: 409 };
-    const ultimo = Math.max(0, ...(mio?.intentos ?? []).map((x) => x.t));
-    if (ahora - ultimo < DIBUJA.INTENTO_CADA_MS) return { error: "muy_rapido", status: 429 };
-    const palabra = palabraDibuja(sala.secreto!, turno).en;
-    if (esLaPalabra(a.texto, palabra)) {
-      const pts = 100 + Math.round(100 * Math.max(0, 1 - (ahora - ahoraTurno.turno.ini) / DIBUJA.DIBUJO_MS));
-      return { cambiar: (e) => e.aciertos?.[turno] ? e : { ...e, aciertos: { ...(e.aciertos ?? {}), [turno]: { t: ahora, pts } } }, respuesta: { correcta: true, pts } };
-    }
-    const casi = normalizarPalabra(a.texto).includes(normalizarPalabra(palabra));
-    const intento = casi ? { turno, casi: true as const, t: ahora } : { turno, texto: a.texto.trim().replace(/\s+/g, " ").slice(0, 30), t: ahora };
-    return { cambiar: (e) => ({ ...e, intentos: [...(e.intentos ?? []), intento].slice(-DIBUJA.MAX_INTENTOS) }), respuesta: { correcta: false, ...(casi ? { casi: true } : {}) } };
+    if (body.trazo !== undefined) return respuestaTrazo<E>(body.trazo, ahoraTurno, mio, yo, ahora);
+    return respuestaAdivina<E>(sala, body.adivina, ahoraTurno, mio, yo, ahora);
   }
-  if (LIMITES_RESULTADO[sala.juego] && body.resultado !== undefined) {
-    const r = validarResultado(sala.juego, body.resultado, inicio, ahora);
-    if (!r) return { error: "resultado_invalido", status: 400 };
-    return {
-      cambiar: (e) => {
-        const previo = e.resultado;
-        if (previo?.fin) return e; // tras el final no cambia
-        if (previo && !r.fin && (r.encontradas ?? 0) < (previo.encontradas ?? 0)) return e; // el avance no baja
-        return { ...e, resultado: { ...r, t: ahora } };
-      },
-    };
-  }
+  if (LIMITES_RESULTADO[sala.juego] && body.resultado !== undefined) return respuestaResultado<E>(sala, body.resultado, inicio, ahora);
   return null;
+}
+
+type TurnoActual = ReturnType<typeof turnoEn>;
+
+// 🎱 ¡Bingo!: válido si el cartón cumple la figura con lo cantado hasta ahora; uno falso se cuenta.
+function respuestaBingo<E extends JugadorGrande>(sala: SalaGrande, mio: E | undefined, yo: string, inicio: number, ahora: number): Cambio<E> | Falla<E> {
+  if (ahora < inicio) return { error: "no_empezo", status: 409 };
+  if (mio?.bingo) return { cambiar: (e) => e };
+  const n = BINGO.cantadosA(inicio, ahora);
+  if (!BINGO.cumple(BINGO.carton(sala.seed, yo), new Set(BINGO.orden(sala.seed).slice(0, n)), sala.opciones.figura || "linea")) {
+    return { error: "bingo_falso", status: 409, cambiar: (e) => ({ ...e, bingoFalsos: Math.min(99, (e.bingoFalsos ?? 0) + 1) }) };
+  }
+  return { cambiar: (e) => e.bingo ? e : { ...e, bingo: { t: ahora, n } } };
+}
+
+// 🎨 Trazo de quien dibuja en su turno (o borrar el dibujo), con ritmo y tamaño acotados.
+function respuestaTrazo<E extends JugadorGrande>(t: unknown, ahoraTurno: TurnoActual, mio: E | undefined, yo: string, ahora: number): Cambio<E> | Falla<E> {
+  if (!esObjeto(t) || !llaves(t, ["turno", "nuevos", "borrar"], ["turno"]) || !entero(t.turno, 0, 20)) return { error: "trazo_invalido", status: 400 };
+  const borrar = t.borrar === true;
+  const nuevos = Array.isArray(t.nuevos) ? t.nuevos.map(validarTrazo) : null;
+  if ((t.borrar !== undefined && !borrar) || (!borrar && (!nuevos || !nuevos.length || nuevos.length > DIBUJA.MAX_POR_ENVIO || nuevos.some((x) => !x)))) return { error: "trazo_invalido", status: 400 };
+  if (!ahoraTurno || ahoraTurno.fase !== "dibujo" || ahoraTurno.turno.i !== t.turno) return { error: "turno_cerrado", status: 409 };
+  if (ahoraTurno.turno.dibuja !== yo) return { error: "no_dibujas", status: 409 };
+  const previo = mio?.dibujo?.turno === t.turno ? mio.dibujo : null;
+  if (previo && ahora - previo.t < DIBUJA.TRAZO_CADA_MS) return { error: "muy_rapido", status: 429 };
+  const lista = borrar ? [] : [...(previo?.trazos ?? []), ...nuevos as Trazo[]];
+  if (lista.length > DIBUJA.MAX_TRAZOS || lista.reduce((a, x) => a + x.p.length, 0) > DIBUJA.MAX_NUMEROS) return { error: "dibujo_lleno", status: 413 };
+  const turno = t.turno as number;
+  return { cambiar: (e) => ({ ...e, dibujo: { turno, trazos: lista, t: ahora } }) };
+}
+
+// 🎨 Intento de adivinar la palabra del turno: acierto con puntos por rapidez, o el intento (marcado si fue casi).
+function respuestaAdivina<E extends JugadorGrande>(sala: SalaGrande, a: unknown, ahoraTurno: TurnoActual, mio: E | undefined, yo: string, ahora: number): Cambio<E> | Falla<E> {
+  if (!esObjeto(a) || !llaves(a, ["turno", "texto"], ["turno", "texto"]) || !entero(a.turno, 0, 20) || typeof a.texto !== "string" || a.texto.length > DIBUJA.MAX_TEXTO || !a.texto.trim()) {
+    return { error: "adivina_invalida", status: 400 };
+  }
+  if (!ahoraTurno || ahoraTurno.fase !== "dibujo" || ahoraTurno.turno.i !== a.turno) return { error: "turno_cerrado", status: 409 };
+  if (ahoraTurno.turno.dibuja === yo) return { error: "eres_quien_dibuja", status: 409 };
+  const turno = a.turno as number;
+  if (mio?.aciertos?.[turno]) return { error: "ya_adivinaste", status: 409 };
+  const ultimo = Math.max(0, ...(mio?.intentos ?? []).map((x) => x.t));
+  if (ahora - ultimo < DIBUJA.INTENTO_CADA_MS) return { error: "muy_rapido", status: 429 };
+  const palabra = palabraDibuja(sala.secreto!, turno).en;
+  if (esLaPalabra(a.texto, palabra)) {
+    const pts = 100 + Math.round(100 * Math.max(0, 1 - (ahora - ahoraTurno.turno.ini) / DIBUJA.DIBUJO_MS));
+    return { cambiar: (e) => e.aciertos?.[turno] ? e : { ...e, aciertos: { ...(e.aciertos ?? {}), [turno]: { t: ahora, pts } } }, respuesta: { correcta: true, pts } };
+  }
+  const casi = normalizarPalabra(a.texto).includes(normalizarPalabra(palabra));
+  const intento = casi ? { turno, casi: true as const, t: ahora } : { turno, texto: a.texto.trim().replaceAll(/\s+/g, " ").slice(0, 30), t: ahora };
+  return { cambiar: (e) => ({ ...e, intentos: [...(e.intentos ?? []), intento].slice(-DIBUJA.MAX_INTENTOS) }), respuesta: { correcta: false, ...(casi ? { casi: true } : {}) } };
+}
+
+// Memorama y Sopa: resultado validado; tras el final no cambia y el avance no baja.
+function respuestaResultado<E extends JugadorGrande>(sala: SalaGrande, crudo: unknown, inicio: number, ahora: number): Cambio<E> | Falla<E> {
+  const r = validarResultado(sala.juego, crudo, inicio, ahora);
+  if (!r) return { error: "resultado_invalido", status: 400 };
+  return {
+    cambiar: (e) => {
+      const previo = e.resultado;
+      if (previo?.fin) return e; // tras el final no cambia
+      if (previo && !r.fin && (r.encontradas ?? 0) < (previo.encontradas ?? 0)) return e; // el avance no baja
+      return { ...e, resultado: { ...r, t: ahora } };
+    },
+  };
 }
 
 // Extra del GET de la sala. Dibuja: turno y fase; la palabra solo para quien dibuja; las de turnos ya terminados.
@@ -283,7 +303,7 @@ export function vistaGrande(sala: SalaGrande, jugadores: JugadorGrande[], yo: st
   const mia = actual.turno.dibuja === yo && actual.fase === "dibujo";
   return {
     dibuja: {
-      turno: actual.turno.i, fase: actual.fase, letras: p.en.replace(/ /g, "").length, forma: p.en.split(" ").map((w) => w.length),
+      turno: actual.turno.i, fase: actual.fase, letras: p.en.replaceAll(" ", "").length, forma: p.en.split(" ").map((w) => w.length),
       ...(mia ? renombrar(p) : {}), reveladas,
     },
   };

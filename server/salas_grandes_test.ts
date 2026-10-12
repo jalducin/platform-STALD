@@ -84,8 +84,8 @@ Deno.test("bingo: figuras línea, esquinas y lleno (la libre cuenta)", () => {
   assertEquals(BINGO.cumple(t, con([0, 1, 2, 3]), "linea"), false);
   assertEquals(BINGO.cumple(t, con([0, 4, 20, 24]), "esquinas"), true);
   assertEquals(BINGO.cumple(t, con([0, 4, 20]), "esquinas"), false);
-  assertEquals(BINGO.cumple(t, con([...Array(25).keys()].filter((i) => i !== 3)), "lleno"), false);
-  assertEquals(BINGO.cumple(t, con([...Array(25).keys()]), "lleno"), true);
+  assertEquals(BINGO.cumple(t, con([...new Array(25).keys()].filter((i) => i !== 3)), "lleno"), false);
+  assertEquals(BINGO.cumple(t, con([...new Array(25).keys()]), "lleno"), true);
   for (const f of ["linea", "esquinas", "lleno"]) assertEquals(B.cumple(t, con([0, 4, 20, 24]), f), BINGO.cumple(t, con([0, 4, 20, 24]), f), "paridad " + f);
 });
 
@@ -251,7 +251,7 @@ Deno.test("dibuja: la palabra solo la recibe quien dibuja (ni GET de los demás 
   assertEquals(yo.body.sala.secreto, undefined);
   for (const q of ["angel", "laura"]) {
     const g = await c.call("GET", `/sala/${codigo}`, q);
-    assertEquals([g.body.dibuja.turno, g.body.dibuja.palabra, g.body.dibuja.es, g.body.dibuja.letras], [0, undefined, undefined, p0.en.replace(/ /g, "").length]);
+    assertEquals([g.body.dibuja.turno, g.body.dibuja.palabra, g.body.dibuja.es, g.body.dibuja.letras], [0, undefined, undefined, p0.en.replaceAll(" ", "").length]);
     assertEquals(JSON.stringify(g.body).includes(s.secreto), false);
     // La palabra en inglés puede coincidir con un valor legítimo de la sala (p. ej. un color «green»), así que se
     // busca dentro de `dibuja`; en todo el cuerpo se buscan la traducción y la llave `palabra`.
@@ -275,13 +275,13 @@ Deno.test("dibuja: trazos solo de quien dibuja, con límites de tamaño y frecue
   c.ir(s.inicio + 500);
   assertEquals((await trazo("angel", { turno: 0, nuevos: [linea] })).body.error, "no_dibujas");
   assertEquals((await trazo("marisol", { turno: 1, nuevos: [linea] })).body.error, "turno_cerrado");
-  for (const malo of [{ turno: 0 }, { turno: 0, nuevos: [] }, { turno: 0, nuevos: Array(7).fill(linea) }, { turno: 0, nuevos: [{ c: 8, g: 1, p: [1, 1, 2, 2] }] },
+  for (const malo of [{ turno: 0 }, { turno: 0, nuevos: [] }, { turno: 0, nuevos: new Array(7).fill(linea) }, { turno: 0, nuevos: [{ c: 8, g: 1, p: [1, 1, 2, 2] }] },
     { turno: 0, nuevos: [{ c: 0, g: 4, p: [1, 1, 2, 2] }] }, { turno: 0, nuevos: [{ c: 0, g: 1, p: [1, 1] }] }, { turno: 0, nuevos: [{ c: 0, g: 1, p: [1, 1, 2] }] },
     { turno: 0, nuevos: [{ c: 0, g: 1, p: [1, 1, 256, 2] }] }, { turno: 0, nuevos: [{ c: 0, g: 1, p: [1.5, 1, 2, 2] }] },
-    { turno: 0, nuevos: [{ c: 0, g: 1, p: Array(130).fill(3) }] }, { turno: 0, nuevos: [{ c: 0, g: 1, p: [1, 1, 2, 2], x: 1 }] }]) {
+    { turno: 0, nuevos: [{ c: 0, g: 1, p: new Array(130).fill(3) }] }, { turno: 0, nuevos: [{ c: 0, g: 1, p: [1, 1, 2, 2], x: 1 }] }]) {
     assertEquals((await trazo("marisol", malo)).body.error, "trazo_invalido", JSON.stringify(malo).slice(0, 80));
   }
-  const ok = await trazo("marisol", { turno: 0, nuevos: [{ c: 2, g: 3, p: Array(128).fill(7) }] });
+  const ok = await trazo("marisol", { turno: 0, nuevos: [{ c: 2, g: 3, p: new Array(128).fill(7) }] });
   assertEquals(ok.status, 200, "64 puntos sí");
   assertEquals((await trazo("marisol", { turno: 0, nuevos: [linea] })).status, 429, "dos envíos seguidos: muy_rapido");
   c.avanzar(DIBUJA.TRAZO_CADA_MS);
@@ -292,7 +292,7 @@ Deno.test("dibuja: trazos solo de quien dibuja, con límites de tamaño y frecue
   assertEquals((await c.jugador(codigo, "a-marisol")).dibujo.trazos.length, 0, "borrar deja el lienzo vacío");
   // Tope por turno: 200 trazos.
   let r: any = null;
-  for (let i = 0; i < 40; i++) { c.avanzar(DIBUJA.TRAZO_CADA_MS); r = await trazo("marisol", { turno: 0, nuevos: Array(6).fill(linea) }); if (r.status !== 200) break; }
+  for (let i = 0; i < 40; i++) { c.avanzar(DIBUJA.TRAZO_CADA_MS); r = await trazo("marisol", { turno: 0, nuevos: new Array(6).fill(linea) }); if (r.status !== 200) break; }
   assertEquals([r.status, r.body.error], [413, "dibujo_lleno"]);
   assertEquals((await c.jugador(codigo, "a-marisol")).dibujo.trazos.length <= DIBUJA.MAX_TRAZOS, true);
 });
@@ -314,7 +314,7 @@ Deno.test("dibuja: adivinar bien, mal, «casi» y repetido; quien dibuja no adiv
   const angel = await c.jugador(codigo, "a-angel");
   assertEquals(angel.intentos.map((x: any) => x.texto ?? "(casi)"), ["zzz nope", "(casi)"], "lo que contiene la palabra se guarda sin texto");
   c.avanzar(DIBUJA.INTENTO_CADA_MS);
-  const bien = await adivina("angel", " " + p0.toUpperCase().replace(/A/g, "Á") + "s ");
+  const bien = await adivina("angel", " " + p0.toUpperCase().replaceAll("A", "Á") + "s ");
   assertEquals(bien.body.correcta, true, JSON.stringify(bien.body));
   assert(bien.body.pts > 100 && bien.body.pts <= 200, "más puntos por rapidez: " + bien.body.pts);
   c.avanzar(DIBUJA.INTENTO_CADA_MS);

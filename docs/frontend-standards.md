@@ -27,7 +27,7 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
 - Todo texto que venga de Notion se inserta con `escapeHtml()` o con `textContent`. Nunca concatenar
   datos crudos en `innerHTML`.
 - Los enlaces externos llevan `target="_blank" rel="noopener"`.
-- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=7">` (sube `?v=` en las
+- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=8">` (sube `?v=` en las
   cuatro cada vez que cambie) y usan
   `window.StaldAuth`:
   - al arrancar, `await StaldAuth.iniciar(API_BASE)`; el correo es `StaldAuth.email()` (sesión) o, solo durante la
@@ -265,7 +265,7 @@ Cada página debe manejar y mostrar de forma explícita:
   - **Personajes de Arcade** (cambio `personajes-xalli`; decisiones en su `design.md`): Xalli (el ajolote, antes
     «Axo»; personaje por omisión), Itzae, Yahui y Xochiquetzal. Fuente única: `juegos/personajes.js`
     (`Personajes.LISTA` con nombre, título, colores y partícula; `normalizar`, `preferencia`, `pintar(c, id, o)` de
-    perfil con las poses de Axo y `retrato(id, pose, poder)`), cargado con `<script src="personajes.js?v=1">`. La
+    perfil con las poses de Axo y `retrato(id, pose, poder)`), cargado con `<script src="personajes.js?v=2">`. La
     elección vive en `localStorage.arcade_personaje` (compartida por Axo y Karts, como `arcade_sonido`; desconocida o
     sin almacenamiento → `xalli`); **el progreso del servidor no cambia de forma**. Solo cosméticos: no tocan física,
     choque, tiempos ni puntos. Axo: selector `#personajes [data-personaje]` en la portada, partícula `rastro`
@@ -405,7 +405,7 @@ agrega como opción con valor por omisión compatible, en su propio cambio OpenS
 **Cargar y crear** (dentro del iframe del juego; `window.Mando`):
 
 ```html
-<script src="mando.js?v=1"></script>
+<script src="mando.js?v=2"></script>
 ```
 
 ```js

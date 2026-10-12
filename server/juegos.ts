@@ -364,7 +364,7 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
     if (!CORREO.test(email)) return json({ error: "correo_invalido" }, 400);
     const conocido = await resolverJugador(email, deps.admin, ingles, secundaria, {});
     if (conocido) return json({ ya: true, jugador: conocido });
-    const nombre = typeof body.nombre === "string" ? body.nombre.trim().replace(/\s+/g, " ") : "";
+    const nombre = typeof body.nombre === "string" ? body.nombre.trim().replaceAll(/\s+/g, " ") : "";
     if (body.acepto !== true) return json({ error: "debe_aceptar" }, 400);
     if (!APODO.test(nombre)) return json({ error: "apodo_invalido" }, 400);
     const r = await registrarInvitado(store, email, nombre, ahora, invDoc);
@@ -381,79 +381,237 @@ export async function handleJuegos(req: Request, sub: string, correo: string, de
   return await rutasDeJugador(req, sub, jugador, deps, hoy, ahora, json, invitados);
 }
 
+// Petición de un jugador ya identificado, compartida por sus rutas.
+interface CtxJugador {
+  req: Request;
+  jugador: Jugador;
+  deps: DepsJuegos;
+  store: Store;
+  ahora: string;
+  lunes: string;
+  json: Json;
+  invitados: Invitados;
+}
+
+// POST /juegos/nick { nick } → nick del jugador; vacío lo quita (openspec: nick-jugadores).
+async function guardarNick(c: CtxJugador): Promise<Response> {
+  const { req, jugador, store, lunes, json } = c;
+  let body: { nick?: unknown } = {};
+  try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+  const nick = typeof body.nick === "string" ? body.nick.trim().replaceAll(/\s+/g, " ") : "";
+  if (nick && !APODO.test(nick)) return json({ error: "nick_invalido" }, 400);
+  let guardado = false;
+  for (let i = 0; i < 3 && !guardado; i++) {
+    const doc = await store.get<Nicks>(RUTA_NICKS);
+    const nicks: Nicks = { ...(doc?.data ?? {}) };
+    if (nick) nicks[jugador.id] = nick; else delete nicks[jugador.id];
+    guardado = await store.put(RUTA_NICKS, nicks, doc?.sha ?? null, `juegos: nick de ${jugador.id}`);
+  }
+  if (!guardado) return json({ error: "conflicto_escritura" }, 503);
+  const real = jugador.nombreReal ?? jugador.nombre;
+  const nuevo: Jugador = { id: jugador.id, nombre: nick || real, tipo: jugador.tipo, ...(nick ? { nombreReal: real } : {}), avatar: jugador.avatar };
+  // Que el ranking lo muestre ya: actualizar la semana si existe.
+  const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
+  for (let i = 0; i < 3; i++) {
+    const doc = await store.get<Semana>(ruta);
+    if (!doc || await store.put(ruta, { ...doc.data, nombre: nuevo.nombre }, doc.sha, `juegos: nick de ${jugador.id}`)) break;
+  }
+  clearCacheJuegos();
+  return json({ ok: true, jugador: nuevo });
+}
+
+// POST /juegos/avatar → cambiar personaje y color (solo de la lista)
+async function cambiarAvatar(c: CtxJugador): Promise<Response> {
+  const { req, jugador, store, ahora, lunes, json } = c;
+  let body: { emoji?: unknown; color?: unknown } = {};
+  try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+  if (!AVATARES.includes(String(body.emoji)) || !COLORES.includes(String(body.color))) return json({ error: "avatar_invalido" }, 400);
+  const avatar: Avatar = { emoji: String(body.emoji), color: String(body.color) }; // elegir personaje quita la foto
+  await guardarAvatar(store, jugador, avatar, lunes, ahora, jugador.nombre);
+  return json({ ok: true, avatar });
+}
+
+// POST /juegos/foto → subir foto como avatar (con permiso de mamá, papá o tutor)
+async function subirFoto(c: CtxJugador): Promise<Response> {
+  const { req, jugador, store, ahora, lunes, json } = c;
+  let body: { imagen?: unknown; acepto?: unknown } = {};
+  try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+  if (body.acepto !== true) return json({ error: "debe_aceptar" }, 400);
+  if (!bytesJpeg(body.imagen)) return json({ error: "imagen_invalida" }, 400);
+  const token = nuevoToken();
+  const foto: Foto = { id: jugador.id, nombre: jugador.nombre, imagen: String(body.imagen), en: ahora };
+  if (!await store.put(rutaFoto(token), foto, null, `juegos: foto de ${jugador.nombre}`)) return json({ error: "conflicto_escritura" }, 503);
+  const base = jugador.avatar ?? avatarPorDefecto(jugador.id);
+  const avatar: Avatar = { emoji: base.emoji, color: base.color, foto: token };
+  await guardarAvatar(store, jugador, avatar, lunes, ahora, jugador.nombre);
+  return json({ ok: true, avatar });
+}
+
+// GET /juegos/fotos y POST /juegos/fotos/quitar → moderación de fotos (solo admin). null: otro método, sigue la búsqueda
+// de ruta.
+async function moderarFotos(c: CtxJugador, sub: string): Promise<Response | null> {
+  const { req, jugador, store, ahora, lunes, json } = c;
+  if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
+  const idx = (await store.get<IndiceFotos>(RUTA_INDICE_FOTOS))?.data ?? {};
+  if (sub === "/fotos" && req.method === "GET") {
+    return json({ fotos: Object.entries(idx).map(([id, f]) => ({ id, ...f })).sort((a, b) => b.en.localeCompare(a.en)) });
+  }
+  if (sub === "/fotos/quitar" && req.method === "POST") {
+    let body: { id?: unknown } = {};
+    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+    const id = String(body.id || "");
+    const f = idx[id];
+    if (!f) return json({ error: "not_found" }, 404);
+    const perfil = (await store.get<Avatar>(rutaPerfil(id)))?.data ?? avatarPorDefecto(id);
+    const otro: Jugador = { id, nombre: f.nombre, tipo: "alumno", avatar: { ...perfil, foto: perfil.foto ?? f.token } };
+    await guardarAvatar(store, otro, { emoji: perfil.emoji, color: perfil.color }, lunes, ahora, `${f.nombre} (admin)`);
+    return json({ ok: true });
+  }
+  return null;
+}
+
+// GET /juegos/admin/resumen → jugadores y partidas de la semana (solo admin, sin correos)
+async function resumenAdmin(c: CtxJugador): Promise<Response> {
+  const { req, jugador, store, lunes, json } = c;
+  if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
+  const semana = new URL(req.url).searchParams.get("semana") || lunes;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
+  const l = lunesDe(semana);
+  const docs = [...await leerSemana(store, l)].sort((a, b) => b.total - a.total);
+  const jugadores = docs.map((d) => ({ nombre: d.nombre, tipo: d.tipo, total: d.total, totalIndividual: d.totalIndividual, totalPartidas: d.totalPartidas, mejores: d.mejores, partidas: d.partidas.length, ultima: d.partidas.at(-1)?.en ?? null, avatar: d.avatar ?? avatarPorDefecto(d.id) }));
+  const catalogo = Object.fromEntries(Object.entries(CATALOGO).map(([id, d]) => [id, d.titulo]));
+  return json({ semana: l, jugadores, salas: await resumenSalas(store, l), catalogo });
+}
+
+// POST /juegos/partida → guardar puntos (con tope) y actualizar el mejor por juego
+async function guardarPartida(c: CtxJugador): Promise<Response> {
+  const { req, jugador, store, ahora, lunes, json } = c;
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+  const juego = String(body.juego || "");
+  const def = CATALOGO[juego];
+  if (!def) return json({ error: "juego_invalido" }, 400);
+  if (typeof body.puntos !== "number" || !Number.isFinite(body.puntos)) return json({ error: "puntos_invalidos" }, 400);
+  const entero = (v: unknown, max: number) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
+  // Partida de sala: la sala existe, es de este juego, ya empezó y el jugador está dentro.
+  const sala = body.sala === undefined ? null : String(body.sala);
+  if (sala !== null) {
+    if (!/^[A-Z]{4}$/.test(sala)) return json({ error: "sala_invalida" }, 400);
+    const sd = (await store.get<{ juego: string; inicio: number | null }>(`juegos/salas/${sala}/sala.json`))?.data;
+    if (!sd || sd.juego !== juego || sd.inicio === null) return json({ error: "sala_invalida" }, 400);
+    if (!(await store.get(`juegos/salas/${sala}/${jugador.id}.json`))) return json({ error: "no_en_sala" }, 403);
+  }
+  const nueva: Partida = {
+    juego, puntos: entero(body.puntos, sala ? MAX_SALA : def.max), ...(sala ? { modo: "sala" as const, sala } : {}), aciertos: entero(body.aciertos, 1000), total: entero(body.total, 1000),
+    segundos: entero(body.segundos, 36000), en: ahora,
+  };
+  const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
+  for (let i = 0; i < 3; i++) {
+    const doc = await store.get<Semana>(ruta);
+    const s: Semana = doc?.data ?? { id: jugador.id, nombre: jugador.nombre, tipo: jugador.tipo, partidas: [], mejores: {}, total: 0 };
+    if (s.partidas.filter((p) => p.en.slice(0, 10) === ahora.slice(0, 10)).length >= LIMITE_DIARIO) return json({ error: "limite_diario" }, 429);
+    if (sala && s.partidas.some((p) => p.sala === sala)) return json({ error: "ya_guardada" }, 409);
+    const anterior = s.mejores[juego] ?? 0;
+    const nuevoRecord = nueva.puntos > anterior;
+    s.nombre = jugador.nombre;
+    s.avatar = jugador.avatar;
+    s.partidas = [...s.partidas, nueva].slice(-MAX_PARTIDAS_GUARDADAS);
+    s.mejores = { ...s.mejores, [juego]: Math.max(anterior, nueva.puntos) };
+    s.actualizado = ahora;
+    const t = conTotales(s);
+    if (await store.put(ruta, t, doc?.sha ?? null, `juegos: ${jugador.nombre} ${juego} ${nueva.puntos}${sala ? ` (sala ${sala})` : ""}`)) {
+      cache.borrar(lunes);
+      const docs = await leerSemana(store, lunes);
+      const tipo: TipoRanking = sala ? "partidas" : "individual";
+      return json({
+        guardado: true, puntos: nueva.puntos, modo: sala ? "sala" : "individual", mejor: t.mejores[juego], nuevoRecord,
+        totalIndividual: t.totalIndividual, totalPartidas: t.totalPartidas, total: t.total, pos: posicionDe(docs, jugador.id, tipo), semana: lunes,
+      });
+    }
+  }
+  return json({ error: "conflicto_escritura" }, 503);
+}
+
+// GET /juegos/ranking/juegos → juegos más jugados de la semana, sin correos (openspec: ranking-juegos-populares)
+async function rankingJuegos(c: CtxJugador): Promise<Response> {
+  const { req, store, lunes, json } = c;
+  const semana = new URL(req.url).searchParams.get("semana") || lunes;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
+  const l = lunesDe(semana);
+  const docs = await leerSemana(store, l);
+  return json({ semana: l, jugadores: docs.filter((d) => d.partidas.length && TIPOS_PERSONA.has(d.tipo)).length, juegos: populares(docs) });
+}
+
+// GET /juegos/ranking → top 20 de la semana y la posición propia
+async function ranking(c: CtxJugador): Promise<Response> {
+  const { req, jugador, store, lunes, json } = c;
+  const q = new URL(req.url).searchParams;
+  const semana = q.get("semana") || lunes;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
+  const tipo = (q.get("tipo") || "individual") as TipoRanking;
+  if (tipo !== "individual" && tipo !== "partidas") return json({ error: "tipo_invalido" }, 400);
+  const todos = await leerSemana(store, lunesDe(semana));
+  const docs = ordenar(todos, tipo);
+  const top = docs.slice(0, 20).map((d, i) => ({
+    pos: i + 1, nombre: d.nombre, tipo: d.tipo, total: puntosDe(d, tipo), totalIndividual: d.totalIndividual ?? 0, totalPartidas: d.totalPartidas ?? 0,
+    juegos: Object.keys(d.mejores).length, partidas: d.partidas.filter((p) => (p.modo === "sala") === (tipo === "partidas")).length,
+    yo: d.id === jugador.id, avatar: d.avatar ?? avatarPorDefecto(d.id),
+  }));
+  const mio = todos.find((d) => d.id === jugador.id);
+  return json({
+    semana: lunesDe(semana), tipo, top, jugadores: docs.length,
+    yo: { pos: posicionDe(todos, jugador.id, tipo), total: mio ? puntosDe(mio, tipo) : 0, totalIndividual: mio?.totalIndividual ?? 0, totalPartidas: mio?.totalPartidas ?? 0, mejores: mio?.mejores ?? {} },
+  });
+}
+
+// GET /juegos/yo → jugador, mejores de la semana y catálogo
+async function verYo(c: CtxJugador): Promise<Response> {
+  const { jugador, store, lunes, json } = c;
+  const docs = await leerSemana(store, lunes);
+  const mio = docs.find((d) => d.id === jugador.id);
+  const catalogo = Object.entries(CATALOGO).map(([id, d]) => ({ id, ...d }));
+  return json({
+    jugador, semana: lunes, total: mio?.total ?? 0, totalIndividual: mio?.totalIndividual ?? 0, totalPartidas: mio?.totalPartidas ?? 0,
+    mejores: mio?.mejores ?? {}, pos: posicionDe(docs, jugador.id), posPartidas: posicionDe(docs, jugador.id, "partidas"), catalogo, avatares: { emojis: AVATARES, colores: COLORES },
+  });
+}
+
+// GET /juegos/jugadores → todos los jugadores y los registros pendientes (solo admin, openspec: jugadores-admin).
+async function listarJugadores(c: CtxJugador): Promise<Response> {
+  const { jugador, deps, store, lunes, json, invitados } = c;
+  if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
+  const [docs, ingles, secundaria] = await Promise.all([leerSemana(store, lunes), deps.filasIngles(), deps.filasSecundaria()]);
+  let cuentas: Cuenta[] = [], cuentasError = false;
+  try { cuentas = deps.cuentas ? await deps.cuentas() : []; } catch (e) { cuentasError = true; console.error("cuentas:", e instanceof Error ? e.message : e); }
+  const nicks = (await store.get<Nicks>(RUTA_NICKS))?.data ?? {};
+  const r = await armarJugadores({ admin: deps.admin, ingles, secundaria, invitados, semana: docs, cuentas, nicks });
+  return json({ semana: lunes, ...r, cuentasError });
+}
+
+// GET /juegos/invitados → solo admin: lista para análisis (con correos)
+async function listarInvitados(c: CtxJugador): Promise<Response> {
+  const { jugador, store, lunes, json, invitados } = c;
+  if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
+  const docs = await leerSemana(store, lunes);
+  const lista = await Promise.all(Object.entries(invitados).map(async ([correo, inv]) => {
+    const id = `i-${await hash10(correo)}`;
+    return { email: correo, ...inv, puntosSemana: docs.find((d) => d.id === id)?.total ?? 0 };
+  }));
+  lista.sort((a, b) => b.ultimaVisita.localeCompare(a.ultimaVisita));
+  return json({ semana: lunes, total: lista.length, invitados: lista });
+}
+
 async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps: DepsJuegos, hoy: string, ahora: string, json: Json, invitados: Invitados): Promise<Response> {
   const store = deps.store;
   const lunes = lunesDe(hoy);
+  const c: CtxJugador = { req, jugador, deps, store, ahora, lunes, json, invitados };
 
-  // POST /juegos/nick { nick } → nick del jugador; vacío lo quita (openspec: nick-jugadores).
-  if (sub === "/nick" && req.method === "POST") {
-    let body: { nick?: unknown } = {};
-    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
-    const nick = typeof body.nick === "string" ? body.nick.trim().replace(/\s+/g, " ") : "";
-    if (nick && !APODO.test(nick)) return json({ error: "nick_invalido" }, 400);
-    let guardado = false;
-    for (let i = 0; i < 3 && !guardado; i++) {
-      const doc = await store.get<Nicks>(RUTA_NICKS);
-      const nicks: Nicks = { ...(doc?.data ?? {}) };
-      if (nick) nicks[jugador.id] = nick; else delete nicks[jugador.id];
-      guardado = await store.put(RUTA_NICKS, nicks, doc?.sha ?? null, `juegos: nick de ${jugador.id}`);
-    }
-    if (!guardado) return json({ error: "conflicto_escritura" }, 503);
-    const real = jugador.nombreReal ?? jugador.nombre;
-    const nuevo: Jugador = { id: jugador.id, nombre: nick || real, tipo: jugador.tipo, ...(nick ? { nombreReal: real } : {}), avatar: jugador.avatar };
-    // Que el ranking lo muestre ya: actualizar la semana si existe.
-    const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
-    for (let i = 0; i < 3; i++) {
-      const doc = await store.get<Semana>(ruta);
-      if (!doc || await store.put(ruta, { ...doc.data, nombre: nuevo.nombre }, doc.sha, `juegos: nick de ${jugador.id}`)) break;
-    }
-    clearCacheJuegos();
-    return json({ ok: true, jugador: nuevo });
-  }
-
-  // POST /juegos/avatar → cambiar personaje y color (solo de la lista)
-  if (sub === "/avatar" && req.method === "POST") {
-    let body: { emoji?: unknown; color?: unknown } = {};
-    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
-    if (!AVATARES.includes(String(body.emoji)) || !COLORES.includes(String(body.color))) return json({ error: "avatar_invalido" }, 400);
-    const avatar: Avatar = { emoji: String(body.emoji), color: String(body.color) }; // elegir personaje quita la foto
-    await guardarAvatar(store, jugador, avatar, lunes, ahora, jugador.nombre);
-    return json({ ok: true, avatar });
-  }
-
-  // POST /juegos/foto → subir foto como avatar (con permiso de mamá, papá o tutor)
-  if (sub === "/foto" && req.method === "POST") {
-    let body: { imagen?: unknown; acepto?: unknown } = {};
-    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
-    if (body.acepto !== true) return json({ error: "debe_aceptar" }, 400);
-    if (!bytesJpeg(body.imagen)) return json({ error: "imagen_invalida" }, 400);
-    const token = nuevoToken();
-    const foto: Foto = { id: jugador.id, nombre: jugador.nombre, imagen: String(body.imagen), en: ahora };
-    if (!await store.put(rutaFoto(token), foto, null, `juegos: foto de ${jugador.nombre}`)) return json({ error: "conflicto_escritura" }, 503);
-    const base = jugador.avatar ?? avatarPorDefecto(jugador.id);
-    const avatar: Avatar = { emoji: base.emoji, color: base.color, foto: token };
-    await guardarAvatar(store, jugador, avatar, lunes, ahora, jugador.nombre);
-    return json({ ok: true, avatar });
-  }
-
-  // GET /juegos/fotos y POST /juegos/fotos/quitar → moderación de fotos (solo admin)
+  if (sub === "/nick" && req.method === "POST") return await guardarNick(c);
+  if (sub === "/avatar" && req.method === "POST") return await cambiarAvatar(c);
+  if (sub === "/foto" && req.method === "POST") return await subirFoto(c);
   if (sub === "/fotos" || sub === "/fotos/quitar") {
-    if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
-    const idx = (await store.get<IndiceFotos>(RUTA_INDICE_FOTOS))?.data ?? {};
-    if (sub === "/fotos" && req.method === "GET") {
-      return json({ fotos: Object.entries(idx).map(([id, f]) => ({ id, ...f })).sort((a, b) => b.en.localeCompare(a.en)) });
-    }
-    if (sub === "/fotos/quitar" && req.method === "POST") {
-      let body: { id?: unknown } = {};
-      try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
-      const id = String(body.id || "");
-      const f = idx[id];
-      if (!f) return json({ error: "not_found" }, 404);
-      const perfil = (await store.get<Avatar>(rutaPerfil(id)))?.data ?? avatarPorDefecto(id);
-      const otro: Jugador = { id, nombre: f.nombre, tipo: "alumno", avatar: { ...perfil, foto: perfil.foto ?? f.token } };
-      await guardarAvatar(store, otro, { emoji: perfil.emoji, color: perfil.color }, lunes, ahora, `${f.nombre} (admin)`);
-      return json({ ok: true });
-    }
+    const r = await moderarFotos(c, sub);
+    if (r) return r;
   }
 
   // /juegos/sala… → partidas multijugador (server/salas.ts)
@@ -462,129 +620,13 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
   // GET/PUT /juegos/progreso/<juego> → avance individual de los juegos de Arcade (server/progreso.ts)
   if (sub.startsWith("/progreso/")) return await handleProgreso(req, sub.slice("/progreso".length), jugador, store, ahora, json);
 
-  // GET /juegos/admin/resumen → jugadores y partidas de la semana (solo admin, sin correos)
-  if (sub === "/admin/resumen" && req.method === "GET") {
-    if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
-    const semana = new URL(req.url).searchParams.get("semana") || lunes;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
-    const l = lunesDe(semana);
-    const docs = [...await leerSemana(store, l)].sort((a, b) => b.total - a.total);
-    const jugadores = docs.map((d) => ({ nombre: d.nombre, tipo: d.tipo, total: d.total, totalIndividual: d.totalIndividual, totalPartidas: d.totalPartidas, mejores: d.mejores, partidas: d.partidas.length, ultima: d.partidas.at(-1)?.en ?? null, avatar: d.avatar ?? avatarPorDefecto(d.id) }));
-    const catalogo = Object.fromEntries(Object.entries(CATALOGO).map(([id, d]) => [id, d.titulo]));
-    return json({ semana: l, jugadores, salas: await resumenSalas(store, l), catalogo });
-  }
-
-  // POST /juegos/partida → guardar puntos (con tope) y actualizar el mejor por juego
-  if (sub === "/partida" && req.method === "POST") {
-    let body: Record<string, unknown> = {};
-    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
-    const juego = String(body.juego || "");
-    const def = CATALOGO[juego];
-    if (!def) return json({ error: "juego_invalido" }, 400);
-    if (typeof body.puntos !== "number" || !Number.isFinite(body.puntos)) return json({ error: "puntos_invalidos" }, 400);
-    const entero = (v: unknown, max: number) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
-    // Partida de sala: la sala existe, es de este juego, ya empezó y el jugador está dentro.
-    const sala = body.sala === undefined ? null : String(body.sala);
-    if (sala !== null) {
-      if (!/^[A-Z]{4}$/.test(sala)) return json({ error: "sala_invalida" }, 400);
-      const sd = (await store.get<{ juego: string; inicio: number | null }>(`juegos/salas/${sala}/sala.json`))?.data;
-      if (!sd || sd.juego !== juego || sd.inicio === null) return json({ error: "sala_invalida" }, 400);
-      if (!(await store.get(`juegos/salas/${sala}/${jugador.id}.json`))) return json({ error: "no_en_sala" }, 403);
-    }
-    const nueva: Partida = {
-      juego, puntos: entero(body.puntos, sala ? MAX_SALA : def.max), ...(sala ? { modo: "sala" as const, sala } : {}), aciertos: entero(body.aciertos, 1000), total: entero(body.total, 1000),
-      segundos: entero(body.segundos, 36000), en: ahora,
-    };
-    const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
-    for (let i = 0; i < 3; i++) {
-      const doc = await store.get<Semana>(ruta);
-      const s: Semana = doc?.data ?? { id: jugador.id, nombre: jugador.nombre, tipo: jugador.tipo, partidas: [], mejores: {}, total: 0 };
-      if (s.partidas.filter((p) => p.en.slice(0, 10) === ahora.slice(0, 10)).length >= LIMITE_DIARIO) return json({ error: "limite_diario" }, 429);
-      if (sala && s.partidas.some((p) => p.sala === sala)) return json({ error: "ya_guardada" }, 409);
-      const anterior = s.mejores[juego] ?? 0;
-      const nuevoRecord = nueva.puntos > anterior;
-      s.nombre = jugador.nombre;
-      s.avatar = jugador.avatar;
-      s.partidas = [...s.partidas, nueva].slice(-MAX_PARTIDAS_GUARDADAS);
-      s.mejores = { ...s.mejores, [juego]: Math.max(anterior, nueva.puntos) };
-      s.actualizado = ahora;
-      const t = conTotales(s);
-      if (await store.put(ruta, t, doc?.sha ?? null, `juegos: ${jugador.nombre} ${juego} ${nueva.puntos}${sala ? ` (sala ${sala})` : ""}`)) {
-        cache.borrar(lunes);
-        const docs = await leerSemana(store, lunes);
-        const tipo: TipoRanking = sala ? "partidas" : "individual";
-        return json({
-          guardado: true, puntos: nueva.puntos, modo: sala ? "sala" : "individual", mejor: t.mejores[juego], nuevoRecord,
-          totalIndividual: t.totalIndividual, totalPartidas: t.totalPartidas, total: t.total, pos: posicionDe(docs, jugador.id, tipo), semana: lunes,
-        });
-      }
-    }
-    return json({ error: "conflicto_escritura" }, 503);
-  }
-
-  // GET /juegos/ranking/juegos → juegos más jugados de la semana, sin correos (openspec: ranking-juegos-populares)
-  if (sub === "/ranking/juegos" && req.method === "GET") {
-    const semana = new URL(req.url).searchParams.get("semana") || lunes;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
-    const l = lunesDe(semana);
-    const docs = await leerSemana(store, l);
-    return json({ semana: l, jugadores: docs.filter((d) => d.partidas.length && TIPOS_PERSONA.has(d.tipo)).length, juegos: populares(docs) });
-  }
-
-  // GET /juegos/ranking → top 20 de la semana y la posición propia
-  if (sub === "/ranking" && req.method === "GET") {
-    const q = new URL(req.url).searchParams;
-    const semana = q.get("semana") || lunes;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(semana)) return json({ error: "semana_invalida" }, 400);
-    const tipo = (q.get("tipo") || "individual") as TipoRanking;
-    if (tipo !== "individual" && tipo !== "partidas") return json({ error: "tipo_invalido" }, 400);
-    const todos = await leerSemana(store, lunesDe(semana));
-    const docs = ordenar(todos, tipo);
-    const top = docs.slice(0, 20).map((d, i) => ({
-      pos: i + 1, nombre: d.nombre, tipo: d.tipo, total: puntosDe(d, tipo), totalIndividual: d.totalIndividual ?? 0, totalPartidas: d.totalPartidas ?? 0,
-      juegos: Object.keys(d.mejores).length, partidas: d.partidas.filter((p) => (p.modo === "sala") === (tipo === "partidas")).length,
-      yo: d.id === jugador.id, avatar: d.avatar ?? avatarPorDefecto(d.id),
-    }));
-    const mio = todos.find((d) => d.id === jugador.id);
-    return json({
-      semana: lunesDe(semana), tipo, top, jugadores: docs.length,
-      yo: { pos: posicionDe(todos, jugador.id, tipo), total: mio ? puntosDe(mio, tipo) : 0, totalIndividual: mio?.totalIndividual ?? 0, totalPartidas: mio?.totalPartidas ?? 0, mejores: mio?.mejores ?? {} },
-    });
-  }
-
-  // GET /juegos/yo → jugador, mejores de la semana y catálogo
-  if (sub === "/yo" && req.method === "GET") {
-    const docs = await leerSemana(store, lunes);
-    const mio = docs.find((d) => d.id === jugador.id);
-    const catalogo = Object.entries(CATALOGO).map(([id, d]) => ({ id, ...d }));
-    return json({
-      jugador, semana: lunes, total: mio?.total ?? 0, totalIndividual: mio?.totalIndividual ?? 0, totalPartidas: mio?.totalPartidas ?? 0,
-      mejores: mio?.mejores ?? {}, pos: posicionDe(docs, jugador.id), posPartidas: posicionDe(docs, jugador.id, "partidas"), catalogo, avatares: { emojis: AVATARES, colores: COLORES },
-    });
-  }
-
-  // GET /juegos/invitados → solo admin: lista para análisis (con correos)
-  // GET /juegos/jugadores → todos los jugadores y los registros pendientes (solo admin, openspec: jugadores-admin).
-  if (sub === "/jugadores" && req.method === "GET") {
-    if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
-    const [docs, ingles, secundaria] = await Promise.all([leerSemana(store, lunes), deps.filasIngles(), deps.filasSecundaria()]);
-    let cuentas: Cuenta[] = [], cuentasError = false;
-    try { cuentas = deps.cuentas ? await deps.cuentas() : []; } catch (e) { cuentasError = true; console.error("cuentas:", e instanceof Error ? e.message : e); }
-    const nicks = (await store.get<Nicks>(RUTA_NICKS))?.data ?? {};
-    const r = await armarJugadores({ admin: deps.admin, ingles, secundaria, invitados, semana: docs, cuentas, nicks });
-    return json({ semana: lunes, ...r, cuentasError });
-  }
-
-  if (sub === "/invitados" && req.method === "GET") {
-    if (jugador.tipo !== "admin") return json({ error: "solo_admin" }, 403);
-    const docs = await leerSemana(store, lunes);
-    const lista = await Promise.all(Object.entries(invitados).map(async ([correo, inv]) => {
-      const id = `i-${await hash10(correo)}`;
-      return { email: correo, ...inv, puntosSemana: docs.find((d) => d.id === id)?.total ?? 0 };
-    }));
-    lista.sort((a, b) => b.ultimaVisita.localeCompare(a.ultimaVisita));
-    return json({ semana: lunes, total: lista.length, invitados: lista });
-  }
+  if (sub === "/admin/resumen" && req.method === "GET") return await resumenAdmin(c);
+  if (sub === "/partida" && req.method === "POST") return await guardarPartida(c);
+  if (sub === "/ranking/juegos" && req.method === "GET") return await rankingJuegos(c);
+  if (sub === "/ranking" && req.method === "GET") return await ranking(c);
+  if (sub === "/yo" && req.method === "GET") return await verYo(c);
+  if (sub === "/jugadores" && req.method === "GET") return await listarJugadores(c);
+  if (sub === "/invitados" && req.method === "GET") return await listarInvitados(c);
 
   return json({ error: "not_found" }, 404);
 }

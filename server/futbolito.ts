@@ -41,7 +41,9 @@ export function repartir(asientos: Asiento[]): Lugar[] {
   });
   return asientos.map((_, i) => {
     const e = eq[i]!, miembros = asientos.map((_, k) => k).filter((k) => eq[k] === e);
-    const rol: Rol = miembros.length === 1 ? "todas" : miembros.indexOf(i) === 0 ? "adelante" : "atras";
+    // Solo en su equipo juega todas las barras; en pareja, el primer asiento va adelante y el otro atrás.
+    let rol: Rol = "todas";
+    if (miembros.length !== 1) rol = miembros.indexOf(i) === 0 ? "adelante" : "atras";
     return { eq: e, rol, barras: BARRAS_ROL[e][rol].slice() };
   });
 }

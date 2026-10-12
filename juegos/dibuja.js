@@ -35,7 +35,7 @@
     for (let k = 0; k < q.length - 2; k += (MAX_PUNTOS - 1) * 2) partes.push(q.slice(k, k + MAX_PUNTOS * 2));
     return partes.map(x => x.map(v => Math.max(0, Math.min(255, v))));
   }
-  const normalizar = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+  const normalizar = s => String(s).normalize('NFD').replaceAll(/[̀-ͯ]/g, '').toLowerCase().replaceAll(/[^a-z ]/g, '').replaceAll(/\s+/g, ' ').trim();
   g.Dibuja = { DIBUJO_MS, PAUSA_MS, calendario, turnoEn, simplificar, normalizar };
   if (typeof document === 'undefined') return;
 
@@ -114,7 +114,7 @@
   const nombreDe = id => (sala.estado.jugadores.find(j => j.id === id) || {}).nombre || '?';
 
   function pintar(body) {
-    const e = sala.estado, s = e.sala, st = est();
+    const e = sala.estado, st = est();
     if (SG.cuenta(body, '¡Prepárense! Dibuja primero ' + escapeHtml(nombreDe(humanosOrden()[0] && humanosOrden()[0].id)))) return;
     const ahora = ahoraServidor(), cal = calendarioSala(), act = turnoEn(cal, ahora);
     if (!act) {
@@ -134,38 +134,58 @@
     if (sala.vista !== clave) {
       sala.vista = clave;
       if (act.fase === 'pausa') {
-        body.innerHTML = '<div class="q-card dj-revela"><div class="sub">Turno ' + (t.i + 1) + ' de ' + cal.length + ' · dibujó ' + escapeHtml(nombreDe(t.dibuja)) + '</div>' +
-          (revelada ? '<div class="em">' + escapeHtml(revelada.emoji) + '</div><div class="q">La palabra era: <b id="dj-revelada">' + escapeHtml(revelada.palabra) + '</b></div><div class="sub">' + escapeHtml(revelada.es) + '</div>' : '<div class="q">⏳ Revelando la palabra…</div>') +
-          '</div><h2>🏆 Marcador</h2>' + marcadorHtml(totales(cal), e.yo);
+        body.innerHTML = pausaHtml(e, cal, t, revelada);
         return;
       }
-      st.dibujados = 0;
-      if (soy && st.turnoMios !== t.i) { st.turnoMios = t.i; st.mios = []; st.pendientes = []; st.borrar = false; const previo = (e.jugadores.find(j => j.id === e.yo) || {}).dibujo; if (previo && previo.turno === t.i) st.mios = previo.trazos.slice(); }
-      body.innerHTML = '<div class="dj-cab" id="dj-cab">' + (soy
-        ? (miPalabra ? '<div class="sub">✏️ ¡Te toca dibujar! No escribas letras.</div><div class="pal" id="dj-palabra" data-palabra="' + escapeHtml(miPalabra.palabra) + '">' + escapeHtml(miPalabra.emoji + ' ' + miPalabra.palabra) + '</div><div class="sub">(' + escapeHtml(miPalabra.es) + ')</div>' : '<div class="q">⏳ Recibiendo tu palabra…</div>')
-        : '<div class="sub">🎨 Dibuja <b>' + escapeHtml(nombreDe(t.dibuja)) + '</b> · adivina en inglés</div><div class="dj-huecos" id="dj-huecos">' + escapeHtml(huecos(dj.turno === t.i ? dj.forma : null)) + '</div>') +
-        '</div><div id="dj-lienzo-wrap"></div>' +
-        (soy ? '<div class="dj-herr" role="group" aria-label="Colores y grosor">' + COLORES.map((c, k) => '<button type="button" data-dj-color="' + k + '" style="background:' + c + '" aria-label="Color ' + NOMBRES_COLOR[k] + '" aria-pressed="' + (st.color === k) + '"></button>').join('') +
-          [1, 2, 3].map(k => '<button type="button" class="g" data-dj-g="' + k + '" aria-label="Grosor ' + k + '" aria-pressed="' + (st.g === k) + '">' + ['', '·', '•', '●'][k] + '</button>').join('') +
-          '<button type="button" class="borrar" data-dj-borrar>🧽 Borrar todo</button></div>'
-          : '<form class="dj-form" id="dj-form" autocomplete="off"><input id="dj-texto" maxlength="40" placeholder="Escribe en inglés…" autocapitalize="off" spellcheck="false" aria-label="Tu respuesta en inglés"><button class="btn" type="submit">Adivinar</button></form>') +
-        '<div class="feedback" id="dj-msg"></div><ul class="dj-feed" id="dj-feed" aria-live="polite"></ul>' +
-        '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-ayuda="dibuja">📖 Cómo se juega</button></div>';
-      st.feed = null;
-      const L = crearLienzo(document.getElementById('dj-lienzo-wrap'), soy ? '' : 'solo-ver');
-      st.lienzo = L;
-      if (soy) { st.mios.forEach(x => pintarTrazo(L.ctx, x)); conectarDibujo(L, st, t.i); }
+      pintarTurno(body, st, e, t, soy, miPalabra, dj);
     }
     // Trazo de quien dibuja (los demás).
-    if (!soy && st.lienzo) {
-      const d = (e.jugadores.find(j => j.id === t.dibuja) || {}).dibujo;
-      const lista = d && d.turno === t.i ? d.trazos : [];
-      if (lista.length < st.dibujados) { limpiarLienzo(st.lienzo.ctx); st.dibujados = 0; }
-      for (; st.dibujados < lista.length; st.dibujados++) pintarTrazo(st.lienzo.ctx, lista[st.dibujados]);
-      const h = document.getElementById('dj-huecos'); if (h && dj.turno === t.i && dj.forma && !h.textContent.trim()) h.textContent = huecos(dj.forma);
-    }
+    if (!soy && st.lienzo) seguirTrazos(st, e, t, dj);
     if (soy) enviarTrazos(st, t.i);
-    // Lo que escriben los demás y quién ya adivinó.
+    pintarFeed(st, e, t, soy);
+  }
+  // Pausa entre turnos: la palabra revelada y el marcador.
+  function pausaHtml(e, cal, t, revelada) {
+    return '<div class="q-card dj-revela"><div class="sub">Turno ' + (t.i + 1) + ' de ' + cal.length + ' · dibujó ' + escapeHtml(nombreDe(t.dibuja)) + '</div>' +
+      (revelada ? '<div class="em">' + escapeHtml(revelada.emoji) + '</div><div class="q">La palabra era: <b id="dj-revelada">' + escapeHtml(revelada.palabra) + '</b></div><div class="sub">' + escapeHtml(revelada.es) + '</div>' : '<div class="q">⏳ Revelando la palabra…</div>') +
+      '</div><h2>🏆 Marcador</h2>' + marcadorHtml(totales(cal), e.yo);
+  }
+  // Encabezado del turno: mi palabra (si dibujo) o los huecos de la palabra (si adivino).
+  function cabeceraHtml(soy, miPalabra, t, dj) {
+    if (soy) return miPalabra ? '<div class="sub">✏️ ¡Te toca dibujar! No escribas letras.</div><div class="pal" id="dj-palabra" data-palabra="' + escapeHtml(miPalabra.palabra) + '">' + escapeHtml(miPalabra.emoji + ' ' + miPalabra.palabra) + '</div><div class="sub">(' + escapeHtml(miPalabra.es) + ')</div>' : '<div class="q">⏳ Recibiendo tu palabra…</div>';
+    return '<div class="sub">🎨 Dibuja <b>' + escapeHtml(nombreDe(t.dibuja)) + '</b> · adivina en inglés</div><div class="dj-huecos" id="dj-huecos">' + escapeHtml(huecos(dj.turno === t.i ? dj.forma : null)) + '</div>';
+  }
+  // Colores y grosor (si dibujo) o el formulario para adivinar.
+  function herramientasHtml(soy, st) {
+    if (!soy) return '<form class="dj-form" id="dj-form" autocomplete="off"><input id="dj-texto" maxlength="40" placeholder="Escribe en inglés…" autocapitalize="off" spellcheck="false" aria-label="Tu respuesta en inglés"><button class="btn" type="submit">Adivinar</button></form>';
+    return '<div class="dj-herr" role="group" aria-label="Colores y grosor">' + COLORES.map((c, k) => '<button type="button" data-dj-color="' + k + '" style="background:' + c + '" aria-label="Color ' + NOMBRES_COLOR[k] + '" aria-pressed="' + (st.color === k) + '"></button>').join('') +
+      [1, 2, 3].map(k => '<button type="button" class="g" data-dj-g="' + k + '" aria-label="Grosor ' + k + '" aria-pressed="' + (st.g === k) + '">' + ['', '·', '•', '●'][k] + '</button>').join('') +
+      '<button type="button" class="borrar" data-dj-borrar>🧽 Borrar todo</button></div>';
+  }
+  // Arma la vista del turno (cabecera, lienzo y herramientas) cuando cambia de turno o de fase.
+  function pintarTurno(body, st, e, t, soy, miPalabra, dj) {
+    st.dibujados = 0;
+    if (soy && st.turnoMios !== t.i) { st.turnoMios = t.i; st.mios = []; st.pendientes = []; st.borrar = false; const previo = (e.jugadores.find(j => j.id === e.yo) || {}).dibujo; if (previo && previo.turno === t.i) st.mios = previo.trazos.slice(); }
+    body.innerHTML = '<div class="dj-cab" id="dj-cab">' + cabeceraHtml(soy, miPalabra, t, dj) +
+      '</div><div id="dj-lienzo-wrap"></div>' +
+      herramientasHtml(soy, st) +
+      '<div class="feedback" id="dj-msg"></div><ul class="dj-feed" id="dj-feed" aria-live="polite"></ul>' +
+      '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-ayuda="dibuja">📖 Cómo se juega</button></div>';
+    st.feed = null;
+    const L = crearLienzo(document.getElementById('dj-lienzo-wrap'), soy ? '' : 'solo-ver');
+    st.lienzo = L;
+    if (soy) { st.mios.forEach(x => pintarTrazo(L.ctx, x)); conectarDibujo(L, st, t.i); }
+  }
+  // Pinta los trazos nuevos de quien dibuja (para los demás) y los huecos si aún no estaban.
+  function seguirTrazos(st, e, t, dj) {
+    const d = (e.jugadores.find(j => j.id === t.dibuja) || {}).dibujo;
+    const lista = d && d.turno === t.i ? d.trazos : [];
+    if (lista.length < st.dibujados) { limpiarLienzo(st.lienzo.ctx); st.dibujados = 0; }
+    for (; st.dibujados < lista.length; st.dibujados++) pintarTrazo(st.lienzo.ctx, lista[st.dibujados]);
+    const h = document.getElementById('dj-huecos'); if (h && dj.turno === t.i && dj.forma && !h.textContent.trim()) h.textContent = huecos(dj.forma);
+  }
+  // Lo que escriben los demás y quién ya adivinó.
+  function pintarFeed(st, e, t, soy) {
     const feed = [];
     for (const j of e.jugadores) {
       (j.intentos || []).filter(x => x.turno === t.i).forEach(x => feed.push({ t: x.t, html: escapeHtml(j.nombre) + ': ' + (x.casi ? '🔥 ¡casi!' : escapeHtml(x.texto)) }));
@@ -228,6 +248,12 @@
     }
     return false;
   }
+  // Aviso cuando el servidor rechaza un intento.
+  function avisoDeError(r) {
+    if (r.body.error === 'muy_rapido') return '⏳ Espera un segundo entre intentos.';
+    if (r.body.error === 'turno_cerrado') return 'Se acabó el turno.';
+    return 'No se pudo enviar (' + (r.body.error || r.status) + ').';
+  }
   // Enviar la respuesta (el formulario de la sala).
   document.addEventListener('submit', ev => {
     if (!ev.target || ev.target.id !== 'dj-form' || !sala.estado) return;
@@ -238,7 +264,7 @@
     post('/juegos/sala/' + sala.codigo + '/respuesta', { adivina: { turno: act.turno.i, texto } }).then(r => {
       if (r.ok && r.body.correcta) { sonidoOk(); mensaje('✅ ¡Correcto! +' + r.body.pts, 'ok'); return traerSala(); }
       if (r.ok) { sonidoMal(); mensaje(r.body.casi ? '🔥 ¡Casi! Escribe solo la palabra.' : '✘ No es «' + texto + '». ¡Sigue intentando!', 'bad'); return traerSala(); }
-      mensaje(r.body.error === 'muy_rapido' ? '⏳ Espera un segundo entre intentos.' : r.body.error === 'turno_cerrado' ? 'Se acabó el turno.' : 'No se pudo enviar (' + (r.body.error || r.status) + ').', 'bad');
+      mensaje(avisoDeError(r), 'bad');
     });
   });
 

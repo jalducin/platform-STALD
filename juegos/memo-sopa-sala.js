@@ -13,7 +13,7 @@
   }
   // Sopa de 10×10 con exactamente 6 palabras (sigue probando candidatas hasta acomodarlas).
   function sopa(vocab, r) {
-    const grid = Array.from({ length: N_SOPA }, () => Array(N_SOPA).fill('')), puestas = [];
+    const grid = Array.from({ length: N_SOPA }, () => new Array(N_SOPA).fill('')), puestas = [];
     for (const w of barajarCon(vocab.filter(v => /^[a-z]{3,8}$/.test(v.en)), r)) {
       if (puestas.length >= PALABRAS) break;
       const W = w.en.toUpperCase();
@@ -39,6 +39,15 @@
   .ms-barra i { display: block; height: 100%; background: var(--ok); }
   `);
   const fmtMs = ms => ms === null || ms === undefined ? '—' : (ms / 1000).toFixed(1) + ' s';
+  // Resultado simulado de un bot con su generador `r` (mismo orden de llamadas a r que antes). Con `conVaEn`, la sopa
+  // sin terminar trae también la hora a la que «va» (para el avance en vivo).
+  function resultadoBot(juego, r, conVaEn) {
+    if (juego === 'en-memorama') return { ms: 30000 + Math.floor(r() * 70000), errores: 2 + Math.floor(r() * 12), pares: PARES, fin: true };
+    if (r() < 0.75) return { ms: 45000 + Math.floor(r() * 110000), encontradas: PALABRAS, fin: true };
+    const b = { ms: null, encontradas: 3 + Math.floor(r() * 3), fin: true };
+    if (conVaEn) b.vaEn = 120000 + Math.floor(r() * 50000);
+    return b;
+  }
 
   // Resultado de cada participante: el suyo (servidor) o el simulado de los bots (aparece a su hora).
   function resultados(juego) {
@@ -46,8 +55,7 @@
     return participantes().map(p => {
       if (p.bot) {
         const r = rngDe(s.seed, juego + '|' + p.id);
-        const b = juego === 'en-memorama' ? { ms: 30000 + Math.floor(r() * 70000), errores: 2 + Math.floor(r() * 12), pares: PARES, fin: true }
-          : r() < 0.75 ? { ms: 45000 + Math.floor(r() * 110000), encontradas: PALABRAS, fin: true } : { ms: null, encontradas: 3 + Math.floor(r() * 3), fin: true, vaEn: 120000 + Math.floor(r() * 50000) };
+        const b = resultadoBot(juego, r, true);
         const cuando = b.ms !== null ? b.ms : LIMITE_MS;
         if (ahora >= cuando) return { p, r: b };
         return { p, r: juego === 'mente-sopa' ? { ms: null, encontradas: Math.floor(PALABRAS * ahora / (b.vaEn || cuando)), fin: false } : null };
@@ -66,16 +74,31 @@
         if (juego === 'en-memorama' && gana === 'errores') return a.r.errores - b.r.errores || a.r.ms - b.r.ms;
         return a.r.ms - b.r.ms || (a.r.errores || 0) - (b.r.errores || 0);
       }
-      const va = x => x.r ? (juego === 'en-memorama' ? x.r.pares : x.r.encontradas) : -1;
+      const va = x => {
+        if (!x.r) return -1;
+        return juego === 'en-memorama' ? x.r.pares : x.r.encontradas;
+      };
       return va(b) - va(a);
     });
+    // Puntos: por lugar si terminó; si no, por pares o palabras encontradas.
+    const totalDe = (x, i) => {
+      if (completo(x)) return SG.puntosLugar(i);
+      if (!x.r) return 0;
+      return juego === 'en-memorama' ? (x.r.pares || 0) * 30 : (x.r.encontradas || 0) * 60;
+    };
     return orden.map((x, i) => ({ id: x.p.id, nombre: x.p.nombre, tipo: x.p.tipo, avatar: x.p.avatar, ultimo: 0, r: x.r,
-      total: completo(x) ? SG.puntosLugar(i) : !x.r ? 0 : juego === 'en-memorama' ? (x.r.pares || 0) * 30 : (x.r.encontradas || 0) * 60 }));
+      total: totalDe(x, i) }));
+  }
+  // Cómo va cada quien: jugando, terminó (tiempo y errores o palabras) o se le acabó el tiempo.
+  function textoProgreso(juego, r) {
+    if (!r) return '🏃 jugando…';
+    if (juego === 'en-memorama') return r.ms !== null ? '✅ ' + fmtMs(r.ms) + ' · ' + r.errores + ' errores' : '⏰ ' + r.pares + ' pares';
+    if (r.fin && r.ms !== null) return '✅ ' + fmtMs(r.ms);
+    return r.encontradas + '/' + PALABRAS + (r.fin ? ' ⏰' : '');
   }
   function progresoHtml(juego) {
     return resultados(juego).map(({ p, r }) => {
-      const txt = !r ? '🏃 jugando…' : juego === 'en-memorama' ? (r.ms !== null ? '✅ ' + fmtMs(r.ms) + ' · ' + r.errores + ' errores' : '⏰ ' + r.pares + ' pares')
-        : (r.fin && r.ms !== null ? '✅ ' + fmtMs(r.ms) : r.encontradas + '/' + PALABRAS + (r.fin ? ' ⏰' : ''));
+      const txt = textoProgreso(juego, r);
       const barra = juego === 'mente-sopa' ? '<span class="ms-barra"><i style="width:' + Math.round(((r && r.encontradas) || 0) / PALABRAS * 100) + '%"></i></span>' : '';
       return '<li' + (p.id === sala.estado.yo ? ' style="font-weight:800"' : '') + '><span>' + avatarHtml(p.avatar, 18) + ' ' + escapeHtml(p.nombre) + (p.bot ? ' 🤖' : '') + '</span>' + barra + '<span>' + txt + '</span></li>';
     }).join('');
@@ -93,16 +116,7 @@
     const lista = resultados(juego);
     const humanosListos = lista.filter(x => !x.p.bot).every(x => x.r && x.r.fin);
     if (humanosListos || t > LIMITE_MS + GRACIA_MS) {
-      SG.barra(null);
-      if (sala.vista === 'final') return;
-      const filas = podio(juego, lista.map(x => x.p.bot && (!x.r || !x.r.fin) ? { p: x.p, r: resultadoBotFinal(juego, x.p) } : x));
-      const mio = st.mio || {};
-      sala.finAciertos = memoJ ? (mio.pares || 0) : (mio.encontradas || 0); sala.finTotal = memoJ ? PARES : PALABRAS;
-      const crit = memoJ ? ((s.opciones || {}).gana === 'errores' ? 'gana quien tuvo menos errores' : 'gana el menor tiempo') : 'gana quien encontró más palabras y más rápido';
-      pintarFinalSala(body, filas, null, memoJ ? '🃏 ¡Memorama terminado!' : '🔎 ¡Sopa terminada!');
-      body.insertAdjacentHTML('beforeend', '<h2>⏱ Resultados</h2><p class="muted" style="margin-top:-6px">' + crit + '.</p><div class="scroll-x"><table class="inv"><thead><tr><th>#</th><th>Jugador</th><th>Tiempo</th><th>' + (memoJ ? 'Errores' : 'Palabras') + '</th><th>Pts</th></tr></thead><tbody>' +
-        filas.map((f, i) => '<tr' + (f.id === e.yo ? ' class="yo"' : '') + '><td>' + (i + 1) + '</td><td>' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' 🤖' : '') + '</td><td class="num">' + (f.r && f.r.fin && f.r.ms !== null ? fmtMs(f.r.ms) : 'No terminó') + '</td><td class="num">' +
-          (f.r ? (memoJ ? f.r.errores : f.r.encontradas) : '—') + '</td><td class="num">' + f.total + '</td></tr>').join('') + '</tbody></table></div>');
+      pintarResultados(body, juego, lista);
       return;
     }
     SG.barra(Math.max(0, (LIMITE_MS - t) / LIMITE_MS));
@@ -111,22 +125,47 @@
     const clave = 'ms:' + (listo ? 'espera' : 'juega');
     if (sala.vista !== clave) {
       sala.vista = clave;
-      body.innerHTML = (listo ? '<div class="q-card"><div class="q">' + (st.mio.ms !== null ? '🏁 ¡Terminaste en ' + fmtMs(st.mio.ms) + '!' : '⏰ Se acabó tu tiempo') + '</div><div class="sub">Esperando a los demás…</div></div>'
-        : memoJ ? '<p class="muted" style="text-align:center;margin-top:0">Une cada palabra en inglés con su significado. ' + ((s.opciones || {}).gana === 'errores' ? 'Gana quien se equivoque menos.' : 'Gana el más rápido.') + ' <b id="ms-err">0</b> errores</p><div class="memo">' +
-          st.contenido.map((c, i) => '<button data-msm="' + i + '" aria-label="Carta ' + (i + 1) + '">' + (c.em ? '<span class="em">' + escapeHtml(c.em) + '</span>' : '') + escapeHtml(c.txt) + '</button>').join('') + '</div>'
-          : '<p class="muted" style="text-align:center;margin-top:0">Toca la primera y la última letra de cada palabra en inglés. ¡Carrera!</p><div class="sopa" style="grid-template-columns:repeat(' + N_SOPA + ',1fr)">' +
-          st.contenido.grid.flatMap((fila, y) => fila.map((l, x) => '<button data-mss-r="' + y + '" data-mss-c="' + x + '">' + l + '</button>')).join('') + '</div>' +
-          '<div class="lista-sopa">' + st.contenido.puestas.map((p, i) => '<span id="mss-w' + i + '">' + escapeHtml(p.w.emoji + ' ' + p.w.es) + '</span>').join('') + '</div>') +
+      body.innerHTML = vistaJuego(st, s, memoJ, listo) +
         '<h2>👥 Así van</h2><ul class="ms-prog" id="ms-prog"></ul>';
       if (!listo && !memoJ) st.encontradasSet.forEach(i => marcarPalabra(i));
     }
     const prog = progresoHtml(juego), ul = document.getElementById('ms-prog');
     if (ul && ul.innerHTML !== prog) ul.innerHTML = prog;
   }
+  // Podio y tabla de resultados al terminar (todas las personas acabaron o pasó el tiempo con gracia).
+  function pintarResultados(body, juego, lista) {
+    const e = sala.estado, s = e.sala, st = sala.ms;
+    const memoJ = juego === 'en-memorama';
+    SG.barra(null);
+    if (sala.vista === 'final') return;
+    const filas = podio(juego, lista.map(x => x.p.bot && (!x.r || !x.r.fin) ? { p: x.p, r: resultadoBotFinal(juego, x.p) } : x));
+    const mio = st.mio || {};
+    sala.finAciertos = memoJ ? (mio.pares || 0) : (mio.encontradas || 0); sala.finTotal = memoJ ? PARES : PALABRAS;
+    let crit = 'gana quien encontró más palabras y más rápido';
+    if (memoJ) crit = (s.opciones || {}).gana === 'errores' ? 'gana quien tuvo menos errores' : 'gana el menor tiempo';
+    const dato = f => {
+      if (!f.r) return '—';
+      return memoJ ? f.r.errores : f.r.encontradas;
+    };
+    pintarFinalSala(body, filas, null, memoJ ? '🃏 ¡Memorama terminado!' : '🔎 ¡Sopa terminada!');
+    body.insertAdjacentHTML('beforeend', '<h2>⏱ Resultados</h2><p class="muted" style="margin-top:-6px">' + crit + '.</p><div class="scroll-x"><table class="inv"><thead><tr><th>#</th><th>Jugador</th><th>Tiempo</th><th>' + (memoJ ? 'Errores' : 'Palabras') + '</th><th>Pts</th></tr></thead><tbody>' +
+      filas.map((f, i) => '<tr' + (f.id === e.yo ? ' class="yo"' : '') + '><td>' + (i + 1) + '</td><td>' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' 🤖' : '') + '</td><td class="num">' + (f.r && f.r.fin && f.r.ms !== null ? fmtMs(f.r.ms) : 'No terminó') + '</td><td class="num">' +
+        dato(f) + '</td><td class="num">' + f.total + '</td></tr>').join('') + '</tbody></table></div>');
+  }
+  // Contenido mientras se juega: espera (ya terminé), memorama o sopa.
+  function vistaJuego(st, s, memoJ, listo) {
+    if (listo) return '<div class="q-card"><div class="q">' + (st.mio.ms !== null ? '🏁 ¡Terminaste en ' + fmtMs(st.mio.ms) + '!' : '⏰ Se acabó tu tiempo') + '</div><div class="sub">Esperando a los demás…</div></div>';
+    if (memoJ) {
+      return '<p class="muted" style="text-align:center;margin-top:0">Une cada palabra en inglés con su significado. ' + ((s.opciones || {}).gana === 'errores' ? 'Gana quien se equivoque menos.' : 'Gana el más rápido.') + ' <b id="ms-err">0</b> errores</p><div class="memo">' +
+        st.contenido.map((c, i) => '<button data-msm="' + i + '" aria-label="Carta ' + (i + 1) + '">' + (c.em ? '<span class="em">' + escapeHtml(c.em) + '</span>' : '') + escapeHtml(c.txt) + '</button>').join('') + '</div>';
+    }
+    return '<p class="muted" style="text-align:center;margin-top:0">Toca la primera y la última letra de cada palabra en inglés. ¡Carrera!</p><div class="sopa" style="grid-template-columns:repeat(' + N_SOPA + ',1fr)">' +
+      st.contenido.grid.flatMap((fila, y) => fila.map((l, x) => '<button data-mss-r="' + y + '" data-mss-c="' + x + '">' + l + '</button>')).join('') + '</div>' +
+      '<div class="lista-sopa">' + st.contenido.puestas.map((p, i) => '<span id="mss-w' + i + '">' + escapeHtml(p.w.emoji + ' ' + p.w.es) + '</span>').join('') + '</div>';
+  }
   function resultadoBotFinal(juego, p) {
     const r = rngDe(sala.estado.sala.seed, juego + '|' + p.id);
-    return juego === 'en-memorama' ? { ms: 30000 + Math.floor(r() * 70000), errores: 2 + Math.floor(r() * 12), pares: PARES, fin: true }
-      : r() < 0.75 ? { ms: 45000 + Math.floor(r() * 110000), encontradas: PALABRAS, fin: true } : { ms: null, encontradas: 3 + Math.floor(r() * 3), fin: true };
+    return resultadoBot(juego, r, false);
   }
   function marcarPalabra(i) {
     const p = sala.ms.contenido.puestas[i];
@@ -180,9 +219,7 @@
     return contenido;
   }
   const registro = { preparar, pintar, clic };
-  g.SALAS_GRANDES['en-memorama'] = Object.assign({}, registro, {
-    opcionesHtml: '<label for="p-gana">¿Quién gana?</label><select id="p-gana" class="sel"><option value="tiempo">⏱ El menor tiempo</option><option value="errores">🎯 Menos errores</option></select>',
-    opciones: () => ({ gana: document.getElementById('p-gana').value }),
-  });
+  g.SALAS_GRANDES['en-memorama'] = { ...registro, opcionesHtml: '<label for="p-gana">¿Quién gana?</label><select id="p-gana" class="sel"><option value="tiempo">⏱ El menor tiempo</option><option value="errores">🎯 Menos errores</option></select>',
+    opciones: () => ({ gana: document.getElementById('p-gana').value }),};
   g.SALAS_GRANDES['mente-sopa'] = registro;
 })(globalThis);

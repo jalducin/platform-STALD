@@ -40,7 +40,7 @@
   }
   // Mapa de teclas por omisión con los cambios del juego ({ Code: boton | null }; null quita la tecla).
   function mapaTeclas(cambios) {
-    const m = Object.assign({}, TECLAS);
+    const m = { ...TECLAS };
     for (const [code, b] of Object.entries(cambios || {})) {
       if (b === null) { delete m[code]; continue; }
       if (!ES_BOTON.has(b)) throw new Error('Mando: botón desconocido «' + b + '» para la tecla ' + code);
@@ -90,23 +90,28 @@
       poner(id, botones) { dedos.set(id, (botones || []).slice()); },
       mover(id, botones) { if (dedos.has(id)) dedos.set(id, (botones || []).slice()); },
       quitar(id) { dedos.delete(id); },
-      botones() { const s = new Set(); for (const l of dedos.values()) for (const b of l) s.add(b); return s; },
+      botones() { const s = new Set(); for (const l of dedos.values()) { for (const b of l) s.add(b); } return s; },
       dedos: () => dedos.size,
       tiene: id => dedos.has(id),
       limpiar() { dedos.clear(); },
     };
   }
   // Control físico (objeto Gamepad o uno simulado) → { botones, eje }.
+  // Valor de un botón del control: número directo u objeto { pressed, value } (presionado vale al menos 1).
+  function valorBoton(bt) {
+    if (typeof bt === 'number') return bt;
+    return bt.pressed ? Math.max(1, bt.value || 0) : bt.value || 0;
+  }
   function controlABotones(gp, opciones) {
     const o = opciones || {};
     if (!gp || gp.connected === false) return { botones: [], eje: { x: 0, y: 0 } };
-    const indices = Object.assign({}, CONTROL_ESTANDAR);
+    const indices = { ...CONTROL_ESTANDAR };
     for (const [i, b] of Object.entries(o.indices || {})) { if (b === null) delete indices[i]; else indices[i] = b; }
     const s = new Set();
     (gp.buttons || []).forEach((bt, i) => {
       const b = indices[i];
       if (!b || !bt) return;
-      const v = typeof bt === 'number' ? bt : (bt.pressed ? Math.max(1, bt.value || 0) : bt.value || 0);
+      const v = valorBoton(bt);
       if (v > 0.5) s.add(b);
     });
     const ax = gp.axes || [];
@@ -125,7 +130,7 @@
     if (op.analogico) for (const d of DIRECCIONES) usados.add(d);
     const fuentes = new Map(), ejes = new Map(), manejadores = { al: new Map(), suelta: new Map() };
     let activas = new Set(), activo = true;
-    const union = () => { const s = new Set(); for (const f of fuentes.values()) for (const b of f) s.add(b); return s; };
+    const union = () => { const s = new Set(); for (const f of fuentes.values()) { for (const b of f) s.add(b); } return s; };
     function recalcular() {
       const u = union(), ahora = new Set();
       for (const [a, lista] of Object.entries(acciones)) if (lista.some(b => u.has(b))) ahora.add(a);
@@ -175,7 +180,11 @@
     L: 'Gatillo izquierdo', R: 'Gatillo derecho', START: 'Start / Menú', SELECT: 'Select / Vista',
   };
   const TEXTO_TECLA = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Space: 'Espacio', Enter: 'Enter', NumpadEnter: 'Enter', ShiftRight: 'Shift derecho', ShiftLeft: 'Shift izquierdo', Backspace: 'Retroceso', Escape: 'Esc', Tab: 'Tab' };
-  const textoTecla = code => TEXTO_TECLA[code] || (/^Key[A-Z]$/.test(code) ? code.slice(3) : /^Digit\d$/.test(code) ? code.slice(5) : code);
+  const textoTecla = code => {
+    if (TEXTO_TECLA[code]) return TEXTO_TECLA[code];
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    return /^Digit\d$/.test(code) ? code.slice(5) : code;
+  };
   const mayuscula = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   function guia(acciones, mapa, nombres) {
     const n = nombres || {}, t = mapa || TECLAS;
@@ -303,7 +312,7 @@
     const etiqueta = b => {
       if (!nombres) return '';
       const l = Object.keys(acciones).filter(a => acciones[a].includes(b)).map(a => nombres[a] || a);
-      return l.length ? '<small>' + l.join(' / ').replace(/[&<>"']/g, '') + '</small>' : '';
+      return l.length ? '<small>' + l.join(' / ').replaceAll(/[&<>"']/g, '') + '</small>' : '';
     };
     const vis = b => usados.has(b) ? '' : ' mando-oculto';
     const hayDir = DIRECCIONES.some(d => usados.has(d)) && !(op.analogico && !DIRECCIONES.some(d => Object.values(acciones).some(l => l.includes(d))));

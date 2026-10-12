@@ -96,7 +96,7 @@
   }
   function distSeg2(px, py, s) {
     const dx = s[2] - s[0], dy = s[3] - s[1], l2 = dx * dx + dy * dy;
-    let t = l2 ? ((px - s[0]) * dx + (py - s[1]) * dy) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+    let t = l2 ? ((px - s[0]) * dx + (py - s[1]) * dy) / l2 : 0; t = F.acotar(t, 0, 1);
     const ex = px - (s[0] + dx * t), ey = py - (s[1] + dy * t);
     return ex * ex + ey * ey;
   }
@@ -104,7 +104,7 @@
   // Choque de la pelota con un segmento (que se mueve con mvx, mvy): la saca y rebota. ¿Rebotó?
   function chocar(b, s, mvx, mvy) {
     const ax = s[0], ay = s[1], dx = s[2] - ax, dy = s[3] - ay, l2 = dx * dx + dy * dy;
-    let t = l2 ? ((b.x - ax) * dx + (b.y - ay) * dy) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+    let t = l2 ? ((b.x - ax) * dx + (b.y - ay) * dy) / l2 : 0; t = F.acotar(t, 0, 1);
     const cx = ax + dx * t, cy = ay + dy * t, ex = b.x - cx, ey = b.y - cy, d2 = ex * ex + ey * ey;
     if (d2 >= R * R || d2 === 0) return false;
     const d = Math.sqrt(d2), nx = ex / d, ny = ey / d;
@@ -161,11 +161,9 @@
       sim.evento = ev; sim.termino = true; b.vx = 0; b.vy = 0;
       if (ev === 'agua' || ev === 'fuera') { sim.donde = { x: b.x, y: b.y }; b.x = sim.lie.x; b.y = sim.lie.y; }
     };
-    sim.paso = () => {
-      if (sim.termino) return;
-      // Obstáculos que ya la tienen encimada al empezar el subpaso: no la chocan (nunca queda atrapada).
-      const enc = geo.moviles.map(m => encima(b, estadoMovil(m, sim.reloj).segs));
-      sim.reloj++; sim.pasos++;
+    // Partes de un subpaso, en el orden en que las corre `paso()`.
+    // Aceleración por zonas (arena y pendientes) y por la atracción del hoyo.
+    const fuerzas = () => {
       let ax = 0, ay = 0, arena = false;
       for (const z of geo.zonas) {
         if (!enZona(z, b.x, b.y)) continue;
@@ -173,14 +171,18 @@
       }
       const hx = hoyo.hoyo.x - b.x, hy = hoyo.hoyo.y - b.y, hd2 = hx * hx + hy * hy;
       if (hd2 > 0 && hd2 < ATRAE_R * ATRAE_R && b.vx * b.vx + b.vy * b.vy < 200 * 200) { const hd = Math.sqrt(hd2); ax += hx / hd * ATRAE; ay += hy / hd * ATRAE; }
-      b.vx += ax * DT; b.vy += ay * DT;
-      b.x += b.vx * DT; b.y += b.vy * DT;
+      return { ax, ay, arena };
+    };
+    // Choques con paredes fijas y con los obstáculos móviles que no la tenían encimada.
+    const rebotar = enc => {
       for (const s of geo.segs) if (chocar(b, s, 0, 0)) sim.rebotes++;
       for (let i = 0; i < geo.moviles.length; i++) {
         if (enc[i]) continue;
         const e = estadoMovil(geo.moviles[i], sim.reloj);
         for (const s of e.segs) if (chocar(b, s, e.vx, e.vy)) sim.rebotes++;
       }
+    };
+    const portal = () => {
       for (const p of geo.portales) {
         const dx = b.x - p.de.x, dy = b.y - p.de.y;
         if (dx * dx + dy * dy >= p.de.r * p.de.r) continue;
@@ -188,6 +190,17 @@
         b.x = p.a.x; b.y = p.a.y; b.vx = c2 * sale; b.vy = s2 * sale; sim.portales++;
         break;
       }
+    };
+    sim.paso = () => {
+      if (sim.termino) return;
+      // Obstáculos que ya la tienen encimada al empezar el subpaso: no la chocan (nunca queda atrapada).
+      const enc = geo.moviles.map(m => encima(b, estadoMovil(m, sim.reloj).segs));
+      sim.reloj++; sim.pasos++;
+      const { ax, ay, arena } = fuerzas();
+      b.vx += ax * DT; b.vy += ay * DT;
+      b.x += b.vx * DT; b.y += b.vy * DT;
+      rebotar(enc);
+      portal();
       for (const z of geo.zonas) if (z.tipo === 'agua' && enZona(z, b.x, b.y)) return acabar('agua');
       if (sim.pasos % 4 === 0 && !dentroCampo(geo, b.x, b.y)) return acabar('fuera'); // red de seguridad
       const v = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
@@ -245,23 +258,28 @@
 
   // ---------- Bot: campo de distancias al hoyo y búsqueda del tiro ----------
   const CELDA = 8, campos = new Map();
-  function campo(hoyo) {
-    let c = campos.get(hoyo.n);
-    if (c) return c;
-    const geo = geometria(hoyo), nx = Math.ceil(hoyo.ancho / CELDA), ny = Math.ceil(hoyo.alto / CELDA), n = nx * ny;
-    const costo = new Float64Array(n), dist = new Float64Array(n).fill(Infinity);
+  // Costo de cruzar cada celda: 0 = no se puede (fuera, pared o agua), 1 = pasto, 4 = arena.
+  function costosCampo(geo, nx, n) {
+    const costo = new Float64Array(n);
     for (let i = 0; i < n; i++) {
       const x = (i % nx + 0.5) * CELDA, y = (Math.floor(i / nx) + 0.5) * CELDA;
       let k = dentroCampo(geo, x, y) && !geo.segs.some(s => distSeg2(x, y, s) < (R + 1) * (R + 1)) ? 1 : 0;
       for (const z of geo.zonas) if (k && enZona(z, x, y)) { if (z.tipo === 'agua') k = 0; else if (z.tipo === 'arena') k = 4; }
       costo[i] = k;
     }
+    return costo;
+  }
+  function campo(hoyo) {
+    let c = campos.get(hoyo.n);
+    if (c) return c;
+    const geo = geometria(hoyo), nx = Math.ceil(hoyo.ancho / CELDA), ny = Math.ceil(hoyo.alto / CELDA), n = nx * ny;
+    const costo = costosCampo(geo, nx, n), dist = new Float64Array(n).fill(Infinity);
     const celda = (x, y) => F.acotar(Math.floor(y / CELDA), 0, ny - 1) * nx + F.acotar(Math.floor(x / CELDA), 0, nx - 1);
     const salidas = geo.portales.map(p => ({ i: celda(p.a.x, p.a.y), p }));
     // Dijkstra con montículo binario (orden determinista).
     const heap = [];
-    const push = (d, i) => { heap.push([d, i]); let k = heap.length - 1; while (k > 0) { const p = (k - 1) >> 1; if (heap[p][0] < heap[k][0] || (heap[p][0] === heap[k][0] && heap[p][1] <= heap[k][1])) break; [heap[p], heap[k]] = [heap[k], heap[p]]; k = p; } };
-    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let k = 0; for (;;) { const l = 2 * k + 1, r = l + 1; let m = k; const menor = (a, b) => heap[a][0] < heap[b][0] || (heap[a][0] === heap[b][0] && heap[a][1] < heap[b][1]); if (l < heap.length && menor(l, m)) m = l; if (r < heap.length && menor(r, m)) m = r; if (m === k) break; [heap[m], heap[k]] = [heap[k], heap[m]]; k = m; } } return top; };
+    const push = (d, i) => { heap.push([d, i]); let k = heap.length - 1; while (k > 0) { const p = (k - 1) >> 1; if (heap[p][0] < heap[k][0] || (heap[p][0] === heap[k][0] && heap[p][1] <= heap[k][1])) { break; } [heap[p], heap[k]] = [heap[k], heap[p]]; k = p; } };
+    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let k = 0; for (;;) { const l = 2 * k + 1, r = l + 1; let m = k; const menor = (a, b) => heap[a][0] < heap[b][0] || (heap[a][0] === heap[b][0] && heap[a][1] < heap[b][1]); if (l < heap.length && menor(l, m)) { m = l; } if (r < heap.length && menor(r, m)) { m = r; } if (m === k) { break; } [heap[m], heap[k]] = [heap[k], heap[m]]; k = m; } } return top; };
     const ini = celda(hoyo.hoyo.x, hoyo.hoyo.y); dist[ini] = 0; push(0, ini);
     const VEC = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.4142135623730951], [1, -1, 1.4142135623730951], [-1, 1, 1.4142135623730951], [-1, -1, 1.4142135623730951]];
     while (heap.length) {
@@ -301,7 +319,8 @@
     while (!sim.termino) sim.paso();
     if (sim.evento === 'hoyo') return -1e6;
     const base = valorCampo(sim.hoyo, sim.bola.x, sim.bola.y);
-    return sim.evento === 'agua' || sim.evento === 'fuera' ? base + 500 : base + (sim.arena ? 20 : 0);
+    if (sim.evento === 'agua' || sim.evento === 'fuera') return base + 500;
+    return base + (sim.arena ? 20 : 0);
   }
   const ideales = new Map();
   // El mejor tiro sin error (72 ángulos × 9 fuerzas y dos afinados). En caché: Fisica.linea lo pide en cada cuadro.
@@ -367,8 +386,16 @@
     if (d === 3) return { clave: 'triple-bogey', t: 'Triple bogey', emoji: '😬' };
     return { clave: 'mas', t: '+' + d, emoji: '💪' };
   }
-  const estrellas = (golpes, par, recogida) => recogida ? 0 : golpes < par ? 3 : golpes === par ? 2 : 1;
-  const puntosHoyo = (golpes, par, recogida) => recogida ? 10 : 20 + 30 * Math.max(0, par + 2 - golpes) + (golpes === 1 ? 100 : 0);
+  const estrellas = (golpes, par, recogida) => {
+    if (recogida) return 0;
+    if (golpes < par) return 3;
+    return golpes === par ? 2 : 1;
+  };
+  const puntosHoyo = (golpes, par, recogida) => {
+    if (recogida) return 10;
+    const bonoHoyoEnUno = golpes === 1 ? 100 : 0;
+    return 20 + 30 * Math.max(0, par + 2 - golpes) + bonoHoyoEnUno;
+  };
   const estrellasDe = (st, idx) => st.hoyos.reduce((a, hi, k) => a + (k < st.h || st.fin || st.jug[idx].dentro && k === st.h ? estrellas(st.jug[idx].golpes[k], HOYOS[hi].par, st.jug[idx].recogidas.includes(k)) : 0), 0);
   // Sala: 500 / 300 / 200 / 100 por lugar (empates comparten) + 10 por estrella (máx. 90); quien se rinde, solo estrellas.
   const BASE_LUGAR = [500, 300, 200, 100];

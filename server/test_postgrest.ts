@@ -6,7 +6,7 @@ const LLAVES: Record<string, string[]> = { docs: ["path"], grupos: ["id"], inscr
 
 export function postgrestFalso(prefijo = "stald_") {
   const tablas = new Map<string, Fila[]>();
-  const tabla = (n: string) => { if (!tablas.has(n)) tablas.set(n, []); return tablas.get(n)!; };
+  const tabla = (n: string) => { if (!tablas.has(n)) { tablas.set(n, []); } return tablas.get(n)!; };
   const llaveDe = (n: string) => LLAVES[n.slice(prefijo.length)] ?? ["id"];
   let falla = false;
   const coincide = (f: Fila, filtros: [string, string][]) => filtros.every(([col, cond]) => {

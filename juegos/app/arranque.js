@@ -47,54 +47,69 @@ document.addEventListener('click', e => { const a = e.target.closest('[data-ayud
 
 // ---------- Eventos ----------
 app.addEventListener('click', e => {
+  // El clic se reparte en bloques en el mismo orden de siempre; un bloque que no lo atiende devuelve NO_ATENDIDO.
+  const NO_ATENDIDO = Symbol('no-atendido');
+  // Dentro de la sala: preguntas, salas grandes, mesas (¡Una!, Póker, cartas, ajedrez, tablero), Lotería y botones de la sala.
+  const clicEnSala = () => {
+    const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
+    if (SalasGrandes.clic(e)) return; // juegos-salas-grandes
+    if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
+    if (sala.estado && sala.estado.sala.juego === 'poker' && document.getElementById('p-body') && e.target.closest('[data-pk]')) { clicPokerSala(e); return; }
+    if (sala.estado && ['brisca', 'conquian'].includes(sala.estado.sala.juego) && document.getElementById('p-body') && clicCartasSala(e)) return;
+    if (sala.estado && sala.estado.sala.juego === 'ajedrez' && document.getElementById('p-body') && clicAjedrezSala(e)) return;
+    if (sala.estado && TableroUI.esSala(sala.estado.sala.juego) && document.getElementById('p-body') && TableroUI.clicSala(e)) return; // juegos-tablero
+    const lsc = e.target.closest('[data-lsc]'); if (lsc) return marcarLoteriaSala(Number(lsc.dataset.lsc), lsc);
+    if (e.target.closest('[data-lsgrito]')) return gritarLoteriaSala();
+    const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }
+    const pa = e.target.closest('[data-p]');
+    if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
+    if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
+    if (pa && pa.dataset.p === 'equipo') return cambiarEquipoFutbolito(pa); // futbolito-equipos
+    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert(TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.'); /* juegos-tablero */ } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
+    return NO_ATENDIDO;
+  };
+  // Admin, foto, ranking, categorías y tarjetas de juego.
+  const clicEnPaneles = () => {
+    const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
+    const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
+    const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
+    const rjt = e.target.closest('#rj-todos'); // top 10 ↔ todos (openspec: ranking-juegos-top10)
+    if (rjt) { const ol = document.getElementById('rank-juegos'), abre = !ol.classList.contains('todos'); ol.classList.toggle('todos', abre); rjt.setAttribute('aria-expanded', String(abre)); rjt.textContent = abre ? 'Ver solo el top 10 ▴' : 'Ver los ' + rjt.dataset.total + ' juegos ▾'; return; }
+    const cc = e.target.closest('[data-categoria]'); if (cc) return abrirCategoria(cc.dataset.categoria); // juegos-categorias
+    const g = e.target.closest('[data-juego]');
+    if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
+    return NO_ATENDIDO;
+  };
+  // Botones con data-a (navegación, revancha, admin, CSV, registro y sesión).
+  const clicEnAccion = a => {
+    if (a.dataset.a === 'categorias') return verCategorias(); // juegos-categorias: «← Categorías»
+    if (a.dataset.a === 'reanudar') return reanudarPartida();
+    if (a.dataset.a === 'revancha-no') { olvidarRevancha(); const c = document.getElementById('revancha-inicio'); if (c) { c.remove(); } return; }
+    if (a.dataset.a === 'revancha-inicio') {
+      a.disabled = true;
+      return pedirRevancha(a.dataset.codigo).then(msg => { if (msg === null) { return; } a.disabled = false; const m = document.getElementById('revancha-msg'); if (m) m.innerHTML = '<div class="alert">' + escapeHtml(msg) + '</div>'; });
+    }
+    if (a.dataset.a === 'adm-actualizar') return cargarAdmin(ADM_FUENTES);
+    if (a.dataset.a === 'adm-reintentar') return cargarAdmin([a.dataset.fuente]);
+    if (a.dataset.a === 'adm-limpiar') { const q = document.getElementById('adm-buscar'); q.value = ''; aplicarBusqueda(); return q.focus(); }
+    if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); olvidarRevancha(); pantallaHub(); }
+    if (a.dataset.a === 'reintentar') iniciar();
+    if (a.dataset.a === 'csv') descargarCsv([['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana])), 'invitados-juegos.csv');
+    if (a.dataset.a === 'csv-jugadores') { const l = state.jugadoresLista || { jugadores: [], pendientes: [] }; descargarCsv([['estado', 'nombre', 'nick', 'correo', 'tipo', 'puntos_semana', 'partidas_semana', 'ultima_visita_o_registro']].concat(l.jugadores.map(j => ['registrado', j.nombre, j.nick || '', j.email, j.espacio, j.puntosSemana, j.partidasSemana, j.ultimaVisita]), l.pendientes.map(p => [p.estado, '', '', p.email, '', '', '', p.creada])), 'jugadores-juegos.csv'); }
+    if (a.dataset.a === 'registro') return pantallaRegistro();
+    // «🆕 Registrar» (openspec: registro-juegos-hub): cierra la sesión en este aparato y abre el registro para otra persona.
+    if (a.dataset.a === 'registrar') {
+      if (!confirm('¿Cerrar tu sesión en este aparato para que otra persona cree su cuenta de Juegos?')) return;
+      StaldAuth.salir().then(() => { state.email = null; borrarRegistro(); pantallaRegistro(); });
+      return;
+    }
+    if (a.dataset.a === 'otro-correo') { StaldAuth.salir().then(() => { state.email = null; pantallaLogin(); }); }
+  };
   const t = e.target.closest('[data-tab]'); if (t) { limpiar(); olvidarRevancha(); return pantallaHub(t.dataset.tab); }
-  const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
-  if (SalasGrandes.clic(e)) return; // juegos-salas-grandes
-  if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
-  if (sala.estado && sala.estado.sala.juego === 'poker' && document.getElementById('p-body') && e.target.closest('[data-pk]')) { clicPokerSala(e); return; }
-  if (sala.estado && ['brisca', 'conquian'].includes(sala.estado.sala.juego) && document.getElementById('p-body') && clicCartasSala(e)) return;
-  if (sala.estado && sala.estado.sala.juego === 'ajedrez' && document.getElementById('p-body') && clicAjedrezSala(e)) return;
-  if (sala.estado && TableroUI.esSala(sala.estado.sala.juego) && document.getElementById('p-body') && TableroUI.clicSala(e)) return; // juegos-tablero
-  const lsc = e.target.closest('[data-lsc]'); if (lsc) return marcarLoteriaSala(Number(lsc.dataset.lsc), lsc);
-  if (e.target.closest('[data-lsgrito]')) return gritarLoteriaSala();
-  const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }
-  const pa = e.target.closest('[data-p]');
-  if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
-  if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
-  if (pa && pa.dataset.p === 'equipo') return cambiarEquipoFutbolito(pa); // futbolito-equipos
-  if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('👥 Faltan jugadores. Espera a que se una tu rival.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
-  if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert(TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.'); /* juegos-tablero */ } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
-  const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
-  const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
-  const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
-  const rjt = e.target.closest('#rj-todos'); // top 10 ↔ todos (openspec: ranking-juegos-top10)
-  if (rjt) { const ol = document.getElementById('rank-juegos'), abre = !ol.classList.contains('todos'); ol.classList.toggle('todos', abre); rjt.setAttribute('aria-expanded', String(abre)); rjt.textContent = abre ? 'Ver solo el top 10 ▴' : 'Ver los ' + rjt.dataset.total + ' juegos ▾'; return; }
-  const cc = e.target.closest('[data-categoria]'); if (cc) return abrirCategoria(cc.dataset.categoria); // juegos-categorias
-  const g = e.target.closest('[data-juego]');
-  if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
+  const enSala = clicEnSala(); if (enSala !== NO_ATENDIDO) return enSala;
+  const enPaneles = clicEnPaneles(); if (enPaneles !== NO_ATENDIDO) return enPaneles;
   const a = e.target.closest('[data-a]'); if (!a) return;
-  if (a.dataset.a === 'categorias') return verCategorias(); // juegos-categorias: «← Categorías»
-  if (a.dataset.a === 'reanudar') return reanudarPartida();
-  if (a.dataset.a === 'revancha-no') { olvidarRevancha(); const c = document.getElementById('revancha-inicio'); if (c) c.remove(); return; }
-  if (a.dataset.a === 'revancha-inicio') {
-    a.disabled = true;
-    return pedirRevancha(a.dataset.codigo).then(msg => { if (msg === null) return; a.disabled = false; const m = document.getElementById('revancha-msg'); if (m) m.innerHTML = '<div class="alert">' + escapeHtml(msg) + '</div>'; });
-  }
-  if (a.dataset.a === 'adm-actualizar') return cargarAdmin(ADM_FUENTES);
-  if (a.dataset.a === 'adm-reintentar') return cargarAdmin([a.dataset.fuente]);
-  if (a.dataset.a === 'adm-limpiar') { const q = document.getElementById('adm-buscar'); q.value = ''; aplicarBusqueda(); return q.focus(); }
-  if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); olvidarRevancha(); pantallaHub(); }
-  if (a.dataset.a === 'reintentar') iniciar();
-  if (a.dataset.a === 'csv') descargarCsv([['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana])), 'invitados-juegos.csv');
-  if (a.dataset.a === 'csv-jugadores') { const l = state.jugadoresLista || { jugadores: [], pendientes: [] }; descargarCsv([['estado', 'nombre', 'nick', 'correo', 'tipo', 'puntos_semana', 'partidas_semana', 'ultima_visita_o_registro']].concat(l.jugadores.map(j => ['registrado', j.nombre, j.nick || '', j.email, j.espacio, j.puntosSemana, j.partidasSemana, j.ultimaVisita]), l.pendientes.map(p => [p.estado, '', '', p.email, '', '', '', p.creada])), 'jugadores-juegos.csv'); }
-  if (a.dataset.a === 'registro') return pantallaRegistro();
-  // «🆕 Registrar» (openspec: registro-juegos-hub): cierra la sesión en este aparato y abre el registro para otra persona.
-  if (a.dataset.a === 'registrar') {
-    if (!confirm('¿Cerrar tu sesión en este aparato para que otra persona cree su cuenta de Juegos?')) return;
-    StaldAuth.salir().then(() => { state.email = null; borrarRegistro(); pantallaRegistro(); });
-    return;
-  }
-  if (a.dataset.a === 'otro-correo') { StaldAuth.salir().then(() => { state.email = null; pantallaLogin(); }); }
+  return clicEnAccion(a);
 });
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez'; opcionesMapaArcade(e.target.value); document.getElementById('p-tema-wrap').hidden = e.target.value !== 'en-frases';
   const nota = { ajedrez: '♟️ Partida 1 vs 1 solo entre dos personas: quien crea y quien se une. Sin bots.', brisca: '🏆 Se juega entre 4 en parejas: si faltan personas, se completa con bots. Máximo 4.', golf: '⛳ De 2 a 4 personas por turnos, sin bots: cada quien tira su pelota en 3 hoyos.' /* golf */ }[e.target.value];
@@ -120,7 +135,7 @@ app.addEventListener('submit', async e => {
   if (e.target.id === 'f-entrada') {
     e.preventDefault();
     const correo = document.getElementById('ent-correo').value.trim().toLowerCase();
-    const apodo = document.getElementById('ent-nick').value.trim().replace(/\s+/g, ' ');
+    const apodo = document.getElementById('ent-nick').value.trim().replaceAll(/\s+/g, ' ');
     entradaPrevia = { correo, nick: apodo };
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return pantallaLogin('Escribe un correo válido, por ejemplo tucorreo@gmail.com.');
     if (!/^[\p{L}\p{N} ]{2,20}$/u.test(apodo)) return pantallaLogin('Tu nick debe tener de 2 a 20 letras o números.');

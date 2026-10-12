@@ -145,9 +145,13 @@ function pintarArcadeSala(body) {
     const k = 'arcade-espera:' + humanos.map(f => f.envio ? 1 : 0).join('') + ':' + Math.ceil((Arcade.LIMITE_SALA[juego] + Arcade.GRACIA_SALA - t) / 10000);
     if (sala.vista === k) return;
     sala.vista = k;
+    const tiempoDe = f => { // quien sigue jugando, quien no terminó o su tiempo
+      if (!f.envio) return '🏃 jugando…';
+      return f.ms === null ? '—' : '⏱ ' + Arcade.formatoTiempo(f.ms);
+    };
     body.innerHTML = '<div class="q-card"><div class="sub">' + escapeHtml(Arcade.nombreMapa(juego, mapa)) + '</div><div class="q">' + (mia.ms === null ? '⏰ No terminaste' : '🏁 Tu tiempo: ' + Arcade.formatoTiempo(mia.ms)) + '</div>' +
       '<div class="sub">Esperando a que terminen los demás (a más tardar en ' + Math.max(0, Math.ceil((Arcade.LIMITE_SALA[juego] + Arcade.GRACIA_SALA - t) / 1000)) + ' s)…</div></div>' +
-      '<ol class="rank">' + humanos.map(f => '<li>' + avatarHtml(f.avatar, 28) + '<span class="n">' + escapeHtml(f.nombre) + '</span><span class="pts">' + (f.envio ? (f.ms === null ? '—' : '⏱ ' + Arcade.formatoTiempo(f.ms)) : '🏃 jugando…') + '</span></li>').join('') + '</ol>';
+      '<ol class="rank">' + humanos.map(f => '<li>' + avatarHtml(f.avatar, 28) + '<span class="n">' + escapeHtml(f.nombre) + '</span><span class="pts">' + tiempoDe(f) + '</span></li>').join('') + '</ol>';
     return;
   }
   if (sala.vista === 'arcade') return;
@@ -175,7 +179,7 @@ function pintarArcadeSala(body) {
 // El juego vive en su iframe y reproduce los tiros con su motor determinista. Esta página le pasa la mesa (los 2 de
 // participantes(): personas y, si falta, el bot), las jugadas del servidor cuando cambian, envía sus tiros y pinta
 // el podio con pintarFinalSala (puntos topados a 1000) cuando el juego avisa el fin.
-const jugadasFisica = () => sala.estado.jugadores.flatMap(x => (x.jugadas || []).map(j => Object.assign({ jugador: x.id }, j))).sort((a, b) => a.n - b.n);
+const jugadasFisica = () => sala.estado.jugadores.flatMap(x => (x.jugadas || []).map(j => ({ jugador: x.id, ...j }))).sort((a, b) => a.n - b.n);
 // futbolito-equipos: equipos de Futbolito 2v2 en la sala de espera (mismo reparto que el juego: Futbolito.repartir).
 function equiposFutbolito(lista) {
   const e = sala.estado;
@@ -183,7 +187,8 @@ function equiposFutbolito(lista) {
   const rep = Futbolito.repartir(lista.map(x => ({ id: x.id, bot: !!x.bot, ...(x.equipo === 0 || x.equipo === 1 ? { equipo: x.equipo } : {}) })));
   const ROL = { todas: 'las 4 barras', adelante: 'medios y delanteros', atras: 'portero y defensa' };
   const yo = lista.findIndex(x => x.id === e.yo);
-  const col = eq => '<div style="flex:1;min-width:140px"><b>' + (eq ? '🔵 Equipo azul' : '🔴 Equipo rojo') + '</b>' + lista.map((x, i) => rep[i].eq !== eq ? '' : '<div data-eq="' + eq + '" style="margin-top:4px">' + escapeHtml(x.nombre) + (x.bot ? ' 🤖' : '') + ' <small class="muted">· ' + ROL[rep[i].rol] + '</small></div>').join('') + '</div>';
+  const fila = (x, i, eq) => '<div data-eq="' + eq + '" style="margin-top:4px">' + escapeHtml(x.nombre) + (x.bot ? ' 🤖' : '') + ' <small class="muted">· ' + ROL[rep[i].rol] + '</small></div>';
+  const col = eq => '<div style="flex:1;min-width:140px"><b>' + (eq ? '🔵 Equipo azul' : '🔴 Equipo rojo') + '</b>' + lista.map((x, i) => rep[i].eq !== eq ? '' : fila(x, i, eq)).join('') + '</div>';
   return '<div class="card" id="p-equipos-fut" style="margin-bottom:10px"><div style="display:flex;gap:10px;flex-wrap:wrap">' + col(0) + col(1) + '</div>' +
     (yo >= 0 ? '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="equipo" data-eq-a="' + (1 - rep[yo].eq) + '">🔁 Cambiar de equipo</button></div>' : '') + '</div>';
 }
@@ -196,7 +201,8 @@ async function cambiarEquipoFutbolito(btn) { // futbolito-equipos
 function pintarFisicaSala(body) {
   const e = sala.estado, s = e.sala, juego = s.juego;
   document.getElementById('m-bar').hidden = true;
-  const mesa = juego === 'futbolito' ? participantes() : participantes().slice(0, juego === 'golf' ? 4 : 2); // futbolito-equipos: hasta 4 según la mesa; golf: de 2 a 4
+  const cupo = juego === 'golf' ? 4 : 2;
+  const mesa = juego === 'futbolito' ? participantes() : participantes().slice(0, cupo); // futbolito-equipos: hasta 4 según la mesa; golf: de 2 a 4
   if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + icoJuego(juego) + (juego === 'golf' ? ' Esperando a más personas: se juega de 2 a 4.' : ' Esperando a tu rival.') /* futbolito-equipos: sin «1 vs 1» (también hay 2 vs 2) */ + '</div>'; sala.vista = 'faltan'; } return; }
   const aFrame = msg => { const f = document.getElementById('arcade-frame'); try { f.contentWindow.postMessage(msg, location.origin); } catch (x) { /* iframe cerrado */ } };
   if (sala.vista === 'fisica') {

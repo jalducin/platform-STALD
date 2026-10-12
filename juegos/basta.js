@@ -8,7 +8,7 @@
 
   // Compara sin mayúsculas ni acentos, pero conserva la ñ como letra propia (\u0001 la aparta mientras se quitan acentos).
   // deno-lint-ignore no-control-regex
-  const norm = s => String(s || '').trim().toLowerCase().replace(/ñ/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'ñ').replace(/\s+/g, ' ');
+  const norm = s => String(s || '').trim().toLowerCase().replaceAll('ñ', '\u0001').normalize('NFD').replaceAll(/[̀-ͯ]/g, '').replaceAll('\u0001', 'ñ').replaceAll(/\s+/g, ' ');
 
   // Diccionario para validar: palabras de México (también ejemplos y bots) + `soloAceptar`, palabras de España que
   // valen pero no se muestran (openspec: basta-mexicano).
@@ -51,10 +51,11 @@
   function conExtras(d, extras, ids) {
     const elegidas = (ids || []).map(id => (extras || []).find(x => x.id === id)).filter(Boolean);
     if (!elegidas.length) return d;
-    return Object.assign({}, d, {
+    return {
+      ...d,
       categorias: d.categorias.concat(elegidas.map(x => ({ id: x.id, emoji: x.emoji, titulo: x.titulo, extra: true }))),
-      palabras: Object.assign({}, d.palabras, Object.fromEntries(elegidas.map(x => [x.id, x.palabras]))),
-    });
+      palabras: { ...d.palabras, ...Object.fromEntries(elegidas.map(x => [x.id, x.palabras])) },
+    };
   }
 
   g.Basta = { MAX_EXTRAS, CONOCIDAS, norm, dic, puntuar, extrasDe, conExtras };

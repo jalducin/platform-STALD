@@ -130,7 +130,10 @@
     return 'Con he / she / it el verbo lleva -s: ' + it.presente + '.';
   }
   const reglaFuturo = it => it.tema === 'to be' ? 'Futuro de to be: will be (nunca will is ni will are).' : 'Futuro: will + verbo base, igual con todas las personas: will ' + it.verbo + '.';
-  const reglaTiempo = (it, t) => t === 'pasado' ? reglaPasado(it) : t === 'presente' ? reglaPresente(it) : reglaFuturo(it);
+  const reglaTiempo = (it, t) => {
+    if (t === 'pasado') return reglaPasado(it);
+    return t === 'presente' ? reglaPresente(it) : reglaFuturo(it);
+  };
   function explicaTiempo(it, t) {
     if (t === 'futuro') return 'Está en futuro: «will ' + it.verbo + '» = will + verbo base.';
     if (t === 'presente') return it.tema === 'to be' ? 'Está en presente: «' + it.presente + '» es presente de to be.' : 'Está en presente: «' + it.presente + '», sin will y sin pasado.';
@@ -138,8 +141,14 @@
     return it.tema === 'regular' ? 'Está en pasado: «' + it.pasado + '» termina en -ed.' : 'Está en pasado: «' + it.pasado + '» es el pasado de ' + it.verbo + '.';
   }
   function falloConvertir(it, t) {
-    if (t === 'pasado') return it.tema === 'to be' ? 'Was / were' : it.tema === 'irregular' ? 'Pasado irregular' : 'Pasado regular (-ed)';
-    if (t === 'presente') return it.tema === 'to be' ? 'Am / is / are' : esP3(it) ? 'Presente con he / she / it (-s)' : 'Presente con I / you / we / they';
+    if (t === 'pasado') {
+      if (it.tema === 'to be') return 'Was / were';
+      return it.tema === 'irregular' ? 'Pasado irregular' : 'Pasado regular (-ed)';
+    }
+    if (t === 'presente') {
+      if (it.tema === 'to be') return 'Am / is / are';
+      return esP3(it) ? 'Presente con he / she / it (-s)' : 'Presente con I / you / we / they';
+    }
     return it.tema === 'to be' ? 'Futuro: will be' : 'Futuro con will';
   }
   // Tiempo que se muestra y tiempo al que hay que cambiarla (distintos).
@@ -214,7 +223,10 @@
       id: 'en-frases', modo: 'reloj', segundos: 90, foto: { tema },
       alResponder: (p, bien) => { if (!bien) fallos[p.fallo] = (fallos[p.fallo] || 0) + 1; },
       detalle: () => 'Tema: <b>' + escapeHtml(nombreTema(tema)) + '</b><br>' + htmlFallos(fallos, escapeHtml),
-      siguiente: n => preguntas.length && n % 2 ? preguntaEn(preguntas[(n >> 1) % preguntas.length]) : preguntaFrase(frases[(preguntas.length ? n >> 1 : n) % frases.length]),
+      siguiente: n => {
+        if (preguntas.length && n % 2) return preguntaEn(preguntas[(n >> 1) % preguntas.length]);
+        return preguntaFrase(frases[(preguntas.length ? n >> 1 : n) % frases.length]);
+      },
     });
   };
 
@@ -223,7 +235,7 @@
     const d = await datos('ingles');
     const previo = typeof reanudacion !== 'undefined' && reanudacion && reanudacion.juego === 'en-tiempos' ? reanudacion : null;
     const pool = barajar(d.tiempos);
-    const foto = { fallos: Object.assign({}, previo && previo.fallos && typeof previo.fallos === 'object' ? previo.fallos : {}) };
+    const foto = { fallos: { ...(previo && previo.fallos && typeof previo.fallos === 'object' ? previo.fallos : {}) } };
     for (const k of Object.keys(foto.fallos)) if (typeof foto.fallos[k] !== 'number' || k.length > 60) delete foto.fallos[k];
     let par = null;
     quiz({

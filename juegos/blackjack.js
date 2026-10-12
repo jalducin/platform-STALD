@@ -6,7 +6,7 @@
   'use strict';
   const FICHA = 5, FICHAS_INICIALES = 500, MANOS = 8;
   const barajar = (a, r) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
-  const valorCarta = id => { const r = id % 13; return r <= 7 ? r + 2 : r <= 11 ? 10 : 11; };
+  const valorCarta = id => { const r = id % 13; if (r <= 7) { return r + 2; } return r <= 11 ? 10 : 11; };
   // Total de la mano: los ases valen 11 o 1. suave = hay un as contando 11.
   function total(cartas) {
     let v = 0, ases = 0;
@@ -19,18 +19,18 @@
 
   function nueva(jugadores, o) {
     o = o || {};
-    return { jugadores: jugadores.map(j => Object.assign({}, j, { fichas: o.fichas || FICHAS_INICIALES })), manos: o.manos || MANOS, mano: -1, fase: 'espera', terminada: false,
+    return { jugadores: jugadores.map(j => ({ ...j, fichas: o.fichas || FICHAS_INICIALES })), manos: o.manos || MANOS, mano: -1, fase: 'espera', terminada: false,
       turno: -1, apuesta: [], cartas: [], estado: [], banca: [], mazo: [], resultado: null, ultima: null };
   }
   // estado por jugador: fuera (sin fichas), apuesta (debe apostar), juega, planta, pasado, bj.
   const pendiente = (st, i) => st.estado[i] === (st.fase === 'apuestas' ? 'apuesta' : 'juega');
-  function siguiente(st, desde) { for (let i = desde + 1; i < st.jugadores.length; i++) if (pendiente(st, i)) return i; return -1; }
+  function siguiente(st, desde) { for (let i = desde + 1; i < st.jugadores.length; i++) { if (pendiente(st, i)) return i; } return -1; }
   function mano(st, rng) {
     st.mano++;
     if (st.mano >= st.manos || !st.jugadores.some(j => j.fichas >= FICHA)) { st.terminada = true; st.fase = 'fin'; st.turno = -1; return; }
-    st.mazo = barajar([...Array(104).keys()].map(x => x % 52), rng || Math.random);
+    st.mazo = barajar([...new Array(104).keys()].map(x => x % 52), rng || Math.random);
     const n = st.jugadores.length;
-    Object.assign(st, { apuesta: Array(n).fill(0), cartas: st.jugadores.map(() => []), estado: st.jugadores.map(j => j.fichas >= FICHA ? 'apuesta' : 'fuera'), banca: [], resultado: null, ultima: null, fase: 'apuestas' });
+    Object.assign(st, { apuesta: new Array(n).fill(0), cartas: st.jugadores.map(() => []), estado: st.jugadores.map(j => j.fichas >= FICHA ? 'apuesta' : 'fuera'), banca: [], resultado: null, ultima: null, fase: 'apuestas' });
     st.turno = siguiente(st, -1);
   }
   const sacar = st => st.mazo.pop();
@@ -54,7 +54,8 @@
       if (!a || e === 'pasado') return 0;
       if (e === 'bj') return bjBanca ? a : pagoBJ(a);
       if (bjBanca) return 0;
-      return b > 21 || t > b ? 2 * a : t === b ? a : 0;
+      if (b > 21 || t > b) return 2 * a;
+      return t === b ? a : 0;
     });
     premios.forEach((p, i) => { st.jugadores[i].fichas += p; });
     st.resultado = { premios, banca: b, bjBanca, neto: premios.map((p, i) => p - st.apuesta[i]) };
@@ -130,7 +131,8 @@
   `);
   const ESTADO_TXT = { pasado: '💥 Se pasó', bj: '♣️ ¡Blackjack!', planta: '✋ Se plantó', fuera: 'Sin fichas', apuesta: 'Apostando…', juega: 'Jugando' };
   const VERBO = { apostar: 'apuesta', pedir: 'pide carta', plantarse: 'se planta', doblar: 'dobla' };
-  const totalHtml = (cartas, e) => { if (!cartas.length) return ''; const t = total(cartas); return '<span class="bj-total' + (t.v > 21 ? ' pasado' : e === 'bj' ? ' bj' : '') + '">' + (t.suave && t.v < 21 ? (t.v - 10) + '/' : '') + t.v + '</span>'; };
+  const claseTotal = (v, e) => { if (v > 21) { return ' pasado'; } return e === 'bj' ? ' bj' : ''; };
+  const totalHtml = (cartas, e) => { if (!cartas.length) { return ''; } const t = total(cartas); return '<span class="bj-total' + claseTotal(t.v, e) + '">' + (t.suave && t.v < 21 ? (t.v - 10) + '/' : '') + t.v + '</span>'; };
   const cartasHtml = (cartas, ocultar, vistas) => '<div class="bj-cartas">' + (cartas.length ? cartas.map((c, k) => pkCarta(ocultar && k === 1 ? undefined : c, vistas && k >= vistas ? ' entra' : '')).join('') : pkCarta(null) + pkCarta(null)) + '</div>';
   // Selector de apuesta con fichas de 5 a 100 (las del póker). Estado en data-* del propio panel.
   const apuestaHtml = max => '<section class="bj-apuesta" id="bj-apuesta" data-monto="0" data-max="' + max + '" aria-label="Arma tu apuesta con fichas">' +
@@ -153,31 +155,45 @@
   }
   const jugadaDe = b => b.dataset.bj === 'apostar' ? { accion: 'apostar', monto: Number(document.getElementById('bj-apuesta').dataset.monto) } : { accion: b.dataset.bj };
 
+  // Ganancia, pérdida o empate de una mano ya resuelta (en los asientos de los demás y en tu lugar).
+  const netoAsientoHtml = n => { if (n > 0) { return '<b style="color:var(--ok)">+' + fmt(n) + '</b>'; } return n < 0 ? '<b style="color:var(--bad, #dc2626)">' + fmt(n) + '</b>' : '🤝 empate'; };
+  const colorNeto = net => { if (net > 0) { return 'var(--ok)'; } return net < 0 ? '#dc2626' : 'inherit'; };
+  const textoNeto = net => { if (net > 0) { return '🏆 Ganaste ' + fmt(net); } return net < 0 ? '😅 Perdiste ' + fmt(-net) : '🤝 Empate: recuperas tu apuesta'; };
+  // Mensaje central de la mesa: resultado de la banca, la última jugada o la llamada a apostar.
+  function mensajeMesa(st, o) {
+    const res = st.resultado, u = st.ultima;
+    if (st.fase === 'fin' && res) {
+      if (res.bjBanca) return '♣️ ¡La banca tiene blackjack!';
+      return res.banca > 21 ? '💥 La banca se pasó con ' + res.banca : '🏦 La banca se queda con ' + res.banca;
+    }
+    if (u) return escapeHtml(o.nombre(u.j)) + ' ' + VERBO[u.accion] + (u.monto ? ' ' + fmt(u.monto) : '') + (u.auto ? ' ⏰' : '');
+    return st.fase === 'apuestas' ? '🪙 ¡Hagan sus apuestas!' : '';
+  }
+
   // Mesa: banca arriba, asientos de los demás, tu lugar y los botones. o: { yo, nombre(i), avatar(i), miTurno, pie }
   function mesaHtml(st, o) {
     const fin = st.fase === 'fin', res = st.resultado, yo = o.yo;
     const asiento = i => {
       const j = st.jugadores[i], e = st.estado[i], c = st.cartas[i] || [];
-      const extra = fin && res && st.apuesta[i] ? (res.neto[i] > 0 ? '<b style="color:var(--ok)">+' + fmt(res.neto[i]) + '</b>' : res.neto[i] < 0 ? '<b style="color:var(--bad, #dc2626)">' + fmt(res.neto[i]) + '</b>' : '🤝 empate')
-        : st.apuesta[i] ? pkPilaHtml(st.apuesta[i], true) + ' ' + fmt(st.apuesta[i]) : '';
+      let extra = '';
+      if (fin && res && st.apuesta[i]) extra = netoAsientoHtml(res.neto[i]);
+      else if (st.apuesta[i]) extra = pkPilaHtml(st.apuesta[i], true) + ' ' + fmt(st.apuesta[i]);
       return '<div class="pk-asiento' + (st.turno === i ? ' turno' : '') + (e === 'fuera' ? ' fuera' : '') + '"><span class="n">' + o.avatar(i) + escapeHtml(o.nombre(i)) + '</span><span class="pk-fichas">🪙 ' + fmt(j.fichas) + '</span>' +
         '<span>' + c.map(x => pkCarta(x, ' chica')).join(' ') + ' ' + totalHtml(c, e) + '</span><span class="muted">' + (ESTADO_TXT[e] && e !== 'juega' && e !== 'apuesta' ? ESTADO_TXT[e] + ' · ' : '') + extra + '</span></div>';
     };
-    const u = st.ultima;
-    const msg = fin && res ? (res.bjBanca ? '♣️ ¡La banca tiene blackjack!' : res.banca > 21 ? '💥 La banca se pasó con ' + res.banca : '🏦 La banca se queda con ' + res.banca)
-      : u ? escapeHtml(o.nombre(u.j)) + ' ' + VERBO[u.accion] + (u.monto ? ' ' + fmt(u.monto) : '') + (u.auto ? ' ⏰' : '') : st.fase === 'apuestas' ? '🪙 ¡Hagan sus apuestas!' : '';
+    const msg = mensajeMesa(st, o);
     const otros = st.jugadores.map((_, i) => i).filter(i => i !== yo);
     let botones = '';
     if (o.miTurno) {
       const op = opciones(st);
-      botones = op.apostar ? apuestaHtml(op.apostar.max)
-        : '<div class="bj-botones"><button class="btn" data-bj="pedir">🃏 Pedir</button><button class="btn ghost" data-bj="plantarse">✋ Plantarme</button><button class="btn ghost" data-bj="doblar"' + (op.doblar ? '' : ' disabled') + '>✌️ Doblar</button></div>';
+      if (op.apostar) botones = apuestaHtml(op.apostar.max);
+      else botones = '<div class="bj-botones"><button class="btn" data-bj="pedir">🃏 Pedir</button><button class="btn ghost" data-bj="plantarse">✋ Plantarme</button><button class="btn ghost" data-bj="doblar"' + (op.doblar ? '' : ' disabled') + '>✌️ Doblar</button></div>';
     }
     const mia = yo >= 0 ? (() => {
       const c = st.cartas[yo] || [], e = st.estado[yo], net = fin && res && st.apuesta[yo] ? res.neto[yo] : null;
       return '<div class="bj-yo' + (st.turno === yo ? ' turno' : '') + '"><div><b>' + o.avatar(yo) + escapeHtml(o.nombre(yo)) + '</b> · 🪙 ' + fmt(st.jugadores[yo].fichas) + (st.apuesta[yo] ? ' · apuesta ' + fmt(st.apuesta[yo]) : '') + '</div>' +
         cartasHtml(c, false) + '<div>' + totalHtml(c, e) + ' ' + (ESTADO_TXT[e] && !['juega', 'apuesta'].includes(e) ? ESTADO_TXT[e] : '') + '</div>' +
-        (net !== null ? '<div class="bj-msg" style="color:' + (net > 0 ? 'var(--ok)' : net < 0 ? '#dc2626' : 'inherit') + '">' + (net > 0 ? '🏆 Ganaste ' + fmt(net) : net < 0 ? '😅 Perdiste ' + fmt(-net) : '🤝 Empate: recuperas tu apuesta') + '</div>' : '') + '</div>';
+        (net !== null ? '<div class="bj-msg" style="color:' + colorNeto(net) + '">' + textoNeto(net) + '</div>' : '') + '</div>';
     })() : '';
     return (otros.length ? '<div class="pk-asientos">' + otros.map(asiento).join('') + '</div>' : '') +
       '<div class="bj-mesa"><div class="bj-titulo">🏦 BANCA · PIDE HASTA 17</div>' + cartasHtml(st.banca, !fin) + (fin ? totalHtml(st.banca) : '') +
@@ -195,12 +211,14 @@
     m.body.addEventListener('click', e => { if (e.target.closest('[data-bj-go]')) jugarBlackjack(); });
   };
 
+  const tituloFinBj = f => { if (f <= 0) { return '💸 Te quedaste sin fichas'; } return f > FICHAS_INICIALES ? '♣️ ¡Le ganaste a la banca!' : '♣️ Fin de la partida'; };
   function jugarBlackjack() {
     const m = marco('blackjack');
     const st = nueva([{ id: 'yo', nombre: 'Tú' }]);
     const t0 = Date.now(); let ganadas = 0, terminado = false, auto = null;
     const pintar = () => {
-      const pie = st.fase === 'fin' ? '<div class="row-btns"><button class="btn" data-bj-sig>' + (st.mano + 1 >= st.manos || st.jugadores[0].fichas < FICHA ? '🏁 Ver resultado' : '➡️ Siguiente mano') + '</button></div>' : '';
+      let pie = '';
+      if (st.fase === 'fin') pie = '<div class="row-btns"><button class="btn" data-bj-sig>' + (st.mano + 1 >= st.manos || st.jugadores[0].fichas < FICHA ? '🏁 Ver resultado' : '➡️ Siguiente mano') + '</button></div>';
       m.body.innerHTML = mesaHtml(st, { yo: 0, nombre: () => 'Tú', avatar: () => '🙂 ', miTurno: st.fase !== 'fin' && st.turno === 0, pie });
       m.puntos(st.jugadores[0].fichas);
     };
@@ -208,10 +226,10 @@
       terminado = true;
       const f = st.jugadores[0].fichas;
       terminar('blackjack', { puntos: puntos(f), aciertos: ganadas, total: st.mano + (st.terminada ? 0 : 1), segundos: (Date.now() - t0) / 1000,
-        titulo: f <= 0 ? '💸 Te quedaste sin fichas' : f > FICHAS_INICIALES ? '♣️ ¡Le ganaste a la banca!' : '♣️ Fin de la partida',
+        titulo: tituloFinBj(f),
         detalle: 'Terminaste con 🪙 ' + fmt(f) + ' fichas · ganaste ' + ganadas + ' mano' + (ganadas === 1 ? '' : 's') + '.' });
     };
-    const siguienteMano = () => { clearTimeout(auto); mano(st); if (st.terminada) return fin(); pintar(); };
+    const siguienteMano = () => { clearTimeout(auto); mano(st); if (st.terminada) { return fin(); } pintar(); };
     const tras = () => {
       if (st.fase === 'fin') {
         if (st.resultado.neto[0] > 0) { ganadas++; sonidoOk(); } else if (st.resultado.neto[0] < 0) sonidoMal();
@@ -235,7 +253,7 @@
   function estadoSala() {
     const e = sala.estado, s = e.sala, orden = participantes();
     const jugs = new Map();
-    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, Object.assign({ jugador: x.id }, j)); }));
+    e.jugadores.forEach(x => (x.jugadas || []).forEach(j => { if (!jugs.has(j.n)) jugs.set(j.n, { jugador: x.id, ...j }); }));
     const st = nueva(orden.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot })));
     mano(st, rngDe(s.seed, 'bj-mano-0'));
     const ganadas = {}; let paso = 0, T0 = s.inicio, contada = -1;
@@ -243,7 +261,7 @@
     const contar = () => { if (st.fase === 'fin' && st.resultado && contada !== st.mano) { contada = st.mano; st.resultado.neto.forEach((n, i) => { if (n > 0) ganadas[i] = (ganadas[i] || 0) + 1; }); } };
     for (let guard = 0; guard < 6000 && !st.terminada; guard++) {
       contar();
-      if (st.fase === 'fin') { const t = T0 + dur(BJ_PAUSA_MS); if (ahora < t) break; mano(st, rngDe(s.seed, 'bj-mano-' + (st.mano + 1))); T0 = t; continue; }
+      if (st.fase === 'fin') { const t = T0 + dur(BJ_PAUSA_MS); if (ahora < t) { break; } mano(st, rngDe(s.seed, 'bj-mano-' + (st.mano + 1))); T0 = t; continue; }
       const p = orden[st.turno];
       if (p.bot) {
         const t = T0 + dur(BJ_BOT_MS); if (ahora < t) break;
@@ -251,7 +269,7 @@
       } else {
         const mv = jugs.get(paso), lim = T0 + dur(BJ_TURNO_MS);
         if (mv && mv.jugador === p.id && mv.t <= lim && actuar(st, mv)) { paso++; T0 = Math.max(T0, mv.t); }
-        else if (ahora >= lim) { actuar(st, auto(st)); if (st.ultima) st.ultima.auto = true; paso++; T0 = lim; }
+        else if (ahora >= lim) { actuar(st, auto(st)); if (st.ultima) { st.ultima.auto = true; } paso++; T0 = lim; }
         else break;
       }
     }
@@ -273,13 +291,16 @@
     }
     const enJuego = st.fase !== 'fin';
     const miTurno = enJuego && st.turno === yo && !sala.bjEnviando;
-    const ventana = !enJuego ? dur(BJ_PAUSA_MS) : dur(st.orden[st.turno].bot ? BJ_BOT_MS : BJ_TURNO_MS);
+    let msVentana = BJ_PAUSA_MS;
+    if (enJuego) msVentana = st.orden[st.turno].bot ? BJ_BOT_MS : BJ_TURNO_MS;
+    const ventana = dur(msVentana);
     SG.barra((st.T0 + ventana - ahora) / ventana);
     const clave = 'bj:' + st.mano + ':' + st.paso + ':' + st.fase + ':' + (sala.bjEnviando ? 1 : 0);
     if (sala.vista === clave) return;
     sala.vista = clave; sala.bjSt = st;
-    const pie = enJuego && !miTurno ? '<div class="feedback">⏳ Turno de ' + escapeHtml(st.orden[st.turno].nombre) + '</div>' : !enJuego ? '<div class="feedback">Siguiente mano en unos segundos…</div>'
-      : '<div class="feedback ok">👉 ¡Tu turno! Tienes 30 s</div>';
+    let pie = '<div class="feedback ok">👉 ¡Tu turno! Tienes 30 s</div>';
+    if (enJuego && !miTurno) pie = '<div class="feedback">⏳ Turno de ' + escapeHtml(st.orden[st.turno].nombre) + '</div>';
+    else if (!enJuego) pie = '<div class="feedback">Siguiente mano en unos segundos…</div>';
     body.innerHTML = mesaHtml(st, { yo, nombre: i => st.orden[i].nombre, avatar: i => avatarHtml(st.orden[i].avatar, 18) + ' ', miTurno, pie });
   }
 
@@ -291,7 +312,7 @@
     if (b.disabled || st.fase === 'fin' || st.turno !== yo || sala.bjEnviando) return true;
     const jugada = jugadaDe(b);
     sala.bjEnviando = true; sala.vista = null; pintarSala();
-    post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: Object.assign({ n: st.paso }, jugada) }).then(async r => {
+    post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: { n: st.paso, ...jugada } }).then(async r => {
       await traerSala();
       sala.bjEnviando = false; sala.vista = null; pintarSala();
       if (!r.ok && r.body.error !== 'turno_tomado') alert('No se pudo enviar la jugada (' + (r.body.error || r.status) + ').');

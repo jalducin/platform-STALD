@@ -48,7 +48,7 @@ Deno.test("clasicos-rapidos: los 5 juegos se crean en partida y están en el cat
   }
   const yo = await c.call("GET", "/yo", M);
   const cat = Object.fromEntries(yo.body.catalogo.map((x: any) => [x.id, x]));
-  assertEquals(["gato", "conecta4", "ppt", "ahorcado", "serpientes"].map((id) => [cat[id].categoria, cat[id].max]), Array(5).fill(["clasicos", 1000]));
+  assertEquals(["gato", "conecta4", "ppt", "ahorcado", "serpientes"].map((id) => [cat[id].categoria, cat[id].max]), new Array(5).fill(["clasicos", 1000]));
   assertEquals(cat.ppt.titulo, "Piedra, papel o tijera");
   const p = await c.call("POST", "/partida", M, { juego: "gato", puntos: 5000, aciertos: 3, total: 3, segundos: 30 });
   assertEquals([p.status, p.body.puntos], [200, 1000]);

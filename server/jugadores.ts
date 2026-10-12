@@ -32,6 +32,9 @@ export interface Pendiente {
   estado: "sin confirmar" | "sin apodo";
 }
 
+// Espacio de un jugador de clase por su id: "s-…" es de Secundaria; los demás, de Inglés.
+const espacioDeClase = (id: string): "Secundaria" | "Inglés" => id.startsWith("s-") ? "Secundaria" : "Inglés";
+
 export async function armarJugadores(e: {
   admin: string;
   ingles: Filas;
@@ -51,7 +54,7 @@ export async function armarJugadores(e: {
     const inv = j.tipo === "invitado" ? e.invitados[email] : null;
     jugadores.push({
       email, nombre: j.nombre, id: j.id, tipo: j.tipo,
-      espacio: j.tipo === "invitado" ? "Juegos" : j.id.startsWith("s-") ? "Secundaria" : "Inglés",
+      espacio: j.tipo === "invitado" ? "Juegos" : espacioDeClase(j.id),
       puntosSemana: sem?.total ?? 0, partidasSemana: sem?.partidas?.length ?? 0,
       ultimaVisita: inv?.ultimaVisita ?? porCorreo.get(email)?.ultimoAcceso ?? null,
       ...(e.nicks?.[j.id] ? { nick: e.nicks[j.id] } : {}),

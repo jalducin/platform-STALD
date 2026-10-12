@@ -12,7 +12,11 @@
     { x: -4, y: 504, r: 28 }, { x: 500, y: 508, r: 24 }, { x: 1004, y: 504, r: 28 },
   ];
   const SALIDA = { x: 250, y: 250 }, PIE = { x: 750, y: 250 };
-  const tipo = n => n === 0 ? 'blanca' : n === 8 ? 'ocho' : n < 8 ? 'lisas' : 'rayadas';
+  const tipo = n => {
+    if (n === 0) return 'blanca';
+    if (n === 8) return 'ocho';
+    return n < 8 ? 'lisas' : 'rayadas';
+  };
   const velocidad = fuerza => 300 + 15 * fuerza;
 
   // Triángulo con la 8 en medio y una lisa y una rayada en las esquinas de atrás; el resto al azar con la semilla.
@@ -24,7 +28,11 @@
     const resto = barajar(lisas.concat(rayadas));
     const bolas = [{ n: 0, x: SALIDA.x, y: SALIDA.y, fuera: false }];
     for (let k = 0; k < 5; k++) for (let j = 0; j <= k; j++) {
-      const n = k === 2 && j === 1 ? 8 : k === 4 && j === 0 ? esquinas[0] : k === 4 && j === 4 ? esquinas[1] : resto.pop();
+      // `resto.pop()` solo se evalúa cuando el lugar no es fijo (mismo orden de bolas que antes).
+      let n;
+      if (k === 2 && j === 1) n = 8;
+      else if (k === 4 && j === 0) n = esquinas[0];
+      else n = k === 4 && j === 4 ? esquinas[1] : resto.pop();
       bolas.push({ n, x: F.q(PIE.x + k * (D * 0.8660254 + 0.05)), y: F.q(PIE.y + (j - k / 2) * (D + 0.05)), fuera: false });
     }
     bolas.sort((a, b) => a.n - b.n);
@@ -44,9 +52,11 @@
     const v0 = velocidad(tiro.fuerza), efecto = (tiro.efecto || 0) / 100;
     b[0].vx = cs * v0; b[0].vy = sn * v0;
     const sim = { bolas: b, metidas: [], primer: null, pasos: 0, termino: false, choques: 0, bandas: 0 };
-    sim.paso = () => {
-      if (sim.termino) return;
+    // Partes de un subpaso, en el orden en que las corre `paso()`.
+    const avanzar = () => {
       for (const o of b) if (!o.fuera && (o.vx !== 0 || o.vy !== 0)) { o.x += o.vx * DT; o.y += o.vy * DT; }
+    };
+    const entronerar = () => {
       for (const o of b) {
         if (o.fuera || (o.vx === 0 && o.vy === 0)) continue;
         for (const t of TRONERAS) {
@@ -54,6 +64,8 @@
           if (dx * dx + dy * dy < t.r * t.r) { o.fuera = true; o.vx = 0; o.vy = 0; o.x = t.x; o.y = t.y; sim.metidas.push(o.n); break; }
         }
       }
+    };
+    const chocar = () => {
       for (let i = 0; i < b.length; i++) {
         const p = b[i]; if (p.fuera) continue;
         for (let j = i + 1; j < b.length; j++) {
@@ -74,6 +86,8 @@
           }
         }
       }
+    };
+    const rebotar = () => {
       for (const o of b) {
         if (o.fuera) continue;
         if (o.x < R) { o.x = R + (R - o.x); o.vx = -o.vx * E_BANDA; o.vy *= 0.97; sim.bandas++; }
@@ -81,12 +95,24 @@
         if (o.y < R) { o.y = R + (R - o.y); o.vy = -o.vy * E_BANDA; o.vx *= 0.97; sim.bandas++; }
         else if (o.y > ALTO - R) { o.y = (ALTO - R) - (o.y - (ALTO - R)); o.vy = -o.vy * E_BANDA; o.vx *= 0.97; sim.bandas++; }
       }
+    };
+    // Fricción; devuelve si alguna bola sigue en movimiento.
+    const frenar = () => {
       let mueve = false;
       for (const o of b) {
         if (o.fuera || (o.vx === 0 && o.vy === 0)) continue;
         const v = Math.sqrt(o.vx * o.vx + o.vy * o.vy), nv = v - DECEL * DT;
         if (nv <= PARA) { o.vx = 0; o.vy = 0; } else { const f = nv / v; o.vx *= f; o.vy *= f; mueve = true; }
       }
+      return mueve;
+    };
+    sim.paso = () => {
+      if (sim.termino) return;
+      avanzar();
+      entronerar();
+      chocar();
+      rebotar();
+      const mueve = frenar();
       sim.pasos++;
       if (!mueve || sim.pasos >= MAX_PASOS) sim.termino = true;
     };
@@ -94,13 +120,26 @@
     return sim;
   }
 
+  // ¿La primera bola que tocó la blanca era válida para quien tiró?
+  function primerValido(primer, mio, ocho) {
+    if (primer === null) return false;
+    if (mio === null) return primer !== 8;
+    return ocho ? primer === 8 : tipo(primer) === mio;
+  }
+  // Falta del tiro (o null si no hubo).
+  function faltaDelTiro(blancaDentro, primer, primerOk) {
+    if (blancaDentro) return 'blanca';
+    if (primer === null) return 'sin-toque';
+    return primerOk ? null : 'primera';
+  }
+
   // Reglas básicas de la bola 8 (design.md §8) → { st, ms }.
   function reglas(st0, b, metidas, primer, ms) {
     const idx = st0.turno, otro = 1 - idx, mio = st0.grupos[idx];
     const ocho = enLaOcho(st0, idx);
     const blancaDentro = metidas.includes(0);
-    const primerOk = primer === null ? false : mio === null ? primer !== 8 : ocho ? primer === 8 : tipo(primer) === mio;
-    const falta = blancaDentro ? 'blanca' : primer === null ? 'sin-toque' : !primerOk ? 'primera' : null;
+    const primerOk = primerValido(primer, mio, ocho);
+    const falta = faltaDelTiro(blancaDentro, primer, primerOk);
     const grupos = st0.grupos.slice();
     let fin = null;
     if (metidas.includes(8)) fin = ocho && !falta ? { gana: idx, motivo: 'ocho' } : { gana: otro, motivo: falta ? 'ocho-falta' : 'ocho-antes' };

@@ -22,7 +22,7 @@ export function politicaCache(pathname: string): PoliticaCache | null {
 // ETag débil: SHA-256 del cuerpo en base64url (22 caracteres, 132 bits).
 async function etagDe(cuerpo: Uint8Array<ArrayBuffer>): Promise<string> {
   const h = new Uint8Array(await crypto.subtle.digest("SHA-256", cuerpo));
-  const b64 = btoa(String.fromCharCode(...h)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const b64 = btoa(String.fromCharCode(...h)).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
   return `W/"${b64.slice(0, 22)}"`;
 }
 
