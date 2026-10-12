@@ -11,7 +11,7 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.08, out, etiqueta: '', dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
-  ok('hub: categoría Clásicos con 7 juegos (con Póker, Brisca y Conquián)', (await p.$$('.cat-clasicos[data-juego]')).length === 7 && (await p.$$('[data-juego]')).length === 23);
+  ok('hub: categoría Clásicos con 7 juegos (con Póker, Brisca y Conquián)', (await p.$$('.cat-clasicos[data-juego]')).length === 7 && (await p.$$('[data-juego]')).length === 24);
 
   // Basta (es): verificada, desconocida y con otra letra
   await p.click('[data-juego="basta-es"]'); await p.waitForSelector('#basta-form');

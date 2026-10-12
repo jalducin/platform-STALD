@@ -110,13 +110,16 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
   - `GET /juegos/sala/<código>`: sala, jugadores y `ahora` (hora del servidor), solo para sus jugadores y
     el admin. Caché de 2 s.
   - Juegos permitidos (`JUEGOS_PARTIDA`):
-    - de preguntas: `en-vocab`, `en-frases`, `es-ortografia`, `cultura` y `mente-calculo`;
+    - de preguntas: `en-vocab`, `en-frases`, `en-tiempos` (⏳ Máquina del tiempo, cambio `juegos-ingles-gramatica`;
+      tope individual 2,000 en el catálogo), `es-ortografia`, `cultura` y `mente-calculo`;
     - Basta (es/en) y Lotería;
     - ¡Una!, póker, Brisca, Conquián y ajedrez.
     - Los juegos absorbidos en el Sprint 4 (`en-preguntas`, `es-acentos`, `es-sinonimos` y `mente-secuencias`, del
       cambio `juegos-fusion`) responden 400 `juego_no_permitido`, pero siguen en el catálogo para conservar sus
       puntos.
     `opciones.rondas` va en Basta (`5`, `10` por defecto o `12`; otro valor → 400 `rondas_invalidas`).
+    `opciones.tema` va en `en-frases` (`todo` por defecto, `tobe`, `presente`, `pasado` o `futuro`; otro valor → 400
+    `tema_invalido`); los demás juegos lo ignoran.
     `opciones.modo` va en Lotería (`linea` o `llena`), y `respuesta` con `{ loteria: true }` guarda la hora
     del primer grito.
   - ¡Una! (`una`): `respuesta` con `{ jugada: { n, accion, carta?, color?, una? } }` se guarda con `t`
@@ -174,7 +177,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     404 si no existe.
   - Solo admin: `GET /juegos/fotos` (lista activa) y `POST /juegos/fotos/quitar` `{ id }` (403 para el
     resto; 404 si ese jugador no tiene foto).
-- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; en total 23 en el menú. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
 **CORS y peticiones** (cambio `ahorro-peticiones`): las páginas mandan los POST con `Content-Type: text/plain` (petición

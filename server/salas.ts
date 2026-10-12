@@ -12,8 +12,11 @@ type Json = (body: unknown, status?: number) => Response;
 // es-acentos, es-sinonimos y mente-secuencias (sus puntos anteriores siguen en el catálogo).
 export const JUEGOS_PARTIDA = new Set([
   "en-vocab", "en-frases", "es-ortografia", "cultura", "mente-calculo", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
+  "en-tiempos", // ⏳ Máquina del tiempo (openspec: juegos-ingles-gramatica)
   "plataformas", "karts", // carreras de Arcade (openspec: juegos-plataformas-karts)
 ]);
+// Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
+const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
 const ACCIONES_POKER = ["retirarse", "pasar", "igualar", "subir", "todo"]; // openspec: poker
 const FICHA_POKER = 5; // la ficha más chica; igual que Cartas.FICHA en juegos/cartas.js (openspec: poker-fichas)
 const ACCIONES_CONQUIAN = ["tomar", "bajar", "descartar", "pasar"]; // openspec: cartas-espanolas
@@ -239,6 +242,10 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       const mapa = mapaDeSala(juego, op.mapa, aleatorio(1)[0]);
       if (!mapa) return json({ error: "mapa_invalido" }, 400);
       opciones.mapa = mapa;
+    }
+    if (juego === "en-frases") {
+      if (op.tema !== undefined && !TEMAS_INGLES.includes(op.tema as string)) return json({ error: "tema_invalido" }, 400);
+      opciones.tema = (op.tema as string) ?? "todo";
     }
     const codigo = await codigoLibre(store);
     if (!codigo) return json({ error: "sin_codigo" }, 503);

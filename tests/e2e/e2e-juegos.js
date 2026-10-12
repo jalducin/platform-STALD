@@ -31,7 +31,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   let p = await nuevaPagina(b, 'marisol@example.com');
   await p.goto(BASE + '/juegos.html' + Q);
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  ok('hub: 23 juegos (fusión del Sprint 4 y Arcade) en 6 categorías', (await p.$$('[data-juego]')).length === 23 && (await p.$$('main h2')).length === 6);
+  ok('hub: 24 juegos (fusión del Sprint 4, Máquina del tiempo y Arcade) en 6 categorías', (await p.$$('[data-juego]')).length === 24 && (await p.$$('main h2')).length === 6);
   ok('chip con el nombre', (await p.textContent('#chip')).includes('Marisol'));
   await p.screenshot({ path: 'juegos-hub.png', fullPage: true });
 
@@ -90,7 +90,9 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
 
   // Ordena (en y es) resuelto con los datos
   for (const [id, fuente] of [['en-ordena', ingles.oraciones.map(o => ({ txt: o.en, pista: o.es }))], ['es-ordena', espanol.oraciones.map(o => ({ txt: o, pista: '' }))]]) {
-    await p.click(`[data-juego="${id}"]`); await p.waitForSelector('[data-poner]');
+    await p.click(`[data-juego="${id}"]`);
+    if (id === 'en-ordena') { await p.waitForSelector('[data-tema="todo"]'); await p.click('[data-tema="todo"]'); } // selector de tema (juegos-ingles-gramatica)
+    await p.waitForSelector('[data-poner]');
     const t0 = Date.now();
     while (!(await p.$('.result .score')) && Date.now() - t0 < 60000) {
       const chips = await p.$$eval('[data-poner]', bs => bs.map(x => x.textContent));

@@ -43,7 +43,7 @@
 
 ## 7. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
-- [x] 7.1 E2E que cuentan juegos y categorías del inicio (`e2e-juegos`, `e2e-clasicos`, `e2e-fusion`: 21 → 23
+- [x] 7.1 E2E que cuentan juegos y categorías del inicio (`e2e-juegos`, `e2e-clasicos`, `e2e-fusion`: 21 → 23, y 24 tras integrar `juegos-ingles-gramatica`
   juegos, 5 → 6 categorías)
 - [x] 7.2 E2E nuevas `tests/e2e/e2e-plataformas.js` y `tests/e2e/e2e-karts.js`, registradas en
   `tests/e2e/correr.sh` (fase `base`): jugar, progreso guardado y recuperado tras recargar, partida sin progreso,
@@ -66,7 +66,7 @@
 
 ## 10. Documentación (OBLIGATORIO)
 
-- [x] 10.1 `docs/backend-standards.md` (ruta de progreso, `carrera` en salas, catálogo 23),
+- [x] 10.1 `docs/backend-standards.md` (ruta de progreso, `carrera` en salas, catálogo 24),
   `docs/data-model.md` (`juegos/progreso/…` y `carrera` del jugador en sala) y `docs/frontend-standards.md`
   (juegos de Arcade en iframe y `juegos/arcade.js`)
 - [x] 10.2 `openspec validate juegos-plataformas-karts --strict`
