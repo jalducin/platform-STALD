@@ -123,7 +123,9 @@ Cada página debe manejar y mostrar de forma explícita:
     ⭐ Individuales, 👥 Partidas y **🔥 Juegos** (`ranking-juegos-populares`). 🔥 Juegos pinta `GET /juegos/ranking/juegos`
     en `<ol class="rank" id="rank-juegos">`: 🥇🥈🥉, emoji del catálogo del cliente, `titulo` del servidor,
     «N jugadores · M partidas», barra `.rj-barra` proporcional al líder (`aria-hidden`) y «👑 Mejor puntaje: {nick}»;
-    vacío: «Todavía nadie juega esta semana. ¡Estrena un juego!». `ttl` 30 s como el ranking de personas.
+    vacío: «Todavía nadie juega esta semana. ¡Estrena un juego!». `ttl` 30 s como el ranking de personas. Muestra el
+    top 10: desde la fila 11 llevan `.rj-extra` (ocultas) y el botón `#rj-todos` («Ver los N juegos» / «Ver solo el
+    top 10», con `aria-expanded`) alterna `.todos` en la lista (`ranking-juegos-top10`).
   - **avatar:** personaje y color de las listas que envía `/juegos/yo`, o foto propia (`avatar-foto`): se recorta y reduce a 128×128 JPEG en el navegador, exige la casilla de permiso de mamá, papá o tutor y, si la foto ya no existe, se muestra el personaje (`onerror`);
   - **Sudoku** (`sudoku-niveles`): el tablero se genera en el navegador con solución única (`generarSudoku`,
     `contarSoluciones`); niveles Fácil 40, Medio 32, Difícil 27 y Experto ~24 pistas; 3 vidas; puntos con
