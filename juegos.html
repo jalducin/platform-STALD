@@ -6,6 +6,7 @@
 <title>Juegos · STALD</title>
 <meta name="description" content="Aprende jugando: inglés, español, cultura, mente ágil y más.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23db2777'/><text x='32' y='44' font-size='34' text-anchor='middle'>🎮</text></svg>">
+<link rel="stylesheet" href="juegos/tablero.css?v=1"> <!-- juegos-tablero -->
 <style>
   :root {
     --bg: #f7f5fb; --card: #ffffff; --text: #1e1b2e; --muted: #6b6880; --border: #e6e4f0;
@@ -517,6 +518,8 @@
 
 <script src="juegos/cartas.js?v=3"></script>
 <script src="juegos/mesas.js?v=1"></script> <!-- mesas de las partidas (openspec: mesas-con-bots) -->
+<script src="juegos/tablero.js?v=1"></script> <!-- juegos-tablero: motores sin DOM -->
+<script src="juegos/tablero-ui.js?v=2"></script> <!-- juegos-tablero: pantallas, salas y ayuda -->
 <script src="juegos/ajedrez.js?v=1"></script>
 <script src="juegos/clasicos-rapidos.js?v=1"></script> <!-- clasicos-rapidos: reglas -->
 <script src="juegos/clasicos-rapidos-ui.js?v=1"></script> <!-- clasicos-rapidos: interfaz -->
@@ -685,6 +688,7 @@
     { id: 'dragon-run', cat: 'arcade', emoji: '🐉', t: 'Dragon Run', d: 'Corre, salta (¡doble salto!), cumple misiones y llega al castillo.', jugar: () => jugarDragonRun() }, // openspec: dragon-run-misiones
   ];
   JUEGOS.push(...ClasicosRapidosUI.TARJETAS); // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes
+  JUEGOS.push(...TableroUI.TARJETAS); // juegos-tablero: Damas y Batalla naval (Mente ágil), Dominó y Parchís (Clásicos)
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
 
   // ---------- Sesión ----------
@@ -2650,6 +2654,7 @@
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
   const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts'];
+  JUEGOS_PARTIDA.push(...TableroUI.SALA); // juegos-tablero
   const ARCADE = new Set(['plataformas', 'karts']); // carreras en sala (openspec: juegos-plataformas-karts)
   const BOT_EXTRA = { id: 'bot-chonita', nombre: 'BOT-CHONITA', acierto: 0.5, avatar: { emoji: '👵', color: '#a855f7' } }; // 3.er bot para completar la Brisca
   const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
@@ -2742,6 +2747,7 @@
 
   const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker', 'brisca', 'conquian', 'ajedrez']);
   ClasicosRapidosUI.IDS.forEach(id => { JUEGOS_PARTIDA.push(id); TIEMPO_REAL.add(id); }); // clasicos-rapidos
+  TableroUI.SALA.forEach(j => TIEMPO_REAL.add(j)); // juegos-tablero
 
   // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
   // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -2908,6 +2914,7 @@
     if (s.juego === 'brisca' || s.juego === 'conquian') return pintarCartasSala(body, s.juego);
     if (s.juego === 'ajedrez') return pintarAjedrezSala(body);
     if (ClasicosRapidosUI.IDS.includes(s.juego)) return ClasicosRapidosUI.pintarSala(body); // clasicos-rapidos
+    if (TableroUI.esSala(s.juego)) return TableroUI.pintarSala(body); // juegos-tablero
     if (ARCADE.has(s.juego)) return pintarArcadeSala(body);
     return pintarPreguntaSala(body);
   }
@@ -4036,7 +4043,7 @@
   Object.assign(AYUDA, ClasicosRapidosUI.AYUDA); // clasicos-rapidos
   function ayuda(id) {
     const d = document.createElement('dialog'); d.className = 'ayuda'; d.setAttribute('aria-label', 'Cómo se juega');
-    d.innerHTML = (AYUDA[id] || '<p>Pronto.</p>') + '<div class="row-btns"><button class="btn" data-cerrar-ayuda autofocus>Entendido</button></div>';
+    d.innerHTML = (AYUDA[id] || TableroUI.ayuda(id) || '<p>Pronto.</p>') + '<div class="row-btns"><button class="btn" data-cerrar-ayuda autofocus>Entendido</button></div>'; // juegos-tablero
     document.body.appendChild(d);
     d.addEventListener('close', () => d.remove());
     d.addEventListener('click', e => { if (e.target.closest('[data-cerrar-ayuda]') || e.target === d) d.close(); });
@@ -4052,6 +4059,7 @@
     if (sala.estado && sala.estado.sala.juego === 'poker' && document.getElementById('p-body') && e.target.closest('[data-pk]')) { clicPokerSala(e); return; }
     if (sala.estado && ['brisca', 'conquian'].includes(sala.estado.sala.juego) && document.getElementById('p-body') && clicCartasSala(e)) return;
     if (sala.estado && sala.estado.sala.juego === 'ajedrez' && document.getElementById('p-body') && clicAjedrezSala(e)) return;
+    if (sala.estado && TableroUI.esSala(sala.estado.sala.juego) && document.getElementById('p-body') && TableroUI.clicSala(e)) return; // juegos-tablero
     const lsc = e.target.closest('[data-lsc]'); if (lsc) return marcarLoteriaSala(Number(lsc.dataset.lsc), lsc);
     if (e.target.closest('[data-lsgrito]')) return gritarLoteriaSala();
     const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }
@@ -4059,6 +4067,7 @@
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('👥 Faltan jugadores. Espera a que se una tu rival.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
+    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert(TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.'); /* juegos-tablero */ } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
     const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
@@ -4091,7 +4100,8 @@
   });
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez'; opcionesMapaArcade(e.target.value); document.getElementById('p-tema-wrap').hidden = e.target.value !== 'en-frases';
     const nota = { ajedrez: '♟️ Partida 1 vs 1 solo entre dos personas: quien crea y quien se une. Sin bots.', brisca: '🏆 Se juega entre 4 en parejas: si faltan personas, se completa con bots. Máximo 4.' }[e.target.value];
-    document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || ''; } });
+    document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || '';
+    TableroUI.alCambiarJuego(e.target.value); } }); // juegos-tablero
   app.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
   });

@@ -7,6 +7,8 @@ import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realti
 import { type Carrera, CARRERAS, mapaDeSala, validarCarrera } from "./carreras.ts";
 // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (reglas de sala en su módulo)
 import * as Clasicos from "./clasicos_rapidos.ts";
+import { JUEGOS_TABLERO, validarJugadaTablero, vistaJugadores } from "./tablero.ts"; // juegos-tablero
+import { respuestaNaval } from "./naval.ts"; // juegos-tablero
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -16,6 +18,7 @@ export const JUEGOS_PARTIDA = new Set([
   "en-vocab", "en-frases", "es-ortografia", "cultura", "mente-calculo", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
   "en-tiempos", // ⏳ Máquina del tiempo (openspec: juegos-ingles-gramatica)
   "plataformas", "karts", // carreras de Arcade (openspec: juegos-plataformas-karts)
+  ...JUEGOS_TABLERO, // juegos-tablero: damas, domino, parchis y naval
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
@@ -34,6 +37,8 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
   if (!entero(n, 0, 2000)) return null;
   const base = { n: n as number, accion };
   if (Clasicos.esClasicoRapido(juego)) return Clasicos.validarJugadaClasicos(juego, j); // clasicos-rapidos
+  const tablero = validarJugadaTablero(juego, j, base); // juegos-tablero
+  if (tablero !== undefined) return tablero as Omit<Jugada, "t"> | null;
   if (juego === "poker") {
     // openspec: poker-fichas — la subida se arma con fichas de 5 a 100: entero múltiplo de FICHA_POKER y obligatorio.
     const montoOk = entero(j.monto, FICHA_POKER, 1_000_000) && (j.monto as number) % FICHA_POKER === 0;
@@ -77,6 +82,11 @@ export const MESAS: Record<string, Mesa> = {
   ppt: { max: 8, asientos: 4, min: 2 },
   ahorcado: { max: 8, min: 1 },
   serpientes: { max: 4, asientos: 4, min: 2 },
+  // juegos-tablero: Batalla naval sin bots (su flota la guarda el servidor); los demás se completan con bots.
+  damas: { max: 2, asientos: 2, min: 2 },
+  domino: { max: 4, asientos: 4, min: 2 },
+  parchis: { max: 4, asientos: 4, min: 2 },
+  naval: { max: 2, min: 2, bots: "nunca" },
 };
 const cupo = (juego: string) => MESAS[juego]?.max ?? MAX_JUGADORES;
 const botsFijos = (juego: string) => MESAS[juego]?.bots === "siempre" ? true : MESAS[juego]?.bots === "nunca" ? false : undefined;
@@ -203,7 +213,7 @@ async function publicarEstado(store: Store, codigo: string, ahora: number, rt?: 
   if (!rt) return;
   cache.delete(codigo);
   const fresco = await estado(store, codigo, ahora);
-  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: Clasicos.ocultarJugadas(fresco.sala.juego, fresco.jugadores), ahora: Date.now() }); // clasicos-rapidos: sin elecciones de ppt
+  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: vistaJugadores(fresco.sala.juego, Clasicos.ocultarJugadas(fresco.sala.juego, fresco.jugadores), null), ahora: Date.now() }); // clasicos-rapidos y juegos-tablero: sin elecciones de ppt ni flotas
 }
 
 // Revancha (openspec: revancha-partidas). La primera petición reserva `siguiente` en la sala vieja con escritura
@@ -324,7 +334,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (!dentro) return json({ error: "no_en_sala" }, 403);
     if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
     let cambiar: (e: EnSala) => EnSala;
-    if (body.una !== undefined && body.jugada === undefined) {
+    // juegos-tablero: Batalla naval guarda la flota y resuelve cada disparo en el servidor (server/naval.ts).
+    const naval = sala.juego === "naval" ? respuestaNaval(sala.inicio, jugadores, jugador.id, body, ahora) : null;
+    if (naval && "error" in naval) return json({ error: naval.error }, naval.status);
+    if (naval) cambiar = naval.cambiar;
+    else if (body.una !== undefined && body.jugada === undefined) {
       const paso = Number((body.una as Record<string, unknown>)?.paso);
       if (!Number.isInteger(paso) || paso < 0 || paso > 2000) return json({ error: "una_invalida" }, 400);
       cambiar = (e) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
@@ -403,7 +417,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (!accion && req.method === "GET") {
     if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
     const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
-    return json({ sala: sinCanal(sala), jugadores: Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo });
+    return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo }); // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota
   }
 
   return json({ error: "metodo_no_permitido" }, 405);

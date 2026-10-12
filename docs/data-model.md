@@ -216,6 +216,14 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     Ahorcado `{ n, accion: "letra" | "pasar", letra?, t }` (con `opciones.modo` `compite` | `coop`) y Serpientes
     `{ n, accion: "tirar", t }`. Las palabras del Ahorcado y el dado salen de la semilla.
     El mazo sale de la semilla (`brisca-mazo` y `conquian-mazo`), según el cambio `cartas-espanolas`.
+  - Juegos de tablero (cambio `juegos-tablero`):
+    - en Damas, `jugadas[]` `{ n, accion: "mover" | "rendirse", ruta?, t }` (`ruta`: casillas oscuras 0–31);
+    - en Dominó, `jugadas[]` `{ n, accion: "jugar", ficha, lado, t }`; el reparto sale de la semilla (`|domino`);
+    - en Parchís, `jugadas[]` `{ n, accion: "mover", ficha, t }`; el dado del tiro `k` sale de la semilla (`|dado|k`);
+    - en Batalla naval, `flota` (5 barcos con sus casillas 0–99) y `flotaT` (hora en que se acomodó), y `jugadas[]`
+      `{ n, accion: "disparar" | "rendirse" | "reclamar", c?, r?, barco?, t }`. El resultado `r` lo pone el
+      servidor. **`flota` es privada:** solo la recibe su dueño mientras se juega (ver `vistaJugadores` en
+      `server/tablero.ts`).
   - En Lotería, `loteria` guarda la hora del primer grito. Las tablas y el orden de las cartas salen de
     la semilla.
 - `juegos/salas-semana/<lunes>.json`: `{ salas: [{ codigo, juego, host, creada }] }`, índice para el

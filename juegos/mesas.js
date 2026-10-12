@@ -16,6 +16,11 @@
     ppt: { max: 8, asientos: 4, min: 2 },
     ahorcado: { max: 8, min: 1 },
     serpientes: { max: 4, asientos: 4, min: 2 },
+    // juegos-tablero: Batalla naval sin bots (su flota la guarda el servidor); los demás se completan con bots.
+    damas: { max: 2, asientos: 2, min: 2 },
+    domino: { max: 4, asientos: 4, min: 2 },
+    parchis: { max: 4, asientos: 4, min: 2 },
+    naval: { max: 2, min: 2, bots: 'nunca' },
   };
   const de = juego => MESAS[juego] || null;
   // Lugares que ocupan los bots con `humanos` personas: solo en mesas con asientos y si la sala lleva bots.

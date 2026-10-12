@@ -289,6 +289,25 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   ids en `JUEGOS_PARTIDA` y `TIEMPO_REAL`, una línea en `pintarSala`, las opciones al crear y `AYUDA`.
 - Los participantes salen de `participantes()` (tabla de mesas). Las elecciones ocultas de Piedra-papel-tijera
   (`"?"`) se vuelven a pedir y las ya vistas se recuerdan en `sala.cr.vistas`.
+## Juegos de tablero (cambio `juegos-tablero`)
+
+- **Motores:** `juegos/tablero.js` es el motor sin DOM de Damas, Dominó, Parchís y Batalla naval. Expone
+  `globalThis.Tablero`, sus estados son JSON y lo prueban `server/tablero_test.ts` y `server/naval_test.ts`.
+- **Pantallas:** `juegos/tablero-ui.js` (`TableroUI`) tiene las pantallas individuales, las salas y la ayuda.
+  - Es un script clásico que se carga antes del script principal y usa sus funciones globales en tiempo de llamada.
+  - Sus ganchos en `juegos.html` llevan el comentario `juegos-tablero`.
+- **Estilos:** `juegos/tablero.css`, con prefijo `tb-`.
+  - El arte es propio: las piezas y fichas son CSS y el tablero de Parchís es SVG.
+  - Las animaciones (deslizar la pieza, caer la ficha, girar el dado e impacto del disparo) se apagan con
+    `prefers-reduced-motion`.
+- **Salas:**
+  - Damas, Dominó y Parchís se reproducen en el cliente por pasos, como `estadoCartasSala`: el bot juega a los
+    1.5 s y el turno de una persona dura 30 s (60 s en Damas).
+  - Batalla naval muestra solo lo que manda el servidor. La flota propia se conserva en `sala.tb.miFlota`, porque los
+    avisos de Realtime no traen flotas.
+- **Celular:** todo cabe a 390 px. El Parchís y la Batalla naval mueven y disparan con botones o casillas de buen
+  tamaño, y el Parchís repite las jugadas posibles como botones de 44 px.
+- **Para cambiar un motor:** sube `?v=` en las etiquetas de `juegos/tablero*.js` y `tablero.css`.
 
 ## Vista del profe en Inglés (cambio `profe-diseno`)
 
