@@ -51,6 +51,26 @@ const unirse = async (q, codigo) => { await q.click('[data-tab="partidas"]'); aw
   await host.click('#f-crear button[type=submit]'); await host.waitForSelector('[data-p="empezar"]');
   await host.click('[data-p="empezar"]'); await sleep(1500);
   ok('naval: sin rival da su aviso propio', host.alertas.some(a => /la batalla naval es 1 vs 1/.test(a)) && !!(await host.$('[data-p="empezar"]:not([disabled])')), host.alertas.join(' | '));
+  // Escrituras que no se guardan (openspec: errores-latentes): el servidor responde 503 conflicto_escritura y la
+  // página lo explica. Se simula con page.route (no se escribe nada en el servidor).
+  const codigoNaval = (await host.textContent('.letra')).trim();
+  const falla503 = r => r.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'conflicto_escritura' }) });
+  const esRuta = re => u => re.test(new URL(u).pathname);
+  host.alertas.length = 0;
+  const esEmpezar = esRuta(/\/juegos\/sala\/[A-Z]{4}\/empezar$/);
+  await host.route(esEmpezar, falla503);
+  await host.click('[data-p="empezar"]'); await sleep(1500);
+  ok('empezar sin guardar: mensaje claro y el botón vuelve a quedar activo', host.alertas.some(a => /No se pudo empezar la partida, intenta de nuevo/.test(a)) && !!(await host.$('[data-p="empezar"]:not([disabled])')), host.alertas.join(' | '));
+  await host.unroute(esEmpezar);
+  await tercero.goto(BASE + '/juegos.html' + Q); await tercero.waitForSelector('[data-menu]');
+  await tercero.route(esRuta(/\/juegos\/sala\/[A-Z]{4}\/unirse$/), falla503);
+  await unirse(tercero, codigoNaval); await sleep(1500);
+  const msgUnirse = await tercero.textContent('#p-msg').catch(() => '');
+  ok('unirse sin guardar: «No se pudo entrar a la sala, intenta de nuevo.» y sigue en el inicio', /No se pudo entrar a la sala, intenta de nuevo/.test(msgUnirse) && !(await tercero.$('[data-p="empezar"], #p-body .rank li')), msgUnirse);
+  await tercero.route(esRuta(/\/juegos\/sala$/), r => (r.request().method() === 'POST' ? falla503(r) : r.continue()));
+  await tercero.selectOption('#p-juego', 'naval'); await tercero.click('#f-crear button[type=submit]'); await sleep(1500);
+  const msgCrear = await tercero.textContent('#p-msg').catch(() => '');
+  ok('crear sin guardar: «No se pudo crear la partida, intenta de nuevo.»', /No se pudo crear la partida, intenta de nuevo/.test(msgCrear), msgCrear);
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 300)); process.exit(2); });
