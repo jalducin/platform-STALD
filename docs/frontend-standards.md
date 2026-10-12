@@ -148,7 +148,8 @@ Cada página debe manejar y mostrar de forma explícita:
     `juegos.html` acepta solo mensajes de su iframe y su origen; responde `inicio` (avance de `GET /juegos/progreso`
     o, en sala, mapa, semilla, `inicioEn` y bots), `guardado` y `puntos-ok`. Guarda con `PUT` encadenado (gana el
     último). Canvas con paso fijo de 1/60 s y escala entera, pausa con `visibilitychange`, sonido opcional
-    (`localStorage.arcade_sonido`), controles táctiles grandes (pointer events) y `prefers-reduced-motion`. No piden
+    (`localStorage.arcade_sonido`), controles táctiles grandes (Axo y Dragon Run usan el mando compartido; ver
+    «Mando de Arcade») y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
@@ -258,6 +259,75 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
     `prefers-reduced-motion`).
 - Basta: `juegos/basta.js` (`Basta.norm`, `dic`, `puntuar`, `conExtras`, `extrasDe`). Las categorías divertidas (hasta
   2) se eligen al crear la partida o antes de la letra en individual y se suman como columnas normales.
+
+## Mando de Arcade (cambio `mando-arcade`)
+
+Fuente única del control de los juegos de 🕹️ Arcade: `juegos/mando.js` (sin dependencias; inyecta su CSS una vez como
+`<style id="mando-css">`). Decisiones y lecciones de Karts en `openspec/changes/mando-arcade/design.md` (al archivar,
+`openspec/changes/archive/*-mando-arcade/`). Lo usan Axo (`plataformas.html`) y Dragon Run (`dragon-run.html`); los
+juegos nuevos (Karts pseudo-3D, Futbolito, Billar) lo adoptan **sin cambiar la API**. Si hace falta algo nuevo, se
+agrega como opción con valor por omisión compatible, en su propio cambio OpenSpec.
+
+**Cargar y crear** (dentro del iframe del juego; `window.Mando`):
+
+```html
+<script src="mando.js?v=1"></script>
+```
+
+```js
+const mando = Mando.crear({
+  acciones: { izquierda: 'izq', derecha: 'der', saltar: 'A', fuego: 'B', pausa: 'START' }, // acción → botón o [botones]
+  contenedor,            // elemento donde va el mando (por omisión, body); en vertical es un hijo flex debajo del juego
+  analogico: false,      // true: palanca (circle pad) encima de la cruceta; eje() analógico
+  teclas: { Space: 'A', KeyZ: null }, // cambios al teclado por omisión (KeyboardEvent.code → botón; null quita)
+  nombres: { saltar: 'saltar' },      // nombre corto bajo cada botón y en la guía
+  zonaMuerta: 0.2,       // palanca y control físico (radial)
+  vibrar: true,          // navigator.vibrate(12) al presionar con el dedo
+  visible: 'auto',       // 'auto' (táctil, any-pointer: coarse o < 700 px), true o false
+  botonesControl: {},    // reasignar índices de la Gamepad API ({ 0: 'B', 6: null })
+});
+mando.presionado('saltar'); // ¿alguna fuente (dedo, tecla o control) mantiene un botón de la acción?
+mando.eje();                // { x, y } en [−1, 1]: palanca táctil > palanca del control > cruceta (diagonal normalizada)
+mando.al('saltar', fn);     // flanco de bajada de la ACCIÓN (no se repite si otra fuente ya la mantenía); devuelve quitar()
+mando.alSoltar('saltar', fn); // cuando ninguna fuente la mantiene
+mando.mostrar(false);       // ocultar el mando de la pantalla (usar los controles propios del juego)
+mando.activar(false);       // desactivar toda la entrada (táctil, teclado y control) y soltar lo presionado
+mando.botonGuia();          // <button class="mando-guia-btn">⌨️ Controles</button> para colocar donde convenga
+mando.mostrarGuia();        // diálogo con cada acción: botón del mando, teclas y botón del control (Esc o «Cerrar»)
+mando.soltarTodo(); mando.destruir(); mando.estado(); mando.elemento; // estado() es para pruebas
+Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
+```
+
+- **Botones canónicos:** `arriba`, `abajo`, `izq`, `der` (cruceta), `A`, `B`, `X`, `Y`, `L`, `R`, `START`, `SELECT`. Un
+  botón desconocido en `acciones` o `teclas` lanza error al crear. Solo se ven los botones usados (de la cruceta, solo
+  los brazos usados); un lado vacío conserva su lugar invisible.
+- **Distribución:** izquierda cruceta (y palanca opcional), derecha A/B/X/Y en rombo (A derecha, B abajo, X arriba,
+  Y izquierda), L/R arriba, START/SELECT al centro abajo. En vertical va debajo del juego (`--u` de 30 a 48 px; cabe
+  desde 320 px). En horizontal bajo (`orientation: landscape` y `max-height: 520px`) va encimado en las esquinas, con
+  el cuerpo transparente y `pointer-events: none` salvo en los grupos. El módulo publica `--mando-alto` en `:root`
+  (0 si está oculto o encimado).
+- **Táctil:** *touch events* no pasivos con `preventDefault` en la raíz del mando, por `identifier`; *pointer events*
+  solo para mouse y pluma (o sin `TouchEvent`); nunca se suelta por `lostpointercapture`; `touchcancel` suelta ese dedo;
+  `blur` suelta solo el teclado y `visibilitychange` (oculto) suelta todo. Cruceta por ángulo en 8 sectores (zona muerta
+  central 0.25; el dedo la conserva hasta 1.8 radios), rombo por el botón visible más cercano, deslizar cambia de botón.
+  El mando no detiene la propagación de `pointerdown`: un juego con «toca para saltar» debe ignorar
+  `e.target.closest('.mando')`.
+- **Teclado por omisión:** flechas/WASD = cruceta; J = A, K = B, U = X, I = Y; Q = L, E = R; Enter = START; Shift derecho
+  y Backspace = SELECT. Solo se interceptan las teclas de botones usados, con el mando activo, y nunca Enter/Espacio sobre
+  botones, enlaces o campos.
+- **Control físico (Gamepad API, mapeo estándar por posición):** 0 abajo = A, 1 derecho = B, 2 izquierdo = X, 3 arriba =
+  Y, 4/6 = L, 5/7 = R, 8 = SELECT, 9 = START, 12–15 = cruceta; palanca izquierda = `eje()` y, pasado 0.5, cruceta.
+  Sondeo con `requestAnimationFrame`; aviso `.mando-aviso` «🎮 Control conectado» / «🎮 Control desconectado».
+- **Textos:** español de México y sin marcas («🎮 Mando clásico», «botón de abajo», «gatillo izquierdo»).
+- **Uso en los juegos:**
+  - Axo: cruceta = mover, A = saltar, B = fuego, START = pausa; además ESPACIO/↑/W = A, X = B, P/Esc = START. Selector
+    «🎮 Mando clásico» · «🔘 Botones» (los de antes, con su teclado) en la portada y la pausa,
+    `localStorage.plataformas_control`. El mando solo está activo en `nivel`/`pausa` y se ve con `body.jugando`.
+  - Dragon Run: A = saltar/doble salto; START = empezar, pausa nueva (`st = 'pause'`, «⏸ Pausa» / «SEGUIR», también
+    ⏸ y al ocultar la pestaña) y seguir. Selector «🎮 Mando clásico» · «👆 Tocar la pantalla» en la pantalla de
+    misiones, `localStorage.dragon_control`. En vertical el `body` pasa a columna y el cielo/tierra usa `--mando-alto`.
+- **Pruebas:** lógica pura en `server/mando_test.ts` (Deno); E2E `tests/e2e/e2e-mando.js` (toques reales por CDP,
+  teclado, control simulado con `navigator.getGamepads` en `addInitScript`, preferencia y capturas).
 
 ## Juegos fusionados (cambio `juegos-fusion`)
 

@@ -102,10 +102,11 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   ok('390: los 4 mundos y el jefe se dibujan', (await recorrerMundos(p, fr, 'plataformas-390')).length === 0);
   const hud = await fr.evaluate(() => {
     const c = document.getElementById('c').getBoundingClientRect(), e = window.__plat.estado(), esc = c.height / e.vh;
-    return { hud: Math.round(document.getElementById('hud').getBoundingClientRect().bottom), nivel: Math.round(c.top + e.oy * esc), fin: Math.round(c.bottom), mandos: Math.round(document.getElementById('mandos').getBoundingClientRect().top), dibujoMs: +e.dibujoMs.toFixed(2) };
+    return { hud: Math.round(document.getElementById('hud').getBoundingClientRect().bottom), nivel: Math.round(c.top + e.oy * esc), fin: Math.round(c.bottom), mandos: Math.round(document.querySelector('.mando').getBoundingClientRect().top), dibujoMs: +e.dibujoMs.toFixed(2) };
   });
   ok('390: el HUD queda sobre el cielo, fuera del nivel', hud.hud <= hud.nivel + 1, JSON.stringify(hud));
-  ok('390: los botones táctiles quedan debajo del juego', hud.mandos >= hud.fin - 1 && await fr.isVisible('#mandos'), JSON.stringify(hud));
+  // Con «🎮 Mando clásico» (por omisión, openspec: mando-arcade) el mando de Arcade reemplaza a los botones de antes.
+  ok('390: el mando táctil queda debajo del juego', hud.mandos >= hud.fin - 1 && await fr.isVisible('.mando') && !(await fr.isVisible('#mandos')), JSON.stringify(hud));
   ok('390: dibujo por cuadro con margen para 60 fps', hud.dibujoMs > 0 && hud.dibujoMs < 8, hud.dibujoMs + ' ms');
   await p.click('[data-a="salir"]').catch(() => {});
 
@@ -120,7 +121,7 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   const ee = await fe.evaluate(() => window.__plat.estado());
   ok('escritorio: vista más ancha', ee.lw > 300, String(ee.lw));
   await esc.screenshot({ path: 'plataformas-escritorio.png' });
-  ok('escritorio: sin botones táctiles', !(await fe.isVisible('#mandos')));
+  ok('escritorio: sin botones táctiles ni mando', !(await fe.isVisible('#mandos')) && !(await fe.isVisible('.mando')));
   ok('escritorio: los 4 mundos y el jefe se dibujan', (await recorrerMundos(esc, fe, 'plataformas-escritorio')).length === 0);
   await fe.evaluate(() => window.__plat.alMapa());
   await fe.waitForSelector('#ov-mapa:not(.hide)');

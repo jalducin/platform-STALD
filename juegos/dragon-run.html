@@ -58,12 +58,25 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 /* Celular vertical: el canvas 2:1 queda al centro; arriba se pinta cielo y abajo tierra, con un recordatorio de toque. */
 #tip{display:none;position:fixed;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;color:#fff;font-size:1rem;font-weight:700;opacity:.9;pointer-events:none}
 @media (orientation:portrait){body{background:linear-gradient(#5db4f5 0 50%,#6b4a2b 50% 100%)}body.jugando #tip{display:block}}
+/* Mando de Arcade (openspec: mando-arcade): en vertical, juego arriba y mando abajo; solo se ve jugando o en pausa. */
+#wrap #bPausa{position:absolute;right:9.5cqw;bottom:1.5cqw;font-size:3cqw;padding:.6cqw 1.6cqw;box-shadow:none;background:rgba(0,0,0,.45)}
+body:not(.jugando) #bPausa,body:not(.jugando) .mando{display:none!important}
+body.ctl-mando{flex-direction:column}
+body.ctl-mando #wrap{margin:auto 0}
+body.ctl-mando .mando{align-self:stretch}
+body.ctl-mando #tip{display:none!important}
+@media (orientation:portrait){body.ctl-mando{background:linear-gradient(#5db4f5 0 calc(50% - var(--mando-alto,0px) / 2),#6b4a2b 0 100%)}}
+.menu .ctl{font:inherit;font-size:.9rem;font-weight:700;min-height:44px;padding:6px 14px;border-radius:99px;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.menu .ctl[aria-pressed="true"]{border-color:#ffd23f;background:rgba(255,210,63,.2)}
+.menu .mando-guia-btn{min-height:44px}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}.menu #bS:active{transform:none}}
 </style></head><body>
 <div id="wrap">
 <canvas id="c" width="800" height="400" aria-label="Dragon Run"></canvas>
 <div id="ovO" class="ov hide"><h2>¡Auch! 💥</h2><p id="oS"></p><p id="oB"></p><p id="oM" class="msgs"></p><button id="bO">REINTENTAR</button></div>
 <div id="ovW" class="ov hide"><h2>¡LO LOGRASTE! 🐉🔥</h2><p id="wS"></p><p id="wB"></p><p id="wM" class="msgs"></p><button id="bW">JUGAR DE NUEVO</button></div>
+<div id="ovP" class="ov hide"><h2>⏸ Pausa</h2><p>Presiona START o SEGUIR para continuar.</p><button id="bP">SEGUIR</button></div>
+<button id="bPausa" aria-label="Pausa">⏸</button>
 <button id="mute" aria-label="Sonido">🔊</button>
 </div>
 <div id="ovS" class="menu">
@@ -80,12 +93,15 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px}
   <div class="etq">Estela</div><div id="estelas" class="sws"></div>
   <p id="pista" class="pista" aria-live="polite"></p>
   <p class="nota">Los premios solo cambian cómo se ve tu dragón: no dan puntos ni ventajas.</p>
+  <h2>🎮 Controles</h2>
+  <div class="sws" role="group" aria-label="Controles"><button class="ctl" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="ctl" data-control="toque" aria-pressed="false">👆 Tocar la pantalla</button><span class="guia-lugar"></span></div>
  </div>
- <div class="menu-pie"><button id="bS">JUGAR</button><p>ESPACIO, clic o toque para saltar · ¡doble salto en el aire!</p></div>
+ <div class="menu-pie"><button id="bS">JUGAR</button><p>ESPACIO, J, clic o toque para saltar · ¡doble salto en el aire! · Enter para pausa</p></div>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
 <p id="tip">👆 Toca en cualquier parte para saltar</p>
 <script src="dragon-misiones.js?v=1"></script>
+<script src="mando.js?v=1"></script>
 <script>
 /* Dragon Run — juego del profe, integrado a Juegos en Arcade (openspec: dragon-run, dragon-run-misiones).
    Embebido en juegos.html: el juego nunca llama al servidor. Avisa a la página con postMessage:
@@ -185,11 +201,12 @@ const mel=[0,4,7,9,7,4,2,4,0,4,7,12,9,7,4,2,5,9,12,9,5,9,7,4,2,7,11,7,4,2,0,null
 const bas=[0,0,-3,-5,0,0,-5,-3];
 function startMusic(){stopMusic();if(!AC)return;mi=setInterval(()=>{const n=mel[step%32];if(n!=null)tone(262*2**(n/12),.18,'square',.03);if(step%4===0)tone(131*2**(bas[(step/4)%8]/12),.5,'triangle',.07);step++},170)}
 function stopMusic(){clearInterval(mi);mi=null}
-document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic();else if(st==='play')startMusic()});
+// Ocultar la pestaña a mitad de carrera la pausa (openspec: mando-arcade).
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(st==='play')pausar(true);stopMusic()}else if(st==='play')startMusic()});
 $('mute').onclick=function(){muted=!muted;this.textContent=muted?'🔇':'🔊';if(master)master.gain.value=muted?0:1;this.blur()};
 
 /* ---------- flow ---------- */
-function show(id){['ovS','ovO','ovW'].forEach(i=>$(i).classList.toggle('hide',i!==id));document.body.classList.toggle('jugando',!id)}
+function show(id){['ovS','ovO','ovW','ovP'].forEach(i=>$(i).classList.toggle('hide',i!==id));document.body.classList.toggle('jugando',!id)}
 function startGame(){const n=performance.now();if(n-lastStart<400)return;lastStart=n;initAudio();
  if(!PRUEBA)fecha=DM.fechaHoy();
  reset();run.antes=DM.vistaMisiones(prog,fecha,semilla).map(m=>m.cumplida);st='play';show(null);startMusic()}
@@ -204,9 +221,33 @@ $('bS').onclick=function(){this.blur();startGame()};
 function jump(){if(st!=='play'||dr.saltos>=2)return;dr.vy=dr.saltos?-600:-720;dr.air=true;dr.saltos++;if(dr.saltos===2)run.dobles++;sJump();estela(P(16),true)}
 addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){
  if(st!=='play'&&e.target.closest&&e.target.closest('.sw'))return; // espacio sobre un premio: lo elige
- e.preventDefault();if(e.repeat)return;if(st==='play')jump();else if(st==='start')startGame();else alMenu()}});
-// En el celular vertical, tocar cualquier parte (fuera de los botones) también salta.
-document.addEventListener('pointerdown',e=>{if(st!=='play'||e.target.closest('button'))return;e.preventDefault();jump()});
+ e.preventDefault();if(e.repeat)return;if(st==='play')jump();else if(st==='pause')pausar(false);else if(st==='start')startGame();else alMenu()}});
+// En el celular vertical, tocar cualquier parte (fuera de los botones y del mando) también salta.
+document.addEventListener('pointerdown',e=>{if(st!=='play'||e.target.closest('button,.mando'))return;e.preventDefault();jump()});
+
+/* ---------- pausa (START, ⏸ u ocultar la pestaña) ---------- */
+function pausar(on){
+ if(on){if(st!=='play')return;st='pause';stopMusic();$('ovP').classList.remove('hide');$('bP').focus()}
+ else if(st==='pause'){st='play';$('ovP').classList.add('hide');$('bP').blur();last=performance.now();startMusic()}
+}
+$('bP').onclick=()=>pausar(false);
+$('bPausa').onclick=function(){this.blur();if(st==='play')pausar(true);else pausar(false)};
+
+/* ---------- mando de Arcade (openspec: mando-arcade) ----------
+   «🎮 Mando clásico» (por omisión): A = saltar y doble salto, START = empezar, pausa y seguir. «👆 Tocar la
+   pantalla»: el control de antes (el mando no se ve; el teclado J/Enter y un control físico siguen sirviendo). */
+let control=Mando.preferencia('dragon_control')==='toque'?'toque':'mando';
+const mando=Mando.crear({acciones:{saltar:'A',pausa:'START'},contenedor:document.body,nombres:{saltar:'saltar',pausa:'pausa'}});
+mando.al('saltar',()=>{if(st==='play')jump()});
+mando.al('pausa',()=>{if(st==='play')pausar(true);else if(st==='pause')pausar(false);else if(st==='start')startGame();else alMenu()});
+function aplicarControl(){
+ document.body.classList.toggle('ctl-mando',control==='mando');
+ document.querySelectorAll('[data-control]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.control===control)));
+ mando.mostrar(control==='mando');
+}
+document.querySelectorAll('[data-control]').forEach(b=>{b.onclick=()=>{control=b.dataset.control;Mando.preferencia('dragon_control',control);aplicarControl()}});
+document.querySelectorAll('.guia-lugar').forEach(s=>s.replaceWith(mando.botonGuia()));
+aplicarControl();
 
 /* ---------- estelas ---------- */
 const NEON=['#ff4d4d','#ffa94d','#ffe14d','#5ef07a','#4dc3ff','#a06bff'];
@@ -330,5 +371,7 @@ if(PRUEBA)window.__dragonPrueba={
  terminar(gano){if(st==='play')gano?win():lose()},
  progreso:()=>JSON.parse(JSON.stringify(prog)),
  semilla:()=>semilla,
+ control:()=>control,
+ mando:()=>mando.estado(),
 };
 </script></body></html>
