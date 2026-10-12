@@ -3,10 +3,10 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
-const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
+const { contarMenu, abrirJuego, idsDe } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`); const info = (n, x = '') => out.push(`INFO ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
+const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-menu]' });
 const texto = async (p, sel) => ((await p.textContent(sel).catch(() => '')) || '').replace(/\s+/g, ' ').trim();
 // Repite `paso` hasta que aparezca el resultado (o se acabe el tiempo).
 async function hastaResultado(p, paso, ms = 120000) {
@@ -25,12 +25,12 @@ const clicPrimero = async (p, sel) => { const b = await p.$(sel); if (b) await b
   const p = await pagina(b, 'marisol@example.com', 0.15);
   // ---- Menú ----
   const menu = await contarMenu(p), ids = menu.ids;
-  ok('menú: todos los juegos de la página (JUEGOS.length) y 16 en Clásicos (con los 5 nuevos)', menu.completo && (await p.$$('.cat-clasicos[data-juego]')).length === 16 && ['gato', 'conecta4', 'ppt', 'ahorcado', 'serpientes'].every(i => ids.includes(i)), ids.length + ' juegos');
-  await p.$eval('[data-juego="gato"]', e => e.scrollIntoView({ block: 'start' })); await sleep(200);
+  ok('menú: todos los juegos de la página (JUEGOS.length) y 16 en Clásicos (con los 5 nuevos)', menu.completo && (await idsDe(p, 'clasicos')).length === 16 && ['gato', 'conecta4', 'ppt', 'ahorcado', 'serpientes'].every(i => ids.includes(i)), ids.length + ' juegos');
+  await p.$eval('.game[data-juego="gato"]', e => e.scrollIntoView({ block: 'start' })); await sleep(200);
   await p.screenshot({ path: 'clasicos-rapidos-390-menu.png', fullPage: false });
 
   // ---- Gato individual (difícil): Michi no pierde ----
-  await p.click('[data-juego="gato"]'); await p.click('[data-cr-nivel="3"]');
+  await abrirJuego(p, 'gato'); await p.click('[data-cr-nivel="3"]');
   await p.click('[data-ayuda="gato"]');
   ok('gato: ayuda con líneas y empate', /tres[\s\S]*empate/i.test(await texto(p, 'dialog.ayuda[open]')));
   await p.keyboard.press('Escape');
@@ -46,7 +46,7 @@ const clicPrimero = async (p, sel) => { const b = await p.$(sel); if (b) await b
   await p.click('[data-a="hub"]');
 
   // ---- Conecta 4 individual (fácil) ----
-  await p.click('[data-juego="conecta4"]'); await p.click('[data-cr-nivel="1"]'); await p.click('[data-cr-go]'); await p.waitForSelector('.cr-c4');
+  await abrirJuego(p, 'conecta4'); await p.click('[data-cr-nivel="1"]'); await p.click('[data-cr-go]'); await p.waitForSelector('.cr-c4');
   ok('conecta4: tablero de 7 × 6', (await p.$$('.cr-c4 button')).length === 42);
   await p.click('.cr-c4 button[data-cr-c="3"]'); await sleep(250);
   ok('conecta4: la ficha cae hasta abajo', await p.$('.cr-c4 button:nth-child(39) .pz.R'));
@@ -59,7 +59,7 @@ const clicPrimero = async (p, sel) => { const b = await p.$(sel); if (b) await b
   await p.click('[data-a="hub"]');
 
   // ---- Piedra, papel o tijera individual ----
-  await p.click('[data-juego="ppt"]'); await p.waitForSelector('.cr-ppt-ops');
+  await abrirJuego(p, 'ppt'); await p.waitForSelector('.cr-ppt-ops');
   // Clic y lectura en la misma tarea de la página (con relojes acelerados la animación dura poco).
   const [ya, agita] = await p.evaluate(() => { document.querySelector('[data-cr-ppt="papel"]').click(); return [document.querySelector('.cr-ya').textContent, document.querySelectorAll('.cr-mano.agita').length]; });
   ok('ppt: «¡Piedra, papel o tijera… ya!» con las manos agitándose', /ya!/.test(ya) && agita === 2, ya);
@@ -71,7 +71,7 @@ const clicPrimero = async (p, sel) => { const b = await p.$(sel); if (b) await b
   await p.click('[data-a="hub"]');
 
   // ---- Ahorcado en inglés ----
-  await p.click('[data-juego="ahorcado"]'); await p.waitForSelector('.cr-teclado');
+  await abrirJuego(p, 'ahorcado'); await p.waitForSelector('.cr-teclado');
   ok('ahorcado: pista en español con emoji y globo', /Pista:/.test(await texto(p, '.cr-pista')) && !!(await p.$('svg.cr-globo')));
   await p.click('[data-cr-l="e"]'); await p.click('[data-cr-l="z"]'); await sleep(200);
   await p.screenshot({ path: 'clasicos-rapidos-390-ahorcado.png', fullPage: true });
@@ -82,7 +82,7 @@ const clicPrimero = async (p, sel) => { const b = await p.$(sel); if (b) await b
   await p.click('[data-a="hub"]');
 
   // ---- Serpientes y escaleras contra 1 bot ----
-  await p.click('[data-juego="serpientes"]'); await p.click('[data-cr-bots="1"]'); await p.click('[data-cr-go]'); await p.waitForSelector('.cr-serp');
+  await abrirJuego(p, 'serpientes'); await p.click('[data-cr-bots="1"]'); await p.click('[data-cr-go]'); await p.waitForSelector('.cr-serp');
   ok('serpientes: tablero de 100 casillas, escaleras y serpientes', (await p.$$('.cr-serp .celdas div')).length === 100 && (await p.$$('.cr-serp svg.arte path')).length >= 20);
   await p.click('[data-cr-tirar]'); await sleep(150);
   ok('serpientes: el dado rueda', !!(await p.$('.cr-dado.rueda')));

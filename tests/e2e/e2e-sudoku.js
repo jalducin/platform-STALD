@@ -2,11 +2,12 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-juego="mente-sudoku"]' });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-menu]' });
   ok('Sudoku aparece en Mente ágil', true);
   // Generador: pistas por nivel, solución única y tiempo
   const gen = await p.evaluate(() => Object.keys(SUDOKU_NIVELES).map(nv => {
@@ -25,7 +26,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok('se genera en menos de 3 s', gen.every(([, r]) => r.every(x => x.ms < 3000)), gen.map(([n, r]) => n + ':' + Math.max(...r.map(x => x.ms)) + 'ms').join(' '));
 
   // Jugar Fácil: un error y luego resolver
-  await p.click('[data-juego="mente-sudoku"]'); await p.waitForSelector('[data-sdk-nivel]');
+  await abrirJuego(p, 'mente-sudoku'); await p.waitForSelector('[data-sdk-nivel]');
   ok('selector con 4 niveles', (await p.$$('[data-sdk-nivel]')).length === 4);
   await p.click('[data-sdk-nivel="facil"]'); await p.click('[data-sdk-go]'); await p.waitForSelector('#sdk');
   const { puzzle, sol } = await p.evaluate(() => window.__sudoku);

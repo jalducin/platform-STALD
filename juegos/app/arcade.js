@@ -197,7 +197,7 @@ function pintarFisicaSala(body) {
   const e = sala.estado, s = e.sala, juego = s.juego;
   document.getElementById('m-bar').hidden = true;
   const mesa = juego === 'futbolito' ? participantes() : participantes().slice(0, juego === 'golf' ? 4 : 2); // futbolito-equipos: hasta 4 según la mesa; golf: de 2 a 4
-  if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + juegoPorId(juego).emoji + (juego === 'golf' ? ' Esperando a más personas: se juega de 2 a 4.' : ' Esperando a tu rival.') /* futbolito-equipos: sin «1 vs 1» (también hay 2 vs 2) */ + '</div>'; sala.vista = 'faltan'; } return; }
+  if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + icoJuego(juego) + (juego === 'golf' ? ' Esperando a más personas: se juega de 2 a 4.' : ' Esperando a tu rival.') /* futbolito-equipos: sin «1 vs 1» (también hay 2 vs 2) */ + '</div>'; sala.vista = 'faltan'; } return; }
   const aFrame = msg => { const f = document.getElementById('arcade-frame'); try { f.contentWindow.postMessage(msg, location.origin); } catch (x) { /* iframe cerrado */ } };
   if (sala.vista === 'fisica') {
     const js = jugadasFisica(), firma = JSON.stringify(js);

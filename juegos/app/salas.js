@@ -227,7 +227,7 @@ async function entrarSala(codigo) {
   if (sala.estado.rt) conectarRealtime(sala.estado.rt, codigo, () => { if (detenido) return; programarTick(); });
   const reloj = setInterval(() => pintarSala(), 250);
   limpiezas.push(() => { detenido = true; clearTimeout(tick); document.removeEventListener('visibilitychange', alVolver); }, () => clearInterval(reloj));
-  app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + (sala.estado.sala.opciones.tema ? ' · ' + escapeHtml(InglesGramatica.nombreTema(sala.estado.sala.opciones.tema)) : '') + ' · partida</span>' +
+  app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + icoJuego(j) + ' ' + escapeHtml(j.t) + (sala.estado.sala.opciones.tema ? ' · ' + escapeHtml(InglesGramatica.nombreTema(sala.estado.sala.opciones.tema)) : '') + ' · partida</span>' +
     '<span class="stat" id="p-codigo-chip">🔑 ' + escapeHtml(codigo) + '</span></div><div class="bar" id="m-bar" hidden><span style="width:100%"></span></div>' +
     '<div id="p-red" class="muted" role="status" hidden style="text-align:center;font-size:.85rem;margin:6px 0">📶 Reconectando… tu partida sigue guardada.</div><div id="p-body"></div></div>';
   sala.vista = null;
@@ -565,7 +565,7 @@ const REANUDAR = {
 };
 function pantallaReanudar(p) {
   const j = juegoPorId(p.juego);
-  app.innerHTML = '<div class="card result" id="reanudar"><div style="font-size:2.4rem">' + j.emoji + '</div><h1>¿Continuar tu partida de ' + escapeHtml(j.t) + '?</h1>' +
+  app.innerHTML = '<div class="card result" id="reanudar"><div style="font-size:2.4rem">' + icoJuego(j) + '</div><h1>¿Continuar tu partida de ' + escapeHtml(j.t) + '?</h1>' +
     '<p class="muted">Se recargó la página a mitad del juego. Puedes seguir donde ibas.</p><div class="pills">' +
     (p.puntos ? '<span class="stat">⭐ ' + fmt(p.puntos) + '</span>' : '') + (p.total ? '<span class="stat">✅ ' + fmt(p.aciertos) + ' de ' + fmt(p.total) + '</span>' : '') +
     (p.faltan ? '<span class="stat">🔢 Faltan ' + fmt(p.faltan) + ' casillas</span>' : '') + '</div>' +

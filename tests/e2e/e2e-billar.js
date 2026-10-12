@@ -10,11 +10,12 @@
 require('./lib/entorno');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego, textoTarjeta, idsDe } = require('./lib/menu'); // menú por categorías (openspec: juegos-categorias)
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const TACTIL = { hasTouch: true, isMobile: true };
-const abrir = (b, email, viewport, contexto) => abrirPagina(b, { email, viejo: true, viewport, contexto: Object.assign({}, TACTIL, contexto || {}), out, etiqueta: email, dialogos: 'aceptar', ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-juego="billar"]' });
+const abrir = (b, email, viewport, contexto) => abrirPagina(b, { email, viejo: true, viewport, contexto: Object.assign({}, TACTIL, contexto || {}), out, etiqueta: email, dialogos: 'aceptar', ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
 const marcoDe = async (p, raiz = '') => (await p.waitForSelector(raiz + ' #arcade-frame', { timeout: 30000 })).contentFrame();
 const estado = fr => fr.evaluate(() => window.__billar.estado());
 const esperar = (fr, fn, arg, ms = 30000) => fr.waitForFunction(fn, arg, { timeout: ms });
@@ -57,12 +58,12 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__billar.firma(
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrir(b, 'marisol@example.com', { width: 390, height: 844 });
-  const tarjeta = await p.textContent('[data-juego="billar"]');
-  ok('catálogo: Billar en Arcade con ícono y descripción', tarjeta.includes('🎱') && tarjeta.includes('Billar') && /Bola 8/.test(tarjeta) && (await p.$$('.cat-arcade[data-juego="billar"]')).length === 1, tarjeta);
+  const tarjeta = await textoTarjeta(p, 'billar');
+  ok('catálogo: Billar en Arcade con ícono y descripción', tarjeta.includes('🎱') && tarjeta.includes('Billar') && /Bola 8/.test(tarjeta) && (await idsDe(p, 'arcade')).filter(i => i === 'billar').length === 1, tarjeta);
   const puntosAntes = await p.evaluate(() => state.totalIndividual);
 
   // ---- Individual con toques reales ----
-  await p.tap('[data-juego="billar"]');
+  await abrirJuego(p, 'billar', { tap: true });
   let fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   ok('individual: menú con 3 niveles, reglas y cómo apuntar', (await fr.$$('[data-nivel]')).length === 3 && /resortera/.test(await fr.textContent('#ov-menu')) && /8 antes de tiempo/.test(await fr.textContent('#ov-menu')));
@@ -209,7 +210,7 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__billar.firma(
 
   // ---- Horizontal 844×390 ----
   const hor = await abrir(b, 'marisol@example.com', { width: 844, height: 390 });
-  await hor.tap('[data-juego="billar"]');
+  await abrirJuego(hor, 'billar', { tap: true });
   const fh = await marcoDe(hor);
   await fh.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fh.tap('[data-nivel="dificil"]');

@@ -2,20 +2,21 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const BASE = process.env.BASE, API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const pagina = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.3, viewport: { width: 390, height: 900 }, out, dialogos: 'registrar', ruta: '/juegos.html', esperar: '[data-juego]' });
+const pagina = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.3, viewport: { width: 390, height: 900 }, out, dialogos: 'registrar', ruta: '/juegos.html', esperar: '[data-menu]' });
 const unirse = async (q, codigo) => { await q.click('[data-tab="partidas"]'); await q.fill('#p-codigo', codigo); await q.click('#f-unirse button[type=submit]'); };
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const host = await pagina(b, 'marisol@example.com'), otro = await pagina(b, 'angel@example.com'), tercero = await pagina(b, 'laura@example.com');
   // Niveles del individual
-  await host.click('[data-juego="ajedrez"]'); await host.waitForSelector('[data-aj-nivel]');
+  await abrirJuego(host, 'ajedrez'); await host.waitForSelector('[data-aj-nivel]');
   const niveles = await host.$$eval('[data-aj-nivel]', bs => bs.map(x => x.textContent.trim()));
   ok('niveles: Básico, Intermedio y Avanzado', niveles.join('|') === '🐣 Básico|🦊 Intermedio|🦉 Avanzado', niveles.join('|'));
-  await host.click('[data-a="salir"]').catch(() => {}); await host.goto(BASE + '/juegos.html' + Q); await host.waitForSelector('[data-juego]');
+  await host.click('[data-a="salir"]').catch(() => {}); await host.goto(BASE + '/juegos.html' + Q); await host.waitForSelector('[data-menu]');
   // Ajedrez en sala
   await host.click('[data-tab="partidas"]'); await host.selectOption('#p-juego', 'ajedrez');
   ok('ajedrez: casilla de bots oculta y nota 1 vs 1', await host.$eval('#p-bots-wrap', e => e.hidden) && /1 vs 1 solo entre dos personas/.test(await host.textContent('#p-bots-nota')));
@@ -32,8 +33,8 @@ const unirse = async (q, codigo) => { await q.click('[data-tab="partidas"]'); aw
   const nombres = await host.$$eval('.aj-info span:first-child', xs => xs.map(x => x.textContent));
   ok('ajedrez: juegan Marisol y Angel, sin bots', nombres.join(' ').includes('Marisol') && nombres.join(' ').includes('Angel') && !/BOT/.test(nombres.join(' ')), nombres.join(' / '));
   // Brisca con 2 personas → 2 bots. Salen con ✕: navegar sin salir regresaría a la sala (openspec: juegos-recarga).
-  await host.click('[data-a="salir"]'); await host.goto(BASE + '/juegos.html' + Q); await host.waitForSelector('[data-juego]');
-  await otro.click('[data-a="salir"]'); await otro.goto(BASE + '/juegos.html' + Q); await otro.waitForSelector('[data-juego]');
+  await host.click('[data-a="salir"]'); await host.goto(BASE + '/juegos.html' + Q); await host.waitForSelector('[data-menu]');
+  await otro.click('[data-a="salir"]'); await otro.goto(BASE + '/juegos.html' + Q); await otro.waitForSelector('[data-menu]');
   await host.click('[data-tab="partidas"]'); await host.selectOption('#p-juego', 'brisca');
   ok('brisca: nota de 4 en parejas', /Se juega entre 4 en parejas/.test(await host.textContent('#p-bots-nota')) && await host.$eval('#p-bots-wrap', e => e.hidden));
   await host.click('#f-crear button[type=submit]'); await host.waitForSelector('[data-p="empezar"]');

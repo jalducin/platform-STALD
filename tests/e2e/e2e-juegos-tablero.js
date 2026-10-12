@@ -4,14 +4,15 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
-const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
+const { contarMenu, abrirJuego } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
+const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-menu]' });
 const sinScroll = p => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 const texto = (p, sel) => p.textContent(sel).then(t => (t || '').replace(/\s+/g, ' ').trim()).catch(() => '');
 const M = 'marisol@example.com', A = 'angel@example.com', J = 'jesus@example.com', L = 'laura@example.com';
 
+const iconoSala = p => p.waitForFunction(() => { const i = document.querySelector('.play-top .t img.ico-img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 10000 }).then(() => true, () => false); // juegos-categorias
 async function crearSala(p, juego, bots = true) {
   await p.click('[data-tab="partidas"]'); await p.selectOption('#p-juego', juego);
   const caja = await p.$('#p-bots');
@@ -39,11 +40,11 @@ const getSala = (email, codigo) => fetch(process.env.API + '/juegos/sala/' + cod
   const menu = await contarMenu(p), ids = menu.ids;
   ok('inicio: todos los juegos de la página (JUEGOS.length) con Damas, Batalla naval, Dominó y Parchís', menu.completo && ['damas', 'naval', 'domino', 'parchis'].every(i => ids.includes(i)), ids.length + '');
   ok('inicio: Dominó y Parchís en Clásicos; Damas y Batalla naval en Mente ágil',
-    await p.$$eval('.cat-clasicos[data-juego]', xs => ['domino', 'parchis'].every(i => xs.some(x => x.dataset.juego === i))) &&
-    await p.$$eval('.cat-mente[data-juego]', xs => ['damas', 'naval'].every(i => xs.some(x => x.dataset.juego === i))));
+    ['domino', 'parchis'].every(i => menu.porCategoria.find(c => c.id === 'clasicos').ids.includes(i)) &&
+    ['damas', 'naval'].every(i => menu.porCategoria.find(c => c.id === 'mente').ids.includes(i)));
 
   // ---------- Damas individual ----------
-  await p.click('[data-juego="damas"]'); await p.click('[data-ayuda="damas"]');
+  await abrirJuego(p, 'damas'); await p.click('[data-ayuda="damas"]');
   ok('damas: ayuda con captura obligatoria, saltos y coronación', /obligatorio[\s\S]*Saltos múltiples[\s\S]*Coronación/.test(await (await p.waitForSelector('dialog.ayuda[open]')).innerText()));
   await p.keyboard.press('Escape');
   await p.click('[data-tb-opt="nivel"][data-v="2"]'); await p.click('[data-tb-go]'); await p.waitForSelector('.tb-damas');
@@ -61,7 +62,7 @@ const getSala = (email, codigo) => fetch(process.env.API + '/juegos/sala/' + cod
   await p.click('[data-a="hub"]');
 
   // ---------- Dominó individual (contra 3 bots) ----------
-  await p.click('[data-juego="domino"]'); await p.click('[data-tb-go]'); await p.waitForSelector('.tb-mano');
+  await abrirJuego(p, 'domino'); await p.click('[data-tb-go]'); await p.waitForSelector('.tb-mano');
   ok('dominó: 7 fichas en mi mano y 3 rivales', (await p.$$('.tb-fb')).length === 7 && (await p.$$('.tb-rival')).length === 3);
   let capturaDomino = false;
   const terminoDomino = await hasta(p, '.result h1', async () => {
@@ -73,7 +74,7 @@ const getSala = (email, codigo) => fetch(process.env.API + '/juegos/sala/' + cod
   await p.click('[data-a="hub"]');
 
   // ---------- Parchís individual (rápida, 1 bot) ----------
-  await p.click('[data-juego="parchis"]'); await p.click('[data-tb-opt="rivales"][data-v="1"]'); await p.click('[data-tb-go]'); await p.waitForSelector('.tb-parchis');
+  await abrirJuego(p, 'parchis'); await p.click('[data-tb-opt="rivales"][data-v="1"]'); await p.click('[data-tb-go]'); await p.waitForSelector('.tb-parchis');
   ok('parchís: tablero con 4 fichas (2 por jugador) y dado', (await p.$$('.tb-pf')).length === 4 && !!(await p.$('.tb-dado')));
   await p.screenshot({ path: 'tablero-parchis-390.png', fullPage: true });
   ok('parchís: cabe a 390 px', await sinScroll(p));
@@ -83,7 +84,7 @@ const getSala = (email, codigo) => fetch(process.env.API + '/juegos/sala/' + cod
   await p.click('[data-a="hub"]');
 
   // ---------- Batalla naval individual ----------
-  await p.click('[data-juego="naval"]'); await p.click('[data-tb-go]'); await p.waitForSelector('.tb-naval');
+  await abrirJuego(p, 'naval'); await p.click('[data-tb-go]'); await p.waitForSelector('.tb-naval');
   await p.click('[data-tb-barco="0"]'); await p.click('[data-tb-n="0"]');
   ok('naval: acomodo manual del portaaviones (5 casillas)', (await p.$$('.tb-nc.barco')).length === 5);
   await p.click('[data-tb-girar]'); await p.click('[data-tb-n="9"]');
@@ -181,6 +182,7 @@ const getSala = (email, codigo) => fetch(process.env.API + '/juegos/sala/' + cod
   {
     const host = await pagina(b, M, 0.02);
     const codigo = await crearSala(host, 'domino', true);
+    ok('dominó sala: el encabezado trae el ícono SVG cargado (juegos-categorias)', await iconoSala(host));
     ok('dominó sala: 1 persona + 3 bots', /1 persona \+ 3 bots/.test(await texto(host, '#p-mesa')), codigo + ' ' + await texto(host, '#p-mesa'));
     await host.click('[data-p="empezar"]');
     let foto = false;

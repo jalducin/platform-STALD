@@ -8,7 +8,7 @@ function marco(id, extra) {
   const j = juegoPorId(id);
   enCurso = extra && extra.menu ? null : { id }; modoPartida(true);
   const tone = (CATEGORIAS.find(c => c.id === j.cat) || {}).clase || '';
-  app.innerHTML = '<div class="' + tone + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + j.emoji + ' ' + escapeHtml(j.t) + '</span>' +
+  app.innerHTML = '<div class="' + tone + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + icoJuego(j) + ' ' + escapeHtml(j.t) + '</span>' +
     '<span class="stat" id="m-tiempo" hidden></span><span class="stat" id="m-vidas" hidden></span><span class="stat" id="m-puntos">⭐ 0</span></div>' +
     '<div class="bar" id="m-bar" hidden><span style="width:100%"></span></div><div id="m-body"></div></div>';
   const $ = s => document.getElementById(s);
@@ -52,7 +52,7 @@ async function terminar(id, r) {
   if (s && s.guardado) {
     state.totalIndividual = s.totalIndividual; state.totalPartidas = s.totalPartidas; state.pos = s.pos; state.mejores[id] = s.mejor; pintarChip();
   }
-  app.innerHTML = '<div class="card result"><div style="font-size:2.4rem">' + j.emoji + '</div><h1>' + escapeHtml(r.titulo || '¡Terminaste!') + '</h1>' +
+  app.innerHTML = '<div class="card result"><div style="font-size:2.4rem">' + icoJuego(j) + '</div><h1>' + escapeHtml(r.titulo || '¡Terminaste!') + '</h1>' +
     '<div class="score">' + fmt(s && s.guardado ? s.puntos : puntos) + '</div><div class="muted">puntos</div>' +
     (s && s.nuevoRecord ? '<div class="record">🏅 ¡Nuevo récord personal!</div>' : '') +
     '<div class="pills">' + (r.total ? '<span class="stat">✅ ' + r.aciertos + ' de ' + r.total + '</span>' : '') +

@@ -3,7 +3,7 @@ require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y
 const { chromium } = require('playwright');
 const fs = require('fs');
 const { abrirPagina } = require('./lib/navegador');
-const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
+const { contarMenu, abrirJuego, idsDe } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const basta = JSON.parse(fs.readFileSync(process.env.DATOS + '/basta.json', 'utf8'));
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`); const info = (n, x = '') => out.push(`INFO ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -11,13 +11,13 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.08, out, etiqueta: '', dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.08, out, etiqueta: '', dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-menu]' });
   // Clásicos de este lote: los 7 de siempre, 5 clásicos rápidos, Dominó, Parchís, Bingo y Blackjack; el total, igual a JUEGOS.length.
-  const clasicos = await p.$$eval('.cat-clasicos[data-juego]', bs => bs.map(x => x.dataset.juego));
+  const clasicos = await idsDe(p, 'clasicos');
   ok('hub: categoría Clásicos con 16 juegos (Basta, ¡Una!, Lotería, Póker, Brisca, Conquián, clásicos rápidos, Dominó, Parchís, Bingo y Blackjack)', clasicos.length === 16 && ['basta-es', 'basta-en', 'una', 'loteria', 'poker', 'brisca', 'conquian'].every(i => clasicos.includes(i)) && (await contarMenu(p)).completo, clasicos.join(','));
 
   // Basta (es): verificada, desconocida y con otra letra
-  await p.click('[data-juego="basta-es"]'); await p.waitForSelector('#basta-empezar'); // basta-divertida-una-robo: sin categorías divertidas
+  await abrirJuego(p, 'basta-es'); await p.waitForSelector('#basta-empezar'); // basta-divertida-una-robo: sin categorías divertidas
   await p.click('#basta-empezar'); await p.waitForSelector('#basta-form');
   const letra = (await p.textContent('.letra')).trim();
   const L = norm(letra);
@@ -35,7 +35,7 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
   await p.click('[data-a="hub"]');
 
   // Basta (en) con 2 categorías divertidas (basta-divertida-una-robo): todo verificado → bono
-  await p.click('[data-juego="basta-en"]'); await p.waitForSelector('#basta-empezar');
+  await abrirJuego(p, 'basta-en'); await p.waitForSelector('#basta-empezar');
   ok('basta individual: ofrece las 10 categorías divertidas', (await p.$$('[data-bextra]')).length === 10);
   await p.check('[data-bextra="kitchen"]'); await p.check('[data-bextra="pokemon"]'); await p.click('[data-bextra="flor"]');
   ok('basta individual: máximo 2 categorías divertidas', !(await p.isChecked('[data-bextra="flor"]')) && /Máximo 2/.test(await p.textContent('#b-extra-aviso')), await p.textContent('#b-extra-aviso'));
@@ -59,7 +59,7 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
   await p.click('[data-a="hub"]');
 
   // ¡Una! contra 1 bot, en inglés
-  await p.click('[data-juego="una"]'); await p.waitForSelector('[data-una-bots]');
+  await abrirJuego(p, 'una'); await p.waitForSelector('[data-una-bots]');
   await p.click('[data-una-bots="1"]'); await p.click('[data-una-lang="en"]'); await p.click('[data-una-go]');
   await p.waitForSelector('.una-mano');
   let invalidaProbada = false, castigoVisto = false, dejarPasarUna = true, gritos = 0;
@@ -96,7 +96,7 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
   await p.click('[data-a="hub"]').catch(() => {});
 
   // Lotería (línea, bilingüe)
-  await p.click('[data-juego="loteria"]'); await p.waitForSelector('[data-lot-go]');
+  await abrirJuego(p, 'loteria'); await p.waitForSelector('[data-lot-go]');
   await p.click('[data-lot-go]'); await p.waitForSelector('.lot-cell');
   // Marca inválida: una casilla cuya carta no ha salido
   const salida = await p.textContent('#lot-carta');

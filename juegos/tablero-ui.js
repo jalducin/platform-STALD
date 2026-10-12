@@ -17,7 +17,7 @@
   const TARJETAS = [
     { id: 'damas', cat: 'mente', emoji: '⚫', t: 'Damas', d: 'Come en diagonal, salta varias y corona tu dama. Contra el bot o 1 vs 1.', jugar: () => elegir('damas') },
     { id: 'naval', cat: 'mente', emoji: '🚢', t: 'Batalla naval', d: 'Esconde tu flota y hunde la del rival: ¡agua, tocado y hundido!', jugar: () => elegir('naval') },
-    { id: 'domino', cat: 'clasicos', emoji: '🁫', t: 'Dominó', d: 'Doble seis de 2 a 4: embona tus fichas y quédate sin ninguna.', jugar: () => elegir('domino') },
+    { id: 'domino', cat: 'clasicos', emoji: '🔳', icono: 'juegos/iconos/domino.svg', t: 'Dominó', d: 'Doble seis de 2 a 4: embona tus fichas y quédate sin ninguna.', jugar: () => elegir('domino') },
     { id: 'parchis', cat: 'clasicos', emoji: '🎲', t: 'Parchís', d: 'Sal con 5, come fichas y llega a la meta antes que nadie.', jugar: () => elegir('parchis') },
   ];
 
@@ -32,7 +32,7 @@
   function menu(id, cuerpo, valores, alJugar) {
     const m = marco(id, { menu: true });
     const j = TARJETAS.find(x => x.id === id);
-    m.body.innerHTML = '<div class="q-card"><div class="big">' + j.emoji + '</div><div class="q">' + esc(j.t) + '</div><div class="sub">' + esc(j.d) + '</div></div>' + cuerpo +
+    m.body.innerHTML = '<div class="q-card"><div class="big">' + (typeof icoJuego === 'function' ? icoJuego(j) : j.emoji) + '</div><div class="q">' + esc(j.t) + '</div><div class="sub">' + esc(j.d) + '</div></div>' + cuerpo +
       '<div class="row-btns"><button class="btn ghost" data-ayuda="' + id + '">📖 Cómo se juega</button><button class="btn" data-tb-go>▶ Jugar</button></div>';
     m.body.addEventListener('click', e => {
       const o = e.target.closest('[data-tb-opt]');
@@ -176,7 +176,7 @@
   const resDomino = (st, j) => st.fin.ganadores.includes(j) ? (st.fin.ganadores.length === 1 ? 'gana' : 'empate') : 'pierde';
   const puntosDomino = (st, j) => T.puntos.domino(resDomino(st, j), st.manos.reduce((s, _, k) => k === j ? s : s + Domino.pips(st, k), 0), Domino.pips(st, j));
   const tituloDomino = (st, nombre) => st.fin.cerrado ? '🔒 Juego cerrado · ' + (st.fin.ganadores.length > 1 ? 'empate entre ' + st.fin.ganadores.map(nombre).join(' y ') : 'gana ' + nombre(st.fin.ganadores[0]) + ' con menos puntos')
-    : '🁫 ¡Dominó de ' + nombre(st.fin.ganadores[0]) + '!';
+    : '🔳 ¡Dominó de ' + nombre(st.fin.ganadores[0]) + '!';
 
   function jugarDomino() {
     const m = marco('domino');
@@ -639,7 +639,7 @@
   const NOTAS = {
     damas: '⚫ Mesa de 2: si juegas sola o solo, el bot ocupa el lugar libre; quien se une le quita el lugar al bot.',
     naval: '🚢 Partida 1 vs 1 solo entre dos personas, sin bots. Cada quien acomoda su flota en secreto.',
-    domino: '🁫 Mesa de 4: los bots completan los lugares libres y cada persona que entra quita un bot.',
+    domino: '🔳 Mesa de 4: los bots completan los lugares libres y cada persona que entra quita un bot.',
     parchis: '🎲 Mesa de 4: los bots completan los lugares libres y cada persona que entra quita un bot.',
   };
   function alCambiarJuego(juego) {
@@ -648,7 +648,7 @@
     if (n) { n.hidden = false; n.textContent = NOTAS[juego]; }
     if (w) w.hidden = juego === 'naval';
   }
-  const faltan = juego => ({ damas: '⚫ Falta tu rival: únete con otra persona o crea la partida con bots.', naval: '🚢 Espera a que se una tu rival: la batalla naval es 1 vs 1.', domino: '🁫 Se necesitan al menos 2 jugadores: invita a alguien o activa los bots.', parchis: '🎲 Se necesitan al menos 2 jugadores: invita a alguien o activa los bots.' }[juego] || '');
+  const faltan = juego => ({ damas: '⚫ Falta tu rival: únete con otra persona o crea la partida con bots.', naval: '🚢 Espera a que se una tu rival: la batalla naval es 1 vs 1.', domino: '🔳 Se necesitan al menos 2 jugadores: invita a alguien o activa los bots.', parchis: '🎲 Se necesitan al menos 2 jugadores: invita a alguien o activa los bots.' }[juego] || '');
 
   // ---------- 📖 Cómo se juega ----------
   const AYUDA = {
@@ -658,7 +658,7 @@
       '<li><b>Coronación:</b> el peón que llega a la última fila se convierte en <b>dama</b> 👑 y termina su turno. La dama mueve y come 1 casilla en las 4 diagonales (también hacia atrás).</li></ul>' +
       '<h3>Cómo termina</h3><ul><li>Gana quien deja a su rival sin piezas o sin movimientos.</li><li>Es <b>empate</b> si pasan 40 movimientos seguidos sin comer ni avanzar un peón.</li><li>En partida, cada turno dura 60 s: si se acaba, el bot mueve por ti. También puedes rendirte.</li></ul>' +
       '<h3>Cómo lo haces aquí</h3><p>Toca una de tus piezas (se marcan sus destinos) y luego la casilla a la que va. En un salto múltiple toca la casilla final.</p><p><b>Bot:</b> 🐣 Fácil juega al azar; 🦊 Difícil piensa 4 movimientos adelante.</p>',
-    domino: '<h2>🁫 Dominó</h2><p>Se juega con las 28 fichas del <b>doble seis</b>, de 2 a 4 jugadores. Cada quien recibe 7 fichas. <b>Gana quien se queda sin fichas.</b></p>' +
+    domino: '<h2>🔳 Dominó</h2><p>Se juega con las 28 fichas del <b>doble seis</b>, de 2 a 4 jugadores. Cada quien recibe 7 fichas. <b>Gana quien se queda sin fichas.</b></p>' +
       '<h3>Cómo se juega</h3><ol><li>Sale quien tiene la <b>mula</b> (ficha doble) más alta, empezando por la mula de seis.</li><li>Por turnos, cada quien pone una ficha que <b>embone</b> con uno de los dos extremos de la mesa: el número tiene que ser igual.</li>' +
       '<li>Si una ficha entra en los dos extremos, eliges el lado.</li><li>Si no tienes ficha que embone, <b>pasas</b> (aquí no se roba).</li></ol>' +
       '<h3>Juego cerrado</h3><p>Si nadie puede tirar, el juego se <b>cierra</b>: se suman los puntos de las fichas que le quedan a cada quien y gana quien tenga <b>menos</b>. Si hay empate, ganan los empatados.</p>' +

@@ -8,11 +8,12 @@
 require('./lib/entorno');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego, textoTarjeta, idsDe, contarMenu } = require('./lib/menu'); // menú por categorías (openspec: juegos-categorias)
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const TACTIL = { hasTouch: true, isMobile: true };
-const abrir = (b, email, viewport, contexto) => abrirPagina(b, { email, viejo: true, viewport, contexto: Object.assign({}, TACTIL, contexto || {}), out, etiqueta: email, dialogos: 'aceptar', ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-juego="golf"]' });
+const abrir = (b, email, viewport, contexto) => abrirPagina(b, { email, viejo: true, viewport, contexto: Object.assign({}, TACTIL, contexto || {}), out, etiqueta: email, dialogos: 'aceptar', ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
 const marcoDe = async (p, raiz = '') => (await p.waitForSelector(raiz + ' #arcade-frame', { timeout: 30000 })).contentFrame();
 const estado = fr => fr.evaluate(() => window.__golf.estado());
 const esperar = (fr, fn, arg, ms = 30000) => fr.waitForFunction(fn, arg, { timeout: ms });
@@ -62,13 +63,13 @@ const cabe = fr => fr.evaluate(() => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrir(b, 'marisol@example.com', { width: 390, height: 844 });
   p.on('pageerror', e => console.error('PILA', (e.stack || '').slice(0, 600)));
-  const tarjeta = await p.textContent('[data-juego="golf"]');
-  ok('catálogo: Golf en Arcade con ícono y descripción', tarjeta.includes('⛳') && tarjeta.includes('Golf') && /Minigolf/.test(tarjeta) && (await p.$$('.cat-arcade[data-juego="golf"]')).length === 1, tarjeta);
-  ok('catálogo: el menú muestra todos los juegos de la página (con Golf)', (await p.$$('[data-juego]')).length === await p.evaluate(() => JUEGOS.length));
+  const tarjeta = await textoTarjeta(p, 'golf');
+  ok('catálogo: Golf en Arcade con ícono y descripción', tarjeta.includes('⛳') && tarjeta.includes('Golf') && /Minigolf/.test(tarjeta) && (await idsDe(p, 'arcade')).filter(i => i === 'golf').length === 1, tarjeta);
+  ok('catálogo: el menú muestra todos los juegos de la página (con Golf)', (m => m.completo && m.ids.includes('golf'))(await contarMenu(p)));
   const puntosAntes = await p.evaluate(() => state.totalIndividual);
 
   // ---- Individual: menú y resortera con toques reales ----
-  await p.tap('[data-juego="golf"]');
+  await abrirJuego(p, 'golf', { tap: true });
   let fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   const menu = await fr.textContent('#ov-menu');
@@ -133,8 +134,8 @@ const cabe = fr => fr.evaluate(() => {
   ok('avance: 9 hoyos, un recorrido y mejor recorrido', Object.keys(prog2.datos.mejores).length === 9 && prog2.datos.recorridos === 1 && prog2.datos.mejorRecorrido >= 9, JSON.stringify(prog2.datos));
 
   // ---- Avance en el menú de práctica tras recargar ----
-  await p.reload(); await p.waitForSelector('[data-juego="golf"]', { timeout: 60000 });
-  await p.tap('[data-juego="golf"]'); fr = await marcoDe(p);
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'golf', { tap: true }); fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   ok('menú: resumen con estrellas y mejor recorrido', /\/27/.test(await fr.textContent('#menu-resumen')) && /Mejor recorrido/.test(await fr.textContent('#menu-resumen')));
   await fr.tap('[data-ir="practica"]');
@@ -162,8 +163,8 @@ const cabe = fr => fr.evaluate(() => {
   await sleep(120);
   ok('mando: A golpea', (await estado(fr)).animando || (await estado(fr)).golpes[0][0] === 1);
   await quieto(fr);
-  await p.reload(); await p.waitForSelector('[data-juego="golf"]', { timeout: 60000 });
-  await p.tap('[data-juego="golf"]'); fr = await marcoDe(p);
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'golf', { tap: true }); fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   ok('mando: la preferencia se recuerda al volver', (await fr.getAttribute('[data-control="mando"]', 'aria-pressed')) === 'true' && (await estado(fr)).control === 'mando');
   await fr.tap('[data-control="toques"]');
@@ -171,7 +172,7 @@ const cabe = fr => fr.evaluate(() => {
 
   // ---- 320 px y horizontal 844×390 ----
   const chico = await abrir(b, 'laura@example.com', { width: 320, height: 568 });
-  await chico.tap('[data-juego="golf"]');
+  await abrirJuego(chico, 'golf', { tap: true });
   const fc = await marcoDe(chico);
   await fc.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await chico.screenshot({ path: 'golf-320-menu.png' });
@@ -182,7 +183,7 @@ const cabe = fr => fr.evaluate(() => {
   await chico.screenshot({ path: 'golf-320-juego.png' });
   await chico.context().close();
   const hor = await abrir(b, 'laura@example.com', { width: 844, height: 390 });
-  await hor.tap('[data-juego="golf"]');
+  await abrirJuego(hor, 'golf', { tap: true });
   const fh = await marcoDe(hor);
   await fh.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fh.tap('[data-ir="recorrido"]');

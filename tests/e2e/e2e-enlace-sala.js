@@ -6,7 +6,7 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const host = await abrirPagina(b, { email: 'marisol@example.com', contexto: { permissions: ['clipboard-read', 'clipboard-write'] }, out, etiqueta: '', ruta: '/juegos.html' });
-  await host.waitForSelector('[data-juego]');
+  await host.waitForSelector('[data-menu]');
   await host.click('[data-tab="partidas"]'); await host.selectOption('#p-juego', 'basta-es'); await host.click('#f-crear button[type=submit]');
   await host.waitForSelector('[data-p="empezar"]');
   const codigo = (await host.textContent('.letra')).trim();

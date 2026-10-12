@@ -5,6 +5,7 @@ require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y
 const { chromium } = require('playwright');
 const fs = require('fs');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego, idsDe, textoTarjeta } = require('./lib/menu'); // menú por categorías (openspec: juegos-categorias)
 const d = JSON.parse(fs.readFileSync(process.env.DATOS + '/ingles.json', 'utf8'));
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -25,7 +26,7 @@ const TXT_T = { pasado: '⏪ Pasado', presente: '▶️ Presente', futuro: '⏩ 
 const textosOpciones = (p, sel = '[data-opt]') => p.$$eval(sel, bs => bs.map(b => b.childNodes[b.childNodes.length - 1].textContent.trim()));
 async function inicio(p) {
   if (await p.$('[data-a="salir"]')) await p.click('[data-a="salir"]');
-  await p.waitForSelector('[data-juego]');
+  await p.waitForSelector('[data-menu]');
 }
 // Respuesta correcta de la pregunta de la Máquina del tiempo que está en pantalla.
 async function correctaTiempos(p) {
@@ -38,13 +39,13 @@ async function correctaTiempos(p) {
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const p = await abrirPagina(b, { email: 'marisol@example.com', tiempo: 0.25, out, ruta: '/juegos.html', esperar: '[data-juego]', dialogos: 'aceptar' });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', tiempo: 0.25, out, ruta: '/juegos.html', esperar: '[data-menu]', dialogos: 'aceptar' });
 
   // ---- Catálogo ----
-  ok('hub: ⏳ Máquina del tiempo en Inglés', !!(await p.$('.cat-ingles[data-juego="en-tiempos"]')) && /Máquina del tiempo/.test(await p.textContent('[data-juego="en-tiempos"]')));
+  ok('hub: ⏳ Máquina del tiempo en Inglés', (await idsDe(p, 'ingles')).includes('en-tiempos') && /Máquina del tiempo/.test(await textoTarjeta(p, 'en-tiempos')));
 
   // ---- Selector de tema en Completa y responde ----
-  await p.click('[data-juego="en-frases"]'); await p.waitForSelector('[data-tema]');
+  await abrirJuego(p, 'en-frases'); await p.waitForSelector('[data-tema]');
   const temas = await p.$$eval('[data-tema]', bs => bs.map(x => x.dataset.tema));
   ok('selector: Todo · To be · Presente · Pasado · Futuro', JSON.stringify(temas) === JSON.stringify(['todo', 'tobe', 'presente', 'pasado', 'futuro']), temas.join(','));
   await p.screenshot({ path: 'ingles-selector.png' });
@@ -72,7 +73,7 @@ async function correctaTiempos(p) {
   await inicio(p);
 
   // ---- Selector en Ordena la oración (Futuro) ----
-  await p.click('[data-juego="en-ordena"]'); await p.waitForSelector('[data-tema="futuro"]');
+  await abrirJuego(p, 'en-ordena'); await p.waitForSelector('[data-tema="futuro"]');
   await p.click('[data-tema="futuro"]'); await p.waitForSelector('[data-poner]');
   const pista = (await p.textContent('.q-card .sub')).replace('💬', '').trim();
   ok('Ordena con tema Futuro: la oración es de futuro con will', oracionesDe('futuro').has(pista), pista);
@@ -92,7 +93,7 @@ async function correctaTiempos(p) {
   await inicio(p);
 
   // ---- Máquina del tiempo en solitario ----
-  await p.click('[data-juego="en-tiempos"]'); await p.waitForSelector('.q-card .q');
+  await abrirJuego(p, 'en-tiempos'); await p.waitForSelector('.q-card .q');
   ok('Máquina: primero pregunta en qué tiempo está, con 3 opciones', /En qué tiempo/.test(await p.textContent('.q-card .sub')) && (await p.$$('[data-opt]')).length === 3);
   // Paso 0 mal a propósito
   {

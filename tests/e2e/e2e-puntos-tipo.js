@@ -3,16 +3,17 @@ require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y
 const { chromium } = require('playwright');
 const API = process.env.API;
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const num = t => Number(String(t).replace(/[^0-9]/g, '')) || 0;
-const jugador = (b, email) => abrirPagina(b, { email, viejo: true, ingles: true, tiempo: 0.2, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
+const jugador = (b, email) => abrirPagina(b, { email, viejo: true, ingles: true, tiempo: 0.2, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-menu]' });
 async function jugarCalculo(p) {
-  await p.click('[data-juego="mente-calculo"]');
+  await abrirJuego(p, 'mente-calculo');
   const t0 = Date.now(); while (!(await p.$('.result .score')) && Date.now() - t0 < 60000) { const o = await p.$('.opt:not(.ok):not(.bad)'); if (o) await o.click().catch(() => {}); await sleep(120); }
   await p.waitForFunction(() => /a tus individuales|No se guardaron/.test((document.querySelector('.result') || {}).textContent || ''), null, { timeout: 30000 });
   const pts = num(await p.textContent('.result .score'));
-  await p.click('[data-a="hub"]'); await p.waitForSelector('[data-juego]');
+  await p.click('[data-a="hub"]'); await p.waitForSelector('[data-menu]');
   return pts;
 }
 (async () => {

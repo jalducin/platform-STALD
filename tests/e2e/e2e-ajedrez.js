@@ -2,17 +2,18 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const sq = s => (8 - Number(s[1])) * 16 + 'abcdefgh'.indexOf(s[0]);
-const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, viewport: { width: 390, height: 900 }, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
+const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, viewport: { width: 390, height: 900 }, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-menu]' });
 const mover = async (p, de, a) => { await p.click('[data-aj="' + sq(de) + '"]'); await sleep(120); await p.click('[data-aj="' + sq(a) + '"]'); };
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   // ---- Individual ----
   const p = await pagina(b, 'marisol@example.com', 0.3);
-  await p.click('[data-juego="ajedrez"]'); await p.click('[data-ayuda="ajedrez"]');
+  await abrirJuego(p, 'ajedrez'); await p.click('[data-ayuda="ajedrez"]');
   ok('ayuda: piezas, enroque, captura al paso y mate', /Caballo[\s\S]*Enroque[\s\S]*Captura al paso[\s\S]*Jaque mate/.test(await (await p.waitForSelector('dialog.ayuda[open]')).innerText()));
   await p.keyboard.press('Escape');
   await p.click('[data-aj-nivel="1"]'); await p.click('[data-aj-go]'); await p.waitForSelector('.aj-tablero');
