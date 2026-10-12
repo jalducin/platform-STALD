@@ -10,7 +10,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 1, viewport: { width: 390, height: 900 }, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-juego]' });
   const ids = await p.$$eval('[data-juego]', bs => bs.map(x => x.dataset.juego));
-  ok('menú: 24 juegos sin los absorbidos (con Máquina del tiempo y Arcade)', ids.length === 24 && !ids.some(i => ['en-preguntas', 'es-acentos', 'es-sinonimos', 'mente-secuencias'].includes(i)), ids.length + ' juegos');
+  ok('menú: 27 juegos sin los absorbidos (con Máquina del tiempo, Arcade y salas grandes)', ids.length === 27 && !ids.some(i => ['en-preguntas', 'es-acentos', 'es-sinonimos', 'mente-secuencias'].includes(i)), ids.length + ' juegos');
   ok('menú: títulos fusionados', /Completa y responde/.test(await p.textContent('[data-juego="en-frases"]')) && /Cálculo y secuencias/.test(await p.textContent('[data-juego="mente-calculo"]')) && /acentos, sinónimos/.test(await p.textContent('[data-juego="es-ortografia"]')));
   // Vuelve al inicio saliendo con ✕: navegar a mitad de un juego que se reanuda ofrecería continuarlo
   // (openspec: juegos-recarga).

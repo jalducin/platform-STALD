@@ -4,6 +4,7 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import "../juegos/bingo.js";
 import "../juegos/mesas.js";
+import "../juegos/blackjack.js";
 import { CATALOGO, clearCacheJuegos, handleJuegos } from "./juegos.ts";
 import { clearCacheSalas, enMesa, JUEGOS_PARTIDA } from "./salas.ts";
 import { BINGO, calendarioDibuja, DIBUJA, normalizarPalabra, PALABRAS_DIBUJA, palabraDibuja } from "./salas_grandes.ts";
@@ -11,6 +12,7 @@ import { MemoryStore } from "./store.ts";
 
 const B = (globalThis as any).Bingo;
 const Mesas = (globalThis as any).Mesas;
+const BJ = (globalThis as any).Blackjack;
 const PERSONAS = ["marisol", "angel", "laura", "jesus", "fernando", "sofy", "rocio", "beto", "ana", "luis", "toño", "lupe", "nico"];
 const ingles = PERSONAS.map((n) => ({ alumno: n[0].toUpperCase() + n.slice(1), userEmails: [`${n}@example.com`], userNames: [n] }));
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s });
@@ -126,6 +128,72 @@ Deno.test("bingo: el servidor valida el bingo (falso 409; verdadero se guarda un
 });
 
 // ---------------------------------------------------------------- Blackjack
+// Reglas del motor (juegos/blackjack.js). Cartas: id = palo·13 + rango (rango 0 = 2 … 8 = 10, 9 J, 10 Q, 11 K, 12 A).
+const carta = (r: string) => ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"].indexOf(r);
+// Mesa de prueba con el mazo en el orden en que salen las cartas (se reparte 1 a cada quien, 1 a la banca, y otra vuelta).
+function mesa(n: number, salen: string[], fichas = 500) {
+  const st = BJ.nueva(Array.from({ length: n }, (_, i) => ({ id: "j" + i, nombre: "J" + i })), { fichas });
+  BJ.mano(st, () => 0.5);
+  st.mazo = salen.map(carta).reverse();
+  return st;
+}
+Deno.test("blackjack: valores, ases suaves y blackjack natural", () => {
+  assertEquals(BJ.total([carta("A"), carta("6")]), { v: 17, suave: true });
+  assertEquals(BJ.total([carta("A"), carta("6"), carta("9")]).v, 16, "el as baja a 1");
+  assertEquals(BJ.total([carta("A"), carta("A"), carta("K")]).v, 12);
+  assertEquals([BJ.esBJ([carta("A"), carta("Q")]), BJ.esBJ([carta("7"), carta("7"), carta("7")])], [true, false]);
+  assertEquals([BJ.pagoBJ(20), BJ.pagoBJ(5), BJ.pagoBJ(25)], [50, 10, 60], "3 a 2 en múltiplos de 5");
+});
+Deno.test("blackjack: plantarse con 19 contra 18 paga el doble; la banca pide hasta 17", () => {
+  const st = mesa(1, ["10", "10", "9", "6", "2"]); // tú 10+9 = 19; banca 10+6 = 16, pide 2 → 18
+  assertEquals(BJ.actuar(st, { accion: "apostar", monto: 7 }), false, "no es múltiplo de 5");
+  assertEquals(BJ.actuar(st, { accion: "apostar", monto: 505 }), false, "más de tus fichas");
+  assertEquals(BJ.actuar(st, { accion: "apostar", monto: 20 }), true);
+  assertEquals([st.fase, st.jugadores[0].fichas, BJ.total(st.cartas[0]).v], ["turnos", 480, 19]);
+  assertEquals(BJ.actuar(st, { accion: "plantarse" }), true);
+  assertEquals([st.fase, BJ.total(st.banca).v, st.resultado.premios[0], st.jugadores[0].fichas], ["fin", 18, 40, 520]);
+});
+Deno.test("blackjack: pasarse, doblar, empate, blackjack y la banca con blackjack", () => {
+  let st = mesa(1, ["10", "10", "6", "7", "K"]); // tú 16, pides K → 26
+  BJ.actuar(st, { accion: "apostar", monto: 50 }); BJ.actuar(st, { accion: "pedir" });
+  assertEquals([st.estado[0], st.resultado.premios[0], st.jugadores[0].fichas, st.banca.length], ["pasado", 0, 450, 2], "la banca no pide si nadie sigue");
+  st = mesa(1, ["5", "10", "6", "7", "K"]); // tú 11, doblas y recibes K → 21; banca 17
+  BJ.actuar(st, { accion: "apostar", monto: 30 });
+  assertEquals(BJ.opciones(st).doblar, true);
+  BJ.actuar(st, { accion: "doblar" });
+  assertEquals([st.apuesta[0], BJ.total(st.cartas[0]).v, st.resultado.premios[0], st.jugadores[0].fichas], [60, 21, 120, 560]);
+  st = mesa(1, ["10", "10", "8", "8"]); // 18 contra 18
+  BJ.actuar(st, { accion: "apostar", monto: 10 }); BJ.actuar(st, { accion: "plantarse" });
+  assertEquals(st.resultado.neto[0], 0, "empate: recuperas tu apuesta");
+  st = mesa(1, ["A", "10", "K", "7"]); // blackjack natural contra 17
+  BJ.actuar(st, { accion: "apostar", monto: 20 });
+  assertEquals([st.estado[0], st.fase, st.resultado.premios[0]], ["bj", "fin", 50]);
+  st = mesa(2, ["10", "9", "A", "10", "8", "K"]); // la banca A+K: se paga de inmediato
+  BJ.actuar(st, { accion: "apostar", monto: 10 }); BJ.actuar(st, { accion: "apostar", monto: 20 });
+  assertEquals([st.fase, st.resultado.bjBanca, st.resultado.premios], ["fin", true, [0, 0]]);
+});
+Deno.test("blackjack: turnos en orden, auto al vencer y bots; termina en 8 manos o sin fichas", () => {
+  const st = mesa(2, ["10", "9", "10", "8", "7", "7", "10", "10"]);
+  assertEquals(st.turno, 0);
+  BJ.actuar(st, BJ.auto(st));
+  assertEquals([st.apuesta[0], st.turno], [5, 1], "al vencer el turno: apuesta mínima");
+  BJ.actuar(st, { accion: "apostar", monto: 10 });
+  assertEquals(BJ.auto(st), { accion: "plantarse" });
+  const b = BJ.bot(st, () => 0.3);
+  assert(["pedir", "plantarse", "doblar"].includes(b.accion));
+  const p = BJ.nueva([{ id: "a", nombre: "A" }]);
+  let manos = 0;
+  for (BJ.mano(p, () => 0.4); !p.terminada; BJ.mano(p, () => 0.4)) {
+    manos++;
+    for (let g = 0; g < 30 && p.fase !== "fin"; g++) BJ.actuar(p, BJ.bot(p, () => 0.4));
+  }
+  assertEquals(manos <= 8, true);
+  const quebrado = mesa(1, ["10", "10", "6", "7", "K"], 5);
+  BJ.actuar(quebrado, { accion: "apostar", monto: 5 }); BJ.actuar(quebrado, { accion: "pedir" });
+  BJ.mano(quebrado, () => 0.5);
+  assertEquals(quebrado.terminada, true, "sin fichas se acaba");
+});
+
 Deno.test("blackjack: acciones y montos en múltiplos de 5 (como el póker)", async () => {
   const c = ctx();
   const codigo = await abrir(c, "blackjack", ["marisol", "angel"]);
@@ -301,6 +369,9 @@ Deno.test("sopa en sala: avance que no baja, final con tiempo y tiempo imposible
   const c = ctx();
   const codigo = await abrir(c, "mente-sopa", ["marisol", "angel"]);
   const s = await c.sala(codigo);
+  c.ir(s.inicio + 1_500);
+  assertEquals((await responder(c, codigo, "angel", { resultado: { ms: 1_400, encontradas: 1, fin: false } })).status, 200, "el avance puede llegar en el primer segundo");
+  assertEquals((await responder(c, codigo, "marisol", { resultado: { ms: 1_400, encontradas: 6, fin: true } })).body.error, "resultado_invalido", "terminar tan rápido no");
   c.ir(s.inicio + 20_000);
   assertEquals((await responder(c, codigo, "angel", { resultado: { ms: 19_800, encontradas: 2, fin: false } })).status, 200);
   c.ir(s.inicio + 25_000);

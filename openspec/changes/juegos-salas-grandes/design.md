@@ -13,14 +13,17 @@
 
 ### 1. Archivos
 - `server/salas_grandes.ts`: reglas del servidor de los 5 juegos (opciones, empezar, jugadas, respuestas y la vista
-  de Dibuja). `server/salas.ts` solo llama a sus funciones en 6 puntos (opciones al crear, cupo y bots, empezar,
-  validar jugada, respuesta y GET) y quita `secreto` junto con `canal` en `sinCanal`.
-- Cliente: `juegos/bingo.js`, `juegos/blackjack.js`, `juegos/dibuja.js` y `juegos/memo-sopa-sala.js`. Cada uno trae
+  de Dibuja). `server/salas.ts` solo llama a sus funciones en 5 puntos (opciones al crear, empezar, validar jugada,
+  respuesta y GET) y quita `secreto` junto con `canal` en `sinCanal`.
+- **Mesas** (regla común `mesas-con-bots`, ya en `main`): cupo, asientos con bots, mínimo y bots fijos van en `MESAS` de
+  `server/salas.ts` y en `juegos/mesas.js` (iguales): Bingo, Memorama y Sopa `{ max: 30, min: 1 }` (bots aparte),
+  Blackjack `{ max: 6, asientos: 3, min: 1 }` (la banca no ocupa asiento; cada persona que entra quita un bot) y
+  Dibuja `{ max: 12, min: 3, bots: 'nunca' }`. `participantes()` de `juegos.html` arma la mesa con `Mesas.botsEnMesa`.
+- Cliente: `juegos/salas-grandes.js` (registro y utilidades comunes), `juegos/bingo.js`, `juegos/blackjack.js`, `juegos/dibuja.js` y `juegos/memo-sopa-sala.js`. Cada uno trae
   su lógica pura (sin DOM, usable desde Deno), sus pantallas y su CSS (se inyecta una vez). Se registran en
   `globalThis.SALAS_GRANDES[juego] = { preparar, pintar, clic, participantes?, opcionesHtml?, opciones?, nota? }`.
-- `juegos.html` agrega: 4 `<script>`, 3 tarjetas, 5 ids en `JUEGOS_PARTIDA` y `TIEMPO_REAL`, y una línea en
-  `entrarSala` (contenido), `participantes`, `pintarSala`, el clic de la sala, `crearPartida`, el cambio de juego del
-  formulario y `ayuda`.
+- `juegos.html` agrega: 5 `<script>`, 3 tarjetas, 5 ids en `JUEGOS_PARTIDA` y 4 en `TIEMPO_REAL`, y una línea en
+  `entrarSala` (contenido), `pintarSala`, el clic de la sala, el formulario y `crearPartida` y `ayuda`.
 
 ### 2. Bingo
 - Canto: `orden(seed)` = barajar 1–75 con `rng(seed, 'bingo-orden')`. El número k (1…75) sale en
@@ -35,7 +38,8 @@
   No se valida contra lo que la persona marcó: marcar es ayuda visual; lo que cuenta es lo cantado.
 - Bots: gritan 1.5 s después de completar (como en la Lotería). Gana el grito válido más temprano (personas por su
   `bingo.t`, bots por su hora calculada). La paridad cliente/servidor (`orden`, `carton`, `cumple`) se prueba en
-  Deno importando `juegos/bingo.js`.
+  Deno importando `juegos/bingo.js`. El canto en sala usa el reloj real (no `__TIEMPO_JUEGOS`) porque lo valida el
+  servidor.
 - Puntos: quien gana 300 (línea), 400 (esquinas) o 600 (lleno) + 5 por cada número que faltaba cantar (tope 1000);
   los demás, 10 por cada número de su cartón que salió.
 
@@ -49,12 +53,13 @@
   termina antes si nadie tiene 5 fichas.
 - Sala: igual que el póker: cada jugada lleva su paso `n` y todos reproducen la mesa; bots a 1.5 s y turno de 30 s
   (al vencer: apuesta mínima o plantarse). El servidor valida `accion ∈ {apostar, pedir, plantarse, doblar}` y que
-  `apostar` traiga `monto` entero, múltiplo de 5 y ≥ 5; las demás acciones no llevan monto. Cupo 6 personas; los bots
-  completan hasta 6 asientos. Sin bots y con una sola persona → 409 `faltan_jugadores` al empezar.
+  `apostar` traiga `monto` entero, múltiplo de 5 y ≥ 5; las demás acciones no llevan monto. Mesa de 3 asientos y hasta
+  6 personas: 1 persona + 2 bots, 2 + 1, 3 o más sin bots; una persona sola (sin bots) juega contra la banca.
 - Puntos: tus fichas finales (tope 1000).
 
 ### 4. Dibuja y adivina
-- Solo personas (sin bots), de 3 a 12: cupo 12 y `empezar` con menos de 3 → 409 `faltan_jugadores`.
+- Solo personas (sin bots), de 3 a 12 (mesa `{ max: 12, min: 3, bots: 'nunca' }`): con menos de 3 → 409
+  `faltan_jugadores`.
 - **Secreto**: al empezar, el servidor guarda `sala.secreto` (hex aleatorio). `sinCanal` lo quita de toda respuesta
   y de la publicación de Realtime. La palabra del turno i es `PALABRAS[perm(secreto)[i]]`, con `PALABRAS` = el
   vocabulario de `juegos/datos/ingles.json` (importado en el servidor como JSON) de una o dos palabras en minúsculas.
@@ -89,6 +94,7 @@
     no baja; `fin` con todas trae `ms`; tras el `fin`, se ignora lo demás.
 - Opción `sala.opciones.gana` del Memorama: `tiempo` (por omisión; desempata errores) o `errores` (desempata
   tiempo). Sopa: más palabras y luego menos tiempo.
+- El mínimo de tiempo solo vale para terminar: el avance de la sopa puede llegar en los primeros segundos.
 - Bots con resultados creíbles por semilla. Podio cuando todas las personas terminan o se vence el límite (+5 s).
 - Puntos por lugar: 600, 480, 400, 340, 290, 250, 220, 200, 180, 160 y luego 150; sin terminar, Memorama da 30 por
   par y Sopa 60 por palabra.

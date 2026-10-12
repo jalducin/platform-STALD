@@ -31,7 +31,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   let p = await nuevaPagina(b, 'marisol@example.com');
   await p.goto(BASE + '/juegos.html' + Q);
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  ok('hub: 24 juegos (fusión del Sprint 4, Máquina del tiempo y Arcade) en 6 categorías', (await p.$$('[data-juego]')).length === 24 && (await p.$$('main h2')).length === 6);
+  ok('hub: 27 juegos (fusión del Sprint 4, Máquina del tiempo, Arcade y salas grandes) en 6 categorías', (await p.$$('[data-juego]')).length === 27 && (await p.$$('main h2')).length === 6);
   ok('chip con el nombre', (await p.textContent('#chip')).includes('Marisol'));
   await p.screenshot({ path: 'juegos-hub.png', fullPage: true });
 

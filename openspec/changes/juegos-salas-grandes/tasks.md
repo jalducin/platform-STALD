@@ -11,9 +11,14 @@
   imposible y repetido)
 - [ ] 1.2 `server/salas_grandes.ts` y ganchos en `server/salas.ts` (`// juegos-salas-grandes`)
 - [ ] 1.3 `bingo`, `blackjack` y `dibuja` en `CATALOGO` de `server/juegos.ts`
+- [ ] 1.4 Integrar `origin/main` (mesas comunes, `mesas-con-bots`): renglones de los 5 juegos en `MESAS` y
+  `juegos/mesas.js`; quitar cupo y mínimo propios; pruebas de la mesa de Blackjack (cada persona quita un bot)
+- [ ] 1.5 Pruebas del motor de Blackjack (`juegos/blackjack.js` en Deno): valores y ases, banca hasta 17, pagos,
+  doblar, blackjack natural, turnos y fin
 
 ## 2. Cliente
 
+- [ ] 2.0 `juegos/salas-grandes.js`: registro `SALAS_GRANDES`, cuenta regresiva, barra, formulario y ayuda
 - [ ] 2.1 `juegos/bingo.js`: reglas puras, individual contra bots y sala (canto, cartón, ¡Bingo! validado, podio)
 - [ ] 2.2 `juegos/blackjack.js`: motor, fichas, individual contra la banca y sala por pasos
 - [ ] 2.3 `juegos/dibuja.js`: lienzo, trazo simplificado y por lotes, adivinar, turnos, pausa y práctica individual
@@ -25,7 +30,7 @@
 
 - [ ] 3.1 Conteo del menú en `e2e-juegos`, `e2e-fusion` y `e2e-clasicos` (24 → 27 juegos; Clásicos 7 → 9)
 - [ ] 3.2 E2E nueva `tests/e2e/e2e-salas-grandes.js` registrada en `tests/e2e/correr.sh` (fase `base`): Bingo con 3
-  personas y bots, Blackjack individual y en sala, Dibuja y adivina con 3 personas, Memorama y Sopa en sala y
+  personas y bots, Blackjack individual y en sala (mesa: 1 persona + 2 bots y, al entrar otra, un bot menos), Dibuja y adivina con 3 personas, Memorama y Sopa en sala y
   capturas a 390 px
 
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)

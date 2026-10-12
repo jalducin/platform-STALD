@@ -34,8 +34,8 @@ y 8 manos.
   termina el turno.
 - La banca SHALL pedir mientras tenga menos de 17. Ganar paga el doble de la apuesta, el empate la devuelve y el
   blackjack natural paga 3 a 2 (en múltiplos de 5).
-- Individual contra la banca; en partida, de 2 a 6 jugadores (personas y bots) contra la banca, con turnos de 30 s
-  (al vencer: apuesta mínima o plantarse).
+- Individual contra la banca; en partida, hasta 6 personas contra la banca en una mesa de 3 asientos: con bots, cada
+  persona que entra quita un bot (1 persona + 2 bots, 2 + 1); turnos de 30 s (al vencer: apuesta mínima o plantarse).
 - En partida, el servidor SHALL aceptar solo `apostar`, `pedir`, `plantarse` y `doblar`; `apostar` SHALL traer un
   `monto` entero, múltiplo de 5 y de al menos 5, y las demás acciones no llevan monto; si no, 400 `jugada_invalida`.
 - Puntos: las fichas con que terminas (tope 1000).
@@ -48,6 +48,10 @@ y 8 manos.
 #### Scenario: Monto inválido en partida
 - **WHEN** alguien envía `apostar` con `monto: 7` o sin monto
 - **THEN** el servidor responde 400 `jugada_invalida`
+
+#### Scenario: Cada persona que entra quita un bot
+- **WHEN** Marisol crea una sala de Blackjack con bots y luego entra Angel
+- **THEN** la sala de espera pasa de «1 persona + 2 bots» a «2 personas + 1 bot»
 
 #### Scenario: Mesa compartida
 - **WHEN** dos personas y un bot juegan en la misma sala

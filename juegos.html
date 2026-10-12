@@ -519,6 +519,12 @@
 <script src="juegos/ajedrez.js?v=1"></script>
 <script src="juegos/arcade.js?v=1"></script>
 <script src="juegos/ingles-gramatica.js?v=1"></script>
+<!-- juegos-salas-grandes: Bingo, Blackjack, Dibuja y adivina, y Memorama y Sopa en partida -->
+<script src="juegos/salas-grandes.js?v=1"></script>
+<script src="juegos/bingo.js?v=1"></script>
+<script src="juegos/blackjack.js?v=1"></script>
+<script src="juegos/dibuja.js?v=1"></script>
+<script src="juegos/memo-sopa-sala.js?v=1"></script>
 <script src="comun/auth.js?v=7"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
@@ -680,6 +686,10 @@
     { id: 'conquian', cat: 'clasicos', emoji: '🪙', t: 'Conquián', d: 'Baraja española: baja tercias y escaleras hasta juntar 9 cartas.', jugar: () => elegirConquian() },
     { id: 'plataformas', cat: 'arcade', emoji: '🦎', t: 'Axo y los 12 mundos', d: 'Plataformas: salta, junta monedas y vence al jefe de cada mundo.', jugar: () => jugarArcade('plataformas') },
     { id: 'karts', cat: 'arcade', emoji: '🏎️', t: 'Karts Turbo', d: 'Carreras: derrapa, usa ítems y gana la copa contra 7 rivales.', jugar: () => jugarArcade('karts') },
+    // juegos-salas-grandes
+    { id: 'dibuja', cat: 'ingles', emoji: '🎨', t: 'Dibuja y adivina', d: 'Por turnos: dibuja una palabra en inglés y adivina la de los demás (3 a 12).', jugar: () => elegirDibuja() },
+    { id: 'bingo', cat: 'clasicos', emoji: '🎱', t: 'Bingo', d: '75 números y tu cartón: línea, esquinas o lleno. ¡Para salas de hasta 30!', jugar: () => elegirBingo() },
+    { id: 'blackjack', cat: 'clasicos', emoji: '🂡', t: 'Blackjack (21)', d: 'Acércate a 21 sin pasarte y gánale a la banca, con fichas de juego.', jugar: () => elegirBlackjack() },
   ];
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
 
@@ -2611,6 +2621,7 @@
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
   const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts'];
+  JUEGOS_PARTIDA.push(...Object.keys(SALAS_GRANDES)); // juegos-salas-grandes: bingo, blackjack, dibuja, en-memorama, mente-sopa
   const ARCADE = new Set(['plataformas', 'karts']); // carreras en sala (openspec: juegos-plataformas-karts)
   const BOT_EXTRA = { id: 'bot-chonita', nombre: 'BOT-CHONITA', acierto: 0.5, avatar: { emoji: '👵', color: '#a855f7' } }; // 3.er bot para completar la Brisca
   const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
@@ -2702,6 +2713,7 @@
   const ahoraServidor = () => Date.now() + sala.offset;
 
   const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker', 'brisca', 'conquian', 'ajedrez']);
+  ['bingo', 'blackjack', 'dibuja', 'mente-sopa'].forEach(j => TIEMPO_REAL.add(j)); // juegos-salas-grandes
 
   // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
   // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -2766,6 +2778,7 @@
       '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select></div>' +
       '<div id="p-mapa-wrap" hidden><label for="p-mapa">Nivel o pista</label><select id="p-mapa" class="sel"></select></div>' +
       '<div id="p-tema-wrap" hidden><label for="p-tema">Tema</label><select id="p-tema" class="sel">' + InglesGramatica.TEMAS.map(t => '<option value="' + t.id + '">' + t.emoji + ' ' + escapeHtml(t.t) + '</option>').join('') + '</select></div>' +
+      '<div id="p-grandes-wrap" hidden></div>' + // juegos-salas-grandes: figura del Bingo, criterio del Memorama
       '<div id="p-cat-wrap" hidden><label for="p-cat">Maratón</label><select id="p-cat" class="sel"><option value="todas">🌈 Todas mezcladas</option></select></div>' +
       '<label class="check" id="p-bots-wrap"><input id="p-bots" type="checkbox" checked><span>Incluir 2 bots (BOT-VACHIRA y BOT-ISAGII) que contestan al azar</span></label>' +
       '<div class="muted" id="p-bots-nota" hidden style="font-size:.82rem;margin:6px 0"></div>' +
@@ -2790,7 +2803,7 @@
     try { history.replaceState(history.state, '', urlConSala(codigo)); } catch (e) { /* sin historial */ }
     modoPartida(true);
     const j = juegoPorId(sala.estado.sala.juego);
-    const preparar = ['una', 'poker', 'brisca', 'conquian', 'ajedrez'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+    const preparar = SALAS_GRANDES[sala.estado.sala.juego] ? Promise.resolve(SALAS_GRANDES[sala.estado.sala.juego].preparar()) : /* juegos-salas-grandes */ ['una', 'poker', 'brisca', 'conquian', 'ajedrez'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
     sala.contenido = await preparar;
     // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
     // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
@@ -2868,6 +2881,7 @@
     if (s.juego === 'brisca' || s.juego === 'conquian') return pintarCartasSala(body, s.juego);
     if (s.juego === 'ajedrez') return pintarAjedrezSala(body);
     if (ARCADE.has(s.juego)) return pintarArcadeSala(body);
+    if (SALAS_GRANDES[s.juego]) return SALAS_GRANDES[s.juego].pintar(body); // juegos-salas-grandes
     return pintarPreguntaSala(body);
   }
 
@@ -3775,6 +3789,7 @@
   async function crearPartida() {
     const juego = document.getElementById('p-juego').value;
     const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
+    Object.assign(opciones, SalasGrandes.opciones(juego)); // juegos-salas-grandes
     const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
     if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     entrarSala(r.body.codigo);
@@ -3993,7 +4008,7 @@
   };
   function ayuda(id) {
     const d = document.createElement('dialog'); d.className = 'ayuda'; d.setAttribute('aria-label', 'Cómo se juega');
-    d.innerHTML = (AYUDA[id] || '<p>Pronto.</p>') + '<div class="row-btns"><button class="btn" data-cerrar-ayuda autofocus>Entendido</button></div>';
+    d.innerHTML = (AYUDA[id] || AYUDA_GRANDES[id] || '<p>Pronto.</p>') /* juegos-salas-grandes */ + '<div class="row-btns"><button class="btn" data-cerrar-ayuda autofocus>Entendido</button></div>';
     document.body.appendChild(d);
     d.addEventListener('close', () => d.remove());
     d.addEventListener('click', e => { if (e.target.closest('[data-cerrar-ayuda]') || e.target === d) d.close(); });
@@ -4005,6 +4020,7 @@
   app.addEventListener('click', e => {
     const t = e.target.closest('[data-tab]'); if (t) { limpiar(); olvidarRevancha(); return pantallaHub(t.dataset.tab); }
     const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
+    if (SalasGrandes.clic(e)) return; // juegos-salas-grandes
     if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
     if (sala.estado && sala.estado.sala.juego === 'poker' && document.getElementById('p-body') && e.target.closest('[data-pk]')) { clicPokerSala(e); return; }
     if (sala.estado && ['brisca', 'conquian'].includes(sala.estado.sala.juego) && document.getElementById('p-body') && clicCartasSala(e)) return;
@@ -4049,6 +4065,7 @@
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez'; opcionesMapaArcade(e.target.value); document.getElementById('p-tema-wrap').hidden = e.target.value !== 'en-frases';
     const nota = { ajedrez: '♟️ Partida 1 vs 1 solo entre dos personas: quien crea y quien se une. Sin bots.', brisca: '🏆 Se juega entre 4 en parejas: si faltan personas, se completa con bots. Máximo 4.' }[e.target.value];
     document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || ''; } });
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') SalasGrandes.formulario(e.target.value); }); // juegos-salas-grandes
   app.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
   });

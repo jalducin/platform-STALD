@@ -60,7 +60,7 @@
   .bg-bola span { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; background: #fff; font-weight: 900; font-size: 1.55rem; }
   .bg-bola small { display: block; font-size: .7rem; font-weight: 800; color: var(--bgc, #2563eb); }
   .bg-bola.entra { animation: bg-rueda .6s ease-out; }
-  @keyframes bg-rueda { from { transform: translateY(-14px) rotate(-200deg) scale(.6); opacity: .2; } to { transform: none; opacity: 1; } }
+  @keyframes bg-rueda { from { transform: translateY(-16px) scale(.6); opacity: .2; } to { transform: none; opacity: 1; } }
   .bg-lado { flex: 1; min-width: 0; font-size: .85rem; }
   .bg-hist { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
   .bg-hist span { min-width: 30px; padding: 2px 5px; border-radius: 999px; background: var(--card); border: 1.5px solid var(--bgc); font-weight: 800; font-size: .72rem; text-align: center; }
@@ -90,7 +90,7 @@
   const histHtml = lista => lista.map(n => '<span style="--bgc:' + colorDe(n) + '">' + letraDe(n) + n + '</span>').join('');
   function cartonHtml(t, marcas, attr) {
     return '<div class="bg-carton" role="grid" aria-label="Tu cartón">' + LETRAS.split('').map(l => '<div class="bg-cab" aria-hidden="true">' + l + '</div>').join('') +
-      t.map((n, i) => n === 0 ? '<button class="bg-cell libre marcada" ' + attr + '="' + i + '" aria-label="Casilla libre" disabled>⭐</button>'
+      t.map((n, i) => n === 0 ? '<button class="bg-cell libre" ' + attr + '="' + i + '" aria-label="Casilla libre" disabled>⭐</button>'
         : '<button class="bg-cell' + (marcas[i] ? ' marcada' : '') + '" ' + attr + '="' + i + '" aria-label="' + letraDe(n) + ' ' + n + '">' + n + '</button>').join('') + '</div>';
   }
   const tableroHtml = set => '<details><summary class="muted" style="cursor:pointer;font-size:.85rem">🔢 Ver los 75 números</summary><div class="bg-tablero">' +
@@ -101,7 +101,7 @@
     else if (voz === 'es') hablar(letraDe(n) + ' ' + n, 'es-MX', 1);
     else { hablar(letraDe(n) + ' ' + n, 'es-MX', 1); if (g.speechSynthesis) { const u = new SpeechSynthesisUtterance(letraDe(n) + ' ' + n); u.lang = 'en-US'; u.rate = .95; speechSynthesis.speak(u); } }
   }
-  const VOCES = [['es', '🇲🇽 Español'], ['ambos', '🔀 Bilingüe'], ['en', '🇺🇸 English'], ['no', '🔇 Sin voz']];
+  const VOCES = [['es', '🇲🇽 Español'], ['ambos', '🔀 Bilingüe'], ['en', '🇺🇸 English'], ['no', '🔇']];
   const vozHtml = (attr, voz) => '<div class="row-btns" style="margin-top:6px">' + VOCES.map(([v, t]) => '<button class="btn ghost sm" ' + attr + '="' + v + '" aria-pressed="' + (voz === v) + '">' + t + '</button>').join('') + '</div>';
   function sacudir(cel) { cel.classList.remove('tiembla'); void cel.offsetWidth; cel.classList.add('tiembla'); }
 

@@ -168,7 +168,8 @@ function validarResultado(juego: string, x: unknown, inicio: number, ahora: numb
   const lim = LIMITES_RESULTADO[juego];
   if (!esObjeto(x) || typeof x.fin !== "boolean") return null;
   const ms = x.ms;
-  if (ms !== null && !entero(ms, lim.minMs, lim.limiteMs)) return null;
+  // El mínimo solo vale para terminar (el avance de la sopa puede llegar en los primeros segundos).
+  if (ms !== null && !entero(ms, x.fin === true ? lim.minMs : 0, lim.limiteMs)) return null;
   if (ms !== null) { const pasado = ahora - inicio; if ((ms as number) > pasado + ADELANTO_MS || (ms as number) < pasado - ATRASO_MS) return null; }
   if (juego === "en-memorama") {
     if (!llaves(x, ["ms", "fin", "errores", "pares"], ["ms", "fin", "errores", "pares"]) || x.fin !== true || !entero(x.errores, 0, 500) || !entero(x.pares, 0, PARES_MEMO)) return null;
