@@ -52,18 +52,15 @@ const htmls = [...listar(RAIZ, ['.html'], false), ...listar(join(RAIZ, 'juegos')
 const csss = [...listar(join(RAIZ, 'estilos'), ['.css']), ...CARPETAS_JS.flatMap((c) => listar(join(RAIZ, c), ['.css']))];
 
 const avisos = [];
-let revisados = 0;
+const revisados = [];
 const lineasDe = new Map();
 function lineas(archivo) {
   if (!lineasDe.has(archivo)) lineasDe.set(archivo, readFileSync(join(RAIZ, archivo), 'utf8').split(/\r?\n/));
   return lineasDe.get(archivo);
 }
 function agregar(archivo, linea, regla, mensaje) {
-  if ((lineas(archivo)[linea - 1] || '').includes('NOSONAR')) {
-    revisados++;
-    return;
-  }
-  avisos.push({ archivo, linea, regla, mensaje });
+  const lista = (lineas(archivo)[linea - 1] || '').includes('NOSONAR') ? revisados : avisos;
+  lista.push({ archivo, linea, regla, mensaje });
 }
 
 // 1) JS y TS (también los <script> de los HTML) con ESLint.
@@ -182,14 +179,20 @@ for (const f of htmls) {
 }
 
 // Resumen.
-const filtrados = avisos
+const filtrar = (lista) => lista
   .filter((a) => !soloReglas.size || soloReglas.has(a.regla) || soloReglas.has(a.regla.replace(/^\w+:/, '')))
   .filter((a) => !soloArchivos.length || soloArchivos.some((p) => a.archivo.startsWith(p)))
   .sort((a, b) => a.archivo.localeCompare(b.archivo) || a.linea - b.linea);
-const contar = (clave) => Object.entries(filtrados.reduce((t, a) => ({ ...t, [a[clave]]: (t[a[clave]] || 0) + 1 }), {}))
-  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-const porRegla = contar('regla');
-const porArchivo = contar('archivo');
+const filtrados = filtrar(avisos);
+const revisadosFiltrados = filtrar(revisados);
+function contar(lista, clave) {
+  const cuenta = new Map();
+  for (const a of lista) cuenta.set(a[clave], (cuenta.get(a[clave]) || 0) + 1);
+  return [...cuenta].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+const porRegla = contar(filtrados, 'regla');
+const porArchivo = contar(filtrados, 'archivo');
+const revisadosPorRegla = contar(revisadosFiltrados, 'regla');
 
 if (detalle) {
   const contexto = Number(opcion('--contexto')[0] || 0);
@@ -206,7 +209,12 @@ console.log('Por regla:');
 for (const [r, n] of porRegla) console.log(`  ${String(n).padStart(4)}  ${r}`);
 console.log('\nPor archivo:');
 for (const [f, n] of porArchivo) console.log(`  ${String(n).padStart(4)}  ${f}`);
-console.log(`\nTotal: ${filtrados.length} avisos; ${revisados} revisados con NOSONAR.`);
+if (revisadosPorRegla.length) {
+  console.log('\nRevisados con NOSONAR (no cuentan en el total), por regla:');
+  for (const [r, n] of revisadosPorRegla) console.log(`  ${String(n).padStart(4)}  ${r}`);
+}
+console.log(`\nTotal: ${filtrados.length} avisos; ${revisadosFiltrados.length} revisados con NOSONAR.`);
 if (salidaJson) {
-  writeFileSync(salidaJson, JSON.stringify({ total: filtrados.length, revisados, porRegla, porArchivo, avisos: filtrados }, null, 2));
+  const datos = { total: filtrados.length, revisados: revisadosFiltrados.length, porRegla, porArchivo, revisadosPorRegla, avisos: filtrados };
+  writeFileSync(salidaJson, JSON.stringify(datos, null, 2));
 }
