@@ -25,7 +25,7 @@ Alcance: `server/`, `juegos/*.html` (salvo `juegos.html`), `juegos/*.js` salvo `
 - [ ] 2.5 e) S3358: extraer ternarios anidados a ayudantes o `if/else` donde mejore la lectura
 - [ ] 2.6 f) S3776: partir solo las funciones de complejidad > ~40 cubiertas por E2E; justificar el resto en design.md
 - [ ] 2.7 g) S2245: `// NOSONAR: azar de juego, no criptográfico` en cada `Math.random` revisado
-- [ ] 2.8 Subir `?v=` de los scripts cambiados en los HTML de la fase 1 (no en `juegos.html`, ver design.md)
+- [ ] 2.8 Decidir los `?v=`: refactor sin cambios de interfaz, no se suben (ver design.md §3)
 
 ## 3. Fase 2: archivos del sprint 22
 

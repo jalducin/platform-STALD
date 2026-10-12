@@ -45,8 +45,10 @@ reporte. Así no hay conflictos con un trabajo que aún no se integra.
 ### 3. `?v=` de los scripts
 Los cambios son refactorizaciones equivalentes y sin cambios de interfaz entre archivos (los ayudantes nuevos viven
 dentro del archivo que los usa), así que una mezcla de versión vieja y nueva en la caché del navegador se comporta
-igual. Por eso **no se sube `?v=` en `juegos.html`** (archivo del sprint 22) durante la fase 1; GitHub Pages además
-sirve con `max-age=600`. Si la fase 2 ocurre, se suben ahí los `?v=` de lo que haya cambiado.
+igual (las API públicas de cada script no cambian: `Fisica`, `Golf`, `Ajedrez`, `Cartas`, `MesaUI`, `Mando`, …). Por
+eso **no se sube `?v=`** en ningún HTML: ni en `juegos.html` (archivo del sprint 22) ni en las páginas de Arcade; GitHub
+Pages además sirve con `max-age=600`. Excepción a la regla de `docs/frontend-standards.md` («al cambiar un archivo de
+`juegos/app/`, sube su `?v=`»), que existe para cambios de comportamiento.
 
 ### 4. Bloque a — posibles errores reales
 - **S2681 (171 avisos, 145 en la fase 1):** todos eran del tipo «adyacente» (`if (x) a(); b();` en la misma línea);
@@ -113,6 +115,31 @@ carácter por carácter, mismo orden de llamadas al azar con semilla, misma eval
 archivo o de la función que los usa (los scripts de `juegos/app/` e `ingles/` comparten el ámbito global), sin
 `NOSONAR`. S3776 solo en funciones con complejidad > 40; el resto (15–40) se deja: partir funciones medianas de
 juegos en canvas no mejora la lectura y arriesga el comportamiento. Ver la sección «Resultado de e y f».
+
+### Resultado de e y f
+- **S3358:** en la fase 1 quedan 0 (de 381). Cada cambio conserva cuándo se evalúa cada rama; en los tres casos con
+  `Math.random` dentro de una rama (Ajedrez «al azar», fuego del turbo de Karts, motas de Plataformas) se pasó a un
+  ayudante local o a `if/else` para no llamar al azar de más ni de menos.
+- **S3776:** ninguna función de la fase 1 pasa ya de 40. Las partidas más grandes: `handleSalas` (219 → despachador de
+  21 con una función por ruta), `handleActividades` (181 → 28), `rutasDeJugador` de `server/juegos.ts` (142 → 25),
+  `atender` de `server/main.ts` (79 → `rutear` dentro del mismo `try/catch`), `pintarUnaSala` (118 → 38), `pseudo`
+  de Ajedrez (105 → 20), `paso` de Futbolito (85 → 39) y de Plataformas (85 → 30), `mostrarResultados` de Karts
+  (71 → 24) y `dibujarHoyo` de Golf (68 → ≤ 15). Se quedan 178 avisos de funciones entre 16 y 40 (y las del sprint
+  22): partirlas no mejora la lectura de un juego en canvas y arriesga el comportamiento.
+- **Verificación además de las pruebas:** para los motores y la mesa se compararon la versión anterior y la nueva
+  con miles de partidas simuladas con semilla (perft de ajedrez, salas de billar, futbolito, golf, ¡Una!, póker,
+  brisca, conquián, lotería y clásicos rápidos): 0 diferencias en el JSON del estado y en el HTML generado.
+- **Nombres globales nuevos:** los scripts de `juegos/app/` e `ingles/` comparten el ámbito global; los únicos
+  nombres de nivel superior nuevos (`unaSala*` en `salas-mesa.js`, `segunModo` en `ingles/comun.js`, `agregarParam`
+  en `index.html`) se buscaron antes en todo `juegos/`, `ingles/`, `comun/` y los HTML.
+- **Posibles errores reales vistos al partir el servidor (no se corrigen aquí: cambiarían el comportamiento y no hay
+  prueba que los cubra; quedan como pendientes para un cambio propio):**
+  1. `server/salas.ts`, unirse a una sala: si no viene `equipo` y `guardarJugador` falla tras 3 intentos (devuelve
+     `null`), responde `{ ok: true }` igual.
+  2. `server/salas.ts`, empezar: no revisa el resultado de `store.put`; con un choque de `sha` responde `ok` con un
+     `inicio` que no se guardó, y si la sala desapareció `doc!` termina en 500.
+  3. `server/actividades.ts`: si `estadoItem` diera «completo» sin resultado, `doc!.data` terminaría en 500 (no
+     debería pasar; se dejó igual).
 
 ### 9. Bloque g — `Math.random` (S2245)
 Son juegos: el azar no protege nada (no hay tokens, contraseñas ni códigos de sala que dependan de él; los códigos de
