@@ -157,6 +157,12 @@
   .rank .n { flex: 1; font-weight: 700; }
   .rank .n small { color: var(--muted); font-weight: 600; }
   .rank .pts { font-weight: 900; }
+  /* 🔥 Juegos más jugados (openspec: ranking-juegos-populares) */
+  .opts.tres { grid-template-columns: repeat(3, 1fr); }
+  .opts.tres .opt { font-size: .88rem; padding: 12px 4px; }
+  .rank .rj-ico { font-size: 1.6rem; width: 34px; text-align: center; flex: none; }
+  .rank .rj-barra { display: block; height: 8px; margin: 6px 0 2px; border-radius: 99px; background: var(--border); overflow: hidden; }
+  .rank .rj-barra span { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
   table.inv { width: 100%; border-collapse: collapse; font-size: .8rem; }
   table.inv th, table.inv td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--border); }
   .scroll-x { overflow-x: auto; }
@@ -894,16 +900,37 @@
     return d.toLocaleDateString('es-MX', o) + ' al ' + f.toLocaleDateString('es-MX', o);
   }
 
+  const medalla = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
+  const plural = (n, uno, varios) => fmt(n) + ' ' + (n === 1 ? uno : varios);
+
+  // 🔥 Juegos más jugados de la semana (openspec: ranking-juegos-populares).
+  async function pintarRankingJuegos(body, pestanas) {
+    const r = await api('/juegos/ranking/juegos', null, { ttl: 30000 });
+    if (!r.ok) { body.innerHTML = pestanas + '<div class="alert">No se pudo cargar el ranking (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+    const lista = r.body.juegos || [];
+    const lider = lista.length ? lista[0].jugadores : 1;
+    body.innerHTML = pestanas + '<p class="muted" style="margin:10px 0">Semana del ' + escapeHtml(rangoSemana(r.body.semana)) + ' · los juegos que más personas jugaron.</p>' +
+      (lista.length
+        ? '<ol class="rank" id="rank-juegos" aria-label="Juegos más jugados de la semana">' + lista.map(x => {
+          const j = juegoPorId(x.id);
+          return '<li data-rj="' + escapeHtml(x.id) + '"><span class="pos">' + medalla(x.pos) + '</span><span class="rj-ico" aria-hidden="true">' + (j ? j.emoji : '🎮') + '</span>' +
+            '<span class="n">' + escapeHtml(x.titulo) + '<br><small>' + plural(x.jugadores, 'jugador', 'jugadores') + ' · ' + plural(x.partidas, 'partida', 'partidas') + '</small>' +
+            '<span class="rj-barra" aria-hidden="true"><span style="width:' + Math.max(4, Math.round(x.jugadores / lider * 100)) + '%"></span></span>' +
+            (x.mejor ? '<small>👑 Mejor puntaje: ' + escapeHtml(x.mejor.nombre) + '</small>' : '') + '</span></li>';
+        }).join('') + '</ol>'
+        : '<div class="card muted" style="text-align:center">Todavía nadie juega esta semana. ¡Estrena un juego! 🚀</div>');
+  }
+
   async function pintarRanking() {
     const body = document.getElementById('tab-body');
     body.innerHTML = '<div class="loading">Cargando ranking…</div>';
     const tipo = state.rtipo;
+    const pestanas = '<div class="opts tres" style="margin-top:10px">' + [['individual', '⭐ Individuales'], ['partidas', '👥 Partidas'], ['juegos', '🔥 Juegos']].map(([id, t]) =>
+      '<button class="opt" data-rtipo="' + id + '" aria-pressed="' + (tipo === id) + '">' + t + '</button>').join('') + '</div>';
+    if (tipo === 'juegos') return pintarRankingJuegos(body, pestanas);
     const r = await api('/juegos/ranking?tipo=' + tipo, null, { ttl: 30000 }); // 30 s; un envío lo vacía
     if (!r.ok) { body.innerHTML = '<div class="alert">No se pudo cargar el ranking (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
-    const medalla = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
     const ico = tipo === 'partidas' ? '👥' : '⭐';
-    const pestanas = '<div class="opts" style="margin-top:10px">' + [['individual', '⭐ Individuales'], ['partidas', '👥 Partidas']].map(([id, t]) =>
-      '<button class="opt" data-rtipo="' + id + '" aria-pressed="' + (tipo === id) + '">' + t + '</button>').join('') + '</div>';
     body.innerHTML = pestanas + '<p class="muted" style="margin:10px 0">Semana del ' + escapeHtml(rangoSemana(r.body.semana)) + ' · ' +
       (tipo === 'partidas' ? 'suman todas tus partidas con otros jugadores.' : 'suman todos tus juegos individuales.') + '</p>' +
       (r.body.top.length
