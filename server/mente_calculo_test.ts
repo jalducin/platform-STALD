@@ -20,7 +20,7 @@ function azarConTope(tope = 10_000, base: () => number = Math.random) {
 // mulberry32, como las partidas con semilla.
 function semilla(s: number) {
   return () => {
-    s = (s + 0x6D2B79F5) | 0;
+    s = (s + 0x6D2B79F5) | 0; // NOSONAR: mulberry32, aritmética entera de 32 bits
     let t = Math.imul(s ^ (s >>> 15), 1 | s);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;

@@ -426,24 +426,28 @@ async function unirseSala(c: CtxSala): Promise<Response> {
 
 // POST /juegos/sala/<código>/empezar (solo el anfitrión)
 async function empezarSala(c: CtxSala): Promise<Response> {
-  const { jugador, store, ahora, json, codigo, sala, jugadores, publicar } = c;
+  const { jugador, ahora, json, sala, jugadores } = c;
   if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
   const minimo = mesaDe(sala.juego, sala.opciones)?.min ?? 1; // futbolito-equipos: mesa por formato
   if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots, sala.opciones) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
   if (sala.inicio !== null) return json({ ok: true, sala: sinCanal(sala), ahora });
-  // errores-latentes: 3 intentos con la versión fresca; si otra petición ya la empezó, se responde esa sala.
-  for (let i = 0; i < 3; i++) {
-    const doc = await store.get<Sala>(ruta(codigo));
-    if (!doc) return json({ error: "sala_no_existe" }, 404);
-    if (doc.data.inicio !== null) { cache.delete(codigo); return json({ ok: true, sala: sinCanal(doc.data), ahora }); }
-    const nueva = { ...doc.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc.data, canalNuevo) }; // + secreto de Dibuja
-    if (await store.put(ruta(codigo), nueva, doc.sha, `sala ${codigo}: empieza`)) {
-      cache.delete(codigo);
-      await publicar();
-      return json({ ok: true, sala: sinCanal(nueva), ahora });
-    }
+  return fijarInicio(c, 3);
+}
+
+// errores-latentes: fija `inicio` con la versión fresca de la sala (hasta `intentos` veces, en secuencia: cada
+// intento relee el sha); si otra petición ya la empezó, se responde esa sala sin reescribirla.
+async function fijarInicio(c: CtxSala, intentos: number): Promise<Response> {
+  const { store, ahora, json, codigo, publicar } = c;
+  const doc = await store.get<Sala>(ruta(codigo));
+  if (!doc) return json({ error: "sala_no_existe" }, 404);
+  if (doc.data.inicio !== null) { cache.delete(codigo); return json({ ok: true, sala: sinCanal(doc.data), ahora }); }
+  const nueva = { ...doc.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc.data, canalNuevo) }; // + secreto de Dibuja
+  if (await store.put(ruta(codigo), nueva, doc.sha, `sala ${codigo}: empieza`)) {
+    cache.delete(codigo);
+    await publicar();
+    return json({ ok: true, sala: sinCanal(nueva), ahora });
   }
-  return json({ error: "conflicto_escritura" }, 503);
+  return intentos > 1 ? fijarInicio(c, intentos - 1) : json({ error: "conflicto_escritura" }, 503);
 }
 
 // Juegos por turnos (¡Una!, póker, Brisca, Conquián): cada jugada con su paso n; nadie más puede tener ese paso.
