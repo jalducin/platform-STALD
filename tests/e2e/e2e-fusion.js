@@ -2,6 +2,7 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const BASE = process.env.BASE, API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
@@ -9,9 +10,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 1, viewport: { width: 390, height: 900 }, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-juego]' });
-  const ids = await p.$$eval('[data-juego]', bs => bs.map(x => x.dataset.juego));
+  const menu = await contarMenu(p), ids = menu.ids;
   // Conteo igual a JUEGOS.length de la página (futbolito-billar), sin repetir y sin los absorbidos.
-  ok('menú: todos los juegos de la página, sin repetir y sin los absorbidos', ids.length === await p.evaluate(() => JUEGOS.length) && ids.length >= 39 && new Set(ids).size === ids.length && !ids.some(i => ['en-preguntas', 'es-acentos', 'es-sinonimos', 'mente-secuencias'].includes(i)), ids.length + ' juegos');
+  ok('menú: todos los juegos de la página, sin repetir y sin los absorbidos', menu.completo && ids.length >= 39 && new Set(ids).size === ids.length && !ids.some(i => ['en-preguntas', 'es-acentos', 'es-sinonimos', 'mente-secuencias'].includes(i)), ids.length + ' juegos');
   ok('menú: títulos fusionados', /Completa y responde/.test(await p.textContent('[data-juego="en-frases"]')) && /Cálculo y secuencias/.test(await p.textContent('[data-juego="mente-calculo"]')) && /acentos, sinónimos/.test(await p.textContent('[data-juego="es-ortografia"]')));
   // Vuelve al inicio saliendo con ✕: navegar a mitad de un juego que se reanuda ofrecería continuarlo
   // (openspec: juegos-recarga).

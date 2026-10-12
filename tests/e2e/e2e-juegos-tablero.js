@@ -4,6 +4,7 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
@@ -35,8 +36,8 @@ const getSala = (email, codigo) => fetch(process.env.API + '/juegos/sala/' + cod
 
   // ---------- Inicio: tarjetas ----------
   const p = await pagina(b, M, 0.05);
-  const ids = await p.$$eval('[data-juego]', xs => xs.map(x => x.dataset.juego));
-  ok('inicio: todos los juegos de la página (JUEGOS.length) con Damas, Batalla naval, Dominó y Parchís', ids.length === await p.evaluate(() => JUEGOS.length) && ['damas', 'naval', 'domino', 'parchis'].every(i => ids.includes(i)), ids.length + '');
+  const menu = await contarMenu(p), ids = menu.ids;
+  ok('inicio: todos los juegos de la página (JUEGOS.length) con Damas, Batalla naval, Dominó y Parchís', menu.completo && ['damas', 'naval', 'domino', 'parchis'].every(i => ids.includes(i)), ids.length + '');
   ok('inicio: Dominó y Parchís en Clásicos; Damas y Batalla naval en Mente ágil',
     await p.$$eval('.cat-clasicos[data-juego]', xs => ['domino', 'parchis'].every(i => xs.some(x => x.dataset.juego === i))) &&
     await p.$$eval('.cat-mente[data-juego]', xs => ['damas', 'naval'].every(i => xs.some(x => x.dataset.juego === i))));

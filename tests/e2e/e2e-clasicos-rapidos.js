@@ -3,6 +3,7 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`); const info = (n, x = '') => out.push(`INFO ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pagina = (b, email, tiempo) => abrirPagina(b, { email, viejo: true, tiempo, out, dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
@@ -23,8 +24,8 @@ const clicPrimero = async (p, sel) => { const b = await p.$(sel); if (b) await b
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await pagina(b, 'marisol@example.com', 0.15);
   // ---- Menú ----
-  const ids = await p.$$eval('[data-juego]', xs => xs.map(x => x.dataset.juego));
-  ok('menú: todos los juegos de la página (JUEGOS.length) y 16 en Clásicos (con los 5 nuevos)', ids.length === await p.evaluate(() => JUEGOS.length) && (await p.$$('.cat-clasicos[data-juego]')).length === 16 && ['gato', 'conecta4', 'ppt', 'ahorcado', 'serpientes'].every(i => ids.includes(i)), ids.length + ' juegos');
+  const menu = await contarMenu(p), ids = menu.ids;
+  ok('menú: todos los juegos de la página (JUEGOS.length) y 16 en Clásicos (con los 5 nuevos)', menu.completo && (await p.$$('.cat-clasicos[data-juego]')).length === 16 && ['gato', 'conecta4', 'ppt', 'ahorcado', 'serpientes'].every(i => ids.includes(i)), ids.length + ' juegos');
   await p.$eval('[data-juego="gato"]', e => e.scrollIntoView({ block: 'start' })); await sleep(200);
   await p.screenshot({ path: 'clasicos-rapidos-390-menu.png', fullPage: false });
 

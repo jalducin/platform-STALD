@@ -3,6 +3,7 @@ require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y
 const { chromium } = require('playwright');
 const fs = require('fs');
 const { abrirPagina } = require('./lib/navegador');
+const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const basta = JSON.parse(fs.readFileSync(process.env.DATOS + '/basta.json', 'utf8'));
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`); const info = (n, x = '') => out.push(`INFO ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -13,7 +14,7 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
   const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.08, out, etiqueta: '', dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
   // Clásicos de este lote: los 7 de siempre, 5 clásicos rápidos, Dominó, Parchís, Bingo y Blackjack; el total, igual a JUEGOS.length.
   const clasicos = await p.$$eval('.cat-clasicos[data-juego]', bs => bs.map(x => x.dataset.juego));
-  ok('hub: categoría Clásicos con 16 juegos (Basta, ¡Una!, Lotería, Póker, Brisca, Conquián, clásicos rápidos, Dominó, Parchís, Bingo y Blackjack)', clasicos.length === 16 && ['basta-es', 'basta-en', 'una', 'loteria', 'poker', 'brisca', 'conquian'].every(i => clasicos.includes(i)) && (await p.$$('[data-juego]')).length === await p.evaluate(() => JUEGOS.length), clasicos.join(','));
+  ok('hub: categoría Clásicos con 16 juegos (Basta, ¡Una!, Lotería, Póker, Brisca, Conquián, clásicos rápidos, Dominó, Parchís, Bingo y Blackjack)', clasicos.length === 16 && ['basta-es', 'basta-en', 'una', 'loteria', 'poker', 'brisca', 'conquian'].every(i => clasicos.includes(i)) && (await contarMenu(p)).completo, clasicos.join(','));
 
   // Basta (es): verificada, desconocida y con otra letra
   await p.click('[data-juego="basta-es"]'); await p.waitForSelector('#basta-empezar'); // basta-divertida-una-robo: sin categorías divertidas
