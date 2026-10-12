@@ -163,7 +163,7 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "mente-simon": { categoria: "mente", titulo: "Simón dice", max: 1500 },
   "mente-sopa": { categoria: "mente", titulo: "Sopa de letras", max: 1500 },
   "mente-sudoku": { categoria: "mente", titulo: "Sudoku", max: 2000 },
-  "dragon-run": { categoria: "mente", titulo: "Dragon Run", max: 2000 },
+  "dragon-run": { categoria: "arcade", titulo: "Dragon Run", max: 2000 }, // en Arcade desde dragon-run-misiones
   "ajedrez": { categoria: "mente", titulo: "Ajedrez", max: 1000 }, // openspec: ajedrez
   "basta-es": { categoria: "clasicos", titulo: "Basta", max: 1500 },
   "basta-en": { categoria: "clasicos", titulo: "Basta en inglés", max: 1500 },

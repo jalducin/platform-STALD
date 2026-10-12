@@ -338,7 +338,7 @@ Deno.test("juegos: en cada ranking aparece quien jugó ese tipo, aunque sea con 
 });
 
 Deno.test("juegos: Dragon Run en el catálogo (openspec: dragon-run)", async () => {
-  assertEquals(CATALOGO["dragon-run"], { categoria: "mente", titulo: "Dragon Run", max: 2000 });
+  assertEquals(CATALOGO["dragon-run"], { categoria: "arcade", titulo: "Dragon Run", max: 2000 }); // openspec: dragon-run-misiones
   const { call } = ctx();
   const p = await call("POST", "/partida", "marisol@example.com", partida("dragon-run", 5000));
   assertEquals([p.status, p.body.puntos, p.body.modo], [200, 2000, "individual"]);
