@@ -362,17 +362,24 @@ function ctx() {
 }
 const M = "marisol@example.com", A = "angel@example.com";
 
-Deno.test("salas de tablero: damas y naval son 1 vs 1 sin bots y no empiezan solas", async () => {
-  for (const juego of ["damas", "naval"]) {
-    const c = ctx();
-    const r = await c.call("POST", "/sala", M, { juego, bots: true });
-    assertEquals([r.status, r.body.sala.bots], [200, false], juego);
-    const codigo = r.body.codigo;
-    assertEquals((await c.call("POST", `/sala/${codigo}/empezar`, M)).body.error, "faltan_jugadores");
-    assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, A)).status, 200);
-    assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, "jesus@example.com")).body.error, "sala_llena");
-    assertEquals((await c.call("POST", `/sala/${codigo}/empezar`, M)).status, 200);
-  }
+Deno.test("salas de tablero: mesas de damas, naval, dominó y parchís (openspec: mesas-con-bots)", async () => {
+  const { MESAS } = await import("./salas.ts");
+  assertEquals([MESAS.damas, MESAS.domino, MESAS.parchis, MESAS.naval], [
+    { max: 2, asientos: 2, min: 2 }, { max: 4, asientos: 4, min: 2 }, { max: 4, asientos: 4, min: 2 }, { max: 2, min: 2, bots: "nunca" },
+  ]);
+  // Batalla naval: siempre 1 vs 1 entre personas (el servidor guarda las flotas; no hay bot de sala).
+  const c = ctx();
+  const r = await c.call("POST", "/sala", M, { juego: "naval", bots: true });
+  assertEquals([r.status, r.body.sala.bots], [200, false]);
+  assertEquals((await c.call("POST", `/sala/${r.body.codigo}/empezar`, M)).body.error, "faltan_jugadores");
+  assertEquals((await c.call("POST", `/sala/${r.body.codigo}/unirse`, A)).status, 200);
+  assertEquals((await c.call("POST", `/sala/${r.body.codigo}/unirse`, "jesus@example.com")).body.error, "sala_llena");
+  assertEquals((await c.call("POST", `/sala/${r.body.codigo}/empezar`, M)).status, 200);
+  // Damas: sin bots necesita 2 personas; con bots, el bot ocupa el asiento libre.
+  const solo = (await c.call("POST", "/sala", M, { juego: "damas", bots: false })).body.codigo;
+  assertEquals((await c.call("POST", `/sala/${solo}/empezar`, M)).body.error, "faltan_jugadores");
+  const conBot = (await c.call("POST", "/sala", M, { juego: "damas", bots: true })).body.codigo;
+  assertEquals((await c.call("POST", `/sala/${conBot}/empezar`, M)).status, 200);
 });
 
 Deno.test("salas de tablero: dominó y parchís admiten 4 personas y bots opcionales", async () => {

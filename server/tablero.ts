@@ -1,21 +1,11 @@
 // Juegos de tablero en sala (openspec: juegos-tablero): Damas, Dominó, Parchís y Batalla naval. Reglas de sala que
-// usa server/salas.ts con ganchos de una línea: forma de las jugadas, cupos, bots y qué ve cada jugador.
+// usa server/salas.ts con ganchos de una línea: forma de las jugadas y qué ve cada jugador.
 // Damas, Dominó y Parchís se reproducen en cada navegador (juegos/tablero.js); Batalla naval se arbitra en el servidor
 // (server/naval.ts).
 import { type JugadorNaval, navalTerminada } from "./naval.ts";
 
 export const JUEGOS_TABLERO = ["damas", "domino", "parchis", "naval"];
-// Cupo de personas: Damas y Batalla naval son 1 vs 1; Dominó y Parchís, hasta 4 (los bots completan hasta 4).
-export const CUPO_TABLERO: Record<string, number> = { damas: 2, naval: 2, domino: 4, parchis: 4 };
-// Damas y Batalla naval siempre sin bots; en Dominó y Parchís los bots son opcionales.
-export const BOTS_TABLERO: Record<string, boolean> = { damas: false, naval: false };
-
-// ¿Falta gente para empezar? 1 vs 1 necesita 2 personas; Dominó y Parchís sin bots, también.
-export function faltanJugadoresTablero(juego: string, bots: boolean, personas: number): boolean {
-  if (juego === "damas" || juego === "naval") return personas < 2;
-  if (juego === "domino" || juego === "parchis") return !bots && personas < 2;
-  return false;
-}
+// Cupo, asientos con bots y mínimo para empezar: renglones de MESAS (server/salas.ts y juegos/mesas.js).
 
 const entero = (x: unknown, min: number, max: number): x is number => typeof x === "number" && Number.isInteger(x) && x >= min && x <= max;
 

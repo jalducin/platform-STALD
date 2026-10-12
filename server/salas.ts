@@ -5,7 +5,7 @@ import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
 import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realtime.ts";
 import { type Carrera, CARRERAS, mapaDeSala, validarCarrera } from "./carreras.ts";
-import { BOTS_TABLERO, CUPO_TABLERO, faltanJugadoresTablero, JUEGOS_TABLERO, validarJugadaTablero, vistaJugadores } from "./tablero.ts"; // juegos-tablero
+import { JUEGOS_TABLERO, validarJugadaTablero, vistaJugadores } from "./tablero.ts"; // juegos-tablero
 import { respuestaNaval } from "./naval.ts"; // juegos-tablero
 
 type Json = (body: unknown, status?: number) => Response;
@@ -65,9 +65,26 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
 const LETRAS_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const MAX_JUGADORES = 30;
 // Cupo de personas por juego (ajuste del profe): ajedrez 1 vs 1 sin bots; Brisca hasta 4 (se completa con bots).
-const CUPO: Record<string, number> = { ajedrez: 2, brisca: 4 };
-const BOTS_FIJOS: Record<string, boolean> = { ajedrez: false, brisca: true };
-Object.assign(CUPO, CUPO_TABLERO); Object.assign(BOTS_FIJOS, BOTS_TABLERO); // juegos-tablero
+// Mesas (openspec: mesas-con-bots): cupo de personas, asientos que se completan con bots (cada persona que entra quita
+// un bot), mínimo para empezar y si los bots son fijos. Misma tabla que juegos/mesas.js (server/mesas_test.ts).
+export interface Mesa { max: number; asientos?: number; min?: number; bots?: "siempre" | "nunca" }
+export const MESAS: Record<string, Mesa> = {
+  ajedrez: { max: 2, min: 2, bots: "nunca" },
+  brisca: { max: 4, asientos: 4, min: 4, bots: "siempre" },
+  // juegos-tablero: Batalla naval sin bots (su flota la guarda el servidor); los demás se completan con bots.
+  damas: { max: 2, asientos: 2, min: 2 },
+  domino: { max: 4, asientos: 4, min: 2 },
+  parchis: { max: 4, asientos: 4, min: 2 },
+  naval: { max: 2, min: 2, bots: "nunca" },
+};
+const cupo = (juego: string) => MESAS[juego]?.max ?? MAX_JUGADORES;
+const botsFijos = (juego: string) => MESAS[juego]?.bots === "siempre" ? true : MESAS[juego]?.bots === "nunca" ? false : undefined;
+// Personas + bots que ocuparían la mesa al empezar (los bots completan los asientos libres).
+export function enMesa(juego: string, humanos: number, conBots: boolean): number {
+  const m = MESAS[juego];
+  if (!m?.asientos || !conBots || m.bots === "nunca") return humanos;
+  return Math.max(Math.min(humanos, m.max), m.asientos);
+}
 const VIGENCIA_MS = 3 * 3600 * 1000;
 const CUENTA_REGRESIVA_MS = 5000;
 const PREGUNTAS = 10;
@@ -255,7 +272,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     }
     const codigo = await codigoLibre(store);
     if (!codigo) return json({ error: "sin_codigo" }, 503);
-    const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: BOTS_FIJOS[juego] ?? body.bots !== false, canal: canalNuevo() };
+    const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: botsFijos(juego) ?? body.bots !== false, canal: canalNuevo() };
     await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`);
     await guardarJugador(store, codigo, jugador, (e) => e, ahora);
     await indexar(store, lunes, { codigo, juego, host: jugador.nombre, creada: ahora });
@@ -276,7 +293,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (accion === "unirse" && req.method === "POST") {
     if (dentro) return json({ ok: true, codigo });
     if (sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
-    if (jugadores.length >= (CUPO[sala.juego] ?? MAX_JUGADORES)) return json({ error: "sala_llena" }, 409);
+    if (jugadores.length >= cupo(sala.juego)) return json({ error: "sala_llena" }, 409);
     await guardarJugador(store, codigo, jugador, (e) => e, ahora);
     await publicar();
     return json({ ok: true, codigo });
@@ -284,8 +301,8 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
 
   if (accion === "empezar" && req.method === "POST") {
     if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
-    if (sala.inicio === null && sala.juego === "ajedrez" && jugadores.length < 2) return json({ error: "faltan_jugadores" }, 409);
-    if (sala.inicio === null && faltanJugadoresTablero(sala.juego, sala.bots, jugadores.length)) return json({ error: "faltan_jugadores" }, 409); // juegos-tablero
+    const minimo = MESAS[sala.juego]?.min ?? 1;
+    if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
     if (sala.inicio === null) {
       const doc = await store.get<Sala>(ruta(codigo));
       const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS };
@@ -373,7 +390,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (!nueva) return json({ error: "conflicto_escritura" }, 503);
     if (!nueva.jugadores.some((j) => j.id === jugador.id)) {
       if (nueva.sala.inicio !== null) return json({ error: "ya_empezo", codigo: sig }, 409);
-      if (nueva.jugadores.length >= (CUPO[nueva.sala.juego] ?? MAX_JUGADORES)) return json({ error: "sala_llena", codigo: sig }, 409);
+      if (nueva.jugadores.length >= cupo(nueva.sala.juego)) return json({ error: "sala_llena", codigo: sig }, 409);
       await guardarJugador(store, sig, jugador, (e) => e, ahora);
     }
     await publicar();
