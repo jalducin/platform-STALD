@@ -3,9 +3,14 @@
 // guardado en el servidor y recuperado tras recargar, y partida en sala con bots: podio por tiempo sin tocar el
 // progreso. Capturas a 390 px y en escritorio. Usa ?arcadePrueba=1 (ganchos window.__plat dentro del juego).
 // Diseño (openspec: axo-diseno): capturas de cada mundo, del jefe y del mapa; el HUD no tapa el nivel a 390 px.
+// Personajes (openspec: personajes-xalli): la portada ofrece a Xalli, Itzae, Yahui y Xochiquetzal con nombre y título;
+// el avance viejo carga con Xalli; la elección se recuerda tras recargar; cada personaje se dibuja (píxeles de su color
+// de firma, capturas de cerca y hoja de poses) y termina el 1-1; valor desconocido o sin localStorage → Xalli; sin
+// partículas con movimiento reducido; el selector cabe a 320×640, 390×844 y 844×390.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { PERSONAJES, contarColor, recorte, hojaPerfiles } = require('./lib/personajes');
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -33,6 +38,77 @@ async function recorrerMundos(pag, fr, prefijo) {
 }
 async function caminar(fr, ms) { await fr.click('canvas', { force: true }); await fr.page().keyboard.down('ArrowRight'); await sleep(ms); await fr.page().keyboard.up('ArrowRight'); }
 
+// ---- Personajes (openspec: personajes-xalli) ----
+const elegido = fr => fr.evaluate(() => [...document.querySelectorAll('#personajes [data-personaje]')].filter(b => b.getAttribute('aria-pressed') === 'true').map(b => b.dataset.personaje).join(','));
+async function revisarSelector(fr, nombre) {
+  const tarjetas = await fr.$$eval('#personajes [data-personaje]', bs => bs.map(b => ({ id: b.dataset.personaje, txt: b.textContent, img: !!b.querySelector('img[src^="data:image"]') })));
+  ok(nombre + ': el selector muestra a los 4 con nombre, título y retrato', tarjetas.length === 4 && PERSONAJES.every((x, i) => tarjetas[i].id === x.id && tarjetas[i].txt.includes(x.nombre) && tarjetas[i].txt.includes(x.titulo) && tarjetas[i].img), JSON.stringify(tarjetas.map(t => t.id + ':' + t.txt)));
+}
+// Caja del personaje (px del lienzo) y sus píxeles: su color de firma sí; las branquias de Xalli solo en Xalli.
+async function revisarDibujo(fr, id, nombre) {
+  const caja = await fr.evaluate(() => window.__plat.cajaJugador());
+  const x = PERSONAJES.find(z => z.id === id), firma = await contarColor(fr, caja, x.firma), branquias = id === 'xalli' ? 0 : await contarColor(fr, caja, PERSONAJES[0].firma);
+  ok(nombre + ': se dibuja a ' + x.nombre + ' (color de firma en su caja)', firma >= 12 && branquias < 4, JSON.stringify({ firma, branquias, caja }));
+  return caja;
+}
+// Juego suelto: con cada personaje se dibuja, se toma de cerca (quieto, caminando, saltando) y termina el 1-1.
+async function probarPersonajes(b) {
+  const q = await abrirPagina(b, { viewport: { width: 390, height: 844 }, contexto: { deviceScaleFactor: 3 }, out, etiqueta: 'plataformas suelto', ruta: '/juegos/plataformas.html?prueba=1', esperar: '#ov-titulo:not(.hide)' });
+  const f = q.mainFrame();
+  await revisarSelector(f, 'suelto');
+  await hojaPerfiles(f, 'personajes-hoja-perfil.png');
+  for (const x of PERSONAJES) {
+    await f.click('[data-personaje="' + x.id + '"]');
+    ok('suelto: elegir a ' + x.nombre + ' lo marca y cambia la portada', await elegido(f) === x.id && (await f.getAttribute('#portada-axo', 'alt')).includes(x.nombre));
+    await q.screenshot({ path: 'plataformas-personaje-' + x.id + '-portada.png' });
+    await f.click('#b-jugar'); await f.waitForSelector('#ov-mapa:not(.hide)');
+    ok('suelto: la marca del mapa es ' + x.nombre, (await f.getAttribute('.marca img', 'data-personaje')) === x.id);
+    await f.click('[data-nivel="1-1"]');
+    await f.waitForFunction(() => window.__plat.estado().modo === 'nivel');
+    await sleep(500);
+    ok('suelto: juega con ' + x.nombre, (await f.evaluate(() => window.__plat.estado().personaje)) === x.id);
+    const caja = await revisarDibujo(f, x.id, 'suelto');
+    await recorte(q, f, caja, 'plataformas-personaje-' + x.id + '-quieto.png', 20);
+    await q.keyboard.down('ArrowRight'); await sleep(450);
+    await recorte(q, f, await f.evaluate(() => window.__plat.cajaJugador()), 'plataformas-personaje-' + x.id + '-camina.png', 20);
+    await q.keyboard.down('Space'); await sleep(170);
+    await recorte(q, f, await f.evaluate(() => window.__plat.cajaJugador()), 'plataformas-personaje-' + x.id + '-salta.png', 20);
+    await q.keyboard.up('Space'); await sleep(250); await q.keyboard.up('ArrowRight');
+    ok('suelto: ' + x.nombre + ' suelta su partícula al correr y saltar', (await f.evaluate(() => window.__plat.estado().rastro)) > 0);
+    await q.screenshot({ path: 'plataformas-personaje-' + x.id + '-nivel.png' });
+    await f.evaluate(() => window.__plat.irAMeta()); await caminar(f, 1500);
+    await f.waitForSelector('#ov-fin:not(.hide)', { timeout: 20000 });
+    ok('suelto: ' + x.nombre + ' termina el 1-1 con sus puntos', (await f.textContent('#fin-titulo')).includes('Nivel superado') && /⭐ \d+ puntos/.test(await f.textContent('#fin-puntos')));
+    await q.reload(); await q.waitForSelector('#ov-titulo:not(.hide)');
+    ok('suelto: tras recargar sigue elegido ' + x.nombre, await elegido(f) === x.id);
+  }
+  await q.context().close();
+  // Selector a 320×640 y 844×390: los 4 caben sin desplazamiento horizontal.
+  for (const vp of [{ width: 320, height: 640 }, { width: 844, height: 390 }]) {
+    const r = await abrirPagina(b, { viewport: vp, contexto: { hasTouch: true, isMobile: true }, out, etiqueta: 'plataformas ' + vp.width, ruta: '/juegos/plataformas.html?prueba=1', esperar: '#ov-titulo:not(.hide)' });
+    const m = await r.evaluate(() => ({ vw: innerWidth, ancho: document.documentElement.scrollWidth, cajas: [...document.querySelectorAll('#personajes [data-personaje]')].map(e => { const c = e.getBoundingClientRect(); return { l: c.left, r: c.right, w: c.width }; }), jugar: document.getElementById('b-jugar').getBoundingClientRect().width }));
+    ok(vp.width + '×' + vp.height + ': las 4 tarjetas caben a lo ancho', m.cajas.length === 4 && m.cajas.every(c => c.l >= -0.5 && c.r <= m.vw + 0.5 && c.w >= 60) && m.ancho <= m.vw && m.jugar > 0, JSON.stringify(m));
+    await r.screenshot({ path: 'plataformas-selector-' + vp.width + 'x' + vp.height + '.png' });
+    await r.context().close();
+  }
+  // Casos de error: valor desconocido y sin localStorage → Xalli; con movimiento reducido no hay partículas.
+  const raro = [() => { try { localStorage.setItem('arcade_personaje', 'pikachu'); } catch { /* nada */ } }];
+  const privado = [() => { Object.defineProperty(window, 'localStorage', { configurable: true, get() { throw new Error('almacenamiento bloqueado'); } }); }];
+  for (const [nombre, init, ctx] of [['valor desconocido', raro, {}], ['sin localStorage (modo privado)', privado, {}], ['movimiento reducido', null, { reducedMotion: 'reduce' }]]) {
+    const r = await abrirPagina(b, { viewport: { width: 390, height: 844 }, contexto: ctx, init: init || undefined, out, etiqueta: 'plataformas ' + nombre, ruta: '/juegos/plataformas.html?prueba=1', esperar: '#ov-titulo:not(.hide)' });
+    const g = r.mainFrame();
+    if (nombre === 'movimiento reducido') await g.click('[data-personaje="xochiquetzal"]');
+    else ok(nombre + ' → Xalli', await elegido(g) === 'xalli');
+    await g.click('#b-jugar'); await g.waitForSelector('#ov-mapa:not(.hide)'); await g.click('[data-nivel="1-1"]');
+    await g.waitForFunction(() => window.__plat.estado().modo === 'nivel');
+    await r.keyboard.down('ArrowRight'); await r.keyboard.press('Space'); await sleep(900); await r.keyboard.up('ArrowRight');
+    const e = await g.evaluate(() => window.__plat.estado());
+    if (nombre === 'movimiento reducido') ok('movimiento reducido: sin partículas del personaje', e.personaje === 'xochiquetzal' && e.rastro === 0, JSON.stringify({ rastro: e.rastro }));
+    else ok(nombre + ': juega con Xalli sin errores', e.personaje === 'xalli');
+    await r.context().close();
+  }
+}
+
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrir(b);
@@ -48,6 +124,10 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   await p.click('[data-juego="plataformas"]');
   let fr = await marcoDe(p);
   await fr.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 });
+  await revisarSelector(fr, 'portada');
+  const portada = await fr.textContent('#ov-titulo');
+  ok('portada: Xalli elegido por omisión y el texto habla de Xalli (el juego sigue siendo «Axo y los 12 mundos»)', await elegido(fr) === 'xalli' && portada.includes('Xalli') && !portada.includes('Axo, el ajolote') && portada.includes('y los 12 mundos'), portada.slice(0, 200));
+  await p.screenshot({ path: 'plataformas-390-portada.png' });
   await fr.click('#b-jugar'); await fr.waitForSelector('#ov-mapa:not(.hide)');
   ok('mapa: 12 mundos y el 1-2 bloqueado', (await fr.textContent('#mapa-num')).includes('/ 12') && await fr.$eval('[data-nivel="1-2"]', x => x.disabled));
   await fr.click('[data-nivel="1-1"]');
@@ -55,7 +135,7 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   const x0 = (await fr.evaluate(() => window.__plat.estado())).x;
   await caminar(fr, 1200);
   const e1 = await fr.evaluate(() => window.__plat.estado());
-  ok('Axo camina con el teclado', e1.x > x0 + 60, x0 + ' → ' + e1.x);
+  ok('Xalli camina con el teclado', e1.x > x0 + 60 && e1.personaje === 'xalli', x0 + ' → ' + e1.x + ' · ' + e1.personaje);
   ok('canvas a 390 px: 15 tiles de alto y nítido', e1.lw >= 224 && e1.k >= 1, JSON.stringify({ lw: e1.lw, k: e1.k }));
   await p.screenshot({ path: 'plataformas-390-jugando.png' });
   const enCurso = await progreso();
@@ -80,19 +160,30 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   const guardado = await progreso();
   const d = guardado.datos || {};
   ok('progreso en el servidor: 1-1 completado y 1-2 desbloqueado', d.completados && d.completados.includes('1-1') && d.mundo === 1 && d.nivel === 2 && d.vidas === 6 && d.monedas === 3 && d.enCurso === null, JSON.stringify(d));
+  ok('el progreso no cambia de forma (sin personaje)', !('personaje' in d) && Object.keys(d).length === 8, Object.keys(d).join(','));
 
   // ---- Recargar y continuar ----
   await p.reload(); await p.waitForSelector('[data-juego="plataformas"]', { timeout: 60000 });
   ok('recargar no deja el juego abierto', !(await p.$('#arcade-frame')));
   await p.click('[data-juego="plataformas"]');
   fr = await marcoDe(p);
-  await fr.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 }); await fr.click('#b-jugar');
+  await fr.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 });
+  // Avance viejo (sin personaje) y sin elección en el navegador → Xalli. Elegir a Yahui y recargar.
+  ok('avance viejo: carga con Xalli elegido', await elegido(fr) === 'xalli');
+  await fr.click('[data-personaje="yahui"]');
+  ok('elegir a Yahui lo marca', await elegido(fr) === 'yahui');
+  await p.reload(); await p.waitForSelector('[data-juego="plataformas"]', { timeout: 60000 });
+  await p.click('[data-juego="plataformas"]');
+  fr = await marcoDe(p);
+  await fr.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 });
+  ok('tras recargar Juegos sigue elegido Yahui', await elegido(fr) === 'yahui');
+  await fr.click('#b-jugar');
   await fr.waitForSelector('#ov-mapa:not(.hide)');
   const hecho = await fr.$eval('[data-nivel="1-1"]', x => x.classList.contains('hecho'));
   const abierto = await fr.$eval('[data-nivel="1-2"]', x => !x.disabled);
   const stats = await fr.textContent('#mapa-stats');
   ok('tras recargar: 1-1 superado, 1-2 abierto, mismas vidas y monedas', hecho && abierto && stats.includes('❤️ 6') && stats.includes('🪙 3'), stats);
-  ok('mapa: escena ilustrada, Axo en el nivel que sigue y candados en «Próximamente»', await fr.$('#mapa-svg svg') !== null && await fr.$('.marca img') !== null && (await fr.textContent('#mapa-mundos')).includes('🔒'));
+  ok('mapa: escena ilustrada, Yahui en el nivel que sigue y candados en «Próximamente»', await fr.$('#mapa-svg svg') !== null && (await fr.getAttribute('.marca img', 'data-personaje')) === 'yahui' && (await fr.textContent('#mapa-mundos')).includes('🔒'));
   await p.screenshot({ path: 'plataformas-390-mapa.png' });
   await fr.click('[data-mundo="6"]');
   ok('mapa: mundo 6 «Próximamente» con nodos bloqueados', (await fr.textContent('#mapa-aviso')).includes('Próximamente') && await fr.$eval('[data-nivel="6-1"]', x => x.disabled));
@@ -100,6 +191,7 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   await fr.click('[data-mundo="1"]');
   // ---- Diseño a 390 px: los 4 mundos y el jefe; el HUD y los botones no tapan el nivel ----
   ok('390: los 4 mundos y el jefe se dibujan', (await recorrerMundos(p, fr, 'plataformas-390')).length === 0);
+  ok('390: los mundos se juegan con Yahui', (await fr.evaluate(() => window.__plat.estado().personaje)) === 'yahui');
   const hud = await fr.evaluate(() => {
     const c = document.getElementById('c').getBoundingClientRect(), e = window.__plat.estado(), esc = c.height / e.vh;
     return { hud: Math.round(document.getElementById('hud').getBoundingClientRect().bottom), nivel: Math.round(c.top + e.oy * esc), fin: Math.round(c.bottom), mandos: Math.round(document.querySelector('.mando').getBoundingClientRect().top), dibujoMs: +e.dibujoMs.toFixed(2) };
@@ -129,6 +221,9 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   await esc.click('[data-a="salir"]').catch(() => {});
   await esc.context().close();
 
+  // ---- Personajes: cada uno se dibuja y termina un nivel; selector, errores y movimiento reducido ----
+  await probarPersonajes(b);
+
   // ---- Partida en sala con bots ----
   const vAntes = (await progreso()).v;
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear');
@@ -142,6 +237,7 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   await fs.waitForFunction(() => window.__plat && window.__plat.estado().sala && window.__plat.estado().nivel === '1-1', null, { timeout: 30000 });
   await fs.waitForFunction(() => document.getElementById('ov-sala').classList.contains('hide'), null, { timeout: 20000 });
   ok('sala: mismo nivel elegido (1-1) y tiempos a vencer', (await fs.textContent('#h-bots')).includes('BOT-VACHIRA'));
+  ok('sala: juegas con tu personaje (Yahui)', (await fs.evaluate(() => window.__plat.estado().personaje)) === 'yahui');
   await p.screenshot({ path: 'plataformas-390-sala.png' });
   await sleep(6500);
   await fs.evaluate(() => window.__plat.irAMeta()); await caminar(fs, 1200);

@@ -61,6 +61,18 @@ body.tactil #menu-control{display:flex}
 .ctl-ops2,.ctl-ops4{grid-template-columns:repeat(2,1fr)}
 /* Mando clásico (openspec: karts-mando): con él no se ven los botones de antes; en horizontal, solo en la carrera */
 body.ctl-mando #mandos{display:none!important}
+/* Piloto (openspec: personajes-xalli): 4 tarjetas con retrato, nombre y título; 2×2 en celular */
+#menu-piloto{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(560px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:8px}
+#pilotos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%}
+.pers{font:inherit;color:#fff;background:#1e293b;border:2px solid rgba(255,255,255,.5);border-radius:12px;padding:4px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-width:0;min-height:46px;text-align:center}
+.pers img{width:52px;height:52px;flex:0 0 auto;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+.pers span{display:flex;flex-direction:column;min-width:0}
+.pers b{font-size:14px;line-height:1.1}
+.pers small{font-size:11px;line-height:1.15;opacity:.85;font-weight:700}
+.pers[aria-pressed="true"]{background:#b45309;border-color:var(--acento)}
+.pers:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+@media (max-width:520px){#pilotos{grid-template-columns:repeat(2,minmax(0,1fr))}.pers{flex-direction:row;text-align:left;gap:4px;padding:3px 6px 3px 2px}.pers img{width:44px;height:44px}.pers small{font-size:10.5px}}
+@media (max-height:520px){.pers img{width:40px;height:40px}}
 /* Resultados */
 .podio{display:flex;align-items:flex-end;justify-content:center;gap:8px;width:min(360px,100%)}
 .esc{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;font-size:13px}
@@ -169,6 +181,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
       <h1>🏎️ Karts Turbo</h1>
       <p>Carreras de 8 carros. Derrapa para cargar el mini-turbo: <b style="color:var(--azul)">azul</b>, <b style="color:var(--naranja)">naranja</b> y <b style="color:var(--morado)">morado</b>.</p>
       <div class="ops" id="menu-ops"></div>
+      <div id="menu-piloto"><div class="ctl-titulo">🏁 Piloto</div><div id="pilotos" role="group" aria-label="Piloto"></div></div>
       <div id="menu-control">
         <div class="ctl-titulo">🎮 Controles</div>
         <div class="ctl-ops ctl-ops4" role="group" aria-label="Controles">
@@ -220,6 +233,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
 </div>
 <script src="mando.js?v=1"></script>
 <script src="arcade.js?v=1"></script>
+<script src="personajes.js?v=1"></script>
 <script>
 /* Karts Turbo — carreras con vista cenital en canvas (openspec: juegos-plataformas-karts, karts-controles-diseno).
    Embebido en juegos.html: la plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage,
@@ -769,41 +783,129 @@ function imgDecor(nombre, w, h) {
   return s;
 }
 
-/* ================= Sprites de los karts en 3D (pre-dibujados por color, número y ángulo) ================= */
+/* ================= Sprites de los karts en 3D (pre-dibujados por personaje, color, número y ángulo) ================= */
 // Un modelo pequeño de cajas (x al frente, y a la derecha, z arriba, en px de mundo) proyectado con la inclinación
 // de la cámara. Hay 32 vistas por vuelta; se dibujan solo cuando se necesitan y se reutilizan.
+// Personajes (openspec: personajes-xalli): la carrocería, la nariz y el alerón llevan los colores del personaje; los
+// costados, el cinturón y el número llevan `color` (el color de identidad del corredor, el mismo del minimapa y del
+// podio). El casco se cambió por la cabeza del personaje, vista desde donde esté la cámara.
 const SPK = 4, KW = 60, KH = 46, KOY = 32, NVISTAS = 32, sprites = {};
-function partesKart(color) {
-  const osc = matiz(color, -0.35), cla = matiz(color, 0.3);
+function partesKart(per, color) {
+  const kc = Personajes.porId(per).kart;
   return [
     [-14, 15, -8, 8, 1.5, 3.5, '#2b2f36'], // piso
     [-15.5, -8.5, -13, -7.5, 0, 9, '#161616'], [-15.5, -8.5, 7.5, 13, 0, 9, '#161616'], // llantas traseras
     [8, 13.5, -12, -7.5, 0, 7, '#161616'], [8, 13.5, 7.5, 12, 0, 7, '#161616'], // llantas delanteras
-    [-8, 6, -10, -6, 2.5, 6.5, osc], [-8, 6, 6, 10, 2.5, 6.5, osc], // pontones
-    [-9, 12, -6, 6, 3, 8.5, color], // carrocería
-    [10, 17, -4.5, 4.5, 2.5, 6, cla], // nariz
+    [-8, 6, -10, -6, 2.5, 6.5, color], [-8, 6, 6, 10, 2.5, 6.5, color], // costados con el color de identidad
+    [-9, 12, -6, 6, 3, 8.5, kc.cuerpo], // carrocería
+    [10, 17, -4.5, 4.5, 2.5, 6, kc.acento], // nariz
     [15.5, 18, -9, 9, 1.5, 3.5, '#374151'], // defensa
     [-14, -9, -4.5, 4.5, 3, 9, '#4b5563'], // motor
     [-16.5, -14, -4, -2.4, 4.5, 6.5, '#9ca3af'], [-16.5, -14, 2.4, 4, 4.5, 6.5, '#9ca3af'], // escapes
     [-9, -5, -5.5, 5.5, 7, 13.5, '#1f2937'], // respaldo
-    [-6, 0.5, -4.5, 4.5, 8, 13.5, cla], // torso del piloto
+    [-6, 0.5, -4.5, 4.5, 8, 13.5, kc.ropa], // torso del piloto (su ropa o su piel)
     [3, 5, -3.5, 3.5, 9, 11, '#111827'], // volante
     [-16.5, -14.5, -1, 1, 8, 14, '#111827'], // soporte del alerón
-    [-19, -14.5, -11.5, 11.5, 13.5, 16, '#111827'], // alerón
-    [-19, -14.5, -12.5, -11, 10.5, 17, color], [-19, -14.5, 11, 12.5, 10.5, 17, color], // placas del alerón
+    [-19, -14.5, -11.5, 11.5, 13.5, 16, kc.oscuro], // alerón
+    [-19, -14.5, -12.5, -11, 10.5, 17, kc.acento], [-19, -14.5, 11, 12.5, 10.5, 17, kc.acento], // placas del alerón
   ];
 }
+// Cabeza y accesorios del piloto. S(x, y, z) → { x, y, d } en el sprite (d mayor = más lejos de la cámara).
+const HC = [-2.5, 0, 17.6];
+function capsula(c, a, b, ancho, color) { c.strokeStyle = color; c.lineWidth = ancho; c.lineCap = 'round'; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke(); }
+function circulo(c, p, r, color, linea) { c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.fillStyle = color; c.fill(); if (linea) { c.strokeStyle = linea; c.lineWidth = 0.4; c.stroke(); } }
+function florK(c, p, r, color) { c.fillStyle = color; for (let k = 0; k < 5; k++) { const a = k * 1.2566; c.beginPath(); c.arc(p.x + Math.cos(a) * r * 0.5, p.y + Math.sin(a) * r * 0.5, r * 0.52, 0, 7); c.fill(); } c.fillStyle = '#fde68a'; c.beginPath(); c.arc(p.x, p.y, r * 0.35, 0, 7); c.fill(); }
+function pintarCabeza(c, per, S, cr, sr) {
+  const h = S(HC[0], HC[1], HC[2]), R = 5.0, frente = cr < 0.35, fx = sr, piel = Personajes.porId(per).piel.base;
+  const H = (dx, dy, dz) => S(HC[0] + dx, HC[1] + dy, HC[2] + dz);
+  const cara = (fondo, brillo, tinta) => { // cara hacia donde mira el kart (se ve de lado y de frente)
+    if (!frente) return;
+    const ox = h.x + fx * R * 0.42, k = Math.max(0.35, Math.min(1, -cr + 0.6));
+    if (fondo) { c.fillStyle = fondo; c.beginPath(); c.ellipse(ox, h.y + 0.6, R * 0.62 * k, R * 0.68, 0, 0, 7); c.fill(); }
+    for (const s of [-1, 1]) {
+      const x = ox + fx * 0.6 + s * R * 0.28 * k;
+      c.fillStyle = tinta; c.beginPath(); c.ellipse(x, h.y - 0.1, 0.55, 0.75, 0, 0, 7); c.fill();
+      if (brillo) { c.fillStyle = brillo; c.beginPath(); c.arc(x, h.y - 0.1, 0.32, 0, 7); c.fill(); }
+    }
+  };
+  if (per === 'xalli') {
+    const ramas = [];
+    for (const lado of [-1, 1]) for (let k = 0; k < 3; k++) ramas.push({ a: H(-0.4, lado * 3.6, 2.4 - k * 2), b: H(-1.2, lado * 8.4, 3.6 - k * 2.6) });
+    const rama = r => { const m = { x: (r.a.x + r.b.x) / 2, y: (r.a.y + r.b.y) / 2 }; capsula(c, r.a, r.b, 3.6, piel.halo); capsula(c, r.a, r.b, 2.0, piel.bran); circulo(c, r.b, 0.9, piel.bran2); circulo(c, m, 0.6, piel.bran2); };
+    ramas.filter(r => r.a.d >= h.d - 0.5).forEach(rama);
+    circulo(c, h, R, piel.cuerpo, piel.linea);
+    c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(h.x - 1, h.y - 2.4, 1.8, 0.8, 0, 0, 7); c.fill();
+    c.strokeStyle = piel.equipo; c.lineWidth = 1.1; c.beginPath(); c.arc(h.x, h.y, R - 0.8, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
+    circulo(c, H(0, 0, 4.2), 0.75, piel.jade);
+    cara(null, null, '#2a1222');
+    ramas.filter(r => r.a.d < h.d - 0.5).forEach(rama);
+  } else if (per === 'itzae') {
+    const plumas = [];
+    for (let k = 0; k < 7; k++) { const a = -1.35 + k * 0.45; plumas.push({ a: H(-3.4, Math.sin(a) * 1.6, 1.6 + Math.cos(a) * 1.6), b: H(-4.4, Math.sin(a) * 10, 1.6 + Math.cos(a) * 10), col: piel.pluma[k % 3] }); }
+    const sol = H(-3.8, 0, 2.6), abanico = () => {
+      for (const f of plumas) { capsula(c, f.a, f.b, 2.6, 'rgba(10,40,40,.5)'); capsula(c, f.a, f.b, 2.0, f.col); circulo(c, f.b, 0.95, piel.punta); }
+      c.fillStyle = 'rgba(255,214,90,.4)'; c.beginPath(); c.arc(sol.x, sol.y, 3.4, 0, 7); c.fill();
+      circulo(c, sol, 2.3, piel.oro, piel.oro2); c.strokeStyle = piel.oro2; c.lineWidth = 0.35; c.beginPath(); c.arc(sol.x, sol.y, 1.1, 0, 7); c.stroke();
+    };
+    const detras = sol.d > h.d;
+    if (detras) abanico();
+    circulo(c, h, R, piel.pelo, piel.linea);
+    c.strokeStyle = piel.banda; c.lineWidth = 1.2; c.beginPath(); c.arc(h.x, h.y, R - 0.7, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
+    cara(piel.piel, null, '#2b160c');
+    if (!detras) abanico();
+  } else if (per === 'yahui') {
+    const orejas = [H(-0.4, -3.1, 3.6), H(-0.4, 3.1, 3.6)];
+    const plumas = [[-1.6, 9.5], [0, 10.5], [1.6, 9.5]].map(([y, l], k) => ({ a: H(-1.5, y * 0.4, 3.6), b: H(-1.5 - l * 0.6, y, 3.6 + l * 0.75), col: piel.pluma[k] }));
+    const penacho = () => { for (const f of plumas) { capsula(c, f.a, f.b, 2.5, 'rgba(5,40,20,.5)'); capsula(c, f.a, f.b, 1.9, f.col); } };
+    const detras = plumas[1].b.d > h.d;
+    if (detras) penacho();
+    for (const o of orejas) { circulo(c, o, 1.8, piel.pelaje, piel.linea); circulo(c, o, 0.85, piel.manchas); }
+    circulo(c, h, R, piel.pelaje, piel.linea);
+    c.fillStyle = piel.manchas;
+    for (const [dy, dz] of [[-2, 1.8], [1.6, 2.4], [0, -1.6], [-2.8, -0.6], [2.6, -0.4]]) { const m = H(-3.4 * Math.max(0, cr), dy * Math.max(0.3, Math.abs(cr)), dz); c.beginPath(); c.arc(m.x, m.y, 0.65, 0, 7); c.fill(); }
+    c.strokeStyle = piel.jade; c.lineWidth = 1.1; c.beginPath(); c.arc(h.x, h.y, R - 0.7, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
+    cara(piel.crema, piel.ojo, '#2b1608');
+    if (!detras) penacho();
+  } else {
+    const flores = [];
+    for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; flores.push({ p: H(Math.cos(a) * 3.6, Math.sin(a) * 3.6, 2.9), col: piel.flor[k % 3] }); }
+    if (cr > -0.2) { // pelo largo sobre la espalda
+      const pts = [H(0, -3.9, 0), H(-3.2, -4.6, -6.5), H(-3.2, 4.6, -6.5), H(0, 3.9, 0)];
+      c.fillStyle = piel.pelo; c.beginPath(); pts.forEach((q, i) => i ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y)); c.closePath(); c.fill();
+    }
+    for (const f of flores) if (f.p.d > h.d) florK(c, f.p, 1.6, f.col);
+    circulo(c, h, R, piel.pelo, piel.linea);
+    cara(piel.mascara, piel.ojo, '#2a160c');
+    for (const f of flores) if (f.p.d <= h.d) florK(c, f.p, 1.6, f.col);
+  }
+}
+// Cola de Yahui: sale de atrás del asiento y se enrosca hacia arriba.
+function pintarCola(c, S) {
+  const piel = Personajes.porId('yahui').piel.base, q = [S(-8, 3, 10), S(-14, 10, 12), S(-17, 13, 18), S(-14, 11.5, 22)];
+  const en = t => { const u = 1 - t; return { x: u * u * u * q[0].x + 3 * u * u * t * q[1].x + 3 * u * t * t * q[2].x + t * t * t * q[3].x, y: u * u * u * q[0].y + 3 * u * u * t * q[1].y + 3 * u * t * t * q[2].y + t * t * t * q[3].y }; };
+  c.lineCap = 'round';
+  for (const [ancho, color] of [[3.2, piel.linea], [2.4, piel.pelaje]]) { c.strokeStyle = color; c.lineWidth = ancho; c.beginPath(); c.moveTo(q[0].x, q[0].y); c.bezierCurveTo(q[1].x, q[1].y, q[2].x, q[2].y, q[3].x, q[3].y); c.stroke(); }
+  c.fillStyle = piel.manchas;
+  for (const t of [0.3, 0.55, 0.78]) { const m = en(t); c.beginPath(); c.arc(m.x, m.y, 0.7, 0, 7); c.fill(); }
+  c.beginPath(); c.arc(q[3].x, q[3].y, 1.3, 0, 7); c.fill();
+}
+// Niebla de Xochiquetzal: un aro translúcido alrededor del piloto.
+function pintarNiebla(c, S) {
+  const pts = []; for (let k = 0; k <= 24; k++) { const a = k / 24 * Math.PI * 2; pts.push(S(-2 + Math.cos(a) * 9, Math.sin(a) * 9, 10 + Math.sin(a * 2) * 1.5)); }
+  for (const [ancho, alfa] of [[3.2, 0.16], [1.1, 0.5]]) { c.strokeStyle = 'rgba(94,234,212,' + alfa + ')'; c.lineWidth = ancho; c.beginPath(); pts.forEach((q, i) => i ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y)); c.stroke(); }
+}
 const CARAS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
-function spriteKart(color, num, vista, phi) {
-  const clave = color + '|' + num + '|' + vista + '|' + phi.toFixed(2);
+function spriteKart(per, color, num, vista, phi) {
+  const clave = per + '|' + color + '|' + num + '|' + vista + '|' + phi.toFixed(2);
   if (sprites[clave]) return sprites[clave];
   const s = document.createElement('canvas'); s.width = KW * SPK; s.height = KH * SPK;
   const c = s.getContext('2d'); c.translate(KW * SPK / 2, KOY * SPK); c.scale(SPK, SPK);
   const rel = vista / NVISTAS * Math.PI * 2, cr = Math.cos(rel), sr = Math.sin(rel), cp = Math.cos(phi), sp = Math.sin(phi);
   const P = (x, y, z) => { const f = x * cr - y * sr; return { u: x * sr + y * cr, v: z * cp + f * sp, d: f * cp - z * sp }; };
+  const S = (x, y, z) => { const q = P(x, y, z); return { x: q.u, y: -q.v, d: q.d }; };
   const luz = [-0.35, -0.45, 0.82]; // hacia la luz en (frente, derecha, arriba) de la vista
-  const caras = [];
-  for (const [x0, x1, y0, y1, z0, z1, col] of partesKart(color)) {
+  const kc = Personajes.porId(per).kart, caras = [];
+  for (const [x0, x1, y0, y1, z0, z1, col] of partesKart(per, color)) {
     for (const [nx, ny, nz] of CARAS) {
       const nf = nx * cr - ny * sr, nu = nx * sr + ny * cr;
       if (-nf * cp + nz * sp <= 0.02) continue; // de espaldas a la cámara
@@ -813,37 +915,37 @@ function spriteKart(color, num, vista, phi) {
       else { const z = nz > 0 ? z1 : z0; q = [[x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z]]; }
       const pts = q.map(p => P(p[0], p[1], p[2]));
       const luzN = Math.max(0, nf * luz[0] + nu * luz[1] + nz * luz[2]);
-      caras.push({ d: pts.reduce((a, p) => a + p.d, 0) / 4 + (nz > 0 ? -0.01 : 0), pts, col, k: 0.58 + 0.5 * luzN, atras: nx < 0 && x0 === -19 && y1 - y0 > 20 });
+      caras.push({ d: pts.reduce((a, p) => a + p.d, 0) / 4 + (nz > 0 ? -0.01 : 0), pts, col, k: 0.58 + 0.5 * luzN, atras: nx < 0 && x0 === -19 && y1 - y0 > 20, manchas: kc.manchas && col === kc.cuerpo });
     }
   }
-  // Casco del piloto (esfera).
-  const ce = P(-2.5, 0, 16.6);
-  caras.push({ d: ce.d, casco: ce });
+  // Cabeza del piloto y, en Yahui, su cola (cada una con su profundidad).
+  caras.push({ d: P(HC[0], HC[1], HC[2]).d, cabeza: true });
+  if (per === 'yahui') caras.push({ d: Math.min(P(-14, 11, 16).d, P(-20, 0, 15).d - 0.5), cola: true });
   caras.sort((a, b) => b.d - a.d);
+  const cuadro = f => { c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(p.u, -p.v) : c.moveTo(p.u, -p.v)); c.closePath(); };
   for (const f of caras) {
-    if (f.casco) {
-      const { u, v } = f.casco, rad = 4.7;
-      const gr = c.createRadialGradient(u - 1.6, -v - 1.8, 0.5, u, -v, rad); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#cbd5e1');
-      c.fillStyle = gr; c.beginPath(); c.arc(u, -v, rad, 0, 7); c.fill();
-      c.save(); c.beginPath(); c.arc(u, -v, rad, 0, 7); c.clip();
-      c.fillStyle = color; c.fillRect(u - rad, -v - rad * 0.95, rad * 2, rad * 0.55); // franja de color arriba
-      if (cr < 0.35) { c.fillStyle = '#1e293b'; c.beginPath(); c.ellipse(u + sr * rad * 0.55, -v + 0.6, rad * 0.75 * Math.max(0.35, Math.abs(cr) + 0.2), rad * 0.42, 0, 0, 7); c.fill(); } // visor
-      c.restore();
-      continue;
+    if (f.cabeza) { pintarCabeza(c, per, S, cr, sr); continue; }
+    if (f.cola) { pintarCola(c, S); continue; }
+    cuadro(f); c.fillStyle = f.col; c.fill();
+    if (f.manchas) { // rosetas de jaguar en la carrocería de Yahui
+      const [p0, p1, p2, p3] = f.pts, bil = (a, b) => ({ x: (1 - a) * (1 - b) * p0.u + a * (1 - b) * p1.u + a * b * p2.u + (1 - a) * b * p3.u, y: -((1 - a) * (1 - b) * p0.v + a * (1 - b) * p1.v + a * b * p2.v + (1 - a) * b * p3.v) });
+      c.fillStyle = kc.manchas;
+      for (const [a, b] of [[0.2, 0.3], [0.55, 0.22], [0.8, 0.6], [0.35, 0.72], [0.65, 0.85]]) { const m = bil(a, b); c.beginPath(); c.arc(m.x, m.y, 0.8, 0, 7); c.fill(); }
+      cuadro(f);
     }
-    c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(p.u, -p.v) : c.moveTo(p.u, -p.v)); c.closePath();
-    c.fillStyle = f.col; c.fill();
     if (f.k !== 1) { c.fillStyle = f.k < 1 ? 'rgba(0,0,0,' + (1 - f.k).toFixed(3) + ')' : 'rgba(255,255,255,' + Math.min(0.35, f.k - 1).toFixed(3) + ')'; c.fill(); }
     c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 0.35; c.stroke();
-    // Número en la parte de atrás del alerón (lo que se ve al seguir a un rival).
+    // Número en la parte de atrás del alerón (lo que se ve al seguir a un rival), en el color de identidad.
     if (f.atras && f.pts.length === 4 && cr > 0.25) {
       const mu = f.pts.reduce((a, p) => a + p.u, 0) / 4, mv = f.pts.reduce((a, p) => a + p.v, 0) / 4;
       c.save(); c.translate(mu, -mv); c.scale(Math.max(0.3, cr), 1);
-      c.fillStyle = '#fff'; c.beginPath(); c.ellipse(0, 0, 3.6, 2.6, 0, 0, 7); c.fill();
-      c.fillStyle = '#111'; c.font = 'bold 4.6px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(num), 0, 0.3);
+      c.fillStyle = color; c.strokeStyle = '#fff'; c.lineWidth = 0.6; c.beginPath(); c.ellipse(0, 0, 3.6, 2.6, 0, 0, 7); c.fill(); c.stroke();
+      c.font = 'bold 4.6px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.lineWidth = 0.8; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(String(num), 0, 0.3); c.fillStyle = '#fff'; c.fillText(String(num), 0, 0.3);
       c.restore();
     }
   }
+  if (per === 'xochiquetzal') pintarNiebla(c, S);
   sprites[clave] = s;
   return s;
 }
@@ -855,12 +957,13 @@ let modo = 'carga', sala = null, tCarrera = 0, cuentaFin = 0, terminada = false,
 let prog = progresoNuevo(), arranque = { presiono: null };
 function progresoNuevo() { return { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null }; }
 
-function nuevoKart(id, nombre, color, humano, slot) {
+function nuevoKart(id, nombre, color, humano, slot, personaje) {
   const fila = Math.floor(slot / 2), lado = slot % 2 ? 0.42 : -0.42;
   const i = N - 4 - fila * 5;
   const p = punto(i, lado * pista.mitad);
   return { id, nombre, color, humano, num: slot + 1, x: p.x, y: p.y, ang: M.pts[(i + N) % N].a, vx: 0, vy: 0, vel: 0, idx: (i + N) % N, vuelta: -1, mitadOk: true, termino: null,
-    item: null, monedas: 0, turbo: 0, giro: 0, estrella: 0, rayo: 0, derrape: null, skill: 1, carril: lado * pista.mitad, carrilT: 0, ahogado: 0, fantasma: false, msObjetivo: 0, usoT: 0, volante: 0, turboNivel: 0 };
+    item: null, monedas: 0, turbo: 0, giro: 0, estrella: 0, rayo: 0, derrape: null, skill: 1, carril: lado * pista.mitad, carrilT: 0, ahogado: 0, fantasma: false, msObjetivo: 0, usoT: 0, volante: 0, turboNivel: 0,
+    personaje: Personajes.normalizar(personaje) };
 }
 const puntaje = k => k.termino !== null ? 1e9 - k.termino : (k.vuelta * N + k.idx);
 function posiciones() { return karts.slice().sort((a, b) => puntaje(b) - puntaje(a)); }
@@ -871,10 +974,12 @@ function prepararCarrera(id, opciones) {
   karts = []; objetos = []; particulas = []; tCarrera = 0; terminada = false; cuentaFin = 0; rayoTinte = 0; ultimoTurbo = null; arranque = { presiono: null };
   const colorYo = COLORES[prog.equipo.color] || COLORES.azul;
   const otros = Object.values(COLORES).filter(c => c !== colorYo);
+  // Personajes (openspec: personajes-xalli): tú con el tuyo; los bots y fantasmas con los otros 3, en orden fijo.
+  const perYo = personaje, perOtros = Personajes.LISTA.map(x => x.id).filter(x => x !== perYo);
   if (opciones.sala) {
-    yo = nuevoKart('yo', 'Tú', colorYo, true, 1);
+    yo = nuevoKart('yo', 'Tú', colorYo, true, 1, perYo);
     karts.push(yo);
-    opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, k === 0 ? 0 : 2 + k); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
+    opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, k === 0 ? 0 : 2 + k, perOtros[k % perOtros.length]); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
   } else {
     const r = A.rng(id + '|' + (opciones.ronda || 0), 'rivales');
     const dif = (opciones.dif || 95) / 100;
@@ -883,8 +988,8 @@ function prepararCarrera(id, opciones) {
     for (let i = skills.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [skills[i], skills[j]] = [skills[j], skills[i]]; }
     const slotYo = 5;
     let s = 0;
-    RIVALES.forEach((nombre, k) => { if (s === slotYo) s++; const b = nuevoKart('bot-' + k, nombre, otros[k % otros.length], false, s++); b.skill = Math.max(0.78, Math.min(1.0, skills[k])); karts.push(b); });
-    yo = nuevoKart('yo', 'Tú', colorYo, true, slotYo);
+    RIVALES.forEach((nombre, k) => { if (s === slotYo) s++; const b = nuevoKart('bot-' + k, nombre, otros[k % otros.length], false, s++, perOtros[k % perOtros.length]); b.skill = Math.max(0.78, Math.min(1.0, skills[k])); karts.push(b); });
+    yo = nuevoKart('yo', 'Tú', colorYo, true, slotYo, perYo);
     karts.splice(slotYo, 0, yo);
   }
   modo = 'carrera';
@@ -1261,6 +1366,13 @@ function iniciarCarrera(id, op) {
   $('m-derrape').textContent = 'DERRAPE';
 }
 
+/* ================= Piloto (openspec: personajes-xalli) =================
+   Elección recordada en localStorage.arcade_personaje (compartida con Axo); sin elección o desconocida → Xalli. */
+let personaje = Personajes.preferencia();
+function pintarPilotos() { document.querySelectorAll('#pilotos [data-personaje]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.personaje === personaje))); }
+$('pilotos').innerHTML = Personajes.LISTA.map(per => '<button class="pers" data-personaje="' + per.id + '" aria-pressed="false"><img src="' + Personajes.retrato(per.id, 'quieto') + '" alt="" width="52" height="52"><span><b>' + per.nombre + '</b><small>' + per.titulo + '</small></span></button>').join('');
+pintarPilotos();
+
 /* ================= Menús ================= */
 function abrirMenu() {
   modo = 'menu'; motorOn(false); soltarTodo(); $('hud').classList.add('hide'); $('cuenta').textContent = '';
@@ -1302,6 +1414,8 @@ document.addEventListener('click', e => {
   }
   const q = e.target.closest('[data-eq]');
   if (q && !q.disabled) { const [gr, val] = q.dataset.eq.split(':'); prog.equipo[gr] = val; guardar(); abrirTaller(); return; }
+  const pe = e.target.closest('[data-personaje]');
+  if (pe) { personaje = Personajes.preferencia(pe.dataset.personaje); pintarPilotos(); return; }
   const ac = e.target.closest('[data-acel]');
   if (ac) { elegirAcel(ac.dataset.acel); return; }
   const ctl = e.target.closest('[data-control]');
@@ -1386,11 +1500,16 @@ function emitir(k) {
       particulas.push({ tipo: 'chispa', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vida: 0.22, max: 0.22, c: NIVEL_COLOR[k.derrape.nivel], tam: 1.6 });
     }
   }
+  if (k === yo && k.turbo > 0 && !REDUCIR && Math.random() < 0.45) { // partícula del personaje (solo cosmética)
+    const forma = Personajes.porId(k.personaje).particula, cols = ESTELA[forma];
+    particulas.push({ tipo: 'estela', forma, x: k.x - ca * 18 + (Math.random() - 0.5) * 10, y: k.y - sa * 18 + (Math.random() - 0.5) * 10, vx: -ca * 30 + (Math.random() - 0.5) * 20, vy: -sa * 30 + (Math.random() - 0.5) * 20, vida: 0.7, max: 0.7, c: cols[(Math.random() * cols.length) | 0], tam: 2.2 });
+  }
   if (k.turbo > 0 && Math.random() < f) for (const s of [-3, 3]) {
     const c = k.turboNivel ? NIVEL_COLOR[k.turboNivel] : (Math.random() < 0.5 ? '#f97316' : '#facc15');
     particulas.push({ tipo: 'fuego', x: k.x - ca * 16 - sa * s, y: k.y - sa * 16 + ca * s, vx: -ca * 60, vy: -sa * 60, vida: 0.18, max: 0.18, c, tam: 2.6 });
   }
 }
+const ESTELA = { burbujas: ['#c8f5ff', '#7dd3fc'], glifos: ['#f5c542', '#ffe08a'], hojas: ['#22c55e', '#84cc16'], petalos: ['#f59e0b', '#db2777', '#a855f7'] };
 function pasoParticulas(dt) {
   for (const p of particulas) { p.vida -= dt; p.x += p.vx * dt; p.y += p.vy * dt; }
   particulas = particulas.filter(p => p.vida > 0);
@@ -1577,6 +1696,14 @@ function dibujarArco([a, b]) {
 function dibujarParticula(p) {
   const a = Math.max(0, p.vida / p.max), q = proyectar(p.x, p.y, 3 + (1 - a) * 5);
   if (!q) return;
+  if (p.tipo === 'estela') {
+    const r = Math.max(1, p.tam * q.s * (0.6 + (1 - a) * 0.6));
+    g.globalAlpha = Math.min(1, a * 1.5);
+    if (p.forma === 'burbujas') { g.strokeStyle = p.c; g.lineWidth = Math.max(0.8, r * 0.25); g.beginPath(); g.arc(q.x, q.y - r * 2, r, 0, 7); g.stroke(); }
+    else if (p.forma === 'glifos') { g.fillStyle = p.c; g.beginPath(); g.arc(q.x, q.y - r * 2, r * 0.7, 0, 7); g.fill(); g.strokeStyle = p.c; g.lineWidth = Math.max(0.8, r * 0.25); g.beginPath(); for (let i = 0; i < 4; i++) { const an = i * Math.PI / 2 + p.vida * 3; g.moveTo(q.x + Math.cos(an) * r, q.y - r * 2 + Math.sin(an) * r); g.lineTo(q.x + Math.cos(an) * r * 1.7, q.y - r * 2 + Math.sin(an) * r * 1.7); } g.stroke(); }
+    else { g.fillStyle = p.c; g.beginPath(); g.ellipse(q.x, q.y - r * 2, r * 1.2, r * 0.55, p.vida * 6, 0, 7); g.fill(); }
+    g.globalAlpha = 1; return;
+  }
   if (p.tipo === 'humo') { g.globalAlpha = a * 0.5; g.fillStyle = p.c; g.beginPath(); g.arc(q.x, q.y, p.tam * (2.4 - a * 1.4) * q.s, 0, 7); g.fill(); g.globalAlpha = 1; return; }
   g.globalCompositeOperation = 'lighter'; g.globalAlpha = a;
   if (p.tipo === 'chispa') {
@@ -1621,7 +1748,7 @@ function dibujarKart(k, t) {
     g.rotate(incl);
     if (!REDUCIR && k.vel > 60) g.translate(0, Math.sin(t * 38) * 0.25 * s);
   }
-  g.drawImage(spriteKart(k.color, k.num, vista, cam.phi), -KW / 2 * s, -KOY * s, KW * s, KH * s);
+  g.drawImage(spriteKart(k.personaje, k.color, k.num, vista, cam.phi), -KW / 2 * s, -KOY * s, KW * s, KH * s);
   if (k.estrella > 0) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'hsla(' + ((t * 360) % 360) + ',90%,60%,.45)'; g.beginPath(); g.ellipse(0, -9 * s, 20 * s, 13 * s, 0, 0, 7); g.fill(); g.globalCompositeOperation = 'source-over'; }
   g.restore();
   if (k.giro > 0 || k.rayo > 0) { g.font = Math.round(Math.max(8, 10 * p.s)) + 'px sans-serif'; g.textAlign = 'center'; g.fillText(k.rayo > 0 ? '⚡' : '💫', p.x, p.y - 30 * p.s); }
@@ -1755,7 +1882,17 @@ if (PRUEBA) {
     estado: () => ({ modo, pista: pista && pista.id, vuelta: yo ? yo.vuelta : null, pos: yo ? posDe(yo) : null, monedas: yo ? yo.monedas : 0, tiempo: Math.round(tCarrera * 1000), termino: yo ? yo.termino : null, turbo: yo ? yo.turbo : 0, ultimoTurbo, prog: JSON.parse(JSON.stringify(prog)), sala: !!sala, karts: karts.length, vel: yo ? Math.round(yo.vel) : 0, lw: LW, lh: LH,
       ang: yo ? yo.ang : 0, giro: leerEntrada().giro, freno: leerEntrada().freno, derrape: activo('derrape'), acel: acelModo, acelera: leerEntrada().acel,
       vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
-      item: yo ? yo.item : null, mando: mando.estado() }),
+      item: yo ? yo.item : null, mando: mando.estado(),
+      personaje: yo ? yo.personaje : personaje, personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length }),
+    // Caja de tu kart en px del lienzo (capturas de cerca y revisión de su dibujo).
+    cajaYo: () => { const p = proyectar(yo.x, yo.y, 0); return p ? { x: (p.x - KW / 2 * p.s) * K, y: (p.y - KOY * p.s) * K, w: KW * p.s * K, h: KH * p.s * K } : null; },
+    // Hoja de revisión: cada piloto de espaldas, de tres cuartos, de lado y de frente.
+    hojaPilotos: () => {
+      const vistas = [0, 4, 8, 12, 16, 24], e = Number(window.__hojaEsc || 2), c = document.createElement('canvas'); c.width = vistas.length * KW * SPK / e; c.height = Personajes.LISTA.length * KH * SPK / e;
+      const x = c.getContext('2d'); x.fillStyle = '#6b7280'; x.fillRect(0, 0, c.width, c.height);
+      Personajes.LISTA.forEach((per, f) => vistas.forEach((v, i) => x.drawImage(spriteKart(per.id, COLORES.azul, 6, v, 0.3), i * KW * SPK / e, f * KH * SPK / e, KW * SPK / e, KH * SPK / e)));
+      return c.toDataURL('image/png');
+    },
     darItem: t => { if (yo && ITEMS[t]) yo.item = t; }, // ítem en la mano (E2E del mando)
     // Lleva al jugador al final de la última vuelta (cruza la meta en un momento).
     piloto: on => { pilotoPrueba = !!on; },
