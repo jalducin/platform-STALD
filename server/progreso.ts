@@ -1,4 +1,4 @@
-// Progreso individual de los juegos de Arcade (openspec: juegos-plataformas-karts).
+// Progreso individual de los juegos de Arcade (openspec: juegos-plataformas-karts; Dragon Run: dragon-run-misiones).
 // GET/PUT /juegos/progreso/<juego> → juegos/progreso/<juego>/<id-jugador>.json = { v, datos, actualizado }, sin correos.
 // Cada jugador lee y escribe solo el suyo (el id sale de la sesión). Escritura condicional: la versión `v` del cliente
 // debe ser la guardada (409 version_vieja si no) y el put usa el sha leído (3 reintentos ante conflicto).
@@ -7,7 +7,7 @@ import type { Store } from "./store.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
-export const JUEGOS_PROGRESO = ["plataformas", "karts"] as const;
+export const JUEGOS_PROGRESO = ["plataformas", "karts", "dragon-run"] as const; // dragon-run: openspec dragon-run-misiones
 export const MAX_PROGRESO = 4096; // bytes de `datos` serializado
 
 export interface DocProgreso {
@@ -75,9 +75,52 @@ function validarKarts(d: unknown): boolean {
   return true;
 }
 
+// ---------- Dragon Run: misiones, logros y premios cosméticos (openspec: dragon-run-misiones) ----------
+// Las mismas listas viven en juegos/dragon-misiones.js; server/dragon_misiones_test.ts comprueba que coincidan.
+export const COLORES_DRAGON = ["verde", "azul", "morado", "rojo", "rosa", "dorado", "noche"];
+export const ESTELAS_DRAGON = ["fuego", "estrellas", "burbujas", "hojas", "arcoiris"];
+export const PREMIOS_DRAGON = [
+  "color-azul", "color-morado", "color-rojo", "color-rosa", "color-dorado", "color-noche",
+  "estela-estrellas", "estela-burbujas", "estela-hojas", "estela-arcoiris",
+];
+const FECHA = /^\d{4}-\d{2}-\d{2}$/;
+const fechaReal = (x: unknown) => {
+  if (typeof x !== "string" || !FECHA.test(x)) return false;
+  const d = new Date(x + "T00:00:00Z");
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === x;
+};
+const TOPES_DRAGON: Record<string, number> = {
+  metros: 10_000_000, monedas: 1_000_000, esquivados: 10_000_000, carreras: 1_000_000, castillos: 1_000_000, dobles: 10_000_000,
+};
+
+function validarDragon(d: unknown): boolean {
+  if (!esObj(d) || !llaves(d, ["totales", "mejorRacha", "dias", "diaria", "cumplidas", "premios", "equipo"])) return false;
+  const t = d.totales;
+  if (!esObj(t) || !llaves(t, Object.keys(TOPES_DRAGON)) || !Object.entries(TOPES_DRAGON).every(([k, max]) => entero(t[k], 0, max))) return false;
+  if (!entero(d.mejorRacha, 0, 999) || !entero(d.cumplidas, 0, 100_000)) return false;
+  const dias = d.dias;
+  if (!esObj(dias) || !llaves(dias, ["ultimo", "racha", "mejor"]) || !entero(dias.racha, 0, 3660) || !entero(dias.mejor, 0, 3660)) return false;
+  if ((dias.racha as number) > (dias.mejor as number)) return false;
+  if (dias.ultimo === null ? dias.racha !== 0 : !fechaReal(dias.ultimo)) return false;
+  const di = d.diaria;
+  if (di !== null) {
+    if (!esObj(di) || !llaves(di, ["fecha", "avance"]) || !fechaReal(di.fecha)) return false;
+    if (!Array.isArray(di.avance) || di.avance.length !== 3 || !di.avance.every((n) => entero(n, 0, 100_000))) return false;
+  }
+  const premios = d.premios;
+  if (!Array.isArray(premios) || !premios.every((p) => PREMIOS_DRAGON.includes(String(p))) || !sinRepetir(premios)) return false;
+  const eq = d.equipo;
+  if (!esObj(eq) || !llaves(eq, ["color", "estela"]) || !COLORES_DRAGON.includes(String(eq.color)) || !ESTELAS_DRAGON.includes(String(eq.estela))) return false;
+  // Lo equipado debe estar desbloqueado (verde y fuego son los de siempre).
+  if (eq.color !== "verde" && !premios.includes("color-" + eq.color)) return false;
+  if (eq.estela !== "fuego" && !premios.includes("estela-" + eq.estela)) return false;
+  return true;
+}
+
 export function validarProgreso(juego: string, datos: unknown): boolean {
   if (juego === "plataformas") return validarPlataformas(datos);
   if (juego === "karts") return validarKarts(datos);
+  if (juego === "dragon-run") return validarDragon(datos);
   return false;
 }
 

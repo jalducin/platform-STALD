@@ -239,6 +239,18 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     llantas "estandar"|"todoterreno", color }, copaEnCurso: null | { copa, carrera 0–3, puntos [8 × 0–60], dif 80–110 } }`.
     Una pieza equipada debe estar en `piezas` (el color `dorado` pide `pintura-dorada`). `puntos` sigue el orden de
     los corredores (0 = el jugador).
+  - `dragon-run` (cambio `dragon-run-misiones`): `{ totales { metros 0–10000000, monedas 0–1000000, esquivados
+    0–10000000, carreras 0–1000000, castillos 0–1000000, dobles 0–10000000 }, mejorRacha 0–999, dias { ultimo:
+    null | "AAAA-MM-DD", racha 0–3660, mejor 0–3660 }, diaria: null | { fecha "AAAA-MM-DD", avance [3 × 0–100000] },
+    cumplidas 0–100000, premios [ids sin repetir], equipo { color, estela } }`.
+    - `totales` acumula todas las carreras; `mejorRacha` es el máximo de obstáculos esquivados seguidos en una carrera
+      (un golpe la reinicia); `dias` cuenta días seguidos jugando (`racha ≤ mejor`; sin `ultimo`, `racha` 0).
+    - `diaria.avance[i]` es el avance de la misión `i` del día `fecha`; las 3 misiones no se guardan: salen de
+      `misionesDelDia(fecha, id-jugador)` en `juegos/dragon-misiones.js` (deterministas). `cumplidas` cuenta misiones
+      diarias cumplidas en total.
+    - `premios` ⊂ `color-azul|morado|rojo|rosa|dorado|noche`, `estela-estrellas|burbujas|hojas|arcoiris` (cosméticos,
+      sin valor); `equipo.color` ∈ `verde` + colores y `equipo.estela` ∈ `fuego` + estelas, y lo equipado debe estar
+      en `premios` (salvo `verde` y `fuego`). Fechas reales; llaves exactas.
 - `juegos/nicks.json`: `{ "<id-jugador>": "<nick>" }`, sin correos (cambio `nick-jugadores`). El nick reemplaza al
   nombre en Juegos (chip, ranking y partidas); el admin ve ambos en «🛡️ Admin › Jugadores».
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.

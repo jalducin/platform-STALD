@@ -130,10 +130,17 @@ Cada página debe manejar y mostrar de forma explícita:
   - **Sudoku** (`sudoku-niveles`): el tablero se genera en el navegador con solución única (`generarSudoku`,
     `contarSoluciones`); niveles Fácil 40, Medio 32, Difícil 27 y Experto ~24 pistas; 3 vidas; puntos con
     `puntosSudoku` (base por nivel + rapidez − errores);
-  - **Dragon Run** (`dragon-run`): juego del profe en `juegos/dragon-run.html`, embebido con un iframe del mismo
-    origen. Al terminar avisa con `postMessage` (solo a `location.origin`) y `juegos.html` lo acepta solo si viene de
-    su iframe y de su origen, y luego llama a `terminar`. Conserva su propia música; la de Juegos se pausa mientras se
-    juega. `?auto=1` es solo para pruebas;
+  - **Dragon Run** (`dragon-run`, en Arcade desde `dragon-run-misiones`): juego del profe en `juegos/dragon-run.html`,
+    embebido con un iframe del mismo origen dentro de `.arcade-caja`. Al terminar avisa con `postMessage` (solo a
+    `location.origin`) y `juegos.html` lo acepta solo si viene de su iframe y de su origen, y luego llama a `terminar`
+    (las misiones cumplidas van escapadas en el detalle). Conserva su propia música; la de Juegos se pausa mientras se
+    juega. Misiones y premios: reglas en `juegos/dragon-misiones.js` (`DragonMisiones`, también lo prueban los tests
+    de Deno); el juego pide el avance con `listo`, recibe `inicio` (`progreso`, `semilla` = id del jugador) y manda
+    `guardar` antes de `fin`; `juegos.html` lo guarda con `canalProgreso` (`GET`/`PUT /juegos/progreso/dragon-run`,
+    cola por juego). Pantalla de misiones a pantalla completa en `rem`, aviso `#toast` «¡Misión cumplida!», toque en
+    toda la pantalla y `prefers-reduced-motion`. Suelto, el avance va a `localStorage.dragonProgreso`. `?auto=1`
+    (`?dragonAuto=1` en Juegos) y `?prueba=1` (`?arcadePrueba=1`, ganchos `window.__dragonPrueba`) son solo para
+    pruebas;
   - **Arcade** (`plataformas` y `karts`, cambio `juegos-plataformas-karts`): `juegos/plataformas.html` y
     `juegos/karts.html`, cada uno en un iframe del mismo origen (`.arcade-caja`), con reglas compartidas en
     `juegos/arcade.js` (mundos, pistas, referencias, mapa de sala, tiempos de bots y puntos por lugar; también lo
@@ -144,6 +151,27 @@ Cada página debe manejar y mostrar de forma explícita:
     (`localStorage.arcade_sonido`), controles táctiles grandes (pointer events) y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
+  - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
+    - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
+      events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo
+      suelta el teclado). Los mandos se ven con *touch events* o `(any-pointer: coarse)` y abajo de 700 px;
+    - controles: 🕹️ Joystick (por omisión: flotante, zona muerta 0.15, abajo frena), 📱 Sensor
+      (`DeviceOrientationEvent`: `gamma` en vertical, `±beta` en horizontal; centro al arrancar y con 🎯; permiso de
+      iOS con el toque en «Activar sensor»; sin permiso o sin lecturas en 2 s regresa al joystick con aviso) y
+      🔘 Botones (◀ ▶). DERRAPE, 🎁 y FRENO a la derecha. Preferencia en `localStorage.karts_control` y
+      `karts_sensibilidad`. El iframe de Arcade lleva `allow="autoplay; accelerometer; gyroscope"`;
+    - giro analógico acotado a [−1, 1]; el derrape lo cuantiza (umbral 0.3) para que las reglas no cambien;
+    - minimapa en `canvas#minimapa` (fuera del canvas del juego), con todos los corredores: tú con borde, flecha y
+      «TÚ»; rivales y fantasmas con su color y número. La E2E verifica que no se cruza con los mandos a 360×640,
+      390×844 y 844×390;
+    - pista y sprites de los karts pre-dibujados; partículas con tope de 300 y un tercio con
+      `prefers-reduced-motion` (sin humo ni confeti);
+    **Dibujo de «Axo y los 12 mundos»** (cambio `axo-diseno`): arte vectorial en canvas a la resolución real (`K`),
+    sin imágenes externas. Los tiles se pre-dibujan una vez por combinación (tipo, mundo, lados expuestos y variante)
+    y los fondos son franjas de paralaje que se repiten (cachés fuera de pantalla a `min(K, 4)`); en cada cuadro solo
+    se copian las columnas visibles. En celular vertical el canvas crece a `VH` y el nivel se desplaza `OY`: el
+    sobrante es cielo (donde va el HUD) y subsuelo, sin cambiar lo que se ve del nivel. Con `prefers-reduced-motion`
+    no hay paralaje ni partículas. El mapa es una escena SVG en línea con los mismos botones `[data-nivel]`;
   - **música de fondo:** generada con WebAudio (Alegre, Relajante, Fiesta); empieza solo tras un gesto y
     baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el

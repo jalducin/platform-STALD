@@ -675,7 +675,6 @@
     { id: 'mente-simon', cat: 'mente', emoji: '🟢', t: 'Simón dice', d: 'Repite la secuencia de colores.', jugar: () => jugarSimon() },
     { id: 'mente-sopa', cat: 'mente', emoji: '🔎', t: 'Sopa de letras', d: 'Encuentra las palabras en inglés.', jugar: () => jugarSopa() },
     { id: 'mente-sudoku', cat: 'mente', emoji: '🔢', t: 'Sudoku', d: 'Por niveles: fácil, medio, difícil y experto.', jugar: () => elegirSudoku() },
-    { id: 'dragon-run', cat: 'mente', emoji: '🐉', t: 'Dragon Run', d: 'Corre, salta (¡doble salto!) y llega al castillo.', jugar: () => jugarDragonRun() },
     { id: 'ajedrez', cat: 'mente', emoji: '♟️', t: 'Ajedrez', d: 'Contra el bot (3 niveles) o 1 vs 1 en partida.', jugar: () => elegirAjedrez() },
     { id: 'basta-es', cat: 'clasicos', emoji: '✋', t: 'Basta', d: 'Nombre, animal, fruta, país… ¡con la letra que salga!', jugar: () => jugarBasta('es') },
     { id: 'basta-en', cat: 'clasicos', emoji: '🗽', t: 'Basta en inglés', d: 'Name, animal, food… in English!', jugar: () => jugarBasta('en') },
@@ -686,6 +685,7 @@
     { id: 'conquian', cat: 'clasicos', emoji: '🪙', t: 'Conquián', d: 'Baraja española: baja tercias y escaleras hasta juntar 9 cartas.', jugar: () => elegirConquian() },
     { id: 'plataformas', cat: 'arcade', emoji: '🦎', t: 'Axo y los 12 mundos', d: 'Plataformas: salta, junta monedas y vence al jefe de cada mundo.', jugar: () => jugarArcade('plataformas') },
     { id: 'karts', cat: 'arcade', emoji: '🏎️', t: 'Karts Turbo', d: 'Carreras: derrapa, usa ítems y gana la copa contra 7 rivales.', jugar: () => jugarArcade('karts') },
+    { id: 'dragon-run', cat: 'arcade', emoji: '🐉', t: 'Dragon Run', d: 'Corre, salta (¡doble salto!), cumple misiones y llega al castillo.', jugar: () => jugarDragonRun() }, // openspec: dragon-run-misiones
     // juegos-salas-grandes
     { id: 'dibuja', cat: 'ingles', emoji: '🎨', t: 'Dibuja y adivina', d: 'Por turnos: dibuja una palabra en inglés y adivina la de los demás (3 a 12).', jugar: () => elegirDibuja() },
     { id: 'bingo', cat: 'clasicos', emoji: '🎱', t: 'Bingo', d: '75 números y tu cartón: línea, esquinas o lleno. ¡Para salas de hasta 30!', jugar: () => elegirBingo() },
@@ -1579,27 +1579,62 @@
     });
   }
 
-  // ---------- Mente ágil: Dragon Run (juego del profe en iframe del mismo origen; openspec: dragon-run) ----------
+  // ---------- Arcade: Dragon Run (juego del profe en iframe del mismo origen; openspec: dragon-run, dragon-run-misiones) ----------
+  // Avance en el servidor de un juego embebido: misma lógica que jugarArcade (PUT encadenado con la versión `v`; ante
+  // version_vieja reintenta una vez si ya se leyó el avance). La cola vive a nivel de página: al volver a jugar, la
+  // lectura espera al último guardado. TODO: unificar con jugarArcade cuando no haya cambios en paralelo ahí.
+  const colasProgreso = {};
+  function canalProgreso(id, aJuego) {
+    let v = 0, cargado = false, pendiente = null;
+    const cola = () => colasProgreso[id] || Promise.resolve();
+    const lectura = cola().then(() => api('/juegos/progreso/' + id)).catch(() => ({ ok: false, status: 0, body: {} }));
+    colasProgreso[id] = lectura.then(r => { if (r.ok) { v = r.body.v; cargado = true; } });
+    const put = datos => api('/juegos/progreso/' + id, { method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ v, datos }) });
+    const guardar = datos => {
+      pendiente = datos;
+      colasProgreso[id] = cola().then(async () => {
+        if (!pendiente) return;
+        const d = pendiente; pendiente = null;
+        let r = await put(d);
+        if (r.status === 409 && r.body.error === 'version_vieja' && cargado) { v = r.body.v; r = await put(d); }
+        if (r.ok) v = r.body.v;
+        aJuego({ tipo: 'guardado', ok: r.ok });
+      }).catch(() => aJuego({ tipo: 'guardado', ok: false }));
+    };
+    return { lectura, guardar };
+  }
   function jugarDragonRun() {
     const m = marco('dragon-run');
     document.getElementById('m-puntos').hidden = true;
-    const auto = new URLSearchParams(location.search).get('dragonAuto') === '1'; // solo pruebas E2E
-    m.body.innerHTML = '<div style="position:relative;width:100%;aspect-ratio:2/1;border-radius:16px;overflow:hidden;box-shadow:var(--shadow)">' +
-      '<iframe id="dragon-frame" src="juegos/dragon-run.html' + (auto ? '?auto=1' : '') + '" title="Dragon Run" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay"></iframe></div>' +
-      '<p class="muted" style="text-align:center;margin:8px 0 0">Toca el juego o presiona ESPACIO para saltar · vuelve a tocar en el aire para el doble salto · 🏰 a los 600 m: +200</p>';
+    enCurso.foto = () => null; // el avance de misiones vive en el servidor: recargar no pide confirmación
+    const q = new URLSearchParams(location.search), extra = [];
+    if (q.get('dragonAuto') === '1') extra.push('auto=1'); // solo pruebas E2E
+    if (q.get('arcadePrueba') === '1') extra.push('prueba=1'); // ganchos window.__dragonPrueba, solo E2E
+    m.body.innerHTML = '<div class="arcade-caja"><iframe id="dragon-frame" src="juegos/dragon-run.html' + (extra.length ? '?' + extra.join('&') : '') + '" title="Dragon Run" allow="autoplay"></iframe></div>';
     const frame = document.getElementById('dragon-frame');
     frame.addEventListener('load', () => { try { frame.focus(); } catch (e) { /* sin foco */ } });
     // La música de Juegos se pausa mientras corre el dragón (el juego trae la suya).
     const estilo = musica.estilo;
     detenerMusica();
-    const alMensaje = ev => {
+    const aJuego = msg => { try { frame.contentWindow.postMessage(msg, location.origin); } catch (e) { /* iframe cerrado */ } };
+    const canal = canalProgreso('dragon-run', aJuego);
+    const alMensaje = async ev => {
       const d = ev.data || {};
-      if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'dragon-run' || !d.fin) return;
-      terminar('dragon-run', {
-        puntos: d.puntos, aciertos: d.monedas, total: 0, segundos: d.segundos,
-        titulo: d.gano ? '🏰 ¡Llegaste al castillo!' : '🐉 Dragon Run',
-        detalle: '📏 ' + d.metros + ' m · 🪙 ' + d.monedas + ' monedas' + (d.gano ? ' · bono castillo +200' : ''),
-      });
+      if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'dragon-run') return;
+      if (d.tipo === 'listo') {
+        const r = await canal.lectura;
+        aJuego({ tipo: 'inicio', progreso: r.ok ? r.body.datos : null, semilla: (state.jugador && state.jugador.id) || '', aviso: r.ok ? '' : '⚠️ No se pudo cargar tu avance: juega y se guardará cuando vuelva la conexión.' });
+      } else if (d.tipo === 'guardar' && d.datos) canal.guardar(d.datos);
+      else if (d.fin) {
+        // Misiones, logros y premios de esta carrera (texto del juego: se escapa porque `detalle` es HTML).
+        const misiones = Array.isArray(d.misiones) ? d.misiones.filter(x => typeof x === 'string').slice(0, 12).map(x => escapeHtml(x.slice(0, 120))) : [];
+        terminar('dragon-run', {
+          puntos: d.puntos, aciertos: d.monedas, total: 0, segundos: d.segundos,
+          titulo: d.gano ? '🏰 ¡Llegaste al castillo!' : '🐉 Dragon Run',
+          detalle: '📏 ' + escapeHtml(d.metros) + ' m · 🪙 ' + escapeHtml(d.monedas) + ' monedas' + (d.gano ? ' · bono castillo +200' : '') +
+            (misiones.length ? '<div class="dr-misiones" style="margin-top:10px;font-weight:700;color:var(--text)">' + misiones.join('<br>') + '</div>' : ''),
+        });
+      }
     };
     window.addEventListener('message', alMensaje);
     limpiezas.push(() => window.removeEventListener('message', alMensaje), () => { if (estilo) iniciarMusica(estilo); });
@@ -1608,7 +1643,7 @@
   // ---------- Arcade: Axo y los 12 mundos y Karts Turbo (iframe del mismo origen; openspec: juegos-plataformas-karts) ----------
   // El juego no habla con el servidor: esta página le pasa el avance (GET /juegos/progreso/<id>), guarda lo que manda
   // (PUT con la versión `v`, una escritura a la vez y gana la última) y registra los puntos de cada nivel o carrera.
-  const marcoArcade = (src, titulo) => '<div class="arcade-caja"><iframe id="arcade-frame" src="' + src + '" title="' + escapeHtml(titulo) + '" allow="autoplay"></iframe></div>';
+  const marcoArcade = (src, titulo) => '<div class="arcade-caja"><iframe id="arcade-frame" src="' + src + '" title="' + escapeHtml(titulo) + '" allow="autoplay; accelerometer; gyroscope"></iframe></div>';
   const srcArcade = (id, extra) => 'juegos/' + id + '.html' + (new URLSearchParams(location.search).get('arcadePrueba') === '1' ? '?prueba=1' : '') + (extra || '');
   function jugarArcade(id) {
     const m = marco(id);
