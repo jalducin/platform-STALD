@@ -425,12 +425,12 @@ async function unirseSala(c: CtxSala): Promise<Response> {
 }
 
 // POST /juegos/sala/<código>/empezar (solo el anfitrión)
-async function empezarSala(c: CtxSala): Promise<Response> {
+function empezarSala(c: CtxSala): Promise<Response> {
   const { jugador, ahora, json, sala, jugadores } = c;
-  if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
+  if (sala.host !== jugador.id) return Promise.resolve(json({ error: "solo_host" }, 403));
   const minimo = mesaDe(sala.juego, sala.opciones)?.min ?? 1; // futbolito-equipos: mesa por formato
-  if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots, sala.opciones) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
-  if (sala.inicio !== null) return json({ ok: true, sala: sinCanal(sala), ahora });
+  if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots, sala.opciones) < minimo) return Promise.resolve(json({ error: "faltan_jugadores", minimo }, 409));
+  if (sala.inicio !== null) return Promise.resolve(json({ ok: true, sala: sinCanal(sala), ahora }));
   return fijarInicio(c, 3);
 }
 

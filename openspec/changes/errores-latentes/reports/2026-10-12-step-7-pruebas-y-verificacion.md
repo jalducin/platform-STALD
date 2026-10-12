@@ -23,7 +23,7 @@ Equivalencia de Cálculo y secuencias con `n` válido: huella SHA-256 de 4 800 p
 ## Comandos ejecutados
 
 - `npx -y deno test -A server/`
-- `npx -y deno check server/main.ts` y `npx -y deno lint server/`
+- `npx -y deno check server/main.ts` y `npx -y deno lint server/` (el primer intento del PR falló en CI por `require-await` en `empezarSala`: el filtro local con `tail -1` ocultaba el aviso; se corrigió y se volvió a correr completo)
 - `cd tests/calidad && node calidad.mjs --detalle` (en la rama y con los archivos de `origin/main`, para comparar)
 - `CHROME=… bash tests/e2e/correr.sh --datos <copia> --puerto-api 9259 --puerto-web 9269 juegos categorias partidas
   juegos-tablero ajustes-salas salas-grandes revancha enlace-sala fusion juegos-recarga puntos-tipo`
