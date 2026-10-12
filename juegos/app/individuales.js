@@ -68,7 +68,7 @@ async function terminar(id, r) {
 
 function confeti() {
   const b = document.createElement('div'); b.className = 'burst';
-  b.innerHTML = Array.from({ length: 24 }, () => '<span style="left:' + Math.random() * 100 + '%;animation-delay:' + Math.random() * .6 + 's">' + ['🎉', '⭐', '✨', '🏅'][Math.floor(Math.random() * 4)] + '</span>').join('');
+  b.innerHTML = Array.from({ length: 24 }, () => '<span style="left:' + Math.random() * 100 + '%;animation-delay:' + Math.random() * .6 + 's">' + ['🎉', '⭐', '✨', '🏅'][Math.floor(Math.random() * 4)] + '</span>').join(''); // NOSONAR: azar de juego, no criptográfico
   document.body.appendChild(b); setTimeout(() => b.remove(), 2600);
 }
 
@@ -384,7 +384,7 @@ function jugarSimon() {
     nivel++; paso = 0; turno = false;
     document.getElementById('sim-niv').textContent = nivel;
     document.getElementById('sim-msg').textContent = 'Mira la secuencia…';
-    seq.push(Math.floor(Math.random() * 4));
+    seq.push(Math.floor(Math.random() * 4)); // NOSONAR: azar de juego, no criptográfico
     pads.forEach(p => { p.disabled = true; });
     await new Promise(r => setTimeout(r, 600));
     const vel = Math.max(220, 480 - nivel * 20);
@@ -420,8 +420,8 @@ async function jugarSopa() {
     if (puestas.length >= 6) break;
     const W = w.en.toUpperCase();
     for (let intento = 0; intento < 60; intento++) {
-      const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
-      const r0 = Math.floor(Math.random() * N), c0 = Math.floor(Math.random() * N);
+      const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)]; // NOSONAR: azar de juego, no criptográfico
+      const r0 = Math.floor(Math.random() * N), c0 = Math.floor(Math.random() * N); // NOSONAR: azar de juego, no criptográfico
       const celdas = [...W].map((_, k) => [r0 + dr * k, c0 + dc * k]);
       if (celdas.every(([r, c], k) => r >= 0 && r < N && c >= 0 && c < N && (!grid[r][c] || grid[r][c] === W[k]))) {
         celdas.forEach(([r, c], k) => { grid[r][c] = W[k]; });
@@ -431,7 +431,7 @@ async function jugarSopa() {
     }
   }
   const letras = 'ABCDEFGHIJKLMNOPRSTUVWY';
-  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!grid[r][c]) grid[r][c] = letras[Math.floor(Math.random() * letras.length)];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!grid[r][c]) grid[r][c] = letras[Math.floor(Math.random() * letras.length)]; // NOSONAR: azar de juego, no criptográfico
   const m = marco('mente-sopa');
   const TOT = 180;
   let inicio = null, encontradas = 0, terminado = false;

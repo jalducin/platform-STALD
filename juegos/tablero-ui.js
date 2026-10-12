@@ -302,7 +302,7 @@
     const m = marco('parchis');
     const n = rivales + 1;
     const orden = [{ nombre: 'Tú', avatar: state.jugador && state.jugador.avatar }].concat(botsIndividual().slice(0, rivales).map(b => ({ nombre: b.nombre, avatar: b.avatar, bot: true })));
-    const st = Parchis.nueva(n, Math.floor(Math.random() * 2147483647), cuantas), t0 = Date.now();
+    const st = Parchis.nueva(n, Math.floor(Math.random() * 2147483647), cuantas), t0 = Date.now(); // NOSONAR: azar de juego, no criptográfico
     let terminado = false, kVisto = -1, logVisto = -1;
     const pintar = () => {
       const miTurno = st.turno === 0 && !st.fin, movs = miTurno ? Parchis.movibles(st) : [];

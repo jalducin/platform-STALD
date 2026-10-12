@@ -43,12 +43,13 @@ ese punto (se revisa con `git fetch` y `gh pr list --state merged`); si no, qued
 reporte. Así no hay conflictos con un trabajo que aún no se integra.
 
 ### 3. `?v=` de los scripts
-Los cambios son refactorizaciones equivalentes y sin cambios de interfaz entre archivos (los ayudantes nuevos viven
-dentro del archivo que los usa), así que una mezcla de versión vieja y nueva en la caché del navegador se comporta
-igual (las API públicas de cada script no cambian: `Fisica`, `Golf`, `Ajedrez`, `Cartas`, `MesaUI`, `Mando`, …). Por
-eso **no se sube `?v=`** en ningún HTML: ni en `juegos.html` (archivo del sprint 22) ni en las páginas de Arcade; GitHub
-Pages además sirve con `max-age=600`. Excepción a la regla de `docs/frontend-standards.md` («al cambiar un archivo de
-`juegos/app/`, sube su `?v=`»), que existe para cambios de comportamiento.
+Los cambios no tocan las API públicas entre archivos (`Fisica`, `Golf`, `Ajedrez`, `Cartas`, `MesaUI`, `Mando`, …; los
+ayudantes nuevos viven dentro del archivo que los usa), así que una mezcla de versiones en caché se comportaría igual.
+Aun así, al llegar a la fase 2 (con el sprint 22 ya en `main`) se siguió la regla de `docs/frontend-standards.md`
+y lo pedido por coordinación: **se sube en 1 el `?v=` de cada script u hoja cambiada en todos los HTML que la cargan**
+(`juegos.html`, las páginas de Arcade y `comun/auth.js` 7 → 8 en portal, Inglés, Juegos y Secundaria), por encima de
+las versiones del sprint 22 (`menu.js` 4; `arcade`, `salas` y `arranque` 5). El cambio de `arranque.js` sí cambia
+comportamiento (ver «Error real»), otra razón para no depender de la caché.
 
 ### 4. Bloque a — posibles errores reales
 - **S2681 (171 avisos, 145 en la fase 1):** todos eran del tipo «adyacente» (`if (x) a(); b();` en la misma línea);
@@ -140,6 +141,28 @@ juegos en canvas no mejora la lectura y arriesga el comportamiento. Ver la secci
      `inicio` que no se guardó, y si la sala desapareció `doc!` termina en 500.
   3. `server/actividades.ts`: si `estadoItem` diera «completo» sin resultado, `doc!.data` terminaría en 500 (no
      debería pasar; se dejó igual).
+
+### Fase 2 (el PR del sprint 22, #181, llegó a `main` durante el cambio)
+Se hizo merge de `origin/main` (sin conflictos) y se aplicaron los mismos bloques a `juegos.html`, `juegos/app/`
+(`arcade`, `arranque`, `individuales`, `juegos.css`, `menu`, `ranking`, `salas`), `juegos/blackjack.js`,
+`juegos/salas-grandes.js` y `juegos/tablero-ui.js`: llaves (S2681), `catch` documentados, spread/`new Array`/
+`replaceAll`/`Object.hasOwn`, mulberry32 de `salas.js` con `NOSONAR`, CSS de `juegos.css` (`overflow-wrap: anywhere`
+en lugar de `word-break: break-word`; `white-space: nowrap` dentro de la primera regla `.tab` y `font-size` dentro de
+la primera `.adm-tabla td` del `@media`, sin otra regla de igual especificidad en medio, así que la cascada no
+cambia), S3358 a 0 y S3776 > 40 partidas (`preguntasPartida`, `pintarBastaSala`, `crearPartida`, el clic de
+`arranque.js`, `damasHtml`, `pintarNavalSala`). El `await` del bucle del Simón (`individuales.js`) es la animación de
+la secuencia, una luz tras otra: se deja.
+
+### Error real encontrado y corregido
+En `juegos/app/arranque.js` había **dos manejadores de «Empezar» iguales**; el primero regresaba siempre, así que el
+segundo (el de `juegos-tablero`, que usa `TableroUI.faltan(juego)`) nunca corría: Damas, Batalla naval, Dominó y
+Parchís mostraban «👥 Faltan jugadores…» en lugar de su aviso propio. Se quitó el duplicado (el que queda cae en el
+aviso general para los demás juegos) y se agregó la verificación en `e2e-ajustes-salas` («naval: sin rival da su
+aviso propio»), que falló antes del arreglo y pasa después. Requisito nuevo en `specs/juegos/spec.md` del cambio.
+
+Otras sospechas vistas al refactorizar, **sin corregir** (ya estaban; corregirlas cambia comportamiento y no hay
+prueba que las cubra): en `clicNaval` de `tablero-ui.js`, `(r.body.jugadas || [])[r.body.jugadas.length - 1]` truena
+si la respuesta llega sin `jugadas`; `genCalculo` de `salas.js` no termina con `n = NaN` (hoy nunca se llama así).
 
 ### 9. Bloque g — `Math.random` (S2245)
 Son juegos: el azar no protege nada (no hay tokens, contraseñas ni códigos de sala que dependan de él; los códigos de

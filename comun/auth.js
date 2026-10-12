@@ -1,6 +1,6 @@
 // Inicio de sesión de STALD con Supabase Auth (openspec: plataforma-login). Script clásico: expone window.StaldAuth.
 // Uso en una página:
-//   <script src="comun/auth.js?v=7"></script>
+//   <script src="comun/auth.js?v=8"></script>
 //   await StaldAuth.iniciar(API_BASE);           // lee /config, carga supabase-js y recupera la sesión
 //   StaldAuth.email()                            // correo de la sesión o null
 //   StaldAuth.fetchConSesion(url, opts)          // fetch con Authorization: Bearer <token>
