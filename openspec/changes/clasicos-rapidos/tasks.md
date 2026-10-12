@@ -5,8 +5,8 @@
 ## 1. Servidor: clásicos rápidos en sala (TDD)
 
 - [x] 1.1 Pruebas que fallan en `server/clasicos_rapidos_test.ts`: crear sala de los 5 juegos, jugadas válidas e
-  inválidas de cada juego, `turno_tomado`, primera elección por ronda en `ppt`, ocultar la elección ajena, cupos,
-  sin bots y `faltan_jugadores` en Gato y Conecta 4, modo del Ahorcado (y revancha que lo conserva), catálogo y tope
+  inválidas de cada juego, `turno_tomado`, primera elección por ronda en `ppt`, ocultar la elección ajena, mesas
+  (`sala_llena` y `faltan_jugadores`; renglones en `MESAS` y `juegos/mesas.js` tras integrar `mesas-con-bots`), modo del Ahorcado (y revancha que lo conserva), catálogo y tope
 - [x] 1.2 `server/clasicos_rapidos.ts` y ganchos localizados (`// clasicos-rapidos`) en `server/salas.ts` y
   `server/juegos.ts`
 
@@ -28,7 +28,7 @@
 ## 4. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
 - [ ] 4.1 Conteo del menú en `e2e-juegos`, `e2e-fusion` y `e2e-clasicos`: 24 → 29 juegos (Clásicos 7 → 12)
-- [ ] 4.2 E2E nueva `tests/e2e/e2e-clasicos-rapidos.js`, registrada en `tests/e2e/correr.sh` (fase `base`): cada juego
+- [ ] 4.2 E2E nueva (con un caso de mesa: 1 persona + bots y, al entrar otra, un bot menos) `tests/e2e/e2e-clasicos-rapidos.js`, registrada en `tests/e2e/correr.sh` (fase `base`): cada juego
   en individual, Gato y Conecta 4 en sala con 2 personas, Piedra, papel o tijera con bots y capturas a 390 px
 
 ## 5. Pruebas y verificación de estado (OBLIGATORIO)
@@ -48,7 +48,7 @@
 
 ## 7. Documentación (OBLIGATORIO)
 
-- [ ] 7.1 `docs/backend-standards.md` (jugadas, cupos, ocultamiento, catálogo 29), `docs/data-model.md` (campos de
+- [ ] 7.1 `docs/backend-standards.md` (jugadas, mesas, ocultamiento, catálogo 29), `docs/data-model.md` (campos de
   `jugadas[]` y `opciones.modo`) y `docs/frontend-standards.md` (módulos y ganchos)
 
 ## 8. Cierre

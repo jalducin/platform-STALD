@@ -14,10 +14,7 @@ export const CATALOGO_CLASICOS_RAPIDOS: Record<string, { categoria: string; titu
   serpientes: { categoria: "clasicos", titulo: "Serpientes y escaleras", max: 1000 },
 };
 
-// Cupo de personas, bots fijos y mínimo de personas para empezar.
-export const CUPO_CLASICOS_RAPIDOS: Record<string, number> = { gato: 2, conecta4: 2, ppt: 8, ahorcado: 8, serpientes: 4 };
-export const BOTS_FIJOS_CLASICOS_RAPIDOS: Record<string, boolean> = { gato: false, conecta4: false };
-export const MIN_PERSONAS_CLASICOS_RAPIDOS: Record<string, number> = { gato: 2, conecta4: 2 };
+// Mesas (cupo, asientos y mínimo): en MESAS de server/salas.ts y juegos/mesas.js (openspec: mesas-con-bots).
 
 export const RONDAS_PPT = 5; // igual que ClasicosRapidos.PPT_RONDAS
 const PPT = ["piedra", "papel", "tijera"];

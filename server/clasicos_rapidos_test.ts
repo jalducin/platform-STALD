@@ -78,17 +78,18 @@ Deno.test("clasicos-rapidos: Conecta 4 valida la columna", async () => {
   assertEquals((await jugar(c, codigo, A, { n: 0, accion: "soltar", col: 2 })).status, 409);
 });
 
-Deno.test("clasicos-rapidos: Gato y Conecta 4 son 1 vs 1 sin bots", async () => {
+Deno.test("clasicos-rapidos: mesas de Gato y Conecta 4 (2 asientos: con bot se empieza solo; sin bots faltan jugadores)", async () => {
   const c = ctx();
   for (const juego of ["gato", "conecta4"]) {
-    const r = await c.call("POST", "/sala", M, { juego, bots: true });
-    const codigo = r.body.codigo;
-    assertEquals(r.body.sala.bots, false, juego + " sin bots");
-    assertEquals((await c.call("POST", `/sala/${codigo}/empezar`, M)).body.error, "faltan_jugadores");
-    assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, A)).status, 200);
-    const llena = await c.call("POST", `/sala/${codigo}/unirse`, L);
+    const sinBots = (await c.call("POST", "/sala", M, { juego, bots: false })).body.codigo;
+    const f = await c.call("POST", `/sala/${sinBots}/empezar`, M);
+    assertEquals([f.status, f.body.error], [409, "faltan_jugadores"], juego);
+    const conBot = (await c.call("POST", "/sala", M, { juego, bots: true })).body.codigo;
+    assertEquals((await c.call("POST", `/sala/${conBot}/empezar`, M)).status, 200, juego + ": 1 persona + 1 bot");
+    assertEquals((await c.call("POST", `/sala/${sinBots}/unirse`, A)).status, 200);
+    const llena = await c.call("POST", `/sala/${sinBots}/unirse`, L);
     assertEquals([llena.status, llena.body.error], [409, "sala_llena"]);
-    assertEquals((await c.call("POST", `/sala/${codigo}/empezar`, M)).status, 200);
+    assertEquals((await c.call("POST", `/sala/${sinBots}/empezar`, M)).status, 200);
   }
 });
 

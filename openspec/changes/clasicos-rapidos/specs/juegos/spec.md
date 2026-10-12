@@ -39,20 +39,28 @@ elección.
 - **THEN** se guardan las dos elecciones
 - **AND** si Marisol vuelve a elegir en la ronda 0, se conserva la primera
 
-### Requirement: Cupos y bots de los clásicos rápidos en partida
-- Gato y Conecta 4 SHALL ser 1 vs 1 entre personas: sin bots, cupo de 2 (409 `sala_llena`) y el anfitrión no puede
-  empezar con menos de 2 (409 `faltan_jugadores`).
-- Piedra, papel o tijera y Ahorcado SHALL admitir hasta 8 personas, con los 2 bots si se piden.
-- Serpientes y escaleras SHALL jugarse entre 2 y 4: hasta 4 personas y, si se piden bots, se completa con bots hasta
-  4; si queda una sola persona sin bots, entra un bot.
+### Requirement: Mesas de los clásicos rápidos en partida
+Los clásicos rápidos SHALL declarar su mesa en la tabla común (`MESAS` de `server/salas.ts` y `juegos/mesas.js`,
+openspec: mesas-con-bots):
+- Gato y Conecta 4: `{ max: 2, asientos: 2, min: 2 }`: 1 vs 1 entre dos personas o una persona contra un bot;
+- Piedra, papel o tijera: `{ max: 8, asientos: 4, min: 2 }`: con bots, completan 4 lugares y cada persona que entra
+  quita un bot;
+- Ahorcado: `{ max: 8, min: 1 }`: los bots, si se piden, se suman aparte;
+- Serpientes y escaleras: `{ max: 4, asientos: 4, min: 2 }`.
+`max` da 409 `sala_llena` y `min` (personas más bots) da 409 `faltan_jugadores` al empezar.
 
 #### Scenario: Tercera persona en Gato
 - **WHEN** una tercera persona intenta unirse a una sala de Gato con 2 personas
 - **THEN** responde 409 `sala_llena`
 
 #### Scenario: Conecta 4 sin rival
-- **WHEN** el anfitrión de una sala de Conecta 4 intenta empezar solo
+- **WHEN** el anfitrión de una sala de Conecta 4 sin bots intenta empezar solo
 - **THEN** responde 409 `faltan_jugadores`
+- **AND** si la sala lleva bots, empieza contra un bot
+
+#### Scenario: Una persona más, un bot menos
+- **WHEN** en una sala de Piedra, papel o tijera con bots hay una persona y entra otra
+- **THEN** la mesa pasa de 1 persona + 3 bots a 2 personas + 2 bots
 
 ### Requirement: Elección simultánea en Piedra, papel o tijera
 La partida de Piedra, papel o tijera SHALL revelar las elecciones de una ronda a la vez para todas las personas.
@@ -69,7 +77,8 @@ La partida de Piedra, papel o tijera SHALL revelar las elecciones de una ronda a
 El sistema SHALL ofrecer Gato (tres en línea) en dos modos:
 - individual: serie de 3 rondas contra el bot, con 3 niveles: 🐣 fácil (al azar), 🦊 medio (gana o bloquea y a veces
   minimax) y 🦉 difícil (minimax: nunca pierde);
-- partida 1 vs 1 por turnos de 20 s, al mejor de 3 rondas, alternando quién empieza.
+- partida 1 vs 1 (dos personas o una persona contra el bot) por turnos de 20 s, al mejor de 3 rondas, alternando
+  quién empieza.
 Gana la ronda quien completa una línea de 3 (fila, columna o diagonal); si el tablero se llena sin línea, es empate.
 
 #### Scenario: Línea de tres
@@ -92,7 +101,7 @@ Gana la ronda quien completa una línea de 3 (fila, columna o diagonal); si el t
 El sistema SHALL ofrecer Conecta 4 en un tablero de 7 columnas × 6 filas: la ficha cae animada a la casilla libre más
 baja de la columna elegida y gana quien alinea 4 en horizontal, vertical o diagonal; con el tablero lleno, empate.
 - Individual contra el bot, con 3 niveles (heurística, minimax a 4 y a 6 jugadas).
-- Partida 1 vs 1 por turnos de 25 s.
+- Partida 1 vs 1 (dos personas o una persona contra el bot) por turnos de 25 s.
 
 #### Scenario: Columna llena
 - **WHEN** alguien toca una columna llena

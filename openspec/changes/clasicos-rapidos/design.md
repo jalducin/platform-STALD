@@ -25,7 +25,7 @@
 
 ### 2. Servidor: `server/clasicos_rapidos.ts`
 - `CLASICOS_RAPIDOS`, `CATALOGO_CLASICOS_RAPIDOS` (títulos para el ranking 🔥 Juegos; categoría `clasicos`,
-  tope 1000), cupos, bots fijos y mínimo de personas, validación de jugadas, opciones y ocultamiento.
+  tope 1000), validación de jugadas, opciones y ocultamiento.
 - Jugadas válidas (además de `n` entero 0–2000; cualquier otro campo se descarta):
 
   | Juego | Jugada |
@@ -38,8 +38,10 @@
 
 - En `ppt` el paso `n` es la **ronda** y todos juegan la misma ronda: no aplica `turno_tomado`, y solo cuenta la
   primera elección de cada quien por ronda.
-- Cupos y bots: `gato` y `conecta4` = 2 personas, sin bots, no empiezan con menos de 2 (409 `faltan_jugadores`);
-  `ppt` y `ahorcado` = 8; `serpientes` = 4.
+- Mesas (tabla común `MESAS`, cambio `mesas-con-bots`, integrado desde `origin/main`): `gato` y `conecta4`
+  `{ max: 2, asientos: 2, min: 2 }` (dos personas o una contra el bot: el bot de sala juega Gato perfecto y Conecta 4
+  con minimax a 4), `ppt` `{ max: 8, asientos: 4, min: 2 }`, `ahorcado` `{ max: 8, min: 1 }` (bots aparte) y
+  `serpientes` `{ max: 4, asientos: 4, min: 2 }`. Los participantes salen de `participantes()` + `Mesas.botsEnMesa`.
 - `ahorcado` acepta `opciones.modo` = `coop` | `compite` (por omisión `compite`); otro valor → 400 `modo_invalido`.
   La revancha copia las opciones.
 - **Elección simultánea sin espiar** (`ppt`): al responder `GET /juegos/sala/<código>`, la `eleccion` de otra persona
@@ -59,7 +61,7 @@
   personas eligieron o al vencer el tiempo; la siguiente empieza al terminar la revelación. Cada quien se compara con
   todas las demás elecciones: +1 victoria por cada rival vencido; no elegir pierde contra cualquier elección. Los bots
   eligen con la semilla. Puntos: `round(800 × victorias / (5 × rivales))` más 200 para quien (o quienes) tenga más
-  victorias. Mínimo 2 participantes: si una persona juega sola, entran los 2 bots.
+  victorias. Mínimo 2 participantes (tabla de mesas).
 - **Ahorcado:** 3 palabras iguales para todos (semilla) del vocabulario de `ingles.json` (solo letras, 3–10), con
   pista en español y emoji; 6 errores por palabra (el globo se desinfla). Turnos de 20 s; +10 por cada aparición de
   la letra acertada para quien la eligió. `compite`: quien acierta sigue; quien completa la palabra gana +50.
@@ -67,7 +69,7 @@
   inglés con algo de azar.
 - **Serpientes y escaleras:** tablero clásico de 100 casillas (9 escaleras y 10 serpientes); el dado de cada paso sale
   de la semilla; con 6 se vuelve a tirar; se llega a la meta aunque sobren puntos. De 2 a 4: las personas (hasta 4)
-  más bots hasta 4 si se piden; si queda una sola persona, entra un bot. Turno 15 s, bots 1.4 s, máximo 240 tiros
+  más bots hasta 4 si se piden (tabla de mesas). Turno 15 s, bots 1.4 s, máximo 240 tiros
   (gana quien vaya más adelante). Puntos: gana 700; los demás, casilla × 4.
 
 ### 4. Individual
