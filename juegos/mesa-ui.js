@@ -71,6 +71,34 @@
     el.addEventListener('pointerup', soltar(false)); el.addEventListener('pointercancel', soltar(true));
   }
 
+  /* ---- Botones táctiles (futbolito-equipos-controles) ----
+     boton(el, on): on(true) al bajar el primer dedo (sin esperar a soltarlo) y on(false) al soltar el último; con varios
+     dedos en botones distintos, cada botón responde por su lado. sostener(el, paso): paso(0) al bajar el dedo y, si se
+     sostiene, paso(1), paso(2)… cada 60 ms tras 300 ms (para ajustes finos que aceleran). Con teclado, Enter/Espacio
+     sobre el botón enfocado dan un toque. */
+  function boton(el, on) {
+    const abajo = new Set();
+    tactil(el, {
+      inicio: id => { abajo.add(id); if (abajo.size === 1) { el.classList.add('on'); on(true); } },
+      mover: () => {},
+      fin: id => { if (!abajo.delete(id) || abajo.size) return; el.classList.remove('on'); on(false); },
+    });
+    el.addEventListener('keydown', e => { if (e.code !== 'Enter' && e.code !== 'Space') return; e.preventDefault(); e.stopPropagation(); if (!e.repeat) { on(true); on(false); } });
+  }
+  function sostener(el, paso) {
+    let t = null, k = 0;
+    const parar = () => { clearTimeout(t); t = null; };
+    const tic = () => { k++; paso(k); t = setTimeout(tic, 60); };
+    boton(el, on => { parar(); if (!on) return; k = 0; paso(0); t = setTimeout(tic, 300); });
+    return parar;
+  }
+  // Mando común (juegos/mando.js) → eje de la capa de acciones sin pisar el de otro adaptador: solo escribe cuando el
+  // mando tiene eje o lo acaba de soltar.
+  function ejeDeMando(acciones) {
+    let previo = 0;
+    return v => { if (v || previo) { acciones.ponerEje(v); previo = v; } };
+  }
+
   /* ---- Capa de acciones (futbolito-billar) ----
      El juego solo lee acciones con nombre (sostenidas, de pulso y un eje analógico −1…1). El teclado es un adaptador
      más; un mando (por ejemplo el de Arcade) se conecta igual: `acciones.presionar(nombre, true|false)` y
@@ -169,7 +197,7 @@
 
   raiz.MesaUI = {
     Q, EMBED, PRUEBA, REDUCIR, TOQUES, TACTIL, $, esc, leerLS, guardarLS,
-    audio, tono, botonSonido, avisar, confeti, tactil, crearSala, crearAcciones,
+    audio, tono, botonSonido, avisar, confeti, tactil, boton, sostener, ejeDeMando, crearSala, crearAcciones,
     enviar, alMensaje: f => oyentes.push(f), usarJuego: id => { juego = id; },
   };
 })(window);

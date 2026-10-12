@@ -141,7 +141,8 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     - Basta (es/en) y Lotería;
     - ¡Una!, póker, Brisca, Conquián y ajedrez;
     - Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (cambio `clasicos-rapidos`; ver la sección propia).
-    - Futbolito y Billar (cambio `futbolito-billar`), 1 vs 1 por tiros.
+    - Futbolito y Billar (cambio `futbolito-billar`), 1 vs 1 por tiros. Futbolito acepta `opciones.formato`
+      `1v1` (por omisión) o `2v2` (otro valor → 400 `formato_invalido`; cambio `futbolito-equipos-controles`).
     - Golf (cambio `golf`), de 2 a 4 personas por turnos, sin bots.
     - Los juegos absorbidos en el Sprint 4 (`en-preguntas`, `es-acentos`, `es-sinonimos` y `mente-secuencias`, del
       cambio `juegos-fusion`) responden 400 `juego_no_permitido`, pero siguen en el catálogo para conservar sus
@@ -177,6 +178,16 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       fuerza 1…100 }` con enteros; los demás campos se descartan. También responde 409 `partida_terminada` tras un
       `final` o `podio` (conjunto `FISICA` de `server/salas.ts`). Se juegan 3 hoyos elegidos con la semilla
       (`Golf.hoyosSala`); el servidor no simula.
+    - Futbolito por equipos (cambio `futbolito-equipos-controles`, `server/futbolito.ts`): el tiro lleva `barra`
+      (entero 0…7; obligatoria en `2v2`, opcional en `1v1`; otro valor → 400 `jugada_invalida`). El servidor reparte
+      los asientos igual que `Futbolito.repartir` de `juegos/futbolito-motor.js` (personas por `unido` hasta el cupo y
+      bots que completan; preferencias de equipo primero, luego personas alternadas, luego bots; con dos por equipo, el
+      primero maneja medios + delanteros y el segundo portero + defensa) y responde 409 `no_es_tu_barra` si la barra no
+      es del asiento de quien tira, o 403 `no_en_mesa` si esa persona no tiene asiento. `rendirse` no lleva barra.
+      Preferencia de equipo: `POST /juegos/sala/<código>/unirse { equipo: 0 | 1 }` (también para quien ya está
+      dentro) → `{ ok, codigo, equipo }`; solo en Futbolito `2v2` (si no, 409 `sin_equipos`) y antes de empezar (409
+      `ya_empezo`); otro valor → 400 `equipo_invalido`; si ya hay 2 personas que pidieron ese equipo → 409
+      `equipo_lleno`. `server/futbolito_equipos_test.ts` compara el reparto del servidor con el de la página.
     - Ajedrez (`ajedrez`, cambio `ajedrez`): acepta dos formas de jugada.
       - `{ n, accion: "mover", de, a, promo? }`, donde `de` y `a` son casillas `a1`–`h8` y `promo` es `q`, `r`, `b`
         o `n`.
@@ -513,6 +524,10 @@ Mesas de `juegos-salas-grandes`: `bingo`, `en-memorama` y `mente-sopa` `{ max: 3
 
 Futbolito y Billar (cambio `futbolito-billar`): `{ max: 2, asientos: 2, min: 2 }` (con bots, 1 persona + 1 bot).
 Golf (cambio `golf`): `{ max: 4, min: 2, bots: "nunca" }` (de 2 a 4 personas; sin bots: por qué, en su `design.md`).
+Mesa por formato (cambio `futbolito-equipos-controles`): un renglón puede traer `formatos: { <opciones.formato>: { max,
+asientos, min } }`; `mesaDe(juego, opciones)` (servidor) y `Mesas.de(juego, opciones)` (página) la aplican, y
+`enMesa`, `botsEnMesa` y `textoMesa` reciben las `opciones` de la sala. Futbolito `2v2` → `{ max: 4, asientos: 4,
+min: 2 }` (con bots, 1 persona + 3 bots, 2 + 2…; sin bots, 2 a 4 personas: 1 vs 1, 2 vs 1 o 2 vs 2).
 `server/mesas_test.ts` comprueba que las dos tablas sean iguales. **Todo juego de sala nuevo agrega su renglón en los
 dos archivos.**
 

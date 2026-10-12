@@ -149,6 +149,7 @@ function pintarPartidas() {
     '<form id="f-crear"><label for="p-juego">Juego</label><select id="p-juego" class="sel">' + opcionesJuego + '</select>' +
     '<div id="p-modo-wrap" hidden><label for="p-modo">Modo</label><select id="p-modo" class="sel"><option value="linea">➖ Línea (rápido)</option><option value="llena">🟩 Tabla llena</option></select></div>' +
     '<div id="p-reloj-wrap" hidden><label for="p-reloj">Reloj por jugador</label><select id="p-reloj" class="sel"><option value="5">⚡ 5 min</option><option value="10" selected>⏱ 10 min</option><option value="15">🐢 15 min</option></select></div>' +
+    '<div id="p-formato-wrap" hidden><label for="p-formato">Formato</label><select id="p-formato" class="sel"><option value="1v1">⚽ 1 vs 1</option><option value="2v2">👥 2 vs 2 (por equipos)</option></select></div>' + // futbolito-equipos
     '<div id="p-equipos-wrap" hidden><label class="check"><input id="p-equipos" type="checkbox"><span>👥 Por equipos (A y B, alternados por orden de entrada)</span></label></div>' +
     '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select>' +
       '<label>🎉 Categorías divertidas (opcional, máximo 2)</label><div id="p-extra"></div><div class="feedback" id="p-extra-aviso"></div></div>' + // basta-divertida-una-robo
@@ -235,13 +236,13 @@ async function entrarSala(codigo) {
 
 function participantes() {
   const e = sala.estado;
-  const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, rondasBasta: x.rondasBasta || {}, loteria: x.loteria }));
+  const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, rondasBasta: x.rondasBasta || {}, loteria: x.loteria, ...(x.equipo === 0 || x.equipo === 1 ? { equipo: x.equipo } : {}) })); // futbolito-equipos: equipo pedido
   const comoBot = b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b, avatar: b.avatar });
   // Mesas (openspec: mesas-con-bots, juegos/mesas.js): con asientos, los bots completan los lugares libres y cada
   // persona que entra quita un bot (Brisca: 3 personas + 1 bot); sin mesa, los bots se suman aparte.
-  const mesa = Mesas.de(e.sala.juego);
+  const mesa = Mesas.de(e.sala.juego, e.sala.opciones); // futbolito-equipos: mesa por formato
   const h = mesa ? humanos.slice(0, mesa.max) : humanos;
-  const nb = Mesas.botsEnMesa(e.sala.juego, h.length, e.sala.bots);
+  const nb = Mesas.botsEnMesa(e.sala.juego, h.length, e.sala.bots, e.sala.opciones);
   if (nb !== null) return h.concat(BOTS.concat(BOT_EXTRA).slice(0, nb).map(comoBot));
   return e.sala.bots && !(mesa && mesa.bots === 'nunca') ? h.concat(BOTS.map(comoBot)) : h;
 }
@@ -281,11 +282,11 @@ function pintarEspera(body) {
     '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
     '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
     extrasEspera(e.sala) + // basta-divertida-una-robo
-    '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length)) + '</p>' : '') + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
+    '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length, e.sala.opciones)) + '</p>' : '') + equiposFutbolito(lista) /* futbolito-equipos */ + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
       (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
     '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
   // La clave cuenta personas y bots: en una mesa de 4, una persona nueva desplaza a un bot y la lista no cambia de largo.
-  const clave = 'espera:' + lista.map(x => x.id).join(',') + ':' + e.soyHost;
+  const clave = 'espera:' + lista.map(x => x.id + (x.equipo === undefined ? '' : '/' + x.equipo)).join(',') + ':' + e.soyHost; // futbolito-equipos: también el equipo pedido
   if (sala.vista !== clave) { body.innerHTML = html; sala.vista = clave; pintarQr(document.getElementById('p-qr'), enlaceSala(e.sala.codigo)); }
 }
 
@@ -535,6 +536,7 @@ async function crearPartida() {
   const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'cultura-linea' ? { cat: document.getElementById('p-ltema').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value, extra: [...document.querySelectorAll('[data-pextra]:checked')].map(x => x.dataset.pextra) } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
   Object.assign(opciones, ClasicosRapidosUI.opcionesCrear(juego)); // clasicos-rapidos: modo del Ahorcado
   Object.assign(opciones, SalasGrandes.opciones(juego)); // juegos-salas-grandes
+  if (juego === 'futbolito') opciones.formato = document.getElementById('p-formato').value; // futbolito-equipos
   const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
   if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
   entrarSala(r.body.codigo);

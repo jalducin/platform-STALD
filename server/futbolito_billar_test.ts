@@ -45,7 +45,8 @@ Deno.test("futbolito-billar: se pueden crear en sala y están en el catálogo de
   assert(JUEGOS_PARTIDA.has("futbolito") && JUEGOS_PARTIDA.has("billar"));
   assertEquals(CATALOGO.futbolito, { categoria: "arcade", titulo: "Futbolito", max: 1000 });
   assertEquals(CATALOGO.billar, { categoria: "arcade", titulo: "Billar bola 8", max: 1000 });
-  assertEquals(MESAS.futbolito, { max: 2, asientos: 2, min: 2 });
+  // futbolito-equipos: 1 vs 1 por omisión y formato 2v2 de hasta 4 (server/futbolito_equipos_test.ts).
+  assertEquals(MESAS.futbolito, { max: 2, asientos: 2, min: 2, formatos: { "2v2": { max: 4, asientos: 4, min: 2 } } });
   assertEquals(MESAS.billar, { max: 2, asientos: 2, min: 2 });
   assertEquals([enMesa("billar", 1, true), enMesa("billar", 1, false), enMesa("futbolito", 2, true)], [2, 1, 2]);
 });

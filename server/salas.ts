@@ -11,6 +11,7 @@ import { JUEGOS_TABLERO, validarJugadaTablero, vistaJugadores } from "./tablero.
 import { respuestaNaval } from "./naval.ts"; // juegos-tablero
 // juegos-salas-grandes: Bingo, Blackjack, Dibuja y adivina, y Memorama y Sopa en partida
 import * as Grandes from "./salas_grandes.ts";
+import * as Futbolito from "./futbolito.ts"; // futbolito-equipos: formato, equipos y dueño de la barra
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -76,8 +77,9 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
     if (accion === "rendirse") return base;
     if (accion !== "tiro") return null;
     if (juego === "futbolito") {
+      if (j.barra !== undefined && !entero(j.barra, 0, 7)) return null; // futbolito-equipos: barra que tira (0…7)
       return entero(j.pos, -150, 150) && entero(j.angulo, -60, 60) && entero(j.fuerza, 10, 100)
-        ? { ...base, pos: j.pos as number, angulo: j.angulo as number, fuerza: j.fuerza as number } : null;
+        ? { ...base, pos: j.pos as number, angulo: j.angulo as number, fuerza: j.fuerza as number, ...(j.barra !== undefined ? { barra: j.barra as number } : {}) } : null;
     }
     if (!entero(j.angulo, 0, 3599) || !entero(j.fuerza, 1, 100) || (j.efecto !== undefined && !entero(j.efecto, -100, 100))) return null;
     return { ...base, angulo: j.angulo as number, fuerza: j.fuerza as number, ...(j.efecto !== undefined ? { efecto: j.efecto as number } : {}) };
@@ -98,7 +100,7 @@ const MAX_JUGADORES = 30;
 // Cupo de personas por juego (ajuste del profe): ajedrez 1 vs 1 sin bots; Brisca hasta 4 (se completa con bots).
 // Mesas (openspec: mesas-con-bots): cupo de personas, asientos que se completan con bots (cada persona que entra quita
 // un bot), mínimo para empezar y si los bots son fijos. Misma tabla que juegos/mesas.js (server/mesas_test.ts).
-export interface Mesa { max: number; asientos?: number; min?: number; bots?: "siempre" | "nunca" }
+export interface Mesa { max: number; asientos?: number; min?: number; bots?: "siempre" | "nunca"; formatos?: Record<string, { max: number; asientos?: number; min?: number }> }
 export const MESAS: Record<string, Mesa> = {
   ajedrez: { max: 2, min: 2, bots: "nunca" },
   brisca: { max: 4, asientos: 4, min: 4, bots: "siempre" },
@@ -121,16 +123,22 @@ export const MESAS: Record<string, Mesa> = {
   "en-memorama": { max: 30, min: 1 },
   "mente-sopa": { max: 30, min: 1 },
   "cultura-linea": { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
-  futbolito: { max: 2, asientos: 2, min: 2 }, // futbolito-billar: 1 vs 1 (con bots, 1 persona + 1 bot)
+  // futbolito-billar: 1 vs 1 (con bots, 1 persona + 1 bot); futbolito-equipos: formato 2v2 de hasta 4 (opciones.formato)
+  futbolito: { max: 2, asientos: 2, min: 2, formatos: { "2v2": { max: 4, asientos: 4, min: 2 } } },
   billar: { max: 2, asientos: 2, min: 2 },
   golf: { max: 4, min: 2, bots: "nunca" }, // golf: de 2 a 4 personas por turnos, sin bots (design.md §4)
 };
 const FISICA = new Set(["futbolito", "billar", "golf"]); // futbolito-billar y golf: no aceptan jugadas tras el final
-const cupo = (juego: string) => MESAS[juego]?.max ?? MAX_JUGADORES;
+// futbolito-equipos: la mesa puede cambiar según `opciones.formato` (Futbolito 2v2).
+export function mesaDe(juego: string, opciones?: Record<string, string>): Mesa | undefined {
+  const m = MESAS[juego], f = opciones?.formato ? m?.formatos?.[opciones.formato] : undefined;
+  return f ? { ...m, ...f } : m;
+}
+const cupo = (juego: string, opciones?: Record<string, string>) => mesaDe(juego, opciones)?.max ?? MAX_JUGADORES;
 const botsFijos = (juego: string) => MESAS[juego]?.bots === "siempre" ? true : MESAS[juego]?.bots === "nunca" ? false : undefined;
 // Personas + bots que ocuparían la mesa al empezar (los bots completan los asientos libres).
-export function enMesa(juego: string, humanos: number, conBots: boolean): number {
-  const m = MESAS[juego];
+export function enMesa(juego: string, humanos: number, conBots: boolean, opciones?: Record<string, string>): number {
+  const m = mesaDe(juego, opciones); // futbolito-equipos
   if (!m?.asientos || !conBots || m.bots === "nunca") return humanos;
   return Math.max(Math.min(humanos, m.max), m.asientos);
 }
@@ -165,10 +173,11 @@ interface EnSala extends Grandes.JugadorGrande { // juegos-salas-grandes: bingo,
   rondasBasta?: Record<string, { palabras: Record<string, string>; basta?: number }>; // Basta por rondas
   loteria?: number; // hora del servidor del primer "¡Lotería!"
   unas?: { paso: number; t: number }[]; // ¡Una!: botón UNA por paso
-  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number | string; de?: string; promo?: string; pos?: number; angulo?: number; fuerza?: number; efecto?: number; t: number }[]; // juegos por turnos
+  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number | string; de?: string; promo?: string; pos?: number; angulo?: number; fuerza?: number; efecto?: number; barra?: number; t: number }[]; // juegos por turnos
   carrera?: Carrera & { t: number }; // Arcade: tiempo de la carrera, solo el primer envío (openspec: juegos-plataformas-karts)
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
+  equipo?: 0 | 1; // futbolito-equipos: equipo pedido en la sala de espera (Futbolito 2v2)
   v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
 }
 
@@ -331,6 +340,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (!mapa) return json({ error: "mapa_invalido" }, 400);
       opciones.mapa = mapa;
     }
+    if (juego === "futbolito") { // futbolito-equipos: 1v1 (por omisión) o 2v2
+      const f = Futbolito.formatoDe(op);
+      if (!f) return json({ error: "formato_invalido" }, 400);
+      opciones.formato = f;
+    }
     if (juego === "cultura-linea") { // cultura-conocimiento: el tema de la Línea del tiempo va en opciones.cat
       if (op.cat !== undefined && !TEMAS_LINEA.includes(op.cat as string)) return json({ error: "tema_invalido" }, 400);
       opciones.cat = (op.cat as string) ?? "todos";
@@ -366,18 +380,25 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   const publicar = () => publicarEstado(store, codigo, ahora, rt);
 
   if (accion === "unirse" && req.method === "POST") {
-    if (dentro) return json({ ok: true, codigo });
-    if (sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
-    if (jugadores.length >= cupo(sala.juego)) return json({ error: "sala_llena" }, 409);
-    await guardarJugador(store, codigo, jugador, (e) => e, ahora);
+    // futbolito-equipos: { equipo } guarda la preferencia de equipo (también para quien ya está dentro).
+    const equipo = body.equipo === undefined ? undefined : Futbolito.validarEquipo(sala.opciones?.formato, sala.inicio !== null, jugadores, jugador.id, body.equipo);
+    if (equipo !== undefined && typeof equipo === "object") return json({ error: equipo.error }, equipo.status);
+    if (dentro && equipo === undefined) return json({ ok: true, codigo });
+    if (!dentro && sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
+    if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
+    const guardado = await guardarJugador(store, codigo, jugador, (e) => equipo === undefined ? e : { ...e, equipo }, ahora);
+    if (equipo !== undefined) { // futbolito-equipos
+      if (!guardado) return json({ error: "conflicto_escritura" }, 503);
+      await publicar(); return json({ ok: true, codigo, equipo });
+    }
     await publicar();
     return json({ ok: true, codigo });
   }
 
   if (accion === "empezar" && req.method === "POST") {
     if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
-    const minimo = MESAS[sala.juego]?.min ?? 1;
-    if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
+    const minimo = mesaDe(sala.juego, sala.opciones)?.min ?? 1; // futbolito-equipos: mesa por formato
+    if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots, sala.opciones) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
     if (sala.inicio === null) {
       const doc = await store.get<Sala>(ruta(codigo));
       const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc!.data, canalNuevo) }; // + secreto de Dibuja
@@ -414,6 +435,10 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (!v) return json({ error: "jugada_invalida" }, 400);
       // futbolito-billar: con un final registrado la partida ya terminó.
       if (FISICA.has(sala.juego) && jugadores.some((x) => x.final !== undefined || x.podio !== undefined)) return json({ error: "partida_terminada" }, 409);
+      if (sala.juego === "futbolito") { // futbolito-equipos: el tiro debe usar una barra de quien lo manda
+        const e = Futbolito.validarTiro(sala.opciones?.formato, Futbolito.asientosDe(jugadores, mesaDe(sala.juego, sala.opciones)!, sala.bots), jugador.id, v);
+        if (e) return json({ error: e.error }, e.status);
+      }
       const n = v.n;
       if (!Clasicos.sinTurnoUnico(sala.juego) && jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409); // clasicos-rapidos: ppt juega la misma ronda
       const nueva = { ...v, t: ahora };
@@ -484,7 +509,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (!nueva) return json({ error: "conflicto_escritura" }, 503);
     if (!nueva.jugadores.some((j) => j.id === jugador.id)) {
       if (nueva.sala.inicio !== null) return json({ error: "ya_empezo", codigo: sig }, 409);
-      if (nueva.jugadores.length >= cupo(nueva.sala.juego)) return json({ error: "sala_llena", codigo: sig }, 409);
+      if (nueva.jugadores.length >= cupo(nueva.sala.juego, nueva.sala.opciones)) return json({ error: "sala_llena", codigo: sig }, 409);
       await guardarJugador(store, sig, jugador, (e) => e, ahora);
     }
     await publicar();

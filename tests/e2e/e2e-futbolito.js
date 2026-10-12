@@ -4,6 +4,11 @@
 // Horizontal 844×390 (deslizar vertical mueve la barra) y prefers-reduced-motion (sin confeti).
 // Sala 1 persona + bot (tiro con toques reales, el bot tira, rendirse → podio y revancha) y sala de 2 personas
 // (los dos aparatos ven el mismo estado tras cada tiro; podio en los dos). Capturas a 390 px y en horizontal.
+// futbolito-equipos-controles: selector de controles recordado; 🔘 Botones con toques reales (flecha sostenida, PATEA al
+// bajar el dedo aunque tiemble o dure 350 ms, PATEA con la flecha sostenida, 🔄 BARRA), barra activa con la pelota
+// pegada por detrás, 👆 Deslizar, 🎮 Mando clásico (toques reales, recordado, control físico simulado), teclado
+// (↑↓, Espacio, Tab, Q/E) y capturas a 320, 390 y 844×390; sala 2 vs 2 con 2 personas + 2 bots (formato, cambio de
+// equipo, colores y nombres, tira quien maneja la barra con la pelota, no_es_tu_barra, mismo estado en los dos).
 require('./lib/entorno');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
@@ -38,9 +43,10 @@ async function tocar(p, x, y) { const d = dedos(p); await d.poner(1, x, y); awai
 const cajaCanvas = async fr => fr.locator('#c').boundingBox();
 const dentro = (r, vw, vh) => r && r.x >= -0.5 && r.y >= -0.5 && r.x + r.width <= vw + 0.5 && r.y + r.height <= vh + 0.5;
 
-async function crearSala(p, bots) {
+async function crearSala(p, bots, formato) {
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear');
   await p.selectOption('#p-juego', 'futbolito');
+  if (formato) await p.selectOption('#p-formato', formato); // futbolito-equipos
   if ((await p.isChecked('#p-bots')) !== bots) await p.click('#p-bots');
   await p.click('#f-crear button[type=submit]'); await p.waitForSelector('[data-p="empezar"]', { timeout: 30000 });
   return (await p.textContent('#p-codigo-chip')).replace(/[^A-Z]/g, '');
@@ -73,7 +79,7 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
   await abrirJuego(p, 'futbolito', { tap: true });
   let fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
-  ok('individual: menú con 3 niveles y ayuda táctil', (await fr.$$('[data-nivel]')).length === 3 && /Desliza/.test(await fr.textContent('#ayuda-menu')));
+  ok('individual: menú con 3 niveles y ayuda táctil', (await fr.$$('[data-nivel]')).length === 3 && /PATEA/.test(await fr.textContent('#ayuda-menu')));
   await p.screenshot({ path: 'futbolito-390-menu.png' });
   await fr.tap('[data-nivel="facil"]');
   await esperar(fr, () => window.__futbolito.estado().modo === 'juego');
@@ -101,10 +107,10 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
   await sleep(1600); // la barra automática vuelve a mandar tras el cambio manual
   await fr.evaluate(() => window.__futbolito.pelotaEnfrente());
   await sleep(60);
-  await tocar(p, c.x + c.width / 2, c.y + c.height * 0.8);
-  await sleep(90);
-  e = await estado(fr);
-  ok('toque real: tocar patea y la pelota sale hacia la portería rival', e.pelota.vy < -200, JSON.stringify(e.pelota));
+  const bp = await fr.locator('#c-patea').boundingBox();
+  const dp = dedos(p); await dp.poner(1, bp.x + bp.width / 2, bp.y + bp.height / 2); await sleep(30); // toque real en «⚽ PATEA»
+  e = await estado(fr); await dp.soltarTodo();
+  ok('toque real: tocar «⚽ PATEA» patea y la pelota sale hacia la portería rival', e.pelota.vy < -200, JSON.stringify(e.pelota));
   await p.screenshot({ path: 'futbolito-390-juego.png' });
   await fr.evaluate(() => window.__futbolito.ponerPelota(150, 330));
   await sleep(100);
@@ -150,6 +156,128 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
   await fred.waitForSelector('#ov-res:not(.hide)', { timeout: 10000 });
   ok('prefers-reduced-motion: gana sin confeti', (await fred.$$('#confeti i')).length === 0);
   await red.context().close();
+
+  // ---- Controles (futbolito-equipos-controles): suelto, toques reales ----
+  const abrirSuelto = (vp, init) => abrirPagina(b, { viewport: vp, contexto: TACTIL, init, out, etiqueta: 'futbolito suelto', ruta: '/juegos/futbolito.html?prueba=1', esperar: '#ov-menu:not(.hide)' });
+  const centro = async (pg, sel) => { const r = await pg.locator(sel).boundingBox(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; };
+  const sostenerEn = async (pg, sel, ms) => { const d = dedos(pg), m = await centro(pg, sel); await d.poner(1, m.x, m.y); await sleep(ms); const e = await estado(pg); await d.soltarTodo(); return e; };
+  const s1 = await abrirSuelto({ width: 390, height: 844 });
+  ok('controles: selector con 🔘 Botones (por omisión), 👆 Deslizar y 🎮 Mando clásico', (await s1.$$('#menu-control [data-control]')).length === 3 && await s1.getAttribute('[data-control="botones"]', 'aria-pressed') === 'true');
+  await s1.screenshot({ path: 'futbolito-390-menu-controles.png' });
+  await s1.tap('[data-nivel="facil"]');
+  await esperar(s1, () => window.__futbolito.estado().modo === 'juego');
+  await s1.evaluate(() => window.__futbolito.pausarBot());
+  const tam = await s1.evaluate(() => ['#c-menos', '#c-mas', '#c-patea', '#c-barra'].map(q => { const r = document.querySelector(q).getBoundingClientRect(); return [q, Math.round(r.width), Math.round(r.height)]; }));
+  ok('botones: flechas, «⚽ PATEA» y «🔄 BARRA» a la vista y grandes (≥ 56 px)', tam.every(([, w, h]) => w >= 56 && h >= 56), JSON.stringify(tam));
+  await s1.evaluate(() => window.__futbolito.ponerPelota(150, 300)); await sleep(150); // defensa activa (corre 81 u)
+  let ia = (await estado(s1)).activa, sx0 = (await estado(s1)).s[ia];
+  let ex = await sostenerEn(s1, '#c-mas', 220); await sleep(150);
+  const sx2 = (await estado(s1)).s[ia]; await sleep(250);
+  const sx3 = (await estado(s1)).s[ia];
+  ok('botones: sostener ▶ (toque real) corre la barra a la derecha y al soltar se detiene', ex.s[ia] > sx0 + 15 && Math.abs(sx3 - sx2) < 0.5 && ex.activa === ia, JSON.stringify({ ia, sx0, sostenido: ex.s[ia], suelto: [sx2, sx3] }));
+  // PATEA al bajar el dedo: sin soltar, con temblor de 14 px y 350 ms abajo (antes se perdía).
+  await s1.evaluate(() => window.__futbolito.pelotaEnfrente()); await sleep(60);
+  const d1 = dedos(s1), mp = await centro(s1, '#c-patea');
+  await d1.poner(1, mp.x, mp.y); await sleep(50);
+  const alBajar = await estado(s1);
+  await d1.mover(1, mp.x + 14, mp.y); await sleep(300); await d1.soltarTodo();
+  ok('PATEA: patea al bajar el dedo, aunque tiemble 14 px y dure 350 ms', alBajar.patada[4] > 0 && Math.hypot(alBajar.pelota.vx, alBajar.pelota.vy) > 150, JSON.stringify({ patada: alBajar.patada[4], vy: alBajar.pelota.vy }));
+  await sleep(400); await s1.evaluate(() => window.__futbolito.pelotaEnfrente()); await sleep(60);
+  const ml = await centro(s1, '#c-menos');
+  await d1.poner(1, ml.x, ml.y); await sleep(80); await d1.poner(2, mp.x, mp.y); await sleep(50);
+  const dosDedos = await estado(s1); await d1.soltarTodo();
+  ok('PATEA con la flecha ◀ sostenida (dos dedos)', dosDedos.patada[4] > 0, JSON.stringify({ patada: dosDedos.patada[4] }));
+  await s1.evaluate(() => window.__futbolito.ponerPelota(150, 235)); await sleep(120);
+  const act0 = (await estado(s1)).activa;
+  await sostenerEn(s1, '#c-barra', 60); await sleep(80);
+  const tb = await estado(s1);
+  ok('«🔄 BARRA» cambia la barra activa y dice cuál («· tú»)', tb.activa !== act0 && /tú/.test(await s1.textContent('#c-barra')), JSON.stringify({ act0, activa: tb.activa, txt: await s1.textContent('#c-barra') }));
+  await sleep(2700); // el cambio manual manda 2.5 s
+  await s1.evaluate(() => window.__futbolito.ponerPelota(178, 278)); await sleep(150);
+  ok('barra activa: con la pelota pegada por detrás de los medios siguen activos los medios', (await estado(s1)).puesto === 'medios' && /Medios/.test(await s1.textContent('#c-barra')), (await estado(s1)).puesto);
+  await s1.screenshot({ path: 'futbolito-390-botones.png' });
+  // 👆 Deslizar (🎮 del HUD cambia al siguiente control)
+  await s1.tap('#b-control'); await sleep(150);
+  ok('🎮 del HUD cambia a 👆 Deslizar: sin flechas ni PATEA', (await estado(s1)).control === 'deslizar' && !(await s1.isVisible('#c-mas')) && !(await s1.isVisible('#c-patea')) && await s1.isVisible('#c-barra'));
+  await s1.evaluate(() => window.__futbolito.ponerPelota(150, 300)); await sleep(150);
+  const cv = await cajaCanvas(s1);
+  ia = (await estado(s1)).activa; sx0 = (await estado(s1)).s[ia];
+  await arrastrar(s1, cv.x + cv.width * 0.25, cv.y + cv.height * 0.6, 40, 0); await sleep(150);
+  ok('deslizar: en la mitad izquierda corre la barra', (await estado(s1)).s[ia] > sx0 + 15, JSON.stringify({ antes: sx0, despues: (await estado(s1)).s[ia] }));
+  await s1.evaluate(() => window.__futbolito.pelotaEnfrente()); await sleep(60);
+  await d1.poner(1, cv.x + cv.width * 0.75, cv.y + cv.height * 0.5); await sleep(50);
+  const toqueDer = await estado(s1); await d1.soltarTodo();
+  ok('deslizar: tocar la mitad derecha patea al bajar el dedo', toqueDer.patada[4] > 0, String(toqueDer.patada[4]));
+  await sleep(1500); // si la patada fue gol, el saque espera 1.2 s
+  // 🎮 Mando clásico con toques reales
+  await s1.tap('#b-control'); await sleep(200);
+  ok('🎮 Mando clásico: se ve el mando y no los botones', (await estado(s1)).control === 'mando' && await s1.isVisible('.mando') && !(await s1.isVisible('#controles')));
+  await s1.evaluate(() => window.__futbolito.ponerPelota(150, 300));
+  await esperar(s1, () => window.__futbolito.estado().activa === 6, null, 5000); await sleep(100);
+  ia = (await estado(s1)).activa; sx0 = (await estado(s1)).s[ia];
+  ex = await sostenerEn(s1, '.mando-cruceta [data-dir="der"]', 220);
+  ok('mando: cruceta ▶ (toque real) corre la barra', ex.s[ia] > sx0 + 15, JSON.stringify({ ia, activa: ex.activa, antes: sx0, despues: ex.s[ia], modo: ex.modo, mando: ex.mando }));
+  await s1.evaluate(() => window.__futbolito.pelotaEnfrente()); await sleep(60);
+  ex = await sostenerEn(s1, '.mando [data-b="A"]', 60);
+  ok('mando: A patea', ex.patada[4] > 0, String(ex.patada[4]));
+  await sleep(300); await s1.evaluate(() => window.__futbolito.ponerPelota(150, 235)); await sleep(100);
+  const actB = (await estado(s1)).activa;
+  await sostenerEn(s1, '.mando [data-b="B"]', 60);
+  ok('mando: B cambia de barra', (await estado(s1)).activa !== actB);
+  await sostenerEn(s1, '.mando [data-b="START"]', 60);
+  const enPausa = (await estado(s1)).modo;
+  await sostenerEn(s1, '.mando [data-b="START"]', 60);
+  ok('mando: START pausa y START sigue', enPausa === 'pausa' && (await estado(s1)).modo === 'juego', enPausa);
+  await s1.screenshot({ path: 'futbolito-390-mando.png' });
+  await s1.reload(); await s1.waitForSelector('#ov-menu:not(.hide)');
+  ok('la elección se recuerda al recargar (🎮 Mando clásico)', await s1.getAttribute('[data-control="mando"]', 'aria-pressed') === 'true');
+  // Teclado: ↓ corre (vertical: ↓ = →), Espacio patea, Tab y Q cambian de barra.
+  await s1.tap('[data-control="botones"]');
+  await s1.tap('[data-nivel="facil"]'); await esperar(s1, () => window.__futbolito.estado().modo === 'juego');
+  await s1.evaluate(() => { window.__futbolito.pausarBot(); window.__futbolito.ponerPelota(150, 300); }); await sleep(150);
+  ia = (await estado(s1)).activa; sx0 = (await estado(s1)).s[ia];
+  await s1.keyboard.down('ArrowDown'); await sleep(200); await s1.keyboard.up('ArrowDown');
+  const kDown = (await estado(s1)).s[ia];
+  await s1.evaluate(() => window.__futbolito.pelotaEnfrente()); await sleep(60);
+  await s1.keyboard.press('Space'); await sleep(40);
+  const kPat = (await estado(s1)).patada[4];
+  await s1.evaluate(() => window.__futbolito.ponerPelota(150, 235)); await sleep(100);
+  const k0 = (await estado(s1)).activa;
+  await s1.keyboard.press('Tab'); const k1 = (await estado(s1)).activa;
+  await s1.keyboard.press('KeyQ'); const k2 = (await estado(s1)).activa;
+  ok('teclado: ↓ corre la barra, Espacio patea, Tab siguiente y Q anterior', kDown > sx0 + 10 && kPat > 0 && k1 !== k0 && k2 === k0, JSON.stringify({ sx0, kDown, kPat, k0, k1, k2 }));
+  await s1.context().close();
+  // Control físico simulado: botón de abajo patea y la palanca corre la barra (con cualquier control elegido).
+  const GAMEPAD = [() => { Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: () => window.__pads || [null, null, null, null] }); }];
+  const pad = (presionados = [], ejes = [0, 0, 0, 0]) => ({ id: 'Control de prueba', index: 0, connected: true, mapping: 'standard', axes: ejes, buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: presionados.includes(i), value: presionados.includes(i) ? 1 : 0 })) });
+  const s2 = await abrirSuelto({ width: 390, height: 844 }, GAMEPAD);
+  await s2.tap('[data-nivel="facil"]'); await esperar(s2, () => window.__futbolito.estado().modo === 'juego');
+  await s2.evaluate(() => { window.__futbolito.pausarBot(); window.__futbolito.pelotaEnfrente(); }); await sleep(60);
+  await s2.evaluate(x => { window.__pads = [x]; }, pad([0])); await sleep(150);
+  const gpPat = (await estado(s2)).patada[4];
+  await s2.evaluate(() => { window.__pads = null; window.__futbolito.ponerPelota(150, 300); }); await sleep(150);
+  ia = (await estado(s2)).activa; sx0 = (await estado(s2)).s[ia];
+  await s2.evaluate(x => { window.__pads = [x]; }, pad([], [1, 0, 0, 0])); await sleep(250);
+  await s2.evaluate(() => { window.__pads = null; });
+  ok('control físico: el botón de abajo patea y la palanca corre la barra (con 🔘 Botones elegido)', gpPat > 0 && (await estado(s2)).s[ia] > sx0 + 15, JSON.stringify({ gpPat, antes: sx0, despues: (await estado(s2)).s[ia] }));
+  await s2.context().close();
+  // Distribución: 320×640 (Botones y Mando) y 844×390 (los botones no tapan la mesa).
+  for (const [w, h, control] of [[320, 640, 'botones'], [320, 640, 'mando'], [844, 390, 'botones'], [844, 390, 'mando']]) {
+    const sp = await abrirSuelto({ width: w, height: h });
+    await sp.tap('[data-control="' + control + '"]'); await sp.tap('[data-nivel="medio"]');
+    await esperar(sp, () => window.__futbolito.estado().modo === 'juego'); await sleep(300);
+    const lay = await sp.evaluate(() => {
+      const r = e => { const b = e.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; };
+      const vis = e => e && e.getBoundingClientRect().width > 0 && getComputedStyle(e).display !== 'none' && getComputedStyle(e).visibility !== 'hidden';
+      const ctl = [...document.querySelectorAll('#controles button, .mando [data-b]:not(.mando-oculto), .mando-cruceta i[data-dir]:not(.mando-oculto)')].filter(vis).map(r);
+      return { vw: innerWidth, vh: innerHeight, ctl, mesa: window.__futbolito.rectMesa() };
+    });
+    const dentroVista = lay.ctl.every(c => c.l >= -0.5 && c.t >= -0.5 && c.r <= lay.vw + 0.5 && c.b <= lay.vh + 0.5);
+    const cruza = lay.ctl.filter(c => c.l < lay.mesa.r - 2 && c.r > lay.mesa.l + 2 && c.t < lay.mesa.b - 2 && c.b > lay.mesa.t + 2);
+    ok('distribución ' + w + '×' + h + ' (' + control + '): controles completos en pantalla y sin tapar la mesa', lay.ctl.length >= 3 && dentroVista && !cruza.length, JSON.stringify({ n: lay.ctl.length, cruza: cruza.length, mesa: lay.mesa }));
+    await sp.screenshot({ path: 'futbolito-' + w + 'x' + h + '-' + control + '.png' });
+    await sp.context().close();
+  }
 
   // ---- Sala: 1 persona + bot ----
   const codigoBot = await crearSala(p, true);
@@ -201,14 +329,76 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
   }
   ok('2 personas: los dos aparatos ven el mismo estado (posiciones, marcador y turno) tras cada tiro', iguales, 'tiros: ' + tiros);
   await p.screenshot({ path: 'futbolito-390-sala-2.png' });
-  const rinde = (await estado(f1)).miTurno ? [p, f1] : [a, f2];
-  await esperar(rinde[1], () => window.__futbolito.estado().miTurno, null, 30000);
-  await rinde[1].tap('#b-rendir');
-  await p.waitForSelector('#p-body .result', { timeout: 30000 }); await a.waitForSelector('#p-body .result', { timeout: 30000 });
+  let rinde = null; // a quien le toque (puede seguir tirando quien tiró)
+  for (let t = 0; t < 150 && !rinde; t++) { const [x1, x2] = [await estado(f1), await estado(f2)]; rinde = x1.miTurno ? f1 : x2.miTurno ? f2 : null; if (!rinde) await sleep(300); }
+  await rinde.tap('#b-rendir');
+  try { await p.waitForSelector('#p-body .result', { timeout: 30000 }); await a.waitForSelector('#p-body .result', { timeout: 30000 }); } catch (err) {
+    await p.screenshot({ path: 'futbolito-falla-rendir-p.png' }); await a.screenshot({ path: 'futbolito-falla-rendir-a.png' });
+    const ver = async f => f.evaluate(() => { const e = window.__futbolito.estado(); return { fin: e.fin, paso: e.paso, miTurno: e.miTurno, finEnviado: e.finEnviado, estado: document.getElementById('estado').textContent }; }).catch(x => 'sin marco: ' + x.message.slice(0, 60));
+    throw new Error('rendirse sin podio: ' + (rinde === f1 ? 'Marisol' : 'Angel') + ' ' + JSON.stringify([await ver(f1), await ver(f2)]));
+  }
   await sleep(1000);
   const [pod1, pod2] = [await p.textContent('#p-body'), await a.textContent('#p-body')];
   ok('2 personas: podio en los dos con Marisol y Angel y la revancha', /Marisol/.test(pod1) && /Angel/.test(pod1) && /Marisol/.test(pod2) && /Angel/.test(pod2) && await a.isVisible('[data-p="revancha"]'));
   await a.screenshot({ path: 'futbolito-844-podio.png', fullPage: true });
+
+  // ---- Sala 2 vs 2: Marisol + Angel + 2 bots (futbolito-equipos-controles) ----
+  const codigo4 = await crearSala(p, true, '2v2');
+  ok('2v2: la mesa dice «Mesa de 4 · 1 persona + 3 bots»', /Mesa de 4 · 1 persona \+ 3 bots/.test(await p.textContent('#p-mesa')), await p.textContent('#p-mesa'));
+  const a4 = await abrir(b, 'angel@example.com', { width: 844, height: 390 });
+  await a4.click('[data-tab="partidas"]'); await a4.waitForSelector('#f-unirse');
+  await a4.fill('#p-codigo', codigo4); await a4.click('#f-unirse button[type=submit]');
+  await p.waitForFunction(() => /2 personas \+ 2 bots/.test((document.getElementById('p-mesa') || {}).textContent || ''), null, { timeout: 30000 });
+  await p.waitForFunction(() => /Angel/.test((document.getElementById('p-equipos-fut') || {}).textContent || ''), null, { timeout: 30000 });
+  const eqAntes = await p.evaluate(() => [...document.querySelectorAll('#p-equipos-fut [data-eq]')].map(x => x.dataset.eq + ':' + x.textContent));
+  ok('2v2: equipos automáticos y balanceados (Marisol y Angel en equipos distintos, con un bot cada quien)', eqAntes.some(x => /^0:.*Marisol/.test(x)) && eqAntes.some(x => /^1:.*Angel/.test(x)), JSON.stringify(eqAntes));
+  await a4.waitForSelector('[data-p="equipo"]', { timeout: 30000 });
+  await a4.click('[data-p="equipo"]');
+  let juntos = true;
+  await p.waitForFunction(() => { const t = [...document.querySelectorAll('#p-equipos-fut [data-eq="0"]')].map(x => x.textContent).join(' '); return /Marisol/.test(t) && /Angel/.test(t); }, null, { timeout: 30000 }).catch(() => { juntos = false; });
+  ok('2v2: «🔁 Cambiar de equipo» deja a Angel con Marisol (equipo rojo) y a los bots en el azul', juntos);
+  await p.screenshot({ path: 'futbolito-390-sala-equipos.png', fullPage: true });
+  await p.click('[data-p="empezar"]');
+  const g1 = await marcoDe(p, '#p-body'), g2 = await marcoDe(a4, '#p-body');
+  await esperar(g1, () => window.__futbolito && window.__futbolito.estado().sala && window.__futbolito.estado().miTurno, null, 30000);
+  const [q1, q2] = [await estado(g1), await estado(g2)];
+  const marcadorTxt = [await g1.textContent('#hud'), await g2.textContent('#hud')];
+  ok('2v2: 4 asientos con color y nombre (Marisol adelante, Angel atrás, 2 bots) y saca Marisol', q1.asientos.length === 4 && q1.asientos[0].nombre === 'Marisol' && q1.asientos[0].rol === 'adelante' && q1.asientos[1].rol === 'atras' && new Set(q1.asientos.map(x => x.color)).size === 4 && /Tú \+ Angel/.test(marcadorTxt[0]) && /Marisol \+ Tú/.test(marcadorTxt[1]) && /🤖 \+ 🤖/.test(marcadorTxt[0]) && !q2.miTurno && q2.yo === 1,
+    JSON.stringify({ asientos: q1.asientos, marcadorTxt }));
+  ok('2v2: Angel ve quién tira («Marisol») mientras espera', /Marisol/.test(await g2.textContent('#estado')), await g2.textContent('#estado'));
+  const ajena = await fetch(API + '/juegos/sala/' + codigo4 + '/respuesta?email=angel%40example.com', { method: 'POST', body: JSON.stringify({ jugada: { n: 0, accion: 'tiro', pos: 0, angulo: 0, fuerza: 50, barra: 4 } }) });
+  ok('servidor: tiro de Angel con la barra de Marisol → 409 no_es_tu_barra', ajena.status === 409 && (await ajena.json()).error === 'no_es_tu_barra', String(ajena.status));
+  await p.screenshot({ path: 'futbolito-390-sala-2v2.png' });
+  await a4.screenshot({ path: 'futbolito-844-sala-2v2.png' });
+  let tiros4 = 0, angelTiro = false, consistente = true;
+  for (let k = 0; k < 14 && !angelTiro; k++) {
+    let quien = null;
+    for (let t = 0; t < 140 && !quien; t++) {
+      const [x1, x2] = [await estado(g1), await estado(g2)];
+      if (x1.fin) break;
+      if (x1.miTurno) quien = [p, g1, x1]; else if (x2.miTurno) quien = [a4, g2, x2]; else await sleep(400);
+    }
+    if (!quien) break;
+    consistente = consistente && quien[2].turnoBarras.includes(quien[2].posesionBarra);
+    if (quien[1] === g2) angelTiro = true;
+    await tirarSala(quien[0], quien[1], k % 2 ? 20 : -20); tiros4++;
+  }
+  const j4 = ((await (await fetch(API + '/juegos/sala/' + codigo4 + '?email=marisol%40example.com')).json()).jugadores || []).flatMap(x => x.jugadas || []);
+  ok('2v2: cada quien tira solo cuando la pelota está en su barra y el servidor guarda la barra', consistente && tiros4 >= 2 && j4.every(j => j.accion !== 'tiro' || Number.isInteger(j.barra)), JSON.stringify({ tiros4, barras: j4.map(j => j.barra) }));
+  ok('2v2: Angel (portero y defensa) tira cuando la pelota llega a su barra', angelTiro, 'tiros: ' + tiros4);
+  for (const f of [g1, g2]) await esperar(f, () => !window.__futbolito.estado().animando, null, 40000);
+  await sleep(1500);
+  const [z1, z2] = [await firmaQuieta(g1), await firmaQuieta(g2)];
+  ok('2v2: los dos aparatos ven el mismo estado', z1 === z2);
+  await a4.screenshot({ path: 'futbolito-844-sala-2v2-juego.png' });
+  let rinde4 = null;
+  for (let t = 0; t < 200 && !rinde4; t++) { const [x1, x2] = [await estado(g1), await estado(g2)]; if (x1.fin) break; rinde4 = x1.miTurno ? g1 : x2.miTurno ? g2 : null; if (!rinde4) await sleep(400); }
+  if (rinde4) await rinde4.tap('#b-rendir');
+  await p.waitForSelector('#p-body .result', { timeout: 60000 }); await a4.waitForSelector('#p-body .result', { timeout: 60000 });
+  await sleep(1000);
+  const pod4 = await p.textContent('#p-body');
+  ok('2v2: podio con Marisol, Angel y los 2 bots, título del equipo', /Marisol/.test(pod4) && /Angel/.test(pod4) && /BOT-/.test(pod4) && /equipo/i.test(pod4), pod4.slice(0, 200));
+  await p.screenshot({ path: 'futbolito-390-podio-2v2.png', fullPage: true });
 
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
