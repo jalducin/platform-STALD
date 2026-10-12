@@ -59,7 +59,10 @@
 
 ## 8. Publicación y cierre
 
-- [ ] 8.1 Push, PR en español, esperar todos los checks («Pruebas del servidor» y el preview de Deno) y merge
-- [ ] 8.2 Producción: GitHub Pages sirve `juegos.html`, `juegos/app/juegos.css` y `juegos/app/*.js` (curl 200) y
+- [x] 8.1 Push, PR en español, esperar todos los checks («Pruebas del servidor» y el preview de Deno) y merge
+  - PR #176: «Pruebas del servidor» y el deploy de Deno en verde; merge `c0f28b5`
+- [x] 8.2 Producción: GitHub Pages sirve `juegos.html`, `juegos/app/juegos.css` y `juegos/app/*.js` (curl 200) y
   Deno Deploy queda en verde
-- [ ] 8.3 `openspec archive organizar-codigo` en un PR aparte
+  - Verificado el 2026-10-12: Pages sirve `juegos.html` (72 líneas) y los 14 archivos de `juegos/app/` con 200;
+    estado del commit en verde (deploy de Deno) y `/salud` 200
+- [x] 8.3 `openspec archive organizar-codigo` en un PR aparte
