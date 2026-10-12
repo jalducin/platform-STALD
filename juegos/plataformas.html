@@ -1254,7 +1254,8 @@ const OVERLAYS = ['ov-carga', 'ov-titulo', 'ov-mapa', 'ov-pausa', 'ov-fin', 'ov-
 function mostrar(id) { OVERLAYS.forEach(o => $(o).classList.toggle('hide', o !== id)); if (id === 'ov-mapa') $('aviso').classList.remove('ver'); }
 function ocultarOverlays() { OVERLAYS.forEach(o => $(o).classList.add('hide')); }
 let avisoT = null;
-function avisar(txt, ms) { const a = $('aviso'); a.style.top = ($('hud').offsetHeight + 4) + 'px'; a.textContent = txt; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms || 1500); }
+function avisar(txt, ms) { const a = $('aviso'); const ubicar = () => { a.style.top = ($('hud').offsetHeight + 4) + 'px'; }; ubicar(); requestAnimationFrame(ubicar); // el HUD puede acomodarse en 2 renglones al arrancar el nivel
+  a.textContent = txt; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms || 1500); }
 
 /* ================= Comunicación con la plataforma ================= */
 function enviar(m) { if (!EMBED) return; try { parent.postMessage(Object.assign({ juego: 'plataformas' }, m), location.origin); } catch (e) { /* nada */ } }
