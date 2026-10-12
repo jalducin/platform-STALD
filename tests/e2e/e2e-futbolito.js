@@ -7,6 +7,7 @@
 require('./lib/entorno');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -64,8 +65,8 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
   // ---- Catálogo ----
   const tarjeta = await p.textContent('[data-juego="futbolito"]');
   ok('catálogo: Futbolito en Arcade con ícono y descripción', tarjeta.includes('⚽') && tarjeta.includes('Futbolito') && /barra/.test(tarjeta) && (await p.$$('.cat-arcade[data-juego="futbolito"]')).length === 1, tarjeta);
-  const total = await p.$$eval('[data-juego]', bs => bs.length);
-  ok('catálogo: el menú muestra todos los juegos de la página (con Futbolito y Billar)', total === await p.evaluate(() => JUEGOS.length) && total >= 26, String(total));
+  const menu = await contarMenu(p), total = menu.tarjetas;
+  ok('catálogo: el menú muestra todos los juegos de la página (con Futbolito y Billar)', menu.completo && total >= 26, String(total));
   const puntosAntes = await p.evaluate(() => state.totalIndividual);
 
   // ---- Individual con toques reales (390×844) ----

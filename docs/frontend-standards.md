@@ -8,6 +8,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   `<script>`. Sin build, sin frameworks y sin dependencias de CDN salvo que un cambio lo justifique en su `design.md`.
   - **Excepción (`ingles.html`, cambio `ingles-pro`):** es un shell que enlaza `estilos/stald.css` (sistema de diseño
     compartido), `ingles/ingles.css` y scripts en `ingles/*.js`. Ver "Inglés pro" al final.
+  - **Excepción (`juegos.html`, cambio `organizar-codigo`):** también es un shell: estilos en `juegos/app/juegos.css` y
+    código en scripts clásicos de `juegos/app/`. Ver [Estructura de juegos/app/](#estructura-de-juegosapp-cambio-organizar-codigo).
 - Una página = una ruta del backend. La URL del backend va en una constante al inicio del script
   (`DATA_URL_BASE`); no repetirla en varios lugares.
 - `index.html` es el **portal** (lo que Pages sirve en `/`):
@@ -136,8 +138,8 @@ Cada página debe manejar y mostrar de forma explícita:
     (las misiones cumplidas van escapadas en el detalle). Conserva su propia música; la de Juegos se pausa mientras se
     juega. Misiones y premios: reglas en `juegos/dragon-misiones.js` (`DragonMisiones`, también lo prueban los tests
     de Deno); el juego pide el avance con `listo`, recibe `inicio` (`progreso`, `semilla` = id del jugador) y manda
-    `guardar` antes de `fin`; `juegos.html` lo guarda con `canalProgreso` (`GET`/`PUT /juegos/progreso/dragon-run`,
-    cola por juego). Pantalla de misiones a pantalla completa en `rem`, aviso `#toast` «¡Misión cumplida!», toque en
+    `guardar` antes de `fin`; `juegos.html` lo guarda con `canalProgreso` (`juegos/app/arcade.js`; `GET`/`PUT
+    /juegos/progreso/dragon-run`, cola por juego). Pantalla de misiones a pantalla completa en `rem`, aviso `#toast` «¡Misión cumplida!», toque en
     toda la pantalla y `prefers-reduced-motion`. Suelto, el avance va a `localStorage.dragonProgreso`. `?auto=1`
     (`?dragonAuto=1` en Juegos) y `?prueba=1` (`?arcadePrueba=1`, ganchos `window.__dragonPrueba`) son solo para
     pruebas;
@@ -146,8 +148,8 @@ Cada página debe manejar y mostrar de forma explícita:
     `juegos/arcade.js` (mundos, pistas, referencias, mapa de sala, tiempos de bots y puntos por lugar; también lo
     carga `juegos.html`). El juego nunca llama al servidor: avisa a `parent` (`listo`, `guardar`, `puntos`, `meta`) y
     `juegos.html` acepta solo mensajes de su iframe y su origen; responde `inicio` (avance de `GET /juegos/progreso`
-    o, en sala, mapa, semilla, `inicioEn` y bots), `guardado` y `puntos-ok`. Guarda con `PUT` encadenado (gana el
-    último). Canvas con paso fijo de 1/60 s y escala entera, pausa con `visibilitychange`, sonido opcional
+    o, en sala, mapa, semilla, `inicioEn` y bots), `guardado` y `puntos-ok`. Guarda con el mismo `canalProgreso` de
+    Dragon Run: `PUT` encadenado (gana el último). Canvas con paso fijo de 1/60 s y escala entera, pausa con `visibilitychange`, sonido opcional
     (`localStorage.arcade_sonido`), controles táctiles grandes (Axo, Dragon Run y Karts usan el mando compartido; ver
     «Mando de Arcade») y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
@@ -168,7 +170,7 @@ Cada página debe manejar y mostrar de forma explícita:
     - pista y sprites de los karts pre-dibujados; partículas con tope de 300 y un tercio con
       `prefers-reduced-motion` (sin humo ni confeti);
   - **Futbolito y Billar** (cambio `futbolito-billar`; decisiones en su `design.md`): `juegos/futbolito.html` y
-    `juegos/billar.html` en el mismo iframe de Arcade, **sin avance guardado** (`SIN_AVANCE` en `juegos.html`: no
+    `juegos/billar.html` en el mismo iframe de Arcade, **sin avance guardado** (`SIN_AVANCE` en `juegos/app/arcade.js`: no
     piden `/juegos/progreso`). Motores sin DOM y deterministas: `juegos/fisica.js` (`senCos`, `atan2Dec` solo con
     `+ − * /` y `Math.sqrt`; azar con semilla; `linea`, la línea de turnos de sala), `juegos/futbolito-motor.js` y
     `juegos/billar-motor.js` (probados con Deno en `server/fisica_test.ts`; **nunca** usar `Math.sin/cos/atan2/hypot`
@@ -263,6 +265,41 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - Local: servir la raíz (`npx serve .`) y recorrer los estados del §3.
 - Publicada: tras el merge, abrir la URL de Pages (ver `openspec/project.md`) y repetir login admin y
   login de alumna. Pages tarda de 1 a 2 minutos en publicar.
+
+## Estructura de juegos/app/ (cambio `organizar-codigo`)
+
+`juegos.html` solo tiene la estructura: el HTML (con el `<svg>` de la baraja española), los `<link>` y los
+`<script>`. Su CSS está en `juegos/app/juegos.css` (entre `juegos/tablero.css` y `juegos/clasicos-rapidos.css`, por
+la cascada) y su código en estos scripts clásicos, que se cargan **en este orden**, después de los motores e
+interfaces de `juegos/*.js` y de `comun/auth.js`:
+
+| Archivo | Responsabilidad |
+|---|---|
+| `nucleo.js` | `API_BASE` (`?api=`), `?sala=`, `state`, recarga (`juegos_sala_activa`, `juegos_partida_individual`), utilidades (`escapeHtml`, `barajar`, `fmt`…), `api`/`post`/`datos`, sonido y voz |
+| `menu.js` | `CATEGORIAS`, `JUEGOS`, `juegoPorId`, avatar, sesión y registro (`iniciar`, `pantallaLogin`), hub |
+| `ranking.js` | 🏆 Ranking (⭐ individuales, 👥 partidas, 🔥 juegos) |
+| `admin.js` | 🛡️ Admin (jugadores, pendientes, invitados y fotos) |
+| `individuales.js` | `marco`, `reloj`, `terminar`, `quiz` y los juegos de Inglés, Español, Cultura y Mente ágil |
+| `arcade.js` | Dragon Run, Axo, Karts, Futbolito y Billar en iframe (`canalProgreso`, `jugarArcade`) y sus carreras y tiros en sala. No confundir con `juegos/arcade.js` (reglas sin DOM) |
+| `mente.js` | Sudoku y Ajedrez contra la computadora |
+| `clasicos.js` | Basta, ¡Una! y Lotería contra bots |
+| `naipes.js` | Póker y baraja española (Brisca y Conquián) contra bots; HTML de cartas y fichas |
+| `salas.js` | partidas multijugador: semilla (`rngDe`), `sala`, Realtime, espera, preguntas, Basta por rondas, podio, revancha, crear/unirse/reanudar y compartir |
+| `salas-mesa.js` | Lotería, ¡Una!, Póker, Brisca/Conquián y Ajedrez jugados en sala |
+| `musica.js` | música de fondo (WebAudio) y su menú |
+| `arranque.js` | `AYUDA` (📖 Cómo se juega), eventos delegados de `#app` e `iniciar()`; **va al último** |
+
+Reglas:
+- Son scripts clásicos (sin build ni módulos ES): sus `const`/`let`/`function` de nivel superior son globales
+  compartidos. Los scripts de `juegos/` (`salas-grandes.js`, `tablero-ui.js`, `clasicos-rapidos-ui.js`…) y las E2E
+  (`JUEGOS`, `CATEGORIAS`, `state`) dependen de esos nombres: no renombrarlos sin buscar sus usos.
+- Fuera de `arranque.js`, cada archivo solo **declara**. Lo que se ejecuta al cargar (`JUEGOS.push`,
+  `JUEGOS_PARTIDA.push`, `addEventListener`…) solo puede usar lo que cargó antes; nada lee un `const` de un archivo
+  posterior hasta que el usuario hace algo.
+- Un juego nuevo va en el archivo de su familia (o en un `juegos/<juego>.js` propio, como los de salas grandes). Si
+  un archivo pasa de ~600 líneas, se parte por juego.
+- Al cambiar un archivo de `juegos/app/`, sube su `?v=` en `juegos.html`.
+- El avance en el servidor de los juegos en iframe (Dragon Run, Axo, Karts) pasa siempre por `canalProgreso`.
 
 ## Ritmo de los juegos de cartas (ajuste del profe, sprint final)
 
@@ -383,7 +420,7 @@ Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
 - **Dato al acertar**: `quiz(opts)` acepta `datoAlAcertar`; con él, al acertar se muestra `explicacion` en
   `.quiz-dato` y la siguiente pregunta llega a los 1.6 s. Solo lo usa el Maratón.
 - **📜 Línea del tiempo** (`cultura-linea`): la lógica vive en `juegos/linea-tiempo.js`, script clásico cargado antes
-  del script principal (sube `?v=` al cambiarlo):
+  de los scripts de `juegos/app/` (sube `?v=` al cambiarlo):
   - `globalThis.LineaTiempo`: funciones puras (temas, líneas por semilla, aciertos, puntos, bots y podio), probadas
     con Deno en `server/linea_tiempo_test.ts`;
   - pantallas `elegirLineaTiempo()`, `jugarLineaTiempo(d, tema)`, `pintarLineaSala(body)` y `lineasDeSala(seed,
@@ -402,8 +439,8 @@ Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
 
 ## Gramática de inglés en Juegos (cambio `juegos-ingles-gramatica`)
 
-- La lógica vive en `juegos/ingles-gramatica.js`, script clásico cargado antes del script principal de
-  `juegos.html` (sube `?v=` al cambiarlo):
+- La lógica vive en `juegos/ingles-gramatica.js`, script clásico cargado antes de los scripts de
+  `juegos/app/` (sube `?v=` al cambiarlo):
   - `globalThis.InglesGramatica`: funciones puras (temas, grupos, filtros, reglas, preguntas de partida), también
     probadas con Deno en `server/ingles_datos_test.ts`;
   - pantallas `elegirTemaIngles(id)`, `jugarFrasesTema(tema)`, `jugarTiempos()` y `resumenFallosSala(sala, n)`,
@@ -450,9 +487,9 @@ Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
   cada sala (`salaGato`, `salaConecta4`, `salaPpt`, `salaAhorcado`, `salaSerpientes`) a partir de
   `{ orden, jugadas, inicio, ahora, dur, rng, memo? }`. Lo prueba `server/clasicos_rapidos_motor_test.ts`.
 - `juegos/clasicos-rapidos-ui.js` (`globalThis.ClasicosRapidosUI`): tarjetas, modos individuales, dibujo y clics de
-  cada sala, selector de modo del Ahorcado y ayudas. Se carga antes del script principal y usa sus funciones solo al
+  cada sala, selector de modo del Ahorcado y ayudas. Se carga antes de los scripts de `juegos/app/` y usa sus funciones solo al
   jugar. Estilos en `juegos/clasicos-rapidos.css` (con `prefers-reduced-motion`).
-- Ganchos en `juegos.html` (comentario `// clasicos-rapidos`): `<link>` y 2 `<script>`, `JUEGOS.push(...TARJETAS)`,
+- Ganchos en `juegos.html` y `juegos/app/*.js` (comentario `// clasicos-rapidos`): `<link>` y 2 `<script>`, `JUEGOS.push(...TARJETAS)`,
   ids en `JUEGOS_PARTIDA` y `TIEMPO_REAL`, una línea en `pintarSala`, las opciones al crear y `AYUDA`.
 - Los participantes salen de `participantes()` (tabla de mesas). Las elecciones ocultas de Piedra-papel-tijera
   (`"?"`) se vuelven a pedir y las ya vistas se recuerdan en `sala.cr.vistas`.
@@ -461,8 +498,8 @@ Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
 - **Motores:** `juegos/tablero.js` es el motor sin DOM de Damas, Dominó, Parchís y Batalla naval. Expone
   `globalThis.Tablero`, sus estados son JSON y lo prueban `server/tablero_test.ts` y `server/naval_test.ts`.
 - **Pantallas:** `juegos/tablero-ui.js` (`TableroUI`) tiene las pantallas individuales, las salas y la ayuda.
-  - Es un script clásico que se carga antes del script principal y usa sus funciones globales en tiempo de llamada.
-  - Sus ganchos en `juegos.html` llevan el comentario `juegos-tablero`.
+  - Es un script clásico que se carga antes de los scripts de `juegos/app/` y usa sus funciones globales en tiempo de llamada.
+  - Sus ganchos en `juegos.html` y `juegos/app/*.js` llevan el comentario `juegos-tablero`.
 - **Estilos:** `juegos/tablero.css`, con prefijo `tb-`.
   - El arte es propio: las piezas y fichas son CSS y el tablero de Parchís es SVG.
   - Las animaciones (deslizar la pieza, caer la ficha, girar el dado e impacto del disparo) se apagan con

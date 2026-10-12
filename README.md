@@ -21,7 +21,7 @@ Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:f
 | [openspec/config.yaml](openspec/config.yaml) | Contexto y reglas para los artefactos OpenSpec |
 | [docs/base-standards.md](docs/base-standards.md) | Principios base e idioma |
 | [docs/documentation-standards.md](docs/documentation-standards.md) | Mantenimiento de la documentación |
-| [docs/frontend-standards.md](docs/frontend-standards.md) | Páginas HTML / GitHub Pages |
+| [docs/frontend-standards.md](docs/frontend-standards.md) | Páginas HTML / GitHub Pages; estructura de `juegos.html` en `juegos/app/` |
 | [docs/backend-standards.md](docs/backend-standards.md) | Backend Deno Deploy, contrato HTTP, seguridad |
 | [docs/data-model.md](docs/data-model.md) | Base de Notion de Secundaria, registro de Inglés, exámenes y actividades semanales (formatos JSON) y tablas `stald_*` |
 | [docs/deno-deploy-setup.md](docs/deno-deploy-setup.md) | Configurar el backend en Deno Deploy y el repo privado de datos |

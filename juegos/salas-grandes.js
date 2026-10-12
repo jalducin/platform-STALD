@@ -1,6 +1,6 @@
 // Juegos para salas grandes (openspec: juegos-salas-grandes): registro común de 🎱 Bingo, 🂡 Blackjack, 🎨 Dibuja y
-// adivina, y 🃏 Memorama y 🔎 Sopa de letras en partida. Script clásico cargado antes del script principal de
-// juegos.html; sus funciones usan los helpers globales de juegos.html (sala, post, pintarFinalSala…) al llamarse.
+// adivina, y 🃏 Memorama y 🔎 Sopa de letras en partida. Script clásico cargado antes de los scripts de
+// juegos/app/ (el código de juegos.html); sus funciones usan los helpers globales de juegos/app/ (sala, post, pintarFinalSala…) al llamarse.
 //
 // Cada juego se registra en SALAS_GRANDES[id] = {
 //   preparar()                       → contenido de la sala (sala.contenido), puede ser una promesa

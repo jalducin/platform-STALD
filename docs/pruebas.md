@@ -129,5 +129,8 @@ falso `Authorization: Bearer prueba:<correo>`:
    // Sin `ruta`, la página queda en blanco: agrega rutas o escuchas y luego `await p.goto(urlDe('/ingles.html#semana'))`.
    ```
 
+   Para comparar el menú de `juegos.html` con su catálogo usa `contarMenu(p)` de `lib/menu.js` (cambio
+   `organizar-codigo`): devuelve `ids`, `tarjetas`, `juegos` (`JUEGOS.length`), `secciones`, `categorias`
+   (`CATEGORIAS.length`) y `completo` (el hub pinta todo el catálogo). No repitas `p.evaluate(() => JUEGOS.length)`.
 3. Agrégala a `ORDEN` en `correr.sh` (y a `fase_de` si no es de fase `base`).
 4. Córrela con `correr.sh` y documenta el resultado en el reporte del cambio.

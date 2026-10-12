@@ -1,5 +1,5 @@
 // Gramática de inglés en Juegos (openspec: juegos-ingles-gramatica): temas del selector, regla corta al fallar y
-// ⏳ Máquina del tiempo (`en-tiempos`). Script clásico cargado antes del script principal de juegos.html.
+// ⏳ Máquina del tiempo (`en-tiempos`). Script clásico cargado antes de los scripts de juegos/app/ (el código de juegos.html).
 // - `globalThis.InglesGramatica`: funciones puras (sin DOM), también usadas por las pruebas de Deno.
 // - Pantallas (`elegirTemaIngles`, `jugarFrasesTema`, `jugarTiempos`, `resumenFallosSala`): usan los helpers globales
 //   de juegos.html (quiz, marco, datos, barajar, escapeHtml…), que se resuelven al llamarlas.

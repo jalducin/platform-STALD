@@ -20,6 +20,7 @@
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const { PERSONAJES, contarColor, recorte } = require('./lib/personajes');
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
@@ -318,7 +319,7 @@ async function probarMando(b) {
   const p = await abrir(b);
   const tarjeta = await p.textContent('[data-juego="karts"]');
   ok('catálogo: Karts Turbo con ícono y descripción', tarjeta.includes('🏎️') && tarjeta.includes('Karts Turbo') && tarjeta.includes('copa'), tarjeta);
-  ok('catálogo: todas las categorías (CATEGORIAS) y todos los juegos de la página', (await p.$$('main h2')).length === await p.evaluate(() => CATEGORIAS.length) && (await p.$$('[data-juego]')).length === await p.evaluate(() => JUEGOS.length));
+  ok('catálogo: todas las categorías (CATEGORIAS) y todos los juegos de la página', (m => m.secciones === m.categorias && m.completo)(await contarMenu(p)));
   const puntosAntes = await p.evaluate(() => state.totalIndividual);
 
   // ---- Copa: carrera 1 (teclado) ----
