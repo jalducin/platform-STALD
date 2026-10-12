@@ -114,7 +114,8 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     - de preguntas: `en-vocab`, `en-frases`, `en-tiempos` (⏳ Máquina del tiempo, cambio `juegos-ingles-gramatica`;
       tope individual 2,000 en el catálogo), `es-ortografia`, `cultura` y `mente-calculo`;
     - Basta (es/en) y Lotería;
-    - ¡Una!, póker, Brisca, Conquián y ajedrez.
+    - ¡Una!, póker, Brisca, Conquián y ajedrez;
+    - Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (cambio `clasicos-rapidos`; ver la sección propia).
     - Los juegos absorbidos en el Sprint 4 (`en-preguntas`, `es-acentos`, `es-sinonimos` y `mente-secuencias`, del
       cambio `juegos-fusion`) responden 400 `juego_no_permitido`, pero siguen en el catálogo para conservar sus
       puntos.
@@ -178,7 +179,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     404 si no existe.
   - Solo admin: `GET /juegos/fotos` (lista activa) y `POST /juegos/fotos/quitar` `{ id }` (403 para el
     resto; 404 si ese jugador no tiene foto).
-- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú; con los clásicos rápidos (`clasicos-rapidos`: `gato`, `conecta4`, `ppt`, `ahorcado` y `serpientes`, categoría `clasicos`, tope 1000, títulos en `CATALOGO_CLASICOS_RAPIDOS`), 29. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
 **CORS y peticiones** (cambio `ahorro-peticiones`): las páginas mandan los POST con `Content-Type: text/plain` (petición
@@ -448,3 +449,25 @@ Cada juego de sala declara su mesa en `MESAS` de `server/salas.ts`, que debe ser
 
 `server/mesas_test.ts` comprueba que las dos tablas sean iguales. **Todo juego de sala nuevo agrega su renglón en los
 dos archivos.**
+
+## Clásicos rápidos en sala (cambio `clasicos-rapidos`)
+
+`server/clasicos_rapidos.ts` reúne lo de servidor de Gato (`gato`), Conecta 4 (`conecta4`), Piedra, papel o tijera
+(`ppt`), Ahorcado en inglés (`ahorcado`) y Serpientes y escaleras (`serpientes`); `server/salas.ts` y
+`server/juegos.ts` solo tienen ganchos marcados con `// clasicos-rapidos`.
+
+- Jugadas (`validarJugadaClasicos`; además de `n`, cualquier otro campo se descarta; si no, 400 `jugada_invalida`):
+  - `gato`: `{ n, accion: "marcar", casilla: 0–8 }`;
+  - `conecta4`: `{ n, accion: "soltar", col: 0–6 }`;
+  - `ppt`: `{ n: ronda 0–4, accion: "elegir", eleccion: "piedra" | "papel" | "tijera" }` o `{ n, accion: "pasar" }`;
+  - `ahorcado`: `{ n, accion: "letra", letra: a–z }` o `{ n, accion: "pasar" }`;
+  - `serpientes`: `{ n, accion: "tirar" }` (el dado sale de la semilla y del paso).
+- En `ppt` todos juegan la misma ronda: no aplica `turno_tomado` (`sinTurnoUnico`) y cuenta la primera elección.
+- **Elección simultánea** (`ocultarJugadas`): en `GET /juegos/sala/<código>` la `eleccion` ajena de la ronda `r` sale
+  como `"?"` si quien pregunta no tiene jugada en `r` y la ronda no está completa; lo publicado en Realtime oculta toda
+  ronda incompleta. El cliente recuerda las elecciones que ya vio.
+- `ahorcado` acepta `opciones.modo` = `compite` (por omisión) | `coop`; otro valor → 400 `modo_invalido`.
+- Mesas (tabla `MESAS`): `gato` y `conecta4` `{ max: 2, asientos: 2, min: 2 }`, `ppt` `{ max: 8, asientos: 4, min: 2 }`,
+  `ahorcado` `{ max: 8, min: 1 }` y `serpientes` `{ max: 4, asientos: 4, min: 2 }`.
+- El servidor no reproduce la partida: valida forma y turno. Las reglas viven en `juegos/clasicos-rapidos.js` y las
+  prueba `server/clasicos_rapidos_motor_test.ts`; el servidor, `server/clasicos_rapidos_test.ts`.

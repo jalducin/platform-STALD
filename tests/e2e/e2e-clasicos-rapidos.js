@@ -155,6 +155,32 @@ const clicPrimero = async (p, sel) => { const b = await p.$(sel); if (b) await b
   ok('ppt sala: mismo final y podio de 4 en ambos', ph && ph === po && (await host.$$('.rank li')).length === 4, ph + ' / ' + po);
   ok('ppt sala: en la revelación Marisol muestra ✊ y Angel ✋', /Marisols*✊/.test(manos) && /Angels*✋/.test(manos), manos);
   info('podio ppt', (await texto(otro, '.rank')).slice(0, 200));
+  await host.context().close(); await otro.context().close();
+
+  // ---- Ahorcado (cooperativo) y Serpientes en sala con bots: una persona, se ve y se juega ----
+  for (const juego of ['ahorcado', 'serpientes']) {
+    const q = await pagina(b, 'marisol@example.com', 0.5);
+    await q.click('[data-tab="partidas"]'); await q.selectOption('#p-juego', juego); await q.check('#p-bots');
+    if (juego === 'ahorcado') { ok('ahorcado sala: selector de modo', !(await q.$eval('#p-cr-modo-wrap', e => e.hidden))); await q.selectOption('#p-cr-modo', 'coop'); }
+    await q.click('#f-crear button[type=submit]'); await q.waitForSelector('[data-p="empezar"]');
+    const mesa = await texto(q, '#p-mesa');
+    ok(juego + ' sala: mesa con bots', juego === 'ahorcado' ? /Hasta 8 personas · 1 persona \+ 2 bots/.test(mesa) : /Mesa de 4 · 1 persona \+ 3 bots/.test(mesa), mesa);
+    await q.click('[data-p="empezar"]');
+    if (juego === 'ahorcado') {
+      await q.waitForSelector('.cr-teclado', { timeout: 20000 });
+      ok('ahorcado sala: modo cooperativo y pista', /Cooperativo/.test(await texto(q, '.cr-sub')) && /Pista:/.test(await texto(q, '.cr-pista')));
+      await q.waitForSelector('.cr-teclado button:not([disabled])', { timeout: 20000 }).catch(() => {});
+      await clicPrimero(q, '[data-cr-l="e"]:not([disabled])'); await sleep(2500);
+      ok('ahorcado sala: la letra elegida queda marcada', !!(await q.$('[data-cr-l="e"][disabled]')));
+    } else {
+      await q.waitForSelector('.cr-serp', { timeout: 20000 });
+      await q.waitForSelector('[data-cr-tirar]:not([disabled])', { timeout: 20000 }).catch(() => {});
+      await clicPrimero(q, '[data-cr-tirar]:not([disabled])'); await sleep(2500);
+      ok('serpientes sala: 4 fichas y el dado tirado', (await q.$$('.cr-serp .ficha')).length === 4 && /sacó/.test(await texto(q, '#cr-serp-msg')), await texto(q, '#cr-serp-msg'));
+    }
+    await q.screenshot({ path: 'clasicos-rapidos-390-' + juego + '-sala.png', fullPage: true });
+    await q.context().close();
+  }
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 300)); process.exit(2); });

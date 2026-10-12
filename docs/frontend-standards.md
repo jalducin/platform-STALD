@@ -248,6 +248,20 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   - una jugada ilegal se ignora y el turno sigue;
   - el bot de respaldo es de nivel 2, con su jugada en caché por FEN.
 
+## Clásicos rápidos (cambio `clasicos-rapidos`)
+
+- `juegos/clasicos-rapidos.js` es el motor sin DOM (`globalThis.ClasicosRapidos`): reglas y bots de Gato (minimax),
+  Conecta 4 (negamax con poda a 4 o 6), Piedra-papel-tijera, Ahorcado y Serpientes, y la reproducción determinista de
+  cada sala (`salaGato`, `salaConecta4`, `salaPpt`, `salaAhorcado`, `salaSerpientes`) a partir de
+  `{ orden, jugadas, inicio, ahora, dur, rng, memo? }`. Lo prueba `server/clasicos_rapidos_motor_test.ts`.
+- `juegos/clasicos-rapidos-ui.js` (`globalThis.ClasicosRapidosUI`): tarjetas, modos individuales, dibujo y clics de
+  cada sala, selector de modo del Ahorcado y ayudas. Se carga antes del script principal y usa sus funciones solo al
+  jugar. Estilos en `juegos/clasicos-rapidos.css` (con `prefers-reduced-motion`).
+- Ganchos en `juegos.html` (comentario `// clasicos-rapidos`): `<link>` y 2 `<script>`, `JUEGOS.push(...TARJETAS)`,
+  ids en `JUEGOS_PARTIDA` y `TIEMPO_REAL`, una línea en `pintarSala`, las opciones al crear y `AYUDA`.
+- Los participantes salen de `participantes()` (tabla de mesas). Las elecciones ocultas de Piedra-papel-tijera
+  (`"?"`) se vuelven a pedir y las ya vistas se recuerdan en `sala.cr.vistas`.
+
 ## Vista del profe en Inglés (cambio `profe-diseno`)
 
 - `ingles.html?modo=profe` agrega `body.profe` y dibuja `renderProfe(act)` (`ingles/profe.js`), no el tablero de
