@@ -5,6 +5,8 @@ import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
 import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realtime.ts";
 import { type Carrera, CARRERAS, mapaDeSala, validarCarrera } from "./carreras.ts";
+import { BOTS_TABLERO, CUPO_TABLERO, faltanJugadoresTablero, JUEGOS_TABLERO, validarJugadaTablero, vistaJugadores } from "./tablero.ts"; // juegos-tablero
+import { respuestaNaval } from "./naval.ts"; // juegos-tablero
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -14,6 +16,7 @@ export const JUEGOS_PARTIDA = new Set([
   "en-vocab", "en-frases", "es-ortografia", "cultura", "mente-calculo", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
   "en-tiempos", // ⏳ Máquina del tiempo (openspec: juegos-ingles-gramatica)
   "plataformas", "karts", // carreras de Arcade (openspec: juegos-plataformas-karts)
+  ...JUEGOS_TABLERO, // juegos-tablero: damas, domino, parchis y naval
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
@@ -30,6 +33,8 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
   const n = j.n, accion = String(j.accion ?? "");
   if (!entero(n, 0, 2000)) return null;
   const base = { n: n as number, accion };
+  const tablero = validarJugadaTablero(juego, j, base); // juegos-tablero
+  if (tablero !== undefined) return tablero as Omit<Jugada, "t"> | null;
   if (juego === "poker") {
     // openspec: poker-fichas — la subida se arma con fichas de 5 a 100: entero múltiplo de FICHA_POKER y obligatorio.
     const montoOk = entero(j.monto, FICHA_POKER, 1_000_000) && (j.monto as number) % FICHA_POKER === 0;
@@ -62,6 +67,7 @@ const MAX_JUGADORES = 30;
 // Cupo de personas por juego (ajuste del profe): ajedrez 1 vs 1 sin bots; Brisca hasta 4 (se completa con bots).
 const CUPO: Record<string, number> = { ajedrez: 2, brisca: 4 };
 const BOTS_FIJOS: Record<string, boolean> = { ajedrez: false, brisca: true };
+Object.assign(CUPO, CUPO_TABLERO); Object.assign(BOTS_FIJOS, BOTS_TABLERO); // juegos-tablero
 const VIGENCIA_MS = 3 * 3600 * 1000;
 const CUENTA_REGRESIVA_MS = 5000;
 const PREGUNTAS = 10;
@@ -179,7 +185,7 @@ async function publicarEstado(store: Store, codigo: string, ahora: number, rt?: 
   if (!rt) return;
   cache.delete(codigo);
   const fresco = await estado(store, codigo, ahora);
-  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: fresco.jugadores, ahora: Date.now() });
+  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: vistaJugadores(fresco.sala.juego, fresco.jugadores, null), ahora: Date.now() }); // juegos-tablero: sin flotas
 }
 
 // Revancha (openspec: revancha-partidas). La primera petición reserva `siguiente` en la sala vieja con escritura
@@ -279,6 +285,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (accion === "empezar" && req.method === "POST") {
     if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
     if (sala.inicio === null && sala.juego === "ajedrez" && jugadores.length < 2) return json({ error: "faltan_jugadores" }, 409);
+    if (sala.inicio === null && faltanJugadoresTablero(sala.juego, sala.bots, jugadores.length)) return json({ error: "faltan_jugadores" }, 409); // juegos-tablero
     if (sala.inicio === null) {
       const doc = await store.get<Sala>(ruta(codigo));
       const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS };
@@ -294,7 +301,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (!dentro) return json({ error: "no_en_sala" }, 403);
     if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
     let cambiar: (e: EnSala) => EnSala;
-    if (body.una !== undefined && body.jugada === undefined) {
+    // juegos-tablero: Batalla naval guarda la flota y resuelve cada disparo en el servidor (server/naval.ts).
+    const naval = sala.juego === "naval" ? respuestaNaval(sala.inicio, jugadores, jugador.id, body, ahora) : null;
+    if (naval && "error" in naval) return json({ error: naval.error }, naval.status);
+    if (naval) cambiar = naval.cambiar;
+    else if (body.una !== undefined && body.jugada === undefined) {
       const paso = Number((body.una as Record<string, unknown>)?.paso);
       if (!Number.isInteger(paso) || paso < 0 || paso > 2000) return json({ error: "una_invalida" }, 400);
       cambiar = (e) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
@@ -373,7 +384,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (!accion && req.method === "GET") {
     if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
     const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
-    return json({ sala: sinCanal(sala), jugadores, ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo });
+    return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, jugadores, jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo }); // juegos-tablero: solo tu flota
   }
 
   return json({ error: "metodo_no_permitido" }, 405);
