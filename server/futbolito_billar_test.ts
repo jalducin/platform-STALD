@@ -1,6 +1,5 @@
 // Futbolito y Billar en partida (openspec: futbolito-billar): sala 1 vs 1, validación de tiros, fin de partida y
 // catálogo. Los motores (juegos/*-motor.js) se prueban en server/fisica_test.ts.
-// deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { CATALOGO, clearCacheJuegos, handleJuegos } from "./juegos.ts";
 import { clearCacheSalas, enMesa, JUEGOS_PARTIDA, MESAS } from "./salas.ts";
