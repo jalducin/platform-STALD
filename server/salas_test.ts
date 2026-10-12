@@ -46,7 +46,7 @@ Deno.test("salas: crear devuelve código y el host queda dentro", async () => {
 
 Deno.test("salas: juego no permitido y no registrado", async () => {
   const c = ctx();
-  assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "en-memorama" })).status, 400);
+  assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "mente-simon" })).status, 400); // solo individual (en-memorama ya va en partida: juegos-salas-grandes)
   assertEquals((await c.call("POST", "/sala", "marisol@example.com", { juego: "no-existe" })).status, 400);
   assertEquals((await c.call("POST", "/sala", "nadie@example.com", { juego: "cultura" })).status, 403);
 });

@@ -6,6 +6,7 @@
 <title>Juegos · STALD</title>
 <meta name="description" content="Aprende jugando: inglés, español, cultura, mente ágil y más.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23db2777'/><text x='32' y='44' font-size='34' text-anchor='middle'>🎮</text></svg>">
+<link rel="stylesheet" href="juegos/tablero.css?v=1"> <!-- juegos-tablero -->
 <style>
   :root {
     --bg: #f7f5fb; --card: #ffffff; --text: #1e1b2e; --muted: #6b6880; --border: #e6e4f0;
@@ -76,6 +77,8 @@
   .arcade-caja { position: relative; width: 100%; height: min(calc(100dvh - 120px), 760px); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); background: #0f172a; }
   .arcade-caja iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   @media (min-width: 700px) { .arcade-caja { height: auto; aspect-ratio: 16 / 10; max-height: calc(100dvh - 140px); } }
+  /* Celular en horizontal: el juego de Arcade usa casi toda la altura (antes quedaba en 250 px; openspec: karts-pseudo3d) */
+  @media (orientation: landscape) and (max-height: 520px) { .arcade-caja:has(#arcade-frame) { height: calc(100dvh - 16px); max-height: none; aspect-ratio: auto; scroll-margin-top: 8px; } }
   .arcade-tiempos td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 800; font-size: .95rem; border: none; border-radius: 12px;
     padding: 12px 16px; cursor: pointer; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px rgba(219, 39, 119, .25); }
@@ -192,6 +195,8 @@
   .basta-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; }
   .basta-grid label { margin: 0; }
   .basta-res td small { color: var(--muted); }
+  .basta-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; margin: 4px 0; } /* basta-divertida-una-robo */
+  .basta-extras .check { font-size: .86rem; margin: 0; }
   /* ¡Una! */
   .una-bots { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .una-bot { flex: 1; min-width: 100px; display: flex; flex-direction: column; font-size: .8rem; font-weight: 700; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; }
@@ -212,6 +217,10 @@
   .una-btn[data-no] .una-card { opacity: .55; }
   .una-btn .jugable { transform: translateY(-6px); box-shadow: 0 6px 14px rgba(0,0,0,.3); }
   .una-btn.robada { position: relative; } .una-btn.robada::after { content: "🆕"; position: absolute; top: -14px; right: -6px; font-size: .9rem; }
+  /* basta-divertida-una-robo: cada carta robada llega del mazo, una tras otra */
+  .una-btn.nueva { animation: una-llega .5s ease-out backwards; animation-delay: calc(var(--k, 0) * .22s); }
+  @keyframes una-llega { from { transform: translate(40px, -90px) rotate(14deg) scale(.5); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .una-btn.nueva { animation: none; } }
   .una-color { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; margin: 0 4px; cursor: pointer; vertical-align: middle; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
   .una-grito.pulsa { animation: pulsa .6s infinite alternate; }
   @keyframes pulsa { to { transform: scale(1.06); box-shadow: 0 0 0 6px rgba(219, 39, 119, .25); } }
@@ -487,6 +496,35 @@
   }
   /* Durante una partida, sin «jalar para recargar» en el celular (openspec: juegos-recarga). */
   html.jugando, html.jugando body { overscroll-behavior-y: contain; }
+  /* cultura-conocimiento: dato del Maratón al acertar y 📜 Línea del tiempo (juegos/linea-tiempo.js). */
+  .quiz-dato { color: var(--muted); font-size: .84rem; font-weight: 600; margin-top: 4px; }
+  .lt-cab { padding: 14px 14px 12px; }
+  .lt-cab .q { font-size: 1.02rem; }
+  .lt-extremo { font-size: .76rem; font-weight: 800; color: var(--muted); text-align: center; margin: 6px 0; }
+  .lt-linea { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .lt-casilla { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 8px 10px; text-align: left; font: inherit; color: var(--text);
+    border: 2px dashed var(--border); border-radius: 12px; background: var(--card); cursor: default; }
+  .lt-casilla.llena { border-style: solid; border-color: var(--tone); background: var(--tone-soft); cursor: grab; touch-action: none; }
+  .lt-casilla.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .lt-casilla.bad { border-color: var(--bad); background: var(--bad-soft); }
+  .lt-casilla:disabled { opacity: 1; }
+  .lt-num { flex: 0 0 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .8rem; background: var(--tone); color: #fff; }
+  .lt-txt { flex: 1; min-width: 0; font-weight: 700; font-size: .9rem; line-height: 1.25; overflow-wrap: anywhere; }
+  .lt-vacia { color: var(--muted); font-weight: 600; font-size: .82rem; }
+  .lt-anio { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; font-size: .86rem; }
+  .lt-pool { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; min-height: 8px; }
+  .lt-tarjeta { font: inherit; font-weight: 700; font-size: .86rem; line-height: 1.25; text-align: left; padding: 10px 12px; border-radius: 12px; max-width: 100%;
+    border: 1.5px solid var(--tone); background: var(--card); color: var(--text); cursor: grab; touch-action: none; box-shadow: var(--shadow); overflow-wrap: anywhere; }
+  .lt-arrastrando { position: relative; z-index: 30; pointer-events: none; opacity: .92; cursor: grabbing; }
+  .lt-destino { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+  .lt-titulo { font-size: .95rem; margin: 14px 0 6px; }
+  .lt-correcto { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .lt-correcto li { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 9px 12px; font-size: .88rem; line-height: 1.3; }
+  .lt-correcto .lt-anio { color: var(--tone); }
+  .lt-correcto .sub { color: var(--muted); font-size: .8rem; margin-top: 2px; }
+  .lt-revela { animation: lt-entra .35s ease-out both; }
+  @keyframes lt-entra { from { opacity: 0; transform: translateY(6px); } }
+  @media (prefers-reduced-motion: reduce) { .lt-revela { animation: none; } .lt-arrastrando { transition: none; } }
 </style>
 <link rel="stylesheet" href="juegos/clasicos-rapidos.css?v=1"> <!-- clasicos-rapidos -->
 </head>
@@ -517,11 +555,22 @@
 
 <script src="juegos/cartas.js?v=3"></script>
 <script src="juegos/mesas.js?v=1"></script> <!-- mesas de las partidas (openspec: mesas-con-bots) -->
+<script src="juegos/tablero.js?v=1"></script> <!-- juegos-tablero: motores sin DOM -->
+<script src="juegos/tablero-ui.js?v=2"></script> <!-- juegos-tablero: pantallas, salas y ayuda -->
 <script src="juegos/ajedrez.js?v=1"></script>
 <script src="juegos/clasicos-rapidos.js?v=1"></script> <!-- clasicos-rapidos: reglas -->
 <script src="juegos/clasicos-rapidos-ui.js?v=1"></script> <!-- clasicos-rapidos: interfaz -->
 <script src="juegos/arcade.js?v=1"></script>
 <script src="juegos/ingles-gramatica.js?v=1"></script>
+<!-- juegos-salas-grandes: Bingo, Blackjack, Dibuja y adivina, y Memorama y Sopa en partida -->
+<script src="juegos/salas-grandes.js?v=1"></script>
+<script src="juegos/bingo.js?v=1"></script>
+<script src="juegos/blackjack.js?v=1"></script>
+<script src="juegos/dibuja.js?v=1"></script>
+<script src="juegos/memo-sopa-sala.js?v=1"></script>
+<script src="juegos/linea-tiempo.js?v=1"></script> <!-- cultura-conocimiento: 📜 Línea del tiempo -->
+<script src="juegos/basta.js?v=1"></script> <!-- basta-divertida-una-robo -->
+<script src="juegos/una.js?v=1"></script> <!-- basta-divertida-una-robo -->
 <script src="comun/auth.js?v=7"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
@@ -652,8 +701,7 @@
   // ---------- Catálogo ----------
   const CATEGORIAS = [
     { id: 'ingles', titulo: '📘 Inglés', clase: 'cat-ingles' },
-    { id: 'espanol', titulo: '📝 Español', clase: 'cat-espanol' },
-    { id: 'cultura', titulo: '🧠 Maratón de cultura', clase: 'cat-cultura' },
+    { id: 'cultura', titulo: '🧠 Cultura y Conocimiento', clase: 'cat-cultura' }, // cultura-conocimiento: junta Español y Maratón
     { id: 'mente', titulo: '⚡ Mente ágil', clase: 'cat-mente' },
     { id: 'clasicos', titulo: '🎲 Clásicos', clase: 'cat-clasicos' },
     { id: 'arcade', titulo: '🕹️ Arcade', clase: 'cat-arcade' },
@@ -665,9 +713,11 @@
     { id: 'en-memorama', cat: 'ingles', emoji: '🃏', t: 'Memorama', d: 'Une cada palabra con su significado.', jugar: () => jugarMemorama() },
     { id: 'en-ordena', cat: 'ingles', emoji: '🔀', t: 'Ordena la oración', d: 'Arma la oración en inglés. Elige el tema.', jugar: () => elegirTemaIngles('en-ordena') },
     { id: 'en-tiempos', cat: 'ingles', emoji: '⏳', t: 'Máquina del tiempo', d: '¿Pasado, presente o futuro? Cambia el verbo contra reloj.', jugar: () => jugarTiempos() }, // openspec: juegos-ingles-gramatica
-    { id: 'es-ortografia', cat: 'espanol', emoji: '✍️', t: 'Ortografía', d: 'Letras, acentos, sinónimos y antónimos.', jugar: () => jugarOrtografia() },
-    { id: 'es-ordena', cat: 'espanol', emoji: '🔀', t: 'Ordena la oración', d: 'Pon las palabras en orden.', jugar: () => jugarOrdena('es') },
-    { id: 'cultura', cat: 'cultura', emoji: '🏃', t: 'Maratón de cultura', d: 'Historia, geografía, ciencias, arte… 3 vidas.', jugar: () => elegirCultura() },
+    // cultura-conocimiento: sección «🧠 Cultura y Conocimiento» (ids sin cambio: los puntos anteriores siguen contando).
+    { id: 'cultura', cat: 'cultura', emoji: '🏃', t: 'Maratón de cultura', d: 'Historia, ciencias, deportes, México… 3 vidas.', jugar: () => elegirCultura() },
+    { id: 'cultura-linea', cat: 'cultura', emoji: '📜', t: 'Línea del tiempo', d: 'Ordena sucesos e inventos del más antiguo al más reciente.', jugar: () => elegirLineaTiempo() },
+    { id: 'es-ortografia', cat: 'cultura', emoji: '✍️', t: 'Ortografía', d: 'Letras, acentos, sinónimos y antónimos.', jugar: () => jugarOrtografia() },
+    { id: 'es-ordena', cat: 'cultura', emoji: '🔀', t: 'Ordena la oración', d: 'Pon las palabras en orden.', jugar: () => jugarOrdena('es') },
     { id: 'mente-calculo', cat: 'mente', emoji: '🧮', t: 'Cálculo y secuencias', d: '75 segundos: operaciones y ¿qué número sigue?', jugar: () => jugarCalculo() },
     { id: 'mente-simon', cat: 'mente', emoji: '🟢', t: 'Simón dice', d: 'Repite la secuencia de colores.', jugar: () => jugarSimon() },
     { id: 'mente-sopa', cat: 'mente', emoji: '🔎', t: 'Sopa de letras', d: 'Encuentra las palabras en inglés.', jugar: () => jugarSopa() },
@@ -683,8 +733,15 @@
     { id: 'plataformas', cat: 'arcade', emoji: '🦎', t: 'Axo y los 12 mundos', d: 'Plataformas: salta, junta monedas y vence al jefe de cada mundo.', jugar: () => jugarArcade('plataformas') },
     { id: 'karts', cat: 'arcade', emoji: '🏎️', t: 'Karts Turbo', d: 'Carreras: derrapa, usa ítems y gana la copa contra 7 rivales.', jugar: () => jugarArcade('karts') },
     { id: 'dragon-run', cat: 'arcade', emoji: '🐉', t: 'Dragon Run', d: 'Corre, salta (¡doble salto!), cumple misiones y llega al castillo.', jugar: () => jugarDragonRun() }, // openspec: dragon-run-misiones
+    // juegos-salas-grandes
+    { id: 'dibuja', cat: 'ingles', emoji: '🎨', t: 'Dibuja y adivina', d: 'Por turnos: dibuja una palabra en inglés y adivina la de los demás (3 a 12).', jugar: () => elegirDibuja() },
+    { id: 'bingo', cat: 'clasicos', emoji: '🎱', t: 'Bingo', d: '75 números y tu cartón: línea, esquinas o lleno. ¡Para salas de hasta 30!', jugar: () => elegirBingo() },
+    { id: 'blackjack', cat: 'clasicos', emoji: '🂡', t: 'Blackjack (21)', d: 'Acércate a 21 sin pasarte y gánale a la banca, con fichas de juego.', jugar: () => elegirBlackjack() },
+    { id: 'futbolito', cat: 'arcade', emoji: '⚽', t: 'Futbolito', d: 'Futbolito de mesa: desliza tu barra y patea. Contra el bot o 1 vs 1.', jugar: () => jugarArcade('futbolito') }, // futbolito-billar
+    { id: 'billar', cat: 'arcade', emoji: '🎱', t: 'Billar', d: 'Bola 8 con línea guía: mete tus bolas y al final la 8. Contra el bot o 1 vs 1.', jugar: () => jugarArcade('billar') }, // futbolito-billar
   ];
   JUEGOS.push(...ClasicosRapidosUI.TARJETAS); // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes
+  JUEGOS.push(...TableroUI.TARJETAS); // juegos-tablero: Damas y Batalla naval (Mente ágil), Dominó y Parchís (Clásicos)
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
 
   // ---------- Sesión ----------
@@ -1238,6 +1295,7 @@
         const gana = 100 + Math.min(racha - 1, 10) * 10 + rapidez;
         puntos += gana; m.puntos(puntos); sonidoOk();
         fb.className = 'feedback ok'; fb.textContent = '✔ +' + gana + (racha > 2 ? ' · racha ×' + racha + ' 🔥' : '');
+        if (opts.datoAlAcertar && actual.explicacion) { const x = document.createElement('div'); x.className = 'quiz-dato'; x.textContent = actual.explicacion; fb.appendChild(x); } // cultura-conocimiento
       } else {
         racha = 0; sonidoMal();
         if (i >= 0 && btns[i]) btns[i].classList.add('bad');
@@ -1245,7 +1303,7 @@
         if (opts.modo === 'vidas') { vidas--; m.vidas(vidas); if (vidas <= 0) { guardarPartida(); return setTimeout(() => acabar('💔 ¡Sin vidas!'), 1400); } }
       }
       guardarPartida();
-      setTimeout(() => { if (!terminado) pintar(); }, bien ? 550 : 1400);
+      setTimeout(() => { if (!terminado) pintar(); }, bien ? (opts.datoAlAcertar ? 1600 : 550) : 1400);
     }
     const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= (actual ? actual.opciones.length : 0)) responder(n - 1); };
     document.addEventListener('keydown', onKey);
@@ -1432,7 +1490,7 @@
     const orden = [].concat(barajar(del.filter(p => p.nivel === 1)).slice(0, 10), barajar(del.filter(p => p.nivel === 2)).slice(0, 12), barajar(del.filter(p => p.nivel === 3)));
     const nombreCat = cat === 'todas' ? 'Todas' : (d.categorias.find(c => c.id === cat) || {}).titulo;
     quiz({
-      id: 'cultura', modo: 'vidas', porPregunta: 15, foto: { cat },
+      id: 'cultura', modo: 'vidas', porPregunta: 15, foto: { cat }, datoAlAcertar: true, // cultura-conocimiento: el dato también al acertar
       detalle: r => 'Maratón: ' + escapeHtml(nombreCat) + ' · llegaste a la pregunta ' + r.total,
       siguiente: n => {
         const p = orden[n]; if (!p) return null;
@@ -1638,6 +1696,7 @@
   // El juego no habla con el servidor: esta página le pasa el avance (GET /juegos/progreso/<id>), guarda lo que manda
   // (PUT con la versión `v`, una escritura a la vez y gana la última) y registra los puntos de cada nivel o carrera.
   const marcoArcade = (src, titulo) => '<div class="arcade-caja"><iframe id="arcade-frame" src="' + src + '" title="' + escapeHtml(titulo) + '" allow="autoplay; accelerometer; gyroscope"></iframe></div>';
+  const SIN_AVANCE = new Set(['futbolito', 'billar']); // futbolito-billar: juegos de Arcade sin avance guardado
   const srcArcade = (id, extra) => 'juegos/' + id + '.html' + (new URLSearchParams(location.search).get('arcadePrueba') === '1' ? '?prueba=1' : '') + (extra || '');
   function jugarArcade(id) {
     const m = marco(id);
@@ -1645,9 +1704,10 @@
     enCurso.foto = () => null; // el avance vive en el servidor: recargar no pide confirmación
     m.body.innerHTML = marcoArcade(srcArcade(id), juegoPorId(id).t);
     const frame = document.getElementById('arcade-frame');
+    if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' });
     const estilo = musica.estilo;
     detenerMusica();
-    const lectura = api('/juegos/progreso/' + id).catch(() => ({ ok: false, status: 0, body: {} }));
+    const lectura = SIN_AVANCE.has(id) ? Promise.resolve({ ok: true, body: { v: 0, datos: null } }) : api('/juegos/progreso/' + id).catch(() => ({ ok: false, status: 0, body: {} })); // futbolito-billar: sin avance
     let v = 0, cargado = false, pendiente = null, cola = Promise.resolve();
     const aJuego = msg => { try { frame.contentWindow.postMessage(msg, location.origin); } catch (e) { /* iframe cerrado */ } };
     const put = datos => api('/juegos/progreso/' + id, { method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ v, datos }) });
@@ -1829,16 +1889,38 @@
   }
 
   // ---------- Clásicos: Basta ----------
-  // Compara sin mayúsculas ni acentos, pero conserva la ñ como letra propia.
-  const normBasta = s => String(s || '').trim().toLowerCase().replace(/ñ/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'ñ').replace(/\s+/g, ' ');
+  // basta-divertida-una-robo: normalizar, diccionario y puntos viven en juegos/basta.js (probados con Deno).
+  const normBasta = Basta.norm, dicBasta = Basta.dic;
+  // Categorías divertidas elegidas (ids) → datos con esas columnas al final (banco = diccionario y palabras de bots).
+  const bastaConExtras = (todo, idioma, ids) => Basta.conExtras(todo[idioma], todo.extras, ids);
+  // Selector de categorías divertidas (máximo Basta.MAX_EXTRAS): casillas con data-<attr>.
+  const selectorExtras = (extras, attr) => '<div class="basta-extras" role="group" aria-label="Categorías divertidas">' + (extras || []).map(x =>
+    '<label class="check"><input type="checkbox" data-' + attr + '="' + escapeHtml(x.id) + '"><span>' + escapeHtml(x.emoji + ' ' + x.titulo) + '</span></label>').join('') + '</div>';
+  // Al marcar una tercera, se desmarca y avisa.
+  function limitarExtras(input, attr, aviso) {
+    const marcadas = [...document.querySelectorAll('[data-' + attr + ']:checked')];
+    const el = document.getElementById(aviso);
+    if (marcadas.length > Basta.MAX_EXTRAS) { input.checked = false; if (el) { el.textContent = 'Máximo ' + Basta.MAX_EXTRAS + ' categorías divertidas, para que la ronda no se haga eterna.'; el.className = 'feedback bad'; } }
+    else if (el) { el.textContent = ''; el.className = 'feedback'; }
+  }
 
-  // Diccionario para validar: palabras de México (también ejemplos y bots) + `soloAceptar`, palabras de España que
-  // valen pero no se muestran (openspec: basta-mexicano).
-  const dicBasta = d => Object.fromEntries(d.categorias.map(c => [c.id, new Set([...(d.palabras[c.id] || []), ...((d.soloAceptar || {})[c.id] || [])].map(normBasta))]));
-
+  // basta-divertida-una-robo: antes de la letra, elegir hasta 2 categorías divertidas (o ninguna).
   async function jugarBasta(idioma) {
     const id = idioma === 'en' ? 'basta-en' : 'basta-es';
-    const d = (await datos('basta'))[idioma];
+    const todo = await datos('basta');
+    const m = marco(id, { menu: true });
+    m.body.innerHTML = '<div class="q-card"><div class="big">✋</div><div class="q">' + (idioma === 'en' ? 'Basta en inglés' : 'Basta') + '</div><div class="sub">Una letra, 60 segundos y una palabra por categoría.</div></div>' +
+      '<label>🎉 Categorías divertidas (opcional, máximo ' + Basta.MAX_EXTRAS + ')</label>' + selectorExtras(todo.extras, 'bextra') +
+      '<div class="feedback" id="b-extra-aviso"></div><div class="row-btns"><button class="btn" id="basta-empezar">✋ Empezar</button></div>';
+    m.body.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.bextra) limitarExtras(e.target, 'bextra', 'b-extra-aviso'); });
+    m.body.querySelector('#basta-empezar').addEventListener('click', () => {
+      const ids = [...m.body.querySelectorAll('[data-bextra]:checked')].map(x => x.dataset.bextra).slice(0, Basta.MAX_EXTRAS);
+      empezarBasta(idioma, bastaConExtras(todo, idioma, ids));
+    });
+  }
+
+  async function empezarBasta(idioma, d) {
+    const id = idioma === 'en' ? 'basta-en' : 'basta-es';
     const letra = d.letras[Math.floor(Math.random() * d.letras.length)];
     const L = normBasta(letra);
     const dic = dicBasta(d);
@@ -1928,11 +2010,12 @@
     const nombres = ['Tú', 'Ajolote 🦎', 'Colibrí 🐦', 'Tlacuache 🐀'];
     let resolverUna = () => {};
     let mazo = unaMazo(), pila = [], dir = 1, turno = 0, color = null, terminado = false, esperandoUna = false, dijoUna = false, jugadas = 0, robada = null, msg = '';
+    let nuevas = []; // basta-divertida-una-robo: cartas recién robadas por ti (se animan una vez)
     const manos = Array.from({ length: numBots + 1 }, () => []);
     const t0 = Date.now();
     // Devuelve cuántas cartas llegaron de verdad (0 si ya no hay mazo ni pila para rebarajar).
     const robar = (j, n) => { let r = 0; for (let k = 0; k < n; k++) { if (!mazo.length) { const top = pila.pop(); mazo = barajar(pila); pila = [top]; } if (mazo.length) { manos[j].push(mazo.pop()); r++; } } return r; };
-    const hayParaRobar = () => mazo.length > 0 || pila.length > 1;
+    const hayParaRobar = () => mazo.length > 0; // basta-divertida-una-robo: el robo no rebaraja el descarte
     for (let k = 0; k < 7; k++) manos.forEach((_, j) => robar(j, 1));
     let primera = mazo.pop(); while (primera.v === '+4') { mazo.unshift(primera); primera = mazo.pop(); }
     pila.push(primera); color = primera.c || ['r', 'y', 'g', 'b'][Math.floor(Math.random() * 4)];
@@ -1950,14 +2033,16 @@
     function dibujar() {
       if (terminado) return;
       const tuTurno = turno === 0 && !esperandoUna;
+      const anim = c => { const k = nuevas.indexOf(c); return k < 0 ? '' : ' nueva" style="--k:' + k; }; // basta-divertida-una-robo
       m.body.innerHTML =
         '<div class="una-bots">' + manos.slice(1).map((h, k) => '<div class="una-bot' + (turno === k + 1 ? ' activo' : '') + '"><span>' + escapeHtml(nombres[k + 1]) + '</span><span>🂠 × ' + h.length + (h.length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
         '<div class="una-mesa"><div>' + cartaHtml(top(), ' grande') + '<div class="muted" style="text-align:center">' + escapeHtml(T.color[color]) + ' <span class="una-dot" style="background:' + UNA_COLOR[color] + '"></span></div></div>' +
         '<button class="una-mazo" data-una="robar"' + (tuTurno && !robada && hayParaRobar() ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + mazo.length + ')</small></button></div>' +
         '<div class="feedback" id="una-msg">' + escapeHtml(msg || (tuTurno ? T.tu + ' · ' + (lang === 'en' ? 'dir ' : 'sentido ') + (dir === 1 ? '↻' : '↺') : '…')) + '</div>' +
-        '<div class="una-mano">' + manos[0].map((c, i) => '<button class="una-btn' + (c === robada ? ' robada' : '') + '" data-una-card="' + i + '"' + (tuTurno && valida(c) && (!robada || robada === c) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(nombreCarta(c)) + '">' + cartaHtml(c, tuTurno && valida(c) && (!robada || robada === c) ? ' jugable' : '') + '</button>').join('') + '</div>' +
+        '<div class="una-mano">' + manos[0].map((c, i) => '<button class="una-btn' + (c === robada ? ' robada' : '') + anim(c) + '" data-una-card="' + i + '"' + (tuTurno && valida(c) && (!robada || robada === c) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(nombreCarta(c)) + '">' + cartaHtml(c, tuTurno && valida(c) && (!robada || robada === c) ? ' jugable' : '') + '</button>').join('') + '</div>' +
         '<div class="row-btns">' + (robada || (tuTurno && !hayParaRobar() && !manos[0].some(valida)) ? '<button class="btn ghost" data-una="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
         '<button class="btn una-grito' + (esperandoUna ? ' pulsa' : '') + '" data-una="una"' + (esperandoUna ? '' : ' disabled') + '>📣 ' + escapeHtml(T.una) + '</button></div>';
+      nuevas = [];
     }
 
     function fin(ganador) {
@@ -1992,8 +2077,10 @@
       if (terminado) return;
       const j = turno, mano = manos[j];
       const siguiente = manos[sig(j)].length;
-      let opciones = mano.filter(valida);
-      if (!opciones.length) { const llego = robar(j, 1); const n = llego ? mano[mano.length - 1] : null; if (n && valida(n)) opciones = [n]; else { msg = nombres[j] + (lang === 'en' ? ' draws a card' : ' roba una carta'); turno = sig(j); return programar(); } }
+      let opciones = mano.filter(valida), robo = 0;
+      // basta-divertida-una-robo: sin carta jugable, roba hasta sacar una que sirva (sin rebarajar el descarte).
+      const cartas = n => n + (lang === 'en' ? (n === 1 ? ' card' : ' cards') : (n === 1 ? ' carta' : ' cartas'));
+      if (!opciones.length) { const r = Una.robarHastaPoder(mazo, mano, valida); robo = r.robadas.length; if (r.jugable) opciones = [r.jugable]; else { msg = nombres[j] + (lang === 'en' ? (robo ? ' drew ' + cartas(robo) + ' and the deck ran out' : ' has nothing to play and the deck is empty') : (robo ? ' robó ' + cartas(robo) + ' y se acabó el mazo' : ' no tiene carta y el mazo está vacío')); turno = sig(j); return programar(); } }
       const accion = opciones.filter(c => ['skip', '+2', '+4', 'rev'].includes(c.v));
       const numeros = opciones.filter(c => c.c && /^\d$/.test(c.v));
       // Bots amables: solo a veces castigan a quien tiene pocas cartas, para que el juego sea retador pero ganable.
@@ -2001,7 +2088,7 @@
       const c = castiga ? accion[0] : (numeros[0] || opciones.find(x => x.c) || opciones[0]);
       mano.splice(mano.indexOf(c), 1);
       if (!c.c) { const cuenta = { r: 0, y: 0, g: 0, b: 0 }; mano.forEach(x => { if (x.c) cuenta[x.c]++; }); color = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0][0]; }
-      msg = nombres[j] + ': ' + nombreCarta(c) + (mano.length === 1 ? ' · ' + T.una : '');
+      msg = nombres[j] + (robo ? (lang === 'en' ? ' drew ' + cartas(robo) + ' and played ' : ' robó ' + cartas(robo) + ' y tiró ') : ': ') + nombreCarta(c) + (mano.length === 1 ? ' · ' + T.una : '');
       aplicar(j, c);
     }
 
@@ -2040,10 +2127,11 @@
       if (turno !== 0 || esperandoUna) return;
       if (col) return jugarCarta(Number(col.dataset.idx), col.dataset.unaColor);
       if (a && a.dataset.una === 'robar' && !robada) {
-        if (!robar(0, 1)) { msg = lang === 'en' ? 'No cards left to draw. Next player' : 'No quedan cartas para robar. Sigue el siguiente'; turno = sig(0); return programar(); }
-        const n = manos[0][manos[0].length - 1];
-        if (valida(n)) { robada = n; msg = (lang === 'en' ? '🆕 You drew: ' : '🆕 Robaste: ') + nombreCarta(n) + (lang === 'en' ? '. Play it or pass' : '. Puedes jugarla o pasar'); dibujar(); }
-        else { msg = (lang === 'en' ? '🆕 You drew: ' : '🆕 Robaste: ') + nombreCarta(n) + (lang === 'en' ? '. No luck, next player' : '. No sirve; sigue el siguiente'); turno = sig(0); programar(); }
+        // basta-divertida-una-robo: roba hasta sacar una que sí puedas tirar; si el mazo se acaba, sigue el siguiente.
+        const r = Una.robarHastaPoder(mazo, manos[0], valida);
+        nuevas = r.robadas;
+        msg = (r.robadas.length ? '🂠 ' : '') + Una.avisoRobo(r.robadas.length, r.jugable, lang) + (r.jugable ? ' · 🆕 ' + nombreCarta(r.jugable) : '');
+        if (r.jugable) { robada = r.jugable; dibujar(); } else { turno = sig(0); programar(); }
         return;
       }
       if (a && a.dataset.una === 'pasar') { robada = null; turno = sig(0); msg = ''; return programar(); }
@@ -2649,7 +2737,9 @@
   function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
-  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts'];
+  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'cultura-linea', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts', 'futbolito', 'billar'];
+  JUEGOS_PARTIDA.push(...TableroUI.SALA); // juegos-tablero
+  JUEGOS_PARTIDA.push(...Object.keys(SALAS_GRANDES)); // juegos-salas-grandes: bingo, blackjack, dibuja, en-memorama, mente-sopa
   const ARCADE = new Set(['plataformas', 'karts']); // carreras en sala (openspec: juegos-plataformas-karts)
   const BOT_EXTRA = { id: 'bot-chonita', nombre: 'BOT-CHONITA', acierto: 0.5, avatar: { emoji: '👵', color: '#a855f7' } }; // 3.er bot para completar la Brisca
   const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
@@ -2659,6 +2749,7 @@
 
   // Diez preguntas iguales para todos a partir de la semilla.
   async function preguntasPartida(juego, seed, opciones) {
+    if (juego === 'cultura-linea') return lineasDeSala(seed, opciones); // cultura-conocimiento: 5 líneas del tiempo
     const rnd = rngDe(seed, 'preguntas');
     const d = juego.startsWith('en-') ? await datos('ingles') : juego.startsWith('es-') ? await datos('espanol') : juego === 'cultura' ? await datos('cultura') : null;
     const lista = [];
@@ -2714,34 +2805,17 @@
     }));
   }
 
-  // Puntuación de Basta en sala: única/verificada 100, repetida 50; no verificada 25/10; inválida 0.
-  function puntuarBasta(d, letra, participantes) {
-    const L = normBasta(letra);
-    const dic = dicBasta(d);
-    const res = participantes.map(p => ({ nombre: p.nombre, id: p.id, total: 0, detalle: {} }));
-    for (const c of d.categorias) {
-      const norm = participantes.map(p => normBasta((p.palabras || {})[c.id] || ''));
-      norm.forEach((n, i) => {
-        let pts = 0, estado = '—';
-        const valida = n && n.startsWith(L) && n.length >= 2;
-        if (valida) {
-          const repetida = norm.filter(x => x === n).length > 1;
-          if (dic[c.id].has(n)) { pts = repetida ? 50 : 100; estado = repetida ? 'repetida' : 'única'; }
-          else if (n.length >= 3) { pts = repetida ? 10 : 25; estado = 'no verificada'; }
-          else estado = 'inválida';
-        } else if (n) estado = 'inválida';
-        res[i].total += pts;
-        res[i].detalle[c.id] = { palabra: (participantes[i].palabras || {})[c.id] || '', pts, estado };
-      });
-    }
-    return res.sort((a, b) => b.total - a.total);
-  }
+  // Puntuación de Basta en sala: única/verificada 100, repetida 50; no verificada 25/10; inválida 0 (juegos/basta.js).
+  const puntuarBasta = Basta.puntuar; // basta-divertida-una-robo
 
   const sala = { codigo: null, estado: null, offset: 0, poll: null, guardado: false };
   const ahoraServidor = () => Date.now() + sala.offset;
 
-  const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker', 'brisca', 'conquian', 'ajedrez']);
+  const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar']); // futbolito-billar
   ClasicosRapidosUI.IDS.forEach(id => { JUEGOS_PARTIDA.push(id); TIEMPO_REAL.add(id); }); // clasicos-rapidos
+  TableroUI.SALA.forEach(j => TIEMPO_REAL.add(j)); // juegos-tablero
+  ['bingo', 'blackjack', 'dibuja', 'mente-sopa'].forEach(j => TIEMPO_REAL.add(j)); // juegos-salas-grandes
+  const FISICA = new Set(['futbolito', 'billar']); // futbolito-billar: 1 vs 1 por tiros en su iframe
 
   // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
   // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -2803,16 +2877,20 @@
       '<div id="p-modo-wrap" hidden><label for="p-modo">Modo</label><select id="p-modo" class="sel"><option value="linea">➖ Línea (rápido)</option><option value="llena">🟩 Tabla llena</option></select></div>' +
       '<div id="p-reloj-wrap" hidden><label for="p-reloj">Reloj por jugador</label><select id="p-reloj" class="sel"><option value="5">⚡ 5 min</option><option value="10" selected>⏱ 10 min</option><option value="15">🐢 15 min</option></select></div>' +
       '<div id="p-equipos-wrap" hidden><label class="check"><input id="p-equipos" type="checkbox"><span>👥 Por equipos (A y B, alternados por orden de entrada)</span></label></div>' +
-      '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select></div>' +
+      '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select>' +
+        '<label>🎉 Categorías divertidas (opcional, máximo 2)</label><div id="p-extra"></div><div class="feedback" id="p-extra-aviso"></div></div>' + // basta-divertida-una-robo
       '<div id="p-mapa-wrap" hidden><label for="p-mapa">Nivel o pista</label><select id="p-mapa" class="sel"></select></div>' +
       '<div id="p-tema-wrap" hidden><label for="p-tema">Tema</label><select id="p-tema" class="sel">' + InglesGramatica.TEMAS.map(t => '<option value="' + t.id + '">' + t.emoji + ' ' + escapeHtml(t.t) + '</option>').join('') + '</select></div>' +
+      '<div id="p-grandes-wrap" hidden></div>' + // juegos-salas-grandes: figura del Bingo, criterio del Memorama
       '<div id="p-cat-wrap" hidden><label for="p-cat">Maratón</label><select id="p-cat" class="sel"><option value="todas">🌈 Todas mezcladas</option></select></div>' +
+      '<div id="p-ltema-wrap" hidden><label for="p-ltema">Tema de la línea del tiempo</label><select id="p-ltema" class="sel">' + LineaTiempo.TEMAS.map(t => '<option value="' + t.id + '">' + escapeHtml(t.emoji + ' ' + t.titulo) + '</option>').join('') + '</select></div>' + // cultura-conocimiento
       '<label class="check" id="p-bots-wrap"><input id="p-bots" type="checkbox" checked><span>Incluir 2 bots (BOT-VACHIRA y BOT-ISAGII) que contestan al azar</span></label>' +
       '<div class="muted" id="p-bots-nota" hidden style="font-size:.82rem;margin:6px 0"></div>' +
       '<div class="row-btns"><button class="btn" type="submit">Crear partida</button></div></form></div>' +
       '<div class="card"><h2 style="margin-top:0">🔑 Unirme con código</h2><form id="f-unirse" autocomplete="off"><label for="p-codigo">Código de 4 letras</label>' +
       '<input id="p-codigo" type="text" maxlength="4" placeholder="KXQP" style="text-transform:uppercase;letter-spacing:.3em;font-weight:800;text-align:center">' +
       '<div class="row-btns"><button class="btn" type="submit">Unirme</button></div></form><div id="p-msg"></div></div>';
+    datos('basta').then(d => { const el = document.getElementById('p-extra'); if (el) el.innerHTML = selectorExtras(d.extras, 'pextra'); }).catch(() => {}); // basta-divertida-una-robo
     datos('cultura').then(d => {
       const sel = document.getElementById('p-cat'); if (!sel) return;
       sel.innerHTML += d.categorias.map(c => '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.emoji + ' ' + c.titulo) + '</option>').join('');
@@ -2821,7 +2899,7 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, finT: 0, revEnviando: false, revMsg: '' });
+    Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, finT: 0, revEnviando: false, revMsg: '' });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
@@ -2830,7 +2908,7 @@
     try { history.replaceState(history.state, '', urlConSala(codigo)); } catch (e) { /* sin historial */ }
     modoPartida(true);
     const j = juegoPorId(sala.estado.sala.juego);
-    const preparar = ['una', 'poker', 'brisca', 'conquian', 'ajedrez'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+    const preparar = SALAS_GRANDES[sala.estado.sala.juego] ? Promise.resolve(SALAS_GRANDES[sala.estado.sala.juego].preparar()) : /* juegos-salas-grandes */ ['una', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
     sala.contenido = await preparar;
     // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
     // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
@@ -2908,10 +2986,20 @@
     if (s.juego === 'brisca' || s.juego === 'conquian') return pintarCartasSala(body, s.juego);
     if (s.juego === 'ajedrez') return pintarAjedrezSala(body);
     if (ClasicosRapidosUI.IDS.includes(s.juego)) return ClasicosRapidosUI.pintarSala(body); // clasicos-rapidos
+    if (TableroUI.esSala(s.juego)) return TableroUI.pintarSala(body); // juegos-tablero
     if (ARCADE.has(s.juego)) return pintarArcadeSala(body);
+    if (SALAS_GRANDES[s.juego]) return SALAS_GRANDES[s.juego].pintar(body); // juegos-salas-grandes
+    if (s.juego === 'cultura-linea') return pintarLineaSala(body); // cultura-conocimiento
+    if (FISICA.has(s.juego)) return pintarFisicaSala(body); // futbolito-billar
     return pintarPreguntaSala(body);
   }
 
+  // basta-divertida-una-robo: categorías divertidas de la partida, visibles en la sala de espera.
+  function extrasEspera(s) {
+    const ids = s.juego.startsWith('basta') ? Basta.extrasDe(s.opciones) : [];
+    const ex = ((sala.contenido || {}).extras || []).filter(x => ids.includes(x.id));
+    return ex.length ? '<p class="muted" id="p-extras" style="margin:8px 0">🎉 Categorías divertidas: <b>' + ex.map(x => escapeHtml(x.emoji + ' ' + x.titulo)).join(' · ') + '</b></p>' : '';
+  }
   function pintarEspera(body) {
     const e = sala.estado;
     const lista = participantes();
@@ -2919,6 +3007,7 @@
       '<div class="sub">Compártelo en el Meet o por WhatsApp · entran desde 🎮 Juegos → 👥 Partidas</div>' +
       '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
       '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
+      extrasEspera(e.sala) + // basta-divertida-una-robo
       '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length)) + '</p>' : '') + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
         (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
       '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
@@ -2993,7 +3082,11 @@
 
   // ---- Basta en sala por rondas (openspec: basta-rondas) ----
   const rondasDeSala = () => Number(sala.estado.sala.opciones.rondas || 1);
-  const datosBasta = () => sala.contenido[sala.estado.sala.juego === 'basta-en' ? 'en' : 'es'];
+  const datosBasta = () => { // basta-divertida-una-robo: con las categorías divertidas de la sala (la revancha las hereda)
+    const ids = Basta.extrasDe(sala.estado.sala.opciones), k = sala.estado.sala.juego + '|' + ids.join(',');
+    if (!sala.bastaDatos || sala.bastaDatos.k !== k) sala.bastaDatos = { k, d: bastaConExtras(sala.contenido, sala.estado.sala.juego === 'basta-en' ? 'en' : 'es', ids) };
+    return sala.bastaDatos.d;
+  };
   // Letras sin repetir, iguales para todos (semilla de la sala).
   function letrasBasta() {
     if (!sala.letrasBasta) sala.letrasBasta = barajar(datosBasta().letras, rngDe(sala.estado.sala.seed, 'letras')).slice(0, rondasDeSala());
@@ -3294,7 +3387,7 @@
       }
       return r;
     };
-    const hayParaRobar = () => st.mazo.length > 0 || st.pila.length > 1;
+    const hayParaRobar = () => st.mazo.length > 0; // basta-divertida-una-robo: el robo no rebaraja el descarte
     const aplicar = (j, mv, t) => {
       st.paso++; st.T0 = t;
       if (mv.accion === 'jugar') {
@@ -3312,9 +3405,10 @@
         if (c.v === '+4') { robar(sig(j), 4); pasos = 2; }
         st.turno = sig(j, pasos);
       } else if (mv.accion === 'robar') {
-        const n = robar(j, 1) ? st.manos[j][st.manos[j].length - 1] : undefined; // sin cartas no hay "robada"
-        st.ultima = { j, accion: 'robar', auto: !!mv.auto, paso: st.paso };
-        if (!mv.auto && n !== undefined && valida(n)) st.pendiente = n; else st.turno = sig(j);
+        // basta-divertida-una-robo: roba del mazo de la semilla hasta sacar una jugable (determinista, sin rebarajar).
+        const r = Una.robarHastaPoder(st.mazo, st.manos[j], valida);
+        st.ultima = { j, accion: 'robar', auto: !!mv.auto, paso: st.paso, robadas: r.robadas, jugable: r.jugable };
+        if (!mv.auto && r.jugable !== null) st.pendiente = r.jugable; else st.turno = sig(j);
       } else {
         st.ultima = { j, accion: 'pasar', auto: !!mv.auto, paso: st.paso };
         st.pendiente = null; st.turno = sig(j);
@@ -3413,9 +3507,14 @@
     const u = st.ultima;
     const ult = !u ? (lang === 'en' ? 'The game begins!' : '¡Empieza la partida!') :
       escapeHtml(st.orden[u.j].nombre) + ': ' + (u.accion === 'jugar' ? escapeHtml(unaNombre(UNA_CARTAS[u.carta], lang)) + (u.castigo ? ' · ⚠️ ' + (lang === 'en' ? 'slow on UNA +' : 'tardó en presionar UNA +') + u.castigo : '') :
-        u.accion === 'robar' ? (lang === 'en' ? 'draws' : 'roba') + (u.auto ? ' ⏰' : '') + (u.j === yo && !u.auto && st.manos[yo].length ? ' · 🆕 ' + escapeHtml(unaNombre(UNA_CARTAS[st.manos[yo][st.manos[yo].length - 1]], lang)) : '') : (lang === 'en' ? 'passes' : 'pasa') + (u.auto ? ' ⏰' : ''));
+        u.accion === 'robar' ? (u.j === yo ? escapeHtml(Una.avisoRobo(u.robadas.length, u.auto ? null : u.jugable, lang)) + (u.auto ? ' ⏰' : '') + (!u.auto && u.jugable !== null ? ' · 🆕 ' + escapeHtml(unaNombre(UNA_CARTAS[u.jugable], lang)) : '') // basta-divertida-una-robo
+          : (lang === 'en' ? 'draws ' : 'roba ') + u.robadas.length + (u.auto ? ' ⏰' : '')) : (lang === 'en' ? 'passes' : 'pasa') + (u.auto ? ' ⏰' : ''));
     const mano = yo >= 0 ? st.manos[yo] : [];
     const jugable = id => miTurno && st.valida(id) && (st.pendiente === null || st.pendiente === id);
+    // basta-divertida-una-robo: las cartas que robé se animan al llegar, una sola vez por paso.
+    const robadasMias = u && u.accion === 'robar' && u.j === yo && sala.unaAnimado !== u.paso ? u.robadas : [];
+    if (robadasMias.length) sala.unaAnimado = u.paso;
+    const anim = id => { const k = robadasMias.indexOf(id); return k < 0 ? '' : ' nueva" style="--k:' + k; };
     body.innerHTML =
       '<div class="una-bots">' + st.orden.map((p, j) => j === yo ? '' : '<div class="una-bot' + (st.turno === j ? ' activo' : '') + '"><span>' + avatarHtml(p.avatar, 20) + ' ' + escapeHtml(p.nombre) + '</span><span>🂠 × ' + st.manos[j].length +
         (st.manos[j].length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
@@ -3425,7 +3524,7 @@
         : miUna ? '📣 ' + (lang === 'en' ? 'Press UNA now! ' : '¡Presiona UNA ya! ') + '<b id="una-cuenta">' + quedaUna.toFixed(1) + '</b> s'
         : st.esperaUna ? '⏳ ' + escapeHtml(st.orden[st.esperaUna.j].nombre) + (lang === 'en' ? ' must press UNA…' : ' debe presionar UNA…')
         : (miTurno ? '👉 ' + escapeHtml(T.tu) : '⏳ ' + escapeHtml(st.orden[st.turno].nombre)) + ' · ' + ult) + '</div>' +
-      '<div class="una-mano">' + mano.map(id => '<button class="una-btn' + (st.pendiente === id && miTurno ? ' robada' : '') + '" data-usala-carta="' + id + '"' + (jugable(id) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(unaNombre(UNA_CARTAS[id], lang)) + '">' + unaCartaHtml(UNA_CARTAS[id], jugable(id) ? ' jugable' : '') + '</button>').join('') + '</div>' +
+      '<div class="una-mano">' + mano.map(id => '<button class="una-btn' + (st.pendiente === id && miTurno ? ' robada' : '') + anim(id) + '" data-usala-carta="' + id + '"' + (jugable(id) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(unaNombre(UNA_CARTAS[id], lang)) + '">' + unaCartaHtml(UNA_CARTAS[id], jugable(id) ? ' jugable' : '') + '</button>').join('') + '</div>' +
       '<div class="row-btns">' + (miTurno && (st.pendiente !== null || (!st.hayParaRobar() && !mano.some(st.valida))) ? '<button class="btn ghost" data-usala="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
       ((sala.unaLocal ? !sala.unaLocal.presionado : miUna) ? '<button class="btn una-grito pulsa" data-usala="una">📣 ' + escapeHtml(T.una) + '</button>' : (sala.unaLocal && sala.unaLocal.presionado && (miUna || !sala.unaLocal.enviado) ? '<span class="feedback ok">📣 ¡UNA!</span>' : '')) + '</div>' +
       '<div class="row-btns" style="margin-top:6px"><button class="btn ghost sm" data-usala-lang="es" aria-pressed="' + (lang === 'es') + '">🇲🇽 Español</button><button class="btn ghost sm" data-usala-lang="en" aria-pressed="' + (lang === 'en') + '">🇺🇸 English</button></div>';
@@ -3813,10 +3912,53 @@
     limpiezas.push(() => window.removeEventListener('message', alMensaje));
   }
 
+  // ---- Futbolito y Billar en sala (openspec: futbolito-billar) ----
+  // El juego vive en su iframe y reproduce los tiros con su motor determinista. Esta página le pasa la mesa (los 2 de
+  // participantes(): personas y, si falta, el bot), las jugadas del servidor cuando cambian, envía sus tiros y pinta
+  // el podio con pintarFinalSala (puntos topados a 1000) cuando el juego avisa el fin.
+  const jugadasFisica = () => sala.estado.jugadores.flatMap(x => (x.jugadas || []).map(j => Object.assign({ jugador: x.id }, j))).sort((a, b) => a.n - b.n);
+  function pintarFisicaSala(body) {
+    const e = sala.estado, s = e.sala, juego = s.juego;
+    document.getElementById('m-bar').hidden = true;
+    const mesa = participantes().slice(0, 2);
+    if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + juegoPorId(juego).emoji + ' Esperando a tu rival: se juega 1 vs 1.</div>'; sala.vista = 'faltan'; } return; }
+    const aFrame = msg => { const f = document.getElementById('arcade-frame'); try { f.contentWindow.postMessage(msg, location.origin); } catch (x) { /* iframe cerrado */ } };
+    if (sala.vista === 'fisica') {
+      const js = jugadasFisica(), firma = JSON.stringify(js);
+      if (sala.fisicaListo && firma !== sala.fisicaFirma) { sala.fisicaFirma = firma; aFrame({ tipo: 'jugadas', jugadas: js, ahora: ahoraServidor() }); }
+      return;
+    }
+    sala.vista = 'fisica'; sala.fisicaListo = false;
+    body.innerHTML = marcoArcade(srcArcade(juego), juegoPorId(juego).t);
+    const frame = document.getElementById('arcade-frame');
+    const orden = mesa.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot }));
+    const alMensaje = async ev => {
+      const d = ev.data || {};
+      if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== juego) return;
+      if (d.tipo === 'listo') {
+        const js = jugadasFisica(); sala.fisicaFirma = JSON.stringify(js); sala.fisicaListo = true;
+        aFrame({ tipo: 'inicio', modo: 'sala', seed: s.seed, inicio: s.inicio, ahora: ahoraServidor(), yo: e.yo, orden, jugadas: js });
+      } else if (d.tipo === 'jugada' && d.jugada && typeof d.jugada === 'object') {
+        const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: d.jugada });
+        aFrame({ tipo: 'jugada-ok', ok: r.ok, error: r.ok ? null : (r.body.error || r.status) });
+        await traerSala(); pintarSala();
+      } else if (d.tipo === 'fin' && sala.vista === 'fisica') {
+        window.removeEventListener('message', alMensaje);
+        const pts = Array.isArray(d.puntos) ? d.puntos : [], yo = orden.findIndex(p => p.id === e.yo);
+        const filas = mesa.map((p, i) => ({ id: p.id, nombre: p.nombre, tipo: p.bot ? 'bot' : p.tipo, avatar: p.avatar, total: Math.max(0, Math.min(1000, Math.round(Number(pts[i]) || 0))), ultimo: 0 })).sort((a, b) => b.total - a.total);
+        sala.finAciertos = yo >= 0 ? Math.max(0, Math.round(Number((d.aciertos || [])[yo]) || 0)) : 0; sala.finTotal = Math.max(0, Math.round(Number(d.total) || 0));
+        pintarFinalSala(document.getElementById('p-body'), filas, null, String(d.titulo || '🏁 ¡Fin de la partida!').slice(0, 90));
+      }
+    };
+    window.addEventListener('message', alMensaje);
+    limpiezas.push(() => window.removeEventListener('message', alMensaje));
+  }
+
   async function crearPartida() {
     const juego = document.getElementById('p-juego').value;
-    const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
+    const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'cultura-linea' ? { cat: document.getElementById('p-ltema').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value, extra: [...document.querySelectorAll('[data-pextra]:checked')].map(x => x.dataset.pextra) } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
     Object.assign(opciones, ClasicosRapidosUI.opcionesCrear(juego)); // clasicos-rapidos: modo del Ahorcado
+    Object.assign(opciones, SalasGrandes.opciones(juego)); // juegos-salas-grandes
     const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
     if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     entrarSala(r.body.codigo);
@@ -4036,7 +4178,7 @@
   Object.assign(AYUDA, ClasicosRapidosUI.AYUDA); // clasicos-rapidos
   function ayuda(id) {
     const d = document.createElement('dialog'); d.className = 'ayuda'; d.setAttribute('aria-label', 'Cómo se juega');
-    d.innerHTML = (AYUDA[id] || '<p>Pronto.</p>') + '<div class="row-btns"><button class="btn" data-cerrar-ayuda autofocus>Entendido</button></div>';
+    d.innerHTML = (AYUDA[id] || TableroUI.ayuda(id) || AYUDA_GRANDES[id] || '<p>Pronto.</p>') + '<div class="row-btns"><button class="btn" data-cerrar-ayuda autofocus>Entendido</button></div>'; // juegos-tablero y juegos-salas-grandes
     document.body.appendChild(d);
     d.addEventListener('close', () => d.remove());
     d.addEventListener('click', e => { if (e.target.closest('[data-cerrar-ayuda]') || e.target === d) d.close(); });
@@ -4048,10 +4190,12 @@
   app.addEventListener('click', e => {
     const t = e.target.closest('[data-tab]'); if (t) { limpiar(); olvidarRevancha(); return pantallaHub(t.dataset.tab); }
     const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
+    if (SalasGrandes.clic(e)) return; // juegos-salas-grandes
     if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
     if (sala.estado && sala.estado.sala.juego === 'poker' && document.getElementById('p-body') && e.target.closest('[data-pk]')) { clicPokerSala(e); return; }
     if (sala.estado && ['brisca', 'conquian'].includes(sala.estado.sala.juego) && document.getElementById('p-body') && clicCartasSala(e)) return;
     if (sala.estado && sala.estado.sala.juego === 'ajedrez' && document.getElementById('p-body') && clicAjedrezSala(e)) return;
+    if (sala.estado && TableroUI.esSala(sala.estado.sala.juego) && document.getElementById('p-body') && TableroUI.clicSala(e)) return; // juegos-tablero
     const lsc = e.target.closest('[data-lsc]'); if (lsc) return marcarLoteriaSala(Number(lsc.dataset.lsc), lsc);
     if (e.target.closest('[data-lsgrito]')) return gritarLoteriaSala();
     const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }
@@ -4059,6 +4203,7 @@
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('👥 Faltan jugadores. Espera a que se una tu rival.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
+    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert(TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.'); /* juegos-tablero */ } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
     const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
@@ -4091,7 +4236,12 @@
   });
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez'; opcionesMapaArcade(e.target.value); document.getElementById('p-tema-wrap').hidden = e.target.value !== 'en-frases';
     const nota = { ajedrez: '♟️ Partida 1 vs 1 solo entre dos personas: quien crea y quien se une. Sin bots.', brisca: '🏆 Se juega entre 4 en parejas: si faltan personas, se completa con bots. Máximo 4.' }[e.target.value];
-    document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || ''; } });
+    document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || '';
+    TableroUI.alCambiarJuego(e.target.value); } }); // juegos-tablero
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') SalasGrandes.formulario(e.target.value); }); // juegos-salas-grandes
+  // cultura-conocimiento: el tema de la Línea del tiempo solo se ve al elegirla.
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-ltema-wrap').hidden = e.target.value !== 'cultura-linea'; });
+  app.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.pextra) limitarExtras(e.target, 'pextra', 'p-extra-aviso'); }); // basta-divertida-una-robo
   app.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
   });

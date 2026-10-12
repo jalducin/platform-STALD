@@ -7,6 +7,10 @@ import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realti
 import { type Carrera, CARRERAS, mapaDeSala, validarCarrera } from "./carreras.ts";
 // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (reglas de sala en su módulo)
 import * as Clasicos from "./clasicos_rapidos.ts";
+import { JUEGOS_TABLERO, validarJugadaTablero, vistaJugadores } from "./tablero.ts"; // juegos-tablero
+import { respuestaNaval } from "./naval.ts"; // juegos-tablero
+// juegos-salas-grandes: Bingo, Blackjack, Dibuja y adivina, y Memorama y Sopa en partida
+import * as Grandes from "./salas_grandes.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -16,9 +20,16 @@ export const JUEGOS_PARTIDA = new Set([
   "en-vocab", "en-frases", "es-ortografia", "cultura", "mente-calculo", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
   "en-tiempos", // ⏳ Máquina del tiempo (openspec: juegos-ingles-gramatica)
   "plataformas", "karts", // carreras de Arcade (openspec: juegos-plataformas-karts)
+  ...JUEGOS_TABLERO, // juegos-tablero: damas, domino, parchis y naval
+  ...Grandes.JUEGOS_GRANDES, // juegos-salas-grandes
+  "cultura-linea", // cultura-conocimiento: 📜 Línea del tiempo
+  "futbolito", "billar", // futbolito-billar: física 1 vs 1 por tiros
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
+// cultura-conocimiento: temas de 📜 Línea del tiempo (opciones.cat), igual que LineaTiempo.TEMAS en juegos/linea-tiempo.js.
+export const TEMAS_LINEA = ["todos", "historia-mexico", "historia-universal", "inventos", "ciencia"];
+const RONDAS_LINEA = 5, SUCESOS_MAX_LINEA = 6, MS_MAX_LINEA = 60_000;
 const ACCIONES_POKER = ["retirarse", "pasar", "igualar", "subir", "todo"]; // openspec: poker
 const FICHA_POKER = 5; // la ficha más chica; igual que Cartas.FICHA en juegos/cartas.js (openspec: poker-fichas)
 const ACCIONES_CONQUIAN = ["tomar", "bajar", "descartar", "pasar"]; // openspec: cartas-espanolas
@@ -34,12 +45,15 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
   if (!entero(n, 0, 2000)) return null;
   const base = { n: n as number, accion };
   if (Clasicos.esClasicoRapido(juego)) return Clasicos.validarJugadaClasicos(juego, j); // clasicos-rapidos
+  const tablero = validarJugadaTablero(juego, j, base); // juegos-tablero
+  if (tablero !== undefined) return tablero as Omit<Jugada, "t"> | null;
   if (juego === "poker") {
     // openspec: poker-fichas — la subida se arma con fichas de 5 a 100: entero múltiplo de FICHA_POKER y obligatorio.
     const montoOk = entero(j.monto, FICHA_POKER, 1_000_000) && (j.monto as number) % FICHA_POKER === 0;
     if (!ACCIONES_POKER.includes(accion) || j.carta !== undefined || (j.monto !== undefined && !montoOk) || (accion === "subir" && j.monto === undefined)) return null;
     return { ...base, ...(j.monto !== undefined ? { monto: j.monto as number } : {}) };
   }
+  if (juego === "blackjack") return Grandes.validarJugadaBlackjack(j, base); // juegos-salas-grandes
   if (juego === "ajedrez") { // openspec: ajedrez
     if (accion === "rendirse") return base;
     const casilla = (x: unknown) => typeof x === "string" && /^[a-h][1-8]$/.test(x);
@@ -56,7 +70,19 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
     if (j.a !== undefined && !entero(j.a, 0, 20)) return null;
     return { ...base, con: con as number[], ...(j.a !== undefined ? { a: j.a as number } : {}) };
   }
-  // ¡Una!
+  // futbolito-billar: tiros de física (enteros; se simulan igual en cada cliente) o rendirse.
+  if (juego === "futbolito" || juego === "billar") {
+    if (accion === "rendirse") return base;
+    if (accion !== "tiro") return null;
+    if (juego === "futbolito") {
+      return entero(j.pos, -150, 150) && entero(j.angulo, -60, 60) && entero(j.fuerza, 10, 100)
+        ? { ...base, pos: j.pos as number, angulo: j.angulo as number, fuerza: j.fuerza as number } : null;
+    }
+    if (!entero(j.angulo, 0, 3599) || !entero(j.fuerza, 1, 100) || (j.efecto !== undefined && !entero(j.efecto, -100, 100))) return null;
+    return { ...base, angulo: j.angulo as number, fuerza: j.fuerza as number, ...(j.efecto !== undefined ? { efecto: j.efecto as number } : {}) };
+  }
+  // ¡Una! Robar (hasta poder tirar) y pasar no llevan carta ni color: el robo se reproduce del mazo de la semilla.
+  if (accion !== "jugar" && (j.carta !== undefined || j.color !== undefined)) return null; // basta-divertida-una-robo
   if (!["jugar", "robar", "pasar"].includes(accion) || (j.carta !== undefined && !entero(j.carta, 0, 107)) ||
     (j.color !== undefined && !["r", "y", "g", "b"].includes(String(j.color))) || (j.una !== undefined && typeof j.una !== "boolean")) return null;
   return { ...base, ...(j.carta !== undefined ? { carta: j.carta as number } : {}), ...(j.color !== undefined ? { color: String(j.color) } : {}), ...(j.una !== undefined ? { una: j.una as boolean } : {}) };
@@ -77,7 +103,22 @@ export const MESAS: Record<string, Mesa> = {
   ppt: { max: 8, asientos: 4, min: 2 },
   ahorcado: { max: 8, min: 1 },
   serpientes: { max: 4, asientos: 4, min: 2 },
+  // juegos-tablero: Batalla naval sin bots (su flota la guarda el servidor); los demás se completan con bots.
+  damas: { max: 2, asientos: 2, min: 2 },
+  domino: { max: 4, asientos: 4, min: 2 },
+  parchis: { max: 4, asientos: 4, min: 2 },
+  naval: { max: 2, min: 2, bots: "nunca" },
+  // juegos-salas-grandes
+  bingo: { max: 30, min: 1 },
+  blackjack: { max: 6, asientos: 3, min: 1 }, // la banca no ocupa asiento
+  dibuja: { max: 12, min: 3, bots: "nunca" }, // los bots no dibujan
+  "en-memorama": { max: 30, min: 1 },
+  "mente-sopa": { max: 30, min: 1 },
+  "cultura-linea": { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
+  futbolito: { max: 2, asientos: 2, min: 2 }, // futbolito-billar: 1 vs 1 (con bots, 1 persona + 1 bot)
+  billar: { max: 2, asientos: 2, min: 2 },
 };
+const FISICA = new Set(["futbolito", "billar"]); // futbolito-billar: no aceptan jugadas tras el final
 const cupo = (juego: string) => MESAS[juego]?.max ?? MAX_JUGADORES;
 const botsFijos = (juego: string) => MESAS[juego]?.bots === "siempre" ? true : MESAS[juego]?.bots === "nunca" ? false : undefined;
 // Personas + bots que ocuparían la mesa al empezar (los bots completan los asientos libres).
@@ -102,21 +143,22 @@ interface Sala {
   canal?: string; // topic secreto de Supabase Realtime (openspec: salas-realtime); nunca va en el cuerpo de la sala
   siguiente?: string; // revancha: código de la sala nueva (openspec: revancha-partidas)
   siguienteHost?: string; // revancha: id de quien la abrió (anfitrión de la sala nueva)
+  secreto?: string; // juegos-salas-grandes: Dibuja; nunca sale del servidor (sinCanal lo quita)
 }
 
-interface EnSala {
+interface EnSala extends Grandes.JugadorGrande { // juegos-salas-grandes: bingo, dibujo, aciertos, intentos, resultado
   id: string;
   nombre: string;
   tipo: Jugador["tipo"];
   unido: number;
   avatar?: { emoji: string; color: string };
-  respuestas: Record<string, { correcta: boolean; puntos: number; ms: number }>;
+  respuestas: Record<string, { correcta: boolean; puntos: number; ms: number; aciertos?: number }>; // aciertos: Línea del tiempo
   palabras?: Record<string, string>;
   basta?: number;
   rondasBasta?: Record<string, { palabras: Record<string, string>; basta?: number }>; // Basta por rondas
   loteria?: number; // hora del servidor del primer "¡Lotería!"
   unas?: { paso: number; t: number }[]; // ¡Una!: botón UNA por paso
-  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number | string; de?: string; promo?: string; t: number }[]; // juegos por turnos
+  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number | string; de?: string; promo?: string; pos?: number; angulo?: number; fuerza?: number; efecto?: number; t: number }[]; // juegos por turnos
   carrera?: Carrera & { t: number }; // Arcade: tiempo de la carrera, solo el primer envío (openspec: juegos-plataformas-karts)
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
@@ -124,6 +166,18 @@ interface EnSala {
 }
 
 const RONDAS_BASTA = ["5", "10", "12"]; // Basta por rondas (openspec: basta-rondas)
+// basta-divertida-una-robo: categorías divertidas que el anfitrión puede sumar (máximo 2). Misma lista que
+// `extras` en juegos/datos/basta.json y Basta.CONOCIDAS en juegos/basta.js (server/basta_una_test.ts).
+export const EXTRAS_BASTA = ["pokemon", "actor", "flor", "anime", "pelicula", "heroe", "antojito", "refri", "excusa", "kitchen"] as const;
+export const MAX_EXTRAS_BASTA = 2;
+// Normaliza `opciones.extra` (arreglo o texto "a,b") a "a,b"; "" sin extras; null si es inválida.
+function extrasBasta(x: unknown): string | null {
+  if (x === undefined || x === null || x === "") return "";
+  const ids = Array.isArray(x) ? x : typeof x === "string" ? x.split(",") : null;
+  if (!ids || ids.length > MAX_EXTRAS_BASTA || new Set(ids).size !== ids.length) return null;
+  if (!ids.every((id) => typeof id === "string" && (EXTRAS_BASTA as readonly string[]).includes(id))) return null;
+  return ids.join(",");
+}
 const MAX_FINAL = 10_000; // total final y podio (10–12 rondas de Basta suman más que un quiz)
 
 const cache = new Map<string, { t: number; v: unknown }>();
@@ -203,7 +257,7 @@ async function publicarEstado(store: Store, codigo: string, ahora: number, rt?: 
   if (!rt) return;
   cache.delete(codigo);
   const fresco = await estado(store, codigo, ahora);
-  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: Clasicos.ocultarJugadas(fresco.sala.juego, fresco.jugadores), ahora: Date.now() }); // clasicos-rapidos: sin elecciones de ppt
+  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: vistaJugadores(fresco.sala.juego, Clasicos.ocultarJugadas(fresco.sala.juego, fresco.jugadores), null), ahora: Date.now() }); // clasicos-rapidos y juegos-tablero: sin elecciones de ppt ni flotas
 }
 
 // Revancha (openspec: revancha-partidas). La primera petición reserva `siguiente` en la sala vieja con escritura
@@ -234,7 +288,7 @@ async function reservarRevancha(store: Store, codigo: string, jugador: Jugador, 
 
 // sub: "" (crear) o "/<código>[/unirse|/empezar|/respuesta|/revancha]"
 // La sala que se devuelve o se publica, sin el canal secreto.
-const sinCanal = (s: Sala): Sala => { const { canal: _c, ...resto } = s; return resto; };
+const sinCanal = (s: Sala): Sala => { const { canal: _c, secreto: _s, ...resto } = s; return resto; }; // juegos-salas-grandes: sin secreto
 
 export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string, rt?: ConfigRealtime): Promise<Response> {
   const ahora = Date.parse(ahoraIso);
@@ -261,11 +315,18 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       const rondas = op.rondas === undefined ? "10" : String(op.rondas);
       if (!RONDAS_BASTA.includes(rondas)) return json({ error: "rondas_invalidas" }, 400);
       opciones.rondas = rondas;
+      const extra = extrasBasta(op.extra); // basta-divertida-una-robo
+      if (extra === null) return json({ error: "extras_invalidas" }, 400);
+      if (extra) opciones.extra = extra;
     }
     if (CARRERAS[juego]) { // Arcade: nivel o pista en las opciones (openspec: juegos-plataformas-karts)
       const mapa = mapaDeSala(juego, op.mapa, aleatorio(1)[0]);
       if (!mapa) return json({ error: "mapa_invalido" }, 400);
       opciones.mapa = mapa;
+    }
+    if (juego === "cultura-linea") { // cultura-conocimiento: el tema de la Línea del tiempo va en opciones.cat
+      if (op.cat !== undefined && !TEMAS_LINEA.includes(op.cat as string)) return json({ error: "tema_invalido" }, 400);
+      opciones.cat = (op.cat as string) ?? "todos";
     }
     if (juego === "en-frases") {
       if (op.tema !== undefined && !TEMAS_INGLES.includes(op.tema as string)) return json({ error: "tema_invalido" }, 400);
@@ -276,6 +337,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (typeof o === "string") return json({ error: o }, 400);
       Object.assign(opciones, o);
     }
+    { const e = Grandes.opcionesGrandes(juego, op, opciones); if (e) return json({ error: e }, 400); } // juegos-salas-grandes
     const codigo = await codigoLibre(store);
     if (!codigo) return json({ error: "sin_codigo" }, 503);
     const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: botsFijos(juego) ?? body.bots !== false, canal: canalNuevo() };
@@ -311,7 +373,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
     if (sala.inicio === null) {
       const doc = await store.get<Sala>(ruta(codigo));
-      const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS };
+      const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc!.data, canalNuevo) }; // + secreto de Dibuja
       await store.put(ruta(codigo), nueva, doc!.sha, `sala ${codigo}: empieza`);
       cache.delete(codigo);
       await publicar();
@@ -323,8 +385,19 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (accion === "respuesta" && req.method === "POST") {
     if (!dentro) return json({ error: "no_en_sala" }, 403);
     if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
+    // juegos-salas-grandes: ¡Bingo!, trazo y adivina de Dibuja, y resultado de Memorama y Sopa
+    const grande = Grandes.respuestaGrande(sala, jugadores, jugador.id, body, ahora);
+    if (grande && "error" in grande) {
+      if (grande.cambiar && await guardarJugador(store, codigo, jugador, grande.cambiar, ahora)) await publicar();
+      return json({ error: grande.error }, grande.status);
+    }
     let cambiar: (e: EnSala) => EnSala;
-    if (body.una !== undefined && body.jugada === undefined) {
+    // juegos-tablero: Batalla naval guarda la flota y resuelve cada disparo en el servidor (server/naval.ts).
+    const naval = sala.juego === "naval" ? respuestaNaval(sala.inicio, jugadores, jugador.id, body, ahora) : null;
+    if (naval && "error" in naval) return json({ error: naval.error }, naval.status);
+    if (naval) cambiar = naval.cambiar;
+    else if (grande) cambiar = grande.cambiar;
+    else if (body.una !== undefined && body.jugada === undefined) {
       const paso = Number((body.una as Record<string, unknown>)?.paso);
       if (!Number.isInteger(paso) || paso < 0 || paso > 2000) return json({ error: "una_invalida" }, 400);
       cambiar = (e) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
@@ -332,6 +405,8 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       // Juegos por turnos (¡Una!, póker, Brisca, Conquián): cada jugada con su paso n; nadie más puede tener ese paso.
       const v = validarJugada(sala.juego, body.jugada);
       if (!v) return json({ error: "jugada_invalida" }, 400);
+      // futbolito-billar: con un final registrado la partida ya terminó.
+      if (FISICA.has(sala.juego) && jugadores.some((x) => x.final !== undefined || x.podio !== undefined)) return json({ error: "partida_terminada" }, 409);
       const n = v.n;
       if (!Clasicos.sinTurnoUnico(sala.juego) && jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409); // clasicos-rapidos: ppt juega la misma ronda
       const nueva = { ...v, t: ahora };
@@ -366,6 +441,15 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       } else {
         cambiar = (e) => ({ ...e, palabras: body.palabras !== undefined ? palabras : e.palabras, basta: body.basta === true && !e.basta ? ahora : e.basta });
       }
+    } else if (sala.juego === "cultura-linea") {
+      // cultura-conocimiento: Línea del tiempo — 5 líneas, aciertos 0–6 obligatorios, hasta 60 s, y puntos recortados a
+      // 20 por acierto + 80 si la línea es perfecta.
+      const q = Number(body.q), aciertos = body.aciertos;
+      if (!Number.isInteger(q) || q < 0 || q >= RONDAS_LINEA || typeof body.correcta !== "boolean" || !entero(aciertos, 0, SUCESOS_MAX_LINEA)) return json({ error: "respuesta_invalida" }, 400);
+      const tope = 20 * (aciertos as number) + (body.correcta ? 80 : 0);
+      const puntos = Math.max(0, Math.min(tope, Math.round(Number(body.puntos) || 0)));
+      const ms = Math.max(0, Math.min(MS_MAX_LINEA, Math.round(Number(body.ms) || 0)));
+      cambiar = (e) => e.respuestas[q] ? e : ({ ...e, respuestas: { ...e.respuestas, [q]: { correcta: body.correcta as boolean, puntos, ms, aciertos: aciertos as number } } });
     } else {
       const q = Number(body.q);
       if (!Number.isInteger(q) || q < 0 || q >= PREGUNTAS || typeof body.correcta !== "boolean") return json({ error: "respuesta_invalida" }, 400);
@@ -376,7 +460,8 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
     if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
     await publicar();
-    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas });
+    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas,
+      ...(grande ? { ...grande.respuesta, bingo: nuevo.bingo, resultado: nuevo.resultado } : {}) }); // juegos-salas-grandes
   }
 
   // POST /juegos/sala/<código>/revancha → { codigo } de la sala nueva, con quien la pidió dentro.
@@ -403,7 +488,8 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (!accion && req.method === "GET") {
     if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
     const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
-    return json({ sala: sinCanal(sala), jugadores: Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo });
+    return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
+      ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora) }); // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
   }
 
   return json({ error: "metodo_no_permitido" }, 405);

@@ -16,6 +16,20 @@
     ppt: { max: 8, asientos: 4, min: 2 },
     ahorcado: { max: 8, min: 1 },
     serpientes: { max: 4, asientos: 4, min: 2 },
+    // juegos-tablero: Batalla naval sin bots (su flota la guarda el servidor); los demás se completan con bots.
+    damas: { max: 2, asientos: 2, min: 2 },
+    domino: { max: 4, asientos: 4, min: 2 },
+    parchis: { max: 4, asientos: 4, min: 2 },
+    naval: { max: 2, min: 2, bots: 'nunca' },
+    // juegos-salas-grandes
+    bingo: { max: 30, min: 1 },
+    blackjack: { max: 6, asientos: 3, min: 1 }, // la banca no ocupa asiento
+    dibuja: { max: 12, min: 3, bots: 'nunca' }, // los bots no dibujan
+    'en-memorama': { max: 30, min: 1 },
+    'mente-sopa': { max: 30, min: 1 },
+    'cultura-linea': { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
+    futbolito: { max: 2, asientos: 2, min: 2 }, // futbolito-billar: 1 vs 1 (con bots, 1 persona + 1 bot)
+    billar: { max: 2, asientos: 2, min: 2 },
   };
   const de = juego => MESAS[juego] || null;
   // Lugares que ocupan los bots con `humanos` personas: solo en mesas con asientos y si la sala lleva bots.

@@ -11,10 +11,13 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.08, out, etiqueta: '', dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
-  ok('hub: categoría Clásicos con 12 juegos (con Póker, Brisca, Conquián y los clásicos rápidos)', (await p.$$('.cat-clasicos[data-juego]')).length === 12 && (await p.$$('[data-juego]')).length === 29);
+  // Clásicos de este lote: los 7 de siempre, 5 clásicos rápidos, Dominó, Parchís, Bingo y Blackjack; el total, igual a JUEGOS.length.
+  const clasicos = await p.$$eval('.cat-clasicos[data-juego]', bs => bs.map(x => x.dataset.juego));
+  ok('hub: categoría Clásicos con 16 juegos (Basta, ¡Una!, Lotería, Póker, Brisca, Conquián, clásicos rápidos, Dominó, Parchís, Bingo y Blackjack)', clasicos.length === 16 && ['basta-es', 'basta-en', 'una', 'loteria', 'poker', 'brisca', 'conquian'].every(i => clasicos.includes(i)) && (await p.$$('[data-juego]')).length === await p.evaluate(() => JUEGOS.length), clasicos.join(','));
 
   // Basta (es): verificada, desconocida y con otra letra
-  await p.click('[data-juego="basta-es"]'); await p.waitForSelector('#basta-form');
+  await p.click('[data-juego="basta-es"]'); await p.waitForSelector('#basta-empezar'); // basta-divertida-una-robo: sin categorías divertidas
+  await p.click('#basta-empezar'); await p.waitForSelector('#basta-form');
   const letra = (await p.textContent('.letra')).trim();
   const L = norm(letra);
   const deCat = cat => basta.es.palabras[cat].find(w => norm(w).startsWith(L));
@@ -30,13 +33,28 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
   ok('basta: guarda en la semana', res.includes('a tus individuales'));
   await p.click('[data-a="hub"]');
 
-  // Basta (en): todo verificado → bono
-  await p.click('[data-juego="basta-en"]'); await p.waitForSelector('#basta-form');
+  // Basta (en) con 2 categorías divertidas (basta-divertida-una-robo): todo verificado → bono
+  await p.click('[data-juego="basta-en"]'); await p.waitForSelector('#basta-empezar');
+  ok('basta individual: ofrece las 10 categorías divertidas', (await p.$$('[data-bextra]')).length === 10);
+  await p.check('[data-bextra="kitchen"]'); await p.check('[data-bextra="pokemon"]'); await p.click('[data-bextra="flor"]');
+  ok('basta individual: máximo 2 categorías divertidas', !(await p.isChecked('[data-bextra="flor"]')) && /Máximo 2/.test(await p.textContent('#b-extra-aviso')), await p.textContent('#b-extra-aviso'));
+  await p.click('#basta-empezar'); await p.waitForSelector('#basta-form');
   const le = norm((await p.textContent('.letra')).trim());
-  for (const c of basta.en.categorias) await p.fill('#b-' + c.id, basta.en.palabras[c.id].find(w => norm(w).startsWith(le)));
+  const extrasEn = basta.extras.filter(x => ['kitchen', 'pokemon'].includes(x.id));
+  ok('basta individual: 6 de siempre + 2 divertidas', (await p.$$('#basta-form input')).length === 8 && !!(await p.$('#b-kitchen')) && !!(await p.$('#b-pokemon')));
+  // Palabras distintas entre sí: una repetida no cuenta (p. ej. «pan» en Thing y en la cocina con la P; con la H,
+  // «ham» y «honey» se necesitan en dos lugares). Se asignan todas juntas con retroceso; si la letra no da para las 8
+  // (con la H solo hay 7 distintas), se deja vacía la menor cantidad posible y se esperan tantas verificadas como llenas.
+  const casillas = [...extrasEn.map(x => ({ id: x.id, lista: x.palabras })), ...basta.en.categorias.map(c => ({ id: c.id, lista: basta.en.palabras[c.id] }))];
+  const opcionesDe = c => [...new Set(c.lista.filter(w => norm(w).startsWith(le)).map(norm))].map(nw => c.lista.find(w => norm(w) === nw));
+  const asignar = (k, usadas, vacias) => { if (k === casillas.length) return []; for (const w of opcionesDe(casillas[k])) { if (usadas.has(norm(w))) continue; usadas.add(norm(w)); const r = asignar(k + 1, usadas, vacias); if (r) return [w, ...r]; usadas.delete(norm(w)); } if (vacias > 0) { const r = asignar(k + 1, usadas, vacias - 1); if (r) return ['', ...r]; } return null; };
+  let palabras = null; for (let v = 0; !palabras && v <= casillas.length; v++) palabras = asignar(0, new Set(), v);
+  const llenas = palabras.filter(Boolean).length;
+  for (const [k, c] of casillas.entries()) await p.fill('#b-' + c.id, palabras[k] || '');
+  await p.screenshot({ path: 'basta-individual-extras.png', fullPage: true });
   await p.click('#basta-form button[type=submit]'); await p.waitForSelector('.result .score');
   const re = (await p.textContent('.result')).replace(/\s+/g, ' ');
-  ok('basta en inglés: 6 verificadas y bono', (re.match(/verificada/g) || []).length === 6 && re.includes('Bono'), re.slice(0, 120));
+  ok('basta en inglés: todas las llenas verificadas (8, o 7 si la letra no da para más; con las divertidas) y bono', llenas >= 7 && (re.match(/verificada/g) || []).length === llenas && re.includes('Bono') && re.includes('Something in the kitchen'), re.slice(0, 160));
   await p.click('[data-a="hub"]');
 
   // ¡Una! contra 1 bot, en inglés

@@ -30,6 +30,8 @@
 - [x] 4.1 Conteo del menú en `e2e-juegos`, `e2e-fusion` y `e2e-clasicos`: 24 → 29 juegos (Clásicos 7 → 12); también `e2e-karts`
 - [x] 4.2 E2E nueva (con un caso de mesa: 1 persona + bots y, al entrar otra, un bot menos) `tests/e2e/e2e-clasicos-rapidos.js`, registrada en `tests/e2e/correr.sh` (fase `base`): cada juego
   en individual, Gato y Conecta 4 en sala con 2 personas, Piedra, papel o tijera con bots y capturas a 390 px
+- [x] 4.3 Integración en `release/juegos-lote`: el conteo del menú de `e2e-clasicos-rapidos` compara con
+  `JUEGOS.length` de la página (con los demás sprints son 39) y Clásicos queda en 16
 
 ## 5. Pruebas y verificación de estado (OBLIGATORIO)
 

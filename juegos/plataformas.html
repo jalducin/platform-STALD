@@ -81,6 +81,11 @@ canvas{display:block;border-radius:8px}
 body:not(.jugando) #mandos{display:none!important}
 @media (orientation:landscape) and (pointer:coarse) and (max-height:520px){#mandos{position:absolute;left:0;right:0;bottom:0;padding:8px 14px;pointer-events:none}#mandos .m{pointer-events:auto;opacity:.8}}
 #teclas{font-size:13px;opacity:.85}
+/* Mando de Arcade (openspec: mando-arcade): con «🎮 Mando clásico» los botones de antes no se ven; solo jugando */
+body.ctl-mando #mandos,body:not(.jugando) .mando{display:none!important}
+.sel{font:inherit;font-weight:800;font-size:15px;min-height:44px;padding:6px 14px;border-radius:999px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer}
+.sel[aria-pressed="true"]{border-color:var(--acento);background:rgba(255,183,3,.24)}
+.ctl-fila{align-items:center}
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.nodo.sigue,.marca img,.portada-axo{animation:none}.m{transition:none}}
 </style></head><body>
 <div id="juego">
@@ -99,6 +104,7 @@ body:not(.jugando) #mandos{display:none!important}
       <h1>Axo <b>y los 12 mundos</b></h1>
       <p>Ayuda a Axo, el ajolote, a cruzar los mundos: junta monedas, pisa a los bichos y vence al jefe de cada castillo.</p>
       <div class="fila"><button class="btn" id="b-jugar">▶ Jugar</button></div>
+      <div class="fila ctl-fila" role="group" aria-label="Controles"><button class="sel" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="sel" data-control="botones" aria-pressed="false">🔘 Botones</button><span class="guia-lugar"></span></div>
       <p id="teclas">⌨️ ← → para moverte · ESPACIO o ↑ para saltar · X para lanzar fuego · P para pausa</p>
     </div>
     <div class="ov hide" id="ov-mapa">
@@ -113,7 +119,8 @@ body:not(.jugando) #mandos{display:none!important}
       </div>
     </div>
     <div class="ov hide" id="ov-pausa"><h2>⏸ Pausa</h2><p id="pausa-txt">El juego se detiene mientras no estás.</p>
-      <div class="fila"><button class="btn" id="b-seguir">▶ Seguir</button><button class="btn sec" id="b-al-mapa">🗺️ Al mapa</button></div></div>
+      <div class="fila"><button class="btn" id="b-seguir">▶ Seguir</button><button class="btn sec" id="b-al-mapa">🗺️ Al mapa</button></div>
+      <div class="fila ctl-fila" role="group" aria-label="Controles"><button class="sel" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="sel" data-control="botones" aria-pressed="false">🔘 Botones</button><span class="guia-lugar"></span></div></div>
     <div class="ov hide" id="ov-fin"><h2 id="fin-titulo">¡Nivel superado!</h2><div class="stats" id="fin-stats"></div><p id="fin-puntos"></p><p id="fin-guardado" style="font-size:14px"></p>
       <div class="fila" id="fin-botones"></div></div>
     <div class="ov hide" id="ov-sala"><h2 id="sala-titulo">Partida</h2><p id="sala-txt"></p><div style="font-size:64px;font-weight:900;color:var(--acento)" id="sala-cuenta"></div></div>
@@ -124,6 +131,7 @@ body:not(.jugando) #mandos{display:none!important}
   </div>
 </div>
 <script src="arcade.js?v=1"></script>
+<script src="mando.js?v=1"></script>
 <script>
 /* Axo y los 12 mundos — plataformas 2D en canvas (openspec: juegos-plataformas-karts).
    Embebido en juegos.html: la plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage, solo
@@ -183,11 +191,12 @@ function presionar(k, on) {
 }
 const MAPA_TECLAS = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'saltar', KeyW: 'saltar', Space: 'saltar', KeyX: 'fuego', KeyJ: 'fuego', KeyK: 'fuego' };
 addEventListener('keydown', e => {
+  if (control === 'mando') return; // con el mando, el teclado lo lee juegos/mando.js
   const k = MAPA_TECLAS[e.code];
   if (k && modo === 'nivel') { e.preventDefault(); if (!e.repeat) presionar(k, true); return; }
   if ((e.code === 'KeyP' || e.code === 'Escape') && modo === 'nivel' && !sala) { e.preventDefault(); pausar(true); }
 });
-addEventListener('keyup', e => { const k = MAPA_TECLAS[e.code]; if (k) presionar(k, false); });
+addEventListener('keyup', e => { const k = control === 'botones' && MAPA_TECLAS[e.code]; if (k) presionar(k, false); });
 addEventListener('blur', () => { for (const k in tecla) tecla[k] = false; });
 document.querySelectorAll('#mandos .m').forEach(b => {
   const k = b.dataset.k, ids = new Set();
@@ -196,6 +205,36 @@ document.querySelectorAll('#mandos .m').forEach(b => {
   b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off);
   b.addEventListener('contextmenu', e => e.preventDefault());
 });
+
+/* ================= Mando de Arcade (openspec: mando-arcade) =================
+   «🎮 Mando clásico» (por omisión): cruceta = mover, A = saltar, B = fuego, START = pausa; teclado J/K/Enter más las
+   teclas de siempre (ESPACIO, ↑, X, P) y control físico. «🔘 Botones»: los botones y teclas de antes. */
+let control = Mando.preferencia('plataformas_control') === 'botones' ? 'botones' : 'mando';
+const mando = Mando.crear({
+  acciones: { izquierda: 'izq', derecha: 'der', saltar: 'A', fuego: 'B', pausa: 'START' },
+  contenedor: $('juego'),
+  teclas: { Space: 'A', ArrowUp: 'A', KeyW: 'A', KeyX: 'B', KeyP: 'START', Escape: 'START' },
+  nombres: { saltar: 'saltar', fuego: 'fuego', pausa: 'pausa' },
+});
+for (const [accion, k] of [['izquierda', 'izq'], ['derecha', 'der'], ['saltar', 'saltar'], ['fuego', 'fuego']]) {
+  mando.al(accion, () => { if (modo === 'nivel') presionar(k, true); });
+  mando.alSoltar(accion, () => presionar(k, false));
+}
+mando.al('pausa', () => { if (modo === 'nivel' && !sala) pausar(true); else if (modo === 'pausa') pausar(false); });
+const TECLAS_TXT = {
+  mando: '⌨️ ← → para moverte · J, ESPACIO o ↑ para saltar · K o X para lanzar fuego · Enter o P para pausa',
+  botones: '⌨️ ← → para moverte · ESPACIO o ↑ para saltar · X para lanzar fuego · P para pausa',
+};
+function aplicarControl() {
+  for (const k in tecla) tecla[k] = false;
+  document.body.classList.toggle('ctl-mando', control === 'mando');
+  document.querySelectorAll('[data-control]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.control === control)));
+  mando.mostrar(control === 'mando');
+  mando.activar(control === 'mando' && (modo === 'nivel' || modo === 'pausa'));
+  $('teclas').textContent = TECLAS_TXT[control];
+}
+document.querySelectorAll('[data-control]').forEach(b => { b.onclick = () => { control = b.dataset.control; Mando.preferencia('plataformas_control', control); aplicarControl(); }; });
+document.querySelectorAll('.guia-lugar').forEach(s => s.replaceWith(mando.botonGuia()));
 
 /* ================= Tamaño del canvas ================= */
 // El nivel siempre mide LW × 240 px lógicos. En celular vertical el sobrante de alto se vuelve cielo (arriba, donde
@@ -1671,7 +1710,7 @@ function pintarHud() {
   hud('h-viento', viento && modo === 'nivel' ? (viento > 0 ? '💨→' : '←💨') : '');
   $('m-fuego').classList.toggle('oculto', P.poder !== 'fuego');
   const jugando = modo === 'nivel' || modo === 'pausa';
-  if (hudPrevio.jugando !== jugando) { hudPrevio.jugando = jugando; document.body.classList.toggle('jugando', jugando); }
+  if (hudPrevio.jugando !== jugando) { hudPrevio.jugando = jugando; document.body.classList.toggle('jugando', jugando); mando.activar(control === 'mando' && jugando); }
 }
 
 /* ================= Bucle principal (paso fijo de 1/60 s) ================= */
@@ -1700,6 +1739,7 @@ function cuadro(ahora) {
 
 /* ================= Arranque ================= */
 ajustar();
+aplicarControl();
 generar(1, 1); cam.x = 0; // fondo de la portada
 $('portada-axo').src = retratoAxo('base', 'gana');
 requestAnimationFrame(t => { ultimo = t; cuadro(t); });
@@ -1716,6 +1756,9 @@ if (PRUEBA) {
     darMonedas: n => { for (let i = 0; i < n; i++) sumarMoneda(); },
     poder: p => cambiarPoder(p),
     danar,
+    control: () => control,
+    mando: () => mando.estado(),
+    tecla: () => Object.assign({}, tecla),
   };
 }
 </script>

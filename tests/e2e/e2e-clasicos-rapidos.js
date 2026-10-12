@@ -24,7 +24,7 @@ const clicPrimero = async (p, sel) => { const b = await p.$(sel); if (b) await b
   const p = await pagina(b, 'marisol@example.com', 0.15);
   // ---- Menú ----
   const ids = await p.$$eval('[data-juego]', xs => xs.map(x => x.dataset.juego));
-  ok('menú: 29 juegos y 12 en Clásicos (con los 5 nuevos)', ids.length === 29 && (await p.$$('.cat-clasicos[data-juego]')).length === 12 && ['gato', 'conecta4', 'ppt', 'ahorcado', 'serpientes'].every(i => ids.includes(i)), ids.length + ' juegos');
+  ok('menú: todos los juegos de la página (JUEGOS.length) y 16 en Clásicos (con los 5 nuevos)', ids.length === await p.evaluate(() => JUEGOS.length) && (await p.$$('.cat-clasicos[data-juego]')).length === 16 && ['gato', 'conecta4', 'ppt', 'ahorcado', 'serpientes'].every(i => ids.includes(i)), ids.length + ' juegos');
   await p.$eval('[data-juego="gato"]', e => e.scrollIntoView({ block: 'start' })); await sleep(200);
   await p.screenshot({ path: 'clasicos-rapidos-390-menu.png', fullPage: false });
 

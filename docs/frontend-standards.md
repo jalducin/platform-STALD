@@ -148,7 +148,8 @@ Cada página debe manejar y mostrar de forma explícita:
     `juegos.html` acepta solo mensajes de su iframe y su origen; responde `inicio` (avance de `GET /juegos/progreso`
     o, en sala, mapa, semilla, `inicioEn` y bots), `guardado` y `puntos-ok`. Guarda con `PUT` encadenado (gana el
     último). Canvas con paso fijo de 1/60 s y escala entera, pausa con `visibilitychange`, sonido opcional
-    (`localStorage.arcade_sonido`), controles táctiles grandes (pointer events) y `prefers-reduced-motion`. No piden
+    (`localStorage.arcade_sonido`), controles táctiles grandes (Axo y Dragon Run usan el mando compartido; ver
+    «Mando de Arcade») y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
@@ -166,6 +167,38 @@ Cada página debe manejar y mostrar de forma explícita:
       390×844 y 844×390;
     - pista y sprites de los karts pre-dibujados; partículas con tope de 300 y un tercio con
       `prefers-reduced-motion` (sin humo ni confeti);
+  - **Futbolito y Billar** (cambio `futbolito-billar`; decisiones en su `design.md`): `juegos/futbolito.html` y
+    `juegos/billar.html` en el mismo iframe de Arcade, **sin avance guardado** (`SIN_AVANCE` en `juegos.html`: no
+    piden `/juegos/progreso`). Motores sin DOM y deterministas: `juegos/fisica.js` (`senCos`, `atan2Dec` solo con
+    `+ − * /` y `Math.sqrt`; azar con semilla; `linea`, la línea de turnos de sala), `juegos/futbolito-motor.js` y
+    `juegos/billar-motor.js` (probados con Deno en `server/fisica_test.ts`; **nunca** usar `Math.sin/cos/atan2/hypot`
+    ni `**` en la simulación). `juegos/mesa-ui.js` reúne toques (*touch events* no pasivos, como Karts), sonido,
+    avisos, confeti, mensajes y el controlador de sala (`crearSala`: jugadas del servidor + la propia enviada,
+    reproduce y anima cada tiro con el mismo objeto de simulación; si llegan varios, salta al penúltimo).
+    - Futbolito individual en tiempo real: deslizar (relativo) mueve la barra activa, un toque corto patea, la barra
+      activa es la propia más cercana detrás de la pelota; teclado ← → / ↑ ↓ (según la orientación) y Espacio.
+    - Billar: arrastrar apunta hacia el dedo con línea guía (bola fantasma, salida de la bola y de la blanca);
+      jalar desde la blanca (resortera) tira con la fuerza del jalón; barra de fuerza, ⟲ ⟳ y efecto ⬆ ● ⬇.
+    - Teclado y mandos pasan por la capa de acciones `MesaUI.crearAcciones` (`window.accionesJuego.presionar(nombre,
+      on)` / `ponerEje(v)`); un mando nuevo se conecta con un adaptador, sin tocar el juego (design §9).
+    - Sala: `pintarFisicaSala` manda `inicio { modo: "sala", seed, inicio, ahora, yo, orden, jugadas }` y
+      `jugadas { jugadas, ahora }` cuando cambian; el iframe responde `jugada { jugada }` (la página hace el `POST` y
+      contesta `jugada-ok`) y `fin { gana, puntos, aciertos, total, titulo }` → `pintarFinalSala`. En Futbolito cada
+      quien ve su portería abajo (o a la izquierda en horizontal). Ganchos de prueba `window.__futbolito` y
+      `window.__billar` con `?arcadePrueba=1`;
+  - **Vista pseudo-3D de Karts Turbo** (cambio `karts-pseudo3d`; diagnóstico y decisiones en su `design.md`):
+    - la carrera se simula en el mapa 2D de siempre y se dibuja en Mode-7 sobre canvas 2D: cámara detrás del carro
+      (`seguirCamara`, `d = 115`), piso proyectado por filas desde una textura `Uint32Array` de la pista (tres niveles
+      1, ½ y ¼; búfer de máx. 400 px escalado sin suavizado), panorama de 360° (1 rad = F px) y sprites ordenados por
+      profundidad; los carros son un modelo de cajas pre-dibujado en 32 vistas. Nunca cambiar reglas para «arreglar»
+      la vista: la cámara se deriva de `x`, `y` y `ang` del carro;
+    - controles por omisión: Botones (⬅ ➡; DERRAPE, 🎁, FRENO) y «Acelerar: Automático» (`localStorage.karts_acelerar`
+      = `auto` | `manual`, este último agrega ACELERAR). Teclado: flechas/WASD (↑ acelera, ↓ frena), ESPACIO derrape,
+      E/Shift ítem, P/Esc pausa. Si el sensor falla se regresa a Botones. Tutorial `#tuto` de 3 s al empezar;
+    - entrada por acciones (`acel`, `freno`, `izq`, `der`, `derrape`, `item`, `pausa` + eje): un mando nuevo se conecta
+      con `window.KartsEntrada.registrar({ presionado(accion), eje() })`, sin tocar las reglas;
+    - en horizontal (`max-height: 520px`) el marco de Arcade de `juegos.html` mide `100dvh − 16px`; las pantallas del
+      juego usan `justify-content: safe center` para poder desplazarse;
     **Dibujo de «Axo y los 12 mundos»** (cambio `axo-diseno`): arte vectorial en canvas a la resolución real (`K`),
     sin imágenes externas. Los tiles se pre-dibujan una vez por combinación (tipo, mundo, lados expuestos y variante)
     y los fondos son franjas de paralaje que se repiten (cachés fuera de pantalla a `min(K, 4)`); en cada cuadro solo
@@ -215,10 +248,86 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 | Conquián | bot 2.5 s por acción | `botMs` 2.5 s |
 | ¡Una! | bots 2.5 s | `U_BOT_MS` 3 s |
 
-- ¡Una!: `robar` devuelve cuántas cartas llegaron.
-  - Sin mazo ni pila no hay carta «robada» y el turno pasa con el aviso «No quedan cartas para robar».
-  - Si alguien se queda sin cartas que sirvan y sin nada que robar, puede **Pasar**.
-  - La carta robada se marca con 🆕 y el mensaje muestra su nombre.
+- ¡Una!: **robar hasta poder tirar** (cambio `basta-divertida-una-robo`), con `Una.robarHastaPoder` de `juegos/una.js`
+  en individual, en sala (`estadoUna`) y para los bots.
+  - Roba del mazo hasta la primera carta que sí sirve; esa queda marcada con 🆕 y se puede tirar o pasar. Aviso:
+    «Robaste 3 cartas hasta encontrar una que sí puedes tirar» (`Una.avisoRobo`).
+  - Si el mazo se acaba sin una que sirva, el turno pasa («…y se acabó el mazo sin una que sirva»). Para robar **no se
+    rebaraja** el descarte; los castigos (+2, +4 y UNA tarde) sí lo rebarajan, como antes.
+  - Si alguien se queda sin cartas que sirvan y sin mazo, puede **Pasar**.
+  - Las cartas robadas entran una tras otra con la animación `.una-btn.nueva` (`--k` = orden; sin animación con
+    `prefers-reduced-motion`).
+- Basta: `juegos/basta.js` (`Basta.norm`, `dic`, `puntuar`, `conExtras`, `extrasDe`). Las categorías divertidas (hasta
+  2) se eligen al crear la partida o antes de la letra en individual y se suman como columnas normales.
+
+## Mando de Arcade (cambio `mando-arcade`)
+
+Fuente única del control de los juegos de 🕹️ Arcade: `juegos/mando.js` (sin dependencias; inyecta su CSS una vez como
+`<style id="mando-css">`). Decisiones y lecciones de Karts en `openspec/changes/mando-arcade/design.md` (al archivar,
+`openspec/changes/archive/*-mando-arcade/`). Lo usan Axo (`plataformas.html`) y Dragon Run (`dragon-run.html`); los
+juegos nuevos (Karts pseudo-3D, Futbolito, Billar) lo adoptan **sin cambiar la API**. Si hace falta algo nuevo, se
+agrega como opción con valor por omisión compatible, en su propio cambio OpenSpec.
+
+**Cargar y crear** (dentro del iframe del juego; `window.Mando`):
+
+```html
+<script src="mando.js?v=1"></script>
+```
+
+```js
+const mando = Mando.crear({
+  acciones: { izquierda: 'izq', derecha: 'der', saltar: 'A', fuego: 'B', pausa: 'START' }, // acción → botón o [botones]
+  contenedor,            // elemento donde va el mando (por omisión, body); en vertical es un hijo flex debajo del juego
+  analogico: false,      // true: palanca (circle pad) encima de la cruceta; eje() analógico
+  teclas: { Space: 'A', KeyZ: null }, // cambios al teclado por omisión (KeyboardEvent.code → botón; null quita)
+  nombres: { saltar: 'saltar' },      // nombre corto bajo cada botón y en la guía
+  zonaMuerta: 0.2,       // palanca y control físico (radial)
+  vibrar: true,          // navigator.vibrate(12) al presionar con el dedo
+  visible: 'auto',       // 'auto' (táctil, any-pointer: coarse o < 700 px), true o false
+  botonesControl: {},    // reasignar índices de la Gamepad API ({ 0: 'B', 6: null })
+});
+mando.presionado('saltar'); // ¿alguna fuente (dedo, tecla o control) mantiene un botón de la acción?
+mando.eje();                // { x, y } en [−1, 1]: palanca táctil > palanca del control > cruceta (diagonal normalizada)
+mando.al('saltar', fn);     // flanco de bajada de la ACCIÓN (no se repite si otra fuente ya la mantenía); devuelve quitar()
+mando.alSoltar('saltar', fn); // cuando ninguna fuente la mantiene
+mando.mostrar(false);       // ocultar el mando de la pantalla (usar los controles propios del juego)
+mando.activar(false);       // desactivar toda la entrada (táctil, teclado y control) y soltar lo presionado
+mando.botonGuia();          // <button class="mando-guia-btn">⌨️ Controles</button> para colocar donde convenga
+mando.mostrarGuia();        // diálogo con cada acción: botón del mando, teclas y botón del control (Esc o «Cerrar»)
+mando.soltarTodo(); mando.destruir(); mando.estado(); mando.elemento; // estado() es para pruebas
+Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
+```
+
+- **Botones canónicos:** `arriba`, `abajo`, `izq`, `der` (cruceta), `A`, `B`, `X`, `Y`, `L`, `R`, `START`, `SELECT`. Un
+  botón desconocido en `acciones` o `teclas` lanza error al crear. Solo se ven los botones usados (de la cruceta, solo
+  los brazos usados); un lado vacío conserva su lugar invisible.
+- **Distribución:** izquierda cruceta (y palanca opcional), derecha A/B/X/Y en rombo (A derecha, B abajo, X arriba,
+  Y izquierda), L/R arriba, START/SELECT al centro abajo. En vertical va debajo del juego (`--u` de 30 a 48 px; cabe
+  desde 320 px). En horizontal bajo (`orientation: landscape` y `max-height: 520px`) va encimado en las esquinas, con
+  el cuerpo transparente y `pointer-events: none` salvo en los grupos. El módulo publica `--mando-alto` en `:root`
+  (0 si está oculto o encimado).
+- **Táctil:** *touch events* no pasivos con `preventDefault` en la raíz del mando, por `identifier`; *pointer events*
+  solo para mouse y pluma (o sin `TouchEvent`); nunca se suelta por `lostpointercapture`; `touchcancel` suelta ese dedo;
+  `blur` suelta solo el teclado y `visibilitychange` (oculto) suelta todo. Cruceta por ángulo en 8 sectores (zona muerta
+  central 0.25; el dedo la conserva hasta 1.8 radios), rombo por el botón visible más cercano, deslizar cambia de botón.
+  El mando no detiene la propagación de `pointerdown`: un juego con «toca para saltar» debe ignorar
+  `e.target.closest('.mando')`.
+- **Teclado por omisión:** flechas/WASD = cruceta; J = A, K = B, U = X, I = Y; Q = L, E = R; Enter = START; Shift derecho
+  y Backspace = SELECT. Solo se interceptan las teclas de botones usados, con el mando activo, y nunca Enter/Espacio sobre
+  botones, enlaces o campos.
+- **Control físico (Gamepad API, mapeo estándar por posición):** 0 abajo = A, 1 derecho = B, 2 izquierdo = X, 3 arriba =
+  Y, 4/6 = L, 5/7 = R, 8 = SELECT, 9 = START, 12–15 = cruceta; palanca izquierda = `eje()` y, pasado 0.5, cruceta.
+  Sondeo con `requestAnimationFrame`; aviso `.mando-aviso` «🎮 Control conectado» / «🎮 Control desconectado».
+- **Textos:** español de México y sin marcas («🎮 Mando clásico», «botón de abajo», «gatillo izquierdo»).
+- **Uso en los juegos:**
+  - Axo: cruceta = mover, A = saltar, B = fuego, START = pausa; además ESPACIO/↑/W = A, X = B, P/Esc = START. Selector
+    «🎮 Mando clásico» · «🔘 Botones» (los de antes, con su teclado) en la portada y la pausa,
+    `localStorage.plataformas_control`. El mando solo está activo en `nivel`/`pausa` y se ve con `body.jugando`.
+  - Dragon Run: A = saltar/doble salto; START = empezar, pausa nueva (`st = 'pause'`, «⏸ Pausa» / «SEGUIR», también
+    ⏸ y al ocultar la pestaña) y seguir. Selector «🎮 Mando clásico» · «👆 Tocar la pantalla» en la pantalla de
+    misiones, `localStorage.dragon_control`. En vertical el `body` pasa a columna y el cielo/tierra usa `--mando-alto`.
+- **Pruebas:** lógica pura en `server/mando_test.ts` (Deno); E2E `tests/e2e/e2e-mando.js` (toques reales por CDP,
+  teclado, control simulado con `navigator.getGamepads` en `addInitScript`, preferencia y capturas).
 
 ## Juegos fusionados (cambio `juegos-fusion`)
 
@@ -231,7 +340,33 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   - Completa y responde: 5 y 5;
   - Ortografía: 4, 3 y 3, en orden barajado con semilla;
   - Cálculo y secuencias: 1 de cada 3 es secuencia.
-- El Maratón de cultura suma las categorías `ia` y `tecnologia`, cada una con 6, 6 y 4 preguntas.
+- El Maratón de cultura suma las categorías `ia` y `tecnologia` (desde `cultura-conocimiento`, con más preguntas; ver
+  `docs/data-model.md`).
+
+## Cultura y Conocimiento (cambio `cultura-conocimiento`)
+
+- **Sección única** «🧠 Cultura y Conocimiento» en `CATEGORIAS` (`id: 'cultura'`): 🏃 Maratón de cultura, 📜 Línea del
+  tiempo, ✍️ Ortografía y 🔀 Ordena la oración. Ya no hay secciones «📝 Español» ni «🧠 Maratón de cultura»; los ids de
+  los juegos no cambian. Las E2E cuentan juegos y secciones sin un número fijo (otros cambios suman juegos).
+- **Dato al acertar**: `quiz(opts)` acepta `datoAlAcertar`; con él, al acertar se muestra `explicacion` en
+  `.quiz-dato` y la siguiente pregunta llega a los 1.6 s. Solo lo usa el Maratón.
+- **📜 Línea del tiempo** (`cultura-linea`): la lógica vive en `juegos/linea-tiempo.js`, script clásico cargado antes
+  del script principal (sube `?v=` al cambiarlo):
+  - `globalThis.LineaTiempo`: funciones puras (temas, líneas por semilla, aciertos, puntos, bots y podio), probadas
+    con Deno en `server/linea_tiempo_test.ts`;
+  - pantallas `elegirLineaTiempo()`, `jugarLineaTiempo(d, tema)`, `pintarLineaSala(body)` y `lineasDeSala(seed,
+    opciones)`, que usan los helpers globales de la página (`marco`, `reloj`, `terminar`, `rngDe`, `sala`,
+    `pintarFinalSala`…).
+  - Tablero: lista vertical de casillas («⬆ Más antiguo» a «⬇ Más reciente») y tarjetas debajo. Tocar una tarjeta la
+    pone en la primera casilla libre; tocar una casilla llena la regresa; arrastrar con Pointer Events (dedo o mouse,
+    `touch-action: none` en tarjetas y casillas llenas) la deja en la casilla soltada e intercambia si estaba ocupada;
+    menos de 8 px cuenta como toque. «✔ Confirmar» se habilita con todo colocado.
+  - Revelación: año y ✔/✘ en cada casilla, y «📜 Orden correcto» con el dato 💡 de cada suceso. La animación
+    `.lt-revela` se apaga con `prefers-reduced-motion`.
+  - Individual: tema, 3 vidas, 45 s por línea (`reloj`), hasta 10 líneas de 4, 5 y 6 sucesos; puntos con racha y
+    rapidez (ver el `design.md` del cambio). En sala: 5 líneas (4, 5, 5, 6 y 6) de 40 s + 8 s de revelación,
+    sincronizadas por reloj; si se acaba el tiempo se envía lo colocado; el podio desempata por aciertos y tiempo, y
+    `pintarFinalSala` da la revancha. El selector `#p-ltema` aparece al elegir el juego al crear la partida.
 
 ## Gramática de inglés en Juegos (cambio `juegos-ingles-gramatica`)
 
@@ -289,6 +424,25 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
   ids en `JUEGOS_PARTIDA` y `TIEMPO_REAL`, una línea en `pintarSala`, las opciones al crear y `AYUDA`.
 - Los participantes salen de `participantes()` (tabla de mesas). Las elecciones ocultas de Piedra-papel-tijera
   (`"?"`) se vuelven a pedir y las ya vistas se recuerdan en `sala.cr.vistas`.
+## Juegos de tablero (cambio `juegos-tablero`)
+
+- **Motores:** `juegos/tablero.js` es el motor sin DOM de Damas, Dominó, Parchís y Batalla naval. Expone
+  `globalThis.Tablero`, sus estados son JSON y lo prueban `server/tablero_test.ts` y `server/naval_test.ts`.
+- **Pantallas:** `juegos/tablero-ui.js` (`TableroUI`) tiene las pantallas individuales, las salas y la ayuda.
+  - Es un script clásico que se carga antes del script principal y usa sus funciones globales en tiempo de llamada.
+  - Sus ganchos en `juegos.html` llevan el comentario `juegos-tablero`.
+- **Estilos:** `juegos/tablero.css`, con prefijo `tb-`.
+  - El arte es propio: las piezas y fichas son CSS y el tablero de Parchís es SVG.
+  - Las animaciones (deslizar la pieza, caer la ficha, girar el dado e impacto del disparo) se apagan con
+    `prefers-reduced-motion`.
+- **Salas:**
+  - Damas, Dominó y Parchís se reproducen en el cliente por pasos, como `estadoCartasSala`: el bot juega a los
+    1.5 s y el turno de una persona dura 30 s (60 s en Damas).
+  - Batalla naval muestra solo lo que manda el servidor. La flota propia se conserva en `sala.tb.miFlota`, porque los
+    avisos de Realtime no traen flotas.
+- **Celular:** todo cabe a 390 px. El Parchís y la Batalla naval mueven y disparan con botones o casillas de buen
+  tamaño, y el Parchís repite las jugadas posibles como botones de 44 px.
+- **Para cambiar un motor:** sube `?v=` en las etiquetas de `juegos/tablero*.js` y `tablero.css`.
 
 ## Vista del profe en Inglés (cambio `profe-diseno`)
 

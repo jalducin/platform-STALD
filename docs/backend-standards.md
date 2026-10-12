@@ -98,6 +98,30 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       entre el mínimo (6 s y 15 s) y el límite (240 s y 300 s) del juego, o `null` si no terminó; además debe cuadrar
       con el reloj del servidor (`ms ≤ ahora − inicio + 3 s` y `ms ≥ ahora − inicio − 20 s`); `monedas` 0–999. Si no,
       400 `carrera_invalida`. Solo cuenta el primer envío (`carrera` del jugador, con su hora `t`).
+    - juegos para salas grandes (cambio `juegos-salas-grandes`; reglas en `server/salas_grandes.ts`, ganchos
+      `// juegos-salas-grandes` en `server/salas.ts`):
+      - **Bingo** `{ bingo: true }`: el servidor revisa la figura (`opciones.figura`: `linea`, `esquinas`, `lleno`) del
+        cartón del jugador (`cartón(seed, id)`) con los números cantados a su hora (uno cada 4.5 s desde `inicio`, orden
+        `orden(seed)`). Válido → guarda `bingo: { t, n }` (solo el primero); falso → 409 `bingo_falso` y suma
+        `bingoFalsos`; antes del inicio → 409 `no_empezo`. Al crear, otra figura → 400 `figura_invalida`.
+      - **Blackjack** `{ jugada: { n, accion, monto? } }`: `accion ∈ {apostar, pedir, plantarse, doblar}`; `apostar`
+        lleva `monto` entero, múltiplo de 5 y ≥ 5; las demás, sin monto. Si no, 400 `jugada_invalida` (`turno_tomado`
+        como en el póker). La mesa se reproduce en el cliente (`juegos/blackjack.js`).
+      - **Dibuja y adivina**: al empezar se guarda `sala.secreto` (nunca sale: `sinCanal` lo quita del cuerpo y de
+        Realtime). Calendario: cada persona dibuja una vez en orden de llegada, 60 s o hasta que todas adivinan, más
+        5 s de pausa. `{ trazo: { turno, nuevos: [{ c 0–7, g 1–3, p: [x, y…] 0–255, 2–64 puntos }] | borrar: true } }`
+        solo de quien dibuja en su turno (409 `turno_cerrado` / `no_dibujas`; 400 `trazo_invalido`; ≤ 6 por envío;
+        200 trazos y 8000 números por turno → 413 `dibujo_lleno`; un envío cada 300 ms → 429 `muy_rapido`).
+        `{ adivina: { turno, texto ≤ 40 } }` → `{ correcta: true, pts }` (100–200 por rapidez; guarda
+        `aciertos[turno]`) o `{ correcta: false, casi? }` (guarda el texto en `intentos`, o sin texto si contiene la
+        palabra); 409 `eres_quien_dibuja`, `ya_adivinaste`, `turno_cerrado`; un intento cada 700 ms → 429. El GET de la
+        sala agrega `dibuja: { turno, fase, letras, forma, palabra?, es?, emoji?, reveladas }`: la palabra solo para
+        quien dibuja en su turno; `reveladas`, las de turnos terminados.
+      - **Memorama y Sopa en sala** `{ resultado }` (como las carreras: ≤ 3 s adelante y ≤ 20 s atrás del reloj):
+        Memorama `{ ms, errores, pares, fin: true }` una vez (`ms` de 8 s a 180 s solo con los 8 pares; `null` si no
+        terminó); Sopa `{ ms, encontradas 0–6, fin }`: el avance no baja y `fin` con las 6 lleva `ms` (≥ 5 s). Tras el
+        final se ignora lo demás. Si no, 400 `resultado_invalido`. Memorama: `opciones.gana` = `tiempo` (por omisión)
+        o `errores`; otro → 400 `criterio_invalido`.
   - Al crear una carrera de Arcade, `opciones.mapa` es el nivel (`1-1`…`4-2`, solo niveles normales) o la pista
     (`pradera`, `desierto`, `hielo`, `volcan`); sin `mapa` el servidor elige uno al azar; uno que no existe → 400
     `mapa_invalido`. La revancha copia las opciones, así que repite el mapa.
@@ -113,13 +137,18 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
   - Juegos permitidos (`JUEGOS_PARTIDA`):
     - de preguntas: `en-vocab`, `en-frases`, `en-tiempos` (⏳ Máquina del tiempo, cambio `juegos-ingles-gramatica`;
       tope individual 2,000 en el catálogo), `es-ortografia`, `cultura` y `mente-calculo`;
+    - 📜 Línea del tiempo (`cultura-linea`, ver «Línea del tiempo en sala»);
     - Basta (es/en) y Lotería;
     - ¡Una!, póker, Brisca, Conquián y ajedrez;
     - Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (cambio `clasicos-rapidos`; ver la sección propia).
+    - Futbolito y Billar (cambio `futbolito-billar`), 1 vs 1 por tiros.
     - Los juegos absorbidos en el Sprint 4 (`en-preguntas`, `es-acentos`, `es-sinonimos` y `mente-secuencias`, del
       cambio `juegos-fusion`) responden 400 `juego_no_permitido`, pero siguen en el catálogo para conservar sus
       puntos.
     `opciones.rondas` va en Basta (`5`, `10` por defecto o `12`; otro valor → 400 `rondas_invalidas`).
+    `opciones.extra` va en Basta (cambio `basta-divertida-una-robo`): arreglo o texto `"a,b"` con hasta
+    `MAX_EXTRAS_BASTA` (2) ids de `EXTRAS_BASTA`, sin repetir; se guarda como `"a,b"` y la revancha lo hereda.
+    Un id desconocido, repetido o más de 2 → 400 `extras_invalidas`.
     `opciones.tema` va en `en-frases` (`todo` por defecto, `tobe`, `presente`, `pasado` o `futuro`; otro valor → 400
     `tema_invalido`); los demás juegos lo ignoran.
     `opciones.modo` va en Lotería (`linea` o `llena`), y `respuesta` con `{ loteria: true }` guarda la hora
@@ -127,6 +156,8 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
   - ¡Una! (`una`): `respuesta` con `{ jugada: { n, accion, carta?, color?, una? } }` se guarda con `t`
     (hora del servidor). Si otro jugador ya tiene ese paso `n`, responde 409 `turno_tomado`. El servidor
     no reproduce la partida: la reconstruye cada cliente con la semilla.
+    `robar` y `pasar` no llevan `carta` ni `color` (si los traen → 400 `jugada_invalida`): `robar` = robar hasta poder
+    tirar, y las cartas salen del mazo de la semilla (cambio `basta-divertida-una-robo`).
     `{ una: { paso } }` guarda `unas[]` `{ paso, t }`, el botón UNA. El castigo por segundos se calcula al
     reproducir: ≤ 2 s 0, ≤ 3 s 1, ≤ 4 s 2, ≤ 5 s 3 y sin UNA 4.
   - `validarJugada(juego, jugada)` valida cada juego por turnos y guarda solo los campos permitidos (cambio
@@ -135,6 +166,11 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       - `CUPO = { ajedrez: 2, brisca: 4 }`: si la sala ya está completa, quien intenta unirse recibe 409 `sala_llena`;
       - `BOTS_FIJOS`: el ajedrez se crea siempre con `bots: false` y la Brisca con `bots: true`;
       - el ajedrez no empieza con menos de 2 personas: 409 `faltan_jugadores`.
+    - Futbolito y Billar (cambio `futbolito-billar`): `{ n, accion: "rendirse" }` o un tiro con enteros —
+      Futbolito `{ n, accion: "tiro", pos −150…150, angulo −60…60, fuerza 10…100 }`; Billar `{ n, accion: "tiro",
+      angulo 0…3599 (décimas de grado), fuerza 1…100, efecto? −100…100 }`; los demás campos se descartan. Con algún
+      `final` o `podio` ya registrado, una jugada nueva responde 409 `partida_terminada` (solo en estos dos juegos).
+      El servidor no simula: cada cliente reproduce los tiros con los motores deterministas de `juegos/`.
     - Ajedrez (`ajedrez`, cambio `ajedrez`): acepta dos formas de jugada.
       - `{ n, accion: "mover", de, a, promo? }`, donde `de` y `a` son casillas `a1`–`h8` y `promo` es `q`, `r`, `b`
         o `n`.
@@ -153,6 +189,24 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     - Al reproducir, cada cliente valida la jugada con `juegos/cartas.js`. Una jugada inválida se ignora y, al vencer
       los 30 s, el jugador pasa o se retira.
   - Al terminar, `respuesta` acepta `{ final }` de cada jugador y `{ podio }`, que solo guarda el del host.
+  - Juegos de tablero (cambio `juegos-tablero`; `server/tablero.ts` y `server/naval.ts`, ganchos `// juegos-tablero`
+    en `server/salas.ts`). En el catálogo, `damas` ("Damas") y `naval` ("Batalla naval") son de `mente`, y `domino`
+    ("Dominó") y `parchis` ("Parchís") de `clasicos`; los 4 con tope 1000. Sus mesas están en `MESAS`.
+    - `validarJugadaTablero` (400 `jugada_invalida` si no cuadra):
+      - Damas: `{ n, accion: "mover", ruta: [2..13 casillas 0–31] }` o `{ n, accion: "rendirse" }`;
+      - Dominó: `{ n, accion: "jugar", ficha: 0–27, lado: "i" | "d" }`;
+      - Parchís: `{ n, accion: "mover", ficha: 0–3 }`.
+    - Las reglas de esos 3 juegos se reproducen en cada navegador con `juegos/tablero.js`, como en los juegos de
+      cartas.
+    - **Batalla naval se arbitra en el servidor.** `respuesta` acepta:
+      - `{ flota: [[c…]×5] }`: una sola vez; 400 `flota_invalida` o 409 `flota_lista`;
+      - `{ jugada: { n, accion: "disparar", c: 0–99 } }`: el servidor calcula el turno (tras «agua» cambia) y guarda
+        `r: "agua" | "tocado" | "hundido"` y, al hundir, `barco`. Errores: 409 `falta_flota`, `no_es_tu_turno`,
+        `turno_tomado` (`n` distinto del siguiente paso) o `partida_terminada`, y 400 `ya_disparaste`;
+      - `rendirse` y `reclamar`: este último solo si al rival le toca y lleva 90 s sin jugar; si no, 409 `aun_no`.
+    - `vistaJugadores` quita la `flota` del rival en `GET /juegos/sala/<código>`. El broadcast de Realtime no lleva
+      ninguna flota. Al terminar se revelan las dos. **Nunca agregues una ruta o un aviso que devuelva los archivos
+      de jugador de una sala de `naval` sin pasar por `vistaJugadores`.**
   - Cada sala nueva se agrega al índice `juegos/salas-semana/<lunes>.json`.
 - **`GET /juegos/admin/resumen?semana=`** (solo admin, 403 para los demás):
   - `jugadores`: todos los de la semana, con `total`, `totalIndividual`, `totalPartidas`, mejores, partidas y última vez;
@@ -179,7 +233,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     404 si no existe.
   - Solo admin: `GET /juegos/fotos` (lista activa) y `POST /juegos/fotos/quitar` `{ id }` (403 para el
     resto; 404 si ese jugador no tiene foto).
-- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú; con los clásicos rápidos (`clasicos-rapidos`: `gato`, `conecta4`, `ppt`, `ahorcado` y `serpientes`, categoría `clasicos`, tope 1000, títulos en `CATALOGO_CLASICOS_RAPIDOS`), 29. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`; categoría `arcade` desde `dragon-run-misiones`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú; con los clásicos rápidos (`clasicos-rapidos`: `gato`, `conecta4`, `ppt`, `ahorcado` y `serpientes`, categoría `clasicos`, tope 1000, títulos en `CATALOGO_CLASICOS_RAPIDOS`), 29; con los 4 de tablero (`juegos-tablero`: `damas`, `domino`, `parchis` y `naval`), 33; con las salas grandes (`juegos-salas-grandes`: `bingo` ("Bingo") y `blackjack` ("Blackjack (21)") en `clasicos` y `dibuja` ("Dibuja y adivina") en `ingles`, tope 1000), 36; con la 📜 Línea del tiempo (`cultura-linea`, `cultura-conocimiento`), 37; con `futbolito` ("Futbolito") y `billar` ("Billar bola 8"), categoría `arcade`, tope 1000 (cambio `futbolito-billar`), 39. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`; categoría `arcade` desde `dragon-run-misiones`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
 **CORS y peticiones** (cambio `ahorro-peticiones`): las páginas mandan los POST con `Content-Type: text/plain` (petición
@@ -447,6 +501,11 @@ Cada juego de sala declara su mesa en `MESAS` de `server/salas.ts`, que debe ser
 - `min`: mínimo para empezar, contando personas y bots; si falta, `faltan_jugadores`.
 - `bots`: `siempre` o `nunca`; si se omite, lo decide quien crea la sala.
 
+Mesas de `juegos-salas-grandes`: `bingo`, `en-memorama` y `mente-sopa` `{ max: 30, min: 1 }` (bots aparte);
+`blackjack` `{ max: 6, asientos: 3, min: 1 }` (la banca no ocupa asiento: 1 persona + 2 bots, 2 + 1, 3 + 0); `dibuja`
+`{ max: 12, min: 3, bots: "nunca" }`.
+
+Futbolito y Billar (cambio `futbolito-billar`): `{ max: 2, asientos: 2, min: 2 }` (con bots, 1 persona + 1 bot).
 `server/mesas_test.ts` comprueba que las dos tablas sean iguales. **Todo juego de sala nuevo agrega su renglón en los
 dos archivos.**
 
@@ -471,3 +530,17 @@ dos archivos.**
   `ahorcado` `{ max: 8, min: 1 }` y `serpientes` `{ max: 4, asientos: 4, min: 2 }`.
 - El servidor no reproduce la partida: valida forma y turno. Las reglas viven en `juegos/clasicos-rapidos.js` y las
   prueba `server/clasicos_rapidos_motor_test.ts`; el servidor, `server/clasicos_rapidos_test.ts`.
+## Línea del tiempo en sala (cambio `cultura-conocimiento`)
+
+- `cultura-linea` está en `JUEGOS_PARTIDA` y en `MESAS` como `{ max: 30, min: 1 }` (sin `asientos`: los bots se suman
+  aparte, como en el quiz). En `CATALOGO` es de la categoría `cultura`, con tope individual de 3,000; los `es-*` también
+  pasan a la categoría `cultura` (sus ids y topes no cambian).
+- Al crear la sala, `opciones.cat` es el tema: `todos` (por omisión), `historia-mexico`, `historia-universal`,
+  `inventos` o `ciencia` (`TEMAS_LINEA`); otro valor → 400 `tema_invalido`.
+- `respuesta` usa la forma del quiz más `aciertos`: `{ q, correcta, puntos, ms, aciertos }`.
+  - `q` de 0 a 4 (5 líneas), `correcta` booleano y `aciertos` entero de 0 a 6, obligatorio; si no → 400
+    `respuesta_invalida`.
+  - `ms` se recorta a 60,000 y `puntos` a `20 × aciertos + (correcta ? 80 : 0)` (máximo 200).
+  - Solo cuenta la primera respuesta de cada línea. Los demás juegos de preguntas no cambian (10 preguntas, sin
+    `aciertos`).
+- Pruebas: `server/linea_tiempo_test.ts` (sala y funciones puras) y `server/cultura_datos_test.ts` (contenido).

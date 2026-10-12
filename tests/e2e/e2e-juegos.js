@@ -9,6 +9,7 @@ const Q = '?api=' + encodeURIComponent(API);
 const DATOS = process.env.DATOS; // carpeta juegos/datos
 const ingles = JSON.parse(fs.readFileSync(DATOS + '/ingles.json', 'utf8'));
 const espanol = JSON.parse(fs.readFileSync(DATOS + '/espanol.json', 'utf8'));
+const cultura = JSON.parse(fs.readFileSync(DATOS + '/cultura.json', 'utf8'));
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -31,9 +32,16 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   let p = await nuevaPagina(b, 'marisol@example.com');
   await p.goto(BASE + '/juegos.html' + Q);
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  ok('hub: 29 juegos (fusión del Sprint 4, Máquina del tiempo, Arcade y clásicos rápidos) en 6 categorías', (await p.$$('[data-juego]')).length === 29 && (await p.$$('main h2')).length === 6);
+  // Sin número fijo de juegos (otros cambios suman más): cada sección con juegos y la de Cultura y Conocimiento única
+  // (openspec: cultura-conocimiento).
+  const secciones = await p.$$eval('main h2', hs => hs.map(h => ({ t: h.textContent.trim(), n: h.nextElementSibling ? h.nextElementSibling.querySelectorAll('[data-juego]').length : 0 })));
+  const nJuegos = (await p.$$('[data-juego]')).length;
+  ok('hub: al menos 25 juegos, cada sección con juegos y sin «📝 Español» aparte', nJuegos >= 25 && secciones.length >= 5 && secciones.every(x => x.n > 0) &&
+    secciones.reduce((a, x) => a + x.n, 0) === nJuegos && !secciones.some(x => /Español|Maratón de cultura/.test(x.t)) && secciones.filter(x => x.t === '🧠 Cultura y Conocimiento').length === 1, nJuegos + ' juegos · ' + secciones.map(x => x.t + ' ' + x.n).join(' | '));
+  ok('hub: el menú pinta todos los juegos de la página (JUEGOS.length)', nJuegos === await p.evaluate(() => JUEGOS.length) && nJuegos >= 39, String(nJuegos));
   const arcade = await p.$$eval('.cat-arcade[data-juego]', xs => xs.map(x => x.dataset.juego));
   ok('hub: Arcade con Axo, Karts y Dragon Run (dragon-run-misiones)', ['plataformas', 'karts', 'dragon-run'].every(id => arcade.includes(id)) && !(await p.$('.cat-mente[data-juego="dragon-run"]')), arcade.join(','));
+  ok('hub: Arcade con Futbolito y Billar (futbolito-billar)', ['futbolito', 'billar'].every(id => arcade.includes(id)), arcade.join(','));
   ok('chip con el nombre', (await p.textContent('#chip')).includes('Marisol'));
   await p.screenshot({ path: 'juegos-hub.png', fullPage: true });
 
@@ -49,7 +57,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
 
   // Vidas: cultura (elige "Todas") y secuencias
   await p.click('[data-juego="cultura"]'); await p.waitForSelector('[data-cat]');
-  ok('cultura: 11 maratones para elegir (con IA y Tecnología)', (await p.$$('[data-cat]')).length === 11);
+  ok('cultura: un maratón por categoría de cultura.json más «Todas»', (await p.$$('[data-cat]')).length === cultura.categorias.length + 1, String((await p.$$('[data-cat]')).length));
   await p.click('[data-cat="todas"]');
   { const t0 = Date.now(); while (!(await p.$('.result .score')) && Date.now() - t0 < 60000) { await clicOpcion(p).catch(() => {}); await sleep(200); } }
   await enResultado(p);

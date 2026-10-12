@@ -95,8 +95,20 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - `ortografia[]` y `acentos[]` `{ frase, opciones, correcta, regla?, explicacion }`;
   - `sinonimos[]` y `antonimos[]` `{ palabra, respuesta, distractores }`;
   - `oraciones[]` (texto).
-- `cultura.json`: `categorias[]` `{ id, titulo, emoji }` y `preguntas[]`
-  `{ cat, nivel (1–3), pregunta, opciones (4), correcta, dato }`.
+- `cultura.json` (sección «🧠 Cultura y Conocimiento», cambio `cultura-conocimiento`; su forma la valida
+  `server/cultura_datos_test.ts`):
+  - `categorias[]` `{ id, titulo, emoji }`: `historia-mexico`, `cultura-mexico`, `historia-mundial`, `geografia`,
+    `capitales`, `banderas`, `ciencias`, `naturaleza`, `cuerpo-humano`, `arte`, `matematicas`, `tecnologia`, `ia` y
+    `deportes`;
+  - `preguntas[]` `{ cat, nivel (1–3), pregunta, opciones (4, sin repetir), correcta (0–3), dato }` para 🏃 Maratón de
+    cultura: al menos 768 en total, 50 por categoría y 10 por nivel; `dato` es breve (máx. 160 caracteres), verificable
+    y se muestra al responder; sin preguntas repetidas;
+  - `linea` para 📜 Línea del tiempo:
+    - `temas[]` `{ id, titulo, emoji }`: `historia-mexico`, `historia-universal`, `inventos` y `ciencia` (iguales a
+      `TEMAS_LINEA` de `server/salas.ts` sin `todos`);
+    - `sets[]` `{ tema, titulo, sucesos[] }`: al menos 5 sets por tema, cada uno con 6 a 8 sucesos
+      `{ txt (máx. 80), anio (entero; negativo = antes de Cristo), dato (máx. 140) }`, sin años repetidos dentro del
+      set (así cualquier selección tiene un solo orden correcto).
 - `basta.json`: `{ es, en }`, cada uno con:
   - `categorias[]` `{ id, titulo, emoji }`;
   - `letras[]` que pueden salir;
@@ -104,6 +116,9 @@ Sin datos personales. Se sirve junto a `juegos.html`.
     mayúsculas ni acentos, y la ñ cuenta aparte; de aquí salen también los ejemplos y las respuestas de los bots;
   - `soloAceptar{ <categoria>: [...] }` (opcional): palabras de España que valen como respuesta pero nunca se
     muestran (cambio `basta-mexicano`).
+  - Además, en la raíz, `extras[]` `{ id, titulo, emoji, palabras[] }`: las 10 categorías divertidas que se pueden
+    sumar (cambio `basta-divertida-una-robo`). `palabras` es un banco pequeño que sirve de diccionario y de respuestas
+    de los bots. Los ids deben ser iguales a `EXTRAS_BASTA` de `server/salas.ts` (lo revisa `server/basta_una_test.ts`).
 - `loteria.json`: `cartas[]` `{ n, es, en, emoji, verso }`.
   - 54 cartas, con versos originales.
   - "El Ajolote", "El Colibrí" y "El Tlacuache" sustituyen a tres cartas tradicionales poco apropiadas
@@ -195,9 +210,16 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
 - `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots, canal? }` (en las
   carreras de Arcade, `opciones.mapa` = nivel o pista; el archivo de cada jugador lleva `carrera: { ms, monedas, t }`) y
   `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta?, rondasBasta?, v? }`.
+  Juegos para salas grandes (`juegos-salas-grandes`): `sala.opciones.figura` (Bingo: `linea`|`esquinas`|`lleno`),
+  `sala.opciones.gana` (Memorama: `tiempo`|`errores`) y `sala.secreto` (Dibuja: hex de 24, se crea al empezar; de él sale
+  la palabra de cada turno y nunca se envía). Por jugador: `bingo?: { t, n }`, `bingoFalsos?`, `dibujo?: { turno,
+  trazos: [{ c, g, p }], t }` (solo quien dibuja), `aciertos?: { "<turno>": { t, pts } }`, `intentos?: [{ turno,
+  texto? | casi: true, t }]` (últimos 20) y `resultado?: { ms, fin, errores?, pares?, encontradas?, t }`. Sin correos.
   - `canal`: topic secreto de Supabase Realtime; nunca sale en las respuestas. `v`: versión del jugador, sube en
     cada guardado (cambio `salas-realtime`).
   - En Basta por rondas (`opciones.rondas`: 5, 10 o 12), `rondasBasta{ <ronda>: { palabras, basta? } }`.
+    `opciones.extra` (opcional) = ids de las categorías divertidas separados por coma, p. ej. `"pokemon,antojito"`;
+    sus palabras van en `palabras` con el id como clave (cambio `basta-divertida-una-robo`).
     Las letras (sin repetir) y el calendario de rondas salen de la semilla y de las horas de `basta`.
   - Partidas multijugador. Cada jugador escribe solo su archivo y no hay correos.
   - Las salas vencen a las 3 h y se pueden borrar sin afectar el ranking.
@@ -210,12 +232,23 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     sale de la semilla (`poker-mano-k`).
   - En Ajedrez, `jugadas[]` `{ n, accion: "mover" | "rendirse", de?, a?, promo?, t }` y `opciones.reloj`
     (minutos por jugador, cambio `ajedrez`).
+  - En Futbolito, `jugadas[]` `{ n, accion: "tiro" | "rendirse", pos?, angulo?, fuerza?, t }`; en Billar,
+    `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, efecto?, t }` (cambio `futbolito-billar`). El triángulo del
+    billar sale de la semilla (`billar-triangulo`); los tiros de bots y los automáticos, de `bot|<paso>` y `auto|<paso>`.
   - En Brisca, `jugadas[]` `{ n, accion: "jugar", carta, t }`. En Conquián, `jugadas[]` `{ n, accion, carta?, con?, a?, t }`.
   - Clásicos rápidos (cambio `clasicos-rapidos`), `jugadas[]`: Gato `{ n, accion: "marcar", casilla, t }`, Conecta 4
     `{ n, accion: "soltar", col, t }`, Piedra-papel-tijera `{ n: ronda, accion: "elegir" | "pasar", eleccion?, t }`,
     Ahorcado `{ n, accion: "letra" | "pasar", letra?, t }` (con `opciones.modo` `compite` | `coop`) y Serpientes
     `{ n, accion: "tirar", t }`. Las palabras del Ahorcado y el dado salen de la semilla.
     El mazo sale de la semilla (`brisca-mazo` y `conquian-mazo`), según el cambio `cartas-espanolas`.
+  - Juegos de tablero (cambio `juegos-tablero`):
+    - en Damas, `jugadas[]` `{ n, accion: "mover" | "rendirse", ruta?, t }` (`ruta`: casillas oscuras 0–31);
+    - en Dominó, `jugadas[]` `{ n, accion: "jugar", ficha, lado, t }`; el reparto sale de la semilla (`|domino`);
+    - en Parchís, `jugadas[]` `{ n, accion: "mover", ficha, t }`; el dado del tiro `k` sale de la semilla (`|dado|k`);
+    - en Batalla naval, `flota` (5 barcos con sus casillas 0–99) y `flotaT` (hora en que se acomodó), y `jugadas[]`
+      `{ n, accion: "disparar" | "rendirse" | "reclamar", c?, r?, barco?, t }`. El resultado `r` lo pone el
+      servidor. **`flota` es privada:** solo la recibe su dueño mientras se juega (ver `vistaJugadores` en
+      `server/tablero.ts`).
   - En Lotería, `loteria` guarda la hora del primer grito. Las tablas y el orden de las cartas salen de
     la semilla.
 - `juegos/salas-semana/<lunes>.json`: `{ salas: [{ codigo, juego, host, creada }] }`, índice para el
