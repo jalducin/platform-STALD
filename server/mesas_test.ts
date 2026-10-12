@@ -19,4 +19,7 @@ Deno.test("mesas: con asientos, los bots completan la mesa y cada persona quita 
   assertEquals(Mesas.botsEnMesa("cultura", 3, true), null, "sin mesa: bots aparte, como siempre");
   assertEquals(Mesas.textoMesa("brisca", 3, 1), "Mesa de 4 · 3 personas + 1 bot");
   assertEquals(Mesas.textoMesa("ajedrez", 1, 0), "Hasta 2 personas · 1 persona");
+  // futbolito-billar: 1 vs 1; con bots, una persona juega contra un bot.
+  assertEquals([Mesas.botsEnMesa("futbolito", 1, true), Mesas.botsEnMesa("billar", 2, true), Mesas.botsEnMesa("billar", 1, false)], [1, 0, null]);
+  assertEquals(Mesas.textoMesa("billar", 1, 1), "Mesa de 2 · 1 persona + 1 bot");
 });
