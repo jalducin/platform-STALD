@@ -193,6 +193,8 @@
   .basta-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; }
   .basta-grid label { margin: 0; }
   .basta-res td small { color: var(--muted); }
+  .basta-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; margin: 4px 0; } /* basta-divertida-una-robo */
+  .basta-extras .check { font-size: .86rem; margin: 0; }
   /* ¡Una! */
   .una-bots { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .una-bot { flex: 1; min-width: 100px; display: flex; flex-direction: column; font-size: .8rem; font-weight: 700; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; }
@@ -213,6 +215,10 @@
   .una-btn[data-no] .una-card { opacity: .55; }
   .una-btn .jugable { transform: translateY(-6px); box-shadow: 0 6px 14px rgba(0,0,0,.3); }
   .una-btn.robada { position: relative; } .una-btn.robada::after { content: "🆕"; position: absolute; top: -14px; right: -6px; font-size: .9rem; }
+  /* basta-divertida-una-robo: cada carta robada llega del mazo, una tras otra */
+  .una-btn.nueva { animation: una-llega .5s ease-out backwards; animation-delay: calc(var(--k, 0) * .22s); }
+  @keyframes una-llega { from { transform: translate(40px, -90px) rotate(14deg) scale(.5); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .una-btn.nueva { animation: none; } }
   .una-color { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; margin: 0 4px; cursor: pointer; vertical-align: middle; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
   .una-grito.pulsa { animation: pulsa .6s infinite alternate; }
   @keyframes pulsa { to { transform: scale(1.06); box-shadow: 0 0 0 6px rgba(219, 39, 119, .25); } }
@@ -561,6 +567,8 @@
 <script src="juegos/dibuja.js?v=1"></script>
 <script src="juegos/memo-sopa-sala.js?v=1"></script>
 <script src="juegos/linea-tiempo.js?v=1"></script> <!-- cultura-conocimiento: 📜 Línea del tiempo -->
+<script src="juegos/basta.js?v=1"></script> <!-- basta-divertida-una-robo -->
+<script src="juegos/una.js?v=1"></script> <!-- basta-divertida-una-robo -->
 <script src="comun/auth.js?v=7"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
@@ -1875,16 +1883,38 @@
   }
 
   // ---------- Clásicos: Basta ----------
-  // Compara sin mayúsculas ni acentos, pero conserva la ñ como letra propia.
-  const normBasta = s => String(s || '').trim().toLowerCase().replace(/ñ/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'ñ').replace(/\s+/g, ' ');
+  // basta-divertida-una-robo: normalizar, diccionario y puntos viven en juegos/basta.js (probados con Deno).
+  const normBasta = Basta.norm, dicBasta = Basta.dic;
+  // Categorías divertidas elegidas (ids) → datos con esas columnas al final (banco = diccionario y palabras de bots).
+  const bastaConExtras = (todo, idioma, ids) => Basta.conExtras(todo[idioma], todo.extras, ids);
+  // Selector de categorías divertidas (máximo Basta.MAX_EXTRAS): casillas con data-<attr>.
+  const selectorExtras = (extras, attr) => '<div class="basta-extras" role="group" aria-label="Categorías divertidas">' + (extras || []).map(x =>
+    '<label class="check"><input type="checkbox" data-' + attr + '="' + escapeHtml(x.id) + '"><span>' + escapeHtml(x.emoji + ' ' + x.titulo) + '</span></label>').join('') + '</div>';
+  // Al marcar una tercera, se desmarca y avisa.
+  function limitarExtras(input, attr, aviso) {
+    const marcadas = [...document.querySelectorAll('[data-' + attr + ']:checked')];
+    const el = document.getElementById(aviso);
+    if (marcadas.length > Basta.MAX_EXTRAS) { input.checked = false; if (el) { el.textContent = 'Máximo ' + Basta.MAX_EXTRAS + ' categorías divertidas, para que la ronda no se haga eterna.'; el.className = 'feedback bad'; } }
+    else if (el) { el.textContent = ''; el.className = 'feedback'; }
+  }
 
-  // Diccionario para validar: palabras de México (también ejemplos y bots) + `soloAceptar`, palabras de España que
-  // valen pero no se muestran (openspec: basta-mexicano).
-  const dicBasta = d => Object.fromEntries(d.categorias.map(c => [c.id, new Set([...(d.palabras[c.id] || []), ...((d.soloAceptar || {})[c.id] || [])].map(normBasta))]));
-
+  // basta-divertida-una-robo: antes de la letra, elegir hasta 2 categorías divertidas (o ninguna).
   async function jugarBasta(idioma) {
     const id = idioma === 'en' ? 'basta-en' : 'basta-es';
-    const d = (await datos('basta'))[idioma];
+    const todo = await datos('basta');
+    const m = marco(id, { menu: true });
+    m.body.innerHTML = '<div class="q-card"><div class="big">✋</div><div class="q">' + (idioma === 'en' ? 'Basta en inglés' : 'Basta') + '</div><div class="sub">Una letra, 60 segundos y una palabra por categoría.</div></div>' +
+      '<label>🎉 Categorías divertidas (opcional, máximo ' + Basta.MAX_EXTRAS + ')</label>' + selectorExtras(todo.extras, 'bextra') +
+      '<div class="feedback" id="b-extra-aviso"></div><div class="row-btns"><button class="btn" id="basta-empezar">✋ Empezar</button></div>';
+    m.body.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.bextra) limitarExtras(e.target, 'bextra', 'b-extra-aviso'); });
+    m.body.querySelector('#basta-empezar').addEventListener('click', () => {
+      const ids = [...m.body.querySelectorAll('[data-bextra]:checked')].map(x => x.dataset.bextra).slice(0, Basta.MAX_EXTRAS);
+      empezarBasta(idioma, bastaConExtras(todo, idioma, ids));
+    });
+  }
+
+  async function empezarBasta(idioma, d) {
+    const id = idioma === 'en' ? 'basta-en' : 'basta-es';
     const letra = d.letras[Math.floor(Math.random() * d.letras.length)];
     const L = normBasta(letra);
     const dic = dicBasta(d);
@@ -1974,11 +2004,12 @@
     const nombres = ['Tú', 'Ajolote 🦎', 'Colibrí 🐦', 'Tlacuache 🐀'];
     let resolverUna = () => {};
     let mazo = unaMazo(), pila = [], dir = 1, turno = 0, color = null, terminado = false, esperandoUna = false, dijoUna = false, jugadas = 0, robada = null, msg = '';
+    let nuevas = []; // basta-divertida-una-robo: cartas recién robadas por ti (se animan una vez)
     const manos = Array.from({ length: numBots + 1 }, () => []);
     const t0 = Date.now();
     // Devuelve cuántas cartas llegaron de verdad (0 si ya no hay mazo ni pila para rebarajar).
     const robar = (j, n) => { let r = 0; for (let k = 0; k < n; k++) { if (!mazo.length) { const top = pila.pop(); mazo = barajar(pila); pila = [top]; } if (mazo.length) { manos[j].push(mazo.pop()); r++; } } return r; };
-    const hayParaRobar = () => mazo.length > 0 || pila.length > 1;
+    const hayParaRobar = () => mazo.length > 0; // basta-divertida-una-robo: el robo no rebaraja el descarte
     for (let k = 0; k < 7; k++) manos.forEach((_, j) => robar(j, 1));
     let primera = mazo.pop(); while (primera.v === '+4') { mazo.unshift(primera); primera = mazo.pop(); }
     pila.push(primera); color = primera.c || ['r', 'y', 'g', 'b'][Math.floor(Math.random() * 4)];
@@ -1996,14 +2027,16 @@
     function dibujar() {
       if (terminado) return;
       const tuTurno = turno === 0 && !esperandoUna;
+      const anim = c => { const k = nuevas.indexOf(c); return k < 0 ? '' : ' nueva" style="--k:' + k; }; // basta-divertida-una-robo
       m.body.innerHTML =
         '<div class="una-bots">' + manos.slice(1).map((h, k) => '<div class="una-bot' + (turno === k + 1 ? ' activo' : '') + '"><span>' + escapeHtml(nombres[k + 1]) + '</span><span>🂠 × ' + h.length + (h.length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
         '<div class="una-mesa"><div>' + cartaHtml(top(), ' grande') + '<div class="muted" style="text-align:center">' + escapeHtml(T.color[color]) + ' <span class="una-dot" style="background:' + UNA_COLOR[color] + '"></span></div></div>' +
         '<button class="una-mazo" data-una="robar"' + (tuTurno && !robada && hayParaRobar() ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + mazo.length + ')</small></button></div>' +
         '<div class="feedback" id="una-msg">' + escapeHtml(msg || (tuTurno ? T.tu + ' · ' + (lang === 'en' ? 'dir ' : 'sentido ') + (dir === 1 ? '↻' : '↺') : '…')) + '</div>' +
-        '<div class="una-mano">' + manos[0].map((c, i) => '<button class="una-btn' + (c === robada ? ' robada' : '') + '" data-una-card="' + i + '"' + (tuTurno && valida(c) && (!robada || robada === c) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(nombreCarta(c)) + '">' + cartaHtml(c, tuTurno && valida(c) && (!robada || robada === c) ? ' jugable' : '') + '</button>').join('') + '</div>' +
+        '<div class="una-mano">' + manos[0].map((c, i) => '<button class="una-btn' + (c === robada ? ' robada' : '') + anim(c) + '" data-una-card="' + i + '"' + (tuTurno && valida(c) && (!robada || robada === c) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(nombreCarta(c)) + '">' + cartaHtml(c, tuTurno && valida(c) && (!robada || robada === c) ? ' jugable' : '') + '</button>').join('') + '</div>' +
         '<div class="row-btns">' + (robada || (tuTurno && !hayParaRobar() && !manos[0].some(valida)) ? '<button class="btn ghost" data-una="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
         '<button class="btn una-grito' + (esperandoUna ? ' pulsa' : '') + '" data-una="una"' + (esperandoUna ? '' : ' disabled') + '>📣 ' + escapeHtml(T.una) + '</button></div>';
+      nuevas = [];
     }
 
     function fin(ganador) {
@@ -2038,8 +2071,10 @@
       if (terminado) return;
       const j = turno, mano = manos[j];
       const siguiente = manos[sig(j)].length;
-      let opciones = mano.filter(valida);
-      if (!opciones.length) { const llego = robar(j, 1); const n = llego ? mano[mano.length - 1] : null; if (n && valida(n)) opciones = [n]; else { msg = nombres[j] + (lang === 'en' ? ' draws a card' : ' roba una carta'); turno = sig(j); return programar(); } }
+      let opciones = mano.filter(valida), robo = 0;
+      // basta-divertida-una-robo: sin carta jugable, roba hasta sacar una que sirva (sin rebarajar el descarte).
+      const cartas = n => n + (lang === 'en' ? (n === 1 ? ' card' : ' cards') : (n === 1 ? ' carta' : ' cartas'));
+      if (!opciones.length) { const r = Una.robarHastaPoder(mazo, mano, valida); robo = r.robadas.length; if (r.jugable) opciones = [r.jugable]; else { msg = nombres[j] + (lang === 'en' ? (robo ? ' drew ' + cartas(robo) + ' and the deck ran out' : ' has nothing to play and the deck is empty') : (robo ? ' robó ' + cartas(robo) + ' y se acabó el mazo' : ' no tiene carta y el mazo está vacío')); turno = sig(j); return programar(); } }
       const accion = opciones.filter(c => ['skip', '+2', '+4', 'rev'].includes(c.v));
       const numeros = opciones.filter(c => c.c && /^\d$/.test(c.v));
       // Bots amables: solo a veces castigan a quien tiene pocas cartas, para que el juego sea retador pero ganable.
@@ -2047,7 +2082,7 @@
       const c = castiga ? accion[0] : (numeros[0] || opciones.find(x => x.c) || opciones[0]);
       mano.splice(mano.indexOf(c), 1);
       if (!c.c) { const cuenta = { r: 0, y: 0, g: 0, b: 0 }; mano.forEach(x => { if (x.c) cuenta[x.c]++; }); color = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0][0]; }
-      msg = nombres[j] + ': ' + nombreCarta(c) + (mano.length === 1 ? ' · ' + T.una : '');
+      msg = nombres[j] + (robo ? (lang === 'en' ? ' drew ' + cartas(robo) + ' and played ' : ' robó ' + cartas(robo) + ' y tiró ') : ': ') + nombreCarta(c) + (mano.length === 1 ? ' · ' + T.una : '');
       aplicar(j, c);
     }
 
@@ -2086,10 +2121,11 @@
       if (turno !== 0 || esperandoUna) return;
       if (col) return jugarCarta(Number(col.dataset.idx), col.dataset.unaColor);
       if (a && a.dataset.una === 'robar' && !robada) {
-        if (!robar(0, 1)) { msg = lang === 'en' ? 'No cards left to draw. Next player' : 'No quedan cartas para robar. Sigue el siguiente'; turno = sig(0); return programar(); }
-        const n = manos[0][manos[0].length - 1];
-        if (valida(n)) { robada = n; msg = (lang === 'en' ? '🆕 You drew: ' : '🆕 Robaste: ') + nombreCarta(n) + (lang === 'en' ? '. Play it or pass' : '. Puedes jugarla o pasar'); dibujar(); }
-        else { msg = (lang === 'en' ? '🆕 You drew: ' : '🆕 Robaste: ') + nombreCarta(n) + (lang === 'en' ? '. No luck, next player' : '. No sirve; sigue el siguiente'); turno = sig(0); programar(); }
+        // basta-divertida-una-robo: roba hasta sacar una que sí puedas tirar; si el mazo se acaba, sigue el siguiente.
+        const r = Una.robarHastaPoder(mazo, manos[0], valida);
+        nuevas = r.robadas;
+        msg = (r.robadas.length ? '🂠 ' : '') + Una.avisoRobo(r.robadas.length, r.jugable, lang) + (r.jugable ? ' · 🆕 ' + nombreCarta(r.jugable) : '');
+        if (r.jugable) { robada = r.jugable; dibujar(); } else { turno = sig(0); programar(); }
         return;
       }
       if (a && a.dataset.una === 'pasar') { robada = null; turno = sig(0); msg = ''; return programar(); }
@@ -2763,28 +2799,8 @@
     }));
   }
 
-  // Puntuación de Basta en sala: única/verificada 100, repetida 50; no verificada 25/10; inválida 0.
-  function puntuarBasta(d, letra, participantes) {
-    const L = normBasta(letra);
-    const dic = dicBasta(d);
-    const res = participantes.map(p => ({ nombre: p.nombre, id: p.id, total: 0, detalle: {} }));
-    for (const c of d.categorias) {
-      const norm = participantes.map(p => normBasta((p.palabras || {})[c.id] || ''));
-      norm.forEach((n, i) => {
-        let pts = 0, estado = '—';
-        const valida = n && n.startsWith(L) && n.length >= 2;
-        if (valida) {
-          const repetida = norm.filter(x => x === n).length > 1;
-          if (dic[c.id].has(n)) { pts = repetida ? 50 : 100; estado = repetida ? 'repetida' : 'única'; }
-          else if (n.length >= 3) { pts = repetida ? 10 : 25; estado = 'no verificada'; }
-          else estado = 'inválida';
-        } else if (n) estado = 'inválida';
-        res[i].total += pts;
-        res[i].detalle[c.id] = { palabra: (participantes[i].palabras || {})[c.id] || '', pts, estado };
-      });
-    }
-    return res.sort((a, b) => b.total - a.total);
-  }
+  // Puntuación de Basta en sala: única/verificada 100, repetida 50; no verificada 25/10; inválida 0 (juegos/basta.js).
+  const puntuarBasta = Basta.puntuar; // basta-divertida-una-robo
 
   const sala = { codigo: null, estado: null, offset: 0, poll: null, guardado: false };
   const ahoraServidor = () => Date.now() + sala.offset;
@@ -2854,7 +2870,8 @@
       '<div id="p-modo-wrap" hidden><label for="p-modo">Modo</label><select id="p-modo" class="sel"><option value="linea">➖ Línea (rápido)</option><option value="llena">🟩 Tabla llena</option></select></div>' +
       '<div id="p-reloj-wrap" hidden><label for="p-reloj">Reloj por jugador</label><select id="p-reloj" class="sel"><option value="5">⚡ 5 min</option><option value="10" selected>⏱ 10 min</option><option value="15">🐢 15 min</option></select></div>' +
       '<div id="p-equipos-wrap" hidden><label class="check"><input id="p-equipos" type="checkbox"><span>👥 Por equipos (A y B, alternados por orden de entrada)</span></label></div>' +
-      '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select></div>' +
+      '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select>' +
+        '<label>🎉 Categorías divertidas (opcional, máximo 2)</label><div id="p-extra"></div><div class="feedback" id="p-extra-aviso"></div></div>' + // basta-divertida-una-robo
       '<div id="p-mapa-wrap" hidden><label for="p-mapa">Nivel o pista</label><select id="p-mapa" class="sel"></select></div>' +
       '<div id="p-tema-wrap" hidden><label for="p-tema">Tema</label><select id="p-tema" class="sel">' + InglesGramatica.TEMAS.map(t => '<option value="' + t.id + '">' + t.emoji + ' ' + escapeHtml(t.t) + '</option>').join('') + '</select></div>' +
       '<div id="p-grandes-wrap" hidden></div>' + // juegos-salas-grandes: figura del Bingo, criterio del Memorama
@@ -2866,6 +2883,7 @@
       '<div class="card"><h2 style="margin-top:0">🔑 Unirme con código</h2><form id="f-unirse" autocomplete="off"><label for="p-codigo">Código de 4 letras</label>' +
       '<input id="p-codigo" type="text" maxlength="4" placeholder="KXQP" style="text-transform:uppercase;letter-spacing:.3em;font-weight:800;text-align:center">' +
       '<div class="row-btns"><button class="btn" type="submit">Unirme</button></div></form><div id="p-msg"></div></div>';
+    datos('basta').then(d => { const el = document.getElementById('p-extra'); if (el) el.innerHTML = selectorExtras(d.extras, 'pextra'); }).catch(() => {}); // basta-divertida-una-robo
     datos('cultura').then(d => {
       const sel = document.getElementById('p-cat'); if (!sel) return;
       sel.innerHTML += d.categorias.map(c => '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.emoji + ' ' + c.titulo) + '</option>').join('');
@@ -2874,7 +2892,7 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, finT: 0, revEnviando: false, revMsg: '' });
+    Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, finT: 0, revEnviando: false, revMsg: '' });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
@@ -2968,6 +2986,12 @@
     return pintarPreguntaSala(body);
   }
 
+  // basta-divertida-una-robo: categorías divertidas de la partida, visibles en la sala de espera.
+  function extrasEspera(s) {
+    const ids = s.juego.startsWith('basta') ? Basta.extrasDe(s.opciones) : [];
+    const ex = ((sala.contenido || {}).extras || []).filter(x => ids.includes(x.id));
+    return ex.length ? '<p class="muted" id="p-extras" style="margin:8px 0">🎉 Categorías divertidas: <b>' + ex.map(x => escapeHtml(x.emoji + ' ' + x.titulo)).join(' · ') + '</b></p>' : '';
+  }
   function pintarEspera(body) {
     const e = sala.estado;
     const lista = participantes();
@@ -2975,6 +2999,7 @@
       '<div class="sub">Compártelo en el Meet o por WhatsApp · entran desde 🎮 Juegos → 👥 Partidas</div>' +
       '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
       '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
+      extrasEspera(e.sala) + // basta-divertida-una-robo
       '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length)) + '</p>' : '') + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
         (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
       '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
@@ -3049,7 +3074,11 @@
 
   // ---- Basta en sala por rondas (openspec: basta-rondas) ----
   const rondasDeSala = () => Number(sala.estado.sala.opciones.rondas || 1);
-  const datosBasta = () => sala.contenido[sala.estado.sala.juego === 'basta-en' ? 'en' : 'es'];
+  const datosBasta = () => { // basta-divertida-una-robo: con las categorías divertidas de la sala (la revancha las hereda)
+    const ids = Basta.extrasDe(sala.estado.sala.opciones), k = sala.estado.sala.juego + '|' + ids.join(',');
+    if (!sala.bastaDatos || sala.bastaDatos.k !== k) sala.bastaDatos = { k, d: bastaConExtras(sala.contenido, sala.estado.sala.juego === 'basta-en' ? 'en' : 'es', ids) };
+    return sala.bastaDatos.d;
+  };
   // Letras sin repetir, iguales para todos (semilla de la sala).
   function letrasBasta() {
     if (!sala.letrasBasta) sala.letrasBasta = barajar(datosBasta().letras, rngDe(sala.estado.sala.seed, 'letras')).slice(0, rondasDeSala());
@@ -3350,7 +3379,7 @@
       }
       return r;
     };
-    const hayParaRobar = () => st.mazo.length > 0 || st.pila.length > 1;
+    const hayParaRobar = () => st.mazo.length > 0; // basta-divertida-una-robo: el robo no rebaraja el descarte
     const aplicar = (j, mv, t) => {
       st.paso++; st.T0 = t;
       if (mv.accion === 'jugar') {
@@ -3368,9 +3397,10 @@
         if (c.v === '+4') { robar(sig(j), 4); pasos = 2; }
         st.turno = sig(j, pasos);
       } else if (mv.accion === 'robar') {
-        const n = robar(j, 1) ? st.manos[j][st.manos[j].length - 1] : undefined; // sin cartas no hay "robada"
-        st.ultima = { j, accion: 'robar', auto: !!mv.auto, paso: st.paso };
-        if (!mv.auto && n !== undefined && valida(n)) st.pendiente = n; else st.turno = sig(j);
+        // basta-divertida-una-robo: roba del mazo de la semilla hasta sacar una jugable (determinista, sin rebarajar).
+        const r = Una.robarHastaPoder(st.mazo, st.manos[j], valida);
+        st.ultima = { j, accion: 'robar', auto: !!mv.auto, paso: st.paso, robadas: r.robadas, jugable: r.jugable };
+        if (!mv.auto && r.jugable !== null) st.pendiente = r.jugable; else st.turno = sig(j);
       } else {
         st.ultima = { j, accion: 'pasar', auto: !!mv.auto, paso: st.paso };
         st.pendiente = null; st.turno = sig(j);
@@ -3469,9 +3499,14 @@
     const u = st.ultima;
     const ult = !u ? (lang === 'en' ? 'The game begins!' : '¡Empieza la partida!') :
       escapeHtml(st.orden[u.j].nombre) + ': ' + (u.accion === 'jugar' ? escapeHtml(unaNombre(UNA_CARTAS[u.carta], lang)) + (u.castigo ? ' · ⚠️ ' + (lang === 'en' ? 'slow on UNA +' : 'tardó en presionar UNA +') + u.castigo : '') :
-        u.accion === 'robar' ? (lang === 'en' ? 'draws' : 'roba') + (u.auto ? ' ⏰' : '') + (u.j === yo && !u.auto && st.manos[yo].length ? ' · 🆕 ' + escapeHtml(unaNombre(UNA_CARTAS[st.manos[yo][st.manos[yo].length - 1]], lang)) : '') : (lang === 'en' ? 'passes' : 'pasa') + (u.auto ? ' ⏰' : ''));
+        u.accion === 'robar' ? (u.j === yo ? escapeHtml(Una.avisoRobo(u.robadas.length, u.auto ? null : u.jugable, lang)) + (u.auto ? ' ⏰' : '') + (!u.auto && u.jugable !== null ? ' · 🆕 ' + escapeHtml(unaNombre(UNA_CARTAS[u.jugable], lang)) : '') // basta-divertida-una-robo
+          : (lang === 'en' ? 'draws ' : 'roba ') + u.robadas.length + (u.auto ? ' ⏰' : '')) : (lang === 'en' ? 'passes' : 'pasa') + (u.auto ? ' ⏰' : ''));
     const mano = yo >= 0 ? st.manos[yo] : [];
     const jugable = id => miTurno && st.valida(id) && (st.pendiente === null || st.pendiente === id);
+    // basta-divertida-una-robo: las cartas que robé se animan al llegar, una sola vez por paso.
+    const robadasMias = u && u.accion === 'robar' && u.j === yo && sala.unaAnimado !== u.paso ? u.robadas : [];
+    if (robadasMias.length) sala.unaAnimado = u.paso;
+    const anim = id => { const k = robadasMias.indexOf(id); return k < 0 ? '' : ' nueva" style="--k:' + k; };
     body.innerHTML =
       '<div class="una-bots">' + st.orden.map((p, j) => j === yo ? '' : '<div class="una-bot' + (st.turno === j ? ' activo' : '') + '"><span>' + avatarHtml(p.avatar, 20) + ' ' + escapeHtml(p.nombre) + '</span><span>🂠 × ' + st.manos[j].length +
         (st.manos[j].length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
@@ -3481,7 +3516,7 @@
         : miUna ? '📣 ' + (lang === 'en' ? 'Press UNA now! ' : '¡Presiona UNA ya! ') + '<b id="una-cuenta">' + quedaUna.toFixed(1) + '</b> s'
         : st.esperaUna ? '⏳ ' + escapeHtml(st.orden[st.esperaUna.j].nombre) + (lang === 'en' ? ' must press UNA…' : ' debe presionar UNA…')
         : (miTurno ? '👉 ' + escapeHtml(T.tu) : '⏳ ' + escapeHtml(st.orden[st.turno].nombre)) + ' · ' + ult) + '</div>' +
-      '<div class="una-mano">' + mano.map(id => '<button class="una-btn' + (st.pendiente === id && miTurno ? ' robada' : '') + '" data-usala-carta="' + id + '"' + (jugable(id) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(unaNombre(UNA_CARTAS[id], lang)) + '">' + unaCartaHtml(UNA_CARTAS[id], jugable(id) ? ' jugable' : '') + '</button>').join('') + '</div>' +
+      '<div class="una-mano">' + mano.map(id => '<button class="una-btn' + (st.pendiente === id && miTurno ? ' robada' : '') + anim(id) + '" data-usala-carta="' + id + '"' + (jugable(id) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(unaNombre(UNA_CARTAS[id], lang)) + '">' + unaCartaHtml(UNA_CARTAS[id], jugable(id) ? ' jugable' : '') + '</button>').join('') + '</div>' +
       '<div class="row-btns">' + (miTurno && (st.pendiente !== null || (!st.hayParaRobar() && !mano.some(st.valida))) ? '<button class="btn ghost" data-usala="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
       ((sala.unaLocal ? !sala.unaLocal.presionado : miUna) ? '<button class="btn una-grito pulsa" data-usala="una">📣 ' + escapeHtml(T.una) + '</button>' : (sala.unaLocal && sala.unaLocal.presionado && (miUna || !sala.unaLocal.enviado) ? '<span class="feedback ok">📣 ¡UNA!</span>' : '')) + '</div>' +
       '<div class="row-btns" style="margin-top:6px"><button class="btn ghost sm" data-usala-lang="es" aria-pressed="' + (lang === 'es') + '">🇲🇽 Español</button><button class="btn ghost sm" data-usala-lang="en" aria-pressed="' + (lang === 'en') + '">🇺🇸 English</button></div>';
@@ -3871,7 +3906,7 @@
 
   async function crearPartida() {
     const juego = document.getElementById('p-juego').value;
-    const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'cultura-linea' ? { cat: document.getElementById('p-ltema').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
+    const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'cultura-linea' ? { cat: document.getElementById('p-ltema').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value, extra: [...document.querySelectorAll('[data-pextra]:checked')].map(x => x.dataset.pextra) } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
     Object.assign(opciones, ClasicosRapidosUI.opcionesCrear(juego)); // clasicos-rapidos: modo del Ahorcado
     Object.assign(opciones, SalasGrandes.opciones(juego)); // juegos-salas-grandes
     const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
@@ -4156,6 +4191,7 @@
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') SalasGrandes.formulario(e.target.value); }); // juegos-salas-grandes
   // cultura-conocimiento: el tema de la Línea del tiempo solo se ve al elegirla.
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-ltema-wrap').hidden = e.target.value !== 'cultura-linea'; });
+  app.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.pextra) limitarExtras(e.target, 'pextra', 'p-extra-aviso'); }); // basta-divertida-una-robo
   app.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
   });

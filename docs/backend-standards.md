@@ -145,6 +145,9 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       cambio `juegos-fusion`) responden 400 `juego_no_permitido`, pero siguen en el catálogo para conservar sus
       puntos.
     `opciones.rondas` va en Basta (`5`, `10` por defecto o `12`; otro valor → 400 `rondas_invalidas`).
+    `opciones.extra` va en Basta (cambio `basta-divertida-una-robo`): arreglo o texto `"a,b"` con hasta
+    `MAX_EXTRAS_BASTA` (2) ids de `EXTRAS_BASTA`, sin repetir; se guarda como `"a,b"` y la revancha lo hereda.
+    Un id desconocido, repetido o más de 2 → 400 `extras_invalidas`.
     `opciones.tema` va en `en-frases` (`todo` por defecto, `tobe`, `presente`, `pasado` o `futuro`; otro valor → 400
     `tema_invalido`); los demás juegos lo ignoran.
     `opciones.modo` va en Lotería (`linea` o `llena`), y `respuesta` con `{ loteria: true }` guarda la hora
@@ -152,6 +155,8 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
   - ¡Una! (`una`): `respuesta` con `{ jugada: { n, accion, carta?, color?, una? } }` se guarda con `t`
     (hora del servidor). Si otro jugador ya tiene ese paso `n`, responde 409 `turno_tomado`. El servidor
     no reproduce la partida: la reconstruye cada cliente con la semilla.
+    `robar` y `pasar` no llevan `carta` ni `color` (si los traen → 400 `jugada_invalida`): `robar` = robar hasta poder
+    tirar, y las cartas salen del mazo de la semilla (cambio `basta-divertida-una-robo`).
     `{ una: { paso } }` guarda `unas[]` `{ paso, t }`, el botón UNA. El castigo por segundos se calcula al
     reproducir: ≤ 2 s 0, ≤ 3 s 1, ≤ 4 s 2, ≤ 5 s 3 y sin UNA 4.
   - `validarJugada(juego, jugada)` valida cada juego por turnos y guarda solo los campos permitidos (cambio
