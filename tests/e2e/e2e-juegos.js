@@ -32,7 +32,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   await p.goto(BASE + '/juegos.html' + Q);
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
   const nJuegos = await p.evaluate(() => JUEGOS.length);
-  ok('hub: todos los juegos de la página (fusión del Sprint 4, Máquina del tiempo, Arcade, clásicos rápidos y tablero) en 6 categorías', (await p.$$('[data-juego]')).length === nJuegos && nJuegos >= 33 && (await p.$$('main h2')).length === 6, String(nJuegos));
+  ok('hub: todos los juegos de la página (fusión del Sprint 4, Máquina del tiempo, Arcade, clásicos rápidos, tablero y salas grandes) en 6 categorías', (await p.$$('[data-juego]')).length === nJuegos && nJuegos >= 36 && (await p.$$('main h2')).length === 6, String(nJuegos));
   const arcade = await p.$$eval('.cat-arcade[data-juego]', xs => xs.map(x => x.dataset.juego));
   ok('hub: Arcade con Axo, Karts y Dragon Run (dragon-run-misiones)', ['plataformas', 'karts', 'dragon-run'].every(id => arcade.includes(id)) && !(await p.$('.cat-mente[data-juego="dragon-run"]')), arcade.join(','));
   ok('chip con el nombre', (await p.textContent('#chip')).includes('Marisol'));

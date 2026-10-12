@@ -195,6 +195,11 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
 - `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots, canal? }` (en las
   carreras de Arcade, `opciones.mapa` = nivel o pista; el archivo de cada jugador lleva `carrera: { ms, monedas, t }`) y
   `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta?, rondasBasta?, v? }`.
+  Juegos para salas grandes (`juegos-salas-grandes`): `sala.opciones.figura` (Bingo: `linea`|`esquinas`|`lleno`),
+  `sala.opciones.gana` (Memorama: `tiempo`|`errores`) y `sala.secreto` (Dibuja: hex de 24, se crea al empezar; de él sale
+  la palabra de cada turno y nunca se envía). Por jugador: `bingo?: { t, n }`, `bingoFalsos?`, `dibujo?: { turno,
+  trazos: [{ c, g, p }], t }` (solo quien dibuja), `aciertos?: { "<turno>": { t, pts } }`, `intentos?: [{ turno,
+  texto? | casi: true, t }]` (últimos 20) y `resultado?: { ms, fin, errores?, pares?, encontradas?, t }`. Sin correos.
   - `canal`: topic secreto de Supabase Realtime; nunca sale en las respuestas. `v`: versión del jugador, sube en
     cada guardado (cambio `salas-realtime`).
   - En Basta por rondas (`opciones.rondas`: 5, 10 o 12), `rondasBasta{ <ronda>: { palabras, basta? } }`.

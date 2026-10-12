@@ -9,6 +9,8 @@ import { type Carrera, CARRERAS, mapaDeSala, validarCarrera } from "./carreras.t
 import * as Clasicos from "./clasicos_rapidos.ts";
 import { JUEGOS_TABLERO, validarJugadaTablero, vistaJugadores } from "./tablero.ts"; // juegos-tablero
 import { respuestaNaval } from "./naval.ts"; // juegos-tablero
+// juegos-salas-grandes: Bingo, Blackjack, Dibuja y adivina, y Memorama y Sopa en partida
+import * as Grandes from "./salas_grandes.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -19,6 +21,7 @@ export const JUEGOS_PARTIDA = new Set([
   "en-tiempos", // ⏳ Máquina del tiempo (openspec: juegos-ingles-gramatica)
   "plataformas", "karts", // carreras de Arcade (openspec: juegos-plataformas-karts)
   ...JUEGOS_TABLERO, // juegos-tablero: damas, domino, parchis y naval
+  ...Grandes.JUEGOS_GRANDES, // juegos-salas-grandes
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
@@ -45,6 +48,7 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
     if (!ACCIONES_POKER.includes(accion) || j.carta !== undefined || (j.monto !== undefined && !montoOk) || (accion === "subir" && j.monto === undefined)) return null;
     return { ...base, ...(j.monto !== undefined ? { monto: j.monto as number } : {}) };
   }
+  if (juego === "blackjack") return Grandes.validarJugadaBlackjack(j, base); // juegos-salas-grandes
   if (juego === "ajedrez") { // openspec: ajedrez
     if (accion === "rendirse") return base;
     const casilla = (x: unknown) => typeof x === "string" && /^[a-h][1-8]$/.test(x);
@@ -87,6 +91,12 @@ export const MESAS: Record<string, Mesa> = {
   domino: { max: 4, asientos: 4, min: 2 },
   parchis: { max: 4, asientos: 4, min: 2 },
   naval: { max: 2, min: 2, bots: "nunca" },
+  // juegos-salas-grandes
+  bingo: { max: 30, min: 1 },
+  blackjack: { max: 6, asientos: 3, min: 1 }, // la banca no ocupa asiento
+  dibuja: { max: 12, min: 3, bots: "nunca" }, // los bots no dibujan
+  "en-memorama": { max: 30, min: 1 },
+  "mente-sopa": { max: 30, min: 1 },
 };
 const cupo = (juego: string) => MESAS[juego]?.max ?? MAX_JUGADORES;
 const botsFijos = (juego: string) => MESAS[juego]?.bots === "siempre" ? true : MESAS[juego]?.bots === "nunca" ? false : undefined;
@@ -112,9 +122,10 @@ interface Sala {
   canal?: string; // topic secreto de Supabase Realtime (openspec: salas-realtime); nunca va en el cuerpo de la sala
   siguiente?: string; // revancha: código de la sala nueva (openspec: revancha-partidas)
   siguienteHost?: string; // revancha: id de quien la abrió (anfitrión de la sala nueva)
+  secreto?: string; // juegos-salas-grandes: Dibuja; nunca sale del servidor (sinCanal lo quita)
 }
 
-interface EnSala {
+interface EnSala extends Grandes.JugadorGrande { // juegos-salas-grandes: bingo, dibujo, aciertos, intentos, resultado
   id: string;
   nombre: string;
   tipo: Jugador["tipo"];
@@ -244,7 +255,7 @@ async function reservarRevancha(store: Store, codigo: string, jugador: Jugador, 
 
 // sub: "" (crear) o "/<código>[/unirse|/empezar|/respuesta|/revancha]"
 // La sala que se devuelve o se publica, sin el canal secreto.
-const sinCanal = (s: Sala): Sala => { const { canal: _c, ...resto } = s; return resto; };
+const sinCanal = (s: Sala): Sala => { const { canal: _c, secreto: _s, ...resto } = s; return resto; }; // juegos-salas-grandes: sin secreto
 
 export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string, rt?: ConfigRealtime): Promise<Response> {
   const ahora = Date.parse(ahoraIso);
@@ -286,6 +297,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (typeof o === "string") return json({ error: o }, 400);
       Object.assign(opciones, o);
     }
+    { const e = Grandes.opcionesGrandes(juego, op, opciones); if (e) return json({ error: e }, 400); } // juegos-salas-grandes
     const codigo = await codigoLibre(store);
     if (!codigo) return json({ error: "sin_codigo" }, 503);
     const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: botsFijos(juego) ?? body.bots !== false, canal: canalNuevo() };
@@ -321,7 +333,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
     if (sala.inicio === null) {
       const doc = await store.get<Sala>(ruta(codigo));
-      const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS };
+      const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc!.data, canalNuevo) }; // + secreto de Dibuja
       await store.put(ruta(codigo), nueva, doc!.sha, `sala ${codigo}: empieza`);
       cache.delete(codigo);
       await publicar();
@@ -333,11 +345,18 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (accion === "respuesta" && req.method === "POST") {
     if (!dentro) return json({ error: "no_en_sala" }, 403);
     if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
+    // juegos-salas-grandes: ¡Bingo!, trazo y adivina de Dibuja, y resultado de Memorama y Sopa
+    const grande = Grandes.respuestaGrande(sala, jugadores, jugador.id, body, ahora);
+    if (grande && "error" in grande) {
+      if (grande.cambiar && await guardarJugador(store, codigo, jugador, grande.cambiar, ahora)) await publicar();
+      return json({ error: grande.error }, grande.status);
+    }
     let cambiar: (e: EnSala) => EnSala;
     // juegos-tablero: Batalla naval guarda la flota y resuelve cada disparo en el servidor (server/naval.ts).
     const naval = sala.juego === "naval" ? respuestaNaval(sala.inicio, jugadores, jugador.id, body, ahora) : null;
     if (naval && "error" in naval) return json({ error: naval.error }, naval.status);
     if (naval) cambiar = naval.cambiar;
+    else if (grande) cambiar = grande.cambiar;
     else if (body.una !== undefined && body.jugada === undefined) {
       const paso = Number((body.una as Record<string, unknown>)?.paso);
       if (!Number.isInteger(paso) || paso < 0 || paso > 2000) return json({ error: "una_invalida" }, 400);
@@ -390,7 +409,8 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
     if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
     await publicar();
-    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas });
+    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas,
+      ...(grande ? { ...grande.respuesta, bingo: nuevo.bingo, resultado: nuevo.resultado } : {}) }); // juegos-salas-grandes
   }
 
   // POST /juegos/sala/<código>/revancha → { codigo } de la sala nueva, con quien la pidió dentro.
@@ -417,7 +437,8 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (!accion && req.method === "GET") {
     if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
     const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
-    return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo }); // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota
+    return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
+      ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora) }); // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
   }
 
   return json({ error: "metodo_no_permitido" }, 405);

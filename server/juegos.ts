@@ -179,6 +179,10 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "domino": { categoria: "clasicos", titulo: "Dominó", max: 1000 },
   "parchis": { categoria: "clasicos", titulo: "Parchís", max: 1000 },
   "naval": { categoria: "mente", titulo: "Batalla naval", max: 1000 },
+  // juegos-salas-grandes
+  "bingo": { categoria: "clasicos", titulo: "Bingo", max: 1000 },
+  "blackjack": { categoria: "clasicos", titulo: "Blackjack (21)", max: 1000 },
+  "dibuja": { categoria: "ingles", titulo: "Dibuja y adivina", max: 1000 },
 };
 
 const LIMITE_DIARIO = 100;
