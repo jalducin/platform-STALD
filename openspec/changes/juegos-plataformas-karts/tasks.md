@@ -4,16 +4,16 @@
 
 ## 1. Servidor: progreso individual (TDD)
 
-- [ ] 1.1 Pruebas que fallan en `server/progreso_test.ts`: GET vacío, PUT y GET, versión vieja (409), forma y tamaño
+- [x] 1.1 Pruebas que fallan en `server/progreso_test.ts`: GET vacío, PUT y GET, versión vieja (409), forma y tamaño
   inválidos (400/413), juego sin progreso, método no permitido, aislamiento por jugador y sin registro (403)
-- [ ] 1.2 `server/progreso.ts` (validadores de `plataformas` y `karts`, escritura condicional) y la ruta
+- [x] 1.2 `server/progreso.ts` (validadores de `plataformas` y `karts`, escritura condicional) y la ruta
   `/juegos/progreso/<juego>` en `server/juegos.ts`; `plataformas` y `karts` en `CATALOGO` (`arcade`, tope 2000)
 
 ## 2. Servidor: carreras en sala (TDD)
 
-- [ ] 2.1 Pruebas que fallan en `server/carreras_test.ts`: crear sala de `plataformas`/`karts`, enviar tiempo,
+- [x] 2.1 Pruebas que fallan en `server/carreras_test.ts`: crear sala de `plataformas`/`karts`, enviar tiempo,
   solo cuenta el primero, mínimos y límites, tiempo que no cuadra con el reloj, `ms: null`, antes de empezar (409)
-- [ ] 2.2 `server/carreras.ts` y el campo `carrera` en `server/salas.ts` (cambio localizado)
+- [x] 2.2 `server/carreras.ts` y el campo `carrera` en `server/salas.ts` (cambio localizado)
 
 ## 3. Módulo compartido
 

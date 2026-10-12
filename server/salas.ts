@@ -4,6 +4,7 @@
 import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
 import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realtime.ts";
+import { type Carrera, validarCarrera } from "./carreras.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -11,6 +12,7 @@ type Json = (body: unknown, status?: number) => Response;
 // es-acentos, es-sinonimos y mente-secuencias (sus puntos anteriores siguen en el catálogo).
 export const JUEGOS_PARTIDA = new Set([
   "en-vocab", "en-frases", "es-ortografia", "cultura", "mente-calculo", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
+  "plataformas", "karts", // carreras de Arcade (openspec: juegos-plataformas-karts)
 ]);
 const ACCIONES_POKER = ["retirarse", "pasar", "igualar", "subir", "todo"]; // openspec: poker
 const FICHA_POKER = 5; // la ficha más chica; igual que Cartas.FICHA en juegos/cartas.js (openspec: poker-fichas)
@@ -86,6 +88,7 @@ interface EnSala {
   loteria?: number; // hora del servidor del primer "¡Lotería!"
   unas?: { paso: number; t: number }[]; // ¡Una!: botón UNA por paso
   jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number | string; de?: string; promo?: string; t: number }[]; // juegos por turnos
+  carrera?: Carrera & { t: number }; // Arcade: tiempo de la carrera, solo el primer envío (openspec: juegos-plataformas-karts)
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
   v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
@@ -255,6 +258,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409);
       const nueva = { ...v, t: ahora };
       cambiar = (e) => (e.jugadas || []).some((y) => y.n === n) ? e : { ...e, jugadas: [...(e.jugadas || []), nueva].slice(-600) };
+    } else if (body.carrera !== undefined) {
+      // Carreras de Arcade (server/carreras.ts): tiempo validado con el reloj del servidor; solo cuenta el primero.
+      const c = validarCarrera(sala.juego, body.carrera, sala.inicio, ahora);
+      if (!c) return json({ error: "carrera_invalida" }, 400);
+      cambiar = (e) => e.carrera ? e : { ...e, carrera: { ...c, t: ahora } };
     } else if (body.loteria === true) {
       cambiar = (e) => e.loteria ? e : { ...e, loteria: ahora };
     } else if (body.final !== undefined || body.podio !== undefined) {

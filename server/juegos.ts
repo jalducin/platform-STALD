@@ -5,6 +5,7 @@ import { mxToday, slugAlumno } from "./motor.ts";
 import { decodeBase64 } from "jsr:@std/encoding@1/base64";
 import type { Doc, Store } from "./store.ts";
 import { handleSalas, resumenSalas } from "./salas.ts";
+import { handleProgreso } from "./progreso.ts";
 import type { ConfigRealtime } from "./realtime.ts";
 import { armarJugadores, type Cuenta } from "./jugadores.ts";
 import { crearMemo } from "./cache.ts";
@@ -168,6 +169,8 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "poker": { categoria: "clasicos", titulo: "Póker Texas Hold'em", max: 1000 }, // openspec: poker
   "brisca": { categoria: "clasicos", titulo: "Brisca", max: 1000 }, // openspec: cartas-espanolas
   "conquian": { categoria: "clasicos", titulo: "Conquián", max: 1000 },
+  "plataformas": { categoria: "arcade", titulo: "Axo y los 12 mundos", max: 2000 }, // openspec: juegos-plataformas-karts
+  "karts": { categoria: "arcade", titulo: "Karts Turbo", max: 2000 },
 };
 
 const LIMITE_DIARIO = 100;
@@ -400,6 +403,9 @@ async function rutasDeJugador(req: Request, sub: string, jugador: Jugador, deps:
 
   // /juegos/sala… → partidas multijugador (server/salas.ts)
   if (sub === "/sala" || sub.startsWith("/sala/")) return await handleSalas(req, sub.slice("/sala".length), jugador, store, ahora, json, lunes, deps.realtime);
+
+  // GET/PUT /juegos/progreso/<juego> → avance individual de los juegos de Arcade (server/progreso.ts)
+  if (sub.startsWith("/progreso/")) return await handleProgreso(req, sub.slice("/progreso".length), jugador, store, ahora, json);
 
   // GET /juegos/admin/resumen → jugadores y partidas de la semana (solo admin, sin correos)
   if (sub === "/admin/resumen" && req.method === "GET") {
