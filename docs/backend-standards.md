@@ -223,6 +223,21 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     caracteres. La revisión muestra lo reconocido y la frase.
   - El patrón de la ruta del profe incluye el viernes (pronunciación).
 
+**Ordenar y emparejar** (`server/motor.ts`, cambio `ejercicios-ordenar-emparejar`):
+  - `publicQuestion(e, semilla)`: `server/actividades.ts` pasa `"<id>|<slug o admin>|<intento>"`. `ordenar` publica
+    `fichas` (`palabras` + `distractores`) y `emparejar` publica `izquierda` en orden y `derecha` barajada. Ambas se
+    barajan con `mulberry32(hashSeed(semilla|id))` y nunca quedan en el orden correcto (si coincide, se rota una
+    posición). Nunca salen `palabras`, `distractores`, `aceptadas` ni `pares`.
+  - `ordenar`: la respuesta es un texto (≤ 300). Es correcta si `normalizeText` coincide con `palabras` unidas o con
+    una de `aceptadas`.
+  - `emparejar`: la respuesta es un arreglo del largo exacto de `pares`, con `""` (sin unir) u opciones de la
+    derecha, y al menos un par. Si no cumple, se descarta completa. Es correcta solo si coinciden todos los pares.
+  - Revisión: `ordenar` muestra lo armado y la oración correcta; `emparejar`, `"this → este / esta · that → — · …"`
+    con los pares propios y los correctos.
+  - `validateItem` revisa:
+    - `ordenar`: al menos 2 `palabras`, sin fichas repetidas entre `palabras` y `distractores`;
+    - `emparejar`: de 3 a 6 pares de 2 textos, sin textos repetidos en un mismo lado.
+
 **Ruta `/ingles/profe/actividades[/<id>]`** (`handleProfe` en `server/actividades.ts`, cambio `ruta-profe`):
   - solo admin (si no, 403); atiende al admin como el alumno "Profe" (estado, intentos, corrección y guardado);
   - usa el ámbito `AMBITO_PROFE` (`contenido/profe/`); el listado agrega `plan`;

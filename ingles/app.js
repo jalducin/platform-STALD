@@ -125,6 +125,9 @@ function onClick(e) {
   if (act === 'tts') { e.preventDefault(); hablar(b.dataset.texto, !!b.dataset.lento); }
   if (act === 'grabar') { e.preventDefault(); grabarPron(b); }
   if (act === 'auto') { e.preventDefault(); const q = b.closest('.q'); const okv = b.dataset.valor === 'auto:ok'; ponerRespuestaPron(q, b.dataset.valor, okv ? '✔ Marcaste que te salió bien' : '↺ Marcaste que necesitas repetir', okv); }
+  if (act === 'ficha') { e.preventDefault(); ordenarMover(b); }
+  if (act === 'ord-borrar') { e.preventDefault(); ordenarBorrar(b); }
+  if (act === 'emp') { e.preventDefault(); empClick(b); }
   if (act === 'abrir-item') { e.preventDefault(); if (cajonEl.open) cajonEl.close(); openItem(b.dataset.id, b.dataset.alumno); }
   if (act === 'ver-resultado') {
     const it = ((state.act && state.act.items) || []).find(x => x.id === b.dataset.id);
