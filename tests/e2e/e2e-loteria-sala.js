@@ -10,7 +10,7 @@ const jugador = (b, email) => abrirPagina(b, { email, viejo: true, tiempo: 0.2, 
   const host = await jugador(b, 'marisol@example.com');
   // Responde en inglés (solitario)
   ok('catálogo: Completa y responde', !!(await host.$('[data-juego="en-frases"]')));
-  await host.click('[data-juego="en-frases"]'); await host.waitForSelector('.opt');
+  await host.click('[data-juego="en-frases"]'); await host.waitForSelector('[data-tema="todo"]'); await host.click('[data-tema="todo"]'); await host.waitForSelector('[data-opt]'); // selector de tema (juegos-ingles-gramatica)
   const q = await host.textContent('.q-card .q');
   ok('pregunta en inglés con traducción', /\?|!|\./.test(q) && (await host.textContent('.q-card .sub')).length > 3, q);
   await host.screenshot({ path: 'preguntas-en.png' });
