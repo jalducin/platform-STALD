@@ -31,7 +31,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   let p = await nuevaPagina(b, 'marisol@example.com');
   await p.goto(BASE + '/juegos.html' + Q);
   await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  ok('hub: 24 juegos (fusión del Sprint 4, Máquina del tiempo y Arcade) en 6 categorías', (await p.$$('[data-juego]')).length === 24 && (await p.$$('main h2')).length === 6);
+  ok('hub: 29 juegos (fusión del Sprint 4, Máquina del tiempo, Arcade y clásicos rápidos) en 6 categorías', (await p.$$('[data-juego]')).length === 29 && (await p.$$('main h2')).length === 6);
   const arcade = await p.$$eval('.cat-arcade[data-juego]', xs => xs.map(x => x.dataset.juego));
   ok('hub: Arcade con Axo, Karts y Dragon Run (dragon-run-misiones)', ['plataformas', 'karts', 'dragon-run'].every(id => arcade.includes(id)) && !(await p.$('.cat-mente[data-juego="dragon-run"]')), arcade.join(','));
   ok('chip con el nombre', (await p.textContent('#chip')).includes('Marisol'));

@@ -10,6 +10,7 @@ import type { ConfigRealtime } from "./realtime.ts";
 import { armarJugadores, type Cuenta } from "./jugadores.ts";
 import { crearMemo } from "./cache.ts";
 import { leerCarpeta } from "./db.ts";
+import { CATALOGO_CLASICOS_RAPIDOS } from "./clasicos_rapidos.ts"; // clasicos-rapidos
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -176,6 +177,7 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
 };
 
 const LIMITE_DIARIO = 100;
+Object.assign(CATALOGO, CATALOGO_CLASICOS_RAPIDOS); // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes
 const MAX_PARTIDAS_GUARDADAS = 1000; // los totales salen del historial: 7 días × 100 al día caben
 const MAX_SALA = 10_000; // tope por partida de sala (como el total final de la sala)
 const MAX_INVITADOS = 500;

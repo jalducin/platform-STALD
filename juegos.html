@@ -488,6 +488,7 @@
   /* Durante una partida, sin «jalar para recargar» en el celular (openspec: juegos-recarga). */
   html.jugando, html.jugando body { overscroll-behavior-y: contain; }
 </style>
+<link rel="stylesheet" href="juegos/clasicos-rapidos.css?v=1"> <!-- clasicos-rapidos -->
 </head>
 <body>
 <!-- Baraja española (openspec: cartas-espanolas-diseno): palos es-s0..3 (oros, copas, espadas, bastos) y figuras es-f10..12 (sota, caballo, rey). -->
@@ -517,6 +518,8 @@
 <script src="juegos/cartas.js?v=3"></script>
 <script src="juegos/mesas.js?v=1"></script> <!-- mesas de las partidas (openspec: mesas-con-bots) -->
 <script src="juegos/ajedrez.js?v=1"></script>
+<script src="juegos/clasicos-rapidos.js?v=1"></script> <!-- clasicos-rapidos: reglas -->
+<script src="juegos/clasicos-rapidos-ui.js?v=1"></script> <!-- clasicos-rapidos: interfaz -->
 <script src="juegos/arcade.js?v=1"></script>
 <script src="juegos/ingles-gramatica.js?v=1"></script>
 <script src="comun/auth.js?v=7"></script>
@@ -681,6 +684,7 @@
     { id: 'karts', cat: 'arcade', emoji: '🏎️', t: 'Karts Turbo', d: 'Carreras: derrapa, usa ítems y gana la copa contra 7 rivales.', jugar: () => jugarArcade('karts') },
     { id: 'dragon-run', cat: 'arcade', emoji: '🐉', t: 'Dragon Run', d: 'Corre, salta (¡doble salto!), cumple misiones y llega al castillo.', jugar: () => jugarDragonRun() }, // openspec: dragon-run-misiones
   ];
+  JUEGOS.push(...ClasicosRapidosUI.TARJETAS); // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
 
   // ---------- Sesión ----------
@@ -2737,6 +2741,7 @@
   const ahoraServidor = () => Date.now() + sala.offset;
 
   const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker', 'brisca', 'conquian', 'ajedrez']);
+  ClasicosRapidosUI.IDS.forEach(id => { JUEGOS_PARTIDA.push(id); TIEMPO_REAL.add(id); }); // clasicos-rapidos
 
   // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
   // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -2902,6 +2907,7 @@
     if (s.juego === 'poker') return pintarPokerSala(body);
     if (s.juego === 'brisca' || s.juego === 'conquian') return pintarCartasSala(body, s.juego);
     if (s.juego === 'ajedrez') return pintarAjedrezSala(body);
+    if (ClasicosRapidosUI.IDS.includes(s.juego)) return ClasicosRapidosUI.pintarSala(body); // clasicos-rapidos
     if (ARCADE.has(s.juego)) return pintarArcadeSala(body);
     return pintarPreguntaSala(body);
   }
@@ -3810,6 +3816,7 @@
   async function crearPartida() {
     const juego = document.getElementById('p-juego').value;
     const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
+    Object.assign(opciones, ClasicosRapidosUI.opcionesCrear(juego)); // clasicos-rapidos: modo del Ahorcado
     const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
     if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     entrarSala(r.body.codigo);
@@ -4026,6 +4033,7 @@
       '<h3>Cómo lo haces aquí</h3><ul><li>Toca cartas de tu mano para seleccionarlas (suben).</li><li>Toca uno de tus juegos bajados si quieres agregarle cartas (se marca como destino).</li><li>Usa ✅ Tomar y bajar, ⬇️ Bajar juego, 🗑️ Descartar (1 carta seleccionada) o 🙅 No la quiero.</li></ul>' +
       '<p>Empiezas con 8 cartas: para ganar necesitas bajar las 8 más la que tomes (9). Si se acaba el mazo, es empate.</p>',
   };
+  Object.assign(AYUDA, ClasicosRapidosUI.AYUDA); // clasicos-rapidos
   function ayuda(id) {
     const d = document.createElement('dialog'); d.className = 'ayuda'; d.setAttribute('aria-label', 'Cómo se juega');
     d.innerHTML = (AYUDA[id] || '<p>Pronto.</p>') + '<div class="row-btns"><button class="btn" data-cerrar-ayuda autofocus>Entendido</button></div>';
@@ -4050,7 +4058,7 @@
     const pa = e.target.closest('[data-p]');
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
-    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('♟️ Espera a que se una tu rival: el ajedrez en partida es 1 vs 1.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
+    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('👥 Faltan jugadores. Espera a que se una tu rival.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
     const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }

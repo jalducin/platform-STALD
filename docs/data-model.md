@@ -211,6 +211,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - En Ajedrez, `jugadas[]` `{ n, accion: "mover" | "rendirse", de?, a?, promo?, t }` y `opciones.reloj`
     (minutos por jugador, cambio `ajedrez`).
   - En Brisca, `jugadas[]` `{ n, accion: "jugar", carta, t }`. En Conquián, `jugadas[]` `{ n, accion, carta?, con?, a?, t }`.
+  - Clásicos rápidos (cambio `clasicos-rapidos`), `jugadas[]`: Gato `{ n, accion: "marcar", casilla, t }`, Conecta 4
+    `{ n, accion: "soltar", col, t }`, Piedra-papel-tijera `{ n: ronda, accion: "elegir" | "pasar", eleccion?, t }`,
+    Ahorcado `{ n, accion: "letra" | "pasar", letra?, t }` (con `opciones.modo` `compite` | `coop`) y Serpientes
+    `{ n, accion: "tirar", t }`. Las palabras del Ahorcado y el dado salen de la semilla.
     El mazo sale de la semilla (`brisca-mazo` y `conquian-mazo`), según el cambio `cartas-espanolas`.
   - En Lotería, `loteria` guarda la hora del primer grito. Las tablas y el orden de las cartas salen de
     la semilla.

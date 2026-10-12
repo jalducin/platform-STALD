@@ -10,6 +10,12 @@
   const MESAS = {
     ajedrez: { max: 2, min: 2, bots: 'nunca' },
     brisca: { max: 4, asientos: 4, min: 4, bots: 'siempre' },
+    // clasicos-rapidos (misma tabla que server/salas.ts)
+    gato: { max: 2, asientos: 2, min: 2 },
+    conecta4: { max: 2, asientos: 2, min: 2 },
+    ppt: { max: 8, asientos: 4, min: 2 },
+    ahorcado: { max: 8, min: 1 },
+    serpientes: { max: 4, asientos: 4, min: 2 },
   };
   const de = juego => MESAS[juego] || null;
   // Lugares que ocupan los bots con `humanos` personas: solo en mesas con asientos y si la sala lleva bots.
