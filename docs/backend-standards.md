@@ -436,3 +436,15 @@ curl -s "$BASE/ingles/data?email=no-existe@example.com" | head -c 200 # rows: []
 ```
 
 Además, un correo de alumna asignada (sin escribirlo en el reporte: usar "alumna A") y el caso admin.
+
+## Mesas de las partidas (cambio `mesas-con-bots`)
+
+Cada juego de sala declara su mesa en `MESAS` de `server/salas.ts`, que debe ser igual a `juegos/mesas.js`:
+
+- `max`: cupo de personas; al llenarse, `sala_llena`.
+- `asientos`: lugares que se completan con bots; cada persona que entra quita un bot.
+- `min`: mínimo para empezar, contando personas y bots; si falta, `faltan_jugadores`.
+- `bots`: `siempre` o `nunca`; si se omite, lo decide quien crea la sala.
+
+`server/mesas_test.ts` comprueba que las dos tablas sean iguales. **Todo juego de sala nuevo agrega su renglón en los
+dos archivos.**

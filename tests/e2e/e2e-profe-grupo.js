@@ -36,7 +36,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok('vista del grupo sin bloque ni calificaciones de Profe', !(await g.$('details.student[data-alumno="Profe"]')) && !(await g.textContent('#ultimas')).includes('Profe'));
   // La alumna no ve nada nuevo
   const al = await (await fetch(API + '/ingles/actividades?email=marisol@example.com')).json();
-  ok('la alumna sigue viendo sus 6 elementos', al.items.length === 6 && !al.items.some(i => i.grupo), String(al.items.length));
+  // El domingo también llega la semana siguiente para adelantar (openspec: semana-desde-domingo): no cuenta aquí.
+  const sigIds = new Set(((al.semanaSiguiente || {}).ids) || []);
+  const propios = al.items.filter(i => !sigIds.has(i.id));
+  ok('la alumna sigue viendo sus 6 elementos (más la semana siguiente para adelantar)', propios.length === 6 && !al.items.some(i => i.grupo), propios.length + ' + ' + sigIds.size);
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 400)); process.exit(2); });

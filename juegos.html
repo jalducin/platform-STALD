@@ -515,6 +515,7 @@
 </div>
 
 <script src="juegos/cartas.js?v=3"></script>
+<script src="juegos/mesas.js?v=1"></script> <!-- mesas de las partidas (openspec: mesas-con-bots) -->
 <script src="juegos/ajedrez.js?v=1"></script>
 <script src="juegos/arcade.js?v=1"></script>
 <script src="juegos/ingles-gramatica.js?v=1"></script>
@@ -2845,10 +2846,13 @@
     const e = sala.estado;
     const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, rondasBasta: x.rondasBasta || {}, loteria: x.loteria }));
     const comoBot = b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b, avatar: b.avatar });
-    // Ajuste del profe: ajedrez 1 vs 1 solo entre personas; Brisca siempre entre 4 (se completa con bots).
-    if (e.sala.juego === 'ajedrez') return humanos.slice(0, 2);
-    if (e.sala.juego === 'brisca') { const h = humanos.slice(0, 4); return h.concat(BOTS.concat(BOT_EXTRA).slice(0, 4 - h.length).map(comoBot)); }
-    return e.sala.bots ? humanos.concat(BOTS.map(comoBot)) : humanos;
+    // Mesas (openspec: mesas-con-bots, juegos/mesas.js): con asientos, los bots completan los lugares libres y cada
+    // persona que entra quita un bot (Brisca: 3 personas + 1 bot); sin mesa, los bots se suman aparte.
+    const mesa = Mesas.de(e.sala.juego);
+    const h = mesa ? humanos.slice(0, mesa.max) : humanos;
+    const nb = Mesas.botsEnMesa(e.sala.juego, h.length, e.sala.bots);
+    if (nb !== null) return h.concat(BOTS.concat(BOT_EXTRA).slice(0, nb).map(comoBot));
+    return e.sala.bots && !(mesa && mesa.bots === 'nunca') ? h.concat(BOTS.map(comoBot)) : h;
   }
 
   function pintarSala() {
@@ -2874,10 +2878,12 @@
       '<div class="sub">Compártelo en el Meet o por WhatsApp · entran desde 🎮 Juegos → 👥 Partidas</div>' +
       '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
       '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
-      '<h2>👥 Jugadores (' + lista.length + ')</h2><ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
+      '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length)) + '</p>' : '') + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
         (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
       '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
-    if (sala.vista !== 'espera:' + lista.length + ':' + e.soyHost) { body.innerHTML = html; sala.vista = 'espera:' + lista.length + ':' + e.soyHost; pintarQr(document.getElementById('p-qr'), enlaceSala(e.sala.codigo)); }
+    // La clave cuenta personas y bots: en una mesa de 4, una persona nueva desplaza a un bot y la lista no cambia de largo.
+    const clave = 'espera:' + lista.map(x => x.id).join(',') + ':' + e.soyHost;
+    if (sala.vista !== clave) { body.innerHTML = html; sala.vista = clave; pintarQr(document.getElementById('p-qr'), enlaceSala(e.sala.codigo)); }
   }
 
   function totalesPreguntas(hasta) {
