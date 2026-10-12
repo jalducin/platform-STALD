@@ -215,6 +215,21 @@ Cada página debe manejar y mostrar de forma explícita:
     se copian las columnas visibles. En celular vertical el canvas crece a `VH` y el nivel se desplaza `OY`: el
     sobrante es cielo (donde va el HUD) y subsuelo, sin cambiar lo que se ve del nivel. Con `prefers-reduced-motion`
     no hay paralaje ni partículas. El mapa es una escena SVG en línea con los mismos botones `[data-nivel]`;
+  - **Personajes de Arcade** (cambio `personajes-xalli`; decisiones en su `design.md`): Xalli (el ajolote, antes
+    «Axo»; personaje por omisión), Itzae, Yahui y Xochiquetzal. Fuente única: `juegos/personajes.js`
+    (`Personajes.LISTA` con nombre, título, colores y partícula; `normalizar`, `preferencia`, `pintar(c, id, o)` de
+    perfil con las poses de Axo y `retrato(id, pose, poder)`), cargado con `<script src="personajes.js?v=1">`. La
+    elección vive en `localStorage.arcade_personaje` (compartida por Axo y Karts, como `arcade_sonido`; desconocida o
+    sin almacenamiento → `xalli`); **el progreso del servidor no cambia de forma**. Solo cosméticos: no tocan física,
+    choque, tiempos ni puntos. Axo: selector `#personajes [data-personaje]` en la portada, partícula `rastro`
+    (burbujas, glifos, hojas o pétalos; ninguna con movimiento reducido). Karts: selector `#menu-piloto` en el menú,
+    `spriteKart(personaje, color, num, vista, phi)` con la carrocería en los colores del personaje y los costados, el
+    número y el minimapa en el color de identidad del corredor (`k.color`; el del taller para la persona); cabeza del
+    piloto según la vista (`pintarCabeza`), cola de Yahui y niebla de Xochiquetzal; bots y fantasmas con los otros
+    3 personajes en orden fijo; estela del personaje con turbo. En una sala las otras personas no se dibujan, así que
+    el personaje no se manda. El título «Axo y los 12 mundos» y el id `plataformas` se conservan (renombrar el título
+    es una línea en `plataformas.html`, `juegos.html` y `server/juegos.ts`). Ganchos de prueba: `__plat.cajaJugador()`,
+    `__karts.cajaYo()`, `__karts.hojaPilotos()` y `personaje`/`personajes`/`rastro`/`estela` en `estado()`;
   - **música de fondo:** generada con WebAudio (Alegre, Relajante, Fiesta); empieza solo tras un gesto y
     baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el
