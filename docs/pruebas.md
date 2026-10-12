@@ -144,7 +144,7 @@ falso `Authorization: Bearer prueba:<correo>`:
 ## Análisis de calidad
 
 Mide desde la terminal los mismos avisos que SonarQube for IDE (SonarLint) muestra en el panel «Problemas» de VS Code,
-para saber si suben o bajan sin abrir cada archivo. Cambio de origen: `openspec/changes/calidad-sonar` (decisiones y
+para saber si suben o bajan sin abrir cada archivo. Cambio de origen: `openspec/changes/archive/2026-10-12-calidad-sonar` (decisiones y
 conteos antes/después en su `design.md` y su reporte).
 
 ```bash
