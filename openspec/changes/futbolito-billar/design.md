@@ -78,7 +78,8 @@ El juego vive en el iframe (como Arcade). `juegos.html`:
 - `jugada { jugada }` del iframe → `POST /respuesta { jugada }` y responde `jugada-ok { ok, error }`; con error el
   iframe se resincroniza con lo que diga el servidor;
 - `fin { gana, puntos, titulo, aciertos, total }` → `pintarFinalSala` con los puntos de cada lugar (topados a 1000) y
-  la revancha. El fin solo se acepta si el iframe ya reprodujo una partida terminada.
+  la revancha. El fin lo calcula el iframe con el motor (mismo origen y mismo código en todos los aparatos); el
+  servidor topa los puntos con el catálogo, como en los demás juegos de sala.
 - Sondeo de 2.5 s (`TIEMPO_REAL`) o Realtime.
 
 ### 6. Servidor

@@ -210,6 +210,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     sale de la semilla (`poker-mano-k`).
   - En Ajedrez, `jugadas[]` `{ n, accion: "mover" | "rendirse", de?, a?, promo?, t }` y `opciones.reloj`
     (minutos por jugador, cambio `ajedrez`).
+  - En Futbolito, `jugadas[]` `{ n, accion: "tiro" | "rendirse", pos?, angulo?, fuerza?, t }`; en Billar,
+    `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, efecto?, t }` (cambio `futbolito-billar`). El triángulo del
+    billar sale de la semilla (`billar-triangulo`); los tiros de bots y los automáticos, de `bot|<paso>` y `auto|<paso>`.
   - En Brisca, `jugadas[]` `{ n, accion: "jugar", carta, t }`. En Conquián, `jugadas[]` `{ n, accion, carta?, con?, a?, t }`.
     El mazo sale de la semilla (`brisca-mazo` y `conquian-mazo`), según el cambio `cartas-espanolas`.
   - En Lotería, `loteria` guarda la hora del primer grito. Las tablas y el orden de las cartas salen de

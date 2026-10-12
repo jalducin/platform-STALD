@@ -114,7 +114,8 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     - de preguntas: `en-vocab`, `en-frases`, `en-tiempos` (⏳ Máquina del tiempo, cambio `juegos-ingles-gramatica`;
       tope individual 2,000 en el catálogo), `es-ortografia`, `cultura` y `mente-calculo`;
     - Basta (es/en) y Lotería;
-    - ¡Una!, póker, Brisca, Conquián y ajedrez.
+    - ¡Una!, póker, Brisca, Conquián y ajedrez;
+    - Futbolito y Billar (cambio `futbolito-billar`), 1 vs 1 por tiros.
     - Los juegos absorbidos en el Sprint 4 (`en-preguntas`, `es-acentos`, `es-sinonimos` y `mente-secuencias`, del
       cambio `juegos-fusion`) responden 400 `juego_no_permitido`, pero siguen en el catálogo para conservar sus
       puntos.
@@ -134,6 +135,11 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       - `CUPO = { ajedrez: 2, brisca: 4 }`: si la sala ya está completa, quien intenta unirse recibe 409 `sala_llena`;
       - `BOTS_FIJOS`: el ajedrez se crea siempre con `bots: false` y la Brisca con `bots: true`;
       - el ajedrez no empieza con menos de 2 personas: 409 `faltan_jugadores`.
+    - Futbolito y Billar (cambio `futbolito-billar`): `{ n, accion: "rendirse" }` o un tiro con enteros —
+      Futbolito `{ n, accion: "tiro", pos −150…150, angulo −60…60, fuerza 10…100 }`; Billar `{ n, accion: "tiro",
+      angulo 0…3599 (décimas de grado), fuerza 1…100, efecto? −100…100 }`; los demás campos se descartan. Con algún
+      `final` o `podio` ya registrado, una jugada nueva responde 409 `partida_terminada` (solo en estos dos juegos).
+      El servidor no simula: cada cliente reproduce los tiros con los motores deterministas de `juegos/`.
     - Ajedrez (`ajedrez`, cambio `ajedrez`): acepta dos formas de jugada.
       - `{ n, accion: "mover", de, a, promo? }`, donde `de` y `a` son casillas `a1`–`h8` y `promo` es `q`, `r`, `b`
         o `n`.
@@ -178,7 +184,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     404 si no existe.
   - Solo admin: `GET /juegos/fotos` (lista activa) y `POST /juegos/fotos/quitar` `{ id }` (403 para el
     resto; 404 si ese jugador no tiene foto).
-- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú. `futbolito` ("Futbolito") y `billar` ("Billar bola 8"), categoría `arcade`, tope 1000 (cambio `futbolito-billar`). Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
 **CORS y peticiones** (cambio `ahorro-peticiones`): las páginas mandan los POST con `Content-Type: text/plain` (petición
@@ -446,5 +452,6 @@ Cada juego de sala declara su mesa en `MESAS` de `server/salas.ts`, que debe ser
 - `min`: mínimo para empezar, contando personas y bots; si falta, `faltan_jugadores`.
 - `bots`: `siempre` o `nunca`; si se omite, lo decide quien crea la sala.
 
+Futbolito y Billar (cambio `futbolito-billar`): `{ max: 2, asientos: 2, min: 2 }` (con bots, 1 persona + 1 bot).
 `server/mesas_test.ts` comprueba que las dos tablas sean iguales. **Todo juego de sala nuevo agrega su renglón en los
 dos archivos.**
