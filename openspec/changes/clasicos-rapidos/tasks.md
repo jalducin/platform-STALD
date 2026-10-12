@@ -27,31 +27,31 @@
 
 ## 4. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
-- [ ] 4.1 Conteo del menú en `e2e-juegos`, `e2e-fusion` y `e2e-clasicos`: 24 → 29 juegos (Clásicos 7 → 12)
-- [ ] 4.2 E2E nueva (con un caso de mesa: 1 persona + bots y, al entrar otra, un bot menos) `tests/e2e/e2e-clasicos-rapidos.js`, registrada en `tests/e2e/correr.sh` (fase `base`): cada juego
+- [x] 4.1 Conteo del menú en `e2e-juegos`, `e2e-fusion` y `e2e-clasicos`: 24 → 29 juegos (Clásicos 7 → 12); también `e2e-karts`
+- [x] 4.2 E2E nueva (con un caso de mesa: 1 persona + bots y, al entrar otra, un bot menos) `tests/e2e/e2e-clasicos-rapidos.js`, registrada en `tests/e2e/correr.sh` (fase `base`): cada juego
   en individual, Gato y Conecta 4 en sala con 2 personas, Piedra, papel o tijera con bots y capturas a 390 px
 
 ## 5. Pruebas y verificación de estado (OBLIGATORIO)
 
-- [ ] 5.1 `npx -y deno test -A server/`, `npx -y deno lint server/` y `npx -y deno check server/main.ts`
-- [ ] 5.2 E2E `clasicos-rapidos juegos fusion clasicos revancha ranking-juegos partidas ajedrez una-sala` con la copia
+- [x] 5.1 `npx -y deno test -A server/`, `npx -y deno lint server/` y `npx -y deno check server/main.ts`
+- [x] 5.2 E2E `clasicos-rapidos juegos fusion clasicos revancha ranking-juegos partidas ajedrez una-sala` con la copia
   de datos de prueba (la carpeta original no se modifica; `correr.sh` descarta su copia: estado restaurado)
-- [ ] 5.3 Revisar las capturas a 390 px de los 5 juegos
-- [ ] 5.4 Reporte `openspec/changes/clasicos-rapidos/reports/2026-10-11-step-5-pruebas-y-verificacion.md`
+- [x] 5.3 Revisar las capturas a 390 px de los 5 juegos
+- [x] 5.4 Reporte `openspec/changes/clasicos-rapidos/reports/2026-10-11-step-5-pruebas-y-verificacion.md`
 
 ## 6. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 `curl` contra un servidor local con una copia de datos: crear sala de cada juego, jugada válida e inválida,
+- [x] 6.1 `curl` contra un servidor local con una copia de datos: crear sala de cada juego, jugada válida e inválida,
   `ppt` oculto y revelado, sala llena, `faltan_jugadores`, modo inválido y sin sesión; restaurar (copia descartada)
 - [ ] 6.2 Tras el merge (usuario): redeploy y Pages; en producción, solo lectura: el inicio muestra los 5 juegos y
   `/juegos/yo` los lista en el catálogo
 
 ## 7. Documentación (OBLIGATORIO)
 
-- [ ] 7.1 `docs/backend-standards.md` (jugadas, mesas, ocultamiento, catálogo 29), `docs/data-model.md` (campos de
+- [x] 7.1 `docs/backend-standards.md` (jugadas, mesas, ocultamiento, catálogo 29), `docs/data-model.md` (campos de
   `jugadas[]` y `opciones.modo`) y `docs/frontend-standards.md` (módulos y ganchos)
 
 ## 8. Cierre
 
-- [ ] 8.1 `npx -y @fission-ai/openspec@1.4.1 validate clasicos-rapidos --strict`
+- [x] 8.1 `npx -y @fission-ai/openspec@1.4.1 validate clasicos-rapidos --strict`
 - [ ] 8.2 Tras el merge (usuario): `openspec archive clasicos-rapidos`
