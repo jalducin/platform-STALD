@@ -2,6 +2,7 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina, urlDe } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const BASE = process.env.BASE, API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
@@ -10,11 +11,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.03, viewport: { width: 390, height: 900 }, dialogos: 'aceptar' });
   const errores = []; p.on('pageerror', e => errores.push(e.message));
-  await p.goto(urlDe('/juegos.html')); await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.goto(urlDe('/juegos.html')); await p.waitForSelector('[data-menu]', { timeout: 60000 });
   const finales = [], acciones = { tomar: 0, extender: 0, bajar: 0, descartar: 0, pasar: 0 }; let invalidas = 0, atascos = 0;
   for (let partida = 0; partida < 4; partida++) {
-    await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]');
-    await p.click('[data-juego="conquian"]'); await p.click('[data-cq-go]'); await p.waitForSelector('.es-mano');
+    await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-menu]');
+    await abrirJuego(p, 'conquian'); await p.click('[data-cq-go]'); await p.waitForSelector('.es-mano');
     const t0 = Date.now(); let ultimo = Date.now(), prevHtml = '';
     while (Date.now() - t0 < 120000 && !(await p.$('.result h1'))) {
       const html = await p.$eval('#m-body', e => e.innerHTML.length + ':' + e.textContent.length).catch(() => '');

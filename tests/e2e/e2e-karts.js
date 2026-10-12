@@ -20,7 +20,7 @@
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
-const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
+const { contarMenu, abrirJuego, textoTarjeta } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const { PERSONAJES, contarColor, recorte } = require('./lib/personajes');
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
@@ -28,7 +28,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const EMAIL = 'angel@example.com';
 const TACTIL = { hasTouch: true, isMobile: true };
 const progreso = async () => (await fetch(API + '/juegos/progreso/karts?email=' + encodeURIComponent(EMAIL))).json();
-const abrir = (b, viewport, contexto, init) => abrirPagina(b, { email: EMAIL, viejo: true, viewport, contexto, init, out, ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-juego="karts"]' });
+const abrir = (b, viewport, contexto, init) => abrirPagina(b, { email: EMAIL, viejo: true, viewport, contexto, init, out, ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
 const marcoDe = async (p, raiz = '') => (await p.waitForSelector(raiz + ' #arcade-frame', { timeout: 30000 })).contentFrame();
 const estado = fr => fr.evaluate(() => window.__karts.estado());
 const r2 = v => Math.round(v * 100) / 100;
@@ -172,14 +172,14 @@ async function girarConCruceta(p, fr, nombre) {
 async function probarMando(b) {
   // ---- Celular 390×844 dentro de Juegos: elegir el mando, recordarlo y jugar con toques reales ----
   const cel = await abrir(b, { width: 390, height: 844 }, TACTIL);
-  await cel.tap('[data-juego="karts"]');
+  await abrirJuego(cel, 'karts', { tap: true });
   let fc = await marcoDe(cel);
   await fc.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   ok('mando: el selector ofrece «🎮 Mando clásico» y por omisión siguen los Botones', /Mando clásico/.test(await fc.textContent('#menu-control').catch(() => '')) && (await fc.getAttribute('[data-control="botones"]', 'aria-pressed')) === 'true');
   await fc.tap('[data-control="mando"]').catch(() => {}); await fc.tap('[data-acel="manual"]');
   await cel.screenshot({ path: 'karts-mando-390-menu.png' });
-  await cel.reload(); await cel.waitForSelector('[data-juego="karts"]', { timeout: 60000 });
-  await cel.tap('[data-juego="karts"]');
+  await cel.reload(); await cel.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(cel, 'karts', { tap: true });
   fc = await marcoDe(cel);
   await fc.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   const pref = await estado(fc);
@@ -253,7 +253,7 @@ async function probarMando(b) {
       if (suelto) { q = await abrirSuelto(b, { width: w, height: h }, CON_MANDO); f = q.mainFrame(); }
       else {
         q = await abrir(b, { width: w, height: h }, TACTIL, CON_MANDO);
-        await q.tap('[data-juego="karts"]');
+        await abrirJuego(q, 'karts', { tap: true });
         f = await marcoDe(q);
         await f.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
       }
@@ -281,7 +281,7 @@ async function probarMando(b) {
 
   // ---- Control físico simulado (PC, con «Botones» por omisión y «Con botón») ----
   const pg = await abrir(b, { width: 1280, height: 800 }, undefined, GAMEPAD);
-  await pg.click('[data-juego="karts"]');
+  await abrirJuego(pg, 'karts');
   const fg = await marcoDe(pg);
   await fg.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fg.click('[data-ir="pistas"]'); await fg.click('[data-ir="rapida:pradera"]');
@@ -317,13 +317,13 @@ async function probarMando(b) {
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrir(b);
-  const tarjeta = await p.textContent('[data-juego="karts"]');
+  const tarjeta = await textoTarjeta(p, 'karts');
   ok('catálogo: Karts Turbo con ícono y descripción', tarjeta.includes('🏎️') && tarjeta.includes('Karts Turbo') && tarjeta.includes('copa'), tarjeta);
   ok('catálogo: todas las categorías (CATEGORIAS) y todos los juegos de la página', (m => m.secciones === m.categorias && m.completo)(await contarMenu(p)));
   const puntosAntes = await p.evaluate(() => state.totalIndividual);
 
   // ---- Copa: carrera 1 (teclado) ----
-  await p.click('[data-juego="karts"]');
+  await abrirJuego(p, 'karts');
   let fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await revisarSelector(fr, 'menú');
@@ -360,8 +360,8 @@ async function probarMando(b) {
   ok('progreso: copa en curso en la carrera 2 con puntos', cc && cc.carrera === 1 && cc.puntos.reduce((a, x) => a + x, 0) === 58, JSON.stringify(g1.datos));
 
   // ---- Recargar y continuar la copa ----
-  await p.reload(); await p.waitForSelector('[data-juego="karts"]', { timeout: 60000 });
-  await p.click('[data-juego="karts"]');
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'karts');
   fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   const menu = await fr.textContent('#menu-ops');
@@ -370,8 +370,8 @@ async function probarMando(b) {
   ok('avance viejo: Xalli sigue elegido', await elegido(fr) === 'xalli');
   await fr.click('[data-personaje="itzae"]');
   ok('elegir a Itzae lo marca', await elegido(fr) === 'itzae');
-  await p.reload(); await p.waitForSelector('[data-juego="karts"]', { timeout: 60000 });
-  await p.click('[data-juego="karts"]');
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'karts');
   fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   ok('tras recargar Juegos sigue elegido Itzae', await elegido(fr) === 'itzae');
@@ -385,7 +385,7 @@ async function probarMando(b) {
 
   // ---- Celular (toques reales): botones ⬅ ➡ por omisión, vista 3D, multitáctil y layout a 390×844 vertical ----
   const cel = await abrir(b, { width: 390, height: 844 }, TACTIL);
-  await cel.tap('[data-juego="karts"]');
+  await abrirJuego(cel, 'karts', { tap: true });
   let fc = await marcoDe(cel);
   await fc.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   ok('celular: selector de controles visible con Botones y acelerar automático por omisión', await fc.isVisible('#menu-control') && (await fc.getAttribute('[data-control="botones"]', 'aria-pressed')) === 'true' && (await fc.getAttribute('[data-acel="auto"]', 'aria-pressed')) === 'true' && (await estado(fc)).tactil);
@@ -435,8 +435,8 @@ async function probarMando(b) {
   await fc.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
   await fc.tap('#res-botones [data-ir="menu"]');
   await fc.tap('[data-control="joystick"]'); await fc.tap('[data-acel="manual"]');
-  await cel.reload(); await cel.waitForSelector('[data-juego="karts"]', { timeout: 60000 });
-  await cel.tap('[data-juego="karts"]');
+  await cel.reload(); await cel.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(cel, 'karts', { tap: true });
   fc = await marcoDe(cel);
   await fc.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   const pref = await estado(fc);
@@ -480,7 +480,7 @@ async function probarMando(b) {
     setInterval(() => dispatchEvent(new DeviceOrientationEvent('deviceorientation', { alpha: 0, beta: 8, gamma: window.__inclinar })), 40);
   }];
   const sen = await abrir(b, { width: 390, height: 844 }, TACTIL, inclinable);
-  await sen.tap('[data-juego="karts"]');
+  await abrirJuego(sen, 'karts', { tap: true });
   const fs1 = await marcoDe(sen);
   await fs1.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fs1.tap('[data-control="sensor"]');
@@ -503,7 +503,7 @@ async function probarMando(b) {
   // Permiso negado (como en iOS) → aviso y regreso al joystick.
   const negado = [() => { if (window.DeviceOrientationEvent) window.DeviceOrientationEvent.requestPermission = () => Promise.resolve('denied'); }];
   const neg = await abrir(b, { width: 390, height: 844 }, TACTIL, negado);
-  await neg.tap('[data-juego="karts"]');
+  await abrirJuego(neg, 'karts', { tap: true });
   const fn = await marcoDe(neg);
   await fn.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fn.tap('[data-control="sensor"]'); await fn.tap('#b-activar-sensor');
@@ -515,7 +515,7 @@ async function probarMando(b) {
 
   // Sin giroscopio (no llegan lecturas) → a los 2 s regresa al joystick.
   const sin = await abrir(b, { width: 390, height: 844 }, TACTIL);
-  await sin.tap('[data-juego="karts"]');
+  await abrirJuego(sin, 'karts', { tap: true });
   const fsn = await marcoDe(sin);
   await fsn.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fsn.tap('[data-control="sensor"]'); await fsn.tap('#b-activar-sensor');
@@ -528,7 +528,7 @@ async function probarMando(b) {
 
   // ---- Horizontal 844×390 y celular angosto 360×640 ----
   const hor = await abrir(b, { width: 844, height: 390 }, TACTIL);
-  await hor.tap('[data-juego="karts"]');
+  await abrirJuego(hor, 'karts', { tap: true });
   const fh = await marcoDe(hor);
   await fh.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await correrRapida(fh, 'volcan');
@@ -546,7 +546,7 @@ async function probarMando(b) {
   await hor.context().close();
 
   const ang = await abrir(b, { width: 360, height: 640 }, TACTIL);
-  await ang.tap('[data-juego="karts"]');
+  await abrirJuego(ang, 'karts', { tap: true });
   const fa = await marcoDe(ang);
   await fa.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await correrRapida(fa, 'pradera');
@@ -554,7 +554,7 @@ async function probarMando(b) {
   await ang.screenshot({ path: 'karts-360-vertical.png' });
   await ang.context().close();
   const mini = await abrir(b, { width: 320, height: 640 }, TACTIL);
-  await mini.tap('[data-juego="karts"]');
+  await abrirJuego(mini, 'karts', { tap: true });
   const fm = await marcoDe(mini);
   await fm.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await correrRapida(fm, 'hielo');
@@ -564,7 +564,7 @@ async function probarMando(b) {
 
   // ---- Escritorio ----
   const escr = await abrir(b, { width: 1280, height: 800 });
-  await escr.click('[data-juego="karts"]');
+  await abrirJuego(escr, 'karts');
   const fe = await marcoDe(escr);
   await fe.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   ok('escritorio: sin mandos táctiles ni selector, con ayuda del teclado', !(await fe.isVisible('#mandos')) && !(await fe.isVisible('#menu-control')) && await fe.isVisible('#teclas'), JSON.stringify({ tactil: (await estado(fe)).tactil }));

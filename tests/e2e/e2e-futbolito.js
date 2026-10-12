@@ -7,12 +7,12 @@
 require('./lib/entorno');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
-const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
+const { contarMenu, abrirJuego, textoTarjeta, idsDe } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const TACTIL = { hasTouch: true, isMobile: true };
-const abrir = (b, email, viewport, contexto) => abrirPagina(b, { email, viejo: true, viewport, contexto: Object.assign({}, TACTIL, contexto || {}), out, etiqueta: email, dialogos: 'aceptar', ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-juego="futbolito"]' });
+const abrir = (b, email, viewport, contexto) => abrirPagina(b, { email, viejo: true, viewport, contexto: Object.assign({}, TACTIL, contexto || {}), out, etiqueta: email, dialogos: 'aceptar', ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
 const marcoDe = async (p, raiz = '') => (await p.waitForSelector(raiz + ' #arcade-frame', { timeout: 30000 })).contentFrame();
 const estado = fr => fr.evaluate(() => window.__futbolito.estado());
 const esperar = (fr, fn, arg, ms = 30000) => fr.waitForFunction(fn, arg, { timeout: ms });
@@ -63,14 +63,14 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrir(b, 'marisol@example.com', { width: 390, height: 844 });
   // ---- Catálogo ----
-  const tarjeta = await p.textContent('[data-juego="futbolito"]');
-  ok('catálogo: Futbolito en Arcade con ícono y descripción', tarjeta.includes('⚽') && tarjeta.includes('Futbolito') && /barra/.test(tarjeta) && (await p.$$('.cat-arcade[data-juego="futbolito"]')).length === 1, tarjeta);
+  const tarjeta = await textoTarjeta(p, 'futbolito');
+  ok('catálogo: Futbolito en Arcade con ícono y descripción', tarjeta.includes('⚽') && tarjeta.includes('Futbolito') && /barra/.test(tarjeta) && (await idsDe(p, 'arcade')).filter(i => i === 'futbolito').length === 1, tarjeta);
   const menu = await contarMenu(p), total = menu.tarjetas;
   ok('catálogo: el menú muestra todos los juegos de la página (con Futbolito y Billar)', menu.completo && total >= 26, String(total));
   const puntosAntes = await p.evaluate(() => state.totalIndividual);
 
   // ---- Individual con toques reales (390×844) ----
-  await p.tap('[data-juego="futbolito"]');
+  await abrirJuego(p, 'futbolito', { tap: true });
   let fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   ok('individual: menú con 3 niveles y ayuda táctil', (await fr.$$('[data-nivel]')).length === 3 && /Desliza/.test(await fr.textContent('#ayuda-menu')));
@@ -123,7 +123,7 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
 
   // ---- Horizontal 844×390 ----
   const hor = await abrir(b, 'marisol@example.com', { width: 844, height: 390 });
-  await hor.tap('[data-juego="futbolito"]');
+  await abrirJuego(hor, 'futbolito', { tap: true });
   const fh = await marcoDe(hor);
   await fh.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fh.tap('[data-nivel="dificil"]');
@@ -141,7 +141,7 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
 
   // ---- prefers-reduced-motion: sin confeti ----
   const red = await abrir(b, 'marisol@example.com', { width: 390, height: 844 }, { reducedMotion: 'reduce' });
-  await red.tap('[data-juego="futbolito"]');
+  await abrirJuego(red, 'futbolito', { tap: true });
   const fred = await marcoDe(red);
   await fred.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fred.tap('[data-nivel="medio"]');

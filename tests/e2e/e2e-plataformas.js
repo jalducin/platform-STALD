@@ -11,12 +11,13 @@ require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de p
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
 const { PERSONAJES, contarColor, recorte, hojaPerfiles } = require('./lib/personajes');
+const { abrirJuego, textoTarjeta } = require('./lib/menu'); // menú por categorías (openspec: juegos-categorias)
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const EMAIL = 'marisol@example.com';
 const progreso = async () => (await fetch(API + '/juegos/progreso/plataformas?email=' + encodeURIComponent(EMAIL))).json();
-const abrir = (b, viewport) => abrirPagina(b, { email: EMAIL, viejo: true, viewport, out, ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-juego="plataformas"]' });
+const abrir = (b, viewport) => abrirPagina(b, { email: EMAIL, viejo: true, viewport, out, ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
 async function marcoDe(p, raiz = '') {
   const el = await p.waitForSelector(raiz + ' #arcade-frame', { timeout: 30000 });
   return el.contentFrame();
@@ -113,7 +114,7 @@ async function probarPersonajes(b) {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrir(b);
   // ---- Catálogo ----
-  const tarjeta = await p.textContent('[data-juego="plataformas"]');
+  const tarjeta = await textoTarjeta(p, 'plataformas'); // abre 🕹️ Arcade
   ok('catálogo: categoría 🕹️ Arcade', (await p.textContent('#tab-body')).includes('🕹️ Arcade'));
   ok('catálogo: tarjeta con ícono y descripción', tarjeta.includes('🦎') && tarjeta.includes('Axo y los 12 mundos') && tarjeta.includes('vence al jefe'), tarjeta);
   const antes = await progreso();
@@ -121,7 +122,7 @@ async function probarPersonajes(b) {
   const puntosAntes = await p.evaluate(() => state.totalIndividual);
 
   // ---- Jugar el 1-1 ----
-  await p.click('[data-juego="plataformas"]');
+  await abrirJuego(p, 'plataformas');
   let fr = await marcoDe(p);
   await fr.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 });
   await revisarSelector(fr, 'portada');
@@ -163,17 +164,17 @@ async function probarPersonajes(b) {
   ok('el progreso no cambia de forma (sin personaje)', !('personaje' in d) && Object.keys(d).length === 8, Object.keys(d).join(','));
 
   // ---- Recargar y continuar ----
-  await p.reload(); await p.waitForSelector('[data-juego="plataformas"]', { timeout: 60000 });
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('recargar no deja el juego abierto', !(await p.$('#arcade-frame')));
-  await p.click('[data-juego="plataformas"]');
+  await abrirJuego(p, 'plataformas');
   fr = await marcoDe(p);
   await fr.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 });
   // Avance viejo (sin personaje) y sin elección en el navegador → Xalli. Elegir a Yahui y recargar.
   ok('avance viejo: carga con Xalli elegido', await elegido(fr) === 'xalli');
   await fr.click('[data-personaje="yahui"]');
   ok('elegir a Yahui lo marca', await elegido(fr) === 'yahui');
-  await p.reload(); await p.waitForSelector('[data-juego="plataformas"]', { timeout: 60000 });
-  await p.click('[data-juego="plataformas"]');
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'plataformas');
   fr = await marcoDe(p);
   await fr.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 });
   ok('tras recargar Juegos sigue elegido Yahui', await elegido(fr) === 'yahui');
@@ -204,7 +205,7 @@ async function probarPersonajes(b) {
 
   // ---- Escritorio ----
   const esc = await abrir(b, { width: 1280, height: 800 });
-  await esc.click('[data-juego="plataformas"]');
+  await abrirJuego(esc, 'plataformas');
   const fe = await marcoDe(esc);
   await fe.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 }); await fe.click('#b-jugar');
   await fe.waitForSelector('#ov-mapa:not(.hide)'); await fe.click('[data-nivel="1-2"]');

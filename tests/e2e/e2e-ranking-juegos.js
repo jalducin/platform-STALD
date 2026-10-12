@@ -88,7 +88,7 @@ const partida = (email, juego, puntos, extra = {}) => pedir(email, '/juegos/part
     ok(`${nombre}: sin desborde horizontal`, desborde <= 0, String(desborde));
   };
 
-  const cel = await abrirPagina(b, { email: 'marisol@example.com', out, ruta: '/juegos.html', esperar: '[data-juego]' });
+  const cel = await abrirPagina(b, { email: 'marisol@example.com', out, ruta: '/juegos.html', esperar: '[data-menu]' });
   await revisar(cel, '390 px');
   const alto = await cel.$eval('[data-rtipo="juegos"]', x => x.getBoundingClientRect().top === document.querySelector('[data-rtipo="individual"]').getBoundingClientRect().top);
   ok('390 px: las tres sub-pestañas en una fila', alto);
@@ -98,12 +98,12 @@ const partida = (email, juego, puntos, extra = {}) => pedir(email, '/juegos/part
   await cel.waitForSelector('.rank li');
   ok('⭐ Individuales sigue mostrando personas', (await cel.$$('#rank-juegos')).length === 0 && (await cel.$$('.rank li')).length > 0);
 
-  const esc = await abrirPagina(b, { email: 'angel@example.com', out, viewport: { width: 1280, height: 900 }, ruta: '/juegos.html', esperar: '[data-juego]' });
+  const esc = await abrirPagina(b, { email: 'angel@example.com', out, viewport: { width: 1280, height: 900 }, ruta: '/juegos.html', esperar: '[data-menu]' });
   await revisar(esc, 'escritorio');
   await esc.screenshot({ path: 'ranking-juegos-escritorio.png', fullPage: true });
 
   // Top 10 con 12 juegos (openspec: ranking-juegos-top10): la respuesta se intercepta para tener más de 10.
-  const doce = await abrirPagina(b, { email: 'marisol@example.com', out, ruta: '/juegos.html', esperar: '[data-juego]' });
+  const doce = await abrirPagina(b, { email: 'marisol@example.com', out, ruta: '/juegos.html', esperar: '[data-menu]' });
   await doce.route('**/juegos/ranking/juegos*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ semana: '2026-09-28', jugadores: 30,
     juegos: Array.from({ length: 12 }, (_, i) => ({ pos: i + 1, id: 'juego-' + i, titulo: 'Juego ' + (i + 1), jugadores: 12 - i, partidas: 20 - i, mejor: null })) }) }));
   await doce.click('[data-tab="ranking"]'); await doce.click('[data-rtipo="juegos"]'); await doce.waitForSelector('#rank-juegos li');
@@ -118,7 +118,7 @@ const partida = (email, juego, puntos, extra = {}) => pedir(email, '/juegos/part
   // Semana sin juegos: la ruta responde vacío y la página muestra el mensaje amable.
   const vacia = await pedir('marisol@example.com', '/juegos/ranking/juegos?semana=2026-09-14');
   ok('semana sin juegos: juegos []', vacia.status === 200 && vacia.body.juegos.length === 0 && vacia.body.jugadores === 0, JSON.stringify(vacia.body));
-  const v = await abrirPagina(b, { email: 'laura@example.com', out, ruta: '/juegos.html', esperar: '[data-juego]' });
+  const v = await abrirPagina(b, { email: 'laura@example.com', out, ruta: '/juegos.html', esperar: '[data-menu]' });
   await v.route('**/juegos/ranking/juegos*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(vacia.body) }));
   await v.click('[data-tab="ranking"]'); await v.click('[data-rtipo="juegos"]');
   await v.waitForSelector('#tab-body .card.muted');

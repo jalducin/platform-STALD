@@ -9,7 +9,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'ñ');
 
 async function jugador(b, email) {
-  const p = await abrirPagina(b, { email, tiempo: 0.4, out, ruta: '/juegos.html', esperar: '[data-juego]' }); // verificador falso (plataforma-login)
+  const p = await abrirPagina(b, { email, tiempo: 0.4, out, ruta: '/juegos.html', esperar: '[data-menu]' }); // verificador falso (plataforma-login)
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear');
   return p;
 }

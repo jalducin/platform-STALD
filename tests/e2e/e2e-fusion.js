@@ -2,28 +2,28 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
-const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
+const { contarMenu, abrirJuego, textoTarjeta } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const BASE = process.env.BASE, API = process.env.API;
 const Q = '?api=' + encodeURIComponent(API);
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 1, viewport: { width: 390, height: 900 }, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-juego]' });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 1, viewport: { width: 390, height: 900 }, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-menu]' });
   const menu = await contarMenu(p), ids = menu.ids;
   // Conteo igual a JUEGOS.length de la página (futbolito-billar), sin repetir y sin los absorbidos.
   ok('menú: todos los juegos de la página, sin repetir y sin los absorbidos', menu.completo && ids.length >= 39 && new Set(ids).size === ids.length && !ids.some(i => ['en-preguntas', 'es-acentos', 'es-sinonimos', 'mente-secuencias'].includes(i)), ids.length + ' juegos');
-  ok('menú: títulos fusionados', /Completa y responde/.test(await p.textContent('[data-juego="en-frases"]')) && /Cálculo y secuencias/.test(await p.textContent('[data-juego="mente-calculo"]')) && /acentos, sinónimos/.test(await p.textContent('[data-juego="es-ortografia"]')));
+  ok('menú: títulos fusionados', /Completa y responde/.test(await textoTarjeta(p, 'en-frases')) && /Cálculo y secuencias/.test(await textoTarjeta(p, 'mente-calculo')) && /acentos, sinónimos/.test(await textoTarjeta(p, 'es-ortografia')));
   // Vuelve al inicio saliendo con ✕: navegar a mitad de un juego que se reanuda ofrecería continuarlo
   // (openspec: juegos-recarga).
   async function inicio() {
     if (await p.$('[data-a="salir"]')) await p.click('[data-a="salir"]');
-    await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]');
+    await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-menu]');
   }
   // Recorre N preguntas y junta el emoji grande de cada una
   async function iconos(id, n) {
     await inicio();
-    await p.click('[data-juego="' + id + '"]'); const vistos = [];
+    await abrirJuego(p, id); const vistos = [];
     if (id === 'en-frases') { await p.waitForSelector('[data-tema="todo"]'); await p.click('[data-tema="todo"]'); } // selector de tema (juegos-ingles-gramatica)
     for (let k = 0; k < n; k++) {
       await p.waitForSelector('.q-card .big', { timeout: 10000 }); const big = await p.textContent('.q-card .big'); vistos.push(big.trim());
@@ -38,7 +38,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const ort = await iconos('es-ortografia', 12);
   ok('Ortografía: mezcla al menos 2 tipos (✍️, á, 🟰/↔️)', new Set(ort.map(x => x === '↔️' ? '🟰' : x)).size >= 2, ort.join(' '));
   // Cultura con categorías nuevas
-  await inicio(); await p.click('[data-juego="cultura"]');
+  await inicio(); await abrirJuego(p, 'cultura');
   await p.waitForSelector('[data-cat="ia"]');
   ok('Maratón: categorías IA y Tecnología', !!(await p.$('[data-cat="ia"]')) && !!(await p.$('[data-cat="tecnologia"]')));
   await p.click('[data-cat="ia"]'); await p.waitForSelector('.q-card');

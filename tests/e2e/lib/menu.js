@@ -7,6 +7,8 @@
 //   const p = await abrirPagina(b, { …, ruta: '/juegos.html', esperar: MENU });
 //   await abrirJuego(p, 'poker');                 // abre la categoría del juego (si hace falta) y toca su tarjeta
 //   await abrirJuego(p, 'karts', { tap: true });  // con toque (contextos táctiles)
+//   const ids = await idsDe(p, 'clasicos');       // tarjetas de una categoría (la abre)
+//   const t = await textoTarjeta(p, 'billar');    // texto de una tarjeta (abre su categoría)
 //   const m = await contarMenu(p);                // entra a cada categoría y cuenta
 //   ok('menú completo', m.completo && m.tarjetas >= 39, String(m.tarjetas));
 const MENU = '[data-menu]';
@@ -40,6 +42,12 @@ async function categoriaDe(p, id) {
   return cat;
 }
 
+// Ids de las tarjetas de una categoría (la abre).
+async function idsDe(p, cat) {
+  await abrirCategoria(p, cat);
+  return p.$$eval('#menu-juegos .game.cat-' + cat + '[data-juego]', xs => xs.map(x => x.dataset.juego));
+}
+
 // Abre la categoría del juego y toca su tarjeta del menú.
 async function abrirJuego(p, id, { tap } = {}) {
   await abrirCategoria(p, await categoriaDe(p, id), { tap });
@@ -54,7 +62,7 @@ async function textoTarjeta(p, id) {
 
 // Entra a cada categoría en orden y devuelve [{ id, titulo, n, ids, clases }]:
 //   n       número que dice la tarjeta de la categoría
-//   titulo  encabezado de la lista
+//   titulo  encabezado de la lista (emoji y nombre, p. ej. «🎲 Clásicos»)
 //   ids     data-juego de las tarjetas de la lista, en orden
 //   clases  true si todas las tarjetas llevan la clase de su categoría (cat-<id>)
 // Termina en la pantalla de categorías.
@@ -64,7 +72,7 @@ async function recorrerMenu(p) {
   const res = [];
   for (const c of cats) {
     await abrirCategoria(p, c.id);
-    const titulo = (await p.textContent('#menu-titulo')).trim();
+    const titulo = await p.$eval('#menu-titulo', h => h.firstChild.textContent.trim()); // sin el «N juegos»
     const ids = await p.$$eval('#menu-juegos .game[data-juego]', xs => xs.map(x => x.dataset.juego));
     const clases = await p.$$eval('#menu-juegos .game[data-juego]', (xs, cat) => xs.every(x => x.classList.contains('cat-' + cat)), c.id);
     res.push({ id: c.id, titulo, n: c.n, ids, clases });
@@ -93,4 +101,4 @@ async function contarMenu(p) {
   return { ids, tarjetas: ids.length, juegos, secciones: porCategoria.length, categorias, porCategoria, completo: exactas && ids.length === juegos };
 }
 
-module.exports = { MENU, esperarMenu, irACategorias, abrirCategoria, abrirJuego, textoTarjeta, recorrerMenu, contarMenu };
+module.exports = { MENU, esperarMenu, irACategorias, abrirCategoria, abrirJuego, textoTarjeta, idsDe, recorrerMenu, contarMenu };

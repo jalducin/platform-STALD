@@ -9,7 +9,7 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'ñ');
 async function jugador(b, email, tiempo = 0.4) {
-  const p = await abrirPagina(b, { email, viejo: true, tiempo, out, ruta: '/juegos.html', esperar: '[data-juego]' });
+  const p = await abrirPagina(b, { email, viejo: true, tiempo, out, ruta: '/juegos.html', esperar: '[data-menu]' });
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear'); return p;
 }
 const podio = p => p.$$eval('.rank li', ls => ls.map(l => l.querySelector('.n').childNodes[0].textContent.trim() + '=' + l.querySelector('.pts').textContent.trim()));

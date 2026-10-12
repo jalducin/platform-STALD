@@ -276,7 +276,7 @@ interfaces de `juegos/*.js` y de `comun/auth.js`:
 | Archivo | Responsabilidad |
 |---|---|
 | `nucleo.js` | `API_BASE` (`?api=`), `?sala=`, `state`, recarga (`juegos_sala_activa`, `juegos_partida_individual`), utilidades (`escapeHtml`, `barajar`, `fmt`…), `api`/`post`/`datos`, sonido y voz |
-| `menu.js` | `CATEGORIAS`, `JUEGOS`, `juegoPorId`, avatar, sesión y registro (`iniciar`, `pantallaLogin`), hub |
+| `menu.js` | `CATEGORIAS`, `JUEGOS`, `juegoPorId`, `icoJuego`, avatar, sesión y registro (`iniciar`, `pantallaLogin`), hub y navegación por categorías |
 | `ranking.js` | 🏆 Ranking (⭐ individuales, 👥 partidas, 🔥 juegos) |
 | `admin.js` | 🛡️ Admin (jugadores, pendientes, invitados y fotos) |
 | `individuales.js` | `marco`, `reloj`, `terminar`, `quiz` y los juegos de Inglés, Español, Cultura y Mente ágil |
@@ -300,6 +300,33 @@ Reglas:
   un archivo pasa de ~600 líneas, se parte por juego.
 - Al cambiar un archivo de `juegos/app/`, sube su `?v=` en `juegos.html`.
 - El avance en el servidor de los juegos en iframe (Dragon Run, Axo, Karts) pasa siempre por `canalProgreso`.
+
+## Navegación por categorías en Juegos (cambio `juegos-categorias`)
+
+- **Primero la categoría, luego el juego.** La pestaña 🎮 Juegos pinta `#menu-juegos[data-menu]`: con
+  `data-menu="categorias"`, las tarjetas `.cat-card[data-categoria]` (`<button>` con emoji, nombre, «N juegos» y la
+  descripción `d` de `CATEGORIAS`); con `data-menu="<id>"`, el botón «← Categorías» (`data-a="categorias"`), el
+  encabezado `#menu-titulo` y solo las tarjetas `.game[data-juego]` de esa categoría. No usar `data-cat` (es del
+  Maratón).
+- **Conteos dinámicos:** el número de cada tarjeta (`data-n`, texto y `aria-label`) sale de
+  `JUEGOS.filter(j => j.cat === id)`. Un juego nuevo solo necesita su `cat`; nunca escribir números fijos.
+- **Estado:** `state.cat` (id o `null`), `sessionStorage.juegos_categoria` (con `try/catch`) y la URL `#cat=<id>`.
+  Prioridad al entrar al hub: `#cat=` válido → `state.cat` → `history.state.cat` → `sessionStorage`. Un `#cat=` que no
+  existe abre las categorías.
+- **Historial:** abrir una categoría hace `pushState({ cat })`; si se pinta una lista y la entrada actual no es suya
+  (recarga, regreso de un juego, enlace directo), se convierte en la de categorías y se empuja la de la lista: debajo
+  de una lista siempre hay una entrada de categorías. «← Categorías» hace `history.back()` en ese caso. `popstate` y
+  `hashchange` solo repintan con el menú a la vista; dentro de un juego el Atrás no cambia nada del juego.
+- **Accesibilidad:** al cambiar de vista por una acción, el foco va a `#menu-titulo` (`tabindex="-1"`); las tarjetas
+  tienen contorno `:focus-visible`; con `prefers-reduced-motion` no hay `transform` ni transición en `.cat-card` y
+  `.game`. Rejilla `.cat-grid`: 1 columna < 360 px, 2 en celular y 3 desde 620 px.
+- **Íconos en imagen:** un juego puede tener `icono` (SVG en `juegos/iconos/`, ruta relativa a `juegos.html`).
+  `icoJuego(j | id)` devuelve `<img class="ico-img" alt="">` (1.25 em, alineada con los emojis) o el emoji. Úsalo
+  donde el ícono va como HTML: tarjeta, 🔥 ranking, `marco`, `terminar`, barra de la sala, «¿Continuar?», portadas y la
+  espera de Arcade 1 vs 1. Donde va como texto (`<option>`, avisos, mensajes, títulos de ayuda) se usa `j.emoji`,
+  que es el **respaldo**: debe dibujarse en cualquier celular y no repetir el de otro juego (Blackjack ♣️, Dominó 🔳;
+  nada de 🂡 ni 🁫). Los módulos que cargan antes de `menu.js` lo llaman en tiempo de ejecución con respaldo a
+  `j.emoji`.
 
 ## Ritmo de los juegos de cartas (ajuste del profe, sprint final)
 

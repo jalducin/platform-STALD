@@ -118,7 +118,7 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
 
   // ---- Juegos con la misma sesión (incluida una sala) ----
   peticiones.length = 0;
-  await p.click('#tiles a[data-espacio="juegos"]'); await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.click('#tiles a[data-espacio="juegos"]'); await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('Juegos entra con la sesión', (await p.textContent('#chip')).includes('Marisol'));
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear');
   await p.selectOption('#p-juego', 'cultura');
@@ -126,7 +126,7 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
   const codigo = (await p.textContent('.letra')).trim();
   ok('Juegos: crea una sala con la sesión', /^[A-Z]{4}$/.test(codigo), codigo);
   const otro = await contexto(b, { sesion: 'angel@example.com' });
-  await otro.p.goto(BASE + '/juegos.html' + Q); await otro.p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await otro.p.goto(BASE + '/juegos.html' + Q); await otro.p.waitForSelector('[data-menu]', { timeout: 60000 });
   await otro.p.click('[data-tab="partidas"]'); await otro.p.waitForSelector('#f-unirse');
   await otro.p.fill('#p-codigo', codigo.toLowerCase()); await otro.p.click('#f-unirse button[type=submit]');
   await otro.p.waitForSelector('.rank li', { timeout: 30000 }); await sleep(3500);
@@ -150,7 +150,7 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
   ok('Juegos: correo de clase → pide su contraseña', (await p.textContent('#app')).includes('Ese correo es de las clases') && (await p.inputValue('#stald-auth-correo')) === 'marisol@example.com');
   ok('Juegos: correo de clase sin sesión todavía', await p.evaluate(() => localStorage.getItem('stald_sesion_prueba') === null));
   await p.fill('#stald-auth-clave', 'mari2026'); await p.click('#stald-auth-entrar');
-  await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('Juegos: la alumna entra con su contraseña', (await p.textContent('#chip')).includes('Marisol'));
   await ctx.close();
 
@@ -193,7 +193,7 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
   ok('transición: activa la sesión y el aviso desaparece', await p.$eval('#secure-notice', e => e.hidden));
   await ctx.close();
   ({ ctx, p } = await contexto(b, { viejo: 'marisol@example.com' }));
-  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('transición: Juegos con correo viejo funciona', (await p.textContent('#chip')).includes('Marisol'));
   await ctx.close();
 
@@ -204,7 +204,7 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
   ok('desconocido: invitación sin error', await p.isHidden('#login-error') && await p.isVisible('#guest') && (await p.textContent('#guest')).includes('Crear mi cuenta de Juegos'));
   await p.click('#guest-btn'); await p.waitForSelector('#f-invitado', { timeout: 60000 });
   await p.fill('#apodo', 'Nuevo'); await p.check('#acepto'); await p.click('#f-invitado button[type=submit]');
-  await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('invitado registrado con su sesión', (await p.textContent('#chip')).includes('Nuevo'));
   await ctx.close();
 
@@ -232,7 +232,7 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
   const correoNuevo = 'registro' + Date.now() + '@example.com';
   const altas = []; p.on('request', q => { if (q.url().includes('/juegos/registro')) altas.push(q.postData()); });
   await p.fill('#ent-correo', correoNuevo); await p.fill('#ent-nick', 'Registro'); await p.check('#ent-acepto'); await p.click('#reg-entrar');
-  await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('Juegos: invitado nuevo entra con su nick al instante', (await p.textContent('#chip')).includes('Registro'));
   ok('Juegos: una sola petición con nick y aviso', altas.length === 1 && altas[0].includes('"nombre":"Registro"') && altas[0].includes('"acepto":true'), String(altas.length));
   // «🆕 Registrar» cierra la sesión en este aparato y abre la entrada para otra persona.
@@ -241,12 +241,12 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
   ok('Registrar: cierra la sesión y abre la entrada', await p.evaluate(() => localStorage.getItem('stald_sesion_prueba') === null));
   ok('Registrar: el aviso ya aceptado queda marcado', await p.isChecked('#ent-acepto'));
   await p.fill('#ent-correo', 'segunda' + Date.now() + '@example.com'); await p.fill('#ent-nick', 'Segunda'); await p.click('#reg-entrar');
-  await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('Registrar: la segunda persona entra con su nick', (await p.textContent('#chip')).includes('Segunda'));
   // El invitado regresa con su correo y nick.
   await p.click('#registrar-btn'); await p.waitForSelector('#f-entrada', { timeout: 30000 });
   await p.fill('#ent-correo', correoNuevo); await p.fill('#ent-nick', 'Registro'); await p.click('#reg-entrar');
-  await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('Juegos: el invitado regresa con su correo y nick', (await p.textContent('#chip')).includes('Registro'));
   await p.screenshot({ path: 'login-juegos.png' });
   await ctx.close();

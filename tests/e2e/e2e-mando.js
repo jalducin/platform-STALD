@@ -10,6 +10,7 @@
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const BASE = process.env.BASE;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -19,7 +20,7 @@ const TACTIL = { hasTouch: true, isMobile: true };
 const GAMEPAD = [() => {
   Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: () => window.__pads || [null, null, null, null] });
 }, null];
-const abrir = (b, viewport, contexto, init) => abrirPagina(b, { email: EMAIL, viejo: true, viewport, contexto, init, out, ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-juego="plataformas"]' });
+const abrir = (b, viewport, contexto, init) => abrirPagina(b, { email: EMAIL, viejo: true, viewport, contexto, init, out, ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
 const marcoDe = async (p, sel = '#arcade-frame') => (await p.waitForSelector(sel, { timeout: 30000 })).contentFrame();
 
 // Dedos reales por CDP: cada evento lleva todos los dedos que siguen en la pantalla.
@@ -38,7 +39,7 @@ const tocar = async (p, c) => { const d = dedos(p); await d.poner(1, c); await s
 
 // Abre Axo desde Juegos y entra al 1-1.
 async function abrirAxo(p) {
-  await p.click('[data-juego="plataformas"]');
+  await abrirJuego(p, 'plataformas');
   const fr = await marcoDe(p);
   await fr.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 });
   return fr;
@@ -114,7 +115,7 @@ async function revisarLayout(fr, nombre, esperados) {
   await tocar(p, await centro(fr, '.mando-pildora[data-b="START"]')); await sleep(100);
   await fr.click('#ov-pausa [data-control="botones"]');
   ok('Axo: elegir «🔘 Botones» oculta el mando', (await fr.evaluate(() => window.__plat.control())) === 'botones' && !(await fr.isVisible('.mando')));
-  await p.reload(); await p.waitForSelector('[data-juego="plataformas"]', { timeout: 60000 });
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
   fr = await abrirAxo(p);
   ok('preferencia recordada: Axo abre con «🔘 Botones»', await fr.$eval('#ov-titulo [data-control="botones"]', x => x.getAttribute('aria-pressed')) === 'true');
   await entrarNivel(fr);
@@ -129,8 +130,8 @@ async function revisarLayout(fr, nombre, esperados) {
 
   // ===== 2) Dragon Run con toques reales (390×844) =====
   await p.click('[data-a="salir"]').catch(() => {});
-  await p.reload(); await p.waitForSelector('[data-juego="dragon-run"]', { timeout: 60000 });
-  await p.click('[data-juego="dragon-run"]');
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'dragon-run');
   let fd = await marcoDe(p, '#dragon-frame');
   await fd.waitForFunction(() => window.__dragonPrueba && document.querySelectorAll('#misiones .mis[data-tipo]').length === 3, null, { timeout: 20000 });
   ok('Dragon: por omisión «🎮 Mando clásico» y guía en la pantalla de misiones', (await fd.evaluate(() => window.__dragonPrueba.control())) === 'mando' && (await fd.textContent('#ovS')).includes('⌨️ Controles'));
@@ -151,8 +152,8 @@ async function revisarLayout(fr, nombre, esperados) {
   ok('toques: START otra vez sigue la carrera', (await fd.evaluate(() => window.__dragon.st)) === 'play' && (await fd.evaluate(() => window.__dragon.dist)) > dist1);
   // Preferencia: «👆 Tocar la pantalla».
   await fd.evaluate(() => { localStorage.setItem('dragon_control', 'toque'); });
-  await p.reload(); await p.waitForSelector('[data-juego="dragon-run"]', { timeout: 60000 });
-  await p.click('[data-juego="dragon-run"]');
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'dragon-run');
   fd = await marcoDe(p, '#dragon-frame');
   await fd.waitForFunction(() => window.__dragonPrueba && document.querySelectorAll('#misiones .mis[data-tipo]').length === 3, null, { timeout: 20000 });
   ok('preferencia recordada: Dragon abre con «👆 Tocar la pantalla»', await fd.$eval('[data-control="toque"]', x => x.getAttribute('aria-pressed')) === 'true');
@@ -175,7 +176,7 @@ async function revisarLayout(fr, nombre, esperados) {
     const dd = dedos(q); await dd.poner(1, await centro(f, '.mando-cruceta .der')); await sleep(400); await dd.soltarTodo();
     ok(`Axo ${w}×${h}: la cruceta mueve a Axo`, (await f.evaluate(() => window.__plat.estado())).x > x0 + 15);
     await q.click('[data-a="salir"]').catch(() => {});
-    await q.click('[data-juego="dragon-run"]');
+    await abrirJuego(q, 'dragon-run');
     const g = await marcoDe(q, '#dragon-frame');
     await g.waitForFunction(() => window.__dragonPrueba && document.querySelectorAll('#misiones .mis[data-tipo]').length === 3, null, { timeout: 20000 });
     await g.click('#bS'); await g.waitForFunction(() => window.__dragon.st === 'play'); await sleep(300);
@@ -213,7 +214,7 @@ async function revisarLayout(fr, nombre, esperados) {
   await fe.focus('#b-seguir'); await pe.keyboard.press('Enter'); await sleep(100);
   ok('teclado: Enter sobre «▶ Seguir» usa el botón (no lo intercepta el mando)', (await fe.evaluate(() => window.__plat.estado().modo)) === 'nivel');
   await pe.click('[data-a="salir"]').catch(() => {});
-  await pe.click('[data-juego="dragon-run"]');
+  await abrirJuego(pe, 'dragon-run');
   const fde = await marcoDe(pe, '#dragon-frame');
   await fde.waitForFunction(() => window.__dragonPrueba && document.querySelectorAll('#misiones .mis[data-tipo]').length === 3, null, { timeout: 20000 });
   await fde.click('#bS'); await fde.waitForFunction(() => window.__dragon.st === 'play'); await sleep(200);

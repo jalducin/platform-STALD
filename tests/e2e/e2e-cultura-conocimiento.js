@@ -5,6 +5,7 @@ require('./lib/entorno'); // BASE, API, DATOS, CHROME, carpeta de salida y sesi�
 const { chromium } = require('playwright');
 const fs = require('fs');
 const { abrirPagina } = require('./lib/navegador');
+const { abrirJuego, textoTarjeta, recorrerMenu } = require('./lib/menu'); // menú por categorías (openspec: juegos-categorias)
 const API = process.env.API;
 const cultura = JSON.parse(fs.readFileSync(process.env.DATOS + '/cultura.json', 'utf8'));
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
@@ -24,19 +25,19 @@ const textoDe = async (p, sel) => ((await p.textContent(sel).catch(() => '')) ||
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.6, out, etiqueta: '', dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-juego]' });
+  const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.6, out, etiqueta: '', dialogos: 'aceptar', ruta: '/juegos.html', esperar: '[data-menu]' });
 
   // ---- Sección única ----
-  const secciones = await p.$$eval('main h2', hs => hs.map(h => ({ t: h.textContent.trim(), ids: h.nextElementSibling ? [...h.nextElementSibling.querySelectorAll('[data-juego]')].map(x => x.dataset.juego) : [] })));
+  const secciones = (await recorrerMenu(p)).map(c => ({ t: c.titulo, ids: c.ids })); // cada categoría con sus tarjetas (juegos-categorias)
   const cc = secciones.find(x => x.t === '🧠 Cultura y Conocimiento');
   ok('hub: sección «🧠 Cultura y Conocimiento» con sus 4 juegos', !!cc && JSON.stringify(cc.ids) === JSON.stringify(['cultura', 'cultura-linea', 'es-ortografia', 'es-ordena']), JSON.stringify(cc));
   ok('hub: ya no hay secciones «📝 Español» ni «🧠 Maratón de cultura»', !secciones.some(x => /Español|Maratón de cultura/.test(x.t)), secciones.map(x => x.t).join(' | '));
-  ok('hub: la tarjeta de Línea del tiempo trae ícono y descripción', /📜[\s\S]*Línea del tiempo[\s\S]*más antiguo/.test(await textoDe(p, '[data-juego="cultura-linea"]')));
-  await (await p.$('[data-juego="cultura"]')).scrollIntoViewIfNeeded();
+  ok('hub: la tarjeta de Línea del tiempo trae ícono y descripción', /📜[\s\S]*Línea del tiempo[\s\S]*más antiguo/.test(await textoTarjeta(p, 'cultura-linea')));
+  await (await p.$('.game[data-juego="cultura"]')).scrollIntoViewIfNeeded();
   await p.screenshot({ path: 'cultura-hub.png' });
 
   // ---- Maratón: categorías nuevas y dato al acertar ----
-  await p.click('[data-juego="cultura"]'); await p.waitForSelector('[data-cat]');
+  await abrirJuego(p, 'cultura'); await p.waitForSelector('[data-cat]');
   const cats = await p.$$eval('[data-cat]', bs => bs.map(x => x.dataset.cat));
   ok('Maratón: 15 opciones con Matemáticas, Deportes, Naturaleza y Cultura de México', cats.length === cultura.categorias.length + 1 && ['matematicas', 'deportes', 'naturaleza', 'cultura-mexico'].every(c => cats.includes(c)), cats.join(','));
   await p.click('[data-cat="deportes"]'); await p.waitForSelector('.q-card .q');
@@ -50,10 +51,10 @@ const textoDe = async (p, sel) => ((await p.textContent(sel).catch(() => '')) ||
     ok('Maratón: al acertar se ve el dato 💡', (await textoDe(p, '#fb .quiz-dato')).includes(preg.dato), await textoDe(p, '#fb'));
     await p.screenshot({ path: 'cultura-maraton-dato.png' });
   }
-  await p.click('[data-a="salir"]'); await p.waitForSelector('[data-juego]');
+  await p.click('[data-a="salir"]'); await p.waitForSelector('[data-menu]');
 
   // ---- Línea del tiempo individual ----
-  await p.click('[data-juego="cultura-linea"]'); await p.waitForSelector('[data-ltema]');
+  await abrirJuego(p, 'cultura-linea'); await p.waitForSelector('[data-ltema]');
   ok('Línea: 5 temas para elegir', (await p.$$('[data-ltema]')).length === 5);
   await p.screenshot({ path: 'linea-temas.png' });
   await p.click('[data-ltema="inventos"]'); await p.waitForSelector('.lt-tarjeta');
@@ -102,8 +103,8 @@ const textoDe = async (p, sel) => ((await p.textContent(sel).catch(() => '')) ||
   await p.screenshot({ path: 'linea-resultado.png' });
 
   // ---- Línea del tiempo en sala con bots ----
-  const mar = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.3, out, etiqueta: 'marisol', ruta: '/juegos.html', esperar: '[data-juego]' });
-  const ang = await abrirPagina(b, { email: 'angel@example.com', viejo: true, tiempo: 0.3, out, etiqueta: 'angel', ruta: '/juegos.html', esperar: '[data-juego]' });
+  const mar = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.3, out, etiqueta: 'marisol', ruta: '/juegos.html', esperar: '[data-menu]' });
+  const ang = await abrirPagina(b, { email: 'angel@example.com', viejo: true, tiempo: 0.3, out, etiqueta: 'angel', ruta: '/juegos.html', esperar: '[data-menu]' });
   await mar.click('[data-tab="partidas"]'); await mar.waitForSelector('#f-crear');
   ok('Crear partida: Línea del tiempo en la lista', !!(await mar.$('#p-juego option[value="cultura-linea"]')));
   await mar.selectOption('#p-juego', 'cultura-linea');

@@ -7,6 +7,7 @@
 // MEDIR=1 solo imprime los conteos (sin umbrales), para tomar la línea base; las pruebas de estabilidad corren igual.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const http = require('node:http');
 const fs = require('node:fs');
 const BASE = process.env.BASE;
@@ -99,7 +100,7 @@ async function contexto(b, email) {
   const Q = '?api=' + encodeURIComponent(PROXY);
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const estaticos = { datos: 0 };
-  const hub = async p => { await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-juego]', { timeout: 60000 }); };
+  const hub = async p => { await p.goto(BASE + '/juegos.html' + Q); await p.waitForSelector('[data-menu]', { timeout: 60000 }); };
 
   await medir('portal (alumna)', async () => {
     const p = await contexto(b, 'marisol@example.com');
@@ -113,7 +114,7 @@ async function contexto(b, email) {
     await p.goto(BASE + '/' + Q); await p.waitForSelector('#home:not([hidden])', { timeout: 60000 }); await quieto();
     await p.click('#tiles a[data-espacio="ingles"]'); await p.waitForSelector('#app', { state: 'visible', timeout: 60000 }); await quieto();
     await p.click('a.home-link'); await p.waitForSelector('#home:not([hidden])', { timeout: 60000 }); await quieto();
-    await p.click('#tiles a[data-espacio="juegos"]'); await p.waitForSelector('[data-juego]', { timeout: 60000 }); await quieto();
+    await p.click('#tiles a[data-espacio="juegos"]'); await p.waitForSelector('[data-menu]', { timeout: 60000 }); await quieto();
     await p.context().close();
   });
 
@@ -121,11 +122,11 @@ async function contexto(b, email) {
     const p = await contexto(b, 'marisol@example.com');
     p.on('request', r => { if (r.url().includes('/juegos/datos/')) estaticos.datos++; });
     await hub(p);
-    await p.click('[data-juego="en-vocab"]');
+    await abrirJuego(p, 'en-vocab');
     const t0 = Date.now();
     while (!(await p.$('.result .score')) && Date.now() - t0 < 60000) { const o = await p.$('.opt:not(.ok):not(.bad)'); if (o) await o.click().catch(() => {}); await sleep(150); }
     await p.waitForSelector('.result .score', { timeout: 60000 });
-    await p.click('[data-a="hub"]'); await p.waitForSelector('[data-juego]');
+    await p.click('[data-a="hub"]'); await p.waitForSelector('[data-menu]');
     await quieto();
     await p.context().close();
   });

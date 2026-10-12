@@ -2,7 +2,7 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
-const { contarMenu } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
+const { contarMenu, abrirJuego } = require('./lib/menu'); // conteo del menú (openspec: organizar-codigo)
 const fs = require('fs');
 const BASE = process.env.BASE;
 const API = process.env.API;
@@ -19,7 +19,7 @@ const nuevaPagina = (b, email) => abrirPagina(b, { email, tiempo: 0.08, out, eti
 const enResultado = p => p.waitForSelector('.result .score', { timeout: 60000 });
 
 async function jugarHastaFin(p, id, accion) {
-  await p.click(`[data-juego="${id}"]`);
+  await abrirJuego(p, id);
   const t0 = Date.now();
   while (!(await p.$('.result .score')) && Date.now() - t0 < 60000) { await accion(p).catch(() => {}); await sleep(150); }
   await enResultado(p);
@@ -32,16 +32,19 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   let p = await nuevaPagina(b, 'marisol@example.com');
   await p.goto(BASE + '/juegos.html' + Q);
-  await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.waitForSelector('[data-menu]', { timeout: 60000 });
   // Sin número fijo de juegos (otros cambios suman más): cada sección con juegos y la de Cultura y Conocimiento única
   // (openspec: cultura-conocimiento).
-  const secciones = await p.$$eval('main h2', hs => hs.map(h => ({ t: h.textContent.trim(), n: h.nextElementSibling ? h.nextElementSibling.querySelectorAll('[data-juego]').length : 0 })));
-  const nJuegos = (await p.$$('[data-juego]')).length;
+  // Navegación por categorías (juegos-categorias): cada «sección» es una categoría con sus tarjetas.
+  const menu = await contarMenu(p);
+  const secciones = menu.porCategoria.map(c => ({ t: c.titulo, n: c.ids.length }));
+  const nJuegos = menu.tarjetas;
   ok('hub: al menos 25 juegos, cada sección con juegos y sin «📝 Español» aparte', nJuegos >= 25 && secciones.length >= 5 && secciones.every(x => x.n > 0) &&
     secciones.reduce((a, x) => a + x.n, 0) === nJuegos && !secciones.some(x => /Español|Maratón de cultura/.test(x.t)) && secciones.filter(x => x.t === '🧠 Cultura y Conocimiento').length === 1, nJuegos + ' juegos · ' + secciones.map(x => x.t + ' ' + x.n).join(' | '));
-  ok('hub: el menú pinta todos los juegos de la página (JUEGOS.length)', (await contarMenu(p)).completo && nJuegos >= 39, String(nJuegos));
-  const arcade = await p.$$eval('.cat-arcade[data-juego]', xs => xs.map(x => x.dataset.juego));
-  ok('hub: Arcade con Axo, Karts y Dragon Run (dragon-run-misiones)', ['plataformas', 'karts', 'dragon-run'].every(id => arcade.includes(id)) && !(await p.$('.cat-mente[data-juego="dragon-run"]')), arcade.join(','));
+  ok('hub: el menú pinta todos los juegos de la página (JUEGOS.length)', menu.completo && nJuegos >= 39, String(nJuegos));
+  const idsCat = id => (menu.porCategoria.find(c => c.id === id) || { ids: [] }).ids;
+  const arcade = idsCat('arcade');
+  ok('hub: Arcade con Axo, Karts y Dragon Run (dragon-run-misiones)', ['plataformas', 'karts', 'dragon-run'].every(id => arcade.includes(id)) && !idsCat('mente').includes('dragon-run'), arcade.join(','));
   ok('hub: Arcade con Futbolito y Billar (futbolito-billar)', ['futbolito', 'billar'].every(id => arcade.includes(id)), arcade.join(','));
   ok('chip con el nombre', (await p.textContent('#chip')).includes('Marisol'));
   await p.screenshot({ path: 'juegos-hub.png', fullPage: true });
@@ -57,7 +60,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   ok('hub muestra el mejor de la semana', (await p.$$('.game .best')).length >= 1);
 
   // Vidas: cultura (elige "Todas") y secuencias
-  await p.click('[data-juego="cultura"]'); await p.waitForSelector('[data-cat]');
+  await abrirJuego(p, 'cultura'); await p.waitForSelector('[data-cat]');
   ok('cultura: un maratón por categoría de cultura.json más «Todas»', (await p.$$('[data-cat]')).length === cultura.categorias.length + 1, String((await p.$$('[data-cat]')).length));
   await p.click('[data-cat="todas"]');
   { const t0 = Date.now(); while (!(await p.$('.result .score')) && Date.now() - t0 < 60000) { await clicOpcion(p).catch(() => {}); await sleep(200); } }
@@ -68,7 +71,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
 
   // Spelling (respuestas equivocadas) con pista
   {
-    await p.click('[data-juego="en-spelling"]'); await p.waitForSelector('#sp-in');
+    await abrirJuego(p, 'en-spelling'); await p.waitForSelector('#sp-in');
     await p.click('[data-sp="pista"]');
     ok('spelling: pista con traducción', (await p.textContent('#sp-pista')).includes('letras'));
     const t0 = Date.now();
@@ -85,7 +88,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
 
   // Memorama resuelto con el diccionario
   {
-    await p.click('[data-juego="en-memorama"]'); await p.waitForSelector('[data-memo]');
+    await abrirJuego(p, 'en-memorama'); await p.waitForSelector('[data-memo]');
     const cartas = await p.$$eval('[data-memo]', bs => bs.map(x => ({ i: x.dataset.memo, txt: x.textContent, em: !!x.querySelector('.em') })));
     const esToEn = new Map(ingles.vocabulario.map(v => [v.emoji + v.es, v.en]));
     for (const c of cartas.filter(c => !c.em)) {
@@ -101,7 +104,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
 
   // Ordena (en y es) resuelto con los datos
   for (const [id, fuente] of [['en-ordena', ingles.oraciones.map(o => ({ txt: o.en, pista: o.es }))], ['es-ordena', espanol.oraciones.map(o => ({ txt: o, pista: '' }))]]) {
-    await p.click(`[data-juego="${id}"]`);
+    await abrirJuego(p, id);
     if (id === 'en-ordena') { await p.waitForSelector('[data-tema="todo"]'); await p.click('[data-tema="todo"]'); } // selector de tema (juegos-ingles-gramatica)
     await p.waitForSelector('[data-poner]');
     const t0 = Date.now();
@@ -128,7 +131,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
     ok('mente-simon: termina y guarda', txt.includes('a tus individuales'), txt.slice(0, 80)); await p.click('[data-a="hub"]'); }
   // Sopa: encuentra una palabra y deja correr el reloj
   {
-    await p.click('[data-juego="mente-sopa"]'); await p.waitForSelector('[data-r]');
+    await abrirJuego(p, 'mente-sopa'); await p.waitForSelector('[data-r]');
     await enResultado(p);
     ok('mente-sopa: termina y guarda', (await p.textContent('.result')).includes('a tus individuales'));
     await p.click('[data-a="hub"]');
@@ -151,7 +154,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   await p.fill('#apodo', 'Leo'); await p.click('#f-invitado button[type=submit]');
   ok('invitado: sin aceptar no entra', (await p.textContent('main')).includes('necesitas aceptar'));
   await p.fill('#apodo', 'Leo'); await p.check('#acepto'); await p.click('#f-invitado button[type=submit]');
-  await p.waitForSelector('[data-juego]', { timeout: 60000 });
+  await p.waitForSelector('[data-menu]', { timeout: 60000 });
   ok('invitado: entra con chip INVITADO', (await p.textContent('#chip')).includes('INVITADO'));
   { const txt = await jugarHastaFin(p, 'mente-calculo', clicOpcion); ok('invitado: su partida se guarda', txt.includes('a tus individuales')); }
   await p.click('[data-a="hub"]'); await p.click('[data-tab="ranking"]'); await p.waitForSelector('.rank li');

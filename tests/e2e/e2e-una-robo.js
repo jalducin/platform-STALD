@@ -4,14 +4,15 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina, urlDe } = require('./lib/navegador');
+const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, tiempo: 0.04, viewport: { width: 390, height: 900 } });
   const errores = []; p.on('pageerror', e => errores.push(e.message));
-  await p.goto(urlDe('/juegos.html')); await p.waitForSelector('[data-juego]', { timeout: 60000 });
-  await p.click('[data-juego="una"]'); await p.click('[data-una-bots="3"]'); await p.click('[data-una-go]');
+  await p.goto(urlDe('/juegos.html')); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'una'); await p.click('[data-una-bots="3"]'); await p.click('[data-una-go]');
   await p.waitForSelector('.una-mano');
   let robos = 0, malos = 0, varias = 0, finMazo = 0, sinCartas = 0, deshabilitado = 0, pasadas = 0, tiradas = 0, animadas = 0, foto = false; const detalle = [];
   const mano = () => p.$$eval('.una-mano .una-btn', xs => xs.map(x => ({ robada: x.classList.contains('robada'), nueva: x.classList.contains('nueva'), k: x.style.getPropertyValue('--k'), jugable: !x.hasAttribute('data-no') })));

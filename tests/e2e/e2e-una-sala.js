@@ -5,7 +5,7 @@ const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function jugador(b, email) {
-  const p = await abrirPagina(b, { email, viejo: true, tiempo: 1, out, dialogos: 'rechazar', ruta: '/juegos.html', esperar: '[data-juego]' });
+  const p = await abrirPagina(b, { email, viejo: true, tiempo: 1, out, dialogos: 'rechazar', ruta: '/juegos.html', esperar: '[data-menu]' });
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear'); return p;
 }
 const foto = p => p.evaluate(() => { if (!sala.estado || !sala.estado.sala.inicio) return null; const st = estadoUna(); return { paso: st.paso + (st.esperaUna ? ':esperando-UNA' : ''), top: st.pila[st.pila.length - 1], color: st.color, manos: st.manos.map(h => h.length), turno: st.turno, castigo: !!(st.ultima && st.ultima.castigo), fin: st.fin && st.fin.ganador, robo: st.ultima && st.ultima.accion === 'robar' ? st.ultima.robadas : null, mazo: st.mazo.length }; }); // basta-divertida-una-robo: robo hasta poder, igual en ambos
@@ -79,7 +79,7 @@ const foto = p => p.evaluate(() => { if (!sala.estado || !sala.estado.sala.inici
   // vaciar el mazo. Ambos dispositivos deben ver las mismas robadas en cada paso.
   const errs = [];
   const nueva = async email => {
-    const p = await abrirPagina(b, { email, viejo: true, tiempo: 0.1, out, dialogos: 'rechazar', ruta: '/juegos.html', esperar: '[data-juego]', viewport: { width: 390, height: 900 } });
+    const p = await abrirPagina(b, { email, viejo: true, tiempo: 0.1, out, dialogos: 'rechazar', ruta: '/juegos.html', esperar: '[data-menu]', viewport: { width: 390, height: 900 } });
     p.on('pageerror', e => errs.push(e.message));
     await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear'); return p;
   };
