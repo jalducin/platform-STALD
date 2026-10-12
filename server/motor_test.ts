@@ -62,7 +62,8 @@ Deno.test("mejor intento y estados", () => {
   assertEquals(r.mejor!.porcentaje, 80);
   assertEquals(r.mejor!.n, 2);
   assertEquals(estadoItem(it, "2026-09-29", r), "completo");
-  assertEquals(estadoItem(it, "2026-09-27", null), "proximamente");
+  assertEquals(estadoItem(it, "2026-09-26", null), "proximamente");
+  assertEquals(estadoItem(it, "2026-09-27", null), "disponible", "lo del lunes se adelanta desde el domingo (openspec: semana-desde-domingo)");
   const r2 = addIntento(null, it, "A", { n: 1, enviadoEn: "t", preguntas: [], respuestas: {}, calificacion: cal(90) });
   assertEquals(addIntento(r2, it, "A", { n: 2, enviadoEn: "t", preguntas: [], respuestas: {}, calificacion: cal(40) }).mejor!.porcentaje, 90);
 });

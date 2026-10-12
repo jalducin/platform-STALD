@@ -4,7 +4,7 @@
 // no agrega objetos nuevos a Postgres.
 import { visibleItems } from "./actividades.ts";
 import { leerCarpeta } from "./db.ts";
-import { type Item, mxToday, paraAlumno, type Resultado, slugAlumno, tieneReto } from "./motor.ts";
+import { abreYa, type Item, mxToday, paraAlumno, type Resultado, slugAlumno, tieneReto } from "./motor.ts";
 import type { Store } from "./store.ts";
 
 type Json = (body: unknown, status?: number) => Response;
@@ -40,7 +40,7 @@ export function celdaDe(it: Item & { grupos?: string[] }, hoy: string, alumno: {
   if (alumno.inicio && suyo.fechaLimite < alumno.inicio) return { estado: "no-aplica" };
   const intentos = r?.intentos.length || 0;
   if (intentos) return { estado: "hecho", porcentaje: r!.mejor?.porcentaje ?? null, fueraDeTiempo: r!.intentos[0].fueraDeTiempo === true, intentos, ...prorroga };
-  if (hoy < suyo.disponibleDesde) return { estado: "proximamente", ...prorroga };
+  if (!abreYa(suyo.disponibleDesde, hoy)) return { estado: "proximamente", ...prorroga };
   if (hoy > suyo.fechaLimite) return { estado: "atrasado", ...prorroga };
   if (hoy === suyo.fechaLimite) return { estado: "hoy", ...prorroga };
   return { estado: "pendiente", ...prorroga };

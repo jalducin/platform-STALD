@@ -304,8 +304,11 @@ function alDiaItems(act) {
 }
 function renderWeekCard(act) {
   const lista = semanaItems(act), alDia = alDiaItems(act);
-  if (!lista.length && !alDia.length) return '';
+  if (!lista.length && !alDia.length && !act.semanaSiguiente) return '';
+  // El domingo, la semana siguiente para adelantar (openspec: semana-desde-domingo).
+  const sig = act.semanaSiguiente ? (act.items || []).filter(i => act.semanaSiguiente.ids.includes(i.id)) : [];
   return (lista.length ? '<div class="exam-card"><h3>📚 Esta semana · ' + escapeHtml(act.semana.titulo) + '</h3>' + lista.map(filaSemana).join('') + '</div>' : '') +
+    (sig.length ? '<div class="exam-card" id="adelanta"><h3>⏩ Adelanta la próxima semana · ' + escapeHtml(act.semanaSiguiente.titulo) + '</h3><div class="s" style="font-size:.82rem;margin-bottom:6px">Ya puedes empezar lo del lunes; el examen y lo demás se abren en su día.</div>' + sig.map(filaSemana).join('') + '</div>' : '') +
     (alDia.length ? '<div class="exam-card" id="al-dia"><h3>📌 Para ponerte al día</h3><div class="s" style="font-size:.82rem;margin-bottom:6px">De semanas anteriores, con fecha esta semana.</div>' + alDia.map(filaSemana).join('') + '</div>' : '');
 }
 
