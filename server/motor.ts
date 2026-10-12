@@ -13,13 +13,16 @@ export interface Tema {
 export interface Ejercicio {
   id: string;
   tema: string;
-  tipo: "opcion" | "escribir" | "pronunciar";
+  tipo: "opcion" | "escribir" | "pronunciar" | "ordenar" | "emparejar";
   enunciado: string;
   opciones?: string[];
   correcta?: number; // opcion
-  aceptadas?: string[]; // escribir
+  aceptadas?: string[]; // escribir; ordenar: otros órdenes válidos (secreto)
   frase?: string; // pronunciar: lo que se dice en voz alta (público)
   audio?: string; // cualquier tipo: texto que la página lee en voz alta (público)
+  palabras?: string[]; // ordenar: fichas en el orden correcto (secreto; la página recibe `fichas` barajadas)
+  distractores?: string[]; // ordenar: fichas que sobran (se publican mezcladas con las palabras)
+  pares?: [string, string][]; // emparejar: 3 a 6 pares [izquierda, derecha] (secreto)
   explicacion: string;
 }
 
@@ -235,8 +238,23 @@ export function temasRefuerzo(it: Item, base: Resultado | null, respaldo: Result
 }
 
 // ---------- Vista pública (sin respuestas) ----------
-export function publicQuestion(e: Ejercicio) {
-  const { correcta: _c, aceptadas: _a, explicacion: _e, ...rest } = e;
+// Baraja sin dejar el orden original (lo regalaría): si coincide, rota una posición.
+function barajarDistinto<T>(arr: T[], rnd: () => number): T[] {
+  const a = shuffle(arr, rnd);
+  if (a.length > 1 && a.every((x, i) => x === arr[i])) a.push(a.shift()!);
+  return a;
+}
+
+// `semilla` = "<elemento>|<alumno o admin>|<intento>" (openspec: ejercicios-ordenar-emparejar): las fichas de
+// `ordenar` y la columna derecha de `emparejar` se barajan aquí, deterministas por alumno, intento y ejercicio.
+export function publicQuestion(e: Ejercicio, semilla = "") {
+  const { correcta: _c, aceptadas: _a, explicacion: _e, palabras: _p, distractores: _d, pares: _r, ...rest } = e;
+  const rnd = () => mulberry32(hashSeed(`${semilla}|${e.id}`));
+  if (e.tipo === "ordenar") return { ...rest, fichas: barajarDistinto([...(e.palabras || []), ...(e.distractores || [])], rnd()) };
+  if (e.tipo === "emparejar") {
+    const pares = e.pares || [];
+    return { ...rest, izquierda: pares.map((p) => p[0]), derecha: barajarDistinto(pares.map((p) => p[1]), rnd()) };
+  }
   return rest;
 }
 
@@ -282,6 +300,14 @@ export function similitudPronunciacion(frase: string, oido: string): number {
 export const UMBRAL_PRONUNCIACION = 0.8;
 
 function esCorrecta(e: Ejercicio, r: unknown): boolean {
+  if (e.tipo === "ordenar") {
+    const v = typeof r === "string" ? normalizeText(r) : "";
+    return v !== "" && [(e.palabras || []).join(" "), ...(e.aceptadas || [])].some((a) => normalizeText(a) === v);
+  }
+  if (e.tipo === "emparejar") {
+    const pares = e.pares || [];
+    return Array.isArray(r) && r.length === pares.length && pares.every((p, i) => normalizeText(r[i]) === normalizeText(p[1]));
+  }
   if (e.tipo === "pronunciar") {
     if (r === "auto:ok") return true;
     if (typeof r !== "string" || r.startsWith("auto:")) return false;
@@ -294,14 +320,21 @@ function esCorrecta(e: Ejercicio, r: unknown): boolean {
   return r === e.correcta;
 }
 
+// Pares con el formato de la revisión: "this → este / esta · these → — · …" (— = sin unir).
+const textoPares = (izq: string[], der: unknown[]) => izq.map((a, i) => `${a} → ${String(der[i] ?? "") || "—"}`).join(" · ");
+
 function textoRespuesta(e: Ejercicio, r: unknown): string | null {
   if (r === undefined || r === null || r === "") return null;
+  if (e.tipo === "emparejar") return Array.isArray(r) && r.some((x) => x) ? textoPares((e.pares || []).map((p) => p[0]), r) : null;
+  if (e.tipo === "ordenar") return String(r);
   if (e.tipo === "pronunciar") return r === "auto:ok" ? "Autoevaluación: me salió bien" : r === "auto:repetir" ? "Autoevaluación: necesito repetir" : String(r);
   if (e.tipo === "escribir") return String(r);
   return typeof r === "number" && e.opciones ? e.opciones[r] ?? null : null;
 }
 
 function textoCorrecta(e: Ejercicio): string {
+  if (e.tipo === "ordenar") return (e.palabras || []).join(" ");
+  if (e.tipo === "emparejar") return textoPares((e.pares || []).map((p) => p[0]), (e.pares || []).map((p) => p[1]));
   if (e.tipo === "pronunciar") return e.frase || "";
   return e.tipo === "escribir" ? (e.aceptadas || [""])[0] : (e.opciones || [])[e.correcta ?? 0];
 }
@@ -314,6 +347,12 @@ export function sanitizeRespuestas(preguntas: Ejercicio[], raw: unknown): Record
     const v = (raw as Record<string, unknown>)[e.id];
     if (e.tipo === "escribir" && typeof v === "string" && v.trim()) out[e.id] = v.slice(0, 200);
     if (e.tipo === "pronunciar" && typeof v === "string" && v.trim()) out[e.id] = v.trim().slice(0, 300);
+    if (e.tipo === "ordenar" && typeof v === "string" && v.trim()) out[e.id] = v.trim().slice(0, 300);
+    // emparejar: arreglo del largo exacto, "" (sin unir) u opciones de la derecha, con al menos un par.
+    if (e.tipo === "emparejar" && Array.isArray(v) && v.length === (e.pares || []).length) {
+      const opciones = new Set((e.pares || []).map((p) => p[1]));
+      if (v.every((x) => typeof x === "string" && (x === "" || opciones.has(x))) && v.some((x) => x)) out[e.id] = v.slice();
+    }
     if (e.tipo === "opcion" && Number.isInteger(v) && (v as number) >= 0 && (v as number) < (e.opciones || []).length) out[e.id] = v;
   }
   return out;
@@ -426,6 +465,39 @@ export function fueraDeTiempoDe(it: Item, n: number, hoy: string): boolean {
   return hoy > (n === 2 && it.segundaOportunidad ? it.segundaOportunidad : it.fechaLimite);
 }
 
+// Arreglo de textos no vacíos (validación del contenido).
+const textos = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === "string" && x.trim() !== "");
+
+function validarOrdenar(ref: string, e: Ejercicio): string[] {
+  const errs: string[] = [];
+  if (!textos(e.palabras) || e.palabras.length < 2) errs.push(`${ref}: ordenar sin palabras (al menos 2 fichas no vacías)`);
+  if (e.distractores !== undefined && !textos(e.distractores)) errs.push(`${ref}: distractores inválidos`);
+  if (e.aceptadas !== undefined && !textos(e.aceptadas)) errs.push(`${ref}: aceptadas inválidas`);
+  const vistas = new Set<string>();
+  for (const f of [...(textos(e.palabras) ? e.palabras : []), ...(textos(e.distractores) ? e.distractores : [])]) {
+    const k = normalizeText(f);
+    if (vistas.has(k)) errs.push(`${ref}: ficha repetida "${f}"`);
+    vistas.add(k);
+  }
+  return errs;
+}
+
+function validarEmparejar(ref: string, e: Ejercicio): string[] {
+  const pares = Array.isArray(e.pares) ? e.pares : [];
+  if (pares.length < 3 || pares.length > 6) return [`${ref}: emparejar con ${pares.length} pares (3 a 6)`];
+  const errs: string[] = [];
+  const lados = [new Set<string>(), new Set<string>()];
+  for (const p of pares) {
+    if (!textos(p) || p.length !== 2) { errs.push(`${ref}: par inválido ${JSON.stringify(p)}`); continue; }
+    p.forEach((t, lado) => {
+      const k = normalizeText(t);
+      if (lados[lado].has(k)) errs.push(`${ref}: texto repetido "${t}"`);
+      lados[lado].add(k);
+    });
+  }
+  return errs;
+}
+
 export function validateItem(it: Item): string[] {
   const errs: string[] = [];
   if (it.segundaOportunidad !== undefined) {
@@ -452,6 +524,8 @@ export function validateItem(it: Item): string[] {
     if (e.tipo === "opcion" && !((e.correcta ?? -1) >= 0 && (e.correcta ?? -1) < (e.opciones || []).length)) errs.push(`${it.id}/${e.id}: correcta inválida`);
     if (e.tipo === "escribir" && !(e.aceptadas || []).length) errs.push(`${it.id}/${e.id}: sin aceptadas`);
     if (e.tipo === "pronunciar" && !(e.frase || "").trim()) errs.push(`${it.id}/${e.id}: pronunciar sin frase`);
+    if (e.tipo === "ordenar") errs.push(...validarOrdenar(`${it.id}/${e.id}`, e));
+    if (e.tipo === "emparejar") errs.push(...validarEmparejar(`${it.id}/${e.id}`, e));
     if (e.audio !== undefined && !String(e.audio).trim()) errs.push(`${it.id}/${e.id}: audio vacío`);
   }
   if (it.tipo !== "refuerzo" && it.preguntasPorIntento && (it.banco || []).length < it.preguntasPorIntento) errs.push(`${it.id}: banco menor que preguntasPorIntento`);

@@ -1,0 +1,38 @@
+{
+  "id": "fichas-e2e",
+  "tipo": "actividad",
+  "titulo": "Fichas y pares (prueba E2E)",
+  "nivel": "A1",
+  "descripcion": "Actividad de ejemplo para la E2E de ordenar la oración y unir pares.",
+  "disponibleDesde": "2026-09-21",
+  "fechaLimite": "2026-10-04",
+  "intentos": 2,
+  "alumnos": ["fernando"],
+  "temas": [
+    { "id": "oraciones", "titulo": "🧩 Oraciones", "retroalimentacion": { "fortaleza": "¡Muy bien!", "en-progreso": "Casi, repasa el orden.", "debilidad": "Repasa el orden de la oración." } },
+    { "id": "vocabulario", "titulo": "🔗 Vocabulario", "retroalimentacion": { "fortaleza": "¡Muy bien!", "en-progreso": "Casi.", "debilidad": "Repasa los demostrativos." } }
+  ],
+  "teoria": [{ "titulo": "Orden de la oración", "texto": "Sujeto + will + verbo + complemento." }],
+  "tips": [{ "tipo": "libreta", "texto": "Escribe tres oraciones con will." }],
+  "banco": [
+    {
+      "id": "fe-o1", "tema": "oraciones", "tipo": "ordenar", "enunciado": "Ordena: Yo voy a viajar mañana",
+      "palabras": ["I", "will", "travel", "tomorrow"], "distractores": ["going"], "aceptadas": ["Tomorrow I will travel"],
+      "explicacion": "Futuro con will: sujeto + will + verbo base."
+    },
+    {
+      "id": "fe-o2", "tema": "oraciones", "tipo": "ordenar", "enunciado": "Escucha y ordena lo que oyes",
+      "audio": "She is reading a book", "palabras": ["She", "is", "reading", "a", "book"],
+      "explicacion": "Presente continuo: sujeto + is + verbo con -ing."
+    },
+    {
+      "id": "fe-m1", "tema": "vocabulario", "tipo": "emparejar", "enunciado": "Une cada palabra con su significado",
+      "pares": [["this", "este / esta"], ["these", "estos / estas"], ["that", "ese / esa / aquel"], ["those", "esos / esas"]],
+      "explicacion": "this y these: cerca; that y those: lejos. These y those son plurales."
+    },
+    {
+      "id": "fe-c1", "tema": "vocabulario", "tipo": "opcion", "enunciado": "Elige: ___ books are mine (cerca)",
+      "opciones": ["These", "That"], "correcta": 0, "explicacion": "Plural y cerca: these."
+    }
+  ]
+}

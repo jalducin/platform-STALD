@@ -73,6 +73,8 @@ interface Sala {
   inicio: number | null; // ms del servidor
   bots: boolean;
   canal?: string; // topic secreto de Supabase Realtime (openspec: salas-realtime); nunca va en el cuerpo de la sala
+  siguiente?: string; // revancha: código de la sala nueva (openspec: revancha-partidas)
+  siguienteHost?: string; // revancha: id de quien la abrió (anfitrión de la sala nueva)
 }
 
 interface EnSala {
@@ -160,7 +162,50 @@ export async function resumenSalas(store: Store, lunes: string) {
   return salas.filter((x) => x !== null).sort((a, b) => b!.creada - a!.creada);
 }
 
-// sub: "" (crear) o "/<código>[/unirse|/empezar|/respuesta]"
+// Código de 4 letras que aún no existe ("" si no se encontró en 10 intentos).
+async function codigoLibre(store: Store): Promise<string> {
+  for (let i = 0; i < 10; i++) {
+    const cand = [...aleatorio(4)].map((x) => LETRAS_CODIGO[x % LETRAS_CODIGO.length]).join("");
+    if (!(await store.get(ruta(cand)))) return cand;
+  }
+  return "";
+}
+
+// Publica el estado fresco de una sala en su canal (si hay Realtime configurado).
+async function publicarEstado(store: Store, codigo: string, ahora: number, rt?: ConfigRealtime) {
+  if (!rt) return;
+  cache.delete(codigo);
+  const fresco = await estado(store, codigo, ahora);
+  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: fresco.jugadores, ahora: Date.now() });
+}
+
+// Revancha (openspec: revancha-partidas). La primera petición reserva `siguiente` en la sala vieja con escritura
+// condicional; quien encuentre la sala nueva sin crear la crea (put con sha null: solo una gana) con la misma
+// configuración y `siguienteHost` de anfitrión. Devuelve la sala vieja ya marcada, o un error.
+async function reservarRevancha(store: Store, codigo: string, jugador: Jugador, terminada: boolean, ahora: number, lunes: string, nombreDe: (id: string) => string | undefined): Promise<Sala | "no_termino" | "sin_codigo" | "conflicto_escritura"> {
+  let vieja = await store.get<Sala>(ruta(codigo));
+  for (let i = 0; i < 3 && vieja && !vieja.data.siguiente; i++) {
+    if (!terminada) return "no_termino";
+    const cand = await codigoLibre(store);
+    if (!cand) return "sin_codigo";
+    const marcada = { ...vieja.data, siguiente: cand, siguienteHost: jugador.id };
+    vieja = await store.put(ruta(codigo), marcada, vieja.sha, `sala ${codigo}: revancha ${cand}`) ? { data: marcada, sha: null } : await store.get<Sala>(ruta(codigo));
+  }
+  const base = vieja?.data;
+  if (!base?.siguiente) return "conflicto_escritura";
+  cache.delete(codigo);
+  const sig = base.siguiente;
+  if (!(await store.get(ruta(sig)))) {
+    const host = base.siguienteHost ?? jugador.id;
+    const nueva: Sala = { codigo: sig, juego: base.juego, opciones: { ...base.opciones }, seed: aleatorio(1)[0] % 2147483647, host, creada: ahora, inicio: null, bots: base.bots, canal: canalNuevo() };
+    if (await store.put(ruta(sig), nueva, null, `sala ${sig}: revancha de ${codigo}`)) {
+      await indexar(store, lunes, { codigo: sig, juego: base.juego, host: nombreDe(host) ?? jugador.nombre, creada: ahora });
+    }
+  }
+  return base;
+}
+
+// sub: "" (crear) o "/<código>[/unirse|/empezar|/respuesta|/revancha]"
 // La sala que se devuelve o se publica, sin el canal secreto.
 const sinCanal = (s: Sala): Sala => { const { canal: _c, ...resto } = s; return resto; };
 
@@ -190,11 +235,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (!RONDAS_BASTA.includes(rondas)) return json({ error: "rondas_invalidas" }, 400);
       opciones.rondas = rondas;
     }
-    let codigo = "";
-    for (let i = 0; i < 10 && !codigo; i++) {
-      const cand = [...aleatorio(4)].map((x) => LETRAS_CODIGO[x % LETRAS_CODIGO.length]).join("");
-      if (!(await store.get(ruta(cand)))) codigo = cand;
-    }
+    const codigo = await codigoLibre(store);
     if (!codigo) return json({ error: "sin_codigo" }, 503);
     const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: BOTS_FIJOS[juego] ?? body.bots !== false, canal: canalNuevo() };
     await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`);
@@ -203,7 +244,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     return json({ codigo, sala: sinCanal(sala) });
   }
 
-  const m = sub.match(/^\/([A-Z]{4})(\/(unirse|empezar|respuesta))?$/);
+  const m = sub.match(/^\/([A-Z]{4})(\/(unirse|empezar|respuesta|revancha))?$/);
   if (!m) return json({ error: "not_found" }, 404);
   const [, codigo, , accion] = m;
   const est = await estado(store, codigo, ahora);
@@ -212,12 +253,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (ahora - sala.creada > VIGENCIA_MS) return json({ error: "sala_vencida" }, 410);
   const dentro = jugadores.some((j) => j.id === jugador.id);
   // Tras un cambio: publicar el estado fresco en el canal de la sala (si hay Realtime configurado).
-  const publicar = async () => {
-    if (!rt || !sala.canal) return;
-    cache.delete(codigo);
-    const fresco = await estado(store, codigo, ahora);
-    if (fresco) await publicarSala(rt, sala.canal, { sala: sinCanal(fresco.sala), jugadores: fresco.jugadores, ahora: Date.now() });
-  };
+  const publicar = () => publicarEstado(store, codigo, ahora, rt);
 
   if (accion === "unirse" && req.method === "POST") {
     if (dentro) return json({ ok: true, codigo });
@@ -299,6 +335,27 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
     await publicar();
     return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas });
+  }
+
+  // POST /juegos/sala/<código>/revancha → { codigo } de la sala nueva, con quien la pidió dentro.
+  if (accion === "revancha" && req.method === "POST") {
+    if (!dentro) return json({ error: "no_en_sala" }, 403);
+    // Terminó: algún jugador ya mandó su total final (lo envía la página al pintar el podio, en todos los juegos).
+    const terminada = sala.inicio !== null && jugadores.some((j) => j.final !== undefined || j.podio !== undefined);
+    const base = await reservarRevancha(store, codigo, jugador, terminada, ahora, lunes, (id) => jugadores.find((j) => j.id === id)?.nombre);
+    if (typeof base === "string") return json({ error: base }, base === "no_termino" ? 409 : 503);
+    const sig = base.siguiente!;
+    cache.delete(sig);
+    const nueva = await estado(store, sig, ahora);
+    if (!nueva) return json({ error: "conflicto_escritura" }, 503);
+    if (!nueva.jugadores.some((j) => j.id === jugador.id)) {
+      if (nueva.sala.inicio !== null) return json({ error: "ya_empezo", codigo: sig }, 409);
+      if (nueva.jugadores.length >= (CUPO[nueva.sala.juego] ?? MAX_JUGADORES)) return json({ error: "sala_llena", codigo: sig }, 409);
+      await guardarJugador(store, sig, jugador, (e) => e, ahora);
+    }
+    await publicar();
+    await publicarEstado(store, sig, ahora, rt);
+    return json({ ok: true, codigo: sig });
   }
 
   if (!accion && req.method === "GET") {
