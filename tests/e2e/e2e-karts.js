@@ -1,4 +1,6 @@
-// E2E: «Karts Turbo» (openspec: juegos-plataformas-karts, karts-controles-diseno).
+// E2E: «Karts Turbo» (openspec: juegos-plataformas-karts, karts-controles-diseno, karts-pseudo3d).
+// Vista pseudo-3D (Mode-7): horizonte, escenario y rivales proyectados; girar mueve el carro y la cámara; una vuelta
+// completa con el piloto de prueba; tutorial de 3 s; botones ⬅ ➡ por omisión, ACELERAR opcional y teclado.
 // Catálogo, carrera 1 de la Copa Fiesta con 8 corredores (manejo con teclado y mini-turbo morado), puntos en ⭐
 // individuales, copa en curso guardada en el servidor y recuperada tras recargar, y carrera en sala con bots
 // fantasma: podio por tiempo sin tocar el progreso.
@@ -35,7 +37,7 @@ const centro = async (fr, sel) => { const c = await fr.locator(sel).boundingBox(
 // Rectángulos (dentro del iframe) del minimapa, del HUD y de los mandos visibles.
 const cajas = fr => fr.evaluate(() => {
   const r = sel => { const e = document.querySelector(sel); if (!e) return null; const s = getComputedStyle(e), b = e.getBoundingClientRect(); return b.width && s.display !== 'none' && s.visibility !== 'hidden' ? { sel, l: b.left, t: b.top, r: b.right, b: b.bottom } : null; };
-  return { vw: innerWidth, vh: innerHeight, mapa: r('#minimapa'), hud: ['.hud-izq', '#h-item', '#hud .der'].map(r).filter(Boolean), ctl: ['#joy-zona', '#m-flechas', '#m-sensor', '#m-item', '#m-freno', '#m-derrape'].map(r).filter(Boolean) };
+  return { vw: innerWidth, vh: innerHeight, mapa: r('#minimapa'), hud: ['.hud-izq', '#h-item', '#hud .der'].map(r).filter(Boolean), ctl: ['#joy-zona', '#m-flechas', '#m-sensor', '#m-item', '#m-freno', '#m-derrape', '#m-acel'].map(r).filter(Boolean) };
 });
 const cruza = (a, b) => a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 && b.t < a.b - 0.5;
 const dentro = (a, vw, vh) => a.l >= -0.5 && a.t >= -0.5 && a.r <= vw + 0.5 && a.b <= vh + 0.5;
@@ -104,71 +106,94 @@ async function correrRapida(fr, pista) {
   ok('continúa en la segunda pista (desierto)', (await estado(fr)).pista === 'desierto');
   await p.click('[data-a="salir"]').catch(() => {});
 
-  // ---- Celular (toques reales): joystick, multitáctil, minimapa y layout a 390×844 vertical ----
+  // ---- Celular (toques reales): botones ⬅ ➡ por omisión, vista 3D, multitáctil y layout a 390×844 vertical ----
   const cel = await abrir(b, { width: 390, height: 844 }, TACTIL);
   await cel.tap('[data-juego="karts"]');
   let fc = await marcoDe(cel);
   await fc.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
-  ok('celular: selector de controles visible con Joystick por omisión', await fc.isVisible('#menu-control') && (await fc.getAttribute('[data-control="joystick"]', 'aria-pressed')) === 'true' && (await estado(fc)).tactil);
+  ok('celular: selector de controles visible con Botones y acelerar automático por omisión', await fc.isVisible('#menu-control') && (await fc.getAttribute('[data-control="botones"]', 'aria-pressed')) === 'true' && (await fc.getAttribute('[data-acel="auto"]', 'aria-pressed')) === 'true' && (await estado(fc)).tactil);
   await cel.screenshot({ path: 'karts-390-menu-controles.png' });
-  await correrRapida(fc, 'pradera');
+  await fc.tap('[data-ir="pistas"]'); await fc.tap('[data-ir="rapida:pradera"]');
+  await fc.waitForFunction(() => window.__karts.estado().modo === 'carrera');
+  await sleep(600);
+  ok('tutorial de controles visible al empezar', (await estado(fc)).tutorial && /Girar/.test(await fc.textContent('#tuto')) && /DERRAPE/.test(await fc.textContent('#tuto')));
+  await cel.screenshot({ path: 'karts-390-tutorial.png' });
+  await fc.waitForFunction(() => window.__karts.estado().tiempo > 400, null, { timeout: 15000 });
+  await sleep(200);
+  ok('tutorial: se quita solo a los 3 s', !(await estado(fc)).tutorial);
+  const v3 = await estado(fc);
+  ok('vista pseudo-3D: horizonte, escenario y rivales proyectados', v3.vista === '3d' && v3.horizonte > 40 && v3.dibujados >= 8, JSON.stringify({ hy: v3.horizonte, dib: v3.dibujados }));
   await revisarLayout(fc, '390×844 vertical');
   const d = dedos(cel);
-  const jz = await centro(fc, '#joy-zona');
-  let a0 = (await estado(fc)).ang;
-  await d.poner(1, jz.x, jz.y); await d.mover(1, jz.x - 15, jz.y); await sleep(250);
-  const suave = await estado(fc);
-  await d.mover(1, jz.x - 60, jz.y); await sleep(500);
-  const fuerte = await estado(fc);
-  ok('joystick: arrastre corto gira poco y arrastre largo gira al máximo (proporcional)', suave.giro < -0.1 && suave.giro > -0.4 && r2(fuerte.giro) === -1, JSON.stringify({ suave: r2(suave.giro), fuerte: r2(fuerte.giro) }));
-  ok('joystick: el carro gira a la izquierda', fuerte.ang < a0 - 0.4, JSON.stringify({ antes: r2(a0), despues: r2(fuerte.ang) }));
-  await cel.screenshot({ path: 'karts-390-joystick.png' });
+  const bi = await centro(fc, '[data-k="izq"]'), bd = await centro(fc, '[data-k="der"]');
+  let a0 = (await estado(fc)).ang, c0 = (await estado(fc)).camAng;
+  await d.poner(1, bi.x, bi.y); await sleep(600);
+  const eb = await estado(fc);
+  ok('botones: mantener ⬅ con toque real gira el carro a la izquierda', eb.giro === -1 && eb.ang < a0 - 0.4, JSON.stringify({ giro: eb.giro, antes: r2(a0), despues: r2(eb.ang) }));
+  ok('botones: la cámara 3D gira con el carro', eb.camAng < c0 - 0.3, JSON.stringify({ antes: r2(c0), despues: r2(eb.camAng) }));
+  await cel.screenshot({ path: 'karts-390-carrera-3d.png' });
   await d.soltarTodo(); await sleep(150);
   const suelto = await estado(fc); await sleep(300);
-  const quieto = await estado(fc);
-  ok('joystick: al soltar regresa al centro y deja de girar', suelto.giro === 0 && Math.abs(quieto.ang - suelto.ang) < 0.02, JSON.stringify({ giro: suelto.giro, delta: r2(quieto.ang - suelto.ang) }));
-  // Zona muerta: un movimiento mínimo no gira.
-  await d.poner(1, jz.x, jz.y); await d.mover(1, jz.x - 5, jz.y); await sleep(150);
-  ok('joystick: zona muerta', (await estado(fc)).giro === 0);
-  // Jalar hacia abajo frena.
-  await d.mover(1, jz.x, jz.y + 50); await sleep(150);
-  ok('joystick: jalar hacia abajo frena', (await estado(fc)).freno === true);
-  await d.soltarTodo(); await sleep(400);
-  // Multitáctil: joystick a la izquierda con un dedo y DERRAPE con otro durante 2.6 s.
+  ok('botones: al soltar deja de girar', suelto.giro === 0 && Math.abs((await estado(fc)).ang - suelto.ang) < 0.02);
+  a0 = (await estado(fc)).ang;
+  await d.poner(1, bd.x, bd.y); await sleep(500);
+  const ed = await estado(fc); await d.soltarTodo();
+  ok('botones: mantener ➡ gira a la derecha', ed.giro === 1 && ed.ang > a0 + 0.3, JSON.stringify({ antes: r2(a0), despues: r2(ed.ang) }));
+  await sleep(400);
+  // Multitáctil: ⬅ con un dedo y DERRAPE con otro durante 2.6 s.
   const dz = await centro(fc, '#m-derrape');
-  await d.poner(1, jz.x, jz.y); await d.mover(1, jz.x - 60, jz.y);
-  await d.poner(2, dz.x, dz.y); await sleep(1200);
+  await d.poner(1, bi.x, bi.y); await d.poner(2, dz.x, dz.y); await sleep(1200);
   const mt = await estado(fc);
   ok('multitáctil: gira y derrapa a la vez', mt.derrape && mt.giro === -1, JSON.stringify({ derrape: mt.derrape, giro: mt.giro }));
   await sleep(1400);
   await d.soltarTodo(); await sleep(150);
   const mt2 = await estado(fc);
-  ok('multitáctil: joystick + DERRAPE 2.6 s → mini-turbo morado', mt2.ultimoTurbo === 'morado', JSON.stringify({ ultimo: mt2.ultimoTurbo, vel: mt2.vel }));
-  // 🎁 con toque real (sin ítem no pasa nada, pero no rompe) y la página de Juegos no se desplaza.
+  ok('multitáctil: ⬅ + DERRAPE 2.6 s → mini-turbo morado', mt2.ultimoTurbo === 'morado', JSON.stringify({ ultimo: mt2.ultimoTurbo, vel: mt2.vel }));
   const scrollAntes = await cel.evaluate(() => scrollY);
-  await d.poner(3, jz.x + 10, jz.y); await d.mover(3, jz.x + 10, jz.y - 120); await d.soltarTodo();
-  ok('arrastrar en la zona del joystick no desplaza la página de Juegos', (await cel.evaluate(() => scrollY)) === scrollAntes);
+  await d.poner(3, bi.x, bi.y); await d.mover(3, bi.x + 10, bi.y - 120); await d.soltarTodo();
+  ok('arrastrar sobre los botones no desplaza la página de Juegos', (await cel.evaluate(() => scrollY)) === scrollAntes);
 
-  // ---- Botones ◀ ▶ con toque real y preferencia guardada ----
+  // ---- Joystick y «Acelerar con botón» elegidos, guardados tras recargar ----
   await fc.evaluate(() => window.__karts.adelantar());
   await fc.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
   await fc.tap('#res-botones [data-ir="menu"]');
-  await fc.tap('[data-control="botones"]');
+  await fc.tap('[data-control="joystick"]'); await fc.tap('[data-acel="manual"]');
   await cel.reload(); await cel.waitForSelector('[data-juego="karts"]', { timeout: 60000 });
   await cel.tap('[data-juego="karts"]');
   fc = await marcoDe(cel);
   await fc.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
-  ok('preferencia: tras recargar sigue elegido «Botones»', (await fc.getAttribute('[data-control="botones"]', 'aria-pressed')) === 'true' && (await estado(fc)).control === 'botones');
+  const pref = await estado(fc);
+  ok('preferencia: tras recargar siguen elegidos «Joystick» y «Con botón»', (await fc.getAttribute('[data-control="joystick"]', 'aria-pressed')) === 'true' && pref.control === 'joystick' && pref.acel === 'manual', JSON.stringify({ control: pref.control, acel: pref.acel }));
   await correrRapida(fc, 'desierto');
-  const bi = await centro(fc, '[data-k="izq"]');
-  a0 = (await estado(fc)).ang;
+  await sleep(800);
+  const sinAcel = await estado(fc);
+  ok('acelerar con botón: sin tocar ACELERAR el carro no avanza', sinAcel.vel < 20 && !sinAcel.acelera, JSON.stringify({ vel: sinAcel.vel }));
+  const ac = await centro(fc, '#m-acel');
   const d2 = dedos(cel);
-  await d2.poner(1, bi.x, bi.y); await sleep(500);
-  const eb = await estado(fc);
+  await d2.poner(5, ac.x, ac.y); await sleep(1200);
+  const conAcel = await estado(fc);
+  ok('acelerar con botón: mantener ACELERAR (toque real) avanza', conAcel.acelera && conAcel.vel > 120, JSON.stringify({ vel: conAcel.vel }));
+  const jz = await centro(fc, '#joy-zona');
+  a0 = conAcel.ang;
+  await d2.poner(1, jz.x, jz.y); await d2.mover(1, jz.x - 15, jz.y); await sleep(250);
+  const suave = await estado(fc);
+  await d2.mover(1, jz.x - 60, jz.y); await sleep(500);
+  const fuerte = await estado(fc);
+  ok('joystick: arrastre corto gira poco y arrastre largo gira al máximo (proporcional)', suave.giro < -0.1 && suave.giro > -0.4 && r2(fuerte.giro) === -1, JSON.stringify({ suave: r2(suave.giro), fuerte: r2(fuerte.giro) }));
+  ok('joystick: el carro gira a la izquierda', fuerte.ang < a0 - 0.4, JSON.stringify({ antes: r2(a0), despues: r2(fuerte.ang) }));
+  await revisarLayout(fc, '390×844 joystick + ACELERAR');
+  await cel.screenshot({ path: 'karts-390-joystick.png' });
+  await d2.soltarTodo(); await sleep(150);
+  ok('joystick: al soltar regresa al centro', (await estado(fc)).giro === 0);
+  await d2.poner(1, jz.x, jz.y); await d2.mover(1, jz.x - 5, jz.y); await sleep(150);
+  ok('joystick: zona muerta', (await estado(fc)).giro === 0);
+  await d2.mover(1, jz.x, jz.y + 50); await sleep(150);
+  ok('joystick: jalar hacia abajo frena', (await estado(fc)).freno === true);
   await d2.soltarTodo();
-  ok('botones: mantener ◀ con toque real gira a la izquierda', eb.giro === -1 && eb.ang < a0 - 0.4, JSON.stringify({ giro: eb.giro, antes: r2(a0), despues: r2(eb.ang) }));
-  await revisarLayout(fc, '390×844 botones');
-  await cel.screenshot({ path: 'karts-390-botones.png' });
+  await fc.evaluate(() => window.__karts.adelantar());
+  await fc.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
+  await fc.tap('#res-botones [data-ir="menu"]');
+  await fc.tap('[data-control="botones"]'); await fc.tap('[data-acel="auto"]');
   await cel.context().close();
 
   // ---- Sensor con eventos deviceorientation ----
@@ -205,9 +230,9 @@ async function correrRapida(fr, pista) {
   const fn = await marcoDe(neg);
   await fn.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fn.tap('[data-control="sensor"]'); await fn.tap('#b-activar-sensor');
-  await fn.waitForFunction(() => window.__karts.estado().control === 'joystick', null, { timeout: 5000 }).catch(() => {});
+  await fn.waitForFunction(() => window.__karts.estado().control === 'botones', null, { timeout: 5000 }).catch(() => {});
   const en = await estado(fn);
-  ok('sensor: permiso negado → aviso amable y regreso al joystick', en.control === 'joystick' && !en.sensorActivo && /No se pudo usar el sensor/.test(await fn.textContent('#ctl-estado')), JSON.stringify({ control: en.control }));
+  ok('sensor: permiso negado → aviso amable y regreso a los botones', en.control === 'botones' && !en.sensorActivo && /No se pudo usar el sensor/.test(await fn.textContent('#ctl-estado')), JSON.stringify({ control: en.control }));
   await neg.screenshot({ path: 'karts-390-sensor-negado.png' });
   await neg.context().close();
 
@@ -221,7 +246,7 @@ async function correrRapida(fr, pista) {
   const antesDe2 = await estado(fsn);
   await sleep(1900);
   const trasDe2 = await estado(fsn);
-  ok('sensor: sin lecturas espera 2 s y regresa al joystick', antesDe2.control === 'sensor' && trasDe2.control === 'joystick' && /No se pudo usar el sensor/.test(await fsn.textContent('#ctl-estado')), JSON.stringify({ antes: antesDe2.control, despues: trasDe2.control }));
+  ok('sensor: sin lecturas espera 2 s y regresa a los botones', antesDe2.control === 'sensor' && trasDe2.control === 'botones' && /No se pudo usar el sensor/.test(await fsn.textContent('#ctl-estado')), JSON.stringify({ antes: antesDe2.control, despues: trasDe2.control }));
   await sin.context().close();
 
   // ---- Horizontal 844×390 y celular angosto 360×640 ----
@@ -231,12 +256,14 @@ async function correrRapida(fr, pista) {
   await fh.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await correrRapida(fh, 'volcan');
   await revisarLayout(fh, '844×390 horizontal');
-  const jh = await centro(fh, '#joy-zona');
+  const marcoH = await hor.evaluate(() => { const r = document.querySelector('#arcade-frame').getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), top: Math.round(r.top) }; });
+  ok('horizontal: el juego usa casi toda la altura de la pantalla dentro de Juegos', marcoH.h >= 360 && marcoH.top >= -1 && marcoH.top + marcoH.h <= 391, JSON.stringify(marcoH));
+  const jh = await centro(fh, '[data-k="der"]');
   a0 = (await estado(fh)).ang;
   const d3 = dedos(hor);
-  await d3.poner(1, jh.x, jh.y); await d3.mover(1, jh.x + 60, jh.y); await sleep(500);
+  await d3.poner(1, jh.x, jh.y); await sleep(500);
   const eh = await estado(fh);
-  ok('horizontal: el joystick gira a la derecha', eh.giro === 1 && eh.ang > a0 + 0.4, JSON.stringify({ giro: eh.giro }));
+  ok('horizontal: el botón ➡ gira a la derecha', eh.giro === 1 && eh.ang > a0 + 0.4, JSON.stringify({ giro: eh.giro }));
   await hor.screenshot({ path: 'karts-844-horizontal.png' });
   await d3.soltarTodo();
   await hor.context().close();
@@ -249,6 +276,14 @@ async function correrRapida(fr, pista) {
   await revisarLayout(fa, '360×640 vertical');
   await ang.screenshot({ path: 'karts-360-vertical.png' });
   await ang.context().close();
+  const mini = await abrir(b, { width: 320, height: 640 }, TACTIL);
+  await mini.tap('[data-juego="karts"]');
+  const fm = await marcoDe(mini);
+  await fm.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  await correrRapida(fm, 'hielo');
+  await revisarLayout(fm, '320×640 vertical');
+  await mini.screenshot({ path: 'karts-320-vertical.png' });
+  await mini.context().close();
 
   // ---- Escritorio ----
   const escr = await abrir(b, { width: 1280, height: 800 });
@@ -261,7 +296,23 @@ async function correrRapida(fr, pista) {
   await sleep(5000);
   const ee = await estado(fe);
   ok('escritorio: vista ancha y 60 cuadros por segundo', ee.lw > 400 && ee.fps >= 50, JSON.stringify({ lw: ee.lw, fps: ee.fps }));
+  ok('escritorio: acelerar avanza (automático)', ee.vel > 150 && ee.acelera, JSON.stringify({ vel: ee.vel }));
   await escr.screenshot({ path: 'karts-escritorio.png' });
+  const k0 = await estado(fe);
+  await escr.keyboard.down('ArrowRight'); await sleep(500);
+  const k1 = await estado(fe); await escr.keyboard.up('ArrowRight');
+  ok('teclado: → gira el carro y la cámara a la derecha', k1.giro === 1 && k1.ang > k0.ang + 0.3 && k1.camAng > k0.camAng + 0.2, JSON.stringify({ ang: [r2(k0.ang), r2(k1.ang)], cam: [r2(k0.camAng), r2(k1.camAng)] }));
+  await escr.keyboard.down('KeyA'); await sleep(300);
+  ok('teclado: A gira a la izquierda', (await estado(fe)).giro === -1); await escr.keyboard.up('KeyA');
+  await escr.keyboard.down('ArrowDown'); await sleep(200);
+  ok('teclado: ↓ frena', (await estado(fe)).freno === true); await escr.keyboard.up('ArrowDown');
+  // Una vuelta completa de verdad con el piloto de prueba (sin teletransportes).
+  await fe.evaluate(() => window.__karts.piloto(true));
+  const vIni = (await estado(fe)).vuelta;
+  await fe.waitForFunction(v => window.__karts.estado().vuelta >= Math.max(1, v + 1), vIni, { timeout: 70000 }).catch(() => {});
+  const ev = await estado(fe);
+  ok('una vuelta completa recorriendo la pista en 3D', ev.vuelta >= Math.max(1, vIni + 1) && !ev.fuera, JSON.stringify({ vuelta: ev.vuelta, t: ev.tiempo, pos: ev.pos }));
+  await escr.screenshot({ path: 'karts-escritorio-vuelta.png' });
   await escr.context().close();
 
   // ---- Partida en sala con bots fantasma ----

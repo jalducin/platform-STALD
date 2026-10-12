@@ -77,6 +77,8 @@
   .arcade-caja { position: relative; width: 100%; height: min(calc(100dvh - 120px), 760px); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); background: #0f172a; }
   .arcade-caja iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   @media (min-width: 700px) { .arcade-caja { height: auto; aspect-ratio: 16 / 10; max-height: calc(100dvh - 140px); } }
+  /* Celular en horizontal: el juego de Arcade usa casi toda la altura (antes quedaba en 250 px; openspec: karts-pseudo3d) */
+  @media (orientation: landscape) and (max-height: 520px) { .arcade-caja:has(#arcade-frame) { height: calc(100dvh - 16px); max-height: none; aspect-ratio: auto; scroll-margin-top: 8px; } }
   .arcade-tiempos td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 800; font-size: .95rem; border: none; border-radius: 12px;
     padding: 12px 16px; cursor: pointer; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px rgba(219, 39, 119, .25); }
@@ -1702,6 +1704,7 @@
     enCurso.foto = () => null; // el avance vive en el servidor: recargar no pide confirmación
     m.body.innerHTML = marcoArcade(srcArcade(id), juegoPorId(id).t);
     const frame = document.getElementById('arcade-frame');
+    if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' });
     const estilo = musica.estilo;
     detenerMusica();
     const lectura = SIN_AVANCE.has(id) ? Promise.resolve({ ok: true, body: { v: 0, datos: null } }) : api('/juegos/progreso/' + id).catch(() => ({ ok: false, status: 0, body: {} })); // futbolito-billar: sin avance

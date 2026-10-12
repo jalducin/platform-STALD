@@ -185,6 +185,19 @@ Cada página debe manejar y mostrar de forma explícita:
       contesta `jugada-ok`) y `fin { gana, puntos, aciertos, total, titulo }` → `pintarFinalSala`. En Futbolito cada
       quien ve su portería abajo (o a la izquierda en horizontal). Ganchos de prueba `window.__futbolito` y
       `window.__billar` con `?arcadePrueba=1`;
+  - **Vista pseudo-3D de Karts Turbo** (cambio `karts-pseudo3d`; diagnóstico y decisiones en su `design.md`):
+    - la carrera se simula en el mapa 2D de siempre y se dibuja en Mode-7 sobre canvas 2D: cámara detrás del carro
+      (`seguirCamara`, `d = 115`), piso proyectado por filas desde una textura `Uint32Array` de la pista (tres niveles
+      1, ½ y ¼; búfer de máx. 400 px escalado sin suavizado), panorama de 360° (1 rad = F px) y sprites ordenados por
+      profundidad; los carros son un modelo de cajas pre-dibujado en 32 vistas. Nunca cambiar reglas para «arreglar»
+      la vista: la cámara se deriva de `x`, `y` y `ang` del carro;
+    - controles por omisión: Botones (⬅ ➡; DERRAPE, 🎁, FRENO) y «Acelerar: Automático» (`localStorage.karts_acelerar`
+      = `auto` | `manual`, este último agrega ACELERAR). Teclado: flechas/WASD (↑ acelera, ↓ frena), ESPACIO derrape,
+      E/Shift ítem, P/Esc pausa. Si el sensor falla se regresa a Botones. Tutorial `#tuto` de 3 s al empezar;
+    - entrada por acciones (`acel`, `freno`, `izq`, `der`, `derrape`, `item`, `pausa` + eje): un mando nuevo se conecta
+      con `window.KartsEntrada.registrar({ presionado(accion), eje() })`, sin tocar las reglas;
+    - en horizontal (`max-height: 520px`) el marco de Arcade de `juegos.html` mide `100dvh − 16px`; las pantallas del
+      juego usan `justify-content: safe center` para poder desplazarse;
     **Dibujo de «Axo y los 12 mundos»** (cambio `axo-diseno`): arte vectorial en canvas a la resolución real (`K`),
     sin imágenes externas. Los tiles se pre-dibujan una vez por combinación (tipo, mundo, lados expuestos y variante)
     y los fondos son franjas de paralaje que se repiten (cachés fuera de pantalla a `min(K, 4)`); en cada cuadro solo
