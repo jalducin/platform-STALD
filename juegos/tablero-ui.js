@@ -598,8 +598,10 @@
       sala.vista = null; pintarSala();
       return true;
     }
-    if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? Tu rival gana la partida.')) enviar({ accion: 'rendirse' }, est.pasos); return true; }
-    if (e.target.closest('[data-tb-reclamar]')) { enviar({ accion: 'reclamar' }, est.pasos); return true; }
+    // Rendirse y reclamar valen en cualquier paso: si otro disparo ganó el paso (turno_tomado), se reintenta con el nuevo.
+    const sinTurno = async jugada => { const r = await enviar(jugada, est.pasos); if (!r.ok && r.body.error === 'turno_tomado') await enviar(jugada, Naval.estado(sala.estado.jugadores).pasos); };
+    if (e.target.closest('[data-tb-rendir]')) { if (confirm('¿Rendirte? Tu rival gana la partida.')) sinTurno({ accion: 'rendirse' }); return true; }
+    if (e.target.closest('[data-tb-reclamar]')) { sinTurno({ accion: 'reclamar' }); return true; }
     const n = e.target.closest('[data-tb-n]'); if (!n) return false;
     if (est.turno !== sala.estado.yo) return true;
     tb.msg = '';
