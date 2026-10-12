@@ -167,7 +167,7 @@ document.querySelectorAll('#mandos .m').forEach(b => {
 function ajustar() {
   const r = $('pantalla').getBoundingClientRect();
   if (!r.width || !r.height) return;
-  LW = Math.max(256, Math.min(480, Math.round(LH * r.width / r.height / 2) * 2));
+  LW = Math.max(224, Math.min(480, Math.round(LH * r.width / r.height / 2) * 2));
   const esc = Math.min(r.width / LW, r.height / LH);
   K = Math.max(1, Math.min(6, Math.round(esc * (window.devicePixelRatio || 1))));
   cv.width = LW * K; cv.height = LH * K;
@@ -176,6 +176,7 @@ function ajustar() {
   fondoCache = null;
 }
 addEventListener('resize', ajustar);
+if (window.ResizeObserver) new ResizeObserver(() => ajustar()).observe($('pantalla'));
 
 /* ================= Tiles y tramos ================= */
 const VACIO = 0, SUELO = 1, PIEDRA = 2, CAJA = 3, CAJA_P = 4, USADA = 5, SEMI = 6, CAE = 7, PINCHO = 8, LAVA = 9;
