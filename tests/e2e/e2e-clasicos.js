@@ -42,15 +42,19 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
   const le = norm((await p.textContent('.letra')).trim());
   const extrasEn = basta.extras.filter(x => ['kitchen', 'pokemon'].includes(x.id));
   ok('basta individual: 6 de siempre + 2 divertidas', (await p.$$('#basta-form input')).length === 8 && !!(await p.$('#b-kitchen')) && !!(await p.$('#b-pokemon')));
-  // Palabras distintas entre sí: una repetida no cuenta (p. ej. «pan» en Thing y en la cocina con la P).
-  const usadas = new Set();
-  const elegir = lista => { const w = lista.find(x => norm(x).startsWith(le) && !usadas.has(norm(x))) || ''; usadas.add(norm(w)); return w; };
-  for (const c of basta.en.categorias) await p.fill('#b-' + c.id, elegir(basta.en.palabras[c.id]));
-  for (const x of extrasEn) await p.fill('#b-' + x.id, elegir(x.palabras));
+  // Palabras distintas entre sí: una repetida no cuenta (p. ej. «pan» en Thing y en la cocina con la P; con la H,
+  // «ham» y «honey» se necesitan en dos lugares). Se asignan todas juntas con retroceso; si la letra no da para las 8
+  // (con la H solo hay 7 distintas), se deja vacía la menor cantidad posible y se esperan tantas verificadas como llenas.
+  const casillas = [...extrasEn.map(x => ({ id: x.id, lista: x.palabras })), ...basta.en.categorias.map(c => ({ id: c.id, lista: basta.en.palabras[c.id] }))];
+  const opcionesDe = c => [...new Set(c.lista.filter(w => norm(w).startsWith(le)).map(norm))].map(nw => c.lista.find(w => norm(w) === nw));
+  const asignar = (k, usadas, vacias) => { if (k === casillas.length) return []; for (const w of opcionesDe(casillas[k])) { if (usadas.has(norm(w))) continue; usadas.add(norm(w)); const r = asignar(k + 1, usadas, vacias); if (r) return [w, ...r]; usadas.delete(norm(w)); } if (vacias > 0) { const r = asignar(k + 1, usadas, vacias - 1); if (r) return ['', ...r]; } return null; };
+  let palabras = null; for (let v = 0; !palabras && v <= casillas.length; v++) palabras = asignar(0, new Set(), v);
+  const llenas = palabras.filter(Boolean).length;
+  for (const [k, c] of casillas.entries()) await p.fill('#b-' + c.id, palabras[k] || '');
   await p.screenshot({ path: 'basta-individual-extras.png', fullPage: true });
   await p.click('#basta-form button[type=submit]'); await p.waitForSelector('.result .score');
   const re = (await p.textContent('.result')).replace(/\s+/g, ' ');
-  ok('basta en inglés: 8 verificadas (con las divertidas) y bono', (re.match(/verificada/g) || []).length === 8 && re.includes('Bono') && re.includes('Something in the kitchen'), re.slice(0, 160));
+  ok('basta en inglés: todas las llenas verificadas (8, o 7 si la letra no da para más; con las divertidas) y bono', llenas >= 7 && (re.match(/verificada/g) || []).length === llenas && re.includes('Bono') && re.includes('Something in the kitchen'), re.slice(0, 160));
   await p.click('[data-a="hub"]');
 
   // ¡Una! contra 1 bot, en inglés
