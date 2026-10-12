@@ -1,6 +1,6 @@
 // Interfaz de los clásicos rápidos (openspec: clasicos-rapidos): modos individuales, salas y ayudas de Gato, Conecta 4,
 // Piedra-papel-tijera, Ahorcado en inglés y Serpientes y escaleras. Las reglas viven en juegos/clasicos-rapidos.js.
-// Se carga antes del script principal de juegos.html y usa sus funciones (marco, terminar, sala, participantes,
+// Se carga antes de los scripts de juegos/app/ (el código de juegos.html) y usa sus funciones (marco, terminar, sala, participantes,
 // pintarFinalSala, post, traerSala, rngDe, dur, escapeHtml…) solo al jugar.
 (function (g) {
   'use strict';

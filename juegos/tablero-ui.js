@@ -1,7 +1,7 @@
 // Pantallas de los juegos de tablero (openspec: juegos-tablero): Damas, Dominó, Parchís y Batalla naval, en individual
-// y en sala. Script clásico que se carga antes del script principal de juegos.html; usa en tiempo de llamada sus
+// y en sala. Script clásico que se carga antes de los scripts de juegos/app/ (el código de juegos.html); usa en tiempo de llamada sus
 // funciones globales (marco, terminar, sala, post, traerSala, participantes, pintarFinalSala, rngDe, dur, TIEMPO…).
-// Los motores (sin DOM) están en juegos/tablero.js. Ganchos en juegos.html: buscar «juegos-tablero».
+// Los motores (sin DOM) están en juegos/tablero.js. Ganchos en juegos.html y juegos/app/*.js: buscar «juegos-tablero».
 (function (g) {
   'use strict';
   const T = g.Tablero, { Damas, Domino, Parchis, Naval } = T;

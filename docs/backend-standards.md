@@ -162,9 +162,10 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     reproducir: ≤ 2 s 0, ≤ 3 s 1, ≤ 4 s 2, ≤ 5 s 3 y sin UNA 4.
   - `validarJugada(juego, jugada)` valida cada juego por turnos y guarda solo los campos permitidos (cambio
     `cartas-espanolas`):
-    - Cupo y bots por juego (ajuste post-apply del profe):
-      - `CUPO = { ajedrez: 2, brisca: 4 }`: si la sala ya está completa, quien intenta unirse recibe 409 `sala_llena`;
-      - `BOTS_FIJOS`: el ajedrez se crea siempre con `bots: false` y la Brisca con `bots: true`;
+    - Cupo y bots por juego: salen de la tabla `MESAS` (ver [Mesas de las partidas](#mesas-de-las-partidas-cambio-mesas-con-bots);
+      antes eran `CUPO` y `BOTS_FIJOS`, que ya no existen):
+      - ajedrez `{ max: 2, min: 2, bots: "nunca" }` y Brisca `{ max: 4, asientos: 4, min: 4, bots: "siempre" }`;
+      - con la sala completa, quien intenta unirse recibe 409 `sala_llena`;
       - el ajedrez no empieza con menos de 2 personas: 409 `faltan_jugadores`.
     - Futbolito y Billar (cambio `futbolito-billar`): `{ n, accion: "rendirse" }` o un tiro con enteros —
       Futbolito `{ n, accion: "tiro", pos −150…150, angulo −60…60, fuerza 10…100 }`; Billar `{ n, accion: "tiro",

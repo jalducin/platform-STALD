@@ -1,7 +1,7 @@
 // 📜 Línea del tiempo (openspec: cultura-conocimiento): ordenar sucesos del más antiguo al más reciente.
-// Script clásico cargado antes del script principal de juegos.html.
+// Script clásico cargado antes de los scripts de juegos/app/ (el código de juegos.html).
 // - `globalThis.LineaTiempo`: funciones puras (sin DOM), también usadas por server/linea_tiempo_test.ts.
-// - Pantallas (`elegirLineaTiempo`, `jugarLineaTiempo`, `pintarLineaSala`): usan los helpers globales de juegos.html
+// - Pantallas (`elegirLineaTiempo`, `jugarLineaTiempo`, `pintarLineaSala`): usan los helpers globales de juegos/app/
 //   (marco, reloj, terminar, datos, barajar, escapeHtml, rngDe, sala, pintarFinalSala…), que se resuelven al llamarlas.
 (function (g) {
   'use strict';
