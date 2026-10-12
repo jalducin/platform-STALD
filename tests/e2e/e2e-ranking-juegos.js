@@ -73,6 +73,17 @@ const partida = (email, juego, puntos, extra = {}) => pedir(email, '/juegos/part
     ok(`${nombre}: 👑 Mejor puntaje con el nick del servidor`, conMejor.length > 0 && conMejor.every(j => fila(j.id).txt.includes('👑 Mejor puntaje: ' + j.mejor.nombre)));
     ok(`${nombre}: nombres distintos (sin dos «Ordena la oración» iguales)`, new Set(api.body.juegos.map(j => j.titulo)).size === ui.length, fila('en-ordena').txt);
     ok(`${nombre}: barra del líder al 100 %`, ui[0].ancho === '100%', ui[0].ancho);
+    // Top 10 (openspec: ranking-juegos-top10): como mucho 10 visibles; con más, el botón despliega y pliega.
+    const visibles = () => p.$$eval('#rank-juegos li', ls => ls.filter(l => l.offsetParent !== null).length);
+    const total = api.body.juegos.length, vis = await visibles();
+    ok(`${nombre}: top 10 visible (${total} juegos)`, vis === Math.min(10, total), vis + ' de ' + total);
+    if (total > 10) {
+      ok(`${nombre}: botón «Ver los ${total} juegos»`, (await p.textContent('#rj-todos')).includes('Ver los ' + total + ' juegos') && (await p.getAttribute('#rj-todos', 'aria-expanded')) === 'false');
+      await p.click('#rj-todos');
+      ok(`${nombre}: al tocarlo se ven los ${total}`, (await visibles()) === total && (await p.getAttribute('#rj-todos', 'aria-expanded')) === 'true' && (await p.textContent('#rj-todos')).includes('Ver solo el top 10'));
+      await p.click('#rj-todos');
+      ok(`${nombre}: «Ver solo el top 10» vuelve a plegar`, (await visibles()) === 10);
+    } else ok(`${nombre}: sin botón con 10 o menos juegos`, !(await p.$('#rj-todos')));
     const desborde = await p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     ok(`${nombre}: sin desborde horizontal`, desborde <= 0, String(desborde));
   };
@@ -90,6 +101,19 @@ const partida = (email, juego, puntos, extra = {}) => pedir(email, '/juegos/part
   const esc = await abrirPagina(b, { email: 'angel@example.com', out, viewport: { width: 1280, height: 900 }, ruta: '/juegos.html', esperar: '[data-juego]' });
   await revisar(esc, 'escritorio');
   await esc.screenshot({ path: 'ranking-juegos-escritorio.png', fullPage: true });
+
+  // Top 10 con 12 juegos (openspec: ranking-juegos-top10): la respuesta se intercepta para tener más de 10.
+  const doce = await abrirPagina(b, { email: 'marisol@example.com', out, ruta: '/juegos.html', esperar: '[data-juego]' });
+  await doce.route('**/juegos/ranking/juegos*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ semana: '2026-09-28', jugadores: 30,
+    juegos: Array.from({ length: 12 }, (_, i) => ({ pos: i + 1, id: 'juego-' + i, titulo: 'Juego ' + (i + 1), jugadores: 12 - i, partidas: 20 - i, mejor: null })) }) }));
+  await doce.click('[data-tab="ranking"]'); await doce.click('[data-rtipo="juegos"]'); await doce.waitForSelector('#rank-juegos li');
+  const vis12 = () => doce.$$eval('#rank-juegos li', ls => ls.filter(l => l.offsetParent !== null).length);
+  ok('12 juegos: se ven 10 y el botón «Ver los 12 juegos»', (await vis12()) === 10 && (await doce.textContent('#rj-todos')).includes('Ver los 12 juegos'));
+  await doce.click('#rj-todos');
+  ok('12 juegos: al tocarlo se ven los 12', (await vis12()) === 12 && (await doce.getAttribute('#rj-todos', 'aria-expanded')) === 'true');
+  await doce.screenshot({ path: 'ranking-juegos-todos-390.png', fullPage: true });
+  await doce.click('#rj-todos');
+  ok('12 juegos: vuelve al top 10', (await vis12()) === 10);
 
   // Semana sin juegos: la ruta responde vacío y la página muestra el mensaje amable.
   const vacia = await pedir('marisol@example.com', '/juegos/ranking/juegos?semana=2026-09-14');

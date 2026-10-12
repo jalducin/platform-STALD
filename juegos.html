@@ -162,6 +162,9 @@
   .opts.tres .opt { font-size: .88rem; padding: 12px 4px; }
   .rank .rj-ico { font-size: 1.6rem; width: 34px; text-align: center; flex: none; }
   .rank .rj-barra { display: block; height: 8px; margin: 6px 0 2px; border-radius: 99px; background: var(--border); overflow: hidden; }
+  .rank .rj-extra { display: none; } /* top 10 (openspec: ranking-juegos-top10) */
+  #rank-juegos.todos .rj-extra { display: flex; }
+  .rj-todos { width: 100%; margin-top: 8px; }
   .rank .rj-barra span { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
   table.inv { width: 100%; border-collapse: collapse; font-size: .8rem; }
   table.inv th, table.inv td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--border); }
@@ -913,11 +916,12 @@
       (lista.length
         ? '<ol class="rank" id="rank-juegos" aria-label="Juegos más jugados de la semana">' + lista.map(x => {
           const j = juegoPorId(x.id);
-          return '<li data-rj="' + escapeHtml(x.id) + '"><span class="pos">' + medalla(x.pos) + '</span><span class="rj-ico" aria-hidden="true">' + (j ? j.emoji : '🎮') + '</span>' +
+          return '<li data-rj="' + escapeHtml(x.id) + '"' + (x.pos > 10 ? ' class="rj-extra"' : '') + '><span class="pos">' + medalla(x.pos) + '</span><span class="rj-ico" aria-hidden="true">' + (j ? j.emoji : '🎮') + '</span>' +
             '<span class="n">' + escapeHtml(x.titulo) + '<br><small>' + plural(x.jugadores, 'jugador', 'jugadores') + ' · ' + plural(x.partidas, 'partida', 'partidas') + '</small>' +
             '<span class="rj-barra" aria-hidden="true"><span style="width:' + Math.max(4, Math.round(x.jugadores / lider * 100)) + '%"></span></span>' +
             (x.mejor ? '<small>👑 Mejor puntaje: ' + escapeHtml(x.mejor.nombre) + '</small>' : '') + '</span></li>';
-        }).join('') + '</ol>'
+        }).join('') + '</ol>' +
+        (lista.length > 10 ? '<button type="button" class="btn ghost rj-todos" id="rj-todos" aria-controls="rank-juegos" aria-expanded="false" data-total="' + lista.length + '">Ver los ' + lista.length + ' juegos ▾</button>' : '')
         : '<div class="card muted" style="text-align:center">Todavía nadie juega esta semana. ¡Estrena un juego! 🚀</div>');
   }
 
@@ -4009,6 +4013,8 @@
     const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
     const rt = e.target.closest('[data-rtipo]'); if (rt) { state.rtipo = rt.dataset.rtipo; return pintarRanking(); }
+    const rjt = e.target.closest('#rj-todos'); // top 10 ↔ todos (openspec: ranking-juegos-top10)
+    if (rjt) { const ol = document.getElementById('rank-juegos'), abre = !ol.classList.contains('todos'); ol.classList.toggle('todos', abre); rjt.setAttribute('aria-expanded', String(abre)); rjt.textContent = abre ? 'Ver solo el top 10 ▴' : 'Ver los ' + rjt.dataset.total + ' juegos ▾'; return; }
     const g = e.target.closest('[data-juego]');
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
     const a = e.target.closest('[data-a]'); if (!a) return;
