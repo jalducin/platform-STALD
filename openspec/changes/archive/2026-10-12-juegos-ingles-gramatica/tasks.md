@@ -58,4 +58,4 @@
 ## 8. Cierre
 
 - [x] 8.1 Validar con `npx -y @fission-ai/openspec@1.4.1 validate juegos-ingles-gramatica --strict`
-- [ ] 8.2 Tras el merge (lo hace el usuario): verificar en producción y `openspec archive`
+- [x] 8.2 Tras el merge (lo hace el usuario): verificar en producción y `openspec archive`
