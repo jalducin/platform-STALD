@@ -72,6 +72,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
 | `/juegos/yo` | GET | Jugador, `totalIndividual`, `totalPartidas`, `total`, mejores, `pos` (individual), `posPartidas` y catálogo |
 | `/juegos/partida` | POST `{ juego, puntos, aciertos, total, segundos, sala? }` | `{ guardado, puntos, modo, mejor, nuevoRecord, totalIndividual, totalPartidas, total, pos }`. **Todo suma** (`puntos-por-tipo`): sin `sala` → puntos individuales (tope del juego); con `sala` → puntos de partidas (tope 10,000; la sala debe existir, ser de ese juego, haber empezado y tener al jugador: 400 `sala_invalida`, 403 `no_en_sala`, 409 `ya_guardada`). 400 si el juego es inválido, 403 `no_registrado`, 429 `limite_diario` (100 por día) |
 | `/juegos/ranking` | GET (`?semana=<lunes>&tipo=individual\|partidas`) | Top 20 del tipo (solo quien tiene puntos de ese tipo) `{ pos, nombre, tipo, total, totalIndividual, totalPartidas, partidas, juegos }` y `yo`. 400 `tipo_invalido`. Sin correos |
+| `/juegos/ranking/juegos` | GET (`?semana=<lunes>`) | Juegos más jugados de la semana (cambio `ranking-juegos-populares`): `{ semana, jugadores, juegos: [{ pos, id, titulo, jugadores, partidas, mejor: { nombre, puntos } \| null }] }`. Solo juegos del catálogo con al menos 1 jugador; `jugadores` = personas distintas (individual o sala; los bots no envían partidas y no cuentan); orden jugadores → partidas → título. Se calcula una vez por carga de la semana en caché (`WeakMap` sobre el arreglo de `leerSemana`, que lee la carpeta con `leerCarpeta`: una consulta en Postgres). 400 `semana_invalida`. Sin correos ni ids de jugador |
 | `/juegos/invitado` | POST `{ nombre, acepto: true }` | Registra o hace entrar a un invitado; `{ ya: true }` si el correo ya es alumno o alumna. 400 si falta aceptar o el apodo es inválido; 429 con 500 invitados |
 | `/juegos/invitados` | GET | Solo admin: correos, apodos, visitas y puntos de la semana, para análisis |
 | `/juegos/registro` | POST `{ email, nombre, acepto }` (sin sesión) | Cuenta de Juegos sin validar el correo: alta del invitado (`registrarInvitado`) y `{ token_hash, jugador }` (llave de un solo uso de `generarEnlace`, que la página canjea con `verifyOtp`); con `ROWS_FIXTURE`, `{ prueba: true }`. 409 `correo_de_clase` para alumnos, alumnas y admin (entran con su enlace); 400 `correo_invalido`/`apodo_invalido`/`debe_aceptar`; 429 `cupo_lleno`; 503 `auth_no_disponible` (cambio `registro-directo-juegos`) |
@@ -216,7 +217,7 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - `loadRows` entrega una copia (`structuredClone`): quien la recibe puede modificar sus filas.
   - Caché HTTP: `handler` pasa cada respuesta por `aplicarCacheHttp` con `politicaCache(ruta)`. Por omisión todo es
     `no-store` (datos personales: no se guardan en el aparato). Solo `GET` con 200 de estas rutas:
-    `/config` → `public, max-age=600`; `/juegos/ranking` → `private, no-cache`, `Vary: Authorization`, `ETag` débil y
+    `/config` → `public, max-age=600`; `/juegos/ranking` y `/juegos/ranking/juegos` → `private, no-cache`, `Vary: Authorization`, `ETag` débil y
     304 si `If-None-Match` coincide. Una ruta nueva entra a la lista solo si no lleva datos de una persona.
 
 **Pronunciación** (`server/motor.ts`, cambio `pronunciacion`):

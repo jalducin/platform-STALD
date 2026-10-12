@@ -3,6 +3,7 @@
 // - /config: pública y casi fija → el navegador la guarda 10 min;
 // - /juegos/ranking: sin correos y la misma para todos los jugadores → `private, no-cache` con ETag; el navegador la
 //   revalida en cada uso (If-None-Match) y un 304 ahorra el cuerpo. `Vary: Authorization` separa por sesión.
+//   /juegos/ranking/juegos (juegos más jugados, openspec: ranking-juegos-populares) usa la misma política.
 
 export interface PoliticaCache {
   cacheControl: string;
@@ -11,7 +12,7 @@ export interface PoliticaCache {
 
 const POLITICAS: { ruta: RegExp; politica: PoliticaCache }[] = [
   { ruta: /\/config$/, politica: { cacheControl: "public, max-age=600" } },
-  { ruta: /\/juegos\/ranking$/, politica: { cacheControl: "private, no-cache", vary: "Authorization" } },
+  { ruta: /\/juegos\/ranking(\/juegos)?$/, politica: { cacheControl: "private, no-cache", vary: "Authorization" } },
 ];
 
 export function politicaCache(pathname: string): PoliticaCache | null {
