@@ -143,7 +143,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
 
 - `contenido/semanas/<lunes>.json`: `{ id, titulo, elementos: [{ id, tipo, fecha }] }`. Ritmo: martes y
   jueves `actividad`, viernes `examen`, sábado `refuerzo`, domingo `meet`. Una semana se puede subir por
-  adelantado: es visible desde su lunes. Reglas de validación: `server/semana.ts`; flujo: skill
+  adelantado: es visible desde el **domingo anterior**, y lo que se abre el lunes se puede adelantar ese domingo
+  (cambio `semana-desde-domingo`). Reglas de validación: `server/semana.ts`; flujo: skill
   `nueva-semana-ingles`.
 - `contenido/actividades/<id>.json` y `contenido/examenes/<id>.json`:
   - Campos generales: `id`, `tipo`, `titulo`, `nivel`, `descripcion`, `disponibleDesde`, `fechaLimite`,

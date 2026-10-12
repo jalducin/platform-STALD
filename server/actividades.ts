@@ -6,7 +6,9 @@ import {
   calcularRacha,
   type Ejercicio,
   esPara,
+  abreYa,
   estadoItem,
+  lunesSiguiente,
   fueraDeTiempoDe,
   grade,
   type Intento,
@@ -82,11 +84,12 @@ type ConGrupos = Item & { grupos?: string[] };
 
 // Elementos visibles: los de semanas ya iniciadas + exámenes sueltos (p. ej. el diagnóstico).
 // Suelto = ninguna semana lo referencia, aunque no haya iniciado (las semanas se suben por adelantado).
-export async function visibleItems(store: Store, hoy: string, ambito: Ambito = AMBITO_CLASE): Promise<{ items: ConGrupos[]; semanaActual: Semana | null }> {
+export async function visibleItems(store: Store, hoy: string, ambito: Ambito = AMBITO_CLASE): Promise<{ items: ConGrupos[]; semanaActual: Semana | null; semanaSiguiente: Semana | null }> {
   return await cached(`${ambito.clave}:visibles:${hoy}`, async () => {
     const nombres = (await store.list(`${ambito.contenido}/semanas`)).filter((n) => n.endsWith(".json")).map((n) => n.slice(0, -5)).sort();
     const todas = (await Promise.all(nombres.map((id) => store.get<Semana>(`${ambito.contenido}/semanas/${id}.json`)))).map((d) => d!.data);
-    const semanas = todas.filter((_s, i) => nombres[i] <= hoy);
+    // El domingo ya se ve la semana del lunes siguiente (openspec: semana-desde-domingo).
+    const semanas = todas.filter((_s, i) => nombres[i] <= hoy || nombres[i] === lunesSiguiente(hoy));
     const enSemana = new Set(todas.flatMap((s) => s.elementos.map((e) => e.id)));
     const sueltos = (await store.list(`${ambito.contenido}/examenes`)).map((n) => n.replace(/\.json$/, "")).filter((id) => !enSemana.has(id));
     const ids = [...semanas.flatMap((s) => s.elementos.map((e) => e.id)), ...sueltos];
@@ -94,7 +97,9 @@ export async function visibleItems(store: Store, hoy: string, ambito: Ambito = A
     const items: ConGrupos[] = (await Promise.all(ids.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x)
       .map((it) => gruposDe.has(it.id) ? { ...it, grupos: gruposDe.get(it.id) } : it);
     items.sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
-    return { items, semanaActual: semanas[semanas.length - 1] || null };
+    // «Esta semana» sigue siendo la que contiene hoy; el domingo, la siguiente va aparte para adelantar.
+    const actuales = semanas.filter((s) => s.id <= hoy);
+    return { items, semanaActual: actuales[actuales.length - 1] || null, semanaSiguiente: semanas.find((s) => s.id === lunesSiguiente(hoy)) || null };
   });
 }
 
@@ -173,14 +178,16 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
 
   // GET /ingles/actividades → elementos con estado (alumno) o con resultados y resumen (admin)
   if (partes.length === 0 && req.method === "GET") {
-    const { items, semanaActual } = await visibleItems(store, hoy, ambito);
-    const semana = semanaActual ? { id: semanaActual.id, titulo: semanaActual.titulo, ids: semanaActual.elementos.map((e) => e.id) } : null;
+    const { items, semanaActual, semanaSiguiente } = await visibleItems(store, hoy, ambito);
+    const resumirSemana = (s: Semana) => ({ id: s.id, titulo: s.titulo, ids: s.elementos.map((e) => e.id) });
+    const semana = semanaActual ? resumirSemana(semanaActual) : null;
+    const siguiente = semanaSiguiente ? { semanaSiguiente: resumirSemana(semanaSiguiente) } : {};
     if (quien.isAdmin) {
       const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), ...(it.prorrogas ? { prorrogas: it.prorrogas } : {}), resultados: tieneReto(it) ? await resultadosDe(store, it.id) : [] })));
       const porAlumno = new Map<string, Resultado[]>();
       for (const it of conRes) for (const r of it.resultados) { if (!porAlumno.has(r.alumno)) porAlumno.set(r.alumno, []); porAlumno.get(r.alumno)!.push(r); }
       const resumen = Object.fromEntries([...porAlumno].map(([a, rs]) => [a, { temasAReforzar: temasAReforzar(rs) }]));
-      return json({ isAdmin: true, hoy, semana, items: conRes, resumen });
+      return json({ isAdmin: true, hoy, semana, ...siguiente, items: conRes, resumen });
     }
     const grupo = ambito.clave === "profe" ? (await itemsDelGrupo(store)).map(paraProfe) : [];
     const deGrupo = new Set(grupo.map((g) => g.id));
@@ -196,7 +203,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
       return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
     }));
     const plan = ambito.clave === "profe" ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
-    return json({ isAdmin: false, hoy, semana, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
+    return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
   }
 
   let base = await loadItem(store, partes[0], ambito);
@@ -210,7 +217,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
     // Meet sin reto (openspec: meet-sin-reto): el profe abre su material (guion, presentación, teoría); alumnos y
     // alumnas, desde su fecha, el material de lectura (teoría y tips), que es su actividad. No hay nada que resolver.
     if (req.method === "GET" && partes.length === 1 && it.tipo === "meet") {
-      if (!quien.isAdmin && hoy < it.disponibleDesde) return json({ error: "no_disponible", disponibleDesde: it.disponibleDesde }, 403);
+      if (!quien.isAdmin && !abreYa(it.disponibleDesde, hoy)) return json({ error: "no_disponible", disponibleDesde: it.disponibleDesde }, 403);
       return json({
         ...meta(it), material: true, teoria: it.teoria || [], tips: it.tips || [],
         ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}), ...(quien.isAdmin && it.presentacion ? { presentacion: it.presentacion } : {}),

@@ -428,15 +428,27 @@ export function correccionDe(it: Item, previo: Intento | undefined): Correccion 
 
 export type EstadoItem = "proximamente" | "disponible" | "en-curso" | "en-espera" | "completo";
 
+// La semana siguiente se abre el domingo (openspec: semana-desde-domingo): lo que se abre el lunes se puede adelantar
+// desde el domingo anterior. Lo demás (examen del viernes, refuerzo, Meet…) se abre en su día.
+export function lunesSiguiente(hoy: string): string | null {
+  const d = new Date(`${hoy}T12:00:00Z`);
+  if (d.getUTCDay() !== 0) return null; // solo el domingo
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+export function abreYa(disponibleDesde: string, hoy: string): boolean {
+  return hoy >= disponibleDesde || disponibleDesde === lunesSiguiente(hoy);
+}
+
 export function estadoItem(it: Item, hoy: string, r: Resultado | null): EstadoItem {
-  if (!tieneReto(it)) return hoy >= it.disponibleDesde ? "disponible" : "proximamente";
+  if (!tieneReto(it)) return abreYa(it.disponibleDesde, hoy) ? "disponible" : "proximamente";
   const usados = r?.intentos.length || 0;
   if (usados >= maxIntentos(it)) return "completo";
   // Examen con 2.ª oportunidad: tras el 1.er intento espera hasta su fecha (el domingo).
   if (it.tipo === "examen" && it.segundaOportunidad && usados === 1 && hoy < it.segundaOportunidad) return "en-espera";
   // Sin nada que corregir: una actividad con 100 % queda completa.
   if (it.tipo !== "examen" && r?.intentos.at(-1)?.calificacion.porcentaje === 100) return "completo";
-  if (hoy < it.disponibleDesde) return "proximamente";
+  if (!abreYa(it.disponibleDesde, hoy)) return "proximamente";
   return usados > 0 ? "en-curso" : "disponible";
 }
 
