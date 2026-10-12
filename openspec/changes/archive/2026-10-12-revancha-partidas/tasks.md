@@ -47,7 +47,7 @@
 - [x] 6.1 API: `curl` contra el servidor local (revancha válida, sin estar en la sala, sin terminar, sala
   inexistente) con estado restaurado (el servidor de pruebas trabaja en memoria sobre una copia)
 - [x] 6.2 UI: la E2E recorre el flujo en el navegador con capturas a 390 px en `tests/e2e/salida/`
-- [ ] 6.3 Tras el merge (lo hace el usuario): jugar una partida corta en producción y tocar «Otra con los mismos». Pendiente: el agente no publica ni hace merge
+- [x] 6.3 Tras el merge (lo hace el usuario): jugar una partida corta en producción y tocar «Otra con los mismos». Pendiente: el agente no publica ni hace merge
 
 ## 7. Documentación (OBLIGATORIO)
 
@@ -57,4 +57,4 @@
 
 ## 8. Archivo
 
-- [ ] 8.1 `openspec archive revancha-partidas` después del merge (lo integra el usuario). Pendiente
+- [x] 8.1 `openspec archive revancha-partidas` después del merge (lo integra el usuario). Pendiente
