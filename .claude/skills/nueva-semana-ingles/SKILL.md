@@ -70,6 +70,17 @@ lleva:
 Mezcla alrededor de 70 % `opcion` y 30 % `escribir`. La plataforma baraja las preguntas pero **no las opciones**:
 reparte la posición de la respuesta correcta.
 
+**Ejercicios estilo Busuu / Duolingo (opcionales, sin IA):** para hacerlas más didácticas, cambia algunos
+ejercicios por estos tipos (formato completo en `docs/data-model.md`):
+- `ordenar` (armar la oración con fichas): `palabras` en el orden correcto, `distractores?` y `aceptadas?` (otros
+  órdenes válidos). Las fichas no se repiten entre `palabras` y `distractores`; no hace falta barajarlas, porque las
+  baraja el servidor. Con `audio` sirve de dictado: «Escucha y ordena lo que oyes».
+- `emparejar` (unir pares): `pares` de 3 a 6 `[inglés, español]`, sin textos repetidos en cada lado. Ideal para
+  vocabulario y pronombres.
+
+Úsalos en actividades, refuerzo y tecnología (1 o 2 por tema), no en lugar de toda la práctica escrita. El
+validador (`validar_semana.ts`) revisa ambos.
+
 **Diapositivas soportadas** (`ingles.html`):
 - `portada`, `agenda`, `retro` (automática, sin nombres);
 - `teoria` con `ref` = índice en `teoria`;

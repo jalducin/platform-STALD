@@ -145,12 +145,25 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `temas[]`: con `retroalimentacion` por estado.
   - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }] }`.
   - `tips[]`: `{ tipo: "libreta" | "video", texto, url? }`. Los videos son enlaces de **búsqueda** de YouTube.
-  - `banco[]`: ejercicios `{ id, tema, tipo: "opcion" | "escribir" | "pronunciar", enunciado, opciones? + correcta? |
-    aceptadas? | frase?, audio?, explicacion }`.
+  - `banco[]`: ejercicios `{ id, tema, tipo: "opcion" | "escribir" | "pronunciar" | "ordenar" | "emparejar",
+    enunciado, opciones? + correcta? | aceptadas? | frase? | palabras? + distractores? | pares?, audio?, explicacion }`.
     - `audio` (opcional, cualquier tipo): texto que la página lee en voz alta (en-US, 🔊 normal y 🐢 lento). Es
       público; úsalo en práctica (pares mínimos), no donde revele la respuesta de un examen.
     - `pronunciar`: `frase` (pública) que se dice en voz alta; la respuesta es lo reconocido o `auto:ok` /
       `auto:repetir` (cambio `pronunciacion`).
+    - `ordenar` (armar la oración tocando fichas, cambio `ejercicios-ordenar-emparejar`): `palabras` (≥ 2, en el
+      orden correcto), `distractores?` (fichas que sobran) y `aceptadas?` (otros órdenes válidos). Las fichas no se
+      repiten entre `palabras` y `distractores`. La página recibe solo `fichas` barajadas. La respuesta es el texto
+      de las fichas unidas por espacios. Con `audio`, sirve de dictado de escucha:
+      `{ "id": "o1", "tema": "futuro", "tipo": "ordenar", "enunciado": "Ordena: Yo voy a viajar mañana",
+      "palabras": ["I", "will", "travel", "tomorrow"], "distractores": ["going"], "aceptadas": ["Tomorrow I will
+      travel"], "explicacion": "…" }`.
+    - `emparejar` (unir pares): `pares` (3 a 6 pares `[izquierda, derecha]`, sin textos repetidos en cada lado). La
+      página recibe `izquierda` en orden y `derecha` barajada. La respuesta es un arreglo con la opción de la derecha
+      elegida para cada elemento de la izquierda (`""` si falta). Es correcta solo si coinciden todos:
+      `{ "id": "m1", "tema": "demostrativos", "tipo": "emparejar", "enunciado": "Une cada palabra con su
+      significado", "pares": [["this", "este / esta"], ["these", "estos / estas"], ["that", "ese / esa / aquel"],
+      ["those", "esos / esas"]], "explicacion": "…" }`.
   - Refuerzo: `bancoDe[]`, `basadoEn` (examen de la semana), `respaldo` (diagnóstico) y `mapeoTemas`.
   - Meet: `meetUrl` y `hora`. Además, para la clase del domingo, el material del profe: `guion` (solo admin),
     `teoria`, `tips` y `presentacion.diapositivas` (solo admin), con tipos `portada`, `agenda`, `retro`
