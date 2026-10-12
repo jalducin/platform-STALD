@@ -45,7 +45,7 @@ class FalsoContexto {
   createOscillator() { return new Osc(); }
   createGain() { const n: any = new Nodo(); n.gain = new Param(); n.gain.value = 1; return n; }
   createBiquadFilter() { const n: any = new Nodo(); n.frequency = new Param(); n.Q = new Param(); n.type = ""; return n; }
-  createDynamicsCompressor() { const n: any = new Nodo(); for (const k of ["threshold", "ratio", "attack", "release"]) n[k] = new Param(); return n; }
+  createDynamicsCompressor() { const n: any = new Nodo(); for (const k of ["threshold", "ratio", "attack", "release"]) { n[k] = new Param(); } return n; }
   createBuffer(_c: number, n: number) { const d = new Float32Array(n); return { getChannelData: () => d }; }
   createBufferSource() { return new Fuente(); }
   resume() { this.state = "running"; return Promise.resolve(); }

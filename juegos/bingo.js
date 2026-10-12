@@ -104,6 +104,8 @@
   }
   const tableroHtml = set => '<details><summary class="muted" style="cursor:pointer;font-size:.85rem">🔢 Ver los 75 números</summary><div class="bg-tablero">' +
     rango(1, 75).map(n => '<span style="--bgc:' + colorDe(n) + '"' + (set.has(n) ? ' class="si"' : '') + '>' + n + '</span>').join('') + '</div></details>';
+  // emocion-sonora: «¡Bingo!» válido suena como logro (sin efectos de emoción, el sonido de siempre).
+  const celebrar = () => { if (!g.Emocion?.logro()) sonidoOk(); };
   function cantar(n, voz) {
     g.Emocion?.canto(); // emocion-sonora: golpe suave en cada número cantado
     if (voz === 'no' || typeof hablar !== 'function') return;
@@ -176,7 +178,7 @@
       }
       if (e.target.closest('[data-bg-grito]')) {
         if (Date.now() < espera) return;
-        if (cumple(mio, set, figura)) { if (!g.Emocion?.logro()) sonidoOk(); acabar(true); } // emocion-sonora: «¡Bingo!»
+        if (cumple(mio, set, figura)) { celebrar(); acabar(true); }
         else { sonidoMal(); espera = Date.now() + 2000; $('bg-msg').className = 'feedback bad'; $('bg-msg').textContent = 'Todavía no tienes bingo 😉 Necesitas ' + FIGURAS[figura].d + '.'; }
       }
     });
@@ -269,7 +271,7 @@
       st.enviando = true; st.msg = { k: 'env' + Date.now(), cls: 'ok', t: '📣 ¡BINGO! Revisando tu cartón…' };
       post('/juegos/sala/' + sala.codigo + '/respuesta', { bingo: true }).then(r => {
         st.enviando = false;
-        if (r.ok) { if (!g.Emocion?.logro()) sonidoOk(); return traerSala(); } // emocion-sonora: «¡Bingo!»
+        if (r.ok) { celebrar(); return traerSala(); }
         sonidoMal(); st.espera = Date.now() + 3000;
         st.msg = { k: 'mal' + Date.now(), cls: 'bad', t: r.body.error === 'bingo_falso' ? '🙈 Todavía no hay bingo: te falta ' + FIGURAS[st.figura].d + ' con números que ya salieron.' : 'No se pudo enviar (' + (r.body.error || r.status) + ').' };
       });

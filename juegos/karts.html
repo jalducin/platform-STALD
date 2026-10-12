@@ -1333,7 +1333,8 @@ function cuentaRegresiva(ahora) {
 }
 // ¡YA!: turbo o motor ahogado según cuándo aceleraste, y algunos bots salen con turbo.
 function arrancar() {
-  carreraDe.salio = true; if (!window.Emocion?.cuenta(0)) S.ya(); motorOn(true); // emocion-sonora: ¡YA!
+  carreraDe.salio = true; motorOn(true);
+  if (!window.Emocion?.cuenta(0)) S.ya(); // emocion-sonora: ¡YA!
   if (sensor.activo) centrarSensor(); // el centro es como se sostiene el celular al arrancar
   $('cuenta').textContent = '¡YA!'; setTimeout(() => { if ($('cuenta').textContent === '¡YA!') $('cuenta').textContent = ''; }, 800);
   const p = arranque.presiono;
@@ -1369,6 +1370,8 @@ function mostrarTutorial() {
   clearTimeout(mostrarTutorial.t);
   mostrarTutorial.t = setTimeout(() => { $('tuto').classList.remove('ver'); document.body.classList.remove('tuto'); }, 3000);
 }
+// emocion-sonora: en los resultados, redoble y tu lugar (0 si no llegaste a la meta).
+function emocionPodio(ms, lugar) { window.Emocion?.intensidad(0); window.Emocion?.podio(ms === null ? 0 : lugar); }
 function llegarMeta() {
   S.meta(); motorOn(false); window.Emocion?.intensidad(0); // emocion-sonora
   avisar('🏁 ¡Meta! ' + posDe(yo) + '.º lugar', 1600);
@@ -1430,7 +1433,7 @@ function mostrarResultados() {
   $('hud').classList.add('hide');
   mostrar('ov-res');
   if (ms !== null && lugar <= 3) lanzarConfeti(); else $('confeti').innerHTML = '';
-  window.Emocion?.intensidad(0); window.Emocion?.podio(ms === null ? 0 : lugar); // emocion-sonora
+  emocionPodio(ms, lugar);
   const b = $('res-botones').querySelector('.btn'); if (b) b.focus();
   if (ms !== null) enviar({ tipo: 'puntos', puntos, aciertos: yo.monedas, total: 0, segundos: Math.round(ms / 1000), titulo: '🏎️ ' + pista.nombre + ': ' + lugar + '.º lugar', detalle: '⏱ ' + A.formatoTiempo(ms) + ' · 🪙 ' + yo.monedas + (bono ? ' · copa +' + bono : '') });
 }

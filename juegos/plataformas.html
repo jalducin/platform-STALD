@@ -825,6 +825,7 @@ const VMAX = A.VEL_AXO, GRAV = 1500, GRAV_SUBIDA = 800, SALTO = 330, CAIDA_MAX =
 const P = { x: 0, y: 0, w: 10, h: 13, vx: 0, vy: 0, suelo: false, mira: 1, coyote: 0, bufer: 0, inv: 0, muerto: 0, paso: 0, poder: 'base', aterriza: 0 };
 let prog = progresoNuevo(), progV = 0;
 let relojEmocion = false; // emocion-sonora: ya sonaron los últimos 5 s del reloj
+function relojFinal() { if (!sala && !relojEmocion && tNivel >= 295) { relojEmocion = true; window.Emocion?.ultimoSegundos(5); } }
 let modo = 'carga', sala = null, tNivel = 0, monedasNivel = 0, enemigosNivel = 0, jefeVencido = false, viento = 0, finalizado = false;
 let cam = { x: 0 }, pausaPrevia = null;
 function progresoNuevo() { return { mundo: 1, nivel: 1, vidas: 5, monedas: 0, poder: 'base', completados: [], mejores: {}, enCurso: null }; }
@@ -957,7 +958,7 @@ function paso(dt) {
     return;
   }
   // Tiempo límite.
-  if (!sala && !relojEmocion && tNivel >= 295) { relojEmocion = true; window.Emocion?.ultimoSegundos(5); } // emocion-sonora
+  relojFinal(); // emocion-sonora
   if (!sala && tNivel >= 300) { avisar('⏰ ¡Se acabó el tiempo!', 1500); morir(); return; }
   if (sala && performance.now() - sala.inicioLocal >= A.LIMITE_SALA.plataformas) { terminarSala(null); return; }
   correr(dt);

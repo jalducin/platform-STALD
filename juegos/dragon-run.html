@@ -218,8 +218,8 @@ function saveBest(){if(score()>best){const habia=best>0;best=score();try{localSt
 function emoFin(gano,rec){window.Emocion?.intensidad(0);if(gano){ return !!window.Emocion?.victoria(); }return !!(rec?window.Emocion?.record():window.Emocion?.derrota())}
 // Embebido: la plataforma guarda los puntos y muestra el resultado (con las misiones cumplidas).
 function avisar(gano,msgs){if(!EMBED){ return false; }try{parent.postMessage({juego:'dragon-run',fin:true,gano,puntos:score()+(gano?BONO:0),monedas:coins,metros:Math.floor(dist/PX),segundos:Math.round(t),misiones:msgs},location.origin)}catch(e){}return true}
-function lose(){st='over';stopMusic();if(!emoFin(false,saveBest()))sLose();const msgs=cerrarCarrera();if(avisar(false,msgs)){ return; }$('oS').textContent='Puntuación: '+score()+' · Distancia: '+Math.floor(dist/PX)+' m';$('oB').textContent='🏆 Récord: '+best;$('oM').innerHTML=msgs.map(esc).join('<br>');show('ovO')}
-function win(){st='win';stopMusic();if(!emoFin(true,saveBest()))sWin();const msgs=cerrarCarrera();if(avisar(true,msgs)){ return; }$('wS').textContent='Puntuación: '+(score()+BONO)+' (bono castillo +'+BONO+') · Monedas: '+coins;$('wB').textContent='🏆 Récord: '+best;$('wM').innerHTML=msgs.map(esc).join('<br>');show('ovW')}
+function lose(){st='over';stopMusic();if(!emoFin(false,saveBest())){ sLose(); }const msgs=cerrarCarrera();if(avisar(false,msgs)){ return; }$('oS').textContent='Puntuación: '+score()+' · Distancia: '+Math.floor(dist/PX)+' m';$('oB').textContent='🏆 Récord: '+best;$('oM').innerHTML=msgs.map(esc).join('<br>');show('ovO')}
+function win(){st='win';stopMusic();if(!emoFin(true,saveBest())){ sWin(); }const msgs=cerrarCarrera();if(avisar(true,msgs)){ return; }$('wS').textContent='Puntuación: '+(score()+BONO)+' (bono castillo +'+BONO+') · Monedas: '+coins;$('wB').textContent='🏆 Récord: '+best;$('wM').innerHTML=msgs.map(esc).join('<br>');show('ovW')}
 function alMenu(){st='start';window.Emocion?.calma();reset();pintarMenu();show('ovS');$('bS').focus()}
 $('bS').onclick=function(){this.blur();startGame()};
 ['bO','bW'].forEach(i=>$(i).onclick=function(){this.blur();alMenu()});

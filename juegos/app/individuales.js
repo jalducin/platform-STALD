@@ -26,6 +26,9 @@ function marco(id, extra) {
 // Cuenta regresiva; devuelve la función para detenerla.
 // Las pruebas E2E pueden acelerar los relojes con window.__TIEMPO_JUEGOS (p. ej. 0.1); para quien juega vale 1.
 const TIEMPO = Number(window.__TIEMPO_JUEGOS) || 1;
+// emocion-sonora: acierto con racha de 3 o más (sube de tono; sin emoción, el sonido de siempre) y resultado final.
+function sonarAcierto(racha) { if (!(racha >= 3 && window.Emocion?.racha(racha))) sonidoOk(); }
+function emocionFinal(s) { if (s?.nuevoRecord) window.Emocion?.record(); else window.Emocion?.revelacion(); }
 // emocion-sonora: en un reloj de 10 s o más, los últimos 5 s suenan con latido; al detenerse, calma.
 function reloj(segundos, onTick, onFin) {
   const fin = Date.now() + segundos * 1000 * TIEMPO;
@@ -67,7 +70,7 @@ async function terminar(id, r) {
     (s && s.guardado ? '' : noGuardadoHtml()) +
     '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn" data-juego="' + id + '">🔁 Jugar otra vez</button></div></div>';
   if (s && s.nuevoRecord) confeti();
-  if (s && s.nuevoRecord) window.Emocion?.record(); else window.Emocion?.revelacion(); // emocion-sonora
+  emocionFinal(s);
 }
 
 function confeti() {
@@ -127,8 +130,7 @@ function quiz(opts) {
       aciertos++; racha++;
       const rapidez = opts.modo === 'vidas' ? Math.max(0, Math.round(((opts.porPregunta || 15) * 1000 - (Date.now() - inicioQ)) / 100)) : 0;
       const gana = 100 + Math.min(racha - 1, 10) * 10 + rapidez;
-      puntos += gana; m.puntos(puntos);
-      if (!(racha >= 3 && window.Emocion?.racha(racha))) sonidoOk(); // emocion-sonora: racha que sube de tono
+      puntos += gana; m.puntos(puntos); sonarAcierto(racha);
       fb.className = 'feedback ok'; fb.textContent = '✔ +' + gana + (racha > 2 ? ' · racha ×' + racha + ' 🔥' : '');
       if (opts.datoAlAcertar && actual.explicacion) { const x = document.createElement('div'); x.className = 'quiz-dato'; x.textContent = actual.explicacion; fb.appendChild(x); } // cultura-conocimiento
     } else {

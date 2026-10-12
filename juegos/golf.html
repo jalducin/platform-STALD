@@ -502,6 +502,8 @@ function presentarHoyo(st) {
   if (ultimoHoyo) window.Emocion?.campana();
   window.Emocion?.intensidad(ultimoHoyo ? 0.35 : 0);
 }
+// emocion-sonora: tarjeta final del recorrido: victoria con 18 ⭐ o más; si no, recorrido superado.
+function emocionTarjeta(est) { window.Emocion?.intensidad(0); if (est >= 18) window.Emocion?.victoria(); else window.Emocion?.nivelSuperado(); }
 // emocion-sonora: hoyo en uno = victoria, birdie o mejor = logro, par = acierto.
 function emocionHoyo(golpes, par) {
   window.Emocion?.intensidad(0);
@@ -609,8 +611,7 @@ function verTarjeta(final) {
     $('tarjeta-total').textContent = 'Total: ' + tot + ' golpes (' + conSigno(tot - parT) + ') · ⭐ ' + est + '/27 · +' + juego.puntos.reduce((a, b) => a + (b || 0), 0) + ' puntos';
     $('tarjeta-botones').innerHTML = '<button class="btn" data-ir="recorrido">🔁 Otro recorrido</button><button class="btn sec" data-ir="menu">🏠 Menú</button>';
     if (est >= 18) U.confeti();
-    window.Emocion?.intensidad(0); // emocion-sonora: tarjeta final
-    if (est >= 18) window.Emocion?.victoria(); else window.Emocion?.nivelSuperado();
+    emocionTarjeta(est);
   } else {
     $('tarjeta-total').textContent = '';
     $('tarjeta-botones').innerHTML = '<button class="btn" data-ir="cerrar-tarjeta">▶ Seguir</button>';
