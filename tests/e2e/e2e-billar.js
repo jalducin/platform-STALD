@@ -4,6 +4,9 @@
 // botón de efecto, el bot tira en su turno, meter la 8 al final gana y suma ⭐ individuales. Horizontal 844×390.
 // Sala 1 persona + bot (rompe con resortera, rendirse → podio y revancha) y sala de 2 personas (los dos aparatos
 // reproducen igual cada tiro; podio en los dos). Capturas a 390 px y en horizontal.
+// futbolito-equipos-controles: un toque no cambia la mira ni dispara (tampoco cerca de la blanca), ⟳ fino que repite
+// al sostener, ángulo y fuerza con número, barra de fuerza vertical, resortera que se cancela al regresar, «🎱 TIRAR»
+// grande, 🎮 Mando clásico (toques reales, recordado, control físico simulado), teclado y capturas a 320, 390 y 844×390.
 require('./lib/entorno');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
@@ -105,6 +108,104 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__billar.firma(
   ok('el total individual sube', (await p.evaluate(() => state.totalIndividual)) > puntosAntes);
   await p.screenshot({ path: 'billar-390-resultado.png' });
   await p.click('[data-a="salir"]').catch(() => {});
+
+  // ---- Controles (futbolito-equipos-controles): suelto, toques reales ----
+  const abrirSuelto = (vp, init) => abrirPagina(b, { viewport: vp, contexto: TACTIL, init, out, etiqueta: 'billar suelto', ruta: '/juegos/billar.html?prueba=1', esperar: '#ov-menu:not(.hide)' });
+  const centro = async (pg, sel) => { const r = await pg.locator(sel).boundingBox(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, r }; };
+  const sostenerEn = async (pg, sel, ms) => { const d = dedos(pg), m = await centro(pg, sel); await d.poner(1, m.x, m.y); await sleep(ms); await d.soltarTodo(); await sleep(40); return estado(pg); };
+  const s1 = await abrirSuelto({ width: 390, height: 844 });
+  ok('controles: selector 👆 Táctil (por omisión) y 🎮 Mando clásico', (await s1.$$('#menu-control [data-control]')).length === 2 && await s1.getAttribute('[data-control="tactil"]', 'aria-pressed') === 'true');
+  await s1.tap('[data-nivel="facil"]');
+  await esperar(s1, () => window.__billar.estado().modo === 'juego'); await sleep(1300);
+  let eb = await estado(s1);
+  const bl = await enPagina(s1, (await s1.evaluate(() => window.__billar.blancaMesa())).x, (await s1.evaluate(() => window.__billar.blancaMesa())).y);
+  const d1 = dedos(s1);
+  await d1.poner(1, bl.x + 30, bl.y - 120); await sleep(40); await d1.soltarTodo(); await sleep(60);
+  ok('toque real: tocar la mesa sin arrastrar no cambia la mira', (await estado(s1)).aim === eb.aim, JSON.stringify({ antes: eb.aim, despues: (await estado(s1)).aim }));
+  await d1.poner(1, bl.x + 22, bl.y + 5); await sleep(30); await d1.mover(1, bl.x + 34, bl.y + 20); await sleep(30); await d1.soltarTodo(); await sleep(80);
+  eb = await estado(s1);
+  ok('toque real: tocar junto a la blanca y mover 20 px no dispara', !eb.animando && eb.tiros === 0, JSON.stringify({ animando: eb.animando, tiros: eb.tiros }));
+  const g0 = (await estado(s1)).aim;
+  const g1 = (await sostenerEn(s1, '#b-der', 40)).aim;
+  const g2 = (await sostenerEn(s1, '#b-der', 1000)).aim;
+  ok('ajuste fino: ⟳ un toque = 0.1° y sostenido 1 s gira varios grados', g1 - g0 === 1 && g2 - g1 >= 30, JSON.stringify({ toque: g1 - g0, sostenido: g2 - g1 }));
+  ok('el ángulo se ve en grados', /°/.test(await s1.textContent('#v-angulo')) && (await s1.textContent('#v-angulo')).includes((g2 / 10).toFixed(1)), await s1.textContent('#v-angulo'));
+  const fz = await centro(s1, '#fuerza');
+  await d1.poner(1, fz.x, fz.r.y + fz.r.height * 0.08); await sleep(40); await d1.soltarTodo(); await sleep(40);
+  const fArriba = (await estado(s1)).fuerza;
+  await d1.poner(1, fz.x, fz.r.y + fz.r.height * 0.9); await sleep(40); await d1.soltarTodo(); await sleep(40);
+  const fAbajo = (await estado(s1)).fuerza;
+  ok('fuerza: barra vertical grande con número (arriba ≥ 85, abajo ≤ 20)', fz.r.width >= 44 && fz.r.height >= 100 && fArriba >= 85 && fAbajo <= 20 && (await s1.textContent('#v-fuerza')).trim() === String(fAbajo), JSON.stringify({ w: fz.r.width, h: fz.r.height, fArriba, fAbajo }));
+  // Resortera que se cancela al regresar el dedo a la blanca.
+  const blm = await s1.evaluate(() => window.__billar.blancaMesa());
+  const pa = await enPagina(s1, blm.x, blm.y), pz = await enPagina(s1, blm.x - 160, blm.y);
+  await d1.poner(1, pa.x, pa.y);
+  for (let i = 1; i <= 8; i++) { await d1.mover(1, pa.x + (pz.x - pa.x) * i / 8, pa.y + (pz.y - pa.y) * i / 8); await sleep(16); }
+  const jalando = await s1.evaluate(() => window.__billar.estado().resortera);
+  for (let i = 7; i >= 0; i--) { await d1.mover(1, pa.x + (pz.x - pa.x) * i / 8, pa.y + (pz.y - pa.y) * i / 8); await sleep(16); }
+  await d1.soltarTodo(); await sleep(80);
+  eb = await estado(s1);
+  ok('resortera: muestra la fuerza al jalar y se cancela al regresar a la blanca', jalando && jalando.fuerza > 20 && !eb.animando && eb.tiros === 0, JSON.stringify({ jalando, tiros: eb.tiros }));
+  const bt = (await centro(s1, '#b-tirar')).r;
+  ok('«🎱 TIRAR» grande (≥ 56 px de alto)', bt.height >= 56, JSON.stringify(bt));
+  await s1.screenshot({ path: 'billar-390-controles.png' });
+  // 🎮 Mando clásico
+  await s1.tap('#b-control'); await sleep(200);
+  ok('🎮 Mando clásico: se ve el mando, no el panel, y una franja con ángulo y fuerza', (await estado(s1)).control === 'mando' && await s1.isVisible('.mando') && !(await s1.isVisible('#panel')) && /°/.test(await s1.textContent('#datos')));
+  const m0 = (await estado(s1)).aim;
+  const m1 = (await sostenerEn(s1, '.mando-cruceta [data-dir="der"]', 300)).aim;
+  const fm0 = (await estado(s1)).fuerza;
+  const fm1 = (await sostenerEn(s1, '.mando [data-b="X"]', 300)).fuerza;
+  const mf = (await sostenerEn(s1, '.mando [data-b="L"]', 40)).aim;
+  const efm = (await sostenerEn(s1, '.mando [data-b="B"]', 40)).efecto;
+  ok('mando: cruceta ▶ gira, X sube la fuerza, L ajusta fino y B cambia el efecto', m1 !== m0 && fm1 > fm0 && mf === m1 - 1 && efm !== 0, JSON.stringify({ m0, m1, fm0, fm1, mf, efm }));
+  await s1.screenshot({ path: 'billar-390-mando.png' });
+  eb = await sostenerEn(s1, '.mando [data-b="A"]', 60);
+  ok('mando: A tira', eb.animando || eb.tiros > 0, JSON.stringify({ animando: eb.animando, tiros: eb.tiros }));
+  await s1.reload(); await s1.waitForSelector('#ov-menu:not(.hide)');
+  ok('la elección se recuerda al recargar (🎮 Mando clásico)', await s1.getAttribute('[data-control="mando"]', 'aria-pressed') === 'true');
+  // Teclado: → gira, ↑ sube la fuerza, E fino, Espacio tira.
+  await s1.tap('[data-control="tactil"]');
+  await s1.tap('[data-nivel="facil"]'); await esperar(s1, () => window.__billar.estado().modo === 'juego'); await sleep(1300);
+  const k0 = await estado(s1);
+  await s1.keyboard.down('ArrowRight'); await sleep(250); await s1.keyboard.up('ArrowRight');
+  await s1.keyboard.down('ArrowUp'); await sleep(250); await s1.keyboard.up('ArrowUp');
+  const k1 = await estado(s1);
+  await s1.keyboard.press('KeyE'); const k2 = await estado(s1);
+  await s1.keyboard.press('Space'); await sleep(60); const k3 = await estado(s1);
+  ok('teclado: → gira, ↑ sube la fuerza, E ajuste fino y Espacio tira', k1.aim !== k0.aim && k1.fuerza > k0.fuerza && k2.aim === (k1.aim + 1) % 3600 && (k3.animando || k3.tiros > 0), JSON.stringify({ a: [k0.aim, k1.aim, k2.aim], f: [k0.fuerza, k1.fuerza] }));
+  await s1.context().close();
+  // Control físico simulado (con 👆 Táctil elegido): palanca gira, botón de abajo tira.
+  const GAMEPAD = [() => { Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: () => window.__pads || [null, null, null, null] }); }];
+  const pad = (presionados = [], ejes = [0, 0, 0, 0]) => ({ id: 'Control de prueba', index: 0, connected: true, mapping: 'standard', axes: ejes, buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: presionados.includes(i), value: presionados.includes(i) ? 1 : 0 })) });
+  const s2 = await abrirSuelto({ width: 390, height: 844 }, GAMEPAD);
+  await s2.tap('[data-nivel="facil"]'); await esperar(s2, () => window.__billar.estado().modo === 'juego'); await sleep(1300);
+  const gp0 = (await estado(s2)).aim;
+  await s2.evaluate(x => { window.__pads = [x]; }, pad([], [1, 0, 0, 0])); await sleep(300);
+  await s2.evaluate(() => { window.__pads = null; }); await sleep(80);
+  const gp1 = (await estado(s2)).aim;
+  await s2.evaluate(x => { window.__pads = [x]; }, pad([0])); await sleep(150);
+  await s2.evaluate(() => { window.__pads = null; });
+  const gpT = await estado(s2);
+  ok('control físico: la palanca gira la mira y el botón de abajo tira', gp1 !== gp0 && (gpT.animando || gpT.tiros > 0), JSON.stringify({ gp0, gp1, tiros: gpT.tiros }));
+  await s2.context().close();
+  // Distribución a 320×640 y 844×390 (táctil y mando): todo cabe y no tapa la mesa.
+  for (const [w, h, control] of [[320, 640, 'tactil'], [320, 640, 'mando'], [844, 390, 'tactil'], [844, 390, 'mando']]) {
+    const sp = await abrirSuelto({ width: w, height: h });
+    await sp.tap('[data-control="' + control + '"]'); await sp.tap('[data-nivel="medio"]');
+    await esperar(sp, () => window.__billar.estado().modo === 'juego'); await sleep(1300);
+    const lay = await sp.evaluate(() => {
+      const r = e => { const b = e.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; };
+      const vis = e => e && e.getBoundingClientRect().width > 0 && getComputedStyle(e).display !== 'none' && getComputedStyle(e).visibility !== 'hidden';
+      const ctl = [...document.querySelectorAll('#panel button, #fuerza, .mando [data-b]:not(.mando-oculto), .mando-cruceta i[data-dir]:not(.mando-oculto)')].filter(vis).map(r);
+      return { vw: innerWidth, vh: innerHeight, ctl, mesa: window.__billar.rectMesa() };
+    });
+    const dentroVista = lay.ctl.every(c => c.l >= -0.5 && c.t >= -0.5 && c.r <= lay.vw + 0.5 && c.b <= lay.vh + 0.5);
+    const cruza = lay.ctl.filter(c => c.l < lay.mesa.r - 2 && c.r > lay.mesa.l + 2 && c.t < lay.mesa.b - 2 && c.b > lay.mesa.t + 2);
+    ok('distribución ' + w + '×' + h + ' (' + control + '): controles completos y sin tapar la mesa', lay.ctl.length >= 3 && dentroVista && !cruza.length, JSON.stringify({ n: lay.ctl.length, cruza: cruza.length, mesa: lay.mesa }));
+    await sp.screenshot({ path: 'billar-' + w + 'x' + h + '-' + control + '.png' });
+    await sp.context().close();
+  }
 
   // ---- Horizontal 844×390 ----
   const hor = await abrir(b, 'marisol@example.com', { width: 844, height: 390 });

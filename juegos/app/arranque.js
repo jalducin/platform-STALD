@@ -61,6 +61,7 @@ app.addEventListener('click', e => {
   const pa = e.target.closest('[data-p]');
   if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
   if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
+  if (pa && pa.dataset.p === 'equipo') return cambiarEquipoFutbolito(pa); // futbolito-equipos
   if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('👥 Faltan jugadores. Espera a que se una tu rival.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
   if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert(TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.'); /* juegos-tablero */ } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
   const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
@@ -98,6 +99,7 @@ app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.
   document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || '';
   TableroUI.alCambiarJuego(e.target.value); } }); // juegos-tablero
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') SalasGrandes.formulario(e.target.value); }); // juegos-salas-grandes
+app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-formato-wrap').hidden = e.target.value !== 'futbolito'; }); // futbolito-equipos
 // cultura-conocimiento: el tema de la Línea del tiempo solo se ve al elegirla.
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-ltema-wrap').hidden = e.target.value !== 'cultura-linea'; });
 app.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.pextra) limitarExtras(e.target, 'pextra', 'p-extra-aviso'); }); // basta-divertida-una-robo

@@ -232,7 +232,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     sale de la semilla (`poker-mano-k`).
   - En Ajedrez, `jugadas[]` `{ n, accion: "mover" | "rendirse", de?, a?, promo?, t }` y `opciones.reloj`
     (minutos por jugador, cambio `ajedrez`).
-  - En Futbolito, `jugadas[]` `{ n, accion: "tiro" | "rendirse", pos?, angulo?, fuerza?, t }`; en Billar,
+  - En Futbolito, `jugadas[]` `{ n, accion: "tiro" | "rendirse", pos?, angulo?, fuerza?, barra?, t }` (`barra` 0…7 y
+    `opciones.formato` `1v1` | `2v2`; el archivo del jugador puede llevar `equipo` 0 | 1, la preferencia pedida en la
+    sala de espera; cambio `futbolito-equipos-controles`); en Billar,
     `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, efecto?, t }` (cambio `futbolito-billar`). El triángulo del
     billar sale de la semilla (`billar-triangulo`); los tiros de bots y los automáticos, de `bot|<paso>` y `auto|<paso>`.
   - En Golf (cambio `golf`), `jugadas[]` `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, t }`. Los 3 hoyos de la

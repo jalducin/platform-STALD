@@ -177,17 +177,47 @@ Cada página debe manejar y mostrar de forma explícita:
     ni `**` en la simulación). `juegos/mesa-ui.js` reúne toques (*touch events* no pasivos, como Karts), sonido,
     avisos, confeti, mensajes y el controlador de sala (`crearSala`: jugadas del servidor + la propia enviada,
     reproduce y anima cada tiro con el mismo objeto de simulación; si llegan varios, salta al penúltimo).
-    - Futbolito individual en tiempo real: deslizar (relativo) mueve la barra activa, un toque corto patea, la barra
-      activa es la propia más cercana detrás de la pelota; teclado ← → / ↑ ↓ (según la orientación) y Espacio.
-    - Billar: arrastrar apunta hacia el dedo con línea guía (bola fantasma, salida de la bola y de la blanca);
-      jalar desde la blanca (resortera) tira con la fuerza del jalón; barra de fuerza, ⟲ ⟳ y efecto ⬆ ● ⬇.
+    - **Controles** (cambio `futbolito-equipos-controles`; diagnóstico con toques reales y decisiones en su
+      `design.md`). Botones táctiles con `MesaUI.boton` (responde al **bajar** el dedo, por dedo, sin umbral de
+      movimiento ni de tiempo) y `MesaUI.sostener` (repite cada 60 ms tras 300 ms). El mando común se conecta como en
+      Karts: `Mando.crear` sin teclas (todas en `null`), activo en el juego, la pausa y la sala con cualquier control
+      elegido (un control físico funciona siempre), visible solo con «🎮 Mando clásico»; su `eje()` entra a la capa de
+      acciones con `MesaUI.ejeDeMando` (no pisa el eje de otro adaptador). En horizontal el mando y los botones van
+      encimados en las esquinas: la mesa se achica para dejarles lugar (`reservaLateral`) y START sube a la esquina
+      superior derecha.
+    - Futbolito individual en tiempo real: selector en la portada y botón 🎮 del HUD — **🔘 Botones** (por omisión:
+      flechas grandes ◀ ▶ en vertical o ▲ ▼ en horizontal, «⚽ PATEA» y «🔄 BARRA» con el nombre de la barra activa),
+      **👆 Deslizar** (mitad izquierda desliza, mitad derecha patea al tocar) y **🎮 Mando clásico** (cruceta
+      proyectada sobre el eje de la barra en pantalla, A patea, B/R siguiente barra, L anterior, START pausa); se
+      recuerda en `localStorage.futbolito_control`. La barra activa sale de `Futbolito.barraActivaCon` (pelota pegada
+      por detrás hasta el alcance y histéresis); el cambio manual manda 2.5 s. Teclado: ↑ ↓ / W S y ← → / A D mueven
+      (en pantalla: ← o ↑ = menos), Espacio/J patea, Tab/E/K siguiente barra, Q anterior, P/Esc/Enter pausa (solo
+      en juego; en los menús el teclado es del navegador).
+    - Billar: selector **👆 Táctil** / **🎮 Mando clásico** (`localStorage.billar_control`) en la portada y el HUD.
+      Arrastrar apunta hacia el dedo solo después de moverlo más de 8 px; ⟲ ⟳ finos (0.1° por toque, repiten y
+      aceleran hasta 2°); ángulo a la vista; bola fantasma rellena; resortera solo desde la blanca (`max(4R·K, 36 px)`),
+      con «💪 fuerza · suelta para tirar», dispara con jalón ≥ 48 px y se cancela regresando a menos de 24 px; barra de
+      fuerza vertical (`#fuerza`, `role="slider"`) con número; «🎱 TIRAR» grande. Mando: cruceta ◀ ▶ o palanca apunta
+      (solo por `eje().x`), L/R fino, A tira, X/▲ y Y/▼ fuerza, B efecto, START menú; con él se oculta el panel y se ve
+      la franja `#datos`. Teclado: ← → apuntar, Q/E fino, ↑ ↓ fuerza, K efecto, Espacio tirar.
     - Teclado y mandos pasan por la capa de acciones `MesaUI.crearAcciones` (`window.accionesJuego.presionar(nombre,
       on)` / `ponerEje(v)`); un mando nuevo se conecta con un adaptador, sin tocar el juego (design §9).
     - Sala: `pintarFisicaSala` manda `inicio { modo: "sala", seed, inicio, ahora, yo, orden, jugadas }` y
       `jugadas { jugadas, ahora }` cuando cambian; el iframe responde `jugada { jugada }` (la página hace el `POST` y
       contesta `jugada-ok`) y `fin { gana, puntos, aciertos, total, titulo }` → `pintarFinalSala`. En Futbolito cada
       quien ve su portería abajo (o a la izquierda en horizontal). Ganchos de prueba `window.__futbolito` y
-      `window.__billar` con `?arcadePrueba=1`;
+      `window.__billar` con `?arcadePrueba=1`. En sala horizontal el marco se desplaza a la vista como en individual.
+    - **Futbolito por equipos** (cambio `futbolito-equipos-controles`): la página ofrece «Formato» (1 vs 1 o
+      2 vs 2) al crear la sala, muestra los equipos en la sala de espera (`#p-equipos-fut`, mismo reparto que el juego:
+      `juegos.html` carga `juegos/fisica.js` y `juegos/futbolito-motor.js`; `equiposFutbolito` y `cambiarEquipoFutbolito`
+      en `juegos/app/arcade.js`, formulario y `participantes()` en `juegos/app/salas.js`) con «🔁 Cambiar de equipo» (`POST …/unirse { equipo }`)
+      y pasa al iframe la mesa completa (hasta 4) con el `equipo` pedido de cada quien. El juego reparte con
+      `Futbolito.repartir`, juega con `Fisica.linea` y `Futbolito.motorSala(reparto)` (tira el asiento dueño de la barra
+      con la pelota; `valida` descarta un tiro con otra barra) y manda `barra` en cada tiro. Cada asiento tiene color
+      (rojo: amarillo y rosa; azul: cian y lima) en sus mangos y su nombre junto a su primera barra; el marcador dice
+      «Tú + Angel» contra «🤖 + 🤖»; tu equipo siempre ataca hacia arriba. Panel de tiro: flechas sostenidas para correr
+      la barra, ⟲ ⟳ para el ángulo, fuerza con número y «⚽ PATEA» (mando: cruceta, L/R ángulo, X/Y fuerza, A patea;
+      teclado: flechas, Q/E ángulo, R/F fuerza, Espacio). Puntos por equipo para cada integrante;
   - **⛳ Golf** (cambio `golf`; decisiones en su `design.md`): `juegos/golf.html` en el iframe de Arcade **con avance**
     (`/juegos/progreso/golf`: mejor y estrellas por hoyo, recorridos y mejor recorrido; manda `guardar` y un `puntos`
     por hoyo terminado). Motor sin DOM y determinista `juegos/golf-motor.js` (`window.Golf`; reutiliza
@@ -342,7 +372,7 @@ Reglas:
 Fuente única del control de los juegos de 🕹️ Arcade: `juegos/mando.js` (sin dependencias; inyecta su CSS una vez como
 `<style id="mando-css">`). Decisiones y lecciones de Karts en `openspec/changes/mando-arcade/design.md` (al archivar,
 `openspec/changes/archive/*-mando-arcade/`). Lo usan Axo (`plataformas.html`), Dragon Run (`dragon-run.html`) y Karts
-Turbo (`karts.html`, cambio `karts-mando`) y ⛳ Golf (`golf.html`, cambio `golf`); los juegos nuevos (Futbolito, Billar) lo adoptan **sin cambiar la API**. Si hace falta algo nuevo, se
+Turbo (`karts.html`, cambio `karts-mando`), ⛳ Golf (`golf.html`, cambio `golf`) y Futbolito y Billar (cambio `futbolito-equipos-controles`), **sin cambiar la API**. Si hace falta algo nuevo, se
 agrega como opción con valor por omisión compatible, en su propio cambio OpenSpec.
 
 **Cargar y crear** (dentro del iframe del juego; `window.Mando`):
@@ -414,6 +444,12 @@ Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
     en `null` (el teclado va por la capa de acciones del juego) y nombres cortos («+💪», «−💪», «fino», «golpe»,
     «pausa»). Activo jugando y en pausa. Con «🎮 Mando clásico» (`body.ctl-mando`) el panel de botones se esconde y la
     fuerza sale en el HUD. Selector «👆 Toques» · «🎮 Mando clásico» en la portada (`localStorage.golf_control`).
+  - Futbolito y Billar (cambio `futbolito-equipos-controles`): adaptador a su capa de acciones (`MesaUI.crearAcciones`)
+    con `al`/`alSoltar` y `MesaUI.ejeDeMando`; sin teclas; activo en juego, pausa y sala con cualquier control; se ve
+    con «🎮 Mando clásico» (`futbolito_control` / `billar_control`). Futbolito: `mover` = las 4 flechas (el juego
+    proyecta `eje()` sobre la barra), A patea, B/R siguiente barra, L anterior, X/Y fuerza en sala, START pausa.
+    Billar: ◀ ▶ apuntan (solo por `eje().x`), L/R fino, A tira, X/▲ y Y/▼ fuerza, B efecto, START menú. En horizontal,
+    START va arriba a la derecha (`.mando .mando-centro`) para no tapar la mesa.
 - **Pruebas:** lógica pura en `server/mando_test.ts` (Deno); E2E `tests/e2e/e2e-mando.js` (toques reales por CDP,
   teclado, control simulado con `navigator.getGamepads` en `addInitScript`, preferencia y capturas), para Karts,
   `tests/e2e/e2e-karts.js` (`probarMando`), y para Golf, `tests/e2e/e2e-golf.js` (cruceta, X, R y A con el dedo y la

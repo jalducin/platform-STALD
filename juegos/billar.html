@@ -10,7 +10,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
 #juego{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
 #pantalla{position:relative;flex:1;min-height:0;overflow:hidden}
 #c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
-#hud{position:absolute;left:0;right:0;top:0;height:44px;display:flex;align-items:center;gap:6px;padding:4px 96px 4px 6px;pointer-events:none;font-weight:800;font-size:13px}
+#hud{position:absolute;left:0;right:0;top:0;height:44px;display:flex;align-items:center;gap:6px;padding:4px 142px 4px 6px;pointer-events:none;font-weight:800;font-size:13px}
 .jug{flex:1;min-width:0;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.18);border-radius:12px;padding:3px 7px;white-space:nowrap;overflow:hidden}
 .jug.turno{border-color:var(--acento);box-shadow:0 0 10px rgba(250,204,21,.5)}
 .jug .n{overflow:hidden;text-overflow:ellipsis;flex:0 0 auto;max-width:55%}
@@ -23,7 +23,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
 #aviso{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);background:var(--panel);padding:10px 18px;border-radius:18px;font-weight:900;font-size:20px;white-space:normal;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5;width:max-content;max-width:90%}
 #aviso.ver{opacity:1}
 #cuenta{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:84px;font-weight:900;color:var(--acento);text-shadow:0 4px 0 #134e4a;pointer-events:none}
-.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 50% 0,rgba(15,118,110,.9),rgba(8,12,20,.95));text-align:center;padding:14px;overflow:auto;z-index:6}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:10px;background:radial-gradient(circle at 50% 0,rgba(15,118,110,.9),rgba(8,12,20,.95));text-align:center;padding:14px;overflow:auto;z-index:6}
 .ov.hide,.hide{display:none!important}
 .ov h1{margin:0;font-size:clamp(28px,8vw,44px);color:var(--acento);text-shadow:0 3px 0 #134e4a}
 .ov h2{margin:0;font-size:clamp(22px,6vw,32px);color:var(--acento)}
@@ -33,7 +33,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
 .btn.chico{font-size:15px;min-height:42px;padding:6px 12px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn:active{transform:translateY(3px)}
-.btn:focus-visible,.mini:focus-visible,.op:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+.btn:focus-visible,.mini:focus-visible,.op:focus-visible,.ctl:focus-visible,#fuerza:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
 .fila{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .ops{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(480px,100%)}
 .op{font:inherit;font-weight:800;font-size:16px;border:3px solid rgba(255,255,255,.7);background:#134e4a;color:#fff;border-radius:16px;padding:8px 4px;min-height:70px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -45,23 +45,38 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
 #confeti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:7}
 #confeti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:caer 2.6s linear forwards}
 @keyframes caer{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
-/* Panel de tiro */
-#panel{flex:0 0 auto;display:grid;grid-template-columns:auto 1fr auto;gap:6px 8px;align-items:center;padding:8px 10px 10px;background:linear-gradient(#162030,#10151f);font-weight:800;font-size:14px}
-#panel label{display:flex;flex-direction:column;gap:2px;min-width:0}
-#panel input[type=range]{width:100%;height:30px;accent-color:var(--acento)}
-#panel .acciones{grid-column:1/-1;display:flex;gap:8px;justify-content:center;align-items:center}
-#panel .nota{grid-column:1/-1;text-align:center;font-size:12px;opacity:.85;font-weight:700}
-#b-tirar{flex:1;max-width:240px}
-.giro{display:flex;gap:4px}
-.giro .mini{min-width:42px;min-height:42px;font-size:18px}
-#b-efecto{min-width:92px}
+/* Selector de controles (futbolito-equipos-controles) */
+#menu-control{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(480px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:8px}
+.ctl-titulo{font-weight:800;font-size:14px}
+.ctl-ops{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;width:100%}
+.ctl{font:inherit;font-weight:800;font-size:14px;border:2px solid rgba(255,255,255,.5);background:#134e4a;color:#fff;border-radius:12px;min-height:46px;padding:4px;cursor:pointer}
+.ctl[aria-pressed="true"]{background:#0e7490;border-color:#67e8f9}
+/* Panel de tiro: fuerza vertical a la izquierda; ángulo fino, efecto y TIRAR a la derecha */
+#panel{flex:0 0 auto;display:grid;grid-template-columns:clamp(48px,14vw,60px) 1fr;grid-template-rows:auto auto auto;gap:6px 8px;align-items:center;padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(#162030,#10151f);font-weight:800;font-size:14px}
+#fuerza{grid-row:1/4;align-self:stretch;position:relative;min-height:150px;border:3px solid rgba(255,255,255,.75);border-radius:16px;background:#0b1220;overflow:hidden;touch-action:none;cursor:ns-resize}
+#fuerza-relleno{position:absolute;left:0;right:0;bottom:0;height:50%;background:linear-gradient(#ef4444,#facc15 45%,#22c55e)}
+#fuerza b{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:20px;text-shadow:0 1px 3px #000,0 0 6px #000}
+#fuerza small{position:absolute;left:0;right:0;top:4px;text-align:center;font-size:14px}
+.fila-ang{display:flex;align-items:center;justify-content:center;gap:8px}
+.fino{font:inherit;font-weight:900;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.4);color:#fff;border-radius:14px;min-width:52px;min-height:50px;font-size:24px;touch-action:none;cursor:pointer}
+.fino.on{background:var(--acento);color:#111}
+#v-angulo{min-width:72px;text-align:center;font-size:17px;white-space:nowrap}
+.fila-ef{display:flex;gap:8px;justify-content:center}
+#b-efecto{flex:1;min-height:44px;max-width:220px}
+#b-rendir{min-width:46px;min-height:44px}
+#b-tirar{grid-column:2;min-height:62px;font-size:22px;width:100%}
+#datos{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);background:var(--panel);border-radius:999px;padding:4px 12px;font-weight:800;font-size:14px;white-space:nowrap;pointer-events:none;z-index:2}
+/* Mando clásico: solo en el juego y en la sala; con él no se ve el panel */
+body:not(.jugando):not(.en-sala) .mando{display:none!important}
 @media (orientation:landscape) and (max-height:520px){
   #juego{flex-direction:row}
-  #panel{width:200px;grid-template-columns:1fr;align-content:center;padding:6px 8px}
-  #panel .giro{justify-content:center}
-  #panel .acciones{flex-direction:column}
-  #b-tirar{width:100%}
-  #hud{padding-right:96px}
+  #panel{width:232px;align-content:center;grid-template-columns:48px minmax(0,1fr);padding:6px 8px}
+  #fuerza{min-height:0}
+  .fila-ang{gap:6px}
+  .fino{min-width:44px;min-height:44px;font-size:20px}
+  #v-angulo{min-width:54px;font-size:14px}
+  #b-tirar{min-height:54px;font-size:19px}
+  .mando .mando-centro{left:auto;right:calc(8px + env(safe-area-inset-right,0px));top:50px;bottom:auto;transform:none}
 }
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
 </style></head><body>
@@ -71,11 +86,12 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
     <div id="hud" class="hide">
       <div class="jug" id="j0"><span class="chip" style="background:var(--rojo)"></span><span class="n" id="n0">Tú</span><span class="g" id="gr0"></span></div>
       <div class="jug" id="j1"><span class="chip" style="background:var(--azul)"></span><span class="n" id="n1">Bot</span><span class="g" id="gr1"></span></div>
-      <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-salir" aria-label="Menú">☰</button></div>
+      <div class="der"><button class="mini" id="b-control" aria-label="Cambiar controles">🎮</button><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-salir" aria-label="Menú">☰</button></div>
     </div>
     <div id="estado" role="status"></div>
     <div id="cuenta" aria-live="polite"></div>
     <div id="aviso" role="status"></div>
+    <div id="datos" class="hide" aria-live="polite"></div>
 
     <div class="ov" id="ov-carga"><h1>🎱 Billar</h1><p>Cargando…</p></div>
     <div class="ov hide" id="ov-menu">
@@ -86,7 +102,14 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
         <button class="op" data-nivel="medio">🟡 Medio<small>apunta bien</small></button>
         <button class="op" data-nivel="dificil">🔴 Difícil<small>casi no falla</small></button>
       </div>
-      <p class="ayuda">👆 <b>Arrastra sobre la mesa</b> para apuntar (verás la línea guía) y toca <b>Tirar</b> con la fuerza de la barra. O <b>jala desde la bola blanca</b> como resortera: lo largo del jalón es la fuerza y al soltar tiras. Efecto opcional: ⬆ seguir o ⬇ retroceder.</p>
+      <div id="menu-control">
+        <div class="ctl-titulo">🎮 Controles</div>
+        <div class="ctl-ops" role="group" aria-label="Controles">
+          <button class="ctl" data-control="tactil" aria-pressed="true">👆 Táctil</button>
+          <button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button>
+        </div>
+      </div>
+      <p class="ayuda" id="ayuda-menu"></p>
       <p class="ayuda">📏 Reglas: la primera bola que metas define tu grupo. Es falta meter la blanca, no tocar ninguna bola o tocar primero una que no es tuya. Si metes la 8 antes de tiempo, pierdes.</p>
     </div>
     <div class="ov hide" id="ov-pausa"><h2>☰ Menú</h2><div class="fila"><button class="btn" data-ir="seguir">▶ Seguir</button><button class="btn sec" data-ir="menu">🏠 Salir al menú</button></div></div>
@@ -101,19 +124,21 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
     <div id="confeti"></div>
   </div>
   <div id="panel" class="hide" aria-label="Tu tiro">
-    <div class="giro"><button class="mini" id="b-izq" aria-label="Girar la mira a la izquierda">⟲</button><button class="mini" id="b-der" aria-label="Girar la mira a la derecha">⟳</button></div>
-    <label for="r-fuerza">💪 Fuerza <span id="v-fuerza">50</span><input id="r-fuerza" type="range" min="1" max="100" step="1" value="50"></label>
-    <button class="mini" id="b-efecto" aria-label="Efecto">● Sin efecto</button>
-    <div class="acciones"><button class="btn" id="b-tirar">🎱 Tirar</button><button class="btn sec chico hide" id="b-rendir" aria-label="Rendirme">🏳️</button></div>
-    <div class="nota">Arrastra para apuntar · jala desde la blanca para tirar</div>
+    <div id="fuerza" role="slider" tabindex="0" aria-label="Fuerza" aria-valuemin="1" aria-valuemax="100" aria-valuenow="50"><div id="fuerza-relleno"></div><small>💪</small><b id="v-fuerza">50</b></div>
+    <div class="fila-ang"><button class="fino" id="b-izq" aria-label="Girar la mira a la izquierda (fino)">⟲</button><b id="v-angulo">🎯 0.0°</b><button class="fino" id="b-der" aria-label="Girar la mira a la derecha (fino)">⟳</button></div>
+    <div class="fila-ef"><button class="mini" id="b-efecto" aria-label="Efecto">● Sin efecto</button><button class="btn sec chico hide" id="b-rendir" aria-label="Rendirme">🏳️</button></div>
+    <button class="btn" id="b-tirar">🎱 TIRAR</button>
   </div>
 </div>
-<script src="fisica.js?v=1"></script>
+<script src="fisica.js?v=2"></script>
 <script src="billar-motor.js?v=1"></script>
-<script src="mesa-ui.js?v=1"></script>
+<script src="mesa-ui.js?v=2"></script>
+<script src="mando.js?v=1"></script>
 <script>
-/* Billar bola 8 (openspec: futbolito-billar). Individual contra el bot y sala 1 vs 1 por turnos con tiros
-   deterministas (MesaUI.crearSala). Embebido en juegos.html por un iframe del mismo origen (postMessage). */
+/* Billar bola 8 (openspec: futbolito-billar; controles: futbolito-equipos-controles). Individual contra el bot y sala
+   1 vs 1 por turnos con tiros deterministas (MesaUI.crearSala). Controles: 👆 Táctil (arrastrar apunta, ⟲ ⟳ finos,
+   barra de fuerza vertical, resortera segura, TIRAR) o 🎮 Mando clásico. Embebido en juegos.html por un iframe del
+   mismo origen (postMessage). */
 'use strict';
 const F = window.Fisica, B = window.Billar, U = window.MesaUI, $ = U.$;
 U.usarJuego('billar');
@@ -125,19 +150,33 @@ const COLORES = ['#f8fafc', '#facc15', '#2563eb', '#dc2626', '#7c3aed', '#f97316
 const colorBola = n => COLORES[n > 8 ? n - 8 : n];
 const EFECTOS = [{ v: 0, t: '● Sin efecto' }, { v: 70, t: '⬆ Seguir' }, { v: -70, t: '⬇ Retroceso' }];
 let modo = 'carga', nivel = 'medio', st = null, sim = null, simOrigen = null, botEn = 0, t0 = 0;
-let sala = null, aim = 0, efectoI = 0;
+let sala = null, aim = 0, efectoI = 0, fuerzaV = 50;
+const CONTROLES = ['tactil', 'mando'];
+let control = U.leerLS('billar_control');
+if (!CONTROLES.includes(control)) control = 'tactil';
+const RESORTERA_PX = 36, DISPARA_PX = 48, CANCELA_PX = 24, ARRASTRE_PX = 8; // design.md §5
+let jalon = null; // resortera en curso: { fuerza, listo } (para dibujar y para las pruebas)
 
 /* ---------- Vista ---------- */
 let W = 0, H = 0, DPR = 1, M = [1, 0, 0, 1, 0, 0], K = 1, horizontal = true;
+// Con el mando encimado (horizontal), la mesa deja libre el lugar de sus esquinas.
+function reservaLateral() {
+  let r = 0;
+  for (const el of document.querySelectorAll('.mando .mando-lado, .mando .mando-centro')) {
+    const caja = el.getBoundingClientRect();
+    if (caja.width && getComputedStyle(el.closest('.mando')).position === 'absolute') r = Math.max(r, caja.width + 10);
+  }
+  return r;
+}
 function ajustar() {
   const r = $('pantalla').getBoundingClientRect();
   if (!r.width || !r.height) return;
   W = r.width; H = r.height; DPR = Math.min(3, window.devicePixelRatio || 1);
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   horizontal = W >= H;
-  const arriba = 48, mw = B.ANCHO + 2 * BANDA, mh = B.ALTO + 2 * BANDA;
+  const arriba = 48, mw = B.ANCHO + 2 * BANDA, mh = B.ALTO + 2 * BANDA, lado = reservaLateral();
   const aw = horizontal ? mw : mh, ah = horizontal ? mh : mw;
-  K = Math.min((W - 8) / aw, (H - arriba - 6) / ah);
+  K = Math.min((W - 8 - 2 * lado) / aw, (H - arriba - 6) / ah);
   const ox = (W - aw * K) / 2, oy = arriba + (H - arriba - ah * K) / 2;
   // Horizontal: tal cual. Vertical: girada 90° (el lado largo hacia abajo).
   M = horizontal ? [K, 0, 0, K, ox + BANDA * K, oy + BANDA * K] : [0, K, -K, 0, ox + (B.ALTO + BANDA) * K, oy + BANDA * K];
@@ -217,7 +256,8 @@ function dibujarMira(bolas, ang, fuerza) {
   g.save(); g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,.85)'; g.setLineDash([7, 6]);
   g.beginPath(); g.moveTo(p0.x, p0.y); g.lineTo(p1.x, p1.y); g.stroke(); g.setLineDash([]);
   if (gi.tipo === 'bola') {
-    g.strokeStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(p1.x, p1.y, B.R * K, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = 'rgba(255,255,255,.28)'; g.beginPath(); g.arc(p1.x, p1.y, B.R * K, 0, Math.PI * 2); g.fill(); // bola fantasma
+    g.setLineDash([]); g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(p1.x, p1.y, B.R * K, 0, Math.PI * 2); g.stroke();
     let nx = gi.o.x - gi.x, ny = gi.o.y - gi.y; const nl = Math.sqrt(nx * nx + ny * ny) || 1; nx /= nl; ny /= nl;
     const q0 = aPantalla(gi.o.x, gi.o.y), q1 = aPantalla(gi.o.x + nx * 120, gi.o.y + ny * 120);
     g.strokeStyle = '#facc15'; g.lineWidth = 3; g.beginPath(); g.moveTo(q0.x, q0.y); g.lineTo(q1.x, q1.y); g.stroke();
@@ -247,6 +287,15 @@ function dibujar() {
   const v = vista();
   dibujarBolas(v.bolas);
   if (v.apuntar) dibujarMira(v.bolas, aim, fuerza());
+  if (v.apuntar && jalon) dibujarJalon(v.bolas[0]);
+}
+// Resortera: fuerza junto a la blanca y qué pasa al soltar.
+function dibujarJalon(bl) {
+  const p = aPantalla(bl.x, bl.y), txt = jalon.listo ? '💪 ' + jalon.fuerza + ' · suelta para tirar' : '↩ suelta aquí: no tiras';
+  g.font = '800 14px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const w = g.measureText(txt).width + 16, x = F.acotar(p.x, w / 2 + 4, W - w / 2 - 4), y = F.acotar(p.y - 34, 60, H - 14);
+  g.fillStyle = 'rgba(0,0,0,.72)'; rr(x - w / 2, y - 12, w, 24, 12); g.fill();
+  g.fillStyle = jalon.listo ? '#facc15' : '#fff'; g.fillText(txt, x, y + 1);
 }
 function vista() {
   if (modo === 'sala' && sala) {
@@ -259,7 +308,7 @@ function vista() {
 }
 
 /* ---------- HUD ---------- */
-const fuerza = () => Number($('r-fuerza').value);
+const fuerza = () => fuerzaV;
 function nombreGrupo(estado, i) {
   const gr = estado.grupos[i]; if (!gr) return 'mesa abierta';
   const quedan = B.quedan(estado, gr);
@@ -281,11 +330,18 @@ function avisoTiro(r, yoIdx, nombres) {
 }
 
 /* ---------- Individual ---------- */
-function abrirMenu() { modo = 'menu'; sim = null; $('hud').classList.add('hide'); $('panel').classList.add('hide'); $('estado').textContent = ''; mostrar('ov-menu'); }
+function ponerModo(m) {
+  modo = m;
+  const jugando = m === 'juego' || m === 'pausa', enSala = m === 'sala';
+  document.body.classList.toggle('jugando', jugando); document.body.classList.toggle('en-sala', enSala);
+  mando.activar(jugando || enSala);
+  requestAnimationFrame(ajustar);
+}
+function abrirMenu() { ponerModo('menu'); sim = null; $('hud').classList.add('hide'); $('panel').classList.add('hide'); $('datos').classList.add('hide'); $('estado').textContent = ''; pintarControles(); mostrar('ov-menu'); }
 function nuevaPartida(n) {
   nivel = n; st = B.inicial(Math.floor(Math.random() * 1e9)); sim = null; botEn = 0; t0 = performance.now();
   aim = 0; $('n0').textContent = 'Tú'; $('n1').textContent = 'Bot ' + NIVEL_TXT[n];
-  ocultar(); $('hud').classList.remove('hide'); modo = 'juego';
+  ocultar(); $('hud').classList.remove('hide'); ponerModo('juego');
   U.avisar('🎱 Rompe tú', 1200);
 }
 function tirarIndividual() {
@@ -310,7 +366,7 @@ function pasoIndividual() {
   if (st.turno === 1 && !st.fin && performance.now() >= botEn) empezarSim(B.tiroBot(st, nivel, Math.random), 'bot');
 }
 function terminarIndividual() {
-  modo = 'resultado';
+  ponerModo('resultado');
   const gano = st.fin.gana === 0, puntos = B.puntos(st, 0, EXTRA[nivel]), seg = Math.round((performance.now() - t0) / 1000);
   const mias = st.grupos[0] ? 7 - B.quedan(st, st.grupos[0]) : 0;
   $('res-titulo').textContent = gano ? '🏆 ¡Ganaste!' : '😅 Ganó el bot';
@@ -329,7 +385,7 @@ function empezarSala(d) {
   const nom = i => (sala.orden[i] || {}).nombre || '—';
   $('n0').textContent = nom(0) + (sala.idx === 0 ? ' (tú)' : ''); $('n1').textContent = nom(1) + (sala.idx === 1 ? ' (tú)' : '');
   ocultar(); $('hud').classList.remove('hide'); $('b-salir').classList.add('hide'); $('b-rendir').classList.remove('hide');
-  modo = 'sala'; aim = 0;
+  ponerModo('sala'); aim = 0;
 }
 function pasoSala() {
   const ahora = sala.ahora();
@@ -341,7 +397,7 @@ function pasoSala() {
   if (sala.anim && sala.anim.sim.pasos === B.SUB) sonarTaco(sala.anim.h.tiro.fuerza || 50);
   if (h && !h.tiro.rendirse) avisoTiro(h.despues, sala.idx, sala.orden.map(p => p.nombre));
   const l = sala.linea, mio = sala.miTurno();
-  $('panel').classList.toggle('hide', !mio);
+  mostrarPanel(mio);
   pintarHud(sala.estado, sala.anim ? sala.anim.h.idx : l && !l.fin ? l.turno : null);
   let txt = '';
   if (sala.anim) txt = sala.anim.h.origen === 'bot' ? '🤖 Tira el bot…' : sala.anim.h.origen === 'auto' ? '⏰ Tiro automático' : '🎱 Tira ' + ((sala.orden[sala.anim.h.idx] || {}).nombre || '');
@@ -375,61 +431,125 @@ const puedoApuntar = () => modo === 'sala' ? !!(sala && sala.miTurno()) : modo =
 const blancaActual = () => (modo === 'sala' ? sala.estado : st).bolas[0];
 
 /* ---------- Entrada ---------- */
+/* Toques sobre la mesa (design.md §5):
+   - arrastrar apunta hacia el dedo solo después de moverlo más de ARRASTRE_PX (un toque no cambia la mira);
+   - si el dedo baja junto a la blanca (RESORTERA_PX), es resortera: el jalón da la dirección y la fuerza; al soltar
+     tira solo si el jalón es de DISPARA_PX o más; regresar a menos de CANCELA_PX de la blanca cancela. */
 const dedos = {};
+const enPantalla = (x, y) => { const r = cv.getBoundingClientRect(); return { x: x - r.left, y: y - r.top }; };
+function distBlancaPx(x, y) { const bl = blancaActual(), p = aPantalla(bl.x, bl.y), q = enPantalla(x, y); return Math.sqrt((q.x - p.x) * (q.x - p.x) + (q.y - p.y) * (q.y - p.y)); }
 U.tactil(cv, {
   inicio: (id, x, y) => {
     if (!puedoApuntar()) return;
-    const m = aMesa(x, y), bl = blancaActual(), dx = m.x - bl.x, dy = m.y - bl.y;
-    dedos[id] = { resortera: dx * dx + dy * dy <= (4 * B.R) * (4 * B.R) };
-    if (!dedos[id].resortera) aim = F.atan2Dec(dy, dx);
+    const resortera = distBlancaPx(x, y) <= Math.max(4 * B.R * K, RESORTERA_PX);
+    dedos[id] = { resortera, x0: x, y0: y, movio: false };
+    if (resortera) jalon = { fuerza: fuerza(), listo: false };
   },
   mover: (id, x, y) => {
     const d = dedos[id]; if (!d || !puedoApuntar()) return;
+    d.movio = d.movio || Math.abs(x - d.x0) + Math.abs(y - d.y0) > ARRASTRE_PX;
     const m = aMesa(x, y), bl = blancaActual(), dx = m.x - bl.x, dy = m.y - bl.y;
     if (d.resortera) {
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > B.R) { aim = F.atan2Dec(-dy, -dx); ponerFuerza(Math.round(F.acotar((dist - B.R) / 2.6, 1, 100))); d.jalo = dist > 2 * B.R; }
-    } else aim = F.atan2Dec(dy, dx);
+      const px = distBlancaPx(x, y), dist = Math.sqrt(dx * dx + dy * dy);
+      if (px >= CANCELA_PX) { aim = F.atan2Dec(-dy, -dx); ponerFuerza(Math.round(F.acotar((dist - B.R) / 2.6, 1, 100))); }
+      jalon = { fuerza: fuerza(), listo: px >= DISPARA_PX };
+    } else if (d.movio) aim = F.atan2Dec(dy, dx);
   },
   fin: (id, x, y, cancel) => {
     const d = dedos[id]; delete dedos[id];
-    if (d && d.resortera && d.jalo && !cancel && puedoApuntar()) tirar();
+    if (d && d.resortera) jalon = null;
+    if (d && d.resortera && !cancel && puedoApuntar() && distBlancaPx(x, y) >= DISPARA_PX) tirar();
   },
 });
-function ponerFuerza(v) { $('r-fuerza').value = v; $('v-fuerza').textContent = v; }
-$('r-fuerza').addEventListener('input', () => { $('v-fuerza').textContent = $('r-fuerza').value; });
-$('b-izq').onclick = () => { aim = (aim + 3597) % 3600; };
-$('b-der').onclick = () => { aim = (aim + 3) % 3600; };
+// Fuerza: barra vertical (tocar o arrastrar fija el valor según la altura).
+function ponerFuerza(v) {
+  fuerzaV = F.acotar(Math.round(v), 1, 100);
+  $('v-fuerza').textContent = fuerzaV; $('fuerza-relleno').style.height = fuerzaV + '%'; $('fuerza').setAttribute('aria-valuenow', fuerzaV);
+}
+const fuerzaDesde = y => { const r = $('fuerza').getBoundingClientRect(); ponerFuerza(1 + 99 * (1 - F.acotar((y - r.top) / r.height, 0, 1))); };
+U.tactil($('fuerza'), { inicio: (id, x, y) => fuerzaDesde(y), mover: (id, x, y) => fuerzaDesde(y), fin: () => {} });
+ponerFuerza(fuerzaV);
+// Ajuste fino: 0.1° por toque; sostenido repite y acelera (hasta 2° por paso).
+const girar = d => { aim = ((aim + d) % 3600 + 3600) % 3600; };
+const pasoFino = k => (k === 0 ? 1 : Math.min(20, 1 + Math.floor(k / 4) * 2));
+U.sostener($('b-izq'), k => { if (puedoApuntar()) girar(-pasoFino(k)); });
+U.sostener($('b-der'), k => { if (puedoApuntar()) girar(pasoFino(k)); });
 function cambiarEfecto() { efectoI = (efectoI + 1) % EFECTOS.length; $('b-efecto').textContent = EFECTOS[efectoI].t; }
+// Panel (táctil) o franja de datos (mando) en tu turno.
+function mostrarPanel(mio) {
+  $('panel').classList.toggle('hide', !mio || control === 'mando');
+  $('datos').classList.toggle('hide', !mio || control !== 'mando');
+  const ang = '🎯 ' + (aim / 10).toFixed(1) + '°';
+  if ($('v-angulo').textContent !== ang) $('v-angulo').textContent = ang;
+  if (mio && control === 'mando') { const t = ang + ' · 💪 ' + fuerza() + ' · ' + EFECTOS[efectoI].t; if ($('datos').textContent !== t) $('datos').textContent = t; }
+}
 $('b-efecto').onclick = cambiarEfecto;
 $('b-tirar').onclick = tirar;
 $('b-rendir').onclick = () => { if (sala && sala.miTurno() && confirm('¿Rendirte? Tu rival gana la partida.')) sala.tirar({ accion: 'rendirse' }); };
 /* Acciones (capa para teclado y para un mando): apuntar con el eje analógico o apuntarMenos/apuntarMas (sostenidas),
    fuerzaMenos/fuerzaMas, tirar, efecto y pausa. Los toques directos (arrastrar, resortera) siguen aparte. */
-function pausarBillar() { if (modo === 'juego') { modo = 'pausa'; mostrar('ov-pausa'); } else if (modo === 'pausa') { ocultar(); modo = 'juego'; } }
+function pausarBillar() { if (modo === 'juego') { ponerModo('pausa'); mostrar('ov-pausa'); } else if (modo === 'pausa') { ocultar(); ponerModo('juego'); } }
 const acciones = U.crearAcciones({
   apuntarMenos: {}, apuntarMas: {}, fuerzaMenos: {}, fuerzaMas: {},
+  finoMenos: { pulso: () => { if (puedoApuntar()) girar(-1); } },
+  finoMas: { pulso: () => { if (puedoApuntar()) girar(1); } },
   tirar: { pulso: () => { if (puedoApuntar()) tirar(); } },
   efecto: { pulso: () => { if (puedoApuntar()) cambiarEfecto(); } },
   pausa: { pulso: pausarBillar },
-}, code => ({ ArrowLeft: 'apuntarMenos', KeyA: 'apuntarMenos', ArrowRight: 'apuntarMas', KeyD: 'apuntarMas', ArrowUp: 'fuerzaMas', KeyW: 'fuerzaMas',
-  ArrowDown: 'fuerzaMenos', KeyS: 'fuerzaMenos', Space: 'tirar', KeyJ: 'tirar', KeyK: 'efecto', Escape: 'pausa', KeyP: 'pausa', Enter: 'pausa' })[code]);
+}, code => (modo === 'juego' || modo === 'pausa' || modo === 'sala') ? ({ ArrowLeft: 'apuntarMenos', KeyA: 'apuntarMenos', ArrowRight: 'apuntarMas', KeyD: 'apuntarMas', ArrowUp: 'fuerzaMas', KeyW: 'fuerzaMas',
+  ArrowDown: 'fuerzaMenos', KeyS: 'fuerzaMenos', KeyQ: 'finoMenos', KeyE: 'finoMas', Space: 'tirar', KeyJ: 'tirar', KeyK: 'efecto', Escape: 'pausa', KeyP: 'pausa', Enter: 'pausa' })[code] : null);
+/* 🎮 Mando clásico (juegos/mando.js): cruceta ◀ ▶ o palanca = apuntar (solo por eje(), proporcional), L / R = fino,
+   A = tirar, X / ▲ = más fuerza, Y / ▼ = menos fuerza, B = efecto, START = menú. Sin teclas (el teclado del juego no
+   cambia). Activo en el juego, la pausa y la sala con cualquier control elegido; se ve solo con «Mando clásico». */
+const mando = Mando.crear({
+  acciones: { apuntarMenos: 'izq', apuntarMas: 'der', fuerzaMas: ['X', 'arriba'], fuerzaMenos: ['Y', 'abajo'], finoMenos: 'L', finoMas: 'R', tirar: 'A', efecto: 'B', pausa: 'START' },
+  contenedor: $('juego'),
+  teclas: Object.fromEntries(Object.keys(Mando.TECLAS).map(k => [k, null])),
+  nombres: { tirar: 'tirar', efecto: 'efecto', fuerzaMas: 'fuerza+', fuerzaMenos: 'fuerza−', pausa: 'menú' },
+});
+mando.activar(false);
+for (const a of ['finoMenos', 'finoMas', 'tirar', 'efecto', 'pausa']) { mando.al(a, () => acciones.presionar(a, true)); mando.alSoltar(a, () => acciones.presionar(a, false)); }
+const ejeMando = U.ejeDeMando(acciones);
+const finoDesde = {}; // L / R sostenidos repiten tras 300 ms
+function leerMando() {
+  ejeMando(mando.eje().x);
+  for (const [a, d] of [['finoMenos', -1], ['finoMas', 1]]) {
+    if (!mando.presionado(a)) { finoDesde[a] = 0; continue; }
+    if (!finoDesde[a]) finoDesde[a] = performance.now();
+    else if (performance.now() - finoDesde[a] > 300 && puedoApuntar()) girar(d);
+  }
+}
+function elegirControl(c) { if (!CONTROLES.includes(c)) return; control = c; U.guardarLS('billar_control', c); acciones.soltarTodo(); pintarControles(); }
+const AYUDA = {
+  tactil: '👆 <b>Arrastra sobre la mesa</b> para apuntar (línea guía y bola fantasma) y afina con <b>⟲ ⟳</b> (sostenlos para girar más). Elige la fuerza en la <b>barra vertical</b> y toca <b>🎱 TIRAR</b>. O <b>jala desde la bola blanca</b> como resortera: suelta para tirar o regresa a la blanca para cancelar. Efecto opcional: ⬆ seguir o ⬇ retroceder.',
+  mando: '🎮 Cruceta ◀ ▶: apuntar · <b>L</b> / <b>R</b>: fino · <b>X</b> / <b>Y</b> (o ▲ ▼): fuerza · <b>B</b>: efecto · <b>A</b>: tirar · <b>START</b>: menú. También puedes jalar la resortera con el dedo.',
+};
+function pintarControles() {
+  document.body.classList.toggle('ctl-mando', control === 'mando');
+  document.querySelectorAll('[data-control]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.control === control)));
+  mando.mostrar(control === 'mando');
+  $('ayuda-menu').innerHTML = AYUDA[control] + (U.TACTIL ? '' : '<br>⌨️ ← → apuntar · Q / E fino · ↑ ↓ fuerza · K efecto · Espacio tirar · P menú.');
+  requestAnimationFrame(ajustar);
+}
+$('b-control').onclick = e => { e.currentTarget.blur(); elegirControl(CONTROLES[(CONTROLES.indexOf(control) + 1) % CONTROLES.length]); U.avisar(control === 'mando' ? '🎮 Mando clásico' : '👆 Táctil', 900); };
 // Cada cuadro de 1/30 s: la mira gira hasta 6°/s con el eje (más fino cerca del centro) y la fuerza sube o baja.
 let fuerzaAcum = 0;
 setInterval(() => {
   if (!puedoApuntar()) return;
   const d = acciones.direccion('apuntarMenos', 'apuntarMas');
   if (d) aim = ((aim + Math.round(d * Math.abs(d) * 20)) % 3600 + 3600) % 3600;
-  fuerzaAcum += acciones.direccion('fuerzaMenos', 'fuerzaMas') * 1.5;
+  const fm = (mando.presionado('fuerzaMas') ? 1 : 0) - (mando.presionado('fuerzaMenos') ? 1 : 0);
+  fuerzaAcum += F.acotar(acciones.direccion('fuerzaMenos', 'fuerzaMas') + fm, -1, 1) * 1.5;
   if (Math.abs(fuerzaAcum) >= 1) { ponerFuerza(F.acotar(fuerza() + Math.trunc(fuerzaAcum), 1, 100)); fuerzaAcum -= Math.trunc(fuerzaAcum); }
 }, 33);
 window.accionesJuego = acciones; // para conectar un mando (adaptador) sin tocar el juego
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-nivel],[data-ir]'); if (!b) return;
+  const b = e.target.closest('[data-nivel],[data-ir],[data-control]'); if (!b) return;
+  if (b.dataset.control) return elegirControl(b.dataset.control);
   if (b.dataset.nivel) return nuevaPartida(b.dataset.nivel);
   if (b.dataset.ir === 'otra') return nuevaPartida(nivel);
   if (b.dataset.ir === 'menu') return abrirMenu();
-  if (b.dataset.ir === 'seguir') { ocultar(); modo = 'juego'; }
+  if (b.dataset.ir === 'seguir') { ocultar(); ponerModo('juego'); }
 });
 U.botonSonido($('b-sonido'));
 $('b-salir').onclick = e => { e.currentTarget.blur(); if (modo === 'juego') pausarBillar(); };
@@ -455,20 +575,22 @@ function cuadro(ahora) {
   let dt = (ahora - ultimo) / 1000; ultimo = ahora;
   if (dt > 0.25) dt = 0.25;
   cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
+  if (modo === 'juego' || modo === 'sala') leerMando();
   if (modo === 'juego' || modo === 'sala') {
     acum += dt; let n = 0;
-    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoIndividual(); else pasoSala(); acum -= PASO; n++; }
+    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoIndividual(); else if (modo === 'sala' && sala) pasoSala(); else break; /* un paso pudo cambiar de modo */ acum -= PASO; n++; }
     if (n === 6) acum = 0;
     if (modo === 'juego' && st) {
       pintarHud(st, sim ? (simOrigen === 'bot' ? 1 : 0) : st.turno);
       const mio = !sim && st.turno === 0 && !st.fin;
-      $('panel').classList.toggle('hide', !mio);
+      mostrarPanel(mio);
       const txt = sim ? (simOrigen === 'bot' ? '🤖 Tira el bot…' : '') : st.turno === 0 ? '👉 Tu turno' : '🤖 El bot está pensando…';
       if ($('estado').textContent !== txt) $('estado').textContent = txt;
     }
   } else acum = 0;
   dibujar();
 }
+pintarControles();
 ajustar();
 requestAnimationFrame(t => { ultimo = t; cuadro(t); });
 if (U.EMBED) U.enviar({ tipo: 'listo' }); else abrirMenu();
@@ -478,13 +600,18 @@ if (U.PRUEBA) {
     estado: () => {
       const e = modo === 'sala' && sala ? sala.estado : st;
       return {
-        modo, nivel, horizontal, tactil: U.TACTIL, fps, w: W, h: H, k: K, aim, fuerza: fuerza(), efecto: EFECTOS[efectoI].v,
+        modo, nivel, horizontal, tactil: U.TACTIL, fps, w: W, h: H, k: K, aim, fuerza: fuerza(), efecto: EFECTOS[efectoI].v, control, resortera: jalon, mando: mando.estado(),
         turno: e ? e.turno : null, grupos: e ? e.grupos : null, enMesa: e ? e.bolas.filter(o => !o.fuera).length : 16, tiros: e ? e.tiros : 0, ultimo: e ? e.ultimo : null, fin: e ? e.fin : null,
         animando: !!(sim || (sala && sala.anim)), sala: !!sala, miTurno: !!(sala && sala.miTurno()), paso: sala && sala.linea ? sala.linea.paso : 0, mostrados: sala ? sala.mostrado.length : 0, yo: sala ? sala.idx : 0, finEnviado: !!(sala && sala.finEnviado),
         blanca: e ? aPantalla(e.bolas[0].x, e.bolas[0].y) : null,
       };
     },
     pantalla: (x, y) => aPantalla(x, y),
+    // Rectángulo de la mesa (con sus bandas) en coordenadas de la página.
+    rectMesa: () => {
+      const r = cv.getBoundingClientRect(), a = aPantalla(-BANDA, -BANDA), b = aPantalla(B.ANCHO + BANDA, B.ALTO + BANDA);
+      return { l: r.left + Math.min(a.x, b.x), t: r.top + Math.min(a.y, b.y), r: r.left + Math.max(a.x, b.x), b: r.top + Math.max(a.y, b.y) };
+    },
     blancaMesa: () => { const o = blancaActual(); return { x: o.x, y: o.y }; },
     firma: () => sala && !sala.anim ? JSON.stringify({ e: sala.estado, mostrados: sala.mostrado.length }) : null,
     // Mesa lista para ganar: tus 7 lisas fuera y la 8 frente a la esquina (individual).
