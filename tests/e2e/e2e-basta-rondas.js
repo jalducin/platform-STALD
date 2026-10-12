@@ -1,5 +1,5 @@
 // E2E: Basta en partida por rondas (openspec: basta-rondas). Dos navegadores + bots, 5 rondas aceleradas;
-// y una partida de 10 rondas por defecto.
+// una partida de 10 rondas por defecto y otra con 2 categorías divertidas y su revancha (basta-divertida-una-robo).
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const fs = require('fs');
@@ -80,6 +80,46 @@ const tabla = p => p.$$eval('.basta-res tbody tr', trs => trs.map(t => [...t.chi
   await solo.waitForSelector('.result', { timeout: 180000 }); await sleep(500);
   const t10 = await tabla(solo);
   ok('10 rondas jugadas con 10 letras distintas', t10.length === 10 && new Set(t10.map(x => x[1])).size === 10, t10.map(x => x[1]).join(''));
+
+  // ---- Categorías divertidas (openspec: basta-divertida-una-robo): 2 en sala, se califican y la revancha las hereda ----
+  const h2 = await jugador(b, 'laura@example.com', 0.15), o2 = await jugador(b, 'fernando@example.com', 0.15);
+  await h2.selectOption('#p-juego', 'basta-es'); await h2.waitForSelector('[data-pextra]');
+  ok('crear: 10 categorías divertidas para elegir', (await h2.$$('[data-pextra]')).length === 10);
+  await h2.selectOption('#p-rondas', '5');
+  await h2.check('[data-pextra="pokemon"]'); await h2.check('[data-pextra="antojito"]'); await h2.click('[data-pextra="flor"]');
+  ok('crear: máximo 2 categorías divertidas', !(await h2.isChecked('[data-pextra="flor"]')) && /Máximo 2/.test(await h2.textContent('#p-extra-aviso')), await h2.textContent('#p-extra-aviso'));
+  await h2.screenshot({ path: 'basta-extras-crear.png', fullPage: true });
+  await h2.click('#f-crear button[type=submit]'); await h2.waitForSelector('[data-p="empezar"]');
+  const cod2 = (await h2.textContent('.letra')).trim();
+  ok('sala guarda las divertidas en opciones.extra', (await h2.evaluate(() => sala.estado.sala.opciones.extra)) === 'pokemon,antojito');
+  await o2.fill('#p-codigo', cod2); await o2.click('#f-unirse button[type=submit]'); await o2.waitForSelector('#p-body .rank li');
+  ok('sala de espera muestra las categorías divertidas', /Pokémon/.test(await o2.textContent('#p-extras')) && /Antojito mexicano/.test(await o2.textContent('#p-extras')), await o2.textContent('#p-extras'));
+  await sleep(2600); await h2.click('[data-p="empezar"]');
+  await h2.waitForFunction(() => document.querySelector('#pb-form') && sala.vista === 'basta0', null, { timeout: 30000 });
+  await o2.waitForFunction(() => document.querySelector('#pb-form') && sala.vista === 'basta0', null, { timeout: 30000 });
+  ok('ronda con 7 + 2 casillas (Pokémon y Antojito al final)', (await h2.$$('#pb-form input')).length === 9 && !!(await o2.$('#pb-pokemon')) && !!(await o2.$('#pb-antojito')));
+  const L2 = norm((await h2.textContent('.letra')).trim());
+  const banco = id => basta.extras.find(x => x.id === id).palabras.filter(w => norm(w).startsWith(L2));
+  // Lo que escriben los bots (misma semilla): la antojito de la anfitriona debe ser distinta para que sea única.
+  const deBots = await h2.evaluate(() => participantes().filter(p => p.bot).map(p => botBasta(sala.estado.sala.seed, p.bot, letrasBasta()[0], datosBasta(), 0).antojito));
+  const poke = banco('pokemon')[0] || '', anto = banco('antojito').find(w => !deBots.includes(w)) || '';
+  await h2.fill('#pb-pokemon', poke); await o2.fill('#pb-pokemon', poke); // repetida → 50 cada quien
+  await h2.fill('#pb-antojito', anto); // única → 100; vacía → 0
+  await h2.screenshot({ path: 'basta-extras-ronda.png', fullPage: true });
+  await h2.waitForSelector('#pb-sig', { timeout: 30000 }); await o2.waitForSelector('#pb-sig', { timeout: 30000 }); await sleep(200);
+  const tH = await tabla(h2), tO = await tabla(o2);
+  const fila = (t, txt) => t.find(x => x[0].includes(txt)) || [];
+  ok('Pokémon repetido vale 50 para ambos', poke ? fila(tH, 'Pokémon')[3] === '50' && fila(tO, 'Pokémon')[3] === '50' && fila(tH, 'Pokémon')[2] === 'repetida' : true, poke + ' ' + JSON.stringify(fila(tH, 'Pokémon')));
+  ok('Antojito única vale 100 y vacía 0', anto ? fila(tH, 'Antojito')[3] === '100' && fila(tO, 'Antojito')[3] === '0' : fila(tH, 'Antojito')[3] === '0', anto + ' ' + JSON.stringify(fila(tH, 'Antojito')) + JSON.stringify(fila(tO, 'Antojito')));
+  await o2.screenshot({ path: 'basta-extras-resultados.png', fullPage: true });
+  await h2.waitForSelector('.result', { timeout: 90000 }); await o2.waitForSelector('.result', { timeout: 90000 }); await sleep(800);
+  ok('podio igual en ambos con las divertidas', JSON.stringify(await podio(h2)) === JSON.stringify(await podio(o2)), (await podio(h2)).join(' | '));
+  await o2.waitForSelector('[data-p="revancha"]', { timeout: 15000 }); await o2.click('[data-p="revancha"]');
+  await o2.waitForFunction(c => sala.estado && sala.estado.sala.codigo !== c && !sala.estado.sala.inicio, cod2, { timeout: 30000 });
+  await o2.waitForSelector('#p-extras', { timeout: 15000 }).catch(() => {});
+  const rev = await o2.evaluate(() => ({ extra: sala.estado.sala.opciones.extra, rondas: sala.estado.sala.opciones.rondas, txt: (document.getElementById('p-extras') || {}).textContent || '' }));
+  ok('la revancha hereda las 2 categorías divertidas', rev.extra === 'pokemon,antojito' && rev.rondas === '5' && /Pokémon/.test(rev.txt), JSON.stringify(rev));
+  await o2.screenshot({ path: 'basta-extras-revancha.png', fullPage: true });
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 400)); process.exit(2); });

@@ -52,7 +52,8 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
     if (j.a !== undefined && !entero(j.a, 0, 20)) return null;
     return { ...base, con: con as number[], ...(j.a !== undefined ? { a: j.a as number } : {}) };
   }
-  // ¡Una!
+  // ¡Una! Robar (hasta poder tirar) y pasar no llevan carta ni color: el robo se reproduce del mazo de la semilla.
+  if (accion !== "jugar" && (j.carta !== undefined || j.color !== undefined)) return null; // basta-divertida-una-robo
   if (!["jugar", "robar", "pasar"].includes(accion) || (j.carta !== undefined && !entero(j.carta, 0, 107)) ||
     (j.color !== undefined && !["r", "y", "g", "b"].includes(String(j.color))) || (j.una !== undefined && typeof j.una !== "boolean")) return null;
   return { ...base, ...(j.carta !== undefined ? { carta: j.carta as number } : {}), ...(j.color !== undefined ? { color: String(j.color) } : {}), ...(j.una !== undefined ? { una: j.una as boolean } : {}) };
@@ -113,6 +114,18 @@ interface EnSala {
 }
 
 const RONDAS_BASTA = ["5", "10", "12"]; // Basta por rondas (openspec: basta-rondas)
+// basta-divertida-una-robo: categorías divertidas que el anfitrión puede sumar (máximo 2). Misma lista que
+// `extras` en juegos/datos/basta.json y Basta.CONOCIDAS en juegos/basta.js (server/basta_una_test.ts).
+export const EXTRAS_BASTA = ["pokemon", "actor", "flor", "anime", "pelicula", "heroe", "antojito", "refri", "excusa", "kitchen"] as const;
+export const MAX_EXTRAS_BASTA = 2;
+// Normaliza `opciones.extra` (arreglo o texto "a,b") a "a,b"; "" sin extras; null si es inválida.
+function extrasBasta(x: unknown): string | null {
+  if (x === undefined || x === null || x === "") return "";
+  const ids = Array.isArray(x) ? x : typeof x === "string" ? x.split(",") : null;
+  if (!ids || ids.length > MAX_EXTRAS_BASTA || new Set(ids).size !== ids.length) return null;
+  if (!ids.every((id) => typeof id === "string" && (EXTRAS_BASTA as readonly string[]).includes(id))) return null;
+  return ids.join(",");
+}
 const MAX_FINAL = 10_000; // total final y podio (10–12 rondas de Basta suman más que un quiz)
 
 const cache = new Map<string, { t: number; v: unknown }>();
@@ -250,6 +263,9 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       const rondas = op.rondas === undefined ? "10" : String(op.rondas);
       if (!RONDAS_BASTA.includes(rondas)) return json({ error: "rondas_invalidas" }, 400);
       opciones.rondas = rondas;
+      const extra = extrasBasta(op.extra); // basta-divertida-una-robo
+      if (extra === null) return json({ error: "extras_invalidas" }, 400);
+      if (extra) opciones.extra = extra;
     }
     if (CARRERAS[juego]) { // Arcade: nivel o pista en las opciones (openspec: juegos-plataformas-karts)
       const mapa = mapaDeSala(juego, op.mapa, aleatorio(1)[0]);

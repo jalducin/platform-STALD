@@ -14,7 +14,8 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
   ok('hub: categoría Clásicos con 7 juegos (con Póker, Brisca y Conquián)', (await p.$$('.cat-clasicos[data-juego]')).length === 7 && (await p.$$('[data-juego]')).length === 24);
 
   // Basta (es): verificada, desconocida y con otra letra
-  await p.click('[data-juego="basta-es"]'); await p.waitForSelector('#basta-form');
+  await p.click('[data-juego="basta-es"]'); await p.waitForSelector('#basta-empezar'); // basta-divertida-una-robo: sin categorías divertidas
+  await p.click('#basta-empezar'); await p.waitForSelector('#basta-form');
   const letra = (await p.textContent('.letra')).trim();
   const L = norm(letra);
   const deCat = cat => basta.es.palabras[cat].find(w => norm(w).startsWith(L));
@@ -30,13 +31,21 @@ const norm = s => String(s).trim().toLowerCase().replace(/ñ/g, '\u0001').normal
   ok('basta: guarda en la semana', res.includes('a tus individuales'));
   await p.click('[data-a="hub"]');
 
-  // Basta (en): todo verificado → bono
-  await p.click('[data-juego="basta-en"]'); await p.waitForSelector('#basta-form');
+  // Basta (en) con 2 categorías divertidas (basta-divertida-una-robo): todo verificado → bono
+  await p.click('[data-juego="basta-en"]'); await p.waitForSelector('#basta-empezar');
+  ok('basta individual: ofrece las 10 categorías divertidas', (await p.$$('[data-bextra]')).length === 10);
+  await p.check('[data-bextra="kitchen"]'); await p.check('[data-bextra="pokemon"]'); await p.click('[data-bextra="flor"]');
+  ok('basta individual: máximo 2 categorías divertidas', !(await p.isChecked('[data-bextra="flor"]')) && /Máximo 2/.test(await p.textContent('#b-extra-aviso')), await p.textContent('#b-extra-aviso'));
+  await p.click('#basta-empezar'); await p.waitForSelector('#basta-form');
   const le = norm((await p.textContent('.letra')).trim());
+  const extrasEn = basta.extras.filter(x => ['kitchen', 'pokemon'].includes(x.id));
+  ok('basta individual: 6 de siempre + 2 divertidas', (await p.$$('#basta-form input')).length === 8 && !!(await p.$('#b-kitchen')) && !!(await p.$('#b-pokemon')));
   for (const c of basta.en.categorias) await p.fill('#b-' + c.id, basta.en.palabras[c.id].find(w => norm(w).startsWith(le)));
+  for (const x of extrasEn) await p.fill('#b-' + x.id, x.palabras.find(w => norm(w).startsWith(le)) || '');
+  await p.screenshot({ path: 'basta-individual-extras.png', fullPage: true });
   await p.click('#basta-form button[type=submit]'); await p.waitForSelector('.result .score');
   const re = (await p.textContent('.result')).replace(/\s+/g, ' ');
-  ok('basta en inglés: 6 verificadas y bono', (re.match(/verificada/g) || []).length === 6 && re.includes('Bono'), re.slice(0, 120));
+  ok('basta en inglés: 8 verificadas (con las divertidas) y bono', (re.match(/verificada/g) || []).length === 8 && re.includes('Bono') && re.includes('Something in the kitchen'), re.slice(0, 160));
   await p.click('[data-a="hub"]');
 
   // ¡Una! contra 1 bot, en inglés
