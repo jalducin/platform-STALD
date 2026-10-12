@@ -152,6 +152,24 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     - Al reproducir, cada cliente valida la jugada con `juegos/cartas.js`. Una jugada inválida se ignora y, al vencer
       los 30 s, el jugador pasa o se retira.
   - Al terminar, `respuesta` acepta `{ final }` de cada jugador y `{ podio }`, que solo guarda el del host.
+  - Juegos de tablero (cambio `juegos-tablero`; `server/tablero.ts` y `server/naval.ts`, ganchos `// juegos-tablero`
+    en `server/salas.ts`). En el catálogo, `damas` ("Damas") y `naval` ("Batalla naval") son de `mente`, y `domino`
+    ("Dominó") y `parchis` ("Parchís") de `clasicos`; los 4 con tope 1000. Sus mesas están en `MESAS`.
+    - `validarJugadaTablero` (400 `jugada_invalida` si no cuadra):
+      - Damas: `{ n, accion: "mover", ruta: [2..13 casillas 0–31] }` o `{ n, accion: "rendirse" }`;
+      - Dominó: `{ n, accion: "jugar", ficha: 0–27, lado: "i" | "d" }`;
+      - Parchís: `{ n, accion: "mover", ficha: 0–3 }`.
+    - Las reglas de esos 3 juegos se reproducen en cada navegador con `juegos/tablero.js`, como en los juegos de
+      cartas.
+    - **Batalla naval se arbitra en el servidor.** `respuesta` acepta:
+      - `{ flota: [[c…]×5] }`: una sola vez; 400 `flota_invalida` o 409 `flota_lista`;
+      - `{ jugada: { n, accion: "disparar", c: 0–99 } }`: el servidor calcula el turno (tras «agua» cambia) y guarda
+        `r: "agua" | "tocado" | "hundido"` y, al hundir, `barco`. Errores: 409 `falta_flota`, `no_es_tu_turno`,
+        `turno_tomado` (`n` distinto del siguiente paso) o `partida_terminada`, y 400 `ya_disparaste`;
+      - `rendirse` y `reclamar`: este último solo si al rival le toca y lleva 90 s sin jugar; si no, 409 `aun_no`.
+    - `vistaJugadores` quita la `flota` del rival en `GET /juegos/sala/<código>`. El broadcast de Realtime no lleva
+      ninguna flota. Al terminar se revelan las dos. **Nunca agregues una ruta o un aviso que devuelva los archivos
+      de jugador de una sala de `naval` sin pasar por `vistaJugadores`.**
   - Cada sala nueva se agrega al índice `juegos/salas-semana/<lunes>.json`.
 - **`GET /juegos/admin/resumen?semana=`** (solo admin, 403 para los demás):
   - `jugadores`: todos los de la semana, con `total`, `totalIndividual`, `totalPartidas`, mejores, partidas y última vez;
@@ -178,7 +196,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     404 si no existe.
   - Solo admin: `GET /juegos/fotos` (lista activa) y `POST /juegos/fotos/quitar` `{ id }` (403 para el
     resto; 404 si ese jugador no tiene foto).
-- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú; con los 4 de tablero (`juegos-tablero`), 28. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
 **CORS y peticiones** (cambio `ahorro-peticiones`): las páginas mandan los POST con `Content-Type: text/plain` (petición
