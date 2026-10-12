@@ -12,13 +12,13 @@
     --accent: #db2777; --accent-2: #7c3aed; --accent-soft: #fce7f3; --ok: #16a34a; --ok-soft: #dcfce7; --bad: #dc2626; --bad-soft: #fee2e2;
     --gold: #f59e0b; --shadow: 0 1px 2px rgba(30, 27, 46, .06), 0 8px 24px rgba(30, 27, 46, .07); --radius: 18px;
     --ingles: #2563eb; --ingles-soft: #dbeafe; --espanol: #ea580c; --espanol-soft: #ffedd5; --cultura: #0d9488; --cultura-soft: #ccfbf1;
-    --mente: #7c3aed; --mente-soft: #ede9fe; --clasicos: #db2777; --clasicos-soft: #fce7f3;
+    --mente: #7c3aed; --mente-soft: #ede9fe; --clasicos: #db2777; --clasicos-soft: #fce7f3; --arcade: #ea580c; --arcade-soft: #ffedd5;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #13111c; --card: #1e1b2e; --text: #f4f3fa; --muted: #a8a5bd; --border: #2e2a45; --accent-soft: #45162f;
       --ok-soft: #12351f; --bad-soft: #3b1414; --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
-      --ingles-soft: #1e2a4d; --espanol-soft: #432411; --cultura-soft: #113b37; --mente-soft: #2e2159; --clasicos-soft: #45162f;
+      --ingles-soft: #1e2a4d; --espanol-soft: #432411; --cultura-soft: #113b37; --mente-soft: #2e2159; --clasicos-soft: #45162f; --arcade-soft: #431c0b;
     }
   }
   * { box-sizing: border-box; }
@@ -72,6 +72,11 @@
   .cat-cultura { --tone: var(--cultura); --tone-soft: var(--cultura-soft); }
   .cat-mente { --tone: var(--mente); --tone-soft: var(--mente-soft); }
   .cat-clasicos { --tone: var(--clasicos); --tone-soft: var(--clasicos-soft); }
+  .cat-arcade { --tone: var(--arcade); --tone-soft: var(--arcade-soft); } /* openspec: juegos-plataformas-karts */
+  .arcade-caja { position: relative; width: 100%; height: min(calc(100dvh - 120px), 760px); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); background: #0f172a; }
+  .arcade-caja iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  @media (min-width: 700px) { .arcade-caja { height: auto; aspect-ratio: 16 / 10; max-height: calc(100dvh - 140px); } }
+  .arcade-tiempos td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 800; font-size: .95rem; border: none; border-radius: 12px;
     padding: 12px 16px; cursor: pointer; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px rgba(219, 39, 119, .25); }
   .btn.ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
@@ -511,6 +516,7 @@
 
 <script src="juegos/cartas.js?v=3"></script>
 <script src="juegos/ajedrez.js?v=1"></script>
+<script src="juegos/arcade.js?v=1"></script>
 <script src="juegos/ingles-gramatica.js?v=1"></script>
 <script src="comun/auth.js?v=7"></script>
 <script>
@@ -646,6 +652,7 @@
     { id: 'cultura', titulo: '🧠 Maratón de cultura', clase: 'cat-cultura' },
     { id: 'mente', titulo: '⚡ Mente ágil', clase: 'cat-mente' },
     { id: 'clasicos', titulo: '🎲 Clásicos', clase: 'cat-clasicos' },
+    { id: 'arcade', titulo: '🕹️ Arcade', clase: 'cat-arcade' },
   ];
   const JUEGOS = [
     { id: 'en-vocab', cat: 'ingles', emoji: '⏱️', t: 'Vocabulario contra reloj', d: '60 segundos: elige la palabra en inglés.', jugar: () => jugarVocab() },
@@ -670,6 +677,8 @@
     { id: 'poker', cat: 'clasicos', emoji: '♠️', t: 'Póker', d: "Texas Hold'em estilo Casino Royale, con fichas de juego.", jugar: () => elegirPoker() },
     { id: 'brisca', cat: 'clasicos', emoji: '🏆', t: 'Brisca', d: 'Baraja española: gana rondas con el triunfo. Solo, contra 2 o en pareja.', jugar: () => elegirBrisca() },
     { id: 'conquian', cat: 'clasicos', emoji: '🪙', t: 'Conquián', d: 'Baraja española: baja tercias y escaleras hasta juntar 9 cartas.', jugar: () => elegirConquian() },
+    { id: 'plataformas', cat: 'arcade', emoji: '🦎', t: 'Axo y los 12 mundos', d: 'Plataformas: salta, junta monedas y vence al jefe de cada mundo.', jugar: () => jugarArcade('plataformas') },
+    { id: 'karts', cat: 'arcade', emoji: '🏎️', t: 'Karts Turbo', d: 'Carreras: derrapa, usa ítems y gana la copa contra 7 rivales.', jugar: () => jugarArcade('karts') },
   ];
   const juegoPorId = id => JUEGOS.find(j => j.id === id);
 
@@ -1580,6 +1589,54 @@
         titulo: d.gano ? '🏰 ¡Llegaste al castillo!' : '🐉 Dragon Run',
         detalle: '📏 ' + d.metros + ' m · 🪙 ' + d.monedas + ' monedas' + (d.gano ? ' · bono castillo +200' : ''),
       });
+    };
+    window.addEventListener('message', alMensaje);
+    limpiezas.push(() => window.removeEventListener('message', alMensaje), () => { if (estilo) iniciarMusica(estilo); });
+  }
+
+  // ---------- Arcade: Axo y los 12 mundos y Karts Turbo (iframe del mismo origen; openspec: juegos-plataformas-karts) ----------
+  // El juego no habla con el servidor: esta página le pasa el avance (GET /juegos/progreso/<id>), guarda lo que manda
+  // (PUT con la versión `v`, una escritura a la vez y gana la última) y registra los puntos de cada nivel o carrera.
+  const marcoArcade = (src, titulo) => '<div class="arcade-caja"><iframe id="arcade-frame" src="' + src + '" title="' + escapeHtml(titulo) + '" allow="autoplay"></iframe></div>';
+  const srcArcade = (id, extra) => 'juegos/' + id + '.html' + (new URLSearchParams(location.search).get('arcadePrueba') === '1' ? '?prueba=1' : '') + (extra || '');
+  function jugarArcade(id) {
+    const m = marco(id);
+    document.getElementById('m-puntos').hidden = true;
+    enCurso.foto = () => null; // el avance vive en el servidor: recargar no pide confirmación
+    m.body.innerHTML = marcoArcade(srcArcade(id), juegoPorId(id).t);
+    const frame = document.getElementById('arcade-frame');
+    const estilo = musica.estilo;
+    detenerMusica();
+    const lectura = api('/juegos/progreso/' + id).catch(() => ({ ok: false, status: 0, body: {} }));
+    let v = 0, cargado = false, pendiente = null, cola = Promise.resolve();
+    const aJuego = msg => { try { frame.contentWindow.postMessage(msg, location.origin); } catch (e) { /* iframe cerrado */ } };
+    const put = datos => api('/juegos/progreso/' + id, { method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ v, datos }) });
+    const guardarAvance = datos => {
+      pendiente = datos;
+      cola = cola.then(async () => {
+        if (!pendiente) return;
+        const d = pendiente; pendiente = null;
+        let r = await put(d);
+        // Otra pestaña guardó antes: la acción más reciente manda, pero solo si sí se leyó el avance real.
+        if (r.status === 409 && r.body.error === 'version_vieja' && cargado) { v = r.body.v; r = await put(d); }
+        if (r.ok) v = r.body.v;
+        aJuego({ tipo: 'guardado', ok: r.ok });
+      }).catch(() => aJuego({ tipo: 'guardado', ok: false }));
+    };
+    const alMensaje = async ev => {
+      const d = ev.data || {};
+      if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== id) return;
+      if (d.tipo === 'listo') {
+        const r = await lectura;
+        if (r.ok) { v = r.body.v; cargado = true; }
+        aJuego({ tipo: 'inicio', modo: 'individual', progreso: r.ok ? r.body.datos : null, aviso: r.ok ? '' : '⚠️ No se pudo cargar tu avance: juega y se guardará cuando vuelva la conexión.' });
+      } else if (d.tipo === 'guardar' && d.datos) guardarAvance(d.datos);
+      else if (d.tipo === 'puntos') {
+        const res = await post('/juegos/partida', { juego: id, puntos: Math.max(0, Math.round(Number(d.puntos) || 0)), aciertos: Number(d.aciertos) || 0, total: Number(d.total) || 0, segundos: Math.round(Number(d.segundos) || 0) });
+        const ok = res.ok && res.body.guardado;
+        if (ok) { state.totalIndividual = res.body.totalIndividual; state.totalPartidas = res.body.totalPartidas; state.pos = res.body.pos; state.mejores[id] = res.body.mejor; pintarChip(); }
+        aJuego({ tipo: 'puntos-ok', guardado: !!ok, puntos: ok ? res.body.puntos : 0, pos: ok ? res.body.pos : null, error: ok ? null : (res.body.error || res.status) });
+      }
     };
     window.addEventListener('message', alMensaje);
     limpiezas.push(() => window.removeEventListener('message', alMensaje), () => { if (estilo) iniciarMusica(estilo); });
@@ -2552,7 +2609,8 @@
   function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
-  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez'];
+  const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts'];
+  const ARCADE = new Set(['plataformas', 'karts']); // carreras en sala (openspec: juegos-plataformas-karts)
   const BOT_EXTRA = { id: 'bot-chonita', nombre: 'BOT-CHONITA', acierto: 0.5, avatar: { emoji: '👵', color: '#a855f7' } }; // 3.er bot para completar la Brisca
   const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
   const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
@@ -2705,6 +2763,7 @@
       '<div id="p-reloj-wrap" hidden><label for="p-reloj">Reloj por jugador</label><select id="p-reloj" class="sel"><option value="5">⚡ 5 min</option><option value="10" selected>⏱ 10 min</option><option value="15">🐢 15 min</option></select></div>' +
       '<div id="p-equipos-wrap" hidden><label class="check"><input id="p-equipos" type="checkbox"><span>👥 Por equipos (A y B, alternados por orden de entrada)</span></label></div>' +
       '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select></div>' +
+      '<div id="p-mapa-wrap" hidden><label for="p-mapa">Nivel o pista</label><select id="p-mapa" class="sel"></select></div>' +
       '<div id="p-tema-wrap" hidden><label for="p-tema">Tema</label><select id="p-tema" class="sel">' + InglesGramatica.TEMAS.map(t => '<option value="' + t.id + '">' + t.emoji + ' ' + escapeHtml(t.t) + '</option>').join('') + '</select></div>' +
       '<div id="p-cat-wrap" hidden><label for="p-cat">Maratón</label><select id="p-cat" class="sel"><option value="todas">🌈 Todas mezcladas</option></select></div>' +
       '<label class="check" id="p-bots-wrap"><input id="p-bots" type="checkbox" checked><span>Incluir 2 bots (BOT-VACHIRA y BOT-ISAGII) que contestan al azar</span></label>' +
@@ -2721,7 +2780,7 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, finT: 0, revEnviando: false, revMsg: '' });
+    Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, finT: 0, revEnviando: false, revMsg: '' });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
@@ -2804,6 +2863,7 @@
     if (s.juego === 'poker') return pintarPokerSala(body);
     if (s.juego === 'brisca' || s.juego === 'conquian') return pintarCartasSala(body, s.juego);
     if (s.juego === 'ajedrez') return pintarAjedrezSala(body);
+    if (ARCADE.has(s.juego)) return pintarArcadeSala(body);
     return pintarPreguntaSala(body);
   }
 
@@ -3639,9 +3699,76 @@
     return true;
   }
 
+  // ---- Carreras de Arcade en sala (openspec: juegos-plataformas-karts) ----
+  // Todos juegan el mismo nivel o pista (sala.opciones.mapa; la revancha lo hereda). Cada quien manda su tiempo una vez;
+  // los bots tienen un tiempo simulado con la semilla. Podio por tiempo con pintarFinalSala (registra final, podio y puntos).
+  function opcionesMapaArcade(juego) {
+    const wrap = document.getElementById('p-mapa-wrap'); if (!wrap) return;
+    wrap.hidden = !ARCADE.has(juego);
+    if (!ARCADE.has(juego)) return;
+    const lista = juego === 'karts' ? Arcade.PISTAS.map(p => p.id) : Arcade.MUNDOS.filter(x => x.jugable).flatMap(x => [x.n + '-1', x.n + '-2']);
+    document.getElementById('p-mapa').innerHTML = '<option value="">🎲 Al azar</option>' + lista.map(m => '<option value="' + m + '">' + escapeHtml(Arcade.nombreMapa(juego, m)) + '</option>').join('');
+  }
+  const mapaArcade = s => (s.opciones && s.opciones.mapa) || Arcade.mapaDeSala(s.juego, s.seed);
+  function resultadosArcade() {
+    const e = sala.estado, s = e.sala, mapa = mapaArcade(s);
+    const filas = participantes().map(p => {
+      if (p.bot) return { id: p.id, nombre: p.nombre, tipo: 'bot', avatar: p.avatar, ms: Arcade.tiempoBot(s.juego, mapa, s.seed, p.id), monedas: 0, envio: true };
+      const j = e.jugadores.find(x => x.id === p.id);
+      const c = (j && j.carrera) || (p.id === e.yo ? sala.arcadeMia : null) || null;
+      return { id: p.id, nombre: p.nombre, tipo: p.tipo, avatar: p.avatar, ms: c ? c.ms : null, monedas: c ? c.monedas : 0, envio: !!c };
+    }).sort((a, b) => (a.ms === null ? Infinity : a.ms) - (b.ms === null ? Infinity : b.ms));
+    filas.forEach((f, i) => { f.total = f.ms === null ? 0 : Arcade.puntosLugar(i + 1); });
+    return filas;
+  }
+  function pintarArcadeSala(body) {
+    const e = sala.estado, s = e.sala, juego = s.juego, mapa = mapaArcade(s);
+    const t = ahoraServidor() - s.inicio;
+    const filas = resultadosArcade();
+    const humanos = filas.filter(f => f.tipo !== 'bot');
+    if (humanos.every(f => f.envio) || t > Arcade.LIMITE_SALA[juego] + Arcade.GRACIA_SALA) {
+      if (sala.vista === 'final') return;
+      const mio = filas.find(f => f.id === e.yo);
+      sala.finAciertos = mio ? mio.monedas : 0; sala.finTotal = 0;
+      pintarFinalSala(body, filas, null, '🏁 ' + Arcade.nombreMapa(juego, mapa));
+      body.insertAdjacentHTML('beforeend', '<h2>⏱ Tiempos</h2><div class="scroll-x"><table class="inv arcade-tiempos"><thead><tr><th>#</th><th>Jugador</th><th>Tiempo</th><th>Pts</th></tr></thead><tbody>' +
+        filas.map((f, i) => '<tr' + (f.id === e.yo ? ' class="yo"' : '') + '><td>' + (i + 1) + '</td><td>' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' 🤖' : '') + '</td><td class="num">' + (f.ms === null ? 'No terminó' : Arcade.formatoTiempo(f.ms)) + '</td><td class="num">' + f.total + '</td></tr>').join('') + '</tbody></table></div>');
+      return;
+    }
+    const mia = (e.jugadores.find(x => x.id === e.yo) || {}).carrera || sala.arcadeMia;
+    if (mia) {
+      const k = 'arcade-espera:' + humanos.map(f => f.envio ? 1 : 0).join('') + ':' + Math.ceil((Arcade.LIMITE_SALA[juego] + Arcade.GRACIA_SALA - t) / 10000);
+      if (sala.vista === k) return;
+      sala.vista = k;
+      body.innerHTML = '<div class="q-card"><div class="sub">' + escapeHtml(Arcade.nombreMapa(juego, mapa)) + '</div><div class="q">' + (mia.ms === null ? '⏰ No terminaste' : '🏁 Tu tiempo: ' + Arcade.formatoTiempo(mia.ms)) + '</div>' +
+        '<div class="sub">Esperando a que terminen los demás (a más tardar en ' + Math.max(0, Math.ceil((Arcade.LIMITE_SALA[juego] + Arcade.GRACIA_SALA - t) / 1000)) + ' s)…</div></div>' +
+        '<ol class="rank">' + humanos.map(f => '<li>' + avatarHtml(f.avatar, 28) + '<span class="n">' + escapeHtml(f.nombre) + '</span><span class="pts">' + (f.envio ? (f.ms === null ? '—' : '⏱ ' + Arcade.formatoTiempo(f.ms)) : '🏃 jugando…') + '</span></li>').join('') + '</ol>';
+      return;
+    }
+    if (sala.vista === 'arcade') return;
+    sala.vista = 'arcade';
+    body.innerHTML = marcoArcade(srcArcade(juego), juegoPorId(juego).t);
+    const frame = document.getElementById('arcade-frame');
+    const bots = participantes().filter(p => p.bot).map(p => ({ nombre: p.nombre, ms: Arcade.tiempoBot(juego, mapa, s.seed, p.id), color: (Arcade.BOTS_SALA.find(b => b.id === p.id) || {}).color }));
+    const alMensaje = ev => {
+      const d = ev.data || {};
+      if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== juego) return;
+      if (d.tipo === 'listo') frame.contentWindow.postMessage({ tipo: 'inicio', modo: 'sala', mapa, seed: s.seed, inicioEn: s.inicio - ahoraServidor(), bots }, location.origin);
+      else if (d.tipo === 'meta' && !sala.arcadeMia) {
+        const ms = d.ms === null ? null : Math.max(0, Math.round(Number(d.ms) || 0));
+        sala.arcadeMia = { ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) };
+        window.removeEventListener('message', alMensaje);
+        post('/juegos/sala/' + sala.codigo + '/respuesta', { carrera: sala.arcadeMia }).then(() => traerSala()).then(() => { if (sala.vista !== 'final') { sala.vista = null; pintarSala(); } });
+        sala.vista = null; pintarSala();
+      }
+    };
+    window.addEventListener('message', alMensaje);
+    limpiezas.push(() => window.removeEventListener('message', alMensaje));
+  }
+
   async function crearPartida() {
     const juego = document.getElementById('p-juego').value;
-    const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : {};
+    const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
     const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
     if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     entrarSala(r.body.codigo);
@@ -3913,7 +4040,7 @@
     }
     if (a.dataset.a === 'otro-correo') { StaldAuth.salir().then(() => { state.email = null; pantallaLogin(); }); }
   });
-  app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez'; document.getElementById('p-tema-wrap').hidden = e.target.value !== 'en-frases';
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez'; opcionesMapaArcade(e.target.value); document.getElementById('p-tema-wrap').hidden = e.target.value !== 'en-frases';
     const nota = { ajedrez: '♟️ Partida 1 vs 1 solo entre dos personas: quien crea y quien se une. Sin bots.', brisca: '🏆 Se juega entre 4 en parejas: si faltan personas, se completa con bots. Máximo 4.' }[e.target.value];
     document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || ''; } });
   app.addEventListener('input', e => {

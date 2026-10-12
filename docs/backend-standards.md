@@ -77,6 +77,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
 | `/juegos/invitados` | GET | Solo admin: correos, apodos, visitas y puntos de la semana, para análisis |
 | `/juegos/registro` | POST `{ email, nombre, acepto }` (sin sesión) | Cuenta de Juegos sin validar el correo: alta del invitado (`registrarInvitado`) y `{ token_hash, jugador }` (llave de un solo uso de `generarEnlace`, que la página canjea con `verifyOtp`); con `ROWS_FIXTURE`, `{ prueba: true }`. 409 `correo_de_clase` para alumnos, alumnas y admin (entran con su enlace); 400 `correo_invalido`/`apodo_invalido`/`debe_aceptar`; 429 `cupo_lleno`; 503 `auth_no_disponible` (cambio `registro-directo-juegos`) |
 | `/juegos/nick` | POST `{ nick }` | Nick del jugador (2 a 20 letras o números; vacío lo quita) en `juegos/nicks.json`; actualiza su entrada de la semana. Con nick, la identidad trae `nombre` = nick y `nombreReal` (cambio `nick-jugadores`). 400 `nick_invalido` |
+| `/juegos/progreso/<juego>` | GET · PUT `{ v, datos }` | Avance individual de los juegos de Arcade (`plataformas`, `karts`; cambio `juegos-plataformas-karts`, `server/progreso.ts`). Cada jugador lee y escribe solo el suyo (id de la sesión; no hay forma de leer el de otra persona, tampoco el admin). GET → `{ juego, v, datos, actualizado }` (`v: 0`, `datos: null` si no hay). PUT con escritura condicional: `v` debe ser la versión guardada (si no, 409 `version_vieja` con `{ v, datos }` actuales) y el `put` usa el sha leído (3 reintentos; 503 `conflicto_escritura`) → `{ ok, v: v + 1, actualizado }`. 400 `juego_sin_progreso`, `json_invalido`, `version_invalida` o `progreso_invalido` (forma exacta por juego, ver docs/data-model.md); 413 `progreso_grande` (> 4096 bytes); 405 otro método; 403 `no_registrado` |
 | `/juegos/jugadores` | GET | Solo admin: `{ semana, jugadores[], pendientes[], cuentasError }`. Jugadores = alumnos, alumnas e invitados con puntos y partidas de la semana; pendientes = cuentas de Supabase Auth (`listarCuentas`, 60 s en memoria) que no terminaron: `sin confirmar` o `sin apodo`. Con `ROWS_FIXTURE`, las cuentas salen de su clave `cuentas` (cambio `jugadores-admin`) |
 
 - **Semana:** de lunes a domingo, hora de CDMX.
@@ -92,7 +93,14 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     - en Basta, `{ ronda, palabras, basta }` (`basta-rondas`): `ronda` entero `0 ≤ ronda < opciones.rondas`
       (si no, 400 `ronda_invalida`); se guarda en `rondasBasta[ronda]` y solo cuenta el primer `basta` de
       cada ronda. Sin `ronda` se acepta el formato anterior `{ palabras, basta }`;
-    - `{ final, podio }`: totales hasta 10000.
+    - `{ final, podio }`: totales hasta 10000;
+    - en carreras de Arcade (`plataformas`, `karts`; `server/carreras.ts`), `{ carrera: { ms, monedas } }`: `ms` entero
+      entre el mínimo (6 s y 15 s) y el límite (240 s y 300 s) del juego, o `null` si no terminó; además debe cuadrar
+      con el reloj del servidor (`ms ≤ ahora − inicio + 3 s` y `ms ≥ ahora − inicio − 20 s`); `monedas` 0–999. Si no,
+      400 `carrera_invalida`. Solo cuenta el primer envío (`carrera` del jugador, con su hora `t`).
+  - Al crear una carrera de Arcade, `opciones.mapa` es el nivel (`1-1`…`4-2`, solo niveles normales) o la pista
+    (`pradera`, `desierto`, `hielo`, `volcan`); sin `mapa` el servidor elige uno al azar; uno que no existe → 400
+    `mapa_invalido`. La revancha copia las opciones, así que repite el mapa.
   - `POST /juegos/sala/<código>/revancha` (cambio `revancha-partidas`) → `{ ok, codigo }` de la sala nueva, con
     quien la pidió dentro. Solo jugadores de la sala (403 `no_en_sala`) y con la partida terminada: empezada y con
     algún `final` o `podio` (409 `no_termino`); 404/410 como las demás. La primera petición reserva en la sala vieja
@@ -170,7 +178,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     404 si no existe.
   - Solo admin: `GET /juegos/fotos` (lista activa) y `POST /juegos/fotos/quitar` `{ id }` (403 para el
     resto; 404 si ese jugador no tiene foto).
-- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
 **CORS y peticiones** (cambio `ahorro-peticiones`): las páginas mandan los POST con `Content-Type: text/plain` (petición
