@@ -5,6 +5,8 @@ import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
 import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realtime.ts";
 import { type Carrera, CARRERAS, mapaDeSala, validarCarrera } from "./carreras.ts";
+// clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (reglas de sala en su módulo)
+import * as Clasicos from "./clasicos_rapidos.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -23,6 +25,7 @@ const ACCIONES_CONQUIAN = ["tomar", "bajar", "descartar", "pasar"]; // openspec:
 
 type Jugada = NonNullable<EnSala["jugadas"]>[number];
 const entero = (x: unknown, min: number, max: number) => typeof x === "number" && Number.isInteger(x) && x >= min && x <= max;
+for (const j of Clasicos.CLASICOS_RAPIDOS) JUEGOS_PARTIDA.add(j); // clasicos-rapidos
 
 // Valida la jugada según el juego y devuelve solo sus campos permitidos (sin t), o null.
 function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null {
@@ -30,6 +33,7 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
   const n = j.n, accion = String(j.accion ?? "");
   if (!entero(n, 0, 2000)) return null;
   const base = { n: n as number, accion };
+  if (Clasicos.esClasicoRapido(juego)) return Clasicos.validarJugadaClasicos(juego, j); // clasicos-rapidos
   if (juego === "poker") {
     // openspec: poker-fichas — la subida se arma con fichas de 5 a 100: entero múltiplo de FICHA_POKER y obligatorio.
     const montoOk = entero(j.monto, FICHA_POKER, 1_000_000) && (j.monto as number) % FICHA_POKER === 0;
@@ -65,6 +69,9 @@ const BOTS_FIJOS: Record<string, boolean> = { ajedrez: false, brisca: true };
 const VIGENCIA_MS = 3 * 3600 * 1000;
 const CUENTA_REGRESIVA_MS = 5000;
 const PREGUNTAS = 10;
+// clasicos-rapidos: cupos (Gato y Conecta 4: 2 personas sin bots) y bots fijos.
+Object.assign(CUPO, Clasicos.CUPO_CLASICOS_RAPIDOS);
+Object.assign(BOTS_FIJOS, Clasicos.BOTS_FIJOS_CLASICOS_RAPIDOS);
 
 interface Sala {
   codigo: string;
@@ -179,7 +186,7 @@ async function publicarEstado(store: Store, codigo: string, ahora: number, rt?: 
   if (!rt) return;
   cache.delete(codigo);
   const fresco = await estado(store, codigo, ahora);
-  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: fresco.jugadores, ahora: Date.now() });
+  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: Clasicos.ocultarJugadas(fresco.sala.juego, fresco.jugadores), ahora: Date.now() }); // clasicos-rapidos: sin elecciones de ppt
 }
 
 // Revancha (openspec: revancha-partidas). La primera petición reserva `siguiente` en la sala vieja con escritura
@@ -247,6 +254,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (op.tema !== undefined && !TEMAS_INGLES.includes(op.tema as string)) return json({ error: "tema_invalido" }, 400);
       opciones.tema = (op.tema as string) ?? "todo";
     }
+    if (Clasicos.esClasicoRapido(juego)) { // clasicos-rapidos: modo del Ahorcado
+      const o = Clasicos.opcionesClasicos(juego, op);
+      if (typeof o === "string") return json({ error: o }, 400);
+      Object.assign(opciones, o);
+    }
     const codigo = await codigoLibre(store);
     if (!codigo) return json({ error: "sin_codigo" }, 503);
     const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: BOTS_FIJOS[juego] ?? body.bots !== false, canal: canalNuevo() };
@@ -279,6 +291,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (accion === "empezar" && req.method === "POST") {
     if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
     if (sala.inicio === null && sala.juego === "ajedrez" && jugadores.length < 2) return json({ error: "faltan_jugadores" }, 409);
+    if (sala.inicio === null && jugadores.length < (Clasicos.MIN_PERSONAS_CLASICOS_RAPIDOS[sala.juego] ?? 0)) return json({ error: "faltan_jugadores" }, 409); // clasicos-rapidos
     if (sala.inicio === null) {
       const doc = await store.get<Sala>(ruta(codigo));
       const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS };
@@ -303,7 +316,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       const v = validarJugada(sala.juego, body.jugada);
       if (!v) return json({ error: "jugada_invalida" }, 400);
       const n = v.n;
-      if (jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409);
+      if (!Clasicos.sinTurnoUnico(sala.juego) && jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409); // clasicos-rapidos: ppt juega la misma ronda
       const nueva = { ...v, t: ahora };
       cambiar = (e) => (e.jugadas || []).some((y) => y.n === n) ? e : { ...e, jugadas: [...(e.jugadas || []), nueva].slice(-600) };
     } else if (body.carrera !== undefined) {
@@ -373,7 +386,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (!accion && req.method === "GET") {
     if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
     const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
-    return json({ sala: sinCanal(sala), jugadores, ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo });
+    return json({ sala: sinCanal(sala), jugadores: Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo });
   }
 
   return json({ error: "metodo_no_permitido" }, 405);

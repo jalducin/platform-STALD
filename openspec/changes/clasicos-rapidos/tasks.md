@@ -4,10 +4,10 @@
 
 ## 1. Servidor: clásicos rápidos en sala (TDD)
 
-- [ ] 1.1 Pruebas que fallan en `server/clasicos_rapidos_test.ts`: crear sala de los 5 juegos, jugadas válidas e
+- [x] 1.1 Pruebas que fallan en `server/clasicos_rapidos_test.ts`: crear sala de los 5 juegos, jugadas válidas e
   inválidas de cada juego, `turno_tomado`, primera elección por ronda en `ppt`, ocultar la elección ajena, cupos,
   sin bots y `faltan_jugadores` en Gato y Conecta 4, modo del Ahorcado (y revancha que lo conserva), catálogo y tope
-- [ ] 1.2 `server/clasicos_rapidos.ts` y ganchos localizados (`// clasicos-rapidos`) en `server/salas.ts` y
+- [x] 1.2 `server/clasicos_rapidos.ts` y ganchos localizados (`// clasicos-rapidos`) en `server/salas.ts` y
   `server/juegos.ts`
 
 ## 2. Motor compartido (TDD)
