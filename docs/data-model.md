@@ -175,7 +175,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   tipo y `total` es la suma de ambos (cambio `puntos-por-tipo`); `mejores` guarda el récord por juego.
   - `{ id, nombre, tipo, partidas: [{ juego, puntos, aciertos, total, segundos, en }], mejores, total }`.
   - Sin correos. Guarda hasta 1,000 partidas (los totales salen del historial).
-- `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots, canal? }` y
+- `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots, canal? }` (en las
+  carreras de Arcade, `opciones.mapa` = nivel o pista; el archivo de cada jugador lleva `carrera: { ms, monedas, t }`) y
   `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta?, rondasBasta?, v? }`.
   - `canal`: topic secreto de Supabase Realtime; nunca sale en las respuestas. `v`: versión del jugador, sube en
     cada guardado (cambio `salas-realtime`).
@@ -204,6 +205,18 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   con permiso de mamá, papá o tutor. Sin correos.
 - `juegos/fotos/indice.json`: `{ "<id-jugador>": { nombre, token, en } }`, fotos activas para la
   moderación del admin.
+- `juegos/progreso/<juego>/<id-jugador>.json` (cambio `juegos-plataformas-karts`): `{ v, datos, actualizado }`, avance
+  individual de los juegos de Arcade, sin correos; `v` sube en cada guardado (escritura condicional). `datos`, con
+  forma exacta y ≤ 4096 bytes:
+  - `plataformas`: `{ mundo 1–12, nivel 1–3, vidas 0–99, monedas 0–99, poder "base"|"grande"|"fuego",
+    completados ["m-n"] (≤ 36, sin repetir), mejores { "m-n": segundos 1–999 }, enCurso: null | { nivel "m-n",
+    checkpoint } }`. `mundo`/`nivel` es el nivel más lejano desbloqueado; `enCurso`, el nivel a medias (y si tocó la
+    bandera).
+  - `karts`: `{ copas { <copa>: { lugar 1–8, puntos 0–60 } }, records { <pista>: ms 10000–900000 },
+    piezas ["chasis-ligero"|"llantas-todoterreno"|"pintura-dorada"], equipo { chasis "estandar"|"ligero",
+    llantas "estandar"|"todoterreno", color }, copaEnCurso: null | { copa, carrera 0–3, puntos [8 × 0–60], dif 80–110 } }`.
+    Una pieza equipada debe estar en `piezas` (el color `dorado` pide `pintura-dorada`). `puntos` sigue el orden de
+    los corredores (0 = el jugador).
 - `juegos/nicks.json`: `{ "<id-jugador>": "<nick>" }`, sin correos (cambio `nick-jugadores`). El nick reemplaza al
   nombre en Juegos (chip, ranking y partidas); el admin ve ambos en «🛡️ Admin › Jugadores».
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.

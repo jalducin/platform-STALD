@@ -118,8 +118,8 @@ Juegos SHALL ofrecer en Arcade el juego **«Karts Turbo»** (`karts`), de carrer
 
 ### Requirement: Carreras de Arcade en partida
 Las partidas (salas) SHALL permitir `plataformas` y `karts` como reto sin guardar avance:
-- todos SHALL jugar el mismo nivel o pista, elegido con la semilla de la sala, y la carrera empieza a la hora de
-  inicio del servidor;
+- todos SHALL jugar el mismo nivel o pista, guardado en `sala.opciones.mapa` (lo elige quien crea la sala o el
+  servidor al azar; 400 `mapa_invalido` si no existe), y la carrera empieza a la hora de inicio del servidor;
 - cada persona SHALL enviar su tiempo con `POST /juegos/sala/<código>/respuesta { carrera: { ms, monedas } }`
   (`ms: null` si no terminó); solo cuenta el primero; el servidor SHALL rechazar con 400 `carrera_invalida` un
   tiempo fuera del mínimo y el límite del juego o que no cuadre con su reloj;
@@ -135,6 +135,10 @@ Las partidas (salas) SHALL permitir `plataformas` y `karts` como reto sin guarda
 #### Scenario: Tiempo imposible
 - **WHEN** alguien envía `ms: 5000` cuando la carrera empezó hace 60 s
 - **THEN** responde 400 `carrera_invalida`
+
+#### Scenario: Revancha con el mismo mapa
+- **WHEN** termina una carrera de karts en «Lago Helado» y alguien toca «Otra con los mismos»
+- **THEN** la sala nueva usa la misma pista
 
 #### Scenario: La partida no guarda progreso
 - **WHEN** alguien juega Karts Turbo en una sala

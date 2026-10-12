@@ -127,6 +127,16 @@ Cada página debe manejar y mostrar de forma explícita:
     origen. Al terminar avisa con `postMessage` (solo a `location.origin`) y `juegos.html` lo acepta solo si viene de
     su iframe y de su origen, y luego llama a `terminar`. Conserva su propia música; la de Juegos se pausa mientras se
     juega. `?auto=1` es solo para pruebas;
+  - **Arcade** (`plataformas` y `karts`, cambio `juegos-plataformas-karts`): `juegos/plataformas.html` y
+    `juegos/karts.html`, cada uno en un iframe del mismo origen (`.arcade-caja`), con reglas compartidas en
+    `juegos/arcade.js` (mundos, pistas, referencias, mapa de sala, tiempos de bots y puntos por lugar; también lo
+    carga `juegos.html`). El juego nunca llama al servidor: avisa a `parent` (`listo`, `guardar`, `puntos`, `meta`) y
+    `juegos.html` acepta solo mensajes de su iframe y su origen; responde `inicio` (avance de `GET /juegos/progreso`
+    o, en sala, mapa, semilla, `inicioEn` y bots), `guardado` y `puntos-ok`. Guarda con `PUT` encadenado (gana el
+    último). Canvas con paso fijo de 1/60 s y escala entera, pausa con `visibilitychange`, sonido opcional
+    (`localStorage.arcade_sonido`), controles táctiles grandes (pointer events) y `prefers-reduced-motion`. No piden
+    confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
+    (ganchos `window.__plat` y `window.__karts`), solo para E2E;
   - **música de fondo:** generada con WebAudio (Alegre, Relajante, Fiesta); empieza solo tras un gesto y
     baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el

@@ -36,7 +36,10 @@
 ## 6. Integración en `juegos.html`
 
 - [ ] 6.1 Categoría 🕹️ Arcade, tarjetas, `jugarArcade` (iframe e intermediario de mensajes: progreso y puntos)
-- [ ] 6.2 Salas: ids en `JUEGOS_PARTIDA`, `pintarArcadeSala` (iframe, envío del tiempo, espera y podio con tiempos)
+- [ ] 6.2 Salas: ids en `JUEGOS_PARTIDA`, selector de nivel o pista, `pintarArcadeSala` (iframe, envío del tiempo,
+  espera y podio con tiempos vía `pintarFinalSala`)
+- [ ] 6.3 Integrar `origin/main` (revancha `revancha-partidas`): mapa en `sala.opciones.mapa` (servidor, TDD) para que
+  la revancha lo herede; E2E `revancha` en la regresión
 
 ## 7. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
@@ -50,7 +53,7 @@
 
 - [ ] 8.1 `npx -y deno test -A server/`, `npx -y deno lint server/` y `npx -y deno check server/main.ts`
 - [ ] 8.2 E2E: `plataformas karts juegos partidas juegos-recarga ajustes-salas ritmo dragon-run peticiones` (más
-  `clasicos fusion`) con la copia de datos de prueba; la copia se descarta al terminar (estado restaurado)
+  `clasicos fusion revancha`) con la copia de datos de prueba; la copia se descarta al terminar (estado restaurado)
 - [ ] 8.3 Revisar las capturas (390 px y escritorio) de ambos juegos
 - [ ] 8.4 Reporte `openspec/changes/juegos-plataformas-karts/reports/2026-10-11-step-8-pruebas-y-verificacion.md`
 

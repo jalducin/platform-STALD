@@ -63,9 +63,11 @@
 - Karts: `(9 − lugar) × 60 + monedas × 10`, y en la 4.ª carrera de la copa `+400/250/150` por oro, plata o bronce.
 
 ### 5. Carreras en partida (sala)
-- `plataformas` y `karts` entran a `JUEGOS_PARTIDA` (servidor y página). Opciones: ninguna.
-- Mapa: `Arcade.mapaDeSala(juego, seed)` elige un nivel normal (`m-1` o `m-2` de los mundos 1–4) o una de las 4
-  pistas. Todos juegan lo mismo; nada se guarda en el progreso.
+- `plataformas` y `karts` entran a `JUEGOS_PARTIDA` (servidor y página).
+- Mapa: vive en `sala.opciones.mapa` para que la revancha (`revancha-partidas`) lo herede. Quien crea la sala lo
+  elige (selector «Nivel o pista») o, si no, el servidor sortea un nivel normal (`m-1` o `m-2` de los mundos 1–4) o
+  una de las 4 pistas (`server/carreras.ts`, `MAPAS_SALA`; 400 `mapa_invalido` si no existe). Salas viejas sin
+  `mapa` usan `Arcade.mapaDeSala(juego, seed)`. Todos juegan lo mismo; nada se guarda en el progreso.
 - Reloj: la carrera arranca en `sala.inicio` (hora del servidor). El juego recibe `inicioEn` y mide el tiempo desde
   ese instante; si alguien recarga, vuelve a la salida con el reloj corriendo.
 - Envío: `POST /juegos/sala/<c>/respuesta { carrera: { ms, monedas } }` (`server/carreras.ts`):
@@ -80,10 +82,11 @@
   plataformas, el HUD muestra su tiempo a vencer.
 - Podio: se resuelve cuando todas las personas enviaron su carrera o al pasar `límite + 10 s`. Orden por tiempo
   (quien no terminó va al final). Puntos por lugar: `max(50, 500 − 75 × (lugar − 1))`, 0 si no terminó. Se usa
-  `pintarFinalSala` (registra `final`, `podio` y la partida de sala) y debajo una tabla con los tiempos.
+  `pintarFinalSala` (registra `final`, `podio` y la partida de sala, y ofrece la revancha) y debajo una tabla con los
+  tiempos.
 
 ### 6. Plataformas
-- Vista de 15 tiles de alto (16 px, 240 px lógicos); el ancho se adapta a la pantalla (256–480 px). Paso fijo de
+- Vista de 15 tiles de alto (16 px, 240 px lógicos); el ancho se adapta a la pantalla (224–480 px). Paso fijo de
   1/60 s con acumulador; escala entera del canvas para pixeles nítidos.
 - Niveles generados con la semilla `m-n` a partir de **tramos** de 16 columnas hechos a mano (todos alcanzables
   con el salto: hoyos de hasta 3 columnas, subidas de hasta 2 tiles). Inicio, tramos, checkpoint a la mitad,
@@ -100,7 +103,7 @@
 ### 7. Karts
 - Vista cenital (más fluida en celular que un pseudo-3D por píxel): la pista se dibuja una vez en un canvas fuera
   de pantalla y cada cuadro se copia la parte visible. Cámara que sigue al carro con adelanto.
-- Pista = curva cerrada Catmull-Rom muestreada cada 8 px; el avance, las vueltas (con paso obligatorio por la mitad)
+- Pista = curva cerrada Catmull-Rom muestreada cada 8 px, con la salida a media recta; el avance, las vueltas (con paso obligatorio por la mitad)
   y las posiciones salen del índice de la muestra más cercana. Fuera del camino se frena según la superficie.
 - Conducción: acelera solo; ◀ ▶ giran; «Derrape» con giro carga el mini-turbo (azul 0.6 s, naranja 1.3 s, morado
   2.1 s → turbo de 0.5, 0.9 o 1.4 s). Turbo de salida: tocar «¡Arranque!» en los últimos 0.5 s antes de «¡YA!»
