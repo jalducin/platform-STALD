@@ -66,4 +66,4 @@
 - [x] 6.3 Skill `ai-specs/skills/nueva-semana-ingles/SKILL.md`, con una copia idéntica en
   `.claude/skills/nueva-semana-ingles/SKILL.md`
 - [x] 6.4 `npx -y @fission-ai/openspec@1.4.1 validate ejercicios-ordenar-emparejar --strict`
-- [ ] 6.5 Tras el merge (integrador): verificar en producción y `openspec archive`
+- [x] 6.5 Tras el merge (integrador): verificar en producción y `openspec archive`
