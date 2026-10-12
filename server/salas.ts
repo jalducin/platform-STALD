@@ -379,8 +379,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     if (dentro && equipo === undefined) return json({ ok: true, codigo });
     if (!dentro && sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
     if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
-    if (!(await guardarJugador(store, codigo, jugador, (e) => equipo === undefined ? e : { ...e, equipo }, ahora))) return json({ error: "conflicto_escritura" }, 503);
-    if (equipo !== undefined) { await publicar(); return json({ ok: true, codigo, equipo }); }
+    const guardado = await guardarJugador(store, codigo, jugador, (e) => equipo === undefined ? e : { ...e, equipo }, ahora);
+    if (equipo !== undefined) { // futbolito-equipos
+      if (!guardado) return json({ error: "conflicto_escritura" }, 503);
+      await publicar(); return json({ ok: true, codigo, equipo });
+    }
     await publicar();
     return json({ ok: true, codigo });
   }

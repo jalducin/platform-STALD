@@ -68,7 +68,7 @@ no es de quien lo manda; en 1 vs 1 `barra` es opcional. Los puntos son por equip
 Billar SHALL permitir apuntar con precisión: arrastrar sobre la mesa apunta hacia el dedo solo después de moverlo más
 de 8 px (un toque no cambia la mira), ⟲ ⟳ ajustan 0.1° por toque y repiten acelerando al sostenerlos, el ángulo se ve
 en grados y la línea guía marca la bola fantasma. La fuerza SHALL verse con número en una barra vertical grande y en la
-resortera; la resortera SHALL empezar solo desde la blanca, disparar con un jalón de al menos 40 px y cancelarse al
+resortera; la resortera SHALL empezar solo desde la blanca, disparar con un jalón de al menos 48 px y cancelarse al
 regresar el dedo a la blanca. «🎱 TIRAR» SHALL ser un botón grande. «🎮 Mando clásico» SHALL ser opcional (cruceta o
 palanca apunta, L / R fino, A tira, X / Y fuerza, B efecto, START menú) y la elección SHALL recordarse
 (`localStorage.billar_control`).

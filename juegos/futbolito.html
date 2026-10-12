@@ -10,10 +10,11 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
 #juego{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
 #pantalla{position:relative;flex:1;min-height:0;overflow:hidden}
 #c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
-#hud{position:absolute;left:0;right:0;top:0;height:40px;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 8px;pointer-events:none;font-weight:900;text-shadow:0 1px 0 #000}
-.marcador{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 10px;font-size:14px;max-width:calc(100% - 150px);white-space:nowrap;overflow:hidden}
+#hud{position:absolute;left:0;right:0;top:0;height:40px;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 146px 4px 6px;pointer-events:none;font-weight:900;text-shadow:0 1px 0 #000}
+.marcador{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 10px;font-size:14px;max-width:100%;min-width:0;white-space:nowrap;overflow:hidden}
 .marcador b{font-size:22px;min-width:16px;text-align:center}
-.marcador .n{overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.marcador .n{overflow:hidden;text-overflow:ellipsis;max-width:110px;min-width:0}
+@media (max-width:420px){#hud{justify-content:flex-start}.marcador{font-size:13px;padding:3px 8px;gap:4px}.marcador b{font-size:19px}}
 .ficha{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid #fff;flex:0 0 auto}
 .f0{background:var(--rojo)}.f1{background:var(--azul)}
 #hud .der{position:absolute;right:6px;top:4px;display:flex;gap:6px;pointer-events:auto}
@@ -74,7 +75,7 @@ body:not(.jugando):not(.en-sala) .mando{display:none!important}
 #panel .acciones{grid-column:1/-1;display:flex;gap:8px;justify-content:center;align-items:center}
 #panel .nota{grid-column:1/-1;text-align:center;font-size:12px;opacity:.85;font-weight:700}
 #b-tirar{flex:1;max-width:300px;min-height:58px;font-size:22px}
-body.ctl-mando #panel .pgrupo .par,body.ctl-mando #panel .acciones{display:none}
+body.ctl-mando #panel .pgrupo .par{display:none}
 #teclas{position:absolute;left:0;right:0;bottom:4px;text-align:center;font-size:12px;opacity:.8;pointer-events:none}
 html.tactil #teclas{display:none}
 @media (orientation:landscape) and (max-height:520px){
@@ -273,16 +274,19 @@ function dibujarBarras(s, opciones) {
     });
   });
 }
-// Nombre de quien maneja cada barra (sala), junto al mango y siempre derecho.
+// Nombre de quien maneja cada asiento (sala por equipos), una vez, junto al mango de su primera barra y siempre derecho.
+// Sus dos mangos llevan su color.
 function dibujarNombres() {
   if (!reparto || !sala || sala.orden.length <= 2) return; // en 1 vs 1 basta el marcador
   g.font = '800 11px system-ui,sans-serif'; g.textBaseline = 'middle';
-  T.BARRAS.forEach((b, i) => {
-    const dueno = duenoDe(i); if (dueno < 0) return;
+  reparto.forEach((lugar, dueno) => {
+    const b = T.BARRAS[lugar.barras[0]];
     const p = aPantalla(b.eq === 0 ? -MARCO + 4 : T.ANCHO + MARCO - 4, b.y);
     const txt = (dueno === sala.idx ? 'Tú' : String((sala.orden[dueno] || {}).nombre || '').slice(0, 9));
     const w = g.measureText(txt).width + 10, izq = p.x < W / 2;
-    const x = F.acotar(izq ? p.x : p.x - w, 2, W - w - 2), y = F.acotar(p.y - (horizontal ? 18 : 12), 44, H - 10);
+    // Vertical: arriba del mango; horizontal: hacia dentro de la mesa (los mangos quedan arriba y abajo).
+    const x = horizontal ? F.acotar(p.x - w / 2, 2, W - w - 2) : F.acotar(izq ? p.x : p.x - w, 2, W - w - 2);
+    const y = horizontal ? F.acotar(p.y + (p.y < H / 2 ? 18 : -18), 50, H - 10) : F.acotar(p.y - 12, 44, H - 10);
     g.fillStyle = 'rgba(0,0,0,.6)'; rr(x, y - 8, w, 16, 7); g.fill();
     g.strokeStyle = colores[dueno]; g.lineWidth = 1.5; g.stroke();
     g.fillStyle = colores[dueno]; g.textAlign = 'left'; g.fillText(txt, x + 5, y + 0.5);
@@ -409,7 +413,8 @@ function cambiarBarra(paso = 1) {
 
 /* ---------- Sala (por tiros; 1 vs 1 o por equipos) ---------- */
 const nombreAsiento = i => (sala.orden[i] || {}).nombre || '—';
-const nombreEquipo = eq => sala.orden.map((p, i) => ({ p, i })).filter(x => reparto[x.i].eq === eq).map(x => (x.p.bot ? '🤖' : '') + (x.i === sala.idx ? 'Tú' : x.p.nombre)).join(' + ');
+// Marcador: «Tú + Angel» contra «🤖 + 🤖» (los nombres completos van junto a las barras).
+const nombreEquipo = eq => sala.orden.map((p, i) => ({ p, i })).filter(x => reparto[x.i].eq === eq).map(x => x.i === sala.idx ? 'Tú' : x.p.bot && sala.orden.length > 2 ? '🤖' : x.p.nombre).join(' + ');
 function empezarSala(d) {
   const orden = (d.orden || []).map(p => ({ id: p.id, bot: !!p.bot, ...(p.equipo === 0 || p.equipo === 1 ? { equipo: p.equipo } : {}) }));
   reparto = T.repartir(orden);

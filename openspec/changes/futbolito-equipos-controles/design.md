@@ -59,7 +59,7 @@ reglas o la física de los motores (salvo la barra activa del modo vivo, que es 
   táctil), **👆 Deslizar** y **🎮 Mando clásico**. `localStorage.futbolito_control` (`botones` | `deslizar` | `mando`;
   valor desconocido → `botones`).
 - **Botones** (`#controles`): a la izquierda dos flechas grandes que mueven la barra en la dirección en que se ve en
-  pantalla (◀ ▶ en vertical, ▲ ▼ en horizontal), a 260 u/s mientras se sostienen; a la derecha «⚽ PATEA» (grande) y
+  pantalla (◀ ▶ en vertical, ▲ ▼ en horizontal), a 300 u/s mientras se sostienen (igual que el teclado y el mando); a la derecha «⚽ PATEA» (grande) y
   «🔄 BARRA» con el nombre de la barra activa («Medios · auto» o «Defensa · tú»). Cada botón usa *touch events* no
   pasivos por dedo (como Karts): se pueden sostener una flecha y tocar PATEA a la vez.
 - **Deslizar**: la mitad izquierda del canvas mueve la barra con el deslizamiento proyectado sobre el eje de la barra en
@@ -129,11 +129,11 @@ R / F fuerza, Espacio patea.
 ### §5 Billar: apuntar fino, fuerza clara, tirar grande y mando
 - **Arrastrar** sobre la mesa apunta hacia el dedo **solo cuando el dedo se movió más de 8 px** (un toque ya no cambia
   la mira). Ángulo a la vista («🎯 123.4°»).
-- **Ajuste fino**: ⟲ ⟳ de 48 px; un toque = 0.1°; sostenidos repiten cada 60 ms y aceleran de 0.1° a 2° por paso.
+- **Ajuste fino**: ⟲ ⟳ de 44 px o más; un toque = 0.1°; sostenidos repiten cada 60 ms y aceleran de 0.1° a 2° por paso.
 - **Bola fantasma**: círculo relleno translúcido con borde en el punto de choque, línea de salida de la bola tocada
   (amarilla) y de la blanca.
 - **Resortera**: empieza solo si el dedo baja a menos de `max(4R·K, 36 px)` de la blanca; muestra «💪 63» junto a la
-  blanca; dispara al soltar solo si el jalón es ≥ 40 px; regresar a menos de 24 px cancela.
+  blanca; dispara al soltar solo si el jalón es ≥ 48 px (con 40 px, tocar a 22 px de la blanca y mover 20 px —el caso del diagnóstico— quedaba en 39 px, demasiado justo); regresar a menos de 24 px cancela.
 - **Fuerza**: barra vertical propia (`#fuerza`, 56 px de ancho) con número grande; arrastrar o tocar en ella fija el
   valor según la altura; − / + al lado. Teclado ↑ ↓ / W S.
 - **«🎱 TIRAR»** de 60 px de alto.

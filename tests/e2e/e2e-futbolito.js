@@ -362,7 +362,7 @@ const firmaQuieta = async fr => { await esperar(fr, () => window.__futbolito.fir
   await esperar(g1, () => window.__futbolito && window.__futbolito.estado().sala && window.__futbolito.estado().miTurno, null, 30000);
   const [q1, q2] = [await estado(g1), await estado(g2)];
   const marcadorTxt = [await g1.textContent('#hud'), await g2.textContent('#hud')];
-  ok('2v2: 4 asientos con color y nombre (Marisol adelante, Angel atrás, 2 bots) y saca Marisol', q1.asientos.length === 4 && q1.asientos[0].nombre === 'Marisol' && q1.asientos[0].rol === 'adelante' && q1.asientos[1].rol === 'atras' && new Set(q1.asientos.map(x => x.color)).size === 4 && /Tú \+ Angel/.test(marcadorTxt[0]) && /Marisol \+ Tú/.test(marcadorTxt[1]) && /BOT-/.test(marcadorTxt[0]) && !q2.miTurno && q2.yo === 1,
+  ok('2v2: 4 asientos con color y nombre (Marisol adelante, Angel atrás, 2 bots) y saca Marisol', q1.asientos.length === 4 && q1.asientos[0].nombre === 'Marisol' && q1.asientos[0].rol === 'adelante' && q1.asientos[1].rol === 'atras' && new Set(q1.asientos.map(x => x.color)).size === 4 && /Tú \+ Angel/.test(marcadorTxt[0]) && /Marisol \+ Tú/.test(marcadorTxt[1]) && /🤖 \+ 🤖/.test(marcadorTxt[0]) && !q2.miTurno && q2.yo === 1,
     JSON.stringify({ asientos: q1.asientos, marcadorTxt }));
   ok('2v2: Angel ve quién tira («Marisol») mientras espera', /Marisol/.test(await g2.textContent('#estado')), await g2.textContent('#estado'));
   const ajena = await fetch(API + '/juegos/sala/' + codigo4 + '/respuesta?email=angel%40example.com', { method: 'POST', body: JSON.stringify({ jugada: { n: 0, accion: 'tiro', pos: 0, angulo: 0, fuerza: 50, barra: 4 } }) });

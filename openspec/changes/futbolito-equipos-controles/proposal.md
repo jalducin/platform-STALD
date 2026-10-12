@@ -30,7 +30,7 @@ por toque y no repiten al sostener, y la barra de fuerza es delgada y salta al t
     «⚽ PATEA»; también con el mando y el teclado.
 - **Controles de 🎱 Billar**: arrastrar apunta sin saltos (solo al mover más de 8 px), ajuste fino ⟲ ⟳ que repite y
   acelera al sostener (0.1° por toque), ángulo en grados a la vista, bola fantasma más clara; resortera solo desde la
-  blanca, con número de fuerza, dispara con jalón ≥ 40 px y se cancela regresando a la blanca; barra de fuerza vertical
+  blanca, con número de fuerza, dispara con jalón ≥ 48 px y se cancela regresando a la blanca; barra de fuerza vertical
   grande con número; «🎱 TIRAR» grande; «🎮 Mando clásico» opcional (cruceta o palanca apunta, L/R fino, A tira, X/Y
   fuerza, B efecto, START pausa), recordado en `localStorage.billar_control`.
 - **Servidor**: `MESAS.futbolito` con formatos (`2v2` → `{ max: 4, asientos: 4, min: 2 }`, igual en
