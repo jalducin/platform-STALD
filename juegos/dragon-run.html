@@ -4,6 +4,7 @@
 <title>Dragon Run</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#fdf3dc}
+*,*::before,*::after{box-sizing:inherit}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1630}}
 :root[data-theme="dark"]{--bg:#1b1630}
 html,body{height:100%;margin:0}
@@ -11,37 +12,166 @@ body{background:var(--bg);display:flex;align-items:center;justify-content:center
 #wrap{position:relative;width:min(100vw,200dvh);container-type:inline-size}
 canvas{width:100%;display:block;touch-action:none}
 .ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2cqw;background:rgba(25,12,50,.6);color:#fff;text-align:center;padding:2cqw}
-.ov h1{font-size:10cqw;margin:0;color:#ffd23f;text-shadow:0 .7cqw 0 #c2410c,0 1.2cqw 2cqw rgba(0,0,0,.4);letter-spacing:.3cqw}
 .ov h2{font-size:7cqw;margin:0;color:#ffd23f;text-shadow:0 .6cqw 0 #c2410c}
 .ov p{font-size:2.6cqw;margin:0}
-button{font:inherit;font-size:3.6cqw;font-weight:800;padding:1.2cqw 5cqw;border:0;border-radius:99px;background:#ff8a1f;color:#fff;box-shadow:0 .8cqw 0 #b94f00;cursor:pointer}
-button:active{transform:translateY(.5cqw);box-shadow:0 .3cqw 0 #b94f00}
-button:focus-visible{outline:.4cqw solid #fff}
-#mute{position:absolute;right:1.5cqw;bottom:1.5cqw;font-size:3cqw;padding:.6cqw 1.6cqw;box-shadow:none;background:rgba(0,0,0,.45)}
-.hide{display:none}
+#wrap button{font:inherit;font-size:3.6cqw;font-weight:800;padding:1.2cqw 5cqw;border:0;border-radius:99px;background:#ff8a1f;color:#fff;box-shadow:0 .8cqw 0 #b94f00;cursor:pointer}
+#wrap button:active{transform:translateY(.5cqw);box-shadow:0 .3cqw 0 #b94f00}
+button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+#wrap #mute{position:absolute;right:1.5cqw;bottom:1.5cqw;font-size:3cqw;padding:.6cqw 1.6cqw;box-shadow:none;background:rgba(0,0,0,.45)}
+.hide{display:none!important}
+/* Pantalla de misiones (openspec: dragon-run-misiones): cubre todo el iframe y usa rem para leerse a 390 px. */
+.menu{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;background:rgba(25,12,50,.93);color:#fff;font-size:16px}
+.menu-in{flex:1;overflow-y:auto;padding:14px 16px 8px;width:100%;max-width:760px;margin:0 auto}
+.menu h1{font-size:clamp(1.6rem,7vw,2.4rem);margin:0;color:#ffd23f;text-shadow:0 3px 0 #c2410c;letter-spacing:.03em;text-align:center}
+.menu h2{font-size:1.05rem;margin:16px 0 8px;color:#ffd23f}
+.menu .sub{margin:4px 0 0;text-align:center;font-size:.95rem;opacity:.9}
+.menu .aviso{margin:10px 0 0;padding:8px 10px;border-radius:10px;background:#7c2d12;font-size:.9rem}
+.menu ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.mis{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px}
+.mis.ok{background:rgba(34,197,94,.22);outline:2px solid #4ade80}
+.mis .fila{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:1rem;font-weight:700}
+.mis .num{font-variant-numeric:tabular-nums;font-weight:400;font-size:.9rem;white-space:nowrap;opacity:.9}
+.barra{height:8px;border-radius:99px;background:rgba(255,255,255,.18);margin-top:7px;overflow:hidden}
+.barra i{display:block;height:100%;border-radius:99px;background:#ffd23f}
+.mis.ok .barra i{background:#4ade80}
+.logros{grid-template-columns:repeat(auto-fill,minmax(155px,1fr))}
+.logro{background:rgba(255,255,255,.08);border-radius:12px;padding:9px 10px;font-size:.88rem;line-height:1.3}
+.logro b{display:block;font-size:.98rem}
+.logro .med{font-size:1.25rem;letter-spacing:2px}
+.logro .sig{opacity:.85}
+.etq{font-size:.85rem;margin:10px 0 6px;opacity:.85}
+.sws{display:flex;flex-wrap:wrap;gap:8px}
+.menu .sw{font:inherit;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 12px 6px 7px;border-radius:99px;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.menu .sw[aria-pressed="true"]{border-color:#ffd23f;background:rgba(255,210,63,.2)}
+.menu .sw[aria-disabled="true"]{opacity:.55}
+.sw .dot{width:28px;height:28px;border-radius:50%;border:3px solid;display:grid;place-items:center;font-size:1rem}
+.menu .pista{min-height:1.3em;font-size:.88rem;margin:8px 0 0;color:#fde68a}
+.menu .nota{font-size:.8rem;opacity:.75;margin:10px 0 0}
+.menu-pie{padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(15,7,32,.95);text-align:center;box-shadow:0 -4px 14px rgba(0,0,0,.35)}
+.menu-pie p{margin:6px 0 0;font-size:.85rem;opacity:.85}
+.menu #bS{font:inherit;font-size:1.35rem;font-weight:800;padding:.6rem 3.2rem;border:0;border-radius:99px;background:#ff8a1f;color:#fff;box-shadow:0 5px 0 #b94f00;cursor:pointer;min-height:48px}
+.menu #bS:active{transform:translateY(3px);box-shadow:0 2px 0 #b94f00}
+/* Aviso «¡Misión cumplida!» arriba del juego */
+#toast{position:fixed;left:50%;top:10px;z-index:6;transform:translate(-50%,-160%);max-width:calc(100vw - 24px);padding:10px 16px;border-radius:14px;background:#ffd23f;color:#3b1d00;font-weight:800;font-size:1rem;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .25s ease,visibility .25s;visibility:hidden;pointer-events:none}
+#toast.ver{transform:translate(-50%,0);visibility:visible}
+.ov .msgs{font-size:2.4cqw;line-height:1.4}
+/* Celular vertical: el canvas 2:1 queda al centro; arriba se pinta cielo y abajo tierra, con un recordatorio de toque. */
+#tip{display:none;position:fixed;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;color:#fff;font-size:1rem;font-weight:700;opacity:.9;pointer-events:none}
+@media (orientation:portrait){body{background:linear-gradient(#5db4f5 0 50%,#6b4a2b 50% 100%)}body.jugando #tip{display:block}}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}.menu #bS:active{transform:none}}
 </style></head><body>
 <div id="wrap">
-<canvas id="c" width="800" height="400"></canvas>
-<div id="ovS" class="ov"><h1>🐉 DRAGON RUN</h1><p>Esquiva obstáculos, recoge monedas y llega al castillo</p><button id="bS">JUGAR</button><p>ESPACIO, clic o toque para saltar · ¡doble salto en el aire!</p></div>
-<div id="ovO" class="ov hide"><h2>¡Auch! 💥</h2><p id="oS"></p><p id="oB"></p><button id="bO">REINTENTAR</button></div>
-<div id="ovW" class="ov hide"><h2>¡LO LOGRASTE! 🐉🔥</h2><p id="wS"></p><p id="wB"></p><button id="bW">JUGAR DE NUEVO</button></div>
+<canvas id="c" width="800" height="400" aria-label="Dragon Run"></canvas>
+<div id="ovO" class="ov hide"><h2>¡Auch! 💥</h2><p id="oS"></p><p id="oB"></p><p id="oM" class="msgs"></p><button id="bO">REINTENTAR</button></div>
+<div id="ovW" class="ov hide"><h2>¡LO LOGRASTE! 🐉🔥</h2><p id="wS"></p><p id="wB"></p><p id="wM" class="msgs"></p><button id="bW">JUGAR DE NUEVO</button></div>
 <button id="mute" aria-label="Sonido">🔊</button>
 </div>
+<div id="ovS" class="menu">
+ <div class="menu-in">
+  <h1>🐉 DRAGON RUN</h1>
+  <p class="sub">Esquiva obstáculos, recoge monedas y llega al castillo (🏰 a los 600 m: +200)</p>
+  <p id="aviso" class="aviso hide"></p>
+  <h2>🎯 Misiones de hoy</h2>
+  <ul id="misiones"></ul>
+  <h2>🏅 Logros</h2>
+  <ul id="logros" class="logros"></ul>
+  <h2>🎨 Tu dragón</h2>
+  <div class="etq">Color</div><div id="colores" class="sws"></div>
+  <div class="etq">Estela</div><div id="estelas" class="sws"></div>
+  <p id="pista" class="pista" aria-live="polite"></p>
+  <p class="nota">Los premios solo cambian cómo se ve tu dragón: no dan puntos ni ventajas.</p>
+ </div>
+ <div class="menu-pie"><button id="bS">JUGAR</button><p>ESPACIO, clic o toque para saltar · ¡doble salto en el aire!</p></div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<p id="tip">👆 Toca en cualquier parte para saltar</p>
+<script src="dragon-misiones.js?v=1"></script>
 <script>
-/* Dragon Run — juego del profe, integrado a Juegos (openspec: dragon-run).
-   Embebido en juegos.html: al terminar avisa por postMessage y la plataforma guarda los ⭐ individuales.
-   Mejoras: doble salto, bono de castillo, pausa de música con la pestaña oculta y modo de prueba ?auto=1. */
-const EMBED=window.parent!==window, AUTO=new URLSearchParams(location.search).get('auto')==='1', BONO=200;
+/* Dragon Run — juego del profe, integrado a Juegos en Arcade (openspec: dragon-run, dragon-run-misiones).
+   Embebido en juegos.html: el juego nunca llama al servidor. Avisa a la página con postMessage:
+   `listo` (pide el avance), `guardar` (avance de misiones y premios) y `fin` (puntos de la carrera); la página
+   responde `inicio` (avance y semilla del jugador) y `guardado`. Suelto, el avance va a localStorage.
+   Modo de prueba: ?auto=1 juega solo; ?prueba=1 expone window.__dragonPrueba (solo E2E). */
+const EMBED=window.parent!==window, Q=new URLSearchParams(location.search), AUTO=Q.get('auto')==='1', PRUEBA=Q.get('prueba')==='1', BONO=200;
+const REDUCIR=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DM=window.DragonMisiones;
 const $=i=>document.getElementById(i),cv=$('c'),x=cv.getContext('2d');
 const W=800,H=400,GY=330,GOAL=600,PX=50,DX=110;
 let st='start',best=0,AC=null,master=null,muted=false,mi=null,step=0,lastStart=-1e9; // evita doble clic, sin bloquear el primer clic tras cargar
 try{best=+localStorage.getItem('dragonBest')||0}catch(e){}
-let dist,sp,t,coins,lives,inv,ob,cn,pt,nextAt,shake=0;
+let dist,sp,t,coins,lives,inv,ob,cn,pt,nextAt,shake=0,run,trailT=0,chequeo=0;
 const dr={y:GY,vy:0,air:false,saltos:0};
-function reset(){dist=0;sp=300;t=0;coins=0;lives=3;inv=0;ob=[];cn=[];pt=[];dr.y=GY;dr.vy=0;dr.air=false;dr.saltos=0;nextAt=600;shake=0}
+function reset(){dist=0;sp=300;t=0;coins=0;lives=3;inv=0;ob=[];cn=[];pt=[];dr.y=GY;dr.vy=0;dr.air=false;dr.saltos=0;nextAt=600;shake=0;
+ run={esq:0,racha:0,mejorRacha:0,dobles:0,extraM:0,castillo:false,avisadas:new Set(),antes:[]}}
 reset();
 const score=()=>Math.floor(dist/PX)+coins*10;
 const hash=k=>{const s=Math.sin(k*127.1+311.7)*43758.5453;return s-Math.floor(s)};
+const P=n=>REDUCIR?Math.ceil(n/4):n; // menos partículas con movimiento reducido
+
+/* ---------- avance: misiones, logros y premios ---------- */
+let prog=DM.nuevo(),semilla='local',fecha=DM.fechaHoy(),cargado=!EMBED,carrerasHechas=0;
+if(!EMBED){try{prog=DM.normalizar(JSON.parse(localStorage.getItem('dragonProgreso')||'null'))}catch(e){}}
+function persistir(){
+ if(EMBED){try{parent.postMessage({juego:'dragon-run',tipo:'guardar',datos:prog},location.origin)}catch(e){}}
+ else{try{localStorage.setItem('dragonProgreso',JSON.stringify(prog))}catch(e){}}
+}
+addEventListener('message',ev=>{
+ const d=ev.data||{};
+ if(!EMBED||ev.source!==parent||ev.origin!==location.origin)return;
+ if(d.tipo==='inicio'){
+  if(d.semilla)semilla=String(d.semilla);
+  // Si ya terminó una carrera antes de que llegara el avance, se queda la local (y se vuelve a guardar).
+  if(carrerasHechas===0)prog=DM.normalizar(d.progreso);else persistir();
+  cargado=true;avisar1(d.aviso||'');pintarMenu();
+ }else if(d.tipo==='guardado'&&!d.ok)avisar1('⚠️ No se pudo guardar tu avance. Se intentará de nuevo en la próxima carrera.');
+});
+if(EMBED){try{parent.postMessage({juego:'dragon-run',tipo:'listo'},location.origin)}catch(e){}}
+function avisar1(txt){$('aviso').textContent=txt;$('aviso').classList.toggle('hide',!txt)}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=DM.fmt;
+const ICONO_ESTELA={fuego:'🔥',estrellas:'⭐',burbujas:'🫧',hojas:'🍃',arcoiris:'🌈'};
+function pintarMenu(){
+ const vis=DM.vistaMisiones(prog,fecha,semilla);
+ $('misiones').innerHTML=(cargado?'':'<li class="mis">Cargando tus misiones…</li>')+vis.map(m=>{
+  const pct=Math.min(100,Math.round(m.avance/m.meta*100));
+  return '<li class="mis'+(m.cumplida?' ok':'')+'" data-tipo="'+m.tipo+'"><div class="fila"><span>'+(m.cumplida?'✅ ':'🎯 ')+esc(m.texto)+'</span><span class="num">'+(m.cumplida?'¡Cumplida!':fmt(Math.min(m.avance,m.meta))+' / '+fmt(m.meta))+'</span></div>'+
+   '<div class="barra" role="progressbar" aria-label="'+esc(m.texto)+'" aria-valuemin="0" aria-valuemax="'+m.meta+'" aria-valuenow="'+Math.min(m.avance,m.meta)+'"><i style="width:'+pct+'%"></i></div></li>'}).join('');
+ $('logros').innerHTML=DM.LOGROS.map(l=>{
+  const n=DM.nivelLogro(l.id,prog),v=l.medida(prog);
+  const sig=n>=3?'¡Oro conseguido!':'Siguiente '+DM.MEDALLAS[n+1]+': '+fmt(l.niveles[n])+' '+l.que+' (llevas '+fmt(v)+')';
+  return '<li class="logro" data-logro="'+l.id+'" data-nivel="'+n+'"><b>'+l.emoji+' '+l.nombre+'</b><span class="med" aria-label="'+DM.NIVELES[n]+'">'+[1,2,3].map(k=>k<=n?DM.MEDALLAS[k]:'⚪').join('')+'</span><div class="sig">'+esc(sig)+'</div></li>'}).join('');
+ const sw=(tipo,id,abierto,muestra)=>{
+  const puesto=prog.equipo[tipo]===id,nombre=DM.NOMBRES[id];
+  return '<button class="sw" data-'+tipo+'="'+id+'" aria-pressed="'+puesto+'"'+(abierto?'':' aria-disabled="true"')+' aria-label="'+(tipo==='color'?'Dragón ':'Estela ')+nombre+(abierto?'':' (bloqueado)')+'">'+muestra+'<span>'+nombre+(abierto?'':' 🔒')+'</span></button>'};
+ $('colores').innerHTML=DM.COLORES.map(c=>{const p=DM.PALETAS[c];return sw('color',c,c==='verde'||prog.premios.includes('color-'+c),'<span class="dot" style="background:'+p[0]+';border-color:'+p[1]+'"></span>')}).join('');
+ $('estelas').innerHTML=DM.ESTELAS.map(e=>sw('estela',e,e==='fuego'||prog.premios.includes('estela-'+e),'<span class="dot" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3)">'+ICONO_ESTELA[e]+'</span>')).join('');
+}
+$('ovS').addEventListener('click',e=>{
+ const b=e.target.closest('.sw');if(!b)return;
+ const tipo=b.dataset.color?'color':'estela',id=b.dataset[tipo];
+ if(b.getAttribute('aria-disabled')==='true'){$('pista').textContent='🔒 '+DM.NOMBRES[id]+': '+DM.comoSeGana(tipo+'-'+id);return}
+ if(prog.equipo[tipo]===id)return;
+ prog.equipo[tipo]=id;$('pista').textContent=(tipo==='color'?'🐉 Dragón ':'✨ Estela ')+DM.NOMBRES[id];persistir();pintarMenu();
+});
+let toastT=null;const cola=[];
+function toast(txt){cola.push(txt);if(!toastT)siguienteToast()}
+function siguienteToast(){
+ const el=$('toast');if(!cola.length){el.classList.remove('ver');toastT=null;return}
+ el.textContent=cola.shift();el.classList.add('ver');
+ toastT=setTimeout(()=>{el.classList.remove('ver');toastT=setTimeout(siguienteToast,REDUCIR?50:300)},2200);
+}
+const carrera=()=>({metros:Math.floor(dist/PX)+run.extraM,monedas:coins,esquivados:run.esq,mejorRacha:run.mejorRacha,dobles:run.dobles,castillo:run.castillo||st==='win'});
+// Durante la carrera: aviso en cuanto una misión del día cruza su meta.
+function revisarMisiones(){
+ DM.vistaMisiones(prog,fecha,semilla,carrera()).forEach((m,i)=>{if(m.cumplida&&!run.antes[i]&&!run.avisadas.has(i)){run.avisadas.add(i);toast('🎯 ¡Misión cumplida! '+m.texto);sCoin()}});
+}
+// Al terminar: suma la carrera, guarda y devuelve los mensajes (misiones, logros y premios).
+function cerrarCarrera(){
+ revisarMisiones();
+ const r=DM.aplicarCarrera(prog,carrera(),fecha,semilla);
+ prog=r.prog;carrerasHechas++;persistir();
+ return r.mensajes;
+}
 
 /* ---------- audio ---------- */
 function initAudio(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination);master.gain.value=muted?0:1}if(AC.state==='suspended')AC.resume()}catch(e){AC=null}}
@@ -59,17 +189,36 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic()
 $('mute').onclick=function(){muted=!muted;this.textContent=muted?'🔇':'🔊';if(master)master.gain.value=muted?0:1;this.blur()};
 
 /* ---------- flow ---------- */
-function show(id){['ovS','ovO','ovW'].forEach(i=>$(i).classList.toggle('hide',i!==id))}
-function startGame(){const n=performance.now();if(n-lastStart<400)return;lastStart=n;initAudio();reset();st='play';show(null);startMusic()}
+function show(id){['ovS','ovO','ovW'].forEach(i=>$(i).classList.toggle('hide',i!==id));document.body.classList.toggle('jugando',!id)}
+function startGame(){const n=performance.now();if(n-lastStart<400)return;lastStart=n;initAudio();
+ if(!PRUEBA)fecha=DM.fechaHoy();
+ reset();run.antes=DM.vistaMisiones(prog,fecha,semilla).map(m=>m.cumplida);st='play';show(null);startMusic()}
 function saveBest(){if(score()>best){best=score();try{localStorage.setItem('dragonBest',best)}catch(e){}}}
-// Embebido: la plataforma guarda los puntos y muestra el resultado.
-function avisar(gano){if(!EMBED)return false;try{parent.postMessage({juego:'dragon-run',fin:true,gano,puntos:score()+(gano?BONO:0),monedas:coins,metros:Math.floor(dist/PX),segundos:Math.round(t)},location.origin)}catch(e){}return true}
-function lose(){st='over';stopMusic();saveBest();sLose();if(avisar(false))return;$('oS').textContent='Puntuación: '+score()+' · Distancia: '+Math.floor(dist/PX)+' m';$('oB').textContent='🏆 Récord: '+best;show('ovO')}
-function win(){st='win';stopMusic();saveBest();sWin();if(avisar(true))return;$('wS').textContent='Puntuación: '+(score()+BONO)+' (bono castillo +'+BONO+') · Monedas: '+coins;$('wB').textContent='🏆 Récord: '+best;show('ovW')}
-['bS','bO','bW'].forEach(i=>$(i).onclick=function(){this.blur();startGame()});
-function jump(){if(st!=='play'||dr.saltos>=2)return;dr.vy=dr.saltos?-600:-720;dr.air=true;dr.saltos++;sJump();for(let i=0;i<16;i++)pt.push({x:DX+8+Math.random()*14,y:dr.y-4,vx:-60-Math.random()*160,vy:-Math.random()*130+20,l:.5+Math.random()*.4,m:.9})}
-addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){e.preventDefault();if(e.repeat)return;if(st==='play')jump();else startGame()}});
-cv.addEventListener('pointerdown',e=>{e.preventDefault();jump()});
+// Embebido: la plataforma guarda los puntos y muestra el resultado (con las misiones cumplidas).
+function avisar(gano,msgs){if(!EMBED)return false;try{parent.postMessage({juego:'dragon-run',fin:true,gano,puntos:score()+(gano?BONO:0),monedas:coins,metros:Math.floor(dist/PX),segundos:Math.round(t),misiones:msgs},location.origin)}catch(e){}return true}
+function lose(){st='over';stopMusic();saveBest();sLose();const msgs=cerrarCarrera();if(avisar(false,msgs))return;$('oS').textContent='Puntuación: '+score()+' · Distancia: '+Math.floor(dist/PX)+' m';$('oB').textContent='🏆 Récord: '+best;$('oM').innerHTML=msgs.map(esc).join('<br>');show('ovO')}
+function win(){st='win';stopMusic();saveBest();sWin();const msgs=cerrarCarrera();if(avisar(true,msgs))return;$('wS').textContent='Puntuación: '+(score()+BONO)+' (bono castillo +'+BONO+') · Monedas: '+coins;$('wB').textContent='🏆 Récord: '+best;$('wM').innerHTML=msgs.map(esc).join('<br>');show('ovW')}
+function alMenu(){st='start';reset();pintarMenu();show('ovS');$('bS').focus()}
+$('bS').onclick=function(){this.blur();startGame()};
+['bO','bW'].forEach(i=>$(i).onclick=function(){this.blur();alMenu()});
+function jump(){if(st!=='play'||dr.saltos>=2)return;dr.vy=dr.saltos?-600:-720;dr.air=true;dr.saltos++;if(dr.saltos===2)run.dobles++;sJump();estela(P(16),true)}
+addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){
+ if(st!=='play'&&e.target.closest&&e.target.closest('.sw'))return; // espacio sobre un premio: lo elige
+ e.preventDefault();if(e.repeat)return;if(st==='play')jump();else if(st==='start')startGame();else alMenu()}});
+// En el celular vertical, tocar cualquier parte (fuera de los botones) también salta.
+document.addEventListener('pointerdown',e=>{if(st!=='play'||e.target.closest('button'))return;e.preventDefault();jump()});
+
+/* ---------- estelas ---------- */
+const NEON=['#ff4d4d','#ffa94d','#ffe14d','#5ef07a','#4dc3ff','#a06bff'];
+function estela(n,salto){const k=prog.equipo.estela;for(let i=0;i<n;i++){const p={x:DX+8+Math.random()*14,y:dr.y-4-(salto?0:Math.random()*20),vx:-60-Math.random()*160,vy:salto?-Math.random()*130+20:(Math.random()-.5)*40,l:.5+Math.random()*.4,m:.9,k};
+ if(k==='burbujas'){p.vy=-30-Math.random()*50;p.l+=.3;p.m+=.3}if(k==='hojas'){p.r=Math.random()*6}if(k==='arcoiris')p.h=NEON[(Math.random()*NEON.length)|0];pt.push(p)}}
+function drawP(p){const a=Math.max(0,p.l/p.m);x.globalAlpha=Math.min(1,a+.2);
+ if(p.c){x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,3,0,7);x.fill();return}
+ if(p.k==='estrellas'){const r=3+a*4;x.fillStyle=a>.5?'#fff7b0':'#ffd23f';x.beginPath();for(let i=0;i<10;i++){const ang=i*Math.PI/5-Math.PI/2,rr=i%2?r*.45:r;x.lineTo(p.x+Math.cos(ang)*rr,p.y+Math.sin(ang)*rr)}x.fill()}
+ else if(p.k==='burbujas'){x.strokeStyle='#bfe9ff';x.lineWidth=1.6;x.beginPath();x.arc(p.x,p.y,2+(1-a)*6,0,7);x.stroke()}
+ else if(p.k==='hojas'){x.fillStyle=a>.5?'#5ccf6a':'#2f9e57';x.beginPath();x.ellipse(p.x,p.y,5,2.6,p.r+t*3,0,7);x.fill()}
+ else if(p.k==='arcoiris'){x.fillStyle=p.h;x.beginPath();x.arc(p.x,p.y,2+a*4,0,7);x.fill()}
+ else{x.fillStyle=a>.6?'#ffe04a':a>.3?'#ff8a1f':'#e0302a';x.beginPath();x.arc(p.x,p.y,2+a*5,0,7);x.fill()}}
 
 /* ---------- update ---------- */
 const hit=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
@@ -77,6 +226,7 @@ function update(dt){
  t+=dt;sp=Math.min(300+t*7,680);dist+=sp*dt;
  dr.vy+=1900*dt;dr.y+=dr.vy*dt;if(dr.y>=GY){dr.y=GY;dr.vy=0;dr.air=false;dr.saltos=0}
  inv=Math.max(0,inv-dt);shake=Math.max(0,shake-dt);
+ trailT-=dt;if(trailT<=0){trailT=REDUCIR?.2:.07;estela(1,false)}
  while(nextAt-dist<W+80&&nextAt<GOAL*PX-700){
   const k=['rock','log','spike','slime'][Math.random()*4|0],S={rock:[38,30],log:[64,28],spike:[48,24],slime:[38,30]}[k];
   ob.push({k,wx:nextAt,w:S[0],h:S[1]});
@@ -89,12 +239,17 @@ function update(dt){
  ob.forEach(o=>{if(o.k==='slime')o.wx-=70*dt});
  if(AUTO&&!dr.air){const p=ob.find(o=>{const d=o.wx-dist;return d>70&&d<130});if(p)jump()}
  const db={x:DX+4,y:dr.y-40,w:46,h:38};
- for(const o of ob){const sx=o.wx-dist+DX;if(inv<=0&&hit(db,{x:sx+5,y:GY-o.h+5,w:o.w-10,h:o.h-5})){
-  lives--;inv=1.5;shake=.3;sHit();o.dead=1;
-  for(let i=0;i<10;i++)pt.push({x:DX+30,y:dr.y-20,vx:(Math.random()-.5)*300,vy:-Math.random()*200,l:.5,m:.5,c:'#fff'});
-  if(lives<=0){lose();return}}}
- for(const c of cn){const sx=c.wx-dist+DX;if(!c.got&&hit(db,{x:sx-10,y:c.y-10,w:20,h:20})){c.got=1;coins++;sCoin();for(let i=0;i<6;i++)pt.push({x:sx,y:c.y,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,l:.4,m:.4,c:'#ffd23f'})}}
+ for(const o of ob){const sx=o.wx-dist+DX,box={x:sx+5,y:GY-o.h+5,w:o.w-10,h:o.h-5};
+  if(hit(db,box)){
+   if(inv>0){o.tocado=1;continue} // lo atravesó parpadeando: no cuenta como esquivado
+   lives--;inv=1.5;shake=REDUCIR?0:.3;sHit();o.dead=1;run.racha=0;
+   for(let i=0;i<P(10);i++)pt.push({x:DX+30,y:dr.y-20,vx:(Math.random()-.5)*300,vy:-Math.random()*200,l:.5,m:.5,c:'#fff'});
+   if(lives<=0){lose();return}}
+  // Esquivado: el obstáculo quedó atrás del dragón sin golpearlo. Un golpe reinicia la racha.
+  else if(!o.pasado&&sx+o.w<DX+4){o.pasado=1;if(!o.tocado){run.esq++;run.racha++;run.mejorRacha=Math.max(run.mejorRacha,run.racha)}}}
+ for(const c of cn){const sx=c.wx-dist+DX;if(!c.got&&hit(db,{x:sx-10,y:c.y-10,w:20,h:20})){c.got=1;coins++;sCoin();for(let i=0;i<P(6);i++)pt.push({x:sx,y:c.y,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,l:.4,m:.4,c:'#ffd23f'})}}
  ob=ob.filter(o=>!o.dead&&o.wx-dist+DX>-120);cn=cn.filter(c=>!c.got&&c.wx-dist+DX>-60);
+ chequeo-=dt;if(chequeo<=0){chequeo=.25;revisarMisiones()}
  if(dist>=GOAL*PX-20)win();
 }
 
@@ -123,23 +278,24 @@ function drawOb(o){const sx=o.wx-dist+DX,b=GY+2;
  if(o.k==='rock'){x.fillStyle='#8b8fa3';x.beginPath();x.moveTo(sx,b);x.lineTo(sx+4,b-20);x.lineTo(sx+14,b-30);x.lineTo(sx+28,b-26);x.lineTo(sx+38,b-8);x.lineTo(sx+38,b);x.fill();x.fillStyle='#b4b8cb';x.beginPath();x.moveTo(sx+8,b-20);x.lineTo(sx+15,b-27);x.lineTo(sx+24,b-24);x.lineTo(sx+14,b-16);x.fill()}
  else if(o.k==='log'){x.fillStyle='#8a5a2e';x.beginPath();x.roundRect(sx,b-28,64,28,8);x.fill();x.fillStyle='#c48a4f';x.beginPath();x.ellipse(sx+6,b-14,7,12,0,0,7);x.fill();x.strokeStyle='#5e3b1b';x.lineWidth=2;x.beginPath();x.arc(sx+6,b-14,4,0,7);x.moveTo(sx+20,b-20);x.lineTo(sx+55,b-20);x.moveTo(sx+24,b-9);x.lineTo(sx+50,b-9);x.stroke()}
  else if(o.k==='spike'){for(let i=0;i<3;i++){x.fillStyle=i%2?'#c9ced8':'#e3e7ee';x.beginPath();x.moveTo(sx+i*16,b-2);x.lineTo(sx+8+i*16,b-26);x.lineTo(sx+16+i*16,b-2);x.fill()}x.fillStyle='#555a6b';x.fillRect(sx-2,b-5,52,5)}
- else{const j=Math.abs(Math.sin(t*8+o.wx))*5;x.fillStyle='#b35be0';x.beginPath();x.ellipse(sx+19,b-13-j,19,15+j/2,0,Math.PI,0);x.rect(sx,b-13-j,38,13+j);x.fill();x.fillStyle='#fff';x.beginPath();x.arc(sx+12,b-18-j,5,0,7);x.arc(sx+26,b-18-j,5,0,7);x.fill();x.fillStyle='#222';x.beginPath();x.arc(sx+10,b-18-j,2.3,0,7);x.arc(sx+24,b-18-j,2.3,0,7);x.fill()}}
+ else{const j=REDUCIR?2:Math.abs(Math.sin(t*8+o.wx))*5;x.fillStyle='#b35be0';x.beginPath();x.ellipse(sx+19,b-13-j,19,15+j/2,0,Math.PI,0);x.rect(sx,b-13-j,38,13+j);x.fill();x.fillStyle='#fff';x.beginPath();x.arc(sx+12,b-18-j,5,0,7);x.arc(sx+26,b-18-j,5,0,7);x.fill();x.fillStyle='#222';x.beginPath();x.arc(sx+10,b-18-j,2.3,0,7);x.arc(sx+24,b-18-j,2.3,0,7);x.fill()}}
 function drawCoin(c){const sx=c.wx-dist+DX,w=Math.abs(Math.cos(t*5+c.wx*.05))*9+2;x.fillStyle='#e8a317';x.beginPath();x.ellipse(sx,c.y,w+1.5,11,0,0,7);x.fill();x.fillStyle='#ffd23f';x.beginPath();x.ellipse(sx,c.y,w,9,0,0,7);x.fill()}
 function drawDragon(){
+ const [C,S,B,A]=DM.PALETAS[prog.equipo.color]||DM.PALETAS.verde; // cuerpo, sombra, panza y ala del color elegido
  const ph=t*14,air=dr.air,bob=air?0:-Math.abs(Math.sin(ph))*3;
  x.save();x.translate(DX,dr.y);if(inv>0&&Math.floor(inv*10)%2)x.globalAlpha=.35;
- x.fillStyle='#3fbf5f';x.beginPath();x.moveTo(6,-20+bob);x.quadraticCurveTo(-16,-12+Math.sin(ph)*5,-28,-30+Math.sin(ph+1)*6);x.quadraticCurveTo(-12,-32,10,-34+bob);x.fill();
- x.strokeStyle='#2c9a49';x.lineWidth=7;x.lineCap='round';
+ x.fillStyle=C;x.beginPath();x.moveTo(6,-20+bob);x.quadraticCurveTo(-16,-12+Math.sin(ph)*5,-28,-30+Math.sin(ph+1)*6);x.quadraticCurveTo(-12,-32,10,-34+bob);x.fill();
+ x.strokeStyle=S;x.lineWidth=7;x.lineCap='round';
  [0,Math.PI].forEach((o,i)=>{const s=Math.sin(ph+o),x0=12+i*16;x.beginPath();x.moveTo(x0,-12+bob);x.lineTo(air?x0+(i?8:-4):x0+s*9,air?-6:-2-Math.max(0,-s)*8);x.stroke()});
- x.fillStyle='#3fbf5f';x.beginPath();x.ellipse(22,-24+bob,22,16,0,0,7);x.fill();
- x.fillStyle='#ffe08a';x.beginPath();x.ellipse(26,-19+bob,14,9,0,0,7);x.fill();
+ x.fillStyle=C;x.beginPath();x.ellipse(22,-24+bob,22,16,0,0,7);x.fill();
+ x.fillStyle=B;x.beginPath();x.ellipse(26,-19+bob,14,9,0,0,7);x.fill();
  x.fillStyle='#ffd23f';for(let i=0;i<4;i++){x.beginPath();x.moveTo(6+i*9,-38+bob+i*1.5);x.lineTo(10+i*9,-46+bob+i*1.5);x.lineTo(14+i*9,-38+bob+i*1.5);x.fill()}
- x.strokeStyle='#3fbf5f';x.lineWidth=14;x.beginPath();x.moveTo(36,-28+bob);x.lineTo(44,-36+bob);x.stroke();
+ x.strokeStyle=C;x.lineWidth=14;x.beginPath();x.moveTo(36,-28+bob);x.lineTo(44,-36+bob);x.stroke();
  x.beginPath();x.arc(46,-38+bob,13,0,7);x.fill();x.beginPath();x.ellipse(57,-34+bob,9,7,0,0,7);x.fill();
  x.fillStyle='#ffd23f';x.beginPath();x.moveTo(38,-48+bob);x.lineTo(43,-64+bob);x.lineTo(49,-48+bob);x.fill();
  x.fillStyle='#fff';x.beginPath();x.arc(49,-42+bob,4.5,0,7);x.fill();x.fillStyle='#222';x.beginPath();x.arc(51,-42+bob,2.2,0,7);x.fill();
- x.fillStyle='#2c9a49';x.beginPath();x.arc(62,-37+bob,1.5,0,7);x.fill();
- x.save();x.translate(16,-34+bob);x.rotate(air?-.9+Math.sin(ph*1.3)*.45:-.3+Math.sin(ph*.8)*.18);x.fillStyle='#ff6b9d';x.beginPath();x.ellipse(0,-14,9,18,0,0,7);x.fill();x.restore();
+ x.fillStyle=S;x.beginPath();x.arc(62,-37+bob,1.5,0,7);x.fill();
+ x.save();x.translate(16,-34+bob);x.rotate(air?-.9+Math.sin(ph*1.3)*.45:-.3+Math.sin(ph*.8)*.18);x.fillStyle=A;x.beginPath();x.ellipse(0,-14,9,18,0,0,7);x.fill();x.restore();
  x.restore()}
 function hud(){
  x.font='bold 20px "Trebuchet MS",system-ui,sans-serif';x.lineWidth=4;x.strokeStyle='rgba(0,0,0,.5)';x.fillStyle='#fff';x.lineJoin='round';
@@ -147,20 +303,32 @@ function hud(){
  for(let i=0;i<3;i++)T(i<lives?'❤️':'🖤',14+i*28,30,'left');
  T('🪙 '+coins+'   📏 '+Math.floor(dist/PX)+'/'+GOAL+' m',14,58,'left');
  T('⭐ '+score(),W-14,30,'right');T('🏆 '+best,W-14,58,'right');
+ if(st==='play'&&run.racha>=5)T('💨 '+run.racha+' seguidos',W-14,86,'right');
  const bx=270,bw=260,r=Math.min(1,dist/(GOAL*PX));x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.roundRect(bx,16,bw,8,4);x.fill();x.fillStyle='#ffd23f';x.beginPath();x.roundRect(bx,16,Math.max(8,bw*r),8,4);x.fill();
  x.font='20px system-ui';x.textAlign='center';x.fillText('🐉',bx+bw*r,36);x.fillText('🏰',bx+bw+14,26)}
 function render(){
  x.save();if(shake>0)x.translate((Math.random()-.5)*8,(Math.random()-.5)*8);
  bg();goal();cn.forEach(drawCoin);ob.forEach(drawOb);
- pt.forEach(p=>{const a=Math.max(0,p.l/p.m);x.fillStyle=p.c||(a>.6?'#ffe04a':a>.3?'#ff8a1f':'#e0302a');x.globalAlpha=Math.min(1,a+.2);x.beginPath();x.arc(p.x,p.y,(p.c?3:2+a*5),0,7);x.fill()});x.globalAlpha=1;
+ pt.forEach(drawP);x.globalAlpha=1;
  drawDragon();x.restore();hud()}
 let last=performance.now();
 function loop(n){
  const dt=Math.min(.033,(n-last)/1000);last=n;
- if(st==='play')update(dt);else if(st==='start'){dist+=150*dt;t+=dt}
+ if(st==='play')update(dt);else if(st==='start'&&!REDUCIR){dist+=150*dt;t+=dt}
  pt.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt});pt=pt.filter(p=>p.l>0);
  render();requestAnimationFrame(loop)}
+pintarMenu();
 requestAnimationFrame(loop);
-Object.defineProperty(window,'__dragon',{get:()=>({st,dist,coins,lives,saltos:dr.saltos,air:dr.air,score:score()})});
+Object.defineProperty(window,'__dragon',{get:()=>({st,dist,coins,lives,saltos:dr.saltos,air:dr.air,score:score(),racha:run.racha,esquivados:run.esq,dobles:run.dobles})});
 window.__saltar=jump;
+// Ganchos de prueba (solo con ?prueba=1, para las E2E).
+if(PRUEBA)window.__dragonPrueba={
+ fecha(f){fecha=f;pintarMenu()},
+ misiones:()=>DM.vistaMisiones(prog,fecha,semilla),
+ // Suma a la carrera en curso lo justo para cumplir la misión i del día.
+ cumplir(i){const c=DM.carreraParaCumplir(DM.misionesDelDia(fecha,semilla)[i]);run.extraM+=c.metros;coins+=c.monedas;run.esq+=c.esquivados;run.mejorRacha=Math.max(run.mejorRacha,c.mejorRacha);run.dobles+=c.dobles;if(c.castillo)run.castillo=true;revisarMisiones()},
+ terminar(gano){if(st==='play')gano?win():lose()},
+ progreso:()=>JSON.parse(JSON.stringify(prog)),
+ semilla:()=>semilla,
+};
 </script></body></html>

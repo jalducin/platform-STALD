@@ -130,10 +130,17 @@ Cada página debe manejar y mostrar de forma explícita:
   - **Sudoku** (`sudoku-niveles`): el tablero se genera en el navegador con solución única (`generarSudoku`,
     `contarSoluciones`); niveles Fácil 40, Medio 32, Difícil 27 y Experto ~24 pistas; 3 vidas; puntos con
     `puntosSudoku` (base por nivel + rapidez − errores);
-  - **Dragon Run** (`dragon-run`): juego del profe en `juegos/dragon-run.html`, embebido con un iframe del mismo
-    origen. Al terminar avisa con `postMessage` (solo a `location.origin`) y `juegos.html` lo acepta solo si viene de
-    su iframe y de su origen, y luego llama a `terminar`. Conserva su propia música; la de Juegos se pausa mientras se
-    juega. `?auto=1` es solo para pruebas;
+  - **Dragon Run** (`dragon-run`, en Arcade desde `dragon-run-misiones`): juego del profe en `juegos/dragon-run.html`,
+    embebido con un iframe del mismo origen dentro de `.arcade-caja`. Al terminar avisa con `postMessage` (solo a
+    `location.origin`) y `juegos.html` lo acepta solo si viene de su iframe y de su origen, y luego llama a `terminar`
+    (las misiones cumplidas van escapadas en el detalle). Conserva su propia música; la de Juegos se pausa mientras se
+    juega. Misiones y premios: reglas en `juegos/dragon-misiones.js` (`DragonMisiones`, también lo prueban los tests
+    de Deno); el juego pide el avance con `listo`, recibe `inicio` (`progreso`, `semilla` = id del jugador) y manda
+    `guardar` antes de `fin`; `juegos.html` lo guarda con `canalProgreso` (`GET`/`PUT /juegos/progreso/dragon-run`,
+    cola por juego). Pantalla de misiones a pantalla completa en `rem`, aviso `#toast` «¡Misión cumplida!», toque en
+    toda la pantalla y `prefers-reduced-motion`. Suelto, el avance va a `localStorage.dragonProgreso`. `?auto=1`
+    (`?dragonAuto=1` en Juegos) y `?prueba=1` (`?arcadePrueba=1`, ganchos `window.__dragonPrueba`) son solo para
+    pruebas;
   - **Arcade** (`plataformas` y `karts`, cambio `juegos-plataformas-karts`): `juegos/plataformas.html` y
     `juegos/karts.html`, cada uno en un iframe del mismo origen (`.arcade-caja`), con reglas compartidas en
     `juegos/arcade.js` (mundos, pistas, referencias, mapa de sala, tiempos de bots y puntos por lugar; también lo
