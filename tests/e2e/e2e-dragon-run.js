@@ -150,7 +150,7 @@ async function abrirDragon(p) {
   const gm = await esperarProgreso(r => r.v >= 1, 15000, 'marisol@example.com');
   ok('la carrera automática también suma a su avance', gm.datos && gm.datos.totales.carreras >= 1, JSON.stringify(gm.datos && gm.datos.totales));
   // 8) Un mensaje falso desde otra ventana no guarda nada
-  await abrirJuego(pe, 'dragon-run'); await pe.waitForSelector('#dragon-frame');
+  await pe.click('.result [data-juego="dragon-run"]'); await pe.waitForSelector('#dragon-frame'); // «Jugar otra vez» del resultado
   await pe.evaluate(() => window.postMessage({ juego: 'dragon-run', fin: true, gano: true, puntos: 2000, monedas: 0, metros: 600, segundos: 1 }, '*'));
   await sleep(1200);
   ok('mensaje que no viene del juego se ignora', !(await pe.$('.result')) && !!(await pe.$('#dragon-frame')));
