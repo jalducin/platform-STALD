@@ -27,6 +27,8 @@
     animación de «¡ya!» dura poco con relojes acelerados); se corrigió la prueba (estado pedido al servidor y lectura en
     la misma tarea del clic), no el juego.
 - Duración de la suite E2E: ~20 min.
+- Tras integrar otra vez `origin/main` (#163–#165: `axo-diseno` y `karts-controles-diseno`, sin conflictos): servidor
+  340 pasaron, 0 fallaron, 6 omitidas; E2E `clasicos-rapidos` 38, `juegos` 28, `clasicos` 10 y `karts` 48 pasos: 4 PASS.
 
 ## Capturas revisadas (tests/e2e/salida/)
 - `clasicos-rapidos-390-menu.png`, `-gato.png`, `-conecta4.png`, `-ppt.png`, `-ahorcado.png`, `-serpientes.png`,
