@@ -69,12 +69,28 @@ A1: ≥ 80 % "A1 sólido — listo para A2", 50–79 % "A1 en progreso", < 50 % 
 ## Contenido de juegos (repo público, `juegos/datos/`)
 
 Sin datos personales. Se sirve junto a `juegos.html`.
-- `ingles.json`:
+- `ingles.json` (nivel A1, español de México, sin nombres de alumnos ni alumnas reales; su forma la valida
+  `server/ingles_datos_test.ts`, cambio `juegos-ingles-gramatica`):
   - `vocabulario[]` `{ en, es, emoji, tema }`;
   - `spelling[]` `{ en, es, nivel }`;
-  - `verbos[]` `{ frase, opciones, correcta, es, tema }`;
-  - `oraciones[]` `{ en, es }`;
-  - `preguntas[]` `{ pregunta, opciones (4), correcta, es, tema }` para "Responde en inglés" (124, nivel A1).
+  - `verbos[]` `{ frase, opciones (3, sin repetir), correcta, es, tema, regla }` para 🧩 Completa y responde:
+    - `frase` lleva `___`; `regla` es la regla corta (máx. 90 caracteres) que se muestra al fallar;
+    - `tema`: `to be`, `to be pasado`, `presente simple`, `pasado simple` y `futuro will` (al menos 40 cada uno), y
+      `wh`, `posesivos`, `articulos`, `plurales`, `demostrativos` y `adjetivos`;
+  - `oraciones[]` `{ en, es, tema }` para 🔀 Ordena la oración: de 3 a 9 palabras y sin punto final; `tema` es uno de
+    los de `verbos` o `general`;
+  - `preguntas[]` `{ pregunta, opciones (4), correcta, es, tema, regla? }` para "Responde en inglés":
+    - `tema` de conversación (`personal`, `familia`, `gustos`, `rutina`, `tiempo-fechas`, `lugares`,
+      `cosas-colores`, `comida`, `clima`, `habilidades`, `cortesia`) o de tiempo (los 5 de `verbos`);
+    - las de tiempo traen `regla`;
+  - `tiempos[]` `{ sujeto, verbo, presente, pasado, resto, es, tema }` para ⏳ Máquina del tiempo (al menos 40):
+    - `tema`: `regular` (pasado con -ed), `irregular` o `to be` (`verbo` = `be`; `presente` am / is / are; `pasado`
+      was / were);
+    - las tres oraciones salen de la plantilla `sujeto presente resto`, `sujeto pasado resto` y
+      `sujeto will verbo resto`; por eso `resto` no lleva marcas de tiempo (yesterday, tomorrow, every…).
+  - Grupos del selector de tema (`juegos/ingles-gramatica.js`): To be = `to be` + `to be pasado`; Presente = `to be`
+    + `presente simple`; Pasado = `to be pasado` + `pasado simple`; Futuro (will) = `futuro will`. Los demás temas
+    solo salen con «Todo».
 - `espanol.json`:
   - `ortografia[]` y `acentos[]` `{ frase, opciones, correcta, regla?, explicacion }`;
   - `sinonimos[]` y `antonimos[]` `{ palabra, respuesta, distractores }`;

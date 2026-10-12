@@ -25,12 +25,13 @@
 ### 1. Archivo propio `juegos/ingles-gramatica.js`
 
 Toda la lógica nueva vive en un script clásico cargado antes del script principal de `juegos.html`:
-- expone `globalThis.InglesGramatica` con funciones puras (sin DOM): `TEMAS`, `grupos(tema)`, `filtrar(lista,
-  tema)`, `reglaOrden(tema)`, `preguntaTiempos(item, paso, rnd)`, `preguntasTiempos(d, n, rnd)`,
-  `preguntasFrasesPartida(d, tema, rnd)` y `resumenFallos(fallos)`;
-- define las pantallas `elegirTemaIngles(id)`, `jugarFrasesTema(tema)`, `jugarOrdenaTema(tema)` y
-  `jugarTiempos()`, que usan los helpers globales de la página (`quiz`, `marco`, `datos`, `terminar`…). Como son
-  scripts clásicos, las funciones y constantes del script principal se resuelven al llamarlas.
+- expone `globalThis.InglesGramatica` con funciones puras (sin DOM): `TEMAS`, `GRUPOS`, `filtrar(lista, tema)`,
+  `reglaOrden(tema)`, `preguntaFrase`, `preguntaEn`, `preguntasFrasesPartida(d, tema, rnd, n)`, `formas`, `trampa`,
+  `reglaTiempo`, `preguntaTiempos(item, paso, par, rnd)`, `preguntasTiempos(d, n, rnd)` y `masFallos(conteo)`;
+- define las pantallas `elegirTemaIngles(id)`, `jugarFrasesTema(tema)`, `jugarTiempos()` y
+  `resumenFallosSala(sala, n)`, que usan los helpers globales de la página (`quiz`, `marco`, `datos`,
+  `jugarOrdena('en', tema)`…). Como son scripts clásicos, las funciones y constantes del script principal se
+  resuelven al llamarlas; todo va dentro de una función para no chocar con los nombres de la página.
 
 En `juegos.html` solo cambian: la etiqueta `<script>`, las tarjetas del catálogo (`en-frases`, `en-ordena` y la
 nueva `en-tiempos`), `JUEGOS_PARTIDA`, dos ramas de `preguntasPartida`, el selector de tema al crear la sala, un
@@ -98,7 +99,7 @@ preguntas por grupo del selector, y al menos 40 elementos en `tiempos`.
 - Partida: el formulario de crear muestra «Tema» cuando el juego es `en-frases`; va como `opciones.tema`.
   - Servidor: `opciones.tema` solo se acepta en `en-frases`; valores `todo` (por omisión), `tobe`, `presente`,
     `pasado`, `futuro`; otro valor → 400 `tema_invalido`.
-  - La sala de espera y el título muestran el tema elegido.
+  - El título de la partida muestra el tema elegido.
 
 ### 6. Regla al fallar
 
