@@ -1048,7 +1048,7 @@ desempate por partidas y luego por título. `mejor` SHALL traer el nombre visibl
 de la mejor partida, nunca correos. El agregado SHALL calcularse una vez por carga de la semana en caché y no leer los
 archivos de la semana en cada petición. En 🏆 Ranking, la página SHALL mostrarlo en la sub-pestaña «🔥 Juegos», con el
 encabezado «Semana del … al …», 🥇🥈🥉 para el top 3, emoji y nombre del juego, «N jugadores · M partidas», una barra
-proporcional al líder y «👑 Mejor puntaje: {nick}». SHALL mostrar solo el top 10 y, si hay más juegos, el botón
+proporcional al líder y «👑 Mejor puntaje: {nick} · N puntos» (separador de miles; «1 punto» en singular). SHALL mostrar solo el top 10 y, si hay más juegos, el botón
 «Ver los N juegos» para desplegar el resto (y «Ver solo el top 10» para plegarlo). SHALL verse bien en un celular de
 390 px.
 
@@ -1080,6 +1080,10 @@ proporcional al líder y «👑 Mejor puntaje: {nick}». SHALL mostrar solo el t
 #### Scenario: Top 10
 - **WHEN** en la semana se jugaron 22 juegos
 - **THEN** la pestaña muestra los primeros 10 y el botón «Ver los 22 juegos»; al tocarlo aparecen los 22
+
+#### Scenario: Puntos del mejor puntaje
+- **WHEN** la mejor partida de Sopa de letras en la semana es de Gabo con 1250 puntos
+- **THEN** la fila dice «👑 Mejor puntaje: Gabo · 1,250 puntos»
 
 ### Requirement: Progreso individual de juegos en el servidor
 El sistema SHALL exponer `GET /juegos/progreso/<juego>` y `PUT /juegos/progreso/<juego>` para los juegos con
