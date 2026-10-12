@@ -22,7 +22,7 @@
 
 ## 4. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
-- [ ] 4.1 En producción (domingo 2026-10-11): Sofy ve «Semana 3» y puede abrir la actividad del martes
+- [x] 4.1 En producción (domingo 2026-10-11): Sofy ve «Semana 3» y puede abrir la actividad del martes
 
 ## 5. Documentación técnica (OBLIGATORIO)
 
