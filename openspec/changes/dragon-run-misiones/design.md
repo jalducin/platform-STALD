@@ -40,8 +40,8 @@ Contiene:
 - `aplicarCarrera(prog, carrera, fecha, semilla)`, que devuelve `{ prog, mensajes }`;
 - `vistaMisiones`, `nivelLogro`, `nuevo` y `normalizar`.
 
-El juego lo carga con `<script src="dragon-misiones.js">`. `server/progreso_test.ts` lo importa para comprobar dos
-cosas:
+El juego lo carga con `<script src="dragon-misiones.js">`. `server/dragon_misiones_test.ts` (archivo propio, para no
+chocar con los cambios en paralelo de `progreso_test.ts`) lo importa para comprobar dos cosas:
 - que las listas de premios coinciden con las del servidor;
 - que todo avance que produce `aplicarCarrera` pasa `validarProgreso("dragon-run", …)`.
 
@@ -135,6 +135,8 @@ El cliente pasa lo que lee por `normalizar` antes de usarlo. Si viene `null` o a
 - **Pruebas.** `?arcadePrueba=1` abre el juego con `?prueba=1`. Eso expone `window.__dragonPrueba`
   (`fecha`, `misiones`, `cumplir`, `terminar` y `progreso`). Solo es para las E2E.
 - **Sin servidor.** Si el juego se abre suelto, sin `juegos.html`, el avance va a `localStorage.dragonProgreso`.
+- **Recargar.** Como los demás juegos de Arcade, que guardan su avance en el servidor, recargar ya no pide
+  confirmación (`enCurso.foto = () => null`). La carrera a medias se pierde, pero las misiones ya guardadas no.
 
 ### 7. Pantallas a 390 px y movimiento reducido
 - **Pantalla de misiones** (`#ovS`):
@@ -143,7 +145,10 @@ El cliente pasa lo que lee por `normalizar` antes de usarlo. Si viene `null` o a
   - muestra las misiones del día con barra de avance, los logros con su medalla y los premios con 🔒 y una pista.
 - **Aviso «¡Misión cumplida!».** Es un aviso del DOM arriba del juego, con `role="status"`. Aparece al cruzar una meta
   durante la carrera.
-- **En el celular vertical**, tocar cualquier parte fuera de los botones también hace saltar.
+- **En el celular vertical**:
+  - tocar cualquier parte fuera de los botones también hace saltar;
+  - arriba del canvas 2:1 se pinta cielo y abajo tierra, con el recordatorio «👆 Toca en cualquier parte para
+    saltar».
 - **Con `prefers-reduced-motion`:**
   - no hay sacudida al chocar;
   - hay menos partículas;
