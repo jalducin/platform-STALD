@@ -4,7 +4,7 @@
 import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
 import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realtime.ts";
-import { type Carrera, validarCarrera } from "./carreras.ts";
+import { type Carrera, CARRERAS, mapaDeSala, validarCarrera } from "./carreras.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -234,6 +234,11 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       const rondas = op.rondas === undefined ? "10" : String(op.rondas);
       if (!RONDAS_BASTA.includes(rondas)) return json({ error: "rondas_invalidas" }, 400);
       opciones.rondas = rondas;
+    }
+    if (CARRERAS[juego]) { // Arcade: nivel o pista en las opciones (openspec: juegos-plataformas-karts)
+      const mapa = mapaDeSala(juego, op.mapa, aleatorio(1)[0]);
+      if (!mapa) return json({ error: "mapa_invalido" }, 400);
+      opciones.mapa = mapa;
     }
     const codigo = await codigoLibre(store);
     if (!codigo) return json({ error: "sin_codigo" }, 503);

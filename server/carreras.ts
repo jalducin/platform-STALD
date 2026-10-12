@@ -5,6 +5,18 @@ export const CARRERAS: Record<string, { minMs: number; limiteMs: number }> = {
   plataformas: { minMs: 6_000, limiteMs: 240_000 },
   karts: { minMs: 15_000, limiteMs: 300_000 },
 };
+// Mapas de sala: niveles normales de los mundos jugables y pistas (igual que Arcade.mapaDeSala / PISTAS). El mapa
+// vive en sala.opciones.mapa para que la revancha lo herede.
+export const MAPAS_SALA: Record<string, string[]> = {
+  plataformas: ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"],
+  karts: ["pradera", "desierto", "hielo", "volcan"],
+};
+// Mapa pedido (si es válido) o uno al azar; null si se pidió uno que no existe.
+export function mapaDeSala(juego: string, pedido: unknown, azar: number): string | null {
+  const lista = MAPAS_SALA[juego];
+  if (pedido === undefined || pedido === "" || pedido === null) return lista[azar % lista.length];
+  return lista.includes(String(pedido)) ? String(pedido) : null;
+}
 const ADELANTO_MS = 3_000; // el tiempo no puede pasar del reloj del servidor más este margen
 const ATRASO_MS = 20_000; // ni quedarse más corto que el reloj menos este margen (envío tardío o red lenta)
 

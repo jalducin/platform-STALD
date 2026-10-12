@@ -3,7 +3,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import { clearCacheJuegos, handleJuegos } from "./juegos.ts";
 import { clearCacheSalas, JUEGOS_PARTIDA } from "./salas.ts";
-import { CARRERAS, validarCarrera } from "./carreras.ts";
+import { CARRERAS, MAPAS_SALA, validarCarrera } from "./carreras.ts";
 import { MemoryStore } from "./store.ts";
 
 const ingles = [
@@ -94,6 +94,26 @@ Deno.test("carreras: antes de empezar 409 y en otro juego 400", async () => {
   const quiz = await salaEmpezada(c, "cultura");
   c.avanzar(30_000);
   assertEquals((await c.call("POST", `/sala/${quiz}/respuesta`, "marisol@example.com", { carrera: { ms: 29_000, monedas: 0 } })).body.error, "carrera_invalida");
+});
+
+Deno.test("carreras: el mapa vive en sala.opciones (elegido o al azar) y la revancha lo hereda", async () => {
+  const c = ctx();
+  const r = await c.call("POST", "/sala", "marisol@example.com", { juego: "karts", opciones: { mapa: "hielo" }, bots: true });
+  assertEquals([r.status, r.body.sala.opciones.mapa], [200, "hielo"]);
+  const p = await c.call("POST", "/sala", "marisol@example.com", { juego: "plataformas", bots: true });
+  assertEquals(MAPAS_SALA.plataformas.includes(p.body.sala.opciones.mapa), true, p.body.sala.opciones.mapa);
+  const mal = await c.call("POST", "/sala", "marisol@example.com", { juego: "karts", opciones: { mapa: "luna" } });
+  assertEquals([mal.status, mal.body.error], [400, "mapa_invalido"]);
+  // Revancha: termina la carrera y la sala nueva trae el mismo mapa.
+  const codigo = r.body.codigo;
+  assertEquals((await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com")).status, 200);
+  c.avanzar(5000 + 20_000);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { carrera: { ms: 20_000, monedas: 1 } })).status, 200);
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { final: 500, podio: [{ nombre: "Marisol", total: 500 }] })).status, 200);
+  const rev = await c.call("POST", `/sala/${codigo}/revancha`, "marisol@example.com");
+  assertEquals(rev.status, 200, JSON.stringify(rev.body));
+  const g = await c.call("GET", `/sala/${rev.body.codigo}`, "marisol@example.com");
+  assertEquals([g.body.sala.juego, g.body.sala.opciones.mapa], ["karts", "hielo"]);
 });
 
 Deno.test("carreras: validarCarrera directo", () => {
