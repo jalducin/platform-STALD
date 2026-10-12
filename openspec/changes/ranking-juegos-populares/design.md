@@ -57,7 +57,8 @@ mantiene intacto el contrato actual.
 
 - `state.rtipo` admite `juegos`; `pintarRanking` delega a `pintarRankingJuegos` (función nueva, aislada) para no
   mezclarse con el ranking de personas. Petición con `ttl: 30000`, como el ranking actual.
-- Emoji y nombre: del catálogo del cliente (`juegoPorId`); si no existe ahí, el `titulo` del servidor y 🎮.
+- Nombre: el `titulo` del catálogo del servidor (distingue «Ordena la oración» de «Ordena la oración (inglés)», que en el
+  cliente se llaman igual). Emoji: del catálogo del cliente (`juegoPorId`); si no existe ahí, 🎮.
 - Fila: `.pos` (🥇🥈🥉 o número), emoji, nombre, «N jugadores · M partidas» (singular con 1), barra
   (`.rj-barra`, ancho = jugadores ÷ jugadores del líder, `aria-hidden`: el texto ya dice los números) y
   «👑 Mejor puntaje: {nick}» cuando hay `mejor`.

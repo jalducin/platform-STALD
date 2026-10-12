@@ -119,6 +119,11 @@ Cada página debe manejar y mostrar de forma explícita:
       abajo de eso, filas como tarjetas (`td[data-label]`, columnas con `--cols`), sin scroll horizontal;
     - CSV por sub-sección (`csv-jugadores` en Jugadores y Pendientes, `csv` en Invitados); el enlace de acceso de un
       pendiente sale en `#jug-enlace`, arriba de la lista. Detalle en el `design.md` del cambio.
+  - **🏆 Ranking** tiene tres sub-pestañas (`button.opt[data-rtipo]` con `aria-pressed`, `.opts.tres` en una fila a 390 px):
+    ⭐ Individuales, 👥 Partidas y **🔥 Juegos** (`ranking-juegos-populares`). 🔥 Juegos pinta `GET /juegos/ranking/juegos`
+    en `<ol class="rank" id="rank-juegos">`: 🥇🥈🥉, emoji del catálogo del cliente, `titulo` del servidor,
+    «N jugadores · M partidas», barra `.rj-barra` proporcional al líder (`aria-hidden`) y «👑 Mejor puntaje: {nick}»;
+    vacío: «Todavía nadie juega esta semana. ¡Estrena un juego!». `ttl` 30 s como el ranking de personas.
   - **avatar:** personaje y color de las listas que envía `/juegos/yo`, o foto propia (`avatar-foto`): se recorta y reduce a 128×128 JPEG en el navegador, exige la casilla de permiso de mamá, papá o tutor y, si la foto ya no existe, se muestra el personaje (`onerror`);
   - **Sudoku** (`sudoku-niveles`): el tablero se genera en el navegador con solución única (`generarSudoku`,
     `contarSoluciones`); niveles Fácil 40, Medio 32, Difícil 27 y Experto ~24 pistas; 3 vidas; puntos con
