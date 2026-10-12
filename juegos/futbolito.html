@@ -11,9 +11,9 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
 #pantalla{position:relative;flex:1;min-height:0;overflow:hidden}
 #c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 #hud{position:absolute;left:0;right:0;top:0;height:40px;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 8px;pointer-events:none;font-weight:900;text-shadow:0 1px 0 #000}
-.marcador{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 12px;font-size:15px;max-width:calc(100% - 100px);white-space:nowrap;overflow:hidden}
+.marcador{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 10px;font-size:14px;max-width:calc(100% - 150px);white-space:nowrap;overflow:hidden}
 .marcador b{font-size:22px;min-width:16px;text-align:center}
-.marcador .n{overflow:hidden;text-overflow:ellipsis;max-width:92px}
+.marcador .n{overflow:hidden;text-overflow:ellipsis;max-width:110px}
 .ficha{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid #fff;flex:0 0 auto}
 .f0{background:var(--rojo)}.f1{background:var(--azul)}
 #hud .der{position:absolute;right:6px;top:4px;display:flex;gap:6px;pointer-events:auto}
@@ -22,7 +22,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
 #aviso{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);background:var(--panel);padding:10px 18px;border-radius:18px;font-weight:900;font-size:22px;white-space:normal;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5;width:max-content;max-width:90%}
 #aviso.ver{opacity:1}
 #cuenta{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:84px;font-weight:900;color:var(--acento);text-shadow:0 4px 0 #14532d;pointer-events:none}
-.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 50% 0,rgba(20,83,45,.92),rgba(5,15,10,.94));text-align:center;padding:14px;overflow:auto;z-index:6}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:10px;background:radial-gradient(circle at 50% 0,rgba(20,83,45,.92),rgba(5,15,10,.94));text-align:center;padding:14px;overflow:auto;z-index:6}
 .ov.hide,.hide{display:none!important}
 .ov h1{margin:0;font-size:clamp(28px,8vw,44px);color:var(--acento);text-shadow:0 3px 0 #14532d}
 .ov h2{margin:0;font-size:clamp(22px,6vw,32px);color:var(--acento)}
@@ -32,46 +32,82 @@ body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,
 .btn.chico{font-size:15px;min-height:42px;padding:6px 14px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn:active{transform:translateY(3px)}
-.btn:focus-visible,.mini:focus-visible,.op:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+.btn:focus-visible,.mini:focus-visible,.op:focus-visible,.ctl:focus-visible,.cb:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
 .fila{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .ops{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(480px,100%)}
 .op{font:inherit;font-weight:800;font-size:16px;border:3px solid rgba(255,255,255,.7);background:#14532d;color:#fff;border-radius:16px;padding:8px 4px;min-height:70px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .op small{font-weight:700;opacity:.85;font-size:11px}
 .ayuda{font-size:13px;opacity:.9;max-width:480px}
+/* Selector de controles (futbolito-equipos-controles) */
+#menu-control{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(480px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:8px}
+.ctl-titulo{font-weight:800;font-size:14px}
+.ctl-ops{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%}
+.ctl{font:inherit;font-weight:800;font-size:14px;border:2px solid rgba(255,255,255,.5);background:#14532d;color:#fff;border-radius:12px;min-height:46px;padding:4px;cursor:pointer}
+.ctl[aria-pressed="true"]{background:#0e7490;border-color:#67e8f9}
 .tarjetas{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .tarjetas div{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:6px 12px;font-weight:800}
 .tarjetas small{display:block;font-size:11px;opacity:.75}
 #confeti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:7}
 #confeti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:caer 2.6s linear forwards}
 @keyframes caer{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
+/* Botones grandes (individual): flechas a la izquierda; PATEA y BARRA a la derecha */
+#controles{flex:0 0 auto;display:none;align-items:stretch;justify-content:space-between;gap:8px;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));background:linear-gradient(#0d2a1b,#0b1f14)}
+body.jugando.ctl-botones #controles,body.jugando.ctl-deslizar #controles{display:flex}
+#controles .grupo{display:flex;gap:8px;align-items:stretch}
+.cb{font:inherit;font-weight:900;border:3px solid rgba(255,255,255,.75);border-radius:18px;background:rgba(20,60,36,.9);color:#fff;min-width:clamp(56px,17vw,76px);min-height:64px;font-size:28px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;touch-action:none;cursor:pointer;padding:2px 8px}
+.cb.on{background:var(--acento);color:#111;border-color:#fff}
+#c-patea{min-width:clamp(84px,26vw,120px);background:#16a34a;font-size:19px}
+#c-barra{font-size:14px;min-width:clamp(76px,22vw,104px)}
+#c-barra small{font-size:11px;font-weight:800;opacity:.92;white-space:nowrap}
+body.ctl-deslizar #c-menos,body.ctl-deslizar #c-mas,body.ctl-deslizar #c-patea{display:none}
+#zonas{position:absolute;left:0;right:0;bottom:6px;display:none;justify-content:space-around;font-size:12px;font-weight:800;opacity:.6;pointer-events:none}
+body.jugando.ctl-deslizar #zonas{display:flex}
+/* Mando clásico: solo en el juego y en la sala */
+body:not(.jugando):not(.en-sala) .mando{display:none!important}
 /* Panel de tiro (sala) */
-#panel{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;padding:8px 10px 10px;background:linear-gradient(#0d2a1b,#0b1f14);font-weight:800;font-size:14px}
-#panel label{display:flex;flex-direction:column;gap:2px}
-#panel input[type=range]{width:100%;height:30px;accent-color:var(--acento)}
+#panel{flex:0 0 auto;display:grid;grid-template-columns:auto auto 1fr;gap:6px 10px;align-items:end;padding:8px 10px 10px;background:linear-gradient(#0d2a1b,#0b1f14);font-weight:800;font-size:14px}
+#panel .pgrupo{display:flex;flex-direction:column;gap:3px;min-width:0}
+#panel .et{font-size:13px;white-space:nowrap}
+#panel .par{display:flex;gap:6px}
+#panel .cb{min-width:50px;min-height:50px;font-size:22px}
+#panel input[type=range]{width:100%;height:34px;accent-color:var(--acento)}
 #panel .acciones{grid-column:1/-1;display:flex;gap:8px;justify-content:center;align-items:center}
 #panel .nota{grid-column:1/-1;text-align:center;font-size:12px;opacity:.85;font-weight:700}
-#b-tirar{flex:1;max-width:260px}
+#b-tirar{flex:1;max-width:300px;min-height:58px;font-size:22px}
+body.ctl-mando #panel .pgrupo .par,body.ctl-mando #panel .acciones{display:none}
 #teclas{position:absolute;left:0;right:0;bottom:4px;text-align:center;font-size:12px;opacity:.8;pointer-events:none}
 html.tactil #teclas{display:none}
 @media (orientation:landscape) and (max-height:520px){
   #juego{flex-direction:row}
-  #panel{width:190px;grid-template-columns:1fr;align-content:center;padding:6px 8px}
-  #panel .acciones{flex-direction:column}
-  #b-tirar{width:100%}
+  #panel{width:200px;grid-template-columns:1fr 1fr;align-content:center;gap:4px 8px;padding:6px 8px}
+  #panel .pgrupo:nth-child(3){grid-column:1/-1}
+  #panel .cb{min-width:42px;min-height:44px;font-size:20px}
+  #panel .par{gap:4px}
+  #panel .nota{display:none}
+  #b-tirar{min-height:52px;font-size:19px}
+  /* El mando encimado: START arriba a la derecha (abajo al centro taparía la mesa). */
+  .mando .mando-centro{left:auto;right:calc(8px + env(safe-area-inset-right,0px));top:46px;bottom:auto;transform:none}
+  /* En horizontal los botones van encimados en las esquinas (la mesa se achica para dejarles lugar). */
+  body.jugando.ctl-botones #controles,body.jugando.ctl-deslizar #controles{position:absolute;left:0;right:0;top:44px;bottom:0;background:none;pointer-events:none;padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px));align-items:flex-end;z-index:3}
+  #controles .grupo{pointer-events:auto;flex-direction:column;gap:8px}
+  .cb{min-width:76px;min-height:58px}
+  #c-patea{min-width:84px;min-height:70px}
+  #c-barra{min-width:84px}
 }
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
-</style></head><body>
+</style></head><body class="ctl-botones">
 <div id="juego">
   <div id="pantalla">
     <canvas id="c" aria-label="Mesa de futbolito vista desde arriba"></canvas>
     <div id="hud" class="hide">
       <div class="marcador" aria-live="polite"><span class="ficha f0"></span><span class="n" id="n0">Tú</span><b id="g0">0</b><span>–</span><b id="g1">0</b><span class="n" id="n1">Bot</span><span class="ficha f1"></span></div>
-      <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
+      <div class="der"><button class="mini" id="b-control" aria-label="Cambiar controles">🎮</button><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
     </div>
     <div id="estado" class="hide" role="status"></div>
     <div id="cuenta" aria-live="polite"></div>
     <div id="aviso" role="status"></div>
-    <div id="teclas" class="hide">← → mueven tu barra · Espacio patea · K cambia de barra · P pausa</div>
+    <div id="zonas" aria-hidden="true"><span>⬅ desliza aquí</span><span>toca aquí para patear ➡</span></div>
+    <div id="teclas" class="hide">↑ ↓ / ← → mueven tu barra · Espacio patea · Tab, Q y E cambian de barra · P pausa</div>
 
     <div class="ov" id="ov-carga"><h1>⚽ Futbolito</h1><p>Cargando…</p></div>
     <div class="ov hide" id="ov-menu">
@@ -81,6 +117,14 @@ html.tactil #teclas{display:none}
         <button class="op" data-nivel="facil">🟢 Fácil<small>bot tranquilo</small></button>
         <button class="op" data-nivel="medio">🟡 Medio<small>bot atento</small></button>
         <button class="op" data-nivel="dificil">🔴 Difícil<small>bot crack</small></button>
+      </div>
+      <div id="menu-control">
+        <div class="ctl-titulo">🎮 Controles</div>
+        <div class="ctl-ops" role="group" aria-label="Controles">
+          <button class="ctl" data-control="botones" aria-pressed="true">🔘 Botones</button>
+          <button class="ctl" data-control="deslizar" aria-pressed="false">👆 Deslizar</button>
+          <button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button>
+        </div>
       </div>
       <p class="ayuda" id="ayuda-menu"></p>
     </div>
@@ -95,70 +139,102 @@ html.tactil #teclas{display:none}
     <div id="confeti"></div>
   </div>
   <div id="panel" class="hide" aria-label="Tu tiro">
-    <label for="r-angulo">🎯 Ángulo <span id="v-angulo">0°</span><input id="r-angulo" type="range" min="-60" max="60" step="1" value="0"></label>
-    <label for="r-fuerza">💪 Fuerza <span id="v-fuerza">75</span><input id="r-fuerza" type="range" min="10" max="100" step="1" value="75"></label>
-    <div class="acciones"><button class="btn" id="b-tirar">⚽ ¡Tirar!</button><button class="btn sec chico" id="b-rendir" aria-label="Rendirme">🏳️</button></div>
-    <div class="nota" id="panel-nota">Desliza sobre la mesa para mover tu barra con la pelota.</div>
+    <div class="pgrupo"><span class="et">↔ Tu barra</span><div class="par"><button class="cb" id="t-menos" aria-label="Correr tu barra">◀</button><button class="cb" id="t-mas" aria-label="Correr tu barra">▶</button></div></div>
+    <div class="pgrupo"><span class="et">🎯 <b id="v-angulo">0°</b></span><div class="par"><button class="cb" id="t-izq" aria-label="Girar el tiro a la izquierda">⟲</button><button class="cb" id="t-der" aria-label="Girar el tiro a la derecha">⟳</button></div></div>
+    <div class="pgrupo"><label for="r-fuerza" class="et">💪 Fuerza <b id="v-fuerza">75</b></label><input id="r-fuerza" type="range" min="10" max="100" step="1" value="75"></div>
+    <div class="acciones"><button class="btn" id="b-tirar">⚽ PATEA</button><button class="btn sec chico" id="b-rendir" aria-label="Rendirme">🏳️</button></div>
+    <div class="nota" id="panel-nota">Corre tu barra con la pelota, apunta y patea. También puedes deslizar sobre la mesa.</div>
+  </div>
+  <div id="controles" aria-label="Controles">
+    <div class="grupo"><button class="cb" id="c-menos" aria-label="Mover tu barra">◀</button><button class="cb" id="c-mas" aria-label="Mover tu barra">▶</button></div>
+    <div class="grupo"><button class="cb" id="c-barra" aria-label="Cambiar de barra"><span>🔄 BARRA</span><small id="c-barra-n">Medios · auto</small></button><button class="cb" id="c-patea" aria-label="Patear">⚽ PATEA</button></div>
   </div>
 </div>
-<script src="fisica.js?v=1"></script>
-<script src="futbolito-motor.js?v=1"></script>
-<script src="mesa-ui.js?v=1"></script>
+<script src="fisica.js?v=2"></script>
+<script src="futbolito-motor.js?v=2"></script>
+<script src="mesa-ui.js?v=2"></script>
+<script src="mando.js?v=1"></script>
 <script>
-/* Futbolito (openspec: futbolito-billar). Individual: tiempo real contra el bot. En sala: 1 vs 1 por tiros
-   deterministas (MesaUI.crearSala). Embebido en juegos.html por un iframe del mismo origen (postMessage). */
+/* Futbolito (openspec: futbolito-billar; controles y equipos: futbolito-equipos-controles). Individual: tiempo real
+   contra el bot con 🔘 Botones, 👆 Deslizar o 🎮 Mando clásico. En sala: por tiros deterministas (MesaUI.crearSala),
+   1 vs 1 o por equipos: tira quien maneja la barra con la pelota. Embebido en juegos.html por un iframe del mismo
+   origen (postMessage). */
 'use strict';
 const F = window.Fisica, T = window.Futbolito, U = window.MesaUI, $ = U.$;
 U.usarJuego('futbolito');
 const cv = $('c'), g = cv.getContext('2d');
 const PASO = 1 / 60, COLOR = ['#ef4444', '#3b82f6'], COLOR_OSC = ['#991b1b', '#1e3a8a'];
+// Color de cada asiento en sala (equipo rojo: amarillo y rosa; azul: cian y lima).
+const COLOR_ASIENTO = [['#facc15', '#f472b6'], ['#22d3ee', '#a3e635']];
 const NIVEL_TXT = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
+const PUESTO = { portero: 'Portero', defensa: 'Defensa', medios: 'Medios', delanteros: 'Delanteros' };
+const EQUIPO_TXT = ['rojo', 'azul'];
+const VEL_BARRA = 300; // u/s de la barra activa con botones, teclado o mando
+const MANUAL_MS = 2500; // el cambio manual de barra manda este tiempo
+const CONTROLES = ['botones', 'deslizar', 'mando'];
 let modo = 'carga', nivel = 'medio', st = null, mem = {}, activa = 4, objetivo = [], golHasta = 0, t0 = 0, rnd = Math.random;
 let sala = null; // controlador de sala (MesaUI.crearSala)
-let posSala = null; // corrimiento elegido para el tiro de sala
-let manualHasta = 0; // «cambiar barra» manual: la automática espera un momento
+let reparto = null, miEq = 0, colores = []; // sala: lugar de cada asiento ({ eq, rol, barras }) y su color
+let posSala = null, anguloSala = 0; // tiro de sala: corrimiento y ángulo elegidos
+let manualHasta = 0; // «cambiar barra» manual: la automática espera
+let control = U.leerLS('futbolito_control');
+if (!CONTROLES.includes(control)) control = 'botones';
 
-/* ---------- Vista: mesa → pantalla (vertical u horizontal; en sala, tu portería siempre abajo/izquierda) ---------- */
+/* ---------- Vista: mesa → pantalla (vertical u horizontal; tu portería siempre abajo/izquierda) ---------- */
 const MARCO = 16, CAB = 24; // marco de madera y fondo de las porterías (unidades de mesa)
 let W = 0, H = 0, DPR = 1, M = [1, 0, 0, 1, 0, 0], horizontal = false, voltear = false;
+// En horizontal, los botones y el mando van encimados en las esquinas: la mesa deja ese lugar libre a los lados.
+function reservaLateral() {
+  let r = 0;
+  const esquinas = [...document.querySelectorAll('#controles .grupo, .mando .mando-lado, .mando .mando-centro')];
+  for (const el of esquinas) {
+    const caja = el.getBoundingClientRect(), cont = el.closest('#controles, .mando');
+    if (!caja.width || getComputedStyle(cont).position !== 'absolute') continue;
+    r = Math.max(r, caja.width + 10);
+  }
+  return r;
+}
 function ajustar() {
   const r = $('pantalla').getBoundingClientRect();
   if (!r.width || !r.height) return;
   W = r.width; H = r.height; DPR = Math.min(3, window.devicePixelRatio || 1);
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   horizontal = W > H * 1.05;
-  const arriba = 40, mw = T.ANCHO + 2 * MARCO, ml = T.LARGO + 2 * CAB;
+  const arriba = 40, mw = T.ANCHO + 2 * MARCO, ml = T.LARGO + 2 * CAB, lado = horizontal ? reservaLateral() : 0;
   const aw = horizontal ? ml : mw, ah = horizontal ? mw : ml;
-  const k = Math.min((W - 8) / aw, (H - arriba - 6) / ah);
+  const k = Math.min((W - 8 - 2 * lado) / aw, (H - arriba - 6) / ah);
   const ox = (W - aw * k) / 2, oy = arriba + (H - arriba - ah * k) / 2;
   if (!horizontal) M = voltear ? [-k, 0, 0, -k, ox + (MARCO + T.ANCHO) * k, oy + (CAB + T.LARGO) * k] : [k, 0, 0, k, ox + MARCO * k, oy + CAB * k];
   else M = voltear ? [0, -k, k, 0, ox + CAB * k, oy + (MARCO + T.ANCHO) * k] : [0, k, -k, 0, ox + (CAB + T.LARGO) * k, oy + MARCO * k];
+  // Flechas según cómo se ven las barras: ◀ ▶ en vertical, ▲ ▼ en horizontal.
+  const fl = horizontal ? ['▲', '▼'] : ['◀', '▶'];
+  for (const [a, b2] of [['c-menos', 'c-mas'], ['t-menos', 't-mas']]) { $(a).textContent = fl[0]; $(b2).textContent = fl[1]; }
 }
 addEventListener('resize', ajustar);
 if (window.ResizeObserver) new ResizeObserver(() => ajustar()).observe($('pantalla'));
 const aPantalla = (x, y) => ({ x: M[0] * x + M[2] * y + M[4], y: M[1] * x + M[3] * y + M[5] });
 // Desplazamiento en pantalla (px) → desplazamiento a lo largo de las barras (x de la mesa).
 function deltaX(dx, dy) { const det = M[0] * M[3] - M[1] * M[2]; return (M[3] * dx - M[2] * dy) / det; }
+// +1 si «más» en pantalla (derecha en vertical, abajo en horizontal) es +x de la mesa; −1 si la vista está volteada.
+const signoPantalla = () => Math.sign(horizontal ? M[1] : M[0]) || 1;
+// Ángulo del tiro: ⟳ gira en el sentido del reloj en tu pantalla (tu equipo siempre ataca hacia arriba/derecha).
+const signoGiro = () => (voltear ? -1 : 1);
 
 /* ---------- Dibujo ---------- */
 function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 function dibujarMesa() {
   const A = T.ANCHO, L = T.LARGO;
-  // Marco de madera
   rr(-MARCO, -CAB, A + 2 * MARCO, L + 2 * CAB, 14); g.fillStyle = '#7c4a21'; g.fill();
   rr(-MARCO + 4, -CAB + 4, A + 2 * MARCO - 8, L + 2 * CAB - 8, 10); g.fillStyle = '#9a5b2a'; g.fill();
-  // Porterías (red)
   for (const lado of [0, 1]) {
     const y = lado ? L : -CAB + 6;
     g.fillStyle = '#111827'; g.fillRect(T.PX0, y, T.PX1 - T.PX0, CAB - 6);
     g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1;
     for (let x = T.PX0 + 6; x < T.PX1; x += 8) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + CAB - 6); g.stroke(); }
   }
-  // Pasto con franjas
   g.fillStyle = '#15803d'; g.fillRect(0, 0, A, L);
   g.fillStyle = '#16a34a';
   for (let i = 0; i < 8; i += 2) g.fillRect(0, i * L / 8, A, L / 8);
-  // Líneas
   g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 2;
   g.strokeRect(1, 1, A - 2, L - 2);
   g.beginPath(); g.moveTo(0, L / 2); g.lineTo(A, L / 2); g.stroke();
@@ -168,34 +244,48 @@ function dibujarMesa() {
     const y0 = lado ? L - 56 : 0;
     g.strokeRect(A / 2 - 70, y0, 140, 56); g.strokeRect(A / 2 - 36, lado ? L - 22 : 0, 72, 22);
   }
-  // Postes
   g.fillStyle = '#f8fafc';
   for (const y of [0, L]) for (const x of [T.PX0, T.PX1]) { g.beginPath(); g.arc(x, y, 3.5, 0, Math.PI * 2); g.fill(); }
 }
+// Dueño (asiento) de la barra i en sala, o -1.
+const duenoDe = i => (reparto ? T.asientoDe(reparto, i) : -1);
 function dibujarBarras(s, opciones) {
   const A = T.ANCHO;
   T.BARRAS.forEach((b, i) => {
-    const resaltada = opciones.activa === i;
-    // Barra de metal
+    const resaltada = opciones.activa === i, dueno = duenoDe(i), mia = sala && dueno === sala.idx;
     g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(-MARCO, b.y - 1, A + 2 * MARCO, 5);
     const gr = g.createLinearGradient(0, b.y - 2.5, 0, b.y + 2.5); gr.addColorStop(0, '#f1f5f9'); gr.addColorStop(0.5, '#94a3b8'); gr.addColorStop(1, '#475569');
     g.fillStyle = gr; g.fillRect(-MARCO, b.y - 2.5, A + 2 * MARCO, 5);
     if (resaltada) { g.fillStyle = 'rgba(250,204,21,.35)'; g.fillRect(-MARCO, b.y - 6, A + 2 * MARCO, 12); }
-    // Mango del lado de su equipo (izquierda equipo 0, derecha equipo 1)
-    g.fillStyle = COLOR_OSC[b.eq]; const mx = b.eq === 0 ? -MARCO - 2 : A + MARCO - 12; rr(mx, b.y - 5, 14, 10, 4); g.fill();
-    // Jugadores
+    // Mango del lado de su equipo (izquierda equipo 0, derecha equipo 1); en sala, del color de quien la maneja.
+    const mx = b.eq === 0 ? -MARCO - 2 : A + MARCO - 12;
+    g.fillStyle = dueno >= 0 ? colores[dueno] : COLOR_OSC[b.eq]; rr(mx, b.y - 6, 14, 12, 4); g.fill();
+    if (mia) { g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke(); }
     const giro = s.patada[i] > 0 ? Math.sin((1 - s.patada[i] / T.PATADA) * Math.PI) : 0;
     b.h.forEach((_, k) => {
       const x = A / 2 + b.h[k] + s.s[i], d = T.dir(b.eq);
       g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x + 2, b.y + 3, 10, 6, 0, 0, Math.PI * 2); g.fill();
-      if (giro > 0.05) { // pierna que gira hacia el frente
-        g.fillStyle = '#1f2937'; g.beginPath(); g.ellipse(x, b.y + d * (5 + giro * 9), 3.5, 3 + giro * 5, 0, 0, Math.PI * 2); g.fill();
-      }
+      if (giro > 0.05) { g.fillStyle = '#1f2937'; g.beginPath(); g.ellipse(x, b.y + d * (5 + giro * 9), 3.5, 3 + giro * 5, 0, 0, Math.PI * 2); g.fill(); }
       g.fillStyle = COLOR[b.eq]; g.beginPath(); g.ellipse(x, b.y, 9.5, 6, 0, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = resaltada ? '#facc15' : 'rgba(0,0,0,.35)'; g.lineWidth = resaltada ? 2 : 1; g.stroke();
+      g.strokeStyle = resaltada ? '#facc15' : dueno >= 0 ? colores[dueno] : 'rgba(0,0,0,.35)'; g.lineWidth = resaltada || mia ? 2.5 : dueno >= 0 ? 1.6 : 1; g.stroke();
       g.fillStyle = '#fde2c4'; g.beginPath(); g.arc(x, b.y, 4.2, 0, Math.PI * 2); g.fill();
       g.fillStyle = '#3b2412'; g.beginPath(); g.arc(x, b.y - d * 0.8, 3.3, Math.PI * (d > 0 ? 1 : 0), Math.PI * (d > 0 ? 2 : 1)); g.fill();
     });
+  });
+}
+// Nombre de quien maneja cada barra (sala), junto al mango y siempre derecho.
+function dibujarNombres() {
+  if (!reparto || !sala || sala.orden.length <= 2) return; // en 1 vs 1 basta el marcador
+  g.font = '800 11px system-ui,sans-serif'; g.textBaseline = 'middle';
+  T.BARRAS.forEach((b, i) => {
+    const dueno = duenoDe(i); if (dueno < 0) return;
+    const p = aPantalla(b.eq === 0 ? -MARCO + 4 : T.ANCHO + MARCO - 4, b.y);
+    const txt = (dueno === sala.idx ? 'Tú' : String((sala.orden[dueno] || {}).nombre || '').slice(0, 9));
+    const w = g.measureText(txt).width + 10, izq = p.x < W / 2;
+    const x = F.acotar(izq ? p.x : p.x - w, 2, W - w - 2), y = F.acotar(p.y - (horizontal ? 18 : 12), 44, H - 10);
+    g.fillStyle = 'rgba(0,0,0,.6)'; rr(x, y - 8, w, 16, 7); g.fill();
+    g.strokeStyle = colores[dueno]; g.lineWidth = 1.5; g.stroke();
+    g.fillStyle = colores[dueno]; g.textAlign = 'left'; g.fillText(txt, x + 5, y + 0.5);
   });
 }
 function dibujarPelota(p) {
@@ -205,7 +295,6 @@ function dibujarPelota(p) {
   g.fillStyle = '#111827'; g.beginPath(); g.arc(p.x, p.y, 1.8, 0, Math.PI * 2); g.fill();
   for (let a = 0; a < 5; a++) { const an = a * 1.2566; g.beginPath(); g.arc(p.x + Math.cos(an) * 4.2, p.y + Math.sin(an) * 4.2, 1.1, 0, Math.PI * 2); g.fill(); }
 }
-// Línea de mira del tiro de sala.
 function dibujarMira(desde, eq, angulo, fuerza) {
   const [sn, cs] = F.senCos(angulo * 10), len = 40 + fuerza * 1.6, d = T.dir(eq);
   g.save(); g.setLineDash([6, 6]); g.strokeStyle = '#facc15'; g.lineWidth = 3;
@@ -222,35 +311,69 @@ function dibujar() {
   dibujarBarras(vista.st, { activa: vista.activa });
   dibujarPelota(vista.st.pelota);
   if (vista.mira) dibujarMira(vista.mira.desde, vista.mira.eq, vista.mira.angulo, vista.mira.fuerza);
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  dibujarNombres();
+}
+
+/* ---------- Controles elegidos ---------- */
+const AYUDA = {
+  botones: '🔘 Mantén ◀ ▶ (o ▲ ▼ con el celular de lado) para correr tu barra resaltada y toca <b>⚽ PATEA</b>. <b>🔄 BARRA</b> elige otra barra; si no, cambia sola según la pelota.',
+  deslizar: '👆 Desliza en la <b>mitad izquierda</b> para correr tu barra y toca la <b>mitad derecha</b> para patear (o el botón ⚽ PATEA con 🔘 Botones). <b>🔄 BARRA</b> elige otra barra.',
+  mando: '🎮 Cruceta: correr tu barra · <b>A</b>: patea (⚽ PATEA) · <b>B</b>, <b>L</b> y <b>R</b>: cambiar de barra · <b>START</b>: pausa.',
+};
+function elegirControl(c) {
+  if (!CONTROLES.includes(c)) return;
+  control = c; U.guardarLS('futbolito_control', c); acciones.soltarTodo(); pintarControles();
+}
+function pintarControles() {
+  const b = document.body;
+  for (const c of CONTROLES) b.classList.toggle('ctl-' + c, control === c);
+  document.querySelectorAll('[data-control]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.control === control)));
+  mando.mostrar(control === 'mando');
+  $('ayuda-menu').innerHTML = AYUDA[control] + (U.TACTIL ? '' : '<br>⌨️ ↑ ↓ (o ← →) mueven · Espacio patea · Tab, Q y E cambian de barra · P pausa.');
+  requestAnimationFrame(ajustar);
+}
+function ponerModo(m) {
+  modo = m;
+  const jugando = m === 'juego' || m === 'pausa', enSala = m === 'sala';
+  document.body.classList.toggle('jugando', jugando); document.body.classList.toggle('en-sala', enSala);
+  mando.activar(jugando || enSala);
+  requestAnimationFrame(ajustar);
 }
 
 /* ---------- Individual (tiempo real) ---------- */
 function abrirMenu() {
-  modo = 'menu'; $('hud').classList.add('hide'); $('teclas').classList.add('hide');
-  $('ayuda-menu').innerHTML = U.TACTIL ? '👆 <b>Desliza</b> el dedo a los lados en tu mitad para mover tu barra (la resaltada) y <b>toca</b> para patear. La barra cambia sola según dónde va la pelota.' : '⌨️ <b>← →</b> (o A D) mueven tu barra resaltada y <b>Espacio</b> patea. La barra cambia sola según dónde va la pelota.';
-  mostrar('ov-menu');
+  ponerModo('menu'); $('hud').classList.add('hide'); $('teclas').classList.add('hide');
+  pintarControles(); mostrar('ov-menu');
 }
 function nuevaPartida(n) {
-  nivel = n; st = T.nuevo(); mem = {}; objetivo = st.s.slice(); activa = 4; golHasta = 0; t0 = performance.now();
+  nivel = n; st = T.nuevo(); mem = {}; objetivo = st.s.slice(); activa = 4; golHasta = 0; manualHasta = 0; t0 = performance.now();
   T.saque(st, Math.random() < 0.5 ? 0 : 1, (Math.random() * 2 - 1) * 20);
   $('n0').textContent = 'Tú'; $('n1').textContent = 'Bot ' + NIVEL_TXT[n];
   pintarMarcador(); ocultar(); $('hud').classList.remove('hide'); if (!U.TACTIL) $('teclas').classList.remove('hide');
-  modo = 'juego'; U.avisar('¡A jugar! Primero a 5', 1200);
+  ponerModo('juego'); U.avisar('¡A jugar! Primero a 5', 1200);
 }
 function pintarMarcador() { const m = vistaMarcador(); $('g0').textContent = m[0]; $('g1').textContent = m[1]; }
+function nombreBarra() {
+  const txt = PUESTO[T.BARRAS[activa].puesto] + (performance.now() < manualHasta ? ' · tú' : ' · auto');
+  if ($('c-barra-n').textContent !== txt) $('c-barra-n').textContent = txt;
+}
 function pasoVivo() {
   if (golHasta) { if (performance.now() < golHasta) return; golHasta = 0; T.saque(st, st.ultimoGol === 0 ? 1 : 0, (Math.random() * 2 - 1) * 20); }
-  const nueva = T.barraActiva(st, 0);
-  if (nueva !== activa && performance.now() > manualHasta) { activa = nueva; objetivo[activa] = st.s[activa]; }
-  objetivo[activa] += 380 * PASO * acciones.direccion('barraMenos', 'barraMas') * signoTecla;
+  if (performance.now() > manualHasta) {
+    const nueva = T.barraActivaCon(st, 0, activa);
+    if (nueva !== activa) { activa = nueva; objetivo[activa] = st.s[activa]; }
+  }
+  objetivo[activa] += VEL_BARRA * PASO * acciones.direccion('barraMenos', 'barraMas') * signoPantalla();
   const b = T.BARRAS[activa]; objetivo[activa] = F.acotar(objetivo[activa], -b.rango, b.rango);
-  const mando = { obj: st.s.slice(), vmax: T.BARRAS.map(() => 0), fantasma: T.BARRAS.map(() => false) };
-  T.BARRAS.forEach((x, i) => { if (x.eq === 0) { mando.obj[i] = i === activa ? objetivo[i] : T.seguir(st, i, st.pelota.x).s; mando.vmax[i] = i === activa ? 900 : 170; } });
-  T.iaBot(st, 1, nivel, mando, mem, rnd, PASO);
+  const mandoV = { obj: st.s.slice(), vmax: T.BARRAS.map(() => 0), fantasma: T.BARRAS.map(() => false) };
+  T.BARRAS.forEach((x, i) => { if (x.eq === 0) { mandoV.obj[i] = i === activa ? objetivo[i] : T.seguir(st, i, st.pelota.x).s; mandoV.vmax[i] = i === activa ? 900 : 170; } });
+  T.iaBot(st, 1, nivel, mandoV, mem, rnd, PASO);
   for (let k = 0; k < T.SUB; k++) {
-    const gol = T.paso(st, T.DT, mando);
+    const gol = T.paso(st, T.DT, mandoV);
     if (gol !== null) { anotar(gol); break; }
   }
+  nombreBarra();
 }
 function anotar(eq) {
   st.marcador[eq]++; st.ultimoGol = eq; pintarMarcador();
@@ -261,7 +384,7 @@ function anotar(eq) {
   golHasta = performance.now() + 1200;
 }
 function terminarIndividual() {
-  modo = 'resultado';
+  ponerModo('resultado');
   const gano = st.marcador[0] > st.marcador[1];
   st.fin = { gana: gano ? 0 : 1, motivo: 'goles' };
   const puntos = T.puntos(st, 0, nivel), seg = Math.round((performance.now() - t0) / 1000);
@@ -276,16 +399,30 @@ function patearActiva() {
   if (modo !== 'juego' || golHasta) return;
   if (T.patear(st, activa, 470)) sonar('patada');
 }
+// Cambio manual de barra (paso +1 siguiente, −1 anterior): manda MANUAL_MS.
+function cambiarBarra(paso = 1) {
+  if (modo !== 'juego') return;
+  const mias = [2, 4, 6, 7];
+  activa = mias[(mias.indexOf(activa) + paso + mias.length) % mias.length]; objetivo[activa] = st.s[activa];
+  manualHasta = performance.now() + MANUAL_MS; nombreBarra();
+}
 
-/* ---------- Sala (por tiros) ---------- */
+/* ---------- Sala (por tiros; 1 vs 1 o por equipos) ---------- */
+const nombreAsiento = i => (sala.orden[i] || {}).nombre || '—';
+const nombreEquipo = eq => sala.orden.map((p, i) => ({ p, i })).filter(x => reparto[x.i].eq === eq).map(x => (x.p.bot ? '🤖' : '') + (x.i === sala.idx ? 'Tú' : x.p.nombre)).join(' + ');
 function empezarSala(d) {
-  sala = U.crearSala({ motor: T, turnoMs: 30000, botMs: 1500, sub: T.SUB });
+  const orden = (d.orden || []).map(p => ({ id: p.id, bot: !!p.bot, ...(p.equipo === 0 || p.equipo === 1 ? { equipo: p.equipo } : {}) }));
+  reparto = T.repartir(orden);
+  const motor = T.motorSala(reparto);
+  sala = U.crearSala({ motor, turnoMs: 30000, botMs: 1500, sub: T.SUB });
   sala.iniciar(d);
-  voltear = sala.idx === 1; ajustar();
-  const nom = i => (sala.orden[i] || {}).nombre || '—';
-  $('n0').textContent = nom(0) + (sala.idx === 0 ? ' (tú)' : ''); $('n1').textContent = nom(1) + (sala.idx === 1 ? ' (tú)' : '');
+  miEq = sala.idx >= 0 ? reparto[sala.idx].eq : 0;
+  const porEquipo = [0, 0];
+  colores = reparto.map(l => COLOR_ASIENTO[l.eq][porEquipo[l.eq]++ % 2]);
+  voltear = miEq === 1; ajustar();
+  $('n0').textContent = nombreEquipo(0); $('n1').textContent = nombreEquipo(1);
   ocultar(); $('hud').classList.remove('hide'); $('b-pausa').classList.add('hide'); $('estado').classList.remove('hide');
-  modo = 'sala'; posSala = null;
+  ponerModo('sala'); posSala = null; anguloSala = 0; pintarAngulo();
 }
 function pasoSala() {
   const ahora = sala.ahora();
@@ -296,19 +433,24 @@ function pasoSala() {
   if (h) {
     posSala = null;
     const m = sala.estado.marcador;
-    if (m[0] !== antes[0] || m[1] !== antes[1]) { const eq = m[0] !== antes[0] ? 0 : 1; sonar('gol', eq === sala.idx); U.avisar(eq === sala.idx ? '⚽ ¡GOOOL!' : '⚽ Gol de ' + ((sala.orden[eq] || {}).nombre || 'tu rival'), 1300); }
+    if (m[0] !== antes[0] || m[1] !== antes[1]) {
+      const eq = m[0] !== antes[0] ? 0 : 1;
+      sonar('gol', eq === miEq);
+      U.avisar(eq === miEq ? '⚽ ¡GOOOL!' : '⚽ Gol del equipo ' + EQUIPO_TXT[eq], 1300);
+    }
   }
   pintarMarcador();
   const l = sala.linea, panel = $('panel');
   const mio = sala.miTurno();
   panel.classList.toggle('hide', !mio);
-  if (mio && posSala === null) posSala = sala.estado.s[sala.estado.posesion.barra];
+  if (mio && posSala === null) { posSala = sala.estado.s[sala.estado.posesion.barra]; anguloSala = 0; pintarAngulo(); }
   let txt = '';
-  if (sala.anim) txt = sala.anim.h.origen === 'bot' ? '🤖 Tira el bot…' : sala.anim.h.origen === 'auto' ? '⏰ Tiro automático' : '⚽ Tiro de ' + ((sala.orden[sala.anim.h.idx] || {}).nombre || '');
+  const puesto = () => sala.estado.posesion ? PUESTO[T.BARRAS[sala.estado.posesion.barra].puesto].toLowerCase() : '';
+  if (sala.anim) txt = sala.anim.h.origen === 'bot' ? '🤖 Tira ' + nombreAsiento(sala.anim.h.idx) + '…' : sala.anim.h.origen === 'auto' ? '⏰ Tiro automático' : '⚽ Tiro de ' + nombreAsiento(sala.anim.h.idx);
   else if (l && l.fin) txt = '🏁 ¡Fin del partido!';
   else if (l && l.espera) {
     const seg = l.espera.tipo === 'persona' ? Math.max(0, Math.ceil((l.espera.limite - ahora) / 1000)) : 0;
-    txt = mio ? '👉 Tu tiro · ⏱ ' + seg + ' s' : l.espera.tipo === 'bot' ? '🤖 El bot está pensando…' : sala.propia ? '📨 Enviando…' : '⏳ Tira ' + ((sala.orden[l.espera.idx] || {}).nombre || 'tu rival') + ' · ⏱ ' + seg + ' s';
+    txt = mio ? '👉 Te toca · ' + puesto() + ' · ⏱ ' + seg + ' s' : l.espera.tipo === 'bot' ? '🤖 ' + nombreAsiento(l.espera.idx) + ' está pensando…' : sala.propia ? '📨 Enviando…' : '⏳ Tira ' + nombreAsiento(l.espera.idx) + ' · ' + puesto() + ' · ⏱ ' + seg + ' s';
   }
   if ($('estado').textContent !== txt) $('estado').textContent = txt;
   if (sala.finDesde && performance.now() - sala.finDesde > 1500 && !sala.finEnviado) terminarSala();
@@ -316,17 +458,27 @@ function pasoSala() {
 function terminarSala() {
   sala.finEnviado = true;
   const s = sala.estado, fin = s.fin;
-  const puntos = [0, 1].map(i => T.puntos(s, i, 'sala'));
-  const quien = (sala.orden[fin.gana] || {}).nombre || '';
-  const titulo = fin.motivo === 'rendicion' ? '🏳️ ' + quien + ' gana por rendición' : '⚽ ¡Ganó ' + quien + ' ' + Math.max(...s.marcador) + '–' + Math.min(...s.marcador) + '!';
-  U.enviar({ tipo: 'fin', gana: fin.gana, puntos, aciertos: s.marcador.slice(), total: T.META, titulo });
+  const puntos = sala.orden.map((_, i) => T.puntosAsiento(s, reparto, i));
+  const aciertos = sala.orden.map((_, i) => s.marcador[reparto[i].eq]);
+  const equipos = sala.orden.length > 2;
+  const quien = equipos ? 'el equipo ' + EQUIPO_TXT[fin.gana] + ' (' + sala.orden.filter((_, i) => reparto[i].eq === fin.gana).map(p => p.nombre).join(' y ') + ')' : nombreAsiento(reparto.findIndex(x => x.eq === fin.gana));
+  const titulo = fin.motivo === 'rendicion' ? '🏳️ ' + (equipos ? 'Gana ' : '') + quien + (equipos ? '' : ' gana') + ' por rendición' : '⚽ ¡Ganó ' + quien + ' ' + Math.max(...s.marcador) + '–' + Math.min(...s.marcador) + '!';
+  U.enviar({ tipo: 'fin', gana: fin.gana, puntos, aciertos, total: T.META, titulo });
   $('sala-titulo').textContent = titulo; $('sala-txt').textContent = 'Esperando el podio…';
   $('panel').classList.add('hide'); mostrar('ov-sala');
-  if (fin.gana === sala.idx) U.confeti();
+  if (fin.gana === miEq) U.confeti();
+}
+function pintarAngulo() { $('v-angulo').textContent = (anguloSala > 0 ? '+' : '') + anguloSala + '°'; }
+function girarSala(paso) {
+  if (!sala || !sala.miTurno()) return;
+  anguloSala = F.acotar(anguloSala + paso * signoGiro(), -60, 60); pintarAngulo();
+}
+function fuerzaSala(paso) {
+  const r = $('r-fuerza'); r.value = F.acotar(Number(r.value) + paso, 10, 100); $('v-fuerza').textContent = r.value;
 }
 function tirarSala() {
   if (!sala || !sala.miTurno()) return;
-  const tiro = { accion: 'tiro', pos: Math.round(posSala), angulo: Number($('r-angulo').value), fuerza: Number($('r-fuerza').value) };
+  const tiro = { accion: 'tiro', pos: Math.round(posSala), angulo: anguloSala, fuerza: Number($('r-fuerza').value), barra: sala.estado.posesion.barra };
   if (sala.tirar(tiro)) { $('panel').classList.add('hide'); sonar('patada'); }
 }
 
@@ -339,7 +491,7 @@ function vistaActual() {
     if (!e.posesion) return { st: e, activa: -1 };
     const vista = F.clonar(e), b = e.posesion.barra;
     if (sala.miTurno() && posSala !== null) { vista.s[b] = F.acotar(posSala, -T.BARRAS[b].rango, T.BARRAS[b].rango); Object.assign(vista.pelota, T.pelotaCon(e, posSala)); }
-    const mira = sala.miTurno() ? { desde: vista.pelota, eq: T.BARRAS[b].eq, angulo: Number($('r-angulo').value), fuerza: Number($('r-fuerza').value) } : null;
+    const mira = sala.miTurno() ? { desde: vista.pelota, eq: T.BARRAS[b].eq, angulo: anguloSala, fuerza: Number($('r-fuerza').value) } : null;
     return { st: vista, activa: b, mira };
   }
   if (st) return { st, activa: modo === 'juego' ? activa : -1 };
@@ -347,57 +499,90 @@ function vistaActual() {
 }
 
 /* ---------- Entrada ---------- */
-let signoTecla = 1; // ← → según la orientación de la vista
+// Toques sobre la mesa: deslizar corre la barra (con 👆 Deslizar, solo en la mitad izquierda; la derecha patea al
+// bajar el dedo). En sala, deslizar corre tu barra con la pelota antes de tirar.
 const dedos = {};
 U.tactil(cv, {
-  inicio: (id, x, y) => { dedos[id] = { x, y, x0: x, y0: y, t: performance.now(), mov: 0 }; },
+  inicio: (id, x, y) => {
+    const r = cv.getBoundingClientRect(), izquierda = x - r.left < r.width / 2;
+    if (modo === 'juego' && control === 'deslizar' && !izquierda) { dedos[id] = { patea: true }; patearActiva(); return; }
+    dedos[id] = { x, y };
+  },
   mover: (id, x, y) => {
-    const d = dedos[id]; if (!d) return;
-    const dx = deltaX(x - d.x, y - d.y);
-    d.mov += Math.abs(x - d.x) + Math.abs(y - d.y); d.x = x; d.y = y;
+    const d = dedos[id]; if (!d || d.patea) return;
+    const dx = deltaX(x - d.x, y - d.y); d.x = x; d.y = y;
     if (modo === 'juego') objetivo[activa] = F.acotar(objetivo[activa] + dx, -T.BARRAS[activa].rango, T.BARRAS[activa].rango);
     else if (modo === 'sala' && sala.miTurno() && posSala !== null) { const b = T.BARRAS[sala.estado.posesion.barra]; posSala = F.acotar(posSala + dx, -b.rango, b.rango); }
   },
-  fin: (id, x, y, cancel) => {
-    const d = dedos[id]; delete dedos[id];
-    if (!d || cancel) return;
-    if (d.mov < 12 && performance.now() - d.t < 300 && modo === 'juego') patearActiva();
-  },
+  fin: id => { delete dedos[id]; },
 });
-/* Acciones (capa para teclado y para un mando): mover la barra a lo largo de su eje (barraMenos/barraMas o el eje
-   analógico), cambiar de barra, patear (en sala: tirar) y pausa. ← → en vertical; ↑ ↓ en horizontal, que es como se
-   ven las barras en cada vista. */
-function cambiarBarra() {
-  if (modo !== 'juego') return;
-  const mias = T.BARRAS.map((b, i) => i).filter(i => T.BARRAS[i].eq === 0);
-  activa = mias[(mias.indexOf(activa) + 1) % mias.length]; objetivo[activa] = st.s[activa];
-  manualHasta = performance.now() + 1500;
-}
+/* Acciones (teclado, botones, mando y adaptadores externos): barraMenos/barraMas mueven la barra en la dirección de la
+   pantalla (← o ↑ = menos), cambiarBarra/barraAnterior, patear (en sala, tirar) y pausa; en sala también
+   anguloMenos/anguloMas y fuerzaMenos/fuerzaMas. */
+function alternarPausa() { if (modo === 'juego') pausar(); else if (modo === 'pausa') seguir(); }
 const acciones = U.crearAcciones({
-  barraMenos: {}, barraMas: {},
-  cambiarBarra: { pulso: cambiarBarra },
+  barraMenos: {}, barraMas: {}, anguloMenos: {}, anguloMas: {}, fuerzaMenos: {}, fuerzaMas: {},
+  cambiarBarra: { pulso: () => cambiarBarra(1) },
+  barraAnterior: { pulso: () => cambiarBarra(-1) },
   patear: { pulso: () => { if (modo === 'juego') patearActiva(); else if (modo === 'sala') tirarSala(); } },
-  pausa: { pulso: () => { if (modo === 'juego') pausar(); else if (modo === 'pausa') seguir(); } },
+  pausa: { pulso: alternarPausa },
 }, code => {
-  signoTecla = Math.sign(horizontal ? (M[1] || 1) : (M[0] || 1));
-  const vertical = { ArrowUp: 'barraMenos', KeyW: 'barraMenos', ArrowDown: 'barraMas', KeyS: 'barraMas' }[code];
-  const lateral = { ArrowLeft: 'barraMenos', KeyA: 'barraMenos', ArrowRight: 'barraMas', KeyD: 'barraMas' }[code];
-  if (vertical || lateral) return horizontal ? vertical : lateral;
-  return { Space: 'patear', KeyJ: 'patear', KeyK: 'cambiarBarra', Escape: 'pausa', KeyP: 'pausa', Enter: 'pausa' }[code];
+  if (modo !== 'juego' && modo !== 'pausa' && modo !== 'sala') return null; // en los menús, el teclado es del navegador
+  const mover = { ArrowUp: 'barraMenos', KeyW: 'barraMenos', ArrowLeft: 'barraMenos', KeyA: 'barraMenos', ArrowDown: 'barraMas', KeyS: 'barraMas', ArrowRight: 'barraMas', KeyD: 'barraMas' }[code];
+  if (mover) return mover;
+  if (modo === 'sala') return { Space: 'patear', KeyJ: 'patear', KeyQ: 'anguloMenos', KeyE: 'anguloMas', KeyR: 'fuerzaMas', KeyF: 'fuerzaMenos' }[code];
+  if (modo === 'juego' && code === 'Tab') return 'cambiarBarra';
+  return { Space: 'patear', KeyJ: 'patear', KeyE: 'cambiarBarra', KeyK: 'cambiarBarra', KeyQ: 'barraAnterior', Escape: 'pausa', KeyP: 'pausa', Enter: 'pausa' }[code];
 });
-window.accionesJuego = acciones; // para conectar un mando (adaptador) sin tocar el juego
-// En sala, las acciones de la barra corren la barra con la pelota antes de tirar.
+window.accionesJuego = acciones; // para conectar otro adaptador sin tocar el juego
+// Botones grandes: flechas sostenidas, PATEA y BARRA al bajar el dedo.
+U.boton($('c-menos'), on => acciones.presionar('barraMenos', on));
+U.boton($('c-mas'), on => acciones.presionar('barraMas', on));
+U.boton($('c-patea'), on => acciones.presionar('patear', on));
+U.boton($('c-barra'), on => { if (on) cambiarBarra(1); });
+// Panel de tiro (sala): correr la barra sostenido, ángulo y fuerza.
+U.boton($('t-menos'), on => acciones.presionar('barraMenos', on));
+U.boton($('t-mas'), on => acciones.presionar('barraMas', on));
+U.sostener($('t-izq'), () => girarSala(-1));
+U.sostener($('t-der'), () => girarSala(1));
+// 🎮 Mando clásico (juegos/mando.js, como Karts): la cruceta (o la palanca de un control físico) se proyecta sobre el
+// eje de la barra en pantalla; A patea, B/R siguiente barra, L anterior, START pausa; en sala, L/R ángulo y X/Y fuerza.
+// No lee teclas: el teclado del juego no cambia. Activo en el juego, la pausa y la sala con cualquier control elegido.
+const mando = Mando.crear({
+  acciones: { mover: ['izq', 'der', 'arriba', 'abajo'], patear: 'A', barra: 'B', anterior: 'L', siguiente: 'R', fuerzaMas: 'X', fuerzaMenos: 'Y', pausa: 'START' },
+  contenedor: $('juego'),
+  teclas: Object.fromEntries(Object.keys(Mando.TECLAS).map(k => [k, null])),
+  nombres: { patear: 'patea', barra: 'barra', fuerzaMas: 'fuerza+', fuerzaMenos: 'fuerza−', pausa: 'pausa' },
+});
+mando.activar(false);
+mando.al('patear', () => acciones.presionar('patear', true)); mando.alSoltar('patear', () => acciones.presionar('patear', false));
+mando.al('barra', () => cambiarBarra(1));
+mando.al('siguiente', () => cambiarBarra(1));
+mando.al('anterior', () => cambiarBarra(-1));
+mando.al('pausa', alternarPausa);
+const ejeMando = U.ejeDeMando(acciones);
+function leerMando() {
+  const e = mando.eje(), largo = horizontal ? e.y : e.x, corto = horizontal ? e.x : e.y;
+  ejeMando(Math.abs(largo) >= 0.3 ? largo : Math.abs(corto) >= 0.3 ? corto : 0);
+}
+// En sala, cada 1/30 s: correr la barra, girar y cambiar la fuerza con lo que esté sostenido.
+let pasoAng = 0;
 setInterval(() => {
   if (modo !== 'sala' || !sala || !sala.miTurno() || posSala === null) return;
-  const d = acciones.direccion('barraMenos', 'barraMas'); if (!d) return;
-  const b = T.BARRAS[sala.estado.posesion.barra]; posSala = F.acotar(posSala + d * 4 * signoTecla, -b.rango, b.rango);
+  const d = acciones.direccion('barraMenos', 'barraMas');
+  if (d) { const b = T.BARRAS[sala.estado.posesion.barra]; posSala = F.acotar(posSala + d * 4 * signoPantalla(), -b.rango, b.rango); }
+  const a = (acciones.presionado('anguloMas') || mando.presionado('siguiente') ? 1 : 0) - (acciones.presionado('anguloMenos') || mando.presionado('anterior') ? 1 : 0);
+  if (a && ++pasoAng % 2) girarSala(a);
+  const f = (acciones.presionado('fuerzaMas') || mando.presionado('fuerzaMas') ? 1 : 0) - (acciones.presionado('fuerzaMenos') || mando.presionado('fuerzaMenos') ? 1 : 0);
+  if (f) fuerzaSala(f);
 }, 33);
-$('r-angulo').addEventListener('input', () => { $('v-angulo').textContent = $('r-angulo').value + '°'; });
 $('r-fuerza').addEventListener('input', () => { $('v-fuerza').textContent = $('r-fuerza').value; });
 $('b-tirar').onclick = tirarSala;
-$('b-rendir').onclick = () => { if (sala && sala.miTurno() && confirm('¿Rendirte? Tu rival gana el partido.')) sala.tirar({ accion: 'rendirse' }); };
+$('b-rendir').onclick = () => { if (sala && sala.miTurno() && confirm('¿Rendirte? Gana el otro equipo.')) sala.tirar({ accion: 'rendirse' }); };
+$('b-control').onclick = e => { e.currentTarget.blur(); elegirControl(CONTROLES[(CONTROLES.indexOf(control) + 1) % CONTROLES.length]); U.avisar({ botones: '🔘 Botones', deslizar: '👆 Deslizar', mando: '🎮 Mando clásico' }[control], 900); };
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-nivel],[data-ir]'); if (!b) return;
+  const b = e.target.closest('[data-nivel],[data-ir],[data-control]'); if (!b) return;
+  if (b.dataset.control) return elegirControl(b.dataset.control);
   if (b.dataset.nivel) return nuevaPartida(b.dataset.nivel);
   if (b.dataset.ir === 'otra') return nuevaPartida(nivel);
   if (b.dataset.ir === 'menu') return abrirMenu();
@@ -405,8 +590,8 @@ document.addEventListener('click', e => {
 });
 U.botonSonido($('b-sonido'));
 $('b-pausa').onclick = e => { e.currentTarget.blur(); pausar(); };
-function pausar() { if (modo !== 'juego') return; modo = 'pausa'; mostrar('ov-pausa'); }
-function seguir() { if (modo !== 'pausa') return; ocultar(); modo = 'juego'; }
+function pausar() { if (modo !== 'juego') return; ponerModo('pausa'); acciones.soltarTodo(); mostrar('ov-pausa'); }
+function seguir() { if (modo !== 'pausa') return; ocultar(); ponerModo('juego'); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pausar(); });
 
 /* ---------- Pantallas y sonido ---------- */
@@ -434,6 +619,7 @@ function cuadro(ahora) {
   let dt = (ahora - ultimo) / 1000; ultimo = ahora;
   if (dt > 0.25) dt = 0.25;
   cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
+  if (modo === 'juego' || modo === 'sala') leerMando();
   if ((modo === 'juego' || modo === 'sala') && !(modo === 'juego' && document.hidden)) {
     acum += dt; let n = 0;
     while (acum >= PASO && n < 6) { if (modo === 'juego') pasoVivo(); else pasoSala(); acum -= PASO; n++; }
@@ -441,27 +627,38 @@ function cuadro(ahora) {
   } else acum = 0;
   dibujar();
 }
+pintarControles();
 ajustar();
 requestAnimationFrame(t => { ultimo = t; cuadro(t); });
 if (U.EMBED) U.enviar({ tipo: 'listo' }); else abrirMenu();
 if (U.PRUEBA) {
   // Ganchos solo para pruebas E2E (?prueba=1).
   window.__futbolito = {
-    estado: () => ({
-      modo, nivel, horizontal, tactil: U.TACTIL, fps, w: W, h: H,
-      marcador: vistaMarcador().slice(), activa, puesto: T.BARRAS[activa] && T.BARRAS[activa].puesto, s: st ? st.s.slice() : null, objetivo: objetivo.slice(),
-      pelota: st ? Object.assign({}, st.pelota) : null, patada: st ? st.patada.slice() : null,
-      sala: !!sala, miTurno: !!(sala && sala.miTurno()), paso: sala && sala.linea ? sala.linea.paso : 0, fin: sala && sala.linea ? sala.linea.fin : null,
-      animando: !!(sala && sala.anim), posSala, yo: sala ? sala.idx : 0, mostrados: sala ? sala.mostrado.length : 0, finEnviado: !!(sala && sala.finEnviado),
-    }),
+    estado: () => {
+      const l = sala && sala.linea, pos = sala && sala.estado.posesion, turno = l && l.espera ? l.espera.idx : -1;
+      return {
+        modo, nivel, horizontal, tactil: U.TACTIL, fps, w: W, h: H, control,
+        marcador: vistaMarcador().slice(), activa, puesto: T.BARRAS[activa] && T.BARRAS[activa].puesto, s: st ? st.s.slice() : null, objetivo: objetivo.slice(),
+        pelota: st ? Object.assign({}, st.pelota) : null, patada: st ? st.patada.slice() : null,
+        sala: !!sala, miTurno: !!(sala && sala.miTurno()), paso: l ? l.paso : 0, fin: l ? l.fin : null,
+        animando: !!(sala && sala.anim), posSala, angulo: anguloSala, yo: sala ? sala.idx : 0, mostrados: sala ? sala.mostrado.length : 0, finEnviado: !!(sala && sala.finEnviado),
+        asientos: sala ? sala.orden.map((p, i) => ({ nombre: p.nombre, bot: !!p.bot, eq: reparto[i].eq, rol: reparto[i].rol, barras: reparto[i].barras, color: colores[i] })) : [],
+        posesionBarra: pos ? pos.barra : -1, turnoBarras: turno >= 0 && reparto ? reparto[turno].barras : [],
+        mando: mando.estado(),
+      };
+    },
     // Pone la pelota frente a tu barra activa (para probar la patada con un toque real).
-    pelotaEnfrente: () => { st.pelota = { x: T.ANCHO / 2 + T.BARRAS[4].h[2] + st.s[4], y: T.BARRAS[4].y - T.ALCANCE - 2, vx: 0, vy: 0 }; activa = 4; objetivo[4] = st.s[4]; },
-    ponerPelota: (x, y) => { st.pelota = { x, y, vx: 0, vy: 0 }; },
-    // Estado de la sala tal como se ve (para comparar dos aparatos).
+    pelotaEnfrente: () => { st.pelota = { x: T.ANCHO / 2 + T.BARRAS[4].h[2] + st.s[4], y: T.BARRAS[4].y - T.ALCANCE - 2, vx: 0, vy: 0 }; activa = 4; objetivo[4] = st.s[4]; manualHasta = 0; golHasta = 0; },
+    ponerPelota: (x, y) => { st.pelota = { x, y, vx: 0, vy: 0 }; golHasta = 0; },
     firma: () => sala && !sala.anim ? JSON.stringify({ e: sala.estado, mostrados: sala.mostrado.length }) : null,
     pausarBot: () => { T.NIVELES[nivel].vmax = 0; T.NIVELES[nivel].patea = 0; },
     anotar: eq => anotar(eq),
     pantalla: (x, y) => aPantalla(x, y),
+    // Rectángulo de la mesa (con su marco) en coordenadas de la página.
+    rectMesa: () => {
+      const r = cv.getBoundingClientRect(), a = aPantalla(-MARCO, -CAB), b = aPantalla(T.ANCHO + MARCO, T.LARGO + CAB);
+      return { l: r.left + Math.min(a.x, b.x), t: r.top + Math.min(a.y, b.y), r: r.left + Math.max(a.x, b.x), b: r.top + Math.max(a.y, b.y) };
+    },
   };
 }
 </script>

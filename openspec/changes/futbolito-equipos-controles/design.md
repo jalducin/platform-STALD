@@ -95,7 +95,9 @@ R / F fuerza, Espacio patea.
 - **Reparto** (función pura, idéntica en `Futbolito.repartir` y `server/futbolito.ts`, comparadas en Deno):
   asientos = personas por orden de entrada (`unido`) y luego bots; cupo por equipo = ⌈asientos / 2⌉.
   1. Las personas con preferencia (`equipo` 0 | 1) entran a su equipo si cabe, en orden;
-  2. los demás asientos (personas y luego bots) van al equipo con menos integrantes (empate: equipo 0).
+  2. las demás personas se alternan por orden de entrada (la k-ésima al equipo k % 2; si está lleno, al otro), así
+     «cambiar de equipo» te lleva con quien ya estaba ahí sin mover a nadie más (salvo que el equipo se llene);
+  3. los bots van al equipo con menos integrantes (empate: equipo 0).
   Dentro de cada equipo, por orden de asiento: con un integrante maneja las 4 barras; con dos, el primero
   **medios + delanteros** («adelante») y el segundo **portero + defensa** («atrás»).
 - **Cambiar de equipo**: en la sala de espera de un 2 vs 2, «🔁 Cambiar de equipo» manda

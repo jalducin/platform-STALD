@@ -150,6 +150,8 @@ Deno.test("futbolito-equipos: reparto automático, preferencias y 2 vs 1", () =>
   assertEquals(B(0, "todas"), [2, 4, 6, 7]);
   const juntos = T.repartir([{ id: "a", equipo: 0 }, { id: "b", equipo: 0 }, { id: "x", bot: true }, { id: "y", bot: true }]);
   assertEquals(juntos.map((s: any) => s.eq), [0, 0, 1, 1]);
+  const cambia = T.repartir([{ id: "m" }, { id: "a", equipo: 0 }, { id: "x", bot: true }, { id: "y", bot: true }]);
+  assertEquals(cambia.map((s: any) => [s.eq, s.rol]), [[0, "adelante"], [0, "atras"], [1, "adelante"], [1, "atras"]], "Angel se cambia al equipo de Marisol");
   const tres = T.repartir([{ id: "a" }, { id: "b" }, { id: "c" }]);
   assertEquals(tres.map((s: any) => [s.eq, s.rol]), [[0, "adelante"], [1, "todas"], [0, "atras"]]);
   const uno = T.repartir([{ id: "a" }, { id: "x", bot: true }]);

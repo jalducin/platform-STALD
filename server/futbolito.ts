@@ -16,14 +16,23 @@ export const BARRAS_ROL: Record<number, Record<Rol, number[]>> = {
 export interface Asiento { id: string; bot?: boolean; equipo?: number }
 export interface Lugar { eq: Equipo; rol: Rol; barras: number[] }
 
-// Reparto de asientos (personas por orden de entrada y luego bots): preferencias primero si caben, los demás al equipo
-// con menos integrantes (empate: 0). En cada equipo, por orden: con uno maneja todas; con dos, el primero adelante.
+// Reparto de asientos (personas por orden de entrada y luego bots), cupo ⌈asientos/2⌉ por equipo:
+//   1. las personas con preferencia, a su equipo si cabe;
+//   2. las demás personas, alternadas por orden de entrada (la k-ésima persona al equipo k % 2; si está lleno, al otro);
+//   3. los bots, al equipo con menos integrantes (empate: 0).
+// En cada equipo, por orden de asiento: con uno maneja todas; con dos, el primero adelante y el segundo atrás.
 export function repartir(asientos: Asiento[]): Lugar[] {
   const cupo = Math.ceil(asientos.length / 2), cuenta = [0, 0];
   const eq: (Equipo | undefined)[] = asientos.map(() => undefined);
   asientos.forEach((a, i) => {
     if (a.bot || (a.equipo !== 0 && a.equipo !== 1)) return;
     if (cuenta[a.equipo] < cupo) { eq[i] = a.equipo; cuenta[a.equipo]++; }
+  });
+  asientos.forEach((a, i) => {
+    if (a.bot || eq[i] !== undefined) return;
+    let e: Equipo = i % 2 === 0 ? 0 : 1;
+    if (cuenta[e] >= cupo) e = e === 0 ? 1 : 0;
+    eq[i] = e; cuenta[e]++;
   });
   asientos.forEach((_, i) => {
     if (eq[i] !== undefined) return;

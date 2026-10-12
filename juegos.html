@@ -554,7 +554,8 @@
 </div>
 
 <script src="juegos/cartas.js?v=3"></script>
-<script src="juegos/mesas.js?v=1"></script> <!-- mesas de las partidas (openspec: mesas-con-bots) -->
+<script src="juegos/mesas.js?v=2"></script> <!-- mesas de las partidas (openspec: mesas-con-bots) -->
+<script src="juegos/fisica.js?v=2"></script><script src="juegos/futbolito-motor.js?v=2"></script> <!-- futbolito-equipos: reparto de equipos en la sala de espera -->
 <script src="juegos/tablero.js?v=1"></script> <!-- juegos-tablero: motores sin DOM -->
 <script src="juegos/tablero-ui.js?v=2"></script> <!-- juegos-tablero: pantallas, salas y ayuda -->
 <script src="juegos/ajedrez.js?v=1"></script>
@@ -2876,6 +2877,7 @@
       '<form id="f-crear"><label for="p-juego">Juego</label><select id="p-juego" class="sel">' + opcionesJuego + '</select>' +
       '<div id="p-modo-wrap" hidden><label for="p-modo">Modo</label><select id="p-modo" class="sel"><option value="linea">➖ Línea (rápido)</option><option value="llena">🟩 Tabla llena</option></select></div>' +
       '<div id="p-reloj-wrap" hidden><label for="p-reloj">Reloj por jugador</label><select id="p-reloj" class="sel"><option value="5">⚡ 5 min</option><option value="10" selected>⏱ 10 min</option><option value="15">🐢 15 min</option></select></div>' +
+      '<div id="p-formato-wrap" hidden><label for="p-formato">Formato</label><select id="p-formato" class="sel"><option value="1v1">⚽ 1 vs 1</option><option value="2v2">👥 2 vs 2 (por equipos)</option></select></div>' + // futbolito-equipos
       '<div id="p-equipos-wrap" hidden><label class="check"><input id="p-equipos" type="checkbox"><span>👥 Por equipos (A y B, alternados por orden de entrada)</span></label></div>' +
       '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select>' +
         '<label>🎉 Categorías divertidas (opcional, máximo 2)</label><div id="p-extra"></div><div class="feedback" id="p-extra-aviso"></div></div>' + // basta-divertida-una-robo
@@ -2962,13 +2964,13 @@
 
   function participantes() {
     const e = sala.estado;
-    const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, rondasBasta: x.rondasBasta || {}, loteria: x.loteria }));
+    const humanos = e.jugadores.map(x => ({ id: x.id, nombre: x.nombre, tipo: x.tipo, avatar: x.avatar, respuestas: x.respuestas || {}, palabras: x.palabras, basta: x.basta, rondasBasta: x.rondasBasta || {}, loteria: x.loteria, ...(x.equipo === 0 || x.equipo === 1 ? { equipo: x.equipo } : {}) })); // futbolito-equipos: equipo pedido
     const comoBot = b => ({ id: b.id, nombre: b.nombre, tipo: 'bot', bot: b, avatar: b.avatar });
     // Mesas (openspec: mesas-con-bots, juegos/mesas.js): con asientos, los bots completan los lugares libres y cada
     // persona que entra quita un bot (Brisca: 3 personas + 1 bot); sin mesa, los bots se suman aparte.
-    const mesa = Mesas.de(e.sala.juego);
+    const mesa = Mesas.de(e.sala.juego, e.sala.opciones); // futbolito-equipos: mesa por formato
     const h = mesa ? humanos.slice(0, mesa.max) : humanos;
-    const nb = Mesas.botsEnMesa(e.sala.juego, h.length, e.sala.bots);
+    const nb = Mesas.botsEnMesa(e.sala.juego, h.length, e.sala.bots, e.sala.opciones);
     if (nb !== null) return h.concat(BOTS.concat(BOT_EXTRA).slice(0, nb).map(comoBot));
     return e.sala.bots && !(mesa && mesa.bots === 'nunca') ? h.concat(BOTS.map(comoBot)) : h;
   }
@@ -3008,11 +3010,11 @@
       '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
       '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
       extrasEspera(e.sala) + // basta-divertida-una-robo
-      '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length)) + '</p>' : '') + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
+      '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length, e.sala.opciones)) + '</p>' : '') + equiposFutbolito(lista) /* futbolito-equipos */ + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
         (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
       '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
     // La clave cuenta personas y bots: en una mesa de 4, una persona nueva desplaza a un bot y la lista no cambia de largo.
-    const clave = 'espera:' + lista.map(x => x.id).join(',') + ':' + e.soyHost;
+    const clave = 'espera:' + lista.map(x => x.id + (x.equipo === undefined ? '' : '/' + x.equipo)).join(',') + ':' + e.soyHost; // futbolito-equipos: también el equipo pedido
     if (sala.vista !== clave) { body.innerHTML = html; sala.vista = clave; pintarQr(document.getElementById('p-qr'), enlaceSala(e.sala.codigo)); }
   }
 
@@ -3917,11 +3919,28 @@
   // participantes(): personas y, si falta, el bot), las jugadas del servidor cuando cambian, envía sus tiros y pinta
   // el podio con pintarFinalSala (puntos topados a 1000) cuando el juego avisa el fin.
   const jugadasFisica = () => sala.estado.jugadores.flatMap(x => (x.jugadas || []).map(j => Object.assign({ jugador: x.id }, j))).sort((a, b) => a.n - b.n);
+  // futbolito-equipos: equipos de Futbolito 2v2 en la sala de espera (mismo reparto que el juego: Futbolito.repartir).
+  function equiposFutbolito(lista) {
+    const e = sala.estado;
+    if (e.sala.juego !== 'futbolito' || e.sala.opciones.formato !== '2v2' || !window.Futbolito || lista.length < 2) return '';
+    const rep = Futbolito.repartir(lista.map(x => ({ id: x.id, bot: !!x.bot, ...(x.equipo === 0 || x.equipo === 1 ? { equipo: x.equipo } : {}) })));
+    const ROL = { todas: 'las 4 barras', adelante: 'medios y delanteros', atras: 'portero y defensa' };
+    const yo = lista.findIndex(x => x.id === e.yo);
+    const col = eq => '<div style="flex:1;min-width:140px"><b>' + (eq ? '🔵 Equipo azul' : '🔴 Equipo rojo') + '</b>' + lista.map((x, i) => rep[i].eq !== eq ? '' : '<div data-eq="' + eq + '" style="margin-top:4px">' + escapeHtml(x.nombre) + (x.bot ? ' 🤖' : '') + ' <small class="muted">· ' + ROL[rep[i].rol] + '</small></div>').join('') + '</div>';
+    return '<div class="card" id="p-equipos-fut" style="margin-bottom:10px"><div style="display:flex;gap:10px;flex-wrap:wrap">' + col(0) + col(1) + '</div>' +
+      (yo >= 0 ? '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="equipo" data-eq-a="' + (1 - rep[yo].eq) + '">🔁 Cambiar de equipo</button></div>' : '') + '</div>';
+  }
+  async function cambiarEquipoFutbolito(btn) { // futbolito-equipos
+    btn.disabled = true;
+    const r = await post('/juegos/sala/' + sala.codigo + '/unirse', { equipo: Number(btn.dataset.eqA) });
+    if (!r.ok) alert(r.body.error === 'equipo_lleno' ? '👥 Ese equipo ya tiene 2 personas.' : 'No se pudo cambiar de equipo (' + (r.body.error || r.status) + ').');
+    await traerSala(); sala.vista = null; pintarSala();
+  }
   function pintarFisicaSala(body) {
     const e = sala.estado, s = e.sala, juego = s.juego;
     document.getElementById('m-bar').hidden = true;
-    const mesa = participantes().slice(0, 2);
-    if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + juegoPorId(juego).emoji + ' Esperando a tu rival: se juega 1 vs 1.</div>'; sala.vista = 'faltan'; } return; }
+    const mesa = juego === 'futbolito' ? participantes() : participantes().slice(0, 2); // futbolito-equipos: hasta 4
+    if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + juegoPorId(juego).emoji + ' Esperando a tu rival.</div>'; sala.vista = 'faltan'; } return; }
     const aFrame = msg => { const f = document.getElementById('arcade-frame'); try { f.contentWindow.postMessage(msg, location.origin); } catch (x) { /* iframe cerrado */ } };
     if (sala.vista === 'fisica') {
       const js = jugadasFisica(), firma = JSON.stringify(js);
@@ -3931,7 +3950,8 @@
     sala.vista = 'fisica'; sala.fisicaListo = false;
     body.innerHTML = marcoArcade(srcArcade(juego), juegoPorId(juego).t);
     const frame = document.getElementById('arcade-frame');
-    const orden = mesa.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot }));
+    if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' }); // futbolito-equipos: como en individual, el marco completo a la vista
+    const orden = mesa.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot, ...(p.equipo === 0 || p.equipo === 1 ? { equipo: p.equipo } : {}) })); // futbolito-equipos
     const alMensaje = async ev => {
       const d = ev.data || {};
       if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== juego) return;
@@ -3959,6 +3979,7 @@
     const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'cultura-linea' ? { cat: document.getElementById('p-ltema').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value, extra: [...document.querySelectorAll('[data-pextra]:checked')].map(x => x.dataset.pextra) } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
     Object.assign(opciones, ClasicosRapidosUI.opcionesCrear(juego)); // clasicos-rapidos: modo del Ahorcado
     Object.assign(opciones, SalasGrandes.opciones(juego)); // juegos-salas-grandes
+    if (juego === 'futbolito') opciones.formato = document.getElementById('p-formato').value; // futbolito-equipos
     const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
     if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
     entrarSala(r.body.codigo);
@@ -4202,6 +4223,7 @@
     const pa = e.target.closest('[data-p]');
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
+    if (pa && pa.dataset.p === 'equipo') return cambiarEquipoFutbolito(pa); // futbolito-equipos
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('👥 Faltan jugadores. Espera a que se una tu rival.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert(TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.'); /* juegos-tablero */ } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
@@ -4239,6 +4261,7 @@
     document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || '';
     TableroUI.alCambiarJuego(e.target.value); } }); // juegos-tablero
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') SalasGrandes.formulario(e.target.value); }); // juegos-salas-grandes
+  app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-formato-wrap').hidden = e.target.value !== 'futbolito'; }); // futbolito-equipos
   // cultura-conocimiento: el tema de la Línea del tiempo solo se ve al elegirla.
   app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-ltema-wrap').hidden = e.target.value !== 'cultura-linea'; });
   app.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.pextra) limitarExtras(e.target, 'pextra', 'p-extra-aviso'); }); // basta-divertida-una-robo

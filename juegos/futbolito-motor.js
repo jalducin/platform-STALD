@@ -292,11 +292,19 @@
     1: { adelante: [3, 5], atras: [0, 1], todas: [0, 1, 3, 5] },
   };
   // asientos: [{ id, bot?, equipo? }] (personas por orden de entrada y luego bots) → [{ eq, rol, barras }].
+  // Preferencias primero (si caben), luego personas alternadas por orden de entrada y al final los bots al equipo con
+  // menos integrantes; en cada equipo de dos, el primero adelante y el segundo atrás.
   function repartir(asientos) {
     const cupo = Math.ceil(asientos.length / 2), cuenta = [0, 0], eq = asientos.map(() => undefined);
     asientos.forEach((a, i) => {
       if (a.bot || (a.equipo !== 0 && a.equipo !== 1)) return;
       if (cuenta[a.equipo] < cupo) { eq[i] = a.equipo; cuenta[a.equipo]++; }
+    });
+    asientos.forEach((a, i) => {
+      if (a.bot || eq[i] !== undefined) return;
+      let e = i % 2 === 0 ? 0 : 1;
+      if (cuenta[e] >= cupo) e = 1 - e;
+      eq[i] = e; cuenta[e]++;
     });
     asientos.forEach((_, i) => {
       if (eq[i] !== undefined) return;
