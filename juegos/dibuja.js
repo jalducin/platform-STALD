@@ -173,7 +173,7 @@
     }
     const html = feed.sort((a, b) => b.t - a.t).slice(0, 8).map(x => '<li' + (x.ok ? ' class="ok"' : '') + '>' + x.html + '</li>').join('');
     const ul = document.getElementById('dj-feed');
-    if (ul && st.feed !== html) { st.feed = html; ul.innerHTML = html || '<li class="muted">' + (soy ? 'Aquí verás lo que escriben.' : 'Sé el primero en adivinar.') + '</li>'; }
+    if (ul && st.feed !== html) { st.feed = html; ul.innerHTML = html || '<li class="muted">' + (soy ? 'Aquí verás lo que escriben.' : '¡Adivina antes que nadie!') + '</li>'; }
     const yaAdivine = !soy && ((e.jugadores.find(j => j.id === e.yo) || {}).aciertos || {})[t.i];
     const form = document.getElementById('dj-form');
     if (form && yaAdivine && !form.hidden) { form.hidden = true; mensaje('✅ ¡Adivinaste! Espera a los demás…', 'ok'); }
