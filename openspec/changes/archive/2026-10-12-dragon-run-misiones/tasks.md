@@ -74,7 +74,7 @@
   - `version_vieja` (409).
 
   Se usa la copia temporal de los datos de las E2E, así que no queda estado que restaurar.
-- [ ] 6.2 Tras el merge (lo hace el usuario), en producción: Dragon Run aparece en Arcade y la pantalla de misiones
+- [x] 6.2 Tras el merge (lo hace el usuario), en producción: Dragon Run aparece en Arcade y la pantalla de misiones
   carga.
 
 ## 7. Documentación técnica (OBLIGATORIO)
@@ -83,4 +83,4 @@
 - [x] 7.2 `docs/frontend-standards.md`: Dragon Run en Arcade, mensajes, misiones y `?prueba=1`.
 - [x] 7.3 `docs/backend-standards.md`: `dragon-run` en `CATALOGO` (`arcade`) y en `JUEGOS_PROGRESO`.
 - [x] 7.4 Validar con `npx -y @fission-ai/openspec@1.4.1 validate dragon-run-misiones --strict`.
-- [ ] 7.5 PR, CI, merge y `openspec archive` (los hace el usuario).
+- [x] 7.5 PR, CI, merge y `openspec archive` (los hace el usuario).
