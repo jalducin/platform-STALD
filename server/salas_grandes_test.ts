@@ -3,12 +3,14 @@
 // deno-lint-ignore-file no-explicit-any require-await
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import "../juegos/bingo.js";
+import "../juegos/mesas.js";
 import { CATALOGO, clearCacheJuegos, handleJuegos } from "./juegos.ts";
-import { clearCacheSalas, JUEGOS_PARTIDA } from "./salas.ts";
+import { clearCacheSalas, enMesa, JUEGOS_PARTIDA } from "./salas.ts";
 import { BINGO, calendarioDibuja, DIBUJA, normalizarPalabra, PALABRAS_DIBUJA, palabraDibuja } from "./salas_grandes.ts";
 import { MemoryStore } from "./store.ts";
 
 const B = (globalThis as any).Bingo;
+const Mesas = (globalThis as any).Mesas;
 const PERSONAS = ["marisol", "angel", "laura", "jesus", "fernando", "sofy", "rocio", "beto", "ana", "luis", "toño", "lupe", "nico"];
 const ingles = PERSONAS.map((n) => ({ alumno: n[0].toUpperCase() + n.slice(1), userEmails: [`${n}@example.com`], userNames: [n] }));
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s });
@@ -140,15 +142,17 @@ Deno.test("blackjack: acciones y montos en múltiplos de 5 (como el póker)", as
   assertEquals((await c.call("POST", "/partida", "angel", { juego: "blackjack", puntos: 4000, aciertos: 3, total: 8, segundos: 300 })).body.puntos, 1000, "tope 1000");
 });
 
-Deno.test("blackjack: hasta 6 personas y sin bots no empieza con una sola", async () => {
+Deno.test("blackjack: mesa de 3 asientos (cada persona quita un bot), hasta 6 personas y solo contra la banca", async () => {
   const c = ctx();
+  assertEquals([1, 2, 3, 4].map((h) => Mesas.botsEnMesa("blackjack", h, true)), [2, 1, 0, 0], "1 persona + 2 bots; al entrar otra, un bot menos");
+  assertEquals([1, 2, 6].map((h) => enMesa("blackjack", h, true)), [3, 3, 6]);
+  for (const j of ["bingo", "en-memorama", "mente-sopa"]) assertEquals(Mesas.botsEnMesa(j, 3, true), null, j + ": bots aparte");
+  assertEquals(Mesas.botsEnMesa("dibuja", 3, true), null, "dibuja: solo personas");
   const r = await c.call("POST", "/sala", "marisol", { juego: "blackjack", opciones: {}, bots: true });
   for (const q of PERSONAS.slice(1, 6)) assertEquals((await c.call("POST", `/sala/${r.body.codigo}/unirse`, q)).status, 200, q);
   assertEquals((await c.call("POST", `/sala/${r.body.codigo}/unirse`, "rocio")).body.error, "sala_llena");
   const solo = await c.call("POST", "/sala", "marisol", { juego: "blackjack", opciones: {}, bots: false });
-  assertEquals((await c.call("POST", `/sala/${solo.body.codigo}/empezar`, "marisol")).body.error, "faltan_jugadores");
-  const conBots = await c.call("POST", "/sala", "marisol", { juego: "blackjack", opciones: {}, bots: true });
-  assertEquals((await c.call("POST", `/sala/${conBots.body.codigo}/empezar`, "marisol")).status, 200, "con bots basta una persona");
+  assertEquals((await c.call("POST", `/sala/${solo.body.codigo}/empezar`, "marisol")).status, 200, "una persona sola contra la banca");
 });
 
 // ---------------------------------------------------------------- Dibuja y adivina

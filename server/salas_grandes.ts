@@ -41,8 +41,6 @@ export type Cambio<E> = { cambiar: (e: E) => E; respuesta?: Rec };
 export type Falla<E> = { error: string; status: number; cambiar?: (e: E) => E };
 
 export const JUEGOS_GRANDES = ["bingo", "blackjack", "dibuja", "en-memorama", "mente-sopa"];
-export const CUPO_GRANDES: Record<string, number> = { blackjack: 6, dibuja: 12 };
-export const BOTS_GRANDES: Record<string, boolean> = { dibuja: false };
 
 const entero = (x: unknown, min: number, max: number) => typeof x === "number" && Number.isInteger(x) && x >= min && x <= max;
 const llaves = (o: Rec, permitidas: string[], obligatorias: string[] = []) =>
@@ -100,7 +98,7 @@ export const BINGO = {
 
 // ---------- 🎨 Dibuja y adivina ----------
 export const DIBUJA = {
-  DIBUJO_MS: 60_000, PAUSA_MS: 5_000, MIN: 3,
+  DIBUJO_MS: 60_000, PAUSA_MS: 5_000, // cupo y mínimo: MESAS de server/salas.ts
   TRAZO_CADA_MS: 300, INTENTO_CADA_MS: 700,
   MAX_POR_ENVIO: 6, MAX_PUNTOS: 64, MAX_TRAZOS: 200, MAX_NUMEROS: 8000, MAX_TEXTO: 40, MAX_INTENTOS: 20,
 };
@@ -195,12 +193,6 @@ export function opcionesGrandes(juego: string, op: Rec, opciones: Record<string,
     opciones.gana = op.gana === undefined ? "tiempo" : String(op.gana);
   }
   return null;
-}
-// ¿Faltan personas para empezar? Dibuja: 3; Blackjack sin bots: 2.
-export function faltanGrandes(sala: SalaGrande, personas: number): boolean {
-  if (sala.juego === "dibuja") return personas < DIBUJA.MIN;
-  if (sala.juego === "blackjack") return !sala.bots && personas < 2;
-  return false;
 }
 // Campos extra de la sala al empezar (el secreto de Dibuja; también en la revancha).
 export const alEmpezarGrande = (sala: SalaGrande, aleatorioHex: () => string): Partial<SalaGrande> => sala.juego === "dibuja" ? { secreto: aleatorioHex() } : {};
