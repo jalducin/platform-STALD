@@ -12,11 +12,11 @@
 
 ## 2. Motor compartido (TDD)
 
-- [ ] 2.1 Pruebas que fallan en `server/clasicos_rapidos_motor_test.ts`: líneas y empates de Gato, minimax que nunca
+- [x] 2.1 Pruebas que fallan en `server/clasicos_rapidos_motor_test.ts`: líneas y empates de Gato, minimax que nunca
   pierde, caída/columna llena/4 en línea/empate de Conecta 4, reglas y puntos de Piedra, papel o tijera, estado del
   Ahorcado, escaleras/serpientes/meta, y reproducción de cada sala (turnos, jugadas inválidas ignoradas, tiempo
   agotado, fin de partida y empates)
-- [ ] 2.2 `juegos/clasicos-rapidos.js` (reglas, bots y reproducción de salas)
+- [x] 2.2 `juegos/clasicos-rapidos.js` (reglas, bots y reproducción de salas)
 
 ## 3. Interfaz
 
