@@ -38,6 +38,8 @@ async function openItem(id) {
           ? '<div class="pron-btns"><button type="button" class="rec" data-action="grabar">🎙️ Decirlo</button></div>'
           : '<div class="pron-btns"><button type="button" data-action="auto" data-valor="auto:ok">✔ Me salió bien</button><button type="button" data-action="auto" data-valor="auto:repetir">↺ Necesito repetir</button></div><div class="s" style="font-size:.78rem">Tu navegador no reconoce voz: usa Chrome o Edge para calificarla. Mientras, escucha el modelo, repítelo y autoevalúate.</div>') +
         '<div class="pron-oido">' + (fija ? 'Ya te salió bien ✔' : '') + '</div>'
+      : p.tipo === 'ordenar' ? (p.audio ? tts(p.audio) : '') + bloqueOrdenar(p, fija)
+      : p.tipo === 'emparejar' ? (p.audio ? tts(p.audio) : '') + bloqueEmparejar(p, fija)
       : p.tipo === 'escribir'
       ? (p.audio ? tts(p.audio) : '') + '<input class="q-text" type="text" name="' + escapeHtml(p.id) + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe tu respuesta"' + (fija ? ' value="' + escapeHtml(v) + '"' : '') + dis + '>'
       : (p.audio ? tts(p.audio) : '') + p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"' + (fija && v === i ? ' checked' : '') + dis + '> <span>' + escapeHtml(o) + '</span>' + (i < 9 && !fija ? '<span class="tecla" aria-hidden="true">' + (i + 1) + '</span>' : '') + '</label>').join('');
@@ -82,6 +84,11 @@ async function openItem(id) {
     '<span class="progress-text" id="exam-count" style="margin:0" aria-live="polite">0/' + porCorregir.length + ' respondidas</span>' +
     '<button class="btn" type="submit" id="exam-send" disabled>Enviar</button></div></form>';
   state.paso = 0;
+  // Correctas fijas de la corrección: la oración y los pares ya armados (openspec: ejercicios-ordenar-emparejar).
+  contentEl.querySelectorAll('#exam-form .q.fija').forEach(q => {
+    if (q.querySelector('[data-ord]')) ordenarDesdeTexto(q, fijas[q.dataset.q]);
+    if (q.querySelector('[data-emp]')) empPintar(q, fijas[q.dataset.q], '', true);
+  });
   if (paso) mostrarPaso(0);
   restaurarBorrador(document.getElementById('exam-form'));
   window.scrollTo(0, 0);
@@ -187,9 +194,12 @@ function restaurarBorrador(form) {
     if (!q) continue;
     const radio = [...q.querySelectorAll('input[type=radio]:not(:disabled)')].find(i => i.value === String(v));
     const txt = q.querySelector('input.q-text:not(:disabled)');
-    if (radio) radio.checked = true;
+    const par = q.querySelector('input.q-par:not(:disabled)');
+    if (par) { if (!Array.isArray(v) || !v.some(x => x)) continue; empPintar(q, v, '', true); }
+    else if (radio) radio.checked = true;
     else if (txt && typeof v === 'string' && v.trim()) {
       txt.value = v;
+      if (q.querySelector('[data-ord]')) ordenarDesdeTexto(q, v);
       const o = q.querySelector('.pron-oido');
       if (o) { o.textContent = 'Respuesta recuperada ✔'; o.className = 'pron-oido ok'; }
     } else continue;
@@ -313,18 +323,141 @@ function grabarPron(btn) {
   r.start();
 }
 
+// ---------- Ordenar la oración y unir pares (openspec: ejercicios-ordenar-emparejar) ----------
+// Ordenar: cada ficha es un botón; en el banco se agrega al final de la línea y en la línea regresa a su lugar.
+// La respuesta (fichas unidas por espacios) vive en un input oculto `q-text`, como la pronunciación.
+function bloqueOrdenar(p, fija) {
+  const id = escapeHtml(p.id), dis = fija ? ' disabled' : '';
+  return '<div class="ord" data-ord>' +
+    '<div class="ord-etq" id="ord-l-' + id + '">Tu oración</div>' +
+    '<div class="ord-linea" role="group" aria-labelledby="ord-l-' + id + '" data-vacio="Toca las fichas en orden"></div>' +
+    '<div class="ord-etq" id="ord-b-' + id + '">Fichas</div>' +
+    '<div class="ord-banco" role="group" aria-labelledby="ord-b-' + id + '">' +
+    (p.fichas || []).map((f, i) => '<button type="button" class="ficha" data-action="ficha" data-i="' + i + '" aria-label="' + escapeHtml(f) + '. Toca para agregarla"' + dis + '>' + escapeHtml(f) + '</button>').join('') + '</div>' +
+    (fija ? '' : '<button type="button" class="btn ghost sm ord-borrar" data-action="ord-borrar">⌫ Borrar</button>') +
+    '<input class="q-text" type="hidden" name="' + id + '"' + dis + '>' +
+    '<div class="sr-only" aria-live="polite" data-anuncio></div></div>';
+}
+function devolverFicha(q, b) {
+  const banco = q.querySelector('.ord-banco');
+  banco.insertBefore(b, [...banco.children].find(x => Number(x.dataset.i) > Number(b.dataset.i)) || null);
+}
+function ordenarSync(q, anuncio, sinProgreso) {
+  const fichas = [...q.querySelectorAll('.ord-linea .ficha')];
+  const inp = q.querySelector('input.q-text');
+  inp.value = fichas.map(b => b.textContent).join(' ');
+  fichas.forEach((b, k) => b.setAttribute('aria-label', b.textContent + ', ficha ' + (k + 1) + ' de tu oración. Toca para quitarla'));
+  q.querySelectorAll('.ord-banco .ficha').forEach(b => b.setAttribute('aria-label', b.textContent + '. Toca para agregarla'));
+  if (anuncio) q.querySelector('[data-anuncio]').textContent = anuncio + '. Tu oración: ' + (inp.value || 'vacía') + '.';
+  const f = q.closest('#exam-form');
+  if (f && !sinProgreso && !q.classList.contains('fija')) updateExamProgress(f);
+}
+function ordenarMover(b) {
+  const q = b.closest('.q'), linea = q.querySelector('.ord-linea'), banco = q.querySelector('.ord-banco');
+  const deLinea = b.parentElement === linea;
+  if (deLinea) devolverFicha(q, b); else linea.appendChild(b);
+  ordenarSync(q, (deLinea ? 'Quitaste «' : 'Agregaste «') + b.textContent + '»');
+  // El foco sigue en el mismo lado (la siguiente ficha) para no perderse con teclado o lector de pantalla.
+  const sig = (deLinea ? linea : banco).querySelector('.ficha') || (deLinea ? banco : linea).querySelector('.ficha');
+  if (sig) sig.focus();
+}
+function ordenarBorrar(btn) {
+  const q = btn.closest('.q');
+  [...q.querySelectorAll('.ord-linea .ficha')].forEach(b => devolverFicha(q, b));
+  ordenarSync(q, 'Borraste tu oración');
+  const f = q.querySelector('.ord-banco .ficha'); if (f) f.focus();
+}
+// Texto → fichas (borrador o corrección): toma la ficha libre más larga que coincida con el inicio del texto.
+function ordenarDesdeTexto(q, texto) {
+  [...q.querySelectorAll('.ord-linea .ficha')].forEach(b => devolverFicha(q, b));
+  const linea = q.querySelector('.ord-linea');
+  let resto = String(texto || '').trim();
+  while (resto) {
+    const libres = [...q.querySelectorAll('.ord-banco .ficha')].sort((a, b) => b.textContent.length - a.textContent.length);
+    const f = libres.find(b => resto === b.textContent || resto.startsWith(b.textContent + ' '));
+    if (!f) break;
+    linea.appendChild(f);
+    resto = resto.slice(f.textContent.length).trim();
+  }
+  ordenarSync(q, '', true);
+}
+
+// Unir pares: se toca uno de un lado y luego uno del otro; tocar uno ya unido deshace su par. La respuesta es el
+// arreglo con la opción de la derecha elegida para cada elemento de la izquierda ("" = sin unir), en `q-par`.
+function bloqueEmparejar(p, fija) {
+  const id = escapeHtml(p.id), dis = fija ? ' disabled' : '';
+  const boton = (lado, t, i) => '<button type="button" class="emp-btn" data-action="emp" data-lado="' + lado + '"' + (lado === 'izq' ? ' data-i="' + i + '"' : '') +
+    ' data-v="' + escapeHtml(t) + '" aria-pressed="false" aria-label="' + escapeHtml(t) + ', sin unir"' + dis + '><span class="emp-num" aria-hidden="true"></span><span class="emp-t">' + escapeHtml(t) + '</span></button>';
+  return '<div class="emp" data-emp>' +
+    '<div class="emp-col" role="group" aria-label="Columna izquierda">' + (p.izquierda || []).map((t, i) => boton('izq', t, i)).join('') + '</div>' +
+    '<div class="emp-col" role="group" aria-label="Columna derecha">' + (p.derecha || []).map(t => boton('der', t)).join('') + '</div>' +
+    '<input class="q-par" type="hidden" name="' + id + '"' + dis + '>' +
+    '<div class="sr-only" aria-live="polite" data-anuncio></div></div>';
+}
+function leerPares(valor) {
+  try { const r = JSON.parse(valor || '[]'); return Array.isArray(r) ? r.map(x => typeof x === 'string' ? x : '') : []; } catch (e) { return []; }
+}
+function empPintar(q, r, anuncio, sinProgreso) {
+  const izqs = [...q.querySelectorAll('.emp-btn[data-lado="izq"]')], ders = [...q.querySelectorAll('.emp-btn[data-lado="der"]')];
+  r = izqs.map((_, i) => (Array.isArray(r) && typeof r[i] === 'string' && ders.some(d => d.dataset.v === r[i])) ? r[i] : '');
+  for (const b of [...izqs, ...ders]) {
+    b.className = 'emp-btn'; b.querySelector('.emp-num').textContent = '';
+    b.setAttribute('aria-label', b.dataset.v + ', sin unir');
+  }
+  r.forEach((v, i) => {
+    if (!v) return;
+    const d = ders.find(x => x.dataset.v === v);
+    for (const b of [izqs[i], d]) { b.classList.add('unido', 'par-' + (i % 6)); b.querySelector('.emp-num').textContent = String(i + 1); }
+    izqs[i].setAttribute('aria-label', izqs[i].dataset.v + ', par ' + (i + 1) + ', unida con ' + v + '. Toca para deshacer');
+    d.setAttribute('aria-label', v + ', par ' + (i + 1) + ', unida con ' + izqs[i].dataset.v + '. Toca para deshacer');
+  });
+  q.querySelector('input.q-par').value = r.some(x => x) ? JSON.stringify(r) : '';
+  if (anuncio) q.querySelector('[data-anuncio]').textContent = anuncio;
+  const f = q.closest('#exam-form');
+  if (f && !sinProgreso && !q.classList.contains('fija')) updateExamProgress(f);
+}
+function empClick(b) {
+  const q = b.closest('.q');
+  const izqs = [...q.querySelectorAll('.emp-btn[data-lado="izq"]')];
+  const guardados = leerPares(q.querySelector('input.q-par').value);
+  const r = izqs.map((_, i) => guardados[i] || '');
+  const sel = q.querySelector('.emp-btn[aria-pressed="true"]');
+  const marcar = x => { q.querySelectorAll('.emp-btn').forEach(y => y.setAttribute('aria-pressed', String(y === x))); };
+  const anunciar = t => { q.querySelector('[data-anuncio]').textContent = t; };
+  const i = b.dataset.lado === 'izq' ? Number(b.dataset.i) : r.indexOf(b.dataset.v);
+  if (i >= 0 && r[i]) { // ya unido: deshacer
+    const antes = r[i]; r[i] = '';
+    marcar(null);
+    return empPintar(q, r, 'Deshiciste el par ' + izqs[i].dataset.v + ' con ' + antes + '.');
+  }
+  if (sel === b) { marcar(null); return anunciar('Quitaste la selección.'); }
+  if (!sel || sel.dataset.lado === b.dataset.lado) {
+    marcar(b);
+    return anunciar('Elegiste ' + b.dataset.v + '. Ahora toca su pareja en la otra columna.');
+  }
+  const izq = b.dataset.lado === 'izq' ? b : sel, der = b.dataset.lado === 'der' ? b : sel;
+  r[Number(izq.dataset.i)] = der.dataset.v;
+  marcar(null);
+  empPintar(q, r, 'Uniste ' + izq.dataset.v + ' con ' + der.dataset.v + '.');
+}
+
 function examAnswers(form) {
   const out = {};
   form.querySelectorAll('input[type=radio]:checked:not(:disabled)').forEach(i => { out[i.name] = Number(i.value); });
   form.querySelectorAll('input.q-text:not(:disabled)').forEach(i => { if (i.value.trim()) out[i.name] = i.value; });
+  form.querySelectorAll('input.q-par:not(:disabled)').forEach(i => { const r = leerPares(i.value); if (r.some(x => x)) out[i.name] = r; });
   return out;
 }
+
+// Respondida = con valor; unir pares, solo con todos los pares hechos (el avance parcial sí se guarda).
+const respuestaCompleta = v => !Array.isArray(v) || v.every(x => x);
 
 function updateExamProgress(form) {
   const total = Number(form.dataset.total);
   const answers = examAnswers(form);
-  const count = Object.keys(answers).length;
-  form.querySelectorAll('.q:not(.fija)').forEach(q => q.classList.toggle('answered', q.dataset.q in answers));
+  const hechas = new Set(Object.keys(answers).filter(k => respuestaCompleta(answers[k])));
+  const count = hechas.size;
+  form.querySelectorAll('.q:not(.fija)').forEach(q => q.classList.toggle('answered', hechas.has(q.dataset.q)));
   document.getElementById('exam-count').textContent = count + '/' + total + ' respondidas' + (count < total ? ' · faltan ' + (total - count) : '');
   const barra = document.getElementById('player-barra');
   if (barra) {
