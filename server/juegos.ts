@@ -173,6 +173,10 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "conquian": { categoria: "clasicos", titulo: "Conquián", max: 1000 },
   "plataformas": { categoria: "arcade", titulo: "Axo y los 12 mundos", max: 2000 }, // openspec: juegos-plataformas-karts
   "karts": { categoria: "arcade", titulo: "Karts Turbo", max: 2000 },
+  // juegos-salas-grandes
+  "bingo": { categoria: "clasicos", titulo: "Bingo", max: 1000 },
+  "blackjack": { categoria: "clasicos", titulo: "Blackjack (21)", max: 1000 },
+  "dibuja": { categoria: "ingles", titulo: "Dibuja y adivina", max: 1000 },
 };
 
 const LIMITE_DIARIO = 100;

@@ -5,6 +5,8 @@ import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
 import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realtime.ts";
 import { type Carrera, CARRERAS, mapaDeSala, validarCarrera } from "./carreras.ts";
+// juegos-salas-grandes: Bingo, Blackjack, Dibuja y adivina, y Memorama y Sopa en partida
+import * as Grandes from "./salas_grandes.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -14,6 +16,7 @@ export const JUEGOS_PARTIDA = new Set([
   "en-vocab", "en-frases", "es-ortografia", "cultura", "mente-calculo", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
   "en-tiempos", // ⏳ Máquina del tiempo (openspec: juegos-ingles-gramatica)
   "plataformas", "karts", // carreras de Arcade (openspec: juegos-plataformas-karts)
+  ...Grandes.JUEGOS_GRANDES, // juegos-salas-grandes
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
@@ -36,6 +39,7 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
     if (!ACCIONES_POKER.includes(accion) || j.carta !== undefined || (j.monto !== undefined && !montoOk) || (accion === "subir" && j.monto === undefined)) return null;
     return { ...base, ...(j.monto !== undefined ? { monto: j.monto as number } : {}) };
   }
+  if (juego === "blackjack") return Grandes.validarJugadaBlackjack(j, base); // juegos-salas-grandes
   if (juego === "ajedrez") { // openspec: ajedrez
     if (accion === "rendirse") return base;
     const casilla = (x: unknown) => typeof x === "string" && /^[a-h][1-8]$/.test(x);
@@ -62,6 +66,7 @@ const MAX_JUGADORES = 30;
 // Cupo de personas por juego (ajuste del profe): ajedrez 1 vs 1 sin bots; Brisca hasta 4 (se completa con bots).
 const CUPO: Record<string, number> = { ajedrez: 2, brisca: 4 };
 const BOTS_FIJOS: Record<string, boolean> = { ajedrez: false, brisca: true };
+Object.assign(CUPO, Grandes.CUPO_GRANDES); Object.assign(BOTS_FIJOS, Grandes.BOTS_GRANDES); // juegos-salas-grandes
 const VIGENCIA_MS = 3 * 3600 * 1000;
 const CUENTA_REGRESIVA_MS = 5000;
 const PREGUNTAS = 10;
@@ -78,9 +83,10 @@ interface Sala {
   canal?: string; // topic secreto de Supabase Realtime (openspec: salas-realtime); nunca va en el cuerpo de la sala
   siguiente?: string; // revancha: código de la sala nueva (openspec: revancha-partidas)
   siguienteHost?: string; // revancha: id de quien la abrió (anfitrión de la sala nueva)
+  secreto?: string; // juegos-salas-grandes: Dibuja; nunca sale del servidor (sinCanal lo quita)
 }
 
-interface EnSala {
+interface EnSala extends Grandes.JugadorGrande { // juegos-salas-grandes: bingo, dibujo, aciertos, intentos, resultado
   id: string;
   nombre: string;
   tipo: Jugador["tipo"];
@@ -210,7 +216,7 @@ async function reservarRevancha(store: Store, codigo: string, jugador: Jugador, 
 
 // sub: "" (crear) o "/<código>[/unirse|/empezar|/respuesta|/revancha]"
 // La sala que se devuelve o se publica, sin el canal secreto.
-const sinCanal = (s: Sala): Sala => { const { canal: _c, ...resto } = s; return resto; };
+const sinCanal = (s: Sala): Sala => { const { canal: _c, secreto: _s, ...resto } = s; return resto; }; // juegos-salas-grandes: sin secreto
 
 export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string, rt?: ConfigRealtime): Promise<Response> {
   const ahora = Date.parse(ahoraIso);
@@ -247,6 +253,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (op.tema !== undefined && !TEMAS_INGLES.includes(op.tema as string)) return json({ error: "tema_invalido" }, 400);
       opciones.tema = (op.tema as string) ?? "todo";
     }
+    { const e = Grandes.opcionesGrandes(juego, op, opciones); if (e) return json({ error: e }, 400); } // juegos-salas-grandes
     const codigo = await codigoLibre(store);
     if (!codigo) return json({ error: "sin_codigo" }, 503);
     const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: BOTS_FIJOS[juego] ?? body.bots !== false, canal: canalNuevo() };
@@ -279,9 +286,10 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (accion === "empezar" && req.method === "POST") {
     if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
     if (sala.inicio === null && sala.juego === "ajedrez" && jugadores.length < 2) return json({ error: "faltan_jugadores" }, 409);
+    if (sala.inicio === null && Grandes.faltanGrandes(sala, jugadores.length)) return json({ error: "faltan_jugadores" }, 409); // juegos-salas-grandes
     if (sala.inicio === null) {
       const doc = await store.get<Sala>(ruta(codigo));
-      const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS };
+      const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc!.data, canalNuevo) }; // + secreto de Dibuja
       await store.put(ruta(codigo), nueva, doc!.sha, `sala ${codigo}: empieza`);
       cache.delete(codigo);
       await publicar();
@@ -293,8 +301,15 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (accion === "respuesta" && req.method === "POST") {
     if (!dentro) return json({ error: "no_en_sala" }, 403);
     if (sala.inicio === null) return json({ error: "no_empezo" }, 409);
+    // juegos-salas-grandes: ¡Bingo!, trazo y adivina de Dibuja, y resultado de Memorama y Sopa
+    const grande = Grandes.respuestaGrande(sala, jugadores, jugador.id, body, ahora);
+    if (grande && "error" in grande) {
+      if (grande.cambiar && await guardarJugador(store, codigo, jugador, grande.cambiar, ahora)) await publicar();
+      return json({ error: grande.error }, grande.status);
+    }
     let cambiar: (e: EnSala) => EnSala;
-    if (body.una !== undefined && body.jugada === undefined) {
+    if (grande) cambiar = grande.cambiar;
+    else if (body.una !== undefined && body.jugada === undefined) {
       const paso = Number((body.una as Record<string, unknown>)?.paso);
       if (!Number.isInteger(paso) || paso < 0 || paso > 2000) return json({ error: "una_invalida" }, 400);
       cambiar = (e) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
@@ -346,7 +361,8 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
     const nuevo = await guardarJugador(store, codigo, jugador, cambiar, ahora);
     if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
     await publicar();
-    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas });
+    return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas,
+      ...(grande ? { ...grande.respuesta, bingo: nuevo.bingo, resultado: nuevo.resultado } : {}) }); // juegos-salas-grandes
   }
 
   // POST /juegos/sala/<código>/revancha → { codigo } de la sala nueva, con quien la pidió dentro.
@@ -373,7 +389,8 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (!accion && req.method === "GET") {
     if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
     const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
-    return json({ sala: sinCanal(sala), jugadores, ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo });
+    return json({ sala: sinCanal(sala), jugadores, ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
+      ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora) }); // juegos-salas-grandes: Dibuja (la palabra, solo a quien dibuja)
   }
 
   return json({ error: "metodo_no_permitido" }, 405);
