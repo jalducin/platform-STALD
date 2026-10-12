@@ -4,14 +4,16 @@
 // Script clásico (sin build ni módulos ES): juegos.html lo carga en orden y todos comparten el ámbito global
 // (const/let/function de nivel superior). Ver docs/frontend-standards.md, «Estructura de juegos/app/».
 // ---------- Arcade: Dragon Run (juego del profe en iframe del mismo origen; openspec: dragon-run, dragon-run-misiones) ----------
-// Avance en el servidor de un juego embebido: misma lógica que jugarArcade (PUT encadenado con la versión `v`; ante
-// version_vieja reintenta una vez si ya se leyó el avance). La cola vive a nivel de página: al volver a jugar, la
-// lectura espera al último guardado. TODO: unificar con jugarArcade cuando no haya cambios en paralelo ahí.
+// Avance en el servidor de un juego embebido (Dragon Run y los de jugarArcade; organizar-codigo los unificó aquí):
+// GET /juegos/progreso/<id> y PUT encadenado con la versión `v`; ante version_vieja reintenta una vez si ya se leyó el
+// avance. La cola vive a nivel de página: al volver a jugar, la lectura espera al último guardado.
+// sinAvance (Futbolito y Billar): no pide nada al servidor; la lectura responde un avance vacío.
 const colasProgreso = {};
-function canalProgreso(id, aJuego) {
+const AVANCE_VACIO = { ok: true, body: { v: 0, datos: null } };
+function canalProgreso(id, aJuego, sinAvance) {
   let v = 0, cargado = false, pendiente = null;
   const cola = () => colasProgreso[id] || Promise.resolve();
-  const lectura = cola().then(() => api('/juegos/progreso/' + id)).catch(() => ({ ok: false, status: 0, body: {} }));
+  const lectura = cola().then(() => sinAvance ? AVANCE_VACIO : api('/juegos/progreso/' + id)).catch(() => ({ ok: false, status: 0, body: {} }));
   colasProgreso[id] = lectura.then(r => { if (r.ok) { v = r.body.v; cargado = true; } });
   const put = datos => api('/juegos/progreso/' + id, { method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ v, datos }) });
   const guardar = datos => {
@@ -27,6 +29,8 @@ function canalProgreso(id, aJuego) {
   };
   return { lectura, guardar };
 }
+// Envía un mensaje al iframe del juego (solo a este origen); si el iframe ya se cerró, no hace nada.
+const mensajeA = frame => msg => { try { frame.contentWindow.postMessage(msg, location.origin); } catch (e) { /* iframe cerrado */ } };
 function jugarDragonRun() {
   const m = marco('dragon-run');
   document.getElementById('m-puntos').hidden = true;
@@ -40,7 +44,7 @@ function jugarDragonRun() {
   // La música de Juegos se pausa mientras corre el dragón (el juego trae la suya).
   const estilo = musica.estilo;
   detenerMusica();
-  const aJuego = msg => { try { frame.contentWindow.postMessage(msg, location.origin); } catch (e) { /* iframe cerrado */ } };
+  const aJuego = mensajeA(frame);
   const canal = canalProgreso('dragon-run', aJuego);
   const alMensaje = async ev => {
     const d = ev.data || {};
@@ -79,30 +83,16 @@ function jugarArcade(id) {
   if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' });
   const estilo = musica.estilo;
   detenerMusica();
-  const lectura = SIN_AVANCE.has(id) ? Promise.resolve({ ok: true, body: { v: 0, datos: null } }) : api('/juegos/progreso/' + id).catch(() => ({ ok: false, status: 0, body: {} })); // futbolito-billar: sin avance
-  let v = 0, cargado = false, pendiente = null, cola = Promise.resolve();
-  const aJuego = msg => { try { frame.contentWindow.postMessage(msg, location.origin); } catch (e) { /* iframe cerrado */ } };
-  const put = datos => api('/juegos/progreso/' + id, { method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ v, datos }) });
-  const guardarAvance = datos => {
-    pendiente = datos;
-    cola = cola.then(async () => {
-      if (!pendiente) return;
-      const d = pendiente; pendiente = null;
-      let r = await put(d);
-      // Otra pestaña guardó antes: la acción más reciente manda, pero solo si sí se leyó el avance real.
-      if (r.status === 409 && r.body.error === 'version_vieja' && cargado) { v = r.body.v; r = await put(d); }
-      if (r.ok) v = r.body.v;
-      aJuego({ tipo: 'guardado', ok: r.ok });
-    }).catch(() => aJuego({ tipo: 'guardado', ok: false }));
-  };
+  const aJuego = mensajeA(frame);
+  // Mismo canal que Dragon Run (otra pestaña que guardó antes: gana la acción más reciente, solo si se leyó el avance).
+  const canal = canalProgreso(id, aJuego, SIN_AVANCE.has(id)); // futbolito-billar: sin avance
   const alMensaje = async ev => {
     const d = ev.data || {};
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== id) return;
     if (d.tipo === 'listo') {
-      const r = await lectura;
-      if (r.ok) { v = r.body.v; cargado = true; }
+      const r = await canal.lectura;
       aJuego({ tipo: 'inicio', modo: 'individual', progreso: r.ok ? r.body.datos : null, aviso: r.ok ? '' : '⚠️ No se pudo cargar tu avance: juega y se guardará cuando vuelva la conexión.' });
-    } else if (d.tipo === 'guardar' && d.datos) guardarAvance(d.datos);
+    } else if (d.tipo === 'guardar' && d.datos) canal.guardar(d.datos);
     else if (d.tipo === 'puntos') {
       const res = await post('/juegos/partida', { juego: id, puntos: Math.max(0, Math.round(Number(d.puntos) || 0)), aciertos: Number(d.aciertos) || 0, total: Number(d.total) || 0, segundos: Math.round(Number(d.segundos) || 0) });
       const ok = res.ok && res.body.guardado;
