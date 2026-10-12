@@ -42,4 +42,4 @@
 
 ## 7. Cierre
 
-- [ ] 7.1 Commits en español; sin push, PR ni merge (los hace el usuario). Tras el merge: `openspec archive`
+- [x] 7.1 Commits en español; sin push, PR ni merge (los hace el usuario). Tras el merge: `openspec archive`
