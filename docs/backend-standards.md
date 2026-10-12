@@ -77,7 +77,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
 | `/juegos/invitados` | GET | Solo admin: correos, apodos, visitas y puntos de la semana, para análisis |
 | `/juegos/registro` | POST `{ email, nombre, acepto }` (sin sesión) | Cuenta de Juegos sin validar el correo: alta del invitado (`registrarInvitado`) y `{ token_hash, jugador }` (llave de un solo uso de `generarEnlace`, que la página canjea con `verifyOtp`); con `ROWS_FIXTURE`, `{ prueba: true }`. 409 `correo_de_clase` para alumnos, alumnas y admin (entran con su enlace); 400 `correo_invalido`/`apodo_invalido`/`debe_aceptar`; 429 `cupo_lleno`; 503 `auth_no_disponible` (cambio `registro-directo-juegos`) |
 | `/juegos/nick` | POST `{ nick }` | Nick del jugador (2 a 20 letras o números; vacío lo quita) en `juegos/nicks.json`; actualiza su entrada de la semana. Con nick, la identidad trae `nombre` = nick y `nombreReal` (cambio `nick-jugadores`). 400 `nick_invalido` |
-| `/juegos/progreso/<juego>` | GET · PUT `{ v, datos }` | Avance individual de los juegos de Arcade (`plataformas`, `karts`; cambio `juegos-plataformas-karts`; `dragon-run`, cambio `dragon-run-misiones`; `server/progreso.ts`). Cada jugador lee y escribe solo el suyo (id de la sesión; no hay forma de leer el de otra persona, tampoco el admin). GET → `{ juego, v, datos, actualizado }` (`v: 0`, `datos: null` si no hay). PUT con escritura condicional: `v` debe ser la versión guardada (si no, 409 `version_vieja` con `{ v, datos }` actuales) y el `put` usa el sha leído (3 reintentos; 503 `conflicto_escritura`) → `{ ok, v: v + 1, actualizado }`. 400 `juego_sin_progreso`, `json_invalido`, `version_invalida` o `progreso_invalido` (forma exacta por juego, ver docs/data-model.md); 413 `progreso_grande` (> 4096 bytes); 405 otro método; 403 `no_registrado` |
+| `/juegos/progreso/<juego>` | GET · PUT `{ v, datos }` | Avance individual de los juegos de Arcade (`plataformas`, `karts`; cambio `juegos-plataformas-karts`; `dragon-run`, cambio `dragon-run-misiones`; `golf`, cambio `golf`; `server/progreso.ts`). Cada jugador lee y escribe solo el suyo (id de la sesión; no hay forma de leer el de otra persona, tampoco el admin). GET → `{ juego, v, datos, actualizado }` (`v: 0`, `datos: null` si no hay). PUT con escritura condicional: `v` debe ser la versión guardada (si no, 409 `version_vieja` con `{ v, datos }` actuales) y el `put` usa el sha leído (3 reintentos; 503 `conflicto_escritura`) → `{ ok, v: v + 1, actualizado }`. 400 `juego_sin_progreso`, `json_invalido`, `version_invalida` o `progreso_invalido` (forma exacta por juego, ver docs/data-model.md); 413 `progreso_grande` (> 4096 bytes); 405 otro método; 403 `no_registrado` |
 | `/juegos/jugadores` | GET | Solo admin: `{ semana, jugadores[], pendientes[], cuentasError }`. Jugadores = alumnos, alumnas e invitados con puntos y partidas de la semana; pendientes = cuentas de Supabase Auth (`listarCuentas`, 60 s en memoria) que no terminaron: `sin confirmar` o `sin apodo`. Con `ROWS_FIXTURE`, las cuentas salen de su clave `cuentas` (cambio `jugadores-admin`) |
 
 - **Semana:** de lunes a domingo, hora de CDMX.
@@ -142,6 +142,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     - ¡Una!, póker, Brisca, Conquián y ajedrez;
     - Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (cambio `clasicos-rapidos`; ver la sección propia).
     - Futbolito y Billar (cambio `futbolito-billar`), 1 vs 1 por tiros.
+    - Golf (cambio `golf`), de 2 a 4 personas por turnos, sin bots.
     - Los juegos absorbidos en el Sprint 4 (`en-preguntas`, `es-acentos`, `es-sinonimos` y `mente-secuencias`, del
       cambio `juegos-fusion`) responden 400 `juego_no_permitido`, pero siguen en el catálogo para conservar sus
       puntos.
@@ -172,6 +173,10 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       angulo 0…3599 (décimas de grado), fuerza 1…100, efecto? −100…100 }`; los demás campos se descartan. Con algún
       `final` o `podio` ya registrado, una jugada nueva responde 409 `partida_terminada` (solo en estos dos juegos).
       El servidor no simula: cada cliente reproduce los tiros con los motores deterministas de `juegos/`.
+    - Golf (cambio `golf`): `{ n, accion: "rendirse" }` o `{ n, accion: "tiro", angulo 0…3599 (décimas de grado),
+      fuerza 1…100 }` con enteros; los demás campos se descartan. También responde 409 `partida_terminada` tras un
+      `final` o `podio` (conjunto `FISICA` de `server/salas.ts`). Se juegan 3 hoyos elegidos con la semilla
+      (`Golf.hoyosSala`); el servidor no simula.
     - Ajedrez (`ajedrez`, cambio `ajedrez`): acepta dos formas de jugada.
       - `{ n, accion: "mover", de, a, promo? }`, donde `de` y `a` son casillas `a1`–`h8` y `promo` es `q`, `r`, `b`
         o `n`.
@@ -234,7 +239,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     404 si no existe.
   - Solo admin: `GET /juegos/fotos` (lista activa) y `POST /juegos/fotos/quitar` `{ id }` (403 para el
     resto; 404 si ese jugador no tiene foto).
-- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú; con los clásicos rápidos (`clasicos-rapidos`: `gato`, `conecta4`, `ppt`, `ahorcado` y `serpientes`, categoría `clasicos`, tope 1000, títulos en `CATALOGO_CLASICOS_RAPIDOS`), 29; con los 4 de tablero (`juegos-tablero`: `damas`, `domino`, `parchis` y `naval`), 33; con las salas grandes (`juegos-salas-grandes`: `bingo` ("Bingo") y `blackjack` ("Blackjack (21)") en `clasicos` y `dibuja` ("Dibuja y adivina") en `ingles`, tope 1000), 36; con la 📜 Línea del tiempo (`cultura-linea`, `cultura-conocimiento`), 37; con `futbolito` ("Futbolito") y `billar` ("Billar bola 8"), categoría `arcade`, tope 1000 (cambio `futbolito-billar`), 39. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`; categoría `arcade` desde `dragon-run-misiones`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú; con los clásicos rápidos (`clasicos-rapidos`: `gato`, `conecta4`, `ppt`, `ahorcado` y `serpientes`, categoría `clasicos`, tope 1000, títulos en `CATALOGO_CLASICOS_RAPIDOS`), 29; con los 4 de tablero (`juegos-tablero`: `damas`, `domino`, `parchis` y `naval`), 33; con las salas grandes (`juegos-salas-grandes`: `bingo` ("Bingo") y `blackjack` ("Blackjack (21)") en `clasicos` y `dibuja` ("Dibuja y adivina") en `ingles`, tope 1000), 36; con la 📜 Línea del tiempo (`cultura-linea`, `cultura-conocimiento`), 37; con `futbolito` ("Futbolito") y `billar` ("Billar bola 8"), categoría `arcade`, tope 1000 (cambio `futbolito-billar`), 39; con `golf` ("Golf", `arcade`, tope 1000, cambio `golf`), 40. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`; categoría `arcade` desde `dragon-run-misiones`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
 **CORS y peticiones** (cambio `ahorro-peticiones`): las páginas mandan los POST con `Content-Type: text/plain` (petición
@@ -507,6 +512,7 @@ Mesas de `juegos-salas-grandes`: `bingo`, `en-memorama` y `mente-sopa` `{ max: 3
 `{ max: 12, min: 3, bots: "nunca" }`.
 
 Futbolito y Billar (cambio `futbolito-billar`): `{ max: 2, asientos: 2, min: 2 }` (con bots, 1 persona + 1 bot).
+Golf (cambio `golf`): `{ max: 4, min: 2, bots: "nunca" }` (de 2 a 4 personas; sin bots: por qué, en su `design.md`).
 `server/mesas_test.ts` comprueba que las dos tablas sean iguales. **Todo juego de sala nuevo agrega su renglón en los
 dos archivos.**
 

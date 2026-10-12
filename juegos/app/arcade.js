@@ -1,5 +1,5 @@
 // Juegos · Arcade (openspec: organizar-codigo).
-// Dragon Run, Axo, Karts, Futbolito y Billar en iframe (jugarArcade, progreso en el servidor) y sus carreras en sala.
+// Dragon Run, Axo, Karts, Futbolito, Billar y Golf en iframe (jugarArcade, progreso en el servidor) y sus carreras en sala.
 // No confundir con juegos/arcade.js (reglas sin DOM que también cargan los juegos del iframe).
 // Script clásico (sin build ni módulos ES): juegos.html lo carga en orden y todos comparten el ámbito global
 // (const/let/function de nivel superior). Ver docs/frontend-standards.md, «Estructura de juegos/app/».
@@ -179,8 +179,8 @@ const jugadasFisica = () => sala.estado.jugadores.flatMap(x => (x.jugadas || [])
 function pintarFisicaSala(body) {
   const e = sala.estado, s = e.sala, juego = s.juego;
   document.getElementById('m-bar').hidden = true;
-  const mesa = participantes().slice(0, 2);
-  if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + juegoPorId(juego).emoji + ' Esperando a tu rival: se juega 1 vs 1.</div>'; sala.vista = 'faltan'; } return; }
+  const mesa = participantes().slice(0, juego === 'golf' ? 4 : 2); // golf: de 2 a 4
+  if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + juegoPorId(juego).emoji + (juego === 'golf' ? ' Esperando a más personas: se juega de 2 a 4.' : ' Esperando a tu rival: se juega 1 vs 1.') + '</div>'; sala.vista = 'faltan'; } return; }
   const aFrame = msg => { const f = document.getElementById('arcade-frame'); try { f.contentWindow.postMessage(msg, location.origin); } catch (x) { /* iframe cerrado */ } };
   if (sala.vista === 'fisica') {
     const js = jugadasFisica(), firma = JSON.stringify(js);
@@ -190,6 +190,7 @@ function pintarFisicaSala(body) {
   sala.vista = 'fisica'; sala.fisicaListo = false;
   body.innerHTML = marcoArcade(srcArcade(juego), juegoPorId(juego).t);
   const frame = document.getElementById('arcade-frame');
+  if (juego === 'golf' && matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' }); // golf: celular de lado
   const orden = mesa.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot }));
   const alMensaje = async ev => {
     const d = ev.data || {};
@@ -207,8 +208,16 @@ function pintarFisicaSala(body) {
       const filas = mesa.map((p, i) => ({ id: p.id, nombre: p.nombre, tipo: p.bot ? 'bot' : p.tipo, avatar: p.avatar, total: Math.max(0, Math.min(1000, Math.round(Number(pts[i]) || 0))), ultimo: 0 })).sort((a, b) => b.total - a.total);
       sala.finAciertos = yo >= 0 ? Math.max(0, Math.round(Number((d.aciertos || [])[yo]) || 0)) : 0; sala.finTotal = Math.max(0, Math.round(Number(d.total) || 0));
       pintarFinalSala(document.getElementById('p-body'), filas, null, String(d.titulo || '🏁 ¡Fin de la partida!').slice(0, 90));
+      if (juego === 'golf' && d.tarjeta && Array.isArray(d.tarjeta.hoyos) && Array.isArray(d.tarjeta.golpes)) document.getElementById('p-body').insertAdjacentHTML('beforeend', tarjetaGolf(d.tarjeta, mesa)); // golf
     }
   };
   window.addEventListener('message', alMensaje);
   limpiezas.push(() => window.removeEventListener('message', alMensaje));
+}
+
+// golf: tarjeta de golpes de la sala debajo del podio (números del iframe, acotados; nombres escapados).
+function tarjetaGolf(t, mesa) {
+  const n = v => Math.max(0, Math.min(99, Math.round(Number(v) || 0))), hoyos = t.hoyos.slice(0, 9);
+  return '<h2>⛳ Tarjeta</h2><div class="scroll-x"><table class="inv golf-tarjeta"><thead><tr><th>Jugador</th>' + hoyos.map(h => '<th>Hoyo ' + n(h && h.n) + '<br><small>par ' + n(h && h.par) + '</small></th>').join('') + '<th>Total</th></tr></thead><tbody>' +
+    mesa.map((p, i) => { const gs = hoyos.map((_, k) => n(((t.golpes[i] || [])[k]))); return '<tr' + (p.id === sala.estado.yo ? ' class="yo"' : '') + '><td>' + escapeHtml(p.nombre) + '</td>' + gs.map(x => '<td class="num">' + x + '</td>').join('') + '<td class="num"><b>' + gs.reduce((a, b) => a + b, 0) + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
 }
