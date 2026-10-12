@@ -8,7 +8,7 @@ parchís y batalla naval. Todos se juegan bien en celular, por turnos, solos con
 
 - **⚫ Damas** (`damas`, Mente ágil): tablero 8×8, captura obligatoria, saltos múltiples y coronación (dama).
   - Individual contra un bot de 2 niveles (🐣 Fácil y 🦊 Difícil).
-  - En sala: 1 vs 1 entre personas, sin bots, con 60 s por turno.
+  - En sala: mesa de 2 con 60 s por turno; si solo hay una persona y la sala lleva bots, el bot ocupa el otro lugar.
 - **🁫 Dominó** (`domino`, Clásicos): doble seis, de 2 a 4 jugadores, 7 fichas cada quien, por turnos.
   - Si no tienes ficha que embone, pasas.
   - Gana quien se queda sin fichas. Si el juego se cierra, gana quien suma menos puntos.
@@ -43,7 +43,7 @@ parchís y batalla naval. Todos se juegan bien en celular, por turnos, solos con
   - `juegos/tablero.js`: motores sin DOM de Damas, Dominó, Parchís y Batalla naval.
   - `juegos/tablero-ui.js`: pantallas, bots y salas.
   - `juegos/tablero.css`.
-  - `server/tablero.ts`: validación de jugadas, cupos y ocultamiento.
+  - `server/tablero.ts`: validación de jugadas y ocultamiento; mesas en `MESAS` (`server/salas.ts` y `juegos/mesas.js`).
   - `server/naval.ts`: flotas y disparos.
   - Pruebas: `server/tablero_test.ts`, `server/naval_test.ts` y `tests/e2e/e2e-juegos-tablero.js`.
 - **Datos:** sin rutas nuevas. En `juegos/salas/<código>/<id>.json` se agregan campos:

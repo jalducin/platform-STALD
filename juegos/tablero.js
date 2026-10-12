@@ -269,16 +269,16 @@
       return op.sort((x, y) => y.v - x.v)[0].f;
     }
     // Casilla [fila, columna] (puede ser fraccionaria) para dibujar la ficha f del jugador j.
-    const CASA = [[1.5, 1.5], [1.5, 12.5], [12.5, 12.5], [12.5, 1.5]];
+    const CASA = [[1.6, 1.6], [1.6, 10.6], [10.6, 10.6], [10.6, 1.6]];
     const META_XY = [[7, 6.2], [6.2, 7], [7, 7.8], [7.8, 7]];
     function celda(st, j, f) {
       const color = st.colores[j], p = st.fichas[j][f];
-      if (p === -1) { const [f0, c0] = CASA[color]; return [f0 + (f >> 1) * 1.6 - 0.3, c0 + (f & 1) * 1.6 - 0.3]; }
+      if (p === -1) { const [f0, c0] = CASA[color]; return [f0 + (f >> 1) * 1.8, c0 + (f & 1) * 1.8]; }
       if (p === META) return META_XY[color];
       if (p > 50) return PASILLO[color][p - 51];
       return anillo(abs(color, p));
     }
-    return { nueva, dado, movibles, mover, bot, enMeta, celda, anillo, abs, ANILLO, PASILLO, SALIDAS, SEGURAS, META, SALE };
+    return { nueva, dado, movibles, mover, bot, enMeta, celda, destino, anillo, abs, ANILLO, PASILLO, SALIDAS, SEGURAS, META, SALE, CASA };
   })();
 
   // ======================= Batalla naval (10×10) =======================
@@ -362,7 +362,25 @@
       const resto = []; for (let c = 0; c < 100; c++) if (libre(c)) resto.push(c);
       return azar(resto);
     }
-    return { FLOTA, NOMBRES, TOTAL, nombre, celdas, validarFlota, autoFlota, disparo, todoHundido, bot, vecinas };
+    // Estado de una sala a partir de las jugadas (con su resultado `r`, que pone el servidor): igual que estadoNaval de
+    // server/naval.ts. Empieza el jugador 0; tras «agua» cambia el turno; gana quien junta 17 aciertos.
+    function estado(jugadores) {
+      const orden = jugadores.slice(0, 2).map(j => j.id);
+      const todas = jugadores.slice(0, 2).flatMap(j => (j.jugadas || []).map(x => Object.assign({ id: j.id }, x))).sort((a, b) => a.n - b.n);
+      let turno = 0, fin = null, ultimo = 0;
+      const aciertos = [0, 0];
+      for (const x of todas) {
+        const k = orden.indexOf(x.id);
+        ultimo = Math.max(ultimo, x.t || 0);
+        if (x.accion === 'rendirse') { fin = { gana: orden[1 - k], por: 'rendicion' }; break; }
+        if (x.accion === 'reclamar') { fin = { gana: x.id, por: 'abandono' }; break; }
+        if (x.r === 'agua') { turno = 1 - k; continue; }
+        turno = k;
+        if (++aciertos[k] >= TOTAL) { fin = { gana: x.id, por: 'hundidos' }; break; }
+      }
+      return { orden, turno: orden[turno], fin, pasos: todas.length, ultimo, aciertos, disparos: todas.filter(x => x.accion === 'disparar') };
+    }
+    return { FLOTA, NOMBRES, TOTAL, nombre, celdas, validarFlota, autoFlota, disparo, todoHundido, bot, vecinas, estado };
   })();
 
   // ======================= Puntos (tope 1,000) =======================

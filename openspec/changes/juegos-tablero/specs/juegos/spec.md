@@ -9,7 +9,8 @@ inglesas:
 - pierde quien no tiene jugadas;
 - hay empate tras 40 medios movimientos sin captura ni avance de peón.
 
-SHALL jugarse en individual contra un bot de 2 niveles y en sala 1 vs 1 entre personas, sin bots.
+SHALL jugarse en individual contra un bot de 2 niveles y en sala con una mesa de 2: 1 vs 1 entre personas o, si la
+sala lleva bots y solo hay una persona, contra un bot.
 
 #### Scenario: Captura obligatoria
 - **WHEN** en su turno una alumna puede capturar una pieza
@@ -30,6 +31,7 @@ SHALL jugarse en individual contra un bot de 2 niveles y en sala 1 vs 1 entre pe
 #### Scenario: Sala 1 vs 1
 - **WHEN** dos personas juegan Damas en una sala
 - **THEN** ambas ven el mismo tablero, juegan por turnos de 60 s y la tercera recibe «sala llena»
+- **AND** si se vence el turno, el bot mueve por quien no jugó
 - **AND** si alguien se rinde, gana su rival y las dos llegan al podio con «🔁 Otra con los mismos»
 
 #### Scenario: Jugada con forma inválida
@@ -59,8 +61,13 @@ SHALL jugarse en individual contra 3 bots y en sala con personas y bots (hasta 4
 - **THEN** la partida termina y gana quien suma menos puntos; si dos empatan, ganan los dos
 
 #### Scenario: Sala con bots
-- **WHEN** dos personas crean una sala de Dominó con bots
-- **THEN** se completa con 2 bots hasta 4 jugadores y todos ven la misma mesa
+- **WHEN** en una sala de Dominó con bots hay 3 personas
+- **THEN** la mesa es de 3 personas + 1 bot
+- **AND** al entrar la cuarta persona ya no hay bot, y todas ven la misma mesa
+
+#### Scenario: Sin bots ni rival
+- **WHEN** alguien crea una sala de Dominó sin bots y quiere empezar sin nadie más
+- **THEN** el servidor responde 409 `faltan_jugadores`
 
 #### Scenario: Jugada con forma inválida
 - **WHEN** en una sala de Dominó alguien envía una ficha fuera de 0–27 o un lado que no es «i» ni «d»
@@ -163,6 +170,7 @@ El servidor SHALL NOT entregar la flota de un jugador a otra persona mientras la
 #### Scenario: Fin de la partida
 - **WHEN** se hunde el último barco
 - **THEN** las dos personas ven el podio y ambas flotas quedan reveladas
+- **AND** si se ganó porque el rival se rindió o dejó de jugar, el ganador suma 500 + 20 por casilla tocada
 
 ### Requirement: Juegos de tablero en celular
 Damas, Dominó, Parchís y Batalla naval SHALL verse completos a 390 px de ancho, sin desplazamiento horizontal: el

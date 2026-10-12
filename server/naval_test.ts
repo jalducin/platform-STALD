@@ -6,6 +6,9 @@ import { clearCacheJuegos, handleJuegos } from "./juegos.ts";
 import { clearCacheSalas } from "./salas.ts";
 import { MemoryStore } from "./store.ts";
 import { estadoNaval, validarFlota } from "./naval.ts";
+import "../juegos/tablero.js";
+
+const NavalPagina = (globalThis as any).Tablero.Naval;
 
 const ingles = [
   { alumno: "Marisol", userEmails: ["marisol@example.com"], userNames: ["Marisol"] },
@@ -115,6 +118,9 @@ Deno.test("naval: turnos, agua, tocado (repite), hundido, casilla repetida y fin
   const est = await c.call("GET", `/sala/${codigo}`, M);
   const e = estadoNaval(est.body.jugadores);
   assertEquals(e.fin, { gana: idDe(est, "Angel"), por: "hundidos" });
+  // La página calcula lo mismo con Tablero.Naval.estado (juegos/tablero.js).
+  const p = NavalPagina.estado(est.body.jugadores);
+  assertEquals([p.fin, p.turno, p.pasos, p.ultimo], [e.fin, e.turno, e.pasos, e.ultimo]);
   assertEquals((await tiro(M, n, 56)).body.error, "partida_terminada");
   assertEquals(flotaDe(est, idDe(est, "Angel")), FLOTA_A, "al terminar se revelan las flotas");
   assertEquals((await c.call("GET", `/sala/${codigo}`, "jesus@example.com")).status, 403);

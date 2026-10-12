@@ -30,7 +30,9 @@ resuelve cada disparo.
   - una línea en `participantes()`, `pintarSala()`, el clic de la sala, `ayuda()`, la nota del selector de juego y
     el aviso de `faltan_jugadores`.
 - En el servidor:
-  - `server/tablero.ts`: `validarJugadaTablero`, cupos y bots, `faltanJugadores` y `vistaJugadores`;
+  - `server/tablero.ts`: `validarJugadaTablero` y `vistaJugadores`;
+  - los renglones de los 4 juegos en la tabla común `MESAS` (`server/salas.ts` y `juegos/mesas.js`, del cambio
+    `mesas-con-bots`);
   - `server/naval.ts`: flota, disparos y turno;
   - `server/salas.ts`: ganchos de una línea, marcados con `// juegos-tablero`.
 
@@ -82,7 +84,7 @@ resuelve cada disparo.
 | Damas | 600 (Fácil) u 800 (Difícil y sala) + 20 por pieza propia en pie | Empate: 300; perder: 25 por captura (máx. 300) |
 | Dominó | 500 + 10 por punto que quedó en las manos rivales | Empate al cerrarse: 400; perder: 200 − 5 por punto en tu mano (mín. 0) |
 | Parchís | 800 × fichas en meta ÷ fichas + 200 | 800 × fichas en meta ÷ fichas |
-| Batalla naval | 600 + 400 × 17 ÷ disparos | Perder: 20 por cuadro tocado |
+| Batalla naval | 600 + 400 × 17 ÷ disparos | Ganar en sala porque el rival se rinde o se va: 500 + 20 por cuadro tocado; perder: 20 por cuadro tocado |
 
 Todos los resultados se recortan a 1,000.
 
@@ -92,9 +94,15 @@ Todos los resultados se recortan a 1,000.
   - `damas`: `{ n, accion: "mover", ruta: [2..13 casillas 0–31] }` o `{ n, accion: "rendirse" }`;
   - `domino`: `{ n, accion: "jugar", ficha: 0–27, lado: "i" | "d" }`;
   - `parchis`: `{ n, accion: "mover", ficha: 0–3 }`.
-- Cupos y bots:
-  - `damas` y `naval`: 2 personas y sin bots (`BOTS_FIJOS`); no empiezan con menos de 2 (409 `faltan_jugadores`);
-  - `domino` y `parchis`: hasta 4 personas y bots opcionales que completan hasta 4; sin bots, necesitan 2 personas.
+- Mesas (tabla común `MESAS` del cambio `mesas-con-bots`; los bots completan los asientos libres y cada persona que
+  entra quita un bot; `min` cuenta personas y bots y se valida al empezar con 409 `faltan_jugadores`):
+
+  | Juego | Mesa |
+  |---|---|
+  | `damas` | `{ max: 2, asientos: 2, min: 2 }`: 1 vs 1; con bots, el bot ocupa el lugar libre |
+  | `domino` | `{ max: 4, asientos: 4, min: 2 }`: 3 personas + 1 bot; con la cuarta, sin bot |
+  | `parchis` | `{ max: 4, asientos: 4, min: 2 }` |
+  | `naval` | `{ max: 2, min: 2, bots: "nunca" }`: solo personas, porque la flota la guarda el servidor |
 - Reproducción en el cliente (`TableroUI`), igual que `estadoCartasSala`:
   - el paso `n` cuenta las jugadas de las personas y de los bots;
   - los bots juegan a los 1.5 s;

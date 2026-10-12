@@ -21,8 +21,8 @@
   - `GET` que solo trae la flota propia, Realtime sin flotas y flotas reveladas al terminar.
 - [ ] 2.2 Pruebas de sala en `server/tablero_test.ts`:
   - formas válidas e inválidas de jugada en `damas`, `domino` y `parchis`;
-  - cupo de 2 en `damas` y `naval` (sin bots);
-  - cupo de 4 en `domino` y `parchis`;
+  - mesas en `MESAS` (`mesas-con-bots`): 2 en `damas` (con bot opcional) y `naval` (solo personas);
+  - mesa de 4 en `domino` y `parchis`, con bots que completan los asientos;
   - `faltan_jugadores`.
 - [ ] 2.3 `server/naval.ts`, `server/tablero.ts`, ganchos en `server/salas.ts` y catálogo en `server/juegos.ts`, con
   bloques `// juegos-tablero`
@@ -44,7 +44,7 @@
 - [ ] 4.2 E2E nueva `tests/e2e/e2e-juegos-tablero.js`, registrada en `tests/e2e/correr.sh` (fase `base`):
   - cada juego en individual;
   - Damas y Batalla naval en sala con 2 personas;
-  - Dominó y Parchís en sala con bots;
+  - Dominó y Parchís en sala con bots, y la mesa del Dominó (3 personas + 1 bot; con la cuarta, sin bot);
   - capturas a 390 px.
 
 ## 5. Pruebas y verificación de estado (OBLIGATORIO)
@@ -67,7 +67,7 @@
 
 ## 7. Documentación (OBLIGATORIO)
 
-- [ ] 7.1 Actualizar `docs/backend-standards.md` (jugadas, cupos y Batalla naval en el servidor) y
+- [ ] 7.1 Actualizar `docs/backend-standards.md` (jugadas, mesas y Batalla naval en el servidor) y
   `docs/data-model.md` (campos nuevos de la sala)
 - [ ] 7.2 Actualizar `docs/frontend-standards.md` (sección de juegos de tablero) y validar con
   `npx -y @fission-ai/openspec@1.4.1 validate juegos-tablero --strict`
