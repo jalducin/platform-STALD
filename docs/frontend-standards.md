@@ -148,7 +148,7 @@ Cada página debe manejar y mostrar de forma explícita:
     `juegos.html` acepta solo mensajes de su iframe y su origen; responde `inicio` (avance de `GET /juegos/progreso`
     o, en sala, mapa, semilla, `inicioEn` y bots), `guardado` y `puntos-ok`. Guarda con `PUT` encadenado (gana el
     último). Canvas con paso fijo de 1/60 s y escala entera, pausa con `visibilitychange`, sonido opcional
-    (`localStorage.arcade_sonido`), controles táctiles grandes (Axo y Dragon Run usan el mando compartido; ver
+    (`localStorage.arcade_sonido`), controles táctiles grandes (Axo, Dragon Run y Karts usan el mando compartido; ver
     «Mando de Arcade») y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
@@ -197,6 +197,16 @@ Cada página debe manejar y mostrar de forma explícita:
       E/Shift ítem, P/Esc pausa. Si el sensor falla se regresa a Botones. Tutorial `#tuto` de 3 s al empezar;
     - entrada por acciones (`acel`, `freno`, `izq`, `der`, `derrape`, `item`, `pausa` + eje): un mando nuevo se conecta
       con `window.KartsEntrada.registrar({ presionado(accion), eje() })`, sin tocar las reglas;
+    - **🎮 Mando clásico** (cambio `karts-mando`; decisiones en su `design.md`): cuarta opción del selector
+      (`karts_control = mando`, cuadrícula 2×2); **por omisión siguen los Botones**. El mando común se registra en
+      `KartsEntrada`: cruceta ◀ ▶ = girar (solo por `eje()`, para que la palanca de un control físico gire en
+      proporción), A = acelerar (con «Automático» no hace falta; sirve para el arranque turbo), B = frenar, R o L =
+      derrape, X o Y = ítem, START = pausa/seguir. El mando no lee teclas (todas en `null`): el teclado de Karts no
+      cambia. Está activo en `carrera`/`pausa` con cualquier elección (un control físico funciona siempre, también en
+      la PC) y se ve solo con «Mando clásico»; entonces se ocultan `#mandos`. En vertical va debajo de `#pantalla`
+      (contenedor `#juego`, el flex le resta su alto; `--mando-alto` no se usa); en horizontal se encima en las
+      esquinas solo con `body.en-carrera`, la cruceta pierde el brazo ▼ invisible (`margin-bottom: −u`) y el tutorial
+      sube para no taparse con START;
     - en horizontal (`max-height: 520px`) el marco de Arcade de `juegos.html` mide `100dvh − 16px`; las pantallas del
       juego usan `justify-content: safe center` para poder desplazarse;
     **Dibujo de «Axo y los 12 mundos»** (cambio `axo-diseno`): arte vectorial en canvas a la resolución real (`K`),
@@ -264,8 +274,8 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 
 Fuente única del control de los juegos de 🕹️ Arcade: `juegos/mando.js` (sin dependencias; inyecta su CSS una vez como
 `<style id="mando-css">`). Decisiones y lecciones de Karts en `openspec/changes/mando-arcade/design.md` (al archivar,
-`openspec/changes/archive/*-mando-arcade/`). Lo usan Axo (`plataformas.html`) y Dragon Run (`dragon-run.html`); los
-juegos nuevos (Karts pseudo-3D, Futbolito, Billar) lo adoptan **sin cambiar la API**. Si hace falta algo nuevo, se
+`openspec/changes/archive/*-mando-arcade/`). Lo usan Axo (`plataformas.html`), Dragon Run (`dragon-run.html`) y Karts
+Turbo (`karts.html`, cambio `karts-mando`); los juegos nuevos (Futbolito, Billar) lo adoptan **sin cambiar la API**. Si hace falta algo nuevo, se
 agrega como opción con valor por omisión compatible, en su propio cambio OpenSpec.
 
 **Cargar y crear** (dentro del iframe del juego; `window.Mando`):
@@ -326,8 +336,15 @@ Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
   - Dragon Run: A = saltar/doble salto; START = empezar, pausa nueva (`st = 'pause'`, «⏸ Pausa» / «SEGUIR», también
     ⏸ y al ocultar la pestaña) y seguir. Selector «🎮 Mando clásico» · «👆 Tocar la pantalla» en la pantalla de
     misiones, `localStorage.dragon_control`. En vertical el `body` pasa a columna y el cielo/tierra usa `--mando-alto`.
+  - Karts Turbo (cambio `karts-mando`): adaptador de `KartsEntrada` (no usa `al`/`alSoltar`: la capa de acciones de
+    Karts lee los flancos una vez por cuadro). Acciones `izq`/`der` (cruceta ◀ ▶, entran solo por `eje().x`),
+    `acel` A, `freno` B, `derrape` [R, L], `item` [X, Y], `pausa` START; `teclas` con todas las de `Mando.TECLAS` en
+    `null` (Karts conserva su teclado y la pausa no se alterna dos veces); `nombres` cortos («gas», «frenar», «ítem»,
+    «pausa») para que quepan a 320 px. Sin «⌨️ Controles»: el tutorial de 3 s explica los botones. Selector
+    «🎮 Mando clásico» junto a Botones, Joystick y Sensor (`localStorage.karts_control`); por omisión, Botones.
 - **Pruebas:** lógica pura en `server/mando_test.ts` (Deno); E2E `tests/e2e/e2e-mando.js` (toques reales por CDP,
-  teclado, control simulado con `navigator.getGamepads` en `addInitScript`, preferencia y capturas).
+  teclado, control simulado con `navigator.getGamepads` en `addInitScript`, preferencia y capturas) y, para Karts,
+  `tests/e2e/e2e-karts.js` (`probarMando`).
 
 ## Juegos fusionados (cambio `juegos-fusion`)
 

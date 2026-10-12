@@ -41,10 +41,10 @@
 | `pausa` | START | P / Esc | Start / Menú |
 
 `Mando.crear({ acciones: { izq: 'izq', der: 'der', acel: 'A', freno: 'B', derrape: ['R', 'L'], item: ['X', 'Y'],
-pausa: 'START' }, contenedor: #juego, nombres: { acel, freno, derrape, item, pausa } })`. Los brazos ▲ ▼ de la cruceta
+pausa: 'START' }, contenedor: #juego, nombres: { acel, freno, item, pausa } })`. Los brazos ▲ ▼ de la cruceta
 no se usan, así que no aparecen (la cruceta muestra solo ◀ ▶). L y R hacen lo mismo para que el derrape caiga en el
-gatillo que cada quien prefiera; X y Y igual con el ítem. Los nombres cortos bajo los botones («acelerar», «frenar»,
-«ítem», «pausa») ayudan a los alumnos y alumnas que no conocen el rombo de una consola.
+gatillo que cada quien prefiera; X y Y igual con el ítem. Los nombres cortos bajo los botones («gas», «frenar», «ítem»,
+«pausa»; «acelerar» se encimaba con B a 320 px) ayudan a los alumnos y alumnas que no conocen el rombo de una consola.
 
 ### 2. El giro entra solo por el eje
 El adaptador responde `presionado('izq')` y `presionado('der')` siempre en falso y entrega el giro con
@@ -93,7 +93,8 @@ cambiar la omisión es una línea (`control = 'botones'` → `'mando'`).
   (L + cruceta abajo a la izquierda, R + rombo abajo a la derecha, START al centro abajo). Karts lo oculta cuando no
   hay carrera ni pausa (`body:not(.en-carrera)`), para que no tape los menús. El minimapa ya va arriba a la derecha
   (`top: 46px`) y el HUD arriba a la izquierda: no se cruzan con el mando (la E2E lo mide). El tutorial sube para no
-  encimarse con START.
+  encimarse con START. Como la cruceta solo usa ◀ ▶,
+  su brazo ▼ invisible no ocupa lugar (`margin-bottom: −u`, CSS de Karts): L y ◀ ▶ quedan pegados a la esquina.
 - **Selector:** cuatro opciones en una cuadrícula de 2×2 para que quepan a 320 px.
 
 ### 7. Tutorial y avisos
