@@ -55,7 +55,7 @@ Alcance: `server/`, `juegos/*.html` (salvo `juegos.html`), `juegos/*.js` salvo `
   vacía, código 0)
 - [x] 6.2 Abrir las páginas cambiadas servidas en local (las E2E las recorren) y revisar capturas de lo visual
   (contraste, `<fieldset>`/`<output>`)
-- [ ] 6.3 Tras el merge: Pages sirve los archivos cambiados y Deno Deploy queda en verde
+- [x] 6.3 Tras el merge: Pages sirve los archivos cambiados y Deno Deploy queda en verde (`/salud` 200; checks de `main` en verde)
 
 ## 7. Documentación (OBLIGATORIO)
 
@@ -65,6 +65,6 @@ Alcance: `server/`, `juegos/*.html` (salvo `juegos.html`), `juegos/*.js` salvo `
 
 ## 8. Publicar y archivar
 
-- [ ] 8.1 Push, PR en español, esperar todos los checks, merge y borrar la rama remota
-- [ ] 8.2 Verificar producción (Pages y Deno)
-- [ ] 8.3 `openspec archive calidad-sonar` en un PR aparte, con sus checks en verde
+- [x] 8.1 Push, PR en español (#182), esperar todos los checks, merge y borrar la rama remota
+- [x] 8.2 Verificar producción (Pages y Deno)
+- [x] 8.3 `openspec archive calidad-sonar` en un PR aparte, con sus checks en verde
