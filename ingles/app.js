@@ -27,7 +27,9 @@ function navItem(s, actual, extra) {
   const cls = 'nav-item' + (extra ? ' ' + extra : '') + (s.id === 'ruta' ? ' profe-link' : '');
   if (s.accion) return '<button type="button" class="' + cls + '" data-nav-accion="' + s.accion + '">' + cuerpo + '</button>';
   // En ?modo=profe las secciones del admin viven en ingles.html (sin modo).
-  const href = s.href ? conApiParam(s.href) : (MODO_PROFE ? conApiParam('ingles.html') + '#' + s.id : '#' + s.id);
+  let href = '#' + s.id;
+  if (s.href) href = conApiParam(s.href);
+  else if (MODO_PROFE) href = conApiParam('ingles.html') + '#' + s.id;
   return '<a class="' + cls + '" href="' + escapeHtml(href) + '" data-nav="' + s.id + '"' + cur + '>' + cuerpo + '</a>';
 }
 function pintarNav() {
@@ -87,7 +89,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') document.get
 function render(data) {
   state.vista = 'secciones';
   if (location.hash.startsWith('#ver/')) history.replaceState(null, '', location.pathname + location.search + '#' + seccionActual());
-  whoLabel.textContent = MODO_PROFE ? 'Ruta del profe' : MODO_SECUNDARIA ? 'Secundaria' : data.isAdmin ? 'Modo maestro' : '';
+  whoLabel.textContent = segunModo('Ruta del profe', 'Secundaria', data.isAdmin ? 'Modo maestro' : '');
   if (data.isAdmin) {
     const tag = document.createElement('span');
     tag.className = 'admin-tag';

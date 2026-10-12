@@ -58,38 +58,51 @@
       if (s & 0x88) { s += 7; continue; }
       const p = t[s]; if (!p || colorDe(p) !== c) continue;
       const tipo = p.toLowerCase();
-      if (tipo === 'p') {
-        const dir = c === 'w' ? -16 : 16, ini = c === 'w' ? 6 : 1, ult = c === 'w' ? 0 : 7;
-        const coronar = (a, extra) => { if ((a >> 4) === ult) for (const pr of 'qrbn') agregar(s, a, { promo: pr, ...extra }); else agregar(s, a, extra); };
-        const uno = s + dir;
-        if (!(uno & 0x88) && !t[uno]) {
-          coronar(uno);
-          const dos = uno + dir;
-          if ((s >> 4) === ini && !t[dos]) agregar(s, dos, { doble: true });
-        }
-        for (const d of [dir - 1, dir + 1]) {
-          const a = s + d; if (a & 0x88) continue;
-          if (enemigo(a)) coronar(a);
-          else if (a === st.ep) agregar(s, a, { ep: true, captura: true });
-        }
-      } else if (tipo === 'n' || tipo === 'k') {
-        for (const d of tipo === 'n' ? N_OFF : K_OFF) { const a = s + d; if (!(a & 0x88) && (!t[a] || enemigo(a))) agregar(s, a); }
-        if (tipo === 'k' && s === (c === 'w' ? E1 : E8)) {
-          const r = c === 'w' ? 'R' : 'r', o = otro(c), en = st.enroques;
-          if (en.includes(c === 'w' ? 'K' : 'k') && !t[s + 1] && !t[s + 2] && t[s + 3] === r && !atacada(t, s, o) && !atacada(t, s + 1, o) && !atacada(t, s + 2, o)) agregar(s, s + 2, { enroque: 'K' });
-          if (en.includes(c === 'w' ? 'Q' : 'q') && !t[s - 1] && !t[s - 2] && !t[s - 3] && t[s - 4] === r && !atacada(t, s, o) && !atacada(t, s - 1, o) && !atacada(t, s - 2, o)) agregar(s, s - 2, { enroque: 'Q' });
-        }
-      } else {
-        const dirs = tipo === 'b' ? DIAG : tipo === 'r' ? ORTO : DIAG.concat(ORTO);
-        for (const d of dirs) for (let a = s + d; !(a & 0x88); a += d) { if (!t[a]) agregar(s, a); else { if (enemigo(a)) { agregar(s, a); } break; } }
-      }
+      if (tipo === 'p') jugadasPeon(st, s, c, agregar, enemigo);
+      else if (tipo === 'n' || tipo === 'k') jugadasSalto(st, s, c, tipo, agregar, enemigo);
+      else jugadasDeslizantes(t, s, tipo, agregar, enemigo);
     }
     return ms;
+  }
+  // Peón en s: avance sencillo y doble, capturas, al paso y coronación.
+  function jugadasPeon(st, s, c, agregar, enemigo) {
+    const t = st.t;
+    const dir = c === 'w' ? -16 : 16, ini = c === 'w' ? 6 : 1, ult = c === 'w' ? 0 : 7;
+    const coronar = (a, extra) => { if ((a >> 4) === ult) for (const pr of 'qrbn') agregar(s, a, { promo: pr, ...extra }); else agregar(s, a, extra); };
+    const uno = s + dir;
+    if (!(uno & 0x88) && !t[uno]) {
+      coronar(uno);
+      const dos = uno + dir;
+      if ((s >> 4) === ini && !t[dos]) agregar(s, dos, { doble: true });
+    }
+    for (const d of [dir - 1, dir + 1]) {
+      const a = s + d; if (a & 0x88) continue;
+      if (enemigo(a)) coronar(a);
+      else if (a === st.ep) agregar(s, a, { ep: true, captura: true });
+    }
+  }
+  // Caballo o rey en s (el rey también enroca).
+  function jugadasSalto(st, s, c, tipo, agregar, enemigo) {
+    const t = st.t;
+    for (const d of tipo === 'n' ? N_OFF : K_OFF) { const a = s + d; if (!(a & 0x88) && (!t[a] || enemigo(a))) agregar(s, a); }
+    if (tipo === 'k' && s === (c === 'w' ? E1 : E8)) {
+      const r = c === 'w' ? 'R' : 'r', o = otro(c), en = st.enroques;
+      if (en.includes(c === 'w' ? 'K' : 'k') && !t[s + 1] && !t[s + 2] && t[s + 3] === r && !atacada(t, s, o) && !atacada(t, s + 1, o) && !atacada(t, s + 2, o)) agregar(s, s + 2, { enroque: 'K' });
+      if (en.includes(c === 'w' ? 'Q' : 'q') && !t[s - 1] && !t[s - 2] && !t[s - 3] && t[s - 4] === r && !atacada(t, s, o) && !atacada(t, s - 1, o) && !atacada(t, s - 2, o)) agregar(s, s - 2, { enroque: 'Q' });
+    }
+  }
+  // Alfil, torre o dama en s: recorre cada dirección hasta topar.
+  function jugadasDeslizantes(t, s, tipo, agregar, enemigo) {
+    let dirs;
+    if (tipo === 'b') dirs = DIAG; else if (tipo === 'r') dirs = ORTO; else dirs = DIAG.concat(ORTO);
+    for (const d of dirs) for (let a = s + d; !(a & 0x88); a += d) { if (!t[a]) agregar(s, a); else { if (enemigo(a)) { agregar(s, a); } break; } }
   }
 
   function aplicar(st, m, sinClave) {
     const t = st.t.slice(), p = t[m.de], c = st.turno, blanco = c === 'w';
-    t[m.a] = m.promo ? (blanco ? m.promo.toUpperCase() : m.promo) : p; t[m.de] = null;
+    let llega = p;
+    if (m.promo) llega = blanco ? m.promo.toUpperCase() : m.promo;
+    t[m.a] = llega; t[m.de] = null;
     if (m.ep) t[m.a + (blanco ? 16 : -16)] = null;
     if (m.enroque) { const fila = blanco ? 7 : 0, r = blanco ? 'R' : 'r'; if (m.enroque === 'K') { t[fila * 16 + 7] = null; t[fila * 16 + 5] = r; } else { t[fila * 16] = null; t[fila * 16 + 3] = r; } }
     let en = st.enroques;
@@ -208,7 +221,8 @@
     const L = legales(st);
     if (!L.length) return null;
     if (nivel <= 1 && r() < 0.35) return L[Math.floor(r() * L.length)];
-    const prof = nivel <= 1 ? 1 : nivel === 2 ? 2 : 3;
+    let prof = 3;
+    if (nivel <= 1) prof = 1; else if (nivel === 2) prof = 2;
     let mejor = -Infinity, mejores = [];
     for (const m of ordenar(st, L)) {
       const v = -negamax(aplicar(st, m, true), prof - 1, -Infinity, -(mejor - 1), 1, nivel >= 3);

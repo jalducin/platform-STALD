@@ -103,12 +103,19 @@
     return base;
   }
 
+  // Valor según la pose: al saltar, al caer o en cualquier otra.
+  const segunPose = (pose, salta, cae, otra) => {
+    if (pose === 'salta') return salta;
+    return pose === 'cae' ? cae : otra;
+  };
+
   // ---------- Xalli: el ajolote (el Axo de siempre con atuendo turquesa y jade) ----------
   function pintarXalli(c, o) {
     const p = (POR_ID.xalli.piel[o.poder] || POR_ID.xalli.piel.base), t = o.t || 0, pose = o.pose, quieto = o.quieto;
     const anda = pose === 'camina' ? Math.sin(o.fase || 0) : 0;
     // Cola con aleta
-    const meneo = quieto ? 0 : Math.sin(t * (pose === 'camina' ? 11 : 3)) * (pose === 'camina' ? 1.3 : 0.6);
+    let meneo = 0;
+    if (!quieto) meneo = Math.sin(t * (pose === 'camina' ? 11 : 3)) * (pose === 'camina' ? 1.3 : 0.6);
     c.fillStyle = p.sombra; c.beginPath(); c.moveTo(-2.4, -6); c.quadraticCurveTo(-7.5, -9 + meneo, -10.4, -5.8 + meneo); c.quadraticCurveTo(-7, -2, -2.2, -2.6); c.closePath(); c.fill();
     c.strokeStyle = p.bran2; c.lineWidth = 0.6; c.beginPath(); c.moveTo(-3.5, -6.6); c.quadraticCurveTo(-7.5, -9.2 + meneo, -10, -6 + meneo); c.stroke();
     if (o.poder === 'fuego') { const fl = quieto ? 1 : 0.8 + 0.25 * Math.sin(t * 18); c.fillStyle = '#ffb703'; elipse(c, -10.8, -7.6 + meneo, 1.3, 2.4 * fl, -0.5); c.fill(); c.fillStyle = '#fff3b0'; elipse(c, -10.6, -7 + meneo, 0.6, 1.2 * fl, -0.5); c.fill(); }
@@ -140,7 +147,7 @@
     else if (pose === 'cae' || pose === 'dano' || pose === 'pierde') brazo(4.6, -5.4, -0.3);
     else brazo(3, -3.4 + anda * 0.4, 0.9);
     // Branquias coral translúcidas: halo suave y tres por lado que se mecen
-    const barre = pose === 'salta' ? 0.3 : pose === 'cae' ? -0.3 : 0;
+    const barre = segunPose(pose, 0.3, -0.3, 0);
     const ramas = [[-4.7, -12.6, Math.PI + 0.6], [-5.5, -10.3, Math.PI + 0.12], [-4.9, -8.1, Math.PI - 0.38], [6.3, -12.6, -0.6], [7.1, -10.3, -0.12], [6.5, -8.1, 0.38]];
     const brillo = quieto ? 1 : 0.85 + 0.15 * Math.sin(t * 2.2);
     ramas.forEach(([x, y, ang], i) => {
@@ -174,7 +181,7 @@
     // Plumas del penacho (detrás de todo): abanico turquesa y verde con puntas doradas
     const vaiven = o.quieto ? 0 : Math.sin(t * 3) * 0.05;
     for (let k = 0; k < 7; k++) {
-      const a = -2.75 + k * 0.29 + vaiven + (pose === 'salta' ? 0.1 : pose === 'cae' ? -0.12 : 0), largo = 5.4 - Math.abs(k - 3) * 0.35;
+      const a = -2.75 + k * 0.29 + vaiven + segunPose(pose, 0.1, -0.12, 0), largo = 5.4 - Math.abs(k - 3) * 0.35;
       c.save(); c.translate(-0.2, -15.2); c.rotate(a);
       elipse(c, largo / 2 + 0.6, 0, largo / 2 + 0.5, 1.05); relleno(c, p.pluma[k % 3], 'rgba(10,40,40,.45)', 0.3);
       c.fillStyle = p.punta; elipse(c, largo + 0.7, 0, 0.75, 0.75); c.fill();
@@ -236,7 +243,8 @@
     const p = POR_ID.yahui.piel[o.poder === 'fuego' ? 'fuego' : 'base'], t = o.t || 0, pose = o.pose, q = postura(o), linea = p.linea;
     const manchas = (lista, r) => { c.fillStyle = p.manchas; for (const [x, y] of lista) { elipse(c, x, y, r, r * 0.85); c.fill(); } };
     // Cola larga moteada, con punta oscura
-    const meneo = o.quieto ? 0 : Math.sin(t * (pose === 'camina' ? 9 : 2.5)) * 1.1;
+    let meneo = 0;
+    if (!o.quieto) meneo = Math.sin(t * (pose === 'camina' ? 9 : 2.5)) * 1.1;
     c.lineCap = 'round';
     const cola = new Path2D(); cola.moveTo(-2.6, -4.8); cola.bezierCurveTo(-7, -4.5, -9.5, -8 + meneo, -7.6, -11.2 + meneo);
     c.strokeStyle = linea; c.lineWidth = 2.1; c.stroke(cola);
@@ -321,7 +329,7 @@
     // Brazo de atrás
     miembro(c, -0.7, -8.0, q.brazoB, 3.2, 1.3, p.piel, linea);
     // Falda larga con franja bordada (se mece al caminar) y pies
-    const meneo = pose === 'camina' ? Math.sin(o.fase || 0) * 0.6 : pose === 'salta' ? -0.5 : pose === 'cae' ? 0.6 : 0;
+    const meneo = pose === 'camina' ? Math.sin(o.fase || 0) * 0.6 : segunPose(pose, -0.5, 0.6, 0);
     c.fillStyle = '#3b2416'; elipse(c, -1.2 + meneo, -0.45, 1.1, 0.5); c.fill(); elipse(c, 1.6 - meneo, -0.45, 1.1, 0.5); c.fill();
     c.beginPath(); c.moveTo(-2.7, -4.6); c.lineTo(2.9, -4.6); c.lineTo(3.7 - meneo * 0.4, -0.8); c.lineTo(-3.5 - meneo * 0.4, -0.8); c.closePath(); relleno(c, p.huipil, linea, 0.4);
     c.fillStyle = p.flor[1]; c.fillRect(-3.4 - meneo * 0.4, -1.9, 7.0, 0.55);
@@ -378,7 +386,9 @@
     const k = id + '|' + pose + '|' + poder;
     if (retratos[k]) return retratos[k];
     const c = g.document.createElement('canvas'); c.width = c.height = 128;
-    const x = c.getContext('2d'); x.translate(id === 'xalli' ? 62 : id === 'yahui' ? 72 : 64, id === 'xalli' ? 116 : 126); const e = 5.6; x.scale(e, e);
+    let dx = 64;
+    if (id === 'xalli') dx = 62; else if (id === 'yahui') dx = 72;
+    const x = c.getContext('2d'); x.translate(dx, id === 'xalli' ? 116 : 126); const e = 5.6; x.scale(e, e);
     pintar(x, id, { pose, fase: 0, t: 0.5, poder, quieto: true });
     return (retratos[k] = c.toDataURL());
   }

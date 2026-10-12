@@ -14,7 +14,10 @@
   const rng = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
   // Redondeo a milésimas: el estado de cada tiro empieza exactamente igual en todos los aparatos.
   const q = v => Math.round(v * 1000) / 1000;
-  const acotar = (v, a, b) => v < a ? a : v > b ? b : v;
+  const acotar = (v, a, b) => {
+    if (v < a) return a;
+    return v > b ? b : v;
+  };
 
   // [seno, coseno] de un ángulo en décimas de grado (entero). Serie de Taylor en [0°, 90°) y cuadrantes.
   function senCos(decimas) {
@@ -22,7 +25,9 @@
     const cuad = Math.floor(a / 900), x = (a - cuad * 900) * PI / 1800, x2 = x * x;
     let s = x, c = 1, ts = x, tc = 1;
     for (let k = 1; k <= 10; k++) { ts = -ts * x2 / ((2 * k) * (2 * k + 1)); s += ts; tc = -tc * x2 / ((2 * k - 1) * (2 * k)); c += tc; }
-    return cuad === 0 ? [s, c] : cuad === 1 ? [c, -s] : cuad === 2 ? [-s, -c] : [-c, s];
+    if (cuad === 0) return [s, c];
+    if (cuad === 1) return [c, -s];
+    return cuad === 2 ? [-s, -c] : [-c, s];
   }
   // atan para |t| ≤ tan 22.5°.
   function atanSerie(t) { const t2 = t * t; let term = t, suma = t; for (let k = 1; k <= 16; k++) { term = -term * t2; suma += term / (2 * k + 1); } return suma; }

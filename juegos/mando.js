@@ -97,6 +97,11 @@
     };
   }
   // Control físico (objeto Gamepad o uno simulado) → { botones, eje }.
+  // Valor de un botón del control: número directo u objeto { pressed, value } (presionado vale al menos 1).
+  function valorBoton(bt) {
+    if (typeof bt === 'number') return bt;
+    return bt.pressed ? Math.max(1, bt.value || 0) : bt.value || 0;
+  }
   function controlABotones(gp, opciones) {
     const o = opciones || {};
     if (!gp || gp.connected === false) return { botones: [], eje: { x: 0, y: 0 } };
@@ -106,7 +111,7 @@
     (gp.buttons || []).forEach((bt, i) => {
       const b = indices[i];
       if (!b || !bt) return;
-      const v = typeof bt === 'number' ? bt : (bt.pressed ? Math.max(1, bt.value || 0) : bt.value || 0);
+      const v = valorBoton(bt);
       if (v > 0.5) s.add(b);
     });
     const ax = gp.axes || [];
@@ -175,7 +180,11 @@
     L: 'Gatillo izquierdo', R: 'Gatillo derecho', START: 'Start / Menú', SELECT: 'Select / Vista',
   };
   const TEXTO_TECLA = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Space: 'Espacio', Enter: 'Enter', NumpadEnter: 'Enter', ShiftRight: 'Shift derecho', ShiftLeft: 'Shift izquierdo', Backspace: 'Retroceso', Escape: 'Esc', Tab: 'Tab' };
-  const textoTecla = code => TEXTO_TECLA[code] || (/^Key[A-Z]$/.test(code) ? code.slice(3) : /^Digit\d$/.test(code) ? code.slice(5) : code);
+  const textoTecla = code => {
+    if (TEXTO_TECLA[code]) return TEXTO_TECLA[code];
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    return /^Digit\d$/.test(code) ? code.slice(5) : code;
+  };
   const mayuscula = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   function guia(acciones, mapa, nombres) {
     const n = nombres || {}, t = mapa || TECLAS;

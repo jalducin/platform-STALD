@@ -201,7 +201,9 @@
   // durante la transición y para que las páginas que aún no usan la sesión sepan quién entró (frontend-standards §2).
   const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
   let viejo = false; // true: entró con el correo guardado de antes (sin sesión), solo durante la transición
-  const conCorreo = (ruta, email) => viejo ? ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(email) : ruta;
+  // Agrega nombre=valor a la consulta de la URL (con ? o con & si ya tiene).
+  const agregarParam = (url, nombre, valor) => url + (url.includes('?') ? '&' : '?') + nombre + '=' + encodeURIComponent(valor);
+  const conCorreo = (ruta, email) => viejo ? agregarParam(ruta, 'email', email) : ruta;
 
   const $ = (id) => document.getElementById(id);
   const show = (id) => ['login', 'cambio', 'loading', 'home'].forEach(s => { $(s).hidden = s !== id; });
@@ -211,7 +213,7 @@
   }
 
   // Conserva ?api= al navegar (pruebas locales).
-  const conApi = (href) => API_PARAM ? href + (href.includes('?') ? '&' : '?') + 'api=' + encodeURIComponent(API_PARAM) : href;
+  const conApi = (href) => API_PARAM ? agregarParam(href, 'api', API_PARAM) : href;
   // Enlace para compartir (openspec: registro-juegos): index.html?juegos=1 lleva directo a crear la cuenta de Juegos.
   if (new URLSearchParams(location.search).get('juegos') === '1') location.replace(conApi('juegos.html?registro=1'));
 

@@ -97,9 +97,10 @@ function slideHtml(d, ctx) {
   const tono = TONOS[d.tipo] || 'indigo';
   const wrap = (titulo, cuerpo, extra) => '<div class="slide" data-tone="' + tono + '"><div class="slide-top"><span>' + escapeHtml(titulo) + '</span><small>' + escapeHtml(extra || ctx.titulo) + '</small></div><div class="slide-body">' + cuerpo + '</div></div>';
   if (d.tipo === 'portada' || d.tipo === 'cierre') {
+    const horaCtx = ctx.hora ? ' · ' + escapeHtml(ctx.hora) : '';
     return '<div class="slide hero" data-tone="' + tono + '"><div class="big-emoji">' + escapeHtml(d.emoji || '🎥') + '</div><h1>' + escapeHtml(d.titulo) + '</h1>' +
       (d.subtitulo ? '<h2>' + escapeHtml(d.subtitulo) + '</h2>' : '') + (d.texto ? '<div class="pill-hero">' + escapeHtml(d.texto) + '</div>' : '') +
-      (d.tipo === 'portada' ? '<div class="pill-hero">' + escapeHtml(formatFecha(ctx.fecha)) + (ctx.hora ? ' · ' + escapeHtml(ctx.hora) : '') + '</div>' : '') + '</div>';
+      (d.tipo === 'portada' ? '<div class="pill-hero">' + escapeHtml(formatFecha(ctx.fecha)) + horaCtx + '</div>' : '') + '</div>';
   }
   if (d.tipo === 'agenda') {
     return wrap(d.titulo, '<div class="s-grid">' + (ctx.guion || []).map((b, i) => '<div class="s-card"><span class="s-num">' + (i + 1) + '</span><span>' + escapeHtml(String(b.titulo).replace(/^\d+\.\s*/, '')) + '</span><span class="s-time">' + escapeHtml(b.tiempo) + '</span></div>').join('') + '</div>');

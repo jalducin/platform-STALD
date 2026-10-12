@@ -4,6 +4,7 @@ import {
   addIntento,
   ahoraIso,
   calcularRacha,
+  type Correccion,
   type Ejercicio,
   esPara,
   abreYa,
@@ -169,6 +170,208 @@ async function preguntasPara(store: Store, it: Item, alumno: string | null, n: n
   return { preguntas: selectQuestions(it.banco || [], it, slug, n, temas), enfoque: temas || [] };
 }
 
+// GET /ingles/actividades → elementos con estado (alumno) o con resultados y resumen (admin)
+async function listarActividades(quien: Identidad, store: Store, json: Json, hoy: string, ambito: Ambito, slug: string | null): Promise<Response> {
+  const { items, semanaActual, semanaSiguiente } = await visibleItems(store, hoy, ambito);
+  const resumirSemana = (s: Semana) => ({ id: s.id, titulo: s.titulo, ids: s.elementos.map((e) => e.id) });
+  const semana = semanaActual ? resumirSemana(semanaActual) : null;
+  const siguiente = semanaSiguiente ? { semanaSiguiente: resumirSemana(semanaSiguiente) } : {};
+  if (quien.isAdmin) {
+    const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), ...(it.prorrogas ? { prorrogas: it.prorrogas } : {}), resultados: tieneReto(it) ? await resultadosDe(store, it.id) : [] })));
+    const porAlumno = new Map<string, Resultado[]>();
+    for (const it of conRes) for (const r of it.resultados) { if (!porAlumno.has(r.alumno)) { porAlumno.set(r.alumno, []); } porAlumno.get(r.alumno)!.push(r); }
+    const resumen = Object.fromEntries([...porAlumno].map(([a, rs]) => [a, { temasAReforzar: temasAReforzar(rs) }]));
+    return json({ isAdmin: true, hoy, semana, ...siguiente, items: conRes, resumen });
+  }
+  const grupo = ambito.clave === "profe" ? (await itemsDelGrupo(store)).map(paraProfe) : [];
+  const deGrupo = new Set(grupo.map((g) => g.id));
+  const todos = [...items, ...grupo].sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
+  // Alumnos y alumnas nuevos: lo que venció antes de su lunes de inicio no aparece (openspec: inicio-lunes-alumnos).
+  const suyos = todos.filter((it: ConGrupos) => !quien.grupo || !it.grupos || it.grupos.includes(quien.grupo)) // calendario por grupo
+    .filter((it) => esPara(it, slug!)) // exclusivos (openspec: examen-secundaria)
+    .map((base) => paraAlumno(base, slug!)).filter((it) => !quien.inicio || it.fechaLimite >= quien.inicio);
+  const diasConEntrega = new Set<string>(); // racha (openspec: ingles-pro)
+  const conEstado = await Promise.all(suyos.map(async (it) => {
+    const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
+    for (const i of r?.intentos || []) diasConEntrega.add(mxToday(new Date(i.enviadoEn)));
+    return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
+  }));
+  const plan = ambito.clave === "profe" ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
+  return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
+}
+
+// Elemento pedido; en la ruta del profe, si no es suyo, el del grupo con sus fechas de profe.
+async function cargarElemento(store: Store, id: string, ambito: Ambito): Promise<Item | null> {
+  let base = await loadItem(store, id, ambito);
+  if (!base && ambito.clave === "profe") {
+    const g = await loadItem(store, id);
+    if (g && TIPOS_GRUPO.has(g.tipo)) base = paraProfe(g);
+  }
+  return base;
+}
+
+// Elemento sin reto. Meet sin reto (openspec: meet-sin-reto): el profe abre su material (guion, presentación, teoría);
+// alumnos y alumnas, desde su fecha, el material de lectura (teoría y tips), que es su actividad. No hay nada que resolver.
+function materialSinReto(req: Request, partes: string[], it: Item, quien: Identidad, hoy: string, json: Json): Response {
+  if (req.method === "GET" && partes.length === 1 && it.tipo === "meet") {
+    if (!quien.isAdmin && !abreYa(it.disponibleDesde, hoy)) return json({ error: "no_disponible", disponibleDesde: it.disponibleDesde }, 403);
+    return json({
+      ...meta(it), material: true, teoria: it.teoria || [], tips: it.tips || [],
+      ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}), ...(quien.isAdmin && it.presentacion ? { presentacion: it.presentacion } : {}),
+      temas: [], enfoque: [], intento: 0, intentosUsados: 0, vistaPrevia: quien.isAdmin, preguntas: [],
+    });
+  }
+  return json({ error: "no_aplica" }, 400);
+}
+
+// Petición a /ingles/actividades/<id>[/...] ya resuelta al elemento con reto que ve quien pide.
+interface CtxElemento {
+  req: Request;
+  quien: Identidad;
+  store: Store;
+  json: Json;
+  ambito: Ambito;
+  hoy: string;
+  slug: string | null;
+  base: Item; // el elemento tal como está guardado (sin ajustes por alumno)
+  it: Item; // el elemento para quien pide (con su prórroga si es alumno o alumna)
+}
+
+// DELETE /ingles/actividades/<id>/resultados/<alumno> → reiniciar (solo admin)
+async function reiniciarResultado(c: CtxElemento, alumno: string): Promise<Response> {
+  const { quien, store, json, it } = c;
+  if (!quien.isAdmin) return json({ error: "solo_admin" }, 403);
+  await store.remove(rutaResultado(it.id, slugAlumno(alumno)), `Reinicio de ${it.id} para ${alumno}`);
+  return json({ borrado: true });
+}
+
+// POST /ingles/actividades/<id>/prorroga { alumno, fecha|null } → prórroga por alumno o alumna (solo admin,
+// openspec: ingles-pro). Se guarda en el JSON del elemento (`prorrogas`), igual que si se editara a mano.
+async function prorrogar(c: CtxElemento): Promise<Response> {
+  const { req, quien, store, json, ambito, base } = c;
+  if (!quien.isAdmin || ambito.clave !== "clase") return json({ error: "solo_admin" }, 403);
+  let body: { alumno?: unknown; fecha?: unknown } = {};
+  try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+  const alumnoSlug = String(body.alumno ?? "").trim() ? slugAlumno(String(body.alumno)) : "";
+  if (!alumnoSlug || alumnoSlug === "sin-nombre") return json({ error: "alumno_invalido" }, 400);
+  const fecha = body.fecha === null || body.fecha === undefined || body.fecha === "" ? null : String(body.fecha);
+  if (fecha !== null && (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || Number.isNaN(Date.parse(fecha)) || fecha < base.disponibleDesde)) return json({ error: "fecha_invalida" }, 400);
+  for (let i = 0; i < 3; i++) {
+    const ruta = (await store.get(`${ambito.contenido}/actividades/${base.id}.json`)) ? `${ambito.contenido}/actividades/${base.id}.json` : `${ambito.contenido}/examenes/${base.id}.json`;
+    const doc = await store.get<Record<string, unknown>>(ruta);
+    if (!doc) return json({ error: "no_encontrado" }, 404);
+    const prorrogas = { ...((doc.data.prorrogas as Record<string, string>) || {}) };
+    if (fecha) prorrogas[alumnoSlug] = fecha;
+    else delete prorrogas[alumnoSlug];
+    const data: Record<string, unknown> = { ...doc.data, prorrogas };
+    if (!Object.keys(prorrogas).length) delete data.prorrogas;
+    if (await store.put(ruta, data, doc.sha, `${base.id}: prórroga de ${alumnoSlug} → ${fecha ?? "sin prórroga"}`)) {
+      clearCache();
+      return json({ ok: true, id: base.id, alumno: alumnoSlug, fecha, prorrogas });
+    }
+  }
+  return json({ error: "conflicto_escritura" }, 503);
+}
+
+type DocResultado = Awaited<ReturnType<typeof leerResultado>>;
+
+// Alumno o alumna que aún no puede resolver el elemento: la respuesta de error, o null si puede.
+function bloqueoDeAlumno(c: CtxElemento, doc: DocResultado | null): Response | null {
+  const { json, hoy, it } = c;
+  const estado = estadoItem(it, hoy, doc?.data ?? null);
+  if (estado === "proximamente") return json({ error: "no_disponible", disponibleDesde: it.disponibleDesde }, 403);
+  if (estado === "completo") return json({ error: "sin_intentos", resultado: doc!.data }, 409);
+  if (estado === "en-espera") return json({ error: "segunda_pronto", desde: it.segundaOportunidad }, 403);
+  return null;
+}
+
+// Preguntas del intento n: corrección del intento anterior (si aplica) o selección nueva, y temas de enfoque.
+interface PreguntasIntento { correccion: Correccion | null; preguntas: Ejercicio[]; enfoque: string[] }
+
+// Corrección: a partir del intento anterior (del alumno o alumna, o del que ve el admin en vista previa).
+async function preguntasDelIntento(c: CtxElemento, doc: DocResultado | null, alumnoVista: string | null, n: number): Promise<PreguntasIntento> {
+  const { quien, store, it } = c;
+  let docVista = doc;
+  if (quien.isAdmin) docVista = alumnoVista ? await leerResultado(store, it.id, slugAlumno(alumnoVista)) : null;
+  const correccion = n > 1 ? correccionDe(it, docVista?.data.intentos[n - 2]) : null;
+  const seleccion = await preguntasPara(store, it, alumnoVista, n);
+  const preguntas = correccion ? correccion.preguntas : seleccion.preguntas;
+  return { correccion, preguntas, enfoque: seleccion.enfoque };
+}
+
+// PUT /<id>/borrador { intento, respuestas } → avance del intento abierto en el servidor; vacío lo borra.
+async function guardarBorrador(c: CtxElemento, n: number, p: PreguntasIntento): Promise<Response> {
+  const { req, quien, store, json, slug, it } = c;
+  const { correccion, preguntas } = p;
+  if (req.method !== "PUT") return json({ error: "metodo_no_permitido" }, 405);
+  if (quien.isAdmin) return json({ error: "solo_alumno" }, 403);
+  let body: { intento?: number; respuestas?: unknown } = {};
+  try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+  if (body.intento !== n) return json({ error: "intento_invalido", esperado: n }, 409);
+  const fijas = new Set(Object.keys(correccion?.fijas || {}));
+  const respuestas = Object.fromEntries(Object.entries(sanitizeRespuestas(preguntas, body.respuestas)).filter(([id]) => !fijas.has(id)));
+  const ruta = rutaBorrador(it.id, slug!);
+  if (!Object.keys(respuestas).length) {
+    if (await store.get(ruta)) await store.remove(ruta, `${it.id}: borrador vacío de ${quien.alumno}`);
+    return json({ guardado: true, vacio: true });
+  }
+  const borrador: Borrador = { intento: n, respuestas, actualizado: ahoraIso() };
+  for (let i = 0; i < 3; i++) {
+    const actual = await store.get<Borrador>(ruta);
+    if (await store.put(ruta, borrador, actual?.sha ?? null, `${it.id}: borrador de ${quien.alumno}`)) return json({ guardado: true, actualizado: borrador.actualizado });
+  }
+  return json({ error: "conflicto_escritura" }, 503);
+}
+
+// GET /ingles/actividades/<id> → el elemento con las preguntas del intento que toca (sin respuestas).
+async function verElemento(c: CtxElemento, n: number, usados: number, alumnoVista: string | null, p: PreguntasIntento): Promise<Response> {
+  const { quien, store, json, slug, it } = c;
+  const { correccion, preguntas, enfoque } = p;
+  const titulos = new Map((it.temas || []).map((t) => [t.id, t.titulo]));
+  const bor = !quien.isAdmin && slug ? (await store.get<Borrador>(rutaBorrador(it.id, slug)))?.data : null;
+  return json({
+    ...meta(it), teoria: it.teoria || [], tips: it.tips || [],
+    ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}),
+    ...(quien.isAdmin && it.presentacion ? { presentacion: it.presentacion } : {}),
+    temas: (it.temas || []).map((t) => ({ id: t.id, titulo: t.titulo })),
+    enfoque: enfoque.map((t) => titulos.get(t) || t),
+    intento: n, intentosUsados: usados, vistaPrevia: quien.isAdmin,
+    ...(correccion ? { correccion: { fijas: correccion.fijas, anteriores: correccion.anteriores } } : {}),
+    // Fichas y pares barajados con la misma base que la selección: elemento + alumno (o admin) + intento.
+    preguntas: preguntas.map((p) => publicQuestion(p, `${it.id}|${alumnoVista ? slugAlumno(alumnoVista) : "admin"}|${n}`)),
+    ...(bor && bor.intento === n ? { borrador: { respuestas: bor.respuestas, actualizado: bor.actualizado } } : {}),
+  });
+}
+
+// POST /ingles/actividades/<id> { intento, respuestas } → califica; el alumno o alumna lo guarda, el admin no.
+async function enviarIntento(c: CtxElemento, n: number, p: PreguntasIntento): Promise<Response> {
+  const { req, quien, store, json, hoy, slug, it } = c;
+  const { correccion, preguntas } = p;
+  let body: { intento?: number; respuestas?: unknown } = {};
+  try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+  if (!quien.isAdmin && body.intento !== n) return json({ error: "intento_invalido", esperado: n }, 409);
+  // Las correctas del intento anterior mandan sobre lo que envíe el cliente.
+  const respuestas = { ...sanitizeRespuestas(preguntas, body.respuestas), ...(correccion?.fijas || {}) };
+  const calificacion = grade(it, preguntas, respuestas);
+  if (quien.isAdmin) return json({ guardado: false, intento: n, intentosMax: maxIntentos(it), calificacion });
+
+  const intento: Intento = { n, enviadoEn: ahoraIso(), fueraDeTiempo: fueraDeTiempoDe(it, n, hoy), preguntas: preguntas.map((p) => p.id), respuestas, calificacion };
+  for (let i = 0; i < 3; i++) {
+    const actual = await leerResultado(store, it.id, slug!);
+    if ((actual?.data.intentos.length || 0) !== n - 1) return json({ error: "intento_invalido", esperado: (actual?.data.intentos.length || 0) + 1 }, 409);
+    const nuevo = addIntento(actual?.data ?? null, it, quien.alumno!, intento);
+    const ok = await store.put(rutaResultado(it.id, slug!), nuevo, actual?.sha ?? null, `${it.id}: intento ${n} de ${quien.alumno}`);
+    const restantes = estadoItem(it, hoy, nuevo) === "completo" ? 0 : maxIntentos(it) - n;
+    if (ok) {
+      // Enviado: el borrador sobra. Si no se puede borrar, la calificación ya quedó guardada.
+      try { if (await store.get(rutaBorrador(it.id, slug!))) await store.remove(rutaBorrador(it.id, slug!), `${it.id}: borrador enviado de ${quien.alumno}`); }
+      catch (e) { console.error("borrador:", e instanceof Error ? e.message : e); }
+      return json({ guardado: true, intento: n, intentosMax: maxIntentos(it), restantes, calificacion, mejor: nuevo.mejor });
+    }
+  }
+  return json({ error: "conflicto_escritura" }, 503);
+}
+
 export async function handleActividades(req: Request, subpath: string, quien: Identidad, store: Store, json: Json, ambito: Ambito = AMBITO_CLASE): Promise<Response> {
   if (!quien.isAdmin && !quien.alumno) return json({ error: "sin_acceso" }, 403);
   const url = new URL(req.url);
@@ -177,88 +380,16 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
   const slug = quien.alumno ? slugAlumno(quien.alumno) : null;
 
   // GET /ingles/actividades → elementos con estado (alumno) o con resultados y resumen (admin)
-  if (partes.length === 0 && req.method === "GET") {
-    const { items, semanaActual, semanaSiguiente } = await visibleItems(store, hoy, ambito);
-    const resumirSemana = (s: Semana) => ({ id: s.id, titulo: s.titulo, ids: s.elementos.map((e) => e.id) });
-    const semana = semanaActual ? resumirSemana(semanaActual) : null;
-    const siguiente = semanaSiguiente ? { semanaSiguiente: resumirSemana(semanaSiguiente) } : {};
-    if (quien.isAdmin) {
-      const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), ...(it.prorrogas ? { prorrogas: it.prorrogas } : {}), resultados: tieneReto(it) ? await resultadosDe(store, it.id) : [] })));
-      const porAlumno = new Map<string, Resultado[]>();
-      for (const it of conRes) for (const r of it.resultados) { if (!porAlumno.has(r.alumno)) { porAlumno.set(r.alumno, []); } porAlumno.get(r.alumno)!.push(r); }
-      const resumen = Object.fromEntries([...porAlumno].map(([a, rs]) => [a, { temasAReforzar: temasAReforzar(rs) }]));
-      return json({ isAdmin: true, hoy, semana, ...siguiente, items: conRes, resumen });
-    }
-    const grupo = ambito.clave === "profe" ? (await itemsDelGrupo(store)).map(paraProfe) : [];
-    const deGrupo = new Set(grupo.map((g) => g.id));
-    const todos = [...items, ...grupo].sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
-    // Alumnos y alumnas nuevos: lo que venció antes de su lunes de inicio no aparece (openspec: inicio-lunes-alumnos).
-    const suyos = todos.filter((it: ConGrupos) => !quien.grupo || !it.grupos || it.grupos.includes(quien.grupo)) // calendario por grupo
-      .filter((it) => esPara(it, slug!)) // exclusivos (openspec: examen-secundaria)
-      .map((base) => paraAlumno(base, slug!)).filter((it) => !quien.inicio || it.fechaLimite >= quien.inicio);
-    const diasConEntrega = new Set<string>(); // racha (openspec: ingles-pro)
-    const conEstado = await Promise.all(suyos.map(async (it) => {
-      const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
-      for (const i of r?.intentos || []) diasConEntrega.add(mxToday(new Date(i.enviadoEn)));
-      return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
-    }));
-    const plan = ambito.clave === "profe" ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
-    return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
-  }
+  if (partes.length === 0 && req.method === "GET") return await listarActividades(quien, store, json, hoy, ambito, slug);
 
-  let base = await loadItem(store, partes[0], ambito);
-  if (!base && ambito.clave === "profe") {
-    const g = await loadItem(store, partes[0]);
-    if (g && TIPOS_GRUPO.has(g.tipo)) base = paraProfe(g);
-  }
+  const base = await cargarElemento(store, partes[0], ambito);
   if (!base || (slug && !quien.isAdmin && !esPara(base, slug))) return json({ error: "no_encontrado" }, 404);
   const it = slug && !quien.isAdmin ? paraAlumno(base, slug) : base;
-  if (!tieneReto(it)) {
-    // Meet sin reto (openspec: meet-sin-reto): el profe abre su material (guion, presentación, teoría); alumnos y
-    // alumnas, desde su fecha, el material de lectura (teoría y tips), que es su actividad. No hay nada que resolver.
-    if (req.method === "GET" && partes.length === 1 && it.tipo === "meet") {
-      if (!quien.isAdmin && !abreYa(it.disponibleDesde, hoy)) return json({ error: "no_disponible", disponibleDesde: it.disponibleDesde }, 403);
-      return json({
-        ...meta(it), material: true, teoria: it.teoria || [], tips: it.tips || [],
-        ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}), ...(quien.isAdmin && it.presentacion ? { presentacion: it.presentacion } : {}),
-        temas: [], enfoque: [], intento: 0, intentosUsados: 0, vistaPrevia: quien.isAdmin, preguntas: [],
-      });
-    }
-    return json({ error: "no_aplica" }, 400);
-  }
+  if (!tieneReto(it)) return materialSinReto(req, partes, it, quien, hoy, json);
+  const c: CtxElemento = { req, quien, store, json, ambito, hoy, slug, base, it };
 
-  // DELETE /ingles/actividades/<id>/resultados/<alumno> → reiniciar (solo admin)
-  if (req.method === "DELETE" && partes[1] === "resultados" && partes[2]) {
-    if (!quien.isAdmin) return json({ error: "solo_admin" }, 403);
-    await store.remove(rutaResultado(it.id, slugAlumno(partes[2])), `Reinicio de ${it.id} para ${partes[2]}`);
-    return json({ borrado: true });
-  }
-  // POST /ingles/actividades/<id>/prorroga { alumno, fecha|null } → prórroga por alumno o alumna (solo admin,
-  // openspec: ingles-pro). Se guarda en el JSON del elemento (`prorrogas`), igual que si se editara a mano.
-  if (req.method === "POST" && partes[1] === "prorroga" && partes.length === 2) {
-    if (!quien.isAdmin || ambito.clave !== "clase") return json({ error: "solo_admin" }, 403);
-    let body: { alumno?: unknown; fecha?: unknown } = {};
-    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
-    const alumnoSlug = String(body.alumno ?? "").trim() ? slugAlumno(String(body.alumno)) : "";
-    if (!alumnoSlug || alumnoSlug === "sin-nombre") return json({ error: "alumno_invalido" }, 400);
-    const fecha = body.fecha === null || body.fecha === undefined || body.fecha === "" ? null : String(body.fecha);
-    if (fecha !== null && (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || Number.isNaN(Date.parse(fecha)) || fecha < base.disponibleDesde)) return json({ error: "fecha_invalida" }, 400);
-    for (let i = 0; i < 3; i++) {
-      const ruta = (await store.get(`${ambito.contenido}/actividades/${base.id}.json`)) ? `${ambito.contenido}/actividades/${base.id}.json` : `${ambito.contenido}/examenes/${base.id}.json`;
-      const doc = await store.get<Record<string, unknown>>(ruta);
-      if (!doc) return json({ error: "no_encontrado" }, 404);
-      const prorrogas = { ...((doc.data.prorrogas as Record<string, string>) || {}) };
-      if (fecha) prorrogas[alumnoSlug] = fecha;
-      else delete prorrogas[alumnoSlug];
-      const data: Record<string, unknown> = { ...doc.data, prorrogas };
-      if (!Object.keys(prorrogas).length) delete data.prorrogas;
-      if (await store.put(ruta, data, doc.sha, `${base.id}: prórroga de ${alumnoSlug} → ${fecha ?? "sin prórroga"}`)) {
-        clearCache();
-        return json({ ok: true, id: base.id, alumno: alumnoSlug, fecha, prorrogas });
-      }
-    }
-    return json({ error: "conflicto_escritura" }, 503);
-  }
+  if (req.method === "DELETE" && partes[1] === "resultados" && partes[2]) return await reiniciarResultado(c, partes[2]);
+  if (req.method === "POST" && partes[1] === "prorroga" && partes.length === 2) return await prorrogar(c);
   const esBorrador = partes.length === 2 && partes[1] === "borrador";
   if (partes.length !== 1 && !esBorrador) return json({ error: "not_found" }, 404);
 
@@ -267,85 +398,15 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
   const doc = slug ? await leerResultado(store, it.id, slug) : null;
   const usados = doc?.data.intentos.length || 0;
   const n = quien.isAdmin ? Math.max(1, Number(url.searchParams.get("intento")) || 1) : usados + 1;
-
   if (!quien.isAdmin) {
-    const estado = estadoItem(it, hoy, doc?.data ?? null);
-    if (estado === "proximamente") return json({ error: "no_disponible", disponibleDesde: it.disponibleDesde }, 403);
-    if (estado === "completo") return json({ error: "sin_intentos", resultado: doc!.data }, 409);
-    if (estado === "en-espera") return json({ error: "segunda_pronto", desde: it.segundaOportunidad }, 403);
+    const bloqueo = bloqueoDeAlumno(c, doc);
+    if (bloqueo) return bloqueo;
   }
+  const p = await preguntasDelIntento(c, doc, alumnoVista, n);
 
-  // Corrección: a partir del intento anterior (del alumno o alumna, o del que ve el admin en vista previa).
-  const docVista = quien.isAdmin ? (alumnoVista ? await leerResultado(store, it.id, slugAlumno(alumnoVista)) : null) : doc;
-  const correccion = n > 1 ? correccionDe(it, docVista?.data.intentos[n - 2]) : null;
-  const seleccion = await preguntasPara(store, it, alumnoVista, n);
-  const preguntas = correccion ? correccion.preguntas : seleccion.preguntas;
-  const enfoque = seleccion.enfoque;
-
-  // PUT /<id>/borrador { intento, respuestas } → avance del intento abierto en el servidor; vacío lo borra.
-  if (esBorrador) {
-    if (req.method !== "PUT") return json({ error: "metodo_no_permitido" }, 405);
-    if (quien.isAdmin) return json({ error: "solo_alumno" }, 403);
-    let body: { intento?: number; respuestas?: unknown } = {};
-    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
-    if (body.intento !== n) return json({ error: "intento_invalido", esperado: n }, 409);
-    const fijas = new Set(Object.keys(correccion?.fijas || {}));
-    const respuestas = Object.fromEntries(Object.entries(sanitizeRespuestas(preguntas, body.respuestas)).filter(([id]) => !fijas.has(id)));
-    const ruta = rutaBorrador(it.id, slug!);
-    if (!Object.keys(respuestas).length) {
-      if (await store.get(ruta)) await store.remove(ruta, `${it.id}: borrador vacío de ${quien.alumno}`);
-      return json({ guardado: true, vacio: true });
-    }
-    const borrador: Borrador = { intento: n, respuestas, actualizado: ahoraIso() };
-    for (let i = 0; i < 3; i++) {
-      const actual = await store.get<Borrador>(ruta);
-      if (await store.put(ruta, borrador, actual?.sha ?? null, `${it.id}: borrador de ${quien.alumno}`)) return json({ guardado: true, actualizado: borrador.actualizado });
-    }
-    return json({ error: "conflicto_escritura" }, 503);
-  }
-
-  if (req.method === "GET") {
-    const titulos = new Map((it.temas || []).map((t) => [t.id, t.titulo]));
-    const bor = !quien.isAdmin && slug ? (await store.get<Borrador>(rutaBorrador(it.id, slug)))?.data : null;
-    return json({
-      ...meta(it), teoria: it.teoria || [], tips: it.tips || [],
-      ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}),
-      ...(quien.isAdmin && it.presentacion ? { presentacion: it.presentacion } : {}),
-      temas: (it.temas || []).map((t) => ({ id: t.id, titulo: t.titulo })),
-      enfoque: enfoque.map((t) => titulos.get(t) || t),
-      intento: n, intentosUsados: usados, vistaPrevia: quien.isAdmin,
-      ...(correccion ? { correccion: { fijas: correccion.fijas, anteriores: correccion.anteriores } } : {}),
-      // Fichas y pares barajados con la misma base que la selección: elemento + alumno (o admin) + intento.
-      preguntas: preguntas.map((p) => publicQuestion(p, `${it.id}|${alumnoVista ? slugAlumno(alumnoVista) : "admin"}|${n}`)),
-      ...(bor && bor.intento === n ? { borrador: { respuestas: bor.respuestas, actualizado: bor.actualizado } } : {}),
-    });
-  }
-
-  if (req.method === "POST") {
-    let body: { intento?: number; respuestas?: unknown } = {};
-    try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
-    if (!quien.isAdmin && body.intento !== n) return json({ error: "intento_invalido", esperado: n }, 409);
-    // Las correctas del intento anterior mandan sobre lo que envíe el cliente.
-    const respuestas = { ...sanitizeRespuestas(preguntas, body.respuestas), ...(correccion?.fijas || {}) };
-    const calificacion = grade(it, preguntas, respuestas);
-    if (quien.isAdmin) return json({ guardado: false, intento: n, intentosMax: maxIntentos(it), calificacion });
-
-    const intento: Intento = { n, enviadoEn: ahoraIso(), fueraDeTiempo: fueraDeTiempoDe(it, n, hoy), preguntas: preguntas.map((p) => p.id), respuestas, calificacion };
-    for (let i = 0; i < 3; i++) {
-      const actual = await leerResultado(store, it.id, slug!);
-      if ((actual?.data.intentos.length || 0) !== n - 1) return json({ error: "intento_invalido", esperado: (actual?.data.intentos.length || 0) + 1 }, 409);
-      const nuevo = addIntento(actual?.data ?? null, it, quien.alumno!, intento);
-      const ok = await store.put(rutaResultado(it.id, slug!), nuevo, actual?.sha ?? null, `${it.id}: intento ${n} de ${quien.alumno}`);
-      const restantes = estadoItem(it, hoy, nuevo) === "completo" ? 0 : maxIntentos(it) - n;
-      if (ok) {
-        // Enviado: el borrador sobra. Si no se puede borrar, la calificación ya quedó guardada.
-        try { if (await store.get(rutaBorrador(it.id, slug!))) await store.remove(rutaBorrador(it.id, slug!), `${it.id}: borrador enviado de ${quien.alumno}`); }
-        catch (e) { console.error("borrador:", e instanceof Error ? e.message : e); }
-        return json({ guardado: true, intento: n, intentosMax: maxIntentos(it), restantes, calificacion, mejor: nuevo.mejor });
-      }
-    }
-    return json({ error: "conflicto_escritura" }, 503);
-  }
+  if (esBorrador) return await guardarBorrador(c, n, p);
+  if (req.method === "GET") return await verElemento(c, n, usados, alumnoVista, p);
+  if (req.method === "POST") return await enviarIntento(c, n, p);
 
   return json({ error: "metodo_no_permitido" }, 405);
 }

@@ -33,20 +33,51 @@
   // ---------- Piezas de dibujo ----------
   const svgX = '<svg class="cr-x" viewBox="0 0 100 100" aria-hidden="true"><path d="M24 24 76 76"/><path d="M76 24 24 76"/></svg>';
   const svgO = '<svg class="cr-o" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="29"/></svg>';
-  const fichaGato = f => f === 'X' ? svgX : f === 'O' ? svgO : '';
+  const fichaGato = f => {
+    if (f === 'X') return svgX;
+    return f === 'O' ? svgO : '';
+  };
   const nombreFicha = f => f === 'X' ? 'equis' : 'círculo';
+  // Ayudantes para escoger textos y clases sin ternarios anidados (los valores que reciben son textos ya armados).
+  // Según el resultado de una ronda: empate, ganó `mia` o ganó el rival.
+  const segunResultado = (r, mia, empate, gane, perdi) => {
+    if (r.empate) return empate;
+    return r.gana === mia ? gane : perdi;
+  };
+  // Según el marcador: voy ganando, vamos parejos o voy perdiendo.
+  const segunMarcador = (yo, el, gane, parejos, perdi) => {
+    if (yo > el) return gane;
+    return yo === el ? parejos : perdi;
+  };
+  // Clase del letrero de estado: 'ok' si ganó `mia`, 'bad' si ganó `rival` y '' en otro caso o sin resultado.
+  const claseResultado = (res, mia, rival) => {
+    if (!res) return '';
+    if (res.gana === mia) return 'ok';
+    return res.gana === rival ? 'bad' : '';
+  };
+  // Texto de una escalera o serpiente en serpientes y escaleras ('' si no hubo salto).
+  const textoSalto = (salto, escalera, serpiente) => {
+    if (salto === 'escalera') return escalera;
+    return salto === 'serpiente' ? serpiente : '';
+  };
   function gatoHtml(t, o) {
-    return '<div class="cr-gato" role="grid" aria-label="Tablero del gato">' + t.map((v, i) => '<button data-cr-g="' + i + '" class="' + ((o.linea || []).includes(i) ? 'gana' : o.ultima === i ? 'ult' : '') + '"' +
+    const clase = i => {
+      if ((o.linea || []).includes(i)) return 'gana';
+      return o.ultima === i ? 'ult' : '';
+    };
+    return '<div class="cr-gato" role="grid" aria-label="Tablero del gato">' + t.map((v, i) => '<button data-cr-g="' + i + '" class="' + clase(i) + '"' +
       (v || !o.activo ? ' disabled' : '') + ' aria-label="Casilla ' + (i + 1) + (v ? ': ' + nombreFicha(v) : ' libre') + '">' + fichaGato(v) + '</button>').join('') + '</div>';
   }
   const fichaC4 = f => '<span class="cr-ficha-chica" style="border-radius:50%;background:' + (f === 'R' ? '#dc2626' : '#eab308') + '"></span>';
+  const nombreColorC4 = v => v === 'R' ? 'roja' : 'amarilla';
+  const piezaC4 = (v, cae, gana, fila) => '<span class="pz ' + v + (cae ? ' cae' : '') + (gana ? ' gana' : '') + '" style="--caida:' + (fila + 1) + '"></span>';
   function c4Html(t, o) {
     let h = '<div class="cr-c4" role="grid" aria-label="Tablero de Conecta 4">';
     for (let i = 0; i < 42; i++) {
       const col = i % 7, fila = Math.floor(i / 7), v = t[i];
       const cae = o.ultima && o.ultima.col === col && o.ultima.fila === fila && o.animar;
-      h += '<button data-cr-c="' + col + '"' + (o.activo && CR.c4Fila(t, col) >= 0 ? '' : ' disabled') + ' aria-label="Columna ' + (col + 1) + (v ? ', ficha ' + (v === 'R' ? 'roja' : 'amarilla') : '') + '">' +
-        (v ? '<span class="pz ' + v + (cae ? ' cae' : '') + ((o.linea || []).includes(i) ? ' gana' : '') + '" style="--caida:' + (fila + 1) + '"></span>' : '') + '</button>';
+      h += '<button data-cr-c="' + col + '"' + (o.activo && CR.c4Fila(t, col) >= 0 ? '' : ' disabled') + ' aria-label="Columna ' + (col + 1) + (v ? ', ficha ' + nombreColorC4(v) : '') + '">' +
+        (v ? piezaC4(v, cae, (o.linea || []).includes(i), fila) : '') + '</button>';
     }
     return h + '</div>';
   }
@@ -55,9 +86,14 @@
   const pptOpsHtml = (activo, elegida) => '<div class="cr-ppt-ops">' + CR.PPT.map(x => '<button data-cr-ppt="' + x + '" aria-pressed="' + (elegida === x) + '"' + (activo ? '' : ' disabled') + '><span aria-hidden="true">' + MANO[x] + '</span>' + NOMBRE_PPT[x] + '</button>').join('') + '</div>';
   // Globo amable: se desinfla con cada error; con 6 queda arrugado en el piso (sin violencia).
   const COLORES_GLOBO = ['#f43f5e', '#8b5cf6', '#0ea5e9', '#22c55e', '#f97316'];
+  // Boca del globo: triste si se desinfló, de «oh» con 4 errores o más y sonriente en otro caso.
+  function caraGlobo(k, perdida) {
+    if (perdida) return '<path d="M64 74q11-7 22 0" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    return k >= 4 ? '<ellipse cx="75" cy="76" rx="6" ry="4" fill="#1f2937"/>' : '<path d="M62 72q13 11 26 0" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/>';
+  }
   function globoHtml(errores, color, perdida) {
     const k = Math.min(errores, CR.AH_ERRORES), esc = perdida ? 0.32 : 1 - k * 0.1;
-    const cara = perdida ? '<path d="M64 74q11-7 22 0" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/>' : k >= 4 ? '<ellipse cx="75" cy="76" rx="6" ry="4" fill="#1f2937"/>' : '<path d="M62 72q13 11 26 0" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    const cara = caraGlobo(k, perdida);
     return '<svg class="cr-globo' + (perdida ? '' : ' flota') + '" viewBox="0 0 150 170" role="img" aria-label="Globo: ' + (perdida ? 'se desinfló' : (CR.AH_ERRORES - k) + ' intentos') + '">' +
       '<path d="M75 ' + (perdida ? 150 : 128) + ' C70 140 82 150 74 168" stroke="#64748b" stroke-width="2" fill="none"/>' +
       '<g class="cuerpo" style="transform:scale(' + esc + ')' + (perdida ? ' translateY(120px)' : '') + '"><path d="M75 6C42 6 22 32 22 62c0 34 30 58 53 64 23-6 53-30 53-64C128 32 108 6 75 6z" fill="' + color + '"/>' +
@@ -65,9 +101,16 @@
       '<circle cx="62" cy="58" r="4.5" fill="#1f2937"/><circle cx="88" cy="58" r="4.5" fill="#1f2937"/>' + cara +
       '<path d="M68 126h14l-4 8h-6z" fill="' + color + '"/></g></svg>';
   }
-  const palabraHtml = (palabra, letras, revelar, nuevas) => '<div class="cr-palabra" aria-label="Palabra">' + [...palabra].map(ch => letras.includes(ch) ? '<span class="' + (nuevas === ch ? 'nueva' : '') + '">' + ch + '</span>' : revelar ? '<span class="falto">' + ch + '</span>' : '<span></span>').join('') + '</div>';
+  // Una letra de la palabra: descubierta, revelada al perder o hueco.
+  const letraPalabraHtml = (ch, letras, revelar, nuevas) => {
+    if (letras.includes(ch)) return '<span class="' + (nuevas === ch ? 'nueva' : '') + '">' + ch + '</span>';
+    return revelar ? '<span class="falto">' + ch + '</span>' : '<span></span>';
+  };
+  const palabraHtml = (palabra, letras, revelar, nuevas) => '<div class="cr-palabra" aria-label="Palabra">' + [...palabra].map(ch => letraPalabraHtml(ch, letras, revelar, nuevas)).join('') + '</div>';
   const tecladoHtml = (palabra, letras, activo) => '<div class="cr-teclado" role="group" aria-label="Letras">' + [...'abcdefghijklmnopqrstuvwxyz'].map(l => {
-    const usada = letras.includes(l), cls = usada ? (palabra.includes(l) ? 'si' : 'no') : '';
+    const usada = letras.includes(l);
+    let cls = '';
+    if (usada) cls = palabra.includes(l) ? 'si' : 'no';
     return '<button data-cr-l="' + l + '" class="' + cls + '"' + (usada || !activo ? ' disabled' : '') + '>' + l + '</button>';
   }).join('') + '</div>';
   // Tablero de serpientes y escaleras: casillas, escaleras y serpientes en SVG, y una ficha por jugador.
@@ -123,7 +166,7 @@
       m.body.innerHTML = '<div class="cr-wrap"><div class="cr-marcador"><span class="cr-jug' + (turno === 'X' && !res ? ' activo' : '') + '"><span class="cr-ficha-chica">' + svgX + '</span><span class="nom">Tú</span><span class="pts">' + gan + '</span></span>' +
         '<span class="muted">Ronda ' + (ronda + 1) + ' de 3 · 🤝 ' + emp + '</span><span class="cr-jug' + (turno === 'O' && !res ? ' activo' : '') + '"><span class="pts">' + perd + '</span><span class="nom">Michi 🐱</span><span class="cr-ficha-chica">' + svgO + '</span></span></div>' +
         gatoHtml(t, { activo: tuTurno, linea: res && res.linea, ultima: ult }) +
-        '<div class="cr-estado ' + (res ? (res.gana === 'X' ? 'ok' : res.gana === 'O' ? 'bad' : '') : '') + '" role="status">' + (msg || (tuTurno ? '👉 Tu turno: toca una casilla' : '🤔 Michi está pensando…')) + '</div>' +
+        '<div class="cr-estado ' + claseResultado(res, 'X', 'O') + '" role="status">' + (msg || (tuTurno ? '👉 Tu turno: toca una casilla' : '🤔 Michi está pensando…')) + '</div>' +
         '<div class="row-btns"><button class="btn ghost sm" data-ayuda="gato">📖 Cómo se juega</button></div></div>';
       m.puntos(puntos);
     }
@@ -133,8 +176,8 @@
       if (!r) { turno = f === 'X' ? 'O' : 'X'; pintar(); if (turno === 'O') { botJuega(); } return; }
       res = r;
       if (r.empate) { emp++; puntos += PTS[1]; sonidoOk(); } else if (r.gana === 'X') { gan++; puntos += PTS[0]; sonidoOk(); } else { perd++; sonidoMal(); }
-      pintar(r.empate ? '🤝 ¡Empate! +' + PTS[1] : r.gana === 'X' ? '🎉 ¡Ganaste la ronda! +' + PTS[0] : '🐱 Michi ganó esta ronda');
-      espera(1600, () => { if (++ronda < 3) { return empezar(); } terminado = true; terminar('gato', { puntos, aciertos: gan, total: 3, segundos: tiempoDesde(t0), titulo: gan > perd ? '🏆 ¡Le ganaste a Michi!' : gan === perd ? '🤝 ¡Quedaron parejos!' : '🐱 Michi ganó la serie', detalle: 'Nivel ' + NIVELES[nivel] + ' · ' + gan + ' ganadas, ' + emp + ' empates y ' + perd + ' perdidas.' }); });
+      pintar(segunResultado(r, 'X', '🤝 ¡Empate! +' + PTS[1], '🎉 ¡Ganaste la ronda! +' + PTS[0], '🐱 Michi ganó esta ronda'));
+      espera(1600, () => { if (++ronda < 3) { return empezar(); } terminado = true; terminar('gato', { puntos, aciertos: gan, total: 3, segundos: tiempoDesde(t0), titulo: segunMarcador(gan, perd, '🏆 ¡Le ganaste a Michi!', '🤝 ¡Quedaron parejos!', '🐱 Michi ganó la serie'), detalle: 'Nivel ' + NIVELES[nivel] + ' · ' + gan + ' ganadas, ' + emp + ' empates y ' + perd + ' perdidas.' }); });
     }
     function botJuega() { espera(550, () => { if (!terminado && !res) poner(CR.gatoBot(t, 'O', nivel, Math.random), 'O'); }); }
     m.body.addEventListener('click', e => { const b = e.target.closest('[data-cr-g]'); if (b && !b.disabled && turno === 'X' && !res) poner(Number(b.dataset.crG), 'X'); });
@@ -152,7 +195,7 @@
       const tuTurno = !res && turno === 'R';
       m.body.innerHTML = '<div class="cr-wrap"><div class="cr-marcador"><span class="cr-jug' + (tuTurno ? ' activo' : '') + '">' + fichaC4('R') + '<span class="nom">Tú</span></span><span class="muted">Nivel ' + NIVELES[nivel] + '</span><span class="cr-jug' + (!res && turno === 'A' ? ' activo' : '') + '"><span class="nom">Cuatrito 🤖</span>' + fichaC4('A') + '</span></div>' +
         c4Html(t, { activo: tuTurno, ultima: ult, animar: true, linea: res && res.linea }) +
-        '<div class="cr-estado ' + (res ? (res.gana === 'R' ? 'ok' : res.gana === 'A' ? 'bad' : '') : '') + '" role="status">' + (msg || (tuTurno ? '👉 Tu turno: toca una columna' : '🤔 Cuatrito está pensando…')) + '</div>' +
+        '<div class="cr-estado ' + claseResultado(res, 'R', 'A') + '" role="status">' + (msg || (tuTurno ? '👉 Tu turno: toca una columna' : '🤔 Cuatrito está pensando…')) + '</div>' +
         '<div class="row-btns"><button class="btn ghost sm" data-ayuda="conecta4">📖 Cómo se juega</button></div></div>';
     }
     function soltar(col, f) {
@@ -161,11 +204,11 @@
       const r = CR.c4Ganador(t);
       if (!r) { turno = f === 'R' ? 'A' : 'R'; pintar(); if (turno === 'A') { espera(650, () => { if (!terminado) soltar(CR.c4Bot(t, 'A', nivel, Math.random), 'A'); }); } return; }
       res = r; terminado = true;
-      const puntos = r.empate ? PTS[1] : r.gana === 'R' ? PTS[0] : 50;
+      const puntos = segunResultado(r, 'R', PTS[1], PTS[0], 50);
       r.gana === 'R' || r.empate ? sonidoOk() : sonidoMal();
-      pintar(r.empate ? '🤝 ¡Tablero lleno: empate!' : r.gana === 'R' ? '🎉 ¡Cuatro en línea!' : '🤖 Cuatrito hizo cuatro en línea');
+      pintar(segunResultado(r, 'R', '🤝 ¡Tablero lleno: empate!', '🎉 ¡Cuatro en línea!', '🤖 Cuatrito hizo cuatro en línea'));
       m.puntos(puntos);
-      espera(2200, () => terminar('conecta4', { puntos, aciertos: r.gana === 'R' ? 1 : 0, total: 1, segundos: tiempoDesde(t0), titulo: r.empate ? '🤝 ¡Empate!' : r.gana === 'R' ? '🏆 ¡Le ganaste a Cuatrito!' : '🤖 Ganó Cuatrito', detalle: 'Nivel ' + NIVELES[nivel] + '.' }));
+      espera(2200, () => terminar('conecta4', { puntos, aciertos: r.gana === 'R' ? 1 : 0, total: 1, segundos: tiempoDesde(t0), titulo: segunResultado(r, 'R', '🤝 ¡Empate!', '🏆 ¡Le ganaste a Cuatrito!', '🤖 Ganó Cuatrito'), detalle: 'Nivel ' + NIVELES[nivel] + '.' }));
     }
     m.body.addEventListener('click', e => { const b = e.target.closest('[data-cr-c]'); if (b && !b.disabled && turno === 'R' && !res) soltar(Number(b.dataset.crC), 'R'); });
     pintar();
@@ -176,9 +219,14 @@
     const m = marco('ppt'), t0 = Date.now();
     let yo = 0, el = 0, tiros = 0, puntos = 0, bloqueado = false, terminado = false;
     const mias = [];
+    // La mano se agita mientras cuentan; luego «sale» si ya no es el puño de espera.
+    const claseMano = (agita, mano) => {
+      if (agita) return ' agita';
+      return mano !== '✊' ? ' sale' : '';
+    };
     const pintar = (izq, der, msg, agita) => {
       m.body.innerHTML = '<div class="cr-wrap"><div class="cr-marcador"><span class="cr-jug"><span class="nom">Tú</span><span class="pts">' + yo + '</span></span><span class="cr-jug"><span class="pts">' + el + '</span><span class="nom">Tito 🤖</span></span></div><div class="cr-sub">Al mejor de 5 · gana quien llegue a 3</div>' +
-        '<div class="cr-ppt-duelo" aria-hidden="true"><span class="cr-mano' + (agita ? ' agita' : izq !== '✊' ? ' sale' : '') + '">' + izq + '</span><span class="vs">VS</span><span class="cr-mano espejo' + (agita ? ' agita' : der !== '✊' ? ' sale' : '') + '">' + der + '</span></div>' +
+        '<div class="cr-ppt-duelo" aria-hidden="true"><span class="cr-mano' + claseMano(agita, izq) + '">' + izq + '</span><span class="vs">VS</span><span class="cr-mano espejo' + claseMano(agita, der) + '">' + der + '</span></div>' +
         '<div class="cr-ya" role="status">' + (msg || '¿Qué eliges?') + '</div>' + pptOpsHtml(!bloqueado, null) +
         '<div class="row-btns"><button class="btn ghost sm" data-ayuda="ppt">📖 Cómo se juega</button></div></div>';
       m.puntos(puntos);
@@ -192,11 +240,14 @@
         const r = CR.pptGana(mia, suya);
         if (r > 0) { yo++; puntos += 100; sonidoOk(); } else if (r < 0) { el++; sonidoMal(); } else tono(440, 120);
         bloqueado = true;
-        pintar(MANO[mia], MANO[suya], r > 0 ? '🎉 ¡' + NOMBRE_PPT[mia] + ' le gana a ' + NOMBRE_PPT[suya].toLowerCase() + '! +100' : r < 0 ? '😅 ' + NOMBRE_PPT[suya] + ' le gana a ' + NOMBRE_PPT[mia].toLowerCase() : '🤝 Empate: otra vez');
+        let texto = '🤝 Empate: otra vez';
+        if (r > 0) texto = '🎉 ¡' + NOMBRE_PPT[mia] + ' le gana a ' + NOMBRE_PPT[suya].toLowerCase() + '! +100';
+        else if (r < 0) texto = '😅 ' + NOMBRE_PPT[suya] + ' le gana a ' + NOMBRE_PPT[mia].toLowerCase();
+        pintar(MANO[mia], MANO[suya], texto);
         espera(1300, () => {
           if (yo >= 3 || el >= 3 || tiros >= 15) {
             terminado = true; if (yo > el) puntos += 300;
-            return terminar('ppt', { puntos, aciertos: yo, total: tiros, segundos: tiempoDesde(t0), titulo: yo > el ? '🏆 ¡Le ganaste a Tito!' : yo === el ? '🤝 ¡Parejos!' : '🤖 Tito ganó esta vez', detalle: yo + ' a ' + el + ' en ' + tiros + ' tiros' + (yo > el ? ' · +300 por ganar' : '') + '.' });
+            return terminar('ppt', { puntos, aciertos: yo, total: tiros, segundos: tiempoDesde(t0), titulo: segunMarcador(yo, el, '🏆 ¡Le ganaste a Tito!', '🤝 ¡Parejos!', '🤖 Tito ganó esta vez'), detalle: yo + ' a ' + el + ' en ' + tiros + ' tiros' + (yo > el ? ' · +300 por ganar' : '') + '.' });
           }
           bloqueado = false; pintar('✊', '✊');
         });
@@ -279,7 +330,7 @@
       const quien = turno, mv = CR.serpMover(pos[quien], dado);
       espera(650, () => {
         pos[quien] = mv.paso; ponerFicha(quien, mv.paso);
-        msg((quien ? jug[quien].nombre : 'Sacaste') + (quien ? ' sacó ' : ' ') + dado + (mv.salto === 'escalera' ? ' · 🪜 ¡sube a la ' + mv.hasta + '!' : mv.salto === 'serpiente' ? ' · 🐍 ¡baja a la ' + mv.hasta + '!' : ''));
+        msg((quien ? jug[quien].nombre : 'Sacaste') + (quien ? ' sacó ' : ' ') + dado + textoSalto(mv.salto, ' · 🪜 ¡sube a la ' + mv.hasta + '!', ' · 🐍 ¡baja a la ' + mv.hasta + '!'));
         espera(mv.salto ? 550 : 50, () => {
           pos[quien] = mv.hasta; ponerFicha(quien, mv.hasta);
           if (mv.salto === 'escalera' && quien === 0) { sonidoOk(); } if (mv.salto === 'serpiente' && quien === 0) sonidoMal();
@@ -375,7 +426,11 @@
 
   // Encabezado de 2 jugadores (Gato y Conecta 4).
   const duoHtml = (ps, turno, fin, ficha, extra) => '<div class="cr-marcador">' + ps.map((p, j) => '<span class="cr-jug' + (!fin && turno === j ? ' activo' : '') + '">' + ficha(j) + nombreDe(p, extra ? '<span class="pts">' + extra[j] + '</span>' : '') + '</span>').join('') + '</div>';
-  const estadoTurno = (ps, yo, turno, enviando) => yo < 0 ? '👀 Estás viendo la partida' : enviando ? '⏳ Enviando…' : yo === turno ? '👉 Tu turno' : '⏳ Turno de ' + escapeHtml(ps[turno].nombre);
+  const estadoTurno = (ps, yo, turno, enviando) => {
+    if (yo < 0) return '👀 Estás viendo la partida';
+    if (enviando) return '⏳ Enviando…';
+    return yo === turno ? '👉 Tu turno' : '⏳ Turno de ' + escapeHtml(ps[turno].nombre);
+  };
 
   function salaGato(body) {
     const ctx = ctxSala(), ps = ctx.participantes, c = cr();
@@ -391,7 +446,9 @@
     if (sala.vista === k) return;
     sala.vista = k;
     const ficha = j => '<span class="cr-ficha-chica">' + (j === 0 ? svgX : svgO) + '</span>';
-    const msg = enPausa && ultimo ? (ultimo.gana === null ? '🤝 ¡Empate en la ronda!' : '🎉 ¡' + escapeHtml(ps[ultimo.gana].nombre) + ' gana la ronda!') : estadoTurno(ps, yo, st.turnoIdx, c.enviando);
+    let msg;
+    if (enPausa && ultimo) msg = ultimo.gana === null ? '🤝 ¡Empate en la ronda!' : '🎉 ¡' + escapeHtml(ps[ultimo.gana].nombre) + ' gana la ronda!';
+    else msg = estadoTurno(ps, yo, st.turnoIdx, c.enviando);
     body.innerHTML = '<div class="cr-wrap">' + duoHtml(ps, st.turnoIdx, enPausa, ficha, st.victorias) + '<div class="cr-sub">Ronda ' + (st.ronda + 1) + ' de ' + CR.GATO_SALA.rondas + ' · 🤝 ' + st.empates + '</div>' +
       gatoHtml(st.t, { activo: !enPausa && yo === st.turnoIdx && !c.enviando, linea: enPausa && ultimo ? ultimo.linea : null, ultima: st.ultima && st.ultima.casilla }) +
       '<div class="cr-estado" role="status">' + msg + '</div><div class="row-btns"><button class="btn ghost sm" data-ayuda="gato">📖 Cómo se juega</button></div></div>';
@@ -410,7 +467,9 @@
     if (sala.vista === k) return;
     const animar = !sala.vista || !sala.vista.startsWith('c4:' + st.paso + ':');
     sala.vista = k;
-    const msg = st.fin ? (st.fin.gana === null ? '🤝 ¡Tablero lleno: empate!' : '🎉 ¡Cuatro en línea de ' + escapeHtml(ps[st.fin.gana].nombre) + '!') : estadoTurno(ps, yo, st.turnoIdx, c.enviando);
+    let msg;
+    if (st.fin) msg = st.fin.gana === null ? '🤝 ¡Tablero lleno: empate!' : '🎉 ¡Cuatro en línea de ' + escapeHtml(ps[st.fin.gana].nombre) + '!';
+    else msg = estadoTurno(ps, yo, st.turnoIdx, c.enviando);
     body.innerHTML = '<div class="cr-wrap">' + duoHtml(ps, st.turnoIdx, !!st.fin, j => fichaC4(j === 0 ? 'R' : 'A')) +
       c4Html(st.t, { activo: !st.fin && yo === st.turnoIdx && !c.enviando, ultima: st.ultima, animar, linea: st.linea }) +
       '<div class="cr-estado" role="status">' + msg + '</div><div class="row-btns"><button class="btn ghost sm" data-ayuda="conecta4">📖 Cómo se juega</button></div></div>';
@@ -442,7 +501,7 @@
       sala.vista = k;
       body.innerHTML = '<div class="cr-wrap"><div class="cr-sub">Ronda ' + (st.ronda + 1) + ' de ' + CR.PPT_SALA.rondas + ' · todos contra todos</div>' +
         '<div class="cr-ppt-duelo" aria-hidden="true"><span class="cr-mano' + (yaElegi ? ' sale' : '') + '">' + (yaElegi ? MANO[yaElegi] : '❔') + '</span></div>' +
-        '<div class="cr-ya" role="status">' + (yo < 0 ? '👀 Estás viendo la partida' : yaElegi ? '✔ Elegiste ' + NOMBRE_PPT[yaElegi] + ' · esperando a los demás' : '¿Qué eliges? Nadie ve tu elección hasta el final de la ronda') + '</div>' +
+        '<div class="cr-ya" role="status">' + textoEleccionPpt(yo, yaElegi) + '</div>' +
         pptOpsHtml(yo >= 0 && !yaElegi, yaElegi) + '<p class="cr-sub">✅ ' + listos + ' de ' + ps.length + ' ya eligieron</p>' + tablaPpt(ps, st, null, yo) +
         '<div class="row-btns"><button class="btn ghost sm" data-ayuda="ppt">📖 Cómo se juega</button></div></div>';
       return;
@@ -456,8 +515,21 @@
     const mia = yo >= 0 ? ro.elecciones[yo] : null;
     body.innerHTML = '<div class="cr-wrap"><div class="cr-sub">Ronda ' + (st.ronda + 1) + ' de ' + CR.PPT_SALA.rondas + '</div>' +
       '<div class="cr-ppt-duelo" aria-hidden="true"><span class="cr-mano' + (yaSale ? ' sale' : ' agita') + '">' + (yaSale ? (MANO[mia] || '🙈') : '✊') + '</span></div>' +
-      '<div class="cr-ya" role="status">' + (yaSale ? (yo >= 0 ? (ro.victorias[yo] ? '🎉 Le ganaste a ' + ro.victorias[yo] + (ro.victorias[yo] === 1 ? ' rival' : ' rivales') : mia ? '😅 Esta vez no ganaste' : '⏰ No elegiste a tiempo') : '¡Ya!') : '¡Piedra, papel o tijera… ya!') + '</div>' +
+      '<div class="cr-ya" role="status">' + textoRevelaPpt(yaSale, yo, ro, mia) + '</div>' +
       tablaPpt(ps, st, yaSale ? ro : null, yo) + '</div>';
+  }
+  // Letrero mientras se elige: espectador, ya elegí o invitación a elegir.
+  function textoEleccionPpt(yo, yaElegi) {
+    if (yo < 0) return '👀 Estás viendo la partida';
+    return yaElegi ? '✔ Elegiste ' + NOMBRE_PPT[yaElegi] + ' · esperando a los demás' : '¿Qué eliges? Nadie ve tu elección hasta el final de la ronda';
+  }
+  // Letrero de la revelación: la cuenta, «¡Ya!» para quien mira o cómo me fue en la ronda.
+  function textoRevelaPpt(yaSale, yo, ro, mia) {
+    if (!yaSale) return '¡Piedra, papel o tijera… ya!';
+    if (yo < 0) return '¡Ya!';
+    const gane = ro.victorias[yo];
+    if (gane) return '🎉 Le ganaste a ' + gane + (gane === 1 ? ' rival' : ' rivales');
+    return mia ? '😅 Esta vez no ganaste' : '⏰ No elegiste a tiempo';
   }
   function tablaPpt(ps, st, ro, yo) {
     return '<ol class="cr-ppt-lista">' + ps.map((p, j) => '<li class="' + (j === yo ? 'yo' : '') + '">' + avatarHtml(p.avatar, 24) + '<span class="n">' + escapeHtml(p.nombre) + (p.bot ? ' 🤖' : '') + '</span>' +
@@ -465,6 +537,12 @@
       '<span class="v">🏅 ' + st.victorias[j] + '</span></li>').join('') + '</ol>';
   }
 
+  // Resumen de la última jugada del Ahorcado en sala ('' si no hay letra ni pase).
+  function textoUltimaAhorcado(ps, u) {
+    if (u && u.accion === 'letra') return escapeHtml(ps[u.j].nombre) + ': «' + u.letra.toUpperCase() + '» ' + (u.veces ? '✔ +' + 10 * u.veces : '✘') + ' · ';
+    if (u && u.accion === 'pasar') return escapeHtml(ps[u.j].nombre) + ' pasó' + (u.auto ? ' ⏰' : '') + ' · ';
+    return '';
+  }
   function salaAhorcado(body) {
     const c = cr(), s = sala.estado.sala;
     if (!c.palabras) {
@@ -485,8 +563,9 @@
     if (sala.vista === k) return;
     sala.vista = k;
     const u = st.ultima;
-    const msg = enPausa && ultimo ? (ultimo.resuelta ? '🎉 ¡' + p.en.toUpperCase() + '! La completó ' + escapeHtml(ps[ultimo.por].nombre) : '🎈 Se desinfló el globo. Era «' + p.en.toUpperCase() + '»')
-      : (u && u.accion === 'letra' ? escapeHtml(ps[u.j].nombre) + ': «' + u.letra.toUpperCase() + '» ' + (u.veces ? '✔ +' + 10 * u.veces : '✘') + ' · ' : u && u.accion === 'pasar' ? escapeHtml(ps[u.j].nombre) + ' pasó' + (u.auto ? ' ⏰' : '') + ' · ' : '') + estadoTurno(ps, yo, st.turnoIdx, c.enviando);
+    let msg;
+    if (enPausa && ultimo) msg = ultimo.resuelta ? '🎉 ¡' + p.en.toUpperCase() + '! La completó ' + escapeHtml(ps[ultimo.por].nombre) : '🎈 Se desinfló el globo. Era «' + p.en.toUpperCase() + '»';
+    else msg = textoUltimaAhorcado(ps, u) + estadoTurno(ps, yo, st.turnoIdx, c.enviando);
     body.innerHTML = '<div class="cr-wrap"><div class="cr-sub">' + (st.modo === 'coop' ? '🤝 Cooperativo' : '⚔️ Competitivo') + ' · palabra ' + (w + 1) + ' de ' + c.palabras.length + '</div>' +
       globoHtml(e.errores, COLORES_GLOBO[w % COLORES_GLOBO.length], enPausa && ultimo && ultimo.perdida) +
       '<div class="cr-pista"><span class="emo" aria-hidden="true">' + escapeHtml(p.emoji) + '</span> Pista: <b>' + escapeHtml(p.es) + '</b></div>' +
@@ -517,7 +596,8 @@
       ponerFicha(u.j, u.paso);
       if (u.salto) { const j = u.j, h = u.hasta; setTimeout(() => ponerFicha(j, h), 550 * TIEMPO); } // pausa visual, sin afectar el estado
     } else ps.forEach((_, i) => ponerFicha(i, st.pos[i]));
-    const quien = u ? escapeHtml(ps[u.j].nombre) + ' sacó ' + u.dado + (u.salto === 'escalera' ? ' · 🪜 sube a la ' + u.hasta : u.salto === 'serpiente' ? ' · 🐍 baja a la ' + u.hasta : '') + (u.auto ? ' ⏰' : '') + ' · ' : '';
+    let quien = '';
+    if (u) quien = escapeHtml(ps[u.j].nombre) + ' sacó ' + u.dado + textoSalto(u.salto, ' · 🪜 sube a la ' + u.hasta, ' · 🐍 baja a la ' + u.hasta) + (u.auto ? ' ⏰' : '') + ' · ';
     document.getElementById('cr-serp-msg').innerHTML = st.fin ? '🏁 ¡' + escapeHtml(ps[st.fin.gana].nombre) + ' llegó a la meta!' : quien + estadoTurno(ps, yo, st.turnoIdx, c.enviando);
     document.getElementById('cr-serp-lista').innerHTML = jugadoresSerpHtml(ps, st.pos, st.fin ? -1 : st.turnoIdx);
     const b = body.querySelector('[data-cr-tirar]'); if (b) b.disabled = !!st.fin || yo !== st.turnoIdx || c.enviando;

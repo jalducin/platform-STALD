@@ -327,7 +327,10 @@ function textoRespuesta(e: Ejercicio, r: unknown): string | null {
   if (r === undefined || r === null || r === "") return null;
   if (e.tipo === "emparejar") return Array.isArray(r) && r.some((x) => x) ? textoPares((e.pares || []).map((p) => p[0]), r) : null;
   if (e.tipo === "ordenar") return String(r);
-  if (e.tipo === "pronunciar") return r === "auto:ok" ? "Autoevaluación: me salió bien" : r === "auto:repetir" ? "Autoevaluación: necesito repetir" : String(r);
+  if (e.tipo === "pronunciar") {
+    if (r === "auto:ok") return "Autoevaluación: me salió bien";
+    return r === "auto:repetir" ? "Autoevaluación: necesito repetir" : String(r);
+  }
   if (e.tipo === "escribir") return String(r);
   return typeof r === "number" && e.opciones ? e.opciones[r] ?? null : null;
 }
@@ -510,6 +513,20 @@ function validarEmparejar(ref: string, e: Ejercicio): string[] {
   return errs;
 }
 
+// Revisa un ejercicio del banco (ref = "<elemento>/<ejercicio>"; el id repetido se revisa aparte).
+function validarEjercicio(ref: string, e: Ejercicio, temas: Set<string>): string[] {
+  const errs: string[] = [];
+  if (!temas.has(e.tema)) errs.push(`${ref}: tema inexistente ${e.tema}`);
+  if (!e.explicacion) errs.push(`${ref}: falta explicacion`);
+  if (e.tipo === "opcion" && !((e.correcta ?? -1) >= 0 && (e.correcta ?? -1) < (e.opciones || []).length)) errs.push(`${ref}: correcta inválida`);
+  if (e.tipo === "escribir" && !(e.aceptadas || []).length) errs.push(`${ref}: sin aceptadas`);
+  if (e.tipo === "pronunciar" && !(e.frase || "").trim()) errs.push(`${ref}: pronunciar sin frase`);
+  if (e.tipo === "ordenar") errs.push(...validarOrdenar(ref, e));
+  if (e.tipo === "emparejar") errs.push(...validarEmparejar(ref, e));
+  if (e.audio !== undefined && !String(e.audio).trim()) errs.push(`${ref}: audio vacío`);
+  return errs;
+}
+
 export function validateItem(it: Item): string[] {
   const errs: string[] = [];
   if (it.segundaOportunidad !== undefined) {
@@ -531,14 +548,7 @@ export function validateItem(it: Item): string[] {
   for (const e of it.banco || []) {
     if (ids.has(e.id)) errs.push(`${it.id}: id repetido ${e.id}`);
     ids.add(e.id);
-    if (!temas.has(e.tema)) errs.push(`${it.id}/${e.id}: tema inexistente ${e.tema}`);
-    if (!e.explicacion) errs.push(`${it.id}/${e.id}: falta explicacion`);
-    if (e.tipo === "opcion" && !((e.correcta ?? -1) >= 0 && (e.correcta ?? -1) < (e.opciones || []).length)) errs.push(`${it.id}/${e.id}: correcta inválida`);
-    if (e.tipo === "escribir" && !(e.aceptadas || []).length) errs.push(`${it.id}/${e.id}: sin aceptadas`);
-    if (e.tipo === "pronunciar" && !(e.frase || "").trim()) errs.push(`${it.id}/${e.id}: pronunciar sin frase`);
-    if (e.tipo === "ordenar") errs.push(...validarOrdenar(`${it.id}/${e.id}`, e));
-    if (e.tipo === "emparejar") errs.push(...validarEmparejar(`${it.id}/${e.id}`, e));
-    if (e.audio !== undefined && !String(e.audio).trim()) errs.push(`${it.id}/${e.id}: audio vacío`);
+    errs.push(...validarEjercicio(`${it.id}/${e.id}`, e, temas));
   }
   if (it.tipo !== "refuerzo" && it.preguntasPorIntento && (it.banco || []).length < it.preguntasPorIntento) errs.push(`${it.id}: banco menor que preguntasPorIntento`);
   return errs;

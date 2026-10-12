@@ -235,6 +235,12 @@ function dibujarBolas(bolas) {
     }
   }
 }
+// Avance (en la dirección del tiro) hasta la banda en un eje: la lejana (max) si va hacia adelante,
+// la cercana (R) si va hacia atrás; Infinity si no se mueve en ese eje.
+function hastaBanda(pos, dir, max) {
+  if (dir > 0) { return (max - pos) / dir; }
+  return dir < 0 ? (B.R - pos) / dir : Infinity;
+}
 // Línea guía: hasta la primera bola (bola fantasma y hacia dónde saldría) o la banda.
 function guia(bolas, ang) {
   const bl = bolas[0], [sn, cs] = F.senCos(ang), R = B.R, D = B.D;
@@ -246,8 +252,8 @@ function guia(bolas, ang) {
     const d = t - Math.sqrt(D * D - per2);
     if (!mejor || d < mejor.d) mejor = { d, o };
   }
-  const tx = cs > 0 ? (B.ANCHO - R - bl.x) / cs : cs < 0 ? (R - bl.x) / cs : Infinity;
-  const ty = sn > 0 ? (B.ALTO - R - bl.y) / sn : sn < 0 ? (R - bl.y) / sn : Infinity;
+  const tx = hastaBanda(bl.x, cs, B.ANCHO - R);
+  const ty = hastaBanda(bl.y, sn, B.ALTO - R);
   const banda = Math.min(tx, ty);
   return mejor && mejor.d < banda ? { tipo: 'bola', x: bl.x + cs * mejor.d, y: bl.y + sn * mejor.d, o: mejor.o } : { tipo: 'banda', x: bl.x + cs * banda, y: bl.y + sn * banda, rebote: tx < ty ? [-cs, sn] : [cs, -sn] };
 }
@@ -371,7 +377,10 @@ function terminarIndividual() {
   const gano = st.fin.gana === 0, puntos = B.puntos(st, 0, EXTRA[nivel]), seg = Math.round((performance.now() - t0) / 1000);
   const mias = st.grupos[0] ? 7 - B.quedan(st, st.grupos[0]) : 0;
   $('res-titulo').textContent = gano ? '🏆 ¡Ganaste!' : '😅 Ganó el bot';
-  $('res-motivo').textContent = st.fin.motivo === 'ocho' ? (gano ? 'Metiste' : 'El bot metió') + ' la 8 al final.' : 'Motivo: ' + B.MOTIVO[st.fin.motivo] + ' (' + (gano ? 'el bot' : 'tú') + ').';
+  let motivo;
+  if (st.fin.motivo === 'ocho') { motivo = (gano ? 'Metiste' : 'El bot metió') + ' la 8 al final.'; }
+  else { motivo = 'Motivo: ' + B.MOTIVO[st.fin.motivo] + ' (' + (gano ? 'el bot' : 'tú') + ').'; }
+  $('res-motivo').textContent = motivo;
   $('res-tarjetas').innerHTML = '<div>' + mias + '/7<small>Tus bolas</small></div><div>' + NIVEL_TXT[nivel] + '<small>Nivel</small></div><div>+' + puntos + '<small>Puntos</small></div>';
   $('res-guardado').textContent = U.EMBED ? 'Guardando tus puntos…' : '';
   $('panel').classList.add('hide'); $('hud').classList.add('hide'); mostrar('ov-res');
@@ -399,16 +408,32 @@ function pasoSala() {
   if (h && !h.tiro.rendirse) avisoTiro(h.despues, sala.idx, sala.orden.map(p => p.nombre));
   const l = sala.linea, mio = sala.miTurno();
   mostrarPanel(mio);
-  pintarHud(sala.estado, sala.anim ? sala.anim.h.idx : l && !l.fin ? l.turno : null);
+  let turnoHud = null;
+  if (sala.anim) { turnoHud = sala.anim.h.idx; }
+  else if (l && !l.fin) { turnoHud = l.turno; }
+  pintarHud(sala.estado, turnoHud);
   let txt = '';
-  if (sala.anim) txt = sala.anim.h.origen === 'bot' ? '🤖 Tira el bot…' : sala.anim.h.origen === 'auto' ? '⏰ Tiro automático' : '🎱 Tira ' + ((sala.orden[sala.anim.h.idx] || {}).nombre || '');
+  if (sala.anim) txt = textoTiroSala(sala.anim.h);
   else if (l && l.fin) txt = '🏁 ¡Fin de la partida!';
   else if (l && l.espera) {
     const seg = l.espera.tipo === 'persona' ? Math.max(0, Math.ceil((l.espera.limite - ahora) / 1000)) : 0;
-    txt = mio ? '👉 Tu turno · ⏱ ' + seg + ' s' : l.espera.tipo === 'bot' ? '🤖 El bot está pensando…' : sala.propia ? '📨 Enviando…' : '⏳ Turno de ' + ((sala.orden[l.espera.idx] || {}).nombre || 'tu rival') + ' · ⏱ ' + seg + ' s';
+    txt = textoEsperaSala(l.espera, mio, seg);
   }
   if ($('estado').textContent !== txt) $('estado').textContent = txt;
   if (sala.finDesde && performance.now() - sala.finDesde > 1500 && !sala.finEnviado) terminarSala();
+}
+// Aviso mientras se anima un tiro de la sala: del bot, automático (se acabó el tiempo) o de una persona.
+function textoTiroSala(h) {
+  if (h.origen === 'bot') { return '🤖 Tira el bot…'; }
+  if (h.origen === 'auto') { return '⏰ Tiro automático'; }
+  return '🎱 Tira ' + ((sala.orden[h.idx] || {}).nombre || '');
+}
+// Aviso mientras la sala espera el siguiente tiro.
+function textoEsperaSala(espera, mio, seg) {
+  if (mio) { return '👉 Tu turno · ⏱ ' + seg + ' s'; }
+  if (espera.tipo === 'bot') { return '🤖 El bot está pensando…'; }
+  if (sala.propia) { return '📨 Enviando…'; }
+  return '⏳ Turno de ' + ((sala.orden[espera.idx] || {}).nombre || 'tu rival') + ' · ⏱ ' + seg + ' s';
 }
 function terminarSala() {
   sala.finEnviado = true;
@@ -566,8 +591,14 @@ U.alMensaje(d => {
   else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
   else if (d.tipo === 'jugadas' && sala) sala.recibir(d.jugadas, d.ahora);
   else if (d.tipo === 'jugada-ok' && sala && !d.ok) { sala.rechazo(); U.avisar('⚠️ No se envió tu tiro (' + (d.error || 'sin conexión') + ')', 2200); }
-  else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = d.guardado ? '✔ +' + d.puntos + ' a tus ⭐ individuales' + (d.pos ? ' · #' + d.pos + ' de la semana' : '') : 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').';
+  else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = textoGuardado(d);
 });
+// Resultado de guardar los puntos individuales (con el lugar de la semana si viene).
+function textoGuardado(d) {
+  if (!d.guardado) { return 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').'; }
+  const lugar = d.pos ? ' · #' + d.pos + ' de la semana' : '';
+  return '✔ +' + d.puntos + ' a tus ⭐ individuales' + lugar;
+}
 
 /* ---------- Bucle de paso fijo ---------- */
 let ultimo = performance.now(), acum = 0, cuadros = 0, fpsDesde = performance.now(), fps = 0;
@@ -578,23 +609,33 @@ function cuadro(ahora) {
   cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
   if (modo === 'juego' || modo === 'sala') leerMando();
   if (modo === 'juego' || modo === 'sala') {
-    acum += dt; let n = 0;
-    while (acum >= PASO && n < 6) {
-      if (modo === 'juego') pasoIndividual();
-      else if (modo === 'sala' && sala) pasoSala();
-      else break; /* un paso pudo cambiar de modo */
-      acum -= PASO; n++;
-    }
-    if (n === 6) acum = 0;
-    if (modo === 'juego' && st) {
-      pintarHud(st, sim ? (simOrigen === 'bot' ? 1 : 0) : st.turno);
-      const mio = !sim && st.turno === 0 && !st.fin;
-      mostrarPanel(mio);
-      const txt = sim ? (simOrigen === 'bot' ? '🤖 Tira el bot…' : '') : st.turno === 0 ? '👉 Tu turno' : '🤖 El bot está pensando…';
-      if ($('estado').textContent !== txt) $('estado').textContent = txt;
-    }
+    avanzarPasos(dt);
+    if (modo === 'juego' && st) rotularIndividual();
   } else acum = 0;
   dibujar();
+}
+// Avanza la partida en pasos fijos (a lo más 6 por cuadro; si se atrasa, descarta lo acumulado).
+function avanzarPasos(dt) {
+  acum += dt; let n = 0;
+  while (acum >= PASO && n < 6) {
+    if (modo === 'juego') pasoIndividual();
+    else if (modo === 'sala' && sala) pasoSala();
+    else break; /* un paso pudo cambiar de modo */
+    acum -= PASO; n++;
+  }
+  if (n === 6) acum = 0;
+}
+// HUD, panel de tiro y aviso de estado del modo individual.
+function rotularIndividual() {
+  let turnoHud = st.turno;
+  if (sim) { turnoHud = simOrigen === 'bot' ? 1 : 0; }
+  pintarHud(st, turnoHud);
+  const mio = !sim && st.turno === 0 && !st.fin;
+  mostrarPanel(mio);
+  let txt;
+  if (sim) { txt = simOrigen === 'bot' ? '🤖 Tira el bot…' : ''; }
+  else { txt = st.turno === 0 ? '👉 Tu turno' : '🤖 El bot está pensando…'; }
+  if ($('estado').textContent !== txt) $('estado').textContent = txt;
 }
 pintarControles();
 ajustar();

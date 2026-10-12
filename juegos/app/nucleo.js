@@ -83,7 +83,8 @@ const sinAcentos = s => String(s).normalize('NFD').replaceAll(/[̀-ͯ]/g, '');
 // Sale por StaldAuth.pedirJson (openspec: cache-estabilidad): junta GET iguales en vuelo, guarda los que piden
 // `cfg.ttl`, reintenta lecturas ante fallas pasajeras y, sin red, responde status 0 en lugar de lanzar.
 async function api(ruta, opts, cfg) {
-  const url = API_BASE + (StaldAuth.email() ? ruta : ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(state.email));
+  let url = API_BASE + ruta;
+  if (!StaldAuth.email()) url += (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(state.email);
   const { ok, status, body } = await StaldAuth.pedirJson(url, opts, cfg);
   const res = { ok, status };
   if (StaldAuth.esSesionVencida(res, body) && !state.pidiendoSesion) {

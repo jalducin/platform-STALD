@@ -50,9 +50,13 @@ function proximaClase(act, ahora) {
     const [hh, mm] = meet.hora.split(':');
     cuando = new Date(meet.fechaLimite + 'T' + hh.padStart(2, '0') + ':' + mm.slice(0, 2) + ':00');
   }
+  // Horario: el del grupo o, sin él, la fecha (y hora) del próximo Meet.
+  let horario = '';
+  if (g && g.horario) horario = g.horario;
+  else if (meet) horario = formatFecha(meet.fechaLimite) + (meet.hora ? ' · ' + meet.hora : '');
   return {
     nombre: g ? g.nombre : 'Repaso por Meet', color: g ? g.color : null, nivel: g ? g.nivel : null,
-    horario: g && g.horario ? g.horario : (meet ? formatFecha(meet.fechaLimite) + (meet.hora ? ' · ' + meet.hora : '') : ''),
+    horario,
     cuando, url: (g && g.meet_url) || (meet && meet.meetUrl) || null,
   };
 }
@@ -70,11 +74,12 @@ function renderProximaClase(act) {
   if (!pc) return '';
   const c = textoCuenta(pc.cuando, new Date());
   const fecha = pc.cuando ? pc.cuando.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'short' }) + ' · ' + pc.cuando.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : pc.horario;
+  const claseVivo = c.vivo ? ' vivo' : '';
   return '<section class="mi-grupo proxima-clase" aria-labelledby="pc-titulo" style="--gc:' + escapeHtml(pc.color || '#4f46e5') + '"' + (pc.cuando ? ' data-cuando="' + pc.cuando.getTime() + '"' : '') + '>' +
     '<div class="pc-info"><div class="card-titulo" id="pc-titulo" style="margin:0">🎥 Próxima clase</div>' +
     '<b>👥 ' + escapeHtml(pc.nombre) + '</b>' + (pc.nivel ? ' <span class="grupo-chip">' + escapeHtml(pc.nivel) + '</span>' : '') +
     '<div class="s">🗓️ ' + escapeHtml(fecha) + '</div>' +
-    (c.texto ? '<div class="pc-cuenta' + (c.vivo ? ' vivo' : '') + '" id="cuenta-regresiva" aria-live="off">' + escapeHtml(c.texto) + '</div>' : '') + '</div>' +
+    (c.texto ? '<div class="pc-cuenta' + claseVivo + '" id="cuenta-regresiva" aria-live="off">' + escapeHtml(c.texto) + '</div>' : '') + '</div>' +
     (pc.url ? '<a class="btn" href="' + escapeHtml(pc.url) + '" target="_blank" rel="noopener">🎥 Unirme a la clase</a>' : '<span class="pill wait">Enlace por WhatsApp</span>') + '</section>';
 }
 // Cuenta regresiva en vivo (cada 30 s) mientras la tarjeta está en pantalla.
@@ -96,7 +101,10 @@ function renderParaHoy(act) {
   const urgentes = items.filter(it => it.fechaLimite <= hoy).sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
   const siguientes = items.filter(it => it.fechaLimite > hoy).sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
   const lista = urgentes.concat(siguientes).slice(0, Math.max(3, urgentes.length));
-  const etiqueta = it => it.fechaLimite < hoy ? '<span class="chip bad">⏰ Atrasada</span>' : it.fechaLimite === hoy ? '<span class="chip warn">📌 Hoy</span>' : '<span class="chip">' + escapeHtml(formatFecha(it.fechaLimite)) + '</span>';
+  const etiqueta = it => {
+    if (it.fechaLimite < hoy) return '<span class="chip bad">⏰ Atrasada</span>';
+    return it.fechaLimite === hoy ? '<span class="chip warn">📌 Hoy</span>' : '<span class="chip">' + escapeHtml(formatFecha(it.fechaLimite)) + '</span>';
+  };
   const filas = lista.map(it => '<div class="hoy-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + etiqueta(it) + ' · ' + tipoTexto(it.tipo) + '</div></div>' + accionItem(it, it.estado) + '</div>').join('');
   return '<section class="card" id="para-hoy" aria-labelledby="ph-titulo"><h3 class="card-titulo" id="ph-titulo">🔥 Para hoy</h3>' +
     (filas || vacio('🎉', '¡Al día! No tienes nada atrasado ni para hoy.')) + '</section>';
@@ -113,7 +121,8 @@ function renderAvisoPendientes(act) {
   const hoy = (act && act.hoy) || todayStr(), lista = pendientesHoy(act);
   if (!lista.length) return '';
   const deHoy = lista.filter(it => it.fechaLimite === hoy).length, atrasadas = lista.length - deHoy;
-  const partes = [deHoy ? deHoy + ' para hoy' : '', atrasadas ? atrasadas + (atrasadas === 1 ? ' atrasada' : ' atrasadas') : ''].filter(Boolean).join(' y ');
+  const palabraAtrasadas = atrasadas === 1 ? ' atrasada' : ' atrasadas';
+  const partes = [deHoy ? deHoy + ' para hoy' : '', atrasadas ? atrasadas + palabraAtrasadas : ''].filter(Boolean).join(' y ');
   return '<section class="card aviso-pendientes" role="status" style="border-left:4px solid ' + (atrasadas ? '#dc2626' : '#f59e0b') + '"><div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">' +
     '<b>' + (atrasadas ? '⏰' : '📌') + ' Tienes ' + partes + '</b><button class="btn" data-action="ver-pendientes">Ver solo hoy y atrasadas →</button></div></section>';
 }
@@ -184,8 +193,11 @@ function renderResultadosAlumno(act) {
     (temas.size ? '<div class="chips" id="temas-reforzar">' + [...temas].map(([t, e]) => '<span class="chip ' + e + '">' + escapeHtml(t) + '</span>').join('') + '</div>' : '<div class="muted">¡Nada por reforzar por ahora! 💪</div>') + '</section>';
   const lista = items.length ? '<section class="card" aria-labelledby="mr-titulo"><h3 class="card-titulo" id="mr-titulo">⭐ Calificaciones en línea</h3>' + items.map(it => {
     const p = it.mejor.porcentaje, tono = claseNota(p);
+    let barra = '';
+    if (tono === 'debilidad') barra = 'bad';
+    else if (tono === 'en-progreso') barra = 'warn';
     return '<div class="res-item" data-id="' + escapeHtml(it.id) + '"><div class="h"><span>' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</span><span class="pct">' + p + '%</span></div>' +
-      '<div class="barra ' + (tono === 'debilidad' ? 'bad' : tono === 'en-progreso' ? 'warn' : '') + '"><span style="width:' + p + '%"></span></div>' +
+      '<div class="barra ' + barra + '"><span style="width:' + p + '%"></span></div>' +
       '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><span class="muted" style="font-size:.78rem">' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' intento(s)' + (it.ultimoEnvio ? ' · ' + escapeHtml(fechaCorta(it.ultimoEnvio)) : '') + '</span>' +
       '<button class="btn ghost sm" data-action="ver-resultado" data-id="' + escapeHtml(it.id) + '">Ver detalle</button></div></div>';
   }).join('') + '</section>' : '<div class="card">' + vacio('⭐', 'Cuando entregues tu primera actividad, aquí verás tus resultados.') + '</div>';

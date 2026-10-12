@@ -24,8 +24,14 @@
   function carton(seed, id) {
     const r = rng(seed, 'bingo-carton|' + id);
     const cols = rango(0, 5).map(c => barajar(rango(c * 15 + 1, 15), r).slice(0, c === 2 ? 4 : 5));
+    // Número de la fila f y columna c: la columna N tiene 4 números y la casilla libre (0) en medio.
+    const numero = (f, c) => {
+      if (c !== 2) return cols[c][f];
+      if (f === 2) return 0;
+      return cols[2][f < 2 ? f : f - 1];
+    };
     const t = [];
-    for (let f = 0; f < 5; f++) for (let c = 0; c < 5; c++) t.push(c === 2 ? (f === 2 ? 0 : cols[2][f < 2 ? f : f - 1]) : cols[c][f]);
+    for (let f = 0; f < 5; f++) for (let c = 0; c < 5; c++) t.push(numero(f, c));
     return t;
   }
   const cantadosA = (inicio, t, canto = CANTO_MS) => t < inicio ? 0 : Math.min(75, Math.floor((t - inicio) / canto) + 1);
@@ -88,10 +94,13 @@
   const bolaHtml = n => n ? '<div class="bg-bola entra" id="bg-bola" style="--bgc:' + colorDe(n) + '" aria-live="polite" aria-label="' + letraDe(n) + ' ' + n + '"><span><small>' + letraDe(n) + '</small>' + n + '</span></div>'
     : '<div class="bg-bola" id="bg-bola"><span>🎱</span></div>';
   const histHtml = lista => lista.map(n => '<span style="--bgc:' + colorDe(n) + '">' + letraDe(n) + n + '</span>').join('');
+  function celdaHtml(n, i, marcas, attr) {
+    if (n === 0) return '<button class="bg-cell libre" ' + attr + '="' + i + '" aria-label="Casilla libre" disabled>⭐</button>';
+    return '<button class="bg-cell' + (marcas[i] ? ' marcada' : '') + '" ' + attr + '="' + i + '" aria-label="' + letraDe(n) + ' ' + n + '">' + n + '</button>';
+  }
   function cartonHtml(t, marcas, attr) {
     return '<div class="bg-carton" role="grid" aria-label="Tu cartón">' + LETRAS.split('').map(l => '<div class="bg-cab" aria-hidden="true">' + l + '</div>').join('') +
-      t.map((n, i) => n === 0 ? '<button class="bg-cell libre" ' + attr + '="' + i + '" aria-label="Casilla libre" disabled>⭐</button>'
-        : '<button class="bg-cell' + (marcas[i] ? ' marcada' : '') + '" ' + attr + '="' + i + '" aria-label="' + letraDe(n) + ' ' + n + '">' + n + '</button>').join('') + '</div>';
+      t.map((n, i) => celdaHtml(n, i, marcas, attr)).join('') + '</div>';
   }
   const tableroHtml = set => '<details><summary class="muted" style="cursor:pointer;font-size:.85rem">🔢 Ver los 75 números</summary><div class="bg-tablero">' +
     rango(1, 75).map(n => '<span style="--bgc:' + colorDe(n) + '"' + (set.has(n) ? ' class="si"' : '') + '>' + n + '</span>').join('') + '</div></details>';
@@ -135,8 +144,10 @@
     function acabar(gane, quien) {
       if (terminado) { return; } terminado = true; limpiar();
       const n = set.size, ac = aciertos(mio, set);
+      let titulo = '🎱 Se acabaron los números';
+      if (gane) titulo = '🎉 ¡BINGO!'; else if (quien) titulo = '😮 ¡Bingo de ' + quien + '!';
       terminar('bingo', { puntos: gane ? puntosGanador(figura, n) : ac * 10, aciertos: ac, total: 24, segundos: (Date.now() - t0) / 1000,
-        titulo: gane ? '🎉 ¡BINGO!' : quien ? '😮 ¡Bingo de ' + quien + '!' : '🎱 Se acabaron los números',
+        titulo,
         detalle: (gane ? 'Ganaste con ' + n + ' números cantados.' : 'Te salieron ' + ac + ' de 24 números.') + ' Figura: ' + escapeHtml(FIGURAS[figura].t) + '.' });
     }
     function siguiente() {

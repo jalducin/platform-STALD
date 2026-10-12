@@ -55,9 +55,10 @@ function renderPresentar() {
   const semana = meets.filter(it => deSemana.has(it.id));
   const anteriores = meets.filter(it => !deSemana.has(it.id)).sort((a, b) => b.fechaLimite.localeCompare(a.fechaLimite));
   const fila = it => {
+    const abrirMeet = it.meetUrl ? '<a class="btn ghost" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">🎥 Abrir Meet</a>' : '';
     const btn = it.tieneReto || it.tieneMaterial // material del profe con o sin reto (openspec: meet-sin-reto)
       ? '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-action="presentar" data-id="' + escapeHtml(it.id) + '">🎬 Presentar</button><button class="btn ghost" data-action="abrir-guion" data-id="' + escapeHtml(it.id) + '">📋 Guion</button></span>'
-      : (it.meetUrl ? '<a class="btn ghost" href="' + escapeHtml(it.meetUrl) + '" target="_blank" rel="noopener">🎥 Abrir Meet</a>' : '');
+      : abrirMeet;
     return '<div class="exam-item"><div><div class="t">🎥 ' + escapeHtml(it.titulo) + '</div><div class="s">' + escapeHtml(formatFecha(it.fechaLimite)) + (it.hora ? ' · ' + escapeHtml(it.hora) : '') + '</div></div>' + btn + '</div>';
   };
   return '<div class="exam-card" id="pres-semana"><h3>📅 Esta semana</h3>' + (semana.length ? semana.map(fila).join('') : '<div class="empty">No hay clase por Meet esta semana.</div>') + '</div>' +
@@ -87,7 +88,8 @@ function celdaHtml(c) {
 }
 function claseCelda(c) {
   let k = 'celda ' + c.estado;
-  if (c.estado === 'hecho') k += c.porcentaje >= 80 ? ' alto' : c.porcentaje >= 60 ? ' medio' : ' bajo';
+  if (c.estado === 'hecho' && c.porcentaje >= 80) k += ' alto';
+  else if (c.estado === 'hecho') k += c.porcentaje >= 60 ? ' medio' : ' bajo';
   if (c.fueraDeTiempo) k += ' tarde';
   return k;
 }
@@ -98,7 +100,8 @@ function renderTablero() {
   const k = r.kpis;
   const kpi = (cls, valor, texto) => '<div class="kpi ' + cls + '"><b>' + valor + '</b><span>' + texto + '</span></div>';
   let tonoATiempo = '';
-  if (k.aTiempo !== null) tonoATiempo = k.aTiempo >= 80 ? 'ok' : k.aTiempo >= 60 ? 'warn' : 'bad';
+  if (k.aTiempo !== null && k.aTiempo >= 80) tonoATiempo = 'ok';
+  else if (k.aTiempo !== null) tonoATiempo = k.aTiempo >= 60 ? 'warn' : 'bad';
   const cab = '<p class="muted" style="margin:0 0 10px">' + (r.grupo ? chipGrupo(r.grupo) + ' · ' : '👥 Todos los grupos · ') + (r.semana ? '📚 ' + escapeHtml(r.semana.titulo) : 'Sin semana activa') + '</p>';
   const kpis = '<div class="kpis" id="kpis">' +
     kpi(tonoATiempo, k.aTiempo === null ? '—' : k.aTiempo + '%', '✅ A tiempo') +
@@ -134,12 +137,13 @@ function filaCajon(c, x, it, nombre) {
   else if (x.estado === 'atrasado') tono = 'debilidad';
   else if (x.estado === 'hoy') tono = 'en-progreso';
   const d = ' data-id="' + escapeHtml(c.id) + '" data-alumno="' + escapeHtml(nombre) + '"';
+  const quitarProrroga = x.prorroga ? '<button type="button" class="btn ghost sm" data-action="prorroga" data-modo="quitar"' + d + '>Quitar prórroga</button>' : '';
+  const reiniciar = x.intentos ? '<button type="button" class="btn ghost sm" data-action="reiniciar" data-titulo="' + escapeHtml(c.titulo) + '"' + d + '>↺ Reiniciar intentos</button>' : '';
   const acciones = x.estado === 'no-aplica' ? '' :
     '<label class="sr-only" for="pr-' + escapeHtml(c.id) + '">Nueva fecha límite para ' + escapeHtml(c.titulo) + '</label>' +
     '<input class="campo" type="date" id="pr-' + escapeHtml(c.id) + '" min="' + escapeHtml(c.disponibleDesde) + '" value="' + escapeHtml(x.prorroga || '') + '">' +
     '<button type="button" class="btn ghost sm" data-action="prorroga" data-modo="dar"' + d + '>⏳ Dar prórroga</button>' +
-    (x.prorroga ? '<button type="button" class="btn ghost sm" data-action="prorroga" data-modo="quitar"' + d + '>Quitar prórroga</button>' : '') +
-    (x.intentos ? '<button type="button" class="btn ghost sm" data-action="reiniciar" data-titulo="' + escapeHtml(c.titulo) + '"' + d + '>↺ Reiniciar intentos</button>' : '');
+    quitarProrroga + reiniciar;
   return '<div class="cajon-fila" data-item="' + escapeHtml(c.id) + '"><div class="h"><span>' + icono(c.tipo) + ' ' + escapeHtml(c.titulo) + '</span><span class="chip ' + tono + '">' + escapeHtml(celdaHtml(x) + ' ' + TEXTO_CELDA[x.estado]) + '</span></div>' +
     '<div class="muted" style="font-size:.78rem">Vence ' + escapeHtml(formatFecha(x.prorroga || c.fechaLimite)) + (x.prorroga ? ' (con prórroga)' : '') + (x.fueraDeTiempo ? ' · entregó fuera de tiempo' : '') + (it.intentosMax ? ' · ' + (x.intentos || 0) + '/' + it.intentosMax + ' intento(s)' : '') + '</div>' +
     (acciones ? '<div class="acc">' + acciones + '</div>' : '') + '</div>';

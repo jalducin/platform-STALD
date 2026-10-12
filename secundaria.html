@@ -170,7 +170,9 @@
     weekStripEl.innerHTML = week.days.map(function(d, i) {
       const ds = fmtDate(d);
       const items = rows.filter(function(r) { return r.fecha === ds; });
-      const cls = ds === today ? 'is-today' : (ds < today ? 'is-past' : '');
+      let cls = '';
+      if (ds === today) cls = 'is-today';
+      else if (ds < today) cls = 'is-past';
       const body = items.length
         ? items.map(function(it) { return '<div class="wd-chip ' + (it.completado ? 'done' : '') + '">' + escapeHtml(it.materia || '?') + '</div>'; }).join('')
         : '<div class="wd-empty">—</div>';
@@ -185,7 +187,8 @@
   function formatRow(i, badgeClass, badgeText, isAdmin) {
     let dow = i.fecha;
     try { dow = new Date(i.fecha+'T00:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric', month:'short'}); } catch(e) {}
-    const whoStr = isAdmin ? ('<div class="who">👤 ' + escapeHtml((i.userNames && i.userNames.length) ? i.userNames.join(', ') : 'Sin asignar') + '</div>') : '';
+    const asignados = (i.userNames && i.userNames.length) ? i.userNames.join(', ') : 'Sin asignar';
+    const whoStr = isAdmin ? ('<div class="who">👤 ' + escapeHtml(asignados) + '</div>') : '';
     return '<div class="row ' + badgeClass + '">' +
       '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
       '<div class="meta">' +
@@ -231,8 +234,13 @@
     nToday.textContent = counts.today;
     nUpcoming.textContent = counts.upcoming;
 
+    // Texto de la etiqueta: días de atraso, «Hoy» o días que faltan.
+    const textoEstado = i => {
+      if (i._status === 'overdue') return i._diff + 'd atraso';
+      return i._status === 'today' ? 'Hoy' : 'en ' + (-i._diff) + 'd';
+    };
     contentEl.innerHTML = pending.length
-      ? pending.map(i => formatRow(i, i._status, i._status === 'overdue' ? i._diff + 'd atraso' : (i._status === 'today' ? 'Hoy' : 'en ' + (-i._diff) + 'd'), data.isAdmin)).join('')
+      ? pending.map(i => formatRow(i, i._status, textoEstado(i), data.isAdmin)).join('')
       : '<div class="empty">🎉 No hay tareas pendientes sin entregar.</div>';
 
     recentEl.innerHTML = recent.length

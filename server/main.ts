@@ -15,7 +15,7 @@ import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
 import { ahoraIso, mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
-import { configPublica, generarEnlace, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, quienEs } from "./auth.ts";
+import { configPublica, generarEnlace, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, type Quien, quienEs } from "./auth.ts";
 import { handleRegistroJuegos } from "./registro.ts";
 import type { Cuenta } from "./jugadores.ts";
 import { handleResumen } from "./resumen.ts";
@@ -207,137 +207,7 @@ async function atender(req: Request): Promise<Response> {
   const email = quien.email;
 
   try {
-    // POST /juegos/registro → cuenta de Juegos con correo y apodo, sin validar el correo (openspec: registro-directo-juegos).
-    if (url.pathname.endsWith("/juegos/registro")) {
-      const sitio = (env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/").replace(/\/?$/, "/");
-      return await handleRegistroJuegos(req, {
-        store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"),
-        ahora: ahoraIso,
-        sesion: async (correo) => {
-          if (env("ROWS_FIXTURE")) return { prueba: true as const };
-          const r = await generarEnlace({ supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY") }, correo, sitio + "juegos.html");
-          if (!r.tokenHash) throw new Error("sin hashed_token");
-          return { token_hash: r.tokenHash };
-        },
-      }, json);
-    }
-
-    // Entrada con contraseña (openspec: acceso-con-contrasena): preparar (sin sesión), cambiar y restablecer.
-    if (url.pathname.endsWith("/auth/preparar") || url.pathname.endsWith("/auth/contrasena") || url.pathname.endsWith("/auth/restablecer") || url.pathname.endsWith("/auth/olvide")) {
-      const deps = {
-        supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY"), admin, prueba: !!env("ROWS_FIXTURE"),
-        redirect: env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/",
-        esDeClase: async (correo: string) => {
-          const [ingles, secundaria] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria")]);
-          const j = await resolverJugador(correo, admin, ingles, secundaria, {});
-          return !!j && j.tipo !== "invitado";
-        },
-      };
-      if (url.pathname.endsWith("/auth/preparar")) return await handlePreparar(req, deps, json);
-      if (url.pathname.endsWith("/auth/olvide")) return await handleOlvide(req, deps, json);
-      if (url.pathname.endsWith("/auth/contrasena")) return await handleCambio(req, quien, deps, json);
-      return await handleRestablecer(req, quien, deps, json);
-    }
-
-    // POST /auth/enlace → enlace de acceso para mandar por WhatsApp (solo admin con sesión).
-    if (url.pathname.endsWith("/auth/enlace")) {
-      return await handleEnlace(req, quien, { admin, supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY"), redirect: env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/" }, json);
-    }
-
-    // GET /salud → límite de GitHub y repo de datos, sin correo ni datos privados (openspec: vigilancia-servidor).
-    if (url.pathname.endsWith("/salud")) {
-      const salud = env("DATA_DIR")
-        ? { ok: true, estado: "ok", github: null, revisado: new Date().toISOString() }
-        : await revisarSalud({ token: env("GITHUB_TOKEN"), store: await getStore() });
-      return json(salud, salud.ok ? 200 : 503);
-    }
-
-    // /ingles/alumnos[/quitar] → alta de alumnos y alumnas (solo admin, server/alumnos.ts)
-    const iAl = url.pathname.indexOf("/ingles/alumnos");
-    if (iAl !== -1) {
-      const conGrupos = await inglesEnPg();
-      const inscribir = conGrupos ? async (nombre: string, grupo: string, desde: string) => {
-        const r = await handleGrupos(new Request("http://x", { method: "POST", body: JSON.stringify({ alumno: nombre, grupo }) }), "/mover", { email: admin, admin, db: db!, hoy: () => desde }, json);
-        return r.ok;
-      } : undefined;
-      return await handleAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), { email, admin, store: await getStore(), filas: () => Promise.resolve([]), inscribir, ahora: ahoraIso }, json);
-    }
-
-    // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada)
-    const iGr = url.pathname.indexOf("/ingles/grupos");
-    if (iGr !== -1) {
-      if (!await inglesEnPg()) return json({ error: "sin_base" }, 503);
-      return await handleGrupos(req, url.pathname.slice(iGr + "/ingles/grupos".length), { email, admin, db: db!, hoy: () => mxToday() }, json);
-    }
-
-    // GET /ingles/resumen?grupo=<id> → tablero del profe: indicadores y mapa de calor (solo admin, server/resumen.ts,
-    // openspec: ingles-pro). La racha del alumno o alumna va dentro de /ingles/actividades (sin ruta aparte).
-    if (url.pathname.endsWith("/ingles/resumen")) {
-      const store = await getStore();
-      const conGrupos = await inglesEnPg();
-      return await handleResumen(req, {
-        email, admin, store,
-        alumnos: async () => {
-          const registro = await leerRegistro(store);
-          const nombres = [...new Set((await filasIngles()).map((r) => r.alumno).filter((n): n is string => !!n))];
-          return nombres.map((nombre) => ({ nombre, ...(inicioDe(registro, nombre) ? { inicio: inicioDe(registro, nombre) } : {}) }));
-        },
-        ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()), grupoInfo: (id: string) => grupoInfo(db!, id) } : {}),
-      }, json);
-    }
-
-    // /ingles/profe/actividades[/<id>] → ruta de estudio del profe (solo admin, server/actividades.ts)
-    const iProfe = url.pathname.indexOf("/ingles/profe/actividades");
-    if (iProfe !== -1) {
-      return await handleProfe(req, url.pathname.slice(iProfe + "/ingles/profe/actividades".length), email, admin, await getStore(), json);
-    }
-
-    // /secundaria/actividades[/<id>] → exámenes de Secundaria (openspec: examen-secundaria)
-    const iSec = url.pathname.indexOf("/secundaria/actividades");
-    if (iSec !== -1) {
-      return await handleSecundaria(req, url.pathname.slice(iSec + "/secundaria/actividades".length), email, admin, await getStore(),
-        () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), json);
-    }
-
-    const idx = url.pathname.indexOf("/ingles/actividades");
-    if (idx !== -1) {
-      if (!email) return json({ error: "missing_email" }, 400);
-      const all = await filasIngles();
-      const { rows, isAdmin } = filterForEmail(all, email, admin);
-      const alumno = isAdmin ? null : (rows.find((r) => r.alumno)?.alumno ?? null);
-      const store = await getStore();
-      const inicio = inicioDe(await leerRegistro(store), alumno);
-      // Grupo vigente (openspec: ingles-grupos): filtra el calendario y da horario y Meet a la página.
-      const grupo = alumno && await inglesEnPg() ? await grupoDe(db!, slugAlumno(alumno), mxToday()) : null;
-      const info = grupo ? await grupoInfo(db!, grupo) : null;
-      const quien = { isAdmin, alumno, ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
-      return await handleActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), quien, store, json);
-    }
-
-    // GET /perfil → accesos del portal (sin filas ni correos ajenos).
-    if (url.pathname.endsWith("/perfil")) {
-      if (!email) return json({ error: "missing_email" }, 400);
-      const store = await getStore();
-      const [ingles, secundaria, inv] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), store.get<Invitados>("juegos/invitados.json")]);
-      return json(armarPerfil(email, admin, ingles, secundaria, inv?.data ?? {}));
-    }
-
-    // /juegos/… → partidas, ranking e invitados (server/juegos.ts)
-    const iJuegos = url.pathname.indexOf("/juegos/");
-    if (iJuegos !== -1) {
-      return await handleJuegos(req, url.pathname.slice(iJuegos + "/juegos".length), email, {
-        store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), realtime, cuentas,
-      }, json);
-    }
-
-    // GET /ingles/data → filas de identidad del registro (Inglés ya no trae tareas de Notion); GET /data → base
-    // «📖 Clases» de Secundaria. "/ingles/data" también termina en "/data": evaluarlo primero.
-    const deIngles = url.pathname.endsWith("/ingles/data");
-    if (!deIngles && !url.pathname.endsWith("/data")) return json({ error: "not_found" }, 404);
-    if (!email) return json({ error: "missing_email" }, 400);
-    const all: (InglesRow | SecundariaRow)[] = deIngles ? await filasIngles() : await loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria");
-    const { rows, isAdmin } = filterForEmail(all, email, admin);
-    return json({ rows, isAdmin, generatedAt: new Date().toISOString() });
+    return await rutear(req, url, quien, email, admin);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "desconocido";
     console.error("error:", msg);
@@ -345,6 +215,160 @@ async function atender(req: Request): Promise<Response> {
     if (msg === "github_rate_limit") return json({ error: "mucho_trafico" }, 503);
     return json({ error: "upstream_error" }, 500);
   }
+}
+
+// POST /juegos/registro → cuenta de Juegos con correo y apodo, sin validar el correo (openspec: registro-directo-juegos).
+async function registroJuegos(req: Request, admin: string): Promise<Response> {
+  const sitio = (env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/").replace(/\/?$/, "/");
+  return await handleRegistroJuegos(req, {
+    store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"),
+    ahora: ahoraIso,
+    sesion: async (correo) => {
+      if (env("ROWS_FIXTURE")) return { prueba: true as const };
+      const r = await generarEnlace({ supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY") }, correo, sitio + "juegos.html");
+      if (!r.tokenHash) throw new Error("sin hashed_token");
+      return { token_hash: r.tokenHash };
+    },
+  }, json);
+}
+
+// Entrada con contraseña (openspec: acceso-con-contrasena): preparar (sin sesión), cambiar y restablecer.
+const esRutaContrasena = (ruta: string) => ruta.endsWith("/auth/preparar") || ruta.endsWith("/auth/contrasena") || ruta.endsWith("/auth/restablecer") || ruta.endsWith("/auth/olvide");
+async function rutasContrasena(req: Request, url: URL, quien: Quien, admin: string): Promise<Response> {
+  const deps = {
+    supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY"), admin, prueba: !!env("ROWS_FIXTURE"),
+    redirect: env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/",
+    esDeClase: async (correo: string) => {
+      const [ingles, secundaria] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria")]);
+      const j = await resolverJugador(correo, admin, ingles, secundaria, {});
+      return !!j && j.tipo !== "invitado";
+    },
+  };
+  if (url.pathname.endsWith("/auth/preparar")) return await handlePreparar(req, deps, json);
+  if (url.pathname.endsWith("/auth/olvide")) return await handleOlvide(req, deps, json);
+  if (url.pathname.endsWith("/auth/contrasena")) return await handleCambio(req, quien, deps, json);
+  return await handleRestablecer(req, quien, deps, json);
+}
+
+// GET /salud → límite de GitHub y repo de datos, sin correo ni datos privados (openspec: vigilancia-servidor).
+async function rutaSalud(): Promise<Response> {
+  const salud = env("DATA_DIR")
+    ? { ok: true, estado: "ok", github: null, revisado: new Date().toISOString() }
+    : await revisarSalud({ token: env("GITHUB_TOKEN"), store: await getStore() });
+  return json(salud, salud.ok ? 200 : 503);
+}
+
+// /ingles/alumnos[/quitar] → alta de alumnos y alumnas (solo admin, server/alumnos.ts)
+async function rutaAlumnos(req: Request, sub: string, email: string, admin: string): Promise<Response> {
+  const conGrupos = await inglesEnPg();
+  const inscribir = conGrupos ? async (nombre: string, grupo: string, desde: string) => {
+    const r = await handleGrupos(new Request("http://x", { method: "POST", body: JSON.stringify({ alumno: nombre, grupo }) }), "/mover", { email: admin, admin, db: db!, hoy: () => desde }, json);
+    return r.ok;
+  } : undefined;
+  return await handleAlumnos(req, sub, { email, admin, store: await getStore(), filas: () => Promise.resolve([]), inscribir, ahora: ahoraIso }, json);
+}
+
+// GET /ingles/resumen?grupo=<id> → tablero del profe: indicadores y mapa de calor (solo admin, server/resumen.ts,
+// openspec: ingles-pro). La racha del alumno o alumna va dentro de /ingles/actividades (sin ruta aparte).
+async function rutaResumen(req: Request, email: string, admin: string): Promise<Response> {
+  const store = await getStore();
+  const conGrupos = await inglesEnPg();
+  return await handleResumen(req, {
+    email, admin, store,
+    alumnos: async () => {
+      const registro = await leerRegistro(store);
+      const nombres = [...new Set((await filasIngles()).map((r) => r.alumno).filter((n): n is string => !!n))];
+      return nombres.map((nombre) => ({ nombre, ...(inicioDe(registro, nombre) ? { inicio: inicioDe(registro, nombre) } : {}) }));
+    },
+    ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()), grupoInfo: (id: string) => grupoInfo(db!, id) } : {}),
+  }, json);
+}
+
+// /ingles/actividades[/<id>] → actividades y exámenes del alumno o alumna (o del admin), con su grupo vigente.
+async function rutaActividades(req: Request, sub: string, email: string, admin: string): Promise<Response> {
+  if (!email) return json({ error: "missing_email" }, 400);
+  const all = await filasIngles();
+  const { rows, isAdmin } = filterForEmail(all, email, admin);
+  const alumno = isAdmin ? null : (rows.find((r) => r.alumno)?.alumno ?? null);
+  const store = await getStore();
+  const inicio = inicioDe(await leerRegistro(store), alumno);
+  // Grupo vigente (openspec: ingles-grupos): filtra el calendario y da horario y Meet a la página.
+  const grupo = alumno && await inglesEnPg() ? await grupoDe(db!, slugAlumno(alumno), mxToday()) : null;
+  const info = grupo ? await grupoInfo(db!, grupo) : null;
+  const quien = { isAdmin, alumno, ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
+  return await handleActividades(req, sub, quien, store, json);
+}
+
+// GET /perfil → accesos del portal (sin filas ni correos ajenos).
+async function rutaPerfil(email: string, admin: string): Promise<Response> {
+  if (!email) return json({ error: "missing_email" }, 400);
+  const store = await getStore();
+  const [ingles, secundaria, inv] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), store.get<Invitados>("juegos/invitados.json")]);
+  return json(armarPerfil(email, admin, ingles, secundaria, inv?.data ?? {}));
+}
+
+// GET /ingles/data → filas de identidad del registro (Inglés ya no trae tareas de Notion); GET /data → base
+// «📖 Clases» de Secundaria. "/ingles/data" también termina en "/data": evaluarlo primero.
+async function rutaData(url: URL, email: string, admin: string): Promise<Response> {
+  const deIngles = url.pathname.endsWith("/ingles/data");
+  if (!deIngles && !url.pathname.endsWith("/data")) return json({ error: "not_found" }, 404);
+  if (!email) return json({ error: "missing_email" }, 400);
+  const all: (InglesRow | SecundariaRow)[] = deIngles ? await filasIngles() : await loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria");
+  const { rows, isAdmin } = filterForEmail(all, email, admin);
+  return json({ rows, isAdmin, generatedAt: new Date().toISOString() });
+}
+
+// Rutas con identidad ya resuelta (o sin identidad: registro, salud y contraseña), en orden de evaluación.
+async function rutear(req: Request, url: URL, quien: Quien, email: string, admin: string): Promise<Response> {
+  if (url.pathname.endsWith("/juegos/registro")) return await registroJuegos(req, admin);
+  if (esRutaContrasena(url.pathname)) return await rutasContrasena(req, url, quien, admin);
+
+  // POST /auth/enlace → enlace de acceso para mandar por WhatsApp (solo admin con sesión).
+  if (url.pathname.endsWith("/auth/enlace")) {
+    return await handleEnlace(req, quien, { admin, supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY"), redirect: env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/" }, json);
+  }
+
+  if (url.pathname.endsWith("/salud")) return await rutaSalud();
+
+  const iAl = url.pathname.indexOf("/ingles/alumnos");
+  if (iAl !== -1) return await rutaAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), email, admin);
+
+  // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada)
+  const iGr = url.pathname.indexOf("/ingles/grupos");
+  if (iGr !== -1) {
+    if (!await inglesEnPg()) return json({ error: "sin_base" }, 503);
+    return await handleGrupos(req, url.pathname.slice(iGr + "/ingles/grupos".length), { email, admin, db: db!, hoy: () => mxToday() }, json);
+  }
+
+  if (url.pathname.endsWith("/ingles/resumen")) return await rutaResumen(req, email, admin);
+
+  // /ingles/profe/actividades[/<id>] → ruta de estudio del profe (solo admin, server/actividades.ts)
+  const iProfe = url.pathname.indexOf("/ingles/profe/actividades");
+  if (iProfe !== -1) {
+    return await handleProfe(req, url.pathname.slice(iProfe + "/ingles/profe/actividades".length), email, admin, await getStore(), json);
+  }
+
+  // /secundaria/actividades[/<id>] → exámenes de Secundaria (openspec: examen-secundaria)
+  const iSec = url.pathname.indexOf("/secundaria/actividades");
+  if (iSec !== -1) {
+    return await handleSecundaria(req, url.pathname.slice(iSec + "/secundaria/actividades".length), email, admin, await getStore(),
+      () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), json);
+  }
+
+  const idx = url.pathname.indexOf("/ingles/actividades");
+  if (idx !== -1) return await rutaActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), email, admin);
+
+  if (url.pathname.endsWith("/perfil")) return await rutaPerfil(email, admin);
+
+  // /juegos/… → partidas, ranking e invitados (server/juegos.ts)
+  const iJuegos = url.pathname.indexOf("/juegos/");
+  if (iJuegos !== -1) {
+    return await handleJuegos(req, url.pathname.slice(iJuegos + "/juegos".length), email, {
+      store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), realtime, cuentas,
+    }, json);
+  }
+
+  return await rutaData(url, email, admin);
 }
 
 if (import.meta.main) Deno.serve({ port: Number(env("PORT")) || 8000 }, handler);

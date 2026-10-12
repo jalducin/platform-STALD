@@ -92,7 +92,10 @@ export async function handlePreparar(req: Request, deps: DepsContrasena, json: J
   if (previos.length >= MAX_INTENTOS) return json({ error: "demasiados_intentos" }, 429);
   intentos.set(email, [...previos, ahora]);
 
-  const inicial = deps.admin && email === deps.admin ? INICIAL_PROFE : (await deps.esDeClase(email)) ? INICIAL_ALUMNOS : null;
+  // Contraseña inicial: la del profe para el admin; la de alumnos para quien es de clase; nadie más tiene.
+  let inicial: string | null = null;
+  if (deps.admin && email === deps.admin) inicial = INICIAL_PROFE;
+  else if (await deps.esDeClase(email)) inicial = INICIAL_ALUMNOS;
   if (!inicial || password !== inicial) return json({ error: "credenciales" }, 401);
   if (deps.prueba) return json({ listo: true });
   if (!deps.supabaseUrl || !deps.serviceKey) return json({ error: "auth_no_disponible" }, 503);

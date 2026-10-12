@@ -21,7 +21,10 @@
     const esDama = p => p === p.toUpperCase();
     const otro = c => c === 'b' ? 'n' : 'b';
     const llega = (p, i) => color(p) === 'b' ? fila(i) === 0 : fila(i) === 7;
-    const dirs = p => esDama(p) ? [[-1, -1], [-1, 1], [1, -1], [1, 1]] : color(p) === 'b' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]];
+    const dirs = p => {
+      if (esDama(p)) return [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+      return color(p) === 'b' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]];
+    };
     const SIN_AVANCE = 40; // medios movimientos sin captura ni avance de peón → empate
 
     function nueva() {
@@ -79,14 +82,18 @@
       let v = 0;
       st.t.forEach((p, i) => {
         if (!p) return;
-        const avance = esDama(p) ? 0 : (color(p) === 'b' ? 7 - fila(i) : fila(i)) * 0.04;
+        let avance = 0;
+        if (!esDama(p)) avance = (color(p) === 'b' ? 7 - fila(i) : fila(i)) * 0.04;
         v += (color(p) === yo ? 1 : -1) * ((esDama(p) ? 2.5 : 1) + avance);
       });
       return v;
     }
     function minimax(st, prof, yo, alfa, beta) {
       const res = resultado(st);
-      if (res) return res.empate ? 0 : (res.gana === yo ? 100 + prof : -100 - prof);
+      if (res) {
+        if (res.empate) return 0;
+        return res.gana === yo ? 100 + prof : -100 - prof;
+      }
       if (!prof) return evaluar(st, yo);
       const max = st.turno === yo;
       let mejor = max ? -Infinity : Infinity;
@@ -348,7 +355,9 @@
         const mismaFila = pend.every(c => Math.floor(c / 10) === Math.floor(pend[0] / 10));
         const mismaCol = pend.every(c => c % 10 === pend[0] % 10);
         const a = pend[0], z = pend[pend.length - 1];
-        const linea = mismaFila ? [a % 10 > 0 ? a - 1 : -1, z % 10 < 9 ? z + 1 : -1] : mismaCol ? [a - 10, z + 10] : [];
+        let linea = [];
+        if (mismaFila) linea = [a % 10 > 0 ? a - 1 : -1, z % 10 < 9 ? z + 1 : -1];
+        else if (mismaCol) linea = [a - 10, z + 10];
         const ok = linea.filter(libre);
         if (ok.length) return azar(ok);
       }
@@ -385,8 +394,14 @@
 
   // ======================= Puntos (tope 1,000) =======================
   const puntos = {
-    damas: (res, nivel, propias, capturas) => res === 'gana' ? tope((nivel === 1 ? 600 : 800) + 20 * propias) : res === 'empate' ? 300 : Math.min(300, tope(25 * capturas)),
-    domino: (res, rivales, mios) => res === 'gana' ? tope(500 + 10 * rivales) : res === 'empate' ? 400 : tope(200 - 5 * mios),
+    damas: (res, nivel, propias, capturas) => {
+      if (res === 'gana') return tope((nivel === 1 ? 600 : 800) + 20 * propias);
+      return res === 'empate' ? 300 : Math.min(300, tope(25 * capturas));
+    },
+    domino: (res, rivales, mios) => {
+      if (res === 'gana') return tope(500 + 10 * rivales);
+      return res === 'empate' ? 400 : tope(200 - 5 * mios);
+    },
     parchis: (meta, cuantas, gana) => tope(800 * meta / cuantas + (gana ? 200 : 0)),
     naval: (gana, disparos, tocados) => gana ? tope(600 + 400 * Naval.TOTAL / Math.max(Naval.TOTAL, disparos)) : tope(20 * tocados),
   };

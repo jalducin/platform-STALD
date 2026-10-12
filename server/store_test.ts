@@ -11,7 +11,10 @@ function githubFalso() {
   const etag = (k: string) => `"${k}-${archivos.get(k)?.v ?? 0}"`;
   const resp = (status: number, body: unknown, headers: Record<string, string> = {}) => new Response(status === 304 ? null : JSON.stringify(body), { status, headers });
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
-    const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url);
+    let href: string;
+    if (typeof input === "string") href = input;
+    else href = input instanceof URL ? input.href : input.url;
+    const url = new URL(href);
     const method = init?.method || "GET";
     const path = decodeURIComponent(url.pathname.replace(/^\/repos\/[^/]+\/[^/]+\/contents\//, ""));
     const h = new Headers(init?.headers);

@@ -21,7 +21,10 @@
   // Minimax completo (9 casillas): +10 − profundidad si gana `yo`, −10 + profundidad si pierde, 0 empate.
   function gatoValor(t, turno, yo, prof) {
     const r = gatoGanador(t);
-    if (r) return r.empate ? 0 : r.gana === yo ? 10 - prof : prof - 10;
+    if (r) {
+      if (r.empate) return 0;
+      return r.gana === yo ? 10 - prof : prof - 10;
+    }
     let mejor = turno === yo ? -Infinity : Infinity;
     for (const i of libres(t)) {
       t[i] = turno; const v = gatoValor(t, otraFicha(turno), yo, prof + 1); t[i] = null;
@@ -132,8 +135,12 @@
   // 1 si a vence a b, −1 si pierde, 0 empate. No elegir (null, "pasar" o "?") pierde contra cualquier elección.
   function pptGana(a, b) {
     const va = PPT.includes(a), vb = PPT.includes(b);
-    if (!va || !vb) return va === vb ? 0 : va ? 1 : -1;
-    return a === b ? 0 : VENCE[a] === b ? 1 : -1;
+    if (!va || !vb) {
+      if (va === vb) return 0;
+      return va ? 1 : -1;
+    }
+    if (a === b) return 0;
+    return VENCE[a] === b ? 1 : -1;
   }
   // Bot: elige antes de ver la jugada. A veces le gana a la última elección del rival; si no, al azar.
   function pptBot(historialRival, r) {
@@ -166,7 +173,9 @@
   function serpMover(pos, dado) {
     const paso = Math.min(100, pos + dado);
     const hasta = SERP_ESCALERAS[paso] || SERP_SERPIENTES[paso] || paso;
-    return { desde: pos, paso, hasta, salto: SERP_ESCALERAS[paso] ? 'escalera' : SERP_SERPIENTES[paso] ? 'serpiente' : null };
+    let salto = null;
+    if (SERP_ESCALERAS[paso]) salto = 'escalera'; else if (SERP_SERPIENTES[paso]) salto = 'serpiente';
+    return { desde: pos, paso, hasta, salto };
   }
   // Fila (0 arriba) y columna de una casilla: la 1 abajo a la izquierda y cada renglón cambia de sentido.
   function serpCelda(n) {
@@ -204,9 +213,20 @@
       if (ctx.ahora >= lim) { st.paso++; st.T0 = lim; g.aplicar(st, j, Object.assign(g.auto(st, j, n), { auto: true }), lim, n); continue; }
       break;
     }
-    st.lim = st.fin || st.esperaHasta !== null ? null : st.T0 + ctx.dur(ctx.orden[st.turnoIdx] && ctx.orden[st.turnoIdx].bot ? g.botMs : g.turnoMs);
+    st.lim = limiteTurno(ctx, st, g);
     return st;
   }
+  // Hora límite del turno que se espera (null si la sala terminó o está en pausa).
+  function limiteTurno(ctx, st, g) {
+    if (st.fin || st.esperaHasta !== null) return null;
+    const p = ctx.orden[st.turnoIdx];
+    return st.T0 + ctx.dur(p && p.bot ? g.botMs : g.turnoMs);
+  }
+  // Índice del ganador por puntos (null si empatan).
+  const ganadorPorPuntos = puntos => {
+    if (puntos[0] === puntos[1]) return null;
+    return puntos[0] > puntos[1] ? 0 : 1;
+  };
   const entero = (x, min, max) => Number.isInteger(x) && x >= min && x <= max;
   // Caché opcional de jugadas de bots (la página reproduce la sala cada 250 ms).
   const memo = (ctx, k, f) => ctx.memo ? ctx.memo(k, f) : f();
@@ -227,7 +247,7 @@
         if (!r) { s.turnoIdx = 1 - j; return; }
         s.resultados.push({ ronda: s.ronda, gana: r.empate ? null : j, linea: r.linea || null, t });
         if (r.empate) { s.empates++; s.puntos[0] += C.empate; s.puntos[1] += C.empate; } else { s.victorias[j]++; s.puntos[j] += C.gana; }
-        if (s.ronda + 1 >= C.rondas) s.fin = { t, gana: s.puntos[0] === s.puntos[1] ? null : s.puntos[0] > s.puntos[1] ? 0 : 1 };
+        if (s.ronda + 1 >= C.rondas) s.fin = { t, gana: ganadorPorPuntos(s.puntos) };
         else s.esperaHasta = t + ctx.dur(C.pausa);
       },
       reanudar: s => { s.ronda++; s.t = new Array(9).fill(null); s.turnoIdx = s.ronda % 2; s.ultima = null; },
@@ -259,6 +279,11 @@
 
   // Piedra, papel o tijera en sala: 5 rondas simultáneas, todos contra todos.
   const PPT_SALA = { rondas: 5, ventana: 12000, revela: 4000, total: 800, bono: 200 };
+  // Elección de un lugar en la ronda r: el bot elige con su semilla; la persona, lo que mandó a tiempo (o nada).
+  function eleccionPpt(ctx, p, sub, r) {
+    if (p.bot) return pptBot(null, ctx.rng(p.id + '|ppt' + r));
+    return sub && sub.accion === 'elegir' ? sub.eleccion : null;
+  }
   function salaPpt(ctx) {
     const C = PPT_SALA, orden = ctx.orden, N = orden.length;
     const porJugador = new Map(orden.map(p => [p.id, new Map()]));
@@ -271,7 +296,7 @@
       const humanos = orden.map((_p, i) => i).filter(i => !orden[i].bot);
       const todos = humanos.length > 0 && humanos.every(i => subs[i]);
       const cierre = todos ? Math.max(ini, Math.min(lim, Math.max(...humanos.map(i => subs[i].t)))) : lim;
-      const elecciones = orden.map((p, i) => p.bot ? pptBot(null, ctx.rng(p.id + '|ppt' + r)) : subs[i] && subs[i].accion === 'elegir' ? subs[i].eleccion : null);
+      const elecciones = orden.map((p, i) => eleccionPpt(ctx, p, subs[i], r));
       rondas.push({ r, ini, lim, cierre, revelaHasta: cierre + ctx.dur(C.revela), elecciones, eligio: orden.map((p, i) => !!(p.bot || subs[i])) });
       ini = cierre + ctx.dur(C.revela);
     }
@@ -284,7 +309,8 @@
       for (let i = 0; i < N; i++) for (let k = 0; k < N; k++) if (i !== k && pptGana(ro.elecciones[i], ro.elecciones[k]) === 1) { ro.victorias[i]++; victorias[i]++; }
     }
     const actual = rondas.findIndex(ro => ctx.ahora < ro.revelaHasta);
-    const fase = actual < 0 ? 'fin' : ctx.ahora < rondas[actual].cierre ? 'elegir' : 'revelar';
+    let fase = 'fin';
+    if (actual >= 0) fase = ctx.ahora < rondas[actual].cierre ? 'elegir' : 'revelar';
     const max = Math.max(...victorias);
     const puntos = victorias.map(v => Math.round(C.total * v / (C.rondas * Math.max(1, N - 1))) + (max > 0 && v === max ? C.bono : 0));
     return { juego: 'ppt', rondas, ronda: actual < 0 ? C.rondas - 1 : actual, fase, victorias, puntos, ocultas, fin: fase === 'fin' ? { t: rondas[C.rondas - 1].revelaHasta } : null };

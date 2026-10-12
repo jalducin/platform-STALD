@@ -27,22 +27,33 @@ async function openItem(id) {
   const fijas = corr ? corr.fijas : {};
   const porCorregir = it.preguntas.filter(p => !(p.id in fijas));
   const yaBien = it.preguntas.filter(p => p.id in fijas);
+  const tts = t => '<div class="tts"><button type="button" data-action="tts" data-texto="' + escapeHtml(t) + '">🔊 Escuchar</button><button type="button" data-action="tts" data-lento="1" data-texto="' + escapeHtml(t) + '">🐢 Lento</button></div>';
+  const audioDe = p => p.audio ? tts(p.audio) : '';
+  // Pronunciar: con reconocimiento de voz se graba; sin él, autoevaluación.
+  const botonesPron = () => Reconocedor
+    ? '<div class="pron-btns"><button type="button" class="rec" data-action="grabar">🎙️ Decirlo</button></div>'
+    : '<div class="pron-btns"><button type="button" data-action="auto" data-valor="auto:ok">✔ Me salió bien</button><button type="button" data-action="auto" data-valor="auto:repetir">↺ Necesito repetir</button></div><div class="s" style="font-size:.78rem">Tu navegador no reconoce voz: usa Chrome o Edge para calificarla. Mientras, escucha el modelo, repítelo y autoevalúate.</div>';
+  const cuerpoPronunciar = (p, fija, v, dis) =>
+    '<div class="pron-frase">' + escapeHtml(p.frase) + '</div>' + tts(p.frase) +
+    '<input class="q-text" type="hidden" name="' + escapeHtml(p.id) + '"' + (fija ? ' value="' + escapeHtml(v) + '"' : '') + dis + '>' +
+    (fija ? '' : botonesPron()) +
+    '<div class="pron-oido">' + (fija ? 'Ya te salió bien ✔' : '') + '</div>';
+  const cuerpoEscribir = (p, fija, v, dis) =>
+    audioDe(p) + '<input class="q-text" type="text" name="' + escapeHtml(p.id) + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe tu respuesta"' + (fija ? ' value="' + escapeHtml(v) + '"' : '') + dis + '>';
+  const cuerpoOpcion = (p, fija, v, dis) =>
+    audioDe(p) + p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"' + (fija && v === i ? ' checked' : '') + dis + '> <span>' + escapeHtml(o) + '</span>' + (i < 9 && !fija ? '<span class="tecla" aria-hidden="true">' + (i + 1) + '</span>' : '') + '</label>').join('');
+  // Cuerpo del ejercicio según su tipo (opción múltiple si no es otro).
+  const cuerpoDe = (p, fija, v, dis) => {
+    if (p.tipo === 'pronunciar') return cuerpoPronunciar(p, fija, v, dis);
+    if (p.tipo === 'ordenar') return audioDe(p) + bloqueOrdenar(p, fija);
+    if (p.tipo === 'emparejar') return audioDe(p) + bloqueEmparejar(p, fija);
+    if (p.tipo === 'escribir') return cuerpoEscribir(p, fija, v, dis);
+    return cuerpoOpcion(p, fija, v, dis);
+  };
   const pregunta = (p, n, total, fija) => {
     const v = fija ? fijas[p.id] : undefined;
     const dis = fija ? ' disabled' : '';
-    const tts = t => '<div class="tts"><button type="button" data-action="tts" data-texto="' + escapeHtml(t) + '">🔊 Escuchar</button><button type="button" data-action="tts" data-lento="1" data-texto="' + escapeHtml(t) + '">🐢 Lento</button></div>';
-    const cuerpo = p.tipo === 'pronunciar'
-      ? '<div class="pron-frase">' + escapeHtml(p.frase) + '</div>' + tts(p.frase) +
-        '<input class="q-text" type="hidden" name="' + escapeHtml(p.id) + '"' + (fija ? ' value="' + escapeHtml(v) + '"' : '') + dis + '>' +
-        (fija ? '' : Reconocedor
-          ? '<div class="pron-btns"><button type="button" class="rec" data-action="grabar">🎙️ Decirlo</button></div>'
-          : '<div class="pron-btns"><button type="button" data-action="auto" data-valor="auto:ok">✔ Me salió bien</button><button type="button" data-action="auto" data-valor="auto:repetir">↺ Necesito repetir</button></div><div class="s" style="font-size:.78rem">Tu navegador no reconoce voz: usa Chrome o Edge para calificarla. Mientras, escucha el modelo, repítelo y autoevalúate.</div>') +
-        '<div class="pron-oido">' + (fija ? 'Ya te salió bien ✔' : '') + '</div>'
-      : p.tipo === 'ordenar' ? (p.audio ? tts(p.audio) : '') + bloqueOrdenar(p, fija)
-      : p.tipo === 'emparejar' ? (p.audio ? tts(p.audio) : '') + bloqueEmparejar(p, fija)
-      : p.tipo === 'escribir'
-      ? (p.audio ? tts(p.audio) : '') + '<input class="q-text" type="text" name="' + escapeHtml(p.id) + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe tu respuesta"' + (fija ? ' value="' + escapeHtml(v) + '"' : '') + dis + '>'
-      : (p.audio ? tts(p.audio) : '') + p.opciones.map((o, i) => '<label><input type="radio" name="' + escapeHtml(p.id) + '" value="' + i + '"' + (fija && v === i ? ' checked' : '') + dis + '> <span>' + escapeHtml(o) + '</span>' + (i < 9 && !fija ? '<span class="tecla" aria-hidden="true">' + (i + 1) + '</span>' : '') + '</label>').join('');
+    const cuerpo = cuerpoDe(p, fija, v, dis);
     const antes = corr && !fija ? '<div class="antes">Antes respondiste: ' + escapeHtml(corr.anteriores[p.id] || 'Sin responder') + ' ✗</div>' : '';
     return '<div class="q' + (fija ? ' fija answered' : '') + '" data-q="' + escapeHtml(p.id) + '"' + (p.tipo === 'pronunciar' ? ' data-frase="' + escapeHtml(p.frase) + '"' : '') + '><div class="n"><span>' + (fija ? '✓ Ya la tenías bien' : 'Ejercicio ' + n + ' de ' + total) + '</span><span class="tema-q chip">' + escapeHtml(titulos.get(p.tema) || p.tema || '') + '</span></div>' +
       '<div class="e">' + escapeHtml(p.enunciado) + '</div>' + antes + cuerpo + '</div>';
@@ -56,24 +67,29 @@ async function openItem(id) {
       return head + pregunta(p, n, lista.length, fija);
     }).join('');
   };
-  const qs = corr
-    ? '<div class="aviso-corr">✏️ Corrección: tus ' + yaBien.length + ' respuestas correctas ya están guardadas. Corrige solo ' + (porCorregir.length === 1 ? 'la que fallaste' : 'las ' + porCorregir.length + ' que fallaste') + '.</div>' +
+  // Corrección: aviso, las falladas por corregir y, plegadas, las que ya estaban bien.
+  const qsCorreccion = () => {
+    const fallaste = porCorregir.length === 1 ? 'la que fallaste' : 'las ' + porCorregir.length + ' que fallaste';
+    return '<div class="aviso-corr">✏️ Corrección: tus ' + yaBien.length + ' respuestas correctas ya están guardadas. Corrige solo ' + fallaste + '.</div>' +
       conTemas(porCorregir, false) +
-      (yaBien.length ? '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>✅ Ya las tenías bien</span><span class="count">' + yaBien.length + '</span></div></summary><div style="padding:8px">' + conTemas(yaBien, true) + '</div></details>' : '')
-    : conTemas(it.preguntas, false);
-  const info = (it.vistaPrevia ? 'Vista previa (no se guarda)' : (corr ? 'Corrección · intento ' : 'Intento ') + it.intento + ' de ' + it.intentosMax) +
+      (yaBien.length ? '<details class="section"><summary><div class="section-head"><span><span class="chevron">▶</span>✅ Ya las tenías bien</span><span class="count">' + yaBien.length + '</span></div></summary><div style="padding:8px">' + conTemas(yaBien, true) + '</div></details>' : '');
+  };
+  const qs = corr ? qsCorreccion() : conTemas(it.preguntas, false);
+  const etiquetaIntento = corr ? 'Corrección · intento ' : 'Intento ';
+  const info = (it.vistaPrevia ? 'Vista previa (no se guarda)' : etiquetaIntento + it.intento + ' de ' + it.intentosMax) +
     (it.enfoque && it.enfoque.length ? ' · Enfocado en: ' + it.enfoque.join(', ') : '');
   // En celular, una pregunta por pantalla (openspec: ingles-pro); «Ver todas» vuelve a la lista completa.
   const paso = window.matchMedia('(max-width: 599.98px)').matches && porCorregir.length > 1;
   // Autoguardado (openspec: examen-autoguardado): sin vista previa ni almacenamiento no hay borrador.
   const kb = !it.vistaPrevia && almacenDisponible() ? claveBorrador(it.id, it.intento) : '';
   if (kb) limpiarBorradores(claveBorrador(it.id, ''), kb); // intentos anteriores y caducados
+  const teoriaAbierta = corr ? '' : ' open'; // en la corrección, la teoría empieza plegada
   contentEl.innerHTML =
     '<div class="exam-card"><h3>' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</h3>' +
     '<div class="s" style="font-size:.82rem">' + escapeHtml(info) + '</div>' +
     '<div class="s muted" style="font-size:.76rem;margin-top:4px">⌨️ Atajos: 1–4 eligen la opción · Enter avanza</div>' +
     (it.descripcion ? '<div class="s" style="font-size:.8rem;margin-top:4px">' + escapeHtml(it.descripcion) + '</div>' : '') + '</div>' +
-    (it.teoria && it.teoria.length ? '<details class="section"' + (corr ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
+    (it.teoria && it.teoria.length ? '<details class="section"' + teoriaAbierta + '><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
     renderTips(it.tips) +
     '<form id="exam-form"' + (paso ? ' class="paso"' : '') + ' data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + porCorregir.length + '" data-borrador="' + escapeHtml(kb) + '" data-cuenta="' + (it.vistaPrevia ? '' : '1') + '">' +
     '<div class="player-progreso"><div class="barra accent" role="progressbar" aria-label="Avance" aria-valuemin="0" aria-valuemax="' + porCorregir.length + '" aria-valuenow="0" id="player-barra"><span id="player-bar" style="width:0%"></span></div><span class="num" id="player-num">0/' + porCorregir.length + '</span></div>' +
@@ -99,7 +115,7 @@ async function openItem(id) {
 // Nunca viaja al servidor. Valor: { v: 1, t: <ms>, r: <lo mismo que examAnswers> }.
 const BORRADOR = 'stald_borrador:';
 const BORRADOR_DIAS = 14;
-const BORRADOR_AMBITO = MODO_PROFE ? 'profe' : MODO_SECUNDARIA ? 'secundaria' : 'ingles';
+const BORRADOR_AMBITO = segunModo('profe', 'secundaria', 'ingles');
 function hashCorto(s) { // FNV-1a de 32 bits en base 36: separa personas sin dejar el correo en claro
   let h = 0x811c9dc5;
   for (const c of String(s || '').toLowerCase()) { h ^= c.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
@@ -172,9 +188,9 @@ function pintarGuardado() {
   if (!ref) return;
   const min = Math.floor((Date.now() - ref) / 60000);
   const cuando = 'Guardado hace ' + (min < 1 ? 'un momento' : min + ' min');
-  el.textContent = f.dataset.pendiente ? '📴 Sin conexión: tu avance está en este aparato y se subirá a tu cuenta al reconectar'
-    : f.dataset.enCuenta ? 'Tu avance se guarda en tu cuenta ✔ · ' + cuando
-    : 'Guardando en tu cuenta… · ' + cuando + ' en este aparato';
+  if (f.dataset.pendiente) el.textContent = '📴 Sin conexión: tu avance está en este aparato y se subirá a tu cuenta al reconectar';
+  else if (f.dataset.enCuenta) el.textContent = 'Tu avance se guarda en tu cuenta ✔ · ' + cuando;
+  else el.textContent = 'Guardando en tu cuenta… · ' + cuando + ' en este aparato';
 }
 setInterval(pintarGuardado, 30000);
 // Aplica el borrador del intento abierto por id de pregunta; ignora ids que ya no están y las fijas de la corrección.
@@ -497,7 +513,13 @@ function showResult(calificacion, info) {
   else if (i.intento) head += ' · intento ' + i.intento + ' de ' + i.intentosMax + (i.mejor ? ' · mejor: ' + i.mejor.porcentaje + '%' : '');
   const corrige = it ? it.tipo !== 'examen' : true;
   const espera = it && it.tipo === 'examen' && it.segundaOportunidad && i.restantes > 0 && !i.vistaPrevia && todayStr() < it.segundaOportunidad;
-  const reintento = espera ? '' : i.restantes > 0 ? '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(i.id) + '">' + (corrige ? 'Corregir errores' : (it && it.segundaOportunidad ? '2.ª oportunidad' : 'Reintentar')) + ' (' + i.restantes + ' intento restante)</button>' : '';
+  // Otro intento: corregir errores (actividades) o reintentar / 2.ª oportunidad (exámenes); no mientras espera.
+  const textoReintento = () => {
+    if (corrige) return 'Corregir errores';
+    return it && it.segundaOportunidad ? '2.ª oportunidad' : 'Reintentar';
+  };
+  let reintento = '';
+  if (!espera && i.restantes > 0) reintento = '<button class="btn" data-action="abrir-item" data-id="' + escapeHtml(i.id) + '">' + textoReintento() + ' (' + i.restantes + ' intento restante)</button>';
   const aviso = espera ? '<div class="aviso-corr" id="aviso-segunda">📅 Tienes una 2.ª oportunidad el ' + escapeHtml(formatFecha(it.segundaOportunidad)) + ' con preguntas nuevas. Estudia el sábado con tu refuerzo; cuenta la mejor de las dos.</div>' : '';
   contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' + aviso +
     renderResultado(calificacion, false) +

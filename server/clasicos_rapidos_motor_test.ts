@@ -66,7 +66,7 @@ Deno.test("conecta4: caída, columna llena, 4 en línea y empate", () => {
   for (const [col, f] of [[6, "R"], [5, "A"], [5, "R"], [4, "A"], [4, "A"], [4, "R"], [3, "A"], [3, "A"], [3, "A"], [3, "R"]] as [number, string][]) e = C.c4Soltar(e, col, f).t;
   assertEquals(C.c4Ganador(e).gana, "R");
   // Tablero lleno sin 4 en línea: patrón por pares de columnas que nunca alinea 4.
-  const lleno = Array.from({ length: 42 }, (_, i) => { const f = Math.floor(i / 7), c = i % 7; return (Math.floor(c / 2) + f + (c === 6 ? 1 : 0)) % 2 ? "R" : "A"; });
+  const lleno = Array.from({ length: 42 }, (_, i) => { const f = Math.floor(i / 7), c = i % 7; return (Math.floor(c / 2) + f + Number(c === 6)) % 2 ? "R" : "A"; });
   assertEquals(C.c4Ganador(lleno), { empate: true });
 });
 

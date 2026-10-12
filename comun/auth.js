@@ -297,6 +297,7 @@
     var aviso = op.aviso || estado.errorEnlace || (estado.error ? 'No pude preparar el inicio de sesión (' + estado.error + '). Revisa tu internet.' : '');
     estado.errorEnlace = null;
     function paso(msg) {
+      var claseOk = op.msgOk ? ' ok' : '';
       el.innerHTML = '<div class="stald-auth" data-stald-auth="contrasena"><h2>' + esc(op.titulo || '🔐 Entra a STALD') + '</h2>' +
         '<p>' + esc(op.texto || 'Entra con tu correo y tu contraseña. Si es tu primera vez, usa la que te dio tu profe.') + '</p>' +
         '<form novalidate><label for="stald-auth-correo">Tu correo</label>' +
@@ -305,7 +306,7 @@
         '<input id="stald-auth-clave" type="password" autocomplete="current-password" autocapitalize="none">' +
         '<button type="submit" id="stald-auth-entrar">Entrar →</button></form>' +
         '<button type="button" class="sec" data-stald-auth-olvide>¿Olvidaste tu contraseña?</button>' +
-        (msg ? '<div class="msg' + (op.msgOk ? ' ok' : '') + '" role="alert">' + esc(msg) + '</div>' : '') + '</div>' + (op.pie || '');
+        (msg ? '<div class="msg' + claseOk + '" role="alert">' + esc(msg) + '</div>' : '') + '</div>' + (op.pie || '');
       op.msgOk = false;
       el.querySelector('[data-stald-auth-olvide]').addEventListener('click', function () {
         var correo = el.querySelector('#stald-auth-correo').value.trim().toLowerCase();

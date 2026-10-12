@@ -21,6 +21,11 @@
   const NOMBRES_MANO = ['Carta alta', 'Par', 'Doble par', 'Tercia', 'Escalera', 'Color', 'Full', 'Póker', 'Escalera de color'];
   const B5 = 13 ** 5;
 
+  // Desempate: carta alta de la escalera, todas las cartas (color o carta alta) o los grupos en orden.
+  function desempate(cat, alta, r, grupos) {
+    if (cat === 8 || cat === 4) return [alta];
+    return cat === 5 || cat === 0 ? r : grupos.map(x => x[0]);
+  }
   function valor5(ids) {
     const r = ids.map(rango).sort((a, b) => b - a);
     const color = ids.every(id => palo(id) === palo(ids[0]));
@@ -41,7 +46,7 @@
     else if (grupos[0][1] === 2 && grupos[1][1] === 2) cat = 2;
     else if (grupos[0][1] === 2) cat = 1;
     else cat = 0;
-    const des = cat === 8 || cat === 4 ? [alta] : cat === 5 || cat === 0 ? r : grupos.map(x => x[0]);
+    const des = desempate(cat, alta, r, grupos);
     let v = cat;
     for (let i = 0; i < 5; i++) v = v * 13 + (des[i] || 0);
     return v;

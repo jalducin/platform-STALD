@@ -161,9 +161,11 @@ function ajTableroHtml(st, o) {
     const f = o.abajo === 'w' ? i : 7 - i, c = o.abajo === 'w' ? k : 7 - k, sq = f * 16 + c;
     const cls = ((f + c) % 2 ? 'os' : 'cl') + (o.ultima && (o.ultima.de === sq || o.ultima.a === sq) ? ' ult' : '') + (o.sel === sq ? ' sel' : '') + (sq === rey ? ' jaque' : '');
     const m = dest.get(sq);
+    let destHtml = '';
+    if (m) destHtml = '<span class="dest' + (m.captura ? ' come' : '') + '"></span>';
     h += '<button class="aj-c ' + cls + '" data-aj="' + sq + '" aria-label="' + Ajedrez.casilla(sq) + (st.t[sq] ? ' ' + st.t[sq] : '') + '">' +
       (k === 0 ? '<span class="aj-coord f">' + (8 - f) + '</span>' : '') + (i === 7 ? '<span class="aj-coord c">' + 'abcdefgh'[c] + '</span>' : '') +
-      ajPieza(st.t[sq]) + (m ? '<span class="dest' + (m.captura ? ' come' : '') + '"></span>' : '') + '</button>';
+      ajPieza(st.t[sq]) + destHtml + '</button>';
   }
   return h + '</div>';
 }
@@ -204,11 +206,14 @@ function jugarAjedrez(nivel, yo) {
   const pintar = msg => {
     const cap = Ajedrez.capturas(st), bot = yo === 'w' ? 'b' : 'w';
     const turnoYo = st.turno === yo && !pensando;
+    let estado = '';
+    if (pensando) estado = '🤔 Gambito está pensando…';
+    else if (turnoYo) estado = Ajedrez.enJaque(st) ? '⚠️ ¡Jaque! Protege a tu rey' : '👉 Tu turno: toca una pieza y luego su destino';
     m.body.innerHTML = '<div class="aj-wrap"><div class="aj-info"><span>🤖 Gambito · ' + AJ_NIVEL[nivel].t + '</span><span class="aj-capt">' + ajCapturasHtml(cap[bot]) + '</span></div>' +
       ajTableroHtml(st, { abajo: yo, sel, destinos: sel !== null && turnoYo ? Ajedrez.legales(st).filter(x => x.de === sel) : [], ultima }) +
       '<div class="aj-info"><span>🙂 Tú (' + (yo === 'w' ? 'blancas' : 'negras') + ')</span><span class="aj-capt">' + ajCapturasHtml(cap[yo]) + '</span></div>' +
       (promo ? ajPromoHtml(yo) : '') +
-      '<div class="feedback' + (Ajedrez.enJaque(st) ? ' bad' : '') + '" id="aj-msg">' + (msg || (pensando ? '🤔 Gambito está pensando…' : turnoYo ? (Ajedrez.enJaque(st) ? '⚠️ ¡Jaque! Protege a tu rey' : '👉 Tu turno: toca una pieza y luego su destino') : '')) + '</div>' +
+      '<div class="feedback' + (Ajedrez.enJaque(st) ? ' bad' : '') + '" id="aj-msg">' + (msg || estado) + '</div>' +
       ajJugadasHtml(sanes) + '<div class="row-btns"><button class="btn ghost sm" data-ayuda="ajedrez">📖 Cómo se juega</button><button class="btn ghost sm" data-aj-rendir>🏳️ Rendirme</button></div></div>';
     m.puntos(Ajedrez.capturas(st)['puntos' + yo.toUpperCase()]);
   };
@@ -216,9 +221,12 @@ function jugarAjedrez(nivel, yo) {
     terminado = true;
     const cap = Ajedrez.capturas(st)['puntos' + yo.toUpperCase()];
     const gane = res.gana === yo, tablas = !res.gana;
-    const puntos = gane ? AJ_NIVEL[nivel].pts : tablas ? Math.round(AJ_NIVEL[nivel].pts / 2) : Math.min(200, cap * 10);
+    let puntos, titulo;
+    if (gane) { puntos = AJ_NIVEL[nivel].pts; titulo = '🏆 ¡Ganaste por ' + AJ_FIN[res.fin] + '!'; }
+    else if (tablas) { puntos = Math.round(AJ_NIVEL[nivel].pts / 2); titulo = '🤝 Tablas: ' + AJ_FIN[res.fin]; }
+    else { puntos = Math.min(200, cap * 10); titulo = '😅 Ganó Gambito por ' + AJ_FIN[res.fin]; }
     setTimeout(() => terminar('ajedrez', { puntos, aciertos: cap, total: 39, segundos: (Date.now() - t0) / 1000,
-      titulo: gane ? '🏆 ¡Ganaste por ' + AJ_FIN[res.fin] + '!' : tablas ? '🤝 Tablas: ' + AJ_FIN[res.fin] : '😅 Ganó Gambito por ' + AJ_FIN[res.fin],
+      titulo,
       detalle: sanes.length + ' jugadas · nivel ' + AJ_NIVEL[nivel].t + (sanes.length ? ' · última: ' + escapeHtml(sanes[sanes.length - 1]) : '') }), res.fin === 'rendicion' ? 0 : 1600 * TIEMPO);
   };
   const mover = mv => {

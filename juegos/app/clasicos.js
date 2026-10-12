@@ -100,7 +100,13 @@ function unaMazo() {
   return barajar(m);
 }
 // Castigo por tardar en presionar UNA (segundos desde que se tira la penúltima carta).
-const castigoUna = seg => seg <= 2 ? 0 : seg <= 3 ? 1 : seg <= 4 ? 2 : seg <= 5 ? 3 : 4;
+const castigoUna = seg => {
+  if (seg <= 2) return 0;
+  if (seg <= 3) return 1;
+  if (seg <= 4) return 2;
+  if (seg <= 5) return 3;
+  return 4;
+};
 const unaSimbolo = v => ({ skip: '⊘', rev: '⇄', '+2': '+2', wild: '★', '+4': '+4' }[v] || v);
 
 function elegirUna() {
@@ -137,7 +143,8 @@ function jugarUna(numBots, lang) {
   const valida = c => !c.c || c.c === color || c.v === top().v;
   const nombreCarta = c => {
     if (c.v === 'wild' || c.v === '+4') return T[c.v];
-    const num = /^\d$/.test(c.v) ? (lang === 'en' ? NUM_EN : NUM_ES)[Number(c.v)] : T[c.v];
+    const nums = lang === 'en' ? NUM_EN : NUM_ES;
+    const num = /^\d$/.test(c.v) ? nums[Number(c.v)] : T[c.v];
     return lang === 'en' ? T.color[c.c] + ' ' + num : num + ' ' + T.color[c.c].toLowerCase();
   };
   const anunciar = texto => hablar(texto, lang === 'en' ? 'en-US' : 'es-MX', 1);
@@ -148,11 +155,12 @@ function jugarUna(numBots, lang) {
     if (terminado) return;
     const tuTurno = turno === 0 && !esperandoUna;
     const anim = c => { const k = nuevas.indexOf(c); return k < 0 ? '' : ' nueva" style="--k:' + k; }; // basta-divertida-una-robo
+    const sentido = (lang === 'en' ? 'dir ' : 'sentido ') + (dir === 1 ? '↻' : '↺');
     m.body.innerHTML =
       '<div class="una-bots">' + manos.slice(1).map((h, k) => '<div class="una-bot' + (turno === k + 1 ? ' activo' : '') + '"><span>' + escapeHtml(nombres[k + 1]) + '</span><span>🂠 × ' + h.length + (h.length === 1 ? ' <b class="una-dijo">' + escapeHtml(T.una) + '</b>' : '') + '</span></div>').join('') + '</div>' +
       '<div class="una-mesa"><div>' + cartaHtml(top(), ' grande') + '<div class="muted" style="text-align:center">' + escapeHtml(T.color[color]) + ' <span class="una-dot" style="background:' + UNA_COLOR[color] + '"></span></div></div>' +
       '<button class="una-mazo" data-una="robar"' + (tuTurno && !robada && hayParaRobar() ? '' : ' disabled') + '>🂠<small>' + escapeHtml(T.robar) + ' (' + mazo.length + ')</small></button></div>' +
-      '<div class="feedback" id="una-msg">' + escapeHtml(msg || (tuTurno ? T.tu + ' · ' + (lang === 'en' ? 'dir ' : 'sentido ') + (dir === 1 ? '↻' : '↺') : '…')) + '</div>' +
+      '<div class="feedback" id="una-msg">' + escapeHtml(msg || (tuTurno ? T.tu + ' · ' + sentido : '…')) + '</div>' +
       '<div class="una-mano">' + manos[0].map((c, i) => '<button class="una-btn' + (c === robada ? ' robada' : '') + anim(c) + '" data-una-card="' + i + '"' + (tuTurno && valida(c) && (!robada || robada === c) ? '' : ' data-no="1"') + ' aria-label="' + escapeHtml(nombreCarta(c)) + '">' + cartaHtml(c, tuTurno && valida(c) && (!robada || robada === c) ? ' jugable' : '') + '</button>').join('') + '</div>' +
       '<div class="row-btns">' + (robada || (tuTurno && !hayParaRobar() && !manos[0].some(valida)) ? '<button class="btn ghost" data-una="pasar">' + escapeHtml(T.pasar) + '</button>' : '') +
       '<button class="btn una-grito' + (esperandoUna ? ' pulsa' : '') + '" data-una="una"' + (esperandoUna ? '' : ' disabled') + '>📣 ' + escapeHtml(T.una) + '</button></div>';
@@ -193,8 +201,20 @@ function jugarUna(numBots, lang) {
     const siguiente = manos[sig(j)].length;
     let opciones = mano.filter(valida), robo = 0;
     // basta-divertida-una-robo: sin carta jugable, roba hasta sacar una que sirva (sin rebarajar el descarte).
-    const cartas = n => n + (lang === 'en' ? (n === 1 ? ' card' : ' cards') : (n === 1 ? ' carta' : ' cartas'));
-    if (!opciones.length) { const r = Una.robarHastaPoder(mazo, mano, valida); robo = r.robadas.length; if (r.jugable) opciones = [r.jugable]; else { msg = nombres[j] + (lang === 'en' ? (robo ? ' drew ' + cartas(robo) + ' and the deck ran out' : ' has nothing to play and the deck is empty') : (robo ? ' robó ' + cartas(robo) + ' y se acabó el mazo' : ' no tiene carta y el mazo está vacío')); turno = sig(j); return programar(); } }
+    const cartas = n => {
+      if (lang === 'en') return n + (n === 1 ? ' card' : ' cards');
+      return n + (n === 1 ? ' carta' : ' cartas');
+    };
+    if (!opciones.length) {
+      const r = Una.robarHastaPoder(mazo, mano, valida); robo = r.robadas.length;
+      if (r.jugable) opciones = [r.jugable];
+      else {
+        let sinJugada;
+        if (lang === 'en') sinJugada = robo ? ' drew ' + cartas(robo) + ' and the deck ran out' : ' has nothing to play and the deck is empty';
+        else sinJugada = robo ? ' robó ' + cartas(robo) + ' y se acabó el mazo' : ' no tiene carta y el mazo está vacío';
+        msg = nombres[j] + sinJugada; turno = sig(j); return programar();
+      }
+    }
     const accion = opciones.filter(c => ['skip', '+2', '+4', 'rev'].includes(c.v));
     const numeros = opciones.filter(c => c.c && /^\d$/.test(c.v));
     // Bots amables: solo a veces castigan a quien tiene pocas cartas, para que el juego sea retador pero ganable.
@@ -202,7 +222,9 @@ function jugarUna(numBots, lang) {
     const c = castiga ? accion[0] : (numeros[0] || opciones.find(x => x.c) || opciones[0]);
     mano.splice(mano.indexOf(c), 1);
     if (!c.c) { const cuenta = { r: 0, y: 0, g: 0, b: 0 }; mano.forEach(x => { if (x.c) cuenta[x.c]++; }); color = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0][0]; }
-    msg = nombres[j] + (robo ? (lang === 'en' ? ' drew ' + cartas(robo) + ' and played ' : ' robó ' + cartas(robo) + ' y tiró ') : ': ') + nombreCarta(c) + (mano.length === 1 ? ' · ' + T.una : '');
+    let jugo = ': ';
+    if (robo) jugo = lang === 'en' ? ' drew ' + cartas(robo) + ' and played ' : ' robó ' + cartas(robo) + ' y tiró ';
+    msg = nombres[j] + jugo + nombreCarta(c) + (mano.length === 1 ? ' · ' + T.una : '');
     aplicar(j, c);
   }
 
@@ -253,8 +275,11 @@ function jugarUna(numBots, lang) {
       const i = Number(k.dataset.unaCard), c = manos[0][i];
       if (!valida(c) || (robada && robada !== c)) {
         sonidoMal(); document.getElementById('una-msg').className = 'feedback bad';
-        document.getElementById('una-msg').textContent = robada ? (lang === 'en' ? 'Play the card you drew or pass' : 'Solo puedes jugar la que robaste o pasar') :
-          (lang === 'en' ? 'Match ' + T.color[color].toLowerCase() + ' or ' + unaSimbolo(top().v) : 'Debe ser ' + T.color[color].toLowerCase() + ' o ' + unaSimbolo(top().v));
+        let aviso;
+        if (robada) aviso = lang === 'en' ? 'Play the card you drew or pass' : 'Solo puedes jugar la que robaste o pasar';
+        else if (lang === 'en') aviso = 'Match ' + T.color[color].toLowerCase() + ' or ' + unaSimbolo(top().v);
+        else aviso = 'Debe ser ' + T.color[color].toLowerCase() + ' o ' + unaSimbolo(top().v);
+        document.getElementById('una-msg').textContent = aviso;
         return;
       }
       if (!c.c) {
@@ -314,9 +339,13 @@ async function jugarLoteria(modo, voz) {
     if (terminado) { return; } terminado = true; limpiar();
     const bien = marcas.filter(Boolean).length;
     const faltan = 54 - salidas.size;
-    const puntos = gano ? Math.min(1000, (modo === 'llena' ? 500 : 300) + faltan * 10) : bien * 10;
+    const baseGano = modo === 'llena' ? 500 : 300;
+    const puntos = gano ? Math.min(1000, baseGano + faltan * 10) : bien * 10;
+    let titulo = '🎴 Se acabaron las cartas';
+    if (gano) titulo = '🎉 ¡LOTERÍA!';
+    else if (quien) titulo = '😮 ¡Lotería de ' + quien + '!';
     terminar('loteria', { puntos, aciertos: bien, total: 16, segundos: (Date.now() - t0) / 1000,
-      titulo: gano ? '🎉 ¡LOTERÍA!' : (quien ? '😮 ¡Lotería de ' + quien + '!' : '🎴 Se acabaron las cartas'),
+      titulo,
       detalle: gano ? 'Ganaste con ' + salidas.size + ' cartas cantadas.' : 'Marcaste ' + bien + ' de 16 casillas.' });
   }
   function siguiente() {
