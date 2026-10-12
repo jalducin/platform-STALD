@@ -16,7 +16,6 @@ function en(hoyo: number, x?: number, y?: number, reloj = 0, n = 1) {
   return st;
 }
 const correr = (st: any, tiro: any) => { const s = G.crearSim(st, tiro); while (!s.termino) s.paso(); return s; };
-const hacia = (x0: number, y0: number, x1: number, y1: number) => F.atan2Dec(y1 - y0, x1 - x0);
 
 Deno.test("golf: el motor solo usa + − * / y Math.sqrt", () => {
   const fuente = Deno.readTextFileSync(new URL("../juegos/golf-motor.js", import.meta.url));

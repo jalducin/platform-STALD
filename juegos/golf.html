@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Golf</title>
+<style>
+:root{--bg:#0b2a1f;--panel:rgba(8,20,16,.92);--txt:#fff;--acento:#facc15;--btn:#15803d;--btn-sombra:#14532d}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#juego{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+#pantalla{position:relative;flex:1;min-height:0;overflow:hidden}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#hud{position:absolute;left:0;right:0;top:0;min-height:48px;display:flex;align-items:center;gap:6px;padding:4px 6px;pointer-events:none;font-weight:800;font-size:15px;background:linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,0))}
+#info{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;text-shadow:0 1px 2px #000}
+#info .t{color:var(--acento)}
+#hud .der{display:flex;gap:6px;pointer-events:auto}
+.mini{font:inherit;font-size:18px;border:1px solid rgba(255,255,255,.45);background:rgba(0,0,0,.5);color:#fff;border-radius:12px;min-width:44px;min-height:44px;padding:2px 8px;cursor:pointer}
+#jugadores{position:absolute;left:6px;right:6px;top:52px;display:flex;gap:4px;pointer-events:none}
+.jug{flex:1;min-width:0;display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.18);border-radius:10px;padding:2px 6px;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden}
+.jug.turno{border-color:var(--acento);box-shadow:0 0 8px rgba(250,204,21,.55)}
+.jug.fuera{opacity:.55}
+.jug .n{overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.punto{width:12px;height:12px;border-radius:50%;border:2px solid #000;flex:0 0 auto}
+#minimapa{position:absolute;right:6px;width:72px;border-radius:8px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.45);cursor:pointer;touch-action:none}
+#estado{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);background:var(--panel);border-radius:999px;padding:5px 14px;font-weight:800;font-size:15px;white-space:nowrap;pointer-events:none;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis}
+#estado:empty{display:none}
+#aviso{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);background:var(--panel);padding:10px 16px;border-radius:18px;font-weight:900;font-size:18px;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5;width:max-content;max-width:88%}
+#aviso.ver{opacity:1}
+#cuenta{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-size:84px;font-weight:900;color:var(--acento);text-shadow:0 4px 0 var(--btn-sombra);pointer-events:none}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:10px;background:radial-gradient(circle at 50% 0,rgba(21,128,61,.92),rgba(5,20,14,.97));text-align:center;padding:14px;overflow:auto;z-index:6;touch-action:pan-y}
+.ov.hide,.hide{display:none!important}
+.ov h1{margin:0;font-size:clamp(30px,9vw,46px);color:var(--acento);text-shadow:0 3px 0 var(--btn-sombra)}
+.ov h2{margin:0;font-size:clamp(22px,7vw,32px);color:var(--acento)}
+.ov p{margin:0;max-width:520px;line-height:1.35;font-size:15px}
+.btn{font:inherit;font-weight:800;font-size:18px;border:0;border-radius:999px;padding:10px 22px;min-height:50px;background:var(--btn);color:#fff;box-shadow:0 4px 0 var(--btn-sombra);cursor:pointer}
+.btn.sec{background:#475569;box-shadow:0 4px 0 #1e293b}
+.btn.chico{font-size:15px;min-height:44px;padding:6px 14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:active{transform:translateY(3px)}
+.btn:focus-visible,.mini:focus-visible,.op:focus-visible,.ctl:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+.fila{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.ayuda{font-size:14px;opacity:.92;max-width:520px}
+.ctl-caja{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(420px,100%);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:8px}
+.ctl-ops{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
+.ctl{font:inherit;font-weight:800;font-size:15px;border:2px solid rgba(255,255,255,.5);background:#1e293b;color:#fff;border-radius:12px;min-height:46px;padding:4px;cursor:pointer}
+.ctl[aria-pressed="true"]{background:#15803d;border-color:#86efac}
+.hoyos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(460px,100%)}
+.op{font:inherit;font-weight:800;font-size:15px;border:3px solid rgba(255,255,255,.7);background:#14532d;color:#fff;border-radius:14px;padding:6px 4px;min-height:78px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.op small{font-weight:700;opacity:.9;font-size:14px}
+.op .est{color:var(--acento);letter-spacing:1px;font-size:16px}
+.op:disabled{opacity:.45;cursor:not-allowed;border-color:rgba(255,255,255,.3)}
+.estrellas{color:var(--acento);font-size:30px;letter-spacing:4px;text-shadow:0 2px 0 #713f12}
+.tarjetas{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tarjetas div{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:6px 12px;font-weight:800;font-size:16px}
+.tarjetas small{display:block;font-size:14px;opacity:.8}
+.tabla-caja{max-width:100%;overflow-x:auto}
+table.tarjeta{border-collapse:collapse;font-size:14px;font-weight:700;background:rgba(0,0,0,.25);border-radius:10px}
+table.tarjeta th,table.tarjeta td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.15);text-align:center;white-space:nowrap}
+table.tarjeta td.izq,table.tarjeta th.izq{text-align:left}
+table.tarjeta tr.total td{color:var(--acento);border-bottom:0}
+.bajo{color:#86efac}.sobre{color:#fca5a5}
+#confeti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:7}
+#confeti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:caer 2.6s linear forwards}
+@keyframes caer{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
+/* Panel de tiro */
+#panel{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding:8px 8px 10px;background:linear-gradient(#123524,#0b2a1f);font-weight:800}
+#panel .fila1{display:flex;gap:6px;align-items:center}
+.giro{display:flex;gap:6px}
+.giro .mini{min-width:46px;min-height:46px;font-size:22px;background:#1e293b}
+#fuerza-caja{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:15px}
+#fuerza-caja b{font-size:22px;color:var(--acento)}
+#barra{width:100%;height:10px;border-radius:6px;background:rgba(255,255,255,.18);overflow:hidden}
+#barra i{display:block;height:100%;width:40%;background:linear-gradient(90deg,#22c55e,#facc15,#ef4444)}
+#acciones{display:flex;gap:8px}
+#b-golpear{flex:1;font-size:22px;min-height:58px;letter-spacing:.5px}
+#panel .nota{text-align:center;font-size:14px;opacity:.85;font-weight:700}
+/* Mando clásico: con él no se ven los botones del panel (la fuerza va en la parte de arriba) */
+body.ctl-mando #panel{display:none!important}
+#hud-fuerza{display:none}
+body.ctl-mando #hud-fuerza{display:inline}
+@media (orientation:landscape) and (max-height:520px){
+  #juego{flex-direction:row}
+  #panel{width:196px;justify-content:center;padding:6px 8px}
+  #panel .fila1{flex-wrap:wrap;justify-content:center}
+  #fuerza-caja{order:-1;flex:1 0 100%}
+  #acciones{flex-direction:column}
+  #b-golpear{font-size:20px}
+  .op{min-height:64px}
+}
+@media (orientation:portrait) and (max-height:640px){#panel .nota{display:none}#panel{gap:6px;padding-top:6px}}
+@media (max-width:340px){
+  .giro .mini{min-width:44px}
+  #panel .fila1{gap:4px}
+  #b-golpear{font-size:20px}
+}
+@media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
+</style></head><body>
+<div id="juego">
+  <div id="pantalla">
+    <canvas id="c" aria-label="Hoyo de minigolf visto desde arriba"></canvas>
+    <canvas id="minimapa" class="hide" role="button" aria-label="Minimapa del hoyo: tócalo para ver el hoyo completo"></canvas>
+    <div id="hud" class="hide">
+      <div id="info"><span class="t" id="h-hoyo">Hoyo 1</span><span id="h-par">Par 2</span><span id="h-golpes">⛳ 0</span><span id="hud-fuerza">💪 <b id="h-fuerza">40</b></span></div>
+      <div class="der"><button class="mini" id="b-tarjeta" aria-label="Ver la tarjeta">📋</button><button class="mini" id="b-salir" aria-label="Pausa y menú">☰</button></div>
+    </div>
+    <div id="jugadores" class="hide"></div>
+    <div id="estado" role="status"></div>
+    <div id="cuenta" aria-live="polite"></div>
+    <div id="aviso" role="status"></div>
+
+    <div class="ov" id="ov-carga"><h1>⛳ Golf</h1><p>Cargando…</p></div>
+    <div class="ov hide" id="ov-menu">
+      <h1>⛳ Golf</h1>
+      <p>Minigolf de 9 hoyos: mete la pelota con los menos golpes posibles.</p>
+      <div class="tarjetas" id="menu-resumen"></div>
+      <div class="fila"><button class="btn" data-ir="recorrido">🏌️ Recorrido de 9 hoyos</button><button class="btn sec" data-ir="practica">🎯 Práctica</button></div>
+      <div class="ctl-caja" role="group" aria-label="Control">
+        <b>Control</b>
+        <div class="ctl-ops"><button class="ctl" data-control="toques" aria-pressed="true">👆 Toques</button><button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button></div>
+        <button class="mini" id="b-sonido" aria-label="Sonido">🔊</button>
+      </div>
+      <p class="ayuda">👆 <b>Jala hacia atrás</b> desde cualquier parte, como resortera: la línea muestra a dónde va y el número es la fuerza. Ajusta con ⟲ ⟳ y − +, y toca <b>⛳ GOLPEAR</b>.</p>
+      <p class="ayuda">🎮 Mando: ◀ ▶ apuntan, L R ajuste fino, X Y fuerza, A golpea, START pausa. ⌨️ Teclado: ← → apuntan, ↑ ↓ fuerza, Espacio golpea.</p>
+      <p class="ayuda">🏖️ La arena frena, 💦 el agua suma un golpe, 🌀 los portales te llevan lejos y el molino abre y cierra.</p>
+    </div>
+    <div class="ov hide" id="ov-practica">
+      <h2>🎯 Práctica</h2>
+      <p class="ayuda">Termina un hoyo para desbloquear el siguiente.</p>
+      <div class="hoyos" id="lista-hoyos"></div>
+      <button class="btn sec chico" data-ir="menu">⬅ Regresar</button>
+    </div>
+    <div class="ov hide" id="ov-pausa"><h2>⏸ Pausa</h2><div class="fila"><button class="btn" data-ir="seguir">▶ Seguir</button><button class="btn sec" data-ir="menu">🏠 Salir al menú</button></div></div>
+    <div class="ov hide" id="ov-hoyo">
+      <h2 id="hoyo-titulo">👍 Par</h2>
+      <p id="hoyo-detalle"></p>
+      <div class="estrellas" id="hoyo-estrellas" aria-label="Estrellas"></div>
+      <div class="tarjetas" id="hoyo-tarjetas"></div>
+      <p class="ayuda" id="hoyo-guardado"></p>
+      <div class="fila" id="hoyo-botones"></div>
+    </div>
+    <div class="ov hide" id="ov-tarjeta">
+      <h2 id="tarjeta-titulo">📋 Tarjeta</h2>
+      <div class="tabla-caja" id="tarjeta-tabla"></div>
+      <p id="tarjeta-total"></p>
+      <p class="ayuda" id="tarjeta-guardado"></p>
+      <div class="fila" id="tarjeta-botones"></div>
+    </div>
+    <div class="ov hide" id="ov-sala"><h2 id="sala-titulo">🏁 ¡Fin de la partida!</h2><div class="tabla-caja" id="sala-tabla"></div><p id="sala-txt">Esperando el podio…</p></div>
+    <div id="confeti"></div>
+  </div>
+  <div id="panel" class="hide" aria-label="Tu tiro">
+    <div class="fila1">
+      <div class="giro"><button class="mini" id="b-izq" aria-label="Girar la mira a la izquierda">⟲</button><button class="mini" id="b-der" aria-label="Girar la mira a la derecha">⟳</button></div>
+      <div id="fuerza-caja" aria-live="off"><span>💪 Fuerza <b id="v-fuerza">40</b></span><div id="barra"><i id="barra-in"></i></div></div>
+      <div class="giro"><button class="mini" id="b-menos" aria-label="Menos fuerza">−</button><button class="mini" id="b-mas" aria-label="Más fuerza">+</button></div>
+    </div>
+    <div id="acciones"><button class="btn" id="b-golpear">⛳ GOLPEAR</button><button class="btn sec chico hide" id="b-rendir" aria-label="Rendirme">🏳️</button></div>
+    <div class="nota" id="nota">Jala hacia atrás desde cualquier parte</div>
+  </div>
+</div>
+<script src="fisica.js?v=1"></script>
+<script src="golf-motor.js?v=1"></script>
+<script src="mesa-ui.js?v=1"></script>
+<script src="mando.js?v=1"></script>
+<script>
+/* ⛳ Golf (openspec: golf). Recorrido de 9 hoyos y práctica con avance guardado; sala de 2 a 4 personas por turnos con
+   tiros deterministas (MesaUI.crearSala + Golf.motorSala). Embebido en juegos.html por un iframe del mismo origen
+   (postMessage). Controles: resortera + GOLPEAR, ⟲ ⟳ y − +, mando clásico (juegos/mando.js) y teclado. */
+'use strict';
+const F = window.Fisica, G = window.Golf, U = window.MesaUI, $ = U.$;
+U.usarJuego('golf');
+const cv = $('c'), g = cv.getContext('2d'), mm = $('minimapa'), gm = mm.getContext('2d');
+const PASO = 1 / 60, JALON_MAX = 170;
+const COLORES = ['#f8fafc', '#facc15', '#fb7185', '#38bdf8'];
+const TODOS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+let modo = 'carga', juego = null, sala = null, aim = 2700, fuerzaV = 40, completa = false;
+let progreso = { mejores: {}, estrellas: {}, recorridos: 0, mejorRecorrido: null };
+let efectos = [];
+
+/* ---------- Vista: escala, cámara y matriz (vertical o acostada) ---------- */
+let W = 0, H = 0, DPR = 1, K = 1, horizontal = false, M = [1, 0, 0, 1, 0, 0], cam = null, arriba = 52;
+function ajustar() {
+  const r = $('pantalla').getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  W = r.width; H = r.height; DPR = Math.min(3, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  horizontal = W > H * 1.15;
+}
+addEventListener('resize', ajustar);
+if (window.ResizeObserver) new ResizeObserver(() => ajustar()).observe($('pantalla'));
+const vista = () => ({ x0: 0, y0: arriba, w: W, h: Math.max(60, H - arriba) });
+function escalas(h) {
+  const v = vista(), aw = horizontal ? h.alto : h.ancho, ah = horizontal ? h.ancho : h.alto;
+  const ajuste = Math.min((v.w - 16) / aw, (v.h - 12) / ah);
+  return { ajuste, k: completa ? ajuste : Math.max(ajuste, 0.75 * Math.min(v.w, v.h) / 300) };
+}
+// Cámara: centra el punto de interés y no deja ver de más fuera del hoyo.
+function camara(h, objetivo, inmediata) {
+  const v = vista(); K = escalas(h).k;
+  const ejeX = horizontal ? { ext: h.alto, pant: v.w } : { ext: h.ancho, pant: v.w };
+  const ejeY = horizontal ? { ext: h.ancho, pant: v.h } : { ext: h.alto, pant: v.h };
+  const acotarEje = (c, e) => { const medio = e.pant / (2 * K), m = 20 / K; return e.ext * K <= e.pant ? e.ext / 2 : F.acotar(c, medio - m, e.ext - medio + m); };
+  // En coordenadas de pantalla «sin rotar»: horizontal → (alto − y, x).
+  const ox = horizontal ? h.alto - objetivo.y : objetivo.x, oy = horizontal ? objetivo.x : objetivo.y;
+  const tx = acotarEje(ox, ejeX), ty = acotarEje(oy, ejeY);
+  if (!cam || inmediata || U.REDUCIR || cam.h !== h.n) cam = { x: tx, y: ty, h: h.n };
+  else { cam.x += (tx - cam.x) * 0.14; cam.y += (ty - cam.y) * 0.14; }
+  const cx0 = v.x0 + v.w / 2, cy0 = v.y0 + v.h / 2;
+  // pantalla = K · (u − cam) + centro, con u = (x, y) en vertical o (alto − y, x) acostado.
+  M = horizontal ? [0, K, -K, 0, cx0 + K * (h.alto - cam.x), cy0 - K * cam.y] : [K, 0, 0, K, cx0 - K * cam.x, cy0 - K * cam.y];
+}
+const aPantalla = (x, y) => ({ x: M[0] * x + M[2] * y + M[4], y: M[1] * x + M[3] * y + M[5] });
+// Vector de pantalla → vector del mundo (solo la rotación).
+const vecMundo = (dx, dy) => horizontal ? { x: dy / K, y: -dx / K } : { x: dx / K, y: dy / K };
+
+/* ---------- Dibujo ---------- */
+const poli = (pts) => { g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.closePath(); };
+function zonaCamino(z) { g.beginPath(); if (z.rect) g.rect(z.rect[0], z.rect[1], z.rect[2], z.rect[3]); else g.arc(z.circ[0], z.circ[1], z.circ[2], 0, Math.PI * 2); }
+let tAnim = 0;
+function dibujarHoyo(h, reloj) {
+  // Pasto con franjas de podadora
+  g.save(); poli(h.borde); g.clip();
+  g.fillStyle = '#2f9e44'; g.fillRect(0, 0, h.ancho, h.alto);
+  g.fillStyle = '#37b24d'; for (let y = 0; y < h.alto; y += 80) g.fillRect(0, y, h.ancho, 40);
+  // Zonas
+  for (const z of h.zonas) {
+    zonaCamino(z);
+    if (z.tipo === 'arena') {
+      g.fillStyle = '#ecd393'; g.fill(); g.save(); g.clip(); g.fillStyle = 'rgba(160,120,50,.35)';
+      const [bx, by] = z.rect ? [z.rect[0], z.rect[1]] : [z.circ[0] - z.circ[2], z.circ[1] - z.circ[2]];
+      const [bw, bh] = z.rect ? [z.rect[2], z.rect[3]] : [2 * z.circ[2], 2 * z.circ[2]];
+      for (let y = by + 6; y < by + bh; y += 12) for (let x = bx + ((y / 12) % 2 ? 4 : 10); x < bx + bw; x += 14) g.fillRect(x, y, 2, 2);
+      g.restore();
+    } else if (z.tipo === 'agua') {
+      g.fillStyle = '#1c7ed6'; g.fill(); g.save(); g.clip(); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2;
+      const [bx, by, bw, bh] = z.rect || [z.circ[0] - z.circ[2], z.circ[1] - z.circ[2], 2 * z.circ[2], 2 * z.circ[2]];
+      const off = U.REDUCIR ? 0 : (tAnim * 12) % 24;
+      for (let y = by + 10; y < by + bh; y += 22) { g.beginPath(); for (let x = bx - 24 + off; x < bx + bw + 24; x += 24) { g.moveTo(x, y); g.quadraticCurveTo(x + 6, y - 5, x + 12, y); } g.stroke(); }
+      g.restore();
+    } else if (z.tipo === 'pendiente') {
+      g.fillStyle = 'rgba(20,83,45,.28)'; g.fill(); g.save(); g.clip();
+      const [bx, by, bw, bh] = z.rect, l = Math.sqrt(z.ax * z.ax + z.ay * z.ay), ux = z.ax / l, uy = z.ay / l;
+      const fuerte = l > 200, paso = fuerte ? 34 : 44, desliza = U.REDUCIR ? 0 : (tAnim * 20) % paso;
+      g.strokeStyle = fuerte ? 'rgba(254,240,138,.75)' : 'rgba(255,255,255,.45)'; g.lineWidth = 3; g.lineCap = 'round';
+      for (let y = by + 18; y < by + bh; y += paso) for (let x = bx + 18; x < bx + bw; x += paso) {
+        const cx = x + ux * desliza - ux * paso / 2, cy = y + uy * desliza - uy * paso / 2;
+        g.beginPath(); g.moveTo(cx - ux * 7 - uy * 7, cy - uy * 7 + ux * 7); g.lineTo(cx, cy); g.lineTo(cx - ux * 7 + uy * 7, cy - uy * 7 - ux * 7); g.stroke();
+      }
+      g.restore();
+    }
+  }
+  // Salida (tapete)
+  g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(h.salida.x - 16, h.salida.y - 10, 32, 20);
+  g.restore();
+  // Paredes y muros
+  g.lineJoin = 'round';
+  poli(h.borde); g.strokeStyle = '#6b3f1d'; g.lineWidth = 12; g.stroke(); g.strokeStyle = '#a0612f'; g.lineWidth = 5; g.stroke();
+  for (const m of h.muros) { poli(m); g.fillStyle = '#7c4a24'; g.fill(); g.strokeStyle = '#a0612f'; g.lineWidth = 4; g.stroke(); }
+  // Portales
+  for (const p of h.portales) {
+    const giro = U.REDUCIR ? 0 : tAnim * 3;
+    g.save(); g.translate(p.de.x, p.de.y);
+    for (let k = 3; k >= 1; k--) { g.fillStyle = ['#2e1065', '#6d28d9', '#a78bfa'][k - 1]; g.beginPath(); g.arc(0, 0, p.de.r * k / 3 + 2, 0, Math.PI * 2); g.fill(); }
+    g.rotate(giro); g.strokeStyle = '#f5f3ff'; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, p.de.r * 0.7, 0, Math.PI * 1.3); g.stroke(); g.restore();
+    const [sn, cs] = F.senCos(p.dir);
+    g.strokeStyle = '#a78bfa'; g.lineWidth = 3; g.beginPath(); g.arc(p.a.x, p.a.y, 13, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.moveTo(p.a.x + cs * 14, p.a.y + sn * 14); g.lineTo(p.a.x + cs * 26, p.a.y + sn * 26); g.stroke();
+  }
+  // Hoyo
+  g.fillStyle = '#0b0f0c'; g.beginPath(); g.arc(h.hoyo.x, h.hoyo.y, G.HOYO_R, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#e2e8f0'; g.lineWidth = 2; g.stroke();
+  // Obstáculos móviles
+  for (const m of h.moviles) {
+    const e = G.estadoMovil(m, reloj);
+    if (m.tipo === 'molino') {
+      const [x1, y1, x2, y2] = m.puerta;
+      g.strokeStyle = e.cerrada ? '#ef4444' : '#22c55e'; g.lineWidth = 4; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+      g.fillStyle = '#b91c1c'; g.beginPath(); g.moveTo(m.cx - 34, m.cy - 6); g.lineTo(m.cx, m.cy - 30); g.lineTo(m.cx + 34, m.cy - 6); g.closePath(); g.fill(); // techo
+      for (let k = 0; k < 4; k++) {
+        const [sn, cs] = F.senCos(e.angulo + k * 900);
+        g.save(); g.translate(m.cx, m.cy); g.transform(cs, sn, -sn, cs, 0, 0);
+        g.fillStyle = '#f5f5f4'; g.fillRect(6, -6, m.largo - 6, 12); g.strokeStyle = '#78716c'; g.lineWidth = 1.5; g.strokeRect(6, -6, m.largo - 6, 12);
+        g.beginPath(); g.moveTo(10, 0); g.lineTo(m.largo, 0); g.stroke();
+        g.restore();
+      }
+      g.fillStyle = '#44403c'; g.beginPath(); g.arc(m.cx, m.cy, 7, 0, Math.PI * 2); g.fill();
+    } else {
+      g.fillStyle = '#facc15'; g.fillRect(e.x, m.y, m.w, m.h);
+      g.save(); g.beginPath(); g.rect(e.x, m.y, m.w, m.h); g.clip(); g.fillStyle = '#1f2937';
+      for (let x = e.x - m.h; x < e.x + m.w; x += 12) { g.beginPath(); g.moveTo(x, m.y + m.h); g.lineTo(x + 6, m.y + m.h); g.lineTo(x + 6 + m.h, m.y); g.lineTo(x + m.h, m.y); g.closePath(); g.fill(); }
+      g.restore(); g.strokeStyle = '#78350f'; g.lineWidth = 2; g.strokeRect(e.x, m.y, m.w, m.h);
+    }
+  }
+}
+// Bandera, pelotas, mira y efectos en coordenadas de pantalla (siempre derechos).
+function dibujarBandera(h) {
+  const p = aPantalla(h.hoyo.x, h.hoyo.y), alto = Math.max(26, 34 * K);
+  g.strokeStyle = '#f8fafc'; g.lineWidth = 2; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(p.x, p.y - alto); g.stroke();
+  g.fillStyle = '#ef4444'; g.beginPath(); g.moveTo(p.x, p.y - alto); g.lineTo(p.x + alto * 0.55, p.y - alto * 0.8); g.lineTo(p.x, p.y - alto * 0.6); g.closePath(); g.fill();
+}
+function dibujarBola(x, y, color, activa) {
+  const p = aPantalla(x, y), r = Math.max(4, G.R * K);
+  if (activa) { g.strokeStyle = 'rgba(250,204,21,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, r + 5 + (U.REDUCIR ? 0 : Math.sin(tAnim * 6) * 1.5), 0, Math.PI * 2); g.stroke(); }
+  g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.arc(p.x + r * 0.3, p.y + r * 0.35, r, 0, Math.PI * 2); g.fill();
+  g.fillStyle = color; g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 1; g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.arc(p.x - r * 0.35, p.y - r * 0.35, r * 0.3, 0, Math.PI * 2); g.fill();
+}
+function dibujarMira(h, bola) {
+  const pts = G.guia(h, bola.x, bola.y, aim, fuerzaV).map(p => aPantalla(p.x, p.y));
+  g.save(); g.lineCap = 'round';
+  g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 3; g.setLineDash([2, 9]);
+  g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.stroke(); g.setLineDash([]);
+  const fin = pts[pts.length - 1];
+  g.strokeStyle = 'rgba(250,204,21,.95)'; g.lineWidth = 2; g.beginPath(); g.arc(fin.x, fin.y, Math.max(5, G.R * K), 0, Math.PI * 2); g.stroke();
+  // Liga de la resortera: detrás de la pelota, más larga con más fuerza.
+  const [sn, cs] = F.senCos(aim), largo = 10 + fuerzaV * 0.9;
+  const a = aPantalla(bola.x, bola.y), b = aPantalla(bola.x - cs * largo / Math.max(K, 0.5), bola.y - sn * largo / Math.max(K, 0.5));
+  g.strokeStyle = '#fb923c'; g.lineWidth = 4; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke();
+  g.fillStyle = '#fb923c'; g.beginPath(); g.arc(b.x, b.y, 5, 0, Math.PI * 2); g.fill();
+  // Flecha de dirección junto a la pelota
+  const c = aPantalla(bola.x + cs * 22 / Math.max(K, 0.5), bola.y + sn * 22 / Math.max(K, 0.5));
+  g.strokeStyle = '#facc15'; g.lineWidth = 4; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(c.x, c.y); g.stroke();
+  g.restore();
+}
+function dibujarEfectos() {
+  const ahora = performance.now();
+  efectos = efectos.filter(e => ahora - e.t < 700);
+  for (const e of efectos) {
+    const p = aPantalla(e.x, e.y), k = (ahora - e.t) / 700;
+    g.strokeStyle = 'rgba(255,255,255,' + (1 - k).toFixed(2) + ')'; g.lineWidth = 3;
+    for (const f of [1, 0.6]) { g.beginPath(); g.arc(p.x, p.y, (8 + 30 * k * f) * Math.max(K, 0.6), 0, Math.PI * 2); g.stroke(); }
+  }
+}
+// Lo que se ve ahora: hoyo, reloj, pelotas, quién tira y si apunto yo.
+function escena() {
+  if (modo === 'sala' && sala && sala.estado) {
+    const an = sala.anim, st = an ? an.h.antes : sala.estado, h = G.hoyoActual(st);
+    const l = sala.linea, activa = an ? an.h.idx : l && !l.fin ? l.turno : -1;
+    const bolas = st.jug.map((j, i) => ({ x: an && i === an.h.idx ? an.sim.bola.x : j.x, y: an && i === an.h.idx ? an.sim.bola.y : j.y, color: COLORES[i % 4], dentro: j.dentro && !(an && i === an.h.idx), retirado: j.retirado, i }));
+    return { st, h, reloj: an ? an.sim.reloj : st.reloj, bolas, activa, apuntar: sala.miTurno() };
+  }
+  if (juego) {
+    const st = juego.mostrar || juego.st, h = G.hoyoActual(st), sim = juego.sim;
+    const j = st.jug[0];
+    return { st, h, reloj: sim ? sim.reloj : st.reloj, bolas: [{ x: sim ? sim.bola.x : j.x, y: sim ? sim.bola.y : j.y, color: COLORES[0], dentro: j.dentro && !sim, i: 0 }], activa: 0, apuntar: puedoApuntar() };
+  }
+  return null;
+}
+function dibujar() {
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  g.fillStyle = '#0b2a1f'; g.fillRect(0, 0, W, H);
+  const e = escena();
+  if (!e) return;
+  const activa = e.bolas.find(b => b.i === e.activa) || e.bolas[0];
+  let objetivo = activa && !activa.dentro ? { x: activa.x, y: activa.y } : e.h.hoyo;
+  if (e.apuntar) { const [sn, cs] = F.senCos(aim); objetivo = { x: objetivo.x + cs * 50, y: objetivo.y + sn * 50 }; }
+  camara(e.h, objetivo, false);
+  g.setTransform(M[0] * DPR, M[1] * DPR, M[2] * DPR, M[3] * DPR, M[4] * DPR, M[5] * DPR);
+  dibujarHoyo(e.h, e.reloj);
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (e.apuntar && activa) dibujarMira(e.h, activa);
+  for (const b of e.bolas) if (!b.dentro && !b.retirado && b.i !== e.activa) dibujarBola(b.x, b.y, b.color, false);
+  if (activa && !activa.dentro) dibujarBola(activa.x, activa.y, activa.color, e.apuntar);
+  dibujarBandera(e.h);
+  dibujarEfectos();
+  dibujarMinimapa(e);
+}
+function dibujarMinimapa(e) {
+  const h = e.h, aw = horizontal ? h.alto : h.ancho, ah = horizontal ? h.ancho : h.alto;
+  const ancho = horizontal ? 104 : W < 360 ? 58 : 72, alto = Math.round(ancho * ah / aw), dpr = DPR;
+  if (mm.width !== Math.round(ancho * dpr) || mm.height !== Math.round(alto * dpr)) { mm.width = Math.round(ancho * dpr); mm.height = Math.round(alto * dpr); mm.style.width = ancho + 'px'; mm.style.height = alto + 'px'; }
+  mm.style.top = (arriba + 4) + 'px';
+  const k = ancho / aw;
+  gm.setTransform(dpr, 0, 0, dpr, 0, 0); gm.clearRect(0, 0, ancho, alto);
+  gm.setTransform(...(horizontal ? [0, k * dpr, -k * dpr, 0, h.alto * k * dpr, 0] : [k * dpr, 0, 0, k * dpr, 0, 0]));
+  gm.beginPath(); h.borde.forEach((p, i) => (i ? gm.lineTo(p[0], p[1]) : gm.moveTo(p[0], p[1]))); gm.closePath(); gm.fillStyle = '#37b24d'; gm.fill();
+  for (const z of h.zonas) {
+    if (z.tipo === 'pendiente') continue;
+    gm.beginPath(); if (z.rect) gm.rect(...z.rect); else gm.arc(z.circ[0], z.circ[1], z.circ[2], 0, Math.PI * 2);
+    gm.fillStyle = z.tipo === 'agua' ? '#1c7ed6' : '#ecd393'; gm.fill();
+  }
+  for (const m of h.muros) { gm.beginPath(); m.forEach((p, i) => (i ? gm.lineTo(p[0], p[1]) : gm.moveTo(p[0], p[1]))); gm.closePath(); gm.fillStyle = '#7c4a24'; gm.fill(); }
+  for (const p of h.portales) { gm.fillStyle = '#a78bfa'; gm.beginPath(); gm.arc(p.de.x, p.de.y, 18, 0, Math.PI * 2); gm.fill(); gm.beginPath(); gm.arc(p.a.x, p.a.y, 14, 0, Math.PI * 2); gm.fill(); }
+  gm.fillStyle = '#ef4444'; gm.beginPath(); gm.arc(h.hoyo.x, h.hoyo.y, 22, 0, Math.PI * 2); gm.fill();
+  for (const b of e.bolas) if (!b.dentro && !b.retirado) { gm.fillStyle = b.color; gm.beginPath(); gm.arc(b.x, b.y, b.i === e.activa ? 26 : 18, 0, Math.PI * 2); gm.fill(); gm.strokeStyle = '#000'; gm.lineWidth = 6; gm.stroke(); }
+  // Recuadro de lo que se ve
+  gm.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const v = vista();
+  const esq = [[v.x0, v.y0], [v.x0 + v.w, v.y0 + v.h]].map(([sx, sy]) => { const det = M[0] * M[3] - M[1] * M[2], x = sx - M[4], y = sy - M[5]; return { x: (M[3] * x - M[2] * y) / det, y: (-M[1] * x + M[0] * y) / det }; });
+  const aMini = p => horizontal ? { x: (h.alto - p.y) * k, y: p.x * k } : { x: p.x * k, y: p.y * k };
+  const a = aMini(esq[0]), b = aMini(esq[1]);
+  gm.strokeStyle = 'rgba(255,255,255,.9)'; gm.lineWidth = 1.5;
+  gm.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+}
+
+/* ---------- HUD ---------- */
+function ponerTexto(id, t) { const el = $(id); if (el.textContent !== t) el.textContent = t; }
+const conSigno = d => d === 0 ? 'par' : (d > 0 ? '+' : '') + d;
+function pintarHud(e) {
+  if (!e) return;
+  const st = e.st, h = e.h;
+  ponerTexto('h-hoyo', st.hoyos.length === 1 ? 'Hoyo ' + h.n : 'Hoyo ' + (st.h + 1) + '/' + st.hoyos.length);
+  ponerTexto('h-par', 'Par ' + h.par);
+  const yo = modo === 'sala' ? Math.max(0, sala.idx) : 0, j = st.jug[yo];
+  ponerTexto('h-golpes', '⛳ ' + (j ? j.golpes[st.h] : 0));
+  ponerTexto('h-fuerza', String(fuerzaV));
+}
+function pintarJugadores(e) {
+  if (modo !== 'sala' || !e) return;
+  const st = e.st, html = sala.orden.map((p, i) => {
+    const j = st.jug[i]; if (!j) return '';
+    const parHasta = st.hoyos.reduce((a, hi, k) => a + (k < st.h || (k === st.h && j.dentro) ? G.HOYOS[hi].par : 0), 0);
+    const hechos = st.hoyos.reduce((a, hi, k) => a + (k < st.h || (k === st.h && j.dentro) ? j.golpes[k] : 0), 0);
+    return '<div class="jug' + (i === e.activa ? ' turno' : '') + (j.retirado ? ' fuera' : '') + '"><span class="punto" style="background:' + COLORES[i % 4] + '"></span><span class="n">' + U.esc(p.nombre || '—') + (i === sala.idx ? ' (tú)' : '') + '</span><span>' + j.golpes[st.h] + (parHasta ? ' · ' + conSigno(hechos - parHasta) : '') + '</span></div>';
+  }).join('');
+  const el = $('jugadores'); if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
+}
+function pintarFuerza() { $('v-fuerza').textContent = fuerzaV; $('barra-in').style.width = fuerzaV + '%'; ponerTexto('h-fuerza', String(fuerzaV)); }
+function ponerFuerza(v) { fuerzaV = F.acotar(Math.round(v), 1, 100); pintarFuerza(); }
+const girar = d => { aim = ((Math.round(aim + d) % 3600) + 3600) % 3600; };
+const estrellasTxt = n => '★'.repeat(n) + '☆'.repeat(3 - n);
+function apuntarAlHoyo(st, idx) { const j = st.jug[idx], h = G.hoyoActual(st); aim = F.atan2Dec(h.hoyo.y - j.y, h.hoyo.x - j.x); }
+
+/* ---------- Avance (progreso del servidor) ---------- */
+function progresoValido(p) {
+  const ok = o => o && typeof o === 'object' && !Array.isArray(o);
+  return ok(p) && ok(p.mejores) && ok(p.estrellas) && Number.isInteger(p.recorridos) && (p.mejorRecorrido === null || Number.isInteger(p.mejorRecorrido));
+}
+const desbloqueado = n => n === 1 || progreso.mejores[String(n - 1)] !== undefined;
+function pintarMenu() {
+  const est = Object.values(progreso.estrellas).reduce((a, b) => a + b, 0), hechos = Object.keys(progreso.mejores).length;
+  const parTotal = G.HOYOS.reduce((a, h) => a + h.par, 0);
+  $('menu-resumen').innerHTML = '<div>⭐ ' + est + '/27<small>Estrellas</small></div><div>' + hechos + '/9<small>Hoyos</small></div>' +
+    (progreso.mejorRecorrido ? '<div>' + progreso.mejorRecorrido + ' (' + conSigno(progreso.mejorRecorrido - parTotal) + ')<small>Mejor recorrido</small></div>' : '');
+  $('lista-hoyos').innerHTML = G.HOYOS.map(h => {
+    const k = String(h.n), libre = desbloqueado(h.n), mejor = progreso.mejores[k];
+    return '<button class="op" data-hoyo="' + (h.n - 1) + '"' + (libre ? '' : ' disabled aria-label="Hoyo ' + h.n + ' bloqueado"') + '>' + (libre ? '' : '🔒 ') + h.n + ' · ' + U.esc(h.nombre) +
+      '<small>Par ' + h.par + '</small><small>' + (mejor ? 'Mejor: ' + mejor : libre ? 'Sin jugar' : 'Bloqueado') + '</small><span class="est">' + estrellasTxt(progreso.estrellas[k] || 0) + '</span></button>';
+  }).join('');
+}
+function guardarAvance(hoyo, golpes, recogida) {
+  const k = String(hoyo.n), est = G.estrellas(golpes, hoyo.par, recogida);
+  if (!recogida) progreso.mejores[k] = Math.min(progreso.mejores[k] || 99, golpes);
+  progreso.estrellas[k] = Math.max(progreso.estrellas[k] || 0, est);
+  if (juego && juego.tipo === 'recorrido' && juego.st.fin) {
+    progreso.recorridos = Math.min(100000, progreso.recorridos + 1);
+    const tot = G.total(juego.st.jug[0]);
+    progreso.mejorRecorrido = progreso.mejorRecorrido === null ? tot : Math.min(progreso.mejorRecorrido, tot);
+  }
+  U.enviar({ tipo: 'guardar', datos: JSON.parse(JSON.stringify(progreso)) });
+}
+
+/* ---------- Individual ---------- */
+function abrirMenu() {
+  modo = 'menu'; juego = null; sala = null; completa = false;
+  $('hud').classList.add('hide'); $('panel').classList.add('hide'); $('minimapa').classList.add('hide'); $('estado').textContent = '';
+  pintarMenu(); mostrar('ov-menu'); activarMando();
+}
+function nuevaPartida(tipo, hoyoIdx) {
+  const hoyos = tipo === 'recorrido' ? TODOS : [hoyoIdx];
+  juego = { tipo, st: G.partida(hoyos, 1), sim: null, mostrar: null, t0: performance.now(), tHoyo: performance.now(), puntos: [] };
+  completa = false; cam = null;
+  apuntarAlHoyo(juego.st, 0);
+  ocultar(); $('hud').classList.remove('hide'); $('minimapa').classList.remove('hide'); $('jugadores').classList.add('hide'); $('b-rendir').classList.add('hide');
+  modo = 'juego'; arriba = 52; activarMando();
+  presentarHoyo(juego.st);
+}
+function presentarHoyo(st) {
+  const h = G.hoyoActual(st);
+  U.avisar('⛳ ' + h.n + '. ' + h.nombre + ' · Par ' + h.par, 1800);
+  ponerTexto('nota', h.ayuda);
+}
+const puedoApuntar = () => modo === 'sala' ? !!(sala && sala.miTurno()) : modo === 'juego' && !!juego && !juego.sim && !juego.mostrar && !juego.st.fin;
+function golpear() {
+  if (modo === 'sala') return golpearSala();
+  if (!puedoApuntar()) return;
+  juego.sim = G.crearSim(juego.st, { angulo: aim, fuerza: fuerzaV });
+  sonarGolpe(fuerzaV);
+}
+function avisoEvento(ev, quien) {
+  if (ev === 'agua') { U.avisar('💦 ¡Al agua! +1 golpe' + (quien ? ' (' + quien + ')' : ''), 1600); U.tono(260, 0.3, 'sine', 0.06, 70); }
+  else if (ev === 'fuera') U.avisar('↩️ La pelota regresa', 1200);
+}
+function pasoIndividual() {
+  const sim = juego.sim;
+  if (sim) {
+    const reb = sim.rebotes, port = sim.portales;
+    for (let i = 0; i < G.SUB && !sim.termino; i++) sim.paso();
+    if (sim.rebotes > reb) U.tono(720, 0.03, 'triangle', 0.04);
+    if (sim.portales > port) U.tono(500, 0.25, 'sine', 0.05, 1400);
+    if (!sim.termino) return;
+    const antes = juego.st, r = sim.resultado().st;
+    juego.sim = null;
+    if (sim.evento === 'agua' || sim.evento === 'fuera') { if (sim.donde && !U.REDUCIR) efectos.push({ x: sim.donde.x, y: sim.donde.y, t: performance.now() }); avisoEvento(sim.evento); }
+    if (sim.evento === 'hoyo') sonarHoyo();
+    juego.st = r;
+    if (r.ultimo.recogida) U.avisar('🫳 Llegaste al límite: se recoge la pelota', 1600);
+    if (r.h !== antes.h || r.fin) {
+      // Se sigue viendo el hoyo que terminó (sin la pelota) mientras sale el resultado.
+      const vista = F.clonar(antes); vista.jug[0].dentro = true; juego.mostrar = vista;
+      terminarHoyo(antes.h, r);
+    } else apuntarAlHoyo(r, 0);
+    return;
+  }
+  if (!juego.mostrar && G.hoyoActual(juego.st).moviles.length) G.esperar(juego.st, G.SUB); // el molino y la compuerta se mueven mientras apuntas
+}
+function terminarHoyo(k, st) {
+  const hoyo = G.HOYOS[st.hoyos[k]], j = st.jug[0], golpes = j.golpes[k], recogida = j.recogidas.includes(k);
+  const res = G.resultado(golpes, hoyo.par, recogida), est = G.estrellas(golpes, hoyo.par, recogida), pts = G.puntosHoyo(golpes, hoyo.par, recogida);
+  const seg = Math.round((performance.now() - juego.tHoyo) / 1000); juego.tHoyo = performance.now();
+  juego.puntos[k] = pts;
+  guardarAvance(hoyo, golpes, recogida);
+  modo = 'hoyo'; $('panel').classList.add('hide'); ponerTexto('estado', '');
+  $('hoyo-titulo').textContent = res.emoji + ' ' + res.t;
+  $('hoyo-detalle').textContent = 'Hoyo ' + hoyo.n + ' · ' + hoyo.nombre + ' · Par ' + hoyo.par + ' · ' + golpes + (golpes === 1 ? ' golpe' : ' golpes');
+  $('hoyo-estrellas').textContent = estrellasTxt(est); $('hoyo-estrellas').setAttribute('aria-label', est + ' de 3 estrellas');
+  $('hoyo-tarjetas').innerHTML = '<div>+' + pts + '<small>Puntos</small></div>' + (juego.tipo === 'recorrido' ? '<div>' + conSigno(totalVsPar(st, 0, k)) + '<small>Recorrido</small></div>' : '');
+  $('hoyo-guardado').textContent = U.EMBED ? 'Guardando tus puntos…' : '';
+  const ultimo = !!st.fin;
+  $('hoyo-botones').innerHTML = juego.tipo === 'recorrido'
+    ? (ultimo ? '<button class="btn" data-ir="ver-tarjeta">📋 Ver la tarjeta</button>' : '<button class="btn" data-ir="siguiente">▶ Siguiente hoyo</button><button class="btn sec chico" data-ir="tarjeta">📋 Tarjeta</button>')
+    : '<button class="btn" data-ir="otra">🔁 Otra vez</button>' + (hoyo.n < 9 && desbloqueado(hoyo.n + 1) ? '<button class="btn sec" data-ir="practicar-sig">▶ Hoyo ' + (hoyo.n + 1) + '</button>' : '') + '<button class="btn sec chico" data-ir="practica">🎯 Hoyos</button>';
+  setTimeout(() => { if (modo === 'hoyo') { mostrar('ov-hoyo'); $('panel').classList.add('hide'); } }, U.REDUCIR ? 200 : 900);
+  if (est === 3 || golpes === 1) U.confeti();
+  U.enviar({ tipo: 'puntos', puntos: pts, aciertos: est, total: 3, segundos: seg });
+}
+// Golpes contra el par hasta el hoyo k (incluido).
+function totalVsPar(st, idx, k) { let d = 0; for (let i = 0; i <= k; i++) d += st.jug[idx].golpes[i] - G.HOYOS[st.hoyos[i]].par; return d; }
+function siguienteHoyo() {
+  juego.mostrar = null; cam = null; modo = 'juego'; ocultar();
+  apuntarAlHoyo(juego.st, 0); presentarHoyo(juego.st);
+}
+function tablaTarjeta(st, nombres, hasta) {
+  const fila = (cols, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '>' + cols.join('') + '</tr>';
+  const n = hasta === undefined ? st.hoyos.length : hasta + 1;
+  const hoyos = st.hoyos.slice(0, n).map(i => G.HOYOS[i]);
+  const cab = '<th class="izq">Hoyo</th>' + hoyos.map(h => '<th>' + h.n + '</th>').join('') + '<th>Total</th>';
+  const par = '<td class="izq">Par</td>' + hoyos.map(h => '<td>' + h.par + '</td>').join('') + '<td>' + hoyos.reduce((a, h) => a + h.par, 0) + '</td>';
+  const filas = st.jug.map((j, i) => {
+    const tot = j.golpes.slice(0, n).reduce((a, b) => a + b, 0), parT = hoyos.reduce((a, h) => a + h.par, 0);
+    return fila(['<td class="izq">' + U.esc(nombres[i] || '—') + (j.retirado ? ' 🏳️' : '') + '</td>'].concat(hoyos.map((h, k) => {
+      const gk = j.golpes[k], d = gk - h.par, rec = j.recogidas.includes(k);
+      return '<td class="' + (rec ? 'sobre' : d < 0 ? 'bajo' : d > 0 ? 'sobre' : '') + '" title="' + U.esc(G.resultado(gk, h.par, rec).t) + '">' + (gk || '—') + '</td>';
+    })).concat(['<td>' + tot + ' (' + conSigno(tot - parT) + ')</td>']));
+  });
+  return '<table class="tarjeta"><thead>' + fila([cab]) + '</thead><tbody>' + fila([par]) + filas.join('') + '</tbody></table>';
+}
+function verTarjeta(final) {
+  const st = juego.st, hasta = final ? undefined : (juego.mostrar ? juego.mostrar.h : st.h - (st.jug[0].dentro ? 0 : 1));
+  modo = final ? 'tarjeta' : modo === 'juego' ? 'pausa-tarjeta' : modo;
+  $('tarjeta-titulo').textContent = final ? '🏁 ¡Terminaste el recorrido!' : '📋 Tarjeta';
+  $('tarjeta-tabla').innerHTML = hasta !== undefined && hasta < 0 ? '<p>Aún no terminas ningún hoyo.</p>' : tablaTarjeta(st, ['Tú'], hasta);
+  if (final) {
+    const tot = G.total(st.jug[0]), parT = st.hoyos.reduce((a, i) => a + G.HOYOS[i].par, 0), est = st.hoyos.reduce((a, i, k) => a + G.estrellas(st.jug[0].golpes[k], G.HOYOS[i].par, st.jug[0].recogidas.includes(k)), 0);
+    $('tarjeta-total').textContent = 'Total: ' + tot + ' golpes (' + conSigno(tot - parT) + ') · ⭐ ' + est + '/27 · +' + juego.puntos.reduce((a, b) => a + (b || 0), 0) + ' puntos';
+    $('tarjeta-botones').innerHTML = '<button class="btn" data-ir="recorrido">🔁 Otro recorrido</button><button class="btn sec" data-ir="menu">🏠 Menú</button>';
+    if (est >= 18) U.confeti();
+  } else {
+    $('tarjeta-total').textContent = '';
+    $('tarjeta-botones').innerHTML = '<button class="btn" data-ir="cerrar-tarjeta">▶ Seguir</button>';
+  }
+  $('tarjeta-guardado').textContent = '';
+  mostrar('ov-tarjeta'); $('panel').classList.add('hide');
+}
+
+/* ---------- Sala ---------- */
+let motorSala = null, pasoAim = -1;
+function empezarSala(d) {
+  motorSala = G.motorSala((d.orden || []).length || 2);
+  sala = U.crearSala({ motor: motorSala, turnoMs: 30000, botMs: 1500, sub: G.SUB });
+  sala.iniciar(d);
+  juego = null; cam = null; completa = false; pasoAim = -1;
+  ocultar(); $('hud').classList.remove('hide'); $('minimapa').classList.remove('hide'); $('jugadores').classList.remove('hide');
+  $('b-salir').classList.add('hide'); $('b-tarjeta').classList.add('hide'); $('b-rendir').classList.remove('hide');
+  modo = 'sala'; arriba = 86; activarMando();
+}
+let hoyoSalaVisto = -1;
+function pasoSala() {
+  const ahora = sala.ahora();
+  if (ahora < sala.inicio) { $('cuenta').textContent = Math.ceil((sala.inicio - ahora) / 1000); return; }
+  $('cuenta').textContent = '';
+  const reb = sala.anim ? sala.anim.sim.rebotes : 0, port = sala.anim ? sala.anim.sim.portales : 0;
+  const h = sala.cuadro();
+  if (sala.anim) {
+    if (sala.anim.sim.rebotes > reb) U.tono(720, 0.03, 'triangle', 0.04);
+    if (sala.anim.sim.portales > port) U.tono(500, 0.25, 'sine', 0.05, 1400);
+    if (sala.anim.sim.pasos === G.SUB) sonarGolpe(sala.anim.h.tiro.fuerza || 40);
+  }
+  if (h) {
+    const nom = i => i === sala.idx ? '' : (sala.orden[i] || {}).nombre || '';
+    const u = h.despues.ultimo;
+    if (u && u.evento === 'hoyo') { sonarHoyo(); const r = G.resultado(u.golpes, u.par, false); U.avisar(r.emoji + ' ' + (nom(u.quien) ? nom(u.quien) + ': ' : '') + r.t, 1600); }
+    else if (u && (u.evento === 'agua' || u.evento === 'fuera')) avisoEvento(u.evento, nom(u.quien));
+    else if (u && u.recogida) U.avisar('🫳 ' + (nom(u.quien) || 'Tu pelota') + ': se recoge', 1500);
+    else if (u && u.evento === 'rendirse') U.avisar('🏳️ ' + (nom(u.quien) || 'Te') + ' rindió', 1500);
+  }
+  const st = sala.estado;
+  if (st.h !== hoyoSalaVisto && !sala.anim && !st.fin) { hoyoSalaVisto = st.h; cam = null; presentarHoyo(st); }
+  const l = sala.linea, mio = sala.miTurno();
+  if (mio && pasoAim !== l.paso) { pasoAim = l.paso; apuntarAlHoyo(st, sala.idx); }
+  $('panel').classList.toggle('hide', !mio || modo !== 'sala');
+  let txt = '';
+  if (sala.anim) txt = sala.anim.h.origen === 'auto' ? '⏰ Tiro automático' : '⛳ Tira ' + (sala.anim.h.idx === sala.idx ? 'tú' : (sala.orden[sala.anim.h.idx] || {}).nombre || '');
+  else if (l && l.fin) txt = '🏁 ¡Fin de la partida!';
+  else if (l && l.espera) {
+    const seg = l.espera.tipo === 'persona' ? Math.max(0, Math.ceil((l.espera.limite - ahora) / 1000)) : 0;
+    txt = mio ? '👉 Tu turno · ⏱ ' + seg + ' s' : sala.propia ? '📨 Enviando…' : '⏳ Turno de ' + ((sala.orden[l.espera.idx] || {}).nombre || 'otra persona') + ' · ⏱ ' + seg + ' s';
+  }
+  ponerTexto('estado', txt);
+  if (sala.finDesde && performance.now() - sala.finDesde > 1500 && !sala.finEnviado) terminarSala();
+}
+function terminarSala() {
+  sala.finEnviado = true;
+  const st = sala.estado, rk = st.fin.ranking, puntos = G.puntosSala(st), nombres = sala.orden.map(p => p.nombre);
+  const est = st.jug.map((j, i) => G.estrellasDe(st, i));
+  const primeros = rk.filter(r => r.lugar === 1 && !r.retirado);
+  const titulo = primeros.length > 1 ? '⛳ ¡Empate con ' + primeros[0].total + ' golpes!' : primeros.length ? '⛳ ¡Ganó ' + (nombres[primeros[0].idx] || '') + ' con ' + primeros[0].total + ' golpes!' : '⛳ ¡Fin de la partida!';
+  U.enviar({ tipo: 'fin', gana: primeros.length ? primeros[0].idx : -1, puntos, aciertos: est, total: st.hoyos.length * 3, titulo, tarjeta: { hoyos: st.hoyos.map(i => ({ n: G.HOYOS[i].n, par: G.HOYOS[i].par })), golpes: st.jug.map(j => j.golpes.slice()) } });
+  $('sala-titulo').textContent = titulo; $('sala-tabla').innerHTML = tablaTarjeta(st, nombres); $('sala-txt').textContent = 'Esperando el podio…';
+  $('panel').classList.add('hide'); mostrar('ov-sala'); activarMando();
+  if (primeros.some(r => r.idx === sala.idx)) U.confeti();
+}
+function golpearSala() {
+  if (!sala || !sala.miTurno()) return;
+  if (sala.tirar({ accion: 'tiro', angulo: aim, fuerza: fuerzaV })) $('panel').classList.add('hide');
+}
+
+/* ---------- Entrada: resortera, botones, teclado y mando ---------- */
+const dedos = {};
+U.tactil(cv, {
+  inicio: (id, x, y) => { if (puedoApuntar()) dedos[id] = { x, y, jalo: false }; },
+  mover: (id, x, y) => {
+    const d = dedos[id]; if (!d || !puedoApuntar()) return;
+    const dx = d.x - x, dy = d.y - y, largo = Math.sqrt(dx * dx + dy * dy);
+    if (largo < 14) return;
+    const v = vecMundo(dx, dy);
+    aim = F.atan2Dec(v.y, v.x); ponerFuerza(F.acotar(largo / JALON_MAX * 100, 1, 100)); d.jalo = true;
+  },
+  fin: (id) => { const d = dedos[id]; delete dedos[id]; if (d && d.jalo && puedoApuntar()) U.avisar('Toca ⛳ GOLPEAR', 900); },
+});
+U.tactil(mm, { inicio: () => {}, mover: () => {}, fin: (id, x, y, cancel) => { if (!cancel) { completa = !completa; cam = null; } } });
+// Botones con repetición al mantener (⟲ ⟳ − +).
+function botonRepite(el, accion) {
+  let t1 = null, t2 = null;
+  const parar = () => { clearTimeout(t1); clearInterval(t2); t1 = t2 = null; el.classList.remove('on'); };
+  U.tactil(el, {
+    inicio: () => { parar(); accion(); el.classList.add('on'); t1 = setTimeout(() => { t2 = setInterval(accion, 70); }, 380); },
+    mover: () => {}, fin: parar,
+  });
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); accion(); } });
+}
+botonRepite($('b-izq'), () => { if (puedoApuntar()) girar(-5); });
+botonRepite($('b-der'), () => { if (puedoApuntar()) girar(5); });
+botonRepite($('b-menos'), () => { if (puedoApuntar()) ponerFuerza(fuerzaV - 1); });
+botonRepite($('b-mas'), () => { if (puedoApuntar()) ponerFuerza(fuerzaV + 1); });
+$('b-golpear').onclick = e => { e.currentTarget.blur(); golpear(); };
+$('b-rendir').onclick = () => { if (sala && sala.miTurno() && confirm('¿Rendirte? Dejas de tirar y quedas al final; los demás siguen.')) sala.tirar({ accion: 'rendirse' }); };
+function pausar() {
+  if (modo === 'juego') { modo = 'pausa'; mostrar('ov-pausa'); $('panel').classList.add('hide'); }
+  else if (modo === 'pausa') { ocultar(); modo = 'juego'; }
+}
+const acciones = U.crearAcciones({
+  apuntarMenos: {}, apuntarMas: {}, fuerzaMenos: {}, fuerzaMas: {}, fino: {},
+  golpear: { pulso: () => { if (puedoApuntar()) golpear(); } },
+  pausa: { pulso: pausar },
+}, code => ({ ArrowLeft: 'apuntarMenos', KeyA: 'apuntarMenos', ArrowRight: 'apuntarMas', KeyD: 'apuntarMas', ArrowUp: 'fuerzaMas', KeyW: 'fuerzaMas',
+  ArrowDown: 'fuerzaMenos', KeyS: 'fuerzaMenos', Space: 'golpear', KeyJ: 'golpear', ShiftLeft: 'fino', ShiftRight: 'fino', Escape: 'pausa', KeyP: 'pausa' })[code]);
+window.accionesJuego = acciones; // para conectar otro adaptador sin tocar el juego
+// Mando clásico (juegos/mando.js, API sin cambios): no lee el teclado (lo maneja la capa de acciones).
+const mando = Mando.crear({
+  acciones: { apuntarMenos: 'izq', apuntarMas: 'der', finoMenos: 'L', finoMas: 'R', fuerzaMas: 'X', fuerzaMenos: 'Y', golpear: 'A', pausa: 'START' },
+  contenedor: $('juego'),
+  teclas: Object.fromEntries(Object.keys(Mando.TECLAS).map(k => [k, null])),
+  nombres: { fuerzaMas: '+💪', fuerzaMenos: '−💪', finoMenos: 'fino', finoMas: 'fino', golpear: 'golpe', pausa: 'pausa' },
+});
+mando.activar(false);
+mando.al('golpear', () => { if (puedoApuntar()) golpear(); });
+mando.al('pausa', pausar);
+mando.al('finoMenos', () => { if (puedoApuntar()) girar(-5); });
+mando.al('finoMas', () => { if (puedoApuntar()) girar(5); });
+let control = Mando.preferencia('golf_control');
+if (!['toques', 'mando'].includes(control)) control = 'toques';
+function elegirControl(c) { control = c; Mando.preferencia('golf_control', c); pintarControl(); }
+function pintarControl() {
+  document.body.classList.toggle('ctl-mando', control === 'mando');
+  mando.mostrar(control === 'mando');
+  document.querySelectorAll('[data-control]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.control === control)));
+  activarMando();
+}
+// El mando solo está activo jugando (también en la pausa, para seguir con START).
+function activarMando() { mando.activar(modo === 'juego' || modo === 'pausa' || modo === 'sala'); }
+pintarControl();
+// Cada cuadro: la mira gira más rápido al mantener (fino con Shift) y la fuerza sube o baja.
+let sostenido = 0, fuerzaAcum = 0;
+function entradaContinua() {
+  if (!puedoApuntar()) { sostenido = 0; return; }
+  const dir = F.acotar(acciones.direccion('apuntarMenos', 'apuntarMas') + (mando.presionado('apuntarMas') ? 1 : 0) - (mando.presionado('apuntarMenos') ? 1 : 0), -1, 1);
+  if (dir) { sostenido++; girar(dir * (acciones.presionado('fino') ? 1 : sostenido > 36 ? 12 : 4)); } else sostenido = 0;
+  const df = acciones.direccion('fuerzaMenos', 'fuerzaMas') + (mando.presionado('fuerzaMas') ? 1 : 0) - (mando.presionado('fuerzaMenos') ? 1 : 0);
+  fuerzaAcum += F.acotar(df, -1, 1) * 0.5;
+  if (Math.abs(fuerzaAcum) >= 1) { ponerFuerza(fuerzaV + Math.trunc(fuerzaAcum)); fuerzaAcum -= Math.trunc(fuerzaAcum); }
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-ir],[data-hoyo],[data-control]'); if (!b) return;
+  if (b.dataset.control) return elegirControl(b.dataset.control);
+  if (b.dataset.hoyo !== undefined) return nuevaPartida('practica', Number(b.dataset.hoyo));
+  const ir = b.dataset.ir;
+  if (ir === 'recorrido') return nuevaPartida('recorrido');
+  if (ir === 'practica') { modo = 'practica'; juego = null; $('hud').classList.add('hide'); $('minimapa').classList.add('hide'); $('panel').classList.add('hide'); pintarMenu(); mostrar('ov-practica'); return activarMando(); }
+  if (ir === 'menu') return abrirMenu();
+  if (ir === 'seguir') { ocultar(); modo = 'juego'; return; }
+  if (ir === 'siguiente') return siguienteHoyo();
+  if (ir === 'tarjeta') { modo = 'hoyo-tarjeta'; return verTarjeta(false); }
+  if (ir === 'ver-tarjeta') return verTarjeta(true);
+  if (ir === 'cerrar-tarjeta') { if (modo === 'hoyo-tarjeta') { modo = 'hoyo'; mostrar('ov-hoyo'); } else { ocultar(); modo = 'juego'; } return; }
+  if (ir === 'otra') return nuevaPartida('practica', juego.st.hoyos[0]);
+  if (ir === 'practicar-sig') return nuevaPartida('practica', juego.st.hoyos[0] + 1);
+});
+U.botonSonido($('b-sonido'));
+$('b-salir').onclick = e => { e.currentTarget.blur(); if (modo === 'juego') pausar(); };
+$('b-tarjeta').onclick = e => { e.currentTarget.blur(); if (modo === 'juego' && juego && !juego.sim) verTarjeta(false); };
+
+const OVERLAYS = ['ov-carga', 'ov-menu', 'ov-practica', 'ov-pausa', 'ov-hoyo', 'ov-tarjeta', 'ov-sala'];
+function mostrar(id) { OVERLAYS.forEach(o => $(o).classList.toggle('hide', o !== id)); }
+function ocultar() { OVERLAYS.forEach(o => $(o).classList.add('hide')); }
+function sonarGolpe(f) { U.tono(180 + f * 4, 0.07, 'triangle', 0.06, 110); }
+function sonarHoyo() { [523, 659, 784, 1047].forEach((f, i) => U.tono(f, 0.12, 'sine', 0.05, undefined, i * 0.08)); }
+
+/* ---------- Plataforma ---------- */
+U.alMensaje(d => {
+  if (d.tipo === 'inicio' && d.modo === 'individual') {
+    if (progresoValido(d.progreso)) progreso = d.progreso;
+    abrirMenu();
+    if (d.aviso) U.avisar(d.aviso, 3000);
+  } else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
+  else if (d.tipo === 'jugadas' && sala) sala.recibir(d.jugadas, d.ahora);
+  else if (d.tipo === 'jugada-ok' && sala && !d.ok) { sala.rechazo(); U.avisar('⚠️ No se envió tu tiro (' + (d.error || 'sin conexión') + ')', 2200); }
+  else if (d.tipo === 'puntos-ok') $('hoyo-guardado').textContent = d.guardado ? '✔ +' + d.puntos + ' a tus ⭐ individuales' + (d.pos ? ' · #' + d.pos + ' de la semana' : '') : 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').';
+  else if (d.tipo === 'guardado') { const t = d.ok ? '💾 Avance guardado' : '⚠️ No se pudo guardar el avance'; $('tarjeta-guardado').textContent = t; if (!d.ok) U.avisar(t, 1800); }
+});
+
+/* ---------- Bucle de paso fijo ---------- */
+let ultimo = performance.now(), acum = 0, cuadros = 0, fpsDesde = performance.now(), fps = 0;
+function cuadro(ahora) {
+  requestAnimationFrame(cuadro);
+  let dt = (ahora - ultimo) / 1000; ultimo = ahora;
+  if (dt > 0.25) dt = 0.25;
+  tAnim += dt;
+  cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
+  if (modo === 'juego' || modo === 'sala') {
+    acum += dt; let n = 0;
+    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoIndividual(); else pasoSala(); entradaContinua(); acum -= PASO; n++; }
+    if (n === 6) acum = 0;
+    if (modo === 'juego' && juego) {
+      $('panel').classList.toggle('hide', !puedoApuntar());
+      const txt = juego.sim ? '' : puedoApuntar() && juego.st.jug[0].golpes[juego.st.h] === 0 ? '👆 Jala y toca GOLPEAR' : '';
+      ponerTexto('estado', txt);
+    }
+  } else acum = 0;
+  dibujar();
+  const e = escena();
+  pintarHud(e); pintarJugadores(e);
+}
+ajustar();
+pintarFuerza();
+requestAnimationFrame(t => { ultimo = t; cuadro(t); });
+if (U.EMBED) U.enviar({ tipo: 'listo' }); else abrirMenu();
+if (U.PRUEBA) {
+  // Ganchos solo para pruebas E2E (?prueba=1).
+  window.__golf = {
+    estado: () => {
+      const st = modo === 'sala' && sala ? sala.estado : juego ? juego.st : null; // estado real (no el que se muestra)
+      return {
+        modo, horizontal, tactil: U.TACTIL, fps, w: W, alto: H, k: K, aim, fuerza: fuerzaV, control, completa,
+        hoyo: st ? G.hoyoActual(st).n : null, h: st ? st.h : null, golpes: st ? st.jug.map(j => j.golpes.slice()) : null, fin: st ? !!st.fin : false,
+        animando: !!((juego && juego.sim) || (sala && sala.anim)), sala: !!sala, miTurno: !!(sala && sala.miTurno()), paso: sala && sala.linea ? sala.linea.paso : 0,
+        mostrados: sala ? sala.mostrado.length : 0, yo: sala ? sala.idx : 0, finEnviado: !!(sala && sala.finEnviado), mando: mando.estado(), progreso,
+        puedo: puedoApuntar(),
+      };
+    },
+    pantalla: (x, y) => aPantalla(x, y),
+    bola: () => { const e = escena(); const b = e && (e.bolas.find(x => x.i === e.activa) || e.bolas[0]); return b ? { x: b.x, y: b.y } : null; },
+    // El mejor tiro del bot para la posición actual (para que la E2E termine hoyos rápido).
+    ideal: () => { const e = escena(); return e ? G.tiroIdeal(e.st) : null; },
+    apuntar: (a, f) => { aim = a; ponerFuerza(f); },
+    practica: i => nuevaPartida('practica', i), // abre cualquier hoyo (desbloqueado o no), solo pruebas
+    firma: () => sala && !sala.anim ? JSON.stringify({ e: sala.estado, mostrados: sala.mostrado.length }) : null,
+  };
+}
+</script>
+</body></html>
