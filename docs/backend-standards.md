@@ -93,6 +93,13 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       (si no, 400 `ronda_invalida`); se guarda en `rondasBasta[ronda]` y solo cuenta el primer `basta` de
       cada ronda. Sin `ronda` se acepta el formato anterior `{ palabras, basta }`;
     - `{ final, podio }`: totales hasta 10000.
+  - `POST /juegos/sala/<código>/revancha` (cambio `revancha-partidas`) → `{ ok, codigo }` de la sala nueva, con
+    quien la pidió dentro. Solo jugadores de la sala (403 `no_en_sala`) y con la partida terminada: empezada y con
+    algún `final` o `podio` (409 `no_termino`); 404/410 como las demás. La primera petición reserva en la sala vieja
+    `siguiente` (código nuevo) y `siguienteHost` (id de quien la abrió) con escritura condicional; la sala nueva se
+    crea una sola vez (`put` con sha `null`) con el mismo juego, opciones y bots, y `siguienteHost` de anfitrión.
+    Peticiones a la vez caen en la misma sala. Unirse a la nueva sigue las reglas de `unirse` (409 `ya_empezo` o
+    `sala_llena`, con `codigo`). Publica en Realtime la sala vieja y la nueva. Detalle en el `design.md` del cambio.
   - `GET /juegos/sala/<código>`: sala, jugadores y `ahora` (hora del servidor), solo para sus jugadores y
     el admin. Caché de 2 s.
   - Juegos permitidos (`JUEGOS_PARTIDA`):

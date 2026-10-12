@@ -1,6 +1,6 @@
 // Inicio de sesión de STALD con Supabase Auth (openspec: plataforma-login). Script clásico: expone window.StaldAuth.
 // Uso en una página:
-//   <script src="comun/auth.js?v=5"></script>
+//   <script src="comun/auth.js?v=7"></script>
 //   await StaldAuth.iniciar(API_BASE);           // lee /config, carga supabase-js y recupera la sesión
 //   StaldAuth.email()                            // correo de la sesión o null
 //   StaldAuth.fetchConSesion(url, opts)          // fetch con Authorization: Bearer <token>
@@ -264,7 +264,7 @@
   }
 
   // Cerrar sesión también olvida la partida que Juegos guardó para recargar (openspec: juegos-recarga).
-  var CLAVES_JUEGOS = ['juegos_sala_activa', 'juegos_partida_individual'];
+  var CLAVES_JUEGOS = ['juegos_sala_activa', 'juegos_partida_individual', 'juegos_revancha']; // juegos_revancha: openspec revancha-partidas
   function salir() {
     CLAVES_VIEJAS.concat(CLAVES_JUEGOS).forEach(function (k) { escribir(k, null); });
     escribir(CLAVE_PRUEBA, null);

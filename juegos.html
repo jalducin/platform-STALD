@@ -85,6 +85,7 @@
   .check { display: flex; gap: 10px; align-items: flex-start; font-size: .84rem; font-weight: 500; margin: 12px 0; }
   .check input { width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0; }
   .alert { margin-top: 12px; padding: 10px 12px; border-radius: 12px; font-size: .86rem; background: var(--bad-soft); color: var(--bad); }
+  .revancha-aviso { margin-top: 12px; padding: 10px 12px; border-radius: 12px; font-weight: 700; text-align: center; background: var(--accent-soft); } /* openspec: revancha-partidas */
   .muted { color: var(--muted); font-size: .84rem; }
   .loading { padding: 40px; text-align: center; color: var(--muted); }
   /* Marco de juego */
@@ -507,7 +508,7 @@
 
 <script src="juegos/cartas.js?v=3"></script>
 <script src="juegos/ajedrez.js?v=1"></script>
-<script src="comun/auth.js?v=6"></script>
+<script src="comun/auth.js?v=7"></script>
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` para probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -554,6 +555,11 @@
     if (new URLSearchParams(location.search).has('sala')) { try { history.replaceState(history.state, '', urlConSala(null)); } catch (e) { /* sin historial */ } }
   }
   const salaGuardada = () => { const s = leerLocal(SALA_KEY); return vigente(s) && /^[A-Z]{4}$/.test(s.codigo) ? s : null; };
+  // Revancha (openspec: revancha-partidas): al llegar al podio queda juegos_revancha = { codigo, quien, t } por 15 min,
+  // para ofrecer «Otra con los mismos» si se recarga en el podio. El podio consulta la sala vieja ese mismo tiempo.
+  const REVANCHA_KEY = 'juegos_revancha', REVANCHA_MS = 15 * 60000;
+  const revanchaGuardada = () => { const r = leerLocal(REVANCHA_KEY); return vigente(r) && Date.now() - Number(r.t) < REVANCHA_MS && /^[A-Z]{4}$/.test(r.codigo) ? r : null; };
+  const olvidarRevancha = () => escribirLocal(REVANCHA_KEY, null);
 
   // Juego individual en curso: { id, foto? }. `foto()` (solo en los que se reanudan) devuelve su instantánea o null.
   let enCurso = null, reanudacion = null;
@@ -786,6 +792,7 @@
       if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
       // Recarga (openspec: juegos-recarga): primero la sala guardada; luego, el juego individual a medias.
       const enSala = salaGuardada(); if (enSala) return volverASala(enSala.codigo);
+      const revancha = revanchaGuardada(); if (revancha) return ofrecerRevancha(revancha.codigo);
       const previa = partidaGuardada(); if (previa) return pantallaReanudar(previa);
       pantallaHub();
     } catch (e) {
@@ -2716,7 +2723,7 @@
 
   async function entrarSala(codigo) {
     limpiar();
-    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0 });
+    Object.assign(sala, { codigo, estado: null, guardado: false, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, finT: 0, revEnviando: false, revMsg: '' });
     app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
     const r = await traerSala();
     if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
@@ -2739,6 +2746,7 @@
     // Sondeo resistente (openspec: cache-estabilidad): un error de red nunca lo detiene; mientras falle, la espera
     // se duplica hasta 30 s y se avisa «Reconectando…»; al primer éxito vuelve a su ritmo.
     const intervalo = () => {
+      if (sala.vista === 'final') return sala.rtVivo ? 30000 : 5000; // podio: espera una revancha (openspec: revancha-partidas)
       const esperando = sala.estado && sala.estado.sala.inicio === null;
       const base = sala.rtVivo ? 30000 : esperando || TIEMPO_REAL.has(sala.estado.sala.juego) ? 2500 : 5000;
       return fallos ? Math.min(30000, base * Math.pow(2, fallos)) : base;
@@ -2746,7 +2754,8 @@
     const ciclo = () => {
       if (detenido) return;
       if (document.hidden) return programarTick(); // pestaña oculta: no consulta (al volver, alVolver)
-      if (sala.vista === 'final') return parar();
+      // En el podio sigue consultando hasta ver la revancha (`siguiente`) o 15 min (openspec: revancha-partidas).
+      if (sala.vista === 'final' && (sala.estado.sala.siguiente || Date.now() - sala.finT > REVANCHA_MS)) return parar();
       if (Date.now() - t0 > 60 * 60000 || (sala.estado.sala.inicio === null && Date.now() - t0 > 15 * 60000)) return parar('⏸️ La partida se pausó por inactividad. Vuelve a entrar con el código 🔑 ' + escapeHtml(codigo) + '.');
       consultando = true;
       traerSala().catch(() => ({ ok: false, status: 0, body: {} })).then(r => {
@@ -2789,6 +2798,7 @@
     const e = sala.estado; if (!e) return;
     const body = document.getElementById('p-body'); if (!body) return;
     const s = e.sala;
+    if (sala.vista === 'final') return pintarRevancha(); // el podio ya no se vuelve a dibujar
     if (s.inicio === null) return pintarEspera(body);
     if (s.juego.startsWith('basta')) return pintarBastaSala(body);
     if (s.juego === 'loteria') return pintarLoteriaSala(body);
@@ -2977,6 +2987,7 @@
     if (sala.vista === 'final') return;
     sala.vista = 'final';
     olvidarSala(); // terminó: recargar ya no vuelve a la sala
+    sala.finT = Date.now(); escribirLocal(REVANCHA_KEY, { codigo: sala.codigo, quien: state.jugador && state.jugador.id, t: sala.finT }); // pero sí ofrece la revancha
     const filas = todas.map(f => Object.assign({}, f, { ultimo: 0 })); // en el podio no se muestra el +puntos de la última pregunta
     document.getElementById('m-bar').hidden = true;
     const e = sala.estado; const juego = e.sala.juego;
@@ -2987,8 +2998,9 @@
       basta.d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>' : '';
     body.innerHTML = '<div class="card result"><div style="font-size:2.4rem">🏆</div><h1>' + escapeHtml(titulo || '¡Fin de la partida!') + '</h1>' +
       (mio ? '<div class="score">' + fmt(mio.total) + '</div><div class="muted">tus puntos · lugar ' + (filas.indexOf(mio) + 1) + ' de ' + filas.length + '</div>' : '') +
-      '<div id="p-guardado" class="muted" style="margin-top:8px"></div></div><h2>🥇 Podio</h2>' + marcadorHtml(filas, e.yo, 30) + detalle +
-      '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn" data-tab="partidas">👥 Otra partida</button></div>';
+      '<div id="p-guardado" class="muted" style="margin-top:8px"></div><div id="p-revancha"></div></div><h2>🥇 Podio</h2>' + marcadorHtml(filas, e.yo, 30) + detalle +
+      '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn ghost" data-tab="partidas">👥 Otra partida</button></div>';
+    pintarRevancha();
     if (mio && mio.total > 0) confeti();
     if (mio && !sala.guardado) {
       sala.guardado = true;
@@ -3003,6 +3015,48 @@
         else if (g) g.textContent = 'No se guardó en el ranking (' + (r.body.error || r.status) + ')';
       });
     }
+  }
+
+  // ---- Revancha (openspec: revancha-partidas) ----
+  // Quien la abrió: su nombre en la sala vieja (por siguienteHost).
+  const abrioRevancha = est => ((est.jugadores || []).find(j => j.id === est.sala.siguienteHost) || {}).nombre || 'Alguien';
+  const TXT_REVANCHA = { ya_empezo: 'La revancha ya empezó. Crea otra partida en 👥 Partidas.', sala_llena: 'La revancha ya está llena.', sala_vencida: 'Esta partida ya venció.', no_termino: 'La partida todavía no termina.', no_en_sala: 'No jugaste en esta partida.' };
+  // Podio: «Otra con los mismos» o, si alguien ya la abrió, «{Nombre} abrió la revancha · Unirme». Solo redibuja si cambia.
+  function pintarRevancha() {
+    const el = document.getElementById('p-revancha'); const e = sala.estado; if (!el || !e) return;
+    const sig = e.sala.siguiente || '';
+    const k = sig + '|' + (sala.revMsg || '') + '|' + !!sala.revEnviando;
+    if (el.dataset.k === k) return;
+    el.dataset.k = k;
+    el.innerHTML = (sig ? '<div class="revancha-aviso" role="status">🔁 ' + escapeHtml(abrioRevancha(e)) + ' abrió la revancha</div>' : '') +
+      '<div class="row-btns"><button class="btn" data-p="revancha"' + (sala.revEnviando ? ' disabled' : '') + '>' + (sig ? '🔁 Unirme' : '🔁 Otra con los mismos') + '</button></div>' +
+      (sala.revMsg ? '<div class="alert">' + escapeHtml(sala.revMsg) + '</div>' : '');
+  }
+  // Abre la revancha o se une a la que ya existe (la ruta es idempotente) y entra a su sala de espera.
+  async function pedirRevancha(codigo) {
+    const r = await post('/juegos/sala/' + codigo + '/revancha', {});
+    if (r.ok) { olvidarRevancha(); entrarSala(r.body.codigo); return null; }
+    return TXT_REVANCHA[r.body.error] || ('No se pudo abrir la revancha (' + (r.body.error || r.status) + ').');
+  }
+  async function revanchaDesdePodio() {
+    if (sala.revEnviando) return;
+    sala.revEnviando = true; sala.revMsg = ''; pintarRevancha();
+    const msg = await pedirRevancha(sala.codigo);
+    if (msg === null) return;
+    sala.revEnviando = false; sala.revMsg = msg; pintarRevancha();
+  }
+  // Tras recargar en el podio: el inicio de Juegos con la tarjeta de revancha arriba (si la sala vieja responde).
+  async function ofrecerRevancha(codigo) {
+    const r = await api('/juegos/sala/' + codigo);
+    if (state.pidiendoSesion) return;
+    pantallaHub();
+    if (!r.ok) return olvidarRevancha();
+    const j = juegoPorId(r.body.sala.juego);
+    const sig = r.body.sala.siguiente;
+    const tabs = app.querySelector('.tabs'); if (!tabs) return;
+    tabs.insertAdjacentHTML('beforebegin', '<div class="card" id="revancha-inicio" style="margin-bottom:12px;text-align:center"><div class="revancha-aviso" role="status">' +
+      (sig ? '🔁 ' + escapeHtml(abrioRevancha(r.body)) + ' abrió la revancha de ' : '🏁 Terminó tu partida de ') + escapeHtml(j.emoji + ' ' + j.t) + (sig ? '' : '. ¿Otra con los mismos?') + '</div>' +
+      '<div class="row-btns"><button class="btn ghost" data-a="revancha-no">No, gracias</button><button class="btn" data-a="revancha-inicio" data-codigo="' + escapeHtml(codigo) + '">' + (sig ? '🔁 Unirme' : '🔁 Otra con los mismos') + '</button></div><div id="revancha-msg"></div></div>');
   }
 
   // ---- Lotería en sala (openspec: juegos-loteria-preguntas) ----
@@ -3818,7 +3872,7 @@
 
   // ---------- Eventos ----------
   app.addEventListener('click', e => {
-    const t = e.target.closest('[data-tab]'); if (t) { limpiar(); return pantallaHub(t.dataset.tab); }
+    const t = e.target.closest('[data-tab]'); if (t) { limpiar(); olvidarRevancha(); return pantallaHub(t.dataset.tab); }
     const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
     if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
     if (sala.estado && sala.estado.sala.juego === 'poker' && document.getElementById('p-body') && e.target.closest('[data-pk]')) { clicPokerSala(e); return; }
@@ -3829,6 +3883,7 @@
     const lsv = e.target.closest('[data-lsvoz]'); if (lsv) { sala.lot.voz = lsv.dataset.lsvoz; document.querySelectorAll('[data-lsvoz]').forEach(x => x.setAttribute('aria-pressed', String(x === lsv))); return; }
     const pa = e.target.closest('[data-p]');
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
+    if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('♟️ Espera a que se una tu rival: el ajedrez en partida es 1 vs 1.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     const adm = e.target.closest('[data-adm]'); if (adm) return cambiarSubAdmin(adm.dataset.adm);
     const qf = e.target.closest('[data-quitar-foto]'); if (qf) return quitarFoto(qf);
@@ -3837,10 +3892,15 @@
     if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === 'reanudar') return reanudarPartida();
+    if (a.dataset.a === 'revancha-no') { olvidarRevancha(); const c = document.getElementById('revancha-inicio'); if (c) c.remove(); return; }
+    if (a.dataset.a === 'revancha-inicio') {
+      a.disabled = true;
+      return pedirRevancha(a.dataset.codigo).then(msg => { if (msg === null) return; a.disabled = false; const m = document.getElementById('revancha-msg'); if (m) m.innerHTML = '<div class="alert">' + escapeHtml(msg) + '</div>'; });
+    }
     if (a.dataset.a === 'adm-actualizar') return cargarAdmin(ADM_FUENTES);
     if (a.dataset.a === 'adm-reintentar') return cargarAdmin([a.dataset.fuente]);
     if (a.dataset.a === 'adm-limpiar') { const q = document.getElementById('adm-buscar'); q.value = ''; aplicarBusqueda(); return q.focus(); }
-    if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); pantallaHub(); }
+    if (a.dataset.a === 'salir' || a.dataset.a === 'hub') { limpiar(); olvidarRevancha(); pantallaHub(); }
     if (a.dataset.a === 'reintentar') iniciar();
     if (a.dataset.a === 'csv') descargarCsv([['correo', 'apodo', 'registrado', 'ultima_visita', 'visitas', 'puntos_semana']].concat((state.invitadosLista || []).map(x => [x.email, x.nombre, x.registradoEn, x.ultimaVisita, x.visitas, x.puntosSemana])), 'invitados-juegos.csv');
     if (a.dataset.a === 'csv-jugadores') { const l = state.jugadoresLista || { jugadores: [], pendientes: [] }; descargarCsv([['estado', 'nombre', 'nick', 'correo', 'tipo', 'puntos_semana', 'partidas_semana', 'ultima_visita_o_registro']].concat(l.jugadores.map(j => ['registrado', j.nombre, j.nick || '', j.email, j.espacio, j.puntosSemana, j.partidasSemana, j.ultimaVisita]), l.pendientes.map(p => [p.estado, '', '', p.email, '', '', '', p.creada])), 'jugadores-juegos.csv'); }
