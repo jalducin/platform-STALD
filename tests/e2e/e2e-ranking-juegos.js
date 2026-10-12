@@ -70,7 +70,7 @@ const partida = (email, juego, puntos, extra = {}) => pedir(email, '/juegos/part
     ok(`${nombre}: cada fila con el título y «N jugadores · M partidas» del servidor (singular con 1)`, iguales, fila('mente-sopa').txt);
     ok(`${nombre}: 🔎 Sopa de letras con su emoji`, fila('mente-sopa').txt.includes('🔎Sopa de letras'), fila('mente-sopa').txt);
     const conMejor = api.body.juegos.filter(j => j.mejor);
-    ok(`${nombre}: 👑 Mejor puntaje con el nick del servidor`, conMejor.length > 0 && conMejor.every(j => fila(j.id).txt.includes('👑 Mejor puntaje: ' + j.mejor.nombre)));
+    ok(`${nombre}: 👑 Mejor puntaje con el nick y los puntos del servidor`, conMejor.length > 0 && conMejor.every(j => fila(j.id).txt.includes('👑 Mejor puntaje: ' + j.mejor.nombre + ' · ' + n(j.mejor.puntos, 'punto', 'puntos'))), conMejor[0] && fila(conMejor[0].id).txt); // openspec: ranking-juegos-puntos
     ok(`${nombre}: nombres distintos (sin dos «Ordena la oración» iguales)`, new Set(api.body.juegos.map(j => j.titulo)).size === ui.length, fila('en-ordena').txt);
     ok(`${nombre}: barra del líder al 100 %`, ui[0].ancho === '100%', ui[0].ancho);
     // Top 10 (openspec: ranking-juegos-top10): como mucho 10 visibles; con más, el botón despliega y pliega.
