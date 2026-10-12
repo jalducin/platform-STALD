@@ -48,6 +48,11 @@ de acelerador (la aceleración es automática en las reglas actuales); tocar `ar
 - Los *pointer events* se usan solo para `pointerType` mouse o pen, o para toques si el navegador no tiene
   *touch events* (`'ontouchstart' in window` falso). Se descarta `lostpointercapture` como señal de soltar.
 - `touchcancel` sí suelta (el sistema interrumpió: llamada, notificación).
+- Los mandos se muestran si hay *touch events* o `(any-pointer: coarse)`, y siempre abajo de 700 px de ancho. No se
+  usa `navigator.maxTouchPoints`: en la prueba de escritorio un equipo sin pantalla táctil lo reportaba mayor que 0 y
+  los mandos tapaban el juego.
+- Perder el foco (`blur` del iframe) solo suelta el teclado; antes también soltaba los botones táctiles aunque el dedo
+  siguiera en la pantalla.
 - El documento del juego agrega un `touchmove` no pasivo con `preventDefault` durante la carrera, para que la
   página de Juegos no se desplace con el dedo.
 - Alternativa descartada: seguir con *pointer events* y solo corregir el layout. No cubre iOS viejo ni el

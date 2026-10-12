@@ -23,7 +23,7 @@ nivel para que se sienta como un juego de karts de verdad (con personajes y marc
 
 - **Entrada táctil robusta (arreglo de la causa raíz):** los controles usan *touch events* con
   `preventDefault` (no pasivos), siguiendo cada dedo por su `identifier`; los *pointer events* quedan para mouse
-  y pluma. Los controles se muestran en cualquier aparato táctil (`any-pointer: coarse` o `maxTouchPoints`) y
+  y pluma. Los controles se muestran en cualquier aparato táctil (`any-pointer: coarse`) y
   caben completos desde 320 px, en vertical y en horizontal.
 - **Joystick virtual** (control por defecto en celular): zona a la izquierda donde el pulgar aparece el joystick;
   giro proporcional, zona muerta, regreso al centro al soltar y jalar hacia abajo frena. A la derecha, botones

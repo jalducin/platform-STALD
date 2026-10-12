@@ -144,6 +144,21 @@ Cada página debe manejar y mostrar de forma explícita:
     (`localStorage.arcade_sonido`), controles táctiles grandes (pointer events) y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
+  - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
+    - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
+      events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo
+      suelta el teclado). Los mandos se ven con *touch events* o `(any-pointer: coarse)` y abajo de 700 px;
+    - controles: 🕹️ Joystick (por omisión: flotante, zona muerta 0.15, abajo frena), 📱 Sensor
+      (`DeviceOrientationEvent`: `gamma` en vertical, `±beta` en horizontal; centro al arrancar y con 🎯; permiso de
+      iOS con el toque en «Activar sensor»; sin permiso o sin lecturas en 2 s regresa al joystick con aviso) y
+      🔘 Botones (◀ ▶). DERRAPE, 🎁 y FRENO a la derecha. Preferencia en `localStorage.karts_control` y
+      `karts_sensibilidad`. El iframe de Arcade lleva `allow="autoplay; accelerometer; gyroscope"`;
+    - giro analógico acotado a [−1, 1]; el derrape lo cuantiza (umbral 0.3) para que las reglas no cambien;
+    - minimapa en `canvas#minimapa` (fuera del canvas del juego), con todos los corredores: tú con borde, flecha y
+      «TÚ»; rivales y fantasmas con su color y número. La E2E verifica que no se cruza con los mandos a 360×640,
+      390×844 y 844×390;
+    - pista y sprites de los karts pre-dibujados; partículas con tope de 300 y un tercio con
+      `prefers-reduced-motion` (sin humo ni confeti);
   - **música de fondo:** generada con WebAudio (Alegre, Relajante, Fiesta); empieza solo tras un gesto y
     baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el
