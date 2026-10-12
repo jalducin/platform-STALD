@@ -32,6 +32,10 @@ servidor SHALL aceptar `todo`, `tobe`, `presente`, `pasado` y `futuro` (por omis
 - **THEN** la sala guarda `opciones.tema = futuro`
 - **AND** las 10 preguntas de la partida son de futuro con will
 
+#### Scenario: Revancha con el mismo tema
+- **WHEN** termina una partida de Completa y responde con tema «Pasado» y alguien pide «🔁 Otra con los mismos»
+- **THEN** la sala nueva conserva `opciones.tema = pasado`
+
 #### Scenario: Tema inválido
 - **WHEN** alguien crea una partida de `en-frases` con `opciones.tema = "marciano"`
 - **THEN** el servidor responde 400 `tema_invalido`
