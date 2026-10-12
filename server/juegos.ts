@@ -148,6 +148,7 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "en-frases": { categoria: "ingles", titulo: "Completa y responde", max: 2000 }, // fusión con en-preguntas (openspec: juegos-fusion)
   "en-memorama": { categoria: "ingles", titulo: "Memorama inglés–español", max: 1000 },
   "en-ordena": { categoria: "ingles", titulo: "Ordena la oración (inglés)", max: 1000 },
+  "en-tiempos": { categoria: "ingles", titulo: "Máquina del tiempo", max: 2000 }, // openspec: juegos-ingles-gramatica
   "en-preguntas": { categoria: "ingles", titulo: "Responde en inglés", max: 2000 },
   "es-ortografia": { categoria: "espanol", titulo: "Ortografía", max: 2000 },
   "es-acentos": { categoria: "espanol", titulo: "Acentos", max: 2000 },

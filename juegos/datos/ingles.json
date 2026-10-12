@@ -1686,7 +1686,8 @@
    ],
    "correcta": 0,
    "es": "Ella es maestra.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
   },
   {
    "frase": "I ___ happy.",
@@ -1697,7 +1698,8 @@
    ],
    "correcta": 1,
    "es": "Estoy feliz.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con I se usa am: I am."
   },
   {
    "frase": "They ___ my friends.",
@@ -1708,7 +1710,8 @@
    ],
    "correcta": 2,
    "es": "Ellos son mis amigos.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
   },
   {
    "frase": "We ___ at school.",
@@ -1719,7 +1722,8 @@
    ],
    "correcta": 0,
    "es": "Estamos en la escuela.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
   },
   {
    "frase": "He ___ ten years old.",
@@ -1730,7 +1734,8 @@
    ],
    "correcta": 1,
    "es": "Él tiene diez años.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
   },
   {
    "frase": "You ___ very tall.",
@@ -1741,7 +1746,8 @@
    ],
    "correcta": 2,
    "es": "Eres muy alto.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
   },
   {
    "frase": "The dog ___ in the garden.",
@@ -1752,7 +1758,8 @@
    ],
    "correcta": 0,
    "es": "El perro está en el jardín.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
   },
   {
    "frase": "My parents ___ at home.",
@@ -1763,7 +1770,8 @@
    ],
    "correcta": 1,
    "es": "Mis papás están en casa.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
   },
   {
    "frase": "It ___ cold today.",
@@ -1774,7 +1782,8 @@
    ],
    "correcta": 2,
    "es": "Hoy hace frío.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
   },
   {
    "frase": "I ___ not tired.",
@@ -1785,7 +1794,8 @@
    ],
    "correcta": 0,
    "es": "No estoy cansado.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con I se usa am: I am."
   },
   {
    "frase": "The apples ___ red.",
@@ -1796,7 +1806,8 @@
    ],
    "correcta": 1,
    "es": "Las manzanas son rojas.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
   },
   {
    "frase": "My name ___ Ana.",
@@ -1807,7 +1818,8 @@
    ],
    "correcta": 2,
    "es": "Me llamo Ana.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
   },
   {
    "frase": "Tom and I ___ brothers.",
@@ -1818,7 +1830,8 @@
    ],
    "correcta": 0,
    "es": "Tom y yo somos hermanos.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
   },
   {
    "frase": "The book ___ on the table.",
@@ -1829,7 +1842,8 @@
    ],
    "correcta": 1,
    "es": "El libro está sobre la mesa.",
-   "tema": "to be"
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
   },
   {
    "frase": "She ___ milk every day.",
@@ -1840,7 +1854,8 @@
    ],
    "correcta": 2,
    "es": "Ella toma leche todos los días.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
   },
   {
    "frase": "I ___ in Mexico City.",
@@ -1851,7 +1866,8 @@
    ],
    "correcta": 0,
    "es": "Vivo en la Ciudad de México.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con I / you / we / they el verbo va sin -s."
   },
   {
    "frase": "He ___ to school by bus.",
@@ -1862,7 +1878,8 @@
    ],
    "correcta": 1,
    "es": "Él va a la escuela en autobús.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con he / she / it, los verbos en -ch, -sh, -s, -x, -o llevan -es."
   },
   {
    "frase": "They ___ soccer on Saturdays.",
@@ -1873,7 +1890,8 @@
    ],
    "correcta": 2,
    "es": "Ellos juegan futbol los sábados.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con I / you / we / they el verbo va sin -s."
   },
   {
    "frase": "My mom ___ in a hospital.",
@@ -1884,7 +1902,8 @@
    ],
    "correcta": 0,
    "es": "Mi mamá trabaja en un hospital.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
   },
   {
    "frase": "We ___ English at school.",
@@ -1895,7 +1914,8 @@
    ],
    "correcta": 1,
    "es": "Estudiamos inglés en la escuela.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con I / you / we / they el verbo va sin -s."
   },
   {
    "frase": "The cat ___ a lot.",
@@ -1906,7 +1926,8 @@
    ],
    "correcta": 2,
    "es": "El gato duerme mucho.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
   },
   {
    "frase": "You ___ very well.",
@@ -1917,7 +1938,8 @@
    ],
    "correcta": 0,
    "es": "Cantas muy bien.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con I / you / we / they el verbo va sin -s."
   },
   {
    "frase": "My brother ___ TV at night.",
@@ -1928,7 +1950,8 @@
    ],
    "correcta": 1,
    "es": "Mi hermano ve la tele en la noche.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con he / she / it, los verbos en -ch, -sh, -s, -x, -o llevan -es."
   },
   {
    "frase": "I ___ breakfast at seven.",
@@ -1939,7 +1962,8 @@
    ],
    "correcta": 2,
    "es": "Desayuno a las siete.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con I / you / we / they el verbo va sin -s."
   },
   {
    "frase": "She ___ her homework after school.",
@@ -1950,7 +1974,8 @@
    ],
    "correcta": 0,
    "es": "Ella hace su tarea después de la escuela.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con he / she / it, do cambia a does."
   },
   {
    "frase": "He ___ two dogs.",
@@ -1961,7 +1986,8 @@
    ],
    "correcta": 1,
    "es": "Él tiene dos perros.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con he / she / it, have cambia a has."
   },
   {
    "frase": "The bus ___ at eight.",
@@ -1972,7 +1998,8 @@
    ],
    "correcta": 2,
    "es": "El autobús sale a las ocho.",
-   "tema": "presente simple"
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
   },
   {
    "frase": "I ___ like coffee.",
@@ -1983,7 +2010,8 @@
    ],
    "correcta": 0,
    "es": "No me gusta el café.",
-   "tema": "negativo"
+   "tema": "presente simple",
+   "regla": "Negativo con I / you / we / they: don't + verbo."
   },
   {
    "frase": "She ___ eat meat.",
@@ -1994,7 +2022,8 @@
    ],
    "correcta": 1,
    "es": "Ella no come carne.",
-   "tema": "negativo"
+   "tema": "presente simple",
+   "regla": "Negativo con he / she / it: doesn't + verbo sin -s."
   },
   {
    "frase": "They ___ live here.",
@@ -2005,7 +2034,8 @@
    ],
    "correcta": 2,
    "es": "Ellos no viven aquí.",
-   "tema": "negativo"
+   "tema": "presente simple",
+   "regla": "Negativo con I / you / we / they: don't + verbo."
   },
   {
    "frase": "He ___ play the guitar.",
@@ -2016,7 +2046,8 @@
    ],
    "correcta": 0,
    "es": "Él no toca la guitarra.",
-   "tema": "negativo"
+   "tema": "presente simple",
+   "regla": "Negativo con he / she / it: doesn't + verbo sin -s."
   },
   {
    "frase": "We ___ have class today.",
@@ -2027,7 +2058,8 @@
    ],
    "correcta": 1,
    "es": "Hoy no tenemos clase.",
-   "tema": "negativo"
+   "tema": "presente simple",
+   "regla": "Negativo con I / you / we / they: don't + verbo."
   },
   {
    "frase": "I ___ hungry.",
@@ -2038,7 +2070,8 @@
    ],
    "correcta": 2,
    "es": "No tengo hambre.",
-   "tema": "negativo"
+   "tema": "to be",
+   "regla": "Negativo de to be: I am not (con to be no se usa don't)."
   },
   {
    "frase": "She ___ at home.",
@@ -2049,7 +2082,8 @@
    ],
    "correcta": 0,
    "es": "Ella no está en casa.",
-   "tema": "negativo"
+   "tema": "to be",
+   "regla": "Negativo de to be con he / she / it: isn't (no doesn't)."
   },
   {
    "frase": "They ___ students.",
@@ -2060,7 +2094,8 @@
    ],
    "correcta": 1,
    "es": "Ellos no son estudiantes.",
-   "tema": "negativo"
+   "tema": "to be",
+   "regla": "Negativo de to be con you / we / they: aren't (no don't)."
   },
   {
    "frase": "My dad ___ drive.",
@@ -2071,7 +2106,8 @@
    ],
    "correcta": 2,
    "es": "Mi papá no maneja.",
-   "tema": "negativo"
+   "tema": "presente simple",
+   "regla": "Negativo con he / she / it: doesn't + verbo sin -s."
   },
   {
    "frase": "You ___ need a pencil.",
@@ -2082,7 +2118,8 @@
    ],
    "correcta": 0,
    "es": "No necesitas un lápiz.",
-   "tema": "negativo"
+   "tema": "presente simple",
+   "regla": "Negativo con I / you / we / they: don't + verbo."
   },
   {
    "frase": "It ___ hot today.",
@@ -2093,7 +2130,8 @@
    ],
    "correcta": 1,
    "es": "Hoy no hace calor.",
-   "tema": "negativo"
+   "tema": "to be",
+   "regla": "Negativo de to be con he / she / it: isn't (no doesn't)."
   },
   {
    "frase": "The dog ___ like cats.",
@@ -2104,7 +2142,8 @@
    ],
    "correcta": 2,
    "es": "Al perro no le gustan los gatos.",
-   "tema": "negativo"
+   "tema": "presente simple",
+   "regla": "Negativo con he / she / it: doesn't + verbo sin -s."
   },
   {
    "frase": "We ___ tired.",
@@ -2115,7 +2154,8 @@
    ],
    "correcta": 0,
    "es": "No estamos cansados.",
-   "tema": "negativo"
+   "tema": "to be",
+   "regla": "Negativo de to be con you / we / they: aren't (no don't)."
   },
   {
    "frase": "___ you like pizza?",
@@ -2126,7 +2166,8 @@
    ],
    "correcta": 1,
    "es": "¿Te gusta la pizza?",
-   "tema": "preguntas"
+   "tema": "presente simple",
+   "regla": "Pregunta con I / you / we / they: Do + sujeto + verbo?"
   },
   {
    "frase": "___ she speak English?",
@@ -2137,7 +2178,8 @@
    ],
    "correcta": 2,
    "es": "¿Ella habla inglés?",
-   "tema": "preguntas"
+   "tema": "presente simple",
+   "regla": "Pregunta con he / she / it: Does + sujeto + verbo sin -s?"
   },
   {
    "frase": "___ they your friends?",
@@ -2148,7 +2190,8 @@
    ],
    "correcta": 0,
    "es": "¿Ellos son tus amigos?",
-   "tema": "preguntas"
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
   },
   {
    "frase": "___ he a doctor?",
@@ -2159,7 +2202,8 @@
    ],
    "correcta": 1,
    "es": "¿Él es doctor?",
-   "tema": "preguntas"
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
   },
   {
    "frase": "___ you have a pet?",
@@ -2170,7 +2214,8 @@
    ],
    "correcta": 2,
    "es": "¿Tienes una mascota?",
-   "tema": "preguntas"
+   "tema": "presente simple",
+   "regla": "Pregunta con I / you / we / they: Do + sujeto + verbo?"
   },
   {
    "frase": "___ it cold outside?",
@@ -2181,7 +2226,8 @@
    ],
    "correcta": 0,
    "es": "¿Hace frío afuera?",
-   "tema": "preguntas"
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
   },
   {
    "frase": "___ your brother play soccer?",
@@ -2192,7 +2238,8 @@
    ],
    "correcta": 1,
    "es": "¿Tu hermano juega futbol?",
-   "tema": "preguntas"
+   "tema": "presente simple",
+   "regla": "Pregunta con he / she / it: Does + sujeto + verbo sin -s?"
   },
   {
    "frase": "___ we late?",
@@ -2203,7 +2250,8 @@
    ],
    "correcta": 2,
    "es": "¿Llegamos tarde?",
-   "tema": "preguntas"
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
   },
   {
    "frase": "___ I your friend?",
@@ -2214,7 +2262,8 @@
    ],
    "correcta": 0,
    "es": "¿Soy tu amigo?",
-   "tema": "preguntas"
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
   },
   {
    "frase": "___ your parents work here?",
@@ -2225,7 +2274,8 @@
    ],
    "correcta": 1,
    "es": "¿Tus papás trabajan aquí?",
-   "tema": "preguntas"
+   "tema": "presente simple",
+   "regla": "Pregunta con I / you / we / they: Do + sujeto + verbo?"
   },
   {
    "frase": "___ the store big?",
@@ -2236,7 +2286,8 @@
    ],
    "correcta": 2,
    "es": "¿La tienda es grande?",
-   "tema": "preguntas"
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
   },
   {
    "frase": "___ you happy?",
@@ -2247,7 +2298,8 @@
    ],
    "correcta": 0,
    "es": "¿Estás feliz?",
-   "tema": "preguntas"
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
   },
   {
    "frase": "___ your cat eat fish?",
@@ -2258,7 +2310,8 @@
    ],
    "correcta": 1,
    "es": "¿Tu gato come pescado?",
-   "tema": "preguntas"
+   "tema": "presente simple",
+   "regla": "Pregunta con he / she / it: Does + sujeto + verbo sin -s?"
   },
   {
    "frase": "___ is your name? My name is Luis.",
@@ -2269,7 +2322,8 @@
    ],
    "correcta": 2,
    "es": "¿Cómo te llamas? Me llamo Luis.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "What = qué / cuál (cosas)."
   },
   {
    "frase": "___ do you live? I live in Puebla.",
@@ -2280,7 +2334,8 @@
    ],
    "correcta": 0,
    "es": "¿Dónde vives? Vivo en Puebla.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "Where = dónde (lugares)."
   },
   {
    "frase": "___ old are you? I am twelve.",
@@ -2291,7 +2346,8 @@
    ],
    "correcta": 1,
    "es": "¿Cuántos años tienes? Tengo doce.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "How old = qué edad; How many = cuántos."
   },
   {
    "frase": "___ is that man? He is my uncle.",
@@ -2302,7 +2358,8 @@
    ],
    "correcta": 2,
    "es": "¿Quién es ese señor? Es mi tío.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "Who = quién (personas)."
   },
   {
    "frase": "___ is your birthday? It is in May.",
@@ -2313,7 +2370,8 @@
    ],
    "correcta": 0,
    "es": "¿Cuándo es tu cumpleaños? Es en mayo.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "When = cuándo (tiempo, horas, fechas)."
   },
   {
    "frase": "___ is the bathroom? It is on the left.",
@@ -2324,7 +2382,8 @@
    ],
    "correcta": 1,
    "es": "¿Dónde está el baño? Está a la izquierda.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "Where = dónde (lugares)."
   },
   {
    "frase": "___ color is your bag? It is blue.",
@@ -2335,7 +2394,8 @@
    ],
    "correcta": 2,
    "es": "¿De qué color es tu bolsa? Es azul.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "What = qué / cuál (cosas)."
   },
   {
    "frase": "___ are you sad? Because my dog is sick.",
@@ -2346,7 +2406,8 @@
    ],
    "correcta": 0,
    "es": "¿Por qué estás triste? Porque mi perro está enfermo.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "Why = por qué; se responde con because."
   },
   {
    "frase": "___ many brothers do you have? I have two.",
@@ -2357,7 +2418,8 @@
    ],
    "correcta": 1,
    "es": "¿Cuántos hermanos tienes? Tengo dos.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "How old = qué edad; How many = cuántos."
   },
   {
    "frase": "___ is your favorite food? Pizza.",
@@ -2368,7 +2430,8 @@
    ],
    "correcta": 2,
    "es": "¿Cuál es tu comida favorita? La pizza.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "What = qué / cuál (cosas)."
   },
   {
    "frase": "___ do you go to school? At seven.",
@@ -2379,7 +2442,8 @@
    ],
    "correcta": 0,
    "es": "¿A qué hora vas a la escuela? A las siete.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "When = cuándo (tiempo, horas, fechas)."
   },
   {
    "frase": "___ is this bag? It is Maria's.",
@@ -2390,7 +2454,8 @@
    ],
    "correcta": 1,
    "es": "¿De quién es esta bolsa? Es de María.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "Whose = de quién."
   },
   {
    "frase": "___ is your best friend? Ana.",
@@ -2401,7 +2466,8 @@
    ],
    "correcta": 2,
    "es": "¿Quién es tu mejor amiga? Ana.",
-   "tema": "wh"
+   "tema": "wh",
+   "regla": "Who = quién (personas)."
   },
   {
    "frase": "This is ___ book. I love it.",
@@ -2412,7 +2478,8 @@
    ],
    "correcta": 0,
    "es": "Este es mi libro. Me encanta.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "She has a cat. ___ cat is white.",
@@ -2423,7 +2490,8 @@
    ],
    "correcta": 1,
    "es": "Ella tiene un gato. Su gato es blanco.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "He plays with ___ dog.",
@@ -2434,7 +2502,8 @@
    ],
    "correcta": 2,
    "es": "Él juega con su perro.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "We love ___ school.",
@@ -2445,7 +2514,8 @@
    ],
    "correcta": 0,
    "es": "Amamos nuestra escuela.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "They are in ___ house.",
@@ -2456,7 +2526,8 @@
    ],
    "correcta": 1,
    "es": "Ellos están en su casa.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "Is this ___ pencil, Ana?",
@@ -2467,7 +2538,8 @@
    ],
    "correcta": 2,
    "es": "¿Este es tu lápiz, Ana?",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "The dog is eating ___ food.",
@@ -2478,7 +2550,8 @@
    ],
    "correcta": 0,
    "es": "El perro está comiendo su comida.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "My sister and I share ___ room.",
@@ -2489,7 +2562,8 @@
    ],
    "correcta": 1,
    "es": "Mi hermana y yo compartimos nuestro cuarto.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "Hi! ___ name is Sofia.",
@@ -2500,7 +2574,8 @@
    ],
    "correcta": 2,
    "es": "¡Hola! Me llamo Sofía.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "Mr. Ruiz is ___ teacher.",
@@ -2511,7 +2586,8 @@
    ],
    "correcta": 0,
    "es": "El señor Ruiz es nuestro maestro.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "The children play with ___ toys.",
@@ -2522,7 +2598,8 @@
    ],
    "correcta": 1,
    "es": "Los niños juegan con sus juguetes.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "Do you have ___ keys?",
@@ -2533,7 +2610,8 @@
    ],
    "correcta": 2,
    "es": "¿Tienes tus llaves?",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "Paula brushes ___ hair.",
@@ -2544,7 +2622,8 @@
    ],
    "correcta": 0,
    "es": "Paula se cepilla el cabello.",
-   "tema": "posesivos"
+   "tema": "posesivos",
+   "regla": "Posesivos antes del sustantivo: my, your, his, her, its, our, their."
   },
   {
    "frase": "I have ___ apple.",
@@ -2555,7 +2634,8 @@
    ],
    "correcta": 1,
    "es": "Tengo una manzana.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "an antes de sonido de vocal: an apple, an hour."
   },
   {
    "frase": "She is ___ teacher.",
@@ -2566,7 +2646,8 @@
    ],
    "correcta": 2,
    "es": "Ella es maestra.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "a antes de sonido de consonante: a banana, a teacher."
   },
   {
    "frase": "It is ___ elephant.",
@@ -2577,7 +2658,8 @@
    ],
    "correcta": 0,
    "es": "Es un elefante.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "an antes de sonido de vocal: an apple, an hour."
   },
   {
    "frase": "___ moon is beautiful tonight.",
@@ -2588,7 +2670,8 @@
    ],
    "correcta": 1,
    "es": "La luna está hermosa esta noche.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "the para algo específico o único: the sun, the sky."
   },
   {
    "frase": "He eats ___ egg every day.",
@@ -2599,7 +2682,8 @@
    ],
    "correcta": 2,
    "es": "Él come un huevo todos los días.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "an antes de sonido de vocal: an apple, an hour."
   },
   {
    "frase": "I want ___ banana, please.",
@@ -2610,7 +2694,8 @@
    ],
    "correcta": 0,
    "es": "Quiero un plátano, por favor.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "a antes de sonido de consonante: a banana, a teacher."
   },
   {
    "frase": "My dad is ___ engineer.",
@@ -2621,7 +2706,8 @@
    ],
    "correcta": 1,
    "es": "Mi papá es ingeniero.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "an antes de sonido de vocal: an apple, an hour."
   },
   {
    "frase": "We live in ___ small house.",
@@ -2632,7 +2718,8 @@
    ],
    "correcta": 2,
    "es": "Vivimos en una casa pequeña.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "a antes de sonido de consonante: a banana, a teacher."
   },
   {
    "frase": "___ sky is blue.",
@@ -2643,7 +2730,8 @@
    ],
    "correcta": 0,
    "es": "El cielo es azul.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "the para algo específico o único: the sun, the sky."
   },
   {
    "frase": "She has ___ umbrella.",
@@ -2654,7 +2742,8 @@
    ],
    "correcta": 1,
    "es": "Ella tiene un paraguas.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "an antes de sonido de vocal: an apple, an hour."
   },
   {
    "frase": "This is ___ interesting book.",
@@ -2665,7 +2754,8 @@
    ],
    "correcta": 2,
    "es": "Este es un libro interesante.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "an antes de sonido de vocal: an apple, an hour."
   },
   {
    "frase": "I see ___ bird in the tree.",
@@ -2676,7 +2766,8 @@
    ],
    "correcta": 0,
    "es": "Veo un pájaro en el árbol.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "a antes de sonido de consonante: a banana, a teacher."
   },
   {
    "frase": "I go to school in ___ morning.",
@@ -2687,7 +2778,8 @@
    ],
    "correcta": 1,
    "es": "Voy a la escuela en la mañana.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "the para algo específico o único: in the morning."
   },
   {
    "frase": "He is ___ honest boy.",
@@ -2698,7 +2790,8 @@
    ],
    "correcta": 2,
    "es": "Él es un niño honesto.",
-   "tema": "articulos"
+   "tema": "articulos",
+   "regla": "an antes de sonido de vocal: an apple, an hour."
   },
   {
    "frase": "There are three ___ in the class.",
@@ -2709,7 +2802,8 @@
    ],
    "correcta": 0,
    "es": "Hay tres niños en la clase.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Plural irregular: child → children."
   },
   {
    "frase": "I have thirty-two ___.",
@@ -2720,7 +2814,8 @@
    ],
    "correcta": 1,
    "es": "Tengo treinta y dos dientes.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Plural irregular: tooth → teeth."
   },
   {
    "frase": "Two ___ are in the kitchen.",
@@ -2731,7 +2826,8 @@
    ],
    "correcta": 2,
    "es": "Dos mujeres están en la cocina.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Plural irregular: woman → women."
   },
   {
    "frase": "My ___ are cold.",
@@ -2742,7 +2838,8 @@
    ],
    "correcta": 0,
    "es": "Mis pies están fríos.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Plural irregular: foot → feet."
   },
   {
    "frase": "There are two ___ in the house.",
@@ -2753,7 +2850,8 @@
    ],
    "correcta": 1,
    "es": "Hay dos ratones en la casa.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Plural irregular: mouse → mice."
   },
   {
    "frase": "I have three ___.",
@@ -2764,7 +2862,8 @@
    ],
    "correcta": 2,
    "es": "Tengo tres cajas.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Plural con -es tras s, x, ch, sh: box → boxes."
   },
   {
    "frase": "The ___ are playing in the park.",
@@ -2775,7 +2874,8 @@
    ],
    "correcta": 0,
    "es": "Los bebés están jugando en el parque.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Consonante + y → -ies: baby → babies."
   },
   {
    "frase": "I buy four ___.",
@@ -2786,7 +2886,8 @@
    ],
    "correcta": 1,
    "es": "Compro cuatro jitomates.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Algunas palabras en -o llevan -es: tomato → tomatoes."
   },
   {
    "frase": "Two ___ are at the door.",
@@ -2797,7 +2898,8 @@
    ],
    "correcta": 2,
    "es": "Dos hombres están en la puerta.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Plural irregular: man → men."
   },
   {
    "frase": "We need six ___.",
@@ -2808,7 +2910,8 @@
    ],
    "correcta": 0,
    "es": "Necesitamos seis cuchillos.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Terminación -fe → -ves: knife → knives."
   },
   {
    "frase": "There are many ___ in the city.",
@@ -2819,7 +2922,8 @@
    ],
    "correcta": 1,
    "es": "Hay muchos autobuses en la ciudad.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Plural con -es tras s: bus → buses."
   },
   {
    "frase": "I visit two ___ every year.",
@@ -2830,7 +2934,8 @@
    ],
    "correcta": 2,
    "es": "Visito dos ciudades cada año.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Consonante + y → -ies: city → cities."
   },
   {
    "frase": "Mom cooks five ___.",
@@ -2841,221 +2946,2701 @@
    ],
    "correcta": 0,
    "es": "Mamá cocina cinco papas.",
-   "tema": "plurales"
+   "tema": "plurales",
+   "regla": "Algunas palabras en -o llevan -es: potato → potatoes."
+  },
+  {
+   "frase": "We ___ in the same class.",
+   "opciones": [
+    "is",
+    "are",
+    "am"
+   ],
+   "correcta": 1,
+   "es": "Estamos en el mismo salón.",
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
+  },
+  {
+   "frase": "The windows ___ open.",
+   "opciones": [
+    "is",
+    "am",
+    "are"
+   ],
+   "correcta": 2,
+   "es": "Las ventanas están abiertas.",
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
+  },
+  {
+   "frase": "My grandma ___ seventy years old.",
+   "opciones": [
+    "is",
+    "am",
+    "are"
+   ],
+   "correcta": 0,
+   "es": "Mi abuela tiene setenta años.",
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
+  },
+  {
+   "frase": "I ___ from Mexico.",
+   "opciones": [
+    "is",
+    "am",
+    "are"
+   ],
+   "correcta": 1,
+   "es": "Soy de México.",
+   "tema": "to be",
+   "regla": "Con I se usa am: I am."
+  },
+  {
+   "frase": "Your shoes ___ under the bed.",
+   "opciones": [
+    "am",
+    "is",
+    "are"
+   ],
+   "correcta": 2,
+   "es": "Tus zapatos están debajo de la cama.",
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
+  },
+  {
+   "frase": "This song ___ very nice.",
+   "opciones": [
+    "is",
+    "am",
+    "are"
+   ],
+   "correcta": 0,
+   "es": "Esta canción está muy bonita.",
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
+  },
+  {
+   "frase": "You and your sister ___ good singers.",
+   "opciones": [
+    "is",
+    "are",
+    "am"
+   ],
+   "correcta": 1,
+   "es": "Tú y tu hermana son buenas cantantes.",
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
+  },
+  {
+   "frase": "I ___ in the kitchen.",
+   "opciones": [
+    "are",
+    "is",
+    "am"
+   ],
+   "correcta": 2,
+   "es": "Estoy en la cocina.",
+   "tema": "to be",
+   "regla": "Con I se usa am: I am."
+  },
+  {
+   "frase": "The store ___ closed on Sundays.",
+   "opciones": [
+    "is",
+    "am",
+    "are"
+   ],
+   "correcta": 0,
+   "es": "La tienda está cerrada los domingos.",
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
+  },
+  {
+   "frase": "Those dogs ___ very friendly.",
+   "opciones": [
+    "am",
+    "are",
+    "is"
+   ],
+   "correcta": 1,
+   "es": "Esos perros son muy amigables.",
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
+  },
+  {
+   "frase": "My uncle ___ a doctor. He is a teacher.",
+   "opciones": [
+    "doesn't",
+    "aren't",
+    "isn't"
+   ],
+   "correcta": 2,
+   "es": "Mi tío no es doctor. Es maestro.",
+   "tema": "to be",
+   "regla": "Negativo de to be con he / she / it: isn't (no doesn't)."
+  },
+  {
+   "frase": "We ___ hungry. We ate at home.",
+   "opciones": [
+    "aren't",
+    "isn't",
+    "don't"
+   ],
+   "correcta": 0,
+   "es": "No tenemos hambre. Comimos en casa.",
+   "tema": "to be",
+   "regla": "Negativo de to be con you / we / they: aren't (no don't)."
+  },
+  {
+   "frase": "___ she your cousin?",
+   "opciones": [
+    "Are",
+    "Is",
+    "Am"
+   ],
+   "correcta": 1,
+   "es": "¿Ella es tu prima?",
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
+  },
+  {
+   "frase": "___ your friends at the park?",
+   "opciones": [
+    "Is",
+    "Am",
+    "Are"
+   ],
+   "correcta": 2,
+   "es": "¿Tus amigos están en el parque?",
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
+  },
+  {
+   "frase": "___ I late for class?",
+   "opciones": [
+    "Am",
+    "Are",
+    "Is"
+   ],
+   "correcta": 0,
+   "es": "¿Llego tarde a la clase?",
+   "tema": "to be",
+   "regla": "Pregunta con to be: el verbo va primero (Is he…? Are you…?)."
+  },
+  {
+   "frase": "The water ___ very cold.",
+   "opciones": [
+    "are",
+    "is",
+    "am"
+   ],
+   "correcta": 1,
+   "es": "El agua está muy fría.",
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
+  },
+  {
+   "frase": "My eyes ___ brown.",
+   "opciones": [
+    "is",
+    "am",
+    "are"
+   ],
+   "correcta": 2,
+   "es": "Mis ojos son cafés.",
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
+  },
+  {
+   "frase": "He ___ my new classmate.",
+   "opciones": [
+    "is",
+    "am",
+    "are"
+   ],
+   "correcta": 0,
+   "es": "Él es mi nuevo compañero de clase.",
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
+  },
+  {
+   "frase": "The kids ___ in the yard.",
+   "opciones": [
+    "am",
+    "are",
+    "is"
+   ],
+   "correcta": 1,
+   "es": "Los niños están en el patio.",
+   "tema": "to be",
+   "regla": "Con you / we / they o varias cosas se usa are."
+  },
+  {
+   "frase": "It ___ ten o'clock.",
+   "opciones": [
+    "am",
+    "are",
+    "is"
+   ],
+   "correcta": 2,
+   "es": "Son las diez.",
+   "tema": "to be",
+   "regla": "Con he / she / it o una sola cosa se usa is."
+  },
+  {
+   "frase": "I ___ at home yesterday.",
+   "opciones": [
+    "am",
+    "were",
+    "was"
+   ],
+   "correcta": 2,
+   "es": "Ayer estuve en casa.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "They ___ at the party last night.",
+   "opciones": [
+    "were",
+    "was",
+    "are"
+   ],
+   "correcta": 0,
+   "es": "Ellos estuvieron en la fiesta anoche.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "She ___ sick last Monday.",
+   "opciones": [
+    "were",
+    "was",
+    "is"
+   ],
+   "correcta": 1,
+   "es": "Ella estuvo enferma el lunes pasado.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "We ___ very happy yesterday.",
+   "opciones": [
+    "was",
+    "are",
+    "were"
+   ],
+   "correcta": 2,
+   "es": "Ayer estuvimos muy felices.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "The movie last night ___ great.",
+   "opciones": [
+    "was",
+    "were",
+    "are"
+   ],
+   "correcta": 0,
+   "es": "La película de anoche estuvo genial.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "You ___ late this morning.",
+   "opciones": [
+    "was",
+    "were",
+    "are"
+   ],
+   "correcta": 1,
+   "es": "Llegaste tarde hoy en la mañana.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "My grandparents ___ teachers many years ago.",
+   "opciones": [
+    "are",
+    "was",
+    "were"
+   ],
+   "correcta": 2,
+   "es": "Mis abuelos fueron maestros hace muchos años.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "It ___ cold last night.",
+   "opciones": [
+    "was",
+    "is",
+    "were"
+   ],
+   "correcta": 0,
+   "es": "Anoche hizo frío.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "The children ___ in the park yesterday afternoon.",
+   "opciones": [
+    "are",
+    "were",
+    "was"
+   ],
+   "correcta": 1,
+   "es": "Los niños estuvieron en el parque ayer en la tarde.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "I ___ ten years old in 2024.",
+   "opciones": [
+    "am",
+    "were",
+    "was"
+   ],
+   "correcta": 2,
+   "es": "Tenía diez años en 2024.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "He ___ at school last Friday.",
+   "opciones": [
+    "wasn't",
+    "didn't",
+    "weren't"
+   ],
+   "correcta": 0,
+   "es": "Él no estuvo en la escuela el viernes pasado.",
+   "tema": "to be pasado",
+   "regla": "Negativo en pasado: wasn't con I / he / she / it."
+  },
+  {
+   "frase": "We ___ tired after the game yesterday.",
+   "opciones": [
+    "wasn't",
+    "weren't",
+    "didn't"
+   ],
+   "correcta": 1,
+   "es": "No estábamos cansados después del partido de ayer.",
+   "tema": "to be pasado",
+   "regla": "Negativo en pasado: weren't con you / we / they."
+  },
+  {
+   "frase": "___ you at the market yesterday?",
+   "opciones": [
+    "Was",
+    "Did",
+    "Were"
+   ],
+   "correcta": 2,
+   "es": "¿Estuviste en el mercado ayer?",
+   "tema": "to be pasado",
+   "regla": "Pregunta en pasado: Were + you / we / they…?"
+  },
+  {
+   "frase": "___ she happy with her gift last night?",
+   "opciones": [
+    "Was",
+    "Were",
+    "Did"
+   ],
+   "correcta": 0,
+   "es": "¿Ella estuvo feliz con su regalo anoche?",
+   "tema": "to be pasado",
+   "regla": "Pregunta en pasado: Was + I / he / she / it…?"
+  },
+  {
+   "frase": "The test ___ easy last week.",
+   "opciones": [
+    "were",
+    "was",
+    "is"
+   ],
+   "correcta": 1,
+   "es": "El examen estuvo fácil la semana pasada.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "My shoes ___ dirty yesterday.",
+   "opciones": [
+    "was",
+    "are",
+    "were"
+   ],
+   "correcta": 2,
+   "es": "Ayer mis zapatos estaban sucios.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "The store ___ open last Sunday.",
+   "opciones": [
+    "wasn't",
+    "weren't",
+    "didn't"
+   ],
+   "correcta": 0,
+   "es": "La tienda no estuvo abierta el domingo pasado.",
+   "tema": "to be pasado",
+   "regla": "Negativo en pasado: wasn't con I / he / she / it."
+  },
+  {
+   "frase": "Your friends ___ at the beach last summer.",
+   "opciones": [
+    "are",
+    "were",
+    "was"
+   ],
+   "correcta": 1,
+   "es": "Tus amigos estuvieron en la playa el verano pasado.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "The dog ___ in the garden an hour ago.",
+   "opciones": [
+    "were",
+    "is",
+    "was"
+   ],
+   "correcta": 2,
+   "es": "El perro estaba en el jardín hace una hora.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "___ they at the concert last Saturday?",
+   "opciones": [
+    "Were",
+    "Did",
+    "Was"
+   ],
+   "correcta": 0,
+   "es": "¿Ellos estuvieron en el concierto el sábado pasado?",
+   "tema": "to be pasado",
+   "regla": "Pregunta en pasado: Were + you / we / they…?"
+  },
+  {
+   "frase": "I ___ hungry after school yesterday.",
+   "opciones": [
+    "were",
+    "was",
+    "am"
+   ],
+   "correcta": 1,
+   "es": "Ayer tenía hambre después de la escuela.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "My mom and dad ___ at work yesterday.",
+   "opciones": [
+    "was",
+    "are",
+    "were"
+   ],
+   "correcta": 2,
+   "es": "Mi mamá y mi papá estuvieron en el trabajo ayer.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "The weather ___ sunny last weekend.",
+   "opciones": [
+    "was",
+    "is",
+    "were"
+   ],
+   "correcta": 0,
+   "es": "El clima estuvo soleado el fin de semana pasado.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "You ___ on my team last year.",
+   "opciones": [
+    "was",
+    "were",
+    "are"
+   ],
+   "correcta": 1,
+   "es": "Estuviste en mi equipo el año pasado.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "The cookies ___ delicious yesterday.",
+   "opciones": [
+    "was",
+    "are",
+    "were"
+   ],
+   "correcta": 2,
+   "es": "Las galletas estuvieron deliciosas ayer.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "___ it hot in Monterrey last week?",
+   "opciones": [
+    "Was",
+    "Were",
+    "Did"
+   ],
+   "correcta": 0,
+   "es": "¿Hizo calor en Monterrey la semana pasada?",
+   "tema": "to be pasado",
+   "regla": "Pregunta en pasado: Was + I / he / she / it…?"
+  },
+  {
+   "frase": "I ___ at the movies last night. I was at home.",
+   "opciones": [
+    "didn't",
+    "wasn't",
+    "weren't"
+   ],
+   "correcta": 1,
+   "es": "Anoche no estuve en el cine. Estuve en casa.",
+   "tema": "to be pasado",
+   "regla": "Negativo en pasado: wasn't con I / he / she / it."
+  },
+  {
+   "frase": "They ___ sad yesterday. They were happy.",
+   "opciones": [
+    "didn't",
+    "wasn't",
+    "weren't"
+   ],
+   "correcta": 2,
+   "es": "Ayer no estaban tristes. Estaban felices.",
+   "tema": "to be pasado",
+   "regla": "Negativo en pasado: weren't con you / we / they."
+  },
+  {
+   "frase": "My sister ___ a baby in 2015.",
+   "opciones": [
+    "was",
+    "were",
+    "is"
+   ],
+   "correcta": 0,
+   "es": "Mi hermana era bebé en 2015.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "We ___ in Oaxaca last December.",
+   "opciones": [
+    "was",
+    "were",
+    "are"
+   ],
+   "correcta": 1,
+   "es": "Estuvimos en Oaxaca el diciembre pasado.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "The bus ___ full this morning.",
+   "opciones": [
+    "were",
+    "is",
+    "was"
+   ],
+   "correcta": 2,
+   "es": "El autobús iba lleno hoy en la mañana.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "___ your teacher at the meeting yesterday?",
+   "opciones": [
+    "Was",
+    "Were",
+    "Did"
+   ],
+   "correcta": 0,
+   "es": "¿Tu maestra estuvo en la junta ayer?",
+   "tema": "to be pasado",
+   "regla": "Pregunta en pasado: Was + I / he / she / it…?"
+  },
+  {
+   "frase": "The classroom ___ clean last Monday.",
+   "opciones": [
+    "weren't",
+    "wasn't",
+    "didn't"
+   ],
+   "correcta": 1,
+   "es": "El salón no estaba limpio el lunes pasado.",
+   "tema": "to be pasado",
+   "regla": "Negativo en pasado: wasn't con I / he / she / it."
+  },
+  {
+   "frase": "The boys ___ at the pool yesterday.",
+   "opciones": [
+    "didn't",
+    "wasn't",
+    "weren't"
+   ],
+   "correcta": 2,
+   "es": "Los niños no estuvieron en la alberca ayer.",
+   "tema": "to be pasado",
+   "regla": "Negativo en pasado: weren't con you / we / they."
+  },
+  {
+   "frase": "When I was six, my pet ___ a white cat.",
+   "opciones": [
+    "was",
+    "were",
+    "is"
+   ],
+   "correcta": 0,
+   "es": "Cuando tenía seis años, mi mascota era un gato blanco.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "Where ___ you last night?",
+   "opciones": [
+    "did",
+    "were",
+    "was"
+   ],
+   "correcta": 1,
+   "es": "¿Dónde estuviste anoche?",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "Who ___ your teacher last year?",
+   "opciones": [
+    "did",
+    "were",
+    "was"
+   ],
+   "correcta": 2,
+   "es": "¿Quién fue tu maestra el año pasado?",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "The books ___ on the table an hour ago.",
+   "opciones": [
+    "were",
+    "was",
+    "are"
+   ],
+   "correcta": 0,
+   "es": "Los libros estaban sobre la mesa hace una hora.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "Were you tired yesterday? Yes, I ___.",
+   "opciones": [
+    "were",
+    "was",
+    "did"
+   ],
+   "correcta": 1,
+   "es": "¿Estabas cansado ayer? Sí.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: was con I / he / she / it."
+  },
+  {
+   "frase": "Was the party fun? No, it ___.",
+   "opciones": [
+    "weren't",
+    "didn't",
+    "wasn't"
+   ],
+   "correcta": 2,
+   "es": "¿La fiesta estuvo divertida? No.",
+   "tema": "to be pasado",
+   "regla": "Negativo en pasado: wasn't con I / he / she / it."
+  },
+  {
+   "frase": "My friend and I ___ in the same class in 2025.",
+   "opciones": [
+    "were",
+    "are",
+    "was"
+   ],
+   "correcta": 0,
+   "es": "Mi amiga y yo estuvimos en el mismo salón en 2025.",
+   "tema": "to be pasado",
+   "regla": "Pasado de to be: were con you / we / they."
+  },
+  {
+   "frase": "The game ___ boring last Sunday. It was fun!",
+   "opciones": [
+    "weren't",
+    "wasn't",
+    "didn't"
+   ],
+   "correcta": 1,
+   "es": "El partido no estuvo aburrido el domingo pasado. ¡Estuvo divertido!",
+   "tema": "to be pasado",
+   "regla": "Negativo en pasado: wasn't con I / he / she / it."
+  },
+  {
+   "frase": "My dad ___ the store at nine.",
+   "opciones": [
+    "open",
+    "opening",
+    "opens"
+   ],
+   "correcta": 2,
+   "es": "Mi papá abre la tienda a las nueve.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
+  },
+  {
+   "frase": "The class ___ at eight.",
+   "opciones": [
+    "starts",
+    "start",
+    "starting"
+   ],
+   "correcta": 0,
+   "es": "La clase empieza a las ocho.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
+  },
+  {
+   "frase": "I ___ my homework at six.",
+   "opciones": [
+    "finishing",
+    "finish",
+    "finishes"
+   ],
+   "correcta": 1,
+   "es": "Termino mi tarea a las seis.",
+   "tema": "presente simple",
+   "regla": "Con I / you / we / they el verbo va sin -s."
+  },
+  {
+   "frase": "She ___ English and French.",
+   "opciones": [
+    "learn",
+    "learning",
+    "learns"
+   ],
+   "correcta": 2,
+   "es": "Ella aprende inglés y francés.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
+  },
+  {
+   "frase": "Our teacher ___ math.",
+   "opciones": [
+    "teaches",
+    "teach",
+    "teachs"
+   ],
+   "correcta": 0,
+   "es": "Nuestro maestro enseña matemáticas.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it, los verbos en -ch, -sh, -s, -x, -o llevan -es."
+  },
+  {
+   "frase": "My brother ___ very fast.",
+   "opciones": [
+    "swimming",
+    "swims",
+    "swim"
+   ],
+   "correcta": 1,
+   "es": "Mi hermano nada muy rápido.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
+  },
+  {
+   "frase": "We ___ in the school choir.",
+   "opciones": [
+    "singing",
+    "sings",
+    "sing"
+   ],
+   "correcta": 2,
+   "es": "Cantamos en el coro de la escuela.",
+   "tema": "presente simple",
+   "regla": "Con I / you / we / they el verbo va sin -s."
+  },
+  {
+   "frase": "He ___ a cap every day.",
+   "opciones": [
+    "wears",
+    "wear",
+    "wearing"
+   ],
+   "correcta": 0,
+   "es": "Él usa gorra todos los días.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
+  },
+  {
+   "frase": "My mom always ___ my keys.",
+   "opciones": [
+    "find",
+    "finds",
+    "finding"
+   ],
+   "correcta": 1,
+   "es": "Mi mamá siempre encuentra mis llaves.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
+  },
+  {
+   "frase": "The baby ___ a lot at night.",
+   "opciones": [
+    "crys",
+    "cry",
+    "cries"
+   ],
+   "correcta": 2,
+   "es": "El bebé llora mucho en la noche.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it, consonante + y cambia a -ies: study → studies."
+  },
+  {
+   "frase": "She ___ hard for her tests.",
+   "opciones": [
+    "studies",
+    "studys",
+    "study"
+   ],
+   "correcta": 0,
+   "es": "Ella estudia mucho para sus exámenes.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it, consonante + y cambia a -ies: study → studies."
+  },
+  {
+   "frase": "They ___ the windows in the morning.",
+   "opciones": [
+    "closes",
+    "close",
+    "closing"
+   ],
+   "correcta": 1,
+   "es": "Ellos cierran las ventanas en la mañana.",
+   "tema": "presente simple",
+   "regla": "Con I / you / we / they el verbo va sin -s."
+  },
+  {
+   "frase": "The store ___ at ten at night.",
+   "opciones": [
+    "closing",
+    "close",
+    "closes"
+   ],
+   "correcta": 2,
+   "es": "La tienda cierra a las diez de la noche.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
+  },
+  {
+   "frase": "My cat ___ like water.",
+   "opciones": [
+    "doesn't",
+    "don't",
+    "isn't"
+   ],
+   "correcta": 0,
+   "es": "A mi gato no le gusta el agua.",
+   "tema": "presente simple",
+   "regla": "Negativo con he / she / it: doesn't + verbo sin -s."
+  },
+  {
+   "frase": "I ___ wear a uniform on Fridays.",
+   "opciones": [
+    "doesn't",
+    "don't",
+    "am not"
+   ],
+   "correcta": 1,
+   "es": "No uso uniforme los viernes.",
+   "tema": "presente simple",
+   "regla": "Negativo con I / you / we / they: don't + verbo."
+  },
+  {
+   "frase": "___ he teach English?",
+   "opciones": [
+    "Do",
+    "Is",
+    "Does"
+   ],
+   "correcta": 2,
+   "es": "¿Él enseña inglés?",
+   "tema": "presente simple",
+   "regla": "Pregunta con he / she / it: Does + sujeto + verbo sin -s?"
+  },
+  {
+   "frase": "___ you swim in the river?",
+   "opciones": [
+    "Do",
+    "Are",
+    "Does"
+   ],
+   "correcta": 0,
+   "es": "¿Nadas en el río?",
+   "tema": "presente simple",
+   "regla": "Pregunta con I / you / we / they: Do + sujeto + verbo?"
+  },
+  {
+   "frase": "She doesn't ___ coffee.",
+   "opciones": [
+    "drinks",
+    "drink",
+    "drinking"
+   ],
+   "correcta": 1,
+   "es": "Ella no toma café.",
+   "tema": "presente simple",
+   "regla": "Después de doesn't el verbo va sin -s: doesn't drink."
+  },
+  {
+   "frase": "Does your sister ___ in a band?",
+   "opciones": [
+    "singing",
+    "sings",
+    "sing"
+   ],
+   "correcta": 2,
+   "es": "¿Tu hermana canta en una banda?",
+   "tema": "presente simple",
+   "regla": "Después de Does el verbo va sin -s: Does she sing?"
+  },
+  {
+   "frase": "My grandpa ___ the newspaper every morning.",
+   "opciones": [
+    "reads",
+    "read",
+    "reading"
+   ],
+   "correcta": 0,
+   "es": "Mi abuelo lee el periódico todas las mañanas.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
+  },
+  {
+   "frase": "The movie ___ at five.",
+   "opciones": [
+    "finish",
+    "finishes",
+    "finishs"
+   ],
+   "correcta": 1,
+   "es": "La película termina a las cinco.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it, los verbos en -ch, -sh, -s, -x, -o llevan -es."
+  },
+  {
+   "frase": "My aunt ___ her room on Saturdays.",
+   "opciones": [
+    "clean",
+    "cleaning",
+    "cleans"
+   ],
+   "correcta": 2,
+   "es": "Mi tía limpia su cuarto los sábados.",
+   "tema": "presente simple",
+   "regla": "Con he / she / it el verbo lleva -s: plays, watches, studies."
+  },
+  {
+   "frase": "I ___ my homework yesterday.",
+   "opciones": [
+    "doed",
+    "did",
+    "do"
+   ],
+   "correcta": 1,
+   "es": "Hice mi tarea ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: do → did (se aprende de memoria)."
+  },
+  {
+   "frase": "We ___ to the beach last summer.",
+   "opciones": [
+    "go",
+    "goed",
+    "went"
+   ],
+   "correcta": 2,
+   "es": "Fuimos a la playa el verano pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: go → went (se aprende de memoria)."
+  },
+  {
+   "frase": "She ___ tacos for lunch yesterday.",
+   "opciones": [
+    "ate",
+    "eated",
+    "eat"
+   ],
+   "correcta": 0,
+   "es": "Ella comió tacos ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: eat → ate (se aprende de memoria)."
+  },
+  {
+   "frase": "He ___ a glass of milk last night.",
+   "opciones": [
+    "drinked",
+    "drank",
+    "drink"
+   ],
+   "correcta": 1,
+   "es": "Él tomó un vaso de leche anoche.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: drink → drank (se aprende de memoria)."
+  },
+  {
+   "frase": "They ___ a party last Saturday.",
+   "opciones": [
+    "have",
+    "haved",
+    "had"
+   ],
+   "correcta": 2,
+   "es": "Ellos hicieron una fiesta el sábado pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: have → had (se aprende de memoria)."
+  },
+  {
+   "frase": "I ___ a big dog in the park yesterday.",
+   "opciones": [
+    "saw",
+    "seed",
+    "see"
+   ],
+   "correcta": 0,
+   "es": "Vi un perro grande en el parque ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: see → saw (se aprende de memoria)."
+  },
+  {
+   "frase": "My mom ___ new shoes last week.",
+   "opciones": [
+    "buyed",
+    "bought",
+    "buy"
+   ],
+   "correcta": 1,
+   "es": "Mi mamá compró zapatos nuevos la semana pasada.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: buy → bought (se aprende de memoria)."
+  },
+  {
+   "frase": "We ___ a cake for my dad last Sunday.",
+   "opciones": [
+    "make",
+    "maked",
+    "made"
+   ],
+   "correcta": 2,
+   "es": "Le hicimos un pastel a mi papá el domingo pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: make → made (se aprende de memoria)."
+  },
+  {
+   "frase": "I ___ up at six this morning.",
+   "opciones": [
+    "got",
+    "getted",
+    "get"
+   ],
+   "correcta": 0,
+   "es": "Me levanté a las seis hoy en la mañana.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: get → got (se aprende de memoria)."
+  },
+  {
+   "frase": "He ___ the bus to school yesterday.",
+   "opciones": [
+    "taked",
+    "took",
+    "take"
+   ],
+   "correcta": 1,
+   "es": "Él tomó el autobús a la escuela ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: take → took (se aprende de memoria)."
+  },
+  {
+   "frase": "My cousins ___ to my house last weekend.",
+   "opciones": [
+    "comed",
+    "come",
+    "came"
+   ],
+   "correcta": 2,
+   "es": "Mis primos vinieron a mi casa el fin de semana pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: come → came (se aprende de memoria)."
+  },
+  {
+   "frase": "She ___ a letter to her grandma yesterday.",
+   "opciones": [
+    "wrote",
+    "writed",
+    "write"
+   ],
+   "correcta": 0,
+   "es": "Ella le escribió una carta a su abuela ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: write → wrote (se aprende de memoria)."
+  },
+  {
+   "frase": "I ___ a good book last month.",
+   "opciones": [
+    "readed",
+    "read",
+    "reads"
+   ],
+   "correcta": 1,
+   "es": "Leí un buen libro el mes pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: read → read (igual, pero suena «red»)."
+  },
+  {
+   "frase": "The baby ___ for three hours yesterday.",
+   "opciones": [
+    "sleep",
+    "sleeped",
+    "slept"
+   ],
+   "correcta": 2,
+   "es": "El bebé durmió tres horas ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: sleep → slept (se aprende de memoria)."
+  },
+  {
+   "frase": "My dad ___ in an office last year.",
+   "opciones": [
+    "worked",
+    "works",
+    "work"
+   ],
+   "correcta": 0,
+   "es": "Mi papá trabajó en una oficina el año pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: work → worked (verbo + -ed)."
+  },
+  {
+   "frase": "We ___ English last night.",
+   "opciones": [
+    "study",
+    "studied",
+    "studyed"
+   ],
+   "correcta": 1,
+   "es": "Estudiamos inglés anoche.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: study → studied (y cambia a -ied)."
+  },
+  {
+   "frase": "The bus ___ in front of the school a minute ago.",
+   "opciones": [
+    "stoped",
+    "stop",
+    "stopped"
+   ],
+   "correcta": 2,
+   "es": "El autobús se paró enfrente de la escuela hace un minuto.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: stop → stopped (se dobla la p)."
+  },
+  {
+   "frase": "I ___ soccer with my friends yesterday.",
+   "opciones": [
+    "played",
+    "play",
+    "plaied"
+   ],
+   "correcta": 0,
+   "es": "Ayer jugué futbol con mis amigos.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: play → played (verbo + -ed)."
+  },
+  {
+   "frase": "She ___ the door five minutes ago.",
+   "opciones": [
+    "opens",
+    "opened",
+    "open"
+   ],
+   "correcta": 1,
+   "es": "Ella abrió la puerta hace cinco minutos.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: open → opened (verbo + -ed)."
+  },
+  {
+   "frase": "He ___ the windows last night.",
+   "opciones": [
+    "close",
+    "closes",
+    "closed"
+   ],
+   "correcta": 2,
+   "es": "Él cerró las ventanas anoche.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: close → closed (solo se agrega -d)."
+  },
+  {
+   "frase": "The class ___ at eight yesterday.",
+   "opciones": [
+    "started",
+    "start",
+    "starts"
+   ],
+   "correcta": 0,
+   "es": "La clase empezó a las ocho ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: start → started (verbo + -ed)."
+  },
+  {
+   "frase": "I ___ my project last Friday.",
+   "opciones": [
+    "finish",
+    "finished",
+    "finishes"
+   ],
+   "correcta": 1,
+   "es": "Terminé mi proyecto el viernes pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: finish → finished (verbo + -ed)."
+  },
+  {
+   "frase": "We ___ a new song in music class yesterday.",
+   "opciones": [
+    "learn",
+    "learns",
+    "learned"
+   ],
+   "correcta": 2,
+   "es": "Aprendimos una canción nueva en la clase de música ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: learn → learned (verbo + -ed)."
+  },
+  {
+   "frase": "Our teacher ___ us the past tense last week.",
+   "opciones": [
+    "taught",
+    "teached",
+    "teach"
+   ],
+   "correcta": 0,
+   "es": "Nuestra maestra nos enseñó el pasado la semana pasada.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: teach → taught (se aprende de memoria)."
+  },
+  {
+   "frase": "They ___ in the river last summer.",
+   "opciones": [
+    "swimmed",
+    "swam",
+    "swim"
+   ],
+   "correcta": 1,
+   "es": "Ellos nadaron en el río el verano pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: swim → swam (se aprende de memoria)."
+  },
+  {
+   "frase": "My sister ___ at the school festival last Friday.",
+   "opciones": [
+    "sing",
+    "singed",
+    "sang"
+   ],
+   "correcta": 2,
+   "es": "Mi hermana cantó en el festival de la escuela el viernes pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: sing → sang (se aprende de memoria)."
+  },
+  {
+   "frase": "He ___ a red jacket yesterday.",
+   "opciones": [
+    "wore",
+    "wear",
+    "weared"
+   ],
+   "correcta": 0,
+   "es": "Él traía una chamarra roja ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: wear → wore (se aprende de memoria)."
+  },
+  {
+   "frase": "I ___ my keys under the sofa this morning.",
+   "opciones": [
+    "find",
+    "found",
+    "finded"
+   ],
+   "correcta": 1,
+   "es": "Encontré mis llaves debajo del sillón hoy en la mañana.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: find → found (se aprende de memoria)."
+  },
+  {
+   "frase": "I ___ go to school yesterday. I was sick.",
+   "opciones": [
+    "don't",
+    "wasn't",
+    "didn't"
+   ],
+   "correcta": 2,
+   "es": "Ayer no fui a la escuela. Estaba enfermo.",
+   "tema": "pasado simple",
+   "regla": "Negativo en pasado: didn't + verbo base, con todas las personas."
+  },
+  {
+   "frase": "She ___ eat breakfast this morning.",
+   "opciones": [
+    "didn't",
+    "wasn't",
+    "doesn't"
+   ],
+   "correcta": 0,
+   "es": "Ella no desayunó hoy en la mañana.",
+   "tema": "pasado simple",
+   "regla": "Negativo en pasado: didn't + verbo base, con todas las personas."
+  },
+  {
+   "frase": "We didn't ___ the movie last night.",
+   "opciones": [
+    "saw",
+    "see",
+    "seen"
+   ],
+   "correcta": 1,
+   "es": "No vimos la película anoche.",
+   "tema": "pasado simple",
+   "regla": "Después de didn't el verbo va en forma base: didn't see."
+  },
+  {
+   "frase": "___ you finish your homework yesterday?",
+   "opciones": [
+    "Were",
+    "Do",
+    "Did"
+   ],
+   "correcta": 2,
+   "es": "¿Terminaste tu tarea ayer?",
+   "tema": "pasado simple",
+   "regla": "Pregunta en pasado: Did + sujeto + verbo base?"
+  },
+  {
+   "frase": "___ they come to the party last night?",
+   "opciones": [
+    "Did",
+    "Do",
+    "Were"
+   ],
+   "correcta": 0,
+   "es": "¿Ellos vinieron a la fiesta anoche?",
+   "tema": "pasado simple",
+   "regla": "Pregunta en pasado: Did + sujeto + verbo base?"
+  },
+  {
+   "frase": "Did she ___ a new phone last week?",
+   "opciones": [
+    "buys",
+    "buy",
+    "bought"
+   ],
+   "correcta": 1,
+   "es": "¿Ella compró un celular nuevo la semana pasada?",
+   "tema": "pasado simple",
+   "regla": "Después de Did el verbo va en forma base: Did she buy…?"
+  },
+  {
+   "frase": "Did you drink water after the game? Yes, I ___.",
+   "opciones": [
+    "was",
+    "do",
+    "did"
+   ],
+   "correcta": 2,
+   "es": "¿Tomaste agua después del partido? Sí.",
+   "tema": "pasado simple",
+   "regla": "Respuesta corta en pasado: Yes, I did. / No, I didn't."
+  },
+  {
+   "frase": "My grandparents ___ in a small town many years ago.",
+   "opciones": [
+    "lived",
+    "live",
+    "lives"
+   ],
+   "correcta": 0,
+   "es": "Mis abuelos vivieron en un pueblo pequeño hace muchos años.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: live → lived (solo se agrega -d)."
+  },
+  {
+   "frase": "I ___ my grandma on the phone last night.",
+   "opciones": [
+    "call",
+    "called",
+    "calls"
+   ],
+   "correcta": 1,
+   "es": "Anoche le hablé por teléfono a mi abuela.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: call → called (verbo + -ed)."
+  },
+  {
+   "frase": "My brother ___ a new job last month.",
+   "opciones": [
+    "get",
+    "getted",
+    "got"
+   ],
+   "correcta": 2,
+   "es": "Mi hermano consiguió un trabajo nuevo el mes pasado.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: get → got (se aprende de memoria)."
+  },
+  {
+   "frase": "The children ___ a movie in class yesterday.",
+   "opciones": [
+    "watched",
+    "watch",
+    "watches"
+   ],
+   "correcta": 0,
+   "es": "Los niños vieron una película en clase ayer.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: watch → watched (verbo + -ed)."
+  },
+  {
+   "frase": "My mom ___ the dishes last night.",
+   "opciones": [
+    "washes",
+    "washed",
+    "wash"
+   ],
+   "correcta": 1,
+   "es": "Mi mamá lavó los trastes anoche.",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: wash → washed (verbo + -ed)."
+  },
+  {
+   "frase": "We didn't ___ to the park last Sunday.",
+   "opciones": [
+    "went",
+    "goes",
+    "go"
+   ],
+   "correcta": 2,
+   "es": "No fuimos al parque el domingo pasado.",
+   "tema": "pasado simple",
+   "regla": "Después de didn't el verbo va en forma base: didn't see."
+  },
+  {
+   "frase": "I ___ my friend a message an hour ago.",
+   "opciones": [
+    "sent",
+    "sended",
+    "send"
+   ],
+   "correcta": 0,
+   "es": "Le mandé un mensaje a mi amigo hace una hora.",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: send → sent (se aprende de memoria)."
+  },
+  {
+   "frase": "I ___ call you tomorrow.",
+   "opciones": [
+    "will",
+    "am",
+    "did"
+   ],
+   "correcta": 0,
+   "es": "Te voy a llamar mañana.",
+   "tema": "futuro will",
+   "regla": "Futuro: will + verbo base, igual con todas las personas."
+  },
+  {
+   "frase": "She ___ visit her grandma next Sunday.",
+   "opciones": [
+    "is",
+    "will",
+    "did"
+   ],
+   "correcta": 1,
+   "es": "Ella va a visitar a su abuela el próximo domingo.",
+   "tema": "futuro will",
+   "regla": "Futuro: will + verbo base, igual con todas las personas."
+  },
+  {
+   "frase": "They will ___ soccer tomorrow.",
+   "opciones": [
+    "played",
+    "plays",
+    "play"
+   ],
+   "correcta": 2,
+   "es": "Ellos van a jugar futbol mañana.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "We will ___ French next year.",
+   "opciones": [
+    "learn",
+    "learns",
+    "learned"
+   ],
+   "correcta": 0,
+   "es": "Vamos a aprender francés el próximo año.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "He ___ come to the party. He is sick.",
+   "opciones": [
+    "doesn't",
+    "won't",
+    "isn't"
+   ],
+   "correcta": 1,
+   "es": "Él no va a venir a la fiesta. Está enfermo.",
+   "tema": "futuro will",
+   "regla": "Negativo del futuro: won't (will not) + verbo base."
+  },
+  {
+   "frase": "___ you help me with my homework tomorrow?",
+   "opciones": [
+    "Did",
+    "Are",
+    "Will"
+   ],
+   "correcta": 2,
+   "es": "¿Me vas a ayudar con mi tarea mañana?",
+   "tema": "futuro will",
+   "regla": "Pregunta en futuro: Will + sujeto + verbo base?"
+  },
+  {
+   "frase": "Will it rain tomorrow? Yes, it ___.",
+   "opciones": [
+    "will",
+    "is",
+    "does"
+   ],
+   "correcta": 0,
+   "es": "¿Va a llover mañana? Sí.",
+   "tema": "futuro will",
+   "regla": "Respuesta corta: Yes, I will. / No, I won't."
+  },
+  {
+   "frase": "Will you come to my party? No, I ___.",
+   "opciones": [
+    "don't",
+    "won't",
+    "willn't"
+   ],
+   "correcta": 1,
+   "es": "¿Vas a venir a mi fiesta? No.",
+   "tema": "futuro will",
+   "regla": "Respuesta corta: Yes, I will. / No, I won't."
+  },
+  {
+   "frase": "The store will ___ at nine tomorrow.",
+   "opciones": [
+    "opens",
+    "opened",
+    "open"
+   ],
+   "correcta": 2,
+   "es": "La tienda va a abrir a las nueve mañana.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "The class ___ start at eight tomorrow.",
+   "opciones": [
+    "will",
+    "was",
+    "did"
+   ],
+   "correcta": 0,
+   "es": "La clase va a empezar a las ocho mañana.",
+   "tema": "futuro will",
+   "regla": "Futuro: will + verbo base, igual con todas las personas."
+  },
+  {
+   "frase": "I will ___ my project next week.",
+   "opciones": [
+    "finishes",
+    "finish",
+    "finished"
+   ],
+   "correcta": 1,
+   "es": "Voy a terminar mi proyecto la próxima semana.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "My aunt will ___ math next year.",
+   "opciones": [
+    "taught",
+    "teaches",
+    "teach"
+   ],
+   "correcta": 2,
+   "es": "Mi tía va a enseñar matemáticas el próximo año.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "We will ___ in the pool on Saturday.",
+   "opciones": [
+    "swim",
+    "swims",
+    "swam"
+   ],
+   "correcta": 0,
+   "es": "Vamos a nadar en la alberca el sábado.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "She will ___ a song at the festival.",
+   "opciones": [
+    "sang",
+    "sing",
+    "sings"
+   ],
+   "correcta": 1,
+   "es": "Ella va a cantar una canción en el festival.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "I will ___ my new jacket tomorrow.",
+   "opciones": [
+    "wears",
+    "wore",
+    "wear"
+   ],
+   "correcta": 2,
+   "es": "Mañana me voy a poner mi chamarra nueva.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "Don't worry. We will ___ your dog.",
+   "opciones": [
+    "find",
+    "found",
+    "finds"
+   ],
+   "correcta": 0,
+   "es": "No te preocupes. Vamos a encontrar a tu perro.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "It ___ be cold tonight.",
+   "opciones": [
+    "was",
+    "will",
+    "is"
+   ],
+   "correcta": 1,
+   "es": "Va a hacer frío esta noche.",
+   "tema": "futuro will",
+   "regla": "Futuro de to be: will be (nunca will is ni will are)."
+  },
+  {
+   "frase": "They ___ be at school tomorrow. It's Saturday.",
+   "opciones": [
+    "aren't",
+    "don't",
+    "won't"
+   ],
+   "correcta": 2,
+   "es": "Mañana no van a estar en la escuela. Es sábado.",
+   "tema": "futuro will",
+   "regla": "Negativo del futuro: won't (will not) + verbo base."
+  },
+  {
+   "frase": "I think you ___ like this movie.",
+   "opciones": [
+    "will",
+    "are",
+    "did"
+   ],
+   "correcta": 0,
+   "es": "Creo que te va a gustar esta película.",
+   "tema": "futuro will",
+   "regla": "Futuro: will + verbo base, igual con todas las personas."
+  },
+  {
+   "frase": "My parents will ___ home late tonight.",
+   "opciones": [
+    "are",
+    "be",
+    "is"
+   ],
+   "correcta": 1,
+   "es": "Mis papás van a llegar tarde a casa hoy en la noche.",
+   "tema": "futuro will",
+   "regla": "Futuro de to be: will be (nunca will is ni will are)."
+  },
+  {
+   "frase": "___ your brother come with us tomorrow?",
+   "opciones": [
+    "Did",
+    "Is",
+    "Will"
+   ],
+   "correcta": 2,
+   "es": "¿Tu hermano va a venir con nosotros mañana?",
+   "tema": "futuro will",
+   "regla": "Pregunta en futuro: Will + sujeto + verbo base?"
+  },
+  {
+   "frase": "I promise I ___ forget your birthday.",
+   "opciones": [
+    "won't",
+    "don't",
+    "didn't"
+   ],
+   "correcta": 0,
+   "es": "Te prometo que no voy a olvidar tu cumpleaños.",
+   "tema": "futuro will",
+   "regla": "Negativo del futuro: won't (will not) + verbo base."
+  },
+  {
+   "frase": "He will ___ the window.",
+   "opciones": [
+    "closes",
+    "close",
+    "closed"
+   ],
+   "correcta": 1,
+   "es": "Él va a cerrar la ventana.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "The movie will ___ at seven.",
+   "opciones": [
+    "starts",
+    "started",
+    "start"
+   ],
+   "correcta": 2,
+   "es": "La película va a empezar a las siete.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "We ___ eat pizza tonight.",
+   "opciones": [
+    "will",
+    "did",
+    "are"
+   ],
+   "correcta": 0,
+   "es": "Hoy en la noche vamos a comer pizza.",
+   "tema": "futuro will",
+   "regla": "Futuro: will + verbo base, igual con todas las personas."
+  },
+  {
+   "frase": "She ___ go to the party. She has a test.",
+   "opciones": [
+    "wasn't",
+    "won't",
+    "isn't"
+   ],
+   "correcta": 1,
+   "es": "Ella no va a ir a la fiesta. Tiene examen.",
+   "tema": "futuro will",
+   "regla": "Negativo del futuro: won't (will not) + verbo base."
+  },
+  {
+   "frase": "Will they ___ the bus tomorrow?",
+   "opciones": [
+    "takes",
+    "took",
+    "take"
+   ],
+   "correcta": 2,
+   "es": "¿Van a tomar el autobús mañana?",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "I will ___ you a letter next week.",
+   "opciones": [
+    "write",
+    "wrote",
+    "writes"
+   ],
+   "correcta": 0,
+   "es": "Te voy a escribir una carta la próxima semana.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "My cousin will ___ to Mexico City next month.",
+   "opciones": [
+    "came",
+    "come",
+    "comes"
+   ],
+   "correcta": 1,
+   "es": "Mi primo va a venir a la Ciudad de México el próximo mes.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "We will ___ a cake for mom's birthday.",
+   "opciones": [
+    "makes",
+    "made",
+    "make"
+   ],
+   "correcta": 2,
+   "es": "Vamos a hacer un pastel para el cumpleaños de mamá.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "Will she ___ new shoes tomorrow?",
+   "opciones": [
+    "buy",
+    "bought",
+    "buys"
+   ],
+   "correcta": 0,
+   "es": "¿Ella va a comprar zapatos nuevos mañana?",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "You ___ be tired after the game.",
+   "opciones": [
+    "were",
+    "will",
+    "are"
+   ],
+   "correcta": 1,
+   "es": "Vas a estar cansado después del partido.",
+   "tema": "futuro will",
+   "regla": "Futuro de to be: will be (nunca will is ni will are)."
+  },
+  {
+   "frase": "In the future, robots ___ help us at home.",
+   "opciones": [
+    "did",
+    "are",
+    "will"
+   ],
+   "correcta": 2,
+   "es": "En el futuro, los robots nos van a ayudar en casa.",
+   "tema": "futuro will",
+   "regla": "Futuro: will + verbo base, igual con todas las personas."
+  },
+  {
+   "frase": "Next year I ___ be thirteen years old.",
+   "opciones": [
+    "will",
+    "was",
+    "am"
+   ],
+   "correcta": 0,
+   "es": "El próximo año voy a tener trece años.",
+   "tema": "futuro will",
+   "regla": "Futuro de to be: will be (nunca will is ni will are)."
+  },
+  {
+   "frase": "Will you study tonight? Yes, I ___.",
+   "opciones": [
+    "do",
+    "will",
+    "am"
+   ],
+   "correcta": 1,
+   "es": "¿Vas a estudiar hoy en la noche? Sí.",
+   "tema": "futuro will",
+   "regla": "Respuesta corta: Yes, I will. / No, I won't."
+  },
+  {
+   "frase": "Will the store be open tomorrow? No, it ___.",
+   "opciones": [
+    "isn't",
+    "doesn't",
+    "won't"
+   ],
+   "correcta": 2,
+   "es": "¿La tienda va a estar abierta mañana? No.",
+   "tema": "futuro will",
+   "regla": "Respuesta corta: Yes, I will. / No, I won't."
+  },
+  {
+   "frase": "My dad will ___ us to the zoo on Sunday.",
+   "opciones": [
+    "drive",
+    "drove",
+    "drives"
+   ],
+   "correcta": 0,
+   "es": "Mi papá nos va a llevar en carro al zoológico el domingo.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "I ___ tell anyone your secret.",
+   "opciones": [
+    "don't",
+    "won't",
+    "didn't"
+   ],
+   "correcta": 1,
+   "es": "No le voy a contar tu secreto a nadie.",
+   "tema": "futuro will",
+   "regla": "Negativo del futuro: won't (will not) + verbo base."
+  },
+  {
+   "frase": "The teacher will ___ the tests on Monday.",
+   "opciones": [
+    "checked",
+    "checks",
+    "check"
+   ],
+   "correcta": 2,
+   "es": "La maestra va a revisar los exámenes el lunes.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "We will ___ at the park at four.",
+   "opciones": [
+    "meet",
+    "met",
+    "meets"
+   ],
+   "correcta": 0,
+   "es": "Nos vamos a ver en el parque a las cuatro.",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "Where will you ___ next summer?",
+   "opciones": [
+    "went",
+    "go",
+    "goes"
+   ],
+   "correcta": 1,
+   "es": "¿A dónde vas a ir el próximo verano?",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "What will you ___ for dinner tonight?",
+   "opciones": [
+    "ate",
+    "eats",
+    "eat"
+   ],
+   "correcta": 2,
+   "es": "¿Qué vas a cenar hoy en la noche?",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "frase": "___ is my pencil, here in my hand.",
+   "opciones": [
+    "These",
+    "This",
+    "Those"
+   ],
+   "correcta": 1,
+   "es": "Este es mi lápiz, aquí en mi mano.",
+   "tema": "demostrativos",
+   "regla": "this = este / esta: una cosa cerca."
+  },
+  {
+   "frase": "___ are my shoes, here under my desk.",
+   "opciones": [
+    "This",
+    "That",
+    "These"
+   ],
+   "correcta": 2,
+   "es": "Estos son mis zapatos, aquí debajo de mi escritorio.",
+   "tema": "demostrativos",
+   "regla": "these = estos / estas: varias cosas cerca."
+  },
+  {
+   "frase": "Look at ___ bird over there in the tree!",
+   "opciones": [
+    "that",
+    "these",
+    "this"
+   ],
+   "correcta": 0,
+   "es": "¡Mira ese pájaro allá en el árbol!",
+   "tema": "demostrativos",
+   "regla": "that = ese / esa / aquel: una cosa lejos."
+  },
+  {
+   "frase": "___ houses over there are very old.",
+   "opciones": [
+    "These",
+    "Those",
+    "This"
+   ],
+   "correcta": 1,
+   "es": "Esas casas de allá son muy viejas.",
+   "tema": "demostrativos",
+   "regla": "those = esos / aquellos: varias cosas lejos."
+  },
+  {
+   "frase": "I like ___ cookies here on my plate.",
+   "opciones": [
+    "that",
+    "this",
+    "these"
+   ],
+   "correcta": 2,
+   "es": "Me gustan estas galletas aquí en mi plato.",
+   "tema": "demostrativos",
+   "regla": "these = estos / estas: varias cosas cerca."
+  },
+  {
+   "frase": "Is ___ your bag over there?",
+   "opciones": [
+    "that",
+    "these",
+    "those"
+   ],
+   "correcta": 0,
+   "es": "¿Esa es tu bolsa, la de allá?",
+   "tema": "demostrativos",
+   "regla": "that = ese / esa / aquel: una cosa lejos."
+  },
+  {
+   "frase": "___ boy next to me is my brother.",
+   "opciones": [
+    "Those",
+    "This",
+    "These"
+   ],
+   "correcta": 1,
+   "es": "Este niño junto a mí es mi hermano.",
+   "tema": "demostrativos",
+   "regla": "this = este / esta: una cosa cerca."
+  },
+  {
+   "frase": "Who are ___ people over there?",
+   "opciones": [
+    "this",
+    "that",
+    "those"
+   ],
+   "correcta": 2,
+   "es": "¿Quiénes son esas personas de allá?",
+   "tema": "demostrativos",
+   "regla": "those = esos / aquellos: varias cosas lejos."
+  },
+  {
+   "frase": "___ flowers in my hand are for you.",
+   "opciones": [
+    "These",
+    "This",
+    "Those"
+   ],
+   "correcta": 0,
+   "es": "Estas flores en mi mano son para ti.",
+   "tema": "demostrativos",
+   "regla": "these = estos / estas: varias cosas cerca."
+  },
+  {
+   "frase": "Can you see ___ stars in the sky?",
+   "opciones": [
+    "that",
+    "those",
+    "this"
+   ],
+   "correcta": 1,
+   "es": "¿Puedes ver esas estrellas en el cielo?",
+   "tema": "demostrativos",
+   "regla": "those = esos / aquellos: varias cosas lejos."
+  },
+  {
+   "frase": "I have ___.",
+   "opciones": [
+    "a red car",
+    "a reds car",
+    "a car red"
+   ],
+   "correcta": 0,
+   "es": "Tengo un carro rojo.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes del sustantivo: a red car."
+  },
+  {
+   "frase": "She has ___.",
+   "opciones": [
+    "a bigs dog",
+    "a big dog",
+    "a dog big"
+   ],
+   "correcta": 1,
+   "es": "Ella tiene un perro grande.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes del sustantivo: a red car."
+  },
+  {
+   "frase": "We live in ___.",
+   "opciones": [
+    "a house small",
+    "a smalls house",
+    "a small house"
+   ],
+   "correcta": 2,
+   "es": "Vivimos en una casa pequeña.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes del sustantivo: a red car."
+  },
+  {
+   "frase": "My mom drives ___.",
+   "opciones": [
+    "a blue car",
+    "a car blue",
+    "a blues car"
+   ],
+   "correcta": 0,
+   "es": "Mi mamá maneja un carro azul.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes del sustantivo: a red car."
+  },
+  {
+   "frase": "They are ___.",
+   "opciones": [
+    "goods students",
+    "good students",
+    "students goods"
+   ],
+   "correcta": 1,
+   "es": "Ellos son buenos estudiantes.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes y no lleva -s en plural: good students."
+  },
+  {
+   "frase": "I want ___, please.",
+   "opciones": [
+    "a colds soda",
+    "a soda cold",
+    "a cold soda"
+   ],
+   "correcta": 2,
+   "es": "Quiero un refresco frío, por favor.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes del sustantivo: a red car."
+  },
+  {
+   "frase": "This is ___.",
+   "opciones": [
+    "an easy test",
+    "an test easy",
+    "a easy test"
+   ],
+   "correcta": 0,
+   "es": "Este es un examen fácil.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes; an antes de sonido de vocal: an easy test."
+  },
+  {
+   "frase": "I have two ___.",
+   "opciones": [
+    "news friends",
+    "new friends",
+    "friends new"
+   ],
+   "correcta": 1,
+   "es": "Tengo dos amigos nuevos.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes y no lleva -s en plural: good students."
+  },
+  {
+   "frase": "Today is ___.",
+   "opciones": [
+    "a hots day",
+    "a day hot",
+    "a hot day"
+   ],
+   "correcta": 2,
+   "es": "Hoy es un día caluroso.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes del sustantivo: a red car."
+  },
+  {
+   "frase": "He wears ___.",
+   "opciones": [
+    "white shoes",
+    "whites shoes",
+    "shoes white"
+   ],
+   "correcta": 0,
+   "es": "Él usa zapatos blancos.",
+   "tema": "adjetivos",
+   "regla": "El adjetivo va antes y no lleva -s en plural: good students."
   }
  ],
  "oraciones": [
   {
    "en": "I like green apples",
-   "es": "Me gustan las manzanas verdes"
+   "es": "Me gustan las manzanas verdes",
+   "tema": "presente simple"
   },
   {
    "en": "My dog is very big",
-   "es": "Mi perro es muy grande"
+   "es": "Mi perro es muy grande",
+   "tema": "to be"
   },
   {
    "en": "She lives in Mexico",
-   "es": "Ella vive en México"
+   "es": "Ella vive en México",
+   "tema": "presente simple"
   },
   {
    "en": "We play soccer after school",
-   "es": "Jugamos futbol después de la escuela"
+   "es": "Jugamos futbol después de la escuela",
+   "tema": "presente simple"
   },
   {
    "en": "The cat is under the bed",
-   "es": "El gato está debajo de la cama"
+   "es": "El gato está debajo de la cama",
+   "tema": "to be"
   },
   {
    "en": "He drinks milk every morning",
-   "es": "Él toma leche todas las mañanas"
+   "es": "Él toma leche todas las mañanas",
+   "tema": "presente simple"
   },
   {
    "en": "My mother is a nurse",
-   "es": "Mi mamá es enfermera"
+   "es": "Mi mamá es enfermera",
+   "tema": "to be"
   },
   {
    "en": "They are in the park",
-   "es": "Ellos están en el parque"
+   "es": "Ellos están en el parque",
+   "tema": "to be"
   },
   {
    "en": "I have two brothers",
-   "es": "Tengo dos hermanos"
+   "es": "Tengo dos hermanos",
+   "tema": "presente simple"
   },
   {
    "en": "The sky is blue today",
-   "es": "Hoy el cielo está azul"
+   "es": "Hoy el cielo está azul",
+   "tema": "to be"
   },
   {
    "en": "Our school has a big garden",
-   "es": "Nuestra escuela tiene un jardín grande"
+   "es": "Nuestra escuela tiene un jardín grande",
+   "tema": "presente simple"
   },
   {
    "en": "I get up at six",
-   "es": "Me levanto a las seis"
+   "es": "Me levanto a las seis",
+   "tema": "presente simple"
   },
   {
    "en": "She reads a book every night",
-   "es": "Ella lee un libro cada noche"
+   "es": "Ella lee un libro cada noche",
+   "tema": "presente simple"
   },
   {
    "en": "The bus is yellow",
-   "es": "El autobús es amarillo"
+   "es": "El autobús es amarillo",
+   "tema": "to be"
   },
   {
    "en": "My father works in an office",
-   "es": "Mi papá trabaja en una oficina"
+   "es": "Mi papá trabaja en una oficina",
+   "tema": "presente simple"
   },
   {
    "en": "I am twelve years old",
-   "es": "Tengo doce años"
+   "es": "Tengo doce años",
+   "tema": "to be"
   },
   {
    "en": "We eat dinner at eight",
-   "es": "Cenamos a las ocho"
+   "es": "Cenamos a las ocho",
+   "tema": "presente simple"
   },
   {
    "en": "The children are happy",
-   "es": "Los niños están felices"
+   "es": "Los niños están felices",
+   "tema": "to be"
   },
   {
    "en": "He doesn't like cold weather",
-   "es": "A él no le gusta el clima frío"
+   "es": "A él no le gusta el clima frío",
+   "tema": "presente simple"
   },
   {
    "en": "My sister has long hair",
-   "es": "Mi hermana tiene el cabello largo"
+   "es": "Mi hermana tiene el cabello largo",
+   "tema": "presente simple"
   },
   {
    "en": "I go to school by bike",
-   "es": "Voy a la escuela en bicicleta"
+   "es": "Voy a la escuela en bicicleta",
+   "tema": "presente simple"
   },
   {
    "en": "It is hot in summer",
-   "es": "Hace calor en verano"
+   "es": "Hace calor en verano",
+   "tema": "to be"
   },
   {
    "en": "The book is on the table",
-   "es": "El libro está sobre la mesa"
+   "es": "El libro está sobre la mesa",
+   "tema": "to be"
   },
   {
    "en": "My grandmother makes delicious tamales",
-   "es": "Mi abuela hace tamales deliciosos"
+   "es": "Mi abuela hace tamales deliciosos",
+   "tema": "presente simple"
   },
   {
    "en": "They watch TV on Sundays",
-   "es": "Ellos ven la tele los domingos"
+   "es": "Ellos ven la tele los domingos",
+   "tema": "presente simple"
   },
   {
    "en": "I brush my teeth every day",
-   "es": "Me lavo los dientes todos los días"
+   "es": "Me lavo los dientes todos los días",
+   "tema": "presente simple"
   },
   {
    "en": "She is my best friend",
-   "es": "Ella es mi mejor amiga"
+   "es": "Ella es mi mejor amiga",
+   "tema": "to be"
   },
   {
    "en": "We have English class today",
-   "es": "Hoy tenemos clase de inglés"
+   "es": "Hoy tenemos clase de inglés",
+   "tema": "presente simple"
   },
   {
    "en": "The dog runs in the garden",
-   "es": "El perro corre en el jardín"
+   "es": "El perro corre en el jardín",
+   "tema": "presente simple"
   },
   {
    "en": "My favorite color is purple",
-   "es": "Mi color favorito es el morado"
+   "es": "Mi color favorito es el morado",
+   "tema": "to be"
   },
   {
    "en": "I don't have a car",
-   "es": "No tengo carro"
+   "es": "No tengo carro",
+   "tema": "presente simple"
   },
   {
    "en": "Birds can fly",
-   "es": "Los pájaros pueden volar"
+   "es": "Los pájaros pueden volar",
+   "tema": "general"
   },
   {
    "en": "My uncle is a doctor",
-   "es": "Mi tío es doctor"
+   "es": "Mi tío es doctor",
+   "tema": "to be"
   },
   {
    "en": "The store opens at nine",
-   "es": "La tienda abre a las nueve"
+   "es": "La tienda abre a las nueve",
+   "tema": "presente simple"
   },
   {
    "en": "I listen to music at night",
-   "es": "Escucho música en la noche"
+   "es": "Escucho música en la noche",
+   "tema": "presente simple"
   },
   {
    "en": "He plays the guitar",
-   "es": "Él toca la guitarra"
+   "es": "Él toca la guitarra",
+   "tema": "presente simple"
   },
   {
    "en": "We visit our grandparents on Saturdays",
-   "es": "Visitamos a nuestros abuelos los sábados"
+   "es": "Visitamos a nuestros abuelos los sábados",
+   "tema": "presente simple"
   },
   {
    "en": "There is a cat on the roof",
-   "es": "Hay un gato en el techo"
+   "es": "Hay un gato en el techo",
+   "tema": "general"
   },
   {
    "en": "My bedroom is small",
-   "es": "Mi recámara es pequeña"
+   "es": "Mi recámara es pequeña",
+   "tema": "to be"
   },
   {
    "en": "She cooks rice and beans",
-   "es": "Ella cocina arroz y frijoles"
+   "es": "Ella cocina arroz y frijoles",
+   "tema": "presente simple"
   },
   {
    "en": "The train is very fast",
-   "es": "El tren es muy rápido"
+   "es": "El tren es muy rápido",
+   "tema": "to be"
   },
   {
    "en": "I want a glass of water",
-   "es": "Quiero un vaso de agua"
+   "es": "Quiero un vaso de agua",
+   "tema": "presente simple"
   },
   {
    "en": "Today is Monday",
-   "es": "Hoy es lunes"
+   "es": "Hoy es lunes",
+   "tema": "to be"
   },
   {
    "en": "My birthday is in April",
-   "es": "Mi cumpleaños es en abril"
+   "es": "Mi cumpleaños es en abril",
+   "tema": "to be"
   },
   {
    "en": "They speak Spanish and English",
-   "es": "Ellos hablan español e inglés"
+   "es": "Ellos hablan español e inglés",
+   "tema": "presente simple"
   },
   {
    "en": "The baby is sleeping now",
-   "es": "El bebé está durmiendo ahora"
+   "es": "El bebé está durmiendo ahora",
+   "tema": "general"
   },
   {
    "en": "I can swim very well",
-   "es": "Sé nadar muy bien"
+   "es": "Sé nadar muy bien",
+   "tema": "general"
   },
   {
    "en": "My friends are at the beach",
-   "es": "Mis amigos están en la playa"
+   "es": "Mis amigos están en la playa",
+   "tema": "to be"
   },
   {
    "en": "He wears a blue shirt",
-   "es": "Él lleva una camisa azul"
+   "es": "Él lleva una camisa azul",
+   "tema": "presente simple"
   },
   {
    "en": "We need three pencils",
-   "es": "Necesitamos tres lápices"
+   "es": "Necesitamos tres lápices",
+   "tema": "presente simple"
   },
   {
    "en": "The teacher is very kind",
-   "es": "La maestra es muy amable"
+   "es": "La maestra es muy amable",
+   "tema": "to be"
   },
   {
    "en": "It is raining today",
-   "es": "Hoy está lloviendo"
+   "es": "Hoy está lloviendo",
+   "tema": "general"
   },
   {
    "en": "I love my family",
-   "es": "Amo a mi familia"
+   "es": "Amo a mi familia",
+   "tema": "presente simple"
+  },
+  {
+   "en": "The class starts at eight",
+   "es": "La clase empieza a las ocho",
+   "tema": "presente simple"
+  },
+  {
+   "en": "My teacher teaches English",
+   "es": "Mi maestra enseña inglés",
+   "tema": "presente simple"
+  },
+  {
+   "en": "She doesn't wear glasses",
+   "es": "Ella no usa lentes",
+   "tema": "presente simple"
+  },
+  {
+   "en": "We close the windows at night",
+   "es": "Cerramos las ventanas en la noche",
+   "tema": "presente simple"
+  },
+  {
+   "en": "My brother isn't at home",
+   "es": "Mi hermano no está en casa",
+   "tema": "to be"
+  },
+  {
+   "en": "I was at home yesterday",
+   "es": "Ayer estuve en casa",
+   "tema": "to be pasado"
+  },
+  {
+   "en": "We were very tired last night",
+   "es": "Anoche estábamos muy cansados",
+   "tema": "to be pasado"
+  },
+  {
+   "en": "The movie was very funny",
+   "es": "La película estuvo muy chistosa",
+   "tema": "to be pasado"
+  },
+  {
+   "en": "My grandparents were teachers",
+   "es": "Mis abuelos eran maestros",
+   "tema": "to be pasado"
+  },
+  {
+   "en": "She wasn't at school on Monday",
+   "es": "Ella no estuvo en la escuela el lunes",
+   "tema": "to be pasado"
+  },
+  {
+   "en": "They weren't hungry after lunch",
+   "es": "No tenían hambre después de la comida",
+   "tema": "to be pasado"
+  },
+  {
+   "en": "It was cold last night",
+   "es": "Anoche hizo frío",
+   "tema": "to be pasado"
+  },
+  {
+   "en": "The test was easy",
+   "es": "El examen estuvo fácil",
+   "tema": "to be pasado"
+  },
+  {
+   "en": "I played soccer yesterday",
+   "es": "Ayer jugué futbol",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "She studied English last night",
+   "es": "Ella estudió inglés anoche",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "We went to the beach last summer",
+   "es": "Fuimos a la playa el verano pasado",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "My mom bought new shoes",
+   "es": "Mi mamá compró zapatos nuevos",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "He ate tacos for lunch",
+   "es": "Él comió tacos en la comida",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "They didn't watch the movie",
+   "es": "Ellos no vieron la película",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "I wrote a letter to my grandma",
+   "es": "Le escribí una carta a mi abuela",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "The bus stopped near the school",
+   "es": "El autobús se paró cerca de la escuela",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "We made a cake for dad",
+   "es": "Hicimos un pastel para papá",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "I found my keys under the bed",
+   "es": "Encontré mis llaves debajo de la cama",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "The baby slept all night",
+   "es": "El bebé durmió toda la noche",
+   "tema": "pasado simple"
+  },
+  {
+   "en": "I will call you tomorrow",
+   "es": "Te voy a llamar mañana",
+   "tema": "futuro will"
+  },
+  {
+   "en": "We will visit our grandma on Sunday",
+   "es": "Vamos a visitar a nuestra abuela el domingo",
+   "tema": "futuro will"
+  },
+  {
+   "en": "It will rain this afternoon",
+   "es": "Va a llover en la tarde",
+   "tema": "futuro will"
+  },
+  {
+   "en": "She will sing at the festival",
+   "es": "Ella va a cantar en el festival",
+   "tema": "futuro will"
+  },
+  {
+   "en": "They won't come to the party",
+   "es": "Ellos no van a venir a la fiesta",
+   "tema": "futuro will"
+  },
+  {
+   "en": "The store will open at nine",
+   "es": "La tienda va a abrir a las nueve",
+   "tema": "futuro will"
+  },
+  {
+   "en": "I will finish my homework tonight",
+   "es": "Voy a terminar mi tarea hoy en la noche",
+   "tema": "futuro will"
+  },
+  {
+   "en": "My brother will learn to swim",
+   "es": "Mi hermano va a aprender a nadar",
+   "tema": "futuro will"
+  },
+  {
+   "en": "We will be at school tomorrow",
+   "es": "Mañana vamos a estar en la escuela",
+   "tema": "futuro will"
+  },
+  {
+   "en": "You will like this book",
+   "es": "Te va a gustar este libro",
+   "tema": "futuro will"
   }
  ],
  "preguntas": [
@@ -4546,6 +7131,933 @@
    "correcta": 3,
    "es": "¡Feliz cumpleaños!",
    "tema": "cortesia"
+  },
+  {
+   "pregunta": "Are you a student?",
+   "opciones": [
+    "Yes, I is.",
+    "Yes, I do.",
+    "Yes, I are.",
+    "Yes, I am."
+   ],
+   "correcta": 3,
+   "es": "¿Eres estudiante?",
+   "tema": "to be",
+   "regla": "Respuesta corta con to be: Yes, I am. / No, I'm not."
+  },
+  {
+   "pregunta": "Is your mom a teacher?",
+   "opciones": [
+    "No, she isn't.",
+    "No, she aren't.",
+    "No, she doesn't.",
+    "No, she don't."
+   ],
+   "correcta": 0,
+   "es": "¿Tu mamá es maestra?",
+   "tema": "to be",
+   "regla": "Con she: Yes, she is. / No, she isn't."
+  },
+  {
+   "pregunta": "Where is your school?",
+   "opciones": [
+    "It am near my house.",
+    "It are near my house.",
+    "It near my house.",
+    "It is near my house."
+   ],
+   "correcta": 3,
+   "es": "¿Dónde está tu escuela?",
+   "tema": "to be",
+   "regla": "Con it se usa is: It is near my house."
+  },
+  {
+   "pregunta": "Are your friends at the park?",
+   "opciones": [
+    "Yes, they do.",
+    "Yes, they are.",
+    "Yes, they is.",
+    "Yes, they am."
+   ],
+   "correcta": 1,
+   "es": "¿Tus amigos están en el parque?",
+   "tema": "to be",
+   "regla": "Con they: Yes, they are. / No, they aren't."
+  },
+  {
+   "pregunta": "How are you today?",
+   "opciones": [
+    "I is fine, thanks.",
+    "I be fine, thanks.",
+    "I are fine, thanks.",
+    "I am fine, thanks."
+   ],
+   "correcta": 3,
+   "es": "¿Cómo estás hoy?",
+   "tema": "to be",
+   "regla": "Con I se usa am: I am."
+  },
+  {
+   "pregunta": "Is it hot today?",
+   "opciones": [
+    "Yes, it does.",
+    "Yes, it are.",
+    "Yes, it is.",
+    "Yes, it am."
+   ],
+   "correcta": 2,
+   "es": "¿Hace calor hoy?",
+   "tema": "to be",
+   "regla": "Con it: Yes, it is. / No, it isn't."
+  },
+  {
+   "pregunta": "What color are your eyes?",
+   "opciones": [
+    "They are brown.",
+    "They am brown.",
+    "It are brown.",
+    "They is brown."
+   ],
+   "correcta": 0,
+   "es": "¿De qué color son tus ojos?",
+   "tema": "to be",
+   "regla": "Varias cosas (eyes) → they are."
+  },
+  {
+   "pregunta": "Who is your best friend?",
+   "opciones": [
+    "She be my cousin.",
+    "She am my cousin.",
+    "She is my cousin.",
+    "She are my cousin."
+   ],
+   "correcta": 2,
+   "es": "¿Quién es tu mejor amiga?",
+   "tema": "to be",
+   "regla": "Con she se usa is: She is my cousin."
+  },
+  {
+   "pregunta": "Were you at home yesterday?",
+   "opciones": [
+    "Yes, I was.",
+    "Yes, I am.",
+    "Yes, I were.",
+    "Yes, I did."
+   ],
+   "correcta": 0,
+   "es": "¿Estuviste en casa ayer?",
+   "tema": "to be pasado",
+   "regla": "Respuesta corta: Yes, I was. / No, I wasn't."
+  },
+  {
+   "pregunta": "Was the movie good?",
+   "opciones": [
+    "Yes, it was great.",
+    "Yes, it were great.",
+    "Yes, it is great.",
+    "Yes, it did great."
+   ],
+   "correcta": 0,
+   "es": "¿Estuvo buena la película?",
+   "tema": "to be pasado",
+   "regla": "Con it en pasado: it was."
+  },
+  {
+   "pregunta": "Where were you last night?",
+   "opciones": [
+    "I did at my grandma's house.",
+    "I am at my grandma's house.",
+    "I was at my grandma's house.",
+    "I were at my grandma's house."
+   ],
+   "correcta": 2,
+   "es": "¿Dónde estuviste anoche?",
+   "tema": "to be pasado",
+   "regla": "Con I en pasado: I was."
+  },
+  {
+   "pregunta": "Were your parents at the meeting?",
+   "opciones": [
+    "Yes, they did.",
+    "Yes, they was.",
+    "Yes, they were.",
+    "Yes, they are."
+   ],
+   "correcta": 2,
+   "es": "¿Tus papás estuvieron en la junta?",
+   "tema": "to be pasado",
+   "regla": "Con they en pasado: they were."
+  },
+  {
+   "pregunta": "Was it cold last night?",
+   "opciones": [
+    "No, it weren't.",
+    "No, it isn't.",
+    "No, it wasn't.",
+    "No, it didn't."
+   ],
+   "correcta": 2,
+   "es": "¿Hizo frío anoche?",
+   "tema": "to be pasado",
+   "regla": "Con it en pasado: it was / it wasn't."
+  },
+  {
+   "pregunta": "How was your weekend?",
+   "opciones": [
+    "It was fun.",
+    "It did fun.",
+    "It is fun.",
+    "It were fun."
+   ],
+   "correcta": 0,
+   "es": "¿Cómo estuvo tu fin de semana?",
+   "tema": "to be pasado",
+   "regla": "Con it en pasado: it was."
+  },
+  {
+   "pregunta": "Were you happy on your birthday?",
+   "opciones": [
+    "Yes, I am very happy.",
+    "Yes, I did very happy.",
+    "Yes, I was very happy.",
+    "Yes, I were very happy."
+   ],
+   "correcta": 2,
+   "es": "¿Estuviste feliz en tu cumpleaños?",
+   "tema": "to be pasado",
+   "regla": "Con I en pasado: I was."
+  },
+  {
+   "pregunta": "Was your brother sick last week?",
+   "opciones": [
+    "Yes, he was.",
+    "Yes, he did.",
+    "Yes, he is.",
+    "Yes, he were."
+   ],
+   "correcta": 0,
+   "es": "¿Tu hermano estuvo enfermo la semana pasada?",
+   "tema": "to be pasado",
+   "regla": "Con he en pasado: he was."
+  },
+  {
+   "pregunta": "Do you like tacos?",
+   "opciones": [
+    "Yes, I like.",
+    "Yes, I does.",
+    "Yes, I am.",
+    "Yes, I do."
+   ],
+   "correcta": 3,
+   "es": "¿Te gustan los tacos?",
+   "tema": "presente simple",
+   "regla": "Respuesta corta: Yes, I do. / No, I don't."
+  },
+  {
+   "pregunta": "Does your dad work on Saturdays?",
+   "opciones": [
+    "No, he isn't.",
+    "No, he doesn't.",
+    "No, he don't.",
+    "No, he not works."
+   ],
+   "correcta": 1,
+   "es": "¿Tu papá trabaja los sábados?",
+   "tema": "presente simple",
+   "regla": "Con he / she / it: Yes, he does. / No, he doesn't."
+  },
+  {
+   "pregunta": "What time does the class start?",
+   "opciones": [
+    "It starts at eight.",
+    "It start at eight.",
+    "It is start at eight.",
+    "It starting at eight."
+   ],
+   "correcta": 0,
+   "es": "¿A qué hora empieza la clase?",
+   "tema": "presente simple",
+   "regla": "Con it el verbo lleva -s: it starts."
+  },
+  {
+   "pregunta": "Where does your grandma live?",
+   "opciones": [
+    "She lives in Oaxaca.",
+    "She live in Oaxaca.",
+    "She living in Oaxaca.",
+    "She is live in Oaxaca."
+   ],
+   "correcta": 0,
+   "es": "¿Dónde vive tu abuela?",
+   "tema": "presente simple",
+   "regla": "Con she el verbo lleva -s: she lives."
+  },
+  {
+   "pregunta": "Does your sister swim?",
+   "opciones": [
+    "Yes, she is.",
+    "Yes, she does.",
+    "Yes, she swim.",
+    "Yes, she do."
+   ],
+   "correcta": 1,
+   "es": "¿Tu hermana nada?",
+   "tema": "presente simple",
+   "regla": "Con she: Yes, she does. / No, she doesn't."
+  },
+  {
+   "pregunta": "What do you do after school?",
+   "opciones": [
+    "I does my homework.",
+    "I am do my homework.",
+    "I do my homework.",
+    "I doing my homework."
+   ],
+   "correcta": 2,
+   "es": "¿Qué haces después de la escuela?",
+   "tema": "presente simple",
+   "regla": "Con I / you / we / they el verbo va sin -s."
+  },
+  {
+   "pregunta": "Do your friends play video games?",
+   "opciones": [
+    "Yes, they plays.",
+    "Yes, they are.",
+    "Yes, they does.",
+    "Yes, they do."
+   ],
+   "correcta": 3,
+   "es": "¿Tus amigos juegan videojuegos?",
+   "tema": "presente simple",
+   "regla": "Con they: Yes, they do. / No, they don't."
+  },
+  {
+   "pregunta": "What does your mom teach?",
+   "opciones": [
+    "She teaches science.",
+    "She teachs science.",
+    "She is teach science.",
+    "She teach science."
+   ],
+   "correcta": 0,
+   "es": "¿Qué enseña tu mamá?",
+   "tema": "presente simple",
+   "regla": "Con she, teach lleva -es: teaches."
+  },
+  {
+   "pregunta": "Did you go to school yesterday?",
+   "opciones": [
+    "Yes, I did.",
+    "Yes, I do.",
+    "Yes, I goed.",
+    "Yes, I was."
+   ],
+   "correcta": 0,
+   "es": "¿Fuiste a la escuela ayer?",
+   "tema": "pasado simple",
+   "regla": "Respuesta corta en pasado: Yes, I did. / No, I didn't."
+  },
+  {
+   "pregunta": "What did you eat for breakfast?",
+   "opciones": [
+    "I eated eggs and beans.",
+    "I eat eggs and beans.",
+    "I ate eggs and beans.",
+    "I eaten eggs and beans."
+   ],
+   "correcta": 2,
+   "es": "¿Qué desayunaste?",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: eat → ate (se aprende de memoria)."
+  },
+  {
+   "pregunta": "Where did you go last weekend?",
+   "opciones": [
+    "I goed to the park.",
+    "I go to the park.",
+    "I gone to the park.",
+    "I went to the park."
+   ],
+   "correcta": 3,
+   "es": "¿A dónde fuiste el fin de semana pasado?",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: go → went (se aprende de memoria)."
+  },
+  {
+   "pregunta": "Did your sister see the movie?",
+   "opciones": [
+    "No, she wasn't.",
+    "No, she didn't.",
+    "No, she doesn't.",
+    "No, she didn't saw."
+   ],
+   "correcta": 1,
+   "es": "¿Tu hermana vio la película?",
+   "tema": "pasado simple",
+   "regla": "Respuesta corta en pasado: Yes, I did. / No, I didn't."
+  },
+  {
+   "pregunta": "What did you buy at the store?",
+   "opciones": [
+    "I buyed some bread.",
+    "I buys some bread.",
+    "I bought some bread.",
+    "I buy some bread."
+   ],
+   "correcta": 2,
+   "es": "¿Qué compraste en la tienda?",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: buy → bought (se aprende de memoria)."
+  },
+  {
+   "pregunta": "When did you finish your homework?",
+   "opciones": [
+    "I finishing it at seven.",
+    "I finishes it at seven.",
+    "I finish it at seven.",
+    "I finished it at seven."
+   ],
+   "correcta": 3,
+   "es": "¿Cuándo terminaste tu tarea?",
+   "tema": "pasado simple",
+   "regla": "Pasado regular: finish → finished (verbo + -ed)."
+  },
+  {
+   "pregunta": "Who did you see at the party?",
+   "opciones": [
+    "I saw my cousins.",
+    "I see my cousins.",
+    "I seed my cousins.",
+    "I seen my cousins."
+   ],
+   "correcta": 0,
+   "es": "¿A quién viste en la fiesta?",
+   "tema": "pasado simple",
+   "regla": "Pasado irregular: see → saw (se aprende de memoria)."
+  },
+  {
+   "pregunta": "Did they play soccer last Sunday?",
+   "opciones": [
+    "Yes, they do.",
+    "Yes, they does.",
+    "Yes, they did.",
+    "Yes, they were."
+   ],
+   "correcta": 2,
+   "es": "¿Ellos jugaron futbol el domingo pasado?",
+   "tema": "pasado simple",
+   "regla": "Respuesta corta en pasado: Yes, I did. / No, I didn't."
+  },
+  {
+   "pregunta": "Will you come to my party?",
+   "opciones": [
+    "Yes, I will.",
+    "Yes, I am.",
+    "Yes, I do.",
+    "Yes, I did."
+   ],
+   "correcta": 0,
+   "es": "¿Vas a venir a mi fiesta?",
+   "tema": "futuro will",
+   "regla": "Respuesta corta: Yes, I will. / No, I won't."
+  },
+  {
+   "pregunta": "What will you do tomorrow?",
+   "opciones": [
+    "I visit will my grandma.",
+    "I will visit my grandma.",
+    "I will visited my grandma.",
+    "I will visits my grandma."
+   ],
+   "correcta": 1,
+   "es": "¿Qué vas a hacer mañana?",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "pregunta": "Will it rain tomorrow?",
+   "opciones": [
+    "No, it isn't.",
+    "No, it doesn't.",
+    "No, it didn't.",
+    "No, it won't."
+   ],
+   "correcta": 3,
+   "es": "¿Va a llover mañana?",
+   "tema": "futuro will",
+   "regla": "Respuesta corta: Yes, I will. / No, I won't."
+  },
+  {
+   "pregunta": "Where will you go on vacation?",
+   "opciones": [
+    "I will going to the beach.",
+    "I will went to the beach.",
+    "I will go to the beach.",
+    "I will goes to the beach."
+   ],
+   "correcta": 2,
+   "es": "¿A dónde vas a ir de vacaciones?",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "pregunta": "Will your brother help us?",
+   "opciones": [
+    "Yes, he is.",
+    "Yes, he wills.",
+    "Yes, he does.",
+    "Yes, he will."
+   ],
+   "correcta": 3,
+   "es": "¿Tu hermano nos va a ayudar?",
+   "tema": "futuro will",
+   "regla": "Will no cambia con he / she / it: Yes, he will."
+  },
+  {
+   "pregunta": "What time will the movie start?",
+   "opciones": [
+    "It starts will at six.",
+    "It will start at six.",
+    "It will started at six.",
+    "It will starts at six."
+   ],
+   "correcta": 1,
+   "es": "¿A qué hora va a empezar la película?",
+   "tema": "futuro will",
+   "regla": "Después de will el verbo va en forma base: will play."
+  },
+  {
+   "pregunta": "Will you be at school tomorrow?",
+   "opciones": [
+    "Yes, I will is there.",
+    "Yes, I am be there.",
+    "Yes, I will be there.",
+    "Yes, I will am there."
+   ],
+   "correcta": 2,
+   "es": "¿Vas a estar en la escuela mañana?",
+   "tema": "futuro will",
+   "regla": "Futuro de to be: will be (nunca will is ni will are)."
+  },
+  {
+   "pregunta": "Will they finish the project today?",
+   "opciones": [
+    "No, they won't.",
+    "No, they don't.",
+    "No, they aren't.",
+    "No, they willn't."
+   ],
+   "correcta": 0,
+   "es": "¿Van a terminar el proyecto hoy?",
+   "tema": "futuro will",
+   "regla": "Negativo del futuro: won't (will not) + verbo base."
+  }
+ ],
+ "tiempos": [
+  {
+   "sujeto": "She",
+   "verbo": "play",
+   "presente": "plays",
+   "pasado": "played",
+   "resto": "soccer with her friends.",
+   "es": "Ella juega futbol con sus amigas.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "I",
+   "verbo": "work",
+   "presente": "work",
+   "pasado": "worked",
+   "resto": "in the garden.",
+   "es": "Trabajo en el jardín.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "We",
+   "verbo": "study",
+   "presente": "study",
+   "pasado": "studied",
+   "resto": "English at school.",
+   "es": "Estudiamos inglés en la escuela.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "The bus",
+   "verbo": "stop",
+   "presente": "stops",
+   "pasado": "stopped",
+   "resto": "near my house.",
+   "es": "El autobús se para cerca de mi casa.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "He",
+   "verbo": "watch",
+   "presente": "watches",
+   "pasado": "watched",
+   "resto": "cartoons on TV.",
+   "es": "Él ve caricaturas en la tele.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "They",
+   "verbo": "open",
+   "presente": "open",
+   "pasado": "opened",
+   "resto": "the store at nine.",
+   "es": "Ellos abren la tienda a las nueve.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "My mom",
+   "verbo": "close",
+   "presente": "closes",
+   "pasado": "closed",
+   "resto": "the windows.",
+   "es": "Mi mamá cierra las ventanas.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "The class",
+   "verbo": "start",
+   "presente": "starts",
+   "pasado": "started",
+   "resto": "at eight.",
+   "es": "La clase empieza a las ocho.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "I",
+   "verbo": "finish",
+   "presente": "finish",
+   "pasado": "finished",
+   "resto": "my homework at six.",
+   "es": "Termino mi tarea a las seis.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "You",
+   "verbo": "learn",
+   "presente": "learn",
+   "pasado": "learned",
+   "resto": "new words in class.",
+   "es": "Aprendes palabras nuevas en clase.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "My dad",
+   "verbo": "cook",
+   "presente": "cooks",
+   "pasado": "cooked",
+   "resto": "rice and beans.",
+   "es": "Mi papá cocina arroz y frijoles.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "The baby",
+   "verbo": "cry",
+   "presente": "cries",
+   "pasado": "cried",
+   "resto": "at night.",
+   "es": "El bebé llora en la noche.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "We",
+   "verbo": "visit",
+   "presente": "visit",
+   "pasado": "visited",
+   "resto": "our grandparents.",
+   "es": "Visitamos a nuestros abuelos.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "She",
+   "verbo": "listen",
+   "presente": "listens",
+   "pasado": "listened",
+   "resto": "to music.",
+   "es": "Ella escucha música.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "It",
+   "verbo": "rain",
+   "presente": "rains",
+   "pasado": "rained",
+   "resto": "a lot in July.",
+   "es": "Llueve mucho en julio.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "My brother",
+   "verbo": "wash",
+   "presente": "washes",
+   "pasado": "washed",
+   "resto": "the dishes.",
+   "es": "Mi hermano lava los trastes.",
+   "tema": "regular"
+  },
+  {
+   "sujeto": "He",
+   "verbo": "go",
+   "presente": "goes",
+   "pasado": "went",
+   "resto": "to the park.",
+   "es": "Él va al parque.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "I",
+   "verbo": "eat",
+   "presente": "eat",
+   "pasado": "ate",
+   "resto": "tacos for lunch.",
+   "es": "Como tacos en la comida.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "She",
+   "verbo": "drink",
+   "presente": "drinks",
+   "pasado": "drank",
+   "resto": "orange juice.",
+   "es": "Ella toma jugo de naranja.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "We",
+   "verbo": "have",
+   "presente": "have",
+   "pasado": "had",
+   "resto": "a math test.",
+   "es": "Tenemos un examen de matemáticas.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "They",
+   "verbo": "see",
+   "presente": "see",
+   "pasado": "saw",
+   "resto": "the stars.",
+   "es": "Ellos ven las estrellas.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "My aunt",
+   "verbo": "buy",
+   "presente": "buys",
+   "pasado": "bought",
+   "resto": "fruit at the market.",
+   "es": "Mi tía compra fruta en el mercado.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "I",
+   "verbo": "make",
+   "presente": "make",
+   "pasado": "made",
+   "resto": "my bed.",
+   "es": "Tiendo mi cama.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "He",
+   "verbo": "do",
+   "presente": "does",
+   "pasado": "did",
+   "resto": "his homework.",
+   "es": "Él hace su tarea.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "You",
+   "verbo": "get",
+   "presente": "get",
+   "pasado": "got",
+   "resto": "good grades.",
+   "es": "Sacas buenas calificaciones.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "She",
+   "verbo": "take",
+   "presente": "takes",
+   "pasado": "took",
+   "resto": "the bus to school.",
+   "es": "Ella toma el autobús a la escuela.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "My friends",
+   "verbo": "come",
+   "presente": "come",
+   "pasado": "came",
+   "resto": "to my house.",
+   "es": "Mis amigos vienen a mi casa.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "I",
+   "verbo": "write",
+   "presente": "write",
+   "pasado": "wrote",
+   "resto": "a letter to my grandma.",
+   "es": "Le escribo una carta a mi abuela.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "He",
+   "verbo": "read",
+   "presente": "reads",
+   "pasado": "read",
+   "resto": "a comic.",
+   "es": "Él lee un cómic.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "The cat",
+   "verbo": "sleep",
+   "presente": "sleeps",
+   "pasado": "slept",
+   "resto": "on my bed.",
+   "es": "El gato duerme en mi cama.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "We",
+   "verbo": "swim",
+   "presente": "swim",
+   "pasado": "swam",
+   "resto": "in the river.",
+   "es": "Nadamos en el río.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "She",
+   "verbo": "sing",
+   "presente": "sings",
+   "pasado": "sang",
+   "resto": "in the choir.",
+   "es": "Ella canta en el coro.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "He",
+   "verbo": "wear",
+   "presente": "wears",
+   "pasado": "wore",
+   "resto": "a red cap.",
+   "es": "Él usa una gorra roja.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "I",
+   "verbo": "find",
+   "presente": "find",
+   "pasado": "found",
+   "resto": "coins in the sofa.",
+   "es": "Encuentro monedas en el sillón.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "Our teacher",
+   "verbo": "teach",
+   "presente": "teaches",
+   "pasado": "taught",
+   "resto": "us new songs.",
+   "es": "Nuestra maestra nos enseña canciones nuevas.",
+   "tema": "irregular"
+  },
+  {
+   "sujeto": "I",
+   "verbo": "be",
+   "presente": "am",
+   "pasado": "was",
+   "resto": "at home.",
+   "es": "Estoy en casa.",
+   "tema": "to be"
+  },
+  {
+   "sujeto": "She",
+   "verbo": "be",
+   "presente": "is",
+   "pasado": "was",
+   "resto": "very happy.",
+   "es": "Ella está muy feliz.",
+   "tema": "to be"
+  },
+  {
+   "sujeto": "They",
+   "verbo": "be",
+   "presente": "are",
+   "pasado": "were",
+   "resto": "in the park.",
+   "es": "Ellos están en el parque.",
+   "tema": "to be"
+  },
+  {
+   "sujeto": "We",
+   "verbo": "be",
+   "presente": "are",
+   "pasado": "were",
+   "resto": "tired.",
+   "es": "Estamos cansados.",
+   "tema": "to be"
+  },
+  {
+   "sujeto": "It",
+   "verbo": "be",
+   "presente": "is",
+   "pasado": "was",
+   "resto": "very cold.",
+   "es": "Hace mucho frío.",
+   "tema": "to be"
+  },
+  {
+   "sujeto": "The test",
+   "verbo": "be",
+   "presente": "is",
+   "pasado": "was",
+   "resto": "easy.",
+   "es": "El examen está fácil.",
+   "tema": "to be"
+  },
+  {
+   "sujeto": "You",
+   "verbo": "be",
+   "presente": "are",
+   "pasado": "were",
+   "resto": "my best friend.",
+   "es": "Eres mi mejor amigo.",
+   "tema": "to be"
+  },
+  {
+   "sujeto": "My parents",
+   "verbo": "be",
+   "presente": "are",
+   "pasado": "were",
+   "resto": "at work.",
+   "es": "Mis papás están en el trabajo.",
+   "tema": "to be"
+  },
+  {
+   "sujeto": "The store",
+   "verbo": "be",
+   "presente": "is",
+   "pasado": "was",
+   "resto": "closed.",
+   "es": "La tienda está cerrada.",
+   "tema": "to be"
+  },
+  {
+   "sujeto": "He",
+   "verbo": "be",
+   "presente": "is",
+   "pasado": "was",
+   "resto": "at school.",
+   "es": "Él está en la escuela.",
+   "tema": "to be"
   }
  ]
 }
