@@ -10,6 +10,7 @@
   const MESAS = {
     ajedrez: { max: 2, min: 2, bots: 'nunca' },
     brisca: { max: 4, asientos: 4, min: 4, bots: 'siempre' },
+    'cultura-linea': { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
   };
   const de = juego => MESAS[juego] || null;
   // Lugares que ocupan los bots con `humanos` personas: solo en mesas con asientos y si la sala lleva bots.

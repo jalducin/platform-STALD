@@ -36,7 +36,9 @@ Deno.test("fusión: cultura con IA y tecnología (6/6/4 preguntas válidas)", as
   for (const id of ["ia", "tecnologia"]) {
     assert(d.categorias.some((c: any) => c.id === id && c.titulo && c.emoji), "categoría " + id);
     const ps = d.preguntas.filter((p: any) => p.cat === id);
-    assertEquals([1, 2, 3].map((n) => ps.filter((p: any) => p.nivel === n).length), [6, 6, 4], id);
+    // Al menos 6, 6 y 4 (cultura-conocimiento amplió las dos categorías; los mínimos balanceados viven en cultura_datos_test.ts)
+    const porNivel = [1, 2, 3].map((n) => ps.filter((p: any) => p.nivel === n).length);
+    assert(porNivel[0] >= 6 && porNivel[1] >= 6 && porNivel[2] >= 4, id + ": " + porNivel);
     for (const p of ps) {
       assert(p.pregunta && p.dato && p.opciones.length === 4 && new Set(p.opciones).size === 4, p.pregunta);
       assert(Number.isInteger(p.correcta) && p.correcta >= 0 && p.correcta < 4, p.pregunta);

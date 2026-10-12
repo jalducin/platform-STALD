@@ -14,9 +14,13 @@ export const JUEGOS_PARTIDA = new Set([
   "en-vocab", "en-frases", "es-ortografia", "cultura", "mente-calculo", "basta-es", "basta-en", "loteria", "una", "poker", "brisca", "conquian", "ajedrez",
   "en-tiempos", // ⏳ Máquina del tiempo (openspec: juegos-ingles-gramatica)
   "plataformas", "karts", // carreras de Arcade (openspec: juegos-plataformas-karts)
+  "cultura-linea", // cultura-conocimiento: 📜 Línea del tiempo
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
+// cultura-conocimiento: temas de 📜 Línea del tiempo (opciones.cat), igual que LineaTiempo.TEMAS en juegos/linea-tiempo.js.
+export const TEMAS_LINEA = ["todos", "historia-mexico", "historia-universal", "inventos", "ciencia"];
+const RONDAS_LINEA = 5, SUCESOS_MAX_LINEA = 6, MS_MAX_LINEA = 60_000;
 const ACCIONES_POKER = ["retirarse", "pasar", "igualar", "subir", "todo"]; // openspec: poker
 const FICHA_POKER = 5; // la ficha más chica; igual que Cartas.FICHA en juegos/cartas.js (openspec: poker-fichas)
 const ACCIONES_CONQUIAN = ["tomar", "bajar", "descartar", "pasar"]; // openspec: cartas-espanolas
@@ -66,6 +70,7 @@ export interface Mesa { max: number; asientos?: number; min?: number; bots?: "si
 export const MESAS: Record<string, Mesa> = {
   ajedrez: { max: 2, min: 2, bots: "nunca" },
   brisca: { max: 4, asientos: 4, min: 4, bots: "siempre" },
+  "cultura-linea": { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
 };
 const cupo = (juego: string) => MESAS[juego]?.max ?? MAX_JUGADORES;
 const botsFijos = (juego: string) => MESAS[juego]?.bots === "siempre" ? true : MESAS[juego]?.bots === "nunca" ? false : undefined;
@@ -99,7 +104,7 @@ interface EnSala {
   tipo: Jugador["tipo"];
   unido: number;
   avatar?: { emoji: string; color: string };
-  respuestas: Record<string, { correcta: boolean; puntos: number; ms: number }>;
+  respuestas: Record<string, { correcta: boolean; puntos: number; ms: number; aciertos?: number }>; // aciertos: Línea del tiempo
   palabras?: Record<string, string>;
   basta?: number;
   rondasBasta?: Record<string, { palabras: Record<string, string>; basta?: number }>; // Basta por rondas
@@ -256,6 +261,10 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       if (!mapa) return json({ error: "mapa_invalido" }, 400);
       opciones.mapa = mapa;
     }
+    if (juego === "cultura-linea") { // cultura-conocimiento: el tema de la Línea del tiempo va en opciones.cat
+      if (op.cat !== undefined && !TEMAS_LINEA.includes(op.cat as string)) return json({ error: "tema_invalido" }, 400);
+      opciones.cat = (op.cat as string) ?? "todos";
+    }
     if (juego === "en-frases") {
       if (op.tema !== undefined && !TEMAS_INGLES.includes(op.tema as string)) return json({ error: "tema_invalido" }, 400);
       opciones.tema = (op.tema as string) ?? "todo";
@@ -350,6 +359,15 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       } else {
         cambiar = (e) => ({ ...e, palabras: body.palabras !== undefined ? palabras : e.palabras, basta: body.basta === true && !e.basta ? ahora : e.basta });
       }
+    } else if (sala.juego === "cultura-linea") {
+      // cultura-conocimiento: Línea del tiempo — 5 líneas, aciertos 0–6 obligatorios, hasta 60 s, y puntos recortados a
+      // 20 por acierto + 80 si la línea es perfecta.
+      const q = Number(body.q), aciertos = body.aciertos;
+      if (!Number.isInteger(q) || q < 0 || q >= RONDAS_LINEA || typeof body.correcta !== "boolean" || !entero(aciertos, 0, SUCESOS_MAX_LINEA)) return json({ error: "respuesta_invalida" }, 400);
+      const tope = 20 * (aciertos as number) + (body.correcta ? 80 : 0);
+      const puntos = Math.max(0, Math.min(tope, Math.round(Number(body.puntos) || 0)));
+      const ms = Math.max(0, Math.min(MS_MAX_LINEA, Math.round(Number(body.ms) || 0)));
+      cambiar = (e) => e.respuestas[q] ? e : ({ ...e, respuestas: { ...e.respuestas, [q]: { correcta: body.correcta as boolean, puntos, ms, aciertos: aciertos as number } } });
     } else {
       const q = Number(body.q);
       if (!Number.isInteger(q) || q < 0 || q >= PREGUNTAS || typeof body.correcta !== "boolean") return json({ error: "respuesta_invalida" }, 400);
