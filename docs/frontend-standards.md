@@ -208,10 +208,17 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 | Conquián | bot 2.5 s por acción | `botMs` 2.5 s |
 | ¡Una! | bots 2.5 s | `U_BOT_MS` 3 s |
 
-- ¡Una!: `robar` devuelve cuántas cartas llegaron.
-  - Sin mazo ni pila no hay carta «robada» y el turno pasa con el aviso «No quedan cartas para robar».
-  - Si alguien se queda sin cartas que sirvan y sin nada que robar, puede **Pasar**.
-  - La carta robada se marca con 🆕 y el mensaje muestra su nombre.
+- ¡Una!: **robar hasta poder tirar** (cambio `basta-divertida-una-robo`), con `Una.robarHastaPoder` de `juegos/una.js`
+  en individual, en sala (`estadoUna`) y para los bots.
+  - Roba del mazo hasta la primera carta que sí sirve; esa queda marcada con 🆕 y se puede tirar o pasar. Aviso:
+    «Robaste 3 cartas hasta encontrar una que sí puedes tirar» (`Una.avisoRobo`).
+  - Si el mazo se acaba sin una que sirva, el turno pasa («…y se acabó el mazo sin una que sirva»). Para robar **no se
+    rebaraja** el descarte; los castigos (+2, +4 y UNA tarde) sí lo rebarajan, como antes.
+  - Si alguien se queda sin cartas que sirvan y sin mazo, puede **Pasar**.
+  - Las cartas robadas entran una tras otra con la animación `.una-btn.nueva` (`--k` = orden; sin animación con
+    `prefers-reduced-motion`).
+- Basta: `juegos/basta.js` (`Basta.norm`, `dic`, `puntuar`, `conExtras`, `extrasDe`). Las categorías divertidas (hasta
+  2) se eligen al crear la partida o antes de la letra en individual y se suman como columnas normales.
 
 ## Juegos fusionados (cambio `juegos-fusion`)
 

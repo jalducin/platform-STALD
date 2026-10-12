@@ -104,6 +104,9 @@ Sin datos personales. Se sirve junto a `juegos.html`.
     mayúsculas ni acentos, y la ñ cuenta aparte; de aquí salen también los ejemplos y las respuestas de los bots;
   - `soloAceptar{ <categoria>: [...] }` (opcional): palabras de España que valen como respuesta pero nunca se
     muestran (cambio `basta-mexicano`).
+  - Además, en la raíz, `extras[]` `{ id, titulo, emoji, palabras[] }`: las 10 categorías divertidas que se pueden
+    sumar (cambio `basta-divertida-una-robo`). `palabras` es un banco pequeño que sirve de diccionario y de respuestas
+    de los bots. Los ids deben ser iguales a `EXTRAS_BASTA` de `server/salas.ts` (lo revisa `server/basta_una_test.ts`).
 - `loteria.json`: `cartas[]` `{ n, es, en, emoji, verso }`.
   - 54 cartas, con versos originales.
   - "El Ajolote", "El Colibrí" y "El Tlacuache" sustituyen a tres cartas tradicionales poco apropiadas
@@ -198,6 +201,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `canal`: topic secreto de Supabase Realtime; nunca sale en las respuestas. `v`: versión del jugador, sube en
     cada guardado (cambio `salas-realtime`).
   - En Basta por rondas (`opciones.rondas`: 5, 10 o 12), `rondasBasta{ <ronda>: { palabras, basta? } }`.
+    `opciones.extra` (opcional) = ids de las categorías divertidas separados por coma, p. ej. `"pokemon,antojito"`;
+    sus palabras van en `palabras` con el id como clave (cambio `basta-divertida-una-robo`).
     Las letras (sin repetir) y el calendario de rondas salen de la semilla y de las horas de `basta`.
   - Partidas multijugador. Cada jugador escribe solo su archivo y no hay correos.
   - Las salas vencen a las 3 h y se pueden borrar sin afectar el ranking.
