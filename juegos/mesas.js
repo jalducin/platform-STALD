@@ -4,6 +4,7 @@
 //            entra quita un bot (ej. Dominó de 4: 3 personas + 1 bot). Sin asientos, los bots se suman aparte (quiz).
 //   min      mínimo para empezar contando personas y bots.
 //   bots     "siempre" (no se pueden quitar), "nunca" (solo personas) u omitido (lo decide quien crea la sala).
+//   formatos mesa distinta según `opciones.formato` (futbolito-equipos: Futbolito 2v2).
 // La misma tabla vive en server/salas.ts (MESAS); server/mesas_test.ts comprueba que coincidan.
 (function (g) {
   'use strict';
@@ -28,19 +29,24 @@
     'en-memorama': { max: 30, min: 1 },
     'mente-sopa': { max: 30, min: 1 },
     'cultura-linea': { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
-    futbolito: { max: 2, asientos: 2, min: 2 }, // futbolito-billar: 1 vs 1 (con bots, 1 persona + 1 bot)
+    // futbolito-billar: 1 vs 1 (con bots, 1 persona + 1 bot); futbolito-equipos: formato 2v2 de hasta 4
+    futbolito: { max: 2, asientos: 2, min: 2, formatos: { '2v2': { max: 4, asientos: 4, min: 2 } } },
     billar: { max: 2, asientos: 2, min: 2 },
   };
-  const de = juego => MESAS[juego] || null;
+  // futbolito-equipos: con `opciones.formato` la mesa puede cambiar (igual que mesaDe en server/salas.ts).
+  const de = (juego, opciones) => {
+    const m = MESAS[juego] || null, f = m && opciones && opciones.formato && m.formatos ? m.formatos[opciones.formato] : null;
+    return f ? Object.assign({}, m, f) : m;
+  };
   // Lugares que ocupan los bots con `humanos` personas: solo en mesas con asientos y si la sala lleva bots.
-  const botsEnMesa = (juego, humanos, conBots) => {
-    const m = de(juego);
+  const botsEnMesa = (juego, humanos, conBots, opciones) => {
+    const m = de(juego, opciones);
     if (!m || !m.asientos || !conBots || m.bots === 'nunca') return null; // null: regla de siempre (bots aparte)
     return Math.max(0, m.asientos - Math.min(humanos, m.max));
   };
   // Texto corto para la sala de espera: «Mesa de 4 · 3 personas + 1 bot».
-  const textoMesa = (juego, humanos, bots) => {
-    const m = de(juego);
+  const textoMesa = (juego, humanos, bots, opciones) => {
+    const m = de(juego, opciones);
     if (!m) return '';
     const p = (n, uno, varios) => n + ' ' + (n === 1 ? uno : varios);
     const lugar = m.asientos ? 'Mesa de ' + m.asientos : 'Hasta ' + m.max + ' personas';

@@ -265,10 +265,70 @@
   const BONO = { facil: 200, medio: 350, dificil: 500, sala: 350 };
   const puntos = (st, idx, nivel = 'sala') => Math.min(1000, 60 * st.marcador[idx] + (st.fin && st.fin.gana === idx ? BONO[nivel] || 0 : 0));
 
+  /* ---------- Barra activa con histéresis (futbolito-equipos, design.md §2) ----------
+     frente(i) > 0: la pelota está delante de la barra i (hacia donde ataca su equipo). La candidata es la propia con
+     la pelota delante o pegada por detrás hasta `margen`, la de menor frente. Entre margen ALCANCE − 6 y ALCANCE + 6
+     se queda la barra actual (no parpadea cuando la pelota tiembla junto a una barra). */
+  const frente = (st, i) => (BARRAS[i].y - st.pelota.y) * -dir(BARRAS[i].eq);
+  function candidata(st, eq, margen) {
+    let mejor = -1;
+    for (let i = 0; i < BARRAS.length; i++) {
+      if (BARRAS[i].eq !== eq || frente(st, i) < -margen) continue;
+      if (mejor < 0 || frente(st, i) < frente(st, mejor)) mejor = i;
+    }
+    if (mejor >= 0) return mejor;
+    for (let i = 0; i < BARRAS.length; i++) if (BARRAS[i].eq === eq && (mejor < 0 || Math.abs(BARRAS[i].y - st.pelota.y) < Math.abs(BARRAS[mejor].y - st.pelota.y))) mejor = i;
+    return mejor;
+  }
+  function barraActivaCon(st, eq, actual) {
+    if (actual >= 0 && BARRAS[actual] && BARRAS[actual].eq === eq && (candidata(st, eq, ALCANCE + 6) === actual || candidata(st, eq, ALCANCE - 6) === actual)) return actual;
+    return candidata(st, eq, ALCANCE);
+  }
+
+  /* ---------- Sala por equipos (futbolito-equipos, design.md §4) ----------
+     Mismo reparto que server/futbolito.ts (server/futbolito_equipos_test.ts los compara). */
+  const BARRAS_ROL = {
+    0: { adelante: [2, 4], atras: [6, 7], todas: [2, 4, 6, 7] },
+    1: { adelante: [3, 5], atras: [0, 1], todas: [0, 1, 3, 5] },
+  };
+  // asientos: [{ id, bot?, equipo? }] (personas por orden de entrada y luego bots) → [{ eq, rol, barras }].
+  function repartir(asientos) {
+    const cupo = Math.ceil(asientos.length / 2), cuenta = [0, 0], eq = asientos.map(() => undefined);
+    asientos.forEach((a, i) => {
+      if (a.bot || (a.equipo !== 0 && a.equipo !== 1)) return;
+      if (cuenta[a.equipo] < cupo) { eq[i] = a.equipo; cuenta[a.equipo]++; }
+    });
+    asientos.forEach((_, i) => {
+      if (eq[i] !== undefined) return;
+      const e = cuenta[0] <= cuenta[1] ? 0 : 1;
+      eq[i] = e; cuenta[e]++;
+    });
+    return asientos.map((_, i) => {
+      const e = eq[i], miembros = asientos.map((_, k) => k).filter(k => eq[k] === e);
+      const rol = miembros.length === 1 ? 'todas' : miembros.indexOf(i) === 0 ? 'adelante' : 'atras';
+      return { eq: e, rol, barras: BARRAS_ROL[e][rol].slice() };
+    });
+  }
+  // Asiento que maneja la barra i (o -1).
+  const asientoDe = (reparto, i) => reparto.findIndex(l => l.barras.includes(i));
+  // Motor de sala por asientos para Fisica.linea: tira el asiento dueño de la barra con la pelota; rendirse es por
+  // equipo; una jugada con `barra` distinta de la que tiene la pelota no cuenta (valida).
+  function motorSala(reparto) {
+    return {
+      inicial, fin: st => st.fin, aplicar, tiroBot, tiroDe,
+      turno: st => asientoDe(reparto, st.posesion.barra),
+      rendir: (st, asiento) => rendir(st, reparto[asiento].eq),
+      valida: (st, j) => j.barra === undefined || !st.posesion || j.barra === st.posesion.barra,
+      crearSim,
+    };
+  }
+  const puntosAsiento = (st, reparto, asiento) => puntos(st, reparto[asiento].eq, 'sala');
+
   raiz.Futbolito = {
-    ANCHO, LARGO, PX0, PX1, RH, RB, ALCANCE, META, SUB, DT, PATADA, BARRAS, MEDIOS, NIVELES, BONO,
-    dir, xHombre, seguir, barraCercana, barraActiva, nuevo, saque, patear, paso, iaBot,
+    ANCHO, LARGO, PX0, PX1, RH, RB, ALCANCE, META, SUB, DT, PATADA, BARRAS, MEDIOS, NIVELES, BONO, BARRAS_ROL,
+    dir, xHombre, seguir, barraCercana, barraActiva, barraActivaCon, nuevo, saque, patear, paso, iaBot,
     inicial, darPosesion, velocidadTiro, pelotaCon, crearSim, aplicar, rendir, tiroDe, tiroBot, puntos,
+    repartir, asientoDe, motorSala, puntosAsiento,
     turno: st => st.turno, fin: st => st.fin,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
