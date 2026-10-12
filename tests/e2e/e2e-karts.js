@@ -9,6 +9,10 @@
 // con eventos deviceorientation, permiso negado y sin lecturas → joystick. Minimapa con todos los corredores (y los
 // fantasmas en sala) sin encimarse con los mandos, mandos completos a 360×640, 390×844 y 844×390.
 // Capturas en vertical, horizontal y escritorio. Usa ?arcadePrueba=1.
+// Mando clásico (openspec: karts-mando): «🎮 Mando clásico» elegido y recordado, cruceta ◀ con toque real, A acelera
+// con «Con botón», R + ◀ → mini-turbo, X usa el ítem, START pausa y sigue, el teclado de Karts sin cambios, control
+// físico simulado (navigator.getGamepads en addInitScript) con cualquier control elegido, y distribución a 320×640,
+// 390×844 y 844×390, suelto (juegos/karts.html?prueba=1) y dentro de Juegos.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
@@ -30,6 +34,7 @@ function dedos(p) {
   return {
     poner: (id, x, y) => { vivos[id] = { x, y, id }; return enviar('touchStart', Object.values(vivos)); },
     mover: (id, x, y) => { vivos[id] = { x, y, id }; return enviar('touchMove', Object.values(vivos)); },
+    quitar: id => { const t = vivos[id]; delete vivos[id]; return enviar('touchEnd', [t]); }, // touchEnd lleva el dedo que se levanta
     soltarTodo: () => { for (const k in vivos) delete vivos[k]; return enviar('touchEnd', []); },
   };
 }
@@ -50,6 +55,192 @@ async function revisarLayout(fr, nombre) {
 async function correrRapida(fr, pista) {
   await fr.tap('[data-ir="pistas"]'); await fr.tap('[data-ir="rapida:' + pista + '"]');
   await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 400, null, { timeout: 15000 });
+}
+
+// ================= Mando clásico (openspec: karts-mando) =================
+const CON_MANDO = [() => { try { localStorage.setItem('karts_control', 'mando'); } catch { /* nada */ } }];
+// Control físico simulado: cada marco (también el iframe del juego) lee window.__pads.
+const GAMEPAD = [() => {
+  Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: () => window.__pads || [null, null, null, null] });
+  try { localStorage.setItem('karts_acelerar', 'manual'); } catch { /* nada */ }
+}];
+const pad = (presionados = [], ejes = [0, 0, 0, 0]) => ({ id: 'Control de prueba', index: 0, connected: true, mapping: 'standard', axes: ejes, buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: presionados.includes(i), value: presionados.includes(i) ? 1 : 0 })) });
+const abrirSuelto = (b, viewport, init) => abrirPagina(b, { viewport, contexto: TACTIL, init, out, etiqueta: 'karts suelto', ruta: '/juegos/karts.html?prueba=1', esperar: '#ov-menu:not(.hide)' });
+// Medidas (dentro del juego) del mando, la pista, el minimapa y el HUD.
+const medirMando = fr => fr.evaluate(() => {
+  const r = e => { const b = e.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; };
+  const vis = e => { const s = getComputedStyle(e), b = e.getBoundingClientRect(); return b.width > 0 && s.visibility !== 'hidden' && s.display !== 'none'; };
+  const m = document.querySelector('.mando');
+  const ctl = m ? [...m.querySelectorAll('[data-b], .mando-cruceta i[data-dir]')].filter(vis).map(e => Object.assign({ id: e.dataset.b || e.dataset.dir }, r(e))) : [];
+  const hud = ['.hud-izq', '#h-item', '#hud .der'].map(s => document.querySelector(s)).filter(e => e && vis(e)).map(r);
+  return { vw: innerWidth, vh: innerHeight, ctl, visible: !!m && vis(m), pos: m ? getComputedStyle(m).position : '', mando: m ? r(m) : null, mandoAlto: getComputedStyle(document.documentElement).getPropertyValue('--mando-alto').trim(),
+    pantalla: r(document.getElementById('pantalla')), mapa: r(document.getElementById('minimapa')), hud, botones: vis(document.getElementById('mandos')), ancho: document.documentElement.scrollWidth };
+});
+async function revisarMando(fr, nombre) {
+  const m = await medirMando(fr);
+  const ids = m.ctl.map(x => x.id).sort().join(',');
+  ok(nombre + ': se ve el mando (◀ ▶, A, B, X, Y, L, R, START) y no los botones de antes', m.visible && !m.botones && ids === 'A,B,L,R,START,X,Y,der,izq', ids);
+  ok(nombre + ': mando completo dentro de la pantalla, sin desplazamiento horizontal', m.ctl.every(x => dentro(x, m.vw, m.vh)) && m.ancho <= m.vw,
+    JSON.stringify({ vw: m.vw, vh: m.vh, fuera: m.ctl.filter(x => !dentro(x, m.vw, m.vh)).map(x => x.id) }));
+  ok(nombre + ': el minimapa y el HUD no se cruzan con el mando', m.ctl.every(x => !cruza(m.mapa, x) && m.hud.every(h => !cruza(h, x))) && dentro(m.mapa, m.vw, m.vh), JSON.stringify(m.mapa));
+  if (m.pos === 'absolute') {
+    ok(nombre + ': en horizontal va encimado en las esquinas de abajo y --mando-alto = 0', m.mandoAlto === '0px' && m.ctl.every(x => x.b > m.vh * 0.4) && m.ctl.filter(x => ['izq', 'der', 'L'].includes(x.id)).every(x => x.r < m.vw * 0.35) && m.ctl.filter(x => ['A', 'B', 'X', 'Y', 'R'].includes(x.id)).every(x => x.l > m.vw * 0.65), JSON.stringify({ alto: m.mandoAlto, ctl: m.ctl.map(x => x.id + ':' + Math.round(x.l) + ',' + Math.round(x.t)) }));
+  } else {
+    ok(nombre + ': en vertical va debajo de la pista y --mando-alto es su alto', !!m.mando && m.mando.t >= m.pantalla.b - 1 && Math.abs(parseFloat(m.mandoAlto) - (m.mando.b - m.mando.t) - 6) <= 2, JSON.stringify({ alto: m.mandoAlto, mando: m.mando && [Math.round(m.mando.t), Math.round(m.mando.b)], pantalla: Math.round(m.pantalla.b) }));
+  }
+  return m;
+}
+// Mantiene ◀ de la cruceta con un dedo real y revisa que el carro gire.
+async function girarConCruceta(p, fr, nombre) {
+  const a0 = (await estado(fr)).ang, d = dedos(p), c = await centro(fr, '.mando-cruceta .izq');
+  await d.poner(7, c.x, c.y); await sleep(500);
+  const e = await estado(fr); await d.soltarTodo();
+  ok(nombre + ': ◀ de la cruceta (toque real) gira a la izquierda', e.giro === -1 && e.ang < a0 - 0.3, JSON.stringify({ giro: e.giro, antes: r2(a0), despues: r2(e.ang) }));
+}
+
+async function probarMando(b) {
+  // ---- Celular 390×844 dentro de Juegos: elegir el mando, recordarlo y jugar con toques reales ----
+  const cel = await abrir(b, { width: 390, height: 844 }, TACTIL);
+  await cel.tap('[data-juego="karts"]');
+  let fc = await marcoDe(cel);
+  await fc.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  ok('mando: el selector ofrece «🎮 Mando clásico» y por omisión siguen los Botones', /Mando clásico/.test(await fc.textContent('#menu-control').catch(() => '')) && (await fc.getAttribute('[data-control="botones"]', 'aria-pressed')) === 'true');
+  await fc.tap('[data-control="mando"]').catch(() => {}); await fc.tap('[data-acel="manual"]');
+  await cel.screenshot({ path: 'karts-mando-390-menu.png' });
+  await cel.reload(); await cel.waitForSelector('[data-juego="karts"]', { timeout: 60000 });
+  await cel.tap('[data-juego="karts"]');
+  fc = await marcoDe(cel);
+  await fc.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  const pref = await estado(fc);
+  ok('mando: tras recargar sigue elegido «🎮 Mando clásico» (y «Con botón»)', pref.control === 'mando' && pref.acel === 'manual' && (await fc.getAttribute('[data-control="mando"]', 'aria-pressed').catch(() => null)) === 'true', JSON.stringify({ control: pref.control, acel: pref.acel }));
+  await fc.tap('[data-ir="pistas"]'); await fc.tap('[data-ir="rapida:pradera"]');
+  await fc.waitForFunction(() => window.__karts.estado().modo === 'carrera');
+  await sleep(600);
+  ok('mando: tutorial con los botones del mando', (await estado(fc)).tutorial && /R \/ L/.test(await fc.textContent('#tuto')) && /X \/ Y/.test(await fc.textContent('#tuto')), await fc.textContent('#tuto'));
+  await cel.screenshot({ path: 'karts-mando-390-tutorial.png' });
+  await fc.waitForFunction(() => window.__karts.estado().tiempo > 400, null, { timeout: 15000 });
+  await revisarMando(fc, 'mando 390×844 en Juegos');
+  const em = await estado(fc);
+  ok('mando: activo en la carrera', !!em.mando && em.mando.activo && em.mando.visible, JSON.stringify(em.mando));
+  ok('mando: con «Con botón» y sin A el carro no avanza', em.vel < 20 && !em.acelera, JSON.stringify({ vel: em.vel }));
+  const d = dedos(cel);
+  const cA = await centro(fc, '.mando-boton[data-b="A"]');
+  await d.poner(5, cA.x, cA.y); await sleep(1400);
+  const ea = await estado(fc);
+  ok('mando: mantener A (toque real) acelera', ea.acelera && ea.vel > 120, JSON.stringify({ vel: ea.vel }));
+  // Cruceta ◀ con otro dedo, sin soltar A.
+  const cI = await centro(fc, '.mando-cruceta .izq');
+  await d.poner(1, cI.x, cI.y); await sleep(500);
+  const ei = await estado(fc);
+  ok('mando: A + ◀ de la cruceta a la vez: acelera y gira a la izquierda', ei.giro === -1 && ei.ang < ea.ang - 0.3 && ei.acelera, JSON.stringify({ giro: ei.giro, antes: r2(ea.ang), despues: r2(ei.ang) }));
+  await cel.screenshot({ path: 'karts-mando-390-carrera.png' });
+  await d.quitar(1); await sleep(150);
+  const es = await estado(fc); await sleep(250);
+  ok('mando: al soltar ◀ deja de girar', es.giro === 0 && Math.abs((await estado(fc)).ang - es.ang) < 0.03, JSON.stringify({ giro: es.giro }));
+  // R + ◀ por 2.6 s → mini-turbo morado.
+  await sleep(500);
+  const cR = await centro(fc, '.mando-gatillo[data-b="R"]');
+  await d.poner(1, cI.x, cI.y); await d.poner(2, cR.x, cR.y); await sleep(1200);
+  const er = await estado(fc);
+  ok('mando: R + ◀ derrapa', er.derrape && er.giro === -1, JSON.stringify({ derrape: er.derrape, giro: er.giro }));
+  await sleep(1400);
+  await d.quitar(2); await d.quitar(1); await sleep(150);
+  const er2 = await estado(fc);
+  ok('mando: R + ◀ 2.6 s → mini-turbo morado', er2.ultimoTurbo === 'morado', JSON.stringify({ ultimo: er2.ultimoTurbo, vel: er2.vel }));
+  // X usa el ítem.
+  await fc.evaluate(() => window.__karts.darItem && window.__karts.darItem('turbo'));
+  const ex0 = await estado(fc);
+  const cX = await centro(fc, '.mando-boton[data-b="X"]');
+  await d.poner(3, cX.x, cX.y); await sleep(120); await d.quitar(3); await sleep(150);
+  const ex1 = await estado(fc);
+  ok('mando: X usa el ítem 🎁', ex0.item === 'turbo' && ex1.item === null && ex1.turbo > 0, JSON.stringify({ antes: ex0.item, despues: ex1.item, turbo: ex1.turbo }));
+  await d.soltarTodo(); await sleep(100);
+  // START pausa y START otra vez sigue.
+  const cS = await centro(fc, '.mando-pildora[data-b="START"]');
+  await d.poner(4, cS.x, cS.y); await sleep(100); await d.soltarTodo(); await sleep(150);
+  const t0 = (await estado(fc)).tiempo; await sleep(400);
+  ok('mando: START pausa la carrera («⏸ Pausa») y el reloj no corre', (await estado(fc)).modo === 'pausa' && await fc.isVisible('#ov-pausa') && (await estado(fc)).tiempo === t0);
+  await cel.screenshot({ path: 'karts-mando-390-pausa.png' });
+  await d.poner(4, cS.x, cS.y); await sleep(100); await d.soltarTodo(); await sleep(150);
+  ok('mando: START otra vez sigue la carrera', (await estado(fc)).modo === 'carrera');
+  // El teclado de Karts sigue igual con el mando elegido: P pausa una sola vez.
+  await fc.focus('canvas').catch(() => {});
+  await fc.evaluate(() => document.activeElement && document.activeElement.blur && document.activeElement.blur());
+  await cel.keyboard.press('KeyP'); await sleep(250);
+  ok('mando: con el mando elegido, P del teclado pausa (una sola vez)', (await estado(fc)).modo === 'pausa');
+  await cel.keyboard.press('KeyP'); await sleep(150);
+  await cel.keyboard.down('ArrowRight'); await sleep(300);
+  ok('mando: con el mando elegido, → del teclado gira a la derecha', (await estado(fc)).giro === 1);
+  await cel.keyboard.up('ArrowRight');
+  await cel.context().close();
+
+  // ---- Distribución a 320×640, 390×844 y 844×390, dentro de Juegos y suelto ----
+  for (const [w, h] of [[320, 640], [390, 844], [844, 390]]) {
+    for (const suelto of [false, true]) {
+      const nombre = `mando ${w}×${h} ${suelto ? 'suelto' : 'en Juegos'}`;
+      let q, f;
+      if (suelto) { q = await abrirSuelto(b, { width: w, height: h }, CON_MANDO); f = q.mainFrame(); }
+      else {
+        q = await abrir(b, { width: w, height: h }, TACTIL, CON_MANDO);
+        await q.tap('[data-juego="karts"]');
+        f = await marcoDe(q);
+        await f.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+      }
+      if (w > h) ok(nombre + ': en el menú no se ve el mando (no tapa los botones)', !(await medirMando(f)).visible);
+      await correrRapida(f, 'volcan');
+      await revisarMando(f, nombre);
+      await girarConCruceta(q, f, nombre);
+      await q.screenshot({ path: `karts-mando-${w}x${h}-${suelto ? 'suelto' : 'juegos'}.png` });
+      await q.context().close();
+    }
+  }
+
+  // ---- Casos de error: valor desconocido y sin localStorage (modo privado) → Botones, sin errores de JS ----
+  const raro = [() => { try { localStorage.setItem('karts_control', 'volante-magico'); } catch { /* nada */ } }];
+  const privado = [() => { Object.defineProperty(window, 'localStorage', { configurable: true, get() { throw new Error('almacenamiento bloqueado'); } }); }];
+  for (const [nombre, init] of [['valor desconocido en karts_control', raro], ['sin localStorage (modo privado)', privado]]) {
+    const q = await abrirSuelto(b, { width: 390, height: 844 }, init);
+    const f = q.mainFrame();
+    const e = await estado(f);
+    ok(`mando: ${nombre} → Botones y sin mando`, e.control === 'botones' && !(await medirMando(f)).visible, JSON.stringify({ control: e.control }));
+    await f.tap('[data-control="mando"]');
+    ok(`mando: ${nombre} → se puede elegir «🎮 Mando clásico»`, (await estado(f)).control === 'mando' && (await medirMando(f)).visible);
+    await q.context().close();
+  }
+
+  // ---- Control físico simulado (PC, con «Botones» por omisión y «Con botón») ----
+  const pg = await abrir(b, { width: 1280, height: 800 }, undefined, GAMEPAD);
+  await pg.click('[data-juego="karts"]');
+  const fg = await marcoDe(pg);
+  await fg.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  await fg.click('[data-ir="pistas"]'); await fg.click('[data-ir="rapida:pradera"]');
+  await fg.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 400, null, { timeout: 15000 });
+  const g0 = await estado(fg);
+  ok('control físico: Karts abre con «Botones» y «Con botón»', g0.control === 'botones' && g0.acel === 'manual', JSON.stringify({ control: g0.control, acel: g0.acel }));
+  await fg.evaluate(v => { window.__pads = [v, null, null, null]; }, pad());
+  await sleep(400);
+  ok('control físico: aviso «🎮 Control conectado»', (await fg.textContent('.mando-aviso').catch(() => '')).includes('🎮 Control conectado'));
+  await fg.evaluate(v => { window.__pads = [v]; }, pad([0]));
+  await sleep(1300);
+  const g1 = await estado(fg);
+  ok('control físico: el botón de abajo (A) acelera', g1.acelera && g1.vel > 100, JSON.stringify({ vel: g1.vel }));
+  await pg.screenshot({ path: 'karts-mando-control-fisico.png' });
+  await fg.evaluate(v => { window.__pads = [v]; }, pad([0], [-0.45, 0, 0, 0]));
+  await sleep(150);
+  const g2 = await estado(fg);
+  await fg.evaluate(v => { window.__pads = [v]; }, pad([0], [-1, 0, 0, 0]));
+  await sleep(150);
+  const g3 = await estado(fg);
+  ok('control físico: la palanca gira en proporción (poco con poca inclinación, todo con toda)', g2.giro < -0.15 && g2.giro > -0.6 && r2(g3.giro) === -1, JSON.stringify({ poca: r2(g2.giro), toda: r2(g3.giro) }));
+  await fg.evaluate(v => { window.__pads = [v]; }, pad([9]));
+  await sleep(150);
+  ok('control físico: Start pausa', (await estado(fg)).modo === 'pausa');
+  await fg.evaluate(v => { window.__pads = [v]; }, pad());
+  await sleep(100);
+  await fg.evaluate(v => { window.__pads = [v]; }, pad([9]));
+  await sleep(150);
+  ok('control físico: Start otra vez sigue', (await estado(fg)).modo === 'carrera');
+  await pg.context().close();
 }
 
 (async () => {
@@ -314,6 +505,9 @@ async function correrRapida(fr, pista) {
   ok('una vuelta completa recorriendo la pista en 3D', ev.vuelta >= Math.max(1, vIni + 1) && !ev.fuera, JSON.stringify({ vuelta: ev.vuelta, t: ev.tiempo, pos: ev.pos }));
   await escr.screenshot({ path: 'karts-escritorio-vuelta.png' });
   await escr.context().close();
+
+  // ---- Mando clásico (openspec: karts-mando) ----
+  await probarMando(b);
 
   // ---- Partida en sala con bots fantasma ----
   const vAntes = (await progreso()).v;
