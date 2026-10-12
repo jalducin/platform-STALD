@@ -17,9 +17,9 @@
 
 ## 4. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
-- [ ] 4.1 Captura a 390 px revisada; en producción, la página publicada trae «· N puntos»
+- [x] 4.1 Captura a 390 px revisada; en producción, la página publicada trae «· N puntos»
 
 ## 5. Documentación técnica (OBLIGATORIO)
 
 - [x] 5.1 `docs/frontend-standards.md` (formato del mejor puntaje)
-- [ ] 5.2 PR, CI, merge y archivo
+- [x] 5.2 PR, CI, merge y archivo
