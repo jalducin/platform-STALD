@@ -23,35 +23,46 @@ const dur = ms => ms * TIEMPO;
 async function preguntasPartida(juego, seed, opciones) {
   if (juego === 'cultura-linea') return lineasDeSala(seed, opciones); // cultura-conocimiento: 5 líneas del tiempo
   const rnd = rngDe(seed, 'preguntas');
-  const d = juego.startsWith('en-') ? await datos('ingles') : juego.startsWith('es-') ? await datos('espanol') : juego === 'cultura' ? await datos('cultura') : null;
+  let d = null; // los de Mente no usan datos
+  if (juego.startsWith('en-')) d = await datos('ingles');
+  else if (juego.startsWith('es-')) d = await datos('espanol');
+  else if (juego === 'cultura') d = await datos('cultura');
   const lista = [];
-  if (juego === 'en-vocab') for (const w of tomar(d.vocabulario, P_N, rnd)) {
+  // Ayudantes: opción múltiple (la correcta y las demás como distractores), sinónimo/antónimo y la regla de la pregunta.
+  const deOpciones = (base, f) => conOpciones(base, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd);
+  const deSinonimo = f => conOpciones({ big: f.tipo === 'sinónimo' ? '🟰' : '↔️', q: '«' + f.palabra + '»', sub: 'Elige el ' + f.tipo }, f.respuesta, f.distractores, rnd);
+  const conRegla = f => (f.regla ? 'Regla: ' + f.regla : '');
+  const deVocab = w => {
     const dis = tomar(d.vocabulario.filter(x => x.en !== w.en && x.tema === w.tema), 2, rnd).concat(tomar(d.vocabulario.filter(x => x.tema !== w.tema), 3, rnd)).map(x => x.en).filter((v, k, a) => a.indexOf(v) === k).slice(0, 3);
-    lista.push(conOpciones({ big: w.emoji, q: w.es, sub: '¿Cómo se dice en inglés?' }, w.en, dis, rnd));
-  }
-  if (juego === 'en-preguntas') for (const f of tomar(d.preguntas, P_N, rnd)) lista.push(conOpciones({ big: '💬', q: f.pregunta, sub: f.es }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd));
+    return conOpciones({ big: w.emoji, q: w.es, sub: '¿Cómo se dice en inglés?' }, w.en, dis, rnd);
+  };
+  const ortografia = () => {
+    for (const [t, n] of [['ortografia', 4], ['acentos', 3]]) for (const f of tomar(d[t], n, rnd))
+      lista.push(deOpciones({ big: t === 'acentos' ? 'á' : '✍️', q: f.frase, sub: conRegla(f) }, f));
+    for (const f of tomar(poolSinonimos(d), 3, rnd)) lista.push(deSinonimo(f));
+    return barajar(lista, rnd);
+  };
+  // Cultura: 4 fáciles, 4 medias y 2 difíciles de la categoría; si faltan, se completa con las demás.
+  const ordenCultura = () => {
+    const del = d.preguntas.filter(p => !opciones.cat || opciones.cat === 'todas' || p.cat === opciones.cat);
+    const orden = tomar(del.filter(p => p.nivel === 1), 4, rnd).concat(tomar(del.filter(p => p.nivel === 2), 4, rnd), tomar(del.filter(p => p.nivel === 3), 2, rnd));
+    return orden.concat(tomar(del.filter(x => !orden.includes(x)), P_N, rnd)).slice(0, P_N);
+  };
+  if (juego === 'en-vocab') for (const w of tomar(d.vocabulario, P_N, rnd)) lista.push(deVocab(w));
+  if (juego === 'en-preguntas') for (const f of tomar(d.preguntas, P_N, rnd)) lista.push(deOpciones({ big: '💬', q: f.pregunta, sub: f.es }, f));
   // Fusionados (openspec: juegos-fusion): las 10 preguntas se reparten entre sus fuentes.
   // Con tema de la sala y la regla de cada pregunta en la revelación (openspec: juegos-ingles-gramatica).
   if (juego === 'en-frases') return InglesGramatica.preguntasFrasesPartida(d, opciones.tema, rnd, P_N);
   if (juego === 'en-tiempos') return InglesGramatica.preguntasTiempos(d, P_N, rnd);
-  if (juego === 'es-ortografia') {
-    for (const [t, n] of [['ortografia', 4], ['acentos', 3]]) for (const f of tomar(d[t], n, rnd))
-      lista.push(conOpciones({ big: t === 'acentos' ? 'á' : '✍️', q: f.frase, sub: f.regla ? 'Regla: ' + f.regla : '' }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd));
-    for (const f of tomar(poolSinonimos(d), 3, rnd)) lista.push(conOpciones({ big: f.tipo === 'sinónimo' ? '🟰' : '↔️', q: '«' + f.palabra + '»', sub: 'Elige el ' + f.tipo }, f.respuesta, f.distractores, rnd));
-    return barajar(lista, rnd);
-  }
+  if (juego === 'es-ortografia') return ortografia();
   if (juego === 'es-acentos') for (const f of tomar(d.acentos, P_N, rnd))
-    lista.push(conOpciones({ big: 'á', q: f.frase, sub: f.regla ? 'Regla: ' + f.regla : '' }, f.opciones[f.correcta], f.opciones.filter((_, k) => k !== f.correcta), rnd));
+    lista.push(deOpciones({ big: 'á', q: f.frase, sub: conRegla(f) }, f));
   if (juego === 'es-sinonimos') {
     const pool = d.sinonimos.map(x => ({ tipo: 'sinónimo', ...x })).concat(d.antonimos.map(x => ({ tipo: 'antónimo', ...x })));
-    for (const f of tomar(pool, P_N, rnd)) lista.push(conOpciones({ big: f.tipo === 'sinónimo' ? '🟰' : '↔️', q: '«' + f.palabra + '»', sub: 'Elige el ' + f.tipo }, f.respuesta, f.distractores, rnd));
+    for (const f of tomar(pool, P_N, rnd)) lista.push(deSinonimo(f));
   }
-  if (juego === 'cultura') {
-    const del = d.preguntas.filter(p => !opciones.cat || opciones.cat === 'todas' || p.cat === opciones.cat);
-    const orden = tomar(del.filter(p => p.nivel === 1), 4, rnd).concat(tomar(del.filter(p => p.nivel === 2), 4, rnd), tomar(del.filter(p => p.nivel === 3), 2, rnd));
-    for (const p of orden.concat(tomar(del.filter(x => !orden.includes(x)), P_N, rnd)).slice(0, P_N))
-      lista.push(conOpciones({ q: p.pregunta, sub: (d.categorias.find(c => c.id === p.cat) || {}).titulo, dato: p.dato }, p.opciones[p.correcta], p.opciones.filter((_, k) => k !== p.correcta), rnd));
-  }
+  if (juego === 'cultura') for (const p of ordenCultura())
+    lista.push(deOpciones({ q: p.pregunta, sub: (d.categorias.find(c => c.id === p.cat) || {}).titulo, dato: p.dato }, p));
   if (juego === 'mente-calculo') for (let n = 0; n < P_N; n++) lista.push(n % 3 === 2 ? genSecuencia(Math.floor(n / 3) * 2, rnd) : genCalculo(n * 2, rnd));
   if (juego === 'mente-secuencias') for (let n = 0; n < P_N; n++) lista.push(genSecuencia(n, rnd));
   return lista;
@@ -182,7 +193,16 @@ async function entrarSala(codigo) {
   try { history.replaceState(history.state, '', urlConSala(codigo)); } catch (e) { /* sin historial */ }
   modoPartida(true);
   const j = juegoPorId(sala.estado.sala.juego);
-  const preparar = SALAS_GRANDES[sala.estado.sala.juego] ? Promise.resolve(SALAS_GRANDES[sala.estado.sala.juego].preparar()) : /* juegos-salas-grandes */ ['una', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar', 'golf'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+  // Contenido de la sala: salas grandes, juegos sin preguntas, Basta, Lotería o las preguntas con semilla.
+  const prepararContenido = () => {
+    const juego = sala.estado.sala.juego;
+    if (SALAS_GRANDES[juego]) return Promise.resolve(SALAS_GRANDES[juego].preparar()); // juegos-salas-grandes
+    if (['una', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar', 'golf'].includes(juego)) return Promise.resolve(null);
+    if (juego.startsWith('basta')) return datos('basta');
+    if (juego === 'loteria') return datos('loteria');
+    return preguntasPartida(juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+  };
+  const preparar = prepararContenido();
   sala.contenido = await preparar;
   // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
   // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
@@ -198,7 +218,8 @@ async function entrarSala(codigo) {
   const intervalo = () => {
     if (sala.vista === 'final') return sala.rtVivo ? 30000 : 5000; // podio: espera una revancha (openspec: revancha-partidas)
     const esperando = sala.estado && sala.estado.sala.inicio === null;
-    const base = sala.rtVivo ? 30000 : esperando || TIEMPO_REAL.has(sala.estado.sala.juego) ? 2500 : 5000;
+    let base = 30000; // con Realtime
+    if (!sala.rtVivo) base = esperando || TIEMPO_REAL.has(sala.estado.sala.juego) ? 2500 : 5000;
     return fallos ? Math.min(30000, base * Math.pow(2, fallos)) : base;
   };
   const ciclo = () => {
@@ -303,7 +324,8 @@ function totalesPreguntas(hasta) {
 }
 
 function marcadorHtml(filas, yo, max = 6) {
-  return '<ol class="rank">' + filas.slice(0, max).map((f, i) => '<li class="' + (f.id === yo ? 'yo' : '') + '"><span class="pos">' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1) + '</span>' +
+  const medallas = ['🥇', '🥈', '🥉']; // del 4.º lugar en adelante, el número
+  return '<ol class="rank">' + filas.slice(0, max).map((f, i) => '<li class="' + (f.id === yo ? 'yo' : '') + '"><span class="pos">' + (medallas[i] || i + 1) + '</span>' +
     avatarHtml(f.avatar, 28) + '<span class="n">' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' <small>🤖</small>' : '') + (f.ultimo ? ' <small>+' + f.ultimo + '</small>' : '') + '</span><span class="pts">⭐ ' + fmt(f.total) + '</span></li>').join('') + '</ol>';
 }
 
@@ -323,10 +345,10 @@ function pintarPreguntaSala(body) {
     const k = 'q:' + q + ':' + (mia ? 'r' : '');
     if (sala.vista !== k) {
       sala.vista = k;
+      const opcionesHtml = () => '<div class="opts' + (p.opciones.some(o => String(o).length > 18) ? ' una-col' : '') + '">' + p.opciones.map((o, i) => '<button class="opt" data-pq="' + q + '" data-po="' + i + '"><span class="k">' + (i + 1) + '</span>' + escapeHtml(o) + '</button>').join('') + '</div>';
       body.innerHTML = '<div class="muted" style="text-align:center;margin-bottom:6px">Pregunta ' + (q + 1) + ' de ' + P_N + '</div><div class="q-card">' + (p.big ? '<div class="big">' + escapeHtml(p.big) + '</div>' : '') +
         '<div class="q">' + escapeHtml(p.q) + '</div>' + (p.sub ? '<div class="sub">' + escapeHtml(p.sub) + '</div>' : '') + '</div>' +
-        (mia ? '<div class="feedback ok">✔ Respuesta enviada · esperando a los demás…</div>'
-          : '<div class="opts' + (p.opciones.some(o => String(o).length > 18) ? ' una-col' : '') + '">' + p.opciones.map((o, i) => '<button class="opt" data-pq="' + q + '" data-po="' + i + '"><span class="k">' + (i + 1) + '</span>' + escapeHtml(o) + '</button>').join('') + '</div>');
+        (mia ? '<div class="feedback ok">✔ Respuesta enviada · esperando a los demás…</div>' : opcionesHtml());
       sala.inicioQ = s.inicio + q * ciclo;
     }
   } else {
@@ -334,8 +356,10 @@ function pintarPreguntaSala(body) {
     const k = 'rev:' + q + ':' + e.jugadores.map(x => Object.keys(x.respuestas || {}).length).join(',');
     if (sala.vista !== k) {
       sala.vista = k;
+      let feedback = '<div class="feedback bad">⏰ No respondiste</div>';
+      if (mia) feedback = '<div class="feedback ' + (mia.correcta ? 'ok">✔ ¡Bien! +' + mia.puntos : 'bad">✘ Esta vez no') + '</div>';
       body.innerHTML = '<div class="q-card"><div class="q">' + escapeHtml(p.q) + '</div><div class="sub">Respuesta correcta: <b>' + escapeHtml(p.opciones[p.correcta]) + '</b></div>' +
-        (mia ? '<div class="feedback ' + (mia.correcta ? 'ok">✔ ¡Bien! +' + mia.puntos : 'bad">✘ Esta vez no') + '</div>' : '<div class="feedback bad">⏰ No respondiste</div>') +
+        feedback +
         (p.dato ? '<div class="sub">💡 ' + escapeHtml(p.dato) + '</div>' : '') + '</div><h2>🏆 Marcador</h2>' + marcadorHtml(totalesPreguntas(q), e.yo);
     }
   }
@@ -390,8 +414,14 @@ function marcadorBasta(hasta) {
   const e = sala.estado, d = datosBasta(), letras = letrasBasta();
   const ps = participantes();
   const acum = Object.fromEntries(ps.map(p => [p.id, { id: p.id, nombre: p.nombre, tipo: p.bot ? 'bot' : '', avatar: p.avatar, total: 0, ultimo: 0, porRonda: [], aciertos: 0, detalle: {} }]));
+  // Palabras de la ronda r: las del bot, las mías recién enviadas o las que tiene el servidor.
+  const palabrasDe = (p, r) => {
+    if (p.bot) return botBasta(e.sala.seed, p.bot, letras[r], d, r);
+    if (p.id === e.yo && sala.misRondas[r]) return sala.misRondas[r];
+    return ((p.rondasBasta || {})[r] || {}).palabras || {};
+  };
   for (let r = 0; r <= hasta; r++) {
-    const parts = ps.map(p => ({ id: p.id, nombre: p.nombre, palabras: p.bot ? botBasta(e.sala.seed, p.bot, letras[r], d, r) : p.id === e.yo && sala.misRondas[r] ? sala.misRondas[r] : ((p.rondasBasta || {})[r] || {}).palabras || {} }));
+    const parts = ps.map(p => ({ id: p.id, nombre: p.nombre, palabras: palabrasDe(p, r) }));
     for (const x of puntuarBasta(d, letras[r], parts)) {
       const a = acum[x.id]; a.total += x.total; a.ultimo = x.total; a.porRonda[r] = x.total; a.detalle = x.detalle;
       a.aciertos += Object.values(x.detalle).filter(y => y.pts > 0).length;
@@ -422,7 +452,8 @@ function pintarBastaSala(body) {
   }
   sala.rondaActual = r;
   const cab = '<div class="sub">' + (idioma === 'en' ? 'Round ' : 'Ronda ') + (r + 1) + (idioma === 'en' ? ' of ' : ' de ') + n + ' · ' + (idioma === 'en' ? 'Letter' : 'Letra') + '</div><div class="letra">' + escapeHtml(letras[r]) + '</div>';
-  if (ahora < cal[r].cierre) {
+  // Ronda abierta: formulario con la letra y aviso de quién gritó ¡Basta!
+  const pintarEscritura = () => {
     bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cal[r].cierre - ahora) / dur(P_BASTA) * 100) + '%';
     if (sala.vista !== 'basta' + r) {
       sala.vista = 'basta' + r;
@@ -433,26 +464,29 @@ function pintarBastaSala(body) {
     }
     const gritador = e.jugadores.filter(x => ((x.rondasBasta || {})[r] || {}).basta).sort((a, b) => a.rondasBasta[r].basta - b.rondasBasta[r].basta)[0];
     if (gritador) { const a = document.getElementById('pb-aviso'); if (a) { a.textContent = '✋ ¡' + gritador.nombre + ' gritó BASTA! Cierra en ' + Math.max(0, Math.ceil((cal[r].cierre - ahora) / 1000 / TIEMPO)) + ' s'; a.style.color = 'var(--bad)'; } }
-    return;
-  }
+  };
   // Pausa: resultados de la ronda y marcador acumulado; luego sigue sola la siguiente letra.
-  bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cal[r].cierre + dur(P_PAUSA) - ahora) / dur(P_PAUSA) * 100) + '%';
-  const lista = rondaLista(r, cal);
-  const k = 'res' + r + ':' + (lista ? e.jugadores.filter(x => (x.rondasBasta || {})[r]).length : 'esperando');
-  if (sala.vista !== k) {
-    sala.vista = k;
-    if (!lista) { body.innerHTML = '<div class="q-card">' + cab + '<div class="big">✋</div><div class="sub">Juntando las palabras de todos…</div></div>'; }
-    else {
-      const filas = marcadorBasta(r);
-      const mio = filas.find(f => f.id === e.yo);
-      body.innerHTML = '<div class="q-card">' + cab + '<div class="sub">' + (mio ? '+' + mio.ultimo + ' en esta ronda' : '') + ' · <span id="pb-sig"></span></div></div>' +
-        (mio ? '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
-          d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>' : '') +
-        '<h2>📊 Marcador acumulado</h2>' + marcadorHtml(filas, e.yo, 28);
+  const pintarPausa = () => {
+    bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cal[r].cierre + dur(P_PAUSA) - ahora) / dur(P_PAUSA) * 100) + '%';
+    const lista = rondaLista(r, cal);
+    const k = 'res' + r + ':' + (lista ? e.jugadores.filter(x => (x.rondasBasta || {})[r]).length : 'esperando');
+    if (sala.vista !== k) {
+      sala.vista = k;
+      if (!lista) { body.innerHTML = '<div class="q-card">' + cab + '<div class="big">✋</div><div class="sub">Juntando las palabras de todos…</div></div>'; }
+      else {
+        const filas = marcadorBasta(r);
+        const mio = filas.find(f => f.id === e.yo);
+        body.innerHTML = '<div class="q-card">' + cab + '<div class="sub">' + (mio ? '+' + mio.ultimo + ' en esta ronda' : '') + ' · <span id="pb-sig"></span></div></div>' +
+          (mio ? '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
+            d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>' : '') +
+          '<h2>📊 Marcador acumulado</h2>' + marcadorHtml(filas, e.yo, 28);
+      }
     }
-  }
-  const sig = document.getElementById('pb-sig');
-  if (sig) sig.textContent = 'Siguiente letra en ' + Math.max(0, Math.ceil((cal[r].cierre + dur(P_PAUSA) - ahora) / 1000 / TIEMPO)) + ' s';
+    const sig = document.getElementById('pb-sig');
+    if (sig) sig.textContent = 'Siguiente letra en ' + Math.max(0, Math.ceil((cal[r].cierre + dur(P_PAUSA) - ahora) / 1000 / TIEMPO)) + ' s';
+  };
+  if (ahora < cal[r].cierre) pintarEscritura();
+  else pintarPausa();
 }
 
 function pintarFinalSala(body, todas, basta, titulo) {
@@ -464,10 +498,11 @@ function pintarFinalSala(body, todas, basta, titulo) {
   document.getElementById('m-bar').hidden = true;
   const e = sala.estado; const juego = e.sala.juego;
   const mio = filas.find(f => f.id === e.yo);
-  const detalle = basta && basta.porRonda && mio ? '<h2>🔤 Tus puntos por ronda</h2><div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Ronda</th><th>Letra</th><th>Pts</th></tr></thead><tbody>' +
-    basta.letras.map((l, i) => '<tr><td>' + (i + 1) + '</td><td><b>' + escapeHtml(l) + '</b></td><td>' + (mio.porRonda[i] || 0) + '</td></tr>').join('') + '</tbody></table></div>'
-    : basta && mio ? '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
-    basta.d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>' : '';
+  let detalle = ''; // Basta: mis puntos por ronda o, en una sola ronda, por categoría
+  if (basta && basta.porRonda && mio) detalle = '<h2>🔤 Tus puntos por ronda</h2><div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Ronda</th><th>Letra</th><th>Pts</th></tr></thead><tbody>' +
+    basta.letras.map((l, i) => '<tr><td>' + (i + 1) + '</td><td><b>' + escapeHtml(l) + '</b></td><td>' + (mio.porRonda[i] || 0) + '</td></tr>').join('') + '</tbody></table></div>';
+  else if (basta && mio) detalle = '<div class="scroll-x"><table class="inv basta-res"><thead><tr><th>Categoría</th><th>Tu palabra</th><th></th><th>Pts</th></tr></thead><tbody>' +
+    basta.d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>';
   body.innerHTML = '<div class="card result"><div style="font-size:2.4rem">🏆</div><h1>' + escapeHtml(titulo || '¡Fin de la partida!') + '</h1>' +
     (mio ? '<div class="score">' + fmt(mio.total) + '</div><div class="muted">tus puntos · lugar ' + (filas.indexOf(mio) + 1) + ' de ' + filas.length + '</div>' : '') +
     '<div id="p-guardado" class="muted" style="margin-top:8px"></div><div id="p-revancha"></div></div><h2>🥇 Podio</h2>' + marcadorHtml(filas, e.yo, 30) + detalle + resumenFallosSala(sala, P_N) +
@@ -478,8 +513,20 @@ function pintarFinalSala(body, todas, basta, titulo) {
     sala.guardado = true;
     // Registro de la partida para el admin: total final de cada quien y, del anfitrión, el podio con bots.
     post('/juegos/sala/' + sala.codigo + '/respuesta', { final: mio.total, ...(e.soyHost ? { podio: filas.map(f => ({ nombre: f.nombre, total: f.total, ...(f.tipo === 'bot' ? { bot: true } : {}) })) } : {}) });
-    const n = sala.finTotal !== undefined ? sala.finTotal : basta ? basta.d.categorias.length : juego === 'loteria' ? 16 : P_N;
-    const aciertos = sala.finAciertos !== undefined ? sala.finAciertos : juego === 'loteria' ? (sala.aciertosLoteria || 0) : basta ? Object.values(mio.detalle).filter(x => x.pts > 0).length : Object.values((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {}).filter(x => x.correcta).length;
+    // Total de la partida y mis aciertos: los que dejó el juego o, si no, según el tipo (Basta, Lotería o preguntas).
+    const totalFinal = () => {
+      if (sala.finTotal !== undefined) return sala.finTotal;
+      if (basta) return basta.d.categorias.length;
+      return juego === 'loteria' ? 16 : P_N;
+    };
+    const aciertosFinal = () => {
+      if (sala.finAciertos !== undefined) return sala.finAciertos;
+      if (juego === 'loteria') return sala.aciertosLoteria || 0;
+      if (basta) return Object.values(mio.detalle).filter(x => x.pts > 0).length;
+      return Object.values((e.jugadores.find(x => x.id === e.yo) || {}).respuestas || {}).filter(x => x.correcta).length;
+    };
+    const n = totalFinal();
+    const aciertos = aciertosFinal();
     post('/juegos/partida', { juego, puntos: mio.total, aciertos, total: n, segundos: 0, sala: sala.codigo }).then(r => {
       const g = document.getElementById('p-guardado');
       if (r.ok) { state.totalIndividual = r.body.totalIndividual; state.totalPartidas = r.body.totalPartidas; state.posPartidas = r.body.pos; state.mejores[juego] = r.body.mejor; pintarChip(); if (g) g.textContent = '✔ +' + fmt(r.body.puntos) + ' a tus puntos de partidas · 👥 ' + fmt(r.body.totalPartidas) + ' en la semana (#' + r.body.pos + ')'; }
@@ -533,7 +580,19 @@ async function ofrecerRevancha(codigo) {
 
 async function crearPartida() {
   const juego = document.getElementById('p-juego').value;
-  const opciones = juego === 'en-frases' ? { tema: document.getElementById('p-tema').value } : juego === 'cultura' ? { cat: document.getElementById('p-cat').value } : juego === 'cultura-linea' ? { cat: document.getElementById('p-ltema').value } : juego === 'loteria' ? { modo: document.getElementById('p-modo').value } : juego.startsWith('basta') ? { rondas: document.getElementById('p-rondas').value, extra: [...document.querySelectorAll('[data-pextra]:checked')].map(x => x.dataset.pextra) } : juego === 'poker' ? (document.getElementById('p-equipos').checked ? { equipos: '1' } : {}) : juego === 'ajedrez' ? { reloj: document.getElementById('p-reloj').value } : ARCADE.has(juego) && document.getElementById('p-mapa').value ? { mapa: document.getElementById('p-mapa').value } : {};
+  const valor = id => document.getElementById(id).value;
+  // Opciones del formulario que aplican al juego elegido.
+  const opcionesDelJuego = () => {
+    if (juego === 'en-frases') return { tema: valor('p-tema') };
+    if (juego === 'cultura') return { cat: valor('p-cat') };
+    if (juego === 'cultura-linea') return { cat: valor('p-ltema') };
+    if (juego === 'loteria') return { modo: valor('p-modo') };
+    if (juego.startsWith('basta')) return { rondas: valor('p-rondas'), extra: [...document.querySelectorAll('[data-pextra]:checked')].map(x => x.dataset.pextra) };
+    if (juego === 'poker') return document.getElementById('p-equipos').checked ? { equipos: '1' } : {};
+    if (juego === 'ajedrez') return { reloj: valor('p-reloj') };
+    return ARCADE.has(juego) && valor('p-mapa') ? { mapa: valor('p-mapa') } : {};
+  };
+  const opciones = opcionesDelJuego();
   Object.assign(opciones, ClasicosRapidosUI.opcionesCrear(juego)); // clasicos-rapidos: modo del Ahorcado
   Object.assign(opciones, SalasGrandes.opciones(juego)); // juegos-salas-grandes
   if (juego === 'futbolito') opciones.formato = document.getElementById('p-formato').value; // futbolito-equipos

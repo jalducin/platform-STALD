@@ -63,8 +63,11 @@ function icoJuego(j) {
 // ---------- Sesión ----------
 // Foto del avatar (openspec: avatar-foto): si ya no existe, queda el personaje.
 const fotoSrc = av => av.fotoUrl || (API_BASE + '/juegos/foto/' + encodeURIComponent(av.foto));
-const avatarHtml = (av, px = 26) => av ? '<span class="av" style="--avc:' + escapeHtml(av.color) + ';width:' + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * 0.58) + 'px" aria-hidden="true">' +
-  (av.foto || av.fotoUrl ? '<img src="' + escapeHtml(fotoSrc(av)) + '" alt="" data-e="' + escapeHtml(av.emoji) + '" onerror="this.replaceWith(document.createTextNode(this.dataset.e))">' : escapeHtml(av.emoji)) + '</span>' : '';
+const avatarHtml = (av, px = 26) => {
+  if (!av) return '';
+  const cara = av.foto || av.fotoUrl ? '<img src="' + escapeHtml(fotoSrc(av)) + '" alt="" data-e="' + escapeHtml(av.emoji) + '" onerror="this.replaceWith(document.createTextNode(this.dataset.e))">' : escapeHtml(av.emoji);
+  return '<span class="av" style="--avc:' + escapeHtml(av.color) + ';width:' + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * 0.58) + 'px" aria-hidden="true">' + cara + '</span>';
+};
 
 // Recorta al centro y reduce a 128×128 JPEG (≤ 40 KB); el canvas descarta los metadatos.
 async function fotoAvatar(file) {
@@ -134,9 +137,10 @@ function pantallaAvatar() {
     if (gu) {
       if (fotoNueva && !permiso) { avMsg('Marca la casilla de permiso para usar tu foto.'); return; }
       gu.disabled = true;
-      const r = fotoNueva ? await post('/juegos/foto', { imagen: fotoNueva, acepto: true })
-        : sel.foto ? { ok: true, body: { avatar: state.jugador.avatar } } // sin cambios: conserva su foto
-        : await post('/juegos/avatar', { emoji: sel.emoji, color: sel.color });
+      let r;
+      if (fotoNueva) r = await post('/juegos/foto', { imagen: fotoNueva, acepto: true });
+      else if (sel.foto) r = { ok: true, body: { avatar: state.jugador.avatar } }; // sin cambios: conserva su foto
+      else r = await post('/juegos/avatar', { emoji: sel.emoji, color: sel.color });
       if (!r.ok) { document.getElementById('av-msg').innerHTML = '<div class="alert">No se pudo guardar (' + escapeHtml(r.body.error || r.status) + ').</div>'; gu.disabled = false; return; }
       state.jugador.avatar = r.body.avatar; pintarChip(); app.onclick = null; app.onchange = null; app.oninput = null; pantallaHub();
     }

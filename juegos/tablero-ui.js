@@ -58,22 +58,26 @@
     const pos = id => { const f = Damas.fila(id), c = Damas.col(id); return o.abajo === 'b' ? [f, c] : [7 - f, 7 - c]; };
     const llega = o.anima && o.ultima ? o.ultima.ruta[o.ultima.ruta.length - 1] : -1;
     let h = '<div class="tb-damas" role="grid" aria-label="Tablero de damas">';
-    for (let i = 0; i < 8; i++) for (let k = 0; k < 8; k++) {
-      const f = o.abajo === 'b' ? i : 7 - i, c = o.abajo === 'b' ? k : 7 - k;
-      if ((f + c) % 2 === 0) { h += '<div class="tb-dc cl"></div>'; continue; }
-      const id = Damas.idx(f, c), p = st.t[id], mv = dest.get(id);
-      const cls = (o.ultima && o.ultima.ruta.includes(id) ? ' ult' : '') + (o.sel === id ? ' sel' : '') + (puede.has(id) ? ' puede' : '');
-      let pieza = '';
-      if (p) {
-        let estilo = '';
-        if (id === llega) { const [f0, c0] = pos(o.ultima.ruta[0]); estilo = ' style="--dx:' + (c0 - k) * 100 + '%;--dy:' + (f0 - i) * 100 + '%"'; }
-        pieza = '<span class="tb-pzw' + (id === llega ? ' llega' : '') + '"' + estilo + '><span class="tb-pz ' + Damas.color(p) + (Damas.esDama(p) ? ' dama' : '') + '">' + (Damas.esDama(p) ? CORONA : '') + '</span></span>';
-      }
-      h += '<button class="tb-dc os' + cls + '" data-tb-d="' + id + '" aria-label="' + Damas.nombre(id) + (p ? ' ' + nombrePieza(p) : '') + (mv ? ', destino' : '') + '">' + pieza +
-        (mv ? '<span class="tb-dest' + (mv.capturas.length ? ' come' : '') + '"></span>' : '') + '</button>';
-    }
+    for (let i = 0; i < 8; i++) for (let k = 0; k < 8; k++) h += casillaDamas(st, o, { dest, puede, pos, llega }, i, k);
     return h + '</div>';
   }
+  // Casilla de la fila i y la columna k en pantalla. x: { dest, puede, pos, llega } (calculados una vez en damasHtml)
+  function casillaDamas(st, o, x, i, k) {
+    const f = o.abajo === 'b' ? i : 7 - i, c = o.abajo === 'b' ? k : 7 - k;
+    if ((f + c) % 2 === 0) return '<div class="tb-dc cl"></div>';
+    const id = Damas.idx(f, c), p = st.t[id], mv = x.dest.get(id);
+    const cls = (o.ultima && o.ultima.ruta.includes(id) ? ' ult' : '') + (o.sel === id ? ' sel' : '') + (x.puede.has(id) ? ' puede' : '');
+    const pieza = p ? piezaDamas(o, x, p, id, i, k) : '';
+    return '<button class="tb-dc os' + cls + '" data-tb-d="' + id + '" aria-label="' + Damas.nombre(id) + (p ? ' ' + nombrePieza(p) : '') + (mv ? ', destino' : '') + '">' + pieza +
+      destinoDamas(mv) + '</button>';
+  }
+  // Pieza p en la casilla id; si es la que acaba de llegar, sale desde su casilla de origen (animación).
+  function piezaDamas(o, x, p, id, i, k) {
+    let estilo = '';
+    if (id === x.llega) { const [f0, c0] = x.pos(o.ultima.ruta[0]); estilo = ' style="--dx:' + (c0 - k) * 100 + '%;--dy:' + (f0 - i) * 100 + '%"'; }
+    return '<span class="tb-pzw' + (id === x.llega ? ' llega' : '') + '"' + estilo + '><span class="tb-pz ' + Damas.color(p) + (Damas.esDama(p) ? ' dama' : '') + '">' + (Damas.esDama(p) ? CORONA : '') + '</span></span>';
+  }
+  const destinoDamas = mv => { if (!mv) { return ''; } return '<span class="tb-dest' + (mv.capturas.length ? ' come' : '') + '"></span>'; };
   // Selección común al individual y a la sala: { sel, jugada?, msg? }
   function damasClic(st, color, sel, id) {
     const ls = Damas.legales(st);
@@ -91,6 +95,9 @@
     return { puede: new Set(ls.map(m => m.ruta[0])), destinos: new Map(sel === null ? [] : ls.filter(m => m.ruta[0] === sel).map(m => [m.ruta[m.ruta.length - 1], m])) };
   }
   const contarHtml = (n, color) => '<span class="tb-cuenta"><span class="tb-pz mini ' + color + '"></span> ×' + n + '</span>';
+  const avisoDamas = (pensando, turnoYo) => { if (pensando) { return '🤔 Gambito está pensando…'; } return turnoYo ? '👉 Tu turno: toca una pieza y luego su destino' : ''; };
+  const resDamas = (gane, empate) => { if (gane) { return 'gana'; } return empate ? 'empate' : 'pierde'; };
+  const tituloDamas = (gane, empate, fin) => { if (gane) { return '🏆 ¡Ganaste por ' + DAMAS_FIN[fin] + '!'; } return empate ? '🤝 Empate: ' + DAMAS_FIN[fin] : '😅 Ganó Gambito por ' + DAMAS_FIN[fin]; };
 
   function jugarDamas(nivel, yo) {
     const m = marco('damas');
@@ -101,7 +108,7 @@
       m.body.innerHTML = '<div class="tb-wrap"><div class="tb-info"><span>🤖 Gambito · ' + (nivel === 1 ? '🐣 Fácil' : '🦊 Difícil') + '</span>' + contarHtml(Damas.piezas(st, bot), bot) + '</div>' +
         damasHtml(st, { abajo: yo, sel, ultima, anima, ...damasOpciones(st, sel, turnoYo) }) +
         '<div class="tb-info"><span>🙂 Tú (' + (yo === 'b' ? 'blancas' : 'negras') + ')</span>' + contarHtml(Damas.piezas(st, yo), yo) + '</div>' +
-        '<div class="feedback" role="status">' + (msg || (pensando ? '🤔 Gambito está pensando…' : turnoYo ? '👉 Tu turno: toca una pieza y luego su destino' : '')) + '</div>' +
+        '<div class="feedback" role="status">' + (msg || avisoDamas(pensando, turnoYo)) + '</div>' +
         '<div class="row-btns"><button class="btn ghost sm" data-ayuda="damas">📖 Cómo se juega</button><button class="btn ghost sm" data-tb-rendir>🏳️ Rendirme</button></div></div>';
       anima = false;
       m.puntos(12 - Damas.piezas(st, bot));
@@ -109,16 +116,20 @@
     const fin = res => {
       terminado = true;
       const gane = res.gana === yo, empate = !!res.empate, capt = 12 - Damas.piezas(st, bot);
-      const puntos = T.puntos.damas(gane ? 'gana' : empate ? 'empate' : 'pierde', nivel, Damas.piezas(st, yo), capt);
+      const puntos = T.puntos.damas(resDamas(gane, empate), nivel, Damas.piezas(st, yo), capt);
       esperar(res.fin === 'rendicion' ? 0 : 1600, () => terminar('damas', { puntos, aciertos: capt, total: 12, segundos: (Date.now() - t0) / 1000,
-        titulo: gane ? '🏆 ¡Ganaste por ' + DAMAS_FIN[res.fin] + '!' : empate ? '🤝 Empate: ' + DAMAS_FIN[res.fin] : '😅 Ganó Gambito por ' + DAMAS_FIN[res.fin],
+        titulo: tituloDamas(gane, empate, res.fin),
         detalle: st.jugadas + ' movimientos · nivel ' + (nivel === 1 ? '🐣 Fácil' : '🦊 Difícil') }));
     };
     const mover = mv => {
       st = Damas.aplicar(st, mv); ultima = mv; sel = null; msg = ''; anima = true;
       tono(mv.capturas.length ? 330 : 520, 60);
       const res = Damas.resultado(st);
-      if (res) { msg = res.empate ? '🤝 Empate' : res.gana === yo ? '🏆 ¡Ganaste!' : '😅 Ganó Gambito'; pintar(); return fin(res); }
+      if (res) {
+        if (res.empate) msg = '🤝 Empate';
+        else msg = res.gana === yo ? '🏆 ¡Ganaste!' : '😅 Ganó Gambito';
+        pintar(); return fin(res);
+      }
       turnoBot();
     };
     function turnoBot() {
@@ -141,23 +152,24 @@
 
   // ======================= Dominó =======================
   const ultimaDe = (st, j) => { for (let i = st.log.length - 1; i >= 0; i--) { if (st.log[i].j === j) return st.log[i]; } return null; };
-  const accionTxt = x => !x ? '' : x.pasa ? '🙅 pasó' : 'tiró ' + Domino.FICHAS[x.ficha].join('-');
+  const accionTxt = x => { if (!x) { return ''; } return x.pasa ? '🙅 pasó' : 'tiró ' + Domino.FICHAS[x.ficha].join('-'); };
   function mesaDominoHtml(st) {
     const nueva = st.log.length && !st.log[st.log.length - 1].pasa ? st.log[st.log.length - 1].ficha : -1;
     return '<div class="tb-mesa-wrap"><div class="tb-extremos">' + (st.mesa.length ? '<span>⬅️ ' + st.izq + '</span><span class="muted">' + st.mesa.length + ' en la mesa</span><span>' + st.der + ' ➡️</span>' : '<span class="muted">Mesa vacía: sale la mula más alta</span>') + '</div>' +
       '<div class="tb-mesa" aria-label="Fichas en la mesa">' + st.mesa.map(x => fichaHtml(x.a, x.b, (x.a === x.b ? ' v' : '') + ' chica' + (x.f === nueva ? ' nueva' : ''))).join('') + '</div></div>';
   }
   function rivalesDominoHtml(st, orden, yo) {
-    return '<div class="tb-rivales">' + orden.map((p, j) => j === yo ? '' : '<div class="tb-rival' + (st.turno === j && !st.fin ? ' turno' : '') + '">' + avatarHtml(p.avatar, 22) + '<span class="n">' + esc(p.nombre) + '</span>' +
-      '<span class="tb-dorsos" aria-label="' + st.manos[j].length + ' fichas">' + '<i></i>'.repeat(st.manos[j].length) + '</span><span class="tb-acc">' + esc(accionTxt(ultimaDe(st, j))) + '</span></div>').join('') + '</div>';
+    return '<div class="tb-rivales">' + orden.map((p, j) => { if (j === yo) { return ''; } return '<div class="tb-rival' + (st.turno === j && !st.fin ? ' turno' : '') + '">' + avatarHtml(p.avatar, 22) + '<span class="n">' + esc(p.nombre) + '</span>' +
+      '<span class="tb-dorsos" aria-label="' + st.manos[j].length + ' fichas">' + '<i></i>'.repeat(st.manos[j].length) + '</span><span class="tb-acc">' + esc(accionTxt(ultimaDe(st, j))) + '</span></div>'; }).join('') + '</div>';
   }
+  const claseFichaMano = (ok, miTurno) => { if (ok) { return ' jugable'; } return miTurno ? ' apagada' : ''; };
   // Mano del jugador j: las que embonan se resaltan en su turno; si una ficha entra en los dos lados se elige el lado.
   function manoDominoHtml(st, j, miTurno, sel) {
     if (j < 0) return '';
     const js = miTurno ? Domino.jugables(st, j) : [];
     const lados = sel === null ? [] : js.filter(x => x.ficha === sel);
     return '<div class="tb-mano" aria-label="Tus fichas">' + st.manos[j].map(f => { const [a, b] = Domino.FICHAS[f], ok = js.some(x => x.ficha === f);
-      return '<button class="tb-fb' + (ok ? ' jugable' : miTurno ? ' apagada' : '') + (sel === f ? ' sel' : '') + '" data-tb-f="' + f + '" aria-label="Ficha ' + a + '-' + b + (ok ? ', se puede tirar' : '') + '">' + fichaHtml(a, b, ' v') + '</button>'; }).join('') + '</div>' +
+      return '<button class="tb-fb' + claseFichaMano(ok, miTurno) +(sel === f ? ' sel' : '') + '" data-tb-f="' + f + '" aria-label="Ficha ' + a + '-' + b + (ok ? ', se puede tirar' : '') + '">' + fichaHtml(a, b, ' v') + '</button>'; }).join('') + '</div>' +
       (lados.length > 1 ? '<div class="row-btns"><button class="btn" data-tb-lado="i">⬅️ A la izquierda (' + st.izq + ')</button><button class="btn" data-tb-lado="d">A la derecha (' + st.der + ') ➡️</button></div>' : '');
   }
   // Clic en la mano: devuelve la jugada lista o cambia la selección (tb.sel).
@@ -173,10 +185,13 @@
     tb.sel = tb.sel === f ? null : f;
     return null;
   }
-  const resDomino = (st, j) => st.fin.ganadores.includes(j) ? (st.fin.ganadores.length === 1 ? 'gana' : 'empate') : 'pierde';
+  const resDomino = (st, j) => { if (!st.fin.ganadores.includes(j)) { return 'pierde'; } return st.fin.ganadores.length === 1 ? 'gana' : 'empate'; };
   const puntosDomino = (st, j) => T.puntos.domino(resDomino(st, j), st.manos.reduce((s, _, k) => k === j ? s : s + Domino.pips(st, k), 0), Domino.pips(st, j));
-  const tituloDomino = (st, nombre) => st.fin.cerrado ? '🔒 Juego cerrado · ' + (st.fin.ganadores.length > 1 ? 'empate entre ' + st.fin.ganadores.map(nombre).join(' y ') : 'gana ' + nombre(st.fin.ganadores[0]) + ' con menos puntos')
-    : '🔳 ¡Dominó de ' + nombre(st.fin.ganadores[0]) + '!';
+  const tituloDomino = (st, nombre) => {
+    if (!st.fin.cerrado) return '🔳 ¡Dominó de ' + nombre(st.fin.ganadores[0]) + '!';
+    return '🔒 Juego cerrado · ' + (st.fin.ganadores.length > 1 ? 'empate entre ' + st.fin.ganadores.map(nombre).join(' y ') : 'gana ' + nombre(st.fin.ganadores[0]) + ' con menos puntos');
+  };
+  const avisoDomino = (st, miTurno, orden) => { if (st.fin) { return ''; } return miTurno ? '👉 Tu turno: toca una ficha que embone' : '⏳ Turno de ' + orden[st.turno].nombre; };
 
   function jugarDomino() {
     const m = marco('domino');
@@ -186,7 +201,7 @@
     const pintar = () => {
       const miTurno = st.turno === 0 && !st.fin;
       m.body.innerHTML = '<div class="tb-wrap">' + rivalesDominoHtml(st, orden, 0) + mesaDominoHtml(st) +
-        '<div class="feedback" role="status">' + esc(tb.msg || (st.fin ? '' : miTurno ? '👉 Tu turno: toca una ficha que embone' : '⏳ Turno de ' + orden[st.turno].nombre)) + '</div>' +
+        '<div class="feedback" role="status">' + esc(tb.msg || avisoDomino(st, miTurno, orden)) + '</div>' +
         manoDominoHtml(st, 0, miTurno, tb.sel) + '<div class="tb-acc" style="text-align:center">' + esc(accionTxt(ultimaDe(st, 0)) ? 'Tú: ' + accionTxt(ultimaDe(st, 0)) : '') + '</div>' +
         '<div class="row-btns"><button class="btn ghost sm" data-ayuda="domino">📖 Cómo se juega</button></div></div>';
       m.puntos(7 - st.manos[0].length);
@@ -248,10 +263,20 @@
     }));
     return h + '</div>';
   }
-  const nombreCasilla = p => p === -1 ? 'casa' : p === Parchis.META ? 'meta' : p > 50 ? 'pasillo' : 'casilla ' + p;
+  const nombreCasilla = p => {
+    if (p === -1) return 'casa';
+    if (p === Parchis.META) return 'meta';
+    return p > 50 ? 'pasillo' : 'casilla ' + p;
+  };
+  // Texto del botón de la ficha f: de la casilla p a la casilla a.
+  const textoBotonParchis = (f, p, a) => {
+    if (p === -1) return '🚪 Sacar la ficha ' + (f + 1);
+    if (a === Parchis.META) return '🏁 Ficha ' + (f + 1) + ' a la meta';
+    return '➡️ Ficha ' + (f + 1) + ' (' + nombreCasilla(p) + ' → ' + nombreCasilla(a) + ')';
+  };
   function botonesParchis(st, j, movs) {
     return '<div class="tb-movs">' + movs.map(f => { const p = st.fichas[j][f], a = Parchis.destino(st, j, f);
-      return '<button class="btn" data-tb-pf="' + f + '">' + (p === -1 ? '🚪 Sacar la ficha ' + (f + 1) : a === Parchis.META ? '🏁 Ficha ' + (f + 1) + ' a la meta' : '➡️ Ficha ' + (f + 1) + ' (' + nombreCasilla(p) + ' → ' + nombreCasilla(a) + ')') + '</button>'; }).join('') + '</div>';
+      return '<button class="btn" data-tb-pf="' + f + '">' + textoBotonParchis(f, p, a) + '</button>'; }).join('') + '</div>';
   }
   function jugadoresParchisHtml(st, orden) {
     return '<div class="tb-rivales">' + orden.map((p, j) => '<div class="tb-rival' + (st.turno === j && !st.fin ? ' turno' : '') + '"><span class="tb-punto" style="background:' + COLORES[st.colores[j]].h + '"></span>' +
@@ -261,10 +286,17 @@
     const x = st.log[st.log.length - 1]; if (!x) return '';
     const n = orden[x.j].nombre;
     if (x.sin) return '🎲 ' + n + ' sacó ' + x.dado + ' y no pudo mover';
-    return '🎲 ' + n + ' sacó ' + x.dado + (x.de === -1 ? ' y sacó una ficha' : x.a === Parchis.META ? ' y metió una ficha 🏁' : ' y avanzó') + (x.comio ? ' · ¡comió! 😋 y vuelve a tirar' : x.dado === 6 ? ' · con 6 vuelve a tirar' : '');
+    let como = ' y avanzó';
+    if (x.de === -1) como = ' y sacó una ficha';
+    else if (x.a === Parchis.META) como = ' y metió una ficha 🏁';
+    let extra = '';
+    if (x.comio) extra = ' · ¡comió! 😋 y vuelve a tirar';
+    else if (x.dado === 6) extra = ' · con 6 vuelve a tirar';
+    return '🎲 ' + n + ' sacó ' + x.dado + como + extra;
   }
   // Última jugada con movimiento (para animarla).
   const ultimoMov = st => { for (let i = st.log.length - 1; i >= 0; i--) { if (!st.log[i].sin) return st.log[i]; } return null; };
+  const avisoParchis = (st, miTurno, orden) => { if (st.fin) { return ''; } return miTurno ? '👉 ¡Tu turno! Sacaste ' + st.dado : '⏳ Tira ' + orden[st.turno].nombre; };
 
   function jugarParchis(cuantas, rivales) {
     const m = marco('parchis');
@@ -276,7 +308,7 @@
       const miTurno = st.turno === 0 && !st.fin, movs = miTurno ? Parchis.movibles(st) : [];
       const anima = st.log.length !== logVisto ? ultimoMov(st) : null; logVisto = st.log.length;
       m.body.innerHTML = '<div class="tb-wrap">' + jugadoresParchisHtml(st, orden) + parchisHtml(st, { yo: 0, movibles: movs, anima }) +
-        '<div class="tb-turno">' + dadoHtml(st.dado, st.k !== kVisto) + '<div><b>' + esc(st.fin ? '' : miTurno ? '👉 ¡Tu turno! Sacaste ' + st.dado : '⏳ Tira ' + orden[st.turno].nombre) + '</b><div class="muted tb-acc">' + esc(logParchis(st, orden)) + '</div></div></div>' +
+        '<div class="tb-turno">' + dadoHtml(st.dado, st.k !== kVisto) + '<div><b>' + esc(avisoParchis(st, miTurno, orden)) + '</b><div class="muted tb-acc">' + esc(logParchis(st, orden)) + '</div></div></div>' +
         (miTurno ? botonesParchis(st, 0, movs) : '') + '<div class="row-btns"><button class="btn ghost sm" data-ayuda="parchis">📖 Cómo se juega</button></div></div>';
       kVisto = st.k;
       m.puntos(Parchis.enMeta(st, 0));
@@ -308,7 +340,8 @@
       h += '<span class="tb-nh">' + (f + 1) + '</span>';
       for (let k = 0; k < 10; k++) {
         const c = f * 10 + k, x = o.celda(c) || { cls: '' };
-        h += o.clic ? '<button class="tb-nc ' + x.cls + '" data-tb-n="' + c + '" aria-label="' + Naval.nombre(c) + (x.txt ? ' ' + x.txt : '') + '"></button>' : '<span class="tb-nc ' + x.cls + '"></span>';
+        if (o.clic) h += '<button class="tb-nc ' + x.cls + '" data-tb-n="' + c + '" aria-label="' + Naval.nombre(c) + (x.txt ? ' ' + x.txt : '') + '"></button>';
+        else h += '<span class="tb-nc ' + x.cls + '"></span>';
       }
     }
     return h + '</div>';
@@ -318,16 +351,36 @@
     const res = new Map(tiros.map(x => [x.c, x.r]));
     const hundidas = new Set(tiros.filter(x => x.r === 'hundido').flatMap(x => x.barco || []));
     const barcos = new Set((flotaRival || []).flat());
-    return c => ({ cls: (hundidas.has(c) ? 'hun' : res.get(c) === 'agua' ? 'agua' : res.has(c) ? 'toc' : barcos.has(c) ? 'barco oculto' : '') + (c === ultimo ? ' ult' : ''),
-      txt: hundidas.has(c) ? 'hundido' : res.get(c) === 'agua' ? 'agua' : res.has(c) ? 'tocado' : '' });
+    const clase = c => {
+      if (hundidas.has(c)) return 'hun';
+      if (res.get(c) === 'agua') return 'agua';
+      if (res.has(c)) return 'toc';
+      return barcos.has(c) ? 'barco oculto' : '';
+    };
+    const texto = c => {
+      if (hundidas.has(c)) return 'hundido';
+      if (res.get(c) === 'agua') return 'agua';
+      return res.has(c) ? 'tocado' : '';
+    };
+    return c => ({ cls: clase(c) + (c === ultimo ? ' ult' : ''), txt: texto(c) });
   }
   function celdaPropia(flota, tirosRival, ultimo, selBarco) {
     const res = new Map(tirosRival.map(x => [x.c, x.r]));
     const deBarco = new Map(); (flota || []).forEach((b, i) => (b || []).forEach(c => deBarco.set(c, i)));
+    const claseBarco = i => { if (i === undefined) { return ''; } return 'barco' + (selBarco === i ? ' sel' : ''); };
+    const claseTiro = r => {
+      if (r === 'agua') return ' agua';
+      if (!r) return '';
+      return r === 'hundido' ? ' hun' : ' toc';
+    };
     return c => { const i = deBarco.get(c), r = res.get(c);
-      return { cls: (i !== undefined ? 'barco' + (selBarco === i ? ' sel' : '') : '') + (r === 'agua' ? ' agua' : r ? (r === 'hundido' ? ' hun' : ' toc') : '') + (c === ultimo ? ' ult' : ''), txt: i !== undefined ? 'barco' : '' }; };
+      return { cls: claseBarco(i) + claseTiro(r) + (c === ultimo ? ' ult' : ''), txt: i !== undefined ? 'barco' : '' }; };
   }
-  const textoTiro = x => !x ? '' : x.r === 'agua' ? '💦 ¡Agua! en ' + Naval.nombre(x.c) : x.r === 'tocado' ? '💥 ¡Tocado! en ' + Naval.nombre(x.c) : '🔥 ¡Hundido! en ' + Naval.nombre(x.c);
+  const textoTiro = x => {
+    if (!x) return '';
+    if (x.r === 'agua') return '💦 ¡Agua! en ' + Naval.nombre(x.c);
+    return x.r === 'tocado' ? '💥 ¡Tocado! en ' + Naval.nombre(x.c) : '🔥 ¡Hundido! en ' + Naval.nombre(x.c);
+  };
   // Acomodo: { barcos: [celdas|null ×5], sel, h, msg }
   const nuevaColocacion = () => ({ barcos: Naval.FLOTA.map(() => null), sel: 0, h: true, msg: '' });
   function colocacionHtml(col, extra) {
@@ -468,14 +521,16 @@
   }
   const nota = (body, texto) => { if (sala.vista !== 'nota:' + texto) { body.innerHTML = '<div class="card muted" style="text-align:center">' + esc(texto) + '</div>'; sala.vista = 'nota:' + texto; } };
 
+  const resDamasSala = (res, color) => { if (res.empate) { return 'empate'; } return res.gana === color ? 'gana' : 'pierde'; };
   function finSala(juego, a) {
     const st = a.st, n = i => a.orden[i].nombre;
     if (juego === 'damas') {
       const res = a.rendido !== null ? { gana: a.rendido === 0 ? 'n' : 'b', fin: 'rendicion' } : Damas.resultado(st.s);
       if (!res) return null;
       const color = i => i === 0 ? 'b' : 'n';
-      const filas = a.orden.map((p, i) => ({ p, total: T.puntos.damas(res.empate ? 'empate' : res.gana === color(i) ? 'gana' : 'pierde', 2, Damas.piezas(st.s, color(i)), 12 - Damas.piezas(st.s, Damas.otro(color(i)))), sufijo: i ? ' ⚫' : ' ⚪' }));
-      const quien = res.empate ? null : n(res.gana === 'b' ? 0 : 1);
+      const filas = a.orden.map((p, i) => ({ p, total: T.puntos.damas(resDamasSala(res, color(i)), 2, Damas.piezas(st.s, color(i)), 12 - Damas.piezas(st.s, Damas.otro(color(i)))), sufijo: i ? ' ⚫' : ' ⚪' }));
+      let quien = null;
+      if (!res.empate) quien = n(res.gana === 'b' ? 0 : 1);
       return { filas, titulo: quien ? '⚫ ¡Ganó ' + quien + ' por ' + DAMAS_FIN[res.fin] + '!' : '🤝 Empate: ' + DAMAS_FIN[res.fin], aciertos: i => 12 - Damas.piezas(st.s, Damas.otro(color(i))), total: 12 };
     }
     if (!st.fin) return null;
@@ -484,10 +539,18 @@
       titulo: '🎲 ¡Ganó ' + n(st.fin.ganador) + '!', aciertos: i => Parchis.enMeta(st, i), total: 4 };
   }
 
+  const textoCuentaSala = juego => {
+    if (juego === 'naval') return '¡Prepárense! Acomoden su flota en secreto';
+    return juego === 'damas' ? '¡Prepárense! Blancas: ' + ((participantes()[0] || {}).nombre || '') : '¡Prepárense!';
+  };
+  const avisoSala = (juego, yo, miTurno, turnoDe) => {
+    if (yo < 0) return '👀 Estás viendo la partida';
+    return miTurno ? '👉 ¡Tu turno! Tienes ' + (CFG[juego].turnoMs / 1000) + ' s' : turnoDe;
+  };
   function pintarSalaTablero(body) {
     const e = sala.estado, s = e.sala, juego = s.juego, tb = estadoTb();
     const bar = $('m-bar');
-    if (ahoraServidor() < s.inicio) { bar.hidden = true; return cuentaRegresiva(body, s, juego === 'naval' ? '¡Prepárense! Acomoden su flota en secreto' : juego === 'damas' ? '¡Prepárense! Blancas: ' + ((participantes()[0] || {}).nombre || '') : '¡Prepárense!'); }
+    if (ahoraServidor() < s.inicio) { bar.hidden = true; return cuentaRegresiva(body, s, textoCuentaSala(juego)); }
     if (juego === 'naval') { bar.hidden = true; return pintarNavalSala(body); }
     const a = reproducir(juego);
     if (a.faltan) { bar.hidden = true; return nota(body, 'Se necesitan al menos 2 jugadores (activa los bots al crear la partida).'); }
@@ -507,7 +570,7 @@
     sala.vista = clave;
     tb.a = a;
     const turnoDe = '⏳ Turno de ' + a.orden[a.turnoIdx].nombre;
-    const pie = '<div class="feedback' + (miTurno ? ' ok' : '') + '" role="status">' + esc(tb.msg || (yo < 0 ? '👀 Estás viendo la partida' : miTurno ? '👉 ¡Tu turno! Tienes ' + (CFG[juego].turnoMs / 1000) + ' s' : turnoDe)) + '</div>';
+    const pie = '<div class="feedback' + (miTurno ? ' ok' : '') + '" role="status">' + esc(tb.msg || avisoSala(juego, yo, miTurno, turnoDe)) + '</div>';
     if (juego === 'damas') {
       const st = a.st, color = yo === 1 ? 'n' : 'b', arriba = yo === 1 ? 0 : 1, abajo = 1 - arriba;
       const anima = st.s.jugadas !== tb.logVisto; tb.logVisto = st.s.jugadas;
@@ -528,6 +591,23 @@
   }
 
   // ---- Batalla naval en sala: la flota se envía al servidor, que resuelve cada disparo ----
+  const porNaval = por => {
+    if (por === 'hundidos') return ' hundiendo toda la flota!';
+    return por === 'rendicion' ? ' por rendición!' : ' porque su rival dejó de jugar!';
+  };
+  // Final de la partida: tabla de puntos y, para quien jugó, los dos mares descubiertos. d: datos de pintarNavalSala.
+  function finalNavalSala(body, d) {
+    const { e, dos, k, yoJ, riv, est, tb, tirosDe } = d;
+    const filas = dos.map(j => { const t = tirosDe(j), toques = t.filter(x => x.r !== 'agua').length; return { id: j.id, nombre: j.nombre, tipo: j.tipo, avatar: j.avatar, total: est.fin.por === 'hundidos' || est.fin.gana !== j.id ? T.puntos.naval(est.fin.gana === j.id, t.length, toques) : Math.min(1000, 500 + 20 * toques), ultimo: 0, toques }; }).sort((p, q) => q.total - p.total);
+    const mia = filas.find(x => x.id === e.yo);
+    sala.finAciertos = mia ? mia.toques : 0; sala.finTotal = 17;
+    const gan = dos.find(j => j.id === est.fin.gana);
+    if (sala.vista === 'final') return;
+    pintarFinalSala(body, filas, null, '🚢 ¡Ganó ' + (gan ? gan.nombre : '') + porNaval(est.fin.por));
+    if (k >= 0 && riv) body.insertAdjacentHTML('beforeend', '<h2>🗺️ Así quedaron los mares</h2><div class="tb-mares"><div><h3 class="tb-h">' + esc(riv.nombre) + '</h3>' +
+      navalHtml({ titulo: 'Flota de ' + riv.nombre, chico: true, celda: celdaPropia(riv.flota || [], tirosDe(yoJ), -1) }) + '</div><div><h3 class="tb-h">Tu flota</h3>' +
+      navalHtml({ titulo: 'Tu flota', chico: true, celda: celdaPropia(tb.miFlota || [], tirosDe(riv), -1) }) + '</div></div>');
+  }
   function pintarNavalSala(body) {
     const e = sala.estado, s = e.sala, tb = estadoTb();
     const dos = e.jugadores.slice(0, 2);
@@ -536,18 +616,7 @@
     if (yoJ && yoJ.flota) tb.miFlota = yoJ.flota; // Realtime no trae flotas: se conserva la propia
     const est = Naval.estado(e.jugadores);
     const tirosDe = j => (j && j.jugadas || []).filter(x => x.accion === 'disparar');
-    if (est.fin) {
-      const filas = dos.map(j => { const t = tirosDe(j), toques = t.filter(x => x.r !== 'agua').length; return { id: j.id, nombre: j.nombre, tipo: j.tipo, avatar: j.avatar, total: est.fin.por === 'hundidos' || est.fin.gana !== j.id ? T.puntos.naval(est.fin.gana === j.id, t.length, toques) : Math.min(1000, 500 + 20 * toques), ultimo: 0, toques }; }).sort((p, q) => q.total - p.total);
-      const mia = filas.find(x => x.id === e.yo);
-      sala.finAciertos = mia ? mia.toques : 0; sala.finTotal = 17;
-      const gan = dos.find(j => j.id === est.fin.gana);
-      if (sala.vista === 'final') return;
-      pintarFinalSala(body, filas, null, '🚢 ¡Ganó ' + (gan ? gan.nombre : '') + (est.fin.por === 'hundidos' ? ' hundiendo toda la flota!' : est.fin.por === 'rendicion' ? ' por rendición!' : ' porque su rival dejó de jugar!'));
-      if (k >= 0 && riv) body.insertAdjacentHTML('beforeend', '<h2>🗺️ Así quedaron los mares</h2><div class="tb-mares"><div><h3 class="tb-h">' + esc(riv.nombre) + '</h3>' +
-        navalHtml({ titulo: 'Flota de ' + riv.nombre, chico: true, celda: celdaPropia(riv.flota || [], tirosDe(yoJ), -1) }) + '</div><div><h3 class="tb-h">Tu flota</h3>' +
-        navalHtml({ titulo: 'Tu flota', chico: true, celda: celdaPropia(tb.miFlota || [], tirosDe(riv), -1) }) + '</div></div>');
-      return;
-    }
+    if (est.fin) return finalNavalSala(body, { e, dos, k, yoJ, riv, est, tb, tirosDe });
     if (k < 0) return nota(body, '👀 Estás viendo la partida: las flotas son secretas.');
     // Reclamar: le toca al rival (acomodar o disparar) y lleva 90 s sin jugar.
     const pendienteRival = !!tb.miFlota && (riv.flotaT === undefined || est.turno === riv.id);
@@ -574,7 +643,8 @@
     const clave = 'nv:' + est.pasos + ':' + miTurno + ':' + tb.enviando + ':' + tb.msg + ':' + puedeReclamar;
     if (sala.vista === clave) return;
     sala.vista = clave;
-    const ultTxt = ult ? (ult.id === e.yo ? 'Tú: ' : riv.nombre + ': ') + textoTiro(ult) : '';
+    let ultTxt = '';
+    if (ult) ultTxt = (ult.id === e.yo ? 'Tú: ' : riv.nombre + ': ') + textoTiro(ult);
     body.innerHTML = '<div class="tb-wrap"><div class="feedback' + (miTurno ? ' ok' : '') + '" role="status">' + esc(tb.msg || (miTurno ? '👉 ¡Tu turno! Dispara al mar de ' + riv.nombre : '⏳ Turno de ' + riv.nombre)) + '</div>' +
       (ultTxt ? '<div class="tb-acc" style="text-align:center">' + esc(ultTxt) + '</div>' : '') +
       '<h3 class="tb-h">🎯 Mar de ' + esc(riv.nombre) + ' · ' + mis.filter(x => x.r !== 'agua').length + '/17</h3>' + navalHtml({ titulo: 'Mar de ' + riv.nombre, clic: miTurno, celda: celdaAtaque(mis, null, ult && ult.id === e.yo ? ult.c : -1) }) +

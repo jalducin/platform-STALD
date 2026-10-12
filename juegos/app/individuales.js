@@ -52,13 +52,16 @@ async function terminar(id, r) {
   if (s && s.guardado) {
     state.totalIndividual = s.totalIndividual; state.totalPartidas = s.totalPartidas; state.pos = s.pos; state.mejores[id] = s.mejor; pintarChip();
   }
+  // Lo guardado en la semana y el aviso cuando no se guardó.
+  const guardadoHtml = () => '<span class="stat">➕ ' + fmt(s.puntos) + ' a tus individuales</span><span class="stat">⭐ ' + fmt(s.totalIndividual) + ' en la semana</span>' + (s.pos ? '<span class="stat">🏆 #' + s.pos + ' de la semana</span>' : '');
+  const noGuardadoHtml = () => '<div class="alert">No se guardaron tus puntos (' + escapeHtml(s && s.error) + '). ' + (s && s.error === 'limite_diario' ? 'Llegaste al límite de partidas de hoy.' : 'Revisa tu conexión.') + '</div>';
   app.innerHTML = '<div class="card result"><div style="font-size:2.4rem">' + icoJuego(j) + '</div><h1>' + escapeHtml(r.titulo || '¡Terminaste!') + '</h1>' +
     '<div class="score">' + fmt(s && s.guardado ? s.puntos : puntos) + '</div><div class="muted">puntos</div>' +
     (s && s.nuevoRecord ? '<div class="record">🏅 ¡Nuevo récord personal!</div>' : '') +
     '<div class="pills">' + (r.total ? '<span class="stat">✅ ' + r.aciertos + ' de ' + r.total + '</span>' : '') +
-    (s && s.guardado ? '<span class="stat">➕ ' + fmt(s.puntos) + ' a tus individuales</span><span class="stat">⭐ ' + fmt(s.totalIndividual) + ' en la semana</span>' + (s.pos ? '<span class="stat">🏆 #' + s.pos + ' de la semana</span>' : '') : '') + '</div>' +
+    (s && s.guardado ? guardadoHtml() : '') + '</div>' +
     (r.detalle ? '<div class="muted" style="margin-top:12px">' + r.detalle + '</div>' : '') +
-    (s && s.guardado ? '' : '<div class="alert">No se guardaron tus puntos (' + escapeHtml(s && s.error) + '). ' + (s && s.error === 'limite_diario' ? 'Llegaste al límite de partidas de hoy.' : 'Revisa tu conexión.') + '</div>') +
+    (s && s.guardado ? '' : noGuardadoHtml()) +
     '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn" data-juego="' + id + '">🔁 Jugar otra vez</button></div></div>';
   if (s && s.nuevoRecord) confeti();
 }
@@ -130,7 +133,9 @@ function quiz(opts) {
       if (opts.modo === 'vidas') { vidas--; m.vidas(vidas); if (vidas <= 0) { guardarPartida(); return setTimeout(() => acabar('💔 ¡Sin vidas!'), 1400); } }
     }
     guardarPartida();
-    setTimeout(() => { if (!terminado) pintar(); }, bien ? (opts.datoAlAcertar ? 1600 : 550) : 1400);
+    let espera = 1400; // tras fallar
+    if (bien) espera = opts.datoAlAcertar ? 1600 : 550;
+    setTimeout(() => { if (!terminado) pintar(); }, espera);
   }
   const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= (actual ? actual.opciones.length : 0)) responder(n - 1); };
   document.addEventListener('keydown', onKey);
@@ -332,7 +337,9 @@ function jugarCultura(d, cat) {
 function genCalculo(n, aleatorio = Math.random) {
   const rnd = (a, b) => a + Math.floor(aleatorio() * (b - a + 1));
   const nivel = Math.min(4, Math.floor(n / 5));
-  const ops = nivel < 1 ? ['+', '−'] : nivel < 2 ? ['+', '−', '×'] : ['+', '−', '×', '÷'];
+  let ops = ['+', '−', '×', '÷'];
+  if (nivel < 1) ops = ['+', '−'];
+  else if (nivel < 2) ops = ['+', '−', '×'];
   const op = ops[rnd(0, ops.length - 1)];
   let a, b, r;
   const max = [10, 20, 50, 100, 200][nivel];
