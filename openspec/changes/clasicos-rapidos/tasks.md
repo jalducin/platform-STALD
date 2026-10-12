@@ -20,9 +20,9 @@
 
 ## 3. Interfaz
 
-- [ ] 3.1 `juegos/clasicos-rapidos-ui.js` y `juegos/clasicos-rapidos.css`: modos individuales de los 5 juegos
-- [ ] 3.2 Salas de los 5 juegos (dibujo, clics, podio con `pintarFinalSala`) y ayudas «📖 Cómo se juega»
-- [ ] 3.3 Ganchos en `juegos.html` (tarjetas, ids de partida y de tiempo real, `pintarSala`, opciones al crear y
+- [x] 3.1 `juegos/clasicos-rapidos-ui.js` y `juegos/clasicos-rapidos.css`: modos individuales de los 5 juegos
+- [x] 3.2 Salas de los 5 juegos (dibujo, clics, podio con `pintarFinalSala`) y ayudas «📖 Cómo se juega»
+- [x] 3.3 Ganchos en `juegos.html` (tarjetas, ids de partida y de tiempo real, `pintarSala`, opciones al crear y
   ayudas), marcados con `// clasicos-rapidos`
 
 ## 4. Revisar y actualizar pruebas existentes (OBLIGATORIO)

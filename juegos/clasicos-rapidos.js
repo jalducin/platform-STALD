@@ -208,6 +208,8 @@
     return st;
   }
   const entero = (x, min, max) => Number.isInteger(x) && x >= min && x <= max;
+  // Caché opcional de jugadas de bots (la página reproduce la sala cada 250 ms).
+  const memo = (ctx, k, f) => ctx.memo ? ctx.memo(k, f) : f();
 
   // Gato en sala: 3 rondas; orden[0] juega con ❌ y orden[1] con ⭕; empieza ❌ y luego alterna.
   const GATO_SALA = { rondas: 3, turno: 20000, bot: 1200, pausa: 3000, gana: 300, empate: 120 };
@@ -216,7 +218,7 @@
     const st = { juego: 'gato', t: Array(9).fill(null), ronda: 0, turnoIdx: 0, paso: 0, T0: ctx.inicio, puntos: [0, 0], victorias: [0, 0], empates: 0, resultados: [], ultima: null, esperaHasta: null, fin: null, ficha };
     return recorrer(ctx, st, {
       turnoMs: C.turno, botMs: C.bot,
-      bot: (s, j, n) => ({ accion: 'marcar', casilla: gatoBot(s.t, ficha(j), 3, ctx.rng('gato-bot' + n)) }),
+      bot: (s, j, n) => ({ accion: 'marcar', casilla: memo(ctx, 'gato-bot' + n + s.t.join(), () => gatoBot(s.t, ficha(j), 3, ctx.rng('gato-bot' + n))) }),
       auto: (s, _j, n) => ({ accion: 'marcar', casilla: alAzar(libres(s.t), ctx.rng('gato-auto' + n)) }),
       valida: (s, _j, mv) => mv.accion === 'marcar' && entero(mv.casilla, 0, 8) && !s.t[mv.casilla],
       aplicar: (s, j, mv, t) => {
@@ -239,8 +241,8 @@
     const st = { juego: 'conecta4', t: c4Vacio(), turnoIdx: 0, paso: 0, T0: ctx.inicio, puntos: [0, 0], ultima: null, linea: null, esperaHasta: null, fin: null, ficha };
     return recorrer(ctx, st, {
       turnoMs: C.turno, botMs: C.bot,
-      bot: (s, j, n) => ({ accion: 'soltar', col: c4Bot(s.t, ficha(j), 2, ctx.rng('c4-bot' + n)) }),
-      auto: (s, j, n) => ({ accion: 'soltar', col: c4Bot(s.t, ficha(j), 1, ctx.rng('c4-auto' + n)) }),
+      bot: (s, j, n) => ({ accion: 'soltar', col: memo(ctx, 'c4-bot' + n + s.t.join(), () => c4Bot(s.t, ficha(j), 2, ctx.rng('c4-bot' + n))) }),
+      auto: (s, j, n) => ({ accion: 'soltar', col: memo(ctx, 'c4-auto' + n + s.t.join(), () => c4Bot(s.t, ficha(j), 1, ctx.rng('c4-auto' + n))) }),
       valida: (s, _j, mv) => mv.accion === 'soltar' && entero(mv.col, 0, C4_COLS - 1) && c4Fila(s.t, mv.col) >= 0,
       aplicar: (s, j, mv, t) => {
         const r0 = c4Soltar(s.t, mv.col, ficha(j));
