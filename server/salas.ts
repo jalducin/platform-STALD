@@ -24,6 +24,7 @@ export const JUEGOS_PARTIDA = new Set([
   ...Grandes.JUEGOS_GRANDES, // juegos-salas-grandes
   "cultura-linea", // cultura-conocimiento: 📜 Línea del tiempo
   "futbolito", "billar", // futbolito-billar: física 1 vs 1 por tiros
+  "golf", // golf: minigolf de 2 a 4 personas por turnos
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
@@ -81,6 +82,11 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
     if (!entero(j.angulo, 0, 3599) || !entero(j.fuerza, 1, 100) || (j.efecto !== undefined && !entero(j.efecto, -100, 100))) return null;
     return { ...base, angulo: j.angulo as number, fuerza: j.fuerza as number, ...(j.efecto !== undefined ? { efecto: j.efecto as number } : {}) };
   }
+  // golf: tiro determinista (ángulo en décimas de grado y fuerza enteros; se simula igual en cada cliente) o rendirse.
+  if (juego === "golf") {
+    if (accion === "rendirse") return base;
+    return accion === "tiro" && entero(j.angulo, 0, 3599) && entero(j.fuerza, 1, 100) ? { ...base, angulo: j.angulo as number, fuerza: j.fuerza as number } : null;
+  }
   // ¡Una! Robar (hasta poder tirar) y pasar no llevan carta ni color: el robo se reproduce del mazo de la semilla.
   if (accion !== "jugar" && (j.carta !== undefined || j.color !== undefined)) return null; // basta-divertida-una-robo
   if (!["jugar", "robar", "pasar"].includes(accion) || (j.carta !== undefined && !entero(j.carta, 0, 107)) ||
@@ -117,8 +123,9 @@ export const MESAS: Record<string, Mesa> = {
   "cultura-linea": { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
   futbolito: { max: 2, asientos: 2, min: 2 }, // futbolito-billar: 1 vs 1 (con bots, 1 persona + 1 bot)
   billar: { max: 2, asientos: 2, min: 2 },
+  golf: { max: 4, min: 2, bots: "nunca" }, // golf: de 2 a 4 personas por turnos, sin bots (design.md §4)
 };
-const FISICA = new Set(["futbolito", "billar"]); // futbolito-billar: no aceptan jugadas tras el final
+const FISICA = new Set(["futbolito", "billar", "golf"]); // futbolito-billar y golf: no aceptan jugadas tras el final
 const cupo = (juego: string) => MESAS[juego]?.max ?? MAX_JUGADORES;
 const botsFijos = (juego: string) => MESAS[juego]?.bots === "siempre" ? true : MESAS[juego]?.bots === "nunca" ? false : undefined;
 // Personas + bots que ocuparían la mesa al empezar (los bots completan los asientos libres).

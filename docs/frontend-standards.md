@@ -188,6 +188,21 @@ Cada página debe manejar y mostrar de forma explícita:
       contesta `jugada-ok`) y `fin { gana, puntos, aciertos, total, titulo }` → `pintarFinalSala`. En Futbolito cada
       quien ve su portería abajo (o a la izquierda en horizontal). Ganchos de prueba `window.__futbolito` y
       `window.__billar` con `?arcadePrueba=1`;
+  - **⛳ Golf** (cambio `golf`; decisiones en su `design.md`): `juegos/golf.html` en el iframe de Arcade **con avance**
+    (`/juegos/progreso/golf`: mejor y estrellas por hoyo, recorridos y mejor recorrido; manda `guardar` y un `puntos`
+    por hoyo terminado). Motor sin DOM y determinista `juegos/golf-motor.js` (`window.Golf`; reutiliza
+    `juegos/fisica.js` sin cambiarlo; probado en `server/golf_motor_test.ts`): 9 hoyos como datos (contorno, muros,
+    zonas de arena/agua/pendiente, portales y obstáculos `molino`/`compuerta` que dependen del `reloj` en subpasos).
+    - Vista: canvas con cámara que sigue a la pelota (suave; inmediata con `prefers-reduced-motion`), escala mínima
+      `0.75 · lado corto / 300`, hoyo acostado en horizontal y minimapa (`canvas#minimapa`) que alterna la vista
+      completa al tocarlo.
+    - Controles: resortera desde cualquier parte del campo (`MesaUI.tactil`; jalón de 170 px = fuerza 100) que **no
+      tira al soltar**; ⟲ ⟳ (0.5°) y − + (1) con repetición al mantener; botón grande «⛳ GOLPEAR»; línea guía
+      geométrica (hasta 2 rebotes) y fuerza en número. Teclado por `MesaUI.crearAcciones` (← → con Shift fino, ↑ ↓,
+      Espacio/J, P/Esc); `window.accionesJuego`. Mando clásico (abajo). Preferencia `localStorage.golf_control`.
+    - Sala de 2 a 4 (sin bots): `pintarFisicaSala` (`juegos/app/arcade.js`) toma hasta 4 de `participantes()` para golf; el iframe usa
+      `MesaUI.crearSala` con `Golf.motorSala(n)` y en el `fin` agrega `tarjeta { hoyos, golpes }`, que la página pinta
+      escapada debajo del podio (`tarjetaGolf`, en el mismo módulo). Ganchos `window.__golf` con `?arcadePrueba=1`;
   - **Vista pseudo-3D de Karts Turbo** (cambio `karts-pseudo3d`; diagnóstico y decisiones en su `design.md`):
     - la carrera se simula en el mapa 2D de siempre y se dibuja en Mode-7 sobre canvas 2D: cámara detrás del carro
       (`seguirCamara`, `d = 115`), piso proyectado por filas desde una textura `Uint32Array` de la pista (tres niveles
@@ -280,7 +295,7 @@ interfaces de `juegos/*.js` y de `comun/auth.js`:
 | `ranking.js` | 🏆 Ranking (⭐ individuales, 👥 partidas, 🔥 juegos) |
 | `admin.js` | 🛡️ Admin (jugadores, pendientes, invitados y fotos) |
 | `individuales.js` | `marco`, `reloj`, `terminar`, `quiz` y los juegos de Inglés, Español, Cultura y Mente ágil |
-| `arcade.js` | Dragon Run, Axo, Karts, Futbolito y Billar en iframe (`canalProgreso`, `jugarArcade`) y sus carreras y tiros en sala. No confundir con `juegos/arcade.js` (reglas sin DOM) |
+| `arcade.js` | Dragon Run, Axo, Karts, Futbolito, Billar y Golf en iframe (`canalProgreso`, `jugarArcade`) y sus carreras y tiros en sala. No confundir con `juegos/arcade.js` (reglas sin DOM) |
 | `mente.js` | Sudoku y Ajedrez contra la computadora |
 | `clasicos.js` | Basta, ¡Una! y Lotería contra bots |
 | `naipes.js` | Póker y baraja española (Brisca y Conquián) contra bots; HTML de cartas y fichas |
@@ -354,7 +369,7 @@ Reglas:
 Fuente única del control de los juegos de 🕹️ Arcade: `juegos/mando.js` (sin dependencias; inyecta su CSS una vez como
 `<style id="mando-css">`). Decisiones y lecciones de Karts en `openspec/changes/mando-arcade/design.md` (al archivar,
 `openspec/changes/archive/*-mando-arcade/`). Lo usan Axo (`plataformas.html`), Dragon Run (`dragon-run.html`) y Karts
-Turbo (`karts.html`, cambio `karts-mando`); los juegos nuevos (Futbolito, Billar) lo adoptan **sin cambiar la API**. Si hace falta algo nuevo, se
+Turbo (`karts.html`, cambio `karts-mando`) y ⛳ Golf (`golf.html`, cambio `golf`); los juegos nuevos (Futbolito, Billar) lo adoptan **sin cambiar la API**. Si hace falta algo nuevo, se
 agrega como opción con valor por omisión compatible, en su propio cambio OpenSpec.
 
 **Cargar y crear** (dentro del iframe del juego; `window.Mando`):
@@ -421,9 +436,15 @@ Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
     `null` (Karts conserva su teclado y la pausa no se alterna dos veces); `nombres` cortos («gas», «frenar», «ítem»,
     «pausa») para que quepan a 320 px. Sin «⌨️ Controles»: el tutorial de 3 s explica los botones. Selector
     «🎮 Mando clásico» junto a Botones, Joystick y Sensor (`localStorage.karts_control`); por omisión, Botones.
+  - ⛳ Golf (cambio `golf`): acciones `apuntarMenos`/`apuntarMas` (cruceta ◀ ▶, giro que acelera al mantener),
+    `finoMenos`/`finoMas` L/R (0.5° con `al`), `fuerzaMas` X, `fuerzaMenos` Y, `golpear` A y `pausa` START; `teclas`
+    en `null` (el teclado va por la capa de acciones del juego) y nombres cortos («+💪», «−💪», «fino», «golpe»,
+    «pausa»). Activo jugando y en pausa. Con «🎮 Mando clásico» (`body.ctl-mando`) el panel de botones se esconde y la
+    fuerza sale en el HUD. Selector «👆 Toques» · «🎮 Mando clásico» en la portada (`localStorage.golf_control`).
 - **Pruebas:** lógica pura en `server/mando_test.ts` (Deno); E2E `tests/e2e/e2e-mando.js` (toques reales por CDP,
-  teclado, control simulado con `navigator.getGamepads` en `addInitScript`, preferencia y capturas) y, para Karts,
-  `tests/e2e/e2e-karts.js` (`probarMando`).
+  teclado, control simulado con `navigator.getGamepads` en `addInitScript`, preferencia y capturas), para Karts,
+  `tests/e2e/e2e-karts.js` (`probarMando`), y para Golf, `tests/e2e/e2e-golf.js` (cruceta, X, R y A con el dedo y la
+  preferencia recordada).
 
 ## Juegos fusionados (cambio `juegos-fusion`)
 

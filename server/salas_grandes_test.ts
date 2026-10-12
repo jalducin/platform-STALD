@@ -253,12 +253,15 @@ Deno.test("dibuja: la palabra solo la recibe quien dibuja (ni GET de los demás 
     const g = await c.call("GET", `/sala/${codigo}`, q);
     assertEquals([g.body.dibuja.turno, g.body.dibuja.palabra, g.body.dibuja.es, g.body.dibuja.letras], [0, undefined, undefined, p0.en.replace(/ /g, "").length]);
     assertEquals(JSON.stringify(g.body).includes(s.secreto), false);
-    assertEquals(new RegExp(`"${p0.en}"`).test(JSON.stringify(g.body)), false, "la palabra no viaja en el cuerpo");
+    // La palabra en inglés puede coincidir con un valor legítimo de la sala (p. ej. un color «green»), así que se
+    // busca dentro de `dibuja`; en todo el cuerpo se buscan la traducción y la llave `palabra`.
+    assertEquals(JSON.stringify(g.body.dibuja).includes(`"${p0.en}"`), false, "la palabra no viaja en dibuja");
+    assertEquals([JSON.stringify(g.body).includes(`"${p0.es}"`), /"palabra":"/.test(JSON.stringify(g.body))], [false, false], "ni la traducción ni la llave palabra");
   }
   // Realtime: tras un trazo se publica el estado sin secreto ni palabra.
   assertEquals((await responder(c, codigo, "marisol", { trazo: { turno: 0, nuevos: [{ c: 1, g: 2, p: [10, 10, 40, 60, 90, 90] }] } })).status, 200);
   const ult = JSON.stringify(c.enviados.at(-1));
-  assertEquals([ult.includes(s.secreto), new RegExp(`"${p0.en}"`).test(ult), ult.includes('"trazos"')], [false, false, true]);
+  assertEquals([ult.includes(s.secreto), ult.includes(`"${p0.es}"`), /"palabra":"/.test(ult), ult.includes('"trazos"')], [false, false, false, true]);
 });
 
 Deno.test("dibuja: trazos solo de quien dibuja, con límites de tamaño y frecuencia", async () => {

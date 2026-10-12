@@ -88,6 +88,7 @@ ClasicosRapidosUI.IDS.forEach(id => { JUEGOS_PARTIDA.push(id); TIEMPO_REAL.add(i
 TableroUI.SALA.forEach(j => TIEMPO_REAL.add(j)); // juegos-tablero
 ['bingo', 'blackjack', 'dibuja', 'mente-sopa'].forEach(j => TIEMPO_REAL.add(j)); // juegos-salas-grandes
 const FISICA = new Set(['futbolito', 'billar']); // futbolito-billar: 1 vs 1 por tiros en su iframe
+JUEGOS_PARTIDA.push('golf'); TIEMPO_REAL.add('golf'); FISICA.add('golf'); // golf: de 2 a 4 por turnos en su iframe (pintarFisicaSala)
 
 // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
 // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -180,7 +181,7 @@ async function entrarSala(codigo) {
   try { history.replaceState(history.state, '', urlConSala(codigo)); } catch (e) { /* sin historial */ }
   modoPartida(true);
   const j = juegoPorId(sala.estado.sala.juego);
-  const preparar = SALAS_GRANDES[sala.estado.sala.juego] ? Promise.resolve(SALAS_GRANDES[sala.estado.sala.juego].preparar()) : /* juegos-salas-grandes */ ['una', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
+  const preparar = SALAS_GRANDES[sala.estado.sala.juego] ? Promise.resolve(SALAS_GRANDES[sala.estado.sala.juego].preparar()) : /* juegos-salas-grandes */ ['una', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar', 'golf'].includes(sala.estado.sala.juego) ? Promise.resolve(null) : sala.estado.sala.juego.startsWith('basta') ? datos('basta') : sala.estado.sala.juego === 'loteria' ? datos('loteria') : preguntasPartida(sala.estado.sala.juego, sala.estado.sala.seed, sala.estado.sala.opciones);
   sala.contenido = await preparar;
   // Deja de consultar cuando ya no sirve (openspec: github-etag-cache): partida terminada, sala vencida o
   // inexistente, o 1 h con la pestaña abierta. Así una pestaña olvidada no gasta el límite de GitHub.
