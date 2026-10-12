@@ -135,7 +135,7 @@ Deno.test("clasicos-rapidos: Piedra-papel-tijera oculta la elección ajena hasta
   // La vista publicada (Realtime, sin yo) oculta solo las rondas incompletas.
   await jugar(c, codigo, M, { n: 1, accion: "elegir", eleccion: "piedra" });
   const doc = await c.call("GET", `/sala/${codigo}`, M);
-  const crudo = (await Promise.all(["Marisol", "Angel", "Laura"].map(async (n) => doc.body.jugadores.find((j: any) => j.nombre === n)))).map((j: any) => ({ ...j }));
+  const crudo = ["Marisol", "Angel", "Laura"].map((n) => ({ ...doc.body.jugadores.find((j: any) => j.nombre === n) }));
   const pub = ocultarJugadas("ppt", crudo);
   assertEquals([eleccionDe({ body: { jugadores: pub } }, "Marisol", 0), eleccionDe({ body: { jugadores: pub } }, "Marisol", 1)], ["papel", "?"]);
   assertEquals(ocultarJugadas("gato", crudo), crudo, "otros juegos no cambian");
