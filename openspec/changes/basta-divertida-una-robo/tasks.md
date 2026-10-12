@@ -43,6 +43,11 @@
 - [x] 4.2 E2E `basta-rondas`: sala con Pokémon y Antojito, puntos de la columna extra y revancha que las hereda
 - [x] 4.3 E2E `una-robo`: robo hasta poder, aviso, animación y mazo vacío (antes: «cada robo suma 1 carta»)
 - [x] 4.4 E2E `una-sala`: robos iguales en ambos dispositivos y partida sin bots hasta vaciar el mazo
+- [x] 4.5 E2E `clasicos` (integración en `release/juegos-lote`): las 8 palabras de Basta en inglés son distintas
+  entre sí; con la «P» la prueba repetía «pan» en Thing y en la cocina y la repetida no cuenta (7 de 8). Ahora las 8 se asignan juntas con retroceso; con la «H» los datos solo dan 7 distintas, así que se
+  espera que se verifiquen todas las que se llenaron (7 u 8)
+- [x] 4.6 E2E `una-robo` (integración): mínimo de 20 robos con tope de 300 s (antes 40 en 240 s). Con el equipo
+  cargado llegaba a 23–26 robos sin ningún robo malo; las verificaciones de cada robo no cambian
 
 ## 5. Ejecutar pruebas y verificar estado (OBLIGATORIO)
 

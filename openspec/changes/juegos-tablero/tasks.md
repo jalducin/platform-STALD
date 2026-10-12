@@ -46,6 +46,8 @@
   - Damas y Batalla naval en sala con 2 personas;
   - Dominó y Parchís en sala con bots, y la mesa del Dominó (3 personas + 1 bot; con la cuarta, sin bot);
   - capturas a 390 px.
+- [x] 4.3 Integración en `release/juegos-lote`: el conteo de `e2e-juegos-tablero` y de las E2E del menú
+  compara con `JUEGOS.length` de la página en lugar de 28 (con los demás sprints son 39)
 
 ## 5. Pruebas y verificación de estado (OBLIGATORIO)
 
