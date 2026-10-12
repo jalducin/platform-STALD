@@ -28,7 +28,7 @@ no respondió) e intentarlo de nuevo puede funcionar.
 responder 503 sin publicar en Realtime. No hay jugador «medio unido» que limpiar.
 
 ### 3. Empezar (error 2)
-Bucle de 3 intentos con lectura fresca: si la sala ya no existe → 404 `sala_no_existe`; si ya tiene `inicio` (otra
+Hasta 3 intentos en secuencia (`fijarInicio`, recursiva para no sumar avisos S9382 de `await` en bucle), cada uno con lectura fresca: si la sala ya no existe → 404 `sala_no_existe`; si ya tiene `inicio` (otra
 petición del anfitrión la empezó) → `ok` con esa sala, sin reescribir (así no cambia el `inicio` ni el secreto de
 Dibuja que ya vieron los demás); si `put` con el `sha` leído funciona → `ok`. Tras 3 choques → 503. Antes, el `put`
 fallido respondía un `inicio` que nadie más veía.
@@ -91,4 +91,4 @@ Se sube en 1, por encima de la versión de `main` al momento del merge, el `?v=`
 
 - [Más 503 visibles] → solo cuando antes se respondía `ok` sin guardar; la página explica qué hacer.
 - [Borrar la sala al crear] → solo si el anfitrión no se guardó (la sala no servía); el código no se indexó todavía.
-- [Bucle de empezar] → máximo 3 lecturas y 3 escrituras, como `guardarJugador`.
+- [Reintentos de empezar] → máximo 3 lecturas y 3 escrituras, como `guardarJugador`.
