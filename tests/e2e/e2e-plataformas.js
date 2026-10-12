@@ -2,6 +2,7 @@
 // Catálogo Arcade, jugar el 1-1 (moverse con el teclado y llegar a la meta), puntos en ⭐ individuales, progreso
 // guardado en el servidor y recuperado tras recargar, y partida en sala con bots: podio por tiempo sin tocar el
 // progreso. Capturas a 390 px y en escritorio. Usa ?arcadePrueba=1 (ganchos window.__plat dentro del juego).
+// Diseño (openspec: axo-diseno): capturas de cada mundo, del jefe y del mapa; el HUD no tapa el nivel a 390 px.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
@@ -14,6 +15,21 @@ const abrir = (b, viewport) => abrirPagina(b, { email: EMAIL, viejo: true, viewp
 async function marcoDe(p, raiz = '') {
   const el = await p.waitForSelector(raiz + ' #arcade-frame', { timeout: 30000 });
   return el.contentFrame();
+}
+// Recorre los 4 mundos jugables y el castillo con jefe, con una captura de cada uno (`<prefijo>-mundo-<id>.png`).
+async function recorrerMundos(pag, fr, prefijo) {
+  const errores = [];
+  for (const id of ['1-1', '2-1', '3-1', '4-1', '4-3']) {
+    await fr.evaluate(i => window.__plat.nivel(i), id);
+    await fr.waitForFunction(i => window.__plat.estado().nivel === i && window.__plat.estado().modo === 'nivel', id);
+    if (id === '4-3') await fr.evaluate(() => window.__plat.irAlJefe());
+    else await caminar(fr, 900);
+    await sleep(id === '4-3' ? 1800 : 300);
+    const e = await fr.evaluate(() => window.__plat.estado());
+    if (e.modo !== 'nivel') errores.push(id + ': ' + e.modo);
+    await pag.screenshot({ path: prefijo + '-mundo-' + id + '.png' });
+  }
+  return errores;
 }
 async function caminar(fr, ms) { await fr.click('canvas', { force: true }); await fr.page().keyboard.down('ArrowRight'); await sleep(ms); await fr.page().keyboard.up('ArrowRight'); }
 
@@ -76,7 +92,21 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   const abierto = await fr.$eval('[data-nivel="1-2"]', x => !x.disabled);
   const stats = await fr.textContent('#mapa-stats');
   ok('tras recargar: 1-1 superado, 1-2 abierto, mismas vidas y monedas', hecho && abierto && stats.includes('❤️ 6') && stats.includes('🪙 3'), stats);
+  ok('mapa: escena ilustrada, Axo en el nivel que sigue y candados en «Próximamente»', await fr.$('#mapa-svg svg') !== null && await fr.$('.marca img') !== null && (await fr.textContent('#mapa-mundos')).includes('🔒'));
   await p.screenshot({ path: 'plataformas-390-mapa.png' });
+  await fr.click('[data-mundo="6"]');
+  ok('mapa: mundo 6 «Próximamente» con nodos bloqueados', (await fr.textContent('#mapa-aviso')).includes('Próximamente') && await fr.$eval('[data-nivel="6-1"]', x => x.disabled));
+  await p.screenshot({ path: 'plataformas-390-mapa-proximamente.png' });
+  await fr.click('[data-mundo="1"]');
+  // ---- Diseño a 390 px: los 4 mundos y el jefe; el HUD y los botones no tapan el nivel ----
+  ok('390: los 4 mundos y el jefe se dibujan', (await recorrerMundos(p, fr, 'plataformas-390')).length === 0);
+  const hud = await fr.evaluate(() => {
+    const c = document.getElementById('c').getBoundingClientRect(), e = window.__plat.estado(), esc = c.height / e.vh;
+    return { hud: Math.round(document.getElementById('hud').getBoundingClientRect().bottom), nivel: Math.round(c.top + e.oy * esc), fin: Math.round(c.bottom), mandos: Math.round(document.getElementById('mandos').getBoundingClientRect().top), dibujoMs: +e.dibujoMs.toFixed(2) };
+  });
+  ok('390: el HUD queda sobre el cielo, fuera del nivel', hud.hud <= hud.nivel + 1, JSON.stringify(hud));
+  ok('390: los botones táctiles quedan debajo del juego', hud.mandos >= hud.fin - 1 && await fr.isVisible('#mandos'), JSON.stringify(hud));
+  ok('390: dibujo por cuadro con margen para 60 fps', hud.dibujoMs > 0 && hud.dibujoMs < 8, hud.dibujoMs + ' ms');
   await p.click('[data-a="salir"]').catch(() => {});
 
   // ---- Escritorio ----
@@ -91,6 +121,10 @@ async function caminar(fr, ms) { await fr.click('canvas', { force: true }); awai
   ok('escritorio: vista más ancha', ee.lw > 300, String(ee.lw));
   await esc.screenshot({ path: 'plataformas-escritorio.png' });
   ok('escritorio: sin botones táctiles', !(await fe.isVisible('#mandos')));
+  ok('escritorio: los 4 mundos y el jefe se dibujan', (await recorrerMundos(esc, fe, 'plataformas-escritorio')).length === 0);
+  await fe.evaluate(() => window.__plat.alMapa());
+  await fe.waitForSelector('#ov-mapa:not(.hide)');
+  await esc.screenshot({ path: 'plataformas-escritorio-mapa.png' });
   await esc.click('[data-a="salir"]').catch(() => {});
   await esc.context().close();
 
