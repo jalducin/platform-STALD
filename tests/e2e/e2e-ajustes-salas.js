@@ -43,6 +43,14 @@ const unirse = async (q, codigo) => { await q.click('[data-tab="partidas"]'); aw
   await host.click('[data-p="empezar"]'); await host.waitForSelector('.es-mano', { timeout: 20000 });
   const asientos = await host.$$eval('.pk-asientos .pk-asiento .n', xs => xs.map(x => x.textContent.trim()));
   ok('brisca: 2 personas + 2 bots en parejas', asientos.length === 3 && asientos.filter(x => /BOT-/.test(x)).length === 2 && (await host.$$('.pk-tag.eqA, .pk-tag.eqB')).length === 4, asientos.join(' | '));
+  // Batalla naval sin rival: aviso propio del juego de tablero, no el general (openspec: calidad-sonar; antes el
+  // manejador con TableroUI.faltan nunca corría porque otro igual, más arriba, regresaba primero).
+  await host.click('[data-a="salir"]'); await host.goto(BASE + '/juegos.html' + Q); await host.waitForSelector('[data-menu]');
+  host.alertas.length = 0;
+  await host.click('[data-tab="partidas"]'); await host.selectOption('#p-juego', 'naval');
+  await host.click('#f-crear button[type=submit]'); await host.waitForSelector('[data-p="empezar"]');
+  await host.click('[data-p="empezar"]'); await sleep(1500);
+  ok('naval: sin rival da su aviso propio', host.alertas.some(a => /la batalla naval es 1 vs 1/.test(a)) && !!(await host.$('[data-p="empezar"]:not([disabled])')), host.alertas.join(' | '));
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 300)); process.exit(2); });
