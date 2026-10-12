@@ -69,7 +69,8 @@
         origen = 'bot';
       } else {
         const j = porN.get(paso);
-        if (j && j.jugador === p.id && j.t <= lim) {
+        // futbolito-equipos: el motor puede rechazar una jugada (p. ej. un tiro con una barra que no tiene la pelota).
+        if (j && j.jugador === p.id && j.t <= lim && (!motor.valida || motor.valida(st, j))) {
           t = Math.max(T0, j.t); origen = 'jugada';
           tiro = j.accion === 'rendirse' ? { rendirse: true } : motor.tiroDe(j);
         } else if (ahora >= lim + gracia) { t = lim; origen = 'auto'; }
