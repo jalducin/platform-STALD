@@ -37,7 +37,7 @@ PEDIDAS=()
 ORDEN=(actividades-datos alta-alumnos inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno presentar examen-secundaria autoguardado ordenar-emparejar
   grupos ingles-pro
   login portal juegos juegos-ingles jugadores nick partidas enlace-sala juegos-recarga revancha
-  conquian-estres clasicos fusion sudoku dragon-run plataformas karts puntos-tipo basta-rondas loteria-sala una-sala una-robo
+  conquian-estres clasicos fusion sudoku dragon-run plataformas karts futbolito billar puntos-tipo basta-rondas loteria-sala una-sala una-robo
   poker cartas-espanolas ajedrez ajustes-salas ritmo avatar-foto peticiones ranking-juegos
   login-despues)
 

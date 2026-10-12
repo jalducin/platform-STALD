@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Billar</title>
+<style>
+:root{--bg:#10151f;--panel:rgba(10,14,22,.9);--txt:#fff;--acento:#facc15;--btn:#0f766e;--rojo:#ef4444;--azul:#3b82f6}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#juego{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+#pantalla{position:relative;flex:1;min-height:0;overflow:hidden}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#hud{position:absolute;left:0;right:0;top:0;height:44px;display:flex;align-items:center;gap:6px;padding:4px 96px 4px 6px;pointer-events:none;font-weight:800;font-size:13px}
+.jug{flex:1;min-width:0;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.18);border-radius:12px;padding:3px 7px;white-space:nowrap;overflow:hidden}
+.jug.turno{border-color:var(--acento);box-shadow:0 0 10px rgba(250,204,21,.5)}
+.jug .n{overflow:hidden;text-overflow:ellipsis;flex:0 0 auto;max-width:55%}
+.jug .g{font-size:11px;opacity:.85;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.chip{display:inline-block;width:11px;height:11px;border-radius:50%;border:2px solid #fff;flex:0 0 auto}
+#hud .der{position:absolute;right:6px;top:5px;display:flex;gap:6px;pointer-events:auto}
+.mini{font:inherit;font-size:16px;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.45);color:#fff;border-radius:10px;min-width:40px;min-height:34px;padding:2px 8px;cursor:pointer}
+#estado{position:absolute;left:50%;top:48px;transform:translateX(-50%);background:var(--panel);border-radius:999px;padding:4px 12px;font-weight:800;font-size:14px;white-space:nowrap;pointer-events:none;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+#estado:empty{display:none}
+#aviso{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);background:var(--panel);padding:10px 18px;border-radius:18px;font-weight:900;font-size:20px;white-space:normal;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5;width:max-content;max-width:90%}
+#aviso.ver{opacity:1}
+#cuenta{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:84px;font-weight:900;color:var(--acento);text-shadow:0 4px 0 #134e4a;pointer-events:none}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 50% 0,rgba(15,118,110,.9),rgba(8,12,20,.95));text-align:center;padding:14px;overflow:auto;z-index:6}
+.ov.hide,.hide{display:none!important}
+.ov h1{margin:0;font-size:clamp(28px,8vw,44px);color:var(--acento);text-shadow:0 3px 0 #134e4a}
+.ov h2{margin:0;font-size:clamp(22px,6vw,32px);color:var(--acento)}
+.ov p{margin:0;max-width:520px;line-height:1.35}
+.btn{font:inherit;font-weight:800;font-size:18px;border:0;border-radius:999px;padding:10px 22px;min-height:50px;background:var(--btn);color:#fff;box-shadow:0 4px 0 #134e4a;cursor:pointer}
+.btn.sec{background:#475569;box-shadow:0 4px 0 #1e293b}
+.btn.chico{font-size:15px;min-height:42px;padding:6px 12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:active{transform:translateY(3px)}
+.btn:focus-visible,.mini:focus-visible,.op:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+.fila{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.ops{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(480px,100%)}
+.op{font:inherit;font-weight:800;font-size:16px;border:3px solid rgba(255,255,255,.7);background:#134e4a;color:#fff;border-radius:16px;padding:8px 4px;min-height:70px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.op small{font-weight:700;opacity:.85;font-size:11px}
+.ayuda{font-size:13px;opacity:.9;max-width:500px}
+.tarjetas{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tarjetas div{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:6px 12px;font-weight:800}
+.tarjetas small{display:block;font-size:11px;opacity:.75}
+#confeti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:7}
+#confeti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:caer 2.6s linear forwards}
+@keyframes caer{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
+/* Panel de tiro */
+#panel{flex:0 0 auto;display:grid;grid-template-columns:auto 1fr auto;gap:6px 8px;align-items:center;padding:8px 10px 10px;background:linear-gradient(#162030,#10151f);font-weight:800;font-size:14px}
+#panel label{display:flex;flex-direction:column;gap:2px;min-width:0}
+#panel input[type=range]{width:100%;height:30px;accent-color:var(--acento)}
+#panel .acciones{grid-column:1/-1;display:flex;gap:8px;justify-content:center;align-items:center}
+#panel .nota{grid-column:1/-1;text-align:center;font-size:12px;opacity:.85;font-weight:700}
+#b-tirar{flex:1;max-width:240px}
+.giro{display:flex;gap:4px}
+.giro .mini{min-width:42px;min-height:42px;font-size:18px}
+#b-efecto{min-width:92px}
+@media (orientation:landscape) and (max-height:520px){
+  #juego{flex-direction:row}
+  #panel{width:200px;grid-template-columns:1fr;align-content:center;padding:6px 8px}
+  #panel .giro{justify-content:center}
+  #panel .acciones{flex-direction:column}
+  #b-tirar{width:100%}
+  #hud{padding-right:96px}
+}
+@media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
+</style></head><body>
+<div id="juego">
+  <div id="pantalla">
+    <canvas id="c" aria-label="Mesa de billar"></canvas>
+    <div id="hud" class="hide">
+      <div class="jug" id="j0"><span class="chip" style="background:var(--rojo)"></span><span class="n" id="n0">Tú</span><span class="g" id="gr0"></span></div>
+      <div class="jug" id="j1"><span class="chip" style="background:var(--azul)"></span><span class="n" id="n1">Bot</span><span class="g" id="gr1"></span></div>
+      <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-salir" aria-label="Menú">☰</button></div>
+    </div>
+    <div id="estado" role="status"></div>
+    <div id="cuenta" aria-live="polite"></div>
+    <div id="aviso" role="status"></div>
+
+    <div class="ov" id="ov-carga"><h1>🎱 Billar</h1><p>Cargando…</p></div>
+    <div class="ov hide" id="ov-menu">
+      <h1>🎱 Billar</h1>
+      <p>Bola 8 contra el bot: mete tus 7 bolas (lisas o rayadas) y al final la 8.</p>
+      <div class="ops" role="group" aria-label="Nivel del bot">
+        <button class="op" data-nivel="facil">🟢 Fácil<small>falla seguido</small></button>
+        <button class="op" data-nivel="medio">🟡 Medio<small>apunta bien</small></button>
+        <button class="op" data-nivel="dificil">🔴 Difícil<small>casi no falla</small></button>
+      </div>
+      <p class="ayuda">👆 <b>Arrastra sobre la mesa</b> para apuntar (verás la línea guía) y toca <b>Tirar</b> con la fuerza de la barra. O <b>jala desde la bola blanca</b> como resortera: lo largo del jalón es la fuerza y al soltar tiras. Efecto opcional: ⬆ seguir o ⬇ retroceder.</p>
+      <p class="ayuda">📏 Reglas: la primera bola que metas define tu grupo. Es falta meter la blanca, no tocar ninguna bola o tocar primero una que no es tuya. Si metes la 8 antes de tiempo, pierdes.</p>
+    </div>
+    <div class="ov hide" id="ov-pausa"><h2>☰ Menú</h2><div class="fila"><button class="btn" data-ir="seguir">▶ Seguir</button><button class="btn sec" data-ir="menu">🏠 Salir al menú</button></div></div>
+    <div class="ov hide" id="ov-res">
+      <h2 id="res-titulo">🏆 ¡Ganaste!</h2>
+      <p id="res-motivo"></p>
+      <div class="tarjetas" id="res-tarjetas"></div>
+      <p id="res-guardado" class="ayuda"></p>
+      <div class="fila"><button class="btn" data-ir="otra">🔁 Otra vez</button><button class="btn sec" data-ir="menu">🎚️ Cambiar nivel</button></div>
+    </div>
+    <div class="ov hide" id="ov-sala"><h2 id="sala-titulo">🏁 ¡Fin de la partida!</h2><p id="sala-txt">Esperando el podio…</p></div>
+    <div id="confeti"></div>
+  </div>
+  <div id="panel" class="hide" aria-label="Tu tiro">
+    <div class="giro"><button class="mini" id="b-izq" aria-label="Girar la mira a la izquierda">⟲</button><button class="mini" id="b-der" aria-label="Girar la mira a la derecha">⟳</button></div>
+    <label for="r-fuerza">💪 Fuerza <span id="v-fuerza">50</span><input id="r-fuerza" type="range" min="1" max="100" step="1" value="50"></label>
+    <button class="mini" id="b-efecto" aria-label="Efecto">● Sin efecto</button>
+    <div class="acciones"><button class="btn" id="b-tirar">🎱 Tirar</button><button class="btn sec chico hide" id="b-rendir" aria-label="Rendirme">🏳️</button></div>
+    <div class="nota">Arrastra para apuntar · jala desde la blanca para tirar</div>
+  </div>
+</div>
+<script src="fisica.js?v=1"></script>
+<script src="billar-motor.js?v=1"></script>
+<script src="mesa-ui.js?v=1"></script>
+<script>
+/* Billar bola 8 (openspec: futbolito-billar). Individual contra el bot y sala 1 vs 1 por turnos con tiros
+   deterministas (MesaUI.crearSala). Embebido en juegos.html por un iframe del mismo origen (postMessage). */
+'use strict';
+const F = window.Fisica, B = window.Billar, U = window.MesaUI, $ = U.$;
+U.usarJuego('billar');
+const cv = $('c'), g = cv.getContext('2d');
+const PASO = 1 / 60, BANDA = 44;
+const NIVEL_TXT = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
+const EXTRA = { facil: 0, medio: 100, dificil: 200 };
+const COLORES = ['#f8fafc', '#facc15', '#2563eb', '#dc2626', '#7c3aed', '#f97316', '#16a34a', '#7f1d1d', '#111827'];
+const colorBola = n => COLORES[n > 8 ? n - 8 : n];
+const EFECTOS = [{ v: 0, t: '● Sin efecto' }, { v: 70, t: '⬆ Seguir' }, { v: -70, t: '⬇ Retroceso' }];
+let modo = 'carga', nivel = 'medio', st = null, sim = null, simOrigen = null, botEn = 0, t0 = 0;
+let sala = null, aim = 0, efectoI = 0;
+
+/* ---------- Vista ---------- */
+let W = 0, H = 0, DPR = 1, M = [1, 0, 0, 1, 0, 0], K = 1, horizontal = true;
+function ajustar() {
+  const r = $('pantalla').getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  W = r.width; H = r.height; DPR = Math.min(3, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  horizontal = W >= H;
+  const arriba = 48, mw = B.ANCHO + 2 * BANDA, mh = B.ALTO + 2 * BANDA;
+  const aw = horizontal ? mw : mh, ah = horizontal ? mh : mw;
+  K = Math.min((W - 8) / aw, (H - arriba - 6) / ah);
+  const ox = (W - aw * K) / 2, oy = arriba + (H - arriba - ah * K) / 2;
+  // Horizontal: tal cual. Vertical: girada 90° (el lado largo hacia abajo).
+  M = horizontal ? [K, 0, 0, K, ox + BANDA * K, oy + BANDA * K] : [0, K, -K, 0, ox + (B.ALTO + BANDA) * K, oy + BANDA * K];
+}
+addEventListener('resize', ajustar);
+if (window.ResizeObserver) new ResizeObserver(() => ajustar()).observe($('pantalla'));
+const aPantalla = (x, y) => ({ x: M[0] * x + M[2] * y + M[4], y: M[1] * x + M[3] * y + M[5] });
+function aMesa(sx, sy) {
+  const r = cv.getBoundingClientRect(), x = sx - r.left - M[4], y = sy - r.top - M[5], det = M[0] * M[3] - M[1] * M[2];
+  return { x: (M[3] * x - M[2] * y) / det, y: (-M[1] * x + M[0] * y) / det };
+}
+
+/* ---------- Dibujo ---------- */
+function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function dibujarMesa() {
+  const A = B.ANCHO, L = B.ALTO;
+  rr(-BANDA, -BANDA, A + 2 * BANDA, L + 2 * BANDA, 26); g.fillStyle = '#5b3416'; g.fill();
+  rr(-BANDA + 6, -BANDA + 6, A + 2 * BANDA - 12, L + 2 * BANDA - 12, 20); g.fillStyle = '#7a4520'; g.fill();
+  g.fillStyle = '#0b6b45'; g.fillRect(-14, -14, A + 28, L + 28); // bandas de hule
+  const gr = g.createRadialGradient(A / 2, L / 2, 40, A / 2, L / 2, A * 0.65); gr.addColorStop(0, '#15955f'); gr.addColorStop(1, '#0e7a4c');
+  g.fillStyle = gr; g.fillRect(0, 0, A, L);
+  // Diamantes
+  g.fillStyle = '#f5e7c8';
+  for (let i = 1; i < 8; i++) { if (i === 4) continue; for (const y of [-BANDA / 2 - 4, L + BANDA / 2 + 4]) { g.beginPath(); g.arc(i * A / 8, y, 4, 0, Math.PI * 2); g.fill(); } }
+  for (let i = 1; i < 4; i++) for (const x of [-BANDA / 2 - 4, A + BANDA / 2 + 4]) { g.beginPath(); g.arc(x, i * L / 4, 4, 0, Math.PI * 2); g.fill(); }
+  // Línea de salida y punto del pie
+  g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(B.SALIDA.x, 0); g.lineTo(B.SALIDA.x, L); g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.3)'; g.beginPath(); g.arc(B.PIE.x, B.PIE.y, 3, 0, Math.PI * 2); g.fill();
+  // Troneras
+  for (const t of B.TRONERAS) {
+    const x = F.acotar(t.x, -2, A + 2), y = F.acotar(t.y, -4, L + 4), r = t.r * 0.95;
+    g.fillStyle = '#3f2a12'; g.beginPath(); g.arc(x, y, r + 5, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#05070a'; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  }
+}
+// Bolas en coordenadas de pantalla (los números siempre derechos).
+function dibujarBolas(bolas) {
+  const r = B.R * K;
+  for (const o of bolas) {
+    if (o.fuera) continue;
+    const p = aPantalla(o.x, o.y);
+    g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.arc(p.x + r * 0.25, p.y + r * 0.3, r, 0, Math.PI * 2); g.fill();
+    g.save(); g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.clip();
+    g.fillStyle = o.n > 8 ? '#f8fafc' : colorBola(o.n); g.fillRect(p.x - r, p.y - r, 2 * r, 2 * r);
+    if (o.n > 8) { g.fillStyle = colorBola(o.n); g.fillRect(p.x - r, p.y - r * 0.55, 2 * r, r * 1.1); }
+    const gr = g.createRadialGradient(p.x - r * 0.35, p.y - r * 0.4, r * 0.1, p.x, p.y, r * 1.1);
+    gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(0.35, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(0,0,0,.35)');
+    g.fillStyle = gr; g.fillRect(p.x - r, p.y - r, 2 * r, 2 * r);
+    g.restore();
+    if (o.n > 0 && r >= 5) {
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(p.x, p.y, r * 0.5, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#111'; g.font = '800 ' + Math.max(6, Math.round(r * 0.62)) + 'px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(String(o.n), p.x, p.y + 0.5);
+    }
+  }
+}
+// Línea guía: hasta la primera bola (bola fantasma y hacia dónde saldría) o la banda.
+function guia(bolas, ang) {
+  const bl = bolas[0], [sn, cs] = F.senCos(ang), R = B.R, D = B.D;
+  let mejor = null;
+  for (const o of bolas) {
+    if (o.n === 0 || o.fuera) continue;
+    const fx = o.x - bl.x, fy = o.y - bl.y, t = fx * cs + fy * sn; if (t <= 0) continue;
+    const per2 = fx * fx + fy * fy - t * t; if (per2 > D * D) continue;
+    const d = t - Math.sqrt(D * D - per2);
+    if (!mejor || d < mejor.d) mejor = { d, o };
+  }
+  const tx = cs > 0 ? (B.ANCHO - R - bl.x) / cs : cs < 0 ? (R - bl.x) / cs : Infinity;
+  const ty = sn > 0 ? (B.ALTO - R - bl.y) / sn : sn < 0 ? (R - bl.y) / sn : Infinity;
+  const banda = Math.min(tx, ty);
+  return mejor && mejor.d < banda ? { tipo: 'bola', x: bl.x + cs * mejor.d, y: bl.y + sn * mejor.d, o: mejor.o } : { tipo: 'banda', x: bl.x + cs * banda, y: bl.y + sn * banda, rebote: tx < ty ? [-cs, sn] : [cs, -sn] };
+}
+function dibujarMira(bolas, ang, fuerza) {
+  const bl = bolas[0], gi = guia(bolas, ang), [sn, cs] = F.senCos(ang);
+  const p0 = aPantalla(bl.x, bl.y), p1 = aPantalla(gi.x, gi.y);
+  g.save(); g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,.85)'; g.setLineDash([7, 6]);
+  g.beginPath(); g.moveTo(p0.x, p0.y); g.lineTo(p1.x, p1.y); g.stroke(); g.setLineDash([]);
+  if (gi.tipo === 'bola') {
+    g.strokeStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(p1.x, p1.y, B.R * K, 0, Math.PI * 2); g.stroke();
+    let nx = gi.o.x - gi.x, ny = gi.o.y - gi.y; const nl = Math.sqrt(nx * nx + ny * ny) || 1; nx /= nl; ny /= nl;
+    const q0 = aPantalla(gi.o.x, gi.o.y), q1 = aPantalla(gi.o.x + nx * 120, gi.o.y + ny * 120);
+    g.strokeStyle = '#facc15'; g.lineWidth = 3; g.beginPath(); g.moveTo(q0.x, q0.y); g.lineTo(q1.x, q1.y); g.stroke();
+    const tx = cs - (cs * nx + sn * ny) * nx, ty = sn - (cs * nx + sn * ny) * ny; // la blanca se abre por la tangente
+    const c1 = aPantalla(gi.x + tx * 60, gi.y + ty * 60);
+    g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2; g.beginPath(); g.moveTo(p1.x, p1.y); g.lineTo(c1.x, c1.y); g.stroke();
+  } else {
+    const c1 = aPantalla(gi.x + gi.rebote[0] * 80, gi.y + gi.rebote[1] * 80);
+    g.strokeStyle = 'rgba(255,255,255,.5)'; g.beginPath(); g.moveTo(p1.x, p1.y); g.lineTo(c1.x, c1.y); g.stroke();
+  }
+  g.restore();
+  // Taco (arte propio): detrás de la blanca, más atrás con más fuerza.
+  const atras = B.R + 8 + fuerza * 0.7, largo = 380;
+  const a = aPantalla(bl.x - cs * atras, bl.y - sn * atras), b = aPantalla(bl.x - cs * (atras + largo), bl.y - sn * (atras + largo));
+  g.save(); g.lineCap = 'round';
+  g.strokeStyle = '#3b2412'; g.lineWidth = Math.max(4, 9 * K); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke();
+  g.strokeStyle = '#d8b07a'; g.lineWidth = Math.max(2.5, 6 * K); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(a.x + (b.x - a.x) * 0.72, a.y + (b.y - a.y) * 0.72); g.stroke();
+  g.strokeStyle = '#e0f2fe'; g.lineWidth = Math.max(2.5, 6 * K); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(a.x + (b.x - a.x) * 0.03, a.y + (b.y - a.y) * 0.03); g.stroke();
+  g.restore();
+}
+function dibujar() {
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  g.fillStyle = '#10151f'; g.fillRect(0, 0, W, H);
+  g.setTransform(M[0] * DPR, M[1] * DPR, M[2] * DPR, M[3] * DPR, M[4] * DPR, M[5] * DPR);
+  dibujarMesa();
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const v = vista();
+  dibujarBolas(v.bolas);
+  if (v.apuntar) dibujarMira(v.bolas, aim, fuerza());
+}
+function vista() {
+  if (modo === 'sala' && sala) {
+    if (sala.anim) return { bolas: sala.anim.sim.bolas };
+    return { bolas: sala.estado.bolas, apuntar: sala.miTurno() };
+  }
+  if (sim) return { bolas: sim.bolas };
+  if (st) return { bolas: st.bolas, apuntar: modo === 'juego' && st.turno === 0 && !st.fin };
+  return { bolas: B.inicial(1).bolas };
+}
+
+/* ---------- HUD ---------- */
+const fuerza = () => Number($('r-fuerza').value);
+function nombreGrupo(estado, i) {
+  const gr = estado.grupos[i]; if (!gr) return 'mesa abierta';
+  const quedan = B.quedan(estado, gr);
+  return (gr === 'lisas' ? 'lisas' : 'rayadas') + ' · ' + (quedan ? 'quedan ' + quedan : '¡va por la 8!');
+}
+function pintarHud(estado, turno) {
+  for (const i of [0, 1]) {
+    const t = nombreGrupo(estado, i); if ($('gr' + i).textContent !== t) $('gr' + i).textContent = t;
+    $('j' + i).classList.toggle('turno', turno === i);
+  }
+}
+function avisoTiro(r, yoIdx, nombres) {
+  const u = r.ultimo; if (!u) return;
+  const quien = u.quien === yoIdx ? 'Tú' : nombres[u.quien];
+  if (r.fin) return;
+  if (u.falta) { U.avisar('⚠️ Falta: ' + B.NOMBRE_FALTA[u.falta], 1800); return; }
+  const buenas = u.metidas.filter(n => n !== 0 && n !== 8);
+  if (buenas.length) U.avisar('✅ ' + quien + ' metió la ' + buenas.join(', la '), 1500);
+}
+
+/* ---------- Individual ---------- */
+function abrirMenu() { modo = 'menu'; sim = null; $('hud').classList.add('hide'); $('panel').classList.add('hide'); $('estado').textContent = ''; mostrar('ov-menu'); }
+function nuevaPartida(n) {
+  nivel = n; st = B.inicial(Math.floor(Math.random() * 1e9)); sim = null; botEn = 0; t0 = performance.now();
+  aim = 0; $('n0').textContent = 'Tú'; $('n1').textContent = 'Bot ' + NIVEL_TXT[n];
+  ocultar(); $('hud').classList.remove('hide'); modo = 'juego';
+  U.avisar('🎱 Rompe tú', 1200);
+}
+function tirarIndividual() {
+  if (modo !== 'juego' || sim || !st || st.turno !== 0 || st.fin) return;
+  empezarSim({ angulo: aim, fuerza: fuerza(), efecto: EFECTOS[efectoI].v }, 'tu');
+}
+function empezarSim(tiro, origen) { sim = B.crearSim(st, tiro); simOrigen = origen; sonarTaco(tiro.fuerza); }
+function pasoIndividual() {
+  if (sim) {
+    const antes = sim.choques;
+    for (let i = 0; i < B.SUB && !sim.termino; i++) sim.paso();
+    if (sim.choques > antes) U.tono(900, 0.03, 'triangle', 0.04);
+    if (!sim.termino) return;
+    const r = sim.resultado().st; sim = null;
+    if (r.ultimo.metidas.some(n => n !== 0)) U.tono(330, 0.12, 'sine', 0.06, 160);
+    st = r;
+    if (st.fin) return terminarIndividual();
+    avisoTiro(st, 0, ['Tú', 'El bot']);
+    if (st.turno === 1) botEn = performance.now() + 900;
+    return;
+  }
+  if (st.turno === 1 && !st.fin && performance.now() >= botEn) empezarSim(B.tiroBot(st, nivel, Math.random), 'bot');
+}
+function terminarIndividual() {
+  modo = 'resultado';
+  const gano = st.fin.gana === 0, puntos = B.puntos(st, 0, EXTRA[nivel]), seg = Math.round((performance.now() - t0) / 1000);
+  const mias = st.grupos[0] ? 7 - B.quedan(st, st.grupos[0]) : 0;
+  $('res-titulo').textContent = gano ? '🏆 ¡Ganaste!' : '😅 Ganó el bot';
+  $('res-motivo').textContent = st.fin.motivo === 'ocho' ? (gano ? 'Metiste' : 'El bot metió') + ' la 8 al final.' : 'Motivo: ' + B.MOTIVO[st.fin.motivo] + ' (' + (gano ? 'el bot' : 'tú') + ').';
+  $('res-tarjetas').innerHTML = '<div>' + mias + '/7<small>Tus bolas</small></div><div>' + NIVEL_TXT[nivel] + '<small>Nivel</small></div><div>+' + puntos + '<small>Puntos</small></div>';
+  $('res-guardado').textContent = U.EMBED ? 'Guardando tus puntos…' : '';
+  $('panel').classList.add('hide'); $('hud').classList.add('hide'); mostrar('ov-res');
+  if (gano) U.confeti();
+  U.enviar({ tipo: 'puntos', puntos, aciertos: mias, total: 7, segundos: seg });
+}
+
+/* ---------- Sala ---------- */
+function empezarSala(d) {
+  sala = U.crearSala({ motor: B, turnoMs: 60000, botMs: 1500, sub: B.SUB });
+  sala.iniciar(d);
+  const nom = i => (sala.orden[i] || {}).nombre || '—';
+  $('n0').textContent = nom(0) + (sala.idx === 0 ? ' (tú)' : ''); $('n1').textContent = nom(1) + (sala.idx === 1 ? ' (tú)' : '');
+  ocultar(); $('hud').classList.remove('hide'); $('b-salir').classList.add('hide'); $('b-rendir').classList.remove('hide');
+  modo = 'sala'; aim = 0;
+}
+function pasoSala() {
+  const ahora = sala.ahora();
+  if (ahora < sala.inicio) { $('cuenta').textContent = Math.ceil((sala.inicio - ahora) / 1000); return; }
+  $('cuenta').textContent = '';
+  const antes = sala.anim ? sala.anim.sim.choques : 0;
+  const h = sala.cuadro();
+  if (sala.anim && sala.anim.sim.choques > antes) U.tono(900, 0.03, 'triangle', 0.04);
+  if (sala.anim && sala.anim.sim.pasos === B.SUB) sonarTaco(sala.anim.h.tiro.fuerza || 50);
+  if (h && !h.tiro.rendirse) avisoTiro(h.despues, sala.idx, sala.orden.map(p => p.nombre));
+  const l = sala.linea, mio = sala.miTurno();
+  $('panel').classList.toggle('hide', !mio);
+  pintarHud(sala.estado, sala.anim ? sala.anim.h.idx : l && !l.fin ? l.turno : null);
+  let txt = '';
+  if (sala.anim) txt = sala.anim.h.origen === 'bot' ? '🤖 Tira el bot…' : sala.anim.h.origen === 'auto' ? '⏰ Tiro automático' : '🎱 Tira ' + ((sala.orden[sala.anim.h.idx] || {}).nombre || '');
+  else if (l && l.fin) txt = '🏁 ¡Fin de la partida!';
+  else if (l && l.espera) {
+    const seg = l.espera.tipo === 'persona' ? Math.max(0, Math.ceil((l.espera.limite - ahora) / 1000)) : 0;
+    txt = mio ? '👉 Tu turno · ⏱ ' + seg + ' s' : l.espera.tipo === 'bot' ? '🤖 El bot está pensando…' : sala.propia ? '📨 Enviando…' : '⏳ Turno de ' + ((sala.orden[l.espera.idx] || {}).nombre || 'tu rival') + ' · ⏱ ' + seg + ' s';
+  }
+  if ($('estado').textContent !== txt) $('estado').textContent = txt;
+  if (sala.finDesde && performance.now() - sala.finDesde > 1500 && !sala.finEnviado) terminarSala();
+}
+function terminarSala() {
+  sala.finEnviado = true;
+  const s = sala.estado, fin = s.fin, puntos = [0, 1].map(i => B.puntos(s, i));
+  const mias = [0, 1].map(i => s.grupos[i] ? 7 - B.quedan(s, s.grupos[i]) : 0);
+  const quien = (sala.orden[fin.gana] || {}).nombre || '';
+  const titulo = '🎱 ¡Ganó ' + quien + '! (' + B.MOTIVO[fin.motivo] + ')';
+  U.enviar({ tipo: 'fin', gana: fin.gana, puntos, aciertos: mias, total: 7, titulo });
+  $('sala-titulo').textContent = titulo; $('sala-txt').textContent = 'Esperando el podio…';
+  $('panel').classList.add('hide'); mostrar('ov-sala');
+  if (fin.gana === sala.idx) U.confeti();
+}
+function tirarSala() {
+  if (!sala || !sala.miTurno()) return;
+  const tiro = { accion: 'tiro', angulo: aim, fuerza: fuerza() };
+  if (EFECTOS[efectoI].v) tiro.efecto = EFECTOS[efectoI].v;
+  if (sala.tirar(tiro)) $('panel').classList.add('hide');
+}
+const tirar = () => (modo === 'sala' ? tirarSala() : tirarIndividual());
+const puedoApuntar = () => modo === 'sala' ? !!(sala && sala.miTurno()) : modo === 'juego' && !sim && st && st.turno === 0 && !st.fin;
+const blancaActual = () => (modo === 'sala' ? sala.estado : st).bolas[0];
+
+/* ---------- Entrada ---------- */
+const dedos = {};
+U.tactil(cv, {
+  inicio: (id, x, y) => {
+    if (!puedoApuntar()) return;
+    const m = aMesa(x, y), bl = blancaActual(), dx = m.x - bl.x, dy = m.y - bl.y;
+    dedos[id] = { resortera: dx * dx + dy * dy <= (4 * B.R) * (4 * B.R) };
+    if (!dedos[id].resortera) aim = F.atan2Dec(dy, dx);
+  },
+  mover: (id, x, y) => {
+    const d = dedos[id]; if (!d || !puedoApuntar()) return;
+    const m = aMesa(x, y), bl = blancaActual(), dx = m.x - bl.x, dy = m.y - bl.y;
+    if (d.resortera) {
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > B.R) { aim = F.atan2Dec(-dy, -dx); ponerFuerza(Math.round(F.acotar((dist - B.R) / 2.6, 1, 100))); d.jalo = dist > 2 * B.R; }
+    } else aim = F.atan2Dec(dy, dx);
+  },
+  fin: (id, x, y, cancel) => {
+    const d = dedos[id]; delete dedos[id];
+    if (d && d.resortera && d.jalo && !cancel && puedoApuntar()) tirar();
+  },
+});
+function ponerFuerza(v) { $('r-fuerza').value = v; $('v-fuerza').textContent = v; }
+$('r-fuerza').addEventListener('input', () => { $('v-fuerza').textContent = $('r-fuerza').value; });
+$('b-izq').onclick = () => { aim = (aim + 3597) % 3600; };
+$('b-der').onclick = () => { aim = (aim + 3) % 3600; };
+$('b-efecto').onclick = () => { efectoI = (efectoI + 1) % EFECTOS.length; $('b-efecto').textContent = EFECTOS[efectoI].t; };
+$('b-tirar').onclick = tirar;
+$('b-rendir').onclick = () => { if (sala && sala.miTurno() && confirm('¿Rendirte? Tu rival gana la partida.')) sala.tirar({ accion: 'rendirse' }); };
+addEventListener('keydown', e => {
+  if (!puedoApuntar()) return;
+  if (e.code === 'ArrowLeft') { aim = (aim + 3590) % 3600; e.preventDefault(); }
+  else if (e.code === 'ArrowRight') { aim = (aim + 10) % 3600; e.preventDefault(); }
+  else if (e.code === 'ArrowUp') { ponerFuerza(Math.min(100, fuerza() + 5)); e.preventDefault(); }
+  else if (e.code === 'ArrowDown') { ponerFuerza(Math.max(1, fuerza() - 5)); e.preventDefault(); }
+  else if (e.code === 'Space' || e.code === 'Enter') { tirar(); e.preventDefault(); }
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-nivel],[data-ir]'); if (!b) return;
+  if (b.dataset.nivel) return nuevaPartida(b.dataset.nivel);
+  if (b.dataset.ir === 'otra') return nuevaPartida(nivel);
+  if (b.dataset.ir === 'menu') return abrirMenu();
+  if (b.dataset.ir === 'seguir') { ocultar(); modo = 'juego'; }
+});
+U.botonSonido($('b-sonido'));
+$('b-salir').onclick = e => { e.currentTarget.blur(); if (modo === 'juego') { modo = 'pausa'; mostrar('ov-pausa'); } };
+
+const OVERLAYS = ['ov-carga', 'ov-menu', 'ov-pausa', 'ov-res', 'ov-sala'];
+function mostrar(id) { OVERLAYS.forEach(o => $(o).classList.toggle('hide', o !== id)); }
+function ocultar() { OVERLAYS.forEach(o => $(o).classList.add('hide')); }
+function sonarTaco(f) { U.tono(160 + f * 3, 0.06, 'square', 0.05, 90); }
+
+/* ---------- Plataforma ---------- */
+U.alMensaje(d => {
+  if (d.tipo === 'inicio' && d.modo === 'individual') abrirMenu();
+  else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
+  else if (d.tipo === 'jugadas' && sala) sala.recibir(d.jugadas, d.ahora);
+  else if (d.tipo === 'jugada-ok' && sala && !d.ok) { sala.rechazo(); U.avisar('⚠️ No se envió tu tiro (' + (d.error || 'sin conexión') + ')', 2200); }
+  else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = d.guardado ? '✔ +' + d.puntos + ' a tus ⭐ individuales' + (d.pos ? ' · #' + d.pos + ' de la semana' : '') : 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').';
+});
+
+/* ---------- Bucle de paso fijo ---------- */
+let ultimo = performance.now(), acum = 0, cuadros = 0, fpsDesde = performance.now(), fps = 0;
+function cuadro(ahora) {
+  requestAnimationFrame(cuadro);
+  let dt = (ahora - ultimo) / 1000; ultimo = ahora;
+  if (dt > 0.25) dt = 0.25;
+  cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
+  if (modo === 'juego' || modo === 'sala') {
+    acum += dt; let n = 0;
+    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoIndividual(); else pasoSala(); acum -= PASO; n++; }
+    if (n === 6) acum = 0;
+    if (modo === 'juego' && st) {
+      pintarHud(st, sim ? (simOrigen === 'bot' ? 1 : 0) : st.turno);
+      const mio = !sim && st.turno === 0 && !st.fin;
+      $('panel').classList.toggle('hide', !mio);
+      const txt = sim ? (simOrigen === 'bot' ? '🤖 Tira el bot…' : '') : st.turno === 0 ? '👉 Tu turno' : '🤖 El bot está pensando…';
+      if ($('estado').textContent !== txt) $('estado').textContent = txt;
+    }
+  } else acum = 0;
+  dibujar();
+}
+ajustar();
+requestAnimationFrame(t => { ultimo = t; cuadro(t); });
+if (U.EMBED) U.enviar({ tipo: 'listo' }); else abrirMenu();
+if (U.PRUEBA) {
+  // Ganchos solo para pruebas E2E (?prueba=1).
+  window.__billar = {
+    estado: () => {
+      const e = modo === 'sala' && sala ? sala.estado : st;
+      return {
+        modo, nivel, horizontal, tactil: U.TACTIL, fps, w: W, h: H, k: K, aim, fuerza: fuerza(), efecto: EFECTOS[efectoI].v,
+        turno: e ? e.turno : null, grupos: e ? e.grupos : null, enMesa: e ? e.bolas.filter(o => !o.fuera).length : 16, tiros: e ? e.tiros : 0, ultimo: e ? e.ultimo : null, fin: e ? e.fin : null,
+        animando: !!(sim || (sala && sala.anim)), sala: !!sala, miTurno: !!(sala && sala.miTurno()), paso: sala && sala.linea ? sala.linea.paso : 0, mostrados: sala ? sala.mostrado.length : 0, yo: sala ? sala.idx : 0, finEnviado: !!(sala && sala.finEnviado),
+        blanca: e ? aPantalla(e.bolas[0].x, e.bolas[0].y) : null,
+      };
+    },
+    pantalla: (x, y) => aPantalla(x, y),
+    blancaMesa: () => { const o = blancaActual(); return { x: o.x, y: o.y }; },
+    firma: () => sala && !sala.anim ? JSON.stringify({ e: sala.estado, mostrados: sala.mostrado.length }) : null,
+    // Mesa lista para ganar: tus 7 lisas fuera y la 8 frente a la esquina (individual).
+    prepararFinal: () => {
+      st.bolas.forEach(o => { if (o.n >= 1 && o.n <= 7) o.fuera = true; });
+      Object.assign(st.bolas[0], { x: 160, y: 160, fuera: false }); Object.assign(st.bolas[8], { x: 60, y: 60, fuera: false });
+      st.bolas.forEach(o => { if (o.n > 8) { o.x = 500 + (o.n - 9) * 40; o.y = 400; } });
+      st.grupos = ['lisas', 'rayadas']; st.turno = 0; st.tiros = Math.max(1, st.tiros);
+    },
+  };
+}
+</script>
+</body></html>

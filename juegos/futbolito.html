@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Futbolito</title>
+<style>
+:root{--bg:#0b1f14;--panel:rgba(8,20,14,.9);--txt:#fff;--acento:#facc15;--rojo:#ef4444;--azul:#3b82f6;--btn:#16a34a}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#juego{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+#pantalla{position:relative;flex:1;min-height:0;overflow:hidden}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#hud{position:absolute;left:0;right:0;top:0;height:40px;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 8px;pointer-events:none;font-weight:900;text-shadow:0 1px 0 #000}
+.marcador{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 12px;font-size:15px;max-width:calc(100% - 100px);white-space:nowrap;overflow:hidden}
+.marcador b{font-size:22px;min-width:16px;text-align:center}
+.marcador .n{overflow:hidden;text-overflow:ellipsis;max-width:92px}
+.ficha{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid #fff;flex:0 0 auto}
+.f0{background:var(--rojo)}.f1{background:var(--azul)}
+#hud .der{position:absolute;right:6px;top:4px;display:flex;gap:6px;pointer-events:auto}
+.mini{font:inherit;font-size:16px;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.45);color:#fff;border-radius:10px;min-width:40px;min-height:34px;padding:2px 8px;cursor:pointer}
+#estado{position:absolute;left:50%;top:42px;transform:translateX(-50%);background:var(--panel);border-radius:999px;padding:4px 12px;font-weight:800;font-size:14px;white-space:nowrap;pointer-events:none;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+#aviso{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);background:var(--panel);padding:10px 18px;border-radius:18px;font-weight:900;font-size:22px;white-space:normal;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5;width:max-content;max-width:90%}
+#aviso.ver{opacity:1}
+#cuenta{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:84px;font-weight:900;color:var(--acento);text-shadow:0 4px 0 #14532d;pointer-events:none}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 50% 0,rgba(20,83,45,.92),rgba(5,15,10,.94));text-align:center;padding:14px;overflow:auto;z-index:6}
+.ov.hide,.hide{display:none!important}
+.ov h1{margin:0;font-size:clamp(28px,8vw,44px);color:var(--acento);text-shadow:0 3px 0 #14532d}
+.ov h2{margin:0;font-size:clamp(22px,6vw,32px);color:var(--acento)}
+.ov p{margin:0;max-width:520px;line-height:1.35}
+.btn{font:inherit;font-weight:800;font-size:18px;border:0;border-radius:999px;padding:10px 22px;min-height:50px;background:var(--btn);color:#fff;box-shadow:0 4px 0 #14532d;cursor:pointer}
+.btn.sec{background:#475569;box-shadow:0 4px 0 #1e293b}
+.btn.chico{font-size:15px;min-height:42px;padding:6px 14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:active{transform:translateY(3px)}
+.btn:focus-visible,.mini:focus-visible,.op:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+.fila{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.ops{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(480px,100%)}
+.op{font:inherit;font-weight:800;font-size:16px;border:3px solid rgba(255,255,255,.7);background:#14532d;color:#fff;border-radius:16px;padding:8px 4px;min-height:70px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.op small{font-weight:700;opacity:.85;font-size:11px}
+.ayuda{font-size:13px;opacity:.9;max-width:480px}
+.tarjetas{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tarjetas div{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:6px 12px;font-weight:800}
+.tarjetas small{display:block;font-size:11px;opacity:.75}
+#confeti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:7}
+#confeti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:caer 2.6s linear forwards}
+@keyframes caer{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
+/* Panel de tiro (sala) */
+#panel{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;padding:8px 10px 10px;background:linear-gradient(#0d2a1b,#0b1f14);font-weight:800;font-size:14px}
+#panel label{display:flex;flex-direction:column;gap:2px}
+#panel input[type=range]{width:100%;height:30px;accent-color:var(--acento)}
+#panel .acciones{grid-column:1/-1;display:flex;gap:8px;justify-content:center;align-items:center}
+#panel .nota{grid-column:1/-1;text-align:center;font-size:12px;opacity:.85;font-weight:700}
+#b-tirar{flex:1;max-width:260px}
+#teclas{position:absolute;left:0;right:0;bottom:4px;text-align:center;font-size:12px;opacity:.8;pointer-events:none}
+html.tactil #teclas{display:none}
+@media (orientation:landscape) and (max-height:520px){
+  #juego{flex-direction:row}
+  #panel{width:190px;grid-template-columns:1fr;align-content:center;padding:6px 8px}
+  #panel .acciones{flex-direction:column}
+  #b-tirar{width:100%}
+}
+@media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
+</style></head><body>
+<div id="juego">
+  <div id="pantalla">
+    <canvas id="c" aria-label="Mesa de futbolito vista desde arriba"></canvas>
+    <div id="hud" class="hide">
+      <div class="marcador" aria-live="polite"><span class="ficha f0"></span><span class="n" id="n0">Tú</span><b id="g0">0</b><span>–</span><b id="g1">0</b><span class="n" id="n1">Bot</span><span class="ficha f1"></span></div>
+      <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
+    </div>
+    <div id="estado" class="hide" role="status"></div>
+    <div id="cuenta" aria-live="polite"></div>
+    <div id="aviso" role="status"></div>
+    <div id="teclas" class="hide">← → mueven tu barra · Espacio patea</div>
+
+    <div class="ov" id="ov-carga"><h1>⚽ Futbolito</h1><p>Cargando…</p></div>
+    <div class="ov hide" id="ov-menu">
+      <h1>⚽ Futbolito</h1>
+      <p>Futbolito de mesa contra el bot. Gana quien meta <b>5 goles</b> primero.</p>
+      <div class="ops" role="group" aria-label="Nivel del bot">
+        <button class="op" data-nivel="facil">🟢 Fácil<small>bot tranquilo</small></button>
+        <button class="op" data-nivel="medio">🟡 Medio<small>bot atento</small></button>
+        <button class="op" data-nivel="dificil">🔴 Difícil<small>bot crack</small></button>
+      </div>
+      <p class="ayuda" id="ayuda-menu"></p>
+    </div>
+    <div class="ov hide" id="ov-pausa"><h2>⏸ Pausa</h2><div class="fila"><button class="btn" data-ir="seguir">▶ Seguir</button><button class="btn sec" data-ir="menu">🏠 Menú</button></div></div>
+    <div class="ov hide" id="ov-res">
+      <h2 id="res-titulo">🏆 ¡Ganaste!</h2>
+      <div class="tarjetas" id="res-tarjetas"></div>
+      <p id="res-guardado" class="ayuda"></p>
+      <div class="fila"><button class="btn" data-ir="otra">🔁 Otra vez</button><button class="btn sec" data-ir="menu">🎚️ Cambiar nivel</button></div>
+    </div>
+    <div class="ov hide" id="ov-sala"><h2 id="sala-titulo">🏁 ¡Fin del partido!</h2><p id="sala-txt">Esperando el podio…</p></div>
+    <div id="confeti"></div>
+  </div>
+  <div id="panel" class="hide" aria-label="Tu tiro">
+    <label for="r-angulo">🎯 Ángulo <span id="v-angulo">0°</span><input id="r-angulo" type="range" min="-60" max="60" step="1" value="0"></label>
+    <label for="r-fuerza">💪 Fuerza <span id="v-fuerza">75</span><input id="r-fuerza" type="range" min="10" max="100" step="1" value="75"></label>
+    <div class="acciones"><button class="btn" id="b-tirar">⚽ ¡Tirar!</button><button class="btn sec chico" id="b-rendir" aria-label="Rendirme">🏳️</button></div>
+    <div class="nota" id="panel-nota">Desliza sobre la mesa para mover tu barra con la pelota.</div>
+  </div>
+</div>
+<script src="fisica.js?v=1"></script>
+<script src="futbolito-motor.js?v=1"></script>
+<script src="mesa-ui.js?v=1"></script>
+<script>
+/* Futbolito (openspec: futbolito-billar). Individual: tiempo real contra el bot. En sala: 1 vs 1 por tiros
+   deterministas (MesaUI.crearSala). Embebido en juegos.html por un iframe del mismo origen (postMessage). */
+'use strict';
+const F = window.Fisica, T = window.Futbolito, U = window.MesaUI, $ = U.$;
+U.usarJuego('futbolito');
+const cv = $('c'), g = cv.getContext('2d');
+const PASO = 1 / 60, COLOR = ['#ef4444', '#3b82f6'], COLOR_OSC = ['#991b1b', '#1e3a8a'];
+const NIVEL_TXT = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
+let modo = 'carga', nivel = 'medio', st = null, mem = {}, activa = 4, objetivo = [], golHasta = 0, t0 = 0, rnd = Math.random;
+let sala = null; // controlador de sala (MesaUI.crearSala)
+let posSala = null; // corrimiento elegido para el tiro de sala
+const tecla = { izq: false, der: false };
+
+/* ---------- Vista: mesa → pantalla (vertical u horizontal; en sala, tu portería siempre abajo/izquierda) ---------- */
+const MARCO = 16, CAB = 24; // marco de madera y fondo de las porterías (unidades de mesa)
+let W = 0, H = 0, DPR = 1, M = [1, 0, 0, 1, 0, 0], horizontal = false, voltear = false;
+function ajustar() {
+  const r = $('pantalla').getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  W = r.width; H = r.height; DPR = Math.min(3, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  horizontal = W > H * 1.05;
+  const arriba = 40, mw = T.ANCHO + 2 * MARCO, ml = T.LARGO + 2 * CAB;
+  const aw = horizontal ? ml : mw, ah = horizontal ? mw : ml;
+  const k = Math.min((W - 8) / aw, (H - arriba - 6) / ah);
+  const ox = (W - aw * k) / 2, oy = arriba + (H - arriba - ah * k) / 2;
+  if (!horizontal) M = voltear ? [-k, 0, 0, -k, ox + (MARCO + T.ANCHO) * k, oy + (CAB + T.LARGO) * k] : [k, 0, 0, k, ox + MARCO * k, oy + CAB * k];
+  else M = voltear ? [0, -k, k, 0, ox + CAB * k, oy + (MARCO + T.ANCHO) * k] : [0, k, -k, 0, ox + (CAB + T.LARGO) * k, oy + MARCO * k];
+}
+addEventListener('resize', ajustar);
+if (window.ResizeObserver) new ResizeObserver(() => ajustar()).observe($('pantalla'));
+const aPantalla = (x, y) => ({ x: M[0] * x + M[2] * y + M[4], y: M[1] * x + M[3] * y + M[5] });
+// Desplazamiento en pantalla (px) → desplazamiento a lo largo de las barras (x de la mesa).
+function deltaX(dx, dy) { const det = M[0] * M[3] - M[1] * M[2]; return (M[3] * dx - M[2] * dy) / det; }
+
+/* ---------- Dibujo ---------- */
+function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function dibujarMesa() {
+  const A = T.ANCHO, L = T.LARGO;
+  // Marco de madera
+  rr(-MARCO, -CAB, A + 2 * MARCO, L + 2 * CAB, 14); g.fillStyle = '#7c4a21'; g.fill();
+  rr(-MARCO + 4, -CAB + 4, A + 2 * MARCO - 8, L + 2 * CAB - 8, 10); g.fillStyle = '#9a5b2a'; g.fill();
+  // Porterías (red)
+  for (const lado of [0, 1]) {
+    const y = lado ? L : -CAB + 6;
+    g.fillStyle = '#111827'; g.fillRect(T.PX0, y, T.PX1 - T.PX0, CAB - 6);
+    g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1;
+    for (let x = T.PX0 + 6; x < T.PX1; x += 8) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + CAB - 6); g.stroke(); }
+  }
+  // Pasto con franjas
+  g.fillStyle = '#15803d'; g.fillRect(0, 0, A, L);
+  g.fillStyle = '#16a34a';
+  for (let i = 0; i < 8; i += 2) g.fillRect(0, i * L / 8, A, L / 8);
+  // Líneas
+  g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 2;
+  g.strokeRect(1, 1, A - 2, L - 2);
+  g.beginPath(); g.moveTo(0, L / 2); g.lineTo(A, L / 2); g.stroke();
+  g.beginPath(); g.arc(A / 2, L / 2, 40, 0, Math.PI * 2); g.stroke();
+  g.beginPath(); g.arc(A / 2, L / 2, 3, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill();
+  for (const lado of [0, 1]) {
+    const y0 = lado ? L - 56 : 0;
+    g.strokeRect(A / 2 - 70, y0, 140, 56); g.strokeRect(A / 2 - 36, lado ? L - 22 : 0, 72, 22);
+  }
+  // Postes
+  g.fillStyle = '#f8fafc';
+  for (const y of [0, L]) for (const x of [T.PX0, T.PX1]) { g.beginPath(); g.arc(x, y, 3.5, 0, Math.PI * 2); g.fill(); }
+}
+function dibujarBarras(s, opciones) {
+  const A = T.ANCHO;
+  T.BARRAS.forEach((b, i) => {
+    const resaltada = opciones.activa === i;
+    // Barra de metal
+    g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(-MARCO, b.y - 1, A + 2 * MARCO, 5);
+    const gr = g.createLinearGradient(0, b.y - 2.5, 0, b.y + 2.5); gr.addColorStop(0, '#f1f5f9'); gr.addColorStop(0.5, '#94a3b8'); gr.addColorStop(1, '#475569');
+    g.fillStyle = gr; g.fillRect(-MARCO, b.y - 2.5, A + 2 * MARCO, 5);
+    if (resaltada) { g.fillStyle = 'rgba(250,204,21,.35)'; g.fillRect(-MARCO, b.y - 6, A + 2 * MARCO, 12); }
+    // Mango del lado de su equipo (izquierda equipo 0, derecha equipo 1)
+    g.fillStyle = COLOR_OSC[b.eq]; const mx = b.eq === 0 ? -MARCO - 2 : A + MARCO - 12; rr(mx, b.y - 5, 14, 10, 4); g.fill();
+    // Jugadores
+    const giro = s.patada[i] > 0 ? Math.sin((1 - s.patada[i] / T.PATADA) * Math.PI) : 0;
+    b.h.forEach((_, k) => {
+      const x = A / 2 + b.h[k] + s.s[i], d = T.dir(b.eq);
+      g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x + 2, b.y + 3, 10, 6, 0, 0, Math.PI * 2); g.fill();
+      if (giro > 0.05) { // pierna que gira hacia el frente
+        g.fillStyle = '#1f2937'; g.beginPath(); g.ellipse(x, b.y + d * (5 + giro * 9), 3.5, 3 + giro * 5, 0, 0, Math.PI * 2); g.fill();
+      }
+      g.fillStyle = COLOR[b.eq]; g.beginPath(); g.ellipse(x, b.y, 9.5, 6, 0, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = resaltada ? '#facc15' : 'rgba(0,0,0,.35)'; g.lineWidth = resaltada ? 2 : 1; g.stroke();
+      g.fillStyle = '#fde2c4'; g.beginPath(); g.arc(x, b.y, 4.2, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#3b2412'; g.beginPath(); g.arc(x, b.y - d * 0.8, 3.3, Math.PI * (d > 0 ? 1 : 0), Math.PI * (d > 0 ? 2 : 1)); g.fill();
+    });
+  });
+}
+function dibujarPelota(p) {
+  g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.arc(p.x + 2, p.y + 2, T.RB, 0, Math.PI * 2); g.fill();
+  const gr = g.createRadialGradient(p.x - 2, p.y - 2, 1, p.x, p.y, T.RB); gr.addColorStop(0, '#fff'); gr.addColorStop(1, '#cbd5e1');
+  g.fillStyle = gr; g.beginPath(); g.arc(p.x, p.y, T.RB, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#111827'; g.beginPath(); g.arc(p.x, p.y, 1.8, 0, Math.PI * 2); g.fill();
+  for (let a = 0; a < 5; a++) { const an = a * 1.2566; g.beginPath(); g.arc(p.x + Math.cos(an) * 4.2, p.y + Math.sin(an) * 4.2, 1.1, 0, Math.PI * 2); g.fill(); }
+}
+// Línea de mira del tiro de sala.
+function dibujarMira(desde, eq, angulo, fuerza) {
+  const [sn, cs] = F.senCos(angulo * 10), len = 40 + fuerza * 1.6, d = T.dir(eq);
+  g.save(); g.setLineDash([6, 6]); g.strokeStyle = '#facc15'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(desde.x, desde.y); g.lineTo(desde.x + sn * len, desde.y + d * cs * len); g.stroke(); g.restore();
+  g.fillStyle = '#facc15'; g.beginPath(); g.arc(desde.x + sn * len, desde.y + d * cs * len, 4, 0, Math.PI * 2); g.fill();
+}
+function dibujar() {
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  g.fillStyle = '#0b1f14'; g.fillRect(0, 0, W, H);
+  g.setTransform(M[0] * DPR, M[1] * DPR, M[2] * DPR, M[3] * DPR, M[4] * DPR, M[5] * DPR);
+  dibujarMesa();
+  const vista = vistaActual();
+  if (!vista) return;
+  dibujarBarras(vista.st, { activa: vista.activa });
+  dibujarPelota(vista.st.pelota);
+  if (vista.mira) dibujarMira(vista.mira.desde, vista.mira.eq, vista.mira.angulo, vista.mira.fuerza);
+}
+
+/* ---------- Individual (tiempo real) ---------- */
+function abrirMenu() {
+  modo = 'menu'; $('hud').classList.add('hide'); $('teclas').classList.add('hide');
+  $('ayuda-menu').innerHTML = U.TACTIL ? '👆 <b>Desliza</b> el dedo a los lados en tu mitad para mover tu barra (la resaltada) y <b>toca</b> para patear. La barra cambia sola según dónde va la pelota.' : '⌨️ <b>← →</b> (o A D) mueven tu barra resaltada y <b>Espacio</b> patea. La barra cambia sola según dónde va la pelota.';
+  mostrar('ov-menu');
+}
+function nuevaPartida(n) {
+  nivel = n; st = T.nuevo(); mem = {}; objetivo = st.s.slice(); activa = 4; golHasta = 0; t0 = performance.now();
+  T.saque(st, Math.random() < 0.5 ? 0 : 1, (Math.random() * 2 - 1) * 20);
+  $('n0').textContent = 'Tú'; $('n1').textContent = 'Bot ' + NIVEL_TXT[n];
+  pintarMarcador(); ocultar(); $('hud').classList.remove('hide'); if (!U.TACTIL) $('teclas').classList.remove('hide');
+  modo = 'juego'; U.avisar('¡A jugar! Primero a 5', 1200);
+}
+function pintarMarcador() { const m = vistaMarcador(); $('g0').textContent = m[0]; $('g1').textContent = m[1]; }
+function pasoVivo() {
+  if (golHasta) { if (performance.now() < golHasta) return; golHasta = 0; T.saque(st, st.ultimoGol === 0 ? 1 : 0, (Math.random() * 2 - 1) * 20); }
+  const nueva = T.barraActiva(st, 0);
+  if (nueva !== activa) { activa = nueva; objetivo[activa] = st.s[activa]; }
+  if (tecla.izq) objetivo[activa] -= 380 * PASO * signoTecla;
+  if (tecla.der) objetivo[activa] += 380 * PASO * signoTecla;
+  const b = T.BARRAS[activa]; objetivo[activa] = F.acotar(objetivo[activa], -b.rango, b.rango);
+  const mando = { obj: st.s.slice(), vmax: T.BARRAS.map(() => 0), fantasma: T.BARRAS.map(() => false) };
+  T.BARRAS.forEach((x, i) => { if (x.eq === 0) { mando.obj[i] = i === activa ? objetivo[i] : T.seguir(st, i, st.pelota.x).s; mando.vmax[i] = i === activa ? 900 : 170; } });
+  T.iaBot(st, 1, nivel, mando, mem, rnd, PASO);
+  for (let k = 0; k < T.SUB; k++) {
+    const gol = T.paso(st, T.DT, mando);
+    if (gol !== null) { anotar(gol); break; }
+  }
+}
+function anotar(eq) {
+  st.marcador[eq]++; st.ultimoGol = eq; pintarMarcador();
+  sonar('gol', eq === 0);
+  st.pelota.vx = 0; st.pelota.vy = 0;
+  if (st.marcador[eq] >= T.META) return terminarIndividual();
+  U.avisar(eq === 0 ? '⚽ ¡GOOOL!' : '😬 Gol del bot', 1100);
+  golHasta = performance.now() + 1200;
+}
+function terminarIndividual() {
+  modo = 'resultado';
+  const gano = st.marcador[0] > st.marcador[1];
+  st.fin = { gana: gano ? 0 : 1, motivo: 'goles' };
+  const puntos = T.puntos(st, 0, nivel), seg = Math.round((performance.now() - t0) / 1000);
+  $('res-titulo').textContent = gano ? '🏆 ¡Ganaste!' : '😅 Ganó el bot';
+  $('res-tarjetas').innerHTML = '<div>' + st.marcador[0] + ' – ' + st.marcador[1] + '<small>Marcador</small></div><div>' + NIVEL_TXT[nivel] + '<small>Nivel</small></div><div>+' + puntos + '<small>Puntos</small></div>';
+  $('res-guardado').textContent = U.EMBED ? 'Guardando tus puntos…' : '';
+  mostrar('ov-res'); $('hud').classList.add('hide');
+  if (gano) U.confeti();
+  U.enviar({ tipo: 'puntos', puntos, aciertos: st.marcador[0], total: T.META, segundos: seg });
+}
+function patearActiva() {
+  if (modo !== 'juego' || golHasta) return;
+  if (T.patear(st, activa, 470)) sonar('patada');
+}
+
+/* ---------- Sala (por tiros) ---------- */
+function empezarSala(d) {
+  sala = U.crearSala({ motor: T, turnoMs: 30000, botMs: 1500, sub: T.SUB });
+  sala.iniciar(d);
+  voltear = sala.idx === 1; ajustar();
+  const nom = i => (sala.orden[i] || {}).nombre || '—';
+  $('n0').textContent = nom(0) + (sala.idx === 0 ? ' (tú)' : ''); $('n1').textContent = nom(1) + (sala.idx === 1 ? ' (tú)' : '');
+  ocultar(); $('hud').classList.remove('hide'); $('b-pausa').classList.add('hide'); $('estado').classList.remove('hide');
+  modo = 'sala'; posSala = null;
+}
+function pasoSala() {
+  const ahora = sala.ahora();
+  if (ahora < sala.inicio) { $('cuenta').textContent = Math.ceil((sala.inicio - ahora) / 1000); return; }
+  $('cuenta').textContent = '';
+  const antes = sala.estado.marcador.slice();
+  const h = sala.cuadro();
+  if (h) {
+    posSala = null;
+    const m = sala.estado.marcador;
+    if (m[0] !== antes[0] || m[1] !== antes[1]) { const eq = m[0] !== antes[0] ? 0 : 1; sonar('gol', eq === sala.idx); U.avisar(eq === sala.idx ? '⚽ ¡GOOOL!' : '⚽ Gol de ' + ((sala.orden[eq] || {}).nombre || 'tu rival'), 1300); }
+  }
+  pintarMarcador();
+  const l = sala.linea, panel = $('panel');
+  const mio = sala.miTurno();
+  panel.classList.toggle('hide', !mio);
+  if (mio && posSala === null) posSala = sala.estado.s[sala.estado.posesion.barra];
+  let txt = '';
+  if (sala.anim) txt = sala.anim.h.origen === 'bot' ? '🤖 Tira el bot…' : sala.anim.h.origen === 'auto' ? '⏰ Tiro automático' : '⚽ Tiro de ' + ((sala.orden[sala.anim.h.idx] || {}).nombre || '');
+  else if (l && l.fin) txt = '🏁 ¡Fin del partido!';
+  else if (l && l.espera) {
+    const seg = l.espera.tipo === 'persona' ? Math.max(0, Math.ceil((l.espera.limite - ahora) / 1000)) : 0;
+    txt = mio ? '👉 Tu tiro · ⏱ ' + seg + ' s' : l.espera.tipo === 'bot' ? '🤖 El bot está pensando…' : sala.propia ? '📨 Enviando…' : '⏳ Tira ' + ((sala.orden[l.espera.idx] || {}).nombre || 'tu rival') + ' · ⏱ ' + seg + ' s';
+  }
+  if ($('estado').textContent !== txt) $('estado').textContent = txt;
+  if (sala.finDesde && performance.now() - sala.finDesde > 1500 && !sala.finEnviado) terminarSala();
+}
+function terminarSala() {
+  sala.finEnviado = true;
+  const s = sala.estado, fin = s.fin;
+  const puntos = [0, 1].map(i => T.puntos(s, i, 'sala'));
+  const quien = (sala.orden[fin.gana] || {}).nombre || '';
+  const titulo = fin.motivo === 'rendicion' ? '🏳️ ' + quien + ' gana por rendición' : '⚽ ¡Ganó ' + quien + ' ' + Math.max(...s.marcador) + '–' + Math.min(...s.marcador) + '!';
+  U.enviar({ tipo: 'fin', gana: fin.gana, puntos, aciertos: s.marcador.slice(), total: T.META, titulo });
+  $('sala-titulo').textContent = titulo; $('sala-txt').textContent = 'Esperando el podio…';
+  $('panel').classList.add('hide'); mostrar('ov-sala');
+  if (fin.gana === sala.idx) U.confeti();
+}
+function tirarSala() {
+  if (!sala || !sala.miTurno()) return;
+  const tiro = { accion: 'tiro', pos: Math.round(posSala), angulo: Number($('r-angulo').value), fuerza: Number($('r-fuerza').value) };
+  if (sala.tirar(tiro)) { $('panel').classList.add('hide'); sonar('patada'); }
+}
+
+/* ---------- Qué se dibuja ---------- */
+function vistaMarcador() { return modo === 'sala' && sala ? sala.estado.marcador : st ? st.marcador : [0, 0]; }
+function vistaActual() {
+  if (modo === 'sala' && sala) {
+    if (sala.anim) return { st: sala.anim.sim.st, activa: sala.anim.h.tiro.pos !== undefined ? sala.anim.h.antes.posesion.barra : -1 };
+    const e = sala.estado;
+    if (!e.posesion) return { st: e, activa: -1 };
+    const vista = F.clonar(e), b = e.posesion.barra;
+    if (sala.miTurno() && posSala !== null) { vista.s[b] = F.acotar(posSala, -T.BARRAS[b].rango, T.BARRAS[b].rango); Object.assign(vista.pelota, T.pelotaCon(e, posSala)); }
+    const mira = sala.miTurno() ? { desde: vista.pelota, eq: T.BARRAS[b].eq, angulo: Number($('r-angulo').value), fuerza: Number($('r-fuerza').value) } : null;
+    return { st: vista, activa: b, mira };
+  }
+  if (st) return { st, activa: modo === 'juego' ? activa : -1 };
+  const demo = T.nuevo(); demo.pelota.y = 240; return { st: demo, activa: -1 };
+}
+
+/* ---------- Entrada ---------- */
+let signoTecla = 1; // ← → según la orientación de la vista
+const dedos = {};
+U.tactil(cv, {
+  inicio: (id, x, y) => { dedos[id] = { x, y, x0: x, y0: y, t: performance.now(), mov: 0 }; },
+  mover: (id, x, y) => {
+    const d = dedos[id]; if (!d) return;
+    const dx = deltaX(x - d.x, y - d.y);
+    d.mov += Math.abs(x - d.x) + Math.abs(y - d.y); d.x = x; d.y = y;
+    if (modo === 'juego') objetivo[activa] = F.acotar(objetivo[activa] + dx, -T.BARRAS[activa].rango, T.BARRAS[activa].rango);
+    else if (modo === 'sala' && sala.miTurno() && posSala !== null) { const b = T.BARRAS[sala.estado.posesion.barra]; posSala = F.acotar(posSala + dx, -b.rango, b.rango); }
+  },
+  fin: (id, x, y, cancel) => {
+    const d = dedos[id]; delete dedos[id];
+    if (!d || cancel) return;
+    if (d.mov < 12 && performance.now() - d.t < 300 && modo === 'juego') patearActiva();
+  },
+});
+const TECLAS = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'izq', KeyW: 'izq', ArrowDown: 'der', KeyS: 'der' };
+addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); if (modo === 'juego') patearActiva(); else if (modo === 'sala') tirarSala(); return; }
+  if (e.code === 'Escape' || e.code === 'KeyP') { if (modo === 'juego') pausar(); else if (modo === 'pausa') seguir(); return; }
+  const k = TECLAS[e.code]; if (!k) return;
+  e.preventDefault();
+  // En horizontal las barras van de arriba abajo: ↑ ↓ las mueven; en vertical, ← →.
+  const vertical = e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'KeyW' || e.code === 'KeyS';
+  if (vertical !== horizontal) return;
+  signoTecla = Math.sign(horizontal ? (M[1] || 1) : (M[0] || 1));
+  if (modo === 'sala' && sala && sala.miTurno() && posSala !== null) { const b = T.BARRAS[sala.estado.posesion.barra]; posSala = F.acotar(posSala + (k === 'izq' ? -6 : 6) * signoTecla, -b.rango, b.rango); return; }
+  tecla[k] = true;
+});
+addEventListener('keyup', e => { const k = TECLAS[e.code]; if (k) tecla[k] = false; });
+addEventListener('blur', () => { tecla.izq = false; tecla.der = false; });
+$('r-angulo').addEventListener('input', () => { $('v-angulo').textContent = $('r-angulo').value + '°'; });
+$('r-fuerza').addEventListener('input', () => { $('v-fuerza').textContent = $('r-fuerza').value; });
+$('b-tirar').onclick = tirarSala;
+$('b-rendir').onclick = () => { if (sala && sala.miTurno() && confirm('¿Rendirte? Tu rival gana el partido.')) sala.tirar({ accion: 'rendirse' }); };
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-nivel],[data-ir]'); if (!b) return;
+  if (b.dataset.nivel) return nuevaPartida(b.dataset.nivel);
+  if (b.dataset.ir === 'otra') return nuevaPartida(nivel);
+  if (b.dataset.ir === 'menu') return abrirMenu();
+  if (b.dataset.ir === 'seguir') return seguir();
+});
+U.botonSonido($('b-sonido'));
+$('b-pausa').onclick = e => { e.currentTarget.blur(); pausar(); };
+function pausar() { if (modo !== 'juego') return; modo = 'pausa'; mostrar('ov-pausa'); }
+function seguir() { if (modo !== 'pausa') return; ocultar(); modo = 'juego'; }
+document.addEventListener('visibilitychange', () => { if (document.hidden) pausar(); });
+
+/* ---------- Pantallas y sonido ---------- */
+const OVERLAYS = ['ov-carga', 'ov-menu', 'ov-pausa', 'ov-res', 'ov-sala'];
+function mostrar(id) { OVERLAYS.forEach(o => $(o).classList.toggle('hide', o !== id)); }
+function ocultar() { OVERLAYS.forEach(o => $(o).classList.add('hide')); }
+function sonar(que, bueno) {
+  if (que === 'patada') U.tono(220, 0.08, 'square', 0.05, 120);
+  if (que === 'gol') (bueno ? [523, 659, 784, 1047] : [392, 330, 262]).forEach((f, i) => U.tono(f, 0.14, 'square', 0.05, undefined, i * 0.1));
+}
+
+/* ---------- Plataforma ---------- */
+U.alMensaje(d => {
+  if (d.tipo === 'inicio' && d.modo === 'individual') abrirMenu();
+  else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
+  else if (d.tipo === 'jugadas' && sala) sala.recibir(d.jugadas, d.ahora);
+  else if (d.tipo === 'jugada-ok' && sala && !d.ok) { sala.rechazo(); U.avisar('⚠️ No se envió tu tiro (' + (d.error || 'sin conexión') + ')', 2200); }
+  else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = d.guardado ? '✔ +' + d.puntos + ' a tus ⭐ individuales' + (d.pos ? ' · #' + d.pos + ' de la semana' : '') : 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').';
+});
+
+/* ---------- Bucle de paso fijo ---------- */
+let ultimo = performance.now(), acum = 0, cuadros = 0, fpsDesde = performance.now(), fps = 0;
+function cuadro(ahora) {
+  requestAnimationFrame(cuadro);
+  let dt = (ahora - ultimo) / 1000; ultimo = ahora;
+  if (dt > 0.25) dt = 0.25;
+  cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
+  if ((modo === 'juego' || modo === 'sala') && !(modo === 'juego' && document.hidden)) {
+    acum += dt; let n = 0;
+    while (acum >= PASO && n < 6) { if (modo === 'juego') pasoVivo(); else pasoSala(); acum -= PASO; n++; }
+    if (n === 6) acum = 0;
+  } else acum = 0;
+  dibujar();
+}
+ajustar();
+requestAnimationFrame(t => { ultimo = t; cuadro(t); });
+if (U.EMBED) U.enviar({ tipo: 'listo' }); else abrirMenu();
+if (U.PRUEBA) {
+  // Ganchos solo para pruebas E2E (?prueba=1).
+  window.__futbolito = {
+    estado: () => ({
+      modo, nivel, horizontal, tactil: U.TACTIL, fps, w: W, h: H,
+      marcador: vistaMarcador().slice(), activa, puesto: T.BARRAS[activa] && T.BARRAS[activa].puesto, s: st ? st.s.slice() : null, objetivo: objetivo.slice(),
+      pelota: st ? Object.assign({}, st.pelota) : null, patada: st ? st.patada.slice() : null,
+      sala: !!sala, miTurno: !!(sala && sala.miTurno()), paso: sala && sala.linea ? sala.linea.paso : 0, fin: sala && sala.linea ? sala.linea.fin : null,
+      animando: !!(sala && sala.anim), posSala, yo: sala ? sala.idx : 0, mostrados: sala ? sala.mostrado.length : 0, finEnviado: !!(sala && sala.finEnviado),
+    }),
+    // Pone la pelota frente a tu barra activa (para probar la patada con un toque real).
+    pelotaEnfrente: () => { st.pelota = { x: T.ANCHO / 2 + T.BARRAS[4].h[2] + st.s[4], y: T.BARRAS[4].y - T.ALCANCE - 2, vx: 0, vy: 0 }; activa = 4; objetivo[4] = st.s[4]; },
+    ponerPelota: (x, y) => { st.pelota = { x, y, vx: 0, vy: 0 }; },
+    // Estado de la sala tal como se ve (para comparar dos aparatos).
+    firma: () => sala && !sala.anim ? JSON.stringify({ e: sala.estado, mostrados: sala.mostrado.length }) : null,
+    pausarBot: () => { T.NIVELES[nivel].vmax = 0; T.NIVELES[nivel].patea = 0; },
+    anotar: eq => anotar(eq),
+    pantalla: (x, y) => aPantalla(x, y),
+  };
+}
+</script>
+</body></html>
