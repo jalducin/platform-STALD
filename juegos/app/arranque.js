@@ -65,7 +65,6 @@ app.addEventListener('click', e => {
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
     if (pa && pa.dataset.p === 'equipo') return cambiarEquipoFutbolito(pa); // futbolito-equipos
-    if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert('👥 Faltan jugadores. Espera a que se una tu rival.'); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok && r.body.error === 'faltan_jugadores') { pa.disabled = false; alert(TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.'); /* juegos-tablero */ } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     return NO_ATENDIDO;
   };
