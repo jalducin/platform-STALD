@@ -99,6 +99,7 @@ body.ctl-mando #mandos,body:not(.jugando) .mando{display:none!important}
 @media (max-height:560px){.portada-axo{width:76px;height:76px}#ov-titulo>p:not(#teclas){display:none}.pers img{width:40px;height:40px}}
 @media (max-height:430px){.portada-axo{display:none}#ov-titulo h1{font-size:28px}}
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.nodo.sigue,.marca img,.portada-axo{animation:none}.m{transition:none}}
+fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
 </style></head><body>
 <div id="juego">
   <div id="pantalla">
@@ -108,22 +109,22 @@ body.ctl-mando #mandos,body:not(.jugando) .mando{display:none!important}
       <div class="grupo"><span class="chip" id="h-viento"></span><span class="chip" id="h-tiempo">⏱ 300</span><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
       <div class="bots chip" id="h-bots"></div>
     </div>
-    <div id="aviso" role="status"></div>
+    <output id="aviso"></output>
 
     <div class="ov" id="ov-carga"><h1>🦎 Axo</h1><p>Cargando tu avance…</p></div>
     <div class="ov hide" id="ov-titulo">
       <img class="portada-axo" id="portada-axo" alt="Xalli, Guardián de los Canales" width="132" height="132">
       <h1>Axo <b>y los 12 mundos</b></h1>
       <p id="portada-txt">Elige a tu personaje y cruza los mundos: junta monedas, pisa a los bichos y vence al jefe de cada castillo.</p>
-      <div id="personajes" role="group" aria-label="Personaje"></div>
+      <fieldset id="personajes" aria-label="Personaje"></fieldset>
       <div class="fila"><button class="btn" id="b-jugar">▶ Jugar</button></div>
-      <div class="fila ctl-fila" role="group" aria-label="Controles"><button class="sel" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="sel" data-control="botones" aria-pressed="false">🔘 Botones</button><span class="guia-lugar"></span></div>
+      <fieldset class="fila ctl-fila" aria-label="Controles"><button class="sel" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="sel" data-control="botones" aria-pressed="false">🔘 Botones</button><span class="guia-lugar"></span></fieldset>
       <p id="teclas">⌨️ ← → para moverte · ESPACIO o ↑ para saltar · X para lanzar fuego · P para pausa</p>
     </div>
     <div class="ov hide" id="ov-mapa">
       <div class="mapa-caja">
         <div class="mundo-nav"><button class="mini" id="b-mundo-ant" aria-label="Mundo anterior">◀</button><div class="mapa-cab"><span id="mapa-num">1 / 12</span><h2 id="mapa-titulo"></h2></div><button class="mini" id="b-mundo-sig" aria-label="Mundo siguiente">▶</button></div>
-        <div id="mapa-mundos" role="group" aria-label="Los 12 mundos"></div>
+        <fieldset id="mapa-mundos" aria-label="Los 12 mundos"></fieldset>
         <div class="escena"><div id="mapa-svg"></div><div id="mapa-nodos"></div></div>
         <p id="mapa-aviso"></p>
         <div class="stats" id="mapa-stats"></div>
@@ -133,7 +134,7 @@ body.ctl-mando #mandos,body:not(.jugando) .mando{display:none!important}
     </div>
     <div class="ov hide" id="ov-pausa"><h2>⏸ Pausa</h2><p id="pausa-txt">El juego se detiene mientras no estás.</p>
       <div class="fila"><button class="btn" id="b-seguir">▶ Seguir</button><button class="btn sec" id="b-al-mapa">🗺️ Al mapa</button></div>
-      <div class="fila ctl-fila" role="group" aria-label="Controles"><button class="sel" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="sel" data-control="botones" aria-pressed="false">🔘 Botones</button><span class="guia-lugar"></span></div></div>
+      <fieldset class="fila ctl-fila" aria-label="Controles"><button class="sel" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="sel" data-control="botones" aria-pressed="false">🔘 Botones</button><span class="guia-lugar"></span></fieldset></div>
     <div class="ov hide" id="ov-fin"><h2 id="fin-titulo">¡Nivel superado!</h2><div class="stats" id="fin-stats"></div><p id="fin-puntos"></p><p id="fin-guardado" style="font-size:14px"></p>
       <div class="fila" id="fin-botones"></div></div>
     <div class="ov hide" id="ov-sala"><h2 id="sala-titulo">Partida</h2><p id="sala-txt"></p><div style="font-size:64px;font-weight:900;color:var(--acento)" id="sala-cuenta"></div></div>

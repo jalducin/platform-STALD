@@ -94,6 +94,7 @@ body.ctl-mando #hud-fuerza{display:inline}
   #b-golpear{font-size:20px}
 }
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
+fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
 </style></head><body>
 <div id="juego">
   <div id="pantalla">
@@ -104,9 +105,9 @@ body.ctl-mando #hud-fuerza{display:inline}
       <div class="der"><button class="mini" id="b-tarjeta" aria-label="Ver la tarjeta">📋</button><button class="mini" id="b-salir" aria-label="Pausa y menú">☰</button></div>
     </div>
     <div id="jugadores" class="hide"></div>
-    <div id="estado" role="status"></div>
+    <output id="estado"></output>
     <div id="cuenta" aria-live="polite"></div>
-    <div id="aviso" role="status"></div>
+    <output id="aviso"></output>
 
     <div class="ov" id="ov-carga"><h1>⛳ Golf</h1><p>Cargando…</p></div>
     <div class="ov hide" id="ov-menu">
@@ -114,11 +115,11 @@ body.ctl-mando #hud-fuerza{display:inline}
       <p>Minigolf de 9 hoyos: mete la pelota con los menos golpes posibles.</p>
       <div class="tarjetas" id="menu-resumen"></div>
       <div class="fila"><button class="btn" data-ir="recorrido">🏌️ Recorrido de 9 hoyos</button><button class="btn sec" data-ir="practica">🎯 Práctica</button></div>
-      <div class="ctl-caja" role="group" aria-label="Control">
+      <fieldset class="ctl-caja" aria-label="Control">
         <b>Control</b>
         <div class="ctl-ops"><button class="ctl" data-control="toques" aria-pressed="true">👆 Toques</button><button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button></div>
         <button class="mini" id="b-sonido" aria-label="Sonido">🔊</button>
-      </div>
+      </fieldset>
       <p class="ayuda">👆 <b>Jala hacia atrás</b> desde cualquier parte, como resortera: la línea muestra a dónde va y el número es la fuerza. Ajusta con ⟲ ⟳ y − +, y toca <b>⛳ GOLPEAR</b>.</p>
       <p class="ayuda">🎮 Mando: ◀ ▶ apuntan, L R ajuste fino, X Y fuerza, A golpea, START pausa. ⌨️ Teclado: ← → apuntan, ↑ ↓ fuerza, Espacio golpea.</p>
       <p class="ayuda">🏖️ La arena frena, 💦 el agua suma un golpe, 🌀 los portales te llevan lejos y el molino abre y cierra.</p>

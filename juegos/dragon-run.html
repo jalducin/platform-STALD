@@ -14,10 +14,10 @@ canvas{width:100%;display:block;touch-action:none}
 .ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2cqw;background:rgba(25,12,50,.6);color:#fff;text-align:center;padding:2cqw}
 .ov h2{font-size:7cqw;margin:0;color:#ffd23f;text-shadow:0 .6cqw 0 #c2410c}
 .ov p{font-size:2.6cqw;margin:0}
-#wrap button{font:inherit;font-size:3.6cqw;font-weight:800;padding:1.2cqw 5cqw;border:0;border-radius:99px;background:#ff8a1f;color:#fff;box-shadow:0 .8cqw 0 #b94f00;cursor:pointer}
+#wrap button{font:inherit;font-size:3.6cqw;font-weight:800;padding:1.2cqw 5cqw;border:0;border-radius:99px;background:#ff8a1f;color:#2a1300;box-shadow:0 .8cqw 0 #b94f00;cursor:pointer}
 #wrap button:active{transform:translateY(.5cqw);box-shadow:0 .3cqw 0 #b94f00}
 button:focus-visible{outline:3px solid #fff;outline-offset:2px}
-#wrap #mute{position:absolute;right:1.5cqw;bottom:1.5cqw;font-size:3cqw;padding:.6cqw 1.6cqw;box-shadow:none;background:rgba(0,0,0,.45)}
+#wrap #mute{position:absolute;right:1.5cqw;bottom:1.5cqw;font-size:3cqw;padding:.6cqw 1.6cqw;box-shadow:none;background:rgba(0,0,0,.45);color:#fff}
 .hide{display:none!important}
 /* Pantalla de misiones (openspec: dragon-run-misiones): cubre todo el iframe y usa rem para leerse a 390 px. */
 .menu{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;background:rgba(25,12,50,.93);color:#fff;font-size:16px}
@@ -49,7 +49,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .menu .nota{font-size:.8rem;opacity:.75;margin:10px 0 0}
 .menu-pie{padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(15,7,32,.95);text-align:center;box-shadow:0 -4px 14px rgba(0,0,0,.35)}
 .menu-pie p{margin:6px 0 0;font-size:.85rem;opacity:.85}
-.menu #bS{font:inherit;font-size:1.35rem;font-weight:800;padding:.6rem 3.2rem;border:0;border-radius:99px;background:#ff8a1f;color:#fff;box-shadow:0 5px 0 #b94f00;cursor:pointer;min-height:48px}
+.menu #bS{font:inherit;font-size:1.35rem;font-weight:800;padding:.6rem 3.2rem;border:0;border-radius:99px;background:#ff8a1f;color:#2a1300;box-shadow:0 5px 0 #b94f00;cursor:pointer;min-height:48px}
 .menu #bS:active{transform:translateY(3px);box-shadow:0 2px 0 #b94f00}
 /* Aviso «¡Misión cumplida!» arriba del juego */
 #toast{position:fixed;left:50%;top:10px;z-index:6;transform:translate(-50%,-160%);max-width:calc(100vw - 24px);padding:10px 16px;border-radius:14px;background:#ffd23f;color:#3b1d00;font-weight:800;font-size:1rem;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .25s ease,visibility .25s;visibility:hidden;pointer-events:none}
@@ -59,7 +59,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 #tip{display:none;position:fixed;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;color:#fff;font-size:1rem;font-weight:700;opacity:.9;pointer-events:none}
 @media (orientation:portrait){body{background:linear-gradient(#5db4f5 0 50%,#6b4a2b 50% 100%)}body.jugando #tip{display:block}}
 /* Mando de Arcade (openspec: mando-arcade): en vertical, juego arriba y mando abajo; solo se ve jugando o en pausa. */
-#wrap #bPausa{position:absolute;right:9.5cqw;bottom:1.5cqw;font-size:3cqw;padding:.6cqw 1.6cqw;box-shadow:none;background:rgba(0,0,0,.45)}
+#wrap #bPausa{position:absolute;right:9.5cqw;bottom:1.5cqw;font-size:3cqw;padding:.6cqw 1.6cqw;box-shadow:none;background:rgba(0,0,0,.45);color:#fff}
 body:not(.jugando) #bPausa,body:not(.jugando) .mando{display:none!important}
 body.ctl-mando{flex-direction:column}
 body.ctl-mando #wrap{margin:auto 0}
@@ -70,6 +70,7 @@ body.ctl-mando #tip{display:none!important}
 .menu .ctl[aria-pressed="true"]{border-color:#ffd23f;background:rgba(255,210,63,.2)}
 .menu .mando-guia-btn{min-height:44px}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}.menu #bS:active{transform:none}}
+fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
 </style></head><body>
 <div id="wrap">
 <canvas id="c" width="800" height="400" aria-label="Dragon Run"></canvas>
@@ -94,11 +95,11 @@ body.ctl-mando #tip{display:none!important}
   <p id="pista" class="pista" aria-live="polite"></p>
   <p class="nota">Los premios solo cambian cómo se ve tu dragón: no dan puntos ni ventajas.</p>
   <h2>🎮 Controles</h2>
-  <div class="sws" role="group" aria-label="Controles"><button class="ctl" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="ctl" data-control="toque" aria-pressed="false">👆 Tocar la pantalla</button><span class="guia-lugar"></span></div>
+  <fieldset class="sws" aria-label="Controles"><button class="ctl" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="ctl" data-control="toque" aria-pressed="false">👆 Tocar la pantalla</button><span class="guia-lugar"></span></fieldset>
  </div>
  <div class="menu-pie"><button id="bS">JUGAR</button><p>ESPACIO, J, clic o toque para saltar · ¡doble salto en el aire! · Enter para pausa</p></div>
 </div>
-<div id="toast" role="status" aria-live="polite"></div>
+<output id="toast" aria-live="polite"></output>
 <p id="tip">👆 Toca en cualquier parte para saltar</p>
 <script src="dragon-misiones.js?v=1"></script>
 <script src="mando.js?v=1"></script>

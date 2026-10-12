@@ -103,7 +103,7 @@
   .notice { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--accent-soft); font-size: .88rem; }
   .notice b { display: block; margin-bottom: 4px; }
   .notice .btn { margin-top: 10px; }
-  .ok-msg { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .88rem; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  .ok-msg { display: block; margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .88rem; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
   input.code { width: 100%; font: inherit; font-size: 1.4rem; letter-spacing: .4em; text-align: center; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
   .admin-box { margin-top: 18px; padding: 16px; }
   .admin-box h2 { font-size: 1rem; margin: 0 0 4px; }
@@ -133,7 +133,7 @@
         <button class="btn" id="login-btn" type="submit">Entrar →</button>
         <button class="link-btn" id="olvide-btn" type="button">¿Olvidaste tu contraseña?</button>
       </form>
-      <div class="ok-msg" id="olvide-ok" role="status" hidden></div>
+      <output class="ok-msg" id="olvide-ok" hidden></output>
       <p class="hint" id="login-hint">Entra con el correo con el que te registraron en tus clases. Si es tu primera vez, usa la contraseña que te dio tu profe. ¿La olvidaste? Pídele a tu profe que la restablezca.</p>
       <div class="alert" id="login-error" role="alert" hidden></div>
       <div class="guest" id="guest" hidden>

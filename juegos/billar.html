@@ -79,6 +79,7 @@ body:not(.jugando):not(.en-sala) .mando{display:none!important}
   .mando .mando-centro{left:auto;right:calc(8px + env(safe-area-inset-right,0px));top:50px;bottom:auto;transform:none}
 }
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
+fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
 </style></head><body>
 <div id="juego">
   <div id="pantalla">
@@ -88,26 +89,26 @@ body:not(.jugando):not(.en-sala) .mando{display:none!important}
       <div class="jug" id="j1"><span class="chip" style="background:var(--azul)"></span><span class="n" id="n1">Bot</span><span class="g" id="gr1"></span></div>
       <div class="der"><button class="mini" id="b-control" aria-label="Cambiar controles">🎮</button><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-salir" aria-label="Menú">☰</button></div>
     </div>
-    <div id="estado" role="status"></div>
+    <output id="estado"></output>
     <div id="cuenta" aria-live="polite"></div>
-    <div id="aviso" role="status"></div>
+    <output id="aviso"></output>
     <div id="datos" class="hide" aria-live="polite"></div>
 
     <div class="ov" id="ov-carga"><h1>🎱 Billar</h1><p>Cargando…</p></div>
     <div class="ov hide" id="ov-menu">
       <h1>🎱 Billar</h1>
       <p>Bola 8 contra el bot: mete tus 7 bolas (lisas o rayadas) y al final la 8.</p>
-      <div class="ops" role="group" aria-label="Nivel del bot">
+      <fieldset class="ops" aria-label="Nivel del bot">
         <button class="op" data-nivel="facil">🟢 Fácil<small>falla seguido</small></button>
         <button class="op" data-nivel="medio">🟡 Medio<small>apunta bien</small></button>
         <button class="op" data-nivel="dificil">🔴 Difícil<small>casi no falla</small></button>
-      </div>
+      </fieldset>
       <div id="menu-control">
         <div class="ctl-titulo">🎮 Controles</div>
-        <div class="ctl-ops" role="group" aria-label="Controles">
+        <fieldset class="ctl-ops" aria-label="Controles">
           <button class="ctl" data-control="tactil" aria-pressed="true">👆 Táctil</button>
           <button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button>
-        </div>
+        </fieldset>
       </div>
       <p class="ayuda" id="ayuda-menu"></p>
       <p class="ayuda">📏 Reglas: la primera bola que metas define tu grupo. Es falta meter la blanca, no tocar ninguna bola o tocar primero una que no es tuya. Si metes la 8 antes de tiempo, pierdes.</p>

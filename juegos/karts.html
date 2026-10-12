@@ -56,7 +56,7 @@ body.tactil #menu-control{display:flex}
 .ctl{font:inherit;font-weight:800;font-size:14px;border:2px solid rgba(255,255,255,.5);background:#1e293b;color:#fff;border-radius:12px;min-height:46px;padding:4px;cursor:pointer}
 .ctl[aria-pressed="true"]{background:#0e7490;border-color:#67e8f9}
 #ctl-sensor{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
-#ctl-estado{font-size:13px;font-weight:700;min-height:1em}
+#ctl-estado{display:block;font-size:13px;font-weight:700;min-height:1em}
 #menu-acel{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(560px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:8px}
 .ctl-ops2,.ctl-ops4{grid-template-columns:repeat(2,1fr)}
 /* Mando clásico (openspec: karts-mando): con él no se ven los botones de antes; en horizontal, solo en la carrera */
@@ -157,6 +157,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
   .mando .mando-cruceta{margin-bottom:calc(var(--u) * -1)}
 }
 @media (prefers-reduced-motion:reduce){#aviso,#h-mbar,#volante,#tuto{transition:none}.m.on{transform:none}body.tuto #mandos .m,body.tuto #joy-zona{animation:none}}
+fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
 </style></head><body class="ctl-joystick">
 <div id="juego">
   <div id="pantalla">
@@ -173,7 +174,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
       <canvas id="minimapa" aria-label="Mapa de la pista con los corredores"></canvas>
     </div>
     <div id="cuenta" aria-live="polite"></div>
-    <div id="aviso" role="status"></div>
+    <output id="aviso"></output>
     <div id="tuto" aria-live="polite"></div>
 
     <div class="ov" id="ov-carga"><h1>🏎️ Karts Turbo</h1><p>Cargando tu avance…</p></div>
@@ -181,32 +182,32 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
       <h1>🏎️ Karts Turbo</h1>
       <p>Carreras de 8 carros. Derrapa para cargar el mini-turbo: <b style="color:var(--azul)">azul</b>, <b style="color:var(--naranja)">naranja</b> y <b style="color:var(--morado)">morado</b>.</p>
       <div class="ops" id="menu-ops"></div>
-      <div id="menu-piloto"><div class="ctl-titulo">🏁 Piloto</div><div id="pilotos" role="group" aria-label="Piloto"></div></div>
+      <div id="menu-piloto"><div class="ctl-titulo">🏁 Piloto</div><fieldset id="pilotos" aria-label="Piloto"></fieldset></div>
       <div id="menu-control">
         <div class="ctl-titulo">🎮 Controles</div>
-        <div class="ctl-ops ctl-ops4" role="group" aria-label="Controles">
+        <fieldset class="ctl-ops ctl-ops4" aria-label="Controles">
           <button class="ctl" data-control="botones" aria-pressed="true">⬅➡ Botones</button>
           <button class="ctl" data-control="joystick" aria-pressed="false">🕹️ Joystick</button>
           <button class="ctl" data-control="sensor" aria-pressed="false">📱 Sensor</button>
           <button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button>
-        </div>
+        </fieldset>
         <div id="ctl-sensor" class="hide">
           <div style="font-size:13px;font-weight:700">📱 Inclinar el celular para girar</div>
           <button class="btn chico" id="b-activar-sensor">📱 Activar sensor</button>
-          <div class="ctl-ops" role="group" aria-label="Sensibilidad del sensor">
+          <fieldset class="ctl-ops" aria-label="Sensibilidad del sensor">
             <button class="ctl" data-sens="baja" aria-pressed="false">Baja</button>
             <button class="ctl" data-sens="media" aria-pressed="true">Media</button>
             <button class="ctl" data-sens="alta" aria-pressed="false">Alta</button>
-          </div>
+          </fieldset>
         </div>
-        <div id="ctl-estado" role="status"></div>
+        <output id="ctl-estado"></output>
       </div>
       <div id="menu-acel">
         <div class="ctl-titulo">⚡ Acelerar</div>
-        <div class="ctl-ops ctl-ops2" role="group" aria-label="Acelerar">
+        <fieldset class="ctl-ops ctl-ops2" aria-label="Acelerar">
           <button class="ctl" data-acel="auto" aria-pressed="true">🤖 Automático</button>
           <button class="ctl" data-acel="manual" aria-pressed="false">👆 Con botón (↑)</button>
-        </div>
+        </fieldset>
       </div>
       <div class="fila" id="menu-stats" style="font-weight:700;font-size:14px;gap:12px"></div>
       <p id="teclas">⌨️ ← → o A D girar · ↑ W acelerar · ↓ S frenar · ESPACIO derrape · E o Shift ítem · P pausa</p>

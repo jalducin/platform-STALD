@@ -96,6 +96,7 @@ html.tactil #teclas{display:none}
   #c-barra{min-width:84px}
 }
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.btn:active{transform:none}}
+fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
 </style></head><body class="ctl-botones">
 <div id="juego">
   <div id="pantalla">
@@ -104,9 +105,9 @@ html.tactil #teclas{display:none}
       <div class="marcador" aria-live="polite"><span class="ficha f0"></span><span class="n" id="n0">Tú</span><b id="g0">0</b><span>–</span><b id="g1">0</b><span class="n" id="n1">Bot</span><span class="ficha f1"></span></div>
       <div class="der"><button class="mini" id="b-control" aria-label="Cambiar controles">🎮</button><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
     </div>
-    <div id="estado" class="hide" role="status"></div>
+    <output id="estado" class="hide"></output>
     <div id="cuenta" aria-live="polite"></div>
-    <div id="aviso" role="status"></div>
+    <output id="aviso"></output>
     <div id="zonas" aria-hidden="true"><span>⬅ desliza aquí</span><span>toca aquí para patear ➡</span></div>
     <div id="teclas" class="hide">↑ ↓ / ← → mueven tu barra · Espacio patea · Tab, Q y E cambian de barra · P pausa</div>
 
@@ -114,18 +115,18 @@ html.tactil #teclas{display:none}
     <div class="ov hide" id="ov-menu">
       <h1>⚽ Futbolito</h1>
       <p>Futbolito de mesa contra el bot. Gana quien meta <b>5 goles</b> primero.</p>
-      <div class="ops" role="group" aria-label="Nivel del bot">
+      <fieldset class="ops" aria-label="Nivel del bot">
         <button class="op" data-nivel="facil">🟢 Fácil<small>bot tranquilo</small></button>
         <button class="op" data-nivel="medio">🟡 Medio<small>bot atento</small></button>
         <button class="op" data-nivel="dificil">🔴 Difícil<small>bot crack</small></button>
-      </div>
+      </fieldset>
       <div id="menu-control">
         <div class="ctl-titulo">🎮 Controles</div>
-        <div class="ctl-ops" role="group" aria-label="Controles">
+        <fieldset class="ctl-ops" aria-label="Controles">
           <button class="ctl" data-control="botones" aria-pressed="true">🔘 Botones</button>
           <button class="ctl" data-control="deslizar" aria-pressed="false">👆 Deslizar</button>
           <button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button>
-        </div>
+        </fieldset>
       </div>
       <p class="ayuda" id="ayuda-menu"></p>
     </div>
