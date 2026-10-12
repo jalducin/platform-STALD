@@ -26,6 +26,37 @@ de resultado con puntos y aciertos; los de Arcade muestran el resultado de cada 
 - **WHEN** un alumno ya tenía su mejor puntaje de la semana en Ortografía
 - **THEN** lo sigue viendo en la tarjeta de Ortografía, dentro de Cultura y Conocimiento
 
+### Requirement: Blackjack con fichas sin valor
+Juegos SHALL ofrecer en Clásicos el **♣️ Blackjack (21)** (ícono en imagen: ver «Íconos de juego en imagen») (`blackjack`) con fichas de juego sin valor real, 500 fichas
+y 8 manos.
+- En cada mano se apuesta con fichas de 5, 10, 20, 50 y 100 (múltiplos de 5, de 5 hasta las fichas que tengas); luego
+  cada quien puede **pedir**, **plantarse** o **doblar** (solo con 2 cartas y fichas suficientes); 21 o pasarse
+  termina el turno.
+- La banca SHALL pedir mientras tenga menos de 17. Ganar paga el doble de la apuesta, el empate la devuelve y el
+  blackjack natural paga 3 a 2 (en múltiplos de 5).
+- Individual contra la banca; en partida, hasta 6 personas contra la banca en una mesa de 3 asientos: con bots, cada
+  persona que entra quita un bot (1 persona + 2 bots, 2 + 1); turnos de 30 s (al vencer: apuesta mínima o plantarse).
+- En partida, el servidor SHALL aceptar solo `apostar`, `pedir`, `plantarse` y `doblar`; `apostar` SHALL traer un
+  `monto` entero, múltiplo de 5 y de al menos 5, y las demás acciones no llevan monto; si no, 400 `jugada_invalida`.
+- Puntos: las fichas con que terminas (tope 1000).
+- La pantalla SHALL aclarar que las fichas no se compran, no se cambian y no tienen valor real.
+
+#### Scenario: Plantarse y ganarle a la banca
+- **WHEN** Laura apuesta 20, se planta con 19 y la banca termina con 18
+- **THEN** recibe 40 fichas (su apuesta más 20)
+
+#### Scenario: Monto inválido en partida
+- **WHEN** alguien envía `apostar` con `monto: 7` o sin monto
+- **THEN** el servidor responde 400 `jugada_invalida`
+
+#### Scenario: Cada persona que entra quita un bot
+- **WHEN** Marisol crea una sala de Blackjack con bots y luego entra Angel
+- **THEN** la sala de espera pasa de «1 persona + 2 bots» a «2 personas + 1 bot»
+
+#### Scenario: Mesa compartida
+- **WHEN** dos personas y un bot juegan en la misma sala
+- **THEN** todos ven las mismas cartas, apuestas y resultados de cada mano
+
 ## ADDED Requirements
 
 ### Requirement: Navegación por categorías

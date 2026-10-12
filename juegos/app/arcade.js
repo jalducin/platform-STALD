@@ -180,7 +180,7 @@ function pintarFisicaSala(body) {
   const e = sala.estado, s = e.sala, juego = s.juego;
   document.getElementById('m-bar').hidden = true;
   const mesa = participantes().slice(0, 2);
-  if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + juegoPorId(juego).emoji + ' Esperando a tu rival: se juega 1 vs 1.</div>'; sala.vista = 'faltan'; } return; }
+  if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">' + icoJuego(juego) + ' Esperando a tu rival: se juega 1 vs 1.</div>'; sala.vista = 'faltan'; } return; }
   const aFrame = msg => { const f = document.getElementById('arcade-frame'); try { f.contentWindow.postMessage(msg, location.origin); } catch (x) { /* iframe cerrado */ } };
   if (sala.vista === 'fisica') {
     const js = jugadasFisica(), firma = JSON.stringify(js);

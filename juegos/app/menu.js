@@ -3,13 +3,16 @@
 // Script clásico (sin build ni módulos ES): juegos.html lo carga en orden y todos comparten el ámbito global
 // (const/let/function de nivel superior). Ver docs/frontend-standards.md, «Estructura de juegos/app/».
 // ---------- Catálogo ----------
+// Navegación por categorías (openspec: juegos-categorias): emoji, nombre y descripción corta de cada tarjeta de
+// categoría; `titulo` (emoji + nombre) se conserva para quien ya lo usa. El número de juegos se cuenta de JUEGOS.
 const CATEGORIAS = [
-  { id: 'ingles', titulo: '📘 Inglés', clase: 'cat-ingles' },
-  { id: 'cultura', titulo: '🧠 Cultura y Conocimiento', clase: 'cat-cultura' }, // cultura-conocimiento: junta Español y Maratón
-  { id: 'mente', titulo: '⚡ Mente ágil', clase: 'cat-mente' },
-  { id: 'clasicos', titulo: '🎲 Clásicos', clase: 'cat-clasicos' },
-  { id: 'arcade', titulo: '🕹️ Arcade', clase: 'cat-arcade' },
+  { id: 'ingles', emoji: '📘', nombre: 'Inglés', d: 'Vocabulario, gramática y pronunciación jugando.', clase: 'cat-ingles' },
+  { id: 'cultura', emoji: '🧠', nombre: 'Cultura y Conocimiento', d: 'Historia, ciencia, ortografía y línea del tiempo.', clase: 'cat-cultura' }, // cultura-conocimiento: junta Español y Maratón
+  { id: 'mente', emoji: '⚡', nombre: 'Mente ágil', d: 'Cálculo, lógica, memoria y estrategia.', clase: 'cat-mente' },
+  { id: 'clasicos', emoji: '🎲', nombre: 'Clásicos', d: 'Cartas, tablero y juegos de mesa de siempre.', clase: 'cat-clasicos' },
+  { id: 'arcade', emoji: '🕹️', nombre: 'Arcade', d: 'Plataformas, carreras y deportes de acción.', clase: 'cat-arcade' },
 ];
+CATEGORIAS.forEach(c => { c.titulo = c.emoji + ' ' + c.nombre; });
 const JUEGOS = [
   { id: 'en-vocab', cat: 'ingles', emoji: '⏱️', t: 'Vocabulario contra reloj', d: '60 segundos: elige la palabra en inglés.', jugar: () => jugarVocab() },
   { id: 'en-spelling', cat: 'ingles', emoji: '🐝', t: 'Spelling bee', d: 'Escucha y escribe la palabra.', jugar: () => jugarSpelling() },
@@ -40,13 +43,21 @@ const JUEGOS = [
   // juegos-salas-grandes
   { id: 'dibuja', cat: 'ingles', emoji: '🎨', t: 'Dibuja y adivina', d: 'Por turnos: dibuja una palabra en inglés y adivina la de los demás (3 a 12).', jugar: () => elegirDibuja() },
   { id: 'bingo', cat: 'clasicos', emoji: '🎱', t: 'Bingo', d: '75 números y tu cartón: línea, esquinas o lleno. ¡Para salas de hasta 30!', jugar: () => elegirBingo() },
-  { id: 'blackjack', cat: 'clasicos', emoji: '🂡', t: 'Blackjack (21)', d: 'Acércate a 21 sin pasarte y gánale a la banca, con fichas de juego.', jugar: () => elegirBlackjack() },
+  { id: 'blackjack', cat: 'clasicos', emoji: '♣️', icono: 'juegos/iconos/blackjack.svg', t: 'Blackjack (21)', d: 'Acércate a 21 sin pasarte y gánale a la banca, con fichas de juego.', jugar: () => elegirBlackjack() },
   { id: 'futbolito', cat: 'arcade', emoji: '⚽', t: 'Futbolito', d: 'Futbolito de mesa: desliza tu barra y patea. Contra el bot o 1 vs 1.', jugar: () => jugarArcade('futbolito') }, // futbolito-billar
   { id: 'billar', cat: 'arcade', emoji: '🎱', t: 'Billar', d: 'Bola 8 con línea guía: mete tus bolas y al final la 8. Contra el bot o 1 vs 1.', jugar: () => jugarArcade('billar') }, // futbolito-billar
 ];
 JUEGOS.push(...ClasicosRapidosUI.TARJETAS); // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes
 JUEGOS.push(...TableroUI.TARJETAS); // juegos-tablero: Damas y Batalla naval (Mente ágil), Dominó y Parchís (Clásicos)
 const juegoPorId = id => JUEGOS.find(j => j.id === id);
+// Ícono de un juego como HTML (openspec: juegos-categorias): con `icono` (SVG del repo) una <img class="ico-img"> del
+// tamaño de la letra de donde vive; si no, su emoji. `emoji` es el respaldo en texto (<option>, avisos, títulos).
+// Acepta el juego o su id.
+function icoJuego(j) {
+  if (typeof j === 'string') j = juegoPorId(j);
+  if (!j) return '🎮';
+  return j.icono ? '<img class="ico-img" src="' + escapeHtml(j.icono) + '" alt="" width="64" height="64" decoding="async">' : j.emoji;
+}
 
 // ---------- Sesión ----------
 // Foto del avatar (openspec: avatar-foto): si ya no existe, queda el personaje.
@@ -251,14 +262,103 @@ function pantallaHub(tab) {
   if (state.tab === 'ranking') return pintarRanking();
   if (state.tab === 'partidas') return pintarPartidas();
   if (state.tab === 'admin') return pintarAdmin();
-  document.getElementById('tab-body').innerHTML = CATEGORIAS.map(c => {
-    const js = JUEGOS.filter(j => j.cat === c.id);
-    if (!js.length) return '';
-    return '<h2>' + c.titulo + '</h2><div class="grid">' + js.map(j => {
-      const best = state.mejores[j.id];
-      return '<button class="game ' + c.clase + '" data-juego="' + j.id + '"><span class="ico" aria-hidden="true">' + j.emoji + '</span>' +
-        '<span class="t">' + escapeHtml(j.t) + '</span><span class="d">' + escapeHtml(j.d) + '</span>' +
-        (best ? '<span class="best" title="Tu mejor de la semana">⭐ ' + fmt(best) + '</span>' : '') + '</button>';
-    }).join('') + '</div>';
-  }).join('');
+  pintarMenuJuegos(categoriaInicial());
 }
+
+// ---------- Navegación por categorías (openspec: juegos-categorias) ----------
+// 🎮 Juegos abre en las tarjetas de categoría; al tocar una se ven solo sus juegos. `#menu-juegos[data-menu]` vale
+// "categorias" o el id de la categoría abierta. La categoría abierta vive en state.cat, en sessionStorage (para
+// volver a ella al salir de un juego o al recargar) y en la URL (#cat=<id>, con history.pushState para que el botón
+// Atrás regrese de la lista a las categorías). Debajo de una lista siempre queda una entrada de categorías.
+const CATEGORIA_KEY = 'juegos_categoria';
+const juegosDe = id => JUEGOS.filter(j => j.cat === id);
+const catValida = id => !!id && CATEGORIAS.some(c => c.id === id) && juegosDe(id).length > 0;
+const catDeHash = () => { const m = /^#cat=([a-z0-9-]+)$/.exec(location.hash || ''); return m ? m[1] : null; };
+const rutaSinHash = () => location.pathname + location.search;
+const cuantosJuegos = n => n + (n === 1 ? ' juego' : ' juegos');
+
+// Prioridad: #cat= de la URL; la de esta página (state.cat); la de la entrada del historial (sobrevive a recargas y
+// al Atrás que vuelve a cargar la página); la guardada en la pestaña (sessionStorage).
+function categoriaInicial() {
+  const h = catDeHash();
+  if (catValida(h)) return h;
+  if (location.hash.startsWith('#cat=')) return null; // #cat= de una categoría que no existe: categorías
+  if (state.cat !== undefined) return catValida(state.cat) ? state.cat : null;
+  if (history.state && Object.prototype.hasOwnProperty.call(history.state, 'cat')) return catValida(history.state.cat) ? history.state.cat : null;
+  let guardada = null;
+  try { guardada = sessionStorage.getItem(CATEGORIA_KEY); } catch (e) { /* sin almacenamiento: solo URL y memoria */ }
+  return catValida(guardada) ? guardada : null;
+}
+
+function recordarCategoria(id) {
+  state.cat = id;
+  try { if (id) sessionStorage.setItem(CATEGORIA_KEY, id); else sessionStorage.removeItem(CATEGORIA_KEY); } catch (e) { /* sin almacenamiento */ }
+}
+
+// Deja el historial de acuerdo con la vista: categorías = entrada sin hash; lista = entrada #cat=<id> encima de una
+// de categorías (si la actual no es de esa categoría, la convierte en la de categorías y empuja la de la lista).
+function marcarHistorial(id) {
+  try {
+    const actual = (history.state && history.state.cat) || null;
+    if (!id) { if (actual || location.hash.startsWith('#cat=')) history.replaceState(Object.assign({}, history.state, { cat: null }), '', rutaSinHash()); return; }
+    if (actual === id && location.hash === '#cat=' + id) return;
+    if (actual) { history.replaceState(Object.assign({}, history.state, { cat: id }), '', rutaSinHash() + '#cat=' + id); return; }
+    history.replaceState(Object.assign({}, history.state, { cat: null }), '', rutaSinHash());
+    history.pushState({ cat: id }, '', rutaSinHash() + '#cat=' + id);
+  } catch (e) { /* sin historial: queda la vista */ }
+}
+
+function tarjetaJuego(j, c) {
+  const best = state.mejores[j.id];
+  return '<button class="game ' + c.clase + '" data-juego="' + j.id + '"><span class="ico" aria-hidden="true">' + icoJuego(j) + '</span>' +
+    '<span class="t">' + escapeHtml(j.t) + '</span><span class="d">' + escapeHtml(j.d) + '</span>' +
+    (best ? '<span class="best" title="Tu mejor de la semana">⭐ ' + fmt(best) + '</span>' : '') + '</button>';
+}
+
+function htmlCategorias() {
+  return '<section id="menu-juegos" data-menu="categorias" aria-labelledby="menu-titulo"><h2 id="menu-titulo" tabindex="-1">Elige una categoría</h2><div class="cat-grid">' +
+    CATEGORIAS.map(c => {
+      const n = juegosDe(c.id).length;
+      if (!n) return '';
+      return '<button type="button" class="cat-card ' + c.clase + '" data-categoria="' + c.id + '" data-n="' + n + '" aria-label="' + escapeHtml(c.nombre + ', ' + cuantosJuegos(n) + '. ' + c.d) + '">' +
+        '<span class="cat-ico" aria-hidden="true">' + c.emoji + '</span><span class="cat-txt"><span class="cat-nombre">' + escapeHtml(c.nombre) + '</span>' +
+        '<span class="cat-n">' + cuantosJuegos(n) + '</span><span class="cat-d">' + escapeHtml(c.d) + '</span></span></button>';
+    }).join('') + '</div></section>';
+}
+
+function htmlCategoria(id) {
+  const c = CATEGORIAS.find(x => x.id === id), js = juegosDe(id);
+  return '<section id="menu-juegos" data-menu="' + id + '" class="' + c.clase + '" aria-labelledby="menu-titulo">' +
+    '<div class="menu-top"><button type="button" class="btn ghost" data-a="categorias">← Categorías</button></div>' +
+    '<h2 id="menu-titulo" tabindex="-1">' + escapeHtml(c.titulo) + ' <span class="menu-n">' + cuantosJuegos(js.length) + '</span></h2>' +
+    '<div class="grid">' + js.map(j => tarjetaJuego(j, c)).join('') + '</div></section>';
+}
+
+// Pinta las categorías (id null) o la lista de una categoría. `foco`: al cambiar de vista por una acción, el foco pasa
+// al encabezado y, si el menú quedó arriba de la pantalla, se desplaza a su inicio.
+function pintarMenuJuegos(id, foco) {
+  const body = document.getElementById('tab-body'); if (!body) return;
+  id = catValida(id) ? id : null;
+  recordarCategoria(id); marcarHistorial(id);
+  body.innerHTML = id ? htmlCategoria(id) : htmlCategorias();
+  if (!foco) return;
+  const sec = document.getElementById('menu-juegos'), h = document.getElementById('menu-titulo');
+  if (sec.getBoundingClientRect().top < 0) sec.scrollIntoView({ block: 'start' });
+  h.focus({ preventScroll: true });
+}
+const abrirCategoria = id => pintarMenuJuegos(id, true);
+// «← Categorías»: si la entrada actual es de una categoría, Atrás (la de abajo es de categorías); si no, pinta.
+function verCategorias() {
+  if (history.state && history.state.cat) { history.back(); return; }
+  pintarMenuJuegos(null, true);
+}
+// Atrás/Adelante y cambios del #cat=: solo con el menú a la vista (en un juego o en otra pestaña no se interrumpe nada;
+// al volver al menú se usa state.cat).
+function alNavegarMenu() {
+  if (!document.getElementById('menu-juegos')) return;
+  const h = catDeHash(), id = catValida(h) ? h : null;
+  if (id === state.cat && document.querySelector('[data-menu="' + (id || 'categorias') + '"]')) return;
+  pintarMenuJuegos(id, true);
+}
+window.addEventListener('popstate', alNavegarMenu);
+window.addEventListener('hashchange', alNavegarMenu);
