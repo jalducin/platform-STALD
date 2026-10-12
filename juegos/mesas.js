@@ -28,6 +28,8 @@
     'en-memorama': { max: 30, min: 1 },
     'mente-sopa': { max: 30, min: 1 },
     'cultura-linea': { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
+    futbolito: { max: 2, asientos: 2, min: 2 }, // futbolito-billar: 1 vs 1 (con bots, 1 persona + 1 bot)
+    billar: { max: 2, asientos: 2, min: 2 },
   };
   const de = juego => MESAS[juego] || null;
   // Lugares que ocupan los bots con `humanos` personas: solo en mesas con asientos y si la sala lleva bots.

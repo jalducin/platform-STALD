@@ -232,6 +232,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     sale de la semilla (`poker-mano-k`).
   - En Ajedrez, `jugadas[]` `{ n, accion: "mover" | "rendirse", de?, a?, promo?, t }` y `opciones.reloj`
     (minutos por jugador, cambio `ajedrez`).
+  - En Futbolito, `jugadas[]` `{ n, accion: "tiro" | "rendirse", pos?, angulo?, fuerza?, t }`; en Billar,
+    `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, efecto?, t }` (cambio `futbolito-billar`). El triángulo del
+    billar sale de la semilla (`billar-triangulo`); los tiros de bots y los automáticos, de `bot|<paso>` y `auto|<paso>`.
   - En Brisca, `jugadas[]` `{ n, accion: "jugar", carta, t }`. En Conquián, `jugadas[]` `{ n, accion, carta?, con?, a?, t }`.
   - Clásicos rápidos (cambio `clasicos-rapidos`), `jugadas[]`: Gato `{ n, accion: "marcar", casilla, t }`, Conecta 4
     `{ n, accion: "soltar", col, t }`, Piedra-papel-tijera `{ n: ronda, accion: "elegir" | "pasar", eleccion?, t }`,

@@ -38,9 +38,10 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   const nJuegos = (await p.$$('[data-juego]')).length;
   ok('hub: al menos 25 juegos, cada sección con juegos y sin «📝 Español» aparte', nJuegos >= 25 && secciones.length >= 5 && secciones.every(x => x.n > 0) &&
     secciones.reduce((a, x) => a + x.n, 0) === nJuegos && !secciones.some(x => /Español|Maratón de cultura/.test(x.t)) && secciones.filter(x => x.t === '🧠 Cultura y Conocimiento').length === 1, nJuegos + ' juegos · ' + secciones.map(x => x.t + ' ' + x.n).join(' | '));
-  ok('hub: el menú pinta todos los juegos de la página (JUEGOS.length)', nJuegos === await p.evaluate(() => JUEGOS.length) && nJuegos >= 37, String(nJuegos));
+  ok('hub: el menú pinta todos los juegos de la página (JUEGOS.length)', nJuegos === await p.evaluate(() => JUEGOS.length) && nJuegos >= 39, String(nJuegos));
   const arcade = await p.$$eval('.cat-arcade[data-juego]', xs => xs.map(x => x.dataset.juego));
   ok('hub: Arcade con Axo, Karts y Dragon Run (dragon-run-misiones)', ['plataformas', 'karts', 'dragon-run'].every(id => arcade.includes(id)) && !(await p.$('.cat-mente[data-juego="dragon-run"]')), arcade.join(','));
+  ok('hub: Arcade con Futbolito y Billar (futbolito-billar)', ['futbolito', 'billar'].every(id => arcade.includes(id)), arcade.join(','));
   ok('chip con el nombre', (await p.textContent('#chip')).includes('Marisol'));
   await p.screenshot({ path: 'juegos-hub.png', fullPage: true });
 

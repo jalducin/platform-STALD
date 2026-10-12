@@ -141,6 +141,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     - Basta (es/en) y Lotería;
     - ¡Una!, póker, Brisca, Conquián y ajedrez;
     - Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (cambio `clasicos-rapidos`; ver la sección propia).
+    - Futbolito y Billar (cambio `futbolito-billar`), 1 vs 1 por tiros.
     - Los juegos absorbidos en el Sprint 4 (`en-preguntas`, `es-acentos`, `es-sinonimos` y `mente-secuencias`, del
       cambio `juegos-fusion`) responden 400 `juego_no_permitido`, pero siguen en el catálogo para conservar sus
       puntos.
@@ -165,6 +166,11 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       - `CUPO = { ajedrez: 2, brisca: 4 }`: si la sala ya está completa, quien intenta unirse recibe 409 `sala_llena`;
       - `BOTS_FIJOS`: el ajedrez se crea siempre con `bots: false` y la Brisca con `bots: true`;
       - el ajedrez no empieza con menos de 2 personas: 409 `faltan_jugadores`.
+    - Futbolito y Billar (cambio `futbolito-billar`): `{ n, accion: "rendirse" }` o un tiro con enteros —
+      Futbolito `{ n, accion: "tiro", pos −150…150, angulo −60…60, fuerza 10…100 }`; Billar `{ n, accion: "tiro",
+      angulo 0…3599 (décimas de grado), fuerza 1…100, efecto? −100…100 }`; los demás campos se descartan. Con algún
+      `final` o `podio` ya registrado, una jugada nueva responde 409 `partida_terminada` (solo en estos dos juegos).
+      El servidor no simula: cada cliente reproduce los tiros con los motores deterministas de `juegos/`.
     - Ajedrez (`ajedrez`, cambio `ajedrez`): acepta dos formas de jugada.
       - `{ n, accion: "mover", de, a, promo? }`, donde `de` y `a` son casillas `a1`–`h8` y `promo` es `q`, `r`, `b`
         o `n`.
@@ -227,7 +233,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     404 si no existe.
   - Solo admin: `GET /juegos/fotos` (lista activa) y `POST /juegos/fotos/quitar` `{ id }` (403 para el
     resto; 404 si ese jugador no tiene foto).
-- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú; con los clásicos rápidos (`clasicos-rapidos`: `gato`, `conecta4`, `ppt`, `ahorcado` y `serpientes`, categoría `clasicos`, tope 1000, títulos en `CATALOGO_CLASICOS_RAPIDOS`), 29; con los 4 de tablero (`juegos-tablero`: `damas`, `domino`, `parchis` y `naval`), 33; con las salas grandes (`juegos-salas-grandes`: `bingo` ("Bingo") y `blackjack` ("Blackjack (21)") en `clasicos` y `dibuja` ("Dibuja y adivina") en `ingles`, tope 1000), 36. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`; categoría `arcade` desde `dragon-run-misiones`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
+- **Catálogo (`CATALOGO`):** con la fusión del Sprint 4 cambian dos títulos: `en-frases` es "Completa y responde" y `mente-calculo` es "Cálculo y secuencias". Los ids absorbidos se conservan para el historial. Arcade (`juegos-plataformas-karts`): `plataformas` ("Axo y los 12 mundos") y `karts` ("Karts Turbo"), categoría `arcade`, tope 2000; con `en-tiempos` (`juegos-ingles-gramatica`), 24 en el menú; con los clásicos rápidos (`clasicos-rapidos`: `gato`, `conecta4`, `ppt`, `ahorcado` y `serpientes`, categoría `clasicos`, tope 1000, títulos en `CATALOGO_CLASICOS_RAPIDOS`), 29; con los 4 de tablero (`juegos-tablero`: `damas`, `domino`, `parchis` y `naval`), 33; con las salas grandes (`juegos-salas-grandes`: `bingo` ("Bingo") y `blackjack` ("Blackjack (21)") en `clasicos` y `dibuja` ("Dibuja y adivina") en `ingles`, tope 1000), 36; con la 📜 Línea del tiempo (`cultura-linea`, `cultura-conocimiento`), 37; con `futbolito` ("Futbolito") y `billar` ("Billar bola 8"), categoría `arcade`, tope 1000 (cambio `futbolito-billar`), 39. Juegos previos: 21 (`en-preguntas`, "Responde en inglés", tope 2000; `mente-sudoku`, "Sudoku", tope 2000, cambio `sudoku-niveles`; `dragon-run`, "Dragon Run", tope 2000, cambio `dragon-run`; categoría `arcade` desde `dragon-run-misiones`). Clásicos (`juegos-clasicos`): `basta-es` y `basta-en` (tope 1500),
   `una` y `loteria` (tope 1000).
 
 **CORS y peticiones** (cambio `ahorro-peticiones`): las páginas mandan los POST con `Content-Type: text/plain` (petición
@@ -499,6 +505,7 @@ Mesas de `juegos-salas-grandes`: `bingo`, `en-memorama` y `mente-sopa` `{ max: 3
 `blackjack` `{ max: 6, asientos: 3, min: 1 }` (la banca no ocupa asiento: 1 persona + 2 bots, 2 + 1, 3 + 0); `dibuja`
 `{ max: 12, min: 3, bots: "nunca" }`.
 
+Futbolito y Billar (cambio `futbolito-billar`): `{ max: 2, asientos: 2, min: 2 }` (con bots, 1 persona + 1 bot).
 `server/mesas_test.ts` comprueba que las dos tablas sean iguales. **Todo juego de sala nuevo agrega su renglón en los
 dos archivos.**
 

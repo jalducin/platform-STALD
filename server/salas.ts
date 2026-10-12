@@ -23,6 +23,7 @@ export const JUEGOS_PARTIDA = new Set([
   ...JUEGOS_TABLERO, // juegos-tablero: damas, domino, parchis y naval
   ...Grandes.JUEGOS_GRANDES, // juegos-salas-grandes
   "cultura-linea", // cultura-conocimiento: 📜 Línea del tiempo
+  "futbolito", "billar", // futbolito-billar: física 1 vs 1 por tiros
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
@@ -69,6 +70,17 @@ function validarJugada(juego: string, crudo: unknown): Omit<Jugada, "t"> | null 
     if (j.a !== undefined && !entero(j.a, 0, 20)) return null;
     return { ...base, con: con as number[], ...(j.a !== undefined ? { a: j.a as number } : {}) };
   }
+  // futbolito-billar: tiros de física (enteros; se simulan igual en cada cliente) o rendirse.
+  if (juego === "futbolito" || juego === "billar") {
+    if (accion === "rendirse") return base;
+    if (accion !== "tiro") return null;
+    if (juego === "futbolito") {
+      return entero(j.pos, -150, 150) && entero(j.angulo, -60, 60) && entero(j.fuerza, 10, 100)
+        ? { ...base, pos: j.pos as number, angulo: j.angulo as number, fuerza: j.fuerza as number } : null;
+    }
+    if (!entero(j.angulo, 0, 3599) || !entero(j.fuerza, 1, 100) || (j.efecto !== undefined && !entero(j.efecto, -100, 100))) return null;
+    return { ...base, angulo: j.angulo as number, fuerza: j.fuerza as number, ...(j.efecto !== undefined ? { efecto: j.efecto as number } : {}) };
+  }
   // ¡Una! Robar (hasta poder tirar) y pasar no llevan carta ni color: el robo se reproduce del mazo de la semilla.
   if (accion !== "jugar" && (j.carta !== undefined || j.color !== undefined)) return null; // basta-divertida-una-robo
   if (!["jugar", "robar", "pasar"].includes(accion) || (j.carta !== undefined && !entero(j.carta, 0, 107)) ||
@@ -103,7 +115,10 @@ export const MESAS: Record<string, Mesa> = {
   "en-memorama": { max: 30, min: 1 },
   "mente-sopa": { max: 30, min: 1 },
   "cultura-linea": { max: 30, min: 1 }, // cultura-conocimiento: bots aparte, como el quiz
+  futbolito: { max: 2, asientos: 2, min: 2 }, // futbolito-billar: 1 vs 1 (con bots, 1 persona + 1 bot)
+  billar: { max: 2, asientos: 2, min: 2 },
 };
+const FISICA = new Set(["futbolito", "billar"]); // futbolito-billar: no aceptan jugadas tras el final
 const cupo = (juego: string) => MESAS[juego]?.max ?? MAX_JUGADORES;
 const botsFijos = (juego: string) => MESAS[juego]?.bots === "siempre" ? true : MESAS[juego]?.bots === "nunca" ? false : undefined;
 // Personas + bots que ocuparían la mesa al empezar (los bots completan los asientos libres).
@@ -143,7 +158,7 @@ interface EnSala extends Grandes.JugadorGrande { // juegos-salas-grandes: bingo,
   rondasBasta?: Record<string, { palabras: Record<string, string>; basta?: number }>; // Basta por rondas
   loteria?: number; // hora del servidor del primer "¡Lotería!"
   unas?: { paso: number; t: number }[]; // ¡Una!: botón UNA por paso
-  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number | string; de?: string; promo?: string; t: number }[]; // juegos por turnos
+  jugadas?: { n: number; accion: string; carta?: number; color?: string; una?: boolean; monto?: number; con?: number[]; a?: number | string; de?: string; promo?: string; pos?: number; angulo?: number; fuerza?: number; efecto?: number; t: number }[]; // juegos por turnos
   carrera?: Carrera & { t: number }; // Arcade: tiempo de la carrera, solo el primer envío (openspec: juegos-plataformas-karts)
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
@@ -390,6 +405,8 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
       // Juegos por turnos (¡Una!, póker, Brisca, Conquián): cada jugada con su paso n; nadie más puede tener ese paso.
       const v = validarJugada(sala.juego, body.jugada);
       if (!v) return json({ error: "jugada_invalida" }, 400);
+      // futbolito-billar: con un final registrado la partida ya terminó.
+      if (FISICA.has(sala.juego) && jugadores.some((x) => x.final !== undefined || x.podio !== undefined)) return json({ error: "partida_terminada" }, 409);
       const n = v.n;
       if (!Clasicos.sinTurnoUnico(sala.juego) && jugadores.some((x) => x.id !== jugador.id && (x.jugadas || []).some((y) => y.n === n))) return json({ error: "turno_tomado" }, 409); // clasicos-rapidos: ppt juega la misma ronda
       const nueva = { ...v, t: ahora };

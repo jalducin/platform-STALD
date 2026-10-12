@@ -185,6 +185,8 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "bingo": { categoria: "clasicos", titulo: "Bingo", max: 1000 },
   "blackjack": { categoria: "clasicos", titulo: "Blackjack (21)", max: 1000 },
   "dibuja": { categoria: "ingles", titulo: "Dibuja y adivina", max: 1000 },
+  "futbolito": { categoria: "arcade", titulo: "Futbolito", max: 1000 }, // futbolito-billar
+  "billar": { categoria: "arcade", titulo: "Billar bola 8", max: 1000 },
 };
 
 const LIMITE_DIARIO = 100;

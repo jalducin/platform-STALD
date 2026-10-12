@@ -166,6 +166,25 @@ Cada página debe manejar y mostrar de forma explícita:
       390×844 y 844×390;
     - pista y sprites de los karts pre-dibujados; partículas con tope de 300 y un tercio con
       `prefers-reduced-motion` (sin humo ni confeti);
+  - **Futbolito y Billar** (cambio `futbolito-billar`; decisiones en su `design.md`): `juegos/futbolito.html` y
+    `juegos/billar.html` en el mismo iframe de Arcade, **sin avance guardado** (`SIN_AVANCE` en `juegos.html`: no
+    piden `/juegos/progreso`). Motores sin DOM y deterministas: `juegos/fisica.js` (`senCos`, `atan2Dec` solo con
+    `+ − * /` y `Math.sqrt`; azar con semilla; `linea`, la línea de turnos de sala), `juegos/futbolito-motor.js` y
+    `juegos/billar-motor.js` (probados con Deno en `server/fisica_test.ts`; **nunca** usar `Math.sin/cos/atan2/hypot`
+    ni `**` en la simulación). `juegos/mesa-ui.js` reúne toques (*touch events* no pasivos, como Karts), sonido,
+    avisos, confeti, mensajes y el controlador de sala (`crearSala`: jugadas del servidor + la propia enviada,
+    reproduce y anima cada tiro con el mismo objeto de simulación; si llegan varios, salta al penúltimo).
+    - Futbolito individual en tiempo real: deslizar (relativo) mueve la barra activa, un toque corto patea, la barra
+      activa es la propia más cercana detrás de la pelota; teclado ← → / ↑ ↓ (según la orientación) y Espacio.
+    - Billar: arrastrar apunta hacia el dedo con línea guía (bola fantasma, salida de la bola y de la blanca);
+      jalar desde la blanca (resortera) tira con la fuerza del jalón; barra de fuerza, ⟲ ⟳ y efecto ⬆ ● ⬇.
+    - Teclado y mandos pasan por la capa de acciones `MesaUI.crearAcciones` (`window.accionesJuego.presionar(nombre,
+      on)` / `ponerEje(v)`); un mando nuevo se conecta con un adaptador, sin tocar el juego (design §9).
+    - Sala: `pintarFisicaSala` manda `inicio { modo: "sala", seed, inicio, ahora, yo, orden, jugadas }` y
+      `jugadas { jugadas, ahora }` cuando cambian; el iframe responde `jugada { jugada }` (la página hace el `POST` y
+      contesta `jugada-ok`) y `fin { gana, puntos, aciertos, total, titulo }` → `pintarFinalSala`. En Futbolito cada
+      quien ve su portería abajo (o a la izquierda en horizontal). Ganchos de prueba `window.__futbolito` y
+      `window.__billar` con `?arcadePrueba=1`;
     **Dibujo de «Axo y los 12 mundos»** (cambio `axo-diseno`): arte vectorial en canvas a la resolución real (`K`),
     sin imágenes externas. Los tiles se pre-dibujan una vez por combinación (tipo, mundo, lados expuestos y variante)
     y los fondos son franjas de paralaje que se repiten (cachés fuera de pantalla a `min(K, 4)`); en cada cuadro solo
