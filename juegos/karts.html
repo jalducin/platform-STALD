@@ -58,7 +58,9 @@ body.tactil #menu-control{display:flex}
 #ctl-sensor{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
 #ctl-estado{font-size:13px;font-weight:700;min-height:1em}
 #menu-acel{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(560px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:8px}
-.ctl-ops2{grid-template-columns:repeat(2,1fr)}
+.ctl-ops2,.ctl-ops4{grid-template-columns:repeat(2,1fr)}
+/* Mando clásico (openspec: karts-mando): con él no se ven los botones de antes; en horizontal, solo en la carrera */
+body.ctl-mando #mandos{display:none!important}
 /* Resultados */
 .podio{display:flex;align-items:flex-end;justify-content:center;gap:8px;width:min(360px,100%)}
 .esc{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;font-size:13px}
@@ -137,6 +139,10 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
   body.tactil #minimapa{top:46px;bottom:auto;width:104px;height:72px}
   .tarjeta{padding:1px 7px 2px}#h-pos{font-size:26px}.datos{font-size:12px}#h-item{width:44px;height:44px;font-size:24px}
   #tuto{bottom:6px;font-size:12px;padding:6px 10px;min-width:0;max-width:46%}#tuto h3{font-size:13px}
+  body:not(.en-carrera) .mando{display:none!important}
+  body.ctl-mando #tuto{bottom:34px;max-width:40%}
+  /* La cruceta solo usa ◀ ▶: su brazo ▼ (invisible) no ocupa lugar, así L y ◀ ▶ quedan pegados a la esquina */
+  .mando .mando-cruceta{margin-bottom:calc(var(--u) * -1)}
 }
 @media (prefers-reduced-motion:reduce){#aviso,#h-mbar,#volante,#tuto{transition:none}.m.on{transform:none}body.tuto #mandos .m,body.tuto #joy-zona{animation:none}}
 </style></head><body class="ctl-joystick">
@@ -165,10 +171,11 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
       <div class="ops" id="menu-ops"></div>
       <div id="menu-control">
         <div class="ctl-titulo">🎮 Controles</div>
-        <div class="ctl-ops" role="group" aria-label="Controles">
+        <div class="ctl-ops ctl-ops4" role="group" aria-label="Controles">
           <button class="ctl" data-control="botones" aria-pressed="true">⬅➡ Botones</button>
           <button class="ctl" data-control="joystick" aria-pressed="false">🕹️ Joystick</button>
           <button class="ctl" data-control="sensor" aria-pressed="false">📱 Sensor</button>
+          <button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button>
         </div>
         <div id="ctl-sensor" class="hide">
           <div style="font-size:13px;font-weight:700">📱 Inclinar el celular para girar</div>
@@ -211,6 +218,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
     </div>
   </div>
 </div>
+<script src="mando.js?v=1"></script>
 <script src="arcade.js?v=1"></script>
 <script>
 /* Karts Turbo — carreras con vista cenital en canvas (openspec: juegos-plataformas-karts, karts-controles-diseno).
@@ -441,9 +449,26 @@ function falloSensor() {
 }
 tactil($('b-centrar'), { inicio: () => { centrarSensor(); $('b-centrar').classList.add('on'); avisar('🎯 Sensor centrado', 900); }, fin: () => $('b-centrar').classList.remove('on') });
 
+/* ================= Mando clásico (openspec: karts-mando) =================
+   El mando común de Arcade (juegos/mando.js) se conecta como una fuente más de la capa de acciones: cruceta ◀ ▶ (y la
+   palanca de un control físico) = girar, A = acelerar, B = frenar, R o L = derrape, X o Y = ítem, START = pausa.
+   - El giro entra SOLO por eje(): así la palanca de un control físico gira en proporción (si también respondiera
+     izq/der, pasada de 0.5 sumaría −1 y giraría al máximo).
+   - No lee el teclado (todas sus teclas en null): el de Karts se queda igual y no hay acciones dobles.
+   - Está activo en la carrera y la pausa con cualquier control elegido (un control físico funciona siempre); se ve
+     solo con «🎮 Mando clásico». Decisiones en openspec/changes/karts-mando/design.md. */
+const mando = Mando.crear({
+  acciones: { izq: 'izq', der: 'der', acel: 'A', freno: 'B', derrape: ['R', 'L'], item: ['X', 'Y'], pausa: 'START' },
+  contenedor: $('juego'),
+  teclas: Object.fromEntries(Object.keys(Mando.TECLAS).map(k => [k, null])),
+  nombres: { acel: 'gas', freno: 'frenar', item: 'ítem', pausa: 'pausa' }, // cortos: «acelerar» se encima con B a 320 px
+});
+mando.activar(false);
+KartsEntrada.registrar({ presionado: a => a !== 'izq' && a !== 'der' && mando.presionado(a), eje: () => mando.eje().x });
+
 // Elección de control y de aceleración (se recuerdan en este navegador). Por omisión: botones ⬅ ➡ y acelerar solo.
 let control = leerLS('karts_control');
-if (!['joystick', 'sensor', 'botones'].includes(control)) control = 'botones';
+if (!['joystick', 'sensor', 'botones', 'mando'].includes(control)) control = 'botones';
 let acelModo = leerLS('karts_acelerar') === 'manual' ? 'manual' : 'auto';
 let sensibilidad = leerLS('karts_sensibilidad');
 if (!SENSIBILIDAD[sensibilidad]) sensibilidad = 'media';
@@ -453,6 +478,7 @@ function pintarControles() {
   const b = document.body;
   b.classList.toggle('ctl-joystick', control === 'joystick'); b.classList.toggle('ctl-sensor', control === 'sensor'); b.classList.toggle('ctl-botones', control === 'botones');
   b.classList.toggle('acel-manual', acelModo === 'manual');
+  b.classList.toggle('ctl-mando', control === 'mando'); mando.mostrar(control === 'mando');
   document.querySelectorAll('[data-control]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.control === control)));
   document.querySelectorAll('[data-acel]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.acel === acelModo)));
   document.querySelectorAll('[data-sens]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.sens === sensibilidad)));
@@ -1129,6 +1155,8 @@ function mostrarTutorial() {
   const acel = acelModo === 'manual' ? (TACTIL ? f('ACELERAR', 'Mantén para avanzar') : f('↑ / W', 'Acelerar')) : f('🤖', 'Aceleras solo');
   let filas;
   if (!TACTIL) filas = f('← → / A D', 'Girar') + acel + f('↓ / S', 'Frenar') + f('ESPACIO', 'Derrape (mantén y gira)') + f('E / Shift', 'Usar ítem');
+  else if (control === 'mando') filas = f('◀ ▶', 'Girar') + (acelModo === 'manual' ? f('A', 'Mantén para acelerar') : f('🤖', 'Aceleras solo')) +
+    f('R / L', 'Mantén y gira: mini-turbo') + f('X / Y', 'Usar ítem') + f('B', 'Frenar');
   else filas = (control === 'joystick' ? f('🕹️', 'Arrastra para girar') : control === 'sensor' ? f('📱', 'Inclina para girar') : f('⬅ ➡', 'Girar')) +
     acel + f('DERRAPE', 'Mantén y gira: mini-turbo') + f('🎁', 'Usar ítem') + f('FRENO', 'Frenar');
   $('tuto').innerHTML = '<h3>🎮 Así se juega</h3>' + filas;
@@ -1229,7 +1257,7 @@ function iniciarCarrera(id, op) {
   avisar(pista.emoji + ' ' + pista.nombre + (op.copa ? ' · carrera ' + (op.ronda + 1) + ' de 4' : ''), 2200);
   revesT = 0; revesAviso = -10;
   mostrarTutorial();
-  if (!op.sala) setTimeout(() => { if (modo === 'carrera' && !carreraDe.salio) avisar(acelModo === 'manual' || !TACTIL ? '🚀 Acelera justo antes de ¡YA!' : '🚀 Toca DERRAPE justo antes de ¡YA!', 1800); }, 1200);
+  if (!op.sala) setTimeout(() => { if (modo === 'carrera' && !carreraDe.salio) avisar(TACTIL && control === 'mando' ? '🚀 Toca A justo antes de ¡YA!' : acelModo === 'manual' || !TACTIL ? '🚀 Acelera justo antes de ¡YA!' : '🚀 Toca DERRAPE justo antes de ¡YA!', 1800); }, 1200);
   $('m-derrape').textContent = 'DERRAPE';
 }
 
@@ -1689,7 +1717,7 @@ function pintarHud() {
 
 /* ================= Bucle ================= */
 const PASO = 1 / 60;
-let ultimo = performance.now(), acum = 0, corriendo = null, cuadros = 0, fpsDesde = performance.now(), fps = 0;
+let ultimo = performance.now(), acum = 0, corriendo = null, enJuego = null, cuadros = 0, fpsDesde = performance.now(), fps = 0;
 function cuadro(ahora) {
   requestAnimationFrame(cuadro);
   let dt = (ahora - ultimo) / 1000; ultimo = ahora;
@@ -1698,6 +1726,8 @@ function cuadro(ahora) {
   revisarFuentesExtra();
   const enCarrera = modo === 'carrera';
   if (enCarrera !== corriendo) { corriendo = enCarrera; document.body.classList.toggle('corriendo', enCarrera); }
+  const jugando = enCarrera || modo === 'pausa'; // el mando solo atiende en la carrera y la pausa
+  if (jugando !== enJuego) { enJuego = jugando; document.body.classList.toggle('en-carrera', jugando); mando.activar(jugando); }
   if (enCarrera && !document.hidden) {
     acum += dt; let n = 0;
     while (acum >= PASO && n < 6) { paso(PASO); pasoParticulas(PASO); acum -= PASO; n++; }
@@ -1724,7 +1754,9 @@ if (PRUEBA) {
   window.__karts = {
     estado: () => ({ modo, pista: pista && pista.id, vuelta: yo ? yo.vuelta : null, pos: yo ? posDe(yo) : null, monedas: yo ? yo.monedas : 0, tiempo: Math.round(tCarrera * 1000), termino: yo ? yo.termino : null, turbo: yo ? yo.turbo : 0, ultimoTurbo, prog: JSON.parse(JSON.stringify(prog)), sala: !!sala, karts: karts.length, vel: yo ? Math.round(yo.vel) : 0, lw: LW, lh: LH,
       ang: yo ? yo.ang : 0, giro: leerEntrada().giro, freno: leerEntrada().freno, derrape: activo('derrape'), acel: acelModo, acelera: leerEntrada().acel,
-      vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length }),
+      vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
+      item: yo ? yo.item : null, mando: mando.estado() }),
+    darItem: t => { if (yo && ITEMS[t]) yo.item = t; }, // ítem en la mano (E2E del mando)
     // Lleva al jugador al final de la última vuelta (cruza la meta en un momento).
     piloto: on => { pilotoPrueba = !!on; },
     adelantar: () => { yo.vuelta = A.VUELTAS - 1; yo.mitadOk = true; const i = N - 14; const p = punto(i, 0); yo.idx = i; yo.x = p.x; yo.y = p.y; yo.ang = M.pts[i].a; yo.vel = A.VEL_KART; yo.vx = Math.cos(yo.ang) * yo.vel; yo.vy = Math.sin(yo.ang) * yo.vel; },
