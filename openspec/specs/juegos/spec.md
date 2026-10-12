@@ -1034,7 +1034,9 @@ desempate por partidas y luego por título. `mejor` SHALL traer el nombre visibl
 de la mejor partida, nunca correos. El agregado SHALL calcularse una vez por carga de la semana en caché y no leer los
 archivos de la semana en cada petición. En 🏆 Ranking, la página SHALL mostrarlo en la sub-pestaña «🔥 Juegos», con el
 encabezado «Semana del … al …», 🥇🥈🥉 para el top 3, emoji y nombre del juego, «N jugadores · M partidas», una barra
-proporcional al líder y «👑 Mejor puntaje: {nick}». SHALL verse bien en un celular de 390 px.
+proporcional al líder y «👑 Mejor puntaje: {nick}». SHALL mostrar solo el top 10 y, si hay más juegos, el botón
+«Ver los N juegos» para desplegar el resto (y «Ver solo el top 10» para plegarlo). SHALL verse bien en un celular de
+390 px.
 
 #### Scenario: Orden por jugadores distintos
 - **WHEN** en la semana Angel, Jesus y Laura juegan Sopa de letras, y Angel juega Ordena la oración 3 veces y Jesus 1
@@ -1060,4 +1062,8 @@ proporcional al líder y «👑 Mejor puntaje: {nick}». SHALL verse bien en un 
 #### Scenario: Una sola lectura por carga
 - **WHEN** se pide el top dos veces dentro de la vigencia de la caché de la semana
 - **THEN** la segunda petición no vuelve a leer los archivos de la semana, y una partida nueva sí la refresca
+
+#### Scenario: Top 10
+- **WHEN** en la semana se jugaron 22 juegos
+- **THEN** la pestaña muestra los primeros 10 y el botón «Ver los 22 juegos»; al tocarlo aparecen los 22
 

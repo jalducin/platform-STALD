@@ -17,9 +17,9 @@
 
 ## 4. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
-- [ ] 4.1 En producción, la página publicada trae el botón
+- [x] 4.1 En producción, la página publicada trae el botón
 
 ## 5. Documentación técnica (OBLIGATORIO)
 
 - [x] 5.1 `docs/frontend-standards.md` (top 10)
-- [ ] 5.2 PR, CI, merge y archivo
+- [x] 5.2 PR, CI, merge y archivo
