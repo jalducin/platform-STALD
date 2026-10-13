@@ -46,6 +46,8 @@ canvas{display:block}
 .ops{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:min(560px,100%)}
 .op{font:inherit;font-weight:800;font-size:16px;border:3px solid rgba(255,255,255,.75);background:#1e293b;color:#fff;border-radius:16px;padding:10px;min-height:64px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .op small{font-weight:700;opacity:.85;font-size:12px}
+.op small.op-desc{font-weight:600;opacity:.8;text-align:center;line-height:1.25}
+.ops-grupo{grid-column:1/-1;font-weight:900;font-size:15px;text-align:left;margin-top:4px}
 .op[aria-pressed="true"]{background:#b45309;border-color:var(--acento)}
 .op:disabled{opacity:.45;cursor:not-allowed}
 /* Selector de controles */
@@ -237,7 +239,8 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="arcade.js?v=2"></script>
+<script src="karts-pistas.js?v=1"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="arcade.js?v=3"></script>
 <script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script>
@@ -255,7 +258,8 @@ let LW = 400, LH = 300, K = 2;
 const COLORES = { rojo: '#e53935', azul: '#1e88e5', verde: '#43a047', morado: '#8e24aa', naranja: '#fb8c00', rosa: '#ec407a', turquesa: '#00897b', dorado: '#f4c430' };
 const NOMBRES_COLOR = { rojo: 'Rojo', azul: 'Azul', verde: 'Verde', morado: 'Morado', naranja: 'Naranja', rosa: 'Rosa', turquesa: 'Turquesa', dorado: 'Dorado' };
 const RIVALES = ['Chuy', 'Paty', 'Memo', 'Lalo', 'Fer', 'Sofi', 'Toño'];
-const COPA = { id: 'fiesta', nombre: 'Copa Fiesta', pistas: ['pradera', 'desierto', 'hielo', 'volcan'] };
+const KP = window.KartsPistas; // pistas y copas (juegos/karts-pistas.js; openspec: karts-pistas-mesoamericanas)
+const copaDe = cc => KP.copaPorId(cc && cc.copa); // copa en curso (sin id = Copa Fiesta, progreso viejo)
 const ITEMS = { cascara: '🍌', bola: '🟢', turbo: '🌶️', cohete: '🚀', estrella: '⭐', monedas: '🪙', rayo: '⚡' };
 const NOMBRE_ITEM = { cascara: 'Cáscara', bola: 'Bola rebotadora', turbo: 'Turbo picante', cohete: 'Cohete guiado', estrella: 'Estrella', monedas: 'Monedas', rayo: 'Rayo' };
 const NIVEL_COLOR = ['', '#60a5fa', '#fb923c', '#c084fc'];
@@ -553,16 +557,11 @@ function matiz(hex, f) { // f > 0 aclara, f < 0 oscurece
 function colorU32(hex) { const n = Number.parseInt(hex.slice(1), 16); return (255 << 24 | (n & 255) << 16 | ((n >> 8) & 255) << 8 | (n >> 16)) >>> 0; }
 
 /* ================= Temas: cielo, montañas y franjas del pasto de cada pista ================= */
-const TEMAS = {
-  pradera: { cielo: ['#2f7fe0', '#86c5f5', '#dff1fd'], bruma: '#d6ecfb', lejos: '#7fa9c9', cerca: '#3f9a4a', cerca2: '#2c7a36', franja: '#3fa046', sol: '#fffbe0', nubes: 1 },
-  desierto: { cielo: ['#e8662a', '#f7ae6b', '#ffe9c7'], bruma: '#f8dcb4', lejos: '#c88b5c', cerca: '#a5532e', cerca2: '#7e3c1f', franja: '#d8aa62', sol: '#fff6c2', nubes: 0 },
-  hielo: { cielo: ['#3f9fdc', '#a6daf6', '#effaff'], bruma: '#e6f4fc', lejos: '#9dbcd8', cerca: '#f4f9fd', cerca2: '#a9c9e2', franja: '#dce9f3', sol: '#ffffff', nubes: 1 },
-  volcan: { cielo: ['#12060d', '#4a1416', '#a9381c'], bruma: '#6b2416', lejos: '#3b1c24', cerca: '#1f1218', cerca2: '#120a0e', franja: '#2c1f1e', sol: null, nubes: 0 },
-};
+const TEMAS = Object.fromEntries(KP.PISTAS.map(p => [p.id, p.tema])); // en juegos/karts-pistas.js
 
 /* ================= Pista: textura del suelo (Mode-7) y objetos de escenario ================= */
 // La carrera se simula en el mapa 2D de siempre; la vista 3D lo proyecta desde una cámara detrás del carro.
-let pista = null, M = null, N = 0, capa = null, cajas = [], monedasPista = [], lavas = [], decor = [], TEX = null;
+let pista = null, M = null, N = 0, capa = null, cajas = [], monedasPista = [], lavas = [], decor = [], TEX = null, zonas = [], trajinera = null;
 function prepararPista(id) {
   pista = A.pistaPorId(id); M = A.muestrearPista(pista); N = M.pts.length;
   const r = A.rng(id, 'pista');
@@ -575,10 +574,14 @@ function prepararPista(id) {
   for (let k = 0; k < 12; k++) { const i0 = Math.floor((k + 0.35) / 12 * N), lado = ((k % 3) - 1) * 0.5 * pista.mitad; for (let j = 0; j < 3; j++) monedasPista.push(Object.assign(punto((i0 + j * 3) % N, lado), { t: 0 })); }
   lavas = [];
   if (pista.lava) [0.12, 0.3, 0.47, 0.63, 0.78, 0.92].forEach((f, k) => lavas.push(Object.assign(punto(Math.floor(f * N), (k % 2 ? 1 : -1) * (pista.mitad + 30)), { r: 22 })));
+  zonas = KP.colocarMecanicas(pista, M); // mecánicas de las pistas mesoamericanas (turbo, salto, cenote, lodo, trajinera)
+  trajinera = zonas.find(z => z.tipo === 'trajinera') || null;
+  for (const t in eventos) eventos[t] = 0; // eventos de las mecánicas en esta carrera (ganchos de prueba)
   // Textura del suelo (se pinta una vez por pista).
   capa = document.createElement('canvas'); capa.width = W; capa.height = H;
   const c = capa.getContext('2d'), col = pista.color, mitad = pista.mitad, tema = TEMAS[id];
   pintarFondo(c, W, H, r, id, col);
+  pintarFondoExtra(c, id, r);
   // Franjas alternas del pasto a lo largo de la pista: dan la sensación de velocidad.
   c.fillStyle = tema.franja; c.globalAlpha = 0.85;
   for (let i = 0; i < N; i += 10) {
@@ -586,6 +589,7 @@ function prepararPista(id) {
     c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.lineTo(b2.x, b2.y); c.lineTo(a2.x, a2.y); c.closePath(); c.fill();
   }
   c.globalAlpha = 1;
+  pintarBajoCamino(c, id, r);
   const linea = lado => { const L = []; for (let i = 0; i < N; i++) { L.push(punto(i, lado)); } return L; };
   const trazo = (ctx, pts, ancho, color, guion) => {
     ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
@@ -630,9 +634,11 @@ function prepararPista(id) {
     const gr = c.createRadialGradient(l.x, l.y, 3, l.x, l.y, l.r + 4); gr.addColorStop(0, '#fff3b0'); gr.addColorStop(0.35, '#ffb703'); gr.addColorStop(0.75, '#ff5400'); gr.addColorStop(1, '#7a1d00');
     c.fillStyle = gr; c.beginPath(); c.arc(l.x, l.y, l.r + 4, 0, 7); c.fill();
   }
+  pintarZonas(c, id);
+  prepararDecor(id, r, W, H);
+  pintarChinampas(c, id, r);
   // Mapas de la textura (tres tamaños para que lo lejano no parpadee).
   TEX = { fondo: colorU32(col.fondo), niveles: [1, 2, 4].map(f => texDe(capa, f)) };
-  prepararDecor(id, r, W, H);
   mm.base = null; pano = null; // el minimapa y el cielo se rehacen con la pista nueva
 }
 function texDe(src, f) {
@@ -656,7 +662,7 @@ function pintarFondo(c, W, H, r, id, col) {
     c.strokeStyle = 'rgba(120,170,210,.55)'; c.lineWidth = 1.5; // grietas del hielo
     for (let k = 0; k < 90; k++) { let x = r() * W, y = r() * H; c.beginPath(); c.moveTo(x, y); for (let j = 0; j < 6; j++) { x += (r() - 0.5) * 40; y += (r() - 0.5) * 40; c.lineTo(x, y); } c.stroke(); }
     for (let k = 0; k < 3000; k++) { c.fillStyle = 'rgba(255,255,255,.75)'; c.fillRect(r() * W, r() * H, 2, 2); }
-  } else {
+  } else if (id === 'volcan') {
     for (let k = 0; k < 4000; k++) { c.fillStyle = col.fondo2; c.fillRect(r() * W, r() * H, 4 + r() * 6, 3 + r() * 4); }
     for (let k = 0; k < 70; k++) { // vetas de lava
       let x = r() * W, y = r() * H; const pts = [[x, y]]; for (let j = 0; j < 7; j++) { x += (r() - 0.5) * 50; y += (r() - 0.5) * 50; pts.push([x, y]); }
@@ -668,12 +674,7 @@ function pintarFondo(c, W, H, r, id, col) {
 
 /* ================= Escenario en 3D (árboles, cactus, gradas, señales de curva) ================= */
 // Cada objeto es un sprite que siempre mira a la cámara (billboard); w y h en px de mundo.
-const DECOR_POR_PISTA = {
-  pradera: [['arbol', 46, 62, 0.55], ['arbusto', 26, 17, 0.85], ['globo', 20, 52, 1]],
-  desierto: [['cactus', 22, 46, 0.5], ['rocaDesierto', 40, 24, 0.85], ['mesa', 70, 44, 1]],
-  hielo: [['pino', 38, 66, 0.6], ['muneco', 18, 30, 0.75], ['bloque', 26, 22, 1]],
-  volcan: [['rocaVolcan', 40, 28, 0.5], ['obsidiana', 26, 40, 0.8], ['fumarola', 24, 30, 1]],
-};
+const DECOR_POR_PISTA = Object.fromEntries(KP.PISTAS.map(p => [p.id, p.decor])); // en juegos/karts-pistas.js
 function prepararDecor(id, r, W, H) {
   decor = [];
   const mitad = pista.mitad;
@@ -690,6 +691,8 @@ function prepararDecor(id, r, W, H) {
     const p = punto(i, (cu > 0 ? -1 : 1) * (mitad + 24));
     if (lejos(p.x, p.y, 18)) decor.push({ x: p.x, y: p.y, img: cu > 0 ? 'curvaDer' : 'curvaIzq', w: 22, h: 30 });
   }
+  // Adornos fijos por tramo (cabezas de serpiente, muros del juego de pelota, cabezas colosales).
+  for (const f of KP.colocarFijos(pista, M)) if (lejos(f.x, f.y, f.w * 0.3)) decor.push(f);
   const tipos = DECOR_POR_PISTA[id];
   for (let k = 0; k < 900 && decor.length < 360; k++) {
     const i = Math.floor(r() * N), lado = (r() < 0.5 ? -1 : 1) * (mitad + 40 + Math.pow(r(), 1.5) * 360);
@@ -701,6 +704,312 @@ function prepararDecor(id, r, W, H) {
     decor.push({ x: p.x, y: p.y, img: tipo[0], w: tipo[1] * f, h: tipo[2] * f });
   }
 }
+/* ================= Pistas mesoamericanas: piso, escenario y cielo (openspec: karts-pistas-mesoamericanas) =================
+   Inspiradas en la arquitectura y el arte de cada lugar, con trazos sobrios: sin caricaturas. */
+// Trazo cerrado de una línea paralela al camino (lado en px) entre las muestras i0 e i1.
+function trazoTramo(c, i0, i1, lado, ancho, color) {
+  c.beginPath();
+  for (let i = i0; i <= i1; i++) { const p = punto(i, lado); if (i === i0) c.moveTo(p.x, p.y); else c.lineTo(p.x, p.y); }
+  c.lineWidth = ancho; c.strokeStyle = color; c.lineJoin = 'round'; c.lineCap = 'round'; c.stroke();
+}
+// Muestras [desde, hasta] del tramo de adornos fijos (la calzada, la cancha); null si la pista no tiene.
+function tramoFijo() {
+  const a = KP.colocarFijos(pista, M);
+  if (!a.length) { return null; }
+  const i0 = a[0].idx, i1 = a[a.length - 1].idx;
+  return [i0, i1 < i0 ? i1 + N : i1];
+}
+// Sobre el color de fondo: agua con brillos (lago), tierra con piedritas, hojarasca de la selva.
+function pintarFondoExtra(c, id, r) {
+  const W = c.canvas.width, H = c.canvas.height;
+  if (id === 'tenochtitlan') {
+    c.strokeStyle = 'rgba(225,250,255,.25)'; c.lineWidth = 2;
+    for (let k = 0; k < 1100; k++) { const x = r() * W, y = r() * H; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 9, y - 3, x + 18, y); c.stroke(); }
+  } else if (id === 'teotihuacan') {
+    for (let k = 0; k < 6000; k++) { c.fillStyle = r() < 0.5 ? 'rgba(90,60,30,.22)' : 'rgba(255,240,210,.18)'; c.fillRect(r() * W, r() * H, 3, 2); }
+  } else if (id === 'chichen' || id === 'laventa') {
+    for (let k = 0; k < 7000; k++) { c.fillStyle = r() < 0.55 ? 'rgba(0,35,0,.28)' : 'rgba(150,200,90,.16)'; c.beginPath(); c.ellipse(r() * W, r() * H, 3 + r() * 3, 1.5 + r() * 1.5, r() * 3, 0, 7); c.fill(); }
+  }
+}
+// Después de las franjas y antes del camino: bordos de la calzada, plaza de piedra, cancha del juego de pelota y el río.
+function pintarBajoCamino(c, id, r) {
+  const pintar = BAJO_CAMINO[id];
+  if (pintar) pintar(c, pista.mitad, r);
+}
+const BAJO_CAMINO = {
+  tenochtitlan: (c, m) => { trazoTramo(c, 0, N, 0, m * 2 + 46, '#7b6342'); trazoTramo(c, 0, N, 0, m * 2 + 34, '#a3854f'); }, // bordo de la calzada
+  teotihuacan: plazaTeotihuacan,
+  chichen: (c, m) => { const t = tramoFijo(); if (t) trazoTramo(c, t[0] - 2, t[1] + 2, 0, m * 2 + 50, '#cfc29d'); }, // cancha de caliza
+  laventa: rioLaVenta,
+};
+function plazaTeotihuacan(c, m) { // plaza de piedra a los lados de la Calzada de los Muertos
+  const t = tramoFijo();
+  if (!t) { return; }
+  trazoTramo(c, t[0] - 6, t[1] + 6, 0, m * 2 + 150, '#958a7c');
+  c.strokeStyle = 'rgba(60,50,40,.35)'; c.lineWidth = 1.5;
+  for (const s of [-1, 1]) for (let i = t[0]; i <= t[1]; i += 9) { // juntas de las losas
+    const a = punto(i, s * (m + 6)), b = punto(i, s * (m + 74));
+    c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
+  }
+  for (const s of [-1, 1]) trazoTramo(c, t[0] - 6, t[1] + 6, s * (m + 74), 5, '#a8322b');
+}
+function rioLaVenta(c, m, r) { // río ancho y lodoso que cruza la selva
+  const pr = pista.rio;
+  const ruta = () => {
+    c.beginPath(); c.moveTo(pr[0][0], pr[0][1]);
+    for (let i = 1; i < pr.length - 1; i++) c.quadraticCurveTo(pr[i][0], pr[i][1], (pr[i][0] + pr[i + 1][0]) / 2, (pr[i][1] + pr[i + 1][1]) / 2);
+    c.lineTo(pr[pr.length - 1][0], pr[pr.length - 1][1]);
+  };
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const [w, col] of [[130, '#4d3d27'], [104, '#2f6c6a'], [70, '#3f8580'], [22, 'rgba(200,235,225,.25)']]) { ruta(); c.lineWidth = w; c.strokeStyle = col; c.stroke(); }
+  c.strokeStyle = 'rgba(220,245,235,.3)'; c.lineWidth = 1.5;
+  for (let k = 0; k < 160; k++) {
+    const i = Math.floor(r() * (pr.length - 1)), f = r(), x = pr[i][0] + (pr[i + 1][0] - pr[i][0]) * f, y = pr[i][1] + (pr[i + 1][1] - pr[i][1]) * f + (r() - 0.5) * 60;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + 12, y); c.stroke();
+  }
+}
+// Encima del camino: placas de velocidad, rampa, cenote, lodo y el canal de la trajinera.
+function pintarZonas(c) {
+  for (const z of zonas) {
+    c.save(); c.translate(z.x, z.y); c.rotate(z.a);
+    ZONA_DIBUJO[z.tipo](c, z, pista.mitad);
+    c.restore();
+  }
+}
+const ZONA_DIBUJO = {
+  turbo(c, z) { // placa de piedra roja con flechas amarillas
+    c.fillStyle = '#7a1f1a'; rr(c, -z.r, -z.r * 0.75, z.r * 2, z.r * 1.5, 5); c.fill();
+    c.strokeStyle = '#ffd54a'; c.lineWidth = 4; c.lineJoin = 'miter';
+    for (const dx of [-10, 0, 10]) { c.beginPath(); c.moveTo(dx - 5, -z.r * 0.5); c.lineTo(dx + 4, 0); c.lineTo(dx - 5, z.r * 0.5); c.stroke(); }
+  },
+  salto(c, z, m) { // rampa de piedra con franjas
+    for (let k = 0; k < 6; k++) { c.fillStyle = k % 2 ? '#8c7a5b' : '#e8dcbc'; c.fillRect(-24 + k * 8, -m + 6, 8, m * 2 - 12); }
+    c.fillStyle = '#2f6b5f'; c.beginPath(); c.moveTo(4, -12); c.lineTo(22, 0); c.lineTo(4, 12); c.fill();
+  },
+  cenote(c, z, m) { // pozo de agua turquesa con borde de caliza
+    c.fillStyle = '#ece2c6'; c.beginPath(); c.ellipse(0, 0, z.r + 8, m + 6, 0, 0, 7); c.fill();
+    const gr = c.createRadialGradient(0, 0, 4, 0, 0, z.r + 4); gr.addColorStop(0, '#0b4f63'); gr.addColorStop(0.55, '#138aa0'); gr.addColorStop(1, '#4fd0da');
+    c.fillStyle = gr; c.beginPath(); c.ellipse(0, 0, z.r, m - 2, 0, 0, 7); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.5;
+    for (const k of [0.4, 0.7]) { c.beginPath(); c.ellipse(0, 0, z.r * k, (m - 2) * k, 0, 0.3, 2.4); c.stroke(); }
+  },
+  lodo(c, z) { // charco de lodo con brillos
+    for (const [dx, dy, rx, ry, col] of [[0, 0, 1, 0.8, '#5b4128'], [-0.35, 0.2, 0.55, 0.5, '#4a331f'], [0.3, -0.25, 0.5, 0.45, '#4a331f'], [0.1, 0.1, 0.35, 0.3, '#6b4d30']]) { c.fillStyle = col; c.beginPath(); c.ellipse(dx * z.r, dy * z.r, rx * z.r, ry * z.r, 0.4, 0, 7); c.fill(); }
+    c.fillStyle = 'rgba(255,255,255,.18)';
+    for (const [dx, dy] of [[-0.2, -0.2], [0.35, 0.15], [-0.4, 0.35]]) { c.beginPath(); c.ellipse(dx * z.r, dy * z.r, 5, 2, 0.4, 0, 7); c.fill(); }
+  },
+  trajinera(c, z, m) { // canal que cruza la calzada: agua y orillas de chinampa
+    const lado = (z.ancho || 140) + 40;
+    c.fillStyle = '#5d7a35'; c.fillRect(-36, -lado - 30, 72, lado * 2 + 60);
+    c.fillStyle = '#2b8a96'; c.fillRect(-24, -lado - 30, 48, lado * 2 + 60);
+    c.strokeStyle = 'rgba(225,250,255,.35)'; c.lineWidth = 2;
+    for (let y = -lado; y < lado; y += 22) { c.beginPath(); c.moveTo(-14, y); c.lineTo(-4, y + 3); c.stroke(); c.beginPath(); c.moveTo(6, y + 11); c.lineTo(16, y + 14); c.stroke(); }
+    c.fillStyle = '#6b4a2a'; for (const s of [-1, 1]) c.fillRect(-26, s * (m + 2) - 3, 52, 6); // orillas de madera de la calzada
+  },
+};
+// Chinampas de Tenochtitlan: parcelas de tierra verde bajo los ahuejotes y las milpas.
+function pintarChinampas(c, id, r) {
+  if (id !== 'tenochtitlan') return;
+  for (const d of decor) {
+    if (d.img !== 'ahuejote' && d.img !== 'maiz') continue;
+    const a = M.pts[Math.floor(r() * N)].a;
+    c.save(); c.translate(d.x, d.y); c.rotate(a);
+    c.fillStyle = '#4a3a22'; rr(c, -30, -20, 60, 40, 5); c.fill();
+    c.fillStyle = '#5f7f36'; rr(c, -27, -17, 54, 34, 4); c.fill();
+    c.strokeStyle = 'rgba(40,70,20,.5)'; c.lineWidth = 1.5; for (let y = -12; y <= 12; y += 6) { c.beginPath(); c.moveTo(-22, y); c.lineTo(22, y); c.stroke(); }
+    c.restore();
+  }
+}
+// ---- Adornos (sprites) ----
+function decorAhuejote(c, w, h) { // árbol esbelto de las orillas de las chinampas
+  const cx = w / 2;
+  sombraDecor(c, w, h, w * 0.4);
+  c.fillStyle = '#6b4f33'; c.fillRect(cx - 1.5, h * 0.6, 3, h * 0.4 - 1);
+  c.fillStyle = '#2f6b33'; c.beginPath(); c.ellipse(cx, h * 0.38, w * 0.36, h * 0.36, 0, 0, 7); c.fill();
+  c.fillStyle = '#4a8c43'; c.beginPath(); c.ellipse(cx - w * 0.08, h * 0.32, w * 0.18, h * 0.28, 0, 0, 7); c.fill();
+}
+function decorMaiz(c, w, h) { // milpa
+  sombraDecor(c, w, h, w * 0.45);
+  for (let k = 0; k < 5; k++) {
+    const x = 3 + k * (w - 6) / 4, top = 3 + (k % 2) * 3;
+    c.strokeStyle = '#3f7d2a'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, h - 1); c.lineTo(x, top); c.stroke();
+    c.strokeStyle = '#5a9e38'; c.lineWidth = 1.1; for (const y of [0.45, 0.65]) { c.beginPath(); c.moveTo(x, h * y); c.quadraticCurveTo(x + 4, h * y - 4, x + 6, h * y + 1); c.stroke(); c.beginPath(); c.moveTo(x, h * y + 3); c.quadraticCurveTo(x - 4, h * y - 1, x - 6, h * y + 4); c.stroke(); }
+    c.fillStyle = '#e0b94a'; c.fillRect(x - 0.8, top - 2, 1.6, 3);
+  }
+}
+function decorCanoa(c, w, h) { // canoa de madera con flores y mazorcas
+  c.fillStyle = 'rgba(0,40,50,.3)'; c.beginPath(); c.ellipse(w / 2, h - 2, w * 0.48, 2.5, 0, 0, 7); c.fill();
+  c.fillStyle = '#6e4423'; c.beginPath(); c.moveTo(1, h * 0.45); c.quadraticCurveTo(w / 2, h + 2, w - 1, h * 0.45); c.lineTo(w * 0.85, h * 0.6); c.lineTo(w * 0.15, h * 0.6); c.closePath(); c.fill();
+  c.fillStyle = '#8a5a2b'; c.fillRect(w * 0.12, h * 0.45, w * 0.76, 2.5);
+  for (let k = 0; k < 9; k++) { c.fillStyle = ['#f59e0b', '#ec4899', '#facc15'][k % 3]; c.beginPath(); c.arc(w * 0.22 + k * w * 0.07, h * 0.4 - (k % 2) * 1.5, 2.2, 0, 7); c.fill(); }
+}
+function decorTrajinera(c, w, h) { // trajinera: lancha plana con techo de flores y su remero de garrocha (sin rostro)
+  c.fillStyle = 'rgba(0,40,50,.35)'; c.beginPath(); c.ellipse(w / 2, h - 2, w * 0.5, 3, 0, 0, 7); c.fill();
+  c.fillStyle = '#7a4a24'; c.beginPath(); c.moveTo(0, h * 0.62); c.lineTo(w, h * 0.62); c.lineTo(w * 0.9, h - 2); c.lineTo(w * 0.1, h - 2); c.closePath(); c.fill();
+  c.fillStyle = '#c0392b'; c.fillRect(w * 0.05, h * 0.62, w * 0.9, 2.5);
+  c.fillStyle = '#5b3a1e'; for (const x of [0.16, 0.84]) c.fillRect(w * x - 1, h * 0.25, 2, h * 0.4);
+  c.fillStyle = '#facc15'; rr(c, w * 0.12, h * 0.14, w * 0.76, h * 0.14, 3); c.fill();
+  for (let k = 0; k < 10; k++) { c.fillStyle = ['#f97316', '#ec4899', '#22c55e', '#3b82f6'][k % 4]; c.beginPath(); c.arc(w * 0.16 + k * w * 0.075, h * 0.21, 2, 0, 7); c.fill(); }
+  c.strokeStyle = '#4a3420'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(w * 0.92, h * 0.05); c.lineTo(w * 0.72, h - 1); c.stroke();
+}
+function decorMaguey(c, w, h) {
+  const cx = w / 2;
+  sombraDecor(c, w, h, w * 0.45);
+  for (let k = 0; k < 9; k++) {
+    const a = -Math.PI / 2 + (k - 4) * 0.33, L = h * (0.95 - Math.abs(k - 4) * 0.08);
+    c.fillStyle = k % 2 ? '#5f8f7a' : '#4f7f6a';
+    c.beginPath(); c.moveTo(cx - 2.2, h - 1); c.lineTo(cx + Math.cos(a) * L, h - 1 + Math.sin(a) * L); c.lineTo(cx + 2.2, h - 1); c.closePath(); c.fill();
+  }
+}
+function decorNopal(c, w, h) {
+  sombraDecor(c, w, h, w * 0.35);
+  for (const [x, y, rx, ry, a] of [[0.5, 0.72, 0.22, 0.26, 0], [0.3, 0.42, 0.18, 0.2, -0.4], [0.68, 0.38, 0.18, 0.2, 0.4], [0.5, 0.16, 0.14, 0.15, 0]]) { c.fillStyle = '#4f8f3a'; c.beginPath(); c.ellipse(w * x, h * y, w * rx, h * ry, a, 0, 7); c.fill(); }
+  c.fillStyle = '#c2185b'; for (const [x, y] of [[0.42, 0.03], [0.6, 0.05], [0.8, 0.24]]) { c.beginPath(); c.arc(w * x, h * y + 2, 1.6, 0, 7); c.fill(); }
+}
+function decorPlataforma(c, w, h) { // basamento de talud-tablero con su escalinata
+  for (let n = 0; n < 2; n++) {
+    const y0 = h - n * h * 0.48, alto = h * 0.48, inset = n * w * 0.14;
+    c.fillStyle = '#8c8378'; c.beginPath(); c.moveTo(inset, y0); c.lineTo(w - inset, y0); c.lineTo(w - inset - 4, y0 - alto * 0.45); c.lineTo(inset + 4, y0 - alto * 0.45); c.closePath(); c.fill(); // talud
+    c.fillStyle = '#d9cdb8'; c.fillRect(inset + 3, y0 - alto, w - 2 * inset - 6, alto * 0.55); // tablero
+    c.fillStyle = '#a8322b'; c.fillRect(inset + 5, y0 - alto + 2, w - 2 * inset - 10, alto * 0.55 - 4);
+  }
+  c.fillStyle = '#b7ab97'; c.beginPath(); c.moveTo(w * 0.42, h); c.lineTo(w * 0.45, 2); c.lineTo(w * 0.55, 2); c.lineTo(w * 0.58, h); c.fill();
+  c.strokeStyle = 'rgba(60,50,40,.4)'; c.lineWidth = 0.6; for (let y = 4; y < h; y += 3) { c.beginPath(); c.moveTo(w * 0.43, y); c.lineTo(w * 0.57, y); c.stroke(); }
+}
+function decorSerpiente(c, w, h) { // cabeza de serpiente emplumada de piedra, como en la Ciudadela
+  const cx = w / 2;
+  sombraDecor(c, w, h, w * 0.45);
+  for (let k = 0; k < 11; k++) { const a = Math.PI * 0.95 + k * Math.PI * 1.1 / 10; c.fillStyle = k % 2 ? '#8fa58a' : '#a99c82'; c.beginPath(); c.ellipse(cx + Math.cos(a) * w * 0.38, h * 0.5 + Math.sin(a) * h * 0.4, 2.6, 5.5, a + Math.PI / 2, 0, 7); c.fill(); } // collar de plumas
+  c.fillStyle = '#c2b59b'; c.beginPath(); c.moveTo(cx - w * 0.26, h * 0.36); c.quadraticCurveTo(cx, h * 0.2, cx + w * 0.26, h * 0.36); c.lineTo(cx + w * 0.34, h * 0.78); c.lineTo(cx - w * 0.34, h * 0.78); c.closePath(); c.fill(); // cabeza ancha hacia el hocico
+  c.fillStyle = '#ab9e84'; c.beginPath(); c.ellipse(cx, h * 0.3, w * 0.12, h * 0.07, 0, 0, 7); c.fill(); // voluta del hocico
+  c.fillStyle = '#8e826b'; c.fillRect(cx - w * 0.34, h * 0.72, w * 0.68, h * 0.12); // fauces
+  c.fillStyle = '#efe6d0'; for (const dx of [-0.2, 0.2]) { c.beginPath(); c.moveTo(cx + dx * w - 2, h * 0.72); c.quadraticCurveTo(cx + dx * w + 1, h * 0.84, cx + dx * w - 1, h * 0.94); c.lineTo(cx + dx * w + 2, h * 0.72); c.fill(); } // colmillos curvos
+  c.fillStyle = '#2f5d4f'; for (const dx of [-0.17, 0.17]) { c.beginPath(); c.ellipse(cx + dx * w, h * 0.46, 2.6, 1.3, dx > 0 ? -0.3 : 0.3, 0, 7); c.fill(); } // ojos de jade
+  c.strokeStyle = 'rgba(80,70,55,.6)'; c.lineWidth = 0.8; for (const dx of [-0.17, 0.17]) { c.beginPath(); c.arc(cx + dx * w, h * 0.46, 4, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); } // párpados
+}
+function decorCeiba(c, w, h) { // ceiba: tronco claro con contrafuertes y copa ancha
+  const cx = w / 2;
+  sombraDecor(c, w, h, w * 0.42);
+  c.fillStyle = '#9a9a86'; c.beginPath(); c.moveTo(cx - 9, h - 1); c.lineTo(cx - 3, h * 0.45); c.lineTo(cx + 3, h * 0.45); c.lineTo(cx + 9, h - 1); c.closePath(); c.fill();
+  for (const [dx, dy, rx, ry, col] of [[0, 0.3, 0.5, 0.17, '#1f5a26'], [-0.22, 0.22, 0.26, 0.13, '#2e7a33'], [0.22, 0.2, 0.26, 0.13, '#2e7a33'], [0, 0.14, 0.3, 0.1, '#3f9442']]) { c.fillStyle = col; c.beginPath(); c.ellipse(cx + dx * w, h * dy, rx * w, ry * h, 0, 0, 7); c.fill(); }
+}
+function decorPalma(c, w, h) {
+  const cx = w / 2;
+  sombraDecor(c, w, h, w * 0.3);
+  c.strokeStyle = '#7a6040'; c.lineWidth = 3; c.beginPath(); c.moveTo(cx, h - 1); c.quadraticCurveTo(cx + 4, h * 0.6, cx + 1, h * 0.22); c.stroke();
+  c.strokeStyle = '#2f7d32'; c.lineWidth = 2.6;
+  for (let k = 0; k < 7; k++) { const a = Math.PI + k * Math.PI / 6; c.beginPath(); c.moveTo(cx + 1, h * 0.22); c.quadraticCurveTo(cx + Math.cos(a) * w * 0.3, h * 0.22 + Math.sin(a) * h * 0.18 - 4, cx + Math.cos(a) * w * 0.48, h * 0.22 + Math.abs(Math.sin(a)) * h * 0.04 + 6); c.stroke(); }
+}
+function decorEstela(c, w, h) { // estela maya de caliza con bloques de glifos
+  sombraDecor(c, w, h, w * 0.45);
+  c.fillStyle = '#d9d0b8'; rr(c, 2, 2, w - 4, h - 3, 4); c.fill();
+  c.fillStyle = 'rgba(90,80,60,.45)'; for (let y = 6; y < h - 6; y += 6) for (const x of [4, w / 2 + 1]) c.fillRect(x, y, w / 2 - 5, 4.5);
+}
+function decorMuro(c, w, h, nombre) { // muro del juego de pelota; el del centro lleva el aro de piedra
+  c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(0, h - 3, w, 3);
+  c.fillStyle = '#cfc4a6'; c.beginPath(); c.moveTo(0, h); c.lineTo(w, h); c.lineTo(w, h * 0.72); c.lineTo(0, h * 0.72); c.fill(); // banqueta
+  c.fillStyle = '#e4dbc2'; c.fillRect(0, h * 0.08, w, h * 0.66); // muro
+  c.strokeStyle = 'rgba(110,95,70,.35)'; c.lineWidth = 0.7; for (let y = h * 0.16; y < h * 0.72; y += 5) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+  c.fillStyle = '#b9ae92'; c.fillRect(0, h * 0.04, w, h * 0.06);
+  if (nombre === 'muroAro') { c.strokeStyle = '#a69a7c'; c.lineWidth = 3.4; c.beginPath(); c.arc(w / 2, h * 0.3, 5, 0, 7); c.stroke(); c.strokeStyle = '#d8ceb4'; c.lineWidth = 1.2; c.beginPath(); c.arc(w / 2, h * 0.3, 5, 0, 7); c.stroke(); }
+}
+function decorHelecho(c, w, h) {
+  const cx = w / 2;
+  sombraDecor(c, w, h, w * 0.45);
+  c.strokeStyle = '#3f8f3a'; c.lineWidth = 1.6;
+  for (let k = 0; k < 7; k++) { const a = Math.PI + (k + 0.5) * Math.PI / 7; c.beginPath(); c.moveTo(cx, h - 1); c.quadraticCurveTo(cx + Math.cos(a) * w * 0.3, h - 1 + Math.sin(a) * h * 0.9, cx + Math.cos(a) * w * 0.5, h * 0.5 + Math.sin(a) * h * 0.2 + 4); c.stroke(); }
+}
+function decorCacao(c, w, h) { // árbol de cacao con sus mazorcas en el tronco
+  const cx = w / 2;
+  sombraDecor(c, w, h, w * 0.4);
+  c.fillStyle = '#5d4030'; c.fillRect(cx - 2.5, h * 0.4, 5, h * 0.6 - 1);
+  for (const [dx, dy, rad, col] of [[0, 0.3, 0.4, '#1f5a2a'], [-0.2, 0.36, 0.25, '#2c6e33'], [0.2, 0.34, 0.25, '#2c6e33']]) { c.fillStyle = col; c.beginPath(); c.arc(cx + dx * w, h * dy, rad * w, 0, 7); c.fill(); }
+  c.fillStyle = '#c2702a'; for (const [dx, dy] of [[-3.5, 0.62], [3.5, 0.7], [-3, 0.82]]) { c.beginPath(); c.ellipse(cx + dx, h * dy, 1.8, 3, 0, 0, 7); c.fill(); }
+}
+function decorAltar(c, w, h) { // altar olmeca de basalto con su nicho
+  c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(w / 2, h - 1.5, w * 0.48, 2.2, 0, 0, 7); c.fill();
+  c.fillStyle = '#4c5052'; rr(c, 1, h * 0.18, w - 2, h * 0.8, 3); c.fill();
+  c.fillStyle = '#5f6466'; c.fillRect(0, h * 0.12, w, h * 0.16);
+  c.fillStyle = '#26292a'; c.beginPath(); c.moveTo(w * 0.36, h - 1); c.lineTo(w * 0.36, h * 0.55); c.arc(w / 2, h * 0.55, w * 0.14, Math.PI, 0); c.lineTo(w * 0.64, h - 1); c.fill();
+}
+function decorCabeza(c, w, h) { // cabeza colosal olmeca de basalto, con casco
+  const cx = w / 2;
+  c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(cx, h - 1.5, w * 0.46, 2.6, 0, 0, 7); c.fill();
+  const gr = c.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, '#3a3d3f'); gr.addColorStop(0.45, '#6a6e70'); gr.addColorStop(1, '#3a3d3f');
+  c.fillStyle = gr; c.beginPath(); c.ellipse(cx, h * 0.55, w * 0.42, h * 0.44, 0, 0, 7); c.fill(); // cabeza
+  c.fillStyle = '#4a4e50'; c.beginPath(); c.ellipse(cx, h * 0.3, w * 0.45, h * 0.22, 0, Math.PI, 0); c.fill(); c.fillRect(cx - w * 0.45, h * 0.29, w * 0.9, h * 0.08); // casco
+  c.fillStyle = '#55595b'; for (const s of [-1, 1]) { rr(c, cx + s * w * 0.4 - 4, h * 0.35, 8, h * 0.36, 3); c.fill(); } // orejeras
+  c.strokeStyle = 'rgba(25,27,28,.55)'; c.lineWidth = 1.1;
+  for (const s of [-1, 1]) { c.beginPath(); c.moveTo(cx + s * w * 0.05, h * 0.47); c.quadraticCurveTo(cx + s * w * 0.15, h * 0.43, cx + s * w * 0.25, h * 0.47); c.stroke(); } // cejas
+  c.fillStyle = '#2b2e2f'; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(cx + s * w * 0.15, h * 0.52, w * 0.07, h * 0.025, 0, 0, 7); c.fill(); } // ojos
+  c.fillStyle = '#5c6062'; c.beginPath(); c.moveTo(cx, h * 0.53); c.lineTo(cx - w * 0.1, h * 0.68); c.lineTo(cx + w * 0.1, h * 0.68); c.closePath(); c.fill(); // nariz
+  c.fillStyle = '#2f3233'; c.beginPath(); c.ellipse(cx, h * 0.78, w * 0.14, h * 0.035, 0, 0, 7); c.fill(); // labios
+}
+const DIBUJO_MESO = [
+  ['ahuejote', decorAhuejote], ['maiz', decorMaiz], ['canoa', decorCanoa], ['trajinera', decorTrajinera], ['maguey', decorMaguey],
+  ['nopal', decorNopal], ['plataforma', decorPlataforma], ['serpiente', decorSerpiente], ['ceiba', decorCeiba], ['palma', decorPalma],
+  ['estela', decorEstela], ['muroPelota', decorMuro], ['muroAro', decorMuro], ['helecho', decorHelecho], ['cacao', decorCacao],
+  ['altar', decorAltar], ['cabezaColosal', decorCabeza],
+];
+// ---- Cielo de 360°: la silueta de cada lugar (c en px del panorama; base = horizonte) ----
+// Pirámide escalonada de n cuerpos en talud con escalinata al centro; devuelve la altura de la cima.
+function piramidePano(c, cx, base, w, h, n, col, sombra, escal) {
+  const paso = h / n;
+  for (let i = 0; i < n; i++) {
+    const w0 = w * (1 - i / n * 0.6), w1 = w * (1 - (i + 0.85) / n * 0.6), y0 = base - i * paso, y1 = y0 - paso;
+    c.fillStyle = col; c.beginPath(); c.moveTo(cx - w0 / 2, y0); c.lineTo(cx - w1 / 2, y1); c.lineTo(cx + w1 / 2, y1); c.lineTo(cx + w0 / 2, y0); c.closePath(); c.fill();
+    c.fillStyle = sombra; c.fillRect(cx - w1 / 2, y1 + paso * 0.68, w1, Math.max(1, paso * 0.18));
+  }
+  if (escal) { const sw = Math.max(4, w * 0.11); c.fillStyle = escal; c.beginPath(); c.moveTo(cx - sw / 2, base); c.lineTo(cx - sw * 0.32, base - h); c.lineTo(cx + sw * 0.32, base - h); c.lineTo(cx + sw / 2, base); c.closePath(); c.fill(); }
+  return base - h;
+}
+function volcanPano(c, cx, base, w, h, col, nieve) {
+  c.fillStyle = col; c.beginPath(); c.moveTo(cx - w / 2, base); c.lineTo(cx - w * 0.06, base - h); c.lineTo(cx + w * 0.06, base - h); c.lineTo(cx + w / 2, base); c.closePath(); c.fill();
+  c.fillStyle = nieve; c.beginPath(); c.moveTo(cx - w * 0.17, base - h * 0.62); c.lineTo(cx - w * 0.06, base - h); c.lineTo(cx + w * 0.06, base - h); c.lineTo(cx + w * 0.17, base - h * 0.62); c.lineTo(cx + w * 0.06, base - h * 0.7); c.lineTo(cx, base - h * 0.6); c.lineTo(cx - w * 0.08, base - h * 0.7); c.closePath(); c.fill();
+}
+function siluetaPano(c, id, PW, PH, dos) {
+  const B = PH + 1;
+  if (id === 'tenochtitlan') {
+    dos(o => { // los volcanes del valle y, sobre el lago, el Templo Mayor con sus dos templos
+      volcanPano(c, PW * 0.14 + o, B, PH * 1.5, PH * 0.62, '#6f88a3', '#f4f8fb');
+      c.fillStyle = '#7790aa'; c.beginPath(); c.moveTo(PW * 0.22 + o, B); c.lineTo(PW * 0.26 + o, B - PH * 0.42); c.lineTo(PW * 0.29 + o, B - PH * 0.47); c.lineTo(PW * 0.32 + o, B - PH * 0.4); c.lineTo(PW * 0.37 + o, B); c.fill();
+      c.fillStyle = '#f4f8fb'; c.beginPath(); c.moveTo(PW * 0.255 + o, B - PH * 0.4); c.lineTo(PW * 0.29 + o, B - PH * 0.47); c.lineTo(PW * 0.32 + o, B - PH * 0.4); c.lineTo(PW * 0.29 + o, B - PH * 0.42); c.fill();
+      const cx = PW * 0.03 + o, w = PH * 1.1, cima = piramidePano(c, cx, B, w, PH * 0.5, 4, '#cdb88f', '#a08a62', null);
+      for (const s of [-1, 1]) { c.fillStyle = '#e9dcc0'; c.beginPath(); c.moveTo(cx + s * w * 0.14 - 3, B); c.lineTo(cx + s * w * 0.1 - 2, cima); c.lineTo(cx + s * w * 0.1 + 2, cima); c.lineTo(cx + s * w * 0.14 + 3, B); c.fill(); } // doble escalinata
+      for (const [s, col] of [[-1, '#3b7fc4'], [1, '#b8322b']]) { // templos de Tláloc (azul) y de Huitzilopochtli (rojo)
+        const tx = cx + s * w * 0.12, tw = w * 0.16, th = PH * 0.13;
+        c.fillStyle = '#efe6d2'; c.fillRect(tx - tw / 2, cima - th, tw, th);
+        c.fillStyle = col; c.fillRect(tx - tw / 2, cima - th * 1.55, tw, th * 0.6);
+        c.fillStyle = '#fff'; for (let k = 0; k < 3; k++) c.fillRect(tx - tw / 2, cima - th * 1.5 + k * th * 0.2, tw, th * 0.06);
+        c.fillStyle = '#4a3a2a'; c.fillRect(tx - tw * 0.15, cima - th * 0.7, tw * 0.3, th * 0.7);
+      }
+      for (const dx of [0.07, 0.6, 0.75]) piramidePano(c, PW * dx + o, B, PH * 0.28, PH * 0.14, 2, '#c2ab80', '#9a8460', null); // templos menores
+    });
+  } else if (id === 'teotihuacan') {
+    dos(o => { // Cerro Gordo, la Pirámide de la Luna delante y la del Sol, más grande, a un lado
+      c.fillStyle = '#7f8a94'; c.beginPath(); c.moveTo(PW * -0.06 + o, B); c.quadraticCurveTo(PW * 0.0 + o, B - PH * 0.9, PW * 0.07 + o, B); c.fill();
+      piramidePano(c, PW * 0.0 + o, B, PH * 1.0, PH * 0.42, 4, '#8d8173', '#6f6458', '#a39785');
+      piramidePano(c, PW * 0.09 + o, B, PH * 1.7, PH * 0.56, 5, '#93877a', '#72675b', '#aa9e8c');
+    });
+  } else if (id === 'chichen') {
+    dos(o => { // El Castillo: nueve cuerpos, escalinata y templo en la cima
+      const cx = PW * 0.02 + o, cima = piramidePano(c, cx, B, PH * 1.25, PH * 0.6, 9, '#ddd2b6', '#b3a684', '#efe7d2');
+      const tw = PH * 0.3, th = PH * 0.13;
+      c.fillStyle = '#d4c8a8'; c.fillRect(cx - tw / 2, cima - th, tw, th);
+      c.fillStyle = '#b3a684'; c.fillRect(cx - tw / 2 - 2, cima - th - 2, tw + 4, 3);
+      c.fillStyle = '#4a4232'; for (const dx of [-0.28, 0, 0.28]) c.fillRect(cx + dx * tw - 2, cima - th * 0.7, 4, th * 0.7);
+    });
+  } else if (id === 'laventa') {
+    dos(o => { // la gran pirámide de tierra de La Venta, con sus estrías, entre la neblina de la selva
+      const cx = PW * 0.03 + o, w = PH * 1.5, h = PH * 0.55;
+      c.fillStyle = '#5f6b45'; c.beginPath(); c.moveTo(cx - w / 2, B);
+      for (let k = 0; k <= 10; k++) { const t = k / 10, x = cx - w / 2 + t * w, y = B - h * Math.pow(Math.sin(Math.PI * t), 0.8) - (k % 2) * h * 0.04; c.lineTo(x, y); }
+      c.lineTo(cx + w / 2, B); c.fill();
+      c.strokeStyle = 'rgba(40,50,30,.35)'; c.lineWidth = 1.2; for (let k = 1; k < 10; k++) { const x = cx - w / 2 + k / 10 * w; c.beginPath(); c.moveTo(x, B); c.lineTo(cx + (x - cx) * 0.35, B - h * 0.92); c.stroke(); }
+      c.fillStyle = 'rgba(230,240,235,.35)'; c.fillRect(cx - w, B - h * 0.35, w * 2, h * 0.12);
+    });
+  }
+}
 const PXD = 4, imgsDecor = {};
 // Qué función dibuja cada adorno (un Map para no tropezar con nombres heredados de Object).
 const DIBUJO_DECOR = new Map([
@@ -708,11 +1017,11 @@ const DIBUJO_DECOR = new Map([
   ['rocaDesierto', decorRoca], ['rocaVolcan', decorRoca], ['mesa', decorMesa], ['pino', decorPino],
   ['muneco', decorMuneco], ['bloque', decorBloque], ['obsidiana', decorObsidiana], ['fumarola', decorFumarola],
   ['grada', decorGrada], ['llantas', decorLlantas], ['curvaDer', decorCurva], ['curvaIzq', decorCurva],
-  ['caja', decorCaja], ['moneda', decorMoneda],
+  ['caja', decorCaja], ['moneda', decorMoneda], ...DIBUJO_MESO,
 ]);
 function imgDecor(nombre, w, h) {
   if (imgsDecor[nombre]) return imgsDecor[nombre];
-  const base = { grada: [66, 34], llantas: [13, 15], curvaDer: [22, 30], curvaIzq: [22, 30], caja: [16, 16], moneda: [10, 10] };
+  const base = { grada: [66, 34], llantas: [13, 15], curvaDer: [22, 30], curvaIzq: [22, 30], caja: [16, 16], moneda: [10, 10], serpiente: [26, 22], muroPelota: [40, 34], cabezaColosal: [48, 54], trajinera: [50, 26], muroAro: [40, 34] };
   for (const l of Object.values(DECOR_POR_PISTA)) for (const t of l) base[t[0]] = [t[1], t[2]];
   [w, h] = base[nombre] || [w, h];
   const s = document.createElement('canvas'); s.width = Math.ceil(w * PXD); s.height = Math.ceil(h * PXD);
@@ -1093,6 +1402,7 @@ function pasoKart(k, dt) {
   const eq = datosEquipo(k);
   k.turbo = Math.max(0, k.turbo - dt); k.estrella = Math.max(0, k.estrella - dt); k.rayo = Math.max(0, k.rayo - dt); k.ahogado = Math.max(0, k.ahogado - dt); k.usoT = Math.max(0, k.usoT - dt);
   if (k.fantasma) { pasoFantasma(k); return; }
+  k.aire = Math.max(0, (k.aire || 0) - dt);
   let giro = 0, acelera = true, freno = false, derrapa = false;
   if (k.humano) {
     const en = leerEntrada(); giro = en.giro; freno = en.freno; derrapa = en.derrape; acelera = en.acel;
@@ -1118,9 +1428,10 @@ function pasoKart(k, dt) {
 // Velocidad punta del kart en este paso (equipo, ajuste del bot, monedas, ítems y si va fuera del camino).
 function velocidadPunta(k, eq) {
   let top = eq.top * (k.humano ? 1 : k.skill * botAjuste(k)) * (1 + 0.015 * k.monedas);
-  const fuera = distanciaCentro(k) > pista.mitad + 4;
+  const fuera = distanciaCentro(k) > pista.mitad + 4 && !(k.aire > 0);
   if (k.estrella > 0) top *= 1.15;
   else if (fuera) top *= eq.fuera;
+  top *= frenoZonas(k);
   if (k.rayo > 0) top *= 0.6;
   if (k.turbo > 0) top = Math.max(top, eq.top * 1.35);
   if (k.termino !== null) top *= 0.5;
@@ -1160,9 +1471,63 @@ function mover(k, dt, agarreBase) {
   k.vx += (fx * k.vel - k.vx) * f; k.vy += (fy * k.vel - k.vy) * f;
   k.x += k.vx * dt; k.y += k.vy * dt;
   k.x = Math.max(10, Math.min(capa.width - 10, k.x)); k.y = Math.max(10, Math.min(capa.height - 10, k.y));
+  const idxAntes = k.idx;
   actualizarIdx(k);
   for (const l of lavas) if (Math.hypot(k.x - l.x, k.y - l.y) < l.r) { rescatar(k); break; }
+  if (zonas.length) pisarZonas(k, idxAntes);
 }
+/* ---- Mecánicas de las pistas mesoamericanas (openspec: karts-pistas-mesoamericanas) ----
+   Zonas fijas sobre el camino (juegos/karts-pistas.js); dependen solo de la posición y de tCarrera: deterministas. */
+const SALTO_S = 0.7, eventos = { turbo: 0, salto: 0, cenote: 0, lodo: 0, trajinera: 0 };
+const dentroZona = (k, z) => (k.x - z.x) ** 2 + (k.y - z.y) ** 2 < z.r * z.r;
+const posTrajinera = () => punto(trajinera.idx, KP.ladoTrajinera(trajinera, tCarrera));
+// Tope de velocidad por lodo o por el agua del cenote (sin efecto en el aire ni con estrella).
+function frenoZonas(k) {
+  if (k.aire > 0 || k.estrella > 0) return 1;
+  let f = 1;
+  for (const z of zonas) if ((z.tipo === 'lodo' || z.tipo === 'cenote') && dentroZona(k, z)) f = Math.min(f, z.tipo === 'lodo' ? 0.55 : 0.45);
+  return f;
+}
+// Al entrar a una zona: turbo de la rampa, salto (con velocidad) o aviso del cenote y del lodo; y el choque con la trajinera.
+function pisarZonas(k, idxAntes) {
+  for (const z of zonas) if (z.tipo !== 'trajinera') revisarZona(k, z, idxAntes);
+  if (trajinera && k.giro <= 0) chocaTrajinera(k);
+}
+function revisarZona(k, z, idxAntes) {
+  if (z.tipo === 'salto') {
+    if (cruzoRampa(k, z, idxAntes)) entrarZona(k, z);
+    return;
+  }
+  const en = dentroZona(k, z), antes = k.zona === z;
+  if (en && !antes) entrarZona(k, z);
+  if (en) k.zona = z;
+  else if (antes) k.zona = null;
+}
+// La rampa ocupa todo el ancho: salta quien cruza su línea por el camino (y con velocidad, ver entrarZona).
+function cruzoRampa(k, z, idxAntes) {
+  const d1 = (z.idx - idxAntes + N) % N, d2 = (k.idx - idxAntes + N) % N;
+  return d2 < 20 && d1 > 0 && d1 <= d2 && distanciaCentro(k) <= pista.mitad + 4;
+}
+function chocaTrajinera(k) {
+  const t = posTrajinera();
+  if ((k.x - t.x) ** 2 + (k.y - t.y) ** 2 >= 26 * 26) { return; }
+  golpear(k);
+  if (k === yo) { eventos.trajinera++; avisar('🛶 ¡Te pegó la trajinera!', 1100); }
+}
+function entrarZona(k, z) {
+  if (z.tipo === 'turbo') {
+    k.turbo = Math.max(k.turbo, 0.7); k.turboNivel = 0;
+    if (k === yo) S.turbo();
+  } else if (z.tipo === 'salto') {
+    if (k.vel <= 140 || k.aire > 0) { return; }
+    k.aire = SALTO_S;
+  } else if (z.tipo === 'cenote' && k.aire > 0) { return; } // en el aire no moja
+  if (k !== yo) { return; }
+  eventos[z.tipo]++;
+  if (z.tipo === 'cenote') avisar('💦 ¡Al cenote! Salta con velocidad', 1100);
+  else if (z.tipo === 'lodo') avisar('🟤 ¡Lodo!', 700);
+}
+const alturaAire = k => (k.aire > 0 ? Math.sin(Math.PI * (1 - k.aire / SALTO_S)) * 22 : 0);
 function rescatar(k) {
   const i = (k.idx - 6 + N) % N, p = M.pts[i];
   k.x = p.x; k.y = p.y; k.ang = p.a; k.vx = k.vy = 0; k.vel = 0; k.idx = i; k.derrape = null; k.giro = 0; k.ahogado = 0.8;
@@ -1439,7 +1804,7 @@ function mostrarResultados() {
   if (ultimoRes.copaTerminada) { finCopa = ' · 🏆 Terminaste la copa en ' + ultimoRes.lugarCopa + '.º lugar' + (bono ? ' (+' + bono + ')' : ''); }
   $('res-puntos').textContent = (ms !== null ? '⭐ ' + puntos + ' puntos · 🪙 ' + yo.monedas : '') + extra + finCopa;
   $('res-guardado').textContent = EMBED && ms !== null ? 'Guardando tus puntos…' : '';
-  $('res-botones').innerHTML = (cc ? '<button class="btn" data-ir="copa">▶ Carrera ' + (cc.carrera + 1) + ' de 4: ' + A.pistaPorId(COPA.pistas[cc.carrera]).nombre + '</button>' : '') +
+  $('res-botones').innerHTML = (cc ? '<button class="btn" data-ir="copa">▶ Carrera ' + (cc.carrera + 1) + ' de 4: ' + A.pistaPorId(copaDe(cc).pistas[cc.carrera]).nombre + '</button>' : '') +
     (!enCopa ? '<button class="btn" data-ir="rapida:' + pista.id + '">🔁 Otra vez</button>' : '') + '<button class="btn sec" data-ir="menu">🏠 Menú</button>';
   $('hud').classList.add('hide');
   mostrar('ov-res');
@@ -1465,10 +1830,11 @@ function puntuarCopa(filas, lugar) {
   cc.dif = Math.max(85, Math.min(105, cc.dif + ajusteDificultad(lugar)));
   cc.carrera++;
   const tabla = karts.map((k, i) => ({ k, pts: cc.puntos[i] })).sort((a, b) => b.pts - a.pts);
-  if (cc.carrera >= COPA.pistas.length) {
+  const copa = copaDe(cc);
+  if (cc.carrera >= copa.pistas.length) {
     const lugarCopa = tabla.findIndex(x => x.k === yo) + 1, pts = cc.puntos[karts.indexOf(yo)];
-    const previo = prog.copas[COPA.id];
-    if (!previo || lugarCopa < previo.lugar || (lugarCopa === previo.lugar && pts > previo.puntos)) prog.copas[COPA.id] = { lugar: lugarCopa, puntos: pts };
+    const previo = prog.copas[copa.id];
+    if (!previo || lugarCopa < previo.lugar || (lugarCopa === previo.lugar && pts > previo.puntos)) prog.copas[copa.id] = { lugar: lugarCopa, puntos: pts };
     bono = BONO_COPA[lugarCopa] || 0;
     if (lugarCopa <= 3 && !prog.piezas.includes('chasis-ligero')) { prog.piezas.push('chasis-ligero'); extra += ' · 🔧 Chasis ligero desbloqueado'; }
     if (lugarCopa === 1 && !prog.piezas.includes('llantas-todoterreno')) { prog.piezas.push('llantas-todoterreno'); extra += ' · 🛞 Llantas todoterreno desbloqueadas'; }
@@ -1493,11 +1859,12 @@ function escalonPodio(f, i) {
   if (!f) { return ''; }
   return '<div class="esc e' + (i + 1) + (f.k === yo ? ' yo' : '') + '"><span class="medalla">' + ['🥇', '🥈', '🥉'][i] + '</span>' + chip(f.k) + '<b>' + esc(f.k.nombre) + '</b><div class="bloque">' + (i + 1) + '</div></div>';
 }
+// nueva = id de la copa que empieza desde cero; sin él, continúa la copa en curso.
 function empezarCopa(nueva) {
-  if (nueva || !prog.copaEnCurso) prog.copaEnCurso = { copa: COPA.id, carrera: 0, puntos: [0, 0, 0, 0, 0, 0, 0, 0], dif: 95 };
+  if (nueva || !prog.copaEnCurso) prog.copaEnCurso = { copa: KP.copaPorId(nueva).id, carrera: 0, puntos: [0, 0, 0, 0, 0, 0, 0, 0], dif: 95 };
   const cc = prog.copaEnCurso;
   guardar();
-  iniciarCarrera(COPA.pistas[cc.carrera], { copa: true, ronda: cc.carrera, dif: cc.dif });
+  iniciarCarrera(copaDe(cc).pistas[cc.carrera], { copa: true, ronda: cc.carrera, dif: cc.dif });
 }
 function iniciarCarrera(id, op) {
   // Con el sensor elegido: se activa (o se centra) dentro del mismo toque que arranca la carrera.
@@ -1532,19 +1899,24 @@ pintarPilotos();
 /* ================= Menús ================= */
 function abrirMenu() {
   modo = 'menu'; motorOn(false); soltarTodo(); $('hud').classList.add('hide'); $('cuenta').textContent = ''; window.Emocion?.calma(); // emocion-sonora
-  const cc = prog.copaEnCurso, copa = prog.copas[COPA.id];
+  const cc = prog.copaEnCurso;
   $('menu-ops').innerHTML =
-    (cc ? '<button class="op" data-ir="copa">▶ Continuar ' + COPA.nombre + '<small>Carrera ' + (cc.carrera + 1) + ' de 4</small></button>' : '') +
-    '<button class="op" data-ir="copa-nueva">🏆 ' + (cc ? 'Copa nueva' : COPA.nombre) + '<small>4 pistas · puntos por lugar</small></button>' +
+    (cc ? '<button class="op" data-ir="copa">▶ Continuar ' + copaDe(cc).nombre + '<small>Carrera ' + (cc.carrera + 1) + ' de 4</small></button>' : '') +
+    KP.COPAS.map(c => '<button class="op" data-ir="copa-nueva' + (c.id === 'fiesta' ? '' : ':' + c.id) + '">' + c.emoji + ' ' + c.nombre + '<small>' + c.desc + '</small></button>').join('') +
     '<button class="op" data-ir="pistas">🏁 Carrera rápida<small>Elige la pista</small></button>' +
     '<button class="op" data-ir="taller">🔧 Taller<small>' + prog.piezas.length + ' de 3 piezas</small></button>';
-  $('menu-stats').innerHTML = '<span>🏆 ' + (copa ? 'Mejor copa: ' + copa.lugar + '.º (' + copa.puntos + ' pts)' : 'Sin copas todavía') + '</span><span>🏅 ' + Object.keys(prog.records).length + ' récords</span>';
+  const mejores = KP.COPAS.filter(c => prog.copas[c.id]).map(c => c.emoji + ' ' + prog.copas[c.id].lugar + '.º (' + prog.copas[c.id].puntos + ' pts)');
+  $('menu-stats').innerHTML = '<span>🏆 ' + (mejores.length ? 'Mejor copa: ' + mejores.join(' · ') : 'Sin copas todavía') + '</span><span>🏅 ' + Object.keys(prog.records).length + ' récords</span>';
   pintarControles();
   mostrar('ov-menu');
   const b = $('menu-ops').querySelector('.op'); if (b) b.focus();
 }
 function abrirPistas() {
-  $('pistas-ops').innerHTML = A.PISTAS.map(p => '<button class="op" data-ir="rapida:' + p.id + '">' + p.emoji + ' ' + p.nombre + '<small>' + (prog.records[p.id] ? '🏅 ' + A.formatoTiempo(prog.records[p.id]) : 'Sin récord') + ' · meta ' + A.formatoTiempo(A.refKarts(p.id)) + '</small></button>').join('');
+  // Agrupadas por copa, con su descripción corta (openspec: karts-pistas-mesoamericanas).
+  $('pistas-ops').innerHTML = KP.COPAS.map(c => '<div class="ops-grupo">' + c.emoji + ' ' + c.nombre + '</div>' + c.pistas.map(id => {
+    const p = A.pistaPorId(id);
+    return '<button class="op" data-ir="rapida:' + p.id + '">' + p.emoji + ' ' + p.nombre + '<small class="op-desc">' + (p.civ ? p.civ + ' · ' : '') + p.desc + '</small><small>' + (prog.records[p.id] ? '🏅 ' + A.formatoTiempo(prog.records[p.id]) : 'Sin récord') + ' · meta ' + A.formatoTiempo(A.refKarts(p.id)) + '</small></button>';
+  }).join('')).join('');
   mostrar('ov-pistas');
 }
 function abrirTaller() {
@@ -1562,7 +1934,7 @@ document.addEventListener('click', e => {
     const ir = b.dataset.ir; audio();
     if (ir === 'menu') abrirMenu();
     else if (ir === 'copa') empezarCopa(false);
-    else if (ir === 'copa-nueva') empezarCopa(true);
+    else if (ir.startsWith('copa-nueva')) empezarCopa(ir.split(':')[1] || 'fiesta');
     else if (ir === 'pistas') abrirPistas();
     else if (ir === 'taller') abrirTaller();
     else if (ir.startsWith('rapida:')) iniciarCarrera(ir.slice(7), { copa: false, ronda: 0, dif: 95 });
@@ -1772,7 +2144,7 @@ function prepararPano() {
     for (let x = 0; x <= TW; x += 2) { let y = altura(x, frec, fase); if (plano) { y = Math.min(y, plano); } c.lineTo(x, PH - Math.max(0.05, y) * alto); }
     c.lineTo(TW, PH); c.closePath(); c.fill();
   };
-  capaMontes(PH * 0.62, [3, 7, 13], t.lejos, 0.7, id === 'desierto' ? 0.62 : 0);
+  capaMontes(PH * (KP.PISTAS.find(p => p.id === id).civ ? 0.4 : 0.62), [3, 7, 13], t.lejos, 0.7, id === 'desierto' ? 0.62 : 0);
   if (id === 'hielo') { c.save(); c.globalCompositeOperation = 'source-atop'; c.fillStyle = 'rgba(255,255,255,.9)'; c.fillRect(0, 0, TW, PH * 0.55); c.restore(); } // cumbres nevadas
   if (id === 'volcan') dos(o => { // el volcán con su cráter encendido y humo
     const vx = PW * 0.55 + o, cima = PH * 0.22;
@@ -1781,8 +2153,9 @@ function prepararPano() {
     const cg = c.createRadialGradient(vx, cima, 2, vx, cima, 30); cg.addColorStop(0, '#ffe08a'); cg.addColorStop(0.4, 'rgba(255,110,0,.7)'); cg.addColorStop(1, 'rgba(255,60,0,0)'); c.fillStyle = cg; c.fillRect(vx - 30, cima - 30, 60, 60);
     c.fillStyle = 'rgba(70,60,60,.55)'; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(vx + k * 9 - 10, cima - 12 - k * 9, 9 + k * 3, 0, 7); c.fill(); }
   });
-  capaMontes(PH * 0.34, [5, 11, 17], t.cerca, 2.1, id === 'desierto' ? 0.7 : 0);
-  if (id === 'pradera') { // arbolitos sobre las lomas cercanas
+  siluetaPano(c, id, PW, PH, dos); // pistas mesoamericanas: templos, pirámides y volcanes
+  capaMontes(PH * 0.34, [5, 11, 17], t.cerca, 2.1, ({ desierto: 0.7, tenochtitlan: 0.16 })[id] || 0);
+  if (id === 'pradera' || id === 'chichen' || id === 'laventa') { // arbolitos (o el dosel de la selva) sobre las lomas cercanas
     c.fillStyle = t.cerca2;
     for (let x = 0; x < PW; x += 9 + r() * 14) { const rad = 3 + r() * 2.5; dos(o => { const y = PH - altura(x, [5, 11, 17], 2.1) * PH * 0.34; c.beginPath(); c.arc(x + o, y + 2, rad, 0, 7); c.fill(); }); }
   }
@@ -1833,6 +2206,7 @@ function juntarVisibles(lista, visible, conKarts) {
   for (const m of monedasPista) if (m.t <= 0) { const z = visible(m.x, m.y, 10, 900); if (z) lista.push({ z, moneda: m }); }
   for (const cj of cajas) if (cj.t <= 0) { const z = visible(cj.x, cj.y, 16, 1100); if (z) lista.push({ z, caja: cj }); }
   for (const o of objetos) { const z = visible(o.x, o.y, 12, 900); if (z) lista.push({ z, obj: o }); }
+  if (trajinera) { const q = posTrajinera(), z = visible(q.x, q.y, 50, 1400); if (z) lista.push({ z, d: { x: q.x, y: q.y, img: 'trajinera', w: 50, h: 26 } }); }
   if (conKarts) {
     for (const k of karts) { const z = visible(k.x, k.y, 30, 1600); if (z) lista.push({ z, kart: k }); }
     for (const p of particulas) { const z = visible(p.x, p.y, 10, 600); if (z) lista.push({ z, part: p }); }
@@ -1909,7 +2283,7 @@ function dibujarObjeto(o) {
   }
 }
 function dibujarKart(k, t) {
-  const p = proyectar(k.x, k.y, 0); if (!p) return;
+  const p = proyectar(k.x, k.y, alturaAire(k)); if (!p) return; // alturaAire: salto del cenote
   const rel = k.ang - Math.atan2(k.y - cam.y, k.x - cam.x);
   const vista = ((Math.round(rel / (2 * Math.PI) * NVISTAS) % NVISTAS) + NVISTAS) % NVISTAS;
   const e = k.rayo > 0 ? 0.62 : 1, s = p.s * e;
@@ -1960,10 +2334,7 @@ function prepararMinimapa() {
   if (!w || !h || !M) return false;
   mm.dpr = Math.min(3, window.devicePixelRatio || 1); mm.w = w; mm.h = h;
   mm.el.width = Math.round(w * mm.dpr); mm.el.height = Math.round(h * mm.dpr);
-  const xs = M.pts.map(p => p.x), ys = M.pts.map(p => p.y);
-  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), m = 11;
-  mm.esc = Math.min((w - 2 * m) / (x1 - x0), (h - 2 * m) / (y1 - y0));
-  mm.ox = (w - (x1 - x0) * mm.esc) / 2 - x0 * mm.esc; mm.oy = (h - (y1 - y0) * mm.esc) / 2 - y0 * mm.esc;
+  Object.assign(mm, KP.encuadrarMinimapa(M.pts, w, h, 11)); // esc, ox, oy (juegos/karts-pistas.js)
   const b = document.createElement('canvas'); b.width = mm.el.width; b.height = mm.el.height;
   const c = b.getContext('2d'); c.scale(mm.dpr, mm.dpr);
   c.fillStyle = 'rgba(8,12,24,.62)'; rr(c, 0.5, 0.5, w - 1, h - 1, 11); c.fill();
@@ -2070,7 +2441,7 @@ if (PRUEBA) {
     estado: () => ({ modo, pista: pista && pista.id, vuelta: yo ? yo.vuelta : null, pos: yo ? posDe(yo) : null, monedas: yo ? yo.monedas : 0, tiempo: Math.round(tCarrera * 1000), termino: yo ? yo.termino : null, turbo: yo ? yo.turbo : 0, ultimoTurbo, prog: structuredClone(prog), sala: !!sala, karts: karts.length, vel: yo ? Math.round(yo.vel) : 0, lw: LW, lh: LH,
       ang: yo ? yo.ang : 0, giro: leerEntrada().giro, freno: leerEntrada().freno, derrape: activo('derrape'), acel: acelModo, acelera: leerEntrada().acel,
       vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
-      item: yo ? yo.item : null, mando: mando.estado(),
+      item: yo ? yo.item : null, mando: mando.estado(), aire: yo ? yo.aire || 0 : 0, eventos: { ...eventos }, zonas: zonas.map(z => z.tipo),
       personaje: yo ? yo.personaje : personaje, masa: Personajes.masa(yo ? yo.personaje : personaje), personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length }),
     // Caja de tu kart en px del lienzo (capturas de cerca y revisión de su dibujo).
     cajaYo: () => { const p = proyectar(yo.x, yo.y, 0); return p ? { x: (p.x - KW / 2 * p.s) * K, y: (p.y - KOY * p.s) * K, w: KW * p.s * K, h: KH * p.s * K } : null; },
@@ -2082,6 +2453,14 @@ if (PRUEBA) {
       return c.toDataURL('image/png');
     },
     darItem: t => { if (yo && ITEMS[t]) yo.item = t; }, // ítem en la mano (E2E del mando)
+    // Mecánicas (karts-pistas-mesoamericanas): te pone 30 muestras antes de la zona, en el centro y a toda velocidad;
+    // con la trajinera, justo donde va a estar en el siguiente cuadro.
+    antesDe: tipo => {
+      const z = zonas.find(x => x.tipo === tipo); if (!z || !yo) return false;
+      if (tipo === 'trajinera') { const q = punto(z.idx, KP.ladoTrajinera(z, tCarrera + 1 / 60)); yo.x = q.x; yo.y = q.y; yo.idx = z.idx; yo.giro = 0; return true; }
+      const i = (z.idx - 30 + N) % N, q = punto(i, 0); yo.idx = i; yo.x = q.x; yo.y = q.y; yo.ang = M.pts[i].a; yo.vel = A.VEL_KART; yo.vx = Math.cos(yo.ang) * yo.vel; yo.vy = Math.sin(yo.ang) * yo.vel; yo.zona = null;
+      return true;
+    },
     // Lleva al jugador al final de la última vuelta (cruza la meta en un momento).
     piloto: on => { pilotoPrueba = !!on; },
     adelantar: () => alFinalDeVuelta(A.VUELTAS - 1),

@@ -18,6 +18,10 @@
 // por omisión, la elección se recuerda tras recargar, los bots y fantasmas usan los otros personajes, cada personaje se
 // dibuja en su kart (color de firma, capturas de cerca y hoja de vistas) y termina una carrera; valor desconocido → Xalli;
 // estela del turbo solo sin movimiento reducido; el selector cabe a 320×640 y 844×390.
+// Pistas mesoamericanas (openspec: karts-pistas-mesoamericanas): selector con 8 pistas por copa y descripción, en cada
+// pista nueva (Tenochtitlan, Teotihuacan, Chichén Itzá y La Venta) su mecánica (trajinera, rampas, salto sobre el
+// cenote y lodo), una vuelta completa con el piloto de prueba, fps con CPU ×4 y capturas a 390×844 y 844×390; Copa
+// Mesoamericana dentro de Juegos: empieza en La Venta, se guarda con su id y continúa tras recargar.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
@@ -323,6 +327,95 @@ async function probarMando(b) {
   await pg.context().close();
 }
 
+// ---- Pistas mesoamericanas (openspec: karts-pistas-mesoamericanas) ----
+const MESO = [
+  { id: 'tenochtitlan', nombre: 'Calzadas de Tenochtitlan', mecanica: 'trajinera' },
+  { id: 'teotihuacan', nombre: 'Calzada de los Muertos', mecanica: 'turbo' },
+  { id: 'chichen', nombre: 'Sacbé de Chichén Itzá', mecanica: 'salto' },
+  { id: 'laventa', nombre: 'Selva de La Venta', mecanica: 'lodo' },
+];
+// Selector con las 8 pistas por copa, una vuelta completa con el piloto de prueba en cada pista nueva, su mecánica,
+// fps con el CPU 4 veces más lento y capturas de cerca a 390×844 y 844×390.
+async function probarPistasMeso(b) {
+  const q = await abrirSuelto(b, { width: 390, height: 844 });
+  const f = q.mainFrame();
+  await f.tap('[data-ir="pistas"]'); await sleep(200);
+  const sel = await f.evaluate(() => ({ grupos: [...document.querySelectorAll('#pistas-ops .ops-grupo')].map(e => e.textContent), pistas: [...document.querySelectorAll('#pistas-ops [data-ir^="rapida:"]')].map(e => ({ id: e.dataset.ir.slice(7), txt: e.textContent })), ancho: document.documentElement.scrollWidth, vw: innerWidth }));
+  ok('pistas: 8 pistas agrupadas en Copa Fiesta y Copa Mesoamericana', sel.pistas.length === 8 && sel.grupos.length === 2 && /Copa Fiesta/.test(sel.grupos[0]) && /Copa Mesoamericana/.test(sel.grupos[1]) && sel.ancho <= sel.vw, JSON.stringify(sel.grupos));
+  ok('pistas: cada pista nueva con su nombre, civilización y descripción corta', MESO.every(m => { const x = sel.pistas.find(p => p.id === m.id); return x && x.txt.includes(m.nombre) && /Mexica|Teotihuacana|Maya|Olmeca/.test(x.txt) && /meta/.test(x.txt); }), JSON.stringify(sel.pistas.slice(4).map(p => p.txt)));
+  await q.screenshot({ path: 'karts-meso-selector.png', fullPage: true });
+  const cdp = await q.context().newCDPSession(q);
+  for (const m of MESO) {
+    await f.tap('[data-ir="rapida:' + m.id + '"]');
+    await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 400, null, { timeout: 15000 });
+    const e0 = await estado(f);
+    ok(m.id + ': se elige y corre con 8 corredores, su mecánica y el minimapa completo', e0.pista === m.id && e0.karts === 8 && e0.zonas.includes(m.mecanica) && e0.marcasMapa === 8 && e0.yoEnMapa, JSON.stringify({ pista: e0.pista, zonas: e0.zonas, marcas: e0.marcasMapa }));
+    // Rendimiento: CPU 4 veces más lento, como un celular modesto.
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); await sleep(3500);
+    const fps = (await estado(f)).fps;
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    ok(m.id + ': 60 cuadros por segundo con CPU ×4', fps >= 55, 'fps=' + fps);
+    fpsMeso[m.id] = fps;
+    await q.screenshot({ path: 'karts-meso-' + m.id + '-390x844.png' });
+    // Mecánica: con el piloto de prueba (sigue el centro de la pista), te pone justo antes de la zona (la trajinera,
+    // donde va a pasar).
+    await f.evaluate(t => { window.__karts.piloto(true); window.__karts.antesDe(t); }, m.mecanica);
+    if (m.mecanica === 'salto') {
+      await f.waitForFunction(() => window.__karts.estado().eventos.salto >= 1, null, { timeout: 6000 }).catch(() => {}); await sleep(1000); const es = await estado(f);
+      ok(m.id + ': la rampa salta sobre el cenote sin mojarse', es.eventos.salto >= 1 && es.eventos.cenote === 0, JSON.stringify(es.eventos));
+    } else {
+      await f.waitForFunction(t => window.__karts.estado().eventos[t] >= 1, m.mecanica, { timeout: 6000 }).catch(() => {}); const es = await estado(f);
+      ok(m.id + ': la mecánica «' + m.mecanica + '» actúa', es.eventos[m.mecanica] >= 1, JSON.stringify(es.eventos));
+    }
+    // Una vuelta completa de verdad con el piloto de prueba.
+    await f.evaluate(() => window.__karts.piloto(true));
+    const v0 = (await estado(f)).vuelta;
+    await f.waitForFunction(v => window.__karts.estado().vuelta >= v + 1, v0, { timeout: 80000 }).catch(() => {});
+    const ev = await estado(f);
+    ok(m.id + ': una vuelta completa con el piloto de prueba', ev.vuelta >= v0 + 1, JSON.stringify({ vuelta: ev.vuelta, t: ev.tiempo }));
+    await q.setViewportSize({ width: 844, height: 390 }); await sleep(900);
+    await q.screenshot({ path: 'karts-meso-' + m.id + '-844x390.png' });
+    await q.setViewportSize({ width: 390, height: 844 }); await sleep(300);
+    await f.evaluate(() => { window.__karts.piloto(false); window.__karts.adelantar(); });
+    await f.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
+    await f.evaluate(() => document.querySelector('#res-botones [data-ir="menu"]').click());
+    await f.waitForSelector('#ov-menu:not(.hide)');
+    await f.tap('[data-ir="pistas"]');
+  }
+  await q.context().close();
+}
+const fpsMeso = {};
+// Copa Mesoamericana dentro de Juegos: empieza en La Venta, se guarda con su id y continúa tras recargar.
+async function probarCopaMeso(b) {
+  const p = await abrir(b);
+  await abrirJuego(p, 'karts');
+  let fr = await marcoDe(p);
+  await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  ok('menú: Copa Fiesta y Copa Mesoamericana', /Copa Fiesta/.test(await fr.textContent('#menu-ops')) && await fr.isVisible('[data-ir="copa-nueva:mesoamerica"]'));
+  await p.screenshot({ path: 'karts-meso-menu.png', fullPage: true });
+  await fr.click('[data-ir="copa-nueva:mesoamerica"]');
+  await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera');
+  ok('Copa Mesoamericana: la carrera 1 es en la Selva de La Venta', (await estado(fr)).pista === 'laventa');
+  await sleep(3800);
+  await fr.evaluate(() => window.__karts.adelantar());
+  await fr.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
+  await fr.waitForFunction(() => /individuales|No se guardaron/.test(document.getElementById('res-guardado').textContent), null, { timeout: 20000 });
+  for (let i = 0; i < 20; i++) { const d = (await progreso()).datos; if (d && d.copaEnCurso && d.copaEnCurso.copa === 'mesoamerica') break; await sleep(500); }
+  ok('Copa Mesoamericana: resultados con la siguiente carrera en Teotihuacan', /Carrera 2 de 4: Calzada de los Muertos/.test(await fr.textContent('#res-botones')), await fr.textContent('#res-botones'));
+  const g = await progreso(), cc = g.datos && g.datos.copaEnCurso;
+  ok('progreso: Copa Mesoamericana en curso (carrera 2) guardada en el servidor', cc && cc.copa === 'mesoamerica' && cc.carrera === 1, JSON.stringify(cc));
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'karts');
+  fr = await marcoDe(p);
+  await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  const menu = await fr.textContent('#menu-ops');
+  ok('tras recargar: «Continuar Copa Mesoamericana» en la carrera 2 de 4', menu.includes('Continuar Copa Mesoamericana') && menu.includes('Carrera 2 de 4'), menu);
+  await fr.click('[data-ir="copa"]');
+  await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera');
+  ok('continúa en la Calzada de los Muertos', (await estado(fr)).pista === 'teotihuacan');
+  await p.context().close();
+}
+
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrir(b);
@@ -607,6 +700,9 @@ async function probarMando(b) {
   // ---- Personajes (openspec: personajes-xalli) ----
   await probarPersonajes(b);
 
+  // ---- Pistas mesoamericanas (openspec: karts-pistas-mesoamericanas) ----
+  await probarPistasMeso(b);
+
   // ---- Partida en sala con bots fantasma ----
   const vAntes = (await progreso()).v;
   await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear');
@@ -631,6 +727,10 @@ async function probarMando(b) {
   ok('puntos de sala en 👥 partidas', /a tus puntos de partidas/.test(await p.textContent('#p-guardado')), await p.textContent('#p-guardado'));
   await p.screenshot({ path: 'karts-390-podio.png', fullPage: true });
   ok('la partida no guarda progreso', (await progreso()).v === vAntes);
+
+  // ---- Copa Mesoamericana (al final: cambia la copa en curso) ----
+  await probarCopaMeso(b);
+  console.log('fps con CPU ×4 por pista nueva: ' + JSON.stringify(fpsMeso));
 
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
