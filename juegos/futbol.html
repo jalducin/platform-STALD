@@ -198,7 +198,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(182,240,60,.8
 <script src="futbol-liga.js?v=1"></script>
 <script src="futbol-vista.js?v=1"></script>
 <script src="futbol-red.js?v=1"></script> <!-- futbol-en-linea: netcode sin DOM -->
-<script src="en-vivo.js?v=1"></script> <!-- futbol-en-linea: canal en vivo (sprint 27A); sin él, respaldo -->
+<script src="en-vivo.js?v=1"></script> <!-- futbol-en-linea: canal en vivo (juegos-en-vivo) por el puente de la página -->
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora: gol, silbato, tensión, victoria, penales y podio -->
 <script>
 /* Fútbol Estelar 2010 — página del juego (openspec: futbol-estelar). Embebido en juegos.html (🕹️ Arcade): la
@@ -1109,9 +1109,10 @@ function respaldoLinea(motivo) {
 }
 function cerrarCanal() { try { if (S.canal) S.canal.cerrar(); } catch { /* ya cerrado */ } S.canal = null; }
 function conectarLinea(cfg) {
-  if (!cfg.rt || !cfg.rt.topic) return Promise.reject(new Error('sin_canal'));
+  if (!cfg.vivo) return Promise.reject(new Error('sin_canal'));
   if (!window.EnVivo || !window.EnVivo.conectar) return Promise.reject(new Error('sin_modulo'));
-  const intento = window.EnVivo.conectar({ topic: cfg.rt.topic, url: cfg.rt.url, llave: cfg.rt.key, yo: cfg.yo, participantes: cfg.participantes, hz: cfg.rol === 'anfitrion' ? R.HZ_FOTO : R.HZ_ENTRADA });
+  // El canal de la sala vive en la página de Juegos (un solo socket); aquí llega por el puente del iframe.
+  const intento = window.EnVivo.conectar({ transporte: window.EnVivo.transporteMarco('futbol'), yo: cfg.yo, participantes: cfg.participantes, hz: cfg.rol === 'anfitrion' ? R.HZ_FOTO : R.HZ_ENTRADA });
   const tope = new Promise((_, mal) => setTimeout(() => mal(new Error('tiempo')), 6000));
   return Promise.race([intento, tope]);
 }

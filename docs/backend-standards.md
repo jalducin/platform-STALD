@@ -539,6 +539,9 @@ Mesas de `juegos-salas-grandes`: `bingo`, `en-memorama` y `mente-sopa` `{ max: 3
 `blackjack` `{ max: 6, asientos: 3, min: 1 }` (la banca no ocupa asiento: 1 persona + 2 bots, 2 + 1, 3 + 0); `dibuja`
 `{ max: 12, min: 3, bots: "nunca" }`.
 
+Karts (cambio `juegos-en-vivo`): `{ max: 8, asientos: 3, min: 1 }` (hasta 8 personas en vivo; con bots, 1 persona + 2
+bots como antes, 2 + 1 y de 3 en adelante sin bots). El servidor no ve los mensajes en vivo: sigue validando el tiempo
+de cada quien con `validarCarrera`.
 Futbolito y Billar (cambio `futbolito-billar`): `{ max: 2, asientos: 2, min: 2 }` (con bots, 1 persona + 1 bot).
 Golf (cambio `golf`): `{ max: 4, min: 2, bots: "nunca" }` (de 2 a 4 personas; sin bots: por qué, en su `design.md`).
 Mesa por formato (cambio `futbolito-equipos-controles`): un renglón puede traer `formatos: { <opciones.formato>: { max,

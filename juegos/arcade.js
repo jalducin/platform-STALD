@@ -49,23 +49,12 @@
   // ---------- Karts ----------
   const VEL_KART = 250; // velocidad punta base (px/s)
   const VUELTAS = 3;
-  // Pistas: curva cerrada (Catmull-Rom) por puntos de control; `mitad` = medio ancho del camino.
-  // fuera: superficie fuera del camino (frena), agarre: 1 asfalto, menos = resbala (hielo).
-  const PISTAS = [
-    { id: 'pradera', nombre: 'Circuito Pradera', emoji: '🌳', mitad: 58, fuera: 'pasto', lento: 0.55, agarre: 1,
-      color: { fondo: '#4caf50', fondo2: '#43a047', camino: '#5b5f66', borde1: '#e53935', borde2: '#ffffff', linea: '#f5f5f5' },
-      puntos: [[560, 265], [800, 230], [1300, 260], [1620, 420], [1650, 760], [1420, 930], [1080, 860], [860, 1040], [520, 1120], [260, 940], [230, 620], [320, 300]] },
-    { id: 'desierto', nombre: 'Cañón del Desierto', emoji: '🌵', mitad: 54, fuera: 'arena', lento: 0.45, agarre: 0.95,
-      color: { fondo: '#e9c27a', fondo2: '#ddb067', camino: '#8a6a4a', borde1: '#b5462e', borde2: '#f3e3c3', linea: '#f3e3c3' },
-      puntos: [[550, 240], [760, 200], [1180, 270], [1560, 220], [1740, 470], [1660, 780], [1320, 860], [1060, 1060], [700, 1180], [400, 1150], [230, 900], [240, 560], [340, 280]] },
-    { id: 'hielo', nombre: 'Lago Helado', emoji: '❄️', mitad: 60, fuera: 'nieve', lento: 0.5, agarre: 0.55,
-      color: { fondo: '#eef6fb', fondo2: '#e1eef7', camino: '#9cc9e8', borde1: '#3d7dbf', borde2: '#ffffff', linea: '#ffffff' },
-      puntos: [[460, 320], [620, 220], [1040, 320], [1420, 210], [1720, 470], [1640, 880], [1280, 1080], [920, 900], [600, 1100], [280, 1010], [190, 720], [300, 420]] },
-    { id: 'volcan', nombre: 'Volcán Rugiente', emoji: '🌋', mitad: 54, fuera: 'roca', lento: 0.5, agarre: 0.95, lava: true,
-      color: { fondo: '#3b2a2a', fondo2: '#33231f', camino: '#2b2b30', borde1: '#ff6d00', borde2: '#ffd180', linea: '#ffab40' },
-      puntos: [[510, 255], [720, 210], [1080, 380], [1440, 250], [1740, 470], [1680, 820], [1380, 950], [1100, 1200], [700, 1180], [450, 1240], [220, 1000], [300, 660], [300, 300]] },
-  ];
-  const pistaPorId = id => PISTAS.find(p => p.id === id) || null;
+  // Pistas (openspec: karts-pistas-mesoamericanas): las definiciones viven en juegos/karts-pistas.js, que se carga
+  // antes que este archivo. PISTAS = las de sala (las 8 desde juegos-en-vivo, igual que MAPAS_SALA de server/carreras.ts);
+  // pistaPorId encuentra todas (también las de la Copa Mesoamericana).
+  const TODAS_PISTAS = (raiz.KartsPistas && raiz.KartsPistas.PISTAS) || [];
+  const PISTAS = TODAS_PISTAS.filter(p => p.sala);
+  const pistaPorId = id => TODAS_PISTAS.find(p => p.id === id) || null;
 
   // Catmull-Rom cerrada muestreada cada `paso` px. Devuelve { pts:[{x,y,a}], largo } (a = ángulo de la tangente).
   const cacheMuestras = {};

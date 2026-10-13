@@ -67,8 +67,8 @@ Sin `rt` en la sala o si `EnVivo.conectar` rechaza (≤ 5 s): el iframe muestra 
 en esta sala» y el botón «📅 Jugar la Clasificatoria semanal» (modo local de siempre); la página no reporta resultado.
 
 ### 8. Integración con la página (iframe)
-El iframe avisa `listo`; `pintarFutbolSala` (arcade.js) le manda `{ tipo: 'inicio', modo: 'linea', rol, yo, rival,
-seed, rt: { url, key, topic }, participantes, tacticas }`; el iframe responde `fin-linea { goles, ms, corte }` y la
+El iframe avisa `listo`; `pintarFutbolSala` (arcade.js) abre `EnVivo.puente` con el canal de la sala y le manda `{ tipo: 'inicio', modo: 'linea', rol, yo, rival,
+seed, vivo, participantes, tacticas }`; el iframe responde `fin-linea { goles, ms, corte }` y la
 página lo manda al servidor y pinta el podio con los puntos que devuelve el servidor.
 
 ## Risks / Trade-offs

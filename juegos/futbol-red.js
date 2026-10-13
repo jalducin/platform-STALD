@@ -234,7 +234,8 @@
         st.ultimoEnvio = t; st.q++;
         st.eventos = st.eventos.filter(e => e.q > st.q - EVENTOS_FOTOS);
         const f = foto(p, { q: st.q, t: t - st.t0, ai: st.ultimaS, ev: st.eventos.map(({ q: _q, ...e }) => e) });
-        canal.enviar('fe:foto', f);
+        if (forzar && canal.enviarYa) canal.enviarYa('fe:foto', f); // la última foto sale sin esperar el ritmo
+        else canal.enviar('fe:foto', f);
         return f;
       },
       iaAlInvitado, devolverInvitado,

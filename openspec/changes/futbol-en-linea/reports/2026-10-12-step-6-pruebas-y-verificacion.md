@@ -60,3 +60,18 @@ con Angel. La IA juega por su equipo · se cierra en 15 s»), `futbol-linea-844-
 - Estado Step 6: PASS
 - Bloqueos: `juegos/en-vivo.js` (sprint 27A) aún no está en `origin/main`; el E2E usa un puente de prueba con la
   misma API servido en lugar de `juegos/en-vivo.js`. No se publica hasta que llegue el módulo real.
+
+## Actualización 2026-10-13 — con `juegos/en-vivo.js` real (PR #189)
+
+- Merge de `origin/main` (dd375b2): conflictos en `server/salas.ts`, `juegos/mesas.js` y `tests/e2e/correr.sh`
+  resueltos conservando los dos lados (`karts` hasta 8 en vivo y `futbol` 1 vs 1; `karts-vivo` y `futbol-en-linea`).
+- Se usa el módulo real: la página de Juegos abre `EnVivo.puente` con el canal de la sala (un solo socket, evento
+  `vivo`) y el iframe se conecta con `EnVivo.transporteMarco('futbol')`; la última foto sale con `enviarYa`.
+- Se borró el doble local (`server/futbol_red_canal.ts`); `server/futbol_red_test.ts` usa `EnVivo.conectar` sobre
+  `EnVivo.redSimulada` (reloj de la prueba) y el E2E usa `EnVivo.simulado` con el relevo `tests/e2e/lib/vivo-relevo.js`
+  (`?vivoSimulado=1`, 80 ms, 3 % de pérdida, desorden; `relevo.cortar` para las desconexiones; `noConecta` para el
+  respaldo).
+- Resultados: `deno test -A server/` 610 pasaron, 0 fallaron (6 omitidas); `deno lint server/` y `deno check` limpios;
+  calidad sin avisos en los archivos nuevos. E2E (puertos 9661/9671): `juegos` 31, `categorias` 49, `partidas` 15,
+  `karts-vivo` 29, `futbol` 52, `futbol-en-linea` 18, `emocion` 45 — 7 corridas, 7 PASS. Latencia en pantalla 📶 92 ms;
+  peor jugador a 1.85 m entre aparatos (instante no alineado; el invitado dibuja 100 ms + latencia atrás).

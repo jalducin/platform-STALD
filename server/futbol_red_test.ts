@@ -5,10 +5,18 @@
 import { assert, assertAlmostEquals, assertEquals } from "jsr:@std/assert@1";
 import "../juegos/futbol-motor.js";
 import "../juegos/futbol-red.js";
-import { canalesSimulados } from "./futbol_red_canal.ts";
+import "../juegos/en-vivo.js";
 
 const g = globalThis as any;
-const M = g.FutbolMotor, R = g.FutbolRed;
+const M = g.FutbolMotor, R = g.FutbolRed, EV = g.EnVivo;
+// Canales reales de juegos/en-vivo.js (EnVivo.conectar) sobre su red simulada determinista (EnVivo.redSimulada) con
+// reloj de la prueba: latencia, variación (desorden) y pérdida. `entregar()` reparte lo que ya llegó.
+async function canalesSimulados(o: { latencia: number; perdida: number; desorden: number; ahora: () => number; semilla: string; ids: string[] }) {
+  const red = EV.redSimulada({ reloj: o.ahora, latencia: o.latencia, variacion: o.desorden * Math.max(100, 2 * o.latencia), perdida: o.perdida, azar: M.rngDe(o.semilla, "red") });
+  const hz = (id: string) => (id === "inv" ? R.HZ_ENTRADA : R.HZ_FOTO);
+  const canales = await Promise.all(o.ids.map((id) => EV.conectar({ transporte: red.transporte(id), yo: { id }, participantes: ["anf", "inv"], hz: hz(id), reloj: o.ahora, manual: true })));
+  return canales.map((c: any) => Object.assign(c, { entregar: () => red.entregar(), enviadas: () => c.estadisticas().enviados }));
+}
 const equipo = (corto: string, media: number) => M.equipoGenerico(corto, media, null);
 const partido = (humanos = [{ eq: 0 }, { eq: 1 }], semilla = "sala") => M.crearPartido({ semilla, equipos: [equipo("AAA", 70), equipo("BBB", 70)], minutos: 1, humanos });
 
@@ -99,10 +107,10 @@ Deno.test("futbol-red: clubes de la sala distintos y iguales en los dos aparatos
 // Partido completo: el anfitrión simula; el invitado manda entradas (persigue al balón con su jugador) por un canal
 // con latencia, pérdida y desorden. Se comparan las posiciones dibujadas con las del anfitrión en el mismo instante
 // (100 ms + latencia atrás) y el marcador final.
-function partidoEnRed(red: { latencia: number; perdida: number; desorden: number }, semilla: string) {
+async function partidoEnRed(red: { latencia: number; perdida: number; desorden: number }, semilla: string) {
   let reloj = 0;
   const ahora = () => reloj;
-  const [cA, cI] = canalesSimulados({ ...red, ahora, semilla, ids: ["anf", "inv"] });
+  const [cA, cI] = await canalesSimulados({ ...red, ahora, semilla, ids: ["anf", "inv"] });
   const pa = partido([{ eq: 0 }, { eq: 1 }], semilla), pi = partido([{ eq: 0 }, { eq: 1 }], semilla);
   const anf = R.anfitrion({ canal: cA, p: pa, M, invitado: "inv", ahora });
   const inv = R.invitado({ canal: cI, p: pi, M, anfitrion: "anf", ahora });
@@ -132,11 +140,11 @@ function partidoEnRed(red: { latencia: number; perdida: number; desorden: number
   }
   // Las últimas fotos llegan.
   for (let k = 0; k < 120; k++) { reloj += PASO_MS; anf.enviarSiToca(); cA.entregar(); cI.entregar(); inv.dibujar(); }
-  return { pa, pi, inv, errores, golesVistos, enviadas: cA.enviadas, recibidas: inv.st.recibidas };
+  return { pa, pi, inv, errores, golesVistos, enviadas: cA.enviadas(), recibidas: inv.st.recibidas };
 }
 
-Deno.test("futbol-red: partido completo con 150 ms, 10 % de pérdida y desorden: mismo marcador y dibujo cercano", () => {
-  const r = partidoEnRed({ latencia: 150, perdida: 0.1, desorden: 0.2 }, "sala-red");
+Deno.test("futbol-red: partido completo con 150 ms, 10 % de pérdida y desorden: mismo marcador y dibujo cercano", async () => {
+  const r = await partidoEnRed({ latencia: 150, perdida: 0.1, desorden: 0.2 }, "sala-red");
   assertEquals(r.pa.estado, "fin");
   assertEquals([r.pi.eq[0].goles, r.pi.eq[1].goles], [r.pa.eq[0].goles, r.pa.eq[1].goles], "mismo marcador");
   assertEquals(r.pi.estado, "fin", "el invitado también ve el final");
@@ -148,16 +156,16 @@ Deno.test("futbol-red: partido completo con 150 ms, 10 % de pérdida y desorden:
   assert(r.recibidas < r.enviadas && r.recibidas > r.enviadas * 0.8, "se perdieron fotos y aun así funciona");
 });
 
-Deno.test("futbol-red: sin pérdida ni latencia el dibujo es casi exacto", () => {
-  const r = partidoEnRed({ latencia: 0, perdida: 0, desorden: 0 }, "sala-limpia");
+Deno.test("futbol-red: sin pérdida ni latencia el dibujo es casi exacto", async () => {
+  const r = await partidoEnRed({ latencia: 0, perdida: 0, desorden: 0 }, "sala-limpia");
   const ordenado = r.errores.slice().sort((a, b) => a - b);
   assert(ordenado[Math.floor(ordenado.length * 0.9)] < 0.6, "p90 " + ordenado[Math.floor(ordenado.length * 0.9)]);
   assertEquals([r.pi.eq[0].goles, r.pi.eq[1].goles], [r.pa.eq[0].goles, r.pa.eq[1].goles]);
 });
 
-Deno.test("futbol-red: el anfitrión ignora entradas viejas y de quien no es el invitado; la IA toma al que se cae", () => {
+Deno.test("futbol-red: el anfitrión ignora entradas viejas y de quien no es el invitado; la IA toma al que se cae", async () => {
   let reloj = 0;
-  const [cA, cI, cX] = canalesSimulados({ latencia: 0, perdida: 0, desorden: 0, ahora: () => reloj, semilla: "x", ids: ["anf", "inv", "intruso"] });
+  const [cA, cI, cX] = await canalesSimulados({ latencia: 0, perdida: 0, desorden: 0, ahora: () => reloj, semilla: "x", ids: ["anf", "inv", "intruso"] });
   const pa = partido();
   const anf = R.anfitrion({ canal: cA, p: pa, M, invitado: "inv", ahora: () => reloj });
   cI.enviar("fe:entrada", R.empacarEntrada({ x: 1, y: 0 }, 5)); cA.entregar();

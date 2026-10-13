@@ -1,7 +1,7 @@
 // E2E: «⚽ Fútbol Estelar 2010» en línea 1 vs 1 (openspec: futbol-en-linea).
-// Dos contextos de navegador (anfitriona Marisol a 390×844 e invitado Angel a 844×390, con toques) unidos por un canal
-// en vivo simulado: `juegos/en-vivo.js` se sirve con un puente que reenvía los mensajes entre contextos desde Node con
-// latencia (80 ms), pérdida y desorden, y la sala recibe un `rt` de prueba (el servidor de pruebas no tiene Supabase).
+// Dos contextos de navegador (anfitriona Marisol a 390×844 e invitado Angel a 844×390, con toques) unidos por el canal
+// en vivo simulado de `juegos/en-vivo.js` (EnVivo.simulado con ?vivoSimulado=1 y el relevo local de
+// tests/e2e/lib/vivo-relevo.js): latencia de 80 ms, 3 % de pérdida y desorden; la página lo lleva al iframe por el puente.
 // Cubre: crear la sala 1 vs 1 sin bots, unirse, táctica en la sala de espera (guardada en el asiento y usada en el
 // partido), gol del invitado (su entrada viaja al anfitrión) visto por los dos y gol de la anfitriona visto por el
 // invitado, latencia en pantalla, desconexión y regreso (la IA toma y devuelve al equipo), final con el resultado
@@ -10,69 +10,17 @@
 require('./lib/entorno');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { levantarRelevo, initVivo } = require('./lib/vivo-relevo');
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const TACTIL = { hasTouch: true, isMobile: true };
 
-// ---- Canal en vivo simulado entre contextos (misma API que EnVivo.conectar) ----
-const red = { latencia: 80, perdida: 0.03, desorden: 0.1 };
-const marcos = new Map(); // `${topic}|${id}` → frame
-const PUENTE_JS = `(function () {
-  'use strict';
-  window.EnVivo = {
-    conectar(o) {
-      return new Promise((ok, mal) => {
-        if (window.__puenteFalla) { setTimeout(() => mal(new Error('sin_conexion')), 300); return; }
-        const yo = o.yo.id, part = new Set(o.participantes), oy = {}, caidas = [], ultimo = {}, avisado = {}, lat = {}, vistos = {};
-        let seq = 0;
-        window.__puenteRecibir = m => {
-          if (m.topic !== o.topic || !part.has(m.de) || m.de === yo) return;
-          const k = m.de + '|' + m.evento;
-          if (m.seq <= (vistos[k] || 0)) return;
-          vistos[k] = m.seq; ultimo[m.de] = Date.now(); avisado[m.de] = false; lat[m.de] = m.latencia;
-          (oy[m.evento] || []).forEach(fn => fn(m.datos, { de: m.de, seq: m.seq, t: m.t, latencia: m.latencia }));
-        };
-        setInterval(() => { for (const id of part) if (id !== yo && ultimo[id] !== undefined && !avisado[id] && Date.now() - ultimo[id] > 3000) { avisado[id] = true; caidas.forEach(fn => fn(id)); } }, 250);
-        window.__puenteEnviar({ tipo: 'conectar', topic: o.topic, id: yo }).then(() => ok({
-          enviar(evento, datos) { if (window.__puenteMudo) return; seq++; window.__puenteEnviar({ tipo: 'msg', topic: o.topic, de: yo, evento, datos, seq, t: Date.now() }); },
-          al(evento, fn) { (oy[evento] = oy[evento] || []).push(fn); },
-          presencia: () => [yo].concat([...part].filter(id => id !== yo && ultimo[id] && Date.now() - ultimo[id] < 3000)),
-          alCambiarPresencia() {},
-          latencia: id => (lat[id] === undefined ? null : lat[id]),
-          alDesconectar(fn) { caidas.push(fn); },
-          cerrar() { window.__puenteEnviar({ tipo: 'cerrar', topic: o.topic, id: yo }); },
-        }));
-      });
-    },
-  };
-})();`;
-async function conPuente(ctx, sinCanal) {
-  await ctx.exposeBinding('__puenteEnviar', (src, m) => {
-    if (m.tipo === 'conectar') { marcos.set(m.topic + '|' + m.id, src.frame); return true; }
-    if (m.tipo === 'cerrar') { marcos.delete(m.topic + '|' + m.id); return true; }
-    for (const [k, fr] of marcos) {
-      const i = k.lastIndexOf('|'), topic = k.slice(0, i), id = k.slice(i + 1);
-      if (topic !== m.topic || id === m.de || Math.random() < red.perdida) continue;
-      const lat = red.latencia + (Math.random() < red.desorden ? Math.random() * red.latencia : 0);
-      setTimeout(() => fr.evaluate(x => window.__puenteRecibir && window.__puenteRecibir(x), { ...m, latencia: Math.round(lat) }).catch(() => {}), lat);
-    }
-    return true;
-  });
-  await ctx.route(/\/juegos\/en-vivo\.js/, r => r.fulfill({ contentType: 'application/javascript', body: PUENTE_JS }));
-  await ctx.route(/supabase\.js/, r => r.abort());
-  await ctx.route(/\/juegos\/sala\/[A-Z]{4}(\?|$)/, async r => {
-    if (r.request().method() !== 'GET') return r.continue();
-    const res = await r.fetch(), j = await res.json();
-    if (!sinCanal && j.sala) j.rt = { url: 'http://127.0.0.1:9', key: 'prueba', topic: 'sala-e2e-' + j.sala.codigo };
-    return r.fulfill({ response: res, json: j });
-  });
-}
-const abrir = async (b, email, viewport, init) => {
-  const p = await abrirPagina(b, { email, viejo: true, viewport, contexto: TACTIL, out, etiqueta: email, dialogos: 'aceptar', init });
-  await conPuente(p.context(), false);
-  await p.goto(require('./lib/navegador').urlDe('/juegos.html?arcadePrueba=1'));
-  await p.waitForSelector('[data-menu]', { timeout: 60000 });
+// ---- Canal en vivo simulado: EnVivo.simulado de juegos/en-vivo.js con el relevo local (tests/e2e/lib/vivo-relevo.js) ----
+const RUTA = '/juegos.html?arcadePrueba=1&vivoSimulado=1';
+let relevo = null;
+const abrir = async (b, email, viewport, opciones) => {
+  const p = await abrirPagina(b, { email, viejo: true, viewport, contexto: TACTIL, out, etiqueta: email, dialogos: 'aceptar', init: initVivo(relevo.url, { latencia: 80, perdida: 0.03, desorden: 0.1, ...(opciones || {}) }), ruta: RUTA, esperar: '[data-menu]' });
   return p;
 };
 const marcoDe = async p => (await p.waitForSelector('#p-body #arcade-frame', { timeout: 30000 })).contentFrame();
@@ -96,6 +44,7 @@ const fuente = fr => fr.evaluate(() => { window.__boton = null; window.FutbolEnt
 async function tiroDe(fr, ms) { await fr.evaluate(() => { window.__boton = 'tiro'; }); await sleep(ms); await fr.evaluate(() => { window.__boton = null; }); }
 
 (async () => {
+  relevo = await levantarRelevo();
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrir(b, 'marisol@example.com', { width: 390, height: 844 });
   const a = await abrir(b, 'angel@example.com', { width: 844, height: 390 });
@@ -123,7 +72,7 @@ async function tiroDe(fr, ms) { await fr.evaluate(() => { window.__boton = 'tiro
   ok('roles: la anfitriona simula y Angel es el invitado', r1.rol === 'anfitrion' && r2.rol === 'invitado', JSON.stringify([r1.rol, r2.rol]));
   const tacticaB = await f1.evaluate(() => window.__futbol.p().eq[1].tactica);
   ok('táctica: el partido usa la de Angel (4-3-3, presión 80)', tacticaB.formacion === '4-3-3' && tacticaB.presion === 80, JSON.stringify(tacticaB));
-  await sleep(1500);
+  await f2.waitForFunction(() => /\d+ ms/.test(document.getElementById('lat').textContent), null, { timeout: 15000 }).catch(() => {}); // la latencia sale de los pings (cada 2 s)
   const l2 = await f2.evaluate(() => document.getElementById('lat').textContent);
   ok('latencia en pantalla (📶 ms)', /📶 \d+ ms/.test(l2), l2);
   // Posiciones parecidas en los dos aparatos (el invitado dibuja ~100 ms + latencia atrás).
@@ -166,12 +115,12 @@ async function tiroDe(fr, ms) { await fr.evaluate(() => { window.__boton = 'tiro
   await f1.evaluate(() => window.__futbol.iaPausada(false));
 
   // ---- Desconexión y regreso del invitado ----
-  await f2.evaluate(() => { window.__puenteMudo = true; });
+  relevo.cortar(asiento.id); // se le acabó la batería: deja de mandar sin avisar
   await esperar(f1, () => window.__futbol.red().ia && /se cierra en/.test(window.__futbol.red().aviso), null, 10000).catch(() => {});
   const caida = await f1.evaluate(() => window.__futbol.red());
   ok('desconexión: aviso con cuenta de 15 s y la IA juega por el invitado', caida.ia && /Se perdió la conexión con Angel/.test(caida.aviso) && /se cierra en \d+ s/.test(caida.aviso), JSON.stringify(caida));
   await p.screenshot({ path: 'futbol-linea-390-desconexion.png' });
-  await f2.evaluate(() => { window.__puenteMudo = false; });
+  relevo.reanudar(asiento.id);
   await esperar(f1, () => !window.__futbol.red().ia, null, 10000).catch(() => {});
   ok('regreso: Angel recupera su equipo', !(await f1.evaluate(() => window.__futbol.red().ia)));
 
@@ -191,7 +140,7 @@ async function tiroDe(fr, ms) { await fr.evaluate(() => { window.__boton = 'tiro
   await p.click('[data-p="empezar"]');
   const h1 = await marcoDe(p), h2 = await marcoDe(a);
   await esperar(h2, () => window.__futbol && window.__futbol.red() && window.__futbol.red().recibidas > 5, null, 45000);
-  await h1.evaluate(() => { window.__puenteMudo = true; });
+  relevo.cortar(s1.sala.host);
   await esperar(h2, () => /Se perdió la conexión/.test(window.__futbol.red().aviso), null, 10000).catch(() => {});
   ok('se cae el anfitrión: el invitado ve el aviso', /Se perdió la conexión con Marisol/.test((await h2.evaluate(() => window.__futbol.red())).aviso));
   await a.screenshot({ path: 'futbol-linea-844-sin-anfitrion.png' });
@@ -202,7 +151,7 @@ async function tiroDe(fr, ms) { await fr.evaluate(() => { window.__boton = 'tiro
   await p.context().close(); await a.context().close();
 
   // ---- Respaldo: el canal no conecta ----
-  const falla = [() => { window.__puenteFalla = true; }];
+  const falla = { noConecta: true };
   const q = await abrir(b, 'laura@example.com', { width: 390, height: 844 }, falla), w = await abrir(b, 'angel@example.com', { width: 844, height: 390 }, falla);
   await crearSala(q, w);
   await q.click('[data-p="empezar"]');
@@ -217,6 +166,6 @@ async function tiroDe(fr, ms) { await fr.evaluate(() => { window.__boton = 'tiro
   await fc.waitForFunction(() => /Clasificatoria semanal/.test((document.getElementById('ov') || {}).textContent || ''), null, { timeout: 30000 });
   ok('respaldo: el botón abre la Clasificatoria semanal de Fútbol Estelar', /Tu mejor de la semana/.test(await fc.textContent('#ov')));
 
-  await b.close();
+  await b.close(); await relevo.cerrar();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 400)); process.exit(2); });

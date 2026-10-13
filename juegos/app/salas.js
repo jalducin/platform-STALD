@@ -124,12 +124,40 @@ function mezclarEstado(local, p) {
   const salaNueva = local.sala.inicio !== null && p.sala.inicio === null ? local.sala : p.sala;
   return { sala: salaNueva, jugadores };
 }
+// Juego en vivo (openspec: juegos-en-vivo): transporte de EnVivo sobre el MISMO canal de la sala (un solo socket):
+// el evento `vivo` lleva los mensajes de navegador a navegador; el `estado` del servidor sigue aparte.
+// En E2E (?vivoSimulado=1 y window.__vivoSimulado con las opciones de EnVivo.simulado) se usa el doble de prueba.
+function transporteSala() {
+  const rx = EnVivo.oyentesDe(), st = EnVivo.oyentesDe();
+  const t = {
+    estado: 'conectando', canal: null, alReconectar: null,
+    enviar(m) { if (t.canal && t.estado === 'listo') t.canal.send({ type: 'broadcast', event: 'vivo', payload: m }); },
+    alRecibir: rx.agregar, alEstado: st.agregar, recibir: rx.emitir,
+    reconectar() { if (t.alReconectar) t.alReconectar(); },
+    fijar(e) { if (t.estado !== e) { t.estado = e; st.emitir(e); } },
+  };
+  return t;
+}
+const vivoSimulado = () => new URLSearchParams(location.search).get('vivoSimulado') === '1' && window.__vivoSimulado ? window.__vivoSimulado : null;
+// Transporte de la sala para el juego en vivo: el doble de prueba, el canal de Realtime o ninguno (respaldo).
+function prepararVivo(codigo) {
+  const op = vivoSimulado();
+  if (op) { sala.vivoTr = EnVivo.simulado(op).transporte('sala-sim-' + codigo, sala.estado.yo); return; }
+  sala.vivoTr = sala.estado.rt && window.EnVivo ? transporteSala() : null;
+}
+const ESTADO_CANAL = { SUBSCRIBED: 'listo', CLOSED: 'caido', CHANNEL_ERROR: 'caido', TIMED_OUT: 'caido' };
 async function conectarRealtime(rt, codigo, alCambiar) {
   try {
     const lib = await cargarSupabase();
     if (sala.codigo !== codigo) return;
     const cliente = lib.createClient(rt.url, rt.key, { auth: { persistSession: false, autoRefreshToken: false } });
-    const canal = cliente.channel(rt.topic);
+    const canal = cliente.channel(rt.topic, { config: { broadcast: { self: false, ack: false } } });
+    const tv = sala.vivoTr && sala.vivoTr.fijar ? sala.vivoTr : null; // el doble de prueba no usa el canal
+    if (tv) {
+      tv.canal = canal;
+      tv.alReconectar = () => { if (sala.codigo !== codigo) { return; } cliente.removeChannel(canal); conectarRealtime(rt, codigo, alCambiar); };
+      canal.on('broadcast', { event: 'vivo' }, ({ payload }) => { if (sala.codigo === codigo) tv.recibir(payload); });
+    }
     canal.on('broadcast', { event: 'estado' }, ({ payload: p }) => {
       if (sala.codigo !== codigo || !sala.estado || !p || !p.sala) return;
       sala.estado = { ...sala.estado, ...mezclarEstado(sala.estado, p), ahora: p.ahora };
@@ -137,6 +165,7 @@ async function conectarRealtime(rt, codigo, alCambiar) {
       sala.rtRecibidos = (sala.rtRecibidos || 0) + 1;
       pintarSala();
     }).subscribe(st => {
+      if (tv && tv.canal === canal && ESTADO_CANAL[st]) tv.fijar(ESTADO_CANAL[st]); // juegos-en-vivo
       const antes = sala.rtVivo;
       sala.rtVivo = st === 'SUBSCRIBED';
       if (antes !== sala.rtVivo) alCambiar();
@@ -185,7 +214,7 @@ function pintarPartidas() {
 
 async function entrarSala(codigo) {
   limpiar();
-  Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, finT: 0, revEnviando: false, revMsg: '' });
+  Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, vivoTr: null, finT: 0, revEnviando: false, revMsg: '' });
   app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
   const r = await traerSala();
   if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) { m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; } return; }
@@ -246,6 +275,8 @@ async function entrarSala(codigo) {
   const alVolver = () => { if (!document.hidden && !detenido && !consultando) { clearTimeout(tick); ciclo(); } };
   document.addEventListener('visibilitychange', alVolver);
   // Al cambiar el estado del canal se reprograma el siguiente ciclo con el intervalo que corresponde.
+  prepararVivo(codigo); // juegos-en-vivo: antes de conectar, para que el canal escuche también `vivo`
+  limpiezas.push(() => { const t = sala.vivoTr; sala.vivoTr = null; if (t && t.cerrar) t.cerrar(); });
   if (sala.estado.rt) conectarRealtime(sala.estado.rt, codigo, () => { if (detenido) { return; } programarTick(); });
   const reloj = setInterval(() => pintarSala(), 250);
   limpiezas.push(() => { detenido = true; clearTimeout(tick); document.removeEventListener('visibilitychange', alVolver); }, () => clearInterval(reloj));

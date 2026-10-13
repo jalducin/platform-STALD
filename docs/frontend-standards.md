@@ -154,6 +154,15 @@ Cada página debe manejar y mostrar de forma explícita:
     «Mando de Arcade») y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
+  - **Pistas y copas de Karts Turbo** (cambio `karts-pistas-mesoamericanas`; decisiones en su `design.md`): las
+    definiciones viven en `juegos/karts-pistas.js` (script clásico sin DOM, `window.KartsPistas`), que `juegos.html`
+    y `karts.html` cargan **antes** de `juegos/arcade.js`. Cada pista lleva trazado, física, colores, `tema` (cielo
+    de 360°), `decor` (adornos al azar), `fijos` (adornos por tramo), `desc` y `mecanicas` (zonas deterministas:
+    `turbo`, `salto`, `cenote`, `lodo`, `trajinera`). `Arcade.PISTAS` son las de sala (`sala: true`; las 8 desde
+    `juegos-en-vivo`, igual que `MAPAS_SALA` de `server/carreras.ts`); `Arcade.pistaPorId` encuentra las 8. Copas en
+    `KartsPistas.COPAS` (Copa Fiesta y Copa Mesoamericana); `copaEnCurso.copa` dice cuál va en curso (sin id =
+    Copa Fiesta). Agregar una pista = un objeto en `karts-pistas.js` + sus dibujos en `karts.html`; las pruebas de
+    datos (`server/karts_pistas_test.ts`) revisan que sea cerrada, manejable y con su minimapa;
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
     - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo
@@ -255,7 +264,7 @@ Cada página debe manejar y mostrar de forma explícita:
       `suspenso()`/`revelacion()` en los penales, `podio(lugar)` al terminar la copa o el torneo y `calma()` al salir.
     - **En línea 1 vs 1** (cambio `futbol-en-linea`, decisiones en su `design.md`): sala `futbol` de 2 personas sin
       bots; en la sala de espera cada quien elige su táctica (`tacticaFutbol` en `juegos/app/arcade.js`). El iframe
-      recibe `{ tipo: 'inicio', modo: 'linea', rol, yo, participantes, nombres, seed, rt, tacticas }`, se conecta con
+      recibe `{ tipo: 'inicio', modo: 'linea', rol, yo, participantes, nombres, seed, vivo, tacticas }`, se conecta con
       `EnVivo.conectar` (`juegos/en-vivo.js`) y al final manda `fin-linea { goles, ms, corte }` (la página lo registra
       y pinta el podio) o, sin canal, `ir-clasif` (abre la Clasificatoria semanal con `?modo=clasif`). Netcode sin DOM
       en `juegos/futbol-red.js` (`window.FutbolRed`, probado en `server/futbol_red_test.ts`): foto cuantizada a 15 Hz
@@ -370,7 +379,7 @@ interfaces de `juegos/*.js` y de `comun/auth.js`:
 | `mente.js` | Sudoku y Ajedrez contra la computadora |
 | `clasicos.js` | Basta, ¡Una! y Lotería contra bots |
 | `naipes.js` | Póker y baraja española (Brisca y Conquián) contra bots; HTML de cartas y fichas |
-| `salas.js` | partidas multijugador: semilla (`rngDe`), `sala`, Realtime, espera, preguntas, Basta por rondas, podio, revancha, crear/unirse/reanudar y compartir |
+| `salas.js` | partidas multijugador: semilla (`rngDe`), `sala`, Realtime (y transporte del juego en vivo), espera, preguntas, Basta por rondas, podio, revancha, crear/unirse/reanudar y compartir |
 | `salas-mesa.js` | Lotería, ¡Una!, Póker, Brisca/Conquián y Ajedrez jugados en sala |
 | `musica.js` | música de fondo (WebAudio) y su menú |
 | `arranque.js` | `AYUDA` (📖 Cómo se juega), eventos delegados de `#app` e `iniciar()`; **va al último** |
@@ -753,6 +762,20 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   - al quedar `SUBSCRIBED`: una consulta para ponerse al día y respaldo cada 30 s;
   - si el canal falla, vuelve el sondeo normal;
   - `limpiar` hace `removeChannel`.
+- Juego en vivo (cambio `juegos-en-vivo`): `juegos/en-vivo.js` (`window.EnVivo`, script clásico) manda mensajes de
+  navegador a navegador por el mismo topic con el evento `vivo` (sin tocar Supabase: canal público y llave publicable).
+  El contrato (`EnVivo.conectar` → `enviar`, `al`, `presencia`, `latencia`, `alDesconectar`, `cerrar`; `EnVivo.simulado`
+  para pruebas) está en el encabezado del archivo y en el `design.md` del cambio:
+  - `prepararVivo` (en `salas.js`) arma `sala.vivoTr`: el **mismo** canal de `conectarRealtime` (un solo socket) con
+    `.on('broadcast', { event: 'vivo' })`, o el doble de prueba con `?vivoSimulado=1` + `window.__vivoSimulado`;
+  - el iframe habla con él por el puente `EnVivo.transporteMarco(juego)` ↔ `EnVivo.puente(...)`, que solo deja pasar
+    mensajes de ids que están en la sala;
+  - por el canal solo viajan el id de la sala y números; el nombre que se pinta sale de la sala;
+  - **Karts** (`pintarArcadeSala` → `inicio` con `yo`, `humanos` y `vivo`): cada kart a 15 Hz con ≤ 4 personas y 10 Hz
+    con 5–8 (2 Hz antes de salir), `[x·10, y·10, ángulo·1000, vel, vuelta, avance, banderas, término, personaje]`;
+    los remotos se interpolan 100 ms atrás (extrapolación ≤ 250 ms), con color y número por su lugar en la sala,
+    nombre encima, minimapa y clasificación en vivo (`#vivo-tabla`); empuje local en los choques; sin ítems entre
+    personas; quien calla 3 s se desvanece con aviso; sin canal en 5 s, aviso y fantasmas como antes.
 
 ## Caché y estabilidad del cliente (cambio `cache-estabilidad`)
 
