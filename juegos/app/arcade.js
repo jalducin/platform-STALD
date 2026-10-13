@@ -293,6 +293,11 @@ function podioFutbol(res, mesa, host) {
   const card = document.querySelector('#p-body .result');
   if (card) card.insertAdjacentHTML('beforeend', '<div class="muted" id="p-futbol-nota" style="margin-top:6px">' + escapeHtml(NOTA_FUTBOL[(res && res.estado) || 'pendiente'] || '') + '</div>');
 }
+// En el podio: la nota se pone al día cuando el rival confirma (llega con el estado de la sala).
+function notaFutbol() {
+  const n = document.getElementById('p-futbol-nota'), res = sala.estado.futbol;
+  if (n && res && NOTA_FUTBOL[res.estado] && !/No se pudo/.test(n.textContent)) n.textContent = NOTA_FUTBOL[res.estado];
+}
 // ¿El partido ya terminó para esta persona? (ya reportó, o su rival lo reportó hace rato).
 function futbolTerminado(e) {
   const mio = (e.jugadores.find(x => x.id === e.yo) || {}).futbol;
