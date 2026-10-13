@@ -959,7 +959,11 @@ function spriteKart(per, color, num, vista, phi) {
   caras.sort((a, b) => b.d - a.d);
   const cuadro = f => { c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(p.u, -p.v) : c.moveTo(p.u, -p.v)); c.closePath(); };
   for (const f of caras) {
-    if (f.cabeza) { if (!piloto || !piloto.cabeza(c, S, cr, sr, HC)) pintarCabeza(c, per, S, cr, sr); continue; }
+    if (f.cabeza) {
+      if (piloto) piloto.cabeza(c, S, cr, sr, HC);
+      else pintarCabeza(c, per, S, cr, sr);
+      continue;
+    }
     if (f.extra) { piloto.extra.pintar(c, S); continue; }
     if (f.cola) { pintarCola(c, S); continue; }
     pintarCaraKart(c, f, cuadro, kc, color, num, cr);

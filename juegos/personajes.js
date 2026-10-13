@@ -438,7 +438,8 @@
   // ---------- Xolo: xoloitzcuintle chiquito y travieso ----------
   function pintarXolo(c, o) {
     const p = paleta('xolo', o), t = o.t || 0, pose = o.pose, q = postura(o), linea = p.linea;
-    const wig = o.quieto ? 0 : Math.sin(t * (pose === 'camina' ? 14 : 4)) * 0.5;
+    const ritmo = pose === 'camina' ? 14 : 4;
+    const wig = o.quieto ? 0 : Math.sin(t * ritmo) * 0.5;
     // Cola delgada que se menea, con su mechón
     let meneo = 0;
     if (!o.quieto) meneo = Math.sin(t * (pose === 'camina' ? 15 : 6)) * 1.1;
@@ -490,10 +491,9 @@
   }
 
   // ---------- Tlali: chapulina oaxaqueña con sombrero bordado ----------
-  function pintarTlali(c, o) {
-    const p = paleta('tlali', o), t = o.t || 0, pose = o.pose, q = postura(o), linea = p.linea;
-    const v = o.quieto ? 0 : Math.sin(t * 5) * 0.6;
-    // Antenas largas que se mecen (salen de debajo del sombrero)
+  // Antenas largas que se mecen (salen de debajo del sombrero).
+  function antenasTlali(c, p, o, linea) {
+    const v = o.quieto ? 0 : Math.sin((o.t || 0) * 5) * 0.6;
     c.lineCap = 'round';
     for (const [dx, dv] of [[0, 0], [0.9, 0.5]]) {
       const ant = new Path2D(); ant.moveTo(0.6 + dx, -15.2); ant.quadraticCurveTo(-1.6 + dx, -21.4 + v, -6.6 + dx, -19.6 + v + dv);
@@ -502,15 +502,12 @@
       c.fillStyle = p.cuerpo2; elipse(c, -6.6 + dx, -19.6 + v + dv, 0.5, 0.5); c.fill();
       if (o.poder === 'fuego') flamita(c, -6.6 + dx, -19.6 + v + dv, o, 0.55);
     }
-    // Abdomen alargado con rayas
-    elipse(c, -3.3, -5.8, 3.4, 1.8, -0.3); relleno(c, p.cuerpo2, linea, 0.4);
-    c.strokeStyle = 'rgba(30,50,5,.35)'; c.lineWidth = 0.3;
-    for (const x of [-5.2, -4.0, -2.8]) { c.beginPath(); c.moveTo(x, -7.4 + (x + 5) * 0.3); c.lineTo(x + 0.5, -4.5 + (x + 5) * 0.3); c.stroke(); }
-    // Bracito de atrás
-    miembro(c, -0.4, -8.0, q.brazoB, 2.6, 0.85, p.cuerpo2, linea);
-    // Pata grande de saltar en «Z» (muslo y canilla); al saltar se estira
-    const salta = pose === 'salta';
-    const cad = [-1.2, -4.6], rodilla = salta ? [-5.4, -5.4] : [-4.6, -9.3 + (pose === 'camina' ? Math.sin(o.fase || 0) * 0.5 : 0)];
+  }
+  // Pata grande de saltar en «Z» (muslo y canilla); al saltar se estira.
+  function pataSaltoTlali(c, p, o, linea) {
+    const pose = o.pose, salta = pose === 'salta';
+    const camina = pose === 'camina' ? Math.sin(o.fase || 0) * 0.5 : 0;
+    const cad = [-1.2, -4.6], rodilla = salta ? [-5.4, -5.4] : [-4.6, -9.3 + camina];
     const pie = salta ? [-8.2, -1.6] : [-3.4, -0.3];
     const ang = Math.atan2(rodilla[1] - cad[1], rodilla[0] - cad[0]), largo = Math.hypot(rodilla[0] - cad[0], rodilla[1] - cad[1]);
     elipse(c, (cad[0] + rodilla[0]) / 2, (cad[1] + rodilla[1]) / 2, largo / 2 + 0.5, 1.35, ang); relleno(c, p.cuerpo, linea, 0.4);
@@ -518,6 +515,42 @@
     c.strokeStyle = linea; c.lineWidth = 0.95; c.beginPath(); c.moveTo(rodilla[0], rodilla[1]); c.lineTo(pie[0], pie[1]); c.stroke();
     c.strokeStyle = p.cuerpo2; c.lineWidth = 0.55; c.stroke();
     c.fillStyle = p.cuerpo2; elipse(c, pie[0] + 0.5, pie[1], 0.9, 0.4); c.fill();
+  }
+  // Ojote brillante con pestañas y sonrisa de oreja a oreja (o la expresión de la pose).
+  function caraTlali(c, p, o, linea) {
+    if (conCara(o.pose)) { cara(c, o, [[2.5, -12.6]], [3.1, -10.3], '#1a2408', 1.3); return; }
+    const parpadea = !o.quieto && ((o.t || 0) % 3.7) < 0.12;
+    if (parpadea) { c.strokeStyle = p.ojo; c.lineWidth = 0.5; c.beginPath(); c.moveTo(1.4, -12.6); c.lineTo(3.6, -12.6); c.stroke(); }
+    else {
+      elipse(c, 2.5, -12.6, 1.35, 1.65); relleno(c, p.ojo, linea, 0.25);
+      c.fillStyle = '#fff'; elipse(c, 2.95, -13.2, 0.5, 0.55); c.fill(); elipse(c, 2.1, -12.0, 0.22, 0.22); c.fill();
+    }
+    c.strokeStyle = p.ojo; c.lineWidth = 0.3; // pestañas
+    for (const a of [-0.9, -0.5, -0.1]) { c.beginPath(); c.moveTo(2.5 + Math.cos(a - 1.2) * 1.4, -12.6 + Math.sin(a - 1.2) * 1.7); c.lineTo(2.5 + Math.cos(a - 1.2) * 2.1, -12.6 + Math.sin(a - 1.2) * 2.4); c.stroke(); }
+    c.fillStyle = '#7f1d1d'; c.beginPath(); c.moveTo(1.6, -10.6); c.quadraticCurveTo(3.4, -8.9, 4.5, -10.9); c.closePath(); c.fill();
+    c.fillStyle = '#f87171'; elipse(c, 3.1, -9.9, 0.55, 0.3); c.fill();
+  }
+  // Sombrero de ala ancha con banda bordada de flores.
+  function sombreroTlali(c, p, linea) {
+    c.save(); c.translate(0.9, -15.2); c.rotate(-0.08);
+    elipse(c, 0, 0.2, 6.0, 1.15); relleno(c, p.sombrero2, linea, 0.4);
+    elipse(c, 0, 0, 5.7, 0.95); c.fillStyle = p.sombrero; c.fill();
+    c.beginPath(); c.moveTo(-2.7, 0); c.bezierCurveTo(-2.6, -3.4, 2.6, -3.4, 2.7, 0); c.closePath(); relleno(c, p.sombrero, linea, 0.4);
+    c.fillStyle = p.bordado[0]; c.fillRect(-2.6, -1.05, 5.2, 0.8);
+    p.bordado.forEach((col, k) => { c.fillStyle = col; elipse(c, -4.6 + k * 3.05, 0.1, 0.45, 0.32); c.fill(); });
+    c.fillStyle = p.bordado[1]; for (const x of [-1.6, 0, 1.6]) { elipse(c, x, -0.65, 0.3, 0.3); c.fill(); }
+    c.restore();
+  }
+  function pintarTlali(c, o) {
+    const p = paleta('tlali', o), q = postura(o), linea = p.linea;
+    antenasTlali(c, p, o, linea);
+    // Abdomen alargado con rayas
+    elipse(c, -3.3, -5.8, 3.4, 1.8, -0.3); relleno(c, p.cuerpo2, linea, 0.4);
+    c.strokeStyle = 'rgba(30,50,5,.35)'; c.lineWidth = 0.3;
+    for (const x of [-5.2, -4.0, -2.8]) { c.beginPath(); c.moveTo(x, -7.4 + (x + 5) * 0.3); c.lineTo(x + 0.5, -4.5 + (x + 5) * 0.3); c.stroke(); }
+    // Bracito de atrás
+    miembro(c, -0.4, -8.0, q.brazoB, 2.6, 0.85, p.cuerpo2, linea);
+    pataSaltoTlali(c, p, o, linea);
     // Patitas para caminar
     const piernaA = q.piernaA, piernaB = q.piernaB + (q.dobla ? 0.4 : 0);
     for (const [x, a, col] of [[-0.5, piernaB, p.cuerpo2], [0.7, piernaA, p.cuerpo]]) {
@@ -533,51 +566,48 @@
     elipse(c, 1.0, -12.0, 3.6, 3.3); relleno(c, p.cuerpo, linea);
     c.fillStyle = p.panza; elipse(c, 2.6, -10.6, 1.8, 1.2); c.fill();
     c.fillStyle = 'rgba(255,255,255,.35)'; elipse(c, -0.2, -14.0, 1.4, 0.5); c.fill();
-    if (conCara(pose)) cara(c, o, [[2.5, -12.6]], [3.1, -10.3], '#1a2408', 1.3);
-    else {
-      const parpadea = !o.quieto && (t % 3.7) < 0.12;
-      if (parpadea) { c.strokeStyle = p.ojo; c.lineWidth = 0.5; c.beginPath(); c.moveTo(1.4, -12.6); c.lineTo(3.6, -12.6); c.stroke(); }
-      else {
-        elipse(c, 2.5, -12.6, 1.35, 1.65); relleno(c, p.ojo, linea, 0.25);
-        c.fillStyle = '#fff'; elipse(c, 2.95, -13.2, 0.5, 0.55); c.fill(); elipse(c, 2.1, -12.0, 0.22, 0.22); c.fill();
-      }
-      c.strokeStyle = p.ojo; c.lineWidth = 0.3; // pestañas
-      for (const a of [-0.9, -0.5, -0.1]) { c.beginPath(); c.moveTo(2.5 + Math.cos(a - 1.2) * 1.4, -12.6 + Math.sin(a - 1.2) * 1.7); c.lineTo(2.5 + Math.cos(a - 1.2) * 2.1, -12.6 + Math.sin(a - 1.2) * 2.4); c.stroke(); }
-      c.fillStyle = '#7f1d1d'; c.beginPath(); c.moveTo(1.6, -10.6); c.quadraticCurveTo(3.4, -8.9, 4.5, -10.9); c.closePath(); c.fill();
-      c.fillStyle = '#fb7185'; elipse(c, 3.1, -9.9, 0.55, 0.3); c.fill();
-    }
+    caraTlali(c, p, o, linea);
     c.fillStyle = 'rgba(244,114,182,.55)'; elipse(c, 1.2, -10.7, 0.75, 0.45); c.fill();
-    // Sombrero de ala ancha con banda bordada de flores
-    c.save(); c.translate(0.9, -15.2); c.rotate(-0.08);
-    elipse(c, 0, 0.2, 6.0, 1.15); relleno(c, p.sombrero2, linea, 0.4);
-    elipse(c, 0, 0, 5.7, 0.95); c.fillStyle = p.sombrero; c.fill();
-    c.beginPath(); c.moveTo(-2.7, 0); c.bezierCurveTo(-2.6, -3.4, 2.6, -3.4, 2.7, 0); c.closePath(); relleno(c, p.sombrero, linea, 0.4);
-    c.fillStyle = p.bordado[0]; c.fillRect(-2.6, -1.05, 5.2, 0.8);
-    p.bordado.forEach((col, k) => { c.fillStyle = col; elipse(c, -4.6 + k * 3.05, 0.1, 0.45, 0.32); c.fill(); });
-    c.fillStyle = p.bordado[1]; for (const x of [-1.6, 0, 1.6]) { elipse(c, x, -0.65, 0.3, 0.3); c.fill(); }
-    c.restore();
+    sombreroTlali(c, p, linea);
     // Bracito de adelante (saluda al festejar)
     miembro(c, 1.0, -8.0, q.brazoA, 2.6, 0.85, p.cuerpo, linea);
   }
 
   // ---------- Tona: tortuga marina sabia con yelmo de jade y concha ----------
-  function pintarTona(c, o) {
-    const p = paleta('tona', o), pose = o.pose, q = postura(o), linea = p.linea;
-    // Aleta y pata de atrás
-    miembro(c, -0.2, -8.3, q.brazoB * 0.8, 3.3, 2.0, p.piel2, linea);
-    const cad = -3.1;
-    miembro(c, -1.4, cad, q.piernaB * 0.7 + (q.dobla ? 0.3 : 0), 2.8, 2.1, p.piel2, linea);
-    // Caparazón grande con placas
+  // Caparazón grande con placas hexagonales (centrado en su espalda).
+  function caparazonTona(c, p, linea) {
     c.save(); c.translate(-1.8, -7.4); c.rotate(-0.12);
     elipse(c, 0, 0, 4.4, 5.4); relleno(c, p.caparazon, linea, 0.5);
     c.strokeStyle = p.borde; c.lineWidth = 0.55; elipse(c, 0, 0, 4.0, 5.0); c.stroke();
     c.fillStyle = p.placa;
-    for (const [x, y, rx, ry] of [[0.2, -2.6, 1.5, 1.2], [0.4, 0, 1.6, 1.25], [0.2, 2.6, 1.5, 1.2], [-2.2, -1.3, 1.0, 1.3], [-2.2, 1.4, 1.0, 1.3]]) {
-      c.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; const px = x + Math.cos(a) * rx, py = y + Math.sin(a) * ry; if (k) { c.lineTo(px, py); } else { c.moveTo(px, py); } } c.closePath(); c.fill();
+    for (const [x, y, rx, ry] of [[0.2, -2.6, 1.5, 1.2], [0.4, 0, 1.6, 1.25], [0.2, 2.6, 1.5, 1.2], [-2.2, -1.3, 1, 1.3], [-2.2, 1.4, 1, 1.3]]) {
+      c.beginPath();
+      for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; c.lineTo(x + Math.cos(a) * rx, y + Math.sin(a) * ry); }
+      c.closePath(); c.fill();
       c.strokeStyle = p.caparazon2; c.lineWidth = 0.25; c.stroke();
     }
     c.fillStyle = 'rgba(255,255,255,.28)'; elipse(c, -1.0, -3.6, 1.8, 0.7, -0.5); c.fill();
     c.restore();
+  }
+  // Ojos sabios de párpado medio y cejas blancas (o la expresión de la pose).
+  function ojosTona(c, p, o, linea) {
+    if (conCara(o.pose)) { cara(c, o, [[3.3, -12.9], [4.9, -12.9]], [4.6, -10.9], '#14140f'); return; }
+    for (const x of [3.3, 4.9]) {
+      c.fillStyle = '#14140f'; elipse(c, x, -12.8, 0.7, 0.85); c.fill();
+      c.fillStyle = '#fff'; elipse(c, x + 0.25, -12.55, 0.22, 0.22); c.fill();
+      c.fillStyle = p.piel; c.beginPath(); c.ellipse(x, -12.95, 0.85, 0.7, 0, Math.PI, Math.PI * 2); c.fill(); // párpado
+      c.strokeStyle = linea; c.lineWidth = 0.25; c.beginPath(); c.moveTo(x - 0.8, -12.95); c.lineTo(x + 0.8, -12.95); c.stroke();
+      c.strokeStyle = p.ceja; c.lineWidth = 0.55; c.beginPath(); c.moveTo(x - 0.8, -14.0); c.quadraticCurveTo(x, -14.5, x + 0.8, -14.1); c.stroke();
+    }
+    c.strokeStyle = '#14140f'; c.lineWidth = 0.4; c.beginPath(); c.arc(4.4, -11.6, 0.9, Math.PI * 0.25, Math.PI * 0.75); c.stroke();
+  }
+  function pintarTona(c, o) {
+    const p = paleta('tona', o), q = postura(o), linea = p.linea;
+    // Aleta y pata de atrás
+    miembro(c, -0.2, -8.3, q.brazoB * 0.8, 3.3, 2.0, p.piel2, linea);
+    const cad = -3.1;
+    miembro(c, -1.4, cad, q.piernaB * 0.7 + (q.dobla ? 0.3 : 0), 2.8, 2.1, p.piel2, linea);
+    caparazonTona(c, p, linea);
     // Pata de adelante
     miembro(c, 1.2, cad, q.piernaA * 0.7, 2.8, 2.1, p.piel, linea);
     // Peto (pecho) con sus franjas
@@ -590,18 +620,7 @@
     c.fillStyle = p.manchas; for (const [x, y, r] of [[0.8, -12.0, 0.5], [1.6, -14.2, 0.45], [0.6, -13.6, 0.35], [2.0, -10.7, 0.35]]) { elipse(c, x, y, r, r * 0.8); c.fill(); }
     c.fillStyle = p.piel2; c.beginPath(); c.moveTo(5.4, -12.9); c.quadraticCurveTo(6.7, -12.4, 6.0, -11.3); c.lineTo(5.0, -11.6); c.closePath(); c.fill();
     c.fillStyle = 'rgba(255,255,255,.35)'; elipse(c, 1.8, -14.6, 1.4, 0.5); c.fill();
-    // Ojos sabios de párpado medio y cejas blancas
-    if (conCara(pose)) cara(c, o, [[3.3, -12.9], [4.9, -12.9]], [4.6, -10.9], '#14140f');
-    else {
-      for (const x of [3.3, 4.9]) {
-        c.fillStyle = '#14140f'; elipse(c, x, -12.8, 0.7, 0.85); c.fill();
-        c.fillStyle = '#fff'; elipse(c, x + 0.25, -12.55, 0.22, 0.22); c.fill();
-        c.fillStyle = p.piel; c.beginPath(); c.ellipse(x, -12.95, 0.85, 0.7, 0, Math.PI, Math.PI * 2); c.fill(); // párpado
-        c.strokeStyle = linea; c.lineWidth = 0.25; c.beginPath(); c.moveTo(x - 0.8, -12.95); c.lineTo(x + 0.8, -12.95); c.stroke();
-        c.strokeStyle = p.ceja; c.lineWidth = 0.55; c.beginPath(); c.moveTo(x - 0.8, -14.0); c.quadraticCurveTo(x, -14.5, x + 0.8, -14.1); c.stroke();
-      }
-      c.strokeStyle = '#14140f'; c.lineWidth = 0.4; c.beginPath(); c.arc(4.4, -11.6, 0.9, Math.PI * 0.25, Math.PI * 0.75); c.stroke();
-    }
+    ojosTona(c, p, o, linea);
     // Yelmo de jade con cresta de concha, plumas y orejera (zapoteca)
     for (const [k, a] of [[0, -2.5], [1, -2.15]]) {
       c.save(); c.translate(1.6, -16.4); c.rotate(a + (o.quieto ? 0 : Math.sin((o.t || 0) * 3 + k) * 0.05));
