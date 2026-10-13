@@ -36,7 +36,7 @@
     for (const x of p.jug) j.push(r(x.x, Q_POS), r(x.y, Q_POS), ((Math.round(x.dir * Q_DIR) % 64) + 64) % 64, Math.max(0, ANIMS.indexOf(x.anim)));
     const f = {
       q: extra.q, t: Math.round(extra.t), e: Math.max(0, ESTADOS.indexOf(p.estado)), mi: p.mitad, m: p.minuto,
-      g: [p.eq[0].goles, p.eq[1].goles], du: p.dueno, po: p.posesion, h: p.humanos.map(h => h.jug), ai: extra.ai | 0,
+      g: [p.eq[0].goles, p.eq[1].goles], du: p.dueno, po: p.posesion, h: p.humanos.map(h => h.jug), ai: Math.trunc(Number(extra.ai) || 0),
       b: [r(b.x, Q_POS), r(b.y, Q_POS), r(b.z, Q_POS), r(b.vx, Q_VEL), r(b.vy, Q_VEL), r(b.vz, Q_VEL)], j,
     };
     if (p.tanda) f.ta = [p.tanda.goles[0], p.tanda.goles[1]];
@@ -49,8 +49,8 @@
     const jug = [];
     for (let k = 0; k < f.j.length; k += 4) jug.push({ x: f.j[k] / Q_POS, y: f.j[k + 1] / Q_POS, dir: f.j[k + 2] / Q_DIR, anim: ANIMS[f.j[k + 3]] || 'parado' });
     return {
-      q: f.q, t: f.t, estado: ESTADOS[f.e] || 'juego', mitad: f.mi, minuto: f.m, goles: [f.g[0] | 0, f.g[1] | 0], dueno: f.du, posesion: f.po,
-      humanos: Array.isArray(f.h) ? f.h.slice() : [], ai: f.ai | 0, tanda: f.ta || null, ev: Array.isArray(f.ev) ? f.ev : [],
+      q: f.q, t: f.t, estado: ESTADOS[f.e] || 'juego', mitad: f.mi, minuto: f.m, goles: [Math.trunc(Number(f.g[0]) || 0), Math.trunc(Number(f.g[1]) || 0)], dueno: f.du, posesion: f.po,
+      humanos: Array.isArray(f.h) ? f.h.slice() : [], ai: Math.trunc(Number(f.ai) || 0), tanda: f.ta || null, ev: Array.isArray(f.ev) ? f.ev : [],
       balon: { x: f.b[0] / Q_POS, y: f.b[1] / Q_POS, z: f.b[2] / Q_POS, vx: f.b[3] / Q_VEL, vy: f.b[4] / Q_VEL, vz: f.b[5] / Q_VEL }, jug,
     };
   }
@@ -201,7 +201,11 @@
     function iaAlInvitado() {
       if (st.iaInvitado) return;
       const h = humanoInvitado();
-      if (h) { if (h.jug >= 0 && p.jug[h.jug]) p.jug[h.jug].humano = -1; st.guardado = h; p.humanos.splice(p.humanos.indexOf(h), 1); }
+      if (h) {
+        if (h.jug >= 0 && p.jug[h.jug]) p.jug[h.jug].humano = -1;
+        st.guardado = h;
+        p.humanos.splice(p.humanos.indexOf(h), 1);
+      }
       p.eq[1].nivel = M.NIVELES.medio;
       st.iaInvitado = true; st.caido = ahora(); st.entrada = M.NADA;
     }
@@ -252,25 +256,46 @@
       return M.velocidadTope(p, j, sprint);
     };
     const pendientes = [];
+    // Foto nueva más reciente: reconcilia al jugador propio (velocidad estimada con la foto anterior).
+    function alFotoNueva(s) {
+      st.ultimaFoto = s;
+      const jug = s.humanos[1];
+      if (!(jug >= 0) || !s.jug[jug]) return;
+      const prev = buf.fotos.findLast(x => x.q < s.q), dt = prev ? Math.max(0.03, (s.t - prev.t) / 1000) : 1;
+      const v = prev?.jug[jug] ? { vx: (s.jug[jug].x - prev.jug[jug].x) / dt, vy: (s.jug[jug].y - prev.jug[jug].y) / dt } : { vx: 0, vy: 0 };
+      if (pred.jug !== jug) Object.assign(pred, { lista: false, ex: 0, ey: 0, jug });
+      reconciliar(pred, { x: s.jug[jug].x, y: s.jug[jug].y, ...v }, s.ai, vmax);
+    }
     canal.al('fe:foto', (f, meta) => {
-      if (meta && meta.de !== undefined && meta.de !== cfg.anfitrion) return;
+      if (meta?.de !== undefined && meta.de !== cfg.anfitrion) return;
       st.ultimoMsg = ahora(); st.caido = null;
       const s = leerFoto(f);
-      if (!s || (st.ultimaFoto && s.q <= st.ultimaFoto.q && buf.fotos.some(x => x.q === s.q))) return;
-      if (!agregarFoto(buf, s, ahora())) return;
+      if (!s || !agregarFoto(buf, s, ahora())) return;
       st.recibidas++;
-      for (const e of s.ev) if (!st.vistos.has(e.n)) { st.vistos.add(e.n); pendientes.push(e); }
-      if (!st.ultimaFoto || s.q > st.ultimaFoto.q) {
-        st.ultimaFoto = s;
-        const jug = s.humanos[1];
-        if (jug >= 0 && s.jug[jug]) {
-          const prev = buf.fotos.filter(x => x.q < s.q).pop();
-          const v = prev && prev.jug[jug] ? { vx: (s.jug[jug].x - prev.jug[jug].x) / Math.max(0.03, (s.t - prev.t) / 1000), vy: (s.jug[jug].y - prev.jug[jug].y) / Math.max(0.03, (s.t - prev.t) / 1000) } : { vx: 0, vy: 0 };
-          if (pred.jug !== jug) { pred.lista = false; pred.ex = 0; pred.ey = 0; pred.jug = jug; }
-          reconciliar(pred, { x: s.jug[jug].x, y: s.jug[jug].y, ...v }, s.ai, vmax);
-        }
+      for (const e of s.ev) {
+        if (!st.vistos.has(e.n)) { st.vistos.add(e.n); pendientes.push(e); }
       }
+      if (!st.ultimaFoto || s.q > st.ultimaFoto.q) alFotoNueva(s);
     });
+    // Eventos que ya «ocurrieron» en el tiempo dibujado; los goles que llegaran sin evento se sacan del marcador.
+    function eventosListos(s) {
+      const ev = [], total = s.goles[0] + s.goles[1];
+      for (let k = 0; k < pendientes.length;) {
+        const e = pendientes[k];
+        if (e.tipo !== 'gol' || !e.marcador || total >= e.marcador[0] + e.marcador[1]) { ev.push(e); pendientes.splice(k, 1); } else k++;
+      }
+      const golDe = (lista, eq) => lista.some(e => e.tipo === 'gol' && e.eq === eq);
+      for (let eq = 0; eq < 2; eq++) {
+        if (s.goles[eq] > st.goles[eq] && !golDe(ev, eq) && !golDe(pendientes, eq)) ev.push({ tipo: 'gol', eq, i: -1, marcador: s.goles.slice() });
+      }
+      st.goles = s.goles.slice();
+      return ev;
+    }
+    function dibujarPredicho() {
+      const pos = posicionPredicha(pred), j = p.jug[pred.jug], v = Math.hypot(pred.vx, pred.vy);
+      Object.assign(j, { x: pos.x, y: pos.y, vx: pred.vx, vy: pred.vy, anim: v > 0.5 ? 'corre' : 'parado' });
+      if (v > 0.4) j.dir = Math.atan2(pred.vy, pred.vx);
+    }
     if (canal.alDesconectar) canal.alDesconectar(id => { if (id === cfg.anfitrion && st.caido === null) st.caido = ahora(); });
     const predecible = s => s && s.estado === 'juego' && pred.lista && pred.jug >= 0 && s.dueno !== pred.jug;
     return {
@@ -299,23 +324,8 @@
         podar(buf, tr);
         aplicar(p, s);
         st.aplicado = s;
-        if (predecible(s)) {
-          const pos = posicionPredicha(pred), j = p.jug[pred.jug];
-          j.x = pos.x; j.y = pos.y; j.vx = pred.vx; j.vy = pred.vy;
-          if (Math.hypot(pred.vx, pred.vy) > 0.4) j.dir = Math.atan2(pred.vy, pred.vx);
-          j.anim = Math.hypot(pred.vx, pred.vy) > 0.5 ? 'corre' : 'parado';
-        }
-        // Eventos que ya «ocurrieron» en el tiempo dibujado; los goles que llegaran sin evento se sacan del marcador.
-        const ev = [];
-        for (let k = 0; k < pendientes.length;) {
-          const e = pendientes[k], listo = e.tipo !== 'gol' || !e.marcador || s.goles[0] + s.goles[1] >= e.marcador[0] + e.marcador[1];
-          if (listo) { ev.push(e); pendientes.splice(k, 1); } else k++;
-        }
-        for (let eq = 0; eq < 2; eq++) {
-          if (s.goles[eq] > st.goles[eq] && !ev.some(e => e.tipo === 'gol' && e.eq === eq) && !pendientes.some(e => e.tipo === 'gol' && e.eq === eq)) ev.push({ tipo: 'gol', eq, i: -1, marcador: s.goles.slice() });
-        }
-        st.goles = s.goles.slice();
-        return { estado: s, eventos: ev };
+        if (predecible(s)) dibujarPredicho();
+        return { estado: s, eventos: eventosListos(s) };
       },
       // ms sin noticias del anfitrión (null si está bien) y si ya pasaron los 15 s.
       anfitrionCaido: () => st.caido,

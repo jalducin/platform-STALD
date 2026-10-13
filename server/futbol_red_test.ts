@@ -20,7 +20,7 @@ Deno.test("futbol-red: la foto pesa ~500 B y su error de posición es ≤ 0.05 m
   const bytes = new TextEncoder().encode(JSON.stringify(f)).length;
   assert(bytes < 600, "foto de " + bytes + " B");
   assert(bytes > 250);
-  const s = R.leerFoto(JSON.parse(JSON.stringify(f)));
+  const s = R.leerFoto(structuredClone(f));
   assertEquals([s.q, s.t, s.ai, s.goles, s.estado, s.minuto], [7, 1234, 3, [p.eq[0].goles, p.eq[1].goles], p.estado, p.minuto]);
   for (let i = 0; i < 22; i++) {
     assert(Math.abs(s.jug[i].x - p.jug[i].x) <= 0.025 + 1e-9 && Math.abs(s.jug[i].y - p.jug[i].y) <= 0.025 + 1e-9, "jugador " + i);

@@ -24,7 +24,7 @@ export function canalesSimulados(o: Opciones) {
         for (const para of o.ids) {
           if (para === id || rng() < o.perdida) continue;
           const extra = rng() < o.desorden ? rng() * Math.max(40, o.latencia) : 0;
-          cola.push({ para, evento, datos: JSON.parse(JSON.stringify(datos)), meta: { de: id, seq, t: o.ahora() }, llega: o.ahora() + o.latencia + extra });
+          cola.push({ para, evento, datos: structuredClone(datos), meta: { de: id, seq, t: o.ahora() }, llega: o.ahora() + o.latencia + extra });
         }
       },
       al(evento: string, fn: Oyente) { (oyentes[evento] ||= []).push(fn); },

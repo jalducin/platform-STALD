@@ -75,7 +75,11 @@ const marcoArcade = (src, titulo) => '<div class="arcade-caja"><iframe id="arcad
 const SIN_AVANCE = new Set(['futbolito', 'billar']); // futbolito-billar: juegos de Arcade sin avance guardado
 const srcArcade = (id, extra) => 'juegos/' + id + '.html' + (new URLSearchParams(location.search).get('arcadePrueba') === '1' ? '?prueba=1' : '') + (extra || '');
 // futbol-en-linea: `param` extra para el juego (modo=clasif abre la Clasificatoria semanal de Fútbol Estelar).
-const conParam = (id, param) => { const src = srcArcade(id); return param ? src + (src.includes('?') ? '&' : '?') + param : src; };
+const conParam = (id, param) => {
+  const src = srcArcade(id);
+  if (!param) return src;
+  return src + (src.includes('?') ? '&' : '?') + param;
+};
 function jugarArcade(id, param) {
   const m = marco(id);
   document.getElementById('m-puntos').hidden = true;
@@ -253,7 +257,7 @@ function tarjetaGolf(t, mesa) {
 // manda al servidor el resultado que vio y pinta el podio con los puntos que devuelve el servidor.
 const FUT_FORMACIONES = ['4-4-2', '4-3-3', '3-5-2', '5-3-2'];
 const FUT_DESLIZADORES = [['linea', '🧱 Línea', 'Baja', 'Alta'], ['ancho', '↔️ Amplitud', 'Cerrada', 'Abierta'], ['mentalidad', '🧠 Mentalidad', 'Defensiva', 'Ofensiva'], ['presion', '🔥 Presión', 'Poca', 'Mucha']];
-const tacticaDe = id => Object.assign({ formacion: '4-4-2', linea: 50, ancho: 50, mentalidad: 50, presion: 50 }, (sala.estado.jugadores.find(x => x.id === id) || {}).tactica || {});
+const tacticaDe = id => ({ formacion: '4-4-2', linea: 50, ancho: 50, mentalidad: 50, presion: 50, ...(sala.estado.jugadores.find(x => x.id === id) || {}).tactica });
 function tacticaFutbol() { // futbol-en-linea: pizarra de la sala de espera
   const e = sala.estado;
   if (e.sala.juego !== 'futbol' || !e.jugadores.some(x => x.id === e.yo)) return '';

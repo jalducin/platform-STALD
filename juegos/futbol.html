@@ -572,7 +572,7 @@ function empezarPartido() {
   const ctx = S.ctx, { equipos, tacticas } = armarEquipos(ctx);
   const semilla = PRUEBA && Q.get('semilla') ? Q.get('semilla') : String(Date.now());
   S.p = M.crearPartido({ semilla, equipos, tacticas, humanos: ctx.humanos.map(h => ({ eq: h.eq })), dificultad: ctx.dificultad, minutos: ajustes.minutos, fueraDeLugar: ajustes.fuera, eliminatoria: !!ctx.eliminatoria });
-  S.yoH = 0; S.red = null; // futbol-en-linea: persona de este aparato en p.humanos (y sin red)
+  S.yoH = 0; S.red = null; $('b-pausa').classList.remove('hide'); // futbol-en-linea: persona de este aparato en p.humanos (y sin red)
   mostrarPartido(equipos, ctx);
 }
 // Pantalla del partido (también la usa el en línea).
@@ -1140,11 +1140,21 @@ function empezarLinea() {
   S.p = M.crearPartido({ semilla: 'sala-' + cfg.seed, equipos: [a, b], tacticas, humanos: [{ eq: 0 }, { eq: 1 }], dificultad: 'medio', minutos: R.MINUTOS_LINEA, fueraDeLugar: true });
   const ahora = () => performance.now();
   S.red = anf ? R.anfitrion({ canal: S.canal, p: S.p, M, invitado: cfg.participantes[1], ahora }) : R.invitado({ canal: S.canal, p: S.p, M, anfitrion: cfg.participantes[0], ahora });
+  $('b-pausa').classList.add('hide'); // el en vivo no se pausa
   S.rol = cfg.rol; S.yoH = anf ? 0 : 1; S.redFin = false; S.holaT = 0; S.redT = 0; S.primeraFoto = anf;
   mostrarPartido([a, b], S.ctx);
   if (!anf) avisarRed('⏳ Esperando al anfitrión…');
 }
-function avisarRed(txt) { const el = $('red-aviso'); if (!txt) { el.classList.add('hide'); return; } if (el.textContent !== txt) el.textContent = txt; el.classList.remove('hide'); }
+function avisarRed(txt) {
+  const el = $('red-aviso');
+  if (!txt) { el.classList.add('hide'); return; }
+  if (el.textContent !== txt) el.textContent = txt;
+  el.classList.remove('hide');
+}
+function nivelLatencia(ms) {
+  if (!Number.isFinite(ms) || ms > 250) return 'malo';
+  return ms > 120 ? 'regular' : 'bueno';
+}
 // Latencia (📶) y aviso de desconexión con la cuenta de 15 s, dos veces por segundo.
 function pintarRed(ahora) {
   if (ahora - S.redT < 500) return;
@@ -1155,29 +1165,36 @@ function pintarRed(ahora) {
   const lat = $('lat');
   lat.classList.remove('hide');
   lat.textContent = '📶 ' + (Number.isFinite(ms) ? Math.round(ms) + ' ms' : '—');
-  lat.dataset.nivel = !Number.isFinite(ms) || ms > 250 ? 'malo' : ms > 120 ? 'regular' : 'bueno';
+  lat.dataset.nivel = nivelLatencia(ms);
   const caido = S.rol === 'anfitrion' ? S.red.invitadoCaido() : S.red.anfitrionCaido();
   if (caido !== null) {
     const quedan = Math.max(0, Math.ceil((R.DESCONEXION_MS - (ahora - caido)) / 1000));
     avisarRed(S.rol === 'anfitrion' ? '📡 Se perdió la conexión con ' + nombre + '. La IA juega por su equipo · se cierra en ' + quedan + ' s' : '📡 Se perdió la conexión con ' + nombre + ' · el partido se cierra en ' + quedan + ' s');
   } else if (S.primeraFoto) avisarRed('');
 }
+// Anfitrión: simula a 60 Hz con su entrada y la del invitado, y manda la foto a 15 Hz.
+function pasoAnfitrion(dt, local) {
+  acum += dt;
+  let n = 0;
+  while (acum >= M.PASO && n < 5) { eventos(S.red.paso(local)); acum -= M.PASO; n++; }
+  if (n === 5) acum = 0;
+  for (let k = 0; k < extraPasos && S.p.estado !== 'fin'; k++) eventos(S.red.paso(local));
+  S.red.enviarSiToca();
+  return true;
+}
+// Invitado: manda su entrada, dibuja lo interpolado y saluda hasta que llega la primera foto.
+function pasoInvitado(ahora, local) {
+  S.red.entrada(local);
+  const d = S.red.dibujar();
+  if (d) { S.primeraFoto = true; eventos(d.eventos); }
+  else if (ahora - S.holaT > 500) { S.holaT = ahora; S.canal.enviar('fe:hola', { v: 1 }); }
+  if (!S.primeraFoto && ahora - S.inicioReal > ESPERA_RIVAL_MS) { respaldoLinea(S.linea.nombres[0] + ' no se conectó al canal en vivo.'); return false; }
+  return true;
+}
 function avanzarLinea(dt) {
   const ahora = performance.now(), local = leerEntrada('todo');
-  if (S.rol === 'anfitrion') {
-    acum += dt;
-    let n = 0;
-    while (acum >= M.PASO && n < 5) { eventos(S.red.paso(local)); acum -= M.PASO; n++; }
-    if (n === 5) acum = 0;
-    for (let k = 0; k < extraPasos && S.p.estado !== 'fin'; k++) eventos(S.red.paso(local));
-    S.red.enviarSiToca();
-  } else {
-    S.red.entrada(local);
-    const d = S.red.dibujar();
-    if (d) { S.primeraFoto = true; eventos(d.eventos); }
-    else if (ahora - S.holaT > 500) { S.holaT = ahora; S.canal.enviar('fe:hola', { v: 1 }); }
-    if (!S.primeraFoto && ahora - S.inicioReal > ESPERA_RIVAL_MS) { respaldoLinea(S.linea.nombres[0] + ' no se conectó al canal en vivo.'); return; }
-  }
+  const sigue = S.rol === 'anfitrion' ? pasoAnfitrion(dt, local) : pasoInvitado(ahora, local);
+  if (!sigue) return;
   pintarRed(ahora);
   if (S.p.estado === 'fin') finLinea(false);
   else if (S.red.cerrarPorCaida()) finLinea(true);
@@ -1285,7 +1302,13 @@ if (PRUEBA) {
     enJuego: () => M.ponerEnJuego(S.p),
     darBalon: i => { M.ponerEnJuego(S.p); M.darBalon(S.p, i); },
     // futbol-en-linea: el jugador i, solo frente al arco rival a 11 m, con el balón (la IA quieta).
-    ponerParaTiro: i => { const p = S.p, j = p.jug[i], lado = p.eq[j.eq].lado; M.ponerEnJuego(p); p.iaPausada = true; Object.assign(j, { x: lado * (M.MX - 11), y: 0, vx: 0, vy: 0, dir: lado > 0 ? 0 : Math.PI }); const gk = p.jug.find(x => x.eq !== j.eq && x.rol === 'POR'); if (gk) Object.assign(gk, { y: 6 }); M.darBalon(p, i); },
+    ponerParaTiro: i => {
+      const p = S.p, j = p.jug[i], lado = p.eq[j.eq].lado, gk = p.jug.find(x => x.eq !== j.eq && x.rol === 'POR');
+      M.ponerEnJuego(p); p.iaPausada = true;
+      Object.assign(j, { x: lado * (M.MX - 11), y: 0, vx: 0, vy: 0, dir: lado > 0 ? 0 : Math.PI });
+      if (gk) gk.y = 6;
+      M.darBalon(p, i);
+    },
     red: () => (S.red ? { rol: S.rol, recibidas: S.red.st.recibidas || 0, ultimaS: S.red.st.ultimaS, ia: !!S.red.st.iaInvitado, caido: S.rol === 'anfitrion' ? S.red.invitadoCaido() : S.red.anfitrionCaido(), aviso: $('red-aviso').classList.contains('hide') ? '' : $('red-aviso').textContent, lat: $('lat').textContent } : null),
   };
 }

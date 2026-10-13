@@ -546,6 +546,14 @@ function cambioDeQuiz(c: CtxSala): CambioJugador | Response {
   return (e: EnSala) => e.respuestas[q] ? e : ({ ...e, respuestas: { ...e.respuestas, [q]: { correcta: body.correcta as boolean, puntos, ms } } });
 }
 
+// futbol-en-linea: el primer reporte de resultado de cada quien, si es plausible.
+function cambioDeFutbol(c: CtxSala, inicio: number): CambioJugador | Response {
+  const { body, ahora, json, sala } = c;
+  const r = sala.juego === "futbol" ? FutbolLinea.validarResultado(body.futbol, inicio, ahora) : null;
+  if (!r) return json({ error: "resultado_invalido" }, 400);
+  return (e: EnSala) => e.futbol ? e : { ...e, futbol: { ...r, t: ahora } };
+}
+
 // Elige cómo cambia el archivo del jugador según lo que trae la respuesta, o la respuesta de error.
 // deGrande: el cambio que ya resolvió juegos-salas-grandes (si aplica).
 function cambioDeRespuesta(c: CtxSala, inicio: number, deGrande: CambioJugador | undefined): CambioJugador | Response {
@@ -561,11 +569,7 @@ function cambioDeRespuesta(c: CtxSala, inicio: number, deGrande: CambioJugador |
     return (e: EnSala) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
   }
   if (body.jugada !== undefined) return cambioDeJugada(c);
-  if (body.futbol !== undefined) { // futbol-en-linea: el primer reporte de cada quien, si es plausible
-    const r = sala.juego === "futbol" ? FutbolLinea.validarResultado(body.futbol, inicio, ahora) : null;
-    if (!r) return json({ error: "resultado_invalido" }, 400);
-    return (e: EnSala) => e.futbol ? e : { ...e, futbol: { ...r, t: ahora } };
-  }
+  if (body.futbol !== undefined) return cambioDeFutbol(c, inicio); // futbol-en-linea
   if (body.carrera !== undefined) {
     // Carreras de Arcade (server/carreras.ts): tiempo validado con el reloj del servidor; solo cuenta el primero.
     const carrera = validarCarrera(sala.juego, body.carrera, inicio, ahora);
