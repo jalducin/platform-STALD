@@ -154,6 +154,15 @@ Cada página debe manejar y mostrar de forma explícita:
     «Mando de Arcade») y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
+  - **Pistas y copas de Karts Turbo** (cambio `karts-pistas-mesoamericanas`; decisiones en su `design.md`): las
+    definiciones viven en `juegos/karts-pistas.js` (script clásico sin DOM, `window.KartsPistas`), que `juegos.html`
+    y `karts.html` cargan **antes** de `juegos/arcade.js`. Cada pista lleva trazado, física, colores, `tema` (cielo
+    de 360°), `decor` (adornos al azar), `fijos` (adornos por tramo), `desc` y `mecanicas` (zonas deterministas:
+    `turbo`, `salto`, `cenote`, `lodo`, `trajinera`). `Arcade.PISTAS` son solo las de sala (`sala: true`, las 4
+    de siempre, igual que `MAPAS_SALA` de `server/carreras.ts`); `Arcade.pistaPorId` encuentra las 8. Copas en
+    `KartsPistas.COPAS` (Copa Fiesta y Copa Mesoamericana); `copaEnCurso.copa` dice cuál va en curso (sin id =
+    Copa Fiesta). Agregar una pista = un objeto en `karts-pistas.js` + sus dibujos en `karts.html`; las pruebas de
+    datos (`server/karts_pistas_test.ts`) revisan que sea cerrada, manejable y con su minimapa;
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
     - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo
