@@ -13,7 +13,8 @@
 // con «Con botón», R + ◀ → mini-turbo, X usa el ítem, START pausa y sigue, el teclado de Karts sin cambios, control
 // físico simulado (navigator.getGamepads en addInitScript) con cualquier control elegido, y distribución a 320×640,
 // 390×844 y 844×390, suelto (juegos/karts.html?prueba=1) y dentro de Juegos.
-// Personajes (openspec: personajes-xalli): «🏁 Piloto» con Xalli, Itzae, Yahui y Xochiquetzal (nombre y título), Xalli
+// Personajes (openspec: personajes-xalli, personajes-estilo-karts): «🏁 Piloto» con los 8 (Xalli, Itzae, Yahui,
+// Xochiquetzal, Xolo, Tlali, Tona y Kinich; nombre, título y peso), Xalli
 // por omisión, la elección se recuerda tras recargar, los bots y fantasmas usan los otros personajes, cada personaje se
 // dibuja en su kart (color de firma, capturas de cerca y hoja de vistas) y termina una carrera; valor desconocido → Xalli;
 // estela del turbo solo sin movimiento reducido; el selector cabe a 320×640 y 844×390.
@@ -63,12 +64,13 @@ const IDS = PERSONAJES.map(x => x.id);
 const elegido = fr => fr.evaluate(() => [...document.querySelectorAll('#menu-piloto [data-personaje]')].filter(b => b.getAttribute('aria-pressed') === 'true').map(b => b.dataset.personaje).join(','));
 async function revisarSelector(fr, nombre) {
   const tarjetas = await fr.$$eval('#menu-piloto [data-personaje]', bs => bs.map(b => ({ id: b.dataset.personaje, txt: b.textContent, img: !!b.querySelector('img[src^="data:image"]') })));
-  ok(nombre + ': «🏁 Piloto» muestra a los 4 con nombre, título y retrato', tarjetas.length === 4 && PERSONAJES.every((x, i) => tarjetas[i].id === x.id && tarjetas[i].txt.includes(x.nombre) && tarjetas[i].txt.includes(x.titulo) && tarjetas[i].img), JSON.stringify(tarjetas.map(t => t.id + ':' + t.txt)));
+  ok(nombre + ': «🏁 Piloto» muestra a los 8 con nombre, título y retrato', tarjetas.length === 8 && PERSONAJES.every((x, i) => tarjetas[i].id === x.id && tarjetas[i].txt.includes(x.nombre) && tarjetas[i].txt.includes(x.titulo) && tarjetas[i].img), JSON.stringify(tarjetas.map(t => t.id + ':' + t.txt)));
 }
 // Tu kart con tu personaje; los bots solo con los otros (y, si hay 3 o más, con los 3).
 function revisarRivales(e, mio, nombre) {
   const otros = e.personajes.slice(); otros.splice(e.yoIndice, 1);
-  ok(nombre + ': tu kart lleva a ' + mio + ' y los rivales a los otros personajes', e.personaje === mio && e.personajes[e.yoIndice] === mio && otros.every(x => IDS.includes(x) && x !== mio) && (otros.length < 3 || new Set(otros).size === 3), JSON.stringify(e.personajes));
+  // personajes-estilo-karts: con 7 rivales, los 7 personajes que no elegiste (uno cada uno).
+  ok(nombre + ': tu kart lleva a ' + mio + ' y los rivales a los otros personajes', e.personaje === mio && e.personajes[e.yoIndice] === mio && otros.every(x => IDS.includes(x) && x !== mio) && (otros.length < 7 || new Set(otros).size === 7), JSON.stringify(e.personajes));
 }
 async function probarPersonajes(b) {
   const q = await abrirPagina(b, { viewport: { width: 390, height: 844 }, contexto: { deviceScaleFactor: 2 }, out, etiqueta: 'karts suelto', ruta: '/juegos/karts.html?prueba=1', esperar: '#ov-menu:not(.hide)' });
@@ -80,6 +82,10 @@ async function probarPersonajes(b) {
   for (const x of PERSONAJES) {
     await f.click('[data-personaje="' + x.id + '"]');
     ok('suelto: elegir a ' + x.nombre + ' lo marca', await elegido(f) === x.id);
+    if (x.nuevo) { // personajes-estilo-karts: línea con título y peso
+      const detalle = await f.textContent('#piloto-detalle');
+      ok('suelto: la línea del piloto dice el título y el peso de ' + x.nombre, detalle.includes(x.titulo) && detalle.includes(x.peso) && detalle.includes('choques'), detalle);
+    }
     await f.click('[data-ir="pistas"]'); await f.click('[data-ir="rapida:pradera"]');
     await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 1200, null, { timeout: 15000 });
     const e = await estado(f);
@@ -89,7 +95,8 @@ async function probarPersonajes(b) {
     ok('suelto: se dibuja el kart de ' + x.nombre + ' (color de firma en tu kart)', firma >= 20, JSON.stringify({ firma, caja }));
     await recorte(q, f, caja, 'karts-personaje-' + x.id + '-carrera.png', 30);
     await q.screenshot({ path: 'karts-personaje-' + x.id + '.png' });
-    if (x.id === 'xochiquetzal') {
+    if (x.nuevo) ok('suelto: la masa del choque de ' + x.nombre + ' corresponde a su peso', e.masa === x.masa, String(e.masa));
+    if (x.id === 'xochiquetzal' || x.nuevo) {
       await f.evaluate(() => window.__karts.darItem('turbo')); await q.keyboard.press('KeyE'); await sleep(250);
       ok('suelto: con turbo tu kart suelta la partícula de tu personaje', (await estado(f)).estela > 0);
       await recorte(q, f, await f.evaluate(() => window.__karts.cajaYo()), 'karts-personaje-' + x.id + '-turbo.png', 30);
@@ -100,13 +107,15 @@ async function probarPersonajes(b) {
     await f.click('#res-botones [data-ir="menu"]'); await f.waitForSelector('#ov-menu:not(.hide)');
   }
   await q.reload(); await q.waitForSelector('#ov-menu:not(.hide)');
-  ok('suelto: tras recargar sigue elegida Xochiquetzal', await elegido(f) === 'xochiquetzal');
+  const ultimo = PERSONAJES.at(-1); // el último elegido en el recorrido (personajes-estilo-karts: Kinich)
+  ok('suelto: tras recargar sigue elegido ' + ultimo.nombre, await elegido(f) === ultimo.id);
   await q.context().close();
-  // Selector a 320×640 y 844×390: los 4 caben a lo ancho, sin desplazamiento horizontal.
-  for (const vp of [{ width: 320, height: 640 }, { width: 844, height: 390 }]) {
+  // Selector a 320×640, 390×844 y 844×390: los 8 caben en 4×2, sin desplazamiento horizontal (personajes-estilo-karts).
+  for (const vp of [{ width: 320, height: 640 }, { width: 390, height: 844 }, { width: 844, height: 390 }]) {
     const r = await abrirSuelto(b, vp);
-    const m = await r.evaluate(() => ({ vw: innerWidth, ancho: document.documentElement.scrollWidth, cajas: [...document.querySelectorAll('#menu-piloto [data-personaje]')].map(e => { const c = e.getBoundingClientRect(); return { l: c.left, r: c.right, w: c.width }; }) }));
-    ok(vp.width + '×' + vp.height + ': las 4 tarjetas del piloto caben a lo ancho', m.cajas.length === 4 && m.cajas.every(c => c.l >= -0.5 && c.r <= m.vw + 0.5 && c.w >= 60) && m.ancho <= m.vw, JSON.stringify(m));
+    const m = await r.evaluate(() => ({ vw: innerWidth, ancho: document.documentElement.scrollWidth, cajas: [...document.querySelectorAll('#menu-piloto [data-personaje]')].map(e => { const c = e.getBoundingClientRect(); return { l: c.left, r: c.right, t: c.top, w: c.width }; }) }));
+    const filas = new Set(m.cajas.map(c => Math.round(c.t))).size;
+    ok(vp.width + '×' + vp.height + ': las 8 tarjetas del piloto caben a lo ancho en 2 filas', m.cajas.length === 8 && filas === 2 && m.cajas.every(c => c.l >= -0.5 && c.r <= m.vw + 0.5 && c.w >= 56) && m.ancho <= m.vw, JSON.stringify(m));
     await r.screenshot({ path: 'karts-selector-' + vp.width + 'x' + vp.height + '.png', fullPage: true });
     await r.context().close();
   }
