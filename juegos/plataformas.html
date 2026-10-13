@@ -1424,6 +1424,8 @@ function textoGuardado(d) {
 /* ================= Partida (sala) ================= */
 function empezarSala(d) {
   sala = { mapa: d.mapa, bots: d.bots || [], inicioLocal: performance.now() + Number(d.inicioEn || 0), esperando: true, enviado: false };
+  // personaje-en-salas: el elegido en la sala de espera; si no viene, el del navegador (o Xalli). No se guarda aquí.
+  personaje = Personajes.LISTA.some(p => p.id === d.personaje) ? d.personaje : Personajes.preferencia();
   iniciarNivel(d.mapa, false);
   sala.esperando = performance.now() < sala.inicioLocal;
   $('sala-titulo').textContent = A.nombreMapa('plataformas', d.mapa);

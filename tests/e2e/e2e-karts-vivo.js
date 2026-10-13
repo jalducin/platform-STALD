@@ -210,9 +210,58 @@ async function desconexion(b, relevo) {
   for (const p of pags) await p.context().close();
 }
 
+// personaje-en-salas: sala de 3 (vertical, horizontal y vertical). La tarjeta «🏁 Tu piloto» marca el del modo
+// individual; cada quien elige otro distinto, ve el de los demás junto a su nombre y en la carrera su kart y los de
+// los rivales llevan el elegido desde la salida.
+async function personajesEnSala(b, relevo) {
+  const quienes = [['marisol@example.com', VERTICAL, 'tona'], ['angel@example.com', HORIZONTAL, 'kinich'], ['laura@example.com', VERTICAL, 'yahui']];
+  const pags = [];
+  for (const [email, vp] of quienes) pags.push(await jugador(b, email, relevo, vp)); // NOSONAR: en orden
+  await pags[0].evaluate(() => localStorage.setItem('arcade_personaje', 'itzae')); // lo eligió antes en el modo individual
+  const codigo = await crearSala(pags[0], 'pradera');
+  await unirse(pags[1], codigo); await unirse(pags[2], codigo);
+  await pags[0].waitForSelector('#p-personaje [data-personaje]', { timeout: 15000 });
+  const marcados = await pags[0].$$eval('#p-personaje [data-personaje]', bs => bs.map(b => ({ id: b.dataset.personaje, on: b.getAttribute('aria-pressed') === 'true', txt: b.textContent })));
+  ok('sala de espera: «🏁 Tu piloto» con los 8 (nombre y peso) e Itzae marcado, el del modo individual', /Tu piloto/.test(await pags[0].textContent('#p-personaje')) && marcados.length === 8 && marcados.every(m => /Ligero|Medio|Pesado/.test(m.txt)) && marcados.filter(m => m.on).map(m => m.id).join() === 'itzae', JSON.stringify(marcados.filter(m => m.on)));
+  // 4×2 sin desplazamiento horizontal, de pie y de lado.
+  for (const [k, nombre] of [[0, '390×844'], [1, '844×390']]) {
+    const m = await pags[k].evaluate(() => { const bs = [...document.querySelectorAll('#p-personaje [data-personaje]')].map(e => e.getBoundingClientRect()); return { vw: innerWidth, ancho: document.documentElement.scrollWidth, filas: new Set(bs.map(r => Math.round(r.top))).size, fuera: bs.filter(r => r.right > innerWidth || r.left < 0).length }; });
+    ok('sala de espera ' + nombre + ': los 8 en 4×2 sin desplazamiento horizontal', m.filas === 2 && m.fuera === 0 && m.ancho <= m.vw, JSON.stringify(m));
+  }
+  for (const [k, [, , id]] of quienes.entries()) await pags[k].click('#p-personaje [data-personaje="' + id + '"]'); // NOSONAR: uno por uno
+  const nombres = { tona: 'Tona', kinich: 'Kinich', yahui: 'Yahui' };
+  await Promise.all(pags.map(p => p.waitForFunction(n => { const t = (document.querySelector('#p-body .rank') || {}).textContent || ''; return n.every(x => t.includes(x)); }, Object.values(nombres), { timeout: 20000 }).catch(() => {})));
+  const listas = await Promise.all(pags.map(p => p.$$eval('#p-body .rank li', ls => ls.map(l => l.textContent.replace(/\s+/g, ' ').trim()))));
+  const fila = (l, n) => l.find(t => t.includes(n)) || '';
+  ok('sala de espera: cada quien ve el personaje de los demás junto a su nombre', listas.every(l => /Tona$/.test(fila(l, 'Marisol')) && /Kinich$/.test(fila(l, 'Angel')) && /Yahui$/.test(fila(l, 'Laura'))), listas[0].join(' | ').slice(0, 160));
+  const guardados = await Promise.all(pags.map(p => p.evaluate(() => localStorage.getItem('arcade_personaje'))));
+  ok('sala de espera: la elección queda en el navegador (compartida con el modo individual)', guardados.join() === 'tona,kinich,yahui', guardados.join());
+  await pags[0].screenshot({ path: 'karts-sala-espera-390.png', fullPage: true });
+  await pags[1].screenshot({ path: 'karts-sala-espera-844x390.png' });
+  await pags[1].screenshot({ path: 'karts-sala-espera-844x390-completa.png', fullPage: true });
+  const ids = await Promise.all(pags.map(yoDe));
+  await pags[0].click('[data-p="empezar"]');
+  const frames = await enCarrera(pags);
+  // Desde la salida (antes de que llegue el primer mensaje en vivo), cada kart remoto ya trae el personaje de su asiento.
+  const e0 = await Promise.all(frames.map(estado));
+  const esperado = Object.fromEntries(ids.map((id, k) => [id, quienes[k][2]]));
+  ok('carrera: cada quien corre con el suyo', e0.map(e => e.personaje).join() === 'tona,kinich,yahui', e0.map(e => e.personaje).join());
+  ok('carrera: los rivales llevan su personaje desde la salida', e0.every(e => e.remotos.length === 2 && e.remotos.every(r => r.personaje === esperado[r.id])), JSON.stringify(e0.map(e => e.remotos.map(r => r.personaje))));
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.vivo && e.remotos.every(r => r.visible); }, null, { timeout: 25000 }).catch(() => {})));
+  await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
+  await sleep(2500);
+  const e1 = await Promise.all(frames.map(estado));
+  ok('carrera en vivo: los 3 se ven y con su personaje', e1.every(e => e.remotos.every(r => r.visible && r.personaje === esperado[r.id])), JSON.stringify(e1.map(e => e.remotos.map(r => r.personaje + ':' + r.visible))));
+  await pags[0].screenshot({ path: 'karts-sala-carrera-390.png' });
+  await pags[1].screenshot({ path: 'karts-sala-carrera-844x390.png' });
+  for (const p of pags) await p.context().close();
+}
+
 async function respaldo(b, relevo) {
   // Sin canal (sala sin Realtime ni doble): aviso inmediato y la carrera de siempre con fantasmas.
   const sin = [await jugador(b, 'fernando@example.com', null, VERTICAL, {}, '/juegos.html?arcadePrueba=1'), await jugador(b, 'jesus@example.com', null, VERTICAL, {}, '/juegos.html?arcadePrueba=1')];
+  // personaje-en-salas: Fernando con Yahui y Jesús con Xalli; el fantasma del bot no usa ninguno de los dos.
+  await sin[0].evaluate(() => localStorage.setItem('arcade_personaje', 'yahui')); await sin[1].evaluate(() => localStorage.setItem('arcade_personaje', 'xalli'));
   const c1 = await crearSala(sin[0], 'desierto');
   await unirse(sin[1], c1); await sleep(1500);
   await sin[0].click('[data-p="empezar"]');
@@ -222,6 +271,7 @@ async function respaldo(b, relevo) {
   const e = await estado(f1[0]);
   ok('respaldo sin Realtime: aviso «Sin conexión en vivo»', [...avisos].some(a => /Sin conexión en vivo/.test(a)), [...avisos].join(' | ').slice(0, 160));
   ok('respaldo sin Realtime: tú + 1 fantasma, sin personas remotas', e.vivo === null && e.remotos.length === 0 && e.karts === 2, JSON.stringify({ karts: e.karts, remotos: e.remotos.length }));
+  ok('respaldo: el fantasma usa un personaje que no eligió ninguna persona', e.personaje === 'yahui' && e.personajes.length === 2 && !['yahui', 'xalli'].includes(e.personajes[1 - e.yoIndice]), e.personajes.join());
   await sin[0].screenshot({ path: 'karts-vivo-respaldo.png' });
   for (const p of sin) await p.context().close();
   // Canal que no conecta: a los 5 s el mismo aviso.
@@ -246,6 +296,7 @@ async function respaldo(b, relevo) {
   for (const p of pags) await p.context().close();
   const fps = await fpsAislado(b, relevo, correos);
   await desconexion(b, relevo);
+  await personajesEnSala(b, relevo); // personaje-en-salas
   await respaldo(b, relevo);
   await b.close(); await relevo.cerrar();
   console.log(out.join('\n'));

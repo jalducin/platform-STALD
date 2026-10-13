@@ -1358,19 +1358,23 @@ function prepararCarrera(id, opciones) {
   const otros = Object.values(COLORES).filter(c => c !== colorYo);
   // Personajes (openspec: personajes-xalli): tú con el tuyo; los bots y fantasmas con los otros 3, en orden fijo.
   const perYo = personaje, perOtros = Personajes.LISTA.map(x => x.id).filter(x => x !== perYo);
+  // personaje-en-salas: en sala, cada persona con el de su asiento y los fantasmas con los que nadie eligió (si alcanzan).
+  const usados = new Set([perYo, ...(opciones.humanos || []).map(h => h.personaje).filter(Boolean)]);
+  const libres = perOtros.filter(x => !usados.has(x)), paraFantasmas = libres.length ? libres : perOtros;
+  const perFantasma = k => paraFantasmas[k % paraFantasmas.length];
   if (opciones.sala && opciones.vivo) {
     // juegos-en-vivo: personas de la sala en su orden (color y lugar en la parrilla iguales en todos los aparatos);
     // los fantasmas de los bots, detrás.
     opciones.humanos.forEach((h, n) => {
       const color = COLORES_VIVO[n % COLORES_VIVO.length];
       if (h.id === opciones.yo) { yo = nuevoKart('yo', 'Tú', color, true, n, perYo); karts.push(yo); return; }
-      karts.push(Object.assign(nuevoKart('vivo-' + n, h.nombre, color, false, n, perOtros[n % perOtros.length]), { id: h.id, remoto: true, visible: false, saliendo: null, interp: EnVivo.interpolador({ retraso: 100, extrapolar: 250, angulos: [2] }) }));
+      karts.push(Object.assign(nuevoKart('vivo-' + n, h.nombre, color, false, n, h.personaje || perOtros[n % perOtros.length]), { id: h.id, remoto: true, visible: false, saliendo: null, interp: EnVivo.interpolador({ retraso: 100, extrapolar: 250, angulos: [2] }) }));
     });
-    opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, opciones.humanos.length + k, perOtros[k % perOtros.length]); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
+    opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, opciones.humanos.length + k, perFantasma(k)); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
   } else if (opciones.sala) {
     yo = nuevoKart('yo', 'Tú', colorYo, true, 1, perYo);
     karts.push(yo);
-    opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, k === 0 ? 0 : 2 + k, perOtros[k % perOtros.length]); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
+    opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, k === 0 ? 0 : 2 + k, perFantasma(k)); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
   } else {
     const r = A.rng(id + '|' + (opciones.ronda || 0), 'rivales');
     const dif = (opciones.dif || 95) / 100;
@@ -2036,6 +2040,7 @@ function textoGuardado(d) {
 }
 function empezarSala(d) {
   sala = { mapa: d.mapa, enviado: false };
+  personaje = personajeDeInicio(d); // personaje-en-salas: el elegido en la sala de espera
   const humanos = humanosDeSala(d), enVivo = !!d.vivo && humanos.length > 1 && humanos.some(h => h.id === d.yo) && !!window.EnVivo;
   iniciarCarrera(d.mapa, { sala: true, bots: d.bots || [], inicioEn: Number(d.inicioEn || 0), vivo: enVivo, humanos, yo: d.yo });
   if (carreraDe.inicioLocal < performance.now()) avisar('La carrera ya empezó: ¡arranca!', 1600);
@@ -2062,9 +2067,12 @@ const BANDERA = { turbo: 1, estrella: 2, derrape: 4, giro: 8, rayo: 16, item: 32
 const SALIDA_MS = 1500; // el kart de quien se desconecta se desvanece en 1.5 s
 let vivo = null;
 const ritmoVivo = n => (n <= 4 ? 15 : 10); // 8 personas × 10 Hz ≈ 70 mensajes/s por aparato (design.md §4)
+const personajeValido = id => Personajes.LISTA.some(p => p.id === id);
+// personaje-en-salas: el de la sala de espera; si no viene, el del navegador (o Xalli). No se guarda: ya lo guardó la página.
+const personajeDeInicio = d => (personajeValido(d.personaje) ? d.personaje : Personajes.preferencia());
 function humanosDeSala(d) {
   return (Array.isArray(d.humanos) ? d.humanos : []).filter(h => h && typeof h.id === 'string' && h.id.length <= 64).slice(0, 8)
-    .map(h => ({ id: h.id, nombre: String(h.nombre || '').slice(0, 30) }));
+    .map(h => ({ id: h.id, nombre: String(h.nombre || '').slice(0, 30), personaje: personajeValido(h.personaje) ? h.personaje : null })); // personaje-en-salas
 }
 function avisoRespaldo() { if (modo === 'carrera') avisar('📴 Sin conexión en vivo: corres contra fantasmas y se comparan los tiempos', 3500); }
 function empezarVivo(yoId, humanos) {

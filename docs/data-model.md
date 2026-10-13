@@ -242,6 +242,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     (enteros 0–100, elegida en la sala de espera) y `futbol` `{ goles: [anfitrión, invitado], ms, corte?, t }`, el
     primer resultado que vio (solo uno por persona). El partido no se guarda: viaja por el canal en vivo de la sala
     (`juegos/en-vivo.js`) sin datos personales (solo ids de asiento y números del partido).
+  - En Karts y Axo (`karts` y `plataformas`, cambio `personaje-en-salas`) el archivo del jugador puede llevar
+    `personaje`, uno de los ids de `Personajes.LISTA` (`juegos/personajes.js`, fuente única), elegido en la sala de
+    espera. Sin datos personales.
   - En Golf (cambio `golf`), `jugadas[]` `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, t }`. Los 3 hoyos de la
     sala salen de la semilla (`golf-hoyos`) y los tiros automáticos por tiempo, de `auto|<paso>`.
   - En Brisca, `jugadas[]` `{ n, accion: "jugar", carta, t }`. En Conquián, `jugadas[]` `{ n, accion, carta?, con?, a?, t }`.
