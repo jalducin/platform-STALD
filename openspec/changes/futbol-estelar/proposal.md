@@ -48,8 +48,9 @@ para el sprint 27.
   forma exacta en `server/progreso.ts` (estadísticas, clasificatoria semanal, táctica y carrera).
 - **Futbolito se retira:** sale del menú de Arcade y del menú de salas de 👥 Partidas; sus archivos, su motor, su
   entrada en `CATALOGO` y el soporte del servidor se quedan para no romper enlaces, historial ni salas en curso.
-- **Audio:** goles, últimos minutos, penales y victoria llaman a `window.Emocion?.…?.()` (módulo del sprint 24b) para
-  activarse solos cuando llegue a `main`.
+- **Audio:** «Emoción sonora» (`juegos/emocion.js`, sprint 24b, ya en `main`): `gol()`, `silbato()` al empezar y al
+  final, `intensidad()` en un final cerrado, `victoria()`/`derrota()`, `suspenso()`/`revelacion()` en los penales,
+  `podio()` en la copa y el torneo y `calma()` al salir; efectos propios sintetizados para patadas, postes y público.
 - **Sprint 27 (propuesto, no se implementa aquí):** en línea 1 vs 1 en tiempo real, autoritativo en el anfitrión sobre
   Supabase Realtime broadcast, con el diseño técnico completo en `design.md`.
 

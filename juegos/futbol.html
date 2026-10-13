@@ -192,6 +192,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(182,240,60,.8
 <script src="futbol-motor.js?v=1"></script>
 <script src="futbol-liga.js?v=1"></script>
 <script src="futbol-vista.js?v=1"></script>
+<script src="emocion.js?v=1"></script> <!-- emocion-sonora: gol, silbato, tensión, victoria, penales y podio -->
 <script>
 /* Fútbol Estelar 2010 — página del juego (openspec: futbol-estelar). Embebido en juegos.html (🕹️ Arcade): la
    plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage, solo mismo origen).
@@ -209,7 +210,7 @@ const NIVELES = [['facil', '🙂 Fácil'], ['medio', '😎 Medio'], ['dificil', 
 const NOMBRE_NIVEL = Object.fromEntries(NIVELES);
 let U = null; // universo (juegos/datos/futbol.json)
 
-/* ================= Audio (sintetizado; window.Emocion del sprint 24b se suma cuando llegue) ================= */
+/* ================= Audio: efectos propios sintetizados + juegos/emocion.js (window.Emocion) para los momentos de ánimo ================= */
 let AC = null, master = null, sonido = leerLS('arcade_sonido') !== '0', publico = null;
 function audio() {
   try {
@@ -249,7 +250,19 @@ function ambiente(on) {
   if (publico || !AC || !sonido) return;
   publico = ruido(600, 0.025, 500);
 }
-const emocion = (f, ...a) => { try { const E = window.Emocion; if (E && typeof E[f] === 'function') E[f](...a); } catch { /* sin módulo de emoción */ } };
+// Emoción sonora (docs/frontend-standards.md, «Emoción sonora»): gol, silbato, tensión del final, victoria o derrota,
+// suspenso y revelación en los penales, podio en la copa y el torneo, y calma al salir. Con «Efectos de emoción: No»
+// el gol y el silbato vuelven al sonido propio del juego.
+const silbatoInicioFin = n => { if (!window.Emocion?.silbato()) SON.silbato(n); };
+let tension = 0;
+function tensionFinal(p) {
+  const diferencia = Math.abs(p.eq[0].goles - p.eq[1].goles), vivo = p.estado === 'juego' || p.estado === 'parada';
+  const x = vivo && p.minuto >= 80 && diferencia <= 1 ? Math.min(1, 0.35 + (p.minuto - 80) / 10 * 0.65) : 0;
+  if (Math.abs(x - tension) < 0.05) return;
+  tension = x;
+  window.Emocion?.intensidad(x);
+}
+function apagarTension() { tension = 0; window.Emocion?.intensidad(0); }
 function pintarSonido() { $('b-sonido').textContent = sonido ? '🔊' : '🔇'; $('b-sonido').setAttribute('aria-pressed', String(!sonido)); }
 $('b-sonido').onclick = e => {
   sonido = !sonido; guardarLS('arcade_sonido', sonido ? '1' : '0'); audio();
@@ -473,6 +486,7 @@ const estrellas = f => '★'.repeat(clamp(Math.round((f - 50) / 7), 1, 5));
 const opciones = (lista, actual, attr) => '<fieldset class="ops">' + lista.map(([v, t]) => '<button type="button" class="op" data-' + attr + '="' + v + '" aria-pressed="' + (String(v) === String(actual)) + '">' + t + '</button>').join('') + '</fieldset>';
 
 function menuPrincipal() {
+  if (S.vista !== 'carga') { apagarTension(); window.Emocion?.calma(); }
   S.local = null; S.ctx = null; S.enLocal = false;
   const st = prog.stats, c = prog.carrera;
   pantalla('<h1>⚽ Fútbol <span>Estelar</span> 2010</h1><p>Futbol táctico, con calma y con peso. Todo el universo es inventado.' + (TACTIL && innerHeight > innerWidth ? '<br>📱↻ Mejor en horizontal (también se puede jugar así).' : '') + '</p>' +
@@ -558,7 +572,7 @@ function empezarPartido() {
   S.vista = 'partido'; document.body.classList.add('en-partido');
   pintarControl(); ajustarVista(); revisarGirar(); soltarToques();
   setTimeout(() => { S.girarCerrado = true; revisarGirar(); }, 6000); // el aviso de girar se va solo
-  audio(); ambiente(true); SON.silbato(1);
+  audio(); ambiente(true); silbatoInicioFin(1); tension = 0;
   avisar('🏟️ ' + (ctx.estadio || clubDe(ctx.equipos[0]).estadio), 1800);
   if (!S.tutoVisto && ctx.humanos.length && !ctx.local) tutorial();
 }
@@ -572,7 +586,7 @@ function tutorial() {
 function alternarPausa() {
   if (S.vista !== 'partido' && S.vista !== 'pausa') return;
   if (S.vista === 'pausa') { reanudar(); return; }
-  S.vista = 'pausa'; S.pausa = true; soltarToques(); ambiente(false);
+  S.vista = 'pausa'; S.pausa = true; soltarToques(); ambiente(false); apagarTension();
   const t = prog.tactica;
   const ov = $('ov');
   ov.innerHTML = '<h2>⏸ Pausa</h2><p>' + esc(S.p.eq[0].datos.nombre) + ' ' + S.p.eq[0].goles + ' – ' + S.p.eq[1].goles + ' ' + esc(S.p.eq[1].datos.nombre) + ' · ' + S.p.minuto + "'</p>" +
@@ -602,17 +616,19 @@ const SONIDOS = {
   patada: () => SON.patada(),
   gol: e => {
     const p = S.p, autor = e.i >= 0 ? p.jug[e.i].datos.nombre : '';
-    SON.gol(); emocion('gol'); S.destello = 1;
+    if (!window.Emocion?.gol()) SON.gol();
+    S.destello = 1;
     gritar('¡GOOOL!', (e.autogol ? 'Autogol · ' : '⚽ ') + autor + ' · ' + p.eq[e.eq].datos.corto);
   },
   poste: () => SON.poste(),
   atajada: e => { SON.atajada(); if (!e.penal) avisar('🧤 ¡Atajada!'); },
   falta: silbatazo, fuera_lugar: silbatazo, banda: silbatazo, meta: silbatazo, esquina: silbatazo,
-  penal: e => { SON.silbato(2); emocion('suspenso'); if (!e.tanda) gritar('¡PENAL!', '', 1600); },
-  medio: e => { const p = S.p; SON.silbato(2); gritar('Medio tiempo', p.eq[0].datos.corto + ' ' + e.marcador[0] + ' – ' + e.marcador[1] + ' ' + p.eq[1].datos.corto, 1900); },
-  ultimos: () => emocion('ultimoSegundos'),
-  tanda: () => emocion('suspenso'),
-  final: () => SON.silbato(3),
+  penal: e => { SON.silbato(2); window.Emocion?.suspenso(); if (!e.tanda) gritar('¡PENAL!', '', 1600); },
+  penal_gol: () => window.Emocion?.revelacion(),
+  penal_falla: () => window.Emocion?.revelacion(),
+  medio: e => { const p = S.p; silbatoInicioFin(2); gritar('Medio tiempo', p.eq[0].datos.corto + ' ' + e.marcador[0] + ' – ' + e.marcador[1] + ' ' + p.eq[1].datos.corto, 1900); },
+  tanda: () => window.Emocion?.suspenso(),
+  final: () => { apagarTension(); silbatoInicioFin(3); },
 };
 function eventoSonido(e) { if (SONIDOS[e.tipo]) SONIDOS[e.tipo](e); }
 
@@ -631,6 +647,7 @@ function pintarHud() {
     $('info-j').classList.toggle('hide', !j);
   }
   textosBotones(p);
+  tensionFinal(p);
 }
 
 /* ================= Fin del partido ================= */
@@ -639,8 +656,10 @@ function terminarPartido() {
   S.vista = 'resultado'; ambiente(false); soltarToques();
   const yo = ctx.humanos.length ? ctx.humanos[0].eq : 0, gf = p.eq[yo].goles, gc = p.eq[1 - yo].goles, g = M.ganador(p);
   const r = { gf, gc, gano: g === yo, empate: g === null, segundos: Math.round((performance.now() - S.inicioReal) / 1000) };
-  if (r.gano) emocion('victoria');
+  apagarTension();
   const extra = ctx.alTerminar ? ctx.alTerminar(r) : {};
+  if (!extra.podio && r.gano) window.Emocion?.victoria(); // en la llave suena el podio
+  else if (!extra.podio && !r.empate) window.Emocion?.derrota();
   if (ctx.puntua) puntuar(r, ctx);
   resultado(r, extra);
 }
@@ -724,6 +743,19 @@ function verLlave(tipo) {
   const nombre = tipo === 'copa' ? '🏆 ' + L.COPA.nombre : '🛋️ Torneo local';
   pantalla('<h2>' + esc(nombre) + '</h2>' + (tipo === 'copa' ? '<div class="sub">Trofeo «' + esc(L.COPA.trofeo) + '»</div>' : '') + cuerpo + '<div class="caja">' + htmlLlave(t) + '</div><div class="fila"><button class="btn sec" data-a="menu">🏠 Menú</button></div>', 'llave');
 }
+// Lugar final de las personas en la llave (1 campeón, 2 finalista, 3 semifinal, 4 antes) o null si siguen vivas.
+function lugarEnLlave(t) {
+  const humanos = new Set(t.equipos.map((e, i) => (e.humano === null ? -1 : i)).filter(i => i >= 0));
+  if (t.campeon !== null && humanos.has(t.campeon)) return 1;
+  const total = Math.log2(t.equipos.length);
+  let mejor = null;
+  t.rondas.forEach((r, k) => r.forEach(m => {
+    const perdedor = m.ganador === m.a ? m.b : m.a;
+    if (m.ganador !== null && humanos.has(perdedor)) mejor = Math.min(mejor || 9, [4, 3, 2][k + 3 - total] || 4);
+  }));
+  const vivas = [...humanos].some(i => t.rondas[t.rondas.length - 1].some(m => (m.a === i || m.b === i) && m.ganador === null));
+  return vivas && t.campeon === null ? null : mejor;
+}
 function jugarLlave(tipo) {
   const t = tipo === 'copa' ? S.copa : S.torneo, sig = L.siguientePartido(t);
   const humanosDe = e => {
@@ -737,7 +769,9 @@ function jugarLlave(tipo) {
     L.registrarTorneo(U, t, p.eq[0].goles, p.eq[1].goles, pen);
     L.simularIA(U, t);
     if (tipo === 'copa' && t.campeon !== null && t.equipos[t.campeon].humano !== null) { prog.stats.copas++; gritar('¡CAMPEÓN!', L.COPA.nombre, 3000); }
-    return { botones: '<button class="btn" data-a="ver-' + tipo + '">▶ Ver la llave</button>' };
+    const lugar = lugarEnLlave(t);
+    if (lugar !== null) window.Emocion?.podio(lugar);
+    return { podio: lugar !== null, botones: '<button class="btn" data-a="ver-' + tipo + '">▶ Ver la llave</button>' };
   };
   if (tipo === 'copa') { previa(ctx); return; }
   S.ctx = ctx; empezarPartido();
@@ -977,7 +1011,7 @@ function ojear() {
 }
 function abandonar() {
   const ctx = S.ctx;
-  ambiente(false);
+  ambiente(false); apagarTension(); window.Emocion?.calma();
   if (ctx.modo === 'carrera') { const sig = proximoCarrera(); registrarCarrera(sig, 0, 3, false); S.aviso = '🏳️ Dejaste el partido: cuenta como derrota 0 – 3.'; hubCarrera(); return; }
   if (ctx.modo === 'copa' || ctx.modo === 'torneo') {
     const yo = ctx.humanos.length ? ctx.humanos[0].eq : 0, p = S.p; // dejar el partido cuenta como derrota 0 – 3

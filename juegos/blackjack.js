@@ -232,7 +232,7 @@
     const siguienteMano = () => { clearTimeout(auto); mano(st); if (st.terminada) { return fin(); } pintar(); };
     const tras = () => {
       if (st.fase === 'fin') {
-        if (st.resultado.neto[0] > 0) { ganadas++; sonidoOk(); } else if (st.resultado.neto[0] < 0) sonidoMal();
+        if (st.resultado.neto[0] > 0) { ganadas++; if (!(st.estado[0] === 'bj' && g.Emocion?.logro())) sonidoOk(); } else if (st.resultado.neto[0] < 0) sonidoMal(); // emocion-sonora: blackjack natural
         auto = setTimeout(() => { if (!terminado) siguienteMano(); }, 9000 * TIEMPO); limpiezas.push(() => clearTimeout(auto));
       }
       pintar();

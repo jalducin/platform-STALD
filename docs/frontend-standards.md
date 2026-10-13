@@ -150,7 +150,7 @@ Cada página debe manejar y mostrar de forma explícita:
     `juegos.html` acepta solo mensajes de su iframe y su origen; responde `inicio` (avance de `GET /juegos/progreso`
     o, en sala, mapa, semilla, `inicioEn` y bots), `guardado` y `puntos-ok`. Guarda con el mismo `canalProgreso` de
     Dragon Run: `PUT` encadenado (gana el último). Canvas con paso fijo de 1/60 s y escala entera, pausa con `visibilitychange`, sonido opcional
-    (`localStorage.arcade_sonido`), controles táctiles grandes (Axo, Dragon Run y Karts usan el mando compartido; ver
+    (`localStorage.arcade_sonido`; también calla la emoción sonora, ver «Emoción sonora»), controles táctiles grandes (Axo, Dragon Run y Karts usan el mando compartido; ver
     «Mando de Arcade») y `prefers-reduced-motion`. No piden
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
@@ -249,7 +249,10 @@ Cada página debe manejar y mostrar de forma explícita:
       Joystick flotante y botones A/B/X/Y/L/R con *touch events* no pasivos; los textos cambian en defensa y en las
       reanudaciones. Preferencias en `localStorage`: `futbol_control`, `futbol_nivel`, `futbol_minutos`,
       `futbol_fuera`, `futbol_club`. Ganchos `window.__futbol` con `?prueba=1`.
-    - Audio sintetizado y `window.Emocion?.gol/suspenso/ultimoSegundos/victoria` (módulo del sprint 24b) cuando exista.
+    - Audio propio sintetizado (patada, poste, atajada, público) y «Emoción sonora» (`juegos/emocion.js`): `gol()` y
+      `silbato()` al empezar, en el medio tiempo y al final (con el sonido propio de respaldo), `intensidad(x)` en los
+      últimos minutos con el marcador cerrado (se apaga en la pausa, al final y al salir), `victoria()`/`derrota()`,
+      `suspenso()`/`revelacion()` en los penales, `podio(lugar)` al terminar la copa o el torneo y `calma()` al salir.
     - **Futbolito retirado del menú**: su tarjeta pasó a `JUEGOS_RETIRADOS` (`juegos/app/menu.js`) y salió de
       `JUEGOS_PARTIDA`; `juegoPorId('futbolito')` lo sigue encontrando para salas en curso, ranking e historial.
   - **Vista pseudo-3D de Karts Turbo** (cambio `karts-pseudo3d`; diagnóstico y decisiones en su `design.md`):
@@ -500,6 +503,45 @@ Mando.preferencia(clave[, valor]); // localStorage con try/catch (modo privado)
   teclado, control simulado con `navigator.getGamepads` en `addInitScript`, preferencia y capturas), para Karts,
   `tests/e2e/e2e-karts.js` (`probarMando`), y para Golf, `tests/e2e/e2e-golf.js` (cruceta, X, R y A con el dedo y la
   preferencia recordada).
+
+## Emoción sonora (cambio `emocion-sonora`)
+
+Fuente única de los sonidos de emoción de Juegos: `juegos/emocion.js` (script clásico sin dependencias, sin archivos
+de audio: todo se sintetiza con WebAudio). Publica `window.Emocion`. Decisiones, síntesis y la tabla de dónde se usa
+cada stinger: `openspec/changes/emocion-sonora/design.md` (al archivar, `openspec/changes/archive/*-emocion-sonora/`).
+
+**Cargar:** en `juegos.html` ya va (`juegos/emocion.js?v=N`); en un juego de Arcade (iframe), después de sus scripts
+compartidos: `<script src="emocion.js?v=N"></script>`. Llamar siempre con `window.Emocion?.` para no depender del
+orden de carga.
+
+**Stingers** (cada uno devuelve `true` solo si sonó): `gol()` (tribuna + fanfarria + «¡Goool!»; `gol({ voz: false })`
+sin voz), `victoria()`, `derrota()` (amable), `record()`, `nivelSuperado()`, `logro()`, `cuentaRegresiva(n)` y
+`cuenta(k)` (un paso: `k > 0` bip, `0` ¡YA!), `ultimoSegundos(n)`, `suspenso(ms)`, `revelacion()`, `acierto()`,
+`error()`, `racha(n)`, `silbato()`, `campana()`, `canto()`, `revancha()` y `podio(lugar)` (redoble, revelación y
+victoria/logro/derrota según el lugar; `0` = solo la revelación).
+
+**Tensión:** `intensidad(x)` con `x` de 0 a 1 (latido más rápido y fuerte); `intensidad(0)` la apaga y se apaga sola
+a los 60 s sin otra llamada o con la pestaña oculta. Se puede llamar en cada cuadro (solo se anota si cambia).
+`calma()` apaga la tensión y desvanece lo que suena; el hub la llama en `limpiar()` al salir de cualquier juego.
+
+**Reglas para un juego nuevo:**
+- Úsalo solo en momentos que cambian el ánimo (anotar, ganar, perder, el último tramo, una revelación), nunca en
+  acciones repetitivas (cada salto o moneda): para eso sigue el `tono()` del juego.
+- Si el juego ya tiene un jingle para ese momento, sustitúyelo y deja el clásico de respaldo:
+  `if (!window.Emocion?.nivelSuperado()) S.meta();` (con «Efectos de emoción: No» vuelve el sonido de siempre).
+- Sube la tensión al entrar al tramo difícil y bájala (`intensidad(0)`) al terminarlo, al morir, al pausar y al
+  salir; en una partida (sala) deja la victoria al podio de Juegos (`pintarFinalSala` ya llama `podio(lugar)`).
+- No agregues controles de sonido: `Emocion` respeta `localStorage.arcade_sonido === '0'` (🔊 de Arcade, compartido
+  entre el hub y los iframes del mismo origen), `localStorage.juegos_emocion === '0'` («🎉 Efectos de emoción» del
+  menú de música) y el volumen `juegos_pref.volumen`. Si el juego tiene un 🔊 propio que no se guarda, llama
+  `Emocion.silencio(muted)` (como Dragon Run).
+- Solo suena tras un gesto (política de reproducción automática) y sin `AudioContext` no hace nada ni lanza errores.
+- Los stingers grandes bajan solos la música de fondo del hub (`bajarMusica`), también desde un iframe.
+
+**Pruebas:** `Emocion.eventos()` devuelve los últimos 200 `{ ev, t, sono, motivo, args }` (motivo: `silencio`,
+`sin-gesto`, `repetido`, `sin-audio`) y la página recibe el evento DOM `emocion`. Unitarias en `server/emocion_test.ts`
+(AudioContext falso); E2E en `tests/e2e/e2e-emocion.js` (eventos por juego, silencio, sin AudioContext, autoplay y
+muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright cuenta como gesto del usuario.
 
 ## Juegos fusionados (cambio `juegos-fusion`)
 

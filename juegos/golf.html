@@ -162,6 +162,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <script src="fisica.js?v=3"></script>
 <script src="golf-motor.js?v=2"></script>
 <script src="mesa-ui.js?v=3"></script>
+<script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script src="mando.js?v=2"></script>
 <script>
 /* ⛳ Golf (openspec: golf). Recorrido de 9 hoyos y práctica con avance guardado; sala de 2 a 4 personas por turnos con
@@ -496,6 +497,19 @@ function presentarHoyo(st) {
   const h = G.hoyoActual(st);
   U.avisar('⛳ ' + h.n + '. ' + h.nombre + ' · Par ' + h.par, 1800);
   ponerTexto('nota', h.ayuda);
+  // emocion-sonora: el último hoyo de un recorrido suena con campana y algo de tensión.
+  const ultimoHoyo = st.hoyos.length > 1 && st.h === st.hoyos.length - 1;
+  if (ultimoHoyo) window.Emocion?.campana();
+  window.Emocion?.intensidad(ultimoHoyo ? 0.35 : 0);
+}
+// emocion-sonora: tarjeta final del recorrido: victoria con 18 ⭐ o más; si no, recorrido superado.
+function emocionTarjeta(est) { window.Emocion?.intensidad(0); if (est >= 18) window.Emocion?.victoria(); else window.Emocion?.nivelSuperado(); }
+// emocion-sonora: hoyo en uno = victoria, birdie o mejor = logro, par = acierto.
+function emocionHoyo(golpes, par) {
+  window.Emocion?.intensidad(0);
+  if (golpes === 1) window.Emocion?.victoria();
+  else if (golpes < par) window.Emocion?.logro();
+  else if (golpes === par) window.Emocion?.acierto();
 }
 const puedoApuntar = () => modo === 'sala' ? !!(sala && sala.miTurno()) : modo === 'juego' && !!juego && !juego.sim && !juego.mostrar && !juego.st.fin;
 function golpear() {
@@ -505,7 +519,7 @@ function golpear() {
   sonarGolpe(fuerzaV);
 }
 function avisoEvento(ev, quien) {
-  if (ev === 'agua') { U.avisar('💦 ¡Al agua! +1 golpe' + (quien ? ' (' + quien + ')' : ''), 1600); U.tono(260, 0.3, 'sine', 0.06, 70); }
+  if (ev === 'agua') { U.avisar('💦 ¡Al agua! +1 golpe' + (quien ? ' (' + quien + ')' : ''), 1600); U.tono(260, 0.3, 'sine', 0.06, 70); if (!quien) window.Emocion?.error(); } // emocion-sonora
   else if (ev === 'fuera') U.avisar('↩️ La pelota regresa', 1200);
 }
 function pasoIndividual() {
@@ -547,6 +561,7 @@ function terminarHoyo(k, st) {
   $('hoyo-botones').innerHTML = botonesHoyo(hoyo, ultimo);
   setTimeout(() => { if (modo === 'hoyo') { mostrar('ov-hoyo'); $('panel').classList.add('hide'); } }, U.REDUCIR ? 200 : 900);
   if (est === 3 || golpes === 1) U.confeti();
+  if (!recogida) emocionHoyo(golpes, hoyo.par); // emocion-sonora
   U.enviar({ tipo: 'puntos', puntos: pts, aciertos: est, total: 3, segundos: seg });
 }
 // Botones al terminar un hoyo: en recorrido, seguir o ver la tarjeta; en práctica, repetir o pasar al siguiente.
@@ -596,6 +611,7 @@ function verTarjeta(final) {
     $('tarjeta-total').textContent = 'Total: ' + tot + ' golpes (' + conSigno(tot - parT) + ') · ⭐ ' + est + '/27 · +' + juego.puntos.reduce((a, b) => a + (b || 0), 0) + ' puntos';
     $('tarjeta-botones').innerHTML = '<button class="btn" data-ir="recorrido">🔁 Otro recorrido</button><button class="btn sec" data-ir="menu">🏠 Menú</button>';
     if (est >= 18) U.confeti();
+    emocionTarjeta(est);
   } else {
     $('tarjeta-total').textContent = '';
     $('tarjeta-botones').innerHTML = '<button class="btn" data-ir="cerrar-tarjeta">▶ Seguir</button>';
@@ -640,7 +656,7 @@ function pasoSala() {
 function avisarJugadaSala(h) {
   const nom = i => i === sala.idx ? '' : (sala.orden[i] || {}).nombre || '';
   const u = h.despues.ultimo;
-  if (u && u.evento === 'hoyo') { sonarHoyo(); const r = G.resultado(u.golpes, u.par, false); U.avisar(r.emoji + ' ' + (nom(u.quien) ? nom(u.quien) + ': ' : '') + r.t, 1600); }
+  if (u && u.evento === 'hoyo') { sonarHoyo(); const r = G.resultado(u.golpes, u.par, false); U.avisar(r.emoji + ' ' + (nom(u.quien) ? nom(u.quien) + ': ' : '') + r.t, 1600); if (u.quien === sala.idx) emocionHoyo(u.golpes, u.par); }
   else if (u && (u.evento === 'agua' || u.evento === 'fuera')) avisoEvento(u.evento, nom(u.quien));
   else if (u && u.recogida) U.avisar('🫳 ' + (nom(u.quien) || 'Tu pelota') + ': se recoge', 1500);
   else if (u && u.evento === 'rendirse') U.avisar('🏳️ ' + (nom(u.quien) || 'Te') + ' rindió', 1500);
@@ -675,6 +691,7 @@ function terminarSala() {
   $('sala-titulo').textContent = titulo; $('sala-tabla').innerHTML = tablaTarjeta(st, nombres); $('sala-txt').textContent = 'Esperando el podio…';
   $('panel').classList.add('hide'); mostrar('ov-sala'); activarMando();
   if (primeros.some(r => r.idx === sala.idx)) U.confeti();
+  window.Emocion?.intensidad(0); // emocion-sonora: el podio de Juegos pone el resultado
 }
 // Título del final de la sala: empate, quién ganó o (si todos se rindieron) solo el fin.
 function tituloSala(primeros, nombres) {

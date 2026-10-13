@@ -19,6 +19,8 @@ const abrir = (b, viewport, contexto, init) => abrirPagina(b, { email: EMAIL, vi
 const marcoDe = async p => (await p.waitForSelector('#arcade-frame', { timeout: 30000 })).contentFrame();
 const estado = fr => fr.evaluate(() => window.__futbol.estado());
 const esperar = (fr, fn, arg, ms = 30000) => fr.waitForFunction(fn, arg, { timeout: ms });
+// Emoción sonora (juegos/emocion.js): nombres de los stingers pedidos en el iframe (como e2e-emocion.js).
+const emociones = fr => fr.evaluate(() => window.Emocion.eventos().map(e => e.ev));
 const progreso = async () => (await fetch(API + '/juegos/progreso/futbol?email=' + encodeURIComponent(EMAIL))).json();
 
 function dedos(p) {
@@ -132,6 +134,8 @@ async function medirFps(p, fr, ms = 3500) {
   const res = await fr.textContent('#res-puntos');
   ok('final: el partido rápido termina y suma ⭐ individuales', /\+\d+ a tus ⭐ individuales/.test(res), res);
   await p.screenshot({ path: 'futbol-390-resultado.png' });
+  const ev1 = await emociones(fr);
+  ok('emoción: silbato al empezar, gol y victoria al ganar', ['silbato', 'gol', 'victoria'].every(x => ev1.includes(x)), ev1.join(','));
   const puntosDespues = await p.evaluate(() => state.totalIndividual || 0);
   ok('ranking: el total individual de la semana subió', puntosDespues > puntosAntes, puntosAntes + ' → ' + puntosDespues);
   const rk = await (await fetch(API + '/juegos/ranking?tipo=individual&email=' + encodeURIComponent(EMAIL))).json();
@@ -257,13 +261,19 @@ async function medirFps(p, fr, ms = 3500) {
   const t = (await estado(fe)).torneo;
   ok('torneo: ganando cada partido se llega al campeón', t.campeon !== null && t.rondas === 2, JSON.stringify(t));
   ok('torneo: se anuncia al campeón', /campeón/.test(await fe.textContent('#ov')));
+  ok('emoción: podio al terminar el torneo', (await emociones(fe)).includes('podio'), (await emociones(fe)).join(','));
   await e.screenshot({ path: 'futbol-escritorio-torneo-final.png' });
 
   // ================= Clasificatoria semanal =================
   await fe.click('[data-a="menu"]'); await fe.click('[data-a="clasif"]'); await fe.waitForSelector('[data-a="clasif-jugar"]');
   ok('clasificatoria: muestra la semana y al rival', /Semana \d{4}-W\d\d/.test(await fe.textContent('#ov')));
+  ok('emoción: calma al volver al menú', (await emociones(fe)).includes('calma'));
   await fe.click('[data-a="clasif-jugar"]'); await fe.click('#b-jugar');
   await esperar(fe, () => window.__futbol.estado().vista === 'partido');
+  // Final cerrado: minuto 82 con empate → sube la tensión.
+  await fe.evaluate(() => { const p = window.__futbol.p(); p.mitad = 2; p.t = p.duracion * 0.92; });
+  await esperar(fe, () => window.Emocion.eventos().some(e => e.ev === 'intensidad' && e.args.x > 0), null, 5000).catch(() => {});
+  ok('emoción: intensidad en los últimos minutos con el marcador cerrado', (await fe.evaluate(() => window.Emocion.eventos().some(e => e.ev === 'intensidad' && e.args.x > 0))));
   await fe.evaluate(() => window.__futbol.golYa(0)); await sleep(400);
   await fe.evaluate(() => window.__futbol.terminarYa());
   await fe.waitForSelector('#res-puntos', { timeout: 15000 });

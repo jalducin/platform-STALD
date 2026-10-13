@@ -11,8 +11,9 @@
 - Las salas (`server/salas.ts`, `juegos/app/salas.js`) escriben cada jugada en el repo de datos (0.3–1.5 s) y avisan
   por Supabase Realtime (`server/realtime.ts`, canal secreto por sala): sirven para turnos, no para tiempo real.
 - El público son alumnos y alumnas en celular (sobre todo) y en PC. Sin build: HTML + JS clásico + canvas.
-- Trabajo en paralelo: sprint 24b crea `juegos/emocion.js` (`gol()`, `suspenso()`, `victoria()`,
-  `ultimoSegundos()`…); sprint 25 toca `server/salas.ts`, `tablero-ui.js` y Cálculo. Este cambio no toca esos archivos.
+- Trabajo en paralelo: sprint 24b creó `juegos/emocion.js` (ya en `main`; el juego lo carga y lo usa como dice
+  «Emoción sonora» en docs/frontend-standards.md); sprint 25 tocó `server/salas.ts`, `tablero-ui.js` y Cálculo. Este
+  cambio no toca esos archivos.
 
 ## Goals / Non-Goals
 
