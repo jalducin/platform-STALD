@@ -39,11 +39,11 @@ async function recorrerMundos(pag, fr, prefijo) {
 }
 async function caminar(fr, ms) { await fr.click('canvas', { force: true }); await fr.page().keyboard.down('ArrowRight'); await sleep(ms); await fr.page().keyboard.up('ArrowRight'); }
 
-// ---- Personajes (openspec: personajes-xalli) ----
+// ---- Personajes (openspec: personajes-xalli, personajes-estilo-karts: 8 personajes) ----
 const elegido = fr => fr.evaluate(() => [...document.querySelectorAll('#personajes [data-personaje]')].filter(b => b.getAttribute('aria-pressed') === 'true').map(b => b.dataset.personaje).join(','));
 async function revisarSelector(fr, nombre) {
   const tarjetas = await fr.$$eval('#personajes [data-personaje]', bs => bs.map(b => ({ id: b.dataset.personaje, txt: b.textContent, img: !!b.querySelector('img[src^="data:image"]') })));
-  ok(nombre + ': el selector muestra a los 4 con nombre, título y retrato', tarjetas.length === 4 && PERSONAJES.every((x, i) => tarjetas[i].id === x.id && tarjetas[i].txt.includes(x.nombre) && tarjetas[i].txt.includes(x.titulo) && tarjetas[i].img), JSON.stringify(tarjetas.map(t => t.id + ':' + t.txt)));
+  ok(nombre + ': el selector muestra a los 8 con nombre, título y retrato', tarjetas.length === 8 && PERSONAJES.every((x, i) => tarjetas[i].id === x.id && tarjetas[i].txt.includes(x.nombre) && tarjetas[i].txt.includes(x.titulo) && tarjetas[i].img), JSON.stringify(tarjetas.map(t => t.id + ':' + t.txt)));
 }
 // Caja del personaje (px del lienzo) y sus píxeles: su color de firma sí; las branquias de Xalli solo en Xalli.
 async function revisarDibujo(fr, id, nombre) {
@@ -61,6 +61,8 @@ async function probarPersonajes(b) {
   for (const x of PERSONAJES) {
     await f.click('[data-personaje="' + x.id + '"]');
     ok('suelto: elegir a ' + x.nombre + ' lo marca y cambia la portada', await elegido(f) === x.id && (await f.getAttribute('#portada-axo', 'alt')).includes(x.nombre));
+    const detalle = await f.textContent('#personaje-detalle'); // personajes-estilo-karts: línea con título y personalidad
+    ok('suelto: la línea de detalle habla de ' + x.nombre, detalle.includes(x.nombre) && detalle.includes(x.titulo), detalle);
     await q.screenshot({ path: 'plataformas-personaje-' + x.id + '-portada.png' });
     await f.click('#b-jugar'); await f.waitForSelector('#ov-mapa:not(.hide)');
     ok('suelto: la marca del mapa es ' + x.nombre, (await f.getAttribute('.marca img', 'data-personaje')) === x.id);
@@ -84,11 +86,12 @@ async function probarPersonajes(b) {
     ok('suelto: tras recargar sigue elegido ' + x.nombre, await elegido(f) === x.id);
   }
   await q.context().close();
-  // Selector a 320×640 y 844×390: los 4 caben sin desplazamiento horizontal.
-  for (const vp of [{ width: 320, height: 640 }, { width: 844, height: 390 }]) {
+  // Selector a 320×640, 390×844 y 844×390: los 8 caben en 4×2 sin desplazamiento horizontal (personajes-estilo-karts).
+  for (const vp of [{ width: 320, height: 640 }, { width: 390, height: 844 }, { width: 844, height: 390 }]) {
     const r = await abrirPagina(b, { viewport: vp, contexto: { hasTouch: true, isMobile: true }, out, etiqueta: 'plataformas ' + vp.width, ruta: '/juegos/plataformas.html?prueba=1', esperar: '#ov-titulo:not(.hide)' });
-    const m = await r.evaluate(() => ({ vw: innerWidth, ancho: document.documentElement.scrollWidth, cajas: [...document.querySelectorAll('#personajes [data-personaje]')].map(e => { const c = e.getBoundingClientRect(); return { l: c.left, r: c.right, w: c.width }; }), jugar: document.getElementById('b-jugar').getBoundingClientRect().width }));
-    ok(vp.width + '×' + vp.height + ': las 4 tarjetas caben a lo ancho', m.cajas.length === 4 && m.cajas.every(c => c.l >= -0.5 && c.r <= m.vw + 0.5 && c.w >= 60) && m.ancho <= m.vw && m.jugar > 0, JSON.stringify(m));
+    const m = await r.evaluate(() => ({ vw: innerWidth, ancho: document.documentElement.scrollWidth, vh: innerHeight, cajas: [...document.querySelectorAll('#personajes [data-personaje]')].map(e => { const c = e.getBoundingClientRect(); return { l: c.left, r: c.right, t: c.top, w: c.width }; }), jugar: document.getElementById('b-jugar').getBoundingClientRect().width, jugarAbajo: document.getElementById('b-jugar').getBoundingClientRect().bottom }));
+    const filas = new Set(m.cajas.map(c => Math.round(c.t))).size;
+    ok(vp.width + '×' + vp.height + ': las 8 tarjetas caben a lo ancho en 2 filas', m.cajas.length === 8 && filas === 2 && m.cajas.every(c => c.l >= -0.5 && c.r <= m.vw + 0.5 && c.w >= 56) && m.ancho <= m.vw && m.jugar > 0 && m.jugarAbajo <= m.vh, JSON.stringify(m));
     await r.screenshot({ path: 'plataformas-selector-' + vp.width + 'x' + vp.height + '.png' });
     await r.context().close();
   }

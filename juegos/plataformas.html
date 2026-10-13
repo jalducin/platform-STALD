@@ -86,17 +86,21 @@ body.ctl-mando #mandos,body:not(.jugando) .mando{display:none!important}
 .sel{font:inherit;font-weight:800;font-size:15px;min-height:44px;padding:6px 14px;border-radius:999px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer}
 .sel[aria-pressed="true"]{border-color:var(--acento);background:rgba(255,183,3,.24)}
 .ctl-fila{align-items:center}
-/* Personajes (openspec: personajes-xalli): 4 tarjetas con retrato, nombre y título; 2×2 en celular */
+/* Personajes (openspec: personajes-xalli, personajes-estilo-karts): 8 tarjetas con retrato y nombre en 4×2; título y
+   personalidad del elegido en #personaje-detalle (el título sigue en la tarjeta para lectores de pantalla) */
 #personajes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:min(100%,560px)}
-.pers{font:inherit;color:#fff;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);border-radius:14px;padding:4px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-width:0;min-height:44px;text-align:center}
+.pers{font:inherit;color:#fff;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);border-radius:14px;padding:3px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-width:0;min-height:44px;text-align:center}
 .pers img{width:52px;height:52px;flex:0 0 auto;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
-.pers span{display:flex;flex-direction:column;min-width:0}
-.pers b{font-size:14px;line-height:1.1}
-.pers small{font-size:11px;line-height:1.15;opacity:.85}
+.pers span{display:flex;flex-direction:column;min-width:0;max-width:100%}
+.pers b{font-size:13px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pers[aria-pressed="true"]{border-color:var(--acento);background:rgba(255,183,3,.22);box-shadow:0 0 0 2px rgba(255,183,3,.3)}
 .pers:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
-@media (max-width:520px){#personajes{grid-template-columns:repeat(2,minmax(0,1fr))}.pers{flex-direction:row;text-align:left;gap:4px;padding:3px 6px 3px 2px}.pers img{width:44px;height:44px}.pers small{font-size:10.5px}}
-@media (max-height:560px){.portada-axo{width:76px;height:76px}#ov-titulo>p:not(#teclas){display:none}.pers img{width:40px;height:40px}}
+.solo-lector{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#personaje-detalle{margin:0;font-size:13px;line-height:1.3;min-height:2.6em}
+#personaje-detalle small{display:block;opacity:.85}
+@media (max-width:520px){.pers img{width:42px;height:42px}.pers b{font-size:11.5px}}
+@media (max-width:360px){#personajes{gap:4px}.pers{padding:2px 1px 3px}.pers img{width:38px;height:38px}.pers b{font-size:10.5px}}
+@media (max-height:560px){.portada-axo{width:76px;height:76px}#ov-titulo>p:not(#teclas):not(#personaje-detalle){display:none}.pers img{width:34px;height:34px}#personaje-detalle{min-height:0;font-size:12px}}
 @media (max-height:430px){.portada-axo{display:none}#ov-titulo h1{font-size:28px}}
 @media (prefers-reduced-motion:reduce){#aviso{transition:none}.nodo.sigue,.marca img,.portada-axo{animation:none}.m{transition:none}}
 fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
@@ -117,6 +121,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
       <h1>Axo <b>y los 12 mundos</b></h1>
       <p id="portada-txt">Elige a tu personaje y cruza los mundos: junta monedas, pisa a los bichos y vence al jefe de cada castillo.</p>
       <fieldset id="personajes" aria-label="Personaje"></fieldset>
+      <p id="personaje-detalle" aria-live="polite"></p>
       <div class="fila"><button class="btn" id="b-jugar">▶ Jugar</button></div>
       <fieldset class="fila ctl-fila" aria-label="Controles"><button class="sel" data-control="mando" aria-pressed="true">🎮 Mando clásico</button><button class="sel" data-control="botones" aria-pressed="false">🔘 Botones</button><span class="guia-lugar"></span></fieldset>
       <p id="teclas">⌨️ ← → para moverte · ESPACIO o ↑ para saltar · X para lanzar fuego · P para pausa</p>
@@ -146,7 +151,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 </div>
 <script src="arcade.js?v=3"></script>
 <script src="mando.js?v=2"></script>
-<script src="personajes.js?v=2"></script>
+<script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script>
 /* Axo y los 12 mundos — plataformas 2D en canvas (openspec: juegos-plataformas-karts).
@@ -1526,13 +1531,14 @@ function colorPolvo(k) {
   if (castillo || mundo.clave === 'volcan') { return 'rgba(150,130,130,' + (0.55 * k).toFixed(3) + ')'; }
   return mundo.clave === 'hielo' ? 'rgba(255,255,255,' + (0.8 * k).toFixed(3) + ')' : 'rgba(235,215,170,' + (0.7 * k).toFixed(3) + ')';
 }
-// Partícula cosmética de cada personaje (openspec: personajes-xalli): burbujas, glifos, hojas o pétalos. No da ventajas.
+// Partícula cosmética de cada personaje (openspec: personajes-xalli, personajes-estilo-karts): burbujas, glifos, hojas,
+// pétalos, huellitas, notas, gotas o pelotitas. No da ventajas.
 const COLOR_RASTRO = { hojas: ['#22c55e', '#16a34a', '#84cc16'], petalos: ['#f59e0b', '#db2777', '#a855f7'] };
 function rastro(n) {
   if (REDUCIR || modo !== 'nivel') return;
-  const forma = Personajes.porId(personaje).particula, sube = forma === 'burbujas' || forma === 'glifos';
+  const per = Personajes.porId(personaje), forma = per.particula, sube = forma === 'burbujas' || forma === 'glifos' || forma === 'notas';
   for (let k = 0; k < n; k++) {
-    const cols = COLOR_RASTRO[forma];
+    const cols = COLOR_RASTRO[forma] || per.estela; // personajes nuevos: colores de su estela (personajes-estilo-karts)
     efectos.push({ tipo: 'rastro', forma, x: P.x + P.w / 2 - P.mira * 3 + (Math.random() - 0.5) * 6, y: P.y + P.h * (0.3 + Math.random() * 0.5), vx: -P.mira * (6 + Math.random() * 10), vy: sube ? -(10 + Math.random() * 12) : 6 + Math.random() * 8, // NOSONAR: azar de juego, no criptográfico
       rot: Math.random() * 6, r: 0.9 + Math.random() * 0.7, c: cols ? cols[Math.trunc(Math.random() * cols.length)] : '', vida: 0.9, v0: 0.9 }); // NOSONAR: azar de juego, no criptográfico
   }
@@ -1541,12 +1547,12 @@ function dibujarRastro(e, k) {
   g.save(); g.translate(e.x, e.y); g.globalAlpha = Math.min(1, k * 1.6);
   if (e.forma === 'burbujas') { g.strokeStyle = 'rgba(200,245,255,.95)'; g.lineWidth = 0.4; elipse(g, 0, 0, e.r, e.r); g.stroke(); g.fillStyle = 'rgba(200,245,255,.3)'; g.fill(); g.fillStyle = '#fff'; elipse(g, -e.r * 0.35, -e.r * 0.35, e.r * 0.25, e.r * 0.25); g.fill(); }
   else if (e.forma === 'glifos') { g.rotate(e.rot * 0.3); g.strokeStyle = '#f5c542'; g.lineWidth = 0.35; g.beginPath(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; g.moveTo(Math.cos(a) * e.r, Math.sin(a) * e.r); g.lineTo(Math.cos(a) * e.r * 1.7, Math.sin(a) * e.r * 1.7); } g.stroke(); g.fillStyle = '#ffe08a'; elipse(g, 0, 0, e.r * 0.7, e.r * 0.7); g.fill(); }
-  else { g.rotate(e.rot); g.fillStyle = e.c; elipse(g, 0, 0, e.r * 1.3, e.r * 0.55); g.fill(); }
+  else if (!Personajes.pintarParticula(g, e.forma, 0, 0, e.r * 1.3, e.rot, e.c)) { g.rotate(e.rot); g.fillStyle = e.c; elipse(g, 0, 0, e.r * 1.3, e.r * 0.55); g.fill(); }
   g.restore();
 }
 
 /* ================= Personaje (openspec: personajes-xalli) =================
-   Xalli (el ajolote de siempre), Itzae, Yahui o Xochiquetzal: un solo dibujo de perfil en juegos/personajes.js para el
+   Xalli (el ajolote de siempre), Itzae, Yahui, Xochiquetzal, Xolo, Tlali, Tona o Kinich: un solo dibujo de perfil en juegos/personajes.js para el
    juego, la portada, el mapa y el selector. Solo cosmético: la física, el tamaño de choque y los puntos no cambian. */
 let personaje = Personajes.preferencia();
 function pintarPortada() {
@@ -1554,9 +1560,10 @@ function pintarPortada() {
   $('portada-axo').src = Personajes.retrato(personaje, 'gana');
   $('portada-axo').alt = per.nombre + ', ' + per.titulo;
   document.querySelectorAll('#personajes [data-personaje]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.personaje === personaje)));
+  $('personaje-detalle').innerHTML = '<b>' + per.nombre + '</b> · ' + per.titulo + '<small>' + per.personalidad + '</small>';
 }
 function elegirPersonaje(id) { personaje = Personajes.preferencia(id); pintarPortada(); }
-$('personajes').innerHTML = Personajes.LISTA.map(per => '<button class="pers" data-personaje="' + per.id + '" aria-pressed="false"><img src="' + Personajes.retrato(per.id, 'quieto') + '" alt="" width="52" height="52"><span><b>' + per.nombre + '</b><small>' + per.titulo + '</small></span></button>').join('');
+$('personajes').innerHTML = Personajes.LISTA.map(per => '<button class="pers" data-personaje="' + per.id + '" aria-pressed="false"><img src="' + Personajes.retrato(per.id, 'quieto') + '" alt="" width="52" height="52"><span><b>' + per.nombre + '</b><small class="solo-lector">' + per.titulo + '</small></span></button>').join('');
 $('personajes').addEventListener('click', e => { const b = e.target.closest('[data-personaje]'); if (b) elegirPersonaje(b.dataset.personaje); });
 function dibujarPersonaje(t) {
   if (!grid || modo === 'carga' || modo === 'titulo' || modo === 'mapa') return;

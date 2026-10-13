@@ -63,18 +63,22 @@ body.tactil #menu-control{display:flex}
 .ctl-ops2,.ctl-ops4{grid-template-columns:repeat(2,1fr)}
 /* Mando clásico (openspec: karts-mando): con él no se ven los botones de antes; en horizontal, solo en la carrera */
 body.ctl-mando #mandos{display:none!important}
-/* Piloto (openspec: personajes-xalli): 4 tarjetas con retrato, nombre y título; 2×2 en celular */
+/* Piloto (openspec: personajes-xalli, personajes-estilo-karts): 8 tarjetas con retrato y nombre en 4×2; el título,
+   la personalidad y el peso del elegido van en #piloto-detalle (el título sigue en la tarjeta para lectores de pantalla) */
 #menu-piloto{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(560px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:8px}
 #pilotos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%}
-.pers{font:inherit;color:#fff;background:#1e293b;border:2px solid rgba(255,255,255,.5);border-radius:12px;padding:4px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-width:0;min-height:46px;text-align:center}
+.pers{font:inherit;color:#fff;background:#1e293b;border:2px solid rgba(255,255,255,.5);border-radius:12px;padding:3px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-width:0;min-height:46px;text-align:center}
 .pers img{width:52px;height:52px;flex:0 0 auto;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
-.pers span{display:flex;flex-direction:column;min-width:0}
-.pers b{font-size:14px;line-height:1.1}
-.pers small{font-size:11px;line-height:1.15;opacity:.85;font-weight:700}
+.pers span{display:flex;flex-direction:column;min-width:0;max-width:100%}
+.pers b{font-size:13px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pers[aria-pressed="true"]{background:#b45309;border-color:var(--acento)}
 .pers:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
-@media (max-width:520px){#pilotos{grid-template-columns:repeat(2,minmax(0,1fr))}.pers{flex-direction:row;text-align:left;gap:4px;padding:3px 6px 3px 2px}.pers img{width:44px;height:44px}.pers small{font-size:10.5px}}
-@media (max-height:520px){.pers img{width:40px;height:40px}}
+.solo-lector{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#piloto-detalle{margin:0;font-size:13px;line-height:1.3;min-height:2.6em}
+#piloto-detalle small{display:block;opacity:.85;font-weight:700}
+@media (max-width:520px){.pers img{width:42px;height:42px}.pers b{font-size:11.5px}}
+@media (max-width:360px){#pilotos{gap:4px}.pers{padding:2px 1px 3px}.pers img{width:38px;height:38px}.pers b{font-size:10.5px}}
+@media (max-height:520px){.pers img{width:36px;height:36px}#piloto-detalle{min-height:0}}
 /* Resultados */
 .podio{display:flex;align-items:flex-end;justify-content:center;gap:8px;width:min(360px,100%)}
 .esc{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;font-size:13px}
@@ -184,7 +188,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
       <h1>🏎️ Karts Turbo</h1>
       <p>Carreras de 8 carros. Derrapa para cargar el mini-turbo: <b style="color:var(--azul)">azul</b>, <b style="color:var(--naranja)">naranja</b> y <b style="color:var(--morado)">morado</b>.</p>
       <div class="ops" id="menu-ops"></div>
-      <div id="menu-piloto"><div class="ctl-titulo">🏁 Piloto</div><fieldset id="pilotos" aria-label="Piloto"></fieldset></div>
+      <div id="menu-piloto"><div class="ctl-titulo">🏁 Piloto</div><fieldset id="pilotos" aria-label="Piloto"></fieldset><p id="piloto-detalle" aria-live="polite"></p></div>
       <div id="menu-control">
         <div class="ctl-titulo">🎮 Controles</div>
         <fieldset class="ctl-ops ctl-ops4" aria-label="Controles">
@@ -237,7 +241,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <script src="mando.js?v=2"></script>
 <script src="karts-pistas.js?v=1"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
 <script src="arcade.js?v=3"></script>
-<script src="personajes.js?v=2"></script>
+<script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script>
 /* Karts Turbo — carreras con vista cenital en canvas (openspec: juegos-plataformas-karts, karts-controles-diseno).
@@ -1258,11 +1262,18 @@ function spriteKart(per, color, num, vista, phi) {
   const kc = Personajes.porId(per).kart, caras = carasKart(per, color, kc, P, cr, sr, cp, sp);
   // Cabeza del piloto y, en Yahui, su cola (cada una con su profundidad).
   caras.push({ d: P(HC[0], HC[1], HC[2]).d, cabeza: true });
+  const piloto = Personajes.piloto(per); // personajes nuevos: cabeza y accesorio en personajes.js (personajes-estilo-karts)
+  if (piloto && piloto.extra) caras.push({ d: P(...piloto.extra.en).d, extra: true });
   if (per === 'yahui') caras.push({ d: Math.min(P(-14, 11, 16).d, P(-20, 0, 15).d - 0.5), cola: true });
   caras.sort((a, b) => b.d - a.d);
   const cuadro = f => { c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(p.u, -p.v) : c.moveTo(p.u, -p.v)); c.closePath(); };
   for (const f of caras) {
-    if (f.cabeza) { pintarCabeza(c, per, S, cr, sr); continue; }
+    if (f.cabeza) {
+      if (piloto) piloto.cabeza(c, S, cr, sr, HC);
+      else pintarCabeza(c, per, S, cr, sr);
+      continue;
+    }
+    if (f.extra) { piloto.extra.pintar(c, S); continue; }
     if (f.cola) { pintarCola(c, S); continue; }
     pintarCaraKart(c, f, cuadro, kc, color, num, cr);
   }
@@ -1653,15 +1664,15 @@ function tomarCajas(k) {
 function tomarMonedas(k) {
   for (const m of monedasPista) if (m.t <= 0 && (k.x - m.x) ** 2 + (k.y - m.y) ** 2 < 12 * 12) { m.t = 8; if (k.monedas < 10) { k.monedas++; if (k === yo) S.moneda(); } }
 }
-// Choques entre carros (empuje suave).
+// Choques entre carros (empuje suave). El peso del personaje solo reparte el empuje (openspec: personajes-estilo-karts).
 function chocarKarts() {
   for (let i = 0; i < karts.length; i++) for (let j = i + 1; j < karts.length; j++) {
     const a = karts[i], b = karts[j];
     if (a.fantasma || b.fantasma) continue;
     const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
     if (d > 0 && d < 18) {
-      const em = (18 - d) / 2, nx = dx / d, ny = dy / d;
-      a.x -= nx * em; a.y -= ny * em; b.x += nx * em; b.y += ny * em;
+      const [fa, fb] = Personajes.repartoChoque(Personajes.masa(a.personaje), Personajes.masa(b.personaje)), em = 18 - d, nx = dx / d, ny = dy / d;
+      a.x -= nx * em * fa; a.y -= ny * em * fa; b.x += nx * em * fb; b.y += ny * em * fb;
       if (a.estrella > 0 && b.estrella <= 0) golpear(b); else if (b.estrella > 0 && a.estrella <= 0) golpear(a);
       else { a.vel *= 0.97; b.vel *= 0.97; }
     }
@@ -1875,8 +1886,14 @@ function pistaArranque() {
 /* ================= Piloto (openspec: personajes-xalli) =================
    Elección recordada en localStorage.arcade_personaje (compartida con Axo); sin elección o desconocida → Xalli. */
 let personaje = Personajes.preferencia();
-function pintarPilotos() { document.querySelectorAll('#pilotos [data-personaje]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.personaje === personaje))); }
-$('pilotos').innerHTML = Personajes.LISTA.map(per => '<button class="pers" data-personaje="' + per.id + '" aria-pressed="false"><img src="' + Personajes.retrato(per.id, 'quieto') + '" alt="" width="52" height="52"><span><b>' + per.nombre + '</b><small>' + per.titulo + '</small></span></button>').join('');
+// Peso estilo karts (openspec: personajes-estilo-karts): solo reparte el empuje de los choques.
+const PESO_TXT = { ligero: '🪶 Ligero', medio: '⚖️ Medio', pesado: '🪨 Pesado' };
+function pintarPilotos() {
+  document.querySelectorAll('#pilotos [data-personaje]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.personaje === personaje)));
+  const per = Personajes.porId(personaje);
+  $('piloto-detalle').innerHTML = '<b>' + esc(per.nombre) + '</b> · ' + esc(per.titulo) + '<small>' + esc(per.personalidad) + ' · ' + PESO_TXT[per.peso] + ' (solo cambia los choques)</small>';
+}
+$('pilotos').innerHTML = Personajes.LISTA.map(per => '<button class="pers" data-personaje="' + per.id + '" aria-pressed="false"><img src="' + Personajes.retrato(per.id, 'quieto') + '" alt="" width="52" height="52"><span><b>' + per.nombre + '</b><small class="solo-lector">' + per.titulo + '</small></span></button>').join('');
 pintarPilotos();
 
 /* ================= Menús ================= */
@@ -2018,7 +2035,7 @@ function emitir(k) {
     }
   }
   if (k === yo && k.turbo > 0 && !REDUCIR && Math.random() < 0.45) { // partícula del personaje (solo cosmética) // NOSONAR: azar de juego, no criptográfico
-    const forma = Personajes.porId(k.personaje).particula, cols = ESTELA[forma];
+    const per = Personajes.porId(k.personaje), forma = per.particula, cols = ESTELA[forma] || per.estela;
     particulas.push({ tipo: 'estela', forma, x: k.x - ca * 18 + (Math.random() - 0.5) * 10, y: k.y - sa * 18 + (Math.random() - 0.5) * 10, vx: -ca * 30 + (Math.random() - 0.5) * 20, vy: -sa * 30 + (Math.random() - 0.5) * 20, vida: 0.7, max: 0.7, c: cols[Math.trunc(Math.random() * cols.length)], tam: 2.2 }); // NOSONAR: azar de juego, no criptográfico
   }
   if (k.turbo > 0 && Math.random() < f) for (const s of [-3, 3]) { // NOSONAR: azar de juego, no criptográfico
@@ -2240,7 +2257,7 @@ function dibujarParticula(p) {
     g.globalAlpha = Math.min(1, a * 1.5);
     if (p.forma === 'burbujas') { g.strokeStyle = p.c; g.lineWidth = Math.max(0.8, r * 0.25); g.beginPath(); g.arc(q.x, q.y - r * 2, r, 0, 7); g.stroke(); }
     else if (p.forma === 'glifos') { g.fillStyle = p.c; g.beginPath(); g.arc(q.x, q.y - r * 2, r * 0.7, 0, 7); g.fill(); g.strokeStyle = p.c; g.lineWidth = Math.max(0.8, r * 0.25); g.beginPath(); for (let i = 0; i < 4; i++) { const an = i * Math.PI / 2 + p.vida * 3; g.moveTo(q.x + Math.cos(an) * r, q.y - r * 2 + Math.sin(an) * r); g.lineTo(q.x + Math.cos(an) * r * 1.7, q.y - r * 2 + Math.sin(an) * r * 1.7); } g.stroke(); }
-    else { g.fillStyle = p.c; g.beginPath(); g.ellipse(q.x, q.y - r * 2, r * 1.2, r * 0.55, p.vida * 6, 0, 7); g.fill(); }
+    else if (!Personajes.pintarParticula(g, p.forma, q.x, q.y - r * 2, r * 1.3, p.vida * 6, p.c)) { g.fillStyle = p.c; g.beginPath(); g.ellipse(q.x, q.y - r * 2, r * 1.2, r * 0.55, p.vida * 6, 0, 7); g.fill(); }
     g.globalAlpha = 1; return;
   }
   if (p.tipo === 'humo') { g.globalAlpha = a * 0.5; g.fillStyle = p.c; g.beginPath(); g.arc(q.x, q.y, p.tam * (2.4 - a * 1.4) * q.s, 0, 7); g.fill(); g.globalAlpha = 1; return; }
@@ -2425,7 +2442,7 @@ if (PRUEBA) {
       ang: yo ? yo.ang : 0, giro: leerEntrada().giro, freno: leerEntrada().freno, derrape: activo('derrape'), acel: acelModo, acelera: leerEntrada().acel,
       vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
       item: yo ? yo.item : null, mando: mando.estado(), aire: yo ? yo.aire || 0 : 0, eventos: { ...eventos }, zonas: zonas.map(z => z.tipo),
-      personaje: yo ? yo.personaje : personaje, personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length }),
+      personaje: yo ? yo.personaje : personaje, masa: Personajes.masa(yo ? yo.personaje : personaje), personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length }),
     // Caja de tu kart en px del lienzo (capturas de cerca y revisión de su dibujo).
     cajaYo: () => { const p = proyectar(yo.x, yo.y, 0); return p ? { x: (p.x - KW / 2 * p.s) * K, y: (p.y - KOY * p.s) * K, w: KW * p.s * K, h: KH * p.s * K } : null; },
     // Hoja de revisión: cada piloto de espaldas, de tres cuartos, de lado y de frente.
