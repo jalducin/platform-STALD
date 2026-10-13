@@ -107,7 +107,8 @@ async function probarPersonajes(b) {
     await f.click('#res-botones [data-ir="menu"]'); await f.waitForSelector('#ov-menu:not(.hide)');
   }
   await q.reload(); await q.waitForSelector('#ov-menu:not(.hide)');
-  ok('suelto: tras recargar sigue elegida Xochiquetzal', await elegido(f) === 'xochiquetzal');
+  const ultimo = PERSONAJES.at(-1); // el último elegido en el recorrido (personajes-estilo-karts: Kinich)
+  ok('suelto: tras recargar sigue elegido ' + ultimo.nombre, await elegido(f) === ultimo.id);
   await q.context().close();
   // Selector a 320×640, 390×844 y 844×390: los 8 caben en 4×2, sin desplazamiento horizontal (personajes-estilo-karts).
   for (const vp of [{ width: 320, height: 640 }, { width: 390, height: 844 }, { width: 844, height: 390 }]) {
