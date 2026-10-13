@@ -85,11 +85,26 @@ estáticos locales, sala de Karts «Lago Helado» con Marisol y Angel:
 - `karts-vivo-844x390.png` (844×390): la pista a la vista al entrar (antes quedaba abajo), tabla arriba del joystick.
 - `karts-vivo-390-cpu4.png`, `karts-vivo-desconexion.png`, `karts-vivo-respaldo.png`.
 
-## Suite completa
+## Suite completa (después de integrar `origin/main`: personajes-estilo-karts y karts-pistas-mesoamericanas)
 
-(pendiente: se completa al terminar la corrida)
+- Deno: 594 pasaron, 0 fallaron, 6 omitidas; `deno check` y `deno lint server/` limpios; OpenSpec `--strict` válido
+  (`juegos-en-vivo` y `karts-pistas-mesoamericanas`).
+- E2E: **53 PASS, 0 FAIL, 2 omitidas** (`grupos` e `ingles-pro` piden `--pg`). Entre ellas `karts` 211 pasos (fps por
+  pista nueva 60 con CPU ×4), `karts-vivo` 29 (con el selector de 8 pistas y una sala en vivo en Sacbé de Chichén Itzá;
+  fps 60 / 59), `futbol` 52, `plataformas` 112, `mando` 64, `emocion` 45, `poker` 27, `juegos-tablero` 42.
+- Incidencia: la primera corrida completa usó los puertos 9299/9309 que también usaba otro agente del sprint en esta
+  máquina; `correr.sh` apaga por puerto y los servidores se cayeron a media corrida («ERR_CONNECTION_REFUSED» en
+  `cartas-espanolas`, `ajustes-salas`, etc.). Todo lo afectado se repitió en puertos propios (9471/9481) y pasó.
+- Calidad tras el merge: 317 avisos = 317 de `origin/main` (copia aparte de main); `estado` y `arrancar` de Karts
+  quedaban en 16 y 18 por las líneas en vivo y se sacaron a `estadoVivo` y `vivoAlSalir`.
+
+## Pistas nuevas en salas
+
+Por pedido del coordinador, las 4 pistas mesoamericanas también se ofrecen en sala (`sala: true` en
+`juegos/karts-pistas.js` y `MAPAS_SALA` en `server/carreras.ts`); `server/karts_pistas_test.ts` comprueba que la
+página y el servidor coinciden y que el azar también las elige; el spec de `karts-pistas-mesoamericanas` se ajustó.
 
 ## Resultado
 
-- Estado Step 4: PASS (pendiente la suite completa)
+- Estado Step 4: PASS
 - Bloqueos: ninguno

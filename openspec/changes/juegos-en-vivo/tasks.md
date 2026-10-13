@@ -28,6 +28,8 @@
 - [x] 2.5 `juegos/karts.html`: karts remotos interpolados (personaje, nombre, número y color por lugar), minimapa,
   empuje local, clasificación en vivo, desvanecer al desconectarse, avisos de respaldo y reconexión; ganchos de prueba
 - [x] 2.6 `juegos.html`: cargar `en-vivo.js` y subir `?v=`
+- [x] 2.7 Tras integrar `karts-pistas-mesoamericanas`: las 4 pistas nuevas también en sala (`sala: true` y
+  `MAPAS_SALA`), prueba del servidor, paso E2E en Sacbé de Chichén Itzá y spec de ese cambio ajustado
 
 ## 3. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
@@ -36,27 +38,27 @@
 
 ## 4. Ejecutar pruebas y verificar estado (OBLIGATORIO)
 
-- [ ] 4.1 `npx -y deno test -A server/`, `deno check server/main.ts` y `deno lint server/`
-- [ ] 4.2 E2E dirigidas: `karts-vivo karts futbol juegos categorias partidas emocion mando`; al final, la suite completa
+- [x] 4.1 `npx -y deno test -A server/`, `deno check server/main.ts` y `deno lint server/`
+- [x] 4.2 E2E dirigidas: `karts-vivo karts futbol juegos categorias partidas emocion mando`; al final, la suite completa
   (la copia temporal de datos se descarta: estado restaurado; nunca se escribe en tablas `stald_`)
-- [ ] 4.3 `cd tests/calidad && npm run calidad` sin avisos nuevos
-- [ ] 4.4 Reporte `openspec/changes/juegos-en-vivo/reports/2026-10-12-step-4-pruebas-y-verificacion.md`
+- [x] 4.3 `cd tests/calidad && npm run calidad` sin avisos nuevos
+- [x] 4.4 Reporte `openspec/changes/juegos-en-vivo/reports/2026-10-12-step-4-pruebas-y-verificacion.md`
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
 - [x] 5.1 Supabase real, carga: 8 navegadores a 10 Hz 20 s en un topic de prueba con `EnVivo.conectar` (70.3
   mensajes/s recibidos por cada uno, sin pérdida, ≈ 90 ms); canales cerrados al terminar
-- [ ] 5.2 Supabase real, sala local: servidor local con las variables en el entorno (nunca en archivos) y
+- [x] 5.2 Supabase real, sala local: servidor local con las variables en el entorno (nunca en archivos) y
   `STALD_TABLAS=stald_test_`; sala de Karts con 2 contextos, ver al otro y medir la latencia; copia de datos temporal
   borrada y servidores apagados
-- [ ] 5.3 fps con 8 karts en vivo y CPU ×4; revisar las capturas a 390×844 y 844×390
-- [ ] 5.4 Casos de error: mensaje de un id ajeno (unitaria), canal que no conecta (respaldo), compañero que se va
+- [x] 5.3 fps con 8 karts en vivo y CPU ×4; revisar las capturas a 390×844 y 844×390
+- [x] 5.4 Casos de error: mensaje de un id ajeno (unitaria), canal que no conecta (respaldo), compañero que se va
 
 ## 6. Documentación (OBLIGATORIO)
 
 - [x] 6.1 `docs/frontend-standards.md` (juego en vivo y Karts), `docs/backend-standards.md` (mesa de Karts) y
   `docs/pruebas.md` (relevo simulado y `e2e-karts-vivo`)
-- [ ] 6.2 `npx -y @fission-ai/openspec@1.4.1 validate juegos-en-vivo --strict`
+- [x] 6.2 `npx -y @fission-ai/openspec@1.4.1 validate juegos-en-vivo --strict`
 
 ## 7. Publicación
 
