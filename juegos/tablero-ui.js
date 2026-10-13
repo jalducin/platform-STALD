@@ -675,7 +675,7 @@
     const n = e.target.closest('[data-tb-n]'); if (!n) return false;
     if (est.turno !== sala.estado.yo) return true;
     tb.msg = '';
-    enviar({ accion: 'disparar', c: Number(n.dataset.tbN) }, est.pasos).then(r => { if (r.ok) { const x = (r.body.jugadas || [])[r.body.jugadas.length - 1]; if (x && x.r === 'agua') sonidoMal(); else sonidoOk(); } });
+    enviar({ accion: 'disparar', c: Number(n.dataset.tbN) }, est.pasos).then(r => { if (r.ok) { const x = (r.body.jugadas || []).at(-1); /* errores-latentes: sin jugadas, sin sonido; el sondeo sincroniza */ if (x) { if (x.r === 'agua') sonidoMal(); else sonidoOk(); } } });
     return true;
   }
 

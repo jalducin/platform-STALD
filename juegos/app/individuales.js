@@ -333,8 +333,13 @@ function jugarCultura(d, cat) {
 }
 
 // ---------- Mente ágil ----------
+// errores-latentes: n debe ser entero ≥ 0 (con NaN genCalculo no terminaba) y aleatorio una función; si no, 0 y
+// Math.random. Con valores válidos el resultado no cambia (mismas llamadas al azar).
+const pasoValido = n => (Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0);
+const azarValido = f => (typeof f === 'function' ? f : Math.random);
 // Operación n (la dificultad sube con n). `aleatorio` permite semilla en partidas.
-function genCalculo(n, aleatorio = Math.random) {
+function genCalculo(paso, azar = Math.random) {
+  const n = pasoValido(paso), aleatorio = azarValido(azar);
   const rnd = (a, b) => a + Math.floor(aleatorio() * (b - a + 1));
   const nivel = Math.min(4, Math.floor(n / 5));
   let ops = ['+', '−', '×', '÷'];
@@ -356,7 +361,8 @@ function jugarCalculo() {
   quiz({ id: 'mente-calculo', modo: 'reloj', segundos: 75, siguiente: n => n % 3 === 2 ? genSecuencia(Math.floor(n / 3)) : genCalculo(n) });
 }
 
-function genSecuencia(n, aleatorio = Math.random) {
+function genSecuencia(paso, azar = Math.random) {
+  const n = pasoValido(paso), aleatorio = azarValido(azar);
   const rnd = (a, b) => a + Math.floor(aleatorio() * (b - a + 1));
   const tipos = [
     () => { const a = rnd(1, 20), k = rnd(2, 9); return { s: [0, 1, 2, 3].map(i => a + k * i), r: a + 4 * k, regla: 'sumar ' + k }; },
