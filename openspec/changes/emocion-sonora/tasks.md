@@ -8,7 +8,7 @@
   cuenta regresiva a 1 s, racha que sube con tope, silencio (`arcade_sonido`, `juegos_emocion`, `silencio()`), sin
   gesto, sin AudioContext o con error al crearlo, espera mínima (`repetido`), ducking solo en stingers grandes,
   capa de tensión (sube, se apaga con 0, silencio y calma) y registro acotado a 200.
-- [ ] 1.2 `tests/e2e/e2e-emocion.js`: eventos en Futbolito (gol, 4-4 con tensión, silbato y victoria), Golf (hoyo),
+- [x] 1.2 `tests/e2e/e2e-emocion.js`: eventos en Futbolito (gol, 4-4 con tensión, silbato y victoria), Golf (hoyo),
   Karts (última vuelta y podio), quiz (final), podio de una partida y revancha; silencio de Arcade y «Efectos de
   emoción: No» (con el sonido clásico de vuelta); sin AudioContext; autoplay bloqueado (`sin-gesto`); muestras WAV de
   cada stinger con `OfflineAudioContext` en `tests/e2e/salida/emocion/` (duración, pico < 1 y RMS > 0). Agregarla a
@@ -21,20 +21,21 @@
 
 ## 3. Aplicación en los juegos (design §7)
 
-- [ ] 3.1 Hub: cargar `juegos/emocion.js?v=1` en `juegos.html`; «🎉 Efectos de emoción: Sí / No» en el menú de
+- [x] 3.1 Hub: cargar `juegos/emocion.js?v=1` en `juegos.html`; «🎉 Efectos de emoción: Sí / No» en el menú de
   música (`musica.js`); `calma()` en `limpiar()` (`nucleo.js`).
-- [ ] 3.2 Marco común (`individuales.js`): últimos segundos en `reloj()`, racha en `quiz()`, récord o revelación en
+- [x] 3.2 Marco común (`individuales.js`): últimos segundos en `reloj()`, racha en `quiz()`, récord o revelación en
   `terminar()`.
-- [ ] 3.3 Partidas (`salas.js`): podio con suspenso (y el 1.er lugar tras el redoble en `juegos.css`), revancha y
+- [x] 3.3 Partidas (`salas.js`): podio con suspenso (y el 1.er lugar tras el redoble en `juegos.css`), revancha y
   Basta por rondas; Lotería y ¡Una! (`salas-mesa.js`); Bingo (`bingo.js`); Póker (`naipes.js`); Blackjack
   (`blackjack.js`).
-- [ ] 3.4 Arcade: Futbolito (solo líneas `// emocion-sonora`, sin tocar controles ni física), Billar, Golf, Karts,
+- [x] 3.4 Arcade: Futbolito (solo líneas `// emocion-sonora`, sin tocar controles ni física), Billar, Golf, Karts,
   Axo y Dragon Run; gancho de prueba `__karts.casiVuelta(v)` para la última vuelta.
-- [ ] 3.5 Subir `?v=` de los scripts cambiados.
+- [x] 3.5 Subir `?v=` de los scripts cambiados (tras el merge de `errores-latentes`: `salas.js?v=7`,
+  `individuales.js?v=5`; `arranque.js` queda en `v=6` de main porque no se toca).
 
 ## 4. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
-- [ ] 4.1 Revisar que las E2E de los juegos tocados (futbolito, billar, golf, karts, plataformas, dragon-run, juegos,
+- [x] 4.1 Revisar que las E2E de los juegos tocados (futbolito, billar, golf, karts, plataformas, dragon-run, juegos,
   partidas, revancha, loteria-sala, una-sala, poker, salas-grandes) sigan válidas: en Karts la cuenta regresiva ahora
   suena con `Emocion.cuenta` y el podio aparece igual (solo una animación).
 
@@ -58,7 +59,7 @@
 
 ## 7. Documentación (OBLIGATORIO)
 
-- [ ] 7.1 `docs/frontend-standards.md`: sección «Emoción sonora» (API, silencio, ducking, gancho de pruebas y cómo la
+- [x] 7.1 `docs/frontend-standards.md`: sección «Emoción sonora» (API, silencio, ducking, gancho de pruebas y cómo la
   usa un juego nuevo) y `docs/pruebas.md` si cambia el inventario de E2E.
 - [x] 7.2 `npx -y @fission-ai/openspec@1.4.1 validate emocion-sonora --strict`.
 

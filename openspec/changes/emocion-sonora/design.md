@@ -121,7 +121,9 @@ acciones repetitivas (cada patada, cada moneda). Llamadas con `window.Emocion?.`
 | Cualquier juego | salir (`limpiar()`) | `calma()` |
 
 Futbolito: los cambios son líneas aisladas marcadas `// emocion-sonora` en `sonar()`, `anotar()`, la parte de goles
-de `pasoSala()` y los finales; no se tocan controles, entrada ni física.
+de `pasoSala()` y los finales; no se tocan controles, entrada ni física. (El sprint 24a de controles se canceló y
+Futbolito se reemplazará por un juego de fútbol nuevo en el sprint 26: ese juego debe volver a usar `gol()`,
+`intensidad()`, `silbato()` y `victoria()`/`derrota()` en los mismos momentos.)
 
 ## Risks / Trade-offs
 
