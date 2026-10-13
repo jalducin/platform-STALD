@@ -205,6 +205,11 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       `futbol: { estado: confirmado | disputa | anfitrion | invitado | pendiente, goles, puntos: { <id>: n } }`
       (coinciden → confirmado; difieren → el del anfitrión «en disputa»; solo uno → ese). Puntos como el partido
       rápido (300/120/40 + 60 por gol hasta 6 − 20 por gol recibido; 0–1000).
+    - Personaje de Karts y Axo (`karts` y `plataformas`, cambio `personaje-en-salas`, `server/personajes.ts`):
+      `POST /juegos/sala/<código>/unirse { personaje }` (también para quien ya está dentro; quien no está entra con él
+      si hay lugar, si no 409 `sala_llena`) → `{ ok, codigo, personaje }`. El id se valida contra
+      `juegos/personajes.js`, que el servidor importa (misma lista, sin copia); id desconocido o sala de otro juego →
+      400 `personaje_invalido`; tras empezar, 409 `ya_empezo`.
     - Ajedrez (`ajedrez`, cambio `ajedrez`): acepta dos formas de jugada.
       - `{ n, accion: "mover", de, a, promo? }`, donde `de` y `a` son casillas `a1`–`h8` y `promo` es `q`, `r`, `b`
         o `n`.

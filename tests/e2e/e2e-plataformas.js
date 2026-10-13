@@ -236,12 +236,21 @@ async function probarPersonajes(b) {
   await p.selectOption('#p-mapa', '1-1');
   await p.click('#f-crear button[type=submit]'); await p.waitForSelector('[data-p="empezar"]', { timeout: 30000 });
   ok('sala de espera con los 2 bots', /BOT-VACHIRA/.test(await p.textContent('#p-body')) && /BOT-ISAGII/.test(await p.textContent('#p-body')));
+  // personaje-en-salas: la tarjeta trae los 8, marca el del modo individual (Yahui) y se cambia a Xolo.
+  await p.waitForSelector('#p-personaje [data-personaje]', { timeout: 15000 });
+  const tarjetaP = await p.$$eval('#p-personaje [data-personaje]', bs => bs.map(b => ({ id: b.dataset.personaje, on: b.getAttribute('aria-pressed') === 'true', img: !!b.querySelector('img[src^="data:image"]') })));
+  ok('sala de espera: «🦎 Tu personaje» con los 8 (retrato y nombre) y Yahui marcado, el del modo individual', /Tu personaje/.test(await p.textContent('#p-personaje')) && tarjetaP.length === 8 && tarjetaP.every(x => x.img) && tarjetaP.filter(x => x.on).map(x => x.id).join() === 'yahui', JSON.stringify(tarjetaP.filter(x => x.on)));
+  await p.click('#p-personaje [data-personaje="xolo"]');
+  await p.waitForFunction(() => { const j = sala.estado.jugadores.find(x => x.id === sala.estado.yo); return j && j.personaje === 'xolo' && document.querySelector('#p-personaje [data-personaje="xolo"][aria-pressed="true"]'); }, null, { timeout: 15000 }).catch(() => {});
+  const enLista = await p.textContent('#p-body .rank').catch(() => '');
+  ok('sala de espera: elegir Xolo lo guarda en el asiento, en el navegador y junto a tu nombre', (await p.evaluate(() => [sala.estado.jugadores.find(x => x.id === sala.estado.yo).personaje, localStorage.getItem('arcade_personaje')].join())) === 'xolo,xolo' && /Xolo/.test(enLista), enLista.slice(0, 120));
+  await p.screenshot({ path: 'plataformas-390-sala-espera.png', fullPage: true });
   await p.click('[data-p="empezar"]');
   const fs = await marcoDe(p, '#p-body');
   await fs.waitForFunction(() => window.__plat && window.__plat.estado().sala && window.__plat.estado().nivel === '1-1', null, { timeout: 30000 });
   await fs.waitForFunction(() => document.getElementById('ov-sala').classList.contains('hide'), null, { timeout: 20000 });
   ok('sala: mismo nivel elegido (1-1) y tiempos a vencer', (await fs.textContent('#h-bots')).includes('BOT-VACHIRA'));
-  ok('sala: juegas con tu personaje (Yahui)', (await fs.evaluate(() => window.__plat.estado().personaje)) === 'yahui');
+  ok('sala: el nivel arranca con el personaje elegido en la sala de espera (Xolo)', (await fs.evaluate(() => window.__plat.estado().personaje)) === 'xolo');
   await p.screenshot({ path: 'plataformas-390-sala.png' });
   await sleep(6500);
   await fs.evaluate(() => window.__plat.irAMeta()); await caminar(fs, 1200);
@@ -255,6 +264,13 @@ async function probarPersonajes(b) {
   await p.screenshot({ path: 'plataformas-390-podio.png', fullPage: true });
   const vDespues = (await progreso()).v;
   ok('la partida no guarda progreso', vDespues === vAntes, vAntes + ' → ' + vDespues);
+  // personaje-en-salas: de vuelta al modo individual, la portada recuerda a Xolo (elegido en la sala).
+  const p2 = p; // mismo navegador (localStorage), página recargada
+  await p2.reload(); await p2.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p2, 'plataformas');
+  const f2 = await marcoDe(p2);
+  await f2.waitForSelector('#ov-titulo:not(.hide)', { timeout: 30000 });
+  ok('modo individual después de la sala: la portada trae a Xolo', await elegido(f2) === 'xolo', await elegido(f2));
 
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

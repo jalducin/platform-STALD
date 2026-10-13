@@ -214,7 +214,7 @@ function pintarPartidas() {
 
 async function entrarSala(codigo) {
   limpiar();
-  Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, vivoTr: null, finT: 0, revEnviando: false, revMsg: '' });
+  Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, vivoTr: null, finT: 0, revEnviando: false, revMsg: '', personajeMio: null, personajeMsg: '' }); // personaje-en-salas: personajeMio/Msg
   app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
   const r = await traerSala();
   if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) { m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; } return; }
@@ -336,12 +336,13 @@ function pintarEspera(body) {
     '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
     '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
     extrasEspera(e.sala) + // basta-divertida-una-robo
-    '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length, e.sala.opciones)) + '</p>' : '') + equiposFutbolito(lista) /* futbolito-equipos */ + tacticaFutbol() /* futbol-en-linea */ + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
-      (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
+    '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length, e.sala.opciones)) + '</p>' : '') + equiposFutbolito(lista) /* futbolito-equipos */ + tacticaFutbol() /* futbol-en-linea */ + tarjetaPersonaje() /* personaje-en-salas */ + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
+      (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + personajeEnLista(x) /* personaje-en-salas */ + '</span></li>').join('') + '</ol>' +
     '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
   // La clave cuenta personas y bots: en una mesa de 4, una persona nueva desplaza a un bot y la lista no cambia de largo.
-  const clave = 'espera:' + lista.map(x => x.id + (x.equipo === undefined ? '' : '/' + x.equipo)).join(',') + ':' + e.soyHost; // futbolito-equipos: también el equipo pedido
+  const clave = 'espera:' + lista.map(x => x.id + (x.equipo === undefined ? '' : '/' + x.equipo) + '@' + (personajeDeAsiento(x.id) || '')).join(',') + ':' + e.soyHost + ':' + (sala.personajeMio || '') + ':' + (sala.personajeMsg || ''); // futbolito-equipos: también el equipo pedido; personaje-en-salas: y el personaje
   if (sala.vista !== clave) { body.innerHTML = html; sala.vista = clave; pintarQr(document.getElementById('p-qr'), enlaceSala(e.sala.codigo)); }
+  sincronizarPersonaje(); // personaje-en-salas: el asiento toma el personaje del navegador si aún no tiene
 }
 
 function totalesPreguntas(hasta) {

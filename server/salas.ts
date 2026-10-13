@@ -13,6 +13,7 @@ import { respuestaNaval } from "./naval.ts"; // juegos-tablero
 import * as Grandes from "./salas_grandes.ts";
 import * as Futbolito from "./futbolito.ts"; // futbolito-equipos: formato, equipos y dueño de la barra
 import * as FutbolLinea from "./futbol_linea.ts"; // futbol-en-linea: táctica del asiento y resultado validado
+import { esPersonaje } from "./personajes.ts"; // personaje-en-salas: misma lista que juegos/personajes.js
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -202,6 +203,7 @@ interface EnSala extends Grandes.JugadorGrande { // juegos-salas-grandes: bingo,
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
   equipo?: 0 | 1; // futbolito-equipos: equipo pedido en la sala de espera (Futbolito 2v2)
   tactica?: FutbolLinea.TacticaFutbol; // futbol-en-linea: táctica elegida en la sala de espera
+  personaje?: string; // personaje-en-salas: personaje de Karts o Axo elegido en la sala de espera
   futbol?: FutbolLinea.ReporteFutbol & { t: number }; // futbol-en-linea: resultado que vio (solo el primero)
   v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
 }
@@ -420,9 +422,8 @@ async function unirseSala(c: CtxSala): Promise<Response> {
   // futbolito-equipos: { equipo } guarda la preferencia de equipo (también para quien ya está dentro).
   const equipo = body.equipo === undefined ? undefined : Futbolito.validarEquipo(sala.opciones?.formato, sala.inicio !== null, jugadores, jugador.id, body.equipo);
   if (equipo !== undefined && typeof equipo === "object") return json({ error: equipo.error }, equipo.status);
-  const tactica = body.tactica === undefined ? undefined : tacticaDeAsiento(sala, body.tactica); // futbol-en-linea
-  if (tactica !== undefined && "error" in tactica) return json({ error: tactica.error }, tactica.status);
-  if (tactica !== undefined) return guardarTactica(c, tactica);
+  const soloAsiento = cambioDeAsiento(c); // futbol-en-linea y personaje-en-salas: táctica o personaje del asiento
+  if (soloAsiento) return soloAsiento;
   if (dentro && equipo === undefined) return json({ ok: true, codigo });
   if (!dentro && sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
   if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
@@ -445,6 +446,28 @@ async function guardarTactica(c: CtxSala, tactica: FutbolLinea.TacticaFutbol): P
   if (!(await guardarJugador(store, codigo, jugador, (e) => ({ ...e, tactica }), ahora))) return json({ error: "conflicto_escritura" }, 503);
   await publicar();
   return json({ ok: true, codigo, tactica });
+}
+// { tactica } (futbol-en-linea) o { personaje } (personaje-en-salas) en /unirse solo cambian el asiento; null si no vienen.
+function cambioDeAsiento(c: CtxSala): Promise<Response> | null {
+  const { body, sala, json } = c;
+  if (body.tactica !== undefined) {
+    const tactica = tacticaDeAsiento(sala, body.tactica);
+    return "error" in tactica ? Promise.resolve(json({ error: tactica.error }, tactica.status)) : guardarTactica(c, tactica);
+  }
+  return body.personaje === undefined ? null : guardarPersonaje(c, body.personaje);
+}
+// personaje-en-salas: { personaje } en /unirse guarda el personaje del asiento (solo en salas de Karts o Axo, antes de
+// empezar). Como la táctica: quien no está dentro entra con él si hay lugar.
+const JUEGOS_PERSONAJE = new Set(["karts", "plataformas"]);
+async function guardarPersonaje(c: CtxSala, crudo: unknown): Promise<Response> {
+  const { jugador, store, ahora, json, codigo, sala, jugadores, dentro, publicar } = c;
+  if (!JUEGOS_PERSONAJE.has(sala.juego) || !esPersonaje(crudo)) return json({ error: "personaje_invalido" }, 400);
+  if (sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
+  if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
+  const personaje = crudo;
+  if (!(await guardarJugador(store, codigo, jugador, (e) => ({ ...e, personaje }), ahora))) return json({ error: "conflicto_escritura" }, 503);
+  await publicar();
+  return json({ ok: true, codigo, personaje });
 }
 // futbol-en-linea: resultado de la sala con la regla del servidor (vacío en otros juegos).
 const vistaFutbol = (sala: Sala, jugadores: EnSala[]) => sala.juego === "futbol" ? { futbol: FutbolLinea.resultadoFutbol(sala.host, jugadores) } : {};

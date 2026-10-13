@@ -168,7 +168,7 @@ function pintarArcadeSala(body) {
   const bots = participantes().filter(p => p.bot).map(p => ({ nombre: p.nombre, ms: Arcade.tiempoBot(juego, mapa, s.seed, p.id), color: (Arcade.BOTS_SALA.find(b => b.id === p.id) || {}).color }));
   // juegos-en-vivo: Karts recibe las personas de la sala (id y nombre ya visibles, en orden) y, si hay canal, el puente
   // que lleva sus mensajes; solo pasan los de ids que están en la sala.
-  const personas = participantes().filter(p => !p.bot).map(p => ({ id: p.id, nombre: p.nombre }));
+  const personas = participantes().filter(p => !p.bot).map(p => ({ id: p.id, nombre: p.nombre, personaje: personajeDeAsiento(p.id) })); // personaje-en-salas: el de su asiento
   const enVivo = juego === 'karts' && !!sala.vivoTr && personas.length > 1;
   if (enVivo) {
     const pt = EnVivo.puente({ marco: frame, juego, transporte: sala.vivoTr, permitido: id => personas.some(h => h.id === id) });
@@ -177,7 +177,7 @@ function pintarArcadeSala(body) {
   const alMensaje = ev => {
     const d = ev.data || {};
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== juego) return;
-    if (d.tipo === 'listo') frame.contentWindow.postMessage({ tipo: 'inicio', modo: 'sala', mapa, seed: s.seed, inicioEn: s.inicio - ahoraServidor(), bots, yo: e.yo, humanos: personas, vivo: enVivo }, location.origin);
+    if (d.tipo === 'listo') frame.contentWindow.postMessage({ tipo: 'inicio', modo: 'sala', mapa, seed: s.seed, inicioEn: s.inicio - ahoraServidor(), bots, yo: e.yo, humanos: personas, vivo: enVivo, personaje: personajeElegido() }, location.origin);
     else if (d.tipo === 'meta' && !sala.arcadeMia) {
       const ms = d.ms === null ? null : Math.max(0, Math.round(Number(d.ms) || 0));
       sala.arcadeMia = { ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) };
@@ -188,6 +188,63 @@ function pintarArcadeSala(body) {
   };
   window.addEventListener('message', alMensaje);
   limpiezas.push(() => window.removeEventListener('message', alMensaje));
+}
+
+// ---- Personaje en las salas de Karts y Axo (openspec: personaje-en-salas) ----
+// Tarjeta de la sala de espera con los 8 personajes de juegos/personajes.js. Al elegir se guarda en el navegador
+// (localStorage.arcade_personaje, compartido con el modo individual) y en el asiento (POST /unirse { personaje }).
+// Al empezar, el iframe recibe el propio y el de cada persona en `inicio`.
+const PESO_PERSONAJE = { ligero: '🪶 Ligero', medio: '⚖️ Medio', pesado: '🪨 Pesado' };
+const conPersonajes = () => !!window.Personajes && ARCADE.has(sala.estado.sala.juego);
+const esPersonajeValido = id => !!window.Personajes && Personajes.LISTA.some(p => p.id === id);
+function personajeDeAsiento(id) {
+  const j = sala.estado.jugadores.find(x => x.id === id);
+  return j && esPersonajeValido(j.personaje) ? j.personaje : null;
+}
+// El de mi asiento; si no tiene, el del navegador (o Xalli).
+function personajeElegido() {
+  if (!window.Personajes) return null;
+  return sala.personajeMio || personajeDeAsiento(sala.estado.yo) || Personajes.preferencia();
+}
+// Junto al nombre en la lista de jugadores: retrato chico y nombre del personaje (bots y asientos sin elegir: nada).
+function personajeEnLista(x) {
+  if (x.bot || !conPersonajes()) return '';
+  const id = x.id === sala.estado.yo ? personajeElegido() : personajeDeAsiento(x.id);
+  if (!id) return '';
+  const per = Personajes.porId(id);
+  return ' <small class="p-pers" data-pers-de="' + escapeHtml(x.id) + '"><img src="' + Personajes.retrato(id, 'quieto') + '" alt="" width="22" height="22">' + escapeHtml(per.nombre) + '</small>';
+}
+function tarjetaPersonaje() {
+  const e = sala.estado;
+  if (!conPersonajes() || !e.jugadores.some(x => x.id === e.yo)) return '';
+  const karts = e.sala.juego === 'karts', mio = personajeElegido();
+  const boton = per => '<button type="button" class="p-pers-op" data-p="personaje" data-personaje="' + per.id + '" aria-pressed="' + (per.id === mio) + '" title="' + escapeHtml(per.nombre + ' · ' + per.titulo) + '">' +
+    '<img src="' + Personajes.retrato(per.id, 'quieto') + '" alt="" width="44" height="44"><b>' + escapeHtml(per.nombre) + '</b>' + (karts ? '<small>' + PESO_PERSONAJE[per.peso] + '</small>' : '') + '</button>';
+  return '<div class="card" id="p-personaje" style="margin-bottom:10px"><b>' + (karts ? '🏁 Tu piloto' : '🦎 Tu personaje') + '</b>' +
+    '<div class="p-pers-grid" role="group" aria-label="' + (karts ? 'Elige tu piloto' : 'Elige tu personaje') + '">' + Personajes.LISTA.map(boton).join('') + '</div>' +
+    '<div class="muted" id="p-personaje-msg" style="font-size:.8rem;min-height:1.1em">' + escapeHtml(sala.personajeMsg || '') + '</div></div>';
+}
+async function guardarPersonajeSala(id) {
+  sala.personajeMio = id;
+  const r = await post('/juegos/sala/' + sala.codigo + '/unirse', { personaje: id });
+  sala.personajeMsg = r.ok ? '' : 'No se pudo guardar tu personaje (' + (r.body.error || r.status) + ').';
+  return r;
+}
+async function elegirPersonajeSala(btn) {
+  const id = btn.dataset.personaje;
+  if (!esPersonajeValido(id)) return;
+  Personajes.preferencia(id); // el mismo que en el modo individual
+  document.querySelectorAll('#p-personaje [data-personaje]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  const msg = document.getElementById('p-personaje-msg'); if (msg) msg.textContent = 'Guardando…';
+  await guardarPersonajeSala(id);
+  await traerSala(); sala.vista = null; pintarSala();
+}
+// Al entrar a la espera: si mi asiento aún no tiene personaje, se guarda una vez el del navegador (así los demás lo ven).
+function sincronizarPersonaje() {
+  const e = sala.estado;
+  if (!conPersonajes() || sala.personajeSync === sala.codigo || !e.jugadores.some(x => x.id === e.yo) || personajeDeAsiento(e.yo)) return;
+  sala.personajeSync = sala.codigo;
+  guardarPersonajeSala(Personajes.preferencia()).then(r => { if (r.ok) return traerSala(); }).then(() => { if (sala.estado && sala.estado.sala.inicio === null) { sala.vista = null; pintarSala(); } });
 }
 
 // ---- Futbolito y Billar en sala (openspec: futbolito-billar) ----

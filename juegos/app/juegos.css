@@ -543,3 +543,15 @@ html.jugando, html.jugando body { overscroll-behavior-y: contain; }
 .lt-revela { animation: lt-entra .35s ease-out both; }
 @keyframes lt-entra { from { opacity: 0; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) { .lt-revela { animation: none; } .lt-arrastrando { transition: none; } }
+/* personaje-en-salas: los 8 personajes de Karts y Axo en la sala de espera (4×2, sin desplazamiento horizontal) */
+.p-pers-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.p-pers-op { font: inherit; color: var(--text); background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 4px 2px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; cursor: pointer; }
+.p-pers-op img { width: 44px; height: 44px; }
+.p-pers-op b { font-size: .78rem; line-height: 1.15; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-pers-op small { font-size: .66rem; color: var(--muted); white-space: nowrap; }
+.p-pers-op[aria-pressed="true"] { border-color: var(--accent-2); background: var(--accent-soft); }
+.p-pers-op:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+.rank .n .p-pers { display: inline-flex; align-items: center; gap: 2px; margin-left: 4px; white-space: nowrap; }
+.rank .n .p-pers img { width: 22px; height: 22px; }
+@media (max-width: 360px) { .p-pers-grid { gap: 4px; } .p-pers-op img { width: 36px; height: 36px; } .p-pers-op b { font-size: .7rem; } .p-pers-op small { font-size: .6rem; } }
+@media (max-height: 520px) { .p-pers-op img { width: 34px; height: 34px; } }

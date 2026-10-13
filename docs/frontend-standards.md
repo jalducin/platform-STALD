@@ -312,8 +312,7 @@ Cada página debe manejar y mostrar de forma explícita:
     `spriteKart(personaje, color, num, vista, phi)` con la carrocería en los colores del personaje y los costados, el
     número y el minimapa en el color de identidad del corredor (`k.color`; el del taller para la persona); cabeza del
     piloto según la vista (`pintarCabeza`), cola de Yahui y niebla de Xochiquetzal; bots y fantasmas con los otros
-    3 personajes en orden fijo; estela del personaje con turbo. En una sala las otras personas no se dibujan, así que
-    el personaje no se manda. El título «Axo y los 12 mundos» y el id `plataformas` se conservan (renombrar el título
+    3 personajes en orden fijo; estela del personaje con turbo. En sala, ver «Personaje en las salas de Karts y Axo». El título «Axo y los 12 mundos» y el id `plataformas` se conservan (renombrar el título
     es una línea en `plataformas.html`, `juegos.html` y `server/juegos.ts`). Ganchos de prueba: `__plat.cajaJugador()`,
     `__karts.cajaYo()`, `__karts.hojaPilotos()` y `personaje`/`personajes`/`rastro`/`estela` en `estado()`;
   - **Personajes estilo karts** (cambio `personajes-estilo-karts`; decisiones en su `design.md`): Xolo (xoloitzcuintle,
@@ -327,6 +326,17 @@ Cada página debe manejar y mostrar de forma explícita:
     `Personajes.pintarParticula`, que usan Axo y Karts. Selectores en 4×2 con retrato y nombre (el título queda en
     `.solo-lector`) y una línea `#personaje-detalle` (Axo) o `#piloto-detalle` (Karts, con el peso). Con 7 rivales, cada
     uno usa uno de los 7 personajes que la persona no eligió. Gancho de prueba: `masa` en `__karts.estado()`;
+  - **Personaje en las salas de Karts y Axo** (cambio `personaje-en-salas`; decisiones en su `design.md`):
+    `juegos.html` carga `juegos/personajes.js?v=3` (el mismo que los iframes). En la sala de espera de `karts` y
+    `plataformas`, `tarjetaPersonaje()` (`juegos/app/arcade.js`) pinta «🏁 Tu piloto» o «🦎 Tu personaje»: los 8 en
+    4×2 (`.p-pers-grid`, retrato, nombre y en Karts el peso) con `data-p="personaje"`; preselecciona el del asiento o
+    el de `localStorage.arcade_personaje`. Elegir guarda en el navegador (`Personajes.preferencia(id)`) y en el
+    asiento (`POST /unirse { personaje }`); si el asiento aún no tiene, la página guarda una vez el del navegador al
+    entrar (`sincronizarPersonaje`). La lista de jugadores muestra el de cada quien (`.p-pers`). `inicio` lleva
+    `personaje` y `humanos[].personaje`: `empezarSala` de Karts y Axo lo usa (si falta, `localStorage` y luego
+    Xalli) sin escribir en `localStorage`; en Karts los karts remotos arrancan con el de su asiento (y siguen el que
+    manda el canal en vivo) y los fantasmas usan personajes que nadie eligió. No hay botón para cambiarlo dentro del
+    iframe: se abre con la sala ya empezada y el servidor responde 409 `ya_empezo`;
   - **música de fondo:** generada con WebAudio (Alegre, Relajante, Fiesta); empieza solo tras un gesto y
     baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el
