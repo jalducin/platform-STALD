@@ -46,13 +46,13 @@
 - [x] 7.3 E2E: `juegos categorias partidas juegos-tablero ajustes-salas salas-grandes revancha enlace-sala` y las de
   Cálculo (`fusion`, `juegos-recarga`, `puntos-tipo`) con una copia de datos de prueba (se descarta al terminar:
   estado restaurado; nunca se escribe en tablas `stald_`)
-- [x] 7.4 Reporte `openspec/changes/errores-latentes/reports/2026-10-12-step-7-pruebas-y-verificacion.md`
+- [x] 7.4 Reporte `openspec/changes/archive/2026-10-13-errores-latentes/reports/2026-10-12-step-7-pruebas-y-verificacion.md`
 
 ## 8. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
 - [x] 8.1 Servidor local: `curl` a crear, unirse y empezar (casos válidos, sala inexistente, sin sesión y no
   anfitrión) y comprobar códigos y cuerpos
-- [ ] 8.2 Tras el merge a `main`: verificar en producción (`/salud`, `?v=` publicados en Pages y las rutas de salas
+- [x] 8.2 Tras el merge a `main`: verificar en producción (`/salud`, `?v=` publicados en Pages y las rutas de salas
   sin sesión) que el despliegue tiene el cambio
 
 ## 9. Documentación técnica (OBLIGATORIO)
@@ -62,5 +62,5 @@
 
 ## 10. Publicación y archivo
 
-- [ ] 10.1 PR en español, `gh pr checks --watch` hasta que terminen todos, merge y borrar la rama remota
-- [ ] 10.2 `openspec archive errores-latentes` en un PR aparte; merge cuando pasen sus checks
+- [x] 10.1 PR en español, `gh pr checks --watch` hasta que terminen todos, merge y borrar la rama remota
+- [x] 10.2 `openspec archive errores-latentes` en un PR aparte; merge cuando pasen sus checks

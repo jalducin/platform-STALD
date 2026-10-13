@@ -66,6 +66,14 @@ Deno (almacén que falla a propósito) y las E2E con `page.route`.
 - Estado restaurado: Sí — servidores apagados y copias descartadas (`correr.sh` borra la suya; la de `curl` se borró a
   mano). La copia original de datos no se modificó.
 
+## Verificación en producción (tras el merge del PR #184)
+
+- Deno Deploy: `deploy/jalducin/stald` en `success` («Build succeeded») para el commit de merge `6b5b079`;
+  `GET /salud` → 200; `POST /juegos/sala/ZZZZ/empezar` y `/unirse` sin sesión → 400 `missing_email`.
+- GitHub Pages: `juegos.html` publica `tablero-ui.js?v=6`, `individuales.js?v=4`, `app/salas.js?v=6` y
+  `arranque.js?v=6`; los archivos publicados ya traen `pasoValido`, el arreglo de `clicNaval`, `NO_GUARDO` y el aviso
+  «No se pudo empezar la partida».
+
 ## Resultado
 
 - Estado Step 7: PASS
