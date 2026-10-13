@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fútbol Estelar 2010</title>
+<style>
+:root{--bg:#06122a;--panel:#0b1d40;--panel2:#10295a;--txt:#eef2ff;--suave:#b8c4e0;--acento:#b6f03c;--acento2:#22c55e;--oro:#facc15;--rojo:#ef4444;--borde:rgba(255,255,255,.22)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#juego{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+#pantalla{position:relative;flex:1;min-height:0;overflow:hidden}
+canvas{display:block}
+#c{position:absolute;left:0;top:0}
+.hide{display:none!important}
+/* ---- HUD ---- */
+#hud{position:absolute;inset:0;pointer-events:none;font-weight:800;text-shadow:0 1px 0 #000}
+#marcador{position:absolute;left:8px;top:6px;display:flex;align-items:center;gap:5px;padding:3px 8px 3px 5px;border-radius:8px;background:linear-gradient(#13306b,#081a3d);border:1px solid rgba(255,255,255,.35);box-shadow:0 3px 8px rgba(0,0,0,.45);font-size:16px;font-style:italic}
+#marcador img{width:22px;height:22px}
+#marcador .gol{min-width:20px;text-align:center;background:#f8fafc;color:#0b1d40;border-radius:4px;padding:0 4px;font-style:normal;text-shadow:none}
+#reloj{margin-left:4px;padding:0 6px;border-radius:4px;background:var(--acento);color:#0b1d40;font-style:normal;text-shadow:none;min-width:34px;text-align:center}
+#hud .der{position:absolute;right:8px;top:6px;display:flex;gap:6px;pointer-events:auto}
+.mini{font:inherit;font-size:16px;border:1px solid var(--borde);background:rgba(0,0,0,.45);color:#fff;border-radius:10px;min-width:40px;min-height:36px;padding:2px 8px;cursor:pointer}
+#info-j{position:absolute;left:8px;top:40px;display:flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:8px;background:rgba(6,18,42,.7);border:1px solid rgba(255,255,255,.2)}
+#info-j .ene{width:46px;height:5px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden}
+#info-j .ene i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#b6f03c)}
+#radar{position:absolute;right:8px;bottom:8px;width:132px;height:86px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#aviso{position:absolute;left:50%;top:44px;transform:translateX(-50%);background:rgba(6,18,42,.88);border:1px solid rgba(255,255,255,.3);padding:5px 14px;border-radius:999px;font-weight:800;font-size:14px;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5}
+#aviso.ver{opacity:1}
+#grito{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;z-index:5;opacity:0;transform:scale(.6);transition:opacity .2s,transform .25s}
+#grito.ver{opacity:1;transform:scale(1)}
+#grito b{display:block;font-size:clamp(40px,11vw,86px);font-style:italic;font-weight:900;color:var(--oro);text-shadow:0 4px 0 #9a3412,0 0 24px rgba(0,0,0,.7);letter-spacing:.02em}
+#grito small{display:inline-block;margin-top:4px;font-size:16px;font-weight:800;background:rgba(6,18,42,.85);padding:3px 12px;border-radius:999px}
+#tuto{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(6,18,42,.9);border:2px solid var(--acento);border-radius:14px;padding:6px 12px;font-weight:800;font-size:12.5px;pointer-events:none;opacity:0;transition:opacity .25s;z-index:5;min-width:min(260px,92%)}
+#tuto.ver{opacity:1}
+#tuto h3{margin:0 0 3px;font-size:14px;color:var(--acento);text-align:center}
+#tuto div{display:flex;gap:10px;justify-content:space-between;line-height:1.45}
+#tuto b{color:#fde68a}
+#girar{position:absolute;left:8px;top:72px;z-index:8;display:flex;align-items:center;gap:8px;background:#fde68a;color:#3b2a05;font-weight:800;font-size:13px;padding:6px 6px 6px 12px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.4);max-width:94%}
+#girar button{font:inherit;border:0;border-radius:999px;background:rgba(0,0,0,.15);min-width:32px;min-height:32px;cursor:pointer}
+/* ---- Pantallas (menús) ---- */
+.ov{position:absolute;inset:0;z-index:6;overflow:auto;padding:14px 12px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;background:radial-gradient(120% 80% at 50% 0,rgba(22,58,120,.96),rgba(4,12,30,.97));text-align:center}
+.ov h1{margin:4px 0 0;font-size:clamp(28px,8vw,46px);font-style:italic;font-weight:900;letter-spacing:.01em;color:#fff;text-shadow:0 3px 0 #0b5b3f,0 0 18px rgba(182,240,60,.45);line-height:1}
+.ov h1 span{color:var(--acento)}
+.ov h2{margin:0;font-size:clamp(20px,5.6vw,30px);font-style:italic;color:var(--acento);text-shadow:0 2px 0 #0b3b1f}
+.ov h3{margin:6px 0 2px;font-size:15px;color:var(--oro)}
+.ov p{margin:0;max-width:560px;line-height:1.35;color:var(--suave)}
+.sub{font-size:13px;color:var(--suave)}
+.caja{width:min(620px,100%);background:linear-gradient(var(--panel2),var(--panel));border:1px solid var(--borde);border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.btn{font:inherit;font-weight:900;font-size:17px;font-style:italic;border:0;border-radius:12px;padding:11px 20px;min-height:50px;background:linear-gradient(#c7f562,#7cc61a);color:#0b2a12;box-shadow:0 4px 0 #3f6b0b;cursor:pointer}
+.btn.sec{background:linear-gradient(#3b5b98,#22396b);color:#fff;box-shadow:0 4px 0 #0f1f40}
+.btn.chico{font-size:14px;min-height:42px;padding:7px 14px}
+.btn:active{transform:translateY(3px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.fila{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.modos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;width:min(620px,100%)}
+.modo{font:inherit;color:#fff;text-align:left;border:1px solid var(--borde);border-radius:12px;padding:10px 12px;min-height:64px;cursor:pointer;background:linear-gradient(135deg,#17407e,#0c2350);display:flex;flex-direction:column;gap:2px;box-shadow:inset 4px 0 0 var(--acento)}
+.modo b{font-size:16px;font-style:italic}
+.modo small{font-size:12px;color:var(--suave)}
+.op{font:inherit;font-weight:800;font-size:14px;border:2px solid rgba(255,255,255,.4);background:#122a57;color:#fff;border-radius:10px;min-height:42px;padding:4px 10px;cursor:pointer}
+.op[aria-pressed="true"]{background:#2d6a12;border-color:var(--acento)}
+.ops{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;width:min(560px,100%)}
+.club{display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800}
+.club img{width:64px;height:64px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.club small{color:var(--suave);font-weight:700}
+.vs .x{font-size:26px;font-style:italic;font-weight:900;color:var(--oro)}
+.deslizadores{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 12px;width:100%;text-align:left}
+.deslizadores label{font-size:13px;font-weight:800;display:flex;flex-direction:column;gap:2px}
+.deslizadores span{display:flex;justify-content:space-between;font-size:11px;color:var(--suave);font-weight:700}
+input[type=range]{width:100%;accent-color:#7cc61a;min-height:28px}
+.alineacion{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:3px 10px;text-align:left;font-size:13px}
+.alineacion div{display:flex;gap:6px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.num{display:inline-block;min-width:22px;text-align:center;border-radius:5px;background:#f8fafc;color:#0b1d40;font-weight:900;font-size:12px}
+.pos{font-size:10px;font-weight:900;color:#0b1d40;background:var(--acento);border-radius:4px;padding:0 3px}
+.carta{font-size:14px}
+.ligas{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;width:min(860px,100%)}
+.clubes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.cbtn{font:inherit;color:#fff;display:flex;align-items:center;gap:6px;text-align:left;border:1px solid var(--borde);background:#102756;border-radius:10px;padding:4px 6px;min-height:44px;cursor:pointer;min-width:0}
+.cbtn img{width:30px;height:30px;flex:0 0 auto}
+.cbtn span{display:flex;flex-direction:column;min-width:0;font-size:12.5px;font-weight:800;line-height:1.15}
+.cbtn small{font-weight:700;color:var(--suave);font-size:11px}
+.cbtn[aria-pressed="true"]{border-color:var(--acento);background:#1f4d14}
+table.tabla{border-collapse:collapse;width:100%;font-size:13px;font-weight:700}
+.tabla th,.tabla td{padding:3px 4px;border-bottom:1px solid rgba(255,255,255,.12);text-align:center}
+.tabla td.n{text-align:left;white-space:nowrap;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.tabla tr.yo{background:rgba(182,240,60,.2)}
+.tabla tr.sube td:first-child{box-shadow:inset 3px 0 0 #22c55e}
+.tabla tr.baja td:first-child{box-shadow:inset 3px 0 0 #ef4444}
+.tabla img{width:18px;height:18px;vertical-align:middle;margin-right:3px}
+.llave{display:flex;gap:8px;overflow-x:auto;width:100%;justify-content:center}
+.ronda{display:flex;flex-direction:column;gap:6px;justify-content:space-around;min-width:150px}
+.ronda h3{font-size:12px;margin:0}
+.par{background:#0f2552;border:1px solid var(--borde);border-radius:8px;padding:3px 6px;font-size:12px;font-weight:800;text-align:left}
+.par div{display:flex;justify-content:space-between;gap:6px;align-items:center}
+.par img{width:16px;height:16px;vertical-align:middle;margin-right:3px}
+.par .gano{color:var(--acento)}
+.par.tuyo{border-color:var(--oro)}
+.stats{display:grid;grid-template-columns:1fr auto 1fr;gap:2px 10px;font-weight:800;font-size:14px;width:min(360px,100%)}
+.stats span:nth-child(3n+2){color:var(--suave);font-size:12px}
+.marcadorg{display:flex;align-items:center;gap:12px;font-size:44px;font-weight:900;font-style:italic}
+.marcadorg img{width:56px;height:56px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.tab{font:inherit;font-weight:800;font-size:13px;border:1px solid var(--borde);background:#0f2552;color:#fff;border-radius:999px;padding:6px 11px;min-height:38px;cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--acento);color:#0b2a12}
+.lista{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left}
+.lista .it{display:flex;align-items:center;gap:6px;background:#0f2552;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:4px 6px;font-size:13px;font-weight:700}
+.lista .it .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lista select{font:inherit;font-size:12px;background:#102756;color:#fff;border:1px solid var(--borde);border-radius:6px;min-height:30px}
+.dinero{color:var(--oro);font-weight:900}
+.forma{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;width:100%;text-align:left}
+.forma label{font-weight:800;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.forma input[type=text]{font:inherit;font-size:16px;padding:8px;border-radius:8px;border:1px solid var(--borde);background:#06122a;color:#fff}
+.swatches{display:flex;flex-wrap:wrap;gap:4px}
+.sw{width:30px;height:30px;border-radius:7px;border:2px solid rgba(255,255,255,.35);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px var(--acento)}
+.vista-club{display:flex;gap:12px;align-items:center;justify-content:center}
+.vista-club img{width:84px;height:84px}
+.personas{display:flex;flex-direction:column;gap:6px;width:100%}
+.persona{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;align-items:center;background:#0f2552;border-radius:10px;padding:6px;border:1px solid var(--borde)}
+.persona b{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#0b1d40}
+.persona select{font:inherit;font-size:13px;background:#102756;color:#fff;border:1px solid var(--borde);border-radius:8px;min-height:38px;min-width:0;width:100%}
+#ctl{display:none;flex-direction:column;align-items:center;gap:5px;width:min(620px,100%)}
+body.tactil #ctl{display:flex}
+#teclas{font-size:12.5px;color:var(--suave)}
+body.tactil #teclas{display:none}
+/* ---- Mandos táctiles (como Karts: joystick a la izquierda, botones grandes a la derecha) ---- */
+#mandos{display:none;flex:0 0 auto;align-items:flex-end;justify-content:space-between;gap:8px;padding:6px 10px 10px;background:linear-gradient(#081733,#06122a)}
+body.tactil.en-partido.ctl-joystick #mandos{display:flex}
+#m-izq{flex:1 1 auto;min-width:0;height:172px}
+#joy-zona{position:relative;width:100%;height:100%;border-radius:18px;background:rgba(255,255,255,.04);touch-action:none}
+#joy-base{position:absolute;left:50%;top:55%;width:108px;height:108px;margin:-54px 0 0 -54px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.05),rgba(255,255,255,.16) 70%);border:2px solid rgba(255,255,255,.4);pointer-events:none}
+#joy-perilla{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#cbd5e1 60%,#94a3b8);box-shadow:0 3px 8px rgba(0,0,0,.5)}
+#joy-zona.on #joy-perilla{background:radial-gradient(circle at 35% 30%,#fff,#d9f99d 60%,#84cc16)}
+.joy-txt{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:11px;opacity:.55;pointer-events:none}
+#m-der{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:34px repeat(3,50px);gap:4px 6px;grid-template-areas:"L . R" ". Y ." "X . B" ". A ."}
+.m{font:inherit;border-radius:50%;border:2px solid rgba(255,255,255,.55);color:#fff;font-weight:900;font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;padding:0;line-height:1;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.45);text-shadow:0 1px 1px rgba(0,0,0,.5)}
+.m small{font-size:8.5px;letter-spacing:.02em;font-weight:900;margin-top:1px}
+.m.on{transform:translateY(2px) scale(.94);filter:brightness(1.25);box-shadow:0 1px 0 rgba(0,0,0,.45)}
+#m-A{grid-area:A;background:radial-gradient(circle at 35% 30%,#f87171,#b91c1c);width:62px;height:62px;justify-self:center;align-self:center}
+#m-B{grid-area:B;background:radial-gradient(circle at 35% 30%,#fcd34d,#b45309);width:62px;height:62px;justify-self:center;align-self:center}
+#m-X{grid-area:X;background:radial-gradient(circle at 35% 30%,#60a5fa,#1d4ed8)}
+#m-Y{grid-area:Y;background:radial-gradient(circle at 35% 30%,#4ade80,#15803d)}
+#m-L,#m-R{border-radius:10px;font-size:14px;flex-direction:row;gap:4px;background:linear-gradient(#64748b,#334155)}
+#m-L{grid-area:L}#m-R{grid-area:R}
+#m-L small,#m-R small{margin:0;font-size:9px}
+body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(182,240,60,.85)}
+@media (max-width:340px){#m-der{grid-template-columns:repeat(3,48px);grid-template-rows:30px repeat(3,44px)}#m-A,#m-B{width:54px;height:54px}.m{font-size:17px}}
+@media (orientation:landscape) and (max-height:520px){
+  body.tactil.en-partido.ctl-joystick #mandos{position:absolute;left:0;right:0;bottom:0;background:none;pointer-events:none;padding:4px 12px calc(6px + env(safe-area-inset-bottom,0px));z-index:4}
+  #mandos>*{pointer-events:auto}
+  #m-izq{flex:0 1 38%;height:150px}
+  #joy-zona{background:rgba(255,255,255,.03)}
+  .m{opacity:.88}
+  #radar{right:50%;transform:translateX(50%);width:110px;height:72px;bottom:6px}
+  #tuto{bottom:86px;max-width:46%;min-width:0}
+  body:not(.en-partido) .mando{display:none!important}
+  #marcador{font-size:14px}#marcador img{width:18px;height:18px}
+}
+@media (orientation:portrait){#radar{width:110px;height:72px}}
+@media (max-width:400px){#marcador{font-size:13px;gap:3px;padding:2px 6px 2px 4px}#marcador img{width:16px;height:16px}#marcador .gol{min-width:16px;padding:0 3px}#reloj{min-width:28px;padding:0 4px}#hud .der{gap:4px}.mini{min-width:34px;font-size:14px;padding:2px 5px}}
+@media (prefers-reduced-motion:reduce){#aviso,#grito,#tuto{transition:none}.m.on{transform:none}}
+</style></head><body class="ctl-joystick">
+<div id="juego">
+  <div id="pantalla">
+    <canvas id="c" width="400" height="300" aria-label="Partido de Fútbol Estelar 2010"></canvas>
+    <div id="hud" class="hide">
+      <div id="marcador"><img id="e-0" alt=""><b id="n-0">LOC</b><span class="gol" id="g-0">0</span><span class="gol" id="g-1">0</span><b id="n-1">VIS</b><img id="e-1" alt=""><span id="reloj">0'</span></div>
+      <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
+      <div id="info-j"></div>
+      <canvas id="radar" aria-label="Radar de la cancha"></canvas>
+    </div>
+    <output id="aviso"></output>
+    <div id="grito" aria-live="polite"></div>
+    <div id="tuto" aria-live="polite"></div>
+    <output id="girar" class="hide"><span>📱↻ Mejor en horizontal</span><button id="b-girar" aria-label="Cerrar aviso">✕</button></output>
+    <div class="ov" id="ov"><h1>⚽ Fútbol <span>Estelar</span> 2010</h1><p>Cargando…</p></div>
+  </div>
+  <div id="mandos" aria-hidden="true">
+    <div id="m-izq"><div id="joy-zona"><div id="joy-base"><div id="joy-perilla"></div></div><span class="joy-txt">Arrastra para moverte</span></div></div>
+    <div id="m-der">
+      <button class="m" data-k="cambiar" id="m-L" tabindex="-1">L<small>CAMBIAR</small></button>
+      <button class="m" data-k="sprint" id="m-R" tabindex="-1">R<small>SPRINT</small></button>
+      <button class="m" data-k="elevado" id="m-Y" tabindex="-1">Y<small>CENTRO</small></button>
+      <button class="m" data-k="hueco" id="m-X" tabindex="-1">X<small>HUECO</small></button>
+      <button class="m" data-k="tiro" id="m-B" tabindex="-1">B<small>TIRO</small></button>
+      <button class="m" data-k="pase" id="m-A" tabindex="-1">A<small>PASE</small></button>
+    </div>
+  </div>
+</div>
+<script src="mando.js?v=2"></script>
+<script src="futbol-motor.js?v=1"></script>
+<script src="futbol-liga.js?v=1"></script>
+<script src="futbol-vista.js?v=1"></script>
+<script src="emocion.js?v=1"></script> <!-- emocion-sonora: gol, silbato, tensión, victoria, penales y podio -->
+<script>
+/* Fútbol Estelar 2010 — página del juego (openspec: futbol-estelar). Embebido en juegos.html (🕹️ Arcade): la
+   plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage, solo mismo origen).
+   Motor: juegos/futbol-motor.js; reglas de liga: juegos/futbol-liga.js; dibujo: juegos/futbol-vista.js. */
+'use strict';
+const M = window.FutbolMotor, L = window.FutbolLiga, V = window.FutbolVista;
+const Q = new URLSearchParams(location.search);
+const EMBED = window.parent !== window, PRUEBA = Q.get('prueba') === '1';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replaceAll(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const leerLS = k => { try { return localStorage.getItem(k); } catch { return null; } };
+const guardarLS = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sin almacenamiento */ } };
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const NIVELES = [['facil', '🙂 Fácil'], ['medio', '😎 Medio'], ['dificil', '🔥 Difícil'], ['leyenda', '👑 Leyenda']];
+const NOMBRE_NIVEL = Object.fromEntries(NIVELES);
+let U = null; // universo (juegos/datos/futbol.json)
+
+/* ================= Audio: efectos propios sintetizados + juegos/emocion.js (window.Emocion) para los momentos de ánimo ================= */
+let AC = null, master = null, sonido = leerLS('arcade_sonido') !== '0', publico = null;
+function audio() {
+  try {
+    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.connect(AC.destination); }
+    master.gain.value = sonido ? 0.9 : 0;
+    if (AC.state === 'suspended' && !document.hidden) AC.resume();
+  } catch { AC = null; }
+}
+function tono(f, d, tipo = 'square', v = 0.05, hasta = 0, retraso = 0) {
+  if (!AC || !sonido) return;
+  const o = AC.createOscillator(), ga = AC.createGain(), s = AC.currentTime + retraso;
+  o.type = tipo; o.frequency.setValueAtTime(f, s); if (hasta) o.frequency.exponentialRampToValueAtTime(hasta, s + d);
+  ga.gain.setValueAtTime(v, s); ga.gain.exponentialRampToValueAtTime(0.001, s + d);
+  o.connect(ga); ga.connect(master); o.start(s); o.stop(s + d + 0.02);
+}
+function ruido(d, v, filtro, retraso = 0) {
+  if (!AC || !sonido) return null;
+  const n = Math.round(AC.sampleRate * d), buf = AC.createBuffer(1, n, AC.sampleRate), x = buf.getChannelData(0);
+  const r = M.rngDe('ruido', String(d));
+  for (let i = 0; i < n; i++) x[i] = r() * 2 - 1;
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), ga = AC.createGain(), t = AC.currentTime + retraso;
+  f.type = 'bandpass'; f.frequency.value = filtro; f.Q.value = 0.7;
+  ga.gain.setValueAtTime(0.0001, t); ga.gain.exponentialRampToValueAtTime(v, t + 0.15); ga.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  s.buffer = buf; s.connect(f); f.connect(ga); ga.connect(master); s.start(t);
+  return s;
+}
+const SON = {
+  silbato: (n = 1) => { for (let k = 0; k < n; k++) { tono(2600, 0.16, 'sine', 0.05, 2400, k * 0.22); tono(2750, 0.16, 'sine', 0.03, 2550, k * 0.22); } },
+  patada: () => tono(140, 0.08, 'triangle', 0.08, 70),
+  poste: () => { tono(900, 0.4, 'triangle', 0.06, 860); tono(1350, 0.3, 'sine', 0.03); },
+  atajada: () => { tono(220, 0.1, 'triangle', 0.07, 120); ruido(0.6, 0.08, 900); },
+  gol: () => { ruido(2.4, 0.22, 700); [523, 659, 784, 1047].forEach((f, i) => tono(f, 0.18, 'square', 0.04, 0, 0.15 + i * 0.12)); },
+  falta: () => SON.silbato(1),
+};
+function ambiente(on) {
+  if (!on) { if (publico) { try { publico.stop(); } catch { /* ya paró */ } } publico = null; return; }
+  if (publico || !AC || !sonido) return;
+  publico = ruido(600, 0.025, 500);
+}
+// Emoción sonora (docs/frontend-standards.md, «Emoción sonora»): gol, silbato, tensión del final, victoria o derrota,
+// suspenso y revelación en los penales, podio en la copa y el torneo, y calma al salir. Con «Efectos de emoción: No»
+// el gol y el silbato vuelven al sonido propio del juego.
+const silbatoInicioFin = n => { if (!window.Emocion?.silbato()) SON.silbato(n); };
+let tension = 0;
+function tensionFinal(p) {
+  const diferencia = Math.abs(p.eq[0].goles - p.eq[1].goles), vivo = p.estado === 'juego' || p.estado === 'parada';
+  const x = vivo && p.minuto >= 80 && diferencia <= 1 ? Math.min(1, 0.35 + (p.minuto - 80) / 10 * 0.65) : 0;
+  if (Math.abs(x - tension) < 0.05) return;
+  tension = x;
+  window.Emocion?.intensidad(x);
+}
+function apagarTension() { tension = 0; window.Emocion?.intensidad(0); }
+function pintarSonido() { $('b-sonido').textContent = sonido ? '🔊' : '🔇'; $('b-sonido').setAttribute('aria-pressed', String(!sonido)); }
+$('b-sonido').onclick = e => {
+  sonido = !sonido; guardarLS('arcade_sonido', sonido ? '1' : '0'); audio();
+  if (!sonido) ambiente(false);
+  pintarSonido(); e.currentTarget.blur();
+};
+pintarSonido();
+addEventListener('pointerdown', audio, { passive: true });
+addEventListener('touchend', audio, { passive: true });
+addEventListener('keydown', audio);
+
+/* ================= Entrada: capa de acciones (como KartsEntrada) =================
+   El juego solo pregunta por acciones (pase, tiro, hueco, elevado, sprint, cambiar) y un eje { x, y } por persona.
+   Fuentes: «todo» (1 persona: toques + teclado + mando clásico y cualquier control), teclado izquierdo, teclado
+   derecho, un control físico por índice («pad0»…«pad3», leído uno por uno) y «pantalla» (solo toques).
+   FutbolEntrada.registrar({ presionado(accion), eje() }) conecta fuentes nuevas a la persona 1. */
+const TOQUES = 'ontouchstart' in window;
+const TACTIL = TOQUES || matchMedia('(any-pointer: coarse)').matches;
+if (TACTIL) document.body.classList.add('tactil');
+const ACCIONES = ['pase', 'tiro', 'hueco', 'elevado', 'sprint', 'cambiar'];
+const TECLADOS = {
+  uno: { arriba: ['ArrowUp', 'KeyW'], abajo: ['ArrowDown', 'KeyS'], izq: ['ArrowLeft', 'KeyA'], der: ['ArrowRight', 'KeyD'], pase: ['KeyJ'], tiro: ['KeyK'], hueco: ['KeyU'], elevado: ['KeyI'], sprint: ['ShiftLeft', 'ShiftRight'], cambiar: ['KeyQ'] },
+  tecladoIzq: { arriba: ['KeyW'], abajo: ['KeyS'], izq: ['KeyA'], der: ['KeyD'], pase: ['KeyF'], tiro: ['KeyG'], hueco: ['KeyR'], elevado: ['KeyT'], sprint: ['ShiftLeft'], cambiar: ['KeyQ'] },
+  tecladoDer: { arriba: ['ArrowUp'], abajo: ['ArrowDown'], izq: ['ArrowLeft'], der: ['ArrowRight'], pase: ['KeyJ'], tiro: ['KeyK'], hueco: ['KeyU'], elevado: ['KeyI'], sprint: ['ShiftRight'], cambiar: ['KeyL'] },
+};
+const TECLAS_JUEGO = new Set(Object.values(TECLADOS).flatMap(t => Object.values(t).flat()));
+const teclas = new Set(), toque = {}, fuentesExtra = [];
+const joy = { id: null, cx: 0, cy: 0, x: 0, y: 0 };
+addEventListener('keydown', e => {
+  if ((e.code === 'KeyP' || e.code === 'Escape') && S.vista === 'partido') {
+    e.preventDefault();
+    if (!e.repeat) alternarPausa();
+    return;
+  }
+  if (!TECLAS_JUEGO.has(e.code) || S.vista !== 'partido') return;
+  e.preventDefault(); teclas.add(e.code);
+});
+addEventListener('keyup', e => teclas.delete(e.code));
+addEventListener('blur', () => teclas.clear());
+document.addEventListener('touchmove', e => { if (S.vista === 'partido') e.preventDefault(); }, { passive: false });
+function deTeclado(nombre) {
+  const t = TECLADOS[nombre], abajo = a => t[a].some(c => teclas.has(c));
+  const r = { x: (abajo('der') ? 1 : 0) - (abajo('izq') ? 1 : 0), y: (abajo('abajo') ? 1 : 0) - (abajo('arriba') ? 1 : 0) };
+  for (const a of ACCIONES) r[a] = abajo(a);
+  return r;
+}
+function dePad(i) {
+  let pads = [];
+  try { pads = navigator.getGamepads ? [...navigator.getGamepads()] : []; } catch { pads = []; }
+  const gp = pads.find(x => x && x.index === i) || pads[i];
+  const r = window.Mando.controlABotones(gp), b = new Set(r.botones);
+  const out = { x: r.eje.x || (b.has('der') ? 1 : 0) - (b.has('izq') ? 1 : 0), y: r.eje.y || (b.has('abajo') ? 1 : 0) - (b.has('arriba') ? 1 : 0) };
+  Object.assign(out, { pase: b.has('A'), tiro: b.has('B'), hueco: b.has('X'), elevado: b.has('Y'), sprint: b.has('R'), cambiar: b.has('L') });
+  return out;
+}
+function deToques() {
+  const r = { x: 0, y: 0 };
+  if (joy.id !== null) { const m = Math.hypot(joy.x, joy.y); if (m > 0.15) { r.x = joy.x; r.y = joy.y; } }
+  for (const a of ACCIONES) r[a] = !!toque[a];
+  return r;
+}
+function deMando() {
+  const e = mando.eje(), r = { x: e.x, y: e.y };
+  for (const a of ACCIONES) r[a] = mando.presionado(a);
+  return r;
+}
+function deExtras() {
+  const r = { x: 0, y: 0 };
+  for (const a of ACCIONES) r[a] = fuentesExtra.some(f => { try { return !!f.presionado(a); } catch { return false; } });
+  for (const f of fuentesExtra) { try { const e = f.eje ? f.eje() : null; if (e && (e.x || e.y)) { r.x = e.x; r.y = e.y; } } catch { /* fuente rota */ } }
+  return r;
+}
+function unir(lista) {
+  const r = { x: 0, y: 0 };
+  for (const e of lista) { if (!r.x && !r.y && (e.x || e.y)) { r.x = e.x; r.y = e.y; } for (const a of ACCIONES) r[a] = r[a] || e[a]; }
+  return r;
+}
+function leerEntrada(fuente) {
+  if (fuente === 'todo') return unir([deToques(), deMando(), deTeclado('uno'), deExtras()]);
+  if (fuente === 'pantalla') return deToques();
+  if (fuente && fuente.startsWith('pad')) return dePad(Number(fuente.slice(3)));
+  return deTeclado(fuente);
+}
+window.FutbolEntrada = { ACCIONES, leer: leerEntrada, registrar: f => { fuentesExtra.push(f); return () => { const i = fuentesExtra.indexOf(f); if (i >= 0) fuentesExtra.splice(i, 1); }; } };
+
+// Toques por dedo (touch events no pasivos) y mouse o pluma con pointer events (lección de Karts).
+function tactil(el, h) {
+  const vivos = new Set();
+  const ini = (id, x, y) => { vivos.add(id); h.inicio(id, x, y); };
+  const mov = (id, x, y) => { if (vivos.has(id) && h.mover) h.mover(id, x, y); };
+  const fin = id => { if (vivos.delete(id)) h.fin(id); };
+  el.addEventListener('touchstart', e => { e.preventDefault(); for (const t of e.changedTouches) ini('t' + t.identifier, t.clientX, t.clientY); }, { passive: false });
+  el.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) mov('t' + t.identifier, t.clientX, t.clientY); }, { passive: false });
+  const finT = e => { e.preventDefault(); for (const t of e.changedTouches) fin('t' + t.identifier); };
+  el.addEventListener('touchend', finT, { passive: false });
+  el.addEventListener('touchcancel', finT, { passive: false });
+  const propio = e => e.pointerType !== 'touch' || !TOQUES;
+  el.addEventListener('pointerdown', e => {
+    if (!propio(e)) return;
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch { /* sin captura */ }
+    ini('p' + e.pointerId, e.clientX, e.clientY);
+  });
+  el.addEventListener('pointermove', e => { if (propio(e)) mov('p' + e.pointerId, e.clientX, e.clientY); });
+  const finP = e => { if (propio(e)) fin('p' + e.pointerId); };
+  el.addEventListener('pointerup', finP); el.addEventListener('pointercancel', finP);
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+document.querySelectorAll('#mandos [data-k]').forEach(b => {
+  const k = b.dataset.k, dedos = new Set();
+  tactil(b, {
+    inicio: id => { dedos.add(id); toque[k] = true; b.classList.add('on'); try { navigator.vibrate && navigator.vibrate(10); } catch { /* sin vibración */ } },
+    fin: id => { dedos.delete(id); if (!dedos.size) { toque[k] = false; b.classList.remove('on'); } },
+  });
+});
+const JOY_R = 48;
+function pintarJoy() { $('joy-perilla').style.transform = 'translate(' + (joy.x * JOY_R).toFixed(1) + 'px,' + (joy.y * JOY_R).toFixed(1) + 'px)'; $('joy-zona').classList.toggle('on', joy.id !== null); }
+function soltarJoy() { joy.id = null; joy.x = 0; joy.y = 0; const b = $('joy-base'); b.style.left = ''; b.style.top = ''; pintarJoy(); }
+tactil($('joy-zona'), {
+  inicio(id, x, y) {
+    if (joy.id !== null) return;
+    const z = $('joy-zona').getBoundingClientRect(), m = 54;
+    joy.id = id;
+    joy.cx = z.width < 2 * m ? z.left + z.width / 2 : clamp(x, z.left + m, z.right - m);
+    joy.cy = z.height < 2 * m ? z.top + z.height / 2 : clamp(y, z.top + m, z.bottom - m);
+    const b = $('joy-base'); b.style.left = (joy.cx - z.left) + 'px'; b.style.top = (joy.cy - z.top) + 'px';
+    this.mover(id, x, y);
+  },
+  mover(id, x, y) {
+    if (id !== joy.id) return;
+    let dx = x - joy.cx, dy = y - joy.cy; const d = Math.hypot(dx, dy);
+    if (d > JOY_R) { dx *= JOY_R / d; dy *= JOY_R / d; }
+    joy.x = dx / JOY_R; joy.y = dy / JOY_R; pintarJoy();
+  },
+  fin(id) { if (id === joy.id) soltarJoy(); },
+});
+function soltarToques() {
+  for (const a of ACCIONES) toque[a] = false;
+  document.querySelectorAll('#mandos .on').forEach(b => b.classList.remove('on'));
+  soltarJoy(); teclas.clear();
+}
+
+/* ---- Mando clásico (juegos/mando.js) y control físico: como en Karts ---- */
+const mando = Mando.crear({
+  acciones: { pase: 'A', tiro: 'B', hueco: 'X', elevado: 'Y', sprint: 'R', cambiar: 'L', pausa: 'START' },
+  analogico: true, contenedor: $('juego'),
+  teclas: Object.fromEntries(Object.keys(Mando.TECLAS).map(k => [k, null])), // el teclado lo lee el juego (sin acciones dobles)
+  nombres: { pase: 'pase', tiro: 'tiro', hueco: 'hueco', elevado: 'centro', sprint: 'sprint', cambiar: 'cambiar', pausa: 'pausa' },
+});
+mando.activar(false);
+mando.al('pausa', () => { if (S.vista === 'partido') alternarPausa(); });
+let control = leerLS('futbol_control');
+if (!['joystick', 'mando'].includes(control)) control = 'joystick';
+function elegirControl(c) { control = c; guardarLS('futbol_control', c); soltarToques(); pintarControl(); }
+function pintarControl() {
+  document.body.classList.toggle('ctl-joystick', control === 'joystick');
+  document.body.classList.toggle('ctl-mando', control === 'mando');
+  mando.mostrar(control === 'mando' && S.vista === 'partido' && !S.enLocal);
+  document.querySelectorAll('[data-control]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.control === control)));
+}
+// Texto de los botones según la jugada: con el balón (ataque), sin el balón (defensa) o en una reanudación.
+const TEXTOS = {
+  ataque: { pase: 'PASE', tiro: 'TIRO', hueco: 'HUECO', elevado: 'CENTRO' },
+  defensa: { pase: 'PRESIÓN', tiro: 'ENTRADA', hueco: 'DOBLE', elevado: 'BARRIDA' },
+  saque: { pase: 'CORTO', tiro: 'TIRO', hueco: 'HUECO', elevado: 'LARGO' },
+};
+let textosActuales = '';
+function textosBotones(p) {
+  const h = p.humanos[0];
+  let modo = 'ataque';
+  if (p.estado === 'parada' || p.estado === 'penal' || p.estado === 'tanda') modo = 'saque';
+  else if (h && p.dueno >= 0 && p.jug[p.dueno].eq !== h.eq) modo = 'defensa';
+  if (modo === textosActuales) return;
+  textosActuales = modo;
+  const t = TEXTOS[modo], ids = { pase: 'm-A', tiro: 'm-B', hueco: 'm-X', elevado: 'm-Y' };
+  for (const [a, id] of Object.entries(ids)) $(id).querySelector('small').textContent = t[a];
+}
+
+/* ================= Estado de la página y avance ================= */
+const S = { vista: 'carga', p: null, ctx: null, pausa: false, copa: null, torneo: null, local: null, ultimoPuntos: null, tutoVisto: false, carreraTab: 'partido', clubEdit: null, ojeo: null, aviso: '' };
+const AVANCE_VACIO = () => ({ stats: { partidos: 0, ganados: 0, empatados: 0, perdidos: 0, gf: 0, gc: 0, copas: 0 }, clasif: null, tactica: { ...M.TACTICA_BASE }, carrera: null });
+let prog = AVANCE_VACIO();
+const ajustes = {
+  nivel: NOMBRE_NIVEL[leerLS('futbol_nivel')] ? leerLS('futbol_nivel') : 'facil',
+  minutos: clamp(Number(leerLS('futbol_minutos')) || 4, 2, 6),
+  fuera: leerLS('futbol_fuera') !== '0',
+  club: clamp(Number(leerLS('futbol_club')) || 0, 0, 23),
+};
+function guardarAjustes() { guardarLS('futbol_nivel', ajustes.nivel); guardarLS('futbol_minutos', String(ajustes.minutos)); guardarLS('futbol_fuera', ajustes.fuera ? '1' : '0'); guardarLS('futbol_club', String(ajustes.club)); }
+function enviar(m) {
+  if (!EMBED) return;
+  try { parent.postMessage({ juego: 'futbol', ...m }, location.origin); } catch { /* sin plataforma */ }
+}
+function guardar() { enviar({ tipo: 'guardar', datos: structuredClone(prog) }); }
+// El avance del servidor se toma solo si tiene la forma esperada (si no, se empieza de cero sin perder nada guardado).
+function cargarAvance(d) {
+  const base = AVANCE_VACIO();
+  if (!d || typeof d !== 'object') return base;
+  const t = { ...base.tactica, ...(d.tactica || {}) };
+  return { stats: { ...base.stats, ...(d.stats || {}) }, clasif: d.clasif || null, tactica: M.FORMACIONES[t.formacion] ? t : base.tactica, carrera: d.carrera && Array.isArray(d.carrera.plantilla) ? d.carrera : null };
+}
+let avisoT = null;
+function avisar(txt, ms) { const a = $('aviso'); a.textContent = txt; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms || 1600); }
+let gritoT = null;
+function gritar(grande, chico, ms) {
+  const g = $('grito'); g.innerHTML = '<b>' + esc(grande) + '</b>' + (chico ? '<small>' + esc(chico) + '</small>' : '');
+  g.classList.add('ver'); clearTimeout(gritoT); gritoT = setTimeout(() => g.classList.remove('ver'), ms || 2200);
+}
+
+/* ================= Pantallas ================= */
+function pantalla(html, vista) {
+  S.vista = vista || 'menu';
+  const ov = $('ov'); ov.innerHTML = html; ov.classList.remove('hide'); ov.scrollTop = 0;
+  $('hud').classList.add('hide');
+  document.body.classList.remove('en-partido');
+  pintarControl(); revisarGirar();
+}
+const escudo = (club, s = 64) => '<img src="' + V.escudoUrl(club.escudo, 96) + '" alt="" width="' + s + '" height="' + s + '">';
+const clubDe = idx => L.clubDe(U, idx, prog.carrera);
+const estrellas = f => '★'.repeat(clamp(Math.round((f - 50) / 7), 1, 5));
+const opciones = (lista, actual, attr) => '<fieldset class="ops">' + lista.map(([v, t]) => '<button type="button" class="op" data-' + attr + '="' + v + '" aria-pressed="' + (String(v) === String(actual)) + '">' + t + '</button>').join('') + '</fieldset>';
+
+function menuPrincipal() {
+  if (S.vista !== 'carga') { apagarTension(); window.Emocion?.calma(); }
+  S.local = null; S.ctx = null; S.enLocal = false;
+  const st = prog.stats, c = prog.carrera;
+  pantalla('<h1>⚽ Fútbol <span>Estelar</span> 2010</h1><p>Futbol táctico, con calma y con peso. Todo el universo es inventado.' + (TACTIL && innerHeight > innerWidth ? '<br>📱↻ Mejor en horizontal (también se puede jugar así).' : '') + '</p>' +
+    '<div class="modos">' +
+    modo('rapido', '⚡ Partido rápido', 'Tu club contra la IA. Suma ⭐ al ranking.') +
+    modo('copa', '🏆 Copa', L.COPA.nombre + ': 8 clubes, eliminación directa.') +
+    modo('carrera', '📈 Carrera', c ? esc(c.club.nombre) + ' · temporada ' + c.temporada : 'Liga Master: crea tu club en la Liga Norte.') +
+    modo('local', '🛋️ Torneo local', 'De 2 a 4 en la misma PC con controles o teclado.') +
+    modo('clasif', '📅 Clasificatoria semanal', 'El rival de la semana en Difícil. ×1.2 puntos.') +
+    '</div>' +
+    '<div class="caja"><h3>⚙️ Partido</h3>' + opciones(NIVELES, ajustes.nivel, 'nivel') +
+    '<div class="fila" style="margin-top:6px">' + opciones([2, 3, 4, 5, 6].map(m => [m, m + ' min']), ajustes.minutos, 'minutos') + '</div>' +
+    '<div class="fila" style="margin-top:6px">' + opciones([['1', '🚩 Fuera de lugar: sí'], ['0', '🚩 Fuera de lugar: no']], ajustes.fuera ? '1' : '0', 'fuera') + '</div></div>' +
+    '<div id="ctl" class="caja"><h3>🎮 Controles</h3><fieldset class="ops"><button class="op" data-control="joystick">🕹️ Joystick y botones</button><button class="op" data-control="mando">🎮 Mando clásico</button></fieldset><div class="sub">Con un control conectado, el botón de abajo es A (pase).</div></div>' +
+    '<p id="teclas">⌨️ Flechas o WASD moverse · J pase · K tiro (mantén) · U al hueco · I centro · Shift sprint · Q cambiar · P pausa</p>' +
+    '<div class="fila" id="guia"></div>' +
+    '<div class="sub">📊 ' + st.partidos + ' partidos · ' + st.ganados + ' G · ' + st.empatados + ' E · ' + st.perdidos + ' P · ' + st.gf + ' goles · 🏆 ' + st.copas + '</div>');
+  $('guia').appendChild(mando.botonGuia());
+}
+const modo = (id, t, d) => '<button type="button" class="modo" data-a="' + id + '"><b>' + t + '</b><small>' + d + '</small></button>';
+
+// ---- Elegir club ----
+function elegirClub(titulo, alElegir, actual) {
+  S.alElegir = alElegir;
+  const ligas = U.ligas.map(l => '<div class="caja"><h3>' + l.emoji + ' ' + esc(l.nombre) + ' <small class="sub">· ' + esc(l.d) + '</small></h3><div class="clubes">' +
+    l.clubes.map(i => { const c = U.clubes[i]; return '<button type="button" class="cbtn" data-club="' + i + '" aria-pressed="' + (i === actual) + '">' + escudo(c, 30) + '<span>' + esc(c.nombre) + '<small>' + estrellas(c.fuerza) + ' · ' + c.formacion + '</small></span></button>'; }).join('') + '</div></div>').join('');
+  const propio = prog.carrera ? '<div class="caja"><h3>📈 Tu club</h3><div class="clubes"><button type="button" class="cbtn" data-club="' + L.TU_CLUB + '">' + escudo(clubDe(L.TU_CLUB), 30) + '<span>' + esc(prog.carrera.club.nombre) + '<small>' + estrellas(L.fuerzaClub(U, L.TU_CLUB, prog.carrera)) + '</small></span></button></div></div>' : '';
+  pantalla('<h2>' + esc(titulo) + '</h2><div class="ligas">' + propio + ligas + '</div><div class="fila"><button class="btn sec" data-a="menu">◀ Menú</button></div>');
+}
+
+// ---- Previa del partido: rivales + pizarra táctica (valores guardados; «¡A jugar!» con un toque) ----
+function previa(ctx) {
+  S.ctx = ctx;
+  const [a, b] = ctx.equipos.map(clubDe), t = prog.tactica;
+  const tuyo = ctx.humanos.length ? ctx.equipos[ctx.humanos[0].eq] : ctx.equipos[0];
+  const eq = L.equipoMotor(U, tuyo, prog.carrera, { formacion: t.formacion });
+  const cambiar = ctx.cambiar ? '<div class="fila"><button class="btn sec chico" data-a="cambiar-tuyo">🔁 Tu club</button><button class="btn sec chico" data-a="cambiar-rival">🎲 Otro rival</button></div>' : '';
+  pantalla('<h2>' + esc(ctx.titulo) + '</h2>' +
+    '<div class="vs"><div class="club">' + escudo(a) + esc(a.nombre) + '<small>' + estrellas(L.fuerzaClub(U, ctx.equipos[0], prog.carrera)) + '</small></div><div class="x">VS</div><div class="club">' + escudo(b) + esc(b.nombre) + '<small>' + estrellas(L.fuerzaClub(U, ctx.equipos[1], prog.carrera)) + '</small></div></div>' +
+    '<div class="sub">🏟️ ' + esc(ctx.estadio || a.estadio) + ' · ' + NOMBRE_NIVEL[ctx.dificultad] + ' · ' + ajustes.minutos + ' min</div>' + cambiar +
+    '<button class="btn" data-a="jugar" id="b-jugar">▶ ¡A jugar!</button>' +
+    '<div class="caja"><h3>📋 Pizarra táctica</h3>' + opciones(Object.keys(M.FORMACIONES).map(f => [f, f]), t.formacion, 'formacion') +
+    '<div class="deslizadores" style="margin-top:8px">' +
+    deslizador('linea', '🧱 Línea defensiva', 'Baja', 'Alta') + deslizador('ancho', '↔️ Amplitud', 'Cerrada', 'Abierta') +
+    deslizador('mentalidad', '🧠 Mentalidad', 'Defensiva', 'Ofensiva') + deslizador('presion', '🔥 Presión', 'Poca', 'Mucha') + '</div></div>' +
+    '<details class="caja"><summary style="font-weight:800;cursor:pointer">👥 Alineación y cartas de habilidad</summary><div class="alineacion" style="margin-top:6px">' + alineacion(eq.jugadores) + '</div></details>', 'previa');
+}
+const deslizador = (k, t, a, b) => '<label>' + t + '<input type="range" min="0" max="100" step="5" data-tac="' + k + '" value="' + prog.tactica[k] + '"><span><i>' + a + '</i><i>' + b + '</i></span></label>';
+const iconoCarta = c => (c && M.CARTA[c] ? '<span class="carta" title="' + esc(M.CARTA[c].nombre) + '">' + M.CARTA[c].icono + '</span>' : '');
+const alineacion = js => js.map(j => '<div><span class="num">' + j.num + '</span><span class="pos">' + j.pos + '</span>' + esc(j.nombre) + ' <small class="sub">' + L.mediaJugador(j) + '</small>' + iconoCarta(j.carta) + '</div>').join('');
+
+/* ================= Partido ================= */
+const vista = V.crearVista($('c'));
+function ajustarVista() { const r = $('pantalla').getBoundingClientRect(); vista.ajustar(Math.max(200, r.width), Math.max(150, r.height), window.devicePixelRatio || 1); }
+addEventListener('resize', () => { ajustarVista(); revisarGirar(); });
+function revisarGirar() {
+  const vertical = innerHeight > innerWidth;
+  $('girar').classList.toggle('hide', !(TACTIL && vertical && !S.girarCerrado && S.vista === 'partido'));
+}
+$('b-girar').onclick = () => { S.girarCerrado = true; revisarGirar(); };
+
+function rivalAzar(excluir, d) {
+  const r = M.rngDe(String(Date.now()), 'rival'), lista = (d === undefined ? U.clubes.map(c => c.id) : U.ligas[d].clubes).filter(x => x !== excluir);
+  return lista[Math.floor(r() * lista.length)];
+}
+function tacticaIA(idx) { const c = clubDe(idx); return { ...M.TACTICA_BASE, formacion: c.formacion }; }
+function armarEquipos(ctx) {
+  const humanosEq = new Set(ctx.humanos.map(h => h.eq));
+  const tacticas = [0, 1].map(e => (humanosEq.has(e) ? { ...prog.tactica } : { ...tacticaIA(ctx.equipos[e]), ...(ctx.formacionRival && e === 1 ? { formacion: ctx.formacionRival } : {}) }));
+  const a = L.equipoMotor(U, ctx.equipos[0], prog.carrera, { formacion: tacticas[0].formacion });
+  const visitante = L.chocan(a.uniforme.c1, clubDe(ctx.equipos[1]).uniforme.c1);
+  const b = L.equipoMotor(U, ctx.equipos[1], prog.carrera, { formacion: tacticas[1].formacion, visitante });
+  return { equipos: [a, b], tacticas };
+}
+function empezarPartido() {
+  const ctx = S.ctx, { equipos, tacticas } = armarEquipos(ctx);
+  const semilla = PRUEBA && Q.get('semilla') ? Q.get('semilla') : String(Date.now());
+  S.p = M.crearPartido({ semilla, equipos, tacticas, humanos: ctx.humanos.map(h => ({ eq: h.eq })), dificultad: ctx.dificultad, minutos: ajustes.minutos, fueraDeLugar: ajustes.fuera, eliminatoria: !!ctx.eliminatoria });
+  S.pausa = false; S.inicioReal = performance.now(); S.enLocal = !!ctx.local; S.ultimoPuntos = null; textosActuales = '';
+  vista.olvidarSprites(); vista.seguir(0, 0);
+  ['0', '1'].forEach(e => { const c = equipos[e]; $('e-' + e).src = V.escudoUrl(c.escudo, 64); $('n-' + e).textContent = c.corto; });
+  $('ov').classList.add('hide'); $('hud').classList.remove('hide');
+  S.vista = 'partido'; document.body.classList.add('en-partido');
+  pintarControl(); ajustarVista(); revisarGirar(); soltarToques();
+  setTimeout(() => { S.girarCerrado = true; revisarGirar(); }, 6000); // el aviso de girar se va solo
+  audio(); ambiente(true); silbatoInicioFin(1); tension = 0;
+  avisar('🏟️ ' + (ctx.estadio || clubDe(ctx.equipos[0]).estadio), 1800);
+  if (!S.tutoVisto && ctx.humanos.length && !ctx.local) tutorial();
+}
+function tutorial() {
+  S.tutoVisto = true;
+  const t = $('tuto');
+  t.innerHTML = '<h3>🎮 Controles</h3><div><b>A</b><span>pase · presiona</span></div><div><b>B (mantén)</b><span>tiro · entrada</span></div><div><b>X / Y</b><span>al hueco · centro</span></div><div><b>R / L</b><span>sprint · cambiar</span></div>';
+  t.classList.add('ver'); document.body.classList.add('tuto');
+  setTimeout(() => { t.classList.remove('ver'); document.body.classList.remove('tuto'); }, 4000);
+}
+function alternarPausa() {
+  if (S.vista !== 'partido' && S.vista !== 'pausa') return;
+  if (S.vista === 'pausa') { reanudar(); return; }
+  S.vista = 'pausa'; S.pausa = true; soltarToques(); ambiente(false); apagarTension();
+  const t = prog.tactica;
+  const ov = $('ov');
+  ov.innerHTML = '<h2>⏸ Pausa</h2><p>' + esc(S.p.eq[0].datos.nombre) + ' ' + S.p.eq[0].goles + ' – ' + S.p.eq[1].goles + ' ' + esc(S.p.eq[1].datos.nombre) + ' · ' + S.p.minuto + "'</p>" +
+    '<div class="fila"><button class="btn" data-a="seguir">▶ Seguir</button><button class="btn sec" data-a="abandonar">🏳️ Dejar el partido</button></div>' +
+    (S.ctx.humanos.length && !S.ctx.local ? '<div class="caja"><h3>📋 Cambiar la táctica</h3>' + opciones(Object.keys(M.FORMACIONES).map(f => [f, f]), t.formacion, 'formacion') + '<div class="deslizadores" style="margin-top:8px">' +
+      deslizador('linea', '🧱 Línea defensiva', 'Baja', 'Alta') + deslizador('ancho', '↔️ Amplitud', 'Cerrada', 'Abierta') + deslizador('mentalidad', '🧠 Mentalidad', 'Defensiva', 'Ofensiva') + deslizador('presion', '🔥 Presión', 'Poca', 'Mucha') + '</div></div>' : '');
+  ov.classList.remove('hide');
+  mando.mostrar(false);
+}
+function reanudar() {
+  S.vista = 'partido'; S.pausa = false;
+  if (S.ctx.humanos.length && !S.ctx.local) M.cambiarTactica(S.p, S.ctx.humanos[0].eq, prog.tactica);
+  $('ov').classList.add('hide'); pintarControl(); ambiente(true); ultimo = performance.now();
+}
+$('b-pausa').onclick = e => { alternarPausa(); e.currentTarget.blur(); };
+
+// Eventos del motor → sonido, avisos y emoción.
+const AVISOS = { banda: '↔️ Saque de banda', meta: '🥅 Saque de meta', esquina: '🚩 Tiro de esquina', fuera_lugar: '🚩 ¡Fuera de lugar!', falta: '⚠️ Falta', amarilla: '🟨 Tarjeta amarilla', poste: '💥 ¡Al poste!', ultimos: '⏱️ ¡Últimos minutos!', tanda: '🎯 Tanda de penales', penal_gol: '✅ ¡Adentro!', penal_falla: '❌ ¡Falló!' };
+function eventos(lista) {
+  for (const e of lista) {
+    if (AVISOS[e.tipo]) avisar(AVISOS[e.tipo]);
+    eventoSonido(e);
+  }
+}
+const silbatazo = () => SON.silbato(1);
+const SONIDOS = {
+  patada: () => SON.patada(),
+  gol: e => {
+    const p = S.p, autor = e.i >= 0 ? p.jug[e.i].datos.nombre : '';
+    if (!window.Emocion?.gol()) SON.gol();
+    S.destello = 1;
+    gritar('¡GOOOL!', (e.autogol ? 'Autogol · ' : '⚽ ') + autor + ' · ' + p.eq[e.eq].datos.corto);
+  },
+  poste: () => SON.poste(),
+  atajada: e => { SON.atajada(); if (!e.penal) avisar('🧤 ¡Atajada!'); },
+  falta: silbatazo, fuera_lugar: silbatazo, banda: silbatazo, meta: silbatazo, esquina: silbatazo,
+  penal: e => { SON.silbato(2); window.Emocion?.suspenso(); if (!e.tanda) gritar('¡PENAL!', '', 1600); },
+  penal_gol: () => window.Emocion?.revelacion(),
+  penal_falla: () => window.Emocion?.revelacion(),
+  medio: e => { const p = S.p; silbatoInicioFin(2); gritar('Medio tiempo', p.eq[0].datos.corto + ' ' + e.marcador[0] + ' – ' + e.marcador[1] + ' ' + p.eq[1].datos.corto, 1900); },
+  tanda: () => window.Emocion?.suspenso(),
+  final: () => { apagarTension(); silbatoInicioFin(3); },
+};
+function eventoSonido(e) { if (SONIDOS[e.tipo]) SONIDOS[e.tipo](e); }
+
+// ---- HUD ----
+const hudPrevio = {};
+function hud(id, txt) { if (hudPrevio[id] !== txt) { hudPrevio[id] = txt; $(id).textContent = txt; } }
+function pintarHud() {
+  const p = S.p;
+  hud('g-0', String(p.eq[0].goles)); hud('g-1', String(p.eq[1].goles));
+  hud('reloj', p.tanda ? 'PEN ' + p.tanda.goles[0] + '-' + p.tanda.goles[1] : p.minuto + "'");
+  const h = p.humanos[0], j = h && h.jug >= 0 ? p.jug[h.jug] : null;
+  const clave = j ? j.i + '|' + Math.round(j.energia * 20) : '';
+  if (hudPrevio.info !== clave) {
+    hudPrevio.info = clave;
+    $('info-j').innerHTML = j ? '<span class="num">' + j.datos.num + '</span>' + esc(j.datos.nombre) + iconoCarta(j.carta) + '<span class="ene" title="Energía"><i style="width:' + Math.round(j.energia * 100) + '%"></i></span>' : '';
+    $('info-j').classList.toggle('hide', !j);
+  }
+  textosBotones(p);
+  tensionFinal(p);
+}
+
+/* ================= Fin del partido ================= */
+function terminarPartido() {
+  const p = S.p, ctx = S.ctx;
+  S.vista = 'resultado'; ambiente(false); soltarToques();
+  const yo = ctx.humanos.length ? ctx.humanos[0].eq : 0, gf = p.eq[yo].goles, gc = p.eq[1 - yo].goles, g = M.ganador(p);
+  const r = { gf, gc, gano: g === yo, empate: g === null, segundos: Math.round((performance.now() - S.inicioReal) / 1000) };
+  apagarTension();
+  const extra = ctx.alTerminar ? ctx.alTerminar(r) : {};
+  if (!extra.podio && r.gano) window.Emocion?.victoria(); // en la llave suena el podio
+  else if (!extra.podio && !r.empate) window.Emocion?.derrota();
+  if (ctx.puntua) puntuar(r, ctx);
+  resultado(r, extra);
+}
+function puntuar(r, ctx) {
+  const st = prog.stats;
+  st.partidos++; st.gf += r.gf; st.gc += r.gc;
+  if (r.gano) st.ganados++; else if (r.empate) st.empatados++; else st.perdidos++;
+  const puntos = L.puntosPartido({ gf: r.gf, gc: r.gc, dificultad: ctx.dificultad, clasificatoria: ctx.modo === 'clasif' });
+  r.puntos = puntos;
+  if (ctx.modo === 'clasif') {
+    const sem = L.semanaISO(new Date());
+    if (!prog.clasif || prog.clasif.semana !== sem) prog.clasif = { semana: sem, mejor: 0, jugados: 0 };
+    prog.clasif.jugados++; prog.clasif.mejor = Math.max(prog.clasif.mejor, puntos);
+  }
+  guardar();
+  S.ultimoPuntos = null;
+  enviar({ tipo: 'puntos', puntos, aciertos: r.gf, total: 0, segundos: r.segundos });
+}
+function resultado(r, extra) {
+  const p = S.p, ctx = S.ctx, a = p.eq[0].datos, b = p.eq[1].datos, st = p.stats;
+  const pos = Math.round(st.posesion[0] / Math.max(1, st.posesion[0] + st.posesion[1]) * 100);
+  const tanda = p.tanda ? '<div class="sub">Penales: ' + p.tanda.goles[0] + ' – ' + p.tanda.goles[1] + '</div>' : '';
+  let titulo = '🤝 Empate';
+  if (r.gano) titulo = '🏆 ¡Victoria!'; else if (!r.empate) titulo = '😓 Derrota';
+  if (!ctx.humanos.length || ctx.local) titulo = '🏁 Final';
+  pantalla('<h2>' + titulo + '</h2><div class="marcadorg">' + escudo(a, 56) + '<span>' + p.eq[0].goles + ' – ' + p.eq[1].goles + '</span>' + escudo(b, 56) + '</div>' +
+    '<div class="sub">' + esc(a.nombre) + ' vs ' + esc(b.nombre) + '</div>' + tanda +
+    '<div class="stats"><span>' + st.tiros[0] + '</span><span>Tiros</span><span>' + st.tiros[1] + '</span><span>' + st.puerta[0] + '</span><span>A puerta</span><span>' + st.puerta[1] + '</span>' +
+    '<span>' + pos + ' %</span><span>Posesión</span><span>' + (100 - pos) + ' %</span><span>' + st.pases[0] + '</span><span>Pases</span><span>' + st.pases[1] + '</span><span>' + st.faltas[0] + '</span><span>Faltas</span><span>' + st.faltas[1] + '</span></div>' +
+    (extra.texto ? '<p>' + extra.texto + '</p>' : '') +
+    '<p id="res-puntos">' + textoPuntos(r, ctx) + '</p>' +
+    '<div class="fila">' + (extra.botones || '<button class="btn" data-a="revancha">🔁 Revancha</button>') + '<button class="btn sec" data-a="menu">🏠 Menú</button></div>', 'resultado');
+  if (S.ultimoPuntos && ctx.puntua) mostrarPuntos(S.ultimoPuntos);
+}
+function textoPuntos(r, ctx) {
+  if (ctx.puntua) return '⭐ +' + r.puntos + ' puntos · guardando…';
+  return ctx.local ? '🛋️ Partido local: no suma al ranking.' : '';
+}
+function mostrarPuntos(d) {
+  const el = $('res-puntos'); if (!el) return;
+  if (!d.guardado) { el.textContent = 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').'; return; }
+  el.textContent = '✔ +' + d.puntos + ' a tus ⭐ individuales' + (d.pos ? ' · #' + d.pos + ' de la semana' : '');
+}
+
+/* ================= Modos ================= */
+function modoRapido() {
+  const rival = rivalAzar(ajustes.club);
+  previa({ modo: 'rapido', titulo: '⚡ Partido rápido', equipos: [ajustes.club, rival], humanos: [{ eq: 0, fuente: 'todo' }], dificultad: ajustes.nivel, puntua: true, cambiar: true });
+}
+function modoClasif() {
+  const sem = L.semanaISO(new Date()), r = L.rivalSemana(U, sem), c = U.clubes[r.club];
+  const mio = prog.clasif && prog.clasif.semana === sem ? prog.clasif : { mejor: 0, jugados: 0 };
+  const tuyo = ajustes.club === r.club ? (r.club + 1) % 24 : ajustes.club;
+  S.ctxClasif = { modo: 'clasif', titulo: '📅 Clasificatoria ' + sem, equipos: [tuyo, r.club], humanos: [{ eq: 0, fuente: 'todo' }], dificultad: 'dificil', puntua: true, formacionRival: r.formacion, cambiar: false };
+  pantalla('<h2>📅 Clasificatoria semanal</h2><p>Semana ' + esc(sem) + ': el rival es el mismo para todos y juega en Difícil. Tus puntos valen ×1.2 en el ranking de la semana.</p>' +
+    '<div class="club">' + escudo(c, 80) + esc(c.nombre) + '<small>' + esc(c.estadio) + ' · ' + esc(r.formacion) + '</small></div>' +
+    '<div class="caja"><h3>Tu mejor de la semana</h3><div style="font-size:28px;font-weight:900">⭐ ' + mio.mejor + '</div><div class="sub">' + mio.jugados + ' partido(s) jugados</div></div>' +
+    '<div class="fila"><button class="btn" data-a="clasif-jugar">▶ Jugar</button><button class="btn sec" data-a="menu">◀ Menú</button></div>');
+}
+// ---- Copa ----
+function modoCopa(club) {
+  S.copa = L.crearCopa(U, club, String(Date.now()), prog.carrera);
+  L.simularIA(U, S.copa);
+  verLlave('copa');
+}
+function filaPar(t, m, r) {
+  const ea = t.equipos[m.a], eb = t.equipos[m.b], ca = clubDe(ea.club), cb = clubDe(eb.club);
+  const lado = (e, c, x, g) => '<div class="' + (m.ganador === x ? 'gano' : '') + '"><span>' + escudo(c, 16) + esc(c.corto) + (e.humano !== null ? ' 🎮' : '') + '</span><b>' + (g === null ? '' : g) + '</b></div>';
+  const pen = m.pen !== null && m.ga === m.gb ? '<small class="sub">penales</small>' : '';
+  return '<div class="par' + (ea.humano !== null || eb.humano !== null ? ' tuyo' : '') + '">' + lado(ea, ca, m.a, m.ga) + lado(eb, cb, m.b, m.gb) + pen + '</div>';
+}
+function htmlLlave(t) {
+  return '<div class="llave">' + t.rondas.map((r, k) => '<div class="ronda"><h3>' + esc(L.nombreRonda(t, k)) + '</h3>' + r.map(m => filaPar(t, m, k)).join('') + '</div>').join('') + '</div>';
+}
+function verLlave(tipo) {
+  const t = tipo === 'copa' ? S.copa : S.torneo, sig = L.siguientePartido(t);
+  let cuerpo;
+  if (t.campeon !== null) { const c = clubDe(t.equipos[t.campeon].club); cuerpo = '<div class="club">' + escudo(c, 84) + '<b>🏆 ¡' + esc(c.nombre) + ' es campeón!</b></div>'; }
+  else if (sig) cuerpo = '<button class="btn" data-a="' + tipo + '-jugar">▶ Jugar: ' + esc(L.nombreRonda(t, sig.ronda)) + '</button>';
+  else cuerpo = '<p>Quedaste fuera. ¡A la próxima!</p>';
+  const nombre = tipo === 'copa' ? '🏆 ' + L.COPA.nombre : '🛋️ Torneo local';
+  pantalla('<h2>' + esc(nombre) + '</h2>' + (tipo === 'copa' ? '<div class="sub">Trofeo «' + esc(L.COPA.trofeo) + '»</div>' : '') + cuerpo + '<div class="caja">' + htmlLlave(t) + '</div><div class="fila"><button class="btn sec" data-a="menu">🏠 Menú</button></div>', 'llave');
+}
+// Lugar final de las personas en la llave (1 campeón, 2 finalista, 3 semifinal, 4 antes) o null si siguen vivas.
+function lugarEnLlave(t) {
+  const humanos = new Set(t.equipos.map((e, i) => (e.humano === null ? -1 : i)).filter(i => i >= 0));
+  if (t.campeon !== null && humanos.has(t.campeon)) return 1;
+  const total = Math.log2(t.equipos.length);
+  let mejor = null;
+  t.rondas.forEach((r, k) => r.forEach(m => {
+    const perdedor = m.ganador === m.a ? m.b : m.a;
+    if (m.ganador !== null && humanos.has(perdedor)) mejor = Math.min(mejor || 9, [4, 3, 2][k + 3 - total] || 4);
+  }));
+  const vivas = [...humanos].some(i => t.rondas[t.rondas.length - 1].some(m => (m.a === i || m.b === i) && m.ganador === null));
+  return vivas && t.campeon === null ? null : mejor;
+}
+function jugarLlave(tipo) {
+  const t = tipo === 'copa' ? S.copa : S.torneo, sig = L.siguientePartido(t);
+  const humanosDe = e => {
+    if (tipo !== 'copa') return S.local.personas.filter(x => x.club === t.equipos[e].club);
+    return t.equipos[e].humano === null ? [] : [{ fuente: 'todo' }];
+  };
+  const hs = [...humanosDe(sig.a).map(h => ({ eq: 0, fuente: h.fuente })), ...humanosDe(sig.b).map(h => ({ eq: 1, fuente: h.fuente }))];
+  const ctx = { modo: tipo, titulo: (tipo === 'copa' ? '🏆 ' : '🛋️ ') + L.nombreRonda(t, sig.ronda), equipos: [t.equipos[sig.a].club, t.equipos[sig.b].club], humanos: hs, dificultad: ajustes.nivel, eliminatoria: true, puntua: tipo === 'copa', local: tipo === 'torneo' };
+  ctx.alTerminar = r => {
+    const p = S.p, pen = p.tanda ? M.ganador(p) : null;
+    L.registrarTorneo(U, t, p.eq[0].goles, p.eq[1].goles, pen);
+    L.simularIA(U, t);
+    if (tipo === 'copa' && t.campeon !== null && t.equipos[t.campeon].humano !== null) { prog.stats.copas++; gritar('¡CAMPEÓN!', L.COPA.nombre, 3000); }
+    const lugar = lugarEnLlave(t);
+    if (lugar !== null) window.Emocion?.podio(lugar);
+    return { podio: lugar !== null, botones: '<button class="btn" data-a="ver-' + tipo + '">▶ Ver la llave</button>' };
+  };
+  if (tipo === 'copa') { previa(ctx); return; }
+  S.ctx = ctx; empezarPartido();
+}
+
+// ---- Carrera (Liga Master) ----
+function modoCarrera() {
+  if (!prog.carrera) { editarClub(null); return; }
+  hubCarrera();
+}
+const nombreDiv = d => U.ligas[d].emoji + ' ' + U.ligas[d].nombre;
+function proximoCarrera() {
+  const c = prog.carrera;
+  if (c.copa) { const r = L.rivalCopa(U, c); return { club: r, local: true, copa: true, ronda: c.copa.ronda }; }
+  if (c.jornada >= 14) return null;
+  return L.rivalJornada(U, c);
+}
+function hubCarrera() {
+  const c = prog.carrera, d = L.divisionDe(c), club = clubDe(L.TU_CLUB), tab = S.carreraTab;
+  const tabs = [['partido', '📅 Próximo'], ['tabla', '📊 Tabla'], ['plantilla', '👥 Plantilla'], ['mercado', '🛒 Mercado'], ['ojeador', '🔭 Ojeador'], ['cartas', '🃏 Cartas'], ['club', '🎨 Club']];
+  const cuerpo = { partido: tabPartido, tabla: tabTabla, plantilla: tabPlantilla, mercado: tabMercado, ojeador: tabOjeador, cartas: tabCartas, club: () => '<button class="btn" data-a="editar-club">🎨 Editar escudo, uniforme y estadio</button>' }[tab]();
+  pantalla('<div class="vista-club">' + escudo(club, 64) + '<div style="text-align:left"><h2 style="margin:0">' + esc(c.club.nombre) + '</h2><div class="sub">' + nombreDiv(d) + ' · Temporada ' + c.temporada + ' · Jornada ' + Math.min(14, c.jornada + 1) + '/14</div><div class="dinero">💰 ' + c.dinero.toLocaleString('es-MX') + '</div></div></div>' +
+    '<div class="tabs">' + tabs.map(([id, t]) => '<button class="tab" data-tab="' + id + '" aria-pressed="' + (id === tab) + '">' + t + '</button>').join('') + '</div>' +
+    '<div class="caja">' + cuerpo + '</div>' + (S.aviso ? '<p>' + esc(S.aviso) + '</p>' : '') + '<div class="fila"><button class="btn sec" data-a="menu">🏠 Menú</button></div>', 'carrera');
+  S.aviso = '';
+}
+function tabPartido() {
+  const c = prog.carrera, sig = proximoCarrera();
+  if (!sig) return '<h3>🏁 Terminó la temporada ' + c.temporada + '</h3><button class="btn" data-a="fin-temporada">📜 Cerrar la temporada</button>';
+  const r = clubDe(sig.club), yo = clubDe(L.TU_CLUB);
+  const lugar = sig.local ? '🏠 En casa' : '✈️ De visita';
+  const titulo = sig.copa ? '🏆 ' + L.COPA.nombre + ' · ' + ['Cuartos de final', 'Semifinal', 'Final'][sig.ronda] : 'Jornada ' + (c.jornada + 1) + ' · ' + lugar;
+  return '<h3>' + esc(titulo) + '</h3><div class="vs"><div class="club">' + escudo(yo) + esc(yo.corto) + '</div><div class="x">VS</div><div class="club">' + escudo(r) + esc(r.nombre) + '<small>' + estrellas(L.fuerzaClub(U, sig.club, c)) + '</small></div></div>' +
+    '<div class="fila" style="margin-top:8px"><button class="btn" data-a="carrera-jugar">▶ Jugar</button><button class="btn sec" data-a="carrera-simular">⏩ Simular (sin puntos)</button></div>';
+}
+function claseFila(f, k, d) {
+  let clase = f.club === L.TU_CLUB ? 'yo' : '';
+  if (k < 2 && d > 0) clase += ' sube';
+  if (k > 5 && d < 2) clase += ' baja';
+  return clase;
+}
+function tabTabla() {
+  const c = prog.carrera, d = L.divisionDe(c), filas = L.tablaDivision(U, c, d);
+  return '<h3>' + nombreDiv(d) + '</h3><table class="tabla"><thead><tr><th>#</th><th style="text-align:left">Club</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>' +
+    filas.map((f, k) => { const cl = clubDe(f.club), clase = claseFila(f, k, d); return '<tr class="' + clase + '"><td>' + (k + 1) + '</td><td class="n">' + escudo(cl, 18) + esc(cl.nombre) + '</td><td>' + f.pj + '</td><td>' + f.g + '</td><td>' + f.e + '</td><td>' + f.p + '</td><td>' + f.gf + '</td><td>' + f.gc + '</td><td>' + f.dg + '</td><td><b>' + f.pts + '</b></td></tr>'; }).join('') + '</tbody></table><div class="sub">Verde: ascenso · rojo: descenso</div>';
+}
+function tabPlantilla() {
+  const c = prog.carrera, js = L.plantillaCompleta(U, c);
+  const sel = (k, actual) => '<select data-asignar="' + k + '" aria-label="Carta"><option value="">—</option>' + c.cartas.map(id => '<option value="' + id + '"' + (id === actual ? ' selected' : '') + '>' + M.CARTA[id].icono + ' ' + esc(M.CARTA[id].nombre) + '</option>').join('') + '</select>';
+  return '<h3>👥 Plantilla (' + js.length + '/' + L.MAX_PLANTILLA + ')</h3><div class="lista">' + js.map((j, k) => '<div class="it"><span class="num">' + j.num + '</span><span class="pos">' + j.pos + '</span><span class="n">' + esc(j.nombre) + ' · ' + j.edad + ' años</span><b>' + L.mediaJugador(j) + '</b>' + iconoCarta(j.carta) +
+    (c.cartas.length ? sel(k, c.plantilla[k][2]) : '') + '<button class="op" data-vender="' + k + '" title="Dejar ir">↩</button></div>').join('') + '</div><div class="sub">↩ deja ir a un jugador por la mitad de su valor (mínimo ' + L.MIN_PLANTILLA + ' y un portero).</div>';
+}
+const filaOferta = (o, attr) => '<div class="it"><span class="pos">' + o.pos + '</span><span class="n">' + esc(o.nombre) + ' · ' + o.edad + ' años</span><b>' + o.media + '</b>' + iconoCarta(o.carta) + '<span class="dinero">💰' + o.precio.toLocaleString('es-MX') + '</span><button class="op" data-' + attr + '="' + o.id + '">Fichar</button></div>';
+function tabMercado() {
+  const lista = L.mercado(U, prog.carrera);
+  return '<h3>🛒 Mercado de la temporada</h3><div class="lista">' + (lista.length ? lista.map(o => filaOferta(o, 'fichar')).join('') : '<p>Ya fichaste a todos los de esta temporada.</p>') + '</div>';
+}
+function tabOjeador() {
+  const c = prog.carrera, lista = c.ojeador.map(id => { const j = L.jugadorPorId(U, id); return { id, nombre: j.nombre, pos: j.pos, media: L.mediaJugador(j), edad: j.edad + c.temporada - 1, carta: null, precio: Math.round(L.precio(L.mediaJugador(j), j.edad) * 0.6 / 10) * 10 }; });
+  return '<h3>🔭 Ojeador</h3><p>Busca jóvenes con futuro para tu división. Cuesta 💰' + L.PRECIO_OJEADOR + ' y sus fichajes salen más baratos.</p><button class="btn chico" data-a="ojear">🔭 Mandar al ojeador</button><div class="lista" style="margin-top:8px">' + lista.map(o => filaOferta(o, 'fichar')).join('') + '</div>';
+}
+function tabCartas() {
+  const c = prog.carrera;
+  return '<h3>🃏 Cartas de habilidad</h3><p>Cada carta cuesta 💰' + L.PRECIO_CARTA + '. Asígnala en 👥 Plantilla (una por jugador).</p><div class="lista">' + M.CARTAS.map(k => '<div class="it"><span class="carta">' + k.icono + '</span><span class="n"><b>' + esc(k.nombre) + '</b> · ' + esc(k.d) + '</span>' +
+    (c.cartas.includes(k.id) ? '<span class="sub">✔ tuya</span>' : '<button class="op" data-carta="' + k.id + '">Comprar</button>') + '</div>').join('') + '</div>';
+}
+function jugarCarrera() {
+  const c = prog.carrera, sig = proximoCarrera(), yo = L.TU_CLUB;
+  const equipos = sig.local ? [yo, sig.club] : [sig.club, yo];
+  const ctx = { modo: 'carrera', titulo: sig.copa ? '🏆 ' + L.COPA.nombre : '📈 Jornada ' + (c.jornada + 1), equipos, humanos: [{ eq: sig.local ? 0 : 1, fuente: 'todo' }], dificultad: ajustes.nivel, puntua: true, eliminatoria: !!sig.copa, estadio: sig.local ? c.club.estadio : clubDe(sig.club).estadio };
+  ctx.alTerminar = r => registrarCarrera(sig, r.gf, r.gc, r.gano);
+  previa(ctx);
+}
+function registrarCarrera(sig, gf, gc, gano) {
+  const c = prog.carrera;
+  let texto;
+  if (sig.copa) { const x = L.registrarCopa(U, c, gano); texto = copaTexto(x); if (x.campeon) prog.stats.copas++; }
+  else { const x = L.registrarPartido(U, c, gf, gc); texto = '💰 +' + x.premio + ' para tu club.'; }
+  guardar();
+  return { texto: esc(texto), botones: '<button class="btn" data-a="carrera">▶ Volver a mi club</button>' };
+}
+function copaTexto(x) {
+  if (x.campeon) return '🏆 ¡Ganaste la ' + L.COPA.nombre + '! +3000';
+  return x.eliminado ? 'Quedaste fuera de la Copa.' : '¡Avanzas en la Copa! +400';
+}
+function simularCarrera() {
+  const c = prog.carrera, sig = proximoCarrera();
+  const [a, b] = L.resultadoRapido(L.fuerzaClub(U, L.TU_CLUB, c), L.fuerzaClub(U, sig.club, c), M.rngDe(String(Date.now()), 'sim'));
+  const gano = sig.copa && a === b ? M.rngDe(String(Date.now()), 'pen')() < 0.5 : a > b;
+  registrarCarrera(sig, a, b, gano);
+  const penales = gano ? ' (ganaste en penales)' : ' (perdiste en penales)';
+  S.aviso = '⏩ Resultado simulado: ' + c.club.corto + ' ' + a + ' – ' + b + ' ' + clubDe(sig.club).corto + (sig.copa && a === b ? penales : '');
+  hubCarrera();
+}
+function finTemporada() {
+  const c = prog.carrera, res = L.finTemporada(U, c);
+  guardar();
+  const lineas = ['Terminaste en el lugar ' + res.pos + ' de ' + nombreDiv(res.division) + '.', res.campeon ? '🏆 ¡Campeón de liga! +2000' : '', res.ascenso ? '⬆️ ¡Ascenso! +1000' : '', res.descenso ? '⬇️ Descenso.' : '', res.copa ? '🏆 Clasificaste a la ' + L.COPA.nombre + '.' : '', '💰 Premio: ' + res.premio];
+  pantalla('<h2>📜 Fin de la temporada</h2>' + lineas.filter(Boolean).map(x => '<p>' + esc(x) + '</p>').join('') + '<p>Los jóvenes crecieron y los mayores bajaron un poco. ¡Nueva temporada!</p><div class="fila"><button class="btn" data-a="carrera">▶ Seguir</button></div>');
+}
+
+// ---- Crear o editar el club propio ----
+const TEXTO_CLUB = /^[\p{L}\p{N} .'-]{2,24}$/u;
+function editarClub(actual) {
+  const c = actual || { nombre: '', corto: '', estadio: '', escudo: { forma: 'escudo', c1: '#1d4ed8', c2: '#facc15', simbolo: 'estrella' }, uniforme: { c1: '#1d4ed8', c2: '#ffffff', patron: 'rayas' } };
+  S.clubEdit = structuredClone(c); S.clubNuevo = !actual;
+  pintarEditor();
+}
+const NOMBRES_OPCION = {
+  escudo: 'Escudo', circulo: 'Círculo', diamante: 'Diamante', hexagono: 'Hexágono',
+  estrella: '⭐ Estrella', rayo: '⚡ Rayo', corona: '👑 Corona', balon: '⚽ Balón', montana: '⛰️ Montaña', ola: '🌊 Ola', sol: '☀️ Sol', llama: '🔥 Llama', ave: '🕊️ Ave', arbol: '🌳 Árbol',
+  liso: 'Liso', rayas: 'Rayas', aros: 'Aros', mitades: 'Mitades', banda: 'Banda',
+};
+function pintarEditor() {
+  const c = S.clubEdit;
+  const sw = (grupo, k, val) => '<div class="swatches">' + L.COLORES.map(x => '<button type="button" class="sw" style="background:' + x + '" data-color="' + grupo + '|' + k + '|' + x + '" aria-pressed="' + (x === val) + '" aria-label="Color ' + x + '"></button>').join('') + '</div>';
+  const cho = (lista, actual, attr) => opciones(lista.map(x => [x, NOMBRES_OPCION[x] || x]), actual, attr);
+  pantalla('<h2>' + (S.clubNuevo ? '🏁 Crea tu club' : '🎨 Tu club') + '</h2>' + (S.clubNuevo ? '<p>Empiezas en la Liga Norte (Tercera) con jugadores jóvenes. ¡Llévalo a la cima!</p>' : '') +
+    '<div class="vista-club"><img id="ver-escudo" alt="Escudo"><img id="ver-camisa" alt="Uniforme"></div>' +
+    '<div class="caja forma">' +
+    '<label>Nombre del club<input type="text" id="f-nombre" maxlength="24" value="' + esc(c.nombre) + '" placeholder="Ej. Ajolotes del Lago"></label>' +
+    '<label>Siglas (3 letras)<input type="text" id="f-corto" maxlength="3" value="' + esc(c.corto) + '" placeholder="AJO" style="text-transform:uppercase"></label>' +
+    '<label>Estadio<input type="text" id="f-estadio" maxlength="24" value="' + esc(c.estadio) + '" placeholder="Estadio Lago Azul"></label>' +
+    '<label>Forma del escudo' + cho(L.FORMAS, c.escudo.forma, 'forma') + '</label>' +
+    '<label>Símbolo' + cho(L.SIMBOLOS, c.escudo.simbolo, 'simbolo') + '</label>' +
+    '<label>Colores del escudo' + sw('escudo', 'c1', c.escudo.c1) + sw('escudo', 'c2', c.escudo.c2) + '</label>' +
+    '<label>Uniforme' + cho(L.PATRONES, c.uniforme.patron, 'patron') + sw('uniforme', 'c1', c.uniforme.c1) + sw('uniforme', 'c2', c.uniforme.c2) + '</label>' +
+    '</div><output id="f-error" style="color:#fca5a5;font-weight:800"></output>' +
+    '<div class="fila"><button class="btn" data-a="guardar-club">' + (S.clubNuevo ? '🏁 Empezar carrera' : '💾 Guardar') + '</button><button class="btn sec" data-a="' + (S.clubNuevo ? 'menu' : 'carrera') + '">◀ Volver</button></div>', 'club');
+  vistaClub();
+}
+function vistaClub() { const c = S.clubEdit; $('ver-escudo').src = V.escudoUrl(c.escudo, 96); $('ver-camisa').src = V.camisaUrl(c.uniforme, 96); }
+function leerFormaClub() {
+  const c = S.clubEdit;
+  c.nombre = $('f-nombre').value.trim().replaceAll(/\s+/g, ' ');
+  c.corto = $('f-corto').value.trim().toUpperCase();
+  c.estadio = $('f-estadio').value.trim().replaceAll(/\s+/g, ' ');
+}
+function guardarClub() {
+  leerFormaClub();
+  const c = S.clubEdit;
+  if (!TEXTO_CLUB.test(c.nombre) || !TEXTO_CLUB.test(c.estadio)) { $('f-error').textContent = 'El nombre y el estadio llevan de 2 a 24 letras o números.'; return; }
+  if (!/^[A-ZÑ]{3}$/.test(c.corto)) { $('f-error').textContent = 'Las siglas son 3 letras.'; return; }
+  const club = { nombre: c.nombre, corto: c.corto, escudo: { ...c.escudo }, uniforme: { ...c.uniforme }, estadio: c.estadio };
+  if (S.clubNuevo) prog.carrera = L.nuevaCarrera(U, { club, semilla: Math.floor(Date.now() % 2147483000) + 1 });
+  else prog.carrera.club = club;
+  guardar();
+  S.carreraTab = 'partido';
+  hubCarrera();
+}
+
+// ---- Local (PC): personas, entradas, lados, partido local y torneo de sillón ----
+const FUENTES = [['tecladoIzq', '⌨️ Teclado izq. (WASD · F G R T · Q)'], ['tecladoDer', '⌨️ Teclado der. (flechas · J K U I · L)'], ['pad0', '🎮 Control 1'], ['pad1', '🎮 Control 2'], ['pad2', '🎮 Control 3'], ['pad3', '🎮 Control 4'], ['pantalla', '📱 Pantalla táctil']];
+const COLORES_P = V.COLOR_P;
+function controlesConectados() { try { return [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(Boolean).length; } catch { return 0; } }
+function modoLocal() {
+  if (!S.local) {
+    const pads = controlesConectados();
+    const f1 = pads > 0 ? 'pad0' : 'tecladoIzq', f2 = pads > 1 ? 'pad1' : 'tecladoDer';
+    S.local = { personas: [{ fuente: TACTIL && !pads ? 'pantalla' : f1, club: ajustes.club, lado: 0 }, { fuente: f2, club: rivalAzar(ajustes.club), lado: 1 }] };
+  }
+  pintarLocal();
+}
+function pintarLocal() {
+  const L0 = S.local, clubesOpt = sel => U.clubes.map(c => '<option value="' + c.id + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.nombre) + '</option>').join('');
+  const filas = L0.personas.map((x, k) => '<div class="persona"><b style="background:' + COLORES_P[k] + '">P' + (k + 1) + '</b>' +
+    '<select data-p-fuente="' + k + '" aria-label="Entrada de P' + (k + 1) + '">' + FUENTES.map(([v, t]) => '<option value="' + v + '"' + (v === x.fuente ? ' selected' : '') + '>' + t + '</option>').join('') + '</select>' +
+    '<select data-p-club="' + k + '" aria-label="Club de P' + (k + 1) + '">' + clubesOpt(x.club) + '</select>' +
+    '<select data-p-lado="' + k + '" aria-label="Lado de P' + (k + 1) + '"><option value="0"' + (x.lado === 0 ? ' selected' : '') + '>🏠 Local</option><option value="1"' + (x.lado === 1 ? ' selected' : '') + '>✈️ Visita</option></select></div>').join('');
+  pantalla('<h2>🛋️ Local en la misma PC</h2><p>De 2 a 4 personas, cada una con su control o su juego de teclas. En el celular juega 1 persona: dos juegos de mandos no caben sin tapar la cancha.</p>' +
+    '<div class="sub">🎮 Controles conectados: <b id="n-pads">' + controlesConectados() + '</b></div>' +
+    '<div class="caja"><div class="personas">' + filas + '</div><div class="fila" style="margin-top:8px"><button class="btn sec chico" data-a="local-mas"' + (L0.personas.length >= 4 ? ' disabled' : '') + '>➕ Persona</button><button class="btn sec chico" data-a="local-menos"' + (L0.personas.length <= 1 ? ' disabled' : '') + '>➖ Persona</button></div></div>' +
+    '<div class="sub">Mismo lado = cooperativo contra la IA. Lados distintos = 1 vs 1 (o 2 vs 2). En el torneo, cada club con personas es un equipo.</div>' +
+    '<div class="fila"><button class="btn" data-a="local-partido">▶ Partido local</button><button class="btn" data-a="local-torneo4">🏆 Torneo de 4</button><button class="btn" data-a="local-torneo8">🏆 Torneo de 8</button></div>' +
+    '<div class="fila"><button class="btn sec" data-a="menu">◀ Menú</button></div>', 'local');
+}
+function partidoLocal() {
+  const ps = S.local.personas, locales = ps.filter(x => x.lado === 0), visitas = ps.filter(x => x.lado === 1);
+  const a = (locales[0] || visitas[0]).club;
+  let b = visitas.length && locales.length ? visitas[0].club : rivalAzar(a);
+  if (b === a) b = rivalAzar(a);
+  const humanos = locales.length ? ps.map(x => ({ eq: x.lado, fuente: x.fuente })) : ps.map(x => ({ eq: 0, fuente: x.fuente }));
+  S.ctx = { modo: 'local', titulo: '🛋️ Partido local', equipos: [a, b], humanos, dificultad: ajustes.nivel, local: true, puntua: false };
+  S.ctx.alTerminar = () => ({ botones: '<button class="btn" data-a="local">▶ Otra vez</button>' });
+  empezarPartido();
+}
+function torneoLocal(n) {
+  const ps = S.local.personas, clubes = [...new Set(ps.map(x => x.club))].slice(0, n);
+  const r = M.rngDe(String(Date.now()), 'torneo'), resto = U.clubes.map(c => c.id).filter(x => !clubes.includes(x));
+  while (clubes.length < n) clubes.push(resto.splice(Math.floor(r() * resto.length), 1)[0]);
+  S.torneo = L.crearTorneo(U, clubes.map(club => ({ club, humano: ps.some(x => x.club === club) ? 0 : null })), String(Date.now()));
+  L.simularIA(U, S.torneo);
+  verLlave('torneo');
+}
+
+/* ================= Clics y cambios ================= */
+const ACCION = {
+  menu: menuPrincipal,
+  rapido: () => modoRapido(),
+  copa: () => elegirClub('🏆 Elige tu club para la Copa', club => modoCopa(club), ajustes.club),
+  carrera: () => { S.carreraTab = S.carreraTab || 'partido'; modoCarrera(); },
+  local: modoLocal,
+  clasif: modoClasif,
+  'clasif-jugar': () => previa(S.ctxClasif),
+  jugar: () => { guardar(); empezarPartido(); },
+  'cambiar-tuyo': () => elegirClub('🔁 Elige tu club', cambiarTuClub, ajustes.club),
+  'cambiar-rival': () => { S.ctx.equipos[1] = rivalAzar(S.ctx.equipos[0]); previa(S.ctx); },
+  revancha: () => previa(S.ctx),
+  seguir: reanudar,
+  abandonar: abandonar,
+  'copa-jugar': () => jugarLlave('copa'),
+  'torneo-jugar': () => jugarLlave('torneo'),
+  'ver-copa': () => verLlave('copa'),
+  'ver-torneo': () => verLlave('torneo'),
+  'carrera-jugar': jugarCarrera,
+  'carrera-simular': simularCarrera,
+  'fin-temporada': finTemporada,
+  'editar-club': () => editarClub(prog.carrera.club),
+  'guardar-club': guardarClub,
+  ojear: () => ojear(),
+  'local-mas': () => { const ps = S.local.personas, usadas = new Set(ps.map(x => x.fuente)); ps.push({ fuente: (FUENTES.find(f => !usadas.has(f[0])) || FUENTES[0])[0], club: rivalAzar(-1), lado: ps.length % 2 }); pintarLocal(); },
+  'local-menos': () => { S.local.personas.pop(); pintarLocal(); },
+  'local-partido': partidoLocal,
+  'local-torneo4': () => torneoLocal(4),
+  'local-torneo8': () => torneoLocal(8),
+};
+function cambiarTuClub(club) {
+  ajustes.club = club; guardarAjustes(); S.ctx.equipos[0] = club;
+  if (S.ctx.equipos[1] === club) S.ctx.equipos[1] = rivalAzar(club);
+  previa(S.ctx);
+}
+function ojear() {
+  const r = L.ojear(U, prog.carrera);
+  S.aviso = r.ok ? '🔭 El ojeador encontró 3 jóvenes.' : '💰 No te alcanza para el ojeador.';
+  if (r.ok) guardar();
+  hubCarrera();
+}
+function abandonar() {
+  const ctx = S.ctx;
+  ambiente(false); apagarTension(); window.Emocion?.calma();
+  if (ctx.modo === 'carrera') { const sig = proximoCarrera(); registrarCarrera(sig, 0, 3, false); S.aviso = '🏳️ Dejaste el partido: cuenta como derrota 0 – 3.'; hubCarrera(); return; }
+  if (ctx.modo === 'copa' || ctx.modo === 'torneo') {
+    const yo = ctx.humanos.length ? ctx.humanos[0].eq : 0, p = S.p; // dejar el partido cuenta como derrota 0 – 3
+    p.eq[yo].goles = 0; p.eq[1 - yo].goles = Math.max(3, p.eq[1 - yo].goles); p.tanda = null;
+    ctx.alTerminar({}); verLlave(ctx.modo); return;
+  }
+  menuPrincipal();
+}
+function clicCarrera(t) {
+  const c = prog.carrera;
+  if (t.dataset.fichar) { const r = L.fichar(U, c, t.dataset.fichar, null); S.aviso = r.ok ? '✔ ¡Fichaje hecho!' : { sin_dinero: '💰 No te alcanza.', plantilla_llena: '👥 La plantilla está llena (máx. 20): deja ir a alguien.' }[r.error] || 'No disponible.'; }
+  else if (t.dataset.vender) { const ok = L.vender(U, c, Number(t.dataset.vender)); S.aviso = ok ? '↩ Se fue del club.' : 'No puedes quedarte con menos de ' + L.MIN_PLANTILLA + ' o sin portero.'; }
+  else if (t.dataset.carta) { const r = L.comprarCarta(c, t.dataset.carta); S.aviso = r.ok ? '🃏 ¡Carta desbloqueada! Asígnala en 👥 Plantilla.' : '💰 No te alcanza.'; }
+  guardar();
+  hubCarrera();
+}
+function clicOpcion(t) {
+  const d = t.dataset;
+  if (d.nivel) ajustes.nivel = d.nivel;
+  if (d.minutos) ajustes.minutos = Number(d.minutos);
+  if (d.fuera) ajustes.fuera = d.fuera === '1';
+  if (d.formacion) prog.tactica.formacion = d.formacion;
+  guardarAjustes();
+  t.parentElement.querySelectorAll('.op').forEach(b => b.setAttribute('aria-pressed', String(b === t)));
+  if (d.formacion && S.vista === 'previa') previa(S.ctx);
+}
+function clicEditor(t) {
+  leerFormaClub();
+  const c = S.clubEdit, d = t.dataset;
+  if (d.forma) c.escudo.forma = d.forma;
+  if (d.simbolo) c.escudo.simbolo = d.simbolo;
+  if (d.patron) c.uniforme.patron = d.patron;
+  if (d.color) { const [g, k, v] = d.color.split('|'); c[g][k] = v; }
+  pintarEditor();
+}
+function elegido(club) {
+  const f = S.alElegir;
+  S.alElegir = null;
+  if (f) f(club);
+}
+$('ov').addEventListener('click', e => {
+  const t = e.target.closest('button');
+  if (!t) return;
+  const d = t.dataset;
+  if (d.a && ACCION[d.a]) { ACCION[d.a](); return; }
+  if (d.control) { elegirControl(d.control); return; }
+  if (d.club !== undefined) { elegido(Number(d.club)); return; }
+  if (d.tab) { S.carreraTab = d.tab; hubCarrera(); return; }
+  if (S.vista === 'club' && (d.forma || d.simbolo || d.patron || d.color)) { clicEditor(t); return; }
+  if (d.fichar || d.vender || d.carta) { clicCarrera(t); return; }
+  if (d.nivel || d.minutos || d.fuera || d.formacion) clicOpcion(t);
+});
+$('ov').addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.tac) prog.tactica[t.dataset.tac] = clamp(Number(t.value) || 0, 0, 100);
+  if (S.vista === 'club' && t.id && t.id.startsWith('f-')) leerFormaClub();
+});
+$('ov').addEventListener('change', e => {
+  const t = e.target, d = t.dataset;
+  if (d.asignar !== undefined) { L.asignarCarta(prog.carrera, Number(d.asignar), t.value || null); guardar(); hubCarrera(); return; }
+  if (!S.local) return;
+  if (d.pFuente !== undefined) S.local.personas[Number(d.pFuente)].fuente = t.value;
+  if (d.pClub !== undefined) S.local.personas[Number(d.pClub)].club = Number(t.value);
+  if (d.pLado !== undefined) S.local.personas[Number(d.pLado)].lado = Number(t.value);
+});
+
+/* ================= Bucle ================= */
+let ultimo = performance.now(), acum = 0, cuadros = 0, fpsDesde = performance.now(), fps = 0, enJuego = null, radarN = 0, extraPasos = 0;
+function entradas() { return S.ctx.humanos.map(h => leerEntrada(h.fuente)); }
+function cuadro(ahora) {
+  requestAnimationFrame(cuadro);
+  let dt = (ahora - ultimo) / 1000; ultimo = ahora;
+  if (dt > 0.25) dt = 0.25;
+  cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
+  const jugando = S.vista === 'partido' || S.vista === 'pausa';
+  if (jugando !== enJuego) { enJuego = jugando; mando.activar(jugando && !S.enLocal); pintarControl(); }
+  if (S.vista === 'partido' && S.p && !document.hidden) avanzar(dt);
+  else acum = 0;
+  if (S.p && (S.vista === 'partido' || S.vista === 'pausa')) {
+    vista.dibujar(S.p, { cargas: S.p.humanos.map(h => h.carga), etiquetas: S.p.humanos.length > 1, destello: S.destello || 0 }, dt);
+    S.destello = Math.max(0, (S.destello || 0) - dt * 2);
+    if (++radarN % 3 === 0) V.dibujarRadar($('radar'), S.p, Math.min(2, window.devicePixelRatio || 1));
+    pintarHud();
+  } else vista.dibujar(null, null, dt);
+}
+function avanzar(dt) {
+  acum += dt;
+  let n = 0;
+  const e = entradas();
+  while (acum >= M.PASO && n < 5) { eventos(M.paso(S.p, e)); acum -= M.PASO; n++; }
+  if (n === 5) acum = 0;
+  for (let k = 0; k < extraPasos && S.p.estado !== 'fin'; k++) eventos(M.paso(S.p, e));
+  if (S.p.estado === 'fin') terminarPartido();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { soltarToques(); if (S.vista === 'partido' && !S.enLocal) alternarPausa(); }
+  else ultimo = performance.now();
+});
+
+/* ================= Plataforma ================= */
+addEventListener('message', ev => {
+  if (ev.origin !== location.origin || ev.source !== parent) return;
+  const d = ev.data || {};
+  if (d.tipo === 'inicio') {
+    prog = cargarAvance(d.progreso);
+    if (d.aviso) avisar(d.aviso, 3500);
+    listo();
+  }
+  else if (d.tipo === 'guardado') { if (!d.ok) avisar('⚠️ No se pudo guardar tu avance. Revisa tu conexión.', 2500); }
+  else if (d.tipo === 'puntos-ok') { S.ultimoPuntos = d; if (S.ctx && S.ctx.puntua) mostrarPuntos(d); }
+});
+let datosListos = false, inicioListo = !EMBED;
+function listo() { inicioListo = true; if (datosListos && S.vista === 'carga') menuPrincipal(); }
+fetch('datos/futbol.json?v=1').then(r => r.json()).then(u => { U = u; datosListos = true; if (inicioListo && S.vista === 'carga') menuPrincipal(); })
+  .catch(() => { $('ov').innerHTML = '<h2>⚠️ No se pudo cargar el juego</h2><p>Revisa tu conexión y vuelve a intentarlo.</p>'; });
+
+ajustarVista();
+requestAnimationFrame(t => { ultimo = t; cuadro(t); });
+if (EMBED) enviar({ tipo: 'listo' });
+if (PRUEBA) {
+  // Ganchos solo para pruebas E2E (?prueba=1).
+  // Resumen del partido y de la página para las pruebas (sin partido, valores vacíos).
+  const estadoPartido = p => {
+    if (!p) return { estado: null, minuto: 0, goles: null, dueno: -1, controlado: -1, jugador: null, balon: null, pases: null, tiros: null, carga: null, humanos: [] };
+    const h = p.humanos[0], j = h && h.jug >= 0 ? p.jug[h.jug] : null;
+    return {
+      estado: p.estado, minuto: p.minuto, goles: [p.eq[0].goles, p.eq[1].goles], dueno: p.dueno, controlado: h ? h.jug : -1,
+      jugador: j ? { x: j.x, y: j.y, vx: j.vx, vy: j.vy } : null, balon: { ...p.balon }, pases: p.stats.pases.slice(), tiros: p.stats.tiros.slice(),
+      carga: h ? h.carga : null, humanos: p.humanos.map(x => ({ eq: x.eq, jug: x.jug })),
+    };
+  };
+  const resumenLlave = t => (t ? { campeon: t.campeon, rondas: t.rondas.length, equipos: t.equipos.length } : null);
+  const estadoPagina = () => ({
+    vista: S.vista, modo: S.ctx && S.ctx.modo, fps, control, tactil: TACTIL, mando: mando.estado(), prog: structuredClone(prog),
+    dibujados: vista.vista.dibujados, entrada: S.ctx ? entradas() : [], local: S.local && S.local.personas ? S.local.personas.length : 0,
+    copa: resumenLlave(S.copa), torneo: resumenLlave(S.torneo), textos: textosActuales,
+  });
+  window.__futbol = {
+    p: () => S.p,
+    estado: () => ({ ...estadoPartido(S.p), ...estadoPagina() }),
+    // Gol inmediato del equipo `eq`: el balón va solo a la portería rival.
+    golYa: (eq = 0) => { const p = S.p; M.ponerEnJuego(p); M.soltarBalon(p); const lado = p.eq[eq].lado; p.ultimoToque = eq * 11 + 9; Object.assign(p.balon, { x: lado * (M.MX - 1.5), y: 0.5, z: 0.4, vx: lado * 22, vy: 0, vz: 0 }); },
+    terminarYa: () => { const p = S.p; p.t = Math.max(p.t, p.duracion - 0.05); if (p.mitad === 1) p.mitad = 2; },
+    acelerar: n => { extraPasos = Math.max(0, Number(n) || 0); },
+    iaPausada: on => { S.p.iaPausada = !!on; },
+    enJuego: () => M.ponerEnJuego(S.p),
+    darBalon: i => { M.ponerEnJuego(S.p); M.darBalon(S.p, i); },
+  };
+}
+</script>
+</body></html>

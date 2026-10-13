@@ -45,7 +45,7 @@ const clicOpcion = async p => { const o = await p.$('.opt:not(.ok):not(.bad)'); 
   const idsCat = id => (menu.porCategoria.find(c => c.id === id) || { ids: [] }).ids;
   const arcade = idsCat('arcade');
   ok('hub: Arcade con Axo, Karts y Dragon Run (dragon-run-misiones)', ['plataformas', 'karts', 'dragon-run'].every(id => arcade.includes(id)) && !idsCat('mente').includes('dragon-run'), arcade.join(','));
-  ok('hub: Arcade con Futbolito y Billar (futbolito-billar)', ['futbolito', 'billar'].every(id => arcade.includes(id)), arcade.join(','));
+  ok('hub: Arcade con Fútbol Estelar y Billar, sin Futbolito (futbol-estelar)', ['futbol', 'billar'].every(id => arcade.includes(id)) && !arcade.includes('futbolito'), arcade.join(','));
   ok('chip con el nombre', (await p.textContent('#chip')).includes('Marisol'));
   await p.screenshot({ path: 'juegos-hub.png', fullPage: true });
 

@@ -233,6 +233,28 @@ Cada página debe manejar y mostrar de forma explícita:
     - Sala de 2 a 4 (sin bots): `pintarFisicaSala` (`juegos/app/arcade.js`) toma hasta 4 de `participantes()` para golf; el iframe usa
       `MesaUI.crearSala` con `Golf.motorSala(n)` y en el `fin` agrega `tarjeta { hoyos, golpes }`, que la página pinta
       escapada debajo del podio (`tarjetaGolf`, en el mismo módulo). Ganchos `window.__golf` con `?arcadePrueba=1`;
+  - **⚽ Fútbol Estelar 2010** (cambio `futbol-estelar`; decisiones, alcance y diseño del en línea del sprint 27 en su
+    `design.md`): `juegos/futbol.html` en el iframe de Arcade **con avance** (`/juegos/progreso/futbol`: estadísticas,
+    clasificatoria semanal, táctica y carrera; manda `guardar` y un `puntos` por partido contra la IA de una persona;
+    los partidos locales no suman). Universo ficticio en `juegos/datos/futbol.json`, generado por
+    `herramientas/generar-futbol.ts` con las reglas de `juegos/futbol-liga.js` (`window.FutbolLiga`).
+    - Motor sin DOM y determinista `juegos/futbol-motor.js` (`window.FutbolMotor`, probado en
+      `server/futbol_motor_test.ts`); dibujo en `juegos/futbol-vista.js` (`window.FutbolVista`): cámara lateral de
+      transmisión que proyecta puntos del mundo (metros) con perspectiva, sprites de jugadores pre-dibujados (16
+      cuadros: 8 a la derecha y 8 en espejo con el número al derecho), balón con altura y sombra, tribuna pre-dibujada,
+      vallas con textos inventados, escudos y camisetas en canvas (`escudoUrl`, `camisaUrl`) y radar.
+    - Entrada `window.FutbolEntrada` (como `KartsEntrada`): fuentes «todo» (toques + teclado J/K/U/I, Shift, Q +
+      `Mando` con cualquier control), «tecladoIzq», «tecladoDer», «pad0»…«pad3» (cada control por separado con
+      `Mando.controlABotones`) y «pantalla». En el modo local no se activa el mando virtual (junta todos los controles).
+      Joystick flotante y botones A/B/X/Y/L/R con *touch events* no pasivos; los textos cambian en defensa y en las
+      reanudaciones. Preferencias en `localStorage`: `futbol_control`, `futbol_nivel`, `futbol_minutos`,
+      `futbol_fuera`, `futbol_club`. Ganchos `window.__futbol` con `?prueba=1`.
+    - Audio propio sintetizado (patada, poste, atajada, público) y «Emoción sonora» (`juegos/emocion.js`): `gol()` y
+      `silbato()` al empezar, en el medio tiempo y al final (con el sonido propio de respaldo), `intensidad(x)` en los
+      últimos minutos con el marcador cerrado (se apaga en la pausa, al final y al salir), `victoria()`/`derrota()`,
+      `suspenso()`/`revelacion()` en los penales, `podio(lugar)` al terminar la copa o el torneo y `calma()` al salir.
+    - **Futbolito retirado del menú**: su tarjeta pasó a `JUEGOS_RETIRADOS` (`juegos/app/menu.js`) y salió de
+      `JUEGOS_PARTIDA`; `juegoPorId('futbolito')` lo sigue encontrando para salas en curso, ranking e historial.
   - **Vista pseudo-3D de Karts Turbo** (cambio `karts-pseudo3d`; diagnóstico y decisiones en su `design.md`):
     - la carrera se simula en el mapa 2D de siempre y se dibuja en Mode-7 sobre canvas 2D: cámara detrás del carro
       (`seguirCamara`, `d = 115`), piso proyectado por filas desde una textura `Uint32Array` de la pista (tres niveles
@@ -399,7 +421,7 @@ Reglas:
 Fuente única del control de los juegos de 🕹️ Arcade: `juegos/mando.js` (sin dependencias; inyecta su CSS una vez como
 `<style id="mando-css">`). Decisiones y lecciones de Karts en `openspec/changes/mando-arcade/design.md` (al archivar,
 `openspec/changes/archive/*-mando-arcade/`). Lo usan Axo (`plataformas.html`), Dragon Run (`dragon-run.html`) y Karts
-Turbo (`karts.html`, cambio `karts-mando`), ⛳ Golf (`golf.html`, cambio `golf`) y Futbolito y Billar (cambio `futbolito-equipos-controles`), **sin cambiar la API**. Si hace falta algo nuevo, se
+Turbo (`karts.html`, cambio `karts-mando`), ⛳ Golf (`golf.html`, cambio `golf`), Futbolito y Billar (cambio `futbolito-equipos-controles`) y ⚽ Fútbol Estelar (`futbol.html`, cambio `futbol-estelar`), **sin cambiar la API**. Si hace falta algo nuevo, se
 agrega como opción con valor por omisión compatible, en su propio cambio OpenSpec.
 
 **Cargar y crear** (dentro del iframe del juego; `window.Mando`):
