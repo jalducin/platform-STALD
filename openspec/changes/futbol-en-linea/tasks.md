@@ -35,8 +35,8 @@
 ## 6. Ejecutar pruebas y verificar estado (OBLIGATORIO)
 
 - [x] 6.1 `npx -y deno test -A server/`, `deno lint`, `cd tests/calidad && npm run calidad` sin avisos nuevos
-- [ ] 6.2 E2E: `futbol futbol-en-linea juegos categorias partidas emocion` (datos copiados; nada en tablas `stald_`)
-- [ ] 6.3 Reporte en `openspec/changes/futbol-en-linea/reports/2026-10-12-step-6-pruebas-y-verificacion.md`
+- [x] 6.2 E2E: `futbol futbol-en-linea juegos categorias partidas emocion` (datos copiados; nada en tablas `stald_`)
+- [x] 6.3 Reporte en `openspec/changes/futbol-en-linea/reports/2026-10-12-step-6-pruebas-y-verificacion.md`
 
 ## 7. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
