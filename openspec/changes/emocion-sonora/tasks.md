@@ -41,16 +41,16 @@
 
 ## 5. Ejecutar pruebas y verificar estado (OBLIGATORIO)
 
-- [ ] 5.1 `npx -y deno test -A server/`, `npx -y deno lint server/` y `deno check server/main.ts`.
-- [ ] 5.2 E2E completa: `CHROME=… bash tests/e2e/correr.sh --datos <copia de datos> --puerto-api 9239 --puerto-web
+- [x] 5.1 `npx -y deno test -A server/`, `npx -y deno lint server/` y `deno check server/main.ts`.
+- [x] 5.2 E2E completa: `CHROME=… bash tests/e2e/correr.sh --datos <copia de datos> --puerto-api 9239 --puerto-web
   9249` (copia temporal de datos que se descarta: estado restaurado; nunca se escribe en tablas `stald_`). Falla
   conocida previa: `peticiones` (41 contra tope de 40); el módulo no agrega peticiones al API.
-- [ ] 5.3 `cd tests/calidad && npm run calidad`: sin avisos nuevos.
-- [ ] 5.4 Reporte `openspec/changes/emocion-sonora/reports/2026-10-12-step-5-pruebas-y-verificacion.md`.
+- [x] 5.3 `cd tests/calidad && npm run calidad`: sin avisos nuevos.
+- [x] 5.4 Reporte `openspec/changes/emocion-sonora/reports/2026-10-12-step-5-pruebas-y-verificacion.md`.
 
 ## 6. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Generar y revisar las muestras WAV de cada stinger (duración, pico y RMS) y escuchar el registro de eventos
+- [x] 6.1 Generar y revisar las muestras WAV de cada stinger (duración, pico y RMS) y escuchar el registro de eventos
   de un partido de Futbolito y un podio en el navegador. Casos de error: sin AudioContext, autoplay bloqueado,
   silencio de Arcade y efectos apagados.
 - [ ] 6.2 Tras el merge: verificar en producción que `juegos/emocion.js` se sirve, que `juegos.html` y los juegos de
