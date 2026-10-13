@@ -1,4 +1,4 @@
-// Ayudantes de las E2E de personajes de Arcade (openspec: personajes-xalli), compartidos por e2e-plataformas.js y
+// Ayudantes de las E2E de personajes de Arcade (openspec: personajes-xalli, personajes-estilo-karts), compartidos por e2e-plataformas.js y
 // e2e-karts.js.
 //
 //   PERSONAJES               ids, nombres, títulos y colores de firma esperados (en el orden del selector)
@@ -13,6 +13,11 @@ const PERSONAJES = [
   { id: 'itzae', nombre: 'Itzae', titulo: 'Cronista del Sol', firma: '#14b8a6', kart: '#d97706' },
   { id: 'yahui', nombre: 'Yahui', titulo: 'Guerrero Jaguar de las Nubes', firma: '#e9a83a', kart: '#eab308' },
   { id: 'xochiquetzal', nombre: 'Xochiquetzal', titulo: 'Señora de la Niebla y las Flores', firma: '#db2777', kart: '#c026d3' },
+  // Personajes estilo karts (openspec: personajes-estilo-karts)
+  { id: 'xolo', nombre: 'Xolo', titulo: 'Guía Veloz de los Caminos', firma: '#6b7a90', kart: '#059669', peso: '🪶 Ligero', masa: 0.8, nuevo: true },
+  { id: 'tlali', nombre: 'Tlali', titulo: 'Saltarina de los Valles', firma: '#84cc16', kart: '#84cc16', peso: '🪶 Ligero', masa: 0.8, nuevo: true },
+  { id: 'tona', nombre: 'Tona', titulo: 'Sabia de la Costa', firma: '#5f8a3a', kart: '#0369a1', peso: '🪨 Pesado', masa: 1.25, nuevo: true },
+  { id: 'kinich', nombre: 'Kinich', titulo: 'Estratega del Juego de Pelota', firma: '#dc2626', kart: '#dc2626', peso: '⚖️ Medio', masa: 1, nuevo: true },
 ];
 
 const contarColor = (fr, caja, hex, tol = 24) => fr.evaluate(([c, h, t]) => {

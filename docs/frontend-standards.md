@@ -299,6 +299,17 @@ Cada página debe manejar y mostrar de forma explícita:
     el personaje no se manda. El título «Axo y los 12 mundos» y el id `plataformas` se conservan (renombrar el título
     es una línea en `plataformas.html`, `juegos.html` y `server/juegos.ts`). Ganchos de prueba: `__plat.cajaJugador()`,
     `__karts.cajaYo()`, `__karts.hojaPilotos()` y `personaje`/`personajes`/`rastro`/`estela` en `estado()`;
+  - **Personajes estilo karts** (cambio `personajes-estilo-karts`; decisiones en su `design.md`): Xolo (xoloitzcuintle,
+    ligero), Tlali (chapulina, ligera), Tona (tortuga marina, pesada) y Kinich (jugador de pelota maya, medio); son 8 en
+    `Personajes.LISTA` (en el orden del selector), cada uno con `personalidad`, `peso`, `estela` (colores de su
+    partícula) y `encuadre` del retrato. **El peso solo reparte el empuje de los choques entre karts**
+    (`Personajes.masa(id)`, `repartoChoque(ma, mb)` en `chocarKarts`); no cambia aceleración, velocidad, giro, tiempos
+    ni puntos. El piloto de espaldas de los nuevos vive en `personajes.js` (`Personajes.piloto(id)` → `cabeza` y un
+    `extra` con su profundidad: caparazón de Tona, pelota de Kinich); `spriteKart` lo consulta antes de `pintarCabeza`
+    (las 4 originales siguen en `karts.html`). Sus partículas (huellitas, notas, gotas, pelotitas) las dibuja
+    `Personajes.pintarParticula`, que usan Axo y Karts. Selectores en 4×2 con retrato y nombre (el título queda en
+    `.solo-lector`) y una línea `#personaje-detalle` (Axo) o `#piloto-detalle` (Karts, con el peso). Con 7 rivales, cada
+    uno usa uno de los 7 personajes que la persona no eligió. Gancho de prueba: `masa` en `__karts.estado()`;
   - **música de fondo:** generada con WebAudio (Alegre, Relajante, Fiesta); empieza solo tras un gesto y
     baja mientras suena una voz.
 - `juegos.html?sala=<código>`: entra (o registra al invitado) y se une solo. La sala de espera muestra el
