@@ -23,3 +23,12 @@ Deno.test("mesas: con asientos, los bots completan la mesa y cada persona quita 
   assertEquals([Mesas.botsEnMesa("futbolito", 1, true), Mesas.botsEnMesa("billar", 2, true), Mesas.botsEnMesa("billar", 1, false)], [1, 0, null]);
   assertEquals(Mesas.textoMesa("billar", 1, 1), "Mesa de 2 · 1 persona + 1 bot");
 });
+
+// juegos-en-vivo: Karts hasta 8 personas en vivo; los bots completan 3 lugares (1 persona + 2 bots, como antes).
+Deno.test("mesas: Karts de hasta 8 personas y cada persona quita un bot de los 3 lugares", () => {
+  assertEquals([1, 2, 3, 4, 8].map((h) => Mesas.botsEnMesa("karts", h, true)), [2, 1, 0, 0, 0]);
+  assertEquals(Mesas.botsEnMesa("karts", 3, false), null, "sin bots: solo personas");
+  assertEquals([1, 2, 5, 8].map((h) => enMesa("karts", h, true)), [3, 3, 5, 8]);
+  assertEquals(Mesas.de("karts").max, 8);
+  assertEquals(Mesas.textoMesa("karts", 2, 1), "Mesa de 3 · 2 personas + 1 bot");
+});
