@@ -273,10 +273,7 @@ function pintarSala() {
   const e = sala.estado; if (!e) return;
   const body = document.getElementById('p-body'); if (!body) return;
   const s = e.sala;
-  if (sala.vista === 'final') { // el podio ya no se vuelve a dibujar (futbol-en-linea: solo su nota)
-    if (s.juego === 'futbol') notaFutbol();
-    return pintarRevancha();
-  }
+  if (sala.vista === 'final') return finalSala(s); // el podio ya no se vuelve a dibujar (futbol-en-linea: solo su nota)
   if (s.inicio === null) return pintarEspera(body);
   if (s.juego.startsWith('basta')) return pintarBastaSala(body);
   if (s.juego === 'loteria') return pintarLoteriaSala(body);

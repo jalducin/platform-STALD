@@ -302,6 +302,11 @@ function notaFutbol() {
   const n = document.getElementById('p-futbol-nota'), res = sala.estado.futbol;
   if (n && res && NOTA_FUTBOL[res.estado] && !/No se pudo/.test(n.textContent)) n.textContent = NOTA_FUTBOL[res.estado];
 }
+// Podio ya pintado: revancha de siempre y, en Fútbol, la nota del resultado al día.
+function finalSala(s) {
+  if (s.juego === 'futbol') notaFutbol();
+  return pintarRevancha();
+}
 // ¿El partido ya terminó para esta persona? (ya reportó, o su rival lo reportó hace rato).
 function futbolTerminado(e) {
   const mio = (e.jugadores.find(x => x.id === e.yo) || {}).futbol;
