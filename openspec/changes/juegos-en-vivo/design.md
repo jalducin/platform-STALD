@@ -110,27 +110,16 @@ necesita un bot con tiempo nuevo.
 | 4 | 15 | 60 | 45 | ~4.5 KB |
 | 8 | 10 | 80 + 8 latidos + 4 pings | ~77 | ~8 KB |
 
-El throttle guarda solo el último estado por evento (coalescencia): nunca se acumula una cola. Se mide en la
-verificación manual (8 clientes reales 30 s: mensajes/s, pérdidas y errores del canal).
+El throttle guarda solo el último estado por evento (coalescencia) y cuenta los huecos desde el hueco anterior (sin
+deriva: llamar cada cuadro da exactamente `hz` por segundo); nunca se acumula una cola. Medido contra el Supabase real:
+8 navegadores a 10 Hz durante 20 s → 70.3 mensajes/s recibidos por cada uno (lo esperado: 7 × 10), sin pérdida y
+≈ 90 ms de un sentido; en la E2E con el relevo simulado, la sala de 8 manda 84–92 mensajes/s (estados + latidos +
+pings).
 
-### 5. Fútbol Estelar en línea 1 vs 1 (fase B)
+### 5. Fútbol Estelar en línea (fuera de este cambio)
 
-Implementa `futbol-estelar/design.md` §12 con estos ajustes:
-- **Sala:** juego `futbol` en `JUEGOS_PARTIDA` (servidor y página), mesa `{ max: 2, min: 2, bots: 'nunca' }`.
-  Anfitrión = `sala.host` (quien creó la sala); invitado = la otra persona.
-- **Táctica en la sala de espera:** formación (4-4-2, 4-3-3, 3-5-2, 5-3-2) con `POST /unirse { tactica }`, validada en
-  el servidor contra la lista; el anfitrión las lee al empezar.
-- **Canal:** `fe:foto` (anfitrión → invitado, 15 Hz) y `fe:entrada` (invitado → anfitrión, 30 Hz si cambia y 5 Hz si
-  no), `fe:evento` (gol, final; sueltos) sobre `EnVivo`.
-- **Invitado:** interpola las fotos 100 ms atrás, predice el movimiento de su jugador controlado con su entrada y lo
-  corrige suave hacia la foto (20 % por cuadro; salto directo si la diferencia pasa de 3 m).
-- **Desconexión:** invitado callado 3 s → su equipo pasa a la IA (el partido sigue, aviso); anfitrión callado 4 s →
-  «Conexión perdida» y el partido se cierra con el marcador de la última foto.
-- **Resultado:** `POST /respuesta { futbol: { a, b, fin } }` (goles 0–30, `fin` = `normal` | `corte`); el anfitrión
-  manda `normal` solo si pasó la duración del partido (reloj del servidor ± margen); el invitado solo puede mandar
-  `corte`; el primero válido queda y nadie lo cambia. Los puntos se calculan del resultado guardado.
-- **Respaldo:** sin canal en 5 s, la sala de Fútbol muestra «En línea no disponible» y sugiere la Clasificatoria
-  semanal en 🕹️ Arcade.
+Por el reparto del sprint 27, el 1 vs 1 en línea de Fútbol Estelar lo lleva otro agente en su propio cambio, sobre el
+contrato `EnVivo.conectar` / `EnVivo.simulado` de §1 (sin cambios en Supabase, Paso 0). Este cambio no lo implementa.
 
 ### 6. Pruebas
 

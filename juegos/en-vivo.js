@@ -384,6 +384,7 @@
         const transporte = op.relevo ? transporteRelevo(o.topic, id) : transporteLocal(o.topic, id);
         return conectar({ ...o, transporte });
       },
+      transporte: (topic, id) => (op.relevo ? transporteRelevo(topic, id) : transporteLocal(topic, id)), // crudo, para el puente
       cortar(id) { cortados.add(id); },
       reanudar(id) { cortados.delete(id); },
     };

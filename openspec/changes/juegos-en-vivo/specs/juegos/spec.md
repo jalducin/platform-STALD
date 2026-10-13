@@ -52,32 +52,6 @@ correr como antes (fantasmas y comparación de tiempos) con un aviso claro.
 - **WHEN** la sala no tiene Realtime
 - **THEN** la carrera corre contra fantasmas con el aviso «Sin conexión en vivo» y el podio compara tiempos
 
-### Requirement: Fútbol Estelar en línea 1 vs 1
-Las partidas SHALL ofrecer «⚽ Fútbol Estelar» en «Crear partida» como sala de 2 personas sin bots. En la sala de
-espera cada persona SHALL elegir su formación. El anfitrión SHALL simular el partido y mandar fotos 15 veces por
-segundo; el invitado SHALL mandar su entrada hasta 30 veces por segundo, predecir a su jugador y corregirse con las
-fotos. Los goles SHALL verse y sonar en los dos aparatos (`Emocion`). Si el invitado se desconecta, su equipo SHALL
-pasar a la IA; si se desconecta el anfitrión, el partido SHALL cerrarse con el último marcador. El servidor SHALL
-validar el resultado (goles de 0 a 30, una sola vez; `normal` solo del anfitrión tras la duración del partido,
-`corte` de cualquiera). Sin canal en 5 s, la sala SHALL avisar que el en línea no está disponible y sugerir la
-Clasificatoria semanal.
-
-#### Scenario: Gol del invitado
-- **WHEN** el invitado anota
-- **THEN** el anfitrión y el invitado ven el marcador subir y oyen el gol
-
-#### Scenario: Resultado validado
-- **WHEN** termina el partido 2-1
-- **THEN** el servidor guarda el 2-1 y el podio da los puntos de cada quien
-
-#### Scenario: Marcador imposible
-- **WHEN** alguien manda `{ futbol: { a: 99, b: 0 } }`
-- **THEN** responde 400 `futbol_invalido`
-
-#### Scenario: Se cae el invitado
-- **WHEN** el invitado deja de mandar entradas 3 s
-- **THEN** su equipo pasa a la IA y el anfitrión ve el aviso
-
 ## MODIFIED Requirements
 
 ### Requirement: Carreras de Arcade en partida

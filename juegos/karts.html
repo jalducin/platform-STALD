@@ -26,6 +26,12 @@ canvas{display:block}
 #h-item{width:54px;height:54px;border-radius:14px;border:3px solid rgba(255,255,255,.7);background:rgba(8,12,24,.55);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:inset 0 0 0 3px rgba(0,0,0,.25)}
 #h-item.lleno{border-color:var(--acento);box-shadow:0 0 12px rgba(250,204,21,.75),inset 0 0 0 3px rgba(0,0,0,.25)}
 #hud .der{display:flex;gap:6px;align-items:center;pointer-events:auto}
+/* juegos-en-vivo: clasificación en vivo (lugar, color y nombre corto) */
+#vivo-tabla{margin:0;padding:3px 7px 4px;list-style:none;font-size:11px;line-height:1.35;min-width:92px;max-width:128px}
+#vivo-tabla li{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden}
+#vivo-tabla li.yo{color:var(--acento)}
+#vivo-tabla i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 0 1px rgba(0,0,0,.7)}
+#vivo-tabla span{overflow:hidden;text-overflow:ellipsis}
 #minimapa{position:absolute;right:8px;bottom:8px;width:124px;height:92px;border-radius:12px;pointer-events:none}
 .mini{font:inherit;font-size:16px;border:1px solid var(--btn-borde);background:rgba(0,0,0,.45);color:#fff;border-radius:10px;min-width:40px;min-height:36px;padding:2px 8px;cursor:pointer}
 .mini:focus-visible,.btn:focus-visible,.op:focus-visible,.ctl:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
@@ -150,6 +156,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
   body.tactil #m-der .m{opacity:.92}
   body.tactil #minimapa{top:46px;bottom:auto;width:104px;height:72px}
   .tarjeta{padding:1px 7px 2px}#h-pos{font-size:26px}.datos{font-size:12px}#h-item{width:44px;height:44px;font-size:24px}
+  #vivo-tabla{font-size:10px;line-height:1.25} /* juegos-en-vivo: 8 filas caben arriba del joystick */
   #tuto{bottom:6px;font-size:12px;padding:6px 10px;min-width:0;max-width:46%}#tuto h3{font-size:13px}
   body:not(.en-carrera) .mando{display:none!important}
   body.ctl-mando #tuto{bottom:34px;max-width:40%}
@@ -167,6 +174,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
         <div class="hud-izq">
           <div class="tarjeta pos"><span id="h-pos">1.º</span><span id="h-de">/8</span></div>
           <div class="tarjeta datos"><span id="h-vuelta">Vuelta 1/3</span><span id="h-tiempo">0:00.0</span><span id="h-monedas">🪙 0/10</span><div class="mbar"><div id="h-mbar"></div></div></div>
+          <ol id="vivo-tabla" class="tarjeta" hidden aria-label="Clasificación en vivo"></ol>
         </div>
         <div id="h-item" aria-label="Ítem"></div>
         <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
@@ -236,6 +244,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <script src="arcade.js?v=2"></script>
 <script src="personajes.js?v=2"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
+<script src="en-vivo.js?v=1"></script> <!-- juegos-en-vivo: karts de las demás personas de la sala -->
 <script>
 /* Karts Turbo — carreras con vista cenital en canvas (openspec: juegos-plataformas-karts, karts-controles-diseno).
    Embebido en juegos.html: la plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage,
@@ -1018,7 +1027,8 @@ function nuevoKart(id, nombre, color, humano, slot, personaje) {
     personaje: Personajes.normalizar(personaje) };
 }
 const puntaje = k => k.termino !== null ? 1e9 - k.termino : (k.vuelta * N + k.idx);
-function posiciones() { return karts.slice().sort((a, b) => puntaje(b) - puntaje(a)); }
+const visibleK = k => !k.remoto || k.visible; // juegos-en-vivo: una persona remota cuenta desde su primer mensaje
+function posiciones() { return karts.filter(visibleK).sort((a, b) => puntaje(b) - puntaje(a)); }
 const posDe = k => posiciones().indexOf(k) + 1;
 
 function prepararCarrera(id, opciones) {
@@ -1028,7 +1038,16 @@ function prepararCarrera(id, opciones) {
   const otros = Object.values(COLORES).filter(c => c !== colorYo);
   // Personajes (openspec: personajes-xalli): tú con el tuyo; los bots y fantasmas con los otros 3, en orden fijo.
   const perYo = personaje, perOtros = Personajes.LISTA.map(x => x.id).filter(x => x !== perYo);
-  if (opciones.sala) {
+  if (opciones.sala && opciones.vivo) {
+    // juegos-en-vivo: personas de la sala en su orden (color y lugar en la parrilla iguales en todos los aparatos);
+    // los fantasmas de los bots, detrás.
+    opciones.humanos.forEach((h, n) => {
+      const color = COLORES_VIVO[n % COLORES_VIVO.length];
+      if (h.id === opciones.yo) { yo = nuevoKart('yo', 'Tú', color, true, n, perYo); karts.push(yo); return; }
+      karts.push(Object.assign(nuevoKart('vivo-' + n, h.nombre, color, false, n, perOtros[n % perOtros.length]), { id: h.id, remoto: true, visible: false, saliendo: null, interp: EnVivo.interpolador({ retraso: 100, extrapolar: 250, angulos: [2] }) }));
+    });
+    opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, opciones.humanos.length + k, perOtros[k % perOtros.length]); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
+  } else if (opciones.sala) {
     yo = nuevoKart('yo', 'Tú', colorYo, true, 1, perYo);
     karts.push(yo);
     opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, k === 0 ? 0 : 2 + k, perOtros[k % perOtros.length]); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
@@ -1232,7 +1251,7 @@ function usarItem(k) {
   }
 }
 function golpear(k) {
-  if (k.estrella > 0 || k.giro > 0 || k.fantasma || k.termino !== null) return;
+  if (k.estrella > 0 || k.giro > 0 || k.fantasma || k.remoto || k.termino !== null) return; // juegos-en-vivo: nada tumba a una persona remota
   k.giro = 0.9; k.monedas = Math.max(0, k.monedas - 2); k.derrape = null;
   if (k === yo) { S.golpe(); avisar('¡Auch! -2 🪙', 900); }
 }
@@ -1263,7 +1282,7 @@ function moverCohete(o, dt) {
 // Golpe del objeto a los karts que toca (el cohete solo a su blanco; el dueño es inmune al soltarlo).
 function chocarObjeto(o) {
   for (const k of karts) {
-    if (k.fantasma || (k === o.dueno && o.t > 0)) continue;
+    if (k.fantasma || k.remoto || (k === o.dueno && o.t > 0)) continue;
     if ((k.x - o.x) ** 2 + (k.y - o.y) ** 2 < (o.r + 9) ** 2) { if (o.tipo !== 'cohete' || !o.blanco || o.blanco === k) { golpear(k); o.vida = 0; } }
   }
 }
@@ -1272,7 +1291,7 @@ function pasoRecolectar(dt) {
   for (const c of cajas) if (c.t > 0) c.t -= dt;
   for (const m of monedasPista) if (m.t > 0) m.t -= dt;
   for (const k of karts) {
-    if (k.fantasma) continue;
+    if (k.fantasma || k.remoto) continue; // juegos-en-vivo: cada quien toma sus cajas y monedas en su aparato
     tomarCajas(k);
     tomarMonedas(k);
   }
@@ -1288,13 +1307,19 @@ function tomarCajas(k) {
 function tomarMonedas(k) {
   for (const m of monedasPista) if (m.t <= 0 && (k.x - m.x) ** 2 + (k.y - m.y) ** 2 < 12 * 12) { m.t = 8; if (k.monedas < 10) { k.monedas++; if (k === yo) S.moneda(); } }
 }
-// Choques entre carros (empuje suave).
+// Choques entre carros (empuje suave). juegos-en-vivo: contra una persona remota solo se empuja el kart propio (en
+// su aparato, su dueño hace lo mismo): simétrico y sin mensajes de más.
+function empujeLocal(a, b, nx, ny, d) {
+  const propio = a.remoto ? b : a, s = a.remoto ? 1 : -1;
+  propio.x += s * nx * (18 - d); propio.y += s * ny * (18 - d); propio.vel *= 0.97;
+}
 function chocarKarts() {
   for (let i = 0; i < karts.length; i++) for (let j = i + 1; j < karts.length; j++) {
     const a = karts[i], b = karts[j];
-    if (a.fantasma || b.fantasma) continue;
+    if (a.fantasma || b.fantasma || !visibleK(a) || !visibleK(b) || (a.remoto && b.remoto)) continue;
     const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-    if (d > 0 && d < 18) {
+    if (d > 0 && d < 18 && (a.remoto || b.remoto)) empujeLocal(a, b, dx / d, dy / d, d);
+    else if (d > 0 && d < 18) {
       const em = (18 - d) / 2, nx = dx / d, ny = dy / d;
       a.x -= nx * em; a.y -= ny * em; b.x += nx * em; b.y += ny * em;
       if (a.estrella > 0 && b.estrella <= 0) golpear(b); else if (b.estrella > 0 && a.estrella <= 0) golpear(a);
@@ -1314,8 +1339,9 @@ function paso(dt) {
   if (pulso.item) { pulso.item = false; if (yo.item && yo.termino === null) usarItem(yo); }
   pulso.derrape = false; pulso.acel = false;
   vigilarSentido(dt);
-  for (const k of karts) { pasoKart(k, dt); emitir(k); }
+  for (const k of karts) { (k.remoto ? pasoRemoto : pasoKart)(k, dt); emitir(k); } // juegos-en-vivo: a un remoto lo mueve su dueño; aquí solo se interpola
   pasoObjetos(dt); pasoRecolectar(dt);
+  if (vivo && !sala.enviado) vivo.enviar('k', kartVivo()); // juegos-en-vivo: el canal lo limita a su ritmo
   rayoTinte = Math.max(0, rayoTinte - dt);
   // Límite de sala.
   if (sala && !sala.enviado && tCarrera * 1000 >= A.LIMITE_SALA.karts) terminarSala(null);
@@ -1340,7 +1366,9 @@ function arrancar() {
   const p = arranque.presiono;
   if (p !== null && p >= -0.5) { yo.turbo = p >= -0.25 ? 1.3 : 0.8; yo.turboNivel = 0; avisar(p >= -0.25 ? '🚀 ¡Súper arranque!' : '🚀 ¡Buen arranque!', 1100); S.turbo(); }
   else if (p !== null) { yo.ahogado = 0.8; avisar('💨 Se ahogó el motor: espera la última luz', 1300); S.ahogo(); }
-  for (const k of karts) if (!k.humano && !k.fantasma && Math.random() < 0.35) k.turbo = 0.5; // NOSONAR: azar de juego, no criptográfico
+  for (const k of karts) if (!k.humano && !k.fantasma && !k.remoto && Math.random() < 0.35) k.turbo = 0.5; // NOSONAR: azar de juego, no criptográfico
+  if (vivo) vivo.ritmo('k', ritmoVivo(karts.filter(k => k.humano || k.remoto).length)); // juegos-en-vivo: ritmo de carrera
+  for (const k of karts) if (k.remoto && !k.visible && vivo && vivo.presencia().includes(k.id)) k.visible = true; // en la parrilla
 }
 // Si vas en sentido contrario más de 0.8 s, un aviso te dice que des la vuelta (solo visual: no cambia reglas).
 let revesT = 0, revesAviso = -10;
@@ -1619,11 +1647,15 @@ function textoGuardado(d) {
 }
 function empezarSala(d) {
   sala = { mapa: d.mapa, enviado: false };
-  iniciarCarrera(d.mapa, { sala: true, bots: d.bots || [], inicioEn: Number(d.inicioEn || 0) });
+  const humanos = humanosDeSala(d), enVivo = !!d.vivo && humanos.length > 1 && humanos.some(h => h.id === d.yo) && !!window.EnVivo;
+  iniciarCarrera(d.mapa, { sala: true, bots: d.bots || [], inicioEn: Number(d.inicioEn || 0), vivo: enVivo, humanos, yo: d.yo });
   if (carreraDe.inicioLocal < performance.now()) avisar('La carrera ya empezó: ¡arranca!', 1600);
+  if (enVivo) empezarVivo(d.yo, humanos);
+  else if (humanos.length > 1) setTimeout(avisoRespaldo, 2400); // tras el nombre de la pista
 }
 function terminarSala(ms) {
   if (sala.enviado) return;
+  if (vivo) vivo.enviarYa('k', kartVivo()); // juegos-en-vivo: los demás te ven llegar antes de que se cierre el juego
   sala.enviado = true; motorOn(false);
   enviar({ tipo: 'meta', ms, monedas: yo.monedas });
   modo = 'resultados'; $('hud').classList.add('hide');
@@ -1632,9 +1664,81 @@ function terminarSala(ms) {
   mostrar('ov-sala');
 }
 
+/* ================= En vivo (openspec: juegos-en-vivo) ================= */
+// Las personas de la sala se ven en vivo: cada quien manda su kart por el canal de la sala (EnVivo, por el puente
+// con la página de Juegos) y las demás lo dibujan interpolado 100 ms atrás. El mensaje solo trae números y el
+// personaje; el nombre sale de la lista de la sala. Sin canal en 5 s: fantasmas y comparación de tiempos, como antes.
+const COLORES_VIVO = Object.values(COLORES);
+const BANDERA = { turbo: 1, estrella: 2, derrape: 4, giro: 8, rayo: 16, item: 32 };
+const SALIDA_MS = 1500; // el kart de quien se desconecta se desvanece en 1.5 s
+let vivo = null;
+const ritmoVivo = n => (n <= 4 ? 15 : 10); // 8 personas × 10 Hz ≈ 70 mensajes/s por aparato (design.md §4)
+function humanosDeSala(d) {
+  return (Array.isArray(d.humanos) ? d.humanos : []).filter(h => h && typeof h.id === 'string' && h.id.length <= 64).slice(0, 8)
+    .map(h => ({ id: h.id, nombre: String(h.nombre || '').slice(0, 30) }));
+}
+function avisoRespaldo() { if (modo === 'carrera') avisar('📴 Sin conexión en vivo: corres contra fantasmas y se comparan los tiempos', 3500); }
+function empezarVivo(yoId, humanos) {
+  const nombre = (humanos.find(h => h.id === yoId) || {}).nombre || '';
+  // Antes de la salida basta con 2 por segundo; en la carrera, el ritmo de la sala (arrancar()).
+  EnVivo.conectar({ transporte: EnVivo.transporteMarco('karts'), yo: { id: yoId, nombre }, participantes: humanos.map(h => h.id), hz: 2 }).then(c => {
+    if (!sala || sala.enviado) { c.cerrar(); return; }
+    vivo = c;
+    if (carreraDe.salio) vivo.ritmo('k', ritmoVivo(humanos.length));
+    vivo.al('k', alKartRemoto);
+    vivo.alDesconectar(alSalirRemoto);
+    vivo.alEstado(st => { if (st === 'reconectando') avisar('📶 Reconectando en vivo…', 1600); else if (st === 'vivo') avisar('📡 En vivo de nuevo', 1200); });
+    vivo.enviar('k', kartVivo());
+  }).catch(avisoRespaldo);
+}
+// Estado de tu kart: [x·10, y·10, ángulo·1000, vel, vuelta, avance, banderas, término, personaje].
+function kartVivo() {
+  const f = (yo.turbo > 0 ? BANDERA.turbo : 0) | (yo.estrella > 0 ? BANDERA.estrella : 0) | (yo.derrape ? BANDERA.derrape : 0) |
+    (yo.giro > 0 ? BANDERA.giro : 0) | (yo.rayo > 0 ? BANDERA.rayo : 0) | (yo.item ? BANDERA.item : 0);
+  return [Math.round(yo.x * 10), Math.round(yo.y * 10), Math.round(difAng(yo.ang) * 1000), Math.round(yo.vel), yo.vuelta, yo.idx, f, yo.termino || 0, yo.personaje];
+}
+const conBandera = (f, b, v) => ((f & b) ? v : 0);
+function alKartRemoto(d, meta) {
+  const k = karts.find(x => x.remoto && x.id === meta.de);
+  if (!k || !Array.isArray(d) || d.length < 8 || !d.slice(0, 8).every(Number.isFinite)) return;
+  k.interp.agregar(meta.tLocal, [d[0] / 10, d[1] / 10, d[2] / 1000, d[3]]);
+  k.vuelta = Math.max(-1, Math.min(A.VUELTAS, Math.trunc(d[4]))); k.idx = ((Math.trunc(d[5]) % N) + N) % N;
+  const f = Math.trunc(d[6]);
+  k.turbo = conBandera(f, BANDERA.turbo, 0.2); k.estrella = conBandera(f, BANDERA.estrella, 0.2); k.giro = conBandera(f, BANDERA.giro, 0.2); k.rayo = conBandera(f, BANDERA.rayo, 0.2);
+  k.derrape = (f & BANDERA.derrape) ? { dir: 0, nivel: 0 } : null;
+  k.termino = d[7] > 0 ? Math.round(d[7]) : null;
+  if (typeof d[8] === 'string') k.personaje = Personajes.normalizar(d[8]);
+  if (!k.visible) { k.visible = true; const p = k.interp.muestra(Date.now()); if (p) { k.x = p[0]; k.y = p[1]; k.ang = p[2]; } }
+  k.saliendo = null;
+}
+function alSalirRemoto(id) {
+  const k = karts.find(x => x.remoto && x.id === id);
+  if (!k || !k.visible || k.termino !== null) return; // quien ya llegó se queda en la meta, sin aviso
+  k.saliendo = Date.now();
+  avisar('👋 ' + k.nombre + ' perdió la conexión', 2200);
+}
+function pasoRemoto(k) {
+  if (k.saliendo !== null && Date.now() - k.saliendo > SALIDA_MS) { k.visible = false; k.saliendo = null; k.interp.vaciar(); }
+  const s = k.interp.muestra(Date.now());
+  if (s) { k.x = s[0]; k.y = s[1]; k.ang = s[2]; k.vel = s[3]; }
+}
+const alfaRemoto = k => (k.saliendo === null ? 1 : Math.max(0, 1 - (Date.now() - k.saliendo) / SALIDA_MS));
+// Clasificación en vivo: lugar, color y nombre corto de cada quien (personas y fantasmas), por avance.
+function pintarTablaVivo() {
+  const el = $('vivo-tabla');
+  const activa = modo === 'carrera' && karts.some(k => k.remoto);
+  if (el.hidden === activa) el.hidden = !activa;
+  if (!activa) return;
+  const filas = posiciones();
+  const firma = filas.map(k => k.num).join(',');
+  if (hudPrevio.tablaVivo === firma) return;
+  hudPrevio.tablaVivo = firma;
+  el.innerHTML = filas.map((k, i) => '<li' + (k === yo ? ' class="yo"' : '') + '><b>' + (i + 1) + '</b><i style="--c:' + k.color + '"></i><span>' + esc(k === yo ? 'Tú' : k.nombre.slice(0, 12)) + '</span></li>').join('');
+}
+
 /* ================= Partículas (en el mapa 2D; se dibujan proyectadas) ================= */
 function emitir(k) {
-  if (k.fantasma || !yo || (k.x - yo.x) ** 2 + (k.y - yo.y) ** 2 > 500 * 500) return;
+  if (k.fantasma || !visibleK(k) || !yo || (k.x - yo.x) ** 2 + (k.y - yo.y) ** 2 > 500 * 500) return;
   const ca = Math.cos(k.ang), sa = Math.sin(k.ang), f = REDUCIR ? 0.33 : 1;
   const rueda = s => ({ x: k.x - ca * 12 - sa * 10 * s, y: k.y - sa * 12 + ca * 10 * s });
   if (k.derrape) for (const s of [-1, 1]) {
@@ -1817,7 +1921,7 @@ function juntarVisibles(lista, visible, conKarts) {
   for (const cj of cajas) if (cj.t <= 0) { const z = visible(cj.x, cj.y, 16, 1100); if (z) lista.push({ z, caja: cj }); }
   for (const o of objetos) { const z = visible(o.x, o.y, 12, 900); if (z) lista.push({ z, obj: o }); }
   if (conKarts) {
-    for (const k of karts) { const z = visible(k.x, k.y, 30, 1600); if (z) lista.push({ z, kart: k }); }
+    for (const k of karts) { const z = visibleK(k) && visible(k.x, k.y, 30, 1600); if (z) lista.push({ z, kart: k }); }
     for (const p of particulas) { const z = visible(p.x, p.y, 10, 600); if (z) lista.push({ z, part: p }); }
   }
 }
@@ -1898,6 +2002,7 @@ function dibujarKart(k, t) {
   const e = k.rayo > 0 ? 0.62 : 1, s = p.s * e;
   g.save();
   if (k.fantasma) g.globalAlpha *= 0.55;
+  if (k.remoto) g.globalAlpha *= alfaRemoto(k); // juegos-en-vivo: se desvanece al desconectarse
   // Sombra y brillo del derrape bajo las llantas.
   g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(p.x, p.y, 19 * s, 19 * s * Math.sin(cam.phi) * 0.7 + 1, 0, 0, 7); g.fill();
   if (k.derrape && k.derrape.nivel && !k.fantasma) {
@@ -1968,9 +2073,9 @@ function dibujarMinimapa() {
   c.textAlign = 'center'; c.textBaseline = 'middle';
   let n = 0;
   for (const k of karts) {
-    if (k === yo) continue;
+    if (k === yo || !visibleK(k)) continue;
     const x = mm.ox + k.x * mm.esc, y = mm.oy + k.y * mm.esc;
-    c.globalAlpha = k.fantasma ? 0.8 : 1;
+    c.globalAlpha = (k.fantasma ? 0.8 : 1) * (k.remoto ? alfaRemoto(k) : 1); // juegos-en-vivo: personas con círculo sólido
     c.fillStyle = k.color; c.beginPath(); c.arc(x, y, 5, 0, 7); c.fill();
     c.strokeStyle = 'rgba(0,0,0,.7)'; c.lineWidth = 1; c.setLineDash(k.fantasma ? [2, 1.5] : []); c.stroke(); c.setLineDash([]);
     c.fillStyle = '#fff'; c.font = 'bold 7px sans-serif'; c.fillText(String(k.num), x, y + 0.5);
@@ -1995,7 +2100,8 @@ const hudPrevio = {};
 function hud(id, txt) { if (hudPrevio[id] !== txt) { hudPrevio[id] = txt; $(id).textContent = txt; } }
 function pintarHud() {
   if (modo !== 'carrera' && modo !== 'pausa') return;
-  const n = karts.length, pos = posDe(yo);
+  const n = karts.filter(visibleK).length, pos = posDe(yo);
+  pintarTablaVivo(); // juegos-en-vivo
   hud('h-pos', pos + '.º'); hud('h-de', '/' + n);
   if (hudPrevio.lugar !== pos) {
     if (pos === 1 && hudPrevio.lugar > 1 && modo === 'carrera' && yo.termino === null) window.Emocion?.logro(); // emocion-sonora: rebasaste al 1.er lugar
@@ -2043,6 +2149,7 @@ function dibujarPortada(t) {
 
 /* ================= Arranque ================= */
 ajustar();
+addEventListener('pagehide', () => { if (vivo) vivo.cerrar(); }); // juegos-en-vivo: adiós a los demás al salir
 requestAnimationFrame(t => { ultimo = t; cuadro(t); });
 if (EMBED) enviar({ tipo: 'listo' }); else abrirMenu();
 if (PRUEBA) {
@@ -2054,7 +2161,11 @@ if (PRUEBA) {
       ang: yo ? yo.ang : 0, giro: leerEntrada().giro, freno: leerEntrada().freno, derrape: activo('derrape'), acel: acelModo, acelera: leerEntrada().acel,
       vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
       item: yo ? yo.item : null, mando: mando.estado(),
-      personaje: yo ? yo.personaje : personaje, personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length }),
+      personaje: yo ? yo.personaje : personaje, personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length,
+      // juegos-en-vivo: personas remotas, canal y clasificación en vivo
+      vivo: vivo ? { estado: vivo.estado(), presencia: vivo.presencia(), latencia: vivo.latencia(), stats: vivo.estadisticas() } : null,
+      remotos: karts.filter(k => k.remoto).map(k => ({ id: k.id, nombre: k.nombre, visible: k.visible, saliendo: k.saliendo !== null, x: Math.round(k.x), y: Math.round(k.y), vuelta: k.vuelta, idx: k.idx, termino: k.termino, personaje: k.personaje, color: k.color, pos: posDe(k) })),
+      yoColor: yo ? yo.color : null, tablaVivo: $('vivo-tabla').hidden ? null : $('vivo-tabla').textContent, aviso: $('aviso').textContent }),
     // Caja de tu kart en px del lienzo (capturas de cerca y revisión de su dibujo).
     cajaYo: () => { const p = proyectar(yo.x, yo.y, 0); return p ? { x: (p.x - KW / 2 * p.s) * K, y: (p.y - KOY * p.s) * K, w: KW * p.s * K, h: KH * p.s * K } : null; },
     // Hoja de revisión: cada piloto de espaldas, de tres cuartos, de lado y de frente.
@@ -2065,6 +2176,7 @@ if (PRUEBA) {
       return c.toDataURL('image/png');
     },
     darItem: t => { if (yo && ITEMS[t]) yo.item = t; }, // ítem en la mano (E2E del mando)
+    ruta: () => M.pts.map(p => [Math.round(p.x), Math.round(p.y), Math.round(p.a * 1000)]), // juegos-en-vivo: karts fabricados en la E2E de fps
     // Lleva al jugador al final de la última vuelta (cruza la meta en un momento).
     piloto: on => { pilotoPrueba = !!on; },
     adelantar: () => alFinalDeVuelta(A.VUELTAS - 1),

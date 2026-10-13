@@ -103,6 +103,13 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   `fichas-e2e` (ordenar y emparejar), en la misma semana, con fecha 2026-10-04 y exclusiva de `fernando`, para
   `ordenar-emparejar`: aparece en su «Para ponerte al día».
 - Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
+- Juego en vivo sin Supabase (cambio `juegos-en-vivo`): `lib/vivo-relevo.js` levanta un relevo local (HTTP + SSE) y
+  `initVivo(relevo.url, { latencia, perdida, desorden, noConecta })` es el `init` de `abrirPagina`; con la ruta
+  `/juegos.html?vivoSimulado=1` la página usa `EnVivo.simulado` (latencia y pérdida inyectadas en la página) en lugar
+  del canal de Realtime. `relevo.cortar(id)` silencia a alguien y `relevo.inyectar(topic, sobre)` fabrica mensajes.
+  `e2e-karts-vivo` usa 8 contextos (el cupo de la sala); para medir fps abre un solo navegador, las otras 7 personas
+  entran por la API y el relevo fabrica sus karts, porque 8 navegadores dibujando en la misma máquina contaminan la
+  medición (15–50 fps según la carga).
 - Con el verificador falso local, cualquier contraseña no vacía abre la sesión; «clase» o «sensei» cuentan como la
   inicial y piden cambiarla (cambio `acceso-con-contrasena`).
 - Solo correos `@example.com`. El usuario admin de prueba es `admin@example.com`. Nada de datos reales.

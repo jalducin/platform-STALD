@@ -351,7 +351,7 @@ interfaces de `juegos/*.js` y de `comun/auth.js`:
 | `mente.js` | Sudoku y Ajedrez contra la computadora |
 | `clasicos.js` | Basta, ¡Una! y Lotería contra bots |
 | `naipes.js` | Póker y baraja española (Brisca y Conquián) contra bots; HTML de cartas y fichas |
-| `salas.js` | partidas multijugador: semilla (`rngDe`), `sala`, Realtime, espera, preguntas, Basta por rondas, podio, revancha, crear/unirse/reanudar y compartir |
+| `salas.js` | partidas multijugador: semilla (`rngDe`), `sala`, Realtime (y transporte del juego en vivo), espera, preguntas, Basta por rondas, podio, revancha, crear/unirse/reanudar y compartir |
 | `salas-mesa.js` | Lotería, ¡Una!, Póker, Brisca/Conquián y Ajedrez jugados en sala |
 | `musica.js` | música de fondo (WebAudio) y su menú |
 | `arranque.js` | `AYUDA` (📖 Cómo se juega), eventos delegados de `#app` e `iniciar()`; **va al último** |
@@ -734,6 +734,20 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   - al quedar `SUBSCRIBED`: una consulta para ponerse al día y respaldo cada 30 s;
   - si el canal falla, vuelve el sondeo normal;
   - `limpiar` hace `removeChannel`.
+- Juego en vivo (cambio `juegos-en-vivo`): `juegos/en-vivo.js` (`window.EnVivo`, script clásico) manda mensajes de
+  navegador a navegador por el mismo topic con el evento `vivo` (sin tocar Supabase: canal público y llave publicable).
+  El contrato (`EnVivo.conectar` → `enviar`, `al`, `presencia`, `latencia`, `alDesconectar`, `cerrar`; `EnVivo.simulado`
+  para pruebas) está en el encabezado del archivo y en el `design.md` del cambio:
+  - `prepararVivo` (en `salas.js`) arma `sala.vivoTr`: el **mismo** canal de `conectarRealtime` (un solo socket) con
+    `.on('broadcast', { event: 'vivo' })`, o el doble de prueba con `?vivoSimulado=1` + `window.__vivoSimulado`;
+  - el iframe habla con él por el puente `EnVivo.transporteMarco(juego)` ↔ `EnVivo.puente(...)`, que solo deja pasar
+    mensajes de ids que están en la sala;
+  - por el canal solo viajan el id de la sala y números; el nombre que se pinta sale de la sala;
+  - **Karts** (`pintarArcadeSala` → `inicio` con `yo`, `humanos` y `vivo`): cada kart a 15 Hz con ≤ 4 personas y 10 Hz
+    con 5–8 (2 Hz antes de salir), `[x·10, y·10, ángulo·1000, vel, vuelta, avance, banderas, término, personaje]`;
+    los remotos se interpolan 100 ms atrás (extrapolación ≤ 250 ms), con color y número por su lugar en la sala,
+    nombre encima, minimapa y clasificación en vivo (`#vivo-tabla`); empuje local en los choques; sin ítems entre
+    personas; quien calla 3 s se desvanece con aviso; sin canal en 5 s, aviso y fantasmas como antes.
 
 ## Caché y estabilidad del cliente (cambio `cache-estabilidad`)
 
