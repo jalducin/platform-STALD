@@ -144,6 +144,7 @@ export const MESAS: Record<string, Mesa> = {
   futbolito: { max: 2, asientos: 2, min: 2, formatos: { "2v2": { max: 4, asientos: 4, min: 2 } } },
   billar: { max: 2, asientos: 2, min: 2 },
   golf: { max: 4, min: 2, bots: "nunca" }, // golf: de 2 a 4 personas por turnos, sin bots (design.md §4)
+  karts: { max: 8, asientos: 3, min: 1 }, // juegos-en-vivo: hasta 8 en vivo; con bots, 1 persona + 2 bots como antes
 };
 const FISICA = new Set(["futbolito", "billar", "golf"]); // futbolito-billar y golf: no aceptan jugadas tras el final
 // futbolito-equipos: la mesa puede cambiar según `opciones.formato` (Futbolito 2v2).

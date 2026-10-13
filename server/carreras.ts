@@ -9,7 +9,7 @@ export const CARRERAS: Record<string, { minMs: number; limiteMs: number }> = {
 // vive en sala.opciones.mapa para que la revancha lo herede.
 export const MAPAS_SALA: Record<string, string[]> = {
   plataformas: ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"],
-  karts: ["pradera", "desierto", "hielo", "volcan"],
+  karts: ["pradera", "desierto", "hielo", "volcan", "tenochtitlan", "teotihuacan", "chichen", "laventa"], // juegos-en-vivo: también las mesoamericanas
 };
 // Mapa pedido (si es válido) o uno al azar; null si se pidió uno que no existe.
 export function mapaDeSala(juego: string, pedido: unknown, azar: number): string | null {

@@ -158,11 +158,20 @@ function pintarArcadeSala(body) {
   sala.vista = 'arcade';
   body.innerHTML = marcoArcade(srcArcade(juego), juegoPorId(juego).t);
   const frame = document.getElementById('arcade-frame');
+  if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' }); // juegos-en-vivo: celular de lado, la pista completa a la vista
   const bots = participantes().filter(p => p.bot).map(p => ({ nombre: p.nombre, ms: Arcade.tiempoBot(juego, mapa, s.seed, p.id), color: (Arcade.BOTS_SALA.find(b => b.id === p.id) || {}).color }));
+  // juegos-en-vivo: Karts recibe las personas de la sala (id y nombre ya visibles, en orden) y, si hay canal, el puente
+  // que lleva sus mensajes; solo pasan los de ids que están en la sala.
+  const personas = participantes().filter(p => !p.bot).map(p => ({ id: p.id, nombre: p.nombre }));
+  const enVivo = juego === 'karts' && !!sala.vivoTr && personas.length > 1;
+  if (enVivo) {
+    const pt = EnVivo.puente({ marco: frame, juego, transporte: sala.vivoTr, permitido: id => personas.some(h => h.id === id) });
+    limpiezas.push(() => pt.cerrar());
+  }
   const alMensaje = ev => {
     const d = ev.data || {};
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== juego) return;
-    if (d.tipo === 'listo') frame.contentWindow.postMessage({ tipo: 'inicio', modo: 'sala', mapa, seed: s.seed, inicioEn: s.inicio - ahoraServidor(), bots }, location.origin);
+    if (d.tipo === 'listo') frame.contentWindow.postMessage({ tipo: 'inicio', modo: 'sala', mapa, seed: s.seed, inicioEn: s.inicio - ahoraServidor(), bots, yo: e.yo, humanos: personas, vivo: enVivo }, location.origin);
     else if (d.tipo === 'meta' && !sala.arcadeMia) {
       const ms = d.ms === null ? null : Math.max(0, Math.round(Number(d.ms) || 0));
       sala.arcadeMia = { ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) };

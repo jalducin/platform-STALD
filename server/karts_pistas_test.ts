@@ -117,9 +117,14 @@ Deno.test("karts-pistas: Copa Fiesta y Copa Mesoamericana con 4 pistas que exist
   assertEquals(KP.copaPorId(undefined).id, "fiesta", "progreso viejo sin id → Copa Fiesta");
 });
 
-Deno.test("karts-pistas: las salas siguen con las 4 pistas originales (igual que el servidor)", () => {
+// juegos-en-vivo: las salas (hasta 8 personas en vivo) ofrecen las 8 pistas, también las mesoamericanas.
+Deno.test("karts-pistas: las salas ofrecen las 8 pistas (igual que el servidor)", () => {
   assertEquals(A.PISTAS.map((p: any) => p.id), MAPAS_SALA.karts);
-  for (let s = 0; s < 60; s++) assert(MAPAS_SALA.karts.includes(A.mapaDeSala("karts", "semilla" + s)));
+  assertEquals(MAPAS_SALA.karts.length, 8);
+  for (const id of NUEVAS) assert(MAPAS_SALA.karts.includes(id), id + " en salas");
+  const azar = new Set<string>();
+  for (let s = 0; s < 200; s++) { const m = A.mapaDeSala("karts", "semilla" + s); assert(MAPAS_SALA.karts.includes(m)); azar.add(m); }
+  assert(NUEVAS.some((id: string) => azar.has(id)), "el azar también elige pistas nuevas");
   for (const id of NUEVAS) assert(A.refKarts(id) > 0 && A.nombreMapa("karts", id).includes(A.pistaPorId(id).nombre));
 });
 
