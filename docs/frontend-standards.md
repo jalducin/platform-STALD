@@ -253,6 +253,14 @@ Cada página debe manejar y mostrar de forma explícita:
       `silbato()` al empezar, en el medio tiempo y al final (con el sonido propio de respaldo), `intensidad(x)` en los
       últimos minutos con el marcador cerrado (se apaga en la pausa, al final y al salir), `victoria()`/`derrota()`,
       `suspenso()`/`revelacion()` en los penales, `podio(lugar)` al terminar la copa o el torneo y `calma()` al salir.
+    - **En línea 1 vs 1** (cambio `futbol-en-linea`, decisiones en su `design.md`): sala `futbol` de 2 personas sin
+      bots; en la sala de espera cada quien elige su táctica (`tacticaFutbol` en `juegos/app/arcade.js`). El iframe
+      recibe `{ tipo: 'inicio', modo: 'linea', rol, yo, participantes, nombres, seed, rt, tacticas }`, se conecta con
+      `EnVivo.conectar` (`juegos/en-vivo.js`) y al final manda `fin-linea { goles, ms, corte }` (la página lo registra
+      y pinta el podio) o, sin canal, `ir-clasif` (abre la Clasificatoria semanal con `?modo=clasif`). Netcode sin DOM
+      en `juegos/futbol-red.js` (`window.FutbolRed`, probado en `server/futbol_red_test.ts`): foto cuantizada a 15 Hz
+      (`fe:foto`), entrada a 30 Hz (`fe:entrada`), búfer de interpolación de 100 ms, predicción y reconciliación del
+      jugador propio, `📶` latencia y aviso de desconexión (IA de inmediato, cierre a los 15 s). Sin pausa en vivo.
     - **Futbolito retirado del menú**: su tarjeta pasó a `JUEGOS_RETIRADOS` (`juegos/app/menu.js`) y salió de
       `JUEGOS_PARTIDA`; `juegoPorId('futbolito')` lo sigue encontrando para salas en curso, ranking e historial.
   - **Vista pseudo-3D de Karts Turbo** (cambio `karts-pseudo3d`; diagnóstico y decisiones en su `design.md`):

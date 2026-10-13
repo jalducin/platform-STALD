@@ -195,6 +195,16 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       dentro) → `{ ok, codigo, equipo }`; solo en Futbolito `2v2` (si no, 409 `sin_equipos`) y antes de empezar (409
       `ya_empezo`); otro valor → 400 `equipo_invalido`; si ya hay 2 personas que pidieron ese equipo → 409
       `equipo_lleno`. `server/futbolito_equipos_test.ts` compara el reparto del servidor con el de la página.
+    - Fútbol Estelar en línea (`futbol`, cambio `futbol-en-linea`, `server/futbol_linea.ts`): mesa 1 vs 1 sin bots.
+      Táctica: `POST /juegos/sala/<código>/unirse { tactica }` (también para quien ya está dentro) → `{ ok, codigo,
+      tactica }`; formación de la lista y deslizadores enteros 0–100 (los que falten valen 50), si no 400
+      `tactica_invalida` (también en otros juegos); tras empezar, 409 `ya_empezo`. Resultado: `POST
+      /juegos/sala/<código>/respuesta { futbol: { goles: [anfitrión, invitado], ms, corte? } }`; cuenta solo el primero
+      de cada quien; 400 `resultado_invalido` si los goles salen de 0–30, suman más de 1 + ms/10 000, o `ms` es menor
+      a 10 s, mayor a 20 min o mayor al tiempo desde el inicio de la sala + 5 s. La respuesta y `GET` de la sala traen
+      `futbol: { estado: confirmado | disputa | anfitrion | invitado | pendiente, goles, puntos: { <id>: n } }`
+      (coinciden → confirmado; difieren → el del anfitrión «en disputa»; solo uno → ese). Puntos como el partido
+      rápido (300/120/40 + 60 por gol hasta 6 − 20 por gol recibido; 0–1000).
     - Ajedrez (`ajedrez`, cambio `ajedrez`): acepta dos formas de jugada.
       - `{ n, accion: "mover", de, a, promo? }`, donde `de` y `a` son casillas `a1`–`h8` y `promo` es `q`, `r`, `b`
         o `n`.
