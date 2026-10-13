@@ -12,6 +12,7 @@ import { respuestaNaval } from "./naval.ts"; // juegos-tablero
 // juegos-salas-grandes: Bingo, Blackjack, Dibuja y adivina, y Memorama y Sopa en partida
 import * as Grandes from "./salas_grandes.ts";
 import * as Futbolito from "./futbolito.ts"; // futbolito-equipos: formato, equipos y dueño de la barra
+import * as FutbolLinea from "./futbol_linea.ts"; // futbol-en-linea: táctica del asiento y resultado validado
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -26,6 +27,7 @@ export const JUEGOS_PARTIDA = new Set([
   "cultura-linea", // cultura-conocimiento: 📜 Línea del tiempo
   "futbolito", "billar", // futbolito-billar: física 1 vs 1 por tiros
   "golf", // golf: minigolf de 2 a 4 personas por turnos
+  "futbol", // futbol-en-linea: Fútbol Estelar 1 vs 1 en vivo (anfitrión autoritativo por el canal en vivo)
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
@@ -144,6 +146,7 @@ export const MESAS: Record<string, Mesa> = {
   futbolito: { max: 2, asientos: 2, min: 2, formatos: { "2v2": { max: 4, asientos: 4, min: 2 } } },
   billar: { max: 2, asientos: 2, min: 2 },
   golf: { max: 4, min: 2, bots: "nunca" }, // golf: de 2 a 4 personas por turnos, sin bots (design.md §4)
+  futbol: { max: 2, min: 2, bots: "nunca" }, // futbol-en-linea: 1 vs 1 en vivo, solo personas
 };
 const FISICA = new Set(["futbolito", "billar", "golf"]); // futbolito-billar y golf: no aceptan jugadas tras el final
 // futbolito-equipos: la mesa puede cambiar según `opciones.formato` (Futbolito 2v2).
@@ -197,6 +200,8 @@ interface EnSala extends Grandes.JugadorGrande { // juegos-salas-grandes: bingo,
   final?: number; // total del jugador al terminar
   podio?: { nombre: string; total: number; bot?: boolean }[]; // solo el host
   equipo?: 0 | 1; // futbolito-equipos: equipo pedido en la sala de espera (Futbolito 2v2)
+  tactica?: FutbolLinea.TacticaFutbol; // futbol-en-linea: táctica elegida en la sala de espera
+  futbol?: FutbolLinea.ReporteFutbol & { t: number }; // futbol-en-linea: resultado que vio (solo el primero)
   v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
 }
 
@@ -414,6 +419,9 @@ async function unirseSala(c: CtxSala): Promise<Response> {
   // futbolito-equipos: { equipo } guarda la preferencia de equipo (también para quien ya está dentro).
   const equipo = body.equipo === undefined ? undefined : Futbolito.validarEquipo(sala.opciones?.formato, sala.inicio !== null, jugadores, jugador.id, body.equipo);
   if (equipo !== undefined && typeof equipo === "object") return json({ error: equipo.error }, equipo.status);
+  const tactica = body.tactica === undefined ? undefined : tacticaDeAsiento(sala, body.tactica); // futbol-en-linea
+  if (tactica !== undefined && "error" in tactica) return json({ error: tactica.error }, tactica.status);
+  if (tactica !== undefined) return guardarTactica(c, tactica);
   if (dentro && equipo === undefined) return json({ ok: true, codigo });
   if (!dentro && sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
   if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
@@ -423,6 +431,22 @@ async function unirseSala(c: CtxSala): Promise<Response> {
   await publicar();
   return json({ ok: true, codigo });
 }
+
+// futbol-en-linea: { tactica } en /unirse guarda la táctica del asiento (solo en salas de futbol y antes de empezar).
+function tacticaDeAsiento(sala: Sala, crudo: unknown): FutbolLinea.TacticaFutbol | { error: string; status: number } {
+  if (sala.juego !== "futbol") return { error: "tactica_invalida", status: 400 };
+  if (sala.inicio !== null) return { error: "ya_empezo", status: 409 };
+  return FutbolLinea.validarTactica(crudo) ?? { error: "tactica_invalida", status: 400 };
+}
+async function guardarTactica(c: CtxSala, tactica: FutbolLinea.TacticaFutbol): Promise<Response> {
+  const { jugador, store, ahora, json, codigo, sala, jugadores, dentro, publicar } = c;
+  if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
+  if (!(await guardarJugador(store, codigo, jugador, (e) => ({ ...e, tactica }), ahora))) return json({ error: "conflicto_escritura" }, 503);
+  await publicar();
+  return json({ ok: true, codigo, tactica });
+}
+// futbol-en-linea: resultado de la sala con la regla del servidor (vacío en otros juegos).
+const vistaFutbol = (sala: Sala, jugadores: EnSala[]) => sala.juego === "futbol" ? { futbol: FutbolLinea.resultadoFutbol(sala.host, jugadores) } : {};
 
 // POST /juegos/sala/<código>/empezar (solo el anfitrión)
 function empezarSala(c: CtxSala): Promise<Response> {
@@ -537,6 +561,11 @@ function cambioDeRespuesta(c: CtxSala, inicio: number, deGrande: CambioJugador |
     return (e: EnSala) => (e.unas || []).some((u) => u.paso === paso) ? e : { ...e, unas: [...(e.unas || []), { paso, t: ahora }].slice(-100) };
   }
   if (body.jugada !== undefined) return cambioDeJugada(c);
+  if (body.futbol !== undefined) { // futbol-en-linea: el primer reporte de cada quien, si es plausible
+    const r = sala.juego === "futbol" ? FutbolLinea.validarResultado(body.futbol, inicio, ahora) : null;
+    if (!r) return json({ error: "resultado_invalido" }, 400);
+    return (e: EnSala) => e.futbol ? e : { ...e, futbol: { ...r, t: ahora } };
+  }
   if (body.carrera !== undefined) {
     // Carreras de Arcade (server/carreras.ts): tiempo validado con el reloj del servidor; solo cuenta el primero.
     const carrera = validarCarrera(sala.juego, body.carrera, inicio, ahora);
@@ -567,7 +596,8 @@ async function responderSala(c: CtxSala): Promise<Response> {
   if (!nuevo) return json({ error: "conflicto_escritura" }, 503);
   await publicar();
   return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas,
-    ...(grande ? { ...grande.respuesta, bingo: nuevo.bingo, resultado: nuevo.resultado } : {}) }); // juegos-salas-grandes
+    ...(grande ? { ...grande.respuesta, bingo: nuevo.bingo, resultado: nuevo.resultado } : {}), // juegos-salas-grandes
+    ...vistaFutbol(sala, jugadores.map((x) => x.id === jugador.id ? nuevo : x)) }); // futbol-en-linea
 }
 
 // POST /juegos/sala/<código>/revancha → { codigo } de la sala nueva, con quien la pidió dentro.
@@ -598,7 +628,7 @@ function verSala(c: CtxSala, rt?: ConfigRealtime): Response {
   if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
   const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
   return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
-    ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora) }); // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
+    ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora), ...vistaFutbol(sala, jugadores) }); // futbol-en-linea // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
 }
 
 export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string, rt?: ConfigRealtime): Promise<Response> {

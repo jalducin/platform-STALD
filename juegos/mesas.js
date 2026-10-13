@@ -33,6 +33,7 @@
     futbolito: { max: 2, asientos: 2, min: 2, formatos: { '2v2': { max: 4, asientos: 4, min: 2 } } },
     billar: { max: 2, asientos: 2, min: 2 },
     golf: { max: 4, min: 2, bots: 'nunca' }, // golf: de 2 a 4 personas por turnos, sin bots
+    futbol: { max: 2, min: 2, bots: 'nunca' }, // futbol-en-linea: 1 vs 1 en vivo, solo personas
   };
   // futbolito-equipos: con `opciones.formato` la mesa puede cambiar (igual que mesaDe en server/salas.ts).
   const de = (juego, opciones) => {
