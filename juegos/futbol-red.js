@@ -16,6 +16,7 @@
   const HZ_FOTO = 15, HZ_ENTRADA = 30, RETRASO_MS = 100, BUFFER_MAX = 30, EXTRAPOLA_MS = 100;
   const CORRECCION = 0.3, SALTO_M = 3, EVENTOS_FOTOS = 3;
   const DESCONEXION_MS = 15000; // design.md §5: aviso + IA de inmediato y cierre a los 15 s
+  const SILENCIO_MS = 3000; // sin mensajes del otro aparato: se da por caído (igual que alDesconectar de EnVivo)
   const MINUTOS_LINEA = 3;
 
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -224,6 +225,7 @@
       },
       enviarSiToca(forzar) {
         const t = ahora();
+        if (!st.iaInvitado && t - st.ultimoMsg >= SILENCIO_MS) iaAlInvitado(); // 3 s sin entradas (aunque el canal no avise)
         if (!forzar && t - st.ultimoEnvio < 1000 / HZ_FOTO - 1) return null;
         st.ultimoEnvio = t; st.q++;
         st.eventos = st.eventos.filter(e => e.q > st.q - EVENTOS_FOTOS);
@@ -289,6 +291,7 @@
       },
       // Estado interpolado a dibujar (null sin fotos) + eventos nuevos (gol, medio, final, avisos).
       dibujar() {
+        if (st.caido === null && st.recibidas && ahora() - st.ultimoMsg >= SILENCIO_MS) st.caido = ahora(); // 3 s sin fotos
         const tr = tiempoRender(buf, ahora());
         if (tr === null) return null;
         const s = estadoEn(buf, tr);

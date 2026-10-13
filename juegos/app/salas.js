@@ -100,6 +100,7 @@ TableroUI.SALA.forEach(j => TIEMPO_REAL.add(j)); // juegos-tablero
 ['bingo', 'blackjack', 'dibuja', 'mente-sopa'].forEach(j => TIEMPO_REAL.add(j)); // juegos-salas-grandes
 const FISICA = new Set(['futbolito', 'billar']); // futbolito-billar: 1 vs 1 por tiros en su iframe
 JUEGOS_PARTIDA.push('golf'); TIEMPO_REAL.add('golf'); FISICA.add('golf'); // golf: de 2 a 4 por turnos en su iframe (pintarFisicaSala)
+JUEGOS_PARTIDA.push('futbol'); TIEMPO_REAL.add('futbol'); // futbol-en-linea: 1 vs 1 en vivo en su iframe (pintarFutbolSala)
 
 // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
 // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -197,7 +198,7 @@ async function entrarSala(codigo) {
   const prepararContenido = () => {
     const juego = sala.estado.sala.juego;
     if (SALAS_GRANDES[juego]) return Promise.resolve(SALAS_GRANDES[juego].preparar()); // juegos-salas-grandes
-    if (['una', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar', 'golf'].includes(juego)) return Promise.resolve(null);
+    if (['una', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar', 'golf', 'futbol' /* futbol-en-linea */].includes(juego)) return Promise.resolve(null);
     if (juego.startsWith('basta')) return datos('basta');
     if (juego === 'loteria') return datos('loteria');
     return preguntasPartida(juego, sala.estado.sala.seed, sala.estado.sala.opciones);
@@ -285,6 +286,7 @@ function pintarSala() {
   if (ARCADE.has(s.juego)) return pintarArcadeSala(body);
   if (SALAS_GRANDES[s.juego]) return SALAS_GRANDES[s.juego].pintar(body); // juegos-salas-grandes
   if (s.juego === 'cultura-linea') return pintarLineaSala(body); // cultura-conocimiento
+  if (s.juego === 'futbol') return pintarFutbolSala(body); // futbol-en-linea
   if (FISICA.has(s.juego)) return pintarFisicaSala(body); // futbolito-billar
   return pintarPreguntaSala(body);
 }
@@ -303,7 +305,7 @@ function pintarEspera(body) {
     '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
     '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
     extrasEspera(e.sala) + // basta-divertida-una-robo
-    '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length, e.sala.opciones)) + '</p>' : '') + equiposFutbolito(lista) /* futbolito-equipos */ + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
+    '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length, e.sala.opciones)) + '</p>' : '') + equiposFutbolito(lista) /* futbolito-equipos */ + tacticaFutbol() /* futbol-en-linea */ + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
       (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + '</span></li>').join('') + '</ol>' +
     '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
   // La clave cuenta personas y bots: en una mesa de 4, una persona nueva desplaza a un bot y la lista no cambia de largo.

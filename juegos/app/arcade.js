@@ -74,11 +74,13 @@ function jugarDragonRun() {
 const marcoArcade = (src, titulo) => '<div class="arcade-caja"><iframe id="arcade-frame" src="' + src + '" title="' + escapeHtml(titulo) + '" allow="autoplay; accelerometer; gyroscope"></iframe></div>';
 const SIN_AVANCE = new Set(['futbolito', 'billar']); // futbolito-billar: juegos de Arcade sin avance guardado
 const srcArcade = (id, extra) => 'juegos/' + id + '.html' + (new URLSearchParams(location.search).get('arcadePrueba') === '1' ? '?prueba=1' : '') + (extra || '');
-function jugarArcade(id) {
+// futbol-en-linea: `param` extra para el juego (modo=clasif abre la Clasificatoria semanal de Fútbol Estelar).
+const conParam = (id, param) => { const src = srcArcade(id); return param ? src + (src.includes('?') ? '&' : '?') + param : src; };
+function jugarArcade(id, param) {
   const m = marco(id);
   document.getElementById('m-puntos').hidden = true;
   enCurso.foto = () => null; // el avance vive en el servidor: recargar no pide confirmación
-  m.body.innerHTML = marcoArcade(srcArcade(id), juegoPorId(id).t);
+  m.body.innerHTML = marcoArcade(conParam(id, param), juegoPorId(id).t); // futbol-en-linea: param
   const frame = document.getElementById('arcade-frame');
   if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' });
   const estilo = musica.estilo;
@@ -243,4 +245,92 @@ function tarjetaGolf(t, mesa) {
   const n = v => Math.max(0, Math.min(99, Math.round(Number(v) || 0))), hoyos = t.hoyos.slice(0, 9);
   return '<h2>⛳ Tarjeta</h2><div class="scroll-x"><table class="inv golf-tarjeta"><thead><tr><th>Jugador</th>' + hoyos.map(h => '<th>Hoyo ' + n(h && h.n) + '<br><small>par ' + n(h && h.par) + '</small></th>').join('') + '<th>Total</th></tr></thead><tbody>' +
     mesa.map((p, i) => { const gs = hoyos.map((_, k) => n(((t.golpes[i] || [])[k]))); return '<tr' + (p.id === sala.estado.yo ? ' class="yo"' : '') + '><td>' + escapeHtml(p.nombre) + '</td>' + gs.map(x => '<td class="num">' + x + '</td>').join('') + '<td class="num"><b>' + gs.reduce((a, b) => a + b, 0) + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+}
+
+// ---- Fútbol Estelar en línea 1 vs 1 (openspec: futbol-en-linea) ----
+// Táctica en la sala de espera: formación y deslizadores del asiento propio (POST /unirse { tactica }). El partido se
+// juega en el iframe por el canal en vivo (juegos/en-vivo.js): esta página le pasa rol, ids, semilla, canal y tácticas,
+// manda al servidor el resultado que vio y pinta el podio con los puntos que devuelve el servidor.
+const FUT_FORMACIONES = ['4-4-2', '4-3-3', '3-5-2', '5-3-2'];
+const FUT_DESLIZADORES = [['linea', '🧱 Línea', 'Baja', 'Alta'], ['ancho', '↔️ Amplitud', 'Cerrada', 'Abierta'], ['mentalidad', '🧠 Mentalidad', 'Defensiva', 'Ofensiva'], ['presion', '🔥 Presión', 'Poca', 'Mucha']];
+const tacticaDe = id => Object.assign({ formacion: '4-4-2', linea: 50, ancho: 50, mentalidad: 50, presion: 50 }, (sala.estado.jugadores.find(x => x.id === id) || {}).tactica || {});
+function tacticaFutbol() { // futbol-en-linea: pizarra de la sala de espera
+  const e = sala.estado;
+  if (e.sala.juego !== 'futbol' || !e.jugadores.some(x => x.id === e.yo)) return '';
+  const t = sala.futTactica || tacticaDe(e.yo);
+  sala.futTactica = t;
+  const boton = f => '<button class="btn ghost sm" data-p="fut-form" data-form="' + f + '" aria-pressed="' + (t.formacion === f) + '"' + (t.formacion === f ? ' style="outline:2px solid currentColor"' : '') + '>' + f + '</button>';
+  const deslizador = ([k, n, a, b]) => '<label style="font-size:.85rem;font-weight:700">' + n + '<input type="range" min="0" max="100" step="5" data-futtac="' + k + '" value="' + t[k] + '" style="width:100%"><small class="muted" style="display:flex;justify-content:space-between"><i>' + a + '</i><i>' + b + '</i></small></label>';
+  return '<div class="card" id="p-tactica-fut" style="margin-bottom:10px"><b>📋 Tu táctica para el partido en vivo</b>' +
+    '<div class="row-btns" style="margin-top:6px;flex-wrap:wrap">' + FUT_FORMACIONES.map(boton).join('') + '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 12px;margin-top:6px">' + FUT_DESLIZADORES.map(deslizador).join('') + '</div>' +
+    '<div class="muted" id="p-tactica-msg" style="font-size:.8rem;min-height:1.1em"></div></div>';
+}
+let futTacticaT = null;
+function cambiarTacticaFutbol(el) { // futbol-en-linea: botón de formación o deslizador
+  const t = sala.futTactica || tacticaDe(sala.estado.yo);
+  if (el.dataset.form) {
+    t.formacion = el.dataset.form;
+    document.querySelectorAll('[data-p="fut-form"]').forEach(b => { const on = b === el; b.setAttribute('aria-pressed', String(on)); b.style.outline = on ? '2px solid currentColor' : ''; });
+  }
+  if (el.dataset.futtac) t[el.dataset.futtac] = Math.max(0, Math.min(100, Math.round(Number(el.value) || 0)));
+  sala.futTactica = t;
+  const msg = document.getElementById('p-tactica-msg'); if (msg) msg.textContent = 'Guardando…';
+  clearTimeout(futTacticaT);
+  futTacticaT = setTimeout(async () => {
+    const r = await post('/juegos/sala/' + sala.codigo + '/unirse', { tactica: t });
+    const m = document.getElementById('p-tactica-msg'); if (m) m.textContent = r.ok ? '✔ Táctica guardada' : 'No se pudo guardar la táctica (' + (r.body.error || r.status) + ').';
+  }, 350);
+}
+const NOTA_FUTBOL = { confirmado: '✔ Resultado confirmado por los dos aparatos.', disputa: '⚠️ Los aparatos no coincidieron: cuenta el marcador del anfitrión.', anfitrion: '⏳ Resultado del anfitrión (falta que el rival lo confirme).', invitado: '📡 El anfitrión perdió la conexión: cuenta el marcador que vio su rival.', pendiente: '⏳ Esperando el resultado.' };
+// Podio con el resultado aceptado por el servidor (puntos topados; nombres escapados en pintarFinalSala).
+function podioFutbol(res, mesa, host) {
+  const e = sala.estado, g = res && res.goles ? res.goles : [0, 0], puntos = (res && res.puntos) || {};
+  const filas = mesa.map(p => ({ id: p.id, nombre: p.nombre, tipo: p.tipo, avatar: p.avatar, total: Math.max(0, Math.min(1000, Math.round(Number(puntos[p.id]) || 0))), ultimo: 0 })).sort((a, b) => b.total - a.total);
+  const rival = mesa.find(p => p.id !== host.id) || { nombre: '—' };
+  sala.finAciertos = e.yo === host.id ? g[0] : g[1]; sala.finTotal = 0;
+  pintarFinalSala(document.getElementById('p-body'), filas, null, '⚽ ' + host.nombre + ' ' + g[0] + ' – ' + g[1] + ' ' + rival.nombre);
+  const card = document.querySelector('#p-body .result');
+  if (card) card.insertAdjacentHTML('beforeend', '<div class="muted" id="p-futbol-nota" style="margin-top:6px">' + escapeHtml(NOTA_FUTBOL[(res && res.estado) || 'pendiente'] || '') + '</div>');
+}
+// ¿El partido ya terminó para esta persona? (ya reportó, o su rival lo reportó hace rato).
+function futbolTerminado(e) {
+  const mio = (e.jugadores.find(x => x.id === e.yo) || {}).futbol;
+  return !!mio || (!!e.futbol && e.futbol.estado !== 'pendiente' && ahoraServidor() - e.sala.inicio > 30000);
+}
+function pintarFutbolSala(body) { // futbol-en-linea
+  const e = sala.estado, s = e.sala;
+  document.getElementById('m-bar').hidden = true;
+  if (sala.vista === 'futbol') return;
+  const mesa = participantes().slice(0, 2);
+  const host = mesa.find(p => p.id === s.host) || mesa[0];
+  if (host && futbolTerminado(e)) return podioFutbol(e.futbol, mesa, host);
+  if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">⚽ Esperando a tu rival.</div>'; sala.vista = 'faltan'; } return; }
+  const rival = mesa.find(p => p.id !== host.id);
+  sala.vista = 'futbol';
+  body.innerHTML = marcoArcade(srcArcade('futbol'), juegoPorId('futbol').t);
+  const frame = document.getElementById('arcade-frame');
+  if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' });
+  const aJuego = mensajeA(frame), soyHost = e.yo === host.id;
+  const finLinea = async d => {
+    const goles = Array.isArray(d.goles) ? d.goles.slice(0, 2).map(x => Math.max(0, Math.round(Number(x) || 0))) : [0, 0];
+    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { futbol: { goles, ms: Math.max(0, Math.round(Number(d.ms) || 0)), ...(d.corte ? { corte: true } : {}) } });
+    await traerSala();
+    podioFutbol((r.ok && r.body.futbol) || sala.estado.futbol, mesa, host);
+    if (!r.ok) { const n = document.getElementById('p-futbol-nota'); if (n) n.textContent = 'No se pudo registrar tu resultado (' + (r.body.error || r.status) + ').'; }
+  };
+  const alMensaje = ev => {
+    const d = ev.data || {};
+    if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'futbol') return;
+    if (d.tipo === 'listo') {
+      aJuego({ tipo: 'inicio', modo: 'linea', rol: soyHost ? 'anfitrion' : 'invitado', yo: { id: e.yo, nombre: (soyHost ? host : rival).nombre }, participantes: [host.id, rival.id], nombres: [host.nombre, rival.nombre],
+        seed: s.seed, rt: e.rt || null, tacticas: [tacticaDe(host.id), tacticaDe(rival.id)] });
+    } else if (d.tipo === 'fin-linea') { window.removeEventListener('message', alMensaje); finLinea(d); }
+    else if (d.tipo === 'ir-clasif') { // respaldo: sin canal en vivo, a la Clasificatoria semanal
+      window.removeEventListener('message', alMensaje);
+      limpiar(); pantallaHub(); jugarArcade('futbol', 'modo=clasif');
+    }
+  };
+  window.addEventListener('message', alMensaje);
+  limpiezas.push(() => window.removeEventListener('message', alMensaje));
 }

@@ -65,6 +65,7 @@ app.addEventListener('click', e => {
     if (pa && pa.dataset.p === 'compartir') return compartirSala(pa);
     if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
     if (pa && pa.dataset.p === 'equipo') return cambiarEquipoFutbolito(pa); // futbolito-equipos
+    if (pa && pa.dataset.p === 'fut-form') return cambiarTacticaFutbol(pa); // futbol-en-linea
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok) { pa.disabled = false; alert(r.body.error === 'faltan_jugadores' ? (TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.') /* juegos-tablero */ : 'No se pudo empezar la partida, intenta de nuevo.' /* errores-latentes */); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     return NO_ATENDIDO;
   };
@@ -112,13 +113,14 @@ app.addEventListener('click', e => {
   return clicEnAccion(a);
 });
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') { document.getElementById('p-cat-wrap').hidden = e.target.value !== 'cultura'; document.getElementById('p-modo-wrap').hidden = e.target.value !== 'loteria'; document.getElementById('p-rondas-wrap').hidden = !e.target.value.startsWith('basta'); document.getElementById('p-equipos-wrap').hidden = e.target.value !== 'poker'; document.getElementById('p-reloj-wrap').hidden = e.target.value !== 'ajedrez'; opcionesMapaArcade(e.target.value); document.getElementById('p-tema-wrap').hidden = e.target.value !== 'en-frases';
-  const nota = { ajedrez: '♟️ Partida 1 vs 1 solo entre dos personas: quien crea y quien se une. Sin bots.', brisca: '🏆 Se juega entre 4 en parejas: si faltan personas, se completa con bots. Máximo 4.', golf: '⛳ De 2 a 4 personas por turnos, sin bots: cada quien tira su pelota en 3 hoyos.' /* golf */ }[e.target.value];
+  const nota = { ajedrez: '♟️ Partida 1 vs 1 solo entre dos personas: quien crea y quien se une. Sin bots.', brisca: '🏆 Se juega entre 4 en parejas: si faltan personas, se completa con bots. Máximo 4.', golf: '⛳ De 2 a 4 personas por turnos, sin bots: cada quien tira su pelota en 3 hoyos.' /* golf */, futbol: '⚽ 1 vs 1 en vivo, solo entre dos personas: quien crea la sala es el anfitrión del partido. Sin bots.' /* futbol-en-linea */ }[e.target.value];
   document.getElementById('p-bots-wrap').hidden = !!nota; const n = document.getElementById('p-bots-nota'); n.hidden = !nota; n.textContent = nota || '';
   TableroUI.alCambiarJuego(e.target.value); } }); // juegos-tablero
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') SalasGrandes.formulario(e.target.value); }); // juegos-salas-grandes
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-formato-wrap').hidden = e.target.value !== 'futbolito'; }); // futbolito-equipos
 // cultura-conocimiento: el tema de la Línea del tiempo solo se ve al elegirla.
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-ltema-wrap').hidden = e.target.value !== 'cultura-linea'; });
+app.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.futtac) cambiarTacticaFutbol(e.target); }); // futbol-en-linea: deslizadores de la táctica
 app.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.pextra) limitarExtras(e.target, 'pextra', 'p-extra-aviso'); }); // basta-divertida-una-robo
 app.addEventListener('input', e => {
   if (e.target.dataset && e.target.dataset.pbcat) { const f = document.getElementById('pb-form'); const lleno = [...f.querySelectorAll('input')].every(i => i.value.trim()); document.getElementById('pb-basta').disabled = !lleno; }
