@@ -141,10 +141,26 @@ const getSala = (email, codigo) => fetch(process.env.API + '/juegos/sala/' + cod
     const flotaDe = (r, email) => (r.jugadores.find(j => j.nombre === (email === M ? 'Marisol' : 'Angel')) || {}).flota;
     ok('naval sala: cada quien recibe solo su flota', Array.isArray(flotaDe(gm, M)) && flotaDe(gm, A) === undefined && Array.isArray(flotaDe(ga, A)) && flotaDe(ga, M) === undefined);
     ok('naval sala: el rival espera su turno', /Turno de Marisol/.test(await texto(otro, '.feedback')) && !(await otro.$('button.tb-nc')));
+    // errores-latentes: la respuesta de un disparo llega sin `jugadas` (se reenvía al servidor y se quita el campo);
+    // la página no debe tener errores JS y el tablero se sincroniza con el sondeo.
+    const sinJugadas = async r => {
+      if (!/disparar/.test(r.request().postData() || '')) return r.continue();
+      const res = await r.fetch(); const cuerpo = await res.json(); delete cuerpo.jugadas;
+      return r.fulfill({ response: res, json: cuerpo });
+    };
+    const errores0 = out.filter(x => x.startsWith('FAIL error JS')).length;
+    const esRespuesta = u => /\/juegos\/sala\/[A-Z]{4}\/respuesta$/.test(new URL(u).pathname);
+    await host.route(esRespuesta, sinJugadas);
     for (let i = 0; i < 4; i++) {
       for (const q of [host, otro]) {
         const c = await q.$('button.tb-nc:not(.agua):not(.toc):not(.hun)');
         if (c) { await c.click(); await sleep(900); }
+      }
+      if (i === 0) {
+        await host.unroute(esRespuesta);
+        await sleep(1500);
+        ok('naval sala: un disparo sin «jugadas» en la respuesta no da error JS y el tablero sigue',
+          out.filter(x => x.startsWith('FAIL error JS')).length === errores0 && !!(await host.$('.tb-naval .tb-nc.agua, .tb-naval .tb-nc.toc, .tb-naval .tb-nc.hun')));
       }
     }
     const marcas = await host.$$('.tb-naval:not(.chico) .tb-nc.agua, .tb-naval:not(.chico) .tb-nc.toc, .tb-naval:not(.chico) .tb-nc.hun');

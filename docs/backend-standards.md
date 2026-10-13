@@ -84,10 +84,17 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
 - **Total:** suma del mejor puntaje de cada juego.
 - **Id del jugador:** `admin`, `a-<slug>` (Inglés), `s-<slug>` (Secundaria) o `i-<hash>` (invitado).
 - **Partidas** (`server/salas.ts`, cambio `juegos-partidas`):
-  - `POST /juegos/sala` `{ juego, opciones, bots }` → `{ codigo }`.
+  - **Escrituras que no se guardan** (cambio `errores-latentes`): crear, unirse, empezar y revancha revisan cada
+    escritura condicional (3 intentos con el `sha` leído); si no se guardó, responden **503 `conflicto_escritura`**
+    (como `respuesta` y `/juegos/progreso`) y no dejan estado a medias. Las páginas lo muestran como «No se pudo
+    …, intenta de nuevo.».
+  - `POST /juegos/sala` `{ juego, opciones, bots }` → `{ codigo }`. 503 `sin_codigo` si no encontró código libre;
+    503 `conflicto_escritura` si no se guardó la sala o su anfitrión (en ese caso se borra la sala nueva).
   - `POST /juegos/sala/<código>/unirse`: 404 si no existe, 409 si ya empezó o está llena (30), 410 si
-    venció (3 h).
-  - `POST /juegos/sala/<código>/empezar`: solo el host; fija `inicio` = ahora + 5 s.
+    venció (3 h), 503 `conflicto_escritura` si no se guardó (la persona no queda dentro).
+  - `POST /juegos/sala/<código>/empezar`: solo el host; fija `inicio` = ahora + 5 s. Relee la sala en cada intento:
+    si otra petición ya la empezó responde esa sala (mismo `inicio`); 404 `sala_no_existe` si ya no existe; 503
+    `conflicto_escritura` tras 3 choques (la sala sigue sin `inicio`).
   - `POST /juegos/sala/<código>/respuesta`:
     - en preguntas, `{ q, correcta, puntos ≤ 200, ms }`, y solo cuenta la primera;
     - en Basta, `{ ronda, palabras, basta }` (`basta-rondas`): `ronda` entero `0 ≤ ronda < opciones.rondas`
@@ -131,7 +138,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     `siguiente` (código nuevo) y `siguienteHost` (id de quien la abrió) con escritura condicional; la sala nueva se
     crea una sola vez (`put` con sha `null`) con el mismo juego, opciones y bots, y `siguienteHost` de anfitrión.
     Peticiones a la vez caen en la misma sala. Unirse a la nueva sigue las reglas de `unirse` (409 `ya_empezo` o
-    `sala_llena`, con `codigo`). Publica en Realtime la sala vieja y la nueva. Detalle en el `design.md` del cambio.
+    `sala_llena`, y 503 `conflicto_escritura` si no se guardó quien la pide; los tres con `codigo`). Publica en Realtime la sala vieja y la nueva. Detalle en el `design.md` del cambio.
   - `GET /juegos/sala/<código>`: sala, jugadores y `ahora` (hora del servidor), solo para sus jugadores y
     el admin. Caché de 2 s.
   - Juegos permitidos (`JUEGOS_PARTIDA`):

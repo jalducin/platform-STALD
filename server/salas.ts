@@ -397,8 +397,13 @@ async function crearSala(body: Record<string, unknown>, jugador: Jugador, store:
   const codigo = await codigoLibre(store);
   if (!codigo) return json({ error: "sin_codigo" }, 503);
   const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: botsFijos(juego) ?? body.bots !== false, canal: canalNuevo() };
-  await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`);
-  await guardarJugador(store, codigo, jugador, (e) => e, ahora);
+  // errores-latentes: sin sala o sin anfitrión guardados no hay partida (y no queda una sala sin anfitrión).
+  if (!(await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`))) return json({ error: "conflicto_escritura" }, 503);
+  if (!(await guardarJugador(store, codigo, jugador, (e) => e, ahora))) {
+    await store.remove(ruta(codigo), `sala ${codigo}: sin anfitrión`);
+    cache.delete(codigo);
+    return json({ error: "conflicto_escritura" }, 503);
+  }
   await indexar(store, lunes, { codigo, juego, host: jugador.nombre, creada: ahora });
   return json({ codigo, sala: sinCanal(sala) });
 }
@@ -413,29 +418,36 @@ async function unirseSala(c: CtxSala): Promise<Response> {
   if (!dentro && sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
   if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
   const guardado = await guardarJugador(store, codigo, jugador, (e) => equipo === undefined ? e : { ...e, equipo }, ahora);
-  if (equipo !== undefined) { // futbolito-equipos
-    if (!guardado) return json({ error: "conflicto_escritura" }, 503);
-    await publicar(); return json({ ok: true, codigo, equipo });
-  }
+  if (!guardado) return json({ error: "conflicto_escritura" }, 503); // errores-latentes: no se guardó, no está dentro
+  if (equipo !== undefined) { await publicar(); return json({ ok: true, codigo, equipo }); } // futbolito-equipos
   await publicar();
   return json({ ok: true, codigo });
 }
 
 // POST /juegos/sala/<código>/empezar (solo el anfitrión)
-async function empezarSala(c: CtxSala): Promise<Response> {
-  const { jugador, store, ahora, json, codigo, sala, jugadores, publicar } = c;
-  if (sala.host !== jugador.id) return json({ error: "solo_host" }, 403);
+function empezarSala(c: CtxSala): Promise<Response> {
+  const { jugador, ahora, json, sala, jugadores } = c;
+  if (sala.host !== jugador.id) return Promise.resolve(json({ error: "solo_host" }, 403));
   const minimo = mesaDe(sala.juego, sala.opciones)?.min ?? 1; // futbolito-equipos: mesa por formato
-  if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots, sala.opciones) < minimo) return json({ error: "faltan_jugadores", minimo }, 409);
-  if (sala.inicio === null) {
-    const doc = await store.get<Sala>(ruta(codigo));
-    const nueva = { ...doc!.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc!.data, canalNuevo) }; // + secreto de Dibuja
-    await store.put(ruta(codigo), nueva, doc!.sha, `sala ${codigo}: empieza`);
+  if (sala.inicio === null && enMesa(sala.juego, jugadores.length, sala.bots, sala.opciones) < minimo) return Promise.resolve(json({ error: "faltan_jugadores", minimo }, 409));
+  if (sala.inicio !== null) return Promise.resolve(json({ ok: true, sala: sinCanal(sala), ahora }));
+  return fijarInicio(c, 3);
+}
+
+// errores-latentes: fija `inicio` con la versión fresca de la sala (hasta `intentos` veces, en secuencia: cada
+// intento relee el sha); si otra petición ya la empezó, se responde esa sala sin reescribirla.
+async function fijarInicio(c: CtxSala, intentos: number): Promise<Response> {
+  const { store, ahora, json, codigo, publicar } = c;
+  const doc = await store.get<Sala>(ruta(codigo));
+  if (!doc) return json({ error: "sala_no_existe" }, 404);
+  if (doc.data.inicio !== null) { cache.delete(codigo); return json({ ok: true, sala: sinCanal(doc.data), ahora }); }
+  const nueva = { ...doc.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc.data, canalNuevo) }; // + secreto de Dibuja
+  if (await store.put(ruta(codigo), nueva, doc.sha, `sala ${codigo}: empieza`)) {
     cache.delete(codigo);
     await publicar();
     return json({ ok: true, sala: sinCanal(nueva), ahora });
   }
-  return json({ ok: true, sala: sinCanal(sala), ahora });
+  return intentos > 1 ? fijarInicio(c, intentos - 1) : json({ error: "conflicto_escritura" }, 503);
 }
 
 // Juegos por turnos (¡Una!, póker, Brisca, Conquián): cada jugada con su paso n; nadie más puede tener ese paso.
@@ -573,7 +585,7 @@ async function revanchaSala(c: CtxSala, lunes: string, rt?: ConfigRealtime): Pro
   if (!nueva.jugadores.some((j) => j.id === jugador.id)) {
     if (nueva.sala.inicio !== null) return json({ error: "ya_empezo", codigo: sig }, 409);
     if (nueva.jugadores.length >= cupo(nueva.sala.juego, nueva.sala.opciones)) return json({ error: "sala_llena", codigo: sig }, 409);
-    await guardarJugador(store, sig, jugador, (e) => e, ahora);
+    if (!(await guardarJugador(store, sig, jugador, (e) => e, ahora))) return json({ error: "conflicto_escritura", codigo: sig }, 503); // errores-latentes
   }
   await publicar();
   await publicarEstado(store, sig, ahora, rt);

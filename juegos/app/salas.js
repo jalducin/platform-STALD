@@ -542,7 +542,7 @@ function pintarFinalSala(body, todas, basta, titulo) {
 // ---- Revancha (openspec: revancha-partidas) ----
 // Quien la abrió: su nombre en la sala vieja (por siguienteHost).
 const abrioRevancha = est => ((est.jugadores || []).find(j => j.id === est.sala.siguienteHost) || {}).nombre || 'Alguien';
-const TXT_REVANCHA = { ya_empezo: 'La revancha ya empezó. Crea otra partida en 👥 Partidas.', sala_llena: 'La revancha ya está llena.', sala_vencida: 'Esta partida ya venció.', no_termino: 'La partida todavía no termina.', no_en_sala: 'No jugaste en esta partida.' };
+const TXT_REVANCHA = { conflicto_escritura: 'No se pudo entrar a la revancha, intenta de nuevo.', ya_empezo: 'La revancha ya empezó. Crea otra partida en 👥 Partidas.', sala_llena: 'La revancha ya está llena.', sala_vencida: 'Esta partida ya venció.', no_termino: 'La partida todavía no termina.', no_en_sala: 'No jugaste en esta partida.' };
 // Podio: «Otra con los mismos» o, si alguien ya la abrió, «{Nombre} abrió la revancha · Unirme». Solo redibuja si cambia.
 function pintarRevancha() {
   const el = document.getElementById('p-revancha'); const e = sala.estado; if (!el || !e) return;
@@ -582,6 +582,8 @@ async function ofrecerRevancha(codigo) {
     '<div class="row-btns"><button class="btn ghost" data-a="revancha-no">No, gracias</button><button class="btn" data-a="revancha-inicio" data-codigo="' + escapeHtml(codigo) + '">' + (sig ? '🔁 Unirme' : '🔁 Otra con los mismos') + '</button></div><div id="revancha-msg"></div></div>');
 }
 
+// errores-latentes: errores pasajeros al guardar la sala (503); se pide intentar de nuevo.
+const NO_GUARDO = new Set(['conflicto_escritura', 'sin_codigo']);
 async function crearPartida() {
   const juego = document.getElementById('p-juego').value;
   const valor = id => document.getElementById(id).value;
@@ -601,7 +603,7 @@ async function crearPartida() {
   Object.assign(opciones, SalasGrandes.opciones(juego)); // juegos-salas-grandes
   if (juego === 'futbolito') opciones.formato = document.getElementById('p-formato').value; // futbolito-equipos
   const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
-  if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">No se pudo crear (' + escapeHtml(r.body.error || r.status) + ').</div>'; return; }
+  if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">' + escapeHtml(NO_GUARDO.has(r.body.error) ? 'No se pudo crear la partida, intenta de nuevo.' : 'No se pudo crear (' + (r.body.error || r.status) + ').') + '</div>'; return; }
   entrarSala(r.body.codigo);
 }
 
@@ -643,7 +645,7 @@ function reanudarPartida() {
 async function unirseCodigo(codigo) {
   const r = await post('/juegos/sala/' + codigo + '/unirse', {});
   if (!r.ok) {
-    const txt = { sala_no_existe: 'No existe una partida con ese código.', ya_empezo: 'Esa partida ya empezó.', sala_llena: 'La partida está llena.', sala_vencida: 'La partida ya venció.' }[r.body.error] || ('Error ' + (r.body.error || r.status));
+    const txt = { conflicto_escritura: 'No se pudo entrar a la sala, intenta de nuevo.', sala_no_existe: 'No existe una partida con ese código.', ya_empezo: 'Esa partida ya empezó.', sala_llena: 'La partida está llena.', sala_vencida: 'La partida ya venció.' }[r.body.error] || ('Error ' + (r.body.error || r.status));
     if (!document.getElementById('p-msg')) pantallaHub('partidas');
     document.getElementById('p-msg').innerHTML = '<div class="alert">' + escapeHtml(txt) + '</div>'; return;
   }
