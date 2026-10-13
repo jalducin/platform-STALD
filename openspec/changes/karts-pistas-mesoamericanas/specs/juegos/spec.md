@@ -12,7 +12,7 @@ nombre y una descripción corta en el selector, y al menos una mecánica determi
   sobre el cenote y, sin salto, el agua del cenote frena.
 - **Selva de La Venta** (olmeca): selva húmeda, cabezas colosales junto a la pista y un río; zonas de lodo que frenan.
 La representación SHALL ser respetuosa (sin caricaturas) y sin marcas de terceros. Las definiciones de las pistas
-SHALL vivir en `juegos/karts-pistas.js`. Las partidas en sala SHALL seguir usando solo las 4 pistas originales. Cada
+SHALL vivir en `juegos/karts-pistas.js`. Las partidas en sala SHALL ofrecer las 8 pistas (cambio `juegos-en-vivo`). Cada
 pista nueva SHALL sostener 60 cuadros por segundo en un celular con el CPU 4 veces más lento.
 
 #### Scenario: Elegir una pista nueva
@@ -35,9 +35,9 @@ pista nueva SHALL sostener 60 cuadros por segundo en un celular con el CPU 4 vec
 - **WHEN** un kart recorre completa cualquiera de las pistas nuevas
 - **THEN** el contador marca la vuelta siguiente y el minimapa muestra el trazado completo
 
-#### Scenario: Sala sin pistas nuevas
+#### Scenario: Sala con las pistas nuevas
 - **WHEN** alguien crea una partida de Karts en sala
-- **THEN** el selector de mapa ofrece solo las 4 pistas originales, igual que el servidor
+- **THEN** el selector de mapa ofrece las 8 pistas, igual que el servidor (cambio `juegos-en-vivo`)
 
 ### Requirement: Copa Mesoamericana
 «Karts Turbo» SHALL ofrecer la **Copa Mesoamericana** (La Venta, Teotihuacan, Chichén Itzá y Tenochtitlan) junto a la

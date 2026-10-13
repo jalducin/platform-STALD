@@ -3,8 +3,8 @@
    Cada pista: trazado (curva Catmull-Rom cerrada por `puntos`, `mitad` = medio ancho del camino), física (`fuera`,
    `lento` = tope fuera del camino, `agarre` 1 = asfalto, menos = resbala), colores del piso, `tema` (cielo de 360°),
    `decor` (adornos al azar: [nombre, ancho, alto, probabilidad acumulada]), `fijos` (adornos por tramo), `desc` y
-   `mecanicas` (zonas deterministas sobre el camino). `sala: true` = se usa también en las partidas en sala (las 4 de
-   siempre, igual que MAPAS_SALA de server/carreras.ts). */
+   `mecanicas` (zonas deterministas sobre el camino). `sala: true` = se usa también en las partidas en sala (las 8
+   desde juegos-en-vivo, igual que MAPAS_SALA de server/carreras.ts). */
 (function (raiz) {
   'use strict';
 
@@ -34,8 +34,8 @@
       decor: [['rocaVolcan', 40, 28, 0.5], ['obsidiana', 26, 40, 0.8], ['fumarola', 24, 30, 1]],
       puntos: [[510, 255], [720, 210], [1080, 380], [1440, 250], [1740, 470], [1680, 820], [1380, 950], [1100, 1200], [700, 1180], [450, 1240], [220, 1000], [300, 660], [300, 300]] },
 
-    // ---------- Pistas mesoamericanas (solo carrera rápida y Copa Mesoamericana) ----------
-    { id: 'tenochtitlan', nombre: 'Calzadas de Tenochtitlan', emoji: '🛶', civ: 'Mexica', desc: 'Calzadas sobre el lago y chinampas. ¡Cuidado con la trajinera!',
+    // ---------- Pistas mesoamericanas (carrera rápida, Copa Mesoamericana y, desde juegos-en-vivo, salas) ----------
+    { id: 'tenochtitlan', nombre: 'Calzadas de Tenochtitlan', emoji: '🛶', sala: true, civ: 'Mexica', desc: 'Calzadas sobre el lago y chinampas. ¡Cuidado con la trajinera!',
       mitad: 56, fuera: 'agua', lento: 0.42, agarre: 1,
       color: { fondo: '#2b8a96', fondo2: '#23798a', camino: '#c39a5f', borde1: '#a4502a', borde2: '#f1e3c4', linea: '#f6ead0' },
       tema: { cielo: ['#3a86c8', '#9fd0ea', '#eaf6f4'], bruma: '#d5ebe7', lejos: '#7d97b0', cerca: '#4f8f6a', cerca2: '#2f6b4c', franja: '#25818f', sol: '#fff7d6', nubes: 1 },
@@ -43,7 +43,7 @@
       fijos: [],
       mecanicas: [{ tipo: 'trajinera', cerca: [1070, 930], periodo: 5.2 }],
       puntos: [[480, 260], [960, 250], [1440, 260], [1700, 420], [1650, 700], [1380, 760], [1120, 800], [1040, 1050], [820, 1200], [480, 1170], [280, 960], [250, 620], [310, 360]] },
-    { id: 'teotihuacan', nombre: 'Calzada de los Muertos', emoji: '🔺', civ: 'Teotihuacana', desc: 'Entre las pirámides del Sol y de la Luna. Pisa las rampas de velocidad.',
+    { id: 'teotihuacan', nombre: 'Calzada de los Muertos', emoji: '🔺', sala: true, civ: 'Teotihuacana', desc: 'Entre las pirámides del Sol y de la Luna. Pisa las rampas de velocidad.',
       mitad: 58, fuera: 'tierra', lento: 0.5, agarre: 1,
       color: { fondo: '#b98b5e', fondo2: '#a87a50', camino: '#8f877e', borde1: '#b0302a', borde2: '#ece0c9', linea: '#ece0c9' },
       tema: { cielo: ['#2d6fb8', '#8ec1e6', '#f2e8d5'], bruma: '#efe2cc', lejos: '#8a8f9a', cerca: '#9a7a58', cerca2: '#7a5c40', franja: '#ad8155', sol: '#fff3c4', nubes: 1 },
@@ -51,7 +51,7 @@
       fijos: [{ img: 'serpiente', w: 26, h: 22, desde: [680, 294], hasta: [1580, 300], cada: 11, lado: 1.0 }],
       mecanicas: [{ tipo: 'turbo', cerca: [920, 290], lado: -0.35, r: 22 }, { tipo: 'turbo', cerca: [1160, 290], lado: 0.35, r: 22 }, { tipo: 'turbo', cerca: [1400, 294], lado: -0.35, r: 22 }],
       puntos: [[600, 296], [900, 290], [1250, 290], [1600, 300], [1760, 480], [1640, 680], [1300, 700], [1080, 820], [1120, 1060], [880, 1200], [520, 1160], [300, 960], [260, 600], [340, 330]] },
-    { id: 'chichen', nombre: 'Sacbé de Chichén Itzá', emoji: '🐍', civ: 'Maya', desc: 'Camino blanco en la selva, salto sobre el cenote y juego de pelota.',
+    { id: 'chichen', nombre: 'Sacbé de Chichén Itzá', emoji: '🐍', sala: true, civ: 'Maya', desc: 'Camino blanco en la selva, salto sobre el cenote y juego de pelota.',
       mitad: 56, fuera: 'selva', lento: 0.5, agarre: 1,
       color: { fondo: '#2f6b2f', fondo2: '#285e28', camino: '#ddd2b6', borde1: '#2f6b5f', borde2: '#f4ecd8', linea: '#b6a77f' },
       tema: { cielo: ['#2a7fc0', '#86c7e8', '#e8f4ea'], bruma: '#d6ead6', lejos: '#5f8f6a', cerca: '#2f6f3a', cerca2: '#1f5129', franja: '#347a34', sol: '#fffbe0', nubes: 1 },
@@ -59,7 +59,7 @@
       fijos: [{ img: 'muroPelota', medio: 'muroAro', w: 40, h: 34, desde: [1440, 1150], hasta: [850, 1160], cada: 5, lado: 1.15 }],
       mecanicas: [{ tipo: 'salto', cerca: [1731, 540], lado: 0, r: 30 }, { tipo: 'cenote', cerca: [1731, 635], lado: 0, r: 42 }],
       puntos: [[620, 296], [900, 290], [1150, 310], [1500, 280], [1720, 420], [1730, 700], [1700, 950], [1500, 1140], [1150, 1160], [800, 1160], [520, 1110], [370, 920], [460, 700], [380, 500], [440, 330]] },
-    { id: 'laventa', nombre: 'Selva de La Venta', emoji: '🗿', civ: 'Olmeca', desc: 'Cabezas colosales, un río y lodo que te frena en la selva.',
+    { id: 'laventa', nombre: 'Selva de La Venta', emoji: '🗿', sala: true, civ: 'Olmeca', desc: 'Cabezas colosales, un río y lodo que te frena en la selva.',
       mitad: 58, fuera: 'selva', lento: 0.5, agarre: 0.95,
       color: { fondo: '#245a2c', fondo2: '#1e4d25', camino: '#6e5a44', borde1: '#2f3437', borde2: '#a4ab9f', linea: '#c9b48a' },
       tema: { cielo: ['#4f7f8f', '#a9c9c4', '#e3eee6'], bruma: '#cfe0d6', lejos: '#4c6b58', cerca: '#1f4d2a', cerca2: '#143a1e', franja: '#2a6431', sol: '#f5f5dc', nubes: 1 },

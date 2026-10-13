@@ -50,7 +50,7 @@
   const VEL_KART = 250; // velocidad punta base (px/s)
   const VUELTAS = 3;
   // Pistas (openspec: karts-pistas-mesoamericanas): las definiciones viven en juegos/karts-pistas.js, que se carga
-  // antes que este archivo. PISTAS = las de sala (las 4 de siempre, igual que MAPAS_SALA de server/carreras.ts);
+  // antes que este archivo. PISTAS = las de sala (las 8 desde juegos-en-vivo, igual que MAPAS_SALA de server/carreras.ts);
   // pistaPorId encuentra todas (también las de la Copa Mesoamericana).
   const TODAS_PISTAS = (raiz.KartsPistas && raiz.KartsPistas.PISTAS) || [];
   const PISTAS = TODAS_PISTAS.filter(p => p.sala);

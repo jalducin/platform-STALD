@@ -177,7 +177,11 @@ async function fpsAislado(b, relevo, correos) {
 async function desconexion(b, relevo) {
   const pags = [];
   for (const email of ['marisol@example.com', 'angel@example.com', 'laura@example.com']) pags.push(await jugador(b, email, relevo)); // NOSONAR: en orden
-  const codigo = await crearSala(pags[0], 'hielo');
+  // Sala en una pista mesoamericana (las 8 pistas se ofrecen en sala desde juegos-en-vivo).
+  await pags[0].click('[data-tab="partidas"]'); await pags[0].waitForSelector('#f-crear'); await pags[0].selectOption('#p-juego', 'karts');
+  const opciones = (await pags[0].$$eval('#p-mapa option', os => os.map(o => o.value))).filter(Boolean);
+  ok('salas: el selector ofrece las 8 pistas', opciones.length === 8 && opciones.includes('chichen'), opciones.join(','));
+  const codigo = await crearSala(pags[0], 'chichen');
   await unirse(pags[1], codigo); await unirse(pags[2], codigo);
   await sleep(1500);
   await pags[0].click('[data-p="empezar"]');
@@ -185,6 +189,8 @@ async function desconexion(b, relevo) {
   await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.vivo && e.remotos.every(r => r.visible); }, null, { timeout: 25000 }).catch(() => {})));
   await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
   await sleep(3000);
+  const enChichen = await Promise.all(frames.map(estado));
+  ok('sala en pista nueva (Sacbé de Chichén Itzá): los 3 corren ahí y se ven en vivo', enChichen.every(e => e.pista === 'chichen' && e.remotos.length === 2 && e.remotos.every(r => r.visible)), enChichen.map(e => e.pista + ':' + e.remotos.filter(r => r.visible).length).join(','));
   const idLaura = await yoDe(pags[2]);
   // Laura se queda sin señal (no avisa): a los 3 s los demás la dan por desconectada.
   relevo.cortar(idLaura);

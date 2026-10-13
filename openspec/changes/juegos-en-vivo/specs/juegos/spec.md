@@ -57,7 +57,8 @@ correr como antes (fantasmas y comparación de tiempos) con un aviso claro.
 ### Requirement: Carreras de Arcade en partida
 Las partidas (salas) SHALL permitir `plataformas` y `karts` como reto sin guardar avance:
 - todos SHALL jugar el mismo nivel o pista, guardado en `sala.opciones.mapa` (lo elige quien crea la sala o el
-  servidor al azar; 400 `mapa_invalido` si no existe), y la carrera empieza a la hora de inicio del servidor;
+  servidor al azar; 400 `mapa_invalido` si no existe), y la carrera empieza a la hora de inicio del servidor; en
+  `karts` SHALL poder elegirse cualquiera de las 8 pistas, también las mesoamericanas;
 - cada persona SHALL enviar su tiempo con `POST /juegos/sala/<código>/respuesta { carrera: { ms, monedas } }`
   (`ms: null` si no terminó); solo cuenta el primero; el servidor SHALL rechazar con 400 `carrera_invalida` un
   tiempo fuera del mínimo y el límite del juego o que no cuadre con su reloj;
@@ -87,6 +88,10 @@ Las partidas (salas) SHALL permitir `plataformas` y `karts` como reto sin guarda
 #### Scenario: Sala de Karts llena
 - **WHEN** ya hay 8 personas en una sala de Karts y entra una más
 - **THEN** responde 409 `sala_llena`
+
+#### Scenario: Sala en una pista mesoamericana
+- **WHEN** alguien crea una sala de Karts en «Sacbé de Chichén Itzá»
+- **THEN** todas las personas corren esa pista en vivo y el servidor la acepta
 
 #### Scenario: Cada persona quita un bot
 - **WHEN** entran 2 personas a una sala de Karts con bots
