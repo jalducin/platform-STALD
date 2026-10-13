@@ -26,6 +26,10 @@ canvas{display:block}
 #radar{position:absolute;right:8px;bottom:8px;width:132px;height:86px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
 #aviso{position:absolute;left:50%;top:44px;transform:translateX(-50%);background:rgba(6,18,42,.88);border:1px solid rgba(255,255,255,.3);padding:5px 14px;border-radius:999px;font-weight:800;font-size:14px;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5}
 #aviso.ver{opacity:1}
+/* futbol-en-linea: latencia y aviso de desconexión */
+#lat{font-size:12px;min-width:0;padding:2px 6px;pointer-events:none}
+#lat[data-nivel=bueno]{color:#86efac}#lat[data-nivel=regular]{color:#fde68a}#lat[data-nivel=malo]{color:#fca5a5}
+#red-aviso{position:absolute;left:50%;top:76px;transform:translateX(-50%);z-index:7;background:#7c2d12;border:2px solid #fdba74;color:#fff;font-weight:800;font-size:13px;padding:6px 12px;border-radius:12px;max-width:92%;text-align:center;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.45)}
 #grito{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;z-index:5;opacity:0;transform:scale(.6);transition:opacity .2s,transform .25s}
 #grito.ver{opacity:1;transform:scale(1)}
 #grito b{display:block;font-size:clamp(40px,11vw,86px);font-style:italic;font-weight:900;color:var(--oro);text-shadow:0 4px 0 #9a3412,0 0 24px rgba(0,0,0,.7);letter-spacing:.02em}
@@ -166,11 +170,12 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(182,240,60,.8
     <canvas id="c" width="400" height="300" aria-label="Partido de Fútbol Estelar 2010"></canvas>
     <div id="hud" class="hide">
       <div id="marcador"><img id="e-0" alt=""><b id="n-0">LOC</b><span class="gol" id="g-0">0</span><span class="gol" id="g-1">0</span><b id="n-1">VIS</b><img id="e-1" alt=""><span id="reloj">0'</span></div>
-      <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
+      <div class="der"><output class="mini hide" id="lat" aria-label="Latencia del partido en vivo"></output><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
       <div id="info-j"></div>
       <canvas id="radar" aria-label="Radar de la cancha"></canvas>
     </div>
     <output id="aviso"></output>
+    <output id="red-aviso" class="hide" aria-live="polite"></output>
     <div id="grito" aria-live="polite"></div>
     <div id="tuto" aria-live="polite"></div>
     <output id="girar" class="hide"><span>📱↻ Mejor en horizontal</span><button id="b-girar" aria-label="Cerrar aviso">✕</button></output>
@@ -192,6 +197,8 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(182,240,60,.8
 <script src="futbol-motor.js?v=1"></script>
 <script src="futbol-liga.js?v=1"></script>
 <script src="futbol-vista.js?v=1"></script>
+<script src="futbol-red.js?v=1"></script> <!-- futbol-en-linea: netcode sin DOM -->
+<script src="en-vivo.js?v=1"></script> <!-- futbol-en-linea: canal en vivo (juegos-en-vivo) por el puente de la página -->
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora: gol, silbato, tensión, victoria, penales y podio -->
 <script>
 /* Fútbol Estelar 2010 — página del juego (openspec: futbol-estelar). Embebido en juegos.html (🕹️ Arcade): la
@@ -565,6 +572,11 @@ function empezarPartido() {
   const ctx = S.ctx, { equipos, tacticas } = armarEquipos(ctx);
   const semilla = PRUEBA && Q.get('semilla') ? Q.get('semilla') : String(Date.now());
   S.p = M.crearPartido({ semilla, equipos, tacticas, humanos: ctx.humanos.map(h => ({ eq: h.eq })), dificultad: ctx.dificultad, minutos: ajustes.minutos, fueraDeLugar: ajustes.fuera, eliminatoria: !!ctx.eliminatoria });
+  S.yoH = 0; S.red = null; $('b-pausa').classList.remove('hide'); // futbol-en-linea: persona de este aparato en p.humanos (y sin red)
+  mostrarPartido(equipos, ctx);
+}
+// Pantalla del partido (también la usa el en línea).
+function mostrarPartido(equipos, ctx) {
   S.pausa = false; S.inicioReal = performance.now(); S.enLocal = !!ctx.local; S.ultimoPuntos = null; textosActuales = '';
   vista.olvidarSprites(); vista.seguir(0, 0);
   ['0', '1'].forEach(e => { const c = equipos[e]; $('e-' + e).src = V.escudoUrl(c.escudo, 64); $('n-' + e).textContent = c.corto; });
@@ -584,6 +596,7 @@ function tutorial() {
   setTimeout(() => { t.classList.remove('ver'); document.body.classList.remove('tuto'); }, 4000);
 }
 function alternarPausa() {
+  if (S.red) { avisar('📡 El partido en vivo no se pausa'); return; } // futbol-en-linea
   if (S.vista !== 'partido' && S.vista !== 'pausa') return;
   if (S.vista === 'pausa') { reanudar(); return; }
   S.vista = 'pausa'; S.pausa = true; soltarToques(); ambiente(false); apagarTension();
@@ -639,7 +652,7 @@ function pintarHud() {
   const p = S.p;
   hud('g-0', String(p.eq[0].goles)); hud('g-1', String(p.eq[1].goles));
   hud('reloj', p.tanda ? 'PEN ' + p.tanda.goles[0] + '-' + p.tanda.goles[1] : p.minuto + "'");
-  const h = p.humanos[0], j = h && h.jug >= 0 ? p.jug[h.jug] : null;
+  const h = p.humanos[S.yoH || 0], j = h && h.jug >= 0 ? p.jug[h.jug] : null; // futbol-en-linea: tu persona
   const clave = j ? j.i + '|' + Math.round(j.energia * 20) : '';
   if (hudPrevio.info !== clave) {
     hudPrevio.info = clave;
@@ -976,6 +989,7 @@ const ACCION = {
   local: modoLocal,
   clasif: modoClasif,
   'clasif-jugar': () => previa(S.ctxClasif),
+  'ir-clasif': () => (EMBED ? enviar({ tipo: 'ir-clasif' }) : modoClasif()), // futbol-en-linea: respaldo
   jugar: () => { guardar(); empezarPartido(); },
   'cambiar-tuyo': () => elegirClub('🔁 Elige tu club', cambiarTuClub, ajustes.club),
   'cambiar-rival': () => { S.ctx.equipos[1] = rivalAzar(S.ctx.equipos[0]); previa(S.ctx); },
@@ -1078,6 +1092,131 @@ $('ov').addEventListener('change', e => {
   if (d.pLado !== undefined) S.local.personas[Number(d.pLado)].lado = Number(t.value);
 });
 
+/* ================= En línea 1 vs 1 (openspec: futbol-en-linea) =================
+   La sala (juegos.html) manda { modo: 'linea', rol, yo, participantes, nombres, seed, rt, tacticas }. El anfitrión
+   (quien creó la sala) simula y manda fotos; el invitado manda su entrada, interpola y predice a su jugador
+   (juegos/futbol-red.js) por el canal en vivo (juegos/en-vivo.js). Sin canal: respaldo con la Clasificatoria semanal.
+   Desconexión (design.md §5): aviso, la IA toma al equipo de quien se cayó y a los 15 s el partido se cierra. */
+const R = window.FutbolRed;
+const ESPERA_RIVAL_MS = 20000;
+const tacticaOk = t => (t && M.FORMACIONES[t.formacion] ? { ...M.TACTICA_BASE, ...t } : { ...M.TACTICA_BASE });
+function respaldoLinea(motivo) {
+  cerrarCanal();
+  S.red = null; S.linea = null;
+  pantalla('<h2>📡 El partido en vivo no está disponible en esta sala</h2><p>' + esc(motivo) + '</p><p>Mientras tanto, juega la 📅 Clasificatoria semanal: el rival es el mismo para todos y tus puntos valen ×1.2.</p>' +
+    '<div class="fila"><button class="btn" data-a="ir-clasif" id="b-ir-clasif">📅 Jugar la Clasificatoria semanal</button></div>', 'respaldo');
+  enviar({ tipo: 'sin-linea' });
+}
+function cerrarCanal() { try { if (S.canal) S.canal.cerrar(); } catch { /* ya cerrado */ } S.canal = null; }
+function conectarLinea(cfg) {
+  if (!cfg.vivo) return Promise.reject(new Error('sin_canal'));
+  if (!window.EnVivo || !window.EnVivo.conectar) return Promise.reject(new Error('sin_modulo'));
+  // El canal de la sala vive en la página de Juegos (un solo socket); aquí llega por el puente del iframe.
+  const intento = window.EnVivo.conectar({ transporte: window.EnVivo.transporteMarco('futbol'), yo: cfg.yo, participantes: cfg.participantes, hz: cfg.rol === 'anfitrion' ? R.HZ_FOTO : R.HZ_ENTRADA });
+  const tope = new Promise((_, mal) => setTimeout(() => mal(new Error('tiempo')), 6000));
+  return Promise.race([intento, tope]);
+}
+async function iniciarLinea() {
+  const cfg = S.linea;
+  pantalla('<h2>⚽ Partido en vivo</h2><p><b>' + esc(cfg.nombres[0]) + '</b> vs <b>' + esc(cfg.nombres[1]) + '</b></p><p id="linea-estado">📡 Conectando el canal en vivo…</p>', 'conectando');
+  try { S.canal = await conectarLinea(cfg); }
+  catch (e) { respaldoLinea(e && e.message === 'sin_canal' ? 'Esta sala no tiene canal en vivo.' : 'No se pudo conectar el canal en vivo.'); return; }
+  if (cfg.rol === 'invitado') { empezarLinea(); return; }
+  // El anfitrión da el saque cuando su rival saluda por el canal (o manda su primera entrada).
+  const est = $('linea-estado'); if (est) est.textContent = '⏳ Esperando a ' + cfg.nombres[1] + '…';
+  let listo = false;
+  const arrancar = () => { if (!listo && S.linea === cfg) { listo = true; empezarLinea(); } };
+  S.canal.al('fe:hola', (_d, meta) => { if (!meta || meta.de === undefined || meta.de === cfg.participantes[1]) arrancar(); });
+  S.canal.al('fe:entrada', (_d, meta) => { if (!meta || meta.de === undefined || meta.de === cfg.participantes[1]) arrancar(); });
+  setTimeout(() => { if (!listo && S.linea === cfg) respaldoLinea(cfg.nombres[1] + ' no se conectó al canal en vivo.'); }, ESPERA_RIVAL_MS);
+}
+function empezarLinea() {
+  const cfg = S.linea, anf = cfg.rol === 'anfitrion';
+  const clubes = R.clubesDeSala(cfg.seed, U.clubes.length);
+  const tacticas = [tacticaOk(cfg.tacticas && cfg.tacticas[0]), tacticaOk(cfg.tacticas && cfg.tacticas[1])];
+  const a = L.equipoMotor(U, clubes[0], null, { formacion: tacticas[0].formacion });
+  const visitante = L.chocan(a.uniforme.c1, clubDe(clubes[1]).uniforme.c1);
+  const b = L.equipoMotor(U, clubes[1], null, { formacion: tacticas[1].formacion, visitante });
+  S.ctx = { modo: 'linea', titulo: '⚽ En vivo', equipos: clubes, humanos: [{ eq: anf ? 0 : 1, fuente: 'todo' }], dificultad: 'medio', puntua: false, linea: true };
+  S.p = M.crearPartido({ semilla: 'sala-' + cfg.seed, equipos: [a, b], tacticas, humanos: [{ eq: 0 }, { eq: 1 }], dificultad: 'medio', minutos: R.MINUTOS_LINEA, fueraDeLugar: true });
+  const ahora = () => performance.now();
+  S.red = anf ? R.anfitrion({ canal: S.canal, p: S.p, M, invitado: cfg.participantes[1], ahora }) : R.invitado({ canal: S.canal, p: S.p, M, anfitrion: cfg.participantes[0], ahora });
+  $('b-pausa').classList.add('hide'); // el en vivo no se pausa
+  S.rol = cfg.rol; S.yoH = anf ? 0 : 1; S.redFin = false; S.holaT = 0; S.redT = 0; S.primeraFoto = anf;
+  mostrarPartido([a, b], S.ctx);
+  if (!anf) avisarRed('⏳ Esperando al anfitrión…');
+}
+function avisarRed(txt) {
+  const el = $('red-aviso');
+  if (!txt) { el.classList.add('hide'); return; }
+  if (el.textContent !== txt) el.textContent = txt;
+  el.classList.remove('hide');
+}
+function nivelLatencia(ms) {
+  if (!Number.isFinite(ms) || ms > 250) return 'malo';
+  return ms > 120 ? 'regular' : 'bueno';
+}
+// Latencia (📶) y aviso de desconexión con la cuenta de 15 s, dos veces por segundo.
+function pintarRed(ahora) {
+  if (ahora - S.redT < 500) return;
+  S.redT = ahora;
+  const cfg = S.linea, rival = cfg.participantes[S.rol === 'anfitrion' ? 1 : 0], nombre = cfg.nombres[S.rol === 'anfitrion' ? 1 : 0];
+  let ms = null;
+  try { ms = S.canal && S.canal.latencia ? S.canal.latencia(rival) : null; } catch { ms = null; }
+  const lat = $('lat');
+  lat.classList.remove('hide');
+  lat.textContent = '📶 ' + (Number.isFinite(ms) ? Math.round(ms) + ' ms' : '—');
+  lat.dataset.nivel = nivelLatencia(ms);
+  const caido = S.rol === 'anfitrion' ? S.red.invitadoCaido() : S.red.anfitrionCaido();
+  if (caido !== null) {
+    const quedan = Math.max(0, Math.ceil((R.DESCONEXION_MS - (ahora - caido)) / 1000));
+    avisarRed(S.rol === 'anfitrion' ? '📡 Se perdió la conexión con ' + nombre + '. La IA juega por su equipo · se cierra en ' + quedan + ' s' : '📡 Se perdió la conexión con ' + nombre + ' · el partido se cierra en ' + quedan + ' s');
+  } else if (S.primeraFoto) avisarRed('');
+}
+// Anfitrión: simula a 60 Hz con su entrada y la del invitado, y manda la foto a 15 Hz.
+function pasoAnfitrion(dt, local) {
+  acum += dt;
+  let n = 0;
+  while (acum >= M.PASO && n < 5) { eventos(S.red.paso(local)); acum -= M.PASO; n++; }
+  if (n === 5) acum = 0;
+  for (let k = 0; k < extraPasos && S.p.estado !== 'fin'; k++) eventos(S.red.paso(local));
+  S.red.enviarSiToca();
+  return true;
+}
+// Invitado: manda su entrada, dibuja lo interpolado y saluda hasta que llega la primera foto.
+function pasoInvitado(ahora, local) {
+  S.red.entrada(local);
+  const d = S.red.dibujar();
+  if (d) { S.primeraFoto = true; eventos(d.eventos); }
+  else if (ahora - S.holaT > 500) { S.holaT = ahora; S.canal.enviar('fe:hola', { v: 1 }); }
+  if (!S.primeraFoto && ahora - S.inicioReal > ESPERA_RIVAL_MS) { respaldoLinea(S.linea.nombres[0] + ' no se conectó al canal en vivo.'); return false; }
+  return true;
+}
+function avanzarLinea(dt) {
+  const ahora = performance.now(), local = leerEntrada('todo');
+  const sigue = S.rol === 'anfitrion' ? pasoAnfitrion(dt, local) : pasoInvitado(ahora, local);
+  if (!sigue) return;
+  pintarRed(ahora);
+  if (S.p.estado === 'fin') finLinea(false);
+  else if (S.red.cerrarPorCaida()) finLinea(true);
+}
+function finLinea(corte) {
+  if (S.redFin) return;
+  S.redFin = true;
+  const p = S.p, anf = S.rol === 'anfitrion', yoEq = anf ? 0 : 1, f = anf ? null : S.red.ultimaFoto();
+  const goles = f ? f.goles.slice() : [p.eq[0].goles, p.eq[1].goles];
+  if (anf) [0, 150, 300].forEach(t => setTimeout(() => { if (S.red && S.red.enviarSiToca) S.red.enviarSiToca(true); }, t)); // la última foto (con el final) llega aunque se pierda una
+  S.vista = 'resultado'; ambiente(false); soltarToques(); apagarTension(); avisarRed('');
+  const gf = goles[yoEq], gc = goles[1 - yoEq];
+  if (gf > gc) window.Emocion?.victoria(); else if (gf < gc) window.Emocion?.derrota();
+  let titulo = '🤝 Empate';
+  if (gf > gc) titulo = '🏆 ¡Victoria!'; else if (gf < gc) titulo = '😓 Derrota';
+  pantalla('<h2>' + titulo + '</h2><div class="marcadorg">' + escudo(p.eq[0].datos, 56) + '<span>' + goles[0] + ' – ' + goles[1] + '</span>' + escudo(p.eq[1].datos, 56) + '</div>' +
+    '<div class="sub">' + esc(S.linea.nombres[0]) + ' vs ' + esc(S.linea.nombres[1]) + '</div>' + (corte ? '<p>📡 El partido se cerró por la desconexión.</p>' : '') + '<p id="res-puntos">Registrando el resultado…</p>', 'resultado');
+  setTimeout(cerrarCanal, 1500);
+  enviar({ tipo: 'fin-linea', goles, ms: Math.round(performance.now() - S.inicioReal), corte: !!corte });
+}
+
 /* ================= Bucle ================= */
 let ultimo = performance.now(), acum = 0, cuadros = 0, fpsDesde = performance.now(), fps = 0, enJuego = null, radarN = 0, extraPasos = 0;
 function entradas() { return S.ctx.humanos.map(h => leerEntrada(h.fuente)); }
@@ -1088,7 +1227,8 @@ function cuadro(ahora) {
   cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
   const jugando = S.vista === 'partido' || S.vista === 'pausa';
   if (jugando !== enJuego) { enJuego = jugando; mando.activar(jugando && !S.enLocal); pintarControl(); }
-  if (S.vista === 'partido' && S.p && !document.hidden) avanzar(dt);
+  if (S.vista === 'partido' && S.p && S.red && !document.hidden) avanzarLinea(dt); // futbol-en-linea
+  else if (S.vista === 'partido' && S.p && !document.hidden) avanzar(dt);
   else acum = 0;
   if (S.p && (S.vista === 'partido' || S.vista === 'pausa')) {
     vista.dibujar(S.p, { cargas: S.p.humanos.map(h => h.carga), etiquetas: S.p.humanos.length > 1, destello: S.destello || 0 }, dt);
@@ -1107,7 +1247,7 @@ function avanzar(dt) {
   if (S.p.estado === 'fin') terminarPartido();
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { soltarToques(); if (S.vista === 'partido' && !S.enLocal) alternarPausa(); }
+  if (document.hidden) { soltarToques(); if (S.vista === 'partido' && !S.enLocal && !S.red) alternarPausa(); } // futbol-en-linea: el en vivo no se pausa
   else ultimo = performance.now();
 });
 
@@ -1117,6 +1257,7 @@ addEventListener('message', ev => {
   const d = ev.data || {};
   if (d.tipo === 'inicio') {
     prog = cargarAvance(d.progreso);
+    if (d.modo === 'linea') S.linea = d; // futbol-en-linea
     if (d.aviso) avisar(d.aviso, 3500);
     listo();
   }
@@ -1124,8 +1265,10 @@ addEventListener('message', ev => {
   else if (d.tipo === 'puntos-ok') { S.ultimoPuntos = d; if (S.ctx && S.ctx.puntua) mostrarPuntos(d); }
 });
 let datosListos = false, inicioListo = !EMBED;
-function listo() { inicioListo = true; if (datosListos && S.vista === 'carga') menuPrincipal(); }
-fetch('datos/futbol.json?v=1').then(r => r.json()).then(u => { U = u; datosListos = true; if (inicioListo && S.vista === 'carga') menuPrincipal(); })
+// futbol-en-linea: la sala abre el partido en vivo; ?modo=clasif abre la Clasificatoria semanal (respaldo).
+function arrancar() { if (S.linea) iniciarLinea(); else if (Q.get('modo') === 'clasif') modoClasif(); else menuPrincipal(); }
+function listo() { inicioListo = true; if (datosListos && S.vista === 'carga') arrancar(); }
+fetch('datos/futbol.json?v=1').then(r => r.json()).then(u => { U = u; datosListos = true; if (inicioListo && S.vista === 'carga') arrancar(); })
   .catch(() => { $('ov').innerHTML = '<h2>⚠️ No se pudo cargar el juego</h2><p>Revisa tu conexión y vuelve a intentarlo.</p>'; });
 
 ajustarVista();
@@ -1136,7 +1279,7 @@ if (PRUEBA) {
   // Resumen del partido y de la página para las pruebas (sin partido, valores vacíos).
   const estadoPartido = p => {
     if (!p) return { estado: null, minuto: 0, goles: null, dueno: -1, controlado: -1, jugador: null, balon: null, pases: null, tiros: null, carga: null, humanos: [] };
-    const h = p.humanos[0], j = h && h.jug >= 0 ? p.jug[h.jug] : null;
+    const h = p.humanos[S.yoH || 0], j = h && h.jug >= 0 ? p.jug[h.jug] : null; // futbol-en-linea
     return {
       estado: p.estado, minuto: p.minuto, goles: [p.eq[0].goles, p.eq[1].goles], dueno: p.dueno, controlado: h ? h.jug : -1,
       jugador: j ? { x: j.x, y: j.y, vx: j.vx, vy: j.vy } : null, balon: { ...p.balon }, pases: p.stats.pases.slice(), tiros: p.stats.tiros.slice(),
@@ -1159,6 +1302,15 @@ if (PRUEBA) {
     iaPausada: on => { S.p.iaPausada = !!on; },
     enJuego: () => M.ponerEnJuego(S.p),
     darBalon: i => { M.ponerEnJuego(S.p); M.darBalon(S.p, i); },
+    // futbol-en-linea: el jugador i, solo frente al arco rival a 11 m, con el balón (la IA quieta).
+    ponerParaTiro: i => {
+      const p = S.p, j = p.jug[i], lado = p.eq[j.eq].lado, gk = p.jug.find(x => x.eq !== j.eq && x.rol === 'POR');
+      M.ponerEnJuego(p); p.iaPausada = true;
+      Object.assign(j, { x: lado * (M.MX - 11), y: 0, vx: 0, vy: 0, dir: lado > 0 ? 0 : Math.PI });
+      if (gk) gk.y = 6;
+      M.darBalon(p, i);
+    },
+    red: () => (S.red ? { rol: S.rol, recibidas: S.red.st.recibidas || 0, ultimaS: S.red.st.ultimaS, ia: !!S.red.st.iaInvitado, caido: S.rol === 'anfitrion' ? S.red.invitadoCaido() : S.red.anfitrionCaido(), aviso: $('red-aviso').classList.contains('hide') ? '' : $('red-aviso').textContent, lat: $('lat').textContent } : null),
   };
 }
 </script>

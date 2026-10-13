@@ -237,6 +237,11 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     sala de espera; cambio `futbolito-equipos-controles`); en Billar,
     `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, efecto?, t }` (cambio `futbolito-billar`). El triángulo del
     billar sale de la semilla (`billar-triangulo`); los tiros de bots y los automáticos, de `bot|<paso>` y `auto|<paso>`.
+  - En Fútbol Estelar en línea (`futbol`, cambio `futbol-en-linea`; mesa 1 vs 1 sin bots) el archivo del jugador
+    puede llevar `tactica` `{ formacion: "4-4-2" | "4-3-3" | "3-5-2" | "5-3-2", linea, ancho, mentalidad, presion }`
+    (enteros 0–100, elegida en la sala de espera) y `futbol` `{ goles: [anfitrión, invitado], ms, corte?, t }`, el
+    primer resultado que vio (solo uno por persona). El partido no se guarda: viaja por el canal en vivo de la sala
+    (`juegos/en-vivo.js`) sin datos personales (solo ids de asiento y números del partido).
   - En Golf (cambio `golf`), `jugadas[]` `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, t }`. Los 3 hoyos de la
     sala salen de la semilla (`golf-hoyos`) y los tiros automáticos por tiempo, de `auto|<paso>`.
   - En Brisca, `jugadas[]` `{ n, accion: "jugar", carta, t }`. En Conquián, `jugadas[]` `{ n, accion, carta?, con?, a?, t }`.
