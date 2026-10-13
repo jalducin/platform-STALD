@@ -291,6 +291,16 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     mejorRecorrido: null | 9–200 }`. Llaves de hoyo `"1"`…`"9"` (las que falten = hoyo sin terminar); `mejores` es el
     menor número de golpes con la pelota adentro (una recogida no cuenta), `estrellas` la mejor marca (3 bajo par, 2
     en par, 1 terminado), `recorridos` los recorridos de 9 hoyos terminados y `mejorRecorrido` su menor total.
+  - `futbol` (cambio `futbol-estelar`): `{ stats { partidos, ganados, empatados, perdidos, gf, gc, copas (0–1000000) },
+    clasif: null | { semana "AAAA-Www", mejor 0–1000, jugados }, tactica { formacion "4-4-2"|"4-3-3"|"3-5-2"|"5-3-2",
+    linea, ancho, mentalidad, presion (0–100) }, carrera: null | { semilla 1–2147483647, club { nombre, corto (3
+    mayúsculas), escudo { forma, c1, c2, simbolo }, uniforme { c1, c2, patron }, estadio }, temporada 1–99,
+    divisiones [[8],[8],[8]] (0–23 del universo y 24 = tu club, sin repetir), jornada 0–14, resultados [[gf, gc]]
+    (uno por jornada jugada, 0–20), dinero 0–9999999, plantilla [[id, ajuste −20…20, carta | null]] (14–20, ids
+    `u<club>-<n>` del universo o `g<n>` generados, sin repetir), cartas [sin repetir], ojeador [hasta 3 `g<n>`],
+    ojeadas 0–9999, copa null | { ronda 0–3, viva }, palmares { ascensos, ligas, copas } } }`. Nombre del club y del
+    estadio: 2–24 letras, números, espacio y `.'-` (los escribe la persona; se escapan al pintarlos); colores `#rrggbb`.
+    La tabla no se guarda: se reconstruye con la semilla y tus resultados (`FutbolLiga.tablaDivision`).
 - `juegos/nicks.json`: `{ "<id-jugador>": "<nick>" }`, sin correos (cambio `nick-jugadores`). El nick reemplaza al
   nombre en Juegos (chip, ranking y partidas); el admin ve ambos en «🛡️ Admin › Jugadores».
 - `juegos/invitados.json`: `{ "<correo>": { nombre, registradoEn, ultimaVisita, visitas } }`.

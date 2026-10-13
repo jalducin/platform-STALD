@@ -135,7 +135,8 @@
     return v * nivelDe(p, j.eq).vel;
   }
   function giro(p, j, conBalon) {
-    let g = conBalon ? 3.4 + (tiene(j, 'regate') ? 1.4 : 0) + j.a.reg * 0.01 : 6;
+    let g = 6;
+    if (conBalon) g = 3.4 + (tiene(j, 'regate') ? 1.4 : 0) + j.a.reg * 0.01;
     if (j.deseo.sprint) g *= 0.7;
     return g;
   }
@@ -244,7 +245,10 @@
   // Cambio automático: al jugador que recibe o al más cercano al balón cuando el tuyo quedó lejos.
   function autoCambio(p, h, k) {
     const d = p.dueno >= 0 ? p.jug[p.dueno] : null;
-    if (d && d.eq === h.eq) { if (d.humano < 0) asignarHumano(p, k, d.i); return; }
+    if (d && d.eq === h.eq) {
+      if (d.humano < 0) asignarHumano(p, k, d.i);
+      return;
+    }
     if (p.t - h.cambioT < 1) return;
     const c = p.cache && p.cache.chaser[h.eq];
     const mejor = c && c.i >= 0 ? c.i : masCercanoAlBalon(p, h.eq, -1);
@@ -253,7 +257,11 @@
   }
   // Barra de potencia: se carga al apretar y se patea al soltar ese botón.
   function cargar(h, fl) {
-    if (!h.carga) { const b = PATADAS.find(x => fl.baja[x]); if (b) h.carga = { boton: b, t: 0 }; return null; }
+    if (!h.carga) {
+      const b = PATADAS.find(x => fl.baja[x]);
+      if (b) h.carga = { boton: b, t: 0 };
+      return null;
+    }
     if (!fl.sube[h.carga.boton]) return null;
     const c = h.carga; h.carga = null;
     return { tipo: c.boton, potencia: clamp(c.t / 1, 0, 1) };
@@ -272,7 +280,7 @@
   }
   function defensaHumana(p, h, j, ent, fl, d) {
     if (fl.baja.tiro) { entrada(p, j); return; }
-    if (fl.baja.pase && ent.sprint) { barrida(p, j); return; }
+    if ((fl.baja.pase && ent.sprint) || fl.baja.elevado) { barrida(p, j); return; } // A con sprint o Y: barrida
     if (ent.hueco) p.eq[j.eq].doble = true;
     if (ent.pase) irA(p, j, puntoContencion(p, j, d), !!ent.sprint || dist(j, d) > 4);
     if (h.carga && h.carga.boton !== 'tiro') h.carga = null; // en defensa no hay barra
@@ -381,9 +389,13 @@
     else controlar(p, mejor);
   }
   function alcance(p, j, b) {
-    if (j.rol === 'POR' && enSuArea(p, j)) return b.z < 2.5 ? alcancePortero(j) + (j.lanza ? 0.5 : 0) : 0;
+    if (j.rol === 'POR' && enSuArea(p, j)) {
+      if (b.z >= 2.5) return 0;
+      return alcancePortero(j) + (j.lanza ? 0.5 : 0);
+    }
     if (b.z <= 1.05) return 0.7 + (tiene(j, 'muro') ? 0.15 : 0);
-    return b.z < 2.6 ? 0.7 + (tiene(j, 'cabeza') ? 0.35 : 0) : 0;
+    if (b.z >= 2.6) return 0;
+    return 0.7 + (tiene(j, 'cabeza') ? 0.35 : 0);
   }
   // Control con el pecho o el muslo: balón a media altura que no viene fuerte (fuera del área rival).
   const alPecho = (p, j) => p.balon.z < 1.8 && Math.hypot(p.balon.vx - j.vx, p.balon.vy - j.vy) < umbralControl(j) * 0.8 && !(enAreaRival(p, j) && p.balon.vz < 0);
@@ -525,7 +537,7 @@
     const largo = tipo === 'banda' ? Math.min(d, 22) : d * 0.82;
     const th = tipo === 'banda' ? 0.42 : 0.62 + potencia * 0.22;
     const v0 = Math.sqrt(largo * GRAV / Math.sin(2 * th));
-    return { tipo: tipo === 'banda' ? 'elevado' : 'elevado', ang: Math.atan2(t.y - j.y, t.x - j.x), v: v0 * Math.cos(th), vz: v0 * Math.sin(th), errZ: 0.3, d, receptor: r };
+    return { tipo: 'elevado', ang: Math.atan2(t.y - j.y, t.x - j.x), v: v0 * Math.cos(th), vz: v0 * Math.sin(th), errZ: 0.3, d, receptor: r };
   }
   const esCentro = (p, j) => Math.abs(j.y) > 15 && uDe(p.eq[j.eq].lado, j.x) > 0.72;
   const puntoCentro = (p, j) => { const g = porteriaRival(p, j.eq); return { x: g.x - p.eq[j.eq].lado * (7 + p.rng() * 5), y: -Math.sign(j.y) * (p.rng() * 5) }; };
@@ -767,6 +779,11 @@
     j.dir = Math.atan2((r || p.balon).y - j.y, (r || p.balon).x - j.x);
     patear(p, j, tipoPatada, 0.5, null, { receptor: r ? r.i : undefined, forzar: true });
   }
+  // En un tiro de esquina conviene buscar a quien está en el área, mejor si cabecea bien.
+  function bonoEsquina(p, t, tipo) {
+    if (tipo !== 'esquina' || !enAreaRival(p, t)) return 0;
+    return tiene(t, 'cabeza') ? 9 : 6;
+  }
   function receptorParada(p, j, tipo) {
     const lado = p.eq[j.eq].lado;
     let mejor = null, ms = -Infinity;
@@ -774,7 +791,7 @@
       if (t === j || t.rol === 'POR') continue;
       const d = dist(j, t), libre = Math.min(...delEquipo(p, 1 - j.eq).map(o => dist(o, t)));
       if (tipo === 'banda' && d > 20) continue;
-      let s = Math.min(libre, 8) - d / 12 + (tipo === 'esquina' && enAreaRival(p, t) ? 6 + (tiene(t, 'cabeza') ? 3 : 0) : 0);
+      let s = Math.min(libre, 8) - d / 12 + bonoEsquina(p, t, tipo);
       if (tipo === 'meta') s += uDe(lado, t.x) * 6 + (p.rng() - 0.5) * 3;
       if (s > ms) { ms = s; mejor = t; }
     }
@@ -834,10 +851,16 @@
     const c = cargar(h, fl);
     if (c && pen.t > 0.6) tirarPenal(p, s.m > 0.3 ? s.y : 0, c.potencia);
   }
+  // La IA tira al centro de vez en cuando y, si no, a un lado con algo de variación.
+  function apunteIA(p) {
+    if (p.rng() < 0.18) return 0;
+    const lado = p.rng() < 0.5 ? -1 : 1;
+    return lado * (0.55 + p.rng() * 0.4);
+  }
   function tirarPenal(p, apunte, potencia) {
     const pen = p.penal, j = p.jug[pen.tirador], gk = p.jug[pen.portero];
     let y = apunte;
-    if (y === null) y = p.rng() < 0.18 ? 0 : (p.rng() < 0.5 ? -1 : 1) * (0.55 + p.rng() * 0.4);
+    if (y === null) y = apunteIA(p);
     Object.assign(j, { x: p.balon.x - pen.lado * 0.4, y: 0, dir: pen.lado > 0 ? 0 : Math.PI });
     darBalon(p, j.i);
     pen.fase = 'vuelo';
@@ -961,7 +984,10 @@
   // Trayectoria prevista del balón suelto (24 puntos cada 0.1 s) y quién de cada equipo llega primero.
   function predecir(p) {
     const tray = [], b = { ...p.balon };
-    for (let k = 1; k <= 24; k++) { for (let s = 0; s < 6; s++) moverBalon(b, PASO); tray.push({ x: b.x, y: b.y, z: b.z, t: k * 0.1 }); }
+    for (let k = 1; k <= 24; k++) {
+      for (let s = 0; s < 6; s++) moverBalon(b, PASO);
+      tray.push({ x: b.x, y: b.y, z: b.z, t: k * 0.1 });
+    }
     p.tray = tray;
     p.cache = { chaser: [perseguidor(p, 0), perseguidor(p, 1)] };
   }
@@ -1134,9 +1160,12 @@
   function opcionConducir(p, j) {
     const lado = p.eq[j.eq].lado, adelante = { x: clamp(j.x + lado * 7, -MX + 2, MX - 2), y: j.y * 0.85 };
     let cerca = null, md = Infinity;
-    for (const o of p.jug) { if (o.eq === j.eq) continue; const d = distSegmento(o, j, adelante); if (d < md) { md = d; cerca = o; } }
+    for (const o of p.jug) {
+      const d = o.eq === j.eq ? Infinity : distSegmento(o, j, adelante);
+      if (d < md) { md = d; cerca = o; }
+    }
     if (cerca && md < 3) adelante.y = clamp(adelante.y + (j.y > cerca.y ? 4 : -4), -MY + 2, MY - 2);
-    const frenteLibre = !p.jug.some(o => o.eq !== j.eq && dist(o, j) < 2 && Math.abs(difAng(Math.atan2(lado ? 0 : 0, lado), Math.atan2(o.y - j.y, o.x - j.x))) < 1.2);
+    const frenteLibre = !p.jug.some(o => o.eq !== j.eq && dist(o, j) < 2 && Math.abs(difAng(lado > 0 ? 0 : Math.PI, Math.atan2(o.y - j.y, o.x - j.x))) < 1.2);
     const s = 0.3 + clamp(md / 8, 0, 1) * 0.7 + j.a.reg / 500 + (tiene(j, 'regate') ? 0.15 : 0) + (uDe(lado, j.x) > 0.6 ? 0.15 : 0) - (frenteLibre ? 0 : 0.35);
     return { tipo: 'conducir', s, punto: adelante, sprint: md > 8 };
   }
@@ -1195,19 +1224,29 @@
     iaEquipos(p);
     if (p.estado !== 'juego') return;
     patadasPendientes(p, dt);
+    if (!moverTodos(p, dt)) return;
+    separar(p);
+    pasoBalon(p, dt);
+    if (p.estado === 'juego') revisarBalon(p);
+  }
+  // Relojes de cada jugador, barridas y movimiento; false si una barrida paró el juego (falta).
+  function moverTodos(p, dt) {
     for (const j of p.jug) {
       j.aturdido = Math.max(0, j.aturdido - dt); j.sinTocar = Math.max(0, j.sinTocar - dt);
       if (j.ia.corre > 0) j.ia.corre -= dt;
-      if (j.lanza && (j.lanza.t -= dt) <= 0) j.lanza = null;
+      if (j.lanza) { j.lanza.t -= dt; if (j.lanza.t <= 0) j.lanza = null; }
       if (j.barrida > 0) pasoBarrida(p, j, dt);
-      if (p.estado !== 'juego') return;
+      if (p.estado !== 'juego') return false;
       moverJugador(p, j, dt);
       animar(j, dt);
     }
-    separar(p);
-    if (p.dueno >= 0) { p.stats.posesion[p.jug[p.dueno].eq] += dt; llevarBalon(p, dt); if (p.dueno >= 0) presionSobreDueno(p, dt); } else moverBalon(p.balon, dt);
-    if (p.dueno < 0) contactos(p);
-    if (p.estado === 'juego') revisarBalon(p);
+    return true;
+  }
+  function pasoBalon(p, dt) {
+    if (p.dueno < 0) { moverBalon(p.balon, dt); contactos(p); return; }
+    p.stats.posesion[p.jug[p.dueno].eq] += dt;
+    llevarBalon(p, dt);
+    if (p.dueno >= 0) presionSobreDueno(p, dt); else contactos(p);
   }
   const PASOS = { juego: pasoJuego, parada: pasoParada, gol: pasoGol, medio: pasoMedio, penal: pasoPenalPartido, tanda: pasoTanda };
   function paso(p, entradas) {

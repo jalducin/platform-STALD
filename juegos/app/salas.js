@@ -9,7 +9,7 @@ function fnv(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.char
 function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; } // NOSONAR: aritmética entera de 32 bits del generador con semilla, no es truncado
 const rngDe = (seed, etiqueta) => mulberry(fnv(seed + '|' + etiqueta));
 
-const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'cultura-linea', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts', 'futbolito', 'billar'];
+const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 'cultura', 'cultura-linea', 'mente-calculo', 'basta-es', 'basta-en', 'loteria', 'una', 'poker', 'brisca', 'conquian', 'ajedrez', 'plataformas', 'karts', 'billar']; // futbol-estelar: Futbolito ya no se ofrece (sus salas en curso siguen: TIEMPO_REAL y FISICA)
 JUEGOS_PARTIDA.push(...TableroUI.SALA); // juegos-tablero
 JUEGOS_PARTIDA.push(...Object.keys(SALAS_GRANDES)); // juegos-salas-grandes: bingo, blackjack, dibuja, en-memorama, mente-sopa
 const ARCADE = new Set(['plataformas', 'karts']); // carreras en sala (openspec: juegos-plataformas-karts)

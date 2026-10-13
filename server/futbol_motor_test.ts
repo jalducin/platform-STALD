@@ -196,7 +196,7 @@ Deno.test("futbol: un partido IA contra IA llega a 90', cambia de lado en el med
   assertEquals(p.eq[0].lado, -lado0, "cambiaron de lado");
   assert(p.stats.tiros[0] + p.stats.tiros[1] >= 3, "hubo tiros: " + JSON.stringify(p.stats));
   assert(p.stats.pases[0] + p.stats.pases[1] >= 20, "hubo pases: " + JSON.stringify(p.stats));
-  assert(ev.some((e: any) => ["banda", "meta", "esquina"].includes(e.tipo)), "hubo reanudaciones");
+  assert(ev.some((e: any) => ["banda", "meta", "esquina", "falta", "penal", "fuera_lugar"].includes(e.tipo)), "hubo reanudaciones");
 });
 
 Deno.test("futbol: fuera de lugar encendido sanciona y apagado deja seguir", () => {

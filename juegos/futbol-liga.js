@@ -160,7 +160,7 @@
   // ================= Equipos para el motor =================
   // Colores parecidos (distancia RGB): el visitante usa su segundo uniforme.
   function chocan(a, b) {
-    const n = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+    const n = h => [1, 3, 5].map(i => Number.parseInt(h.slice(i, i + 2), 16));
     const [x, y] = [n(a), n(b)];
     return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) < 110;
   }
@@ -262,7 +262,11 @@
     });
     for (const j of lista) { if (!j.num || usados.has(j.num)) j.num = 0; else usados.add(j.num); }
     let libre = 1;
-    for (const j of lista) { if (j.num) continue; while (usados.has(libre)) libre++; j.num = libre; usados.add(libre); }
+    for (const j of lista.filter(x => !x.num)) {
+      while (usados.has(libre)) libre++;
+      j.num = libre;
+      usados.add(libre);
+    }
     return lista;
   }
   function premioPartido(gf, gc) {
@@ -426,7 +430,8 @@
       t.rondas[r].forEach((m, k) => {
         if (m.ganador !== null || conHumano(t, m)) return;
         const rng = rngDe(t.semilla, 'ia|' + r + '|' + k), [ga, gb] = resultadoRapido(t.equipos[m.a].fuerza, t.equipos[m.b].fuerza, rng);
-        cerrar(m, ga, gb, ga === gb ? (rng() < 0.5 ? 0 : 1) : null);
+        const pen = rng() < 0.5 ? 0 : 1; // penales simulados si empatan
+        cerrar(m, ga, gb, ga === gb ? pen : null);
       });
       avanzar(t);
       if (siguientePartido(t)) return;

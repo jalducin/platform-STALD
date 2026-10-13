@@ -44,13 +44,18 @@ const JUEGOS = [
   { id: 'dibuja', cat: 'ingles', emoji: '🎨', t: 'Dibuja y adivina', d: 'Por turnos: dibuja una palabra en inglés y adivina la de los demás (3 a 12).', jugar: () => elegirDibuja() },
   { id: 'bingo', cat: 'clasicos', emoji: '🎱', t: 'Bingo', d: '75 números y tu cartón: línea, esquinas o lleno. ¡Para salas de hasta 30!', jugar: () => elegirBingo() },
   { id: 'blackjack', cat: 'clasicos', emoji: '♣️', icono: 'juegos/iconos/blackjack.svg', t: 'Blackjack (21)', d: 'Acércate a 21 sin pasarte y gánale a la banca, con fichas de juego.', jugar: () => elegirBlackjack() },
-  { id: 'futbolito', cat: 'arcade', emoji: '⚽', t: 'Futbolito', d: 'Futbolito de mesa: desliza tu barra y patea. Contra el bot o 1 vs 1.', jugar: () => jugarArcade('futbolito') }, // futbolito-billar
+  { id: 'futbol', cat: 'arcade', emoji: '⚽', t: 'Fútbol Estelar 2010', d: 'Futbol táctico de consola: liga, copa, carrera y torneos con amigos. Contra la IA o en local.', jugar: () => jugarArcade('futbol') }, // futbol-estelar: reemplaza a Futbolito
   { id: 'billar', cat: 'arcade', emoji: '🎱', t: 'Billar', d: 'Bola 8 con línea guía: mete tus bolas y al final la 8. Contra el bot o 1 vs 1.', jugar: () => jugarArcade('billar') }, // futbolito-billar
   { id: 'golf', cat: 'arcade', emoji: '⛳', t: 'Golf', d: 'Minigolf de 9 hoyos: jala como resortera y métela en pocos golpes. Solo o de 2 a 4.', jugar: () => jugarArcade('golf') }, // golf
 ];
 JUEGOS.push(...ClasicosRapidosUI.TARJETAS); // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes
 JUEGOS.push(...TableroUI.TARJETAS); // juegos-tablero: Damas y Batalla naval (Mente ágil), Dominó y Parchís (Clásicos)
-const juegoPorId = id => JUEGOS.find(j => j.id === id);
+// futbol-estelar: juegos retirados del menú (no salen en categorías ni al crear salas), pero juegoPorId los sigue
+// encontrando para abrir y terminar salas que ya existían y para el ranking y el historial.
+const JUEGOS_RETIRADOS = [
+  { id: 'futbolito', cat: 'arcade', emoji: '⚽', t: 'Futbolito', d: 'Futbolito de mesa (retirado: lo reemplaza Fútbol Estelar 2010).', jugar: () => jugarArcade('futbolito') }, // futbolito-billar
+];
+const juegoPorId = id => JUEGOS.find(j => j.id === id) || JUEGOS_RETIRADOS.find(j => j.id === id);
 // Ícono de un juego como HTML (openspec: juegos-categorias): con `icono` (SVG del repo) una <img class="ico-img"> del
 // tamaño de la letra de donde vive; si no, su emoji. `emoji` es el respaldo en texto (<option>, avisos, títulos).
 // Acepta el juego o su id.
