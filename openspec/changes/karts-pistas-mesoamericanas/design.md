@@ -17,7 +17,7 @@ solo conoce las 4 pistas de sala (`server/carreras.ts`, `MAPAS_SALA`).
 
 ### 1. `juegos/karts-pistas.js` como fuente única de las pistas
 Script clásico (igual que `arcade.js`, sin módulos ni build) que publica `KartsPistas = { PISTAS, COPAS,
-encuadrarMinimapa, enZona }` en `window`/`globalThis` (así también lo importan las pruebas de Deno). Cada pista
+encuadrarMinimapa, colocarMecanicas, colocarFijos, ladoTrajinera, copaPorId }` en `window`/`globalThis` (así también lo importan las pruebas de Deno). Cada pista
 lleva: `id, nombre, emoji, desc, civ, sala, mitad, fuera, lento, agarre, color, tema, decor, puntos` y, las nuevas,
 `mecanicas`. `arcade.js` lo lee al cargar: `PISTAS` = las que tienen `sala: true` (las 4 de siempre, igual que el
 servidor) y `pistaPorId` busca en todas. Por eso `juegos.html` y `karts.html` cargan `karts-pistas.js` **antes** de
@@ -47,7 +47,7 @@ tierra de La Venta con dosel de selva. El agua (lago, canal, cenote, río) y el 
 piso una sola vez.
 
 ### 4. Copas
-`COPAS = [fiesta, mesoamericana]`. `prog.copaEnCurso.copa` dice cuál está en curso; si falta (progreso viejo) es
+`COPAS = [fiesta, mesoamerica]` (el servidor acepta ids de copa de 2 a 12 letras). `prog.copaEnCurso.copa` dice cuál está en curso; si falta (progreso viejo) es
 `fiesta`. `prog.copas[id]` guarda el mejor resultado de cada una. Bono y piezas iguales para ambas. La pintura
 dorada sigue pidiendo los récords de las 4 pistas de la Copa Fiesta (no se endurece una regla ya ganada).
 

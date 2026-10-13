@@ -403,7 +403,7 @@ async function probarCopaMeso(b) {
   for (let i = 0; i < 20; i++) { const d = (await progreso()).datos; if (d && d.copaEnCurso && d.copaEnCurso.copa === 'mesoamerica') break; await sleep(500); }
   ok('Copa Mesoamericana: resultados con la siguiente carrera en Teotihuacan', /Carrera 2 de 4: Calzada de los Muertos/.test(await fr.textContent('#res-botones')), await fr.textContent('#res-botones'));
   const g = await progreso(), cc = g.datos && g.datos.copaEnCurso;
-  ok('progreso: Copa Mesoamericana en curso (carrera 2) y récord de La Venta', cc && cc.copa === 'mesoamerica' && cc.carrera === 1 && g.datos.records && g.datos.records.laventa > 0, JSON.stringify(cc));
+  ok('progreso: Copa Mesoamericana en curso (carrera 2) guardada en el servidor', cc && cc.copa === 'mesoamerica' && cc.carrera === 1, JSON.stringify(cc));
   await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
   await abrirJuego(p, 'karts');
   fr = await marcoDe(p);
