@@ -158,6 +158,14 @@ function jugarPoker(numBots, pareja) {
   const avatar = i => i === 0 ? '🙂 ' : bots[i - 1].emoji + ' ';
   const ganadas = {}; const t0 = Date.now();
   let terminado = false;
+  // emocion-sonora: ir con todo sube la tensión; al cerrar la mano, victoria o derrota (o logro si ganaste sin ir con todo).
+  let conTodo = false;
+  const pkEmocionFin = gano => {
+    window.Emocion?.intensidad(0);
+    if (conTodo) { if (gano) window.Emocion?.victoria(); else window.Emocion?.derrota(); }
+    else if (gano && !window.Emocion?.logro()) sonidoOk();
+    conTodo = false;
+  };
   const pintar = () => {
     if (terminado) return;
     const miTurno = st.fase !== 'fin' && st.turno === 0;
@@ -193,7 +201,7 @@ function jugarPoker(numBots, pareja) {
     pkContar(st, ganadas);
     pintar();
     if (st.fase === 'fin') {
-      if (st.resultado.premios[0] > 0) sonidoOk();
+      pkEmocionFin(st.resultado.premios[0] > 0); // emocion-sonora
       auto = setTimeout(() => { if (!terminado) siguienteMano(); }, 10000 * TIEMPO); /* ritmo más lento (ajuste del profe) */ limpiezas.push(() => clearTimeout(auto));
       return;
     }
@@ -205,6 +213,7 @@ function jugarPoker(numBots, pareja) {
     const b = e.target.closest('[data-pk]');
     if (!b || st.fase === 'fin' || st.turno !== 0) return;
     if (!Cartas.pokerActuar(st, pkJugadaDe(b))) { sonidoMal(); return; }
+    if (b.dataset.pk === 'todo') { conTodo = true; window.Emocion?.suspenso(1500); window.Emocion?.intensidad(0.6); } // emocion-sonora: vas con todo
     tono(520, 60); programar();
   });
   limpiezas.push(() => { terminado = true; });

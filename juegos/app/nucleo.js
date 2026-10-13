@@ -26,7 +26,8 @@ const chip = document.getElementById('chip');
 const state = { email: null, jugador: null, totalIndividual: 0, totalPartidas: 0, pos: null, posPartidas: null, mejores: {}, semana: null, tab: 'juegos', rtipo: 'individual' };
 let limpiezas = []; // timers del juego en curso
 // Al dejar un juego (terminar, salir, empezar otro): detiene timers y descarta la partida individual guardada.
-function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) { speechSynthesis.cancel(); } soltarPartida(); modoPartida(false); }
+// emocion-sonora: también apaga la tensión y desvanece los stingers que sigan sonando.
+function limpiar() { limpiezas.forEach(f => { try { f(); } catch (e) { /* ya detenido */ } }); limpiezas = []; if (window.speechSynthesis) { speechSynthesis.cancel(); } window.Emocion?.calma(); soltarPartida(); modoPartida(false); }
 
 // ---------- Recarga del navegador (openspec: juegos-recarga) ----------
 // Sala activa: la URL lleva ?sala= y localStorage.juegos_sala_activa = { codigo, quien, t, marcas? }. Juego

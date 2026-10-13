@@ -134,6 +134,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <script src="fisica.js?v=3"></script>
 <script src="billar-motor.js?v=2"></script>
 <script src="mesa-ui.js?v=3"></script>
+<script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script src="mando.js?v=2"></script>
 <script>
 /* Billar bola 8 (openspec: futbolito-billar; controles: futbolito-equipos-controles). Individual contra el bot y sala
@@ -355,7 +356,7 @@ function tirarIndividual() {
   if (modo !== 'juego' || sim || !st || st.turno !== 0 || st.fin) return;
   empezarSim({ angulo: aim, fuerza: fuerza(), efecto: EFECTOS[efectoI].v }, 'tu');
 }
-function empezarSim(tiro, origen) { sim = B.crearSim(st, tiro); simOrigen = origen; sonarTaco(tiro.fuerza); }
+function empezarSim(tiro, origen) { emocionTiro(st, st.turno); sim = B.crearSim(st, tiro); simOrigen = origen; sonarTaco(tiro.fuerza); }
 function pasoIndividual() {
   if (sim) {
     const antes = sim.choques;
@@ -365,6 +366,7 @@ function pasoIndividual() {
     const r = sim.resultado().st; sim = null;
     if (r.ultimo.metidas.some(n => n !== 0)) U.tono(330, 0.12, 'sine', 0.06, 160);
     st = r;
+    emocionResultado(r, 0, true);
     if (st.fin) return terminarIndividual();
     avisoTiro(st, 0, ['Tú', 'El bot']);
     if (st.turno === 1) botEn = performance.now() + 900;
@@ -404,8 +406,8 @@ function pasoSala() {
   const antes = sala.anim ? sala.anim.sim.choques : 0;
   const h = sala.cuadro();
   if (sala.anim && sala.anim.sim.choques > antes) U.tono(900, 0.03, 'triangle', 0.04);
-  if (sala.anim && sala.anim.sim.pasos === B.SUB) sonarTaco(sala.anim.h.tiro.fuerza || 50);
-  if (h && !h.tiro.rendirse) avisoTiro(h.despues, sala.idx, sala.orden.map(p => p.nombre));
+  if (sala.anim && sala.anim.sim.pasos === B.SUB) { sonarTaco(sala.anim.h.tiro.fuerza || 50); emocionTiro(sala.anim.h.antes, sala.anim.h.idx); }
+  if (h && !h.tiro.rendirse) { avisoTiro(h.despues, sala.idx, sala.orden.map(p => p.nombre)); emocionResultado(h.despues, sala.idx, false); }
   const l = sala.linea, mio = sala.miTurno();
   mostrarPanel(mio);
   let turnoHud = null;
@@ -584,6 +586,26 @@ const OVERLAYS = ['ov-carga', 'ov-menu', 'ov-pausa', 'ov-res', 'ov-sala'];
 function mostrar(id) { OVERLAYS.forEach(o => $(o).classList.toggle('hide', o !== id)); }
 function ocultar() { OVERLAYS.forEach(o => $(o).classList.add('hide')); }
 function sonarTaco(f) { U.tono(160 + f * 3, 0.06, 'square', 0.05, 90); }
+/* emocion-sonora: suspenso cuando quien tira va por la 8; al terminar el tiro, racha de bolas tuyas o el final. */
+function emocionTiro(estado, idx) {
+  if (estado && !estado.fin && B.enLaOcho(estado, idx)) { window.Emocion?.suspenso(1600); window.Emocion?.intensidad(0.7); }
+}
+let rachaBillar = 0;
+function emocionResultado(estado, yo, conResultado) {
+  const u = estado.ultimo; if (!u) return;
+  window.Emocion?.intensidad(0);
+  if (estado.fin) {
+    window.Emocion?.revelacion();
+    const gano = estado.fin.gana === yo;
+    if (conResultado) setTimeout(() => { if (gano) window.Emocion?.victoria(); else window.Emocion?.derrota(); }, 900);
+    return;
+  }
+  if (u.quien !== yo) return;
+  const mias = u.falta ? 0 : u.metidas.filter(n => n !== 0 && n !== 8).length;
+  rachaBillar = mias ? rachaBillar + mias : 0;
+  if (rachaBillar >= 2) window.Emocion?.racha(rachaBillar);
+  else if (mias) window.Emocion?.acierto();
+}
 
 /* ---------- Plataforma ---------- */
 U.alMensaje(d => {

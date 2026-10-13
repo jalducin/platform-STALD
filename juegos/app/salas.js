@@ -462,6 +462,7 @@ function pintarBastaSala(body) {
         '<div class="row-btns" style="grid-column:1/-1"><button class="btn" type="submit" id="pb-basta" disabled>✋ ¡Basta!</button></div></form>';
       const primero = document.getElementById('pb-' + d.categorias[0].id); if (primero && r > 0) primero.focus();
     }
+    if (sala.emoBasta !== r && cal[r].cierre - ahora <= 5000 * TIEMPO) { sala.emoBasta = r; window.Emocion?.ultimoSegundos(Math.max(1, Math.ceil((cal[r].cierre - ahora) / 1000 / TIEMPO))); } // emocion-sonora
     const gritador = e.jugadores.filter(x => ((x.rondasBasta || {})[r] || {}).basta).sort((a, b) => a.rondasBasta[r].basta - b.rondasBasta[r].basta)[0];
     if (gritador) { const a = document.getElementById('pb-aviso'); if (a) { a.textContent = '✋ ¡' + gritador.nombre + ' gritó BASTA! Cierra en ' + Math.max(0, Math.ceil((cal[r].cierre - ahora) / 1000 / TIEMPO)) + ' s'; a.style.color = 'var(--bad)'; } }
   };
@@ -469,6 +470,7 @@ function pintarBastaSala(body) {
   const pintarPausa = () => {
     bar.hidden = false; bar.firstChild.style.width = Math.max(0, (cal[r].cierre + dur(P_PAUSA) - ahora) / dur(P_PAUSA) * 100) + '%';
     const lista = rondaLista(r, cal);
+    if (sala.emoPausa !== r) { sala.emoPausa = r; window.Emocion?.revelacion(); } // emocion-sonora: fin de la ronda
     const k = 'res' + r + ':' + (lista ? e.jugadores.filter(x => (x.rondasBasta || {})[r]).length : 'esperando');
     if (sala.vista !== k) {
       sala.vista = k;
@@ -505,9 +507,10 @@ function pintarFinalSala(body, todas, basta, titulo) {
     basta.d.categorias.map(c => { const x = mio.detalle[c.id]; return '<tr><td>' + escapeHtml(c.emoji + ' ' + c.titulo) + '</td><td><b>' + escapeHtml(x.palabra || '—') + '</b></td><td>' + escapeHtml(x.estado) + '</td><td>' + x.pts + '</td></tr>'; }).join('') + '</tbody></table></div>';
   body.innerHTML = '<div class="card result"><div style="font-size:2.4rem">🏆</div><h1>' + escapeHtml(titulo || '¡Fin de la partida!') + '</h1>' +
     (mio ? '<div class="score">' + fmt(mio.total) + '</div><div class="muted">tus puntos · lugar ' + (filas.indexOf(mio) + 1) + ' de ' + filas.length + '</div>' : '') +
-    '<div id="p-guardado" class="muted" style="margin-top:8px"></div><div id="p-revancha"></div></div><h2>🥇 Podio</h2>' + marcadorHtml(filas, e.yo, 30) + detalle + resumenFallosSala(sala, P_N) +
+    '<div id="p-guardado" class="muted" style="margin-top:8px"></div><div id="p-revancha"></div></div><h2>🥇 Podio</h2><div class="podio-suspenso">' + marcadorHtml(filas, e.yo, 30) + '</div>' + detalle + resumenFallosSala(sala, P_N) +
     '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn ghost" data-tab="partidas">👥 Otra partida</button></div>';
   pintarRevancha();
+  window.Emocion?.podio(mio ? filas.indexOf(mio) + 1 : 0); // emocion-sonora: redoble, revelación y tu lugar
   if (mio && mio.total > 0) confeti();
   if (mio && !sala.guardado) {
     sala.guardado = true;
@@ -546,6 +549,7 @@ function pintarRevancha() {
   const sig = e.sala.siguiente || '';
   const k = sig + '|' + (sala.revMsg || '') + '|' + !!sala.revEnviando;
   if (el.dataset.k === k) return;
+  if (sig && el.dataset.k && !el.dataset.k.startsWith(sig + '|')) window.Emocion?.revancha(); // emocion-sonora: alguien abrió la revancha
   el.dataset.k = k;
   el.innerHTML = (sig ? '<div class="revancha-aviso" role="status">🔁 ' + escapeHtml(abrioRevancha(e)) + ' abrió la revancha</div>' : '') +
     '<div class="row-btns"><button class="btn" data-p="revancha"' + (sala.revEnviando ? ' disabled' : '') + '>' + (sig ? '🔁 Unirme' : '🔁 Otra con los mismos') + '</button></div>' +

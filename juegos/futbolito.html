@@ -155,6 +155,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <script src="fisica.js?v=3"></script>
 <script src="futbolito-motor.js?v=3"></script>
 <script src="mesa-ui.js?v=3"></script>
+<script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script src="mando.js?v=2"></script>
 <script>
 /* Futbolito (openspec: futbolito-billar; controles y equipos: futbolito-equipos-controles). Individual: tiempo real
@@ -389,6 +390,7 @@ function pasoVivo() {
 function anotar(eq) {
   st.marcador[eq]++; st.ultimoGol = eq; pintarMarcador();
   sonar('gol', eq === 0);
+  emocionMarcador(st.marcador); // emocion-sonora
   st.pelota.vx = 0; st.pelota.vy = 0;
   if (st.marcador[eq] >= T.META) return terminarIndividual();
   U.avisar(eq === 0 ? '⚽ ¡GOOOL!' : '😬 Gol del bot', 1100);
@@ -404,6 +406,7 @@ function terminarIndividual() {
   $('res-guardado').textContent = U.EMBED ? 'Guardando tus puntos…' : '';
   mostrar('ov-res'); $('hud').classList.add('hide');
   if (gano) U.confeti();
+  emocionFinal(gano, true); // emocion-sonora
   U.enviar({ tipo: 'puntos', puntos, aciertos: st.marcador[0], total: T.META, segundos: seg });
 }
 function patearActiva() {
@@ -453,6 +456,7 @@ function pasoSala() {
     if (m[0] !== antes[0] || m[1] !== antes[1]) {
       const eq = m[0] !== antes[0] ? 0 : 1;
       sonar('gol', eq === miEq);
+      emocionMarcador(m); // emocion-sonora
       U.avisar(eq === miEq ? '⚽ ¡GOOOL!' : '⚽ Gol del equipo ' + EQUIPO_TXT[eq], 1300);
     }
   }
@@ -499,6 +503,7 @@ function terminarSala() {
   $('sala-titulo').textContent = titulo; $('sala-txt').textContent = 'Esperando el podio…';
   $('panel').classList.add('hide'); mostrar('ov-sala');
   if (fin.gana === miEq) U.confeti();
+  emocionFinal(fin.gana === miEq, false); // emocion-sonora: el podio de Juegos pone la victoria
 }
 function pintarAngulo() { $('v-angulo').textContent = (anguloSala > 0 ? '+' : '') + anguloSala + '°'; }
 function girarSala(paso) {
@@ -639,7 +644,20 @@ function mostrar(id) { OVERLAYS.forEach(o => $(o).classList.toggle('hide', o !==
 function ocultar() { OVERLAYS.forEach(o => $(o).classList.add('hide')); }
 function sonar(que, bueno) {
   if (que === 'patada') U.tono(220, 0.08, 'square', 0.05, 120);
-  if (que === 'gol') (bueno ? [523, 659, 784, 1047] : [392, 330, 262]).forEach((f, i) => U.tono(f, 0.14, 'square', 0.05, undefined, i * 0.1));
+  if (que === 'gol' && !(bueno ? window.Emocion?.gol() : window.Emocion?.error())) (bueno ? [523, 659, 784, 1047] : [392, 330, 262]).forEach((f, i) => U.tono(f, 0.14, 'square', 0.05, undefined, i * 0.1)); // emocion-sonora: tribuna (sin emoción, el sonido clásico)
+}
+// emocion-sonora: a un gol de la meta y con diferencia de 1 o menos sube la tensión (más si van empatados).
+function emocionMarcador(m) {
+  const cerrado = Math.max(m[0], m[1]) === T.META - 1 && Math.abs(m[0] - m[1]) <= 1;
+  let x = 0;
+  if (cerrado) x = m[0] === m[1] ? 0.8 : 0.6;
+  window.Emocion?.intensidad(x);
+}
+// emocion-sonora: fin del partido: se apaga la tensión, silbatazo y (en individual) victoria o derrota amable.
+function emocionFinal(gano, conResultado) {
+  window.Emocion?.intensidad(0);
+  setTimeout(() => window.Emocion?.silbato(), 900);
+  if (conResultado) setTimeout(() => { if (gano) window.Emocion?.victoria(); else window.Emocion?.derrota(); }, 2100);
 }
 
 /* ---------- Plataforma ---------- */
