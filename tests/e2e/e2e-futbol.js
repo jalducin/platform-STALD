@@ -225,10 +225,10 @@ async function medirFps(p, fr, ms = 3500) {
   await esperar(fe, () => window.__futbol.estado().vista === 'partido');
   const hl = (await estado(fe)).humanos;
   ok('local: 1 vs 1 con dos personas (una por equipo)', hl.length === 2 && hl[0].eq === 0 && hl[1].eq === 1, JSON.stringify(hl));
-  await fe.evaluate(() => { window.__futbol.iaPausada(true); window.__futbol.enJuego(); for (const j of window.__futbol.p().jug) { j.vx = 0; j.vy = 0; } });
+  await fe.evaluate(() => { window.__futbol.iaPausada(true); window.__futbol.enJuego(); const p = window.__futbol.p(); for (const j of p.jug) { j.vx = 0; j.vy = 0; } for (const h of p.humanos) h.cambioT = p.t + 100; });
   const pos = () => fe.evaluate(() => { const p = window.__futbol.p(); return p.humanos.map(h => ({ x: p.jug[h.jug].x, y: p.jug[h.jug].y })); });
   const antes = await pos();
-  await ponerPads(fe, [pad(0), pad(1, [], [0, 1, 0, 0]), null, null]); await sleep(700); await ponerPads(fe, [pad(0), pad(1), null, null]);
+  await ponerPads(fe, [pad(0), pad(1, [], [0, 1, 0, 0]), null, null]); await sleep(1500); await ponerPads(fe, [pad(0), pad(1), null, null]);
   const despues = await pos();
   ok('local: el control 2 mueve solo a su jugador hacia abajo (el de P1 no se mueve)', despues[1].y < antes[1].y - 1 && Math.hypot(despues[0].x - antes[0].x, despues[0].y - antes[0].y) < 0.3, JSON.stringify({ antes, despues }));
   await e.screenshot({ path: 'futbol-escritorio-local-partido.png' });

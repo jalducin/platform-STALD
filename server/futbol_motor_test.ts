@@ -205,7 +205,7 @@ Deno.test("futbol: fuera de lugar encendido sanciona y apagado deja seguir", () 
     enJuego(p, 6, 0, 0);
     M.asignarHumano(p, 0, 6);
     // Defensa rival en su línea de 25 m; el 10 adelantado a 40 m.
-    p.jug.filter((j: any) => j.eq === 1).forEach((j: any, k: number) => { j.x = k === 0 ? 51 : 25; j.y = k === 0 ? 0 : (k % 2 ? 1 : -1) * (8 + k * 2); });
+    p.jug.filter((j: any) => j.eq === 1).forEach((j: any, k: number) => { j.x = k === 0 ? 51 : 25; const signo = k % 2 ? 1 : -1; j.y = k === 0 ? 0 : signo * (8 + k * 2); });
     Object.assign(p.jug[9], { x: 40, y: 0 });
     pasos(p, 2, { ...NADA, x: 1, pase: true });
     const ev: any[] = [];

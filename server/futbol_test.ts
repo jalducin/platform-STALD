@@ -31,7 +31,7 @@ const avance = (carrera: any = null, extra: any = {}) => ({
   tactica: { formacion: "4-3-3", linea: 60, ancho: 55, mentalidad: 70, presion: 40 },
   carrera, ...extra,
 });
-const carrera = () => JSON.parse(JSON.stringify(L.nuevaCarrera(U, { club: CLUB, semilla: 4242 })));
+const carrera = () => structuredClone(L.nuevaCarrera(U, { club: CLUB, semilla: 4242 }));
 
 Deno.test("futbol: en el catálogo de Arcade (tope 1000) y con avance; Futbolito se conserva", () => {
   assertEquals(CATALOGO["futbol"], { categoria: "arcade", titulo: "Fútbol Estelar 2010", max: 1000 });
