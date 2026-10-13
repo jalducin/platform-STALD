@@ -48,10 +48,10 @@
 ## 7. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 7.1 `npx -y deno test -A server/` y `npx -y deno lint` sin errores nuevos
-- [ ] 7.2 E2E `futbol juegos categorias mando karts billar golf` (más `futbolito`) con la copia de datos de prueba (la
+- [x] 7.2 E2E `futbol juegos categorias mando karts billar golf` (más `futbolito`) con la copia de datos de prueba (la
   copia se descarta: estado restaurado) y después la suite completa (`peticiones` 41 vs 40 es previa)
 - [x] 7.3 `cd tests/calidad && npm run calidad` sin avisos nuevos
-- [ ] 7.4 Reporte `openspec/changes/futbol-estelar/reports/2026-10-12-step-7-pruebas-y-verificacion.md`
+- [x] 7.4 Reporte `openspec/changes/futbol-estelar/reports/2026-10-12-step-7-pruebas-y-verificacion.md`
 
 ## 8. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 

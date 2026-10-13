@@ -229,12 +229,16 @@ async function medirFps(p, fr, ms = 3500) {
   await esperar(fe, () => window.__futbol.estado().vista === 'partido');
   const hl = (await estado(fe)).humanos;
   ok('local: 1 vs 1 con dos personas (una por equipo)', hl.length === 2 && hl[0].eq === 0 && hl[1].eq === 1, JSON.stringify(hl));
-  await fe.evaluate(() => { window.__futbol.iaPausada(true); window.__futbol.enJuego(); const p = window.__futbol.p(); for (const j of p.jug) { j.vx = 0; j.vy = 0; } for (const h of p.humanos) h.cambioT = p.t + 100; });
-  const pos = () => fe.evaluate(() => { const p = window.__futbol.p(); return p.humanos.map(h => ({ x: p.jug[h.jug].x, y: p.jug[h.jug].y })); });
-  const antes = await pos();
-  await ponerPads(fe, [pad(0), pad(1, [], [0, 1, 0, 0]), null, null]); await sleep(1500); await ponerPads(fe, [pad(0), pad(1), null, null]);
-  const despues = await pos();
-  ok('local: el control 2 mueve solo a su jugador hacia abajo (el de P1 no se mueve)', despues[1].y < antes[1].y - 1 && Math.hypot(despues[0].x - antes[0].x, despues[0].y - antes[0].y) < 0.3, JSON.stringify({ antes, despues }));
+  await fe.evaluate(() => { window.__futbol.iaPausada(true); window.__futbol.enJuego(); const p = window.__futbol.p(); for (const j of p.jug) { j.vx = 0; j.vy = 0; } for (const h of p.humanos) h.cambioT = p.t + 100; const j2 = p.jug[p.humanos[1].jug]; j2.x = 12; j2.y = 12; });
+  // Lo que pide cada persona al motor (deseo de velocidad) mientras el control 2 empuja la palanca hacia abajo.
+  const deseos = () => fe.evaluate(() => { const p = window.__futbol.p(); return p.humanos.map(h => ({ ...p.jug[h.jug].deseo, y: p.jug[h.jug].y })); });
+  const antes = await deseos();
+  await ponerPads(fe, [pad(0), pad(1, [], [0, 1, 0, 0]), null, null]);
+  await esperar(fe, () => { const p = window.__futbol.p(); return p.jug[p.humanos[1].jug].deseo.vy < -1; }, null, 5000).catch(() => {});
+  await sleep(400);
+  const durante = await deseos();
+  await ponerPads(fe, [pad(0), pad(1), null, null]);
+  ok('local: el control 2 mueve solo a su jugador hacia abajo (P1 quieto)', durante[1].vy < -1 && durante[1].y < antes[1].y - 0.5 && Math.hypot(durante[0].vx, durante[0].vy) < 0.01, JSON.stringify({ antes, durante }));
   await e.screenshot({ path: 'futbol-escritorio-local-partido.png' });
   await fe.evaluate(() => window.__futbol.terminarYa());
   await fe.waitForSelector('#res-puntos', { timeout: 15000 });
