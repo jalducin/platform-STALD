@@ -45,7 +45,7 @@ escenario), lo que dificulta agregar pistas sin tocar el código del juego.
 - **Coordinación:** otros dos cambios en paralelo tocan Karts (27A: rivales en vivo en `juegos/en-vivo.js` y la parte
   multijugador; 28a: personajes en `juegos/personajes.js`, dibujo del piloto y selector de personajes). Este cambio
   solo toca pistas, escenario, copa y selector de pistas, y no fija la lista de personajes.
-- **Datos:** el progreso de Karts (`/juegos/progreso/karts`) agrega la copa `mesoamericana` en `copas` y las pistas
+- **Datos:** el progreso de Karts (`/juegos/progreso/karts`) agrega la copa `mesoamerica` en `copas` (el servidor acepta ids de 2 a 12 letras) y las pistas
   nuevas en `records`, con la misma forma. **Matriz de acceso:** sin cambios (cada persona solo ve y guarda su
   progreso, igual que antes).
 - **Pruebas:** `server/karts_pistas_test.ts` (datos: trazados cerrados y manejables, minimapa coherente, copas) y

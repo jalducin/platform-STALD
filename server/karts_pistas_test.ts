@@ -5,6 +5,7 @@ import { assert, assertAlmostEquals, assertEquals } from "jsr:@std/assert@1";
 import "../juegos/karts-pistas.js";
 import "../juegos/arcade.js";
 import { MAPAS_SALA } from "./carreras.ts";
+import { validarProgreso } from "./progreso.ts";
 
 const g = globalThis as any;
 const KP = g.KartsPistas, A = g.Arcade;
@@ -105,14 +106,14 @@ Deno.test("karts-pistas: el minimapa encuadra todo el trazado dentro del margen 
 });
 
 Deno.test("karts-pistas: Copa Fiesta y Copa Mesoamericana con 4 pistas que existen", () => {
-  assertEquals(KP.COPAS.map((c: any) => c.id), ["fiesta", "mesoamericana"]);
+  assertEquals(KP.COPAS.map((c: any) => c.id), ["fiesta", "mesoamerica"]);
   assertEquals(KP.COPAS[0].pistas, ORIGINALES);
   assertEquals(KP.COPAS[1].pistas, ["laventa", "teotihuacan", "chichen", "tenochtitlan"]);
   for (const c of KP.COPAS) {
     assert(c.nombre && c.emoji && c.desc, c.id);
     assert(c.pistas.every((id: string) => A.pistaPorId(id)), c.id + " con pistas que existen");
   }
-  assertEquals(KP.copaPorId("mesoamericana").nombre, "Copa Mesoamericana");
+  assertEquals(KP.copaPorId("mesoamerica").nombre, "Copa Mesoamericana");
   assertEquals(KP.copaPorId(undefined).id, "fiesta", "progreso viejo sin id → Copa Fiesta");
 });
 
@@ -120,4 +121,16 @@ Deno.test("karts-pistas: las salas siguen con las 4 pistas originales (igual que
   assertEquals(A.PISTAS.map((p: any) => p.id), MAPAS_SALA.karts);
   for (let s = 0; s < 60; s++) assert(MAPAS_SALA.karts.includes(A.mapaDeSala("karts", "semilla" + s)));
   for (const id of NUEVAS) assert(A.refKarts(id) > 0 && A.nombreMapa("karts", id).includes(A.pistaPorId(id).nombre));
+});
+
+Deno.test("karts-pistas: el servidor acepta el progreso con cada copa en curso, su mejor resultado y los récords de las 8 pistas", () => {
+  const records = Object.fromEntries(KP.PISTAS.map((p: any) => [p.id, 61_000]));
+  for (const c of KP.COPAS) {
+    const datos = {
+      copas: { [c.id]: { lugar: 1, puntos: 60 } }, records, piezas: [],
+      equipo: { chasis: "estandar", llantas: "estandar", color: "azul" },
+      copaEnCurso: { copa: c.id, carrera: 1, puntos: [15, 12, 10, 8, 6, 4, 2, 1], dif: 95 },
+    };
+    assert(validarProgreso("karts", datos), c.id + " pasa la validación del servidor");
+  }
 });
