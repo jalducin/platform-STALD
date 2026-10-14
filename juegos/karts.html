@@ -585,7 +585,15 @@ function prepararPista(id) {
   const xs = M.pts.map(p => p.x), ys = M.pts.map(p => p.y);
   const W = Math.ceil(Math.max(...xs) + 220), H = Math.ceil(Math.max(...ys) + 220);
   densidad = W * H / 2.9e6;
-  // Cajas de ítems y monedas (karts-pistas-grandes: 7 filas de 4 cajas y 30 grupos de 3 monedas en la vuelta 3× más larga).
+  colocarRecolectables();
+  zonas = KP.colocarMecanicas(pista, M); // mecánicas de las pistas mesoamericanas (turbo, salto, cenote, lodo, trajinera)
+  trajineras = zonas.filter(z => z.tipo === 'trajinera'); // karts-pistas-grandes: 3 en Tenochtitlan
+  for (const t in eventos) eventos[t] = 0; // eventos de las mecánicas en esta carrera (ganchos de prueba)
+  pintarTextura(id, r, W, H);
+}
+// Cajas de ítems, monedas y lava (karts-pistas-grandes: 7 filas de 4 cajas, 30 grupos de 3 monedas y un charco de lava
+// cada ~880 px en la vuelta 3× más larga).
+function colocarRecolectables() {
   cajas = [];
   for (const f of [0.12, 0.25, 0.38, 0.51, 0.64, 0.77, 0.9]) { const i = Math.floor(f * N); for (const lado of [-0.6, -0.2, 0.2, 0.6]) cajas.push(Object.assign(punto(i, lado * pista.mitad), { idx: i, t: 0 })); }
   monedasPista = [];
@@ -593,10 +601,9 @@ function prepararPista(id) {
   lavas = [];
   const nLava = Math.round(M.largo / 880); // karts-pistas-grandes: un charco cada ~880 px (15 en el Volcán)
   if (pista.lava) for (let k = 0; k < nLava; k++) lavas.push(Object.assign(punto(Math.floor((0.1 + 0.85 * k / (nLava - 1)) * N), (k % 2 ? 1 : -1) * (pista.mitad + 30)), { r: 22 }));
-  zonas = KP.colocarMecanicas(pista, M); // mecánicas de las pistas mesoamericanas (turbo, salto, cenote, lodo, trajinera)
-  trajineras = zonas.filter(z => z.tipo === 'trajinera'); // karts-pistas-grandes: 3 en Tenochtitlan
-  for (const t in eventos) eventos[t] = 0; // eventos de las mecánicas en esta carrera (ganchos de prueba)
-  // Textura del suelo (se pinta una vez por pista).
+}
+// Textura del suelo (se pinta una vez por pista).
+function pintarTextura(id, r, W, H) {
   capa = document.createElement('canvas'); capa.width = W; capa.height = H;
   const c = capa.getContext('2d'), col = pista.color, mitad = pista.mitad, tema = TEMAS[id];
   pintarFondo(c, W, H, r, id, col);
@@ -1368,8 +1375,11 @@ function progresoNuevo() { return { copas: {}, records: {}, piezas: [], equipo: 
 // pasan a recordsV1 («pista chica») y records empieza vacío. Copas, piezas, equipo y copa en curso no cambian.
 // Devuelve true si migró (hay que guardar y avisar).
 function migrarRecords(pr) {
-  if (pr.pistasV === KP.VERSION_PISTAS) { if (!pr.recordsV1) pr.recordsV1 = {}; return false; }
-  pr.recordsV1 = Object.assign({}, pr.records || {});
+  if (pr.pistasV === KP.VERSION_PISTAS) {
+    pr.recordsV1 = pr.recordsV1 || {};
+    return false;
+  }
+  pr.recordsV1 = { ...pr.records };
   pr.records = {};
   pr.pistasV = KP.VERSION_PISTAS;
   return Object.keys(pr.recordsV1).length > 0;
@@ -2366,8 +2376,11 @@ function pintarEscena(t, conKarts) {
   g.globalAlpha = 1;
 }
 // Mete en la lista { z, … } lo que la cámara alcanza a ver (con su distancia z), cada cosa con su alcance.
-function juntarVisibles(lista, visible, conKarts) {
+function juntarDecor(lista, visible) { // karts-pistas-grandes: solo las celdas cercanas a la cámara
   for (const l of decorCerca(cam.x, cam.y, 1700)) for (const d of l) { const z = visible(d.x, d.y, d.w, 1600); if (z) lista.push({ z, d }); }
+}
+function juntarVisibles(lista, visible, conKarts) {
+  juntarDecor(lista, visible);
   for (const m of monedasPista) if (m.t <= 0) { const z = visible(m.x, m.y, 10, 900); if (z) lista.push({ z, moneda: m }); }
   for (const cj of cajas) if (cj.t <= 0) { const z = visible(cj.x, cj.y, 16, 1100); if (z) lista.push({ z, caja: cj }); }
   for (const o of objetos) { const z = visible(o.x, o.y, 12, 900); if (z) lista.push({ z, obj: o }); }

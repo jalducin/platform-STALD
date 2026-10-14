@@ -102,7 +102,9 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       cada ronda. Sin `ronda` se acepta el formato anterior `{ palabras, basta }`;
     - `{ final, podio }`: totales hasta 10000;
     - en carreras de Arcade (`plataformas`, `karts`; `server/carreras.ts`), `{ carrera: { ms, monedas } }`: `ms` entero
-      entre el mínimo (6 s y 15 s) y el límite (240 s y 300 s) del juego, o `null` si no terminó; además debe cuadrar
+      entre el mínimo y el límite del juego (plataformas 6 s y 240 s; karts, los de la pista de la sala:
+      `Arcade.limitesKarts`, 25 % y 2.5 veces su referencia, ≈ 30 s y 300–340 s; cambio `karts-pistas-grandes`, el
+      servidor importa `juegos/karts-pistas.js` y `juegos/arcade.js`), o `null` si no terminó; además debe cuadrar
       con el reloj del servidor (`ms ≤ ahora − inicio + 3 s` y `ms ≥ ahora − inicio − 20 s`); `monedas` 0–999. Si no,
       400 `carrera_invalida`. Solo cuenta el primer envío (`carrera` del jugador, con su hora `t`).
     - juegos para salas grandes (cambio `juegos-salas-grandes`; reglas en `server/salas_grandes.ts`, ganchos

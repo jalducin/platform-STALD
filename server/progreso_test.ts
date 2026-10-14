@@ -143,10 +143,8 @@ Deno.test("progreso: karts con récords versionados (pistasV 2 y recordsV1) y la
     karts({ pistasV: 2, recordsV1: { pradera: 5 } }), karts({ pistasV: 2, recordsV1: { "Pradera!": 61_000 } }),
     karts({ pistasV: 2, recordsV1: Object.fromEntries(Array.from({ length: 33 }, (_, i) => ["pista-" + "abc"[i % 3] + "abcdefghijk"[Math.floor(i / 3)], 61_000])) }),
   ];
-  for (const datos of malos) {
-    const r = await c.call("PUT", "/progreso/karts", "marisol@example.com", { v: 0, datos });
-    assertEquals([r.status, r.body.error], [400, "progreso_invalido"], JSON.stringify(datos));
-  }
+  const rs = await Promise.all(malos.map((datos) => c.call("PUT", "/progreso/karts", "marisol@example.com", { v: 0, datos })));
+  rs.forEach((r, i) => assertEquals([r.status, r.body.error], [400, "progreso_invalido"], JSON.stringify(malos[i])));
 });
 
 Deno.test("progreso: validarProgreso acepta lo mínimo y rechaza llaves faltantes", () => {
