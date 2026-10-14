@@ -116,8 +116,9 @@ async function revisarVivo(pags, frames, relevo, lista) {
 
 
 async function terminarTodos(pags, frames) {
-  // Mínimo de una carrera en sala: 15 s (server/carreras.ts). Cada quien llega a la meta y manda su tiempo.
-  await sleep(6000);
+  // Mínimo de una carrera en sala: 25 % de la referencia de la pista (karts-pistas-grandes: ≈ 30 s en la Pradera).
+  // Cada quien llega a la meta y manda su tiempo.
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 31000, null, { timeout: 90000 })));
   for (const fr of frames) await fr.evaluate(() => window.__karts.adelantar()); // NOSONAR: uno por uno, como llegan
   await pags[0].waitForSelector('#p-body .result', { timeout: 90000 });
   await sleep(1500);

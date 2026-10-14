@@ -2066,7 +2066,9 @@ addEventListener('message', ev => {
   const d = ev.data || {};
   if (d.tipo === 'inicio' && d.modo === 'individual') {
     const base = progresoNuevo();
+    const viejo = !!d.progreso && d.progreso.pistasV !== KP.VERSION_PISTAS; // karts-pistas-grandes: récords de las pistas chicas
     prog = Object.assign(base, d.progreso || {});
+    if (viejo) prog.pistasV = 0;
     prog.equipo = Object.assign(base.equipo, (d.progreso || {}).equipo || {});
     const migro = d.progreso ? migrarRecords(prog) : false; // karts-pistas-grandes
     if (migro) guardar();
