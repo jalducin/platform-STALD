@@ -49,15 +49,22 @@ export const COLORES_KART = ["rojo", "azul", "verde", "morado", "naranja", "rosa
 const COPA = /^[a-z]{2,12}$/;
 const PISTA = /^[a-z][a-z-]{1,19}$/;
 
+// Récords por pista: ≤ 32 pistas, de 10 s a 15 min.
+const recordsValidos = (rec: unknown) => esObj(rec) && Object.keys(rec).length <= 32 && Object.entries(rec).every(([k, v]) => PISTA.test(k) && entero(v, 10_000, 900_000));
+const BASE_KARTS = ["copas", "records", "piezas", "equipo", "copaEnCurso"];
+export const VERSION_PISTAS_KARTS = 2; // igual que KartsPistas.VERSION_PISTAS (server/karts_pistas_test.ts)
+
 function validarKarts(d: unknown): boolean {
-  if (!esObj(d) || !llaves(d, ["copas", "records", "piezas", "equipo", "copaEnCurso"])) return false;
+  // karts-pistas-grandes: forma versionada (+ pistasV y recordsV1 = récords archivados de las pistas chicas) o la
+  // anterior (5 llaves), que todavía puede mandar una pestaña vieja.
+  if (!esObj(d) || !(llaves(d, BASE_KARTS) || llaves(d, [...BASE_KARTS, "pistasV", "recordsV1"]))) return false;
+  if ("pistasV" in d && (d.pistasV !== VERSION_PISTAS_KARTS || !recordsValidos(d.recordsV1))) return false;
   const copas = d.copas;
   if (!esObj(copas) || Object.keys(copas).length > 8) return false;
   for (const [k, v] of Object.entries(copas)) {
     if (!COPA.test(k) || !esObj(v) || !llaves(v, ["lugar", "puntos"]) || !entero(v.lugar, 1, 8) || !entero(v.puntos, 0, 60)) return false;
   }
-  const rec = d.records;
-  if (!esObj(rec) || Object.keys(rec).length > 32 || !Object.entries(rec).every(([k, v]) => PISTA.test(k) && entero(v, 10_000, 900_000))) return false;
+  if (!recordsValidos(d.records)) return false;
   const piezas = d.piezas;
   if (!Array.isArray(piezas) || !piezas.every((p) => PIEZAS_KART.includes(String(p))) || !sinRepetir(piezas)) return false;
   const eq = d.equipo;

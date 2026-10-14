@@ -596,7 +596,7 @@ function cambioDeRespuesta(c: CtxSala, inicio: number, deGrande: CambioJugador |
   if (body.futbol !== undefined) return cambioDeFutbol(c, inicio); // futbol-en-linea
   if (body.carrera !== undefined) {
     // Carreras de Arcade (server/carreras.ts): tiempo validado con el reloj del servidor; solo cuenta el primero.
-    const carrera = validarCarrera(sala.juego, body.carrera, inicio, ahora);
+    const carrera = validarCarrera(sala.juego, body.carrera, inicio, ahora, sala.opciones?.mapa); // karts-pistas-grandes: límites de la pista
     if (!carrera) return json({ error: "carrera_invalida" }, 400);
     return (e: EnSala) => e.carrera ? e : { ...e, carrera: { ...carrera, t: ahora } };
   }

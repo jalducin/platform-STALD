@@ -127,6 +127,28 @@ Deno.test("progreso: errores de petición", async () => {
   assertEquals([nadie.status, nadie.body.error], [403, "no_registrado"]);
 });
 
+// karts-pistas-grandes: récords versionados. pistasV 2 = récords de las pistas grandes; recordsV1 = los de las chicas.
+Deno.test("progreso: karts con récords versionados (pistasV 2 y recordsV1) y la forma anterior", async () => {
+  const c = ctx();
+  const nuevo = karts({ records: { hielo: 131_400 }, pistasV: 2, recordsV1: { pradera: 61_234, volcan: 70_100 } });
+  const p = await c.call("PUT", "/progreso/karts", "angel@example.com", { v: 0, datos: nuevo });
+  assertEquals([p.status, p.body.v], [200, 1], JSON.stringify(p.body));
+  assertEquals((await c.call("GET", "/progreso/karts", "angel@example.com")).body.datos, nuevo);
+  assert(validarProgreso("karts", karts({ records: {}, pistasV: 2, recordsV1: {} })), "migrado sin récords todavía");
+  assert(validarProgreso("karts", karts()), "la forma anterior (5 llaves) sigue valiendo: pestañas viejas");
+  const malos: unknown[] = [
+    karts({ pistasV: 2 }), // falta recordsV1
+    karts({ recordsV1: {} }), // falta pistasV
+    karts({ pistasV: 3, recordsV1: {} }), karts({ pistasV: 1, recordsV1: {} }), karts({ pistasV: "2", recordsV1: {} }),
+    karts({ pistasV: 2, recordsV1: { pradera: 5 } }), karts({ pistasV: 2, recordsV1: { "Pradera!": 61_000 } }),
+    karts({ pistasV: 2, recordsV1: Object.fromEntries(Array.from({ length: 33 }, (_, i) => ["pista-" + "abcdefghijklmnopqrstuvwxyzabcdefg"[i], 61_000])) }),
+  ];
+  for (const datos of malos) {
+    const r = await c.call("PUT", "/progreso/karts", "marisol@example.com", { v: 0, datos });
+    assertEquals([r.status, r.body.error], [400, "progreso_invalido"], JSON.stringify(datos));
+  }
+});
+
 Deno.test("progreso: validarProgreso acepta lo mínimo y rechaza llaves faltantes", () => {
   assert(validarProgreso("plataformas", plat()));
   assert(validarProgreso("karts", karts({ copaEnCurso: null, piezas: [], equipo: { chasis: "estandar", llantas: "estandar", color: "azul" } })));

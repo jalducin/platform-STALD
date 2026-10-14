@@ -1,10 +1,25 @@
 // Carreras de Arcade en partida (openspec: juegos-plataformas-karts): cada persona juega el mismo nivel o pista y
 // envía su tiempo una sola vez. Los límites deben coincidir con Arcade.LIMITE_SALA / MIN_SALA de juegos/arcade.js.
+// karts-pistas-grandes: en karts el mínimo y el límite son los de la pista de la sala. Para no copiar números, el
+// servidor importa las mismas definiciones que el juego (como server/personajes.ts importa juegos/personajes.js):
+// juegos/karts-pistas.js (trazados) y juegos/arcade.js (referencia y límites). Ninguno toca el DOM al cargar.
+import "../juegos/karts-pistas.js";
+import "../juegos/arcade.js";
 
-export const CARRERAS: Record<string, { minMs: number; limiteMs: number }> = {
-  plataformas: { minMs: 6_000, limiteMs: 240_000 },
-  karts: { minMs: 15_000, limiteMs: 300_000 },
+interface Limites { minMs: number; limiteMs: number }
+const ARCADE = (globalThis as unknown as { Arcade: { limitesKarts(id: string): Limites | null; LIMITE_SALA: Record<string, number>; MIN_SALA: Record<string, number> } }).Arcade;
+
+// Reglas generales por juego (karts: el menor mínimo y el mayor límite de sus pistas).
+export const CARRERAS: Record<string, Limites> = {
+  plataformas: { minMs: ARCADE.MIN_SALA.plataformas, limiteMs: ARCADE.LIMITE_SALA.plataformas },
+  karts: { minMs: ARCADE.MIN_SALA.karts, limiteMs: ARCADE.LIMITE_SALA.karts },
 };
+// Mínimo y límite de la carrera de una sala: en karts los de su pista (si se conoce); null si el juego no es carrera.
+export function reglasCarrera(juego: string, mapa?: string): Limites | null {
+  if (!CARRERAS[juego]) return null;
+  if (juego === "karts" && mapa) return ARCADE.limitesKarts(mapa) ?? CARRERAS.karts;
+  return CARRERAS[juego];
+}
 // Mapas de sala: niveles normales de los mundos jugables y pistas (igual que Arcade.mapaDeSala / PISTAS). El mapa
 // vive en sala.opciones.mapa para que la revancha lo herede.
 export const MAPAS_SALA: Record<string, string[]> = {
@@ -27,9 +42,10 @@ export interface Carrera {
 
 const entero = (x: unknown, min: number, max: number) => typeof x === "number" && Number.isInteger(x) && x >= min && x <= max;
 
-// Valida { ms, monedas } contra los límites del juego y el reloj del servidor (ahora − inicio). Devuelve la carrera o null.
-export function validarCarrera(juego: string, crudo: unknown, inicio: number, ahora: number): Carrera | null {
-  const reglas = CARRERAS[juego];
+// Valida { ms, monedas } contra los límites del juego (y de la pista) y el reloj del servidor (ahora − inicio).
+// Devuelve la carrera o null.
+export function validarCarrera(juego: string, crudo: unknown, inicio: number, ahora: number, mapa?: string): Carrera | null {
+  const reglas = reglasCarrera(juego, mapa);
   if (!reglas || !crudo || typeof crudo !== "object" || Array.isArray(crudo)) return null;
   const c = crudo as Record<string, unknown>;
   const k = Object.keys(c);
