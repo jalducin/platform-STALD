@@ -45,7 +45,7 @@ Deno.test("karts en vivo: una persona sola puede empezar y su tiempo se valida c
   const r = await c.call("POST", "/sala", correo("Marisol"), { juego: "karts", opciones: { mapa: "hielo" }, bots: true });
   const codigo = r.body.codigo;
   assertEquals((await c.call("POST", `/sala/${codigo}/empezar`, correo("Marisol"))).status, 200);
-  c.avanzar(5000 + 40_000);
+  c.avanzar(8000 + 40_000); // 8 s de cuenta regresiva en Karts (karts-salida-y-puntos)
   const malo = await c.call("POST", `/sala/${codigo}/respuesta`, correo("Marisol"), { carrera: { ms: 16_000, monedas: 1 } });
   assertEquals([malo.status, malo.body.error], [400, "carrera_invalida"], "16 s cuando van 40 s: no cuadra con el reloj");
   const bueno = await c.call("POST", `/sala/${codigo}/respuesta`, correo("Marisol"), { carrera: { ms: 39_500, monedas: 3 } });

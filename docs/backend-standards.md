@@ -92,7 +92,11 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     503 `conflicto_escritura` si no se guardó la sala o su anfitrión (en ese caso se borra la sala nueva).
   - `POST /juegos/sala/<código>/unirse`: 404 si no existe, 409 si ya empezó o está llena (30), 410 si
     venció (3 h), 503 `conflicto_escritura` si no se guardó (la persona no queda dentro).
-  - `POST /juegos/sala/<código>/empezar`: solo el host; fija `inicio` = ahora + 5 s. Relee la sala en cada intento:
+  - `GET /juegos/sala/<código>` trae `ahora` (hora del servidor al empezar a atender) y `reloj` (al responder; cambio
+    `karts-salida-y-puntos`): con las dos, la página acota su desfase con el servidor sin el tiempo de procesamiento
+    (`juegos/reloj-sala.js`).
+  - `POST /juegos/sala/<código>/empezar`: solo el host; fija `inicio` = ahora + 5 s (Karts: + 8 s, para que todos los
+    aparatos tengan abierta la pista antes de la salida; `cuentaRegresiva` en `server/salas.ts`). Relee la sala en cada intento:
     si otra petición ya la empezó responde esa sala (mismo `inicio`); 404 `sala_no_existe` si ya no existe; 503
     `conflicto_escritura` tras 3 choques (la sala sigue sin `inicio`).
   - `POST /juegos/sala/<código>/respuesta`:
@@ -106,14 +110,20 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       `Arcade.limitesKarts`, 25 % y 2.5 veces su referencia, ≈ 30 s y 300–340 s; cambio `karts-pistas-grandes`, el
       servidor importa `juegos/karts-pistas.js` y `juegos/arcade.js`), o `null` si no terminó; además debe cuadrar
       con el reloj del servidor (`ms ≤ ahora − inicio + 3 s` y `ms ≥ ahora − inicio − 20 s`); `monedas` 0–999. Si no,
-      400 `carrera_invalida`. Solo cuenta el primer envío (`carrera` del jugador, con su hora `t`).
+      400 `carrera_invalida`. Solo cuenta el primer envío (`carrera` del jugador, con su hora `t`). Con `ms: null` puede
+      venir `avance` (entero 0–999, ‰ de la carrera recorrido; cambio `karts-salida-y-puntos`). En `POST
+      /juegos/partida` de una carrera suelta en sala, los puntos los calcula el servidor (`rankingCarreraSala`, con
+      `Arcade.podioCarrera`: orden de llegada; quien no terminó, después por su avance; 500, 440, 380… por lugar, 0 si
+      no terminó; sin monedas) e ignora los de la página; si falta el tiempo de alguien y no vence el límite + la
+      gracia, 409 `carrera_en_curso` (no guarda; la página reintenta).
     - copa completa de Karts (cambio `karts-copa-en-sala`, `server/karts_copa.ts`; reglas en `juegos/karts-copa.js`, que
       importa el servidor): la sala se crea con `opciones { modo: "copa", copa }` (400 `copa_invalida` /
       `modo_invalido`) y cada carrera se reporta con `{ copa: { carrera 0–3, ms, monedas } }` o
       `{ copa: { carrera, abandono: true } }`: solo la carrera abierta y ya empezada (409 `carrera_fuera_de_turno` /
       `carrera_cerrada`), validada como una carrera suelta desde el inicio de esa carrera y con su pista. `GET /sala`,
       la respuesta y Realtime traen `copa` (fase, carrera, calendario, resultados y tabla). En `POST /juegos/partida`
-      de una sala de copa, los puntos se topan con los de la tabla del servidor (tope 2000).
+      de una sala de copa, los puntos se topan con los de la tabla del servidor: por el lugar final en la copa, 4 ×
+      `Arcade.puntosLugar` (2000, 1760, 1520…; 0 sin puntos de copa; cambio `karts-salida-y-puntos`).
     - juegos para salas grandes (cambio `juegos-salas-grandes`; reglas en `server/salas_grandes.ts`, ganchos
       `// juegos-salas-grandes` en `server/salas.ts`):
       - **Bingo** `{ bingo: true }`: el servidor revisa la figura (`opciones.figura`: `linea`, `esquinas`, `lleno`) del

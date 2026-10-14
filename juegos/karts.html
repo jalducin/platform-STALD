@@ -251,7 +251,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 </div>
 <script src="mando.js?v=2"></script>
 <script src="karts-pistas.js?v=4"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
-<script src="arcade.js?v=5"></script>
+<script src="arcade.js?v=6"></script>
 <script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script src="en-vivo.js?v=1"></script> <!-- juegos-en-vivo: karts de las demás personas de la sala -->
@@ -647,7 +647,7 @@ function pintarTextura(id, r, W, H) {
   // Casillas de salida.
   c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 2;
   for (let slot = 0; slot < 8; slot++) {
-    const fila = Math.floor(slot / 2), lado = slot % 2 ? 0.42 : -0.42, i = N - 4 - fila * 5, p = punto(i, lado * mitad), a = M.pts[(i + N) % N].a;
+    const { i, lado } = casillaSalida(slot), p = punto(i, lado), a = M.pts[(i + N) % N].a; // karts-salida-y-puntos
     c.save(); c.translate(p.x, p.y); c.rotate(a); c.beginPath(); c.moveTo(14, -11); c.lineTo(17, -11); c.lineTo(17, 11); c.lineTo(14, 11); c.stroke(); c.restore();
   }
   // Línea de meta a cuadros (3 filas).
@@ -1389,12 +1389,17 @@ function migrarRecords(pr) {
 // El aviso cabe en una línea de celular: dos avisos cortos seguidos.
 const AVISO_PISTAS = ['🏁 ¡Pistas 3 veces más grandes!', 'Tus récords de antes: «pista chica»'];
 
+// karts-salida-y-puntos: casilla de salida en muestras de la pista (índice antes de la meta) y lado en px, a partir de
+// la parrilla fija en píxeles de Arcade.parrilla (filas de 2 a 48 px; lados a ±24 px), igual en las 8 pistas.
+function casillaSalida(slot) {
+  const c = A.parrilla(slot);
+  return { i: N - Math.round(c.atras / M.paso), lado: c.lado };
+}
 function nuevoKart(id, nombre, color, humano, slot, personaje) {
-  const fila = Math.floor(slot / 2), lado = slot % 2 ? 0.42 : -0.42;
-  const i = N - 4 - fila * 5;
-  const p = punto(i, lado * pista.mitad);
-  return { id, nombre, color, humano, num: slot + 1, x: p.x, y: p.y, ang: M.pts[(i + N) % N].a, vx: 0, vy: 0, vel: 0, idx: (i + N) % N, vuelta: -1, mitadOk: true, termino: null,
-    item: null, monedas: 0, turbo: 0, giro: 0, estrella: 0, rayo: 0, derrape: null, skill: 1, carril: lado * pista.mitad, carrilT: 0, ahogado: 0, fantasma: false, msObjetivo: 0, usoT: 0, volante: 0, turboNivel: 0,
+  const { i, lado } = casillaSalida(slot);
+  const p = punto(i, lado);
+  return { id, nombre, color, humano, num: slot + 1, x: p.x, y: p.y, casilla: { x: Math.round(p.x), y: Math.round(p.y) }, ang: M.pts[(i + N) % N].a, vx: 0, vy: 0, vel: 0, idx: (i + N) % N, vuelta: -1, mitadOk: true, termino: null,
+    item: null, monedas: 0, turbo: 0, giro: 0, estrella: 0, rayo: 0, derrape: null, skill: 1, carril: lado, carrilT: 0, ahogado: 0, fantasma: false, msObjetivo: 0, usoT: 0, volante: 0, turboNivel: 0,
     personaje: Personajes.normalizar(personaje) };
 }
 const puntaje = k => k.termino !== null ? 1e9 - k.termino : (k.vuelta * N + k.idx);
@@ -1423,9 +1428,10 @@ function prepararCarrera(id, opciones) {
     });
     opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, opciones.humanos.length + k, perFantasma(k)); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
   } else if (opciones.sala) {
-    yo = nuevoKart('yo', 'Tú', colorYo, true, 1, perYo);
+    // Respaldo sin canal (las demás personas no se dibujan): tú adelante y los fantasmas detrás (karts-salida-y-puntos).
+    yo = nuevoKart('yo', 'Tú', colorYo, true, 0, perYo);
     karts.push(yo);
-    opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, k === 0 ? 0 : 2 + k, perFantasma(k)); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
+    opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, 1 + k, perFantasma(k)); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
   } else {
     const r = A.rng(id + '|' + (opciones.ronda || 0), 'rivales');
     const dif = (opciones.dif || 95) / 100;
@@ -1784,6 +1790,7 @@ function paso(dt) {
 // Antes de la salida: anota cuándo aceleraste (para el súper arranque) y canta 3, 2, 1.
 function cuentaRegresiva(ahora) {
   const falta = (carreraDe.inicioLocal - ahora) / 1000;
+  if (vivo) mostrarPresentes(); // karts-salida-y-puntos: en la parrilla ya se ve a quien está conectado, en su casilla
   quitarCopaAntes(falta); // karts-copa-en-sala
   if ((pulso.derrape || pulso.acel) && arranque.presiono === null) arranque.presiono = -falta;
   pulso.derrape = false; pulso.item = false; pulso.acel = false;
@@ -1956,8 +1963,11 @@ function empezarCopa(nueva) {
 function iniciarCarrera(id, op) {
   // Con el sensor elegido: se activa (o se centra) dentro del mismo toque que arranca la carrera.
   if (control === 'sensor' && TACTIL) activarSensor();
+  // karts-salida-y-puntos: la hora de salida se fija ANTES de preparar la pista: pintar una pista grande tarda hasta
+  // segundos en un celular y, contado después, cada aparato salía tarde según lo lento que fuera.
+  const salida = performance.now() + (op.sala ? op.inicioEn : 0);
   prepararCarrera(id, op);
-  carreraDe = { copa: !!op.copa, inicioLocal: performance.now() + (op.sala ? op.inicioEn : 3200), salio: false, ultimoNum: null };
+  carreraDe = { copa: !!op.copa, inicioLocal: op.sala ? salida : performance.now() + 3200, salio: false, ultimoNum: null, listoEn: Date.now() };
   avisar(pista.emoji + ' ' + pista.nombre + (op.copa ? ' · carrera ' + (op.ronda + 1) + ' de 4' : ''), 2200);
   revesT = 0; revesAviso = -10;
   if (!(op.sala && sala && sala.copa && sala.copa.k > 0)) mostrarTutorial(); // karts-copa-en-sala: solo en la carrera 1 de la copa
@@ -2107,7 +2117,9 @@ function empezarSala(d) {
   sala = { mapa: d.mapa, enviado: false, copa };
   if (!copa || copa.k === 0 || !personaje) personaje = personajeDeInicio(d); // personaje-en-salas (en la copa: el de la carrera 1, toda la copa)
   const humanos = humanosDeSala(d), enVivo = !!d.vivo && humanos.length > 1 && humanos.some(h => h.id === d.yo) && !!window.EnVivo;
-  iniciarCarrera(d.mapa, { sala: true, bots: d.bots || [], inicioEn: Number(d.inicioEn || 0), vivo: enVivo, humanos, yo: d.yo });
+  // karts-salida-y-puntos: la salida a la hora del aparato que manda la página (reloj común); si no viene, inicioEn.
+  const inicioEn = Number.isFinite(d.salidaLocal) ? d.salidaLocal - Date.now() : Number(d.inicioEn || 0);
+  iniciarCarrera(d.mapa, { sala: true, bots: d.bots || [], inicioEn, vivo: enVivo, humanos, yo: d.yo });
   if (copa) mostrarCopaAntes(copa);
   if (carreraDe.inicioLocal < performance.now()) avisar('La carrera ya empezó: ¡arranca!', 1600);
   if (enVivo && vivo) vivo.ritmo('k', 2); // karts-copa-en-sala: el canal sigue abierto entre carreras
@@ -2157,7 +2169,9 @@ function terminarSala(ms) {
   if (sala.enviado) return;
   if (vivo) vivo.enviarYa('k', kartVivo()); // juegos-en-vivo: los demás te ven llegar antes de que se cierre el juego
   sala.enviado = true; motorOn(false);
-  enviar({ tipo: 'meta', ms, monedas: yo.monedas, ...(sala.copa ? { carrera: sala.copa.k } : {}) }); // karts-copa-en-sala: de qué carrera
+  // karts-salida-y-puntos: si no llegó, hasta dónde llegó (‰ de la carrera) para ordenar a quien no terminó.
+  const avance = ms === null ? Math.max(0, Math.min(999, Math.floor(1000 * Math.max(0, yo.vuelta * N + yo.idx) / (vueltasPista() * N)))) : undefined;
+  enviar({ tipo: 'meta', ms, monedas: yo.monedas, ...(avance === undefined ? {} : { avance }), ...(sala.copa ? { carrera: sala.copa.k } : {}) }); // karts-copa-en-sala: de qué carrera
   modo = 'resultados'; $('hud').classList.add('hide');
   if (sala.copa) { // karts-copa-en-sala: la página manda la tabla con quién falta
     $('copa-titulo').textContent = ms === null ? '⏰ Se acabó el tiempo' : '🏁 ¡Llegaste!';
@@ -2210,6 +2224,9 @@ function kartVivo() {
 // ¡YA!: ritmo de carrera y, en la parrilla, quien ya está conectado aunque todavía no llegue su primer estado.
 function vivoAlSalir() {
   vivo.ritmo('k', ritmoVivo(karts.filter(k => k.humano || k.remoto).length));
+  mostrarPresentes();
+}
+function mostrarPresentes() {
   const presentes = vivo.presencia();
   for (const k of karts) if (k.remoto && !k.visible && presentes.includes(k.id)) k.visible = true;
 }
@@ -2689,9 +2706,18 @@ if (PRUEBA) {
     remotos: karts.filter(k => k.remoto).map(remotoPrueba), yoColor: yo && yo.color,
     tablaVivo: $('vivo-tabla').hidden ? null : $('vivo-tabla').textContent, aviso: $('aviso').textContent,
   });
+  // karts-salida-y-puntos: dónde va tu kart, a qué hora (del aparato) arrancó y tuvo lista la pista, y la casilla de
+  // salida de cada persona.
+  const estadoSalida = () => {
+    const r = { casillas: karts.filter(k => k.humano || k.remoto).map(k => ({ id: k.remoto ? k.id : null, ...k.casilla })), salidaEn: null, listoEn: null };
+    if (yo) Object.assign(r, { yoX: Math.round(yo.x), yoY: Math.round(yo.y), avance: yo.vuelta * N + yo.idx });
+    if (carreraDe) Object.assign(r, { salidaEn: Math.round(Date.now() - performance.now() + carreraDe.inicioLocal), listoEn: carreraDe.listoEn });
+    return r;
+  };
   // Ganchos solo para pruebas E2E (?prueba=1).
   window.__karts = {
-    estado: () => ({ modo, pista: pista && pista.id, vuelta: yo ? yo.vuelta : null, pos: yo ? posDe(yo) : null, monedas: yo ? yo.monedas : 0, tiempo: Math.round(tCarrera * 1000), termino: yo ? yo.termino : null, turbo: yo ? yo.turbo : 0, ultimoTurbo, prog: structuredClone(prog), sala: !!sala, karts: karts.length, vel: yo ? Math.round(yo.vel) : 0, lw: LW, lh: LH,
+    estado: () => ({ modo, pista: pista && pista.id, ...estadoSalida(),
+      vuelta: yo ? yo.vuelta : null, pos: yo ? posDe(yo) : null, monedas: yo ? yo.monedas : 0, tiempo: Math.round(tCarrera * 1000), termino: yo ? yo.termino : null, turbo: yo ? yo.turbo : 0, ultimoTurbo, prog: structuredClone(prog), sala: !!sala, karts: karts.length, vel: yo ? Math.round(yo.vel) : 0, lw: LW, lh: LH,
       ang: yo ? yo.ang : 0, giro: leerEntrada().giro, freno: leerEntrada().freno, derrape: activo('derrape'), acel: acelModo, acelera: leerEntrada().acel,
       vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
       item: yo ? yo.item : null, mando: mando.estado(), aire: yo ? yo.aire || 0 : 0, eventos: { ...eventos }, zonas: zonas.map(z => z.tipo),

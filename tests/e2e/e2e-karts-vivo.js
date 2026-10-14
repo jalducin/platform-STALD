@@ -342,9 +342,120 @@ async function copaEnSala(b, relevo) {
   for (const q of pags) await q.context().close();
 }
 
+// karts-salida-y-puntos: el profe vio que en la sala los karts salían lejos unos de otros y que, aunque Montecillo cruzó
+// la meta primero, a él le dieron más puntos. Causa: cada aparato arrancaba con su propio desfase de reloj (la última
+// respuesta del servidor, sin descontar procesamiento ni red; y contaba la salida después de pintar la pista) y su tiempo
+// se medía desde SU salida. Aquí, a una persona le llegan las respuestas de GET /juegos/sala 1.5 s tarde (después de la
+// primera, como un celular con mala señal): aun así su reloj coincide con el del servidor, arrancan a la misma hora, se
+// ven pegados en la parrilla, y quien cruza la meta 0.8 s antes es 1.º del podio con más puntos (los del servidor).
+const RETRASO_MS = 1500;
+const SALA_GET = /\/juegos\/sala\/[A-Z]{4}(\?|$)/;
+// A partir de que se pone `lento.si = true`, las respuestas de GET /juegos/sala le llegan a esta página RETRASO_MS tarde.
+async function redLenta(p) {
+  const lento = { si: false };
+  await p.route(u => SALA_GET.test(u.href), async route => {
+    if (!lento.si || route.request().method() !== 'GET') return route.continue();
+    const resp = await route.fetch();
+    await sleep(RETRASO_MS);
+    return route.fulfill({ response: resp });
+  });
+  return lento;
+}
+const posYo = e => ({ x: e.yoX, y: e.yoY });
+// En CADA pantalla, cuando su reloj de carrera pasa `ms` (con los demás ya a la vista): la mayor distancia entre su
+// kart y los de las demás personas tal como los dibuja (una sola lectura, sin desfase entre páginas) y a qué hora del
+// aparato arrancó (las páginas comparten el reloj de la máquina: así se compara la salida de cada una).
+async function separacionEnPantallas(frames, ms) {
+  const n = frames.length - 1;
+  const lecturas = await Promise.all(frames.map(fr => fr.waitForFunction(([ms, n]) => {
+    const e = window.__karts.estado();
+    const listo = e.modo === 'carrera' && e.remotos.length === n && e.remotos.every(r => r.visible) && e.tiempo >= ms;
+    if (!listo) return false;
+    return { t: e.tiempo, d: Math.round(Math.max(...e.remotos.map(r => Math.hypot(r.x - e.yoX, r.y - e.yoY)))), salidaEn: e.salidaEn, listo: e.listoEn - e.salidaEn };
+  }, [ms, n], { timeout: 30000 }).then(h => h.jsonValue()).catch(() => fr.evaluate(() => { const e = window.__karts.estado(); return { fallo: true, modo: e.modo, t: e.tiempo, visibles: e.remotos.map(r => r.visible), salidaEn: e.salidaEn, ahora: Date.now() }; }).catch(() => ({ fallo: true })))));
+  const ok2 = lecturas.every(l => !l.fallo);
+  const salidas = ok2 ? lecturas.map(l => l.salidaEn) : [];
+  return { ok: ok2, max: ok2 ? Math.max(...lecturas.map(l => l.d)) : Infinity, desfaseSalida: ok2 ? Math.max(...salidas) - Math.min(...salidas) : null, lecturas };
+}
+// Sala de karts en `mapa` con `pags` (la 1.ª la crea); a las páginas de `lentas` les llegan tarde las respuestas.
+async function salaConRedLenta(pags, lentas, mapa) {
+  const lentos = [];
+  for (const k of lentas) lentos.push(await redLenta(pags[k])); // NOSONAR: en orden
+  const codigo = await crearSala(pags[0], mapa);
+  for (const p of pags.slice(1)) await unirse(p, codigo); // NOSONAR: entran en orden
+  await sleep(2500);
+  lentos.forEach(l => { l.si = true; });
+  await sleep(2500); // ya recibieron respuestas lentas
+  await pags[0].click('[data-p="empezar"]');
+  const frames = await enCarrera(pags);
+  // Servidor y navegador corren en la misma máquina: el desfase verdadero es 0.
+  const desfases = await Promise.all(pags.map(p => p.evaluate(() => Math.round(sala.offset))));
+  ok('reloj común en ' + mapa + ': el desfase estimado de cada aparato es ≈ 0 (< 100 ms) aunque la red sea lenta', desfases.every(d => Math.abs(d) < 100), desfases.join(','));
+  return { codigo, frames };
+}
+async function salidaYPodio(b, relevo) {
+  // 1) Volcán (pista grande): Marisol de pie, Angel de lado con la red lenta.
+  const [m, a] = [await jugador(b, 'marisol@example.com', relevo), await jugador(b, 'angel@example.com', relevo, HORIZONTAL)];
+  const { codigo, frames } = await salaConRedLenta([m, a], [1], 'volcan');
+  await m.screenshot({ path: 'karts-salida-volcan-cuenta-390.png' });
+  // Recién arrancan (aceleran solos): cada pantalla ve a la otra persona junto a su kart.
+  const parrilla = await separacionEnPantallas(frames, 800);
+  await m.screenshot({ path: 'karts-salida-volcan-390.png' });
+  await a.screenshot({ path: 'karts-salida-volcan-844x390.png' });
+  ok('salida: en la parrilla las 2 personas van en la 1.ª fila, juntas (< 60 px en las dos pantallas)', parrilla.ok && parrilla.max < 60, JSON.stringify(parrilla));
+  ok('salida pareja con red lenta: los 2 aparatos arrancan a la misma hora (< 150 ms)', parrilla.ok && parrilla.desfaseSalida < 150, 'desfase=' + parrilla.desfaseSalida + ' ms');
+  await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
+  await sleep(3000);
+  const [vm, va] = await Promise.all(frames.map(estado));
+  const visto = vm.remotos[0];
+  ok('salida pareja: en la pantalla de Marisol, Angel va donde de verdad va (< 120 px)', visto && distancia(visto, posYo(va)) < 120, JSON.stringify({ visto: visto && { x: visto.x, y: visto.y }, propio: posYo(va) }));
+  // Marisol cruza la meta 0.8 s antes que Angel (menos que el 1.5 s de la red lenta).
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 36000, null, { timeout: 90000 })));
+  await frames[0].evaluate(() => window.__karts.adelantar());
+  await frames[0].waitForFunction(() => window.__karts.estado().termino !== null, null, { timeout: 10000 });
+  await sleep(800);
+  await frames[1].evaluate(() => window.__karts.adelantar());
+  await Promise.all([m, a].map(p => p.waitForSelector('#p-body .result', { timeout: 60000 })));
+  await Promise.all([m, a].map(p => p.waitForFunction(() => /\+\d+ a tus puntos|ya estaba guardada|No se guardó/.test((document.getElementById('p-guardado') || {}).textContent || ''), null, { timeout: 40000 }).catch(() => {})));
+  const vista = await (await fetch(API + '/juegos/sala/' + codigo + '?email=marisol%40example.com')).json();
+  const ms = Object.fromEntries(vista.jugadores.map(j => [j.nombre, j.carrera ? j.carrera.ms : null]));
+  ok('meta: el tiempo de Marisol (llegó primero) es menor que el de Angel', ms.Marisol !== null && ms.Angel !== null && ms.Marisol < ms.Angel, JSON.stringify(ms));
+  const [tm, ta] = await Promise.all([m, a].map(p => p.textContent('#p-body .result')));
+  const [gm, ga] = await Promise.all([m, a].map(p => p.textContent('#p-guardado')));
+  const pts = t => Number((/\+(\d+)/.exec(t) || [])[1]);
+  ok('podio: Marisol 1.ª y Angel 2.º en las dos pantallas', /lugar 1 de 3/.test(tm) && /lugar 2 de 3/.test(ta), tm.slice(0, 80) + ' | ' + ta.slice(0, 80));
+  ok('podio: la ganadora recibe más puntos (500 contra 440, del servidor)', pts(gm) === 500 && pts(ga) === 440, gm + ' | ' + ga);
+  await sleep(3000); // el podio se revela con suspenso
+  await m.screenshot({ path: 'karts-salida-podio-390.png', fullPage: true });
+  await a.screenshot({ path: 'karts-salida-podio-844x390.png' });
+  for (const p of [m, a]) await p.context().close();
+  // 2) Teotihuacan (mesoamericana): 3 personas; Angel y Laura con la red lenta.
+  const ps = [await jugador(b, 'marisol@example.com', relevo), await jugador(b, 'angel@example.com', relevo, HORIZONTAL), await jugador(b, 'laura@example.com', relevo)];
+  const { frames: f2 } = await salaConRedLenta(ps, [1, 2], 'teotihuacan');
+  await ps[0].screenshot({ path: 'karts-salida-teotihuacan-390.png' });
+  await ps[1].screenshot({ path: 'karts-salida-teotihuacan-844x390.png' });
+  // Casillas de las 3 personas en cada pantalla: pegadas (1.ª fila y 2.ª fila) e iguales en los 3 aparatos (orden de la sala).
+  const ids2 = await Promise.all(ps.map(yoDe));
+  const es2 = await Promise.all(f2.map(estado));
+  const casillas = es2.map((e, k) => Object.fromEntries(e.casillas.map(c => [c.id || ids2[k], c.x + ',' + c.y])));
+  const pares = cs => { const v = Object.values(cs).map(s => s.split(',').map(Number)); let m = 0; for (const a of v) for (const b of v) m = Math.max(m, Math.hypot(a[0] - b[0], a[1] - b[1])); return Math.round(m); };
+  ok('salida de 3 en Teotihuacan: las 3 casillas pegadas (< 80 px entre cualquier par) en cada pantalla', es2.every(e => e.pista === 'teotihuacan') && casillas.every(cs => Object.keys(cs).length === 3 && pares(cs) < 80), JSON.stringify(casillas));
+  ok('salida de 3: cada persona sale de la misma casilla en las 3 pantallas', ids2.every(id => casillas.every(cs => cs[id] === casillas[0][id])), JSON.stringify(casillas[0]));
+  const p2 = await separacionEnPantallas(f2, 800);
+  ok('salida de 3 con red lenta: arrancan a la misma hora (< 150 ms)', p2.ok && p2.desfaseSalida < 150, 'desfase=' + p2.desfaseSalida + ' ms');
+  out.push('INFO salida de 3: distancia en pantalla al poder leerla (quien abre la pista tarde sale de su casilla tarde) ' + JSON.stringify(p2.lecturas));
+  for (const p of ps) await p.context().close();
+}
+
 (async () => {
   const relevo = await levantarRelevo();
   const b = await chromium.launch({ executablePath: process.env.CHROME || undefined, args: ['--disable-renderer-backgrounding', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows'] });
+  if (process.env.KARTS_VIVO_SOLO === 'salida') { // karts-salida-y-puntos: solo esta parte (para iterar)
+    await salidaYPodio(b, relevo);
+    await b.close(); await relevo.cerrar();
+    console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   const { pags, frames, lista, correos } = await salaDe8(b, relevo);
   const r = await revisarVivo(pags, frames, relevo, lista);
   await terminarTodos(pags, frames);
@@ -354,6 +465,7 @@ async function copaEnSala(b, relevo) {
   await personajesEnSala(b, relevo); // personaje-en-salas
   await respaldo(b, relevo);
   await copaEnSala(b, relevo); // karts-copa-en-sala
+  await salidaYPodio(b, relevo); // karts-salida-y-puntos
   await b.close(); await relevo.cerrar();
   console.log(out.join('\n'));
   console.log('RESUMEN fps(8 en vivo) libre=' + fps.libre + ' CPU×4=' + fps.lento + ' mensajes/s(sala de 8)=' + r.porSeg.toFixed(1));

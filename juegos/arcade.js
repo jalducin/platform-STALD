@@ -133,7 +133,31 @@
     const f = bot.factor[0] + r() * (bot.factor[1] - bot.factor[0]);
     return Math.round(refDe(juego, mapa) * f / 10) * 10;
   }
-  const puntosLugar = lugar => Math.max(50, 500 - 75 * (lugar - 1));
+  // Puntos de partida por lugar en una carrera de sala (karts-salida-y-puntos): estrictamente decrecientes en los 8
+  // lugares posibles (500, 440, 380, 320, 260, 200, 140, 80); no terminar = 0 (lo decide podioCarrera).
+  const puntosLugar = lugar => Math.max(20, 500 - 60 * (lugar - 1));
+  // Podio de una carrera suelta de sala (karts y Axo), igual en la página y en el servidor (server/carreras.ts).
+  // filas: [{ id, ms (null = no terminó), t? (hora del servidor al recibirlo), avance? (‰, solo si no terminó) }].
+  // Con el reloj común (juegos/reloj-sala.js), ms = hora en que cruzó la meta − salida común: el orden es el de
+  // llegada. Empate: quien lo reportó antes y luego el id. Quien no terminó va después, por su avance (sin dato, al
+  // final) y el id. Devuelve copias con `lugar` y `total` (puntos de partida; las monedas no cuentan en la sala).
+  function podioCarrera(filas) {
+    const termino = f => f.ms !== null && f.ms !== undefined;
+    const porId = (a, b) => (String(a.id) < String(b.id) ? -1 : Number(String(a.id) > String(b.id)));
+    const t = f => (Number.isFinite(f.t) ? f.t : 0);
+    const av = f => (Number.isInteger(f.avance) ? f.avance : -1);
+    const llegaron = filas.filter(termino).sort((a, b) => a.ms - b.ms || t(a) - t(b) || porId(a, b));
+    const no = filas.filter(f => !termino(f)).sort((a, b) => av(b) - av(a) || porId(a, b));
+    return llegaron.concat(no).map((f, i) => ({ ...f, lugar: i + 1, total: termino(f) ? puntosLugar(i + 1) : 0 }));
+  }
+  // Parrilla de salida de Karts (karts-salida-y-puntos): casilla `slot` a `atras` px detrás de la meta (filas de 2 a
+  // 48 px, ≈ 1.7 karts; la 1.ª a 32 px) y a `lado` px del centro del camino (±24). Fija en píxeles: no depende del
+  // tamaño de la pista ni de su muestreo; karts.html la convierte a muestras con el paso de la pista.
+  const PARRILLA = { delante: 32, fila: 48, lado: 24 };
+  const parrilla = slot => {
+    const fila = Math.floor(slot / 2);
+    return { fila, atras: PARRILLA.delante + fila * PARRILLA.fila, lado: slot % 2 ? PARRILLA.lado : -PARRILLA.lado };
+  };
   function nombreMapa(juego, mapa) {
     if (juego === 'plataformas') { const [m] = String(mapa).split('-').map(Number); const mu = MUNDOS[m - 1]; return mu ? mu.emoji + ' ' + mu.nombre + ' · nivel ' + mapa : mapa; }
     const p = pistaPorId(mapa); return p ? p.emoji + ' ' + p.nombre : mapa;
@@ -153,5 +177,6 @@
     TILE, TRAMO, FILAS, VEL_AXO, NIVELES_POR_MUNDO, MUNDOS, MUNDOS_JUGABLES, tramosDe, esCastillo, anchoNivel, refPlataformas,
     VEL_KART, VUELTAS, PISTAS, pistaPorId, muestrearPista, vueltasDe, refKarts, limitesKarts, PUNTOS_COPA,
     LIMITE_SALA, MIN_SALA, limiteSala, GRACIA_SALA, BOTS_SALA, mapaDeSala, refDe, tiempoBot, puntosLugar, nombreMapa, formatoTiempo,
+    podioCarrera, PARRILLA, parrilla, // karts-salida-y-puntos
   };
 })(typeof window !== 'undefined' ? window : globalThis);

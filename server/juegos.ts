@@ -12,6 +12,7 @@ import { crearMemo } from "./cache.ts";
 import { leerCarpeta } from "./db.ts";
 import { CATALOGO_CLASICOS_RAPIDOS } from "./clasicos_rapidos.ts"; // clasicos-rapidos
 import { topeRankingCopa } from "./karts_copa.ts"; // karts-copa-en-sala
+import { CARRERAS, rankingCarreraSala } from "./carreras.ts"; // karts-salida-y-puntos
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -485,6 +486,24 @@ async function resumenAdmin(c: CtxJugador): Promise<Response> {
   return json({ semana: l, jugadores, salas: await resumenSalas(store, l), catalogo });
 }
 
+const enteroEn = (v: unknown, max: number) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
+// Puntos de una partida de sala (la sala existe, es de este juego, ya empezó y el jugador está dentro): en una copa de
+// Karts, a lo más los de la tabla del servidor (karts-copa-en-sala); en una carrera suelta (karts o Axo), los del podio
+// del servidor (karts-salida-y-puntos; 409 carrera_en_curso si falta alguien); en lo demás, los de la página con tope.
+async function puntosDeSala(c: CtxJugador, juego: string, sala: string, puntos: unknown): Promise<number | Response> {
+  const { jugador, store, ahora, json } = c;
+  if (!/^[A-Z]{4}$/.test(sala)) return json({ error: "sala_invalida" }, 400);
+  const sd = (await store.get<{ juego: string; inicio: number | null }>(`juegos/salas/${sala}/sala.json`))?.data;
+  if (!sd || sd.juego !== juego || sd.inicio === null) return json({ error: "sala_invalida" }, 400);
+  if (!(await store.get(`juegos/salas/${sala}/${jugador.id}.json`))) return json({ error: "no_en_sala" }, 403);
+  const t = Date.parse(ahora);
+  const topeCopa = juego === "karts" ? await topeRankingCopa(store, sala, jugador.id, t) : null;
+  if (topeCopa !== null) return enteroEn(puntos, topeCopa);
+  const delServidor = juego in CARRERAS ? await rankingCarreraSala(store, sala, jugador.id, t) : null;
+  if (delServidor === "en_curso") return json({ error: "carrera_en_curso" }, 409);
+  return delServidor ?? enteroEn(puntos, MAX_SALA);
+}
+
 // POST /juegos/partida → guardar puntos (con tope) y actualizar el mejor por juego
 async function guardarPartida(c: CtxJugador): Promise<Response> {
   const { req, jugador, store, ahora, lunes, json } = c;
@@ -494,19 +513,12 @@ async function guardarPartida(c: CtxJugador): Promise<Response> {
   const def = CATALOGO[juego];
   if (!def) return json({ error: "juego_invalido" }, 400);
   if (typeof body.puntos !== "number" || !Number.isFinite(body.puntos)) return json({ error: "puntos_invalidos" }, 400);
-  const entero = (v: unknown, max: number) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
-  // Partida de sala: la sala existe, es de este juego, ya empezó y el jugador está dentro.
+  const entero = enteroEn;
   const sala = body.sala === undefined ? null : String(body.sala);
-  if (sala !== null) {
-    if (!/^[A-Z]{4}$/.test(sala)) return json({ error: "sala_invalida" }, 400);
-    const sd = (await store.get<{ juego: string; inicio: number | null }>(`juegos/salas/${sala}/sala.json`))?.data;
-    if (!sd || sd.juego !== juego || sd.inicio === null) return json({ error: "sala_invalida" }, 400);
-    if (!(await store.get(`juegos/salas/${sala}/${jugador.id}.json`))) return json({ error: "no_en_sala" }, 403);
-  }
-  // karts-copa-en-sala: en una copa de Karts, a lo más lo que le da la tabla del servidor (tope 2000).
-  const topeCopa = sala !== null && juego === "karts" ? await topeRankingCopa(store, sala, jugador.id, Date.parse(ahora)) : null;
+  const puntos = sala === null ? entero(body.puntos, def.max) : await puntosDeSala(c, juego, sala, body.puntos);
+  if (puntos instanceof Response) return puntos;
   const nueva: Partida = {
-    juego, puntos: entero(body.puntos, topeCopa ?? (sala ? MAX_SALA : def.max)), ...(sala ? { modo: "sala" as const, sala } : {}), aciertos: entero(body.aciertos, 1000), total: entero(body.total, 1000),
+    juego, puntos, ...(sala ? { modo: "sala" as const, sala } : {}), aciertos: entero(body.aciertos, 1000), total: entero(body.total, 1000),
     segundos: entero(body.segundos, 36000), en: ahora,
   };
   const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
