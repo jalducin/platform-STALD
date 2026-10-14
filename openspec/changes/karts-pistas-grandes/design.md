@@ -49,7 +49,7 @@
 
 ### 2. Vueltas: 2 en todas las pistas
 - Con 3 vueltas la referencia sería de 3 a 3.3 min por carrera y una copa de 4 carreras pasaría de 13 min (más la
-  espera entre carreras en sala). Con **2 vueltas** la referencia queda entre 1:59.7 (Pradera) y 2:12.6 (Volcán): una
+  espera entre carreras en sala). Con **2 vueltas** la referencia queda entre 1:59.6 (Pradera) y 2:12.5 (Volcán): una
   persona tarda ≈ 2 a 2.5 min y una copa ≈ 9 a 11 min, dentro de la meta del profe (2–3 min por carrera, copa de
   10–12 min). Cada pista lleva `vueltas: 2` en `juegos/karts-pistas.js` y `Arcade.vueltasDe(id)` la lee (por si algún
   día una pista necesita otra cantidad); `VUELTAS` se queda como valor por omisión (2).
