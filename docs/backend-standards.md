@@ -107,6 +107,13 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       servidor importa `juegos/karts-pistas.js` y `juegos/arcade.js`), o `null` si no terminó; además debe cuadrar
       con el reloj del servidor (`ms ≤ ahora − inicio + 3 s` y `ms ≥ ahora − inicio − 20 s`); `monedas` 0–999. Si no,
       400 `carrera_invalida`. Solo cuenta el primer envío (`carrera` del jugador, con su hora `t`).
+    - copa completa de Karts (cambio `karts-copa-en-sala`, `server/karts_copa.ts`; reglas en `juegos/karts-copa.js`, que
+      importa el servidor): la sala se crea con `opciones { modo: "copa", copa }` (400 `copa_invalida` /
+      `modo_invalido`) y cada carrera se reporta con `{ copa: { carrera 0–3, ms, monedas } }` o
+      `{ copa: { carrera, abandono: true } }`: solo la carrera abierta y ya empezada (409 `carrera_fuera_de_turno` /
+      `carrera_cerrada`), validada como una carrera suelta desde el inicio de esa carrera y con su pista. `GET /sala`,
+      la respuesta y Realtime traen `copa` (fase, carrera, calendario, resultados y tabla). En `POST /juegos/partida`
+      de una sala de copa, los puntos se topan con los de la tabla del servidor (tope 2000).
     - juegos para salas grandes (cambio `juegos-salas-grandes`; reglas en `server/salas_grandes.ts`, ganchos
       `// juegos-salas-grandes` en `server/salas.ts`):
       - **Bingo** `{ bingo: true }`: el servidor revisa la figura (`opciones.figura`: `linea`, `esquinas`, `lleno`) del

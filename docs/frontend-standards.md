@@ -166,7 +166,10 @@ Cada página debe manejar y mostrar de forma explícita:
     `karts-pistas-grandes`: vueltas ≈ 3 veces más largas (2.9–3.0×, radio mínimo ≥ el de antes, caja ≤ 12.6 M px),
     `vueltas` por pista (`Arcade.vueltasDe`, 2 en las 8; nunca `Arcade.VUELTAS` directo), cajas, monedas, lava y
     escenario proporcionales a la vuelta, escenario agrupado en celdas de 512 px (`decorCerca`) y gancho de prueba
-    `__karts.rapido(n)` (n pasos de la misma física por cuadro);
+    `__karts.rapido(n)` (n pasos de la misma física por cuadro). Cambio `karts-copa-en-sala`: la copa en sala la lleva
+    la página (`pintarCopaSala` en `juegos/app/arcade.js`, calendario de `juegos/karts-copa.js`) con un solo iframe para
+    las 4 carreras: manda `inicio` con `copa { k, nombre, tabla }` y `copa-tabla` mientras se espera; el juego muestra
+    `#ov-copa`, reutiliza el canal en vivo y marca cada mensaje con la carrera (`d[9]`);
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
     - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo
