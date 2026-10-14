@@ -316,7 +316,7 @@ function pintarSala() {
   if (s.juego === 'ajedrez') return pintarAjedrezSala(body);
   if (ClasicosRapidosUI.IDS.includes(s.juego)) return ClasicosRapidosUI.pintarSala(body); // clasicos-rapidos
   if (TableroUI.esSala(s.juego)) return TableroUI.pintarSala(body); // juegos-tablero
-  if (ARCADE.has(s.juego)) return pintarArcadeSala(body);
+  if (ARCADE.has(s.juego)) return pintarArcadeOCopa(body); // karts-copa-en-sala
   if (SALAS_GRANDES[s.juego]) return SALAS_GRANDES[s.juego].pintar(body); // juegos-salas-grandes
   if (s.juego === 'cultura-linea') return pintarLineaSala(body); // cultura-conocimiento
   if (s.juego === 'futbol') return pintarFutbolSala(body); // futbol-en-linea

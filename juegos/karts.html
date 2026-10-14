@@ -2090,10 +2090,11 @@ addEventListener('message', ev => {
     if (d.aviso) avisar(d.aviso, 3500);
     else if (migro) { avisar(AVISO_PISTAS[0], 2600); setTimeout(() => avisar(AVISO_PISTAS[1], 3200), 2700); }
   } else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
-  else if (d.tipo === 'copa-tabla') pintarCopa(d); // karts-copa-en-sala
   else if (d.tipo === 'guardado') { if (!d.ok) avisar('⚠️ No se pudo guardar tu avance. Revisa tu conexión.', 2500); }
   else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = textoGuardado(d);
 });
+// karts-copa-en-sala: tabla de la copa que manda la página mientras se espera.
+addEventListener('message', ev => { if (ev.origin === location.origin && ev.source === parent && ev.data && ev.data.tipo === 'copa-tabla') pintarCopa(ev.data); });
 // Resultado de guardar los puntos individuales (con el lugar de la semana si viene).
 function textoGuardado(d) {
   if (!d.guardado) { return 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').'; }

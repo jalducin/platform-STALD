@@ -38,7 +38,7 @@ async function copaEmpezada(c: C, copa = "fiesta", bots = true, quienes = ["Ange
   const r = await c.call("POST", "/sala", "Marisol", { juego: "karts", opciones: { modo: "copa", copa }, bots });
   assertEquals(r.status, 200, JSON.stringify(r.body));
   const codigo = r.body.codigo as string;
-  for (const n of quienes) assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, n)).status, 200);
+  for (const n of quienes) assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, n)).status, 200); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
   const e = await c.call("POST", `/sala/${codigo}/empezar`, "Marisol");
   assertEquals(e.status, 200);
   c.ir(e.body.sala.inicio);
@@ -59,7 +59,7 @@ async function aLaCarrera(c: C, codigo: string, k: number) {
 Deno.test("karts-copa: crear la sala de copa (fiesta, mesoamericana o mixta) y opciones inválidas", async () => {
   const c = ctx();
   for (const copa of ["fiesta", "mesoamerica", "mixta"]) {
-    const r = await c.call("POST", "/sala", "Marisol", { juego: "karts", opciones: { modo: "copa", copa }, bots: true });
+    const r = await c.call("POST", "/sala", "Marisol", { juego: "karts", opciones: { modo: "copa", copa }, bots: true }); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
     assertEquals([r.status, r.body.sala.opciones.modo, r.body.sala.opciones.copa], [200, "copa", copa]);
     const pistas = KC.pistasDe(copa, r.body.sala.seed);
     assertEquals(r.body.sala.opciones.mapa, pistas[0], "el mapa es la primera pista (la vista de una carrera sigue sirviendo)");
@@ -92,18 +92,18 @@ Deno.test("karts-copa: 4 carreras en orden, puntos por lugar, tabla y podio fina
   const adelantada = await reportar(c, codigo, "Marisol", 1, 99_000);
   assertEquals([adelantada.status, adelantada.body.error], [409, "carrera_fuera_de_turno"]);
   for (let k = 0; k < 4; k++) {
-    const inicio = await aLaCarrera(c, codigo, k);
+    const inicio = await aLaCarrera(c, codigo, k); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
     const ref = A.refKarts(v0.copa.pistas[k]);
     c.ir(inicio + Math.round(ref * 0.9));
-    assertEquals((await reportar(c, codigo, "Marisol", k, Math.round(ref * 0.9))).status, 200, "Marisol carrera " + k);
-    const v = await vista(c, codigo);
+    assertEquals((await reportar(c, codigo, "Marisol", k, Math.round(ref * 0.9))).status, 200, "Marisol carrera " + k); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
+    const v = await vista(c, codigo); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
     assertEquals([v.copa.fase, v.copa.carrera], ["carrera", k], "sigue abierta: falta Angel");
     c.avanzar(5_000);
-    const r = await reportar(c, codigo, "Angel", k, Math.round(ref * 0.9) + 5_000);
+    const r = await reportar(c, codigo, "Angel", k, Math.round(ref * 0.9) + 5_000); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
     assertEquals(r.status, 200, JSON.stringify(r.body));
-    const repetido = await reportar(c, codigo, "Angel", k, Math.round(ref * 0.9) + 6_000);
+    const repetido = await reportar(c, codigo, "Angel", k, Math.round(ref * 0.9) + 6_000); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
     assertEquals(repetido.status, 409, "la carrera ya cerró: no se cambia");
-    const v2 = await vista(c, codigo);
+    const v2 = await vista(c, codigo); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
     if (k < 3) {
       assertEquals([v2.copa.fase, v2.copa.carrera], ["interpodio", k + 1]);
       assertEquals(v2.copa.calendario[k + 1].inicio, c.ahora() + KC.INTERPODIO_MS, "la siguiente empieza tras la tabla");
@@ -168,7 +168,7 @@ Deno.test("karts-copa: desconexión (abandono) y regreso en la carrera siguiente
   const enLa1 = await reportar(c, codigo, "Laura", 1, 60_000);
   assertEquals(enLa1.status, 200, "puede mandar su resultado si corrió (no la frena a nadie)");
   c.ir(i1 + 130_000);
-  for (const n of ["Marisol", "Angel"]) assertEquals((await reportar(c, codigo, n, 1, 130_000)).status, 200);
+  for (const n of ["Marisol", "Angel"]) assertEquals((await reportar(c, codigo, n, 1, 130_000)).status, 200); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
   const v2 = await vista(c, codigo);
   assertEquals(v2.copa.calendario[2].esperados.length, 3, "en la carrera 2 se espera otra vez a Laura");
   // Una abandonada sin bots: personas sin reporte en la 0 → 0 puntos; la tabla tiene 3 (sin bots).
@@ -183,7 +183,7 @@ Deno.test("karts-copa: validaciones del reporte", async () => {
   const corto = await reportar(c, codigo, "Marisol", 0, 19_000);
   assertEquals([corto.status, corto.body.error], [400, "carrera_invalida"], "debajo del mínimo de la Pradera");
   for (const malo of [{ carrera: 0 }, { carrera: 7, ms: 20_000, monedas: 0 }, { carrera: "0", ms: 20_000, monedas: 0 }, { carrera: 0, ms: 20_000, monedas: 0, extra: 1 }, "x"]) {
-    const r = await c.call("POST", `/sala/${codigo}/respuesta`, "Marisol", { copa: malo });
+    const r = await c.call("POST", `/sala/${codigo}/respuesta`, "Marisol", { copa: malo }); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
     assertEquals([r.status, r.body.error], [400, "copa_invalida"], JSON.stringify(malo));
   }
   // En una sala de una sola carrera no hay copa; la de copa no acepta `carrera` suelta.
@@ -202,7 +202,7 @@ Deno.test("karts-copa: la revancha hereda la copa (la mixta sortea otras pistas)
   const c = ctx();
   const codigo = await copaEmpezada(c, "mixta");
   for (let k = 0; k < 4; k++) {
-    const inicio = await aLaCarrera(c, codigo, k);
+    const inicio = await aLaCarrera(c, codigo, k); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
     c.ir(inicio + 130_000);
     for (const n of ["Marisol", "Angel"]) assertEquals((await reportar(c, codigo, n, k, 130_000)).status, 200); // NOSONAR: en orden
   }
