@@ -169,6 +169,10 @@ export function enMesa(juego: string, humanos: number, conBots: boolean, opcione
 }
 const VIGENCIA_MS = 3 * 3600 * 1000;
 const CUENTA_REGRESIVA_MS = 5000;
+// karts-salida-y-puntos: en Karts, 8 s para que todos los aparatos (también un celular lento o con mala señal) tengan
+// abierta la pista antes de la salida y nadie arranque tarde, lejos de los demás.
+const CUENTA_REGRESIVA_KARTS_MS = 8000;
+export const cuentaRegresiva = (juego: string) => (juego === "karts" ? CUENTA_REGRESIVA_KARTS_MS : CUENTA_REGRESIVA_MS);
 const PREGUNTAS = 10;
 
 interface Sala {
@@ -498,7 +502,7 @@ async function fijarInicio(c: CtxSala, intentos: number): Promise<Response> {
   const doc = await store.get<Sala>(ruta(codigo));
   if (!doc) return json({ error: "sala_no_existe" }, 404);
   if (doc.data.inicio !== null) { cache.delete(codigo); return json({ ok: true, sala: sinCanal(doc.data), ahora }); }
-  const nueva = { ...doc.data, inicio: ahora + CUENTA_REGRESIVA_MS, ...Grandes.alEmpezarGrande(doc.data, canalNuevo) }; // + secreto de Dibuja
+  const nueva = { ...doc.data, inicio: ahora + cuentaRegresiva(doc.data.juego), ...Grandes.alEmpezarGrande(doc.data, canalNuevo) }; // + secreto de Dibuja
   if (await store.put(ruta(codigo), nueva, doc.sha, `sala ${codigo}: empieza`)) {
     cache.delete(codigo);
     await publicar();
@@ -670,7 +674,9 @@ function verSala(c: CtxSala, rt?: ConfigRealtime): Response {
   const { jugador, ahora, json, sala, jugadores, dentro } = c;
   if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
   const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
-  return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
+  // karts-salida-y-puntos: `reloj` = hora del servidor al responder (`ahora` es la de cuando empezó a atender); con las
+  // dos, la página acota su desfase sin el tiempo de procesamiento (juegos/reloj-sala.js).
+  return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, reloj: Date.now(), yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
     ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora), ...vistaFutbol(sala, jugadores), ...Copa.vistaCopa(sala, jugadores, ahora) }); // karts-copa-en-sala // futbol-en-linea // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
 }
 

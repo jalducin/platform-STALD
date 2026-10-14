@@ -123,16 +123,18 @@ function opcionesMapaArcade(juego) {
   document.getElementById('p-mapa').innerHTML = '<option value="">🎲 Al azar</option>' + lista.map(m => '<option value="' + m + '">' + escapeHtml(Arcade.nombreMapa(juego, m)) + '</option>').join('');
 }
 const mapaArcade = s => (s.opciones && s.opciones.mapa) || Arcade.mapaDeSala(s.juego, s.seed);
+// karts-salida-y-puntos: el orden y los puntos salen de Arcade.podioCarrera, la misma regla que usa el servidor para
+// guardar los puntos (orden de llegada; quien no terminó, después, por su avance). `servidor`: el servidor ya tiene su
+// tiempo (el podio final solo se pinta con los del servidor; el propio en camino solo sirve para la espera).
 function resultadosArcade() {
   const e = sala.estado, s = e.sala, mapa = mapaArcade(s);
   const filas = participantes().map(p => {
-    if (p.bot) return { id: p.id, nombre: p.nombre, tipo: 'bot', avatar: p.avatar, ms: Arcade.tiempoBot(s.juego, mapa, s.seed, p.id), monedas: 0, envio: true };
+    if (p.bot) return { id: p.id, nombre: p.nombre, tipo: 'bot', avatar: p.avatar, ms: Arcade.tiempoBot(s.juego, mapa, s.seed, p.id), monedas: 0, envio: true, servidor: true };
     const j = e.jugadores.find(x => x.id === p.id);
     const c = (j && j.carrera) || (p.id === e.yo ? sala.arcadeMia : null) || null;
-    return { id: p.id, nombre: p.nombre, tipo: p.tipo, avatar: p.avatar, ms: c ? c.ms : null, monedas: c ? c.monedas : 0, envio: !!c };
-  }).sort((a, b) => (a.ms === null ? Infinity : a.ms) - (b.ms === null ? Infinity : b.ms));
-  filas.forEach((f, i) => { f.total = f.ms === null ? 0 : Arcade.puntosLugar(i + 1); });
-  return filas;
+    return { id: p.id, nombre: p.nombre, tipo: p.tipo, avatar: p.avatar, ms: c ? c.ms : null, monedas: c ? c.monedas : 0, t: c ? c.t : undefined, avance: c ? c.avance : undefined, envio: !!c, servidor: !!(j && j.carrera) };
+  });
+  return Arcade.podioCarrera(filas);
 }
 // karts-copa-en-sala: una sala de copa de Karts va por pintarCopaSala; las demás carreras, por pintarArcadeSala.
 function pintarArcadeOCopa(body) {
@@ -144,7 +146,7 @@ function pintarArcadeSala(body) {
   const t = ahoraServidor() - s.inicio;
   const filas = resultadosArcade();
   const humanos = filas.filter(f => f.tipo !== 'bot');
-  if (humanos.every(f => f.envio) || t > Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA) {
+  if (humanos.every(f => f.servidor) || t > Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA) {
     if (sala.vista === 'final') return;
     const mio = filas.find(f => f.id === e.yo);
     sala.finAciertos = mio ? mio.monedas : 0; sala.finTotal = 0;
@@ -184,10 +186,13 @@ function pintarArcadeSala(body) {
   const alMensaje = ev => {
     const d = ev.data || {};
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== juego) return;
-    if (d.tipo === 'listo') frame.contentWindow.postMessage({ tipo: 'inicio', modo: 'sala', mapa, seed: s.seed, inicioEn: s.inicio - ahoraServidor(), bots, yo: e.yo, humanos: personas, vivo: enVivo, personaje: personajeElegido() }, location.origin);
+    // karts-salida-y-puntos: salidaLocal = hora del aparato (Date.now) de la salida con el reloj común; el juego la usa en
+    // lugar de inicioEn para que la demora del mensaje no atrase su salida.
+    if (d.tipo === 'listo') frame.contentWindow.postMessage({ tipo: 'inicio', modo: 'sala', mapa, seed: s.seed, inicioEn: s.inicio - ahoraServidor(), salidaLocal: s.inicio - sala.offset, bots, yo: e.yo, humanos: personas, vivo: enVivo, personaje: personajeElegido() }, location.origin);
     else if (d.tipo === 'meta' && !sala.arcadeMia) {
       const ms = d.ms === null ? null : Math.max(0, Math.round(Number(d.ms) || 0));
       sala.arcadeMia = { ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) };
+      if (ms === null && Number.isInteger(d.avance)) sala.arcadeMia.avance = Math.max(0, Math.min(999, d.avance)); // karts-salida-y-puntos: hasta dónde llegó
       window.removeEventListener('message', alMensaje);
       post('/juegos/sala/' + sala.codigo + '/respuesta', { carrera: sala.arcadeMia }).then(() => traerSala()).then(() => { if (sala.vista !== 'final') { sala.vista = null; pintarSala(); } });
       sala.vista = null; pintarSala();
@@ -270,7 +275,7 @@ function pintarCopaSala(body) {
 function iniciarCarreraCopa(cal, st, tabla, ahora) {
   const e = sala.estado, s = e.sala, c = sala.copa;
   c.enviada = cal.k; c.corriendo = cal.k;
-  aCopa({ tipo: 'inicio', modo: 'sala', mapa: cal.pista, seed: s.seed, inicioEn: cal.inicio - ahora, bots: botsDeCarrera(s, cal.pista), yo: e.yo, humanos: c.personas, vivo: c.vivo, personaje: personajeElegido(),
+  aCopa({ tipo: 'inicio', modo: 'sala', mapa: cal.pista, seed: s.seed, inicioEn: cal.inicio - ahora, salidaLocal: cal.inicio - sala.offset, bots: botsDeCarrera(s, cal.pista), yo: e.yo, humanos: c.personas, vivo: c.vivo, personaje: personajeElegido(),
     copa: { k: cal.k, nombre: st.nombre, tabla } });
 }
 // Texto de la espera: a quién falta esperar (y el límite) o cuánto falta para la siguiente carrera.

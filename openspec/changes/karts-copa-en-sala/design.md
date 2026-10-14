@@ -48,7 +48,8 @@ sala y los reportes de cada asiento (`copa: [{ k, ms, monedas, t, abandono? }]`)
 - Por carrera: personas y bots ordenados por tiempo; `PUNTOS_COPA[lugar]` (15, 12, 10, 8, 6, 4, 2, 1); no terminar o
   abandonar = 0 y sin lugar. Tabla: puntos acumulados; desempate por tiempo total (no terminar cuenta el límite) y nombre.
 - Ranking de partidas: suma de `Arcade.puntosLugar(lugar)` de cada carrera (500, 425, 350…), tope 2000 (el de Karts en
-  el catálogo), en lugar del 500 de una carrera suelta: una copa son 4 carreras.
+  el catálogo), en lugar del 500 de una carrera suelta: una copa son 4 carreras. **Reemplazado por
+  `karts-salida-y-puntos`**: la suma podía quedar al revés que la tabla; ahora es 4 × `puntosLugar(lugar final)`.
 - Bots: los de la mesa de siempre (`asientos: 3`: 1 persona + 2 bots, 2 + 1, 3 o más sin bots), con
   `Arcade.tiempoBot('karts', pista, seed, bot)` de cada pista.
 

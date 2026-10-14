@@ -15,8 +15,9 @@ SHALL sumar 0 en las carreras que falte y, si vuelve, SHALL entrar en la siguien
 SHALL avisar `{ copa: { carrera, abandono: true } }` para que nadie lo espere. Los bots SHALL completar la mesa como
 siempre con su tiempo simulado de cada pista y sumar sus propios puntos. El personaje elegido en la sala SHALL valer
 para toda la copa y el canal en vivo SHALL seguir abierto entre carreras (sin canal, fantasmas). Al terminar, todos
-SHALL ver el podio de la copa con suspenso, la tabla de las 4 carreras y la revancha; los puntos de partida SHALL ser
-la suma de los puntos por lugar de cada carrera, con tope 2000 y sin pasar de lo que calcula el servidor.
+SHALL ver el podio de la copa con suspenso, la tabla de las 4 carreras y la revancha; los puntos de partida SHALL salir
+del lugar final en la copa (requisito «Puntos de la copa de Karts en sala por lugar final» del cambio
+`karts-salida-y-puntos`), con tope 2000 y sin pasar de lo que calcula el servidor.
 
 #### Scenario: Copa en sala con tabla entre carreras
 - **WHEN** Marisol crea una sala de Copa Fiesta, Angel entra y los dos terminan la carrera 1 en la Pradera

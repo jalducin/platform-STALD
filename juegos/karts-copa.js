@@ -11,7 +11,8 @@
      su límite + la gracia (quien no llegó: no terminó, 0 puntos);
    - la siguiente empieza INTERPODIO_MS después del cierre (tabla entre carreras con cuenta regresiva).
    Puntos por lugar como en el modo individual (15, 12, 10, 8, 6, 4, 2, 1); no terminar = 0. Los bots corren con su
-   tiempo simulado de cada pista. Al final, puntos de ranking = suma de Arcade.puntosLugar por carrera, tope 2000. */
+   tiempo simulado de cada pista. Al final, puntos de ranking por el lugar en la tabla de la copa: 4 × Arcade.puntosLugar
+   (2000, 1760, 1520…; tope 2000; 0 sin puntos de copa) — karts-salida-y-puntos. */
 (function (raiz) {
   'use strict';
   const A = raiz.Arcade, KP = raiz.KartsPistas;
@@ -57,17 +58,19 @@
     return jugadores.map(j => ({ id: j.id, nombre: j.nombre, bot: false }))
       .concat(A.BOTS_SALA.slice(0, nb).map(b => ({ id: b.id, nombre: b.nombre, bot: true })));
   }
-  // Resultado de la carrera k ya cerrada: filas { id, ms (null = no terminó), lugar, pts, ranking } en orden de llegada.
+  // Resultado de la carrera k ya cerrada: filas { id, ms (null = no terminó), lugar, pts } en orden de llegada (el mismo
+  // orden que una carrera suelta: Arcade.podioCarrera; karts-salida-y-puntos).
   function resultadoCarrera(sala, jugadores, c) {
     const filas = participantesCopa(sala, jugadores).map(p => {
       if (p.bot) return { id: p.id, ms: A.tiempoBot('karts', c.pista, sala.seed, p.id) };
       const r = reporte(jugadores.find(j => j.id === p.id), c.k);
-      return { id: p.id, ms: r && !r.abandono && r.ms !== null && r.t <= c.cierre ? r.ms : null };
+      return r && !r.abandono && r.ms !== null && r.t <= c.cierre ? { id: p.id, ms: r.ms, t: r.t } : { id: p.id, ms: null };
     });
-    filas.sort((a, b) => (a.ms === null ? Infinity : a.ms) - (b.ms === null ? Infinity : b.ms));
-    filas.forEach((f, i) => { f.lugar = f.ms === null ? null : i + 1; f.pts = f.ms === null ? 0 : (A.PUNTOS_COPA[i] || 0); f.ranking = f.ms === null ? 0 : A.puntosLugar(i + 1); });
-    return filas;
+    return A.podioCarrera(filas).map((f, i) => f.ms === null ? { id: f.id, ms: null, lugar: null, pts: 0 } : { id: f.id, ms: f.ms, lugar: i + 1, pts: A.PUNTOS_COPA[i] || 0 });
   }
+  // karts-salida-y-puntos: puntos de partida por el lugar final en la copa (4 × los de una carrera, tope 2000; 0 si no
+  // sumó puntos de copa). Así siempre van en el orden de la tabla (con la suma por carrera podían quedar al revés).
+  const rankingCopa = (lugar, pts) => (pts > 0 ? Math.min(TOPE_RANKING, CARRERAS * A.puntosLugar(lugar)) : 0);
   // Estado completo de la copa a la hora `ahora`.
   //   fase: 'espera' (antes de empezar), 'carrera' (la k está abierta), 'interpodio' (la k cerró y la k+1 aún no
   //   empieza) o 'final'; carrera = k en curso o la última cerrada; inicioSig = hora de inicio de la siguiente.
@@ -79,9 +82,10 @@
     const resultados = cerradas.map(c => resultadoCarrera(sala, jugadores, c));
     const tabla = participantesCopa(sala, jugadores).map(p => {
       const por = resultados.map(r => r.find(f => f.id === p.id));
-      return { id: p.id, nombre: p.nombre, bot: p.bot, pts: por.reduce((a, f) => a + f.pts, 0), ranking: Math.min(TOPE_RANKING, por.reduce((a, f) => a + f.ranking, 0)),
+      return { id: p.id, nombre: p.nombre, bot: p.bot, pts: por.reduce((a, f) => a + f.pts, 0),
         tiempo: por.reduce((a, f, i) => a + (f.ms === null ? cerradas[i].limite : f.ms), 0), porCarrera: por.map(f => ({ ms: f.ms, lugar: f.lugar, pts: f.pts })) };
     }).sort((a, b) => b.pts - a.pts || a.tiempo - b.tiempo || a.nombre.localeCompare(b.nombre, 'es-MX'));
+    tabla.forEach((t, i) => { t.ranking = rankingCopa(i + 1, t.pts); });
     let fase = 'espera', carrera = 0, inicioSig = null;
     const ultima = cal[cal.length - 1];
     if (ultima) {

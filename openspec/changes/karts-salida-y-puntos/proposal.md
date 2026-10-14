@@ -22,6 +22,10 @@ que la tabla de la copa (15, 12, 10…). Y `Arcade.puntosLugar` daba 50 al 7.º 
   intervalos de cada muestra (como NTP: antes y después de cada `GET /juegos/sala`, y el aviso de Realtime como cota
   inferior). `GET /juegos/sala/<código>` agrega `reloj` (hora del servidor al responder). Todos los aparatos arrancan
   a la vez (± la latencia de la red, decenas de ms) y el tiempo de cada quien equivale a la hora en que cruzó la meta.
+- **La salida no se atrasa en aparatos lentos** (hallazgo de la E2E, design.md §2b): el juego fijaba su salida después
+  de pintar la pista (≈ 1 s o más en una pista grande); ahora la fija antes y recibe `salidaLocal` (hora del aparato de
+  la salida). La cuenta regresiva de Karts pasa de 5 a 8 s para que todos tengan la pista lista, y en la cuenta ya se
+  ve en su casilla a quien está conectado.
 - **Parrilla compacta y explícita** (`Arcade.parrilla`): filas de 2 a 48 px (≈ 1.7 karts), lados a ±24 px del centro,
   la 1.ª fila a 32 px de la meta, sin depender del tamaño de la pista. En sala, las personas en el orden de la sala
   adelante y los bots/fantasmas detrás (en el respaldo sin canal, tú adelante y los fantasmas detrás); en el modo

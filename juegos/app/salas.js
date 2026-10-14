@@ -93,6 +93,9 @@ const puntuarBasta = Basta.puntuar; // basta-divertida-una-robo
 
 const sala = { codigo: null, estado: null, offset: 0, poll: null, guardado: false };
 const ahoraServidor = () => Date.now() + sala.offset;
+// karts-salida-y-puntos: el desfase con el servidor sale de la intersección de todas las muestras recientes
+// (juegos/reloj-sala.js), no de la última: así cada aparato arranca las carreras a la misma hora del servidor.
+const relojSala = RelojSala.crear();
 
 const TIEMPO_REAL = new Set(['una', 'basta-es', 'basta-en', 'loteria', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar']); // futbolito-billar
 ClasicosRapidosUI.IDS.forEach(id => { JUEGOS_PARTIDA.push(id); TIEMPO_REAL.add(id); }); // clasicos-rapidos
@@ -161,7 +164,7 @@ async function conectarRealtime(rt, codigo, alCambiar) {
     canal.on('broadcast', { event: 'estado' }, ({ payload: p }) => {
       if (sala.codigo !== codigo || !sala.estado || !p || !p.sala) return;
       sala.estado = { ...sala.estado, ...mezclarEstado(sala.estado, p), ahora: p.ahora };
-      sala.offset = p.ahora - Date.now();
+      relojSala.aviso(Date.now(), p.ahora); sala.offset = relojSala.offset();
       sala.rtRecibidos = (sala.rtRecibidos || 0) + 1;
       pintarSala();
     }).subscribe(st => {
@@ -177,8 +180,9 @@ async function conectarRealtime(rt, codigo, alCambiar) {
 }
 
 async function traerSala() {
+  const t0 = Date.now();
   const r = await api('/juegos/sala/' + sala.codigo);
-  if (r.ok) { sala.estado = r.body; sala.offset = r.body.ahora - Date.now(); }
+  if (r.ok) { sala.estado = r.body; relojSala.http(t0, Date.now(), r.body.ahora, r.body.reloj); sala.offset = relojSala.offset(); }
   return r;
 }
 
@@ -527,6 +531,16 @@ function pintarBastaSala(body) {
   else pintarPausa();
 }
 
+// karts-salida-y-puntos: en una carrera suelta los puntos los calcula el servidor; si todavía no tiene el tiempo de
+// alguien (409 carrera_en_curso), se vuelve a pedir cada 2.5 s (hasta 8 veces) sin cambiar nada más.
+async function guardarPartidaSala(datos) {
+  let r = await post('/juegos/partida', datos);
+  for (let i = 0; i < 8 && r.status === 409 && r.body && r.body.error === 'carrera_en_curso'; i++) {
+    await new Promise(ok => setTimeout(ok, 2500)); // NOSONAR: espera entre reintentos, en orden
+    r = await post('/juegos/partida', datos); // NOSONAR: un reintento a la vez
+  }
+  return r;
+}
 function pintarFinalSala(body, todas, basta, titulo) {
   if (sala.vista === 'final') return;
   sala.vista = 'final';
@@ -566,7 +580,7 @@ function pintarFinalSala(body, todas, basta, titulo) {
     };
     const n = totalFinal();
     const aciertos = aciertosFinal();
-    post('/juegos/partida', { juego, puntos: mio.total, aciertos, total: n, segundos: 0, sala: sala.codigo }).then(r => {
+    guardarPartidaSala({ juego, puntos: mio.total, aciertos, total: n, segundos: 0, sala: sala.codigo }).then(r => {
       const g = document.getElementById('p-guardado');
       if (r.ok) { state.totalIndividual = r.body.totalIndividual; state.totalPartidas = r.body.totalPartidas; state.posPartidas = r.body.pos; state.mejores[juego] = r.body.mejor; pintarChip(); if (g) g.textContent = '✔ +' + fmt(r.body.puntos) + ' a tus puntos de partidas · 👥 ' + fmt(r.body.totalPartidas) + ' en la semana (#' + r.body.pos + ')'; }
       else if (g && r.body.error === 'ya_guardada') g.textContent = '✔ Esta partida ya estaba guardada en tus puntos de partidas';

@@ -55,8 +55,10 @@ Las partidas (salas) SHALL permitir `plataformas` y `karts` como reto sin guarda
 ## ADDED Requirements
 
 ### Requirement: Salida pareja en las salas de Karts
-En una sala de Karts, todos los aparatos SHALL arrancar a la misma hora del servidor (con el reloj común, ± la
-latencia de la red) y la parrilla SHALL ser compacta y fija en píxeles, igual en las 8 pistas: filas de 2 a 48 px
+En una sala de Karts, la cuenta regresiva SHALL durar 8 s y todos los aparatos SHALL arrancar a la misma hora del
+servidor (con el reloj común, ± la latencia de la red), fijada antes de preparar la pista para que lo que tarde cada
+aparato en pintarla no lo atrase; durante la cuenta SHALL verse en su casilla a quien ya está conectado en vivo. La
+parrilla SHALL ser compacta y fija en píxeles, igual en las 8 pistas: filas de 2 a 48 px
 (la 1.ª a 32 px detrás de la meta) y lados a ±24 px del centro del camino. Las personas SHALL ocupar los primeros
 lugares en el orden de la sala y los bots (fantasmas) SHALL ir detrás; en el modo individual la persona sale en el
 6.º lugar como siempre. Ninguna casilla SHALL quedar fuera del camino ni sobre una mecánica (turbo, salto, cenote,
@@ -65,7 +67,12 @@ lodo, trajinera).
 #### Scenario: Salen juntos aunque la red de uno sea lenta
 - **WHEN** Marisol y Angel empiezan una carrera en vivo y las respuestas del servidor le llegan a Angel con 1.5 s de
   retraso después de la primera
-- **THEN** al salir, sus karts están a menos de 120 px uno del otro en las dos pantallas
+- **THEN** los dos aparatos arrancan con menos de 150 ms de diferencia y, al salir, cada pantalla ve al otro kart
+  junto al suyo (a menos de 60 px)
+
+#### Scenario: Cuenta regresiva de Karts
+- **WHEN** el anfitrión empieza una sala de Karts
+- **THEN** la carrera sale 8 s después (en los demás juegos, 5 s)
 
 #### Scenario: Parrilla en una pista grande
 - **WHEN** se arma la parrilla de 8 en el Sacbé de Chichén Itzá

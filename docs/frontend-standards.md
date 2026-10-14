@@ -169,7 +169,12 @@ Cada página debe manejar y mostrar de forma explícita:
     `__karts.rapido(n)` (n pasos de la misma física por cuadro). Cambio `karts-copa-en-sala`: la copa en sala la lleva
     la página (`pintarCopaSala` en `juegos/app/arcade.js`, calendario de `juegos/karts-copa.js`) con un solo iframe para
     las 4 carreras: manda `inicio` con `copa { k, nombre, tabla }` y `copa-tabla` mientras se espera; el juego muestra
-    `#ov-copa`, reutiliza el canal en vivo y marca cada mensaje con la carrera (`d[9]`);
+    `#ov-copa`, reutiliza el canal en vivo y marca cada mensaje con la carrera (`d[9]`); cambio `karts-salida-y-puntos`:
+    la hora del servidor de las salas sale de `juegos/reloj-sala.js` (intersección de las cotas de cada `GET /sala` y de
+    los avisos de Realtime, no la última muestra), `inicio` lleva `salidaLocal` (hora del aparato de la salida) y el
+    juego fija su salida ANTES de pintar la pista; la parrilla es `Arcade.parrilla` (filas de 2 a 48 px, lados ±24 px,
+    personas adelante en el orden de la sala, fantasmas detrás) y el podio de una carrera suelta es
+    `Arcade.podioCarrera`, el mismo del servidor, que solo se pinta con los tiempos que ya tiene el servidor;
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
     - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo

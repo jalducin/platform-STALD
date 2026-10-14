@@ -208,7 +208,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `{ id, nombre, tipo, partidas: [{ juego, puntos, aciertos, total, segundos, en }], mejores, total }`.
   - Sin correos. Guarda hasta 1,000 partidas (los totales salen del historial).
 - `juegos/salas/<código>/sala.json` `{ codigo, juego, opciones, seed, host, creada, inicio, bots, canal? }` (en las
-  carreras de Arcade, `opciones.mapa` = nivel o pista; el archivo de cada jugador lleva `carrera: { ms, monedas, t }`) y
+  carreras de Arcade, `opciones.mapa` = nivel o pista; el archivo de cada jugador lleva `carrera: { ms, monedas, t,
+  avance? }`, con `avance` 0–999 ‰ solo si no terminó: `karts-salida-y-puntos`) y
   `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta?, rondasBasta?, v? }`.
   Juegos para salas grandes (`juegos-salas-grandes`): `sala.opciones.figura` (Bingo: `linea`|`esquinas`|`lleno`),
   `sala.opciones.gana` (Memorama: `tiempo`|`errores`) y `sala.secreto` (Dibuja: hex de 24, se crea al empezar; de él sale

@@ -51,6 +51,18 @@
   sigue sumando la bajada; (c) una ruta de hora dedicada: más peticiones sin ganar precisión frente a (2).
 - Aplica a todas las salas (todas usan `ahoraServidor()`): cuentas regresivas y cierres más parejos.
 
+### 2b. La salida se fija antes de pintar la pista (hallazgo de la E2E)
+
+- La E2E con el reloj ya corregido mostró que el iframe salía ≈ 0.7–1.4 s tarde: `iniciarCarrera` sumaba `inicioEn`
+  a `performance.now()` **después** de `prepararCarrera` (pintar la textura de una pista grande tarda ≈ 1 s en la
+  máquina de pruebas y más en un celular). Ahora la hora de salida se fija antes de pintar, y el mensaje `inicio` trae
+  `salidaLocal` (hora del aparato, `Date.now()`, de la salida según el reloj común) para que tampoco cuente la demora
+  del `postMessage`. Resultado en la E2E: salidas a ≤ 3 ms entre aparatos.
+- Cuenta regresiva de Karts: 8 s (antes 5 s, igual que los demás juegos). Un aparato que se entera tarde del inicio
+  (sin Realtime y con mala señal) y además tarda en pintar la pista se perdía la salida y arrancaba tarde de su
+  casilla. Los demás juegos siguen con 5 s.
+- En la cuenta regresiva ya se ve, en su casilla, a quien está conectado al canal en vivo (antes aparecía al «¡YA!»).
+
 ### 3. Parrilla (`Arcade.parrilla(slot)`)
 
 - `{ atras, lado }` en px: `atras = 32 + fila·48` detrás de la meta (fila = ⌊slot/2⌋), `lado = ±24` del centro. Se

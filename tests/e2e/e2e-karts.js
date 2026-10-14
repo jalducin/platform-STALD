@@ -776,7 +776,9 @@ async function probarCopaMeso(b) {
   const es2 = await estado(fsala);
   ok('sala: el minimapa muestra a los 2 fantasmas y a ti', es2.marcasMapa === 3 && es2.yoEnMapa, JSON.stringify({ marcas: es2.marcasMapa }));
   await p.screenshot({ path: 'karts-390-sala.png' });
-  await sleep(26000); // karts-pistas-grandes: el servidor exige el mínimo de la pista (≈ 32 s en el Lago Helado)
+  // karts-pistas-grandes: el servidor exige el mínimo de la pista (≈ 32 s en el Lago Helado); se espera al reloj de la
+  // carrera (karts-salida-y-puntos: la cuenta regresiva de Karts es de 8 s).
+  await fsala.waitForFunction(() => window.__karts.estado().tiempo > 33000, null, { timeout: 60000 });
   await fsala.evaluate(() => window.__karts.adelantar());
   await p.waitForSelector('#p-body .result', { timeout: 30000 });
   await sleep(1500);
