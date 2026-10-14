@@ -53,6 +53,7 @@ canvas{display:block}
 .op{font:inherit;font-weight:800;font-size:16px;border:3px solid rgba(255,255,255,.75);background:#1e293b;color:#fff;border-radius:16px;padding:10px;min-height:64px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .op small{font-weight:700;opacity:.85;font-size:12px}
 .op small.op-desc{font-weight:600;opacity:.8;text-align:center;line-height:1.25}
+.op small.op-chica{font-weight:600;opacity:.6} /* karts-pistas-grandes: récord archivado de la pista chica */
 .ops-grupo{grid-column:1/-1;font-weight:900;font-size:15px;text-align:left;margin-top:4px}
 .op[aria-pressed="true"]{background:#b45309;border-color:var(--acento)}
 .op:disabled{opacity:.45;cursor:not-allowed}
@@ -179,7 +180,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
       <div class="hud-fila">
         <div class="hud-izq">
           <div class="tarjeta pos"><span id="h-pos">1.º</span><span id="h-de">/8</span></div>
-          <div class="tarjeta datos"><span id="h-vuelta">Vuelta 1/3</span><span id="h-tiempo">0:00.0</span><span id="h-monedas">🪙 0/10</span><div class="mbar"><div id="h-mbar"></div></div></div>
+          <div class="tarjeta datos"><span id="h-vuelta">Vuelta 1/2</span><span id="h-tiempo">0:00.0</span><span id="h-monedas">🪙 0/10</span><div class="mbar"><div id="h-mbar"></div></div></div>
           <ol id="vivo-tabla" class="tarjeta" hidden aria-label="Clasificación en vivo"></ol>
         </div>
         <div id="h-item" aria-label="Ítem"></div>
@@ -247,8 +248,8 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="karts-pistas.js?v=2"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
-<script src="arcade.js?v=4"></script>
+<script src="karts-pistas.js?v=3"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="arcade.js?v=5"></script>
 <script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script src="en-vivo.js?v=1"></script> <!-- juegos-en-vivo: karts de las demás personas de la sala -->
@@ -534,6 +535,7 @@ function giroAnalogico() {
   if (control === 'sensor' && sensor.activo) return sensor.giro;
   return ejeExtra();
 }
+let pasosPrueba = 1; // karts-pistas-grandes: solo con ?prueba=1 (__karts.rapido): pasos de física por cuadro
 let pilotoPrueba = false; // solo con ?prueba=1: maneja tu carro por la pista (E2E de una vuelta completa)
 function leerEntrada() {
   const giro = Math.max(-1, Math.min(1, (activo('der') ? 1 : 0) - (activo('izq') ? 1 : 0) + giroAnalogico()));
@@ -570,21 +572,29 @@ const TEMAS = Object.fromEntries(KP.PISTAS.map(p => [p.id, p.tema])); // en jueg
 
 /* ================= Pista: textura del suelo (Mode-7) y objetos de escenario ================= */
 // La carrera se simula en el mapa 2D de siempre; la vista 3D lo proyecta desde una cámara detrás del carro.
-let pista = null, M = null, N = 0, capa = null, cajas = [], monedasPista = [], lavas = [], decor = [], TEX = null, zonas = [], trajinera = null;
+let pista = null, M = null, N = 0, capa = null, cajas = [], monedasPista = [], lavas = [], decor = [], TEX = null, zonas = [], trajineras = [];
+// karts-pistas-grandes: densidad = área de la textura ÷ la de una pista de antes (≈ 2.9 M px): las manchas del piso se
+// multiplican por ella. celdasDecor agrupa el escenario en celdas de 512 px para revisar solo lo cercano a la cámara.
+let densidad = 1, celdasDecor = new Map();
+const CELDA = 512;
+const cuantos = n => Math.round(n * densidad);
+const vueltasPista = () => A.vueltasDe(pista.id); // karts-pistas-grandes: 2 en las 8 pistas
 function prepararPista(id) {
   pista = A.pistaPorId(id); M = A.muestrearPista(pista); N = M.pts.length;
   const r = A.rng(id, 'pista');
   const xs = M.pts.map(p => p.x), ys = M.pts.map(p => p.y);
   const W = Math.ceil(Math.max(...xs) + 220), H = Math.ceil(Math.max(...ys) + 220);
-  // Cajas de ítems (3 filas de 4) y monedas (12 grupos de 3).
+  densidad = W * H / 2.9e6;
+  // Cajas de ítems y monedas (karts-pistas-grandes: 7 filas de 4 cajas y 30 grupos de 3 monedas en la vuelta 3× más larga).
   cajas = [];
-  for (const f of [0.2, 0.55, 0.8]) { const i = Math.floor(f * N); for (const lado of [-0.6, -0.2, 0.2, 0.6]) cajas.push(Object.assign(punto(i, lado * pista.mitad), { idx: i, t: 0 })); }
+  for (const f of [0.12, 0.25, 0.38, 0.51, 0.64, 0.77, 0.9]) { const i = Math.floor(f * N); for (const lado of [-0.6, -0.2, 0.2, 0.6]) cajas.push(Object.assign(punto(i, lado * pista.mitad), { idx: i, t: 0 })); }
   monedasPista = [];
-  for (let k = 0; k < 12; k++) { const i0 = Math.floor((k + 0.35) / 12 * N), lado = ((k % 3) - 1) * 0.5 * pista.mitad; for (let j = 0; j < 3; j++) monedasPista.push(Object.assign(punto((i0 + j * 3) % N, lado), { t: 0 })); }
+  for (let k = 0; k < 30; k++) { const i0 = Math.floor((k + 0.35) / 30 * N), lado = ((k % 3) - 1) * 0.5 * pista.mitad; for (let j = 0; j < 3; j++) monedasPista.push(Object.assign(punto((i0 + j * 3) % N, lado), { t: 0 })); }
   lavas = [];
-  if (pista.lava) [0.12, 0.3, 0.47, 0.63, 0.78, 0.92].forEach((f, k) => lavas.push(Object.assign(punto(Math.floor(f * N), (k % 2 ? 1 : -1) * (pista.mitad + 30)), { r: 22 })));
+  const nLava = Math.round(M.largo / 880); // karts-pistas-grandes: un charco cada ~880 px (15 en el Volcán)
+  if (pista.lava) for (let k = 0; k < nLava; k++) lavas.push(Object.assign(punto(Math.floor((0.1 + 0.85 * k / (nLava - 1)) * N), (k % 2 ? 1 : -1) * (pista.mitad + 30)), { r: 22 }));
   zonas = KP.colocarMecanicas(pista, M); // mecánicas de las pistas mesoamericanas (turbo, salto, cenote, lodo, trajinera)
-  trajinera = zonas.find(z => z.tipo === 'trajinera') || null;
+  trajineras = zonas.filter(z => z.tipo === 'trajinera'); // karts-pistas-grandes: 3 en Tenochtitlan
   for (const t in eventos) eventos[t] = 0; // eventos de las mecánicas en esta carrera (ganchos de prueba)
   // Textura del suelo (se pinta una vez por pista).
   capa = document.createElement('canvas'); capa.width = W; capa.height = H;
@@ -616,7 +626,7 @@ function prepararPista(id) {
   const q = cam2.getContext('2d');
   trazo(q, M.pts, mitad * 2, col.camino);
   q.globalCompositeOperation = 'source-atop';
-  for (let k = 0; k < 14000; k++) { const p = punto(Math.floor(r() * N), (r() * 2 - 1) * mitad); q.fillStyle = r() < 0.5 ? 'rgba(255,255,255,.09)' : 'rgba(0,0,0,.12)'; q.fillRect(p.x, p.y, 2, 2); }
+  for (let k = 0, nk = Math.round(14000 * M.largo / 4200); k < nk; k++) { const p = punto(Math.floor(r() * N), (r() * 2 - 1) * mitad); q.fillStyle = r() < 0.5 ? 'rgba(255,255,255,.09)' : 'rgba(0,0,0,.12)'; q.fillRect(p.x, p.y, 2, 2); }
   // Bandas sutiles del asfalto (también marcan la velocidad).
   for (let i = 0; i < N; i += 8) { const a = punto(i, -mitad), b = punto(i, mitad), b2 = punto(i + 4, mitad), a2 = punto(i + 4, -mitad); q.fillStyle = 'rgba(255,255,255,.035)'; q.beginPath(); q.moveTo(a.x, a.y); q.lineTo(b.x, b.y); q.lineTo(b2.x, b2.y); q.lineTo(a2.x, a2.y); q.fill(); }
   q.globalAlpha = 0.08; for (const l of [-16, -6, 6, 16]) trazo(q, linea(l), 3, '#000');
@@ -647,7 +657,8 @@ function prepararPista(id) {
   prepararDecor(id, r, W, H);
   pintarChinampas(c, id, r);
   // Mapas de la textura (tres tamaños para que lo lejano no parpadee).
-  TEX = { fondo: colorU32(col.fondo), niveles: [1, 2, 4].map(f => texDe(capa, f)) };
+  TEX = { fondo: colorU32(col.fondo), niveles: [4, 2, 1].map(f => texDe(capa, f)).reverse() };
+  capa = { width: W, height: H }; // karts-pistas-grandes: suelta el lienzo de trabajo (hasta 12.6 M px); queda solo su tamaño
   mm.base = null; pano = null; // el minimapa y el cielo se rehacen con la pista nueva
 }
 function texDe(src, f) {
@@ -660,20 +671,20 @@ function punto(i, lado) { const p = M.pts[((i % N) + N) % N]; return { x: p.x - 
 function pintarFondo(c, W, H, r, id, col) {
   c.fillStyle = col.fondo; c.fillRect(0, 0, W, H);
   if (id === 'pradera') {
-    for (let k = 0; k < 9000; k++) { c.fillStyle = r() < 0.6 ? 'rgba(0,70,0,.2)' : 'rgba(255,255,255,.09)'; c.fillRect(r() * W, r() * H, 2, 3); }
-    for (let k = 0; k < 500; k++) { c.fillStyle = ['#f472b6', '#fde047', '#ffffff', '#a78bfa'][Math.floor(r() * 4)]; c.fillRect(r() * W, r() * H, 3, 3); }
+    for (let k = 0; k < cuantos(9000); k++) { c.fillStyle = r() < 0.6 ? 'rgba(0,70,0,.2)' : 'rgba(255,255,255,.09)'; c.fillRect(r() * W, r() * H, 2, 3); }
+    for (let k = 0; k < cuantos(500); k++) { c.fillStyle = ['#f472b6', '#fde047', '#ffffff', '#a78bfa'][Math.floor(r() * 4)]; c.fillRect(r() * W, r() * H, 3, 3); }
   } else if (id === 'desierto') {
     c.strokeStyle = 'rgba(150,100,40,.25)'; c.lineWidth = 3; // ondas de arena
     for (let y = 0; y < H; y += 22) { c.beginPath(); for (let x = 0; x <= W; x += 24) { c.lineTo(x, y + Math.sin(x / 70 + y * 0.3) * 6); } c.stroke(); }
-    for (let k = 0; k < 5000; k++) { c.fillStyle = r() < 0.5 ? 'rgba(120,80,40,.25)' : 'rgba(255,255,255,.15)'; c.fillRect(r() * W, r() * H, 3, 2); }
+    for (let k = 0; k < cuantos(5000); k++) { c.fillStyle = r() < 0.5 ? 'rgba(120,80,40,.25)' : 'rgba(255,255,255,.15)'; c.fillRect(r() * W, r() * H, 3, 2); }
   } else if (id === 'hielo') {
-    for (let k = 0; k < 60; k++) { c.fillStyle = 'rgba(180,215,240,.4)'; c.beginPath(); c.ellipse(r() * W, r() * H, 30 + r() * 70, 18 + r() * 40, r() * 3, 0, 7); c.fill(); }
+    for (let k = 0; k < cuantos(60); k++) { c.fillStyle = 'rgba(180,215,240,.4)'; c.beginPath(); c.ellipse(r() * W, r() * H, 30 + r() * 70, 18 + r() * 40, r() * 3, 0, 7); c.fill(); }
     c.strokeStyle = 'rgba(120,170,210,.55)'; c.lineWidth = 1.5; // grietas del hielo
-    for (let k = 0; k < 90; k++) { let x = r() * W, y = r() * H; c.beginPath(); c.moveTo(x, y); for (let j = 0; j < 6; j++) { x += (r() - 0.5) * 40; y += (r() - 0.5) * 40; c.lineTo(x, y); } c.stroke(); }
-    for (let k = 0; k < 3000; k++) { c.fillStyle = 'rgba(255,255,255,.75)'; c.fillRect(r() * W, r() * H, 2, 2); }
+    for (let k = 0; k < cuantos(90); k++) { let x = r() * W, y = r() * H; c.beginPath(); c.moveTo(x, y); for (let j = 0; j < 6; j++) { x += (r() - 0.5) * 40; y += (r() - 0.5) * 40; c.lineTo(x, y); } c.stroke(); }
+    for (let k = 0; k < cuantos(3000); k++) { c.fillStyle = 'rgba(255,255,255,.75)'; c.fillRect(r() * W, r() * H, 2, 2); }
   } else if (id === 'volcan') {
-    for (let k = 0; k < 4000; k++) { c.fillStyle = col.fondo2; c.fillRect(r() * W, r() * H, 4 + r() * 6, 3 + r() * 4); }
-    for (let k = 0; k < 70; k++) { // vetas de lava
+    for (let k = 0; k < cuantos(4000); k++) { c.fillStyle = col.fondo2; c.fillRect(r() * W, r() * H, 4 + r() * 6, 3 + r() * 4); }
+    for (let k = 0; k < cuantos(70); k++) { // vetas de lava
       let x = r() * W, y = r() * H; const pts = [[x, y]]; for (let j = 0; j < 7; j++) { x += (r() - 0.5) * 50; y += (r() - 0.5) * 50; pts.push([x, y]); }
       for (const [w, a, colr] of [[7, 0.14, '#ff6d00'], [2, 0.7, '#ffab40']]) { c.globalAlpha = a; c.strokeStyle = colr; c.lineWidth = w; c.beginPath(); pts.forEach(([px, py], i) => i ? c.lineTo(px, py) : c.moveTo(px, py)); c.stroke(); }
     }
@@ -703,7 +714,7 @@ function prepararDecor(id, r, W, H) {
   // Adornos fijos por tramo (cabezas de serpiente, muros del juego de pelota, cabezas colosales).
   for (const f of KP.colocarFijos(pista, M)) if (lejos(f.x, f.y, f.w * 0.3)) decor.push(f);
   const tipos = DECOR_POR_PISTA[id];
-  for (let k = 0; k < 900 && decor.length < 360; k++) {
+  for (let k = 0; k < 2700 && decor.length < 1080; k++) { // karts-pistas-grandes: 3 veces el escenario de antes
     const i = Math.floor(r() * N), lado = (r() < 0.5 ? -1 : 1) * (mitad + 40 + Math.pow(r(), 1.5) * 360);
     const p = punto(i, lado);
     if (p.x < 10 || p.y < 10 || p.x > W - 10 || p.y > H - 10 || !lejos(p.x, p.y, 32)) continue;
@@ -712,6 +723,22 @@ function prepararDecor(id, r, W, H) {
     if (tipo === tipos[2] && Math.abs(lado) < mitad + 180) tipo = tipos[0]; // lo grande (globos, mesetas) solo a lo lejos
     decor.push({ x: p.x, y: p.y, img: tipo[0], w: tipo[1] * f, h: tipo[2] * f });
   }
+  agruparDecor();
+}
+// Celdas de CELDA px con el escenario de cada una (karts-pistas-grandes: descarte por distancia sin recorrer los 1 080).
+function agruparDecor() {
+  celdasDecor = new Map();
+  for (const d of decor) {
+    const k = Math.floor(d.x / CELDA) + ',' + Math.floor(d.y / CELDA);
+    if (!celdasDecor.has(k)) celdasDecor.set(k, []);
+    celdasDecor.get(k).push(d);
+  }
+}
+// Escenario de las celdas a menos de `alcance` px de (x, y).
+function decorCerca(x, y, alcance) {
+  const out = [], c0 = Math.floor((x - alcance) / CELDA), c1 = Math.floor((x + alcance) / CELDA), f0 = Math.floor((y - alcance) / CELDA), f1 = Math.floor((y + alcance) / CELDA);
+  for (let cx = c0; cx <= c1; cx++) for (let fy = f0; fy <= f1; fy++) { const l = celdasDecor.get(cx + ',' + fy); if (l) out.push(l); }
+  return out;
 }
 /* ================= Pistas mesoamericanas: piso, escenario y cielo (openspec: karts-pistas-mesoamericanas) =================
    Inspiradas en la arquitectura y el arte de cada lugar, con trazos sobrios: sin caricaturas. */
@@ -733,11 +760,11 @@ function pintarFondoExtra(c, id, r) {
   const W = c.canvas.width, H = c.canvas.height;
   if (id === 'tenochtitlan') {
     c.strokeStyle = 'rgba(225,250,255,.25)'; c.lineWidth = 2;
-    for (let k = 0; k < 1100; k++) { const x = r() * W, y = r() * H; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 9, y - 3, x + 18, y); c.stroke(); }
+    for (let k = 0; k < cuantos(1100); k++) { const x = r() * W, y = r() * H; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 9, y - 3, x + 18, y); c.stroke(); }
   } else if (id === 'teotihuacan') {
-    for (let k = 0; k < 6000; k++) { c.fillStyle = r() < 0.5 ? 'rgba(90,60,30,.22)' : 'rgba(255,240,210,.18)'; c.fillRect(r() * W, r() * H, 3, 2); }
+    for (let k = 0; k < cuantos(6000); k++) { c.fillStyle = r() < 0.5 ? 'rgba(90,60,30,.22)' : 'rgba(255,240,210,.18)'; c.fillRect(r() * W, r() * H, 3, 2); }
   } else if (id === 'chichen' || id === 'laventa') {
-    for (let k = 0; k < 7000; k++) { c.fillStyle = r() < 0.55 ? 'rgba(0,35,0,.28)' : 'rgba(150,200,90,.16)'; c.beginPath(); c.ellipse(r() * W, r() * H, 3 + r() * 3, 1.5 + r() * 1.5, r() * 3, 0, 7); c.fill(); }
+    for (let k = 0; k < cuantos(7000); k++) { c.fillStyle = r() < 0.55 ? 'rgba(0,35,0,.28)' : 'rgba(150,200,90,.16)'; c.beginPath(); c.ellipse(r() * W, r() * H, 3 + r() * 3, 1.5 + r() * 1.5, r() * 3, 0, 7); c.fill(); }
   }
 }
 // Después de las franjas y antes del camino: bordos de la calzada, plaza de piedra, cancha del juego de pelota y el río.
@@ -772,7 +799,7 @@ function rioLaVenta(c, m, r) { // río ancho y lodoso que cruza la selva
   c.lineCap = 'round'; c.lineJoin = 'round';
   for (const [w, col] of [[130, '#4d3d27'], [104, '#2f6c6a'], [70, '#3f8580'], [22, 'rgba(200,235,225,.25)']]) { ruta(); c.lineWidth = w; c.strokeStyle = col; c.stroke(); }
   c.strokeStyle = 'rgba(220,245,235,.3)'; c.lineWidth = 1.5;
-  for (let k = 0; k < 160; k++) {
+  for (let k = 0; k < cuantos(160); k++) {
     const i = Math.floor(r() * (pr.length - 1)), f = r(), x = pr[i][0] + (pr[i + 1][0] - pr[i][0]) * f, y = pr[i][1] + (pr[i + 1][1] - pr[i][1]) * f + (r() - 0.5) * 60;
     c.beginPath(); c.moveTo(x, y); c.lineTo(x + 12, y); c.stroke();
   }
@@ -1336,7 +1363,18 @@ const PASO_M = 8; // px entre muestras
 let karts = [], yo = null, objetos = [], particulas = [];
 let modo = 'carga', sala = null, tCarrera = 0, cuentaFin = 0, terminada = false, rayoTinte = 0, ultimoTurbo = null, carreraDe = null;
 let prog = progresoNuevo(), arranque = { presiono: null };
-function progresoNuevo() { return { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null }; }
+function progresoNuevo() { return { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: KP.VERSION_PISTAS, recordsV1: {} }; }
+// karts-pistas-grandes: un progreso de antes (sin pistasV) trae récords de las pistas chicas, que ya no se comparan:
+// pasan a recordsV1 («pista chica») y records empieza vacío. Copas, piezas, equipo y copa en curso no cambian.
+// Devuelve true si migró (hay que guardar y avisar).
+function migrarRecords(pr) {
+  if (pr.pistasV === KP.VERSION_PISTAS) { if (!pr.recordsV1) pr.recordsV1 = {}; return false; }
+  pr.recordsV1 = Object.assign({}, pr.records || {});
+  pr.records = {};
+  pr.pistasV = KP.VERSION_PISTAS;
+  return Object.keys(pr.recordsV1).length > 0;
+}
+const AVISO_PISTAS = '🏁 ¡Las pistas ahora son 3 veces más grandes! Tus récords anteriores quedaron como «pista chica».';
 
 function nuevoKart(id, nombre, color, humano, slot, personaje) {
   const fila = Math.floor(slot / 2), lado = slot % 2 ? 0.42 : -0.42;
@@ -1412,12 +1450,13 @@ function actualizarIdx(k) {
   if (antes > N * 0.85 && k.idx < N * 0.15 && k.mitadOk) { k.vuelta++; k.mitadOk = false; alCruzar(k); }
 }
 function alCruzar(k) {
-  if (k.vuelta >= A.VUELTAS && k.termino === null) {
+  const vueltas = vueltasPista();
+  if (k.vuelta >= vueltas && k.termino === null) {
     k.termino = Math.round(tCarrera * 1000);
     if (k === yo) llegarMeta();
   } else if (k === yo && k.vuelta >= 1) {
-    S.vuelta(); avisar(k.vuelta === A.VUELTAS - 1 ? '🏁 ¡Última vuelta!' : 'Vuelta ' + (k.vuelta + 1) + ' de ' + A.VUELTAS, 1400);
-    if (k.vuelta === A.VUELTAS - 1) { window.Emocion?.campana(); window.Emocion?.intensidad(0.5); } // emocion-sonora: última vuelta
+    S.vuelta(); avisar(k.vuelta === vueltas - 1 ? '🏁 ¡Última vuelta!' : 'Vuelta ' + (k.vuelta + 1) + ' de ' + vueltas, 1400);
+    if (k.vuelta === vueltas - 1) { window.Emocion?.campana(); window.Emocion?.intensidad(0.5); } // emocion-sonora: última vuelta
   }
 }
 
@@ -1503,7 +1542,7 @@ function mover(k, dt, agarreBase) {
    Zonas fijas sobre el camino (juegos/karts-pistas.js); dependen solo de la posición y de tCarrera: deterministas. */
 const SALTO_S = 0.7, eventos = { turbo: 0, salto: 0, cenote: 0, lodo: 0, trajinera: 0 };
 const dentroZona = (k, z) => (k.x - z.x) ** 2 + (k.y - z.y) ** 2 < z.r * z.r;
-const posTrajinera = () => punto(trajinera.idx, KP.ladoTrajinera(trajinera, tCarrera));
+const posTrajinera = tj => punto(tj.idx, KP.ladoTrajinera(tj, tCarrera));
 // Tope de velocidad por lodo o por el agua del cenote (sin efecto en el aire ni con estrella).
 function frenoZonas(k) {
   if (k.aire > 0 || k.estrella > 0) return 1;
@@ -1514,7 +1553,7 @@ function frenoZonas(k) {
 // Al entrar a una zona: turbo de la rampa, salto (con velocidad) o aviso del cenote y del lodo; y el choque con la trajinera.
 function pisarZonas(k, idxAntes) {
   for (const z of zonas) if (z.tipo !== 'trajinera') revisarZona(k, z, idxAntes);
-  if (trajinera && k.giro <= 0) chocaTrajinera(k);
+  if (k.giro <= 0) for (const tj of trajineras) chocaTrajinera(k, tj);
 }
 function revisarZona(k, z, idxAntes) {
   if (z.tipo === 'salto') {
@@ -1531,9 +1570,9 @@ function cruzoRampa(k, z, idxAntes) {
   const d1 = (z.idx - idxAntes + N) % N, d2 = (k.idx - idxAntes + N) % N;
   return d2 < 20 && d1 > 0 && d1 <= d2 && distanciaCentro(k) <= pista.mitad + 4;
 }
-function chocaTrajinera(k) {
-  const t = posTrajinera();
-  if ((k.x - t.x) ** 2 + (k.y - t.y) ** 2 >= 26 * 26) { return; }
+function chocaTrajinera(k, tj) {
+  const t = posTrajinera(tj);
+  if (k.giro > 0 || (k.x - t.x) ** 2 + (k.y - t.y) ** 2 >= 26 * 26) { return; }
   golpear(k);
   if (k === yo) { eventos.trajinera++; avisar('🛶 ¡Te pegó la trajinera!', 1100); }
 }
@@ -1558,7 +1597,7 @@ function rescatar(k) {
 }
 // Fantasma de sala: avanza por la pista al ritmo de su tiempo simulado (no choca ni recibe ítems).
 function pasoFantasma(k) {
-  const ms = tCarrera * 1000, total = A.VUELTAS * N;
+  const ms = tCarrera * 1000, total = vueltasPista() * N;
   const f = Math.max(0, Math.min(1, ms < 2000 ? (ms / 2000) * (ms / 2000) * 1000 / k.msObjetivo : (ms - 1000) / (k.msObjetivo - 1000)));
   const pos = f * total - 4;
   k.vuelta = Math.floor(pos / N); k.idx = ((Math.floor(pos) % N) + N) % N;
@@ -1725,7 +1764,7 @@ function paso(dt) {
   if (vivo && !sala.enviado) vivo.enviar('k', kartVivo()); // juegos-en-vivo: el canal lo limita a su ritmo
   rayoTinte = Math.max(0, rayoTinte - dt);
   // Límite de sala.
-  if (sala && !sala.enviado && tCarrera * 1000 >= A.LIMITE_SALA.karts) terminarSala(null);
+  if (sala && !sala.enviado && tCarrera * 1000 >= A.limiteSala('karts', pista.id)) terminarSala(null); // karts-pistas-grandes: límite de la pista
   if (terminada) { cuentaFin -= dt; if (cuentaFin <= 0 && !sala) mostrarResultados(); }
   if (motor && AC) motor.o.frequency.value = 50 + Math.max(0, yo.vel) * 0.45 + (yo.turbo > 0 ? 40 : 0);
 }
@@ -1738,6 +1777,8 @@ function cuentaRegresiva(ahora) {
   if (n !== carreraDe.ultimoNum && n <= 3) { carreraDe.ultimoNum = n; if (!window.Emocion?.cuenta(n)) S.bip(); } // emocion-sonora: 3-2-1
   $('cuenta').textContent = n <= 3 ? String(n) : '';
 }
+// karts-pistas-grandes: la carrera mide ≈ 2× lo de antes (2 vueltas × 3), así que el turbo de salida dura 1.8 veces más.
+const TURBO_SALIDA = 1.8;
 // ¡YA!: turbo o motor ahogado según cuándo aceleraste, y algunos bots salen con turbo.
 function arrancar() {
   carreraDe.salio = true; motorOn(true);
@@ -1745,9 +1786,9 @@ function arrancar() {
   if (sensor.activo) centrarSensor(); // el centro es como se sostiene el celular al arrancar
   $('cuenta').textContent = '¡YA!'; setTimeout(() => { if ($('cuenta').textContent === '¡YA!') $('cuenta').textContent = ''; }, 800);
   const p = arranque.presiono;
-  if (p !== null && p >= -0.5) { yo.turbo = p >= -0.25 ? 1.3 : 0.8; yo.turboNivel = 0; avisar(p >= -0.25 ? '🚀 ¡Súper arranque!' : '🚀 ¡Buen arranque!', 1100); S.turbo(); }
+  if (p !== null && p >= -0.5) { yo.turbo = p >= -0.25 ? 1.3 * TURBO_SALIDA : 0.8 * TURBO_SALIDA; yo.turboNivel = 0; avisar(p >= -0.25 ? '🚀 ¡Súper arranque!' : '🚀 ¡Buen arranque!', 1100); S.turbo(); }
   else if (p !== null) { yo.ahogado = 0.8; avisar('💨 Se ahogó el motor: espera la última luz', 1300); S.ahogo(); }
-  for (const k of karts) if (!k.humano && !k.fantasma && !k.remoto && Math.random() < 0.35) k.turbo = 0.5; // NOSONAR: azar de juego, no criptográfico
+  for (const k of karts) if (!k.humano && !k.fantasma && !k.remoto && Math.random() < 0.35) k.turbo = 0.5 * TURBO_SALIDA; // NOSONAR: azar de juego, no criptográfico
   if (vivo) vivoAlSalir(); // juegos-en-vivo
 }
 // Si vas en sentido contrario más de 0.8 s, un aviso te dice que des la vuelta (solo visual: no cambia reglas).
@@ -1792,7 +1833,7 @@ function tiemposFinales() {
   // Quienes no han llegado: tiempo estimado con lo que les falta a su ritmo.
   return karts.map(k => {
     if (k.termino !== null) return { k, ms: k.termino };
-    const falta = (A.VUELTAS * N - (k.vuelta * N + k.idx)) * PASO_M;
+    const falta = (vueltasPista() * N - (k.vuelta * N + k.idx)) * PASO_M;
     const vel = A.VEL_KART * (k.skill || 0.9) * 0.82;
     return { k, ms: Math.round(tCarrera * 1000 + falta / vel * 1000) };
   }).sort((a, b) => a.ms - b.ms);
@@ -1947,7 +1988,8 @@ function abrirPistas() {
   // Agrupadas por copa, con su descripción corta (openspec: karts-pistas-mesoamericanas).
   $('pistas-ops').innerHTML = KP.COPAS.map(c => '<div class="ops-grupo">' + c.emoji + ' ' + c.nombre + '</div>' + c.pistas.map(id => {
     const p = A.pistaPorId(id);
-    return '<button class="op" data-ir="rapida:' + p.id + '">' + p.emoji + ' ' + p.nombre + '<small class="op-desc">' + (p.civ ? p.civ + ' · ' : '') + p.desc + '</small><small>' + (prog.records[p.id] ? '🏅 ' + A.formatoTiempo(prog.records[p.id]) : 'Sin récord') + ' · meta ' + A.formatoTiempo(A.refKarts(p.id)) + '</small></button>';
+    return '<button class="op" data-ir="rapida:' + p.id + '">' + p.emoji + ' ' + p.nombre + '<small class="op-desc">' + (p.civ ? p.civ + ' · ' : '') + p.desc + '</small><small>' + (prog.records[p.id] ? '🏅 ' + A.formatoTiempo(prog.records[p.id]) : 'Sin récord') + ' · meta ' + A.formatoTiempo(A.refKarts(p.id)) + '</small>' +
+      (prog.recordsV1 && prog.recordsV1[p.id] ? '<small class="op-chica">pista chica ' + A.formatoTiempo(prog.recordsV1[p.id]) + '</small>' : '') + '</button>'; // karts-pistas-grandes: récord archivado
   }).join('')).join('');
   mostrar('ov-pistas');
 }
@@ -2026,8 +2068,11 @@ addEventListener('message', ev => {
     const base = progresoNuevo();
     prog = Object.assign(base, d.progreso || {});
     prog.equipo = Object.assign(base.equipo, (d.progreso || {}).equipo || {});
-    if (d.aviso) avisar(d.aviso, 3500);
+    const migro = d.progreso ? migrarRecords(prog) : false; // karts-pistas-grandes
+    if (migro) guardar();
     abrirMenu();
+    if (d.aviso) avisar(d.aviso, 3500);
+    else if (migro) avisar(AVISO_PISTAS, 4500);
   } else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
   else if (d.tipo === 'guardado') { if (!d.ok) avisar('⚠️ No se pudo guardar tu avance. Revisa tu conexión.', 2500); }
   else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = textoGuardado(d);
@@ -2105,7 +2150,7 @@ function alKartRemoto(d, meta) {
   const k = karts.find(x => x.remoto && x.id === meta.de);
   if (!k || !Array.isArray(d) || d.length < 8 || !d.slice(0, 8).every(Number.isFinite)) return;
   k.interp.agregar(meta.tLocal, [d[0] / 10, d[1] / 10, d[2] / 1000, d[3]]);
-  k.vuelta = Math.max(-1, Math.min(A.VUELTAS, Math.trunc(d[4]))); k.idx = ((Math.trunc(d[5]) % N) + N) % N;
+  k.vuelta = Math.max(-1, Math.min(vueltasPista(), Math.trunc(d[4]))); k.idx = ((Math.trunc(d[5]) % N) + N) % N;
   const f = Math.trunc(d[6]);
   k.turbo = conBandera(f, BANDERA.turbo, 0.2); k.estrella = conBandera(f, BANDERA.estrella, 0.2); k.giro = conBandera(f, BANDERA.giro, 0.2); k.rayo = conBandera(f, BANDERA.rayo, 0.2);
   k.derrape = (f & BANDERA.derrape) ? { dir: 0, nivel: 0 } : null;
@@ -2320,11 +2365,11 @@ function pintarEscena(t, conKarts) {
 }
 // Mete en la lista { z, … } lo que la cámara alcanza a ver (con su distancia z), cada cosa con su alcance.
 function juntarVisibles(lista, visible, conKarts) {
-  for (const d of decor) { const z = visible(d.x, d.y, d.w, 1600); if (z) lista.push({ z, d }); }
+  for (const l of decorCerca(cam.x, cam.y, 1700)) for (const d of l) { const z = visible(d.x, d.y, d.w, 1600); if (z) lista.push({ z, d }); }
   for (const m of monedasPista) if (m.t <= 0) { const z = visible(m.x, m.y, 10, 900); if (z) lista.push({ z, moneda: m }); }
   for (const cj of cajas) if (cj.t <= 0) { const z = visible(cj.x, cj.y, 16, 1100); if (z) lista.push({ z, caja: cj }); }
   for (const o of objetos) { const z = visible(o.x, o.y, 12, 900); if (z) lista.push({ z, obj: o }); }
-  if (trajinera) { const q = posTrajinera(), z = visible(q.x, q.y, 50, 1400); if (z) lista.push({ z, d: { x: q.x, y: q.y, img: 'trajinera', w: 50, h: 26 } }); }
+  for (const tj of trajineras) { const q = posTrajinera(tj), z = visible(q.x, q.y, 50, 1400); if (z) lista.push({ z, d: { x: q.x, y: q.y, img: 'trajinera', w: 50, h: 26 } }); }
   if (conKarts) {
     for (const k of karts) { const z = visibleK(k) && visible(k.x, k.y, 30, 1600); if (z) lista.push({ z, kart: k }); }
     for (const p of particulas) { const z = visible(p.x, p.y, 10, 600); if (z) lista.push({ z, part: p }); }
@@ -2460,8 +2505,8 @@ function prepararMinimapa() {
   c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1; c.stroke();
   const ruta = () => { c.beginPath(); M.pts.forEach((p, i) => i ? c.lineTo(mm.ox + p.x * mm.esc, mm.oy + p.y * mm.esc) : c.moveTo(mm.ox + p.x * mm.esc, mm.oy + p.y * mm.esc)); c.closePath(); };
   c.lineJoin = 'round';
-  ruta(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 7; c.stroke();
-  ruta(); c.strokeStyle = '#e2e8f0'; c.lineWidth = 4; c.stroke();
+  ruta(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 5; c.stroke(); // karts-pistas-grandes: trazo fino, los tramos no se juntan
+  ruta(); c.strokeStyle = '#e2e8f0'; c.lineWidth = 3; c.stroke();
   const p0 = M.pts[0]; c.fillStyle = '#111'; c.save(); c.translate(mm.ox + p0.x * mm.esc, mm.oy + p0.y * mm.esc); c.rotate(p0.a); c.fillRect(-1, -4, 2, 8); c.restore();
   mm.base = b; mm.pista = pista.id;
   return true;
@@ -2509,7 +2554,7 @@ function pintarHud() {
     if (pos === 1 && hudPrevio.lugar > 1 && modo === 'carrera' && yo.termino === null) window.Emocion?.logro(); // emocion-sonora: rebasaste al 1.er lugar
     hudPrevio.lugar = pos; $('h-pos').dataset.lugar = pos;
   }
-  hud('h-vuelta', 'Vuelta ' + Math.max(1, Math.min(A.VUELTAS, yo.vuelta + 1)) + '/' + A.VUELTAS);
+  hud('h-vuelta', 'Vuelta ' + Math.max(1, Math.min(vueltasPista(), yo.vuelta + 1)) + '/' + vueltasPista());
   hud('h-tiempo', '⏱ ' + A.formatoTiempo(Math.max(0, Math.round(tCarrera * 1000))));
   hud('h-monedas', '🪙 ' + yo.monedas + '/10');
   if (hudPrevio.mon !== yo.monedas) { hudPrevio.mon = yo.monedas; $('h-mbar').style.width = (yo.monedas * 10) + '%'; }
@@ -2534,8 +2579,10 @@ function cuadro(ahora) {
   if (jugando !== enJuego) { enJuego = jugando; document.body.classList.toggle('en-carrera', jugando); mando.activar(jugando); }
   if (enCarrera && !document.hidden) {
     acum += dt; let n = 0;
-    while (acum >= PASO && n < 6) { paso(PASO); pasoParticulas(PASO); acum -= PASO; n++; }
-    if (n === 6) acum = 0;
+    const tope = 6 * pasosPrueba;
+    acum += dt * (pasosPrueba - 1); // solo ?prueba=1 con __karts.rapido(n): n pasos de la misma física por cuadro
+    while (acum >= PASO && n < tope) { paso(PASO); pasoParticulas(PASO); acum -= PASO; n++; }
+    if (n === tope) acum = 0;
   } else acum = 0;
   if (modo === 'carrera' || modo === 'pausa' || modo === 'resultados') dibujar(ahora / 1000, dt);
   else dibujarPortada(ahora / 1000);
@@ -2593,8 +2640,9 @@ if (PRUEBA) {
     },
     // Lleva al jugador al final de la última vuelta (cruza la meta en un momento).
     piloto: on => { pilotoPrueba = !!on; },
-    adelantar: () => alFinalDeVuelta(A.VUELTAS - 1),
-    casiVuelta: () => alFinalDeVuelta(A.VUELTAS - 2), // emocion-sonora: al cruzar empieza la última vuelta
+    rapido: n => { pasosPrueba = Math.max(1, Math.min(8, Math.round(Number(n) || 1))); }, // karts-pistas-grandes: misma física, más pasos por cuadro
+    adelantar: () => alFinalDeVuelta(vueltasPista() - 1),
+    casiVuelta: () => alFinalDeVuelta(vueltasPista() - 2), // emocion-sonora: al cruzar empieza la última vuelta
   };
 }
 </script>

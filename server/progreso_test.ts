@@ -141,7 +141,7 @@ Deno.test("progreso: karts con récords versionados (pistasV 2 y recordsV1) y la
     karts({ recordsV1: {} }), // falta pistasV
     karts({ pistasV: 3, recordsV1: {} }), karts({ pistasV: 1, recordsV1: {} }), karts({ pistasV: "2", recordsV1: {} }),
     karts({ pistasV: 2, recordsV1: { pradera: 5 } }), karts({ pistasV: 2, recordsV1: { "Pradera!": 61_000 } }),
-    karts({ pistasV: 2, recordsV1: Object.fromEntries(Array.from({ length: 33 }, (_, i) => ["pista-" + "abcdefghijklmnopqrstuvwxyzabcdefg"[i], 61_000])) }),
+    karts({ pistasV: 2, recordsV1: Object.fromEntries(Array.from({ length: 33 }, (_, i) => ["pista-" + "abc"[i % 3] + "abcdefghijk"[Math.floor(i / 3)], 61_000])) }),
   ];
   for (const datos of malos) {
     const r = await c.call("PUT", "/progreso/karts", "marisol@example.com", { v: 0, datos });

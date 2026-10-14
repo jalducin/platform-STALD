@@ -137,7 +137,7 @@ function pintarArcadeSala(body) {
   const t = ahoraServidor() - s.inicio;
   const filas = resultadosArcade();
   const humanos = filas.filter(f => f.tipo !== 'bot');
-  if (humanos.every(f => f.envio) || t > Arcade.LIMITE_SALA[juego] + Arcade.GRACIA_SALA) {
+  if (humanos.every(f => f.envio) || t > Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA) {
     if (sala.vista === 'final') return;
     const mio = filas.find(f => f.id === e.yo);
     sala.finAciertos = mio ? mio.monedas : 0; sala.finTotal = 0;
@@ -148,7 +148,7 @@ function pintarArcadeSala(body) {
   }
   const mia = (e.jugadores.find(x => x.id === e.yo) || {}).carrera || sala.arcadeMia;
   if (mia) {
-    const k = 'arcade-espera:' + humanos.map(f => f.envio ? 1 : 0).join('') + ':' + Math.ceil((Arcade.LIMITE_SALA[juego] + Arcade.GRACIA_SALA - t) / 10000);
+    const k = 'arcade-espera:' + humanos.map(f => f.envio ? 1 : 0).join('') + ':' + Math.ceil((Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA - t) / 10000);
     if (sala.vista === k) return;
     sala.vista = k;
     const tiempoDe = f => { // quien sigue jugando, quien no terminó o su tiempo
@@ -156,7 +156,7 @@ function pintarArcadeSala(body) {
       return f.ms === null ? '—' : '⏱ ' + Arcade.formatoTiempo(f.ms);
     };
     body.innerHTML = '<div class="q-card"><div class="sub">' + escapeHtml(Arcade.nombreMapa(juego, mapa)) + '</div><div class="q">' + (mia.ms === null ? '⏰ No terminaste' : '🏁 Tu tiempo: ' + Arcade.formatoTiempo(mia.ms)) + '</div>' +
-      '<div class="sub">Esperando a que terminen los demás (a más tardar en ' + Math.max(0, Math.ceil((Arcade.LIMITE_SALA[juego] + Arcade.GRACIA_SALA - t) / 1000)) + ' s)…</div></div>' +
+      '<div class="sub">Esperando a que terminen los demás (a más tardar en ' + Math.max(0, Math.ceil((Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA - t) / 1000)) + ' s)…</div></div>' +
       '<ol class="rank">' + humanos.map(f => '<li>' + avatarHtml(f.avatar, 28) + '<span class="n">' + escapeHtml(f.nombre) + '</span><span class="pts">' + tiempoDe(f) + '</span></li>').join('') + '</ol>';
     return;
   }

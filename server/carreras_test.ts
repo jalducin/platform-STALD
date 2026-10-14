@@ -109,8 +109,8 @@ Deno.test("carreras: el mapa vive en sala.opciones (elegido o al azar) y la reva
   // Revancha: termina la carrera y la sala nueva trae el mismo mapa.
   const codigo = r.body.codigo;
   assertEquals((await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com")).status, 200);
-  c.avanzar(5000 + 20_000);
-  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { carrera: { ms: 20_000, monedas: 1 } })).status, 200);
+  c.avanzar(5000 + 40_000); // karts-pistas-grandes: arriba del mínimo del Lago Helado (≈ 32 s)
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { carrera: { ms: 40_000, monedas: 1 } })).status, 200);
   assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { final: 500, podio: [{ nombre: "Marisol", total: 500 }] })).status, 200);
   const rev = await c.call("POST", `/sala/${codigo}/revancha`, "marisol@example.com");
   assertEquals(rev.status, 200, JSON.stringify(rev.body));
