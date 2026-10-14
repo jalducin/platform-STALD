@@ -288,6 +288,60 @@ async function respaldo(b, relevo) {
   for (const p of mudos) await p.context().close();
 }
 
+// karts-copa-en-sala: sala de Copa Fiesta con 2 personas en vivo (+ 1 bot): las 4 carreras seguidas, tabla entre
+// carreras con cuenta regresiva, la siguiente arranca sola, el canal en vivo sigue toda la copa y el podio final con
+// suspenso y revancha. Cada quien llega a la meta con __karts.adelantar() pasado el mínimo de la pista (≈ 30–33 s).
+async function copaEnSala(b, relevo) {
+  const pags = [];
+  for (const email of ['marisol@example.com', 'angel@example.com']) pags.push(await jugador(b, email, relevo)); // NOSONAR: en orden
+  const [host] = pags;
+  await host.click('[data-tab="partidas"]'); await host.waitForSelector('#f-crear');
+  await host.selectOption('#p-juego', 'karts');
+  ok('copa: el formulario ofrece «Una carrera» y las copas completas', (await host.$$eval('#p-kformato option', os => os.map(o => o.value))).join(',') === 'carrera,copa:fiesta,copa:mesoamerica,copa:mixta');
+  await host.selectOption('#p-kformato', 'copa:fiesta');
+  ok('copa: al elegir una copa se oculta el selector de pista', await host.isHidden('#p-mapa-wrap'));
+  await host.screenshot({ path: 'karts-copa-crear.png', fullPage: true });
+  await host.click('#f-crear button[type=submit]'); await host.waitForSelector('[data-p="empezar"]', { timeout: 30000 });
+  const codigo = (await host.textContent('.letra')).trim();
+  await unirse(pags[1], codigo);
+  await sleep(1500);
+  await host.click('[data-p="empezar"]');
+  const frames = await enCarrera(pags);
+  const vista = async () => (await (await fetch(API + '/juegos/sala/' + codigo + '?email=marisol%40example.com')).json()).copa;
+  const PISTAS = ['pradera', 'desierto', 'hielo', 'volcan'];
+  for (let k = 0; k < 4; k++) {
+    await Promise.all(frames.map(fr => fr.waitForFunction(k => { const e = window.__karts.estado(); return e.copa === k && e.modo === 'carrera' && e.tiempo > 500; }, k, { timeout: 60000 })));
+    const es = await Promise.all(frames.map(estado));
+    ok('copa: carrera ' + (k + 1) + ' de 4 en ' + PISTAS[k] + ' para los 2, con el otro en vivo y el bot fantasma', es.every(e => e.pista === PISTAS[k] && e.karts === 3 && e.remotos.length === 1), es.map(e => e.pista + ':' + e.karts + ':' + e.remotos.length).join(','));
+    if (k === 1) ok('copa: el canal en vivo sigue en la carrera 2', es.every(e => e.vivo && e.vivo.estado === 'vivo'), es.map(e => e.vivo && e.vivo.estado).join(','));
+    await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
+    await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 34000, null, { timeout: 60000 })));
+    await frames[0].evaluate(() => window.__karts.adelantar());
+    await sleep(1500);
+    await frames[1].evaluate(() => window.__karts.adelantar());
+    if (k < 3) {
+      // Entre carreras: la tabla con la cuenta regresiva en los 2 aparatos; la siguiente arranca sola.
+      await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.copaVisible && /Empieza en|Siguiente carrera en/.test(e.copaTexto); }, null, { timeout: 30000 })));
+      const t = await estado(frames[0]);
+      ok('copa: tabla entre carreras ' + (k + 1) + '→' + (k + 2) + ' con puntos y cuenta regresiva', /Copa/.test(t.copaTexto) && /BOT-/.test(t.copaTexto) && /Tú|Marisol/.test(t.copaTexto), t.copaTexto.slice(0, 160));
+      if (k === 0) { await pags[0].screenshot({ path: 'karts-copa-tabla-390.png' }); await pags[1].setViewportSize(HORIZONTAL); await sleep(800); await pags[1].screenshot({ path: 'karts-copa-tabla-844x390.png' }); await pags[1].setViewportSize(VERTICAL); }
+      const v = await vista();
+      ok('copa: el servidor marca la tabla entre carreras y la carrera ' + (k + 2), v && v.fase === 'interpodio' && v.carrera === k + 1 && v.resultados.length === k + 1, JSON.stringify(v && { fase: v.fase, carrera: v.carrera }));
+    }
+  }
+  // Podio final con suspenso, la tabla de la copa y la revancha.
+  await Promise.all(pags.map(p => p.waitForSelector('#p-body .result', { timeout: 60000 })));
+  await sleep(2500);
+  const txt = await host.textContent('#p-body');
+  ok('copa: podio final de la Copa Fiesta con la tabla de las 4 carreras', /Copa Fiesta/.test(txt) && /Puntos de la copa/.test(txt) && (await host.$$('.copa-tabla tbody tr')).length === 3, txt.slice(0, 160));
+  ok('copa: revancha en el podio', await host.isVisible('[data-p="revancha"]'));
+  const v = await vista();
+  ok('copa: el servidor cierra la copa con 3 en la tabla', v && v.fase === 'final' && v.tabla.length === 3 && v.tabla.every(t => t.porCarrera.length === 4), JSON.stringify(v && v.tabla.map(t => t.nombre + ':' + t.pts)));
+  ok('copa: puntos de ranking guardados (tope 2000)', /a tus puntos de partidas|ya estaba guardada/.test(await host.textContent('#p-guardado').catch(() => '')), await host.textContent('#p-guardado').catch(() => ''));
+  await host.screenshot({ path: 'karts-copa-podio-390.png', fullPage: true });
+  for (const q of pags) await q.context().close();
+}
+
 (async () => {
   const relevo = await levantarRelevo();
   const b = await chromium.launch({ executablePath: process.env.CHROME || undefined, args: ['--disable-renderer-backgrounding', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows'] });
@@ -299,6 +353,7 @@ async function respaldo(b, relevo) {
   await desconexion(b, relevo);
   await personajesEnSala(b, relevo); // personaje-en-salas
   await respaldo(b, relevo);
+  await copaEnSala(b, relevo); // karts-copa-en-sala
   await b.close(); await relevo.cerrar();
   console.log(out.join('\n'));
   console.log('RESUMEN fps(8 en vivo) libre=' + fps.libre + ' CPU×4=' + fps.lento + ' mensajes/s(sala de 8)=' + r.porSeg.toFixed(1));

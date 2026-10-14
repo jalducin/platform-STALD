@@ -115,6 +115,8 @@ function jugarArcade(id, param) {
 // los bots tienen un tiempo simulado con la semilla. Podio por tiempo con pintarFinalSala (registra final, podio y puntos).
 function opcionesMapaArcade(juego) {
   const wrap = document.getElementById('p-mapa-wrap'); if (!wrap) return;
+  const kf = document.getElementById('p-kformato-wrap'); // karts-copa-en-sala: «Una carrera» o «Copa completa»
+  if (kf) { kf.hidden = juego !== 'karts'; if (juego === 'karts') document.getElementById('p-kformato').value = 'carrera'; }
   wrap.hidden = !ARCADE.has(juego);
   if (!ARCADE.has(juego)) return;
   const lista = juego === 'karts' ? Arcade.PISTAS.map(p => p.id) : Arcade.MUNDOS.filter(x => x.jugable).flatMap(x => [x.n + '-1', x.n + '-2']);
@@ -131,6 +133,11 @@ function resultadosArcade() {
   }).sort((a, b) => (a.ms === null ? Infinity : a.ms) - (b.ms === null ? Infinity : b.ms));
   filas.forEach((f, i) => { f.total = f.ms === null ? 0 : Arcade.puntosLugar(i + 1); });
   return filas;
+}
+// karts-copa-en-sala: una sala de copa de Karts va por pintarCopaSala; las demás carreras, por pintarArcadeSala.
+function pintarArcadeOCopa(body) {
+  if (window.KartsCopa && KartsCopa.esCopa(sala.estado.sala)) return pintarCopaSala(body);
+  return pintarArcadeSala(body);
 }
 function pintarArcadeSala(body) {
   const e = sala.estado, s = e.sala, juego = s.juego, mapa = mapaArcade(s);
@@ -188,6 +195,105 @@ function pintarArcadeSala(body) {
   };
   window.addEventListener('message', alMensaje);
   limpiezas.push(() => window.removeEventListener('message', alMensaje));
+}
+
+// ---- Copa completa de Karts en sala (openspec: karts-copa-en-sala) ----
+// El calendario sale de juegos/karts-copa.js (el mismo que usa el servidor) con el estado de la sala y la hora del
+// servidor. El iframe de Karts se abre una vez y corre las 4 carreras: esta página le manda `inicio` de cada carrera
+// (con la tabla, que se ve hasta 3 s antes de la salida) y `copa-tabla` mientras se espera a los demás. Cada resultado va
+// al servidor como { copa: { carrera, ms, monedas } }; al salir a media carrera se manda { copa: { carrera, abandono } }.
+const filaCopaIframe = (t, st, yo) => {
+  const ult = st.resultados.length ? st.resultados[st.resultados.length - 1].find(f => f.id === t.id) : null;
+  return { nombre: t.nombre, bot: t.bot, pts: t.pts, ultimo: ult ? ult.pts : null, yo: t.id === yo };
+};
+function botsDeCarrera(s, pista) {
+  return participantes().filter(p => p.bot).map(p => ({ nombre: p.nombre, ms: Arcade.tiempoBot('karts', pista, s.seed, p.id), color: (Arcade.BOTS_SALA.find(b => b.id === p.id) || {}).color }));
+}
+function aCopa(msg) { const f = document.getElementById('arcade-frame'); try { f.contentWindow.postMessage(msg, location.origin); } catch (x) { /* iframe cerrado */ } }
+// Manda al servidor el abandono de la carrera en curso (al salir o al volver a media carrera). keepalive: también al cerrar.
+function abandonarCopa(k) {
+  const c = sala.copa;
+  if (!c || c.abandono === k) return;
+  c.abandono = k;
+  api('/juegos/sala/' + sala.codigo + '/respuesta', { method: 'POST', keepalive: true, headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ copa: { carrera: k, abandono: true } }) });
+}
+function abrirCopaSala(body) {
+  sala.vista = 'copa';
+  sala.copa = { listo: false, enviada: -1, firma: '', abandono: -1, corriendo: -1 };
+  body.innerHTML = marcoArcade(srcArcade('karts'), juegoPorId('karts').t);
+  const frame = document.getElementById('arcade-frame');
+  if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' });
+  const personas = participantes().filter(p => !p.bot).map(p => ({ id: p.id, nombre: p.nombre, personaje: personajeDeAsiento(p.id) }));
+  sala.copa.personas = personas;
+  sala.copa.vivo = !!sala.vivoTr && personas.length > 1;
+  if (sala.copa.vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'karts', transporte: sala.vivoTr, permitido: id => personas.some(h => h.id === id) }); limpiezas.push(() => pt.cerrar()); }
+  const alMensaje = ev => {
+    const d = ev.data || {};
+    if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'karts') return;
+    if (d.tipo === 'listo') { sala.copa.listo = true; pintarSala(); }
+    else if (d.tipo === 'meta' && Number.isInteger(d.carrera) && d.carrera === sala.copa.corriendo) {
+      const k = d.carrera, ms = d.ms === null ? null : Math.max(0, Math.round(Number(d.ms) || 0));
+      sala.copa.corriendo = -1;
+      post('/juegos/sala/' + sala.codigo + '/respuesta', { copa: { carrera: k, ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) } })
+        .then(() => traerSala()).then(() => pintarSala());
+    }
+  };
+  const alSalir = () => { if (sala.copa && sala.copa.corriendo >= 0) abandonarCopa(sala.copa.corriendo); };
+  window.addEventListener('message', alMensaje);
+  window.addEventListener('pagehide', alSalir);
+  limpiezas.push(() => { alSalir(); window.removeEventListener('message', alMensaje); window.removeEventListener('pagehide', alSalir); });
+}
+function pintarCopaSala(body) {
+  const e = sala.estado, s = e.sala, ahora = ahoraServidor();
+  const st = KartsCopa.estado(s, e.jugadores, ahora);
+  if (st.fase === 'final') return finalCopa(body, st);
+  if (sala.vista !== 'copa') abrirCopaSala(body);
+  const c = sala.copa;
+  if (!c.listo) return;
+  const cal = st.calendario[st.calendario.length - 1];
+  if (!cal) return;
+  const yoJ = e.jugadores.find(x => x.id === e.yo) || { id: e.yo };
+  const mio = KartsCopa.reporte(yoJ, cal.k);
+  const tabla = st.tabla.map(t => filaCopaIframe(t, st, e.yo));
+  // Volviste a media carrera (no la empezaste en esta página): no la corres; si se te esperaba, se avisa al servidor.
+  const tarde = cal.cierre === null && ahora > cal.inicio + 4000 && c.enviada < cal.k && !mio;
+  if (tarde && cal.esperados.includes(e.yo)) abandonarCopa(cal.k);
+  if (cal.cierre === null && !mio && !tarde && c.enviada < cal.k) return iniciarCarreraCopa(cal, st, tabla, ahora);
+  if (c.corriendo === cal.k && !mio) return; // corriendo: el juego tiene la pantalla
+  const { sub, cuenta } = textoEsperaCopa(cal, !!mio, ahora);
+  const firma = sub + '|' + cuenta + '|' + tabla.map(t => t.pts).join(',');
+  if (firma === c.firma) return;
+  c.firma = firma;
+  aCopa({ tipo: 'copa-tabla', nombre: st.nombre, sub, cuenta, tabla });
+}
+// Manda al juego la carrera k de la copa (con la tabla, que se ve hasta 3 s antes de la salida).
+function iniciarCarreraCopa(cal, st, tabla, ahora) {
+  const e = sala.estado, s = e.sala, c = sala.copa;
+  c.enviada = cal.k; c.corriendo = cal.k;
+  aCopa({ tipo: 'inicio', modo: 'sala', mapa: cal.pista, seed: s.seed, inicioEn: cal.inicio - ahora, bots: botsDeCarrera(s, cal.pista), yo: e.yo, humanos: c.personas, vivo: c.vivo, personaje: personajeElegido(),
+    copa: { k: cal.k, nombre: st.nombre, tabla } });
+}
+// Texto de la espera: a quién falta esperar (y el límite) o cuánto falta para la siguiente carrera.
+function textoEsperaCopa(cal, corri, ahora) {
+  const e = sala.estado, nombre = id => (e.jugadores.find(x => x.id === id) || {}).nombre;
+  if (cal.cierre !== null || ahora < cal.inicio) return { sub: 'Siguiente: carrera ' + (cal.k + 1) + ' de 4 · ' + Arcade.nombreMapa('karts', cal.pista), cuenta: '⏱ Empieza en ' + Math.max(0, Math.ceil((cal.inicio - ahora) / 1000)) + ' s' };
+  const faltan = cal.esperados.filter(id => !KartsCopa.reporte(e.jugadores.find(x => x.id === id) || {}, cal.k)).map(nombre);
+  const vence = Math.max(0, Math.ceil((cal.inicio + cal.limite + Arcade.GRACIA_SALA - ahora) / 1000));
+  return { sub: 'Carrera ' + (cal.k + 1) + ' de 4' + (corri ? '' : ' · te unes en la siguiente') + (faltan.length ? ' · faltan: ' + faltan.join(', ') : ''), cuenta: '⏱ A más tardar en ' + vence + ' s' };
+}
+// Podio final de la copa: por puntos de copa; el total de cada quien son sus puntos de ranking (tope 2000).
+function finalCopa(body, st) {
+  if (sala.vista === 'final') return;
+  const e = sala.estado;
+  const filas = st.tabla.map(t => { const p = participantes().find(x => x.id === t.id) || {}; return { id: t.id, nombre: t.nombre, tipo: t.bot ? 'bot' : p.tipo, avatar: p.avatar, total: t.ranking }; });
+  const yo = e.jugadores.find(x => x.id === e.yo);
+  sala.finAciertos = yo && Array.isArray(yo.copa) ? yo.copa.reduce((a, x) => a + (x.monedas || 0), 0) : 0; sala.finTotal = KartsCopa.CARRERAS;
+  pintarFinalSala(body, filas, null, (KartsCopa.EMOJI[st.copa] || '🏆') + ' ' + st.nombre);
+  body.insertAdjacentHTML('beforeend', '<h2>🏁 Puntos de la copa</h2><div class="scroll-x"><table class="inv copa-tabla"><thead><tr><th>#</th><th>Jugador</th>' +
+    st.pistas.map((id, i) => '<th>' + (i + 1) + '. ' + escapeHtml((Arcade.pistaPorId(id) || {}).emoji || '') + '</th>').join('') + '<th>Copa</th></tr></thead><tbody>' +
+    st.tabla.map((t, i) => '<tr' + (t.id === e.yo ? ' class="yo"' : '') + '><td>' + (i + 1) + '</td><td>' + escapeHtml(t.nombre) + (t.bot ? ' 🤖' : '') + '</td>' +
+      t.porCarrera.map(x => '<td class="num">' + (x.ms === null ? 'NT' : x.pts) + '</td>').join('') + '<td class="num"><b>' + t.pts + '</b></td></tr>').join('') + '</tbody></table></div>' +
+    '<p class="muted" style="font-size:.82rem">NT = no terminó (0 puntos). Puntos por lugar: 15, 12, 10, 8, 6, 4, 2, 1.</p>');
 }
 
 // ---- Personaje en las salas de Karts y Axo (openspec: personaje-en-salas) ----

@@ -99,6 +99,7 @@ body.ctl-mando #mandos{display:none!important}
 .res-tarjetas div{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:6px 12px;font-weight:800;font-size:15px}
 .res-tarjetas small{display:block;font-size:11px;opacity:.75}
 table.tabla{border-collapse:collapse;width:min(460px,100%);font-weight:700;font-size:14px}
+#copa-tabla{font-size:13px}#copa-tabla td,#copa-tabla th{padding:3px 6px} /* karts-copa-en-sala: tabla entre carreras */
 .tabla td,.tabla th{padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.15);text-align:left}
 .tabla tr.yo{background:rgba(250,204,21,.25)}
 .tabla .num{text-align:right}
@@ -232,6 +233,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
     <div class="ov hide" id="ov-pausa"><h2>⏸ Pausa</h2><p id="pausa-txt"></p><div class="fila"><button class="btn" id="b-seguir">▶ Seguir</button><button class="btn sec" id="b-salir-carrera">🏳️ Dejar la carrera</button></div></div>
     <div class="ov hide" id="ov-res"><div id="confeti"></div><h2 id="res-titulo">Resultados</h2><div class="podio" id="res-podio"></div><div class="res-tarjetas" id="res-tarjetas"></div><table class="tabla" id="res-tabla"></table><p id="res-puntos"></p><p id="res-guardado" style="font-size:14px"></p><div class="fila" id="res-botones"></div></div>
     <div class="ov hide" id="ov-sala"><h2 id="sala-titulo">Partida</h2><p id="sala-txt"></p></div>
+    <div class="ov hide" id="ov-copa" aria-live="polite"><h2 id="copa-titulo">🏆 Copa</h2><p id="copa-sub"></p><table class="tabla" id="copa-tabla"></table><p id="copa-cuenta" style="font-weight:800;font-size:18px"></p></div>
   </div>
   <div id="mandos" aria-hidden="true">
     <div id="m-izq">
@@ -248,7 +250,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="karts-pistas.js?v=3"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="karts-pistas.js?v=4"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
 <script src="arcade.js?v=5"></script>
 <script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
@@ -1782,6 +1784,7 @@ function paso(dt) {
 // Antes de la salida: anota cuándo aceleraste (para el súper arranque) y canta 3, 2, 1.
 function cuentaRegresiva(ahora) {
   const falta = (carreraDe.inicioLocal - ahora) / 1000;
+  quitarCopaAntes(falta); // karts-copa-en-sala
   if ((pulso.derrape || pulso.acel) && arranque.presiono === null) arranque.presiono = -falta;
   pulso.derrape = false; pulso.item = false; pulso.acel = false;
   const n = Math.ceil(falta);
@@ -1957,7 +1960,7 @@ function iniciarCarrera(id, op) {
   carreraDe = { copa: !!op.copa, inicioLocal: performance.now() + (op.sala ? op.inicioEn : 3200), salio: false, ultimoNum: null };
   avisar(pista.emoji + ' ' + pista.nombre + (op.copa ? ' · carrera ' + (op.ronda + 1) + ' de 4' : ''), 2200);
   revesT = 0; revesAviso = -10;
-  mostrarTutorial();
+  if (!(op.sala && sala && sala.copa && sala.copa.k > 0)) mostrarTutorial(); // karts-copa-en-sala: solo en la carrera 1 de la copa
   if (!op.sala) setTimeout(() => { if (modo === 'carrera' && !carreraDe.salio) avisar(pistaArranque(), 1800); }, 1200);
   $('m-derrape').textContent = 'DERRAPE';
 }
@@ -2063,7 +2066,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 /* ================= Overlays ================= */
-const OVERLAYS = ['ov-carga', 'ov-menu', 'ov-pistas', 'ov-taller', 'ov-pausa', 'ov-res', 'ov-sala'];
+const OVERLAYS = ['ov-carga', 'ov-menu', 'ov-pistas', 'ov-taller', 'ov-pausa', 'ov-res', 'ov-sala', 'ov-copa'];
 function mostrar(id) { OVERLAYS.forEach(o => $(o).classList.toggle('hide', o !== id)); }
 function ocultarOverlays() { OVERLAYS.forEach(o => $(o).classList.add('hide')); }
 let avisoT = null;
@@ -2090,6 +2093,8 @@ addEventListener('message', ev => {
   else if (d.tipo === 'guardado') { if (!d.ok) avisar('⚠️ No se pudo guardar tu avance. Revisa tu conexión.', 2500); }
   else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = textoGuardado(d);
 });
+// karts-copa-en-sala: tabla de la copa que manda la página mientras se espera.
+addEventListener('message', ev => { if (ev.origin === location.origin && ev.source === parent && ev.data && ev.data.tipo === 'copa-tabla') pintarCopa(ev.data); });
 // Resultado de guardar los puntos individuales (con el lugar de la semana si viene).
 function textoGuardado(d) {
   if (!d.guardado) { return 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').'; }
@@ -2097,20 +2102,70 @@ function textoGuardado(d) {
   return '✔ +' + d.puntos + ' a tus ⭐ individuales' + lugar;
 }
 function empezarSala(d) {
-  sala = { mapa: d.mapa, enviado: false };
-  personaje = personajeDeInicio(d); // personaje-en-salas: el elegido en la sala de espera
+  const copa = copaDeInicio(d.copa); // karts-copa-en-sala: carrera k de la copa (null en una carrera suelta)
+  if (copa && sala && sala.copa && sala.copa.k === copa.k) return; // la misma carrera otra vez: nada
+  sala = { mapa: d.mapa, enviado: false, copa };
+  if (!copa || copa.k === 0 || !personaje) personaje = personajeDeInicio(d); // personaje-en-salas (en la copa: el de la carrera 1, toda la copa)
   const humanos = humanosDeSala(d), enVivo = !!d.vivo && humanos.length > 1 && humanos.some(h => h.id === d.yo) && !!window.EnVivo;
   iniciarCarrera(d.mapa, { sala: true, bots: d.bots || [], inicioEn: Number(d.inicioEn || 0), vivo: enVivo, humanos, yo: d.yo });
+  if (copa) mostrarCopaAntes(copa);
   if (carreraDe.inicioLocal < performance.now()) avisar('La carrera ya empezó: ¡arranca!', 1600);
-  if (enVivo) empezarVivo(d.yo, humanos);
+  if (enVivo && vivo) vivo.ritmo('k', 2); // karts-copa-en-sala: el canal sigue abierto entre carreras
+  else if (enVivo) empezarVivo(d.yo, humanos);
   else if (humanos.length > 1) setTimeout(avisoRespaldo, 2400); // tras el nombre de la pista
+}
+
+/* ================= Copa completa en sala (openspec: karts-copa-en-sala) =================
+   La página de Juegos lleva el calendario (juegos/karts-copa.js) y manda `inicio` con `copa` { k, n, nombre, tabla }
+   para cada carrera, y `copa-tabla` mientras esperas a los demás o entre carreras. El iframe no se recarga: el canal en
+   vivo, el personaje y el sonido siguen toda la copa. */
+function copaDeInicio(c) {
+  if (!c || typeof c !== 'object' || !Number.isInteger(c.k) || c.k < 0 || c.k > 3) return null;
+  return { k: c.k, n: 4, nombre: String(c.nombre || 'Copa').slice(0, 40), tabla: Array.isArray(c.tabla) ? c.tabla : [] };
+}
+const kCopa = () => (sala && sala.copa ? sala.copa.k : 0);
+// Tabla de la copa: lugar, nombre, puntos de la última carrera y acumulados (los nombres se escapan).
+function filasCopa(tabla) {
+  return '<tr><th>#</th><th>Corredor</th><th class="num">+Pts</th><th class="num">Copa</th></tr>' + tabla.slice(0, 12).map((f, i) =>
+    '<tr' + (f.yo ? ' class="yo"' : '') + '><td>' + (i + 1) + '</td><td>' + esc(String(f.nombre || '').slice(0, 24)) + (f.bot ? ' 🤖' : '') + '</td><td class="num">' + (f.ultimo === null || f.ultimo === undefined ? '—' : '+' + Number(f.ultimo)) + '</td><td class="num">' + Number(f.pts || 0) + '</td></tr>').join('');
+}
+// Antes de la carrera k (k > 0): la tabla con la cuenta regresiva hasta 3 s antes de la salida.
+function mostrarCopaAntes(c) {
+  $('copa-titulo').textContent = '🏆 ' + c.nombre;
+  $('copa-sub').textContent = 'Carrera ' + (c.k + 1) + ' de 4: ' + pista.emoji + ' ' + pista.nombre;
+  avisar(pista.emoji + ' ' + pista.nombre + ' · carrera ' + (c.k + 1) + ' de 4', 2200);
+  if (c.k === 0 || !c.tabla.length) return;
+  $('copa-tabla').innerHTML = filasCopa(c.tabla);
+  mostrar('ov-copa');
+  sala.copaVer = true;
+}
+// Mientras esperas (ya llegaste o te toca la siguiente) o entre carreras: tabla y cuenta que manda la página.
+function pintarCopa(d) {
+  if (!sala || !sala.copa || (modo === 'carrera' && !sala.enviado && !sala.copaVer)) return; // corriendo: no se tapa la pista
+  $('copa-titulo').textContent = '🏆 ' + String(d.nombre || sala.copa.nombre).slice(0, 40);
+  $('copa-sub').textContent = String(d.sub || '').slice(0, 120);
+  $('copa-tabla').innerHTML = filasCopa(Array.isArray(d.tabla) ? d.tabla : []);
+  $('copa-cuenta').textContent = String(d.cuenta || '').slice(0, 80);
+  if (modo !== 'carrera' || sala.copaVer) mostrar('ov-copa');
+}
+// En la cuenta regresiva de la carrera k: la tabla se quita a 3 s de la salida.
+function quitarCopaAntes(falta) {
+  if (sala && sala.copaVer && falta < 3.2) { sala.copaVer = false; $('ov-copa').classList.add('hide'); }
+  else if (sala && sala.copaVer) $('copa-cuenta').textContent = '⏱ Siguiente carrera en ' + Math.ceil(falta) + ' s';
 }
 function terminarSala(ms) {
   if (sala.enviado) return;
   if (vivo) vivo.enviarYa('k', kartVivo()); // juegos-en-vivo: los demás te ven llegar antes de que se cierre el juego
   sala.enviado = true; motorOn(false);
-  enviar({ tipo: 'meta', ms, monedas: yo.monedas });
+  enviar({ tipo: 'meta', ms, monedas: yo.monedas, ...(sala.copa ? { carrera: sala.copa.k } : {}) }); // karts-copa-en-sala: de qué carrera
   modo = 'resultados'; $('hud').classList.add('hide');
+  if (sala.copa) { // karts-copa-en-sala: la página manda la tabla con quién falta
+    $('copa-titulo').textContent = ms === null ? '⏰ Se acabó el tiempo' : '🏁 ¡Llegaste!';
+    $('copa-sub').textContent = (ms === null ? '' : 'Tu tiempo: ' + A.formatoTiempo(ms) + ' · ') + 'Esperando a los demás…';
+    $('copa-tabla').innerHTML = ''; $('copa-cuenta').textContent = '';
+    mostrar('ov-copa');
+    return;
+  }
   $('sala-titulo').textContent = ms === null ? '⏰ Se acabó el tiempo' : '🏁 ¡Llegaste!';
   $('sala-txt').textContent = (ms === null ? '' : 'Tu tiempo: ' + A.formatoTiempo(ms) + ' · ') + 'Esperando el podio…';
   mostrar('ov-sala');
@@ -2146,11 +2201,11 @@ function empezarVivo(yoId, humanos) {
     vivo.enviar('k', kartVivo());
   }).catch(avisoRespaldo);
 }
-// Estado de tu kart: [x·10, y·10, ángulo·1000, vel, vuelta, avance, banderas, término, personaje].
+// Estado de tu kart: [x·10, y·10, ángulo·1000, vel, vuelta, avance, banderas, término, personaje, carrera de la copa].
 function kartVivo() {
   const f = (yo.turbo > 0 ? BANDERA.turbo : 0) | (yo.estrella > 0 ? BANDERA.estrella : 0) | (yo.derrape ? BANDERA.derrape : 0) |
     (yo.giro > 0 ? BANDERA.giro : 0) | (yo.rayo > 0 ? BANDERA.rayo : 0) | (yo.item ? BANDERA.item : 0);
-  return [Math.round(yo.x * 10), Math.round(yo.y * 10), Math.round(difAng(yo.ang) * 1000), Math.round(yo.vel), yo.vuelta, yo.idx, f, yo.termino || 0, yo.personaje];
+  return [Math.round(yo.x * 10), Math.round(yo.y * 10), Math.round(difAng(yo.ang) * 1000), Math.round(yo.vel), yo.vuelta, yo.idx, f, yo.termino || 0, yo.personaje, kCopa()]; // karts-copa-en-sala: d[9] = carrera de la copa
 }
 // ¡YA!: ritmo de carrera y, en la parrilla, quien ya está conectado aunque todavía no llegue su primer estado.
 function vivoAlSalir() {
@@ -2162,6 +2217,7 @@ const conBandera = (f, b, v) => ((f & b) ? v : 0);
 function alKartRemoto(d, meta) {
   const k = karts.find(x => x.remoto && x.id === meta.de);
   if (!k || !Array.isArray(d) || d.length < 8 || !d.slice(0, 8).every(Number.isFinite)) return;
+  if (d.length > 9 && d[9] !== kCopa()) return; // karts-copa-en-sala: un mensaje de otra carrera de la copa
   k.interp.agregar(meta.tLocal, [d[0] / 10, d[1] / 10, d[2] / 1000, d[3]]);
   k.vuelta = Math.max(-1, Math.min(vueltasPista(), Math.trunc(d[4]))); k.idx = ((Math.trunc(d[5]) % N) + N) % N;
   const f = Math.trunc(d[6]);
@@ -2377,8 +2433,14 @@ function pintarEscena(t, conKarts) {
   g.globalAlpha = 1;
 }
 // Mete en la lista { z, … } lo que la cámara alcanza a ver (con su distancia z), cada cosa con su alcance.
-function juntarDecor(lista, visible) { // karts-pistas-grandes: solo las celdas cercanas a la cámara
-  for (const l of decorCerca(cam.x, cam.y, 1700)) for (const d of l) { const z = visible(d.x, d.y, d.w, 1600); if (z) lista.push({ z, d }); }
+// karts-pistas-grandes: solo las celdas cercanas a la cámara y, como mucho, los MAX_DECOR adornos más cercanos (los
+// lejanos ya se ven chicos y desvanecidos): el costo de dibujar no crece con la pista.
+const MAX_DECOR = 150;
+function juntarDecor(lista, visible) {
+  const vistos = [];
+  for (const l of decorCerca(cam.x, cam.y, 1700)) for (const d of l) { const z = visible(d.x, d.y, d.w, 1600); if (z) vistos.push({ z, d }); }
+  if (vistos.length > MAX_DECOR) { vistos.sort((a, b) => a.z - b.z); vistos.length = MAX_DECOR; }
+  for (const v of vistos) lista.push(v);
 }
 function juntarVisibles(lista, visible, conKarts) {
   juntarDecor(lista, visible);
@@ -2633,6 +2695,7 @@ if (PRUEBA) {
       ang: yo ? yo.ang : 0, giro: leerEntrada().giro, freno: leerEntrada().freno, derrape: activo('derrape'), acel: acelModo, acelera: leerEntrada().acel,
       vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
       item: yo ? yo.item : null, mando: mando.estado(), aire: yo ? yo.aire || 0 : 0, eventos: { ...eventos }, zonas: zonas.map(z => z.tipo),
+      copa: sala && sala.copa ? sala.copa.k : null, copaVisible: !$('ov-copa').classList.contains('hide'), copaTexto: $('ov-copa').textContent, // karts-copa-en-sala
       personaje: yo ? yo.personaje : personaje, masa: Personajes.masa(yo ? yo.personaje : personaje), personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length,
       ...estadoVivo() }),
     // Caja de tu kart en px del lienzo (capturas de cerca y revisión de su dibujo).

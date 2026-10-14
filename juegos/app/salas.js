@@ -194,6 +194,8 @@ function pintarPartidas() {
     '<div id="p-equipos-wrap" hidden><label class="check"><input id="p-equipos" type="checkbox"><span>👥 Por equipos (A y B, alternados por orden de entrada)</span></label></div>' +
     '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select>' +
       '<label>🎉 Categorías divertidas (opcional, máximo 2)</label><div id="p-extra"></div><div class="feedback" id="p-extra-aviso"></div></div>' + // basta-divertida-una-robo
+    '<div id="p-kformato-wrap" hidden><label for="p-kformato">Formato</label><select id="p-kformato" class="sel"><option value="carrera">🏁 Una carrera</option>' + // karts-copa-en-sala
+      '<option value="copa:fiesta">🏆 Copa completa: Copa Fiesta (4 pistas)</option><option value="copa:mesoamerica">🌽 Copa completa: Copa Mesoamericana (4 pistas)</option><option value="copa:mixta">🎲 Copa completa: mixta (2 y 2 al azar)</option></select></div>' +
     '<div id="p-mapa-wrap" hidden><label for="p-mapa">Nivel o pista</label><select id="p-mapa" class="sel"></select></div>' +
     '<div id="p-tema-wrap" hidden><label for="p-tema">Tema</label><select id="p-tema" class="sel">' + InglesGramatica.TEMAS.map(t => '<option value="' + t.id + '">' + t.emoji + ' ' + escapeHtml(t.t) + '</option>').join('') + '</select></div>' +
     '<div id="p-grandes-wrap" hidden></div>' + // juegos-salas-grandes: figura del Bingo, criterio del Memorama
@@ -314,7 +316,7 @@ function pintarSala() {
   if (s.juego === 'ajedrez') return pintarAjedrezSala(body);
   if (ClasicosRapidosUI.IDS.includes(s.juego)) return ClasicosRapidosUI.pintarSala(body); // clasicos-rapidos
   if (TableroUI.esSala(s.juego)) return TableroUI.pintarSala(body); // juegos-tablero
-  if (ARCADE.has(s.juego)) return pintarArcadeSala(body);
+  if (ARCADE.has(s.juego)) return pintarArcadeOCopa(body); // karts-copa-en-sala
   if (SALAS_GRANDES[s.juego]) return SALAS_GRANDES[s.juego].pintar(body); // juegos-salas-grandes
   if (s.juego === 'cultura-linea') return pintarLineaSala(body); // cultura-conocimiento
   if (s.juego === 'futbol') return pintarFutbolSala(body); // futbol-en-linea
@@ -630,6 +632,7 @@ async function crearPartida() {
     if (juego.startsWith('basta')) return { rondas: valor('p-rondas'), extra: [...document.querySelectorAll('[data-pextra]:checked')].map(x => x.dataset.pextra) };
     if (juego === 'poker') return document.getElementById('p-equipos').checked ? { equipos: '1' } : {};
     if (juego === 'ajedrez') return { reloj: valor('p-reloj') };
+    if (juego === 'karts' && valor('p-kformato').startsWith('copa:')) return { modo: 'copa', copa: valor('p-kformato').slice(5) }; // karts-copa-en-sala
     return ARCADE.has(juego) && valor('p-mapa') ? { mapa: valor('p-mapa') } : {};
   };
   const opciones = opcionesDelJuego();

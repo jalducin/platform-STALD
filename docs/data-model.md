@@ -245,6 +245,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - En Karts y Axo (`karts` y `plataformas`, cambio `personaje-en-salas`) el archivo del jugador puede llevar
     `personaje`, uno de los ids de `Personajes.LISTA` (`juegos/personajes.js`, fuente única), elegido en la sala de
     espera. Sin datos personales.
+  - Copa completa de Karts (cambio `karts-copa-en-sala`): la sala lleva `opciones.modo = "copa"` y `opciones.copa`
+    (`fiesta`, `mesoamerica`, `mixta`; `opciones.mapa` = su 1.ª pista) y cada asiento `copa[]`
+    `{ k 0–3, ms | null, monedas, t, abandono? }` (un resultado por carrera, el primero). Calendario, puntos y tabla se
+    deducen de eso con `juegos/karts-copa.js`; no se guarda nada más.
   - En Golf (cambio `golf`), `jugadas[]` `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, t }`. Los 3 hoyos de la
     sala salen de la semilla (`golf-hoyos`) y los tiros automáticos por tiempo, de `auto|<paso>`.
   - En Brisca, `jugadas[]` `{ n, accion: "jugar", carta, t }`. En Conquián, `jugadas[]` `{ n, accion, carta?, con?, a?, t }`.

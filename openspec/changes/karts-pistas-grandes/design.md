@@ -101,6 +101,10 @@
 - **Escenario por celdas** de 512 px: `juntarVisibles` solo revisa las celdas a ≤ 1 600 px de la cámara, en vez de los
   1 080 adornos en cada cuadro. Monedas y cajas siguen con su alcance (900 y 1 100 px).
 - El costo por cuadro del Mode-7 no depende del tamaño de la pista (un píxel de textura por píxel del búfer).
+- Tope de adornos dibujados (ajuste tras la suite completa, cambio `karts-copa-en-sala`): solo los 150 más cercanos
+  (`MAX_DECOR`; los lejanos ya se ven chicos y desvanecidos) y las cabezas de serpiente de la Calzada cada 18 muestras
+  (antes 14): el costo de dibujar no crece con la pista. Con la máquina cargada (la suite completa y otra suite a la
+  vez), las pistas con más adornos cercanos bajaban a 39–54 fps con CPU ×4.
 - Medición: fps con CPU ×4 en cada una de las 8 pistas (E2E), y con 8 karts en vivo (`e2e-karts-vivo`).
 
 ### 7. Pruebas
