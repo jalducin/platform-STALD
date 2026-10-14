@@ -14,6 +14,7 @@ import * as Grandes from "./salas_grandes.ts";
 import * as Futbolito from "./futbolito.ts"; // futbolito-equipos: formato, equipos y dueño de la barra
 import * as FutbolLinea from "./futbol_linea.ts"; // futbol-en-linea: táctica del asiento y resultado validado
 import { esPersonaje } from "./personajes.ts"; // personaje-en-salas: misma lista que juegos/personajes.js
+import * as Copa from "./karts_copa.ts"; // karts-copa-en-sala: copa completa de Karts (reglas en juegos/karts-copa.js)
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -205,6 +206,7 @@ interface EnSala extends Grandes.JugadorGrande { // juegos-salas-grandes: bingo,
   tactica?: FutbolLinea.TacticaFutbol; // futbol-en-linea: táctica elegida en la sala de espera
   personaje?: string; // personaje-en-salas: personaje de Karts o Axo elegido en la sala de espera
   futbol?: FutbolLinea.ReporteFutbol & { t: number }; // futbol-en-linea: resultado que vio (solo el primero)
+  copa?: Copa.ReporteCopa[]; // karts-copa-en-sala: resultado de cada carrera de la copa (solo el primero de cada una)
   v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
 }
 
@@ -302,7 +304,7 @@ async function publicarEstado(store: Store, codigo: string, ahora: number, rt?: 
   if (!rt) return;
   cache.delete(codigo);
   const fresco = await estado(store, codigo, ahora);
-  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: vistaJugadores(fresco.sala.juego, Clasicos.ocultarJugadas(fresco.sala.juego, fresco.jugadores), null), ahora: Date.now() }); // clasicos-rapidos y juegos-tablero: sin elecciones de ppt ni flotas
+  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: vistaJugadores(fresco.sala.juego, Clasicos.ocultarJugadas(fresco.sala.juego, fresco.jugadores), null), ahora: Date.now(), ...Copa.vistaCopa(fresco.sala, fresco.jugadores, ahora) }); // clasicos-rapidos y juegos-tablero: sin elecciones de ppt ni flotas
 }
 
 // Revancha (openspec: revancha-partidas). La primera petición reserva `siguiente` en la sala vieja con escritura
@@ -324,6 +326,7 @@ async function reservarRevancha(store: Store, codigo: string, jugador: Jugador, 
   if (!(await store.get(ruta(sig)))) {
     const host = base.siguienteHost ?? jugador.id;
     const nueva: Sala = { codigo: sig, juego: base.juego, opciones: { ...base.opciones }, seed: aleatorio(1)[0] % 2147483647, host, creada: ahora, inicio: null, bots: base.bots, canal: canalNuevo() };
+    if (Copa.esCopaKarts(nueva)) nueva.opciones.mapa = Copa.pistasCopa(nueva.opciones.copa, nueva.seed)[0]; // karts-copa-en-sala: la mixta sortea otra vez
     if (await store.put(ruta(sig), nueva, null, `sala ${sig}: revancha de ${codigo}`)) {
       await indexar(store, lunes, { codigo: sig, juego: base.juego, host: nombreDe(host) ?? jugador.nombre, creada: ahora });
     }
@@ -372,6 +375,11 @@ function opcionesNuevaSala(juego: string, op: Record<string, unknown>): Record<s
     const mapa = mapaDeSala(juego, op.mapa, aleatorio(1)[0]);
     if (!mapa) return "mapa_invalido";
     opciones.mapa = mapa;
+    if (juego === "karts") { // karts-copa-en-sala: «Una carrera» o «Copa completa» (el mapa pasa a ser su 1.ª pista)
+      const copa = Copa.opcionesCopa(op);
+      if (typeof copa === "string") return copa;
+      Object.assign(opciones, copa);
+    }
   }
   if (juego === "futbolito") { // futbolito-equipos: 1v1 (por omisión) o 2v2
     const f = Futbolito.formatoDe(op);
@@ -405,6 +413,7 @@ async function crearSala(body: Record<string, unknown>, jugador: Jugador, store:
   const codigo = await codigoLibre(store);
   if (!codigo) return json({ error: "sin_codigo" }, 503);
   const sala: Sala = { codigo, juego, opciones, seed: aleatorio(1)[0] % 2147483647, host: jugador.id, creada: ahora, inicio: null, bots: botsFijos(juego) ?? body.bots !== false, canal: canalNuevo() };
+  if (Copa.esCopaKarts(sala)) opciones.mapa = Copa.pistasCopa(opciones.copa, sala.seed)[0]; // karts-copa-en-sala
   // errores-latentes: sin sala o sin anfitrión guardados no hay partida (y no queda una sala sin anfitrión).
   if (!(await store.put(ruta(codigo), sala, null, `sala ${codigo}: nueva (${juego})`))) return json({ error: "conflicto_escritura" }, 503);
   if (!(await guardarJugador(store, codigo, jugador, (e) => e, ahora))) {
@@ -594,6 +603,11 @@ function cambioDeRespuesta(c: CtxSala, inicio: number, deGrande: CambioJugador |
   }
   if (body.jugada !== undefined) return cambioDeJugada(c);
   if (body.futbol !== undefined) return cambioDeFutbol(c, inicio); // futbol-en-linea
+  if (body.copa !== undefined) { // karts-copa-en-sala: resultado de la carrera en curso de la copa
+    const r = Copa.reporteCopa(sala, jugadores, body.copa, ahora);
+    return "error" in r ? json({ error: r.error }, r.status) : r.cambiar;
+  }
+  if (body.carrera !== undefined && Copa.esCopaKarts(sala)) return json({ error: "carrera_invalida" }, 400); // en copa, cada carrera va en `copa`
   if (body.carrera !== undefined) {
     // Carreras de Arcade (server/carreras.ts): tiempo validado con el reloj del servidor; solo cuenta el primero.
     const carrera = validarCarrera(sala.juego, body.carrera, inicio, ahora, sala.opciones?.mapa); // karts-pistas-grandes: límites de la pista
@@ -625,7 +639,8 @@ async function responderSala(c: CtxSala): Promise<Response> {
   await publicar();
   return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas,
     ...(grande ? { ...grande.respuesta, bingo: nuevo.bingo, resultado: nuevo.resultado } : {}), // juegos-salas-grandes
-    ...vistaFutbol(sala, jugadores.map((x) => x.id === jugador.id ? nuevo : x)) }); // futbol-en-linea
+    ...vistaFutbol(sala, jugadores.map((x) => x.id === jugador.id ? nuevo : x)), // futbol-en-linea
+    ...Copa.vistaCopa(sala, jugadores.map((x) => x.id === jugador.id ? nuevo : x), ahora) }); // karts-copa-en-sala
 }
 
 // POST /juegos/sala/<código>/revancha → { codigo } de la sala nueva, con quien la pidió dentro.
@@ -656,7 +671,7 @@ function verSala(c: CtxSala, rt?: ConfigRealtime): Response {
   if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
   const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
   return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
-    ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora), ...vistaFutbol(sala, jugadores) }); // futbol-en-linea // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
+    ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora), ...vistaFutbol(sala, jugadores), ...Copa.vistaCopa(sala, jugadores, ahora) }); // karts-copa-en-sala // futbol-en-linea // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
 }
 
 export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string, rt?: ConfigRealtime): Promise<Response> {

@@ -11,6 +11,7 @@ import { armarJugadores, type Cuenta } from "./jugadores.ts";
 import { crearMemo } from "./cache.ts";
 import { leerCarpeta } from "./db.ts";
 import { CATALOGO_CLASICOS_RAPIDOS } from "./clasicos_rapidos.ts"; // clasicos-rapidos
+import { topeRankingCopa } from "./karts_copa.ts"; // karts-copa-en-sala
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -502,8 +503,10 @@ async function guardarPartida(c: CtxJugador): Promise<Response> {
     if (!sd || sd.juego !== juego || sd.inicio === null) return json({ error: "sala_invalida" }, 400);
     if (!(await store.get(`juegos/salas/${sala}/${jugador.id}.json`))) return json({ error: "no_en_sala" }, 403);
   }
+  // karts-copa-en-sala: en una copa de Karts, a lo más lo que le da la tabla del servidor (tope 2000).
+  const topeCopa = sala !== null && juego === "karts" ? await topeRankingCopa(store, sala, jugador.id, Date.parse(ahora)) : null;
   const nueva: Partida = {
-    juego, puntos: entero(body.puntos, sala ? MAX_SALA : def.max), ...(sala ? { modo: "sala" as const, sala } : {}), aciertos: entero(body.aciertos, 1000), total: entero(body.total, 1000),
+    juego, puntos: entero(body.puntos, topeCopa ?? (sala ? MAX_SALA : def.max)), ...(sala ? { modo: "sala" as const, sala } : {}), aciertos: entero(body.aciertos, 1000), total: entero(body.total, 1000),
     segundos: entero(body.segundos, 36000), en: ahora,
   };
   const ruta = `juegos/semanas/${lunes}/${jugador.id}.json`;
