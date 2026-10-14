@@ -250,7 +250,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="karts-pistas.js?v=3"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="karts-pistas.js?v=4"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
 <script src="arcade.js?v=5"></script>
 <script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
@@ -2433,8 +2433,14 @@ function pintarEscena(t, conKarts) {
   g.globalAlpha = 1;
 }
 // Mete en la lista { z, … } lo que la cámara alcanza a ver (con su distancia z), cada cosa con su alcance.
-function juntarDecor(lista, visible) { // karts-pistas-grandes: solo las celdas cercanas a la cámara
-  for (const l of decorCerca(cam.x, cam.y, 1700)) for (const d of l) { const z = visible(d.x, d.y, d.w, 1600); if (z) lista.push({ z, d }); }
+// karts-pistas-grandes: solo las celdas cercanas a la cámara y, como mucho, los MAX_DECOR adornos más cercanos (los
+// lejanos ya se ven chicos y desvanecidos): el costo de dibujar no crece con la pista.
+const MAX_DECOR = 150;
+function juntarDecor(lista, visible) {
+  const vistos = [];
+  for (const l of decorCerca(cam.x, cam.y, 1700)) for (const d of l) { const z = visible(d.x, d.y, d.w, 1600); if (z) vistos.push({ z, d }); }
+  if (vistos.length > MAX_DECOR) { vistos.sort((a, b) => a.z - b.z); vistos.length = MAX_DECOR; }
+  for (const v of vistos) lista.push(v);
 }
 function juntarVisibles(lista, visible, conKarts) {
   juntarDecor(lista, visible);

@@ -52,7 +52,7 @@
       color: { fondo: '#b98b5e', fondo2: '#a87a50', camino: '#8f877e', borde1: '#b0302a', borde2: '#ece0c9', linea: '#ece0c9' },
       tema: { cielo: ['#2d6fb8', '#8ec1e6', '#f2e8d5'], bruma: '#efe2cc', lejos: '#8a8f9a', cerca: '#9a7a58', cerca2: '#7a5c40', franja: '#ad8155', sol: '#fff3c4', nubes: 1 },
       decor: [['maguey', 28, 24, 0.5], ['nopal', 22, 30, 0.8], ['plataforma', 84, 34, 1]],
-      fijos: [{ img: 'serpiente', w: 26, h: 22, desde: [1240, 305], hasta: [3378, 303], cada: 14, lado: 1.0 }],
+      fijos: [{ img: 'serpiente', w: 26, h: 22, desde: [1240, 305], hasta: [3378, 303], cada: 18, lado: 1.0 }],
       // karts-pistas-grandes: 4 rampas en la Calzada de los Muertos, 3 en la recta baja y 2 en la del costado
       mecanicas: [{ tipo: 'turbo', cerca: [1983, 306], lado: -0.35, r: 22 }, { tipo: 'turbo', cerca: [2363, 301], lado: 0.35, r: 22 }, { tipo: 'turbo', cerca: [2743, 297], lado: -0.35, r: 22 }, { tipo: 'turbo', cerca: [3123, 284], lado: 0.35, r: 22 },
         { tipo: 'turbo', cerca: [1764, 2105], lado: 0.35, r: 22 }, { tipo: 'turbo', cerca: [1719, 1853], lado: -0.35, r: 22 }, { tipo: 'turbo', cerca: [1664, 1604], lado: 0.35, r: 22 },

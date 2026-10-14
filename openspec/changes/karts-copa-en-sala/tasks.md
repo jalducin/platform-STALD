@@ -21,6 +21,9 @@
 - [x] 3.2 `juegos/karts.html`: `copa` en `inicio`, tabla `#ov-copa`, canal en vivo entre carreras, `d[9]` y `meta` con
   la carrera
 
+- [x] 3.3 `juegos/karts.html` y `juegos/karts-pistas.js` (ajuste de rendimiento de `karts-pistas-grandes`): tope de
+  150 adornos dibujados (`MAX_DECOR`) y serpientes cada 18 muestras; `?v=` de `karts-pistas.js`
+
 ## 4. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
 - [x] 4.1 `tests/e2e/e2e-karts-vivo.js`: sala de Copa Fiesta con 2 personas en vivo + 1 bot: 4 carreras, tabla entre
