@@ -1384,7 +1384,8 @@ function migrarRecords(pr) {
   pr.pistasV = KP.VERSION_PISTAS;
   return Object.keys(pr.recordsV1).length > 0;
 }
-const AVISO_PISTAS = '🏁 ¡Las pistas ahora son 3 veces más grandes! Tus récords anteriores quedaron como «pista chica».';
+// El aviso cabe en una línea de celular: dos avisos cortos seguidos.
+const AVISO_PISTAS = ['🏁 ¡Pistas 3 veces más grandes!', 'Tus récords de antes: «pista chica»'];
 
 function nuevoKart(id, nombre, color, humano, slot, personaje) {
   const fila = Math.floor(slot / 2), lado = slot % 2 ? 0.42 : -0.42;
@@ -2084,7 +2085,7 @@ addEventListener('message', ev => {
     if (migro) guardar();
     abrirMenu();
     if (d.aviso) avisar(d.aviso, 3500);
-    else if (migro) avisar(AVISO_PISTAS, 4500);
+    else if (migro) { avisar(AVISO_PISTAS[0], 2600); setTimeout(() => avisar(AVISO_PISTAS[1], 3200), 2700); }
   } else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
   else if (d.tipo === 'guardado') { if (!d.ok) avisar('⚠️ No se pudo guardar tu avance. Revisa tu conexión.', 2500); }
   else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = textoGuardado(d);

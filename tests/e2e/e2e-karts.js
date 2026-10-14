@@ -430,6 +430,8 @@ async function probarRecordsViejos(b) {
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   await fr.waitForFunction(() => /3 veces más grandes/.test(document.getElementById('aviso').textContent), null, { timeout: 8000 }).catch(() => {});
   ok('récords viejos: aviso de las pistas nuevas', /3 veces más grandes/.test(await fr.textContent('#aviso')), await fr.textContent('#aviso'));
+  await fr.waitForFunction(() => /pista chica/.test(document.getElementById('aviso').textContent), null, { timeout: 6000 }).catch(() => {});
+  ok('récords viejos: segundo aviso con la «pista chica»', /pista chica/.test(await fr.textContent('#aviso')), await fr.textContent('#aviso'));
   let d = null;
   for (let i = 0; i < 20; i++) { d = (await progreso()).datos; if (d && d.pistasV === 2) break; await sleep(400); }
   ok('récords viejos: archivados en recordsV1, records vacío y la copa ganada se queda', d && d.pistasV === 2 && d.recordsV1.pradera === 61234 && Object.keys(d.records).length === 0 && d.copas.fiesta.lugar === 3, JSON.stringify(d));
