@@ -48,7 +48,7 @@
 
   // ---------- Karts ----------
   const VEL_KART = 250; // velocidad punta base (px/s)
-  const VUELTAS = 3;
+  const VUELTAS = 2; // karts-pistas-grandes: por omisión; cada pista define las suyas (`vueltas`, ver vueltasDe)
   // Pistas (openspec: karts-pistas-mesoamericanas): las definiciones viven en juegos/karts-pistas.js, que se carga
   // antes que este archivo. PISTAS = las de sala (las 8 desde juegos-en-vivo, igual que MAPAS_SALA de server/carreras.ts);
   // pistaPorId encuentra todas (también las de la Copa Mesoamericana).
@@ -92,12 +92,25 @@
     }
     return (cacheMuestras[clave] = { pts, largo, paso });
   }
-  // Tiempo de referencia (ms) de una carrera de VUELTAS vueltas.
-  const refKarts = id => { const p = pistaPorId(id); return p ? Math.round(muestrearPista(p).largo * VUELTAS / (VEL_KART * 0.8) * 1000) : 0; };
+  // Vueltas de una carrera en la pista (karts-pistas-grandes: 2 en las 8; sin pista, VUELTAS).
+  const vueltasDe = id => { const p = pistaPorId(id); return p && Number.isInteger(p.vueltas) && p.vueltas > 0 ? p.vueltas : VUELTAS; };
+  // Tiempo de referencia (ms) de una carrera completa (sus vueltas a 200 px/s).
+  const refKarts = id => { const p = pistaPorId(id); return p ? Math.round(muestrearPista(p).largo * vueltasDe(id) / (VEL_KART * 0.8) * 1000) : 0; };
+  // Mínimo y límite de una carrera de sala en la pista (karts-pistas-grandes): 25 % y 2.5 veces la referencia (el
+  // límite en decenas de segundo). Los usa también el servidor (server/carreras.ts importa este archivo). null sin pista.
+  function limitesKarts(id) {
+    if (!pistaPorId(id)) return null;
+    const ref = refKarts(id);
+    return { minMs: Math.round(ref * 0.25), limiteMs: Math.ceil(ref * 2.5 / 10000) * 10000 };
+  }
+  const LIM_KARTS = PISTAS.map(p => limitesKarts(p.id));
 
   // ---------- Partidas (salas) ----------
-  const LIMITE_SALA = { plataformas: 240000, karts: 300000 }; // igual que server/carreras.ts
-  const MIN_SALA = { plataformas: 6000, karts: 15000 };
+  // karts: el mayor límite y el menor mínimo de las pistas (cada sala usa los de su pista: limitesKarts).
+  const LIMITE_SALA = { plataformas: 240000, karts: LIM_KARTS.length ? Math.max(...LIM_KARTS.map(l => l.limiteMs)) : 340000 }; // igual que server/carreras.ts (sin karts-pistas.js, como en Axo: un valor fijo)
+  const MIN_SALA = { plataformas: 6000, karts: LIM_KARTS.length ? Math.min(...LIM_KARTS.map(l => l.minMs)) : 30000 };
+  // Límite de la carrera de sala de este juego y mapa (karts: el de la pista).
+  const limiteSala = (juego, mapa) => (juego === 'karts' && limitesKarts(mapa) ? limitesKarts(mapa).limiteMs : LIMITE_SALA[juego]);
   const GRACIA_SALA = 10000; // tras el límite, el podio se cierra aunque falte alguien
   // Bots de las salas (mismos ids y nombres que en juegos.html): su tiempo es la referencia por un factor de la semilla.
   const BOTS_SALA = [
@@ -138,7 +151,7 @@
   raiz.Arcade = {
     fnv, mulberry, rng,
     TILE, TRAMO, FILAS, VEL_AXO, NIVELES_POR_MUNDO, MUNDOS, MUNDOS_JUGABLES, tramosDe, esCastillo, anchoNivel, refPlataformas,
-    VEL_KART, VUELTAS, PISTAS, pistaPorId, muestrearPista, refKarts, PUNTOS_COPA,
-    LIMITE_SALA, MIN_SALA, GRACIA_SALA, BOTS_SALA, mapaDeSala, refDe, tiempoBot, puntosLugar, nombreMapa, formatoTiempo,
+    VEL_KART, VUELTAS, PISTAS, pistaPorId, muestrearPista, vueltasDe, refKarts, limitesKarts, PUNTOS_COPA,
+    LIMITE_SALA, MIN_SALA, limiteSala, GRACIA_SALA, BOTS_SALA, mapaDeSala, refDe, tiempoBot, puntosLugar, nombreMapa, formatoTiempo,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

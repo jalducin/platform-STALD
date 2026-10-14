@@ -162,7 +162,11 @@ Cada página debe manejar y mostrar de forma explícita:
     `juegos-en-vivo`, igual que `MAPAS_SALA` de `server/carreras.ts`); `Arcade.pistaPorId` encuentra las 8. Copas en
     `KartsPistas.COPAS` (Copa Fiesta y Copa Mesoamericana); `copaEnCurso.copa` dice cuál va en curso (sin id =
     Copa Fiesta). Agregar una pista = un objeto en `karts-pistas.js` + sus dibujos en `karts.html`; las pruebas de
-    datos (`server/karts_pistas_test.ts`) revisan que sea cerrada, manejable y con su minimapa;
+    datos (`server/karts_pistas_test.ts`) revisan que sea cerrada, manejable y con su minimapa. Cambio
+    `karts-pistas-grandes`: vueltas ≈ 3 veces más largas (2.9–3.0×, radio mínimo ≥ el de antes, caja ≤ 12.6 M px),
+    `vueltas` por pista (`Arcade.vueltasDe`, 2 en las 8; nunca `Arcade.VUELTAS` directo), cajas, monedas, lava y
+    escenario proporcionales a la vuelta, escenario agrupado en celdas de 512 px (`decorCerca`) y gancho de prueba
+    `__karts.rapido(n)` (n pasos de la misma física por cuadro);
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
     - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo

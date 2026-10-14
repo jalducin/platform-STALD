@@ -282,7 +282,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     piezas ["chasis-ligero"|"llantas-todoterreno"|"pintura-dorada"], equipo { chasis "estandar"|"ligero",
     llantas "estandar"|"todoterreno", color }, copaEnCurso: null | { copa, carrera 0–3, puntos [8 × 0–60], dif 80–110 } }`.
     Una pieza equipada debe estar en `piezas` (el color `dorado` pide `pintura-dorada`). `puntos` sigue el orden de
-    los corredores (0 = el jugador).
+    los corredores (0 = el jugador). Cambio `karts-pistas-grandes`: forma versionada con dos llaves más,
+    `pistasV: 2` (versión de los trazados, `KartsPistas.VERSION_PISTAS`) y `recordsV1 { <pista>: ms }` (récords
+    archivados de las pistas chicas, se muestran como «pista chica»); `records` son los de las pistas grandes. El
+    servidor acepta también la forma anterior de 5 llaves (pestañas viejas); al abrirla, el juego la migra y la guarda.
   - `dragon-run` (cambio `dragon-run-misiones`): `{ totales { metros 0–10000000, monedas 0–1000000, esquivados
     0–10000000, carreras 0–1000000, castillos 0–1000000, dobles 0–10000000 }, mejorRacha 0–999, dias { ultimo:
     null | "AAAA-MM-DD", racha 0–3660, mejor 0–3660 }, diaria: null | { fecha "AAAA-MM-DD", avance [3 × 0–100000] },
