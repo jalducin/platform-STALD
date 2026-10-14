@@ -1,7 +1,7 @@
 ## 0. Rama (OBLIGATORIO)
 
-- [x] 0.1 Crear `feature/karts-copa-en-sala` sobre `feature/karts-pistas-grandes` (depende de sus límites por pista;
-  se rebasa sobre `origin/main` cuando ese PR se fusione)
+- [x] 0.1 Crear `feature/karts-copa-en-sala` (empezó sobre `feature/karts-pistas-grandes` por sus límites por pista y
+  se rebasó sobre `origin/main` cuando se fusionó el PR #193)
 
 ## 1. Pruebas que fallan primero (TDD)
 
