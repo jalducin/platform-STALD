@@ -122,12 +122,6 @@ function opcionesMapaArcade(juego) {
   const lista = juego === 'karts' ? Arcade.PISTAS.map(p => p.id) : Arcade.MUNDOS.filter(x => x.jugable).flatMap(x => [x.n + '-1', x.n + '-2']);
   document.getElementById('p-mapa').innerHTML = '<option value="">🎲 Al azar</option>' + lista.map(m => '<option value="' + m + '">' + escapeHtml(Arcade.nombreMapa(juego, m)) + '</option>').join('');
 }
-// karts-copa-reinos: «Copa completa» de cada copa, de la más fácil a la más difícil, y la mixta (de todas las copas).
-function opcionesCopaSala() {
-  if (!window.KartsPistas) return '';
-  return KartsPistas.copasPorDificultad().map(c => '<option value="copa:' + c.id + '">' + c.emoji + ' Copa completa: ' + escapeHtml(c.nombre) + ' (4 pistas)</option>').join('') +
-    '<option value="copa:mixta">🎲 Copa completa: mixta (de todas las copas, al azar)</option>';
-}
 const mapaArcade = s => (s.opciones && s.opciones.mapa) || Arcade.mapaDeSala(s.juego, s.seed);
 // karts-salida-y-puntos: el orden y los puntos salen de Arcade.podioCarrera, la misma regla que usa el servidor para
 // guardar los puntos (orden de llegada; quien no terminó, después, por su avance). `servidor`: el servidor ya tiene su

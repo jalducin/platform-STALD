@@ -69,15 +69,15 @@ antes de la orilla.
 | Radio mínimo | ≥ 100 px (algunas curvas amplias) | ≥ 100 px con más curvas cerradas y eses |
 | Fallar | salirse frena (×0.42–0.5) | adentro el muro frena (×0.7) y rebota |
 | Obstáculos | 1 tipo por pista | 2 a 3 tipos por pista, con columnas y compuertas que obligan a elegir carril |
-| Bots (individual) | habilidad 0.87–0.95 × dificultad | lo mismo × 1.03 (`bots` de la pista) |
+| Bots | habilidad 0.87–0.95 × dificultad | lo mismo × 1.03 (`ritmoBots` de la pista; en salas, el tiempo de los fantasmas ÷ 1.03) |
 
 Es justa porque: (1) todo obstáculo es determinista y se ve antes (sombra del bloque que crece 1 s antes de caer;
 compuerta que avisa con su posición; la roca es grande y lenta); (2) los muros no tumban, solo frenan; (3) nadie
 queda fuera de la pista (no hay lava ni caídas); (4) los bots también chocan con los muros y las columnas y esquivan
 con la misma regla que el piloto de prueba; (5) la copa se abre al terminar la anterior (no al ganarla).
 
-En salas los fantasmas conservan su tiempo de referencia (no se aceleran): la sala es para jugar en grupo y la pista ya
-es más difícil por sí misma.
+Al integrar la Copa del Espacio se adoptó su campo `ritmoBots` (`Arcade.ritmoBots`), que también divide el tiempo de los
+fantasmas de sala: con 1.03 los fantasmas van un 3 % más rápido (la del Espacio usa 1.04 a 1.08).
 
 ## 4. Mecánicas (deterministas)
 
@@ -87,8 +87,9 @@ Funciones puras en `juegos/karts-pistas.js` (probadas en Deno), con el reloj de 
   queda en el piso 0.5 s. Peligro si la altura < 20 px: golpe (giro y −2 monedas).
 - `roca`: `ladoRoca(z, t)`: va y viene de muro a muro (seno, como la trajinera, pero dentro de los muros). Choque a
   < 24 px: golpe.
-- `compuerta`: `centroCompuerta(z, t)`: una losa de medio ancho que se desliza de un lado al otro (pausa, 0.6 s de
-  deslizamiento, pausa). La losa detiene al kart (vuelve 3 muestras y queda a ×0.35): no tumba.
+- `losa` (compuerta de piedra; el tipo `compuerta` es la compuerta espacial de karts-copa-espacio): `centroCompuerta(z,
+  t)`: una losa de medio ancho que se desliza de un lado al otro (pausa, deslizamiento, pausa). La losa detiene al kart
+  (vuelve 4 muestras y queda a ×0.35): no tumba.
 - `arena`: como el lodo (tope ×0.6), dibujada con dunas.
 - `luz`: franja de luz (triángulos de la serpiente del equinoccio): turbo como la placa de Teotihuacan.
 - `columnas`: círculos fijos de radio 15 sobre el camino; empujan hacia afuera y frenan (×0.6).
@@ -98,25 +99,27 @@ carril objetivo pasa al lado libre; si no, el de siempre.
 
 ## 5. Copa y desbloqueo (para niñas, niños y adolescentes)
 
-- Individual: `requiere: 'mesoamerica'` en la copa. Se abre al **terminar** la Copa Mesoamericana en cualquier lugar
-  (`prog.copas.mesoamerica` existe). Terminarla ya pide ≈ 10 min de juego; pedir ganarla dejaría fuera a quien juega
-  menos o está aprendiendo, y la frustración aleja a los más chicos. Mientras tanto se ve con candado y el motivo (la
-  meta es clara y alcanzable). Sus pistas siempre están en la carrera rápida para practicar.
+La primera propuesta era abrirla al **terminar** la Copa Mesoamericana. El sprint 35 (Copa del Espacio) llegó antes a
+`main` con un desbloqueo genérico por datos: cada copa lleva `nivel` (orden de dificultad del menú, del selector y de
+las salas) y `requiere: { podios }` (podios, 1.º a 3.º, en OTRAS copas). Para que las dos copas sigan una sola regla:
+
+- Individual: `nivel: 3` y `requiere: { podios: 1 }`. Un podio en la Copa Fiesta (la fácil) basta: es una meta clara y
+  alcanzable para quien juega menos o está aprendiendo, y no obliga a pasar por la Mesoamericana. La del Espacio pide 2
+  (escalón final). Mientras tanto se ve con candado y lo que falta. Sus pistas siempre están en la carrera rápida.
 - Salas: siempre abiertas. Las decide la anfitriona (a veces el profe) para el grupo; no dependen del avance de cada
   quien y no se pueden «atorar» por una persona.
-- **Nota para el sprint 35 (Copa Espacio)**: usar la misma regla, `requiere: 'reinos'` y `dificultad: 4`; el menú y
-  el selector de sala ordenan por `dificultad` y el candado sale de `requiere`, sin código propio.
 
-Cada copa lleva `dificultad` (1 Fiesta, 2 Mesoamericana, 3 Reinos). Récords: llaves por pista con `VERSION_PISTAS = 2`
-(no cambia: las pistas de antes no cambian; las nuevas solo agregan llaves).
+Récords: llaves por pista con `VERSION_PISTAS = 2` (no cambia: las pistas de antes no cambian; las nuevas solo agregan
+llaves).
 
 ## 6. Sin listas fijas
 
-- `KartsCopa.COPAS_SALA` = ids de `KP.COPAS` (por dificultad) + `mixta`; `NOMBRE` y `EMOJI` se derivan.
-- Copa mixta: baraja cada copa con la semilla y toma por turnos, empezando por una copa al azar, hasta 4 pistas (2 y 2
-  con dos copas, como antes; 2-1-1 con tres; 1 por copa con cuatro).
+Lo resolvió igual el sprint 35 (karts-copa-espacio) y se conservó su versión al fusionar:
+
+- `KartsCopa.COPAS_SALA` = ids de `KP.copasOrdenadas()` (por `nivel`) + `mixta`; `NOMBRE` y `EMOJI` se derivan.
+- Copa mixta: sigue tomando 2 y 2 de Fiesta y Mesoamericana (Reinos Antiguos y Espacio no entran).
 - `server/carreras.ts`: `MAPAS_SALA.karts` = `Arcade.PISTAS` (pistas con `sala: true`).
-- `juegos/app/salas.js`: las opciones de «Copa completa» salen de `KartsPistas.COPAS`.
+- `juegos/app/salas.js`: las opciones de «Copa completa» salen de `KartsCopa.COPAS_SALA`.
 
 ## 7. Rendimiento
 

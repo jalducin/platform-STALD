@@ -16,28 +16,24 @@
 (function (raiz) {
   'use strict';
   const A = raiz.Arcade, KP = raiz.KartsPistas;
-  // karts-copa-reinos: sin listas fijas: las copas de sala, sus nombres y emojis salen de KartsPistas.COPAS (por
-  // dificultad) más la mixta.
-  const COPAS_SALA = [...KP.copasPorDificultad().map(c => c.id), 'mixta'];
+  // karts-copa-espacio: las copas de sala salen de KartsPistas.COPAS en orden de dificultad (`nivel`), más la mixta.
+  const ORDEN = KP.copasOrdenadas();
+  const COPAS_SALA = [...ORDEN.map(c => c.id), 'mixta'];
   const CARRERAS = 4;
   const INTERPODIO_MS = 10000; // tabla entre carreras (incluye los 3 s de cuenta regresiva del juego)
   const TOPE_RANKING = 2000; // igual que el tope de Karts en el catálogo (server/juegos.ts)
-  const NOMBRE = Object.fromEntries([...KP.COPAS.map(c => [c.id, c.nombre]), ['mixta', 'Copa mixta']]);
-  const EMOJI = Object.fromEntries([...KP.COPAS.map(c => [c.id, c.emoji]), ['mixta', '🎲']]);
+  const NOMBRE = { ...Object.fromEntries(ORDEN.map(c => [c.id, c.nombre])), mixta: 'Copa mixta' };
+  const EMOJI = { ...Object.fromEntries(ORDEN.map(c => [c.id, c.emoji])), mixta: '🎲' };
+  const MIXTA = ['fiesta', 'mesoamerica']; // karts-copa-espacio: la mixta sigue tomando 2 y 2 de estas dos (por id)
 
-  // Pistas de la copa. La mixta (karts-copa-reinos: de todas las copas): baraja cada copa con la semilla de la sala y
-  // toma por turnos, empezando por una copa al azar, hasta 4 (2 y 2 con dos copas; 2-1-1 con tres; 1 por copa con
-  // cuatro). La revancha sortea otras.
+  // Pistas de la copa. La mixta: 2 de cada copa, al azar con la semilla de la sala (la revancha sortea otras).
   function pistasDe(copa, seed) {
     if (copa !== 'mixta') return KP.copaPorId(copa).pistas.slice();
     const r = A.rng(seed, 'copa-mixta');
-    const baraja = l => { const x = l.slice(); for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; };
-    const copas = KP.copasPorDificultad().map(c => baraja(c.pistas)), primera = Math.floor(r() * copas.length), out = [];
-    for (let k = 0; out.length < CARRERAS && k < CARRERAS * copas.length; k++) {
-      const l = copas[(primera + k) % copas.length], id = l[Math.floor(k / copas.length)];
-      if (id && !out.includes(id)) out.push(id);
-    }
-    return baraja(out);
+    const toma = l => { const x = l.slice(); for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x.slice(0, 2); };
+    const out = [...toma(KP.copaPorId(MIXTA[0]).pistas), ...toma(KP.copaPorId(MIXTA[1]).pistas)];
+    for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+    return out;
   }
   const esCopa = sala => !!sala && sala.juego === 'karts' && !!sala.opciones && sala.opciones.modo === 'copa';
   const reporte = (j, k) => (Array.isArray(j.copa) ? j.copa.find(x => x.k === k) : null) || null;

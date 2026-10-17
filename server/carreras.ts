@@ -12,8 +12,9 @@ interface Limites { minMs: number; limiteMs: number }
 interface FilaPodio { id: string; ms: number | null; t?: number; avance?: number; lugar?: number; total?: number }
 const ARCADE = (globalThis as unknown as {
   Arcade: {
+    PISTAS: { id: string }[]; // karts-copa-espacio: las pistas de sala (sala: true en juegos/karts-pistas.js)
     limitesKarts(id: string): Limites | null; LIMITE_SALA: Record<string, number>; MIN_SALA: Record<string, number>;
-    limiteSala(juego: string, mapa?: string): number; GRACIA_SALA: number; PISTAS: { id: string }[]; BOTS_SALA: { id: string }[]; mapaDeSala(juego: string, seed: number): string;
+    limiteSala(juego: string, mapa?: string): number; GRACIA_SALA: number; BOTS_SALA: { id: string }[]; mapaDeSala(juego: string, seed: number): string;
     tiempoBot(juego: string, mapa: string, seed: number, botId: string): number; podioCarrera(filas: FilaPodio[]): FilaPodio[];
   };
 }).Arcade;
@@ -34,7 +35,7 @@ export function reglasCarrera(juego: string, mapa?: string): Limites | null {
 // vive en sala.opciones.mapa para que la revancha lo herede.
 export const MAPAS_SALA: Record<string, string[]> = {
   plataformas: ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"],
-  // karts-copa-reinos: sin lista fija: todas las pistas con `sala: true` de juegos/karts-pistas.js (Arcade.PISTAS).
+  // juegos-en-vivo: también las mesoamericanas; karts-copa-espacio: la lista sale de las definiciones (sin copiarla).
   karts: ARCADE.PISTAS.map((p) => p.id),
 };
 // Mapa pedido (si es válido) o uno al azar; null si se pidió uno que no existe.

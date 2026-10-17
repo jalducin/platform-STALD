@@ -127,11 +127,14 @@
     if (juego === 'plataformas') { const [m, n] = String(mapa).split('-').map(Number); return refPlataformas(m, n); }
     return refKarts(mapa);
   }
+  // karts-copa-espacio: ritmo de los bots en la pista (1 en las de siempre; > 1 en las espaciales, las más rápidas).
+  const ritmoBots = id => { const p = pistaPorId(id); return p && p.ritmoBots > 0 ? p.ritmoBots : 1; };
   function tiempoBot(juego, mapa, seed, botId) {
     const bot = BOTS_SALA.find(b => b.id === botId) || BOTS_SALA[0];
     const r = rng(seed, botId + '|carrera|' + mapa);
     const f = bot.factor[0] + r() * (bot.factor[1] - bot.factor[0]);
-    return Math.round(refDe(juego, mapa) * f / 10) * 10;
+    const ritmo = juego === 'karts' ? ritmoBots(mapa) : 1;
+    return Math.round(refDe(juego, mapa) * f / ritmo / 10) * 10;
   }
   // Puntos de partida por lugar en una carrera de sala (karts-salida-y-puntos): estrictamente decrecientes en los 8
   // lugares posibles (500, 440, 380, 320, 260, 200, 140, 80); no terminar = 0 (lo decide podioCarrera).
@@ -178,5 +181,6 @@
     VEL_KART, VUELTAS, PISTAS, pistaPorId, muestrearPista, vueltasDe, refKarts, limitesKarts, PUNTOS_COPA,
     LIMITE_SALA, MIN_SALA, limiteSala, GRACIA_SALA, BOTS_SALA, mapaDeSala, refDe, tiempoBot, puntosLugar, nombreMapa, formatoTiempo,
     podioCarrera, PARRILLA, parrilla, // karts-salida-y-puntos
+    ritmoBots, // karts-copa-espacio
   };
 })(typeof window !== 'undefined' ? window : globalThis);

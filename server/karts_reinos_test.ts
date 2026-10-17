@@ -1,6 +1,6 @@
 // Copa Reinos Antiguos de Karts (openspec: karts-copa-reinos): 4 pistas con tramos DENTRO de cada monumento, mecánicas
-// deterministas sobre el camino, columnas, copa por dificultad con candado (`requiere`), salas en pistas nuevas con su
-// mínimo y su límite, copa en sala y copa mixta de todas las copas (sin listas fijas).
+// deterministas sobre el camino, columnas, copa con `nivel: 3` y candado por podios (la regla de karts-copa-espacio),
+// salas en pistas nuevas con su mínimo y su límite y copa en sala (sin listas fijas).
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertAlmostEquals, assertEquals } from "jsr:@std/assert@1";
 import "../juegos/karts-pistas.js";
@@ -12,25 +12,27 @@ import { opcionesCopa } from "./karts_copa.ts";
 const g = globalThis as any;
 const KP = g.KartsPistas, A = g.Arcade, KC = g.KartsCopa;
 const REINOS = ["giza", "castillo", "karnak", "angkor"];
-const TIPOS_NUEVOS = ["bloques", "roca", "compuerta", "arena", "luz"];
+const TIPOS_NUEVOS = ["bloques", "roca", "losa", "arena", "luz"]; // losa = compuerta de piedra (la «compuerta» es del Espacio)
 const pista = (id: string) => A.pistaPorId(id);
 
-Deno.test("karts-reinos: Copa Reinos Antiguos con 4 pistas, más difícil que la Mesoamericana y con candado", () => {
+Deno.test("karts-reinos: Copa Reinos Antiguos con 4 pistas, nivel 3 (entre la Mesoamericana y la del Espacio) y candado", () => {
   const c = KP.copaPorId("reinos");
-  assertEquals([c.id, c.nombre, c.pistas], ["reinos", "Copa Reinos Antiguos", REINOS]);
+  assertEquals([c.id, c.nombre, c.pistas, c.nivel], ["reinos", "Copa Reinos Antiguos", REINOS, 3]);
   assert(/^[a-z]{2,12}$/.test(c.id), "id de copa válido para el servidor (2 a 12 letras)");
-  assertEquals(c.requiere, "mesoamerica");
-  const orden = KP.copasPorDificultad().map((x: any) => x.id);
+  assertEquals(c.requiere, { podios: 1 });
+  const orden = KP.copasOrdenadas().map((x: any) => x.id);
   assertEquals(orden.slice(0, 3), ["fiesta", "mesoamerica", "reinos"], "orden de dificultad");
-  assert(KP.copasPorDificultad().every((x: any, i: number, l: any[]) => i === 0 || x.dificultad > l[i - 1].dificultad), "dificultades crecientes");
-  assertEquals([KP.copaAbierta(c, {}), KP.copaAbierta(c, { fiesta: { lugar: 1, puntos: 60 } })], [false, false]);
-  assert(KP.copaAbierta(c, { mesoamerica: { lugar: 8, puntos: 3 } }), "se abre al TERMINAR la Mesoamericana, en cualquier lugar");
-  assert(KP.copaAbierta(KP.copaPorId("fiesta"), {}) && KP.copaAbierta(KP.copaPorId("mesoamerica"), {}), "las de antes siguen abiertas");
+  assert(orden.indexOf("reinos") < orden.indexOf("espacio"), "antes de la Copa del Espacio");
+  const prog = (copas: Record<string, unknown>) => ({ copas });
+  assertEquals([KP.copaDesbloqueada(c, prog({})), KP.podiosFaltan(c, prog({}))], [false, 1]);
+  assertEquals(KP.copaDesbloqueada(c, prog({ mesoamerica: { lugar: 4, puntos: 30 } })), false, "terminar sin podio no basta");
+  assert(KP.copaDesbloqueada(c, prog({ fiesta: { lugar: 3, puntos: 30 } })), "un podio en cualquier otra copa la abre");
+  assert(KP.copaDesbloqueada(KP.copaPorId("fiesta"), prog({})) && KP.copaDesbloqueada(KP.copaPorId("mesoamerica"), prog({})), "las de antes siguen abiertas");
   for (const id of REINOS) {
     const p = pista(id);
     assert(p.sala, id + " también en salas");
     assert(p.mitad <= 52, id + " camino más angosto que las mesoamericanas (56–58)");
-    assert(p.bots > 1 && p.bots <= 1.05, id + " bots un poco más rápidos en el modo individual");
+    assert(p.ritmoBots > 1 && p.ritmoBots <= 1.05 && A.ritmoBots(id) === p.ritmoBots, id + " bots un poco más rápidos (menos que en el Espacio)");
     assert(p.civ && p.int && /^#[0-9a-f]{6}$/i.test(p.int.muro) && p.int.cielo.length === 3, id + " civilización y colores del interior");
     const textos = [p.nombre, p.desc, ...(p.interiores || []).map((t: any) => t.nombre)].join(" ");
     assert(!/maldici|momia|tumba|miedo|terror|curse/i.test(textos), id + " textos de aventura, sin sustos: " + textos);
@@ -66,7 +68,7 @@ Deno.test("karts-reinos: al menos 2 mecánicas por pista, sobre el camino (dentr
       assert(z.idx > n * 0.06 && z.idx < n * 0.94, id + " " + z.tipo + " lejos de la meta");
       const c = M.pts[z.idx], borde = muros.w[z.idx] || p.mitad;
       assert(Math.hypot(z.x - c.x, z.y - c.y) + z.r * 0.5 <= borde + 1, id + " " + z.tipo + " sobre el camino");
-      if (["bloques", "roca", "compuerta"].includes(z.tipo)) assert(muros.w[z.idx] > 0, id + " " + z.tipo + " adentro del monumento");
+      if (["bloques", "roca", "losa"].includes(z.tipo)) assert(muros.w[z.idx] > 0, id + " " + z.tipo + " adentro del monumento");
       if (z.tipo === "roca") assert(z.ancho + z.r <= z.w, id + " la roca rueda entre los muros");
     }
   }
@@ -127,20 +129,12 @@ Deno.test("karts-reinos: salas en las pistas nuevas con su mínimo y su límite 
 });
 
 Deno.test("karts-reinos: copa en sala (reinos) y copas de sala derivadas de las copas, por dificultad", () => {
-  assertEquals(KC.COPAS_SALA, [...KP.copasPorDificultad().map((c: any) => c.id), "mixta"]);
+  assertEquals(KC.COPAS_SALA, [...KP.copasOrdenadas().map((c: any) => c.id), "mixta"]);
+  assertEquals(KC.COPAS_SALA.slice(0, 3), ["fiesta", "mesoamerica", "reinos"]);
   assertEquals(opcionesCopa({ modo: "copa", copa: "reinos" }), { modo: "copa", copa: "reinos" });
   assertEquals(opcionesCopa({ modo: "copa", copa: "egipto" }), "copa_invalida");
   assertEquals([KC.NOMBRE.reinos, KC.EMOJI.reinos], ["Copa Reinos Antiguos", KP.copaPorId("reinos").emoji]);
   assertEquals(KC.pistasDe("reinos", 7), REINOS);
-  // Mixta: 4 pistas distintas, de todas las copas (con tres copas, 2-1-1), cambia con la semilla.
-  const vistas = new Set<string>();
-  for (let s = 1; s < 60; s++) {
-    const p = KC.pistasDe("mixta", s);
-    assertEquals(new Set(p).size, 4);
-    const porCopa = KP.COPAS.map((c: any) => p.filter((x: string) => c.pistas.includes(x)).length);
-    if (KP.COPAS.length <= 4) assert(porCopa.every((k: number) => k >= 1 && k <= 2), "de todas las copas: " + porCopa);
-    vistas.add(p.join(","));
-  }
-  assert(vistas.size > 20, "la mixta cambia con la semilla");
-  assertEquals(KC.pistasDe("mixta", 5), KC.pistasDe("mixta", 5), "misma semilla, mismas pistas");
+  // Mixta (karts-copa-espacio): sigue tomando 2 y 2 de Fiesta y Mesoamericana; Reinos Antiguos no entra.
+  for (let k = 1; k < 30; k++) assert(KC.pistasDe("mixta", k).every((x: string) => !REINOS.includes(x)), "la mixta no toma pistas de Reinos Antiguos");
 });

@@ -72,11 +72,11 @@ Deno.test("karts-copa: crear la sala de copa (fiesta, mesoamericana o mixta) y o
   assertEquals([modo.status, modo.body.error], [400, "modo_invalido"]);
   const una = await c.call("POST", "/sala", "Marisol", { juego: "karts", opciones: { mapa: "hielo" } });
   assertEquals([una.status, una.body.sala.opciones.modo, una.body.sala.opciones.mapa], [200, undefined, "hielo"], "«Una carrera» como siempre");
-  // Copa mixta: pistas de todas las copas (karts-copa-reinos: con tres copas, 2-1-1), distintas según la semilla.
+  // Copa mixta: 2 pistas de cada copa, distintas según la semilla.
   const mixtas = new Set<string>();
   for (let s = 1; s < 40; s++) {
     const p = KC.pistasDe("mixta", s);
-    assert(G.KartsPistas.COPAS.every((c: any) => p.some((x: string) => c.pistas.includes(x))) || G.KartsPistas.COPAS.length > 4);
+    assertEquals(p.filter((x: string) => G.KartsPistas.COPAS[0].pistas.includes(x)).length, 2);
     mixtas.add(p.join(","));
   }
   assert(mixtas.size > 10, "la mixta cambia con la semilla");

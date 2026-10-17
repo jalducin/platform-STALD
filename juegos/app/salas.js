@@ -187,6 +187,13 @@ async function traerSala() {
   return r;
 }
 
+// karts-copa-espacio: «Copa completa» de cada copa de sala (KartsCopa.COPAS_SALA, en orden de dificultad) y la mixta.
+function opcionesCopaKarts() {
+  if (!window.KartsCopa) return '';
+  return KartsCopa.COPAS_SALA.map(id => '<option value="copa:' + id + '">' + KartsCopa.EMOJI[id] + ' Copa completa: ' +
+    (id === 'mixta' ? 'mixta (2 y 2 al azar)' : escapeHtml(KartsCopa.NOMBRE[id]) + ' (4 pistas)') + '</option>').join('');
+}
+
 function pintarPartidas() {
   const body = document.getElementById('tab-body');
   const opcionesJuego = JUEGOS_PARTIDA.map(id => { const j = juegoPorId(id); return '<option value="' + id + '">' + j.emoji + ' ' + escapeHtml(j.t) + '</option>'; }).join('');
@@ -202,7 +209,7 @@ function pintarPartidas() {
     '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select>' +
       '<label>🎉 Categorías divertidas (opcional, máximo 2)</label><div id="p-extra"></div><div class="feedback" id="p-extra-aviso"></div></div>' + // basta-divertida-una-robo
     '<div id="p-kformato-wrap" hidden><label for="p-kformato">Formato</label><select id="p-kformato" class="sel"><option value="carrera">🏁 Una carrera</option>' + // karts-copa-en-sala
-      opcionesCopaSala() + '</select></div>' + // karts-copa-reinos: las copas salen de KartsPistas (por dificultad)
+      opcionesCopaKarts() + '</select></div>' + // karts-copa-espacio: copas en orden de dificultad, sin lista fija
     '<div id="p-mapa-wrap" hidden><label for="p-mapa">Nivel o pista</label><select id="p-mapa" class="sel"></select></div>' +
     '<div id="p-tema-wrap" hidden><label for="p-tema">Tema</label><select id="p-tema" class="sel">' + InglesGramatica.TEMAS.map(t => '<option value="' + t.id + '">' + t.emoji + ' ' + escapeHtml(t.t) + '</option>').join('') + '</select></div>' +
     '<div id="p-grandes-wrap" hidden></div>' + // juegos-salas-grandes: figura del Bingo, criterio del Memorama

@@ -13,7 +13,7 @@ const KartsReinos = (() => {
   let R = null; // estado de la pista con interiores (null en las demás)
   let ultimoMuro = null; // velocidad que te dejó el último golpe con el muro (ganchos de prueba)
   let dentro = 0, techo = 0; // luz del interior y bóveda (0 afuera … 1 adentro), suavizadas
-  const DINAMICAS = new Set(['bloques', 'roca', 'compuerta']);
+  const DINAMICAS = new Set(['bloques', 'roca', 'losa']); // losa = compuerta de piedra (karts-copa-espacio ya usa «compuerta»)
   const cerca = (i, j, n) => { const d = Math.abs(i - j) % N; return Math.min(d, N - d) <= n; };
   const adelante = (de, a) => (a - de + N) % N; // muestras hacia adelante
 
@@ -28,7 +28,7 @@ const KartsReinos = (() => {
       muros: KP.muroEn(pista, M), tramos, tramoDe: indiceTramos(tramos), antorchas, fino, grueso, columnas: KP.colocarColumnas(pista, M),
       paleta: Array.from({ length: NIVELES }, (_, n) => matiz(pista.int.muro, -0.86 + 0.86 * n / (NIVELES - 1))),
       portales: portales.map(q => ({ ...q, a: punto(q.i, -(q.w + 9)), b: punto(q.i, q.w + 9) })),
-      bloques: zonas.filter(z => z.tipo === 'bloques'), rocas: zonas.filter(z => z.tipo === 'roca'), compuertas: zonas.filter(z => z.tipo === 'compuerta'),
+      bloques: zonas.filter(z => z.tipo === 'bloques'), rocas: zonas.filter(z => z.tipo === 'roca'), compuertas: zonas.filter(z => z.tipo === 'losa'),
       pano: null, vineta: null,
     };
   }
@@ -178,7 +178,7 @@ const KartsReinos = (() => {
       c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(-z.r, -z.w, z.r * 2, z.w * 2);
       c.strokeStyle = 'rgba(255,255,255,.12)'; c.lineWidth = 1.5; for (const dx of [-z.r * 0.5, z.r * 0.5]) { c.beginPath(); c.moveTo(dx, -z.w); c.lineTo(dx, z.w); c.stroke(); }
     },
-    compuerta(c, z) { // riel de la compuerta de piedra
+    losa(c, z) { // riel de la compuerta de piedra
       c.fillStyle = '#1a140e'; c.fillRect(-5, -z.w, 10, z.w * 2);
       c.fillStyle = 'rgba(255,200,110,.5)'; c.fillRect(-1, -z.w, 2, z.w * 2);
     },
@@ -224,7 +224,7 @@ const KartsReinos = (() => {
     if (lat < c - z.w / 2 - 9 || lat > c + z.w / 2 + 9) return;
     const i = (z.idx - 4 + N) % N, p = punto(i, lat);
     k.x = p.x; k.y = p.y; k.idx = i; k.vel *= 0.35; k.vx = Math.cos(k.ang) * k.vel; k.vy = Math.sin(k.ang) * k.vel; k.compT = tCarrera + 0.5; k.derrape = null;
-    if (k === yo) { eventos.compuerta = (eventos.compuerta || 0) + 1; tono(110, 0.2, 'square', 0.05, 60); avisar('🚪 ¡Compuerta! Pasa por el lado abierto', 1100); }
+    if (k === yo) { eventos.losa = (eventos.losa || 0) + 1; tono(110, 0.2, 'square', 0.05, 60); avisar('🚪 ¡Compuerta! Pasa por el lado abierto', 1100); }
   }
   function fisica(k) {
     if (!R) return;
@@ -551,7 +551,7 @@ const KartsReinos = (() => {
       coloca(i, s * (t.w - 14), A.VEL_KART); yo.ang += s * 0.6; yo.vx = Math.cos(yo.ang) * yo.vel; yo.vy = Math.sin(yo.ang) * yo.vel; return true;
     }
     if (tipo === 'columna' && R.columnas.length) { const c = R.columnas[2] || R.columnas[0]; coloca(c.idx - 6, c.lado, A.VEL_KART); return true; }
-    if (tipo === 'compuerta' && R.compuertas.length) { const z = R.compuertas[0]; coloca(z.idx - 8, KP.centroCompuerta(z, tCarrera + 0.15), A.VEL_KART); return true; }
+    if (tipo === 'losa' && R.compuertas.length) { const z = R.compuertas[0]; coloca(z.idx - 8, KP.centroCompuerta(z, tCarrera + 0.15), A.VEL_KART); return true; }
     if (tipo === 'bloques' && R.bloques.length) { const z = R.bloques[0]; coloca(z.idx, lateralZona(z), 0); yo.ahogado = 6; return true; }
     if (tipo === 'roca' && R.rocas.length) { const z = R.rocas[0]; coloca(z.idx, KP.ladoRoca(z, tCarrera + 1 / 60), 0); return true; }
     return false;

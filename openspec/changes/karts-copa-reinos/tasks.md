@@ -52,5 +52,9 @@
 
 ## 9. Publicación
 
+- [x] 9.0 Integrar `origin/main` con karts-copa-espacio (sprint 35): su desbloqueo (`nivel: 3`, `requiere: { podios: 1 }`),
+  `ritmoBots`, su selector de sala y su mixta; la mecánica propia pasa a `losa` (su `compuerta` es la espacial) y
+  `fase` a `faseCiclo`; spec, diseño y pruebas actualizados; `?v=` por encima de `main`
+
 - [ ] 9.1 Fusionar `origin/main` (conservar ambos lados), PR en español, `gh pr checks --watch` hasta que terminen
   todos, merge, borrar la rama remota y verificar en producción. Sin `openspec archive`.

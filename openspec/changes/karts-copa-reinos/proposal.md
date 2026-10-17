@@ -19,16 +19,16 @@ agente en paralelo). La curva de dificultad queda así: Fiesta → Mesoamericana
 - **Interiores en Mode-7**: piso de piedra oscura, muros que rebotan en las dos orillas (frenan al tocarlos), cielo
   interior oscuro con antorchas, luz limitada (viñeta y brillo de antorchas) y portada de piedra en cada entrada.
   Con `prefers-reduced-motion`, sin parpadeo de antorchas ni transiciones animadas.
-- **Mecánicas nuevas, deterministas y baratas**: bloques que caen en ciclo, roca rodante, compuertas que abren y
-  cierran, arena, columnas en el camino y franjas de luz (turbo). Todas dependen solo de la posición y del reloj de la
+- **Mecánicas nuevas, deterministas y baratas**: bloques que caen en ciclo, roca rodante, losas (compuertas de piedra)
+  que se deslizan, arena, columnas en el camino y franjas de luz (turbo). Todas dependen solo de la posición y del reloj de la
   carrera (iguales en todos los aparatos de una sala).
 - **Más difícil, pero justa**: carriles angostos adentro, curvas más cerradas (radio ≥ el mínimo global de 100 px),
   muros que frenan, obstáculos con aviso visible y bots un poco más rápidos en el modo individual (design.md §3).
-- **Copa Reinos Antiguos** (`reinos`): en el modo individual (se abre al **terminar** la Copa Mesoamericana, en
-  cualquier lugar), en las **copas en sala** (siempre abierta, también entra a la copa mixta) y como pistas sueltas en
-  salas (`MAPAS_SALA` y límites por pista). Récords con `VERSION_PISTAS` como las demás.
-- **Sin listas fijas**: las copas de sala, sus nombres y emojis, la copa mixta, `MAPAS_SALA` y el selector de la
-  página de Juegos salen de `KartsPistas.COPAS` / `PISTAS`; el selector muestra las copas en orden de dificultad.
+- **Copa Reinos Antiguos** (`reinos`, `nivel: 3`): en el modo individual (se abre con 1 podio en otra copa, la regla
+  de desbloqueo de la Copa del Espacio), en las **copas en sala** (siempre abierta) y como pistas sueltas en salas
+  (`MAPAS_SALA` y límites por pista). Récords con `VERSION_PISTAS` como las demás.
+- **Sin listas fijas**: las copas de sala, sus nombres y emojis, `MAPAS_SALA` y el selector de la página de Juegos salen
+  de `KartsPistas.COPAS` / `PISTAS` (como dejó karts-copa-espacio); los selectores ordenan por `nivel`.
 - **Rendimiento**: 60 fps en un celular con el CPU ×4 y 8 karts en vivo (los interiores acortan la vista).
 
 ## Capabilities
@@ -44,11 +44,10 @@ _Ninguna._
 
 ## Impact
 
-- Superficies: `juegos.html` (Juegos: `?v=` y selector de copa en sala), `juegos/karts-pistas.js`,
-  `juegos/karts-copa.js`, `juegos/karts.html`, `juegos/app/salas.js`; servidor Deno (`server/carreras.ts`,
-  `server/karts_copa.ts`).
+- Superficies: `juegos.html` (Juegos: `?v=`), `juegos/karts-pistas.js`, `juegos/karts-reinos.js` (nuevo),
+  `juegos/karts.html`; servidor Deno (pruebas; `server/carreras.ts` ya deriva las pistas de sala).
 - Matriz de acceso: sin cambios. El progreso de Karts sigue siendo solo de su dueño; la copa nueva agrega llaves de
   copa y de pista (ids públicos), sin datos personales.
-- Coordinación: el sprint 35 (Copa Espacio) toca los mismos archivos; los cambios van marcados `// karts-copa-reinos`
-  y design.md §5 deja la regla de desbloqueo para que ambas copas sean coherentes.
+- Coordinación: el sprint 35 (Copa del Espacio) tocó los mismos archivos y llegó antes a `main`; los cambios van
+  marcados `// karts-copa-reinos` y se adoptó su desbloqueo (`nivel`, `requiere: { podios }`, design.md §5).
 - No se escribe en tablas `stald_`. No se toca `supabase/`, Notion ni `.env`. Sin acciones externas.
