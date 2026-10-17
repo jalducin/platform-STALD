@@ -93,7 +93,10 @@ Deno.test("karts-reinos: bloques, roca y compuertas son deterministas, periódic
   const z = { periodo: 4, desfase: 0.5 };
   for (const t of [0, 0.7, 1.9, 3.3]) assertAlmostEquals(KP.alturaBloque(z, t), KP.alturaBloque(z, t + 8), 1e-9);
   // El aviso (el bloque baja y su sombra crece) empieza al menos 0.9 s antes del peligro.
-  const primero = (desde: number, cumple: (t: number) => boolean) => { for (let t = desde; t < desde + 8; t += 0.01) if (cumple(t)) return t; return -1; };
+  const primero = (desde: number, cumple: (t: number) => boolean) => {
+    for (let t = desde; t < desde + 8; t += 0.01) { if (cumple(t)) return t; }
+    return -1;
+  };
   const aviso = primero(0, (t) => KP.alturaBloque(z, t) < KP.ALTO_BLOQUE - 0.01), peligro = primero(aviso, (t) => KP.bloquePeligro(z, t));
   assert(aviso >= 0 && peligro - aviso >= 0.9, "aviso de " + (peligro - aviso).toFixed(2) + " s");
   let enPeligro = 0;
