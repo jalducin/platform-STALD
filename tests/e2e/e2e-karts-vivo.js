@@ -182,7 +182,8 @@ async function desconexion(b, relevo) {
   // Sala en una pista mesoamericana (las 8 pistas se ofrecen en sala desde juegos-en-vivo).
   await pags[0].click('[data-tab="partidas"]'); await pags[0].waitForSelector('#f-crear'); await pags[0].selectOption('#p-juego', 'karts');
   const opciones = (await pags[0].$$eval('#p-mapa option', os => os.map(o => o.value))).filter(Boolean);
-  ok('salas: el selector ofrece las 8 pistas', opciones.length === 8 && opciones.includes('chichen'), opciones.join(','));
+  // karts-copa-espacio: todas las pistas de sala (las 8 de antes y las espaciales; la lista sale de las definiciones).
+  ok('salas: el selector ofrece todas las pistas de sala (también las espaciales)', opciones.length >= 12 && ['chichen', 'orbital', 'nebulosa'].every(id => opciones.includes(id)), opciones.join(','));
   const codigo = await crearSala(pags[0], 'chichen');
   await unirse(pags[1], codigo); await unirse(pags[2], codigo);
   await sleep(1500);

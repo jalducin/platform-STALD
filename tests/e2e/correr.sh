@@ -246,6 +246,7 @@ correr() { # $1 = prueba
   local n=$1 out=$SALIDA/$1.out rc p f estado
   local max=$TIEMPO_MAX
   [ "$n" = karts-vivo ] && max=$((TIEMPO_MAX + 540)) # karts-copa-en-sala: la copa en sala corre 4 carreras de ≈ 35 s; karts-salida-y-puntos: 2 salas más
+  [ "$n" = karts ] && max=$((TIEMPO_MAX + 480)) # karts-copa-espacio: 4 pistas espaciales (vuelta, caída, fps) y la Copa del Espacio
   (cd "$E2E" && BASE=$BASE API=$API DATA="$(nativo "$COPIA")" SALIDA="$(nativo "$SALIDA")" \
     timeout "$max" node "e2e-$n.js") > "$out" 2>&1
   rc=$?

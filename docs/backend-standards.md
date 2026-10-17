@@ -107,8 +107,9 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     - `{ final, podio }`: totales hasta 10000;
     - en carreras de Arcade (`plataformas`, `karts`; `server/carreras.ts`), `{ carrera: { ms, monedas } }`: `ms` entero
       entre el mínimo y el límite del juego (plataformas 6 s y 240 s; karts, los de la pista de la sala:
-      `Arcade.limitesKarts`, 25 % y 2.5 veces su referencia, ≈ 30 s y 300–340 s; cambio `karts-pistas-grandes`, el
-      servidor importa `juegos/karts-pistas.js` y `juegos/arcade.js`), o `null` si no terminó; además debe cuadrar
+      `Arcade.limitesKarts`, 25 % y 2.5 veces su referencia, ≈ 30 s y 300–350 s; cambio `karts-pistas-grandes`, el
+      servidor importa `juegos/karts-pistas.js` y `juegos/arcade.js`; cambio `karts-copa-espacio`: las pistas de sala
+      son `MAPAS_SALA.karts = Arcade.PISTAS`, las de `sala: true`, sin lista copiada), o `null` si no terminó; además debe cuadrar
       con el reloj del servidor (`ms ≤ ahora − inicio + 3 s` y `ms ≥ ahora − inicio − 20 s`); `monedas` 0–999. Si no,
       400 `carrera_invalida`. Solo cuenta el primer envío (`carrera` del jugador, con su hora `t`). Con `ms: null` puede
       venir `avance` (entero 0–999, ‰ de la carrera recorrido; cambio `karts-salida-y-puntos`). En `POST
@@ -117,7 +118,8 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       no terminó; sin monedas) e ignora los de la página; si falta el tiempo de alguien y no vence el límite + la
       gracia, 409 `carrera_en_curso` (no guarda; la página reintenta).
     - copa completa de Karts (cambio `karts-copa-en-sala`, `server/karts_copa.ts`; reglas en `juegos/karts-copa.js`, que
-      importa el servidor): la sala se crea con `opciones { modo: "copa", copa }` (400 `copa_invalida` /
+      importa el servidor): la sala se crea con `opciones { modo: "copa", copa }` (`copa` ∈ `KartsCopa.COPAS_SALA`: las
+      copas de `KartsPistas.COPAS` por `nivel` + `mixta`; cambio `karts-copa-espacio`) (400 `copa_invalida` /
       `modo_invalido`) y cada carrera se reporta con `{ copa: { carrera 0–3, ms, monedas } }` o
       `{ copa: { carrera, abandono: true } }`: solo la carrera abierta y ya empezada (409 `carrera_fuera_de_turno` /
       `carrera_cerrada`), validada como una carrera suelta desde el inicio de esa carrera y con su pista. `GET /sala`,
