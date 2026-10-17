@@ -131,7 +131,9 @@ async function terminarTodos(pags, frames) {
 // máquina la medición sale contaminada (15–50 fps según la carga), así que aquí solo Marisol abre el navegador: las
 // otras 7 personas entran a la sala por la API y el relevo fabrica sus karts a 10 Hz recorriendo la pista. Marisol
 // recibe y dibuja lo mismo que en una sala real de 8.
-async function fpsAislado(b, relevo, correos, mapa = 'pradera') {
+// karts-copa-espacio: también en otra pista; karts-copa-reinos: `adentro` te pone a mitad del primer tramo interior y
+// los otros 7 karts van alrededor de ti.
+async function fpsAislado(b, relevo, correos, mapa = 'pradera', adentro = false) {
   const m = await jugador(b, correos[0], relevo);
   const codigo = await crearSala(m, mapa); // karts-copa-espacio: también en la Nebulosa Esmeralda (la más cargada)
   for (const email of correos.slice(1)) await pedir(email, '/juegos/sala/' + codigo + '/unirse', {}); // NOSONAR: entran en orden
@@ -140,19 +142,19 @@ async function fpsAislado(b, relevo, correos, mapa = 'pradera') {
   await m.click('[data-p="empezar"]');
   const [fr] = await enCarrera([m]);
   const ruta = await fr.evaluate(() => window.__karts.ruta());
-  let seq = 0, n = 0;
+  let seq = 0, n = 0, base = 0;
   // karts-objetos-en-sala: cada persona fabricada usa un ítem cada 3 s (cáscara, bola o cohete) a la hora de la
   // carrera de Marisol: cáscaras, bolas y cohetes en la pista durante la medición.
-  let base = null; const tipos = [0, 1, 2];
+  let baseItem = null; const tipos = [0, 1, 2];
   const items = ids.map(() => 0);
   const iv = setInterval(() => {
     n++;
     ids.forEach((id, k) => {
-      const i = (n * 3 + k * 25) % ruta.length, [x, y, a] = ruta[i], lado = (k % 2 ? 1 : -1) * 20;
+      const L = ruta.length, i = (((base + n * 3 + k * (adentro ? 9 : 25)) % L) + L) % L, [x, y, a] = ruta[i], lado = (k % 2 ? 1 : -1) * 20;
       const d = [Math.round((x - Math.sin(a / 1000) * lado) * 10), Math.round((y + Math.cos(a / 1000) * lado) * 10), a, 180, 1, i, k === 0 ? 1 : 0, 0, 'xalli'];
       relevo.inyectar('sala-sim-' + codigo, { i: id, s: ++seq, t: Date.now(), e: 'k', d });
-      if (base && (n + k * 4) % 30 === 0) {
-        const tc = base.tiempo + Date.now() - base.t;
+      if (baseItem && (n + k * 4) % 30 === 0) {
+        const tc = baseItem.tiempo + Date.now() - baseItem.t;
         const it = [++items[k], tipos[(n + k) % 3], d[0], d[1], a, 180, 1, i, Math.max(0, tc), ruta.length + i, -1, 0];
         relevo.inyectar('sala-sim-' + codigo, { i: id, s: ++seq, t: Date.now(), e: 'item', d: it });
       }
@@ -166,7 +168,8 @@ async function fpsAislado(b, relevo, correos, mapa = 'pradera') {
     return xs[4];
   };
   await sleep(9000); // cuenta regresiva + 3 s de carrera
-  base = { tiempo: (await estado(fr)).tiempo, t: Date.now() };
+  if (adentro) { await fr.evaluate(() => window.__karts.obstaculo('adentro:0')); base = (((await estado(fr)).avance % ruta.length) + ruta.length) % ruta.length - n * 3 - 20; }
+  baseItem = { tiempo: (await estado(fr)).tiempo, t: Date.now() }; // karts-objetos-en-sala
   await fr.evaluate(() => window.__karts.piloto(true));
   await sleep(3000);
   const libre = await medianaFps();
@@ -178,13 +181,43 @@ async function fpsAislado(b, relevo, correos, mapa = 'pradera') {
   await m.screenshot({ path: mapa === 'pradera' ? 'karts-vivo-390-cpu4.png' : 'karts-vivo-' + mapa + '-390-cpu4.png' });
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   clearInterval(iv);
-  const visibles = e.remotos.filter(r => r.visible).length, en = mapa === 'pradera' ? '' : ' (' + mapa + ')';
-  if (mapa !== 'pradera') ok('sala en una pista espacial: el servidor la acepta y todos corren en ' + mapa, e.pista === mapa && e.espacio, JSON.stringify({ pista: e.pista }));
+  const visibles = e.remotos.filter(r => r.visible).length, en = mapa === 'pradera' ? '' : ' (' + mapa + (adentro ? ', adentro' : '') + ')';
+  if (e.espacio) ok('sala en una pista espacial: el servidor la acepta y todos corren en ' + mapa, e.pista === mapa && e.espacio, JSON.stringify({ pista: e.pista }));
+  if (adentro) ok('fps' + en + ': vas adentro del monumento', e.pista === mapa && e.reinos.interior, JSON.stringify(e.reinos)); // karts-copa-reinos
   ok('fps sin límite con 8 karts en vivo ≥ 55' + en, libre >= 55, 'fps=' + libre);
   ok('fps con CPU ×4 y 8 karts en vivo ≥ 55 (meta 60)' + en, lento >= 55 && visibles === 7, 'fps=' + lento + ' visibles=' + visibles);
   ok('fps medidos con ítems en la pista (karts-objetos-en-sala)' + en, e.red && e.red.stats.ok >= 7, JSON.stringify(e.red && { stats: e.red.stats, enPista: e.objetosRed.length }));
   await m.context().close();
   return { libre, lento };
+}
+
+// karts-copa-reinos: sala de 2 en una pista nueva (Templo de Karnak): la pista llega a los dos aparatos con sus
+// interiores, el servidor espera el mínimo de ESA pista y el podio tiene los 2 tiempos.
+async function salaReinos(b, relevo) {
+  const pags = [await jugador(b, 'marisol@example.com', relevo), await jugador(b, 'angel@example.com', relevo, HORIZONTAL)];
+  await pags[0].click('[data-tab="partidas"]'); await pags[0].waitForSelector('#f-crear'); await pags[0].selectOption('#p-juego', 'karts');
+  const mapas = await pags[0].$$eval('#p-mapa option', os => os.map(o => o.value));
+  ok('sala: las 4 pistas de Reinos Antiguos en el selector de pista', ['giza', 'castillo', 'karnak', 'angkor'].every(id => mapas.includes(id)), mapas.join(','));
+  const codigo = await crearSala(pags[0], 'karnak');
+  await unirse(pags[1], codigo);
+  await pags[0].click('[data-p="empezar"]');
+  const frames = await enCarrera(pags);
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 500, null, { timeout: 30000 })));
+  await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
+  const es = await Promise.all(frames.map(estado));
+  ok('sala en Karnak: la misma pista con sus interiores en los 2 aparatos', es.every(e => e.pista === 'karnak' && e.sala && e.reinos.tramos === 2 && e.reinos.columnas >= 8), JSON.stringify(es.map(e => [e.pista, e.reinos])));
+  await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.obstaculo('adentro:0'))));
+  await sleep(1200);
+  await pags[0].screenshot({ path: 'karts-reinos-sala-karnak-390.png' });
+  await pags[1].screenshot({ path: 'karts-reinos-sala-karnak-844x390.png' });
+  const minMs = await frames[0].evaluate(() => window.Arcade.limitesKarts('karnak').minMs);
+  await Promise.all(frames.map(fr => fr.waitForFunction(ms => window.__karts.estado().tiempo > ms + 1500, minMs, { timeout: 90000 })));
+  for (const fr of frames) await fr.evaluate(() => window.__karts.adelantar()); // NOSONAR: uno por uno, como llegan
+  await pags[0].waitForSelector('#p-body .result', { timeout: 90000 });
+  await sleep(1500);
+  const filas = await pags[0].$$eval('.arcade-tiempos tbody tr', trs => trs.map(t => t.textContent));
+  ok('sala en Karnak: podio del servidor con los 2 tiempos (y los bots)', filas.filter(f => /\d:\d\d\.\d/.test(f)).length >= 2, filas.join(' | ').slice(0, 200));
+  for (const p of pags) await p.context().close();
 }
 
 async function desconexion(b, relevo) {
@@ -193,8 +226,9 @@ async function desconexion(b, relevo) {
   // Sala en una pista mesoamericana (las 8 pistas se ofrecen en sala desde juegos-en-vivo).
   await pags[0].click('[data-tab="partidas"]'); await pags[0].waitForSelector('#f-crear'); await pags[0].selectOption('#p-juego', 'karts');
   const opciones = (await pags[0].$$eval('#p-mapa option', os => os.map(o => o.value))).filter(Boolean);
-  // karts-copa-espacio: todas las pistas de sala (las 8 de antes y las espaciales; la lista sale de las definiciones).
-  ok('salas: el selector ofrece todas las pistas de sala (también las espaciales)', opciones.length >= 12 && ['chichen', 'orbital', 'nebulosa'].every(id => opciones.includes(id)), opciones.join(','));
+  // karts-copa-espacio y karts-copa-reinos: todas las pistas de sala (la lista sale de las definiciones: Arcade.PISTAS).
+  const deSala = await pags[0].evaluate(() => Arcade.PISTAS.map(p => p.id));
+  ok('salas: el selector ofrece todas las pistas de sala (también las espaciales y las de Reinos Antiguos)', opciones.join(',') === deSala.join(',') && ['chichen', 'angkor', 'orbital', 'nebulosa'].every(id => opciones.includes(id)), opciones.join(','));
   const codigo = await crearSala(pags[0], 'chichen');
   await unirse(pags[1], codigo); await unirse(pags[2], codigo);
   await sleep(1500);
@@ -334,9 +368,9 @@ async function copaEnSala(b, relevo) {
   const [host] = pags;
   await host.click('[data-tab="partidas"]'); await host.waitForSelector('#f-crear');
   await host.selectOption('#p-juego', 'karts');
-  // karts-copa-espacio: copas en orden de dificultad (sin lista fija): Fiesta, Mesoamericana, …, Espacio y la mixta.
+  // karts-copa-espacio: copas en orden de dificultad (sin lista fija): Fiesta, Mesoamericana, Reinos Antiguos, Espacio y la mixta.
   const formatos = (await host.$$eval('#p-kformato option', os => os.map(o => o.value))).join(',');
-  ok('copa: el formulario ofrece «Una carrera» y las copas completas en orden de dificultad', formatos.startsWith('carrera,copa:fiesta,copa:mesoamerica,') && formatos.endsWith(',copa:espacio,copa:mixta'), formatos);
+  ok('copa: el formulario ofrece «Una carrera» y las copas completas en orden de dificultad', formatos === 'carrera,copa:fiesta,copa:mesoamerica,copa:reinos,copa:espacio,copa:mixta', formatos);
   await host.selectOption('#p-kformato', 'copa:fiesta');
   ok('copa: al elegir una copa se oculta el selector de pista', await host.isHidden('#p-mapa-wrap'));
   await host.screenshot({ path: 'karts-copa-crear.png', fullPage: true });
@@ -617,6 +651,8 @@ async function salidaYPodio(b, relevo) {
   const fps = await fpsAislado(b, relevo, correos);
   const fpsEspacio = await fpsAislado(b, relevo, correos, 'nebulosa'); // karts-copa-espacio
   await copaEspacioEnSala(b, relevo); // karts-copa-espacio
+  const fpsCastillo = await fpsAislado(b, relevo, correos, 'castillo', true); // karts-copa-reinos: 8 en vivo dentro del monumento
+  await salaReinos(b, relevo); // karts-copa-reinos
   await objetosEnSala(b, relevo); // karts-objetos-en-sala
   await desconexion(b, relevo);
   await personajesEnSala(b, relevo); // personaje-en-salas
@@ -627,5 +663,6 @@ async function salidaYPodio(b, relevo) {
   console.log(out.join('\n'));
   console.log('RESUMEN fps(8 en vivo) libre=' + fps.libre + ' CPU×4=' + fps.lento + ' mensajes/s(sala de 8)=' + r.porSeg.toFixed(1));
   console.log('RESUMEN fps(8 en vivo, Nebulosa Esmeralda) libre=' + fpsEspacio.libre + ' CPU×4=' + fpsEspacio.lento);
+  console.log('RESUMEN fps(8 en vivo, dentro de El Castillo) libre=' + fpsCastillo.libre + ' CPU×4=' + fpsCastillo.lento); // karts-copa-reinos
   process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 600)); process.exit(2); });

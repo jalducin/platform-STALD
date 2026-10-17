@@ -159,8 +159,8 @@ Cada página debe manejar y mostrar de forma explícita:
     y `karts.html` cargan **antes** de `juegos/arcade.js`. Cada pista lleva trazado, física, colores, `tema` (cielo
     de 360°), `decor` (adornos al azar), `fijos` (adornos por tramo), `desc` y `mecanicas` (zonas deterministas:
     `turbo`, `salto`, `cenote`, `lodo`, `trajinera`). `Arcade.PISTAS` son las de sala (`sala: true`; las 8 desde
-    `juegos-en-vivo`, igual que `MAPAS_SALA` de `server/carreras.ts`); `Arcade.pistaPorId` encuentra las 8. Copas en
-    `KartsPistas.COPAS` (Copa Fiesta y Copa Mesoamericana); `copaEnCurso.copa` dice cuál va en curso (sin id =
+    `juegos-en-vivo`; `MAPAS_SALA` de `server/carreras.ts` sale de ellas desde `karts-copa-reinos`); `Arcade.pistaPorId` encuentra todas. Copas en
+    `KartsPistas.COPAS` (Copa Fiesta, Copa Mesoamericana y, desde `karts-copa-reinos`, Copa Reinos Antiguos); `copaEnCurso.copa` dice cuál va en curso (sin id =
     Copa Fiesta). Agregar una pista = un objeto en `karts-pistas.js` + sus dibujos en `karts.html`; las pruebas de
     datos (`server/karts_pistas_test.ts`) revisan que sea cerrada, manejable y con su minimapa. Cambio
     `karts-pistas-grandes`: vueltas ≈ 3 veces más largas (2.9–3.0×, radio mínimo ≥ el de antes, caja ≤ 12.6 M px),
@@ -183,6 +183,17 @@ Cada página debe manejar y mostrar de forma explícita:
     `nivel` (orden de dificultad: menú, selector y salas usan `KartsPistas.copasOrdenadas()`) y `requiere: { podios }`
     (`copaDesbloqueada`); `KartsCopa.COPAS_SALA`, el `<select>` de «Crear partida» y `MAPAS_SALA.karts` del servidor
     salen de las definiciones (no se copian listas). Agregar una copa = sus pistas y un objeto en `COPAS` con `nivel`;
+    cambio `karts-copa-reinos` (decisiones en su `design.md`): tercera copa, **Copa Reinos Antiguos** (`reinos`, `nivel: 3`,
+    `requiere: { podios: 1 }`: Giza, El Castillo, Karnak y Angkor Wat), con tramos DENTRO del monumento. Una pista puede
+    llevar `interiores` (`desde`, `hasta`, `ancho` en veces `mitad`, `muro` 0/±1, `techo`), `int` (colores del interior),
+    `columnas`, `adornos`, `lago` y `foso`; mecánicas `arena`, `luz`, `bloques`, `roca` y `losa` (compuerta de piedra que
+    se desliza; distinta de la `compuerta` espacial), con funciones puras en `karts-pistas.js` (`tramosInteriores`,
+    `muroEn`, `colocarColumnas`, `alturaBloque`, `ladoRoca`, `centroCompuerta`). El dibujo y la física de los interiores
+    viven en `juegos/karts-reinos.js` (`window.KartsReinos`, script clásico que `karts.html` carga antes de su script;
+    solo define funciones y `karts.html` lo llama con ganchos marcados `karts-copa-reinos`): muros en 3D
+    (cuadriláteros proyectados; dentro de un corredor, en lote y solo los de ese tramo), portadas, bóveda (segundo
+    panorama), niebla, viñeta y brillo de antorchas; con `prefers-reduced-motion`, antorchas quietas y luz sin
+    transición. Ganchos de prueba: `__karts.obstaculo(tipo)` y `estado().reinos`;
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
     - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo
