@@ -16,7 +16,7 @@ Cada pista se define igual que las demás (`puntos` Catmull-Rom, `mitad`, `vuelt
 - `interiores: [{ desde, hasta, ancho, muro }]`: tramos interiores entre las muestras más cercanas a `desde` y
   `hasta` (igual que `fijos`). `ancho` = medio ancho entre muros en veces `mitad` (0.8 a 1). `muro` = `0` (dos muros),
   `1` o `-1` (solo el muro de ese lado: una cámara abierta donde se ve el centro, como el trono del jaguar).
-- `obstaculos` (columnas fijas en el camino) y `mecanicas` con los tipos nuevos.
+- `columnas` (columnas fijas en el camino, alternadas), `adornos` (sueltos), `lago`, `foso`, `bots` y `mecanicas` con los tipos nuevos.
 
 `KartsPistas.tramosInteriores(pista, M)` devuelve los tramos en muestras y `KartsPistas.muroEn(pista, M)` un arreglo
 por muestra con el medio ancho del muro (0 = afuera); los usan la página, las pruebas y el minimapa. Restricciones
@@ -52,7 +52,7 @@ del de afuera con opacidad `dentro` (0 → 1 en ≈ 0.35 s al entrar; con movimi
 del horizonte pasa a casi negro y los sprites se desvanecen entre 550 y 900 px (afuera, 1 100 a 1 600 px).
 
 **Luz limitada.** Viñeta precalculada (un `drawImage` por cuadro, opacidad `dentro`) y el brillo de cada antorcha
-visible con un sprite de resplandor en modo `lighter`. Las antorchas parpadean (seno determinista) solo sin
+visible con un sprite de resplandor (sin `lighter`: más barato), con tope de tamaño y solo a menos de 560 px. Las antorchas parpadean (seno determinista) solo sin
 `prefers-reduced-motion`.
 
 **Física de los muros.** Tras mover el kart, si su muestra tiene muro y la distancia lateral pasa de `muro − 9` px,
@@ -91,7 +91,7 @@ Funciones puras en `juegos/karts-pistas.js` (probadas en Deno), con el reloj de 
   deslizamiento, pausa). La losa detiene al kart (vuelve 3 muestras y queda a ×0.35): no tumba.
 - `arena`: como el lodo (tope ×0.6), dibujada con dunas.
 - `luz`: franja de luz (triángulos de la serpiente del equinoccio): turbo como la placa de Teotihuacan.
-- `obstaculos` (columnas): círculos fijos de radio 15 sobre el camino; empujan hacia afuera y frenan (×0.6).
+- `columnas`: círculos fijos de radio 15 sobre el camino; empujan hacia afuera y frenan (×0.6).
 
 Esquivar (bots y piloto de prueba): si a menos de 60 muestras hay una columna, una compuerta cerrada o una roca, el
 carril objetivo pasa al lado libre; si no, el de siempre.
@@ -120,7 +120,11 @@ Cada copa lleva `dificultad` (1 Fiesta, 2 Mesoamericana, 3 Reinos). Récords: ll
 
 ## 7. Rendimiento
 
-Presupuesto por cuadro con CPU ×4: el piso Mode-7 domina y no cambia. Adentro la vista se acorta (sprites hasta
+Dentro de un corredor de dos muros (cámara y kart en el mismo tramo) solo se dibujan los muros de ese tramo y, cerca
+de la unión, los del tramo vecino: todo lo demás queda detrás. Esos muros van en lote (de lejos a cerca, uniendo los
+seguidos del mismo tono en un solo relleno) y, con la bóveda opaca, no se pinta el cielo de afuera. Medido: cuadro
+medio de ≈ 9.5 ms con CPU ×4 dentro de El Castillo (reporte del Step 6). Presupuesto por cuadro con CPU ×4: el piso
+Mode-7 domina y no cambia. Adentro la vista se acorta (sprites hasta
 900 px, ≈ 40 % del área), lo que compensa los ≈ 60–90 cuadriláteros de muro (un `fill` cada uno, sin gradientes). La
 viñeta y el resplandor son `drawImage` de lienzos precalculados. Se mide con las E2E (CPU ×4, 8 karts en vivo).
 
