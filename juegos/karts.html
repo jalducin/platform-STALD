@@ -2219,7 +2219,7 @@ document.addEventListener('click', e => {
     const ir = b.dataset.ir; audio();
     if (ir === 'menu') abrirMenu();
     else if (ir === 'copa') empezarCopa(false);
-    else if (ir.startsWith('copa-nueva')) { const c = KP.copaPorId(ir.split(':')[1] || 'fiesta'); if (KP.copaAbierta(c, prog.copas)) empezarCopa(c.id); } // karts-copa-reinos: nunca una copa cerrada
+    else if (ir.startsWith('copa-nueva')) { const c = KP.copaPorId(ir.split(':')[1] || 'fiesta'); if (KP.copaDesbloqueada(c, prog)) empezarCopa(c.id); } // karts-copa-reinos: nunca una copa con candado
     else if (ir === 'pistas') abrirPistas();
     else if (ir === 'taller') abrirTaller();
     else if (ir.startsWith('rapida:')) iniciarCarrera(ir.slice(7), { copa: false, ronda: 0, dif: 95 });
