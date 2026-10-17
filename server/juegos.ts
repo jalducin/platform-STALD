@@ -13,6 +13,7 @@ import { leerCarpeta } from "./db.ts";
 import { CATALOGO_CLASICOS_RAPIDOS } from "./clasicos_rapidos.ts"; // clasicos-rapidos
 import { topeRankingCopa } from "./karts_copa.ts"; // karts-copa-en-sala
 import { CARRERAS, rankingCarreraSala } from "./carreras.ts"; // karts-salida-y-puntos
+import { puntosArenaSala } from "./arena.ts"; // futbolito-arena
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -191,6 +192,7 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "billar": { categoria: "arcade", titulo: "Billar bola 8", max: 1000 },
   "golf": { categoria: "arcade", titulo: "Golf", max: 1000 }, // golf
   "futbol": { categoria: "arcade", titulo: "Fútbol Estelar 2010", max: 1000 }, // futbol-estelar (reemplaza a Futbolito en el menú; `futbolito` se queda por el historial)
+  "futbolito-arena": { categoria: "arcade", titulo: "Futbolito Arena", max: 1000 }, // futbolito-arena (id nuevo: `futbolito` es el de barras)
 };
 
 const LIMITE_DIARIO = 100;
@@ -499,6 +501,9 @@ async function puntosDeSala(c: CtxJugador, juego: string, sala: string, puntos: 
   const t = Date.parse(ahora);
   const topeCopa = juego === "karts" ? await topeRankingCopa(store, sala, jugador.id, t) : null;
   if (topeCopa !== null) return enteroEn(puntos, topeCopa);
+  const arena = juego === "futbolito-arena" ? await puntosArenaSala(store, sala, jugador.id) : null; // futbolito-arena: del resultado del servidor
+  if (arena === "pendiente") return json({ error: "resultado_pendiente" }, 409);
+  if (arena !== null) return arena;
   const delServidor = juego in CARRERAS ? await rankingCarreraSala(store, sala, jugador.id, t) : null;
   if (delServidor === "en_curso") return json({ error: "carrera_en_curso" }, 409);
   return delServidor ?? enteroEn(puntos, MAX_SALA);

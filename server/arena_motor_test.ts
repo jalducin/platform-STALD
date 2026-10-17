@@ -139,13 +139,13 @@ Deno.test("arena: choques entre robots y robot–balón (no se atraviesan)", () 
   const [a, b] = p.robots;
   Object.assign(a, { x: -1, y: 0 }); Object.assign(b, { x: 1, y: 0 });
   Object.assign(p.balon, { x: 0, y: 4 });
-  pasos(p, 90, (p: any) => [{ x: 1, y: 0, a: false, b: false }, { x: -1, y: 0, a: false, b: false }]);
+  pasos(p, 90, () => [{ x: 1, y: 0, a: false, b: false }, { x: -1, y: 0, a: false, b: false }]);
   assert(Math.hypot(a.x - b.x, a.y - b.y) >= 2 * M.R_ROBOT - 0.02, "no se enciman");
   // Robot que llega al balón quieto lo empuja.
   const q = enJuego(partido());
   Object.assign(q.robots[0], { x: -2, y: 0, fx: 1, fy: 0 }); q.robots[1].x = 6; q.robots[1].y = 3;
   Object.assign(q.balon, { x: 0, y: 0, vx: 0, vy: 0 });
-  pasos(q, 40, (p: any) => [{ x: 1, y: 0, a: false, b: false }, NADA]);
+  pasos(q, 40, () => [{ x: 1, y: 0, a: false, b: false }, NADA]);
   assert(q.balon.vx > 1, "lo empujó");
   assert(Math.hypot(q.balon.x - q.robots[0].x, q.balon.y - q.robots[0].y) >= M.R_ROBOT + M.R_BALON - 0.02);
 });

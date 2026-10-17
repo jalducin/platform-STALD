@@ -81,7 +81,7 @@ async function partidoEnRed(formato: string, red: { latencia: number; perdida: n
     for (const e of anf.paso(persona(p0, 0, k))) if (e.tipo === "dash" && e.i > 0) dashInvitados++;
     anf.enviarSiToca();
     hist.push({ t: reloj, pos: p0.robots.map((r: any) => [r.x, r.y]), estado: p0.estado });
-    cs.forEach((c: any) => rs.entregar());
+    rs.entregar();
     invs.forEach((inv: any, j: number) => {
       const d = inv.dibujar();
       if (!d) return;
@@ -160,7 +160,7 @@ Deno.test("arena-red: si se cae el anfitrión, el invitado avisa y cierra a los 
 });
 
 Deno.test("arena-red: el anfitrión ignora entradas viejas y de quien no está en la mesa", async () => {
-  let reloj = 0;
+  const reloj = 0;
   const ids = ["p0", "p1", "p2", "p3"];
   const { red, cs } = await canales([...ids, "intruso"], { latencia: 0, perdida: 0, desorden: 0, ahora: () => reloj, hz: () => 0 });
   const p = partido("2v2");
