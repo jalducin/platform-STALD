@@ -80,15 +80,69 @@
         { tipo: 'lodo', cerca: [333, 1739], lado: 0.3, r: 40 }],
       rio: [[100, 1650], [800, 1500], [1500, 1650], [2300, 1350], [3100, 1150], [4100, 1250]],
       vueltas: 2, puntos: [[1026, 320], [1728, 232], [2454, 662], [3180, 228], [3905, 657], [3912, 1346], [3446, 1704], [3543, 2236], [2865, 2575], [1970, 2346], [2060, 1730], [1730, 1070], [1180, 1180], [1180, 1840], [960, 2423], [518, 2284], [300, 1510], [373, 784], [639, 397]] },
+
+    // ---------- karts-copa-espacio: pistas espaciales (Copa del Espacio, carrera rápida y salas) ----------
+    // `espacio: true` = fuera del camino hay vacío: con barandal (postes de neón) se raspa; en los tramos `abierto` se
+    // cae y el dron de rescate te regresa. `ritmoBots` multiplica la habilidad de los bots (y divide el tiempo de los
+    // fantasmas de sala). Mecánicas por fracción de la vuelta: `f` (punto) o `tramo: [f0, f1]`.
+    { id: 'orbital', nombre: 'Estación Orbital Quetzal', emoji: '🛰️', sala: true, espacio: true, ritmoBots: 1.04, desc: 'Pasillos y hangares. Las compuertas abren y cierran: pasa por el centro.',
+      mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 1,
+      color: { fondo: '#03050c', fondo2: '#0b1a3a', camino: '#3b4763', borde1: '#22d3ee', borde2: '#fbbf24', linea: '#a5f3fc' },
+      tema: { cielo: ['#01030a', '#081634', '#1a3566'], bruma: '#13284f', lejos: '#1d3a6b', cerca: '#0e1d3a', cerca2: '#091327', franja: '#0b1a3a', sol: null, nubes: 0, espacio: 'orbital' },
+      decor: [['espPanel', 50, 28, 0.45], ['espAntena', 18, 56, 0.8], ['espModulo', 96, 60, 1]],
+      mecanicas: [{ tipo: 'turbo', f: 0.07, lado: -0.35, r: 22 }, { tipo: 'turbo', f: 0.095, lado: 0.35, r: 22 }, { tipo: 'compuerta', f: 0.12, periodo: 3.2 },
+        { tipo: 'abierto', tramo: [0.22, 0.31] }, { tipo: 'antiturbo', f: 0.36, lado: 0.4, r: 26 }, { tipo: 'compuerta', f: 0.52, periodo: 3.6 },
+        { tipo: 'gravedad', tramo: [0.55, 0.63] }, { tipo: 'antiturbo', f: 0.66, lado: -0.4, r: 26 }, { tipo: 'turbo', f: 0.7, lado: -0.35, r: 22 },
+        { tipo: 'turbo', f: 0.73, lado: 0.35, r: 22 }, { tipo: 'compuerta', f: 0.76, periodo: 4 }, { tipo: 'abierto', tramo: [0.8, 0.86] }],
+      vueltas: 2, puntos: [[870, 329], [1630, 319], [2390, 329], [3150, 338], [3578, 604], [3625, 1203], [3293, 1535], [2770, 1440], [2343, 1108], [1868, 1013], [1440, 1250], [1630, 1678], [2248, 1820], [2865, 1963], [3150, 2390], [2580, 2656], [1630, 2580], [775, 2533], [376, 2105], [443, 1440], [775, 1108], [585, 680]] },
+    { id: 'anillos', nombre: 'Anillos de Saturno', emoji: '🪐', sala: true, espacio: true, ritmoBots: 1.05, desc: 'Hielo de los anillos que resbala y rocas que cruzan el camino.',
+      mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 0.7,
+      color: { fondo: '#04060e', fondo2: '#1c2440', camino: '#5b7594', borde1: '#7dd3fc', borde2: '#fbbf24', linea: '#e0f2fe' },
+      tema: { cielo: ['#02030a', '#141a33', '#3a2f3f'], bruma: '#2a2438', lejos: '#3a3350', cerca: '#1a1830', cerca2: '#100f22', franja: '#1c2440', sol: '#fff7e0', nubes: 0, espacio: 'anillos' },
+      decor: [['espHielo', 30, 26, 0.5], ['espRoca', 34, 26, 0.85], ['espLunita', 80, 80, 1]],
+      mecanicas: [{ tipo: 'turbo', f: 0.07, lado: -0.3, r: 22 }, { tipo: 'asteroide', f: 0.1, periodo: 4.4, ancho: 120 }, { tipo: 'abierto', tramo: [0.16, 0.3] },
+        { tipo: 'asteroide', f: 0.47, periodo: 5, ancho: 120 }, { tipo: 'abierto', tramo: [0.56, 0.68] }, { tipo: 'turbo', f: 0.565, lado: 0, r: 22 },
+        { tipo: 'brecha', f: 0.6 }, { tipo: 'asteroide', f: 0.66, periodo: 4.7, ancho: 120 }, { tipo: 'abierto', tramo: [0.71, 0.79] }],
+      vueltas: 2, puntos: [[937, 336], [1756, 327], [2575, 355], [3303, 482], [3622, 1028], [3394, 1665], [2757, 1756], [2302, 1392], [1847, 1529], [2075, 2056], [2666, 2120], [3076, 2302], [2985, 2648], [2211, 2621], [1392, 2530], [664, 2393], [346, 1847], [664, 1392], [1210, 1392], [1347, 983], [892, 864], [464, 773], [418, 500]] },
+    { id: 'cinturon', nombre: 'Cinturón de Asteroides', emoji: '☄️', sala: true, espacio: true, ritmoBots: 1.06, desc: 'Asteroides en órbita, huecos con rampa y plataformas que se mueven.',
+      mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 0.95,
+      color: { fondo: '#05040a', fondo2: '#2a1a14', camino: '#4c4a5a', borde1: '#fb923c', borde2: '#fde047', linea: '#fed7aa' },
+      tema: { cielo: ['#020106', '#160c18', '#3b1d1a'], bruma: '#2b1716', lejos: '#3a2420', cerca: '#1c1214', cerca2: '#120b0d', franja: '#2a1a14', sol: '#fff1c2', nubes: 0, espacio: 'cinturon' },
+      decor: [['espRoca', 36, 28, 0.55], ['espRocaGrande', 74, 56, 0.85], ['espSatelite', 46, 36, 1]],
+      mecanicas: [{ tipo: 'turbo', f: 0.065, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.07, 0.18] }, { tipo: 'brecha', f: 0.08 }, { tipo: 'brecha', f: 0.15 },
+        { tipo: 'asteroide', f: 0.25, periodo: 4.8, ancho: 120 }, { tipo: 'abierto', tramo: [0.29, 0.37] }, { tipo: 'turbo', f: 0.305, lado: 0, r: 22 }, { tipo: 'brecha', f: 0.33 },
+        { tipo: 'antiturbo', f: 0.44, lado: 0.4, r: 26 }, { tipo: 'abierto', tramo: [0.48, 0.56] }, { tipo: 'plataforma', f: 0.52, periodo: 5.5, amp: 0.65, ancho: 0.5 },
+        { tipo: 'asteroide', f: 0.7, periodo: 5.4, ancho: 120 }, { tipo: 'antiturbo', f: 0.8, lado: -0.4, r: 26 }, { tipo: 'abierto', tramo: [0.86, 0.93] },
+        { tipo: 'plataforma', f: 0.9, periodo: 6, amp: 0.6, ancho: 0.5 }],
+      vueltas: 2, puntos: [[979, 329], [1852, 319], [2725, 339], [3453, 446], [3792, 1076], [3695, 1852], [3501, 2483], [2919, 2677], [2531, 2289], [2386, 1658], [1998, 1416], [1610, 1658], [1464, 2289], [1076, 2677], [543, 2483], [349, 1852], [688, 1416], [446, 931], [494, 591]] },
+    { id: 'nebulosa', nombre: 'Nebulosa Esmeralda', emoji: '🌌', sala: true, espacio: true, ritmoBots: 1.08, desc: 'Portales, gravedad baja y plataformas: la pista más difícil.',
+      mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 0.9,
+      color: { fondo: '#03070a', fondo2: '#0c2a24', camino: '#334658', borde1: '#34d399', borde2: '#f472b6', linea: '#bbf7d0' },
+      tema: { cielo: ['#020509', '#0b2230', '#174a3c'], bruma: '#123a33', lejos: '#1b4a40', cerca: '#0c241f', cerca2: '#071713', franja: '#0c2a24', sol: null, nubes: 0, espacio: 'nebulosa' },
+      decor: [['espCristal', 22, 40, 0.5], ['espRoca', 30, 24, 0.8], ['espMedusa', 40, 56, 1]],
+      mecanicas: [{ tipo: 'turbo', f: 0.065, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.07, 0.12] }, { tipo: 'abierto', tramo: [0.22, 0.31] },
+        { tipo: 'portal', f: 0.215, salida: 0.3, lado: -0.55, r: 24 }, { tipo: 'gravedad', tramo: [0.36, 0.45] }, { tipo: 'antiturbo', f: 0.48, lado: 0.4, r: 26 },
+        { tipo: 'abierto', tramo: [0.55, 0.69] }, { tipo: 'gravedad', tramo: [0.55, 0.7] }, { tipo: 'turbo', f: 0.555, lado: 0, r: 22 }, { tipo: 'brecha', f: 0.58 },
+        { tipo: 'plataforma', f: 0.62, periodo: 5, amp: 0.65, ancho: 0.5 }, { tipo: 'antiturbo', f: 0.66, lado: -0.4, r: 26 }, { tipo: 'abierto', tramo: [0.72, 0.82] },
+        { tipo: 'portal', f: 0.74, salida: 0.8, lado: 0.55, r: 24 }, { tipo: 'plataforma', f: 0.84, periodo: 5.6, amp: 0.65, ancho: 0.5 }],
+      vueltas: 2, puntos: [[905, 337], [1695, 319], [2439, 356], [2904, 672], [2625, 1137], [2067, 1184], [1788, 1602], [2253, 1974], [2904, 1788], [3164, 1379], [3416, 1221], [3648, 1509], [3722, 1881], [3462, 2439], [2625, 2579], [1695, 2532], [858, 2439], [393, 1974], [719, 1556], [1277, 1277], [1184, 951], [812, 905], [467, 802], [421, 514]] },
   ];
 
   const VERSION_PISTAS = 2; // karts-pistas-grandes: sube cuando los trazados cambian tanto que los récords no se comparan
 
+  // karts-copa-espacio: `nivel` = orden de dificultad (el menú, el selector y las salas ordenan por él; 3 queda para
+  // Reinos Antiguos) y `requiere: { podios }` = podios en otras copas para abrirla en el modo individual.
   const COPAS = [
-    { id: 'fiesta', nombre: 'Copa Fiesta', emoji: '🏆', desc: 'Pradera, desierto, hielo y volcán', pistas: ['pradera', 'desierto', 'hielo', 'volcan'] },
-    { id: 'mesoamerica', nombre: 'Copa Mesoamericana', emoji: '🌽', desc: 'De La Venta a Tenochtitlan', pistas: ['laventa', 'teotihuacan', 'chichen', 'tenochtitlan'] },
+    { id: 'fiesta', nivel: 1, nombre: 'Copa Fiesta', emoji: '🏆', desc: 'Pradera, desierto, hielo y volcán', pistas: ['pradera', 'desierto', 'hielo', 'volcan'] },
+    { id: 'mesoamerica', nivel: 2, nombre: 'Copa Mesoamericana', emoji: '🌽', desc: 'De La Venta a Tenochtitlan', pistas: ['laventa', 'teotihuacan', 'chichen', 'tenochtitlan'] },
+    { id: 'espacio', nivel: 4, nombre: 'Copa del Espacio', emoji: '🚀', desc: 'Pistas imposibles en el espacio: la más difícil', requiere: { podios: 2 }, pistas: ['orbital', 'anillos', 'cinturon', 'nebulosa'] }, // karts-copa-espacio
   ];
   const copaPorId = id => COPAS.find(c => c.id === id) || COPAS[0]; // sin id (progreso viejo) → Copa Fiesta
+  // karts-copa-espacio: copas en orden de dificultad y desbloqueo por podios en OTRAS copas (1.º a 3.º).
+  const copasOrdenadas = () => COPAS.slice().sort((a, b) => a.nivel - b.nivel);
+  const podiosDe = (copa, prog) => COPAS.filter(c => c.id !== copa.id && prog && prog.copas && prog.copas[c.id] && prog.copas[c.id].lugar <= 3).length;
+  const podiosFaltan = (copa, prog) => (copa.requiere ? Math.max(0, copa.requiere.podios - podiosDe(copa, prog)) : 0);
+  const copaDesbloqueada = (copa, prog) => podiosFaltan(copa, prog) === 0;
 
   // Punto a un lado de la muestra i (lado > 0 = derecha del sentido de la carrera), igual que karts.html.
   function puntoEn(M, i, lado) {
@@ -101,13 +155,48 @@
     return mejor;
   }
   // Zonas de las mecánicas en el mapa: { tipo, idx, x, y, r, ... } (lado en veces la mitad del camino).
+  // karts-copa-espacio: también por fracción de la vuelta (`f`), tramos (`tramo` → i0, i1), huecos de la rampa y de la
+  // plataforma (i0, i1) y la salida de los portales (idxSalida, sx, sy).
+  const HUECO_DE = { brecha: m => [2, 2 + (m.largo || 10) - 1], plataforma: m => [0, (m.largo || 14) - 1] };
   function colocarMecanicas(pista, M) {
+    const n = M.pts.length;
     return (pista.mecanicas || []).map(m => {
-      const idx = muestraMasCercana(M, m.cerca[0], m.cerca[1]), lado = (m.lado || 0) * pista.mitad;
-      const p = puntoEn(M, idx, lado);
-      return { ...m, idx, x: p.x, y: p.y, r: m.r || 20, a: M.pts[idx].a };
+      if (m.tramo) { const i0 = Math.round(m.tramo[0] * n), p0 = M.pts[i0]; return { ...m, idx: i0, i0, i1: Math.round(m.tramo[1] * n), x: p0.x, y: p0.y, r: 0, a: p0.a }; }
+      const idx = m.f === undefined ? muestraMasCercana(M, m.cerca[0], m.cerca[1]) : Math.round(m.f * n) % n, lado = (m.lado || 0) * pista.mitad;
+      const p = puntoEn(M, idx, lado), z = { ...m, idx, x: p.x, y: p.y, r: m.r || 20, a: M.pts[idx].a };
+      if (HUECO_DE[m.tipo]) { const [d0, d1] = HUECO_DE[m.tipo](m); z.i0 = idx + d0; z.i1 = idx + d1; }
+      if (m.tipo === 'plataforma') { z.ampPx = (m.amp || 0.65) * pista.mitad; z.medioPx = m.ancho * pista.mitad; }
+      if (m.salida !== undefined) { z.idxSalida = Math.round(m.salida * n) % n; const s = puntoEn(M, z.idxSalida, lado); z.sx = s.x; z.sy = s.y; }
+      return z;
     });
   }
+  // ---- karts-copa-espacio: reglas puras de las mecánicas espaciales (las usan karts.html y las pruebas de Deno) ----
+  // Banderas por muestra: ABIERTO (sin barandal: se puede caer), HUECO (rampa), PLATAFORMA (hueco con plataforma) y
+  // GRAVEDAD (baja). null en las pistas que no son del espacio.
+  const MARCA = { ABIERTO: 1, HUECO: 2, PLATAFORMA: 4, GRAVEDAD: 8 };
+  const BITS = { abierto: MARCA.ABIERTO, gravedad: MARCA.GRAVEDAD, brecha: MARCA.HUECO | MARCA.ABIERTO, plataforma: MARCA.PLATAFORMA | MARCA.ABIERTO };
+  function marcasEspacio(pista, M, zonas) {
+    if (!pista.espacio) return null;
+    const n = M.pts.length, m = new Uint8Array(n);
+    for (const z of zonas) if (BITS[z.tipo]) for (let i = z.i0; i <= z.i1; i++) m[i % n] |= BITS[z.tipo];
+    return m;
+  }
+  // Física espacial: salto de la rampa (s y px/s mínimos), caída y remolque del dron (s), gravedad baja y antiturbo.
+  const ESPACIO = { saltoS: 0.7, velSalto: 150, caidaS: 0.8, remolqueS: 1.4, gravedadSalto: 1.6, gravedadAgarre: 0.4, antiturbo: 0.6 };
+  // Dónde te deja el dron: desde un hueco (o si 4 muestras atrás cae en uno), 2 muestras después del hueco; desde un
+  // borde abierto, 4 muestras atrás. Las mecánicas están lejos de la meta: nunca la cruza hacia atrás.
+  function rescateEn(marcas, idx) {
+    const n = marcas.length, hueco = MARCA.HUECO | MARCA.PLATAFORMA;
+    let i = marcas[idx] & hueco ? idx : (idx - 4 + n) % n;
+    if (!(marcas[i] & hueco)) return i;
+    while (marcas[i % n] & hueco) i++;
+    return (i + 2) % n;
+  }
+  const fase = (t, periodo) => (t % periodo) / periodo * Math.PI * 2;
+  // Centro de la plataforma (px desde el centro del camino) en el tiempo t: va y viene de lado.
+  const ladoPlataforma = (z, t) => Math.sin(fase(t, z.periodo)) * z.ampPx;
+  // Abertura de la compuerta (fracción de la mitad del camino): de 1 (abierta) a 0.3 (el centro nunca se cierra).
+  const aperturaCompuerta = (z, t) => 0.3 + 0.7 * (0.5 + 0.5 * Math.cos(fase(t, z.periodo)));
   // Tramos de adornos fijos: posiciones a ambos lados entre `desde` y `hasta`, cada `cada` muestras.
   function colocarFijos(pista, M) {
     const out = [], n = M.pts.length;
@@ -131,5 +220,6 @@
     return { esc, ox: (w - (x1 - x0) * esc) / 2 - x0 * esc, oy: (h - (y1 - y0) * esc) / 2 - y0 * esc };
   }
 
-  raiz.KartsPistas = { PISTAS, COPAS, VERSION_PISTAS, copaPorId, puntoEn, colocarMecanicas, colocarFijos, ladoTrajinera, encuadrarMinimapa };
+  raiz.KartsPistas = { PISTAS, COPAS, VERSION_PISTAS, copaPorId, puntoEn, colocarMecanicas, colocarFijos, ladoTrajinera, encuadrarMinimapa,
+    copasOrdenadas, copaDesbloqueada, podiosFaltan, MARCA, ESPACIO, marcasEspacio, rescateEn, ladoPlataforma, aperturaCompuerta }; // karts-copa-espacio
 })(typeof window !== 'undefined' ? window : globalThis);

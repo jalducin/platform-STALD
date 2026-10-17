@@ -16,19 +16,22 @@
 (function (raiz) {
   'use strict';
   const A = raiz.Arcade, KP = raiz.KartsPistas;
-  const COPAS_SALA = ['fiesta', 'mesoamerica', 'mixta'];
+  // karts-copa-espacio: las copas de sala salen de KartsPistas.COPAS en orden de dificultad (`nivel`), más la mixta.
+  const ORDEN = KP.copasOrdenadas();
+  const COPAS_SALA = [...ORDEN.map(c => c.id), 'mixta'];
   const CARRERAS = 4;
   const INTERPODIO_MS = 10000; // tabla entre carreras (incluye los 3 s de cuenta regresiva del juego)
   const TOPE_RANKING = 2000; // igual que el tope de Karts en el catálogo (server/juegos.ts)
-  const NOMBRE = { fiesta: 'Copa Fiesta', mesoamerica: 'Copa Mesoamericana', mixta: 'Copa mixta' };
-  const EMOJI = { fiesta: '🏆', mesoamerica: '🌽', mixta: '🎲' };
+  const NOMBRE = { ...Object.fromEntries(ORDEN.map(c => [c.id, c.nombre])), mixta: 'Copa mixta' };
+  const EMOJI = { ...Object.fromEntries(ORDEN.map(c => [c.id, c.emoji])), mixta: '🎲' };
+  const MIXTA = ['fiesta', 'mesoamerica']; // karts-copa-espacio: la mixta sigue tomando 2 y 2 de estas dos (por id)
 
   // Pistas de la copa. La mixta: 2 de cada copa, al azar con la semilla de la sala (la revancha sortea otras).
   function pistasDe(copa, seed) {
     if (copa !== 'mixta') return KP.copaPorId(copa).pistas.slice();
     const r = A.rng(seed, 'copa-mixta');
     const toma = l => { const x = l.slice(); for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x.slice(0, 2); };
-    const out = [...toma(KP.COPAS[0].pistas), ...toma(KP.COPAS[1].pistas)];
+    const out = [...toma(KP.copaPorId(MIXTA[0]).pistas), ...toma(KP.copaPorId(MIXTA[1]).pistas)];
     for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
     return out;
   }
