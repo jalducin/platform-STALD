@@ -156,8 +156,15 @@ async function horizontalYEscritorio(b) {
   await e.keyboard.down('ArrowRight'); await sleep(450);
   const kr = await estado(fe);
   ok('teclado: → mueve tu robot a la derecha', kr.robot.vx > 2, String(kr.robot.vx));
-  await e.keyboard.press('Space'); await sleep(60);
-  ok('teclado: Espacio embiste', (await estado(fe)).robot.recA > 0.3);
+  // Si justo cayó un gol (saque: nadie se mueve), se vuelve a intentar.
+  let embistio = false;
+  for (let k = 0; k < 3 && !embistio; k++) {
+    await fe.evaluate(() => window.__arena.enJuego());
+    await e.keyboard.press('Space'); await sleep(60);
+    embistio = (await estado(fe)).robot.recA > 0.3;
+    if (!embistio) await sleep(1300);
+  }
+  ok('teclado: Espacio embiste', embistio);
   await e.keyboard.up('ArrowRight');
   await e.keyboard.press('KeyK'); await sleep(60);
   ok('teclado: K gira', (await estado(fe)).robot.recB > 0.2);

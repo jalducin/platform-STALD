@@ -114,7 +114,8 @@ Referencia: imagen del profe (arena octagonal, 4 robots, control con joystick + 
 | Karts (medido en `juegos-en-vivo`) | 8 | 80 + latidos | ≈ 70 |
 
 El 3 vs 3 queda por debajo de los 8 karts que ya se midieron contra el Supabase real sin pérdida, y la foto de 6 robots
-cabe holgada en el sobre de 2048 B (medida en `server/arena_red_test.ts`). Costo de código: solo una formación más y un
+cabe holgada en el sobre de 2048 B. Medido en `server/arena_red_test.ts` (red simulada de `EnVivo` con 80 ms): 72.3
+envíos por sala/s en 3 vs 3 y foto < 560 B (244 B al final del partido); 2 vs 2: fotos 14.9/s y entradas 14.3/s. Costo de código: solo una formación más y un
 formato de mesa. **Decisión: sí hay 3 vs 3**, solo en la arena grande y con entrada a 12 Hz.
 
 ### 9. Resultado y puntos
