@@ -251,7 +251,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     `personaje`, uno de los ids de `Personajes.LISTA` (`juegos/personajes.js`, fuente única), elegido en la sala de
     espera. Sin datos personales.
   - Copa completa de Karts (cambio `karts-copa-en-sala`): la sala lleva `opciones.modo = "copa"` y `opciones.copa`
-    (`fiesta`, `mesoamerica`, `mixta`; `opciones.mapa` = su 1.ª pista) y cada asiento `copa[]`
+    (un id de `KartsPistas.COPAS` —`fiesta`, `mesoamerica`, `reinos` (cambio `karts-copa-reinos`), `espacio` (cambio
+    `karts-copa-espacio`)— o `mixta`, 2 y 2 de Fiesta y Mesoamericana; `opciones.mapa` = su 1.ª pista) y cada asiento `copa[]`
     `{ k 0–3, ms | null, monedas, t, abandono? }` (un resultado por carrera, el primero). Calendario, puntos y tabla se
     deducen de eso con `juegos/karts-copa.js`; no se guarda nada más.
   - En Golf (cambio `golf`), `jugadas[]` `{ n, accion: "tiro" | "rendirse", angulo?, fuerza?, t }`. Los 3 hoyos de la
@@ -295,6 +296,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     `pistasV: 2` (versión de los trazados, `KartsPistas.VERSION_PISTAS`) y `recordsV1 { <pista>: ms }` (récords
     archivados de las pistas chicas, se muestran como «pista chica»); `records` son los de las pistas grandes. El
     servidor acepta también la forma anterior de 5 llaves (pestañas viejas); al abrirla, el juego la migra y la guarda.
+    Cambio `karts-copa-reinos`: sin cambio de forma; `copas` y `copaEnCurso.copa` pueden traer `reinos` y `records`
+    las 4 pistas nuevas (`giza`, `castillo`, `karnak`, `angkor`), con la misma `pistasV: 2`. La Copa Reinos Antiguos se
+    abre en el modo individual con 1 podio (1.º a 3.º) en otra copa (`requiere: { podios: 1 }`, la regla de
+    `karts-copa-espacio`).
   - `dragon-run` (cambio `dragon-run-misiones`): `{ totales { metros 0–10000000, monedas 0–1000000, esquivados
     0–10000000, carreras 0–1000000, castillos 0–1000000, dobles 0–10000000 }, mejorRacha 0–999, dias { ultimo:
     null | "AAAA-MM-DD", racha 0–3660, mejor 0–3660 }, diaria: null | { fecha "AAAA-MM-DD", avance [3 × 0–100000] },

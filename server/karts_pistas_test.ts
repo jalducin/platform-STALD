@@ -49,8 +49,7 @@ Deno.test("karts-pistas: cada trazado es cerrado, cabe en el mapa y no se cruza 
     const M = A.muestrearPista(p), pts = M.pts, n = pts.length;
     const cierre = Math.hypot(pts[n - 1].x - pts[0].x, pts[n - 1].y - pts[0].y);
     assert(cierre <= M.paso * 1.5, p.id + " cerrado (" + cierre.toFixed(1) + " px)");
-    const veces = M.largo / LARGO_ANTES[p.id];
-    assert(veces >= 2.7 && veces <= 3.3, p.id + " vuelta ≈ 3 veces más larga: " + veces.toFixed(2) + "×");
+    if (LARGO_ANTES[p.id]) { const veces = M.largo / LARGO_ANTES[p.id]; assert(veces >= 2.7 && veces <= 3.3, p.id + " vuelta ≈ 3 veces más larga: " + veces.toFixed(2) + "×"); }
     assert(pts.every((q: any) => q.x >= p.mitad + 90 && q.y >= p.mitad + 90), p.id + " deja orilla en el mapa");
     const W = Math.max(...pts.map((q: any) => q.x)) + 220, H = Math.max(...pts.map((q: any) => q.y)) + 220;
     assert(W * H <= 12.6e6, p.id + " textura del piso ≤ 12.6 M px: " + (W * H / 1e6).toFixed(1));
@@ -71,7 +70,7 @@ Deno.test("karts-pistas: las curvas se pueden tomar (radio mínimo ≥ el de ant
   for (const p of KP.PISTAS.filter(conMedidaAntes)) {
     const M = A.muestrearPista(p), pts = M.pts, n = pts.length;
     const radio = radioMinimo(M);
-    assert(radio >= RADIO_ANTES[p.id] && radio >= 100, p.id + " radio mínimo " + Math.round(radio) + " px (antes " + RADIO_ANTES[p.id] + ")");
+    assert(radio >= (RADIO_ANTES[p.id] ?? 100) && radio >= 100, p.id + " radio mínimo " + Math.round(radio) + " px (antes " + RADIO_ANTES[p.id] + ")");
     const recta = Math.abs(ang(pts[8].a - pts[n - 8].a));
     assert(recta < 0.35, p.id + " meta en recta (" + recta.toFixed(2) + " rad)");
   }
@@ -193,7 +192,7 @@ Deno.test("karts-pistas: Copa Fiesta y Copa Mesoamericana con 4 pistas que exist
 });
 
 // juegos-en-vivo: las salas (hasta 8 personas en vivo) ofrecen las 8 pistas, también las mesoamericanas.
-Deno.test("karts-pistas: las salas ofrecen las 8 pistas (igual que el servidor)", () => {
+Deno.test("karts-pistas: las salas ofrecen todas las pistas (igual que el servidor)", () => {
   assertEquals(A.PISTAS.map((p: any) => p.id), MAPAS_SALA.karts);
   for (const id of ORIGINALES) assert(MAPAS_SALA.karts.includes(id), id + " en salas"); // karts-copa-espacio: y las de otras copas
   for (const id of NUEVAS) assert(MAPAS_SALA.karts.includes(id), id + " en salas");
