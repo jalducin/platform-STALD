@@ -356,8 +356,8 @@ async function probarPistasMeso(b) {
     const e0 = await estado(f);
     ok(m.id + ': se elige y corre con 8 corredores, su mecánica y el minimapa completo', e0.pista === m.id && e0.karts === 8 && e0.zonas.includes(m.mecanica) && e0.marcasMapa === 8 && e0.yoEnMapa, JSON.stringify({ pista: e0.pista, zonas: e0.zonas, marcas: e0.marcasMapa }));
     // Rendimiento: CPU 4 veces más lento, como un celular modesto.
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); await sleep(3500);
-    const fps = (await estado(f)).fps;
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); await sleep(2000);
+    const fps = await fpsMediana(f); // karts-copa-reinos: mediana de 6 lecturas (una sola sale contaminada si la máquina tiene más carga)
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     ok(m.id + ': 60 cuadros por segundo con CPU ×4', fps >= 55, 'fps=' + fps);
     fpsMeso[m.id] = fps;
@@ -391,6 +391,12 @@ async function probarPistasMeso(b) {
   await q.context().close();
 }
 const fpsMeso = {};
+// Mediana de 6 lecturas de fps (una cada 0.5 s; el juego cuenta cuadros por segundo), como en e2e-karts-vivo.js.
+async function fpsMediana(f) {
+  const xs = [];
+  for (let k = 0; k < 6; k++) { await sleep(500); xs.push((await estado(f)).fps); } // NOSONAR: lecturas en orden
+  return xs.sort((a, b) => a - b)[3];
+}
 // karts-pistas-grandes: las 4 pistas originales escaladas: «Vuelta 1/2», minimapa con 8, fps con CPU ×4 y capturas.
 async function probarPistasGrandes(b) {
   const q = await abrirSuelto(b, { width: 390, height: 844 });
@@ -402,8 +408,8 @@ async function probarPistasGrandes(b) {
     await f.evaluate(() => window.__karts.piloto(true)); await sleep(1500);
     const e0 = await estado(f);
     ok(id + ': «Vuelta 1/2» y minimapa con los 8', (await f.textContent('#h-vuelta')) === 'Vuelta 1/2' && e0.marcasMapa === 8 && e0.yoEnMapa, JSON.stringify({ marcas: e0.marcasMapa }));
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); await sleep(3500);
-    const fps = (await estado(f)).fps;
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); await sleep(2000);
+    const fps = await fpsMediana(f); // karts-copa-reinos: mediana de 6 lecturas (una sola sale contaminada si la máquina tiene más carga)
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     ok(id + ': 60 cuadros por segundo con CPU ×4', fps >= 55, 'fps=' + fps);
     fpsMeso[id] = fps;
@@ -456,8 +462,8 @@ async function probarReinos(b) {
     ok(m.id + ': adentro la luz cambia (bóveda, viñeta) y vas entre muros', ea.reinos.interior && ea.reinos.dentro >= 0.45 && ea.reinos.muro > 0, JSON.stringify(ea.reinos));
     // Rendimiento adentro con el piloto de prueba: CPU 4 veces más lento.
     await f.evaluate(() => window.__karts.piloto(true));
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); await sleep(3500);
-    const fps = (await estado(f)).fps;
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); await sleep(2000);
+    const fps = await fpsMediana(f); // karts-copa-reinos: mediana de 6 lecturas (una sola sale contaminada si la máquina tiene más carga)
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     ok(m.id + ': 60 cuadros por segundo con CPU ×4 dentro del monumento', fps >= 55, 'fps=' + fps);
     fpsReinos[m.id] = fps;
