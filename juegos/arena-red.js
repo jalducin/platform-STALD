@@ -31,7 +31,7 @@
     }
     const f = {
       q: extra.q, t: Math.round(extra.t), e: Math.max(0, ESTADOS.indexOf(p.estado)), r: Math.round(p.t * 10), og: p.oro ? 1 : 0,
-      g: [p.goles[0], p.goles[1]], b: [r(b.x, Q_POS), r(b.y, Q_POS), r(b.vx, Q_VEL), r(b.vy, Q_VEL)], j, a: (extra.a || []).slice(), ia: extra.ia | 0,
+      g: [p.goles[0], p.goles[1]], b: [r(b.x, Q_POS), r(b.y, Q_POS), r(b.vx, Q_VEL), r(b.vy, Q_VEL)], j, a: (extra.a || []).slice(), ia: Math.trunc(Number(extra.ia) || 0),
     };
     if (p.ganador !== null && p.ganador !== undefined) f.w = p.ganador;
     if (extra.ev && extra.ev.length) f.ev = extra.ev;
@@ -69,8 +69,8 @@
   function anfitrion(cfg) {
     const { canal, p, M, ids, yo } = cfg, ahora = cfg.ahora, nivel = cfg.nivel || 'medio';
     const n = p.robots.length;
-    const st = { ent: Array(n).fill(null), s: Array(n).fill(-1), na: Array(n).fill(null), nb: Array(n).fill(null), pendA: Array(n).fill(false), pendB: Array(n).fill(false),
-      ultimo: Array(n).fill(ahora()), ia: new Set(), q: 0, ultimoEnvio: -Infinity, eventos: [], nEv: 0, t0: ahora(), ultimaFoto: null };
+    const st = { ent: new Array(n).fill(null), s: new Array(n).fill(-1), na: new Array(n).fill(null), nb: new Array(n).fill(null), pendA: new Array(n).fill(false), pendB: new Array(n).fill(false),
+      ultimo: new Array(n).fill(ahora()), ia: new Set(), q: 0, ultimoEnvio: -Infinity, eventos: [], nEv: 0, t0: ahora(), ultimaFoto: null };
     const persona = i => i !== yo && !!ids[i];
     const locales = []; // avisos que también ve el anfitrión (desconexión y regreso)
     const evento = (tipo, extra) => st.eventos.push({ n: ++st.nEv, q: st.q + 1, tipo, ...extra });
@@ -134,8 +134,8 @@
     const interp = raiz.EnVivo.interpolador({ retraso: RETRASO_MS, extrapolar: EXTRAPOLA_MS, angulos });
     const st = { s: 0, na: 0, nb: 0, aPrev: false, bPrev: false, ultimoEnvio: -Infinity, junto: null, ultima: null, recibidas: 0, ultimoMsg: ahora(), caido: null,
       vistos: new Set(), pendientes: [], goles: [0, 0], ultimoPaso: ahora(), ia: 0 };
-    const pred = Object.assign({}, p.robots[yo], { pend: [], ex: 0, ey: 0, lista: false });
-    const vector = s => { const v = [s.balon.x, s.balon.y]; for (const x of s.robots) v.push(x.x, x.y, x.ang); return v; };
+    const pred = { ...p.robots[yo], pend: [], ex: 0, ey: 0, lista: false };
+    const vector = s => [s.balon.x, s.balon.y, ...s.robots.flatMap(x => [x.x, x.y, x.ang])];
     function reconciliar(s) {
       const aut = s.robots[yo];
       if (!aut || s.estado !== 'juego') { pred.lista = false; pred.pend = []; return; }

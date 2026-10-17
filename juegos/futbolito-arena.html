@@ -18,6 +18,7 @@ canvas{display:block}
 #marcador .eq{display:flex;align-items:center;gap:4px}
 #marcador .gol{min-width:24px;text-align:center;border-radius:6px;padding:0 5px;color:#04120d;text-shadow:none;font-size:17px}
 #g-0{background:var(--mar)}#g-1{background:var(--sol)}
+body.lado-sol #marcador,body.lado-sol #marcador .eq{flex-direction:row-reverse} /* tu equipo siempre a la izquierda, como tu portería */
 #reloj{min-width:44px;text-align:center;padding:0 6px;border-radius:6px;background:#e2fbe9;color:#04120d;text-shadow:none;font-size:13px}
 #reloj.oro{background:var(--oro)}
 #hud .der{position:absolute;right:8px;top:6px;display:flex;gap:6px;pointer-events:auto}
@@ -207,7 +208,12 @@ function tactil(el, h) {
   el.addEventListener('touchend', finT, { passive: false });
   el.addEventListener('touchcancel', finT, { passive: false });
   const propio = e => e.pointerType !== 'touch' || !TOQUES;
-  el.addEventListener('pointerdown', e => { if (!propio(e)) return; e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch { /* nada */ } ini('p' + e.pointerId, e.clientX, e.clientY); });
+  el.addEventListener('pointerdown', e => {
+    if (!propio(e)) return;
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch { /* nada */ }
+    ini('p' + e.pointerId, e.clientX, e.clientY);
+  });
   el.addEventListener('pointermove', e => { if (propio(e)) mov('p' + e.pointerId, e.clientX, e.clientY); });
   const finP = e => { if (propio(e)) fin('p' + e.pointerId); };
   el.addEventListener('pointerup', finP); el.addEventListener('pointercancel', finP);
@@ -315,7 +321,7 @@ const vista = (() => {
   const pt = (x, y, z = 0) => { const q = mundo(x, y); return [V.ox + q.u * V.s, V.oy + q.v * V.s * INCL - z * V.s]; };
   function ajustar(ar, lado) {
     const w = $('pantalla').clientWidth, h = $('pantalla').clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
-    const vertical = h > w * 1.05, rot = vertical ? (lado ? 3 : 1) : (lado ? 2 : 0);
+    const vertical = h > w * 1.05, rot = (vertical ? 1 : 0) + (lado ? 2 : 0); // 0/2 horizontal, 1/3 vertical
     const clave = [w, h, dpr, rot, ar.L, ar.A].join(':');
     if (clave === V.clave) return;
     Object.assign(V, { clave, rot, w, h, dpr, arena: ar });
@@ -500,19 +506,21 @@ function pantalla(html, v) {
 let avisoT = null;
 function avisar(t, ms = 1800) { const a = $('aviso'); a.textContent = t; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms); }
 let gritoT = null;
-function gritar(t, sub, ms = 1500, color) {
+function gritar(t, sub, ms, color) {
+  ms = ms || 1500;
   const g = $('grito'); g.innerHTML = '<b' + (color ? ' style="color:' + color + '"' : '') + '>' + esc(t) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '');
   g.classList.add('ver'); clearTimeout(gritoT); gritoT = setTimeout(() => g.classList.remove('ver'), ms);
 }
 
 /* ================= Menú contra la IA ================= */
+const DESCRIPCION_MODO = { '1v1': 'Tú contra un robot de la IA.', '2v2': 'Tú y un compañero de la IA contra el equipo 🔥 Sol.', '3v3': 'Tú y dos compañeros de la IA contra el equipo 🔥 Sol.' };
 const botonOp = (grupo, valor, texto, activo, extra = '') => '<button class="op" data-op="' + grupo + '" data-v="' + valor + '" aria-pressed="' + activo + '"' + extra + '>' + texto + '</button>';
 function menuPrincipal() {
   const m = ajustes.modo, grande = m === '3v3' || ajustes.grande;
   const colores = M.COLORES[0].map((c, k) => '<button class="color" data-op="color" data-v="' + k + '" aria-label="Robot ' + M.NOMBRES_COLOR[0][k] + '" aria-pressed="' + (ajustes.color === k) + '" style="background:' + c + '"></button>').join('');
   pantalla('<h1>⚽ Futbolito <span>Arena</span></h1><p>Maneja tu robot con el joystick, embiste con ⚡ para patear y gira con 🌀. ¡Mete el balón en la portería rival!</p>' +
     '<div class="caja"><h3>Modo</h3><div class="fila">' + MODOS.map(([k, t]) => botonOp('modo', k, t, m === k)).join('') + '</div>' +
-    '<p class="sub" style="margin-top:6px">' + (m === '1v1' ? 'Tú contra un robot de la IA.' : 'Tú y ' + (m === '2v2' ? 'un compañero' : 'dos compañeros') + ' de la IA contra el equipo 🔥 Sol.') + '</p></div>' +
+    '<p class="sub" style="margin-top:6px">' + DESCRIPCION_MODO[m] + '</p></div>' +
     '<div class="caja"><h3>Arena</h3><div class="fila">' + botonOp('grande', '0', '🟩 Normal', !grande, m === '3v3' ? ' disabled' : '') + botonOp('grande', '1', '🏟️ Grande', grande) + '</div></div>' +
     '<div class="caja"><h3>Dificultad</h3><div class="fila">' + NIVELES.map(([k, t]) => botonOp('nivel', k, t, ajustes.nivel === k)).join('') + '</div></div>' +
     '<div class="caja"><h3>Partido a</h3><div class="fila">' + M.GOLES.map(g => botonOp('goles', g, g + ' goles', ajustes.goles === g)).join('') + '</div><p class="sub" style="margin-top:6px">o 3 minutos; si empatan, ⭐ gol de oro.</p></div>' +
@@ -538,6 +546,7 @@ function empezarSolo() {
 function iniciarPartido(p, yo, nombres) {
   S.p = p; S.yo = yo; S.fin = false; S.inicioReal = performance.now(); S.puntos = null;
   S.colores = p.robots.map(r => M.COLORES[r.eq][r.color]);
+  document.body.classList.toggle('lado-sol', !!p.robots[yo] && p.robots[yo].eq === 1);
   S.nombres = nombres.map(apodo);
   $('ov').classList.add('hide'); $('hud').classList.remove('hide'); document.body.classList.add('en-partido');
   S.vista = 'partido'; vista.invalidar(); soltarToques(); pintarControl();
@@ -547,11 +556,16 @@ function iniciarPartido(p, yo, nombres) {
 function avisoGirar() {
   const vertical = innerHeight > innerWidth * 1.05;
   $('girar').classList.toggle('hide', !(TACTIL && vertical && leerLS('arena_girar') !== 'no'));
+  clearTimeout(girarT); girarT = setTimeout(() => $('girar').classList.add('hide'), 5000); // no tapa la arena todo el partido
 }
+let girarT = null;
 $('b-girar').onclick = () => { guardarLS('arena_girar', 'no'); $('girar').classList.add('hide'); };
 $('b-pausa').onclick = e => { alternarPausa(); e.currentTarget.blur(); };
 function alternarPausa() {
-  if (!S.ctx || S.ctx.modo !== 'solo') { if (S.vista === 'partido') avisar('📡 El partido en sala no se pausa'); return; }
+  if (!S.ctx || S.ctx.modo !== 'solo') {
+    if (S.vista === 'partido') avisar('📡 El partido en sala no se pausa');
+    return;
+  }
   if (S.vista === 'partido') {
     apagarTension(); soltarToques();
     pantalla('<h2>⏸ Pausa</h2><div class="fila"><button class="btn" data-a="seguir">▶ Seguir</button><button class="btn sec" data-a="menu">🏠 Salir al menú</button></div>', 'pausa');
@@ -799,11 +813,15 @@ addEventListener('message', ev => {
   if (d.tipo === 'inicio') {
     if (d.modo === 'sala' && Array.isArray(d.asientos)) iniciarSala(d);
     else if (S.vista === 'carga') menuPrincipal();
-  } else if (d.tipo === 'puntos-ok') {
-    const el = $('res-puntos');
-    if (el && S.puntos !== null) el.innerHTML = d.guardado ? '<b>+' + esc(d.puntos) + '</b> puntos guardados' + (d.pos ? ' · lugar ' + esc(d.pos) + ' de la semana' : '') : '⚠️ No se guardaron los puntos (' + esc(d.error || 'sin conexión') + ').';
-  }
+  } else if (d.tipo === 'puntos-ok') pintarPuntosOk(d);
 });
+// Respuesta de la plataforma al guardar los puntos contra la IA.
+function pintarPuntosOk(d) {
+  const el = $('res-puntos');
+  if (!el || S.puntos === null) return;
+  if (!d.guardado) { el.innerHTML = '⚠️ No se guardaron los puntos (' + esc(d.error || 'sin conexión') + ').'; return; }
+  el.innerHTML = '<b>+' + esc(d.puntos) + '</b> puntos guardados' + (d.pos ? ' · lugar ' + esc(d.pos) + ' de la semana' : '');
+}
 requestAnimationFrame(t => { ultimo = t; cuadro(t); });
 if (EMBED) { enviar({ tipo: 'listo' }); setTimeout(() => { if (S.vista === 'carga') menuPrincipal(); }, 4000); }
 else menuPrincipal();

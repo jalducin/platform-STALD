@@ -26,6 +26,8 @@ function ctx() {
   return { call, avanzar: (ms: number) => { t += ms; } };
 }
 type Ctx = ReturnType<typeof ctx>;
+// Una petición tras otra (el orden de entrada importa en la mesa).
+const enSerie = <T>(xs: T[], f: (x: T) => Promise<void>) => xs.reduce((pr, x) => pr.then(() => f(x)), Promise.resolve());
 async function crear(c: Ctx, opciones: Record<string, unknown>, bots = true) {
   const r = await c.call("POST", "/sala", "marisol", { juego: "futbolito-arena", opciones, bots });
   assertEquals(r.status, 200, JSON.stringify(r.body));
@@ -45,10 +47,9 @@ Deno.test("futbolito-arena: opciones de la sala (2v2 por omisión, 3v3 grande) y
   assertEquals((await crear(c, {})).sala.opciones, { formato: "2v2", arena: "normal", goles: "5" });
   assertEquals((await crear(c, { formato: "3v3", arena: "normal", goles: "7" })).sala.opciones, { formato: "3v3", arena: "grande", goles: "7" });
   assertEquals((await crear(c, { formato: "1v2", arena: "grande", goles: "3" })).sala.opciones, { formato: "1v2", arena: "grande", goles: "3" });
-  for (const [op, err] of [[{ formato: "4v4" }, "formato_invalido"], [{ arena: "luna" }, "arena_invalida"], [{ goles: "10" }, "goles_invalidos"]] as const) {
-    const r = await c.call("POST", "/sala", "marisol", { juego: "futbolito-arena", opciones: op, bots: true });
-    assertEquals([r.status, r.body.error], [400, err]);
-  }
+  const malas = [[{ formato: "4v4" }, "formato_invalido"], [{ arena: "luna" }, "arena_invalida"], [{ goles: "10" }, "goles_invalidos"]] as const;
+  const rs = await Promise.all(malas.map(([op]) => c.call("POST", "/sala", "marisol", { juego: "futbolito-arena", opciones: op, bots: true })));
+  rs.forEach((r, k) => assertEquals([r.status, r.body.error], [400, malas[k][1]]));
   assertEquals([mesaDe("futbolito-arena", { formato: "1v1" })!.asientos, mesaDe("futbolito-arena", { formato: "1v2" })!.asientos, mesaDe("futbolito-arena", { formato: "2v2" })!.asientos, mesaDe("futbolito-arena", { formato: "3v3" })!.max], [2, 3, 4, 6]);
   assertEquals(Mesas.de("futbolito-arena", { formato: "3v3" }).max, 6);
   assertEquals([enMesa("futbolito-arena", 1, true, { formato: "2v2" }), enMesa("futbolito-arena", 2, false, { formato: "2v2" })], [4, 2]);
@@ -58,10 +59,10 @@ Deno.test("futbolito-arena: opciones de la sala (2v2 por omisión, 3v3 grande) y
 Deno.test("futbolito-arena: cupo por formato, con bots empieza con 1 y sin bots con 2", async () => {
   const c = ctx();
   const { codigo } = await crear(c, { formato: "2v2" }, false);
-  for (const q of ["angel", "laura", "fernando"]) assertEquals((await unirse(c, codigo, q)).status, 200, q);
+  await enSerie(["angel", "laura", "fernando"], async (q) => assertEquals((await unirse(c, codigo, q)).status, 200, q));
   assertEquals((await unirse(c, codigo, "jesus")).body.error, "sala_llena");
   const tres = (await crear(c, { formato: "3v3" }, false)).codigo;
-  for (const q of ["angel", "laura", "fernando", "jesus", "sofia"]) assertEquals((await unirse(c, tres, q)).status, 200, q);
+  await enSerie(["angel", "laura", "fernando", "jesus", "sofia"], async (q) => assertEquals((await unirse(c, tres, q)).status, 200, q));
   assertEquals((await unirse(c, tres, "ximena")).body.error, "sala_llena");
   const sola = (await crear(c, { formato: "2v2" }, false)).codigo;
   assertEquals((await empezar(c, sola)).body.error, "faltan_jugadores");
@@ -104,7 +105,7 @@ Deno.test("futbolito-arena: resultado validado, una vez por persona, confirmado 
   c.avanzar(100_000);
   const pend = await c.call("POST", "/partida", "marisol", { juego: "futbolito-arena", puntos: 999, sala: codigo });
   assertEquals([pend.status, pend.body.error], [409, "resultado_pendiente"]);
-  for (const g of [[9, 0], [6, 0], [1, "2"], [5, 5, 1]]) assertEquals((await reportar(c, codigo, "marisol", g)).body.error, "resultado_invalido", JSON.stringify(g));
+  await enSerie<unknown[]>([[9, 0], [6, 0], [1, "2"], [5, 5, 1]], async (g) => assertEquals((await reportar(c, codigo, "marisol", g)).body.error, "resultado_invalido", JSON.stringify(g)));
   assertEquals((await reportar(c, codigo, "marisol", [3, 2], 400_000)).body.error, "resultado_invalido", "más largo que la sala");
   const r1 = await reportar(c, codigo, "marisol", [3, 2]);
   assertEquals([r1.status, r1.body.arena.estado, r1.body.arena.goles], [200, "anfitrion", [3, 2]]);

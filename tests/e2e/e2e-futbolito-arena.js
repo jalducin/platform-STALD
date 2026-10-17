@@ -188,9 +188,9 @@ async function sala2v2(b, relevo) {
   await p.waitForFunction(() => { const d = [...document.querySelectorAll('#p-equipos-arena [data-eq]')].find(x => x.textContent.includes('Laura')); return d && d.dataset.eq === '1'; }, null, { timeout: 20000 });
   ok('espera: «Cambiar de equipo» (Laura al 🔥 Sol, Fernando al 🌊 Mar)', (await eqDe(p, 'Laura')) === 1 && (await eqDe(p, 'Fernando')) === 0);
   await ps[1].click('[data-p="arena-robot"][data-v="2"]');
-  await sleep(1500);
+  await p.waitForFunction(() => { const d = [...document.querySelectorAll('#p-equipos-arena [data-eq]')].find(x => x.textContent.includes('Angel')); return d && /249, 115, 22|f97316/i.test(d.innerHTML); }, null, { timeout: 20000 }).catch(() => {});
   const s0 = await sala(codigo, 'angel@example.com'), id = n => s0.jugadores.find(j => j.nombre === n).id;
-  ok('espera: Angel eligió el robot rojo… el 3.º color de su equipo', s0.jugadores.find(j => j.nombre === 'Angel').robot === 2);
+  ok('espera: Angel eligió el robot naranja (3.er color del 🔥 Sol) y todos lo ven', s0.jugadores.find(j => j.nombre === 'Angel').robot === 2 && /f97316/i.test(await p.innerHTML('#p-equipos-arena')));
   await p.screenshot({ path: 'arena-390-espera-2v2.png', fullPage: true });
   await ps[1].screenshot({ path: 'arena-844-espera-2v2.png', fullPage: true });
   // ---- Partido en vivo ----
@@ -224,6 +224,7 @@ async function sala2v2(b, relevo) {
   const yoFer = await frs[3].evaluate(() => window.__arena.estado().yo);
   relevo.cortar(id('Fernando'));
   await esperar(frs[0], i => window.__arena.red().caidos.includes(i), yoFer, 10000).catch(() => {});
+  await sleep(400); // el aviso sale en el cuadro siguiente
   const caida = await frs[0].evaluate(() => ({ red: window.__arena.red(), aviso: document.getElementById('aviso').textContent }));
   ok('desconexión: la IA maneja el robot de Fernando y se avisa', caida.red.caidos.includes(yoFer) && /Fernando/.test(caida.aviso), JSON.stringify(caida));
   await p.screenshot({ path: 'arena-390-desconexion.png' });

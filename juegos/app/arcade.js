@@ -538,7 +538,7 @@ function pintarFutbolSala(body) { // futbol-en-linea
 const repartoArena = lista => ArenaMotor.repartir(lista.map(x => ({ id: x.id, bot: !!x.bot, ...(x.equipo === 0 || x.equipo === 1 ? { equipo: x.equipo } : {}), ...(Number.isInteger(x.robot) ? { robot: x.robot } : {}) })), sala.estado.sala.opciones.formato || '2v2');
 const puntoColor = (eq, c) => '<span aria-hidden="true" style="display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;background:' + ArenaMotor.COLORES[eq][c] + ';border:2px solid #fff;box-shadow:0 0 0 1px #0003"></span>';
 function botonesRobot(eq, actual) {
-  return ArenaMotor.COLORES[eq].map((_, k) => '<button class="btn ghost sm" data-p="arena-robot" data-v="' + k + '" aria-label="Robot ' + ArenaMotor.NOMBRES_COLOR[eq][k] + '" aria-pressed="' + (actual === k) + '" style="min-width:44px' + (actual === k ? ';outline:2px solid currentColor' : '') + '">' + puntoColor(eq, k) + '</button>').join('');
+  return ArenaMotor.COLORES[eq].map((_, k) => '<button class="btn ghost sm" data-p="arena-robot" data-v="' + k + '" aria-label="Robot ' + ArenaMotor.NOMBRES_COLOR[eq][k] + '" aria-pressed="' + (actual === k) + '" style="min-width:44px;min-height:40px;flex:0 0 auto' + (actual === k ? ';outline:2px solid currentColor' : '') + '">' + puntoColor(eq, k) + '</button>').join('');
 }
 function equiposArena(lista) {
   const e = sala.estado;
@@ -546,7 +546,8 @@ function equiposArena(lista) {
   const rep = repartoArena(lista), yo = lista.findIndex(x => x.id === e.yo), o = e.sala.opciones;
   const fila = (x, i) => '<div data-eq="' + rep[i].eq + '" style="margin-top:4px">' + puntoColor(rep[i].eq, rep[i].color) + ' <b>' + rep[i].num + '</b> ' + escapeHtml(x.nombre) + (x.bot ? ' 🤖' : '') + (i === yo ? ' <small>(tú)</small>' : '') + '</div>';
   const col = eq => '<div style="flex:1;min-width:140px"><b>' + ArenaMotor.EQUIPOS[eq].emoji + ' Equipo ' + ArenaMotor.EQUIPOS[eq].nombre + '</b>' + lista.map((x, i) => (rep[i].eq === eq ? fila(x, i) : '')).join('') + '</div>';
-  const mio = yo < 0 ? '' : '<div class="row-btns" style="margin-top:8px;flex-wrap:wrap"><button class="btn ghost sm" data-p="arena-equipo" data-v="' + (1 - rep[yo].eq) + '">🔁 Cambiar de equipo</button><span class="muted" style="align-self:center">Tu robot:</span>' + botonesRobot(rep[yo].eq, rep[yo].color) + '</div>';
+  const mio = yo < 0 ? '' : '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="arena-equipo" data-v="' + (1 - rep[yo].eq) + '">🔁 Cambiar de equipo</button></div>' +
+    '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px"><span class="muted">🤖 Tu robot:</span>' + botonesRobot(rep[yo].eq, rep[yo].color) + '</div>';
   return '<div class="card" id="p-equipos-arena" style="margin-bottom:10px"><div class="muted" style="font-size:.85rem;margin-bottom:4px">⚽ ' + escapeHtml(o.formato || '2v2') + ' · arena ' + (o.arena === 'grande' ? 'grande' : 'normal') + ' · a ' + escapeHtml(o.goles || '5') + ' goles o 3 min</div>' +
     '<div style="display:flex;gap:10px;flex-wrap:wrap">' + col(0) + col(1) + '</div>' + mio + '<div class="muted" id="p-arena-msg" style="font-size:.8rem;min-height:1.1em"></div></div>';
 }

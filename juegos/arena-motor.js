@@ -36,7 +36,7 @@
   const NADA = { x: 0, y: 0, a: false, b: false };
 
   const raiz = Math.sqrt;
-  const acotar = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const acotar = (v, a, b) => Math.min(b, Math.max(a, v));
   const entero = (x, a, b) => typeof x === 'number' && Number.isInteger(x) && x >= a && x <= b;
 
   // Azar con semilla (mulberry32 sobre un hash FNV-1a del texto).
@@ -64,12 +64,13 @@
     const L = ar.L / 2, A = ar.A / 2, c = ar.c;
     return [[L, -A + c], [L, A - c], [L - c, A], [-L + c, A], [-L, A - c], [-L, -A + c], [-L + c, -A], [L - c, -A]];
   }
+  const PORTERIA = { 0: 1, 4: -1 }; // pared 0: portería derecha; pared 4: izquierda
   function paredes(ar) {
     const v = vertices(ar);
     return v.map((p1, k) => {
       const p2 = v[(k + 1) % 8], dx = p2[0] - p1[0], dy = p2[1] - p1[1], n = raiz(dx * dx + dy * dy);
       const nx = dy / n, ny = -dx / n;
-      return { nx, ny, d: -(nx * p1[0] + ny * p1[1]), porteria: k === 0 ? 1 : k === 4 ? -1 : 0, a: p1, b: p2 };
+      return { nx, ny, d: -(nx * p1[0] + ny * p1[1]), porteria: PORTERIA[k] || 0, a: p1, b: p2 };
     });
   }
   const postes = ar => [[ar.L / 2, ar.G / 2], [ar.L / 2, -ar.G / 2], [-ar.L / 2, ar.G / 2], [-ar.L / 2, -ar.G / 2]];
@@ -143,31 +144,46 @@
   }
   // Mueve un robot un paso con su entrada (joystick, A y B). Lo usa el motor y la predicción del invitado
   // (juegos/arena-red.js). ent: { x, y, a, b, ga?, gb? } — ga/gb fuerzan una presión (llegó por la red).
-  function moverRobot(r, ent, dt, p, juega) {
-    const ev = [];
+  const tiene = (ent, k) => !!(ent && ent[k]);
+  // Recargas y presiones (flanco de bajada del botón, o forzada por la red).
+  function presiones(r, ent, dt) {
     r.recA = Math.max(0, r.recA - dt); r.recB = Math.max(0, r.recB - dt);
-    const presA = !!(ent && ent.ga) || (!!(ent && ent.a) && !r.aPrev), presB = !!(ent && ent.gb) || (!!(ent && ent.b) && !r.bPrev);
-    r.aPrev = !!(ent && ent.a); r.bPrev = !!(ent && ent.b);
-    if (!juega) { r.vx = 0; r.vy = 0; r.dashT = 0; r.golpeT = 0; r.giroT = 0; return ev; }
-    const e = entradaLimpia(ent);
-    if (presA && r.recA <= 0) { r.dashT = T_DASH; r.golpeT = T_GOLPE; r.recA = RECARGA_A; r.patear = true; ev.push({ tipo: 'dash', i: r.i }); }
-    if (presB && r.recB <= 0) { r.giroT = T_GIRO; r.recB = RECARGA_B; r.barrio = false; ev.push({ tipo: 'giro', i: r.i }); }
+    const a = tiene(ent, 'ga') || (tiene(ent, 'a') && !r.aPrev), b = tiene(ent, 'gb') || (tiene(ent, 'b') && !r.bPrev);
+    r.aPrev = tiene(ent, 'a'); r.bPrev = tiene(ent, 'b');
+    return { a, b };
+  }
+  function activar(r, pres, ev) {
+    if (pres.a && r.recA <= 0) { r.dashT = T_DASH; r.golpeT = T_GOLPE; r.recA = RECARGA_A; r.patear = true; ev.push({ tipo: 'dash', i: r.i }); }
+    if (pres.b && r.recB <= 0) { r.giroT = T_GIRO; r.recB = RECARGA_B; r.barrio = false; ev.push({ tipo: 'giro', i: r.i }); }
+  }
+  // Dirección: gira sola durante el giro; si no, sigue al joystick (mientras no embista).
+  function orientar(r, e, dt) {
     if (r.giroT > 0) {
       const fx = r.fx * GIRO_C - r.fy * GIRO_S, fy = r.fx * GIRO_S + r.fy * GIRO_C;
       r.fx = fx; r.fy = fy; normalizar(r);
       r.giroT = Math.max(0, r.giroT - dt);
     } else if (e.m > 0.2 && r.dashT <= 0) girarHacia(r, e.x / e.m, e.y / e.m, dt);
+  }
+  // Velocidad: la embestida manda; si no, acelera hacia lo que pide el joystick (o frena fuerte con B).
+  function acelerar(r, e, frena, dt) {
     if (r.dashT > 0) {
       r.vx = r.fx * DASH_V; r.vy = r.fy * DASH_V;
       r.dashT = Math.max(0, r.dashT - dt);
-    } else {
-      const frena = !!(ent && ent.b), vmax = VMAX * (r.vel || 1);
-      const ac = (frena ? FRENO : ACEL) * dt;
-      let ux = (frena ? 0 : e.x * vmax) - r.vx, uy = (frena ? 0 : e.y * vmax) - r.vy;
-      const m = raiz(ux * ux + uy * uy);
-      if (m > ac) { ux *= ac / m; uy *= ac / m; }
-      r.vx += ux; r.vy += uy;
+      return;
     }
+    const vmax = VMAX * (r.vel || 1), ac = (frena ? FRENO : ACEL) * dt;
+    let ux = (frena ? 0 : e.x * vmax) - r.vx, uy = (frena ? 0 : e.y * vmax) - r.vy;
+    const m = raiz(ux * ux + uy * uy);
+    if (m > ac) { ux *= ac / m; uy *= ac / m; }
+    r.vx += ux; r.vy += uy;
+  }
+  function moverRobot(r, ent, dt, p, juega) {
+    const ev = [], pres = presiones(r, ent, dt);
+    if (!juega) { r.vx = 0; r.vy = 0; r.dashT = 0; r.golpeT = 0; r.giroT = 0; return ev; }
+    const e = entradaLimpia(ent);
+    activar(r, pres, ev);
+    orientar(r, e, dt);
+    acelerar(r, e, tiene(ent, 'b'), dt);
     r.x += r.vx * dt; r.y += r.vy * dt;
     contraParedes(p, r, R_ROBOT, REB_ROBOT_PARED, false);
     return ev;
@@ -183,63 +199,70 @@
     r.golpeT = 0; p.ultimo = r.i;
     ev.push({ tipo: 'patada', i: r.i });
   }
+  // Dos robots que se enciman: se separan (el que embiste pesa más) e intercambian velocidad con rebote.
+  function separar(a, b, min) {
+    const dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
+    if (d2 >= min * min) return;
+    const d = raiz(d2) || 1e-6, nx = d2 ? dx / d : 1, ny = d2 ? dy / d : 0;
+    const ma = a.dashT > 0 ? 1.6 : 1, mb = b.dashT > 0 ? 1.6 : 1, sol = min - d;
+    a.x -= nx * sol * mb / (ma + mb); a.y -= ny * sol * mb / (ma + mb);
+    b.x += nx * sol * ma / (ma + mb); b.y += ny * sol * ma / (ma + mb);
+    const vr = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+    if (vr >= 0) return;
+    const j2 = -(1 + REB_ROBOTS) * vr / (1 / ma + 1 / mb);
+    a.vx -= nx * j2 / ma; a.vy -= ny * j2 / ma; b.vx += nx * j2 / mb; b.vy += ny * j2 / mb;
+  }
   function choquesRobots(p) {
-    const rs = p.robots, min = 2 * R_ROBOT;
-    for (let i = 0; i < rs.length; i++) {
-      for (let j = i + 1; j < rs.length; j++) {
-        const a = rs[i], b = rs[j], dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
-        if (d2 >= min * min) continue;
-        const d = raiz(d2) || 1e-6, nx = d2 ? dx / d : 1, ny = d2 ? dy / d : 0;
-        const ma = a.dashT > 0 ? 1.6 : 1, mb = b.dashT > 0 ? 1.6 : 1, sol = min - d;
-        a.x -= nx * sol * mb / (ma + mb); a.y -= ny * sol * mb / (ma + mb);
-        b.x += nx * sol * ma / (ma + mb); b.y += ny * sol * ma / (ma + mb);
-        const vr = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-        if (vr < 0) {
-          const j2 = -(1 + REB_ROBOTS) * vr / (1 / ma + 1 / mb);
-          a.vx -= nx * j2 / ma; a.vy -= ny * j2 / ma; b.vx += nx * j2 / mb; b.vy += ny * j2 / mb;
-        }
-      }
-    }
+    const rs = p.robots;
+    for (let i = 0; i < rs.length; i++) for (let j = i + 1; j < rs.length; j++) separar(rs[i], rs[j], 2 * R_ROBOT);
     for (const r of rs) contraParedes(p, r, R_ROBOT, REB_ROBOT_PARED, false);
+  }
+  // Al presionar A con el balón al alcance y enfrente, la patada sale de inmediato.
+  function patadaInmediata(p, r, dx, dy, d2, ev) {
+    if (!r.patear) return false;
+    r.patear = false;
+    const lim = R_ROBOT + R_BALON + ALCANCE;
+    if (d2 >= lim * lim) return false;
+    const d = raiz(d2) || 1e-6;
+    if ((dx * r.fx + dy * r.fy) / d <= 0.5) return false;
+    patada(p, r, dx / d, dy / d, ev);
+    return true;
+  }
+  // Contacto robot–balón: patada (si embiste de frente), barrida (si gira) o rebote con el empuje del robot.
+  function contacto(p, r, dx, dy, d2, ev) {
+    const b = p.balon, min = R_ROBOT + R_BALON;
+    const d = raiz(d2) || 1e-6, nx = d2 ? dx / d : r.fx, ny = d2 ? dy / d : r.fy;
+    b.x = r.x + nx * min; b.y = r.y + ny * min;
+    p.ultimo = r.i;
+    if (r.golpeT > 0 && nx * r.fx + ny * r.fy > 0.3) { patada(p, r, nx, ny, ev); return; }
+    if (r.giroT > 0 && !r.barrio) { // barrida: el balón sale de lado
+      b.vx = r.vx - ny * BARRIDA + nx * 3; b.vy = r.vy + nx * BARRIDA + ny * 3;
+      r.barrio = true; ev.push({ tipo: 'barrida', i: r.i });
+      return;
+    }
+    const vr = (b.vx - r.vx) * nx + (b.vy - r.vy) * ny;
+    if (vr < 0) { b.vx -= (1 + REB_ROBOT) * vr * nx; b.vy -= (1 + REB_ROBOT) * vr * ny; ev.push({ tipo: 'toque', i: r.i, v: -vr }); }
   }
   function choquesBalon(p, ev) {
     const b = p.balon, min = R_ROBOT + R_BALON;
     for (const r of p.robots) {
       const dx = b.x - r.x, dy = b.y - r.y, d2 = dx * dx + dy * dy;
-      if (r.patear) {
-        r.patear = false;
-        const lim = min + ALCANCE;
-        if (d2 < lim * lim) {
-          const d = raiz(d2) || 1e-6;
-          if ((dx * r.fx + dy * r.fy) / d > 0.5) { patada(p, r, dx / d, dy / d, ev); continue; }
-        }
-      }
-      if (d2 >= min * min) continue;
-      const d = raiz(d2) || 1e-6, nx = d2 ? dx / d : r.fx, ny = d2 ? dy / d : r.fy;
-      b.x = r.x + nx * min; b.y = r.y + ny * min;
-      p.ultimo = r.i;
-      if (r.golpeT > 0 && nx * r.fx + ny * r.fy > 0.3) { patada(p, r, nx, ny, ev); continue; }
-      if (r.giroT > 0 && !r.barrio) { // barrida: el balón sale de lado
-        b.vx = r.vx - ny * BARRIDA + nx * 3; b.vy = r.vy + nx * BARRIDA + ny * 3;
-        r.barrio = true; ev.push({ tipo: 'barrida', i: r.i });
-        continue;
-      }
-      const vr = (b.vx - r.vx) * nx + (b.vy - r.vy) * ny;
-      if (vr < 0) { b.vx -= (1 + REB_ROBOT) * vr * nx; b.vy -= (1 + REB_ROBOT) * vr * ny; ev.push({ tipo: 'toque', i: r.i, v: -vr }); }
+      if (patadaInmediata(p, r, dx, dy, d2, ev) || d2 >= min * min) continue;
+      contacto(p, r, dx, dy, d2, ev);
     }
   }
-  function moverBalon(p, dt, ev) {
-    const b = p.balon, ar = p.ar;
+  // Inercia del balón: avanza, se frena con la fricción, con tope de velocidad y se detiene si ya casi no se mueve.
+  function integrarBalon(b, dt) {
     b.x += b.vx * dt; b.y += b.vy * dt;
     const k = 1 - FRICCION * dt;
     b.vx *= k; b.vy *= k;
     let v2 = b.vx * b.vx + b.vy * b.vy;
     if (v2 > VBALON_MAX * VBALON_MAX) { const f = VBALON_MAX / raiz(v2); b.vx *= f; b.vy *= f; v2 = VBALON_MAX * VBALON_MAX; }
     if (v2 < 0.03 * 0.03) { b.vx = 0; b.vy = 0; }
-    choquesBalon(p, ev);
-    const golpe = contraParedes(p, b, R_BALON, REB_PARED, true);
-    if (golpe) ev.push({ tipo: golpe.poste ? 'poste' : 'pared', v: golpe.vn });
-    // Postes: puntos que rebotan.
+  }
+  // Postes: puntos que rebotan.
+  function contraPostes(p, ev) {
+    const b = p.balon;
     for (const [px, py] of p.postes) {
       const dx = b.x - px, dy = b.y - py, d2 = dx * dx + dy * dy;
       if (d2 >= R_BALON * R_BALON) continue;
@@ -248,18 +271,57 @@
       const vn = b.vx * nx + b.vy * ny;
       if (vn < 0) { b.vx -= (1 + REB_PARED) * vn * nx; b.vy -= (1 + REB_PARED) * vn * ny; ev.push({ tipo: 'poste', v: -vn }); }
     }
-    // Dentro de la portería: la red (fondo y lados).
-    const L = ar.L / 2;
-    if (b.x > L || b.x < -L) {
-      const s = b.x > 0 ? 1 : -1, fondo = L + RED - R_BALON, lado = ar.G / 2 - R_BALON;
-      if (s * b.x > fondo) { b.x = s * fondo; if (s * b.vx > 0) b.vx = -b.vx * 0.3; }
-      if (b.y > lado) { b.y = lado; if (b.vy > 0) b.vy = -b.vy * 0.3; }
-      if (b.y < -lado) { b.y = -lado; if (b.vy < 0) b.vy = -b.vy * 0.3; }
-    }
+  }
+  // Dentro de la portería: la red (fondo y lados) frena el balón.
+  function contraRed(p) {
+    const b = p.balon, L = p.ar.L / 2;
+    if (b.x <= L && b.x >= -L) return;
+    const s = b.x > 0 ? 1 : -1, fondo = L + RED - R_BALON, lado = p.ar.G / 2 - R_BALON;
+    if (s * b.x > fondo) { b.x = s * fondo; if (s * b.vx > 0) b.vx = -b.vx * 0.3; }
+    if (b.y > lado) { b.y = lado; if (b.vy > 0) b.vy = -b.vy * 0.3; }
+    if (b.y < -lado) { b.y = -lado; if (b.vy < 0) b.vy = -b.vy * 0.3; }
+  }
+  function moverBalon(p, dt, ev) {
+    integrarBalon(p.balon, dt);
+    choquesBalon(p, ev);
+    const golpe = contraParedes(p, p.balon, R_BALON, REB_PARED, true);
+    if (golpe) ev.push({ tipo: golpe.poste ? 'poste' : 'pared', v: golpe.vn });
+    contraPostes(p, ev);
+    contraRed(p);
   }
   function terminar(p, ganador, ev) {
     p.estado = 'fin'; p.ganador = ganador;
     ev.push({ tipo: 'fin', ganador, marcador: p.goles.slice() });
+  }
+  // Cambios de estado por tiempo: saque → juego y gol → saque (o fin). Devuelve true si el partido terminó.
+  function transicion(p, ev) {
+    if (p.estado === 'saque' && p.estT >= T_SAQUE) {
+      p.estado = 'juego'; p.estT = 0;
+      ev.push({ tipo: 'arranque', primero: p.t === 0 && p.goles[0] + p.goles[1] === 0 });
+    } else if (p.estado === 'gol' && p.estT >= T_GOL) {
+      if (p.terminar) { terminar(p, p.ganador, ev); return true; }
+      ponerSaque(p); ev.push({ tipo: 'saque' });
+    }
+    return false;
+  }
+  // ¿El balón cruzó la boca de una portería? Anota, festeja y, si llegó a los goles (o era gol de oro), termina.
+  function revisarGol(p, ev) {
+    const b = p.balon, L = p.ar.L / 2, boca = p.ar.G / 2;
+    if (!((b.x > L || b.x < -L) && b.y < boca && b.y > -boca)) return false;
+    const eq = b.x > L ? 0 : 1;
+    p.goles[eq]++;
+    ev.push({ tipo: 'gol', eq, i: p.ultimo, marcador: p.goles.slice(), oro: p.oro || undefined });
+    p.estado = 'gol'; p.estT = 0;
+    if (p.goles[eq] >= p.objetivo || p.oro) { p.terminar = true; p.ganador = eq; }
+    return true;
+  }
+  // Reloj del partido: al cumplirse el tiempo gana quien va arriba; con empate, gol de oro hasta ORO segundos más.
+  function avanzarReloj(p, dt, ev) {
+    p.t += dt;
+    if (!p.oro && p.t >= p.duracion) {
+      if (p.goles[0] === p.goles[1]) { p.oro = true; ev.push({ tipo: 'oro' }); }
+      else terminar(p, p.goles[0] > p.goles[1] ? 0 : 1, ev);
+    } else if (p.oro && p.t >= p.duracion + ORO) terminar(p, -1, ev);
   }
 
   // Un paso de 1/60 s. entradas[i] es la del robot i (persona o IA). Devuelve los eventos del paso.
@@ -268,33 +330,12 @@
     if (p.estado === 'fin') return ev;
     const dt = PASO;
     p.estT += dt;
-    if (p.estado === 'saque' && p.estT >= T_SAQUE) {
-      p.estado = 'juego'; p.estT = 0;
-      ev.push({ tipo: 'arranque', primero: p.t === 0 && p.goles[0] + p.goles[1] === 0 });
-    } else if (p.estado === 'gol' && p.estT >= T_GOL) {
-      if (p.terminar) { terminar(p, p.ganador, ev); return ev; }
-      ponerSaque(p); ev.push({ tipo: 'saque' });
-    }
+    if (transicion(p, ev)) return ev;
     const juega = p.estado !== 'saque';
     p.robots.forEach((r, i) => { for (const e of moverRobot(r, (entradas && entradas[i]) || NADA, dt, p, juega)) ev.push(e); });
     choquesRobots(p);
     if (juega) moverBalon(p, dt, ev);
-    if (p.estado === 'juego') {
-      const b = p.balon, L = p.ar.L / 2, boca = p.ar.G / 2;
-      if ((b.x > L || b.x < -L) && b.y < boca && b.y > -boca) {
-        const eq = b.x > L ? 0 : 1;
-        p.goles[eq]++;
-        ev.push({ tipo: 'gol', eq, i: p.ultimo, marcador: p.goles.slice(), oro: p.oro || undefined });
-        p.estado = 'gol'; p.estT = 0;
-        if (p.goles[eq] >= p.objetivo || p.oro) { p.terminar = true; p.ganador = eq; }
-      } else {
-        p.t += dt;
-        if (!p.oro && p.t >= p.duracion) {
-          if (p.goles[0] === p.goles[1]) { p.oro = true; ev.push({ tipo: 'oro' }); }
-          else terminar(p, p.goles[0] > p.goles[1] ? 0 : 1, ev);
-        } else if (p.oro && p.t >= p.duracion + ORO) terminar(p, -1, ev);
-      }
-    }
+    if (p.estado === 'juego' && !revisarGol(p, ev)) avanzarReloj(p, dt, ev);
     p.pasos++;
     return ev;
   }
@@ -309,53 +350,69 @@
     if (k === 0) return 'ataca';
     return comp.length >= 3 && k === 1 ? 'medio' : 'defiende';
   }
+  // Balón pegado a la pared (no hay lugar detrás): si el balón queda hacia la portería rival lo empuja derecho; si
+  // no, se regresa hacia su lado para volver a entrar.
+  function pegadoPared(p, r, m, N, c) {
+    const b = p.balon, cx = c.rbx / c.dB, cy = c.rby / c.dB;
+    if (cx * c.s > -0.2) {
+      m.tx = b.x + cx * 0.8; m.ty = b.y + cy * 0.8;
+      if (c.dB < c.min + 1 && r.recA <= 0 && p.rnd() < N.pA) m.a = true;
+    } else { m.tx = b.x - c.s * 1.3; m.ty = b.y * 0.6; }
+  }
+  // Del lado equivocado: rodea el balón por el lado donde ya está (con histéresis, para no cambiar a cada decisión).
+  function rodear(p, r, m, N, c) {
+    const b = p.balon, rx = r.x - b.x, ry = r.y - b.y, lat = rx * -c.uy + ry * c.ux;
+    const ladoAhora = lat >= 0 ? 1 : -1;
+    if (!m.lado || Math.abs(lat) > 0.6) m.lado = ladoAhora;
+    m.tx = b.x - c.ux * 1.1 - c.uy * m.lado * 1.3; m.ty = b.y - c.uy * 1.1 + c.ux * m.lado * 1.3;
+    if (c.dB < c.min + 0.4 && r.recB <= 0 && p.rnd() < N.pB) m.b = true;
+  }
+  // Detrás del balón: se acomoda y lo empuja hacia la portería; embiste si está alineado y cerca.
+  function empujar(p, r, m, N, c) {
+    const b = p.balon, dp = raiz((c.px - r.x) * (c.px - r.x) + (c.py - r.y) * (c.py - r.y));
+    if (dp < 0.6) { m.tx = b.x + c.ux * 0.8; m.ty = b.y + c.uy * 0.8; } else { m.tx = c.px; m.ty = c.py; }
+    const alineado = c.dB > 0 && (c.rbx * c.ux + c.rby * c.uy) / c.dB > 0.9;
+    if (alineado && c.dB < c.min + 1.3 && r.recA <= 0 && p.rnd() < N.pA) m.a = true;
+  }
+  function atacar(p, r, m, N, c) {
+    const b = p.balon;
+    let ux = c.gx - b.x, uy = c.gy - b.y;
+    const un = raiz(ux * ux + uy * uy) || 1;
+    ux /= un; uy /= un;
+    Object.assign(c, { ux, uy, px: b.x - ux * (c.min + 0.1), py: b.y - uy * (c.min + 0.1) });
+    const delante = (r.x - b.x) * ux + (r.y - b.y) * uy;
+    if (fuera(p, c.px, c.py, R_ROBOT * 0.9) && c.dB > 0) pegadoPared(p, r, m, N, c);
+    else if (delante > -0.2) rodear(p, r, m, N, c);
+    else empujar(p, r, m, N, c);
+  }
+  // Atasco: el balón casi quieto junto al robot un rato → lo embiste derecho.
+  function desatorar(p, r, m, N, c) {
+    const b = p.balon;
+    m.tx = b.x + c.rbx / c.dB; m.ty = b.y + c.rby / c.dB; m.atasco = 0;
+    if (r.recA <= 0 && p.rnd() < Math.max(0.5, N.pA)) m.a = true;
+  }
+  function defender(p, m, s) {
+    const b = p.balon, ox = -s * p.ar.L / 2, vx = b.x - ox, vy = b.y, dv = raiz(vx * vx + vy * vy) || 1, k = Math.max(1.2, Math.min(dv * 0.4, 3.5));
+    m.tx = ox + vx / dv * k; m.ty = vy / dv * k;
+  }
   function decidir(p, r, m, N) {
     const ar = p.ar, b = p.balon, s = r.eq === 0 ? 1 : -1, min = R_ROBOT + R_BALON;
     m.a = false; m.b = false;
-    const gx = s * ar.L / 2, gy = (p.rnd() * 2 - 1) * N.err;
+    const c = { s, min, gx: s * ar.L / 2, gy: (p.rnd() * 2 - 1) * N.err, rbx: b.x - r.x, rby: b.y - r.y };
+    c.dB = raiz(c.rbx * c.rbx + c.rby * c.rby);
     let rol = rolIA(p, r.i);
-    const rbx = b.x - r.x, rby = b.y - r.y, dB = raiz(rbx * rbx + rby * rby);
-    if (rol === 'defiende' && dB < 1.6 && s * b.x < 0) rol = 'ataca'; // despeja si el balón llega a su lado
-    // Atasco: el balón casi quieto junto al robot varias decisiones seguidas → lo embiste derecho.
+    if (rol === 'defiende' && c.dB < 1.6 && s * b.x < 0) rol = 'ataca'; // despeja si el balón llega a su lado
     const vb = b.vx * b.vx + b.vy * b.vy;
-    m.atasco = vb < 0.09 && dB < min + 0.8 ? (m.atasco || 0) + N.cada : 0; // pasos con el balón quieto a un lado
-    if (rol === 'ataca' && m.atasco >= 45 && dB > 0) {
-      m.tx = b.x + rbx / dB; m.ty = b.y + rby / dB; m.atasco = 0;
-      if (r.recA <= 0 && p.rnd() < Math.max(0.5, N.pA)) m.a = true;
-    } else if (rol === 'ataca') {
-      let ux = gx - b.x, uy = gy - b.y;
-      const un = raiz(ux * ux + uy * uy) || 1;
-      ux /= un; uy /= un;
-      const rx = r.x - b.x, ry = r.y - b.y, delante = rx * ux + ry * uy;
-      const px = b.x - ux * (min + 0.1), py = b.y - uy * (min + 0.1);
-      if (fuera(p, px, py, R_ROBOT * 0.9) && dB > 0) { // balón pegado a la pared: no hay lugar detrás
-        const cx = rbx / dB, cy = rby / dB;
-        if (cx * s > -0.2) { m.tx = b.x + cx * 0.8; m.ty = b.y + cy * 0.8; if (dB < min + 1 && r.recA <= 0 && p.rnd() < N.pA) m.a = true; }
-        else { m.tx = b.x - s * 1.3; m.ty = b.y * 0.6; }
-      } else if (delante > -0.2) { // del lado equivocado: rodea el balón
-        const ladoAhora = rx * -uy + ry * ux >= 0 ? 1 : -1; // con histéresis: no cambia de lado a cada decisión
-        if (!m.lado || Math.abs(rx * -uy + ry * ux) > 0.6) m.lado = ladoAhora;
-        const lado = m.lado;
-        m.tx = b.x - ux * 1.1 - uy * lado * 1.3; m.ty = b.y - uy * 1.1 + ux * lado * 1.3;
-        if (dB < min + 0.4 && r.recB <= 0 && p.rnd() < N.pB) m.b = true;
-      } else {
-        const dp = raiz((px - r.x) * (px - r.x) + (py - r.y) * (py - r.y));
-        if (dp < 0.6) { m.tx = b.x + ux * 0.8; m.ty = b.y + uy * 0.8; } else { m.tx = px; m.ty = py; }
-        const alineado = dB > 0 && (rbx * ux + rby * uy) / dB > 0.9;
-        if (alineado && dB < min + 1.3 && r.recA <= 0 && p.rnd() < N.pA) m.a = true;
-      }
-    } else if (rol === 'medio') {
-      m.tx = b.x - s * ar.L * 0.22; m.ty = b.y * 0.5;
-    } else {
-      const ox = -s * ar.L / 2, vx = b.x - ox, vy = b.y, dv = raiz(vx * vx + vy * vy) || 1, k = Math.min(dv * 0.4, 3.5);
-      m.tx = ox + vx / dv * Math.max(1.2, k); m.ty = vy / dv * Math.max(1.2, k);
-    }
+    m.atasco = vb < 0.09 && c.dB < min + 0.8 ? (m.atasco || 0) + N.cada : 0; // pasos con el balón quieto a un lado
+    if (rol === 'ataca' && m.atasco >= 45 && c.dB > 0) desatorar(p, r, m, N, c);
+    else if (rol === 'ataca') atacar(p, r, m, N, c);
+    else if (rol === 'medio') { m.tx = b.x - s * ar.L * 0.22; m.ty = b.y * 0.5; }
+    else defender(p, m, s);
     m.tx = acotar(m.tx, -ar.L / 2 + 0.6, ar.L / 2 - 0.6); m.ty = acotar(m.ty, -ar.A / 2 + 0.6, ar.A / 2 - 0.6);
   }
   // ¿El punto queda a menos de `r` de alguna pared (o afuera)?
   function fuera(p, x, y, r) {
-    for (const w of p.paredes) if (w.nx * x + w.ny * y + w.d > -r) return true;
-    return false;
+    return p.paredes.some(w => w.nx * x + w.ny * y + w.d > -r);
   }
   // Entrada de la IA para el robot i: decide cada `cada` pasos (según el nivel) y entre decisiones va hacia su objetivo.
   function ia(p, i, nivel) {

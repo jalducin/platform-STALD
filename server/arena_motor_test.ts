@@ -13,7 +13,10 @@ const robots = (formato: string) => {
 };
 const partido = (o: any = {}) => M.crearPartido({ arena: "normal", robots: robots(o.formato || "1v1"), goles: 5, semilla: "prueba", ...o });
 // Pasa el saque y deja el partido en juego.
-const enJuego = (p: any) => { while (p.estado !== "juego") M.paso(p, p.robots.map(() => NADA)); return p; };
+const enJuego = (p: any) => {
+  while (p.estado !== "juego") M.paso(p, p.robots.map(() => NADA));
+  return p;
+};
 const pasos = (p: any, n: number, ents?: (p: any) => any[]) => {
   const ev: any[] = [];
   for (let k = 0; k < n; k++) ev.push(...M.paso(p, ents ? ents(p) : p.robots.map(() => NADA)));
