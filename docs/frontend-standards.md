@@ -292,6 +292,20 @@ Cada página debe manejar y mostrar de forma explícita:
       jugador propio, `📶` latencia y aviso de desconexión (IA de inmediato, cierre a los 15 s). Sin pausa en vivo.
     - **Futbolito retirado del menú**: su tarjeta pasó a `JUEGOS_RETIRADOS` (`juegos/app/menu.js`) y salió de
       `JUEGOS_PARTIDA`; `juegoPorId('futbolito')` lo sigue encontrando para salas en curso, ranking e historial.
+  - **⚽ Futbolito Arena** (cambio `futbolito-arena`; decisiones, medición del canal y 3 vs 3 en su `design.md`):
+    `juegos/futbolito-arena.html` en el iframe de Arcade, sin avance guardado (`SIN_AVANCE`). Motor sin DOM
+    `juegos/arena-motor.js` (`window.ArenaMotor`: física de paso fijo solo con `+ − × ÷` y `Math.sqrt`, reglas, IA,
+    `repartir` de equipos, validación y puntos; lo importan también la página de Juegos y `server/arena.ts`) y netcode
+    `juegos/arena-red.js` (`window.ArenaRed`, probado en `server/arena_red_test.ts`). Vista en canvas 2D con la arena
+    pre-dibujada y cuerpos de robot por color; en vertical la arena se gira 90° y tu portería queda siempre abajo o a
+    la izquierda (`ROTS`; el joystick se traduce de pantalla a mundo con `vista.aMundo`). Controles: capa
+    `ArenaEntrada` (teclado, joystick flotante + ⚡ A y 🌀 B táctiles por dedo, mando común con `analogico: true` y
+    teclas en `null`, y fuentes registradas); una presión más corta que un cuadro no se pierde (`pulso`). En sala la
+    página manda `{ tipo: 'inicio', modo: 'sala', rol, anfitrion, yo, asientos: [{ id, nombre, bot, eq, color, num }],
+    seed, vivo, formato, arena, goles }`; con una sola persona simula su aparato, con más usa el canal en vivo
+    (anfitrión autoritativo); responde `fin-sala { goles, ms, corte }` o, sin canal, `ir-solo`. La hora de las fotos
+    en el invitado sale de `ahora() − meta.edad` (el reloj del canal puede ser otro que `performance.now`). Ganchos de
+    prueba `window.__arena` con `?prueba=1`.
   - **Vista pseudo-3D de Karts Turbo** (cambio `karts-pseudo3d`; diagnóstico y decisiones en su `design.md`):
     - la carrera se simula en el mapa 2D de siempre y se dibuja en Mode-7 sobre canvas 2D: cámara detrás del carro
       (`seguirCamara`, `d = 115`), piso proyectado por filas desde una textura `Uint32Array` de la pista (tres niveles
@@ -479,7 +493,7 @@ Reglas:
 Fuente única del control de los juegos de 🕹️ Arcade: `juegos/mando.js` (sin dependencias; inyecta su CSS una vez como
 `<style id="mando-css">`). Decisiones y lecciones de Karts en `openspec/changes/mando-arcade/design.md` (al archivar,
 `openspec/changes/archive/*-mando-arcade/`). Lo usan Axo (`plataformas.html`), Dragon Run (`dragon-run.html`) y Karts
-Turbo (`karts.html`, cambio `karts-mando`), ⛳ Golf (`golf.html`, cambio `golf`), Futbolito y Billar (cambio `futbolito-equipos-controles`) y ⚽ Fútbol Estelar (`futbol.html`, cambio `futbol-estelar`), **sin cambiar la API**. Si hace falta algo nuevo, se
+Turbo (`karts.html`, cambio `karts-mando`), ⛳ Golf (`golf.html`, cambio `golf`), Futbolito y Billar (cambio `futbolito-equipos-controles`), ⚽ Fútbol Estelar (`futbol.html`, cambio `futbol-estelar`) y ⚽ Futbolito Arena (`futbolito-arena.html`, cambio `futbolito-arena`), **sin cambiar la API**. Si hace falta algo nuevo, se
 agrega como opción con valor por omisión compatible, en su propio cambio OpenSpec.
 
 **Cargar y crear** (dentro del iframe del juego; `window.Mando`):
