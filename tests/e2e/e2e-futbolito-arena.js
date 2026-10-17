@@ -111,10 +111,12 @@ async function soloConToques(b) {
   await sleep(60);
   ok('mando clásico: A con toque real embiste', (await estado(fr)).robot.recA > 0.3);
   await p.screenshot({ path: 'arena-390-mando.png' });
+  // Tu robot en medio de la cancha (lejos de paredes y robots) y la palanca hacia arriba.
+  await fr.evaluate(() => { const p = window.__arena.p(), r = p.robots[0]; Object.assign(r, { x: -4, y: 0, vx: 0, vy: 0 }); p.robots.slice(1).forEach(o => Object.assign(o, { x: 6, y: 3 })); });
   await fr.evaluate(() => { window.__pads = [{ id: 'Control de prueba', index: 0, connected: true, mapping: 'standard', axes: [0, -1, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) }]; });
-  await sleep(500);
-  const conPad = await estado(fr);
-  ok('control físico: la palanca mueve el robot', velocidad(conPad.robot) > 2, JSON.stringify(conPad.entrada));
+  let maxV = 0, conPad = null;
+  for (let k = 0; k < 8; k++) { await sleep(80); conPad = await estado(fr); maxV = Math.max(maxV, velocidad(conPad.robot)); }
+  ok('control físico: la palanca mueve el robot', maxV > 2, maxV.toFixed(2) + ' ' + JSON.stringify(conPad.entrada));
   await sleep(1200);
   await fr.evaluate(p0 => { window.__pads = [p0]; }, pad([0], [0, 0, 0, 0]));
   await sleep(120);

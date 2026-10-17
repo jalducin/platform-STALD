@@ -224,6 +224,17 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       `futbol: { estado: confirmado | disputa | anfitrion | invitado | pendiente, goles, puntos: { <id>: n } }`
       (coinciden → confirmado; difieren → el del anfitrión «en disputa»; solo uno → ese). Puntos como el partido
       rápido (300/120/40 + 60 por gol hasta 6 − 20 por gol recibido; 0–1000).
+    - Futbolito Arena (`futbolito-arena`, cambio `futbolito-arena`, `server/arena.ts`; reglas en
+      `juegos/arena-motor.js`, que el servidor importa): opciones al crear `{ formato: "1v1" | "1v2" | "2v2" (por omisión)
+      | "3v3", arena: "normal" | "grande" (3v3 siempre grande), goles: "3" | "5" | "7" }` (si no, 400
+      `formato_invalido` / `arena_invalida` / `goles_invalidos`); mesa por formato con bots que ceden su lugar. Asiento:
+      `POST /unirse { equipo: 0 | 1 }` (400 `equipo_invalido`, 409 `equipo_lleno` si ya lo pidieron las que caben, 409
+      `ya_empezo`) y `{ robot: 0 | 1 | 2 }` (color en su equipo; 400 `robot_invalido`, también en otros juegos). Resultado:
+      `POST /respuesta { arena: { goles: [🌊 Mar, 🔥 Sol], ms, corte? } }`, solo el primero; 400 `resultado_invalido` si
+      un marcador pasa los goles de la sala, si suman más de 1 + ms/2500, o si `ms` sale de 5 s–5 min o del tiempo desde
+      el inicio + 5 s. La respuesta y `GET` de la sala traen `arena: { estado: confirmado | disputa | anfitrion |
+      invitado | pendiente, goles, puntos: { <id>: n } }` (puntos por equipo, como Fútbol Estelar). En el ranking
+      (`POST /juegos/partida` con `sala`) los puntos los pone ese resultado (409 `resultado_pendiente` si aún no hay).
     - Personaje de Karts y Axo (`karts` y `plataformas`, cambio `personaje-en-salas`, `server/personajes.ts`):
       `POST /juegos/sala/<código>/unirse { personaje }` (también para quien ya está dentro; quien no está entra con él
       si hay lugar, si no 409 `sala_llena`) → `{ ok, codigo, personaje }`. El id se valida contra
