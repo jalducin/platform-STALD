@@ -465,7 +465,7 @@ async function probarReinos(b) {
     await f.evaluate(() => { window.__karts.piloto(false); window.__karts.obstaculo('muro'); });
     await f.waitForFunction(() => window.__karts.estado().eventos.muro >= 1, null, { timeout: 5000 }).catch(() => {});
     const em = await estado(f);
-    ok(m.id + ': el muro detiene y frena (×0.7 al chocar)', em.eventos.muro >= 1 && Math.abs(em.reinos.lateral) <= em.reinos.muro && em.reinos.velMuro !== null && em.reinos.velMuro <= 180, JSON.stringify({ ev: em.eventos.muro, lat: em.reinos.lateral, w: em.reinos.muro, velMuro: em.reinos.velMuro }));
+    ok(m.id + ': el muro detiene y frena (×0.7 al chocar: [antes, después])', em.eventos.muro >= 1 && Math.abs(em.reinos.lateral) <= em.reinos.muro && Array.isArray(em.reinos.velMuro) && em.reinos.velMuro[1] <= em.reinos.velMuro[0] * 0.75, JSON.stringify({ ev: em.eventos.muro, lat: em.reinos.lateral, w: em.reinos.muro, velMuro: em.reinos.velMuro }));
     await f.evaluate(t => window.__karts.obstaculo(t), m.mecanica);
     await f.waitForFunction(t => window.__karts.estado().eventos[t] >= 1, m.mecanica, { timeout: 7000 }).catch(() => {});
     const ev = (await estado(f)).eventos;

@@ -2434,7 +2434,7 @@ function pintarCielo() {
   if (!pano || pano.pista !== pista.id || pano.F !== cam.F || pano.hy !== cam.hy || pano.lw !== LW) prepararPano();
   const { PW, PH, ps } = pano;
   const sx = Math.floor(((((cam.ang - Math.atan2(LW / 2, cam.F)) / (2 * Math.PI)) % 1) + 1) % 1 * PW * ps);
-  g.drawImage(pano.cv, sx, 0, Math.round(LW * ps), PH * ps, 0, 0, LW, PH);
+  if (!KartsReinos.tapaCielo()) g.drawImage(pano.cv, sx, 0, Math.round(LW * ps), PH * ps, 0, 0, LW, PH); // karts-copa-reinos: bajo la bóveda no se ve
   KartsReinos.cielo(); // karts-copa-reinos: bóveda del interior
 }
 // Escena completa: cielo, piso y todos los sprites ordenados de lejos a cerca.

@@ -59,27 +59,28 @@ const KartsReinos = (() => {
     const fino = new Map(), grueso = new Map(), portales = [];
     const luzDe = (x, y) => antorchas.reduce((l, a) => Math.max(l, 1 - Math.hypot(a.x - x, a.y - y) / 190), 0);
     const contiguo = (t, en) => tramos.some(o => o !== t && (o.i0 === en || o.i1 === en));
-    for (const t of tramos) {
+    tramos.forEach((t, k) => {
+      t.vecinos = new Set([k, ...tramos.flatMap((o, j) => (o.i0 === t.i1 || o.i1 === t.i0 ? [j] : []))]); // los que se ven desde adentro
       for (const s of t.muro ? [t.muro] : [-1, 1]) {
-        segmentos(t, s, SEG, fino, luzDe);
-        segmentos(t, s, SEG_LEJOS, grueso, luzDe);
-        for (const en of [t.i0, t.i1]) if (!contiguo(t, en)) fachada(t, s, en, [fino, grueso]); // no entre dos tramos seguidos
+        segmentos(t, k, s, SEG, fino, luzDe);
+        segmentos(t, k, s, SEG_LEJOS, grueso, luzDe);
+        for (const en of [t.i0, t.i1]) if (!contiguo(t, en)) fachada(t, k, s, en, [fino, grueso]); // no entre dos tramos seguidos
       }
       portales.push({ i: t.i0, w: t.w, nombre: t.nombre });
       if (!contiguo(t, t.i1)) portales.push({ i: t.i1, w: t.w, nombre: '' });
-    }
+    });
     return { fino, grueso, portales };
   }
-  function segmentos(t, s, paso, mapa, luzDe) {
+  function segmentos(t, k, s, paso, mapa, luzDe) {
     for (let d = 0; d < t.largo; d += paso) {
       const a = punto(t.i0 + d, s * t.w), b = punto(t.i0 + Math.min(t.largo, d + paso), s * t.w);
-      meterSeg(mapa, { x1: a.x, y1: a.y, x2: b.x, y2: b.y, luz: luzDe((a.x + b.x) / 2, (a.y + b.y) / 2) });
+      meterSeg(mapa, { x1: a.x, y1: a.y, x2: b.x, y2: b.y, luz: luzDe((a.x + b.x) / 2, (a.y + b.y) / 2), t: k });
     }
   }
   // Fachada del monumento a un lado de la entrada `en`.
-  function fachada(t, s, en, mapas) {
+  function fachada(t, k, s, en, mapas) {
     const a = punto(en, s * t.w), b = punto(en, s * (t.w + FACHADA));
-    for (const m of mapas) meterSeg(m, { x1: a.x, y1: a.y, x2: b.x, y2: b.y, luz: 0.5 });
+    for (const m of mapas) meterSeg(m, { x1: a.x, y1: a.y, x2: b.x, y2: b.y, luz: 0.5, t: k });
   }
   const activo = () => !!R;
   // ¿Bloquea este adorno al azar? (detrás de un muro no se ve; en la cámara abierta solo si tiene bóveda).
@@ -201,7 +202,7 @@ const KartsReinos = (() => {
     k.vel *= 0.99; // rozar frena un poco
     if (Math.abs(vl) > 60 && (k.muroT || 0) <= tCarrera) {
       k.vel *= 0.7; k.muroT = tCarrera + 0.4; k.derrape = null;
-      if (k === yo) { eventos.muro = (eventos.muro || 0) + 1; ultimoMuro = Math.round(k.vel); tono(140, 0.12, 'square', 0.05, 70); }
+      if (k === yo) { eventos.muro = (eventos.muro || 0) + 1; ultimoMuro = [Math.round(k.vel / 0.7), Math.round(k.vel)]; tono(140, 0.12, 'square', 0.05, 70); }
     }
   }
   function columna(k, c) {
@@ -277,18 +278,32 @@ const KartsReinos = (() => {
     for (const o of R.rocas) { const q = punto(o.idx, KP.ladoRoca(o, tCarrera)), z = visible(q.x, q.y, 40, 1100); if (z) lista.push({ z, rk: 'roca', o, q }); }
     for (const o of R.compuertas) { const p = M.pts[o.idx], z = visible(p.x, p.y, o.w + 10, 1100); if (z) lista.push({ z: z + 1, rk: 'compuerta', o }); }
   }
-  // Segmentos de muro de las celdas cercanas (finos a menos de 900 px, gruesos más lejos) que caen en la vista.
+  // Segmentos de muro de las celdas cercanas (finos a menos de 900 px, gruesos más lejos) que caen en la vista. Con la
+  // cámara y el kart dentro de un corredor de dos muros, solo los de ese tramo y sus vecinos: lo demás queda detrás.
   function juntarMuros(lista, lejos, mitadVista) {
+    const solo = encerrado(), lote = [];
+    if (solo) lista.push({ z: 1e9, rk: 'lote', lote }); // en un corredor todo lo demás va adentro: los muros, primero
     const c0 = Math.floor((cam.x - lejos) / CELDA_M), c1 = Math.floor((cam.x + lejos) / CELDA_M), f0 = Math.floor((cam.y - lejos) / CELDA_M), f1 = Math.floor((cam.y + lejos) / CELDA_M);
     for (let cx = c0; cx <= c1; cx++) {
       for (let fy = f0; fy <= f1; fy++) {
         const dc = Math.hypot((cx + 0.5) * CELDA_M - cam.x, (fy + 0.5) * CELDA_M - cam.y);
         for (const sg of (dc < 900 ? R.fino : R.grueso).get(cx + ',' + fy) || []) {
-          const e = segmentoVisible(sg, lejos, mitadVista);
-          if (e) lista.push(e);
+          const e = solo && !solo.has(sg.t) ? null : segmentoVisible(sg, lejos, mitadVista);
+          if (e) (solo ? lote : lista).push(e);
         }
       }
     }
+  }
+  let idxCam = 0; // muestra donde va tu kart (paso)
+  function encerrado() {
+    const k = R.tramoDe[idxCam], kc = R.tramoDe[(idxCam - 16 + N) % N], t = R.tramos[k]; // la cámara va ≈ 115 px detrás
+    if (!t || t.muro || k !== kc) return null;
+    const ves = new Set([k]); // el vecino solo cerca de la unión (si no, queda detrás del muro)
+    for (const j of t.vecinos) {
+      const o = R.tramos[j];
+      if ((o.i0 === t.i1 && adelante(idxCam, t.i1) < 120) || (o.i1 === t.i0 && adelante(t.i0, idxCam) < 20)) ves.add(j);
+    }
+    return ves;
   }
   // Elemento de la escena para el segmento (en coordenadas de cámara) o null si no se ve.
   function segmentoVisible(sg, lejos, mitadVista) {
@@ -300,10 +315,11 @@ const KartsReinos = (() => {
     return { z: Math.max(z1, z2), rk: 'muro', s: sg, z1, z2, l1, l2 };
   }
   // Cuadrilátero vertical entre dos puntos del piso (en coordenadas de cámara: lateral l y distancia z), de alto `alto`.
-  function cuad(l1, z1, l2, z2, alto) {
+  function cuad(l1, z1, l2, z2, alto, nuevo = true) {
     if (z1 < 6) { const f = (6 - z1) / (z2 - z1); l1 += (l2 - l1) * f; z1 = 6; } else if (z2 < 6) { const f = (6 - z2) / (z1 - z2); l2 += (l1 - l2) * f; z2 = 6; }
     const s1 = cam.F / z1, s2 = cam.F / z2, x1 = LW / 2 + l1 * s1, x2 = LW / 2 + l2 * s2;
-    g.beginPath(); g.moveTo(x1, cam.hy + cam.h * s1); g.lineTo(x1, cam.hy + (cam.h - alto) * s1); g.lineTo(x2, cam.hy + (cam.h - alto) * s2); g.lineTo(x2, cam.hy + cam.h * s2); g.closePath();
+    if (nuevo) g.beginPath();
+    g.moveTo(x1, cam.hy + cam.h * s1); g.lineTo(x1, cam.hy + (cam.h - alto) * s1); g.lineTo(x2, cam.hy + (cam.h - alto) * s2); g.lineTo(x2, cam.hy + cam.h * s2); g.closePath();
     return { x1, x2, s1, s2 };
   }
   function nivel(luz, z) {
@@ -311,20 +327,37 @@ const KartsReinos = (() => {
     const adentro = (0.3 + 0.7 * luz) * (1 - niebla), afuera = 0.86 - Math.min(0.25, z / 6400);
     return R.paleta[Math.max(0, Math.min(NIVELES - 1, Math.round((adentro * dentro + afuera * (1 - dentro)) * (NIVELES - 1))))];
   }
+  const zMedia = e => (Math.max(e.z1, 6) + Math.max(e.z2, 6)) / 2;
+  // Hiladas de piedra y la junta del borde de un segmento (solo de cerca), en el trazo en curso.
+  function hiladas(q) {
+    for (const h of [38, 76, 114]) { g.moveTo(q.x1, cam.hy + (cam.h - h) * q.s1); g.lineTo(q.x2, cam.hy + (cam.h - h) * q.s2); }
+    g.moveTo(q.x1, cam.hy + cam.h * q.s1); g.lineTo(q.x1, cam.hy + (cam.h - ALTO_MURO) * q.s1);
+  }
+  function dibujarMuro(e) {
+    const zm = zMedia(e);
+    g.fillStyle = nivel(e.s.luz, zm);
+    const q = cuad(e.l1, e.z1, e.l2, e.z2, ALTO_MURO);
+    g.fill();
+    if (zm < 520) { g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1; g.beginPath(); hiladas(q); g.stroke(); }
+  }
+  // Muros de un corredor en lote: de lejos a cerca, uniendo los seguidos del mismo tono en un solo relleno.
+  function dibujarLote(lote) {
+    lote.sort((a, b) => b.z - a.z);
+    const cerca = [];
+    let color = null;
+    for (const e of lote) {
+      const zm = zMedia(e), col = nivel(e.s.luz, zm);
+      if (col !== color) { if (color) g.fill(); g.fillStyle = col; g.beginPath(); color = col; }
+      const q = cuad(e.l1, e.z1, e.l2, e.z2, ALTO_MURO, false);
+      if (zm < 520) cerca.push(q);
+    }
+    if (color) g.fill();
+    if (cerca.length) { g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1; g.beginPath(); cerca.forEach(hiladas); g.stroke(); }
+  }
   function dibujar(e, t) {
-    if (e.rk === 'muro') {
-      const zm = (Math.max(e.z1, 6) + Math.max(e.z2, 6)) / 2;
-      g.fillStyle = nivel(e.s.luz, zm);
-      const q = cuad(e.l1, e.z1, e.l2, e.z2, ALTO_MURO);
-      g.fill();
-      if (zm < 520) { // hiladas de piedra y la junta del borde (solo de cerca)
-        g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1;
-        g.beginPath();
-        for (const h of [38, 76, 114]) { g.moveTo(q.x1, cam.hy + (cam.h - h) * q.s1); g.lineTo(q.x2, cam.hy + (cam.h - h) * q.s2); }
-        g.moveTo(q.x1, cam.hy + cam.h * q.s1); g.lineTo(q.x1, cam.hy + (cam.h - ALTO_MURO) * q.s1);
-        g.stroke();
-      }
-    } else if (e.rk === 'portal') dibujarPortal(e.p);
+    if (e.rk === 'lote') dibujarLote(e.lote);
+    else if (e.rk === 'muro') dibujarMuro(e);
+    else if (e.rk === 'portal') dibujarPortal(e.p);
     else if (e.rk === 'bloque') dibujarBloque(e.b);
     else if (e.rk === 'roca') dibujarRoca(e.o, e.q);
     else if (e.rk === 'compuerta') dibujarCompuerta(e.o);
@@ -427,6 +460,7 @@ const KartsReinos = (() => {
     }
     return cv2;
   }
+  const tapaCielo = () => !!R && techo > 0.99; // la bóveda tapa todo el cielo de afuera
   function cielo() {
     if (!R || techo < 0.01) return;
     const { PW, PH, ps } = pano, TW = Math.round(PW + Math.ceil(LW) + 2);
@@ -459,21 +493,23 @@ const KartsReinos = (() => {
   let resplandor = null;
   // Brillo de una antorcha (p = proyección de su base; d = adorno con alt y h), en modo «lighter».
   function brillo(p, d, t) {
+    if (p.z > 560) return; // lejos el resplandor casi no se ve y cuesta igual
     if (!resplandor) {
       resplandor = document.createElement('canvas'); resplandor.width = resplandor.height = 64;
       const c = resplandor.getContext('2d'), gr = c.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(255,200,110,.95)'); gr.addColorStop(0.4, 'rgba(255,150,60,.35)'); gr.addColorStop(1, 'rgba(255,120,40,0)');
       c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
     }
     const parpadeo = REDUCIR ? 1 : 0.88 + 0.12 * Math.sin(t * 11 + d.x * 0.7) * Math.sin(t * 7.3 + d.y);
-    const w = 90 * p.s * parpadeo, y = p.y - d.h * p.s * 0.85;
-    const a = g.globalAlpha; g.globalCompositeOperation = 'lighter'; g.globalAlpha = a * (0.35 + 0.4 * dentro);
+    const w = Math.min(120, 90 * p.s) * parpadeo, y = p.y - d.h * p.s * 0.85; // tope: el resplandor pegado a la cámara es caro
+    const a = g.globalAlpha; g.globalAlpha = a * (0.3 + 0.35 * dentro); // sin «lighter»: mezclar así es más barato
     g.drawImage(resplandor, p.x - w / 2, y - w / 2, w, w);
-    g.globalCompositeOperation = 'source-over'; g.globalAlpha = a;
+    g.globalAlpha = a;
   }
   // Suaviza la luz del interior según la muestra donde va la cámara (≈ 0.35 s; de golpe con movimiento reducido).
   function paso(idx, dt) {
     if (!R) { dentro = techo = 0; return; }
-    const t = R.tramos[R.tramoDe[((idx % N) + N) % N]];
+    idxCam = ((idx % N) + N) % N;
+    const t = R.tramos[R.tramoDe[idxCam]];
     let objD = 0;
     if (t) objD = t.techo ? 1 : 0.5;
     const objT = t?.techo ? 1 : 0, f = REDUCIR ? 1 : Math.min(1, dt * 8);
@@ -650,5 +686,5 @@ const KartsReinos = (() => {
   const BASE = { esfingeGrande: [120, 66], kukulkan: [30, 24], tronoJaguar: [64, 50], esfinge: [34, 26], naga: [26, 20], pilar: [14, 46], antorcha: [9, 22], columnaHipostila: [34, 150], bloqueCae: [48, 48], rocaRodante: [44, 44], torreAngkor: [64, 96] };
   const DIBUJO = Object.entries(D);
 
-  return { preparar, activo, tapaDecor, decorar, pintarFondo, pintarBajo, pintarPiso, ZONA_DIBUJO, DINAMICAS, fisica, carril, juntar, dibujar, silueta, cielo, niebla, lejania, alcanceDecor, luz, brillo, paso, minimapa, estado, prueba, DIBUJO, BASE };
+  return { tapaCielo, preparar, activo, tapaDecor, decorar, pintarFondo, pintarBajo, pintarPiso, ZONA_DIBUJO, DINAMICAS, fisica, carril, juntar, dibujar, silueta, cielo, niebla, lejania, alcanceDecor, luz, brillo, paso, minimapa, estado, prueba, DIBUJO, BASE };
 })();
