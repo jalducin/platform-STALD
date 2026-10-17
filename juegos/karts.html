@@ -2498,7 +2498,10 @@ function golpeObjetoRed(o) {
 // frenas con el rayo). La gracia acota el tiempo perdido (design.md §6).
 function golpeDeRed(tipo) {
   const tc = tcAhora();
-  if (yo.estrella > 0 || yo.giro > 0 || yo.termino !== null || KO.enGracia(red.gracia, tc)) { if (tipo !== 'estrella') red.inmune++; return false; }
+  if (yo.estrella > 0 || yo.giro > 0 || yo.termino !== null || KO.enGracia(red.gracia, tc)) {
+    if (tipo !== 'estrella') red.inmune++;
+    return false;
+  }
   red.gracia = tc; red.golpes.push(tipo);
   if (tipo === 'rayo') { yo.rayo = 2.5; yo.derrape = null; } else golpear(yo);
   return true;
@@ -3046,7 +3049,10 @@ if (PRUEBA) {
     },
     darItem: t => { if (yo && ITEMS[t]) yo.item = t; }, // ítem en la mano (E2E del mando)
     // karts-objetos-en-sala: usar el ítem en la mano, ponerte en la muestra idx (carril `lado`) y sortear n cajas.
-    usar: () => { if (yo && yo.item && yo.termino === null) usarItem(yo); return yo ? yo.item : null; },
+    usar: () => {
+      if (yo && yo.item && yo.termino === null) usarItem(yo);
+      return yo ? yo.item : null;
+    },
     ponerEn: (idx, lado = 0) => { const i = ((idx % N) + N) % N, q = punto(i, lado); carrilPrueba = lado; Object.assign(yo, { idx: i, x: q.x, y: q.y, ang: M.pts[i].a, vel: A.VEL_KART, vuelta: 0, mitadOk: false, giro: 0 }); },
     ponerAntes: (x, y, muestras) => { // en el carril del punto (x, y), `muestras` antes
       let i = 0, md = Infinity; M.pts.forEach((p, k) => { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < md) { md = d; i = k; } });
