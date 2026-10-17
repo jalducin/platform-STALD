@@ -131,9 +131,9 @@ async function terminarTodos(pags, frames) {
 // máquina la medición sale contaminada (15–50 fps según la carga), así que aquí solo Marisol abre el navegador: las
 // otras 7 personas entran a la sala por la API y el relevo fabrica sus karts a 10 Hz recorriendo la pista. Marisol
 // recibe y dibuja lo mismo que en una sala real de 8.
-async function fpsAislado(b, relevo, correos) {
+async function fpsAislado(b, relevo, correos, mapa = 'pradera') {
   const m = await jugador(b, correos[0], relevo);
-  const codigo = await crearSala(m, 'pradera');
+  const codigo = await crearSala(m, mapa); // karts-copa-espacio: también en la Nebulosa Esmeralda (la más cargada)
   for (const email of correos.slice(1)) await pedir(email, '/juegos/sala/' + codigo + '/unirse', {}); // NOSONAR: entran en orden
   const ids = (await (await fetch(API + '/juegos/sala/' + codigo + '?email=' + encodeURIComponent(correos[0]))).json()).jugadores.map(j => j.id).filter(id => id !== 'a-marisol');
   await m.waitForFunction(() => document.querySelectorAll('#p-body .rank li').length >= 8, null, { timeout: 30000 }).catch(() => {});
@@ -165,12 +165,13 @@ async function fpsAislado(b, relevo, correos) {
   await sleep(1500);
   const lento = await medianaFps();
   const e = await estado(fr);
-  await m.screenshot({ path: 'karts-vivo-390-cpu4.png' });
+  await m.screenshot({ path: mapa === 'pradera' ? 'karts-vivo-390-cpu4.png' : 'karts-vivo-' + mapa + '-390-cpu4.png' });
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   clearInterval(iv);
-  const visibles = e.remotos.filter(r => r.visible).length;
-  ok('fps sin límite con 8 karts en vivo ≥ 55', libre >= 55, 'fps=' + libre);
-  ok('fps con CPU ×4 y 8 karts en vivo ≥ 55 (meta 60)', lento >= 55 && visibles === 7, 'fps=' + lento + ' visibles=' + visibles);
+  const visibles = e.remotos.filter(r => r.visible).length, en = mapa === 'pradera' ? '' : ' (' + mapa + ')';
+  if (mapa !== 'pradera') ok('sala en una pista espacial: el servidor la acepta y todos corren en ' + mapa, e.pista === mapa && e.espacio, JSON.stringify({ pista: e.pista }));
+  ok('fps sin límite con 8 karts en vivo ≥ 55' + en, libre >= 55, 'fps=' + libre);
+  ok('fps con CPU ×4 y 8 karts en vivo ≥ 55 (meta 60)' + en, lento >= 55 && visibles === 7, 'fps=' + lento + ' visibles=' + visibles);
   await m.context().close();
   return { libre, lento };
 }
@@ -181,7 +182,8 @@ async function desconexion(b, relevo) {
   // Sala en una pista mesoamericana (las 8 pistas se ofrecen en sala desde juegos-en-vivo).
   await pags[0].click('[data-tab="partidas"]'); await pags[0].waitForSelector('#f-crear'); await pags[0].selectOption('#p-juego', 'karts');
   const opciones = (await pags[0].$$eval('#p-mapa option', os => os.map(o => o.value))).filter(Boolean);
-  ok('salas: el selector ofrece las 8 pistas', opciones.length === 8 && opciones.includes('chichen'), opciones.join(','));
+  // karts-copa-espacio: todas las pistas de sala (las 8 de antes y las espaciales; la lista sale de las definiciones).
+  ok('salas: el selector ofrece todas las pistas de sala (también las espaciales)', opciones.length >= 12 && ['chichen', 'orbital', 'nebulosa'].every(id => opciones.includes(id)), opciones.join(','));
   const codigo = await crearSala(pags[0], 'chichen');
   await unirse(pags[1], codigo); await unirse(pags[2], codigo);
   await sleep(1500);
@@ -291,13 +293,36 @@ async function respaldo(b, relevo) {
 // karts-copa-en-sala: sala de Copa Fiesta con 2 personas en vivo (+ 1 bot): las 4 carreras seguidas, tabla entre
 // carreras con cuenta regresiva, la siguiente arranca sola, el canal en vivo sigue toda la copa y el podio final con
 // suspenso y revancha. Cada quien llega a la meta con __karts.adelantar() pasado el mínimo de la pista (≈ 30–33 s).
+// karts-copa-espacio: copa completa del espacio en sala: el servidor la acepta con las 4 pistas espaciales en orden y la
+// carrera 1 es en la Estación Orbital para todas las personas.
+async function copaEspacioEnSala(b, relevo) {
+  const pags = [];
+  for (const email of ['marisol@example.com', 'angel@example.com']) pags.push(await jugador(b, email, relevo)); // NOSONAR: en orden
+  const [host] = pags;
+  await host.click('[data-tab="partidas"]'); await host.waitForSelector('#f-crear');
+  await host.selectOption('#p-juego', 'karts'); await host.selectOption('#p-kformato', 'copa:espacio');
+  await host.click('#f-crear button[type=submit]'); await host.waitForSelector('[data-p="empezar"]', { timeout: 30000 });
+  const codigo = (await host.textContent('.letra')).trim();
+  await unirse(pags[1], codigo);
+  await sleep(1500);
+  await host.click('[data-p="empezar"]');
+  const frames = await enCarrera(pags);
+  const copa = (await (await fetch(API + '/juegos/sala/' + codigo + '?email=marisol%40example.com')).json()).copa;
+  ok('copa del espacio en sala: el servidor la arma con las 4 pistas espaciales en orden', copa && copa.nombre === 'Copa del Espacio' && copa.pistas.join(',') === 'orbital,anillos,cinturon,nebulosa', JSON.stringify(copa && { nombre: copa.nombre, pistas: copa.pistas }));
+  const es = await Promise.all(frames.map(estado));
+  ok('copa del espacio en sala: la carrera 1 es en la Estación Orbital para las 2 personas', es.every(e => e.pista === 'orbital' && e.copa === 0), es.map(e => e.pista + ':' + e.copa).join(','));
+  await sleep(6000); await host.screenshot({ path: 'karts-vivo-copa-espacio.png' });
+  for (const p of pags) await p.context().close();
+}
 async function copaEnSala(b, relevo) {
   const pags = [];
   for (const email of ['marisol@example.com', 'angel@example.com']) pags.push(await jugador(b, email, relevo)); // NOSONAR: en orden
   const [host] = pags;
   await host.click('[data-tab="partidas"]'); await host.waitForSelector('#f-crear');
   await host.selectOption('#p-juego', 'karts');
-  ok('copa: el formulario ofrece «Una carrera» y las copas completas', (await host.$$eval('#p-kformato option', os => os.map(o => o.value))).join(',') === 'carrera,copa:fiesta,copa:mesoamerica,copa:mixta');
+  // karts-copa-espacio: copas en orden de dificultad (sin lista fija): Fiesta, Mesoamericana, …, Espacio y la mixta.
+  const formatos = (await host.$$eval('#p-kformato option', os => os.map(o => o.value))).join(',');
+  ok('copa: el formulario ofrece «Una carrera» y las copas completas en orden de dificultad', formatos.startsWith('carrera,copa:fiesta,copa:mesoamerica,') && formatos.endsWith(',copa:espacio,copa:mixta'), formatos);
   await host.selectOption('#p-kformato', 'copa:fiesta');
   ok('copa: al elegir una copa se oculta el selector de pista', await host.isHidden('#p-mapa-wrap'));
   await host.screenshot({ path: 'karts-copa-crear.png', fullPage: true });
@@ -461,6 +486,8 @@ async function salidaYPodio(b, relevo) {
   await terminarTodos(pags, frames);
   for (const p of pags) await p.context().close();
   const fps = await fpsAislado(b, relevo, correos);
+  const fpsEspacio = await fpsAislado(b, relevo, correos, 'nebulosa'); // karts-copa-espacio
+  await copaEspacioEnSala(b, relevo); // karts-copa-espacio
   await desconexion(b, relevo);
   await personajesEnSala(b, relevo); // personaje-en-salas
   await respaldo(b, relevo);
@@ -469,5 +496,6 @@ async function salidaYPodio(b, relevo) {
   await b.close(); await relevo.cerrar();
   console.log(out.join('\n'));
   console.log('RESUMEN fps(8 en vivo) libre=' + fps.libre + ' CPU×4=' + fps.lento + ' mensajes/s(sala de 8)=' + r.porSeg.toFixed(1));
+  console.log('RESUMEN fps(8 en vivo, Nebulosa Esmeralda) libre=' + fpsEspacio.libre + ' CPU×4=' + fpsEspacio.lento);
   process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 600)); process.exit(2); });

@@ -175,6 +175,14 @@ Cada página debe manejar y mostrar de forma explícita:
     juego fija su salida ANTES de pintar la pista; la parrilla es `Arcade.parrilla` (filas de 2 a 48 px, lados ±24 px,
     personas adelante en el orden de la sala, fantasmas detrás) y el podio de una carrera suelta es
     `Arcade.podioCarrera`, el mismo del servidor, que solo se pinta con los tiempos que ya tiene el servidor;
+    cambio `karts-copa-espacio` (decisiones y balance en su `design.md`): pistas con `espacio: true` (fuera del camino
+    hay vacío) y `ritmoBots` (`Arcade.ritmoBots`: habilidad de los bots y tiempo de los fantasmas de sala); mecánicas por
+    fracción de la vuelta (`f`, `tramo`, `salida`) con reglas puras en `KartsPistas` (`marcasEspacio`, `rescateEn`,
+    `ladoPlataforma`, `aperturaCompuerta`, `ESPACIO`); el dibujo espacial (piso, sprites `esp*`, cielo y parche de las
+    plataformas en los mipmaps) vive en `juegos/karts-espacio.js` (sin estado, solo lo carga `karts.html`). Copas con
+    `nivel` (orden de dificultad: menú, selector y salas usan `KartsPistas.copasOrdenadas()`) y `requiere: { podios }`
+    (`copaDesbloqueada`); `KartsCopa.COPAS_SALA`, el `<select>` de «Crear partida» y `MAPAS_SALA.karts` del servidor
+    salen de las definiciones (no se copian listas). Agregar una copa = sus pistas y un objeto en `COPAS` con `nivel`;
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
     - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo

@@ -18,6 +18,8 @@ const ang = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
 // karts-pistas-grandes: largo (px) y radio mínimo (px) de cada pista ANTES del cambio (medidos con muestrearPista).
 const LARGO_ANTES: Record<string, number> = { pradera: 3989, desierto: 4221, hielo: 4255, volcan: 4418, tenochtitlan: 4121, teotihuacan: 4225, chichen: 4042, laventa: 4373 };
 const RADIO_ANTES: Record<string, number> = { pradera: 118, desierto: 124, hielo: 131, volcan: 83, tenochtitlan: 104, teotihuacan: 92, chichen: 120, laventa: 85 };
+// karts-copa-espacio: las pistas que se agregan después (otras copas) se prueban en su propio archivo.
+const conMedidaAntes = (p: any) => p.id in LARGO_ANTES;
 const radioMinimo = (M: any) => {
   const pts = M.pts, n = pts.length, v = 6;
   let radio = Infinity;
@@ -28,9 +30,10 @@ const radioMinimo = (M: any) => {
   return radio;
 };
 
-Deno.test("karts-pistas: 8 pistas con id único, nombre, descripción corta, tema y escenario", () => {
+Deno.test("karts-pistas: 8 pistas (y las que se agreguen) con id único, nombre, descripción corta, tema y escenario", () => {
   const ids = KP.PISTAS.map((p: any) => p.id);
-  assertEquals(ids, [...ORIGINALES, ...NUEVAS]);
+  assertEquals(ids.slice(0, 8), [...ORIGINALES, ...NUEVAS]); // karts-copa-espacio: después vienen las de otras copas
+  assertEquals(new Set(ids).size, ids.length, "ids únicos");
   for (const p of KP.PISTAS) {
     assert(p.nombre && p.emoji, p.id + " sin nombre o emoji");
     assert(typeof p.desc === "string" && p.desc.length >= 15 && p.desc.length <= 80, p.id + " descripción de 15 a 80 caracteres");
@@ -42,7 +45,7 @@ Deno.test("karts-pistas: 8 pistas con id único, nombre, descripción corta, tem
 });
 
 Deno.test("karts-pistas: cada trazado es cerrado, cabe en el mapa y no se cruza consigo mismo", () => {
-  for (const p of KP.PISTAS) {
+  for (const p of KP.PISTAS.filter(conMedidaAntes)) {
     const M = A.muestrearPista(p), pts = M.pts, n = pts.length;
     const cierre = Math.hypot(pts[n - 1].x - pts[0].x, pts[n - 1].y - pts[0].y);
     assert(cierre <= M.paso * 1.5, p.id + " cerrado (" + cierre.toFixed(1) + " px)");
@@ -65,7 +68,7 @@ Deno.test("karts-pistas: cada trazado es cerrado, cabe en el mapa y no se cruza 
 });
 
 Deno.test("karts-pistas: las curvas se pueden tomar (radio mínimo ≥ el de antes) y la meta está en una recta", () => {
-  for (const p of KP.PISTAS) {
+  for (const p of KP.PISTAS.filter(conMedidaAntes)) {
     const M = A.muestrearPista(p), pts = M.pts, n = pts.length;
     const radio = radioMinimo(M);
     assert(radio >= RADIO_ANTES[p.id] && radio >= 100, p.id + " radio mínimo " + Math.round(radio) + " px (antes " + RADIO_ANTES[p.id] + ")");
@@ -177,9 +180,10 @@ Deno.test("karts-pistas: el minimapa encuadra todo el trazado dentro del margen 
 });
 
 Deno.test("karts-pistas: Copa Fiesta y Copa Mesoamericana con 4 pistas que existen", () => {
-  assertEquals(KP.COPAS.map((c: any) => c.id), ["fiesta", "mesoamerica"]);
-  assertEquals(KP.COPAS[0].pistas, ORIGINALES);
-  assertEquals(KP.COPAS[1].pistas, ["laventa", "teotihuacan", "chichen", "tenochtitlan"]);
+  // karts-copa-espacio: las dos primeras por dificultad (nivel 1 y 2); las demás copas se prueban en su archivo.
+  assertEquals(KP.copasOrdenadas().slice(0, 2).map((c: any) => [c.id, c.nivel]), [["fiesta", 1], ["mesoamerica", 2]]);
+  assertEquals(KP.copaPorId("fiesta").pistas, ORIGINALES);
+  assertEquals(KP.copaPorId("mesoamerica").pistas, ["laventa", "teotihuacan", "chichen", "tenochtitlan"]);
   for (const c of KP.COPAS) {
     assert(c.nombre && c.emoji && c.desc, c.id);
     assert(c.pistas.every((id: string) => A.pistaPorId(id)), c.id + " con pistas que existen");
@@ -191,7 +195,7 @@ Deno.test("karts-pistas: Copa Fiesta y Copa Mesoamericana con 4 pistas que exist
 // juegos-en-vivo: las salas (hasta 8 personas en vivo) ofrecen las 8 pistas, también las mesoamericanas.
 Deno.test("karts-pistas: las salas ofrecen las 8 pistas (igual que el servidor)", () => {
   assertEquals(A.PISTAS.map((p: any) => p.id), MAPAS_SALA.karts);
-  assertEquals(MAPAS_SALA.karts.length, 8);
+  for (const id of ORIGINALES) assert(MAPAS_SALA.karts.includes(id), id + " en salas"); // karts-copa-espacio: y las de otras copas
   for (const id of NUEVAS) assert(MAPAS_SALA.karts.includes(id), id + " en salas");
   const azar = new Set<string>();
   for (let s = 0; s < 200; s++) { const m = A.mapaDeSala("karts", "semilla" + s); assert(MAPAS_SALA.karts.includes(m)); azar.add(m); }

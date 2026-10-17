@@ -345,7 +345,8 @@ async function probarPistasMeso(b) {
   const f = q.mainFrame();
   await f.tap('[data-ir="pistas"]'); await sleep(200);
   const sel = await f.evaluate(() => ({ grupos: [...document.querySelectorAll('#pistas-ops .ops-grupo')].map(e => e.textContent), pistas: [...document.querySelectorAll('#pistas-ops [data-ir^="rapida:"]')].map(e => ({ id: e.dataset.ir.slice(7), txt: e.textContent })), ancho: document.documentElement.scrollWidth, vw: innerWidth }));
-  ok('pistas: 8 pistas agrupadas en Copa Fiesta y Copa Mesoamericana', sel.pistas.length === 8 && sel.grupos.length === 2 && /Copa Fiesta/.test(sel.grupos[0]) && /Copa Mesoamericana/.test(sel.grupos[1]) && sel.ancho <= sel.vw, JSON.stringify(sel.grupos));
+  // karts-copa-espacio: las copas en orden de dificultad (Fiesta, Mesoamericana, …, Espacio al final), 4 pistas cada una.
+  ok('pistas: agrupadas por copa en orden de dificultad (Fiesta, Mesoamericana, …, Espacio)', sel.grupos.length >= 3 && sel.pistas.length === sel.grupos.length * 4 && /Copa Fiesta/.test(sel.grupos[0]) && /Copa Mesoamericana/.test(sel.grupos[1]) && /Copa del Espacio/.test(sel.grupos.at(-1)) && sel.ancho <= sel.vw, JSON.stringify(sel.grupos));
   ok('pistas: cada pista nueva con su nombre, civilización y descripción corta', MESO.every(m => { const x = sel.pistas.find(p => p.id === m.id); return x && x.txt.includes(m.nombre) && /Mexica|Teotihuacana|Maya|Olmeca/.test(x.txt) && /meta/.test(x.txt); }), JSON.stringify(sel.pistas.slice(4).map(p => p.txt)));
   await q.screenshot({ path: 'karts-meso-selector.png', fullPage: true });
   const cdp = await q.context().newCDPSession(q);
@@ -417,6 +418,113 @@ async function probarPistasGrandes(b) {
   }
   await q.context().close();
 }
+// ---- karts-copa-espacio: las 4 pistas espaciales ----
+// En cada una: se elige y corre con 8, su mecánica actúa, fps con CPU ×4, capturas a 390×844 y 844×390, caída al vacío
+// con el dron de rescate (vuelve al camino firme) y una vuelta completa con el piloto de prueba.
+const ESPACIO = [
+  { id: 'orbital', nombre: 'Estación Orbital Quetzal', mecanica: 'antiturbo', zonas: ['compuerta', 'gravedad', 'abierto'] },
+  { id: 'anillos', nombre: 'Anillos de Saturno', mecanica: 'brecha', zonas: ['asteroide', 'abierto'] },
+  { id: 'cinturon', nombre: 'Cinturón de Asteroides', mecanica: 'plataforma', zonas: ['brecha', 'asteroide', 'antiturbo'] },
+  { id: 'nebulosa', nombre: 'Nebulosa Esmeralda', mecanica: 'portal', zonas: ['gravedad', 'plataforma', 'brecha'] },
+];
+async function medirFps(q, f) {
+  const cdp = await q.context().newCDPSession(q);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); await sleep(3500);
+  const xs = [];
+  for (let k = 0; k < 5; k++) { await sleep(400); xs.push((await estado(f)).fps); } // NOSONAR: lecturas en orden
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  return xs.sort((a, b) => a - b)[2];
+}
+// Caída: al vacío en un tramo sin barandal; el dron te deja en el camino firme.
+async function probarCaida(q, f, id) {
+  await f.evaluate(() => { window.__karts.piloto(false); window.__karts.alVacio(false); });
+  await f.waitForFunction(() => window.__karts.estado().cae > 0, null, { timeout: 4000 }).catch(() => {});
+  await sleep(250); await q.screenshot({ path: 'karts-espacio-' + id + '-cae.png' });
+  await f.waitForFunction(() => window.__karts.estado().remolque > 0, null, { timeout: 4000 }).catch(() => {});
+  await sleep(300); await q.screenshot({ path: 'karts-espacio-' + id + '-dron.png' });
+  await f.waitForFunction(() => window.__karts.estado().eventos.rescate >= 1, null, { timeout: 6000 }).catch(() => {});
+  const e = await estado(f);
+  // El dron lo deja en el centro; para cuando se lee, el kart ya pudo avanzar un poco: basta con que esté en el camino.
+  ok(id + ': caer al vacío y el dron de rescate te regresa al camino', e.eventos.caida >= 1 && e.eventos.rescate >= 1 && Math.abs(e.lateral) <= 50 && e.cae <= 0, JSON.stringify({ caida: e.eventos.caida, rescate: e.eventos.rescate, lat: e.lateral }));
+}
+async function probarMecanicaEspacio(q, f, m) {
+  await f.evaluate(t => { window.__karts.piloto(true); window.__karts.antesDe(t); }, m.mecanica);
+  if (m.mecanica === 'portal') { await sleep(500); await q.screenshot({ path: 'karts-espacio-' + m.id + '-portal.png' }); }
+  await f.waitForFunction(t => window.__karts.estado().eventos[t] >= 1, m.mecanica, { timeout: 6000 }).catch(() => {});
+  await sleep(m.mecanica === 'brecha' ? 900 : 100);
+  const e = await estado(f);
+  ok(m.id + ': la mecánica «' + m.mecanica + '» actúa' + (m.mecanica === 'brecha' ? ' (salta el hueco sin caer)' : ''), e.eventos[m.mecanica] >= 1 && e.eventos.caida === 0, JSON.stringify(e.eventos));
+  if (m.mecanica !== 'portal') await q.screenshot({ path: 'karts-espacio-' + m.id + '-' + m.mecanica + '.png' });
+}
+async function probarPistasEspacio(b) {
+  const q = await abrirSuelto(b, { width: 390, height: 844 });
+  const f = q.mainFrame();
+  await f.tap('[data-ir="pistas"]'); await sleep(200);
+  const txt = await f.textContent('#pistas-ops');
+  ok('espacio: las 4 pistas en «Carrera rápida» con nombre y meta', ESPACIO.every(m => txt.includes(m.nombre)) && /Copa del Espacio/.test(txt), txt.slice(-300));
+  for (const m of ESPACIO) {
+    await f.tap('[data-ir="rapida:' + m.id + '"]');
+    await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 1500, null, { timeout: 30000 });
+    await f.evaluate(() => window.__karts.piloto(true)); await sleep(1200);
+    const e0 = await estado(f);
+    ok(m.id + ': se elige y corre con 8, en el espacio, con sus mecánicas y el minimapa completo', e0.pista === m.id && e0.espacio && e0.karts === 8 && [m.mecanica, ...m.zonas].every(z => e0.zonas.includes(z)) && e0.marcasMapa === 8 && e0.yoEnMapa, JSON.stringify({ pista: e0.pista, zonas: [...new Set(e0.zonas)], marcas: e0.marcasMapa }));
+    const fps = await medirFps(q, f);
+    ok(m.id + ': 60 cuadros por segundo con CPU ×4', fps >= 55, 'fps=' + fps);
+    fpsMeso[m.id] = fps;
+    await q.screenshot({ path: 'karts-espacio-' + m.id + '-390x844.png' });
+    await probarMecanicaEspacio(q, f, m);
+    await probarCaida(q, f, m.id);
+    // Una vuelta completa de verdad con el piloto de prueba (karts-pistas-grandes: 4 pasos de la misma física por cuadro).
+    await f.evaluate(() => { window.__karts.piloto(true); window.__karts.rapido(4); });
+    const v0 = (await estado(f)).vuelta;
+    await f.waitForFunction(v => window.__karts.estado().vuelta >= v + 1, v0, { timeout: 90000 }).catch(() => {});
+    await f.evaluate(() => window.__karts.rapido(1));
+    const ev = await estado(f);
+    ok(m.id + ': una vuelta completa con el piloto de prueba', ev.vuelta >= v0 + 1, JSON.stringify({ vuelta: ev.vuelta, caidas: ev.eventos.caida }));
+    await q.setViewportSize({ width: 844, height: 390 }); await sleep(900);
+    await q.screenshot({ path: 'karts-espacio-' + m.id + '-844x390.png' });
+    await q.setViewportSize({ width: 390, height: 844 }); await sleep(300);
+    await f.evaluate(() => { window.__karts.piloto(false); window.__karts.adelantar(); });
+    await f.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
+    await f.evaluate(() => document.querySelector('#res-botones [data-ir="menu"]').click());
+    await f.waitForSelector('#ov-menu:not(.hide)');
+    await f.tap('[data-ir="pistas"]');
+  }
+  await q.context().close();
+}
+// karts-copa-espacio: sin 2 podios la copa está bloqueada (suelto, progreso nuevo); con 2 podios (en el servidor) se
+// abre, empieza en la Estación Orbital y se guarda con su id.
+async function probarCopaEspacio(b) {
+  const q = await abrirSuelto(b, { width: 390, height: 844 });
+  const f = q.mainFrame();
+  const c0 = (await estado(f)).copasMenu;
+  ok('menú: copas en orden de dificultad y la del Espacio bloqueada sin 2 podios', c0[0].ir === 'copa-nueva' && c0[1].ir === 'copa-nueva:mesoamerica' && c0.at(-1).ir === 'copa-nueva:espacio' && c0.at(-1).bloqueada && /faltan 2/.test(c0.at(-1).txt), JSON.stringify(c0));
+  await q.screenshot({ path: 'karts-espacio-menu-bloqueada.png' });
+  await f.evaluate(() => window.__karts.ponerCopas({ fiesta: { lugar: 2, puntos: 40 } }));
+  ok('menú: con 1 podio sigue bloqueada (falta 1)', /falta 1/.test((await estado(f)).copasMenu.at(-1).txt));
+  await q.context().close();
+  const g0 = await progreso();
+  const base = g0.datos || { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: 2, recordsV1: {} };
+  const datos = { ...base, copas: { ...base.copas, fiesta: { lugar: 1, puntos: 50 }, mesoamerica: { lugar: 3, puntos: 30 } }, copaEnCurso: null };
+  const put = await fetch(API + '/juegos/progreso/karts?email=' + encodeURIComponent(EMAIL), { method: 'PUT', body: JSON.stringify({ v: g0.v, datos }) });
+  ok('copa del espacio: progreso con 2 podios guardado', put.ok, String(put.status));
+  const p = await abrir(b);
+  await abrirJuego(p, 'karts');
+  const fr = await marcoDe(p);
+  await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  ok('menú: con 2 podios la Copa del Espacio se abre', await fr.isEnabled('[data-ir="copa-nueva:espacio"]'));
+  await p.screenshot({ path: 'karts-espacio-menu.png', fullPage: true });
+  await fr.click('[data-ir="copa-nueva:espacio"]');
+  await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera');
+  ok('Copa del Espacio: la carrera 1 es en la Estación Orbital Quetzal', (await estado(fr)).pista === 'orbital');
+  await sleep(3800);
+  await fr.evaluate(() => window.__karts.adelantar());
+  await fr.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
+  let cc = null;
+  for (let i = 0; i < 20 && !(cc && cc.copa === 'espacio'); i++) { cc = ((await progreso()).datos || {}).copaEnCurso; if (!(cc && cc.copa === 'espacio')) await sleep(500); } // NOSONAR: espera en orden
+  ok('Copa del Espacio: en curso (carrera 2, Anillos de Saturno) guardada en el servidor', cc && cc.copa === 'espacio' && cc.carrera === 1 && /Carrera 2 de 4: Anillos de Saturno/.test(await fr.textContent('#res-botones')), JSON.stringify(cc));
+  await p.context().close();
+}
 // karts-pistas-grandes: un progreso de antes (sin pistasV) archiva sus récords como «pista chica» con aviso, sin perder
 // la copa ganada; se guarda con pistasV 2.
 async function probarRecordsViejos(b) {
@@ -474,6 +582,11 @@ async function probarCopaMeso(b) {
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
+  if (process.env.KARTS_SOLO === 'espacio') { // karts-copa-espacio: solo esta parte (para iterar)
+    await probarPistasEspacio(b); await probarCopaEspacio(b);
+    await b.close(); console.log(out.join('\n')); console.log('fps: ' + JSON.stringify(fpsMeso));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   const p = await abrir(b);
   const tarjeta = await textoTarjeta(p, 'karts');
   ok('catálogo: Karts Turbo con ícono y descripción', tarjeta.includes('🏎️') && tarjeta.includes('Karts Turbo') && tarjeta.includes('copa'), tarjeta);
@@ -760,6 +873,7 @@ async function probarCopaMeso(b) {
   // ---- Pistas mesoamericanas (openspec: karts-pistas-mesoamericanas) ----
   await probarPistasMeso(b);
   await probarPistasGrandes(b); // karts-pistas-grandes
+  await probarPistasEspacio(b); // karts-copa-espacio
 
   // ---- Partida en sala con bots fantasma ----
   const vAntes = (await progreso()).v;
@@ -790,6 +904,7 @@ async function probarCopaMeso(b) {
 
   // ---- Copa Mesoamericana (al final: cambia la copa en curso) ----
   await probarCopaMeso(b);
+  await probarCopaEspacio(b); // karts-copa-espacio (al final: cambia las copas y la copa en curso)
   console.log('fps con CPU ×4 por pista nueva: ' + JSON.stringify(fpsMeso));
 
   await b.close();
