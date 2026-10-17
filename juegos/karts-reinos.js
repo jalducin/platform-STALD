@@ -283,14 +283,20 @@ const KartsReinos = (() => {
   function juntarMuros(lista, lejos, mitadVista) {
     const solo = encerrado(), lote = [];
     if (solo) lista.push({ z: 1e9, rk: 'lote', lote }); // en un corredor todo lo demás va adentro: los muros, primero
+    const destino = solo ? lote : lista;
+    for (const sg of segmentosCerca(lejos)) {
+      if (solo && !solo.has(sg.t)) continue;
+      const e = segmentoVisible(sg, lejos, mitadVista);
+      if (e) destino.push(e);
+    }
+  }
+  // Segmentos de las celdas a menos de `lejos` px de la cámara (finos si la celda queda a menos de 900 px).
+  function* segmentosCerca(lejos) {
     const c0 = Math.floor((cam.x - lejos) / CELDA_M), c1 = Math.floor((cam.x + lejos) / CELDA_M), f0 = Math.floor((cam.y - lejos) / CELDA_M), f1 = Math.floor((cam.y + lejos) / CELDA_M);
     for (let cx = c0; cx <= c1; cx++) {
       for (let fy = f0; fy <= f1; fy++) {
         const dc = Math.hypot((cx + 0.5) * CELDA_M - cam.x, (fy + 0.5) * CELDA_M - cam.y);
-        for (const sg of (dc < 900 ? R.fino : R.grueso).get(cx + ',' + fy) || []) {
-          const e = solo && !solo.has(sg.t) ? null : segmentoVisible(sg, lejos, mitadVista);
-          if (e) (solo ? lote : lista).push(e);
-        }
+        yield* (dc < 900 ? R.fino : R.grueso).get(cx + ',' + fy) || [];
       }
     }
   }
@@ -347,7 +353,10 @@ const KartsReinos = (() => {
     let color = null;
     for (const e of lote) {
       const zm = zMedia(e), col = nivel(e.s.luz, zm);
-      if (col !== color) { if (color) g.fill(); g.fillStyle = col; g.beginPath(); color = col; }
+      if (col !== color) {
+        if (color) g.fill();
+        g.fillStyle = col; g.beginPath(); color = col;
+      }
       const q = cuad(e.l1, e.z1, e.l2, e.z2, ALTO_MURO, false);
       if (zm < 520) cerca.push(q);
     }
