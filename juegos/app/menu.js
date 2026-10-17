@@ -45,6 +45,7 @@ const JUEGOS = [
   { id: 'bingo', cat: 'clasicos', emoji: '🎱', t: 'Bingo', d: '75 números y tu cartón: línea, esquinas o lleno. ¡Para salas de hasta 30!', jugar: () => elegirBingo() },
   { id: 'blackjack', cat: 'clasicos', emoji: '♣️', icono: 'juegos/iconos/blackjack.svg', t: 'Blackjack (21)', d: 'Acércate a 21 sin pasarte y gánale a la banca, con fichas de juego.', jugar: () => elegirBlackjack() },
   { id: 'futbol', cat: 'arcade', emoji: '⚽', t: 'Fútbol Estelar 2010', d: 'Futbol táctico de consola: liga, copa, carrera y torneos con amigos. Contra la IA o en local.', jugar: () => jugarArcade('futbol') }, // futbol-estelar: reemplaza a Futbolito
+  { id: 'futbolito-arena', cat: 'arcade', emoji: '🤖', t: 'Futbolito Arena', d: 'Robots con joystick en una arena octagonal: embiste, patea y mete gol. Contra la IA o 2 vs 2 en vivo.', jugar: () => jugarArcade('futbolito-arena') }, // futbolito-arena
   { id: 'billar', cat: 'arcade', emoji: '🎱', t: 'Billar', d: 'Bola 8 con línea guía: mete tus bolas y al final la 8. Contra el bot o 1 vs 1.', jugar: () => jugarArcade('billar') }, // futbolito-billar
   { id: 'golf', cat: 'arcade', emoji: '⛳', t: 'Golf', d: 'Minigolf de 9 hoyos: jala como resortera y métela en pocos golpes. Solo o de 2 a 4.', jugar: () => jugarArcade('golf') }, // golf
 ];
