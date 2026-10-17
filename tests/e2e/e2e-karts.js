@@ -609,9 +609,8 @@ async function probarCopaReinos(b) {
   await abrirJuego(p, 'karts');
   const fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
-  const orden = await fr.$$eval('#menu-ops .op', bs => bs.map(x => x.textContent));
-  const i = n => orden.findIndex(t => t.includes(n));
-  ok('reinos: abierta con podios y en orden de dificultad (Fiesta, Mesoamericana, Reinos Antiguos, Espacio)', await fr.isEnabled('[data-ir="copa-nueva:reinos"]') && i('Copa Fiesta') < i('Copa Mesoamericana') && i('Copa Mesoamericana') < i('Copa Reinos Antiguos') && i('Copa Reinos Antiguos') < i('Copa del Espacio'), JSON.stringify(orden));
+  const orden = (await estado(fr)).copasMenu; // solo los botones de copa nueva (sin «Continuar …»)
+  ok('reinos: abierta con podios y en orden de dificultad (Fiesta, Mesoamericana, Reinos Antiguos, Espacio)', await fr.isEnabled('[data-ir="copa-nueva:reinos"]') && orden.map(c => c.ir).join(',') === 'copa-nueva,copa-nueva:mesoamerica,copa-nueva:reinos,copa-nueva:espacio', JSON.stringify(orden.map(c => c.ir + (c.bloqueada ? '🔒' : ''))));
   await p.screenshot({ path: 'karts-reinos-menu-390.png', fullPage: true });
   await fr.click('[data-ir="copa-nueva:reinos"]');
   await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera');
