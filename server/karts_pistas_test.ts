@@ -13,7 +13,9 @@ const g = globalThis as any;
 const KP = g.KartsPistas, A = g.Arcade;
 const NUEVAS = ["tenochtitlan", "teotihuacan", "chichen", "laventa"];
 const ORIGINALES = ["pradera", "desierto", "hielo", "volcan"];
+const REINOS = ["giza", "castillo", "karnak", "angkor"]; // karts-copa-reinos (sus pruebas propias: server/karts_reinos_test.ts)
 const TIPOS = ["trajinera", "turbo", "salto", "cenote", "lodo"];
+const ANTES = [...ORIGINALES, ...NUEVAS]; // karts-pistas-grandes: las que se escalaron (las de karts-copa-reinos nacen grandes)
 const ang = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
 // karts-pistas-grandes: largo (px) y radio mínimo (px) de cada pista ANTES del cambio (medidos con muestrearPista).
 const LARGO_ANTES: Record<string, number> = { pradera: 3989, desierto: 4221, hielo: 4255, volcan: 4418, tenochtitlan: 4121, teotihuacan: 4225, chichen: 4042, laventa: 4373 };
@@ -28,9 +30,10 @@ const radioMinimo = (M: any) => {
   return radio;
 };
 
-Deno.test("karts-pistas: 8 pistas con id único, nombre, descripción corta, tema y escenario", () => {
+Deno.test("karts-pistas: pistas con id único, nombre, descripción corta, tema y escenario", () => {
   const ids = KP.PISTAS.map((p: any) => p.id);
-  assertEquals(ids, [...ORIGINALES, ...NUEVAS]);
+  assertEquals(ids.slice(0, 12), [...ORIGINALES, ...NUEVAS, ...REINOS]); // karts-copa-reinos: + 4
+  assertEquals(new Set(ids).size, ids.length, "ids únicos");
   for (const p of KP.PISTAS) {
     assert(p.nombre && p.emoji, p.id + " sin nombre o emoji");
     assert(typeof p.desc === "string" && p.desc.length >= 15 && p.desc.length <= 80, p.id + " descripción de 15 a 80 caracteres");
@@ -46,8 +49,7 @@ Deno.test("karts-pistas: cada trazado es cerrado, cabe en el mapa y no se cruza 
     const M = A.muestrearPista(p), pts = M.pts, n = pts.length;
     const cierre = Math.hypot(pts[n - 1].x - pts[0].x, pts[n - 1].y - pts[0].y);
     assert(cierre <= M.paso * 1.5, p.id + " cerrado (" + cierre.toFixed(1) + " px)");
-    const veces = M.largo / LARGO_ANTES[p.id];
-    assert(veces >= 2.7 && veces <= 3.3, p.id + " vuelta ≈ 3 veces más larga: " + veces.toFixed(2) + "×");
+    if (LARGO_ANTES[p.id]) { const veces = M.largo / LARGO_ANTES[p.id]; assert(veces >= 2.7 && veces <= 3.3, p.id + " vuelta ≈ 3 veces más larga: " + veces.toFixed(2) + "×"); }
     assert(pts.every((q: any) => q.x >= p.mitad + 90 && q.y >= p.mitad + 90), p.id + " deja orilla en el mapa");
     const W = Math.max(...pts.map((q: any) => q.x)) + 220, H = Math.max(...pts.map((q: any) => q.y)) + 220;
     assert(W * H <= 12.6e6, p.id + " textura del piso ≤ 12.6 M px: " + (W * H / 1e6).toFixed(1));
@@ -68,7 +70,7 @@ Deno.test("karts-pistas: las curvas se pueden tomar (radio mínimo ≥ el de ant
   for (const p of KP.PISTAS) {
     const M = A.muestrearPista(p), pts = M.pts, n = pts.length;
     const radio = radioMinimo(M);
-    assert(radio >= RADIO_ANTES[p.id] && radio >= 100, p.id + " radio mínimo " + Math.round(radio) + " px (antes " + RADIO_ANTES[p.id] + ")");
+    assert(radio >= (RADIO_ANTES[p.id] ?? 100) && radio >= 100, p.id + " radio mínimo " + Math.round(radio) + " px (antes " + RADIO_ANTES[p.id] + ")");
     const recta = Math.abs(ang(pts[8].a - pts[n - 8].a));
     assert(recta < 0.35, p.id + " meta en recta (" + recta.toFixed(2) + " rad)");
   }
@@ -128,6 +130,7 @@ Deno.test("karts-pistas: cada pista nueva tiene al menos una mecánica sobre el 
     assert(zc.some((z: any) => z.tipo === "cenote" && ((z.idx - s.idx + nc) % nc) > 0 && ((z.idx - s.idx + nc) % nc) <= 30), "salto con su cenote");
   }
   for (const id of ORIGINALES) assertEquals(A.pistaPorId(id).mecanicas || [], [], id + " sin mecánicas nuevas");
+  assertEquals(ANTES.length, 8);
 });
 
 Deno.test("karts-pistas: cada trajinera cruza su canal de orilla a orilla y es determinista", () => {
@@ -176,8 +179,8 @@ Deno.test("karts-pistas: el minimapa encuadra todo el trazado dentro del margen 
   }
 });
 
-Deno.test("karts-pistas: Copa Fiesta y Copa Mesoamericana con 4 pistas que existen", () => {
-  assertEquals(KP.COPAS.map((c: any) => c.id), ["fiesta", "mesoamerica"]);
+Deno.test("karts-pistas: cada copa con 4 pistas que existen (Fiesta, Mesoamericana, Reinos Antiguos…)", () => {
+  assertEquals(KP.COPAS.map((c: any) => c.id).slice(0, 3), ["fiesta", "mesoamerica", "reinos"]); // karts-copa-reinos
   assertEquals(KP.COPAS[0].pistas, ORIGINALES);
   assertEquals(KP.COPAS[1].pistas, ["laventa", "teotihuacan", "chichen", "tenochtitlan"]);
   for (const c of KP.COPAS) {
@@ -189,9 +192,9 @@ Deno.test("karts-pistas: Copa Fiesta y Copa Mesoamericana con 4 pistas que exist
 });
 
 // juegos-en-vivo: las salas (hasta 8 personas en vivo) ofrecen las 8 pistas, también las mesoamericanas.
-Deno.test("karts-pistas: las salas ofrecen las 8 pistas (igual que el servidor)", () => {
+Deno.test("karts-pistas: las salas ofrecen todas las pistas (igual que el servidor)", () => {
   assertEquals(A.PISTAS.map((p: any) => p.id), MAPAS_SALA.karts);
-  assertEquals(MAPAS_SALA.karts.length, 8);
+  assert(MAPAS_SALA.karts.length >= 12); // karts-copa-reinos: también las de Reinos Antiguos
   for (const id of NUEVAS) assert(MAPAS_SALA.karts.includes(id), id + " en salas");
   const azar = new Set<string>();
   for (let s = 0; s < 200; s++) { const m = A.mapaDeSala("karts", "semilla" + s); assert(MAPAS_SALA.karts.includes(m)); azar.add(m); }
