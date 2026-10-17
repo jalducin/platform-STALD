@@ -131,20 +131,22 @@ async function terminarTodos(pags, frames) {
 // máquina la medición sale contaminada (15–50 fps según la carga), así que aquí solo Marisol abre el navegador: las
 // otras 7 personas entran a la sala por la API y el relevo fabrica sus karts a 10 Hz recorriendo la pista. Marisol
 // recibe y dibuja lo mismo que en una sala real de 8.
-async function fpsAislado(b, relevo, correos) {
+// karts-copa-reinos: también dentro de un monumento (`adentro`: te pone a mitad del primer tramo interior y los otros 7
+// karts van alrededor de ti).
+async function fpsAislado(b, relevo, correos, mapa = 'pradera', adentro = false) {
   const m = await jugador(b, correos[0], relevo);
-  const codigo = await crearSala(m, 'pradera');
+  const codigo = await crearSala(m, mapa);
   for (const email of correos.slice(1)) await pedir(email, '/juegos/sala/' + codigo + '/unirse', {}); // NOSONAR: entran en orden
   const ids = (await (await fetch(API + '/juegos/sala/' + codigo + '?email=' + encodeURIComponent(correos[0]))).json()).jugadores.map(j => j.id).filter(id => id !== 'a-marisol');
   await m.waitForFunction(() => document.querySelectorAll('#p-body .rank li').length >= 8, null, { timeout: 30000 }).catch(() => {});
   await m.click('[data-p="empezar"]');
   const [fr] = await enCarrera([m]);
   const ruta = await fr.evaluate(() => window.__karts.ruta());
-  let seq = 0, n = 0;
+  let seq = 0, n = 0, base = 0;
   const iv = setInterval(() => {
     n++;
     ids.forEach((id, k) => {
-      const i = (n * 3 + k * 25) % ruta.length, [x, y, a] = ruta[i], lado = (k % 2 ? 1 : -1) * 20;
+      const L = ruta.length, i = (((base + n * 3 + k * (adentro ? 9 : 25)) % L) + L) % L, [x, y, a] = ruta[i], lado = (k % 2 ? 1 : -1) * 20;
       const d = [Math.round((x - Math.sin(a / 1000) * lado) * 10), Math.round((y + Math.cos(a / 1000) * lado) * 10), a, 180, 1, i, k === 0 ? 1 : 0, 0, 'xalli'];
       relevo.inyectar('sala-sim-' + codigo, { i: id, s: ++seq, t: Date.now(), e: 'k', d });
     });
@@ -157,6 +159,7 @@ async function fpsAislado(b, relevo, correos) {
     return xs[4];
   };
   await sleep(9000); // cuenta regresiva + 3 s de carrera
+  if (adentro) { await fr.evaluate(() => window.__karts.obstaculo('adentro:0')); base = (((await estado(fr)).avance % ruta.length) + ruta.length) % ruta.length - n * 3 - 20; }
   await fr.evaluate(() => window.__karts.piloto(true));
   await sleep(3000);
   const libre = await medianaFps();
@@ -165,14 +168,44 @@ async function fpsAislado(b, relevo, correos) {
   await sleep(1500);
   const lento = await medianaFps();
   const e = await estado(fr);
-  await m.screenshot({ path: 'karts-vivo-390-cpu4.png' });
+  await m.screenshot({ path: 'karts-vivo-390-cpu4' + (adentro ? '-' + mapa : '') + '.png' });
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   clearInterval(iv);
-  const visibles = e.remotos.filter(r => r.visible).length;
-  ok('fps sin límite con 8 karts en vivo ≥ 55', libre >= 55, 'fps=' + libre);
-  ok('fps con CPU ×4 y 8 karts en vivo ≥ 55 (meta 60)', lento >= 55 && visibles === 7, 'fps=' + lento + ' visibles=' + visibles);
+  const visibles = e.remotos.filter(r => r.visible).length, donde = adentro ? ' dentro de ' + mapa : '';
+  if (adentro) ok('fps' + donde + ': vas adentro del monumento', e.reinos.interior, JSON.stringify(e.reinos));
+  ok('fps sin límite con 8 karts en vivo' + donde + ' ≥ 55', libre >= 55, 'fps=' + libre);
+  ok('fps con CPU ×4 y 8 karts en vivo' + donde + ' ≥ 55 (meta 60)', lento >= 55 && visibles === 7, 'fps=' + lento + ' visibles=' + visibles);
   await m.context().close();
   return { libre, lento };
+}
+
+// karts-copa-reinos: sala de 2 en una pista nueva (Templo de Karnak): la pista llega a los dos aparatos con sus
+// interiores, el servidor espera el mínimo de ESA pista y el podio tiene los 2 tiempos.
+async function salaReinos(b, relevo) {
+  const pags = [await jugador(b, 'marisol@example.com', relevo), await jugador(b, 'angel@example.com', relevo, HORIZONTAL)];
+  await pags[0].click('[data-tab="partidas"]'); await pags[0].waitForSelector('#f-crear'); await pags[0].selectOption('#p-juego', 'karts');
+  const mapas = await pags[0].$$eval('#p-mapa option', os => os.map(o => o.value));
+  ok('sala: las 4 pistas de Reinos Antiguos en el selector de pista', ['giza', 'castillo', 'karnak', 'angkor'].every(id => mapas.includes(id)), mapas.join(','));
+  const codigo = await crearSala(pags[0], 'karnak');
+  await unirse(pags[1], codigo);
+  await pags[0].click('[data-p="empezar"]');
+  const frames = await enCarrera(pags);
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 500, null, { timeout: 30000 })));
+  await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
+  const es = await Promise.all(frames.map(estado));
+  ok('sala en Karnak: la misma pista con sus interiores en los 2 aparatos', es.every(e => e.pista === 'karnak' && e.sala && e.reinos.tramos === 2 && e.reinos.columnas >= 8), JSON.stringify(es.map(e => [e.pista, e.reinos])));
+  await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.obstaculo('adentro:0'))));
+  await sleep(1200);
+  await pags[0].screenshot({ path: 'karts-reinos-sala-karnak-390.png' });
+  await pags[1].screenshot({ path: 'karts-reinos-sala-karnak-844x390.png' });
+  const minMs = await frames[0].evaluate(() => window.Arcade.limitesKarts('karnak').minMs);
+  await Promise.all(frames.map(fr => fr.waitForFunction(ms => window.__karts.estado().tiempo > ms + 1500, minMs, { timeout: 90000 })));
+  for (const fr of frames) await fr.evaluate(() => window.__karts.adelantar()); // NOSONAR: uno por uno, como llegan
+  await pags[0].waitForSelector('#p-body .result', { timeout: 90000 });
+  await sleep(1500);
+  const filas = await pags[0].$$eval('.arcade-tiempos tbody tr', trs => trs.map(t => t.textContent));
+  ok('sala en Karnak: podio del servidor con los 2 tiempos (y los bots)', filas.filter(f => /\d:\d\d\.\d/.test(f)).length >= 2, filas.join(' | ').slice(0, 200));
+  for (const p of pags) await p.context().close();
 }
 
 async function desconexion(b, relevo) {
@@ -297,7 +330,9 @@ async function copaEnSala(b, relevo) {
   const [host] = pags;
   await host.click('[data-tab="partidas"]'); await host.waitForSelector('#f-crear');
   await host.selectOption('#p-juego', 'karts');
-  ok('copa: el formulario ofrece «Una carrera» y las copas completas', (await host.$$eval('#p-kformato option', os => os.map(o => o.value))).join(',') === 'carrera,copa:fiesta,copa:mesoamerica,copa:mixta');
+  // karts-copa-reinos: las copas salen de KartsPistas por dificultad (Fiesta, Mesoamericana, Reinos Antiguos…) y la mixta al final.
+  const formatos = await host.$$eval('#p-kformato option', os => os.map(o => o.value));
+  ok('copa: el formulario ofrece «Una carrera» y las copas completas por dificultad', formatos.slice(0, 4).join(',') === 'carrera,copa:fiesta,copa:mesoamerica,copa:reinos' && formatos[formatos.length - 1] === 'copa:mixta', formatos.join(','));
   await host.selectOption('#p-kformato', 'copa:fiesta');
   ok('copa: al elegir una copa se oculta el selector de pista', await host.isHidden('#p-mapa-wrap'));
   await host.screenshot({ path: 'karts-copa-crear.png', fullPage: true });
@@ -461,6 +496,8 @@ async function salidaYPodio(b, relevo) {
   await terminarTodos(pags, frames);
   for (const p of pags) await p.context().close();
   const fps = await fpsAislado(b, relevo, correos);
+  const fpsCastillo = await fpsAislado(b, relevo, correos, 'castillo', true); // karts-copa-reinos: 8 en vivo dentro del monumento
+  await salaReinos(b, relevo); // karts-copa-reinos
   await desconexion(b, relevo);
   await personajesEnSala(b, relevo); // personaje-en-salas
   await respaldo(b, relevo);
@@ -468,6 +505,6 @@ async function salidaYPodio(b, relevo) {
   await salidaYPodio(b, relevo); // karts-salida-y-puntos
   await b.close(); await relevo.cerrar();
   console.log(out.join('\n'));
-  console.log('RESUMEN fps(8 en vivo) libre=' + fps.libre + ' CPU×4=' + fps.lento + ' mensajes/s(sala de 8)=' + r.porSeg.toFixed(1));
+  console.log('RESUMEN fps(8 en vivo) libre=' + fps.libre + ' CPU×4=' + fps.lento + ' · dentro de El Castillo libre=' + fpsCastillo.libre + ' CPU×4=' + fpsCastillo.lento + ' mensajes/s(sala de 8)=' + r.porSeg.toFixed(1));
   process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 600)); process.exit(2); });

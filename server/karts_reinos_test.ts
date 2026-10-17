@@ -93,12 +93,8 @@ Deno.test("karts-reinos: bloques, roca y compuertas son deterministas, periódic
   const z = { periodo: 4, desfase: 0.5 };
   for (const t of [0, 0.7, 1.9, 3.3]) assertAlmostEquals(KP.alturaBloque(z, t), KP.alturaBloque(z, t + 8), 1e-9);
   // El aviso (el bloque baja y su sombra crece) empieza al menos 0.9 s antes del peligro.
-  let aviso = -1, peligro = -1;
-  for (let t = 0; t < 8; t += 0.01) {
-    const h = KP.alturaBloque(z, t);
-    if (aviso < 0 && h < KP.ALTO_BLOQUE - 0.01) aviso = t;
-    if (aviso >= 0 && peligro < 0 && KP.bloquePeligro(z, t)) { peligro = t; break; }
-  }
+  const primero = (desde: number, cumple: (t: number) => boolean) => { for (let t = desde; t < desde + 8; t += 0.01) if (cumple(t)) return t; return -1; };
+  const aviso = primero(0, (t) => KP.alturaBloque(z, t) < KP.ALTO_BLOQUE - 0.01), peligro = primero(aviso, (t) => KP.bloquePeligro(z, t));
   assert(aviso >= 0 && peligro - aviso >= 0.9, "aviso de " + (peligro - aviso).toFixed(2) + " s");
   let enPeligro = 0;
   for (let t = 0; t < 4; t += 0.01) if (KP.bloquePeligro(z, t)) enPeligro += 0.01;
@@ -109,12 +105,8 @@ Deno.test("karts-reinos: bloques, roca y compuertas son deterministas, periódic
   assert(Math.max(...lados) > 19 && Math.min(...lados) < -19 && Math.max(...lados.map(Math.abs)) <= 20, "la roca va de un lado al otro sin pasar su recorrido");
   assertAlmostEquals(KP.ladoRoca(roca, 1.1), KP.ladoRoca(roca, 1.1 + 6.8), 1e-9);
   const comp = { periodo: 4, w: 42 };
-  let abierto = true;
-  for (let t = 0; t < 4; t += 0.02) {
-    const c = KP.centroCompuerta(comp, t);
-    if (Math.abs(c) > 21 + 1e-9) abierto = false; // la losa (medio ancho) nunca tapa más que medio camino
-  }
-  assert(abierto, "siempre queda medio camino libre");
+  const centros = Array.from({ length: 200 }, (_, k) => KP.centroCompuerta(comp, k * 0.02));
+  assert(centros.every((c) => Math.abs(c) <= 21 + 1e-9), "siempre queda medio camino libre (la losa tapa medio ancho)");
   assertEquals([KP.centroCompuerta(comp, 0.5), KP.centroCompuerta(comp, 2.5)], [-21, 21]);
 });
 

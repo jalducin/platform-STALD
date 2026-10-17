@@ -132,7 +132,7 @@
       fijos: [{ img: 'naga', w: 26, h: 20, desde: [1900, 2330], hasta: [1900, 1960], cada: 12, lado: 1.25 }, { img: 'pilar', w: 14, h: 46, desde: [1500, 1705], hasta: [2900, 1720], cada: 9, lado: 1.0, solo: 1 }],
       adornos: [{ img: 'torreAngkor', x: 1900, y: 1060, w: 110, h: 170 }, { img: 'torreAngkor', x: 1350, y: 800, w: 70, h: 110 }, { img: 'torreAngkor', x: 2450, y: 800, w: 70, h: 110 }, { img: 'torreAngkor', x: 1350, y: 1330, w: 70, h: 110 }, { img: 'torreAngkor', x: 2450, y: 1330, w: 70, h: 110 }],
       foso: true,
-      interiores: [{ nombre: 'Galería de los bajorrelieves', desde: [1600, 1705], hasta: [2850, 1720], ancho: 0.9, muro: -1 }],
+      interiores: [{ nombre: 'Galería de los bajorrelieves', desde: [1600, 1705], hasta: [2850, 1720], ancho: 0.9, muro: -1, techo: false }],
       mecanicas: [{ tipo: 'bloques', cerca: [410, 1200], lado: 0.3, r: 24, periodo: 3.8, desfase: 0.4 }, { tipo: 'roca', cerca: [1700, 422], r: 20, periodo: 3.4, amplitud: 0.5 },
         { tipo: 'roca', cerca: [2600, 425], r: 20, periodo: 3.9, amplitud: 0.5 }, { tipo: 'bloques', cerca: [3450, 1000], lado: -0.3, r: 24, periodo: 4.1, desfase: 1.6 },
         { tipo: 'lodo', cerca: [3400, 2300], lado: 0.3, r: 40 }, { tipo: 'lodo', cerca: [2600, 2620], lado: -0.3, r: 40 }],
