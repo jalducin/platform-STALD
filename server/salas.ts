@@ -15,6 +15,7 @@ import * as Futbolito from "./futbolito.ts"; // futbolito-equipos: formato, equi
 import * as FutbolLinea from "./futbol_linea.ts"; // futbol-en-linea: táctica del asiento y resultado validado
 import { esPersonaje } from "./personajes.ts"; // personaje-en-salas: misma lista que juegos/personajes.js
 import * as Copa from "./karts_copa.ts"; // karts-copa-en-sala: copa completa de Karts (reglas en juegos/karts-copa.js)
+import * as Arena from "./arena.ts"; // futbolito-arena: equipos, robot y resultado (reglas en juegos/arena-motor.js)
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -30,6 +31,7 @@ export const JUEGOS_PARTIDA = new Set([
   "futbolito", "billar", // futbolito-billar: física 1 vs 1 por tiros
   "golf", // golf: minigolf de 2 a 4 personas por turnos
   "futbol", // futbol-en-linea: Fútbol Estelar 1 vs 1 en vivo (anfitrión autoritativo por el canal en vivo)
+  Arena.JUEGO_ARENA, // futbolito-arena: robots por equipos en vivo (1v1, 1v2, 2v2 y 3v3)
 ]);
 // Tema de Completa y responde (openspec: juegos-ingles-gramatica); igual que TEMAS en juegos/ingles-gramatica.js.
 const TEMAS_INGLES = ["todo", "tobe", "presente", "pasado", "futuro"];
@@ -150,6 +152,8 @@ export const MESAS: Record<string, Mesa> = {
   golf: { max: 4, min: 2, bots: "nunca" }, // golf: de 2 a 4 personas por turnos, sin bots (design.md §4)
   karts: { max: 8, asientos: 3, min: 1 }, // juegos-en-vivo: hasta 8 en vivo; con bots, 1 persona + 2 bots como antes
   futbol: { max: 2, min: 2, bots: "nunca" }, // futbol-en-linea: 1 vs 1 en vivo, solo personas
+  // futbolito-arena: 2 vs 2 por omisión; cada persona que entra quita un bot
+  "futbolito-arena": { max: 4, asientos: 4, min: 2, formatos: { "1v1": { max: 2, asientos: 2, min: 2 }, "1v2": { max: 3, asientos: 3, min: 2 }, "2v2": { max: 4, asientos: 4, min: 2 }, "3v3": { max: 6, asientos: 6, min: 2 } } },
 };
 const FISICA = new Set(["futbolito", "billar", "golf"]); // futbolito-billar y golf: no aceptan jugadas tras el final
 // futbolito-equipos: la mesa puede cambiar según `opciones.formato` (Futbolito 2v2).
@@ -211,6 +215,8 @@ interface EnSala extends Grandes.JugadorGrande { // juegos-salas-grandes: bingo,
   personaje?: string; // personaje-en-salas: personaje de Karts o Axo elegido en la sala de espera
   futbol?: FutbolLinea.ReporteFutbol & { t: number }; // futbol-en-linea: resultado que vio (solo el primero)
   copa?: Copa.ReporteCopa[]; // karts-copa-en-sala: resultado de cada carrera de la copa (solo el primero de cada una)
+  robot?: number; // futbolito-arena: color del robot pedido en la sala de espera (0–2)
+  arena?: Arena.ReporteArena & { t: number }; // futbolito-arena: resultado que vio (solo el primero)
   v?: number; // versión: sube en cada guardado; la página descarta avisos de Realtime más viejos (openspec: salas-realtime)
 }
 
@@ -390,6 +396,11 @@ function opcionesNuevaSala(juego: string, op: Record<string, unknown>): Record<s
     if (!f) return "formato_invalido";
     opciones.formato = f;
   }
+  if (Arena.esArena(juego)) { // futbolito-arena: formato, arena y goles
+    const o = Arena.opcionesArena(op);
+    if (typeof o === "string") return o;
+    Object.assign(opciones, o);
+  }
   if (juego === "cultura-linea") { // cultura-conocimiento: el tema de la Línea del tiempo va en opciones.cat
     if (op.cat !== undefined && !TEMAS_LINEA.includes(op.cat as string)) return "tema_invalido";
     opciones.cat = (op.cat as string) ?? "todos";
@@ -429,11 +440,17 @@ async function crearSala(body: Record<string, unknown>, jugador: Jugador, store:
   return json({ codigo, sala: sinCanal(sala) });
 }
 
+// futbolito-equipos y futbolito-arena: equipo pedido en la sala de espera (cada juego con su regla).
+function equipoPedido(c: CtxSala) {
+  const { body, jugador, sala, jugadores } = c;
+  if (Arena.esArena(sala.juego)) return Arena.validarEquipoArena(sala, jugadores, jugador.id, body.equipo); // futbolito-arena
+  return Futbolito.validarEquipo(sala.opciones?.formato, sala.inicio !== null, jugadores, jugador.id, body.equipo);
+}
 // POST /juegos/sala/<código>/unirse
 async function unirseSala(c: CtxSala): Promise<Response> {
   const { body, jugador, store, ahora, json, codigo, sala, jugadores, dentro, publicar } = c;
   // futbolito-equipos: { equipo } guarda la preferencia de equipo (también para quien ya está dentro).
-  const equipo = body.equipo === undefined ? undefined : Futbolito.validarEquipo(sala.opciones?.formato, sala.inicio !== null, jugadores, jugador.id, body.equipo);
+  const equipo = body.equipo === undefined ? undefined : equipoPedido(c);
   if (equipo !== undefined && typeof equipo === "object") return json({ error: equipo.error }, equipo.status);
   const soloAsiento = cambioDeAsiento(c); // futbol-en-linea y personaje-en-salas: táctica o personaje del asiento
   if (soloAsiento) return soloAsiento;
@@ -467,7 +484,19 @@ function cambioDeAsiento(c: CtxSala): Promise<Response> | null {
     const tactica = tacticaDeAsiento(sala, body.tactica);
     return "error" in tactica ? Promise.resolve(json({ error: tactica.error }, tactica.status)) : guardarTactica(c, tactica);
   }
+  if (body.robot !== undefined) return guardarRobot(c, body.robot); // futbolito-arena
   return body.personaje === undefined ? null : guardarPersonaje(c, body.personaje);
+}
+// futbolito-arena: { robot } en /unirse guarda el color del robot del asiento (antes de empezar).
+async function guardarRobot(c: CtxSala, crudo: unknown): Promise<Response> {
+  const { jugador, store, ahora, json, codigo, sala, jugadores, dentro, publicar } = c;
+  if (!Arena.esArena(sala.juego) || !Arena.validarRobot(crudo)) return json({ error: "robot_invalido" }, 400);
+  if (sala.inicio !== null) return json({ error: "ya_empezo" }, 409);
+  if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
+  const robot = crudo as number;
+  if (!(await guardarJugador(store, codigo, jugador, (e) => ({ ...e, robot }), ahora))) return json({ error: "conflicto_escritura" }, 503);
+  await publicar();
+  return json({ ok: true, codigo, robot });
 }
 // personaje-en-salas: { personaje } en /unirse guarda el personaje del asiento (solo en salas de Karts o Axo, antes de
 // empezar). Como la táctica: quien no está dentro entra con él si hay lugar.
@@ -607,6 +636,11 @@ function cambioDeRespuesta(c: CtxSala, inicio: number, deGrande: CambioJugador |
   }
   if (body.jugada !== undefined) return cambioDeJugada(c);
   if (body.futbol !== undefined) return cambioDeFutbol(c, inicio); // futbol-en-linea
+  if (body.arena !== undefined) { // futbolito-arena: el primer reporte de cada quien, si es plausible
+    const r = Arena.esArena(sala.juego) ? Arena.validarReporte(sala, body.arena, inicio, ahora) : null;
+    if (!r) return json({ error: "resultado_invalido" }, 400);
+    return (e: EnSala) => e.arena ? e : { ...e, arena: { ...r, t: ahora } };
+  }
   if (body.copa !== undefined) { // karts-copa-en-sala: resultado de la carrera en curso de la copa
     const r = Copa.reporteCopa(sala, jugadores, body.copa, ahora);
     return "error" in r ? json({ error: r.error }, r.status) : r.cambiar;
@@ -644,6 +678,7 @@ async function responderSala(c: CtxSala): Promise<Response> {
   return json({ ok: true, respuestas: nuevo.respuestas, palabras: nuevo.palabras, basta: nuevo.basta, rondasBasta: nuevo.rondasBasta, loteria: nuevo.loteria, jugadas: nuevo.jugadas, unas: nuevo.unas,
     ...(grande ? { ...grande.respuesta, bingo: nuevo.bingo, resultado: nuevo.resultado } : {}), // juegos-salas-grandes
     ...vistaFutbol(sala, jugadores.map((x) => x.id === jugador.id ? nuevo : x)), // futbol-en-linea
+    ...Arena.vistaArena(sala, jugadores.map((x) => x.id === jugador.id ? nuevo : x)), // futbolito-arena
     ...Copa.vistaCopa(sala, jugadores.map((x) => x.id === jugador.id ? nuevo : x), ahora) }); // karts-copa-en-sala
 }
 
@@ -677,7 +712,7 @@ function verSala(c: CtxSala, rt?: ConfigRealtime): Response {
   // karts-salida-y-puntos: `reloj` = hora del servidor al responder (`ahora` es la de cuando empezó a atender); con las
   // dos, la página acota su desfase sin el tiempo de procesamiento (juegos/reloj-sala.js).
   return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, reloj: Date.now(), yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
-    ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora), ...vistaFutbol(sala, jugadores), ...Copa.vistaCopa(sala, jugadores, ahora) }); // karts-copa-en-sala // futbol-en-linea // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
+    ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora), ...vistaFutbol(sala, jugadores), ...Arena.vistaArena(sala, jugadores) /* futbolito-arena */, ...Copa.vistaCopa(sala, jugadores, ahora) }); // karts-copa-en-sala // futbol-en-linea // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
 }
 
 export async function handleSalas(req: Request, sub: string, jugador: Jugador, store: Store, ahoraIso: string, json: Json, lunes: string, rt?: ConfigRealtime): Promise<Response> {

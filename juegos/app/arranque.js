@@ -66,6 +66,7 @@ app.addEventListener('click', e => {
     if (pa && pa.dataset.p === 'revancha') return revanchaDesdePodio();
     if (pa && pa.dataset.p === 'equipo') return cambiarEquipoFutbolito(pa); // futbolito-equipos
     if (pa?.dataset.p === 'fut-form') return cambiarTacticaFutbol(pa); // futbol-en-linea
+    if (pa?.dataset.p === 'arena-equipo' || pa?.dataset.p === 'arena-robot') return cambiarAsientoArena(pa); // futbolito-arena
     if (pa?.dataset.p === 'personaje') return elegirPersonajeSala(pa); // personaje-en-salas
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok) { pa.disabled = false; alert(r.body.error === 'faltan_jugadores' ? (TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.') /* juegos-tablero */ : 'No se pudo empezar la partida, intenta de nuevo.' /* errores-latentes */); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     return NO_ATENDIDO;
@@ -119,6 +120,7 @@ app.addEventListener('change', e => { if (e.target.id === 'p-kformato') { docume
   TableroUI.alCambiarJuego(e.target.value); } }); // juegos-tablero
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') SalasGrandes.formulario(e.target.value); }); // juegos-salas-grandes
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-formato-wrap').hidden = e.target.value !== 'futbolito'; }); // futbolito-equipos
+app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-aformato-wrap').hidden = e.target.value !== 'futbolito-arena'; }); // futbolito-arena
 // cultura-conocimiento: el tema de la Línea del tiempo solo se ve al elegirla.
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-ltema-wrap').hidden = e.target.value !== 'cultura-linea'; });
 app.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.futtac) cambiarTacticaFutbol(e.target); }); // futbol-en-linea: deslizadores de la táctica

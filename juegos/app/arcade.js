@@ -72,7 +72,7 @@ function jugarDragonRun() {
 // El juego no habla con el servidor: esta página le pasa el avance (GET /juegos/progreso/<id>), guarda lo que manda
 // (PUT con la versión `v`, una escritura a la vez y gana la última) y registra los puntos de cada nivel o carrera.
 const marcoArcade = (src, titulo) => '<div class="arcade-caja"><iframe id="arcade-frame" src="' + src + '" title="' + escapeHtml(titulo) + '" allow="autoplay; accelerometer; gyroscope"></iframe></div>';
-const SIN_AVANCE = new Set(['futbolito', 'billar']); // futbolito-billar: juegos de Arcade sin avance guardado
+const SIN_AVANCE = new Set(['futbolito', 'billar', 'futbolito-arena']); // futbolito-billar y futbolito-arena: juegos de Arcade sin avance guardado
 const srcArcade = (id, extra) => 'juegos/' + id + '.html' + (new URLSearchParams(location.search).get('arcadePrueba') === '1' ? '?prueba=1' : '') + (extra || '');
 // futbol-en-linea: `param` extra para el juego (modo=clasif abre la Clasificatoria semanal de Fútbol Estelar).
 const conParam = (id, param) => {
@@ -482,6 +482,7 @@ function notaFutbol() {
 // Podio ya pintado: revancha de siempre y, en Fútbol, la nota del resultado al día.
 function finalSala(s) {
   if (s.juego === 'futbol') notaFutbol();
+  if (s.juego === 'futbolito-arena') notaArena(); // futbolito-arena
   return pintarRevancha();
 }
 // ¿El partido ya terminó para esta persona? (ya reportó, o su rival lo reportó hace rato).
@@ -524,6 +525,93 @@ function pintarFutbolSala(body) { // futbol-en-linea
       window.removeEventListener('message', alMensaje);
       limpiar(); pantallaHub(); jugarArcade('futbol', 'modo=clasif');
     }
+  };
+  window.addEventListener('message', alMensaje);
+  limpiezas.push(() => window.removeEventListener('message', alMensaje));
+}
+
+// ---- Futbolito Arena por equipos (openspec: futbolito-arena) ----
+// Sala de espera: los dos equipos con el mismo reparto que el juego y el servidor (ArenaMotor.repartir), «Cambiar de
+// equipo» y el color del robot. El partido se juega en el iframe: con una sola persona (el resto bots) simula su
+// aparato; con más, el anfitrión simula y los demás mandan su entrada por el canal en vivo (juegos/arena-red.js). Al
+// final la página manda al servidor el resultado que vio y pinta el podio con los puntos que devuelve el servidor.
+const repartoArena = lista => ArenaMotor.repartir(lista.map(x => ({ id: x.id, bot: !!x.bot, ...(x.equipo === 0 || x.equipo === 1 ? { equipo: x.equipo } : {}), ...(Number.isInteger(x.robot) ? { robot: x.robot } : {}) })), sala.estado.sala.opciones.formato || '2v2');
+const puntoColor = (eq, c) => '<span aria-hidden="true" style="display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;background:' + ArenaMotor.COLORES[eq][c] + ';border:2px solid #fff;box-shadow:0 0 0 1px #0003"></span>';
+function botonesRobot(eq, actual) {
+  return ArenaMotor.COLORES[eq].map((_, k) => '<button class="btn ghost sm" data-p="arena-robot" data-v="' + k + '" aria-label="Robot ' + ArenaMotor.NOMBRES_COLOR[eq][k] + '" aria-pressed="' + (actual === k) + '" style="min-width:44px;min-height:40px;flex:0 0 auto' + (actual === k ? ';outline:2px solid currentColor' : '') + '">' + puntoColor(eq, k) + '</button>').join('');
+}
+function equiposArena(lista) {
+  const e = sala.estado;
+  if (e.sala.juego !== 'futbolito-arena' || !window.ArenaMotor || !lista.length) return '';
+  const rep = repartoArena(lista), yo = lista.findIndex(x => x.id === e.yo), o = e.sala.opciones;
+  const fila = (x, i) => '<div data-eq="' + rep[i].eq + '" style="margin-top:4px">' + puntoColor(rep[i].eq, rep[i].color) + ' <b>' + rep[i].num + '</b> ' + escapeHtml(x.nombre) + (x.bot ? ' 🤖' : '') + (i === yo ? ' <small>(tú)</small>' : '') + '</div>';
+  const col = eq => '<div style="flex:1;min-width:140px"><b>' + ArenaMotor.EQUIPOS[eq].emoji + ' Equipo ' + ArenaMotor.EQUIPOS[eq].nombre + '</b>' + lista.map((x, i) => (rep[i].eq === eq ? fila(x, i) : '')).join('') + '</div>';
+  const mio = yo < 0 ? '' : '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="arena-equipo" data-v="' + (1 - rep[yo].eq) + '">🔁 Cambiar de equipo</button></div>' +
+    '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px"><span class="muted">🤖 Tu robot:</span>' + botonesRobot(rep[yo].eq, rep[yo].color) + '</div>';
+  return '<div class="card" id="p-equipos-arena" style="margin-bottom:10px"><div class="muted" style="font-size:.85rem;margin-bottom:4px">⚽ ' + escapeHtml(o.formato || '2v2') + ' · arena ' + (o.arena === 'grande' ? 'grande' : 'normal') + ' · a ' + escapeHtml(o.goles || '5') + ' goles o 3 min</div>' +
+    '<div style="display:flex;gap:10px;flex-wrap:wrap">' + col(0) + col(1) + '</div>' + mio + '<div class="muted" id="p-arena-msg" style="font-size:.8rem;min-height:1.1em"></div></div>';
+}
+async function cambiarAsientoArena(btn) { // futbolito-arena: equipo o color del robot
+  btn.disabled = true;
+  const campo = btn.dataset.p === 'arena-equipo' ? 'equipo' : 'robot';
+  const r = await post('/juegos/sala/' + sala.codigo + '/unirse', { [campo]: Number(btn.dataset.v) });
+  await traerSala(); sala.vista = null; pintarSala();
+  if (!r.ok) { const m = document.getElementById('p-arena-msg'); if (m) m.textContent = r.body.error === 'equipo_lleno' ? '👥 Ese equipo ya está completo.' : 'No se pudo cambiar (' + (r.body.error || r.status) + ').'; }
+}
+const NOTA_ARENA = { confirmado: '✔ Resultado confirmado por los aparatos de la sala.', disputa: '⚠️ Los aparatos no coincidieron: cuenta el marcador del anfitrión.', anfitrion: '⏳ Resultado del anfitrión (falta que lo confirmen).', invitado: '📡 El anfitrión perdió la conexión: cuenta el marcador que vieron los demás.', pendiente: '⏳ Esperando el resultado.' };
+// Podio: personas con los puntos del servidor; los bots con la misma regla (solo para mostrarse, no suman).
+function podioArena(res, mesa, rep) {
+  const e = sala.estado, g = res && res.goles ? res.goles : [0, 0], puntos = (res && res.puntos) || {};
+  const total = (p, i) => (p.bot ? ArenaMotor.puntosEquipo(g[rep[i].eq], g[1 - rep[i].eq]) : puntos[p.id]);
+  const filas = mesa.map((p, i) => ({ id: p.id, nombre: p.nombre, tipo: p.bot ? 'bot' : p.tipo, avatar: p.avatar, total: Math.max(0, Math.min(1000, Math.round(Number(total(p, i)) || 0))), ultimo: 0 })).sort((a, b) => b.total - a.total);
+  const yo = mesa.findIndex(p => p.id === e.yo);
+  sala.finAciertos = yo >= 0 ? g[rep[yo].eq] : 0; sala.finTotal = 0;
+  pintarFinalSala(document.getElementById('p-body'), filas, null, '⚽ 🌊 Mar ' + g[0] + ' – ' + g[1] + ' Sol 🔥');
+  const card = document.querySelector('#p-body .result');
+  if (card) card.insertAdjacentHTML('beforeend', '<div class="muted" id="p-arena-nota" style="margin-top:6px">' + escapeHtml(NOTA_ARENA[(res && res.estado) || 'pendiente'] || '') + '</div>');
+}
+function notaArena() {
+  const n = document.getElementById('p-arena-nota'), res = sala.estado.arena;
+  if (n && res && NOTA_ARENA[res.estado] && !/No se pudo/.test(n.textContent)) n.textContent = NOTA_ARENA[res.estado];
+}
+function arenaTerminada(e) {
+  const mio = (e.jugadores.find(x => x.id === e.yo) || {}).arena;
+  return !!mio || (!!e.arena && e.arena.estado !== 'pendiente' && ahoraServidor() - e.sala.inicio > 30000);
+}
+function inicioArena(mesa, rep, vivo) {
+  const e = sala.estado, s = e.sala;
+  return {
+    tipo: 'inicio', modo: 'sala', rol: e.yo === s.host ? 'anfitrion' : 'invitado', anfitrion: s.host, yo: { id: e.yo, nombre: (mesa.find(p => p.id === e.yo) || {}).nombre || '' },
+    asientos: mesa.map((p, i) => ({ id: p.id, nombre: p.nombre, bot: !!p.bot, eq: rep[i].eq, color: rep[i].color, num: rep[i].num })),
+    seed: s.seed, vivo, formato: s.opciones.formato || '2v2', arena: s.opciones.arena || 'normal', goles: s.opciones.goles || '5',
+  };
+}
+function pintarArenaSala(body) { // futbolito-arena
+  const e = sala.estado;
+  document.getElementById('m-bar').hidden = true;
+  if (sala.vista === 'arena') return;
+  const mesa = participantes(), rep = repartoArena(mesa);
+  if (arenaTerminada(e)) return podioArena(e.arena, mesa, rep);
+  sala.vista = 'arena';
+  body.innerHTML = marcoArcade(srcArcade('futbolito-arena'), juegoPorId('futbolito-arena').t);
+  const frame = document.getElementById('arcade-frame');
+  if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' });
+  const aJuego = mensajeA(frame), personas = mesa.filter(p => !p.bot).map(p => p.id);
+  const vivo = !!sala.vivoTr && !!window.EnVivo && personas.length > 1;
+  if (vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'futbolito-arena', transporte: sala.vivoTr, permitido: id => personas.includes(id) }); limpiezas.push(() => pt.cerrar()); }
+  const finSala = async d => {
+    const goles = Array.isArray(d.goles) ? d.goles.slice(0, 2).map(x => Math.max(0, Math.round(Number(x) || 0))) : [0, 0];
+    const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { arena: { goles, ms: Math.max(0, Math.round(Number(d.ms) || 0)), ...(d.corte ? { corte: true } : {}) } });
+    await traerSala();
+    podioArena((r.ok && r.body.arena) || sala.estado.arena, mesa, rep);
+    if (!r.ok) { const n = document.getElementById('p-arena-nota'); if (n) n.textContent = 'No se pudo registrar tu resultado (' + (r.body.error || r.status) + ').'; }
+  };
+  const alMensaje = ev => {
+    const d = ev.data || {};
+    if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'futbolito-arena') return;
+    if (d.tipo === 'listo') aJuego(inicioArena(mesa, rep, vivo));
+    else if (d.tipo === 'fin-sala') { window.removeEventListener('message', alMensaje); finSala(d); }
+    else if (d.tipo === 'ir-solo') { window.removeEventListener('message', alMensaje); limpiar(); pantallaHub(); jugarArcade('futbolito-arena'); }
   };
   window.addEventListener('message', alMensaje);
   limpiezas.push(() => window.removeEventListener('message', alMensaje));
