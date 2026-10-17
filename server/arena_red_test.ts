@@ -56,7 +56,8 @@ Deno.test("arena-red: la entrada pesa < 50 B y cuenta las presiones (un toque pe
 // Partido en red: el anfitrión (robot 0) y los invitados (el resto de las personas) corren cada uno su página; las
 // personas mueven su robot hacia el balón que ven y aprietan A de vez en cuando. Se compara lo que dibuja cada invitado
 // con lo que el anfitrión simuló.
-async function partidoEnRed(formato: string, red: { latencia: number; perdida: number; desorden: number }, semilla: string, extra: (k: number, x: any) => void = () => {}) {
+// `desfase`: el reloj de las páginas de los invitados no es el del canal (performance.now contra Date.now).
+async function partidoEnRed(formato: string, red: { latencia: number; perdida: number; desorden: number }, semilla: string, extra: (k: number, x: any) => void = () => {}, desfase = 0) {
   let reloj = 0;
   const ahora = () => reloj;
   const p0 = partido(formato, semilla);
@@ -65,7 +66,7 @@ async function partidoEnRed(formato: string, red: { latencia: number; perdida: n
   const { red: rs, cs } = await canales(ids, { ...red, ahora, hz: (id) => (id === "p0" ? R.HZ_FOTO : hzEnt) });
   const anf = R.anfitrion({ canal: cs[0], p: p0, M, ids, yo: 0, ahora });
   const pis = ids.slice(1).map(() => partido(formato, semilla));
-  const invs = pis.map((p: any, k: number) => R.invitado({ canal: cs[k + 1], p, M, anfitrion: "p0", yo: k + 1, ahora, hz: hzEnt }));
+  const invs = pis.map((p: any, k: number) => R.invitado({ canal: cs[k + 1], p, M, anfitrion: "p0", yo: k + 1, ahora: () => ahora() + desfase, hz: hzEnt }));
   const persona = (p: any, i: number, k: number) => {
     const r = p.robots[i], dx = p.balon.x - r.x, dy = p.balon.y - r.y, d = Math.hypot(dx, dy) || 1;
     return { x: dx / d, y: dy / d, a: k % 50 < 3 && d < 2, b: false };
@@ -107,7 +108,7 @@ async function partidoEnRed(formato: string, red: { latencia: number; perdida: n
 }
 
 Deno.test("arena-red: 2 vs 2 con 120 ms, 8 % de pérdida y desorden: mismo marcador, A llega y dibujo cercano", async () => {
-  const r = await partidoEnRed("2v2", { latencia: 120, perdida: 0.08, desorden: 0.2 }, "red-2v2");
+  const r = await partidoEnRed("2v2", { latencia: 120, perdida: 0.08, desorden: 0.2 }, "red-2v2", () => {}, -1_700_000_000_000);
   console.log("2v2 120 ms:", { seg: r.seg.toFixed(0), goles: r.p0.goles, propio: r.p90Propio.toFixed(2), mediana: r.medPropio.toFixed(2), otros: r.p90Otros.toFixed(2), muestras: r.muestras, envios: r.envios.map((x: number) => x.toFixed(1)) });
   assertEquals(r.p0.estado, "fin");
   for (const p of r.pis) assertEquals([p.goles, p.estado], [r.p0.goles, "fin"], "mismo marcador y final en cada invitado");

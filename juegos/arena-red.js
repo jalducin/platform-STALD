@@ -72,17 +72,18 @@
     const st = { ent: Array(n).fill(null), s: Array(n).fill(-1), na: Array(n).fill(null), nb: Array(n).fill(null), pendA: Array(n).fill(false), pendB: Array(n).fill(false),
       ultimo: Array(n).fill(ahora()), ia: new Set(), q: 0, ultimoEnvio: -Infinity, eventos: [], nEv: 0, t0: ahora(), ultimaFoto: null };
     const persona = i => i !== yo && !!ids[i];
+    const locales = []; // avisos que también ve el anfitrión (desconexión y regreso)
     const evento = (tipo, extra) => st.eventos.push({ n: ++st.nEv, q: st.q + 1, tipo, ...extra });
     function caer(i) {
       if (!persona(i) || st.ia.has(i)) return;
       st.ia.add(i); st.ent[i] = null;
-      evento('desconexion', { i });
+      evento('desconexion', { i }); locales.push({ tipo: 'desconexion', i });
     }
     canal.al('fa:entrada', (m, meta) => {
       const i = meta && meta.de !== undefined ? ids.indexOf(meta.de) : -1;
       if (i < 0 || !persona(i)) return;
       st.ultimo[i] = ahora();
-      if (st.ia.has(i)) { st.ia.delete(i); evento('regreso', { i }); }
+      if (st.ia.has(i)) { st.ia.delete(i); evento('regreso', { i }); locales.push({ tipo: 'regreso', i }); }
       if (!m || !(m.s > st.s[i])) return; // viejas o repetidas
       st.s[i] = m.s;
       const e = leerEntrada(m);
@@ -105,7 +106,7 @@
       paso(local) {
         const ev = M.paso(p, p.robots.map((_, i) => entradaDe(i, local)));
         for (const e of ev) if (EVENTOS_RED.has(e.tipo)) evento(e.tipo, { eq: e.eq, i: e.i, marcador: e.marcador, ganador: e.ganador, primero: e.primero || undefined });
-        return ev;
+        return locales.length ? ev.concat(locales.splice(0)) : ev;
       },
       // Foto a 15 Hz (o ya, con `forzar`) con los eventos de las últimas 3 fotos (por si se pierde alguna).
       enviarSiToca(forzar) {
@@ -151,7 +152,9 @@
       const s = leerFoto(f);
       if (!s || s.robots.length !== n) return;
       st.ultimoMsg = ahora(); st.caido = null; st.recibidas++;
-      const t = meta && Number.isFinite(meta.tLocal) ? meta.tLocal : ahora();
+      // Hora de la foto en el reloj de `ahora`: llegada menos el retraso extra que estimó el canal (meta.edad). El reloj
+      // del canal puede ser otro (Date.now) que el de la página (performance.now): solo se usa la diferencia.
+      const t = ahora() - (meta && Number.isFinite(meta.edad) ? Math.max(0, meta.edad) : 0);
       interp.agregar(t, vector(s));
       for (const e of s.ev) if (!st.vistos.has(e.n)) { st.vistos.add(e.n); st.pendientes.push({ ...e, t }); }
       if (!st.ultima || s.q > st.ultima.q) { st.ultima = s; reconciliar(s); }
