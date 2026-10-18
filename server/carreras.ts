@@ -6,6 +6,7 @@
 import "../juegos/karts-pistas.js";
 import "../juegos/arcade.js";
 import "../juegos/mesas.js"; // karts-salida-y-puntos: cuántos bots completan la sala (igual que la página)
+import "../juegos/karts-copa.js"; // karts-copa-sala-4: cierre de la carrera (plazo de 30 s tras la primera llegada)
 import type { Store } from "./store.ts";
 
 interface Limites { minMs: number; limiteMs: number }
@@ -18,6 +19,8 @@ const ARCADE = (globalThis as unknown as {
     tiempoBot(juego: string, mapa: string, seed: number, botId: string): number; podioCarrera(filas: FilaPodio[]): FilaPodio[];
   };
 }).Arcade;
+// deno-lint-ignore no-explicit-any
+const KCOPA = (globalThis as any).KartsCopa as { cierreCarrera(c: { inicio: number; limite: number; total: number; reportes: ({ t: number; ms: number | null } | undefined)[] }, ahora: number): { cierre: number | null; plazo: number | null } };
 const MESAS = (globalThis as unknown as { Mesas: { botsEnMesa(juego: string, humanos: number, conBots: boolean, opciones?: Record<string, string>): number | null } }).Mesas;
 
 // Reglas generales por juego (karts: el menor mínimo y el mayor límite de sus pistas).
@@ -86,12 +89,25 @@ export async function rankingCarreraSala(store: Store, codigo: string, jugadorId
   const personas = (await Promise.all(nombres.map((n) => store.get<AsientoCarrera>(`juegos/salas/${codigo}/${n}`))))
     .filter((d) => d?.data?.id).map((d) => d!.data).sort((a, b) => a.unido - b.unido);
   const mapa = sala.opciones?.mapa || ARCADE.mapaDeSala(sala.juego, sala.seed);
-  const vence = sala.inicio + ARCADE.limiteSala(sala.juego, mapa) + ARCADE.GRACIA_SALA;
-  if (ahora < vence && !personas.every((p) => p.carrera)) return "en_curso";
+  if (cierreCarreraSala(sala, personas, ahora) === null) return "en_curso"; // karts-copa-sala-4
   const nb = MESAS.botsEnMesa(sala.juego, personas.length, sala.bots, sala.opciones) ?? (sala.bots ? ARCADE.BOTS_SALA.length : 0);
   const filas: FilaPodio[] = [
     ...personas.map((p) => ({ id: p.id, ms: p.carrera ? p.carrera.ms : null, t: p.carrera?.t, avance: p.carrera?.avance })),
     ...ARCADE.BOTS_SALA.slice(0, nb).map((b) => ({ id: b.id, ms: ARCADE.tiempoBot(sala.juego, mapa, sala.seed, b.id) })),
   ];
   return ARCADE.podioCarrera(filas).find((f) => f.id === jugadorId)?.total ?? 0;
+}
+
+// karts-copa-sala-4: hora de cierre de una carrera suelta de sala (null = abierta). En Karts: todas reportaron, 30 s
+// tras la primera llegada o el límite de la pista + la gracia (KartsCopa.cierreCarrera, igual que la página). En Axo
+// (plataformas), como antes: todas reportaron o el límite + la gracia.
+export function cierreCarreraSala(sala: SalaCarrera, personas: AsientoCarrera[], ahora: number): number | null {
+  if (sala.inicio === null) return null;
+  const mapa = sala.opciones?.mapa || ARCADE.mapaDeSala(sala.juego, sala.seed);
+  const limite = ARCADE.limiteSala(sala.juego, mapa);
+  const reportes = personas.map((p) => p.carrera);
+  if (sala.juego === "karts") return KCOPA.cierreCarrera({ inicio: sala.inicio, limite, total: personas.length, reportes }, ahora).cierre;
+  if (personas.length && reportes.every(Boolean)) return Math.max(sala.inicio, ...reportes.map((r) => r!.t));
+  const vence = sala.inicio + limite + ARCADE.GRACIA_SALA;
+  return ahora >= vence ? vence : null;
 }

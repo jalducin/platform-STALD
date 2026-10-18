@@ -8,7 +8,7 @@ import "../juegos/karts-copa.js";
 import { validarCarrera } from "./carreras.ts";
 import type { Store } from "./store.ts";
 
-export interface ReporteCopa { k: number; ms: number | null; monedas: number; t: number; abandono?: true }
+export interface ReporteCopa { k: number; ms: number | null; monedas: number; t: number; abandono?: true; avance?: number } // karts-copa-sala-4: avance (‰) si no terminó
 interface SalaCopa { juego: string; opciones: Record<string, string>; seed: number; inicio: number | null; bots: boolean }
 interface JugadorCopa { id: string; nombre: string; copa?: ReporteCopa[] }
 interface Cal { k: number; pista: string; inicio: number; cierre: number | null }
@@ -36,13 +36,16 @@ const entero = (x: unknown, min: number, max: number) => typeof x === "number" &
 const llavesExactas = (o: Record<string, unknown>, ks: string[]) => Object.keys(o).length === ks.length && ks.every((k) => k in o);
 
 // { copa: { carrera, ms, monedas } } o { copa: { carrera, abandono: true } }: solo la carrera abierta y ya empezada
-// (409 carrera_fuera_de_turno si todavía no toca, 409 carrera_cerrada si ya cerró); el tiempo se valida como una carrera
-// suelta (mínimo y límite de su pista y reloj del servidor desde el inicio de esa carrera). Solo cuenta el primero.
+// (409 carrera_fuera_de_turno si todavía no toca, 409 carrera_cerrada si ya cerró: todas reportaron, venció el plazo de
+// 30 s tras la primera llegada o el límite; karts-copa-sala-4); el tiempo se valida como una carrera suelta (mínimo y
+// límite de su pista y reloj del servidor desde el inicio de esa carrera). Solo cuenta el primero; un reintento de la
+// misma carrera responde 200 sin cambiar nada.
 export function reporteCopa<J extends JugadorCopa>(sala: SalaCopa, jugadores: J[], crudo: unknown, ahora: number): Resultado<J> {
   if (!KC.esCopa(sala) || !crudo || typeof crudo !== "object" || Array.isArray(crudo)) return { error: "copa_invalida", status: 400 };
   const c = crudo as Record<string, unknown>;
   const abandono = llavesExactas(c, ["carrera", "abandono"]) && c.abandono === true;
-  if (!entero(c.carrera, 0, KC.CARRERAS - 1) || !(abandono || llavesExactas(c, ["carrera", "ms", "monedas"]))) return { error: "copa_invalida", status: 400 };
+  const conAvance = llavesExactas(c, ["carrera", "ms", "monedas", "avance"]); // karts-copa-sala-4: «no terminó» con su avance
+  if (!entero(c.carrera, 0, KC.CARRERAS - 1) || !(abandono || conAvance || llavesExactas(c, ["carrera", "ms", "monedas"]))) return { error: "copa_invalida", status: 400 };
   const k = c.carrera as number;
   const cal = KC.calendario(sala, jugadores, ahora), ultima = cal[cal.length - 1];
   if (!ultima || k > ultima.k || (k === ultima.k && ahora < ultima.inicio)) return { error: "carrera_fuera_de_turno", status: 409 };
@@ -50,9 +53,9 @@ export function reporteCopa<J extends JugadorCopa>(sala: SalaCopa, jugadores: J[
   let nuevo: ReporteCopa;
   if (abandono) nuevo = { k, ms: null, monedas: 0, t: ahora, abandono: true };
   else {
-    const v = validarCarrera("karts", { ms: c.ms, monedas: c.monedas }, ultima.inicio, ahora, ultima.pista);
+    const v = validarCarrera("karts", { ms: c.ms, monedas: c.monedas, ...(conAvance ? { avance: c.avance } : {}) }, ultima.inicio, ahora, ultima.pista);
     if (!v) return { error: "carrera_invalida", status: 400 };
-    nuevo = { k, ms: v.ms, monedas: v.monedas, t: ahora };
+    nuevo = { k, ms: v.ms, monedas: v.monedas, t: ahora, ...(v.avance === undefined ? {} : { avance: v.avance }) };
   }
   return { cambiar: (j) => KC.reporte(j, k) ? j : { ...j, copa: [...(j.copa || []), nuevo].slice(-KC.CARRERAS) } };
 }

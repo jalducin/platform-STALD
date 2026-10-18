@@ -1,0 +1,1112 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de estudio: los 3 tiempos + to be</title>
+<!--
+  Fuente del PDF de estudio de Inglés (openspec: material-pdf-ingles).
+  Se imprime a PDF tamaño carta con herramientas/material-ingles/generar-pdf.ts → ingles/material/guia-tres-tiempos-y-to-be.pdf
+  Sin recursos de internet: fuentes del sistema (Segoe UI / Arial y Segoe UI Emoji) y SVG en línea.
+  Colores pensados para imprimir también en blanco y negro: cada tiempo lleva además su símbolo y su tipo de borde.
+-->
+<style>
+  @page {
+    size: letter;
+    margin: 13mm 14mm 15mm 14mm;
+    @bottom-left { content: "Los 3 tiempos en inglés + el verbo to be · Guía de estudio"; font: 7.5pt "Segoe UI", Arial, sans-serif; color: #666; }
+    @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 7.5pt "Segoe UI", Arial, sans-serif; color: #666; }
+  }
+  @page :first { @bottom-left { content: none; } @bottom-right { content: none; } }
+
+  :root {
+    --tinta: #1d2330;
+    --suave: #5a6170;
+    --linea: #c9ced8;
+    --be: #6a3fa0;      --be-f: #f1ebf9;
+    --pres: #17804a;    --pres-f: #e6f4ec;
+    --pas: #b85400;     --pas-f: #fdf0e3;
+    --fut: #1c5bb8;     --fut-f: #e7effb;
+    --mal: #b3261e;     --bien: #17804a;
+    --nota: #fff7d6;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0; color: var(--tinta); background: #fff;
+    font: 10pt/1.38 "Segoe UI", "Helvetica Neue", Arial, "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  }
+  .emo { font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; }
+  .pagina { break-after: page; }
+  .pagina:last-child { break-after: auto; }
+  h1, h2, h3 { margin: 0; line-height: 1.15; }
+  h2.seccion {
+    font-size: 19pt; padding: 7px 12px; border-radius: 8px; margin-bottom: 9px; color: #fff;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2.seccion .num { font-size: 10pt; background: rgba(255,255,255,.22); border: 1.5px solid #fff; border-radius: 99px; padding: 1px 9px; }
+  h2.seccion small { font-size: 10pt; font-weight: 500; opacity: .95; margin-left: auto; white-space: nowrap; }
+  h3 { break-after: avoid; font-size: 12.5pt; margin: 9px 0 4px; padding-bottom: 2px; border-bottom: 1.5px solid var(--linea); }
+  p { margin: 4px 0 6px; }
+  ul, ol { margin: 4px 0 6px; padding-left: 20px; }
+  li { margin: 1.5px 0; }
+  .en { font-weight: 600; }
+  .es { color: var(--suave); }
+  .chico { font-size: 8.8pt; }
+
+  /* Colores por tema: fondo + símbolo + tipo de borde (se distinguen en gris) */
+  .c-be   { --c: var(--be);   --f: var(--be-f); }
+  .c-pres { --c: var(--pres); --f: var(--pres-f); }
+  .c-pas  { --c: var(--pas);  --f: var(--pas-f); }
+  .c-fut  { --c: var(--fut);  --f: var(--fut-f); }
+  .c-gris { --c: #3d4452; --f: #eef0f4; }
+  h2.seccion { background: var(--c); }
+  .b-pres { border: 2px solid var(--c) !important; }
+  .b-pas  { border: 2px dashed var(--c) !important; }
+  .b-fut  { border: 4px double var(--c) !important; }
+
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 6px; break-inside: avoid; font-size: 9.6pt; }
+  th, td { border: 1px solid var(--linea); padding: 2.6px 6px; vertical-align: top; text-align: left; }
+  thead th { background: var(--c, #3d4452); color: #fff; font-weight: 700; }
+  tbody tr:nth-child(even) td { background: var(--f, #f5f6f8); }
+  td.k { font-weight: 700; white-space: nowrap; }
+  .t-centro td, .t-centro th { text-align: center; }
+
+  .caja { border: 1.6px solid var(--c, #3d4452); border-radius: 8px; padding: 7px 10px; margin: 7px 0; background: var(--f, #fafafa); break-inside: avoid; }
+  .caja > .tit { font-weight: 800; color: var(--c, #3d4452); margin-bottom: 2px; }
+  .nota { background: var(--nota); border: 1.4px solid #d9b100; border-radius: 8px; padding: 6px 10px; margin: 7px 0; break-inside: avoid; }
+  .errores { break-inside: avoid; }
+  .errores td:first-child { color: var(--mal); }
+  .errores td:nth-child(2) { color: var(--bien); font-weight: 700; }
+  .mal { color: var(--mal); }
+  .bien { color: var(--bien); font-weight: 700; }
+  .formula { font-family: Consolas, "Courier New", monospace; font-weight: 700; background: #fff; border: 1px dashed var(--c, #888); border-radius: 6px; padding: 2px 7px; display: inline-block; margin: 1px 0; font-size: 9.6pt; }
+  .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tres { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .dos > *, .tres > * { min-width: 0; }
+  .sello { display: inline-block; font-size: 8pt; font-weight: 700; border-radius: 99px; padding: 0 7px; border: 1.2px solid var(--c); color: var(--c); background: #fff; }
+  .v-pres { color: var(--pres); font-weight: 700; }
+  .v-pas  { color: var(--pas);  font-weight: 700; text-decoration: underline dashed; text-underline-offset: 2px; }
+  .v-fut  { color: var(--fut);  font-weight: 700; text-decoration: underline double; text-underline-offset: 2px; }
+  .v-be   { color: var(--be);   font-weight: 700; }
+
+  /* Portada */
+  .portada { display: block; }
+  .portada .banda { background: linear-gradient(135deg, #22314f, #3b2a63); color: #fff; border-radius: 14px; padding: 18px 22px 16px; }
+  .portada .banda .curso { font-size: 10pt; letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+  .portada h1 { font-size: 31pt; margin: 6px 0 4px; }
+  .portada h1 em { font-style: italic; color: #ffd75e; }
+  .portada .sub { font-size: 12pt; opacity: .95; }
+  .portada .ilus { margin: 12px 0 6px; text-align: center; }
+  .indice { columns: 2; column-gap: 18px; font-size: 10pt; margin: 0; padding: 0; list-style: none; }
+  .indice li { display: flex; gap: 6px; break-inside: avoid; border-bottom: 1px dotted #b8bdc8; padding: 2.5px 0; }
+  .indice li span:last-child { margin-left: auto; font-weight: 700; }
+  .usar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
+  .usar div { border: 1.4px solid #3d4452; border-radius: 9px; padding: 7px 8px; font-size: 9.2pt; background: #f6f7fa; }
+  .usar b { display: block; font-size: 10.5pt; margin-bottom: 2px; }
+  .leyenda { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; font-size: 9pt; }
+  .leyenda span { border: 2px solid; border-radius: 7px; padding: 2px 8px; }
+
+  /* Línea del tiempo */
+  .linea-tiempo { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; margin: 10px 0 6px; position: relative; }
+  .lt { border: 2.2px solid var(--c); background: var(--f); padding: 9px 10px; text-align: center; }
+  .lt:first-child { border-radius: 12px 0 0 12px; }
+  .lt:last-child { border-radius: 0 12px 12px 0; }
+  .lt .ico { font-size: 26pt; line-height: 1; }
+  .lt .nom { font-size: 13pt; font-weight: 800; color: var(--c); margin: 3px 0; }
+  .lt .aux { font-family: Consolas, monospace; font-size: 11pt; font-weight: 700; background: #fff; border-radius: 6px; padding: 1px 6px; border: 1px solid var(--c); display: inline-block; margin: 3px 0; }
+
+  /* Ejercicios */
+  .ej ol { padding-left: 22px; }
+  .ej li { margin: 3px 0 5px; }
+  .raya { display: inline-block; min-width: 70px; border-bottom: 1.2px solid #555; height: 1em; vertical-align: -2px; }
+  .raya.larga { min-width: 230px; }
+  .renglon { border-bottom: 1.1px solid #8a909c; height: 27px; margin: 2px 0 0 0; }
+  .check li { list-style: none; margin-left: -18px; }
+  .check li::before { content: "☐ "; font-size: 12pt; }
+  .historia { font-size: 10.4pt; }
+  .historia p { margin: 3px 0; }
+  .links li { margin: 3px 0; }
+  .links a { color: #1c5bb8; word-break: break-all; }
+  a { color: inherit; }
+  .bloque { break-inside: avoid; }
+  .ej h3 { font-size: 11.5pt; }
+  .raya.media { min-width: 120px; }
+  .dos-col { columns: 2; column-gap: 24px; }
+  .dos-col li, .cinco-col li { break-inside: avoid; }
+  .cinco-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 10px; padding-left: 22px; }
+  .cinco-col .raya { min-width: 95px; }
+  .ej ol { font-size: 10.6pt; }
+  .ej li { line-height: 2.55; margin: 0; }
+  .ej h3 { margin-top: 13px; }
+  .tabla-ej { width: 70%; margin-left: auto; margin-right: auto; }
+  .tabla-ej td { height: 30px; vertical-align: middle; font-size: 10.6pt; }
+  .sopa { width: auto; margin: 10px auto; border: 2.5px solid var(--pas); }
+  .sopa td { width: 34px; height: 34px; text-align: center; vertical-align: middle; font: 700 15pt Consolas, "Courier New", monospace; padding: 0; background: #fff !important; }
+  .sopa.mini { margin: 0; border-width: 1.5px; }
+  .sopa.mini td { width: 15px; height: 15px; font-size: 7.5pt; }
+  .sopa.mini td.s { background: #fbd7b4 !important; color: #000; font-weight: 900; text-decoration: underline; }
+  .sopa-lista { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px 12px; padding-left: 22px; line-height: 2; }
+  .sopa-lista .raya { min-width: 70px; }
+  .resp { columns: 2; column-gap: 16px; font-size: 9pt; }
+  .resp .grupo { break-inside: avoid; border: 1.5px solid var(--c); border-radius: 8px; padding: 5px 8px 4px; margin: 0 0 8px; background: var(--f); }
+  .resp .tit { font-weight: 800; color: var(--c); }
+  .resp ol { margin: 2px 0; padding-left: 26px; }
+  .resp li { margin: 0; line-height: 1.35; }
+</style>
+</head>
+<body>
+
+<!-- ============================ 1. PORTADA ============================ -->
+<section class="pagina portada">
+  <div class="banda">
+    <div class="curso">Inglés A1–A2 · Guía de estudio</div>
+    <h1>Los 3 tiempos en inglés + el verbo <em>to be</em></h1>
+    <div class="sub">Presente simple · Pasado simple · Futuro con <b>will</b> — con tablas, reglas, ejemplos, práctica y respuestas.</div>
+  </div>
+
+  <div class="ilus">
+    <svg width="610" height="176" viewBox="0 0 640 185" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea del tiempo: ayer, hoy y mañana">
+      <defs>
+        <marker id="pf" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1c5bb8"/></marker>
+        <marker id="pp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b85400"/></marker>
+      </defs>
+      <!-- libreta -->
+      <rect x="250" y="8" width="140" height="104" rx="10" fill="#fff" stroke="#3d4452" stroke-width="2.5"/>
+      <rect x="250" y="8" width="22" height="104" rx="8" fill="#6a3fa0"/>
+      <g stroke="#9aa1ad" stroke-width="1.4"><line x1="282" y1="34" x2="378" y2="34"/><line x1="282" y1="50" x2="378" y2="50"/><line x1="282" y1="66" x2="378" y2="66"/><line x1="282" y1="82" x2="378" y2="82"/><line x1="282" y1="98" x2="360" y2="98"/></g>
+      <text x="330" y="30" font-family="Segoe UI, Arial" font-size="15" font-weight="800" fill="#6a3fa0" text-anchor="middle">to be</text>
+      <text x="330" y="62" font-family="Segoe UI, Arial" font-size="12" font-weight="700" fill="#17804a" text-anchor="middle">I am · I cook</text>
+      <text x="330" y="78" font-family="Segoe UI, Arial" font-size="12" font-weight="700" fill="#b85400" text-anchor="middle">I was · I cooked</text>
+      <text x="330" y="94" font-family="Segoe UI, Arial" font-size="12" font-weight="700" fill="#1c5bb8" text-anchor="middle">I will be · I will cook</text>
+      <!-- línea -->
+      <line x1="40" y1="148" x2="240" y2="148" stroke="#b85400" stroke-width="5" stroke-dasharray="12 7" marker-start="url(#pp)" transform="rotate(180 140 148)"/>
+      <line x1="400" y1="148" x2="600" y2="148" stroke="#1c5bb8" stroke-width="5" marker-end="url(#pf)"/>
+      <line x1="40" y1="148" x2="600" y2="148" stroke="#c9ced8" stroke-width="1"/>
+      <circle cx="320" cy="148" r="17" fill="#17804a"/>
+      <text x="320" y="153" font-family="Segoe UI, Arial" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">HOY</text>
+      <text x="60" y="176" font-family="Segoe UI, Arial" font-size="13" font-weight="800" fill="#b85400">◄ AYER · yesterday</text>
+      <text x="320" y="180" font-family="Segoe UI, Arial" font-size="13" font-weight="800" fill="#17804a" text-anchor="middle">every day</text>
+      <text x="580" y="176" font-family="Segoe UI, Arial" font-size="13" font-weight="800" fill="#1c5bb8" text-anchor="end">tomorrow · MAÑANA ►</text>
+    </svg>
+  </div>
+
+  <h3 style="margin-top:2px">📌 Cómo usar esta guía</h3>
+  <div class="usar">
+    <div><b>1 · Lee</b>Lee cada sección despacio. Lee los ejemplos en voz alta: primero el inglés y luego el español.</div>
+    <div><b>2 · Copia</b>Pásala a tu libreta: las tablas, las reglas y la lista de irregulares. Qué copiar: pág. 17.</div>
+    <div><b>3 · Practica</b>Resuelve los 71 ejercicios (págs. 10 a 15) y escribe sobre ti (pág. 16), sin ver las respuestas.</div>
+    <div><b>4 · Revisa</b>Califícate con las respuestas del final (pág. 19) y corrige con otro color lo que fallaste.</div>
+  </div>
+  <div class="leyenda">
+    <b style="align-self:center">Colores de la guía:</b>
+    <span style="border-color:var(--be);color:var(--be)">◆ to be</span>
+    <span style="border-color:var(--pres);color:var(--pres)">● Presente (línea continua)</span>
+    <span style="border-color:var(--pas);color:var(--pas);border-style:dashed">◄ Pasado (línea punteada)</span>
+    <span style="border-color:var(--fut);color:var(--fut);border-style:double;border-width:4px">► Futuro (línea doble)</span>
+  </div>
+
+  <h3>📑 Contenido</h3>
+  <ol class="indice">
+    <li><span>1.</span><span>La línea del tiempo y las 3 llaves</span><span>2</span></li>
+    <li><span>2.</span><span>El verbo <i>to be</i>: am, is, are</span><span>3</span></li>
+    <li><span>3.</span><span><i>To be</i>: usos, there is / are, was / were, will be</span><span>4</span></li>
+    <li><span>4.</span><span>Presente simple</span><span>5</span></li>
+    <li><span>5.</span><span>Pasado simple: verbos regulares</span><span>6</span></li>
+    <li><span>6.</span><span>Pasado simple: 25 verbos irregulares</span><span>7</span></li>
+    <li><span>7.</span><span>Futuro con <i>will</i> (+ going to)</span><span>8</span></li>
+    <li><span>8.</span><span>El gran cuadro de los 3 tiempos</span><span>9</span></li>
+    <li><span>9.</span><span>Mini historia en 3 tiempos</span><span>9</span></li>
+    <li><span>10.</span><span>Práctica: 71 ejercicios + sopa de letras</span><span>10</span></li>
+    <li><span>11.</span><span>Escribe sobre ti</span><span>16</span></li>
+    <li><span>12.</span><span>Para tu libreta + autoevaluación</span><span>17</span></li>
+    <li><span>13.</span><span>Recursos oficiales</span><span>18</span></li>
+    <li><span>14.</span><span>Respuestas</span><span>19</span></li>
+  </ol>
+  <h3>🏁 Al terminar esta guía podrás…</h3>
+  <div class="tres">
+    <div class="caja c-be"><div class="tit">◆ Presentarte</div><p class="chico" style="margin:0"><b>I'm Ana. I'm 30. I'm from Puebla. I'm a nurse.</b></p></div>
+    <div class="caja c-pas b-pas"><div class="tit">◄ Contar lo que hiciste</div><p class="chico" style="margin:0"><b>Yesterday I made hot cakes. They were delicious!</b></p></div>
+    <div class="caja c-fut b-fut"><div class="tit">► Decir tus planes</div><p class="chico" style="margin:0"><b>Tomorrow I will cook tacos for my family.</b></p></div>
+  </div>
+</section>
+
+<!-- ============================ 2. LÍNEA DEL TIEMPO ============================ -->
+<section class="pagina c-gris">
+  <h2 class="seccion"><span class="num">1</span> <span class="emo">⏳</span> La línea del tiempo y las 3 llaves <small>past ← present → future</small></h2>
+  <p>En inglés, para hablar de <b>ayer</b>, <b>hoy</b> y <b>mañana</b> casi siempre usas el mismo verbo y solo cambia una «llave»: un verbo auxiliar que va antes. Apréndete las 3 llaves y ya tienes la mitad del trabajo.</p>
+
+  <div class="linea-tiempo">
+    <div class="lt c-pas b-pas"><div class="ico emo">⏪</div><div class="nom">◄ PASADO</div><div>Ya pasó y terminó</div><div class="aux">did / didn't</div><div class="chico">yesterday · last week · two days ago</div></div>
+    <div class="lt c-pres b-pres"><div class="ico emo">🔁</div><div class="nom">● PRESENTE</div><div>Hábitos, rutinas y verdades</div><div class="aux">do / does</div><div class="chico">every day · usually · always</div></div>
+    <div class="lt c-fut b-fut"><div class="ico emo">🚀</div><div class="nom">FUTURO ►</div><div>Decisiones, promesas y predicciones</div><div class="aux">will / won't</div><div class="chico">tomorrow · next week · soon</div></div>
+  </div>
+
+  <table class="c-gris">
+    <thead><tr><th style="width:17%"></th><th>◄ Pasado simple</th><th>● Presente simple</th><th>Futuro con will ►</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Afirmativo</td><td>I <span class="v-pas">cooked</span>.</td><td>I <span class="v-pres">cook</span>. / She <span class="v-pres">cooks</span>.</td><td>I <span class="v-fut">will cook</span>.</td></tr>
+      <tr><td class="k">Negativo</td><td>I <span class="v-pas">didn't cook</span>.</td><td>I <span class="v-pres">don't cook</span>. / She <span class="v-pres">doesn't cook</span>.</td><td>I <span class="v-fut">won't cook</span>.</td></tr>
+      <tr><td class="k">Pregunta</td><td><span class="v-pas">Did</span> you cook?</td><td><span class="v-pres">Do</span> you cook? / <span class="v-pres">Does</span> she cook?</td><td><span class="v-fut">Will</span> you cook?</td></tr>
+      <tr><td class="k">Español</td><td class="es">Cociné. / No cociné. / ¿Cocinaste?</td><td class="es">Cocino. / No cocino. / ¿Cocinas?</td><td class="es">Cocinaré. / No cocinaré. / ¿Cocinarás?</td></tr>
+    </tbody>
+  </table>
+
+  <div class="dos">
+    <div class="caja c-be">
+      <div class="tit">◆ ¿Y el verbo to be?</div>
+      <p>El verbo <b>to be</b> (ser / estar) es especial: <b>no usa do, does ni did</b>. Tiene sus propias formas en cada tiempo:</p>
+      <p style="text-align:center;font-size:11pt"><span class="v-pas">was / were</span> &nbsp;←&nbsp; <span class="v-pres">am / is / are</span> &nbsp;→&nbsp; <span class="v-fut">will be</span></p>
+      <p class="chico">Are you tired? (no «Do you are tired?») · She wasn't at home. (no «She didn't was»)</p>
+    </div>
+    <div class="caja c-gris">
+      <div class="tit">🔑 La regla de oro del verbo base</div>
+      <p>Después de <b>do, does, did, will</b> y <b>won't</b>, el verbo va en su <b>forma base</b> (como en el diccionario): sin -s, sin -ed y sin «to».</p>
+      <p class="chico"><span class="bien">She doesn't cook.</span> · <span class="bien">Did you go?</span> · <span class="bien">I will eat.</span><br><span class="mal">She doesn't cooks ❌ · Did you went ❌ · I will to eat ❌</span></p>
+    </div>
+  </div>
+
+  <h3>🗓️ Palabras que te dicen el tiempo</h3>
+  <table class="c-gris">
+    <thead><tr><th>◄ Pasado</th><th>● Presente</th><th>Futuro ►</th></tr></thead>
+    <tbody>
+      <tr><td><b>yesterday</b> <span class="es">ayer</span></td><td><b>every day</b> <span class="es">todos los días</span></td><td><b>tomorrow</b> <span class="es">mañana</span></td></tr>
+      <tr><td><b>last night</b> <span class="es">anoche</span></td><td><b>always</b> <span class="es">siempre</span></td><td><b>tonight</b> <span class="es">hoy en la noche</span></td></tr>
+      <tr><td><b>last week / month / year</b> <span class="es">la semana / el mes / el año pasado</span></td><td><b>usually</b> <span class="es">normalmente</span></td><td><b>next week / month / year</b> <span class="es">la próxima semana…</span></td></tr>
+      <tr><td><b>two days ago</b> <span class="es">hace dos días</span></td><td><b>sometimes</b> <span class="es">a veces</span></td><td><b>in two days</b> <span class="es">en dos días</span></td></tr>
+      <tr><td><b>in 2020</b> <span class="es">en 2020</span></td><td><b>on Sundays</b> <span class="es">los domingos</span></td><td><b>soon / later</b> <span class="es">pronto / más tarde</span></td></tr>
+    </tbody>
+  </table>
+  <p class="nota">💡 <b>Truco:</b> antes de escribir una oración, pregúntate <i>¿cuándo pasa?</i> Si dice <b>yesterday</b>, usa la llave del pasado (<b>did</b> o el verbo con <b>-ed</b>); si dice <b>every day</b>, presente; si dice <b>tomorrow</b>, futuro con <b>will</b>.</p>
+</section>
+
+<!-- ============================ 3. TO BE (PRESENTE) ============================ -->
+<section class="pagina c-be">
+  <h2 class="seccion"><span class="num">2</span> <span class="emo">🙋</span> <span>El verbo <i>to be</i>: am, is, are</span> <small>ser / estar</small></h2>
+  <p><b>To be</b> significa <b>ser</b> o <b>estar</b>. Es el verbo más usado del inglés y la base de todo lo demás. En presente tiene 3 formas: <b>am</b>, <b>is</b> y <b>are</b>.</p>
+
+  <table>
+    <thead><tr><th>Pronombre</th><th>Afirmativo</th><th>Contracción</th><th>Negativo</th><th>Pregunta</th><th>Español</th></tr></thead>
+    <tbody>
+      <tr><td class="k">I <span class="es">yo</span></td><td>I <b>am</b></td><td>I'm</td><td>I'm not</td><td><b>Am</b> I…?</td><td class="es">soy / estoy</td></tr>
+      <tr><td class="k">You <span class="es">tú / usted</span></td><td>you <b>are</b></td><td>you're</td><td>you aren't</td><td><b>Are</b> you…?</td><td class="es">eres / estás</td></tr>
+      <tr><td class="k">He <span class="es">él</span></td><td>he <b>is</b></td><td>he's</td><td>he isn't</td><td><b>Is</b> he…?</td><td class="es">es / está</td></tr>
+      <tr><td class="k">She <span class="es">ella</span></td><td>she <b>is</b></td><td>she's</td><td>she isn't</td><td><b>Is</b> she…?</td><td class="es">es / está</td></tr>
+      <tr><td class="k">It <span class="es">eso (cosa, animal)</span></td><td>it <b>is</b></td><td>it's</td><td>it isn't</td><td><b>Is</b> it…?</td><td class="es">es / está</td></tr>
+      <tr><td class="k">We <span class="es">nosotros(as)</span></td><td>we <b>are</b></td><td>we're</td><td>we aren't</td><td><b>Are</b> we…?</td><td class="es">somos / estamos</td></tr>
+      <tr><td class="k">You <span class="es">ustedes</span></td><td>you <b>are</b></td><td>you're</td><td>you aren't</td><td><b>Are</b> you…?</td><td class="es">son / están</td></tr>
+      <tr><td class="k">They <span class="es">ellos(as)</span></td><td>they <b>are</b></td><td>they're</td><td>they aren't</td><td><b>Are</b> they…?</td><td class="es">son / están</td></tr>
+    </tbody>
+  </table>
+  <p class="chico">✏️ Para recordar: <b>I → am</b> · <b>he, she, it → is</b> · <b>you, we, they → are</b>. El negativo también se dice <i>he's not, you're not, we're not</i>; con I solo existe <b>I'm not</b>.</p>
+
+  <div class="dos">
+    <div>
+      <h3>🚫 Negativo: <i>not</i> después del verbo</h3>
+      <p><span class="formula">sujeto + am / is / are + not</span></p>
+      <ul>
+        <li><span class="en">I'm not tired.</span> <span class="es">No estoy cansado(a).</span></li>
+        <li><span class="en">Luis isn't a doctor.</span> <span class="es">Luis no es doctor.</span></li>
+        <li><span class="en">It isn't cold today.</span> <span class="es">Hoy no hace frío.</span></li>
+        <li><span class="en">We aren't at home.</span> <span class="es">No estamos en casa.</span></li>
+      </ul>
+    </div>
+    <div>
+      <h3>❓ Pregunta: el verbo va primero</h3>
+      <p><span class="formula">Am / Is / Are + sujeto + …?</span></p>
+      <ul>
+        <li><span class="en">You are a teacher.</span> → <span class="en">Are you a teacher?</span></li>
+        <li><span class="en">She is Mexican.</span> → <span class="en">Is she Mexican?</span></li>
+        <li><span class="en">Where are you from?</span> <span class="es">¿De dónde eres?</span></li>
+        <li><span class="en">How old is he?</span> <span class="es">¿Cuántos años tiene?</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>💬 Respuestas cortas (short answers)</h3>
+  <table>
+    <thead><tr><th>Pregunta</th><th>Sí ✅</th><th>No ❌</th></tr></thead>
+    <tbody>
+      <tr><td>Are you a student?</td><td>Yes, I <b>am</b>.</td><td>No, I'm <b>not</b>.</td></tr>
+      <tr><td>Is she at work?</td><td>Yes, she <b>is</b>.</td><td>No, she <b>isn't</b>.</td></tr>
+      <tr><td>Is it cold?</td><td>Yes, it <b>is</b>.</td><td>No, it <b>isn't</b>.</td></tr>
+      <tr><td>Are they hungry?</td><td>Yes, they <b>are</b>.</td><td>No, they <b>aren't</b>.</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">⚠️ En la respuesta corta con <b>Yes</b> no se usa contracción: <span class="bien">Yes, I am.</span> <span class="mal">Yes, I'm. ❌</span></p>
+
+  <h3>❌ Errores comunes con <i>to be</i></h3>
+  <table class="errores">
+    <thead><tr><th>❌ Así no</th><th>✅ Así sí</th><th>¿Por qué?</th></tr></thead>
+    <tbody>
+      <tr><td>I am agree.</td><td>I agree.</td><td>«Agree» ya es verbo (estar de acuerdo); no lleva <i>am</i>.</td></tr>
+      <tr><td>I have 25 years.</td><td>I am 25 (years old).</td><td>La edad se dice con <i>to be</i>, no con <i>have</i>.</td></tr>
+      <tr><td>I have hunger.</td><td>I am hungry.</td><td>Hambre, sed, frío y miedo van con <i>to be</i>: hungry, thirsty, cold, scared.</td></tr>
+      <tr><td>Is cold.</td><td>It is cold.</td><td>En inglés la oración siempre lleva sujeto.</td></tr>
+      <tr><td>She is nurse.</td><td>She is a nurse.</td><td>Un trabajo en singular lleva <i>a / an</i>.</td></tr>
+      <tr><td>Do you are tired?</td><td>Are you tired?</td><td><i>To be</i> no usa <i>do</i>: el verbo pasa al inicio.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 4. TO BE (USOS Y TIEMPOS) ============================ -->
+<section class="pagina c-be">
+  <h2 class="seccion"><span class="num">3</span> <span class="emo">🧩</span> <span><i>To be</i>: usos, there is / are, was / were, will be</span></h2>
+
+  <h3>🎯 ¿Para qué sirve <i>to be</i>?</h3>
+  <table>
+    <thead><tr><th style="width:24%">Para decir…</th><th style="width:30%">Fórmula</th><th>Ejemplo</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Tu nombre</td><td>My name is… / I'm…</td><td><b>My name is Ana.</b> <span class="es">Me llamo Ana.</span></td></tr>
+      <tr><td class="k">Tu edad</td><td>to be + número (+ years old)</td><td><b>I am 25 (years old).</b> <span class="es">Tengo 25 años.</span></td></tr>
+      <tr><td class="k">De dónde eres</td><td>to be + from + lugar</td><td><b>We are from Puebla.</b> <span class="es">Somos de Puebla.</span></td></tr>
+      <tr><td class="k">Nacionalidad</td><td>to be + nacionalidad</td><td><b>They are Mexican.</b> <span class="es">Son mexicanos.</span></td></tr>
+      <tr><td class="k">Tu trabajo</td><td>to be + a / an + trabajo</td><td><b>She is a nurse. He is an engineer.</b></td></tr>
+      <tr><td class="k">Cómo te sientes</td><td>to be + adjetivo</td><td><b>I'm hungry / tired / happy.</b> <span class="es">Tengo hambre / Estoy cansado(a) / feliz.</span></td></tr>
+      <tr><td class="k">Cómo es algo</td><td>to be + adjetivo</td><td><b>The soup is hot.</b> <span class="es">La sopa está caliente.</span></td></tr>
+      <tr><td class="k">Dónde está</td><td>to be + at / in / on + lugar</td><td><b>Luis is at work.</b> <span class="es">Luis está en el trabajo.</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="dos">
+    <div>
+      <h3>🏙️ There is / there are = hay</h3>
+      <table>
+        <thead><tr><th></th><th>Uno</th><th>Varios</th></tr></thead>
+        <tbody>
+          <tr><td class="k">+</td><td>There <b>is</b> a park.</td><td>There <b>are</b> two parks.</td></tr>
+          <tr><td class="k">−</td><td>There <b>isn't</b> a bank.</td><td>There <b>aren't</b> any banks.</td></tr>
+          <tr><td class="k">?</td><td><b>Is there</b> a store?</td><td><b>Are there</b> any stores?</td></tr>
+          <tr><td class="k">R</td><td class="chico">Yes, there is. / No, there isn't.</td><td class="chico">Yes, there are. / No, there aren't.</td></tr>
+        </tbody>
+      </table>
+      <p class="chico">Pasado: <b>there was / there were</b> (había). Futuro: <b>there will be</b> (habrá).</p>
+    </div>
+    <div>
+      <h3>⏪ Pasado: was / were</h3>
+      <table>
+        <thead><tr><th>Persona</th><th>+</th><th>−</th><th>?</th></tr></thead>
+        <tbody>
+          <tr><td class="k">I, he, she, it</td><td><b>was</b></td><td>wasn't</td><td>Was she…?</td></tr>
+          <tr><td class="k">you, we, they</td><td><b>were</b></td><td>weren't</td><td>Were you…?</td></tr>
+        </tbody>
+      </table>
+      <ul class="chico">
+        <li><b>I was at home yesterday.</b> <span class="es">Ayer estuve en casa.</span></li>
+        <li><b>The hot cakes were delicious!</b> <span class="es">¡Los hot cakes estaban deliciosos!</span></li>
+        <li><b>Were you tired?</b> — Yes, I was. / No, I wasn't.</li>
+      </ul>
+      <h3>⏩ Futuro: will be</h3>
+      <p class="chico">Igual para todos: <b>I / you / she / we / they will be</b> · negativo <b>won't be</b> · pregunta <b>Will you be…?</b><br><b>Tomorrow I will be at the park.</b> <span class="es">Mañana estaré en el parque.</span></p>
+    </div>
+  </div>
+
+  <h3>⏳ <i>To be</i> en los 3 tiempos</h3>
+  <table class="t-centro">
+    <thead><tr><th></th><th>◄ Ayer (pasado)</th><th>● Hoy (presente)</th><th>Mañana (futuro) ►</th></tr></thead>
+    <tbody>
+      <tr><td class="k">I</td><td>I was</td><td>I am (I'm)</td><td>I will be (I'll be)</td></tr>
+      <tr><td class="k">he / she / it</td><td>was</td><td>is</td><td>will be</td></tr>
+      <tr><td class="k">you / we / they</td><td>were</td><td>are</td><td>will be</td></tr>
+      <tr><td class="k">Negativo</td><td>wasn't / weren't</td><td>'m not / isn't / aren't</td><td>won't be</td></tr>
+    </tbody>
+  </table>
+
+</section>
+
+<!-- ============================ 5. PRESENTE SIMPLE ============================ -->
+<section class="pagina c-pres">
+  <h2 class="seccion"><span class="num">4</span> <span class="emo">🔁</span> Presente simple <small>● hábitos, rutinas y verdades</small></h2>
+  <p>Lo usas para lo que haces <b>siempre o seguido</b> (rutinas y hábitos) y para cosas que siempre son verdad. <b>I cook every day.</b> <span class="es">Cocino todos los días.</span> · <b>Water boils at 100 °C.</b> <span class="es">El agua hierve a 100 °C.</span></p>
+
+  <table class="b-pres">
+    <thead><tr><th style="width:16%"></th><th>I / you / we / they</th><th>he / she / it</th><th>Fórmula</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Afirmativo</td><td>I <b>cook</b> dinner.</td><td>She <b>cooks</b> dinner.</td><td>sujeto + verbo (<b>+s</b> con he, she, it)</td></tr>
+      <tr><td class="k">Negativo</td><td>I <b>don't</b> cook.</td><td>She <b>doesn't</b> cook.</td><td>don't / doesn't + verbo base</td></tr>
+      <tr><td class="k">Pregunta</td><td><b>Do</b> you cook?</td><td><b>Does</b> she cook?</td><td>Do / Does + sujeto + verbo base?</td></tr>
+      <tr><td class="k">Respuesta corta</td><td>Yes, I do. / No, I don't.</td><td>Yes, she does. / No, she doesn't.</td><td>don't = do not · doesn't = does not</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">🔑 La <b>-s</b> solo aparece una vez: en el afirmativo con he, she, it. Si ya está <b>does</b> o <b>doesn't</b>, el verbo va sin -s: <span class="bien">Does she cook?</span> <span class="mal">Does she cooks? ❌</span></p>
+
+  <h3>✍️ La regla de la -s (he, she, it): cómo se escribe</h3>
+  <table class="b-pres">
+    <thead><tr><th style="width:24%">Si el verbo termina en…</th><th style="width:19%">Agrega</th><th>Ejemplos</th></tr></thead>
+    <tbody>
+      <tr><td>la mayoría de los verbos</td><td><b>-s</b></td><td>cook → cooks · eat → eats · work → works · play → plays</td></tr>
+      <tr><td>-s, -sh, -ch, -x, -o</td><td><b>-es</b></td><td>mix → mixes · wash → washes · watch → watches · go → goes · do → does</td></tr>
+      <tr><td>consonante + y</td><td>quita la y → <b>-ies</b></td><td>study → studies · try → tries · fry → fries</td></tr>
+      <tr><td>vocal + y</td><td><b>-s</b></td><td>play → plays · buy → buys · say → says</td></tr>
+      <tr><td>irregular</td><td>—</td><td><b>have → has</b> · be → is</td></tr>
+    </tbody>
+  </table>
+
+  <div class="dos">
+    <div>
+      <h3>🗓️ Palabras de frecuencia</h3>
+      <div class="caja c-pres b-pres" style="margin-top:3px">
+        <p style="margin:0"><b>always</b> <span class="es">siempre</span> (100 %) › <b>usually</b> <span class="es">normalmente</span> › <b>often</b> <span class="es">seguido</span> › <b>sometimes</b> <span class="es">a veces</span> › <b>never</b> <span class="es">nunca</span> (0 %)</p>
+      </div>
+      <p class="chico">Van <b>antes</b> del verbo y <b>después</b> de to be: <b>I usually cook.</b> · <b>She is always happy.</b><br>Al final de la oración: every day, every week, on Sundays, at night.</p>
+    </div>
+    <div>
+      <h3>📝 Ejemplos</h3>
+      <ul>
+        <li><b>Ana works in a hospital.</b> <span class="es">Ana trabaja en un hospital.</span></li>
+        <li><b>We eat breakfast at 7.</b> <span class="es">Desayunamos a las 7.</span></li>
+        <li><b>My son doesn't like onion.</b> <span class="es">A mi hijo no le gusta la cebolla.</span></li>
+        <li><b>Do you go to the market on Sundays?</b> <span class="es">¿Vas al mercado los domingos?</span></li>
+        <li><b>Luis watches TV at night.</b> <span class="es">Luis ve la tele en la noche.</span></li>
+        <li><b>Does she have a car?</b> — Yes, she does.</li>
+        <li><b>First, I mix the flour.</b> <span class="es">Primero, mezclo la harina.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>❌ Errores comunes</h3>
+  <table class="errores">
+    <thead><tr><th>❌ Así no</th><th>✅ Así sí</th><th>¿Por qué?</th></tr></thead>
+    <tbody>
+      <tr><td>She cook every day.</td><td>She cooks every day.</td><td>Con he, she, it el verbo lleva -s.</td></tr>
+      <tr><td>He don't work.</td><td>He doesn't work.</td><td>Con he, she, it se usa doesn't.</td></tr>
+      <tr><td>Does she cooks?</td><td>Does she cook?</td><td>Después de does, verbo base.</td></tr>
+      <tr><td>I am work in a store.</td><td>I work in a store.</td><td>No mezcles <i>to be</i> con otro verbo en presente simple.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 6. PASADO REGULAR ============================ -->
+<section class="pagina c-pas">
+  <h2 class="seccion"><span class="num">5</span> <span class="emo">⏪</span> Pasado simple: verbos regulares <small>◄ ya pasó y terminó</small></h2>
+  <p>Lo usas para algo que <b>empezó y terminó en el pasado</b>: ayer, la semana pasada, en 2020. <b>Yesterday I cooked pasta.</b> <span class="es">Ayer cociné pasta.</span> La buena noticia: en pasado el verbo es <b>igual para todas las personas</b> (sin -s).</p>
+
+  <table class="b-pas">
+    <thead><tr><th style="width:16%"></th><th>Ejemplo (todas las personas)</th><th>Fórmula</th><th>Español</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Afirmativo</td><td>I / She / They <b>cooked</b> dinner.</td><td>sujeto + verbo<b>-ed</b> (o irregular)</td><td class="es">Cociné / cocinó / cocinaron</td></tr>
+      <tr><td class="k">Negativo</td><td>She <b>didn't cook</b> dinner.</td><td>didn't + verbo base</td><td class="es">No cocinó</td></tr>
+      <tr><td class="k">Pregunta</td><td><b>Did</b> you <b>cook</b> dinner?</td><td>Did + sujeto + verbo base?</td><td class="es">¿Cocinaste?</td></tr>
+      <tr><td class="k">Respuesta corta</td><td>Yes, I did. / No, I didn't.</td><td>didn't = did not</td><td class="es">Sí. / No.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>✍️ Cómo se escribe el pasado regular (-ed)</h3>
+  <table class="b-pas">
+    <thead><tr><th style="width:27%">Si el verbo termina en…</th><th style="width:20%">Haz esto</th><th>Ejemplos</th></tr></thead>
+    <tbody>
+      <tr><td>la mayoría de los verbos</td><td>agrega <b>-ed</b></td><td>cook → cooked · mix → mixed · add → added · watch → watched</td></tr>
+      <tr><td>-e</td><td>agrega solo <b>-d</b></td><td>bake → baked · like → liked · live → lived · use → used</td></tr>
+      <tr><td>consonante + y</td><td>quita la y → <b>-ied</b></td><td>study → studied · try → tried · fry → fried</td></tr>
+      <tr><td>vocal + y</td><td>agrega <b>-ed</b></td><td>play → played · stay → stayed · enjoy → enjoyed</td></tr>
+      <tr><td>cons. + vocal + cons. (sílaba corta)</td><td>dobla la última y <b>-ed</b></td><td>stop → stopped · plan → planned · chop → chopped</td></tr>
+    </tbody>
+  </table>
+
+  <h3>🔊 Cómo suena la -ed: tres sonidos</h3>
+  <p class="chico">💡 La <b>e</b> de -ed casi nunca se pronuncia: <b>cooked</b> suena «kukt», no «kú-ked». Solo suena cuando el verbo termina en t o d: <b>add-ed</b>, <b>want-ed</b>.</p>
+  <div class="tres">
+    <div class="caja"><div class="tit">/t/ como «t»</div><p class="chico">Después de los sonidos p, k, s, sh, ch, x.</p><p><b>cooked</b> /kʊkt/ · <b>mixed</b> · <b>washed</b> · <b>watched</b> · <b>helped</b></p></div>
+    <div class="caja"><div class="tit">/d/ como «d»</div><p class="chico">Después de vocales y de los demás sonidos (l, n, m, v, b, g…).</p><p><b>played</b> /pleɪd/ · <b>cleaned</b> · <b>called</b> · <b>lived</b> · <b>opened</b></p></div>
+    <div class="caja"><div class="tit">/ɪd/ sílaba extra «id»</div><p class="chico">Solo después de t o d: se agrega una sílaba.</p><p><b>added</b> /ˈædɪd/ · <b>wanted</b> · <b>needed</b> · <b>visited</b> · <b>started</b></p></div>
+  </div>
+
+  <div class="dos">
+    <div>
+      <h3>🗓️ Palabras del pasado</h3>
+      <p class="chico"><b>yesterday</b> <span class="es">ayer</span> · <b>yesterday morning</b> <span class="es">ayer en la mañana</span> · <b>last night / week / month / year / Sunday</b> <span class="es">anoche, la semana pasada…</span> · <b>two days ago, a year ago</b> <span class="es">hace dos días, hace un año</span> (<i>ago</i> va al final) · <b>in 2020, in May</b> <span class="es">en 2020, en mayo</span></p>
+    </div>
+    <div>
+      <h3>📝 Ejemplos</h3>
+      <ul>
+        <li><b>Ana visited her mom last Sunday.</b> <span class="es">Ana visitó a su mamá el domingo pasado.</span></li>
+        <li><b>We didn't watch TV last night.</b> <span class="es">Anoche no vimos la tele.</span></li>
+        <li><b>Did you study yesterday?</b> — Yes, I did.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>❌ Errores comunes</h3>
+  <table class="errores">
+    <thead><tr><th>❌ Así no</th><th>✅ Así sí</th><th>¿Por qué?</th></tr></thead>
+    <tbody>
+      <tr><td>Did you cooked?</td><td>Did you cook?</td><td>Después de did, verbo base: el pasado ya está en <i>did</i>.</td></tr>
+      <tr><td>She didn't cooked.</td><td>She didn't cook.</td><td>Igual: didn't + verbo base.</td></tr>
+      <tr><td>I studyed.</td><td>I studied.</td><td>Consonante + y → -ied.</td></tr>
+      <tr><td>Yesterday I cook pasta.</td><td>Yesterday I cooked pasta.</td><td>Con <i>yesterday</i> el verbo va en pasado.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 7. IRREGULARES ============================ -->
+<section class="pagina c-pas">
+  <h2 class="seccion"><span class="num">6</span> <span class="emo">⭐</span> Pasado simple: 25 verbos irregulares <small>◄ de memoria</small></h2>
+  <p>Los verbos irregulares <b>no llevan -ed</b>: cambian de forma. Los 25 de esta tabla son de los más usados. Recuerda: en negativo y en pregunta regresan a su forma base (<b>I went</b> → <b>I didn't go</b> → <b>Did you go?</b>).</p>
+  <table class="b-pas">
+    <thead><tr><th style="width:4%">#</th><th style="width:13%">Base</th><th style="width:15%">Pasado</th><th style="width:20%">Significado</th><th>Ejemplo en pasado</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><b>be</b></td><td class="v-pas">was / were</td><td class="es">ser / estar</td><td>I <b>was</b> at home. They <b>were</b> happy.</td></tr>
+      <tr><td>2</td><td><b>have</b></td><td class="v-pas">had</td><td class="es">tener</td><td>We <b>had</b> tacos for dinner.</td></tr>
+      <tr><td>3</td><td><b>do</b></td><td class="v-pas">did</td><td class="es">hacer</td><td>I <b>did</b> my homework.</td></tr>
+      <tr><td>4</td><td><b>go</b></td><td class="v-pas">went</td><td class="es">ir</td><td>She <b>went</b> to the market.</td></tr>
+      <tr><td>5</td><td><b>make</b></td><td class="v-pas">made</td><td class="es">hacer, preparar</td><td>I <b>made</b> hot cakes.</td></tr>
+      <tr><td>6</td><td><b>eat</b></td><td class="v-pas">ate</td><td class="es">comer</td><td>We <b>ate</b> at a restaurant.</td></tr>
+      <tr><td>7</td><td><b>see</b></td><td class="v-pas">saw</td><td class="es">ver</td><td>I <b>saw</b> Luis at the park.</td></tr>
+      <tr><td>8</td><td><b>come</b></td><td class="v-pas">came</td><td class="es">venir</td><td>My sister <b>came</b> to my house.</td></tr>
+      <tr><td>9</td><td><b>get</b></td><td class="v-pas">got</td><td class="es">conseguir, recibir</td><td>I <b>got</b> a message.</td></tr>
+      <tr><td>10</td><td><b>take</b></td><td class="v-pas">took</td><td class="es">tomar, llevar</td><td>He <b>took</b> the bus.</td></tr>
+      <tr><td>11</td><td><b>give</b></td><td class="v-pas">gave</td><td class="es">dar</td><td>She <b>gave</b> me a gift.</td></tr>
+      <tr><td>12</td><td><b>say</b></td><td class="v-pas">said</td><td class="es">decir</td><td>He <b>said</b> «hello».</td></tr>
+      <tr><td>13</td><td><b>know</b></td><td class="v-pas">knew</td><td class="es">saber, conocer</td><td>I <b>knew</b> the answer.</td></tr>
+      <tr><td>14</td><td><b>think</b></td><td class="v-pas">thought</td><td class="es">pensar, creer</td><td>I <b>thought</b> about you.</td></tr>
+      <tr><td>15</td><td><b>buy</b></td><td class="v-pas">bought</td><td class="es">comprar</td><td>We <b>bought</b> eggs and milk.</td></tr>
+      <tr><td>16</td><td><b>drink</b></td><td class="v-pas">drank</td><td class="es">beber, tomar</td><td>She <b>drank</b> coffee.</td></tr>
+      <tr><td>17</td><td><b>write</b></td><td class="v-pas">wrote</td><td class="es">escribir</td><td>I <b>wrote</b> my recipe.</td></tr>
+      <tr><td>18</td><td><b>read</b></td><td class="v-pas">read</td><td class="es">leer</td><td>He <b>read</b> a book. <span class="chico">(se escribe igual, suena «red»)</span></td></tr>
+      <tr><td>19</td><td><b>run</b></td><td class="v-pas">ran</td><td class="es">correr</td><td>They <b>ran</b> in the park.</td></tr>
+      <tr><td>20</td><td><b>sleep</b></td><td class="v-pas">slept</td><td class="es">dormir</td><td>I <b>slept</b> eight hours.</td></tr>
+      <tr><td>21</td><td><b>find</b></td><td class="v-pas">found</td><td class="es">encontrar</td><td>She <b>found</b> her keys.</td></tr>
+      <tr><td>22</td><td><b>tell</b></td><td class="v-pas">told</td><td class="es">decir, contar</td><td>He <b>told</b> me a story.</td></tr>
+      <tr><td>23</td><td><b>sit</b></td><td class="v-pas">sat</td><td class="es">sentarse</td><td>We <b>sat</b> at the table.</td></tr>
+      <tr><td>24</td><td><b>speak</b></td><td class="v-pas">spoke</td><td class="es">hablar</td><td>I <b>spoke</b> English in class.</td></tr>
+      <tr><td>25</td><td><b>swim</b></td><td class="v-pas">swam</td><td class="es">nadar</td><td>The kids <b>swam</b> in the pool.</td></tr>
+    </tbody>
+  </table>
+  <div class="dos">
+    <div class="caja"><div class="tit">🧠 Truco para memorizarlos</div><p class="chico">Agrúpalos por cómo suenan: <b>bought, thought</b> (-ought) · <b>drank, swam, ran, sat</b> (cambia a «a») · <b>wrote, spoke</b> (cambia a «o») · <b>slept, told, found</b>. Repasa 5 al día y dilos en voz alta en una oración.</p></div>
+    <div class="caja"><div class="tit">🧑‍🍳 Con tu receta</div><p class="chico"><b>I made</b> hot cakes. <b>I had</b> eggs and milk. <b>I ate</b> them with honey. <b>My family came</b> and <b>they said</b>: «Delicious!»</p></div>
+  </div>
+</section>
+
+<!-- ============================ 8. FUTURO ============================ -->
+<section class="pagina c-fut">
+  <h2 class="seccion"><span class="num">7</span> <span class="emo">🚀</span> <span>Futuro con <i>will</i></span> <small>► decisiones, promesas y predicciones</small></h2>
+  <p>El futuro con <b>will</b> es el más fácil: <b>will + verbo base</b> para todas las personas. Sin -s, sin -ed y sin «to». <b>Tomorrow I will cook tacos.</b> <span class="es">Mañana cocinaré tacos.</span></p>
+
+  <table class="b-fut">
+    <thead><tr><th style="width:16%"></th><th>Ejemplo (todas las personas)</th><th>Contracción</th><th>Fórmula</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Afirmativo</td><td>She <b>will cook</b> tomorrow.</td><td>I'll, you'll, she'll, we'll, they'll</td><td>sujeto + will + verbo base</td></tr>
+      <tr><td class="k">Negativo</td><td>She <b>won't cook</b> tomorrow.</td><td>won't = will not</td><td>sujeto + won't + verbo base</td></tr>
+      <tr><td class="k">Pregunta</td><td><b>Will</b> you <b>cook</b> tomorrow?</td><td>—</td><td>Will + sujeto + verbo base?</td></tr>
+      <tr><td class="k">Respuesta corta</td><td>Yes, I will. / No, I won't.</td><td colspan="2">Con Yes no se contrae: <span class="mal">Yes, I'll. ❌</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>🎯 ¿Cuándo uso <i>will</i>?</h3>
+  <table class="b-fut">
+    <thead><tr><th style="width:26%">Uso</th><th>Ejemplo</th><th style="width:34%">Español</th></tr></thead>
+    <tbody>
+      <tr><td class="k">💡 Decisión en el momento</td><td><b>I'm hungry. I'll make a sandwich.</b></td><td class="es">Tengo hambre. Me voy a hacer un sándwich.</td></tr>
+      <tr><td class="k">🔮 Predicción (lo que crees)</td><td><b>It will rain tomorrow.</b> · <b>I think you will pass the exam.</b></td><td class="es">Mañana va a llover. · Creo que vas a pasar el examen.</td></tr>
+      <tr><td class="k">🤝 Promesa</td><td><b>I will call you tonight.</b> · <b>I won't forget.</b></td><td class="es">Te llamo hoy en la noche. · No se me va a olvidar.</td></tr>
+      <tr><td class="k">🙋 Ofrecer ayuda</td><td><b>I'll help you with the dishes.</b></td><td class="es">Te ayudo con los trastes.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="dos">
+    <div>
+      <h3>🗓️ Palabras del futuro</h3>
+      <ul>
+        <li><b>tomorrow</b> <span class="es">mañana</span> · <b>tomorrow morning</b> <span class="es">mañana en la mañana</span></li>
+        <li><b>tonight</b> <span class="es">hoy en la noche</span></li>
+        <li><b>next week / month / year / Sunday</b> <span class="es">la próxima semana…</span></li>
+        <li><b>in two days, in a year</b> <span class="es">en dos días, en un año</span></li>
+        <li><b>soon, later</b> <span class="es">pronto, más tarde</span></li>
+      </ul>
+      <h3>📝 Ejemplos</h3>
+      <ul>
+        <li><b>Luis will be 30 next year.</b> <span class="es">Luis va a cumplir 30 el próximo año.</span></li>
+        <li><b>We won't go to school on Monday.</b> <span class="es">No vamos a ir a la escuela el lunes.</span></li>
+        <li><b>Will you make your recipe again?</b> — Yes, I will.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="caja c-fut b-fut">
+        <div class="tit">🎁 Bonus: going to (planes ya decididos)</div>
+        <p>Para algo que <b>ya planeaste antes</b> de hablar, también se usa <b>going to</b>:</p>
+        <p><span class="formula">am / is / are + going to + verbo base</span></p>
+        <ul class="chico">
+          <li><b>I am going to cook tacos on Sunday.</b> <span class="es">Voy a cocinar tacos el domingo (ya lo planeé).</span></li>
+          <li><b>She isn't going to work tomorrow.</b> <span class="es">Ella no va a trabajar mañana.</span></li>
+          <li><b>Are you going to visit your mom?</b> <span class="es">¿Vas a visitar a tu mamá?</span></li>
+        </ul>
+        <p class="chico"><b>Compara:</b> <i>The phone is ringing! — I'll answer it.</i> (decido ahora: <b>will</b>) · <i>I'm going to visit Puebla in December.</i> (ya lo tenía planeado: <b>going to</b>).</p>
+      </div>
+      <h3>❌ Errores comunes</h3>
+      <table class="errores">
+        <thead><tr><th>❌ Así no</th><th>✅ Así sí</th></tr></thead>
+        <tbody>
+          <tr><td>I will to cook.</td><td>I will cook.</td></tr>
+          <tr><td>She will cooks.</td><td>She will cook.</td></tr>
+          <tr><td>I will be cook tomorrow.</td><td>I will cook tomorrow.</td></tr>
+          <tr><td>I don't will go.</td><td>I won't go.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 9. GRAN CUADRO + HISTORIA ============================ -->
+<section class="pagina c-gris">
+  <h2 class="seccion"><span class="num">8</span> <span class="emo">📊</span> El gran cuadro de los 3 tiempos <small>4 verbos × 3 formas</small></h2>
+  <p class="chico">Lee cada fila de izquierda a derecha: <b>ayer → hoy → mañana</b>. Fíjate en qué cambia (la llave) y qué se queda igual (el verbo base).</p>
+  <table>
+    <thead><tr><th style="width:12%">Verbo</th><th style="width:10%"></th><th>◄ Pasado</th><th>● Presente</th><th>Futuro ►</th></tr></thead>
+    <tbody>
+      <tr><td class="k" rowspan="3">cook<br><span class="es">cocinar</span><br><span class="chico">regular</span></td><td class="k">+</td><td class="v-pas">I cooked.</td><td class="v-pres">I cook. / She cooks.</td><td class="v-fut">I will cook.</td></tr>
+      <tr><td class="k">−</td><td>I didn't cook.</td><td>I don't cook. / She doesn't cook.</td><td>I won't cook.</td></tr>
+      <tr><td class="k">?</td><td>Did you cook?</td><td>Do you cook? / Does she cook?</td><td>Will you cook?</td></tr>
+      <tr><td class="k" rowspan="3">eat<br><span class="es">comer</span><br><span class="chico">irregular</span></td><td class="k">+</td><td class="v-pas">I ate.</td><td class="v-pres">I eat. / He eats.</td><td class="v-fut">I will eat.</td></tr>
+      <tr><td class="k">−</td><td>I didn't eat.</td><td>I don't eat. / He doesn't eat.</td><td>I won't eat.</td></tr>
+      <tr><td class="k">?</td><td>Did you eat?</td><td>Do you eat? / Does he eat?</td><td>Will you eat?</td></tr>
+      <tr><td class="k" rowspan="3">go<br><span class="es">ir</span><br><span class="chico">irregular</span></td><td class="k">+</td><td class="v-pas">We went.</td><td class="v-pres">We go. / She goes.</td><td class="v-fut">We will go.</td></tr>
+      <tr><td class="k">−</td><td>We didn't go.</td><td>We don't go. / She doesn't go.</td><td>We won't go.</td></tr>
+      <tr><td class="k">?</td><td>Did they go?</td><td>Do they go? / Does she go?</td><td>Will they go?</td></tr>
+      <tr><td class="k" rowspan="3">be<br><span class="es">ser / estar</span><br><span class="chico">sin do / did</span></td><td class="k">+</td><td class="v-pas">I was. / We were.</td><td class="v-pres">I am. / She is. / We are.</td><td class="v-fut">I will be.</td></tr>
+      <tr><td class="k">−</td><td>I wasn't. / We weren't.</td><td>I'm not. / She isn't. / We aren't.</td><td>I won't be.</td></tr>
+      <tr><td class="k">?</td><td>Was she…? / Were you…?</td><td>Is she…? / Are you…?</td><td>Will you be…?</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="seccion c-gris" style="margin-top:12px"><span class="num">9</span> <span class="emo">🥞</span> Mini historia en 3 tiempos <small>Mrs. García's hot cakes</small></h2>
+  <div class="dos historia">
+    <div>
+      <p><b class="sello c-pres">● HOY</b> Mrs. García <span class="v-be">is</span> a teacher. She <span class="v-pres">cooks</span> every Sunday. She usually <span class="v-pres">makes</span> hot cakes for her family. Her kids <span class="v-be">are</span> always hungry!</p>
+      <p><b class="sello c-pas">◄ AYER</b> Last Sunday she <span class="v-pas">made</span> hot cakes. First, she <span class="v-pas">mixed</span> the flour and the sugar. Then, she <span class="v-pas">added</span> the milk and the egg. She <span class="v-pas">didn't have</span> butter, so she <span class="v-pas">used</span> oil. Finally, they <span class="v-pas">ate</span> the hot cakes with honey. They <span class="v-pas">were</span> delicious!</p>
+      <p><b class="sello c-fut">MAÑANA ►</b> Next Sunday she <span class="v-fut">will make</span> them again. Her son Luis <span class="v-fut">will help</span> her. «<span class="v-fut">Will</span> you <span class="v-fut">buy</span> the butter?», she asks. «Yes, I <span class="v-fut">will</span>!», says Luis.</p>
+    </div>
+    <div class="es">
+      <p><b>Hoy.</b> La señora García es maestra. Cocina todos los domingos. Normalmente hace hot cakes para su familia. ¡Sus hijos siempre tienen hambre!</p>
+      <p><b>Ayer.</b> El domingo pasado hizo hot cakes. Primero mezcló la harina y el azúcar. Después agregó la leche y el huevo. No tenía mantequilla, así que usó aceite. Al final se comieron los hot cakes con miel. ¡Estaban deliciosos!</p>
+      <p><b>Mañana.</b> El próximo domingo los va a hacer otra vez. Su hijo Luis la va a ayudar. «¿Vas a comprar la mantequilla?», le pregunta. «¡Sí!», dice Luis.</p>
+    </div>
+  </div>
+  <p class="nota chico">✏️ <b>Reto:</b> subraya en tu libreta los verbos de la historia con tres colores (presente, pasado y futuro). Luego escribe la historia de <b>tu</b> receta en los 3 tiempos.</p>
+</section>
+
+<!-- ============================ 10. PRÁCTICA ============================ -->
+<!-- 71 ejercicios numerados de corrido (1–71), de lo fácil a lo difícil; las respuestas van al final de la guía. -->
+<section class="pagina ej c-be">
+  <h2 class="seccion"><span class="num">10</span> <span class="emo">✏️</span> <span>Práctica A · El verbo <i>to be</i></span> <small>ejercicios 1–15</small></h2>
+  <p class="chico">Contesta aquí o en tu libreta. Las respuestas de toda la práctica están al final de la guía (página 19). Los ejercicios van de lo más fácil a lo más difícil.</p>
+  <div class="bloque">
+    <h3>A1. Completa con am, is o are</h3>
+    <ol start="1" class="dos-col">
+      <li>I <span class="raya"></span> a student.</li>
+      <li>My mom <span class="raya"></span> a nurse.</li>
+      <li>Ana and Luis <span class="raya"></span> from Oaxaca.</li>
+      <li>It <span class="raya"></span> hot today.</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>A2. Escribe la oración en negativo</h3>
+    <ol start="5">
+      <li>She is tired. → <span class="raya larga"></span></li>
+      <li>We are at home. → <span class="raya larga"></span></li>
+      <li>I am hungry. → <span class="raya larga"></span></li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>A3. Haz la pregunta y contesta con una respuesta corta</h3>
+    <ol start="8">
+      <li>you / a teacher? (Sí) → <span class="raya larga"></span> <span class="raya media"></span></li>
+      <li>he / at work? (No) → <span class="raya larga"></span> <span class="raya media"></span></li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>A4. Completa con there is, there are, is there o are there</h3>
+    <ol start="10">
+      <li><span class="raya media"></span> a market near my house.</li>
+      <li><span class="raya media"></span> two parks in my neighborhood.</li>
+      <li><span class="raya media"></span> any eggs in the fridge?</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>A5. To be en pasado y en futuro</h3>
+    <ol start="13">
+      <li>Yesterday I <span class="raya"></span> at home, and my kids <span class="raya"></span> at school. <span class="chico es">(was / were)</span></li>
+      <li>Tomorrow it <span class="raya media"></span> sunny. <span class="chico es">(be, en futuro)</span></li>
+      <li>Corrige el error: <i>I have 30 years.</i> → <span class="raya larga"></span></li>
+    </ol>
+  </div>
+  <div class="caja c-be">
+    <div class="tit">🔎 Recuerda</div>
+    <p class="chico" style="margin:0">I → <b>am</b> · he, she, it → <b>is</b> · you, we, they → <b>are</b> · pasado: <b>was / were</b> · futuro: <b>will be</b> · <i>to be</i> no usa do ni did.</p>
+  </div>
+</section>
+
+<section class="pagina ej c-pres">
+  <h2 class="seccion"><span class="num">10</span> <span class="emo">🔁</span> <span>Práctica B · Presente simple</span> <small>ejercicios 16–28</small></h2>
+  <div class="bloque">
+    <h3>B1. La regla de la -s: escribe la forma con he / she / it</h3>
+    <ol start="16" class="cinco-col">
+      <li>cook → <span class="raya"></span></li>
+      <li>watch → <span class="raya"></span></li>
+      <li>study → <span class="raya"></span></li>
+      <li>go → <span class="raya"></span></li>
+      <li>have → <span class="raya"></span></li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>B2. Completa con el verbo en presente</h3>
+    <ol start="21">
+      <li>Luis <span class="raya"></span> (work) in a store.</li>
+      <li>My kids <span class="raya"></span> (eat) breakfast at 7.</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>B3. Negativo con don't o doesn't</h3>
+    <ol start="23">
+      <li>She <span class="raya media"></span> (not like) onion.</li>
+      <li>We <span class="raya media"></span> (not watch) TV at night.</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>B4. Pregunta con Do o Does</h3>
+    <ol start="25">
+      <li><span class="raya"></span> you cook every day?</li>
+      <li><span class="raya"></span> your sister live in Puebla?</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>B5. Pon la palabra de frecuencia en su lugar y escribe la oración completa</h3>
+    <ol start="27">
+      <li>(always) I drink coffee in the morning. → <span class="raya larga"></span></li>
+      <li>(usually) She is happy on Sundays. → <span class="raya larga"></span></li>
+    </ol>
+  </div>
+  <div class="caja c-pres b-pres">
+    <div class="tit">🔎 Recuerda</div>
+    <p class="chico" style="margin:0">he, she, it → verbo + <b>s</b> · <b>doesn't / does</b> + verbo base · la palabra de frecuencia va <b>antes</b> del verbo y <b>después</b> de <i>to be</i>.</p>
+  </div>
+</section>
+
+<section class="pagina ej c-pas">
+  <h2 class="seccion"><span class="num">10</span> <span class="emo">⏪</span> <span>Práctica C · Pasado simple</span> <small>ejercicios 29–45</small></h2>
+  <div class="bloque">
+    <h3>C1. Escribe el pasado regular (-ed)</h3>
+    <ol start="29" class="cinco-col">
+      <li>cook → <span class="raya"></span></li>
+      <li>bake → <span class="raya"></span></li>
+      <li>study → <span class="raya"></span></li>
+      <li>stop → <span class="raya"></span></li>
+      <li>play → <span class="raya"></span></li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>C2. Completa la tabla de irregulares</h3>
+    <table class="b-pas t-centro tabla-ej">
+      <thead><tr><th>#</th><th>Base</th><th>Pasado</th><th>Significado</th></tr></thead>
+      <tbody>
+        <tr><td>34</td><td>go</td><td></td><td>ir</td></tr>
+        <tr><td>35</td><td>eat</td><td></td><td>comer</td></tr>
+        <tr><td>36</td><td>buy</td><td></td><td>comprar</td></tr>
+        <tr><td>37</td><td></td><td>made</td><td>hacer, preparar</td></tr>
+        <tr><td>38</td><td></td><td>wrote</td><td>escribir</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="bloque">
+    <h3>C3. Usa el verbo en pasado</h3>
+    <ol start="39">
+      <li>Last Sunday we <span class="raya"></span> (go) to the park.</li>
+      <li>I <span class="raya"></span> (have) eggs for breakfast yesterday.</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>C4. Did y didn't + verbo base</h3>
+    <ol start="41">
+      <li>She <span class="raya media"></span> (not cook) last night.</li>
+      <li><span class="raya"></span> you <span class="raya"></span> (see) the movie?</li>
+      <li>Haz la pregunta: you / buy / milk / yesterday → <span class="raya larga"></span></li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>C5. Completa con last o ago</h3>
+    <ol start="44">
+      <li>I visited my mom two days <span class="raya"></span>.</li>
+      <li>We cooked tacos <span class="raya"></span> weekend.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="pagina ej c-fut">
+  <h2 class="seccion"><span class="num">10</span> <span class="emo">🚀</span> <span>Práctica D · Futuro con <i>will</i></span> <small>ejercicios 46–54</small></h2>
+  <div class="bloque">
+    <h3>D1. Completa con will o won't + verbo</h3>
+    <ol start="46">
+      <li>I <span class="raya media"></span> (call) you tonight.</li>
+      <li>They <span class="raya media"></span> (be) at the party next week.</li>
+      <li>She <span class="raya media"></span> (not work) tomorrow.</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>D2. Preguntas y respuestas cortas</h3>
+    <ol start="49">
+      <li><span class="raya"></span> you help me, please?</li>
+      <li>Will it rain tomorrow? — Yes, <span class="raya media"></span>.</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>D3. Decisiones y predicciones</h3>
+    <ol start="51">
+      <li><i>(decisión)</i> I'm thirsty. I <span class="raya media"></span> (drink) some water.</li>
+      <li><i>(predicción)</i> I think you <span class="raya media"></span> (pass) the exam.</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>D4. Ordena y corrige</h3>
+    <ol start="53">
+      <li>Ordena: will / next / visit / we / Puebla / year → <span class="raya larga"></span></li>
+      <li>Corrige: <i>I will to cook tomorrow.</i> → <span class="raya larga"></span></li>
+    </ol>
+  </div>
+
+  <h2 class="seccion c-gris" style="margin-top:14px"><span class="num">10</span> <span class="emo">🔀</span> <span>Práctica E · Mezcla de tiempos</span> <small>ejercicios 55–56</small></h2>
+  <div class="bloque">
+    <h3>E1. Una oración, tres tiempos: pásala a pasado y a futuro</h3>
+    <ol start="55">
+      <li>I eat tacos.<br><i>Yesterday</i> <span class="raya larga"></span> &nbsp; <i>Tomorrow</i> <span class="raya larga"></span></li>
+      <li>She is at home.<br><i>Yesterday</i> <span class="raya larga"></span> &nbsp; <i>Tomorrow</i> <span class="raya larga"></span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="pagina ej c-gris">
+  <h2 class="seccion"><span class="num">10</span> <span class="emo">🔀</span> <span>Práctica E · Mezcla de tiempos (2)</span> <small>ejercicios 57–71</small></h2>
+  <div class="bloque">
+    <h3>E2. Mira la palabra de tiempo y encierra la opción correcta</h3>
+    <ol start="57" class="dos-col">
+      <li><b>Yesterday</b> I ___ pasta.<br>a) cook &nbsp; b) cooked &nbsp; c) will cook</li>
+      <li><b>Every Sunday</b> we ___ to the market.<br>a) go &nbsp; b) went &nbsp; c) will go</li>
+      <li><b>Next week</b> Luis ___ 30.<br>a) is &nbsp; b) was &nbsp; c) will be</li>
+      <li><b>Two days ago</b> they ___ hot cakes.<br>a) make &nbsp; b) made &nbsp; c) will make</li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>E3. Corrige el error</h3>
+    <ol start="61">
+      <li>Did she went to work? → <span class="raya larga"></span></li>
+      <li>He don't like milk. → <span class="raya larga"></span></li>
+      <li>I am agree with you. → <span class="raya larga"></span></li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>E4. Ordena la oración</h3>
+    <ol start="64">
+      <li>ate / honey / we / the hot cakes / with → <span class="raya larga"></span></li>
+    </ol>
+  </div>
+  <div class="bloque">
+    <h3>E5. Completa la historia de la receta en pasado</h3>
+    <div class="caja c-pas b-pas historia" style="line-height:2.1">
+      <p style="margin:0">Last Sunday I <b>(65)</b> <span class="raya"></span> <span class="es chico">(make)</span> hot cakes. First, I <b>(66)</b> <span class="raya"></span> <span class="es chico">(mix)</span> the flour and the sugar. Then, I <b>(67)</b> <span class="raya"></span> <span class="es chico">(add)</span> the milk and the egg. I <b>(68)</b> <span class="raya media"></span> <span class="es chico">(not have)</span> butter, so I <b>(69)</b> <span class="raya"></span> <span class="es chico">(use)</span> oil. My family <b>(70)</b> <span class="raya"></span> <span class="es chico">(eat)</span> them with honey. They <b>(71)</b> <span class="raya"></span> <span class="es chico">(be)</span> delicious!</p>
+    </div>
+  </div>
+  <div class="caja c-gris" style="margin-top:14px">
+    <div class="tit">📏 Califícate (71 ejercicios)</div>
+    <p class="chico">Revisa con las respuestas de la página 19. Cada ejercicio vale 1 punto (en el 8, 9, 13, 42, 55 y 56 tiene que estar todo bien).<br><b>64–71</b> ¡Excelente! · <b>50–63</b> Muy bien, repasa lo que fallaste · <b>menos de 50</b> vuelve a leer la sección que más fallaste y repite esos ejercicios en 2 días.</p>
+    <table class="t-centro" style="margin:6px 0 0">
+      <thead><tr><th>A · to be (15)</th><th>B · presente (13)</th><th>C · pasado (17)</th><th>D · futuro (9)</th><th>E · mezcla (17)</th><th>Total (71)</th></tr></thead>
+      <tbody><tr><td style="height:28px"></td><td></td><td></td><td></td><td></td><td></td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ SOPA DE LETRAS ============================ -->
+<section class="pagina c-pas">
+  <h2 class="seccion"><span class="num">10</span> <span class="emo">🔤</span> <span>Sopa de letras: el pasado irregular</span> <small>para divertirte</small></h2>
+  <p>Escribe el <b>pasado</b> de cada verbo y luego búscalo en la sopa de letras. Las palabras van <b>→ a la derecha</b>, <b>↓ hacia abajo</b> o <b>en diagonal</b> (hacia abajo y a la derecha). <span class="chico es">(Ojo: RAN también aparece dentro de DRANK.)</span></p>
+  <table class="sopa">
+      <tr><td>H</td><td>H</td><td>P</td><td>L</td><td>M</td><td>J</td><td>F</td><td>P</td><td>T</td><td>O</td><td>O</td><td>K</td><td>B</td></tr>
+      <tr><td>L</td><td>F</td><td>V</td><td>Y</td><td>J</td><td>J</td><td>O</td><td>D</td><td>U</td><td>D</td><td>I</td><td>M</td><td>V</td></tr>
+      <tr><td>Y</td><td>U</td><td>V</td><td>I</td><td>C</td><td>L</td><td>U</td><td>R</td><td>U</td><td>M</td><td>C</td><td>Y</td><td>D</td></tr>
+      <tr><td>M</td><td>S</td><td>J</td><td>I</td><td>L</td><td>V</td><td>N</td><td>A</td><td>B</td><td>C</td><td>K</td><td>L</td><td>B</td></tr>
+      <tr><td>H</td><td>L</td><td>V</td><td>P</td><td>P</td><td>P</td><td>D</td><td>N</td><td>J</td><td>A</td><td>N</td><td>U</td><td>D</td></tr>
+      <tr><td>D</td><td>E</td><td>M</td><td>F</td><td>B</td><td>Y</td><td>F</td><td>K</td><td>M</td><td>M</td><td>E</td><td>M</td><td>F</td></tr>
+      <tr><td>J</td><td>P</td><td>M</td><td>G</td><td>A</td><td>V</td><td>E</td><td>I</td><td>P</td><td>E</td><td>W</td><td>I</td><td>L</td></tr>
+      <tr><td>H</td><td>T</td><td>U</td><td>M</td><td>P</td><td>V</td><td>B</td><td>J</td><td>Y</td><td>V</td><td>W</td><td>M</td><td>Y</td></tr>
+      <tr><td>D</td><td>M</td><td>Y</td><td>M</td><td>F</td><td>J</td><td>G</td><td>B</td><td>L</td><td>I</td><td>R</td><td>P</td><td>M</td></tr>
+      <tr><td>F</td><td>B</td><td>O</td><td>U</td><td>G</td><td>H</td><td>T</td><td>O</td><td>M</td><td>J</td><td>O</td><td>L</td><td>W</td></tr>
+      <tr><td>I</td><td>A</td><td>J</td><td>R</td><td>S</td><td>A</td><td>W</td><td>I</td><td>T</td><td>B</td><td>T</td><td>M</td><td>E</td></tr>
+      <tr><td>M</td><td>P</td><td>T</td><td>Y</td><td>A</td><td>P</td><td>I</td><td>M</td><td>A</td><td>D</td><td>E</td><td>L</td><td>N</td></tr>
+      <tr><td>P</td><td>B</td><td>Y</td><td>E</td><td>F</td><td>N</td><td>U</td><td>S</td><td>A</td><td>I</td><td>D</td><td>D</td><td>T</td></tr>
+  </table>
+  <ol class="sopa-lista">
+    <li>go → <span class="raya"></span></li><li>eat → <span class="raya"></span></li><li>make → <span class="raya"></span></li><li>see → <span class="raya"></span></li>
+    <li>come → <span class="raya"></span></li><li>get → <span class="raya"></span></li><li>take → <span class="raya"></span></li><li>give → <span class="raya"></span></li>
+    <li>say → <span class="raya"></span></li><li>know → <span class="raya"></span></li><li>buy → <span class="raya"></span></li><li>drink → <span class="raya"></span></li>
+    <li>write → <span class="raya"></span></li><li>run → <span class="raya"></span></li><li>sleep → <span class="raya"></span></li><li>find → <span class="raya"></span></li>
+  </ol>
+  <p class="nota">🏆 <b>Reto extra:</b> cuando encuentres una palabra, di en voz alta una oración con ella: <i>Yesterday I went to the market.</i> La solución está al final de la guía.</p>
+</section>
+
+<!-- ============================ 11. ESCRIBE SOBRE TI ============================ -->
+<section class="pagina c-gris">
+  <h2 class="seccion"><span class="num">11</span> <span class="emo">📝</span> <span>Escribe sobre ti</span> <small>aquí o en tu libreta</small></h2>
+  <p>Ahora usa lo que aprendiste para hablar de <b>tu</b> vida. Escribe oraciones completas y léelas en voz alta.</p>
+  <div class="bloque">
+    <h3 style="color:var(--be)">◆ 1. Preséntate: 5 oraciones con <i>to be</i></h3>
+    <p class="chico es">Ideas: tu nombre, tu edad, de dónde eres, tu trabajo y cómo te sientes hoy. <i>I'm Ana. I'm 30. I'm from Puebla…</i></p>
+    <div class="renglon"></div><div class="renglon"></div><div class="renglon"></div><div class="renglon"></div><div class="renglon"></div>
+  </div>
+  <div class="bloque">
+    <h3 style="color:var(--pas)">◄ 2. ¿Qué hiciste ayer? (pasado)</h3>
+    <p class="chico es">Usa yesterday, first, then, finally y verbos irregulares. <i>Yesterday I got up at 6. Then I went to work…</i></p>
+    <div class="renglon"></div><div class="renglon"></div><div class="renglon"></div><div class="renglon"></div><div class="renglon"></div><div class="renglon"></div>
+  </div>
+  <div class="bloque">
+    <h3 style="color:var(--fut)">► 3. ¿Qué vas a hacer el próximo fin de semana? (futuro con will)</h3>
+    <p class="chico es">Usa next Saturday, next Sunday y will / won't. <i>Next Saturday I will visit my mom. I won't work…</i></p>
+    <div class="renglon"></div><div class="renglon"></div><div class="renglon"></div><div class="renglon"></div><div class="renglon"></div><div class="renglon"></div>
+  </div>
+</section>
+
+<!-- ============================ 11. LIBRETA ============================ -->
+<section class="pagina c-gris">
+  <h2 class="seccion"><span class="num">12</span> <span class="emo">📓</span> Para tu libreta <small>pásala completa, con buena letra</small></h2>
+  <p>Copiar a mano te ayuda a recordar. Ponle título y fecha, usa los 3 colores de la guía (verde para presente, naranja para pasado y azul para futuro) y subraya los verbos.</p>
+  <table>
+    <thead><tr><th style="width:5%">✔</th><th style="width:40%">Qué copiar</th><th>Cómo</th></tr></thead>
+    <tbody>
+      <tr><td>☐</td><td><b>1. Tabla de to be en presente</b> (pág. 3)</td><td>Pronombre, am / is / are, contracción, negativo y pregunta.</td></tr>
+      <tr><td>☐</td><td><b>2. To be en los 3 tiempos</b> (pág. 4)</td><td>was / were · am / is / are · will be, y there is / there are.</td></tr>
+      <tr><td>☐</td><td><b>3. Los errores comunes de to be</b> (pág. 3)</td><td>Escribe el ❌ tachado y el ✅ al lado.</td></tr>
+      <tr><td>☐</td><td><b>4. Las 3 llaves y el gran cuadro</b> (págs. 2 y 9)</td><td>Con el verbo <b>cook</b> y otro que tú elijas: +, − y ? en los 3 tiempos.</td></tr>
+      <tr><td>☐</td><td><b>5. Reglas de la -s y de la -ed</b> (págs. 5 y 6)</td><td>Con 2 ejemplos tuyos de cada regla y los 3 sonidos de -ed.</td></tr>
+      <tr><td>☐</td><td><b>6. Los 25 verbos irregulares</b> (pág. 7)</td><td>Base, pasado y significado. Repasa 5 al día.</td></tr>
+      <tr><td>☐</td><td><b>7. Futuro con will y going to</b> (pág. 8)</td><td>Los 4 usos de will con un ejemplo tuyo cada uno.</td></tr>
+      <tr><td>☐</td><td><b>8. 10 oraciones tuyas en presente</b></td><td>De tu rutina: <i>I get up at 6. My son goes to school…</i> (incluye 2 negativas y 2 preguntas).</td></tr>
+      <tr><td>☐</td><td><b>9. 10 oraciones tuyas en pasado</b></td><td>De ayer o el fin de semana: <i>Yesterday I cooked… I went…</i> (incluye 2 negativas y 2 preguntas).</td></tr>
+      <tr><td>☐</td><td><b>10. 10 oraciones tuyas en futuro</b></td><td>Tus planes y promesas: <i>Tomorrow I will… Next week we will…</i> (incluye 2 negativas y 2 preguntas).</td></tr>
+      <tr><td>☐</td><td><b>11. La práctica y «Escribe sobre ti»</b> (págs. 10–16)</td><td>Resuelve los 71 ejercicios, califícate con las respuestas del final y corrige con otro color.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>✅ Autoevaluación: ¿ya puedo…?</h3>
+  <div class="dos">
+    <ul class="check">
+      <li>Decir am, is o are con cada pronombre.</li>
+      <li>Hacer negativos y preguntas con to be (sin do).</li>
+      <li>Decir mi nombre, edad, de dónde soy y mi trabajo.</li>
+      <li>Usar there is / there are para describir mi colonia.</li>
+      <li>Usar was / were para hablar de ayer.</li>
+      <li>Poner la -s con he, she, it (y escribirla bien: -es, -ies).</li>
+    </ul>
+    <ul class="check">
+      <li>Usar do / does en preguntas y negativos del presente.</li>
+      <li>Escribir y pronunciar el pasado con -ed (/t/, /d/, /ɪd/).</li>
+      <li>Decir de memoria los 25 irregulares.</li>
+      <li>Usar did / didn't con el verbo base.</li>
+      <li>Hablar de mis planes con will y won't.</li>
+      <li>Contar mi receta en presente, pasado y futuro.</li>
+    </ul>
+  </div>
+  <p class="nota">🎯 Si marcaste menos de 9, vuelve a la sección que te falta antes del examen. Si tienes dudas, llévalas al Meet del domingo: el profe las resuelve con todo el grupo.</p>
+</section>
+
+<!-- ============================ 13. RECURSOS ============================ -->
+<section class="pagina c-gris">
+  <h2 class="seccion"><span class="num">13</span> <span class="emo">🌐</span> <span>Recursos oficiales para estudiar más</span></h2>
+  <h3>📚 Documentación oficial (Cambridge Grammar, en inglés con ejemplos)</h3>
+  <ul class="links chico">
+    <li><b>Be (am, is, are, was, were):</b> <a href="https://dictionary.cambridge.org/es/gramatica/gramatica-britanica/be">dictionary.cambridge.org/es/gramatica/gramatica-britanica/be</a></li>
+    <li><b>Contracciones (I'm, isn't, won't):</b> <a href="https://dictionary.cambridge.org/es/gramatica/gramatica-britanica/contractions">dictionary.cambridge.org/es/gramatica/gramatica-britanica/contractions</a></li>
+    <li><b>There is / there are:</b> <a href="https://dictionary.cambridge.org/es/gramatica/gramatica-britanica/there-is-there-are">dictionary.cambridge.org/es/gramatica/gramatica-britanica/there-is-there-are</a></li>
+    <li><b>Present simple (I work):</b> <a href="https://dictionary.cambridge.org/es/gramatica/gramatica-britanica/present-simple-i-work">dictionary.cambridge.org/es/gramatica/gramatica-britanica/present-simple-i-work</a></li>
+    <li><b>Past simple (I worked):</b> <a href="https://dictionary.cambridge.org/es/gramatica/gramatica-britanica/past-simple-i-worked">dictionary.cambridge.org/es/gramatica/gramatica-britanica/past-simple-i-worked</a></li>
+    <li><b>Tabla de verbos irregulares:</b> <a href="https://dictionary.cambridge.org/es/gramatica/gramatica-britanica/irregular-verbs">dictionary.cambridge.org/es/gramatica/gramatica-britanica/irregular-verbs</a></li>
+    <li><b>Will:</b> <a href="https://dictionary.cambridge.org/es/gramatica/gramatica-britanica/will">dictionary.cambridge.org/es/gramatica/gramatica-britanica/will</a></li>
+    <li><b>Going to:</b> <a href="https://dictionary.cambridge.org/es/gramatica/gramatica-britanica/going-to">dictionary.cambridge.org/es/gramatica/gramatica-britanica/going-to</a></li>
+    <li><b>Tiempos verbales y el tiempo (tenses and time):</b> <a href="https://dictionary.cambridge.org/es/gramatica/gramatica-britanica/tenses-and-time">dictionary.cambridge.org/es/gramatica/gramatica-britanica/tenses-and-time</a></li>
+    <li><b>Diccionario inglés-español (escucha la pronunciación):</b> <a href="https://dictionary.cambridge.org/es/diccionario/ingles-espanol/">dictionary.cambridge.org/es/diccionario/ingles-espanol</a></li>
+  </ul>
+  <div class="caja c-gris">
+    <div class="tit">🎧 Para practicar más</div>
+    <p class="chico">En YouTube busca: <b>«presente pasado y futuro simple en inglés»</b>, <b>«verbo to be explicación en español»</b> y <b>«pronunciación ed en inglés»</b>. Con la IA, puedes pedir: <i>Correct my sentences in the past tense and explain my mistakes in Spanish. I am a beginner (A1).</i> Revisa siempre lo que te responda con esta guía.</p>
+  </div>
+  <h3>🗓️ Plan sugerido: estudia un poco cada día</h3>
+  <table>
+    <thead><tr><th style="width:16%">Día</th><th style="width:38%">Lee y copia en tu libreta</th><th>Practica</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Día 1</td><td>Línea del tiempo y <i>to be</i> (págs. 2–4)</td><td>Práctica A (1–15) y «Preséntate» (pág. 16)</td></tr>
+      <tr><td class="k">Día 2</td><td>Presente simple (pág. 5)</td><td>Práctica B (16–28)</td></tr>
+      <tr><td class="k">Día 3</td><td>Pasado simple e irregulares (págs. 6–7)</td><td>Práctica C (29–45), sopa de letras y «¿Qué hiciste ayer?»</td></tr>
+      <tr><td class="k">Día 4</td><td>Futuro con will (pág. 8)</td><td>Práctica D (46–54) y «El próximo fin de semana»</td></tr>
+      <tr><td class="k">Día 5</td><td>Gran cuadro y mini historia (pág. 9)</td><td>Práctica E (55–71), califícate y llena la autoevaluación (pág. 17)</td></tr>
+    </tbody>
+  </table>
+  <p class="es chico" style="margin-top:10px">Guía de estudio de Inglés A1–A2 · los 3 tiempos + el verbo to be. Material del curso para alumnos y alumnas y para el profe. Los nombres de los ejemplos (Ana, Luis, Mrs. García…) son inventados.</p>
+</section>
+
+<!-- ============================ 12. RESPUESTAS (al final) ============================ -->
+<section class="pagina c-gris respuestas">
+  <h2 class="seccion"><span class="num">14</span> <span class="emo">🔑</span> <span>Respuestas de la práctica</span> <small>revisa después de contestar</small></h2>
+  <p class="chico">Si tu respuesta es distinta pero dice lo mismo (por ejemplo con o sin contracción: <i>isn't / is not</i>), también cuenta.</p>
+  <div class="resp">
+    <div class="grupo c-be"><div class="tit">A · To be</div><ol start="1">
+      <li>am</li><li>is</li><li>are</li><li>is</li>
+      <li>She isn't tired. (She's not / She is not tired.)</li>
+      <li>We aren't at home. (We're not / We are not…)</li>
+      <li>I'm not hungry. (I am not hungry.)</li>
+      <li>Are you a teacher? Yes, I am.</li>
+      <li>Is he at work? No, he isn't. (No, he's not.)</li>
+      <li>There is (There's)</li><li>There are</li><li>Are there</li>
+      <li>was / were</li><li>will be ('ll be)</li>
+      <li>I am 30 (years old). (I'm 30.)</li>
+    </ol></div>
+    <div class="grupo c-pres"><div class="tit">B · Presente simple</div><ol start="16">
+      <li>cooks</li><li>watches</li><li>studies</li><li>goes</li><li>has</li>
+      <li>works</li><li>eat (my kids = they, sin -s)</li>
+      <li>doesn't like</li><li>don't watch</li>
+      <li>Do</li><li>Does</li>
+      <li>I always drink coffee in the morning.</li>
+      <li>She is usually happy on Sundays.</li>
+    </ol></div>
+    <div class="grupo c-pas"><div class="tit">C · Pasado simple</div><ol start="29">
+      <li>cooked</li><li>baked</li><li>studied</li><li>stopped</li><li>played</li>
+      <li>went</li><li>ate</li><li>bought</li><li>make</li><li>write</li>
+      <li>went</li><li>had</li>
+      <li>didn't cook</li><li>Did … see</li>
+      <li>Did you buy milk yesterday?</li>
+      <li>ago</li><li>last</li>
+    </ol></div>
+    <div class="grupo c-fut"><div class="tit">D · Futuro con will</div><ol start="46">
+      <li>will call ('ll call)</li><li>will be</li><li>won't work</li>
+      <li>Will</li><li>it will</li>
+      <li>will drink ('ll drink)</li><li>will pass</li>
+      <li>We will visit Puebla next year. (Next year we will visit Puebla.)</li>
+      <li>I will cook tomorrow.</li>
+    </ol></div>
+    <div class="grupo c-gris"><div class="tit">E · Mezcla de tiempos</div><ol start="55">
+      <li>Yesterday I ate tacos. · Tomorrow I will eat tacos.</li>
+      <li>Yesterday she was at home. · Tomorrow she will be at home.</li>
+      <li>b) cooked</li><li>a) go</li><li>c) will be</li><li>b) made</li>
+      <li>Did she go to work?</li><li>He doesn't like milk.</li><li>I agree with you.</li>
+      <li>We ate the hot cakes with honey.</li>
+      <li>made</li><li>mixed</li><li>added</li><li>didn't have</li><li>used</li><li>ate</li><li>were</li>
+    </ol></div>
+    <div class="grupo c-pas"><div class="tit">🔤 Sopa de letras</div>
+      <p class="chico" style="margin:0 0 4px">went · ate · made · saw · came · got · took · gave · said · knew · bought · drank · wrote · ran · slept · found</p>
+      <table class="sopa mini">
+        <tr><td>H</td><td>H</td><td>P</td><td>L</td><td>M</td><td>J</td><td class="s">F</td><td>P</td><td class="s">T</td><td class="s">O</td><td class="s">O</td><td class="s">K</td><td>B</td></tr>
+        <tr><td>L</td><td>F</td><td>V</td><td>Y</td><td>J</td><td>J</td><td class="s">O</td><td class="s">D</td><td>U</td><td>D</td><td>I</td><td>M</td><td>V</td></tr>
+        <tr><td>Y</td><td>U</td><td>V</td><td>I</td><td>C</td><td>L</td><td class="s">U</td><td class="s">R</td><td>U</td><td>M</td><td>C</td><td>Y</td><td>D</td></tr>
+        <tr><td>M</td><td class="s">S</td><td>J</td><td>I</td><td>L</td><td>V</td><td class="s">N</td><td class="s">A</td><td>B</td><td class="s">C</td><td class="s">K</td><td>L</td><td>B</td></tr>
+        <tr><td>H</td><td class="s">L</td><td>V</td><td>P</td><td>P</td><td>P</td><td class="s">D</td><td class="s">N</td><td>J</td><td class="s">A</td><td class="s">N</td><td>U</td><td>D</td></tr>
+        <tr><td>D</td><td class="s">E</td><td>M</td><td>F</td><td>B</td><td>Y</td><td>F</td><td class="s">K</td><td>M</td><td class="s">M</td><td class="s">E</td><td>M</td><td>F</td></tr>
+        <tr><td>J</td><td class="s">P</td><td>M</td><td class="s">G</td><td class="s">A</td><td class="s">V</td><td class="s">E</td><td>I</td><td>P</td><td class="s">E</td><td class="s">W</td><td>I</td><td>L</td></tr>
+        <tr><td>H</td><td class="s">T</td><td>U</td><td>M</td><td>P</td><td>V</td><td>B</td><td>J</td><td>Y</td><td>V</td><td class="s">W</td><td>M</td><td>Y</td></tr>
+        <tr><td>D</td><td>M</td><td>Y</td><td>M</td><td>F</td><td>J</td><td class="s">G</td><td>B</td><td>L</td><td>I</td><td class="s">R</td><td>P</td><td>M</td></tr>
+        <tr><td>F</td><td class="s">B</td><td class="s">O</td><td class="s">U</td><td class="s">G</td><td class="s">H</td><td class="s">T</td><td class="s">O</td><td>M</td><td>J</td><td class="s">O</td><td>L</td><td class="s">W</td></tr>
+        <tr><td>I</td><td class="s">A</td><td>J</td><td class="s">R</td><td class="s">S</td><td class="s">A</td><td class="s">W</td><td>I</td><td class="s">T</td><td>B</td><td class="s">T</td><td>M</td><td class="s">E</td></tr>
+        <tr><td>M</td><td>P</td><td class="s">T</td><td>Y</td><td class="s">A</td><td>P</td><td>I</td><td class="s">M</td><td class="s">A</td><td class="s">D</td><td class="s">E</td><td>L</td><td class="s">N</td></tr>
+        <tr><td>P</td><td>B</td><td>Y</td><td class="s">E</td><td>F</td><td class="s">N</td><td>U</td><td class="s">S</td><td class="s">A</td><td class="s">I</td><td class="s">D</td><td>D</td><td class="s">T</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
