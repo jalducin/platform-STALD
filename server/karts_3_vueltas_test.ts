@@ -7,6 +7,7 @@ import { assert, assertEquals } from "jsr:@std/assert@1";
 import "../juegos/karts-pistas.js";
 import "../juegos/arcade.js";
 import "../juegos/karts-reversa.js";
+import "../juegos/karts-copa.js";
 import { MAPAS_SALA, reglasCarrera } from "./carreras.ts";
 import { validarProgreso, VERSION_PISTAS_KARTS } from "./progreso.ts";
 
@@ -129,4 +130,21 @@ Deno.test("3 vueltas: la reversa sobre la meta no suma vueltas y la 3.ª vuelta 
   assertEquals(mj(3), "vuelta");
   for (let i = 0; i < 10; i++) { assertEquals(mj(N - 4), "atras"); assertEquals(mj(4), "recupera"); }
   assertEquals([j.vuelta, j.deuda], [2, 0], "ir y venir no llega a la 3.ª");
+});
+
+// karts-3-vueltas + karts-copa-sala-4: si nadie llega, la carrera (suelta o de copa) cierra al vencer el límite de la
+// pista con 3 vueltas + la gracia; con una llegada, a los 30 s de ella (el plazo no depende de las vueltas).
+Deno.test("3 vueltas: el límite de la pista con 3 vueltas sigue siendo el cierre de respaldo de la sala", () => {
+  const KC = g.KartsCopa;
+  for (const id of MAPAS_SALA.karts) {
+    const limite = A.limiteSala("karts", id), inicio = 1_000_000;
+    assertEquals(limite, A.limitesKarts(id).limiteMs, id);
+    assert(limite >= 440_000, id + " límite de 3 vueltas: " + limite);
+    const c = { inicio, limite, total: 2, reportes: [undefined, undefined] };
+    assertEquals(KC.cierreCarrera(c, inicio + limite + A.GRACIA_SALA - 1).cierre, null, id + " sigue abierta antes del límite");
+    assertEquals(KC.cierreCarrera(c, inicio + limite + A.GRACIA_SALA).cierre, inicio + limite + A.GRACIA_SALA, id + " cierra al vencer");
+    const llegada = inicio + A.refKarts(id);
+    const una = { inicio, limite, total: 2, reportes: [{ t: llegada, ms: A.refKarts(id) }, undefined] };
+    assertEquals(KC.cierreCarrera(una, llegada + KC.PLAZO_MS).cierre, llegada + KC.PLAZO_MS, id + " 30 s tras la primera llegada");
+  }
 });

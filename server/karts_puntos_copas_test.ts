@@ -227,7 +227,9 @@ for (const copa of COPAS) {
       c.ir(cal.inicio + msGana + 300); // el reporte llega 0.3 s después de cruzar la meta
       const r1 = await reportar(c, codigo, "Marisol", k, msGana); // NOSONAR: llamadas en orden
       assertEquals(r1.status, 200, `${copa} carrera ${k} (${pista}) Marisol ${msGana} ms: ${JSON.stringify(r1.body)}`);
-      const msAngel = realista(pista);
+      // karts-3-vueltas: con 3 vueltas, «realista» (108 %) llega > 30 s después del 90 % y la carrera ya cerró
+      // (karts-copa-sala-4); Angel llega 20 s después de Marisol, dentro del plazo.
+      const msAngel = Math.min(realista(pista), msGana + 20_000);
       c.ir(cal.inicio + msAngel + 300);
       const r2 = await reportar(c, codigo, "Angel", k, msAngel); // NOSONAR: llamadas en orden
       assertEquals(r2.status, 200, `${copa} carrera ${k} (${pista}) Angel ${msAngel} ms: ${JSON.stringify(r2.body)}`);

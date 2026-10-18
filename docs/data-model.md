@@ -176,7 +176,13 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     encabezado por sección, y se barajan solo dentro de cada sección (cambio `examen-por-secciones`).
   - `temas[]`: con `retroalimentacion` por estado.
   - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }] }`.
-  - `tips[]`: `{ tipo: "libreta" | "video", texto, url? }`. Los videos son enlaces de **búsqueda** de YouTube.
+  - `tips[]`: `{ tipo: "libreta" | "video" | "lectura", texto, url? }`. Los videos son enlaces de **búsqueda** de
+    YouTube; `lectura` enlaza documentación oficial verificada o material propio, como los PDF de estudio.
+  - **Material de estudio en PDF** (cambio `material-pdf-ingles`): vive en el repo **público** porque no tiene datos
+    personales. Fuente `herramientas/material-ingles/<nombre>.html` → generador
+    `herramientas/material-ingles/generar-pdf.ts` → `ingles/material/<nombre>.pdf`, que sirve GitHub Pages. La
+    actividad lo enlaza con un tip `lectura` y la URL absoluta de Pages; el repo de datos se sube después de que Pages
+    sirva el PDF. Primera guía: `guia-tres-tiempos-y-to-be.pdf` (actividad `guia-2026-10-23`).
   - `banco[]`: ejercicios `{ id, tema, tipo: "opcion" | "escribir" | "pronunciar" | "ordenar" | "emparejar",
     enunciado, opciones? + correcta? | aceptadas? | frase? | palabras? + distractores? | pares?, audio?, explicacion }`.
     - `audio` (opcional, cualquier tipo): texto que la página lee en voz alta (en-US, 🔊 normal y 🐢 lento). Es

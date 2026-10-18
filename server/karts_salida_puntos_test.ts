@@ -112,17 +112,17 @@ Deno.test("karts-salida-y-puntos: quien no terminó va después de todos los que
   const ms = Math.round(A.refKarts("chichen") * 1.2);
   c.ir(inicio + ms);
   assertEquals((await reportar(c, codigo, "Angel", { ms, monedas: 1 })).status, 200);
-  const lim = A.limiteSala("karts", "chichen");
-  c.ir(inicio + lim);
+  // karts-copa-sala-4: quien no llega manda «no terminó» con su avance dentro de los 30 s tras la primera llegada.
+  c.ir(inicio + ms + 20_000);
   // Avance solo cuando no terminó (‰ de 0 a 999).
   for (const malo of [{ ms, monedas: 0, avance: 500 }, { ms: null, monedas: 0, avance: 1000 }, { ms: null, monedas: 0, avance: -1 }, { ms: null, monedas: 0, avance: 1.5 }]) {
     assertEquals((await reportar(c, codigo, "Laura", malo)).body.error, "carrera_invalida", JSON.stringify(malo)); // NOSONAR: en orden
   }
   assertEquals((await reportar(c, codigo, "Laura", { ms: null, monedas: 9, avance: 300 })).status, 200);
   assertEquals((await reportar(c, codigo, "Beto", { ms: null, monedas: 0, avance: 800 })).status, 200);
-  // Marisol no manda nada (se fue la red): la carrera sigue abierta hasta el límite + la gracia; luego queda al final.
+  // Marisol no manda nada (se fue la red): la carrera sigue abierta hasta 30 s tras la llegada de Angel; luego queda al final.
   assertEquals((await guardar(c, codigo, "Angel", 0)).body.error, "carrera_en_curso");
-  c.ir(inicio + lim + A.GRACIA_SALA);
+  c.ir(inicio + ms + KC.PLAZO_MS);
   const antes = await guardar(c, codigo, "Angel", 0);
   assertEquals(antes.status, 200, JSON.stringify(antes.body));
   const vista = (await c.call("GET", `/sala/${codigo}`, "Angel")).body;
@@ -131,17 +131,23 @@ Deno.test("karts-salida-y-puntos: quien no terminó va después de todos los que
   assertEquals([antes.body.puntos, (await guardar(c, codigo, "Beto", 999)).body.puntos], [500, 0]);
 });
 
-Deno.test("karts-salida-y-puntos: el límite + la gracia cierran la carrera aunque falte alguien", async () => {
+Deno.test("karts-salida-y-puntos: el plazo de 30 s tras la primera llegada (o el límite) cierra la carrera aunque falte alguien", async () => {
   const c = ctx();
   const { codigo, inicio } = await carreraEmpezada(c, "hielo", ["Angel"]);
   const ms = Math.round(A.refKarts("hielo") * 0.95);
   c.ir(inicio + ms);
   assertEquals((await reportar(c, codigo, "Angel", { ms, monedas: 4 })).status, 200);
-  c.ir(inicio + A.limiteSala("karts", "hielo") + A.GRACIA_SALA - 1);
+  c.ir(inicio + ms + KC.PLAZO_MS - 1); // karts-copa-sala-4
   assertEquals((await guardar(c, codigo, "Angel", 0)).body.error, "carrera_en_curso");
   c.avanzar(1);
   const r = await guardar(c, codigo, "Angel", 0);
   assertEquals([r.status, r.body.puntos], [200, 500], JSON.stringify(r.body));
+  // Nadie llega: cierra al límite de la pista + la gracia.
+  const otra = await carreraEmpezada(c, "hielo", ["Angel"]);
+  c.ir(otra.inicio + A.limiteSala("karts", "hielo") + A.GRACIA_SALA - 1);
+  assertEquals((await guardar(c, otra.codigo, "Angel", 0)).body.error, "carrera_en_curso");
+  c.avanzar(1);
+  assertEquals((await guardar(c, otra.codigo, "Angel", 0)).status, 200);
 });
 
 Deno.test("karts-salida-y-puntos: copa — los puntos de partida siguen el orden de la tabla", () => {
