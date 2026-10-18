@@ -143,12 +143,21 @@ async function fpsAislado(b, relevo, correos, mapa = 'pradera', adentro = false)
   const [fr] = await enCarrera([m]);
   const ruta = await fr.evaluate(() => window.__karts.ruta());
   let seq = 0, n = 0, base = 0;
+  // karts-objetos-en-sala: cada persona fabricada usa un ítem cada 3 s (cáscara, bola o cohete) a la hora de la
+  // carrera de Marisol: cáscaras, bolas y cohetes en la pista durante la medición.
+  let baseItem = null; const tipos = [0, 1, 2];
+  const items = ids.map(() => 0);
   const iv = setInterval(() => {
     n++;
     ids.forEach((id, k) => {
       const L = ruta.length, i = (((base + n * 3 + k * (adentro ? 9 : 25)) % L) + L) % L, [x, y, a] = ruta[i], lado = (k % 2 ? 1 : -1) * 20;
       const d = [Math.round((x - Math.sin(a / 1000) * lado) * 10), Math.round((y + Math.cos(a / 1000) * lado) * 10), a, 180, 1, i, k === 0 ? 1 : 0, 0, 'xalli'];
       relevo.inyectar('sala-sim-' + codigo, { i: id, s: ++seq, t: Date.now(), e: 'k', d });
+      if (baseItem && !process.env.KARTS_VIVO_SIN_ITEMS && (n + k * 4) % 30 === 0) {
+        const tc = baseItem.tiempo + Date.now() - baseItem.t;
+        const it = [++items[k], tipos[(n + k) % 3], d[0], d[1], a, 180, 1, i, Math.max(0, tc), ruta.length + i, -1, 0];
+        relevo.inyectar('sala-sim-' + codigo, { i: id, s: ++seq, t: Date.now(), e: 'item', d: it });
+      }
     });
   }, 100);
   // fps = mediana de 8 lecturas (una cada 0.5 s; el juego cuenta cuadros por segundo) tras calentar la caché de sprites.
@@ -160,6 +169,7 @@ async function fpsAislado(b, relevo, correos, mapa = 'pradera', adentro = false)
   };
   await sleep(9000); // cuenta regresiva + 3 s de carrera
   if (adentro) { await fr.evaluate(() => window.__karts.obstaculo('adentro:0')); base = (((await estado(fr)).avance % ruta.length) + ruta.length) % ruta.length - n * 3 - 20; }
+  baseItem = { tiempo: (await estado(fr)).tiempo, t: Date.now() }; // karts-objetos-en-sala
   await fr.evaluate(() => window.__karts.piloto(true));
   await sleep(3000);
   const libre = await medianaFps();
@@ -176,6 +186,7 @@ async function fpsAislado(b, relevo, correos, mapa = 'pradera', adentro = false)
   if (adentro) ok('fps' + en + ': vas adentro del monumento', e.pista === mapa && e.reinos.interior, JSON.stringify(e.reinos)); // karts-copa-reinos
   ok('fps sin límite con 8 karts en vivo ≥ 55' + en, libre >= 55, 'fps=' + libre);
   ok('fps con CPU ×4 y 8 karts en vivo ≥ 55 (meta 60)' + en, lento >= 55 && visibles === 7, 'fps=' + lento + ' visibles=' + visibles);
+  ok('fps medidos con ítems en la pista (karts-objetos-en-sala)' + en, e.red && e.red.stats.ok >= 7, JSON.stringify(e.red && { stats: e.red.stats, enPista: e.objetosRed.length }));
   await m.context().close();
   return { libre, lento };
 }
@@ -309,6 +320,9 @@ async function respaldo(b, relevo) {
   ok('respaldo sin Realtime: aviso «Sin conexión en vivo»', [...avisos].some(a => /Sin conexión en vivo/.test(a)), [...avisos].join(' | ').slice(0, 160));
   ok('respaldo sin Realtime: tú + 1 fantasma, sin personas remotas', e.vivo === null && e.remotos.length === 0 && e.karts === 2, JSON.stringify({ karts: e.karts, remotos: e.remotos.length }));
   ok('respaldo: el fantasma usa un personaje que no eligió ninguna persona', e.personaje === 'yahui' && e.personajes.length === 2 && !['yahui', 'xalli'].includes(e.personajes[1 - e.yoIndice]), e.personajes.join());
+  // karts-objetos-en-sala: sin canal en vivo las cajas dan la tabla reducida (monedas, turbo y estrella), sin objetos.
+  const sorteo = await f1[0].evaluate(() => window.__karts.sorteo(400));
+  ok('respaldo: tabla reducida (solo monedas, turbo y estrella)', e.modoItems === 'respaldo' && Object.keys(sorteo).every(k => ['monedas', 'turbo', 'estrella'].includes(k)), e.modoItems + ' ' + JSON.stringify(sorteo));
   await sin[0].screenshot({ path: 'karts-vivo-respaldo.png' });
   for (const p of sin) await p.context().close();
   // Canal que no conecta: a los 5 s el mismo aviso.
@@ -452,6 +466,114 @@ async function salaConRedLenta(pags, lentas, mapa) {
   ok('reloj común en ' + mapa + ': el desfase estimado de cada aparato es ≈ 0 (< 100 ms) aunque la red sea lenta', desfases.every(d => Math.abs(d) < 100), desfases.join(','));
   return { codigo, frames };
 }
+// karts-objetos-en-sala: sala de 3 en vivo (Marisol = A, Angel = B, Laura = C) con el relevo de siempre (60 ms,
+// 3 % de pérdida y 10 % de desorden). Cada aparato manda solo sobre su kart: quien recibe el golpe decide.
+// Las posiciones se fijan con __karts.ponerEn (muestra de la pista) y todos manejan con el piloto de prueba.
+const GRACIA = 4300; // un poco más que la gracia de 4 s tras un golpe de ítem en sala
+async function esperarEn(fr, fn, arg, ms = 8000) { return fr.waitForFunction(fn, arg, { timeout: ms }).then(() => true).catch(() => false); }
+async function objetosEnSala(b, relevo) {
+  const pags = [];
+  for (const email of ['marisol@example.com', 'angel@example.com', 'laura@example.com']) pags.push(await jugador(b, email, relevo)); // NOSONAR: en orden
+  const codigo = await crearSala(pags[0], 'pradera');
+  await unirse(pags[1], codigo); await unirse(pags[2], codigo);
+  await sleep(1500);
+  await pags[0].click('[data-p="empezar"]');
+  const frames = await enCarrera(pags), [A, B, C] = frames;
+  const ids = await Promise.all(pags.map(yoDe));
+  await Promise.all(frames.map(fr => esperarEn(fr, () => { const e = window.__karts.estado(); return e.vivo && e.remotos.every(r => r.visible) && e.tiempo > 300; }, null, 25000)));
+  await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
+  // Pone a cada quien en su muestra y espera a que las 3 pantallas vean el orden nuevo (la red tarda).
+  const colocar = async pos => {
+    await Promise.all(frames.map((fr, k) => fr.evaluate(([i]) => window.__karts.ponerEn(i, 0), [pos[k]])));
+    const t0 = Date.now();
+    const vistos = await Promise.all(frames.map((fr, k) => esperarEn(fr, lugar => window.__karts.estado().pos === lugar && window.__karts.estado().remotos.every(r => r.visible), 1 + pos.filter(x => x > pos[k]).length, 10000)));
+    out.push('INFO colocar ' + JSON.stringify(pos) + ': orden visto en ' + (Date.now() - t0) + ' ms ' + vistos.join());
+  };
+  // Tabla por lugar: A 1.º, B 2.º, C 3.º; entre los 3 salen los 7 ítems.
+  await colocar([600, 450, 300]);
+  const sorteos = await Promise.all(frames.map(fr => fr.evaluate(() => ({ modo: window.__karts.estado().modoItems, pos: window.__karts.estado().pos, c: window.__karts.sorteo(400) }))));
+  const union = new Set(sorteos.flatMap(s => Object.keys(s.c)));
+  ok('sala en vivo: las cajas dan los 7 ítems por lugar (tabla en vivo)', sorteos.every(s => s.modo === 'vivo') && union.size === 7, JSON.stringify(sorteos));
+  ok('sala en vivo: quien va 1.º no recibe cohete ni rayo; quien va último sí puede recibir rayo', !sorteos[0].c.cohete && !sorteos[0].c.rayo && sorteos[2].c.rayo > 0, JSON.stringify(sorteos.map(s => s.pos)));
+  // 1) Rayo: C (último) lo usa; A y B, que iban adelante, se frenan en su pantalla; C no.
+  await C.evaluate(() => { window.__karts.darItem('rayo'); window.__karts.usar(); });
+  const rayoA = await esperarEn(A, () => window.__karts.estado().rayoYo > 0, null, 3000);
+  const rayoB = await esperarEn(B, () => window.__karts.estado().rayoYo > 0, null, 3000);
+  await pags[0].screenshot({ path: 'karts-objetos-rayo-390.png' });
+  const eC = await estado(C);
+  ok('rayo: quienes iban adelante (A y B) se frenan en su pantalla', rayoA && rayoB, JSON.stringify({ rayoA, rayoB }));
+  ok('rayo: quien lo usó no se frena', eC.rayoYo === 0 && eC.red.golpes.length === 0, JSON.stringify(eC.red));
+  await sleep(GRACIA);
+  // 2) Cohete de A a B (B va justo adelante): B gira en su pantalla y A lo ve girar.
+  await colocar([492, 520, 200]);
+  await A.evaluate(() => { window.__karts.darItem('cohete'); window.__karts.usar(); });
+  const enVuelo = await A.evaluate(() => window.__karts.estado().objetosRed.filter(o => o.tipo === 'cohete'));
+  ok('cohete: A lo lanza con B de blanco (su lugar en la sala)', enVuelo.length === 1 && enVuelo[0].blanco === 1, JSON.stringify(enVuelo));
+  // Captura cuando el cohete va por alcanzar a B (en la pantalla de A).
+  for (let k = 0; k < 60; k++) { // NOSONAR: sondeo hasta que el cohete esté encima del rival
+    const e = await estado(A), r = e.objetosRed.find(o => o.tipo === 'cohete'), rb = e.remotos.find(x => x.id === ids[1]);
+    if (!r || (rb && distancia(r, rb) < 45)) break;
+    await sleep(80);
+  }
+  await pags[0].screenshot({ path: 'karts-objetos-cohete-390.png' });
+  const golpeB = await esperarEn(B, () => window.__karts.estado().red.golpes.includes('cohete'), null, 7000);
+  const vioA = await esperarEn(A, id => window.__karts.estado().red.vistos.some(v => v.de === id), ids[1], 3000);
+  await pags[0].screenshot({ path: 'karts-objetos-cohete-golpe-390.png' });
+  const sinCohete = await Promise.all(frames.map(fr => esperarEn(fr, () => !window.__karts.estado().objetosRed.some(o => o.tipo === 'cohete'), null, 3000)));
+  ok('cohete: B gira en su pantalla', golpeB);
+  ok('cohete: A ve a B girar (aviso del golpe)', vioA);
+  ok('cohete: desaparece en las 3 pantallas', sinCohete.every(Boolean), sinCohete.join(','));
+  // 3) Cáscara: A la suelta y C, que viene atrás por el mismo carril, pasa encima y gira.
+  // En la recta más larga (lejos de la meta): A adelante y C atrás por el mismo carril.
+  const ruta = await A.evaluate(() => window.__karts.ruta()), giroEn = i => Math.abs(Math.atan2(Math.sin((ruta[(i + 50) % ruta.length][2] - ruta[i - 70][2]) / 1000), Math.cos((ruta[(i + 50) % ruta.length][2] - ruta[i - 70][2]) / 1000)));
+  let recta = 400;
+  for (let i = 300; i < ruta.length * 0.8; i += 5) if (giroEn(i) < giroEn(recta)) recta = i;
+  await colocar([recta + 10, 150, recta - 45]);
+  await A.evaluate(() => { window.__karts.darItem('cascara'); window.__karts.usar(); });
+  const cas = (await A.evaluate(() => window.__karts.estado().objetosRed.filter(o => o.tipo === 'cascara')))[0];
+  await sleep(250);
+  const enB = (await estado(B)).objetosRed.filter(o => o.tipo === 'cascara');
+  ok('cáscara: la misma en otra pantalla, en el mismo lugar (< 2 px)', cas && enB.length === 1 && enB[0].id === cas.id && distancia(enB[0], cas) < 2, JSON.stringify({ cas, enB }));
+  if (cas) await C.evaluate(([x, y]) => window.__karts.ponerAntes(x, y, 22), [cas.x, cas.y]); // C viene por su carril
+  for (let k = 0; k < 40; k++) { // NOSONAR: captura desde C cuando la cáscara está enfrente
+    const e = await estado(C);
+    if (!cas || distancia({ x: e.yoX, y: e.yoY }, cas) < 140) break;
+    await sleep(60);
+  }
+  await pags[2].screenshot({ path: 'karts-objetos-cascara-390.png' });
+  const golpeC = await esperarEn(C, () => window.__karts.estado().red.golpes.includes('cascara'), null, 6000);
+  const sinCas = await Promise.all(frames.map(fr => esperarEn(fr, id => !window.__karts.estado().objetosRed.some(o => o.id === id), cas && cas.id, 3000)));
+  ok('cáscara: C pasa encima y gira en su pantalla', golpeC);
+  ok('cáscara: desaparece en las 3 pantallas', sinCas.every(Boolean), sinCas.join(','));
+  await sleep(GRACIA);
+  // 4) Estrella: B la usa y A le lanza un cohete: B no gira (el cohete se consume).
+  await colocar([470, 520, 200]);
+  const antesB = await estado(B);
+  await B.evaluate(() => { window.__karts.darItem('estrella'); window.__karts.usar(); });
+  const conEstrella = (await estado(B)).estrellaYo > 0;
+  await A.evaluate(() => { window.__karts.darItem('cohete'); window.__karts.usar(); });
+  const inmune = await esperarEn(B, n => window.__karts.estado().red.inmune > n, antesB.red.inmune, 7000);
+  const eB = await estado(B);
+  ok('estrella: el cohete llega y B no gira (inmune)', conEstrella && inmune && eB.red.golpes.length === antesB.red.golpes.length && eB.estrellaYo > 0, JSON.stringify({ golpes: eB.red.golpes, inmune: eB.red.inmune, estrella: eB.estrellaYo }));
+  // 5) Red: cada aviso viaja dos veces (y con pérdida y desorden): nunca hay objetos repetidos; los repetidos, los
+  // viejos y los de más de 1 por segundo se descartan.
+  const eA = await estado(A);
+  const base = [1, 0, Math.round(eA.yoX * 10), Math.round(eA.yoY * 10), 0, 200, 0, 300, 0, 0, -1, 0];
+  const topic = 'sala-sim-' + codigo, idC = ids[2];
+  const tc = (await estado(B)).tiempo;
+  const sobre = (s, d) => ({ i: idC, s, t: Date.now(), e: 'item', d });
+  relevo.inyectar(topic, sobre(900001, base.map((x, k) => (k === 0 ? 500 : k === 8 ? Math.max(0, tc - 6000) : x)))); // de hace 6 s
+  relevo.inyectar(topic, sobre(900002, base.map((x, k) => (k === 0 ? 501 : k === 8 ? tc : x))));
+  relevo.inyectar(topic, sobre(900003, base.map((x, k) => (k === 0 ? 502 : k === 8 ? tc + 300 : x)))); // 0.3 s después
+  relevo.inyectar(topic, sobre(900004, base.map((x, k) => (k === 0 ? 501 : k === 8 ? tc : x)))); // el mismo id otra vez
+  await sleep(800);
+  const fin = await Promise.all(frames.map(estado));
+  const statsB = fin[1].red.stats;
+  ok('anti-abuso: se descartan el viejo, el repetido y el de más de 1 por segundo', statsB.viejo >= 1 && statsB.rapido >= 1 && statsB.repetido >= 1, JSON.stringify(statsB));
+  ok('red con pérdida y desorden: ningún objeto repetido en ninguna pantalla', fin.every(e => new Set(e.objetosRed.map(o => o.id)).size === e.objetosRed.length), fin.map(e => e.objetosRed.length).join(','));
+  ok('red: cada aviso llegó dos veces y la copia se descartó', fin.some(e => e.red.stats.repetido >= 2), JSON.stringify(fin.map(e => e.red.stats)));
+  for (const p of pags) await p.context().close();
+}
 async function salidaYPodio(b, relevo) {
   // 1) Volcán (pista grande): Marisol de pie, Angel de lado con la red lenta.
   const [m, a] = [await jugador(b, 'marisol@example.com', relevo), await jugador(b, 'angel@example.com', relevo, HORIZONTAL)];
@@ -509,6 +631,24 @@ async function salidaYPodio(b, relevo) {
 (async () => {
   const relevo = await levantarRelevo();
   const b = await chromium.launch({ executablePath: process.env.CHROME || undefined, args: ['--disable-renderer-backgrounding', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows'] });
+  if (process.env.KARTS_VIVO_SOLO === 'fps') { // karts-objetos-en-sala: solo los fps de 8 en vivo con ítems (máquina quieta)
+    const sufijo = Date.now().toString(36);
+    const inv = ['Nube', 'Rayo', 'Trueno'].map((n, k) => ({ email: `kv-${n.toLowerCase()}-${sufijo}@example.com`, nombre: n + ' ' + (k + 1) }));
+    await Promise.all(inv.map(i => pedir(i.email, '/juegos/invitado', { nombre: i.nombre, acepto: true })));
+    const correos = ['marisol', 'angel', 'laura', 'fernando', 'jesus'].map(n => n + '@example.com').concat(inv.map(i => i.email));
+    const f = await fpsAislado(b, relevo, correos, process.env.KARTS_VIVO_MAPA || 'pradera');
+    await b.close(); await relevo.cerrar();
+    console.log(out.join('\n'));
+    console.log('RESUMEN fps(8 en vivo con ítems) libre=' + f.libre + ' CPU×4=' + f.lento);
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
+  if (process.env.KARTS_VIVO_SOLO === 'objetos') { // karts-objetos-en-sala: solo esta parte (para iterar)
+    await objetosEnSala(b, relevo);
+    await respaldo(b, relevo);
+    await b.close(); await relevo.cerrar();
+    console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_VIVO_SOLO === 'salida') { // karts-salida-y-puntos: solo esta parte (para iterar)
     await salidaYPodio(b, relevo);
     await b.close(); await relevo.cerrar();
@@ -524,6 +664,7 @@ async function salidaYPodio(b, relevo) {
   await copaEspacioEnSala(b, relevo); // karts-copa-espacio
   const fpsCastillo = await fpsAislado(b, relevo, correos, 'castillo', true); // karts-copa-reinos: 8 en vivo dentro del monumento
   await salaReinos(b, relevo); // karts-copa-reinos
+  await objetosEnSala(b, relevo); // karts-objetos-en-sala
   await desconexion(b, relevo);
   await personajesEnSala(b, relevo); // personaje-en-salas
   await respaldo(b, relevo);

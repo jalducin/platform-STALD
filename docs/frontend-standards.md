@@ -838,8 +838,18 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   - **Karts** (`pintarArcadeSala` → `inicio` con `yo`, `humanos` y `vivo`): cada kart a 15 Hz con ≤ 4 personas y 10 Hz
     con 5–8 (2 Hz antes de salir), `[x·10, y·10, ángulo·1000, vel, vuelta, avance, banderas, término, personaje]`;
     los remotos se interpolan 100 ms atrás (extrapolación ≤ 250 ms), con color y número por su lugar en la sala,
-    nombre encima, minimapa y clasificación en vivo (`#vivo-tabla`); empuje local en los choques; sin ítems entre
-    personas; quien calla 3 s se desvanece con aviso; sin canal en 5 s, aviso y fantasmas como antes.
+    nombre encima, minimapa y clasificación en vivo (`#vivo-tabla`); empuje local en los choques; quien calla 3 s se
+    desvanece con aviso; sin canal en 5 s, aviso y fantasmas como antes;
+  - **Ítems entre personas en Karts** (cambio `karts-objetos-en-sala`; decisiones en su `design.md`): regla «la
+    víctima decide». La parte pura (tablas por lugar `solo`/`vivo`/`respaldo`, codificación, registro anti-abuso,
+    simulación con paso fijo de 1/60 s, choque, historial del avance para el rayo y gracia) vive en
+    `juegos/karts-objetos.js` (`window.KartsObjetos`, lo carga `karts.html`; pruebas en `server/karts_objetos_test.ts`).
+    Eventos sueltos (ritmo 0, `enviarYa`, cada uno dos veces): `item` =
+    `[n, tipo, x·10, y·10, ángulo·1000, vel, vuelta, idx, tc, avance, blanco, carrera]` (id = `dueño:n`; `tc` = ms de
+    la carrera con el reloj común; `blanco` = lugar en la sala o −1) e `item-golpe` = `[n, lugar del dueño, carrera]`.
+    Cada aparato revisa los golpes solo contra su kart; se descartan repetidos, números viejos, eventos de más de 4 s y
+    más de 1 ítem por segundo por persona; tras un golpe hay 4 s de gracia (el peor caso cabe en el límite de la pista).
+    Sin canal, la tabla reducida (monedas, turbo y estrella); los fantasmas no reciben ítems.
 
 ## Caché y estabilidad del cliente (cambio `cache-estabilidad`)
 
