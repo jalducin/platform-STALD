@@ -34,16 +34,16 @@ Ocho con cruce: no aplica (motor Mode-7 de un solo plano); el «paso por encima�
 
 ## Resultados de pruebas
 
-- Deno (, tras fusionar  con karts-objetos-en-sala y Brigada Xalli): 758 pasaron, 0 fallaron, 6
-  omitidas. Nueva:  (7 pruebas: versión 3 y , complejidad, óvalo contra espiral,
-  geometría, largo ±15 % y límites, migración de récords, forma del progreso). : sin problemas.
-- Calidad: sin avisos nuevos (los 15 S3776 de  son los mismos de ;  sin avisos).
-- E2E : **297 pasaron, 0 fallaron**. En las 8 pistas rediseñadas: vuelta completa con el piloto de prueba y
+- Deno (`server/`, tras fusionar `origin/main` con karts-objetos-en-sala y Brigada Xalli): 758 pasaron, 0 fallaron, 6
+  omitidas. Nueva: `server/karts_curvas_test.ts` (7 pruebas: versión 3 y `trazado: 3`, complejidad, óvalo contra
+  espiral, geometría, largo ±15 % y límites, migración de récords, forma del progreso). `deno lint`: sin problemas.
+- Calidad: sin avisos nuevos (los 15 S3776 de `karts.html` son los mismos de `origin/main`; `karts-pistas.js` sin avisos).
+- E2E `karts`: **297 pasaron, 0 fallaron**. En las 8 pistas rediseñadas: vuelta completa con el piloto de prueba y
   **los 7 bots completan una vuelta** (0 a 2 caídas de bots en el Espacio, 0 en Reinos); mecánicas (antiturbo, brecha,
-  plataforma, portal, bloques, losa, columna, roca), caída y dron, récords del trazado anterior (aviso, ,
-  «trazado anterior 2:11.0») y forma de 8 llaves con .
-- E2E : 95 pasaron, 1 falló: fps de la Nebulosa con 8 en vivo y CPU ×4 = 54 (umbral 55). Es la lectura
-  más pesada y ya variaba en  con carga ajena (32–56 en los reportes de karts-copa-espacio y
+  plataforma, portal, bloques, losa, columna, roca), caída y dron, récords del trazado anterior (aviso, `recordsV2`,
+  «trazado anterior 2:11.0») y forma de 8 llaves con `pistasV: 3`.
+- E2E `karts-vivo`: 95 pasaron, 1 falló: fps de la Nebulosa con 8 en vivo y CPU ×4 = 54 (umbral 55). Es la lectura
+  más pesada y ya variaba en `main` con carga ajena (32–56 en los reportes de karts-copa-espacio y
   karts-objetos-en-sala); en esta misma corrida la Pradera con 8 dio 59 y dentro de El Castillo con 8 dio 60.
 - fps con CPU ×4 (individual): Estación 60, Anillos 60, Cinturón 60, Nebulosa 60; dentro de Giza 60, El Castillo 59,
   Karnak 60, Angkor 60. 8 en vivo: Pradera 59, Nebulosa 54, dentro de El Castillo 60. La máquina tenía carga ajena
