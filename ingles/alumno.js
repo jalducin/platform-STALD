@@ -240,6 +240,7 @@ function renderAlumno(data, act) {
     '<h3 class="card-titulo" style="margin-top:16px">📋 Todas mis tareas</h3>' + renderBoard(itemRowsAlumno(act)) : '<div class="card">' + vacio('📅', 'Aún no hay actividades en tu semana.') + '</div>';
   return seccionHtml('alumno', 'inicio', inicio) +
     seccionHtml('alumno', 'semana', semana) +
+    seccionHtml('alumno', 'material', renderMaterial()) +
     seccionHtml('alumno', 'resultados', renderResultadosAlumno(act)) +
     seccionHtml('alumno', 'perfil', renderPerfil(data, act));
 }

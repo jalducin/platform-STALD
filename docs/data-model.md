@@ -185,6 +185,28 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     sirva el PDF. Primera guía: `guia-tres-tiempos-y-to-be.pdf` (actividad `guia-2026-10-23`): 14 páginas carta para copiar
     en la libreta, con recuadros «🤖 Practica con IA» en los temas más bajos de `resultados/`, 44 ejercicios y
     respuestas al final (`server/material_pdf_test.ts` vigila las 14 páginas y los 40–45 ejercicios).
+  - **Catálogo `ingles/material/indice.json`** (cambio `ingles-material-estudio`): arreglo público, sin datos
+    personales, que alimenta la sección «📚 Material de estudio» de `ingles.html` (alumnos y alumnas, admin, ruta
+    del profe y entrada sin sesión; siempre disponible, sin fechas ni candados):
+    `[{ "id", "titulo", "descripcion", "temas": [..], "nivel", "mes", "paginas", "url", "fecha" }]`.
+    - `id` = nombre del PDF sin `.pdf` (y de su fuente HTML); `url` =
+      `https://jalducin.github.io/platform-STALD/ingles/material/<id>.pdf`; `mes` = mes del curso (1, 2, …; la
+      sección ordena del más reciente al primero); `paginas` = páginas reales del PDF; `fecha` = publicación.
+    - `server/material_indice_test.ts` falla si falta un campo, la URL no es la de Pages, el PDF no existe, las
+      páginas no coinciden, hay un PDF sin entrada o el catálogo trae correos o teléfonos.
+  - **Guías mensuales (petición del profe).** Una guía por mes del curso: el mes 1 tiene 14 páginas (temas ligeros);
+    **desde el mes 2, 20 páginas**. Cada guía es compacta para pasarla a la libreta, trae ejercicios con las
+    respuestas al final y recuadros «🤖 Practica con IA» en los temas que el grupo necesita reforzar según sus
+    resultados (temas a reforzar del resumen del grupo y del examen).
+  - **Cómo agregar una guía nueva:**
+    1. Fuente `herramientas/material-ingles/<id>.html` (HTML + CSS, tamaño carta, sin recursos de internet ni
+       datos de alumnos o alumnas).
+    2. `npx -y deno run -A herramientas/material-ingles/generar-pdf.ts <id>` (o `--todas`); el generador imprime las
+       páginas del PDF.
+    3. Agregar la entrada a `ingles/material/indice.json` con `mes` y esas `paginas`.
+    4. `npx -y deno test -A server/material_indice_test.ts server/material_pdf_test.ts`.
+    5. PR y merge: Pages publica el PDF y el catálogo; la sección lo muestra sola, sin tocar código. Si una
+       actividad lo enlaza (tip `lectura` con la `url`), subir el repo de datos después de que Pages sirva el PDF.
   - `banco[]`: ejercicios `{ id, tema, tipo: "opcion" | "escribir" | "pronunciar" | "ordenar" | "emparejar",
     enunciado, opciones? + correcta? | aceptadas? | frase? | palabras? + distractores? | pares?, audio?, explicacion }`.
     - `audio` (opcional, cualquier tipo): texto que la página lee en voz alta (en-US, 🔊 normal y 🐢 lento). Es

@@ -88,6 +88,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') document.get
 // ---------- Dibujo ----------
 function render(data) {
   state.vista = 'secciones';
+  mostrarMaterialPublico(false);
   if (location.hash.startsWith('#ver/')) history.replaceState(null, '', location.pathname + location.search + '#' + seccionActual());
   whoLabel.textContent = segunModo('Ruta del profe', 'Secundaria', data.isAdmin ? 'Modo maestro' : '');
   if (data.isAdmin) {
@@ -196,6 +197,7 @@ async function loadFor(email) {
 function mostrarEntrada(aviso) {
   if (cajonEl.open) cajonEl.close();
   appEl.style.display = 'none'; navEl.hidden = true; loginEl.style.display = 'block';
+  mostrarMaterialPublico(true);
   state.data = null;
   StaldAuth.pintarEntrada(loginEl, { titulo: MODO_SECUNDARIA ? '📝 Exámenes de Secundaria' : '📗 Clases de Inglés', texto: 'Entra con tu correo y tu contraseña. Si es tu primera vez, usa la que te dio tu profe.', aviso, alEntrar: c => loadFor(c) });
 }

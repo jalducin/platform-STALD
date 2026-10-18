@@ -62,10 +62,11 @@
   do/does y -s, irregulares y did, will/won't, preguntas, alfabeto y verbos comunes; sección «Estudiar con IA sin hacer trampa» (pág. 9)
 - [x] 7.4 «Para tu libreta»: 11 pasos en orden con su página, plan de 5 días y autoevaluación
 - [x] 7.5 Revisión de las 14 páginas en PNG (y en gris): nada partido ni desbordado, acentos e índice correctos
-- [ ] 7.6 Repo de datos: textos de `guia-2026-10-23`, `act-2026-10-23`, `meet-2026-10-25` y `meet-2026-11-01` con
+- [x] 7.6 Repo de datos: textos de `guia-2026-10-23`, `act-2026-10-23`, `meet-2026-10-25` y `meet-2026-11-01` con
   14 páginas, 44 ejercicios y las páginas nuevas; `validar_semana.ts` de `2026-10-12` y `2026-10-19` sin errores
-- [ ] 7.7 Revisar y actualizar pruebas (OBLIGATORIO): `server/material_pdf_test.ts` verifica 14 páginas en la guía
-- [ ] 7.8 Ejecutar pruebas (OBLIGATORIO): `deno test -A server/`, `deno lint server/` y `npm run calidad`; reporte en
+- [x] 7.7 Revisar y actualizar pruebas (OBLIGATORIO): `server/material_pdf_test.ts` verifica 14 páginas, 40–45 ejercicios y recuadros de IA;
+  `ingles/material/indice.json` con `paginas: 14` (lo vigila `server/material_indice_test.ts`)
+- [x] 7.8 Ejecutar pruebas (OBLIGATORIO): `deno test -A server/`, `deno lint server/` y `npm run calidad`; reporte en
   `openspec/changes/material-pdf-ingles/reports/2026-10-18-step-7-guia-compacta.md`
 - [ ] 7.9 Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA: tras el merge, Pages sirve el PDF nuevo (200,
   `application/pdf`, hash distinto, 14 páginas)
