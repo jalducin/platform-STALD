@@ -26,6 +26,9 @@
 // vuelta completa con el piloto de prueba (gancho __karts.rapido: más pasos de la misma física por cuadro), fps con CPU
 // ×4 y capturas a 390×844 y 844×390 de cada pista, minimapa con los 8, y récords de antes archivados como «pista chica»
 // con aviso, sin perder la copa ganada. Las salas esperan el mínimo de la pista (25 % de la referencia).
+// Reversa (openspec: karts-reversa): botón «⏪ REVERSA» con toques reales en Botones, Joystick y Sensor (el carro va
+// hacia atrás y el volante se invierte), sin encimarse a 390×844 y 844×390 (capturas); mando clásico (B parado);
+// teclado (↓ parado y R); reversa sobre la meta sin contar vueltas; el piloto de prueba no la usa.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
@@ -57,7 +60,7 @@ const centro = async (fr, sel) => { const c = await fr.locator(sel).boundingBox(
 // Rectángulos (dentro del iframe) del minimapa, del HUD y de los mandos visibles.
 const cajas = fr => fr.evaluate(() => {
   const r = sel => { const e = document.querySelector(sel); if (!e) return null; const s = getComputedStyle(e), b = e.getBoundingClientRect(); return b.width && s.display !== 'none' && s.visibility !== 'hidden' ? { sel, l: b.left, t: b.top, r: b.right, b: b.bottom } : null; };
-  return { vw: innerWidth, vh: innerHeight, mapa: r('#minimapa'), hud: ['.hud-izq', '#h-item', '#hud .der'].map(r).filter(Boolean), ctl: ['#joy-zona', '#m-flechas', '#m-sensor', '#m-item', '#m-freno', '#m-derrape', '#m-acel'].map(r).filter(Boolean) };
+  return { vw: innerWidth, vh: innerHeight, mapa: r('#minimapa'), hud: ['.hud-izq', '#h-item', '#hud .der'].map(r).filter(Boolean), ctl: ['#joy-zona', '#m-flechas', '#m-sensor', '#m-item', '#m-freno', '#m-derrape', '#m-acel', '#m-reversa'].map(r).filter(Boolean) };
 });
 const cruza = (a, b) => a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 && b.t < a.b - 0.5;
 const dentro = (a, vw, vh) => a.l >= -0.5 && a.t >= -0.5 && a.r <= vw + 0.5 && a.b <= vh + 0.5;
@@ -144,6 +147,112 @@ async function correrRapida(fr, pista) {
   await fr.tap('[data-ir="pistas"]'); await fr.tap('[data-ir="rapida:' + pista + '"]');
   await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 400, null, { timeout: 15000 });
 }
+
+// ================= Reversa (openspec: karts-reversa) =================
+// Control elegido y «Automático»; con el sensor, además, lecturas de orientación sin inclinar (para poder activarlo).
+const conControl = c => [x => {
+  try { localStorage.setItem('karts_control', x); localStorage.setItem('karts_acelerar', 'auto'); } catch { /* nada */ }
+  if (x === 'sensor') setInterval(() => dispatchEvent(new DeviceOrientationEvent('deviceorientation', { alpha: 0, beta: 8, gamma: 0 })), 40);
+}, c];
+// Mantiene un botón con un dedo real `ms` milisegundos y devuelve el estado justo antes de soltarlo.
+async function mantener(p, fr, sel, ms, id = 9) {
+  const d = dedos(p), c = await centro(fr, sel);
+  await d.poner(id, c.x, c.y); await sleep(ms);
+  const e = await estado(fr); await d.quitar(id);
+  return e;
+}
+async function probarReversaTactil(b) {
+  for (const control of ['botones', 'joystick', 'sensor']) {
+    for (const vp of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
+      const nombre = 'reversa ' + control + ' ' + vp.width + '×' + vp.height;
+      const q = await abrirSuelto(b, vp, conControl(control));
+      const f = q.mainFrame();
+      if (control === 'sensor') { await f.tap('#b-activar-sensor'); await f.waitForFunction(() => window.__karts.estado().sensorActivo, null, { timeout: 5000 }).catch(() => {}); }
+      await correrRapida(f, 'pradera');
+      await f.waitForFunction(() => window.__karts.estado().vel > 150, null, { timeout: 15000 });
+      const caja = await cajas(f);
+      const rev = caja.ctl.find(x => x.sel === '#m-reversa');
+      ok(nombre + ': se ve «⏪ REVERSA» dentro de la pantalla', (await estado(f)).control === control && !!rev && dentro(rev, caja.vw, caja.vh) && /REVERSA/.test(await f.textContent('#m-reversa')), JSON.stringify({ control: (await estado(f)).control, rev }));
+      ok(nombre + ': «⏪ REVERSA» no se encima con los demás mandos, el minimapa ni el HUD', !!rev && caja.ctl.filter(x => x !== rev).every(x => !cruza(rev, x)) && !cruza(rev, caja.mapa) && caja.hud.every(h => !cruza(h, rev)),
+        JSON.stringify(caja.ctl.map(x => x.sel + ':' + [x.l, x.t, x.r, x.b].map(Math.round).join(','))));
+      const a0 = (await estado(f)).avance;
+      const e1 = await mantener(q, f, '#m-reversa', 2600);
+      ok(nombre + ': mantener «⏪ REVERSA» (toque real, «Automático») frena y va hacia atrás despacio', e1.reversa && e1.vel < -40 && e1.vel > -0.42 * 230 && e1.avance < a0, JSON.stringify({ vel: e1.vel, avance: [a0, e1.avance] }));
+      await q.screenshot({ path: 'karts-reversa-' + control + '-' + vp.width + 'x' + vp.height + '.png' });
+      await sleep(1200);
+      const e2 = await estado(f);
+      ok(nombre + ': al soltarla vuelve a acelerar hacia adelante', e2.vel > 0 && !e2.reversa, JSON.stringify({ vel: e2.vel }));
+      if (control === 'botones' && vp.width === 390) {
+        // Volante invertido: en reversa, ⬅ gira la trompa hacia la derecha (el ángulo sube).
+        const d = dedos(q), cR = await centro(f, '#m-reversa'), cI = await centro(f, '#m-flechas [data-k="izq"]');
+        await d.poner(1, cR.x, cR.y); await sleep(2400);
+        const g0 = await estado(f);
+        await d.poner(2, cI.x, cI.y); await sleep(500);
+        const g1 = await estado(f); await d.soltarTodo();
+        ok(nombre + ': en reversa ⬅ gira la trompa hacia la derecha (volante invertido)', g0.vel < -30 && g1.giro === -1 && g1.ang > g0.ang + 0.15, JSON.stringify({ vel: g0.vel, antes: r2(g0.ang), despues: r2(g1.ang) }));
+        const tuto = await f.evaluate(() => { mostrarTutorial(); return document.getElementById('tuto').textContent; });
+        ok(nombre + ': el tutorial muestra la reversa', /REVERSA/.test(tuto), tuto);
+      }
+      await q.context().close();
+    }
+  }
+}
+async function probarReversaMando(b) {
+  const q = await abrirSuelto(b, { width: 390, height: 844 }, [() => { try { localStorage.setItem('karts_control', 'mando'); localStorage.setItem('karts_acelerar', 'auto'); } catch { /* nada */ } }]);
+  const f = q.mainFrame();
+  await correrRapida(f, 'pradera');
+  await f.waitForFunction(() => window.__karts.estado().vel > 150, null, { timeout: 15000 });
+  const d = dedos(q), cB = await centro(f, '.mando-boton[data-b="B"]');
+  await d.poner(3, cB.x, cB.y); await sleep(250);
+  const e0 = await estado(f);
+  ok('reversa mando: B con el carro en marcha solo frena', e0.vel >= 0 && !e0.reversa && e0.freno, JSON.stringify({ vel: e0.vel }));
+  await sleep(2600);
+  const e1 = await estado(f); await d.soltarTodo();
+  ok('reversa mando: mantener B (toque real) estando parado = reversa', e1.reversa && e1.vel < -30, JSON.stringify({ vel: e1.vel }));
+  ok('reversa mando: la etiqueta de B dice «frenar/rev»', /frenar\/rev/.test(await f.textContent('.mando').catch(() => '')));
+  await q.screenshot({ path: 'karts-reversa-mando-390x844.png' });
+  await q.context().close();
+}
+async function probarReversaTeclado(b) {
+  const q = await abrirPagina(b, { viewport: { width: 1280, height: 800 }, out, etiqueta: 'karts suelto', ruta: '/juegos/karts.html?prueba=1', esperar: '#ov-menu:not(.hide)' });
+  const f = q.mainFrame();
+  await f.click('[data-ir="pistas"]'); await f.click('[data-ir="rapida:pradera"]');
+  await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().vel > 150, null, { timeout: 15000 });
+  await q.keyboard.down('ArrowDown'); await sleep(250);
+  const e0 = await estado(f);
+  ok('reversa teclado: ↓ con el carro en marcha solo frena', e0.vel >= 0 && !e0.reversa, JSON.stringify({ vel: e0.vel }));
+  await sleep(2600);
+  const e1 = await estado(f); await q.keyboard.up('ArrowDown');
+  ok('reversa teclado: mantener ↓ estando parado = reversa', e1.reversa && e1.vel < -30, JSON.stringify({ vel: e1.vel }));
+  await sleep(1500);
+  await q.keyboard.down('KeyR'); await sleep(2800);
+  const e2 = await estado(f); await q.keyboard.up('KeyR');
+  ok('reversa teclado: mantener R = reversa (frena y retrocede)', e2.reversa && e2.vel < -30, JSON.stringify({ vel: e2.vel }));
+  // Meta: ir y venir sobre ella en reversa no cuenta vueltas.
+  await f.evaluate(() => { window.__karts.ponerEn(4, 0); });
+  const m0 = await estado(f);
+  let maxV = m0.vuelta, atras = 0, avisos = '';
+  for (let i = 0; i < 3; i++) {
+    await q.keyboard.down('KeyR');
+    await f.waitForFunction(() => window.__karts.estado().idx > window.__karts.estado().n * 0.85, null, { timeout: 12000 }).catch(() => {});
+    const ea = await estado(f); if (ea.idx > ea.n * 0.85) atras++;
+    maxV = Math.max(maxV, ea.vuelta);
+    await q.keyboard.up('KeyR');
+    await f.waitForFunction(() => window.__karts.estado().idx < 30 && window.__karts.estado().idx > 2, null, { timeout: 12000 }).catch(() => {});
+    const ev = await estado(f); maxV = Math.max(maxV, ev.vuelta); avisos += ev.aviso + '|';
+  }
+  const m1 = await estado(f);
+  ok('reversa teclado: cruzar la meta en reversa y volver 3 veces no cuenta vueltas', atras === 3 && m1.vuelta === m0.vuelta && maxV === m0.vuelta && m1.deuda === 0 && m1.termino === null && !/Vuelta 2|Última vuelta/.test(avisos) && /Vuelta 1\//.test(await f.textContent('#h-vuelta')),
+    JSON.stringify({ atras, antes: m0.vuelta, despues: m1.vuelta, maxV, deuda: m1.deuda, avisos }));
+  // El piloto de prueba no usa la reversa.
+  await f.evaluate(() => window.__karts.piloto(true));
+  await q.keyboard.down('KeyR'); await sleep(1500);
+  const ep = await estado(f); await q.keyboard.up('KeyR');
+  await f.evaluate(() => window.__karts.piloto(false));
+  ok('reversa teclado: el piloto de prueba no la usa', ep.vel > 100, JSON.stringify({ vel: ep.vel }));
+  await q.context().close();
+}
+async function probarReversa(b) { await probarReversaTeclado(b); await probarReversaMando(b); await probarReversaTactil(b); }
 
 // ================= Mando clásico (openspec: karts-mando) =================
 const CON_MANDO = [() => { try { localStorage.setItem('karts_control', 'mando'); } catch { /* nada */ } }];
@@ -716,6 +825,11 @@ async function probarCopaMeso(b) {
     await b.close(); console.log(out.join('\n')); console.log('fps: ' + JSON.stringify(fpsReinos));
     process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
   }
+  if (process.env.KARTS_SOLO === 'reversa') { // karts-reversa: solo esta parte (para iterar)
+    await probarReversa(b);
+    await b.close(); console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_SOLO === 'espacio') { // karts-copa-espacio: solo esta parte (para iterar)
     await probarPistasEspacio(b); await probarCopaEspacio(b);
     await b.close(); console.log(out.join('\n')); console.log('fps: ' + JSON.stringify(fpsMeso));
@@ -1001,6 +1115,7 @@ async function probarCopaMeso(b) {
   // ---- Mando clásico (openspec: karts-mando) ----
   await probarMando(b);
 
+  await probarReversa(b); // karts-reversa
   // ---- Personajes (openspec: personajes-xalli) ----
   await probarPersonajes(b);
 
