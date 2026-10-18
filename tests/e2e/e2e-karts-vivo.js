@@ -153,7 +153,7 @@ async function fpsAislado(b, relevo, correos, mapa = 'pradera', adentro = false)
       const L = ruta.length, i = (((base + n * 3 + k * (adentro ? 9 : 25)) % L) + L) % L, [x, y, a] = ruta[i], lado = (k % 2 ? 1 : -1) * 20;
       const d = [Math.round((x - Math.sin(a / 1000) * lado) * 10), Math.round((y + Math.cos(a / 1000) * lado) * 10), a, 180, 1, i, k === 0 ? 1 : 0, 0, 'xalli'];
       relevo.inyectar('sala-sim-' + codigo, { i: id, s: ++seq, t: Date.now(), e: 'k', d });
-      if (baseItem && (n + k * 4) % 30 === 0) {
+      if (baseItem && !process.env.KARTS_VIVO_SIN_ITEMS && (n + k * 4) % 30 === 0) {
         const tc = baseItem.tiempo + Date.now() - baseItem.t;
         const it = [++items[k], tipos[(n + k) % 3], d[0], d[1], a, 180, 1, i, Math.max(0, tc), ruta.length + i, -1, 0];
         relevo.inyectar('sala-sim-' + codigo, { i: id, s: ++seq, t: Date.now(), e: 'item', d: it });
@@ -631,6 +631,17 @@ async function salidaYPodio(b, relevo) {
 (async () => {
   const relevo = await levantarRelevo();
   const b = await chromium.launch({ executablePath: process.env.CHROME || undefined, args: ['--disable-renderer-backgrounding', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows'] });
+  if (process.env.KARTS_VIVO_SOLO === 'fps') { // karts-objetos-en-sala: solo los fps de 8 en vivo con ítems (máquina quieta)
+    const sufijo = Date.now().toString(36);
+    const inv = ['Nube', 'Rayo', 'Trueno'].map((n, k) => ({ email: `kv-${n.toLowerCase()}-${sufijo}@example.com`, nombre: n + ' ' + (k + 1) }));
+    await Promise.all(inv.map(i => pedir(i.email, '/juegos/invitado', { nombre: i.nombre, acepto: true })));
+    const correos = ['marisol', 'angel', 'laura', 'fernando', 'jesus'].map(n => n + '@example.com').concat(inv.map(i => i.email));
+    const f = await fpsAislado(b, relevo, correos, process.env.KARTS_VIVO_MAPA || 'pradera');
+    await b.close(); await relevo.cerrar();
+    console.log(out.join('\n'));
+    console.log('RESUMEN fps(8 en vivo con ítems) libre=' + f.libre + ' CPU×4=' + f.lento);
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_VIVO_SOLO === 'objetos') { // karts-objetos-en-sala: solo esta parte (para iterar)
     await objetosEnSala(b, relevo);
     await respaldo(b, relevo);
