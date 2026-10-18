@@ -161,7 +161,17 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
     Peticiones a la vez caen en la misma sala. Unirse a la nueva sigue las reglas de `unirse` (409 `ya_empezo` o
     `sala_llena`, y 503 `conflicto_escritura` si no se guardó quien la pide; los tres con `codigo`). Publica en Realtime la sala vieja y la nueva. Detalle en el `design.md` del cambio.
   - `GET /juegos/sala/<código>`: sala, jugadores y `ahora` (hora del servidor), solo para sus jugadores y
-    el admin. Caché de 2 s.
+    el admin. Caché de 2 s. Lleva `viendo` (cuántas personas espectan).
+  - **Espectador** (cambio `espectador-partidas`, cambios marcados `// espectador`):
+    `POST /juegos/sala/<código>/espectar` registra a una persona con cuenta de Juegos en
+    `juegos/salas/<código>/espectadores/<id>.json` `{ id, t }` (subcarpeta: no cuenta para asientos, `MESAS`, `empezar`,
+    podio, revancha ni ranking; `/respuesta` sigue respondiendo 403 `no_en_sala`). Cupo `MAX_ESPECTADORES` = 30 (409
+    `espectadores_llenos`); quien ya juega recibe 409 `ya_en_sala`; `{ salir: true }` lo quita; al unirse como jugador
+    deja de espectar. Quien especta (y el admin) recibe en el GET la **vista pública** (`vistaPublica`: la misma que
+    publica el canal; sin `canal`, `secreto`, flotas ni elecciones de ppt sin revelar, y Dibuja sin la palabra) con
+    `espectador: true`, `soyHost: false` y `viendo`; el `rt` solo en los juegos en vivo de `ESPECTADOR_EN_VIVO`
+    (Karts, Fútbol, Futbolito Arena y Brigada Xalli), para escuchar `vivo` en solo escucha. Matriz de acceso y modelo
+    de amenaza en el `design.md` del cambio.
   - Juegos permitidos (`JUEGOS_PARTIDA`):
     - de preguntas: `en-vocab`, `en-frases`, `en-tiempos` (⏳ Máquina del tiempo, cambio `juegos-ingles-gramatica`;
       tope individual 2,000 en el catálogo), `es-ortografia`, `cultura` y `mente-calculo`;
@@ -324,7 +334,8 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
 **Salas en tiempo real** (`server/realtime.ts`, cambio `salas-realtime`): con `SUPABASE_URL`,
 `SUPABASE_PUBLISHABLE_KEY` y `SUPABASE_SERVICE_KEY` (proyecto Supabase *Portafolio*, compartido con el portafolio):
   - cada sala nace con `canal` (24 hex secretos). Solo se entrega dentro de `rt: { url, key, topic }` en
-    `GET /juegos/sala/<código>`, y solo a quien está en la sala;
+    `GET /juegos/sala/<código>`, y solo a quien está en la sala (y a quien especta un juego en vivo, en solo escucha:
+    cambio `espectador-partidas`);
   - tras `unirse`, `empezar` y `respuesta`, `publicarSala` hace un broadcast REST
     (`POST /realtime/v1/api/broadcast`, evento `estado`, payload `{ sala, jugadores, ahora }`, sin correos), con
     tope de 3 s. Si falla, se registra y la respuesta sigue igual;

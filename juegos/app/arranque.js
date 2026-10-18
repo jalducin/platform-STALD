@@ -51,6 +51,7 @@ app.addEventListener('click', e => {
   const NO_ATENDIDO = Symbol('no-atendido');
   // Dentro de la sala: preguntas, salas grandes, mesas (¡Una!, Póker, cartas, ajedrez, tablero), Lotería y botones de la sala.
   const clicEnSala = () => {
+    if (sala.espectador && sala.estado && clicEspectador(e)) return; // espectador: sin controles del juego
     const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
     if (SalasGrandes.clic(e)) return; // juegos-salas-grandes
     if (sala.estado && sala.estado.sala.juego === 'una' && document.getElementById('p-body') && clicUnaSala(e)) return;
@@ -87,6 +88,8 @@ app.addEventListener('click', e => {
   const clicEnAccion = a => {
     if (a.dataset.a === 'categorias') return verCategorias(); // juegos-categorias: «← Categorías»
     if (a.dataset.a === 'reanudar') return reanudarPartida();
+    if (a.dataset.a === 'espectar') { a.disabled = true; return espectarCodigo(a.dataset.codigo); } // espectador
+    if (a.dataset.a === 'espectar-form') return espectarDesdeFormulario(); // espectador: «👀 Solo ver»
     if (a.dataset.a === 'revancha-no') { olvidarRevancha(); const c = document.getElementById('revancha-inicio'); if (c) { c.remove(); } return; }
     if (a.dataset.a === 'revancha-inicio') {
       a.disabled = true;

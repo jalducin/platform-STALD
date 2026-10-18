@@ -210,6 +210,7 @@
       vistos: new Set(), pendientes: [], ultimoPaso: ahora(), lento: null };
     const pred = { pend: [], ex: 0, lista: false };
     function reconciliar(f) {
+      if (cfg.espectador) { m.cam.x = f.c; return; } // espectador (openspec: espectador-partidas): sin jugador propio; solo la cámara compartida
       const p = m.jugadores[yo], k = 8 * yo, j = f.j;
       if (!j || ((j[k + 4] >> 5) & 3) !== 0) { pred.lista = false; pred.pend = []; return; }
       pred.pend = pred.pend.filter(x => x.s > (f.a[yo] || 0));
@@ -329,7 +330,7 @@
     // Disparos de los demás (cosméticos): burbujas al ritmo de su arma mientras su bandera dice que disparan.
     function disparosAjenos(dt) {
       m.jugadores.forEach((p, i) => {
-        if (i === yo || p.estado !== 'vivo' || p.dispT > 0.05) return;
+        if ((i === yo && !cfg.espectador) || p.estado !== 'vivo' || p.dispT > 0.05) return; // espectador: ve los disparos de todos
         p.cad = (p.cad || 0) - dt;
         if (p.cad > 0) return;
         p.cad = 0;
@@ -341,6 +342,7 @@
       st, pred,
       // Junta la entrada de este cuadro, predice y manda a `hz`.
       entrada(ent) {
+        if (cfg.espectador) return null; // espectador: no manda entrada
         const t = ahora(), dt = Math.min(0.1, Math.max(0, (t - st.ultimoPaso) / 1000)); st.ultimoPaso = t;
         const e = normalizar(ent);
         if (e.ga) st.cont.na = (st.cont.na + 1) & 63;

@@ -106,6 +106,10 @@ JUEGOS_PARTIDA.push('golf'); TIEMPO_REAL.add('golf'); FISICA.add('golf'); // gol
 JUEGOS_PARTIDA.push('futbol'); TIEMPO_REAL.add('futbol'); // futbol-en-linea: 1 vs 1 en vivo en su iframe (pintarFutbolSala)
 JUEGOS_PARTIDA.push('futbolito-arena'); TIEMPO_REAL.add('futbolito-arena'); // futbolito-arena: robots por equipos en su iframe (pintarArenaSala)
 JUEGOS_PARTIDA.push('brigada'); TIEMPO_REAL.add('brigada'); // brigada: misión cooperativa de 1 a 8 en su iframe (pintarBrigadaSala)
+// espectador (openspec: espectador-partidas): juegos en vivo cuyo iframe sabe mostrarse a quien especta (`espectador:
+// true` en `inicio`, solo escucha). Gancho para juegos en vivo nuevos (como Brigada Xalli): agregar su id aquí y en
+// ESPECTADOR_EN_VIVO de server/salas.ts.
+const ESPECTAR_EN_VIVO = new Set(['karts', 'futbol', 'futbolito-arena', 'brigada']);
 
 // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
 // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -136,7 +140,7 @@ function transporteSala() {
   const rx = EnVivo.oyentesDe(), st = EnVivo.oyentesDe();
   const t = {
     estado: 'conectando', canal: null, alReconectar: null,
-    enviar(m) { if (t.canal && t.estado === 'listo') t.canal.send({ type: 'broadcast', event: 'vivo', payload: m }); },
+    enviar(m) { if (!sala.espectador && t.canal && t.estado === 'listo') t.canal.send({ type: 'broadcast', event: 'vivo', payload: m }); }, // espectador: solo escucha
     alRecibir: rx.agregar, alEstado: st.agregar, recibir: rx.emitir,
     reconectar() { if (t.alReconectar) t.alReconectar(); },
     fijar(e) { if (t.estado !== e) { t.estado = e; st.emitir(e); } },
@@ -147,7 +151,11 @@ const vivoSimulado = () => new URLSearchParams(location.search).get('vivoSimulad
 // Transporte de la sala para el juego en vivo: el doble de prueba, el canal de Realtime o ninguno (respaldo).
 function prepararVivo(codigo) {
   const op = vivoSimulado();
-  if (op) { sala.vivoTr = EnVivo.simulado(op).transporte('sala-sim-' + codigo, sala.estado.yo); return; }
+  if (op) {
+    sala.vivoTr = EnVivo.simulado(op).transporte('sala-sim-' + codigo, sala.estado.yo);
+    if (sala.espectador) sala.vivoTr.enviar = () => {}; // espectador: solo escucha también en el doble de prueba
+    return;
+  }
   sala.vivoTr = sala.estado.rt && window.EnVivo ? transporteSala() : null;
 }
 const ESTADO_CANAL = { SUBSCRIBED: 'listo', CLOSED: 'caido', CHANNEL_ERROR: 'caido', TIMED_OUT: 'caido' };
@@ -168,6 +176,7 @@ async function conectarRealtime(rt, codigo, alCambiar) {
       sala.estado = { ...sala.estado, ...mezclarEstado(sala.estado, p), ahora: p.ahora };
       relojSala.aviso(Date.now(), p.ahora); sala.offset = relojSala.offset();
       sala.rtRecibidos = (sala.rtRecibidos || 0) + 1;
+      if (Number.isInteger(p.viendo)) sala.estado.viendo = p.viendo; // espectador: «👀 N viendo» al instante
       pintarSala();
     }).subscribe(st => {
       if (tv && tv.canal === canal && ESTADO_CANAL[st]) tv.fijar(ESTADO_CANAL[st]); // juegos-en-vivo
@@ -184,7 +193,7 @@ async function conectarRealtime(rt, codigo, alCambiar) {
 async function traerSala() {
   const t0 = Date.now();
   const r = await api('/juegos/sala/' + sala.codigo);
-  if (r.ok) { sala.estado = r.body; relojSala.http(t0, Date.now(), r.body.ahora, r.body.reloj); sala.offset = relojSala.offset(); }
+  if (r.ok) { sala.estado = r.body; sala.espectador = !!r.body.espectador; espectandoSala = sala.espectador ? sala.codigo : null; relojSala.http(t0, Date.now(), r.body.ahora, r.body.reloj); sala.offset = relojSala.offset(); } // espectador: sala.espectador
   return r;
 }
 
@@ -222,7 +231,7 @@ function pintarPartidas() {
     '<div class="row-btns"><button class="btn" type="submit">Crear partida</button></div></form></div>' +
     '<div class="card"><h2 style="margin-top:0">🔑 Unirme con código</h2><form id="f-unirse" autocomplete="off"><label for="p-codigo">Código de 4 letras</label>' +
     '<input id="p-codigo" type="text" maxlength="4" placeholder="KXQP" style="text-transform:uppercase;letter-spacing:.3em;font-weight:800;text-align:center">' +
-    '<div class="row-btns"><button class="btn" type="submit">Unirme</button></div></form><div id="p-msg"></div></div>';
+    '<div class="row-btns"><button class="btn ghost" type="button" data-a="espectar-form">👀 Solo ver</button><button class="btn" type="submit">Unirme</button></div></form><div id="p-msg"></div></div>'; // espectador: «👀 Solo ver»
   datos('basta').then(d => { const el = document.getElementById('p-extra'); if (el) el.innerHTML = selectorExtras(d.extras, 'pextra'); }).catch(() => {}); // basta-divertida-una-robo
   datos('cultura').then(d => {
     const sel = document.getElementById('p-cat'); if (!sel) return;
@@ -232,13 +241,15 @@ function pintarPartidas() {
 
 async function entrarSala(codigo) {
   limpiar();
-  Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, vivoTr: null, finT: 0, revEnviando: false, revMsg: '', personajeMio: null, personajeMsg: '' }); // personaje-en-salas: personajeMio/Msg
+  Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, vivoTr: null, finT: 0, revEnviando: false, revMsg: '', personajeMio: null, personajeMsg: '', espectador: false }); // personaje-en-salas: personajeMio/Msg; espectador
+  espectandoSala = null;
   app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
   const r = await traerSala();
   if (!r.ok) { pantallaHub('partidas'); const m = document.getElementById('p-msg'); if (m) { m.innerHTML = '<div class="alert">No se pudo abrir la partida (' + escapeHtml(r.body.error || r.status) + ').</div>'; } return; }
   // Recargar regresa aquí (openspec: juegos-recarga): código en la URL y sala activa guardada.
   recordarSala(codigo);
-  try { history.replaceState(history.state, '', urlConSala(codigo)); } catch (e) { /* sin historial */ }
+  try { history.replaceState(history.state, '', urlConSala(codigo, sala.espectador)); } catch (e) { /* sin historial */ } // espectador: &ver=1
+  if (sala.espectador) limpiezas.push(() => { espectandoSala = null; post('/juegos/sala/' + codigo + '/espectar', { salir: true }); }); // espectador: al salir deja de contar en «viendo»
   modoPartida(true);
   const j = juegoPorId(sala.estado.sala.juego);
   // Contenido de la sala: salas grandes, juegos sin preguntas, Basta, Lotería o las preguntas con semilla.
@@ -298,8 +309,8 @@ async function entrarSala(codigo) {
   if (sala.estado.rt) conectarRealtime(sala.estado.rt, codigo, () => { if (detenido) { return; } programarTick(); });
   const reloj = setInterval(() => pintarSala(), 250);
   limpiezas.push(() => { detenido = true; clearTimeout(tick); document.removeEventListener('visibilitychange', alVolver); }, () => clearInterval(reloj));
-  app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + icoJuego(j) + ' ' + escapeHtml(j.t) + (sala.estado.sala.opciones.tema ? ' · ' + escapeHtml(InglesGramatica.nombreTema(sala.estado.sala.opciones.tema)) : '') + ' · partida</span>' +
-    '<span class="stat" id="p-codigo-chip">🔑 ' + escapeHtml(codigo) + '</span></div><div class="bar" id="m-bar" hidden><span style="width:100%"></span></div>' +
+  app.innerHTML = '<div class="cat-' + escapeHtml(j.cat) + (sala.espectador ? ' espectando' : '') /* espectador */ + '"><div class="play-top"><button class="btn ghost sm" data-a="salir" aria-label="Salir">✕</button><span class="t">' + icoJuego(j) + ' ' + escapeHtml(j.t) + (sala.estado.sala.opciones.tema ? ' · ' + escapeHtml(InglesGramatica.nombreTema(sala.estado.sala.opciones.tema)) : '') + ' · partida</span>' +
+    '<span class="stat" id="p-codigo-chip">🔑 ' + escapeHtml(codigo) + '</span></div>' + barraEspectador() /* espectador */ + '<div class="bar" id="m-bar" hidden><span style="width:100%"></span></div>' +
     '<div id="p-red" class="muted" role="status" hidden style="text-align:center;font-size:.85rem;margin:6px 0">📶 Reconectando… tu partida sigue guardada.</div><div id="p-body"></div></div>';
   sala.vista = null;
   pintarSala();
@@ -322,6 +333,7 @@ function pintarSala() {
   const e = sala.estado; if (!e) return;
   const body = document.getElementById('p-body'); if (!body) return;
   const s = e.sala;
+  pintarViendo(); // espectador: «👀 N viendo»
   if (sala.vista === 'final') return finalSala(s); // el podio ya no se vuelve a dibujar (futbol-en-linea: solo su nota)
   if (s.inicio === null) return pintarEspera(body);
   if (s.juego.startsWith('basta')) return pintarBastaSala(body);
@@ -358,9 +370,9 @@ function pintarEspera(body) {
     extrasEspera(e.sala) + // basta-divertida-una-robo
     '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length, e.sala.opciones)) + '</p>' : '') + equiposFutbolito(lista) /* futbolito-equipos */ + equiposArena(lista) /* futbolito-arena */ + tacticaFutbol() /* futbol-en-linea */ + tarjetaPersonaje() /* personaje-en-salas */ + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
       (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + personajeEnLista(x) /* personaje-en-salas */ + '</span></li>').join('') + '</ol>' +
-    '<div class="row-btns">' + (e.soyHost ? '<button class="btn" data-p="empezar">▶ Empezar partida</button>' : '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>') + '</div>';
+    '<div class="row-btns">' + botonesEspera(e, lista) + '</div>';
   // La clave cuenta personas y bots: en una mesa de 4, una persona nueva desplaza a un bot y la lista no cambia de largo.
-  const clave = 'espera:' + lista.map(x => x.id + (x.equipo === undefined ? '' : '/' + x.equipo) + (x.robot === undefined ? '' : '#' + x.robot) /* futbolito-arena */ + '@' + (personajeDeAsiento(x.id) || '')).join(',') + ':' + e.soyHost + ':' + (sala.personajeMio || '') + ':' + (sala.personajeMsg || ''); // futbolito-equipos: también el equipo pedido; personaje-en-salas: y el personaje
+  const clave = 'espera:' + lista.map(x => x.id + (x.equipo === undefined ? '' : '/' + x.equipo) + (x.robot === undefined ? '' : '#' + x.robot) /* futbolito-arena */ + '@' + (personajeDeAsiento(x.id) || '')).join(',') + ':' + e.soyHost + ':' + (sala.personajeMio || '') + ':' + (sala.personajeMsg || '') + ':' + (sala.espMsg || ''); // espectador: aviso al querer jugar // futbolito-equipos: también el equipo pedido; personaje-en-salas: y el personaje
   if (sala.vista !== clave) { body.innerHTML = html; sala.vista = clave; pintarQr(document.getElementById('p-qr'), enlaceSala(e.sala.codigo)); }
   sincronizarPersonaje(); // personaje-en-salas: el asiento toma el personaje del navegador si aún no tiene
 }
@@ -559,7 +571,7 @@ function pintarFinalSala(body, todas, basta, titulo) {
   if (sala.vista === 'final') return;
   sala.vista = 'final';
   olvidarSala(); // terminó: recargar ya no vuelve a la sala
-  sala.finT = Date.now(); escribirLocal(REVANCHA_KEY, { codigo: sala.codigo, quien: state.jugador && state.jugador.id, t: sala.finT }); // pero sí ofrece la revancha
+  sala.finT = Date.now(); if (!sala.espectador) escribirLocal(REVANCHA_KEY, { codigo: sala.codigo, quien: state.jugador && state.jugador.id, t: sala.finT }); // pero sí ofrece la revancha (espectador: la ve en el podio)
   const filas = todas.map(f => ({ ...f, ultimo: 0 })); // en el podio no se muestra el +puntos de la última pregunta
   document.getElementById('m-bar').hidden = true;
   const e = sala.estado; const juego = e.sala.juego;
@@ -615,6 +627,7 @@ function pintarRevancha() {
   if (el.dataset.k === k) return;
   if (sig && el.dataset.k && !el.dataset.k.startsWith(sig + '|')) window.Emocion?.revancha(); // emocion-sonora: alguien abrió la revancha
   el.dataset.k = k;
+  if (sala.espectador) { el.innerHTML = revanchaEspectadorHtml(sig, e); return; } // espectador
   el.innerHTML = (sig ? '<div class="revancha-aviso" role="status">🔁 ' + escapeHtml(abrioRevancha(e)) + ' abrió la revancha</div>' : '') +
     '<div class="row-btns"><button class="btn" data-p="revancha"' + (sala.revEnviando ? ' disabled' : '') + '>' + (sig ? '🔁 Unirme' : '🔁 Otra con los mismos') + '</button></div>' +
     (sala.revMsg ? '<div class="alert">' + escapeHtml(sala.revMsg) + '</div>' : '');
@@ -712,11 +725,88 @@ function reanudarPartida() {
 async function unirseCodigo(codigo) {
   const r = await post('/juegos/sala/' + codigo + '/unirse', {});
   if (!r.ok) {
-    const txt = { conflicto_escritura: 'No se pudo entrar a la sala, intenta de nuevo.', sala_no_existe: 'No existe una partida con ese código.', ya_empezo: 'Esa partida ya empezó.', sala_llena: 'La partida está llena.', sala_vencida: 'La partida ya venció.' }[r.body.error] || ('Error ' + (r.body.error || r.status));
+    const txt = { conflicto_escritura: 'No se pudo entrar a la sala, intenta de nuevo.', sala_no_existe: 'No existe una partida con ese código.', ya_empezo: 'La partida ya empezó.', sala_llena: 'La partida está llena.', sala_vencida: 'La partida ya venció.' }[r.body.error] || ('Error ' + (r.body.error || r.status));
     if (!document.getElementById('p-msg')) pantallaHub('partidas');
-    document.getElementById('p-msg').innerHTML = '<div class="alert">' + escapeHtml(txt) + '</div>'; return;
+    // espectador: llena o empezada → «👀 Ver como espectador» en lugar de solo el error.
+    const ver = ['ya_empezo', 'sala_llena'].includes(r.body.error) ? '<div class="row-btns"><button class="btn" data-a="espectar" data-codigo="' + escapeHtml(codigo) + '">👀 Ver como espectador</button></div>' : '';
+    document.getElementById('p-msg').innerHTML = '<div class="alert" id="p-no-entra">' + escapeHtml(txt) + ver + '</div>'; return;
   }
   entrarSala(codigo);
+}
+
+// ---- Modo espectador (openspec: espectador-partidas) ----
+// Ver una partida sin jugar: no ocupa asiento, sin controles del juego, vista pública sin secretos (la arma el
+// servidor) y, en los juegos en vivo, el canal en solo escucha. Al terminar: podio y «Unirme a la revancha».
+const TXT_ESPECTAR = { sala_no_existe: 'No existe una partida con ese código.', sala_vencida: 'La partida ya venció.', espectadores_llenos: '👀 Ya hay 30 personas viendo esta partida. Intenta más tarde.', conflicto_escritura: 'No se pudo entrar a ver la partida, intenta de nuevo.' };
+async function espectarCodigo(codigo) {
+  const r = await post('/juegos/sala/' + codigo + '/espectar', {});
+  if (r.ok || r.body.error === 'ya_en_sala') return entrarSala(codigo); // ya_en_sala: juega en esa sala
+  if (!document.getElementById('p-msg')) pantallaHub('partidas');
+  const m = document.getElementById('p-msg');
+  if (m) m.innerHTML = '<div class="alert">' + escapeHtml(TXT_ESPECTAR[r.body.error] || ('No se pudo ver la partida (' + (r.body.error || r.status) + ').')) + '</div>';
+}
+function espectarDesdeFormulario() {
+  const codigo = document.getElementById('p-codigo').value.trim().toUpperCase();
+  if (!/^[A-Z]{4}$/.test(codigo)) { document.getElementById('p-msg').innerHTML = '<div class="alert">El código tiene 4 letras.</div>'; return; }
+  espectarCodigo(codigo);
+}
+// Barra bajo el título: distintivo, cuántas personas ven y el sonido (arcade_sonido: lo respetan Emoción y los juegos).
+const sonidoApagado = () => { try { return localStorage.getItem('arcade_sonido') === '0'; } catch { return false; } };
+function barraEspectador() {
+  const sonido = '<button class="btn ghost sm" data-esp="sonido" aria-pressed="' + sonidoApagado() + '" aria-label="Silenciar">' + (sonidoApagado() ? '🔇' : '🔊') + '</button>';
+  return '<div class="esp-barra" id="p-esp">' + (sala.espectador ? '<span class="esp-chip" role="status">👀 Espectador</span>' : '') + '<span class="muted" id="p-viendo" hidden></span>' + (sala.espectador ? sonido : '') + '</div>';
+}
+function pintarViendo() {
+  const v = document.getElementById('p-viendo'), n = Number(sala.estado && sala.estado.viendo) || 0;
+  if (!v) return;
+  const txt = n ? '👀 ' + n + ' viendo' : '';
+  if (v.textContent !== txt) { v.textContent = txt; v.hidden = !n; }
+}
+function alternarSonidoEspectador(btn) {
+  const apagar = !sonidoApagado();
+  try { localStorage.setItem('arcade_sonido', apagar ? '0' : '1'); } catch { /* sin almacenamiento */ }
+  if (apagar && window.speechSynthesis) speechSynthesis.cancel();
+  if (apagar) window.Emocion?.calma();
+  btn.textContent = apagar ? '🔇' : '🔊'; btn.setAttribute('aria-pressed', String(apagar));
+  const f = document.getElementById('arcade-frame'); // el juego del iframe también se calla (o suena)
+  if (f) { try { f.contentWindow.postMessage({ tipo: 'sonido', activo: !apagar }, location.origin); } catch { /* iframe cerrado */ } }
+}
+// Sala de espera: el anfitrión empieza; quien especta puede pasar a jugar si hay lugar.
+function botonesEspera(e, lista) {
+  if (e.soyHost) return '<button class="btn" data-p="empezar">▶ Empezar partida</button>';
+  const espera = '<div class="muted" style="text-align:center;width:100%">Esperando a que el anfitrión empiece…</div>';
+  if (!sala.espectador) return espera;
+  const mesa = Mesas.de(e.sala.juego, e.sala.opciones), personas = lista.filter(x => !x.bot).length;
+  const hayLugar = personas < (mesa ? mesa.max : 30);
+  return espera + (hayLugar ? '<button class="btn" data-p="jugar-esp">🙋 Unirme a jugar</button>' : '') + (sala.espMsg ? '<div class="alert">' + escapeHtml(sala.espMsg) + '</div>' : '');
+}
+// De espectador a jugador en la sala que se ve (o en la revancha): se une y, si ya no hay lugar, sigue viendo.
+async function jugarDesdeEspectador(codigo) {
+  const r = await api('/juegos/sala/' + codigo + '/unirse', { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: '{}' });
+  if (r.ok) { espectandoSala = null; olvidarRevancha(); return entrarSala(codigo); }
+  if (['ya_empezo', 'sala_llena'].includes(r.body.error)) return codigo === sala.codigo ? avisoEspectador(r.body.error) : espectarCodigo(codigo);
+  return avisoEspectador(r.body.error || String(r.status));
+}
+function avisoEspectador(error) {
+  sala.espMsg = ({ ya_empezo: 'La partida ya empezó: sigues viendo.', sala_llena: 'Ya no hay lugar: sigues viendo.' })[error] || 'No se pudo entrar (' + error + ').';
+  sala.vista = null; pintarSala();
+}
+// Podio: la revancha de quien juega es «Otra con los mismos»; quien especta se une si alguien la abrió.
+function revanchaEspectadorHtml(sig, e) {
+  if (!sig) return '<div class="muted" style="margin-top:6px">👀 Si alguien abre la revancha, podrás unirte desde aquí.</div>';
+  return '<div class="revancha-aviso" role="status">🔁 ' + escapeHtml(abrioRevancha(e)) + ' abrió la revancha</div>' +
+    '<div class="row-btns"><button class="btn" data-p="revancha-esp" data-codigo="' + escapeHtml(sig) + '">🔁 Unirme a la revancha</button></div>';
+}
+// Clics de quien especta: compartir, sonido, pasar a jugar y revancha; lo demás del juego no hace nada.
+function clicEspectador(e) {
+  const b = e.target.closest('[data-p], [data-esp]');
+  if (b && b.dataset.esp === 'sonido') { alternarSonidoEspectador(b); return true; }
+  if (b && b.dataset.p === 'compartir') { compartirSala(b); return true; }
+  if (b && b.dataset.p === 'jugar-esp') { b.disabled = true; jugarDesdeEspectador(sala.codigo); return true; }
+  if (b && b.dataset.p === 'revancha-esp') { b.disabled = true; jugarDesdeEspectador(b.dataset.codigo); return true; }
+  // Ver en otro idioma o con otra voz no manda nada: se deja pasar.
+  if (e.target.closest('[data-usala-lang], [data-lsvoz], [data-ayuda]')) return false;
+  return !!e.target.closest('#p-body');
 }
 
 const enlaceSala = codigo => location.origin + location.pathname + '?sala=' + codigo + (API_PARAM ? '&api=' + encodeURIComponent(API_PARAM) : '');

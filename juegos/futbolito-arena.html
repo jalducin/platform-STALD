@@ -83,6 +83,9 @@ body.tactil.en-partido.ctl-joystick #mandos{display:flex}
 }
 @media (max-width:400px){#marcador{font-size:13px;gap:4px;padding:2px 6px}#reloj{min-width:38px}.mini{min-width:34px;font-size:14px;padding:2px 5px}}
 @media (prefers-reduced-motion:reduce){#aviso,#grito{transition:none}.m.on{transform:none}}
+/* espectador (openspec: espectador-partidas): la arena completa, sin controles ni pausa */
+html body.espectador #mandos,html body.espectador.tactil.en-partido.ctl-joystick #mandos,html body.espectador #b-pausa{display:none}
+#esp-chip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:6;padding:3px 12px;border-radius:999px;background:rgba(124,58,237,.9);color:#fff;font-weight:800;font-size:13px}
 </style></head><body class="ctl-joystick">
 <div id="juego">
   <div id="pantalla">
@@ -107,7 +110,7 @@ body.tactil.en-partido.ctl-joystick #mandos{display:flex}
 </div>
 <script src="mando.js?v=2"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora: gol, silbato, tensión, victoria y derrota -->
-<script src="en-vivo.js?v=1"></script> <!-- juegos-en-vivo: canal de la sala por el puente de la página -->
+<script src="en-vivo.js?v=2"></script> <!-- juegos-en-vivo: canal de la sala por el puente de la página -->
 <script src="arena-motor.js?v=1"></script>
 <script src="arena-red.js?v=1"></script>
 <script>
@@ -273,7 +276,7 @@ function elegirControl(c) { control = c; guardarLS('arena_control', c); soltarTo
 function pintarControl() {
   document.body.classList.toggle('ctl-joystick', control === 'joystick');
   document.body.classList.toggle('ctl-mando', control === 'mando');
-  mando.mostrar(control === 'mando' && TACTIL && S.vista === 'partido');
+  mando.mostrar(control === 'mando' && TACTIL && S.vista === 'partido' && S.rol !== 'espectador'); // espectador: sin mando
   document.querySelectorAll('[data-control]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.control === control)));
 }
 // Eje de la pantalla: el de mayor magnitud entre joystick, mando, teclado y fuentes registradas.
@@ -639,6 +642,7 @@ function iniciarSala(d) {
   S.sala = d;
   const personas = d.asientos.filter(a => !a.bot), yo = d.asientos.findIndex(a => a.id === d.yo.id);
   S.ctx = { modo: 'sala', nivel: 'medio', formato: d.formato, arena: d.arena };
+  if (d.espectador === true) { conectarEspectador(d); return; } // espectador
   if (yo < 0) { respaldo('No encontramos tu lugar en la mesa.'); return; }
   if (personas.length === 1) { S.rol = 'local'; iniciarPartido(partidoSala(d), yo, d.asientos.map(a => a.nombre)); return; }
   conectarSala(d, yo);
@@ -683,6 +687,23 @@ function empezarInvitado(d, yo) {
   avisarRed('⏳ Esperando al anfitrión…');
 }
 const esAnfitrion = (d, a) => a.id === d.anfitrion;
+// espectador (openspec: espectador-partidas): invitado sin robot (yo = -1) que no manda entrada; el canal en solo escucha.
+async function conectarEspectador(d) {
+  pantalla('<h2>👀 Partido en vivo</h2><p id="linea-estado">📡 Conectando la transmisión…</p>', 'conectando');
+  if (!d.vivo || !window.EnVivo) { pantalla('<h2>👀 Partido en vivo</h2><p>Este partido no se transmite en vivo. Al terminar verás el podio.</p>', 'respaldo'); return; }
+  const ids = d.asientos.filter(a => !a.bot).map(a => a.id);
+  try {
+    const intento = EnVivo.conectar({ transporte: EnVivo.transporteMarco('futbolito-arena'), yo: d.yo, participantes: ids, hz: R.HZ_FOTO, escucha: true });
+    S.canal = await Promise.race([intento, new Promise((_, mal) => setTimeout(() => mal(new Error('tiempo')), 6000))]);
+  } catch { pantalla('<h2>👀 Partido en vivo</h2><p>No se pudo conectar la transmisión. Al terminar verás el podio.</p>', 'respaldo'); return; }
+  const p = partidoSala(d), ahora = () => performance.now();
+  S.rol = 'espectador';
+  S.red = R.invitado({ canal: S.canal, p, M, anfitrion: d.anfitrion, yo: -1, ahora, hz: R.HZ_FOTO });
+  iniciarPartido(p, -1, d.asientos.map(a => a.nombre));
+  document.body.classList.add('espectador');
+  if (!$('esp-chip')) { const chip = document.createElement('output'); chip.id = 'esp-chip'; chip.textContent = '👀 Espectador'; $('pantalla').appendChild(chip); }
+  avisarRed('⏳ Esperando la transmisión del anfitrión…');
+}
 function avisarRed(t) {
   const el = $('red-aviso');
   if (!t) { el.classList.add('hide'); return; }
@@ -701,7 +722,7 @@ function pintarRed(ahora) {
   let nivel = 'malo';
   if (Number.isFinite(ms) && ms <= 120) nivel = 'bueno'; else if (Number.isFinite(ms) && ms <= 250) nivel = 'regular';
   lat.dataset.nivel = nivel;
-  if (S.rol !== 'invitado') return;
+  if (S.rol !== 'invitado' && S.rol !== 'espectador') return; // espectador: también ve el aviso del anfitrión
   const caido = S.red.anfitrionCaido();
   if (caido !== null) avisarRed('📡 Se perdió la conexión con el anfitrión · el partido se cierra en ' + Math.max(0, Math.ceil((R.DESCONEXION_MS - (ahora - caido)) / 1000)) + ' s');
   else if (S.red.ultimaFoto()) avisarRed('');
@@ -717,10 +738,11 @@ function avanzarAnfitrion(dt) {
   if (S.p.estado === 'fin') terminarSala(false);
 }
 function avanzarInvitado() {
-  const ahora = performance.now();
-  S.red.entrada(leerEntrada());
+  const ahora = performance.now(), esp = S.rol === 'espectador';
+  if (!esp) S.red.entrada(leerEntrada()); // espectador: no manda entrada
   const d = S.red.dibujar();
   if (d) eventos(d.eventos);
+  else if (esp) return; // espectador: sigue esperando la transmisión
   else if (ahora - S.inicioReal > ESPERA_MS) { respaldo('El anfitrión no se conectó al canal en vivo.'); return; }
   if (d && d.estado === 'fin') terminarSala(false);
   else if (S.red.cerrarPorCaida()) terminarSala(true);
@@ -738,9 +760,9 @@ function terminarSala(corte) {
   if (S.fin) return;
   S.fin = true;
   if (S.rol === 'anfitrion') [0, 150, 300].forEach(t => setTimeout(() => { if (S.red) S.red.enviarSiToca(true); }, t)); // la última foto llega aunque se pierda una
-  const f = S.rol === 'invitado' ? S.red.ultimaFoto() : null, goles = f ? f.goles.slice() : S.p.goles.slice();
+  const f = S.rol === 'invitado' || S.rol === 'espectador' ? S.red.ultimaFoto() : null, goles = f ? f.goles.slice() : S.p.goles.slice();
   apagarTension(); soltarToques(); avisarRed(''); silbato(2);
-  const eq = S.p.robots[S.yo].eq, r = resultadoDe(goles, eq);
+  const robot = S.p.robots[S.yo], r = robot ? resultadoDe(goles, robot.eq) : { titulo: '🏁 ¡Final del partido!', gano: false, gf: 0, gc: 0 }; // espectador: sin robot propio
   if (r.gano) window.Emocion?.victoria(); else if (r.gf < r.gc) window.Emocion?.derrota();
   pantalla('<h2>' + r.titulo + '</h2>' + marcadorGrande(goles) + (corte ? '<p>📡 El partido se cerró por la desconexión.</p>' : '') + '<p id="res-puntos">Registrando el resultado…</p>', 'resultado');
   setTimeout(cerrarCanal, 1500);
@@ -784,7 +806,7 @@ let ultimo = performance.now(), cuadros = 0, fpsDesde = performance.now(), fps =
 function avanzar(dt) {
   if (S.ctx.modo === 'solo') avanzarSolo(dt);
   else if (S.rol === 'anfitrion') avanzarAnfitrion(dt);
-  else if (S.rol === 'invitado') avanzarInvitado();
+  else if (S.rol === 'invitado' || S.rol === 'espectador') avanzarInvitado(); // espectador
   else avanzarLocalSala(dt);
 }
 function cuadro(ahora) {

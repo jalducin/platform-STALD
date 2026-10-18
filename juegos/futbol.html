@@ -164,6 +164,9 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(182,240,60,.8
 @media (orientation:portrait){#radar{width:110px;height:72px}}
 @media (max-width:400px){#marcador{font-size:13px;gap:3px;padding:2px 6px 2px 4px}#marcador img{width:16px;height:16px}#marcador .gol{min-width:16px;padding:0 3px}#reloj{min-width:28px;padding:0 4px}#hud .der{gap:4px}.mini{min-width:34px;font-size:14px;padding:2px 5px}}
 @media (prefers-reduced-motion:reduce){#aviso,#grito,#tuto{transition:none}.m.on{transform:none}}
+/* espectador (openspec: espectador-partidas): la cancha completa, sin controles ni pausa */
+body.espectador #mandos,body.espectador .mando,body.espectador #b-pausa,body.espectador #tuto,body.espectador #info-j{display:none!important}
+#esp-chip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:6;padding:3px 12px;border-radius:999px;background:rgba(124,58,237,.9);color:#fff;font-weight:800;font-size:13px}
 </style></head><body class="ctl-joystick">
 <div id="juego">
   <div id="pantalla">
@@ -198,7 +201,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(182,240,60,.8
 <script src="futbol-liga.js?v=1"></script>
 <script src="futbol-vista.js?v=1"></script>
 <script src="futbol-red.js?v=1"></script> <!-- futbol-en-linea: netcode sin DOM -->
-<script src="en-vivo.js?v=1"></script> <!-- futbol-en-linea: canal en vivo (juegos-en-vivo) por el puente de la página -->
+<script src="en-vivo.js?v=2"></script> <!-- futbol-en-linea: canal en vivo (juegos-en-vivo) por el puente de la página -->
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora: gol, silbato, tensión, victoria, penales y podio -->
 <script>
 /* Fútbol Estelar 2010 — página del juego (openspec: futbol-estelar). Embebido en juegos.html (🕹️ Arcade): la
@@ -427,7 +430,7 @@ function elegirControl(c) { control = c; guardarLS('futbol_control', c); soltarT
 function pintarControl() {
   document.body.classList.toggle('ctl-joystick', control === 'joystick');
   document.body.classList.toggle('ctl-mando', control === 'mando');
-  mando.mostrar(control === 'mando' && S.vista === 'partido' && !S.enLocal);
+  mando.mostrar(control === 'mando' && S.vista === 'partido' && !S.enLocal && S.rol !== 'espectador'); // espectador: sin mando
   document.querySelectorAll('[data-control]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.control === control)));
 }
 // Texto de los botones según la jugada: con el balón (ataque), sin el balón (defensa) o en una reanudación.
@@ -1112,7 +1115,7 @@ function conectarLinea(cfg) {
   if (!cfg.vivo) return Promise.reject(new Error('sin_canal'));
   if (!window.EnVivo || !window.EnVivo.conectar) return Promise.reject(new Error('sin_modulo'));
   // El canal de la sala vive en la página de Juegos (un solo socket); aquí llega por el puente del iframe.
-  const intento = window.EnVivo.conectar({ transporte: window.EnVivo.transporteMarco('futbol'), yo: cfg.yo, participantes: cfg.participantes, hz: cfg.rol === 'anfitrion' ? R.HZ_FOTO : R.HZ_ENTRADA });
+  const intento = window.EnVivo.conectar({ transporte: window.EnVivo.transporteMarco('futbol'), yo: cfg.yo, participantes: cfg.participantes, hz: cfg.rol === 'anfitrion' ? R.HZ_FOTO : R.HZ_ENTRADA, escucha: cfg.rol === 'espectador' }); // espectador: solo escucha
   const tope = new Promise((_, mal) => setTimeout(() => mal(new Error('tiempo')), 6000));
   return Promise.race([intento, tope]);
 }
@@ -1121,7 +1124,7 @@ async function iniciarLinea() {
   pantalla('<h2>⚽ Partido en vivo</h2><p><b>' + esc(cfg.nombres[0]) + '</b> vs <b>' + esc(cfg.nombres[1]) + '</b></p><p id="linea-estado">📡 Conectando el canal en vivo…</p>', 'conectando');
   try { S.canal = await conectarLinea(cfg); }
   catch (e) { respaldoLinea(e && e.message === 'sin_canal' ? 'Esta sala no tiene canal en vivo.' : 'No se pudo conectar el canal en vivo.'); return; }
-  if (cfg.rol === 'invitado') { empezarLinea(); return; }
+  if (cfg.rol === 'invitado' || cfg.rol === 'espectador') { empezarLinea(); return; } // espectador: ve como el invitado, sin mandar
   // El anfitrión da el saque cuando su rival saluda por el canal (o manda su primera entrada).
   const est = $('linea-estado'); if (est) est.textContent = '⏳ Esperando a ' + cfg.nombres[1] + '…';
   let listo = false;
@@ -1145,6 +1148,16 @@ function empezarLinea() {
   S.rol = cfg.rol; S.yoH = anf ? 0 : 1; S.redFin = false; S.holaT = 0; S.redT = 0; S.primeraFoto = anf;
   mostrarPartido([a, b], S.ctx);
   if (!anf) avisarRed('⏳ Esperando al anfitrión…');
+  pintarEspectador(); // espectador
+}
+// espectador (openspec: espectador-partidas): rol 'espectador' = invitado que no manda entrada ni saludo; ve la cancha.
+const esEspectador = () => S.rol === 'espectador';
+function pintarEspectador() {
+  document.body.classList.toggle('espectador', esEspectador());
+  let chip = $('esp-chip');
+  if (esEspectador() && !chip) { chip = document.createElement('output'); chip.id = 'esp-chip'; chip.textContent = '👀 Espectador'; $('pantalla').appendChild(chip); }
+  if (chip) chip.hidden = !esEspectador();
+  pintarControl();
 }
 function avisarRed(txt) {
   const el = $('red-aviso');
@@ -1185,10 +1198,11 @@ function pasoAnfitrion(dt, local) {
 }
 // Invitado: manda su entrada, dibuja lo interpolado y saluda hasta que llega la primera foto.
 function pasoInvitado(ahora, local) {
-  S.red.entrada(local);
+  if (!esEspectador()) S.red.entrada(local); // espectador: no manda entrada
   const d = S.red.dibujar();
   if (d) { S.primeraFoto = true; eventos(d.eventos); }
-  else if (ahora - S.holaT > 500) { S.holaT = ahora; S.canal.enviar('fe:hola', { v: 1 }); }
+  else if (!esEspectador() && ahora - S.holaT > 500) { S.holaT = ahora; S.canal.enviar('fe:hola', { v: 1 }); }
+  if (!S.primeraFoto && ahora - S.inicioReal > ESPERA_RIVAL_MS && esEspectador()) { avisarRed('📡 Todavía no llega la transmisión del partido…'); return true; } // espectador: sigue esperando
   if (!S.primeraFoto && ahora - S.inicioReal > ESPERA_RIVAL_MS) { respaldoLinea(S.linea.nombres[0] + ' no se conectó al canal en vivo.'); return false; }
   return true;
 }
@@ -1208,9 +1222,9 @@ function finLinea(corte) {
   if (anf) [0, 150, 300].forEach(t => setTimeout(() => { if (S.red && S.red.enviarSiToca) S.red.enviarSiToca(true); }, t)); // la última foto (con el final) llega aunque se pierda una
   S.vista = 'resultado'; ambiente(false); soltarToques(); apagarTension(); avisarRed('');
   const gf = goles[yoEq], gc = goles[1 - yoEq];
-  if (gf > gc) window.Emocion?.victoria(); else if (gf < gc) window.Emocion?.derrota();
   let titulo = '🤝 Empate';
-  if (gf > gc) titulo = '🏆 ¡Victoria!'; else if (gf < gc) titulo = '😓 Derrota';
+  if (esEspectador()) titulo = '🏁 ¡Final del partido!'; // espectador: sin victoria ni derrota propias
+  else if (gf > gc) { titulo = '🏆 ¡Victoria!'; window.Emocion?.victoria(); } else if (gf < gc) { titulo = '😓 Derrota'; window.Emocion?.derrota(); }
   pantalla('<h2>' + titulo + '</h2><div class="marcadorg">' + escudo(p.eq[0].datos, 56) + '<span>' + goles[0] + ' – ' + goles[1] + '</span>' + escudo(p.eq[1].datos, 56) + '</div>' +
     '<div class="sub">' + esc(S.linea.nombres[0]) + ' vs ' + esc(S.linea.nombres[1]) + '</div>' + (corte ? '<p>📡 El partido se cerró por la desconexión.</p>' : '') + '<p id="res-puntos">Registrando el resultado…</p>', 'resultado');
   setTimeout(cerrarCanal, 1500);

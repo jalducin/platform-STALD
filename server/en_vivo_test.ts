@@ -316,6 +316,66 @@ Deno.test({ name: "conectar: con pérdida y desorden, los estados viejos no se e
   a.cerrar(); b.cerrar();
 } });
 
+// espectador (openspec: espectador-partidas): quien especta escucha el canal pero no está en `participantes`.
+Deno.test("espectador: en solo escucha recibe todo y no envía nada (ni latidos, pings ni adiós)", () => {
+  const { red, crear, avanzar, reloj } = escenario({ latencia: 10 });
+  const enviados: any[] = [];
+  const tr = red.transporte("espectador");
+  const original = tr.enviar;
+  tr.enviar = (m: any) => { enviados.push(m); original(m); };
+  const ids = ["a", "b"];
+  const a = crear("a", { miembros: ids }), b = crear("b", { miembros: ids });
+  const esp = EV.crear({ transporte: tr, yo: "espectador", reloj, manual: true, miembros: ids, escucha: true });
+  const vistos: string[] = [];
+  esp.al("k", (_d: unknown, de: string) => vistos.push(de));
+  avanzar(20);
+  a.enviar("k", [1]); b.enviar("k", [2]);
+  for (let k = 0; k < 400; k++) { avanzar(10); esp.tic(); }
+  esp.enviar("k", [9]); esp.enviarYa("k", [9]); esp.cerrar();
+  avanzar(50);
+  assert(vistos.includes("a") && vistos.includes("b"), "ve a quienes juegan");
+  assertEquals(esp.estado(), "vivo", "escucha el canal");
+  assertEquals(enviados, [], "no manda nada en 4 s");
+});
+
+Deno.test("espectador: lo que inyecta alguien fuera de `participantes` se descarta", () => {
+  const { crear, avanzar } = escenario({ latencia: 10 });
+  const ids = ["a", "b"];
+  const a = crear("a", { miembros: ids }), b = crear("b", { miembros: ids });
+  const espia = crear("espectador"); // sin escucha: intenta mandar como si jugara
+  const deA: string[] = [], deB: string[] = [];
+  a.al("k", (_d: unknown, de: string) => deA.push(de));
+  b.al("item", (_d: unknown, de: string) => deB.push(de));
+  avanzar(20);
+  espia.enviar("k", [999, 999]); espia.enviar("item", { tipo: "cohete" });
+  avanzar(100);
+  assertEquals([deA, deB], [[], []], "nadie recibe los eventos del espectador");
+  assert(a.estadisticas().descartados > 0 && b.estadisticas().descartados > 0);
+  assertEquals(a.presentes(), ["b"], "tampoco cuenta como presente");
+});
+
+Deno.test("espectador: el puente de la página no reenvía lo que manda el iframe de quien especta", () => {
+  const oyentes: any[] = [];
+  const g: any = globalThis as any;
+  const antes = { add: g.addEventListener, rm: g.removeEventListener, loc: g.location };
+  g.addEventListener = (_t: string, f: any) => oyentes.push(f);
+  g.removeEventListener = () => {};
+  try {
+    const enviados: any[] = [];
+    const tr = { estado: "listo", enviar: (m: any) => enviados.push(m), alRecibir: () => () => {}, alEstado: () => () => {}, reconectar: () => {} };
+    const marco = { contentWindow: { postMessage: () => {} } };
+    const pt = EV.puente({ marco, juego: "karts", transporte: tr, permitido: () => true, origen: "https://x", escucha: true });
+    const m = { i: "a", s: 1, t: 1, e: "k", d: [1] };
+    for (const f of oyentes) f({ origin: "https://x", source: marco.contentWindow, data: { juego: "karts", tipo: "vivo-tx", m } });
+    assertEquals(enviados, [], "solo escucha: no sale nada al canal");
+    pt.cerrar();
+    const pt2 = EV.puente({ marco, juego: "karts", transporte: tr, permitido: () => true, origen: "https://x" });
+    for (const f of oyentes) f({ origin: "https://x", source: marco.contentWindow, data: { juego: "karts", tipo: "vivo-tx", m } });
+    assertEquals(enviados.length, 1, "quien juega sí envía");
+    pt2.cerrar();
+  } finally { g.addEventListener = antes.add; g.removeEventListener = antes.rm; }
+});
+
 // Azar con semilla (mulberry32) para que la pérdida y la variación sean reproducibles.
 function semilla(s: number) { // NOSONAR: aritmética entera de 32 bits del generador, no es truncado
   let a = s;

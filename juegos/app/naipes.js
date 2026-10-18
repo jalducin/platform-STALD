@@ -283,7 +283,9 @@ function briscaHtml(st, o) {
   const otros = [...new Array(n).keys()].filter(i => i !== yo);
   const tagEq = i => {
     if (!st.equipos) return '';
-    return ' <span class="pk-tag eq' + 'AB'[st.equipos[i]] + '">' + (yo >= 0 && st.equipos[i] === st.equipos[yo] ? 'pareja' : 'rival') + '</span>';
+    let txt = 'equipo ' + 'AB'[st.equipos[i]]; // espectador: sin pareja ni rival propios, el equipo
+    if (yo >= 0) txt = st.equipos[i] === st.equipos[yo] ? 'pareja' : 'rival';
+    return ' <span class="pk-tag eq' + 'AB'[st.equipos[i]] + '">' + txt + '</span>';
   };
   const asientos = '<div class="pk-asientos">' + otros.map(i => '<div class="pk-asiento' + (!st.terminada && st.turno === i ? ' turno' : '') + '"><span class="n">' + o.avatar(i) + escapeHtml(o.nombre(i)) + tagEq(i) + '</span><span>' +
     esDorsosHtml(st.manos[i].length) + '</span><span class="muted">' + st.ganadas[i].length / n + ' ronda(s)</span></div>').join('') + '</div>';
@@ -336,8 +338,10 @@ function conquianHtml(st, o) {
   const mano = yo >= 0 ? esManoHtml(ordenMano(st.manos[yo]).map(c => ({ c, cls: elegida(c) ? ' sel' : '', attrs: ' data-cq-carta="' + c + '" aria-pressed="' + elegida(c) + '"' }))) : '';
   let tuyos = '';
   if (yo >= 0) tuyos = '<div class="es-seccion">Tus juegos · ' + Cartas.bajadas(st, ver) + ' de 9' + (o.destino !== null && o.destino !== undefined ? ' · destino: juego ' + (o.destino + 1) : '') + '</div>' + juegos(yo, true) + mano;
-  return '<div class="pk-asientos"><div class="pk-asiento' + (!st.terminada && st.turno === rival ? ' turno' : '') + '"><span class="n">' + o.avatar(rival) + escapeHtml(o.nombre(rival)) + '</span><span>' + esDorsosHtml(st.manos[rival].length) +
-    '</span><span class="muted">' + Cartas.bajadas(st, rival) + ' de 9 bajadas</span>' + juegos(rival, false) + '</div></div>' + mesa +
+  const asiento = j => '<div class="pk-asiento' + (!st.terminada && st.turno === j ? ' turno' : '') + '"><span class="n">' + o.avatar(j) + escapeHtml(o.nombre(j)) + '</span><span>' + esDorsosHtml(st.manos[j].length) +
+    '</span><span class="muted">' + Cartas.bajadas(st, j) + ' de 9 bajadas</span>' + juegos(j, false) + '</div>';
+  // espectador: quien no juega ve a las 2 personas (dorsos y juegos bajados), nunca sus manos.
+  return '<div class="pk-asientos">' + (yo >= 0 ? asiento(rival) : asiento(0) + asiento(1)) + '</div>' + mesa +
     tuyos +
     '<div class="feedback" id="cq-msg">' + (o.msg || '') + '</div>' + botones + (o.pie || '') +
     '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-ayuda="conquian">📖 Cómo se juega</button></div>';

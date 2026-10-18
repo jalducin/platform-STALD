@@ -33,10 +33,14 @@ function brigadaTerminada(e) {
   const mio = (e.jugadores.find(x => x.id === e.yo) || {}).brigada;
   return !!mio || (!!e.brigada && e.brigada.estado !== 'pendiente' && ahoraServidor() - e.sala.inicio > 30000);
 }
+function rolBrigada(e, s) {
+  if (sala.espectador) return 'espectador'; // espectador (openspec: espectador-partidas)
+  return e.yo === s.host ? 'anfitrion' : 'invitado';
+}
 function inicioBrigada(mesa, vivo) {
   const e = sala.estado, s = e.sala;
   return {
-    tipo: 'inicio', modo: 'sala', rol: e.yo === s.host ? 'anfitrion' : 'invitado', anfitrion: s.host, yo: { id: e.yo, nombre: (mesa.find(p => p.id === e.yo) || {}).nombre || '' },
+    tipo: 'inicio', modo: 'sala', rol: rolBrigada(e, s), anfitrion: s.host, espectador: sala.espectador, yo: { id: e.yo, nombre: (mesa.find(p => p.id === e.yo) || {}).nombre || '' }, // espectador
     asientos: mesa.map(p => ({ id: p.id, nombre: p.nombre, bot: !!p.bot, personaje: p.id === e.yo ? personajeElegido() : personajeDeAsiento(p.id) })),
     seed: s.seed, vivo, mision: s.opciones.mision || '1',
   };
@@ -55,20 +59,25 @@ async function finBrigada(d, personas, mesa) {
 function pintarBrigadaSala(body) {
   const e = sala.estado;
   document.getElementById('m-bar').hidden = true;
-  if (sala.vista === 'brigada') return;
   const mesa = participantes();
+  // espectador: el podio llega cuando el servidor ya tiene el resultado de alguien (no lo manda quien especta).
+  if (sala.espectador && e.brigada && e.brigada.estado !== 'pendiente') { podioBrigada(e.brigada, mesa); return; }
+  if (sala.vista === 'brigada' || sala.vista === 'brigada-esp') return;
   if (brigadaTerminada(e)) { podioBrigada(e.brigada, mesa); return; }
+  // espectador: con una sola persona la misión es local en su aparato (no se transmite); sin canal, tampoco.
+  if (sala.espectador && !(sala.vivoTr && window.EnVivo && mesa.filter(p => !p.bot).length > 1)) { sala.vista = 'brigada-esp'; body.innerHTML = sinTransmision('🦎 Brigada Xalli'); return; }
   sala.vista = 'brigada';
   body.innerHTML = marcoArcade(srcArcade('brigada'), juegoPorId('brigada').t);
   const frame = document.getElementById('arcade-frame');
   if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' });
   const aJuego = mensajeA(frame), personas = mesa.filter(p => !p.bot).map(p => p.id);
   const vivo = !!sala.vivoTr && !!window.EnVivo && personas.length > 1;
-  if (vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'brigada', transporte: sala.vivoTr, permitido: id => personas.includes(id) }); limpiezas.push(() => pt.cerrar()); }
+  if (vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'brigada', transporte: sala.vivoTr, permitido: id => personas.includes(id), escucha: sala.espectador }); limpiezas.push(() => pt.cerrar()); } // espectador: solo escucha
   const alMensaje = ev => {
     const d = ev.data || {};
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'brigada') return;
     if (d.tipo === 'listo') aJuego(inicioBrigada(mesa, vivo));
+    else if (d.tipo === 'fin-sala' && sala.espectador) { window.removeEventListener('message', alMensaje); sala.vista = 'brigada-esp'; traerSala().then(() => pintarSala()); } // espectador: espera el resultado del servidor
     else if (d.tipo === 'fin-sala') { window.removeEventListener('message', alMensaje); finBrigada(d, personas, mesa).catch(() => {}); }
     else if (d.tipo === 'ir-solo') { window.removeEventListener('message', alMensaje); limpiar(); pantallaHub(); jugarArcade('brigada'); }
   };

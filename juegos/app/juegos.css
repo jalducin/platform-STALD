@@ -555,3 +555,13 @@ html.jugando, html.jugando body { overscroll-behavior-y: contain; }
 .rank .n .p-pers img { width: 22px; height: 22px; }
 @media (max-width: 360px) { .p-pers-grid { gap: 4px; } .p-pers-op img { width: 36px; height: 36px; } .p-pers-op b { font-size: .7rem; } .p-pers-op small { font-size: .6rem; } }
 @media (max-height: 520px) { .p-pers-op img { width: 34px; height: 34px; } }
+
+/* espectador (openspec: espectador-partidas): distintivo, «N viendo» y sonido; sin controles del juego */
+.esp-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin: 4px 0; min-height: 0; }
+.esp-barra:empty { display: none; }
+.esp-chip { background: var(--accent-2); color: #fff; border-radius: 999px; padding: 3px 12px; font-weight: 800; font-size: .85rem; }
+#p-viendo { font-size: .85rem; font-weight: 700; }
+.espectando #p-body .opts .opt, .espectando #p-body [data-usala], .espectando #p-body [data-usala-carta], .espectando #p-body .pk-botones,
+.espectando #p-body [data-pk-abrir], .espectando #p-body [data-aj-rendir], .espectando #p-body [data-cq], .espectando #p-body [data-br-carta] { pointer-events: none; }
+.espectando #p-body .opts .opt { opacity: .75; }
+.espectando #pb-form, .espectando .lot-grid, .espectando [data-lsgrito], .espectando #lot-msg { display: none; }

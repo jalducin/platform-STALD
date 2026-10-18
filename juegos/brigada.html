@@ -108,6 +108,9 @@ body.tactil.en-partido.ctl-joystick #mandos{display:flex}
 }
 @media (max-width:360px){#m-der{width:166px;height:166px}.pers img{width:38px;height:38px}}
 @media (prefers-reduced-motion:reduce){#aviso,#grito{transition:none}.m.on{transform:translate(-50%,-50%)}}
+/* espectador (openspec: espectador-partidas): la misión con la cámara compartida, sin controles ni pausa */
+html body.espectador #mandos,html body.espectador.tactil.en-partido.ctl-joystick #mandos,html body.espectador #b-pausa,html body.espectador #arma,html body.espectador #globos{display:none}
+#esp-chip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:6;padding:3px 12px;border-radius:999px;background:rgba(124,58,237,.9);color:#fff;font-weight:800;font-size:13px}
 </style></head><body class="ctl-joystick">
 <div id="juego">
   <div id="pantalla">
@@ -135,12 +138,12 @@ body.tactil.en-partido.ctl-joystick #mandos{display:flex}
 </div>
 <script src="mando.js?v=2"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
-<script src="en-vivo.js?v=1"></script> <!-- juegos-en-vivo: canal de la sala por el puente de la página -->
+<script src="en-vivo.js?v=2"></script> <!-- juegos-en-vivo: canal de la sala por el puente de la página -->
 <script src="personajes.js?v=3"></script>
 <script src="brigada-misiones.js?v=1"></script>
 <script src="brigada-motor.js?v=1"></script>
 <script src="brigada-arte.js?v=1"></script>
-<script src="brigada-red.js?v=1"></script> <!-- brigada-xalli: netcode de la misión en equipo --> <!-- brigada-xalli: fondos, enemigos y jefes (opcional: si falta, la página dibuja los suyos) -->
+<script src="brigada-red.js?v=2"></script> <!-- brigada-xalli: netcode de la misión en equipo --> <!-- brigada-xalli: fondos, enemigos y jefes (opcional: si falta, la página dibuja los suyos) -->
 <script>
 /* Brigada Xalli — página del juego (openspec: brigada-xalli). Embebido en juegos.html (🕹️ Arcade): misiones con
    avance (la página de Juegos lo lee y guarda) y puntos de ranking por misión. Motor sin DOM: juegos/brigada-motor.js;
@@ -300,7 +303,7 @@ function elegirControl(c) { control = c; guardarLS('brigada_control', c); soltar
 function pintarControl() {
   document.body.classList.toggle('ctl-joystick', control === 'joystick');
   document.body.classList.toggle('ctl-mando', control === 'mando');
-  mando.mostrar(control === 'mando' && TACTIL && S.vista === 'partido');
+  mando.mostrar(control === 'mando' && TACTIL && S.vista === 'partido' && S.rol !== 'espectador'); // espectador: sin mando
   document.querySelectorAll('[data-control]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.control === control)));
 }
 // Eje: el de mayor magnitud entre joystick, mando, teclado y fuentes registradas. c4 = viene del joystick táctil.
@@ -1151,7 +1154,7 @@ function tensionJefe(m) {
 let ultimo = performance.now(), cuadros = 0, fpsDesde = performance.now(), fps = 0, enJuego = null;
 function avanzar(dt) {
   if (S.rol === 'anfitrion' && S.red) avanzarAnfitrion(dt);
-  else if (S.rol === 'invitado' && S.red) avanzarInvitado(dt);
+  else if ((S.rol === 'invitado' || S.rol === 'espectador') && S.red) avanzarInvitado(dt); // espectador
   else avanzarLocal(dt);
 }
 function cuadro(ahora) {
@@ -1188,8 +1191,9 @@ function iniciarSala(d) {
   S.sala = d; S.reintentoEn = 0;
   const personas = d.asientos.filter(a => !a.bot), yo = d.asientos.findIndex(a => a.id === d.yo.id);
   S.ctx = { modo: 'sala' };
-  if (yo < 0) { respaldo('No encontramos tu lugar en la mesa.'); return; }
   const nombres = d.asientos.map(a => (a.bot ? '🤖 ' : '') + apodo(a.nombre));
+  if (d.espectador === true) { conectarEspectador(d, nombres); return; } // espectador
+  if (yo < 0) { respaldo('No encontramos tu lugar en la mesa.'); return; }
   if (personas.length === 1) { S.rol = 'local'; iniciarMision(misionSala(d), yo, nombres); return; }
   conectarSala(d, yo, nombres);
 }
@@ -1232,6 +1236,24 @@ function empezarInvitado(d, yo, nombres) {
   iniciarMision(m, yo, nombres);
   avisarRed('⏳ Esperando al anfitrión…');
 }
+// espectador (openspec: espectador-partidas): invitado sin jugador propio (sigue la cámara compartida del anfitrión) que
+// no manda entrada; el canal en solo escucha. El HUD muestra al equipo.
+async function conectarEspectador(d, nombres) {
+  pantalla('<h2>👀 Misión en equipo</h2><p id="linea-estado">📡 Conectando la transmisión…</p>', 'conectando');
+  if (!d.vivo || !window.EnVivo) { pantalla('<h2>👀 Misión en equipo</h2><p>Esta misión no se transmite en vivo. Al terminar verás el podio.</p>', 'respaldo'); return; }
+  const ids = d.asientos.filter(a => !a.bot).map(a => a.id);
+  try {
+    const intento = EnVivo.conectar({ transporte: EnVivo.transporteMarco('brigada'), yo: d.yo, participantes: ids, hz: R.HZ_FOTO, escucha: true });
+    S.canal = await Promise.race([intento, new Promise((_, mal) => setTimeout(() => mal(new Error('tiempo')), 6000))]);
+  } catch { pantalla('<h2>👀 Misión en equipo</h2><p>No se pudo conectar la transmisión. Al terminar verás el podio.</p>', 'respaldo'); return; }
+  const m = misionSala(d);
+  S.rol = 'espectador';
+  S.red = R.invitado({ canal: S.canal, m, M, anfitrion: d.anfitrion, yo: 0, ahora: () => performance.now(), espectador: true });
+  iniciarMision(m, 0, nombres);
+  document.body.classList.add('espectador');
+  if (!$('esp-chip')) { const chip = document.createElement('output'); chip.id = 'esp-chip'; chip.textContent = '👀 Espectador'; $('pantalla').appendChild(chip); }
+  avisarRed('⏳ Esperando la transmisión del anfitrión…');
+}
 function avisarRed(t) {
   const el = $('red-aviso');
   if (!t) { el.classList.add('hide'); return; }
@@ -1247,7 +1269,7 @@ function pintarRed(ahora) {
   const lat = $('lat');
   lat.classList.remove('hide');
   lat.textContent = '📶 ' + (Number.isFinite(ms) ? Math.round(ms) + ' ms' : '—');
-  if (S.rol !== 'invitado') return;
+  if (S.rol !== 'invitado' && S.rol !== 'espectador') return; // espectador: también ve el aviso del anfitrión
   const caido = S.red.anfitrionCaido();
   if (caido !== null) avisarRed('📡 Se perdió la conexión con el anfitrión · la misión se cierra en ' + Math.max(0, Math.ceil((R.DESCONEXION_MS - (ahora - caido)) / 1000)) + ' s');
   else if (S.red.ultimaFoto()) avisarRed('');
@@ -1270,9 +1292,11 @@ function avanzarAnfitrion(dt) {
   else if (S.m.estado === 'fallida') reintentoEquipo();
 }
 function avanzarInvitado(dt) {
-  S.red.entrada(leerEntrada());
+  const esp = S.rol === 'espectador';
+  if (!esp) S.red.entrada(leerEntrada()); // espectador: no manda entrada
   const d = S.red.dibujar(dt);
   if (d) eventos(d.eventos);
+  else if (esp) return; // espectador: sigue esperando la transmisión
   else if (performance.now() - S.inicioReal > ESPERA_MS) { respaldo('El anfitrión no se conectó al canal en vivo.'); return; }
   if (d && d.estado === 'cumplida') terminarSala(false);
   else if (S.red.cerrarPorCaida()) terminarSala(true);
@@ -1286,7 +1310,7 @@ function terminarSala(corte) {
   S.sala.asientos.forEach((a, i) => { if (!a.bot) puntos[a.id] = m.jugadores[i].puntos; });
   if (r.completada) window.Emocion?.nivelSuperado();
   pantalla('<h2>' + (r.completada ? '🎉 ¡Misión cumplida en equipo!' : '📡 Misión cerrada') + '</h2><div class="grande-estrellas">' + estrellasTxt(r.estrellas) + '</div>' +
-    '<p>🏅 Equipo: <b>' + r.equipo.toLocaleString('es-MX') + '</b> · tú: <b>' + m.jugadores[S.yo].puntos.toLocaleString('es-MX') + '</b></p>' +
+    '<p>🏅 Equipo: <b>' + r.equipo.toLocaleString('es-MX') + '</b>' + (S.rol === 'espectador' ? '' : ' · tú: <b>' + m.jugadores[S.yo].puntos.toLocaleString('es-MX') + '</b>') + '</p>' + // espectador: sin «tú»
     (corte ? '<p>📡 La misión se cerró por la desconexión del anfitrión.</p>' : '') + '<p id="res-puntos">Registrando el resultado…</p>', 'resultado');
   setTimeout(cerrarCanal, 1500);
   // Tiempo real desde el inicio (la misión «sombra» de los invitados no lleva su propio reloj).
