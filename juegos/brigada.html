@@ -139,6 +139,7 @@ body.tactil.en-partido.ctl-joystick #mandos{display:flex}
 <script src="personajes.js?v=3"></script>
 <script src="brigada-misiones.js?v=1"></script>
 <script src="brigada-motor.js?v=1"></script>
+<script src="brigada-arte.js?v=1"></script> <!-- brigada-xalli: fondos, enemigos y jefes (opcional: si falta, la página dibuja los suyos) -->
 <script>
 /* Brigada Xalli — página del juego (openspec: brigada-xalli). Embebido en juegos.html (🕹️ Arcade): misiones con
    avance (la página de Juegos lo lee y guarda) y puntos de ranking por misión. Motor sin DOM: juegos/brigada-motor.js;
@@ -401,7 +402,10 @@ const vista = (() => {
       const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, P.cielo[0]); g.addColorStop(1, P.cielo[1]);
       c.fillStyle = g; c.fillRect(0, 0, 8, H);
     });
-    return { cielo, lejos: tira(512, 200, c => LEJOS[def.clave](c, P)), medio: tira(512, 200, c => MEDIO[def.clave](c, P)), clave: def.clave };
+    const A = window.BrigadaArte || {};
+    const lejos = A.fondoLejos ? c => A.fondoLejos(c, def.clave, P) : c => LEJOS[def.clave](c, P);
+    const medio = A.fondoMedio ? c => A.fondoMedio(c, def.clave, P) : c => MEDIO[def.clave](c, P);
+    return { cielo, lejos: tira(512, 200, lejos), medio: tira(512, 200, medio), clave: def.clave };
   }
   // Capas en coordenadas de una tira de 512 × 200 que termina en el horizonte (y = 200 ≈ suelo 230).
   const LEJOS = {
@@ -654,12 +658,13 @@ const vista = (() => {
   };
   function enemigo(e, t) {
     const d = M.ENEMIGOS[e.tipo];
-    let f = Math.floor(t * 6 + e.id) % 2;
+    const A = window.BrigadaArte, cuadros = (A && A.cuadros && A.cuadros[e.tipo]) || 2;
+    let f = Math.floor(t * 6 + e.id) % cuadros;
     if (e.tipo === 'torreta') f = e.carga ? 1 : 0;
     if (e.tipo === 'saltabot' || e.tipo === 'alien') f = e.suelo ? 0 : 1;
     const sp = sprite('en:' + e.tipo + ':' + f + ':' + e.dir, d.w + 30, d.h + 18, (d.w + 30) / 2, d.h + 14, c => {
       if (e.dir < 0) c.scale(-1, 1);
-      DIBUJO_ENEMIGO[e.tipo](c, f);
+      if (A && A.enemigo) A.enemigo(c, e.tipo, f); else DIBUJO_ENEMIGO[e.tipo](c, f % 2);
     });
     poner(sp, e.x, e.y);
     if (e.golpeT > 0) { cx.globalAlpha = 0.55; cx.fillStyle = '#fff'; cx.fillRect(e.x - d.w / 2, e.y - d.h, d.w, d.h); cx.globalAlpha = 1; }
@@ -888,7 +893,7 @@ const vista = (() => {
     const sx = sacudida(o), sy = sacudida(o);
     cx.setTransform(V.s, 0, 0, V.s, (-V.x0 + sx) * V.s, (-V.y0 + sy) * V.s);
     escenario(m, t);
-    if (m.jefe) DIBUJO_JEFE[m.jefe.tipo](cx, m.jefe, t);
+    if (m.jefe) (window.BrigadaArte && window.BrigadaArte.jefe ? window.BrigadaArte.jefe : DIBUJO_JEFE[m.jefe.tipo])(cx, m.jefe, t);
     for (const e of m.enemigos) if (e.vivo && enVista(e.x, 40)) enemigo(e, t);
     personajes(m, o, t);
     proyectiles(m, t);
