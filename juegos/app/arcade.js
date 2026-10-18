@@ -146,7 +146,11 @@ function finalArcade(body, filas, juego, mapa) {
   if (sala.vista === 'final') return;
   const e = sala.estado, mio = filas.find(f => f.id === e.yo);
   sala.finAciertos = mio ? mio.monedas : 0; sala.finTotal = 0;
-  pintarFinalSala(body, filas, null, '🏁 ' + Arcade.nombreMapa(juego, mapa));
+  const titulo = '🏁 ' + Arcade.nombreMapa(juego, mapa);
+  const cer = juego === 'karts' ? ceremoniaKarts(filas, titulo, 'Carrera en sala', cierreCarreraSala(filas, juego, mapa)) : null; // karts-ceremonia
+  sala.conCeremonia = !!cer;
+  pintarFinalSala(body, filas, null, titulo);
+  if (cer) cer.mostrar(); // karts-ceremonia: encima del podio; al terminar queda la tabla de siempre
   body.insertAdjacentHTML('beforeend', '<h2>⏱ Tiempos</h2><div class="scroll-x"><table class="inv arcade-tiempos"><thead><tr><th>#</th><th>Jugador</th><th>Tiempo</th><th>Pts</th></tr></thead><tbody>' +
     filas.map((f, i) => '<tr' + (f.id === e.yo ? ' class="yo"' : '') + '><td>' + (i + 1) + '</td><td>' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' 🤖' : '') + '</td><td class="num">' + (f.ms === null ? 'No terminó' : Arcade.formatoTiempo(f.ms)) + '</td><td class="num">' + f.total + '</td></tr>').join('') + '</tbody></table></div>');
 }
@@ -325,12 +329,99 @@ function finalCopa(body, st) {
   const filas = st.tabla.map(t => { const p = participantes().find(x => x.id === t.id) || {}; return { id: t.id, nombre: t.nombre, tipo: t.bot ? 'bot' : p.tipo, avatar: p.avatar, total: t.ranking }; });
   const yo = e.jugadores.find(x => x.id === e.yo);
   sala.finAciertos = yo && Array.isArray(yo.copa) ? yo.copa.reduce((a, x) => a + (x.monedas || 0), 0) : 0; sala.finTotal = KartsCopa.CARRERAS;
-  pintarFinalSala(body, filas, null, (KartsCopa.EMOJI[st.copa] || '🏆') + ' ' + st.nombre);
+  const titulo = (KartsCopa.EMOJI[st.copa] || '🏆') + ' ' + st.nombre;
+  const ultima = st.calendario[st.calendario.length - 1]; // karts-ceremonia: cierre de la última carrera (hora del servidor)
+  const cer = ceremoniaKarts(filas, titulo, 'Copa completa en sala', ultima ? ultima.cierre : null); // karts-ceremonia
+  sala.conCeremonia = !!cer;
+  pintarFinalSala(body, filas, null, titulo);
+  if (cer) cer.mostrar(); // karts-ceremonia
   body.insertAdjacentHTML('beforeend', '<h2>🏁 Puntos de la copa</h2><div class="scroll-x"><table class="inv copa-tabla"><thead><tr><th>#</th><th>Jugador</th>' +
     st.pistas.map((id, i) => '<th>' + (i + 1) + '. ' + escapeHtml((Arcade.pistaPorId(id) || {}).emoji || '') + '</th>').join('') + '<th>Copa</th></tr></thead><tbody>' +
     st.tabla.map((t, i) => '<tr' + (t.id === e.yo ? ' class="yo"' : '') + '><td>' + (i + 1) + '</td><td>' + escapeHtml(t.nombre) + (t.bot ? ' 🤖' : '') + '</td>' +
       t.porCarrera.map(x => '<td class="num">' + (x.ms === null ? 'NT' : x.pts) + '</td>').join('') + '<td class="num"><b>' + t.pts + '</b></td></tr>').join('') + '</tbody></table></div>' +
     '<p class="muted" style="font-size:.82rem">NT = no terminó (0 puntos). Puntos por lugar: 15, 12, 10, 8, 6, 4, 2, 1.</p>');
+}
+
+// ---- Ceremonia de premiación de Karts en sala (openspec: karts-control-sala-y-ceremonia) ---- // karts-ceremonia
+// Todos los aparatos (también quien especta) la empiezan a la misma hora: KartsCeremonia.inicioSala(cierre) con la hora
+// del servidor (ahoraServidor, reloj común). Los lugares son los de `filas` (ya ordenadas como en el servidor).
+// Cierre de una carrera suelta: el último reporte de las personas (hora del servidor) o, si alguien no llegó, el límite.
+function cierreCarreraSala(filas, juego, mapa) {
+  const s = sala.estado.sala, humanos = filas.filter(f => f.tipo !== 'bot');
+  if (humanos.length && humanos.every(f => f.servidor && Number.isFinite(f.t))) return Math.max(s.inicio, ...humanos.map(f => f.t));
+  return s.inicio + Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA;
+}
+// Personaje de cada fila: el del asiento (el mío, el elegido); los bots, con los que nadie eligió (orden fijo).
+function personajesPodio(filas) {
+  if (!window.Personajes) return {};
+  const e = sala.estado, out = {};
+  filas.forEach(f => { if (f.tipo !== 'bot') out[f.id] = f.id === e.yo ? personajeElegido() : personajeDeAsiento(f.id); });
+  const usados = new Set(Object.values(out).filter(Boolean));
+  const libres = Personajes.LISTA.map(p => p.id).filter(id => !usados.has(id));
+  filas.filter(f => f.tipo === 'bot').forEach((f, k) => { out[f.id] = libres.length ? libres[k % libres.length] : null; });
+  return out;
+}
+// Devuelve { mostrar } si la ceremonia todavía se ve (aún no empieza o va a la mitad); null si ya pasó o no hay módulo.
+function ceremoniaKarts(filas, titulo, sub, cierre) {
+  if (!window.KartsCeremonia) return null;
+  const t = KartsCeremonia.transcurridoSala(cierre, ahoraServidor());
+  if (!KartsCeremonia.debeMostrar(t)) return null;
+  const pers = personajesPodio(filas), yo = sala.estado.yo;
+  const podio = KartsCeremonia.podioDe(filas.map(f => ({ ...f, personaje: pers[f.id] || null })), { yo });
+  const mio = filas.find(f => f.id === yo);
+  return {
+    mostrar() {
+      let viva = true;
+      const c = KartsCeremonia.mostrar({ titulo, sub, podio, transcurrido: t, reducido: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        alTerminar: () => {
+          if (!viva) return;
+          viva = false; sala.ceremonia = null;
+          if (mio && mio.total > 0) confeti();
+        } });
+      sala.ceremonia = c;
+      limpiezas.push(() => { viva = false; c.cerrar(); }); // al salir de la sala se quita
+    },
+  };
+}
+
+// ---- Control de Karts en la sala de espera (openspec: karts-control-sala-y-ceremonia) ---- // karts-control-sala
+// Las mismas opciones del modo individual, guardadas en el navegador en texto plano (las mismas claves que lee Karts:
+// karts_control y karts_acelerar). No va al servidor. El sensor pide permiso aquí, dentro del toque (iPhone).
+const CONTROLES_KARTS = [['botones', '⬅➡ Botones'], ['joystick', '🕹️ Joystick'], ['sensor', '📱 Sensor'], ['mando', '🎮 Mando clásico']];
+const ACEL_KARTS = [['auto', '🤖 Automático'], ['manual', '👆 Con botón']];
+const leerTextoLocal = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const guardarTextoLocal = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } };
+const controlKarts = () => { const c = leerTextoLocal('karts_control'); return CONTROLES_KARTS.some(x => x[0] === c) ? c : 'botones'; };
+const acelKarts = () => (leerTextoLocal('karts_acelerar') === 'manual' ? 'manual' : 'auto');
+function tarjetaControl() {
+  const e = sala.estado;
+  if (e.sala.juego !== 'karts' || !e.jugadores.some(x => x.id === e.yo)) return '';
+  const ctl = controlKarts(), acel = acelKarts();
+  const boton = (p, [v, txt], on) => '<button type="button" class="p-ctl-op" data-p="' + p + '" data-v="' + v + '" aria-pressed="' + on + '">' + txt + '</button>';
+  return '<div class="card" id="p-control" style="margin-bottom:10px"><b>🎮 Tu control</b>' +
+    '<div class="p-ctl-grid" role="group" aria-label="Elige tu control">' + CONTROLES_KARTS.map(x => boton('kcontrol', x, x[0] === ctl)).join('') + '</div>' +
+    '<div class="p-ctl-sub">⚡ Acelerar</div><div class="p-ctl-grid p-ctl-2" role="group" aria-label="Acelerar">' + ACEL_KARTS.map(x => boton('kacel', x, x[0] === acel)).join('') + '</div>' +
+    '<div class="muted" id="p-control-msg" style="font-size:.8rem;min-height:1.1em">' + escapeHtml(sala.controlMsg || '') + '</div></div>';
+}
+function elegirControlSala(btn) {
+  const v = btn.dataset.v, acel = btn.dataset.p === 'kacel';
+  if (acel) guardarTextoLocal('karts_acelerar', v === 'manual' ? 'manual' : 'auto');
+  else if (CONTROLES_KARTS.some(x => x[0] === v)) guardarTextoLocal('karts_control', v);
+  else return;
+  document.querySelectorAll('#p-control [data-p="' + btn.dataset.p + '"]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  sala.controlMsg = '';
+  if (!acel && v === 'sensor') permisoSensorSala();
+  const msg = document.getElementById('p-control-msg'); if (msg) msg.textContent = sala.controlMsg;
+}
+// iPhone: requestPermission solo funciona dentro de un toque; el permiso es del origen y lo comparte el iframe de Karts.
+function permisoSensorSala() {
+  const DOE = window.DeviceOrientationEvent;
+  const avisar = t => { sala.controlMsg = t; const msg = document.getElementById('p-control-msg'); if (msg) msg.textContent = t; };
+  if (!DOE || typeof DOE.requestPermission !== 'function') { avisar('📱 Inclina el celular como volante; 🎯 lo vuelve a centrar.'); return; }
+  let pr;
+  try { pr = DOE.requestPermission(); } catch (e) { pr = Promise.resolve('denied'); }
+  avisar('📱 Pidiendo permiso del sensor…');
+  Promise.resolve(pr).catch(() => 'denied').then(r => avisar(r === 'granted' ? '✔ Sensor permitido: inclina el celular como volante.' : '📱 Sin permiso del sensor: en la carrera toca ⚙️ › «Activar sensor» o elige otro control.'));
 }
 
 // ---- Personaje en las salas de Karts y Axo (openspec: personaje-en-salas) ----

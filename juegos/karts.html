@@ -186,6 +186,12 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espectador #b-pausa,body.espectador #tuto,body.espectador #h-monedas,body.espectador .mbar{display:none!important}
 #esp-cam{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;pointer-events:auto;display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:999px;background:rgba(15,23,42,.82);color:#fff;font-weight:800;font-size:13px;max-width:92%}
 #esp-cam[hidden]{display:none}
+/* karts-control-sala: ⚙️ en la carrera de sala (sin pausa) y su panel */
+#b-control{display:none}body.en-sala:not(.espectador) #b-control{display:inline-block}
+#panel-control{position:absolute;top:50px;left:50%;transform:translateX(-50%);z-index:7;width:min(360px,94%);max-height:calc(100% - 60px);overflow:auto;display:flex;flex-direction:column;gap:6px;align-items:center;padding:10px;border-radius:14px;background:rgba(15,23,42,.94);border:2px solid #67e8f9;color:#fff;text-align:center;pointer-events:auto}
+#panel-control .fila{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+body.espectador #panel-control{display:none!important}
+@media (orientation:landscape) and (max-height:520px){#panel-control{top:44px;width:min(520px,70%)}#panel-control .ctl-ops4{grid-template-columns:repeat(4,1fr)}#panel-control .ctl{min-height:40px;font-size:13px}}
 #esp-cam button{min-width:40px;min-height:36px;border:0;border-radius:999px;background:#7c3aed;color:#fff;font-weight:800;font-size:15px;cursor:pointer}
 #esp-cam span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
 </style></head><body class="ctl-joystick">
@@ -200,7 +206,7 @@ body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espe
           <ol id="vivo-tabla" class="tarjeta" hidden aria-label="Clasificación en vivo"></ol>
         </div>
         <div id="h-item" aria-label="Ítem"></div>
-        <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
+        <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button><button class="mini" id="b-control" aria-label="Cambiar control" aria-expanded="false">⚙️</button></div> <!-- karts-control-sala -->
       </div>
       <canvas id="minimapa" aria-label="Mapa de la pista con los corredores"></canvas>
       <fieldset id="esp-cam" hidden aria-label="Cámara del espectador"><button id="esp-ant" aria-label="Seguir al anterior">◀</button><span id="esp-sigue" aria-live="polite"></span><button id="esp-sig" aria-label="Seguir al siguiente">▶</button><button id="esp-lider" aria-label="Seguir al líder">👑</button></fieldset> <!-- espectador -->
@@ -250,6 +256,14 @@ body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espe
     <div class="ov hide" id="ov-res"><div id="confeti"></div><h2 id="res-titulo">Resultados</h2><div class="podio" id="res-podio"></div><div class="res-tarjetas" id="res-tarjetas"></div><table class="tabla" id="res-tabla"></table><p id="res-puntos"></p><p id="res-guardado" style="font-size:14px"></p><div class="fila" id="res-botones"></div></div>
     <div class="ov hide" id="ov-sala"><h2 id="sala-titulo">Partida</h2><p id="sala-txt"></p></div>
     <div class="ov hide" id="ov-copa" aria-live="polite"><h2 id="copa-titulo">🏆 Copa</h2><p id="copa-sub"></p><table class="tabla" id="copa-tabla"></table><p id="copa-cuenta" style="font-weight:800;font-size:18px"></p></div>
+    <section id="panel-control" class="hide" aria-label="Cambiar control"> <!-- karts-control-sala: la carrera de la sala sigue; después de los overlays para que [data-control] del menú vaya primero -->
+      <div class="ctl-titulo">🎮 Tu control <small style="font-weight:600">· la carrera sigue</small></div>
+      <fieldset class="ctl-ops ctl-ops4" aria-label="Controles"><button class="ctl" data-control="botones" aria-pressed="true">⬅➡ Botones</button><button class="ctl" data-control="joystick" aria-pressed="false">🕹️ Joystick</button><button class="ctl" data-control="sensor" aria-pressed="false">📱 Sensor</button><button class="ctl" data-control="mando" aria-pressed="false">🎮 Mando clásico</button></fieldset>
+      <div class="ctl-titulo">⚡ Acelerar</div>
+      <fieldset class="ctl-ops ctl-ops2" aria-label="Acelerar"><button class="ctl" data-acel="auto" aria-pressed="true">🤖 Automático</button><button class="ctl" data-acel="manual" aria-pressed="false">👆 Con botón</button></fieldset>
+      <div class="fila"><button class="btn chico" id="b-sensor-panel" hidden>📱 Activar sensor</button><button class="btn chico" id="b-control-listo">✔ Listo</button></div>
+      <output id="panel-estado" style="font-size:13px"></output>
+    </section>
   </div>
   <div id="mandos" aria-hidden="true">
     <div id="m-izq">
@@ -277,7 +291,8 @@ body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espe
 <script src="karts-reinos.js?v=1"></script> <!-- karts-copa-reinos: interiores de monumentos y sus mecánicas -->
 <script src="karts-objetos.js?v=1"></script> <!-- karts-objetos-en-sala: ítems entre personas en sala -->
 <script src="karts-reversa.js?v=1"></script> <!-- karts-reversa: velocidad de reversa y cruce de la meta en ambos sentidos -->
-<script src="karts-salto.js?v=1"></script> <!-- karts-salto: brinco corto, enfriamiento y esquiva (no es el aire de una rampa) -->
+<script src="karts-salto.js?v=1"></script>
+<script src="karts-ceremonia.js?v=1"></script> <!-- karts-ceremonia: premiación con podio de 3 escalones --> <!-- karts-salto: brinco corto, enfriamiento y esquiva (no es el aire de una rampa) -->
 <script>
 /* Karts Turbo — carreras con vista cenital en canvas (openspec: juegos-plataformas-karts, karts-controles-diseno).
    Embebido en juegos.html: la plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage,
@@ -497,11 +512,11 @@ addEventListener('orientationchange', () => { sensor.centro = null; });
 if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', () => { sensor.centro = null; });
 let activando = null;
 // Se llama dentro de un toque: en iOS, requestPermission() solo funciona así.
-function activarSensor() {
+function activarSensor(silencioso) { // karts-control-sala: silencioso = sin toque (sala): si falla no cambia a botones
   if (sensor.activo) { centrarSensor(); return Promise.resolve(true); }
   if (activando) return activando;
   const DOE = window.DeviceOrientationEvent;
-  if (!DOE) return Promise.resolve(falloSensor());
+  if (!DOE) return Promise.resolve(silencioso ? false : falloSensor());
   let permiso;
   try { permiso = typeof DOE.requestPermission === 'function' ? DOE.requestPermission() : Promise.resolve('granted'); } catch (e) { permiso = Promise.resolve('denied'); }
   $('ctl-estado').textContent = '📱 Activando el sensor…';
@@ -512,7 +527,7 @@ function activarSensor() {
     return new Promise(res => { sensor.esperando = res; setTimeout(() => { if (sensor.esperando === res) { sensor.esperando = null; res(false); } }, 2000); });
   }).then(ok => {
     activando = null;
-    if (!ok) { removeEventListener('deviceorientation', alOrientar); return falloSensor(); }
+    if (!ok) { removeEventListener('deviceorientation', alOrientar); return silencioso ? false : falloSensor(); }
     sensor.activo = true; centrarSensor();
     $('ctl-estado').textContent = '✔ Sensor listo: inclina el celular para girar. 🎯 lo vuelve a centrar.';
     pintarControles();
@@ -565,6 +580,7 @@ function pintarControles() {
   document.querySelectorAll('[data-sens]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.sens === sensibilidad)));
   $('ctl-sensor').classList.toggle('hide', control !== 'sensor');
   $('b-activar-sensor').textContent = sensor.activo ? '🎯 Centrar sensor' : '📱 Activar sensor';
+  $('b-sensor-panel').hidden = control !== 'sensor' || sensor.activo; // karts-control-sala
 }
 pintarControles();
 
@@ -2131,9 +2147,21 @@ function mostrarResultados() {
   $('hud').classList.add('hide');
   mostrar('ov-res');
   if (ms !== null && lugar <= 3) lanzarConfeti(); else $('confeti').innerHTML = '';
-  emocionPodio(ms, lugar);
+  premiar(tablaCopa, ms, lugar); // karts-ceremonia
   const b = $('res-botones').querySelector('.btn'); if (b) b.focus();
   if (ms !== null) enviar({ tipo: 'puntos', puntos, aciertos: yo.monedas, total: 0, segundos: Math.round(ms / 1000), titulo: '🏎️ ' + pista.nombre + ': ' + lugar + '.º lugar', detalle: '⏱ ' + A.formatoTiempo(ms) + ' · 🪙 ' + yo.monedas + (bono ? ' · copa +' + bono : '') });
+}
+// karts-ceremonia: premiación de la copa individual sobre los resultados (tabla ya ordenada por KP.sumarCarreraCopa).
+let ceremonia = null;
+// Copa terminada: la ceremonia (con su sonido); si no, el redoble de siempre.
+function premiar(tablaCopa, ms, lugar) {
+  if (ultimoRes.copaTerminada && window.KartsCeremonia) ceremoniaCopa(tablaCopa, ultimoRes.copa);
+  else emocionPodio(ms, lugar);
+}
+function ceremoniaCopa(tabla, copa) {
+  const podio = KartsCeremonia.podioDe(tabla.map(t => ({ nombre: t.k === yo ? 'Tú' : t.k.nombre, personaje: t.k.personaje, color: t.k.color, total: t.pts, yo: t.k === yo })));
+  ceremonia = KartsCeremonia.mostrar({ contenedor: $('pantalla'), fija: false, titulo: (copa ? copa.emoji + ' ' + copa.nombre : '🏆 Copa'), sub: 'Puntos de la copa', podio, transcurrido: 0, reducido: REDUCIR, sonido: sonido,
+    alTerminar: () => { ceremonia = null; const b = $('res-botones').querySelector('.btn'); if (b) b.focus(); } });
 }
 // Récord de la pista y pintura dorada (récord bajo la meta en todas). Devuelve el texto extra de lo ganado.
 // karts-puntos-copas: KartsPistas.anotarRecord solo anota tiempos que el servidor acepta (10 s a 15 min); antes una
@@ -2160,7 +2188,7 @@ function puntuarCopa(filas, lugar) {
     bono = BONO_COPA[lugarCopa] || 0;
     if (lugarCopa <= 3 && !prog.piezas.includes('chasis-ligero')) { prog.piezas.push('chasis-ligero'); extra += ' · 🔧 Chasis ligero desbloqueado'; }
     if (lugarCopa === 1 && !prog.piezas.includes('llantas-todoterreno')) { prog.piezas.push('llantas-todoterreno'); extra += ' · 🛞 Llantas todoterreno desbloqueadas'; }
-    ultimoRes = { copaTerminada: true, lugarCopa };
+    ultimoRes = { copaTerminada: true, lugarCopa, copa: copaDe(cc) }; // karts-ceremonia: la copa (copaEnCurso ya es null)
   } else ultimoRes = { copaTerminada: false };
   return { tabla, bono, extra };
 }
@@ -2286,7 +2314,10 @@ document.addEventListener('click', e => {
   const ac = e.target.closest('[data-acel]');
   if (ac) { elegirAcel(ac.dataset.acel); return; }
   const ctl = e.target.closest('[data-control]');
-  if (ctl) { elegirControl(ctl.dataset.control); $('ctl-estado').textContent = control === 'sensor' && !sensor.activo ? 'Toca «Activar sensor» y sostén el celular como volante.' : ''; return; }
+  if (ctl) {
+    elegirControl(ctl.dataset.control); $('ctl-estado').textContent = control === 'sensor' && !sensor.activo ? 'Toca «Activar sensor» y sostén el celular como volante.' : '';
+    return;
+  }
   const sens = e.target.closest('[data-sens]');
   if (sens) { sensibilidad = sens.dataset.sens; guardarLS('karts_sensibilidad', sensibilidad); pintarControles(); return; }
   if (e.target.closest('#b-activar-sensor')) activarSensor();
@@ -2366,6 +2397,7 @@ function empezarSala(d) {
   sala = { mapa: d.mapa, enviado: false, copa };
   if (!copa || copa.k === 0 || !personaje) personaje = personajeDeInicio(d); // personaje-en-salas (en la copa: el de la carrera 1, toda la copa)
   espectador = d.espectador === true; document.body.classList.toggle('espectador', espectador); $('esp-cam').hidden = !espectador; // espectador
+  document.body.classList.add('en-sala'); releerControl(); // karts-control-sala: lo elegido en la sala de espera (o en la carrera anterior de la copa)
   const humanos = humanosDeSala(d), enVivo = !!d.vivo && humanos.length > 1 && (espectador || humanos.some(h => h.id === d.yo)) && !!window.EnVivo;
   // karts-salida-y-puntos: la salida a la hora del aparato que manda la página (reloj común); si no viene, inicioEn.
   const inicioEn = Number.isFinite(d.salidaLocal) ? d.salidaLocal - Date.now() : Number(d.inicioEn || 0);
@@ -2375,6 +2407,48 @@ function empezarSala(d) {
   if (enVivo && vivo) vivo.ritmo('k', 2); // karts-copa-en-sala: el canal sigue abierto entre carreras
   else if (enVivo) empezarVivo(d.yo, humanos);
   else if (humanos.length > 1) setTimeout(avisoRespaldo, 2400); // tras el nombre de la pista
+  sensorEnSala(); // karts-control-sala
+}
+
+/* ================= Control en la carrera de sala (openspec: karts-control-sala-y-ceremonia) ================= // karts-control-sala
+   En sala no hay pausa: el ⚙️ abre un panel chico con los mismos controles del menú y la carrera sigue. El control vive
+   en localStorage (karts_control y karts_acelerar), que también escribe la sala de espera de juegos.html. */
+function releerControl() {
+  const c = leerLS('karts_control'); control = ['joystick', 'sensor', 'botones', 'mando'].includes(c) ? c : 'botones';
+  acelModo = leerLS('karts_acelerar') === 'manual' ? 'manual' : 'auto';
+  soltarTodo(); pintarControles();
+}
+function pintarPanel() {
+  pintarControles();
+  let txt = '';
+  if (control === 'sensor') txt = sensor.activo ? '✔ Sensor listo: inclina el celular. 🎯 lo centra.' : '📱 Toca «Activar sensor» y sostén el celular como volante.';
+  $('panel-estado').textContent = txt;
+}
+function abrirPanelControl(on) {
+  if (on && (espectador || !sala)) return;
+  $('panel-control').classList.toggle('hide', !on); $('b-control').setAttribute('aria-expanded', String(on));
+  if (on) { soltarTodo(); pintarPanel(); }
+}
+$('b-control').onclick = e => { e.currentTarget.blur(); abrirPanelControl($('panel-control').classList.contains('hide')); };
+// Clics del panel (los botones data-control/data-acel ya los atiende el manejador del menú, que corre antes).
+$('panel-control').addEventListener('click', e => {
+  if (e.target.closest('[data-control]')) {
+    if (control === 'sensor' && !sensor.activo) activarSensor().then(pintarPanel); // dentro del toque (iPhone)
+    else pintarPanel();
+  } else if (e.target.closest('#b-sensor-panel')) {
+    activarSensor().then(ok => { pintarPanel(); if (ok) abrirPanelControl(false); });
+  } else if (e.target.closest('#b-control-listo')) abrirPanelControl(false);
+});
+// Sensor elegido: sin requestPermission (Android) se activa como siempre; en iPhone se intenta sin toque (si la sala de
+// espera ya dio el permiso, funciona) y, si no quedó activo, el panel ofrece «📱 Activar sensor» (un toque).
+function sensorEnSala() {
+  if (espectador || control !== 'sensor' || sensor.activo) return;
+  const DOE = window.DeviceOrientationEvent;
+  if (!DOE || typeof DOE.requestPermission !== 'function') {
+    if (TACTIL) activarSensor();
+    return;
+  }
+  activarSensor(true).then(ok => { if (!ok && sala && modo === 'carrera') { abrirPanelControl(true); avisar('📱 Toca «Activar sensor» para girar inclinando el celular', 3000); } });
 }
 
 /* ================= Copa completa en sala (openspec: karts-copa-en-sala) =================
@@ -3201,6 +3275,9 @@ if (PRUEBA) {
       return c.toDataURL('image/png');
     },
     darItem: t => { if (yo && ITEMS[t]) yo.item = t; }, // ítem en la mano (E2E del mando)
+    panelControl: () => !$('panel-control').classList.contains('hide'), // karts-control-sala
+    // karts-ceremonia: la copa individual a punto de terminar (carrera 4 de 4 con puntos de ejemplo).
+    copaCasiTerminada: id => { prog.copaEnCurso = KP.copaNueva(id || 'fiesta'); prog.copaEnCurso.carrera = 3; prog.copaEnCurso.puntos = [40, 30, 20, 10, 5, 3, 25, 1]; },
     // karts-salto: altura máxima desde el último reinicio, el hueco sin rampa y una cáscara `px` adelante (sin dueño).
     reiniciarAltura: () => { maxAltura = 0; for (const k of karts) k.alturaMax = 0; },
     // karts-salto: te deja pasando la línea de la rampa del primer hueco (sin su salto), rápido y brincando.

@@ -329,6 +329,95 @@ async function saltoEnSala(b, relevo) {
   for (const p of pags) await p.context().close();
 }
 
+// karts-control-sala y karts-ceremonia: sala de 2 (Marisol de pie y Angel de lado) + Laura que especta con movimiento
+// reducido. «🎮 Tu control» en la sala de espera (preseleccionado, permiso del sensor en el toque, Joystick aplica en
+// la carrera y se recuerda), ⚙️ a media carrera sin pausa, y la ceremonia en los 3 aparatos a la misma hora.
+const arribaEn = p => p.evaluate(() => [...document.querySelectorAll('#kc-ceremonia .kc-col.arriba')].map(c => Number(c.dataset.escalon)));
+async function controlYCeremoniaEnSala(b, relevo) {
+  const m = await jugador(b, 'marisol@example.com', relevo), a = await jugador(b, 'angel@example.com', relevo, HORIZONTAL);
+  await m.evaluate(() => { localStorage.setItem('karts_control', 'mando'); localStorage.setItem('karts_acelerar', 'auto'); });
+  await a.evaluate(() => { localStorage.setItem('karts_control', 'botones'); localStorage.setItem('karts_acelerar', 'auto'); });
+  const codigo = await crearSala(m, 'pradera');
+  await unirse(a, codigo);
+  const esp = await abrirPagina(b, { email: 'laura@example.com', viejo: true, viewport: VERTICAL, contexto: { reducedMotion: 'reduce' }, init: initVivo(relevo.url, {}), out, ruta: RUTA, esperar: '[data-menu]' });
+  await esp.click('[data-tab="partidas"]'); await esp.fill('#p-codigo', codigo); await esp.click('[data-a="espectar-form"]');
+  await esp.waitForSelector('.esp-chip', { timeout: 30000 });
+  await m.waitForSelector('#p-control [data-p="kcontrol"]', { timeout: 15000 });
+  const tarjeta = await m.$$eval('#p-control [data-p]', bs => bs.map(x => ({ p: x.dataset.p, v: x.dataset.v, on: x.getAttribute('aria-pressed') === 'true' })));
+  ok('sala de espera: «🎮 Tu control» con Botones, Joystick, Sensor y Mando clásico + Acelerar, con lo guardado preseleccionado (mando, automático)',
+    /Tu control/.test(await m.textContent('#p-control')) && tarjeta.filter(x => x.p === 'kcontrol').map(x => x.v).join() === 'botones,joystick,sensor,mando' && tarjeta.filter(x => x.p === 'kacel').length === 2 && tarjeta.filter(x => x.on).map(x => x.v).join() === 'mando,auto', JSON.stringify(tarjeta));
+  ok('sala de espera: «🎮 Tu control» va junto a «🏁 Tu piloto»', await m.evaluate(() => document.getElementById('p-personaje').nextElementSibling === document.getElementById('p-control')));
+  ok('espectador: sin «🎮 Tu control»', !(await esp.$('#p-control')));
+  // iPhone (simulado): el permiso del giroscopio se pide en el toque de «📱 Sensor».
+  await m.evaluate(() => { window.__permisos = 0; window.DeviceOrientationEvent = window.DeviceOrientationEvent || function () {}; window.DeviceOrientationEvent.requestPermission = () => { window.__permisos++; return Promise.resolve('granted'); }; });
+  await m.click('#p-control [data-v="sensor"]');
+  await m.waitForFunction(() => /Sensor permitido/.test(document.getElementById('p-control-msg').textContent), null, { timeout: 5000 }).catch(() => {});
+  ok('sala de espera: elegir «📱 Sensor» pide el permiso del giroscopio en el toque (iPhone)', await m.evaluate(() => window.__permisos) === 1 && /Sensor permitido/.test(await m.textContent('#p-control-msg')), await m.textContent('#p-control-msg'));
+  await m.click('#p-control [data-v="joystick"]');
+  await a.waitForSelector('#p-control [data-v="manual"]', { timeout: 15000 });
+  await a.click('#p-control [data-v="manual"]');
+  const guardado = await Promise.all([m, a].map(p => p.evaluate(() => [localStorage.getItem('karts_control'), localStorage.getItem('karts_acelerar')].join())));
+  ok('sala de espera: la elección queda en el navegador (la misma del modo individual)', guardado.join('|') === 'joystick,auto|botones,manual', guardado.join('|'));
+  await m.screenshot({ path: 'karts-control-sala-espera-390.png', fullPage: true });
+  await a.screenshot({ path: 'karts-control-sala-espera-844x390.png', fullPage: true });
+  const fueraTarjeta = await Promise.all([m, a].map(p => p.evaluate(() => { const bs = [...document.querySelectorAll('#p-control [data-p]')].map(e => e.getBoundingClientRect()); return bs.filter(r => r.right > innerWidth || r.left < 0).length + (document.documentElement.scrollWidth > innerWidth ? 100 : 0); })));
+  ok('sala de espera: «🎮 Tu control» cabe sin desplazamiento horizontal (390×844 y 844×390)', fueraTarjeta.every(x => x === 0), fueraTarjeta.join());
+  await m.click('[data-p="empezar"]');
+  const [fm, fa] = await enCarrera([m, a]);
+  const fe = await marcoDe(esp);
+  const [em, ea] = await Promise.all([fm, fa].map(estado));
+  ok('carrera: lo elegido en la sala de espera aplica (Marisol joystick, Angel botones con «Con botón»)', em.control === 'joystick' && em.acel === 'auto' && ea.control === 'botones' && ea.acel === 'manual', JSON.stringify([em.control, em.acel, ea.control, ea.acel]));
+  ok('carrera: el joystick de Marisol se ve', await fm.isVisible('#joy-zona'));
+  await Promise.all([fm, fa].map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.vivo && e.remotos.every(r => r.visible); }, null, { timeout: 25000 }).catch(() => {})));
+  await Promise.all([fm, fa].map(fr => fr.evaluate(() => window.__karts.piloto(true))));
+  await sleep(1500);
+  // ⚙️ a media carrera: la sala no se pausa.
+  ok('carrera de sala: ⚙️ visible para quien corre y oculto para quien especta', await fm.isVisible('#b-control') && !(await fe.isVisible('#b-control')));
+  await fm.click('#b-control');
+  const t1 = (await estado(fm)).tiempo;
+  ok('⚙️: abre el panel de control', await fm.evaluate(() => window.__karts.panelControl()));
+  await m.screenshot({ path: 'karts-control-panel-390.png' });
+  await fa.click('#b-control'); await sleep(300);
+  await a.screenshot({ path: 'karts-control-panel-844x390.png' });
+  await fa.click('#b-control-listo');
+  await fm.click('#panel-control [data-control="botones"]');
+  await sleep(800);
+  const e2 = await estado(fm);
+  ok('⚙️: cambiar a Botones a media carrera aplica al momento, sin pausa', e2.control === 'botones' && e2.modo === 'carrera' && e2.tiempo > t1 + 500 && await fm.isVisible('#m-flechas'), JSON.stringify({ control: e2.control, modo: e2.modo, t1, t2: e2.tiempo }));
+  ok('⚙️: el cambio se recuerda en el navegador', await m.evaluate(() => localStorage.getItem('karts_control')) === 'botones');
+  await fm.click('#b-control-listo');
+  ok('⚙️: «✔ Listo» cierra el panel', !(await fm.evaluate(() => window.__karts.panelControl())));
+  // Meta y ceremonia: Marisol 1.ª, Angel 2.º, el bot 3.º (o el orden que diga el servidor).
+  await Promise.all([fm, fa].map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 34000, null, { timeout: 90000 })));
+  await fm.evaluate(() => window.__karts.adelantar()); await sleep(600); await fa.evaluate(() => window.__karts.adelantar());
+  const pags = [m, a, esp];
+  await Promise.all(pags.map(p => p.waitForSelector('#kc-ceremonia', { timeout: 60000 })));
+  // Hora del servidor (reloj común) en que sube el 3.º en cada aparato que anima.
+  const subio = await Promise.all([m, a].map(p => p.waitForFunction(() => document.querySelector('#kc-ceremonia .kc-e3.arriba') && ahoraServidor(), null, { timeout: 15000, polling: 'raf' }).then(h => h.jsonValue()).catch(() => null)));
+  ok('ceremonia en sala: los 2 aparatos la empiezan a la misma hora del servidor (< 400 ms)', subio.every(Number.isFinite) && Math.abs(subio[0] - subio[1]) < 400, JSON.stringify(subio));
+  const cols = await m.$$eval('#kc-ceremonia .kc-col', cs => cs.map(c => ({ e: Number(c.dataset.escalon), per: c.dataset.personaje, img: !!c.querySelector('img'), nombre: c.querySelector('.kc-nombre').textContent })));
+  ok('ceremonia en sala: podio de 3 con personaje dibujado y nombre', cols.length === 3 && cols.every(c => c.per && c.img && c.nombre), JSON.stringify(cols));
+  const pasos = [await arribaEn(m)];
+  await sleep(1500); pasos.push(await arribaEn(m));
+  await m.waitForFunction(() => document.querySelector('#kc-ceremonia .kc-e1.arriba'), null, { timeout: 6000 }).catch(() => {});
+  pasos.push(await arribaEn(m));
+  ok('ceremonia en sala: suben 3.º, luego 2.º y al final 1.º', pasos.map(p => p.sort((x, y) => y - x).join('')).join('|') === '3|32|321', JSON.stringify(pasos));
+  const tabla = await m.$$eval('.arcade-tiempos tbody tr td:nth-child(2)', ts => ts.map(t => t.textContent.replace(' 🤖', '')));
+  const porEscalon = [1, 2, 3].map(e => (cols.find(c => c.e === e) || {}).nombre);
+  ok('ceremonia en sala: los lugares son los del podio (tabla de tiempos del servidor)', porEscalon.every((n, i) => n && tabla[i] && tabla[i].startsWith(n)), JSON.stringify({ porEscalon, tabla }));
+  await sleep(1100); // el 1.º termina de subir
+  await m.screenshot({ path: 'karts-ceremonia-sala-390.png' });
+  await a.screenshot({ path: 'karts-ceremonia-sala-844x390.png' });
+  const fija = await esp.evaluate(() => ({ quieta: document.getElementById('kc-ceremonia').classList.contains('kc-quieta'), arriba: document.querySelectorAll('#kc-ceremonia .kc-col.arriba').length, confeti: document.querySelectorAll('#kc-ceremonia .kc-confeti i').length }));
+  ok('espectador con movimiento reducido: ve la ceremonia fija (3 arriba, sin confeti)', fija.quieta && fija.arriba === 3 && fija.confeti === 0, JSON.stringify(fija));
+  await esp.screenshot({ path: 'karts-ceremonia-espectador-390.png' });
+  await a.click('#kc-ceremonia [data-kc="saltar"]');
+  ok('ceremonia en sala: «⏭ Saltar» la quita y queda la tabla de tiempos', !(await a.$('#kc-ceremonia')) && await a.isVisible('.arcade-tiempos'));
+  await m.waitForSelector('#kc-ceremonia', { state: 'detached', timeout: 10000 }).catch(() => {});
+  ok('ceremonia en sala: termina sola y queda el podio con «Otra con los mismos»', !(await m.$('#kc-ceremonia')) && /Podio/.test(await m.textContent('#p-body')) && !!(await m.$('#p-revancha')));
+  for (const p of pags) await p.context().close();
+}
+
 async function respaldo(b, relevo) {
   // Sin canal (sala sin Realtime ni doble): aviso inmediato y la carrera de siempre con fantasmas.
   const sin = [await jugador(b, 'fernando@example.com', null, VERTICAL, {}, '/juegos.html?arcadePrueba=1'), await jugador(b, 'jesus@example.com', null, VERTICAL, {}, '/juegos.html?arcadePrueba=1')];
@@ -459,7 +548,13 @@ async function copaEnSala(b, relevo) {
   }
   // Podio final con suspenso, la tabla de la copa y la revancha.
   await Promise.all(pags.map(p => p.waitForSelector('#p-body .result', { timeout: 60000 })));
-  await sleep(2500);
+  // karts-ceremonia: al final de la copa, la ceremonia con los 3 personajes en los 2 aparatos.
+  await Promise.all(pags.map(p => p.waitForSelector('#kc-ceremonia', { timeout: 15000 }).catch(() => {})));
+  const cer = await Promise.all(pags.map(p => p.evaluate(() => { const c = document.getElementById('kc-ceremonia'); return c ? { cols: c.querySelectorAll('.kc-col img').length, titulo: c.querySelector('.kc-cab').textContent } : null; })));
+  ok('copa: ceremonia al final en los 2 aparatos con 3 personajes y el nombre de la copa', cer.every(c => c && c.cols === 3 && /Copa Fiesta/.test(c.titulo)), JSON.stringify(cer));
+  await host.waitForFunction(() => document.querySelector('#kc-ceremonia .kc-e1.arriba'), null, { timeout: 9000 }).catch(() => {});
+  await host.screenshot({ path: 'karts-ceremonia-copa-sala-390.png' });
+  await host.waitForSelector('#kc-ceremonia', { state: 'detached', timeout: 10000 }).catch(() => {});
   const txt = await host.textContent('#p-body');
   ok('copa: podio final de la Copa Fiesta con la tabla de las 4 carreras', /Copa Fiesta/.test(txt) && /Puntos de la copa/.test(txt) && (await host.$$('.copa-tabla tbody tr')).length === 3, txt.slice(0, 160));
   ok('copa: revancha en el podio', await host.isVisible('[data-p="revancha"]'));
@@ -704,6 +799,18 @@ async function salidaYPodio(b, relevo) {
     console.log(out.join('\n'));
     process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
   }
+  if (process.env.KARTS_VIVO_SOLO === 'ceremonia') { // karts-control-sala y karts-ceremonia: solo esta parte (para iterar)
+    await controlYCeremoniaEnSala(b, relevo);
+    await b.close(); await relevo.cerrar();
+    console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
+  if (process.env.KARTS_VIVO_SOLO === 'copa') { // karts-ceremonia: la copa en sala (para iterar)
+    await copaEnSala(b, relevo);
+    await b.close(); await relevo.cerrar();
+    console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_VIVO_SOLO === 'salto') { // karts-salto: solo esta parte (para iterar)
     await saltoEnSala(b, relevo);
     await b.close(); await relevo.cerrar();
@@ -739,6 +846,7 @@ async function salidaYPodio(b, relevo) {
   await copaReinosEnSala(b, relevo); // karts-puntos-copas
   await salidaYPodio(b, relevo); // karts-salida-y-puntos
   await saltoEnSala(b, relevo); // karts-salto
+  await controlYCeremoniaEnSala(b, relevo); // karts-control-sala y karts-ceremonia
   await b.close(); await relevo.cerrar();
   console.log(out.join('\n'));
   console.log('RESUMEN fps(8 en vivo) libre=' + fps.libre + ' CPU×4=' + fps.lento + ' mensajes/s(sala de 8)=' + r.porSeg.toFixed(1));

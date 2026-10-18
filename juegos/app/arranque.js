@@ -69,6 +69,7 @@ app.addEventListener('click', e => {
     if (pa?.dataset.p === 'fut-form') return cambiarTacticaFutbol(pa); // futbol-en-linea
     if (pa?.dataset.p === 'arena-equipo' || pa?.dataset.p === 'arena-robot') return cambiarAsientoArena(pa); // futbolito-arena
     if (pa?.dataset.p === 'personaje') return elegirPersonajeSala(pa); // personaje-en-salas
+    if (pa?.dataset.p === 'kcontrol' || pa?.dataset.p === 'kacel') return elegirControlSala(pa); // karts-control-sala
     if (pa && pa.dataset.p === 'empezar') { pa.disabled = true; return post('/juegos/sala/' + sala.codigo + '/empezar', {}).then(r => { if (!r.ok) { pa.disabled = false; alert(r.body.error === 'faltan_jugadores' ? (TableroUI.faltan(sala.estado.sala.juego) || '👥 Faltan jugadores. Espera a que se una tu rival.') /* juegos-tablero */ : 'No se pudo empezar la partida, intenta de nuevo.' /* errores-latentes */); } return traerSala(); }).then(() => { sala.vista = null; pintarSala(); }); }
     return NO_ATENDIDO;
   };
