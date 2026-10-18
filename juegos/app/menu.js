@@ -190,7 +190,7 @@ async function iniciar() {
     }
     if (!r.ok) throw new Error(r.body.error || ('HTTP ' + r.status));
     borrarRegistro(); // ya tenía cuenta (alumno, alumna o invitado): no hay nada que registrar
-    if (salaPendiente) { const c = salaPendiente; salaPendiente = null; return unirseCodigo(c); }
+    if (salaPendiente) { const c = salaPendiente; salaPendiente = null; return VER_URL ? espectarCodigo(c) : unirseCodigo(c); } // espectador: &ver=1
     if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
     // Recarga (openspec: juegos-recarga): primero la sala guardada; luego, el juego individual a medias.
     const enSala = salaGuardada(); if (enSala) return volverASala(enSala.codigo);

@@ -240,6 +240,26 @@ const MAX_FINAL = 10_000; // total final y podio (10–12 rondas de Basta suman 
 const cache = new Map<string, { t: number; v: unknown }>();
 export function clearCacheSalas() {
   cache.clear();
+  cacheViendo.clear(); // espectador
+}
+
+// espectador (openspec: espectador-partidas): quien mira sin jugar. Un archivo por persona en una subcarpeta de la sala
+// (`espectadores/<id>.json`, solo { id, t }); estado() no lista subcarpetas, así que no cuenta para asientos, mesas,
+// empezar, podio, revancha ni ranking. Una escritura por espectador (sin latidos) y hasta MAX_ESPECTADORES por sala.
+export const MAX_ESPECTADORES = 30;
+// Juegos en vivo (navegador a navegador): solo aquí el espectador recibe el topic, para escuchar el evento `vivo` en
+// solo escucha. Gancho para juegos en vivo nuevos (p. ej. Brigada Xalli): agregar su id aquí y en ESPECTAR_EN_VIVO de
+// juegos/app/salas.js, y atender `espectador: true` en su iframe.
+export const ESPECTADOR_EN_VIVO = new Set(["karts", "futbol", Arena.JUEGO_ARENA]);
+const VIENDO_MS = 10_000;
+const cacheViendo = new Map<string, { t: number; ids: string[] }>();
+const rutaEspectadores = (codigo: string) => `juegos/salas/${codigo}/espectadores`;
+async function espectadores(store: Store, codigo: string): Promise<string[]> {
+  const c = cacheViendo.get(codigo);
+  if (c && Date.now() - c.t < VIENDO_MS) return c.ids;
+  const ids = (await store.list(rutaEspectadores(codigo))).filter((n) => n.endsWith(".json")).map((n) => n.slice(0, -5));
+  cacheViendo.set(codigo, { t: Date.now(), ids });
+  return ids;
 }
 
 const ruta = (codigo: string, archivo = "sala") => `juegos/salas/${codigo}/${archivo}.json`;
@@ -314,7 +334,18 @@ async function publicarEstado(store: Store, codigo: string, ahora: number, rt?: 
   if (!rt) return;
   cache.delete(codigo);
   const fresco = await estado(store, codigo, ahora);
-  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { sala: sinCanal(fresco.sala), jugadores: vistaJugadores(fresco.sala.juego, Clasicos.ocultarJugadas(fresco.sala.juego, fresco.jugadores), null), ahora: Date.now(), ...Copa.vistaCopa(fresco.sala, fresco.jugadores, ahora) }); // clasicos-rapidos y juegos-tablero: sin elecciones de ppt ni flotas
+  // clasicos-rapidos y juegos-tablero: sin elecciones de ppt ni flotas; espectador: la misma vista pública que ve quien especta
+  if (fresco?.sala.canal) await publicarSala(rt, fresco.sala.canal, { ...vistaPublica(fresco.sala, fresco.jugadores, ahora), ahora: Date.now(), viendo: (await espectadores(store, codigo)).length });
+}
+
+// espectador: vista pública de la mesa (la más restrictiva), igual para el canal de la sala, quien especta y el admin.
+// Sin canal ni secreto (sinCanal), sin flotas de naval (vistaJugadores con yo null), sin elecciones de ppt de rondas
+// incompletas (ocultarJugadas sin yo) y con los resultados que ya son públicos (Fútbol, Arena y Copa).
+function vistaPublica(sala: Sala, jugadores: EnSala[], ahora: number) {
+  return {
+    sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores), null),
+    ...vistaFutbol(sala, jugadores), ...Arena.vistaArena(sala, jugadores), ...Copa.vistaCopa(sala, jugadores, ahora),
+  };
 }
 
 // Revancha (openspec: revancha-partidas). La primera petición reserva `siguiente` en la sala vieja con escritura
@@ -459,6 +490,7 @@ async function unirseSala(c: CtxSala): Promise<Response> {
   if (!dentro && jugadores.length >= cupo(sala.juego, sala.opciones)) return json({ error: "sala_llena" }, 409);
   const guardado = await guardarJugador(store, codigo, jugador, (e) => equipo === undefined ? e : { ...e, equipo }, ahora);
   if (!guardado) return json({ error: "conflicto_escritura" }, 503); // errores-latentes: no se guardó, no está dentro
+  if (!dentro) await dejarDeEspectar(store, codigo, jugador); // espectador: quien entra a jugar ya no especta
   if (equipo !== undefined) { await publicar(); return json({ ok: true, codigo, equipo }); } // futbolito-equipos
   await publicar();
   return json({ ok: true, codigo });
@@ -704,14 +736,45 @@ async function revanchaSala(c: CtxSala, lunes: string, rt?: ConfigRealtime): Pro
   return json({ ok: true, codigo: sig });
 }
 
-// GET /juegos/sala/<código>: estado de la sala para quien está dentro (o el admin).
-function verSala(c: CtxSala, rt?: ConfigRealtime): Response {
-  const { jugador, ahora, json, sala, jugadores, dentro } = c;
-  if (!dentro && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
+// espectador: POST /juegos/sala/<código>/espectar → registra a quien especta ({ salir: true } lo quita).
+async function espectarSala(c: CtxSala): Promise<Response> {
+  const { body, jugador, store, json, codigo, dentro, publicar, ahora } = c;
+  if (body.salir === true) {
+    await dejarDeEspectar(store, codigo, jugador);
+    await publicar();
+    return json({ ok: true, codigo });
+  }
+  if (dentro) return json({ error: "ya_en_sala" }, 409);
+  cacheViendo.delete(codigo);
+  const ids = await espectadores(store, codigo);
+  if (ids.includes(jugador.id)) return json({ ok: true, codigo });
+  if (ids.length >= MAX_ESPECTADORES) return json({ error: "espectadores_llenos" }, 409);
+  if (!(await store.put(`${rutaEspectadores(codigo)}/${jugador.id}.json`, { id: jugador.id, t: ahora }, null, `sala ${codigo}: espectador`))) return json({ error: "conflicto_escritura" }, 503);
+  cacheViendo.delete(codigo);
+  await publicar();
+  return json({ ok: true, codigo });
+}
+async function dejarDeEspectar(store: Store, codigo: string, jugador: Jugador) {
+  cacheViendo.delete(codigo);
+  if (!(await espectadores(store, codigo)).includes(jugador.id)) return;
+  await store.remove(`${rutaEspectadores(codigo)}/${jugador.id}.json`, `sala ${codigo}: deja de espectar`);
+  cacheViendo.delete(codigo);
+}
+
+// GET /juegos/sala/<código>: estado de la sala para quien está dentro; espectador: la vista pública para quien especta
+// (o el admin), con el topic solo en juegos en vivo (para escuchar en solo escucha).
+async function verSala(c: CtxSala, rt?: ConfigRealtime): Promise<Response> {
+  const { jugador, ahora, json, sala, jugadores, dentro, store, codigo } = c;
+  const viendo = await espectadores(store, codigo);
+  if (!dentro) {
+    if (!viendo.includes(jugador.id) && jugador.tipo !== "admin") return json({ error: "no_en_sala" }, 403);
+    const escucha = rt && sala.canal && ESPECTADOR_EN_VIVO.has(sala.juego) ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
+    return json({ ...vistaPublica(sala, jugadores, ahora), ahora, reloj: Date.now(), yo: jugador.id, soyHost: false, espectador: true, viendo: viendo.length, ...escucha, ...Grandes.vistaGrande(sala, jugadores, "", ahora) });
+  }
   const enVivo = rt && sala.canal ? { rt: { url: rt.url, key: rt.publica, topic: topicDe(sala.canal) } } : {};
   // karts-salida-y-puntos: `reloj` = hora del servidor al responder (`ahora` es la de cuando empezó a atender); con las
   // dos, la página acota su desfase sin el tiempo de procesamiento (juegos/reloj-sala.js).
-  return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, reloj: Date.now(), yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo,
+  return json({ sala: sinCanal(sala), jugadores: vistaJugadores(sala.juego, Clasicos.ocultarJugadas(sala.juego, jugadores, jugador.id), jugador.id), ahora, reloj: Date.now(), yo: jugador.id, soyHost: sala.host === jugador.id, ...enVivo, viendo: viendo.length,
     ...Grandes.vistaGrande(sala, jugadores, jugador.id, ahora), ...vistaFutbol(sala, jugadores), ...Arena.vistaArena(sala, jugadores) /* futbolito-arena */, ...Copa.vistaCopa(sala, jugadores, ahora) }); // karts-copa-en-sala // futbol-en-linea // clasicos-rapidos y juegos-tablero: solo tu elección y tu flota; juegos-salas-grandes: la palabra de Dibuja, solo a quien dibuja
 }
 
@@ -726,7 +789,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   // POST /juegos/sala → crear
   if (sub === "" && req.method === "POST") return crearSala(body, jugador, store, ahora, json, lunes);
 
-  const m = sub.match(/^\/([A-Z]{4})(\/(unirse|empezar|respuesta|revancha))?$/);
+  const m = sub.match(/^\/([A-Z]{4})(\/(unirse|empezar|respuesta|revancha|espectar))?$/); // espectador: /espectar
   if (!m) return json({ error: "not_found" }, 404);
   const [, codigo, , accion] = m;
   const est = await estado(store, codigo, ahora);
@@ -742,6 +805,7 @@ export async function handleSalas(req: Request, sub: string, jugador: Jugador, s
   if (accion === "empezar" && req.method === "POST") return empezarSala(c);
   if (accion === "respuesta" && req.method === "POST") return responderSala(c);
   if (accion === "revancha" && req.method === "POST") return revanchaSala(c, lunes, rt);
+  if (accion === "espectar" && req.method === "POST") return espectarSala(c); // espectador
   if (!accion && req.method === "GET") return verSala(c, rt);
 
   return json({ error: "metodo_no_permitido" }, 405);

@@ -12,6 +12,7 @@ if (API_PARAM) document.querySelector('.home-link').href = './?api=' + encodeURI
 // Enlace de partida: juegos.html?sala=KXQP entra (o registra al invitado) y se une solo.
 const SALA_URL = (new URLSearchParams(location.search).get('sala') || '').trim().toUpperCase();
 let salaPendiente = /^[A-Z]{4}$/.test(SALA_URL) ? SALA_URL : null;
+const VER_URL = new URLSearchParams(location.search).get('ver') === '1'; // espectador: ?sala=XXXX&ver=1 entra a ver, sin jugar
 let abrirAvatar = new URLSearchParams(location.search).get('avatar') === '1';
 // Registro de Juegos en 2 pasos (openspec: registro-juegos-boton): apodo y aviso primero, luego el correo. El
 // apodo espera en este navegador (sin correo) hasta que el enlace confirma la sesión.
@@ -39,7 +40,7 @@ const escribirLocal = (k, v) => { try { if (v === null) localStorage.removeItem(
 const vigente = x => !!x && !!state.jugador && x.quien === state.jugador.id && Math.abs(Date.now() - Number(x.t)) < RECARGA_MS;
 const numEntre = (x, max) => Math.max(0, Math.min(max, Math.round(Number(x) || 0)));
 const modoPartida = on => document.documentElement.classList.toggle('jugando', !!on);
-function urlConSala(codigo) { const u = new URL(location.href); if (codigo) u.searchParams.set('sala', codigo); else { u.searchParams.delete('sala'); } return u.pathname + u.search + u.hash; }
+function urlConSala(codigo, ver) { const u = new URL(location.href); if (codigo) u.searchParams.set('sala', codigo); else { u.searchParams.delete('sala'); } if (ver && codigo) { u.searchParams.set('ver', '1'); } else { u.searchParams.delete('ver'); } return u.pathname + u.search + u.hash; } // espectador: &ver=1
 function recordarSala(codigo, extra) {
   const previa = leerLocal(SALA_KEY);
   escribirLocal(SALA_KEY, { ...(previa && previa.codigo === codigo ? previa : {}), ...extra, codigo, quien: state.jugador && state.jugador.id, t: Date.now() });
@@ -95,7 +96,11 @@ async function api(ruta, opts, cfg) {
   }
   return { ok, status, body };
 }
-const post = (ruta, datos) => api(ruta, { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(datos) });
+// espectador (openspec: espectador-partidas): mientras se especta la sala `espectandoSala`, no salen jugadas, inicios,
+// uniones ni puntos de esa sala (el servidor igual responde 403); solo /espectar.
+let espectandoSala = null;
+const bloqueoEspectador = ruta => !!espectandoSala && (ruta === '/juegos/partida' || (ruta.startsWith('/juegos/sala/' + espectandoSala + '/') && !ruta.endsWith('/espectar')));
+const post = (ruta, datos) => bloqueoEspectador(ruta) ? Promise.resolve({ ok: false, status: 403, body: { error: 'espectador' } }) : api(ruta, { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(datos) });
 
 const cacheDatos = {};
 async function datos(nombre) {

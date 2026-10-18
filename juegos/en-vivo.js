@@ -20,6 +20,8 @@
 //   canal.alDesconectar(fn)         // fn(id) cuando un participante pasa 3 s sin mandar nada
 //   canal.estado(); canal.alEstado(fn)  // 'vivo' | 'reconectando' (se reconecta solo: 1, 2, 4, 8, 10 s)
 //   canal.ritmo(evento, hz); canal.estadisticas(); canal.cerrar()
+//   espectador (openspec: espectador-partidas): `escucha: true` en conectar/crear/puente = solo escucha: recibe pero
+//     nunca envía (ni latidos, pings ni adiós). Quien juega ignora a quien no está en `participantes`.
 //   EnVivo.simulado({ latencia, perdida, desorden, relevo?, noConecta? })  // doble de prueba: { conectar(o) } con la
 //     misma API; sin `relevo` une a los canales del mismo topic en esta página; con `relevo` (URL de
 //     tests/e2e/lib/vivo-relevo.js) cruza contextos del navegador. La latencia y la pérdida se inyectan aquí.
@@ -74,7 +76,7 @@
       estado = nuevo; oyEstado.emitir(nuevo);
     };
     const mandar = (e, d) => {
-      if (cerrado || tr.estado !== 'listo') return false;
+      if (o.escucha || cerrado || tr.estado !== 'listo') return false; // espectador: solo escucha
       const ahora = reloj();
       tr.enviar({ i: yo, s: ++seq, t: ahora, e, d });
       ultimoEnvio = ahora; est.enviados++;
@@ -233,7 +235,7 @@
     const yo = String(o.yo && typeof o.yo === 'object' ? o.yo.id : o.yo);
     let tr;
     try { tr = o.transporte || transporteSupabase(o); } catch (e) { return Promise.reject(e); }
-    const m = crear({ transporte: tr, yo, miembros: o.participantes, hz: o.hz ?? 15, ritmos: o.ritmos, espera: o.espera ?? 5000, silencio: o.silencio, reloj: o.reloj, manual: o.manual });
+    const m = crear({ transporte: tr, yo, miembros: o.participantes, hz: o.hz ?? 15, ritmos: o.ritmos, espera: o.espera ?? 5000, silencio: o.silencio, reloj: o.reloj, manual: o.manual, escucha: !!o.escucha }); // espectador
     return new Promise((ok, mal) => {
       if (m.estado() === 'vivo') { ok(fachada(m, yo)); return; }
       const quitar = m.alEstado(st => {
@@ -316,7 +318,7 @@
     const alMensaje = ev => {
       const d = ev.data || {};
       if (ev.origin !== org || !marco.contentWindow || ev.source !== marco.contentWindow || d.juego !== juego) return;
-      if (d.tipo === 'vivo-tx' && esSobre(d.m)) tr.enviar(d.m);
+      if (d.tipo === 'vivo-tx' && esSobre(d.m)) { if (!o.escucha) tr.enviar(d.m); } // espectador: el puente no reenvía nada
       else if (d.tipo === 'vivo-reconectar') tr.reconectar();
       else if (d.tipo === 'vivo-hola') aMarco({ tipo: 'vivo-estado', st: tr.estado });
     };

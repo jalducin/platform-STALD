@@ -173,6 +173,12 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
 }
 @media (prefers-reduced-motion:reduce){#aviso,#h-mbar,#volante,#tuto{transition:none}.m.on{transform:none}body.tuto #mandos .m,body.tuto #joy-zona{animation:none}}
 fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fieldset> sin el marco del navegador (Web:S6819) */
+/* espectador (openspec: espectador-partidas): sin controles ni datos propios; cámara con ◀ ▶ */
+body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espectador #b-pausa,body.espectador #tuto,body.espectador #h-monedas,body.espectador .mbar{display:none!important}
+#esp-cam{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;pointer-events:auto;display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:999px;background:rgba(15,23,42,.82);color:#fff;font-weight:800;font-size:13px;max-width:92%}
+#esp-cam[hidden]{display:none}
+#esp-cam button{min-width:40px;min-height:36px;border:0;border-radius:999px;background:#7c3aed;color:#fff;font-weight:800;font-size:15px;cursor:pointer}
+#esp-cam span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
 </style></head><body class="ctl-joystick">
 <div id="juego">
   <div id="pantalla">
@@ -188,6 +194,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
         <div class="der"><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
       </div>
       <canvas id="minimapa" aria-label="Mapa de la pista con los corredores"></canvas>
+      <fieldset id="esp-cam" hidden aria-label="Cámara del espectador"><button id="esp-ant" aria-label="Seguir al anterior">◀</button><span id="esp-sigue" aria-live="polite"></span><button id="esp-sig" aria-label="Seguir al siguiente">▶</button><button id="esp-lider" aria-label="Seguir al líder">👑</button></fieldset> <!-- espectador -->
     </div>
     <div id="cuenta" aria-live="polite"></div>
     <output id="aviso"></output>
@@ -255,7 +262,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <script src="arcade.js?v=7"></script>
 <script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
-<script src="en-vivo.js?v=1"></script> <!-- juegos-en-vivo: karts de las demás personas de la sala -->
+<script src="en-vivo.js?v=2"></script> <!-- juegos-en-vivo: karts de las demás personas de la sala -->
 <script src="karts-reinos.js?v=1"></script> <!-- karts-copa-reinos: interiores de monumentos y sus mecánicas -->
 <script src="karts-objetos.js?v=1"></script> <!-- karts-objetos-en-sala: ítems entre personas en sala -->
 <script>
@@ -1479,7 +1486,7 @@ const posDe = k => posiciones().indexOf(k) + 1;
 function prepararCarrera(id, opciones) {
   prepararPista(id);
   karts = []; objetos = []; particulas = []; tCarrera = 0; terminada = false; cuentaFin = 0; rayoTinte = 0; ultimoTurbo = null; arranque = { presiono: null };
-  geo = KO.geometria(pista, M, A.VEL_KART); red = opciones.sala && opciones.vivo ? redNueva(opciones.humanos, opciones.yo) : null; // karts-objetos-en-sala
+  geo = KO.geometria(pista, M, A.VEL_KART); red = opciones.sala && opciones.vivo && !opciones.espectador ? redNueva(opciones.humanos, opciones.yo) : null; // karts-objetos-en-sala; espectador: sin ítems propios
   const colorYo = COLORES[prog.equipo.color] || COLORES.azul;
   const otros = Object.values(COLORES).filter(c => c !== colorYo);
   // Personajes (openspec: personajes-xalli): tú con el tuyo; los bots y fantasmas con los otros 3, en orden fijo.
@@ -1497,6 +1504,7 @@ function prepararCarrera(id, opciones) {
       karts.push(Object.assign(nuevoKart('vivo-' + n, h.nombre, color, false, n, h.personaje || perOtros[n % perOtros.length]), { id: h.id, remoto: true, visible: false, saliendo: null, interp: EnVivo.interpolador({ retraso: 100, extrapolar: 250, angulos: [2] }) }));
     });
     opciones.bots.forEach((b, k) => { const f = nuevoKart('fantasma-' + k, b.nombre, b.color || otros[k], false, opciones.humanos.length + k, perFantasma(k)); f.fantasma = true; f.msObjetivo = b.ms; karts.push(f); });
+    if (opciones.espectador) { yo = karts.find(k => k.remoto) || karts[0]; sigueLider = true; } // espectador: la cámara sigue a una persona (al líder)
   } else if (opciones.sala) {
     // Respaldo sin canal (las demás personas no se dibujan): tú adelante y los fantasmas detrás (karts-salida-y-puntos).
     yo = nuevoKart('yo', 'Tú', colorYo, true, 0, perYo);
@@ -1949,13 +1957,14 @@ function paso(dt) {
   if (carreraDe.inicioLocal > ahora) { cuentaRegresiva(ahora); return; }
   if (!carreraDe.salio) arrancar();
   tCarrera = (ahora - carreraDe.inicioLocal) / 1000;
+  if (espectador) { pulso.item = false; elegirSeguido(); } // espectador: sin ítems; la cámara sigue al líder o a quien eligió
   if (pulso.item) { pulso.item = false; if (yo.item && yo.termino === null) usarItem(yo); }
   pulso.derrape = false; pulso.acel = false;
   vigilarSentido(dt);
   for (const k of karts) { (k.remoto ? pasoRemoto : pasoKart)(k, dt); emitir(k); } // juegos-en-vivo: a un remoto lo mueve su dueño; aquí solo se interpola
   pasoObjetos(dt); pasoRecolectar(dt);
   if (red) red.hist.agregar(tcAhora(), puntaje(yo)); // karts-objetos-en-sala: tu avance de los últimos 5 s (rayo)
-  if (vivo && !sala.enviado) vivo.enviar('k', kartVivo()); // juegos-en-vivo: el canal lo limita a su ritmo
+  if (vivo && !sala.enviado && !espectador) vivo.enviar('k', kartVivo()); // juegos-en-vivo: el canal lo limita a su ritmo (espectador: nada)
   rayoTinte = Math.max(0, rayoTinte - dt);
   // Límite de sala.
   if (sala && !sala.enviado && tCarrera * 1000 >= A.limiteSala('karts', pista.id)) terminarSala(null); // karts-pistas-grandes: límite de la pista
@@ -1981,7 +1990,7 @@ function arrancar() {
   if (!window.Emocion?.cuenta(0)) S.ya(); // emocion-sonora: ¡YA!
   if (sensor.activo) centrarSensor(); // el centro es como se sostiene el celular al arrancar
   $('cuenta').textContent = '¡YA!'; setTimeout(() => { if ($('cuenta').textContent === '¡YA!') $('cuenta').textContent = ''; }, 800);
-  const p = arranque.presiono;
+  const p = espectador ? null : arranque.presiono; // espectador: no arranca
   if (p !== null && p >= -0.5) { yo.turbo = p >= -0.25 ? 1.3 * TURBO_SALIDA : 0.8 * TURBO_SALIDA; yo.turboNivel = 0; avisar(p >= -0.25 ? '🚀 ¡Súper arranque!' : '🚀 ¡Buen arranque!', 1100); S.turbo(); }
   else if (p !== null) { yo.ahogado = 0.8; avisar('💨 Se ahogó el motor: espera la última luz', 1300); S.ahogo(); }
   for (const k of karts) if (!k.humano && !k.fantasma && !k.remoto && Math.random() < 0.35) k.turbo = 0.5 * TURBO_SALIDA; // NOSONAR: azar de juego, no criptográfico
@@ -1990,7 +1999,7 @@ function arrancar() {
 // Si vas en sentido contrario más de 0.8 s, un aviso te dice que des la vuelta (solo visual: no cambia reglas).
 let revesT = 0, revesAviso = -10;
 function vigilarSentido(dt) {
-  if (!yo || yo.termino !== null || yo.vel < 40) { revesT = 0; return; }
+  if (!yo || espectador || yo.termino !== null || yo.vel < 40) { revesT = 0; return; } // espectador: el aviso es de quien maneja
   revesT = Math.cos(difAng(yo.ang - M.pts[yo.idx].a)) < -0.3 ? revesT + dt : 0;
   if (revesT > 0.8 && tCarrera - revesAviso > 2.5) { revesAviso = tCarrera; avisar('↩ ¡Vas al revés! Da la vuelta', 1600); }
 }
@@ -2018,6 +2027,7 @@ function mostrarTutorial() {
 // emocion-sonora: en los resultados, redoble y tu lugar (0 si no llegaste a la meta).
 function emocionPodio(ms, lugar) { window.Emocion?.intensidad(0); window.Emocion?.podio(ms === null ? 0 : lugar); }
 function llegarMeta() {
+  if (espectador) return; // espectador: la meta es de quien maneja
   S.meta(); motorOn(false); window.Emocion?.intensidad(0); // emocion-sonora
   avisar('🏁 ¡Meta! ' + posDe(yo) + '.º lugar', 1600);
   if (sala) { terminarSala(yo.termino); return; }
@@ -2299,12 +2309,13 @@ function empezarSala(d) {
   if (copa && sala && sala.copa && sala.copa.k === copa.k) return; // la misma carrera otra vez: nada
   sala = { mapa: d.mapa, enviado: false, copa };
   if (!copa || copa.k === 0 || !personaje) personaje = personajeDeInicio(d); // personaje-en-salas (en la copa: el de la carrera 1, toda la copa)
-  const humanos = humanosDeSala(d), enVivo = !!d.vivo && humanos.length > 1 && humanos.some(h => h.id === d.yo) && !!window.EnVivo;
+  espectador = d.espectador === true; document.body.classList.toggle('espectador', espectador); $('esp-cam').hidden = !espectador; // espectador
+  const humanos = humanosDeSala(d), enVivo = !!d.vivo && humanos.length > 1 && (espectador || humanos.some(h => h.id === d.yo)) && !!window.EnVivo;
   // karts-salida-y-puntos: la salida a la hora del aparato que manda la página (reloj común); si no viene, inicioEn.
   const inicioEn = Number.isFinite(d.salidaLocal) ? d.salidaLocal - Date.now() : Number(d.inicioEn || 0);
-  iniciarCarrera(d.mapa, { sala: true, bots: d.bots || [], inicioEn, vivo: enVivo, humanos, yo: d.yo });
+  iniciarCarrera(d.mapa, { sala: true, bots: d.bots || [], inicioEn, vivo: enVivo, humanos, yo: d.yo, espectador: espectador && enVivo });
   if (copa) mostrarCopaAntes(copa);
-  if (carreraDe.inicioLocal < performance.now()) avisar('La carrera ya empezó: ¡arranca!', 1600);
+  if (carreraDe.inicioLocal < performance.now()) avisar(espectador ? '👀 La carrera ya empezó' : 'La carrera ya empezó: ¡arranca!', 1600);
   if (enVivo && vivo) vivo.ritmo('k', 2); // karts-copa-en-sala: el canal sigue abierto entre carreras
   else if (enVivo) empezarVivo(d.yo, humanos);
   else if (humanos.length > 1) setTimeout(avisoRespaldo, 2400); // tras el nombre de la pista
@@ -2350,6 +2361,12 @@ function quitarCopaAntes(falta) {
 }
 function terminarSala(ms) {
   if (sala.enviado) return;
+  if (espectador) { // espectador: no manda `meta`; espera el podio que pinta la página
+    sala.enviado = true; motorOn(false); modo = 'resultados'; $('hud').classList.add('hide');
+    $('sala-titulo').textContent = '🏁 Fin de la carrera'; $('sala-txt').textContent = 'Esperando el podio…';
+    mostrar('ov-sala');
+    return;
+  }
   if (vivo) vivo.enviarYa('k', kartVivo()); // juegos-en-vivo: los demás te ven llegar antes de que se cierre el juego
   sala.enviado = true; motorOn(false);
   // karts-salida-y-puntos: si no llegó, hasta dónde llegó (‰ de la carrera) para ordenar a quien no terminó.
@@ -2388,7 +2405,7 @@ function avisoRespaldo() { if (modo === 'carrera') avisar('📴 Sin conexión en
 function empezarVivo(yoId, humanos) {
   const nombre = (humanos.find(h => h.id === yoId) || {}).nombre || '';
   // Antes de la salida basta con 2 por segundo; en la carrera, el ritmo de la sala (arrancar()).
-  EnVivo.conectar({ transporte: EnVivo.transporteMarco('karts'), yo: { id: yoId, nombre }, participantes: humanos.map(h => h.id), hz: 2 }).then(c => {
+  EnVivo.conectar({ transporte: EnVivo.transporteMarco('karts'), yo: { id: yoId, nombre }, participantes: humanos.map(h => h.id), hz: 2, escucha: espectador }).then(c => { // espectador: solo escucha
     if (!sala || sala.enviado) { c.cerrar(); return; }
     vivo = c;
     if (carreraDe.salio) vivo.ritmo('k', ritmoVivo(humanos.length));
@@ -2453,8 +2470,39 @@ function pintarTablaVivo() {
   const firma = filas.map(k => k.num).join(',');
   if (hudPrevio.tablaVivo === firma) return;
   hudPrevio.tablaVivo = firma;
-  el.innerHTML = filas.map((k, i) => '<li' + (k === yo ? ' class="yo"' : '') + '><b>' + (i + 1) + '</b><i style="--c:' + k.color + '"></i><span>' + esc(k === yo ? 'Tú' : k.nombre.slice(0, 12)) + '</span></li>').join('');
+  el.innerHTML = filas.map((k, i) => '<li' + (k === yo ? ' class="yo"' : '') + '><b>' + (i + 1) + '</b><i style="--c:' + k.color + '"></i><span>' + esc(k === yo && !espectador ? 'Tú' : k.nombre.slice(0, 12)) + '</span></li>').join(''); // espectador: con nombres
 }
+
+/* ================= Espectador (openspec: espectador-partidas) =================
+   Quien especta no tiene kart: todas las personas son remotas y `yo` apunta al kart que sigue la cámara (el líder, o a
+   quien elija con ◀ ▶). Sin entrada, sin ítems y sin `meta`; el canal va en solo escucha (EnVivo `escucha`). */
+let espectador = false, sigueLider = true;
+const personasEnPista = () => posiciones().filter(k => k.remoto);
+function elegirSeguido() {
+  const lista = personasEnPista();
+  if (sigueLider && lista.length && yo !== lista[0]) { yo = lista[0]; hudPrevio.tablaVivo = null; }
+  pintarCamEsp();
+}
+function cambiarSeguido(paso) {
+  const lista = personasEnPista();
+  if (!lista.length) return;
+  const i = lista.indexOf(yo);
+  yo = lista[(i + paso + lista.length) % lista.length];
+  sigueLider = false; hudPrevio.tablaVivo = null; pintarCamEsp();
+}
+function pintarCamEsp() {
+  const txt = '👀 ' + (sigueLider ? '👑 ' : '') + (yo ? yo.nombre : '');
+  if ($('esp-sigue').textContent !== txt) $('esp-sigue').textContent = txt;
+  $('esp-lider').setAttribute('aria-pressed', String(sigueLider));
+}
+$('esp-ant').onclick = e => { cambiarSeguido(-1); e.currentTarget.blur(); };
+$('esp-sig').onclick = e => { cambiarSeguido(1); e.currentTarget.blur(); };
+$('esp-lider').onclick = e => { sigueLider = true; elegirSeguido(); e.currentTarget.blur(); };
+// La página de Juegos puede silenciar o activar el sonido (botón 🔊 de quien especta).
+addEventListener('message', ev => {
+  if (ev.origin !== location.origin || ev.source !== parent || !ev.data || ev.data.tipo !== 'sonido') return;
+  sonido = ev.data.activo !== false; if (!sonido) motorOn(false); pintarSonido();
+});
 
 /* ================= Ítems entre personas en sala (openspec: karts-objetos-en-sala) =================
    «La víctima decide»: cada aparato manda solo sobre su kart. Quien usa cáscara, bola, cohete o rayo manda el evento
@@ -3064,7 +3112,8 @@ if (PRUEBA) {
       copasMenu: [...document.querySelectorAll('#menu-ops [data-ir^="copa-nueva"]')].map(b => ({ ir: b.dataset.ir, txt: b.textContent, bloqueada: b.disabled })),
       copa: sala && sala.copa ? sala.copa.k : null, copaVisible: !$('ov-copa').classList.contains('hide'), copaTexto: $('ov-copa').textContent, // karts-copa-en-sala
       personaje: yo ? yo.personaje : personaje, masa: Personajes.masa(yo ? yo.personaje : personaje), personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length,
-      ...estadoVivo(), ...estadoObjetos() }),
+      ...estadoVivo(), ...estadoObjetos(),
+      espectador, sigue: espectador && yo ? yo.id || null : null, sigueLider, camEsp: !$('esp-cam').hidden ? $('esp-sigue').textContent : null }), // espectador
     // Caja de tu kart en px del lienzo (capturas de cerca y revisión de su dibujo).
     cajaYo: () => { const p = proyectar(yo.x, yo.y, 0); return p ? { x: (p.x - KW / 2 * p.s) * K, y: (p.y - KOY * p.s) * K, w: KW * p.s * K, h: KH * p.s * K } : null; },
     // Hoja de revisión: cada piloto de espaldas, de tres cuartos, de lado y de frente.

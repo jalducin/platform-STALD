@@ -160,15 +160,13 @@ function pintarArcadeSala(body) {
     const k = 'arcade-espera:' + humanos.map(f => f.envio ? 1 : 0).join('') + ':' + Math.ceil((Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA - t) / 10000);
     if (sala.vista === k) return;
     sala.vista = k;
-    const tiempoDe = f => { // quien sigue jugando, quien no terminó o su tiempo
-      if (!f.envio) return '🏃 jugando…';
-      return f.ms === null ? '—' : '⏱ ' + Arcade.formatoTiempo(f.ms);
-    };
     body.innerHTML = '<div class="q-card"><div class="sub">' + escapeHtml(Arcade.nombreMapa(juego, mapa)) + '</div><div class="q">' + (mia.ms === null ? '⏰ No terminaste' : '🏁 Tu tiempo: ' + Arcade.formatoTiempo(mia.ms)) + '</div>' +
       '<div class="sub">Esperando a que terminen los demás (a más tardar en ' + Math.max(0, Math.ceil((Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA - t) / 1000)) + ' s)…</div></div>' +
-      '<ol class="rank">' + humanos.map(f => '<li>' + avatarHtml(f.avatar, 28) + '<span class="n">' + escapeHtml(f.nombre) + '</span><span class="pts">' + tiempoDe(f) + '</span></li>').join('') + '</ol>';
+      listaArcade(humanos);
     return;
   }
+  // espectador: sin transmisión en vivo (Axo, una sola persona o sin canal) se ve quién va llegando.
+  if (sala.espectador && !(juego === 'karts' && sala.vivoTr && humanos.length > 1)) return esperaEspectadorArcade(body, humanos, juego, mapa, t);
   if (sala.vista === 'arcade') return;
   sala.vista = 'arcade';
   body.innerHTML = marcoArcade(srcArcade(juego), juegoPorId(juego).t);
@@ -180,7 +178,7 @@ function pintarArcadeSala(body) {
   const personas = participantes().filter(p => !p.bot).map(p => ({ id: p.id, nombre: p.nombre, personaje: personajeDeAsiento(p.id) })); // personaje-en-salas: el de su asiento
   const enVivo = juego === 'karts' && !!sala.vivoTr && personas.length > 1;
   if (enVivo) {
-    const pt = EnVivo.puente({ marco: frame, juego, transporte: sala.vivoTr, permitido: id => personas.some(h => h.id === id) });
+    const pt = EnVivo.puente({ marco: frame, juego, transporte: sala.vivoTr, permitido: id => personas.some(h => h.id === id), escucha: sala.espectador }); // espectador: solo escucha
     limpiezas.push(() => pt.cerrar());
   }
   const alMensaje = ev => {
@@ -188,8 +186,8 @@ function pintarArcadeSala(body) {
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== juego) return;
     // karts-salida-y-puntos: salidaLocal = hora del aparato (Date.now) de la salida con el reloj común; el juego la usa en
     // lugar de inicioEn para que la demora del mensaje no atrase su salida.
-    if (d.tipo === 'listo') frame.contentWindow.postMessage({ tipo: 'inicio', modo: 'sala', mapa, seed: s.seed, inicioEn: s.inicio - ahoraServidor(), salidaLocal: s.inicio - sala.offset, bots, yo: e.yo, humanos: personas, vivo: enVivo, personaje: personajeElegido() }, location.origin);
-    else if (d.tipo === 'meta' && !sala.arcadeMia) {
+    if (d.tipo === 'listo') frame.contentWindow.postMessage({ tipo: 'inicio', modo: 'sala', mapa, seed: s.seed, inicioEn: s.inicio - ahoraServidor(), salidaLocal: s.inicio - sala.offset, bots, yo: e.yo, humanos: personas, vivo: enVivo, personaje: personajeElegido(), espectador: sala.espectador }, location.origin); // espectador
+    else if (d.tipo === 'meta' && !sala.arcadeMia && !sala.espectador) {
       const ms = d.ms === null ? null : Math.max(0, Math.round(Number(d.ms) || 0));
       sala.arcadeMia = { ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) };
       if (ms === null && Number.isInteger(d.avance)) sala.arcadeMia.avance = Math.max(0, Math.min(999, d.avance)); // karts-salida-y-puntos: hasta dónde llegó
@@ -200,6 +198,22 @@ function pintarArcadeSala(body) {
   };
   window.addEventListener('message', alMensaje);
   limpiezas.push(() => window.removeEventListener('message', alMensaje));
+}
+
+// Lista de personas de la carrera con su tiempo, quien no terminó o quien sigue jugando.
+const tiempoArcade = f => {
+  if (!f.envio) return '🏃 jugando…';
+  return f.ms === null ? '—' : '⏱ ' + Arcade.formatoTiempo(f.ms);
+};
+const listaArcade = humanos => '<ol class="rank">' + humanos.map(f => '<li>' + avatarHtml(f.avatar, 28) + '<span class="n">' + escapeHtml(f.nombre) + '</span><span class="pts">' + tiempoArcade(f) + '</span></li>').join('') + '</ol>';
+// espectador: carrera sin transmisión en vivo; la lista se pone al día con cada tiempo que llega al servidor.
+function esperaEspectadorArcade(body, humanos, juego, mapa, t) {
+  const quedan = Math.max(0, Math.ceil((Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA - t) / 1000));
+  const sub = t < 0 ? '¡Arranca en ' + Math.ceil(-t / 1000) + ' s!' : 'Esta carrera no se transmite en vivo: aquí ves quién va llegando (a más tardar en ' + quedan + ' s).';
+  const k = 'arcade-esp:' + humanos.map(f => (f.envio ? 1 : 0)).join('') + ':' + sub;
+  if (sala.vista === k) return;
+  sala.vista = k;
+  body.innerHTML = '<div class="q-card"><div class="sub">' + escapeHtml(Arcade.nombreMapa(juego, mapa)) + '</div><div class="q">👀 Carrera en curso</div><div class="sub">' + escapeHtml(sub) + '</div></div>' + listaArcade(humanos);
 }
 
 // ---- Copa completa de Karts en sala (openspec: karts-copa-en-sala) ----
@@ -218,7 +232,7 @@ function aCopa(msg) { const f = document.getElementById('arcade-frame'); try { f
 // Manda al servidor el abandono de la carrera en curso (al salir o al volver a media carrera). keepalive: también al cerrar.
 function abandonarCopa(k) {
   const c = sala.copa;
-  if (!c || c.abandono === k) return;
+  if (!c || c.abandono === k || sala.espectador) return; // espectador: no corre, no abandona
   c.abandono = k;
   api('/juegos/sala/' + sala.codigo + '/respuesta', { method: 'POST', keepalive: true, headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ copa: { carrera: k, abandono: true } }) });
 }
@@ -231,12 +245,12 @@ function abrirCopaSala(body) {
   const personas = participantes().filter(p => !p.bot).map(p => ({ id: p.id, nombre: p.nombre, personaje: personajeDeAsiento(p.id) }));
   sala.copa.personas = personas;
   sala.copa.vivo = !!sala.vivoTr && personas.length > 1;
-  if (sala.copa.vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'karts', transporte: sala.vivoTr, permitido: id => personas.some(h => h.id === id) }); limpiezas.push(() => pt.cerrar()); }
+  if (sala.copa.vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'karts', transporte: sala.vivoTr, permitido: id => personas.some(h => h.id === id), escucha: sala.espectador }); limpiezas.push(() => pt.cerrar()); } // espectador: solo escucha
   const alMensaje = ev => {
     const d = ev.data || {};
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'karts') return;
     if (d.tipo === 'listo') { sala.copa.listo = true; pintarSala(); }
-    else if (d.tipo === 'meta' && Number.isInteger(d.carrera) && d.carrera === sala.copa.corriendo) {
+    else if (d.tipo === 'meta' && Number.isInteger(d.carrera) && d.carrera === sala.copa.corriendo && !sala.espectador) {
       const k = d.carrera, ms = d.ms === null ? null : Math.max(0, Math.round(Number(d.ms) || 0));
       sala.copa.corriendo = -1;
       post('/juegos/sala/' + sala.codigo + '/respuesta', { copa: { carrera: k, ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) } })
@@ -263,7 +277,9 @@ function pintarCopaSala(body) {
   // Volviste a media carrera (no la empezaste en esta página): no la corres; si se te esperaba, se avisa al servidor.
   const tarde = cal.cierre === null && ahora > cal.inicio + 4000 && c.enviada < cal.k && !mio;
   if (tarde && cal.esperados.includes(e.yo)) abandonarCopa(cal.k);
+  if (sala.espectador && !c.vivo && c.enviada < cal.k) c.enviada = cal.k; // espectador sin transmisión en vivo: solo la tabla
   if (cal.cierre === null && !mio && !tarde && c.enviada < cal.k) return iniciarCarreraCopa(cal, st, tabla, ahora);
+  if (sala.espectador && c.corriendo === cal.k && cal.cierre === null) return; // espectador: la carrera se ve en el juego
   if (c.corriendo === cal.k && !mio) return; // corriendo: el juego tiene la pantalla
   const { sub, cuenta } = textoEsperaCopa(cal, !!mio, ahora);
   const firma = sub + '|' + cuenta + '|' + tabla.map(t => t.pts).join(',');
@@ -275,7 +291,7 @@ function pintarCopaSala(body) {
 function iniciarCarreraCopa(cal, st, tabla, ahora) {
   const e = sala.estado, s = e.sala, c = sala.copa;
   c.enviada = cal.k; c.corriendo = cal.k;
-  aCopa({ tipo: 'inicio', modo: 'sala', mapa: cal.pista, seed: s.seed, inicioEn: cal.inicio - ahora, salidaLocal: cal.inicio - sala.offset, bots: botsDeCarrera(s, cal.pista), yo: e.yo, humanos: c.personas, vivo: c.vivo, personaje: personajeElegido(),
+  aCopa({ tipo: 'inicio', modo: 'sala', mapa: cal.pista, seed: s.seed, inicioEn: cal.inicio - ahora, salidaLocal: cal.inicio - sala.offset, bots: botsDeCarrera(s, cal.pista), yo: e.yo, humanos: c.personas, vivo: c.vivo, personaje: personajeElegido(), espectador: sala.espectador, // espectador
     copa: { k: cal.k, nombre: st.nombre, tabla } });
 }
 // Texto de la espera: a quién falta esperar (y el límite) o cuánto falta para la siguiente carrera.
@@ -284,7 +300,9 @@ function textoEsperaCopa(cal, corri, ahora) {
   if (cal.cierre !== null || ahora < cal.inicio) return { sub: 'Siguiente: carrera ' + (cal.k + 1) + ' de 4 · ' + Arcade.nombreMapa('karts', cal.pista), cuenta: '⏱ Empieza en ' + Math.max(0, Math.ceil((cal.inicio - ahora) / 1000)) + ' s' };
   const faltan = cal.esperados.filter(id => !KartsCopa.reporte(e.jugadores.find(x => x.id === id) || {}, cal.k)).map(nombre);
   const vence = Math.max(0, Math.ceil((cal.inicio + cal.limite + Arcade.GRACIA_SALA - ahora) / 1000));
-  return { sub: 'Carrera ' + (cal.k + 1) + ' de 4' + (corri ? '' : ' · te unes en la siguiente') + (faltan.length ? ' · faltan: ' + faltan.join(', ') : ''), cuenta: '⏱ A más tardar en ' + vence + ' s' };
+  let nota = corri ? '' : ' · te unes en la siguiente';
+  if (sala.espectador) nota = ' en curso'; // espectador
+  return { sub: 'Carrera ' + (cal.k + 1) + ' de 4' + nota + (faltan.length ? ' · faltan: ' + faltan.join(', ') : ''), cuenta: '⏱ A más tardar en ' + vence + ' s' };
 }
 // Podio final de la copa: por puntos de copa; el total de cada quien son sus puntos de ranking (tope 2000).
 function finalCopa(body, st) {
@@ -403,8 +421,8 @@ function pintarFisicaSala(body) {
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== juego) return;
     if (d.tipo === 'listo') {
       const js = jugadasFisica(); sala.fisicaFirma = JSON.stringify(js); sala.fisicaListo = true;
-      aFrame({ tipo: 'inicio', modo: 'sala', seed: s.seed, inicio: s.inicio, ahora: ahoraServidor(), yo: e.yo, orden, jugadas: js });
-    } else if (d.tipo === 'jugada' && d.jugada && typeof d.jugada === 'object') {
+      aFrame({ tipo: 'inicio', modo: 'sala', seed: s.seed, inicio: s.inicio, ahora: ahoraServidor(), yo: e.yo, orden, jugadas: js, espectador: sala.espectador }); // espectador: el iframe reproduce los tiros
+    } else if (d.tipo === 'jugada' && d.jugada && typeof d.jugada === 'object' && !sala.espectador) {
       const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { jugada: d.jugada });
       aFrame({ tipo: 'jugada-ok', ok: r.ok, error: r.ok ? null : (r.body.error || r.status) });
       await traerSala(); pintarSala();
@@ -493,12 +511,15 @@ function futbolTerminado(e) {
 function pintarFutbolSala(body) { // futbol-en-linea
   const e = sala.estado, s = e.sala;
   document.getElementById('m-bar').hidden = true;
-  if (sala.vista === 'futbol') return;
   const mesa = participantes().slice(0, 2);
   const host = mesa.find(p => p.id === s.host) || mesa[0];
+  // espectador: el podio llega cuando el servidor ya tiene el resultado de alguien (no lo manda quien especta).
+  if (sala.espectador && host && e.futbol && e.futbol.estado !== 'pendiente') return podioFutbol(e.futbol, mesa, host);
+  if (sala.vista === 'futbol' || sala.vista === 'futbol-esp') return;
   if (host && futbolTerminado(e)) return podioFutbol(e.futbol, mesa, host);
   if (mesa.length < 2) { if (sala.vista !== 'faltan') { body.innerHTML = '<div class="card muted" style="text-align:center">⚽ Esperando a tu rival.</div>'; sala.vista = 'faltan'; } return; }
   const rival = mesa.find(p => p.id !== host.id);
+  if (sala.espectador && !(sala.vivoTr && window.EnVivo)) { sala.vista = 'futbol-esp'; body.innerHTML = sinTransmision('⚽ ' + host.nombre + ' vs ' + rival.nombre); return; } // espectador sin canal
   sala.vista = 'futbol';
   body.innerHTML = marcoArcade(srcArcade('futbol'), juegoPorId('futbol').t);
   const frame = document.getElementById('arcade-frame');
@@ -506,7 +527,7 @@ function pintarFutbolSala(body) { // futbol-en-linea
   const aJuego = mensajeA(frame), soyHost = e.yo === host.id, ids = [host.id, rival.id];
   // El canal en vivo de la sala (juegos-en-vivo: un solo socket) llega al iframe por el puente; solo pasan los 2 de la mesa.
   const vivo = !!sala.vivoTr && !!window.EnVivo;
-  if (vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'futbol', transporte: sala.vivoTr, permitido: id => ids.includes(id) }); limpiezas.push(() => pt.cerrar()); }
+  if (vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'futbol', transporte: sala.vivoTr, permitido: id => ids.includes(id), escucha: sala.espectador }); limpiezas.push(() => pt.cerrar()); } // espectador: solo escucha
   const finLinea = async d => {
     const goles = Array.isArray(d.goles) ? d.goles.slice(0, 2).map(x => Math.max(0, Math.round(Number(x) || 0))) : [0, 0];
     const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { futbol: { goles, ms: Math.max(0, Math.round(Number(d.ms) || 0)), ...(d.corte ? { corte: true } : {}) } });
@@ -518,9 +539,11 @@ function pintarFutbolSala(body) { // futbol-en-linea
     const d = ev.data || {};
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'futbol') return;
     if (d.tipo === 'listo') {
-      aJuego({ tipo: 'inicio', modo: 'linea', rol: soyHost ? 'anfitrion' : 'invitado', yo: { id: e.yo, nombre: (soyHost ? host : rival).nombre }, participantes: ids, nombres: [host.nombre, rival.nombre],
+      const rol = soyHost ? 'anfitrion' : 'invitado', asiento = soyHost ? host : rival;
+      aJuego({ tipo: 'inicio', modo: 'linea', rol: sala.espectador ? 'espectador' : rol, yo: { id: e.yo, nombre: sala.espectador ? '' : asiento.nombre }, participantes: ids, nombres: [host.nombre, rival.nombre], // espectador: rol propio, sin nombre
         seed: s.seed, vivo, tacticas: [tacticaDe(host.id), tacticaDe(rival.id)] });
-    } else if (d.tipo === 'fin-linea') { window.removeEventListener('message', alMensaje); finLinea(d); }
+    } else if (d.tipo === 'fin-linea' && sala.espectador) { window.removeEventListener('message', alMensaje); sala.vista = 'futbol-esp'; traerSala().then(() => pintarSala()); } // espectador: espera el resultado del servidor
+    else if (d.tipo === 'fin-linea') { window.removeEventListener('message', alMensaje); finLinea(d); }
     else if (d.tipo === 'ir-clasif') { // respaldo: sin canal en vivo, a la Clasificatoria semanal
       window.removeEventListener('message', alMensaje);
       limpiar(); pantallaHub(); jugarArcade('futbol', 'modo=clasif');
@@ -578,10 +601,16 @@ function arenaTerminada(e) {
   const mio = (e.jugadores.find(x => x.id === e.yo) || {}).arena;
   return !!mio || (!!e.arena && e.arena.estado !== 'pendiente' && ahoraServidor() - e.sala.inicio > 30000);
 }
+function rolArena(e, s) {
+  if (sala.espectador) return 'espectador'; // espectador
+  return e.yo === s.host ? 'anfitrion' : 'invitado';
+}
+// espectador: partido que no se transmite en vivo; el podio llega con el resultado del servidor.
+const sinTransmision = titulo => '<div class="q-card"><div class="q">' + escapeHtml(titulo) + '</div><div class="big">👀</div><div class="sub">Este partido no se transmite en vivo (se juega en el aparato de quien juega o la sala no tiene canal). Cuando termine, aquí verás el podio.</div></div>';
 function inicioArena(mesa, rep, vivo) {
   const e = sala.estado, s = e.sala;
   return {
-    tipo: 'inicio', modo: 'sala', rol: e.yo === s.host ? 'anfitrion' : 'invitado', anfitrion: s.host, yo: { id: e.yo, nombre: (mesa.find(p => p.id === e.yo) || {}).nombre || '' },
+    tipo: 'inicio', modo: 'sala', rol: rolArena(e, s), anfitrion: s.host, espectador: sala.espectador, // espectador yo: { id: e.yo, nombre: (mesa.find(p => p.id === e.yo) || {}).nombre || '' },
     asientos: mesa.map((p, i) => ({ id: p.id, nombre: p.nombre, bot: !!p.bot, eq: rep[i].eq, color: rep[i].color, num: rep[i].num })),
     seed: s.seed, vivo, formato: s.opciones.formato || '2v2', arena: s.opciones.arena || 'normal', goles: s.opciones.goles || '5',
   };
@@ -589,16 +618,20 @@ function inicioArena(mesa, rep, vivo) {
 function pintarArenaSala(body) { // futbolito-arena
   const e = sala.estado;
   document.getElementById('m-bar').hidden = true;
-  if (sala.vista === 'arena') return;
   const mesa = participantes(), rep = repartoArena(mesa);
+  // espectador: el podio llega cuando el servidor ya tiene el resultado de alguien (no lo manda quien especta).
+  if (sala.espectador && e.arena && e.arena.estado !== 'pendiente') return podioArena(e.arena, mesa, rep);
+  if (sala.vista === 'arena' || sala.vista === 'arena-esp') return;
   if (arenaTerminada(e)) return podioArena(e.arena, mesa, rep);
+  // espectador: con una sola persona el partido es local en su aparato (no se transmite); sin canal, tampoco.
+  if (sala.espectador && !(sala.vivoTr && window.EnVivo && mesa.filter(p => !p.bot).length > 1)) { sala.vista = 'arena-esp'; body.innerHTML = sinTransmision('⚽ 🌊 Mar vs Sol 🔥'); return; }
   sala.vista = 'arena';
   body.innerHTML = marcoArcade(srcArcade('futbolito-arena'), juegoPorId('futbolito-arena').t);
   const frame = document.getElementById('arcade-frame');
   if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) frame.parentElement.scrollIntoView({ block: 'start' });
   const aJuego = mensajeA(frame), personas = mesa.filter(p => !p.bot).map(p => p.id);
   const vivo = !!sala.vivoTr && !!window.EnVivo && personas.length > 1;
-  if (vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'futbolito-arena', transporte: sala.vivoTr, permitido: id => personas.includes(id) }); limpiezas.push(() => pt.cerrar()); }
+  if (vivo) { const pt = EnVivo.puente({ marco: frame, juego: 'futbolito-arena', transporte: sala.vivoTr, permitido: id => personas.includes(id), escucha: sala.espectador }); limpiezas.push(() => pt.cerrar()); } // espectador: solo escucha
   const finSala = async d => {
     const goles = Array.isArray(d.goles) ? d.goles.slice(0, 2).map(x => Math.max(0, Math.round(Number(x) || 0))) : [0, 0];
     const r = await post('/juegos/sala/' + sala.codigo + '/respuesta', { arena: { goles, ms: Math.max(0, Math.round(Number(d.ms) || 0)), ...(d.corte ? { corte: true } : {}) } });
@@ -610,6 +643,7 @@ function pintarArenaSala(body) { // futbolito-arena
     const d = ev.data || {};
     if (ev.origin !== location.origin || ev.source !== frame.contentWindow || d.juego !== 'futbolito-arena') return;
     if (d.tipo === 'listo') aJuego(inicioArena(mesa, rep, vivo));
+    else if (d.tipo === 'fin-sala' && sala.espectador) { window.removeEventListener('message', alMensaje); sala.vista = 'arena-esp'; traerSala().then(() => pintarSala()); } // espectador: espera el resultado del servidor
     else if (d.tipo === 'fin-sala') { window.removeEventListener('message', alMensaje); finSala(d); }
     else if (d.tipo === 'ir-solo') { window.removeEventListener('message', alMensaje); limpiar(); pantallaHub(); jugarArcade('futbolito-arena'); }
   };
