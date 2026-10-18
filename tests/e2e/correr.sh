@@ -251,9 +251,11 @@ correr() { # $1 = prueba
     timeout "$max" node "e2e-$n.js") > "$out" 2>&1
   rc=$?
   p=$(grep -c '^PASS' "$out"); f=$(grep -cE '^FAIL|ERROR' "$out")
-  if [ $rc = 0 ] && [ "$f" = 0 ]; then estado=PASS; else estado=FAIL; FALLAS=$((FALLAS + 1)); fi
+  # OMIT: la prueba sale con 0 y avisa que le faltan datos (p. ej. pronunciacion sin ruta del profe); no cuenta como falla.
+  if [ $rc = 0 ] && [ "$f" = 0 ] && [ "$p" = 0 ] && grep -q '^OMIT' "$out"; then estado=OMIT; OMITIDAS=$((OMITIDAS + 1)); TOTAL=$((TOTAL - 1)) # omitida: no cuenta como corrida
+  elif [ $rc = 0 ] && [ "$f" = 0 ]; then estado=PASS; else estado=FAIL; FALLAS=$((FALLAS + 1)); fi
   printf '%-5s %-22s pasos PASS=%-3s FAIL=%-3s salida=%s\n' "$estado" "$n" "$p" "$f" "$rc" | tee -a "$SALIDA/resumen.txt"
-  [ $estado = PASS ] || grep -E '^FAIL|ERROR' "$out" | cut -c1-220 | sed 's/^/        /' | tee -a "$SALIDA/resumen.txt"
+  [ $estado != FAIL ] || grep -E '^FAIL|ERROR' "$out" | cut -c1-220 | sed 's/^/        /' | tee -a "$SALIDA/resumen.txt"
 }
 
 SELECCION=()

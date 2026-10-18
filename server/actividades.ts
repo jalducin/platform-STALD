@@ -172,7 +172,10 @@ async function preguntasPara(store: Store, it: Item, alumno: string | null, n: n
 
 // GET /ingles/actividades → elementos con estado (alumno) o con resultados y resumen (admin)
 async function listarActividades(quien: Identidad, store: Store, json: Json, hoy: string, ambito: Ambito, slug: string | null): Promise<Response> {
-  const { items, semanaActual, semanaSiguiente } = await visibleItems(store, hoy, ambito);
+  const { items, ...propias } = await visibleItems(store, hoy, ambito);
+  // Sin ruta propia (openspec: profe-semanas-del-grupo), el profe sigue las semanas del grupo: lo del grupo ya está en su lista.
+  const { semanaActual, semanaSiguiente } = ambito.clave === "profe" && !propias.semanaActual && !propias.semanaSiguiente
+    ? await visibleItems(store, hoy, AMBITO_CLASE) : propias;
   const resumirSemana = (s: Semana) => ({ id: s.id, titulo: s.titulo, ids: s.elementos.map((e) => e.id) });
   const semana = semanaActual ? resumirSemana(semanaActual) : null;
   const siguiente = semanaSiguiente ? { semanaSiguiente: resumirSemana(semanaSiguiente) } : {};
