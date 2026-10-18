@@ -417,6 +417,8 @@ async function terminarCopaSuelta(q) {
   await f.waitForSelector('#kc-ceremonia', { timeout: 20000 });
   return f;
 }
+// karts-3-vueltas: mandos de manejo visibles (flechas, FRENO, DERRAPE, SALTO, REVERSA, 🎁 y el mando clásico).
+const mandosVisibles = f => f.evaluate(() => [...document.querySelectorAll('#mandos .m, #mandos #joy-zona, .mando')].filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; }).length);
 async function probarCeremonia(b) {
   for (const vp of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
     const nombre = 'ceremonia copa ' + vp.width + '×' + vp.height;
@@ -435,8 +437,11 @@ async function probarCeremonia(b) {
     await q.screenshot({ path: 'karts-ceremonia-copa-' + vp.width + 'x' + vp.height + '.png' });
     const dentro = await f.evaluate(() => [...document.querySelectorAll('#kc-ceremonia .kc-col, #kc-ceremonia .kc-saltar')].every(e => { const r = e.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1 && r.top >= 0 && r.bottom <= innerHeight + 1; }));
     ok(nombre + ': todo cabe en la pantalla', dentro);
+    ok(nombre + ': durante la premiación no se ven los mandos de manejo', (await mandosVisibles(f)) === 0, String(await mandosVisibles(f))); // karts-3-vueltas
     await f.click('#kc-ceremonia [data-kc="saltar"]');
     ok(nombre + ': «⏭ Saltar» la quita y quedan los resultados', !(await f.$('#kc-ceremonia')) && await f.isVisible('#ov-res'));
+    const tras = await f.evaluate(() => document.body.classList.contains('en-ceremonia'));
+    ok(nombre + ': con «⏭ Saltar» los mandos regresan' + (vp.width < vp.height ? ' (se ven otra vez)' : ''), !tras && (vp.width > vp.height || (await mandosVisibles(f)) > 0), JSON.stringify({ enCeremonia: tras, visibles: await mandosVisibles(f) })); // karts-3-vueltas
     await q.context().close();
   }
   // Sin «Saltar», se va sola en ~7 s; con movimiento reducido, fija.
@@ -447,6 +452,7 @@ async function probarCeremonia(b) {
   await r.screenshot({ path: 'karts-ceremonia-reducida-390x844.png' });
   await fr.waitForSelector('#kc-ceremonia', { state: 'detached', timeout: 10000 }).catch(() => {});
   ok('ceremonia: se quita sola al terminar (~7 s) y quedan los resultados', !(await fr.$('#kc-ceremonia')) && await fr.isVisible('#ov-res'));
+  ok('ceremonia: al terminar sola, los mandos regresan', !(await fr.evaluate(() => document.body.classList.contains('en-ceremonia'))) && (await mandosVisibles(fr)) > 0, String(await mandosVisibles(fr))); // karts-3-vueltas
   await r.context().close();
 }
 

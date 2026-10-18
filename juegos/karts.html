@@ -111,6 +111,7 @@ table.tabla{border-collapse:collapse;width:min(460px,100%);font-weight:700;font-
 /* ---- Mandos táctiles ---- */
 #mandos{display:none;flex:0 0 auto;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px 12px;background:linear-gradient(#0b1222,#0f172a)}
 body.tactil #mandos{display:flex}
+body.en-ceremonia #mandos,body.en-ceremonia .mando{display:none!important} /* karts-3-vueltas: sin mandos durante la premiación */
 #teclas{font-size:13px;opacity:.85}
 body.tactil #teclas{display:none}
 #m-izq{flex:1 1 auto;min-width:0;height:124px;display:flex;align-items:center;justify-content:center}
@@ -203,7 +204,7 @@ body.espectador #panel-control{display:none!important}
       <div class="hud-fila">
         <div class="hud-izq">
           <div class="tarjeta pos"><span id="h-pos">1.º</span><span id="h-de">/8</span></div>
-          <div class="tarjeta datos"><span id="h-vuelta">Vuelta 1/2</span><span id="h-tiempo">0:00.0</span><span id="h-monedas">🪙 0/10</span><div class="mbar"><div id="h-mbar"></div></div></div>
+          <div class="tarjeta datos"><span id="h-vuelta">Vuelta 1/3</span><span id="h-tiempo">0:00.0</span><span id="h-monedas">🪙 0/10</span><div class="mbar"><div id="h-mbar"></div></div></div>
           <ol id="vivo-tabla" class="tarjeta" hidden aria-label="Clasificación en vivo"></ol>
         </div>
         <div id="h-item" aria-label="Ítem"></div>
@@ -2166,7 +2167,8 @@ function premiar(tablaCopa, ms, lugar) {
 function ceremoniaCopa(tabla, copa) {
   const podio = KartsCeremonia.podioDe(tabla.map(t => ({ nombre: t.k === yo ? 'Tú' : t.k.nombre, personaje: t.k.personaje, color: t.k.color, total: t.pts, yo: t.k === yo })));
   ceremonia = KartsCeremonia.mostrar({ contenedor: $('pantalla'), fija: false, titulo: (copa ? copa.emoji + ' ' + copa.nombre : '🏆 Copa'), sub: 'Puntos de la copa', podio, transcurrido: 0, reducido: REDUCIR, sonido: sonido,
-    alTerminar: () => { ceremonia = null; const b = $('res-botones').querySelector('.btn'); if (b) b.focus(); } });
+    alTerminar: () => { ceremonia = null; document.body.classList.remove('en-ceremonia'); const b = $('res-botones').querySelector('.btn'); if (b) b.focus(); } }); // karts-3-vueltas: regresan los mandos
+  if (ceremonia) document.body.classList.add('en-ceremonia'); // karts-3-vueltas: la premiación oculta los mandos de manejo
 }
 // Récord de la pista y pintura dorada (récord bajo la meta en todas). Devuelve el texto extra de lo ganado.
 // karts-puntos-copas: KartsPistas.anotarRecord solo anota tiempos que el servidor acepta (10 s a 15 min); antes una

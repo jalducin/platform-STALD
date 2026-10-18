@@ -52,3 +52,16 @@ las anteriores (pestañas viejas) y rechazar las combinaciones inválidas con `4
 #### Scenario: Forma inválida
 - **WHEN** llega un avance con `recordsV3` y una versión distinta de 4, o con versión 4 sin `recordsV3`
 - **THEN** el servidor responde `400 progreso_invalido`
+
+### Requirement: La premiación de Karts oculta los mandos de manejo
+El juego SHALL ocultar los mandos de manejo (flechas o joystick, FRENO, DERRAPE, SALTO, REVERSA, 🎁 y el mando
+clásico) mientras la premiación de la copa (`juegos/karts-ceremonia.js`) está en pantalla, y SHALL mostrarlos otra vez
+cuando la premiación termina sola o con «⏭ Saltar».
+
+#### Scenario: Premiación en el celular
+- **WHEN** termina la copa individual en un celular y aparece la premiación
+- **THEN** no se ve ningún mando de manejo encima de la premiación
+
+#### Scenario: Saltar la premiación
+- **WHEN** alguien toca «⏭ Saltar» (o la premiación termina sola)
+- **THEN** quedan los resultados y los mandos vuelven a su lugar

@@ -21,6 +21,11 @@
 - [ ] 2.4 `juegos/karts.html`: `progresoNuevo` con `recordsV3`, aviso «¡Ahora son 3 vueltas!» y etiqueta «2 vueltas»
       en el selector de pistas
 - [ ] 2.5 Subir `?v=` por encima de `main`
+- [ ] 2.6 Merge de `origin/main` con 43a (copa en sala, plazo de 30 s) y 43c (⚙️ y premiación): el límite de la pista
+      con 3 vueltas sigue siendo el cierre de respaldo (prueba en `karts_3_vueltas_test.ts`) y el HUD «Vuelta x/3» no se
+      encima con ⚙️ ni con `#plazo` (E2E `karts-vivo`)
+- [ ] 2.7 Premiación: ocultar los mandos de manejo mientras está en pantalla y regresarlos al terminar o con «Saltar»
+      (`body.en-ceremonia` en `juegos/karts.html`; E2E `KARTS_SOLO=ceremonia`)
 
 ## 3. Pruebas y verificación (OBLIGATORIO)
 
