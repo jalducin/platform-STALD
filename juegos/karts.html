@@ -250,7 +250,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="karts-pistas.js?v=6"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="karts-pistas.js?v=7"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
 <script src="karts-espacio.js?v=1"></script> <!-- karts-copa-espacio: piso, sprites y cielo de las pistas espaciales -->
 <script src="arcade.js?v=7"></script>
 <script src="personajes.js?v=3"></script>
@@ -2965,6 +2965,7 @@ if (PRUEBA) {
       item: yo ? yo.item : null, mando: mando.estado(), aire: yo ? yo.aire || 0 : 0, eventos: { ...eventos }, zonas: zonas.map(z => z.tipo),
       espacio: !!marcas, caidasBots, cae: yo ? yo.cae : 0, remolque: yo ? yo.remolque : 0, idx: yo ? yo.idx : 0, n: N, lateral: yo ? Math.round(lateralDe(yo)) : 0, // karts-copa-espacio
       reinos: KartsReinos.estado(), // karts-copa-reinos
+      bots: karts.filter(k => k !== yo).map(k => ({ v: k.vuelta, t: k.termino })), // karts-curvas-complejas: vueltas de los bots
       copasMenu: [...document.querySelectorAll('#menu-ops [data-ir^="copa-nueva"]')].map(b => ({ ir: b.dataset.ir, txt: b.textContent, bloqueada: b.disabled })),
       copa: sala && sala.copa ? sala.copa.k : null, copaVisible: !$('ov-copa').classList.contains('hide'), copaTexto: $('ov-copa').textContent, // karts-copa-en-sala
       personaje: yo ? yo.personaje : personaje, masa: Personajes.masa(yo ? yo.personaje : personaje), personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length,

@@ -456,6 +456,17 @@ async function probarMecanicaEspacio(q, f, m) {
   ok(m.id + ': la mecánica «' + m.mecanica + '» actúa' + (m.mecanica === 'brecha' ? ' (salta el hueco sin caer)' : ''), e.eventos[m.mecanica] >= 1 && e.eventos.caida === 0, JSON.stringify(e.eventos));
   if (m.mecanica !== 'portal') await q.screenshot({ path: 'karts-espacio-' + m.id + '-' + m.mecanica + '.png' });
 }
+// karts-curvas-complejas: los 7 bots completan una vuelta del trazado nuevo con su línea de carrera (la misma física, 4
+// pasos por cuadro) y captura del minimapa del trazado (para revisarlo contra el de antes).
+async function vueltaBots(f, id, b0) {
+  await f.evaluate(() => window.__karts.rapido(4));
+  await f.waitForFunction(b => window.__karts.estado().bots.every((x, i) => x.v >= b[i] + 1 || x.t !== null), b0, { timeout: 60000 }).catch(() => {});
+  await f.evaluate(() => window.__karts.rapido(1));
+  const e = await estado(f);
+  ok(id + ': los 7 bots completan una vuelta del trazado nuevo', e.bots.length === 7 && e.bots.every((x, i) => x.v >= b0[i] + 1 || x.t !== null), JSON.stringify({ antes: b0, ahora: e.bots.map(x => x.v), caidasBots: e.caidasBots }));
+  const mm = await f.$('#minimapa');
+  if (mm) await mm.screenshot({ path: 'karts-curvas-' + id + '-minimapa.png' });
+}
 async function probarPistasEspacio(b) {
   const q = await abrirSuelto(b, { width: 390, height: 844 });
   const f = q.mainFrame();
@@ -476,11 +487,12 @@ async function probarPistasEspacio(b) {
     await probarCaida(q, f, m.id);
     // Una vuelta completa de verdad con el piloto de prueba (karts-pistas-grandes: 4 pasos de la misma física por cuadro).
     await f.evaluate(() => { window.__karts.piloto(true); window.__karts.rapido(4); });
-    const v0 = (await estado(f)).vuelta;
+    const v0 = (await estado(f)).vuelta, b0 = (await estado(f)).bots.map(x => x.v); // karts-curvas-complejas: + bots
     await f.waitForFunction(v => window.__karts.estado().vuelta >= v + 1, v0, { timeout: 90000 }).catch(() => {});
     await f.evaluate(() => window.__karts.rapido(1));
     const ev = await estado(f);
     ok(m.id + ': una vuelta completa con el piloto de prueba', ev.vuelta >= v0 + 1, JSON.stringify({ vuelta: ev.vuelta, caidas: ev.eventos.caida }));
+    await vueltaBots(f, m.id, b0); // karts-curvas-complejas
     await q.setViewportSize({ width: 844, height: 390 }); await sleep(900);
     await q.screenshot({ path: 'karts-espacio-' + m.id + '-844x390.png' });
     await q.setViewportSize({ width: 390, height: 844 }); await sleep(300);
@@ -581,11 +593,12 @@ async function probarReinos(b) {
     ok(m.id + ': la mecánica «' + m.mecanica + '» actúa', ev[m.mecanica] >= 1, JSON.stringify(ev));
     // Una vuelta completa de verdad con el piloto de prueba (esquiva los obstáculos).
     await f.evaluate(() => { window.__karts.piloto(true); window.__karts.rapido(4); });
-    const v0 = (await estado(f)).vuelta;
+    const v0 = (await estado(f)).vuelta, b0 = (await estado(f)).bots.map(x => x.v); // karts-curvas-complejas: + bots
     await f.waitForFunction(v => window.__karts.estado().vuelta >= v + 1, v0, { timeout: 90000 }).catch(() => {});
     await f.evaluate(() => window.__karts.rapido(1));
     const ef = await estado(f);
     ok(m.id + ': una vuelta completa con el piloto de prueba', ef.vuelta >= v0 + 1, JSON.stringify({ vuelta: ef.vuelta, t: ef.tiempo, ev: ef.eventos }));
+    await vueltaBots(f, m.id, b0); // karts-curvas-complejas
     await f.evaluate(() => { window.__karts.piloto(false); window.__karts.adelantar(); });
     await f.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
     await f.evaluate(() => document.querySelector('#res-botones [data-ir="menu"]').click());
@@ -621,7 +634,8 @@ async function probarCopaReinos(b) {
   await p.context().close();
 }
 // karts-pistas-grandes: un progreso de antes (sin pistasV) archiva sus récords como «pista chica» con aviso, sin perder
-// la copa ganada; se guarda con pistasV 2.
+// la copa ganada; se guarda con pistasV 3 (karts-curvas-complejas). Después, uno de pistasV 2 archiva solo los récords de
+// las pistas con trazado nuevo como «trazado anterior» (recordsV2) y conserva los demás.
 async function probarRecordsViejos(b) {
   const g0 = await progreso();
   const viejo = { copas: { fiesta: { lugar: 3, puntos: 40 } }, records: { pradera: 61234 }, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null };
@@ -636,13 +650,32 @@ async function probarRecordsViejos(b) {
   await fr.waitForFunction(() => /pista chica/.test(document.getElementById('aviso').textContent), null, { timeout: 6000 }).catch(() => {});
   ok('récords viejos: segundo aviso con la «pista chica»', /pista chica/.test(await fr.textContent('#aviso')), await fr.textContent('#aviso'));
   let d = null;
-  for (let i = 0; i < 20; i++) { d = (await progreso()).datos; if (d && d.pistasV === 2) break; await sleep(400); }
-  ok('récords viejos: archivados en recordsV1, records vacío y la copa ganada se queda', d && d.pistasV === 2 && d.recordsV1.pradera === 61234 && Object.keys(d.records).length === 0 && d.copas.fiesta.lugar === 3, JSON.stringify(d));
+  for (let i = 0; i < 20; i++) { d = (await progreso()).datos; if (d && d.pistasV === 3) break; await sleep(400); }
+  ok('récords viejos: archivados en recordsV1, records vacío y la copa ganada se queda', d && d.pistasV === 3 && d.recordsV1.pradera === 61234 && Object.keys(d.records).length === 0 && d.copas.fiesta.lugar === 3, JSON.stringify(d));
   await fr.click('[data-ir="pistas"]');
   const txt = await fr.textContent('[data-ir="rapida:pradera"]');
   ok('récords viejos: Pradera «Sin récord» y «pista chica 1:01.2»', txt.includes('Sin récord') && txt.includes('pista chica 1:01.2'), txt);
   await p.screenshot({ path: 'karts-pista-chica.png', fullPage: true });
   await p.context().close();
+  // karts-curvas-complejas: progreso de la versión 2 con récord en la Estación Orbital y en Pradera.
+  const g1 = await progreso();
+  const v2 = { copas: { fiesta: { lugar: 2, puntos: 44 } }, records: { pradera: 121500, orbital: 131000 }, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: 2, recordsV1: { pradera: 61234 } };
+  const put2 = await fetch(API + '/juegos/progreso/karts?email=' + encodeURIComponent(EMAIL), { method: 'PUT', body: JSON.stringify({ v: g1.v, datos: v2 }) });
+  ok('trazado anterior: el servidor acepta la versión 2 (pestaña vieja)', put2.ok, String(put2.status));
+  const p2 = await abrir(b);
+  await abrirJuego(p2, 'karts');
+  const f2 = await marcoDe(p2);
+  await f2.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  await f2.waitForFunction(() => /Curvas nuevas/.test(document.getElementById('aviso').textContent), null, { timeout: 8000 }).catch(() => {});
+  ok('trazado anterior: aviso de las curvas nuevas', /Curvas nuevas/.test(await f2.textContent('#aviso')), await f2.textContent('#aviso'));
+  let d2 = null;
+  for (let i = 0; i < 20; i++) { d2 = (await progreso()).datos; if (d2 && d2.pistasV === 3) break; await sleep(400); }
+  ok('trazado anterior: Orbital a recordsV2, Pradera se queda, copa y pista chica intactas', d2 && d2.pistasV === 3 && d2.recordsV2.orbital === 131000 && !d2.records.orbital && d2.records.pradera === 121500 && d2.recordsV1.pradera === 61234 && d2.copas.fiesta.lugar === 2, JSON.stringify(d2));
+  await f2.click('[data-ir=pistas]');
+  const t2 = await f2.textContent('[data-ir=rapida:orbital]');
+  ok('trazado anterior: la Estación dice «Sin récord» y «trazado anterior 2:11.0»', t2.includes('Sin récord') && t2.includes('trazado anterior 2:11.0'), t2);
+  await p2.screenshot({ path: 'karts-trazado-anterior.png', fullPage: true });
+  await p2.context().close();
 }
 // Copa Mesoamericana dentro de Juegos: empieza en La Venta, se guarda con su id y continúa tras recargar.
 async function probarCopaMeso(b) {
@@ -752,7 +785,7 @@ async function probarCopaMeso(b) {
   ok('continúa en la segunda pista (desierto)', (await estado(fr)).pista === 'desierto');
   revisarRivales(await estado(fr), 'itzae', 'copa tras recargar');
   const prog2 = await progreso();
-  ok('el progreso de karts no cambia de forma (sin personaje)', prog2.datos && !('personaje' in prog2.datos) && Object.keys(prog2.datos).length === 7 && prog2.datos.pistasV === 2, Object.keys(prog2.datos || {}).join(',')); // karts-pistas-grandes: + pistasV y recordsV1
+  ok('el progreso de karts no cambia de forma (sin personaje)', prog2.datos && !('personaje' in prog2.datos) && Object.keys(prog2.datos).length === 8 && prog2.datos.pistasV === 3, Object.keys(prog2.datos || {}).join(',')); // karts-pistas-grandes: + pistasV y recordsV1; karts-curvas-complejas: + recordsV2
   await p.click('[data-a="salir"]').catch(() => {});
 
   // ---- Celular (toques reales): botones ⬅ ➡ por omisión, vista 3D, multitáctil y layout a 390×844 vertical ----
