@@ -382,6 +382,21 @@ Cada página debe manejar y mostrar de forma explícita:
       el derrape. Celular: botón «⤴ SALTO» separado, columna alta a la derecha de `#m-der`. Mando: R/L (salto y
       derrape; el adaptador responde `salto` con `derrape`, `mando.js` sin cambios). Teclado: ESPACIO (salto y
       derrape). En vivo, `d[10]` = altura (0–40 px) interpolada en los demás aparatos;
+    - **🎮 Control en las salas** (cambio `karts-control-sala-y-ceremonia`; decisiones en su `design.md`): la sala de
+      espera de Karts muestra «🎮 Tu control» junto a «🏁 Tu piloto» (`tarjetaControl` en `juegos/app/arcade.js`, clics
+      `data-p="kcontrol"`/`"kacel"`) y escribe en texto plano `localStorage.karts_control` y `karts_acelerar` (las
+      claves del modo individual; no va al servidor). Al elegir 📱 Sensor pide `DeviceOrientationEvent.requestPermission`
+      dentro del toque (iPhone). El iframe relee las claves en cada `inicio` (`releerControl`); en la carrera de sala el
+      botón ⚙️ (`#b-control`, oculto a quien especta) abre `#panel-control` sin pausar; si el sensor no se activa sin
+      toque, ese panel ofrece «📱 Activar sensor»;
+    - **🏆 Ceremonia de premiación** (mismo cambio): `juegos/karts-ceremonia.js` (`window.KartsCeremonia`, probada en
+      `server/karts_ceremonia_test.ts`). Podio de 3 escalones con foco y confeti; suben 3.º, 2.º y 1.º (personaje con
+      `Personajes.retrato(id, 'gana')`, kart SVG con sus colores, nombre y puntos), revelación, redoble y victoria de
+      `window.Emocion`, «⏭ Saltar», 7 s; con movimiento reducido, fija. Toma las filas **en el orden que ya trae el
+      podio** (no calcula lugares). Copa individual: sobre los resultados de `karts.html`. Sala (carrera suelta y copa):
+      `ceremoniaKarts` en `juegos/app/arcade.js`, que empieza en `cierre + 2.5 s` con la hora del servidor
+      (`ahoraServidor()`), igual en todos los aparatos y para quien especta; mientras corre, `pintarFinalSala` no toca
+      `Emocion.podio` ni el confeti (`sala.conCeremonia`);
     - en horizontal (`max-height: 520px`) el marco de Arcade de `juegos.html` mide `100dvh − 16px`; las pantallas del
       juego usan `justify-content: safe center` para poder desplazarse;
     **Dibujo de «Axo y los 12 mundos»** (cambio `axo-diseno`): arte vectorial en canvas a la resolución real (`K`),

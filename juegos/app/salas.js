@@ -241,7 +241,7 @@ function pintarPartidas() {
 
 async function entrarSala(codigo) {
   limpiar();
-  Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, vivoTr: null, finT: 0, revEnviando: false, revMsg: '', personajeMio: null, personajeMsg: '', espectador: false }); // personaje-en-salas: personajeMio/Msg; espectador
+  Object.assign(sala, { codigo, estado: null, guardado: false, arcadeMia: null, mias: {}, enviado: false, misPalabras: null, vista: null, lot: null, unaSt: null, unaLocal: null, unaElegir: null, unaEnviando: false, unaAnunciada: null, unaAnimado: null, bastaDatos: null, cqSel: new Set(), cqDestino: null, cqMsg: '', csEnviando: false, csSt: null, ajSel: null, ajPromo: null, ajEnviando: false, ajA: null, ajCache: new Map(), finAciertos: undefined, finTotal: undefined, bastaEnviado: {}, misRondas: {}, letrasBasta: null, rondaActual: 0, rtVivo: false, rtRecibidos: 0, vivoTr: null, finT: 0, revEnviando: false, revMsg: '', personajeMio: null, personajeMsg: '', espectador: false, conCeremonia: false, ceremonia: null, controlMsg: '' }); // karts-ceremonia y karts-control-sala: conCeremonia, ceremonia, controlMsg // personaje-en-salas: personajeMio/Msg; espectador
   espectandoSala = null;
   app.innerHTML = '<div class="loading">Entrando a la partida ' + escapeHtml(codigo) + '…</div>';
   const r = await traerSala();
@@ -368,7 +368,7 @@ function pintarEspera(body) {
     '<div class="p-share"><div id="p-qr" aria-label="Código QR de la partida"></div><div><div class="muted" style="word-break:break-all;font-size:.76rem" id="p-enlace">' + escapeHtml(enlaceSala(e.sala.codigo)) + '</div>' +
     '<div class="row-btns" style="margin-top:8px"><button class="btn ghost sm" data-p="compartir">📤 Compartir</button></div></div></div></div>' +
     extrasEspera(e.sala) + // basta-divertida-una-robo
-    '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length, e.sala.opciones)) + '</p>' : '') + equiposFutbolito(lista) /* futbolito-equipos */ + equiposArena(lista) /* futbolito-arena */ + tacticaFutbol() /* futbol-en-linea */ + tarjetaPersonaje() /* personaje-en-salas */ + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
+    '<h2>👥 Jugadores (' + lista.length + ')</h2>' + (Mesas.de(e.sala.juego) ? '<p class="muted" id="p-mesa" style="margin:-4px 0 8px">🪑 ' + escapeHtml(Mesas.textoMesa(e.sala.juego, lista.filter(x => !x.bot).length, lista.filter(x => x.bot).length, e.sala.opciones)) + '</p>' : '') + equiposFutbolito(lista) /* futbolito-equipos */ + equiposArena(lista) /* futbolito-arena */ + tacticaFutbol() /* futbol-en-linea */ + tarjetaPersonaje() /* personaje-en-salas */ + tarjetaControl() /* karts-control-sala */ + '<ol class="rank">' + lista.map(x => '<li>' + avatarHtml(x.avatar, 32) + '<span class="n">' + escapeHtml(x.nombre) +
       (x.id === e.sala.host ? ' <small>(anfitrión)</small>' : '') + (x.tipo === 'invitado' ? ' <small>(invitado)</small>' : '') + personajeEnLista(x) /* personaje-en-salas */ + '</span></li>').join('') + '</ol>' +
     '<div class="row-btns">' + botonesEspera(e, lista) + '</div>';
   // La clave cuenta personas y bots: en una mesa de 4, una persona nueva desplaza a un bot y la lista no cambia de largo.
@@ -567,6 +567,12 @@ async function guardarPartidaSala(datos) {
   }
   return r;
 }
+// Sonido y confeti del podio; con la ceremonia de Karts, los pone la ceremonia (karts-ceremonia).
+function celebrarPodio(filas, mio) {
+  if (sala.conCeremonia) return;
+  window.Emocion?.podio(mio ? filas.indexOf(mio) + 1 : 0); // emocion-sonora: redoble, revelación y tu lugar
+  if (mio && mio.total > 0) confeti();
+}
 function pintarFinalSala(body, todas, basta, titulo) {
   if (sala.vista === 'final') return;
   sala.vista = 'final';
@@ -586,8 +592,7 @@ function pintarFinalSala(body, todas, basta, titulo) {
     '<div id="p-guardado" class="muted" style="margin-top:8px"></div><div id="p-revancha"></div></div><h2>🥇 Podio</h2><div class="podio-suspenso">' + marcadorHtml(filas, e.yo, 30) + '</div>' + detalle + resumenFallosSala(sala, P_N) +
     '<div class="row-btns"><button class="btn ghost" data-a="hub">🎮 Otros juegos</button><button class="btn ghost" data-tab="partidas">👥 Otra partida</button></div>';
   pintarRevancha();
-  window.Emocion?.podio(mio ? filas.indexOf(mio) + 1 : 0); // emocion-sonora: redoble, revelación y tu lugar
-  if (mio && mio.total > 0) confeti();
+  celebrarPodio(filas, mio);
   if (mio && !sala.guardado) {
     sala.guardado = true;
     // Registro de la partida para el admin: total final de cada quien y, del anfitrión, el podio con bots.
