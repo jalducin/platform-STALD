@@ -75,6 +75,11 @@ const copaEnCursoValida = (cc: unknown) => cc === null || (esObj(cc) && llaves(c
   entero(cc.carrera, 0, KP.PUNTOS_COPA_MAX / KP.PUNTOS_CARRERA[0] - 1) && entero(cc.dif, 80, 110) && Array.isArray(cc.puntos) && cc.puntos.length === KP.PUNTOS_CARRERA.length &&
   cc.puntos.every((x) => entero(x, 0, KP.PUNTOS_COPA_MAX)));
 
+// karts-3-vueltas: la versión que corresponde a las llaves archivadas (recordsV3 → 4, recordsV2 → 3, solo recordsV1 → 2).
+function versionDeForma(d: Record<string, unknown>): number {
+  if ("recordsV3" in d) return VERSION_PISTAS_KARTS;
+  return "recordsV2" in d ? 3 : 2;
+}
 function validarKarts(d: unknown): boolean {
   // karts-pistas-grandes: forma versionada (+ pistasV y recordsV1 = récords archivados de las pistas chicas) o la
   // anterior (5 llaves), que todavía puede mandar una pestaña vieja. karts-curvas-complejas: la versión 3 suma recordsV2
@@ -82,7 +87,7 @@ function validarKarts(d: unknown): boolean {
   // karts-3-vueltas: la versión 4 suma recordsV3 (récords de las carreras de 2 vueltas); la 3 y la 2 siguen valiendo.
   const v2 = [...BASE_KARTS, "pistasV", "recordsV1"], v3 = [...v2, "recordsV2"], v4 = [...v3, "recordsV3"];
   if (!esObj(d) || !(llaves(d, BASE_KARTS) || llaves(d, v2) || llaves(d, v3) || llaves(d, v4))) return false;
-  if ("pistasV" in d && d.pistasV !== ("recordsV3" in d ? VERSION_PISTAS_KARTS : "recordsV2" in d ? 3 : 2)) return false;
+  if ("pistasV" in d && d.pistasV !== versionDeForma(d)) return false;
   if ("recordsV3" in d && !recordsValidos(d.recordsV3)) return false;
   if ("recordsV2" in d && !recordsValidos(d.recordsV2)) return false;
   if ("pistasV" in d && !recordsValidos(d.recordsV1)) return false;

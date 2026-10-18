@@ -417,7 +417,8 @@
       else { pr.recordsV3[p.id] = pr.records[p.id]; vueltas++; } // karts-3-vueltas: de 2 vueltas
       delete pr.records[p.id];
     }
-    return vueltas ? 'vueltas' : trazado ? 'trazado' : false;
+    if (vueltas) return 'vueltas';
+    return trazado ? 'trazado' : false;
   }
 
   // ---- Copa individual y récords (karts-puntos-copas): reglas puras que usan juegos/karts.html y el servidor ----
