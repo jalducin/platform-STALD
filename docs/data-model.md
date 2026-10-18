@@ -243,6 +243,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     (enteros 0–100, elegida en la sala de espera) y `futbol` `{ goles: [anfitrión, invitado], ms, corte?, t }`, el
     primer resultado que vio (solo uno por persona). El partido no se guarda: viaja por el canal en vivo de la sala
     (`juegos/en-vivo.js`) sin datos personales (solo ids de asiento y números del partido).
+  - En Brigada Xalli (`brigada`, cambio `brigada-xalli`) la sala lleva en `opciones` `mision` ("1"–"4"); el archivo del
+    jugador puede llevar `personaje` y `brigada` `{ mision, ms, completada, puntos { <id>: n }, corte?, t }`, el primer
+    resultado que vio. La misión viaja por el canal en vivo (`bx:foto`, `bx:lento` y `bx:entrada`) sin datos
+    personales (ids de asiento y números).
   - En Futbolito Arena (`futbolito-arena`, cambio `futbolito-arena`) la sala lleva en `opciones` `formato`, `arena` y
     `goles`; el archivo del jugador puede llevar `equipo` (0 = 🌊 Mar, 1 = 🔥 Sol), `robot` (color 0–2 dentro de su
     equipo), elegidos en la sala de espera, y `arena` `{ goles: [Mar, Sol], ms, corte?, t }`, el primer resultado que

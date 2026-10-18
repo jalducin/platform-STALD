@@ -262,10 +262,13 @@ async function cooperativo4(b, relevo) {
   await frs[0].evaluate(() => window.__brigada.invulnerable());
   // Todos avanzan a la derecha disparando (fuente registrada en cada aparato): aparecen enemigos.
   for (const fr of frs) await fr.evaluate(() => { window.__mueve = true; window.BrigadaEntrada.registrar({ eje: () => ({ x: window.__mueve ? 1 : 0, y: 0 }), presionado: a => a === 'b' && window.__dispara !== false }); }); // NOSONAR: en orden
-  await sleep(4000);
-  const vistas = await Promise.all(frs.map(fr => fr.evaluate(() => window.__brigada.red().enemigos)));
-  const host = new Set(vistas[0]), parecido = vistas.slice(1).map(v => v.filter(x => host.has(x)).length / Math.max(1, Math.min(host.size, v.length)));
-  ok('mismos enemigos en los 4 aparatos (por id)', host.size > 0 && parecido.every(x => x >= 0.6), JSON.stringify({ host: vistas[0].length, parecido }));
+  const t0 = Date.now();
+  await sleep(6000);
+  // Enemigos por id: lo que ve cada invitado tiene que estar en lo que simuló el anfitrión en los últimos 1.5 s.
+  const host = new Set();
+  for (let k = 0; k < 4; k++) { (await frs[0].evaluate(() => window.__brigada.red().enemigos)).forEach(x => host.add(x)); if (k === 2) var vistas = await Promise.all(frs.slice(1).map(fr => fr.evaluate(() => window.__brigada.red().enemigos))); await sleep(400); } // NOSONAR: muestras en orden
+  const parecido = vistas.map(v => (v.length ? v.filter(x => host.has(x)).length / v.length : 1));
+  ok('mismos enemigos en los 4 aparatos (por id)', host.size > 0 && vistas.some(v => v.length) && parecido.every(x => x >= 0.6), JSON.stringify({ host: host.size, vistas: vistas.map(v => v.length), parecido }));
   await frs[1].waitForFunction(() => /\d+ ms/.test(document.getElementById('lat').textContent), null, { timeout: 15000 }).catch(() => {});
   ok('latencia en pantalla (📶 ms)', /📶 \d+ ms/.test(await frs[1].textContent('#lat')));
   await ps[1].screenshot({ path: 'brigada-844-equipo.png' });
@@ -288,15 +291,17 @@ async function cooperativo4(b, relevo) {
   await esperar(frs[1], () => !!window.__brigada.m().jefe, null, 10000).catch(() => {});
   await sleep(500);
   await ps[1].screenshot({ path: 'brigada-844-jefe-equipo.png' });
+  // El servidor no acepta una misión de menos de 20 s (imposible jugando): se espera a que pasen 24 s.
+  await sleep(Math.max(0, 24000 - (Date.now() - t0)));
   await frs[0].evaluate(() => window.__brigada.debilitarJefe());
   await frs[1].evaluate(() => { window.__dispara = true; });
   await esperar(frs[0], () => ['victoria', 'cumplida'].includes(window.__brigada.estado().estadoM), null, 20000).catch(() => {});
   const ganador = await frs[0].evaluate(() => window.__brigada.m().jugadores.map(j => j.puntos));
   ok('jefe vencido por la invitada (su disparo llega al anfitrión)', ganador[1] >= 5000, ganador.join(','));
-  for (const fr of frs) await esperar(fr, () => /Misión cumplida/.test(document.getElementById('ov').textContent), null, 20000).catch(() => {}); // NOSONAR: en orden
-  const fines = await Promise.all(frs.map(fr => fr.evaluate(() => document.getElementById('ov').textContent)));
-  ok('los 4 ven la misión cumplida', fines.every(t => /Misión cumplida/.test(t)), fines.map(t => t.slice(0, 30)).join(' | '));
+  // Al terminar, cada iframe manda `fin-sala` y la página lo cambia por el podio (el título dice «cumplida»).
   for (const q of ps) await q.waitForSelector('#p-body .result', { timeout: 30000 }); // NOSONAR: en orden
+  const fines = await Promise.all(ps.map(q => q.textContent('#p-body .result h1')));
+  ok('los 4 ven la misión cumplida', fines.every(t => /cumplida/.test(t)), fines.join(' | '));
   await p.waitForFunction(() => /confirmado/.test((document.getElementById('p-brigada-nota') || {}).textContent || ''), null, { timeout: 20000 }).catch(() => {});
   const s1 = await salaDe(codigo, 'marisol@example.com');
   ok('servidor: resultado confirmado, puntos por persona y del equipo', s1.brigada && s1.brigada.estado === 'confirmado' && s1.brigada.ranking[id('Angel')] >= 250 && s1.brigada.equipo > 5000, JSON.stringify(s1.brigada).slice(0, 200));
@@ -347,10 +352,10 @@ async function fpsAnfitrion8(b, relevo) {
   const sufijo = Date.now() % 100000;
   const invitados = Array.from({ length: 7 }, (_, k) => ({ email: `bxf-${k}-${sufijo}@example.com`, nombre: 'Brigada ' + (k + 1) }));
   await Promise.all(invitados.map(i => pedir(i.email, '/juegos/invitado', { nombre: i.nombre, acepto: true })));
-  const m = await abrirPagina(b, { email: 'sofia@example.com', viejo: true, viewport: { width: 844, height: 390 }, contexto: { ...TACTIL, deviceScaleFactor: 2 }, out, init: initVivo(relevo.url, { latencia: 60 }), ruta: RUTA + '&vivoSimulado=1', esperar: '[data-menu]' });
+  const m = await abrirPagina(b, { email: 'valeria@example.com', viejo: true, viewport: { width: 844, height: 390 }, contexto: { ...TACTIL, deviceScaleFactor: 2 }, out, init: initVivo(relevo.url, { latencia: 60 }), ruta: RUTA + '&vivoSimulado=1', esperar: '[data-menu]' });
   const codigo = await crearSalaBrigada(m, '3', false);
   for (const i of invitados) await pedir(i.email, '/juegos/sala/' + codigo + '/unirse', {}); // NOSONAR: en orden
-  const ids = (await salaDe(codigo, invitados[0].email)).jugadores.map(j => j.id).filter(x => !x.includes('sofia'));
+  const s = await salaDe(codigo, invitados[0].email), ids = s.jugadores.map(j => j.id).filter(x => x !== s.sala.host);
   await m.waitForFunction(() => /8 personas/.test((document.getElementById('p-mesa') || {}).textContent || ''), null, { timeout: 30000 }).catch(() => {});
   let seq = 0;
   const iv = setInterval(() => ids.forEach((id, k) => { seq++; relevo.inyectar('sala-sim-' + codigo, { i: id, s: seq, t: Date.now(), e: 'bx:entrada', d: { s: seq, x: k % 3 ? 100 : 60, y: 0, m: 2, na: 0, nx: 0, ny: 0 } }); }), 100);

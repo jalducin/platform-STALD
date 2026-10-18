@@ -120,6 +120,11 @@
       na: num(m && m.na) & 63, nx: num(m && m.nx) & 63, ny: num(m && m.ny) & 63 };
   }
   const presiones = (antes, ahora) => (ahora - antes + 64) % 64;
+  // Entrada de la página con todos los campos (números y banderas).
+  function normalizar(ent) {
+    const e = ent || {};
+    return { x: Number(e.x) || 0, y: Number(e.y) || 0, a: !!e.a, b: !!e.b, c4: !!e.c4, ga: !!e.ga, gx: !!e.gx, gy: !!e.gy };
+  }
 
   // ================= Anfitrión =================
   // cfg: { canal, m, M, ids: [id de la persona de cada personaje o null si es IA], yo, ahora() ms }
@@ -307,13 +312,17 @@
     function aplicarLento(l) {
       l.s.forEach((s, i) => { const p = m.jugadores[i]; if (p) Object.assign(p, { puntos: s[0], robots: s[1], rescates: s[2], globos: s[6] }, { mun: { rafaga: s[3], abanico: s[4], laser: s[5] } }); });
       let k = 0;
-      for (const o of l.o) { if (k >= m.objetos.length) break; Object.assign(m.objetos[k++], { vivo: true, id: o[0], tipo: OBJETOS[o[1]], x: o[2], y: o[3], flota: !!o[4], t: 0 }); }
+      for (const o of l.o.slice(0, m.objetos.length)) Object.assign(m.objetos[k++], { vivo: true, id: o[0], tipo: OBJETOS[o[1]], x: o[2], y: o[3], flota: !!o[4], t: 0 });
       for (; k < m.objetos.length; k++) m.objetos[k].vivo = false;
       l.v.forEach((v, i) => { if (m.vehiculos[i]) Object.assign(m.vehiculos[i], { x: v[0], y: v[1], hp: v[2], ocupante: v[3], vivo: !!v[4] }); });
     }
     function eventosListos(tR) {
       const ev = [];
-      st.pendientes = st.pendientes.filter(e => { if (e.t > tR) return true; ev.push(e); return false; });
+      st.pendientes = st.pendientes.filter(e => {
+        if (e.t > tR) return true;
+        ev.push(e);
+        return false;
+      });
       if (st.vistos.size > 2000) st.vistos = new Set([...st.vistos].slice(-500));
       return ev;
     }
@@ -323,11 +332,9 @@
         if (i === yo || p.estado !== 'vivo' || p.dispT > 0.05) return;
         p.cad = (p.cad || 0) - dt;
         if (p.cad > 0) return;
-        const arma = p.vehiculo >= 0 ? 'canon' : p.arma, v = p.vehiculo;
-        p.vehiculo = -1; p.cad = 0;
-        if (arma === 'canon') p.vehiculo = v;
-        M.disparar(m, p);
-        p.vehiculo = v; m.ev.length = 0;
+        p.cad = 0;
+        M.disparar(m, p); // con su arma (o el cañón si va en el Armadillo); el evento no se usa aquí
+        m.ev.length = 0;
       });
     }
     return {
@@ -335,7 +342,7 @@
       // Junta la entrada de este cuadro, predice y manda a `hz`.
       entrada(ent) {
         const t = ahora(), dt = Math.min(0.1, Math.max(0, (t - st.ultimoPaso) / 1000)); st.ultimoPaso = t;
-        const e = { x: Number(ent && ent.x) || 0, y: Number(ent && ent.y) || 0, a: !!(ent && ent.a), b: !!(ent && ent.b), c4: !!(ent && ent.c4), ga: !!(ent && ent.ga), gx: !!(ent && ent.gx), gy: !!(ent && ent.gy) };
+        const e = normalizar(ent);
         if (e.ga) st.cont.na = (st.cont.na + 1) & 63;
         if (e.gx) st.cont.nx = (st.cont.nx + 1) & 63;
         if (e.gy) st.cont.ny = (st.cont.ny + 1) & 63;

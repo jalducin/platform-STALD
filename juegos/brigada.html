@@ -1117,6 +1117,9 @@ $('ov').addEventListener('click', e => {
 
 /* ================= HUD ================= */
 let hudClave = '';
+// Con más de 4 personas: renglón corto (nombre de 5 letras, corazones en número y vidas).
+const filaCompacta = (q, i) => '<div class="fila-j' + (q.estado === 'vivo' ? '' : ' fuera') + '" data-i="' + i + '"><span class="n" style="color:' + FIRMA_PJ(q.personaje) + ';max-width:44px">' +
+  esc((S.nombres[i] || '').replace('🤖 ', '').slice(0, 5)) + '</span><span>' + (q.estado === 'burbuja' ? '🫧' : '❤' + Math.max(0, q.cor)) + '·' + q.vidas + '</span></div>';
 const corazones = p => '❤️'.repeat(Math.max(0, p.cor)) + '🤍'.repeat(Math.max(0, M.COR - p.cor));
 function pintarHud(m) {
   const p = m.jugadores[S.yo], equipo = m.jugadores.reduce((s, q) => s + q.puntos, 0);
@@ -1126,7 +1129,7 @@ function pintarHud(m) {
   const clave = filas.join('') + '|' + p.puntos + '|' + equipo + '|' + p.arma + p.mun[p.arma] + p.vehiculo + '|' + p.globos;
   if (clave !== hudClave) {
     hudClave = clave;
-    $('equipo').innerHTML = (m.jugadores.length > 4 ? filas.map(f => f.replace(/<span>❤️|<span>🤍/, '<span>')) : filas).join('');
+    $('equipo').innerHTML = m.jugadores.length > 4 ? m.jugadores.map(filaCompacta).join('') : filas.join('');
     $('puntos').textContent = '🏅 ' + p.puntos.toLocaleString('es-MX') + (m.jugadores.length > 1 && S.ctx.modo !== 'solo' ? ' · equipo ' + equipo.toLocaleString('es-MX') : '');
     const municion = p.arma === 'burbuja' ? '∞' : p.mun[p.arma];
     $('arma').textContent = p.vehiculo >= 0 ? '🎊 Cañón' : M.ARMAS[p.arma].emoji + ' ' + municion;
@@ -1286,7 +1289,8 @@ function terminarSala(corte) {
     '<p>🏅 Equipo: <b>' + r.equipo.toLocaleString('es-MX') + '</b> · tú: <b>' + m.jugadores[S.yo].puntos.toLocaleString('es-MX') + '</b></p>' +
     (corte ? '<p>📡 La misión se cerró por la desconexión del anfitrión.</p>' : '') + '<p id="res-puntos">Registrando el resultado…</p>', 'resultado');
   setTimeout(cerrarCanal, 1500);
-  enviar({ tipo: 'fin-sala', puntos, ms: r.ms, completada: r.completada, corte: !!corte });
+  // Tiempo real desde el inicio (la misión «sombra» de los invitados no lleva su propio reloj).
+  enviar({ tipo: 'fin-sala', puntos, ms: Math.round(performance.now() - S.inicioReal), completada: r.completada, corte: !!corte });
 }
 
 /* ================= Plataforma ================= */

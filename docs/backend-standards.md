@@ -237,6 +237,16 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       el inicio + 5 s. La respuesta y `GET` de la sala traen `arena: { estado: confirmado | disputa | anfitrion |
       invitado | pendiente, goles, puntos: { <id>: n } }` (puntos por equipo, como Fútbol Estelar). En el ranking
       (`POST /juegos/partida` con `sala`) los puntos los pone ese resultado (409 `resultado_pendiente` si aún no hay).
+    - Brigada Xalli (`brigada`, cambio `brigada-xalli`, `server/brigada.ts`; reglas en `juegos/brigada-motor.js`, que el
+      servidor importa): opción al crear `{ mision: "1"…"4" }` ("1" por omisión; si no, 400 `mision_invalida`); mesa
+      `{ max: 8, asientos: 4, min: 1 }` (sin bots de 1 a 8 personas; con bots, compañeros IA hasta 4 asientos);
+      personaje por asiento como Karts y Axo. Resultado: `POST /respuesta { brigada: { mision, ms, completada,
+      puntos: { <id>: n }, corte? } }`, solo el primero; 400 `resultado_invalido` si la misión no es la de la sala,
+      `ms` sale de 20 s–40 min o del tiempo desde el inicio + 5 s, algún id no es de la sala o algún puntaje pasa el
+      máximo posible de la misión con esos personajes. La respuesta y `GET` de la sala traen `brigada: { estado:
+      confirmado | disputa | anfitrion | invitado | pendiente, mision, completada, puntos, ranking: { <id>: n }, equipo }`
+      (ranking = puntos / 20, tope 1000). En el ranking (`POST /juegos/partida` con `sala`) los puntos los pone ese
+      resultado (409 `resultado_pendiente` si aún no hay).
     - Personaje de Karts y Axo (`karts` y `plataformas`, cambio `personaje-en-salas`, `server/personajes.ts`):
       `POST /juegos/sala/<código>/unirse { personaje }` (también para quien ya está dentro; quien no está entra con él
       si hay lugar, si no 409 `sala_llena`) → `{ ok, codigo, personaje }`. El id se valida contra

@@ -27,7 +27,7 @@ function pisoMasAlto(d: any, x0: number, x1: number) {
 }
 const plataformaEn = (d: any, x: number, y: number) => d.plataformas.some((p: number[]) => x >= p[0] && x <= p[1] && p[2] === y);
 
-Deno.test("brigada contenido: cada misión cumple el contrato del motor", () => {
+Deno.test("brigada contenido: cada misión cumple el contrato del motor", () => { // NOSONAR: una aserción por regla del contrato, en orden
   assertEquals(MIS.LISTA.map((d: any) => d.id), [1, 2, 3, 4]);
   assertEquals(new Set(MIS.LISTA.map((d: any) => d.clave)).size, 4, "claves únicas (el arte las usa)");
   for (const d of MIS.LISTA) {
@@ -162,7 +162,7 @@ function medirAvisos(id: number, cual: "jefe" | "minijefe", semilla: string, seg
   return avisos;
 }
 
-Deno.test("brigada contenido: los jefes avisan antes de cada ataque y usan todos sus patrones", () => {
+Deno.test("brigada contenido: los jefes avisan antes de cada ataque y usan todos sus patrones", () => { // NOSONAR: recorre jefes y ataques
   for (const d of MIS.LISTA) {
     for (const cual of ["minijefe", "jefe"] as const) {
       if (!d[cual]) continue;
