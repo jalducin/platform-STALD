@@ -19,7 +19,14 @@ es la dirección absoluta de Pages, y el repo de datos SHALL subirse solo despu�
 - **WHEN** la fuente HTML carga una hoja de estilos, fuente, script o imagen de otro sitio, o contiene un correo
 - **THEN** la prueba `server/material_pdf_test.ts` falla
 
-#### Scenario: Práctica con respuestas al final
-- **WHEN** se imprime la guía
-- **THEN** trae al menos 50 ejercicios por sección (to be, presente, pasado, futuro y mezcla) y las respuestas
-  están todas en la última página, no junto a los ejercicios
+#### Scenario: Guía compacta para copiar en la libreta
+- **WHEN** se imprime la guía `guia-tres-tiempos-y-to-be.pdf`
+- **THEN** tiene exactamente 14 páginas tamaño carta, con 40 a 45 ejercicios por sección (to be, presente, pasado,
+  futuro y mezcla) y las respuestas todas en la última página, no junto a los ejercicios
+- **AND** una sección «Para tu libreta» dice qué copiar y en qué orden, con la página de cada cosa
+
+#### Scenario: Práctica con IA en los temas a reforzar
+- **WHEN** alumno o alumna estudia un tema con resultados bajos (presente simple y la -s, to be, días, orden)
+- **THEN** la sección trae un recuadro «🤖 Practica con IA» con 1–2 prompts en inglés listos para copiar
+- **AND** la guía explica cómo usar la IA sin hacer trampa: contestar primero, verificar con la guía, no dar datos
+  personales y usar el dictado para la pronunciación

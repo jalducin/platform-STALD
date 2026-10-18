@@ -50,3 +50,23 @@
   (copias en `ai-specs/skills` y `.claude/skills`)
 - [x] 6.2 PR, CI y merge
 - [ ] 6.3 `openspec archive material-pdf-ingles` cuando el profe confirme la guía
+
+## 7. Versión compacta de 14 páginas con IA (petición del profe)
+
+- [x] 7.0 Rama `feature/guia-compacta-ia` desde `origin/main` (OBLIGATORIO)
+- [x] 7.1 Fuente compacta: 14 páginas carta (portada, 8 de teoría, 3 de práctica, libreta, respuestas); tablas cortas,
+  una regla por recuadro y 2–3 ejemplos; pasado regular + irregulares en 1 página; will + going to en 1; gran cuadro y
+  mini historia más cortos; sin sopa de letras
+- [x] 7.2 44 ejercicios (A 11, B 10, C 8, D 6, E 9) con todos los tipos y respuestas en la pág. 14
+- [x] 7.3 Recuadros «🤖 Practica con IA» en días/orden, to be y pronombres, posesivos/this-that/adjetivos, presente
+  do/does y -s, irregulares y did, will/won't, preguntas, alfabeto y verbos comunes; sección «Estudiar con IA sin hacer trampa» (pág. 9)
+- [x] 7.4 «Para tu libreta»: 11 pasos en orden con su página, plan de 5 días y autoevaluación
+- [x] 7.5 Revisión de las 14 páginas en PNG (y en gris): nada partido ni desbordado, acentos e índice correctos
+- [ ] 7.6 Repo de datos: textos de `guia-2026-10-23`, `act-2026-10-23`, `meet-2026-10-25` y `meet-2026-11-01` con
+  14 páginas, 44 ejercicios y las páginas nuevas; `validar_semana.ts` de `2026-10-12` y `2026-10-19` sin errores
+- [ ] 7.7 Revisar y actualizar pruebas (OBLIGATORIO): `server/material_pdf_test.ts` verifica 14 páginas en la guía
+- [ ] 7.8 Ejecutar pruebas (OBLIGATORIO): `deno test -A server/`, `deno lint server/` y `npm run calidad`; reporte en
+  `openspec/changes/material-pdf-ingles/reports/2026-10-18-step-7-guia-compacta.md`
+- [ ] 7.9 Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA: tras el merge, Pages sirve el PDF nuevo (200,
+  `application/pdf`, hash distinto, 14 páginas)
+- [ ] 7.10 Documentación (OBLIGATORIO): `docs/data-model.md` (guía de 14 páginas con IA); PR, CI y merge

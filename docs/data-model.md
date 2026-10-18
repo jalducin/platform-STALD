@@ -182,7 +182,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     personales. Fuente `herramientas/material-ingles/<nombre>.html` → generador
     `herramientas/material-ingles/generar-pdf.ts` → `ingles/material/<nombre>.pdf`, que sirve GitHub Pages. La
     actividad lo enlaza con un tip `lectura` y la URL absoluta de Pages; el repo de datos se sube después de que Pages
-    sirva el PDF. Primera guía: `guia-tres-tiempos-y-to-be.pdf` (actividad `guia-2026-10-23`).
+    sirva el PDF. Primera guía: `guia-tres-tiempos-y-to-be.pdf` (actividad `guia-2026-10-23`): 14 páginas carta para copiar
+    en la libreta, con recuadros «🤖 Practica con IA» en los temas más bajos de `resultados/`, 44 ejercicios y
+    respuestas al final (`server/material_pdf_test.ts` vigila las 14 páginas y los 40–45 ejercicios).
   - `banco[]`: ejercicios `{ id, tema, tipo: "opcion" | "escribir" | "pronunciar" | "ordenar" | "emparejar",
     enunciado, opciones? + correcta? | aceptadas? | frase? | palabras? + distractores? | pares?, audio?, explicacion }`.
     - `audio` (opcional, cualquier tipo): texto que la página lee en voz alta (en-US, 🔊 normal y 🐢 lento). Es

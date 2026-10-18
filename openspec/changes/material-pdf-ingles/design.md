@@ -27,8 +27,12 @@ para alumnos, alumnas y el profe con una URL estable; una actividad que guíe el
   punteada, doble), para que se distinga impreso en blanco y negro.
 - **Saltos de página:** tablas, cajas y cada bloque de ejercicios con `break-inside: avoid`; títulos con
   `break-after: avoid`. Se revisan las páginas renderizadas a PNG antes de publicar.
-- **Práctica:** 71 ejercicios numerados de corrido, por sección y de lo fácil a lo difícil, y las respuestas juntas
-  al final para que no se vean al contestar.
+- **Práctica:** ejercicios numerados de corrido, por sección y de lo fácil a lo difícil, y las respuestas juntas
+  al final para que no se vean al contestar (71 en la primera versión; 44 en la compacta).
+- **Versión compacta de 14 páginas:** cada página es una `section.pagina` con salto forzado, así el total se controla
+  por diseño (14 secciones → 14 páginas) y la revisión en PNG confirma que ninguna se desborda. Recuadros
+  `.ia` con borde punteado (se distinguen en gris) y prompts en monoespaciada para copiarlos tal cual. Los temas con
+  recuadro salen de los porcentajes por sección de `resultados/` del repo de datos.
 
 ## Risks / Trade-offs
 

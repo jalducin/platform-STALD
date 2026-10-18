@@ -26,3 +26,18 @@ Deno.test("material: la fuente HTML no carga nada de internet y no trae correos"
     assert(!/[\w.+-]+@[\w-]+\.[\w.]+/.test(html), `${n}.html contiene un correo`);
   }
 });
+
+// Versión compacta (petición del profe): la guía se copia en la libreta, así que debe medir exactamente 14 páginas
+// carta, con 40–45 ejercicios (una respuesta por ejercicio en la última página) y recuadros «🤖 Practica con IA».
+Deno.test("material: la guía compacta tiene 14 páginas, 40–45 ejercicios y práctica con IA", () => {
+  const pdf = new TextDecoder("latin1").decode(Deno.readFileSync(new URL("guia-tres-tiempos-y-to-be.pdf", PUBLICADOS)));
+  // El nodo raíz de /Pages es el que cuenta todas las páginas: el /Count más grande del archivo.
+  const paginas = Math.max(...[...pdf.matchAll(/\/Count (\d+)/g)].map((m) => Number(m[1])));
+  assertEquals(paginas, 14, "la guía debe tener 14 páginas");
+  const html = Deno.readTextFileSync(new URL("guia-tres-tiempos-y-to-be.html", FUENTES));
+  const respuestas = html.slice(html.indexOf('<div class="resp">'));
+  const ejercicios = (respuestas.match(/<li>/g) ?? []).length;
+  assert(ejercicios >= 40 && ejercicios <= 45, `la guía trae ${ejercicios} ejercicios; se esperan 40–45`);
+  assert((html.match(/class="ia"/g) ?? []).length >= 4, "faltan recuadros «🤖 Practica con IA»");
+  assert(html.includes("sin hacer trampa"), "falta la sección para estudiar con IA sin hacer trampa");
+});
