@@ -28,13 +28,13 @@
 
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
-- [ ] 4.1 `npx -y deno test -A server/`, `deno lint` y `cd tests/calidad && npm run calidad` sin avisos nuevos
-- [ ] 4.2 E2E `karts karts-vivo mando espectador` (copia temporal de datos; nunca tablas `stald_`)
-- [ ] 4.3 Reporte `openspec/changes/karts-puntos-copas/reports/2026-10-17-step-4-pruebas-y-verificacion.md`
+- [x] 4.1 `npx -y deno test -A server/`, `deno lint` y `cd tests/calidad && npm run calidad` sin avisos nuevos
+- [x] 4.2 E2E `karts karts-vivo mando espectador` (copia temporal de datos; nunca tablas `stald_`)
+- [x] 4.3 Reporte `openspec/changes/karts-puntos-copas/reports/2026-10-18-step-4-pruebas-y-verificacion.md`
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Capturas de la tabla tras ganar la carrera 1 de Reinos y del menú tras recargar (390×844)
+- [x] 5.1 Capturas de la tabla tras ganar la carrera 1 de Reinos y del menú tras recargar (390×844)
 - [ ] 5.2 Tras el merge: `juegos/karts.html` y `juegos/karts-pistas.js?v=8` publicados; `GET /salud` del servidor
 
 ## 6. Documentación (OBLIGATORIO)
