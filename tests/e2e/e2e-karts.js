@@ -672,8 +672,8 @@ async function probarRecordsViejos(b) {
   let d2 = null;
   for (let i = 0; i < 20; i++) { d2 = (await progreso()).datos; if (d2 && d2.pistasV === 3) break; await sleep(400); }
   ok('trazado anterior: Orbital a recordsV2, Pradera se queda, copa y pista chica intactas', d2 && d2.pistasV === 3 && d2.recordsV2.orbital === 131000 && !d2.records.orbital && d2.records.pradera === 121500 && d2.recordsV1.pradera === 61234 && d2.copas.fiesta.lugar === 2, JSON.stringify(d2));
-  await f2.click('[data-ir=pistas]');
-  const t2 = await f2.textContent('[data-ir=rapida:orbital]');
+  await f2.click('[data-ir="pistas"]');
+  const t2 = await f2.textContent('[data-ir="rapida:orbital"]');
   ok('trazado anterior: la Estación dice «Sin récord» y «trazado anterior 2:11.0»', t2.includes('Sin récord') && t2.includes('trazado anterior 2:11.0'), t2);
   await p2.screenshot({ path: 'karts-trazado-anterior.png', fullPage: true });
   await p2.context().close();
