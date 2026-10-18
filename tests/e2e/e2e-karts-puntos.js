@@ -229,7 +229,7 @@ async function probarCopaSala(b, copa, pista) {
   const es = await Promise.all(frames.map(estado));
   ok('sala ' + copa + ': la carrera 1 es en ' + pista + ' para los 2', es.every(e => e.pista === pista), es.map(e => e.pista).join(','));
   await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
-  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 37000, null, { timeout: 90000 })));
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.tiempo > window.Arcade.limitesKarts(e.pista).minMs + 1500; }, null, { timeout: 120000 })));
   await frames[0].evaluate(() => window.__karts.adelantar());
   await sleep(1500);
   await frames[1].evaluate(() => window.__karts.adelantar());
@@ -275,7 +275,7 @@ async function probarSalaRechazada(b, copa) {
     return fr;
   }));
   await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
-  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 37000, null, { timeout: 90000 })));
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.tiempo > window.Arcade.limitesKarts(e.pista).minMs + 1500; }, null, { timeout: 120000 })));
   await frames[0].evaluate(() => window.__karts.adelantar());
   await sleep(1500);
   await frames[1].evaluate(() => window.__karts.adelantar());

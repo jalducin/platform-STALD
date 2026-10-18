@@ -116,9 +116,9 @@ async function revisarVivo(pags, frames, relevo, lista) {
 
 
 async function terminarTodos(pags, frames) {
-  // Mínimo de una carrera en sala: 25 % de la referencia de la pista (karts-pistas-grandes: ≈ 30 s en la Pradera).
+  // Mínimo de una carrera en sala: 25 % de la referencia de la pista (karts-3-vueltas: ≈ 45 s en la Pradera).
   // Cada quien llega a la meta y manda su tiempo.
-  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 31000, null, { timeout: 90000 })));
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.tiempo > window.Arcade.limitesKarts(e.pista).minMs + 1500; }, null, { timeout: 120000 })));
   for (const fr of frames) await fr.evaluate(() => window.__karts.adelantar()); // NOSONAR: uno por uno, como llegan
   await pags[0].waitForSelector('#p-body .result', { timeout: 90000 });
   await sleep(1500);
@@ -403,7 +403,7 @@ async function copaReinosEnSala(b, relevo) {
   const vista = async () => (await (await fetch(API + '/juegos/sala/' + codigo + '?email=marisol%40example.com')).json()).copa;
   ok('copa reinos en sala: la carrera 1 es en Giza', (await estado(frames[0])).pista === 'giza');
   await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
-  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 36000, null, { timeout: 90000 })));
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.tiempo > window.Arcade.limitesKarts(e.pista).minMs + 1500; }, null, { timeout: 120000 })));
   await frames[0].evaluate(() => window.__karts.adelantar());
   await sleep(1500);
   await frames[1].evaluate(() => window.__karts.adelantar());
@@ -443,7 +443,7 @@ async function copaEnSala(b, relevo) {
     ok('copa: carrera ' + (k + 1) + ' de 4 en ' + PISTAS[k] + ' para los 2, con el otro en vivo y el bot fantasma', es.every(e => e.pista === PISTAS[k] && e.karts === 3 && e.remotos.length === 1), es.map(e => e.pista + ':' + e.karts + ':' + e.remotos.length).join(','));
     if (k === 1) ok('copa: el canal en vivo sigue en la carrera 2', es.every(e => e.vivo && e.vivo.estado === 'vivo'), es.map(e => e.vivo && e.vivo.estado).join(','));
     await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
-    await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 34000, null, { timeout: 60000 })));
+    await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.tiempo > window.Arcade.limitesKarts(e.pista).minMs + 1500; }, null, { timeout: 120000 })));
     await frames[0].evaluate(() => window.__karts.adelantar());
     await sleep(1500);
     await frames[1].evaluate(() => window.__karts.adelantar());
@@ -646,7 +646,7 @@ async function salidaYPodio(b, relevo) {
   const visto = vm.remotos[0];
   ok('salida pareja: en la pantalla de Marisol, Angel va donde de verdad va (< 120 px)', visto && distancia(visto, posYo(va)) < 120, JSON.stringify({ visto: visto && { x: visto.x, y: visto.y }, propio: posYo(va) }));
   // Marisol cruza la meta 0.8 s antes que Angel (menos que el 1.5 s de la red lenta).
-  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 36000, null, { timeout: 90000 })));
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.tiempo > window.Arcade.limitesKarts(e.pista).minMs + 1500; }, null, { timeout: 120000 })));
   await frames[0].evaluate(() => window.__karts.adelantar());
   await frames[0].waitForFunction(() => window.__karts.estado().termino !== null, null, { timeout: 10000 });
   await sleep(800);
