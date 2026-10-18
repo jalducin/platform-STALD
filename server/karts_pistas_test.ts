@@ -76,17 +76,17 @@ Deno.test("karts-pistas: las curvas se pueden tomar (radio mínimo ≥ el de ant
   }
 });
 
-// karts-pistas-grandes: 2 vueltas por pista; la referencia usa las vueltas de la pista (≈ 2 a 2.3 min).
-Deno.test("karts-pistas: 2 vueltas por pista y carrera de referencia de 2 a 2.3 min", () => {
-  assertEquals(A.VUELTAS, 2);
+// karts-pistas-grandes: la referencia usa las vueltas de la pista. karts-3-vueltas: 3 vueltas (≈ 3 a 3.5 min).
+Deno.test("karts-pistas: 3 vueltas por pista y carrera de referencia de 3 a 3.5 min", () => {
+  assertEquals(A.VUELTAS, 3);
   for (const p of KP.PISTAS) {
-    assertEquals([p.vueltas, A.vueltasDe(p.id)], [2, 2], p.id);
+    assertEquals([p.vueltas, A.vueltasDe(p.id)], [3, 3], p.id);
     const ref = A.refKarts(p.id);
-    assertEquals(ref, Math.round(A.muestrearPista(p).largo * 2 / (A.VEL_KART * 0.8) * 1000), p.id + " referencia con sus vueltas");
-    assert(ref >= 115_000 && ref <= 140_000, p.id + " referencia " + ref);
+    assertEquals(ref, Math.round(A.muestrearPista(p).largo * 3 / (A.VEL_KART * 0.8) * 1000), p.id + " referencia con sus vueltas");
+    assert(ref >= 172_000 && ref <= 210_000, p.id + " referencia " + ref);
   }
-  assertEquals(A.vueltasDe("luna"), 2, "pista desconocida: el valor por omisión");
-  assertEquals(KP.VERSION_PISTAS, 3); // karts-curvas-complejas: trazados nuevos en el Espacio y Reinos Antiguos
+  assertEquals(A.vueltasDe("luna"), 3, "pista desconocida: el valor por omisión");
+  assertEquals(KP.VERSION_PISTAS, 4); // karts-3-vueltas: récords de 2 vueltas en recordsV3
 });
 
 // karts-pistas-grandes: en el minimapa de 104×72 dos tramos lejanos (≥ 1000 px por la pista) quedan a ≥ 6 px.
@@ -156,7 +156,7 @@ Deno.test("karts-pistas: límites de sala por pista", () => {
   for (const p of KP.PISTAS) {
     const ref = A.refKarts(p.id), l = A.limitesKarts(p.id);
     assertEquals(l, { minMs: Math.round(ref * 0.25), limiteMs: Math.ceil(ref * 2.5 / 10_000) * 10_000 }, p.id);
-    assert(l.minMs >= 28_000 && l.limiteMs <= 360_000, p.id + " " + JSON.stringify(l));
+    assert(l.minMs >= 43_000 && l.limiteMs <= 540_000, p.id + " " + JSON.stringify(l)); // karts-3-vueltas
     mins.push(l.minMs);
     lims.push(l.limiteMs);
   }
@@ -211,6 +211,6 @@ Deno.test("karts-pistas: el servidor acepta el progreso con cada copa en curso, 
       copaEnCurso: { copa: c.id, carrera: 1, puntos: [15, 12, 10, 8, 6, 4, 2, 1], dif: 95 },
     };
     assert(validarProgreso("karts", datos), c.id + " pasa la validación del servidor");
-    assert(validarProgreso("karts", { ...datos, pistasV: KP.VERSION_PISTAS, recordsV1: records, recordsV2: {} }), c.id + " con récords versionados");
+    assert(validarProgreso("karts", { ...datos, pistasV: KP.VERSION_PISTAS, recordsV1: records, recordsV2: {}, recordsV3: records }), c.id + " con récords versionados");
   }
 });

@@ -22,7 +22,7 @@
 // pista nueva (Tenochtitlan, Teotihuacan, Chichén Itzá y La Venta) su mecánica (trajinera, rampas, salto sobre el
 // cenote y lodo), una vuelta completa con el piloto de prueba, fps con CPU ×4 y capturas a 390×844 y 844×390; Copa
 // Mesoamericana dentro de Juegos: empieza en La Venta, se guarda con su id y continúa tras recargar.
-// Pistas grandes (openspec: karts-pistas-grandes): las 8 pistas con vueltas 3 veces más largas y 2 vueltas («Vuelta 1/2»),
+// Pistas grandes (openspec: karts-pistas-grandes): las 8 pistas con vueltas 3 veces más largas y 3 vueltas («Vuelta 1/3»; karts-3-vueltas),
 // vuelta completa con el piloto de prueba (gancho __karts.rapido: más pasos de la misma física por cuadro), fps con CPU
 // ×4 y capturas a 390×844 y 844×390 de cada pista, minimapa con los 8, y récords de antes archivados como «pista chica»
 // con aviso, sin perder la copa ganada. Las salas esperan el mínimo de la pista (25 % de la referencia).
@@ -649,7 +649,7 @@ async function probarPistasMeso(b) {
   await q.context().close();
 }
 const fpsMeso = {};
-// karts-pistas-grandes: las 4 pistas originales escaladas: «Vuelta 1/2», minimapa con 8, fps con CPU ×4 y capturas.
+// karts-pistas-grandes: las 4 pistas originales escaladas: «Vuelta 1/3» (karts-3-vueltas), minimapa con 8, fps con CPU ×4 y capturas.
 async function probarPistasGrandes(b) {
   const q = await abrirSuelto(b, { width: 390, height: 844 });
   const f = q.mainFrame();
@@ -659,7 +659,7 @@ async function probarPistasGrandes(b) {
     await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 1500, null, { timeout: 30000 });
     await f.evaluate(() => window.__karts.piloto(true)); await sleep(1500);
     const e0 = await estado(f);
-    ok(id + ': «Vuelta 1/2» y minimapa con los 8', (await f.textContent('#h-vuelta')) === 'Vuelta 1/2' && e0.marcasMapa === 8 && e0.yoEnMapa, JSON.stringify({ marcas: e0.marcasMapa }));
+    ok(id + ': «Vuelta 1/3» y minimapa con los 8', (await f.textContent('#h-vuelta')) === 'Vuelta 1/3' && e0.marcasMapa === 8 && e0.yoEnMapa, JSON.stringify({ marcas: e0.marcasMapa }));
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); await sleep(3500);
     const fps = (await estado(f)).fps;
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
@@ -893,8 +893,9 @@ async function probarCopaReinos(b) {
   await p.context().close();
 }
 // karts-pistas-grandes: un progreso de antes (sin pistasV) archiva sus récords como «pista chica» con aviso, sin perder
-// la copa ganada; se guarda con pistasV 3 (karts-curvas-complejas). Después, uno de pistasV 2 archiva solo los récords de
-// las pistas con trazado nuevo como «trazado anterior» (recordsV2) y conserva los demás.
+// la copa ganada; se guarda con la versión actual. Después, uno de pistasV 2 archiva los récords de las pistas con trazado
+// nuevo como «trazado anterior» (recordsV2) y, desde karts-3-vueltas, los demás como «2 vueltas» (recordsV3). Al final,
+// uno de pistasV 3 con una copa a medias: sus récords pasan a «2 vueltas» y la copa en curso se queda (karts-3-vueltas).
 async function probarRecordsViejos(b) {
   const g0 = await progreso();
   const viejo = { copas: { fiesta: { lugar: 3, puntos: 40 } }, records: { pradera: 61234 }, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null };
@@ -909,8 +910,8 @@ async function probarRecordsViejos(b) {
   await fr.waitForFunction(() => /pista chica/.test(document.getElementById('aviso').textContent), null, { timeout: 6000 }).catch(() => {});
   ok('récords viejos: segundo aviso con la «pista chica»', /pista chica/.test(await fr.textContent('#aviso')), await fr.textContent('#aviso'));
   let d = null;
-  for (let i = 0; i < 20; i++) { d = (await progreso()).datos; if (d && d.pistasV === 3) break; await sleep(400); }
-  ok('récords viejos: archivados en recordsV1, records vacío y la copa ganada se queda', d && d.pistasV === 3 && d.recordsV1.pradera === 61234 && Object.keys(d.records).length === 0 && d.copas.fiesta.lugar === 3, JSON.stringify(d));
+  for (let i = 0; i < 20; i++) { d = (await progreso()).datos; if (d && d.pistasV === 4) break; await sleep(400); }
+  ok('récords viejos: archivados en recordsV1, records vacío y la copa ganada se queda', d && d.pistasV === 4 && d.recordsV1.pradera === 61234 && Object.keys(d.records).length === 0 && d.copas.fiesta.lugar === 3, JSON.stringify(d));
   await fr.click('[data-ir="pistas"]');
   const txt = await fr.textContent('[data-ir="rapida:pradera"]');
   ok('récords viejos: Pradera «Sin récord» y «pista chica 1:01.2»', txt.includes('Sin récord') && txt.includes('pista chica 1:01.2'), txt);
@@ -925,16 +926,78 @@ async function probarRecordsViejos(b) {
   await abrirJuego(p2, 'karts');
   const f2 = await marcoDe(p2);
   await f2.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
-  await f2.waitForFunction(() => /Curvas nuevas/.test(document.getElementById('aviso').textContent), null, { timeout: 8000 }).catch(() => {});
-  ok('trazado anterior: aviso de las curvas nuevas', /Curvas nuevas/.test(await f2.textContent('#aviso')), await f2.textContent('#aviso'));
+  // karts-3-vueltas: además del trazado, Pradera era de 2 vueltas: gana el aviso de las 3 vueltas.
+  await f2.waitForFunction(() => /3 vueltas/.test(document.getElementById('aviso').textContent), null, { timeout: 8000 }).catch(() => {});
+  ok('trazado anterior: aviso de las 3 vueltas', /3 vueltas/.test(await f2.textContent('#aviso')), await f2.textContent('#aviso'));
   let d2 = null;
-  for (let i = 0; i < 20; i++) { d2 = (await progreso()).datos; if (d2 && d2.pistasV === 3) break; await sleep(400); }
-  ok('trazado anterior: Orbital a recordsV2, Pradera se queda, copa y pista chica intactas', d2 && d2.pistasV === 3 && d2.recordsV2.orbital === 131000 && !d2.records.orbital && d2.records.pradera === 121500 && d2.recordsV1.pradera === 61234 && d2.copas.fiesta.lugar === 2, JSON.stringify(d2));
+  for (let i = 0; i < 20; i++) { d2 = (await progreso()).datos; if (d2 && d2.pistasV === 4) break; await sleep(400); }
+  ok('trazado anterior: Orbital a recordsV2, Pradera a recordsV3 («2 vueltas»), copa y pista chica intactas', d2 && d2.pistasV === 4 && d2.recordsV2.orbital === 131000 && !d2.records.orbital && d2.recordsV3.pradera === 121500 && !d2.records.pradera && d2.recordsV1.pradera === 61234 && d2.copas.fiesta.lugar === 2, JSON.stringify(d2));
   await f2.click('[data-ir="pistas"]');
   const t2 = await f2.textContent('[data-ir="rapida:orbital"]');
   ok('trazado anterior: la Estación dice «Sin récord» y «trazado anterior 2:11.0»', t2.includes('Sin récord') && t2.includes('trazado anterior 2:11.0'), t2);
   await p2.screenshot({ path: 'karts-trazado-anterior.png', fullPage: true });
   await p2.context().close();
+  // karts-3-vueltas: progreso de la versión 3 (récords de 2 vueltas) con la Copa Fiesta a medias (carrera 3 de 4).
+  const g3 = await progreso();
+  const cc3 = { copa: 'fiesta', carrera: 2, puntos: [12, 10, 8, 6, 4, 27, 2, 1], dif: 95 }; // SLOT_YO = 5
+  const v3 = { copas: { fiesta: { lugar: 2, puntos: 44 } }, records: { pradera: 121500, hielo: 128300 }, piezas: ['chasis-ligero'], equipo: { chasis: 'ligero', llantas: 'estandar', color: 'azul' }, copaEnCurso: cc3, pistasV: 3, recordsV1: { pradera: 61234 }, recordsV2: { orbital: 131000 } };
+  const put3 = await fetch(API + '/juegos/progreso/karts?email=' + encodeURIComponent(EMAIL), { method: 'PUT', body: JSON.stringify({ v: g3.v, datos: v3 }) });
+  ok('2 vueltas: el servidor acepta la versión 3 (pestaña vieja)', put3.ok, String(put3.status));
+  const p3 = await abrir(b);
+  await abrirJuego(p3, 'karts');
+  const f3 = await marcoDe(p3);
+  await f3.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  await f3.waitForFunction(() => /3 vueltas/.test(document.getElementById('aviso').textContent), null, { timeout: 8000 }).catch(() => {});
+  ok('2 vueltas: aviso «¡Ahora son 3 vueltas!»', /Ahora son 3 vueltas/.test(await f3.textContent('#aviso')), await f3.textContent('#aviso'));
+  await f3.waitForFunction(() => /«2 vueltas»/.test(document.getElementById('aviso').textContent), null, { timeout: 6000 }).catch(() => {});
+  ok('2 vueltas: segundo aviso con los récords «2 vueltas»', /«2 vueltas»/.test(await f3.textContent('#aviso')), await f3.textContent('#aviso'));
+  let d3 = null;
+  for (let i = 0; i < 20; i++) { d3 = (await progreso()).datos; if (d3 && d3.pistasV === 4) break; await sleep(400); }
+  ok('2 vueltas: récords a recordsV3; copa en curso, copas, piezas y archivos intactos', d3 && d3.pistasV === 4 && Object.keys(d3.records).length === 0 && d3.recordsV3.pradera === 121500 && d3.recordsV3.hielo === 128300 &&
+    d3.recordsV1.pradera === 61234 && d3.recordsV2.orbital === 131000 && JSON.stringify(d3.copaEnCurso) === JSON.stringify(cc3) && d3.copas.fiesta.lugar === 2 && d3.piezas.includes('chasis-ligero'), JSON.stringify(d3));
+  const menu3 = await f3.textContent('#menu-ops');
+  ok('2 vueltas: el menú sigue ofreciendo «Continuar Copa Fiesta · Carrera 3 de 4» con sus 27 pts', menu3.includes('Continuar Copa Fiesta') && menu3.includes('Carrera 3 de 4') && menu3.includes('27'), menu3);
+  await f3.click('[data-ir="pistas"]');
+  const t3 = await f3.textContent('[data-ir="rapida:hielo"]');
+  ok('2 vueltas: el Lago Helado dice «Sin récord» y «2 vueltas 2:08.3»', t3.includes('Sin récord') && t3.includes('2 vueltas 2:08.3'), t3);
+  await p3.screenshot({ path: 'karts-2-vueltas.png', fullPage: true });
+  await f3.click('#ov-pistas [data-ir="menu"]');
+  await f3.waitForSelector('#ov-menu:not(.hide)', { timeout: 5000 });
+  await f3.click('[data-ir="copa"]');
+  await f3.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 1200, null, { timeout: 30000 });
+  const e3 = await estado(f3), h3 = await f3.textContent('#h-vuelta');
+  ok('2 vueltas: la copa continúa en el Lago Helado (carrera 3) y ya es de 3 vueltas', e3.pista === 'hielo' && h3 === 'Vuelta 1/3', e3.pista + ' ' + h3);
+  await p3.context().close();
+  // Deja el progreso sin copa a medias para lo que sigue.
+  const g4 = await progreso();
+  await fetch(API + '/juegos/progreso/karts?email=' + encodeURIComponent(EMAIL), { method: 'PUT', body: JSON.stringify({ v: g4.v, datos: { ...g4.datos, copaEnCurso: null } }) });
+}
+// karts-3-vueltas: una carrera rápida dura 3 vueltas: «Vuelta 1/3» → «Vuelta 2 de 3» → «¡Última vuelta!» con la campana
+// de Emoción y «Vuelta 3/3» → termina al cruzar la meta por 3.ª vez (y no antes).
+async function probarTresVueltas(b) {
+  const q = await abrirSuelto(b, { width: 390, height: 844 });
+  const f = q.mainFrame();
+  await f.tap('[data-ir="pistas"]'); await f.tap('[data-ir="rapida:pradera"]');
+  await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 1500, null, { timeout: 30000 });
+  ok('3 vueltas: el HUD empieza en «Vuelta 1/3»', (await f.textContent('#h-vuelta')) === 'Vuelta 1/3', await f.textContent('#h-vuelta'));
+  const cruzar = async (v, aviso) => {
+    await f.evaluate(x => window.__karts.alFinalDe(x), v);
+    await f.waitForFunction(x => window.__karts.estado().vuelta > x, v, { timeout: 8000 }).catch(() => {});
+    await f.waitForFunction(re => new RegExp(re).test(document.getElementById('aviso').textContent), aviso, { timeout: 4000 }).catch(() => {});
+    return { hud: await f.textContent('#h-vuelta'), aviso: await f.textContent('#aviso'), e: await estado(f), res: await f.isVisible('#ov-res') };
+  };
+  const v2 = await cruzar(0, 'Vuelta 2 de 3');
+  ok('3 vueltas: al cruzar la meta, «Vuelta 2 de 3» y HUD «Vuelta 2/3» (sin terminar)', v2.hud === 'Vuelta 2/3' && /Vuelta 2 de 3/.test(v2.aviso) && !v2.res, JSON.stringify({ hud: v2.hud, aviso: v2.aviso }));
+  await f.evaluate(() => window.Emocion && window.Emocion.limpiar && window.Emocion.limpiar());
+  const v3 = await cruzar(1, 'Última vuelta');
+  const ev = await f.evaluate(() => ((window.Emocion && window.Emocion.eventos && window.Emocion.eventos()) || []).map(x => x.ev));
+  ok('3 vueltas: en la 3.ª, «¡Última vuelta!», HUD «Vuelta 3/3» y la campana de Emoción', v3.hud === 'Vuelta 3/3' && /Última vuelta/.test(v3.aviso) && !v3.res && ev.includes('campana'), JSON.stringify({ hud: v3.hud, aviso: v3.aviso, ev }));
+  await q.screenshot({ path: 'karts-3-vueltas-ultima.png' });
+  await f.evaluate(() => window.__karts.adelantar());
+  await f.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
+  const fin = await estado(f);
+  ok('3 vueltas: la carrera termina al completar la 3.ª vuelta', fin.vuelta === 3 && fin.modo === 'resultados', JSON.stringify({ vuelta: fin.vuelta, modo: fin.modo }));
+  await q.context().close();
 }
 // Copa Mesoamericana dentro de Juegos: empieza en La Venta, se guarda con su id y continúa tras recargar.
 async function probarCopaMeso(b) {
@@ -975,7 +1038,7 @@ async function probarCopaMeso(b) {
 const PODIOS_TODAS = { fiesta: { lugar: 1, puntos: 50 }, mesoamerica: { lugar: 2, puntos: 40 } };
 async function ponerProgreso(cambio) {
   const g0 = await progreso();
-  const base = g0.datos || { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: 3, recordsV1: {}, recordsV2: {} };
+  const base = g0.datos || { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: 4, recordsV1: {}, recordsV2: {}, recordsV3: {} }; // karts-3-vueltas
   const put = await fetch(API + '/juegos/progreso/karts?email=' + encodeURIComponent(EMAIL), { method: 'PUT', body: JSON.stringify({ v: g0.v, datos: { ...base, ...cambio(base) } }) });
   return put.ok;
 }
@@ -1045,6 +1108,11 @@ async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probar
   }
   if (process.env.KARTS_SOLO === 'salto') { // karts-salto: solo esta parte (para iterar)
     await probarSalto(b);
+    await b.close(); console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
+  if (process.env.KARTS_SOLO === 'vueltas') { // karts-3-vueltas: solo esta parte (para iterar)
+    await probarTresVueltas(b); await probarRecordsViejos(b);
     await b.close(); console.log(out.join('\n'));
     process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
   }
@@ -1118,7 +1186,7 @@ async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probar
   ok('continúa en la segunda pista (desierto)', (await estado(fr)).pista === 'desierto');
   revisarRivales(await estado(fr), 'itzae', 'copa tras recargar');
   const prog2 = await progreso();
-  ok('el progreso de karts no cambia de forma (sin personaje)', prog2.datos && !('personaje' in prog2.datos) && Object.keys(prog2.datos).length === 8 && prog2.datos.pistasV === 3, Object.keys(prog2.datos || {}).join(',')); // karts-pistas-grandes: + pistasV y recordsV1; karts-curvas-complejas: + recordsV2
+  ok('el progreso de karts no cambia de forma (sin personaje)', prog2.datos && !('personaje' in prog2.datos) && Object.keys(prog2.datos).length === 9 && prog2.datos.pistasV === 4, Object.keys(prog2.datos || {}).join(',')); // karts-pistas-grandes: + pistasV y recordsV1; karts-curvas-complejas: + recordsV2; karts-3-vueltas: + recordsV3
   await p.click('[data-a="salir"]').catch(() => {});
 
   // ---- Celular (toques reales): botones ⬅ ➡ por omisión, vista 3D, multitáctil y layout a 390×844 vertical ----
@@ -1341,6 +1409,7 @@ async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probar
   // ---- Pistas mesoamericanas (openspec: karts-pistas-mesoamericanas) ----
   await probarPistasMeso(b);
   await probarPistasGrandes(b); // karts-pistas-grandes
+  await probarTresVueltas(b); // karts-3-vueltas
   await probarPistasEspacio(b); // karts-copa-espacio
   await probarReinos(b); // karts-copa-reinos
 

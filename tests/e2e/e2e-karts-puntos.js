@@ -54,7 +54,7 @@ function escuchar(p) {
 // Progreso de partida para la copa: los podios que la abren y nada en curso (récords limpios de la versión 3).
 async function prepararProgreso(c) {
   const g = await progreso();
-  const datos = { copas: c.copas, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: 3, recordsV1: {}, recordsV2: {} };
+  const datos = { copas: c.copas, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: 4, recordsV1: {}, recordsV2: {}, recordsV3: {} }; // karts-3-vueltas: versión 4
   const put = await fetch(urlProgreso, { method: 'PUT', body: JSON.stringify({ v: g.v, datos }) });
   ok(c.id + ': progreso inicial guardado (podios para abrir la copa)', put.ok, String(put.status) + ' ' + await put.text());
 }
@@ -67,7 +67,7 @@ async function ganarCarrera(fr, pista) {
     await sleep(3800); // cuenta regresiva
     await fr.evaluate(() => window.__karts.adelantar());
   } else if (REAL) {
-    // KARTS_PUNTOS_REAL=1: el piloto de prueba corre las 2 vueltas a velocidad normal, sin ganchos de tiempo (≈ 2–3 min
+    // KARTS_PUNTOS_REAL=1: el piloto de prueba corre las 3 vueltas (karts-3-vueltas) a velocidad normal, sin ganchos (≈ 3–4.5 min
     // por carrera), como una persona. No siempre gana: se revisa que los puntos de su lugar se muestren y se guarden.
     await fr.evaluate(() => window.__karts.piloto(true));
   } else {

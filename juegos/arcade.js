@@ -48,7 +48,7 @@
 
   // ---------- Karts ----------
   const VEL_KART = 250; // velocidad punta base (px/s)
-  const VUELTAS = 2; // karts-pistas-grandes: por omisión; cada pista define las suyas (`vueltas`, ver vueltasDe)
+  const VUELTAS = 3; // karts-pistas-grandes: por omisión; cada pista define las suyas (`vueltas`, ver vueltasDe). karts-3-vueltas: 3
   // Pistas (openspec: karts-pistas-mesoamericanas): las definiciones viven en juegos/karts-pistas.js, que se carga
   // antes que este archivo. PISTAS = las de sala (las 8 desde juegos-en-vivo, igual que MAPAS_SALA de server/carreras.ts);
   // pistaPorId encuentra todas (también las de la Copa Mesoamericana).
@@ -92,7 +92,7 @@
     }
     return (cacheMuestras[clave] = { pts, largo, paso });
   }
-  // Vueltas de una carrera en la pista (karts-pistas-grandes: 2 en las 8; sin pista, VUELTAS).
+  // Vueltas de una carrera en la pista (karts-3-vueltas: 3 en las 16; sin pista, VUELTAS).
   const vueltasDe = id => { const p = pistaPorId(id); return p && Number.isInteger(p.vueltas) && p.vueltas > 0 ? p.vueltas : VUELTAS; };
   // Tiempo de referencia (ms) de una carrera completa (sus vueltas a 200 px/s).
   const refKarts = id => { const p = pistaPorId(id); return p ? Math.round(muestrearPista(p).largo * vueltasDe(id) / (VEL_KART * 0.8) * 1000) : 0; };

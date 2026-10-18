@@ -38,8 +38,8 @@ function radioMinimo(M: any) {
   return radio;
 }
 
-Deno.test("karts-curvas: las 8 pistas rediseñadas llevan trazado 3 y la versión de pistas sube a 3", () => {
-  assertEquals(KP.VERSION_PISTAS, 3);
+Deno.test("karts-curvas: las 8 pistas rediseñadas llevan trazado 3 y la versión de pistas sube (3; 4 con karts-3-vueltas)", () => {
+  assertEquals(KP.VERSION_PISTAS, 4); // karts-3-vueltas
   assertEquals(VERSION_PISTAS_KARTS, KP.VERSION_PISTAS, "el servidor usa la misma versión");
   assertEquals(KP.PISTAS.filter((p: any) => p.trazado === 3).map((p: any) => p.id).sort(), [...REDISENADAS].sort());
   for (const p of KP.PISTAS.filter((x: any) => !REDISENADAS.includes(x.id))) assertEquals(p.trazado, undefined, p.id + " sin cambio de trazado");
@@ -90,12 +90,12 @@ Deno.test("karts-curvas: trazados cerrados, sin encimarse, radio ≥ 100 px, met
   }
 });
 
-Deno.test("karts-curvas: vuelta ±15 % de la de antes, referencia de 115 a 140 s y límites de sala recalculados", () => {
+Deno.test("karts-curvas: vuelta ±15 % de la de antes, referencia de 115 a 140 s por 2 vueltas y límites de sala recalculados", () => {
   for (const id of REDISENADAS) {
     const veces = muestras(id).largo / LARGO_ANTES[id];
     assert(veces >= 0.85 && veces <= 1.15, id + " largo " + veces.toFixed(2) + "× el de antes");
     const ref = A.refKarts(id), l = A.limitesKarts(id);
-    assert(ref >= 115_000 && ref <= 140_000, id + " referencia " + ref);
+    assert(ref * 2 / A.vueltasDe(id) >= 115_000 && ref * 2 / A.vueltasDe(id) <= 140_000, id + " referencia " + ref); // karts-3-vueltas: por 2 vueltas
     assertEquals(l, { minMs: Math.round(ref * 0.25), limiteMs: Math.ceil(ref * 2.5 / 10_000) * 10_000 });
     assertEquals(reglasCarrera("karts", id), l, id + " el servidor usa el límite nuevo");
     assert(MAPAS_SALA.karts.includes(id), id + " en salas");
@@ -107,20 +107,21 @@ const base = () => ({
   copas: { fiesta: { lugar: 1, puntos: 60 } }, piezas: ["pintura-dorada"],
   equipo: { chasis: "estandar", llantas: "estandar", color: "dorado" }, copaEnCurso: null,
 });
-Deno.test("karts-curvas: migrar récords del trazado anterior (pistasV 2 → 3) sin perder copas, piezas ni otros récords", () => {
+// karts-3-vueltas: desde la versión 2 se llega a la 4; los récords de las demás pistas (2 vueltas) pasan a recordsV3.
+Deno.test("karts-curvas: migrar récords del trazado anterior (pistasV 2 → 4) sin perder copas, piezas ni otros récords", () => {
   const pr: any = { ...base(), records: { pradera: 120_500, orbital: 131_000, giza: 128_000 }, pistasV: 2, recordsV1: { pradera: 61_000 } };
-  assertEquals(KP.migrarRecords(pr), "trazado");
-  assertEquals(pr.records, { pradera: 120_500 });
+  assertEquals(KP.migrarRecords(pr), "vueltas");
+  assertEquals([pr.records, pr.recordsV3], [{}, { pradera: 120_500 }]);
   assertEquals(pr.recordsV2, { orbital: 131_000, giza: 128_000 });
-  assertEquals([pr.pistasV, pr.recordsV1, pr.copas, pr.piezas], [3, { pradera: 61_000 }, base().copas, base().piezas]);
+  assertEquals([pr.pistasV, pr.recordsV1, pr.copas, pr.piezas], [4, { pradera: 61_000 }, base().copas, base().piezas]);
   assert(validarProgreso("karts", pr), "el servidor acepta el progreso migrado");
   assertEquals(KP.migrarRecords(pr), false, "migrar otra vez no cambia nada");
-  // Sin récords en las pistas rediseñadas: se migra la versión sin aviso.
+  // Sin récords en las pistas rediseñadas: el de 2 vueltas pasa a recordsV3 (karts-3-vueltas).
   const sin: any = { ...base(), records: { volcan: 125_000 }, pistasV: 2, recordsV1: {} };
-  assertEquals([KP.migrarRecords(sin), sin.pistasV, sin.records, sin.recordsV2], [false, 3, { volcan: 125_000 }, {}]);
+  assertEquals([KP.migrarRecords(sin), sin.pistasV, sin.records, sin.recordsV2, sin.recordsV3], ["vueltas", 4, {}, {}, { volcan: 125_000 }]);
   // Progreso de antes de las pistas grandes: todo a «pista chica», como siempre.
   const viejo: any = { ...base(), records: { pradera: 61_234 } };
-  assertEquals([KP.migrarRecords(viejo), viejo.records, viejo.recordsV1, viejo.recordsV2, viejo.pistasV], ["chica", {}, { pradera: 61_234 }, {}, 3]);
+  assertEquals([KP.migrarRecords(viejo), viejo.records, viejo.recordsV1, viejo.recordsV2, viejo.pistasV], ["chica", {}, { pradera: 61_234 }, {}, 4]);
 });
 
 Deno.test("karts-curvas: forma del progreso versión 3 en el servidor (y las anteriores de pestañas viejas)", () => {

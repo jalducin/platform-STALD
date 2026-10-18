@@ -31,7 +31,7 @@ function servidor() {
 // Avance como lo arma el juego (progresoNuevo + podios en las otras copas para abrir cualquiera).
 const avance = () => ({
   copas: { fiesta: { lugar: 1, puntos: 50 }, mesoamerica: { lugar: 2, puntos: 40 } }, records: {}, piezas: [],
-  equipo: { chasis: "estandar", llantas: "estandar", color: "azul" }, copaEnCurso: null, pistasV: KP.VERSION_PISTAS, recordsV1: {}, recordsV2: {},
+  equipo: { chasis: "estandar", llantas: "estandar", color: "azul" }, copaEnCurso: null, pistasV: KP.VERSION_PISTAS, recordsV1: {}, recordsV2: {}, recordsV3: {}, // karts-3-vueltas: + recordsV3
 });
 // Orden de llegada de la carrera: índices de los 8 karts (el tuyo, `yo`, primero si ganaste).
 const orden = (yo: number, lugar = 1) => { const o = [0, 1, 2, 3, 4, 5, 6, 7].filter((i) => i !== yo); o.splice(lugar - 1, 0, yo); return o; };
