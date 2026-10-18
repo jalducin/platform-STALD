@@ -7,57 +7,57 @@
 
 ### 1. Pruebas que fallan primero (TDD)
 
-- [ ] 1.1 `server/brigada_motor_test.ts`: física determinista (correr con inercia, salto variable, escalones,
+- [x] 1.1 `server/brigada_motor_test.ts`: física determinista (correr con inercia, salto variable, escalones,
   plataformas, agacharse), apuntado de 8 y 4 direcciones, armas (cadencia, munición, abanico, láser que atraviesa,
   globo de área), enemigos (aparecen con la cámara, disparan, Escudobot), rescates y premios, vehículo, corazones,
   vidas, burbuja y revivir, puntos de control y reintento, cámara compartida con liga, jefes con patrón de semilla
   (misma semilla → misma partida), estrellas, puntos, `puntosMaximos`, escalado por personajes, avance válido e
   inválido, y las 4 misiones terminadas por el piloto automático (1, 4 y 8 personajes, varias semillas)
-- [ ] 1.2 `server/brigada_test.ts`: catálogo (tope 1000), progreso `brigada` (forma exacta, versión, récord imposible,
+- [x] 1.2 `server/brigada_test.ts`: catálogo (tope 1000), progreso `brigada` (forma exacta, versión, récord imposible,
   misión bloqueada, 409 `version_vieja`)
 
 ### 2. Motor y misiones (sin DOM)
 
-- [ ] 2.1 `juegos/brigada-misiones.js`: 4 misiones (suelo, plataformas, puntos de control, enemigos, jaulas, objetos,
+- [x] 2.1 `juegos/brigada-misiones.js`: 4 misiones (suelo, plataformas, puntos de control, enemigos, jaulas, objetos,
   vehículo, minijefe y jefe)
-- [ ] 2.2 `juegos/brigada-motor.js`: física, armas, enemigos, jefes, rescates, vehículo, cámara, IA, puntos, estrellas,
+- [x] 2.2 `juegos/brigada-motor.js`: física, armas, enemigos, jefes, rescates, vehículo, cámara, IA, puntos, estrellas,
   plausibilidad y avance
 
 ### 3. Servidor
 
-- [ ] 3.1 `server/brigada.ts` (avance y reglas del motor) y cambios marcados `// brigada` en `server/progreso.ts`
+- [x] 3.1 `server/brigada.ts` (avance y reglas del motor) y cambios marcados `// brigada` en `server/progreso.ts`
   (`JUEGOS_PROGRESO`, validación) y `server/juegos.ts` (`CATALOGO`)
 
 ### 4. Juego
 
-- [ ] 4.1 `juegos/brigada.html`: vista con fondos y sprites pre-dibujados, HUD, controles (toques A/B/X/Y, mando,
+- [x] 4.1 `juegos/brigada.html`: vista con fondos y sprites pre-dibujados, HUD, controles (toques A/B/X/Y, mando,
   Gamepad, teclado), portada con personaje, mapa de misiones y compañeros IA, Emoción, fin de misión con estrellas,
   récord, puntos y siguiente misión; avance por `postMessage`
 
 ### 5. Página de Juegos
 
-- [ ] 5.1 `juegos/app/menu.js` (tarjeta) y `?v=` en `juegos.html` (marcado `// brigada`)
+- [x] 5.1 `juegos/app/menu.js` (tarjeta) y `?v=` en `juegos.html` (marcado `// brigada`)
 
 ### 6. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
-- [ ] 6.1 Pruebas del servidor y E2E existentes que cuenten juegos de Arcade o progreso; E2E nueva
+- [x] 6.1 Pruebas del servidor y E2E existentes que cuenten juegos de Arcade o progreso; E2E nueva
   `tests/e2e/e2e-brigada.js` (misión con toques reales, mando y control físico, teclado, rescate, jefe vencido, fin con
   estrellas y avance guardado, capturas y fps con CPU ×4) en `tests/e2e/correr.sh`
 
 ### 7. Ejecutar pruebas y verificar estado (OBLIGATORIO)
 
-- [ ] 7.1 `npx -y deno test -A server/`, `deno lint`, `cd tests/calidad && npm run calidad` sin avisos nuevos
-- [ ] 7.2 E2E: `brigada juegos categorias partidas emocion mando` (datos copiados; nada en tablas `stald_`)
-- [ ] 7.3 Reporte en `openspec/changes/brigada-xalli/reports/2026-10-17-step-7-pruebas-y-verificacion.md`
+- [x] 7.1 `npx -y deno test -A server/`, `deno lint`, `cd tests/calidad && npm run calidad` sin avisos nuevos
+- [x] 7.2 E2E: `brigada juegos categorias partidas emocion mando` (datos copiados; nada en tablas `stald_`)
+- [x] 7.3 Reporte en `openspec/changes/brigada-xalli/reports/2026-10-17-step-7-pruebas-y-verificacion.md`
 
 ### 8. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
-- [ ] 8.1 Revisión de capturas a 390×844 (vertical), 844×390 y escritorio (acción, rescate, jefe, fin) e iteración
-- [ ] 8.2 curl local: GET/PUT del avance válido, forma inválida, récord imposible, versión vieja; ranking topado
+- [x] 8.1 Revisión de capturas a 390×844 (vertical), 844×390 y escritorio (acción, rescate, jefe, fin) e iteración
+- [x] 8.2 curl local: GET/PUT del avance válido, forma inválida, récord imposible, versión vieja; ranking topado
 
 ### 9. Documentación técnica (OBLIGATORIO)
 
-- [ ] 9.1 `docs/frontend-standards.md` (Brigada Xalli), `docs/backend-standards.md` / `docs/data-model.md` (avance
+- [x] 9.1 `docs/frontend-standards.md` (Brigada Xalli), `docs/backend-standards.md` / `docs/data-model.md` (avance
   `brigada`), `?v=` en `juegos.html`
 
 ### 10. Publicación PR 1
