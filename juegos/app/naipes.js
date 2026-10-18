@@ -283,7 +283,9 @@ function briscaHtml(st, o) {
   const otros = [...new Array(n).keys()].filter(i => i !== yo);
   const tagEq = i => {
     if (!st.equipos) return '';
-    return ' <span class="pk-tag eq' + 'AB'[st.equipos[i]] + '">' + (yo >= 0 && st.equipos[i] === st.equipos[yo] ? 'pareja' : 'rival') + '</span>';
+    let txt = 'equipo ' + 'AB'[st.equipos[i]]; // espectador: sin pareja ni rival propios, el equipo
+    if (yo >= 0) txt = st.equipos[i] === st.equipos[yo] ? 'pareja' : 'rival';
+    return ' <span class="pk-tag eq' + 'AB'[st.equipos[i]] + '">' + txt + '</span>';
   };
   const asientos = '<div class="pk-asientos">' + otros.map(i => '<div class="pk-asiento' + (!st.terminada && st.turno === i ? ' turno' : '') + '"><span class="n">' + o.avatar(i) + escapeHtml(o.nombre(i)) + tagEq(i) + '</span><span>' +
     esDorsosHtml(st.manos[i].length) + '</span><span class="muted">' + st.ganadas[i].length / n + ' ronda(s)</span></div>').join('') + '</div>';

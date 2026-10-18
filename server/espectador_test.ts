@@ -42,7 +42,7 @@ async function sala(c: C, juego: string, personas: string[], opciones: Record<st
   const r = await c.call("POST", "/sala", personas[0], { juego, opciones, bots });
   assertEquals(r.status, 200, JSON.stringify(r.body));
   const codigo = r.body.codigo as string;
-  for (const p of personas.slice(1)) assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, p)).status, 200);
+  for (const p of personas.slice(1)) assertEquals((await c.call("POST", `/sala/${codigo}/unirse`, p)).status, 200); // NOSONAR: entran en orden
   if (empezar) {
     assertEquals((await c.call("POST", `/sala/${codigo}/empezar`, personas[0])).status, 200);
     c.avanzar(9000);
@@ -95,7 +95,7 @@ Deno.test("espectador: no puede jugar (403), ni empezar, ni revancha, ni ranking
 Deno.test("espectador: no cuenta para la mesa (bots) ni para el mínimo", async () => {
   const c = ctx();
   const codigo = await sala(c, "brisca", [P(0), P(1)], {}, true, false);
-  for (const k of [2, 3, 4]) assertEquals((await espectar(c, codigo, P(k))).status, 200);
+  for (const k of [2, 3, 4]) assertEquals((await espectar(c, codigo, P(k))).status, 200); // NOSONAR: en orden
   const g = await c.call("GET", `/sala/${codigo}`, P(0));
   assertEquals([g.body.jugadores.length, g.body.viendo], [2, 3]);
   // Siguen cabiendo 2 personas más en la mesa de 4.
@@ -110,7 +110,7 @@ Deno.test("espectador: cupo de 30, ya en sala, salir, sin registro, inexistente 
   const c = ctx();
   const codigo = await sala(c, "bingo", [P(0)], {}, true, false);
   assertEquals(MAX_ESPECTADORES, 30);
-  for (let k = 1; k <= 30; k++) assertEquals((await espectar(c, codigo, P(k))).status, 200, `p${k}`);
+  for (let k = 1; k <= 30; k++) assertEquals((await espectar(c, codigo, P(k))).status, 200, `p${k}`); // NOSONAR: en orden (cupo)
   const otra = await espectar(c, codigo, P(31));
   assertEquals([otra.status, otra.body.error], [409, "espectadores_llenos"]);
   assertEquals((await espectar(c, codigo, P(5))).status, 200, "volver a espectar es idempotente");
@@ -195,9 +195,9 @@ Deno.test("espectador: Dibuja y adivina sin la palabra ni el secreto", async () 
 Deno.test("espectador: la vista de espectador es la misma que publica el canal (nada extra)", async () => {
   const c = ctx();
   for (const juego of ["poker", "brisca", "una", "conquian", "loteria", "blackjack", "bingo"]) {
-    const codigo = await sala(c, juego, [P(0), P(1)], juego === "loteria" ? { modo: "linea" } : {}, true);
-    await espectar(c, codigo, P(2));
-    const g = await c.call("GET", `/sala/${codigo}`, P(2));
+    const codigo = await sala(c, juego, [P(0), P(1)], juego === "loteria" ? { modo: "linea" } : {}, true); // NOSONAR: un juego a la vez
+    await espectar(c, codigo, P(2)); // NOSONAR: un juego a la vez
+    const g = await c.call("GET", `/sala/${codigo}`, P(2)); // NOSONAR: un juego a la vez
     assertEquals(g.status, 200, juego);
     const ultimo = [...c.avisos].reverse().find((a) => a.sala?.codigo === codigo);
     assert(ultimo, `aviso de ${juego}`);

@@ -84,7 +84,7 @@ body.tactil.en-partido.ctl-joystick #mandos{display:flex}
 @media (max-width:400px){#marcador{font-size:13px;gap:4px;padding:2px 6px}#reloj{min-width:38px}.mini{min-width:34px;font-size:14px;padding:2px 5px}}
 @media (prefers-reduced-motion:reduce){#aviso,#grito{transition:none}.m.on{transform:none}}
 /* espectador (openspec: espectador-partidas): la arena completa, sin controles ni pausa */
-html body.espectador #mandos,html body.espectador #b-pausa{display:none}
+html body.espectador #mandos,html body.espectador.tactil.en-partido.ctl-joystick #mandos,html body.espectador #b-pausa{display:none}
 #esp-chip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:6;padding:3px 12px;border-radius:999px;background:rgba(124,58,237,.9);color:#fff;font-weight:800;font-size:13px}
 </style></head><body class="ctl-joystick">
 <div id="juego">

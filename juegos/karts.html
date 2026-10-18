@@ -2499,7 +2499,9 @@ $('esp-lider').onclick = e => { sigueLider = true; elegirSeguido(); e.currentTar
 // La página de Juegos puede silenciar o activar el sonido (botón 🔊 de quien especta).
 addEventListener('message', ev => {
   if (ev.origin !== location.origin || ev.source !== parent || !ev.data || ev.data.tipo !== 'sonido') return;
-  sonido = ev.data.activo !== false; if (!sonido) motorOn(false); pintarSonido();
+  sonido = ev.data.activo !== false;
+  if (!sonido) motorOn(false);
+  pintarSonido();
 });
 
 /* ================= Ítems entre personas en sala (openspec: karts-objetos-en-sala) =================
@@ -3011,7 +3013,7 @@ function dibujarMinimapa() {
   c.restore();
   c.font = 'bold 8px sans-serif'; const ty = y - 11 < 6 ? y + 12 : y - 11;
   c.fillStyle = 'rgba(0,0,0,.75)'; rr(c, x - 9, ty - 5, 18, 10, 3); c.fill();
-  c.fillStyle = '#facc15'; c.fillText('TÚ', x, ty + 0.5);
+  c.fillStyle = '#facc15'; c.fillText(espectador ? '👀' : 'TÚ', x, ty + 0.5); // espectador: a quien sigue la cámara
   mm.marcas = n + 1; mm.yo = true;
 }
 

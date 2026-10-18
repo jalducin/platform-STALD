@@ -184,7 +184,7 @@ async function brigada(b) {
   const c1 = await fj.evaluate(() => window.__brigada.m().cam.x);
   await fm.evaluate(() => { const m = window.__brigada.m(); m.cam.x += 300; m.jugadores.forEach(q => { q.x += 300; }); }); // la brigada avanza: la cámara compartida también
   await sleep(1500);
-  const r = await fj.evaluate(() => ({ red: window.__brigada.red(), cam: window.__brigada.m().cam.x, clase: document.body.classList.contains('espectador'), chip: !!document.getElementById('esp-chip') }));
+  const r = await fj.evaluate(() => ({ red: window.__brigada.red(), cam: window.__brigada.m().cam.x, clase: document.body.classList.contains('espectador') && getComputedStyle(document.getElementById('mandos')).display === 'none', chip: !!document.getElementById('esp-chip') }));
   ok('Brigada: el espectador recibe las fotos del anfitrión (rol espectador) y sigue la cámara compartida', r.red.rol === 'espectador' && r.red.recibidas > 5 && r.cam > c1 + 100 && r.clase && r.chip, JSON.stringify({ rol: r.red.rol, rec: r.red.recibidas, cam: [c1, r.cam] }));
   const s = await pedir('marisol@example.com', '/juegos/sala/' + codigo);
   ok('Brigada: la mesa sigue con 2 personas y 1 viendo', s.body.jugadores.length === 2 && s.body.viendo === 1, JSON.stringify({ n: s.body.jugadores.length, viendo: s.body.viendo }));

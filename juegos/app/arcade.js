@@ -141,20 +141,21 @@ function pintarArcadeOCopa(body) {
   if (window.KartsCopa && KartsCopa.esCopa(sala.estado.sala)) return pintarCopaSala(body);
   return pintarArcadeSala(body);
 }
+// Podio de una carrera suelta con la tabla de tiempos (espectador: la misma, sin «tus» puntos).
+function finalArcade(body, filas, juego, mapa) {
+  if (sala.vista === 'final') return;
+  const e = sala.estado, mio = filas.find(f => f.id === e.yo);
+  sala.finAciertos = mio ? mio.monedas : 0; sala.finTotal = 0;
+  pintarFinalSala(body, filas, null, '🏁 ' + Arcade.nombreMapa(juego, mapa));
+  body.insertAdjacentHTML('beforeend', '<h2>⏱ Tiempos</h2><div class="scroll-x"><table class="inv arcade-tiempos"><thead><tr><th>#</th><th>Jugador</th><th>Tiempo</th><th>Pts</th></tr></thead><tbody>' +
+    filas.map((f, i) => '<tr' + (f.id === e.yo ? ' class="yo"' : '') + '><td>' + (i + 1) + '</td><td>' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' 🤖' : '') + '</td><td class="num">' + (f.ms === null ? 'No terminó' : Arcade.formatoTiempo(f.ms)) + '</td><td class="num">' + f.total + '</td></tr>').join('') + '</tbody></table></div>');
+}
 function pintarArcadeSala(body) {
   const e = sala.estado, s = e.sala, juego = s.juego, mapa = mapaArcade(s);
   const t = ahoraServidor() - s.inicio;
   const filas = resultadosArcade();
   const humanos = filas.filter(f => f.tipo !== 'bot');
-  if (humanos.every(f => f.servidor) || t > Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA) {
-    if (sala.vista === 'final') return;
-    const mio = filas.find(f => f.id === e.yo);
-    sala.finAciertos = mio ? mio.monedas : 0; sala.finTotal = 0;
-    pintarFinalSala(body, filas, null, '🏁 ' + Arcade.nombreMapa(juego, mapa));
-    body.insertAdjacentHTML('beforeend', '<h2>⏱ Tiempos</h2><div class="scroll-x"><table class="inv arcade-tiempos"><thead><tr><th>#</th><th>Jugador</th><th>Tiempo</th><th>Pts</th></tr></thead><tbody>' +
-      filas.map((f, i) => '<tr' + (f.id === e.yo ? ' class="yo"' : '') + '><td>' + (i + 1) + '</td><td>' + escapeHtml(f.nombre) + (f.tipo === 'bot' ? ' 🤖' : '') + '</td><td class="num">' + (f.ms === null ? 'No terminó' : Arcade.formatoTiempo(f.ms)) + '</td><td class="num">' + f.total + '</td></tr>').join('') + '</tbody></table></div>');
-    return;
-  }
+  if (humanos.every(f => f.servidor) || t > Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA) return finalArcade(body, filas, juego, mapa);
   const mia = (e.jugadores.find(x => x.id === e.yo) || {}).carrera || sala.arcadeMia;
   if (mia) {
     const k = 'arcade-espera:' + humanos.map(f => f.envio ? 1 : 0).join('') + ':' + Math.ceil((Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA - t) / 10000);
@@ -262,6 +263,12 @@ function abrirCopaSala(body) {
   window.addEventListener('pagehide', alSalir);
   limpiezas.push(() => { alSalir(); window.removeEventListener('message', alMensaje); window.removeEventListener('pagehide', alSalir); });
 }
+// espectador: sin transmisión en vivo solo ve la tabla; con transmisión, la carrera en curso la tiene el juego.
+function esperaEspectadorCopa(c, cal) {
+  if (!sala.espectador) return false;
+  if (!c.vivo && c.enviada < cal.k) c.enviada = cal.k;
+  return c.corriendo === cal.k && cal.cierre === null;
+}
 function pintarCopaSala(body) {
   const e = sala.estado, s = e.sala, ahora = ahoraServidor();
   const st = KartsCopa.estado(s, e.jugadores, ahora);
@@ -277,9 +284,8 @@ function pintarCopaSala(body) {
   // Volviste a media carrera (no la empezaste en esta página): no la corres; si se te esperaba, se avisa al servidor.
   const tarde = cal.cierre === null && ahora > cal.inicio + 4000 && c.enviada < cal.k && !mio;
   if (tarde && cal.esperados.includes(e.yo)) abandonarCopa(cal.k);
-  if (sala.espectador && !c.vivo && c.enviada < cal.k) c.enviada = cal.k; // espectador sin transmisión en vivo: solo la tabla
+  if (esperaEspectadorCopa(c, cal)) return; // espectador
   if (cal.cierre === null && !mio && !tarde && c.enviada < cal.k) return iniciarCarreraCopa(cal, st, tabla, ahora);
-  if (sala.espectador && c.corriendo === cal.k && cal.cierre === null) return; // espectador: la carrera se ve en el juego
   if (c.corriendo === cal.k && !mio) return; // corriendo: el juego tiene la pantalla
   const { sub, cuenta } = textoEsperaCopa(cal, !!mio, ahora);
   const firma = sub + '|' + cuenta + '|' + tabla.map(t => t.pts).join(',');
