@@ -949,7 +949,7 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `.nav-item` y `.nav-barra`);
   - `ingles/ingles.css`: estilos propios de Inglés (incluida la presentación del Meet);
   - scripts clásicos con `defer`, en este orden: `comun.js` (configuración, `SECCIONES`, `api()`, formato y
-    componentes), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, registro de alumnos y alumnas, juegos; el registro va en su propia opción «➕ Registro», separado del avance en «Alumnos»), `tablero.js`
+    componentes), `material.js` (material de estudio), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, registro de alumnos y alumnas, juegos; el registro va en su propia opción «➕ Registro», separado del avance en «Alumnos»), `tablero.js`
     (vista del admin por secciones, mapa de calor y cajón), `alumno.js`, `profe.js` y `app.js` (sesión, ruteo y
     eventos). No son módulos ES: comparten el ámbito global, así que un nombre de nivel superior no se puede repetir
     entre archivos.
@@ -958,6 +958,13 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   aplica en un `<script>` del `<head>` para no parpadear. Se cambia con 🌓 en el encabezado o en 👤 Perfil.
 - **Navegación.** Catálogo único `SECCIONES` (`id`, `emoji`, `titulo`, `encabezado`, `rol`, `href`, `accion`, `barra`);
   de ahí salen la barra, el menú y el `<h2>` de cada sección (`seccionHtml`).
+- **Material de estudio** (cambio `ingles-material-estudio`). `ingles/material.js` (va después de `comun.js`) lee el
+  catálogo público `ingles/material/indice.json` una vez al cargar y rellena cada marcador `[data-material]`
+  (`renderMaterial()`). Lo usan la sección `#material` (alumnos y alumnas en la barra; admin en el menú o «☰ Más»),
+  la pestaña «📚 Material» de la ruta del profe y `#material-publico`, bajo la entrada sin sesión (no en Secundaria;
+  el material es público). Los PDF se enlazan relativos al catálogo, así funcionan igual en Pages y en local. El
+  portal tiene el atajo `#material-link` → `ingles.html#material`. Formato del catálogo y cómo agregar una guía:
+  [data-model.md](data-model.md) § «Material de estudio en PDF».
   - Ruteo por hash: `#inicio`, `#semana`, `#resultados`, `#perfil` (alumno o alumna) y `#resumen`, `#grupos`,
     `#alumnos`, `#semana`, `#resultados`, `#presentar`, `#juegos` (admin). Todas las secciones se dibujan a la vez
     y `aplicarRuta()` deja visible solo la del hash; la pestaña lleva `aria-current="page"`.

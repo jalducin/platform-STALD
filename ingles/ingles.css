@@ -364,3 +364,17 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 .emp-btn.unido { border: 2px solid var(--pc); background: color-mix(in srgb, var(--pc) 14%, var(--card)); }
 .emp-btn.par-0 { --pc: #4f46e5; } .emp-btn.par-1 { --pc: #0f766e; } .emp-btn.par-2 { --pc: #b45309; }
 .emp-btn.par-3 { --pc: #be185d; } .emp-btn.par-4 { --pc: #15803d; } .emp-btn.par-5 { --pc: #7c3aed; }
+
+/* Material de estudio siempre disponible (openspec: ingles-material-estudio) */
+.material-intro { margin: 0 0 10px; color: var(--muted); font-size: .9rem; }
+.material-lista { display: grid; gap: 12px; }
+.material-guia { display: flex; gap: 12px; align-items: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; box-shadow: var(--shadow-1); min-width: 0; }
+.material-ico { font-size: 1.8rem; line-height: 1; flex: none; }
+.material-cuerpo { flex: 1; min-width: 0; }
+.material-titulo { margin: 0 0 4px; font-size: 1.02rem; overflow-wrap: anywhere; }
+.material-desc { margin: 0 0 8px; font-size: .88rem; overflow-wrap: anywhere; }
+.material-meta { margin-top: 8px; font-size: .8rem; color: var(--muted); }
+.material-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.material-acciones .btn { min-height: 44px; text-decoration: none; }
+.material-publico { max-width: 560px; margin: 20px auto 24px; padding: 0 16px; }
+@media (max-width: 479.98px) { .material-ico { display: none; } .material-acciones .btn { flex: 1 1 140px; justify-content: center; } }

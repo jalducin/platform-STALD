@@ -98,6 +98,8 @@
   .ghost-btn { margin-top: 0; background: var(--card); color: var(--juegos); border: 1.5px solid var(--juegos); box-shadow: none; }
   .av { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font-size: 23px; vertical-align: middle; margin-right: 6px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); overflow: hidden; }
   .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .atajo-material { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--ingles-soft); color: var(--text); font-weight: 700; text-decoration: none; }
+  .atajo-material:hover { border-color: var(--ingles); }
   .av-link { font-size: .82rem; font-weight: 700; color: var(--juegos); text-decoration: none; margin-left: 6px; }
   footer { text-align: center; font-size: .74rem; color: var(--muted); margin-top: 36px; }
   .notice { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--accent-soft); font-size: .88rem; }
@@ -165,6 +167,8 @@
         <span class="tag" id="admin-tag" hidden>Modo maestro</span>
       </div>
       <nav class="tiles" id="tiles" aria-label="Espacios"></nav>
+      <!-- Atajo al material de estudio de Inglés, siempre disponible (openspec: ingles-material-estudio). -->
+      <a class="atajo-material" id="material-link" href="ingles.html#material" hidden><span aria-hidden="true">📚</span> Material de estudio de Inglés <span aria-hidden="true">→</span></a>
       <div class="notice" id="secure-notice" hidden>
         <b>🔒 Activa tu acceso seguro</b>
         Ahora se entra con tu correo y una contraseña. Si es tu primera vez, usa la que te dio tu profe.
@@ -247,6 +251,7 @@
     $('who').textContent = p.email;
     $('secure-notice').hidden = !viejo;
     $('admin-link').hidden = !(p.isAdmin && !viejo);
+    const atajo = $('material-link'); atajo.href = conApi('ingles.html') + '#material'; atajo.hidden = !(p.isAdmin || p.accesos.ingles);
     $('tiles').innerHTML = ESPACIOS.filter(e => e.soloAdmin ? p.isAdmin : p.accesos[e.id]).map(e => e.pronto
       ? '<div class="tile ' + e.clase + ' soon" aria-disabled="true" data-espacio="' + e.id + '"><span class="ico" aria-hidden="true">' + e.ico + '</span>' +
         '<span class="t">' + escapeHtml(e.t) + '</span><span class="d">' + escapeHtml(e.d) + '</span><span class="pill">Muy pronto</span></div>'

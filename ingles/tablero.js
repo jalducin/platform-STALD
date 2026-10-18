@@ -44,6 +44,7 @@ function renderAdmin(data) {
     seccionHtml('admin', 'registro', renderAlumnosAdmin()) +
     seccionHtml('admin', 'semana', renderAdminWeek(state.act) || vacio('📅', 'Sin actividades esta semana.')) +
     seccionHtml('admin', 'resultados', renderUltimasAdmin(names, items)) +
+    seccionHtml('admin', 'material', renderMaterial()) +
     seccionHtml('admin', 'presentar', renderPresentar()) +
     seccionHtml('admin', 'juegos', renderJuegosAdmin() + '<a class="btn ghost" href="' + escapeHtml(conApiParam('juegos.html')) + '">🎮 Abrir Juegos</a>');
 }
