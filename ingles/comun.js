@@ -42,6 +42,8 @@ const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
 const SECCIONES = [
   { id: 'inicio', emoji: '🏠', titulo: 'Inicio', rol: 'alumno' },
   { id: 'semana', emoji: '📅', titulo: 'Semana', encabezado: 'Mi semana', rol: 'alumno' },
+  // Guías en PDF siempre disponibles, sin fechas (openspec: ingles-material-estudio).
+  { id: 'material', emoji: '📚', titulo: 'Material', encabezado: 'Material de estudio', rol: 'alumno' },
   { id: 'resultados', emoji: '⭐', titulo: 'Resultados', encabezado: 'Mis resultados', rol: 'alumno' },
   { id: 'juegos', emoji: '🎮', titulo: 'Juegos', rol: 'alumno', href: 'juegos.html' },
   { id: 'perfil', emoji: '👤', titulo: 'Perfil', encabezado: 'Mi perfil', rol: 'alumno' },
@@ -52,6 +54,7 @@ const SECCIONES = [
   { id: 'registro', emoji: '➕', titulo: 'Registro', encabezado: 'Registro de alumnos y alumnas', rol: 'admin' },
   { id: 'semana', emoji: '📅', titulo: 'Semana', encabezado: 'Esta semana', rol: 'admin', barra: true },
   { id: 'resultados', emoji: '⭐', titulo: 'Resultados', encabezado: 'Últimas calificaciones', rol: 'admin', barra: true },
+  { id: 'material', emoji: '📚', titulo: 'Material', encabezado: 'Material de estudio', rol: 'admin' },
   { id: 'presentar', emoji: '🎬', titulo: 'Presentar', encabezado: 'Presentar la clase', rol: 'admin' },
   { id: 'ruta', emoji: '🎓', titulo: 'Mi ruta', rol: 'admin', href: 'ingles.html?modo=profe' },
   { id: 'juegos', emoji: '🎮', titulo: 'Juegos', encabezado: 'Juegos de la semana', rol: 'admin' },

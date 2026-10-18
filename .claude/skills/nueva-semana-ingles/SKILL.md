@@ -73,6 +73,11 @@ reparte la posición de la respuesta correcta.
 **Material para descargar (PDF):** si el profe pide una guía de estudio, va en el repo público con su fuente HTML
 (`herramientas/material-ingles/`, ver [docs/data-model.md](../../../docs/data-model.md) § "Material de estudio en PDF").
 Enlázala en la actividad con un tip `lectura` y sube el repo de datos solo cuando Pages ya sirva el PDF.
+Las guías son **mensuales**: mes 1 de 14 páginas (temas ligeros) y, **desde el mes 2, 20 páginas**; compactas para la
+libreta, con ejercicios y respuestas al final, y recuadros «🤖 Practica con IA» en los temas que el grupo necesita
+reforzar según sus resultados. **Toda guía nueva va también en el catálogo `ingles/material/indice.json`** (con `mes`
+y las `paginas` que imprime `generar-pdf.ts`): así queda siempre en «📚 Material de estudio», aunque la actividad
+venza. Pasos completos en el mismo § de `docs/data-model.md` («Cómo agregar una guía nueva»).
 
 **Ejercicios estilo Busuu / Duolingo (opcionales, sin IA):** para hacerlas más didácticas, cambia algunos
 ejercicios por estos tipos (formato completo en `docs/data-model.md`):

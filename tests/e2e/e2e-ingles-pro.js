@@ -44,7 +44,7 @@ async function contexto(b, email, ancho, opciones = {}) {
   ok('Para hoy con acciones', (await p.$$('#para-hoy .hoy-item')).length >= 1 && (await p.$$('#para-hoy .hoy-item .btn')).length >= 1, String((await p.$$('#para-hoy .hoy-item')).length));
   ok('insignias', (await p.$$('#insignias .insignia')).length === 4);
   const barra = await p.evaluate(() => { const n = document.getElementById('nav'), r = n.getBoundingClientRect(); return { pos: getComputedStyle(n).position, abajo: Math.round(innerHeight - r.bottom), items: n.querySelectorAll('.nav-item').length, txt: n.innerText.replace(/\s+/g, ' ') }; });
-  ok('barra inferior fija con 5 secciones', barra.pos === 'fixed' && barra.abajo <= 1 && barra.items === 5 && /Inicio.*Semana.*Resultados.*Juegos.*Perfil/.test(barra.txt), JSON.stringify(barra));
+  ok('barra inferior fija con 6 secciones (con 📚 Material)', barra.pos === 'fixed' && barra.abajo <= 1 && barra.items === 6 && /Inicio.*Semana.*Material.*Resultados.*Juegos.*Perfil/.test(barra.txt), JSON.stringify(barra));
   const altos = await p.$$eval('#nav .nav-item, [data-seccion="inicio"] .btn', xs => xs.filter(x => x.offsetParent).map(x => Math.round(x.getBoundingClientRect().height)));
   ok('botones de al menos 44 px', altos.every(h => h >= 44), altos.join(','));
   ok('celular: inicio sin desplazamiento horizontal', await sinScrollX(p));
@@ -120,7 +120,7 @@ async function contexto(b, email, ancho, opciones = {}) {
   const { ctx: c4, p: d } = await contexto(b, ADMIN, 1280);
   await d.goto(BASE + '/ingles.html' + Q);
   await d.waitForSelector('#mapa-calor', { timeout: 60000 });
-  ok('escritorio: menú lateral con 10 secciones (con ➕ Registro)', await d.evaluate(() => getComputedStyle(document.getElementById('nav')).position === 'sticky') && (await d.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).length)) === 10);
+  ok('escritorio: menú lateral con 11 secciones (con ➕ Registro y 📚 Material)', await d.evaluate(() => getComputedStyle(document.getElementById('nav')).position === 'sticky') && (await d.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).length)) === 11);
   ok('indicadores del grupo', (await d.$$('#kpis .kpi')).length === 4);
   await d.selectOption('#grupo-filtro', 'sabado-a1');
   await d.waitForFunction(() => { const t = document.getElementById('mapa-calor'); return t && [...t.querySelectorAll('tbody tr')].map(r => r.dataset.alumno).join() === 'Marisol'; }, null, { timeout: 15000 });
