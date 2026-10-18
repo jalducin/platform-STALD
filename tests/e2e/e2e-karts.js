@@ -525,6 +525,101 @@ async function probarCopaEspacio(b) {
   ok('Copa del Espacio: en curso (carrera 2, Anillos de Saturno) guardada en el servidor', cc && cc.copa === 'espacio' && cc.carrera === 1 && /Carrera 2 de 4: Anillos de Saturno/.test(await fr.textContent('#res-botones')), JSON.stringify(cc));
   await p.context().close();
 }
+// ---- Copa Reinos Antiguos (openspec: karts-copa-reinos) ----
+// Cada pista: se elige y corre con 8, tiene tramos interiores (la luz cambia al entrar), el muro detiene y frena, su
+// mecánica actúa, fps con CPU ×4 adentro, capturas afuera y adentro a 390×844 y 844×390 y una vuelta completa con el
+// piloto de prueba (que esquiva columnas, losas, bloques y roca). Desbloqueo como la Copa del Espacio (karts-copa-espacio):
+// `nivel: 3` y `requiere: { podios: 1 }`.
+const REINOS = [
+  { id: 'giza', nombre: 'Gran Pirámide de Giza', mecanica: 'bloques', zona: 'arena' },
+  { id: 'castillo', nombre: 'Interior de El Castillo', mecanica: 'losa', zona: 'luz' }, // losa = compuerta de piedra
+  { id: 'karnak', nombre: 'Templo de Karnak', mecanica: 'columna', zona: 'losa' },
+  { id: 'angkor', nombre: 'Galerías de Angkor Wat', mecanica: 'roca', zona: 'roca' },
+];
+const fpsReinos = {};
+async function probarReinos(b) {
+  const q = await abrirSuelto(b, { width: 390, height: 844 });
+  const f = q.mainFrame();
+  const c0 = (await estado(f)).copasMenu, reinos = c => c.find(x => x.ir === 'copa-nueva:reinos');
+  ok('reinos: 3.ª en el menú (entre la Mesoamericana y la del Espacio) y con candado sin podios (falta 1)', c0[2].ir === 'copa-nueva:reinos' && reinos(c0).bloqueada && /falta 1/.test(reinos(c0).txt), JSON.stringify(c0.map(x => x.ir + (x.bloqueada ? '🔒' : ''))));
+  await q.screenshot({ path: 'karts-reinos-menu-candado-390.png', fullPage: true });
+  await f.evaluate(() => window.__karts.ponerCopas({ fiesta: { lugar: 3, puntos: 30 } }));
+  const c1 = (await estado(f)).copasMenu;
+  ok('reinos: con 1 podio (3.º en la Copa Fiesta) se abre; la del Espacio sigue con candado', !reinos(c1).bloqueada && c1.at(-1).bloqueada, JSON.stringify(c1.map(x => x.ir + (x.bloqueada ? '🔒' : ''))));
+  await f.evaluate(() => window.__karts.ponerCopas({}));
+  for (const m of REINOS) {
+    await f.tap('[data-ir="pistas"]');
+    const txt = await f.textContent('[data-ir="rapida:' + m.id + '"]');
+    ok(m.id + ': en la carrera rápida con nombre y civilización', txt.includes(m.nombre) && /Egipcia|Maya|Jemer/.test(txt), txt);
+    await f.tap('[data-ir="rapida:' + m.id + '"]');
+    await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 400, null, { timeout: 20000 });
+    const e0 = await estado(f);
+    ok(m.id + ': corre con 8, tramos interiores, sus mecánicas y el minimapa completo', e0.pista === m.id && e0.karts === 8 && e0.reinos.tramos >= 1 && e0.zonas.includes(m.zona) && e0.marcasMapa === 8 && e0.yoEnMapa && e0.reinos.dentro === 0, JSON.stringify({ zonas: [...new Set(e0.zonas)], r: e0.reinos, marcas: e0.marcasMapa }));
+    for (const [vp, nombre] of [[{ width: 390, height: 844 }, '390x844'], [{ width: 844, height: 390 }, '844x390']]) { // capturas afuera (frente a la portada) y adentro
+      await q.setViewportSize(vp);
+      await f.evaluate(() => window.__karts.obstaculo('entrada:0')); await sleep(900);
+      await q.screenshot({ path: 'karts-reinos-' + m.id + '-afuera-' + nombre + '.png' });
+      await f.evaluate(() => window.__karts.obstaculo('adentro:0')); await sleep(900);
+      await q.screenshot({ path: 'karts-reinos-' + m.id + '-adentro-' + nombre + '.png' });
+    }
+    await q.setViewportSize({ width: 390, height: 844 }); await sleep(300);
+    const ea = await estado(f);
+    ok(m.id + ': adentro la luz cambia (bóveda, viñeta) y vas entre muros', ea.reinos.interior && ea.reinos.dentro >= 0.45 && ea.reinos.muro > 0, JSON.stringify(ea.reinos));
+    // Rendimiento adentro con el piloto de prueba: CPU 4 veces más lento.
+    await f.evaluate(() => window.__karts.piloto(true));
+    const fps = await medirFps(q, f); // mediana de 5 lecturas con CPU ×4 (una sola sale contaminada si la máquina tiene más carga)
+    ok(m.id + ': 60 cuadros por segundo con CPU ×4 dentro del monumento', fps >= 55, 'fps=' + fps);
+    fpsReinos[m.id] = fps;
+    // El muro detiene y frena (sin salirse del camino).
+    await f.evaluate(() => { window.__karts.piloto(false); window.__karts.obstaculo('muro'); });
+    await f.waitForFunction(() => window.__karts.estado().eventos.muro >= 1, null, { timeout: 5000 }).catch(() => {});
+    const em = await estado(f);
+    ok(m.id + ': el muro detiene y frena (×0.7 al chocar: [antes, después])', em.eventos.muro >= 1 && Math.abs(em.reinos.lateral) <= em.reinos.muro && Array.isArray(em.reinos.velMuro) && em.reinos.velMuro[1] <= em.reinos.velMuro[0] * 0.75, JSON.stringify({ ev: em.eventos.muro, lat: em.reinos.lateral, w: em.reinos.muro, velMuro: em.reinos.velMuro }));
+    await f.evaluate(t => window.__karts.obstaculo(t), m.mecanica);
+    await f.waitForFunction(t => window.__karts.estado().eventos[t] >= 1, m.mecanica, { timeout: 7000 }).catch(() => {});
+    const ev = (await estado(f)).eventos;
+    ok(m.id + ': la mecánica «' + m.mecanica + '» actúa', ev[m.mecanica] >= 1, JSON.stringify(ev));
+    // Una vuelta completa de verdad con el piloto de prueba (esquiva los obstáculos).
+    await f.evaluate(() => { window.__karts.piloto(true); window.__karts.rapido(4); });
+    const v0 = (await estado(f)).vuelta;
+    await f.waitForFunction(v => window.__karts.estado().vuelta >= v + 1, v0, { timeout: 90000 }).catch(() => {});
+    await f.evaluate(() => window.__karts.rapido(1));
+    const ef = await estado(f);
+    ok(m.id + ': una vuelta completa con el piloto de prueba', ef.vuelta >= v0 + 1, JSON.stringify({ vuelta: ef.vuelta, t: ef.tiempo, ev: ef.eventos }));
+    await f.evaluate(() => { window.__karts.piloto(false); window.__karts.adelantar(); });
+    await f.waitForSelector('#ov-res:not(.hide)', { timeout: 20000 });
+    await f.evaluate(() => document.querySelector('#res-botones [data-ir="menu"]').click());
+    await f.waitForSelector('#ov-menu:not(.hide)');
+  }
+  await q.context().close();
+  // Movimiento reducido: al entrar, la luz cambia de golpe (sin transición).
+  const r = await abrirSuelto(b, { width: 390, height: 844 });
+  await r.emulateMedia({ reducedMotion: 'reduce' }); await r.reload(); await r.waitForSelector('#ov-menu:not(.hide)');
+  await r.tap('[data-ir="pistas"]'); await r.tap('[data-ir="rapida:karnak"]');
+  await r.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 400, null, { timeout: 20000 });
+  await r.evaluate(() => window.__karts.obstaculo('adentro:0')); await sleep(120);
+  const er = await estado(r);
+  ok('reinos: con movimiento reducido la luz cambia de golpe al entrar', er.reinos.dentro === 1, JSON.stringify(er.reinos));
+  await r.context().close();
+}
+// Copa Reinos Antiguos dentro de Juegos (después de probarCopaEspacio: el progreso ya tiene podios): abierta y en orden
+// de dificultad; la carrera 1 es en Giza y se guarda con su id.
+async function probarCopaReinos(b) {
+  const p = await abrir(b);
+  await abrirJuego(p, 'karts');
+  const fr = await marcoDe(p);
+  await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  const orden = (await estado(fr)).copasMenu; // solo los botones de copa nueva (sin «Continuar …»)
+  ok('reinos: abierta con podios y en orden de dificultad (Fiesta, Mesoamericana, Reinos Antiguos, Espacio)', await fr.isEnabled('[data-ir="copa-nueva:reinos"]') && orden.map(c => c.ir).join(',') === 'copa-nueva,copa-nueva:mesoamerica,copa-nueva:reinos,copa-nueva:espacio', JSON.stringify(orden.map(c => c.ir + (c.bloqueada ? '🔒' : ''))));
+  await p.screenshot({ path: 'karts-reinos-menu-390.png', fullPage: true });
+  await fr.click('[data-ir="copa-nueva:reinos"]');
+  await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera');
+  ok('Copa Reinos Antiguos: la carrera 1 es en la Gran Pirámide de Giza', (await estado(fr)).pista === 'giza');
+  for (let k = 0; k < 20; k++) { const d = (await progreso()).datos; if (d && d.copaEnCurso && d.copaEnCurso.copa === 'reinos') break; await sleep(400); } // NOSONAR: sondeo en orden
+  const cc = (await progreso()).datos.copaEnCurso;
+  ok('progreso: Copa Reinos Antiguos en curso guardada en el servidor', cc && cc.copa === 'reinos' && cc.carrera === 0, JSON.stringify(cc));
+  await p.context().close();
+}
 // karts-pistas-grandes: un progreso de antes (sin pistasV) archiva sus récords como «pista chica» con aviso, sin perder
 // la copa ganada; se guarda con pistasV 2.
 async function probarRecordsViejos(b) {
@@ -582,6 +677,11 @@ async function probarCopaMeso(b) {
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
+  if (process.env.KARTS_SOLO === 'reinos') { // karts-copa-reinos: solo esta parte (para iterar)
+    await probarReinos(b);
+    await b.close(); console.log(out.join('\n')); console.log('fps: ' + JSON.stringify(fpsReinos));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_SOLO === 'espacio') { // karts-copa-espacio: solo esta parte (para iterar)
     await probarPistasEspacio(b); await probarCopaEspacio(b);
     await b.close(); console.log(out.join('\n')); console.log('fps: ' + JSON.stringify(fpsMeso));
@@ -874,6 +974,7 @@ async function probarCopaMeso(b) {
   await probarPistasMeso(b);
   await probarPistasGrandes(b); // karts-pistas-grandes
   await probarPistasEspacio(b); // karts-copa-espacio
+  await probarReinos(b); // karts-copa-reinos
 
   // ---- Partida en sala con bots fantasma ----
   const vAntes = (await progreso()).v;
@@ -905,7 +1006,9 @@ async function probarCopaMeso(b) {
   // ---- Copa Mesoamericana (al final: cambia la copa en curso) ----
   await probarCopaMeso(b);
   await probarCopaEspacio(b); // karts-copa-espacio (al final: cambia las copas y la copa en curso)
+  await probarCopaReinos(b); // karts-copa-reinos (con los podios que dejó la prueba del Espacio)
   console.log('fps con CPU ×4 por pista nueva: ' + JSON.stringify(fpsMeso));
+  console.log('fps con CPU ×4 dentro de los monumentos: ' + JSON.stringify(fpsReinos));
 
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
