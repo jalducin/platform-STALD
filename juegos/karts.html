@@ -2499,7 +2499,7 @@ function quitarCopaAntes(falta) {
   if (sala && sala.copaVer && falta < 3.2) { sala.copaVer = false; $('ov-copa').classList.add('hide'); }
   else if (sala && sala.copaVer) $('copa-cuenta').textContent = '⏱ Siguiente carrera en ' + Math.ceil(falta) + ' s';
 }
-// karts-copa-sala-4: la primera persona llegó a la meta: las demás tienen 30 s (la página manda la hora del aparato en
+// karts-copa-sala-4: la primera persona llegó a la meta: las demás tienen 45 s, KartsCopa.PLAZO_MS (la página manda la hora del aparato en
 // que se acaba, con el reloj común de la sala). Se ve «⏱️ N s para terminar»; 1.5 s antes del cierre el juego manda tu
 // «no terminó» con tu avance para que llegue al servidor antes de que cierre la carrera.
 function fijarPlazo(d) {

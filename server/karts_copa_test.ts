@@ -128,7 +128,7 @@ Deno.test("karts-copa: tiempo vencido = no terminó (0 puntos) y la siguiente ar
   const inicio = await aLaCarrera(c, codigo, 0);
   c.ir(inicio + 125_000);
   assertEquals((await reportar(c, codigo, "Marisol", 0, 125_000)).status, 200);
-  // karts-copa-sala-4: Angel no llega en los 30 s tras la llegada de Marisol: la carrera cierra.
+  // karts-copa-sala-4: Angel no llega en el plazo (KC.PLAZO_MS) tras la llegada de Marisol: la carrera cierra.
   c.ir(inicio + 125_000 + KC.PLAZO_MS - 1);
   assertEquals((await vista(c, codigo)).copa.fase, "carrera");
   c.ir(inicio + 125_000 + KC.PLAZO_MS);
@@ -143,7 +143,7 @@ Deno.test("karts-copa: tiempo vencido = no terminó (0 puntos) y la siguiente ar
   assertEquals((await vista(c, codigo)).copa.calendario[1].esperados.length, 2);
   c.ir(i1 + 130_000);
   assertEquals((await reportar(c, codigo, "Marisol", 1, 130_000)).status, 200);
-  assertEquals((await vista(c, codigo)).copa.fase, "carrera", "Angel tiene 30 s");
+  assertEquals((await vista(c, codigo)).copa.fase, "carrera", "Angel tiene el plazo");
   c.ir(i1 + 131_000);
   assertEquals((await reportar(c, codigo, "Angel", 1, 131_000)).status, 200);
   assertEquals((await vista(c, codigo)).copa.fase, "interpodio");

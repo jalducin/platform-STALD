@@ -6,7 +6,7 @@
 import "../juegos/karts-pistas.js";
 import "../juegos/arcade.js";
 import "../juegos/mesas.js"; // karts-salida-y-puntos: cuántos bots completan la sala (igual que la página)
-import "../juegos/karts-copa.js"; // karts-copa-sala-4: cierre de la carrera (plazo de 30 s tras la primera llegada)
+import "../juegos/karts-copa.js"; // karts-copa-sala-4: cierre de la carrera (plazo de 45 s tras la primera llegada, KartsCopa.PLAZO_MS)
 import type { Store } from "./store.ts";
 
 interface Limites { minMs: number; limiteMs: number }
@@ -98,7 +98,7 @@ export async function rankingCarreraSala(store: Store, codigo: string, jugadorId
   return ARCADE.podioCarrera(filas).find((f) => f.id === jugadorId)?.total ?? 0;
 }
 
-// karts-copa-sala-4: hora de cierre de una carrera suelta de sala (null = abierta). En Karts: todas reportaron, 30 s
+// karts-copa-sala-4: hora de cierre de una carrera suelta de sala (null = abierta). En Karts: todas reportaron, el plazo
 // tras la primera llegada o el límite de la pista + la gracia (KartsCopa.cierreCarrera, igual que la página). En Axo
 // (plataformas), como antes: todas reportaron o el límite + la gracia.
 export function cierreCarreraSala(sala: SalaCarrera, personas: AsientoCarrera[], ahora: number): number | null {

@@ -536,7 +536,9 @@ async function copaEnSala(b, relevo) {
     await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
     await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.tiempo > window.Arcade.limitesKarts(e.pista).minMs + 1500; }, null, { timeout: 120000 })));
     await frames[0].evaluate(() => window.__karts.adelantar());
-    if (k === 1) { // karts-copa-sala-4: Angel no llega: 30 s tras la llegada de Marisol la carrera cierra sola
+    if (k === 1) { // karts-copa-sala-4: Angel no llega: al vencer el plazo tras la llegada de Marisol la carrera cierra sola
+      const PLAZO = await pags[0].evaluate(() => window.KartsCopa.PLAZO_MS); // karts-plazo-45: 45 s
+      ok('plazo-45: la página usa un plazo de 45 s', PLAZO === 45000, String(PLAZO));
       const t0 = Date.now();
       await frames[1].waitForFunction(() => /s para terminar/.test(window.__karts.estado().plazo || ''), null, { timeout: 15000 }).catch(() => {});
       const pz = await estado(frames[1]);
@@ -547,13 +549,13 @@ async function copaEnSala(b, relevo) {
         return { txt: document.getElementById('h-vuelta').textContent, vuelta: caja('h-vuelta'), control: caja('b-control'), plazo: caja('plazo') };
       });
       const choca = (a, c) => a && c && a.l < c.r - 0.5 && c.l < a.r - 0.5 && a.t < c.b - 0.5 && c.t < a.b - 0.5;
-      ok('3 vueltas: en la copa en sala el HUD dice «Vuelta x/3» sin encimarse con ⚙️ ni con el plazo de 30 s', /^Vuelta [123]\/3$/.test(hud3.txt) && !choca(hud3.vuelta, hud3.control) && !choca(hud3.vuelta, hud3.plazo), JSON.stringify(hud3));
+      ok('3 vueltas: en la copa en sala el HUD dice «Vuelta x/3» sin encimarse con ⚙️ ni con el plazo', /^Vuelta [123]\/3$/.test(hud3.txt) && !choca(hud3.vuelta, hud3.control) && !choca(hud3.vuelta, hud3.plazo), JSON.stringify(hud3));
       await frames[0].waitForFunction(() => /s para terminar/.test(window.__karts.estado().copaTexto), null, { timeout: 15000 }).catch(() => {});
-      ok('copa-sala-4: quien ya llegó ve la cuenta de 30 s en la tabla', /⏱️ \d+ s para terminar/.test((await estado(frames[0])).copaTexto), (await estado(frames[0])).copaTexto.slice(0, 160));
+      ok('copa-sala-4: quien ya llegó ve la cuenta del plazo en la tabla', /⏱️ \d+ s para terminar/.test((await estado(frames[0])).copaTexto), (await estado(frames[0])).copaTexto.slice(0, 160));
       await pags[1].screenshot({ path: 'karts-copa-plazo-390.png' });
-      await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.copaVisible && /Empieza en|Siguiente carrera en/.test(e.copaTexto); }, null, { timeout: 45000 })));
+      await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.copaVisible && /Empieza en|Siguiente carrera en/.test(e.copaTexto); }, null, { timeout: PLAZO + 15000 })));
       const espera = Date.now() - t0;
-      ok('copa-sala-4: la carrera cierra a los 30 s de la primera llegada (espera ≤ 33 s)', espera <= 33000, 'espera=' + espera + ' ms');
+      ok('plazo-45: la carrera cierra a los 45 s de la primera llegada (espera ≤ 48 s)', espera <= PLAZO + 3000, 'espera=' + espera + ' ms');
       const v = await vista();
       const angel = v && v.tabla.find(x => /Angel/.test(x.nombre));
       ok('copa-sala-4: quien no llegó queda NT en la carrera 2', !!angel && angel.porCarrera[1] && angel.porCarrera[1].ms === null, JSON.stringify(angel && angel.porCarrera));

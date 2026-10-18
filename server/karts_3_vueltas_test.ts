@@ -133,7 +133,7 @@ Deno.test("3 vueltas: la reversa sobre la meta no suma vueltas y la 3.ª vuelta 
 });
 
 // karts-3-vueltas + karts-copa-sala-4: si nadie llega, la carrera (suelta o de copa) cierra al vencer el límite de la
-// pista con 3 vueltas + la gracia; con una llegada, a los 30 s de ella (el plazo no depende de las vueltas).
+// pista con 3 vueltas + la gracia; con una llegada, al vencer KartsCopa.PLAZO_MS (45 s) tras ella (el plazo no depende de las vueltas).
 Deno.test("3 vueltas: el límite de la pista con 3 vueltas sigue siendo el cierre de respaldo de la sala", () => {
   const KC = g.KartsCopa;
   for (const id of MAPAS_SALA.karts) {
@@ -145,6 +145,6 @@ Deno.test("3 vueltas: el límite de la pista con 3 vueltas sigue siendo el cierr
     assertEquals(KC.cierreCarrera(c, inicio + limite + A.GRACIA_SALA).cierre, inicio + limite + A.GRACIA_SALA, id + " cierra al vencer");
     const llegada = inicio + A.refKarts(id);
     const una = { inicio, limite, total: 2, reportes: [{ t: llegada, ms: A.refKarts(id) }, undefined] };
-    assertEquals(KC.cierreCarrera(una, llegada + KC.PLAZO_MS).cierre, llegada + KC.PLAZO_MS, id + " 30 s tras la primera llegada");
+    assertEquals(KC.cierreCarrera(una, llegada + KC.PLAZO_MS).cierre, llegada + KC.PLAZO_MS, id + " plazo tras la primera llegada");
   }
 });

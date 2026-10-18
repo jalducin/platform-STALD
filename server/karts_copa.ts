@@ -37,7 +37,7 @@ const llavesExactas = (o: Record<string, unknown>, ks: string[]) => Object.keys(
 
 // { copa: { carrera, ms, monedas } } o { copa: { carrera, abandono: true } }: solo la carrera abierta y ya empezada
 // (409 carrera_fuera_de_turno si todavía no toca, 409 carrera_cerrada si ya cerró: todas reportaron, venció el plazo de
-// 30 s tras la primera llegada o el límite; karts-copa-sala-4); el tiempo se valida como una carrera suelta (mínimo y
+// el plazo tras la primera llegada (KartsCopa.PLAZO_MS, 45 s) o el límite; karts-copa-sala-4); el tiempo se valida como una carrera suelta (mínimo y
 // límite de su pista y reloj del servidor desde el inicio de esa carrera). Solo cuenta el primero; un reintento de la
 // misma carrera responde 200 sin cambiar nada.
 export function reporteCopa<J extends JugadorCopa>(sala: SalaCopa, jugadores: J[], crudo: unknown, ahora: number): Resultado<J> {
