@@ -105,6 +105,7 @@ const FISICA = new Set(['futbolito', 'billar']); // futbolito-billar: 1 vs 1 por
 JUEGOS_PARTIDA.push('golf'); TIEMPO_REAL.add('golf'); FISICA.add('golf'); // golf: de 2 a 4 por turnos en su iframe (pintarFisicaSala)
 JUEGOS_PARTIDA.push('futbol'); TIEMPO_REAL.add('futbol'); // futbol-en-linea: 1 vs 1 en vivo en su iframe (pintarFutbolSala)
 JUEGOS_PARTIDA.push('futbolito-arena'); TIEMPO_REAL.add('futbolito-arena'); // futbolito-arena: robots por equipos en su iframe (pintarArenaSala)
+JUEGOS_PARTIDA.push('brigada'); TIEMPO_REAL.add('brigada'); // brigada: misión cooperativa de 1 a 8 en su iframe (pintarBrigadaSala)
 
 // Supabase Realtime (openspec: salas-realtime): si el servidor entrega `rt`, la página escucha el canal de la
 // sala y recibe cada cambio al instante; el sondeo baja a 30 s de respaldo. Si el canal falla, vuelve el sondeo normal.
@@ -205,6 +206,7 @@ function pintarPartidas() {
     '<div id="p-formato-wrap" hidden><label for="p-formato">Formato</label><select id="p-formato" class="sel"><option value="1v1">⚽ 1 vs 1</option><option value="2v2">👥 2 vs 2 (por equipos)</option></select></div>' + // futbolito-equipos
     '<div id="p-aformato-wrap" hidden><label for="p-aformato">Formato</label><select id="p-aformato" class="sel"><option value="2v2">👥 2 vs 2</option><option value="1v1">🤖 1 vs 1</option><option value="1v2">⚔️ 1 vs 2</option><option value="3v3">🏟️ 3 vs 3 (arena grande)</option></select>' + // futbolito-arena
       '<label for="p-aarena">Arena</label><select id="p-aarena" class="sel"><option value="normal">🟩 Normal</option><option value="grande">🏟️ Grande</option></select><label for="p-agoles">Partido a</label><select id="p-agoles" class="sel"><option value="3">3 goles</option><option value="5" selected>5 goles</option><option value="7">7 goles</option></select></div>' +
+    '<div id="p-bmision-wrap" hidden><label for="p-bmision">Misión</label><select id="p-bmision" class="sel"><option value="1">🌳 1 · Selva de Ceibas</option><option value="2">🌵 2 · Desierto de Saguaros</option><option value="3">🏙️ 3 · Ciudad de Colores</option><option value="4">🛰️ 4 · Estación Orbital</option></select></div>' + // brigada
     '<div id="p-equipos-wrap" hidden><label class="check"><input id="p-equipos" type="checkbox"><span>👥 Por equipos (A y B, alternados por orden de entrada)</span></label></div>' +
     '<div id="p-rondas-wrap" hidden><label for="p-rondas">Rondas</label><select id="p-rondas" class="sel"><option value="5">5 rondas</option><option value="10" selected>10 rondas</option><option value="12">12 rondas</option></select>' +
       '<label>🎉 Categorías divertidas (opcional, máximo 2)</label><div id="p-extra"></div><div class="feedback" id="p-extra-aviso"></div></div>' + // basta-divertida-una-robo
@@ -243,7 +245,7 @@ async function entrarSala(codigo) {
   const prepararContenido = () => {
     const juego = sala.estado.sala.juego;
     if (SALAS_GRANDES[juego]) return Promise.resolve(SALAS_GRANDES[juego].preparar()); // juegos-salas-grandes
-    if (['una', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar', 'golf', 'futbol' /* futbol-en-linea */, 'futbolito-arena' /* futbolito-arena */].includes(juego)) return Promise.resolve(null);
+    if (['una', 'poker', 'brisca', 'conquian', 'ajedrez', 'futbolito', 'billar', 'golf', 'futbol' /* futbol-en-linea */, 'futbolito-arena' /* futbolito-arena */, 'brigada' /* brigada */].includes(juego)) return Promise.resolve(null);
     if (juego.startsWith('basta')) return datos('basta');
     if (juego === 'loteria') return datos('loteria');
     return preguntasPartida(juego, sala.estado.sala.seed, sala.estado.sala.opciones);
@@ -335,6 +337,7 @@ function pintarSala() {
   if (s.juego === 'cultura-linea') return pintarLineaSala(body); // cultura-conocimiento
   if (s.juego === 'futbol') return pintarFutbolSala(body); // futbol-en-linea
   if (s.juego === 'futbolito-arena') return pintarArenaSala(body); // futbolito-arena
+  if (s.juego === 'brigada') return pintarBrigadaSala(body); // brigada
   if (FISICA.has(s.juego)) return pintarFisicaSala(body); // futbolito-billar
   return pintarPreguntaSala(body);
 }
@@ -665,6 +668,7 @@ async function crearPartida() {
   Object.assign(opciones, SalasGrandes.opciones(juego)); // juegos-salas-grandes
   if (juego === 'futbolito') opciones.formato = document.getElementById('p-formato').value; // futbolito-equipos
   if (juego === 'futbolito-arena') Object.assign(opciones, { formato: valor('p-aformato'), arena: valor('p-aarena'), goles: valor('p-agoles') }); // futbolito-arena
+  if (juego === 'brigada') opciones.mision = valor('p-bmision'); // brigada
   const r = await post('/juegos/sala', { juego, opciones, bots: document.getElementById('p-bots').checked });
   if (!r.ok) { document.getElementById('p-msg').innerHTML = '<div class="alert">' + escapeHtml(NO_GUARDO.has(r.body.error) ? 'No se pudo crear la partida, intenta de nuevo.' : 'No se pudo crear (' + (r.body.error || r.status) + ').') + '</div>'; return; }
   entrarSala(r.body.codigo);

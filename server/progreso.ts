@@ -4,10 +4,11 @@
 // debe ser la guardada (409 version_vieja si no) y el put usa el sha leído (3 reintentos ante conflicto).
 import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
+import { validarProgresoBrigada } from "./brigada.ts"; // brigada
 
 type Json = (body: unknown, status?: number) => Response;
 
-export const JUEGOS_PROGRESO = ["plataformas", "karts", "dragon-run", "golf", "futbol"] as const; // dragon-run: openspec dragon-run-misiones; golf; futbol: futbol-estelar
+export const JUEGOS_PROGRESO = ["plataformas", "karts", "dragon-run", "golf", "futbol", "brigada"] as const; // dragon-run: openspec dragon-run-misiones; golf; futbol: futbol-estelar; brigada: brigada-xalli
 export const MAX_PROGRESO = 4096; // bytes de `datos` serializado
 
 export interface DocProgreso {
@@ -210,6 +211,7 @@ export function validarProgreso(juego: string, datos: unknown): boolean {
   if (juego === "dragon-run") return validarDragon(datos);
   if (juego === "golf") return validarGolf(datos);
   if (juego === "futbol") return validarFutbol(datos);
+  if (juego === "brigada") return validarProgresoBrigada(datos); // brigada: forma exacta en juegos/brigada-motor.js
   return false;
 }
 

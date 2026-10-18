@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoja de arte · Brigada Xalli</title>
+<!-- Hoja de arte de «🦎 Brigada Xalli» (openspec: brigada-xalli): dibuja cada pieza de juegos/brigada-arte.js para
+     revisarla a ojo y con capturas (tests/e2e/hoja-brigada-arte.js). No es parte del juego. -->
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; padding: 16px; background: #0f172a; color: #e2e8f0; font: 14px/1.4 system-ui, sans-serif; }
+  h2 { margin: 18px 0 8px; font-size: 16px; }
+  section { margin-bottom: 18px; }
+  canvas { display: block; background: #1e293b; border-radius: 8px; max-width: 100%; }
+</style>
+</head>
+<body>
+<h1>Hoja de arte · Brigada Xalli</h1>
+<section id="escenas"><h2>Escenarios (fondo lejano, medio, suelo, enemigos y jefe)</h2></section>
+<section id="costuras"><h2>Costura de las tiras (cada capa repetida dos veces)</h2></section>
+<section id="enemigos"><h2>Enemigos por cuadro (derecha e izquierda; caja del motor punteada)</h2></section>
+<section id="jefes"><h2>Jefes: normal · aviso de ataque · golpe · enojo (menos de la mitad de vida)</h2></section>
+<script src="../../juegos/brigada-misiones.js"></script>
+<script src="../../juegos/brigada-motor.js"></script>
+<script src="../../juegos/brigada-arte.js"></script>
+<script>
+'use strict';
+const A = window.BrigadaArte, M = window.BrigadaMotor, MIS = window.BrigadaMisiones;
+const errores = [];
+// Paleta de la página (juegos/brigada.html) para ver los fondos con los mismos colores.
+const PALETA = {
+  selva: { cielo: ['#7dd3c0', '#fef3c7'], lejos: '#5b9a8b', medio: '#2f6b4f', tierra: '#7a4b2a', pasto: '#3fa34d', borde: '#2e7d32', plat: '#8b5a2b', platTop: '#4caf50' },
+  desierto: { cielo: ['#7cc4f0', '#fde3b0'], lejos: '#c7774a', medio: '#a35f3a', tierra: '#d4a25c', pasto: '#e9c27a', borde: '#b07c3c', plat: '#a8693a', platTop: '#d9a066' },
+  ciudad: { cielo: ['#60a5fa', '#dbeafe'], lejos: '#7f93b8', medio: '#4b5d82', tierra: '#4b5563', pasto: '#9ca3af', borde: '#6b7280', plat: '#64748b', platTop: '#cbd5e1' },
+  estacion: { cielo: ['#0b1030', '#1e1b4b'], lejos: '#3b3f6b', medio: '#2a2f55', tierra: '#334155', pasto: '#94a3b8', borde: '#475569', plat: '#475569', platTop: '#a5b4fc' },
+};
+function lienzo(padre, w, h, k, id) {
+  const c = document.createElement('canvas'); c.width = w * k; c.height = h * k; c.style.width = Math.min(w * k, 1200) + 'px';
+  if (id) c.id = id;
+  document.getElementById(padre).appendChild(c);
+  const x = c.getContext('2d'); x.scale(k, k); x.lineJoin = x.lineCap = 'round';
+  return x;
+}
+function tira(fn, clave) {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 400;
+  const x = c.getContext('2d'); x.scale(2, 2);
+  if (!fn(x, clave, PALETA[clave])) errores.push('fondo sin dibujo: ' + clave);
+  return c;
+}
+const ok = (r, que) => { if (!r) errores.push('sin dibujo: ' + que); };
+function jefeFalso(tipo, arenaX, extra) {
+  const d = M.JEFES[tipo], y = d.vuela || 230;
+  return { tipo, x: arenaX + d.casa, y, w: d.w, h: d.h, hp: 100, hpMax: 100, fase: 'pausa', faseT: 0, aviso: false, oculto: false, golpeT: 0, objX: 0, ...extra };
+}
+
+// ---------- Escenas de 480 × 270 ----------
+const MUESTRA = { selva: ['patrulla', 'saltabot', 'dron'], desierto: ['escudobot', 'torreta', 'dron'], ciudad: ['patrulla', 'escudobot', 'dron'], estacion: ['alien', 'alien', 'dron'] };
+for (const def of MIS.LISTA) {
+  const P = PALETA[def.clave], c = lienzo('escenas', 480, 270, 2, 'escena-' + def.clave);
+  const g = c.createLinearGradient(0, 0, 0, 270); g.addColorStop(0, P.cielo[0]); g.addColorStop(1, P.cielo[1]);
+  c.fillStyle = g; c.fillRect(0, 0, 480, 270);
+  const camX = 140;
+  for (const [fn, par, base] of [[A.fondoLejos, 0.2, 210], [A.fondoMedio, 0.5, 232]]) {
+    const t = tira(fn, def.clave), off = ((camX * par) % 512 + 512) % 512;
+    for (let x = -off; x < 480; x += 512) c.drawImage(t, x, base - 200, 512, 200);
+  }
+  c.fillStyle = P.tierra; c.fillRect(0, 230, 480, 40); c.fillStyle = P.pasto; c.fillRect(0, 230, 480, 6); c.fillStyle = P.borde; c.fillRect(0, 236, 480, 2);
+  c.fillStyle = P.plat; c.fillRect(40, 182, 90, 9); c.fillStyle = P.platTop; c.fillRect(42, 182, 86, 3);
+  MUESTRA[def.clave].forEach((tipo, k) => {
+    c.save(); c.translate(70 + k * 50, tipo === 'dron' ? 120 : (k === 0 && tipo !== 'alien' ? 182 : 230)); c.scale(-1, 1);
+    ok(A.enemigo(c, tipo, k % 2), tipo); c.restore();
+  });
+  const j = jefeFalso(def.jefe.tipo, 0, { x: 360, fase: M.JEFES[def.jefe.tipo].ataques[0], faseT: 0.1 });
+  ok(A.jefe(c, j, 1.3), def.jefe.tipo);
+  c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(6, 6, 200, 18); c.fillStyle = '#fff'; c.font = '700 10px system-ui'; c.fillText(def.emoji + ' ' + def.nombre + ' · ' + def.dificultad, 12, 19);
+}
+
+// ---------- Costuras: cada tira dibujada dos veces seguida ----------
+for (const clave of A.claves) {
+  const c = lienzo('costuras', 1024, 200, 1, 'costura-' + clave);
+  const P = PALETA[clave], g = c.createLinearGradient(0, 0, 0, 200); g.addColorStop(0, P.cielo[0]); g.addColorStop(1, P.cielo[1]);
+  c.fillStyle = g; c.fillRect(0, 0, 1024, 200);
+  for (const fn of [A.fondoLejos, A.fondoMedio]) { const t = tira(fn, clave); c.drawImage(t, 0, 0, 512, 200); c.drawImage(t, 512, 0, 512, 200); }
+  c.strokeStyle = 'rgba(255,0,0,.5)'; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(512, 0); c.lineTo(512, 200); c.stroke();
+}
+
+// ---------- Enemigos ----------
+{
+  const tipos = A.tiposEnemigo, k = 4, celda = 56;
+  const c = lienzo('enemigos', celda * 8, celda * tipos.length, k, 'hoja-enemigos');
+  tipos.forEach((tipo, fila) => {
+    const d = M.ENEMIGOS[tipo], n = A.cuadros[tipo];
+    for (let col = 0; col < 8; col++) {
+      const cuadro = col % 4, dir = col < 4 ? 1 : -1;
+      if (cuadro >= n) continue;
+      const ox = col * celda + celda / 2, oy = fila * celda + celda - 8;
+      c.fillStyle = (fila + col) % 2 ? '#26344d' : '#22304a'; c.fillRect(col * celda, fila * celda, celda, celda);
+      c.save(); c.setLineDash([1.5, 1.5]); c.strokeStyle = 'rgba(250,204,21,.45)'; c.lineWidth = 0.4; c.strokeRect(ox - d.w / 2, oy - d.h, d.w, d.h); c.restore();
+      c.save(); c.translate(ox, oy); c.scale(dir, 1); ok(A.enemigo(c, tipo, cuadro), tipo + ':' + cuadro); c.restore();
+    }
+  });
+}
+
+// ---------- Jefes ----------
+{
+  const tipos = A.tiposJefe, ancho = 220, alto = 200;
+  const c = lienzo('jefes', ancho * 4, alto * tipos.length, 1.5, 'hoja-jefes');
+  tipos.forEach((tipo, fila) => {
+    const d = M.JEFES[tipo];
+    const variantes = [{}, { fase: d.ataques[0], faseT: 0.1, aviso: true }, { golpeT: 0.05 }, { hp: 30 }];
+    variantes.forEach((v, col) => {
+      c.fillStyle = (fila + col) % 2 ? '#334155' : '#2b3a52'; c.fillRect(col * ancho, fila * alto, ancho, alto);
+      c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(col * ancho, fila * alto + 170, ancho, 30);
+      const base = d.vuela ? 110 : 170;
+      const j = jefeFalso(tipo, 0, { x: col * ancho + ancho / 2 + 6, y: fila * alto + base, ...v });
+      ok(A.jefe(c, j, 0.7 + col * 0.3), tipo);
+    });
+    c.fillStyle = '#fff'; c.font = '700 11px system-ui'; c.fillText(d.nombre, 6, fila * alto + 14);
+  });
+  // El escorpión escondido en la arena
+  const j = jefeFalso('escorpion', 0, { x: 0, y: 3 * alto - 40, objX: 3 * ancho + 160, oculto: true, aviso: true, fase: 'excavar', faseT: 0.2 });
+  ok(A.jefe(c, j, 1), 'escorpion oculto');
+}
+window.__hoja = { errores, listo: true };
+</script>
+</body>
+</html>
