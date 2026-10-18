@@ -86,7 +86,7 @@ Deno.test("karts-pistas: 2 vueltas por pista y carrera de referencia de 2 a 2.3 
     assert(ref >= 115_000 && ref <= 140_000, p.id + " referencia " + ref);
   }
   assertEquals(A.vueltasDe("luna"), 2, "pista desconocida: el valor por omisión");
-  assertEquals(KP.VERSION_PISTAS, 2);
+  assertEquals(KP.VERSION_PISTAS, 3); // karts-curvas-complejas: trazados nuevos en el Espacio y Reinos Antiguos
 });
 
 // karts-pistas-grandes: en el minimapa de 104×72 dos tramos lejanos (≥ 1000 px por la pista) quedan a ≥ 6 px.
@@ -211,6 +211,6 @@ Deno.test("karts-pistas: el servidor acepta el progreso con cada copa en curso, 
       copaEnCurso: { copa: c.id, carrera: 1, puntos: [15, 12, 10, 8, 6, 4, 2, 1], dif: 95 },
     };
     assert(validarProgreso("karts", datos), c.id + " pasa la validación del servidor");
-    assert(validarProgreso("karts", { ...datos, pistasV: KP.VERSION_PISTAS, recordsV1: records }), c.id + " con récords versionados");
+    assert(validarProgreso("karts", { ...datos, pistasV: KP.VERSION_PISTAS, recordsV1: records, recordsV2: {} }), c.id + " con récords versionados");
   }
 });

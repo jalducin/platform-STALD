@@ -205,7 +205,8 @@ async function salaReinos(b, relevo) {
   await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 500, null, { timeout: 30000 })));
   await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
   const es = await Promise.all(frames.map(estado));
-  ok('sala en Karnak: la misma pista con sus interiores en los 2 aparatos', es.every(e => e.pista === 'karnak' && e.sala && e.reinos.tramos === 2 && e.reinos.columnas >= 8), JSON.stringify(es.map(e => [e.pista, e.reinos])));
+  // karts-curvas-complejas: el santuario de Karnak va en 2 tramos (no se fija cuántos).
+  ok('sala en Karnak: la misma pista con sus interiores en los 2 aparatos', es.every(e => e.pista === 'karnak' && e.sala && e.reinos.tramos >= 2 && e.reinos.columnas >= 8), JSON.stringify(es.map(e => [e.pista, e.reinos])));
   await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.obstaculo('adentro:0'))));
   await sleep(1200);
   await pags[0].screenshot({ path: 'karts-reinos-sala-karnak-390.png' });

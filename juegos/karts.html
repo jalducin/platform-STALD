@@ -250,7 +250,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="karts-pistas.js?v=6"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="karts-pistas.js?v=7"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
 <script src="karts-espacio.js?v=1"></script> <!-- karts-copa-espacio: piso, sprites y cielo de las pistas espaciales -->
 <script src="arcade.js?v=7"></script>
 <script src="personajes.js?v=3"></script>
@@ -1440,22 +1440,16 @@ let karts = [], yo = null, objetos = [], particulas = [];
 let geo = null, red = null; // karts-objetos-en-sala: geometría de la pista para los objetos y estado de los ítems en sala en vivo
 let modo = 'carga', sala = null, tCarrera = 0, cuentaFin = 0, terminada = false, rayoTinte = 0, ultimoTurbo = null, carreraDe = null;
 let prog = progresoNuevo(), arranque = { presiono: null };
-function progresoNuevo() { return { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: KP.VERSION_PISTAS, recordsV1: {} }; }
-// karts-pistas-grandes: un progreso de antes (sin pistasV) trae récords de las pistas chicas, que ya no se comparan:
-// pasan a recordsV1 («pista chica») y records empieza vacío. Copas, piezas, equipo y copa en curso no cambian.
-// Devuelve true si migró (hay que guardar y avisar).
-function migrarRecords(pr) {
-  if (pr.pistasV === KP.VERSION_PISTAS) {
-    pr.recordsV1 = pr.recordsV1 || {};
-    return false;
-  }
-  pr.recordsV1 = { ...pr.records };
-  pr.records = {};
-  pr.pistasV = KP.VERSION_PISTAS;
-  return Object.keys(pr.recordsV1).length > 0;
-}
+function progresoNuevo() { return { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: KP.VERSION_PISTAS, recordsV1: {}, recordsV2: {} }; } // karts-curvas-complejas: + recordsV2
+// karts-pistas-grandes y karts-curvas-complejas: la migración es pura (KartsPistas.migrarRecords): sin pistasV, los
+// récords pasan a recordsV1 («pista chica»); con pistasV 2, los de las pistas rediseñadas pasan a recordsV2 («trazado
+// anterior»). Devuelve 'chica', 'trazado' o false (si archivó algo hay que guardar y avisar).
+const migrarRecords = pr => KP.migrarRecords(pr);
 // El aviso cabe en una línea de celular: dos avisos cortos seguidos.
-const AVISO_PISTAS = ['🏁 ¡Pistas 3 veces más grandes!', 'Tus récords de antes: «pista chica»'];
+const AVISO_PISTAS = {
+  chica: ['🏁 ¡Pistas 3 veces más grandes!', 'Tus récords de antes: «pista chica»'],
+  trazado: ['🌀 ¡Curvas nuevas en Espacio y Reinos!', 'Tus récords de antes: «trazado anterior»'], // karts-curvas-complejas
+};
 
 // karts-salida-y-puntos: casilla de salida en muestras de la pista (índice antes de la meta) y lado en px, a partir de
 // la parrilla fija en píxeles de Arcade.parrilla (filas de 2 a 48 px; lados a ±24 px), igual en las 8 pistas.
@@ -1818,7 +1812,10 @@ function pilotoBot(k) {
   k.carrilT -= 1 / 60;
   if (k.carrilT <= 0) { k.carrilT = 2 + Math.random() * 3; k.carril = (Math.random() - 0.5) * pista.mitad * 0.9; } // NOSONAR: azar de juego, no criptográfico
   // karts-copa-espacio: en el espacio miran más cerca (mirar lejos corta las curvas y en lo abierto se caerían).
-  const mira = marcas ? 6 + Math.floor(k.vel * 0.06) : 10 + Math.floor(k.vel * 0.12);
+  // karts-curvas-complejas: entre muros también miran cerca (en las curvas cerradas de las galerías, mirar lejos apunta a
+  // través del muro de adentro y el bot se queda raspándolo).
+  const entreMuros = !!pista.interiores && KP.muroEn(pista, M).w[k.idx] > 0;
+  const mira = marcas || entreMuros ? 6 + Math.floor(k.vel * 0.06) : 10 + Math.floor(k.vel * 0.12);
   const obj = punto(k.idx + mira, KartsReinos.carril(k, carrilBot(k, mira))); // karts-copa-reinos: esquiva obstáculos y no pasa los muros
   const dAng = Math.atan2(Math.sin(Math.atan2(obj.y - k.y, obj.x - k.x) - k.ang), Math.cos(Math.atan2(obj.y - k.y, obj.x - k.x) - k.ang));
   const a0 = M.pts[k.idx].a, a1 = M.pts[(k.idx + 28) % N].a;
@@ -2196,7 +2193,8 @@ function abrirPistas() {
   $('pistas-ops').innerHTML = KP.copasOrdenadas().map(c => '<div class="ops-grupo">' + c.emoji + ' ' + c.nombre + '</div>' + c.pistas.map(id => {
     const p = A.pistaPorId(id);
     return '<button class="op" data-ir="rapida:' + p.id + '">' + p.emoji + ' ' + p.nombre + '<small class="op-desc">' + (p.civ ? p.civ + ' · ' : '') + p.desc + '</small><small>' + (prog.records[p.id] ? '🏅 ' + A.formatoTiempo(prog.records[p.id]) : 'Sin récord') + ' · meta ' + A.formatoTiempo(A.refKarts(p.id)) + '</small>' +
-      (prog.recordsV1 && prog.recordsV1[p.id] ? '<small class="op-chica">pista chica ' + A.formatoTiempo(prog.recordsV1[p.id]) + '</small>' : '') + '</button>'; // karts-pistas-grandes: récord archivado
+      (prog.recordsV1 && prog.recordsV1[p.id] ? '<small class="op-chica">pista chica ' + A.formatoTiempo(prog.recordsV1[p.id]) + '</small>' : '') + // karts-pistas-grandes: récord archivado
+      (prog.recordsV2 && prog.recordsV2[p.id] ? '<small class="op-chica">trazado anterior ' + A.formatoTiempo(prog.recordsV2[p.id]) + '</small>' : '') + '</button>'; // karts-curvas-complejas
   }).join('')).join('');
   mostrar('ov-pistas');
 }
@@ -2273,15 +2271,15 @@ addEventListener('message', ev => {
   const d = ev.data || {};
   if (d.tipo === 'inicio' && d.modo === 'individual') {
     const base = progresoNuevo();
-    const viejo = !!d.progreso && d.progreso.pistasV !== KP.VERSION_PISTAS; // karts-pistas-grandes: récords de las pistas chicas
+    const viejo = !!d.progreso && d.progreso.pistasV !== KP.VERSION_PISTAS; // karts-pistas-grandes: récords de otra versión
     prog = Object.assign(base, d.progreso || {});
-    if (viejo) prog.pistasV = 0;
+    if (viejo) prog.pistasV = d.progreso.pistasV; // karts-curvas-complejas: la versión de antes decide qué se archiva
     prog.equipo = Object.assign(base.equipo, (d.progreso || {}).equipo || {});
     const migro = d.progreso ? migrarRecords(prog) : false; // karts-pistas-grandes
-    if (migro) guardar();
+    if (viejo) guardar(); // karts-curvas-complejas: se guarda con la versión nueva aunque no haya récords que archivar
     abrirMenu();
     if (d.aviso) avisar(d.aviso, 3500);
-    else if (migro) { avisar(AVISO_PISTAS[0], 2600); setTimeout(() => avisar(AVISO_PISTAS[1], 3200), 2700); }
+    else if (migro) { const av = AVISO_PISTAS[migro]; avisar(av[0], 2600); setTimeout(() => avisar(av[1], 3200), 2700); }
   } else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
   else if (d.tipo === 'guardado') { if (!d.ok) avisar('⚠️ No se pudo guardar tu avance. Revisa tu conexión.', 2500); }
   else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = textoGuardado(d);
@@ -3061,6 +3059,7 @@ if (PRUEBA) {
       item: yo ? yo.item : null, mando: mando.estado(), aire: yo ? yo.aire || 0 : 0, eventos: { ...eventos }, zonas: zonas.map(z => z.tipo),
       espacio: !!marcas, caidasBots, cae: yo ? yo.cae : 0, remolque: yo ? yo.remolque : 0, idx: yo ? yo.idx : 0, n: N, lateral: yo ? Math.round(lateralDe(yo)) : 0, // karts-copa-espacio
       reinos: KartsReinos.estado(), // karts-copa-reinos
+      bots: karts.filter(k => k !== yo).map(k => ({ v: k.vuelta, t: k.termino, i: k.idx, vel: Math.round(k.vel) })), // karts-curvas-complejas: vueltas de los bots
       copasMenu: [...document.querySelectorAll('#menu-ops [data-ir^="copa-nueva"]')].map(b => ({ ir: b.dataset.ir, txt: b.textContent, bloqueada: b.disabled })),
       copa: sala && sala.copa ? sala.copa.k : null, copaVisible: !$('ov-copa').classList.contains('hide'), copaTexto: $('ov-copa').textContent, // karts-copa-en-sala
       personaje: yo ? yo.personaje : personaje, masa: Personajes.masa(yo ? yo.personaje : personaje), personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length,
