@@ -128,22 +128,31 @@ Deno.test("karts-copa: tiempo vencido = no terminó (0 puntos) y la siguiente ar
   const inicio = await aLaCarrera(c, codigo, 0);
   c.ir(inicio + 125_000);
   assertEquals((await reportar(c, codigo, "Marisol", 0, 125_000)).status, 200);
-  // Angel nunca llega: al vencer el límite de la pista + la gracia, la carrera cierra.
-  const lim = A.limiteSala("karts", "pradera");
-  c.ir(inicio + lim + A.GRACIA_SALA - 1);
+  // karts-copa-sala-4: Angel no llega en los 30 s tras la llegada de Marisol: la carrera cierra.
+  c.ir(inicio + 125_000 + KC.PLAZO_MS - 1);
   assertEquals((await vista(c, codigo)).copa.fase, "carrera");
-  c.ir(inicio + lim + A.GRACIA_SALA + 1);
+  c.ir(inicio + 125_000 + KC.PLAZO_MS);
   const v = await vista(c, codigo);
   assertEquals([v.copa.fase, v.copa.carrera], ["interpodio", 1]);
   const angel = v.copa.tabla.find((x: any) => x.nombre === "Angel");
   assertEquals([angel.pts, angel.porCarrera[0].ms, angel.porCarrera[0].lugar], [0, null, null], "no terminó");
-  const tarde = await reportar(c, codigo, "Angel", 0, 140_000);
+  const tarde = await reportar(c, codigo, "Angel", 0, 160_000);
   assertEquals([tarde.status, tarde.body.error], [409, "carrera_cerrada"]);
-  // Angel no reportó la 0: en la 1 ya no se le espera; Marisol sola la cierra.
+  // karts-copa-sala-4: en la 1 Angel vuelve a contar (antes ya no se le esperaba y quedaba fuera de la copa).
   const i1 = await aLaCarrera(c, codigo, 1);
-  assertEquals((await vista(c, codigo)).copa.calendario[1].esperados.length, 1);
+  assertEquals((await vista(c, codigo)).copa.calendario[1].esperados.length, 2);
   c.ir(i1 + 130_000);
   assertEquals((await reportar(c, codigo, "Marisol", 1, 130_000)).status, 200);
+  assertEquals((await vista(c, codigo)).copa.fase, "carrera", "Angel tiene 30 s");
+  c.ir(i1 + 131_000);
+  assertEquals((await reportar(c, codigo, "Angel", 1, 131_000)).status, 200);
+  assertEquals((await vista(c, codigo)).copa.fase, "interpodio");
+  // Nadie llega a la meta: cierra al límite de la pista + la gracia.
+  const i2 = await aLaCarrera(c, codigo, 2);
+  const lim = A.limiteSala("karts", (await vista(c, codigo)).copa.pistas[2]);
+  c.ir(i2 + lim + A.GRACIA_SALA - 1);
+  assertEquals((await vista(c, codigo)).copa.fase, "carrera");
+  c.ir(i2 + lim + A.GRACIA_SALA);
   assertEquals((await vista(c, codigo)).copa.fase, "interpodio");
 });
 
@@ -159,14 +168,14 @@ Deno.test("karts-copa: desconexión (abandono) y regreso en la carrera siguiente
   assertEquals((await reportar(c, codigo, "Marisol", 0, 128_000)).status, 200);
   assertEquals((await reportar(c, codigo, "Angel", 0, 127_000)).status, 200);
   const v = await vista(c, codigo);
-  assertEquals([v.copa.fase, v.copa.carrera], ["interpodio", 1], "no se espera a Laura");
-  assertEquals(v.copa.calendario[1].esperados.length, 2);
+  assertEquals([v.copa.fase, v.copa.carrera], ["interpodio", 1], "el abandono de Laura cuenta como su reporte (NT)");
+  assertEquals(v.copa.calendario[1].esperados.length, 3, "karts-copa-sala-4: todas las personas cuentan en cada carrera");
   assertEquals(v.copa.tabla.find((x: any) => x.nombre === "Laura").pts, 0);
-  // Laura vuelve a mitad de la carrera 1: no la corre (no se le espera), entra en la 2.
+  // Laura vuelve a mitad de la carrera 1 y la corre (karts-copa-sala-4: la página ya no la abandona sola).
   const i1 = await aLaCarrera(c, codigo, 1);
-  c.ir(i1 + 60_000);
-  const enLa1 = await reportar(c, codigo, "Laura", 1, 60_000);
-  assertEquals(enLa1.status, 200, "puede mandar su resultado si corrió (no la frena a nadie)");
+  c.ir(i1 + 125_000);
+  const enLa1 = await reportar(c, codigo, "Laura", 1, 125_000);
+  assertEquals(enLa1.status, 200, "su tiempo cuenta");
   c.ir(i1 + 130_000);
   for (const n of ["Marisol", "Angel"]) assertEquals((await reportar(c, codigo, n, 1, 130_000)).status, 200); // NOSONAR: llamadas en orden (el reloj y cada paso dependen del anterior)
   const v2 = await vista(c, codigo);

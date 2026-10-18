@@ -437,6 +437,7 @@ async function copaEnSala(b, relevo) {
   const frames = await enCarrera(pags);
   const vista = async () => (await (await fetch(API + '/juegos/sala/' + codigo + '?email=marisol%40example.com')).json()).copa;
   const PISTAS = ['pradera', 'desierto', 'hielo', 'volcan'];
+  let tablas = 0; // karts-copa-sala-4: tablas entre carreras vistas
   for (let k = 0; k < 4; k++) {
     await Promise.all(frames.map(fr => fr.waitForFunction(k => { const e = window.__karts.estado(); return e.copa === k && e.modo === 'carrera' && e.tiempo > 500; }, k, { timeout: 60000 })));
     const es = await Promise.all(frames.map(estado));
@@ -445,8 +446,21 @@ async function copaEnSala(b, relevo) {
     await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
     await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 34000, null, { timeout: 60000 })));
     await frames[0].evaluate(() => window.__karts.adelantar());
-    await sleep(1500);
-    await frames[1].evaluate(() => window.__karts.adelantar());
+    if (k === 1) { // karts-copa-sala-4: Angel no llega: 30 s tras la llegada de Marisol la carrera cierra sola
+      const t0 = Date.now();
+      await frames[1].waitForFunction(() => /s para terminar/.test(window.__karts.estado().plazo || ''), null, { timeout: 15000 }).catch(() => {});
+      const pz = await estado(frames[1]);
+      ok('copa-sala-4: quien sigue corriendo ve «⏱️ N s para terminar»', /⏱️ \d+ s para terminar/.test(pz.plazo || ''), String(pz.plazo));
+      await frames[0].waitForFunction(() => /s para terminar/.test(window.__karts.estado().copaTexto), null, { timeout: 15000 }).catch(() => {});
+      ok('copa-sala-4: quien ya llegó ve la cuenta de 30 s en la tabla', /⏱️ \d+ s para terminar/.test((await estado(frames[0])).copaTexto), (await estado(frames[0])).copaTexto.slice(0, 160));
+      await pags[1].screenshot({ path: 'karts-copa-plazo-390.png' });
+      await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.copaVisible && /Empieza en|Siguiente carrera en/.test(e.copaTexto); }, null, { timeout: 45000 })));
+      const espera = Date.now() - t0;
+      ok('copa-sala-4: la carrera cierra a los 30 s de la primera llegada (espera ≤ 33 s)', espera <= 33000, 'espera=' + espera + ' ms');
+      const v = await vista();
+      const angel = v && v.tabla.find(x => /Angel/.test(x.nombre));
+      ok('copa-sala-4: quien no llegó queda NT en la carrera 2', !!angel && angel.porCarrera[1] && angel.porCarrera[1].ms === null, JSON.stringify(angel && angel.porCarrera));
+    } else { await sleep(1500); await frames[1].evaluate(() => window.__karts.adelantar()); }
     if (k < 3) {
       // Entre carreras: la tabla con la cuenta regresiva en los 2 aparatos; la siguiente arranca sola.
       await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.copaVisible && /Empieza en|Siguiente carrera en/.test(e.copaTexto); }, null, { timeout: 30000 })));
@@ -455,6 +469,9 @@ async function copaEnSala(b, relevo) {
       if (k === 0) { await pags[0].screenshot({ path: 'karts-copa-tabla-390.png' }); await pags[1].setViewportSize(HORIZONTAL); await sleep(800); await pags[1].screenshot({ path: 'karts-copa-tabla-844x390.png' }); await pags[1].setViewportSize(VERTICAL); }
       const v = await vista();
       ok('copa: el servidor marca la tabla entre carreras y la carrera ' + (k + 2), v && v.fase === 'interpodio' && v.carrera === k + 1 && v.resultados.length === k + 1, JSON.stringify(v && { fase: v.fase, carrera: v.carrera }));
+      tablas++; // karts-copa-sala-4
+      const podios = await Promise.all(pags.map(p => p.$('#p-body .result')));
+      ok('copa-sala-4: sin podio final después de la carrera ' + (k + 1), podios.every(x => !x));
     }
   }
   // Podio final con suspenso, la tabla de la copa y la revancha.
@@ -464,6 +481,7 @@ async function copaEnSala(b, relevo) {
   ok('copa: podio final de la Copa Fiesta con la tabla de las 4 carreras', /Copa Fiesta/.test(txt) && /Puntos de la copa/.test(txt) && (await host.$$('.copa-tabla tbody tr')).length === 3, txt.slice(0, 160));
   ok('copa: revancha en el podio', await host.isVisible('[data-p="revancha"]'));
   const v = await vista();
+  ok('copa-sala-4: 4 carreras con resultado, 3 tablas entre carreras y un solo podio final', v && v.resultados.length === 4 && tablas === 3 && (await host.$$('#p-body .result')).length === 1, 'tablas=' + tablas + ' resultados=' + (v && v.resultados.length));
   ok('copa: el servidor cierra la copa con 3 en la tabla', v && v.fase === 'final' && v.tabla.length === 3 && v.tabla.every(t => t.porCarrera.length === 4), JSON.stringify(v && v.tabla.map(t => t.nombre + ':' + t.pts)));
   ok('copa: puntos de ranking guardados (tope 2000)', /a tus puntos de partidas|ya estaba guardada/.test(await host.textContent('#p-guardado').catch(() => '')), await host.textContent('#p-guardado').catch(() => ''));
   await host.screenshot({ path: 'karts-copa-podio-390.png', fullPage: true });
@@ -706,6 +724,12 @@ async function salidaYPodio(b, relevo) {
   }
   if (process.env.KARTS_VIVO_SOLO === 'salto') { // karts-salto: solo esta parte (para iterar)
     await saltoEnSala(b, relevo);
+    await b.close(); await relevo.cerrar();
+    console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
+  if (process.env.KARTS_VIVO_SOLO === 'copa') { // karts-copa-sala-4: solo la copa completa (para iterar)
+    await copaEnSala(b, relevo);
     await b.close(); await relevo.cerrar();
     console.log(out.join('\n'));
     process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

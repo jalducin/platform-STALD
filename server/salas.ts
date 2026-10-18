@@ -4,7 +4,7 @@
 import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
 import { canalNuevo, type ConfigRealtime, publicarSala, topicDe } from "./realtime.ts";
-import { type Carrera, CARRERAS, mapaDeSala, validarCarrera } from "./carreras.ts";
+import { type Carrera, CARRERAS, cierreCarreraSala, mapaDeSala, validarCarrera } from "./carreras.ts"; // karts-copa-sala-4: cierreCarreraSala
 // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes (reglas de sala en su módulo)
 import * as Clasicos from "./clasicos_rapidos.ts";
 import { JUEGOS_TABLERO, validarJugadaTablero, vistaJugadores } from "./tablero.ts"; // juegos-tablero
@@ -661,6 +661,17 @@ function cambioDeFutbol(c: CtxSala, inicio: number): CambioJugador | Response {
   return (e: EnSala) => e.futbol ? e : { ...e, futbol: { ...r, t: ahora } };
 }
 
+// Carrera suelta de Arcade: el tiempo validado o el error. karts-copa-sala-4: un primer reporte después del cierre (todas
+// llegaron, 30 s tras la primera llegada o el límite) se rechaza con carrera_cerrada: nadie alarga la carrera.
+const ESTADO_CARRERA = { carrera_invalida: 400, carrera_cerrada: 409 } as const;
+function carreraSuelta(c: CtxSala, inicio: number): Carrera | "carrera_invalida" | "carrera_cerrada" {
+  const { body, ahora, sala, jugadores, jugador } = c;
+  const carrera = validarCarrera(sala.juego, body.carrera, inicio, ahora, sala.opciones?.mapa);
+  if (!carrera) return "carrera_invalida";
+  const yaTenia = jugadores.some((x) => x.id === jugador.id && x.carrera);
+  return yaTenia || cierreCarreraSala(sala, jugadores, ahora) === null ? carrera : "carrera_cerrada";
+}
+
 // Elige cómo cambia el archivo del jugador según lo que trae la respuesta, o la respuesta de error.
 // deGrande: el cambio que ya resolvió juegos-salas-grandes (si aplica).
 function cambioDeRespuesta(c: CtxSala, inicio: number, deGrande: CambioJugador | undefined): CambioJugador | Response {
@@ -694,8 +705,8 @@ function cambioDeRespuesta(c: CtxSala, inicio: number, deGrande: CambioJugador |
   if (body.carrera !== undefined && Copa.esCopaKarts(sala)) return json({ error: "carrera_invalida" }, 400); // en copa, cada carrera va en `copa`
   if (body.carrera !== undefined) {
     // Carreras de Arcade (server/carreras.ts): tiempo validado con el reloj del servidor; solo cuenta el primero.
-    const carrera = validarCarrera(sala.juego, body.carrera, inicio, ahora, sala.opciones?.mapa); // karts-pistas-grandes: límites de la pista
-    if (!carrera) return json({ error: "carrera_invalida" }, 400);
+    const carrera = carreraSuelta(c, inicio); // karts-pistas-grandes: límites de la pista; karts-copa-sala-4: y el cierre
+    if (typeof carrera === "string") return json({ error: carrera }, ESTADO_CARRERA[carrera]);
     return (e: EnSala) => e.carrera ? e : { ...e, carrera: { ...carrera, t: ahora } };
   }
   if (body.loteria === true) return (e: EnSala) => e.loteria ? e : { ...e, loteria: ahora };

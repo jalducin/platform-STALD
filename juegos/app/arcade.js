@@ -155,17 +155,20 @@ function pintarArcadeSala(body) {
   const t = ahoraServidor() - s.inicio;
   const filas = resultadosArcade();
   const humanos = filas.filter(f => f.tipo !== 'bot');
-  if (humanos.every(f => f.servidor) || t > Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA) return finalArcade(body, filas, juego, mapa);
+  const ci = cierreArcade(s, juego, mapa); // karts-copa-sala-4: todas llegaron, 30 s tras la primera llegada o el límite
+  if (ci.cierre !== null) return finalArcade(body, filas, juego, mapa);
+  const quedan = segundosArcade(s, juego, mapa, ci);
   const mia = (e.jugadores.find(x => x.id === e.yo) || {}).carrera || sala.arcadeMia;
   if (mia) {
-    const k = 'arcade-espera:' + humanos.map(f => f.envio ? 1 : 0).join('') + ':' + Math.ceil((Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA - t) / 10000);
+    const k = 'arcade-espera:' + humanos.map(f => f.envio ? 1 : 0).join('') + ':' + quedan;
     if (sala.vista === k) return;
     sala.vista = k;
     body.innerHTML = '<div class="q-card"><div class="sub">' + escapeHtml(Arcade.nombreMapa(juego, mapa)) + '</div><div class="q">' + (mia.ms === null ? '⏰ No terminaste' : '🏁 Tu tiempo: ' + Arcade.formatoTiempo(mia.ms)) + '</div>' +
-      '<div class="sub">Esperando a que terminen los demás (a más tardar en ' + Math.max(0, Math.ceil((Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA - t) / 1000)) + ' s)…</div></div>' +
+      '<div class="sub">' + textoEsperaArcade(ci, quedan) + '</div></div>' +
       listaArcade(humanos);
     return;
   }
+  plazoArcadeAlJuego(ci); // karts-copa-sala-4: cuenta en el juego
   // espectador: sin transmisión en vivo (Axo, una sola persona o sin canal) se ve quién va llegando.
   if (sala.espectador && !(juego === 'karts' && sala.vivoTr && humanos.length > 1)) return esperaEspectadorArcade(body, humanos, juego, mapa, t);
   if (sala.vista === 'arcade') return;
@@ -217,6 +220,31 @@ function esperaEspectadorArcade(body, humanos, juego, mapa, t) {
   body.innerHTML = '<div class="q-card"><div class="sub">' + escapeHtml(Arcade.nombreMapa(juego, mapa)) + '</div><div class="q">👀 Carrera en curso</div><div class="sub">' + escapeHtml(sub) + '</div></div>' + listaArcade(humanos);
 }
 
+// karts-copa-sala-4: cierre de la carrera suelta con los tiempos que ya tiene el servidor: en Karts, todas llegaron, 30 s
+// tras la primera llegada o el límite (KartsCopa.cierreCarrera, igual que server/carreras.ts); en Axo, como antes.
+function cierreArcade(s, juego, mapa) {
+  const e = sala.estado, ahora = ahoraServidor(), limite = Arcade.limiteSala(juego, mapa);
+  const reportes = e.jugadores.map(j => j.carrera);
+  if (juego === 'karts' && window.KartsCopa) return KartsCopa.cierreCarrera({ inicio: s.inicio, limite, total: e.jugadores.length, reportes }, ahora);
+  const todos = e.jugadores.length > 0 && reportes.every(Boolean);
+  return { cierre: todos || ahora > s.inicio + limite + Arcade.GRACIA_SALA ? ahora : null, plazo: null };
+}
+// karts-copa-sala-4: segundos que faltan para cerrar (plazo de 30 s o, si nadie ha llegado, el límite) y su texto.
+function segundosArcade(s, juego, mapa, ci) {
+  const fin = ci.plazo === null ? s.inicio + Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA : ci.plazo;
+  return Math.max(0, Math.ceil((fin - ahoraServidor()) / 1000));
+}
+const textoEsperaArcade = (ci, quedan) => (ci.plazo === null ? 'Esperando a que terminen los demás (a más tardar en ' + quedan + ' s)…' : '⏱️ ' + quedan + ' s para terminar');
+function plazoArcadeAlJuego(ci) { if (ci.plazo !== null && sala.vista === 'arcade') plazoAlJuego(null, ci.plazo); }
+function plazoCorriendo(cal) { if (cal.plazo !== null) plazoAlJuego(cal.k, cal.plazo); }
+// karts-copa-sala-4: manda al juego la hora (del aparato) en que se acaba el plazo de 30 s, una vez por carrera.
+function plazoAlJuego(k, plazo) {
+  const firma = k + ':' + plazo;
+  if (sala.plazoFirma === firma) return;
+  sala.plazoFirma = firma;
+  aCopa({ tipo: 'plazo', carrera: k, finLocal: plazo - sala.offset });
+}
+
 // ---- Copa completa de Karts en sala (openspec: karts-copa-en-sala) ----
 // El calendario sale de juegos/karts-copa.js (el mismo que usa el servidor) con el estado de la sala y la hora del
 // servidor. El iframe de Karts se abre una vez y corre las 4 carreras: esta página le manda `inicio` de cada carrera
@@ -261,8 +289,10 @@ function abrirCopaSala(body) {
     else if (d.tipo === 'meta' && Number.isInteger(d.carrera) && d.carrera === sala.copa.corriendo && !sala.espectador) {
       const k = d.carrera, ms = d.ms === null ? null : Math.max(0, Math.round(Number(d.ms) || 0));
       sala.copa.corriendo = -1;
-      post('/juegos/sala/' + sala.codigo + '/respuesta', { copa: { carrera: k, ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) } })
-        .then(r => { if (r && !r.ok) avisoRechazo(r); }) // karts-puntos-copas: el rechazo del servidor se ve
+      const rep = { carrera: k, ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) };
+      if (ms === null && Number.isInteger(d.avance)) rep.avance = Math.max(0, Math.min(999, d.avance)); // karts-copa-sala-4: NT por avance
+      post('/juegos/sala/' + sala.codigo + '/respuesta', { copa: rep })
+        .then(r => { if (r && !r.ok && !(ms === null && r.body && r.body.error === 'carrera_cerrada')) avisoRechazo(r); }) // karts-puntos-copas: el rechazo se ve (karts-copa-sala-4: salvo un NT que llegó al cierre)
         .then(() => traerSala()).then(() => pintarSala());
     }
   };
@@ -289,12 +319,11 @@ function pintarCopaSala(body) {
   const yoJ = e.jugadores.find(x => x.id === e.yo) || { id: e.yo };
   const mio = KartsCopa.reporte(yoJ, cal.k);
   const tabla = st.tabla.map(t => filaCopaIframe(t, st, e.yo));
-  // Volviste a media carrera (no la empezaste en esta página): no la corres; si se te esperaba, se avisa al servidor.
-  const tarde = cal.cierre === null && ahora > cal.inicio + 4000 && c.enviada < cal.k && !mio;
-  if (tarde && cal.esperados.includes(e.yo)) abandonarCopa(cal.k);
+  // karts-copa-sala-4: si te enteraste tarde de la salida (celular bloqueado, aviso perdido) o volviste a media carrera,
+  // entras tarde y corres: la página ya no abandona sola (eso te sacaba del resto de la copa).
   if (esperaEspectadorCopa(c, cal)) return; // espectador
-  if (cal.cierre === null && !mio && !tarde && c.enviada < cal.k) return iniciarCarreraCopa(cal, st, tabla, ahora);
-  if (c.corriendo === cal.k && !mio) return; // corriendo: el juego tiene la pantalla
+  if (cal.cierre === null && !mio && c.enviada < cal.k) return iniciarCarreraCopa(cal, st, tabla, ahora);
+  if (c.corriendo === cal.k && !mio) return plazoCorriendo(cal); // corriendo: el juego tiene la pantalla (karts-copa-sala-4: con la cuenta de 30 s)
   const { sub, cuenta } = textoEsperaCopa(cal, !!mio, ahora);
   const firma = sub + '|' + cuenta + '|' + tabla.map(t => t.pts).join(',');
   if (firma === c.firma) return;
@@ -316,7 +345,9 @@ function textoEsperaCopa(cal, corri, ahora) {
   const vence = Math.max(0, Math.ceil((cal.inicio + cal.limite + Arcade.GRACIA_SALA - ahora) / 1000));
   let nota = corri ? '' : ' · te unes en la siguiente';
   if (sala.espectador) nota = ' en curso'; // espectador
-  return { sub: 'Carrera ' + (cal.k + 1) + ' de 4' + nota + (faltan.length ? ' · faltan: ' + faltan.join(', ') : ''), cuenta: '⏱ A más tardar en ' + vence + ' s' };
+  // karts-copa-sala-4: tras la primera llegada, «⏱️ N s para terminar» (30 s); antes, el límite de la pista.
+  const cuenta = cal.plazo === null ? '⏱ A más tardar en ' + vence + ' s' : '⏱️ ' + Math.max(0, Math.ceil((cal.plazo - ahora) / 1000)) + ' s para terminar';
+  return { sub: 'Carrera ' + (cal.k + 1) + ' de 4' + nota + (faltan.length ? ' · faltan: ' + faltan.join(', ') : ''), cuenta };
 }
 // Podio final de la copa: por puntos de copa; el total de cada quien son sus puntos de ranking (tope 2000).
 function finalCopa(body, st) {
