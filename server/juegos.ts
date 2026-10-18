@@ -191,6 +191,7 @@ export const CATALOGO: Record<string, { categoria: string; titulo: string; max: 
   "futbolito": { categoria: "arcade", titulo: "Futbolito", max: 1000 }, // futbolito-billar
   "billar": { categoria: "arcade", titulo: "Billar bola 8", max: 1000 },
   "golf": { categoria: "arcade", titulo: "Golf", max: 1000 }, // golf
+  "brigada": { categoria: "arcade", titulo: "Brigada Xalli", max: 1000 }, // brigada: por misión (puntos / 20, design.md §5)
   "futbol": { categoria: "arcade", titulo: "Fútbol Estelar 2010", max: 1000 }, // futbol-estelar (reemplaza a Futbolito en el menú; `futbolito` se queda por el historial)
   "futbolito-arena": { categoria: "arcade", titulo: "Futbolito Arena", max: 1000 }, // futbolito-arena (id nuevo: `futbolito` es el de barras)
 };
