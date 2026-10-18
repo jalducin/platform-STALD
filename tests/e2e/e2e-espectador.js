@@ -122,7 +122,7 @@ async function karts(b) {
   ok('lo que «manda» quien especta no tiene efecto (no aparece como kart ni como presente; sin ítems)', despuesM.remotos.length === 1 && despuesM.remotos[0].id !== idJ && !despuesM.vivo.presencia.includes(idJ) && despuesM.objetosRed.length === antesM.objetosRed.length,
     JSON.stringify({ remotos: despuesM.remotos.map(r => r.id), pres: despuesM.vivo.presencia, objetos: [antesM.objetosRed.length, despuesM.objetosRed.length] }));
   // Podio y revancha.
-  await Promise.all([fm, fa].map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 31000, null, { timeout: 90000 })));
+  await Promise.all([fm, fa].map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.tiempo > window.Arcade.limitesKarts(e.pista).minMs + 1500; }, null, { timeout: 120000 })));
   for (const fr of [fm, fa]) await fr.evaluate(() => window.__karts.adelantar()); // NOSONAR: en orden
   await j.waitForSelector('#p-body .result', { timeout: 90000 });
   await sleep(1200);

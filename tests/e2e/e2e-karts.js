@@ -403,6 +403,53 @@ async function probarSaltoHueco(b) {
 }
 async function probarSalto(b) { await probarSaltoTeclado(b); await probarSaltoHueco(b); await probarSaltoMando(b); await probarSaltoControlFisico(b); await probarSaltoTactil(b); }
 
+// ================= Ceremonia de premiación (openspec: karts-control-sala-y-ceremonia) ================= // karts-ceremonia
+// Copa individual: al terminar la 4.ª carrera sube 3.º, 2.º y 1.º con su personaje y su kart; «Saltar» deja los
+// resultados; con movimiento reducido se ve fija (los 3 arriba, sin confeti).
+const arribaDe = f => f.evaluate(() => [...document.querySelectorAll('#kc-ceremonia .kc-col.arriba')].map(c => Number(c.dataset.escalon)));
+async function terminarCopaSuelta(q) {
+  const f = q.mainFrame();
+  await f.evaluate(() => window.__karts.copaCasiTerminada('fiesta'));
+  await f.evaluate(() => { abrirMenu(); });
+  await f.click('[data-ir="copa"]');
+  await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 400, null, { timeout: 20000 });
+  await f.evaluate(() => window.__karts.adelantar());
+  await f.waitForSelector('#kc-ceremonia', { timeout: 20000 });
+  return f;
+}
+async function probarCeremonia(b) {
+  for (const vp of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
+    const nombre = 'ceremonia copa ' + vp.width + '×' + vp.height;
+    const q = await abrirSuelto(b, vp);
+    const f = await terminarCopaSuelta(q);
+    const t0 = Date.now();
+    const cols = await f.$$eval('#kc-ceremonia .kc-col', cs => cs.map(c => ({ e: Number(c.dataset.escalon), per: c.dataset.personaje, img: !!c.querySelector('img'), kart: !!c.querySelector('svg'), nombre: c.querySelector('.kc-nombre').textContent })));
+    ok(nombre + ': podio de 3 escalones con personaje dibujado, kart y nombre', cols.length === 3 && cols.every(c => c.per && c.img && c.kart && c.nombre), JSON.stringify(cols));
+    ok(nombre + ': en pantalla van 2.º, 1.º y 3.º', cols.map(c => c.e).join() === '2,1,3');
+    ok(nombre + ': título con la copa', /Copa Fiesta/.test(await f.textContent('#kc-ceremonia .kc-cab')));
+    const pasos = [];
+    for (const t of [1300, 2700, 5500]) { await sleep(Math.max(0, t - (Date.now() - t0))); pasos.push(await arribaDe(f)); } // NOSONAR: en orden
+    ok(nombre + ': suben 3.º, luego 2.º y al final 1.º', pasos.map(p => p.sort((x, y) => y - x).join('')).join('|') === '3|32|321', JSON.stringify(pasos));
+    await sleep(900); // el 1.º termina de subir
+    ok(nombre + ': confeti al subir el 1.º', (await f.$$('#kc-ceremonia .kc-confeti i')).length > 0);
+    await q.screenshot({ path: 'karts-ceremonia-copa-' + vp.width + 'x' + vp.height + '.png' });
+    const dentro = await f.evaluate(() => [...document.querySelectorAll('#kc-ceremonia .kc-col, #kc-ceremonia .kc-saltar')].every(e => { const r = e.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1 && r.top >= 0 && r.bottom <= innerHeight + 1; }));
+    ok(nombre + ': todo cabe en la pantalla', dentro);
+    await f.click('#kc-ceremonia [data-kc="saltar"]');
+    ok(nombre + ': «⏭ Saltar» la quita y quedan los resultados', !(await f.$('#kc-ceremonia')) && await f.isVisible('#ov-res'));
+    await q.context().close();
+  }
+  // Sin «Saltar», se va sola en ~7 s; con movimiento reducido, fija.
+  const r = await abrirPagina(b, { viewport: { width: 390, height: 844 }, contexto: { reducedMotion: 'reduce', ...TACTIL }, out, etiqueta: 'karts reducido', ruta: '/juegos/karts.html?prueba=1', esperar: '#ov-menu:not(.hide)' });
+  const fr = await terminarCopaSuelta(r);
+  const fija = await fr.evaluate(() => ({ quieta: document.getElementById('kc-ceremonia').classList.contains('kc-quieta'), confeti: document.querySelectorAll('#kc-ceremonia .kc-confeti i').length }));
+  ok('ceremonia reducida: fija con los 3 arriba desde el principio y sin confeti', fija.quieta && fija.confeti === 0 && (await arribaDe(fr)).sort().join() === '1,2,3', JSON.stringify(fija));
+  await r.screenshot({ path: 'karts-ceremonia-reducida-390x844.png' });
+  await fr.waitForSelector('#kc-ceremonia', { state: 'detached', timeout: 10000 }).catch(() => {});
+  ok('ceremonia: se quita sola al terminar (~7 s) y quedan los resultados', !(await fr.$('#kc-ceremonia')) && await fr.isVisible('#ov-res'));
+  await r.context().close();
+}
+
 // ================= Mando clásico (openspec: karts-mando) =================
 const CON_MANDO = [() => { try { localStorage.setItem('karts_control', 'mando'); } catch { /* nada */ } }];
 // Control físico simulado: cada marco (también el iframe del juego) lee window.__pads.
@@ -1116,6 +1163,11 @@ async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probar
     await b.close(); console.log(out.join('\n'));
     process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
   }
+  if (process.env.KARTS_SOLO === 'ceremonia') { // karts-ceremonia: solo esta parte (para iterar)
+    await probarCeremonia(b);
+    await b.close(); console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_SOLO === 'espacio') { // karts-copa-espacio: solo esta parte (para iterar)
     await probarPistasEspacio(b); await probarCopaEspacio(b);
     await b.close(); console.log(out.join('\n')); console.log('fps: ' + JSON.stringify(fpsMeso));
@@ -1403,6 +1455,7 @@ async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probar
 
   await probarReversa(b); // karts-reversa
   await probarSalto(b); // karts-salto
+  await probarCeremonia(b); // karts-ceremonia
   // ---- Personajes (openspec: personajes-xalli) ----
   await probarPersonajes(b);
 
