@@ -354,35 +354,38 @@
   // < 8° y se unen los del mismo sentido separados por ≤ 80 px. Cada curva: { sg (1 horario, -1 antihorario), i0, i1,
   // grados, rmin (px), largo (px) }.
   const angulo = a => Math.atan2(Math.sin(a), Math.cos(a));
-  function curvasTrazado(M, rmax = 1000) {
+  // Tramos crudos: muestras seguidas con el mismo signo de giro (0 = recta), desde una muestra recta.
+  function tramosDeGiro(M, rmax) {
     const pts = M.pts, n = pts.length, lim = M.paso / rmax;
     const da = pts.map((_p, i) => angulo(pts[(i + 1) % n].a - pts[(i - 1 + n) % n].a) / 2);
     const signo = d => (Math.abs(d) < lim ? 0 : Math.sign(d));
-    const s0 = Math.max(0, da.findIndex(d => signo(d) === 0)), crudas = [];
-    let cur = null;
+    const s0 = Math.max(0, da.findIndex(d => signo(d) === 0)), tramos = [];
     for (let k = 0; k < n; k++) {
-      const i = (s0 + k) % n, d = da[i], sg = signo(d);
-      if (cur && sg === cur.sg) { cur.giro += d; cur.i1 = i; cur.rmin = Math.min(cur.rmin, M.paso / Math.abs(d)); continue; }
-      if (cur && cur.sg) crudas.push(cur);
-      cur = { sg, i0: i, i1: i, giro: d, rmin: sg ? M.paso / Math.abs(d) : Infinity };
+      const i = (s0 + k) % n, d = da[i], sg = signo(d), cur = tramos[tramos.length - 1];
+      const r = sg ? M.paso / Math.abs(d) : Infinity;
+      if (cur && sg === cur.sg) { cur.giro += d; cur.i1 = i; cur.rmin = Math.min(cur.rmin, r); } else tramos.push({ sg, i0: i, i1: i, giro: d, rmin: r });
     }
-    if (cur && cur.sg) crudas.push(cur);
-    const out = [];
+    return tramos.filter(t => t.sg);
+  }
+  function curvasTrazado(M, rmax = 1000) {
+    const n = M.pts.length, crudas = tramosDeGiro(M, rmax), out = [];
     for (const c of crudas.filter(x => Math.abs(x.giro) >= 8 * Math.PI / 180)) {
       const u = out[out.length - 1];
       if (u && u.sg === c.sg && ((c.i0 - u.i1 + n) % n) * M.paso <= 80) { u.giro += c.giro; u.i1 = c.i1; u.rmin = Math.min(u.rmin, c.rmin); } else out.push({ ...c });
     }
     return out.map(c => ({ sg: c.sg, i0: c.i0, i1: c.i1, rmin: Math.round(c.rmin), grados: Math.round(Math.abs(c.giro) * 180 / Math.PI), largo: (((c.i1 - c.i0 + n) % n) + 1) * M.paso }));
   }
-  // Resumen: giro total de la vuelta (suma de los grados de todas las curvas), curvas > 120°, espirales (≥ 360° en un sentido), sacacorchos (≥ 270°), laberinto (racha más larga de giros de
-  // 60° a 120° separados ≤ 600 px), chicanas (curvas ≥ 45° de sentido contrario a ≤ 250 px) y horquillas (150° a 230°
+  // Resumen: giro total de la vuelta (suma de los grados de todas las curvas), curvas > 120°, espirales (≥ 360° en un
+  // sentido), sacacorchos (≥ 270°), laberinto (racha más larga de giros de 60° a 120° separados ≤ 600 px), chicanas (curvas ≥ 45° de sentido contrario a ≤ 250 px) y horquillas (150° a 230°
   // con radio ≤ 220 px).
   function complejidad(M) {
     const cs = curvasTrazado(M), n = M.pts.length, gap = (a, b) => ((b.i0 - a.i1 + n) % n) * M.paso;
     let racha = 0, laberinto = 0, chicanas = 0;
     cs.forEach((c, k) => {
       const prev = cs[k - 1], noventa = c.grados >= 60 && c.grados <= 120;
-      racha = noventa ? (prev && racha && gap(prev, c) <= 600 ? racha + 1 : 1) : 0;
+      const sigue = prev && racha && gap(prev, c) <= 600;
+      if (!noventa) racha = 0;
+      else racha = sigue ? racha + 1 : 1;
       laberinto = Math.max(laberinto, racha);
       if (prev && prev.sg !== c.sg && prev.grados >= 45 && c.grados >= 45 && gap(prev, c) <= 250) chicanas++;
     });
