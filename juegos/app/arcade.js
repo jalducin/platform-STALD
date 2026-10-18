@@ -306,7 +306,7 @@ function finalCopa(body, st) {
 // (localStorage.arcade_personaje, compartido con el modo individual) y en el asiento (POST /unirse { personaje }).
 // Al empezar, el iframe recibe el propio y el de cada persona en `inicio`.
 const PESO_PERSONAJE = { ligero: '🪶 Ligero', medio: '⚖️ Medio', pesado: '🪨 Pesado' };
-const conPersonajes = () => !!window.Personajes && ARCADE.has(sala.estado.sala.juego);
+const conPersonajes = () => !!window.Personajes && (ARCADE.has(sala.estado.sala.juego) || sala.estado.sala.juego === 'brigada'); // brigada: también elige personaje
 const esPersonajeValido = id => !!window.Personajes && Personajes.LISTA.some(p => p.id === id);
 function personajeDeAsiento(id) {
   const j = sala.estado.jugadores.find(x => x.id === id);
@@ -483,6 +483,7 @@ function notaFutbol() {
 function finalSala(s) {
   if (s.juego === 'futbol') notaFutbol();
   if (s.juego === 'futbolito-arena') notaArena(); // futbolito-arena
+  if (s.juego === 'brigada') notaBrigada(); // brigada
   return pintarRevancha();
 }
 // ¿El partido ya terminó para esta persona? (ya reportó, o su rival lo reportó hace rato).

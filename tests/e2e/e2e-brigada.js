@@ -8,6 +8,7 @@ require('./lib/entorno');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
 const { abrirJuego, textoTarjeta, idsDe } = require('./lib/menu');
+const { levantarRelevo, initVivo } = require('./lib/vivo-relevo');
 const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -214,10 +215,194 @@ async function horizontalYEscritorio(b) {
   await e.context().close();
 }
 
+// ================= Cooperativo en vivo (canal simulado: relevo local + EnVivo.simulado) =================
+const pedir = async (email, ruta, body) => {
+  const r = await fetch(API + ruta + '?email=' + encodeURIComponent(email), { method: 'POST', body: JSON.stringify(body || {}) });
+  return { status: r.status, body: await r.json() };
+};
+const salaDe = async (codigo, quien) => (await fetch(API + '/juegos/sala/' + codigo + '?email=' + encodeURIComponent(quien))).json();
+async function crearSalaBrigada(p, mision = '1', bots = false) {
+  await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear');
+  await p.selectOption('#p-juego', 'brigada');
+  await p.selectOption('#p-bmision', mision);
+  const conBots = await p.isChecked('#p-bots');
+  if (conBots !== bots) await p.click('#p-bots');
+  await p.click('#f-crear button[type=submit]'); await p.waitForSelector('[data-p="empezar"]', { timeout: 30000 });
+  return (await p.textContent('#p-codigo-chip')).replace(/[^A-Z]/g, '');
+}
+async function unirseSala(q, codigo) {
+  await q.click('[data-tab="partidas"]'); await q.waitForSelector('#f-unirse');
+  await q.fill('#p-codigo', codigo); await q.click('#f-unirse button[type=submit]');
+  await q.waitForSelector('#p-personaje', { timeout: 30000 });
+}
+const enSala = (fr, n = 3) => esperar(fr, k => window.__brigada && window.__brigada.red() && (window.__brigada.red().rol === 'anfitrion' || window.__brigada.red().recibidas > k), n, 60000);
+
+async function cooperativo4(b, relevo) {
+  const abrir = (email, viewport, extra) => abrirPagina(b, { email, viejo: true, viewport, contexto: extra, out, etiqueta: email, dialogos: 'aceptar', init: initVivo(relevo.url, { latencia: 80, perdida: 0.03, desorden: 0.1 }), ruta: RUTA + '&vivoSimulado=1', esperar: '[data-menu]' });
+  const ps = [await abrir('marisol@example.com', { width: 390, height: 844 }, TACTIL), await abrir('angel@example.com', { width: 844, height: 390 }, TACTIL),
+    await abrir('laura@example.com', { width: 390, height: 844 }, TACTIL), await abrir('fernando@example.com', { width: 1280, height: 800 }, {})];
+  const [p] = ps;
+  await p.click('[data-tab="partidas"]'); await p.waitForSelector('#f-crear');
+  await p.selectOption('#p-juego', 'brigada');
+  ok('crear: Brigada Xalli con la misión a elegir', await p.isVisible('#p-bmision'));
+  const codigo = await crearSalaBrigada(p, '1', false);
+  for (const q of ps.slice(1)) await unirseSala(q, codigo); // NOSONAR: entran en orden
+  await p.waitForFunction(() => /4 personas/.test((document.getElementById('p-mesa') || {}).textContent || ''), null, { timeout: 30000 }).catch(() => {});
+  await ps[1].click('[data-p="personaje"][data-personaje="kinich"]');
+  await p.waitForFunction(() => /Kinich/.test(document.getElementById('p-body').textContent), null, { timeout: 20000 }).catch(() => {});
+  const s0 = await salaDe(codigo, 'angel@example.com'), id = n => s0.jugadores.find(j => j.nombre === n).id;
+  ok('espera: 4 personas sin bots y Angel eligió a Kinich', s0.jugadores.length === 4 && s0.jugadores.find(j => j.nombre === 'Angel').personaje === 'kinich', JSON.stringify(s0.jugadores.map(j => j.personaje)));
+  await p.screenshot({ path: 'brigada-390-espera.png', fullPage: true });
+  await p.click('[data-p="empezar"]');
+  const frs = []; for (const q of ps) frs.push(await marcoDe(q, '#p-body #arcade-frame')); // NOSONAR: en orden
+  await enSala(frs[0]);
+  for (const fr of frs.slice(1)) await enSala(fr, 5); // NOSONAR: en orden
+  const roles = await Promise.all(frs.map(fr => fr.evaluate(() => window.__brigada.red().rol)));
+  ok('roles: la anfitriona simula y los otros 3 son invitados', JSON.stringify(roles) === JSON.stringify(['anfitrion', 'invitado', 'invitado', 'invitado']), roles.join());
+  await frs[0].evaluate(() => window.__brigada.invulnerable());
+  // Todos avanzan a la derecha disparando (fuente registrada en cada aparato): aparecen enemigos.
+  for (const fr of frs) await fr.evaluate(() => { window.__mueve = true; window.BrigadaEntrada.registrar({ eje: () => ({ x: window.__mueve ? 1 : 0, y: 0 }), presionado: a => a === 'b' && window.__dispara !== false }); }); // NOSONAR: en orden
+  await sleep(4000);
+  const vistas = await Promise.all(frs.map(fr => fr.evaluate(() => window.__brigada.red().enemigos)));
+  const host = new Set(vistas[0]), parecido = vistas.slice(1).map(v => v.filter(x => host.has(x)).length / Math.max(1, Math.min(host.size, v.length)));
+  ok('mismos enemigos en los 4 aparatos (por id)', host.size > 0 && parecido.every(x => x >= 0.6), JSON.stringify({ host: vistas[0].length, parecido }));
+  await frs[1].waitForFunction(() => /\d+ ms/.test(document.getElementById('lat').textContent), null, { timeout: 15000 }).catch(() => {});
+  ok('latencia en pantalla (📶 ms)', /📶 \d+ ms/.test(await frs[1].textContent('#lat')));
+  await ps[1].screenshot({ path: 'brigada-844-equipo.png' });
+  await p.screenshot({ path: 'brigada-390-equipo.png' });
+  await ps[3].screenshot({ path: 'brigada-escritorio-equipo.png' });
+  // Desconexión de Fernando y regreso.
+  const yoFer = await frs[3].evaluate(() => window.__brigada.estado().yo ? window.__brigada.m().jugadores.findIndex(j => j === window.__brigada.m().jugadores[window.__brigada.estado().yo]) : 3);
+  relevo.cortar(id('Fernando'));
+  await esperar(frs[0], () => window.__brigada.red().caidos.length > 0, null, 10000).catch(() => {});
+  await sleep(300);
+  const caida = await frs[0].evaluate(() => ({ red: window.__brigada.red().caidos, aviso: document.getElementById('aviso').textContent }));
+  ok('desconexión: la IA maneja al personaje de Fernando y se avisa', caida.red.length === 1 && /Fernando/.test(caida.aviso), JSON.stringify(caida) + yoFer);
+  relevo.reanudar(id('Fernando'));
+  await esperar(frs[0], () => window.__brigada.red().caidos.length === 0, null, 10000).catch(() => {});
+  ok('regreso: Fernando recupera su personaje', (await frs[0].evaluate(() => window.__brigada.red().caidos.length)) === 0);
+  // Jefe: Angel (invitada) lo vence a burbujazos; su disparo viaja al anfitrión.
+  for (const fr of frs) await fr.evaluate(() => { window.__mueve = false; window.__dispara = false; }); // NOSONAR: en orden
+  await frs[0].evaluate(() => window.__brigada.alJefe());
+  await esperar(frs[0], () => { const j = window.__brigada.estado().jefe; return j && j.fase !== 'entrada'; }, null, 20000);
+  await esperar(frs[1], () => !!window.__brigada.m().jefe, null, 10000).catch(() => {});
+  await sleep(500);
+  await ps[1].screenshot({ path: 'brigada-844-jefe-equipo.png' });
+  await frs[0].evaluate(() => window.__brigada.debilitarJefe());
+  await frs[1].evaluate(() => { window.__dispara = true; });
+  await esperar(frs[0], () => ['victoria', 'cumplida'].includes(window.__brigada.estado().estadoM), null, 20000).catch(() => {});
+  const ganador = await frs[0].evaluate(() => window.__brigada.m().jugadores.map(j => j.puntos));
+  ok('jefe vencido por la invitada (su disparo llega al anfitrión)', ganador[1] >= 5000, ganador.join(','));
+  for (const fr of frs) await esperar(fr, () => /Misión cumplida/.test(document.getElementById('ov').textContent), null, 20000).catch(() => {}); // NOSONAR: en orden
+  const fines = await Promise.all(frs.map(fr => fr.evaluate(() => document.getElementById('ov').textContent)));
+  ok('los 4 ven la misión cumplida', fines.every(t => /Misión cumplida/.test(t)), fines.map(t => t.slice(0, 30)).join(' | '));
+  for (const q of ps) await q.waitForSelector('#p-body .result', { timeout: 30000 }); // NOSONAR: en orden
+  await p.waitForFunction(() => /confirmado/.test((document.getElementById('p-brigada-nota') || {}).textContent || ''), null, { timeout: 20000 }).catch(() => {});
+  const s1 = await salaDe(codigo, 'marisol@example.com');
+  ok('servidor: resultado confirmado, puntos por persona y del equipo', s1.brigada && s1.brigada.estado === 'confirmado' && s1.brigada.ranking[id('Angel')] >= 250 && s1.brigada.equipo > 5000, JSON.stringify(s1.brigada).slice(0, 200));
+  const podios = await Promise.all(ps.map(q => q.textContent('#p-body')));
+  ok('podio en los 4 con los puntos del equipo y la revancha', podios.every(t => /equipo/.test(t)) && await p.isVisible('#p-revancha'), podios[1].replace(/\s+/g, ' ').slice(0, 140));
+  const em = await p.evaluate(() => (window.Emocion ? window.Emocion.eventos().map(x => x.ev) : []));
+  ok('podio con Emocion.podio', em.includes('podio'), em.slice(-6).join(','));
+  await p.screenshot({ path: 'brigada-390-podio.png', fullPage: true });
+  await ps[1].screenshot({ path: 'brigada-844-podio.png', fullPage: true });
+  for (const q of ps) await q.context().close(); // NOSONAR: en orden
+}
+
+// Chequeo ligero con 8 contextos (todos se conectan y ven la misma misión) y fps del anfitrión con 8 personajes
+// (las otras 7 entradas las inyecta el relevo desde Node, como Karts en vivo: 8 navegadores dibujando a la vez
+// contaminan la medición).
+async function ocho(b, relevo) {
+  const sufijo = Date.now() % 100000;
+  const invitados = ['Nube', 'Rayo', 'Trueno'].map((n, k) => ({ email: `bx-${n.toLowerCase()}-${sufijo}@example.com`, nombre: n + ' ' + (k + 1) }));
+  const altas = await Promise.all(invitados.map(i => pedir(i.email, '/juegos/invitado', { nombre: i.nombre, acepto: true })));
+  ok('alta de 3 invitados de prueba', altas.every(r => r.status === 200), altas.map(r => r.status).join(','));
+  const correos = ['marisol', 'angel', 'laura', 'fernando', 'jesus'].map(n => n + '@example.com').concat(invitados.map(i => i.email));
+  const abrir = email => abrirPagina(b, { email, viejo: true, viewport: { width: 640, height: 400 }, out, etiqueta: email, dialogos: 'aceptar', init: initVivo(relevo.url, { latencia: 60, perdida: 0.02, desorden: 0.1 }), ruta: RUTA + '&vivoSimulado=1', esperar: '[data-menu]' });
+  const ps = [];
+  for (const e of correos) ps.push(await abrir(e)); // NOSONAR: en orden
+  const codigo = await crearSalaBrigada(ps[0], '2', false);
+  for (const q of ps.slice(1)) await unirseSala(q, codigo); // NOSONAR: en orden
+  await ps[0].waitForFunction(() => /8 personas/.test((document.getElementById('p-mesa') || {}).textContent || ''), null, { timeout: 30000 }).catch(() => {});
+  const lleno = await pedir('valeria@example.com', '/juegos/sala/' + codigo + '/unirse', {});
+  ok('sala de 8: la novena persona recibe «sala_llena»', lleno.status === 409 && lleno.body.error === 'sala_llena', JSON.stringify(lleno.body));
+  await ps[0].click('[data-p="empezar"]');
+  const frs = []; for (const q of ps) frs.push(await marcoDe(q, '#p-body #arcade-frame')); // NOSONAR: en orden
+  let conectados = 0;
+  for (const fr of frs) { try { await enSala(fr, 3); conectados++; } catch { /* lo cuenta abajo */ } } // NOSONAR: en orden
+  ok('8 aparatos conectados al canal (anfitrión + 7 invitados con fotos)', conectados === 8, String(conectados));
+  const n = await frs[0].evaluate(() => window.__brigada.m().jugadores.length);
+  ok('misión con 8 personajes', n === 8, String(n));
+  await sleep(2000);
+  const bytes = await frs[0].evaluate(() => window.__brigada.red().bytes);
+  ok('fotos de 8 personajes < 1700 B', bytes.length > 0 && Math.max(...bytes) < 1700, 'máx ' + Math.max(...bytes) + ' prom ' + Math.round(bytes.reduce((s, x) => s + x, 0) / bytes.length));
+  await ps[3].screenshot({ path: 'brigada-ocho.png' });
+  await frs[0].evaluate(() => window.__brigada.terminarYa());
+  let fin = 0;
+  for (const q of ps) { try { await q.waitForSelector('#p-body .result', { timeout: 30000 }); fin++; } catch { /* lo cuenta abajo */ } } // NOSONAR: en orden
+  ok('los 8 ven el podio', fin === 8, String(fin));
+  for (const q of ps) await q.context().close(); // NOSONAR: en orden
+}
+async function fpsAnfitrion8(b, relevo) {
+  const sufijo = Date.now() % 100000;
+  const invitados = Array.from({ length: 7 }, (_, k) => ({ email: `bxf-${k}-${sufijo}@example.com`, nombre: 'Brigada ' + (k + 1) }));
+  await Promise.all(invitados.map(i => pedir(i.email, '/juegos/invitado', { nombre: i.nombre, acepto: true })));
+  const m = await abrirPagina(b, { email: 'sofia@example.com', viejo: true, viewport: { width: 844, height: 390 }, contexto: { ...TACTIL, deviceScaleFactor: 2 }, out, init: initVivo(relevo.url, { latencia: 60 }), ruta: RUTA + '&vivoSimulado=1', esperar: '[data-menu]' });
+  const codigo = await crearSalaBrigada(m, '3', false);
+  for (const i of invitados) await pedir(i.email, '/juegos/sala/' + codigo + '/unirse', {}); // NOSONAR: en orden
+  const ids = (await salaDe(codigo, invitados[0].email)).jugadores.map(j => j.id).filter(x => !x.includes('sofia'));
+  await m.waitForFunction(() => /8 personas/.test((document.getElementById('p-mesa') || {}).textContent || ''), null, { timeout: 30000 }).catch(() => {});
+  let seq = 0;
+  const iv = setInterval(() => ids.forEach((id, k) => { seq++; relevo.inyectar('sala-sim-' + codigo, { i: id, s: seq, t: Date.now(), e: 'bx:entrada', d: { s: seq, x: k % 3 ? 100 : 60, y: 0, m: 2, na: 0, nx: 0, ny: 0 } }); }), 100);
+  await m.click('[data-p="empezar"]');
+  const fr = await marcoDe(m, '#p-body #arcade-frame');
+  await enSala(fr);
+  await fr.evaluate(() => window.__brigada.invulnerable());
+  await sleep(5000);
+  const cdp = await m.context().newCDPSession(m);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await sleep(1500);
+  const xs = [];
+  for (let k = 0; k < 8; k++) { await sleep(500); xs.push((await estado(fr)).fps); } // NOSONAR: lecturas en orden
+  xs.sort((a, b2) => a - b2);
+  const e = await fr.evaluate(() => ({ n: window.__brigada.m().jugadores.length, enemigos: window.__brigada.estado().enemigos, caidos: window.__brigada.red().caidos }));
+  await m.screenshot({ path: 'brigada-844-ocho-cpu4.png' });
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  clearInterval(iv);
+  ok('fps del anfitrión con 8 personajes y enemigos, CPU ×4 (meta 60, mínimo 50)', xs[4] >= 50 && e.n === 8 && e.caidos.length === 0, 'fps=' + xs[4] + ' ' + JSON.stringify(e));
+  await m.context().close();
+}
+async function respaldoSinCanal(b, relevo) {
+  const abrir = (email, viewport) => abrirPagina(b, { email, viejo: true, viewport, contexto: TACTIL, out, etiqueta: email, dialogos: 'aceptar', init: initVivo(relevo.url, { noConecta: true }), ruta: RUTA + '&vivoSimulado=1', esperar: '[data-menu]' });
+  const q = await abrir('jesus@example.com', { width: 390, height: 844 }), w = await abrir('angel@example.com', { width: 844, height: 390 });
+  const codigo = await crearSalaBrigada(q, '1', false);
+  await unirseSala(w, codigo);
+  await q.waitForFunction(() => /2 personas/.test((document.getElementById('p-mesa') || {}).textContent || ''), null, { timeout: 30000 }).catch(() => {});
+  await q.click('[data-p="empezar"]');
+  const fq = await marcoDe(q, '#p-body #arcade-frame');
+  await fq.waitForSelector('#b-ir-solo', { timeout: 30000 });
+  ok('respaldo: sin canal, mensaje claro y «Jugar solo»', /no está disponible en esta sala/.test(await fq.textContent('#ov')));
+  await q.screenshot({ path: 'brigada-390-respaldo.png' });
+  await fq.click('#b-ir-solo');
+  const fs = await marcoDe(q);
+  await fs.waitForSelector('#b-jugar', { timeout: 30000 });
+  ok('respaldo: el botón abre el juego individual', true);
+  await q.context().close(); await w.context().close();
+}
+
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  await soloConToques(b);
-  await horizontalYEscritorio(b);
+  const soloCoop = process.env.BRIGADA_SOLO_COOP === '1';
+  if (!soloCoop) {
+    await soloConToques(b);
+    await horizontalYEscritorio(b);
+  }
+  const relevo = await levantarRelevo();
+  await cooperativo4(b, relevo);
+  await ocho(b, relevo);
+  await fpsAnfitrion8(b, relevo);
+  await respaldoSinCanal(b, relevo);
+  await relevo.cerrar();
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 400)); process.exit(2); });
