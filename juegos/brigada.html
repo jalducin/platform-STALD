@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brigada Xalli</title>
+<style>
+:root{--bg:#0b1324;--panel:#13213d;--panel2:#1b2f55;--txt:#f1f6ff;--suave:#b7c6e4;--acento:#2dd4bf;--oro:#facc15;--borde:rgba(255,255,255,.22)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--txt);font-family:"Trebuchet MS",system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#juego{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+#pantalla{position:relative;flex:1;min-height:0;overflow:hidden;background:#0b1324}
+body.vertical.en-partido.tactil #pantalla{flex:0 0 auto;height:min(78vw,62%)}
+canvas{display:block}
+#c{position:absolute;left:0;top:0}
+.hide{display:none!important}
+/* ---- HUD ---- */
+#hud{position:absolute;inset:0;pointer-events:none;font-weight:800;text-shadow:0 1px 0 #000,0 0 3px rgba(0,0,0,.6);font-size:13px}
+#equipo{position:absolute;left:6px;top:5px;display:grid;grid-auto-flow:column;grid-template-rows:repeat(4,auto);gap:2px 8px}
+.fila-j{display:flex;align-items:center;gap:3px;background:rgba(5,12,28,.62);border-radius:8px;padding:1px 6px 1px 2px;white-space:nowrap;line-height:1.2}
+.fila-j img{width:18px;height:18px}
+.fila-j .n{max-width:64px;overflow:hidden;text-overflow:ellipsis}
+.fila-j.fuera{opacity:.55}
+#centro{position:absolute;left:50%;top:5px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;width:min(30%,260px)}
+@media (max-width:620px){#centro{top:40px;width:56%}#mnombre{display:none}.chip{padding:2px 5px;font-size:12px}}
+.sub{font-size:13px;color:var(--suave)}
+#mnombre{font-size:12px;opacity:.9;white-space:nowrap}
+#avance{width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden}
+#avance i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2dd4bf,#facc15)}
+#jefe-barra{width:100%;font-size:11px;text-align:center}
+#jefe-barra div{height:8px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden;border:1px solid rgba(255,255,255,.4)}
+#jefe-vida{display:block;height:100%;width:100%;background:linear-gradient(90deg,#f43f5e,#fb923c)}
+#hud .der{position:absolute;right:6px;top:5px;display:flex;gap:5px;align-items:center;pointer-events:auto}
+.chip{background:rgba(5,12,28,.62);border-radius:8px;padding:2px 7px;white-space:nowrap;pointer-events:none}
+#puntos{color:var(--oro)}
+.mini{font:inherit;font-size:15px;border:1px solid var(--borde);background:rgba(0,0,0,.45);color:#fff;border-radius:10px;min-width:38px;min-height:34px;padding:2px 7px;cursor:pointer}
+#lat{font-size:12px;min-width:0;padding:2px 6px;pointer-events:none}
+#aviso{position:absolute;left:50%;top:58px;transform:translateX(-50%);background:rgba(5,12,28,.9);border:1px solid rgba(255,255,255,.3);padding:5px 14px;border-radius:999px;font-weight:800;font-size:14px;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5}
+#aviso.ver{opacity:1}
+#red-aviso{position:absolute;left:50%;top:92px;transform:translateX(-50%);z-index:7;background:#7c2d12;border:2px solid #fdba74;color:#fff;font-weight:800;font-size:13px;padding:6px 12px;border-radius:12px;max-width:92%;text-align:center;pointer-events:none}
+#grito{position:absolute;left:0;right:0;top:30%;text-align:center;pointer-events:none;z-index:5;opacity:0;transform:scale(.6);transition:opacity .2s,transform .25s}
+#grito.ver{opacity:1;transform:scale(1)}
+#grito b{display:block;font-size:clamp(30px,8vw,64px);font-style:italic;font-weight:900;color:var(--oro);text-shadow:0 4px 0 #7c2d12,0 0 24px rgba(0,0,0,.7)}
+#grito small{display:inline-block;margin-top:4px;font-size:15px;font-weight:800;background:rgba(5,12,28,.85);padding:3px 12px;border-radius:999px}
+#girar{position:absolute;left:8px;top:62px;z-index:8;display:flex;align-items:center;gap:8px;background:#fde68a;color:#3b2a05;font-weight:800;font-size:13px;padding:6px 6px 6px 12px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.4);max-width:94%}
+#girar button{font:inherit;border:0;border-radius:999px;background:rgba(0,0,0,.15);min-width:32px;min-height:32px;cursor:pointer}
+/* ---- Pantallas ---- */
+.ov{position:absolute;inset:0;z-index:6;overflow:auto;padding:12px 12px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;background:radial-gradient(120% 80% at 50% 0,rgba(19,58,96,.96),rgba(6,10,24,.97));text-align:center}
+.ov h1{margin:2px 0 0;font-size:clamp(28px,7.5vw,46px);font-style:italic;font-weight:900;color:#fff;text-shadow:0 3px 0 #0f766e,0 0 18px rgba(45,212,191,.45);line-height:1}
+.ov h1 span{color:var(--acento)}
+.ov h2{margin:0;font-size:clamp(20px,5.4vw,30px);font-style:italic;color:var(--acento)}
+.ov p{margin:0;max-width:600px;line-height:1.35;color:var(--suave)}
+.caja{width:min(640px,100%);background:linear-gradient(var(--panel2),var(--panel));border:1px solid var(--borde);border-radius:14px;padding:9px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.caja h3{margin:2px 0 6px;font-size:14px;color:var(--oro)}
+.btn{font:inherit;font-weight:900;font-size:17px;font-style:italic;border:0;border-radius:12px;padding:11px 20px;min-height:50px;background:linear-gradient(#5eead4,#14b8a6);color:#042f2e;box-shadow:0 4px 0 #0f766e;cursor:pointer}
+.btn.sec{background:linear-gradient(#36507e,#1e335a);color:#fff;box-shadow:0 4px 0 #0c1a33}
+.btn:active{transform:translateY(3px)}
+.fila{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.op{font:inherit;font-weight:800;font-size:14px;color:#fff;border:1px solid var(--borde);border-radius:10px;padding:8px 12px;min-height:44px;background:#1d3460;cursor:pointer}
+.op[aria-pressed=true]{background:#14b8a6;color:#042f2e;border-color:#99f6e4;box-shadow:0 0 0 2px rgba(153,246,228,.45)}
+#pers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.pers{font:inherit;border:2px solid transparent;border-radius:12px;background:#1d3460;color:#fff;padding:3px 2px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-height:44px}
+.pers img{width:46px;height:46px}
+.pers b{font-size:11.5px}
+.pers[aria-pressed=true]{border-color:#5eead4;background:#155e75}
+#pers-detalle{font-size:13px;min-height:1.3em;margin-top:5px;color:var(--suave)}
+#misiones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.mis{font:inherit;text-align:left;border:2px solid transparent;border-radius:12px;background:#1d3460;color:#fff;padding:7px 9px;cursor:pointer;min-height:58px}
+.mis[aria-pressed=true]{border-color:#facc15;background:#3b3413}
+.mis:disabled{opacity:.45;cursor:not-allowed}
+.mis b{display:block;font-size:14px}
+.mis small{display:block;font-size:12px;color:var(--suave)}
+.estrellas{color:var(--oro);letter-spacing:1px}
+.grande-estrellas{font-size:44px;color:var(--oro);letter-spacing:6px;text-shadow:0 3px 0 #7c2d12}
+.grande-estrellas i{font-style:normal;color:rgba(255,255,255,.25)}
+.tabla{border-collapse:collapse;margin:0 auto;font-size:14px}
+.tabla td{padding:2px 10px;text-align:left}.tabla td.num{text-align:right;font-weight:800}
+#teclas{font-size:12.5px;color:var(--suave)}
+/* ---- Controles táctiles: joystick a la izquierda y el rombo A/B/X/Y a la derecha (como el mando común) ---- */
+#mandos{display:none;flex:1 1 auto;align-items:center;justify-content:space-between;gap:10px;padding:6px 12px 10px;background:linear-gradient(#10203f,#0b1324);min-height:0}
+body.tactil.en-partido.ctl-joystick #mandos{display:flex}
+#m-izq{flex:1 1 auto;min-width:0;max-width:240px;height:min(100%,190px)}
+#joy-zona{position:relative;width:100%;height:100%;border-radius:18px;background:rgba(255,255,255,.05);touch-action:none}
+#joy-base{position:absolute;left:50%;top:52%;width:108px;height:108px;margin:-54px 0 0 -54px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.05),rgba(255,255,255,.18) 70%);border:2px solid rgba(255,255,255,.45);pointer-events:none}
+#joy-perilla{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#4b5563,#111827 70%);border:3px solid #9ca3af}
+#joy-zona.on #joy-perilla{border-color:#5eead4}
+.joy-txt{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:11px;opacity:.55;pointer-events:none}
+#m-der{flex:0 0 auto;position:relative;width:186px;height:186px}
+.m{position:absolute;font:inherit;border-radius:50%;border:3px solid rgba(255,255,255,.6);color:#fff;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;padding:0;line-height:1;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.45);text-shadow:0 1px 1px rgba(0,0,0,.5);transform:translate(-50%,-50%)}
+.m small{font-size:9.5px;letter-spacing:.02em;margin-top:2px}
+.m.on{transform:translate(-50%,-50%) translateY(2px) scale(.94);filter:brightness(1.25);box-shadow:0 1px 0 rgba(0,0,0,.45)}
+#b-x{left:50%;top:15%;width:56px;height:56px;font-size:20px;background:radial-gradient(circle at 35% 30%,#93c5fd,#1d4ed8)}
+#b-y{left:15%;top:50%;width:56px;height:56px;font-size:20px;background:radial-gradient(circle at 35% 30%,#86efac,#15803d)}
+#b-a{left:83%;top:50%;width:68px;height:68px;font-size:24px;background:radial-gradient(circle at 35% 30%,#fca5a5,#b91c1c)}
+#b-b{left:50%;top:83%;width:76px;height:76px;font-size:26px;background:radial-gradient(circle at 35% 30%,#fde68a,#ca8a04)}
+@media (orientation:landscape) and (max-height:520px){
+  body.tactil.en-partido.ctl-joystick #mandos{position:absolute;left:0;right:0;bottom:0;background:none;pointer-events:none;padding:4px 14px calc(6px + env(safe-area-inset-bottom,0px));z-index:4;height:auto}
+  #mandos>*{pointer-events:auto}
+  #m-izq{flex:0 1 32%;height:140px}
+  #m-der{width:150px;height:150px}
+  #b-x,#b-y{width:48px;height:48px;font-size:17px}
+  #b-a{width:58px;height:58px}
+  #b-b{width:62px;height:62px;top:78%}
+  #joy-zona{background:rgba(255,255,255,.04)}
+  .m{opacity:.85}
+  .ov{padding-top:8px;gap:7px}
+  #pers{grid-template-columns:repeat(8,minmax(0,1fr))}
+  .pers img{width:36px;height:36px}
+}
+@media (max-width:360px){#m-der{width:166px;height:166px}.pers img{width:38px;height:38px}}
+@media (prefers-reduced-motion:reduce){#aviso,#grito{transition:none}.m.on{transform:translate(-50%,-50%)}}
+</style></head><body class="ctl-joystick">
+<div id="juego">
+  <div id="pantalla">
+    <canvas id="c" width="480" height="270" aria-label="Misión de Brigada Xalli"></canvas>
+    <div id="hud" class="hide">
+      <div id="equipo"></div>
+      <div id="centro"><div id="mnombre"></div><div id="avance"><i id="avance-barra"></i></div><div id="jefe-barra" class="hide"><b id="jefe-nombre"></b><div><i id="jefe-vida"></i></div></div></div>
+      <div class="der"><output class="chip" id="puntos">0</output><output class="chip" id="arma">🫧 ∞</output><output class="chip" id="globos">🎈 5</output><output class="mini hide" id="lat" aria-label="Latencia"></output><button class="mini" id="b-sonido" aria-label="Sonido">🔊</button><button class="mini" id="b-pausa" aria-label="Pausa">⏸</button></div>
+    </div>
+    <output id="aviso"></output>
+    <output id="red-aviso" class="hide" aria-live="polite"></output>
+    <div id="grito" aria-live="polite"></div>
+    <output id="girar" class="hide"><span>📱↻ Mejor con el celular de lado</span><button id="b-girar" aria-label="Cerrar aviso">✕</button></output>
+    <div class="ov" id="ov"><h1>🦎 Brigada <span>Xalli</span></h1><p>Cargando…</p></div>
+  </div>
+  <div id="mandos" aria-hidden="true">
+    <div id="m-izq"><div id="joy-zona"><div id="joy-base"><div id="joy-perilla"></div></div><span class="joy-txt">Muévete y apunta</span></div></div>
+    <div id="m-der">
+      <button class="m" data-k="gx" id="b-x" tabindex="-1">🎈<small>X</small></button>
+      <button class="m" data-k="gy" id="b-y" tabindex="-1">🔁<small>Y</small></button>
+      <button class="m" data-k="a" id="b-a" tabindex="-1">⤴<small>A SALTA</small></button>
+      <button class="m" data-k="b" id="b-b" tabindex="-1">🫧<small>B DISPARA</small></button>
+    </div>
+  </div>
+</div>
+<script src="mando.js?v=2"></script>
+<script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
+<script src="en-vivo.js?v=1"></script> <!-- juegos-en-vivo: canal de la sala por el puente de la página -->
+<script src="personajes.js?v=3"></script>
+<script src="brigada-misiones.js?v=1"></script>
+<script src="brigada-motor.js?v=1"></script>
+<script>
+/* Brigada Xalli — página del juego (openspec: brigada-xalli). Embebido en juegos.html (🕹️ Arcade): misiones con
+   avance (la página de Juegos lo lee y guarda) y puntos de ranking por misión. Motor sin DOM: juegos/brigada-motor.js;
+   misiones: juegos/brigada-misiones.js. Todo el arte son trazos de canvas propios y los sonidos, síntesis propia. */
+'use strict';
+const M = window.BrigadaMotor, MIS = window.BrigadaMisiones;
+const Q = new URLSearchParams(location.search);
+const EMBED = window.parent !== window, PRUEBA = Q.get('prueba') === '1';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replaceAll(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const leerLS = k => { try { return localStorage.getItem(k); } catch { return null; } };
+const guardarLS = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sin almacenamiento */ } };
+const REDUCIR = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const apodo = n => (String(n || '').trim().split(/\s+/)[0] || '').slice(0, 8);
+function enviar(m) {
+  if (!EMBED) return;
+  try { parent.postMessage({ juego: 'brigada', ...m }, location.origin); } catch { /* sin plataforma */ }
+}
+
+/* ================= Audio: síntesis propia + juegos/emocion.js en los momentos grandes ================= */
+let AC = null, master = null, sonido = leerLS('arcade_sonido') !== '0';
+function audio() {
+  try {
+    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.connect(AC.destination); }
+    master.gain.value = sonido ? 0.8 : 0;
+    if (AC.state === 'suspended' && !document.hidden) AC.resume();
+  } catch { AC = null; }
+}
+let tonosCuadro = 0;
+function tono(f, d, tipo = 'square', v = 0.05, hasta = 0, retraso = 0) {
+  if (!AC || !sonido || tonosCuadro > 6) return;
+  tonosCuadro++;
+  const o = AC.createOscillator(), ga = AC.createGain(), s = AC.currentTime + retraso;
+  o.type = tipo; o.frequency.setValueAtTime(f, s); if (hasta) o.frequency.exponentialRampToValueAtTime(hasta, s + d);
+  ga.gain.setValueAtTime(v, s); ga.gain.exponentialRampToValueAtTime(0.001, s + d);
+  o.connect(ga); ga.connect(master); o.start(s); o.stop(s + d + 0.02);
+}
+const SON = {
+  burbuja: () => tono(520, 0.07, 'sine', 0.035, 900),
+  laser: () => tono(1400, 0.08, 'triangle', 0.025, 700),
+  canon: () => tono(180, 0.18, 'square', 0.05, 70),
+  salto: () => tono(330, 0.12, 'triangle', 0.04, 620),
+  boom: () => { tono(140, 0.2, 'square', 0.05, 50); tono(900, 0.08, 'triangle', 0.02, 1500, 0.03); },
+  globo: () => { tono(90, 0.3, 'sawtooth', 0.06, 40); [784, 988, 1175].forEach((f, i) => tono(f, 0.08, 'triangle', 0.03, 0, 0.05 + i * 0.05)); },
+  rescate: () => [523, 659, 784, 1047].forEach((f, i) => tono(f, 0.14, 'triangle', 0.045, 0, i * 0.08)),
+  objeto: () => { tono(880, 0.08, 'sine', 0.05); tono(1320, 0.12, 'sine', 0.04, 0, 0.06); },
+  herido: () => tono(440, 0.25, 'square', 0.05, 160),
+  bloqueo: () => tono(1800, 0.05, 'square', 0.02, 1200),
+  checkpoint: () => [659, 880, 1175].forEach((f, i) => tono(f, 0.12, 'square', 0.035, 0, i * 0.09)),
+  jefe: () => [220, 196, 220, 196].forEach((f, i) => tono(f, 0.22, 'sawtooth', 0.04, 0, i * 0.24)),
+  revive: () => [392, 523, 659, 784].forEach((f, i) => tono(f, 0.1, 'sine', 0.05, 0, i * 0.06)),
+};
+function pintarSonido() { $('b-sonido').textContent = sonido ? '🔊' : '🔇'; $('b-sonido').setAttribute('aria-pressed', String(!sonido)); }
+$('b-sonido').onclick = e => { sonido = !sonido; guardarLS('arcade_sonido', sonido ? '1' : '0'); audio(); window.Emocion?.silencio(!sonido); pintarSonido(); e.currentTarget.blur(); };
+pintarSonido();
+addEventListener('pointerdown', audio, { passive: true });
+addEventListener('touchend', audio, { passive: true });
+addEventListener('keydown', audio);
+
+/* ================= Entrada: capa de acciones BrigadaEntrada =================
+   Eje de la palanca (x a la derecha, y hacia abajo) + A (saltar), B (disparar, mantener = ráfaga), X (globo) e
+   Y (cambiar arma). Fuentes: teclado, toques (joystick + rombo), mando común y las que se registren (pruebas).
+   Las presiones más cortas que un cuadro no se pierden (pulso). */
+const TOQUES = 'ontouchstart' in window;
+const TACTIL = TOQUES || matchMedia('(any-pointer: coarse)').matches;
+if (TACTIL) document.body.classList.add('tactil');
+const teclas = new Set(), toque = { a: false, b: false, gx: false, gy: false }, fuentes = [];
+const pulso = { a: false, b: false, gx: false, gy: false };
+const TECLAS = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'arriba', KeyW: 'arriba', ArrowDown: 'abajo', KeyS: 'abajo',
+  Space: 'a', KeyK: 'a', KeyJ: 'b', KeyZ: 'b', KeyL: 'gx', KeyX: 'gx', KeyI: 'gy', KeyC: 'gy' };
+const jugando = () => S.vista === 'partido';
+addEventListener('keydown', e => {
+  if ((e.code === 'KeyP' || e.code === 'Escape') && (S.vista === 'partido' || S.vista === 'pausa')) { e.preventDefault(); alternarPausa(); return; }
+  const k = TECLAS[e.code];
+  if (!k || !jugando()) return;
+  e.preventDefault(); teclas.add(k);
+  if (k in pulso && !e.repeat) pulso[k] = true;
+});
+addEventListener('keyup', e => { const k = TECLAS[e.code]; if (k) teclas.delete(k); });
+addEventListener('blur', () => teclas.clear());
+document.addEventListener('touchmove', e => { if (jugando()) e.preventDefault(); }, { passive: false });
+function tactil(el, h) {
+  const vivos = new Set();
+  const ini = (id, x, y) => { vivos.add(id); h.inicio(id, x, y); };
+  const mov = (id, x, y) => { if (vivos.has(id) && h.mover) h.mover(id, x, y); };
+  const fin = id => { if (vivos.delete(id)) h.fin(id); };
+  el.addEventListener('touchstart', e => { e.preventDefault(); for (const t of e.changedTouches) ini('t' + t.identifier, t.clientX, t.clientY); }, { passive: false });
+  el.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) mov('t' + t.identifier, t.clientX, t.clientY); }, { passive: false });
+  const finT = e => { e.preventDefault(); for (const t of e.changedTouches) fin('t' + t.identifier); };
+  el.addEventListener('touchend', finT, { passive: false });
+  el.addEventListener('touchcancel', finT, { passive: false });
+  const propio = e => e.pointerType !== 'touch' || !TOQUES;
+  el.addEventListener('pointerdown', e => {
+    if (!propio(e)) return;
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch { /* nada */ }
+    ini('p' + e.pointerId, e.clientX, e.clientY);
+  });
+  el.addEventListener('pointermove', e => { if (propio(e)) mov('p' + e.pointerId, e.clientX, e.clientY); });
+  const finP = e => { if (propio(e)) fin('p' + e.pointerId); };
+  el.addEventListener('pointerup', finP); el.addEventListener('pointercancel', finP);
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+document.querySelectorAll('#mandos [data-k]').forEach(b => {
+  const k = b.dataset.k, dedos = new Set();
+  tactil(b, {
+    inicio: id => { dedos.add(id); toque[k] = true; pulso[k] = true; b.classList.add('on'); },
+    fin: id => { dedos.delete(id); if (!dedos.size) { toque[k] = false; b.classList.remove('on'); } },
+  });
+});
+const JOY_R = 46, JOY_MUERTA = 0.12;
+const joy = { id: null, cx: 0, cy: 0, x: 0, y: 0 };
+function pintarJoy() {
+  $('joy-perilla').style.transform = 'translate(' + (joy.x * JOY_R).toFixed(1) + 'px,' + (joy.y * JOY_R).toFixed(1) + 'px)';
+  $('joy-zona').classList.toggle('on', joy.id !== null);
+}
+function soltarJoy() { joy.id = null; joy.x = 0; joy.y = 0; const b = $('joy-base'); b.style.left = ''; b.style.top = ''; pintarJoy(); }
+tactil($('joy-zona'), {
+  inicio(id, x, y) {
+    if (joy.id !== null) return;
+    const z = $('joy-zona').getBoundingClientRect(), m = 50;
+    joy.id = id;
+    joy.cx = z.width < 2 * m ? z.left + z.width / 2 : Math.max(z.left + m, Math.min(z.right - m, x));
+    joy.cy = z.height < 2 * m ? z.top + z.height / 2 : Math.max(z.top + m, Math.min(z.bottom - m, y));
+    const b = $('joy-base'); b.style.left = (joy.cx - z.left) + 'px'; b.style.top = (joy.cy - z.top) + 'px';
+    this.mover(id, x, y);
+  },
+  mover(id, x, y) {
+    if (id !== joy.id) return;
+    let dx = x - joy.cx, dy = y - joy.cy;
+    const d = Math.hypot(dx, dy);
+    if (d > JOY_R) { dx *= JOY_R / d; dy *= JOY_R / d; }
+    joy.x = dx / JOY_R; joy.y = dy / JOY_R; pintarJoy();
+  },
+  fin(id) { if (id === joy.id) soltarJoy(); },
+});
+function soltarToques() {
+  for (const k in toque) { toque[k] = false; pulso[k] = false; }
+  teclas.clear(); soltarJoy();
+  document.querySelectorAll('#mandos .on').forEach(b => b.classList.remove('on'));
+}
+// Mando común de Arcade: palanca y cruceta = mover/apuntar, A = saltar, B = disparar, X = globo, Y = arma, START = pausa.
+const mando = Mando.crear({
+  acciones: { saltar: 'A', disparar: 'B', globo: 'X', arma: 'Y', pausa: 'START' }, analogico: true, contenedor: $('juego'),
+  teclas: Object.fromEntries(Object.keys(Mando.TECLAS).map(k => [k, null])),
+  nombres: { saltar: 'salta', disparar: 'dispara', globo: 'globo', arma: 'arma', pausa: 'pausa' },
+});
+mando.activar(false);
+mando.al('pausa', () => { if (S.vista === 'partido' || S.vista === 'pausa') alternarPausa(); });
+mando.al('saltar', () => { pulso.a = true; });
+mando.al('disparar', () => { pulso.b = true; });
+mando.al('globo', () => { pulso.gx = true; });
+mando.al('arma', () => { pulso.gy = true; });
+let control = leerLS('brigada_control');
+if (!['joystick', 'mando'].includes(control)) control = 'joystick';
+function elegirControl(c) { control = c; guardarLS('brigada_control', c); soltarToques(); pintarControl(); }
+function pintarControl() {
+  document.body.classList.toggle('ctl-joystick', control === 'joystick');
+  document.body.classList.toggle('ctl-mando', control === 'mando');
+  mando.mostrar(control === 'mando' && TACTIL && S.vista === 'partido');
+  document.querySelectorAll('[data-control]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.control === control)));
+}
+// Eje: el de mayor magnitud entre joystick, mando, teclado y fuentes registradas. c4 = viene del joystick táctil.
+function eje() {
+  const cands = [{ x: joy.x, y: joy.y, c4: true }];
+  try { cands.push(mando.eje()); } catch { /* sin mando */ }
+  let kx = 0, ky = 0;
+  if (teclas.has('izq')) kx -= 1;
+  if (teclas.has('der')) kx += 1;
+  if (teclas.has('arriba')) ky -= 1;
+  if (teclas.has('abajo')) ky += 1;
+  cands.push({ x: kx, y: ky });
+  for (const f of fuentes) { try { if (f.eje) cands.push(f.eje()); } catch { /* fuente rota */ } }
+  let mejor = { x: 0, y: 0 }, mm = 0;
+  for (const c of cands) { const m = Math.hypot(c.x || 0, c.y || 0); if (m > mm) { mm = m; mejor = c; } }
+  if (mm < JOY_MUERTA) return { x: 0, y: 0, c4: false };
+  const k = mm > 1 ? 1 / mm : 1;
+  return { x: mejor.x * k, y: mejor.y * k, c4: !!mejor.c4 };
+}
+const deFuentes = a => fuentes.some(f => { try { return !!f.presionado(a); } catch { return false; } });
+const MANTENIDO = { a: () => toque.a || teclas.has('a') || mando.presionado('saltar'), b: () => toque.b || teclas.has('b') || mando.presionado('disparar') };
+// Entrada de este cuadro: { x, y, a, b, ga, gx, gy, c4 }. Las presiones se consumen al leer.
+let aPrev = false;
+function leerEntrada() {
+  const e = eje(), a = MANTENIDO.a() || pulso.a || deFuentes('a'), b = MANTENIDO.b() || pulso.b || deFuentes('b');
+  const ga = (a && !aPrev) || pulso.a, gx = pulso.gx || (deFuentes('gx') && !leerEntrada.gxPrev), gy = pulso.gy || (deFuentes('gy') && !leerEntrada.gyPrev);
+  leerEntrada.gxPrev = deFuentes('gx'); leerEntrada.gyPrev = deFuentes('gy');
+  aPrev = a;
+  for (const k in pulso) pulso[k] = false;
+  return { x: e.x, y: e.y, a, b, ga, gx, gy, c4: e.c4 };
+}
+window.BrigadaEntrada = { leer: leerEntrada, registrar: f => { fuentes.push(f); return () => { const i = fuentes.indexOf(f); if (i >= 0) fuentes.splice(i, 1); }; } };
+
+/* ================= Vista (canvas 2D) =================
+   La ventana de juego mide 480 × 270 px nativos; se dibuja a la escala que quepa. Si el aparato es más ancho que 16:9
+   se ve más escenario a los lados; si es más alto, más cielo. Fondos de cada misión pre-dibujados en tiras (cielo,
+   lejano y medio con paralaje) y sprites pre-dibujados (personajes por pose con casco, mochila y lanzaburbujas;
+   enemigos por tipo y cuadro); cada cuadro solo copia imágenes y dibuja lo que cae en la vista. */
+const ESC_PJ = 1.75; // personajes de juegos/personajes.js (~15 u) → ~26 px nativos
+const CAB = {}; // por personaje: { top, cx } de la cabeza en unidades del dibujo (medido una vez)
+function medirCabeza(id) {
+  if (CAB[id]) return CAB[id];
+  const c = document.createElement('canvas'); c.width = c.height = 96;
+  const x = c.getContext('2d'); x.translate(48, 80); x.scale(4, 4);
+  Personajes.pintar(x, id, { pose: 'quieto', quieto: true });
+  const d = x.getImageData(0, 0, 96, 96).data;
+  let top = 96;
+  for (let y = 0; y < 96 && top === 96; y++) for (let k = 0; k < 96; k++) if (d[(y * 96 + k) * 4 + 3] > 40) { top = y; break; }
+  let sx = 0, n = 0;
+  for (let y = top; y < Math.min(96, top + 14); y++) for (let k = 0; k < 96; k++) if (d[(y * 96 + k) * 4 + 3] > 40) { sx += k; n++; }
+  return (CAB[id] = { top: (top - 80) / 4, cx: n ? (sx / n - 48) / 4 : 0 });
+}
+const COLOR_PJ = id => Personajes.porId(id).kart.cuerpo;
+const FIRMA_PJ = id => Personajes.porId(id).firma;
+function elipse(c, x, y, rx, ry, r0, r1) { c.beginPath(); c.ellipse(x, y, Math.max(0.01, rx), Math.max(0.01, ry), 0, r0 || 0, r1 || 2 * Math.PI); }
+function rr(c, x, y, w, h, r) { c.beginPath(); c.roundRect(x, y, w, h, r); }
+
+const vista = (() => {
+  const cv = $('c'), cx = cv.getContext('2d');
+  const V = { w: 0, h: 0, dpr: 1, k: 1, s: 1, vw: 480, vh: 270, x0: 0, y0: 0, clave: '', sp: new Map(), fondos: null, mision: 0 };
+  function ajustar(mision) {
+    const w = $('pantalla').clientWidth, h = $('pantalla').clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+    const clave = [w, h, dpr, mision].join(':');
+    if (clave === V.clave) return;
+    V.clave = clave; V.w = w; V.h = h; V.dpr = dpr; V.mision = mision;
+    cv.width = Math.max(1, Math.round(w * dpr)); cv.height = Math.max(1, Math.round(h * dpr)); cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    V.k = Math.min(h / M.H, w / M.W); V.s = V.k * dpr;
+    V.vw = w / V.k; V.vh = h / V.k;
+    V.sp = new Map(); V.fondos = prepararFondos(mision);
+  }
+  // Sprite pre-dibujado: w × h nativos con el origen en (ox, oy), a la resolución del aparato.
+  function sprite(clave, w, h, ox, oy, dibujar) {
+    let sp = V.sp.get(clave);
+    if (sp) return sp;
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.ceil(w * V.s)); c.height = Math.max(1, Math.ceil(h * V.s));
+    const x = c.getContext('2d'); x.scale(V.s, V.s); x.translate(ox, oy); x.lineJoin = x.lineCap = 'round';
+    dibujar(x);
+    sp = { c, w, h, ox, oy };
+    V.sp.set(clave, sp);
+    return sp;
+  }
+  const poner = (sp, x, y) => cx.drawImage(sp.c, x - sp.ox, y - sp.oy, sp.w, sp.h);
+
+  /* ---------- Fondos por misión ---------- */
+  const PALETA = {
+    selva: { cielo: ['#7dd3c0', '#fef3c7'], lejos: '#5b9a8b', medio: '#2f6b4f', tierra: '#7a4b2a', pasto: '#3fa34d', borde: '#2e7d32', plat: '#8b5a2b', platTop: '#4caf50' },
+    desierto: { cielo: ['#7cc4f0', '#fde3b0'], lejos: '#c7774a', medio: '#a35f3a', tierra: '#d4a25c', pasto: '#e9c27a', borde: '#b07c3c', plat: '#a8693a', platTop: '#d9a066' },
+    ciudad: { cielo: ['#60a5fa', '#dbeafe'], lejos: '#7f93b8', medio: '#4b5d82', tierra: '#4b5563', pasto: '#9ca3af', borde: '#6b7280', plat: '#64748b', platTop: '#cbd5e1' },
+    estacion: { cielo: ['#0b1030', '#1e1b4b'], lejos: '#3b3f6b', medio: '#2a2f55', tierra: '#334155', pasto: '#94a3b8', borde: '#475569', plat: '#475569', platTop: '#a5b4fc' },
+  };
+  const paleta = () => PALETA[(MIS.porId(V.mision) || MIS.LISTA[0]).clave];
+  function tira(w, h, dibujar) {
+    const c = document.createElement('canvas'); c.width = Math.ceil(w * V.s); c.height = Math.ceil(h * V.s);
+    const x = c.getContext('2d'); x.scale(V.s, V.s); dibujar(x); return { c, w, h };
+  }
+  function prepararFondos(mision) {
+    const def = MIS.porId(mision) || MIS.LISTA[0], P = PALETA[def.clave], H = Math.max(M.H, V.vh);
+    const cielo = tira(8, H, c => {
+      const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, P.cielo[0]); g.addColorStop(1, P.cielo[1]);
+      c.fillStyle = g; c.fillRect(0, 0, 8, H);
+    });
+    return { cielo, lejos: tira(512, 200, c => LEJOS[def.clave](c, P)), medio: tira(512, 200, c => MEDIO[def.clave](c, P)), clave: def.clave };
+  }
+  // Capas en coordenadas de una tira de 512 × 200 que termina en el horizonte (y = 200 ≈ suelo 230).
+  const LEJOS = {
+    selva(c, P) {
+      c.fillStyle = 'rgba(255,255,255,.35)'; for (const [x, y, r] of [[60, 40, 18], [300, 24, 14], [440, 50, 20]]) { elipse(c, x, y, r * 2, r); c.fill(); }
+      c.fillStyle = P.lejos;
+      c.beginPath(); c.moveTo(0, 200); for (let x = 0; x <= 512; x += 32) c.lineTo(x, 120 + 26 * Math.sin(x / 70) + 12 * Math.sin(x / 23)); c.lineTo(512, 200); c.fill();
+      // Ruina escalonada en silueta lejana, entre la neblina.
+      c.fillStyle = 'rgba(47,107,79,.55)';
+      for (let k = 0; k < 5; k++) c.fillRect(320 + k * 8, 96 + k * 14, 96 - k * 16, 16);
+      c.fillRect(356, 84, 24, 14);
+    },
+    desierto(c, P) {
+      c.fillStyle = '#fff7d6'; elipse(c, 420, 46, 22, 22); c.fill();
+      c.fillStyle = P.lejos;
+      const mesa = (x, w, h) => { c.beginPath(); c.moveTo(x, 200); c.lineTo(x + 12, 200 - h); c.lineTo(x + w - 12, 200 - h); c.lineTo(x + w, 200); c.fill(); };
+      mesa(20, 150, 70); mesa(230, 110, 96); mesa(380, 140, 60);
+      c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(32, 136, 126, 4); c.fillRect(242, 112, 86, 4);
+    },
+    ciudad(c, P) {
+      c.fillStyle = 'rgba(255,255,255,.55)'; for (const [x, y] of [[90, 30], [350, 46]]) { elipse(c, x, y, 34, 10); c.fill(); }
+      c.fillStyle = P.lejos;
+      for (let k = 0; k < 16; k++) { const w = 22 + (k * 13) % 18, h = 50 + (k * 37) % 70; c.fillRect(k * 32, 200 - h, w, h); }
+      c.fillStyle = 'rgba(255,255,255,.25)';
+      for (let k = 0; k < 16; k++) for (let j = 0; j < 4; j++) c.fillRect(k * 32 + 5, 200 - 40 - j * 12, 4, 5);
+    },
+    estacion(c) {
+      for (let k = 0; k < 70; k++) { c.fillStyle = k % 7 ? 'rgba(255,255,255,.7)' : '#fde68a'; c.fillRect((k * 97) % 512, (k * 53) % 180, k % 5 ? 1 : 2, k % 5 ? 1 : 2); }
+      const g = c.createRadialGradient(410, 60, 6, 410, 70, 46); g.addColorStop(0, '#60a5fa'); g.addColorStop(0.6, '#2563eb'); g.addColorStop(1, '#1e3a8a');
+      c.fillStyle = g; elipse(c, 410, 70, 44, 44); c.fill();
+      c.fillStyle = '#22c55e'; elipse(c, 398, 60, 14, 9); c.fill(); elipse(c, 424, 86, 10, 7); c.fill();
+      c.strokeStyle = 'rgba(165,180,252,.5)'; c.lineWidth = 2;
+      c.strokeRect(40, 120, 180, 40); c.beginPath(); for (let x = 40; x < 220; x += 20) { c.moveTo(x, 120); c.lineTo(x + 20, 160); } c.stroke();
+    },
+  };
+  const MEDIO = {
+    selva(c, P) {
+      for (const [x, s] of [[70, 1], [250, 1.2], [430, 0.9]]) { // ceibas con raíces de contrafuerte
+        c.fillStyle = '#5b4636';
+        c.beginPath(); c.moveTo(x - 30 * s, 200); c.quadraticCurveTo(x - 8 * s, 170, x - 7 * s, 70); c.lineTo(x + 7 * s, 70); c.quadraticCurveTo(x + 8 * s, 170, x + 30 * s, 200); c.fill();
+        c.fillStyle = P.medio; elipse(c, x, 64, 70 * s, 30 * s); c.fill();
+        c.fillStyle = '#3c8a5f'; elipse(c, x - 22 * s, 54, 34 * s, 16 * s); c.fill(); elipse(c, x + 26 * s, 58, 30 * s, 14 * s); c.fill();
+      }
+      c.fillStyle = '#2f7d4a'; for (let x = 0; x < 512; x += 26) { elipse(c, x, 198, 16, 9, Math.PI, 2 * Math.PI); c.fill(); }
+    },
+    desierto(c, P) {
+      const saguaro = (x, h) => {
+        c.fillStyle = '#4d7c3a'; rr(c, x - 5, 200 - h, 10, h, 5); c.fill();
+        rr(c, x - 16, 200 - h * 0.6, 7, h * 0.3, 3.5); c.fill(); c.fillRect(x - 14, 200 - h * 0.36, 10, 6);
+        rr(c, x + 9, 200 - h * 0.75, 7, h * 0.32, 3.5); c.fill(); c.fillRect(x + 4, 200 - h * 0.47, 10, 6);
+      };
+      saguaro(60, 70); saguaro(330, 56); saguaro(470, 80);
+      // Pueblito de adobe con puerta en arco
+      for (const [x, w, h] of [[150, 60, 40], [215, 46, 32]]) {
+        c.fillStyle = '#c98b5a'; c.fillRect(x, 200 - h, w, h); c.fillStyle = '#b07040'; c.fillRect(x - 3, 200 - h - 4, w + 6, 5);
+        c.fillStyle = '#6b3f1f'; rr(c, x + w / 2 - 6, 200 - 20, 12, 20, [6, 6, 0, 0]); c.fill();
+        c.fillStyle = '#3f6b8a'; c.fillRect(x + 6, 200 - h + 10, 8, 8);
+      }
+      c.fillStyle = '#7da35a'; for (const x of [110, 290, 400]) { elipse(c, x, 194, 9, 6); c.fill(); elipse(c, x + 8, 186, 7, 5); c.fill(); }
+    },
+    ciudad(c) {
+      const colores = ['#f472b6', '#facc15', '#38bdf8', '#4ade80', '#fb923c', '#a78bfa'];
+      for (let k = 0; k < 6; k++) {
+        const x = k * 86, h = 90 + (k * 29) % 50;
+        c.fillStyle = colores[k]; c.fillRect(x, 200 - h, 84, h);
+        c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(x, 200 - h, 84, 6);
+        c.fillStyle = '#1e3a5f';
+        for (let f = 0; f < 3; f++) for (let j = 0; j < Math.floor(h / 34); j++) { rr(c, x + 10 + f * 26, 200 - h + 16 + j * 32, 14, 18, [7, 7, 0, 0]); c.fill(); }
+        c.fillStyle = '#7c4a24'; rr(c, x + 34, 176, 16, 24, [8, 8, 0, 0]); c.fill();
+      }
+      // Papel picado entre las fachadas
+      for (let k = 0; k < 5; k++) {
+        const x0 = k * 86 + 40, y0 = 70 + (k % 2) * 12;
+        c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo(x0 + 43, y0 + 14, x0 + 86, y0); c.stroke();
+        for (let j = 0; j < 6; j++) { const t = (j + 0.5) / 6, px = x0 + 86 * t, py = y0 + 14 * 2 * t * (1 - t); c.fillStyle = colores[(j + k) % 6]; c.fillRect(px - 5, py, 10, 11); }
+      }
+    },
+    estacion(c, P) {
+      c.fillStyle = P.medio; c.fillRect(0, 60, 512, 140);
+      c.fillStyle = '#1f2547'; for (let x = 0; x < 512; x += 128) { rr(c, x + 16, 84, 70, 40, 10); c.fill(); }
+      c.fillStyle = 'rgba(96,165,250,.35)'; for (let x = 0; x < 512; x += 128) { rr(c, x + 22, 90, 58, 28, 8); c.fill(); }
+      c.strokeStyle = '#475569'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 150); c.lineTo(512, 150); c.moveTo(0, 168); c.lineTo(512, 168); c.stroke();
+      c.fillStyle = '#fbbf24'; for (let x = 40; x < 512; x += 64) { c.fillRect(x, 140, 6, 4); }
+      c.fillStyle = '#22d3ee'; for (let x = 100; x < 512; x += 128) { elipse(c, x, 70, 4, 4); c.fill(); }
+    },
+  };
+  function dibujarFondo() {
+    const F = V.fondos, top = V.y0;
+    cx.drawImage(F.cielo.c, V.x0, top, V.vw + 2, V.vh + 2);
+    for (const [capa, par, base] of [[F.lejos, 0.2, 210], [F.medio, 0.5, 232]]) {
+      const desde = V.x0 * (1 - par), off = ((desde % 512) + 512) % 512;
+      for (let x = V.x0 - off; x < V.x0 + V.vw; x += 512) cx.drawImage(capa.c, x, base - 200, 512, 200);
+    }
+  }
+  function dibujarSuelo(def) {
+    const P = paleta(), fondo = V.y0 + V.vh + 2;
+    for (const [x0, x1, y] of def.suelo) {
+      if (x1 < V.x0 || x0 > V.x0 + V.vw) continue;
+      cx.fillStyle = P.tierra; cx.fillRect(x0, y, x1 - x0, fondo - y);
+      cx.fillStyle = P.pasto; cx.fillRect(x0, y, x1 - x0, 6);
+      cx.fillStyle = P.borde; cx.fillRect(x0, y + 6, x1 - x0, 2);
+      cx.fillStyle = 'rgba(0,0,0,.12)';
+      for (let x = Math.max(x0, Math.floor(V.x0 / 24) * 24); x < Math.min(x1, V.x0 + V.vw); x += 24) cx.fillRect(x + 6, y + 16 + (x % 48 ? 6 : 0), 6, 4);
+    }
+    for (const [x0, x1, y] of def.plataformas) {
+      if (x1 < V.x0 || x0 > V.x0 + V.vw) continue;
+      cx.fillStyle = P.plat; rr(cx, x0, y, x1 - x0, 9, 3); cx.fill();
+      cx.fillStyle = P.platTop; cx.fillRect(x0 + 2, y, x1 - x0 - 4, 3);
+    }
+  }
+
+  /* ---------- Personajes ---------- */
+  function poseDe(p) {
+    if (p.estado === 'burbuja') return ['dano', 0];
+    if (p.agachado) return ['aterriza', 0];
+    if (!p.suelo) return [p.vy < 0 ? 'salta' : 'cae', 0];
+    if (Math.abs(p.vx) > 8) return ['camina', Math.floor(p.paso / 7) % 4];
+    return ['quieto', 0];
+  }
+  function spritePJ(id, pose, fase, dir) {
+    return sprite('pj:' + id + ':' + pose + ':' + fase + ':' + dir, 44, 40, 22, 36, c => {
+      const cab = medirCabeza(id), col = COLOR_PJ(id), firma = FIRMA_PJ(id);
+      if (dir < 0) c.scale(-1, 1);
+      if (pose === 'aterriza') c.scale(1, 0.7);
+      c.scale(ESC_PJ, ESC_PJ);
+      // Mochila de la brigada (detrás)
+      c.fillStyle = '#334155'; rr(c, cab.cx - 9.5, cab.top + 6, 5.5, 8, 1.6); c.fill();
+      c.fillStyle = col; c.fillRect(cab.cx - 9.5, cab.top + 8, 5.5, 1.6);
+      Personajes.pintar(c, id, { pose, fase: fase * Math.PI / 2, t: 0.5, quieto: true });
+      // Casco con su color y una estrella
+      c.fillStyle = col; elipse(c, cab.cx, cab.top + 3.6, 5.6, 4, Math.PI, 2 * Math.PI); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.35)'; elipse(c, cab.cx - 1.6, cab.top + 1.4, 2.2, 1, Math.PI, 2 * Math.PI); c.fill();
+      c.fillStyle = '#1f2937'; c.fillRect(cab.cx - 6, cab.top + 3.2, 12, 1.1);
+      c.fillStyle = firma; c.beginPath();
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 0.7 : 1.6; c.lineTo(cab.cx + Math.cos(a) * r, cab.top + 1.4 + Math.sin(a) * r); }
+      c.fill();
+    });
+  }
+  function lanzaburbujas(p, x, y, col) {
+    const d = M.DIRS[p.aim], ang = Math.atan2(d[1], d[0]), hy = p.agachado ? y - 9 : y - 15;
+    cx.save(); cx.translate(x + p.dir * 2, hy); cx.rotate(ang);
+    if (d[0] < -0.1) cx.scale(1, -1);
+    cx.fillStyle = col; rr(cx, -2, -2, 10, 4.4, 2); cx.fill();
+    cx.fillStyle = '#fde047'; cx.fillRect(7.5, -1.6, 3, 3.2);
+    cx.fillStyle = 'rgba(165,243,252,.85)'; elipse(cx, 2, -3.6, 2.6, 2.6); cx.fill();
+    if (p.dispT < 0.06) { cx.fillStyle = 'rgba(255,255,255,.9)'; elipse(cx, 12, 0, 3, 3); cx.fill(); }
+    cx.restore();
+  }
+  function jugador(p, yo, nombre, t) {
+    const x = p.x, y = p.y;
+    if (p.estado === 'caido') {
+      const f = 1 - Math.max(0, p.estT) / 1;
+      cx.globalAlpha = Math.max(0, 1 - f);
+      poner(spritePJ(p.personaje, 'dano', 0, p.dir), x, y - f * 20);
+      cx.globalAlpha = 1;
+      return;
+    }
+    if (p.estado === 'burbuja') { burbujaPJ(p, t); return; }
+    if (p.inv > 0 && !REDUCIR && Math.floor(t * 14) % 2) cx.globalAlpha = 0.45;
+    const [pose, fase] = poseDe(p);
+    if (p.vehiculo >= 0) { poner(spritePJ(p.personaje, 'quieto', 0, p.dir), x, y - 12); cx.globalAlpha = 1; armadillo(x, y, p.dir, COLOR_PJ(p.personaje), t, true); return; }
+    poner(spritePJ(p.personaje, pose, fase, p.dir), x, y);
+    lanzaburbujas(p, x, y, FIRMA_PJ(p.personaje));
+    cx.globalAlpha = 1;
+    if (p.escudo > 0) { cx.strokeStyle = 'rgba(125,211,252,' + (0.5 + 0.3 * Math.sin(t * 8)) + ')'; cx.lineWidth = 2; elipse(cx, x, y - 13, 15, 17); cx.stroke(); }
+    if (yo) { cx.fillStyle = '#fde047'; cx.beginPath(); cx.moveTo(x - 4, y - 36); cx.lineTo(x + 4, y - 36); cx.lineTo(x, y - 31); cx.fill(); }
+    if (nombre) etiqueta(nombre, x, y - 38, yo);
+  }
+  function burbujaPJ(p, t) {
+    const x = p.x, y = p.y - 13 + Math.sin(t * 3 + p.i) * 2;
+    poner(spritePJ(p.personaje, 'dano', 0, 1), x, y + 13);
+    cx.fillStyle = 'rgba(186,230,253,.28)'; elipse(cx, x, y, 17, 17); cx.fill();
+    cx.strokeStyle = 'rgba(224,242,254,.9)'; cx.lineWidth = 1.5; cx.stroke();
+    cx.fillStyle = 'rgba(255,255,255,.8)'; elipse(cx, x - 6, y - 7, 4, 2.4); cx.fill();
+    if (p.revive > 0) { cx.strokeStyle = '#4ade80'; cx.lineWidth = 3; cx.beginPath(); cx.arc(x, y, 20, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * p.revive / 0.6); cx.stroke(); }
+    etiqueta('¡Ayuda!', x, y - 22, false);
+  }
+  function etiqueta(txt, x, y, yo) {
+    cx.font = '800 8px system-ui,sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    const w = cx.measureText(txt).width + 6;
+    cx.fillStyle = yo ? 'rgba(254,240,138,.92)' : 'rgba(5,12,28,.7)'; rr(cx, x - w / 2, y - 5, w, 10, 5); cx.fill();
+    cx.fillStyle = yo ? '#3b2a05' : '#fff'; cx.fillText(txt, x, y + 0.5);
+  }
+  function armadillo(x, y, dir, col, t, ocupado) {
+    cx.fillStyle = '#1f2937';
+    for (const dx of [-11, 0, 11]) { elipse(cx, x + dx, y - 4, 4.5, 4.5); cx.fill(); }
+    cx.fillStyle = '#9ca3af'; for (const dx of [-11, 0, 11]) { elipse(cx, x + dx + Math.cos(t * 9 + dx) * 1.5, y - 4 + Math.sin(t * 9 + dx) * 1.5, 1.2, 1.2); cx.fill(); }
+    cx.fillStyle = '#a16207'; elipse(cx, x, y - 10, 17, 13, Math.PI, 2 * Math.PI); cx.fill(); cx.fillRect(x - 17, y - 10, 34, 4);
+    cx.strokeStyle = '#713f12'; cx.lineWidth = 1.4;
+    for (const k of [-8, 0, 8]) { cx.beginPath(); cx.moveTo(x + k, y - 22 + Math.abs(k) * 0.4); cx.lineTo(x + k, y - 7); cx.stroke(); }
+    cx.fillStyle = ocupado ? col : '#64748b'; cx.fillRect(x - 17, y - 9, 34, 2.5);
+    cx.fillStyle = '#374151'; rr(cx, x + dir * 14 - (dir < 0 ? 9 : 0), y - 15, 9, 4, 2); cx.fill();
+  }
+
+  /* ---------- Enemigos (pre-dibujados por tipo, dirección y cuadro) ---------- */
+  const ACERO = '#94a3b8', ACERO2 = '#64748b', OSCURO = '#1f2937';
+  const DIBUJO_ENEMIGO = {
+    patrulla(c, f) {
+      c.fillStyle = OSCURO; c.fillRect(-6, -8 + (f ? 1 : 0), 4, 8 - (f ? 1 : 0)); c.fillRect(2, -8 + (f ? 0 : 1), 4, 8 - (f ? 0 : 1));
+      c.fillStyle = ACERO2; rr(c, -8, -20, 16, 13, 3); c.fill();
+      c.fillStyle = '#22d3ee'; c.fillRect(-5, -16, 10, 3);
+      c.fillStyle = ACERO; rr(c, -6, -27, 12, 8, 3); c.fill();
+      c.fillStyle = '#ef4444'; elipse(c, 2.5, -23, 2, 2); c.fill();
+      c.strokeStyle = OSCURO; c.lineWidth = 1; c.beginPath(); c.moveTo(-2, -27); c.lineTo(-3, -31); c.stroke();
+      c.fillStyle = '#fbbf24'; elipse(c, -3, -31.5, 1.4, 1.4); c.fill();
+      c.fillStyle = OSCURO; c.fillRect(6, -16, 6, 3);
+    },
+    dron(c, f) {
+      c.strokeStyle = OSCURO; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-7, -12); c.lineTo(-7, -15); c.moveTo(7, -12); c.lineTo(7, -15); c.stroke();
+      c.fillStyle = 'rgba(203,213,225,.85)'; c.fillRect(-12 + (f ? 2 : 0), -16, f ? 6 : 10, 1.6); c.fillRect(2 + (f ? 2 : 0), -16, f ? 6 : 10, 1.6);
+      c.fillStyle = ACERO; elipse(c, 0, -7, 11, 5.5); c.fill();
+      c.fillStyle = '#f97316'; c.fillRect(-10, -7, 20, 2);
+      c.fillStyle = '#ef4444'; elipse(c, 5, -5, 2, 2); c.fill();
+    },
+    torreta(c, f) {
+      c.fillStyle = OSCURO; c.beginPath(); c.moveTo(-11, 0); c.lineTo(-8, -7); c.lineTo(8, -7); c.lineTo(11, 0); c.fill();
+      c.fillStyle = ACERO; elipse(c, 0, -7, 8.5, 8, Math.PI, 2 * Math.PI); c.fill();
+      c.fillStyle = ACERO2; c.fillRect(2, -16, 11, 4);
+      c.fillStyle = f ? '#f87171' : '#7f1d1d'; elipse(c, 0, -10, 2.4, 2.4); c.fill();
+      if (f) { c.fillStyle = 'rgba(248,113,113,.6)'; elipse(c, 14, -14, 4, 4); c.fill(); }
+    },
+    saltabot(c, f) {
+      c.strokeStyle = OSCURO; c.lineWidth = 1.4; c.beginPath();
+      const alto = f ? 3 : 6;
+      for (let k = 0; k <= 4; k++) c.lineTo(k % 2 ? 3 : -3, -k * alto / 4);
+      c.stroke();
+      c.fillStyle = '#84cc16'; elipse(c, 0, -alto - 6, 7, 6.5); c.fill();
+      c.fillStyle = '#fff'; elipse(c, 2, -alto - 7, 3, 3); c.fill();
+      c.fillStyle = OSCURO; elipse(c, 3, -alto - 7, 1.4, 1.4); c.fill();
+    },
+    escudobot(c, f) {
+      c.fillStyle = OSCURO; c.fillRect(-7, -8, 5, 8 - (f ? 1 : 0)); c.fillRect(2, -8, 5, 8 - (f ? 0 : 1));
+      c.fillStyle = ACERO2; rr(c, -10, -22, 18, 15, 4); c.fill();
+      c.fillStyle = ACERO; rr(c, -7, -29, 13, 8, 3); c.fill();
+      c.fillStyle = '#ef4444'; c.fillRect(0, -26, 5, 2);
+      c.fillStyle = '#2563eb'; rr(c, 7, -26, 7, 24, 3); c.fill();
+      c.strokeStyle = '#fde047'; c.lineWidth = 1.4; rr(c, 7, -26, 7, 24, 3); c.stroke();
+      c.fillStyle = '#fde047'; elipse(c, 10.5, -14, 1.8, 1.8); c.fill();
+    },
+    alien(c, f) {
+      const sq = f ? 1.12 : 1;
+      c.fillStyle = '#4ade80'; elipse(c, 0, -8 / sq, 9 * sq, 8 / sq, Math.PI, 2 * Math.PI); c.fill(); c.fillRect(-9 * sq, -8 / sq, 18 * sq, 8 / sq);
+      c.fillStyle = '#86efac'; elipse(c, -3, -12 / sq, 3, 1.6); c.fill();
+      for (const ex of [-3.5, 0.5, 4.5]) { c.fillStyle = '#fff'; elipse(c, ex, -9 / sq, 1.8, 2.2); c.fill(); c.fillStyle = '#1e1b4b'; elipse(c, ex + 0.5, -9 / sq, 0.9, 1.1); c.fill(); }
+      c.strokeStyle = '#16a34a'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, -16 / sq); c.lineTo(1, -20); c.stroke();
+      c.fillStyle = '#facc15'; elipse(c, 1, -20.5, 1.4, 1.4); c.fill();
+    },
+  };
+  function enemigo(e, t) {
+    const d = M.ENEMIGOS[e.tipo];
+    let f = Math.floor(t * 6 + e.id) % 2;
+    if (e.tipo === 'torreta') f = e.carga ? 1 : 0;
+    if (e.tipo === 'saltabot' || e.tipo === 'alien') f = e.suelo ? 0 : 1;
+    const sp = sprite('en:' + e.tipo + ':' + f + ':' + e.dir, d.w + 30, d.h + 18, (d.w + 30) / 2, d.h + 14, c => { if (e.dir < 0) c.scale(-1, 1); DIBUJO_ENEMIGO[e.tipo](c, f); });
+    poner(sp, e.x, e.y);
+    if (e.golpeT > 0) { cx.globalAlpha = 0.55; cx.fillStyle = '#fff'; cx.fillRect(e.x - d.w / 2, e.y - d.h, d.w, d.h); cx.globalAlpha = 1; }
+  }
+
+  /* ---------- Jefes (dibujo directo: es uno solo) ---------- */
+  const DIBUJO_JEFE = {
+    tractor(c, j, t) {
+      const x = j.x - j.w / 2, y = j.y - j.h, brillo = j.golpeT > 0;
+      c.fillStyle = '#1f2937'; rr(c, x + 6, j.y - 22, j.w - 12, 22, 11); c.fill();
+      c.fillStyle = '#4b5563'; for (let k = 0; k < 8; k++) { c.fillRect(x + 12 + ((k * 13 + t * 60) % (j.w - 24)), j.y - 20, 4, 18); }
+      c.fillStyle = brillo ? '#fef08a' : '#ca8a04'; rr(c, x + 14, y + 20, j.w - 20, j.h - 40, 8); c.fill();
+      c.fillStyle = brillo ? '#d9f99d' : '#65a30d'; rr(c, x + 48, y, 46, 30, 6); c.fill();
+      c.fillStyle = '#bae6fd'; rr(c, x + 54, y + 6, 32, 16, 4); c.fill();
+      c.fillStyle = '#ef4444'; elipse(c, x + 64, y + 14, 4, 4); c.fill();
+      // Rodillo tragahojas con dientes
+      c.fillStyle = '#6b7280'; elipse(c, x + 14, j.y - 30, 16, 22); c.fill();
+      c.fillStyle = '#e5e7eb'; for (let k = 0; k < 6; k++) { const a = t * 6 + k * Math.PI / 3; c.fillRect(x + 14 + Math.cos(a) * 12 - 2, j.y - 30 + Math.sin(a) * 17 - 2, 4, 4); }
+      c.fillStyle = '#374151'; c.fillRect(x + j.w - 22, y + 2, 8, 24);
+      c.fillStyle = j.aviso ? 'rgba(239,68,68,.85)' : 'rgba(209,213,219,.7)'; elipse(c, x + j.w - 18, y - 4 - (t * 30) % 10, 6, 5); c.fill();
+    },
+    excavadora(c, j, t) {
+      const x = j.x - j.w / 2, y = j.y - j.h, brillo = j.golpeT > 0;
+      c.fillStyle = '#1f2937'; rr(c, x + 10, j.y - 18, j.w - 20, 18, 9); c.fill();
+      c.fillStyle = brillo ? '#fed7aa' : '#ea580c'; rr(c, x + 24, y + 22, j.w - 30, j.h - 40, 6); c.fill();
+      c.fillStyle = '#bae6fd'; rr(c, x + 50, y + 28, 22, 16, 3); c.fill();
+      c.fillStyle = '#ef4444'; elipse(c, x + 58, y + 36, 3, 3); c.fill();
+      const a = -0.6 + Math.sin(t * 2) * 0.15;
+      c.save(); c.translate(x + 30, y + 30); c.rotate(a);
+      c.fillStyle = '#c2410c'; c.fillRect(-46, -4, 46, 8);
+      c.fillStyle = '#6b7280'; c.beginPath(); c.moveTo(-46, -6); c.lineTo(-60, 8); c.lineTo(-40, 14); c.fill();
+      c.restore();
+      if (j.aviso) { c.fillStyle = 'rgba(214,211,209,.6)'; elipse(c, x + 10, j.y - 4, 14, 6); c.fill(); }
+    },
+    escorpion(c, j, t) {
+      if (j.oculto) return;
+      const x = j.x - j.w / 2, brillo = j.golpeT > 0, cuerpo = brillo ? '#e2e8f0' : '#94a3b8';
+      c.fillStyle = '#334155'; for (let k = 0; k < 4; k++) { c.fillRect(x + 30 + k * 16, j.y - 12, 3, 12); }
+      c.fillStyle = cuerpo; rr(c, x + 20, j.y - 34, 80, 24, 10); c.fill();
+      c.fillStyle = '#64748b'; for (let k = 0; k < 4; k++) c.fillRect(x + 34 + k * 16, j.y - 34, 2, 24);
+      c.fillStyle = '#ef4444'; elipse(c, x + 26, j.y - 26, 3, 3); c.fill();
+      c.fillStyle = cuerpo; elipse(c, x + 8, j.y - 20, 10, 7); c.fill(); elipse(c, x + 8, j.y - 40, 10, 7); c.fill();
+      // Cola en arco con su lámpara
+      c.strokeStyle = cuerpo; c.lineWidth = 8; c.beginPath(); c.moveTo(x + 96, j.y - 26); c.quadraticCurveTo(x + 130, j.y - 70, x + 92, j.y - 64 + Math.sin(t * 3) * 3); c.stroke();
+      c.fillStyle = j.fase === 'cola' ? '#f87171' : '#fde047'; elipse(c, x + 90, j.y - 64, 6, 6); c.fill();
+    },
+    grua(c, j, t) {
+      const x = j.x - j.w / 2, y = j.y - j.h, brillo = j.golpeT > 0;
+      c.strokeStyle = brillo ? '#fef08a' : '#eab308'; c.lineWidth = 3;
+      c.strokeRect(x + 22, y + 26, 20, j.h - 26);
+      c.beginPath(); for (let yy = y + 26; yy < j.y; yy += 14) { c.moveTo(x + 22, yy); c.lineTo(x + 42, yy + 14); } c.stroke();
+      c.fillStyle = brillo ? '#fef9c3' : '#ca8a04'; rr(c, x + 6, y, 52, 26, 5); c.fill();
+      c.fillStyle = '#bae6fd'; rr(c, x + 12, y + 5, 18, 12, 3); c.fill();
+      c.fillStyle = '#ef4444'; elipse(c, x + 21, y + 11, 3, 3); c.fill();
+      c.strokeStyle = '#374151'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x + 6, y + 8); c.lineTo(x - 20, y + 44 + Math.sin(t * 2) * 4); c.stroke();
+      c.fillStyle = '#374151'; c.fillRect(x - 24, y + 44 + Math.sin(t * 2) * 4, 8, 6);
+    },
+    antenon(c, j, t) {
+      const x = j.x, y = j.y - j.h / 2, brillo = j.golpeT > 0;
+      c.fillStyle = brillo ? '#ddd6fe' : '#7c3aed'; elipse(c, x, y, j.w / 2, j.h / 2); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.2)'; elipse(c, x - 20, y - 12, 40, 8); c.fill();
+      c.fillStyle = '#4c1d95'; for (let k = -2; k <= 2; k++) c.fillRect(x + k * 26 - 1, y - j.h / 2 + 6, 2, j.h - 12);
+      c.strokeStyle = '#c4b5fd'; c.lineWidth = 2; c.beginPath(); c.moveTo(x - 20, y - j.h / 2); c.lineTo(x - 30, y - j.h / 2 - 16); c.moveTo(x + 20, y - j.h / 2); c.lineTo(x + 34, y - j.h / 2 - 14); c.stroke();
+      c.fillStyle = '#fde047'; elipse(c, x - 30, y - j.h / 2 - 17, 3, 3); c.fill(); elipse(c, x + 34, y - j.h / 2 - 15, 3, 3); c.fill();
+      c.fillStyle = '#334155'; rr(c, x - 22, y + j.h / 2 - 6, 44, 14, 6); c.fill();
+      c.fillStyle = '#ef4444'; elipse(c, x + Math.sin(t * 2) * 10, y + j.h / 2 + 1, 4, 4); c.fill();
+      c.fillStyle = 'rgba(203,213,225,.8)'; c.fillRect(x + j.w / 2 - 4, y - 2 + (Math.floor(t * 12) % 2) * 4, 10, 2);
+    },
+    torre(c, j, t) {
+      const x = j.x - j.w / 2, y = j.y - j.h, brillo = j.golpeT > 0;
+      c.fillStyle = brillo ? '#e0e7ff' : '#475569'; rr(c, x + 6, y + 30, j.w - 12, j.h - 30, 6); c.fill();
+      c.fillStyle = '#334155'; for (let yy = y + 40; yy < j.y; yy += 16) c.fillRect(x + 6, yy, j.w - 12, 3);
+      c.fillStyle = brillo ? '#c7d2fe' : '#6366f1'; elipse(c, x + j.w / 2, y + 22, j.w / 2, 22); c.fill();
+      c.fillStyle = '#f472b6'; elipse(c, x + j.w / 2, y + 22, 9 + Math.sin(t * 5) * 2, 9 + Math.sin(t * 5) * 2); c.fill();
+      c.fillStyle = '#fff'; elipse(c, x + j.w / 2 - 3, y + 19, 3, 3); c.fill();
+    },
+    reina(c, j, t) {
+      const x = j.x, y = j.y - j.h / 2, brillo = j.golpeT > 0;
+      c.fillStyle = 'rgba(167,139,250,.35)'; elipse(c, x, y + 30, j.w / 2 + 10, 14); c.fill();
+      c.fillStyle = brillo ? '#e9d5ff' : '#6d28d9'; elipse(c, x, y + 18, j.w / 2, 26); c.fill();
+      c.fillStyle = brillo ? '#f5f3ff' : '#a78bfa'; elipse(c, x, y, j.w / 2 - 22, 34, Math.PI, 2 * Math.PI); c.fill();
+      for (let k = 0; k < 8; k++) { const a = t * 1.5 + k * Math.PI / 4; c.fillStyle = k % 2 ? '#fde047' : '#22d3ee'; elipse(c, x + Math.cos(a) * (j.w / 2 - 8), y + 18 + Math.sin(a) * 8, 3, 3); c.fill(); }
+      const ojo = j.hp < j.hpMax / 2 ? '#f43f5e' : '#4ade80';
+      c.fillStyle = '#fff'; elipse(c, x, y - 12, 16, 12); c.fill();
+      c.fillStyle = ojo; elipse(c, x + Math.sin(t) * 5, y - 12, 8, 8); c.fill();
+      c.fillStyle = '#1e1b4b'; elipse(c, x + Math.sin(t) * 5, y - 12, 3.5, 3.5); c.fill();
+    },
+  };
+
+  /* ---------- Proyectiles, objetos, jaulas y avisos ---------- */
+  const COLOR_BALA = { burbuja: 'rgba(165,243,252,.95)', rafaga: 'rgba(103,232,249,.95)', canon: '#f472b6' };
+  const CONFETI = ['#f472b6', '#facc15', '#22d3ee', '#4ade80', '#a78bfa', '#fb923c'];
+  function bala(b) {
+    if (b.tipo === 'laser') { cx.strokeStyle = '#fef08a'; cx.lineWidth = 2.4; cx.beginPath(); cx.moveTo(b.x - b.vx * 0.025, b.y - b.vy * 0.025); cx.lineTo(b.x, b.y); cx.stroke(); return; }
+    if (b.tipo === 'abanico') { cx.fillStyle = CONFETI[b.id % 6]; cx.fillRect(b.x - 2, b.y - 1.5, 4, 3); return; }
+    cx.fillStyle = COLOR_BALA[b.tipo] || '#fff';
+    elipse(cx, b.x, b.y, b.r, b.r); cx.fill();
+    cx.fillStyle = 'rgba(255,255,255,.85)'; elipse(cx, b.x - b.r * 0.35, b.y - b.r * 0.35, b.r * 0.35, b.r * 0.35); cx.fill();
+  }
+  const COLOR_BE = { tuerca: '#9ca3af', bola: '#fb923c', gota: '#6d28d9', baba: '#4ade80', engrane: '#a8a29e', roca: '#92400e', pinza: '#cbd5e1', orbe: '#e879f9', caja: '#b45309' };
+  function balaE(b, t) {
+    if (b.retraso > 0) return;
+    if (b.w > 0) { balaRect(b, t); return; }
+    cx.fillStyle = COLOR_BE[b.tipo] || '#f87171';
+    if (b.tipo === 'tuerca' || b.tipo === 'engrane') {
+      cx.save(); cx.translate(b.x, b.y); cx.rotate(t * 10 + b.id);
+      cx.beginPath(); for (let k = 0; k < 6; k++) cx.lineTo(Math.cos(k * Math.PI / 3) * b.r * 1.1, Math.sin(k * Math.PI / 3) * b.r * 1.1); cx.fill();
+      cx.fillStyle = '#374151'; elipse(cx, 0, 0, b.r * 0.4, b.r * 0.4); cx.fill();
+      cx.restore(); return;
+    }
+    if (b.tipo === 'caja') { cx.fillRect(b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r); cx.strokeStyle = '#78350f'; cx.lineWidth = 1.2; cx.strokeRect(b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r); return; }
+    elipse(cx, b.x, b.y, b.r, b.r); cx.fill();
+    cx.fillStyle = 'rgba(255,255,255,.6)'; elipse(cx, b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.35, b.r * 0.35); cx.fill();
+  }
+  function balaRect(b, t) {
+    const colores = { onda: 'rgba(214,211,209,.85)', gancho: '#374151', rayo: 'rgba(248,113,113,.9)', columna: 'rgba(244,114,182,.75)', erupcion: 'rgba(217,119,6,.75)' };
+    cx.fillStyle = colores[b.tipo] || '#f87171';
+    if (b.tipo === 'columna' || b.tipo === 'rayo') cx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 40);
+    cx.fillRect(b.x, b.y, b.w, b.h);
+    cx.globalAlpha = 1;
+  }
+  const EMOJI_OBJ = { rafaga: '💨', abanico: '🎉', laser: '🔦', globos: '🎈', escudo: '🛡️', corazon: '❤️', estrella: '⭐' };
+  const EMOJI_ANIMAL = { ajolotito: '🦎', xolito: '🐕', guacamaya: '🦜', tortuguita: '🐢', conejito: '🐇', colibri: '🐦' };
+  const emoji = (ch, tam) => sprite('emo:' + ch + ':' + tam, tam + 4, tam + 4, (tam + 4) / 2, (tam + 4) / 2, c => {
+    c.font = tam + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ch, 0, 1);
+  });
+  function objeto(o, t) {
+    const y = o.y - 9 + (o.flota ? Math.sin(t * 3 + o.id) * 2 : 0);
+    cx.fillStyle = 'rgba(255,255,255,.25)'; elipse(cx, o.x, y, 9, 9); cx.fill();
+    cx.strokeStyle = 'rgba(255,255,255,.8)'; cx.lineWidth = 1; cx.stroke();
+    poner(emoji(EMOJI_OBJ[o.tipo] || '⭐', 11), o.x, y);
+  }
+  function jaula(j, t) {
+    if (j.abierta) return;
+    poner(emoji(EMOJI_ANIMAL[j.animal] || '🐾', 13), j.x, j.y - 11 + Math.sin(t * 4 + j.k) * 1);
+    cx.strokeStyle = '#475569'; cx.lineWidth = 1.6;
+    for (let k = -9; k <= 9; k += 4.5) { cx.beginPath(); cx.moveTo(j.x + k, j.y - 22); cx.lineTo(j.x + k, j.y); cx.stroke(); }
+    cx.fillStyle = '#334155'; cx.fillRect(j.x - 12, j.y - 25, 24, 4); cx.fillRect(j.x - 12, j.y - 2, 24, 3);
+    cx.fillStyle = Math.floor(t * 3) % 2 ? '#ef4444' : '#7f1d1d'; elipse(cx, j.x, j.y - 23, 2, 2); cx.fill();
+  }
+  function aviso(a, t) {
+    const f = 1 - a.t / a.total;
+    if (a.tipo === 'sombra' || a.tipo === 'polvo') { cx.fillStyle = a.tipo === 'polvo' ? 'rgba(180,140,90,' + (0.3 + 0.4 * f) + ')' : 'rgba(0,0,0,' + (0.15 + 0.35 * f) + ')'; elipse(cx, a.x, a.y - 2, a.w / 2 * (0.5 + 0.5 * f), 4); cx.fill(); return; }
+    if (a.tipo === 'columna') { cx.fillStyle = 'rgba(244,63,94,' + (0.12 + 0.2 * (Math.floor(t * 12) % 2)) + ')'; cx.fillRect(a.x - a.w / 2, V.y0, a.w, V.vh); return; }
+    if (a.tipo === 'rayo') { cx.strokeStyle = 'rgba(248,113,113,' + (0.4 + 0.5 * (Math.floor(t * 12) % 2)) + ')'; cx.lineWidth = 2; cx.setLineDash([6, 5]); cx.beginPath(); cx.moveTo(a.x, a.y - 6); cx.lineTo(a.x + a.w, a.y - 6); cx.stroke(); cx.setLineDash([]); }
+  }
+  function bandera(x, y, lograda) {
+    cx.fillStyle = '#e5e7eb'; cx.fillRect(x - 1, y - 40, 2, 40);
+    cx.fillStyle = lograda ? '#14b8a6' : '#94a3b8';
+    cx.beginPath(); cx.moveTo(x + 1, y - 40); cx.lineTo(x + 20, y - 34); cx.lineTo(x + 1, y - 28); cx.fill();
+    if (lograda) poner(emoji('🦎', 7), x + 8, y - 34);
+  }
+
+  /* ---------- Partículas, textos y animalitos libres (pools) ---------- */
+  const PART = Array.from({ length: 320 }, () => ({ vivo: false }));
+  const TEXTOS = Array.from({ length: 16 }, () => ({ vivo: false }));
+  const LIBRES = Array.from({ length: 10 }, () => ({ vivo: false }));
+  const libre = l => l.find(x => !x.vivo) || null;
+  function chispas(x, y, n, tipo, colores) {
+    for (let k = 0; k < n; k++) {
+      const p = libre(PART); if (!p) return;
+      const a = Math.random() * Math.PI * 2, v = 40 + Math.random() * 140;
+      Object.assign(p, { vivo: true, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, vida: 0.6 + Math.random() * 0.6, tipo, color: colores[k % colores.length], rot: Math.random() * 6, tam: tipo === 'engrane' ? 3 : 2 });
+    }
+  }
+  function texto(t, x, y, color) { const p = libre(TEXTOS); if (p) Object.assign(p, { vivo: true, t, x, y, vida: 1, color: color || '#fde047' }); }
+  function soltarAnimal(animal, x, y) { const p = libre(LIBRES); if (p) Object.assign(p, { vivo: true, animal, x, y, vy: -150, vida: 2.2 }); }
+  function efectos(dt) {
+    for (const p of PART) {
+      if (!p.vivo) continue;
+      p.vida -= dt; if (p.vida <= 0) { p.vivo = false; continue; }
+      p.vy += 300 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += dt * 8;
+      if (p.x < V.x0 - 10 || p.x > V.x0 + V.vw + 10) continue;
+      cx.fillStyle = p.color;
+      if (p.tipo === 'engrane') { cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot); cx.fillRect(-p.tam, -p.tam, 2 * p.tam, 2 * p.tam); cx.fillStyle = '#374151'; cx.fillRect(-0.8, -0.8, 1.6, 1.6); cx.restore(); }
+      else cx.fillRect(p.x - p.tam, p.y - p.tam * 0.6, p.tam * 2, p.tam * 1.2);
+    }
+    for (const a of LIBRES) {
+      if (!a.vivo) continue;
+      a.vida -= dt; if (a.vida <= 0) { a.vivo = false; continue; }
+      a.vy += 500 * dt; a.y += a.vy * dt; a.x -= 70 * dt;
+      if (a.vy > 0 && a.y > a.y0) { a.y = a.y0; a.vy = -150; }
+      a.y0 = a.y0 || a.y + 30;
+      poner(emoji(EMOJI_ANIMAL[a.animal] || '🐾', 12), a.x, a.y);
+    }
+    cx.font = '900 9px system-ui,sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    for (const p of TEXTOS) {
+      if (!p.vivo) continue;
+      p.vida -= dt; if (p.vida <= 0) { p.vivo = false; continue; }
+      p.y -= 26 * dt; cx.globalAlpha = Math.min(1, p.vida * 2);
+      cx.fillStyle = 'rgba(0,0,0,.6)'; cx.fillText(p.t, p.x + 0.8, p.y + 0.8);
+      cx.fillStyle = p.color; cx.fillText(p.t, p.x, p.y);
+    }
+    cx.globalAlpha = 1;
+  }
+
+  // Cuadro completo. `vista` = { m, yo, nombres, sacudir }
+  function dibujar(o, dt, t) {
+    const m = o.m;
+    if (!m) { cx.setTransform(1, 0, 0, 1, 0, 0); cx.fillStyle = '#0b1324'; cx.fillRect(0, 0, cv.width, cv.height); return; }
+    ajustar(m.mision);
+    const def = m.def;
+    V.x0 = m.cam.x - (V.vw - M.W) / 2; V.y0 = M.H - V.vh;
+    const sx = o.sacudir > 0 && !REDUCIR ? (Math.random() - 0.5) * o.sacudir * 6 : 0, sy = o.sacudir > 0 && !REDUCIR ? (Math.random() - 0.5) * o.sacudir * 6 : 0;
+    cx.setTransform(V.s, 0, 0, V.s, (-V.x0 + sx) * V.s, (-V.y0 + sy) * V.s);
+    dibujarFondo(); dibujarSuelo(def);
+    m.cps.forEach((x, k) => { if (x >= V.x0 - 30 && x <= V.x0 + V.vw + 30) bandera(x, M.sueloEn(def, x), k <= m.cp); });
+    for (const a of m.avisos) if (a.vivo) aviso(a, t);
+    for (const j of m.jaulas) if (j.x > V.x0 - 20 && j.x < V.x0 + V.vw + 20) jaula(j, t);
+    for (const ob of m.objetos) if (ob.vivo && ob.x > V.x0 - 20 && ob.x < V.x0 + V.vw + 20) objeto(ob, t);
+    for (const v of m.vehiculos) if (v.vivo && v.ocupante < 0 && v.x > V.x0 - 30 && v.x < V.x0 + V.vw + 30) armadillo(v.x, v.y, 1, '#64748b', 0, false);
+    if (m.jefe) DIBUJO_JEFE[m.jefe.tipo](cx, m.jefe, t);
+    for (const e of m.enemigos) if (e.vivo && e.x > V.x0 - 40 && e.x < V.x0 + V.vw + 40) enemigo(e, t);
+    m.jugadores.forEach((p, i) => { if (i !== o.yo) jugador(p, false, o.nombres[i], t); });
+    if (m.jugadores[o.yo]) jugador(m.jugadores[o.yo], m.jugadores.length > 1, m.jugadores.length > 1 ? o.nombres[o.yo] : '', t);
+    for (const g of m.globos) if (g.vivo) { cx.fillStyle = '#f43f5e'; elipse(cx, g.x, g.y, 5, 6); cx.fill(); cx.fillStyle = 'rgba(255,255,255,.6)'; elipse(cx, g.x - 1.5, g.y - 2, 1.5, 2); cx.fill(); }
+    for (const b of m.balas) if (b.vivo) bala(b);
+    for (const b of m.balasE) if (b.vivo) balaE(b, t);
+    efectos(dt);
+  }
+  return { V, dibujar, chispas, texto, soltarAnimal, CONFETI, invalidar() { V.clave = ''; } };
+})();
+addEventListener('resize', () => { vista.invalidar(); ajustarOrientacion(); });
+function ajustarOrientacion() { document.body.classList.toggle('vertical', innerHeight > innerWidth * 1.05); }
+ajustarOrientacion();
+
+/* ================= Estado de la página ================= */
+const S = { vista: 'carga', m: null, yo: 0, nombres: [], ctx: null, prog: null, fin: false, inicioReal: 0, sacudir: 0, puntosEnviados: null, sala: null, rol: null, red: null, canal: null };
+const ajustes = { personaje: Personajes.preferencia(), mision: 1, companeros: 0 };
+function pantalla(html, v) {
+  const ov = $('ov'); ov.innerHTML = html; ov.classList.remove('hide'); ov.scrollTop = 0;
+  S.vista = v; $('hud').classList.add('hide'); document.body.classList.remove('en-partido'); pintarControl();
+}
+let avisoT = null;
+function avisar(t, ms = 1800) { const a = $('aviso'); a.textContent = t; a.classList.add('ver'); clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), ms); }
+let gritoT = null;
+function gritar(t, sub, ms) {
+  const g = $('grito'); g.innerHTML = '<b>' + esc(t) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '');
+  g.classList.add('ver'); clearTimeout(gritoT); gritoT = setTimeout(() => g.classList.remove('ver'), ms || 1500);
+}
+const prog = () => S.prog || M.progresoVacio();
+const estrellasTxt = n => '★'.repeat(n) + '<i>' + '★'.repeat(3 - n) + '</i>';
+
+/* ================= Portada: personaje, misiones y compañeros ================= */
+function portada() {
+  const p = prog();
+  ajustes.mision = Math.min(ajustes.mision, p.desbloqueada);
+  const pers = Personajes.LISTA.map(x => '<button class="pers" data-pj="' + x.id + '" aria-pressed="' + (x.id === ajustes.personaje) + '"><img src="' + Personajes.retrato(x.id, 'quieto') + '" alt="" width="46" height="46"><b>' + esc(x.nombre) + '</b></button>').join('');
+  const mis = MIS.LISTA.map(d => {
+    const r = p.misiones[String(d.id)], bloqueada = d.id > p.desbloqueada;
+    return '<button class="mis" data-mision="' + d.id + '" aria-pressed="' + (d.id === ajustes.mision) + '"' + (bloqueada ? ' disabled' : '') + '><b>' + d.emoji + ' ' + d.id + '. ' + esc(d.nombre) + (bloqueada ? ' 🔒' : '') + '</b>' +
+      '<small><span class="estrellas">' + '★'.repeat(r ? r.estrellas : 0) + '☆'.repeat(3 - (r ? r.estrellas : 0)) + '</span>' + (r && r.record ? ' · récord ' + r.record.toLocaleString('es-MX') : '') + '</small></button>';
+  }).join('');
+  const per = Personajes.porId(ajustes.personaje);
+  pantalla('<h1>🦎 Brigada <span>Xalli</span></h1><p>Unos robots traviesos invadieron. ¡Corre, salta, rescata a los animalitos y reviéntalos en confeti!</p>' +
+    '<div class="caja"><h3>Tu brigadista</h3><div id="pers">' + pers + '</div><div id="pers-detalle"><b>' + esc(per.nombre) + '</b> · ' + esc(per.titulo) + '</div></div>' +
+    '<div class="caja"><h3>Misiones</h3><div id="misiones">' + mis + '</div></div>' +
+    '<div class="caja"><h3>Compañeros IA</h3><div class="fila">' + [0, 1, 3].map(n => '<button class="op" data-comp="' + n + '" aria-pressed="' + (ajustes.companeros === n) + '">' + (n ? '🤖 ' + n : '🙋 Solo') + '</button>').join('') + '</div></div>' +
+    (TACTIL ? '<div class="caja"><h3>Controles</h3><div class="fila"><button class="op" data-control="joystick" aria-pressed="' + (control === 'joystick') + '">🕹️ Joystick + A B X Y</button><button class="op" data-control="mando" aria-pressed="' + (control === 'mando') + '">🎮 Mando clásico</button></div></div>' :
+      '<p id="teclas">⌨️ Flechas o WASD: correr y apuntar (↓ agacharse) · K o Espacio: saltar · J o Z: disparar (mantén para ráfaga) · L o X: globo de confeti · I o C: cambiar arma · P: pausa · 🎮 también con control.</p>') +
+    '<div class="fila"><button class="btn" data-a="jugar" id="b-jugar">▶ ¡A la misión!</button></div>', 'menu');
+}
+function empezarSolo() {
+  const p = prog();
+  if (p.personaje !== ajustes.personaje || p.companeros !== ajustes.companeros) { S.prog = { ...p, personaje: ajustes.personaje, companeros: ajustes.companeros }; enviar({ tipo: 'guardar', datos: structuredClone(S.prog) }); }
+  const libres = M.PERSONAJES.filter(id => id !== ajustes.personaje);
+  const personajes = [{ personaje: ajustes.personaje }, ...libres.slice(0, ajustes.companeros).map(id => ({ personaje: id, ia: true }))];
+  const m = M.crearMision({ mision: ajustes.mision, personajes, semilla: 'solo-' + Date.now() });
+  S.ctx = { modo: 'solo' };
+  iniciarMision(m, 0, personajes.map((x, i) => (i ? Personajes.porId(x.personaje).nombre : 'TÚ')));
+}
+function iniciarMision(m, yo, nombres) {
+  S.m = m; S.yo = yo; S.fin = false; S.inicioReal = performance.now(); S.puntosEnviados = null; S.nombres = nombres.map(apodo);
+  $('ov').classList.add('hide'); $('hud').classList.remove('hide'); document.body.classList.add('en-partido');
+  S.vista = 'partido'; vista.invalidar(); soltarToques(); pintarControl(); hudClave = '';
+  $('b-pausa').classList.toggle('hide', S.ctx.modo !== 'solo');
+  $('mnombre').textContent = m.def.emoji + ' Misión ' + m.def.id + ' · ' + m.def.nombre;
+  gritar('Misión ' + m.def.id, m.def.lema, 2400);
+  avisoGirar();
+}
+let girarT = null;
+function avisoGirar() {
+  const vertical = innerHeight > innerWidth * 1.05;
+  $('girar').classList.toggle('hide', !(TACTIL && vertical && leerLS('brigada_girar') !== 'no'));
+  clearTimeout(girarT); girarT = setTimeout(() => $('girar').classList.add('hide'), 6000);
+}
+$('b-girar').onclick = () => { guardarLS('brigada_girar', 'no'); $('girar').classList.add('hide'); };
+$('b-pausa').onclick = e => { alternarPausa(); e.currentTarget.blur(); };
+function alternarPausa() {
+  if (!S.ctx || S.ctx.modo !== 'solo') { if (S.vista === 'partido') avisar('📡 La misión en sala no se pausa'); return; }
+  if (S.vista === 'partido') {
+    window.Emocion?.intensidad(0); soltarToques();
+    pantalla('<h2>⏸ Pausa</h2><div class="fila"><button class="btn" data-a="seguir">▶ Seguir</button><button class="btn sec" data-a="menu">🗺️ Misiones</button></div>', 'pausa');
+  } else if (S.vista === 'pausa') { $('ov').classList.add('hide'); $('hud').classList.remove('hide'); document.body.classList.add('en-partido'); S.vista = 'partido'; ultimo = performance.now(); pintarControl(); }
+}
+
+/* ================= Eventos de la misión (sonido, efectos, gritos y Emoción) ================= */
+const nombreDe = i => S.nombres[i] || 'Alguien';
+const ARMA_TXT = a => M.ARMAS[a] ? M.ARMAS[a].emoji + ' ' + M.ARMAS[a].nombre : a;
+const MANEJA = {
+  disparo: e => { if (e.i !== S.yo) return; if (e.arma === 'laser') SON.laser(); else if (e.arma === 'canon') SON.canon(); else SON.burbuja(); },
+  salto: e => { if (e.i === S.yo) SON.salto(); },
+  boom: e => {
+    SON.boom();
+    vista.chispas(e.x, e.y, 14, 'engrane', ['#9ca3af', '#64748b', '#fbbf24']);
+    vista.chispas(e.x, e.y, 12, 'confeti', vista.CONFETI);
+    const d = M.ENEMIGOS[e.enemigo];
+    if (d && e.i >= 0) vista.texto('+' + d.puntos, e.x, e.y - 12);
+  },
+  globo: e => { SON.globo(); S.sacudir = 0.4; vista.chispas(e.x, e.y, 30, 'confeti', vista.CONFETI); },
+  rescate: e => {
+    SON.rescate(); vista.soltarAnimal(e.animal, e.x, e.y); vista.texto('¡Gracias! +500', e.x, e.y - 16, '#86efac');
+    vista.chispas(e.x, e.y, 10, 'confeti', ['#86efac', '#fde047']);
+    if (S.m && S.m.jaulas.every(j => j.abierta)) { window.Emocion?.logro(); avisar('🐾 ¡Rescataste a todos los animalitos!'); }
+  },
+  objeto: e => { SON.objeto(); if (e.i === S.yo) avisar(e.objeto === 'globos' ? '🎈 +5 globos' : (M.ARMAS[e.objeto] ? ARMA_TXT(e.objeto) : { escudo: '🛡️ Escudo burbuja', corazon: '❤️ Corazón', estrella: '⭐ +300' }[e.objeto] || ''), 1200); },
+  arma: e => { if (e.i === S.yo) avisar(ARMA_TXT(e.arma), 900); },
+  sinMunicion: e => { if (e.i === S.yo) avisar('🫧 Sin munición: lanzaburbujas', 1000); },
+  herido: e => { if (e.i === S.yo) { SON.herido(); S.sacudir = 0.3; } },
+  escudo: e => { if (e.i === S.yo) avisar('🛡️ ¡El escudo te salvó!', 900); },
+  bloqueo: () => SON.bloqueo(),
+  caida: e => { vista.chispas(e.x, e.y, 16, 'confeti', vista.CONFETI); if (e.i === S.yo) avisar(e.vidas > 0 ? '😵 ¡Ups! Te quedan ' + e.vidas + ' vida' + (e.vidas === 1 ? '' : 's') : '😵 Sin vidas', 1600); },
+  burbuja: e => avisar('🫧 ' + nombreDe(e.i) + ' quedó en una burbuja: ¡tócala para revivirle!', 2400),
+  revive: e => { SON.revive(); avisar('💚 ' + nombreDe(e.por) + ' revivió a ' + nombreDe(e.i), 1800); },
+  checkpoint: () => { SON.checkpoint(); avisar('🚩 ¡Punto de control!', 1400); },
+  liga: e => avisar('🪢 ¡Jalón! ' + nombreDe(e.i) + ' se une al grupo', 1400),
+  vehiculo: e => { if (e.i === S.yo) avisar('🛡️ ¡Al Armadillo! X para bajarte', 1600); },
+  jefe: e => { SON.jefe(); gritar(e.mini ? '¡Minijefe!' : '¡JEFE!', M.JEFES[e.jefe].nombre, 1800); window.Emocion?.intensidad(e.mini ? 0.5 : 0.7); },
+  jefeFin: e => {
+    S.sacudir = 0.8; vista.chispas(e.x, e.y, 60, 'confeti', vista.CONFETI); vista.chispas(e.x, e.y, 30, 'engrane', ['#9ca3af', '#fbbf24']);
+    vista.texto('+' + (e.mini ? 2000 : 5000), e.x, e.y - 20);
+    window.Emocion?.intensidad(0);
+    if (e.mini) avisar('💥 ¡Minijefe vencido!', 1600); else { gritar('¡VICTORIA!', M.JEFES[e.jefe].nombre + ' vencido', 2200); window.Emocion?.victoria(); }
+  },
+  reintento: () => avisar('🔁 ¡Otra vez, desde el punto de control!', 1800),
+  arranque: () => { if (!window.Emocion?.silbato()) SON.checkpoint(); },
+  desconexion: e => avisar('📡 Se desconectó ' + nombreDe(e.i) + ': la IA maneja su personaje', 2600),
+  regreso: e => avisar('✔ ' + nombreDe(e.i) + ' volvió', 1800),
+};
+function eventos(lista) { for (const e of lista) if (MANEJA[e.tipo]) MANEJA[e.tipo](e); }
+
+/* ================= Misión individual ================= */
+let acum = 0, extraPasos = 0;
+function entradasSolo(local, primera) {
+  return S.m.jugadores.map((p, i) => {
+    if (i !== S.yo) return M.ia(S.m, i);
+    return primera ? local : { ...local, ga: false, gx: false, gy: false };
+  });
+}
+function avanzarLocal(dt) {
+  acum += dt;
+  let n = 0;
+  const local = leerEntrada();
+  while (acum >= M.PASO && n < 5) { eventos(M.paso(S.m, entradasSolo(local, n === 0))); acum -= M.PASO; n++; }
+  if (n === 5) acum = 0;
+  for (let k = 0; k < extraPasos && !terminada(); k++) eventos(M.paso(S.m, entradasSolo(local, false)));
+  if (S.m.estado === 'cumplida') terminarMision();
+  else if (S.m.estado === 'fallida') fallida();
+}
+const terminada = () => S.m.estado === 'cumplida' || S.m.estado === 'fallida';
+function fallida() {
+  if (S.ctx.modo !== 'solo') { setTimeout(() => { if (S.m && S.m.estado === 'fallida') { M.reintentar(S.m); } }, 2500); S.m.estado = 'reintentando'; return; }
+  if (S.vista !== 'partido') return;
+  window.Emocion?.intensidad(0); window.Emocion?.derrota(); soltarToques();
+  pantalla('<h2>😵 ¡Uy! La brigada necesita otro intento</h2><p>Vuelves al último punto de control con todas tus vidas.</p>' +
+    '<div class="fila"><button class="btn" data-a="reintentar" id="b-reintentar">🔁 Reintentar</button><button class="btn sec" data-a="menu">🗺️ Misiones</button></div>', 'fallida');
+}
+function terminarMision() {
+  if (S.fin) return;
+  S.fin = true; soltarToques(); window.Emocion?.intensidad(0);
+  const r = M.resumen(S.m), mio = r.puntos[S.yo], antes = prog().misiones[String(r.mision)];
+  const record = !antes || mio > antes.record;
+  const pj = S.m.jugadores[S.yo];
+  S.prog = M.registrarMision(prog(), { mision: r.mision, puntos: mio, ms: r.ms, estrellas: r.estrellas, robots: pj.robots, rescatados: pj.rescates, completada: true });
+  enviar({ tipo: 'guardar', datos: structuredClone(S.prog) });
+  const ranking = M.puntosRanking(mio);
+  S.puntosEnviados = ranking;
+  enviar({ tipo: 'puntos', puntos: ranking, aciertos: r.rescatados, total: r.jaulas, segundos: Math.round(r.ms / 1000) });
+  window.Emocion?.nivelSuperado();
+  if (record) setTimeout(() => window.Emocion?.record(), 900);
+  const sigue = r.mision < MIS.LISTA.length;
+  const bono = M.bonoTiempo(S.m.def.tiempoMeta, r.ms / 1000);
+  pantalla('<h2>🎉 ¡Misión cumplida!</h2><p>' + S.m.def.emoji + ' ' + esc(S.m.def.nombre) + '</p><div class="grande-estrellas" aria-label="' + r.estrellas + ' de 3 estrellas">' + estrellasTxt(r.estrellas) + '</div>' +
+    '<table class="tabla"><tr><td>🤖 Robots</td><td class="num">' + pj.robots + '</td></tr><tr><td>🐾 Rescates</td><td class="num">' + r.rescatados + ' / ' + r.jaulas + '</td></tr>' +
+    '<tr><td>⏱ Tiempo</td><td class="num">' + Math.floor(r.ms / 60000) + ':' + String(Math.floor(r.ms / 1000) % 60).padStart(2, '0') + '</td></tr><tr><td>⚡ Bono de tiempo</td><td class="num">+' + bono + '</td></tr>' +
+    '<tr><td>🏅 Puntos</td><td class="num">' + mio.toLocaleString('es-MX') + (record ? ' 🆕 récord' : '') + '</td></tr></table>' +
+    '<p class="sub">★ completar · ★ rescatar a todos · ★ sin reintentos</p><p id="res-puntos"><b>+' + ranking + '</b> puntos de ranking' + (EMBED ? ' · registrando…' : '') + '</p>' +
+    '<div class="fila">' + (sigue ? '<button class="btn" data-a="siguiente" id="b-siguiente">▶ Siguiente misión</button>' : '<p>🏆 ¡Terminaste las 4 misiones de la brigada!</p>') +
+    '<button class="btn sec" data-a="repetir">🔁 Repetir</button><button class="btn sec" data-a="menu">🗺️ Misiones</button></div>', 'resultado');
+}
+
+/* ================= Botones de las pantallas ================= */
+const ACCIONES = {
+  jugar: empezarSolo, repetir: empezarSolo, seguir: alternarPausa,
+  menu: () => { window.Emocion?.intensidad(0); window.Emocion?.calma(); S.m = null; portada(); },
+  siguiente: () => { ajustes.mision = Math.min(MIS.LISTA.length, ajustes.mision + 1); empezarSolo(); },
+  reintentar: () => { M.reintentar(S.m); $('ov').classList.add('hide'); $('hud').classList.remove('hide'); document.body.classList.add('en-partido'); S.vista = 'partido'; pintarControl(); ultimo = performance.now(); },
+  'ir-solo': () => (EMBED ? enviar({ tipo: 'ir-solo' }) : portada()),
+};
+$('ov').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  audio();
+  if (b.dataset.a && ACCIONES[b.dataset.a]) { ACCIONES[b.dataset.a](); return; }
+  if (b.dataset.control) { elegirControl(b.dataset.control); return; }
+  if (b.dataset.pj) { ajustes.personaje = Personajes.preferencia(b.dataset.pj); portada(); return; }
+  if (b.dataset.mision) { ajustes.mision = Number(b.dataset.mision); portada(); return; }
+  if (b.dataset.comp) { ajustes.companeros = Number(b.dataset.comp); portada(); }
+});
+
+/* ================= HUD ================= */
+let hudClave = '';
+const corazones = p => '❤️'.repeat(Math.max(0, p.cor)) + '🤍'.repeat(Math.max(0, M.COR - p.cor));
+function pintarHud(m) {
+  const p = m.jugadores[S.yo], equipo = m.jugadores.reduce((s, q) => s + q.puntos, 0);
+  const filas = m.jugadores.map((q, i) => '<div class="fila-j' + (q.estado === 'vivo' ? '' : ' fuera') + '" data-i="' + i + '"><img src="' + Personajes.retrato(q.personaje, 'quieto') + '" alt="">' +
+    (m.jugadores.length > 1 ? '<span class="n" style="color:' + FIRMA_PJ(q.personaje) + '">' + esc(S.nombres[i] || '') + '</span>' : '') +
+    '<span>' + (q.estado === 'burbuja' ? '🫧' : corazones(q)) + '</span><span>×' + q.vidas + '</span></div>');
+  const clave = filas.join('') + '|' + p.puntos + '|' + equipo + '|' + p.arma + p.mun[p.arma] + p.vehiculo + '|' + p.globos;
+  if (clave !== hudClave) {
+    hudClave = clave;
+    $('equipo').innerHTML = (m.jugadores.length > 4 ? filas.map(f => f.replace(/<span>❤️|<span>🤍/, '<span>')) : filas).join('');
+    $('puntos').textContent = '🏅 ' + p.puntos.toLocaleString('es-MX') + (m.jugadores.length > 1 && S.ctx.modo !== 'solo' ? ' · equipo ' + equipo.toLocaleString('es-MX') : '');
+    $('arma').textContent = p.vehiculo >= 0 ? '🎊 Cañón' : M.ARMAS[p.arma].emoji + ' ' + (p.arma === 'burbuja' ? '∞' : p.mun[p.arma]);
+    $('globos').textContent = '🎈 ' + p.globos;
+  }
+  $('avance-barra').style.width = Math.min(100, Math.round(m.cam.x / (m.def.largo - M.W) * 100)) + '%';
+  const j = m.jefe;
+  $('jefe-barra').classList.toggle('hide', !j);
+  if (j) { $('jefe-nombre').textContent = (j.mini ? '⚠️ ' : '👾 ') + M.JEFES[j.tipo].nombre; $('jefe-vida').style.width = Math.max(0, Math.round(j.hp / j.hpMax * 100)) + '%'; }
+}
+function tensionJefe(m) {
+  const j = m.jefe;
+  if (!j || j.mini) return;
+  const x = j.hp < j.hpMax * 0.3 ? 0.95 : 0.7;
+  if (Math.abs((tensionJefe.x || 0) - x) > 0.05) { tensionJefe.x = x; window.Emocion?.intensidad(x); }
+}
+
+/* ================= Bucle ================= */
+let ultimo = performance.now(), cuadros = 0, fpsDesde = performance.now(), fps = 0, enJuego = null;
+function avanzar(dt) {
+  if (S.rol === 'anfitrion' && S.red) avanzarAnfitrion(dt);
+  else if (S.rol === 'invitado' && S.red) avanzarInvitado();
+  else avanzarLocal(dt);
+}
+function cuadro(ahora) {
+  requestAnimationFrame(cuadro);
+  tonosCuadro = 0;
+  let dt = (ahora - ultimo) / 1000; ultimo = ahora;
+  if (dt > 0.25) dt = 0.25;
+  cuadros++; if (ahora - fpsDesde >= 1000) { fps = Math.round(cuadros * 1000 / (ahora - fpsDesde)); cuadros = 0; fpsDesde = ahora; }
+  const juega = S.vista === 'partido' || S.vista === 'pausa';
+  if (juega !== enJuego) { enJuego = juega; mando.activar(juega); pintarControl(); }
+  if (S.vista === 'partido' && S.m && !document.hidden) avanzar(dt);
+  else acum = 0;
+  S.sacudir = Math.max(0, S.sacudir - dt * 2);
+  const ver = S.m && ['partido', 'pausa', 'resultado', 'fallida', 'conectando'].includes(S.vista);
+  vista.dibujar({ m: ver ? S.m : null, yo: S.yo, nombres: S.nombres, sacudir: S.sacudir }, S.vista === 'partido' ? dt : 0, ahora / 1000);
+  if (S.vista === 'partido' && S.m) { pintarHud(S.m); tensionJefe(S.m); if (S.canal) pintarRed(ahora); }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { soltarToques(); if (S.vista === 'partido' && S.ctx && S.ctx.modo === 'solo') alternarPausa(); }
+  else ultimo = performance.now();
+});
+
+/* ================= Modo sala (cooperativo; se completa en el PR 2 con juegos/brigada-red.js) ================= */
+function avanzarAnfitrion(dt) { avanzarLocal(dt); }
+function avanzarInvitado() { /* PR 2 */ }
+function pintarRed() { /* PR 2 */ }
+
+/* ================= Plataforma ================= */
+addEventListener('message', ev => {
+  if (ev.origin !== location.origin || ev.source !== parent) return;
+  const d = ev.data || {};
+  if (d.tipo === 'inicio' && d.modo !== 'sala') {
+    S.prog = d.progreso && M.validarProgreso(d.progreso) ? d.progreso : null;
+    if (S.prog) { ajustes.personaje = Personajes.preferencia(S.prog.personaje); ajustes.companeros = S.prog.companeros; ajustes.mision = S.prog.desbloqueada; }
+    if (S.vista === 'carga' || S.vista === 'menu') portada();
+    if (d.aviso) avisar(d.aviso, 4000);
+  } else if (d.tipo === 'puntos-ok') pintarPuntosOk(d);
+});
+function pintarPuntosOk(d) {
+  const el = $('res-puntos');
+  if (!el || S.puntosEnviados === null) return;
+  if (!d.guardado) { el.innerHTML = '⚠️ No se guardaron los puntos (' + esc(d.error || 'sin conexión') + ').'; return; }
+  el.innerHTML = '<b>+' + esc(d.puntos) + '</b> puntos guardados' + (d.pos ? ' · lugar ' + esc(d.pos) + ' de la semana' : '');
+}
+requestAnimationFrame(t => { ultimo = t; cuadro(t); });
+if (EMBED) { enviar({ tipo: 'listo' }); setTimeout(() => { if (S.vista === 'carga') portada(); }, 4000); }
+else portada();
+if (PRUEBA) {
+  // Ganchos solo para pruebas E2E (?prueba=1).
+  window.__brigada = {
+    m: () => S.m,
+    estado: () => {
+      const m = S.m, p = m && m.jugadores[S.yo];
+      return {
+        vista: S.vista, modo: S.ctx && S.ctx.modo, rol: S.rol, fps, control, tactil: TACTIL, vertical: document.body.classList.contains('vertical'), entrada: eje(),
+        mision: m && m.mision, estadoM: m && m.estado, cam: m && m.cam.x, enemigos: m ? M.contarEnemigos(m) : 0, prog: S.prog, puntosEnviados: S.puntosEnviados,
+        jefe: m && m.jefe ? { tipo: m.jefe.tipo, hp: m.jefe.hp, hpMax: m.jefe.hpMax, fase: m.jefe.fase } : null, mando: mando.estado(),
+        yo: p ? { x: p.x, y: p.y, vx: p.vx, vy: p.vy, suelo: p.suelo, agachado: p.agachado, aim: p.aim, arma: p.arma, mun: { ...p.mun }, globos: p.globos, cor: p.cor, vidas: p.vidas, estado: p.estado, puntos: p.puntos, rescates: p.rescates, robots: p.robots, dir: p.dir, vehiculo: p.vehiculo } : null,
+      };
+    },
+    acelerar: n => { extraPasos = Math.max(0, Number(n) || 0); },
+    invulnerable: () => { for (const p of S.m.jugadores) p.inv = 1e6; },
+    // Lleva al equipo a la entrada de la arena del jefe.
+    alJefe: () => { const m = S.m, x = m.def.jefe.x; m.cam.x = x - 200; m.miniHecho = true; m.cp = m.cps.length - 2; m.jugadores.forEach((p, i) => Object.assign(p, { x: x + 40 + 10 * i, y: M.sueloEn(m.def, x - 60), vx: 0, vy: 0, suelo: true, plat: -1 })); for (const e of m.enemigos) e.vivo = false; m.sig = m.lista.length; },
+    debilitarJefe: () => { const j = S.m.jefe; if (j) { j.hp = Math.min(j.hp, 2); j.invul = false; } },
+    // Pone un enemigo o una jaula a dx px adelante del personaje.
+    enemigo: (tipo, dx) => { const p = S.m.jugadores[S.yo]; const e = M.ponerEnemigo(S.m, tipo, p.x + dx, 0); return e && e.id; },
+    jaula: dx => { const m = S.m, p = m.jugadores[S.yo], j = { k: m.jaulas.length, x: p.x + dx, y: M.sueloEn(m.def, p.x + dx), animal: 'xolito', abierta: false }; m.jaulas.push(j); return j.k; },
+    limpiar: () => { for (const e of S.m.enemigos) e.vivo = false; for (const b of S.m.balasE) b.vivo = false; },
+    terminarYa: () => { const m = S.m; m.estado = 'victoria'; m.estT = 99; },
+    fallarYa: () => { const m = S.m; m.jugadores.forEach(p => { p.estado = 'burbuja'; p.vidas = 0; }); },
+  };
+}
+</script>
+</body></html>
