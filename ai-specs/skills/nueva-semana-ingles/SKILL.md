@@ -70,6 +70,10 @@ lleva:
 Mezcla alrededor de 70 % `opcion` y 30 % `escribir`. La plataforma baraja las preguntas pero **no las opciones**:
 reparte la posición de la respuesta correcta.
 
+**Material para descargar (PDF):** si el profe pide una guía de estudio, va en el repo público con su fuente HTML
+(`herramientas/material-ingles/`, ver [docs/data-model.md](../../../docs/data-model.md) § "Material de estudio en PDF").
+Enlázala en la actividad con un tip `lectura` y sube el repo de datos solo cuando Pages ya sirva el PDF.
+
 **Ejercicios estilo Busuu / Duolingo (opcionales, sin IA):** para hacerlas más didácticas, cambia algunos
 ejercicios por estos tipos (formato completo en `docs/data-model.md`):
 - `ordenar` (armar la oración con fichas): `palabras` en el orden correcto, `distractores?` y `aceptadas?` (otros
