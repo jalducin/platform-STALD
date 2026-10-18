@@ -1,6 +1,7 @@
 // karts-copa-sala-4 (sprint 43a): la copa en sala siempre corre sus 4 carreras y la espera entre carreras es corta.
 // Reproduce el reporte del profe («solo hubo 2 premios, ya no se llevaron las 4 carreras») y fija la regla nueva:
-// al llegar la primera persona a la meta, las demás tienen 30 s para terminar (reloj del servidor).
+// al llegar la primera persona a la meta, las demás tienen KartsCopa.PLAZO_MS (45 s, karts-plazo-45) para terminar
+// (reloj del servidor).
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { clearCacheJuegos, handleJuegos } from "./juegos.ts";
@@ -84,32 +85,32 @@ Deno.test("karts-copa-sala-4: quien se perdió una carrera vuelve a contar en la
   assert(angel.pts > 0);
 });
 
-Deno.test("karts-copa-sala-4: 30 s después de la primera llegada la carrera cierra (y la siguiente arranca sola)", async () => {
+Deno.test("karts-copa-sala-4: al vencer el plazo tras la primera llegada la carrera cierra (y la siguiente arranca sola)", async () => {
   const c = ctx();
   const codigo = await salaEmpezada(c, { modo: "copa", copa: "mesoamerica" }, ["Angel", "Laura"]);
-  assertEquals(KC.PLAZO_MS, 30_000);
+  assertEquals(KC.PLAZO_MS, 45_000); // karts-plazo-45
   const pistas = (await vista(c, codigo)).copa.pistas as string[];
   const i = await aLaCarrera(c, codigo, 0);
   const llega = i + ref(pistas[0]);
   c.ir(llega);
   assertEquals((await reportar(c, codigo, "Marisol", 0, ref(pistas[0]))).status, 200);
   let v = await vista(c, codigo);
-  assertEquals(v.copa.calendario[0].plazo, llega + 30_000, "plazo visible para la cuenta «30 s para terminar»");
-  c.ir(llega + 20_000);
-  assertEquals((await reportar(c, codigo, "Angel", 0, ref(pistas[0]) + 20_000)).status, 200, "dentro de los 30 s cuenta");
-  c.ir(llega + 29_999);
+  assertEquals(v.copa.calendario[0].plazo, llega + KC.PLAZO_MS, "plazo visible para la cuenta «N s para terminar»");
+  c.ir(llega + KC.PLAZO_MS - 1_000); // karts-plazo-45: un 2.º lugar 44 s después cuenta
+  assertEquals((await reportar(c, codigo, "Angel", 0, ref(pistas[0]) + KC.PLAZO_MS - 1_000)).status, 200, "dentro del plazo cuenta");
+  c.ir(llega + KC.PLAZO_MS - 1);
   assertEquals((await vista(c, codigo)).copa.fase, "carrera");
-  c.ir(llega + 30_000);
+  c.ir(llega + KC.PLAZO_MS);
   v = await vista(c, codigo);
-  assertEquals([v.copa.fase, v.copa.carrera], ["interpodio", 1], "Laura no llegó: cierra a los 30 s, sin esperar el límite de la pista");
-  assertEquals(v.copa.calendario[0].cierre, llega + 30_000);
-  assertEquals(v.copa.calendario[1].inicio, llega + 30_000 + KC.INTERPODIO_MS, "tabla entre carreras ≤ 10 s");
+  assertEquals([v.copa.fase, v.copa.carrera], ["interpodio", 1], "Laura no llegó: cierra al vencer el plazo, sin esperar el límite de la pista");
+  assertEquals(v.copa.calendario[0].cierre, llega + KC.PLAZO_MS);
+  assertEquals(v.copa.calendario[1].inicio, llega + KC.PLAZO_MS + KC.INTERPODIO_MS, "tabla entre carreras ≤ 10 s");
   assert(KC.INTERPODIO_MS <= 10_000);
   const laura = v.copa.tabla.find((x: any) => x.nombre === "Laura");
   assertEquals([laura.porCarrera[0].ms, laura.porCarrera[0].pts], [null, 0], "NT, 0 puntos");
-  const tarde = await reportar(c, codigo, "Laura", 0, ref(pistas[0]) + 31_000);
+  const tarde = await reportar(c, codigo, "Laura", 0, ref(pistas[0]) + KC.PLAZO_MS + 1_000);
   assertEquals([tarde.status, tarde.body.error], [409, "carrera_cerrada"], "nadie alarga la carrera");
-  // En la carrera 2, Laura vuelve a contar: cierra cuando llegan los 3 (sin esperar 30 s).
+  // En la carrera 2, Laura vuelve a contar: cierra cuando llegan los 3 (sin esperar el plazo).
   const i1 = await aLaCarrera(c, codigo, 1);
   const ms1 = ref(pistas[1]);
   for (const [n, d] of [["Laura", 0], ["Marisol", 1_000], ["Angel", 2_000]] as const) {
@@ -135,7 +136,7 @@ Deno.test("karts-copa-sala-4: reportes duplicados (dos aparatos o reintentos) no
     assertEquals(sig.status, k < 3 ? 409 : 400, "no se puede adelantar a la siguiente");
     const v = await vista(c, codigo); // NOSONAR: en orden
     assertEquals([v.copa.fase, v.copa.carrera], ["carrera", k], "sigue la carrera " + (k + 1) + " (falta Angel)");
-    c.ir(i + ms + 30_000);
+    c.ir(i + ms + KC.PLAZO_MS);
     const v2 = await vista(c, codigo); // NOSONAR: en orden
     assertEquals(v2.copa.fase, k < 3 ? "interpodio" : "final");
   }
@@ -171,7 +172,7 @@ Deno.test("karts-copa-sala-4: quien no termina queda NT ordenado por su avance; 
   assertEquals(r0.filter((f) => f.ms === null).map((f) => f.pts), [0, 0], "NT = 0 puntos");
 });
 
-Deno.test("karts-copa-sala-4: carrera suelta en sala: 30 s tras la primera llegada cierra el podio", async () => {
+Deno.test("karts-copa-sala-4: carrera suelta en sala: el plazo tras la primera llegada cierra el podio", async () => {
   const c = ctx();
   const codigo = await salaEmpezada(c, { mapa: "hielo" }, ["Angel"]);
   const i = c.ahora();
@@ -181,10 +182,10 @@ Deno.test("karts-copa-sala-4: carrera suelta en sala: 30 s tras la primera llega
   assertEquals(r.status, 200);
   const p0 = await c.call("POST", "/partida", "Marisol", { juego: "karts", puntos: 9_999, aciertos: 0, total: 0, segundos: 0, sala: codigo });
   assertEquals(p0.status, 409, "todavía en curso: " + JSON.stringify(p0.body));
-  c.ir(i + ms + 30_000);
-  const tarde = await c.call("POST", `/sala/${codigo}/respuesta`, "Angel", { carrera: { ms: ms + 30_000, monedas: 1 } });
+  c.ir(i + ms + KC.PLAZO_MS);
+  const tarde = await c.call("POST", `/sala/${codigo}/respuesta`, "Angel", { carrera: { ms: ms + KC.PLAZO_MS, monedas: 1 } });
   assertEquals([tarde.status, tarde.body.error], [409, "carrera_cerrada"]);
   const p = await c.call("POST", "/partida", "Marisol", { juego: "karts", puntos: 9_999, aciertos: 0, total: 0, segundos: 0, sala: codigo });
-  assertEquals(p.status, 200, "a los 30 s ya hay podio: " + JSON.stringify(p.body));
+  assertEquals(p.status, 200, "al vencer el plazo ya hay podio: " + JSON.stringify(p.body));
   assert(p.body.puntos > 0);
 });

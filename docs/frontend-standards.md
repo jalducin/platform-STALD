@@ -170,7 +170,7 @@ Cada página debe manejar y mostrar de forma explícita:
     la página (`pintarCopaSala` en `juegos/app/arcade.js`, calendario de `juegos/karts-copa.js`) con un solo iframe para
     las 4 carreras: manda `inicio` con `copa { k, nombre, tabla }` y `copa-tabla` mientras se espera; el juego muestra
     `#ov-copa`, reutiliza el canal en vivo y marca cada mensaje con la carrera (`d[9]`); cambio `karts-copa-sala-4`: la
-    página nunca abandona sola una carrera (quien se entera tarde entra tarde) y, tras la primera llegada, manda
+    página nunca abandona sola una carrera (quien se entera tarde entra tarde) y, tras la primera llegada (45 s, `KartsCopa.PLAZO_MS`; cambio `karts-plazo-45`), manda
     `{ tipo: 'plazo', carrera, finLocal }`: el juego muestra `#plazo` «⏱️ N s para terminar» y 1.5 s antes del cierre
     manda su «no terminó» con `avance` (también en la carrera suelta de Karts, con `carrera: null`); cambio `karts-salida-y-puntos`:
     la hora del servidor de las salas sale de `juegos/reloj-sala.js` (intersección de las cotas de cada `GET /sala` y de

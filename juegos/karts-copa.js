@@ -8,7 +8,7 @@
    - karts-copa-sala-4: en TODAS las carreras cuentan todas las personas de la sala (antes, desde la 2.ª solo quien
      reportó la anterior: perder un reporte te sacaba del resto de la copa);
    - la carrera k cierra (KartsCopa.cierreCarrera) cuando todas la reportaron (a la hora del último reporte), a los
-     PLAZO_MS (30 s) de la primera llegada o, si nadie llega, al vencer su límite + la gracia (quien no llegó: NT,
+     PLAZO_MS (45 s, karts-plazo-45) de la primera llegada o, si nadie llega, al vencer su límite + la gracia (quien no llegó: NT,
      0 puntos, ordenado por su avance);
    - la siguiente empieza INTERPODIO_MS después del cierre (tabla entre carreras con cuenta regresiva).
    Puntos por lugar como en el modo individual (15, 12, 10, 8, 6, 4, 2, 1); no terminar = 0. Los bots corren con su
@@ -22,7 +22,7 @@
   const COPAS_SALA = [...ORDEN.map(c => c.id), 'mixta'];
   const CARRERAS = 4; // todas las copas tienen 4 pistas; el calendario usa pistasDe(…).length (karts-copa-sala-4)
   const INTERPODIO_MS = 10000; // tabla entre carreras (incluye los 3 s de cuenta regresiva del juego)
-  const PLAZO_MS = 30000; // karts-copa-sala-4: tras la primera llegada, las demás tienen 30 s para terminar
+  const PLAZO_MS = 45000; // karts-copa-sala-4 + karts-plazo-45: tras la primera llegada, las demás tienen 45 s para terminar
   const TOPE_RANKING = 2000; // igual que el tope de Karts en el catálogo (server/juegos.ts)
   const NOMBRE = { ...Object.fromEntries(ORDEN.map(c => [c.id, c.nombre])), mixta: 'Copa mixta' };
   const EMOJI = { ...Object.fromEntries(ORDEN.map(c => [c.id, c.emoji])), mixta: '🎲' };
@@ -43,7 +43,7 @@
   // karts-copa-sala-4: cierre de una carrera de sala (copa o suelta), igual en la página y en el servidor.
   //   inicio y limite (ms), reportes = [{ t (hora del servidor), ms (null = no terminó) }] (el primero de cada persona),
   //   total = personas de la sala. Devuelve { cierre (null = abierta), plazo (null = nadie ha llegado) }.
-  //   Cierra: todas reportaron → hora del último reporte; si no, al vencer el plazo (1.ª llegada + 30 s); si no, al
+  //   Cierra: todas reportaron → hora del último reporte; si no, al vencer el plazo (1.ª llegada + PLAZO_MS); si no, al
   //   límite + la gracia. No depende del número de vueltas.
   function cierreCarrera(c, ahora) {
     const reps = (c.reportes || []).filter(Boolean);

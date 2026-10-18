@@ -159,7 +159,7 @@ function pintarArcadeSala(body) {
   const t = ahoraServidor() - s.inicio;
   const filas = resultadosArcade();
   const humanos = filas.filter(f => f.tipo !== 'bot');
-  const ci = cierreArcade(s, juego, mapa); // karts-copa-sala-4: todas llegaron, 30 s tras la primera llegada o el límite
+  const ci = cierreArcade(s, juego, mapa); // karts-copa-sala-4: todas llegaron, 45 s tras la primera llegada o el límite
   if (ci.cierre !== null) return finalArcade(body, filas, juego, mapa);
   const quedan = segundosArcade(s, juego, mapa, ci);
   const mia = (e.jugadores.find(x => x.id === e.yo) || {}).carrera || sala.arcadeMia;
@@ -224,7 +224,7 @@ function esperaEspectadorArcade(body, humanos, juego, mapa, t) {
   body.innerHTML = '<div class="q-card"><div class="sub">' + escapeHtml(Arcade.nombreMapa(juego, mapa)) + '</div><div class="q">👀 Carrera en curso</div><div class="sub">' + escapeHtml(sub) + '</div></div>' + listaArcade(humanos);
 }
 
-// karts-copa-sala-4: cierre de la carrera suelta con los tiempos que ya tiene el servidor: en Karts, todas llegaron, 30 s
+// karts-copa-sala-4: cierre de la carrera suelta con los tiempos que ya tiene el servidor: en Karts, todas llegaron, el plazo
 // tras la primera llegada o el límite (KartsCopa.cierreCarrera, igual que server/carreras.ts); en Axo, como antes.
 function cierreArcade(s, juego, mapa) {
   const e = sala.estado, ahora = ahoraServidor(), limite = Arcade.limiteSala(juego, mapa);
@@ -233,7 +233,7 @@ function cierreArcade(s, juego, mapa) {
   const todos = e.jugadores.length > 0 && reportes.every(Boolean);
   return { cierre: todos || ahora > s.inicio + limite + Arcade.GRACIA_SALA ? ahora : null, plazo: null };
 }
-// karts-copa-sala-4: segundos que faltan para cerrar (plazo de 30 s o, si nadie ha llegado, el límite) y su texto.
+// karts-copa-sala-4: segundos que faltan para cerrar (plazo de 45 s o, si nadie ha llegado, el límite) y su texto.
 function segundosArcade(s, juego, mapa, ci) {
   const fin = ci.plazo === null ? s.inicio + Arcade.limiteSala(juego, mapa) + Arcade.GRACIA_SALA : ci.plazo;
   return Math.max(0, Math.ceil((fin - ahoraServidor()) / 1000));
@@ -241,7 +241,7 @@ function segundosArcade(s, juego, mapa, ci) {
 const textoEsperaArcade = (ci, quedan) => (ci.plazo === null ? 'Esperando a que terminen los demás (a más tardar en ' + quedan + ' s)…' : '⏱️ ' + quedan + ' s para terminar');
 function plazoArcadeAlJuego(ci) { if (ci.plazo !== null && sala.vista === 'arcade') plazoAlJuego(null, ci.plazo); }
 function plazoCorriendo(cal) { if (cal.plazo !== null) plazoAlJuego(cal.k, cal.plazo); }
-// karts-copa-sala-4: manda al juego la hora (del aparato) en que se acaba el plazo de 30 s, una vez por carrera.
+// karts-copa-sala-4: manda al juego la hora (del aparato) en que se acaba el plazo (45 s), una vez por carrera.
 function plazoAlJuego(k, plazo) {
   const firma = k + ':' + plazo;
   if (sala.plazoFirma === firma) return;
@@ -327,7 +327,7 @@ function pintarCopaSala(body) {
   // entras tarde y corres: la página ya no abandona sola (eso te sacaba del resto de la copa).
   if (esperaEspectadorCopa(c, cal)) return; // espectador
   if (cal.cierre === null && !mio && c.enviada < cal.k) return iniciarCarreraCopa(cal, st, tabla, ahora);
-  if (c.corriendo === cal.k && !mio) return plazoCorriendo(cal); // corriendo: el juego tiene la pantalla (karts-copa-sala-4: con la cuenta de 30 s)
+  if (c.corriendo === cal.k && !mio) return plazoCorriendo(cal); // corriendo: el juego tiene la pantalla (karts-copa-sala-4: con la cuenta del plazo)
   const { sub, cuenta } = textoEsperaCopa(cal, !!mio, ahora);
   const firma = sub + '|' + cuenta + '|' + tabla.map(t => t.pts).join(',');
   if (firma === c.firma) return;
@@ -349,7 +349,7 @@ function textoEsperaCopa(cal, corri, ahora) {
   const vence = Math.max(0, Math.ceil((cal.inicio + cal.limite + Arcade.GRACIA_SALA - ahora) / 1000));
   let nota = corri ? '' : ' · te unes en la siguiente';
   if (sala.espectador) nota = ' en curso'; // espectador
-  // karts-copa-sala-4: tras la primera llegada, «⏱️ N s para terminar» (30 s); antes, el límite de la pista.
+  // karts-copa-sala-4: tras la primera llegada, «⏱️ N s para terminar» (KartsCopa.PLAZO_MS, 45 s); antes, el límite de la pista.
   const cuenta = cal.plazo === null ? '⏱ A más tardar en ' + vence + ' s' : '⏱️ ' + Math.max(0, Math.ceil((cal.plazo - ahora) / 1000)) + ' s para terminar';
   return { sub: 'Carrera ' + (cal.k + 1) + ' de 4' + nota + (faltan.length ? ' · faltan: ' + faltan.join(', ') : ''), cuenta };
 }

@@ -662,7 +662,7 @@ function cambioDeFutbol(c: CtxSala, inicio: number): CambioJugador | Response {
 }
 
 // Carrera suelta de Arcade: el tiempo validado o el error. karts-copa-sala-4: un primer reporte después del cierre (todas
-// llegaron, 30 s tras la primera llegada o el límite) se rechaza con carrera_cerrada: nadie alarga la carrera.
+// llegaron, el plazo tras la primera llegada o el límite) se rechaza con carrera_cerrada: nadie alarga la carrera.
 const ESTADO_CARRERA = { carrera_invalida: 400, carrera_cerrada: 409 } as const;
 function carreraSuelta(c: CtxSala, inicio: number): Carrera | "carrera_invalida" | "carrera_cerrada" {
   const { body, ahora, sala, jugadores, jugador } = c;
