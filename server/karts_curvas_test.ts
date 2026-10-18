@@ -45,13 +45,20 @@ Deno.test("karts-curvas: las 8 pistas rediseñadas llevan trazado 3 y la versió
   for (const p of KP.PISTAS.filter((x: any) => !REDISENADAS.includes(x.id))) assertEquals(p.trazado, undefined, p.id + " sin cambio de trazado");
 });
 
-Deno.test("karts-curvas: complejidad medible (curvas > 120°, espiral / sacacorchos / laberinto, chicanas u horquillas)", () => {
+// Giro total por vuelta (°) de cada pista ANTES del rediseño (KartsPistas.complejidad sobre los trazados de antes).
+const GIRO_ANTES: Record<string, number> = {
+  orbital: 839, anillos: 1080, cinturon: 742, nebulosa: 1015, giza: 702, castillo: 1039, karnak: 651, angkor: 933,
+};
+Deno.test("karts-curvas: complejidad medible (giro total, espiral / sacacorchos / laberinto, chicanas u horquillas)", () => {
   for (const id of REDISENADAS) {
     const c = KP.complejidad(muestras(id));
-    assert(c.mayores120 >= 4, id + " curvas > 120°: " + c.mayores120);
+    assert(c.giroTotal >= 1350 && c.giroTotal >= GIRO_ANTES[id] * 1.5, id + " giro total " + c.giroTotal + "° (antes " + GIRO_ANTES[id] + "°)");
+    assert(c.curvas >= 10 && c.mayores120 >= 1, id + " 10 o más curvas y al menos una de más de 120°: " + JSON.stringify(c));
     assert(c.espirales + c.sacacorchos >= 1 || c.laberinto >= 4, id + " espiral, sacacorchos o laberinto: " + JSON.stringify(c));
-    assert(c.chicanas + c.horquillas >= 2, id + " chicanas u horquillas: " + JSON.stringify(c));
+    assert(c.chicanas + c.horquillas >= 3, id + " chicanas u horquillas: " + JSON.stringify(c));
   }
+  // Ninguna pista de antes llega a ese giro: la medida distingue los trazados técnicos.
+  for (const p of KP.PISTAS.filter((x: any) => !REDISENADAS.includes(x.id))) assert(KP.complejidad(A.muestrearPista(p)).giroTotal < 1350, p.id);
   // Las secciones estrella de cada pista del Espacio.
   const de = (id: string) => KP.complejidad(muestras(id));
   assert(de("anillos").espirales >= 1 && de("nebulosa").espirales >= 1, "espiral doble en Anillos y Nebulosa (≥ 360° en un sentido)");

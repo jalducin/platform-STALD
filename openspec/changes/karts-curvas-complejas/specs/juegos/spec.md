@@ -2,8 +2,9 @@
 
 ### Requirement: Trazados técnicos en las pistas del Espacio y de Reinos Antiguos
 Las 4 pistas de la Copa del Espacio y las 4 de la Copa Reinos Antiguos SHALL tener trazados técnicos: cada pista SHALL
-tener al menos 4 curvas de más de 120° y al menos una espiral (giro de 360° o más en un solo sentido), un sacacorchos
-(270° o más) o un laberinto (4 o más giros de 60° a 120° seguidos), además de chicanas u horquillas. La complejidad SHALL
+girar en total al menos 1350° por vuelta (y al menos 1.5 veces lo que giraba antes; ninguna pista de antes llega), tener
+10 o más curvas con al menos una de más de 120°, al menos una espiral (giro de 360° o más en un solo sentido), un
+sacacorchos (270° o más) o un laberinto (4 o más giros de 60° a 120° seguidos) y 3 o más chicanas u horquillas. La complejidad SHALL
 medirse con una función pura de las definiciones (`KartsPistas.complejidad`). Cada trazado SHALL seguir siendo cerrado,
 sin encimarse en el mismo plano, con todas sus curvas de radio ≥ 100 px, la meta en una recta, el minimapa legible
 (tramos lejanos ≥ 6 px en 104×72) y una vuelta de largo parecido a la de antes (±15 %). Cada pista SHALL conservar su
@@ -13,7 +14,7 @@ cuadros por segundo en un celular con el CPU 4 veces más lento y 8 karts.
 
 #### Scenario: Complejidad medible
 - **WHEN** las pruebas recorren las 8 pistas rediseñadas
-- **THEN** cada una tiene 4 o más curvas de más de 120° y al menos una espiral, un sacacorchos o un laberinto
+- **THEN** cada una gira al menos 1350° por vuelta y tiene al menos una espiral, un sacacorchos o un laberinto
 
 #### Scenario: Trazado manejable
 - **WHEN** un kart recorre completa una pista rediseñada con el piloto de prueba
