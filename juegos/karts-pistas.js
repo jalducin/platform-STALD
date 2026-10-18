@@ -110,7 +110,7 @@
       // karts-curvas-complejas: interiores, mecánicas y adornos colocados sobre el trazado nuevo.
       fijos: [{ img: 'kukulkan', w: 30, h: 24, desde: [3945, 197], hasta: [3457, 197], cada: 30, lado: 1.3 }],
       adornos: [{ img: 'tronoJaguar', x: 4071, y: 2044, w: 64, h: 50 }],
-      interiores: [{ nombre: 'Escaleras interiores', desde: [2693, 2112], hasta: [4192, 718], ancho: 0.8, muro: 0 }, { nombre: 'Templo del jaguar', desde: [3433, 197], hasta: [1114, 200], ancho: 1, muro: 1 }],
+      interiores: [{ nombre: 'Templo del jaguar', desde: [3433, 197], hasta: [800, 1030], ancho: 1, muro: 0 }, { nombre: 'Escaleras interiores', desde: [2693, 2112], hasta: [4192, 718], ancho: 0.8, muro: 0 }],
       mecanicas: [{ tipo: 'luz', cerca: [2565, 2110], lado: -0.35, r: 22 }, { tipo: 'luz', cerca: [3769, 200], lado: 0.35, r: 22 },
         { tipo: 'luz', cerca: [804, 631], lado: -0.35, r: 22 }, { tipo: 'losa', cerca: [3213, 1509], r: 20, periodo: 4 },
         { tipo: 'losa', cerca: [3204, 601], r: 20, periodo: 4.6 }, { tipo: 'losa', cerca: [1701, 1022], r: 20, periodo: 5.2 }],
