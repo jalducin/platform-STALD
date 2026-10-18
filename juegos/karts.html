@@ -1808,7 +1808,10 @@ function pilotoBot(k) {
   k.carrilT -= 1 / 60;
   if (k.carrilT <= 0) { k.carrilT = 2 + Math.random() * 3; k.carril = (Math.random() - 0.5) * pista.mitad * 0.9; } // NOSONAR: azar de juego, no criptográfico
   // karts-copa-espacio: en el espacio miran más cerca (mirar lejos corta las curvas y en lo abierto se caerían).
-  const mira = marcas ? 6 + Math.floor(k.vel * 0.06) : 10 + Math.floor(k.vel * 0.12);
+  // karts-curvas-complejas: entre muros también miran cerca (en las curvas cerradas de las galerías, mirar lejos apunta a
+  // través del muro de adentro y el bot se queda raspándolo).
+  const entreMuros = !!pista.interiores && KP.muroEn(pista, M).w[k.idx] > 0;
+  const mira = marcas || entreMuros ? 6 + Math.floor(k.vel * 0.06) : 10 + Math.floor(k.vel * 0.12);
   const obj = punto(k.idx + mira, KartsReinos.carril(k, carrilBot(k, mira))); // karts-copa-reinos: esquiva obstáculos y no pasa los muros
   const dAng = Math.atan2(Math.sin(Math.atan2(obj.y - k.y, obj.x - k.x) - k.ang), Math.cos(Math.atan2(obj.y - k.y, obj.x - k.x) - k.ang));
   const a0 = M.pts[k.idx].a, a1 = M.pts[(k.idx + 28) % N].a;
@@ -2965,7 +2968,7 @@ if (PRUEBA) {
       item: yo ? yo.item : null, mando: mando.estado(), aire: yo ? yo.aire || 0 : 0, eventos: { ...eventos }, zonas: zonas.map(z => z.tipo),
       espacio: !!marcas, caidasBots, cae: yo ? yo.cae : 0, remolque: yo ? yo.remolque : 0, idx: yo ? yo.idx : 0, n: N, lateral: yo ? Math.round(lateralDe(yo)) : 0, // karts-copa-espacio
       reinos: KartsReinos.estado(), // karts-copa-reinos
-      bots: karts.filter(k => k !== yo).map(k => ({ v: k.vuelta, t: k.termino })), // karts-curvas-complejas: vueltas de los bots
+      bots: karts.filter(k => k !== yo).map(k => ({ v: k.vuelta, t: k.termino, i: k.idx, vel: Math.round(k.vel) })), // karts-curvas-complejas: vueltas de los bots
       copasMenu: [...document.querySelectorAll('#menu-ops [data-ir^="copa-nueva"]')].map(b => ({ ir: b.dataset.ir, txt: b.textContent, bloqueada: b.disabled })),
       copa: sala && sala.copa ? sala.copa.k : null, copaVisible: !$('ov-copa').classList.contains('hide'), copaTexto: $('ov-copa').textContent, // karts-copa-en-sala
       personaje: yo ? yo.personaje : personaje, masa: Personajes.masa(yo ? yo.personaje : personaje), personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length,

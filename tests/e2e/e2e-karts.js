@@ -458,14 +458,15 @@ async function probarMecanicaEspacio(q, f, m) {
 }
 // karts-curvas-complejas: los 7 bots completan una vuelta del trazado nuevo con su línea de carrera (la misma física, 4
 // pasos por cuadro) y captura del minimapa del trazado (para revisarlo contra el de antes).
+const soloPista = m => !process.env.KARTS_PISTA || process.env.KARTS_PISTA === m.id;
 async function vueltaBots(f, id, b0) {
+  const mm = await f.$('#minimapa');
+  if (mm && await mm.isVisible()) await mm.screenshot({ path: 'karts-curvas-' + id + '-minimapa.png', timeout: 5000 }).catch(() => {});
   await f.evaluate(() => window.__karts.rapido(4));
   await f.waitForFunction(b => window.__karts.estado().bots.every((x, i) => x.v >= b[i] + 1 || x.t !== null), b0, { timeout: 60000 }).catch(() => {});
   await f.evaluate(() => window.__karts.rapido(1));
   const e = await estado(f);
-  ok(id + ': los 7 bots completan una vuelta del trazado nuevo', e.bots.length === 7 && e.bots.every((x, i) => x.v >= b0[i] + 1 || x.t !== null), JSON.stringify({ antes: b0, ahora: e.bots.map(x => x.v), caidasBots: e.caidasBots }));
-  const mm = await f.$('#minimapa');
-  if (mm) await mm.screenshot({ path: 'karts-curvas-' + id + '-minimapa.png' });
+  ok(id + ': los 7 bots completan una vuelta del trazado nuevo', e.bots.length === 7 && e.bots.every((x, i) => x.v >= b0[i] + 1 || x.t !== null), JSON.stringify({ antes: b0, ahora: e.bots.map(x => x.v), donde: e.bots.map(x => x.i + '/' + e.n + '@' + x.vel), caidasBots: e.caidasBots }));
 }
 async function probarPistasEspacio(b) {
   const q = await abrirSuelto(b, { width: 390, height: 844 });
@@ -473,7 +474,7 @@ async function probarPistasEspacio(b) {
   await f.tap('[data-ir="pistas"]'); await sleep(200);
   const txt = await f.textContent('#pistas-ops');
   ok('espacio: las 4 pistas en «Carrera rápida» con nombre y meta', ESPACIO.every(m => txt.includes(m.nombre)) && /Copa del Espacio/.test(txt), txt.slice(-300));
-  for (const m of ESPACIO) {
+  for (const m of ESPACIO.filter(soloPista)) { // karts-curvas-complejas: KARTS_PISTA=<id> para iterar en una sola
     await f.tap('[data-ir="rapida:' + m.id + '"]');
     await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 1500, null, { timeout: 30000 });
     await f.evaluate(() => window.__karts.piloto(true)); await sleep(1200);
@@ -559,7 +560,7 @@ async function probarReinos(b) {
   const c1 = (await estado(f)).copasMenu;
   ok('reinos: con 1 podio (3.º en la Copa Fiesta) se abre; la del Espacio sigue con candado', !reinos(c1).bloqueada && c1.at(-1).bloqueada, JSON.stringify(c1.map(x => x.ir + (x.bloqueada ? '🔒' : ''))));
   await f.evaluate(() => window.__karts.ponerCopas({}));
-  for (const m of REINOS) {
+  for (const m of REINOS.filter(soloPista)) { // karts-curvas-complejas: KARTS_PISTA=<id>
     await f.tap('[data-ir="pistas"]');
     const txt = await f.textContent('[data-ir="rapida:' + m.id + '"]');
     ok(m.id + ': en la carrera rápida con nombre y civilización', txt.includes(m.nombre) && /Egipcia|Maya|Jemer/.test(txt), txt);
