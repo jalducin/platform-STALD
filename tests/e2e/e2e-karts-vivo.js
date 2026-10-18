@@ -363,6 +363,37 @@ async function copaEspacioEnSala(b, relevo) {
   await sleep(6000); await host.screenshot({ path: 'karts-vivo-copa-espacio.png' });
   for (const p of pags) await p.context().close();
 }
+// karts-puntos-copas (sprint 41): Copa Reinos Antiguos en sala: quien gana la carrera 1 (en Giza) suma 15 en la
+// tabla del servidor y en la tabla entre carreras de su aparato; el reporte no se rechaza en silencio.
+async function copaReinosEnSala(b, relevo) {
+  const pags = [];
+  for (const email of ['marisol@example.com', 'angel@example.com']) pags.push(await jugador(b, email, relevo)); // NOSONAR: en orden
+  const [host] = pags;
+  await host.click('[data-tab="partidas"]'); await host.waitForSelector('#f-crear');
+  await host.selectOption('#p-juego', 'karts'); await host.selectOption('#p-kformato', 'copa:reinos');
+  await host.click('#f-crear button[type=submit]'); await host.waitForSelector('[data-p="empezar"]', { timeout: 30000 });
+  const codigo = (await host.textContent('.letra')).trim();
+  await unirse(pags[1], codigo);
+  await sleep(1500);
+  await host.click('[data-p="empezar"]');
+  const frames = await enCarrera(pags);
+  const vista = async () => (await (await fetch(API + '/juegos/sala/' + codigo + '?email=marisol%40example.com')).json()).copa;
+  ok('copa reinos en sala: la carrera 1 es en Giza', (await estado(frames[0])).pista === 'giza');
+  await Promise.all(frames.map(fr => fr.evaluate(() => window.__karts.piloto(true))));
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => window.__karts.estado().tiempo > 36000, null, { timeout: 90000 })));
+  await frames[0].evaluate(() => window.__karts.adelantar());
+  await sleep(1500);
+  await frames[1].evaluate(() => window.__karts.adelantar());
+  await frames[0].waitForFunction(() => { const e = window.__karts.estado(); return e.copaVisible && /Empieza en|Siguiente carrera en/.test(e.copaTexto); }, null, { timeout: 30000 }).catch(() => {});
+  const t = await estado(frames[0]);
+  const v = await vista();
+  const r0 = v && v.resultados && v.resultados[0];
+  const fila = v && v.tabla && v.tabla.find(x => /Marisol/i.test(x.nombre));
+  ok('copa reinos en sala: el servidor cierra la carrera 1 con quien ganó en 1.º y 15 puntos', !!r0 && fila && fila.pts === 15, JSON.stringify(v && { fase: v.fase, carrera: v.carrera, tabla: v.tabla && v.tabla.map(x => x.nombre + ':' + x.pts) }));
+  ok('copa reinos en sala: la tabla entre carreras muestra los 15 de quien ganó', /15/.test(t.copaTexto), t.copaTexto.slice(0, 200));
+  await host.screenshot({ path: 'karts-vivo-copa-reinos-tabla.png' });
+  for (const q of pags) await q.context().close();
+}
 async function copaEnSala(b, relevo) {
   const pags = [];
   for (const email of ['marisol@example.com', 'angel@example.com']) pags.push(await jugador(b, email, relevo)); // NOSONAR: en orden
@@ -650,6 +681,12 @@ async function salidaYPodio(b, relevo) {
     console.log(out.join('\n'));
     process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
   }
+  if (process.env.KARTS_VIVO_SOLO === 'copa-reinos') { // karts-puntos-copas: solo esta parte (para iterar)
+    await copaReinosEnSala(b, relevo);
+    await b.close(); await relevo.cerrar();
+    console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_VIVO_SOLO === 'salida') { // karts-salida-y-puntos: solo esta parte (para iterar)
     await salidaYPodio(b, relevo);
     await b.close(); await relevo.cerrar();
@@ -670,6 +707,7 @@ async function salidaYPodio(b, relevo) {
   await personajesEnSala(b, relevo); // personaje-en-salas
   await respaldo(b, relevo);
   await copaEnSala(b, relevo); // karts-copa-en-sala
+  await copaReinosEnSala(b, relevo); // karts-puntos-copas
   await salidaYPodio(b, relevo); // karts-salida-y-puntos
   await b.close(); await relevo.cerrar();
   console.log(out.join('\n'));

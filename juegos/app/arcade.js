@@ -24,8 +24,8 @@ function canalProgreso(id, aJuego, sinAvance) {
       let r = await put(d);
       if (r.status === 409 && r.body.error === 'version_vieja' && cargado) { v = r.body.v; r = await put(d); }
       if (r.ok) v = r.body.v;
-      aJuego({ tipo: 'guardado', ok: r.ok });
-    }).catch(() => aJuego({ tipo: 'guardado', ok: false }));
+      aJuego({ tipo: 'guardado', ok: r.ok, error: r.ok ? null : ((r.body && r.body.error) || r.status || 'sin conexión') }); // karts-puntos-copas: con el motivo
+    }).catch(() => aJuego({ tipo: 'guardado', ok: false, error: 'sin conexión' }));
   };
   return { lectura, guardar };
 }
@@ -229,6 +229,13 @@ const filaCopaIframe = (t, st, yo) => {
 function botsDeCarrera(s, pista) {
   return participantes().filter(p => p.bot).map(p => ({ nombre: p.nombre, ms: Arcade.tiempoBot('karts', pista, s.seed, p.id), color: (Arcade.BOTS_SALA.find(b => b.id === p.id) || {}).color }));
 }
+// karts-puntos-copas: si el servidor no acepta tu tiempo de la copa, el juego lo avisa (antes fallaba en silencio y
+// la carrera contaba como «no terminó», 0 puntos).
+const MOTIVO_RECHAZO = { carrera_invalida: 'tu tiempo no coincide con el reloj de la sala', carrera_cerrada: 'la carrera ya había cerrado', carrera_fuera_de_turno: 'esa carrera todavía no empezaba' };
+function avisoRechazo(r) {
+  const e = (r.body && r.body.error) || r.status || 'sin conexión';
+  aCopa({ tipo: 'aviso', texto: '⚠️ No se guardó tu tiempo de esta carrera: ' + (MOTIVO_RECHAZO[e] || e) + '.' });
+}
 function aCopa(msg) { const f = document.getElementById('arcade-frame'); try { f.contentWindow.postMessage(msg, location.origin); } catch (x) { /* iframe cerrado */ } }
 // Manda al servidor el abandono de la carrera en curso (al salir o al volver a media carrera). keepalive: también al cerrar.
 function abandonarCopa(k) {
@@ -255,6 +262,7 @@ function abrirCopaSala(body) {
       const k = d.carrera, ms = d.ms === null ? null : Math.max(0, Math.round(Number(d.ms) || 0));
       sala.copa.corriendo = -1;
       post('/juegos/sala/' + sala.codigo + '/respuesta', { copa: { carrera: k, ms, monedas: Math.max(0, Math.min(999, Math.round(Number(d.monedas) || 0))) } })
+        .then(r => { if (r && !r.ok) avisoRechazo(r); }) // karts-puntos-copas: el rechazo del servidor se ve
         .then(() => traerSala()).then(() => pintarSala());
     }
   };

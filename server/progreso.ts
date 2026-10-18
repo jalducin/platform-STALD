@@ -5,6 +5,7 @@
 import type { Jugador } from "./juegos.ts";
 import type { Store } from "./store.ts";
 import { validarProgresoBrigada } from "./brigada.ts"; // brigada
+import "../juegos/karts-pistas.js"; // karts-puntos-copas: copas, tope de puntos y récords salen de las definiciones
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -47,17 +48,22 @@ function validarPlataformas(d: unknown): boolean {
 
 export const PIEZAS_KART = ["chasis-ligero", "llantas-todoterreno", "pintura-dorada"];
 export const COLORES_KART = ["rojo", "azul", "verde", "morado", "naranja", "rosa", "turquesa", "dorado"];
-const COPA = /^[a-z]{2,12}$/;
+// karts-puntos-copas: sin listas fijas. Las copas, el tope de puntos de una copa, los corredores de la copa y el
+// rango de los récords salen de juegos/karts-pistas.js (el mismo archivo que usa el juego).
+const KP = (globalThis as unknown as {
+  KartsPistas: { COPAS: { id: string }[]; PUNTOS_COPA_MAX: number; PUNTOS_CARRERA: number[]; RECORD_MIN_MS: number; RECORD_MAX_MS: number; VERSION_PISTAS: number };
+}).KartsPistas;
+const ES_COPA = (id: unknown) => KP.COPAS.some((c) => c.id === id);
 const PISTA = /^[a-z][a-z-]{1,19}$/;
 
-// Récords por pista: ≤ 32 pistas, de 10 s a 15 min.
-const recordsValidos = (rec: unknown) => esObj(rec) && Object.keys(rec).length <= 32 && Object.entries(rec).every(([k, v]) => PISTA.test(k) && entero(v, 10_000, 900_000));
+// Récords por pista: ≤ 32 pistas, en el rango de KartsPistas (10 s a 15 min).
+const recordsValidos = (rec: unknown) => esObj(rec) && Object.keys(rec).length <= 32 && Object.entries(rec).every(([k, v]) => PISTA.test(k) && entero(v, KP.RECORD_MIN_MS, KP.RECORD_MAX_MS));
 const BASE_KARTS = ["copas", "records", "piezas", "equipo", "copaEnCurso"];
-export const VERSION_PISTAS_KARTS = 3; // igual que KartsPistas.VERSION_PISTAS (server/karts_curvas_test.ts)
+export const VERSION_PISTAS_KARTS = KP.VERSION_PISTAS; // karts-puntos-copas: de KartsPistas.VERSION_PISTAS (antes, copiado)
 
-// Copas ganadas: ≤ 8, cada una con su mejor lugar y puntos.
-const copasValidas = (copas: unknown) => esObj(copas) && Object.keys(copas).length <= 8 &&
-  Object.entries(copas).every(([k, v]) => COPA.test(k) && esObj(v) && llaves(v, ["lugar", "puntos"]) && entero(v.lugar, 1, 8) && entero(v.puntos, 0, 60));
+// Copas ganadas: solo las de KartsPistas.COPAS, cada una con su mejor lugar y puntos (tope de la copa más larga).
+const copasValidas = (copas: unknown) => esObj(copas) && Object.keys(copas).length <= KP.COPAS.length &&
+  Object.entries(copas).every(([k, v]) => ES_COPA(k) && esObj(v) && llaves(v, ["lugar", "puntos"]) && entero(v.lugar, 1, KP.PUNTOS_CARRERA.length) && entero(v.puntos, 0, KP.PUNTOS_COPA_MAX));
 // Equipo válido y, si lleva una pieza, que esté desbloqueada.
 function equipoValido(eq: unknown, piezas: unknown[]): boolean {
   if (!esObj(eq) || !llaves(eq, ["chasis", "llantas", "color"])) return false;
@@ -65,8 +71,9 @@ function equipoValido(eq: unknown, piezas: unknown[]): boolean {
   const falta = (usa: boolean, pieza: string) => usa && !piezas.includes(pieza);
   return !falta(eq.chasis === "ligero", "chasis-ligero") && !falta(eq.llantas === "todoterreno", "llantas-todoterreno") && !falta(eq.color === "dorado", "pintura-dorada");
 }
-const copaEnCursoValida = (cc: unknown) => cc === null || (esObj(cc) && llaves(cc, ["copa", "carrera", "puntos", "dif"]) && COPA.test(String(cc.copa)) &&
-  entero(cc.carrera, 0, 3) && entero(cc.dif, 80, 110) && Array.isArray(cc.puntos) && cc.puntos.length === 8 && cc.puntos.every((x) => entero(x, 0, 60)));
+const copaEnCursoValida = (cc: unknown) => cc === null || (esObj(cc) && llaves(cc, ["copa", "carrera", "puntos", "dif"]) && ES_COPA(cc.copa) &&
+  entero(cc.carrera, 0, KP.PUNTOS_COPA_MAX / KP.PUNTOS_CARRERA[0] - 1) && entero(cc.dif, 80, 110) && Array.isArray(cc.puntos) && cc.puntos.length === KP.PUNTOS_CARRERA.length &&
+  cc.puntos.every((x) => entero(x, 0, KP.PUNTOS_COPA_MAX)));
 
 function validarKarts(d: unknown): boolean {
   // karts-pistas-grandes: forma versionada (+ pistasV y recordsV1 = récords archivados de las pistas chicas) o la

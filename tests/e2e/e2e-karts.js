@@ -818,8 +818,72 @@ async function probarCopaMeso(b) {
   await p.context().close();
 }
 
+// ---- karts-puntos-copas: puntos de la copa (sprint 41) ----
+// «En la copa Reinos Antiguos no suma puntos y gané en la primera carrera». Con los podios para abrir todas las copas
+// (en el servidor), cada copa corre su carrera 1 dentro de Juegos: la de Reinos de verdad (el piloto de prueba maneja la
+// primera vuelta) y las demás con el gancho `adelantar`. Al ganar: +15 en la tabla, «Copa 15», puntos en ⭐ individuales,
+// copa en curso con 15 guardada en el servidor y, tras recargar, «Continuar … Carrera 2 de 4» con los 15.
+const PODIOS_TODAS = { fiesta: { lugar: 1, puntos: 50 }, mesoamerica: { lugar: 2, puntos: 40 } };
+async function ponerProgreso(cambio) {
+  const g0 = await progreso();
+  const base = g0.datos || { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: 3, recordsV1: {}, recordsV2: {} };
+  const put = await fetch(API + '/juegos/progreso/karts?email=' + encodeURIComponent(EMAIL), { method: 'PUT', body: JSON.stringify({ v: g0.v, datos: { ...base, ...cambio(base) } }) });
+  return put.ok;
+}
+async function probarPuntosCopa(b, copa, deVerdad) {
+  ok(copa.id + ': progreso con podios para abrir la copa', await ponerProgreso(base => ({ copas: { ...base.copas, ...PODIOS_TODAS }, copaEnCurso: null })));
+  const p = await abrir(b);
+  const errores = []; p.on('console', m => { if (m.type() === 'error') errores.push(m.text()); });
+  await abrirJuego(p, 'karts');
+  let fr = await marcoDe(p);
+  await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  await fr.click('[data-ir="copa-nueva' + (copa.id === 'fiesta' ? '' : ':' + copa.id) + '"]');
+  await fr.waitForFunction(() => window.__karts.estado().modo === 'carrera');
+  ok(copa.id + ': la carrera 1 es en ' + copa.pista, (await estado(fr)).pista === copa.pista);
+  await sleep(3800);
+  if (deVerdad) { // una vuelta de verdad con el piloto de prueba (como una carrera real) y luego a la meta
+    await fr.evaluate(() => { window.__karts.piloto(true); window.__karts.rapido(4); });
+    await fr.waitForFunction(() => window.__karts.estado().vuelta >= 1, null, { timeout: 120000 }).catch(() => {});
+    await fr.evaluate(() => { window.__karts.rapido(1); window.__karts.piloto(false); });
+  }
+  await fr.evaluate(() => window.__karts.adelantar());
+  await fr.waitForSelector('#ov-res:not(.hide)', { timeout: 30000 });
+  await fr.waitForFunction(() => /individuales|No se guardaron/.test(document.getElementById('res-guardado').textContent), null, { timeout: 20000 }).catch(() => {});
+  const fila = await fr.evaluate(() => { const tr = document.querySelector('#res-tabla tr.yo'); return tr ? [...tr.children].map(td => td.textContent) : null; });
+  const titulo = await fr.textContent('#res-titulo'), guardado = await fr.textContent('#res-guardado');
+  ok(copa.id + ': ganas la carrera 1 y la tabla dice +15 y Copa 15', /Ganaste/.test(titulo) && fila && fila[0] === '1' && fila[3] === '+15' && fila[4] === '15', JSON.stringify({ titulo, fila }));
+  ok(copa.id + ': los puntos de la carrera llegan a tus ⭐ individuales (el servidor los acepta)', /a tus ⭐ individuales/.test(guardado), guardado);
+  let cc = null;
+  for (let i = 0; i < 20; i++) { cc = ((await progreso()).datos || {}).copaEnCurso; if (cc && cc.copa === copa.id && cc.carrera === 1) break; await sleep(400); } // NOSONAR: sondeo en orden
+  const yoIndice = (await estado(fr)).yoIndice;
+  ok(copa.id + ': copa en curso guardada en el servidor (carrera 2) con tus 15 puntos', cc && cc.copa === copa.id && cc.carrera === 1 && cc.puntos[yoIndice] === 15, JSON.stringify({ cc, yoIndice }));
+  const aviso = await fr.textContent('#aviso');
+  ok(copa.id + ': sin aviso de error al guardar', !/No se pudo guardar/.test(aviso) && !errores.some(e => /progreso_invalido|400/.test(e)), aviso + ' ' + errores.join(' | '));
+  await p.reload(); await p.waitForSelector('[data-menu]', { timeout: 60000 });
+  await abrirJuego(p, 'karts');
+  fr = await marcoDe(p);
+  await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+  const menu = await fr.textContent('#menu-ops');
+  ok(copa.id + ': tras recargar, «Continuar ' + copa.nombre + '» en la carrera 2 de 4 con «⭐ 15 pts (1.º)»', menu.includes('Continuar ' + copa.nombre) && menu.includes('Carrera 2 de 4') && menu.includes('⭐ 15 pts (1.º)'), menu.slice(0, 160));
+  ok(copa.id + ': tras recargar la copa conserva tus 15 puntos', (await estado(fr)).prog.copaEnCurso?.puntos?.includes(15), JSON.stringify((await estado(fr)).prog.copaEnCurso));
+  await p.screenshot({ path: 'karts-puntos-' + copa.id + '-recarga.png', fullPage: true });
+  await p.context().close();
+}
+const COPAS_PUNTOS = [
+  { id: 'reinos', nombre: 'Copa Reinos Antiguos', pista: 'giza', deVerdad: true },
+  { id: 'espacio', nombre: 'Copa del Espacio', pista: 'orbital' },
+  { id: 'fiesta', nombre: 'Copa Fiesta', pista: 'pradera' },
+  { id: 'mesoamerica', nombre: 'Copa Mesoamericana', pista: 'laventa' },
+];
+async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probarPuntosCopa(b, c, c.deVerdad); }
+
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
+  if (process.env.KARTS_SOLO === 'puntos') { // karts-puntos-copas: solo esta parte (para iterar)
+    await probarPuntosCopas(b);
+    await b.close(); console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_SOLO === 'reinos') { // karts-copa-reinos: solo esta parte (para iterar)
     await probarReinos(b);
     await b.close(); console.log(out.join('\n')); console.log('fps: ' + JSON.stringify(fpsReinos));
@@ -1156,6 +1220,7 @@ async function probarCopaMeso(b) {
   await probarCopaMeso(b);
   await probarCopaEspacio(b); // karts-copa-espacio (al final: cambia las copas y la copa en curso)
   await probarCopaReinos(b); // karts-copa-reinos (con los podios que dejó la prueba del Espacio)
+  await probarPuntosCopas(b); // karts-puntos-copas: ganar la carrera 1 de cada copa suma 15, se guarda y sobrevive a recargar
   console.log('fps con CPU ×4 por pista nueva: ' + JSON.stringify(fpsMeso));
   console.log('fps con CPU ×4 dentro de los monumentos: ' + JSON.stringify(fpsReinos));
 
