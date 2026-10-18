@@ -54,11 +54,11 @@ de las manos.
 - **THEN** ve las cartas comunes, las fichas y los dorsos, y las manos solo en la muestra final
 
 ### Requirement: Juegos en vivo en solo escucha
-En Karts, Fútbol en línea y Futbolito Arena el espectador SHALL recibir el topic de la sala y conectarse en solo
+En Karts, Fútbol en línea, Futbolito Arena y Brigada Xalli el espectador SHALL recibir el topic de la sala y conectarse en solo
 escucha: no SHALL enviar ningún evento `vivo` (ni latidos) y cada aparato de juego SHALL ignorar los mensajes de quien
 no está en `participantes`. En los demás juegos el espectador no SHALL recibir el topic y SHALL usar sondeo. En Karts
 SHALL ver la carrera con la cámara en el líder o en quien elija (◀ ▶), el minimapa y la clasificación en vivo; en
-Fútbol y Arena SHALL ver la cancha completa con el marcador.
+Fútbol y Arena SHALL ver la cancha completa con el marcador, y en Brigada Xalli la misión con la cámara compartida del anfitrión.
 
 #### Scenario: Karts en vivo
 - **WHEN** alguien especta una carrera de Karts en vivo de 2 personas

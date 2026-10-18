@@ -17,7 +17,7 @@ vivo en solo escucha; podio y revancha.
 ## Decisions
 
 ### 1. Registro en una subcarpeta
-`POST /juegos/sala/<código>/espectar` escribe `juegos/salas/<código>/espectadores/<id>.json` (`{ id, nombre, t }`).
+`POST /juegos/sala/<código>/espectar` escribe `juegos/salas/<código>/espectadores/<id>.json` (`{ id, t }`).
 Al estar en una subcarpeta, `estado()` no lo ve: el espectador no cuenta para MESAS, cupo, `empezar`, podio,
 revancha ni ranking (`/juegos/partida` sigue exigiendo `juegos/salas/<sala>/<id>.json`). Una escritura por
 espectador (no hay latido), así no gasta el límite de GitHub. Cupo `MAX_ESPECTADORES = 30` (409
@@ -51,8 +51,8 @@ mismo nivel que un jugador que no es dueño de esa mano, no más arriba. Quitar 
 mesa; se documenta como pendiente (repartir en el servidor).
 
 ### 3. Juegos en vivo: solo escucha
-El topic solo se da al espectador en `ESPECTADOR_EN_VIVO = {karts, futbol, futbolito-arena}` (gancho para Brigada
-Xalli). En la página, el transporte de un espectador no envía (`enviar` vacío) y el puente no reenvía `vivo-tx` del
+El topic solo se da al espectador en `ESPECTADOR_EN_VIVO = {karts, futbol, futbolito-arena, brigada}` (gancho para
+juegos en vivo nuevos). En la página, el transporte de un espectador no envía (`enviar` vacío) y el puente no reenvía `vivo-tx` del
 iframe; `EnVivo.conectar({ escucha: true })` no manda latidos, pings ni `_x`. Del lado de quien juega, `EnVivo` ya
 descarta todo sobre cuyo `i` no está en `participantes` (`miembros`), y el puente de la página solo deja pasar ids de la
 sala. **Riesgo residual documentado:** el `i` del sobre lo declara quien envía; alguien con el topic que modifique su
@@ -67,8 +67,10 @@ La página manda `espectador: true` en `inicio`:
 - **Fútbol:** rol `espectador` = invitado sin entrada ni saludo; ve la cancha completa y el marcador.
 - **Arena:** invitado con `yo = -1` (sin robot propio) y sin entrada. Con una sola persona el partido es local: la
   página avisa que se verá el resultado.
-- **Brigada Xalli:** cuando llegue a `main`, su id se agrega a `ESPECTADOR_EN_VIVO` / `ESPECTAR_EN_VIVO` y su iframe
-  atiende `espectador: true` (mismo contrato).
+- **Brigada Xalli** (llegó a `main` durante este cambio): invitado de `brigada-red.js` con `espectador: true` (sin
+  predicción ni entrada; solo toma la cámara compartida `c` de cada foto del anfitrión) y canal en solo escucha. Con una
+  sola persona la misión es local: la página avisa que se verá el resultado.
+- Ítems de Karts entre personas: quien especta no los dibuja (no tiene `red`); queda como pendiente.
 
 ### 5. Página
 `sala.espectador` sale de la respuesta (`espectador: true`). Guardas: `post()` no envía a `/respuesta`, `/empezar`,

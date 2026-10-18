@@ -211,6 +211,8 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   carreras de Arcade, `opciones.mapa` = nivel o pista; el archivo de cada jugador lleva `carrera: { ms, monedas, t,
   avance? }`, con `avance` 0–999 ‰ solo si no terminó: `karts-salida-y-puntos`) y
   `juegos/salas/<código>/<id-jugador>.json` `{ id, nombre, tipo, unido, respuestas, palabras?, basta?, rondasBasta?, v? }`.
+  Espectadores (cambio `espectador-partidas`): `juegos/salas/<código>/espectadores/<id>.json` `{ id, t }` (id opaco y
+  hora; sin nombre ni correo), hasta 30 por sala; vencen con la sala.
   Juegos para salas grandes (`juegos-salas-grandes`): `sala.opciones.figura` (Bingo: `linea`|`esquinas`|`lleno`),
   `sala.opciones.gana` (Memorama: `tiempo`|`errores`) y `sala.secreto` (Dibuja: hex de 24, se crea al empezar; de él sale
   la palabra de cada turno y nunca se envía). Por jugador: `bingo?: { t, n }`, `bingoFalsos?`, `dibujo?: { turno,

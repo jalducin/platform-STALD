@@ -409,6 +409,17 @@ Cada página debe manejar y mostrar de forma explícita:
     los demás individuales piden confirmar con `beforeunload`. Las pantallas de elegir nivel o modo usan
     `marco(id, { menu: true })` y no cuentan como partida;
   - durante una partida, `html.jugando` aplica `overscroll-behavior-y: contain` (sin «jalar para recargar»).
+- **Espectador** (openspec: espectador-partidas; cambios marcados `// espectador`): al no poder unirse (`sala_llena`,
+  `ya_empezo`) se ofrece «👀 Ver como espectador»; también «👀 Solo ver» en 🔑 Unirme con código y el enlace
+  `?sala=<código>&ver=1`. `sala.espectador` sale del GET (`espectador: true`). Guardas: `post()` de `nucleo.js` no envía
+  a la sala que se especta (`espectandoSala`) ni a `/juegos/partida`; `clicEspectador` ignora los clics del juego;
+  `.espectando` apaga los controles. Barra `#p-esp` con «👀 Espectador», «👀 N viendo» (`#p-viendo`, para todos) y
+  🔊/🔇 (`arcade_sonido`). Podio con «🔁 Unirme a la revancha» (o seguir viendo si está llena). Juegos en vivo:
+  `ESPECTAR_EN_VIVO` en `salas.js`; el transporte y el puente (`EnVivo.puente({ escucha: true })`) no envían nada y el
+  iframe recibe `espectador: true`: Karts (todas las personas remotas, cámara del líder o ◀ ▶ 👑, sin entrada,
+  ítems ni `meta`), Fútbol (rol `espectador`), Arena (invitado sin robot) y Brigada (invitado sin entrada que sigue la
+  cámara compartida). Para un juego en vivo nuevo: agregar su id a `ESPECTAR_EN_VIVO` y a `ESPECTADOR_EN_VIVO`
+  (servidor) y atender `espectador: true` en su iframe con `EnVivo.conectar({ escucha: true })`.
 - **Revancha** (openspec: revancha-partidas; detalle en su `design.md`): el podio de toda partida
   (`pintarFinalSala`) muestra «🔁 Otra con los mismos» (`POST /juegos/sala/<código>/revancha`); si alguien ya la
   abrió (`sala.siguiente`), «🔁 {Nombre} abrió la revancha · Unirme». Al terminar se guarda

@@ -18,11 +18,12 @@ llegan tarde al Meet quieren ver la partida de sus compañeros y compañeras, y 
     ya publica el canal de la sala: sin flotas de Batalla naval, sin elecciones de Piedra-papel-tijera antes de
     revelarse, sin la palabra de Dibuja (solo letras y las ya reveladas), y nunca el canal secreto salvo en juegos en
     vivo. El admin, que ya podía ver salas, usa la misma vista.
-- **Juegos en vivo (solo escucha):** solo en Karts, Fútbol en línea y Futbolito Arena (y el gancho para Brigada
-  Xalli) el espectador recibe el topic de la sala; se conecta en modo **solo escucha** (`EnVivo` con `escucha: true`
+- **Juegos en vivo (solo escucha):** solo en Karts, Fútbol en línea, Futbolito Arena y Brigada Xalli (con
+  un gancho para juegos en vivo nuevos) el espectador recibe el topic de la sala; se conecta en modo **solo escucha** (`EnVivo` con `escucha: true`
   no envía nada, ni latidos) y los demás ignoran cualquier mensaje suyo porque no está en `participantes`.
   - Karts: cámara que sigue al líder o a quien elijas (◀ ▶), minimapa y clasificación en vivo.
   - Fútbol y Arena: la cancha completa con el marcador, interpolando las fotos del anfitrión.
+  - Brigada Xalli: la misión con la cámara compartida del anfitrión y el equipo en el HUD.
 - **Interfaz del espectador:** distintivo «👀 Espectador», sin controles del juego, sonido del juego con botón para
   silenciar, el podio al final y «🔁 Unirme a la revancha» si hay lugar. Funciona con sondeo si no hay Realtime.
 
@@ -39,11 +40,12 @@ llegan tarde al Meet quieren ver la partida de sus compañeros y compañeras, y 
 
 - **Superficies:** servidor Deno (`server/salas.ts`, cambios marcados `// espectador`), `juegos.html` (solo `?v=`),
   `juegos/app/salas.js`, `salas-mesa.js`, `arcade.js`, `arranque.js`, `nucleo.js`, `juegos/app/juegos.css`,
-  `juegos/naipes.js` (Conquián visto por espectador), `juegos/en-vivo.js` (modo solo escucha), `juegos/karts.html`,
-  `juegos/futbol.html` y `juegos/futbolito-arena.html` (modo espectador del iframe). No toca `index.html`,
+  `juegos/app/naipes.js` (Conquián visto por espectador), `juegos/en-vivo.js` (modo solo escucha), `juegos/karts.html`,
+  `juegos/futbol.html`, `juegos/futbolito-arena.html`, `juegos/brigada.html`, `juegos/brigada-red.js` y
+  `juegos/app/brigada-sala.js` (modo espectador del iframe). No toca `index.html`,
   `ingles.html`, `secundaria.html`, Postgres `stald_*`, `supabase/`, Notion ni `.env`.
 - **Datos:** un archivo por espectador en el repo de datos, `juegos/salas/<código>/espectadores/<id>.json` con
-  `{ id, nombre, t }` (id opaco y nick, como los jugadores; sin correos). Vence con la sala (3 h).
+  `{ id, t }` (id opaco y hora; sin nombre ni correo). Vence con la sala (3 h).
 - **Matriz de acceso:**
 
   | Quién | Ve la sala | Recibe el topic | Juega / ranking |
@@ -56,6 +58,7 @@ llegan tarde al Meet quieren ver la partida de sus compañeros y compañeras, y 
 
   Se verifica con `server/espectador_test.ts` (tabla de juegos con secretos) y la E2E `tests/e2e/e2e-espectador.js`.
 - **Coordinación:** sprint 38 (pistas de Karts, `karts-pistas.js`) y sprint 39 (Brigada Xalli, `server/salas.ts`,
-  `juegos/mesas.js`, `juegos/app/*.js`). Cambios marcados `// espectador`; el gancho de Brigada Xalli queda en
-  `ESPECTADOR_EN_VIVO` (servidor) y `ESPECTAR_EN_VIVO` (página). Antes del PR se mezcla `origin/main`.
+  `juegos/mesas.js`, `juegos/app/*.js`). Cambios marcados `// espectador`. Brigada Xalli llegó a `main` durante el
+  cambio: se mezcló `origin/main` y quedó conectada (`ESPECTADOR_EN_VIVO` en el servidor y `ESPECTAR_EN_VIVO` en la
+  página, el gancho para juegos en vivo nuevos).
 - **Acciones externas:** ninguna (Pages y Deno Deploy publican con el merge a `main`).
