@@ -1143,7 +1143,46 @@
     return esObj(t) && llaves(t, ['robots', 'rescatados', 'completadas']) && entero(t.robots, 0, 1e7) && entero(t.rescatados, 0, 1e6) && entero(t.completadas, 0, 1e6);
   }
 
+  // ================= Invitado en vivo (juegos/brigada-red.js, design.md §11) =================
+  // Predice solo el movimiento del personaje propio con la misma física (sin recoger cosas, abrir jaulas, lanzar
+  // globos ni subir al vehículo: eso lo decide el anfitrión). `disparo`: crea burbujas cosméticas (falso al re-aplicar).
+  function predecir(m, i, e, dt, disparo) {
+    const p = m.jugadores[i];
+    if (!p || p.estado !== 'vivo') return;
+    relojes(p, dt);
+    const x = acotar(Number(e.x) || 0, -1, 1), y = acotar(Number(e.y) || 0, -1, 1);
+    p.c4 = !!e.c4;
+    p.agachado = p.suelo && p.vehiculo < 0 && y > 0.6 && y > Math.abs(x);
+    if (Math.abs(x) > UMBRAL_GIRO) p.dir = x > 0 ? 1 : -1;
+    p.aim = apuntar(x, y, p.dir, p.suelo, p.c4);
+    correr(p, x, dt);
+    const ev = m.ev;
+    saltar(m, p, e, y);
+    m.ev = ev;
+    if (!p.suelo) p.vy = Math.min(CAIDA_MAX, p.vy + GRAV * dt);
+    moverJugador(m, p, dt);
+    if (disparo && e.b) disparar(m, p);
+  }
+  // Burbujas cosméticas del invitado: avanzan y se apagan al tocar un enemigo, el jefe o el suelo; no hacen daño.
+  function balasCosmeticas(m, dt) {
+    for (const b of m.balas) {
+      if (!b.vivo) continue;
+      b.x += b.vx * dt; b.y += b.vy * dt; b.vida -= dt;
+      if (b.vida <= 0 || b.x < m.cam.x - 30 || b.x > m.cam.x + W + 30 || b.y < -40 || b.y >= sueloEn(m.def, b.x) || tocaBlanco(m, b)) b.vivo = false;
+    }
+  }
+  function tocaBlanco(m, b) {
+    for (const e of m.enemigos) {
+      if (!e.vivo) continue;
+      const d = ENEMIGOS[e.tipo];
+      if (solapa(b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r, e.x - d.w / 2, e.y - d.h, d.w, d.h)) return !b.perfora;
+    }
+    const j = m.jefe;
+    return !!j && !j.oculto && !b.perfora && solapa(b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r, j.x - j.w / 2, j.y - j.h, j.w, j.h);
+  }
+
   raiz.BrigadaMotor = {
+    predecir, balasCosmeticas, disparar,
     W, H, PASO, VEL, SALTO, GRAV, COR, VIDAS, VIDA_VEHICULO, PERSONAJES, DIRS, ARMAS, ORDEN_ARMAS, GLOBO, ENEMIGOS, JEFES, PREMIOS, PUNTOS,
     VERSION_AVANCE, COMPANEROS, INTRO_S, VICTORIA_S, LIGA_S,
     rng, escala, copiasExtra, sueloEn, apuntar, crearMision, paso, ia, reintentar, herir, cajaJugador, ponerEnemigo, ponerObjeto,

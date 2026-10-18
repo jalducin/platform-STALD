@@ -408,7 +408,9 @@ const vista = (() => {
     selva(c, P) {
       c.fillStyle = 'rgba(255,255,255,.35)'; for (const [x, y, r] of [[60, 40, 18], [300, 24, 14], [440, 50, 20]]) { elipse(c, x, y, r * 2, r); c.fill(); }
       c.fillStyle = P.lejos;
-      c.beginPath(); c.moveTo(0, 200); for (let x = 0; x <= 512; x += 32) c.lineTo(x, 120 + 26 * Math.sin(x / 70) + 12 * Math.sin(x / 23)); c.lineTo(512, 200); c.fill();
+      c.beginPath(); c.moveTo(0, 200);
+      for (let x = 0; x <= 512; x += 32) c.lineTo(x, 120 + 26 * Math.sin(x / 70) + 12 * Math.sin(x / 23));
+      c.lineTo(512, 200); c.fill();
       // Ruina escalonada en silueta lejana, entre la neblina.
       c.fillStyle = 'rgba(47,107,79,.55)';
       for (let k = 0; k < 5; k++) c.fillRect(320 + k * 8, 96 + k * 14, 96 - k * 16, 16);
@@ -655,7 +657,10 @@ const vista = (() => {
     let f = Math.floor(t * 6 + e.id) % 2;
     if (e.tipo === 'torreta') f = e.carga ? 1 : 0;
     if (e.tipo === 'saltabot' || e.tipo === 'alien') f = e.suelo ? 0 : 1;
-    const sp = sprite('en:' + e.tipo + ':' + f + ':' + e.dir, d.w + 30, d.h + 18, (d.w + 30) / 2, d.h + 14, c => { if (e.dir < 0) c.scale(-1, 1); DIBUJO_ENEMIGO[e.tipo](c, f); });
+    const sp = sprite('en:' + e.tipo + ':' + f + ':' + e.dir, d.w + 30, d.h + 18, (d.w + 30) / 2, d.h + 14, c => {
+      if (e.dir < 0) c.scale(-1, 1);
+      DIBUJO_ENEMIGO[e.tipo](c, f);
+    });
     poner(sp, e.x, e.y);
     if (e.golpeT > 0) { cx.globalAlpha = 0.55; cx.fillStyle = '#fff'; cx.fillRect(e.x - d.w / 2, e.y - d.h, d.w, d.h); cx.globalAlpha = 1; }
   }
@@ -761,7 +766,9 @@ const vista = (() => {
     cx.fillStyle = COLOR_BE[b.tipo] || '#f87171';
     if (b.tipo === 'tuerca' || b.tipo === 'engrane') {
       cx.save(); cx.translate(b.x, b.y); cx.rotate(t * 10 + b.id);
-      cx.beginPath(); for (let k = 0; k < 6; k++) cx.lineTo(Math.cos(k * Math.PI / 3) * b.r * 1.1, Math.sin(k * Math.PI / 3) * b.r * 1.1); cx.fill();
+      cx.beginPath();
+      for (let k = 0; k < 6; k++) cx.lineTo(Math.cos(k * Math.PI / 3) * b.r * 1.1, Math.sin(k * Math.PI / 3) * b.r * 1.1);
+      cx.fill();
       cx.fillStyle = '#374151'; elipse(cx, 0, 0, b.r * 0.4, b.r * 0.4); cx.fill();
       cx.restore(); return;
     }
@@ -813,67 +820,94 @@ const vista = (() => {
   const TEXTOS = Array.from({ length: 16 }, () => ({ vivo: false }));
   const LIBRES = Array.from({ length: 10 }, () => ({ vivo: false }));
   const libre = l => l.find(x => !x.vivo) || null;
+  // Azar solo visual (chispas y sacudida): no afecta la partida.
+  let semillaVisual = 0x2f6b4f;
+  const azar = () => { semillaVisual = Math.imul(semillaVisual ^ (semillaVisual >>> 15), 2246822507) + 0x9e3779b9; return ((semillaVisual >>> 0) % 100000) / 100000; };
   function chispas(x, y, n, tipo, colores) {
     for (let k = 0; k < n; k++) {
-      const p = libre(PART); if (!p) return;
-      const a = Math.random() * Math.PI * 2, v = 40 + Math.random() * 140;
-      Object.assign(p, { vivo: true, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, vida: 0.6 + Math.random() * 0.6, tipo, color: colores[k % colores.length], rot: Math.random() * 6, tam: tipo === 'engrane' ? 3 : 2 });
+      const p = libre(PART);
+      if (!p) return;
+      const a = azar() * Math.PI * 2, v = 40 + azar() * 140;
+      Object.assign(p, { vivo: true, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, vida: 0.6 + azar() * 0.6, tipo, color: colores[k % colores.length], rot: azar() * 6, tam: tipo === 'engrane' ? 3 : 2 });
     }
   }
   function texto(t, x, y, color) { const p = libre(TEXTOS); if (p) Object.assign(p, { vivo: true, t, x, y, vida: 1, color: color || '#fde047' }); }
-  function soltarAnimal(animal, x, y) { const p = libre(LIBRES); if (p) Object.assign(p, { vivo: true, animal, x, y, vy: -150, vida: 2.2 }); }
+  function soltarAnimal(animal, x, y) { const p = libre(LIBRES); if (p) Object.assign(p, { vivo: true, animal, x, y, y0: y, vy: -150, vida: 2.2 }); }
+  // Resta vida a un elemento del pool; false si se acabó.
+  function vive(p, dt) {
+    if (!p.vivo) return false;
+    p.vida -= dt;
+    if (p.vida <= 0) p.vivo = false;
+    return p.vivo;
+  }
+  function particula(p, dt) {
+    p.vy += 300 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += dt * 8;
+    if (!enVista(p.x, 10)) return;
+    cx.fillStyle = p.color;
+    if (p.tipo !== 'engrane') { cx.fillRect(p.x - p.tam, p.y - p.tam * 0.6, p.tam * 2, p.tam * 1.2); return; }
+    cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot);
+    cx.fillRect(-p.tam, -p.tam, 2 * p.tam, 2 * p.tam);
+    cx.fillStyle = '#374151'; cx.fillRect(-0.8, -0.8, 1.6, 1.6);
+    cx.restore();
+  }
+  function animalLibre(a, dt) {
+    a.vy += 500 * dt; a.y += a.vy * dt; a.x -= 70 * dt;
+    if (a.vy > 0 && a.y > a.y0) { a.y = a.y0; a.vy = -150; }
+    poner(emoji(EMOJI_ANIMAL[a.animal] || '🐾', 12), a.x, a.y);
+  }
+  function textoFlotante(p, dt) {
+    p.y -= 26 * dt; cx.globalAlpha = Math.min(1, p.vida * 2);
+    cx.fillStyle = 'rgba(0,0,0,.6)'; cx.fillText(p.t, p.x + 0.8, p.y + 0.8);
+    cx.fillStyle = p.color; cx.fillText(p.t, p.x, p.y);
+  }
   function efectos(dt) {
-    for (const p of PART) {
-      if (!p.vivo) continue;
-      p.vida -= dt; if (p.vida <= 0) { p.vivo = false; continue; }
-      p.vy += 300 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += dt * 8;
-      if (p.x < V.x0 - 10 || p.x > V.x0 + V.vw + 10) continue;
-      cx.fillStyle = p.color;
-      if (p.tipo === 'engrane') { cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot); cx.fillRect(-p.tam, -p.tam, 2 * p.tam, 2 * p.tam); cx.fillStyle = '#374151'; cx.fillRect(-0.8, -0.8, 1.6, 1.6); cx.restore(); }
-      else cx.fillRect(p.x - p.tam, p.y - p.tam * 0.6, p.tam * 2, p.tam * 1.2);
-    }
-    for (const a of LIBRES) {
-      if (!a.vivo) continue;
-      a.vida -= dt; if (a.vida <= 0) { a.vivo = false; continue; }
-      a.vy += 500 * dt; a.y += a.vy * dt; a.x -= 70 * dt;
-      if (a.vy > 0 && a.y > a.y0) { a.y = a.y0; a.vy = -150; }
-      a.y0 = a.y0 || a.y + 30;
-      poner(emoji(EMOJI_ANIMAL[a.animal] || '🐾', 12), a.x, a.y);
-    }
+    for (const p of PART) if (vive(p, dt)) particula(p, dt);
+    for (const a of LIBRES) if (vive(a, dt)) animalLibre(a, dt);
     cx.font = '900 9px system-ui,sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
-    for (const p of TEXTOS) {
-      if (!p.vivo) continue;
-      p.vida -= dt; if (p.vida <= 0) { p.vivo = false; continue; }
-      p.y -= 26 * dt; cx.globalAlpha = Math.min(1, p.vida * 2);
-      cx.fillStyle = 'rgba(0,0,0,.6)'; cx.fillText(p.t, p.x + 0.8, p.y + 0.8);
-      cx.fillStyle = p.color; cx.fillText(p.t, p.x, p.y);
-    }
+    for (const p of TEXTOS) if (vive(p, dt)) textoFlotante(p, dt);
     cx.globalAlpha = 1;
   }
+  const enVista = (x, margen) => x > V.x0 - margen && x < V.x0 + V.vw + margen;
+  function sacudida(o) { return o.sacudir > 0 && !REDUCIR ? (azar() - 0.5) * o.sacudir * 6 : 0; }
+  function escenario(m, t) {
+    const def = m.def;
+    dibujarFondo(); dibujarSuelo(def);
+    m.cps.forEach((x, k) => { if (enVista(x, 30)) bandera(x, M.sueloEn(def, x), k <= m.cp); });
+    for (const a of m.avisos) if (a.vivo) aviso(a, t);
+    for (const j of m.jaulas) if (enVista(j.x, 20)) jaula(j, t);
+    for (const ob of m.objetos) if (ob.vivo && enVista(ob.x, 20)) objeto(ob, t);
+    for (const v of m.vehiculos) if (v.vivo && v.ocupante < 0 && enVista(v.x, 30)) armadillo(v.x, v.y, 1, '#64748b', 0, false);
+  }
 
-  // Cuadro completo. `vista` = { m, yo, nombres, sacudir }
+  // Cuadro completo. `o` = { m, yo, nombres, sacudir }
   function dibujar(o, dt, t) {
     const m = o.m;
     if (!m) { cx.setTransform(1, 0, 0, 1, 0, 0); cx.fillStyle = '#0b1324'; cx.fillRect(0, 0, cv.width, cv.height); return; }
     ajustar(m.mision);
-    const def = m.def;
     V.x0 = m.cam.x - (V.vw - M.W) / 2; V.y0 = M.H - V.vh;
-    const sx = o.sacudir > 0 && !REDUCIR ? (Math.random() - 0.5) * o.sacudir * 6 : 0, sy = o.sacudir > 0 && !REDUCIR ? (Math.random() - 0.5) * o.sacudir * 6 : 0;
+    const sx = sacudida(o), sy = sacudida(o);
     cx.setTransform(V.s, 0, 0, V.s, (-V.x0 + sx) * V.s, (-V.y0 + sy) * V.s);
-    dibujarFondo(); dibujarSuelo(def);
-    m.cps.forEach((x, k) => { if (x >= V.x0 - 30 && x <= V.x0 + V.vw + 30) bandera(x, M.sueloEn(def, x), k <= m.cp); });
-    for (const a of m.avisos) if (a.vivo) aviso(a, t);
-    for (const j of m.jaulas) if (j.x > V.x0 - 20 && j.x < V.x0 + V.vw + 20) jaula(j, t);
-    for (const ob of m.objetos) if (ob.vivo && ob.x > V.x0 - 20 && ob.x < V.x0 + V.vw + 20) objeto(ob, t);
-    for (const v of m.vehiculos) if (v.vivo && v.ocupante < 0 && v.x > V.x0 - 30 && v.x < V.x0 + V.vw + 30) armadillo(v.x, v.y, 1, '#64748b', 0, false);
+    escenario(m, t);
     if (m.jefe) DIBUJO_JEFE[m.jefe.tipo](cx, m.jefe, t);
-    for (const e of m.enemigos) if (e.vivo && e.x > V.x0 - 40 && e.x < V.x0 + V.vw + 40) enemigo(e, t);
+    for (const e of m.enemigos) if (e.vivo && enVista(e.x, 40)) enemigo(e, t);
+    personajes(m, o, t);
+    proyectiles(m, t);
+    efectos(dt);
+  }
+  // Primero los demás y al final el propio (encima, con su marca).
+  function personajes(m, o, t) {
+    const equipo = m.jugadores.length > 1;
     m.jugadores.forEach((p, i) => { if (i !== o.yo) jugador(p, false, o.nombres[i], t); });
-    if (m.jugadores[o.yo]) jugador(m.jugadores[o.yo], m.jugadores.length > 1, m.jugadores.length > 1 ? o.nombres[o.yo] : '', t);
-    for (const g of m.globos) if (g.vivo) { cx.fillStyle = '#f43f5e'; elipse(cx, g.x, g.y, 5, 6); cx.fill(); cx.fillStyle = 'rgba(255,255,255,.6)'; elipse(cx, g.x - 1.5, g.y - 2, 1.5, 2); cx.fill(); }
+    if (m.jugadores[o.yo]) jugador(m.jugadores[o.yo], equipo, equipo ? o.nombres[o.yo] : '', t);
+  }
+  function globo(g) {
+    cx.fillStyle = '#f43f5e'; elipse(cx, g.x, g.y, 5, 6); cx.fill();
+    cx.fillStyle = 'rgba(255,255,255,.6)'; elipse(cx, g.x - 1.5, g.y - 2, 1.5, 2); cx.fill();
+  }
+  function proyectiles(m, t) {
+    for (const g of m.globos) if (g.vivo) globo(g);
     for (const b of m.balas) if (b.vivo) bala(b);
     for (const b of m.balasE) if (b.vivo) balaE(b, t);
-    efectos(dt);
   }
   return { V, dibujar, chispas, texto, soltarAnimal, CONFETI, invalidar() { V.clave = ''; } };
 })();
@@ -944,7 +978,10 @@ function avisoGirar() {
 $('b-girar').onclick = () => { guardarLS('brigada_girar', 'no'); $('girar').classList.add('hide'); };
 $('b-pausa').onclick = e => { alternarPausa(); e.currentTarget.blur(); };
 function alternarPausa() {
-  if (!S.ctx || S.ctx.modo !== 'solo') { if (S.vista === 'partido') avisar('📡 La misión en sala no se pausa'); return; }
+  if (!S.ctx || S.ctx.modo !== 'solo') {
+    if (S.vista === 'partido') avisar('📡 La misión en sala no se pausa');
+    return;
+  }
   if (S.vista === 'partido') {
     window.Emocion?.intensidad(0); soltarToques();
     pantalla('<h2>⏸ Pausa</h2><div class="fila"><button class="btn" data-a="seguir">▶ Seguir</button><button class="btn sec" data-a="menu">🗺️ Misiones</button></div>', 'pausa');
@@ -953,9 +990,15 @@ function alternarPausa() {
 
 /* ================= Eventos de la misión (sonido, efectos, gritos y Emoción) ================= */
 const nombreDe = i => S.nombres[i] || 'Alguien';
-const ARMA_TXT = a => M.ARMAS[a] ? M.ARMAS[a].emoji + ' ' + M.ARMAS[a].nombre : a;
+const ARMA_TXT = a => (M.ARMAS[a] ? M.ARMAS[a].emoji + ' ' + M.ARMAS[a].nombre : a);
+const SON_ARMA = { laser: () => SON.laser(), canon: () => SON.canon() };
+const OBJETO_TXT = { globos: '🎈 +5 globos', escudo: '🛡️ Escudo burbuja', corazon: '❤️ Corazón', estrella: '⭐ +300' };
+function textoCaida(vidas) {
+  if (vidas <= 0) return '😵 Sin vidas';
+  return '😵 ¡Ups! Te quedan ' + vidas + (vidas === 1 ? ' vida' : ' vidas');
+}
 const MANEJA = {
-  disparo: e => { if (e.i !== S.yo) return; if (e.arma === 'laser') SON.laser(); else if (e.arma === 'canon') SON.canon(); else SON.burbuja(); },
+  disparo: e => { if (e.i === S.yo) (SON_ARMA[e.arma] || SON.burbuja)(); },
   salto: e => { if (e.i === S.yo) SON.salto(); },
   boom: e => {
     SON.boom();
@@ -970,13 +1013,13 @@ const MANEJA = {
     vista.chispas(e.x, e.y, 10, 'confeti', ['#86efac', '#fde047']);
     if (S.m && S.m.jaulas.every(j => j.abierta)) { window.Emocion?.logro(); avisar('🐾 ¡Rescataste a todos los animalitos!'); }
   },
-  objeto: e => { SON.objeto(); if (e.i === S.yo) avisar(e.objeto === 'globos' ? '🎈 +5 globos' : (M.ARMAS[e.objeto] ? ARMA_TXT(e.objeto) : { escudo: '🛡️ Escudo burbuja', corazon: '❤️ Corazón', estrella: '⭐ +300' }[e.objeto] || ''), 1200); },
+  objeto: e => { SON.objeto(); if (e.i === S.yo) avisar(OBJETO_TXT[e.objeto] || ARMA_TXT(e.objeto), 1200); },
   arma: e => { if (e.i === S.yo) avisar(ARMA_TXT(e.arma), 900); },
   sinMunicion: e => { if (e.i === S.yo) avisar('🫧 Sin munición: lanzaburbujas', 1000); },
   herido: e => { if (e.i === S.yo) { SON.herido(); S.sacudir = 0.3; } },
   escudo: e => { if (e.i === S.yo) avisar('🛡️ ¡El escudo te salvó!', 900); },
   bloqueo: () => SON.bloqueo(),
-  caida: e => { vista.chispas(e.x, e.y, 16, 'confeti', vista.CONFETI); if (e.i === S.yo) avisar(e.vidas > 0 ? '😵 ¡Ups! Te quedan ' + e.vidas + ' vida' + (e.vidas === 1 ? '' : 's') : '😵 Sin vidas', 1600); },
+  caida: e => { vista.chispas(e.x, e.y, 16, 'confeti', vista.CONFETI); if (e.i === S.yo) avisar(textoCaida(e.vidas), 1600); },
   burbuja: e => avisar('🫧 ' + nombreDe(e.i) + ' quedó en una burbuja: ¡tócala para revivirle!', 2400),
   revive: e => { SON.revive(); avisar('💚 ' + nombreDe(e.por) + ' revivió a ' + nombreDe(e.i), 1800); },
   checkpoint: () => { SON.checkpoint(); avisar('🚩 ¡Punto de control!', 1400); },
@@ -1078,7 +1121,8 @@ function pintarHud(m) {
     hudClave = clave;
     $('equipo').innerHTML = (m.jugadores.length > 4 ? filas.map(f => f.replace(/<span>❤️|<span>🤍/, '<span>')) : filas).join('');
     $('puntos').textContent = '🏅 ' + p.puntos.toLocaleString('es-MX') + (m.jugadores.length > 1 && S.ctx.modo !== 'solo' ? ' · equipo ' + equipo.toLocaleString('es-MX') : '');
-    $('arma').textContent = p.vehiculo >= 0 ? '🎊 Cañón' : M.ARMAS[p.arma].emoji + ' ' + (p.arma === 'burbuja' ? '∞' : p.mun[p.arma]);
+    const municion = p.arma === 'burbuja' ? '∞' : p.mun[p.arma];
+    $('arma').textContent = p.vehiculo >= 0 ? '🎊 Cañón' : M.ARMAS[p.arma].emoji + ' ' + municion;
     $('globos').textContent = '🎈 ' + p.globos;
   }
   $('avance-barra').style.width = Math.min(100, Math.round(m.cam.x / (m.def.largo - M.W) * 100)) + '%';
@@ -1161,12 +1205,21 @@ if (PRUEBA) {
     acelerar: n => { extraPasos = Math.max(0, Number(n) || 0); },
     invulnerable: () => { for (const p of S.m.jugadores) p.inv = 1e6; },
     // Lleva al equipo a la entrada de la arena del jefe.
-    alJefe: () => { const m = S.m, x = m.def.jefe.x; m.cam.x = x - 200; m.miniHecho = true; m.cp = m.cps.length - 2; m.jugadores.forEach((p, i) => Object.assign(p, { x: x + 40 + 10 * i, y: M.sueloEn(m.def, x - 60), vx: 0, vy: 0, suelo: true, plat: -1 })); for (const e of m.enemigos) e.vivo = false; m.sig = m.lista.length; },
+    alJefe: () => {
+      const m = S.m, x = m.def.jefe.x;
+      m.cam.x = x - 200; m.miniHecho = true; m.cp = m.cps.length - 2;
+      m.jugadores.forEach((p, i) => Object.assign(p, { x: x + 40 + 10 * i, y: M.sueloEn(m.def, x + 40), vx: 0, vy: 0, suelo: true, plat: -1 }));
+      for (const e of m.enemigos) e.vivo = false;
+      m.sig = m.lista.length;
+    },
     debilitarJefe: () => { const j = S.m.jefe; if (j) { j.hp = Math.min(j.hp, 2); j.invul = false; } },
     // Pone un enemigo o una jaula a dx px adelante del personaje.
     enemigo: (tipo, dx) => { const p = S.m.jugadores[S.yo]; const e = M.ponerEnemigo(S.m, tipo, p.x + dx, 0); return e && e.id; },
     jaula: dx => { const m = S.m, p = m.jugadores[S.yo], j = { k: m.jaulas.length, x: p.x + dx, y: M.sueloEn(m.def, p.x + dx), animal: 'xolito', abierta: false }; m.jaulas.push(j); return j.k; },
-    limpiar: () => { for (const e of S.m.enemigos) e.vivo = false; for (const b of S.m.balasE) b.vivo = false; },
+    limpiar: () => {
+      for (const e of S.m.enemigos) e.vivo = false;
+      for (const b of S.m.balasE) b.vivo = false;
+    },
     terminarYa: () => { const m = S.m; m.estado = 'victoria'; m.estT = 99; },
     fallarYa: () => { const m = S.m; m.jugadores.forEach(p => { p.estado = 'burbuja'; p.vidas = 0; }); },
   };

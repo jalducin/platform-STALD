@@ -292,6 +292,16 @@ Cada página debe manejar y mostrar de forma explícita:
       jugador propio, `📶` latencia y aviso de desconexión (IA de inmediato, cierre a los 15 s). Sin pausa en vivo.
     - **Futbolito retirado del menú**: su tarjeta pasó a `JUEGOS_RETIRADOS` (`juegos/app/menu.js`) y salió de
       `JUEGOS_PARTIDA`; `juegoPorId('futbolito')` lo sigue encontrando para salas en curso, ranking e historial.
+  - **🦎 Brigada Xalli** (cambio `brigada-xalli`; decisiones en su `design.md`): run-and-gun original en
+    `juegos/brigada.html` (iframe de Arcade, con avance `brigada` por `postMessage`: `guardar` y `puntos` por misión).
+    Datos de las 4 misiones en `juegos/brigada-misiones.js`; motor sin DOM `juegos/brigada-motor.js`
+    (`window.BrigadaMotor`: paso fijo de 1/60, armas, enemigos, jefes con semilla, cámara compartida con liga, IA,
+    puntos, estrellas y forma del avance; lo importa `server/brigada.ts`). Vista en canvas 2D con fondos en tiras
+    pre-dibujadas y sprites por pose (personajes de `juegos/personajes.js` con casco, mochila y lanzaburbujas medidos
+    con la caja del dibujo); *pools* de proyectiles, partículas y textos. Controles: capa `BrigadaEntrada` (joystick
+    flotante + rombo A salta, B dispara, X globo, Y arma —mismo rombo que el mando común—, mando con `analogico: true` y
+    teclas en `null`, teclado y fuentes registradas); el joystick táctil apunta en 4 direcciones (`c4`). Ganchos de
+    prueba `window.__brigada` con `?prueba=1`.
   - **⚽ Futbolito Arena** (cambio `futbolito-arena`; decisiones, medición del canal y 3 vs 3 en su `design.md`):
     `juegos/futbolito-arena.html` en el iframe de Arcade, sin avance guardado (`SIN_AVANCE`). Motor sin DOM
     `juegos/arena-motor.js` (`window.ArenaMotor`: física de paso fijo solo con `+ − × ÷` y `Math.sqrt`, reglas, IA,
@@ -493,7 +503,7 @@ Reglas:
 Fuente única del control de los juegos de 🕹️ Arcade: `juegos/mando.js` (sin dependencias; inyecta su CSS una vez como
 `<style id="mando-css">`). Decisiones y lecciones de Karts en `openspec/changes/mando-arcade/design.md` (al archivar,
 `openspec/changes/archive/*-mando-arcade/`). Lo usan Axo (`plataformas.html`), Dragon Run (`dragon-run.html`) y Karts
-Turbo (`karts.html`, cambio `karts-mando`), ⛳ Golf (`golf.html`, cambio `golf`), Futbolito y Billar (cambio `futbolito-equipos-controles`), ⚽ Fútbol Estelar (`futbol.html`, cambio `futbol-estelar`) y ⚽ Futbolito Arena (`futbolito-arena.html`, cambio `futbolito-arena`), **sin cambiar la API**. Si hace falta algo nuevo, se
+Turbo (`karts.html`, cambio `karts-mando`), ⛳ Golf (`golf.html`, cambio `golf`), Futbolito y Billar (cambio `futbolito-equipos-controles`), ⚽ Fútbol Estelar (`futbol.html`, cambio `futbol-estelar`), ⚽ Futbolito Arena (`futbolito-arena.html`, cambio `futbolito-arena`) y 🦎 Brigada Xalli (`brigada.html`, cambio `brigada-xalli`), **sin cambiar la API**. Si hace falta algo nuevo, se
 agrega como opción con valor por omisión compatible, en su propio cambio OpenSpec.
 
 **Cargar y crear** (dentro del iframe del juego; `window.Mando`):
