@@ -250,12 +250,14 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="karts-pistas.js?v=5"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="karts-pistas.js?v=6"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
 <script src="karts-espacio.js?v=1"></script> <!-- karts-copa-espacio: piso, sprites y cielo de las pistas espaciales -->
 <script src="arcade.js?v=7"></script>
 <script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script src="en-vivo.js?v=1"></script> <!-- juegos-en-vivo: karts de las demás personas de la sala -->
+<script src="karts-reinos.js?v=1"></script> <!-- karts-copa-reinos: interiores de monumentos y sus mecánicas -->
+<script src="karts-objetos.js?v=1"></script> <!-- karts-objetos-en-sala: ítems entre personas en sala -->
 <script>
 /* Karts Turbo — carreras con vista cenital en canvas (openspec: juegos-plataformas-karts, karts-controles-diseno).
    Embebido en juegos.html: la plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage,
@@ -271,6 +273,7 @@ let LW = 400, LH = 300, K = 2;
 const COLORES = { rojo: '#e53935', azul: '#1e88e5', verde: '#43a047', morado: '#8e24aa', naranja: '#fb8c00', rosa: '#ec407a', turquesa: '#00897b', dorado: '#f4c430' };
 const NOMBRES_COLOR = { rojo: 'Rojo', azul: 'Azul', verde: 'Verde', morado: 'Morado', naranja: 'Naranja', rosa: 'Rosa', turquesa: 'Turquesa', dorado: 'Dorado' };
 const RIVALES = ['Chuy', 'Paty', 'Memo', 'Lalo', 'Fer', 'Sofi', 'Toño'];
+const KO = window.KartsObjetos; // karts-objetos-en-sala: ítems entre personas en sala (juegos/karts-objetos.js)
 const KP = window.KartsPistas; // pistas y copas (juegos/karts-pistas.js; openspec: karts-pistas-mesoamericanas)
 const copaDe = cc => KP.copaPorId(cc && cc.copa); // copa en curso (sin id = Copa Fiesta, progreso viejo)
 const ITEMS = { cascara: '🍌', bola: '🟢', turbo: '🌶️', cohete: '🚀', estrella: '⭐', monedas: '🪙', rayo: '⚡' };
@@ -588,7 +591,7 @@ const CELDA = 512;
 // karts-copa-espacio: banderas de borde por muestra (KP.marcasEspacio), compuertas, portales, plataformas (parches de la
 // textura) y las zonas que se pisan (las de tramo se leen de las marcas).
 let marcas = null, compuertas = [], portales = [], parches = [], zonasPunto = [];
-const ZONA_PUNTO = new Set(['turbo', 'salto', 'cenote', 'lodo', 'antiturbo', 'portal', 'brecha']);
+const ZONA_PUNTO = new Set(['turbo', 'salto', 'cenote', 'lodo', 'antiturbo', 'portal', 'brecha', 'arena', 'luz']); // karts-copa-reinos: + arena y luz
 const cuantos = n => Math.round(n * densidad);
 const vueltasPista = () => A.vueltasDe(pista.id); // karts-pistas-grandes: 2 en las 8 pistas
 function prepararPista(id) {
@@ -603,6 +606,7 @@ function prepararPista(id) {
   marcas = KP.marcasEspacio(pista, M, zonas); // karts-copa-espacio: null fuera del espacio
   compuertas = zonas.filter(z => z.tipo === 'compuerta'); portales = zonas.filter(z => z.tipo === 'portal');
   zonasPunto = zonas.filter(z => ZONA_PUNTO.has(z.tipo));
+  KartsReinos.preparar(); // karts-copa-reinos: muros, antorchas y obstáculos de los interiores
   for (const t in eventos) eventos[t] = 0; // eventos de las mecánicas en esta carrera (ganchos de prueba)
   caidasBots = 0; carrilPrueba = 0; // karts-copa-espacio
   pintarTextura(id, r, W, H);
@@ -627,6 +631,7 @@ function pintarTextura(id, r, W, H) {
   else pintarPisoTierra(c, id, r, W, H);
   pintarSalida(c);
   pintarLava(c);
+  KartsReinos.pintarPiso(c); // karts-copa-reinos: piso de piedra de los interiores
   pintarZonas(c, id);
   prepararDecor(id, r, W, H);
   pintarChinampas(c, id, r);
@@ -748,14 +753,17 @@ function prepararDecor(id, r, W, H) {
     const a0 = M.pts[(i - 8 + N) % N].a, a1 = M.pts[(i + 8) % N].a, cu = Math.atan2(Math.sin(a1 - a0), Math.cos(a1 - a0));
     if (Math.abs(cu) < 0.42) continue;
     const p = punto(i, (cu > 0 ? -1 : 1) * (mitad + 24));
+    if (KartsReinos.tapaDecor(i, cu > 0 ? -1 : 1)) continue; // karts-copa-reinos: no detrás de un muro
     if (lejos(p.x, p.y, 18)) decor.push({ x: p.x, y: p.y, img: cu > 0 ? 'curvaDer' : 'curvaIzq', w: 22, h: 30 });
   }
   // Adornos fijos por tramo (cabezas de serpiente, muros del juego de pelota, cabezas colosales).
   for (const f of KP.colocarFijos(pista, M)) if (lejos(f.x, f.y, f.w * 0.3)) decor.push(f);
+  KartsReinos.decorar(decor); // karts-copa-reinos: antorchas, columnas y adornos sueltos
   const tipos = DECOR_POR_PISTA[id];
   for (let k = 0; k < 2700 && decor.length < 1080; k++) { // karts-pistas-grandes: 3 veces el escenario de antes
     const i = Math.floor(r() * N), lado = (r() < 0.5 ? -1 : 1) * (mitad + 40 + Math.pow(r(), 1.5) * 360);
     const p = punto(i, lado);
+    if (KartsReinos.tapaDecor(i, lado)) continue; // karts-copa-reinos: detrás de un muro no se ve
     if (p.x < 10 || p.y < 10 || p.x > W - 10 || p.y > H - 10 || !lejos(p.x, p.y, 32)) continue;
     const t = r(), f = 0.8 + r() * 0.5;
     let tipo = tipos.find(x => t <= x[3]);
@@ -826,11 +834,13 @@ function pintarFondoExtra(c, id, r) {
   } else if (id === 'chichen' || id === 'laventa') {
     for (let k = 0; k < cuantos(7000); k++) { c.fillStyle = r() < 0.55 ? 'rgba(0,35,0,.28)' : 'rgba(150,200,90,.16)'; c.beginPath(); c.ellipse(r() * W, r() * H, 3 + r() * 3, 1.5 + r() * 1.5, r() * 3, 0, 7); c.fill(); }
   }
+  KartsReinos.pintarFondo(c, W, H, r, id); // karts-copa-reinos
 }
 // Después de las franjas y antes del camino: bordos de la calzada, plaza de piedra, cancha del juego de pelota y el río.
 function pintarBajoCamino(c, id, r) {
   const pintar = BAJO_CAMINO[id];
   if (pintar) pintar(c, pista.mitad, r);
+  KartsReinos.pintarBajo(c); // karts-copa-reinos: lago sagrado y foso
 }
 const BAJO_CAMINO = {
   tenochtitlan: (c, m) => { trazoTramo(c, 0, N, 0, m * 2 + 46, '#7b6342'); trazoTramo(c, 0, N, 0, m * 2 + 34, '#a3854f'); }, // bordo de la calzada
@@ -907,6 +917,7 @@ const ZONA_DIBUJO = {
     c.fillStyle = '#6b4a2a'; for (const s of [-1, 1]) c.fillRect(-26, s * (m + 2) - 3, 52, 6); // orillas de madera de la calzada
   },
 };
+Object.assign(ZONA_DIBUJO, KartsReinos.ZONA_DIBUJO); // karts-copa-reinos: arena, luz, bloques, roca y losa
 // Chinampas de Tenochtitlan: parcelas de tierra verde bajo los ahuejotes y las milpas.
 function pintarChinampas(c, id, r) {
   if (id !== 'tenochtitlan') return;
@@ -1108,7 +1119,7 @@ function siluetaPano(c, id, PW, PH, dos) {
       c.strokeStyle = 'rgba(40,50,30,.35)'; c.lineWidth = 1.2; for (let k = 1; k < 10; k++) { const x = cx - w / 2 + k / 10 * w; c.beginPath(); c.moveTo(x, B); c.lineTo(cx + (x - cx) * 0.35, B - h * 0.92); c.stroke(); }
       c.fillStyle = 'rgba(230,240,235,.35)'; c.fillRect(cx - w, B - h * 0.35, w * 2, h * 0.12);
     });
-  }
+  } else KartsReinos.silueta(c, id, PW, PH, dos); // karts-copa-reinos: Giza, El Castillo, Karnak y Angkor
 }
 const PXD = 4, imgsDecor = {};
 // Qué función dibuja cada adorno (un Map para no tropezar con nombres heredados de Object).
@@ -1117,11 +1128,12 @@ const DIBUJO_DECOR = new Map([
   ['rocaDesierto', decorRoca], ['rocaVolcan', decorRoca], ['mesa', decorMesa], ['pino', decorPino],
   ['muneco', decorMuneco], ['bloque', decorBloque], ['obsidiana', decorObsidiana], ['fumarola', decorFumarola],
   ['grada', decorGrada], ['llantas', decorLlantas], ['curvaDer', decorCurva], ['curvaIzq', decorCurva],
-  ['caja', decorCaja], ['moneda', decorMoneda], ...DIBUJO_MESO,
+  ['caja', decorCaja], ['moneda', decorMoneda], ...DIBUJO_MESO, ...KartsReinos.DIBUJO, // karts-copa-reinos
 ]);
 function imgDecor(nombre, w, h) {
   if (imgsDecor[nombre]) return imgsDecor[nombre];
   const base = { grada: [66, 34], llantas: [13, 15], curvaDer: [22, 30], curvaIzq: [22, 30], caja: [16, 16], moneda: [10, 10], serpiente: [26, 22], muroPelota: [40, 34], cabezaColosal: [48, 54], trajinera: [50, 26], muroAro: [40, 34] };
+  Object.assign(base, KartsReinos.BASE); // karts-copa-reinos
   for (const l of Object.values(DECOR_POR_PISTA)) for (const t of l) base[t[0]] = [t[1], t[2]];
   [w, h] = base[nombre] || KartsEspacio.tamano(nombre) || [w, h]; // karts-copa-espacio: sprites esp*
   const s = document.createElement('canvas'); s.width = Math.ceil(w * PXD); s.height = Math.ceil(h * PXD);
@@ -1425,6 +1437,7 @@ function pintarCaraKart(c, f, cuadro, kc, color, num, cr) {
 /* ================= Corredores ================= */
 const PASO_M = 8; // px entre muestras
 let karts = [], yo = null, objetos = [], particulas = [];
+let geo = null, red = null; // karts-objetos-en-sala: geometría de la pista para los objetos y estado de los ítems en sala en vivo
 let modo = 'carga', sala = null, tCarrera = 0, cuentaFin = 0, terminada = false, rayoTinte = 0, ultimoTurbo = null, carreraDe = null;
 let prog = progresoNuevo(), arranque = { presiono: null };
 function progresoNuevo() { return { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: KP.VERSION_PISTAS, recordsV1: {} }; }
@@ -1466,6 +1479,7 @@ const posDe = k => posiciones().indexOf(k) + 1;
 function prepararCarrera(id, opciones) {
   prepararPista(id);
   karts = []; objetos = []; particulas = []; tCarrera = 0; terminada = false; cuentaFin = 0; rayoTinte = 0; ultimoTurbo = null; arranque = { presiono: null };
+  geo = KO.geometria(pista, M, A.VEL_KART); red = opciones.sala && opciones.vivo ? redNueva(opciones.humanos, opciones.yo) : null; // karts-objetos-en-sala
   const colorYo = COLORES[prog.equipo.color] || COLORES.azul;
   const otros = Object.values(COLORES).filter(c => c !== colorYo);
   // Personajes (openspec: personajes-xalli): tú con el tuyo; los bots y fantasmas con los otros 3, en orden fijo.
@@ -1612,17 +1626,20 @@ function mover(k, dt, agarreBase) {
   actualizarIdx(k);
   for (const l of lavas) if (Math.hypot(k.x - l.x, k.y - l.y) < l.r) { rescatar(k); break; }
   if (zonas.length) pisarZonas(k, idxAntes);
+  KartsReinos.fisica(k); // karts-copa-reinos: muros, columnas, losas, bloques y roca
   if (marcas && !(k.cae > 0)) bordeEspacio(k, idxAntes, dt); // karts-copa-espacio
 }
 /* ---- Mecánicas de las pistas mesoamericanas (openspec: karts-pistas-mesoamericanas) ----
    Zonas fijas sobre el camino (juegos/karts-pistas.js); dependen solo de la posición y de tCarrera: deterministas. */
 const SALTO_S = 0.7, eventos = { turbo: 0, salto: 0, cenote: 0, lodo: 0, trajinera: 0,
-  brecha: 0, caida: 0, rescate: 0, barandal: 0, plataforma: 0, portal: 0, compuerta: 0, asteroide: 0, antiturbo: 0 }; // karts-copa-espacio
+  brecha: 0, caida: 0, rescate: 0, barandal: 0, plataforma: 0, portal: 0, compuerta: 0, asteroide: 0, antiturbo: 0, // karts-copa-espacio
+  arena: 0, luz: 0, bloques: 0, roca: 0, losa: 0, columna: 0, muro: 0 }; // karts-copa-reinos
 let carrilPrueba = 0, caidasBots = 0; // karts-copa-espacio: carril del piloto de prueba (portal) y caídas de los bots
 const dentroZona = (k, z) => (k.x - z.x) ** 2 + (k.y - z.y) ** 2 < z.r * z.r;
 const posTrajinera = tj => punto(tj.idx, KP.ladoTrajinera(tj, tCarrera));
-// Tope de velocidad por lodo, por el agua del cenote o por la franja antiturbo (sin efecto en el aire ni con estrella).
-const FRENO_ZONA = { lodo: 0.55, cenote: 0.45, antiturbo: KP.ESPACIO.antiturbo };
+// Tope de velocidad por lodo, por el agua del cenote, por la franja antiturbo o por la arena (sin efecto en el aire ni
+// con estrella).
+const FRENO_ZONA = { lodo: 0.55, cenote: 0.45, antiturbo: KP.ESPACIO.antiturbo, arena: 0.6 }; // karts-copa-reinos: + arena
 function frenoZonas(k) {
   if (k.aire > 0 || k.estrella > 0) return 1;
   let f = 1;
@@ -1669,9 +1686,10 @@ function saltar(k, z) {
   k.aire = k.aireMax;
   return true;
 }
-const AVISO_ZONA = { cenote: ['💦 ¡Al cenote! Salta con velocidad', 1100], lodo: ['🟤 ¡Lodo!', 700], antiturbo: ['🟥 ¡Antiturbo! Esquívalo', 900] };
+const AVISO_ZONA = { cenote: ['💦 ¡Al cenote! Salta con velocidad', 1100], lodo: ['🟤 ¡Lodo!', 700], antiturbo: ['🟥 ¡Antiturbo! Esquívalo', 900],
+  arena: ['🏜️ ¡Arena!', 700], luz: ['🐍 ¡Serpiente de luz!', 800] }; // karts-copa-reinos
 function entrarZona(k, z) {
-  if (z.tipo === 'turbo') {
+  if (z.tipo === 'turbo' || z.tipo === 'luz') { // karts-copa-reinos: la franja de luz también da turbo
     k.turbo = Math.max(k.turbo, 0.7); k.turboNivel = 0;
     if (k === yo) S.turbo();
   } else if (z.tipo === 'salto' || z.tipo === 'brecha') {
@@ -1801,7 +1819,7 @@ function pilotoBot(k) {
   if (k.carrilT <= 0) { k.carrilT = 2 + Math.random() * 3; k.carril = (Math.random() - 0.5) * pista.mitad * 0.9; } // NOSONAR: azar de juego, no criptográfico
   // karts-copa-espacio: en el espacio miran más cerca (mirar lejos corta las curvas y en lo abierto se caerían).
   const mira = marcas ? 6 + Math.floor(k.vel * 0.06) : 10 + Math.floor(k.vel * 0.12);
-  const obj = punto(k.idx + mira, carrilBot(k, mira));
+  const obj = punto(k.idx + mira, KartsReinos.carril(k, carrilBot(k, mira))); // karts-copa-reinos: esquiva obstáculos y no pasa los muros
   const dAng = Math.atan2(Math.sin(Math.atan2(obj.y - k.y, obj.x - k.x) - k.ang), Math.cos(Math.atan2(obj.y - k.y, obj.x - k.x) - k.ang));
   const a0 = M.pts[k.idx].a, a1 = M.pts[(k.idx + 28) % N].a;
   const curva = Math.abs(Math.atan2(Math.sin(a1 - a0), Math.cos(a1 - a0)));
@@ -1809,6 +1827,7 @@ function pilotoBot(k) {
   return { giro: Math.max(-1, Math.min(1, dAng * 2.6)), freno: curva > 1.1 && k.vel > A.VEL_KART * 0.72 };
 }
 function usarItemBot(k) {
+  if (k.humano && red) return; // karts-objetos-en-sala: en sala el piloto de prueba no usa ítems solo (las E2E los usan a mano)
   if (!k.item || k.usoT > 0) return;
   const pos = posDe(k);
   const atras = karts.some(o => o !== k && Math.abs(puntaje(o) - puntaje(k)) < 20 && puntaje(o) < puntaje(k));
@@ -1822,19 +1841,11 @@ function usarItemBot(k) {
 function sortearItem(k) {
   const n = karts.filter(x => !x.fantasma || sala).length;
   const r = n > 1 ? (posDe(k) - 1) / (n - 1) : 0;
-  let tabla;
-  if (sala) tabla = r < 0.5 ? { monedas: 50, turbo: 40, estrella: 10 } : { turbo: 55, estrella: 30, monedas: 15 };
-  else if (r <= 0.01) tabla = { cascara: 45, bola: 25, monedas: 30 };
-  else if (r < 0.4) tabla = { cascara: 25, bola: 30, monedas: 15, turbo: 25, cohete: 5 };
-  else if (r < 0.75) tabla = { bola: 15, turbo: 35, cohete: 30, estrella: 10, monedas: 10 };
-  else tabla = { turbo: 30, cohete: 30, estrella: 25, rayo: 15 };
-  const total = Object.values(tabla).reduce((a, b) => a + b, 0);
-  let x = Math.random() * total; // NOSONAR: azar de juego, no criptográfico
-  for (const [it, p] of Object.entries(tabla)) { x -= p; if (x <= 0) return it; }
-  return 'turbo';
+  return KO.sortear(KO.tablaItems(r, modoItems()), Math.random); // NOSONAR: azar de juego. karts-objetos-en-sala: tablas en el módulo
 }
 function usarItem(k) {
   const it = k.item; if (!it) return;
+  if (k === yo && redActiva() && KO.TIPOS.includes(it)) { usarItemRed(it); return; } // karts-objetos-en-sala
   k.item = null; k.usoT = 0.6;
   const fx = Math.cos(k.ang), fy = Math.sin(k.ang);
   if (k === yo) S.usar();
@@ -1860,6 +1871,7 @@ function golpear(k) {
 }
 function pasoObjetos(dt) {
   for (const o of objetos) {
+    if (o.red) { pasoObjetoRed(o); continue; } // karts-objetos-en-sala: paso fijo desde el evento y choque solo contra tu kart
     o.t = Math.max(0, o.t - dt); o.vida -= dt;
     if (o.tipo === 'bola') moverBola(o, dt);
     else if (o.tipo === 'cohete') moverCohete(o, dt);
@@ -1867,19 +1879,15 @@ function pasoObjetos(dt) {
   }
   objetos = objetos.filter(o => o.vida > 0);
 }
-function moverBola(o, dt) {
-  o.x += o.vx * dt; o.y += o.vy * dt;
-  // Rebota contra el borde del camino (hasta que se le acaba la vida).
-  let mi = 0, md = Infinity; for (let i = 0; i < N; i += 2) { const p = M.pts[i], d = (p.x - o.x) ** 2 + (p.y - o.y) ** 2; if (d < md) { md = d; mi = i; } }
-  if (Math.sqrt(md) > pista.mitad) { const p = M.pts[mi], nx = (o.x - p.x), ny = (o.y - p.y), l = Math.hypot(nx, ny) || 1, dot = (o.vx * nx + o.vy * ny) / l; if (dot > 0) { o.vx -= 2 * dot * nx / l; o.vy -= 2 * dot * ny / l; } }
-}
+// Rebota contra el borde del camino (hasta que se le acaba la vida). karts-objetos-en-sala: la física vive en el módulo.
+function moverBola(o, dt) { KO.moverBola(o, dt, geo); }
 // El cohete avanza por la pista y se cierra hacia el carril de su blanco.
 function moverCohete(o, dt) {
-  const vel = A.VEL_KART * 1.7 * dt / PASO_M;
-  o.idx += vel; if (o.idx >= N) { o.idx -= N; o.vuelta++; }
-  if (o.blanco) o.carril += (lateralDe(o.blanco) - o.carril) * Math.min(1, dt * 4);
-  const p = punto(Math.floor(o.idx), o.carril); o.x = p.x; o.y = p.y;
+  KO.moverCohete(o, dt, geo, o.blanco ? lateralDe(o.blanco) : null); // karts-objetos-en-sala: la física vive en el módulo
   if (o.blanco && o.blanco.termino !== null) o.blanco = null;
+  fuegoCohete(o);
+}
+function fuegoCohete(o) {
   if (!REDUCIR && Math.random() < 0.6) particulas.push({ tipo: 'fuego', x: o.x, y: o.y, vx: 0, vy: 0, vida: 0.25, max: 0.25, c: '#fb923c', tam: 2 }); // NOSONAR: azar de juego, no criptográfico
 }
 // Golpe del objeto a los karts que toca (el cohete solo a su blanco; el dueño es inmune al soltarlo).
@@ -1916,6 +1924,7 @@ function tomarMonedas(k) {
 function empujeLocal(a, b, nx, ny, d) {
   const propio = a.remoto ? b : a, s = a.remoto ? 1 : -1;
   propio.x += s * nx * (18 - d); propio.y += s * ny * (18 - d); propio.vel *= 0.97;
+  if (red && propio === yo && (a.remoto ? a : b).estrella > 0) golpeDeRed('estrella'); // karts-objetos-en-sala: su estrella te tumba (decides tú)
 }
 function chocarKarts() {
   for (let i = 0; i < karts.length; i++) for (let j = i + 1; j < karts.length; j++) {
@@ -1945,6 +1954,7 @@ function paso(dt) {
   vigilarSentido(dt);
   for (const k of karts) { (k.remoto ? pasoRemoto : pasoKart)(k, dt); emitir(k); } // juegos-en-vivo: a un remoto lo mueve su dueño; aquí solo se interpola
   pasoObjetos(dt); pasoRecolectar(dt);
+  if (red) red.hist.agregar(tcAhora(), puntaje(yo)); // karts-objetos-en-sala: tu avance de los últimos 5 s (rayo)
   if (vivo && !sala.enviado) vivo.enviar('k', kartVivo()); // juegos-en-vivo: el canal lo limita a su ritmo
   rayoTinte = Math.max(0, rayoTinte - dt);
   // Límite de sala.
@@ -2205,7 +2215,7 @@ document.addEventListener('click', e => {
     const ir = b.dataset.ir; audio();
     if (ir === 'menu') abrirMenu();
     else if (ir === 'copa') empezarCopa(false);
-    else if (ir.startsWith('copa-nueva')) empezarCopa(ir.split(':')[1] || 'fiesta');
+    else if (ir.startsWith('copa-nueva')) { const c = KP.copaPorId(ir.split(':')[1] || 'fiesta'); if (KP.copaDesbloqueada(c, prog)) empezarCopa(c.id); } // karts-copa-reinos: nunca una copa con candado
     else if (ir === 'pistas') abrirPistas();
     else if (ir === 'taller') abrirTaller();
     else if (ir.startsWith('rapida:')) iniciarCarrera(ir.slice(7), { copa: false, ronda: 0, dif: 95 });
@@ -2383,6 +2393,7 @@ function empezarVivo(yoId, humanos) {
     vivo = c;
     if (carreraDe.salio) vivo.ritmo('k', ritmoVivo(humanos.length));
     vivo.al('k', alKartRemoto);
+    escucharItems(vivo); // karts-objetos-en-sala
     vivo.alDesconectar(alSalirRemoto);
     vivo.alEstado(st => { if (st === 'reconectando') avisar('📶 Reconectando en vivo…', 1600); else if (st === 'vivo') avisar('📡 En vivo de nuevo', 1200); });
     vivo.enviar('k', kartVivo());
@@ -2443,6 +2454,94 @@ function pintarTablaVivo() {
   if (hudPrevio.tablaVivo === firma) return;
   hudPrevio.tablaVivo = firma;
   el.innerHTML = filas.map((k, i) => '<li' + (k === yo ? ' class="yo"' : '') + '><b>' + (i + 1) + '</b><i style="--c:' + k.color + '"></i><span>' + esc(k === yo ? 'Tú' : k.nombre.slice(0, 12)) + '</span></li>').join('');
+}
+
+/* ================= Ítems entre personas en sala (openspec: karts-objetos-en-sala) =================
+   «La víctima decide»: cada aparato manda solo sobre su kart. Quien usa cáscara, bola, cohete o rayo manda el evento
+   `item` (dos veces; la copia se descarta por id) y crea su objeto con ese mismo evento; cada aparato lo simula igual
+   (juegos/karts-objetos.js, paso fijo desde la hora de la carrera del evento, reloj común de la sala) y revisa los
+   golpes solo contra su kart. Quien recibe el golpe gira, manda `item-golpe` y los demás quitan el objeto. Sin canal
+   en vivo (respaldo con fantasmas) las cajas dan la tabla reducida y no hay objetos entre personas. */
+function redNueva(humanos, yoId) {
+  const ids = humanos.map(h => h.id);
+  return { ids, yoId, yoIdx: ids.indexOf(yoId), n: 0, ultimoUso: null, gracia: null, reg: KO.registro(), hist: KO.historial(5000), golpes: [], inmune: 0, vistos: [] };
+}
+const tcAhora = () => Math.round(tCarrera * 1000); // ms de la carrera: la misma hora en todos los aparatos de la sala
+const redActiva = () => !!(red && vivo && sala && !sala.enviado);
+// Tabla de las cajas: individual, sala en vivo (todos los ítems) o sala sin canal (reducida).
+function modoItems() {
+  if (!sala) return 'solo';
+  return redActiva() ? 'vivo' : 'respaldo';
+}
+function mandarDosVeces(evento, d) {
+  vivo.enviarYa(evento, d);
+  setTimeout(() => { if (vivo) vivo.enviarYa(evento, d); }, 150);
+}
+function usarItemRed(it) {
+  const tc = tcAhora();
+  if (!KO.puedeUsar(red.ultimoUso, tc)) return; // 1 por segundo (los demás descartarían el segundo)
+  yo.item = null; yo.usoT = 0.6; red.ultimoUso = tc; S.usar();
+  let blanco = -1; // el cohete va por quien va justo adelante (si es persona; a un fantasma no se le apunta)
+  if (it === 'cohete') { const orden = posiciones(), p = orden.indexOf(yo), b = p > 0 ? orden[p - 1] : null; if (b && b.remoto) blanco = red.ids.indexOf(b.id); }
+  const e = { n: ++red.n, tipo: it, x: yo.x, y: yo.y, ang: yo.ang, vel: yo.vel, vuelta: yo.vuelta, idx: yo.idx, tc, avance: puntaje(yo), blanco, carrera: kCopa() };
+  mandarDosVeces('item', KO.codificar(e));
+  if (it === 'rayo') rayoTinte = REDUCIR ? 0 : 0.5; // a quién frena lo decide cada aparato
+  else agregarObjetoRed(e, red.yoId);
+}
+function agregarObjetoRed(e, de) {
+  const o = KO.crear(e, geo, de); if (!o) return;
+  Object.assign(o, { red: true, id: KO.idDe(de, e.n), n: e.n, duenoIdx: red.ids.indexOf(de) });
+  KO.avanzar(o, geo, tcAhora(), () => lateralBlanco(o)); // llega tarde: se pone al día
+  objetos.push(o);
+}
+function lateralBlanco(o) {
+  const id = red.ids[o.blanco], k = id === red.yoId ? yo : karts.find(x => x.remoto && x.id === id);
+  return k && visibleK(k) && k.termino === null ? lateralDe(k) : null;
+}
+function pasoObjetoRed(o) {
+  KO.avanzar(o, geo, tcAhora(), () => lateralBlanco(o));
+  if (o.tipo === 'cohete' && o.vida > 0) fuegoCohete(o);
+  if (o.vida > 0 && yo.termino === null && KO.toca(o, yo.x, yo.y, red.yoIdx, red.yoId)) golpeObjetoRed(o);
+}
+function golpeObjetoRed(o) {
+  o.vida = 0; red.reg.retirar(o.id);
+  if (vivo) mandarDosVeces('item-golpe', KO.codificarGolpe({ n: o.n, dueno: o.duenoIdx, carrera: kCopa() }));
+  golpeDeRed(o.tipo);
+}
+// Golpe de ítem en sala: con estrella, girando o en la gracia (4 s tras el anterior) no pasa nada; si no, giras (o te
+// frenas con el rayo). La gracia acota el tiempo perdido (design.md §6).
+function golpeDeRed(tipo) {
+  const tc = tcAhora();
+  if (yo.estrella > 0 || yo.giro > 0 || yo.termino !== null || KO.enGracia(red.gracia, tc)) {
+    if (tipo !== 'estrella') red.inmune++;
+    return false;
+  }
+  red.gracia = tc; red.golpes.push(tipo);
+  if (tipo === 'rayo') { yo.rayo = 2.5; yo.derrape = null; } else golpear(yo);
+  return true;
+}
+function escucharItems(c) {
+  c.ritmo('item', 0); c.ritmo('item-golpe', 0); // eventos sueltos: sin ritmo, cada uno cuenta
+  c.al('item', alItemRemoto); c.al('item-golpe', alGolpeRemoto);
+}
+function alItemRemoto(d, meta) {
+  if (!red || modo !== 'carrera') return;
+  const e = KO.decodificar(d), duenoK = karts.find(k => k.remoto && k.id === meta.de);
+  if (!e || !duenoK || e.carrera !== kCopa() || red.reg.aceptar(meta.de, e, tcAhora()) !== 'ok') return;
+  if (e.tipo !== 'rayo') { agregarObjetoRed(e, meta.de); return; }
+  rayoTinte = REDUCIR ? 0 : 0.5;
+  if (KO.rayoAfecta(red.hist.en(e.tc), e.avance) && golpeDeRed('rayo')) avisar('⚡ ' + duenoK.nombre + ' usó el rayo', 1200);
+}
+function alGolpeRemoto(d, meta) {
+  if (!red || modo !== 'carrera') return;
+  const gp = KO.decodificarGolpe(d), de = gp && red.ids[gp.dueno];
+  if (!de || gp.carrera !== kCopa()) return;
+  const id = KO.idDe(de, gp.n);
+  if (red.reg.retirado(id) && !objetos.some(o => o.id === id && o.vida > 0)) return; // la copia del aviso
+  red.reg.retirar(id);
+  for (const o of objetos) if (o.id === id) o.vida = 0;
+  const k = karts.find(x => x.remoto && x.id === meta.de);
+  if (k) { k.giro = Math.max(k.giro, 0.9); red.vistos.push({ id, de: meta.de }); }
 }
 
 /* ================= Partículas (en el mapa 2D; se dibujan proyectadas) ================= */
@@ -2595,7 +2694,8 @@ function pintarCielo() {
   if (!pano || pano.pista !== pista.id || pano.F !== cam.F || pano.hy !== cam.hy || pano.lw !== LW) prepararPano();
   const { PW, PH, ps } = pano;
   const sx = Math.floor(((((cam.ang - Math.atan2(LW / 2, cam.F)) / (2 * Math.PI)) % 1) + 1) % 1 * PW * ps);
-  g.drawImage(pano.cv, sx, 0, Math.round(LW * ps), PH * ps, 0, 0, LW, PH);
+  if (!KartsReinos.tapaCielo()) g.drawImage(pano.cv, sx, 0, Math.round(LW * ps), PH * ps, 0, 0, LW, PH); // karts-copa-reinos: bajo la bóveda no se ve
+  KartsReinos.cielo(); // karts-copa-reinos: bóveda del interior
 }
 // Escena completa: cielo, piso y todos los sprites ordenados de lejos a cerca.
 function pintarEscena(t, conKarts) {
@@ -2608,6 +2708,7 @@ function pintarEscena(t, conKarts) {
   const bruma = g.createLinearGradient(0, cam.hy - 2, 0, cam.hy + (LH - cam.hy) * 0.28);
   bruma.addColorStop(0, tema.bruma); bruma.addColorStop(1, 'rgba(255,255,255,0)');
   g.fillStyle = bruma; g.globalAlpha = 0.85; g.fillRect(0, cam.hy - 2, LW, (LH - cam.hy) * 0.28 + 2); g.globalAlpha = 1;
+  KartsReinos.niebla(); // karts-copa-reinos: niebla oscura adentro
   const lista = [], mitadVista = LW / 2 / cam.F;
   const visible = (x, y, ancho, lejos) => {
     const dx = x - cam.x, dy = y - cam.y, z = dx * cam.cos + dy * cam.sin;
@@ -2623,8 +2724,9 @@ function pintarEscena(t, conKarts) {
   for (const e of lista) if (e.kart === yo) e.z = -1; else if (zYo && e.kart && e.z < zYo) e.cerca = true;
   lista.sort((a, b) => b.z - a.z);
   dibujados = lista.length;
+  const [desde, rango] = KartsReinos.lejania(); // karts-copa-reinos: adentro lo lejano se apaga antes
   for (const e of lista) {
-    const lejania = e.z > 1100 ? Math.max(0, 1 - (e.z - 1100) / 500) : 1;
+    const lejania = e.z > desde ? Math.max(0, 1 - (e.z - desde) / rango) : 1;
     g.globalAlpha = lejania;
     dibujarElemento(e, t);
   }
@@ -2636,7 +2738,8 @@ function pintarEscena(t, conKarts) {
 const MAX_DECOR = 150;
 function juntarDecor(lista, visible) {
   const vistos = [];
-  for (const l of decorCerca(cam.x, cam.y, 1700)) for (const d of l) { const z = visible(d.x, d.y, d.w, 1600); if (z) vistos.push({ z, d }); }
+  const alcance = KartsReinos.alcanceDecor(); // karts-copa-reinos: adentro se ve menos lejos
+  for (const l of decorCerca(cam.x, cam.y, alcance + 100)) for (const d of l) { const z = visible(d.x, d.y, d.w, alcance); if (z) vistos.push({ z, d }); }
   if (vistos.length > MAX_DECOR) { vistos.sort((a, b) => a.z - b.z); vistos.length = MAX_DECOR; }
   for (const v of vistos) lista.push(v);
 }
@@ -2664,6 +2767,7 @@ function juntarVisibles(lista, visible, conKarts) {
   for (const o of objetos) { const z = visible(o.x, o.y, 12, 900); if (z) lista.push({ z, obj: o }); }
   for (const tj of trajineras) { const q = posTrajinera(tj), z = visible(q.x, q.y, 50, 1400); if (z) lista.push({ z, d: { x: q.x, y: q.y, ...spriteMovil(tj) } }); }
   if (marcas) juntarEspacio(lista, visible); // karts-copa-espacio
+  KartsReinos.juntar(lista, visible, LW / 2 / cam.F); // karts-copa-reinos: muros, portadas y obstáculos
   if (conKarts) {
     for (const k of karts) { const z = visibleK(k) && visible(k.x, k.y, 30, 1600); if (z) lista.push({ z, kart: k }); }
     for (const p of particulas) { const z = visible(p.x, p.y, 10, 600); if (z) lista.push({ z, part: p }); }
@@ -2671,7 +2775,8 @@ function juntarVisibles(lista, visible, conKarts) {
 }
 // Dibuja un elemento de la escena ya ordenada (adorno, moneda, caja, objeto, kart, partícula o arco de meta).
 function dibujarElemento(e, t) {
-  if (e.d) dibujarAdorno(e.d);
+  if (e.rk) KartsReinos.dibujar(e, t); // karts-copa-reinos
+  else if (e.d) dibujarAdorno(e.d, t);
   else if (e.moneda) dibujarMonedaPista(e.moneda, t);
   else if (e.caja) dibujarCajaPista(e.caja, t);
   else if (e.obj) dibujarObjeto(e.obj);
@@ -2679,9 +2784,12 @@ function dibujarElemento(e, t) {
   else if (e.part) dibujarParticula(e.part);
   else if (e.arco) dibujarArco(e.arco, e.txt, e.color, e.luz);
 }
-function dibujarAdorno(d) {
-  const p = proyectar(d.x, d.y, 0), w = d.w * p.s, h = d.h * p.s;
+function dibujarAdorno(d, t) {
+  const p = proyectar(d.x, d.y, d.alt || 0); // karts-copa-reinos: las antorchas van en el muro (alt)
+  if (!p) return;
+  const w = d.w * p.s, h = d.h * p.s;
   g.drawImage(imgDecor(d.img), p.x - w / 2, p.y - h, w, h);
+  if (d.luz) KartsReinos.brillo(p, d, t);
 }
 function dibujarMonedaPista(m, t) {
   const p = proyectar(m.x, m.y, 0), giro = REDUCIR ? 1 : Math.abs(Math.cos(t * 4 + m.x)), w = 9 * p.s;
@@ -2791,7 +2899,9 @@ function dibujarDron(k, p) {
 function dibujar(t, dt) {
   if (!capa || !yo) { g.setTransform(K, 0, 0, K, 0, 0); g.fillStyle = '#0f172a'; g.fillRect(0, 0, LW, LH); return; }
   if (modo === 'carrera') seguirCamara(dt);
+  KartsReinos.paso(yo.idx, dt); // karts-copa-reinos: luz del interior donde vas
   pintarEscena(t, true);
+  KartsReinos.luz(); // karts-copa-reinos: viñeta
   dibujarMinimapa();
   if (rayoTinte > 0) { g.fillStyle = 'rgba(255,250,200,' + (rayoTinte * 0.35) + ')'; g.fillRect(0, 0, LW, LH); }
   if (yo.rayo > 0) { g.fillStyle = 'rgba(80,80,160,.12)'; g.fillRect(0, 0, LW, LH); }
@@ -2814,6 +2924,7 @@ function prepararMinimapa() {
   ruta(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 5; c.stroke(); // karts-pistas-grandes: trazo fino, los tramos no se juntan
   ruta(); c.strokeStyle = '#e2e8f0'; c.lineWidth = 3; c.stroke();
   if (marcas) tramosAbiertosMapa(c); // karts-copa-espacio: en ámbar, donde no hay barandal
+  KartsReinos.minimapa(c, mm); // karts-copa-reinos: tramos interiores en ámbar
   const p0 = M.pts[0]; c.fillStyle = '#111'; c.save(); c.translate(mm.ox + p0.x * mm.esc, mm.oy + p0.y * mm.esc); c.rotate(p0.a); c.fillRect(-1, -4, 2, 8); c.restore();
   mm.base = b; mm.pista = pista.id;
   return true;
@@ -2935,6 +3046,12 @@ if (PRUEBA) {
     if (carreraDe) Object.assign(r, { salidaEn: Math.round(Date.now() - performance.now() + carreraDe.inicioLocal), listoEn: carreraDe.listoEn });
     return r;
   };
+  // karts-objetos-en-sala: objetos en la pista, golpes recibidos y vistos, descartes del registro y tabla de las cajas.
+  const estadoObjetos = () => ({
+    modoItems: modo === 'carrera' ? modoItems() : null, girando: yo ? yo.giro : 0, rayoYo: yo ? yo.rayo : 0, estrellaYo: yo ? yo.estrella : 0,
+    objetosRed: objetos.filter(o => o.red && o.vida > 0).map(o => ({ id: o.id, tipo: o.tipo, x: Math.round(o.x), y: Math.round(o.y), blanco: o.blanco })),
+    red: red && { golpes: red.golpes.slice(), vistos: red.vistos.slice(), stats: red.reg.stats(), inmune: red.inmune, enviados: red.n, yoIdx: red.yoIdx },
+  });
   // Ganchos solo para pruebas E2E (?prueba=1).
   window.__karts = {
     estado: () => ({ modo, pista: pista && pista.id, ...estadoSalida(),
@@ -2943,10 +3060,11 @@ if (PRUEBA) {
       vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
       item: yo ? yo.item : null, mando: mando.estado(), aire: yo ? yo.aire || 0 : 0, eventos: { ...eventos }, zonas: zonas.map(z => z.tipo),
       espacio: !!marcas, caidasBots, cae: yo ? yo.cae : 0, remolque: yo ? yo.remolque : 0, idx: yo ? yo.idx : 0, n: N, lateral: yo ? Math.round(lateralDe(yo)) : 0, // karts-copa-espacio
+      reinos: KartsReinos.estado(), // karts-copa-reinos
       copasMenu: [...document.querySelectorAll('#menu-ops [data-ir^="copa-nueva"]')].map(b => ({ ir: b.dataset.ir, txt: b.textContent, bloqueada: b.disabled })),
       copa: sala && sala.copa ? sala.copa.k : null, copaVisible: !$('ov-copa').classList.contains('hide'), copaTexto: $('ov-copa').textContent, // karts-copa-en-sala
       personaje: yo ? yo.personaje : personaje, masa: Personajes.masa(yo ? yo.personaje : personaje), personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length,
-      ...estadoVivo() }),
+      ...estadoVivo(), ...estadoObjetos() }),
     // Caja de tu kart en px del lienzo (capturas de cerca y revisión de su dibujo).
     cajaYo: () => { const p = proyectar(yo.x, yo.y, 0); return p ? { x: (p.x - KW / 2 * p.s) * K, y: (p.y - KOY * p.s) * K, w: KW * p.s * K, h: KH * p.s * K } : null; },
     // Hoja de revisión: cada piloto de espaldas, de tres cuartos, de lado y de frente.
@@ -2957,6 +3075,17 @@ if (PRUEBA) {
       return c.toDataURL('image/png');
     },
     darItem: t => { if (yo && ITEMS[t]) yo.item = t; }, // ítem en la mano (E2E del mando)
+    // karts-objetos-en-sala: usar el ítem en la mano, ponerte en la muestra idx (carril `lado`) y sortear n cajas.
+    usar: () => {
+      if (yo && yo.item && yo.termino === null) usarItem(yo);
+      return yo ? yo.item : null;
+    },
+    ponerEn: (idx, lado = 0) => { const i = ((idx % N) + N) % N, q = punto(i, lado); carrilPrueba = lado; Object.assign(yo, { idx: i, x: q.x, y: q.y, ang: M.pts[i].a, vel: A.VEL_KART, vuelta: 0, mitadOk: false, giro: 0 }); },
+    ponerAntes: (x, y, muestras) => { // en el carril del punto (x, y), `muestras` antes
+      let i = 0, md = Infinity; M.pts.forEach((p, k) => { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < md) { md = d; i = k; } });
+      const p = M.pts[i]; window.__karts.ponerEn(i - muestras, -(x - p.x) * Math.sin(p.a) + (y - p.y) * Math.cos(p.a));
+    },
+    sorteo: n => { const c = {}; for (let k = 0; k < n; k++) { const it = sortearItem(yo); c[it] = (c[it] || 0) + 1; } return c; },
     ruta: () => M.pts.map(p => [Math.round(p.x), Math.round(p.y), Math.round(p.a * 1000)]), // juegos-en-vivo: karts fabricados en la E2E de fps
     // Mecánicas (karts-pistas-mesoamericanas): te pone 30 muestras antes de la zona, en el centro y a toda velocidad;
     // con la trajinera, justo donde va a estar en el siguiente cuadro.
@@ -2979,6 +3108,7 @@ if (PRUEBA) {
     // Lleva al jugador al final de la última vuelta (cruza la meta en un momento).
     piloto: on => { pilotoPrueba = !!on; carrilPrueba = 0; },
     ponerCopas: copas => { prog.copas = copas; if (modo === 'menu') abrirMenu(); }, // karts-copa-espacio: desbloqueo sin servidor (suelto)
+    obstaculo: tipo => KartsReinos.prueba(tipo), // karts-copa-reinos: te pone frente al muro, una columna, losa, bloque o roca
     rapido: n => { pasosPrueba = Math.max(1, Math.min(8, Math.round(Number(n) || 1))); }, // karts-pistas-grandes: misma física, más pasos por cuadro
     adelantar: () => alFinalDeVuelta(vueltasPista() - 1),
     casiVuelta: () => alFinalDeVuelta(vueltasPista() - 2), // emocion-sonora: al cruzar empieza la última vuelta
