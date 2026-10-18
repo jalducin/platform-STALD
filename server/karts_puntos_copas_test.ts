@@ -66,7 +66,7 @@ for (const copa of KP.copasOrdenadas()) {
     const prog: any = avance();
     prog.copaEnCurso = KP.copaNueva(copa.id);
     let r: any = null;
-    for (let k = 0; k < copa.pistas.length; k++) r = KP.sumarCarreraCopa(prog, orden(2), 2);
+    copa.pistas.forEach(() => { r = KP.sumarCarreraCopa(prog, orden(2), 2); });
     assertEquals([r.terminada, r.lugar, prog.copaEnCurso], [true, 1, null]);
     assertEquals(prog.copas[copa.id], { lugar: 1, puntos: KP.PUNTOS_COPA_MAX });
     assert(validarProgreso("karts", prog), JSON.stringify(prog));

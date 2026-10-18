@@ -257,7 +257,7 @@ body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espe
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="karts-pistas.js?v=7"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="karts-pistas.js?v=8"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
 <script src="karts-espacio.js?v=1"></script> <!-- karts-copa-espacio: piso, sprites y cielo de las pistas espaciales -->
 <script src="arcade.js?v=7"></script>
 <script src="personajes.js?v=3"></script>
@@ -2092,7 +2092,7 @@ function mostrarResultados() {
 }
 // Récord de la pista y pintura dorada (récord bajo la meta en todas). Devuelve el texto extra de lo ganado.
 // karts-puntos-copas: KartsPistas.anotarRecord solo anota tiempos que el servidor acepta (10 s a 15 min); antes una
-// carrera de más de 15 min (pestaña oculta o atorado) dejaba un récord inválido y el servidor rechazaba TODO el avance.
+// carrera de más de 15 min (pestaña oculta o atorado) dejaba un récord inválido y el servidor rechazaba todo el avance.
 function anotarRecord(id, ms) {
   let extra = '';
   if (KP.anotarRecord(prog, id, ms)) extra += ' · 🏅 Récord de la pista';

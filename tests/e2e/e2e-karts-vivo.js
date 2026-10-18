@@ -707,6 +707,7 @@ async function salidaYPodio(b, relevo) {
   await personajesEnSala(b, relevo); // personaje-en-salas
   await respaldo(b, relevo);
   await copaEnSala(b, relevo); // karts-copa-en-sala
+  await copaReinosEnSala(b, relevo); // karts-puntos-copas
   await salidaYPodio(b, relevo); // karts-salida-y-puntos
   await b.close(); await relevo.cerrar();
   console.log(out.join('\n'));

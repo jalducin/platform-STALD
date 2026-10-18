@@ -420,7 +420,7 @@
   const PUNTOS_COPA_MAX = PUNTOS_CARRERA[0] * Math.max(...COPAS.map(c => c.pistas.length));
   const KARTS_COPA = PUNTOS_CARRERA.length; // 8 corredores en la copa individual
   // Récords válidos: de 10 s a 15 min. Una carrera más larga (pausa larga, pestaña oculta o atorado) no es récord:
-  // antes el juego la anotaba y el servidor rechazaba TODO el avance (progreso_invalido), copa en curso incluida.
+  // antes el juego la anotaba y el servidor rechazaba todo el avance (progreso_invalido), copa en curso incluida.
   const RECORD_MIN_MS = 10_000, RECORD_MAX_MS = 900_000;
   const copaNueva = id => ({ copa: copaPorId(id).id, carrera: 0, puntos: new Array(KARTS_COPA).fill(0), dif: 95 });
   // Anota el récord de la pista si es válido y mejor. Devuelve true si es récord nuevo.

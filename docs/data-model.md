@@ -310,7 +310,12 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     anterior»). Al abrir un progreso con `pistasV: 2`, el juego mueve a `recordsV2` solo los récords de esas pistas
     (`KartsPistas.migrarRecords`) y guarda; copas, piezas, equipo, copa en curso y los demás récords no cambian. El
     servidor acepta 3 formas: la anterior (5 llaves), `pistasV: 2` + `recordsV1` (pestaña vieja) y `pistasV: 3` +
-    `recordsV1` + `recordsV2`; rechaza `recordsV2` con otra versión.
+    `recordsV1` + `recordsV2`; rechaza `recordsV2` con otra versión. Cambio `karts-puntos-copas`: sin cambio de forma,
+    pero el servidor ya no copia números: las copas válidas son las de `KartsPistas.COPAS` (una copa que no existe se
+    rechaza), el tope de puntos es `KartsPistas.PUNTOS_COPA_MAX` (15 × 4 = 60), `copaEnCurso.puntos` lleva un valor por
+    corredor de `KartsPistas.PUNTOS_CARRERA` (8), y el rango de los récords es `RECORD_MIN_MS`–`RECORD_MAX_MS`. El juego
+    solo anota récords dentro de ese rango (`KartsPistas.anotarRecord`): antes, una carrera de más de 15 min dejaba un
+    récord fuera de rango y el servidor rechazaba todo el avance.
   - `dragon-run` (cambio `dragon-run-misiones`): `{ totales { metros 0–10000000, monedas 0–1000000, esquivados
     0–10000000, carreras 0–1000000, castillos 0–1000000, dobles 0–10000000 }, mejorRacha 0–999, dias { ultimo:
     null | "AAAA-MM-DD", racha 0–3660, mejor 0–3660 }, diaria: null | { fecha "AAAA-MM-DD", avance [3 × 0–100000] },

@@ -755,7 +755,7 @@ async function probarPuntosCopa(b, copa, deVerdad) {
   fr = await marcoDe(p);
   await fr.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
   const menu = await fr.textContent('#menu-ops');
-  ok(copa.id + ': tras recargar, «Continuar ' + copa.nombre + '» en la carrera 2 de 4', menu.includes('Continuar ' + copa.nombre) && menu.includes('Carrera 2 de 4'), menu.slice(0, 160));
+  ok(copa.id + ': tras recargar, «Continuar ' + copa.nombre + '» en la carrera 2 de 4 con «⭐ 15 pts (1.º)»', menu.includes('Continuar ' + copa.nombre) && menu.includes('Carrera 2 de 4') && menu.includes('⭐ 15 pts (1.º)'), menu.slice(0, 160));
   ok(copa.id + ': tras recargar la copa conserva tus 15 puntos', (await estado(fr)).prog.copaEnCurso?.puntos?.includes(15), JSON.stringify((await estado(fr)).prog.copaEnCurso));
   await p.screenshot({ path: 'karts-puntos-' + copa.id + '-recarga.png', fullPage: true });
   await p.context().close();
@@ -1105,6 +1105,7 @@ async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probar
   await probarCopaMeso(b);
   await probarCopaEspacio(b); // karts-copa-espacio (al final: cambia las copas y la copa en curso)
   await probarCopaReinos(b); // karts-copa-reinos (con los podios que dejó la prueba del Espacio)
+  await probarPuntosCopas(b); // karts-puntos-copas: ganar la carrera 1 de cada copa suma 15, se guarda y sobrevive a recargar
   console.log('fps con CPU ×4 por pista nueva: ' + JSON.stringify(fpsMeso));
   console.log('fps con CPU ×4 dentro de los monumentos: ' + JSON.stringify(fpsReinos));
 
