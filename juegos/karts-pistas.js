@@ -413,7 +413,41 @@
     return movidos ? 'trazado' : false;
   }
 
+  // ---- Copa individual y récords (karts-puntos-copas): reglas puras que usan juegos/karts.html y el servidor ----
+  // Puntos por lugar en cada carrera de copa (igual que Arcade.PUNTOS_COPA, que este archivo no puede leer: se carga
+  // antes) y tope de puntos de una copa: los del 1.er lugar por la copa más larga (el servidor valida con este tope).
+  const PUNTOS_CARRERA = [15, 12, 10, 8, 6, 4, 2, 1];
+  const PUNTOS_COPA_MAX = PUNTOS_CARRERA[0] * Math.max(...COPAS.map(c => c.pistas.length));
+  const KARTS_COPA = PUNTOS_CARRERA.length; // 8 corredores en la copa individual
+  // Récords válidos: de 10 s a 15 min. Una carrera más larga (pausa larga, pestaña oculta o atorado) no es récord:
+  // antes el juego la anotaba y el servidor rechazaba TODO el avance (progreso_invalido), copa en curso incluida.
+  const RECORD_MIN_MS = 10_000, RECORD_MAX_MS = 900_000;
+  const copaNueva = id => ({ copa: copaPorId(id).id, carrera: 0, puntos: new Array(KARTS_COPA).fill(0), dif: 95 });
+  // Anota el récord de la pista si es válido y mejor. Devuelve true si es récord nuevo.
+  function anotarRecord(pr, id, ms) {
+    if (!Number.isInteger(ms) || ms < RECORD_MIN_MS || ms > RECORD_MAX_MS) return false;
+    pr.records = pr.records || {};
+    if (pr.records[id] && pr.records[id] <= ms) return false;
+    pr.records[id] = ms;
+    return true;
+  }
+  // Suma una carrera de la copa en curso: `orden` = índices de los karts en orden de llegada, `yo` = tu índice.
+  // En la última carrera cierra la copa (mejor lugar guardado). Devuelve { terminada, lugar (en la copa), puntos }.
+  function sumarCarreraCopa(pr, orden, yo) {
+    const cc = pr.copaEnCurso, copa = copaPorId(cc.copa);
+    orden.forEach((k, i) => { if (k >= 0 && k < cc.puntos.length) cc.puntos[k] = Math.min(PUNTOS_COPA_MAX, cc.puntos[k] + (PUNTOS_CARRERA[i] || 0)); });
+    cc.carrera++;
+    if (cc.carrera < copa.pistas.length) return { terminada: false, lugar: null, puntos: cc.puntos[yo] };
+    // Lugar en la tabla: por puntos; con empate, el orden de los karts (como el sort estable de antes).
+    const pts = cc.puntos[yo], lugar = 1 + cc.puntos.filter((p, i) => p > pts || (p === pts && i < yo)).length;
+    const previo = pr.copas[copa.id];
+    if (!previo || lugar < previo.lugar || (lugar === previo.lugar && pts > previo.puntos)) pr.copas[copa.id] = { lugar, puntos: pts };
+    pr.copaEnCurso = null;
+    return { terminada: true, lugar, puntos: pts };
+  }
+
   raiz.KartsPistas = { PISTAS, COPAS, VERSION_PISTAS, curvasTrazado, complejidad, migrarRecords, // karts-curvas-complejas
+    PUNTOS_CARRERA, PUNTOS_COPA_MAX, RECORD_MIN_MS, RECORD_MAX_MS, copaNueva, anotarRecord, sumarCarreraCopa, // karts-puntos-copas
     copaPorId, puntoEn, colocarMecanicas, colocarFijos, ladoTrajinera, encuadrarMinimapa,
     tramosInteriores, muroEn, colocarColumnas, alturaBloque, bloquePeligro, ladoRoca, centroCompuerta, ALTO_BLOQUE, // karts-copa-reinos
     copasOrdenadas, copaDesbloqueada, podiosFaltan, MARCA, ESPACIO, marcasEspacio, rescateEn, ladoPlataforma, aperturaCompuerta }; // karts-copa-espacio
