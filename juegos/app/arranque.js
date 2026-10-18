@@ -121,6 +121,7 @@ app.addEventListener('change', e => { if (e.target.id === 'p-kformato') { docume
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') SalasGrandes.formulario(e.target.value); }); // juegos-salas-grandes
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-formato-wrap').hidden = e.target.value !== 'futbolito'; }); // futbolito-equipos
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-aformato-wrap').hidden = e.target.value !== 'futbolito-arena'; }); // futbolito-arena
+app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-bmision-wrap').hidden = e.target.value !== 'brigada'; }); // brigada
 // cultura-conocimiento: el tema de la Línea del tiempo solo se ve al elegirla.
 app.addEventListener('change', e => { if (e.target.id === 'p-juego') document.getElementById('p-ltema-wrap').hidden = e.target.value !== 'cultura-linea'; });
 app.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.futtac) cambiarTacticaFutbol(e.target); }); // futbol-en-linea: deslizadores de la táctica

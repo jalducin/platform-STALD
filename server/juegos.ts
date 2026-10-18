@@ -14,6 +14,11 @@ import { CATALOGO_CLASICOS_RAPIDOS } from "./clasicos_rapidos.ts"; // clasicos-r
 import { topeRankingCopa } from "./karts_copa.ts"; // karts-copa-en-sala
 import { CARRERAS, rankingCarreraSala } from "./carreras.ts"; // karts-salida-y-puntos
 import { puntosArenaSala } from "./arena.ts"; // futbolito-arena
+import { puntosBrigadaSala } from "./brigada.ts"; // brigada
+// futbolito-arena y brigada: en sus salas los puntos de ranking salen del resultado validado por el servidor.
+const PUNTOS_DEL_RESULTADO: Record<string, (store: Store, sala: string, id: string) => Promise<number | "pendiente" | null>> = {
+  "futbolito-arena": puntosArenaSala, brigada: puntosBrigadaSala,
+};
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -502,7 +507,8 @@ async function puntosDeSala(c: CtxJugador, juego: string, sala: string, puntos: 
   const t = Date.parse(ahora);
   const topeCopa = juego === "karts" ? await topeRankingCopa(store, sala, jugador.id, t) : null;
   if (topeCopa !== null) return enteroEn(puntos, topeCopa);
-  const arena = juego === "futbolito-arena" ? await puntosArenaSala(store, sala, jugador.id) : null; // futbolito-arena: del resultado del servidor
+  const delResultado = PUNTOS_DEL_RESULTADO[juego]; // futbolito-arena y brigada: del resultado del servidor
+  const arena = delResultado ? await delResultado(store, sala, jugador.id) : null;
   if (arena === "pendiente") return json({ error: "resultado_pendiente" }, 409);
   if (arena !== null) return arena;
   const delServidor = juego in CARRERAS ? await rankingCarreraSala(store, sala, jugador.id, t) : null;

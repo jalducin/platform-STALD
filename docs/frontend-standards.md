@@ -312,7 +312,12 @@ Cada página debe manejar y mostrar de forma explícita:
     con la caja del dibujo); *pools* de proyectiles, partículas y textos. Controles: capa `BrigadaEntrada` (joystick
     flotante + rombo A salta, B dispara, X globo, Y arma —mismo rombo que el mando común—, mando con `analogico: true` y
     teclas en `null`, teclado y fuentes registradas); el joystick táctil apunta en 4 direcciones (`c4`). Ganchos de
-    prueba `window.__brigada` con `?prueba=1`.
+    prueba `window.__brigada` con `?prueba=1`. Cooperativo en sala (de 1 a 8): `juegos/app/brigada-sala.js`
+    (`pintarBrigadaSala`, podio con los puntos del servidor) manda al iframe `{ tipo: 'inicio', modo: 'sala', rol,
+    anfitrion, yo, asientos: [{ id, nombre, bot, personaje }], seed, vivo, mision }`; con una sola persona simula su
+    aparato (compañeros IA), con más usa `juegos/brigada-red.js` (anfitrión autoritativo, `BrigadaRed.anfitrion` /
+    `BrigadaRed.invitado`, cámara compartida) y responde `fin-sala { puntos: { <id>: n }, ms, completada, corte }` o,
+    sin canal, `ir-solo`.
   - **⚽ Futbolito Arena** (cambio `futbolito-arena`; decisiones, medición del canal y 3 vs 3 en su `design.md`):
     `juegos/futbolito-arena.html` en el iframe de Arcade, sin avance guardado (`SIN_AVANCE`). Motor sin DOM
     `juegos/arena-motor.js` (`window.ArenaMotor`: física de paso fijo solo con `+ − × ÷` y `Math.sqrt`, reglas, IA,

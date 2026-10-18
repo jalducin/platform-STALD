@@ -150,9 +150,23 @@ misiones por encima de `desbloqueada`, una misión con estrellas obliga a desblo
   anfitrión, los invitados ven una cuenta de 15 s y cierran con los puntos de la última foto (`corte`).
 - **Respaldo**: sin canal (la sala no trae `rt` o no conecta en 6 s) y con más de una persona → «La misión en vivo no
   está disponible en esta sala» + «🦎 Jugar solo». Con una sola persona (y compañeros IA) no hace falta canal.
-- **Presupuesto** (medido en `server/brigada_red_test.ts`): 8 personas → envíos por sala ≈ 12 + 7 × 10 = 82/s (Karts de
-  8 midió ≈ 80/s contra el Supabase real sin pérdida); foto máxima con 8 personajes, 24 enemigos y 16 proyectiles
-  < 1700 B (sobre de 2048 B).
+- **Lo lento aparte**: puntos, munición, objetos y vehículos viajan en su propio mensaje `bx:lento` (al cambiar, a lo
+  más cada 250 ms, o cada 1 s), no en la foto. Los eventos (explosiones, rescates, jefe…) van compactos
+  `[n, tipo, i, x, y, aux]`, a lo más 12 por foto, repetidos en 3 fotos por si se pierde una.
+- **Presupuesto** (medido en `server/brigada_red_test.ts` con la red simulada de `EnVivo`):
+
+  | Caso | Envíos por sala/s | Foto promedio | Foto máxima |
+  |---|---|---|---|
+  | 8 personas, misión 2, 80 ms y 3 % de pérdida | 83.3 | 420 B | 770 B |
+  | 4 personas, misión 1, 120 ms y 5 % de pérdida | 49.4 | — | 509 B |
+  | Peor caso armado: 8 personajes, 24 enemigos, 16 proyectiles y 12 eventos | — | — | < 1700 B |
+
+  En el navegador, con 8 contextos, la foto máxima fue de 432 B. Karts con 8 midió ≈ 80 envíos/s contra el Supabase
+  real sin pérdida.
+  El personaje propio predicho va adelantado a lo que simula el anfitrión una latencia más un intervalo de entrada:
+  p90 de 19 px a 80 ms y de 30 px a 120 ms (a 120 px/s). La corrección es suave en x (25 % por cuadro).
+- **Fin**: cada aparato manda el tiempo real desde el inicio (el servidor lo compara con el tiempo transcurrido) y los
+  puntos de cada persona que vio (los invitados los reciben en `bx:lento`).
 
 ### 12. Sala y resultado (PR 2)
 - `MESAS.brigada = { max: 8, asientos: 4, min: 1 }` en el servidor y en la página: sin bots, de 1 a 8 personas; con

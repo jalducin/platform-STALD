@@ -37,6 +37,7 @@
     futbol: { max: 2, min: 2, bots: 'nunca' }, // futbol-en-linea: 1 vs 1 en vivo, solo personas
     // futbolito-arena: 2 vs 2 por omisión; cada persona que entra quita un bot
     'futbolito-arena': { max: 4, asientos: 4, min: 2, formatos: { '1v1': { max: 2, asientos: 2, min: 2 }, '1v2': { max: 3, asientos: 3, min: 2 }, '2v2': { max: 4, asientos: 4, min: 2 }, '3v3': { max: 6, asientos: 6, min: 2 } } },
+    brigada: { max: 8, asientos: 4, min: 1 }, // brigada: de 1 a 8 personas; con bots, compañeros IA hasta 4 asientos
   };
   // futbolito-equipos: con `opciones.formato` la mesa puede cambiar (igual que mesaDe en server/salas.ts).
   const de = (juego, opciones) => {

@@ -62,53 +62,53 @@
 
 ### 10. Publicación PR 1
 
-- [ ] 10.1 Merge de `origin/main`, PR en español, checks, merge, borrar la rama remota y verificación en producción
+- [x] 10.1 Merge de `origin/main`, PR en español, checks, merge, borrar la rama remota y verificación en producción
 
 ## PR 2 — Cooperativo en vivo de hasta 8
 
 ### 11. Pruebas que fallan primero (TDD)
 
-- [ ] 11.1 `server/brigada_red_test.ts`: foto cuantizada (8 personajes, 24 enemigos, 16 proyectiles < 1700 B), entrada
+- [x] 11.1 `server/brigada_red_test.ts`: foto cuantizada (8 personajes, 24 enemigos, 16 proyectiles < 1700 B), entrada
   con contadores de presiones, misión en red de 4 y de 8 con `EnVivo.redSimulada` (latencia, pérdida y desorden): los
   mismos enemigos en todos, jefe vencido visto por todos, personaje propio predicho cerca del autoritativo,
   desconexión con IA y regreso, caída del anfitrión; envíos por segundo medidos
-- [ ] 11.2 `server/brigada_test.ts`: sala de 1 a 8 (sin bots y con compañeros), mesa igual en servidor y página,
+- [x] 11.2 `server/brigada_test.ts`: sala de 1 a 8 (sin bots y con compañeros), mesa igual en servidor y página,
   misión de la sala, personaje por asiento, resultado válido, implausible, una vez por persona, estado
   confirmado/disputa e invitado, puntos de ranking del servidor
 
 ### 12. Red y servidor
 
-- [ ] 12.1 `juegos/brigada-red.js`: foto, entrada, anfitrión e invitado
-- [ ] 12.2 `server/brigada.ts` (opciones, reporte, resultado y puntos) y cambios marcados `// brigada` en
+- [x] 12.1 `juegos/brigada-red.js`: foto, entrada, anfitrión e invitado
+- [x] 12.2 `server/brigada.ts` (opciones, reporte, resultado y puntos) y cambios marcados `// brigada` en
   `server/salas.ts` (JUEGOS_PARTIDA, MESAS, personaje, /respuesta, vista) y `server/juegos.ts` (puntos de sala)
 
 ### 13. Juego y página en sala
 
-- [ ] 13.1 `juegos/brigada.html` modo sala: local (una persona + compañeros), en vivo (anfitrión/invitado), latencia,
+- [x] 13.1 `juegos/brigada.html` modo sala: local (una persona + compañeros), en vivo (anfitrión/invitado), latencia,
   avisos de desconexión, respaldo y `fin-sala`
-- [ ] 13.2 `juegos/mesas.js`, `juegos/app/salas.js`, `juegos/app/arcade.js`, `juegos/app/arranque.js`, `juegos.html`:
+- [x] 13.2 `juegos/mesas.js`, `juegos/app/salas.js`, `juegos/app/arcade.js`, `juegos/app/arranque.js`, `juegos.html`:
   misión al crear, personaje en la espera, iframe con canal, resultado y podio (marcado `// brigada`)
 
 ### 14. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
-- [ ] 14.1 `tests/e2e/e2e-brigada.js` con sala de 4 contextos en el canal simulado (mismos enemigos, jefe vencido,
+- [x] 14.1 `tests/e2e/e2e-brigada.js` con sala de 4 contextos en el canal simulado (mismos enemigos, jefe vencido,
   desconexión, podio en todos), chequeo ligero con 8 contextos, fps del anfitrión con 8 personajes y CPU ×4, respaldo y
   capturas
 
 ### 15. Ejecutar pruebas y verificar estado (OBLIGATORIO)
 
-- [ ] 15.1 `npx -y deno test -A server/`, `deno lint`, calidad sin avisos nuevos
-- [ ] 15.2 E2E: `brigada juegos categorias partidas emocion mando`
-- [ ] 15.3 Reporte en `openspec/changes/brigada-xalli/reports/2026-10-17-step-15-pruebas-y-verificacion.md`
+- [x] 15.1 `npx -y deno test -A server/`, `deno lint`, calidad sin avisos nuevos
+- [x] 15.2 E2E: `brigada juegos categorias partidas emocion mando`
+- [x] 15.3 Reporte en `openspec/changes/brigada-xalli/reports/2026-10-17-step-15-pruebas-y-verificacion.md`
 
 ### 16. Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA
 
-- [ ] 16.1 Capturas del cooperativo con 4+ personas, jefe y podio (390×844, 844×390 y escritorio) e iteración
-- [ ] 16.2 curl local: crear sala de 8, personaje, resultado válido e imposible, ranking de sala
+- [x] 16.1 Capturas del cooperativo con 4+ personas, jefe y podio (390×844, 844×390 y escritorio) e iteración
+- [x] 16.2 curl local: crear sala de 8, personaje, resultado válido e imposible, ranking de sala
 
 ### 17. Documentación técnica (OBLIGATORIO)
 
-- [ ] 17.1 `docs/frontend-standards.md`, `docs/backend-standards.md` y `docs/data-model.md` (sala `brigada`), `?v=`
+- [x] 17.1 `docs/frontend-standards.md`, `docs/backend-standards.md` y `docs/data-model.md` (sala `brigada`), `?v=`
 
 ### 18. Publicación PR 2
 

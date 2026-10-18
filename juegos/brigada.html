@@ -139,7 +139,8 @@ body.tactil.en-partido.ctl-joystick #mandos{display:flex}
 <script src="personajes.js?v=3"></script>
 <script src="brigada-misiones.js?v=1"></script>
 <script src="brigada-motor.js?v=1"></script>
-<script src="brigada-arte.js?v=1"></script> <!-- brigada-xalli: fondos, enemigos y jefes (opcional: si falta, la página dibuja los suyos) -->
+<script src="brigada-arte.js?v=1"></script>
+<script src="brigada-red.js?v=1"></script> <!-- brigada-xalli: netcode de la misión en equipo --> <!-- brigada-xalli: fondos, enemigos y jefes (opcional: si falta, la página dibuja los suyos) -->
 <script>
 /* Brigada Xalli — página del juego (openspec: brigada-xalli). Embebido en juegos.html (🕹️ Arcade): misiones con
    avance (la página de Juegos lo lee y guarda) y puntos de ranking por misión. Motor sin DOM: juegos/brigada-motor.js;
@@ -1059,12 +1060,13 @@ function avanzarLocal(dt) {
   while (acum >= M.PASO && n < 5) { eventos(M.paso(S.m, entradasSolo(local, n === 0))); acum -= M.PASO; n++; }
   if (n === 5) acum = 0;
   for (let k = 0; k < extraPasos && !terminada(); k++) eventos(M.paso(S.m, entradasSolo(local, false)));
-  if (S.m.estado === 'cumplida') terminarMision();
+  if (S.m.estado === 'cumplida' && S.ctx.modo === 'solo') terminarMision();
+  else if (S.m.estado === 'cumplida') terminarSala(false); // sala con una sola persona y compañeros IA
   else if (S.m.estado === 'fallida') fallida();
 }
 const terminada = () => S.m.estado === 'cumplida' || S.m.estado === 'fallida';
 function fallida() {
-  if (S.ctx.modo !== 'solo') { setTimeout(() => { if (S.m && S.m.estado === 'fallida') { M.reintentar(S.m); } }, 2500); S.m.estado = 'reintentando'; return; }
+  if (S.ctx.modo !== 'solo') { reintentoEquipo(); return; }
   if (S.vista !== 'partido') return;
   window.Emocion?.intensidad(0); window.Emocion?.derrota(); soltarToques();
   pantalla('<h2>😵 ¡Uy! La brigada necesita otro intento</h2><p>Vuelves al último punto de control con todas tus vidas.</p>' +
@@ -1115,6 +1117,9 @@ $('ov').addEventListener('click', e => {
 
 /* ================= HUD ================= */
 let hudClave = '';
+// Con más de 4 personas: renglón corto (nombre de 5 letras, corazones en número y vidas).
+const filaCompacta = (q, i) => '<div class="fila-j' + (q.estado === 'vivo' ? '' : ' fuera') + '" data-i="' + i + '"><span class="n" style="color:' + FIRMA_PJ(q.personaje) + ';max-width:44px">' +
+  esc((S.nombres[i] || '').replace('🤖 ', '').slice(0, 5)) + '</span><span>' + (q.estado === 'burbuja' ? '🫧' : '❤' + Math.max(0, q.cor)) + '·' + q.vidas + '</span></div>';
 const corazones = p => '❤️'.repeat(Math.max(0, p.cor)) + '🤍'.repeat(Math.max(0, M.COR - p.cor));
 function pintarHud(m) {
   const p = m.jugadores[S.yo], equipo = m.jugadores.reduce((s, q) => s + q.puntos, 0);
@@ -1124,7 +1129,7 @@ function pintarHud(m) {
   const clave = filas.join('') + '|' + p.puntos + '|' + equipo + '|' + p.arma + p.mun[p.arma] + p.vehiculo + '|' + p.globos;
   if (clave !== hudClave) {
     hudClave = clave;
-    $('equipo').innerHTML = (m.jugadores.length > 4 ? filas.map(f => f.replace(/<span>❤️|<span>🤍/, '<span>')) : filas).join('');
+    $('equipo').innerHTML = m.jugadores.length > 4 ? m.jugadores.map(filaCompacta).join('') : filas.join('');
     $('puntos').textContent = '🏅 ' + p.puntos.toLocaleString('es-MX') + (m.jugadores.length > 1 && S.ctx.modo !== 'solo' ? ' · equipo ' + equipo.toLocaleString('es-MX') : '');
     const municion = p.arma === 'burbuja' ? '∞' : p.mun[p.arma];
     $('arma').textContent = p.vehiculo >= 0 ? '🎊 Cañón' : M.ARMAS[p.arma].emoji + ' ' + municion;
@@ -1146,7 +1151,7 @@ function tensionJefe(m) {
 let ultimo = performance.now(), cuadros = 0, fpsDesde = performance.now(), fps = 0, enJuego = null;
 function avanzar(dt) {
   if (S.rol === 'anfitrion' && S.red) avanzarAnfitrion(dt);
-  else if (S.rol === 'invitado' && S.red) avanzarInvitado();
+  else if (S.rol === 'invitado' && S.red) avanzarInvitado(dt);
   else avanzarLocal(dt);
 }
 function cuadro(ahora) {
@@ -1169,16 +1174,131 @@ document.addEventListener('visibilitychange', () => {
   else ultimo = performance.now();
 });
 
-/* ================= Modo sala (cooperativo; se completa en el PR 2 con juegos/brigada-red.js) ================= */
-function avanzarAnfitrion(dt) { avanzarLocal(dt); }
-function avanzarInvitado() { /* PR 2 */ }
-function pintarRed() { /* PR 2 */ }
+/* ================= Modo sala (cooperativo en vivo de 1 a 8; juegos/brigada-red.js) =================
+   La página manda { modo: 'sala', rol, anfitrion, yo, asientos: [{ id, nombre, bot, personaje }], seed, vivo, mision }.
+   Con una sola persona (y compañeros IA) se simula aquí mismo; con más, el anfitrión simula y manda fotos y los
+   invitados mandan su entrada por el canal en vivo. Sin canal: respaldo («Jugar solo»). */
+const R = window.BrigadaRed, ESPERA_MS = 20000;
+function misionSala(d) {
+  const usados = new Set(d.asientos.map(a => a.personaje).filter(Boolean)), libres = M.PERSONAJES.filter(id => !usados.has(id));
+  const personajes = d.asientos.map((a, i) => ({ personaje: a.personaje || libres.shift() || M.PERSONAJES[i % 8], ia: !!a.bot }));
+  return M.crearMision({ mision: Number(d.mision) || 1, personajes, semilla: 'sala-' + d.seed });
+}
+function iniciarSala(d) {
+  S.sala = d; S.reintentoEn = 0;
+  const personas = d.asientos.filter(a => !a.bot), yo = d.asientos.findIndex(a => a.id === d.yo.id);
+  S.ctx = { modo: 'sala' };
+  if (yo < 0) { respaldo('No encontramos tu lugar en la mesa.'); return; }
+  const nombres = d.asientos.map(a => (a.bot ? '🤖 ' : '') + apodo(a.nombre));
+  if (personas.length === 1) { S.rol = 'local'; iniciarMision(misionSala(d), yo, nombres); return; }
+  conectarSala(d, yo, nombres);
+}
+function respaldo(motivo) {
+  cerrarCanal(); S.red = null; S.rol = null;
+  pantalla('<h2>📡 La misión en vivo no está disponible en esta sala</h2><p>' + esc(motivo) + '</p><p>Mientras tanto, juega solo: tus puntos cuentan en el ranking individual.</p>' +
+    '<div class="fila"><button class="btn" data-a="ir-solo" id="b-ir-solo">🦎 Jugar solo</button></div>', 'respaldo');
+}
+function cerrarCanal() { try { if (S.canal) S.canal.cerrar(); } catch { /* ya cerrado */ } S.canal = null; }
+async function conectarSala(d, yo, nombres) {
+  pantalla('<h2>🦎 Misión en equipo</h2><p id="linea-estado">📡 Conectando el canal en vivo…</p>', 'conectando');
+  if (!d.vivo || !window.EnVivo) { respaldo('Esta sala no tiene canal en vivo.'); return; }
+  const ids = d.asientos.filter(a => !a.bot).map(a => a.id), anf = d.rol === 'anfitrion';
+  try {
+    const intento = EnVivo.conectar({ transporte: EnVivo.transporteMarco('brigada'), yo: d.yo, participantes: ids, hz: anf ? R.HZ_FOTO : R.hzEntrada(ids.length) });
+    S.canal = await Promise.race([intento, new Promise((_, mal) => setTimeout(() => mal(new Error('tiempo')), 6000))]);
+  } catch { respaldo('No se pudo conectar el canal en vivo.'); return; }
+  if (anf) esperarInvitados(d, yo, ids, nombres); else empezarInvitado(d, yo, nombres);
+}
+// El anfitrión arranca cuando todas las personas saludaron (o a los 10 s: quien falte lo maneja la IA hasta que llegue).
+function esperarInvitados(d, yo, ids, nombres) {
+  const vistos = new Set([d.yo.id]), est = $('linea-estado');
+  let listo = false;
+  const arrancar = () => { if (!listo && S.sala === d) { listo = true; empezarAnfitrion(d, yo, nombres); } };
+  const pinta = () => { if (est) est.textContent = '⏳ Esperando a la brigada (' + vistos.size + ' de ' + ids.length + ')…'; };
+  pinta();
+  S.canal.al('bx:entrada', (_m, meta) => { if (meta && ids.includes(meta.de)) { vistos.add(meta.de); pinta(); if (vistos.size >= ids.length) arrancar(); } });
+  setTimeout(arrancar, 10000);
+}
+function empezarAnfitrion(d, yo, nombres) {
+  const m = misionSala(d);
+  S.rol = 'anfitrion';
+  S.red = R.anfitrion({ canal: S.canal, m, M, ids: d.asientos.map(a => (a.bot ? null : a.id)), yo, ahora: () => performance.now() });
+  iniciarMision(m, yo, nombres);
+}
+function empezarInvitado(d, yo, nombres) {
+  const m = misionSala(d);
+  S.rol = 'invitado';
+  S.red = R.invitado({ canal: S.canal, m, M, anfitrion: d.anfitrion, yo, ahora: () => performance.now(), hz: R.hzEntrada(d.asientos.filter(a => !a.bot).length) });
+  iniciarMision(m, yo, nombres);
+  avisarRed('⏳ Esperando al anfitrión…');
+}
+function avisarRed(t) {
+  const el = $('red-aviso');
+  if (!t) { el.classList.add('hide'); return; }
+  if (el.textContent !== t) el.textContent = t;
+  el.classList.remove('hide');
+}
+let redT = 0;
+function pintarRed(ahora) {
+  if (ahora - redT < 500 || !S.canal) return;
+  redT = ahora;
+  let ms = null;
+  try { ms = S.canal.latencia(); } catch { ms = null; }
+  const lat = $('lat');
+  lat.classList.remove('hide');
+  lat.textContent = '📶 ' + (Number.isFinite(ms) ? Math.round(ms) + ' ms' : '—');
+  if (S.rol !== 'invitado') return;
+  const caido = S.red.anfitrionCaido();
+  if (caido !== null) avisarRed('📡 Se perdió la conexión con el anfitrión · la misión se cierra en ' + Math.max(0, Math.ceil((R.DESCONEXION_MS - (ahora - caido)) / 1000)) + ' s');
+  else if (S.red.ultimaFoto()) avisarRed('');
+}
+// En equipo, si todos quedan fuera, la brigada vuelve sola al punto de control a los 2.5 s.
+function reintentoEquipo() {
+  const ahora = performance.now();
+  if (!S.reintentoEn) { S.reintentoEn = ahora + 2500; gritar('¡Uy!', 'Otra vez desde el punto de control', 2200); return; }
+  if (ahora >= S.reintentoEn) { S.reintentoEn = 0; M.reintentar(S.m); }
+}
+function avanzarAnfitrion(dt) {
+  acum += dt;
+  let n = 0;
+  const local = leerEntrada();
+  while (acum >= M.PASO && n < 5) { eventos(S.red.paso(n === 0 ? local : { ...local, ga: false, gx: false, gy: false })); acum -= M.PASO; n++; }
+  if (n === 5) acum = 0;
+  for (let k = 0; k < extraPasos && !terminada(); k++) eventos(S.red.paso({ ...local, ga: false, gx: false, gy: false }));
+  S.red.enviarSiToca();
+  if (S.m.estado === 'cumplida') terminarSala(false);
+  else if (S.m.estado === 'fallida') reintentoEquipo();
+}
+function avanzarInvitado(dt) {
+  S.red.entrada(leerEntrada());
+  const d = S.red.dibujar(dt);
+  if (d) eventos(d.eventos);
+  else if (performance.now() - S.inicioReal > ESPERA_MS) { respaldo('El anfitrión no se conectó al canal en vivo.'); return; }
+  if (d && d.estado === 'cumplida') terminarSala(false);
+  else if (S.red.cerrarPorCaida()) terminarSala(true);
+}
+function terminarSala(corte) {
+  if (S.fin) return;
+  S.fin = true;
+  if (S.rol === 'anfitrion') [0, 150, 300].forEach(t => setTimeout(() => { if (S.red) S.red.enviarSiToca(true); }, t));
+  soltarToques(); avisarRed(''); window.Emocion?.intensidad(0);
+  const m = S.m, r = M.resumen(m), puntos = {};
+  S.sala.asientos.forEach((a, i) => { if (!a.bot) puntos[a.id] = m.jugadores[i].puntos; });
+  if (r.completada) window.Emocion?.nivelSuperado();
+  pantalla('<h2>' + (r.completada ? '🎉 ¡Misión cumplida en equipo!' : '📡 Misión cerrada') + '</h2><div class="grande-estrellas">' + estrellasTxt(r.estrellas) + '</div>' +
+    '<p>🏅 Equipo: <b>' + r.equipo.toLocaleString('es-MX') + '</b> · tú: <b>' + m.jugadores[S.yo].puntos.toLocaleString('es-MX') + '</b></p>' +
+    (corte ? '<p>📡 La misión se cerró por la desconexión del anfitrión.</p>' : '') + '<p id="res-puntos">Registrando el resultado…</p>', 'resultado');
+  setTimeout(cerrarCanal, 1500);
+  // Tiempo real desde el inicio (la misión «sombra» de los invitados no lleva su propio reloj).
+  enviar({ tipo: 'fin-sala', puntos, ms: Math.round(performance.now() - S.inicioReal), completada: r.completada, corte: !!corte });
+}
 
 /* ================= Plataforma ================= */
 addEventListener('message', ev => {
   if (ev.origin !== location.origin || ev.source !== parent) return;
   const d = ev.data || {};
-  if (d.tipo === 'inicio' && d.modo !== 'sala') {
+  if (d.tipo === 'inicio' && d.modo === 'sala' && Array.isArray(d.asientos)) iniciarSala(d);
+  else if (d.tipo === 'inicio') {
     S.prog = d.progreso && M.validarProgreso(d.progreso) ? d.progreso : null;
     if (S.prog) { ajustes.personaje = Personajes.preferencia(S.prog.personaje); ajustes.companeros = S.prog.companeros; ajustes.mision = S.prog.desbloqueada; }
     if (S.vista === 'carga' || S.vista === 'menu') portada();
@@ -1208,6 +1328,11 @@ if (PRUEBA) {
       };
     },
     acelerar: n => { extraPasos = Math.max(0, Number(n) || 0); },
+    red: () => (S.red ? {
+      rol: S.rol, recibidas: S.red.st.recibidas || 0, caidos: S.rol === 'anfitrion' ? S.red.caidos() : [], caido: S.rol === 'invitado' ? S.red.anfitrionCaido() : null,
+      bytes: S.rol === 'anfitrion' ? S.red.st.bytes.slice(-120) : [], aviso: $('red-aviso').classList.contains('hide') ? '' : $('red-aviso').textContent, lat: $('lat').textContent,
+      enemigos: S.m.enemigos.filter(e => e.vivo).map(e => e.id).sort((a, b) => a - b),
+    } : null),
     invulnerable: () => { for (const p of S.m.jugadores) p.inv = 1e6; },
     // Lleva al equipo a la entrada de la arena del jefe.
     alJefe: () => {
