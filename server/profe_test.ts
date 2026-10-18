@@ -130,3 +130,24 @@ Deno.test("profe: resuelve una actividad del grupo y no aparece en las vistas de
   const act = admin.items.find((i: any) => i.id === "act-2026-10-06");
   assertEquals([act.resultados.length, Object.keys(admin.resumen)], [0, []], "el profe no cuenta como alumno");
 });
+
+// ---- Sin ruta propia, el profe sigue las semanas del grupo (openspec: profe-semanas-del-grupo) ----
+Deno.test("profe: sin ruta propia ve la semana del grupo, sin plan y con lo del grupo", async () => {
+  clearCache();
+  const store = storeCon({ ...semanaValida() });
+  const r = await profe(store, "GET", "", ADMIN, undefined, "2026-10-07");
+  assertEquals(r.status, 200);
+  assertEquals(r.body.semana?.id, "2026-10-05", "la semana es la del grupo");
+  assertEquals(r.body.plan, null, "sin plan.json no hay plan");
+  assert(r.body.items.length > 0 && r.body.items.every((i: any) => i.grupo), "solo lo del grupo");
+  assert(r.body.semana.ids.includes("act-2026-10-06"));
+  const domingo = await profe(store, "GET", "", ADMIN, undefined, "2026-10-04");
+  assertEquals(domingo.body.semanaSiguiente?.id, "2026-10-05", "el domingo ya ve la siguiente del grupo");
+});
+
+Deno.test("profe: con ruta propia conserva su semana", async () => {
+  clearCache();
+  const r = await profe(datos(), "GET", "", ADMIN, undefined, "2026-10-07");
+  assertEquals(r.body.semana.id, "2026-10-05");
+  assertEquals(r.body.semana.titulo, "Semana 1", "la de su ruta, no la del grupo");
+});

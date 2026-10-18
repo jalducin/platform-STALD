@@ -1,4 +1,5 @@
-// E2E profe-diseno: encabezado, Pendiente ahora, pestañas recordadas, acordeón y dos columnas en escritorio.
+// E2E profe-diseno: encabezado, Pendiente ahora, pestañas recordadas y dos columnas en escritorio.
+// Sin ruta propia (openspec: profe-semanas-del-grupo): 3 pestañas, sin plan ni barra del mes; todo es del grupo.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
@@ -9,15 +10,13 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
   // Escritorio
   const p = await abrirPagina(b, { email: 'admin@example.com', viejo: true, viewport: { width: 1280, height: 900 }, out, etiqueta: '', ruta: RUTA });
   const hero = await p.waitForSelector('.pf-hero', { timeout: 15000 }).catch(() => null);
-  ok('encabezado de progreso con contadores y barra del mes', !!hero && (await p.$$('.pf-hero .pf-stat')).length === 4 && !!(await p.$('.pf-hero .progress-bar')));
+  ok('encabezado con contadores y sin barra del mes (no hay plan)', !!hero && (await p.$$('.pf-hero .pf-stat')).length === 4 && !(await p.$('.pf-hero .progress-bar')));
   const urg = await p.textContent('#pf-urgente').catch(() => '');
-  ok('Pendiente ahora con etiquetas Ruta y Grupo', /Pendiente ahora/.test(urg) && /Ruta/.test(urg) && /Grupo/.test(urg), urg.replace(/\s+/g, ' ').slice(0, 140));
-  ok('4 pestañas con "Esta semana" activa', (await p.$$('[role="tab"][data-pf-tab]')).length === 4 && (await p.getAttribute('[data-pf-tab="semana"]', 'aria-selected')) === 'true');
+  ok('Pendiente ahora con etiqueta Grupo', /Pendiente ahora/.test(urg) && (/Grupo/.test(urg) || /Al día/.test(urg)) && !/🎓 Ruta/.test(urg), urg.replace(/\s+/g, ' ').slice(0, 140));
+  ok('3 pestañas (sin Plan) con "Esta semana" activa', (await p.$$('[role="tab"][data-pf-tab]')).length === 3 && !(await p.$('[data-pf-tab="plan"]')) && (await p.getAttribute('[data-pf-tab="semana"]', 'aria-selected')) === 'true');
   const col = await p.evaluate(() => { const m = document.querySelector('.pf-main').getBoundingClientRect(), s = document.querySelector('.pf-side').getBoundingClientRect(); return { lado: s.left > m.right - 1, ancho: document.body.getBoundingClientRect().width }; });
   ok('escritorio: dos columnas y página ancha', col.lado && col.ancho > 1000, JSON.stringify(col));
-  await p.click('[data-pf-tab="plan"]');
-  ok('pestaña Plan sin recargar: acordeón con solo la semana actual abierta', await p.isVisible('#ruta-plan') && (await p.$$('.ruta-sem[open]')).length === 1 && !!(await p.$('.ruta-sem.actual[open]')) && (await p.$$('.ruta-sem')).length === 5);
-  ok('cada semana muestra su avance x/y', (await p.$$eval('.ruta-sem summary .pf-avance', xs => xs.filter(x => /\d+\/\d+/.test(x.textContent)).length)) === 5);
+  ok('«Esta semana» muestra la semana del grupo', /Esta semana|Adelanta/.test(await p.textContent('[data-pf-panel="semana"]')));
   await p.click('[data-pf-tab="grupo"]');
   ok('pestaña Mi grupo muestra #grupo-profe', await p.isVisible('#grupo-profe'));
   await p.screenshot({ path: 'profe-despues-escritorio.png', fullPage: true });

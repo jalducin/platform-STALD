@@ -784,7 +784,9 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   - encabezado `.pf-hero`: semana actual, siguiente entrega, barra de la ruta del mes y 4 contadores. Los contadores
     salen de `buildGroups`;
   - `#pf-urgente`: lo atrasado y lo de hoy, de la ruta (🎓) y del grupo (👥), con el `accionItem` de siempre;
-  - pestañas: Esta semana, Plan del mes, Mi grupo y Hechas.
+  - pestañas: Esta semana, Plan del mes, Mi grupo y Hechas. Sin `plan` (cambio `profe-semanas-del-grupo`) no hay
+    pestaña Plan del mes ni barra de la ruta del mes, y una pestaña guardada que no existe cae a Esta semana.
+    El título es «🎓 Mi ruta de Inglés».
     - Son `role="tab"` y `role="tabpanel"` con `hidden`.
     - Cambiar de pestaña no redibuja la página.
     - La pestaña se guarda en `localStorage.profe_tab`.

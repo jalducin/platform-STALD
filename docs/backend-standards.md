@@ -399,7 +399,9 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
 
 **Ruta `/ingles/profe/actividades[/<id>]`** (`handleProfe` en `server/actividades.ts`, cambio `ruta-profe`):
   - solo admin (si no, 403); atiende al admin como el alumno "Profe" (estado, intentos, corrección y guardado);
-  - usa el ámbito `AMBITO_PROFE` (`contenido/profe/`); el listado agrega `plan`;
+  - usa el ámbito `AMBITO_PROFE` (`contenido/profe/`); el listado agrega `plan` (`null` sin `plan.json`);
+  - si el ámbito no tiene semana actual ni siguiente (sin ruta propia; vacío desde el 2026-10-17), `semana` y
+    `semanaSiguiente` son las del grupo (cambio `profe-semanas-del-grupo`);
   - incluye además los elementos del grupo (`actividad`, `examen`, `refuerzo` de todas las semanas subidas y los
     exámenes sueltos; sin Meet) con `grupo: true`, abiertos ya y con fecha límite el día anterior a que abran para el
     grupo (`paraProfe`, cambio `profe-actividades-grupo`). Sus intentos van a `resultados/<id>/profe.json`, que

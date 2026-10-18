@@ -19,7 +19,11 @@ const simularVoz = conVoz => {
 };
 const pagina = (b, conVoz) => abrirPagina(b, { email: 'admin@example.com', ingles: true, init: [simularVoz, conVoz], out, etiqueta: '', dialogos: 'aceptar', ruta: '/ingles.html?modo=profe', esperar: ['#ruta-plan', { state: 'attached' }] });
 (async () => {
-  const act = JSON.parse(fs.readFileSync(DATA + '/contenido/profe/actividades/profe-pron-2026-10-02.json', 'utf8'));
+  // La única actividad de pronunciación era de la ruta B1 → C1, eliminada el 2026-10-17 (openspec: profe-semanas-del-grupo).
+  // Sin ella en los datos, la prueba se omite; el motor sigue cubierto por server/pronunciacion_test.ts.
+  const archivo = DATA + '/contenido/profe/actividades/profe-pron-2026-10-02.json';
+  if (!fs.existsSync(archivo)) { console.log('OMIT sin actividad de pronunciación en los datos (ruta del profe eliminada)'); process.exit(0); }
+  const act = JSON.parse(fs.readFileSync(archivo, 'utf8'));
   const porId = Object.fromEntries(act.banco.map(e => [e.id, e]));
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await pagina(b, true);
