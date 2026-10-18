@@ -115,14 +115,19 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
       venir `avance` (entero 0–999, ‰ de la carrera recorrido; cambio `karts-salida-y-puntos`). En `POST
       /juegos/partida` de una carrera suelta en sala, los puntos los calcula el servidor (`rankingCarreraSala`, con
       `Arcade.podioCarrera`: orden de llegada; quien no terminó, después por su avance; 500, 440, 380… por lugar, 0 si
-      no terminó; sin monedas) e ignora los de la página; si falta el tiempo de alguien y no vence el límite + la
-      gracia, 409 `carrera_en_curso` (no guarda; la página reintenta).
+      no terminó; sin monedas) e ignora los de la página; si la carrera sigue abierta, 409 `carrera_en_curso` (no
+      guarda; la página reintenta). Cierre de la carrera (`cierreCarreraSala`; en Karts `KartsCopa.cierreCarrera`,
+      cambio `karts-copa-sala-4`): todas reportaron, 30 s tras la primera llegada o el límite + la gracia; un primer
+      tiempo después del cierre → 409 `carrera_cerrada`.
     - copa completa de Karts (cambio `karts-copa-en-sala`, `server/karts_copa.ts`; reglas en `juegos/karts-copa.js`, que
       importa el servidor): la sala se crea con `opciones { modo: "copa", copa }` (`copa` ∈ `KartsCopa.COPAS_SALA`: las
       copas de `KartsPistas.COPAS` por `nivel` + `mixta`; cambio `karts-copa-espacio`) (400 `copa_invalida` /
       `modo_invalido`) y cada carrera se reporta con `{ copa: { carrera 0–3, ms, monedas } }` o
-      `{ copa: { carrera, abandono: true } }`: solo la carrera abierta y ya empezada (409 `carrera_fuera_de_turno` /
-      `carrera_cerrada`), validada como una carrera suelta desde el inicio de esa carrera y con su pista. `GET /sala`,
+      `{ copa: { carrera, abandono: true } }` (o `{ copa: { carrera, ms: null, monedas, avance } }` si no terminó;
+      cambio `karts-copa-sala-4`): solo la carrera abierta y ya empezada (409 `carrera_fuera_de_turno` /
+      `carrera_cerrada`), validada como una carrera suelta desde el inicio de esa carrera y con su pista. Cambio
+      `karts-copa-sala-4`: en cada carrera cuentan todas las personas de la sala y cierra cuando todas reportan, 30 s
+      después de la primera llegada (`KartsCopa.PLAZO_MS`) o al límite + la gracia; la siguiente empieza 10 s después. `GET /sala`,
       la respuesta y Realtime traen `copa` (fase, carrera, calendario, resultados y tabla). En `POST /juegos/partida`
       de una sala de copa, los puntos se topan con los de la tabla del servidor: por el lugar final en la copa, 4 ×
       `Arcade.puntosLugar` (2000, 1760, 1520…; 0 sin puntos de copa; cambio `karts-salida-y-puntos`).

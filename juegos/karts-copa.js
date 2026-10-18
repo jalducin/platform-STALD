@@ -5,10 +5,11 @@
    (`jugador.copa` = [{ k, ms, monedas, t, abandono? }]); con eso y la hora de inicio de la sala, el calendario es el mismo
    en el servidor y en cada aparato:
    - carrera 0: empieza en `sala.inicio`;
-   - personas esperadas en la carrera k: todas en la 0; desde la 1, quienes reportaron la anterior sin abandonarla
-     (quien se desconecta suma 0 en las que faltan y, si vuelve, entra en la siguiente);
-   - la carrera k cierra cuando todas las esperadas la reportaron (a la hora del último reporte) o, si no, al vencer
-     su límite + la gracia (quien no llegó: no terminó, 0 puntos);
+   - karts-copa-sala-4: en TODAS las carreras cuentan todas las personas de la sala (antes, desde la 2.ª solo quien
+     reportó la anterior: perder un reporte te sacaba del resto de la copa);
+   - la carrera k cierra (KartsCopa.cierreCarrera) cuando todas la reportaron (a la hora del último reporte), a los
+     PLAZO_MS (30 s) de la primera llegada o, si nadie llega, al vencer su límite + la gracia (quien no llegó: NT,
+     0 puntos, ordenado por su avance);
    - la siguiente empieza INTERPODIO_MS después del cierre (tabla entre carreras con cuenta regresiva).
    Puntos por lugar como en el modo individual (15, 12, 10, 8, 6, 4, 2, 1); no terminar = 0. Los bots corren con su
    tiempo simulado de cada pista. Al final, puntos de ranking por el lugar en la tabla de la copa: 4 × Arcade.puntosLugar
@@ -19,8 +20,9 @@
   // karts-copa-espacio: las copas de sala salen de KartsPistas.COPAS en orden de dificultad (`nivel`), más la mixta.
   const ORDEN = KP.copasOrdenadas();
   const COPAS_SALA = [...ORDEN.map(c => c.id), 'mixta'];
-  const CARRERAS = 4;
+  const CARRERAS = 4; // todas las copas tienen 4 pistas; el calendario usa pistasDe(…).length (karts-copa-sala-4)
   const INTERPODIO_MS = 10000; // tabla entre carreras (incluye los 3 s de cuenta regresiva del juego)
+  const PLAZO_MS = 30000; // karts-copa-sala-4: tras la primera llegada, las demás tienen 30 s para terminar
   const TOPE_RANKING = 2000; // igual que el tope de Karts en el catálogo (server/juegos.ts)
   const NOMBRE = { ...Object.fromEntries(ORDEN.map(c => [c.id, c.nombre])), mixta: 'Copa mixta' };
   const EMOJI = { ...Object.fromEntries(ORDEN.map(c => [c.id, c.emoji])), mixta: '🎲' };
@@ -38,19 +40,32 @@
   const esCopa = sala => !!sala && sala.juego === 'karts' && !!sala.opciones && sala.opciones.modo === 'copa';
   const reporte = (j, k) => (Array.isArray(j.copa) ? j.copa.find(x => x.k === k) : null) || null;
 
-  // Calendario: [{ k, pista, inicio, limite, cierre (null = abierta), esperados }] hasta la carrera en curso.
+  // karts-copa-sala-4: cierre de una carrera de sala (copa o suelta), igual en la página y en el servidor.
+  //   inicio y limite (ms), reportes = [{ t (hora del servidor), ms (null = no terminó) }] (el primero de cada persona),
+  //   total = personas de la sala. Devuelve { cierre (null = abierta), plazo (null = nadie ha llegado) }.
+  //   Cierra: todas reportaron → hora del último reporte; si no, al vencer el plazo (1.ª llegada + 30 s); si no, al
+  //   límite + la gracia. No depende del número de vueltas.
+  function cierreCarrera(c, ahora) {
+    const reps = (c.reportes || []).filter(Boolean);
+    const llegadas = reps.filter(r => r.ms !== null && r.ms !== undefined).map(r => r.t);
+    const plazo = llegadas.length ? Math.min(...llegadas) + PLAZO_MS : null;
+    const vence = c.inicio + c.limite + A.GRACIA_SALA;
+    let cierre = null;
+    if (c.total > 0 && reps.length >= c.total) cierre = Math.max(c.inicio, ...reps.map(r => r.t));
+    if (plazo !== null && ahora >= plazo && (cierre === null || plazo < cierre)) cierre = plazo;
+    if (cierre === null && ahora >= vence) cierre = vence;
+    return { cierre, plazo };
+  }
+  // Calendario: [{ k, pista, inicio, limite, cierre (null = abierta), plazo, esperados }] hasta la carrera en curso.
+  // karts-copa-sala-4: `esperados` = todas las personas de la sala en cada carrera.
   function calendario(sala, jugadores, ahora) {
     const pistas = pistasDe(sala.opciones.copa, sala.seed), out = [];
+    const esperados = jugadores.map(j => j.id);
     let inicio = sala.inicio;
-    for (let k = 0; k < CARRERAS && inicio !== null; k++) {
+    for (let k = 0; k < pistas.length && inicio !== null; k++) {
       const pista = pistas[k], limite = A.limiteSala('karts', pista);
-      const esperados = jugadores.filter(j => k === 0 || (reporte(j, k - 1) && !reporte(j, k - 1).abandono)).map(j => j.id);
-      const vence = inicio + limite + A.GRACIA_SALA;
-      let cierre = null;
-      const reps = esperados.map(id => reporte(jugadores.find(j => j.id === id), k));
-      if (esperados.length && reps.every(Boolean)) cierre = Math.max(inicio, ...reps.map(x => x.t));
-      else if (ahora >= vence) cierre = vence;
-      out.push({ k, pista, inicio, limite, cierre, esperados });
+      const { cierre, plazo } = cierreCarrera({ inicio, limite, total: jugadores.length, reportes: jugadores.map(j => reporte(j, k)) }, ahora);
+      out.push({ k, pista, inicio, limite, cierre, plazo, esperados });
       inicio = cierre === null ? null : cierre + INTERPODIO_MS;
     }
     return out;
@@ -67,7 +82,8 @@
     const filas = participantesCopa(sala, jugadores).map(p => {
       if (p.bot) return { id: p.id, ms: A.tiempoBot('karts', c.pista, sala.seed, p.id) };
       const r = reporte(jugadores.find(j => j.id === p.id), c.k);
-      return r && !r.abandono && r.ms !== null && r.t <= c.cierre ? { id: p.id, ms: r.ms, t: r.t } : { id: p.id, ms: null };
+      if (r && !r.abandono && r.ms !== null && r.t <= c.cierre) return { id: p.id, ms: r.ms, t: r.t };
+      return r && Number.isInteger(r.avance) && r.t <= c.cierre ? { id: p.id, ms: null, avance: r.avance } : { id: p.id, ms: null }; // karts-copa-sala-4: NT por avance
     });
     return A.podioCarrera(filas).map((f, i) => f.ms === null ? { id: f.id, ms: null, lugar: null, pts: 0 } : { id: f.id, ms: f.ms, lugar: i + 1, pts: A.PUNTOS_COPA[i] || 0 });
   }
@@ -94,7 +110,7 @@
     if (ultima) {
       carrera = ultima.k;
       if (ultima.cierre === null) fase = ahora < ultima.inicio ? 'interpodio' : 'carrera';
-      else if (ultima.k === CARRERAS - 1) fase = 'final';
+      else if (ultima.k === pistasDe(sala.opciones.copa, sala.seed).length - 1) fase = 'final'; // karts-copa-sala-4: podio solo al final
       else { fase = 'interpodio'; carrera = ultima.k + 1; inicioSig = ultima.cierre + INTERPODIO_MS; }
       if (fase === 'interpodio' && ultima.cierre === null) inicioSig = ultima.inicio; // la que sigue ya tiene hora
     }
@@ -107,5 +123,6 @@
     return c && c.cierre === null && ahora >= c.inicio ? c : null;
   }
 
-  raiz.KartsCopa = { COPAS_SALA, CARRERAS, INTERPODIO_MS, TOPE_RANKING, NOMBRE, EMOJI, pistasDe, esCopa, reporte, calendario, participantesCopa, resultadoCarrera, estado, carreraAbierta };
+  raiz.KartsCopa = { COPAS_SALA, CARRERAS, INTERPODIO_MS, PLAZO_MS, cierreCarrera, // karts-copa-sala-4
+    TOPE_RANKING, NOMBRE, EMOJI, pistasDe, esCopa, reporte, calendario, participantesCopa, resultadoCarrera, estado, carreraAbierta };
 })(typeof window !== 'undefined' ? window : globalThis);

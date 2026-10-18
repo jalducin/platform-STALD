@@ -37,6 +37,7 @@ canvas{display:block}
 .mini:focus-visible,.btn:focus-visible,.op:focus-visible,.ctl:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
 #aviso{position:absolute;left:50%;top:70px;transform:translateX(-50%);background:var(--panel);padding:6px 12px;border-radius:999px;font-weight:800;font-size:14px;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:0;transition:opacity .25s;z-index:5}
 #aviso.ver{opacity:1}
+#plazo{position:absolute;left:50%;top:104px;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:5px 12px;border-radius:999px;font-weight:900;font-size:15px;white-space:nowrap;pointer-events:none;z-index:5} /* karts-copa-sala-4: «⏱️ N s para terminar» */
 #cuenta{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-size:84px;font-weight:900;color:var(--acento);text-shadow:0 4px 0 #9a3412,0 0 18px rgba(0,0,0,.6);pointer-events:none}
 /* ---- Pantallas ---- */
 .ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-content:safe center;gap:10px;background:radial-gradient(circle at 50% 0,rgba(30,41,59,.88),rgba(8,12,24,.9));text-align:center;padding:14px;overflow:auto;z-index:4}
@@ -207,6 +208,7 @@ body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espe
     </div>
     <div id="cuenta" aria-live="polite"></div>
     <output id="aviso"></output>
+    <output id="plazo" hidden></output> <!-- karts-copa-sala-4 -->
     <div id="tuto" aria-live="polite"></div>
 
     <div class="ov" id="ov-carga"><h1>🏎️ Karts Turbo</h1><p>Cargando tu avance…</p></div>
@@ -2010,6 +2012,7 @@ function paso(dt) {
   rayoTinte = Math.max(0, rayoTinte - dt);
   // Límite de sala.
   if (sala && !sala.enviado && tCarrera * 1000 >= A.limiteSala('karts', pista.id)) terminarSala(null); // karts-pistas-grandes: límite de la pista
+  vigilarPlazo(); // karts-copa-sala-4
   if (terminada) { cuentaFin -= dt; if (cuentaFin <= 0 && !sala) mostrarResultados(); }
   if (motor && AC) motor.o.frequency.value = 50 + Math.max(0, yo.vel) * 0.45 + (yo.turbo > 0 ? 40 : 0);
 }
@@ -2343,6 +2346,7 @@ addEventListener('message', ev => {
   } else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
   else if (d.tipo === 'guardado') avisoGuardado(d); // karts-puntos-copas: el error se ve y dice por qué
   else if (d.tipo === 'aviso' && typeof d.texto === 'string') avisar(d.texto.slice(0, 140), 4500); // karts-puntos-copas: errores de la sala
+  else if (d.tipo === 'plazo') fijarPlazo(d); // karts-copa-sala-4
   else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = textoGuardado(d);
 });
 // karts-copa-en-sala: tabla de la copa que manda la página mientras se espera.
@@ -2364,6 +2368,7 @@ function empezarSala(d) {
   const copa = copaDeInicio(d.copa); // karts-copa-en-sala: carrera k de la copa (null en una carrera suelta)
   if (copa && sala && sala.copa && sala.copa.k === copa.k) return; // la misma carrera otra vez: nada
   sala = { mapa: d.mapa, enviado: false, copa };
+  $('plazo').hidden = true; // karts-copa-sala-4: cada carrera empieza sin plazo
   if (!copa || copa.k === 0 || !personaje) personaje = personajeDeInicio(d); // personaje-en-salas (en la copa: el de la carrera 1, toda la copa)
   espectador = d.espectador === true; document.body.classList.toggle('espectador', espectador); $('esp-cam').hidden = !espectador; // espectador
   const humanos = humanosDeSala(d), enVivo = !!d.vivo && humanos.length > 1 && (espectador || humanos.some(h => h.id === d.yo)) && !!window.EnVivo;
@@ -2415,8 +2420,24 @@ function quitarCopaAntes(falta) {
   if (sala && sala.copaVer && falta < 3.2) { sala.copaVer = false; $('ov-copa').classList.add('hide'); }
   else if (sala && sala.copaVer) $('copa-cuenta').textContent = '⏱ Siguiente carrera en ' + Math.ceil(falta) + ' s';
 }
+// karts-copa-sala-4: la primera persona llegó a la meta: las demás tienen 30 s (la página manda la hora del aparato en
+// que se acaba, con el reloj común de la sala). Se ve «⏱️ N s para terminar»; 1.5 s antes del cierre el juego manda tu
+// «no terminó» con tu avance para que llegue al servidor antes de que cierre la carrera.
+function fijarPlazo(d) {
+  if (!sala || !Number.isFinite(d.finLocal)) return;
+  if (sala.copa ? d.carrera !== sala.copa.k : d.carrera !== null) return; // de otra carrera
+  sala.plazoFin = d.finLocal;
+}
+function vigilarPlazo() {
+  if (!sala || !sala.plazoFin || sala.enviado || espectador) return;
+  const falta = sala.plazoFin - Date.now();
+  $('plazo').hidden = false;
+  $('plazo').textContent = '⏱️ ' + Math.max(0, Math.ceil(falta / 1000)) + ' s para terminar';
+  if (falta <= 1500) terminarSala(null);
+}
 function terminarSala(ms) {
   if (sala.enviado) return;
+  $('plazo').hidden = true; // karts-copa-sala-4
   if (espectador) { // espectador: no manda `meta`; espera el podio que pinta la página
     sala.enviado = true; motorOn(false); modo = 'resultados'; $('hud').classList.add('hide');
     $('sala-titulo').textContent = '🏁 Fin de la carrera'; $('sala-txt').textContent = 'Esperando el podio…';
@@ -3188,6 +3209,7 @@ if (PRUEBA) {
       bots: karts.filter(k => k !== yo).map(k => ({ v: k.vuelta, t: k.termino, i: k.idx, vel: Math.round(k.vel) })), // karts-curvas-complejas: vueltas de los bots
       copasMenu: [...document.querySelectorAll('#menu-ops [data-ir^="copa-nueva"]')].map(b => ({ ir: b.dataset.ir, txt: b.textContent, bloqueada: b.disabled })),
       copa: sala && sala.copa ? sala.copa.k : null, copaVisible: !$('ov-copa').classList.contains('hide'), copaTexto: $('ov-copa').textContent, // karts-copa-en-sala
+      plazo: $('plazo').hidden ? null : $('plazo').textContent, // karts-copa-sala-4
       personaje: yo ? yo.personaje : personaje, masa: Personajes.masa(yo ? yo.personaje : personaje), personajes: karts.map(k => k.personaje), yoIndice: karts.indexOf(yo), estela: particulas.filter(p => p.tipo === 'estela').length,
       ...estadoVivo(), ...estadoObjetos(),
       espectador, sigue: espectador && yo ? yo.id || null : null, sigueLider, camEsp: !$('esp-cam').hidden ? $('esp-sigue').textContent : null }), // espectador
