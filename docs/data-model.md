@@ -305,7 +305,12 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     Cambio `karts-copa-reinos`: sin cambio de forma; `copas` y `copaEnCurso.copa` pueden traer `reinos` y `records`
     las 4 pistas nuevas (`giza`, `castillo`, `karnak`, `angkor`), con la misma `pistasV: 2`. La Copa Reinos Antiguos se
     abre en el modo individual con 1 podio (1.º a 3.º) en otra copa (`requiere: { podios: 1 }`, la regla de
-    `karts-copa-espacio`).
+    `karts-copa-espacio`). Cambio `karts-curvas-complejas`: versión 3 con una llave más, `pistasV: 3` y `recordsV2
+    { <pista>: ms }` (récords del trazado anterior de las pistas con `trazado: 3`, se muestran como «trazado
+    anterior»). Al abrir un progreso con `pistasV: 2`, el juego mueve a `recordsV2` solo los récords de esas pistas
+    (`KartsPistas.migrarRecords`) y guarda; copas, piezas, equipo, copa en curso y los demás récords no cambian. El
+    servidor acepta 3 formas: la anterior (5 llaves), `pistasV: 2` + `recordsV1` (pestaña vieja) y `pistasV: 3` +
+    `recordsV1` + `recordsV2`; rechaza `recordsV2` con otra versión.
   - `dragon-run` (cambio `dragon-run-misiones`): `{ totales { metros 0–10000000, monedas 0–1000000, esquivados
     0–10000000, carreras 0–1000000, castillos 0–1000000, dobles 0–10000000 }, mejorRacha 0–999, dias { ultimo:
     null | "AAAA-MM-DD", racha 0–3660, mejor 0–3660 }, diaria: null | { fecha "AAAA-MM-DD", avance [3 × 0–100000] },

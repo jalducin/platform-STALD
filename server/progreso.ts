@@ -53,7 +53,7 @@ const PISTA = /^[a-z][a-z-]{1,19}$/;
 // Récords por pista: ≤ 32 pistas, de 10 s a 15 min.
 const recordsValidos = (rec: unknown) => esObj(rec) && Object.keys(rec).length <= 32 && Object.entries(rec).every(([k, v]) => PISTA.test(k) && entero(v, 10_000, 900_000));
 const BASE_KARTS = ["copas", "records", "piezas", "equipo", "copaEnCurso"];
-export const VERSION_PISTAS_KARTS = 2; // igual que KartsPistas.VERSION_PISTAS (server/karts_pistas_test.ts)
+export const VERSION_PISTAS_KARTS = 3; // igual que KartsPistas.VERSION_PISTAS (server/karts_curvas_test.ts)
 
 // Copas ganadas: ≤ 8, cada una con su mejor lugar y puntos.
 const copasValidas = (copas: unknown) => esObj(copas) && Object.keys(copas).length <= 8 &&
@@ -70,9 +70,13 @@ const copaEnCursoValida = (cc: unknown) => cc === null || (esObj(cc) && llaves(c
 
 function validarKarts(d: unknown): boolean {
   // karts-pistas-grandes: forma versionada (+ pistasV y recordsV1 = récords archivados de las pistas chicas) o la
-  // anterior (5 llaves), que todavía puede mandar una pestaña vieja.
-  if (!esObj(d) || !(llaves(d, BASE_KARTS) || llaves(d, [...BASE_KARTS, "pistasV", "recordsV1"]))) return false;
-  if ("pistasV" in d && (d.pistasV !== VERSION_PISTAS_KARTS || !recordsValidos(d.recordsV1))) return false;
+  // anterior (5 llaves), que todavía puede mandar una pestaña vieja. karts-curvas-complejas: la versión 3 suma recordsV2
+  // (récords del trazado anterior de las pistas rediseñadas); la 2 (sin recordsV2) sigue valiendo para pestañas viejas.
+  const v2 = [...BASE_KARTS, "pistasV", "recordsV1"];
+  if (!esObj(d) || !(llaves(d, BASE_KARTS) || llaves(d, v2) || llaves(d, [...v2, "recordsV2"]))) return false;
+  if ("recordsV2" in d && (d.pistasV !== VERSION_PISTAS_KARTS || !recordsValidos(d.recordsV2))) return false;
+  if ("pistasV" in d && !("recordsV2" in d) && d.pistasV !== 2) return false;
+  if ("pistasV" in d && !recordsValidos(d.recordsV1)) return false;
   const piezas = d.piezas;
   if (!Array.isArray(piezas) || !piezas.every((x) => PIEZAS_KART.includes(String(x))) || !sinRepetir(piezas)) return false;
   return copasValidas(d.copas) && recordsValidos(d.records) && equipoValido(d.equipo, piezas) && copaEnCursoValida(d.copaEnCurso);

@@ -86,105 +86,119 @@
     // `mitad`; `muro` 0 = dos muros, 1 / -1 = solo el muro de ese lado (cámara abierta). `int` = colores del interior
     // (piso, juntas, muro, cielo de la bóveda y acento). `columnas` = columnas fijas en el camino (slalom), alternadas.
     // `adornos` = adornos sueltos en un punto. `bots` = multiplica la habilidad de los bots del modo individual.
-    { id: 'giza', nombre: 'Gran Pirámide de Giza', emoji: '🔺', sala: true, civ: 'Egipcia', desc: 'Arena del desierto y, adentro, la Gran Galería con bloques que caen.',
+    { id: 'giza', nombre: 'Gran Pirámide de Giza', emoji: '🔺', sala: true, trazado: 3, civ: 'Egipcia', desc: 'Arena del desierto y, adentro, la Gran Galería con bloques que caen.',
       mitad: 50, fuera: 'arena', lento: 0.45, agarre: 0.95, ritmoBots: 1.03,
       color: { fondo: '#e2c48a', fondo2: '#d4b277', camino: '#b39466', borde1: '#8a5a2b', borde2: '#f1e2c0', linea: '#f6ecd2' },
       tema: { cielo: ['#3b7fc4', '#9cc8e8', '#f4e4c4'], bruma: '#f0dcb8', lejos: '#c9a877', cerca: '#b88f5a', cerca2: '#9a7445', franja: '#d8b97f', sol: '#fff3c8', nubes: 0 },
       int: { piso: '#3b2d20', junta: '#20170e', muro: '#9a774c', cielo: ['#0c0805', '#24180f', '#3d2a18'], acento: '#c9a24f' },
       decor: [['palmaDatil', 30, 58, 0.45], ['rocaDesierto', 40, 24, 0.85], ['piramideChica', 96, 62, 1]],
-      adornos: [{ img: 'esfingeGrande', x: 1350, y: 620, w: 120, h: 66 }],
-      interiores: [{ nombre: 'Gran Galería', desde: [3150, 915], hasta: [800, 1050], ancho: 0.82, muro: 0 }, { nombre: 'Cámara del rey', desde: [800, 1050], hasta: [3150, 1590], ancho: 0.95, muro: 0 }],
-      mecanicas: [{ tipo: 'arena', cerca: [1950, 322], lado: 0.4, r: 40 }, { tipo: 'arena', cerca: [2450, 340], lado: -0.4, r: 40 },
-        { tipo: 'bloques', cerca: [2400, 935], lado: -0.4, r: 24, periodo: 3.8, desfase: 0 }, { tipo: 'bloques', cerca: [1950, 922], lado: 0.4, r: 24, periodo: 4.2, desfase: 1.3 },
-        { tipo: 'bloques', cerca: [1500, 945], lado: -0.4, r: 24, periodo: 3.6, desfase: 2.1 }, { tipo: 'bloques', cerca: [2300, 1555], lado: 0, r: 24, periodo: 4.4, desfase: 0.7 },
-        { tipo: 'arena', cerca: [2200, 2050], lado: 0.35, r: 40 }, { tipo: 'arena', cerca: [1500, 2100], lado: -0.35, r: 40 }, { tipo: 'arena', cerca: [350, 1300], lado: 0.3, r: 40 }],
-      vueltas: 2, puntos: [[900, 330], [1700, 320], [2450, 340], [3000, 380], [3350, 600], [3200, 900], [2600, 950], [2000, 920], [1300, 950], [800, 1050], [750, 1380], [1250, 1500], [1800, 1400], [2300, 1560], [2750, 1450], [3200, 1600], [3250, 1900], [2800, 2080], [2200, 2050], [1500, 2100], [900, 2080], [450, 1850], [350, 1300], [380, 750], [550, 420]] },
-    { id: 'castillo', nombre: 'Interior de El Castillo', emoji: '🐍', sala: true, civ: 'Maya', desc: 'La serpiente de luz, escaleras ocultas y el trono del jaguar rojo.',
+      // karts-curvas-complejas: interiores, mecánicas y adornos colocados sobre el trazado nuevo.
+      adornos: [{ img: 'esfingeGrande', x: 3078, y: 298, w: 120, h: 66 }],
+      interiores: [{ nombre: 'Cámara del rey', desde: [1020, 734], hasta: [2028, 397], ancho: 0.95, muro: 0 }, { nombre: 'Gran Galería', desde: [2028, 397], hasta: [2949, 1834], ancho: 0.82, muro: 0 }],
+      mecanicas: [{ tipo: 'arena', cerca: [180, 1647], lado: 0.4, r: 40 }, { tipo: 'arena', cerca: [1242, 1577], lado: -0.4, r: 40 },
+        { tipo: 'arena', cerca: [1520, 1831], lado: 0.35, r: 40 }, { tipo: 'arena', cerca: [1552, 983], lado: -0.35, r: 40 },
+        { tipo: 'bloques', cerca: [726, 481], lado: -0.3, r: 24, periodo: 3.8, desfase: 0 }, { tipo: 'bloques', cerca: [1563, 201], lado: 0.4, r: 24, periodo: 4.2, desfase: 1.3 },
+        { tipo: 'bloques', cerca: [2056, 791], lado: -0.4, r: 24, periodo: 3.6, desfase: 2.1 }, { tipo: 'bloques', cerca: [2579, 1337], lado: 0, r: 24, periodo: 4.4, desfase: 0.7 },
+        { tipo: 'arena', cerca: [2695, 2357], lado: 0.35, r: 40 }],
+      vueltas: 2, puntos: [[1356,2357], [1206,2357], [1056,2357], [906,2357], [755,2350], [610,2312], [476,2243], [361,2147], [270,2027], [208,1890], [180,1742], [187,1592], [229,1447], [304,1317], [408,1209], [536,1130], [679,1086], [829,1079], [976,1111], [1110,1182], [1220,1286], [1290,1418], [1256,1561], [1129,1637], [986,1599], [886,1486], [743,1451], [618,1530], [587,1674], [658,1806], [769,1908], [903,1978], [1050,2009], [1201,2001], [1343,1956], [1470,1876], [1574,1768], [1648,1637], [1690,1492], [1695,1342], [1666,1194], [1604,1058], [1512,938], [1396,843], [1262,775], [1117,738], [965,731], [818,704], [727,587], [741,440], [853,342], [1003,331], [1153,331], [1300,299], [1428,219], [1577,200], [1728,205], [1872,248], [1991,338], [2055,474], [2056,624], [2056,776], [2056,927], [2056,1079], [2091,1223], [2226,1277], [2376,1277], [2527,1290], [2615,1405], [2616,1557], [2618,1709], [2706,1824], [2856,1837], [3006,1837], [3142,1891], [3176,2035], [3171,2187], [3090,2312], [2948,2357], [2798,2357], [2648,2357], [2498,2357], [2348,2357], [2198,2357], [2048,2357], [1898,2357], [1748,2357], [1598,2357], [1448,2357]] },
+    { id: 'castillo', nombre: 'Interior de El Castillo', emoji: '🐍', sala: true, trazado: 3, civ: 'Maya', desc: 'La serpiente de luz, escaleras ocultas y el trono del jaguar rojo.',
       mitad: 50, fuera: 'pasto', lento: 0.5, agarre: 1, ritmoBots: 1.03,
       color: { fondo: '#3f7a3a', fondo2: '#356b31', camino: '#cfc4a6', borde1: '#8e2f22', borde2: '#efe6cf', linea: '#b8a986' },
       tema: { cielo: ['#e9803a', '#f6bf78', '#fbe7c2'], bruma: '#f6dcb4', lejos: '#6f8f6a', cerca: '#3c6f3a', cerca2: '#2b5429', franja: '#3a7536', sol: '#fff1c0', nubes: 1 },
       int: { piso: '#36362f', junta: '#1c1c18', muro: '#a39b82', cielo: ['#07090a', '#1a1d1a', '#2e3129'], acento: '#9e2b1f' },
       decor: [['palma', 30, 56, 0.45], ['columnaMaya', 18, 48, 0.8], ['chacmool', 34, 22, 1]],
-      fijos: [{ img: 'kukulkan', w: 30, h: 24, desde: [1000, 2552], hasta: [2500, 2520], cada: 30, lado: 1.3 }],
-      adornos: [{ img: 'tronoJaguar', x: 1660, y: 1000, w: 64, h: 50 }],
-      interiores: [{ nombre: 'Escaleras interiores', desde: [3400, 2120], hasta: [2530, 900], ancho: 0.8, muro: 0 }, { nombre: 'Templo del jaguar', desde: [2530, 900], hasta: [1950, 1480], ancho: 1, muro: 1 }],
-      mecanicas: [{ tipo: 'luz', cerca: [1700, 2560], lado: -0.35, r: 22 }, { tipo: 'luz', cerca: [2080, 2546], lado: 0.35, r: 22 }, { tipo: 'luz', cerca: [2450, 2523], lado: -0.35, r: 22 },
-        { tipo: 'losa', cerca: [3475, 1250], r: 20, periodo: 4.0 }, { tipo: 'losa', cerca: [2985, 1200], r: 20, periodo: 4.6 }, { tipo: 'losa', cerca: [2550, 1500], r: 20, periodo: 5.2 }],
-      vueltas: 2, puntos: [[800, 2550], [1700, 2560], [2500, 2520], [3150, 2420], [3450, 2000], [3480, 1450], [3460, 950], [3400, 680], [3230, 570], [3060, 680], [3000, 950], [2980, 1400], [3000, 1850], [2980, 2060], [2780, 2180], [2580, 2060], [2550, 1850], [2550, 1300], [2530, 900], [2300, 520], [1750, 450], [1250, 600], [1150, 1100], [1450, 1500], [1950, 1480], [2150, 1800], [1850, 2100], [1100, 2080], [550, 1950], [380, 2250], [520, 2500]] },
-    { id: 'karnak', nombre: 'Templo de Karnak', emoji: '🏛️', sala: true, civ: 'Egipcia', desc: 'Avenida de esfinges y slalom entre las columnas gigantes.',
+      // karts-curvas-complejas: interiores, mecánicas y adornos colocados sobre el trazado nuevo.
+      fijos: [{ img: 'kukulkan', w: 30, h: 24, desde: [3945, 197], hasta: [3457, 197], cada: 30, lado: 1.3 }],
+      adornos: [{ img: 'tronoJaguar', x: 4071, y: 2044, w: 64, h: 50 }],
+      interiores: [{ nombre: 'Templo del jaguar', desde: [3433, 197], hasta: [2650, 970], ancho: 1, muro: 0 }, { nombre: 'Sala de las serpientes', desde: [2650, 970], hasta: [2007, 783], ancho: 1, muro: 0 }, { nombre: 'Cámara del trono', desde: [2007, 783], hasta: [1370, 257], ancho: 1, muro: 0 }, { nombre: 'Salida del templo', desde: [1370, 257], hasta: [800, 1030], ancho: 1, muro: 0 }, { nombre: 'Escaleras interiores', desde: [2693, 2112], hasta: [3437, 1515], ancho: 0.8, muro: 0 }, { nombre: 'Escalera de la cima', desde: [3437, 1515], hasta: [4192, 718], ancho: 0.8, muro: 0 }],
+      mecanicas: [{ tipo: 'luz', cerca: [2565, 2110], lado: -0.35, r: 22 }, { tipo: 'luz', cerca: [3769, 200], lado: 0.35, r: 22 },
+        { tipo: 'luz', cerca: [804, 631], lado: -0.35, r: 22 }, { tipo: 'losa', cerca: [3213, 1509], r: 20, periodo: 4 },
+        { tipo: 'losa', cerca: [3204, 601], r: 20, periodo: 4.6 }, { tipo: 'losa', cerca: [1701, 1022], r: 20, periodo: 5.2 }],
+      vueltas: 2, puntos: [[1254,2110], [1404,2110], [1554,2110], [1704,2110], [1854,2110], [2005,2116], [2141,2180], [2290,2182], [2425,2117], [2576,2110], [2726,2110], [2872,2080], [2932,1948], [2932,1796], [2933,1644], [3016,1525], [3166,1510], [3316,1510], [3468,1508], [3581,1416], [3592,1266], [3592,1116], [3622,971], [3754,910], [3904,910], [4056,909], [4176,827], [4192,678], [4192,527], [4192,376], [4142,238], [4000,200], [3848,200], [3696,200], [3544,200], [3392,200], [3251,241], [3204,380], [3204,530], [3204,680], [3204,830], [3165,972], [3026,1020], [2876,1020], [2725,1017], [2614,923], [2604,772], [2604,622], [2593,472], [2478,382], [2326,380], [2176,380], [2040,433], [2004,576], [2004,726], [2004,878], [1927,1001], [1778,1020], [1628,1020], [1480,1000], [1405,876], [1404,724], [1404,574], [1404,424], [1385,276], [1260,200], [1108,200], [956,200], [828,269], [804,416], [804,566], [804,716], [804,866], [803,1018], [727,1143], [580,1170], [430,1170], [281,1185], [180,1293], [190,1440], [305,1533], [456,1540], [606,1540], [747,1583], [804,1718], [804,1868], [816,2018], [931,2108], [1082,2110]] },
+    { id: 'karnak', nombre: 'Templo de Karnak', emoji: '🏛️', sala: true, trazado: 3, civ: 'Egipcia', desc: 'Avenida de esfinges y slalom entre las columnas gigantes.',
       mitad: 52, fuera: 'arena', lento: 0.45, agarre: 0.95, ritmoBots: 1.03,
       color: { fondo: '#d9b77a', fondo2: '#cba869', camino: '#c4a878', borde1: '#2f5f8a', borde2: '#efe2c2', linea: '#f3e6c9' },
       tema: { cielo: ['#2f78c0', '#8fc3e6', '#f6e6c6'], bruma: '#f1dfbd', lejos: '#c4a67a', cerca: '#a98656', cerca2: '#8a6a40', franja: '#cfae74', sol: '#fff4cc', nubes: 0 },
       int: { piso: '#3d3022', junta: '#1f170f', muro: '#b39066', cielo: ['#0a0806', '#1f1710', '#35271a'], acento: '#2f5f8a' },
       decor: [['palmaDatil', 30, 58, 0.45], ['obelisco', 16, 80, 0.75], ['estatuaFaraon', 40, 72, 1]],
-      fijos: [{ img: 'esfinge', w: 34, h: 26, desde: [400, 1100], hasta: [430, 2300], cada: 14, lado: 1.3 }],
-      lago: { x: 1700, y: 1060, rx: 300, ry: 330 },
-      interiores: [{ nombre: 'Sala hipóstila', desde: [1250, 2715], hasta: [2750, 2690], ancho: 1, muro: 0 }, { nombre: 'Santuario', desde: [3200, 2580], hasta: [3330, 780], ancho: 0.84, muro: 0 }],
-      columnas: [{ desde: [1420, 2718], hasta: [2620, 2698], cada: 15, lado: 0.45 }],
-      mecanicas: [{ tipo: 'losa', cerca: [3420, 1900], r: 20, periodo: 4.2 }, { tipo: 'losa', cerca: [3420, 1380], r: 20, periodo: 4.8 }],
-      vueltas: 2, puntos: [[400, 1000], [400, 1700], [430, 2300], [700, 2650], [1300, 2720], [2000, 2700], [2600, 2700], [3150, 2600], [3480, 2200], [3350, 1650], [3500, 1100], [3200, 520], [2700, 400], [2350, 600], [2150, 1300], [1700, 1850], [1250, 1350], [1150, 700], [900, 420], [550, 500]] },
-    { id: 'angkor', nombre: 'Galerías de Angkor Wat', emoji: '🛕', sala: true, civ: 'Jemer', desc: 'Calzada sobre el foso, galerías con roca rodante y selva.',
+      // karts-curvas-complejas: interiores, mecánicas y adornos colocados sobre el trazado nuevo.
+      fijos: [{ img: 'esfinge', w: 34, h: 26, desde: [179, 2650], hasta: [180, 970], cada: 14, lado: 1.3 }],
+      lago: { x: 2500, y: 689, rx: 230, ry: 230 },
+      interiores: [{ nombre: 'Santuario', desde: [1855, 883], hasta: [1714, 1533], ancho: 0.84, muro: 0 }, { nombre: 'Capilla de la barca', desde: [1714, 1533], hasta: [2520, 2494], ancho: 0.84, muro: 0 }, { nombre: 'Sala hipóstila', desde: [2422, 2944], hasta: [486, 2945], ancho: 1, muro: 0 }],
+      columnas: [{ desde: [2294, 2944], hasta: [614, 2944], cada: 15, lado: 0.45 }],
+      mecanicas: [{ tipo: 'losa', cerca: [1641, 869], r: 20, periodo: 4.2 }, { tipo: 'losa', cerca: [1214, 1196], r: 20, periodo: 4.8 }],
+      vueltas: 2, puntos: [[700,489], [850,489], [1000,489], [1150,489], [1300,489], [1443,446], [1591,425], [1731,479], [1880,472], [1989,370], [2104,271], [2243,212], [2394,200], [2541,235], [2670,315], [2768,430], [2825,571], [2835,721], [2798,868], [2717,996], [2600,1092], [2459,1148], [2308,1156], [2162,1117], [2035,1035], [1935,921], [1796,869], [1646,869], [1495,880], [1357,936], [1250,1041], [1215,1186], [1219,1337], [1316,1446], [1467,1454], [1619,1458], [1727,1555], [1735,1706], [1739,1857], [1836,1966], [1987,1974], [2139,1978], [2247,2075], [2255,2226], [2259,2377], [2356,2486], [2507,2494], [2659,2498], [2767,2595], [2775,2746], [2719,2882], [2585,2944], [2433,2944], [2281,2944], [2129,2944], [1977,2944], [1825,2944], [1674,2944], [1522,2944], [1370,2944], [1218,2944], [1066,2944], [914,2944], [762,2944], [610,2944], [458,2944], [308,2930], [200,2830], [180,2682], [180,2530], [180,2378], [180,2226], [180,2074], [180,1922], [180,1770], [180,1618], [180,1466], [180,1314], [180,1162], [180,1010], [180,858], [180,707], [232,567], [360,492], [512,489]] },
+    { id: 'angkor', nombre: 'Galerías de Angkor Wat', emoji: '🛕', sala: true, trazado: 3, civ: 'Jemer', desc: 'Calzada sobre el foso, galerías con roca rodante y selva.',
       mitad: 50, fuera: 'selva', lento: 0.5, agarre: 1, ritmoBots: 1.03,
       color: { fondo: '#2f6a2f', fondo2: '#275b27', camino: '#8d8a7c', borde1: '#5b6b3a', borde2: '#c9c4b0', linea: '#c9c4b0' },
       tema: { cielo: ['#3a7fb5', '#9fcbe0', '#e9f1e6'], bruma: '#d8e6dc', lejos: '#5f7f6a', cerca: '#2e5f34', cerca2: '#1e4824', franja: '#2f6d33', sol: '#fff8dc', nubes: 1 },
       int: { piso: '#34342e', junta: '#1a1a16', muro: '#7f7b6a', cielo: ['#08090a', '#1b1d1b', '#2f322b'], acento: '#6b7a4a' },
       decor: [['arbolRaices', 50, 70, 0.45], ['helecho', 28, 22, 0.8], ['torreAngkor', 64, 96, 1]],
-      fijos: [{ img: 'naga', w: 26, h: 20, desde: [1900, 2330], hasta: [1900, 1960], cada: 12, lado: 1.25 }, { img: 'pilar', w: 14, h: 46, desde: [1500, 1705], hasta: [2900, 1720], cada: 9, lado: 1.0, solo: 1 }],
-      adornos: [{ img: 'torreAngkor', x: 1900, y: 1060, w: 110, h: 170 }, { img: 'torreAngkor', x: 1350, y: 800, w: 70, h: 110 }, { img: 'torreAngkor', x: 2450, y: 800, w: 70, h: 110 }, { img: 'torreAngkor', x: 1350, y: 1330, w: 70, h: 110 }, { img: 'torreAngkor', x: 2450, y: 1330, w: 70, h: 110 }],
       foso: true,
-      interiores: [{ nombre: 'Galería de los bajorrelieves', desde: [1600, 1705], hasta: [2850, 1720], ancho: 0.9, muro: -1, techo: false }],
-      mecanicas: [{ tipo: 'bloques', cerca: [410, 1200], lado: 0.3, r: 24, periodo: 3.8, desfase: 0.4 }, { tipo: 'roca', cerca: [1700, 422], r: 20, periodo: 3.4, amplitud: 0.5 },
-        { tipo: 'roca', cerca: [2600, 425], r: 20, periodo: 3.9, amplitud: 0.5 }, { tipo: 'bloques', cerca: [3450, 1000], lado: -0.3, r: 24, periodo: 4.1, desfase: 1.6 },
-        { tipo: 'lodo', cerca: [3400, 2300], lado: 0.3, r: 40 }, { tipo: 'lodo', cerca: [2600, 2620], lado: -0.3, r: 40 }],
-      vueltas: 2, puntos: [[1900, 2350], [1900, 1950], [1700, 1700], [1100, 1720], [600, 1700], [420, 1450], [400, 900], [600, 450], [1300, 420], [2200, 430], [3000, 420], [3400, 650], [3450, 1300], [3250, 1700], [2750, 1720], [2450, 2050], [2850, 2300], [3400, 2300], [3500, 2650], [3050, 2780], [2600, 2620], [2200, 2780], [1930, 2650]] },
+      // karts-curvas-complejas: interiores, mecánicas y adornos colocados sobre el trazado nuevo.
+      fijos: [{ img: 'naga', w: 26, h: 20, desde: [179, 1760], hasta: [179, 496], cada: 12, lado: 1.25 }, { img: 'pilar', w: 14, h: 46, desde: [2182, 1086], hasta: [1448, 1657], cada: 9, lado: 1, solo: 1 }],
+      adornos: [{ img: 'torreAngkor', x: 728, y: 1549, w: 110, h: 170 }, { img: 'torreAngkor', x: 728, y: 749, w: 70, h: 110 }, { img: 'torreAngkor', x: 578, y: 1149, w: 70, h: 110 }, { img: 'torreAngkor', x: 1028, y: 1849, w: 70, h: 110 }, { img: 'torreAngkor', x: 2528, y: 2249, w: 70, h: 110 }],
+      interiores: [{ nombre: 'Galerías concéntricas', desde: [2368, 306], hasta: [2296, 1425], ancho: 0.9, muro: 0 }, { nombre: 'Patio del templo', desde: [2296, 1425], hasta: [1959, 1015], ancho: 0.9, muro: 0 }, { nombre: 'Galería de los bajorrelieves', desde: [2056, 1094], hasta: [1671, 1780], ancho: 0.9, muro: -1, techo: false }],
+      mecanicas: [{ tipo: 'bloques', cerca: [2675, 830], lado: 0.3, r: 24, periodo: 3.8, desfase: 0.4 }, { tipo: 'roca', cerca: [2501, 1289], r: 20, periodo: 3.4, amplitud: 0.5 },
+        { tipo: 'roca', cerca: [1560, 602], r: 20, periodo: 3.9, amplitud: 0.5 }, { tipo: 'bloques', cerca: [1213, 1097], lado: -0.3, r: 24, periodo: 4.1, desfase: 1.6 },
+        { tipo: 'lodo', cerca: [1673, 2256], lado: 0.3, r: 40 }, { tipo: 'lodo', cerca: [180, 1504], lado: -0.3, r: 40 }],
+      vueltas: 2, puntos: [[1500,200], [1650,200], [1800,200], [1950,200], [2101,207], [2246,245], [2380,314], [2495,410], [2586,530], [2647,668], [2674,816], [2666,966], [2622,1110], [2545,1239], [2438,1344], [2308,1420], [2163,1460], [2012,1460], [1867,1421], [1738,1342], [1636,1232], [1589,1092], [1654,959], [1794,913], [1925,981], [2031,1086], [2178,1088], [2283,984], [2282,837], [2195,714], [2076,622], [1936,566], [1786,549], [1638,573], [1500,634], [1383,728], [1293,848], [1234,986], [1211,1135], [1224,1285], [1271,1428], [1350,1556], [1455,1663], [1582,1744], [1723,1795], [1872,1814], [2024,1818], [2148,1897], [2184,2041], [2112,2170], [1970,2214], [1820,2214], [1678,2253], [1576,2362], [1430,2373], [1323,2270], [1188,2214], [1060,2284], [947,2378], [803,2352], [702,2242], [557,2213], [410,2182], [280,2105], [193,1984], [180,1835], [180,1683], [180,1531], [180,1379], [180,1227], [180,1075], [180,923], [180,772], [180,620], [180,468], [204,320], [313,218], [462,200], [612,200], [762,200], [912,200], [1062,200], [1212,200], [1362,200]] },
     // ---------- karts-copa-espacio: pistas espaciales (Copa del Espacio, carrera rápida y salas) ----------
     // `espacio: true` = fuera del camino hay vacío: con barandal (postes de neón) se raspa; en los tramos `abierto` se
     // cae y el dron de rescate te regresa. `ritmoBots` multiplica la habilidad de los bots (y divide el tiempo de los
     // fantasmas de sala). Mecánicas por fracción de la vuelta: `f` (punto) o `tramo: [f0, f1]`.
-    { id: 'orbital', nombre: 'Estación Orbital Quetzal', emoji: '🛰️', sala: true, espacio: true, ritmoBots: 1.04, desc: 'Pasillos y hangares. Las compuertas abren y cierran: pasa por el centro.',
+    { id: 'orbital', nombre: 'Estación Orbital Quetzal', emoji: '🛰️', sala: true, trazado: 3, espacio: true, ritmoBots: 1.04, desc: 'Pasillos y hangares. Las compuertas abren y cierran: pasa por el centro.',
       mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 1,
       color: { fondo: '#03050c', fondo2: '#0b1a3a', camino: '#3b4763', borde1: '#22d3ee', borde2: '#fbbf24', linea: '#a5f3fc' },
       tema: { cielo: ['#01030a', '#081634', '#1a3566'], bruma: '#13284f', lejos: '#1d3a6b', cerca: '#0e1d3a', cerca2: '#091327', franja: '#0b1a3a', sol: null, nubes: 0, espacio: 'orbital' },
       decor: [['espPanel', 50, 28, 0.45], ['espAntena', 18, 56, 0.8], ['espModulo', 96, 60, 1]],
-      mecanicas: [{ tipo: 'turbo', f: 0.07, lado: -0.35, r: 22 }, { tipo: 'turbo', f: 0.095, lado: 0.35, r: 22 }, { tipo: 'compuerta', f: 0.12, periodo: 3.2 },
-        { tipo: 'abierto', tramo: [0.22, 0.31] }, { tipo: 'antiturbo', f: 0.36, lado: 0.4, r: 26 }, { tipo: 'compuerta', f: 0.52, periodo: 3.6 },
-        { tipo: 'gravedad', tramo: [0.55, 0.63] }, { tipo: 'antiturbo', f: 0.66, lado: -0.4, r: 26 }, { tipo: 'turbo', f: 0.7, lado: -0.35, r: 22 },
-        { tipo: 'turbo', f: 0.73, lado: 0.35, r: 22 }, { tipo: 'compuerta', f: 0.76, periodo: 4 }, { tipo: 'abierto', tramo: [0.8, 0.86] }],
-      vueltas: 2, puntos: [[870, 329], [1630, 319], [2390, 329], [3150, 338], [3578, 604], [3625, 1203], [3293, 1535], [2770, 1440], [2343, 1108], [1868, 1013], [1440, 1250], [1630, 1678], [2248, 1820], [2865, 1963], [3150, 2390], [2580, 2656], [1630, 2580], [775, 2533], [376, 2105], [443, 1440], [775, 1108], [585, 680]] },
-    { id: 'anillos', nombre: 'Anillos de Saturno', emoji: '🪐', sala: true, espacio: true, ritmoBots: 1.05, desc: 'Hielo de los anillos que resbala y rocas que cruzan el camino.',
+      // karts-curvas-complejas: escalón de pasillos (0.11–0.27), greca del laberinto (0.39–0.74) y horquilla (0.86–0.90).
+      mecanicas: [{ tipo: 'compuerta', f: 0.147, periodo: 3.2 }, { tipo: 'compuerta', f: 0.242, periodo: 3.6 }, { tipo: 'abierto', tramo: [0.29, 0.345] },
+        { tipo: 'turbo', f: 0.358, lado: -0.35, r: 22 }, { tipo: 'turbo', f: 0.372, lado: 0.35, r: 22 }, { tipo: 'antiturbo', f: 0.43, lado: 0.4, r: 26 },
+        { tipo: 'gravedad', tramo: [0.51, 0.61] }, { tipo: 'antiturbo', f: 0.649, lado: -0.4, r: 26 }, { tipo: 'compuerta', f: 0.696, periodo: 4 },
+        { tipo: 'turbo', f: 0.79, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.85, 0.91] }],
+      vueltas: 2, puntos: [[1242,272], [1392,272], [1542,272], [1692,272], [1842,272], [1993,266], [2129,202], [2278,200], [2413,265], [2564,272], [2714,272], [2859,301], [2920,434], [2920,586], [2920,736], [2927,887], [3032,987], [3184,992], [3334,992], [3486,996], [3592,1095], [3600,1246], [3600,1396], [3600,1546], [3657,1680], [3802,1712], [3952,1712], [4103,1721], [4197,1832], [4200,1982], [4153,2121], [4012,2162], [3860,2162], [3708,2162], [3556,2162], [3404,2162], [3258,2136], [3192,2006], [3192,1856], [3192,1706], [3192,1556], [3185,1405], [3078,1306], [2926,1302], [2776,1302], [2636,1346], [2592,1486], [2592,1636], [2592,1786], [2557,1929], [2420,1982], [2270,1982], [2118,1980], [2004,1890], [1992,1740], [1992,1590], [1992,1438], [1910,1318], [1760,1302], [1610,1302], [1463,1325], [1392,1452], [1392,1602], [1392,1752], [1392,1902], [1387,2053], [1284,2156], [1132,2162], [980,2162], [839,2121], [792,1982], [792,1832], [792,1682], [792,1532], [792,1382], [744,1243], [606,1192], [456,1192], [305,1188], [188,1098], [180,951], [287,851], [438,842], [588,842], [731,803], [792,670], [792,520], [802,369], [913,275], [1064,272]] },
+    { id: 'anillos', nombre: 'Anillos de Saturno', emoji: '🪐', sala: true, trazado: 3, espacio: true, ritmoBots: 1.05, desc: 'Hielo de los anillos que resbala y rocas que cruzan el camino.',
       mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 0.7,
       color: { fondo: '#04060e', fondo2: '#1c2440', camino: '#5b7594', borde1: '#7dd3fc', borde2: '#fbbf24', linea: '#e0f2fe' },
       tema: { cielo: ['#02030a', '#141a33', '#3a2f3f'], bruma: '#2a2438', lejos: '#3a3350', cerca: '#1a1830', cerca2: '#100f22', franja: '#1c2440', sol: '#fff7e0', nubes: 0, espacio: 'anillos' },
       decor: [['espHielo', 30, 26, 0.5], ['espRoca', 34, 26, 0.85], ['espLunita', 80, 80, 1]],
-      mecanicas: [{ tipo: 'turbo', f: 0.07, lado: -0.3, r: 22 }, { tipo: 'asteroide', f: 0.1, periodo: 4.4, ancho: 120 }, { tipo: 'abierto', tramo: [0.16, 0.3] },
-        { tipo: 'asteroide', f: 0.47, periodo: 5, ancho: 120 }, { tipo: 'abierto', tramo: [0.56, 0.68] }, { tipo: 'turbo', f: 0.565, lado: 0, r: 22 },
-        { tipo: 'brecha', f: 0.6 }, { tipo: 'asteroide', f: 0.66, periodo: 4.7, ancho: 120 }, { tipo: 'abierto', tramo: [0.71, 0.79] }],
-      vueltas: 2, puntos: [[937, 336], [1756, 327], [2575, 355], [3303, 482], [3622, 1028], [3394, 1665], [2757, 1756], [2302, 1392], [1847, 1529], [2075, 2056], [2666, 2120], [3076, 2302], [2985, 2648], [2211, 2621], [1392, 2530], [664, 2393], [346, 1847], [664, 1392], [1210, 1392], [1347, 983], [892, 864], [464, 773], [418, 500]] },
-    { id: 'cinturon', nombre: 'Cinturón de Asteroides', emoji: '☄️', sala: true, espacio: true, ritmoBots: 1.06, desc: 'Asteroides en órbita, huecos con rampa y plataformas que se mueven.',
+      // karts-curvas-complejas: espiral doble de los anillos (0.04–0.57), horquilla (0.58–0.63), curva que se cierra (0.70–0.74),
+      // chicana (0.75–0.80) y serpentina con 2 horquillas (0.80–0.96).
+      mecanicas: [{ tipo: 'turbo', f: 0.07, lado: -0.3, r: 22 }, { tipo: 'asteroide', f: 0.09, periodo: 4.4, ancho: 120 }, { tipo: 'abierto', tramo: [0.1, 0.2] },
+        { tipo: 'turbo', f: 0.385, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.4, 0.5] }, { tipo: 'asteroide', f: 0.52, periodo: 5, ancho: 120 },
+        { tipo: 'brecha', f: 0.635 }, { tipo: 'asteroide', f: 0.745, periodo: 4.7, ancho: 120 }, { tipo: 'abierto', tramo: [0.84, 0.88] }],
+      vueltas: 2, puntos: [[1443,200], [1293,200], [1143,200], [993,200], [842,206], [696,240], [558,300], [435,387], [332,496], [252,624], [201,765], [180,915], [192,1065], [236,1209], [311,1340], [414,1450], [540,1534], [682,1585], [832,1600], [982,1576], [1120,1515], [1237,1420], [1324,1296], [1372,1153], [1370,1005], [1274,893], [1126,884], [1017,984], [987,1132], [884,1238], [737,1239], [633,1134], [626,985], [670,842], [754,716], [869,618], [1006,554], [1155,528], [1306,540], [1449,588], [1576,669], [1681,778], [1759,907], [1805,1050], [1820,1200], [1801,1350], [1752,1492], [1675,1622], [1573,1732], [1451,1821], [1315,1884], [1169,1919], [1018,1927], [869,1947], [769,2056], [771,2204], [875,2310], [1024,2327], [1174,2327], [1325,2335], [1458,2405], [1596,2464], [1747,2467], [1898,2465], [2044,2431], [2172,2351], [2254,2226], [2263,2076], [2263,1924], [2233,1778], [2170,1643], [2214,1502], [2263,1362], [2268,1211], [2360,1097], [2509,1080], [2659,1080], [2799,1034], [2853,898], [2780,771], [2635,740], [2485,740], [2339,712], [2264,586], [2263,434], [2221,291], [2098,207], [1947,200], [1797,200], [1647,200]] },
+    { id: 'cinturon', nombre: 'Cinturón de Asteroides', emoji: '☄️', sala: true, trazado: 3, espacio: true, ritmoBots: 1.06, desc: 'Asteroides en órbita, huecos con rampa y plataformas que se mueven.',
       mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 0.95,
       color: { fondo: '#05040a', fondo2: '#2a1a14', camino: '#4c4a5a', borde1: '#fb923c', borde2: '#fde047', linea: '#fed7aa' },
       tema: { cielo: ['#020106', '#160c18', '#3b1d1a'], bruma: '#2b1716', lejos: '#3a2420', cerca: '#1c1214', cerca2: '#120b0d', franja: '#2a1a14', sol: '#fff1c2', nubes: 0, espacio: 'cinturon' },
       decor: [['espRoca', 36, 28, 0.55], ['espRocaGrande', 74, 56, 0.85], ['espSatelite', 46, 36, 1]],
-      mecanicas: [{ tipo: 'turbo', f: 0.065, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.07, 0.18] }, { tipo: 'brecha', f: 0.08 }, { tipo: 'brecha', f: 0.15 },
-        { tipo: 'asteroide', f: 0.25, periodo: 4.8, ancho: 120 }, { tipo: 'abierto', tramo: [0.29, 0.37] }, { tipo: 'turbo', f: 0.305, lado: 0, r: 22 }, { tipo: 'brecha', f: 0.33 },
-        { tipo: 'antiturbo', f: 0.44, lado: 0.4, r: 26 }, { tipo: 'abierto', tramo: [0.48, 0.56] }, { tipo: 'plataforma', f: 0.52, periodo: 5.5, amp: 0.65, ancho: 0.5 },
-        { tipo: 'asteroide', f: 0.7, periodo: 5.4, ancho: 120 }, { tipo: 'antiturbo', f: 0.8, lado: -0.4, r: 26 }, { tipo: 'abierto', tramo: [0.86, 0.93] },
-        { tipo: 'plataforma', f: 0.9, periodo: 6, amp: 0.6, ancho: 0.5 }],
-      vueltas: 2, puntos: [[979, 329], [1852, 319], [2725, 339], [3453, 446], [3792, 1076], [3695, 1852], [3501, 2483], [2919, 2677], [2531, 2289], [2386, 1658], [1998, 1416], [1610, 1658], [1464, 2289], [1076, 2677], [543, 2483], [349, 1852], [688, 1416], [446, 931], [494, 591]] },
-    { id: 'nebulosa', nombre: 'Nebulosa Esmeralda', emoji: '🌌', sala: true, espacio: true, ritmoBots: 1.08, desc: 'Portales, gravedad baja y plataformas: la pista más difícil.',
+      // karts-curvas-complejas: sacacorchos de 277° alrededor del asteroide (0.08–0.25), curva que se cierra (0.29–0.33),
+      // laberinto en escalera (0.34–0.50), recta de los huecos (0.56–0.66), chicana (0.66–0.71) y horquilla (0.86–0.91).
+      mecanicas: [{ tipo: 'abierto', tramo: [0.12, 0.24] }, { tipo: 'asteroide', f: 0.18, periodo: 4.8, ancho: 120 }, { tipo: 'antiturbo', f: 0.287, lado: 0.4, r: 26 },
+        { tipo: 'asteroide', f: 0.45, periodo: 5.4, ancho: 120 }, { tipo: 'turbo', f: 0.572, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.585, 0.655] },
+        { tipo: 'brecha', f: 0.6 }, { tipo: 'plataforma', f: 0.635, periodo: 5.5, amp: 0.65, ancho: 0.5 }, { tipo: 'antiturbo', f: 0.685, lado: -0.4, r: 26 },
+        { tipo: 'turbo', f: 0.752, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.765, 0.805] }, { tipo: 'brecha', f: 0.775 }],
+      vueltas: 2, puntos: [[1292,446], [1442,446], [1592,446], [1742,446], [1892,446], [2043,441], [2184,386], [2333,396], [2474,445], [2611,393], [2714,283], [2850,216], [3000,200], [3146,239], [3269,327], [3353,452], [3387,600], [3366,749], [3294,882], [3180,981], [3038,1033], [2886,1031], [2746,976], [2634,874], [2512,793], [2360,791], [2210,791], [2061,809], [1926,874], [1829,988], [1807,1135], [1819,1285], [1933,1375], [2085,1377], [2236,1388], [2325,1503], [2327,1655], [2339,1805], [2453,1895], [2605,1897], [2756,1908], [2845,2023], [2847,2175], [2859,2325], [2973,2415], [3125,2417], [3276,2428], [3365,2543], [3365,2694], [3292,2823], [3151,2867], [2999,2867], [2847,2867], [2695,2867], [2543,2867], [2392,2867], [2240,2867], [2088,2867], [1936,2867], [1784,2867], [1633,2876], [1498,2941], [1349,2933], [1213,2870], [1062,2867], [911,2857], [797,2764], [772,2617], [772,2465], [772,2313], [772,2161], [772,2009], [772,1858], [772,1706], [772,1554], [704,1425], [558,1396], [408,1396], [262,1367], [180,1244], [214,1100], [342,1027], [494,1026], [646,1022], [759,930], [772,780], [775,628], [849,499], [988,446], [1140,446]] },
+    { id: 'nebulosa', nombre: 'Nebulosa Esmeralda', emoji: '🌌', sala: true, trazado: 3, espacio: true, ritmoBots: 1.08, desc: 'Portales, gravedad baja y plataformas: la pista más difícil.',
       mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 0.9,
       color: { fondo: '#03070a', fondo2: '#0c2a24', camino: '#334658', borde1: '#34d399', borde2: '#f472b6', linea: '#bbf7d0' },
       tema: { cielo: ['#020509', '#0b2230', '#174a3c'], bruma: '#123a33', lejos: '#1b4a40', cerca: '#0c241f', cerca2: '#071713', franja: '#0c2a24', sol: null, nubes: 0, espacio: 'nebulosa' },
       decor: [['espCristal', 22, 40, 0.5], ['espRoca', 30, 24, 0.8], ['espMedusa', 40, 56, 1]],
-      mecanicas: [{ tipo: 'turbo', f: 0.065, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.07, 0.12] }, { tipo: 'abierto', tramo: [0.22, 0.31] },
-        { tipo: 'portal', f: 0.215, salida: 0.3, lado: -0.55, r: 24 }, { tipo: 'gravedad', tramo: [0.36, 0.45] }, { tipo: 'antiturbo', f: 0.48, lado: 0.4, r: 26 },
-        { tipo: 'abierto', tramo: [0.55, 0.69] }, { tipo: 'gravedad', tramo: [0.55, 0.7] }, { tipo: 'turbo', f: 0.555, lado: 0, r: 22 }, { tipo: 'brecha', f: 0.58 },
-        { tipo: 'plataforma', f: 0.62, periodo: 5, amp: 0.65, ancho: 0.5 }, { tipo: 'antiturbo', f: 0.66, lado: -0.4, r: 26 }, { tipo: 'abierto', tramo: [0.72, 0.82] },
-        { tipo: 'portal', f: 0.74, salida: 0.8, lado: 0.55, r: 24 }, { tipo: 'plataforma', f: 0.84, periodo: 5.6, amp: 0.65, ancho: 0.5 }],
-      vueltas: 2, puntos: [[905, 337], [1695, 319], [2439, 356], [2904, 672], [2625, 1137], [2067, 1184], [1788, 1602], [2253, 1974], [2904, 1788], [3164, 1379], [3416, 1221], [3648, 1509], [3722, 1881], [3462, 2439], [2625, 2579], [1695, 2532], [858, 2439], [393, 1974], [719, 1556], [1277, 1277], [1184, 951], [812, 905], [467, 802], [421, 514]] },
+      // karts-curvas-complejas: remolino en espiral doble (0.04–0.49) con portal que corta al centro, horquilla (0.51–0.56),
+      // serpiente de S abierta (0.56–0.67), curva que se cierra (0.68–0.72), recta de los huecos (0.72–0.77) y horquilla doble.
+      mecanicas: [{ tipo: 'abierto', tramo: [0.07, 0.13] }, { tipo: 'gravedad', tramo: [0.1, 0.19] }, { tipo: 'portal', f: 0.2, salida: 0.29, lado: -0.55, r: 24 },
+        { tipo: 'abierto', tramo: [0.31, 0.36] }, { tipo: 'gravedad', tramo: [0.37, 0.45] }, { tipo: 'antiturbo', f: 0.48, lado: 0.4, r: 26 },
+        { tipo: 'abierto', tramo: [0.565, 0.66] }, { tipo: 'antiturbo', f: 0.6, lado: -0.4, r: 26 }, { tipo: 'turbo', f: 0.725, lado: 0, r: 22 },
+        { tipo: 'abierto', tramo: [0.73, 0.775] }, { tipo: 'brecha', f: 0.735 }, { tipo: 'plataforma', f: 0.756, periodo: 5, amp: 0.65, ancho: 0.5 },
+        { tipo: 'abierto', tramo: [0.8, 0.86] }, { tipo: 'portal', f: 0.79, salida: 0.86, lado: 0.55, r: 24 }],
+      vueltas: 2, puntos: [[2075,200], [2225,200], [2375,200], [2525,200], [2677,207], [2824,242], [2961,307], [3081,399], [3180,514], [3251,648], [3291,792], [3298,942], [3271,1089], [3211,1227], [3119,1346], [3001,1439], [2864,1501], [2715,1525], [2565,1509], [2424,1452], [2306,1359], [2221,1235], [2228,1087], [2338,989], [2485,999], [2589,1107], [2723,1169], [2861,1115], [2919,979], [2865,841], [2760,733], [2628,659], [2481,625], [2330,631], [2186,676], [2059,756], [1955,865], [1880,995], [1838,1139], [1830,1289], [1855,1436], [1913,1576], [2000,1700], [2112,1803], [2241,1879], [2385,1928], [2535,1947], [2687,1950], [2813,2027], [2852,2170], [2782,2300], [2641,2347], [2491,2347], [2348,2383], [2247,2493], [2101,2507], [1993,2406], [1859,2347], [1729,2414], [1618,2510], [1473,2487], [1372,2377], [1227,2347], [1077,2340], [935,2293], [817,2199], [756,2063], [755,1912], [755,1760], [755,1608], [755,1456], [755,1304], [728,1158], [603,1081], [451,1080], [299,1076], [183,987], [180,840], [292,746], [443,740], [595,740], [723,669], [755,524], [760,372], [840,247], [981,200], [1131,200], [1281,200], [1431,200], [1581,200], [1731,200], [1881,200]] },
   ];
 
-  const VERSION_PISTAS = 2; // karts-pistas-grandes: sube cuando los trazados cambian tanto que los récords no se comparan
+  // karts-pistas-grandes: sube cuando los trazados cambian tanto que los récords no se comparan. karts-curvas-complejas: 3 =
+  // trazados técnicos de las pistas con `trazado: 3` (sus récords de antes pasan a recordsV2, «trazado anterior»).
+  const VERSION_PISTAS = 3;
 
   // karts-copa-espacio: `nivel` = orden de dificultad (el menú, el selector y las salas ordenan por él; 3 queda para
   // Reinos Antiguos) y `requiere: { podios }` = podios en otras copas para abrirla en el modo individual.
@@ -335,7 +349,72 @@
     return { esc, ox: (w - (x1 - x0) * esc) / 2 - x0 * esc, oy: (h - (y1 - y0) * esc) / 2 - y0 * esc };
   }
 
-  raiz.KartsPistas = { PISTAS, COPAS, VERSION_PISTAS, copaPorId, puntoEn, colocarMecanicas, colocarFijos, ladoTrajinera, encuadrarMinimapa,
+  // ---- karts-curvas-complejas: complejidad medible del trazado (la usan las pruebas; el juego no la necesita al correr) ----
+  // Tramos de giro en un mismo sentido sobre las muestras de Arcade.muestrearPista (radio < rmax px): se ignoran los de
+  // < 8° y se unen los del mismo sentido separados por ≤ 80 px. Cada curva: { sg (1 horario, -1 antihorario), i0, i1,
+  // grados, rmin (px), largo (px) }.
+  const angulo = a => Math.atan2(Math.sin(a), Math.cos(a));
+  // Tramos crudos: muestras seguidas con el mismo signo de giro (0 = recta), desde una muestra recta.
+  function tramosDeGiro(M, rmax) {
+    const pts = M.pts, n = pts.length, lim = M.paso / rmax;
+    const da = pts.map((_p, i) => angulo(pts[(i + 1) % n].a - pts[(i - 1 + n) % n].a) / 2);
+    const signo = d => (Math.abs(d) < lim ? 0 : Math.sign(d));
+    const s0 = Math.max(0, da.findIndex(d => signo(d) === 0)), tramos = [];
+    for (let k = 0; k < n; k++) {
+      const i = (s0 + k) % n, d = da[i], sg = signo(d), cur = tramos[tramos.length - 1];
+      const r = sg ? M.paso / Math.abs(d) : Infinity;
+      if (cur && sg === cur.sg) { cur.giro += d; cur.i1 = i; cur.rmin = Math.min(cur.rmin, r); } else tramos.push({ sg, i0: i, i1: i, giro: d, rmin: r });
+    }
+    return tramos.filter(t => t.sg);
+  }
+  function curvasTrazado(M, rmax = 1000) {
+    const n = M.pts.length, crudas = tramosDeGiro(M, rmax), out = [];
+    for (const c of crudas.filter(x => Math.abs(x.giro) >= 8 * Math.PI / 180)) {
+      const u = out[out.length - 1];
+      if (u && u.sg === c.sg && ((c.i0 - u.i1 + n) % n) * M.paso <= 80) { u.giro += c.giro; u.i1 = c.i1; u.rmin = Math.min(u.rmin, c.rmin); } else out.push({ ...c });
+    }
+    return out.map(c => ({ sg: c.sg, i0: c.i0, i1: c.i1, rmin: Math.round(c.rmin), grados: Math.round(Math.abs(c.giro) * 180 / Math.PI), largo: (((c.i1 - c.i0 + n) % n) + 1) * M.paso }));
+  }
+  // Resumen: giro total de la vuelta (suma de los grados de todas las curvas), curvas > 120°, espirales (≥ 360° en un
+  // sentido), sacacorchos (≥ 270°), laberinto (racha más larga de giros de 60° a 120° separados ≤ 600 px), chicanas (curvas ≥ 45° de sentido contrario a ≤ 250 px) y horquillas (150° a 230°
+  // con radio ≤ 220 px).
+  function complejidad(M) {
+    const cs = curvasTrazado(M), n = M.pts.length, gap = (a, b) => ((b.i0 - a.i1 + n) % n) * M.paso;
+    let racha = 0, laberinto = 0, chicanas = 0;
+    cs.forEach((c, k) => {
+      const prev = cs[k - 1], noventa = c.grados >= 60 && c.grados <= 120;
+      const sigue = prev && racha && gap(prev, c) <= 600;
+      if (!noventa) racha = 0;
+      else racha = sigue ? racha + 1 : 1;
+      laberinto = Math.max(laberinto, racha);
+      if (prev && prev.sg !== c.sg && prev.grados >= 45 && c.grados >= 45 && gap(prev, c) <= 250) chicanas++;
+    });
+    return { curvas: cs.length, giroTotal: cs.reduce((s, c) => s + c.grados, 0), mayores120: cs.filter(c => c.grados > 120).length, espirales: cs.filter(c => c.grados >= 360).length,
+      sacacorchos: cs.filter(c => c.grados >= 270).length, laberinto, chicanas, horquillas: cs.filter(c => c.grados >= 150 && c.grados <= 230 && c.rmin <= 220).length };
+  }
+  // ---- Récords por trazado (karts-pistas-grandes y karts-curvas-complejas) ----
+  // Sin pistasV (antes de las pistas grandes): todos los récords pasan a recordsV1 («pista chica»). Con pistasV 2: los de
+  // las pistas con `trazado: 3` pasan a recordsV2 («trazado anterior»). Copas, piezas, equipo, copa en curso y los
+  // demás récords no cambian. Devuelve 'chica' o 'trazado' si archivó algún récord (hay que guardar y avisar) o false.
+  function migrarRecords(pr) {
+    const antes = pr.pistasV;
+    pr.records = pr.records || {}; pr.recordsV1 = pr.recordsV1 || {}; pr.recordsV2 = pr.recordsV2 || {};
+    if (antes === VERSION_PISTAS) return false;
+    pr.pistasV = VERSION_PISTAS;
+    if (antes !== 2) {
+      pr.recordsV1 = { ...pr.records }; pr.records = {};
+      return Object.keys(pr.recordsV1).length ? 'chica' : false;
+    }
+    let movidos = 0;
+    for (const p of PISTAS) {
+      if (p.trazado !== VERSION_PISTAS || !pr.records[p.id]) continue;
+      pr.recordsV2[p.id] = pr.records[p.id]; delete pr.records[p.id]; movidos++;
+    }
+    return movidos ? 'trazado' : false;
+  }
+
+  raiz.KartsPistas = { PISTAS, COPAS, VERSION_PISTAS, curvasTrazado, complejidad, migrarRecords, // karts-curvas-complejas
+    copaPorId, puntoEn, colocarMecanicas, colocarFijos, ladoTrajinera, encuadrarMinimapa,
     tramosInteriores, muroEn, colocarColumnas, alturaBloque, bloquePeligro, ladoRoca, centroCompuerta, ALTO_BLOQUE, // karts-copa-reinos
     copasOrdenadas, copaDesbloqueada, podiosFaltan, MARCA, ESPACIO, marcasEspacio, rescateEn, ladoPlataforma, aperturaCompuerta }; // karts-copa-espacio
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -194,6 +194,15 @@ Cada página debe manejar y mostrar de forma explícita:
     (cuadriláteros proyectados; dentro de un corredor, en lote y solo los de ese tramo), portadas, bóveda (segundo
     panorama), niebla, viñeta y brillo de antorchas; con `prefers-reduced-motion`, antorchas quietas y luz sin
     transición. Ganchos de prueba: `__karts.obstaculo(tipo)` y `estado().reinos`;
+  - **Trazados técnicos** (cambio `karts-curvas-complejas`; decisiones en su `design.md`): las pistas del Espacio y de
+    Reinos Antiguos llevan `trazado: 3` y trazados con espiral doble, sacacorchos, laberintos de giros de 90°,
+    chicanas, horquillas y curvas que se cierran (no hay ocho con cruce: el motor es de un solo plano). La
+    complejidad es medible con `KartsPistas.complejidad(M)` / `curvasTrazado(M)` (giro total, curvas > 120°,
+    espirales, sacacorchos, laberinto, chicanas, horquillas); `server/karts_curvas_test.ts` exige un mínimo por pista.
+    Un interior largo que se enrolla (espiral) se parte en tramos seguidos para que, dentro del corredor, solo se
+    dibujen los muros de ese tramo (60 fps). Entre muros, los bots miran más cerca (como en el espacio). Récords del
+    trazado anterior en `recordsV2` (ver `docs/data-model.md`). Ganchos de prueba: `estado().bots` (vuelta, muestra y
+    velocidad de cada bot) y `KARTS_PISTA=<id>` en `e2e-karts.js` para correr una sola pista;
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
     - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo
