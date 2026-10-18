@@ -23,7 +23,7 @@ const pedir = async (email, ruta, body) => {
   return { status: r.status, body: await r.json() };
 };
 let relevo = null;
-const abrir = (b, email, viewport = VERTICAL, ruta = RUTA, esperar = '[data-menu]') => abrirPagina(b, { email, viejo: true, viewport, contexto: viewport === HORIZONTAL ? TACTIL : {}, init: initVivo(relevo.url, { latencia: 40, perdida: 0, desorden: 0 }), out, etiqueta: email, dialogos: 'aceptar', ruta, esperar });
+const abrir = async (b, email, viewport = VERTICAL, ruta = RUTA, esperar = '[data-menu]') => { const p = await abrirPagina(b, { email, viejo: true, viewport, contexto: viewport === HORIZONTAL ? TACTIL : {}, init: initVivo(relevo.url, { latencia: 40, perdida: 0, desorden: 0 }), out, etiqueta: email, dialogos: 'aceptar', ruta, esperar }); p.on('pageerror', e => console.error('PILA', email, (e.stack || '').slice(0, 500))); return p; };
 const marcoDe = async p => (await p.waitForSelector('#p-body #arcade-frame', { timeout: 60000 })).contentFrame();
 const kartsDe = fr => fr.evaluate(() => window.__karts.estado());
 async function crear(p, juego, extra) {
@@ -165,10 +165,37 @@ async function futbol(b) {
   await Promise.all([p, a, j].map(x => x.context().close()));
 }
 
+// 4) Brigada Xalli en equipo: quien especta escucha las fotos del anfitrión y sigue la cámara compartida, sin mandar nada.
+async function brigada(b) {
+  const p = await abrir(b, 'marisol@example.com'), a = await abrir(b, 'angel@example.com');
+  const codigo = await crear(p, 'brigada', async q => { await q.selectOption('#p-bmision', '1'); if (await q.isChecked('#p-bots')) await q.click('#p-bots'); });
+  await intentarUnirse(a, codigo); await a.waitForSelector('#p-body .rank li', { timeout: 30000 });
+  await p.click('[data-p="empezar"]');
+  const fa = await marcoDe(a);
+  await fa.waitForFunction(() => window.__brigada && window.__brigada.red() && window.__brigada.red().recibidas > 3, null, { timeout: 60000 });
+  const j = await abrir(b, 'jesus@example.com', HORIZONTAL);
+  await intentarUnirse(j, codigo);
+  await j.waitForSelector('[data-a="espectar"]', { timeout: 30000 });
+  await j.click('[data-a="espectar"]');
+  const fj = await marcoDe(j);
+  await fj.waitForFunction(() => window.__brigada && window.__brigada.red() && window.__brigada.red().recibidas > 5, null, { timeout: 60000 });
+  const fm = await marcoDe(p);
+  await fm.evaluate(() => window.__brigada.invulnerable());
+  const c1 = await fj.evaluate(() => window.__brigada.m().cam.x);
+  await fm.evaluate(() => { const m = window.__brigada.m(); m.cam.x += 300; m.jugadores.forEach(q => { q.x += 300; }); }); // la brigada avanza: la cámara compartida también
+  await sleep(1500);
+  const r = await fj.evaluate(() => ({ red: window.__brigada.red(), cam: window.__brigada.m().cam.x, clase: document.body.classList.contains('espectador'), chip: !!document.getElementById('esp-chip') }));
+  ok('Brigada: el espectador recibe las fotos del anfitrión (rol espectador) y sigue la cámara compartida', r.red.rol === 'espectador' && r.red.recibidas > 5 && r.cam > c1 + 100 && r.clase && r.chip, JSON.stringify({ rol: r.red.rol, rec: r.red.recibidas, cam: [c1, r.cam] }));
+  const s = await pedir('marisol@example.com', '/juegos/sala/' + codigo);
+  ok('Brigada: la mesa sigue con 2 personas y 1 viendo', s.body.jugadores.length === 2 && s.body.viendo === 1, JSON.stringify({ n: s.body.jugadores.length, viendo: s.body.viendo }));
+  await j.screenshot({ path: 'espectador-brigada-844x390.png' });
+  await Promise.all([p, a, j].map(x => x.context().close()));
+}
+
 (async () => {
   relevo = await levantarRelevo();
   const b = await chromium.launch({ executablePath: process.env.CHROME });
-  for (const [nombre, fn] of [['cartas', cartas], ['karts', karts], ['futbol', futbol]]) {
+  for (const [nombre, fn] of (process.env.SOLO ? [['brigada', brigada]] : [['cartas', cartas], ['karts', karts], ['futbol', futbol], ['brigada', brigada]])) {
     try { await fn(b); } catch (e) { ok('parte ' + nombre + ' sin errores', false, e.message.slice(0, 300)); }
   }
   await b.close(); await relevo.cerrar();

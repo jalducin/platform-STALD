@@ -138,7 +138,7 @@ Deno.test("espectador: al unirse como jugador deja de ser espectador", async () 
 
 Deno.test("espectador: el topic del canal solo en juegos en vivo (solo escucha)", async () => {
   const c = ctx();
-  assertEquals([...ESPECTADOR_EN_VIVO].sort(), ["futbol", "futbolito-arena", "karts"]);
+  assertEquals([...ESPECTADOR_EN_VIVO].sort(), ["brigada", "futbol", "futbolito-arena", "karts"]);
   const cartas = await sala(c, "poker", [P(0)]);
   await espectar(c, cartas, P(1));
   const gc = await c.call("GET", `/sala/${cartas}`, P(1));

@@ -324,7 +324,7 @@ function finalCopa(body, st) {
 // (localStorage.arcade_personaje, compartido con el modo individual) y en el asiento (POST /unirse { personaje }).
 // Al empezar, el iframe recibe el propio y el de cada persona en `inicio`.
 const PESO_PERSONAJE = { ligero: '🪶 Ligero', medio: '⚖️ Medio', pesado: '🪨 Pesado' };
-const conPersonajes = () => !!window.Personajes && ARCADE.has(sala.estado.sala.juego);
+const conPersonajes = () => !!window.Personajes && (ARCADE.has(sala.estado.sala.juego) || sala.estado.sala.juego === 'brigada'); // brigada: también elige personaje
 const esPersonajeValido = id => !!window.Personajes && Personajes.LISTA.some(p => p.id === id);
 function personajeDeAsiento(id) {
   const j = sala.estado.jugadores.find(x => x.id === id);
@@ -501,6 +501,7 @@ function notaFutbol() {
 function finalSala(s) {
   if (s.juego === 'futbol') notaFutbol();
   if (s.juego === 'futbolito-arena') notaArena(); // futbolito-arena
+  if (s.juego === 'brigada') notaBrigada(); // brigada
   return pintarRevancha();
 }
 // ¿El partido ya terminó para esta persona? (ya reportó, o su rival lo reportó hace rato).
@@ -610,7 +611,7 @@ const sinTransmision = titulo => '<div class="q-card"><div class="q">' + escapeH
 function inicioArena(mesa, rep, vivo) {
   const e = sala.estado, s = e.sala;
   return {
-    tipo: 'inicio', modo: 'sala', rol: rolArena(e, s), anfitrion: s.host, espectador: sala.espectador, // espectador yo: { id: e.yo, nombre: (mesa.find(p => p.id === e.yo) || {}).nombre || '' },
+    tipo: 'inicio', modo: 'sala', rol: rolArena(e, s), anfitrion: s.host, espectador: sala.espectador, yo: { id: e.yo, nombre: (mesa.find(p => p.id === e.yo) || {}).nombre || '' }, // espectador
     asientos: mesa.map((p, i) => ({ id: p.id, nombre: p.nombre, bot: !!p.bot, eq: rep[i].eq, color: rep[i].color, num: rep[i].num })),
     seed: s.seed, vivo, formato: s.opciones.formato || '2v2', arena: s.opciones.arena || 'normal', goles: s.opciones.goles || '5',
   };
