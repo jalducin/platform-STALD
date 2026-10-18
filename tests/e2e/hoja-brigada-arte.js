@@ -19,8 +19,8 @@ const HOJA = pathToFileURL(path.join(__dirname, 'brigada-hoja-arte.html')).href;
     const p = await ctx.newPage();
     p.on('pageerror', e => { fallas.push(`error JS (${modo}): ${e.message}`); console.log('FAIL error JS:', e.stack); });
     await p.goto(HOJA);
-    await p.waitForFunction(() => window.__hoja && window.__hoja.listo, null, { timeout: 30000 });
-    const { errores } = await p.evaluate(() => window.__hoja);
+    await p.waitForFunction(() => globalThis.__hoja?.listo, null, { timeout: 30000 });
+    const { errores } = await p.evaluate(() => globalThis.__hoja);
     for (const e of errores) fallas.push(`${modo}: ${e}`);
     const ids = await p.$$eval('canvas[id]', cs => cs.map(c => c.id));
     for (const id of ids) {
