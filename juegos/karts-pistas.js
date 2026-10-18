@@ -110,7 +110,7 @@
       // karts-curvas-complejas: interiores, mecánicas y adornos colocados sobre el trazado nuevo.
       fijos: [{ img: 'kukulkan', w: 30, h: 24, desde: [3945, 197], hasta: [3457, 197], cada: 30, lado: 1.3 }],
       adornos: [{ img: 'tronoJaguar', x: 4071, y: 2044, w: 64, h: 50 }],
-      interiores: [{ nombre: 'Templo del jaguar', desde: [3433, 197], hasta: [800, 1030], ancho: 1, muro: 0 }, { nombre: 'Escaleras interiores', desde: [2693, 2112], hasta: [4192, 718], ancho: 0.8, muro: 0 }],
+      interiores: [{ nombre: 'Templo del jaguar', desde: [3433, 197], hasta: [2650, 970], ancho: 1, muro: 0 }, { nombre: 'Sala de las serpientes', desde: [2650, 970], hasta: [2007, 783], ancho: 1, muro: 0 }, { nombre: 'Cámara del trono', desde: [2007, 783], hasta: [1370, 257], ancho: 1, muro: 0 }, { nombre: 'Salida del templo', desde: [1370, 257], hasta: [800, 1030], ancho: 1, muro: 0 }, { nombre: 'Escaleras interiores', desde: [2693, 2112], hasta: [3437, 1515], ancho: 0.8, muro: 0 }, { nombre: 'Escalera de la cima', desde: [3437, 1515], hasta: [4192, 718], ancho: 0.8, muro: 0 }],
       mecanicas: [{ tipo: 'luz', cerca: [2565, 2110], lado: -0.35, r: 22 }, { tipo: 'luz', cerca: [3769, 200], lado: 0.35, r: 22 },
         { tipo: 'luz', cerca: [804, 631], lado: -0.35, r: 22 }, { tipo: 'losa', cerca: [3213, 1509], r: 20, periodo: 4 },
         { tipo: 'losa', cerca: [3204, 601], r: 20, periodo: 4.6 }, { tipo: 'losa', cerca: [1701, 1022], r: 20, periodo: 5.2 }],
@@ -124,7 +124,7 @@
       // karts-curvas-complejas: interiores, mecánicas y adornos colocados sobre el trazado nuevo.
       fijos: [{ img: 'esfinge', w: 34, h: 26, desde: [179, 2650], hasta: [180, 970], cada: 14, lado: 1.3 }],
       lago: { x: 2500, y: 689, rx: 230, ry: 230 },
-      interiores: [{ nombre: 'Santuario', desde: [1855, 883], hasta: [2520, 2494], ancho: 0.84, muro: 0 }, { nombre: 'Sala hipóstila', desde: [2422, 2944], hasta: [486, 2945], ancho: 1, muro: 0 }],
+      interiores: [{ nombre: 'Santuario', desde: [1855, 883], hasta: [1714, 1533], ancho: 0.84, muro: 0 }, { nombre: 'Capilla de la barca', desde: [1714, 1533], hasta: [2520, 2494], ancho: 0.84, muro: 0 }, { nombre: 'Sala hipóstila', desde: [2422, 2944], hasta: [486, 2945], ancho: 1, muro: 0 }],
       columnas: [{ desde: [2294, 2944], hasta: [614, 2944], cada: 15, lado: 0.45 }],
       mecanicas: [{ tipo: 'losa', cerca: [1641, 869], r: 20, periodo: 4.2 }, { tipo: 'losa', cerca: [1214, 1196], r: 20, periodo: 4.8 }],
       vueltas: 2, puntos: [[700,489], [850,489], [1000,489], [1150,489], [1300,489], [1443,446], [1591,425], [1731,479], [1880,472], [1989,370], [2104,271], [2243,212], [2394,200], [2541,235], [2670,315], [2768,430], [2825,571], [2835,721], [2798,868], [2717,996], [2600,1092], [2459,1148], [2308,1156], [2162,1117], [2035,1035], [1935,921], [1796,869], [1646,869], [1495,880], [1357,936], [1250,1041], [1215,1186], [1219,1337], [1316,1446], [1467,1454], [1619,1458], [1727,1555], [1735,1706], [1739,1857], [1836,1966], [1987,1974], [2139,1978], [2247,2075], [2255,2226], [2259,2377], [2356,2486], [2507,2494], [2659,2498], [2767,2595], [2775,2746], [2719,2882], [2585,2944], [2433,2944], [2281,2944], [2129,2944], [1977,2944], [1825,2944], [1674,2944], [1522,2944], [1370,2944], [1218,2944], [1066,2944], [914,2944], [762,2944], [610,2944], [458,2944], [308,2930], [200,2830], [180,2682], [180,2530], [180,2378], [180,2226], [180,2074], [180,1922], [180,1770], [180,1618], [180,1466], [180,1314], [180,1162], [180,1010], [180,858], [180,707], [232,567], [360,492], [512,489]] },
