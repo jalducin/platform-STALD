@@ -306,6 +306,29 @@ async function personajesEnSala(b, relevo) {
   for (const p of pags) await p.context().close();
 }
 
+// karts-salto: en una sala de 2, cuando una persona brinca la otra ve su kart subir y bajar (altura en d[10]).
+async function saltoEnSala(b, relevo) {
+  const pags = [await jugador(b, 'marisol@example.com', relevo), await jugador(b, 'angel@example.com', relevo)];
+  const codigo = await crearSala(pags[0], 'pradera');
+  await unirse(pags[1], codigo);
+  const ids = await Promise.all(pags.map(yoDe));
+  await pags[0].click('[data-p="empezar"]');
+  const frames = await enCarrera(pags);
+  await Promise.all(frames.map(fr => fr.waitForFunction(() => { const e = window.__karts.estado(); return e.vivo && e.remotos.every(r => r.visible) && e.vel > 100; }, null, { timeout: 25000 }).catch(() => {})));
+  await sleep(500);
+  const antes = (await estado(frames[1])).remotos.find(r => r.id === ids[0]);
+  await frames[1].evaluate(() => window.__karts.reiniciarAltura());
+  await frames[0].evaluate(() => { window.__karts.reiniciarAltura(); dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' })); });
+  await sleep(60); await frames[0].evaluate(() => dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' })));
+  await frames[1].waitForFunction(id => (window.__karts.estado().remotos.find(r => r.id === id) || {}).altura > 6, ids[0], { timeout: 2000, polling: 'raf' }).catch(() => {});
+  await pags[1].screenshot({ path: 'karts-salto-vivo-390.png' });
+  await sleep(900);
+  const yo = await estado(frames[0]), visto = (await estado(frames[1])).remotos.find(r => r.id === ids[0]);
+  ok('salto en vivo: la otra persona ve el kart subir y volver a bajar', antes && antes.altura === 0 && yo.alturaMax > 10 && visto.alturaMax > 6 && visto.altura === 0,
+    JSON.stringify({ antes: antes && antes.altura, propio: yo.alturaMax, visto: visto.alturaMax, ahora: visto.altura }));
+  for (const p of pags) await p.context().close();
+}
+
 async function respaldo(b, relevo) {
   // Sin canal (sala sin Realtime ni doble): aviso inmediato y la carrera de siempre con fantasmas.
   const sin = [await jugador(b, 'fernando@example.com', null, VERTICAL, {}, '/juegos.html?arcadePrueba=1'), await jugador(b, 'jesus@example.com', null, VERTICAL, {}, '/juegos.html?arcadePrueba=1')];
@@ -681,6 +704,12 @@ async function salidaYPodio(b, relevo) {
     console.log(out.join('\n'));
     process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
   }
+  if (process.env.KARTS_VIVO_SOLO === 'salto') { // karts-salto: solo esta parte (para iterar)
+    await saltoEnSala(b, relevo);
+    await b.close(); await relevo.cerrar();
+    console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_VIVO_SOLO === 'copa-reinos') { // karts-puntos-copas: solo esta parte (para iterar)
     await copaReinosEnSala(b, relevo);
     await b.close(); await relevo.cerrar();
@@ -709,6 +738,7 @@ async function salidaYPodio(b, relevo) {
   await copaEnSala(b, relevo); // karts-copa-en-sala
   await copaReinosEnSala(b, relevo); // karts-puntos-copas
   await salidaYPodio(b, relevo); // karts-salida-y-puntos
+  await saltoEnSala(b, relevo); // karts-salto
   await b.close(); await relevo.cerrar();
   console.log(out.join('\n'));
   console.log('RESUMEN fps(8 en vivo) libre=' + fps.libre + ' CPU×4=' + fps.lento + ' mensajes/s(sala de 8)=' + r.porSeg.toFixed(1));

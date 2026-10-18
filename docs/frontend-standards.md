@@ -348,9 +348,9 @@ Cada página debe manejar y mostrar de forma explícita:
       profundidad; los carros son un modelo de cajas pre-dibujado en 32 vistas. Nunca cambiar reglas para «arreglar»
       la vista: la cámara se deriva de `x`, `y` y `ang` del carro;
     - controles por omisión: Botones (⬅ ➡; DERRAPE, 🎁, FRENO) y «Acelerar: Automático» (`localStorage.karts_acelerar`
-      = `auto` | `manual`, este último agrega ACELERAR). Teclado: flechas/WASD (↑ acelera, ↓ frena), ESPACIO derrape,
-      E/Shift ítem, P/Esc pausa. Si el sensor falla se regresa a Botones. Tutorial `#tuto` de 3 s al empezar;
-    - entrada por acciones (`acel`, `freno`, `izq`, `der`, `derrape`, `item`, `pausa`, `reversa` + eje): un mando nuevo se conecta
+      = `auto` | `manual`, este último agrega ACELERAR). Teclado: flechas/WASD (↑ acelera, ↓ frena), ESPACIO salto y
+      derrape, E/Shift ítem, P/Esc pausa. Si el sensor falla se regresa a Botones. Tutorial `#tuto` de 3 s al empezar;
+    - entrada por acciones (`acel`, `freno`, `izq`, `der`, `derrape`, `item`, `pausa`, `reversa`, `salto` + eje): un mando nuevo se conecta
       con `window.KartsEntrada.registrar({ presionado(accion), eje() })`, sin tocar las reglas;
     - **🎮 Mando clásico** (cambio `karts-mando`; decisiones en su `design.md`): cuarta opción del selector
       (`karts_control = mando`, cuadrícula 2×2); **por omisión siguen los Botones**. El mando común se registra en
@@ -370,6 +370,15 @@ Cada página debe manejar y mostrar de forma explícita:
       se vuelve reversa. Cruzar la meta hacia atrás resta la vuelta y la deja como `deuda`; volver a cruzarla solo la
       repone, sin aviso (no se suman vueltas yendo y viniendo). Sin reversa con el motor ahogado, girando por un
       golpe, cayendo, con el dron, al terminar, en el piloto de prueba ni en los bots;
+    - **⤴ Salto** (cambio `karts-salto`; decisiones en su `design.md`): acción `salto` de `KartsEntrada`; lógica pura en
+      `juegos/karts-salto.js` (`window.KartsSalto`, probada en `server/karts_salto_test.ts`). Brinco de 0.4 s y 14 px
+      (sombra en el piso, aplastón al caer), 0.6 s de enfriamiento al caer, giro al 35 % en el aire (salvo derrapando).
+      Esquiva cáscara y bola en lo alto del brinco; no el cohete, el rayo, los bloques ni la roca. **No es `k.aire`**
+      (vive en `k.brinco`, `k.brincoEnf`, `k.aplasta`): no cruza huecos ni el cenote, no salva del lodo, no acelera y no
+      toca el conteo de vueltas. Derrape: `derrape || (salto && en el piso)`, así SALTO mantenido + giro al caer empieza
+      el derrape. Celular: botón «⤴ SALTO» separado, columna alta a la derecha de `#m-der`. Mando: R/L (salto y
+      derrape; el adaptador responde `salto` con `derrape`, `mando.js` sin cambios). Teclado: ESPACIO (salto y
+      derrape). En vivo, `d[10]` = altura (0–40 px) interpolada en los demás aparatos;
     - en horizontal (`max-height: 520px`) el marco de Arcade de `juegos.html` mide `100dvh − 16px`; las pantallas del
       juego usan `justify-content: safe center` para poder desplazarse;
     **Dibujo de «Axo y los 12 mundos»** (cambio `axo-diseno`): arte vectorial en canvas a la resolución real (`K`),
@@ -872,7 +881,8 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
     mensajes de ids que están en la sala;
   - por el canal solo viajan el id de la sala y números; el nombre que se pinta sale de la sala;
   - **Karts** (`pintarArcadeSala` → `inicio` con `yo`, `humanos` y `vivo`): cada kart a 15 Hz con ≤ 4 personas y 10 Hz
-    con 5–8 (2 Hz antes de salir), `[x·10, y·10, ángulo·1000, vel, vuelta, avance, banderas, término, personaje]`;
+    con 5–8 (2 Hz antes de salir), `[x·10, y·10, ángulo·1000, vel, vuelta, avance, banderas, término, personaje, carrera de la copa,
+    altura]` (`d[10]`, cambio `karts-salto`: brinco o rampa en px, interpolada; sin ella, 0);
     los remotos se interpolan 100 ms atrás (extrapolación ≤ 250 ms), con color y número por su lugar en la sala,
     nombre encima, minimapa y clasificación en vivo (`#vivo-tabla`); empuje local en los choques; quien calla 3 s se
     desvanece con aviso; sin canal en 5 s, aviso y fantasmas como antes;
