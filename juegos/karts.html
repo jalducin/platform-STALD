@@ -1577,16 +1577,17 @@ function pasoKart(k, dt) {
   if (k.ahogado > 0) { acelera = false; reversa = false; } // karts-reversa: con el motor ahogado tampoco hay reversa
   if (k.giro > 0) { k.giro -= dt; k.ang += 9 * dt; k.vel *= Math.pow(0.2, dt); k.derrape = null; mover(k, dt, 2); return; }
   const top = velocidadPunta(k, eq);
-  if (reversa) { k.vel = KartsReversa.pasoVel(k.vel, top, dt); derrapa = false; } // karts-reversa: manda sobre «Automático»
-  else {
-    const objetivo = acelera && !freno ? top : 0;
-    const acel = k.turbo > 0 ? 600 : eq.acel;
-    const desacel = freno ? FRENO : 220;
-    k.vel += Math.max(-desacel * dt, Math.min(acel * dt, objetivo - k.vel));
-  }
-  const w = giroConDerrape(k, giro, giroD, derrapa, dt);
+  k.vel = reversa ? KartsReversa.pasoVel(k.vel, top, dt) : velAdelante(k, eq, top, acelera, freno, dt); // karts-reversa: manda sobre «Automático»
+  const w = giroConDerrape(k, giro, giroD, derrapa && !reversa, dt);
   k.ang += w * dt * KartsReversa.factorGiro(k.vel); // karts-reversa: con velocidad negativa el volante se invierte
   mover(k, dt, k.derrape ? 3.2 : 9);
+}
+// Velocidad hacia adelante (acelerar, frenar o soltar); la de reversa está en juegos/karts-reversa.js (karts-reversa).
+function velAdelante(k, eq, top, acelera, freno, dt) {
+  const objetivo = acelera && !freno ? top : 0;
+  const acel = k.turbo > 0 ? 600 : eq.acel;
+  const desacel = freno ? FRENO : 220;
+  return k.vel + Math.max(-desacel * dt, Math.min(acel * dt, objetivo - k.vel));
 }
 // Velocidad punta del kart en este paso (equipo, ajuste del bot, monedas, ítems y si va fuera del camino).
 function velocidadPunta(k, eq) {

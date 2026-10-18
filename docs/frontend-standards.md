@@ -350,7 +350,7 @@ Cada página debe manejar y mostrar de forma explícita:
     - controles por omisión: Botones (⬅ ➡; DERRAPE, 🎁, FRENO) y «Acelerar: Automático» (`localStorage.karts_acelerar`
       = `auto` | `manual`, este último agrega ACELERAR). Teclado: flechas/WASD (↑ acelera, ↓ frena), ESPACIO derrape,
       E/Shift ítem, P/Esc pausa. Si el sensor falla se regresa a Botones. Tutorial `#tuto` de 3 s al empezar;
-    - entrada por acciones (`acel`, `freno`, `izq`, `der`, `derrape`, `item`, `pausa` + eje): un mando nuevo se conecta
+    - entrada por acciones (`acel`, `freno`, `izq`, `der`, `derrape`, `item`, `pausa`, `reversa` + eje): un mando nuevo se conecta
       con `window.KartsEntrada.registrar({ presionado(accion), eje() })`, sin tocar las reglas;
     - **🎮 Mando clásico** (cambio `karts-mando`; decisiones en su `design.md`): cuarta opción del selector
       (`karts_control = mando`, cuadrícula 2×2); **por omisión siguen los Botones**. El mando común se registra en
@@ -362,6 +362,14 @@ Cada página debe manejar y mostrar de forma explícita:
       (contenedor `#juego`, el flex le resta su alto; `--mando-alto` no se usa); en horizontal se encima en las
       esquinas solo con `body.en-carrera`, la cruceta pierde el brazo ▼ invisible (`margin-bottom: −u`) y el tutorial
       sube para no taparse con START;
+    - **⏪ Reversa** (cambio `karts-reversa`; decisiones en su `design.md`): acción `reversa` de `KartsEntrada`; lógica
+      pura en `juegos/karts-reversa.js` (`window.KartsReversa`, probada en `server/karts_reversa_test.ts`). Mientras se
+      mantiene, el carro frena y retrocede a 38 % de la punta (aceleración 90 px/s²) con el volante invertido; manda
+      sobre «Automático». Celular: botón «⏪ REVERSA» en la tercera fila de `#m-der` (Botones, Joystick y Sensor).
+      Mando: B estando parado (etiqueta «frenar/rev»). Teclado: ↓/S estando parado, o R. El botón FRENO táctil no
+      se vuelve reversa. Cruzar la meta hacia atrás resta la vuelta y la deja como `deuda`; volver a cruzarla solo la
+      repone, sin aviso (no se suman vueltas yendo y viniendo). Sin reversa con el motor ahogado, girando por un
+      golpe, cayendo, con el dron, al terminar, en el piloto de prueba ni en los bots;
     - en horizontal (`max-height: 520px`) el marco de Arcade de `juegos.html` mide `100dvh − 16px`; las pantallas del
       juego usan `justify-content: safe center` para poder desplazarse;
     **Dibujo de «Axo y los 12 mundos»** (cambio `axo-diseno`): arte vectorial en canvas a la resolución real (`K`),
