@@ -20,9 +20,9 @@ const conApiParam = href => {
 };
 if (MODO_PROFE) {
   document.body.classList.add('profe');
-  document.title = 'Mi ruta B1 → C1';
-  document.getElementById('titulo').textContent = '🎓 Mi ruta B1 → C1';
-  document.getElementById('subtitulo').textContent = 'Temas de estudio, práctica y 2 exámenes por semana. Solo tú la ves.';
+  document.title = 'Mi ruta de Inglés';
+  document.getElementById('titulo').textContent = '🎓 Mi ruta de Inglés';
+  document.getElementById('subtitulo').textContent = 'Las mismas actividades de tu grupo, para resolverlas antes que ellos. Solo tú ves tus resultados.';
 }
 if (MODO_SECUNDARIA) {
   document.body.classList.add('secundaria');

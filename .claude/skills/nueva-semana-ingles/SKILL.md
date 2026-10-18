@@ -123,19 +123,15 @@ git -C "$DATA" add -A && git -C "$DATA" commit -m "contenido: semana N (<lunes>)
 - Recuerda al usuario el enlace y la hora del Meet si faltan. Se editan en `meet-<dom>.json`, y el
   servidor lo toma en menos de un minuto.
 
-## Ruta del profe (mes siguiente)
+## Ruta del profe
 
-El profe tiene su propia ruta B1 → C1 en `contenido/profe/` (spec: `openspec/changes/ruta-profe`). Para armar el
-mes siguiente:
+Desde el 2026-10-17 el profe **no tiene ruta propia**: a su pedido se eliminó la ruta B1 → C1 (`contenido/profe/` y
+`herramientas/profe-mes-1/` del repo de datos; cambio `profe-semanas-del-grupo`). En `ingles.html?modo=profe` resuelve
+**las mismas actividades de la semana del grupo** (actividades, examen, refuerzo y Tecnología e IA, sin el Meet), abiertas
+desde que se suben y con fecha límite el día antes de que abran al grupo. No hace falta armarle nada aparte: basta con
+subir la semana del grupo.
 
-1. Copia `herramientas/profe-mes-1/` a `herramientas/profe-mes-<N>/` y escribe sus `contenido_*.py`. Usa el
-   mismo formato y los ids `profe-act-<fecha>` (lunes y jueves) y `profe-examen-<fecha>` (miércoles y sábado).
-2. Toma como punto de partida los temas en «debilidad» de sus resultados
-   (`resultados/profe-*/profe.json`) y el examen mensual anterior.
-3. Mes 2 sugerido (B2): tiempos avanzados en contraste, inversión y énfasis (cleft sentences), gerundio vs.
-   infinitivo, artículos avanzados, colocaciones y register (formal/informal), escritura de ensayos y emails.
-4. Cada semana lleva su **pronunciación del viernes** (`profe-pron-<fecha>`, ver `contenido_pron.py`): 4 ejercicios
-   de escuchar con `audio`, 3 de teoría de sonidos y 5 frases `pronunciar` ligadas a la gramática de la semana.
-5. Ejecuta el generador y valida cada semana con `--profe`:
-   `npx -y deno run --allow-read server/validar_semana.ts "$DATA" <lunes> --profe` (0 errores).
-6. Actualiza `plan.json` con el mes nuevo (el generador lo reescribe). Muestra el resumen al profe y sube.
+- Sus intentos quedan en `resultados/<id>/profe.json` y nunca cuentan en las vistas del grupo.
+- Para retomar la ruta C1: `git revert` del commit «profe: elimina la ruta B1 → C1» en el repo de datos (vuelven
+  `plan.json`, sus semanas y el generador `herramientas/profe-mes-1/`). El servidor vuelve a usar sus semanas sin
+  cambios de código, y se valida con `validar_semana.ts <datos> <lunes> --profe`.

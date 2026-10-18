@@ -348,7 +348,9 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - Son los únicos correos que guarda el repo de datos. El invitado aceptó el aviso al registrarse.
   - Solo el admin los ve (`/juegos/invitados` y `/juegos/jugadores`, que suma alumnos, alumnas y registros
     pendientes de las cuentas de acceso), en la pestaña «🛡️ Admin» de `juegos.html`.
-- `contenido/profe/`: ruta de estudio del profe (cambio `ruta-profe`), mismo formato que `contenido/`:
+- `contenido/profe/`: ruta de estudio propia del profe (cambio `ruta-profe`), mismo formato que `contenido/`. **Vacía desde
+  el 2026-10-17** (cambio `profe-semanas-del-grupo`): la ruta B1 → C1 se eliminó y el profe resuelve las actividades de su
+  grupo; se recupera con `git revert` del commit «profe: elimina la ruta B1 → C1» en el repo de datos. Si se vuelve a usar:
   - `plan.json`: `{ titulo, subtitulo, nivelActual, meta, horizonte, horasSemana, reparto[], rutinaDiaria[], reglas[],
     semanas[{ id, n, titulo, objetivo, temas[], busuu, extra, elementos[{ id, tipo, titulo, fecha }] }] }`;
   - `semanas/<lunes>.json`, `actividades/profe-act-<fecha>.json` y `examenes/profe-examen-<fecha>.json`;

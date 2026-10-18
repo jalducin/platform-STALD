@@ -1,54 +1,32 @@
-// E2E: ruta de estudio del profe (openspec: ruta-profe).
+// E2E: ruta del profe sin ruta propia (openspec: ruta-profe, profe-semanas-del-grupo). Desde el 2026-10-17 el profe
+// resuelve las mismas actividades de su grupo: «Esta semana» es la del grupo y no hay plan del mes.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
-const fs = require('fs');
 const API = process.env.API;
 const { abrirPagina } = require('./lib/navegador');
-const DATA = process.env.DATA;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, ingles: true, out, dialogos: 'aceptar', ruta });
 (async () => {
-  const examen = JSON.parse(fs.readFileSync(DATA + '/contenido/profe/examenes/profe-examen-directo-s1.json', 'utf8'));
-  const resp = Object.fromEntries(examen.banco.map(e => [e.id, e.tipo === 'opcion' ? e.correcta : e.aceptadas[0]]));
   const b = await chromium.launch({ executablePath: process.env.CHROME });
+  const r = await (await fetch(API + '/ingles/profe/actividades?email=admin@example.com')).json();
+  ok('servidor: sin plan y con la semana del grupo', r.plan === null && !!r.semana && /^\d{4}-\d{2}-\d{2}$/.test(r.semana.id), JSON.stringify(r.semana && r.semana.id));
+  ok('servidor: solo actividades del grupo (sin Meet)', r.items.length > 0 && r.items.every(i => i.grupo && i.tipo !== 'meet'), String(r.items.length));
 
   const ad = await pagina(b, 'admin@example.com', '/ingles.html?modo=profe');
-  await ad.waitForSelector('#ruta-plan', { timeout: 60000, state: 'attached' });
-  ok('título de la subpágina', (await ad.textContent('#titulo')).includes('Mi ruta B1 → C1'));
-  ok('plan con 5 semanas (0–4) y la actual marcada', (await ad.$$('.ruta-sem')).length === 5 && (await ad.textContent('.ruta-sem.actual')).includes('Semana 0'));
-  ok('el plan muestra las 18 tareas con fecha', (await ad.$$('.ruta-lista li')).length >= 18 + 8, String((await ad.$$('.ruta-lista li')).length));
-  const semana = (await ad.$$eval('.exam-card', xs => xs.map(x => x.textContent))).join(' ');
-  ok('esta semana: examen directo y diagnóstico', semana.includes('Examen directo') && semana.includes('Diagnóstico B1 → B2'));
+  await ad.waitForSelector('.pf-hero', { timeout: 60000 });
+  ok('título sin B1 → C1', (await ad.textContent('#titulo')).includes('Mi ruta de Inglés') && !(await ad.textContent('body')).includes('C1'));
+  ok('sin pestaña ni tarjeta de plan', !(await ad.$('[data-pf-tab="plan"]')) && !(await ad.$('#ruta-plan')));
+  const semana = await ad.textContent('[data-pf-panel="semana"]');
+  ok('«Esta semana» muestra la semana del grupo', semana.includes(r.semana.titulo), semana.replace(/\s+/g, ' ').slice(0, 140));
   await ad.screenshot({ path: 'ruta-profe.png', fullPage: true });
-  // Resolver el examen directo con todo bien
-  await ad.click('.exam-card [data-action="abrir-item"][data-id="profe-examen-directo-s1"]');
-  await ad.waitForSelector('#exam-form'); if (await ad.$('[data-action="ver-todas"]')) await ad.click('[data-action="ver-todas"]');
-  const ids = await ad.$$eval('#exam-form [data-q]', xs => xs.map(x => x.dataset.q));
-  ok('27 preguntas del examen directo', ids.length === 27, String(ids.length));
-  for (const id of ids) {
-    const v = resp[id];
-    if (typeof v === 'number') await ad.check(`input[name="${id}"][value="${v}"]`);
-    else await ad.fill(`input[name="${id}"]`, v);
-  }
-  await ad.click('#exam-send');
-  await ad.waitForSelector('.score', { timeout: 60000 });
-  ok('calificación 100 % con retroalimentación por tema', (await ad.textContent('.score')).includes('100') && (await ad.textContent('#content')).includes('Artículos'));
-  await ad.screenshot({ path: 'ruta-profe-resultado.png', fullPage: false });
-  await ad.click('[data-action="volver"]'); await ad.waitForSelector('#ruta-plan', { state: 'attached' });
-  await sleep(500);
-  ok('el plan refleja ⭐ 100%', (await ad.textContent('#ruta-plan')).includes('⭐ 100%'));
-  const r = await (await fetch(API + '/ingles/profe/actividades?email=admin@example.com')).json();
-  ok('servidor: examen directo completo', r.items.find(i => i.id === 'profe-examen-directo-s1').estado === 'completo');
 
   // Admin: enlace desde la vista del grupo y en el portal
   const grupo = await pagina(b, 'admin@example.com', '/ingles.html#registro');
   await grupo.waitForSelector('#alumnos-admin', { timeout: 60000 });
   ok('vista del grupo con enlace a Mi ruta', !!(await grupo.$('a.profe-link[href*="modo=profe"]')));
-  ok('la vista del grupo no lista elementos del profe', !(await grupo.textContent('#content')).includes('Examen directo'));
   const portal = await pagina(b, 'admin@example.com', '/');
   await portal.waitForSelector('[data-espacio]', { timeout: 60000 });
-  ok('portal admin: tile Mi ruta B1 → C1', !!(await portal.$('[data-espacio="profe"]')));
+  ok('portal admin: tile Mi ruta de Inglés', !!(await portal.$('[data-espacio="profe"]')) && !(await portal.textContent('body')).includes('B1 → C1'));
 
   // Alumna: no la ve
   const al = await pagina(b, 'marisol@example.com', '/ingles.html?modo=profe');
