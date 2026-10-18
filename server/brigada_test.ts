@@ -55,7 +55,7 @@ Deno.test("brigada: avance — guardar, leer, versión vieja y formas inválidas
     { ...a, personaje: "otro" },
   ];
   for (const datos of malos) {
-    const r = await c.call("PUT", "/progreso/brigada", "marisol", { v: 1, datos });
+    const r = await c.call("PUT", "/progreso/brigada", "marisol", { v: 1, datos }); // NOSONAR: en orden, sobre el mismo almacén
     assertEquals([r.status, r.body.error], [400, "progreso_invalido"], JSON.stringify(datos).slice(0, 80));
   }
   assertEquals(validarProgreso("brigada", a), true);

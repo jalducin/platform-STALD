@@ -69,7 +69,7 @@
   function rng(semilla) {
     let a = hash(semilla) || 1;
     return () => {
-      a = (a + 0x6d2b79f5) | 0;
+      a = (a + 0x6d2b79f5) | 0; // NOSONAR: aritmética de 32 bits de mulberry32
       let t = Math.imul(a ^ (a >>> 15), 1 | a);
       t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -129,19 +129,22 @@
   // Índice 0–7 de la dirección del disparo. En el suelo, ↓ (o diagonal abajo) dispara al frente (agachado).
   // Con toques (`cuatro`): solo adelante, arriba, atrás y, en el aire, abajo.
   function apuntar(x, y, dir, enSuelo, cuatro) {
-    const mag = Math.hypot(x, y), frente = dir < 0 ? 4 : 0;
-    if (mag < UMBRAL_APUNTAR) return frente;
-    let k;
-    if (cuatro) {
-      const vertical = Math.abs(y) >= 0.6 * Math.abs(x) && Math.abs(y) >= 0.35;
-      if (!vertical) k = x < 0 ? 4 : 0;
-      else k = y < 0 ? 6 : 2;
-    } else k = ((Math.round(Math.atan2(y, x) / (Math.PI / 4)) % 8) + 8) % 8;
-    if (enSuelo && k >= 1 && k <= 3) {
-      if (k === 1) return 0;
-      return k === 3 ? 4 : frente;
-    }
-    return k;
+    const frente = dir < 0 ? 4 : 0;
+    if (Math.hypot(x, y) < UMBRAL_APUNTAR) return frente;
+    const k = cuatro ? apuntarCuatro(x, y) : ((Math.round(Math.atan2(y, x) / (Math.PI / 4)) % 8) + 8) % 8;
+    return enSuelo ? sinAbajoEnSuelo(k, frente) : k;
+  }
+  // Con toques: adelante/atrás si es más horizontal; arriba/abajo si es claramente vertical.
+  function apuntarCuatro(x, y) {
+    const vertical = Math.abs(y) >= 0.6 * Math.abs(x) && Math.abs(y) >= 0.35;
+    if (!vertical) return x < 0 ? 4 : 0;
+    return y < 0 ? 6 : 2;
+  }
+  // En el suelo no se dispara hacia abajo: diagonal abajo → al frente de ese lado; abajo → al frente.
+  function sinAbajoEnSuelo(k, frente) {
+    if (k === 1) return 0;
+    if (k === 3) return 4;
+    return k === 2 ? frente : k;
   }
 
   // ================= Crear la misión =================
@@ -293,30 +296,49 @@
     if (p.estado === 'caido') { actualizarCaido(m, p, dt); return; }
     if (p.estado === 'burbuja') { actualizarBurbuja(m, p, dt); return; }
     if (p.estado !== 'vivo') return;
-    for (const k of ['inv', 'escudo', 'bajoT', 'caeT']) if (p[k] > 0) p[k] = Math.max(0, p[k] - dt);
-    if (p.cad > 0) p.cad -= dt;
-    p.dispT += dt; p.herT += dt;
+    relojes(p, dt);
     const x = acotar(Number(e.x) || 0, -1, 1), y = acotar(Number(e.y) || 0, -1, 1);
     p.c4 = !!e.c4;
     p.agachado = p.suelo && p.vehiculo < 0 && y > 0.6 && y > Math.abs(x);
     if (Math.abs(x) > UMBRAL_GIRO) p.dir = x > 0 ? 1 : -1;
     p.aim = apuntar(x, y, p.dir, p.suelo, p.c4);
-    const fuerza = Math.abs(x) > UMBRAL_MOVER ? Math.min(1, (Math.abs(x) - UMBRAL_MOVER) / 0.4) : 0;
-    const meta = p.agachado ? 0 : signo(x) * VEL * fuerza * (p.vehiculo >= 0 ? 0.85 : 1);
-    const tasa = meta === 0 ? (p.suelo ? FRENO : FRENO_AIRE) : (p.suelo ? ACEL_SUELO : ACEL_AIRE); // NOSONAR: tabla de 2×2
-    p.vx = acercar(p.vx, meta, tasa * dt);
+    correr(p, x, dt);
     saltar(m, p, e, y);
     if (!p.suelo) p.vy = Math.min(CAIDA_MAX, p.vy + GRAV * dt);
+    moverJugador(m, p, dt);
+    acciones(m, p, e);
+    tocarCosas(m, p);
+  }
+  function relojes(p, dt) {
+    for (const k of ['inv', 'escudo', 'bajoT', 'caeT']) if (p[k] > 0) p[k] = Math.max(0, p[k] - dt);
+    if (p.cad > 0) p.cad -= dt;
+    p.dispT += dt; p.herT += dt;
+  }
+  // Aceleración del suelo o del aire hacia la velocidad que pide la palanca; frenado si no pide nada.
+  function tasaDe(meta, suelo) {
+    if (meta === 0) return suelo ? FRENO : FRENO_AIRE;
+    return suelo ? ACEL_SUELO : ACEL_AIRE;
+  }
+  function correr(p, x, dt) {
+    const fuerza = Math.abs(x) > UMBRAL_MOVER ? Math.min(1, (Math.abs(x) - UMBRAL_MOVER) / 0.4) : 0;
+    const factor = p.vehiculo >= 0 ? 0.85 : 1;
+    const meta = p.agachado ? 0 : signo(x) * VEL * fuerza * factor;
+    p.vx = acercar(p.vx, meta, tasaDe(meta, p.suelo) * dt);
+  }
+  // Física y ventana de la cámara (nadie sale de ella); el vehículo va con quien lo maneja.
+  function moverJugador(m, p, dt) {
     const x0 = p.x;
     mover(m.def, p, ANCHO, dt, true);
     const izq = m.cam.x + 8, der = m.cam.x + W - 8;
     if (p.x < izq || p.x > der) { p.x = acotar(p.x, izq, der); p.vx = 0; }
     p.paso += Math.abs(p.x - x0);
     if (p.vehiculo >= 0) Object.assign(m.vehiculos[p.vehiculo], { x: p.x, y: p.y });
+  }
+  function acciones(m, p, e) {
     if (e.b) disparar(m, p);
-    if (e.gx) { if (p.vehiculo >= 0) bajar(m, p); else lanzarGlobo(m, p); }
+    if (e.gx && p.vehiculo >= 0) bajar(m, p);
+    else if (e.gx) lanzarGlobo(m, p);
     if (e.gy) cambiarArma(m, p);
-    tocarCosas(m, p);
   }
   function saltar(m, p, e, y) {
     if (e.ga && p.suelo) {
@@ -330,21 +352,29 @@
     const k = ORDEN_ARMAS.indexOf(p.arma);
     for (let d = 1; d <= ORDEN_ARMAS.length; d++) {
       const a = ORDEN_ARMAS[(k + d) % ORDEN_ARMAS.length];
-      if (a === 'burbuja' || p.mun[a] > 0) { if (a !== p.arma) { p.arma = a; m.ev.push({ tipo: 'arma', i: p.i, arma: a }); } return; }
+      if (a !== 'burbuja' && !(p.mun[a] > 0)) continue;
+      if (a !== p.arma) { p.arma = a; m.ev.push({ tipo: 'arma', i: p.i, arma: a }); }
+      return;
     }
+  }
+  // Altura de la que sale el disparo: agachado, en el vehículo, hacia arriba o hacia abajo.
+  function alturaDisparo(p) {
+    if (p.aim === 2) return p.y - 4;
+    if (p.aim === 6) return p.y - 24;
+    if (p.vehiculo >= 0) return p.y - 16;
+    return p.agachado ? p.y - 9 : p.y - 17;
+  }
+  function anguloBala(A, arma, k, nDisp) {
+    if (arma === 'rafaga') return nDisp % 2 ? 0.04 : -0.04;
+    return A.balas > 1 ? (k - (A.balas - 1) / 2) * (A.abre / 2) : 0;
   }
   function disparar(m, p) {
     if (p.cad > 0) return;
     const arma = p.vehiculo >= 0 ? 'canon' : p.arma, A = ARMAS[arma], d = DIRS[p.aim];
-    let oy = p.agachado ? p.y - 9 : p.y - 17;
-    if (p.vehiculo >= 0) oy = p.y - 16;
-    if (p.aim === 6) oy = p.y - 24;
-    if (p.aim === 2) oy = p.y - 4;
-    const ox = p.x + d[0] * 10;
+    const oy = alturaDisparo(p), ox = p.x + d[0] * 10;
     let n = 0;
     for (let k = 0; k < A.balas; k++) {
-      let ang = A.balas > 1 ? (k - (A.balas - 1) / 2) * (A.abre / 2) : 0;
-      if (arma === 'rafaga') ang = (p.nDisp % 2 ? 0.04 : -0.04);
+      const ang = anguloBala(A, arma, k, p.nDisp);
       const c = Math.cos(ang), s = Math.sin(ang), dx = d[0] * c - d[1] * s, dy = d[0] * s + d[1] * c;
       const b = libre(m.balas);
       if (!b) break;
@@ -353,8 +383,14 @@
       n++;
     }
     p.nDisp++; p.dispT = 0; p.cad += A.cad;
-    if (A.mun) { p.mun[arma] = Math.max(0, p.mun[arma] - 1); if (p.mun[arma] === 0) { p.arma = 'burbuja'; m.ev.push({ tipo: 'sinMunicion', i: p.i }); } }
+    if (A.mun) gastarMunicion(m, p, arma);
     m.ev.push({ tipo: 'disparo', i: p.i, arma, balas: n, aim: p.aim });
+  }
+  function gastarMunicion(m, p, arma) {
+    p.mun[arma] = Math.max(0, p.mun[arma] - 1);
+    if (p.mun[arma] > 0) return;
+    p.arma = 'burbuja';
+    m.ev.push({ tipo: 'sinMunicion', i: p.i });
   }
   function lanzarGlobo(m, p) {
     if (p.globos <= 0) return;
@@ -405,7 +441,10 @@
     const vs = vivos(m), def = m.def;
     if (!vs.length) return;
     let lead = vs[0], rear = vs[0];
-    for (const q of vs) { if (q.x > lead.x) lead = q; if (q.x < rear.x) rear = q; }
+    for (const q of vs) {
+      if (q.x > lead.x) lead = q;
+      if (q.x < rear.x) rear = q;
+    }
     if (m.cam.bloqueo !== null) { m.cam.x = Math.min(m.cam.bloqueo, m.cam.x + 260 * dt); return; }
     const deseo = Math.min(lead.x - W * 0.4, rear.x - 8, def.largo - W);
     if (deseo > m.cam.x) m.cam.x = deseo;
@@ -502,20 +541,20 @@
     if (e.suelo && e.t <= 0 && Math.abs(p.x - e.x) < 280) { e.dir = p.x < e.x ? -1 : 1; e.vx = e.dir * d.vel; e.vy = -260; e.suelo = false; e.t = d.cad; }
   }
   function enemigos(m, dt) {
-    for (const e of m.enemigos) {
-      if (!e.vivo) continue;
-      if (e.x < m.cam.x - 80) { e.vivo = false; continue; }
-      if (e.golpeT > 0) e.golpeT -= dt;
-      if (!activo(m, e)) continue;
-      const p = objetivo(m, e.x);
-      if (p) IA_ENEMIGO[e.tipo](m, e, p, dt);
-      const d = ENEMIGOS[e.tipo];
-      if (d.suelo) {
-        if (!e.suelo) e.vy = Math.min(CAIDA_MAX, e.vy + GRAV * dt);
-        mover(m.def, e, d.w, dt, false);
-      }
-      contactoEnemigo(m, e, d);
+    for (const e of m.enemigos) if (e.vivo) actualizarEnemigo(m, e, dt);
+  }
+  function actualizarEnemigo(m, e, dt) {
+    if (e.x < m.cam.x - 80) { e.vivo = false; return; }
+    if (e.golpeT > 0) e.golpeT -= dt;
+    if (!activo(m, e)) return;
+    const p = objetivo(m, e.x);
+    if (p) IA_ENEMIGO[e.tipo](m, e, p, dt);
+    const d = ENEMIGOS[e.tipo];
+    if (d.suelo) {
+      if (!e.suelo) e.vy = Math.min(CAIDA_MAX, e.vy + GRAV * dt);
+      mover(m.def, e, d.w, dt, false);
     }
+    contactoEnemigo(m, e, d);
   }
   function contactoEnemigo(m, e, d) {
     for (const p of m.jugadores) {
@@ -714,38 +753,57 @@
       golpearConBala(m, b);
     }
   }
+  // Orden fijo: jaulas, enemigos y jefe; cada parte dice si la bala ya se gastó.
   function golpearConBala(m, b) {
+    if (golpearJaulas(m, b) || golpearEnemigos(m, b)) return;
+    golpearJefe(m, b);
+  }
+  const tocaBala = (b, x, y, w, h) => solapa(b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r, x, y, w, h);
+  function golpearJaulas(m, b) {
     for (const j of m.jaulas) {
-      if (!j.abierta && solapa(b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r, j.x - 11, j.y - 24, 22, 24)) { abrirJaula(m, j, b.de); if (!b.perfora) { b.vivo = false; return; } }
+      if (j.abierta || !tocaBala(b, j.x - 11, j.y - 24, 22, 24)) continue;
+      abrirJaula(m, j, b.de);
+      if (!b.perfora) { b.vivo = false; return true; }
     }
+    return false;
+  }
+  function golpearEnemigos(m, b) {
     for (const e of m.enemigos) {
       if (!e.vivo || b.hits.includes(e.id)) continue;
       const d = ENEMIGOS[e.tipo];
-      if (!solapa(b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r, e.x - d.w / 2, e.y - d.h, d.w, d.h)) continue;
-      if (d.escudo && b.vx * e.dir < 0 && Math.abs(b.vy) < Math.abs(b.vx)) { b.vivo = false; m.ev.push({ tipo: 'bloqueo', x: b.x, y: b.y }); return; }
+      if (!tocaBala(b, e.x - d.w / 2, e.y - d.h, d.w, d.h)) continue;
+      if (d.escudo && b.vx * e.dir < 0 && Math.abs(b.vy) < Math.abs(b.vx)) { b.vivo = false; m.ev.push({ tipo: 'bloqueo', x: b.x, y: b.y }); return true; }
       danarEnemigo(m, e, b.dano, b.de);
-      if (!b.perfora) { b.vivo = false; return; }
+      if (!b.perfora) { b.vivo = false; return true; }
       b.hits.push(e.id);
     }
+    return false;
+  }
+  function golpearJefe(m, b) {
     const j = m.jefe;
-    if (j && !b.hits.includes(-1) && solapa(b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r, j.x - j.w / 2, j.y - j.h, j.w, j.h) && danarJefe(m, j, b.dano, b.de)) {
-      if (b.perfora) b.hits.push(-1); else b.vivo = false;
-    }
+    if (!j || b.hits.includes(-1) || !tocaBala(b, j.x - j.w / 2, j.y - j.h, j.w, j.h) || !danarJefe(m, j, b.dano, b.de)) return;
+    if (b.perfora) b.hits.push(-1);
+    else b.vivo = false;
   }
   function balasEnemigas(m, dt) {
-    for (const b of m.balasE) {
-      if (!b.vivo) continue;
-      if (b.retraso > 0) { b.retraso -= dt; if (b.retraso <= 0) b.vy = b.vy0 || 200; continue; }
-      if (b.g) b.vy += b.g * dt;
-      b.x += b.vx * dt; b.y += b.vy * dt; b.vida -= dt;
-      const rect = b.w > 0;
-      if (b.vida <= 0 || b.x < m.cam.x - 60 || b.x > m.cam.x + W + 60 || b.y > H + 20 || (!rect && b.y >= sueloEn(m.def, b.x))) { b.vivo = false; continue; }
-      for (const p of m.jugadores) {
-        if (p.estado !== 'vivo') continue;
-        const c = cajaJugador(p);
-        const toca = rect ? solapa(c.x, c.y, c.w, c.h, b.x, b.y, b.w, b.h) : solapa(c.x, c.y, c.w, c.h, b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r);
-        if (toca && herir(m, p.i, b.tipo) && !rect) { b.vivo = false; break; }
-      }
+    for (const b of m.balasE) if (b.vivo) actualizarBalaE(m, b, dt);
+  }
+  function actualizarBalaE(m, b, dt) {
+    if (b.retraso > 0) {
+      b.retraso -= dt;
+      if (b.retraso <= 0) b.vy = b.vy0 || 200;
+      return;
+    }
+    if (b.g) b.vy += b.g * dt;
+    b.x += b.vx * dt; b.y += b.vy * dt; b.vida -= dt;
+    const rect = b.w > 0;
+    const fuera = b.vida <= 0 || b.x < m.cam.x - 60 || b.x > m.cam.x + W + 60 || b.y > H + 20;
+    if (fuera || (!rect && b.y >= sueloEn(m.def, b.x))) { b.vivo = false; return; }
+    for (const p of m.jugadores) {
+      if (p.estado !== 'vivo') continue;
+      const c = cajaJugador(p);
+      const toca = rect ? solapa(c.x, c.y, c.w, c.h, b.x, b.y, b.w, b.h) : solapa(c.x, c.y, c.w, c.h, b.x - b.r, b.y - b.r, 2 * b.r, 2 * b.r);
+      if (toca && herir(m, p.i, b.tipo) && !rect) { b.vivo = false; return; }
     }
   }
   function globos(m, dt) {
@@ -779,22 +837,27 @@
     if (j && distCaja(g.x, g.y, j.x - j.w / 2, j.y - j.h, j.w, j.h) <= GLOBO.area) danarJefe(m, j, GLOBO.dano, g.de);
   }
   function objetos(m, dt) {
-    for (const o of m.objetos) {
-      if (!o.vivo) continue;
-      o.t += dt;
-      if (o.flota) continue;
-      const piso = sueloEn(m.def, o.x);
-      o.vy = Math.min(CAIDA_MAX, o.vy + GRAV * dt); o.y = Math.min(piso, o.y + o.vy * dt);
-      if (o.y >= piso) o.vy = 0;
+    for (const o of m.objetos) if (o.vivo) caerObjeto(m, o, dt);
+    for (const a of m.avisos) {
+      if (!a.vivo) continue;
+      a.t -= dt;
+      if (a.t <= 0) a.vivo = false;
     }
-    for (const a of m.avisos) if (a.vivo && (a.t -= dt) <= 0) a.vivo = false;
-    for (const v of m.vehiculos) {
-      if (!v.vivo) continue;
-      if (v.inv > 0) v.inv -= dt;
-      if (v.ocupante >= 0) continue;
-      if (!v.suelo) v.vy = Math.min(CAIDA_MAX, v.vy + GRAV * dt);
-      mover(m.def, v, 34, dt, false);
-    }
+    for (const v of m.vehiculos) if (v.vivo) vehiculoSolo(m, v, dt);
+  }
+  function caerObjeto(m, o, dt) {
+    o.t += dt;
+    if (o.flota) return;
+    const piso = sueloEn(m.def, o.x);
+    o.vy = Math.min(CAIDA_MAX, o.vy + GRAV * dt); o.y = Math.min(piso, o.y + o.vy * dt);
+    if (o.y >= piso) o.vy = 0;
+  }
+  // Vehículo sin conductor: cae y se queda donde lo dejaron.
+  function vehiculoSolo(m, v, dt) {
+    if (v.inv > 0) v.inv -= dt;
+    if (v.ocupante >= 0) return;
+    if (!v.suelo) v.vy = Math.min(CAIDA_MAX, v.vy + GRAV * dt);
+    mover(m.def, v, 34, dt, false);
   }
 
   // ================= Estado de la misión =================
@@ -848,34 +911,51 @@
 
   // ================= Piloto automático (compañeros IA, quien se desconecta y pruebas) =================
   function entradaIA() { return { x: 0, y: 0, a: false, b: false, ga: false, gx: false, gy: false }; }
+  // Blanco más cercano en la ventana: enemigos (los de atrás cuentan 60 px más) y luego jaulas (30 px menos).
   function blancoIA(m, p) {
-    let mejor = null, dmin = Infinity;
+    const r = { d: Infinity, b: null };
+    enemigoCercano(m, p, r);
+    jaulaCercana(m, p, r);
+    const mejor = r.b, j = m.jefe;
+    if (!j || j.oculto || j.fase === 'entrada') return mejor;
+    return mejor && Math.abs(mejor.x - p.x) < 90 ? mejor : { x: j.x, y: j.y - j.h / 2, jefe: j };
+  }
+  function enemigoCercano(m, p, r) {
     for (const e of m.enemigos) {
       if (!e.vivo || !visible(m, e.x)) continue;
       const d = Math.abs(e.x - p.x) + (e.x < p.x ? 60 : 0);
-      if (d < dmin) { dmin = d; mejor = { x: e.x, y: e.y - ENEMIGOS[e.tipo].h / 2, e }; }
+      if (d < r.d) { r.d = d; r.b = { x: e.x, y: e.y - ENEMIGOS[e.tipo].h / 2, e }; }
     }
+  }
+  function jaulaCercana(m, p, r) {
     for (const j of m.jaulas) {
       if (j.abierta || !visible(m, j.x)) continue;
       const d = Math.abs(j.x - p.x) - 30;
-      if (d < dmin) { dmin = d; mejor = { x: j.x, y: j.y - 12, jaula: j }; }
+      if (d < r.d) { r.d = d; r.b = { x: j.x, y: j.y - 12, jaula: j }; }
     }
-    const j = m.jefe;
-    if (j && !j.oculto && j.fase !== 'entrada') return mejor && Math.abs(mejor.x - p.x) < 90 ? mejor : { x: j.x, y: j.y - j.h / 2, jefe: j };
-    return mejor;
   }
   // ¿Viene algo que hay que saltar, esquivar agachado o de lado? { accion, x } con x = de dónde viene.
   function peligroIA(m, p) {
+    return peligroBalas(m, p) || peligroAvisos(m, p) || peligroSaltones(m, p);
+  }
+  function peligroBalas(m, p) {
     for (const b of m.balasE) {
       if (!b.vivo || b.retraso > 0) continue;
       const r = b.w > 0 ? peligroRect(p, b) : peligroBala(p, b);
       if (r) return { accion: r, x: b.w > 0 ? b.x + b.w / 2 : b.x };
     }
+    return null;
+  }
+  const AVISOS_DE_LADO = new Set(['columna', 'sombra', 'polvo']);
+  function peligroAvisos(m, p) {
     for (const a of m.avisos) {
       if (!a.vivo) continue;
       if (a.tipo === 'rayo' && a.t < 0.2) return { accion: 'saltar', x: a.x };
-      if ((a.tipo === 'columna' || a.tipo === 'sombra' || a.tipo === 'polvo') && Math.abs(a.x - p.x) < a.w / 2 + 14) return { accion: 'apartar', x: a.x };
+      if (AVISOS_DE_LADO.has(a.tipo) && Math.abs(a.x - p.x) < a.w / 2 + 14) return { accion: 'apartar', x: a.x };
     }
+    return null;
+  }
+  function peligroSaltones(m, p) {
     for (const e of m.enemigos) if (e.vivo && (e.tipo === 'saltabot' || e.tipo === 'alien') && Math.abs(e.x - p.x) < 34 && p.suelo) return { accion: 'saltar', x: e.x };
     return null;
   }
@@ -907,20 +987,24 @@
     const caida = m.jugadores.find(q => q.estado === 'burbuja');
     if (caida) return caida.x;
     const j = m.jefe;
-    if (j && !j.oculto) {
-      const lejos = JEFES[j.tipo].vuela ? Math.max(j.w / 2 + 40, p.y - 17 - (j.y - j.h / 2)) : j.w / 2 + 120;
-      return acotar(j.x - lejos, izq, der);
-    }
-    if (j) return acotar(j.arena + 120, izq, der);
-    if (blanco && blanco.e) {
-      const dx = blanco.x - p.x, dy = blanco.y - (p.y - 17);
-      if (esEscudo(blanco) && (p.globos === 0 || p.vehiculo >= 0)) return blanco.x + blanco.e.dir * -30; // por arriba y por detrás
-      // Blanco alto: a la diagonal de 45° (o debajo, si está muy arriba).
-      if (dy < -30) return acotar(blanco.x - (signo(dx) || 1) * Math.min(-dy, 150), izq, der);
-      if (!lineaLibre(m, p, blanco)) return blanco.x;
-      if (dx >= 40 && dx < 140) return p.x;
-    }
-    return der;
+    if (j) return destinoJefe(p, j, izq, der);
+    const hacia = blanco && blanco.e ? destinoEnemigo(m, p, blanco, izq, der) : null;
+    return hacia === null ? der : hacia;
+  }
+  // Frente al jefe: a distancia (o en la diagonal si vuela); si está escondido, al centro de la arena.
+  function destinoJefe(p, j, izq, der) {
+    if (j.oculto) return acotar(j.arena + 120, izq, der);
+    const lejos = JEFES[j.tipo].vuela ? Math.max(j.w / 2 + 40, p.y - 17 - (j.y - j.h / 2)) : j.w / 2 + 120;
+    return acotar(j.x - lejos, izq, der);
+  }
+  // null = seguir avanzando.
+  function destinoEnemigo(m, p, blanco, izq, der) {
+    const dx = blanco.x - p.x, dy = blanco.y - (p.y - 17);
+    if (esEscudo(blanco) && (p.globos === 0 || p.vehiculo >= 0)) return blanco.x + blanco.e.dir * -30; // por arriba y por detrás
+    // Blanco alto: a la diagonal de 45° (o debajo, si está muy arriba).
+    if (dy < -30) return acotar(blanco.x - (signo(dx) || 1) * Math.min(-dy, 150), izq, der);
+    if (!lineaLibre(m, p, blanco)) return blanco.x;
+    return dx >= 40 && dx < 140 ? p.x : null;
   }
   // ¿El disparo de pie llega al blanco sin chocar con un escalón?
   function lineaLibre(m, p, blanco) {
@@ -933,18 +1017,9 @@
     const p = m.jugadores[i], e = entradaIA();
     if (!p || p.estado !== 'vivo' || m.estado === 'cumplida' || m.estado === 'fallida') return e;
     const blanco = blancoIA(m, p), riesgo = peligroIA(m, p), peligro = riesgo && riesgo.accion;
-    let meta = destinoIA(m, p, blanco);
-    if (peligro === 'apartar') {
-      const lado = riesgo.x > p.x ? -1 : 1, libre = lado < 0 ? p.x - 40 > m.cam.x + 16 : p.x + 40 < m.cam.x + W - 16;
-      meta = p.x + (libre ? lado : -lado) * 60;
-    }
+    const meta = peligro === 'apartar' ? apartarse(m, p, riesgo) : destinoIA(m, p, blanco);
     const mover = Math.abs(meta - p.x) > 6 ? signo(meta - p.x) : 0;
-    // Apuntado al blanco (o al frente) con la misma palanca: si no camina, una inclinación chica solo apunta.
-    let ax = p.dir, ay = 0;
-    if (blanco) { ax = blanco.x - p.x; ay = blanco.y - (p.y - 17); }
-    const k = apuntar(ax, ay, ax < 0 ? -1 : 1, p.suelo, false), d = DIRS[k];
-    if (mover) { e.x = mover; e.y = d[1] * (Math.abs(d[0]) > 0.1 && signo(d[0]) !== mover ? 0 : 1); }
-    else { e.x = d[0] * 0.28; e.y = d[1] * 0.28; }
+    const k = palancaIA(p, e, blanco, mover);
     if (peligro === 'agachar' && p.suelo) { e.x = 0; e.y = 1; }
     else if (!peligro && p.suelo && blanco && (k === 0 || k === 4)) tiroBajo(p, e, blanco);
     e.b = !!blanco;
@@ -952,9 +1027,26 @@
     // En una plataforma con el blanco abajo (desde el suelo no se apunta en diagonal hacia abajo): bajar.
     if (p.plat >= 0 && p.suelo && blanco && blanco.y > p.y + 8 && !e.ga) { e.y = 1; e.x = 0; e.ga = true; }
     globoIA(m, p, e, blanco);
-    if (p.iaArma > 0) p.iaArma -= 1 / 60;
-    else if (p.arma === 'burbuja' && ORDEN_ARMAS.some(a => p.mun[a] > 0)) { e.gy = true; p.iaArma = 2; }
+    armaIA(p, e);
     return e;
+  }
+  // Lejos de lo que viene (del otro lado si ya no hay espacio en la ventana).
+  function apartarse(m, p, riesgo) {
+    const lado = riesgo.x > p.x ? -1 : 1, libre = lado < 0 ? p.x - 40 > m.cam.x + 16 : p.x + 40 < m.cam.x + W - 16;
+    return p.x + (libre ? lado : -lado) * 60;
+  }
+  // Apuntado al blanco (o al frente) con la misma palanca: si no camina, una inclinación chica solo apunta.
+  function palancaIA(p, e, blanco, mover) {
+    let ax = p.dir, ay = 0;
+    if (blanco) { ax = blanco.x - p.x; ay = blanco.y - (p.y - 17); }
+    const k = apuntar(ax, ay, ax < 0 ? -1 : 1, p.suelo, false), d = DIRS[k];
+    if (mover) { e.x = mover; e.y = d[1] * (Math.abs(d[0]) > 0.1 && signo(d[0]) !== mover ? 0 : 1); }
+    else { e.x = d[0] * 0.28; e.y = d[1] * 0.28; }
+    return k;
+  }
+  function armaIA(p, e) {
+    if (p.iaArma > 0) { p.iaArma -= 1 / 60; return; }
+    if (p.arma === 'burbuja' && ORDEN_ARMAS.some(a => p.mun[a] > 0)) { e.gy = true; p.iaArma = 2; }
   }
   // Blanco más abajo que el disparo de pie (un escalón): agacharse para tirar bajo o, si ni así, acercarse.
   function tiroBajo(p, e, blanco) {
