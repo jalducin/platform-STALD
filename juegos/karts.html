@@ -266,7 +266,7 @@ body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espe
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="karts-pistas.js?v=7"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="karts-pistas.js?v=8"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
 <script src="karts-espacio.js?v=1"></script> <!-- karts-copa-espacio: piso, sprites y cielo de las pistas espaciales -->
 <script src="arcade.js?v=7"></script>
 <script src="personajes.js?v=3"></script>
@@ -1460,6 +1460,7 @@ function pintarCaraKart(c, f, cuadro, kc, color, num, cr) {
 
 /* ================= Corredores ================= */
 const PASO_M = 8; // px entre muestras
+const SLOT_YO = 5; // tu lugar en la parrilla y en la tabla de la copa individual (índice en karts)
 let karts = [], yo = null, objetos = [], particulas = [];
 let geo = null, red = null; // karts-objetos-en-sala: geometría de la pista para los objetos y estado de los ítems en sala en vivo
 let modo = 'carga', sala = null, tCarrera = 0, cuentaFin = 0, terminada = false, rayoTinte = 0, ultimoTurbo = null, carreraDe = null;
@@ -1527,7 +1528,7 @@ function prepararCarrera(id, opciones) {
     const skills = [0.95, 0.94, 0.93, 0.92, 0.9, 0.89, 0.87].map(s => s * dif);
     // Barajar las habilidades con la semilla para que el favorito cambie entre pistas.
     for (let i = skills.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [skills[i], skills[j]] = [skills[j], skills[i]]; }
-    const slotYo = 5;
+    const slotYo = SLOT_YO;
     let s = 0;
     RIVALES.forEach((nombre, k) => { if (s === slotYo) { s++; } const b = nuevoKart('bot-' + k, nombre, otros[k % otros.length], false, s++, perOtros[k % perOtros.length]); b.skill = Math.max(0.78, Math.min(1.0, skills[k])) * A.ritmoBots(id); karts.push(b); }); // karts-copa-espacio: ritmo de la pista
     yo = nuevoKart('yo', 'Tú', colorYo, true, slotYo, perYo);
@@ -2098,7 +2099,7 @@ function mostrarResultados() {
   let bono = 0, extra = '';
   // Récord de la pista y piezas.
   const id = pista.id, ms = yo.termino;
-  if (ms !== null && ms >= 10000) extra += anotarRecord(id, ms);
+  if (ms !== null) extra += anotarRecord(id, ms);
   let tablaCopa = null;
   if (enCopa) {
     const copa = puntuarCopa(filas, lugar);
@@ -2129,9 +2130,11 @@ function mostrarResultados() {
   if (ms !== null) enviar({ tipo: 'puntos', puntos, aciertos: yo.monedas, total: 0, segundos: Math.round(ms / 1000), titulo: '🏎️ ' + pista.nombre + ': ' + lugar + '.º lugar', detalle: '⏱ ' + A.formatoTiempo(ms) + ' · 🪙 ' + yo.monedas + (bono ? ' · copa +' + bono : '') });
 }
 // Récord de la pista y pintura dorada (récord bajo la meta en todas). Devuelve el texto extra de lo ganado.
+// karts-puntos-copas: KartsPistas.anotarRecord solo anota tiempos que el servidor acepta (10 s a 15 min); antes una
+// carrera de más de 15 min (pestaña oculta o atorado) dejaba un récord inválido y el servidor rechazaba todo el avance.
 function anotarRecord(id, ms) {
   let extra = '';
-  if (!prog.records[id] || ms < prog.records[id]) { prog.records[id] = ms; extra += ' · 🏅 Récord de la pista'; }
+  if (KP.anotarRecord(prog, id, ms)) extra += ' · 🏅 Récord de la pista';
   // karts-copa-espacio: las 4 pistas de la Copa Fiesta, como dice el taller (no todas las de sala, que ya son 12 o más).
   if (!prog.piezas.includes('pintura-dorada') && KP.copaPorId('fiesta').pistas.every(id => prog.records[id] && prog.records[id] <= A.refKarts(id))) { prog.piezas.push('pintura-dorada'); extra += ' · 🎨 ¡Pintura dorada desbloqueada!'; }
   return extra;
@@ -2139,23 +2142,19 @@ function anotarRecord(id, ms) {
 const BONO_COPA = [0, 400, 250, 150]; // por lugar final en la copa (1.º a 3.º); los demás, 0
 // Suma los puntos de copa de la carrera y, en la última, cierra la copa (bono y piezas).
 // Devuelve { tabla, bono, extra } y deja el resumen en ultimoRes.
+// karts-puntos-copas: la suma y el cierre son KartsPistas.sumarCarreraCopa (los prueba Deno con el validador del servidor).
 function puntuarCopa(filas, lugar) {
   const cc = prog.copaEnCurso;
   let bono = 0, extra = '';
-  filas.forEach((f, i) => { const k = karts.indexOf(f.k); cc.puntos[k] = Math.min(60, cc.puntos[k] + A.PUNTOS_COPA[i]); });
   cc.dif = Math.max(85, Math.min(105, cc.dif + ajusteDificultad(lugar)));
-  cc.carrera++;
+  const r = KP.sumarCarreraCopa(prog, filas.map(f => karts.indexOf(f.k)), karts.indexOf(yo));
   const tabla = karts.map((k, i) => ({ k, pts: cc.puntos[i] })).sort((a, b) => b.pts - a.pts);
-  const copa = copaDe(cc);
-  if (cc.carrera >= copa.pistas.length) {
-    const lugarCopa = tabla.findIndex(x => x.k === yo) + 1, pts = cc.puntos[karts.indexOf(yo)];
-    const previo = prog.copas[copa.id];
-    if (!previo || lugarCopa < previo.lugar || (lugarCopa === previo.lugar && pts > previo.puntos)) prog.copas[copa.id] = { lugar: lugarCopa, puntos: pts };
+  if (r.terminada) {
+    const lugarCopa = r.lugar;
     bono = BONO_COPA[lugarCopa] || 0;
     if (lugarCopa <= 3 && !prog.piezas.includes('chasis-ligero')) { prog.piezas.push('chasis-ligero'); extra += ' · 🔧 Chasis ligero desbloqueado'; }
     if (lugarCopa === 1 && !prog.piezas.includes('llantas-todoterreno')) { prog.piezas.push('llantas-todoterreno'); extra += ' · 🛞 Llantas todoterreno desbloqueadas'; }
     ultimoRes = { copaTerminada: true, lugarCopa };
-    prog.copaEnCurso = null;
   } else ultimoRes = { copaTerminada: false };
   return { tabla, bono, extra };
 }
@@ -2178,7 +2177,7 @@ function escalonPodio(f, i) {
 // nueva = id de la copa que empieza desde cero; sin él, continúa la copa en curso.
 function empezarCopa(nueva) {
   if (nueva && !KP.copaDesbloqueada(KP.copaPorId(nueva), prog)) return; // karts-copa-espacio: copa con candado
-  if (nueva || !prog.copaEnCurso) prog.copaEnCurso = { copa: KP.copaPorId(nueva).id, carrera: 0, puntos: [0, 0, 0, 0, 0, 0, 0, 0], dif: 95 };
+  if (nueva || !prog.copaEnCurso) prog.copaEnCurso = KP.copaNueva(nueva);
   const cc = prog.copaEnCurso;
   guardar();
   iniciarCarrera(copaDe(cc).pistas[cc.carrera], { copa: true, ronda: cc.carrera, dif: cc.dif });
@@ -2221,7 +2220,7 @@ function abrirMenu() {
   modo = 'menu'; motorOn(false); soltarTodo(); $('hud').classList.add('hide'); $('cuenta').textContent = ''; window.Emocion?.calma(); // emocion-sonora
   const cc = prog.copaEnCurso;
   $('menu-ops').innerHTML =
-    (cc ? '<button class="op" data-ir="copa">▶ Continuar ' + copaDe(cc).nombre + '<small>Carrera ' + (cc.carrera + 1) + ' de 4</small></button>' : '') +
+    (cc ? '<button class="op" data-ir="copa">▶ Continuar ' + copaDe(cc).nombre + '<small>Carrera ' + (cc.carrera + 1) + ' de 4' + puntosCopaTxt(cc) + '</small></button>' : '') + // karts-puntos-copas: + tus puntos
     KP.copasOrdenadas().map(botonCopa).join('') + // karts-copa-espacio: en orden de dificultad, con candado
     '<button class="op" data-ir="pistas">🏁 Carrera rápida<small>Elige la pista</small></button>' +
     '<button class="op" data-ir="taller">🔧 Taller<small>' + prog.piezas.length + ' de 3 piezas</small></button>';
@@ -2230,6 +2229,12 @@ function abrirMenu() {
   pintarControles();
   mostrar('ov-menu');
   const b = $('menu-ops').querySelector('.op'); if (b) b.focus();
+}
+// karts-puntos-copas: tus puntos y lugar en la copa en curso (con el índice de tu kart en la copa individual: el 6.º).
+function puntosCopaTxt(cc) {
+  if (!cc.carrera) return '';
+  const yoI = SLOT_YO, pts = cc.puntos[yoI], lugar = 1 + cc.puntos.filter((p, i) => p > pts || (p === pts && i < yoI)).length;
+  return ' · ⭐ ' + pts + ' pts (' + lugar + '.º)';
 }
 // karts-copa-espacio: botón de una copa; la que pide podios en otras copas va con candado y lo que falta.
 function botonCopa(c) {
@@ -2330,11 +2335,19 @@ addEventListener('message', ev => {
     if (d.aviso) avisar(d.aviso, 3500);
     else if (migro) { const av = AVISO_PISTAS[migro]; avisar(av[0], 2600); setTimeout(() => avisar(av[1], 3200), 2700); }
   } else if (d.tipo === 'inicio' && d.modo === 'sala') empezarSala(d);
-  else if (d.tipo === 'guardado') { if (!d.ok) avisar('⚠️ No se pudo guardar tu avance. Revisa tu conexión.', 2500); }
+  else if (d.tipo === 'guardado') avisoGuardado(d); // karts-puntos-copas: el error se ve y dice por qué
+  else if (d.tipo === 'aviso' && typeof d.texto === 'string') avisar(d.texto.slice(0, 140), 4500); // karts-puntos-copas: errores de la sala
   else if (d.tipo === 'puntos-ok') $('res-guardado').textContent = textoGuardado(d);
 });
 // karts-copa-en-sala: tabla de la copa que manda la página mientras se espera.
 addEventListener('message', ev => { if (ev.origin === location.origin && ev.source === parent && ev.data && ev.data.tipo === 'copa-tabla') pintarCopa(ev.data); });
+// karts-puntos-copas: si el servidor no acepta el avance, se avisa 4.5 s y queda escrito en los resultados.
+function avisoGuardado(d) {
+  if (d.ok) return;
+  const txt = '⚠️ No se guardó tu avance de la copa' + (d.error ? ' (' + String(d.error).slice(0, 40) + ')' : '') + '. Revisa tu conexión y vuelve a abrir el juego.';
+  avisar(txt, 4500);
+  if (modo === 'resultados') $('res-guardado').textContent = txt;
+}
 // Resultado de guardar los puntos individuales (con el lugar de la semana si viene).
 function textoGuardado(d) {
   if (!d.guardado) { return 'No se guardaron los puntos (' + (d.error || 'sin conexión') + ').'; }
