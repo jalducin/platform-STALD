@@ -368,8 +368,9 @@ async function probarSaltoTeclado(b) {
   // Brincando justo antes, pasa por encima y la cáscara sigue en la pista (a 0.2 s de distancia a tu velocidad).
   const c0 = (await estado(f)).cascaras;
   // ESPACIO y, en cuanto despega, la cáscara en su camino (la toca entre 0.1 y 0.3 s del brinco).
+  await f.evaluate(() => window.__karts.ponerEn(6)); await sleep(350); // en la recta de salida, ya derecho y a la punta
   const dz = await f.evaluate(() => new Promise(res => {
-    window.__karts.ponerEn(6); dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }));
+    dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }));
     const ver = () => { const e = window.__karts.estado(); if (e.brinco > 0) { const px = e.vel * 0.2; window.__karts.cascaraAdelante(px); res({ px: Math.round(px), vel: e.vel }); } else requestAnimationFrame(ver); };
     requestAnimationFrame(ver);
   }));

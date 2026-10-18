@@ -37,7 +37,8 @@ Regla única: `derrapa = derrape || (salto && en el piso)`. Así:
   achica DERRAPE, FRENO, 🎁 ni REVERSA. En horizontal cabe en la esquina derecha.
 - **Mando: combinado en R/L** (presionar = brinco, mantener = derrape): no hay botón libre (A gas, B frenar/rev,
   X/Y ítem, START pausa; ▲/▼ no se usan en Karts y la cruceta pierde ▼ en horizontal). Es el esquema de los clásicos.
-  `mando.js` no cambia: el adaptador de Karts responde `salto` con el estado de `derrape`; etiqueta «salto/derrape».
+  `mando.js` no cambia: el adaptador de Karts responde `salto` con el estado de `derrape`; nombre «salto/derrape» en la guía
+  «⌨️ Controles» (los gatillos no llevan etiqueta) y fila «R / L: Salto · mantén y gira» en el tutorial.
 - **Teclado: ESPACIO** (combinado, igual que el mando). No hay tecla nueva que memorizar.
 
 ### 5. En vivo

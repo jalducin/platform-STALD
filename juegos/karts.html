@@ -159,7 +159,9 @@ body.acel-manual #m-acel{display:flex!important}
 body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.85);animation:brilla .8s ease-in-out infinite alternate}
 @keyframes brilla{to{box-shadow:0 0 0 6px rgba(250,204,21,.35)}}
 @media (max-width:700px){#mandos{display:flex}#menu-control{display:flex}}
-@media (max-width:340px){#m-der{grid-template-columns:56px 56px 48px;grid-template-rows:50px 50px 30px;gap:6px}#m-flechas{gap:8px}#m-flechas .m{width:58px;height:92px;font-size:32px}#mandos{padding:8px 8px 12px}}
+/* karts-salto: con la columna ⤴ todo cabe desde 320 px (dentro de Juegos el marco mide ≈ 32 px menos) */
+@media (max-width:380px){#m-der{grid-template-columns:60px 60px 50px;gap:6px}#m-flechas{gap:8px}#m-flechas .m{width:64px}}
+@media (max-width:340px){#m-der{grid-template-columns:50px 50px 44px;grid-template-rows:50px 50px 30px;gap:5px}#m-der .m{font-size:10px;letter-spacing:0}#m-salto b{font-size:20px}#m-flechas{gap:6px}#m-flechas .m{width:52px;height:92px;font-size:30px}#mandos{padding:8px 8px 12px}}
 @media (orientation:landscape) and (max-height:520px){
   body.tactil #mandos{position:absolute;left:0;right:0;bottom:0;padding:6px 14px calc(6px + env(safe-area-inset-bottom,0px));background:none;pointer-events:none;align-items:flex-end;z-index:3}
   body.tactil:not(.corriendo) #mandos{display:none}
@@ -396,7 +398,11 @@ addEventListener('keydown', e => {
   if (k === 'pausa') { if (modo === 'carrera' || modo === 'pausa') { e.preventDefault(); if (!e.repeat) alternarPausa(); } return; }
   if (modo === 'carrera') { e.preventDefault(); if (!e.repeat) { presionar(teclado, k, true); if (TECLA_DOBLE[e.code]) presionar(teclado, TECLA_DOBLE[e.code], true); } }
 });
-addEventListener('keyup', e => { const k = MAPA_TECLAS[e.code]; if (k) presionar(teclado, k, false); if (TECLA_DOBLE[e.code]) presionar(teclado, TECLA_DOBLE[e.code], false); });
+addEventListener('keyup', e => {
+  const k = MAPA_TECLAS[e.code];
+  if (k) presionar(teclado, k, false);
+  if (TECLA_DOBLE[e.code]) presionar(teclado, TECLA_DOBLE[e.code], false);
+});
 // Perder el foco solo suelta el teclado: los dedos siguen en la pantalla.
 addEventListener('blur', () => { for (const k in teclado) teclado[k] = false; });
 // Durante la carrera, arrastrar el dedo nunca desplaza la página de Juegos.

@@ -17,7 +17,7 @@ las mecánicas que ya piden rampa (huecos del espacio, cenote) ni el conteo de v
   no acelera y no toca el conteo de vueltas.
 - **Celular:** botón propio «⤴ SALTO» (Botones, Joystick y Sensor), columna alta a la derecha de DERRAPE, FRENO y
   REVERSA.
-- **Mando clásico:** R/L (los del derrape): presionar = brinco, mantener girando = derrape. Etiqueta «salto/derrape».
+- **Mando clásico:** R/L (los del derrape): presionar = brinco, mantener girando = derrape. En la guía «⌨️ Controles» se llama «salto/derrape» (los gatillos no llevan etiqueta) y el tutorial lo explica.
 - **Teclado:** ESPACIO (el del derrape), igual que el mando: presionar brinca, mantener girando derrapa.
 - **En vivo:** el estado del kart manda la altura (índice 10, interpolada) y los demás ven el brinco (y los saltos de
   rampa). Los aparatos con la versión anterior la ignoran.

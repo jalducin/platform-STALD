@@ -44,7 +44,10 @@ Deno.test("salto: enfriamiento de ~0.6 s después de caer (no se puede spamear)"
   // Brincos por segundo con el botón apretado sin parar: a lo más 1.
   const s = kart();
   let n = 0;
-  for (let i = 0; i < 600; i++) { if (KS.iniciar(s)) n++; KS.paso(s, DT); }
+  for (let i = 0; i < 600; i++) {
+    if (KS.iniciar(s)) n++;
+    KS.paso(s, DT);
+  }
   assert(n <= 10, "10 s apretando: " + n + " brincos");
 });
 
@@ -71,28 +74,30 @@ Deno.test("salto: no acelera ni toca vueltas, muestra ni el aire de rampa", () =
   assertEquals(KS.enAireDeRampa(kart({ aire: 0.2 })), true, "la rampa sí");
 });
 
+// Brinca `antes` muestras antes del hueco y avanza por el centro a `vel` (sin pasar por la rampa: k.aire = 0).
+// Devuelve si cae con la regla de bordeEspacio (karts.html): con hueco y sin aire de rampa, cae.
+function caeEnHueco(marcas: number[], i0: number, antes: number, paso: number, vel: number) {
+  const n = marcas.length, k = kart({ idx: (i0 - antes + n) % n });
+  let dist = 0;
+  KS.iniciar(k);
+  for (let t = 0; t < 1.2; t += DT) {
+    KS.paso(k, DT);
+    dist += vel * DT;
+    k.idx = (i0 - antes + Math.floor(dist / paso) + n) % n;
+    if ((marcas[k.idx] & KP.MARCA.HUECO) && !KS.enAireDeRampa(k)) return true;
+  }
+  return false;
+}
+
 Deno.test("salto: no cruza los huecos del espacio sin rampa (a la punta con turbo, brincando justo antes)", () => {
   const VEL = A.VEL_KART * 1.35 * 1.25; // punta con turbo y el mejor equipo, de sobra
   let huecos = 0;
   for (const id of ["orbital", "anillos", "cinturon", "nebulosa"]) {
     const p = A.pistaPorId(id), M = A.muestrearPista(p), zonas = KP.colocarMecanicas(p, M), marcas = KP.marcasEspacio(p, M, zonas);
-    const n = M.pts.length, paso = Math.hypot(M.pts[1].x - M.pts[0].x, M.pts[1].y - M.pts[0].y);
+    const paso = Math.hypot(M.pts[1].x - M.pts[0].x, M.pts[1].y - M.pts[0].y);
     for (const z of zonas.filter((x: any) => x.tipo === "brecha")) {
       huecos++;
-      // Brinca a distintas distancias antes del hueco y avanza por el centro (sin pasar por la rampa: k.aire = 0).
-      for (let antes = 0; antes <= 6; antes++) {
-        const k = kart({ idx: (z.i0 - antes + n) % n });
-        let dist = 0, cae = false;
-        KS.iniciar(k);
-        for (let t = 0; t < 1.2 && !cae; t += DT) {
-          KS.paso(k, DT);
-          dist += VEL * DT;
-          k.idx = (z.i0 - antes + Math.floor(dist / paso) + n) % n;
-          // Regla de bordeEspacio (karts.html): con hueco y sin aire de rampa, cae.
-          if ((marcas[k.idx] & KP.MARCA.HUECO) && !KS.enAireDeRampa(k)) cae = true;
-        }
-        assert(cae, id + " hueco en " + z.i0 + ": brincando " + antes + " muestras antes también cae");
-      }
+      for (let antes = 0; antes <= 6; antes++) assert(caeEnHueco(marcas, z.i0, antes, paso, VEL), id + " hueco en " + z.i0 + ": brincando " + antes + " muestras antes también cae");
     }
   }
   assert(huecos >= 4, "hay huecos que revisar: " + huecos);
