@@ -29,14 +29,14 @@
 
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
-- [ ] 4.1 `npx -y deno test -A server/`, `deno lint` y `cd tests/calidad && npm run calidad` sin avisos nuevos
-- [ ] 4.2 E2E `karts karts-vivo` con la copia de datos de prueba (`correr.sh` trabaja sobre una copia temporal y la
+- [x] 4.1 `npx -y deno test -A server/`, `deno lint` y `cd tests/calidad && npm run calidad` sin avisos nuevos
+- [x] 4.2 E2E `karts karts-vivo` con la copia de datos de prueba (`correr.sh` trabaja sobre una copia temporal y la
   borra: estado restaurado; nunca se escribe en tablas `stald_`)
-- [ ] 4.3 Reporte `openspec/changes/karts-curvas-complejas/reports/2026-10-17-step-4-pruebas-y-verificacion.md`
+- [x] 4.3 Reporte `openspec/changes/karts-curvas-complejas/reports/2026-10-17-step-4-pruebas-y-verificacion.md`
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Capturas del minimapa de cada pista (antes y después) y de la carrera a 390×844; iterar hasta que se vean
+- [x] 5.1 Capturas del minimapa de cada pista (antes y después) y de la carrera a 390×844; iterar hasta que se vean
   claramente más técnicas
 - [ ] 5.2 Tras el merge: abrir `juegos/karts.html` publicado y confirmar que carga los trazados nuevos (`?v=`)
 
