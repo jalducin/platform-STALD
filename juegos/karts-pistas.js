@@ -86,7 +86,7 @@
     // `mitad`; `muro` 0 = dos muros, 1 / -1 = solo el muro de ese lado (cámara abierta). `int` = colores del interior
     // (piso, juntas, muro, cielo de la bóveda y acento). `columnas` = columnas fijas en el camino (slalom), alternadas.
     // `adornos` = adornos sueltos en un punto. `bots` = multiplica la habilidad de los bots del modo individual.
-    { id: 'giza', nombre: 'Gran Pirámide de Giza', emoji: '🔺', sala: true, civ: 'Egipcia', desc: 'Arena del desierto y, adentro, la Gran Galería con bloques que caen.',
+    { id: 'giza', nombre: 'Gran Pirámide de Giza', emoji: '🔺', sala: true, trazado: 3, civ: 'Egipcia', desc: 'Arena del desierto y, adentro, la Gran Galería con bloques que caen.',
       mitad: 50, fuera: 'arena', lento: 0.45, agarre: 0.95, ritmoBots: 1.03,
       color: { fondo: '#e2c48a', fondo2: '#d4b277', camino: '#b39466', borde1: '#8a5a2b', borde2: '#f1e2c0', linea: '#f6ecd2' },
       tema: { cielo: ['#3b7fc4', '#9cc8e8', '#f4e4c4'], bruma: '#f0dcb8', lejos: '#c9a877', cerca: '#b88f5a', cerca2: '#9a7445', franja: '#d8b97f', sol: '#fff3c8', nubes: 0 },
@@ -99,7 +99,7 @@
         { tipo: 'bloques', cerca: [1500, 945], lado: -0.4, r: 24, periodo: 3.6, desfase: 2.1 }, { tipo: 'bloques', cerca: [2300, 1555], lado: 0, r: 24, periodo: 4.4, desfase: 0.7 },
         { tipo: 'arena', cerca: [2200, 2050], lado: 0.35, r: 40 }, { tipo: 'arena', cerca: [1500, 2100], lado: -0.35, r: 40 }, { tipo: 'arena', cerca: [350, 1300], lado: 0.3, r: 40 }],
       vueltas: 2, puntos: [[900, 330], [1700, 320], [2450, 340], [3000, 380], [3350, 600], [3200, 900], [2600, 950], [2000, 920], [1300, 950], [800, 1050], [750, 1380], [1250, 1500], [1800, 1400], [2300, 1560], [2750, 1450], [3200, 1600], [3250, 1900], [2800, 2080], [2200, 2050], [1500, 2100], [900, 2080], [450, 1850], [350, 1300], [380, 750], [550, 420]] },
-    { id: 'castillo', nombre: 'Interior de El Castillo', emoji: '🐍', sala: true, civ: 'Maya', desc: 'La serpiente de luz, escaleras ocultas y el trono del jaguar rojo.',
+    { id: 'castillo', nombre: 'Interior de El Castillo', emoji: '🐍', sala: true, trazado: 3, civ: 'Maya', desc: 'La serpiente de luz, escaleras ocultas y el trono del jaguar rojo.',
       mitad: 50, fuera: 'pasto', lento: 0.5, agarre: 1, ritmoBots: 1.03,
       color: { fondo: '#3f7a3a', fondo2: '#356b31', camino: '#cfc4a6', borde1: '#8e2f22', borde2: '#efe6cf', linea: '#b8a986' },
       tema: { cielo: ['#e9803a', '#f6bf78', '#fbe7c2'], bruma: '#f6dcb4', lejos: '#6f8f6a', cerca: '#3c6f3a', cerca2: '#2b5429', franja: '#3a7536', sol: '#fff1c0', nubes: 1 },
@@ -111,7 +111,7 @@
       mecanicas: [{ tipo: 'luz', cerca: [1700, 2560], lado: -0.35, r: 22 }, { tipo: 'luz', cerca: [2080, 2546], lado: 0.35, r: 22 }, { tipo: 'luz', cerca: [2450, 2523], lado: -0.35, r: 22 },
         { tipo: 'losa', cerca: [3475, 1250], r: 20, periodo: 4.0 }, { tipo: 'losa', cerca: [2985, 1200], r: 20, periodo: 4.6 }, { tipo: 'losa', cerca: [2550, 1500], r: 20, periodo: 5.2 }],
       vueltas: 2, puntos: [[800, 2550], [1700, 2560], [2500, 2520], [3150, 2420], [3450, 2000], [3480, 1450], [3460, 950], [3400, 680], [3230, 570], [3060, 680], [3000, 950], [2980, 1400], [3000, 1850], [2980, 2060], [2780, 2180], [2580, 2060], [2550, 1850], [2550, 1300], [2530, 900], [2300, 520], [1750, 450], [1250, 600], [1150, 1100], [1450, 1500], [1950, 1480], [2150, 1800], [1850, 2100], [1100, 2080], [550, 1950], [380, 2250], [520, 2500]] },
-    { id: 'karnak', nombre: 'Templo de Karnak', emoji: '🏛️', sala: true, civ: 'Egipcia', desc: 'Avenida de esfinges y slalom entre las columnas gigantes.',
+    { id: 'karnak', nombre: 'Templo de Karnak', emoji: '🏛️', sala: true, trazado: 3, civ: 'Egipcia', desc: 'Avenida de esfinges y slalom entre las columnas gigantes.',
       mitad: 52, fuera: 'arena', lento: 0.45, agarre: 0.95, ritmoBots: 1.03,
       color: { fondo: '#d9b77a', fondo2: '#cba869', camino: '#c4a878', borde1: '#2f5f8a', borde2: '#efe2c2', linea: '#f3e6c9' },
       tema: { cielo: ['#2f78c0', '#8fc3e6', '#f6e6c6'], bruma: '#f1dfbd', lejos: '#c4a67a', cerca: '#a98656', cerca2: '#8a6a40', franja: '#cfae74', sol: '#fff4cc', nubes: 0 },
@@ -123,7 +123,7 @@
       columnas: [{ desde: [1420, 2718], hasta: [2620, 2698], cada: 15, lado: 0.45 }],
       mecanicas: [{ tipo: 'losa', cerca: [3420, 1900], r: 20, periodo: 4.2 }, { tipo: 'losa', cerca: [3420, 1380], r: 20, periodo: 4.8 }],
       vueltas: 2, puntos: [[400, 1000], [400, 1700], [430, 2300], [700, 2650], [1300, 2720], [2000, 2700], [2600, 2700], [3150, 2600], [3480, 2200], [3350, 1650], [3500, 1100], [3200, 520], [2700, 400], [2350, 600], [2150, 1300], [1700, 1850], [1250, 1350], [1150, 700], [900, 420], [550, 500]] },
-    { id: 'angkor', nombre: 'Galerías de Angkor Wat', emoji: '🛕', sala: true, civ: 'Jemer', desc: 'Calzada sobre el foso, galerías con roca rodante y selva.',
+    { id: 'angkor', nombre: 'Galerías de Angkor Wat', emoji: '🛕', sala: true, trazado: 3, civ: 'Jemer', desc: 'Calzada sobre el foso, galerías con roca rodante y selva.',
       mitad: 50, fuera: 'selva', lento: 0.5, agarre: 1, ritmoBots: 1.03,
       color: { fondo: '#2f6a2f', fondo2: '#275b27', camino: '#8d8a7c', borde1: '#5b6b3a', borde2: '#c9c4b0', linea: '#c9c4b0' },
       tema: { cielo: ['#3a7fb5', '#9fcbe0', '#e9f1e6'], bruma: '#d8e6dc', lejos: '#5f7f6a', cerca: '#2e5f34', cerca2: '#1e4824', franja: '#2f6d33', sol: '#fff8dc', nubes: 1 },
@@ -141,7 +141,7 @@
     // `espacio: true` = fuera del camino hay vacío: con barandal (postes de neón) se raspa; en los tramos `abierto` se
     // cae y el dron de rescate te regresa. `ritmoBots` multiplica la habilidad de los bots (y divide el tiempo de los
     // fantasmas de sala). Mecánicas por fracción de la vuelta: `f` (punto) o `tramo: [f0, f1]`.
-    { id: 'orbital', nombre: 'Estación Orbital Quetzal', emoji: '🛰️', sala: true, espacio: true, ritmoBots: 1.04, desc: 'Pasillos y hangares. Las compuertas abren y cierran: pasa por el centro.',
+    { id: 'orbital', nombre: 'Estación Orbital Quetzal', emoji: '🛰️', sala: true, trazado: 3, espacio: true, ritmoBots: 1.04, desc: 'Pasillos y hangares. Las compuertas abren y cierran: pasa por el centro.',
       mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 1,
       color: { fondo: '#03050c', fondo2: '#0b1a3a', camino: '#3b4763', borde1: '#22d3ee', borde2: '#fbbf24', linea: '#a5f3fc' },
       tema: { cielo: ['#01030a', '#081634', '#1a3566'], bruma: '#13284f', lejos: '#1d3a6b', cerca: '#0e1d3a', cerca2: '#091327', franja: '#0b1a3a', sol: null, nubes: 0, espacio: 'orbital' },
@@ -152,7 +152,7 @@
         { tipo: 'gravedad', tramo: [0.51, 0.61] }, { tipo: 'antiturbo', f: 0.649, lado: -0.4, r: 26 }, { tipo: 'compuerta', f: 0.696, periodo: 4 },
         { tipo: 'turbo', f: 0.79, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.85, 0.91] }],
       vueltas: 2, puntos: [[1242,272], [1392,272], [1542,272], [1692,272], [1842,272], [1993,266], [2129,202], [2278,200], [2413,265], [2564,272], [2714,272], [2859,301], [2920,434], [2920,586], [2920,736], [2927,887], [3032,987], [3184,992], [3334,992], [3486,996], [3592,1095], [3600,1246], [3600,1396], [3600,1546], [3657,1680], [3802,1712], [3952,1712], [4103,1721], [4197,1832], [4200,1982], [4153,2121], [4012,2162], [3860,2162], [3708,2162], [3556,2162], [3404,2162], [3258,2136], [3192,2006], [3192,1856], [3192,1706], [3192,1556], [3185,1405], [3078,1306], [2926,1302], [2776,1302], [2636,1346], [2592,1486], [2592,1636], [2592,1786], [2557,1929], [2420,1982], [2270,1982], [2118,1980], [2004,1890], [1992,1740], [1992,1590], [1992,1438], [1910,1318], [1760,1302], [1610,1302], [1463,1325], [1392,1452], [1392,1602], [1392,1752], [1392,1902], [1387,2053], [1284,2156], [1132,2162], [980,2162], [839,2121], [792,1982], [792,1832], [792,1682], [792,1532], [792,1382], [744,1243], [606,1192], [456,1192], [305,1188], [188,1098], [180,951], [287,851], [438,842], [588,842], [731,803], [792,670], [792,520], [802,369], [913,275], [1064,272]] },
-    { id: 'anillos', nombre: 'Anillos de Saturno', emoji: '🪐', sala: true, espacio: true, ritmoBots: 1.05, desc: 'Hielo de los anillos que resbala y rocas que cruzan el camino.',
+    { id: 'anillos', nombre: 'Anillos de Saturno', emoji: '🪐', sala: true, trazado: 3, espacio: true, ritmoBots: 1.05, desc: 'Hielo de los anillos que resbala y rocas que cruzan el camino.',
       mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 0.7,
       color: { fondo: '#04060e', fondo2: '#1c2440', camino: '#5b7594', borde1: '#7dd3fc', borde2: '#fbbf24', linea: '#e0f2fe' },
       tema: { cielo: ['#02030a', '#141a33', '#3a2f3f'], bruma: '#2a2438', lejos: '#3a3350', cerca: '#1a1830', cerca2: '#100f22', franja: '#1c2440', sol: '#fff7e0', nubes: 0, espacio: 'anillos' },
@@ -163,7 +163,7 @@
         { tipo: 'turbo', f: 0.385, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.4, 0.5] }, { tipo: 'asteroide', f: 0.52, periodo: 5, ancho: 120 },
         { tipo: 'brecha', f: 0.635 }, { tipo: 'asteroide', f: 0.745, periodo: 4.7, ancho: 120 }, { tipo: 'abierto', tramo: [0.84, 0.88] }],
       vueltas: 2, puntos: [[1443,200], [1293,200], [1143,200], [993,200], [842,206], [696,240], [558,300], [435,387], [332,496], [252,624], [201,765], [180,915], [192,1065], [236,1209], [311,1340], [414,1450], [540,1534], [682,1585], [832,1600], [982,1576], [1120,1515], [1237,1420], [1324,1296], [1372,1153], [1370,1005], [1274,893], [1126,884], [1017,984], [987,1132], [884,1238], [737,1239], [633,1134], [626,985], [670,842], [754,716], [869,618], [1006,554], [1155,528], [1306,540], [1449,588], [1576,669], [1681,778], [1759,907], [1805,1050], [1820,1200], [1801,1350], [1752,1492], [1675,1622], [1573,1732], [1451,1821], [1315,1884], [1169,1919], [1018,1927], [869,1947], [769,2056], [771,2204], [875,2310], [1024,2327], [1174,2327], [1325,2335], [1458,2405], [1596,2464], [1747,2467], [1898,2465], [2044,2431], [2172,2351], [2254,2226], [2263,2076], [2263,1924], [2233,1778], [2170,1643], [2214,1502], [2263,1362], [2268,1211], [2360,1097], [2509,1080], [2659,1080], [2799,1034], [2853,898], [2780,771], [2635,740], [2485,740], [2339,712], [2264,586], [2263,434], [2221,291], [2098,207], [1947,200], [1797,200], [1647,200]] },
-    { id: 'cinturon', nombre: 'Cinturón de Asteroides', emoji: '☄️', sala: true, espacio: true, ritmoBots: 1.06, desc: 'Asteroides en órbita, huecos con rampa y plataformas que se mueven.',
+    { id: 'cinturon', nombre: 'Cinturón de Asteroides', emoji: '☄️', sala: true, trazado: 3, espacio: true, ritmoBots: 1.06, desc: 'Asteroides en órbita, huecos con rampa y plataformas que se mueven.',
       mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 0.95,
       color: { fondo: '#05040a', fondo2: '#2a1a14', camino: '#4c4a5a', borde1: '#fb923c', borde2: '#fde047', linea: '#fed7aa' },
       tema: { cielo: ['#020106', '#160c18', '#3b1d1a'], bruma: '#2b1716', lejos: '#3a2420', cerca: '#1c1214', cerca2: '#120b0d', franja: '#2a1a14', sol: '#fff1c2', nubes: 0, espacio: 'cinturon' },
@@ -175,7 +175,7 @@
         { tipo: 'brecha', f: 0.6 }, { tipo: 'plataforma', f: 0.635, periodo: 5.5, amp: 0.65, ancho: 0.5 }, { tipo: 'antiturbo', f: 0.685, lado: -0.4, r: 26 },
         { tipo: 'turbo', f: 0.752, lado: 0, r: 22 }, { tipo: 'abierto', tramo: [0.765, 0.805] }, { tipo: 'brecha', f: 0.775 }],
       vueltas: 2, puntos: [[1292,446], [1442,446], [1592,446], [1742,446], [1892,446], [2043,441], [2184,386], [2333,396], [2474,445], [2611,393], [2714,283], [2850,216], [3000,200], [3146,239], [3269,327], [3353,452], [3387,600], [3366,749], [3294,882], [3180,981], [3038,1033], [2886,1031], [2746,976], [2634,874], [2512,793], [2360,791], [2210,791], [2061,809], [1926,874], [1829,988], [1807,1135], [1819,1285], [1933,1375], [2085,1377], [2236,1388], [2325,1503], [2327,1655], [2339,1805], [2453,1895], [2605,1897], [2756,1908], [2845,2023], [2847,2175], [2859,2325], [2973,2415], [3125,2417], [3276,2428], [3365,2543], [3365,2694], [3292,2823], [3151,2867], [2999,2867], [2847,2867], [2695,2867], [2543,2867], [2392,2867], [2240,2867], [2088,2867], [1936,2867], [1784,2867], [1633,2876], [1498,2941], [1349,2933], [1213,2870], [1062,2867], [911,2857], [797,2764], [772,2617], [772,2465], [772,2313], [772,2161], [772,2009], [772,1858], [772,1706], [772,1554], [704,1425], [558,1396], [408,1396], [262,1367], [180,1244], [214,1100], [342,1027], [494,1026], [646,1022], [759,930], [772,780], [775,628], [849,499], [988,446], [1140,446]] },
-    { id: 'nebulosa', nombre: 'Nebulosa Esmeralda', emoji: '🌌', sala: true, espacio: true, ritmoBots: 1.08, desc: 'Portales, gravedad baja y plataformas: la pista más difícil.',
+    { id: 'nebulosa', nombre: 'Nebulosa Esmeralda', emoji: '🌌', sala: true, trazado: 3, espacio: true, ritmoBots: 1.08, desc: 'Portales, gravedad baja y plataformas: la pista más difícil.',
       mitad: 54, fuera: 'vacio', lento: 0.5, agarre: 0.9,
       color: { fondo: '#03070a', fondo2: '#0c2a24', camino: '#334658', borde1: '#34d399', borde2: '#f472b6', linea: '#bbf7d0' },
       tema: { cielo: ['#020509', '#0b2230', '#174a3c'], bruma: '#123a33', lejos: '#1b4a40', cerca: '#0c241f', cerca2: '#071713', franja: '#0c2a24', sol: null, nubes: 0, espacio: 'nebulosa' },
@@ -190,7 +190,9 @@
       vueltas: 2, puntos: [[2075,200], [2225,200], [2375,200], [2525,200], [2677,207], [2824,242], [2961,307], [3081,399], [3180,514], [3251,648], [3291,792], [3298,942], [3271,1089], [3211,1227], [3119,1346], [3001,1439], [2864,1501], [2715,1525], [2565,1509], [2424,1452], [2306,1359], [2221,1235], [2228,1087], [2338,989], [2485,999], [2589,1107], [2723,1169], [2861,1115], [2919,979], [2865,841], [2760,733], [2628,659], [2481,625], [2330,631], [2186,676], [2059,756], [1955,865], [1880,995], [1838,1139], [1830,1289], [1855,1436], [1913,1576], [2000,1700], [2112,1803], [2241,1879], [2385,1928], [2535,1947], [2687,1950], [2813,2027], [2852,2170], [2782,2300], [2641,2347], [2491,2347], [2348,2383], [2247,2493], [2101,2507], [1993,2406], [1859,2347], [1729,2414], [1618,2510], [1473,2487], [1372,2377], [1227,2347], [1077,2340], [935,2293], [817,2199], [756,2063], [755,1912], [755,1760], [755,1608], [755,1456], [755,1304], [728,1158], [603,1081], [451,1080], [299,1076], [183,987], [180,840], [292,746], [443,740], [595,740], [723,669], [755,524], [760,372], [840,247], [981,200], [1131,200], [1281,200], [1431,200], [1581,200], [1731,200], [1881,200]] },
   ];
 
-  const VERSION_PISTAS = 2; // karts-pistas-grandes: sube cuando los trazados cambian tanto que los récords no se comparan
+  // karts-pistas-grandes: sube cuando los trazados cambian tanto que los récords no se comparan. karts-curvas-complejas: 3 =
+  // trazados técnicos de las pistas con `trazado: 3` (sus récords de antes pasan a recordsV2, «trazado anterior»).
+  const VERSION_PISTAS = 3;
 
   // karts-copa-espacio: `nivel` = orden de dificultad (el menú, el selector y las salas ordenan por él; 3 queda para
   // Reinos Antiguos) y `requiere: { podios }` = podios en otras copas para abrirla en el modo individual.
@@ -341,7 +343,69 @@
     return { esc, ox: (w - (x1 - x0) * esc) / 2 - x0 * esc, oy: (h - (y1 - y0) * esc) / 2 - y0 * esc };
   }
 
-  raiz.KartsPistas = { PISTAS, COPAS, VERSION_PISTAS, copaPorId, puntoEn, colocarMecanicas, colocarFijos, ladoTrajinera, encuadrarMinimapa,
+  // ---- karts-curvas-complejas: complejidad medible del trazado (la usan las pruebas; el juego no la necesita al correr) ----
+  // Tramos de giro en un mismo sentido sobre las muestras de Arcade.muestrearPista (radio < rmax px): se ignoran los de
+  // < 8° y se unen los del mismo sentido separados por ≤ 80 px. Cada curva: { sg (1 horario, -1 antihorario), i0, i1,
+  // grados, rmin (px), largo (px) }.
+  const angulo = a => Math.atan2(Math.sin(a), Math.cos(a));
+  function curvasTrazado(M, rmax = 1000) {
+    const pts = M.pts, n = pts.length, lim = M.paso / rmax;
+    const da = pts.map((p, i) => angulo(pts[(i + 1) % n].a - pts[(i - 1 + n) % n].a) / 2);
+    const signo = d => (Math.abs(d) < lim ? 0 : Math.sign(d));
+    const s0 = Math.max(0, da.findIndex(d => signo(d) === 0)), crudas = [];
+    let cur = null;
+    for (let k = 0; k < n; k++) {
+      const i = (s0 + k) % n, d = da[i], sg = signo(d);
+      if (cur && sg === cur.sg) { cur.giro += d; cur.i1 = i; cur.rmin = Math.min(cur.rmin, M.paso / Math.abs(d)); continue; }
+      if (cur && cur.sg) crudas.push(cur);
+      cur = { sg, i0: i, i1: i, giro: d, rmin: sg ? M.paso / Math.abs(d) : Infinity };
+    }
+    if (cur && cur.sg) crudas.push(cur);
+    const out = [];
+    for (const c of crudas.filter(x => Math.abs(x.giro) >= 8 * Math.PI / 180)) {
+      const u = out[out.length - 1];
+      if (u && u.sg === c.sg && ((c.i0 - u.i1 + n) % n) * M.paso <= 80) { u.giro += c.giro; u.i1 = c.i1; u.rmin = Math.min(u.rmin, c.rmin); } else out.push({ ...c });
+    }
+    return out.map(c => ({ sg: c.sg, i0: c.i0, i1: c.i1, rmin: Math.round(c.rmin), grados: Math.round(Math.abs(c.giro) * 180 / Math.PI), largo: (((c.i1 - c.i0 + n) % n) + 1) * M.paso }));
+  }
+  // Resumen: curvas > 120°, espirales (≥ 360° en un sentido), sacacorchos (≥ 270°), laberinto (racha más larga de giros de
+  // 60° a 120° separados ≤ 600 px), chicanas (curvas ≥ 45° de sentido contrario a ≤ 250 px) y horquillas (150° a 230°
+  // con radio ≤ 220 px).
+  function complejidad(M) {
+    const cs = curvasTrazado(M), n = M.pts.length, gap = (a, b) => ((b.i0 - a.i1 + n) % n) * M.paso;
+    let racha = 0, laberinto = 0, chicanas = 0;
+    cs.forEach((c, k) => {
+      const prev = cs[k - 1], noventa = c.grados >= 60 && c.grados <= 120;
+      racha = noventa ? (prev && racha && gap(prev, c) <= 600 ? racha + 1 : 1) : 0;
+      laberinto = Math.max(laberinto, racha);
+      if (prev && prev.sg !== c.sg && prev.grados >= 45 && c.grados >= 45 && gap(prev, c) <= 250) chicanas++;
+    });
+    return { curvas: cs.length, mayores120: cs.filter(c => c.grados > 120).length, espirales: cs.filter(c => c.grados >= 360).length,
+      sacacorchos: cs.filter(c => c.grados >= 270).length, laberinto, chicanas, horquillas: cs.filter(c => c.grados >= 150 && c.grados <= 230 && c.rmin <= 220).length };
+  }
+  // ---- Récords por trazado (karts-pistas-grandes y karts-curvas-complejas) ----
+  // Sin pistasV (antes de las pistas grandes): todos los récords pasan a recordsV1 («pista chica»). Con pistasV 2: los de
+  // las pistas con `trazado: 3` pasan a recordsV2 («trazado anterior»). Copas, piezas, equipo, copa en curso y los
+  // demás récords no cambian. Devuelve 'chica' o 'trazado' si archivó algún récord (hay que guardar y avisar) o false.
+  function migrarRecords(pr) {
+    const antes = pr.pistasV;
+    pr.records = pr.records || {}; pr.recordsV1 = pr.recordsV1 || {}; pr.recordsV2 = pr.recordsV2 || {};
+    if (antes === VERSION_PISTAS) return false;
+    pr.pistasV = VERSION_PISTAS;
+    if (antes !== 2) {
+      pr.recordsV1 = { ...pr.records }; pr.records = {};
+      return Object.keys(pr.recordsV1).length ? 'chica' : false;
+    }
+    let movidos = 0;
+    for (const p of PISTAS) {
+      if (p.trazado !== VERSION_PISTAS || !pr.records[p.id]) continue;
+      pr.recordsV2[p.id] = pr.records[p.id]; delete pr.records[p.id]; movidos++;
+    }
+    return movidos ? 'trazado' : false;
+  }
+
+  raiz.KartsPistas = { PISTAS, COPAS, VERSION_PISTAS, curvasTrazado, complejidad, migrarRecords, // karts-curvas-complejas
+    copaPorId, puntoEn, colocarMecanicas, colocarFijos, ladoTrajinera, encuadrarMinimapa,
     tramosInteriores, muroEn, colocarColumnas, alturaBloque, bloquePeligro, ladoRoca, centroCompuerta, ALTO_BLOQUE, // karts-copa-reinos
     copasOrdenadas, copaDesbloqueada, podiosFaltan, MARCA, ESPACIO, marcasEspacio, rescateEn, ladoPlataforma, aperturaCompuerta }; // karts-copa-espacio
 })(typeof window !== 'undefined' ? window : globalThis);

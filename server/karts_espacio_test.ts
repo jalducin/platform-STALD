@@ -283,8 +283,8 @@ Deno.test("karts-copa-espacio: el servidor acepta el progreso con la Copa del Es
     copas: { fiesta: { lugar: 1, puntos: 60 }, mesoamerica: { lugar: 2, puntos: 44 }, espacio: { lugar: 3, puntos: 38 } }, records, piezas: [],
     equipo: { chasis: "estandar", llantas: "estandar", color: "azul" },
     copaEnCurso: { copa: "espacio", carrera: 2, puntos: [15, 12, 10, 8, 6, 4, 2, 1], dif: 95 },
-    pistasV: KP.VERSION_PISTAS, recordsV1: {},
+    pistasV: KP.VERSION_PISTAS, recordsV1: {}, recordsV2: {}, // karts-curvas-complejas: + recordsV2
   };
   assert(validarProgreso("karts", datos), "progreso con la copa espacio");
-  assertEquals(KP.VERSION_PISTAS, 2, "las pistas de antes no cambian: sus récords siguen valiendo");
+  assertEquals(KP.VERSION_PISTAS, 3, "karts-curvas-complejas: trazados nuevos (récords del trazado anterior en recordsV2)");
 });

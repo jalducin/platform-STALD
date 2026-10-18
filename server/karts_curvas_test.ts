@@ -1,0 +1,131 @@
+// Curvas complejas de Karts (openspec: karts-curvas-complejas): las 4 pistas del Espacio y las 4 de Reinos Antiguos
+// tienen trazados técnicos medibles (curvas > 120°, espiral / sacacorchos / laberinto, chicanas u horquillas), siguen
+// cerradas y manejables (sin encimarse, radio ≥ 100 px, meta en recta, minimapa legible), con la vuelta ±15 % de la de
+// antes y límites de sala recalculados; sus récords del trazado anterior se archivan en recordsV2.
+// deno-lint-ignore-file no-explicit-any
+import { assert, assertEquals } from "jsr:@std/assert@1";
+import "../juegos/karts-pistas.js";
+import "../juegos/arcade.js";
+import { MAPAS_SALA, reglasCarrera } from "./carreras.ts";
+import { validarProgreso, VERSION_PISTAS_KARTS } from "./progreso.ts";
+
+const g = globalThis as any;
+const KP = g.KartsPistas, A = g.Arcade;
+const ESPACIO = ["orbital", "anillos", "cinturon", "nebulosa"];
+const REINOS = ["giza", "castillo", "karnak", "angkor"];
+const REDISENADAS = [...REINOS, ...ESPACIO];
+// Largo de la vuelta (px) de cada pista ANTES del rediseño (medido con muestrearPista).
+const LARGO_ANTES: Record<string, number> = {
+  orbital: 13473, anillos: 13917, cinturon: 11992, nebulosa: 13729, giza: 13348, castillo: 13902, karnak: 11634, angkor: 11665,
+};
+const ang = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+const muestras = (id: string) => A.muestrearPista(A.pistaPorId(id));
+function distanciaLejana(pts: any[], salto: number, esc = 1) {
+  const n = pts.length;
+  let minimo = Infinity;
+  for (let i = 0; i < n; i += 2) {
+    for (let j = i + salto; j < n && n - (j - i) >= salto; j += 2) minimo = Math.min(minimo, Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) * esc);
+  }
+  return minimo;
+}
+function radioMinimo(M: any) {
+  const pts = M.pts, n = pts.length;
+  let radio = Infinity;
+  for (let i = 0; i < n; i++) {
+    const da = Math.abs(ang(pts[(i + 6) % n].a - pts[(i - 6 + n) % n].a));
+    if (da > 1e-6) radio = Math.min(radio, (12 * M.paso) / da);
+  }
+  return radio;
+}
+
+Deno.test("karts-curvas: las 8 pistas rediseñadas llevan trazado 3 y la versión de pistas sube a 3", () => {
+  assertEquals(KP.VERSION_PISTAS, 3);
+  assertEquals(VERSION_PISTAS_KARTS, KP.VERSION_PISTAS, "el servidor usa la misma versión");
+  assertEquals(KP.PISTAS.filter((p: any) => p.trazado === 3).map((p: any) => p.id).sort(), [...REDISENADAS].sort());
+  for (const p of KP.PISTAS.filter((x: any) => !REDISENADAS.includes(x.id))) assertEquals(p.trazado, undefined, p.id + " sin cambio de trazado");
+});
+
+Deno.test("karts-curvas: complejidad medible (curvas > 120°, espiral / sacacorchos / laberinto, chicanas u horquillas)", () => {
+  for (const id of REDISENADAS) {
+    const c = KP.complejidad(muestras(id));
+    assert(c.mayores120 >= 4, id + " curvas > 120°: " + c.mayores120);
+    assert(c.espirales + c.sacacorchos >= 1 || c.laberinto >= 4, id + " espiral, sacacorchos o laberinto: " + JSON.stringify(c));
+    assert(c.chicanas + c.horquillas >= 2, id + " chicanas u horquillas: " + JSON.stringify(c));
+  }
+  // Las secciones estrella de cada pista del Espacio.
+  const de = (id: string) => KP.complejidad(muestras(id));
+  assert(de("anillos").espirales >= 1 && de("nebulosa").espirales >= 1, "espiral doble en Anillos y Nebulosa (≥ 360° en un sentido)");
+  assert(de("orbital").laberinto >= 6, "laberinto de pasillos en la Estación Orbital");
+  assert(de("cinturon").sacacorchos >= 1 && de("cinturon").laberinto >= 4, "sacacorchos y escalera en el Cinturón");
+});
+
+Deno.test("karts-curvas: la complejidad distingue un óvalo de una espiral", () => {
+  const ovalo = { id: "ovalo-prueba", mitad: 54, vueltas: 2, puntos: [[300, 300], [1500, 300], [1800, 600], [1500, 900], [300, 900], [100, 600]] };
+  const c = KP.complejidad(A.muestrearPista(ovalo));
+  assertEquals([c.espirales, c.sacacorchos], [0, 0]);
+  assert(c.laberinto < 4 && c.mayores120 <= 2, JSON.stringify(c));
+  const curvas = KP.curvasTrazado(muestras("anillos"));
+  assert(curvas.some((x: any) => x.grados >= 400), "la espiral de los anillos gira más de 400° en un sentido");
+});
+
+Deno.test("karts-curvas: trazados cerrados, sin encimarse, radio ≥ 100 px, meta en recta y textura acotada", () => {
+  for (const id of REDISENADAS) {
+    const p = A.pistaPorId(id), M = muestras(id), pts = M.pts, n = pts.length;
+    assert(Math.hypot(pts[n - 1].x - pts[0].x, pts[n - 1].y - pts[0].y) <= M.paso * 1.5, id + " cerrado");
+    assert(pts.every((q: any) => q.x >= p.mitad + 90 && q.y >= p.mitad + 90), id + " deja orilla");
+    const W = Math.max(...pts.map((q: any) => q.x)) + 220, H = Math.max(...pts.map((q: any) => q.y)) + 220;
+    assert(W * H <= 12.6e6, id + " textura ≤ 12.6 M px");
+    assert(distanciaLejana(pts, Math.ceil((p.mitad * 4) / M.paso)) >= p.mitad * 2 + 30, id + " sin encimarse");
+    assert(radioMinimo(M) >= 100, id + " radio mínimo " + Math.round(radioMinimo(M)));
+    assert(Math.abs(ang(pts[8].a - pts[n - 8].a)) < 0.35, id + " meta en recta");
+    const e = KP.encuadrarMinimapa(pts, 104, 72, 11);
+    assert(distanciaLejana(pts, Math.ceil(1000 / M.paso), e.esc) >= 6, id + " minimapa legible");
+  }
+});
+
+Deno.test("karts-curvas: vuelta ±15 % de la de antes, referencia de 115 a 140 s y límites de sala recalculados", () => {
+  for (const id of REDISENADAS) {
+    const veces = muestras(id).largo / LARGO_ANTES[id];
+    assert(veces >= 0.85 && veces <= 1.15, id + " largo " + veces.toFixed(2) + "× el de antes");
+    const ref = A.refKarts(id), l = A.limitesKarts(id);
+    assert(ref >= 115_000 && ref <= 140_000, id + " referencia " + ref);
+    assertEquals(l, { minMs: Math.round(ref * 0.25), limiteMs: Math.ceil(ref * 2.5 / 10_000) * 10_000 });
+    assertEquals(reglasCarrera("karts", id), l, id + " el servidor usa el límite nuevo");
+    assert(MAPAS_SALA.karts.includes(id), id + " en salas");
+  }
+  assertEquals(MAPAS_SALA.karts, A.PISTAS.map((p: any) => p.id), "MAPAS_SALA sale de las pistas");
+});
+
+const base = () => ({
+  copas: { fiesta: { lugar: 1, puntos: 60 } }, piezas: ["pintura-dorada"],
+  equipo: { chasis: "estandar", llantas: "estandar", color: "dorado" }, copaEnCurso: null,
+});
+Deno.test("karts-curvas: migrar récords del trazado anterior (pistasV 2 → 3) sin perder copas, piezas ni otros récords", () => {
+  const pr: any = { ...base(), records: { pradera: 120_500, orbital: 131_000, giza: 128_000 }, pistasV: 2, recordsV1: { pradera: 61_000 } };
+  assertEquals(KP.migrarRecords(pr), "trazado");
+  assertEquals(pr.records, { pradera: 120_500 });
+  assertEquals(pr.recordsV2, { orbital: 131_000, giza: 128_000 });
+  assertEquals([pr.pistasV, pr.recordsV1, pr.copas, pr.piezas], [3, { pradera: 61_000 }, base().copas, base().piezas]);
+  assert(validarProgreso("karts", pr), "el servidor acepta el progreso migrado");
+  assertEquals(KP.migrarRecords(pr), false, "migrar otra vez no cambia nada");
+  // Sin récords en las pistas rediseñadas: se migra la versión sin aviso.
+  const sin: any = { ...base(), records: { volcan: 125_000 }, pistasV: 2, recordsV1: {} };
+  assertEquals([KP.migrarRecords(sin), sin.pistasV, sin.records, sin.recordsV2], [false, 3, { volcan: 125_000 }, {}]);
+  // Progreso de antes de las pistas grandes: todo a «pista chica», como siempre.
+  const viejo: any = { ...base(), records: { pradera: 61_234 } };
+  assertEquals([KP.migrarRecords(viejo), viejo.records, viejo.recordsV1, viejo.recordsV2, viejo.pistasV], ["chica", {}, { pradera: 61_234 }, {}, 3]);
+});
+
+Deno.test("karts-curvas: forma del progreso versión 3 en el servidor (y las anteriores de pestañas viejas)", () => {
+  const records = { pradera: 120_000 };
+  assert(validarProgreso("karts", { ...base(), records, pistasV: 3, recordsV1: {}, recordsV2: { orbital: 130_000 } }), "versión 3");
+  assert(validarProgreso("karts", { ...base(), records, pistasV: 2, recordsV1: {} }), "versión 2 (pestaña vieja)");
+  assert(validarProgreso("karts", { ...base(), records }), "forma anterior");
+  for (const malo of [
+    { ...base(), records, pistasV: 2, recordsV1: {}, recordsV2: {} }, // recordsV2 solo con la versión 3
+    { ...base(), records, pistasV: 3, recordsV1: {} }, // a la 3 le falta recordsV2
+    { ...base(), records, pistasV: 3, recordsV1: {}, recordsV2: { orbital: 5 } }, // tiempo imposible
+    { ...base(), records, pistasV: 3, recordsV1: {}, recordsV2: { "Orbital!": 130_000 } }, // pista inválida
+    { ...base(), records, pistasV: 4, recordsV1: {}, recordsV2: {} },
+  ]) assertEquals(validarProgreso("karts", malo), false, JSON.stringify(malo));
+});
