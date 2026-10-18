@@ -121,7 +121,7 @@ Deno.test("karts-reinos: salas en las pistas nuevas con su mínimo y su límite 
     assert(MAPAS_SALA.karts.includes(id), id + " en salas");
     const l = reglasCarrera("karts", id)!;
     assertEquals(l, A.limitesKarts(id));
-    assert(l.minMs >= 28_000 && l.limiteMs <= 360_000, id + " " + JSON.stringify(l));
+    assert(l.minMs >= 43_000 && l.limiteMs <= 540_000, id + " " + JSON.stringify(l)); // karts-3-vueltas
     const inicio = 1_000_000, debajo = l.minMs - 1000;
     assertEquals(validarCarrera("karts", { ms: debajo, monedas: 0 }, inicio, inicio + debajo, id), null, id + " debajo del mínimo");
     assertEquals(validarCarrera("karts", { ms: l.minMs + 60_000, monedas: 3 }, inicio, inicio + l.minMs + 60_000, id), { ms: l.minMs + 60_000, monedas: 3 });

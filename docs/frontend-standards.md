@@ -164,7 +164,7 @@ Cada página debe manejar y mostrar de forma explícita:
     Copa Fiesta). Agregar una pista = un objeto en `karts-pistas.js` + sus dibujos en `karts.html`; las pruebas de
     datos (`server/karts_pistas_test.ts`) revisan que sea cerrada, manejable y con su minimapa. Cambio
     `karts-pistas-grandes`: vueltas ≈ 3 veces más largas (2.9–3.0×, radio mínimo ≥ el de antes, caja ≤ 12.6 M px),
-    `vueltas` por pista (`Arcade.vueltasDe`, 2 en las 8; nunca `Arcade.VUELTAS` directo), cajas, monedas, lava y
+    `vueltas` por pista (`Arcade.vueltasDe`, 3 en las 16 desde `karts-3-vueltas`; nunca `Arcade.VUELTAS` directo), cajas, monedas, lava y
     escenario proporcionales a la vuelta, escenario agrupado en celdas de 512 px (`decorCerca`) y gancho de prueba
     `__karts.rapido(n)` (n pasos de la misma física por cuadro). Cambio `karts-copa-en-sala`: la copa en sala la lleva
     la página (`pintarCopaSala` en `juegos/app/arcade.js`, calendario de `juegos/karts-copa.js`) con un solo iframe para
@@ -205,7 +205,9 @@ Cada página debe manejar y mostrar de forma explícita:
     Un interior largo que se enrolla (espiral) se parte en tramos seguidos para que, dentro del corredor, solo se
     dibujen los muros de ese tramo (60 fps). Entre muros, los bots miran más cerca (como en el espacio). Récords del
     trazado anterior en `recordsV2` (ver `docs/data-model.md`). Ganchos de prueba: `estado().bots` (vuelta, muestra y
-    velocidad de cada bot) y `KARTS_PISTA=<id>` en `e2e-karts.js` para correr una sola pista;
+    velocidad de cada bot) y `KARTS_PISTA=<id>` en `e2e-karts.js` para correr una sola pista. Cambio `karts-3-vueltas`:
+    3 vueltas por carrera (referencia, límites de sala y bots salen de `vueltas`), récords de 2 vueltas en `recordsV3`
+    («2 vueltas»), gancho `__karts.alFinalDe(v)` (al final de la vuelta v) y `KARTS_SOLO=vueltas` en `e2e-karts.js`;
   - **Controles de Karts Turbo** (cambio `karts-controles-diseno`; causa raíz y decisiones en su `design.md`):
     - la entrada táctil usa *touch events* no pasivos con `preventDefault`, por dedo (`identifier`); los *pointer
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo

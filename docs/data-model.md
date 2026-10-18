@@ -300,7 +300,7 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     completados ["m-n"] (≤ 36, sin repetir), mejores { "m-n": segundos 1–999 }, enCurso: null | { nivel "m-n",
     checkpoint } }`. `mundo`/`nivel` es el nivel más lejano desbloqueado; `enCurso`, el nivel a medias (y si tocó la
     bandera).
-  - `karts`: `{ copas { <copa>: { lugar 1–8, puntos 0–60 } }, records { <pista>: ms 10000–900000 },
+  - `karts`: `{ copas { <copa>: { lugar 1–8, puntos 0–60 } }, records { <pista>: ms 10000–1200000 },
     piezas ["chasis-ligero"|"llantas-todoterreno"|"pintura-dorada"], equipo { chasis "estandar"|"ligero",
     llantas "estandar"|"todoterreno", color }, copaEnCurso: null | { copa, carrera 0–3, puntos [8 × 0–60], dif 80–110 } }`.
     Una pieza equipada debe estar en `piezas` (el color `dorado` pide `pintura-dorada`). `puntos` sigue el orden de
@@ -321,7 +321,14 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     rechaza), el tope de puntos es `KartsPistas.PUNTOS_COPA_MAX` (15 × 4 = 60), `copaEnCurso.puntos` lleva un valor por
     corredor de `KartsPistas.PUNTOS_CARRERA` (8), y el rango de los récords es `RECORD_MIN_MS`–`RECORD_MAX_MS`. El juego
     solo anota récords dentro de ese rango (`KartsPistas.anotarRecord`): antes, una carrera de más de 15 min dejaba un
-    récord fuera de rango y el servidor rechazaba todo el avance.
+    récord fuera de rango y el servidor rechazaba todo el avance. Cambio `karts-3-vueltas`: carreras de 3 vueltas;
+    versión 4 con una llave más, `pistasV: 4` y `recordsV3 { <pista>: ms }` (récords de las carreras de 2 vueltas, se
+    muestran como «2 vueltas»), y `RECORD_MAX_MS` de 15 a 20 min (≥ 2 veces el mayor límite de sala). Al abrir un
+    progreso con `pistasV: 3`, todos sus `records` pasan a `recordsV3`; con `pistasV: 2`, los de las pistas con
+    `trazado: 3` a `recordsV2` y los demás a `recordsV3`. Copas, piezas, equipo, la copa en curso (sus carreras
+    restantes ya son de 3 vueltas) y los archivos de antes no cambian. El servidor acepta 4 formas: la anterior (5
+    llaves), `pistasV: 2` + `recordsV1`, `pistasV: 3` + `recordsV1` + `recordsV2` y `pistasV: 4` + `recordsV1` +
+    `recordsV2` + `recordsV3`; rechaza cualquier otra combinación de versión y llaves.
   - `dragon-run` (cambio `dragon-run-misiones`): `{ totales { metros 0–10000000, monedas 0–1000000, esquivados
     0–10000000, carreras 0–1000000, castillos 0–1000000, dobles 0–10000000 }, mejorRacha 0–999, dias { ultimo:
     null | "AAAA-MM-DD", racha 0–3660, mejor 0–3660 }, diaria: null | { fecha "AAAA-MM-DD", avance [3 × 0–100000] },

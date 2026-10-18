@@ -51,13 +51,13 @@ const ciclo = (periodo: number, f: (t: number) => number, paso = 0.02) => {
   return out;
 };
 
-Deno.test("karts-copa-espacio: 4 pistas espaciales de sala con id válido, 2 vueltas, nombre y descripción", () => {
+Deno.test("karts-copa-espacio: 4 pistas espaciales de sala con id válido, 3 vueltas (karts-3-vueltas), nombre y descripción", () => {
   for (const id of ESPACIO) {
     const p = pista(id);
     assert(p, id + " existe");
     assert(/^[a-z][a-z-]{1,19}$/.test(id), id + " id válido para los récords del servidor");
     assert(p.espacio === true && p.sala === true, id + " espacial y de sala");
-    assertEquals([p.vueltas, A.vueltasDe(id)], [2, 2], id);
+    assertEquals([p.vueltas, A.vueltasDe(id)], [3, 3], id);
     assert(p.nombre && p.emoji && p.desc.length >= 15 && p.desc.length <= 80, id + " nombre y descripción corta");
     assert(Array.isArray(p.tema.cielo) && p.tema.cielo.length === 3 && p.tema.espacio, id + " cielo espacial");
     assertEquals(p.decor.length, 3, id + " 3 adornos al azar");
@@ -79,12 +79,12 @@ Deno.test("karts-copa-espacio: trazados cerrados, sin encimarse, curvas tomables
   }
 });
 
-Deno.test("karts-copa-espacio: del tamaño de las pistas grandes (referencia de 115 a 140 s) y límites de sala por pista", () => {
+Deno.test("karts-copa-espacio: del tamaño de las pistas grandes (referencia de 115 a 140 s por 2 vueltas) y límites de sala por pista", () => {
   for (const id of ESPACIO) {
     const ref = A.refKarts(id), l = A.limitesKarts(id);
-    assert(ref >= 115_000 && ref <= 140_000, id + " referencia " + ref);
+    assert(ref * 2 / 3 >= 115_000 && ref * 2 / 3 <= 140_000, id + " referencia " + ref); // karts-3-vueltas: por 2 vueltas
     assertEquals(l, { minMs: Math.round(ref * 0.25), limiteMs: Math.ceil(ref * 2.5 / 10_000) * 10_000 }, id);
-    assert(l.limiteMs <= 360_000, id + " límite " + l.limiteMs);
+    assert(l.limiteMs <= 540_000, id + " límite " + l.limiteMs);
     assertEquals(reglasCarrera("karts", id), l, id + " el servidor usa el límite de la pista");
   }
   assertEquals(A.LIMITE_SALA.karts, Math.max(...A.PISTAS.map((p: any) => A.limitesKarts(p.id).limiteMs)));
@@ -283,8 +283,8 @@ Deno.test("karts-copa-espacio: el servidor acepta el progreso con la Copa del Es
     copas: { fiesta: { lugar: 1, puntos: 60 }, mesoamerica: { lugar: 2, puntos: 44 }, espacio: { lugar: 3, puntos: 38 } }, records, piezas: [],
     equipo: { chasis: "estandar", llantas: "estandar", color: "azul" },
     copaEnCurso: { copa: "espacio", carrera: 2, puntos: [15, 12, 10, 8, 6, 4, 2, 1], dif: 95 },
-    pistasV: KP.VERSION_PISTAS, recordsV1: {}, recordsV2: {}, // karts-curvas-complejas: + recordsV2
+    pistasV: KP.VERSION_PISTAS, recordsV1: {}, recordsV2: {}, recordsV3: {}, // karts-curvas-complejas: + recordsV2; karts-3-vueltas: + recordsV3
   };
   assert(validarProgreso("karts", datos), "progreso con la copa espacio");
-  assertEquals(KP.VERSION_PISTAS, 3, "karts-curvas-complejas: trazados nuevos (récords del trazado anterior en recordsV2)");
+  assertEquals(KP.VERSION_PISTAS, 4, "karts-3-vueltas: récords de 2 vueltas en recordsV3");
 });

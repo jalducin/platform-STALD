@@ -109,8 +109,8 @@ Deno.test("carreras: el mapa vive en sala.opciones (elegido o al azar) y la reva
   // Revancha: termina la carrera y la sala nueva trae el mismo mapa.
   const codigo = r.body.codigo;
   assertEquals((await c.call("POST", `/sala/${codigo}/empezar`, "marisol@example.com")).status, 200);
-  c.avanzar(8000 + 40_000); // 8 s de cuenta (karts-salida-y-puntos); karts-pistas-grandes: arriba del mínimo del Lago Helado (≈ 32 s)
-  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { carrera: { ms: 40_000, monedas: 1 } })).status, 200);
+  c.avanzar(8000 + 60_000); // 8 s de cuenta (karts-salida-y-puntos); karts-3-vueltas: arriba del mínimo del Lago Helado (≈ 48 s)
+  assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { carrera: { ms: 60_000, monedas: 1 } })).status, 200);
   assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "marisol@example.com", { final: 500, podio: [{ nombre: "Marisol", total: 500 }] })).status, 200);
   const rev = await c.call("POST", `/sala/${codigo}/revancha`, "marisol@example.com");
   assertEquals(rev.status, 200, JSON.stringify(rev.body));
@@ -120,8 +120,8 @@ Deno.test("carreras: el mapa vive en sala.opciones (elegido o al azar) y la reva
 
 Deno.test("carreras: validarCarrera directo", () => {
   const inicio = 1_000_000;
-  assertEquals(validarCarrera("karts", { ms: 40_000, monedas: 2 }, inicio, inicio + 40_500, "pradera"), { ms: 40_000, monedas: 2 });
-  assertEquals(validarCarrera("karts", { ms: 40_000, monedas: 2 }, inicio, inicio + 70_000, "pradera"), null, "más de 20 s de diferencia");
+  assertEquals(validarCarrera("karts", { ms: 60_000, monedas: 2 }, inicio, inicio + 60_500, "pradera"), { ms: 60_000, monedas: 2 }); // karts-3-vueltas: mínimo ≈ 45 s
+  assertEquals(validarCarrera("karts", { ms: 60_000, monedas: 2 }, inicio, inicio + 90_000, "pradera"), null, "más de 20 s de diferencia");
   assertEquals(validarCarrera("plataformas", { ms: null, monedas: 0 }, inicio, inicio + 1000, "1-1"), { ms: null, monedas: 0 });
   assertEquals(validarCarrera("poker", { ms: 40_000, monedas: 0 }, inicio, inicio + 40_000), null);
 });
@@ -133,7 +133,7 @@ Deno.test("carreras: karts con el mínimo y el límite de la pista de la sala", 
   assertEquals(reglasCarrera("karts", "luna"), { minMs: G.Arcade.MIN_SALA.karts, limiteMs: G.Arcade.LIMITE_SALA.karts }, "pista desconocida: los generales");
   assertEquals(reglasCarrera("plataformas", "1-1"), { minMs: 6_000, limiteMs: 240_000 });
   const hielo = reglasCarrera("karts", "hielo")!, pradera = reglasCarrera("karts", "pradera")!, volcan = reglasCarrera("karts", "volcan")!;
-  assert(hielo.minMs > 30_000 && hielo.minMs < 33_000, JSON.stringify(hielo));
+  assert(hielo.minMs > 46_000 && hielo.minMs < 49_000, JSON.stringify(hielo)); // karts-3-vueltas
   const c = ctx();
   const codigo = await salaEmpezada(c, "karts", "hielo");
   c.avanzar(25_000);
@@ -141,12 +141,12 @@ Deno.test("carreras: karts con el mínimo y el límite de la pista de la sala", 
   assertEquals([corto.status, corto.body.error], [400, "carrera_invalida"], "25 s en el Lago Helado: debajo del mínimo de la pista");
   c.avanzar(100_000);
   assertEquals((await c.call("POST", `/sala/${codigo}/respuesta`, "angel@example.com", { carrera: { ms: 124_600, monedas: 4 } })).status, 200, "tiempo normal");
-  // Pasar los 300 s cuenta en el Volcán (límite 340 s) pero no en la Pradera (límite 300 s).
-  assertEquals([pradera.limiteMs, volcan.limiteMs], [300_000, 340_000]);
+  // karts-3-vueltas: pasar los 450 s cuenta en el Volcán (límite 500 s) pero no en la Pradera (límite 450 s).
+  assertEquals([pradera.limiteMs, volcan.limiteMs], [450_000, 500_000]);
   const cp = ctx(), sp = await salaEmpezada(cp, "karts", "pradera");
-  cp.avanzar(305_000);
-  assertEquals((await cp.call("POST", `/sala/${sp}/respuesta`, "marisol@example.com", { carrera: { ms: 304_900, monedas: 0 } })).body.error, "carrera_invalida");
+  cp.avanzar(455_000);
+  assertEquals((await cp.call("POST", `/sala/${sp}/respuesta`, "marisol@example.com", { carrera: { ms: 454_900, monedas: 0 } })).body.error, "carrera_invalida");
   const cv = ctx(), sv = await salaEmpezada(cv, "karts", "volcan");
-  cv.avanzar(305_000);
-  assertEquals((await cv.call("POST", `/sala/${sv}/respuesta`, "marisol@example.com", { carrera: { ms: 304_900, monedas: 0 } })).status, 200);
+  cv.avanzar(455_000);
+  assertEquals((await cv.call("POST", `/sala/${sv}/respuesta`, "marisol@example.com", { carrera: { ms: 454_900, monedas: 0 } })).status, 200);
 });

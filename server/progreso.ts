@@ -56,7 +56,7 @@ const KP = (globalThis as unknown as {
 const ES_COPA = (id: unknown) => KP.COPAS.some((c) => c.id === id);
 const PISTA = /^[a-z][a-z-]{1,19}$/;
 
-// Récords por pista: ≤ 32 pistas, en el rango de KartsPistas (10 s a 15 min).
+// Récords por pista: ≤ 32 pistas, en el rango de KartsPistas (10 s a 20 min; karts-3-vueltas).
 const recordsValidos = (rec: unknown) => esObj(rec) && Object.keys(rec).length <= 32 && Object.entries(rec).every(([k, v]) => PISTA.test(k) && entero(v, KP.RECORD_MIN_MS, KP.RECORD_MAX_MS));
 const BASE_KARTS = ["copas", "records", "piezas", "equipo", "copaEnCurso"];
 export const VERSION_PISTAS_KARTS = KP.VERSION_PISTAS; // karts-puntos-copas: de KartsPistas.VERSION_PISTAS (antes, copiado)
@@ -75,14 +75,21 @@ const copaEnCursoValida = (cc: unknown) => cc === null || (esObj(cc) && llaves(c
   entero(cc.carrera, 0, KP.PUNTOS_COPA_MAX / KP.PUNTOS_CARRERA[0] - 1) && entero(cc.dif, 80, 110) && Array.isArray(cc.puntos) && cc.puntos.length === KP.PUNTOS_CARRERA.length &&
   cc.puntos.every((x) => entero(x, 0, KP.PUNTOS_COPA_MAX)));
 
+// karts-3-vueltas: la versión que corresponde a las llaves archivadas (recordsV3 → 4, recordsV2 → 3, solo recordsV1 → 2).
+function versionDeForma(d: Record<string, unknown>): number {
+  if ("recordsV3" in d) return VERSION_PISTAS_KARTS;
+  return "recordsV2" in d ? 3 : 2;
+}
 function validarKarts(d: unknown): boolean {
   // karts-pistas-grandes: forma versionada (+ pistasV y recordsV1 = récords archivados de las pistas chicas) o la
   // anterior (5 llaves), que todavía puede mandar una pestaña vieja. karts-curvas-complejas: la versión 3 suma recordsV2
   // (récords del trazado anterior de las pistas rediseñadas); la 2 (sin recordsV2) sigue valiendo para pestañas viejas.
-  const v2 = [...BASE_KARTS, "pistasV", "recordsV1"];
-  if (!esObj(d) || !(llaves(d, BASE_KARTS) || llaves(d, v2) || llaves(d, [...v2, "recordsV2"]))) return false;
-  if ("recordsV2" in d && (d.pistasV !== VERSION_PISTAS_KARTS || !recordsValidos(d.recordsV2))) return false;
-  if ("pistasV" in d && !("recordsV2" in d) && d.pistasV !== 2) return false;
+  // karts-3-vueltas: la versión 4 suma recordsV3 (récords de las carreras de 2 vueltas); la 3 y la 2 siguen valiendo.
+  const v2 = [...BASE_KARTS, "pistasV", "recordsV1"], v3 = [...v2, "recordsV2"], v4 = [...v3, "recordsV3"];
+  if (!esObj(d) || !(llaves(d, BASE_KARTS) || llaves(d, v2) || llaves(d, v3) || llaves(d, v4))) return false;
+  if ("pistasV" in d && d.pistasV !== versionDeForma(d)) return false;
+  if ("recordsV3" in d && !recordsValidos(d.recordsV3)) return false;
+  if ("recordsV2" in d && !recordsValidos(d.recordsV2)) return false;
   if ("pistasV" in d && !recordsValidos(d.recordsV1)) return false;
   const piezas = d.piezas;
   if (!Array.isArray(piezas) || !piezas.every((x) => PIEZAS_KART.includes(String(x))) || !sinRepetir(piezas)) return false;

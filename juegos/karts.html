@@ -111,6 +111,7 @@ table.tabla{border-collapse:collapse;width:min(460px,100%);font-weight:700;font-
 /* ---- Mandos táctiles ---- */
 #mandos{display:none;flex:0 0 auto;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px 12px;background:linear-gradient(#0b1222,#0f172a)}
 body.tactil #mandos{display:flex}
+body.en-ceremonia #mandos,body.en-ceremonia .mando{display:none!important} /* karts-3-vueltas: sin mandos durante la premiación */
 #teclas{font-size:13px;opacity:.85}
 body.tactil #teclas{display:none}
 #m-izq{flex:1 1 auto;min-width:0;height:124px;display:flex;align-items:center;justify-content:center}
@@ -203,7 +204,7 @@ body.espectador #panel-control{display:none!important}
       <div class="hud-fila">
         <div class="hud-izq">
           <div class="tarjeta pos"><span id="h-pos">1.º</span><span id="h-de">/8</span></div>
-          <div class="tarjeta datos"><span id="h-vuelta">Vuelta 1/2</span><span id="h-tiempo">0:00.0</span><span id="h-monedas">🪙 0/10</span><div class="mbar"><div id="h-mbar"></div></div></div>
+          <div class="tarjeta datos"><span id="h-vuelta">Vuelta 1/3</span><span id="h-tiempo">0:00.0</span><span id="h-monedas">🪙 0/10</span><div class="mbar"><div id="h-mbar"></div></div></div>
           <ol id="vivo-tabla" class="tarjeta" hidden aria-label="Clasificación en vivo"></ol>
         </div>
         <div id="h-item" aria-label="Ítem"></div>
@@ -284,9 +285,9 @@ body.espectador #panel-control{display:none!important}
   </div>
 </div>
 <script src="mando.js?v=2"></script>
-<script src="karts-pistas.js?v=8"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
+<script src="karts-pistas.js?v=9"></script> <!-- karts-pistas-mesoamericanas: pistas y copas -->
 <script src="karts-espacio.js?v=1"></script> <!-- karts-copa-espacio: piso, sprites y cielo de las pistas espaciales -->
-<script src="arcade.js?v=7"></script>
+<script src="arcade.js?v=8"></script>
 <script src="personajes.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script src="en-vivo.js?v=2"></script> <!-- juegos-en-vivo: karts de las demás personas de la sala -->
@@ -641,7 +642,7 @@ const CELDA = 512;
 let marcas = null, compuertas = [], portales = [], parches = [], zonasPunto = [];
 const ZONA_PUNTO = new Set(['turbo', 'salto', 'cenote', 'lodo', 'antiturbo', 'portal', 'brecha', 'arena', 'luz']); // karts-copa-reinos: + arena y luz
 const cuantos = n => Math.round(n * densidad);
-const vueltasPista = () => A.vueltasDe(pista.id); // karts-pistas-grandes: 2 en las 8 pistas
+const vueltasPista = () => A.vueltasDe(pista.id); // karts-3-vueltas: 3 en las 16 pistas
 function prepararPista(id) {
   pista = A.pistaPorId(id); M = A.muestrearPista(pista); N = M.pts.length;
   const r = A.rng(id, 'pista');
@@ -1489,15 +1490,17 @@ let karts = [], yo = null, objetos = [], particulas = [];
 let geo = null, red = null; // karts-objetos-en-sala: geometría de la pista para los objetos y estado de los ítems en sala en vivo
 let modo = 'carga', sala = null, tCarrera = 0, cuentaFin = 0, terminada = false, rayoTinte = 0, ultimoTurbo = null, carreraDe = null;
 let prog = progresoNuevo(), arranque = { presiono: null };
-function progresoNuevo() { return { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: KP.VERSION_PISTAS, recordsV1: {}, recordsV2: {} }; } // karts-curvas-complejas: + recordsV2
+function progresoNuevo() { return { copas: {}, records: {}, piezas: [], equipo: { chasis: 'estandar', llantas: 'estandar', color: 'azul' }, copaEnCurso: null, pistasV: KP.VERSION_PISTAS, recordsV1: {}, recordsV2: {}, recordsV3: {} }; } // karts-curvas-complejas: + recordsV2; karts-3-vueltas: + recordsV3
 // karts-pistas-grandes y karts-curvas-complejas: la migración es pura (KartsPistas.migrarRecords): sin pistasV, los
 // récords pasan a recordsV1 («pista chica»); con pistasV 2, los de las pistas rediseñadas pasan a recordsV2 («trazado
-// anterior»). Devuelve 'chica', 'trazado' o false (si archivó algo hay que guardar y avisar).
+// anterior»). karts-3-vueltas: los de 2 vueltas pasan a recordsV3 («2 vueltas»). Devuelve 'chica', 'trazado', 'vueltas' o
+// false (si archivó algo hay que guardar y avisar).
 const migrarRecords = pr => KP.migrarRecords(pr);
 // El aviso cabe en una línea de celular: dos avisos cortos seguidos.
 const AVISO_PISTAS = {
   chica: ['🏁 ¡Pistas 3 veces más grandes!', 'Tus récords de antes: «pista chica»'],
   trazado: ['🌀 ¡Curvas nuevas en Espacio y Reinos!', 'Tus récords de antes: «trazado anterior»'], // karts-curvas-complejas
+  vueltas: ['🏁 ¡Ahora son 3 vueltas!', 'Tus récords de antes: «2 vueltas»'], // karts-3-vueltas
 };
 
 // karts-salida-y-puntos: casilla de salida en muestras de la pista (índice antes de la meta) y lado en px, a partir de
@@ -2164,7 +2167,8 @@ function premiar(tablaCopa, ms, lugar) {
 function ceremoniaCopa(tabla, copa) {
   const podio = KartsCeremonia.podioDe(tabla.map(t => ({ nombre: t.k === yo ? 'Tú' : t.k.nombre, personaje: t.k.personaje, color: t.k.color, total: t.pts, yo: t.k === yo })));
   ceremonia = KartsCeremonia.mostrar({ contenedor: $('pantalla'), fija: false, titulo: (copa ? copa.emoji + ' ' + copa.nombre : '🏆 Copa'), sub: 'Puntos de la copa', podio, transcurrido: 0, reducido: REDUCIR, sonido: sonido,
-    alTerminar: () => { ceremonia = null; const b = $('res-botones').querySelector('.btn'); if (b) b.focus(); } });
+    alTerminar: () => { ceremonia = null; document.body.classList.remove('en-ceremonia'); const b = $('res-botones').querySelector('.btn'); if (b) b.focus(); } }); // karts-3-vueltas: regresan los mandos
+  if (ceremonia) document.body.classList.add('en-ceremonia'); // karts-3-vueltas: la premiación oculta los mandos de manejo
 }
 // Récord de la pista y pintura dorada (récord bajo la meta en todas). Devuelve el texto extra de lo ganado.
 // karts-puntos-copas: KartsPistas.anotarRecord solo anota tiempos que el servidor acepta (10 s a 15 min); antes una
@@ -2285,7 +2289,8 @@ function abrirPistas() {
     const p = A.pistaPorId(id);
     return '<button class="op" data-ir="rapida:' + p.id + '">' + p.emoji + ' ' + p.nombre + '<small class="op-desc">' + (p.civ ? p.civ + ' · ' : '') + p.desc + '</small><small>' + (prog.records[p.id] ? '🏅 ' + A.formatoTiempo(prog.records[p.id]) : 'Sin récord') + ' · meta ' + A.formatoTiempo(A.refKarts(p.id)) + '</small>' +
       (prog.recordsV1 && prog.recordsV1[p.id] ? '<small class="op-chica">pista chica ' + A.formatoTiempo(prog.recordsV1[p.id]) + '</small>' : '') + // karts-pistas-grandes: récord archivado
-      (prog.recordsV2 && prog.recordsV2[p.id] ? '<small class="op-chica">trazado anterior ' + A.formatoTiempo(prog.recordsV2[p.id]) + '</small>' : '') + '</button>'; // karts-curvas-complejas
+      (prog.recordsV2 && prog.recordsV2[p.id] ? '<small class="op-chica">trazado anterior ' + A.formatoTiempo(prog.recordsV2[p.id]) + '</small>' : '') + // karts-curvas-complejas
+      (prog.recordsV3 && prog.recordsV3[p.id] ? '<small class="op-chica">2 vueltas ' + A.formatoTiempo(prog.recordsV3[p.id]) + '</small>' : '') + '</button>'; // karts-3-vueltas
   }).join('')).join('');
   mostrar('ov-pistas');
 }
@@ -3348,6 +3353,7 @@ if (PRUEBA) {
     rapido: n => { pasosPrueba = Math.max(1, Math.min(8, Math.round(Number(n) || 1))); }, // karts-pistas-grandes: misma física, más pasos por cuadro
     adelantar: () => alFinalDeVuelta(vueltasPista() - 1),
     casiVuelta: () => alFinalDeVuelta(vueltasPista() - 2), // emocion-sonora: al cruzar empieza la última vuelta
+    alFinalDe: v => alFinalDeVuelta(Math.max(-1, Math.min(vueltasPista() - 1, Math.trunc(v)))), // karts-3-vueltas: al final de la vuelta v (0 = la 1.ª)
   };
 }
 </script>

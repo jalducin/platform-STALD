@@ -53,7 +53,7 @@ function puntosTrasGanar(): number[] {
   ordenBots.forEach((k, i) => { puntos[k] = A.PUNTOS_COPA[i + 1]; });
   return puntos;
 }
-// Tiempo realista en la pista rediseñada: la referencia de la pista (sus 2 vueltas a 80 % de la velocidad tope) más un
+// Tiempo realista en la pista rediseñada: la referencia de la pista (sus 3 vueltas a 80 % de la velocidad tope) más un
 // 8 %, el ritmo de quien gana con muros, columnas y caídas de por medio.
 const realista = (pista: string) => Math.round(A.refKarts(pista) * 1.08);
 
@@ -69,7 +69,7 @@ function progresoCarrera1(copa: string) {
     copas, records: { [pista]: realista(pista) }, piezas: copa === "fiesta" ? [] : ["chasis-ligero", "llantas-todoterreno"],
     equipo: { chasis: "estandar", llantas: "estandar", color: "azul" },
     copaEnCurso: { copa: c.id, carrera: 1, puntos: puntosTrasGanar(), dif: 97 },
-    pistasV: VERSION_PISTAS_KARTS, recordsV1: {}, recordsV2: {},
+    pistasV: VERSION_PISTAS_KARTS, recordsV1: {}, recordsV2: {}, recordsV3: {}, // karts-3-vueltas: + recordsV3
   };
 }
 
@@ -115,13 +115,14 @@ for (const copa of COPAS) {
   });
 
   Deno.test(`puntos-copas (${copa}): progreso real de un aparato que ya jugaba (records en las 16 pistas y archivados)`, async () => {
-    // Un progreso más lleno: récords en todas las pistas, archivados de la versión 1 y 2 y copas ganadas. Debe caber en
+    // Un progreso más lleno: récords en todas las pistas, archivados de las versiones 1, 2 y 3 y copas ganadas. Debe caber en
     // MAX_PROGRESO y pasar la validación de forma.
     const todas = KP.PISTAS.map((p: any) => p.id);
     const datos = progresoCarrera1(copa);
     datos.records = Object.fromEntries(todas.map((id: string) => [id, realista(id)]));
     datos.recordsV1 = Object.fromEntries(todas.slice(0, 8).map((id: string) => [id, 61_234]));
-    datos.recordsV2 = Object.fromEntries(todas.filter((id: string) => A.pistaPorId(id).trazado === VERSION_PISTAS_KARTS).map((id: string) => [id, 131_000]));
+    datos.recordsV2 = Object.fromEntries(todas.filter((id: string) => A.pistaPorId(id).trazado === 3).map((id: string) => [id, 131_000]));
+    datos.recordsV3 = Object.fromEntries(todas.map((id: string) => [id, 128_500])); // karts-3-vueltas: récords de 2 vueltas
     datos.copas = { fiesta: { lugar: 1, puntos: 54 }, mesoamerica: { lugar: 2, puntos: 41 }, reinos: { lugar: 3, puntos: 30 }, espacio: { lugar: 4, puntos: 28 } };
     assert(validarProgreso("karts", datos), copa + ": validarProgreso acepta el progreso lleno " + JSON.stringify(datos));
     const c = ctx();
@@ -143,8 +144,8 @@ for (const copa of COPAS) {
         const v = validarCarrera("karts", { ms, monedas: 4 }, inicio, inicio + ms + 400, pista);
         assertEquals(v, { ms, monedas: 4 }, `${pista}: validarCarrera acepta ${ms} ms (×${f})`);
       }
-      // Los récords del progreso aceptan esos tiempos (de 10 s a 15 min).
-      assert(realista(pista) >= 10_000 && realista(pista) <= 900_000, pista);
+      // Los récords del progreso aceptan esos tiempos (de 10 s a 20 min; karts-3-vueltas).
+      assert(realista(pista) >= KP.RECORD_MIN_MS && realista(pista) <= KP.RECORD_MAX_MS, pista);
     }
     // POST /juegos/partida como lo manda la página (juegos/app/arcade.js) al ganar la carrera 1 de la copa:
     // puntos = (9 − lugar) × 60 + monedas × 10; segundos del tiempo realista.
@@ -157,22 +158,22 @@ for (const copa of COPAS) {
   });
 }
 
-// ---------- Defecto real (diagnóstico del agente de puntos): récord de más de 15 min ----------
+// ---------- Defecto real (diagnóstico del agente de puntos): récord de más de 15 min (20 min desde karts-3-vueltas) ----------
 // El tiempo de la carrera es de reloj de pared: con la pestaña oculta o atorado en un muro, una carrera ganada puede durar
 // más de 15 min. Ese récord no debe tumbar el guardado: en origin/main el juego lo anotaba y recordsValidos (10 s a 15 min)
 // rechazaba todo el progreso con progreso_invalido, y se perdía la copa en curso con sus 15 puntos. Arreglo (cliente):
 // KartsPistas.anotarRecord no anota tiempos fuera del rango que acepta el servidor; la copa en curso se guarda igual.
 for (const copa of COPAS) {
-  Deno.test(`puntos-copas (${copa}): una carrera de más de 15 min no hace perder la copa en curso (progreso_invalido)`, async () => {
+  Deno.test(`puntos-copas (${copa}): una carrera de más de 20 min no hace perder la copa en curso (progreso_invalido)`, async () => {
     const datos = progresoCarrera1(copa);
     const pista = KP.copaPorId(copa).pistas[0];
     datos.records = {}; // primera vez en la pista: sin récord previo
-    assertEquals(KP.anotarRecord(datos, pista, 16 * 60_000 + 1_234), false, "16:01.2 no se anota como récord"); // como karts.html
+    assertEquals(KP.anotarRecord(datos, pista, 21 * 60_000 + 1_234), false, "21:01.2 no se anota como récord"); // como karts.html
     assertEquals(datos.records[pista], undefined);
-    assertEquals(validarProgreso("karts", { ...datos, records: { [pista]: 16 * 60_000 } }), false, "el servidor sigue sin aceptar récords fuera de rango");
+    assertEquals(validarProgreso("karts", { ...datos, records: { [pista]: 21 * 60_000 } }), false, "el servidor sigue sin aceptar récords fuera de rango");
     const c = ctx();
     const put = await c.call("PUT", "/progreso/karts", "Angel", { v: 0, datos });
-    assertEquals(put.status, 200, copa + ": PUT tras una carrera de 16 min " + JSON.stringify(put.body));
+    assertEquals(put.status, 200, copa + ": PUT tras una carrera de 21 min " + JSON.stringify(put.body));
     const get = await c.call("GET", "/progreso/karts", "Angel");
     assertEquals(get.body.datos?.copaEnCurso?.puntos?.[SLOT_YO], 15, copa + ": la copa en curso conserva tus 15 puntos");
   });
@@ -226,7 +227,9 @@ for (const copa of COPAS) {
       c.ir(cal.inicio + msGana + 300); // el reporte llega 0.3 s después de cruzar la meta
       const r1 = await reportar(c, codigo, "Marisol", k, msGana); // NOSONAR: llamadas en orden
       assertEquals(r1.status, 200, `${copa} carrera ${k} (${pista}) Marisol ${msGana} ms: ${JSON.stringify(r1.body)}`);
-      const msAngel = realista(pista);
+      // karts-3-vueltas: con 3 vueltas, «realista» (108 %) llega > 30 s después del 90 % y la carrera ya cerró
+      // (karts-copa-sala-4); Angel llega 20 s después de Marisol, dentro del plazo.
+      const msAngel = Math.min(realista(pista), msGana + 20_000);
       c.ir(cal.inicio + msAngel + 300);
       const r2 = await reportar(c, codigo, "Angel", k, msAngel); // NOSONAR: llamadas en orden
       assertEquals(r2.status, 200, `${copa} carrera ${k} (${pista}) Angel ${msAngel} ms: ${JSON.stringify(r2.body)}`);
