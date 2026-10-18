@@ -312,6 +312,11 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     - `premios` ⊂ `color-azul|morado|rojo|rosa|dorado|noche`, `estela-estrellas|burbujas|hojas|arcoiris` (cosméticos,
       sin valor); `equipo.color` ∈ `verde` + colores y `equipo.estela` ∈ `fuego` + estelas, y lo equipado debe estar
       en `premios` (salvo `verde` y `fuego`). Fechas reales; llaves exactas.
+  - `brigada` (cambio `brigada-xalli`; forma exacta en `juegos/brigada-motor.js`, `validarProgreso`): `{ ver: 1,
+    desbloqueada: 1–4, personaje (id de juegos/personajes.js), misiones { "1"…"4": { estrellas 0–3, record 0–máximo
+    posible de la misión, mejorMs null | 20000–3600000 } }, companeros: 0 | 1 | 3, totales { robots, rescatados,
+    completadas } }`. Sin misiones por encima de `desbloqueada`; una misión con estrellas tiene `mejorMs` y desbloquea la
+    siguiente; sin estrellas, `mejorMs` es null. `ver` cambia solo con migración.
   - `golf` (cambio `golf`): `{ mejores { "1"…"9": golpes 1–20 }, estrellas { "1"…"9": 0–3 }, recorridos 0–100000,
     mejorRecorrido: null | 9–200 }`. Llaves de hoyo `"1"`…`"9"` (las que falten = hoyo sin terminar); `mejores` es el
     menor número de golpes con la pelota adentro (una recogida no cuenta), `estrellas` la mejor marca (3 bajo par, 2
