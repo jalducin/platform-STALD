@@ -132,8 +132,12 @@ body.ctl-sensor #m-sensor{display:flex}
 #m-flechas .m{width:72px;height:100px;border-radius:20px;font-size:40px;background:rgba(255,255,255,.14);border-width:3px}
 #m-flechas .m.on{background:rgba(250,204,21,.6)}
 /* Derecha: 🎁, FRENO, DERRAPE y (con «Acelerar con botón») ACELERAR */
-#m-der{flex:0 0 auto;display:grid;grid-template-columns:64px 64px;grid-template-rows:54px 54px 34px;gap:8px;grid-template-areas:"item derrape" "freno derrape" "reversa reversa"}
-body.acel-manual #m-der{grid-template-areas:"item derrape" "freno acel" "reversa reversa"}
+#m-der{flex:0 0 auto;display:grid;grid-template-columns:64px 64px 56px;grid-template-rows:54px 54px 34px;gap:8px;grid-template-areas:"item derrape salto" "freno derrape salto" "reversa reversa salto"}
+body.acel-manual #m-der{grid-template-areas:"item derrape salto" "freno acel salto" "reversa reversa salto"}
+/* karts-salto: columna alta a la derecha (donde descansa el pulgar), de arriba abajo */
+#m-salto{grid-area:salto;flex-direction:column;gap:4px;background:linear-gradient(rgba(56,189,248,.55),rgba(3,105,161,.6));border-color:rgba(186,230,253,.8)}
+#m-salto b{font-size:24px;line-height:1}
+#m-salto.on{background:linear-gradient(#7dd3fc,#0369a1)}
 /* karts-reversa: fila baja a lo ancho, debajo de FRENO y DERRAPE */
 #m-reversa{grid-area:reversa;background:linear-gradient(rgba(245,158,11,.5),rgba(146,64,14,.55));border-color:rgba(253,230,138,.75)}
 #m-reversa.on{background:linear-gradient(#fbbf24,#b45309)}
@@ -155,7 +159,7 @@ body.acel-manual #m-acel{display:flex!important}
 body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.85);animation:brilla .8s ease-in-out infinite alternate}
 @keyframes brilla{to{box-shadow:0 0 0 6px rgba(250,204,21,.35)}}
 @media (max-width:700px){#mandos{display:flex}#menu-control{display:flex}}
-@media (max-width:340px){#m-der{grid-template-columns:56px 56px;grid-template-rows:50px 50px 30px;gap:6px}#m-flechas{gap:8px}#m-flechas .m{width:58px;height:92px;font-size:32px}#mandos{padding:8px 8px 12px}}
+@media (max-width:340px){#m-der{grid-template-columns:56px 56px 48px;grid-template-rows:50px 50px 30px;gap:6px}#m-flechas{gap:8px}#m-flechas .m{width:58px;height:92px;font-size:32px}#mandos{padding:8px 8px 12px}}
 @media (orientation:landscape) and (max-height:520px){
   body.tactil #mandos{position:absolute;left:0;right:0;bottom:0;padding:6px 14px calc(6px + env(safe-area-inset-bottom,0px));background:none;pointer-events:none;align-items:flex-end;z-index:3}
   body.tactil:not(.corriendo) #mandos{display:none}
@@ -163,7 +167,7 @@ body.tuto #mandos .m,body.tuto #joy-zona{box-shadow:0 0 0 3px rgba(250,204,21,.8
   body.tactil #m-izq{flex:0 1 42%;height:112px}
   body.tactil #joy-zona{background:rgba(255,255,255,.03)}
   body.tactil #m-flechas .m{width:68px;height:84px;font-size:34px;opacity:.92}
-  body.tactil #m-der{grid-template-columns:58px 58px;grid-template-rows:48px 48px 30px;gap:6px} /* karts-reversa: + fila ⏪ */
+  body.tactil #m-der{grid-template-columns:58px 58px 56px;grid-template-rows:48px 48px 30px;gap:6px} /* karts-reversa: + fila ⏪; karts-salto: + columna ⤴ */
   body.tactil #m-der .m{opacity:.92}
   body.tactil #minimapa{top:46px;bottom:auto;width:104px;height:72px}
   .tarjeta{padding:1px 7px 2px}#h-pos{font-size:26px}.datos{font-size:12px}#h-item{width:44px;height:44px;font-size:24px}
@@ -236,7 +240,7 @@ body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espe
         </fieldset>
       </div>
       <div class="fila" id="menu-stats" style="font-weight:700;font-size:14px;gap:12px"></div>
-      <p id="teclas">⌨️ ← → o A D girar · ↑ W acelerar · ↓ S frenar (parado: reversa) · R reversa · ESPACIO derrape · E o Shift ítem · P pausa</p>
+      <p id="teclas">⌨️ ← → o A D girar · ↑ W acelerar · ↓ S frenar (parado: reversa) · R reversa · ESPACIO salto (mantén y gira: derrape) · E o Shift ítem · P pausa</p>
     </div>
     <div class="ov hide" id="ov-pistas"><h2>🏁 Carrera rápida</h2><p>Elige la pista. Tu mejor tiempo se guarda.</p><div class="ops" id="pistas-ops"></div><div class="fila"><button class="btn sec" data-ir="menu">◀ Volver</button></div></div>
     <div class="ov hide" id="ov-taller"><h2>🔧 Taller</h2><p>Gana piezas en la copa y con buenos tiempos.</p><div id="taller-cuerpo" style="display:flex;flex-direction:column;gap:10px;align-items:center;width:100%"></div><div class="fila"><button class="btn sec" data-ir="menu">◀ Volver</button></div></div>
@@ -257,6 +261,7 @@ body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espe
       <button class="m" data-k="derrape" id="m-derrape" tabindex="-1">DERRAPE</button>
       <button class="m" data-k="acel" id="m-acel" tabindex="-1">ACELERAR</button>
       <button class="m" data-k="reversa" id="m-reversa" tabindex="-1">⏪ REVERSA</button> <!-- karts-reversa -->
+      <button class="m" data-k="salto" id="m-salto" tabindex="-1" aria-label="Salto"><b>⤴</b>SALTO</button> <!-- karts-salto -->
     </div>
   </div>
 </div>
@@ -270,6 +275,7 @@ body.espectador #mandos,body.espectador .mando,body.espectador #h-item,body.espe
 <script src="karts-reinos.js?v=1"></script> <!-- karts-copa-reinos: interiores de monumentos y sus mecánicas -->
 <script src="karts-objetos.js?v=1"></script> <!-- karts-objetos-en-sala: ítems entre personas en sala -->
 <script src="karts-reversa.js?v=1"></script> <!-- karts-reversa: velocidad de reversa y cruce de la meta en ambos sentidos -->
+<script src="karts-salto.js?v=1"></script> <!-- karts-salto: brinco corto, enfriamiento y esquiva (no es el aire de una rampa) -->
 <script>
 /* Karts Turbo — carreras con vista cenital en canvas (openspec: juegos-plataformas-karts, karts-controles-diseno).
    Embebido en juegos.html: la plataforma le pasa el avance del servidor y guarda puntos y progreso (postMessage,
@@ -351,10 +357,10 @@ const TOQUES = 'ontouchstart' in window;
 // Táctil si hay touch events o algún puntero grueso (no basta maxTouchPoints: lo reportan escritorios sin pantalla táctil).
 const TACTIL = TOQUES || matchMedia('(any-pointer: coarse)').matches;
 if (TACTIL) document.body.classList.add('tactil');
-const ACCIONES = ['acel', 'freno', 'izq', 'der', 'derrape', 'item', 'pausa', 'reversa']; // karts-reversa: + reversa
+const ACCIONES = ['acel', 'freno', 'izq', 'der', 'derrape', 'item', 'pausa', 'reversa', 'salto']; // karts-reversa: + reversa; karts-salto: + salto
 const vacio = () => Object.fromEntries(ACCIONES.map(a => [a, false]));
 const teclado = vacio(), toqueBtn = vacio();
-const pulso = { derrape: false, item: false, acel: false };
+const pulso = { derrape: false, item: false, acel: false, salto: false }; // karts-salto: + salto
 const fuentesExtra = []; // adaptadores registrados desde fuera (p. ej. el mando común de Arcade)
 const deExtra = a => fuentesExtra.some(f => { try { return !!f.presionado(a); } catch (e) { return false; } });
 const activo = k => teclado[k] || toqueBtn[k] || deExtra(k);
@@ -366,7 +372,7 @@ function presionar(fuente, k, on) {
 const antesExtra = {};
 function revisarFuentesExtra() {
   if (!fuentesExtra.length) return;
-  for (const a of ['acel', 'derrape', 'item', 'pausa']) {
+  for (const a of ['acel', 'derrape', 'item', 'pausa', 'salto']) { // karts-salto: + salto (R/L del mando)
     const v = deExtra(a);
     if (v && !antesExtra[a]) { if (a === 'pausa') alternarPausa(); else pulso[a] = true; }
     antesExtra[a] = v;
@@ -381,14 +387,16 @@ window.KartsEntrada = { ACCIONES, activo, registrar: f => { fuentesExtra.push(f)
 function soltarTodo() { for (const k in teclado) { teclado[k] = false; toqueBtn[k] = false; } document.querySelectorAll('#mandos .on').forEach(b => b.classList.remove('on')); soltarJoy(); }
 // Teclado: flechas o WASD, ESPACIO derrape, E o Shift ítem, P o Esc pausa (X y K también lanzan el ítem).
 // karts-reversa: R = reversa (y ↓/S estando parado, en leerEntrada).
+// karts-salto: ESPACIO vale derrape Y salto (presionar brinca; mantener girando derrapa, como siempre).
+const TECLA_DOBLE = { Space: 'salto' };
 const MAPA_TECLAS = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'acel', KeyW: 'acel', ArrowDown: 'freno', KeyS: 'freno', Space: 'derrape', KeyE: 'item', ShiftLeft: 'item', ShiftRight: 'item', KeyX: 'item', KeyK: 'item', KeyP: 'pausa', Escape: 'pausa', KeyR: 'reversa' };
 addEventListener('keydown', e => {
   const k = MAPA_TECLAS[e.code];
   if (!k) return;
   if (k === 'pausa') { if (modo === 'carrera' || modo === 'pausa') { e.preventDefault(); if (!e.repeat) alternarPausa(); } return; }
-  if (modo === 'carrera') { e.preventDefault(); if (!e.repeat) presionar(teclado, k, true); }
+  if (modo === 'carrera') { e.preventDefault(); if (!e.repeat) { presionar(teclado, k, true); if (TECLA_DOBLE[e.code]) presionar(teclado, TECLA_DOBLE[e.code], true); } }
 });
-addEventListener('keyup', e => { const k = MAPA_TECLAS[e.code]; if (k) presionar(teclado, k, false); });
+addEventListener('keyup', e => { const k = MAPA_TECLAS[e.code]; if (k) presionar(teclado, k, false); if (TECLA_DOBLE[e.code]) presionar(teclado, TECLA_DOBLE[e.code], false); });
 // Perder el foco solo suelta el teclado: los dedos siguen en la pantalla.
 addEventListener('blur', () => { for (const k in teclado) teclado[k] = false; });
 // Durante la carrera, arrastrar el dedo nunca desplaza la página de Juegos.
@@ -527,10 +535,11 @@ const mando = Mando.crear({
   acciones: { izq: 'izq', der: 'der', acel: 'A', freno: 'B', derrape: ['R', 'L'], item: ['X', 'Y'], pausa: 'START' },
   contenedor: $('juego'),
   teclas: Object.fromEntries(Object.keys(Mando.TECLAS).map(k => [k, null])),
-  nombres: { acel: 'gas', freno: 'frenar/rev', item: 'ítem', pausa: 'pausa' }, // cortos: «acelerar» se encima con B a 320 px; karts-reversa: B parado = reversa
+  nombres: { acel: 'gas', freno: 'frenar/rev', derrape: 'salto/derrape', item: 'ítem', pausa: 'pausa' }, // cortos: «acelerar» se encima con B a 320 px; karts-reversa: B parado = reversa; karts-salto: R/L brincan y, mantenidos, derrapan
 });
 mando.activar(false);
-KartsEntrada.registrar({ presionado: a => a !== 'izq' && a !== 'der' && mando.presionado(a), eje: () => mando.eje().x });
+// karts-salto: el mando no tiene botón libre; `salto` responde con R/L (los del derrape), sin tocar mando.js.
+KartsEntrada.registrar({ presionado: a => a !== 'izq' && a !== 'der' && mando.presionado(a === 'salto' ? 'derrape' : a), eje: () => mando.eje().x });
 
 // Elección de control y de aceleración (se recuerdan en este navegador). Por omisión: botones ⬅ ➡ y acelerar solo.
 let control = leerLS('karts_control');
@@ -566,7 +575,7 @@ function leerEntrada(vel = yo ? yo.vel : 0) {
   const frenoJoy = control === 'joystick' && joy.id !== null && joy.y > 0.7 && joy.y > Math.abs(joy.x);
   // karts-reversa: botón ⏪ o R; o freno del teclado (↓/S) o del mando (B) estando parado. El botón táctil FRENO no.
   const reversa = KartsReversa.quiereReversa({ reversa: activo('reversa'), frenoParado: teclado.freno || deExtra('freno'), vel });
-  return { giro, freno: activo('freno') || frenoJoy, derrape: activo('derrape'), acel: acelModo === 'auto' || activo('acel'), reversa };
+  return { giro, freno: activo('freno') || frenoJoy, derrape: activo('derrape'), acel: acelModo === 'auto' || activo('acel'), reversa, salto: activo('salto') }; // karts-salto
 }
 
 /* ================= Tamaño ================= */
@@ -1563,9 +1572,10 @@ function pasoKart(k, dt) {
   k.turbo = Math.max(0, k.turbo - dt); k.estrella = Math.max(0, k.estrella - dt); k.rayo = Math.max(0, k.rayo - dt); k.ahogado = Math.max(0, k.ahogado - dt); k.usoT = Math.max(0, k.usoT - dt);
   if (sinControl(k, dt)) return; // fantasma de sala; karts-copa-espacio: o cayendo, o con el dron
   k.aire = Math.max(0, (k.aire || 0) - dt);
+  pasoBrinco(k, dt); // karts-salto
   let giro = 0, acelera = true, freno = false, derrapa = false, reversa = false;
   if (k.humano) {
-    const en = leerEntrada(k.vel); giro = en.giro; freno = en.freno; derrapa = en.derrape; acelera = en.acel; reversa = en.reversa;
+    const en = leerEntrada(k.vel); giro = en.giro; freno = en.freno; derrapa = KartsSalto.derrapa(en, k); acelera = en.acel; reversa = en.reversa; // karts-salto: el salto mantenido derrapa al caer
     if (pilotoPrueba) { k.carril = carrilPrueba; k.carrilT = 9; const ia = pilotoBot(k); giro = ia.giro; acelera = true; reversa = false; }
     if (k.termino !== null) { giro = 0; derrapa = false; reversa = false; }
   } else {
@@ -1574,6 +1584,7 @@ function pasoKart(k, dt) {
   k.volante = giro;
   // El derrape usa solo la dirección (como el teclado): giro analógico cuantizado con umbral 0.3.
   const giroD = Math.abs(giro) >= 0.3 ? Math.sign(giro) : 0;
+  giro = KartsSalto.giroEnAire(giro, k); // karts-salto: en el aire no hay volantazos
   if (k.ahogado > 0) { acelera = false; reversa = false; } // karts-reversa: con el motor ahogado tampoco hay reversa
   if (k.giro > 0) { k.giro -= dt; k.ang += 9 * dt; k.vel *= Math.pow(0.2, dt); k.derrape = null; mover(k, dt, 2); return; }
   const top = velocidadPunta(k, eq);
@@ -1581,6 +1592,17 @@ function pasoKart(k, dt) {
   const w = giroConDerrape(k, giro, giroD, derrapa && !reversa, dt);
   k.ang += w * dt * KartsReversa.factorGiro(k.vel); // karts-reversa: con velocidad negativa el volante se invierte
   mover(k, dt, k.derrape ? 3.2 : 9);
+}
+// karts-salto: brinco del kart (juegos/karts-salto.js). No es el aire de una rampa: no cruza huecos ni el cenote.
+function brincar(k) {
+  if (!KartsSalto.iniciar(k)) return false;
+  if (k === yo) tono(330, 0.12, 'triangle', 0.05, 660);
+  return true;
+}
+let maxAltura = 0; // altura máxima de tu kart (gancho de pruebas: el brinco dura menos que un sondeo)
+function pasoBrinco(k, dt) {
+  if (KartsSalto.paso(k, dt) === 'aterriza' && k === yo) tono(150, 0.08, 'square', 0.04, 90);
+  if (k === yo) maxAltura = Math.max(maxAltura, KartsSalto.altura(k));
 }
 // Velocidad hacia adelante (acelerar, frenar o soltar); la de reversa está en juegos/karts-reversa.js (karts-reversa).
 function velAdelante(k, eq, top, acelera, freno, dt) {
@@ -1717,6 +1739,10 @@ function entrarZona(k, z) {
 function alturaAire(k) {
   if (k.cae > 0) return -Math.pow(1 - k.cae / KP.ESPACIO.caidaS, 2) * 70;
   if (k.remolque > 0) return Math.max(0, k.remolque - 0.4) / (KP.ESPACIO.remolqueS - 0.4) * 40;
+  if (k.remoto) return k.alturaRed || 0; // karts-salto: la que manda su dueño (brinco o rampa)
+  return alturaRampa(k) + KartsSalto.altura(k); // karts-salto: + brinco
+}
+function alturaRampa(k) {
   if (!(k.aire > 0)) return 0;
   const max = k.aireMax || SALTO_S, alto = max > SALTO_S ? 33 : 22; // con gravedad baja, más alto
   return Math.sin(Math.PI * (1 - k.aire / max)) * alto;
@@ -1754,7 +1780,7 @@ function sobrePlataforma(k, lat, dt) {
 const parcheDe = i => zonas.find(z => z.tipo === 'plataforma' && i >= z.i0 && i <= z.i1) || null;
 function caer(k) {
   if (k.cae > 0 || k.remolque > 0 || k.termino !== null) return; // ni la estrella salva del vacío
-  k.cae = KP.ESPACIO.caidaS; k.derrape = null; k.turbo = 0; k.aire = 0; k.giro = 0; k.zona = null;
+  k.cae = KP.ESPACIO.caidaS; k.derrape = null; k.turbo = 0; k.aire = 0; k.giro = 0; k.zona = null; KartsSalto.cancelar(k); // karts-salto: el brinco no salva del vacío
   if (k !== yo) { caidasBots++; return; }
   eventos.caida++; S.caida(); avisar('🕳️ ¡Al vacío! Ahí va el dron de rescate', 1600);
 }
@@ -1909,7 +1935,7 @@ function fuegoCohete(o) {
 // Golpe del objeto a los karts que toca (el cohete solo a su blanco; el dueño es inmune al soltarlo).
 function chocarObjeto(o) {
   for (const k of karts) {
-    if (k.fantasma || k.remoto || (k === o.dueno && o.t > 0)) continue;
+    if (k.fantasma || k.remoto || (k === o.dueno && o.t > 0) || KartsSalto.esquiva(k, o.tipo)) continue; // karts-salto: brincando pasa sobre cáscara y bola
     if ((k.x - o.x) ** 2 + (k.y - o.y) ** 2 < (o.r + 9) ** 2) { if (o.tipo !== 'cohete' || !o.blanco || o.blanco === k) { golpear(k); o.vida = 0; } }
   }
 }
@@ -1967,6 +1993,7 @@ function paso(dt) {
   tCarrera = (ahora - carreraDe.inicioLocal) / 1000;
   if (espectador) { pulso.item = false; elegirSeguido(); } // espectador: sin ítems; la cámara sigue al líder o a quien eligió
   if (pulso.item) { pulso.item = false; if (yo.item && yo.termino === null) usarItem(yo); }
+  if (pulso.salto) { pulso.salto = false; if (!espectador && !pilotoPrueba) brincar(yo); } // karts-salto (el piloto de prueba no brinca)
   pulso.derrape = false; pulso.acel = false;
   vigilarSentido(dt);
   for (const k of karts) { (k.remoto ? pasoRemoto : pasoKart)(k, dt); emitir(k); } // juegos-en-vivo: a un remoto lo mueve su dueño; aquí solo se interpola
@@ -1985,7 +2012,7 @@ function cuentaRegresiva(ahora) {
   if (vivo) mostrarPresentes(); // karts-salida-y-puntos: en la parrilla ya se ve a quien está conectado, en su casilla
   quitarCopaAntes(falta); // karts-copa-en-sala
   if ((pulso.derrape || pulso.acel) && arranque.presiono === null) arranque.presiono = -falta;
-  pulso.derrape = false; pulso.item = false; pulso.acel = false;
+  pulso.derrape = false; pulso.item = false; pulso.acel = false; pulso.salto = false; // karts-salto: antes de ¡YA! no se brinca
   const n = Math.ceil(falta);
   if (n !== carreraDe.ultimoNum && n <= 3) { carreraDe.ultimoNum = n; if (!window.Emocion?.cuenta(n)) S.bip(); } // emocion-sonora: 3-2-1
   $('cuenta').textContent = n <= 3 ? String(n) : '';
@@ -2019,14 +2046,14 @@ function mostrarTutorial() {
   else { acel = TACTIL ? f('ACELERAR', 'Mantén para avanzar') : f('↑ / W', 'Acelerar'); }
   let filas;
   // karts-reversa: cada control dice cómo ir en reversa.
-  if (!TACTIL) filas = f('← → / A D', 'Girar') + acel + f('↓ / S', 'Frenar (parado: reversa)') + f('R', 'Reversa') + f('ESPACIO', 'Derrape (mantén y gira)') + f('E / Shift', 'Usar ítem');
+  if (!TACTIL) filas = f('← → / A D', 'Girar') + acel + f('↓ / S', 'Frenar (parado: reversa)') + f('R', 'Reversa') + f('ESPACIO', 'Salto · mantén y gira: derrape') + f('E / Shift', 'Usar ítem'); // karts-salto
   else if (control === 'mando') filas = f('◀ ▶', 'Girar') + (acelModo === 'manual' ? f('A', 'Mantén para acelerar') : f('🤖', 'Aceleras solo')) +
-    f('R / L', 'Mantén y gira: mini-turbo') + f('X / Y', 'Usar ítem') + f('B', 'Frenar (parado: reversa)');
+    f('R / L', 'Salto · mantén y gira: mini-turbo') + f('X / Y', 'Usar ítem') + f('B', 'Frenar (parado: reversa)');
   else {
     let giroTxt = f('⬅ ➡', 'Girar');
     if (control === 'joystick') { giroTxt = f('🕹️', 'Arrastra para girar'); }
     else if (control === 'sensor') { giroTxt = f('📱', 'Inclina para girar'); }
-    filas = giroTxt + acel + f('DERRAPE', 'Mantén y gira: mini-turbo') + f('🎁', 'Usar ítem') + f('FRENO', 'Frenar') + f('⏪ REVERSA', 'Mantén para ir hacia atrás');
+    filas = giroTxt + acel + f('DERRAPE', 'Mantén y gira: mini-turbo') + f('⤴ SALTO', 'Brinca cáscaras') + f('🎁', 'Usar ítem') + f('FRENO', 'Frenar') + f('⏪ REVERSA', 'Mantén para ir hacia atrás');
   }
   $('tuto').innerHTML = '<h3>🎮 Así se juega</h3>' + filas;
   $('tuto').classList.add('ver'); document.body.classList.add('tuto');
@@ -2431,8 +2458,11 @@ function kartVivo() {
   const f = (yo.turbo > 0 ? BANDERA.turbo : 0) | (yo.estrella > 0 ? BANDERA.estrella : 0) | (yo.derrape ? BANDERA.derrape : 0) |
     (yo.giro > 0 ? BANDERA.giro : 0) | (yo.rayo > 0 ? BANDERA.rayo : 0) | (yo.item ? BANDERA.item : 0) |
     (yo.cae > 0 ? BANDERA.cae : 0) | (yo.remolque > 0 ? BANDERA.remolque : 0);
-  return [Math.round(yo.x * 10), Math.round(yo.y * 10), Math.round(difAng(yo.ang) * 1000), Math.round(yo.vel), yo.vuelta, yo.idx, f, yo.termino || 0, yo.personaje, kCopa()]; // karts-copa-en-sala: d[9] = carrera de la copa
+  return [Math.round(yo.x * 10), Math.round(yo.y * 10), Math.round(difAng(yo.ang) * 1000), Math.round(yo.vel), yo.vuelta, yo.idx, f, yo.termino || 0, yo.personaje, kCopa(), alturaVivo()]; // karts-copa-en-sala: d[9] = carrera de la copa; karts-salto: d[10] = altura
 }
+// karts-salto: altura visible de tu kart para los demás (brinco o rampa; la caída y el dron van en las banderas).
+const alturaVivo = () => (yo.cae > 0 || yo.remolque > 0 ? 0 : Math.round(Math.max(0, Math.min(40, alturaAire(yo)))));
+const alturaRemota = d => (d.length > 10 && Number.isFinite(d[10]) ? Math.max(0, Math.min(40, d[10])) : 0);
 // ¡YA!: ritmo de carrera y, en la parrilla, quien ya está conectado aunque todavía no llegue su primer estado.
 function vivoAlSalir() {
   vivo.ritmo('k', ritmoVivo(karts.filter(k => k.humano || k.remoto).length));
@@ -2447,7 +2477,7 @@ function alKartRemoto(d, meta) {
   const k = karts.find(x => x.remoto && x.id === meta.de);
   if (!k || !Array.isArray(d) || d.length < 8 || !d.slice(0, 8).every(Number.isFinite)) return;
   if (d.length > 9 && d[9] !== kCopa()) return; // karts-copa-en-sala: un mensaje de otra carrera de la copa
-  k.interp.agregar(meta.tLocal, [d[0] / 10, d[1] / 10, d[2] / 1000, d[3]]);
+  k.interp.agregar(meta.tLocal, [d[0] / 10, d[1] / 10, d[2] / 1000, d[3], alturaRemota(d)]); // karts-salto: + altura interpolada
   k.vuelta = Math.max(-1, Math.min(vueltasPista(), Math.trunc(d[4]))); k.idx = ((Math.trunc(d[5]) % N) + N) % N;
   const f = Math.trunc(d[6]);
   k.turbo = conBandera(f, BANDERA.turbo, 0.2); k.estrella = conBandera(f, BANDERA.estrella, 0.2); k.giro = conBandera(f, BANDERA.giro, 0.2); k.rayo = conBandera(f, BANDERA.rayo, 0.2);
@@ -2467,7 +2497,7 @@ function alSalirRemoto(id) {
 function pasoRemoto(k) {
   if (k.saliendo !== null && Date.now() - k.saliendo > SALIDA_MS) { k.visible = false; k.saliendo = null; k.interp.vaciar(); }
   const s = k.interp.muestra(Date.now());
-  if (s) { k.x = s[0]; k.y = s[1]; k.ang = s[2]; k.vel = s[3]; }
+  if (s) { k.x = s[0]; k.y = s[1]; k.ang = s[2]; k.vel = s[3]; k.alturaRed = Math.max(0, s[4] || 0); k.alturaMax = Math.max(k.alturaMax || 0, k.alturaRed); } // karts-salto: la extrapolación no la hunde
 }
 const alfaRemoto = k => (k.saliendo === null ? 1 : Math.max(0, 1 - (Date.now() - k.saliendo) / SALIDA_MS));
 // Clasificación en vivo: lugar, color y nombre corto de cada quien (personas y fantasmas), por avance.
@@ -2561,7 +2591,7 @@ function lateralBlanco(o) {
 function pasoObjetoRed(o) {
   KO.avanzar(o, geo, tcAhora(), () => lateralBlanco(o));
   if (o.tipo === 'cohete' && o.vida > 0) fuegoCohete(o);
-  if (o.vida > 0 && yo.termino === null && KO.toca(o, yo.x, yo.y, red.yoIdx, red.yoId)) golpeObjetoRed(o);
+  if (o.vida > 0 && yo.termino === null && !KartsSalto.esquiva(yo, o.tipo) && KO.toca(o, yo.x, yo.y, red.yoIdx, red.yoId)) golpeObjetoRed(o); // karts-salto: brincando pasa encima
 }
 function golpeObjetoRed(o) {
   o.vida = 0; red.reg.retirar(o.id);
@@ -2909,8 +2939,19 @@ function dibujarObjeto(o) {
     g.fillStyle = '#fb923c'; g.beginPath(); g.arc(p.x, p.y - 3 * s, 3 * s, 0, 7); g.fill();
   }
 }
+// karts-salto: sombra bajo las llantas; en el aire se queda en el piso, más chica y más clara cuanto más alto.
+function sombraKart(k, p, s, alto) {
+  let q = p, f = 1;
+  if (alto > 0) { q = proyectar(k.x, k.y, 0) || p; f = Math.max(0.45, 1 - alto / 40); }
+  g.fillStyle = 'rgba(0,0,0,' + (0.35 * f).toFixed(3) + ')'; g.beginPath(); g.ellipse(q.x, q.y, 19 * s * f, (19 * s * Math.sin(cam.phi) * 0.7 + 1) * f, 0, 0, 7); g.fill();
+}
+// karts-salto: aplastón al caer del brinco (más ancho y más bajo un instante, con el piso como eje).
+function aplastar(k) {
+  const a = REDUCIR ? 0 : KartsSalto.aplastado(k);
+  if (a > 0) g.scale(1 + 0.18 * a, 1 - 0.22 * a);
+}
 function dibujarKart(k, t) {
-  const p = proyectar(k.x, k.y, alturaAire(k)); if (!p) return; // alturaAire: salto del cenote
+  const alto = alturaAire(k), p = proyectar(k.x, k.y, alto); if (!p) return; // alturaAire: salto del cenote (y el brinco: karts-salto)
   const rel = k.ang - Math.atan2(k.y - cam.y, k.x - cam.x);
   const vista = ((Math.round(rel / (2 * Math.PI) * NVISTAS) % NVISTAS) + NVISTAS) % NVISTAS;
   const e = k.rayo > 0 ? 0.62 : 1, s = p.s * e;
@@ -2919,7 +2960,7 @@ function dibujarKart(k, t) {
   if (k.remoto) g.globalAlpha *= alfaRemoto(k); // juegos-en-vivo: se desvanece al desconectarse
   if (k.cae > 0) g.globalAlpha *= Math.max(0.15, k.cae / KP.ESPACIO.caidaS); // karts-copa-espacio: se pierde en el vacío
   // Sombra y brillo del derrape bajo las llantas (cayendo no hay piso).
-  if (!(k.cae > 0)) { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(p.x, p.y, 19 * s, 19 * s * Math.sin(cam.phi) * 0.7 + 1, 0, 0, 7); g.fill(); }
+  if (!(k.cae > 0)) sombraKart(k, p, s, alto); // karts-salto: en el aire, la sombra se queda en el piso y se achica
   if (k.derrape && k.derrape.nivel && !k.fantasma) {
     g.globalCompositeOperation = 'lighter';
     const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, 22 * s); gr.addColorStop(0, NIVEL_COLOR[k.derrape.nivel]); gr.addColorStop(1, 'rgba(0,0,0,0)');
@@ -2934,6 +2975,7 @@ function dibujarKart(k, t) {
     g.rotate(incl);
     if (!REDUCIR && k.vel > 60) g.translate(0, Math.sin(t * 38) * 0.25 * s);
   }
+  aplastar(k); // karts-salto
   g.drawImage(spriteKart(k.personaje, k.color, k.num, vista, cam.phi), -KW / 2 * s, -KOY * s, KW * s, KH * s);
   if (k.estrella > 0) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'hsla(' + ((t * 360) % 360) + ',90%,60%,.45)'; g.beginPath(); g.ellipse(0, -9 * s, 20 * s, 13 * s, 0, 0, 7); g.fill(); g.globalCompositeOperation = 'source-over'; }
   g.restore();
@@ -3092,7 +3134,7 @@ if (PRUEBA) {
   // Lleva al jugador al final de la vuelta v (al cruzar la meta, la vuelta v termina).
   const alFinalDeVuelta = v => { yo.vuelta = v; yo.mitadOk = true; const i = N - 14; const p = punto(i, 0); yo.idx = i; yo.x = p.x; yo.y = p.y; yo.ang = M.pts[i].a; yo.vel = A.VEL_KART; yo.vx = Math.cos(yo.ang) * yo.vel; yo.vy = Math.sin(yo.ang) * yo.vel; };
   // juegos-en-vivo: personas remotas, canal y clasificación en vivo para el gancho de estado.
-  const remotoPrueba = k => ({ id: k.id, nombre: k.nombre, visible: k.visible, saliendo: k.saliendo !== null, x: Math.round(k.x), y: Math.round(k.y), vuelta: k.vuelta, idx: k.idx, termino: k.termino, personaje: k.personaje, color: k.color, pos: posDe(k) });
+  const remotoPrueba = k => ({ id: k.id, nombre: k.nombre, visible: k.visible, saliendo: k.saliendo !== null, x: Math.round(k.x), y: Math.round(k.y), vuelta: k.vuelta, idx: k.idx, termino: k.termino, personaje: k.personaje, color: k.color, pos: posDe(k), altura: Math.round(alturaAire(k) * 10) / 10, alturaMax: Math.round((k.alturaMax || 0) * 10) / 10 }); // karts-salto: + altura
   const estadoVivo = () => ({
     vivo: vivo && { estado: vivo.estado(), presencia: vivo.presencia(), latencia: vivo.latencia(), stats: vivo.estadisticas() },
     remotos: karts.filter(k => k.remoto).map(remotoPrueba), yoColor: yo && yo.color,
@@ -3118,6 +3160,8 @@ if (PRUEBA) {
       vuelta: yo ? yo.vuelta : null, pos: yo ? posDe(yo) : null, monedas: yo ? yo.monedas : 0, tiempo: Math.round(tCarrera * 1000), termino: yo ? yo.termino : null, turbo: yo ? yo.turbo : 0, ultimoTurbo, prog: structuredClone(prog), sala: !!sala, karts: karts.length, vel: yo ? Math.round(yo.vel) : 0, lw: LW, lh: LH,
       ang: yo ? yo.ang : 0, giro: leerEntrada().giro, freno: leerEntrada().freno, derrape: activo('derrape'), acel: acelModo, acelera: leerEntrada().acel,
       reversa: leerEntrada().reversa, deuda: yo ? yo.deuda || 0 : 0, // karts-reversa
+      salto: activo('salto'), brinco: yo ? yo.brinco || 0 : 0, enfria: yo ? yo.brincoEnf || 0 : 0, altura: yo ? Math.round(alturaAire(yo) * 10) / 10 : 0, alturaMax: maxAltura, // karts-salto
+      kartDerrapa: !!(yo && yo.derrape), cascaras: objetos.filter(o => o.tipo === 'cascara' && !o.red).length, // karts-salto
       vista: '3d', camAng: cam.ang, camX: cam.x, camY: cam.y, horizonte: cam.hy, dibujados, tutorial: $('tuto').classList.contains('ver'), fuera: yo ? distanciaCentro(yo) > pista.mitad + 4 : false, control, sensibilidad, sensorActivo: sensor.activo, tactil: TACTIL, marcasMapa: mm.marcas, yoEnMapa: mm.yo, fps, particulas: particulas.length,
       item: yo ? yo.item : null, mando: mando.estado(), aire: yo ? yo.aire || 0 : 0, eventos: { ...eventos }, zonas: zonas.map(z => z.tipo),
       espacio: !!marcas, caidasBots, cae: yo ? yo.cae : 0, remolque: yo ? yo.remolque : 0, idx: yo ? yo.idx : 0, n: N, lateral: yo ? Math.round(lateralDe(yo)) : 0, // karts-copa-espacio
@@ -3138,6 +3182,17 @@ if (PRUEBA) {
       return c.toDataURL('image/png');
     },
     darItem: t => { if (yo && ITEMS[t]) yo.item = t; }, // ítem en la mano (E2E del mando)
+    // karts-salto: altura máxima desde el último reinicio, el hueco sin rampa y una cáscara `px` adelante (sin dueño).
+    reiniciarAltura: () => { maxAltura = 0; for (const k of karts) k.alturaMax = 0; },
+    // karts-salto: te deja pasando la línea de la rampa del primer hueco (sin su salto), rápido y brincando.
+    huecoSinRampa: () => {
+      const z = zonas.find(x => x.tipo === 'brecha'); if (!z || !yo) return false;
+      const i = (z.idx + 1) % N, q = punto(i, 0), v = A.VEL_KART * 1.3;
+      Object.assign(yo, { idx: i, x: q.x, y: q.y, ang: M.pts[i].a, vel: v, vx: Math.cos(M.pts[i].a) * v, vy: Math.sin(M.pts[i].a) * v, aire: 0, zona: null, brincoEnf: 0 });
+      const brinca = brincar(yo);
+      return brinca && !(marcas[i] & KP.MARCA.HUECO) ? true : { brinca, marca: marcas[i], giro: yo.giro, cae: yo.cae, remolque: yo.remolque, termino: yo.termino, enf: yo.brincoEnf };
+    },
+    cascaraAdelante: px => { const fx = Math.cos(yo.ang), fy = Math.sin(yo.ang); objetos.push({ tipo: 'cascara', x: yo.x + fx * px, y: yo.y + fy * px, r: 7, dueno: null, t: 0, vida: 40 }); },
     // karts-objetos-en-sala: usar el ítem en la mano, ponerte en la muestra idx (carril `lado`) y sortear n cajas.
     usar: () => {
       if (yo && yo.item && yo.termino === null) usarItem(yo);

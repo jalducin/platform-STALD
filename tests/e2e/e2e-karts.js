@@ -29,6 +29,10 @@
 // Reversa (openspec: karts-reversa): botón «⏪ REVERSA» con toques reales en Botones, Joystick y Sensor (el carro va
 // hacia atrás y el volante se invierte), sin encimarse a 390×844 y 844×390 (capturas); mando clásico (B parado);
 // teclado (↓ parado y R); reversa sobre la meta sin contar vueltas; el piloto de prueba no la usa.
+// Salto (openspec: karts-salto): botón «⤴ SALTO» con toques reales en Botones, Joystick y Sensor (sube y baja, sin
+// encimarse a 390×844 y 844×390, capturas y kart en el aire), enfriamiento, SALTO mantenido + ⬅ = derrape con
+// mini-turbo, mando (R táctil, L del control físico) y teclado (ESPACIO), esquiva una cáscara (y sin brincar te
+// tumba), no cruza un hueco del espacio sin rampa (cae y llega el dron); el piloto de prueba no brinca.
 require('./lib/entorno'); // BASE, API, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
@@ -60,7 +64,7 @@ const centro = async (fr, sel) => { const c = await fr.locator(sel).boundingBox(
 // Rectángulos (dentro del iframe) del minimapa, del HUD y de los mandos visibles.
 const cajas = fr => fr.evaluate(() => {
   const r = sel => { const e = document.querySelector(sel); if (!e) return null; const s = getComputedStyle(e), b = e.getBoundingClientRect(); return b.width && s.display !== 'none' && s.visibility !== 'hidden' ? { sel, l: b.left, t: b.top, r: b.right, b: b.bottom } : null; };
-  return { vw: innerWidth, vh: innerHeight, mapa: r('#minimapa'), hud: ['.hud-izq', '#h-item', '#hud .der'].map(r).filter(Boolean), ctl: ['#joy-zona', '#m-flechas', '#m-sensor', '#m-item', '#m-freno', '#m-derrape', '#m-acel', '#m-reversa'].map(r).filter(Boolean) };
+  return { vw: innerWidth, vh: innerHeight, mapa: r('#minimapa'), hud: ['.hud-izq', '#h-item', '#hud .der'].map(r).filter(Boolean), ctl: ['#joy-zona', '#m-flechas', '#m-sensor', '#m-item', '#m-freno', '#m-derrape', '#m-acel', '#m-reversa', '#m-salto'].map(r).filter(Boolean) };
 });
 const cruza = (a, b) => a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 && b.t < a.b - 0.5;
 const dentro = (a, vw, vh) => a.l >= -0.5 && a.t >= -0.5 && a.r <= vw + 0.5 && a.b <= vh + 0.5;
@@ -253,6 +257,150 @@ async function probarReversaTeclado(b) {
   await q.context().close();
 }
 async function probarReversa(b) { await probarReversaTeclado(b); await probarReversaMando(b); await probarReversaTactil(b); }
+
+// ================= Salto (openspec: karts-salto) =================
+// Toca un botón con un dedo real (`ms` ms) y espera a que el brinco termine; devuelve la altura máxima y el estado.
+async function tocarYMedir(p, fr, sel, ms = 80) {
+  await fr.evaluate(() => window.__karts.reiniciarAltura());
+  const d = dedos(p), c = await centro(fr, sel);
+  await d.poner(11, c.x, c.y); await sleep(ms); await d.quitar(11);
+  await sleep(150);
+  const medio = await estado(fr);
+  await sleep(450);
+  return { medio, fin: await estado(fr) };
+}
+async function probarSaltoTactil(b) {
+  for (const control of ['botones', 'joystick', 'sensor']) {
+    for (const vp of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
+      const nombre = 'salto ' + control + ' ' + vp.width + '×' + vp.height;
+      const q = await abrirSuelto(b, vp, conControl(control));
+      const f = q.mainFrame();
+      if (control === 'sensor') { await f.tap('#b-activar-sensor'); await f.waitForFunction(() => window.__karts.estado().sensorActivo, null, { timeout: 5000 }).catch(() => {}); }
+      await correrRapida(f, 'pradera');
+      await f.waitForFunction(() => window.__karts.estado().vel > 150, null, { timeout: 15000 });
+      const caja = await cajas(f);
+      const sal = caja.ctl.find(x => x.sel === '#m-salto');
+      ok(nombre + ': se ve «⤴ SALTO» dentro de la pantalla', (await estado(f)).control === control && !!sal && dentro(sal, caja.vw, caja.vh) && /SALTO/.test(await f.textContent('#m-salto')), JSON.stringify({ sal }));
+      ok(nombre + ': «⤴ SALTO» no se encima con DERRAPE, FRENO, REVERSA, 🎁, el minimapa ni el HUD', !!sal && caja.ctl.filter(x => x !== sal).every(x => !cruza(sal, x)) && !cruza(sal, caja.mapa) && caja.hud.every(h => !cruza(h, sal)),
+        JSON.stringify(caja.ctl.map(x => x.sel + ':' + [x.l, x.t, x.r, x.b].map(Math.round).join(','))));
+      const v0 = (await estado(f)).vel;
+      const t1 = await tocarYMedir(q, f, '#m-salto');
+      ok(nombre + ': tocar «⤴ SALTO» (toque real): el carro sube y vuelve a bajar', t1.fin.alturaMax > 10 && t1.fin.altura === 0 && t1.fin.brinco === 0 && t1.fin.vel <= Math.max(v0, 260), JSON.stringify({ max: t1.fin.alturaMax, alt: t1.fin.altura, vel: [v0, t1.fin.vel] }));
+      await q.screenshot({ path: 'karts-salto-' + control + '-' + vp.width + 'x' + vp.height + '.png' });
+      if (control === 'botones') {
+        // Kart en el aire (captura a media altura).
+        const d = dedos(q), c = await centro(f, '#m-salto');
+        await sleep(700);
+        await d.poner(12, c.x, c.y); await sleep(60); await d.quitar(12);
+        await f.waitForFunction(() => window.__karts.estado().altura > 11, null, { timeout: 1500, polling: 'raf' }).catch(() => {});
+        await q.screenshot({ path: 'karts-salto-aire-' + vp.width + 'x' + vp.height + '.png' });
+        // Enfriamiento: justo al caer no vuelve a brincar.
+        await f.waitForFunction(() => window.__karts.estado().brinco === 0, null, { timeout: 1500, polling: 'raf' });
+        const t2 = await tocarYMedir(q, f, '#m-salto', 40);
+        ok(nombre + ': justo al caer no brinca otra vez (enfriamiento)', t2.fin.alturaMax === 0, JSON.stringify({ max: t2.fin.alturaMax }));
+      }
+      if (control === 'botones' && vp.width === 390) {
+        // Brinco + giro al caer = derrape con mini-turbo (dos dedos: SALTO mantenido y ⬅).
+        await sleep(800);
+        const d = dedos(q), cS = await centro(f, '#m-salto'), cI = await centro(f, '#m-flechas [data-k="izq"]');
+        await d.poner(1, cS.x, cS.y); await sleep(120);
+        const enAire = await estado(f);
+        await d.poner(2, cI.x, cI.y); await sleep(1500);
+        const der = await estado(f);
+        await d.quitar(1); await sleep(120); await d.soltarTodo();
+        const fin = await estado(f);
+        ok(nombre + ': SALTO mantenido + ⬅ al caer = derrape (en el aire no empieza) y mini-turbo al soltar', enAire.brinco > 0 && !enAire.kartDerrapa && der.kartDerrapa && !fin.kartDerrapa && ['azul', 'naranja', 'morado'].includes(fin.ultimoTurbo),
+          JSON.stringify({ aire: enAire.brinco, derrapaAire: enAire.kartDerrapa, derrapa: der.kartDerrapa, turbo: fin.ultimoTurbo }));
+        const tuto = await f.evaluate(() => { mostrarTutorial(); return document.getElementById('tuto').textContent; });
+        ok(nombre + ': el tutorial muestra el salto', /SALTO/.test(tuto), tuto);
+      }
+      await q.context().close();
+    }
+  }
+}
+async function probarSaltoMando(b) {
+  const q = await abrirSuelto(b, { width: 390, height: 844 }, conControl('mando'));
+  const f = q.mainFrame();
+  await correrRapida(f, 'pradera');
+  await f.waitForFunction(() => window.__karts.estado().vel > 150, null, { timeout: 15000 });
+  const t1 = await tocarYMedir(q, f, '.mando-gatillo[data-b="R"]');
+  ok('salto mando: R (toque real) brinca y vuelve a bajar', t1.fin.alturaMax > 10 && t1.fin.altura === 0, JSON.stringify({ max: t1.fin.alturaMax }));
+  const tutoM = await f.evaluate(() => { mostrarTutorial(); return document.getElementById('tuto').textContent; });
+  ok('salto mando: el tutorial dice que R / L brincan y, mantenidos, derrapan', /R \/ L.*Salto/.test(tutoM), tutoM);
+  await q.screenshot({ path: 'karts-salto-mando-390x844.png' });
+  await q.context().close();
+}
+// Control físico (Gamepad API, en la PC): L (índice 4) brinca.
+async function probarSaltoControlFisico(b) {
+  const q = await abrirPagina(b, { viewport: { width: 1280, height: 800 }, out, etiqueta: 'karts suelto', ruta: '/juegos/karts.html?prueba=1', esperar: '#ov-menu:not(.hide)', init: GAMEPAD });
+  const f = q.mainFrame();
+  await f.click('[data-ir="pistas"]'); await f.click('[data-ir="rapida:pradera"]');
+  await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().tiempo > 400, null, { timeout: 15000 });
+  await f.evaluate(p => { window.__pads = [p, null, null, null]; }, pad([0])); // A = gas («Con botón»)
+  await f.waitForFunction(() => window.__karts.estado().vel > 150, null, { timeout: 15000 }).catch(() => {});
+  await f.evaluate(() => window.__karts.reiniciarAltura());
+  await f.evaluate(p => { window.__pads = [p, null, null, null]; }, pad([0, 4]));
+  await sleep(150);
+  const e1 = await estado(f);
+  await f.evaluate(p => { window.__pads = [p, null, null, null]; }, pad([0]));
+  await sleep(500);
+  const e2 = await estado(f);
+  ok('salto mando: L del control físico brinca', e2.alturaMax > 10, JSON.stringify({ max: e2.alturaMax, controles: e1.mando.controles, salto: e1.salto, derrape: e1.derrape }));
+  await q.context().close();
+}
+async function probarSaltoTeclado(b) {
+  const q = await abrirPagina(b, { viewport: { width: 1280, height: 800 }, out, etiqueta: 'karts suelto', ruta: '/juegos/karts.html?prueba=1', esperar: '#ov-menu:not(.hide)' });
+  const f = q.mainFrame();
+  ok('salto teclado: la lista de teclas dice ESPACIO salto', /ESPACIO salto/.test(await f.textContent('#teclas')));
+  await f.click('[data-ir="pistas"]'); await f.click('[data-ir="rapida:pradera"]');
+  await f.waitForFunction(() => window.__karts.estado().modo === 'carrera' && window.__karts.estado().vel > 150, null, { timeout: 15000 });
+  await f.evaluate(() => window.__karts.reiniciarAltura());
+  await q.keyboard.down('Space'); await sleep(60); await q.keyboard.up('Space'); await sleep(600);
+  const e1 = await estado(f);
+  ok('salto teclado: ESPACIO brinca y vuelve a bajar (sin girar no derrapa)', e1.alturaMax > 10 && e1.altura === 0 && !e1.kartDerrapa, JSON.stringify({ max: e1.alturaMax, derrapa: e1.kartDerrapa }));
+  // Sin brincar, la cáscara te tumba.
+  await sleep(700);
+  await f.evaluate(() => { window.__karts.ponerEn(6); window.__karts.cascaraAdelante(48); }); await sleep(400);
+  const g0 = await estado(f);
+  ok('salto teclado: sin brincar, la cáscara te tumba (control)', g0.girando > 0 || g0.cascaras === 0, JSON.stringify({ girando: g0.girando, cascaras: g0.cascaras }));
+  await f.waitForFunction(() => window.__karts.estado().girando === 0 && window.__karts.estado().vel > 200, null, { timeout: 8000 }).catch(() => {});
+  await f.evaluate(() => window.__karts.reiniciarAltura());
+  // Brincando justo antes, pasa por encima y la cáscara sigue en la pista (a 0.2 s de distancia a tu velocidad).
+  const c0 = (await estado(f)).cascaras;
+  // ESPACIO y, en cuanto despega, la cáscara en su camino (la toca entre 0.1 y 0.3 s del brinco).
+  const dz = await f.evaluate(() => new Promise(res => {
+    window.__karts.ponerEn(6); dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }));
+    const ver = () => { const e = window.__karts.estado(); if (e.brinco > 0) { const px = e.vel * 0.2; window.__karts.cascaraAdelante(px); res({ px: Math.round(px), vel: e.vel }); } else requestAnimationFrame(ver); };
+    requestAnimationFrame(ver);
+  }));
+  await sleep(80); await f.evaluate(() => dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' })));
+  await sleep(450);
+  const g1 = await estado(f);
+  ok('salto teclado: brincando esquiva la cáscara (no te tumba y sigue en la pista)', g1.girando === 0 && g1.cascaras === c0 + 1 && g1.alturaMax > 10, JSON.stringify({ girando: g1.girando, cascaras: [c0, g1.cascaras], max: g1.alturaMax, ...dz }));
+  // El piloto de prueba no brinca.
+  await sleep(800); await f.evaluate(() => { window.__karts.reiniciarAltura(); window.__karts.piloto(true); });
+  await q.keyboard.down('Space'); await sleep(60); await q.keyboard.up('Space'); await sleep(500);
+  ok('salto teclado: el piloto de prueba no brinca', (await estado(f)).alturaMax === 0);
+  await f.evaluate(() => window.__karts.piloto(false));
+  await q.context().close();
+}
+// Un hueco del espacio sin la rampa: brincando también caes y el dron te regresa.
+async function probarSaltoHueco(b) {
+  const q = await abrirSuelto(b, { width: 390, height: 844 });
+  const f = q.mainFrame();
+  await correrRapida(f, 'anillos');
+  await f.waitForFunction(() => window.__karts.estado().tiempo > 1500, null, { timeout: 20000 });
+  const listo = await f.evaluate(() => window.__karts.huecoSinRampa());
+  await sleep(120);
+  const e0 = await estado(f);
+  await q.screenshot({ path: 'karts-salto-hueco-390x844.png' });
+  await f.waitForFunction(() => window.__karts.estado().eventos.caida >= 1, null, { timeout: 4000 }).catch(() => {});
+  await f.waitForFunction(() => window.__karts.estado().eventos.rescate >= 1, null, { timeout: 6000 }).catch(() => {});
+  const e1 = await estado(f);
+  ok('salto: brincar sobre un hueco del espacio sin la rampa no lo cruza (cae y llega el dron)', listo && (e0.brinco > 0 || e0.cae > 0) && e1.eventos.caida >= 1 && e1.eventos.rescate >= 1 && e1.eventos.brecha === 0, JSON.stringify({ listo, brinco: e0.brinco, eventos: { caida: e1.eventos.caida, rescate: e1.eventos.rescate, brecha: e1.eventos.brecha } }));
+  await q.context().close();
+}
+async function probarSalto(b) { await probarSaltoTeclado(b); await probarSaltoHueco(b); await probarSaltoMando(b); await probarSaltoControlFisico(b); await probarSaltoTactil(b); }
 
 // ================= Mando clásico (openspec: karts-mando) =================
 const CON_MANDO = [() => { try { localStorage.setItem('karts_control', 'mando'); } catch { /* nada */ } }];
@@ -830,6 +978,11 @@ async function probarCopaMeso(b) {
     await b.close(); console.log(out.join('\n'));
     process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
   }
+  if (process.env.KARTS_SOLO === 'salto') { // karts-salto: solo esta parte (para iterar)
+    await probarSalto(b);
+    await b.close(); console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
   if (process.env.KARTS_SOLO === 'espacio') { // karts-copa-espacio: solo esta parte (para iterar)
     await probarPistasEspacio(b); await probarCopaEspacio(b);
     await b.close(); console.log(out.join('\n')); console.log('fps: ' + JSON.stringify(fpsMeso));
@@ -1116,6 +1269,7 @@ async function probarCopaMeso(b) {
   await probarMando(b);
 
   await probarReversa(b); // karts-reversa
+  await probarSalto(b); // karts-salto
   // ---- Personajes (openspec: personajes-xalli) ----
   await probarPersonajes(b);
 
