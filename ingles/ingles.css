@@ -277,6 +277,7 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 .pf-tag { font-size: .68rem; font-weight: 800; padding: 1px 6px; border-radius: 6px; margin-left: 4px; vertical-align: middle; }
 .pf-tag.ruta { background: #ede9fe; color: #5b21b6; } .pf-tag.grupo { background: #dbeafe; color: #1e40af; }
 .pf-ok { text-align: center; padding: 10px; color: var(--muted); }
+.pf-bloque + .pf-bloque { margin-top: 16px; } /* Esta semana: mis clases y el grupo (openspec: profe-grupo-y-ruta-ia) */
 .pf-tabs { display: flex; gap: 6px; overflow-x: auto; margin: 4px 0 10px; padding-bottom: 2px; scrollbar-width: none; }
 .pf-tabs button { flex: 0 0 auto; font: inherit; font-size: .86rem; font-weight: 700; min-height: 40px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; }
 .pf-tabs button[aria-selected="true"] { background: var(--accent-bg); border-color: transparent; color: #fff; }

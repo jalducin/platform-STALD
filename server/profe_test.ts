@@ -46,10 +46,11 @@ Deno.test("profe: lista su ámbito con plan y solo sus elementos", async () => {
   const r = await profe(store, "GET", "");
   assertEquals(r.status, 200);
   assertEquals(r.body.plan.titulo, "Ruta B1 → C1 · Mes 1");
-  assertEquals(r.body.semana.id, "2026-09-28");
+  assertEquals(r.body.semanaPropia.id, "2026-09-28");
+  assertEquals(r.body.semana, null, "el grupo aún no tiene semana el 2026-10-01");
   assertEquals(r.body.items.filter((i: any) => !i.grupo).map((i: any) => [i.id, i.estado]), [["profe-examen-directo-s1", "disponible"]]);
   const lunes = await profe(store, "GET", "", ADMIN, undefined, "2026-10-07");
-  assertEquals(lunes.body.semana.id, "2026-10-05");
+  assertEquals(lunes.body.semanaPropia.id, "2026-10-05");
   assertEquals(lunes.body.items.find((i: any) => i.id === "profe-examen-2026-10-10").estado, "proximamente", "el examen B abre el sábado");
 });
 
@@ -145,9 +146,43 @@ Deno.test("profe: sin ruta propia ve la semana del grupo, sin plan y con lo del 
   assertEquals(domingo.body.semanaSiguiente?.id, "2026-10-05", "el domingo ya ve la siguiente del grupo");
 });
 
-Deno.test("profe: con ruta propia conserva su semana", async () => {
+// ---- Grupo y ruta propia a la vez (openspec: profe-grupo-y-ruta-ia) ----
+Deno.test("profe: con ruta propia, semana del grupo y semanaPropia aparte", async () => {
   clearCache();
   const r = await profe(datos(), "GET", "", ADMIN, undefined, "2026-10-07");
   assertEquals(r.body.semana.id, "2026-10-05");
-  assertEquals(r.body.semana.titulo, "Semana 1", "la de su ruta, no la del grupo");
+  assert(r.body.semana.ids.includes("act-2026-10-06"), "semana = la del grupo");
+  assert(r.body.semana.titulo !== "Semana 1", "el título es el del grupo");
+  assertEquals([r.body.semanaPropia.id, r.body.semanaPropia.titulo], ["2026-10-05", "Semana 1"]);
+  assertEquals(r.body.semanaPropia.ids, ["profe-act-2026-10-05", "profe-examen-2026-10-07", "profe-act-2026-10-08", "profe-examen-2026-10-10"]);
+  const ids = r.body.items.map((i: any) => i.id);
+  assert(ids.includes("act-2026-10-06") && ids.includes("profe-act-2026-10-08"), "la lista trae ambas");
+  assert(r.body.items.filter((i: any) => i.id.startsWith("profe-")).every((i: any) => !i.grupo), "las propias sin grupo");
+  assertEquals(r.body.plan.titulo, "Ruta B1 → C1 · Mes 1");
+});
+
+Deno.test("profe: el domingo, la siguiente del grupo y la siguiente propia", async () => {
+  clearCache();
+  const r = await profe(datos(), "GET", "", ADMIN, undefined, "2026-10-04");
+  assertEquals(r.body.semana, null, "el grupo empieza el 2026-10-05");
+  assertEquals(r.body.semanaSiguiente?.id, "2026-10-05");
+  assert(r.body.semanaSiguiente.ids.includes("act-2026-10-06"));
+  assertEquals(r.body.semanaPropia?.id, "2026-09-28");
+  assertEquals(r.body.semanaSiguientePropia?.titulo, "Semana 1");
+});
+
+Deno.test("profe: sin ruta propia no hay campos propios", async () => {
+  clearCache();
+  const r = await profe(storeCon({ ...semanaValida() }), "GET", "", ADMIN, undefined, "2026-10-04");
+  assert(!("semanaPropia" in r.body) && !("semanaSiguientePropia" in r.body));
+});
+
+Deno.test("profe: el alumno sigue sin semanas propias ni elementos del profe", async () => {
+  clearCache();
+  Deno.env.set("PERMITIR_HOY", "1");
+  const req = new Request("http://x/ingles/actividades?email=x&hoy=2026-10-07");
+  const body = await (await handleActividades(req, "", { isAdmin: false, alumno: "Marisol" }, datos(), json)).json();
+  assert(!("semanaPropia" in body) && !("plan" in body));
+  assertEquals(body.semana.id, "2026-10-05");
+  assert(!body.items.some((i: any) => i.id.startsWith("profe-")));
 });
