@@ -390,11 +390,13 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - Son los únicos correos que guarda el repo de datos. El invitado aceptó el aviso al registrarse.
   - Solo el admin los ve (`/juegos/invitados` y `/juegos/jugadores`, que suma alumnos, alumnas y registros
     pendientes de las cuentas de acceso), en la pestaña «🛡️ Admin» de `juegos.html`.
-- `contenido/profe/`: ruta de estudio propia del profe (cambio `ruta-profe`), mismo formato que `contenido/`. **Vacía desde
-  el 2026-10-17** (cambio `profe-semanas-del-grupo`): la ruta B1 → C1 se eliminó y el profe resuelve las actividades de su
-  grupo; se recupera con `git revert` del commit «profe: elimina la ruta B1 → C1» en el repo de datos. Si se vuelve a usar:
-  - `plan.json`: `{ titulo, subtitulo, nivelActual, meta, horizonte, horasSemana, reparto[], rutinaDiaria[], reglas[],
-    semanas[{ id, n, titulo, objetivo, temas[], busuu, extra, elementos[{ id, tipo, titulo, fecha }] }] }`;
+- `contenido/profe/`: ruta de estudio propia del profe (cambio `ruta-profe`), mismo formato que `contenido/`. La ruta
+  B1 → C1 se eliminó el 2026-10-17 (cambio `profe-semanas-del-grupo`; se recupera con `git revert` del commit «profe:
+  elimina la ruta B1 → C1» en el repo de datos). Desde el 2026-10-18 puede tener una ruta de otro tema (p. ej. IA/Claude
+  Code); el profe ve **a la vez** la semana del grupo y la de su ruta (cambio `profe-grupo-y-ruta-ia`):
+  - `plan.json`: `{ titulo, semanas[{ id, titulo, temas[], elementos[{ id, tipo, titulo, fecha }] }] }`. Opcionales:
+    `subtitulo`, `horizonte`, `nivelActual` + `meta`, `horasSemana`, `reparto[]`, `rutinaDiaria[]`, `reglas[]` y, por
+    semana, `n`, `objetivo`, `busuu` y `extra`; la vista solo muestra los que vienen. `titulo` da nombre a la vista;
   - `semanas/<lunes>.json`, `actividades/profe-act-<fecha>.json` y `examenes/profe-examen-<fecha>.json`;
   - resultados en `resultados/<id>/profe.json` (alumno "Profe"), también para los elementos del grupo que resuelve
     antes que ellos; esos archivos se excluyen de todas las vistas de resultados del grupo.

@@ -173,12 +173,17 @@ async function preguntasPara(store: Store, it: Item, alumno: string | null, n: n
 // GET /ingles/actividades → elementos con estado (alumno) o con resultados y resumen (admin)
 async function listarActividades(quien: Identidad, store: Store, json: Json, hoy: string, ambito: Ambito, slug: string | null): Promise<Response> {
   const { items, ...propias } = await visibleItems(store, hoy, ambito);
-  // Sin ruta propia (openspec: profe-semanas-del-grupo), el profe sigue las semanas del grupo: lo del grupo ya está en su lista.
-  const { semanaActual, semanaSiguiente } = ambito.clave === "profe" && !propias.semanaActual && !propias.semanaSiguiente
-    ? await visibleItems(store, hoy, AMBITO_CLASE) : propias;
+  const esProfe = ambito.clave === "profe";
+  // Ruta del profe (openspec: profe-grupo-y-ruta-ia): `semana`/`semanaSiguiente` son siempre las del grupo (lo del grupo
+  // ya está en su lista) y, si tiene ruta propia, sus semanas van aparte en `semanaPropia`/`semanaSiguientePropia`.
+  const { semanaActual, semanaSiguiente } = esProfe ? await visibleItems(store, hoy, AMBITO_CLASE) : propias;
   const resumirSemana = (s: Semana) => ({ id: s.id, titulo: s.titulo, ids: s.elementos.map((e) => e.id) });
   const semana = semanaActual ? resumirSemana(semanaActual) : null;
-  const siguiente = semanaSiguiente ? { semanaSiguiente: resumirSemana(semanaSiguiente) } : {};
+  const siguiente = {
+    ...(semanaSiguiente ? { semanaSiguiente: resumirSemana(semanaSiguiente) } : {}),
+    ...(esProfe && propias.semanaActual ? { semanaPropia: resumirSemana(propias.semanaActual) } : {}),
+    ...(esProfe && propias.semanaSiguiente ? { semanaSiguientePropia: resumirSemana(propias.semanaSiguiente) } : {}),
+  };
   if (quien.isAdmin) {
     const conRes = await Promise.all(items.map(async (it) => ({ ...meta(it), ...(it.prorrogas ? { prorrogas: it.prorrogas } : {}), resultados: tieneReto(it) ? await resultadosDe(store, it.id) : [] })));
     const porAlumno = new Map<string, Resultado[]>();
@@ -186,7 +191,7 @@ async function listarActividades(quien: Identidad, store: Store, json: Json, hoy
     const resumen = Object.fromEntries([...porAlumno].map(([a, rs]) => [a, { temasAReforzar: temasAReforzar(rs) }]));
     return json({ isAdmin: true, hoy, semana, ...siguiente, items: conRes, resumen });
   }
-  const grupo = ambito.clave === "profe" ? (await itemsDelGrupo(store)).map(paraProfe) : [];
+  const grupo = esProfe ? (await itemsDelGrupo(store)).map(paraProfe) : [];
   const deGrupo = new Set(grupo.map((g) => g.id));
   const todos = [...items, ...grupo].sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
   // Alumnos y alumnas nuevos: lo que venció antes de su lunes de inicio no aparece (openspec: inicio-lunes-alumnos).
@@ -199,7 +204,7 @@ async function listarActividades(quien: Identidad, store: Store, json: Json, hoy
     for (const i of r?.intentos || []) diasConEntrega.add(mxToday(new Date(i.enviadoEn)));
     return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
   }));
-  const plan = ambito.clave === "profe" ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
+  const plan = esProfe ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
   return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
 }
 

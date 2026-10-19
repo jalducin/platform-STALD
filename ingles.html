@@ -12,17 +12,17 @@
   try { var t = localStorage.getItem('stald_tema'); if (t === 'oscuro') document.documentElement.dataset.theme = 'dark'; else if (t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) { /* sin almacenamiento */ }
 </script>
 <link rel="stylesheet" href="estilos/stald.css">
-<link rel="stylesheet" href="ingles/ingles.css?v=2">
+<link rel="stylesheet" href="ingles/ingles.css?v=3">
 <!-- Scripts clásicos en orden (comparten el ámbito global); defer: corren cuando el DOM ya existe. -->
 <script defer src="comun/auth.js?v=8"></script> <!-- sesión (openspec: plataforma-login) -->
-<script defer src="ingles/comun.js?v=2"></script>
+<script defer src="ingles/comun.js?v=3"></script>
 <script defer src="ingles/material.js?v=1"></script> <!-- material de estudio (openspec: ingles-material-estudio) -->
 <script defer src="ingles/reproductor.js"></script>
 <script defer src="ingles/presentacion.js"></script>
 <script defer src="ingles/admin.js"></script>
 <script defer src="ingles/tablero.js?v=2"></script>
 <script defer src="ingles/alumno.js?v=2"></script>
-<script defer src="ingles/profe.js?v=2"></script>
+<script defer src="ingles/profe.js?v=3"></script>
 <script defer src="ingles/secundaria.js"></script>
 <script defer src="ingles/app.js?v=2"></script>
 </head>

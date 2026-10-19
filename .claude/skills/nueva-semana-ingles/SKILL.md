@@ -134,11 +134,12 @@ git -C "$DATA" add -A && git -C "$DATA" commit -m "contenido: semana N (<lunes>)
 
 ## Ruta del profe
 
-Desde el 2026-10-17 el profe **no tiene ruta propia**: a su pedido se eliminó la ruta B1 → C1 (`contenido/profe/` y
-`herramientas/profe-mes-1/` del repo de datos; cambio `profe-semanas-del-grupo`). En `ingles.html?modo=profe` resuelve
-**las mismas actividades de la semana del grupo** (actividades, examen, refuerzo y Tecnología e IA, sin el Meet), abiertas
-desde que se suben y con fecha límite el día antes de que abran al grupo. No hace falta armarle nada aparte: basta con
-subir la semana del grupo.
+El 2026-10-17 se eliminó la ruta B1 → C1 del profe (`contenido/profe/` y `herramientas/profe-mes-1/` del repo de datos;
+cambio `profe-semanas-del-grupo`). En `ingles.html?modo=profe` resuelve **las mismas actividades de la semana del grupo**
+(actividades, examen, refuerzo y Tecnología e IA, sin el Meet), abiertas desde que se suben y con fecha límite el día
+antes de que abran al grupo: basta con subir la semana del grupo. Si además tiene ruta propia en `contenido/profe/`
+(desde el 2026-10-18, de IA), «Esta semana» muestra los dos bloques, «🎓 Mis clases» y «👥 Inglés con el grupo»
+(cambio `profe-grupo-y-ruta-ia`; formato del plan en `docs/data-model.md`).
 
 - Sus intentos quedan en `resultados/<id>/profe.json` y nunca cuentan en las vistas del grupo.
 - Para retomar la ruta C1: `git revert` del commit «profe: elimina la ruta B1 → C1» en el repo de datos (vuelven
