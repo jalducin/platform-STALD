@@ -94,8 +94,12 @@ export async function visibleItems(store: Store, hoy: string, ambito: Ambito = A
     const enSemana = new Set(todas.flatMap((s) => s.elementos.map((e) => e.id)));
     const sueltos = (await store.list(`${ambito.contenido}/examenes`)).map((n) => n.replace(/\.json$/, "")).filter((id) => !enSemana.has(id));
     const ids = [...semanas.flatMap((s) => s.elementos.map((e) => e.id)), ...sueltos];
+    // Ruta del profe a su ritmo (openspec: profe-ruta-abierta): de sus semanas futuras entra lo que ya abrió
+    // (`disponibleDesde` ≤ hoy). El grupo sigue viendo solo semanas iniciadas.
+    const adelantables = ambito.clave === AMBITO_PROFE.clave ? todas.filter((s) => !semanas.includes(s)).flatMap((s) => s.elementos.map((e) => e.id)) : [];
+    const abiertas = (await Promise.all(adelantables.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x && abreYa(x.disponibleDesde, hoy));
     const gruposDe = new Map(todas.flatMap((s) => s.grupos?.length ? s.elementos.map((e) => [e.id, s.grupos!] as const) : []));
-    const items: ConGrupos[] = (await Promise.all(ids.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x)
+    const items: ConGrupos[] = [...(await Promise.all(ids.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x), ...abiertas]
       .map((it) => gruposDe.has(it.id) ? { ...it, grupos: gruposDe.get(it.id) } : it);
     items.sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
     // «Esta semana» sigue siendo la que contiene hoy; el domingo, la siguiente va aparte para adelantar.

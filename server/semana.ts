@@ -1,5 +1,5 @@
 // Validador de una semana completa antes de subirla al repo de datos (ver openspec: nueva-semana-ingles).
-import { AMBITO_CLASE, type Ambito, loadItem } from "./actividades.ts";
+import { AMBITO_CLASE, AMBITO_PROFE, type Ambito, loadItem } from "./actividades.ts";
 import { erroresDiagramas } from "./diagrama.ts";
 import { maxIntentos, validateItem } from "./motor.ts";
 import type { Store } from "./store.ts";
@@ -48,6 +48,17 @@ function revisarMeet(it: Elemento, id: string, r: ReporteSemana) {
   }
 }
 
+// Apertura de un elemento. Grupo: abre dentro de su semana (lunes…fechaLimite) y el examen, solo su día.
+// Ruta del profe (openspec: profe-ruta-abierta): va a su ritmo; puede abrir antes del lunes de su semana y el examen
+// no espera su día, pero nunca abre después de `fechaLimite` (que queda como ritmo sugerido).
+function erroresApertura(it: Elemento, id: string, lunes: string, esProfe: boolean): string[] {
+  if (esProfe) return it.disponibleDesde > it.fechaLimite ? [`${id}: disponibleDesde ${it.disponibleDesde} posterior a fechaLimite ${it.fechaLimite}`] : [];
+  const errores: string[] = [];
+  if (it.disponibleDesde < lunes || it.disponibleDesde > it.fechaLimite) errores.push(`${id}: disponibleDesde ${it.disponibleDesde} fuera de ${lunes}…${it.fechaLimite}`);
+  if (it.tipo === "examen" && it.disponibleDesde !== it.fechaLimite) errores.push(`${id}: el examen debe quedar bloqueado hasta su día (disponibleDesde = ${it.fechaLimite})`);
+  return errores;
+}
+
 // Revisa un elemento de la semana y agrega sus errores y avisos al reporte.
 async function revisarElemento(store: Store, el: Semana["elementos"][number], lunes: string, ambito: Ambito, ids: Set<string>, r: ReporteSemana) {
   const { errores, avisos } = r;
@@ -56,9 +67,9 @@ async function revisarElemento(store: Store, el: Semana["elementos"][number], lu
   if (!it) { errores.push(`${el.id}: no existe el archivo en ${ambito.contenido}/actividades ni ${ambito.contenido}/examenes`); return; }
   if (it.tipo !== el.tipo) errores.push(`${el.id}: tipo ${it.tipo} en el archivo y ${el.tipo} en la semana`);
   if (it.fechaLimite !== el.fecha) errores.push(`${el.id}: fechaLimite ${it.fechaLimite} distinta de la fecha de la semana ${el.fecha}`);
-  if (it.disponibleDesde < lunes || it.disponibleDesde > it.fechaLimite) errores.push(`${el.id}: disponibleDesde ${it.disponibleDesde} fuera de ${lunes}…${it.fechaLimite}`);
-  if (it.tipo === "examen" && maxIntentos(it) === 2 && !it.segundaOportunidad && !ambito.clave.startsWith("profe")) avisos.push(`${el.id}: examen con 2 intentos sin segundaOportunidad (se sugiere el domingo)`);
-  if (it.tipo === "examen" && it.disponibleDesde !== it.fechaLimite) errores.push(`${el.id}: el examen debe quedar bloqueado hasta su día (disponibleDesde = ${it.fechaLimite})`);
+  const esProfe = ambito.clave === AMBITO_PROFE.clave;
+  errores.push(...erroresApertura(it, el.id, lunes, esProfe));
+  if (it.tipo === "examen" && maxIntentos(it) === 2 && !it.segundaOportunidad && !esProfe) avisos.push(`${el.id}: examen con 2 intentos sin segundaOportunidad (se sugiere el domingo)`);
   errores.push(...validateItem(it), ...erroresDiagramas(it.teoria).map((e) => `${el.id}: ${e}`));
 
   const esperado = PATRON[diaSemana(el.fecha)];

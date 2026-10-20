@@ -186,3 +186,84 @@ Deno.test("profe: el alumno sigue sin semanas propias ni elementos del profe", a
   assertEquals(body.semana.id, "2026-10-05");
   assert(!body.items.some((i: any) => i.id.startsWith("profe-")));
 });
+
+// ---- Ruta propia abierta a su ritmo (openspec: profe-ruta-abierta) ----
+// Toda la ruta del profe con disponibleDesde = el lunes de la semana 1; fechaLimite queda como ritmo sugerido.
+function rutaAbierta() {
+  const abre = (o: any) => ({ ...o, disponibleDesde: "2026-10-05" });
+  return storeCon({
+    ...semanaValida(),
+    "contenido/profe/plan.json": { titulo: "Ruta IA", semanas: [{ id: "2026-10-05", titulo: "Semana 1" }, { id: "2026-10-12", titulo: "Semana 2" }] },
+    "contenido/profe/semanas/2026-10-05.json": { id: "2026-10-05", titulo: "Semana 1", elementos: [
+      { id: "profe-act-2026-10-05", tipo: "actividad", fecha: "2026-10-05" },
+      { id: "profe-examen-2026-10-10", tipo: "examen", fecha: "2026-10-10" },
+    ] },
+    "contenido/profe/semanas/2026-10-12.json": { id: "2026-10-12", titulo: "Semana 2", elementos: [
+      { id: "profe-act-2026-10-12", tipo: "actividad", fecha: "2026-10-12" },
+      { id: "profe-examen-2026-10-17", tipo: "examen", fecha: "2026-10-17" },
+    ] },
+    "contenido/profe/semanas/2026-10-19.json": { id: "2026-10-19", titulo: "Semana 3", elementos: [
+      { id: "profe-act-2026-10-19", tipo: "actividad", fecha: "2026-10-19" },
+    ] },
+    "contenido/profe/actividades/profe-act-2026-10-05.json": abre(act("profe-act-2026-10-05", "2026-10-05", "ia")),
+    "contenido/profe/examenes/profe-examen-2026-10-10.json": abre(examen("profe-examen-2026-10-10", "2026-10-10", "ia")),
+    "contenido/profe/actividades/profe-act-2026-10-12.json": abre(act("profe-act-2026-10-12", "2026-10-12", "ia")),
+    "contenido/profe/examenes/profe-examen-2026-10-17.json": abre(examen("profe-examen-2026-10-17", "2026-10-17", "ia")),
+    // La semana 3 conserva la apertura normal: abre su lunes.
+    "contenido/profe/actividades/profe-act-2026-10-19.json": { ...act("profe-act-2026-10-19", "2026-10-19", "ia"), disponibleDesde: "2026-10-19" },
+  });
+}
+
+Deno.test("profe-ruta-abierta: validador --profe acepta disponibleDesde antes del lunes y examen abierto", async () => {
+  clearCache();
+  const r = await validarSemana(rutaAbierta(), "2026-10-12", AMBITO_PROFE);
+  assertEquals(r.errores, [], r.errores.join("\n"));
+});
+
+Deno.test("profe-ruta-abierta: validador --profe sigue rechazando disponibleDesde después de fechaLimite", async () => {
+  clearCache();
+  const store = rutaAbierta();
+  (store.files.get("contenido/profe/actividades/profe-act-2026-10-12.json")!.data as any).disponibleDesde = "2026-10-13";
+  const r = await validarSemana(store, "2026-10-12", AMBITO_PROFE);
+  assert(r.errores.some((e) => e.startsWith("profe-act-2026-10-12: disponibleDesde 2026-10-13")), r.errores.join("\n"));
+});
+
+Deno.test("profe-ruta-abierta: el modo normal (alumnos y alumnas) no cambia", async () => {
+  clearCache();
+  const f = semanaValida() as Record<string, any>;
+  f["contenido/actividades/act-2026-10-08.json"].disponibleDesde = "2026-09-28";
+  f["contenido/examenes/examen-2026-10-09.json"].disponibleDesde = "2026-10-05";
+  const r = await validarSemana(storeCon(f), "2026-10-05");
+  assert(r.errores.some((e) => e.startsWith("act-2026-10-08: disponibleDesde 2026-09-28 fuera de 2026-10-05")), r.errores.join("\n"));
+  assert(r.errores.some((e) => e.includes("examen-2026-10-09: el examen debe quedar bloqueado hasta su día")), r.errores.join("\n"));
+});
+
+Deno.test("profe-ruta-abierta: lista y abre todo lo que ya abrió, aunque su semana sea futura", async () => {
+  clearCache();
+  const store = rutaAbierta();
+  const r = await profe(store, "GET", "", ADMIN, undefined, "2026-10-06");
+  const propios = r.body.items.filter((i: any) => !i.grupo).map((i: any) => [i.id, i.estado]);
+  assertEquals(propios, [
+    ["profe-act-2026-10-05", "disponible"],
+    ["profe-examen-2026-10-10", "disponible"],
+    ["profe-act-2026-10-12", "disponible"],
+    ["profe-examen-2026-10-17", "disponible"],
+  ], "la semana 2 ya está abierta; la 3 (abre su lunes) aún no aparece");
+  assertEquals(r.body.semanaPropia.id, "2026-10-05", "«Esta semana» sigue siendo la que contiene hoy");
+  const ex = await profe(store, "GET", "/profe-examen-2026-10-17", ADMIN, undefined, "2026-10-06");
+  assertEquals([ex.status, ex.body.intento], [200, 1], "el examen futuro se resuelve ya");
+  const resp = Object.fromEntries(ex.body.preguntas.map((q: any) => [q.id, 0]));
+  const p = await profe(store, "POST", "/profe-examen-2026-10-17", ADMIN, { intento: 1, respuestas: resp }, "2026-10-06");
+  assertEquals([p.status, p.body.guardado], [200, true]);
+  const doc = (await store.get<any>("resultados/profe-examen-2026-10-17/profe.json"))!.data;
+  assertEquals(doc.intentos[0].fueraDeTiempo, false, "antes de su fecha sugerida no es fuera de tiempo");
+});
+
+Deno.test("profe-ruta-abierta: alumnos y alumnas siguen viendo solo semanas iniciadas", async () => {
+  clearCache();
+  const store = rutaAbierta();
+  store.files.set("contenido/semanas/2026-10-12.json", { data: { id: "2026-10-12", titulo: "Semana 3", elementos: [{ id: "act-2026-10-13", tipo: "actividad", fecha: "2026-10-13" }] }, sha: "s" });
+  store.files.set("contenido/actividades/act-2026-10-13.json", { data: { ...act("act-2026-10-13", "2026-10-13", "x"), disponibleDesde: "2026-10-05" }, sha: "a" });
+  const { items } = await visibleItems(store, "2026-10-06");
+  assert(!items.some((i) => i.id === "act-2026-10-13"), "el grupo no adelanta semanas aunque disponibleDesde ya pasó");
+});

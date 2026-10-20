@@ -410,6 +410,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     `subtitulo`, `horizonte`, `nivelActual` + `meta`, `horasSemana`, `reparto[]`, `rutinaDiaria[]`, `reglas[]` y, por
     semana, `n`, `objetivo`, `busuu` y `extra`; la vista solo muestra los que vienen. `titulo` da nombre a la vista;
   - `semanas/<lunes>.json`, `actividades/profe-act-<fecha>.json` y `examenes/profe-examen-<fecha>.json`;
+  - **a su ritmo** (cambio `profe-ruta-abierta`): `disponibleDesde` puede ser anterior al lunes de su semana (p. ej.
+    toda la ruta con el primer lunes) y los exámenes no esperan su día; `fechaLimite` es ritmo sugerido (nunca antes de
+    `disponibleDesde`). El servidor lista también los elementos de semanas futuras ya abiertos y la pestaña «Plan del
+    mes» trae el botón de cada uno. Se valida con `validar_semana.ts <datos> <lunes> --profe`. El grupo no cambia;
   - resultados en `resultados/<id>/profe.json` (alumno "Profe"), también para los elementos del grupo que resuelve
     antes que ellos; esos archivos se excluyen de todas las vistas de resultados del grupo.
 - `contenido/secundaria/`: exámenes de Secundaria (cambio `examen-secundaria`), mismo formato que `contenido/`:

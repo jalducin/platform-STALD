@@ -1,6 +1,7 @@
 // CLI: valida una semana de la copia local del repo de datos antes de subirla.
 // Uso: deno run --allow-read server/validar_semana.ts <dir-datos> <lunes AAAA-MM-DD> [--profe]
-// Con --profe valida una semana de la ruta del profe (contenido/profe/, patrón lun/mié/jue/sáb).
+// Con --profe valida una semana de la ruta del profe (contenido/profe/, patrón lun/mié/jue/sáb). La ruta del profe va a
+// su ritmo (openspec: profe-ruta-abierta): disponibleDesde puede ser anterior al lunes y el examen no espera su día.
 // Sale con código 1 si hay errores; los avisos no bloquean.
 import { AMBITO_CLASE, AMBITO_PROFE } from "./actividades.ts";
 import { validarSemana } from "./semana.ts";
