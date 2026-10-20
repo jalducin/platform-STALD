@@ -402,8 +402,52 @@ function renderTeoria(teoria) {
     }
     if (b.puntos) h += '<ul class="teo-list">' + b.puntos.map(p => '<li>' + escapeHtml(p) + '</li>').join('') + '</ul>';
     if (b.ejemplos) h += '<ul class="teo-list">' + b.ejemplos.map(e => '<li><b>' + escapeHtml(e.en) + '</b> — ' + escapeHtml(e.es) + '</li>').join('') + '</ul>';
+    if (b.diagrama) h += renderDiagrama(b.diagrama);
     return h + '</div>';
   }).join('');
+}
+
+// Diagrama de la teoría (openspec: teoria-diagramas; formato en docs/data-model.md): flujo, ciclo, capas, ramas o
+// comparar, solo con HTML + CSS. Todo texto pasa por escapeHtml; los únicos valores sin escapar son números calculados.
+const TIPOS_DIAGRAMA = ['flujo', 'ciclo', 'capas', 'ramas', 'comparar'];
+function nodoDiagrama(p, num) {
+  p = p || {};
+  return '<div class="dg-nodo">' + (num ? '<span class="dg-num" aria-hidden="true">' + num + '</span>' : '') +
+    '<span class="dg-txt">' + (p.icono ? '<span class="dg-ico" aria-hidden="true">' + escapeHtml(p.icono) + '</span>' : '') +
+    '<b>' + escapeHtml(p.texto) + '</b>' + (p.detalle ? '<small>' + escapeHtml(p.detalle) + '</small>' : '') + '</span></div>';
+}
+function renderDiagrama(d) {
+  if (!d || !TIPOS_DIAGRAMA.includes(d.tipo) || !Array.isArray(d.pasos) || !d.pasos.length) return '';
+  const pasos = d.pasos;
+  const n = pasos.length;
+  const etiqueta = { flujo: 'Diagrama de flujo', ciclo: 'Diagrama de ciclo', capas: 'Diagrama de capas', ramas: 'Mapa de ramas', comparar: 'Comparación' }[d.tipo];
+  let cuerpo = '';
+  if (d.tipo === 'flujo' || d.tipo === 'ciclo') {
+    cuerpo = '<div class="dg-sec" style="--n:' + n + '">' + pasos.map((p, i) => nodoDiagrama(p, i + 1)).join('') + '</div>';
+    if (d.tipo === 'ciclo') cuerpo += '<div class="dg-regreso" style="--n:' + n + '"><span>↺ Vuelve a «' + escapeHtml((pasos[0] || {}).texto) + '»</span></div>';
+  } else if (d.tipo === 'capas') {
+    cuerpo = '<div class="dg-pila">' + pasos.map(p => nodoDiagrama(p)).join('') + '</div>';
+  } else if (d.tipo === 'ramas') {
+    cuerpo = '<div class="dg-centro">' + escapeHtml(d.centro || '') + '</div>' +
+      '<div class="dg-hijos' + (n <= 4 ? ' dg-pocos' : '') + '" style="--n:' + n + '">' + pasos.map(p => nodoDiagrama(p)).join('') + '</div>';
+  } else {
+    // comparar: pasos = izquierda y derecha = derecha; sin `derecha`, los pasos se reparten pares/impares.
+    const izq = Array.isArray(d.derecha) ? pasos : pasos.filter((_, i) => i % 2 === 0);
+    const der = Array.isArray(d.derecha) ? d.derecha : pasos.filter((_, i) => i % 2 === 1);
+    const cols = Array.isArray(d.columnas) ? d.columnas : [];
+    const filas = Math.max(izq.length, der.length);
+    let celdas = '';
+    if (cols.length) celdas += '<div class="dg-col-h dg-izq">' + escapeHtml(cols[0]) + '</div><div class="dg-col-h dg-der">' + escapeHtml(cols[1]) + '</div>';
+    for (let i = 0; i < filas; i++) {
+      celdas += '<div class="dg-celda dg-izq">' + (izq[i] ? nodoDiagrama(izq[i]) : '') + '</div><div class="dg-celda dg-der">' + (der[i] ? nodoDiagrama(der[i]) : '') + '</div>';
+    }
+    cuerpo = '<div class="dg-dos">' + celdas + '</div>';
+  }
+  // Ancho que necesita para ir en fila: w1 (hasta 4 pasos), w2 (5–6), w3 (7–8). Ver ingles.css.
+  const ancho = n <= 4 ? 'dg-w1' : n <= 6 ? 'dg-w2' : 'dg-w3';
+  return '<figure class="dg dg-' + d.tipo + ' ' + ancho + '" data-n="' + n + '" aria-label="' + etiqueta + '">' +
+    (d.titulo ? '<figcaption class="dg-tit">' + escapeHtml(d.titulo) + '</figcaption>' : '') + cuerpo +
+    (d.nota ? '<p class="dg-nota">' + escapeHtml(d.nota) + '</p>' : '') + '</figure>';
 }
 
 function renderTips(tips) {

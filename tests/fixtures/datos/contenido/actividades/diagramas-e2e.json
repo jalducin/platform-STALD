@@ -1,0 +1,107 @@
+{
+  "id": "diagramas-e2e",
+  "tipo": "actividad",
+  "titulo": "Diagramas en la teoría (prueba E2E)",
+  "nivel": "A1",
+  "descripcion": "Actividad de ejemplo para la E2E de los diagramas de la teoría (openspec: teoria-diagramas).",
+  "disponibleDesde": "2026-09-21",
+  "fechaLimite": "2026-10-04",
+  "intentos": 2,
+  "alumnos": ["fernando"],
+  "temas": [
+    { "id": "ia", "titulo": "🤖 IA", "retroalimentacion": { "fortaleza": "¡Muy bien!", "en-progreso": "Casi.", "debilidad": "Repasa los diagramas." } }
+  ],
+  "teoria": [
+    {
+      "titulo": "Flujo",
+      "texto": "Así se pide un cambio a Claude Code.",
+      "diagrama": {
+        "tipo": "flujo", "titulo": "De la idea al PR",
+        "pasos": [
+          { "texto": "Pides el cambio", "detalle": "Dices qué quieres y por qué", "icono": "💬" },
+          { "texto": "Claude explora", "detalle": "Lee los archivos que importan", "icono": "🔎" },
+          { "texto": "Edita y prueba", "detalle": "Corre las pruebas", "icono": "🛠️" },
+          { "texto": "Abre el PR <b>sin HTML</b>", "detalle": "<script>window.__xss = 1</script>", "icono": "🚀" }
+        ],
+        "nota": "Siempre revisas tú el resultado."
+      }
+    },
+    {
+      "titulo": "Ciclo",
+      "diagrama": {
+        "tipo": "ciclo",
+        "pasos": [
+          { "texto": "Explorar", "icono": "🧭" },
+          { "texto": "Planear", "icono": "🗺️" },
+          { "texto": "Codificar", "icono": "⌨️" },
+          { "texto": "Commit", "icono": "✅" }
+        ]
+      }
+    },
+    {
+      "titulo": "Capas",
+      "diagrama": {
+        "tipo": "capas", "titulo": "Lo que Claude sabe de tu proyecto",
+        "pasos": [
+          { "texto": "CLAUDE.md", "detalle": "Reglas del proyecto, siempre cargadas", "icono": "📄" },
+          { "texto": "Skills", "detalle": "Recetas que se cargan cuando hacen falta", "icono": "🧰" },
+          { "texto": "Hooks", "detalle": "Comandos automáticos antes o después", "icono": "🪝" },
+          { "texto": "Permisos", "detalle": "Qué puede hacer sin preguntarte", "icono": "🔐" }
+        ]
+      }
+    },
+    {
+      "titulo": "Ramas",
+      "diagrama": {
+        "tipo": "ramas", "centro": "Claude Code",
+        "pasos": [
+          { "texto": "Leer código", "icono": "📖" },
+          { "texto": "Editar archivos", "icono": "✏️" },
+          { "texto": "Correr comandos", "icono": "💻" },
+          { "texto": "Usar Git", "icono": "🌿" }
+        ]
+      }
+    },
+    {
+      "titulo": "Ramas con muchas hojas",
+      "diagrama": {
+        "tipo": "ramas", "centro": "Un buen prompt",
+        "pasos": [
+          { "texto": "Contexto" }, { "texto": "Objetivo" }, { "texto": "Restricciones" },
+          { "texto": "Ejemplo" }, { "texto": "Formato de salida" }, { "texto": "Cómo verificar" }
+        ]
+      }
+    },
+    {
+      "titulo": "Comparar",
+      "diagrama": {
+        "tipo": "comparar", "columnas": ["Así sí", "Así no"],
+        "pasos": [
+          { "texto": "Arregla el login: falla con correos en mayúsculas", "icono": "✅" },
+          { "texto": "Agrega una prueba que lo demuestre", "icono": "✅" }
+        ],
+        "derecha": [
+          { "texto": "Arregla todo", "icono": "❌" },
+          { "texto": "Hazlo rápido", "icono": "❌" }
+        ],
+        "nota": "Pide algo concreto y verificable."
+      }
+    },
+    {
+      "titulo": "Flujo largo",
+      "diagrama": {
+        "tipo": "flujo",
+        "pasos": [
+          { "texto": "Uno" }, { "texto": "Dos" }, { "texto": "Tres" }, { "texto": "Cuatro" },
+          { "texto": "Cinco" }, { "texto": "Seis" }, { "texto": "Siete" }, { "texto": "Ocho con un texto bastante más largo" }
+        ]
+      }
+    }
+  ],
+  "tips": [{ "tipo": "libreta", "texto": "Dibuja en tu libreta el ciclo Explorar → Planear → Codificar → Commit." }],
+  "preguntasPorIntento": 2,
+  "banco": [
+    { "id": "dg-1", "tema": "ia", "tipo": "opcion", "enunciado": "¿Qué va primero?", "opciones": ["Explorar", "Commit"], "correcta": 0, "explicacion": "Primero se explora." },
+    { "id": "dg-2", "tema": "ia", "tipo": "opcion", "enunciado": "¿Qué capa siempre se carga?", "opciones": ["CLAUDE.md", "Hooks"], "correcta": 0, "explicacion": "CLAUDE.md se carga siempre." }
+  ]
+}

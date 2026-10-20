@@ -1,5 +1,6 @@
 // Validador de una semana completa antes de subirla al repo de datos (ver openspec: nueva-semana-ingles).
 import { AMBITO_CLASE, type Ambito, loadItem } from "./actividades.ts";
+import { erroresDiagramas } from "./diagrama.ts";
 import { maxIntentos, validateItem } from "./motor.ts";
 import type { Store } from "./store.ts";
 
@@ -58,7 +59,7 @@ async function revisarElemento(store: Store, el: Semana["elementos"][number], lu
   if (it.disponibleDesde < lunes || it.disponibleDesde > it.fechaLimite) errores.push(`${el.id}: disponibleDesde ${it.disponibleDesde} fuera de ${lunes}…${it.fechaLimite}`);
   if (it.tipo === "examen" && maxIntentos(it) === 2 && !it.segundaOportunidad && !ambito.clave.startsWith("profe")) avisos.push(`${el.id}: examen con 2 intentos sin segundaOportunidad (se sugiere el domingo)`);
   if (it.tipo === "examen" && it.disponibleDesde !== it.fechaLimite) errores.push(`${el.id}: el examen debe quedar bloqueado hasta su día (disponibleDesde = ${it.fechaLimite})`);
-  errores.push(...validateItem(it));
+  errores.push(...validateItem(it), ...erroresDiagramas(it.teoria).map((e) => `${el.id}: ${e}`));
 
   const esperado = PATRON[diaSemana(el.fecha)];
   if (esperado !== el.tipo) avisos.push(`${el.id}: ${el.tipo} el ${DIAS[diaSemana(el.fecha)]}; se esperaba ${esperado ?? "ningún elemento"}`);

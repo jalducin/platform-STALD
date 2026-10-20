@@ -175,7 +175,19 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `porSecciones` (opcional, `true`): las preguntas salen agrupadas por tema en el orden de `temas`, con un
     encabezado por sección, y se barajan solo dentro de cada sección (cambio `examen-por-secciones`).
   - `temas[]`: con `retroalimentacion` por estado.
-  - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }] }`.
+  - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }], diagrama? }`.
+  - `teoria[].diagrama` (opcional, cambio `teoria-diagramas`): un dibujo sencillo hecho con HTML + CSS, debajo del
+    resto del bloque (también en la diapositiva `teoria` del Meet). Forma:
+    `{ tipo, titulo?, pasos: [{ texto, detalle?, icono? }], centro?, columnas?, derecha?, nota? }`.
+    - `tipo`: `flujo` (cajas en secuencia con flechas; en fila si cabe, en columna en celular), `ciclo` (flujo con
+      flecha que regresa del último paso al primero), `capas` (pila de bloques, el primero arriba), `ramas` (nodo
+      `centro` y los pasos como ramas) o `comparar` (dos columnas: `pasos` a la izquierda y `derecha` a la derecha).
+    - `pasos`: 2–8, cada uno con `texto` (≤ 90 caracteres), `detalle?` (≤ 280) e `icono?` (un emoji corto).
+    - `centro` (≤ 80): requerido en `ramas`. `derecha` (2–8 pasos): requerido en `comparar`; `columnas?`:
+      `[encabezado izquierdo, encabezado derecho]` (≤ 60 cada uno). En otros tipos esos campos se ignoran.
+    - `titulo?` (≤ 120) y `nota?` (≤ 300, pie del diagrama).
+    - Todo texto se muestra escapado (sin HTML). El validador de semana (`server/diagrama.ts`, desde
+      `server/validar_semana.ts`) marca como error lo que no cumpla esta forma.
   - `tips[]`: `{ tipo: "libreta" | "video" | "lectura", texto, url? }`. Los videos son enlaces de **búsqueda** de
     YouTube; `lectura` enlaza documentación oficial verificada o material propio, como los PDF de estudio.
   - **Material de estudio en PDF** (cambio `material-pdf-ingles`): vive en el repo **público** porque no tiene datos
