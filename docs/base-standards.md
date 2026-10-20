@@ -58,12 +58,13 @@ y continuar — no detenerse a preguntar. Volver al modelo estándar para el res
 ## 6. Integridad de referencias y portabilidad multi-agente
 
 - **Fuente canónica**: mantener los artefactos reutilizables en `ai-specs` como fuente única. Las rutas
-  específicas por agente (`.claude`, `.gemini`) referencian esa fuente (symlink donde el SO lo permita;
-  copia real en Windows).
+  específicas por agente (`.claude`, `.gemini`) son **copias reales** de esa fuente, generadas con
+  `node ai-specs/scripts/sincronizar-espejos.mjs` (en Windows los symlinks de git quedan como texto con la ruta
+  y el agente no los lee). `server/espejos_agentes_test.ts` falla si una copia difiere de `ai-specs`.
 - **Seguridad al actualizar**: al renombrar o mover un archivo, verificar y actualizar todas las
   referencias/symlinks que lo apunten antes de dar el cambio por terminado.
-- **Enlazado de artefactos nuevos**: al crear un artefacto que requiere exposición multi-agente (agentes o
-  skills en `ai-specs`), crear las referencias correspondientes desde las rutas de cada agente.
+- **Enlazado de artefactos nuevos**: al crear o editar un agente o skill en `ai-specs`, correr el script de
+  espejos en el mismo cambio.
 - **Revisión de personalización externa**: si se introduce personalización fuera de `ai-specs`, evaluar
   moverla a `ai-specs` y referenciarla desde su ubicación original.
 - **Compuerta de cierre**: un cambio está incompleto si deja referencias rotas, destinos obsoletos o
