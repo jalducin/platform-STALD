@@ -1,8 +1,8 @@
 ## Why
 
 El profe pidió (2026-10-19): «desbloquea todas porque mañana le daré duro a este curso». Su ruta propia de IA
-(`contenido/profe/`, 8 semanas del 2026-10-19 al 2026-12-07, 24 elementos) ya tiene en el repo de datos
-`disponibleDesde: "2026-10-19"` en los 24 y deja `fechaLimite` como ritmo sugerido. Faltaban dos cosas:
+(`contenido/profe/`, 8 semanas del 2026-10-19 al 2026-12-07, 27 elementos) ya tiene en el repo de datos
+`disponibleDesde: "2026-10-19"` en los 27 y deja `fechaLimite` como ritmo sugerido. Faltaban dos cosas:
 
 - `server/validar_semana.ts --profe` rechazaba esos datos («disponibleDesde fuera de <lunes>…» y «el examen debe
   quedar bloqueado hasta su día»), reglas pensadas para alumnos y alumnas.
@@ -17,7 +17,7 @@ El profe pidió (2026-10-19): «desbloquea todas porque mañana le daré duro a 
   semanas futuras que ya abrieron (`disponibleDesde` ≤ hoy). «Esta semana» (`semanaPropia`) no cambia.
 - **Vista (`ingles/profe.js`):** la pestaña «Plan del mes» pone el botón para resolver (o ver resultado) en cada
   elemento ya abierto de las 8 semanas, y avisa «🔓 Tu ruta ya está abierta…» cuando hay semanas futuras abiertas.
-- **Pruebas:** unitarias en `server/profe_test.ts` y pasos nuevos en `e2e-ruta-profe` (24 abiertos, abribles desde el
+- **Pruebas:** unitarias en `server/profe_test.ts` y pasos nuevos en `e2e-ruta-profe` (todos los abiertos, abribles desde el
   plan, sin atraso por `fechaLimite` futura).
 
 ## Capabilities

@@ -34,7 +34,7 @@
 
 ## 6. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [x] 6.1 Servidor local con la copia y hoy 2026-10-20: 24 propios listados y abiertos (200), examen 2026-12-12
+- [x] 6.1 Servidor local con la copia y hoy 2026-10-20: 27 propios listados y abiertos (200), examen 2026-12-12
   abierto desde el plan en el navegador; alumna 403 en la ruta del profe y 404 por id
 - [ ] 6.2 Producción tras el merge, solo lectura: `/salud` y la página `ingles.html` publicada con `profe.js?v=4`
 

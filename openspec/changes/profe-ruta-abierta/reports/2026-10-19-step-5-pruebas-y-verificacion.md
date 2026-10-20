@@ -17,8 +17,8 @@
 - Dirigidas (`profe_test` + `semana_test`): 29 pasaron, 0 fallaron (5 nuevas).
 - Suite del servidor: 897 pasaron, 0 fallaron, 6 omitidas; check y lint sin errores; calidad sin avisos nuevos en las
   líneas del diff.
-- Validador `--profe` con la copia de datos: 0 errores y 0 avisos en las 8 semanas.
-- E2E con hoy 2026-10-20: `ruta-profe` 21/21 PASS (24 abiertos, sin «próximamente», 24 × 200 por id, botón en el plan,
+- Validador `--profe` con la copia de datos: 0 errores en las 8 semanas (copia con 27 elementos, commit 4902bc3); 2 avisos esperados «actividad el miércoles; se esperaba examen» (fechas pedidas por el profe).
+- E2E con hoy 2026-10-20: `ruta-profe` 21/21 PASS (27 abiertos, sin «próximamente», 27 × 200 por id, botón en el plan,
   sin atraso por fecha futura, abre `profe-examen-2026-12-12` desde el plan con preguntas); `profe-diseno` 11/11 PASS.
   `profe-grupo` 6/7: falla «la alumna sigue viendo sus 6 elementos», conteo fijo escrito para el 2026-10-04
   (35 elementos el 2026-10-20); no depende de este cambio.

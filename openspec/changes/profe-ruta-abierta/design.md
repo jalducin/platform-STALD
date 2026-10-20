@@ -27,4 +27,4 @@ ni el cálculo de «fuera de tiempo» (sigue contra `fechaLimite`).
 ## Risks / Trade-offs
 
 - Un elemento del profe con `disponibleDesde` futuro y semana futura sigue sin listarse hasta abrir (igual que antes).
-- La lista del profe crece (24 propios + los del grupo); la carga sigue en caché 60 s por `hoy`.
+- La lista del profe crece (27 propios + los del grupo); la carga sigue en caché 60 s por `hoy`.

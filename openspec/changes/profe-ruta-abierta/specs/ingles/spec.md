@@ -10,8 +10,8 @@ botón para resolverlo o ver su resultado. Para alumnos y alumnas nada cambia: s
 iniciadas, y la ruta del profe les responde 403.
 
 #### Scenario: Toda la ruta abierta desde el primer lunes
-- **WHEN** los 24 elementos de la ruta tienen `disponibleDesde` 2026-10-19 y hoy es 2026-10-20
-- **THEN** la lista del profe trae los 24, ninguno «próximamente», y cada uno se abre por id con sus preguntas
+- **WHEN** todos los elementos de la ruta (27) tienen `disponibleDesde` 2026-10-19 y hoy es 2026-10-20
+- **THEN** la lista del profe trae los 27, ninguno «próximamente», y cada uno se abre por id con sus preguntas
 
 #### Scenario: Examen de una semana futura
 - **WHEN** el profe abre desde «Plan del mes» el examen del 2026-12-12 el 2026-10-20
