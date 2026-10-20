@@ -19,7 +19,7 @@ Corres pruebas y regresas **solo el resumen**. La sesión que te llamó no quier
 ## Comandos habituales de este repo
 - Unitarias: `npx -y deno test -A server/` (o un archivo: `npx -y deno test -A server/<x>_test.ts`)
 - Tipos y lint: `npx -y deno check server/main.ts` · `npx -y deno lint server/`
-- E2E: `CHROME=/c/Users/valen/AppData/Local/ms-playwright/chromium-1228/chrome-win64/chrome.exe bash tests/e2e/correr.sh --datos <copia> --puerto-api 8871 --puerto-web 8872 <pruebas>`
+- E2E: `CHROME=<chrome.exe de Playwright> bash tests/e2e/correr.sh --datos <copia> --puerto-api 8871 --puerto-web 8872 <pruebas>`
 
 ## Formato de respuesta
 ```

@@ -32,8 +32,9 @@ Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:f
 
 - **Hook `proteger-git`** ([.claude/hooks/proteger-git.mjs](.claude/hooks/proteger-git.mjs), registrado en
   [.claude/settings.json](.claude/settings.json)): antes de cada comando de Bash o PowerShell bloquea `git add`/`commit`
-  de un `.env` o de la carpeta privada `IA/`, y el `git push` directo a `main`. El repo de datos sí publica en `main`.
-  Revísalo con `/hooks`; se activa al abrir una sesión nueva.
+  que incluirían un `.env` o algo de la carpeta privada `IA/` (también por `git add -A` o lo ya preparado), y el
+  `git push` a `main` (incluye `HEAD` y `refs/heads/main`). El repo de datos sí publica en `main`. Revísalo con
+  `/hooks`; se activa al abrir una sesión nueva.
 - **Subagentes** ([ai-specs/agents/](ai-specs/agents/), visibles con `/agents`): `revisor-solo-lectura` (segunda
   lectura del diff contra su cambio OpenSpec) y `verificador-pruebas` (corre pruebas y devuelve solo el resumen), más
   `backend-developer`, `frontend-developer` y `product-strategy-analyst`.

@@ -17,15 +17,26 @@
 - [x] 2.3 `ai-specs/scripts/sincronizar-espejos.mjs` y regenerar `.claude/{agents,skills}` y `.gemini/{agents,skills}`
       como copias reales
 
+## 2b. Hallazgos de la revisión con contexto limpio (`revisor-solo-lectura`, 12 hallazgos)
+
+- [x] 2b.1 `.gitignore`: versionar `.claude/settings.json` (solo se ignora `settings.local.json`) e ignorar `**/.env.*`
+- [x] 2b.2 Pruebas en rojo de los escenarios nuevos del spec: variantes de push a `main`, `Set-Location`, rutas `/c/`,
+      `.env` con varios sufijos y por `git add -A`, `ia/` en minúsculas y absoluto, separadores en comillas y heredoc,
+      espejo sobrante
+- [x] 2b.3 Hook: tokenizador que respeta comillas y heredocs, `cd`/`Set-Location`/`pushd`, rutas de Git Bash,
+      `git add --dry-run` y `git diff --cached`, refspecs `HEAD`/`refs/heads/`, opciones con valor de `push`
+- [x] 2b.4 Script de espejos borra sobrantes (salvo `openspec-*`); `verificador-pruebas` sin ruta con usuario local
+
 ## 3. Pruebas y verificación (OBLIGATORIO)
 
-- [ ] 3.1 Step 3 — Ejecutar pruebas y verificar estado (OBLIGATORIO): pruebas nuevas, `deno test -A server/`,
+- [x] 3.1 Step 3 — Ejecutar pruebas y verificar estado (OBLIGATORIO): pruebas nuevas, `deno test -A server/`,
       `deno check` y `deno lint`; reporte en
       `openspec/changes/hook-y-subagentes/reports/2026-10-19-step-3-pruebas-y-verificacion.md`. El cambio no muta
       datos.
-- [ ] 3.2 Step 4 — Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA: correr el hook a mano con eventos reales
-      (bloquea y deja pasar), correr el script de espejos dos veces (idempotente: el segundo no cambia nada) y, tras
-      el merge, usar `revisor-solo-lectura` y `verificador-pruebas` en una sesión nueva
+- [x] 3.2 Step 4 — Verificación manual (OBLIGATORIO) — EL AGENTE EJECUTA: correr el hook a mano con eventos reales
+      (bloquea y deja pasar), correr el script de espejos dos veces (idempotente: el segundo no cambia nada), probar el
+      hook registrado de punta a punta con `claude -p` en una sesión nueva (que `$CLAUDE_PROJECT_DIR` se expanda en
+      Windows) y usar `revisor-solo-lectura` y `verificador-pruebas`
 
 ## 4. Documentación (OBLIGATORIO)
 

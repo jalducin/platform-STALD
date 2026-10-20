@@ -36,6 +36,25 @@ for (const tipo of ["agents", "skills"]) {
   });
 }
 
+Deno.test("espejos: no sobra nada en .claude ni .gemini (salvo skills openspec-*)", async () => {
+  for (const tipo of ["agents", "skills"]) {
+    const fuente = new Set<string>();
+    for await (const e of Deno.readDir(join(RAIZ, "ai-specs", tipo))) fuente.add(e.name);
+    for (const espejo of ESPEJOS) {
+      for await (const e of Deno.readDir(join(RAIZ, espejo, tipo))) {
+        if (tipo === "skills" && e.name.startsWith("openspec-")) continue;
+        assert(fuente.has(e.name), `${espejo}/${tipo}/${e.name} sobra: ya no existe en ai-specs (corre el script)`);
+      }
+      for (const nombre of fuente) {
+        if (!(await Deno.stat(join(RAIZ, "ai-specs", tipo, nombre))).isDirectory) continue;
+        const a = await archivos(join(RAIZ, "ai-specs", tipo), nombre);
+        const b = await archivos(join(RAIZ, espejo, tipo), nombre);
+        assertEquals(b, a, `${espejo}/${tipo}/${nombre} tiene archivos de más o de menos`);
+      }
+    }
+  }
+});
+
 Deno.test("espejos: subagentes del proyecto son de solo lectura", async () => {
   for (const nombre of ["revisor-solo-lectura", "verificador-pruebas"]) {
     const md = await Deno.readTextFile(join(RAIZ, "ai-specs", "agents", nombre + ".md"));
@@ -45,5 +64,6 @@ Deno.test("espejos: subagentes del proyecto son de solo lectura", async () => {
     const tools = front.match(/tools: (.*)/)?.[1] ?? "";
     assert(tools.length > 0, nombre + ": tools explícitas");
     assert(!/\b(Edit|Write|NotebookEdit)\b/.test(tools), nombre + ": sin herramientas de edición");
+    assert(!/[A-Za-z]:[\\/]|\/c\/Users|\/home\//.test(md), nombre + ": sin rutas absolutas ni usuario local");
   }
 });
