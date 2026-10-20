@@ -259,6 +259,20 @@ Deno.test("profe-ruta-abierta: lista y abre todo lo que ya abrió, aunque su sem
   assertEquals(doc.intentos[0].fueraDeTiempo, false, "antes de su fecha sugerida no es fuera de tiempo");
 });
 
+Deno.test("profe-ruta-abierta: domingo sin adelantar semanas lejanas y sin duplicados", async () => {
+  clearCache();
+  const store = rutaAbierta();
+  // La semana 3 (2026-10-19) abre el lunes 2026-10-19; el domingo 2026-10-11 no debe listarse aunque sea «lunes siguiente» de nadie.
+  (store.files.get("contenido/profe/actividades/profe-act-2026-10-19.json")!.data as any).disponibleDesde = "2026-10-12";
+  // Id repetido en dos semanas: una iniciada y una futura.
+  (store.files.get("contenido/profe/semanas/2026-10-19.json")!.data as any).elementos.push({ id: "profe-act-2026-10-05", tipo: "actividad", fecha: "2026-10-05" });
+  const r = await profe(store, "GET", "", ADMIN, undefined, "2026-10-11");
+  const ids = r.body.items.filter((i: any) => !i.grupo).map((i: any) => i.id);
+  assertEquals(ids.filter((id: string) => id === "profe-act-2026-10-05").length, 1, "sin duplicados");
+  assert(!ids.includes("profe-act-2026-10-19"), "disponibleDesde 2026-10-12 > hoy 2026-10-11: no se lista desde una semana lejana");
+  assert(ids.includes("profe-act-2026-10-12"), "la semana siguiente (domingo) sigue como antes");
+});
+
 Deno.test("profe-ruta-abierta: alumnos y alumnas siguen viendo solo semanas iniciadas", async () => {
   clearCache();
   const store = rutaAbierta();

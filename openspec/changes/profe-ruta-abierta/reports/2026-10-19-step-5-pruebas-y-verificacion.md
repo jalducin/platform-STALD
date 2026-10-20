@@ -33,5 +33,9 @@
 - Estado restaurado: No aplica.
 
 ## Resultado
-- Estado Step 5: PASS (fallas E2E restantes dependen de fecha/datos y existían antes)
+- Revisión con contexto limpio (`revisor-solo-lectura`): se corrigió el adelanto del domingo en semanas lejanas
+  (ahora estrictamente `disponibleDesde` ≤ hoy) y los ids repetidos; prueba nueva «domingo sin adelantar semanas
+  lejanas y sin duplicados». Suite del servidor tras el ajuste: 898 pasaron, 0 fallaron, 6 omitidas.
+- Estado Step 5: PASS. Las fallas E2E restantes se atribuyen a fecha/datos **por análisis** (conteos y supuestos
+  escritos para el 2026-10-04; el código nuevo no actúa en esos pasos), no por una corrida comparativa sobre `main`.
 - Bloqueos: ninguno

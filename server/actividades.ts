@@ -97,7 +97,10 @@ export async function visibleItems(store: Store, hoy: string, ambito: Ambito = A
     // Ruta del profe a su ritmo (openspec: profe-ruta-abierta): de sus semanas futuras entra lo que ya abrió
     // (`disponibleDesde` ≤ hoy). El grupo sigue viendo solo semanas iniciadas.
     const adelantables = ambito.clave === AMBITO_PROFE.clave ? todas.filter((s) => !semanas.includes(s)).flatMap((s) => s.elementos.map((e) => e.id)) : [];
-    const abiertas = (await Promise.all(adelantables.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x && abreYa(x.disponibleDesde, hoy));
+    // Estrictamente `disponibleDesde` ≤ hoy (sin el adelanto del domingo) y sin repetir ids ya listados.
+    const yaListados = new Set(ids);
+    const abiertas = (await Promise.all([...new Set(adelantables)].filter((id) => !yaListados.has(id)).map((id) => loadItem(store, id, ambito))))
+      .filter((x): x is Item => !!x && x.disponibleDesde <= hoy);
     const gruposDe = new Map(todas.flatMap((s) => s.grupos?.length ? s.elementos.map((e) => [e.id, s.grupos!] as const) : []));
     const items: ConGrupos[] = [...(await Promise.all(ids.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x), ...abiertas]
       .map((it) => gruposDe.has(it.id) ? { ...it, grupos: gruposDe.get(it.id) } : it);
