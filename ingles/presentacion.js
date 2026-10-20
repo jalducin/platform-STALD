@@ -129,6 +129,7 @@ function slideHtml(d, ctx) {
     }
     if (b.ejemplos) c += '<div class="s-ex">' + b.ejemplos.map(e => '<div><b>' + escapeHtml(e.en) + '</b>' + escapeHtml(e.es) + '</div>').join('') + '</div>';
     if (b.puntos) c += '<ul class="s-points">' + b.puntos.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul>';
+    if (b.diagrama) c += renderDiagrama(b.diagrama);
     return wrap(b.titulo || '', c);
   }
   if (d.tipo === 'practica') {

@@ -28,6 +28,32 @@
     {
       "titulo": "Teoría de prueba",
       "texto": "Texto de prueba."
+    },
+    {
+      "titulo": "Ciclo de trabajo",
+      "diagrama": {
+        "tipo": "ciclo",
+        "titulo": "Cómo trabaja Claude Code",
+        "pasos": [
+          {
+            "texto": "Explorar",
+            "icono": "🧭"
+          },
+          {
+            "texto": "Planear",
+            "icono": "🗺️"
+          },
+          {
+            "texto": "Codificar",
+            "icono": "⌨️"
+          },
+          {
+            "texto": "Commit",
+            "icono": "✅"
+          }
+        ],
+        "nota": "Y vuelta a empezar."
+      }
     }
   ],
   "tips": [
@@ -80,6 +106,10 @@
         "titulo": "Clase anterior de prueba",
         "subtitulo": "Semana 0",
         "texto": "Clases de Inglés"
+      },
+      {
+        "tipo": "teoria",
+        "ref": 1
       },
       {
         "tipo": "cierre",
