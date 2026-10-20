@@ -961,6 +961,11 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
 - **Modo oscuro.** Sigue a `prefers-color-scheme` salvo que `<html data-theme="light|dark">` lo fije. La preferencia
   se guarda en `localStorage.stald_tema` (`auto`, `claro` u `oscuro`; preferencia de interfaz sin datos personales) y se
   aplica en un `<script>` del `<head>` para no parpadear. Se cambia con 🌓 en el encabezado o en 👤 Perfil.
+- **Diagramas de la teoría** (cambio `teoria-diagramas`). `renderDiagrama()` (`comun.js`) pinta `teoria[].diagrama`
+  dentro de `renderTeoria()` y en la diapositiva `teoria` (`presentacion.js`). Solo HTML + CSS (`.dg-*` en
+  `ingles.css`, medidas en `em`): `.dg` es un *container query*, así que flujo y ciclo van en fila según el ancho de la
+  caja (no de la ventana) y en columna en celular; en `.slide` toma la paleta de la diapositiva. Colores solo con
+  tokens del tema. Formato: [data-model.md](data-model.md) § `teoria[].diagrama`.
 - **Navegación.** Catálogo único `SECCIONES` (`id`, `emoji`, `titulo`, `encabezado`, `rol`, `href`, `accion`, `barra`);
   de ahí salen la barra, el menú y el `<h2>` de cada sección (`seccionHtml`).
 - **Material de estudio** (cambio `ingles-material-estudio`). `ingles/material.js` (va después de `comun.js`) lee el

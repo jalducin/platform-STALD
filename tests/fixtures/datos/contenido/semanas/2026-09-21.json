@@ -11,6 +11,11 @@
       "id": "fichas-e2e",
       "tipo": "actividad",
       "fecha": "2026-10-04"
+    },
+    {
+      "id": "diagramas-e2e",
+      "tipo": "actividad",
+      "fecha": "2026-10-04"
     }
   ]
 }

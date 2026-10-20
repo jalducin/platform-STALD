@@ -61,6 +61,9 @@ Escribe un generador en `$DATA/herramientas/semana-<lunes>/`. Usa como modelo
 | `actividades/meet-<dom>.json` | Solo material del profe: `guion` (bloques con `tiempo`, `titulo`, `objetivo`, `pasos`), `teoria` de lo nuevo, `tips` y `presentacion.diapositivas`. **Sin `banco` ni reto** (cambio `meet-sin-reto`): alumnos y alumnas solo ven el enlace |
 | `actividades/tec-<jue>.json`, `tec-<sáb>.json`, `tec-<dom>.json` | Tecnología e IA para el trabajo y la vida diaria, ligada a la gramática de la semana (bases de IA generativa, prompts en inglés y uso seguro, la gramática con tecnología…). `disponibleDesde` = jueves, `intentos` 2, `preguntasPorIntento` 10, banco ~20, 2 `temas`, `teoria` y `tips` con ≥ 2 `libreta`, videos y **documentación oficial verificada** (`{ tipo: "lectura", texto, url }`; comprobar cada URL con curl) |
 
+Cada bloque de `teoria` puede llevar un **`diagrama`** opcional para explicar con un dibujo (`flujo`, `ciclo`, `capas`,
+`ramas` o `comparar`; 2–8 `pasos`); formato y límites en `docs/data-model.md` § `teoria[].diagrama`. El validador lo revisa.
+
 Cada **tema** lleva `retroalimentacion` con `fortaleza`, `en-progreso` y `debilidad`. Cada **ejercicio**
 lleva:
 - `id` único con prefijo del archivo, `tema`, `enunciado` y `explicacion`;
