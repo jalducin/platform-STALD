@@ -144,6 +144,11 @@ antes de que abran al grupo: basta con subir la semana del grupo. Si además tie
 (desde el 2026-10-18, de IA), «Esta semana» muestra los dos bloques, «🎓 Mis clases» y «👥 Inglés con el grupo»
 (cambio `profe-grupo-y-ruta-ia`; formato del plan en `docs/data-model.md`).
 
+- Su ruta propia va **a su ritmo** (cambio `profe-ruta-abierta`): para desbloquearla, pon en sus elementos un
+  `disponibleDesde` anterior (p. ej. el primer lunes) y deja `fechaLimite` como ritmo sugerido; los exámenes también
+  pueden abrir antes de su día. Lo ya abierto aparece en «Plan del mes» con su botón. Valida cada semana con
+  `validar_semana.ts <datos> <lunes> --profe` (solo marca error si `disponibleDesde` > `fechaLimite`). Nunca apliques
+  esto a semanas del grupo: ahí el validador sigue exigiendo abrir en su semana y el examen en su día.
 - Sus intentos quedan en `resultados/<id>/profe.json` y nunca cuentan en las vistas del grupo.
 - Para retomar la ruta C1: `git revert` del commit «profe: elimina la ruta B1 → C1» en el repo de datos (vuelven
   `plan.json`, sus semanas y el generador `herramientas/profe-mes-1/`). El servidor vuelve a usar sus semanas sin

@@ -4,6 +4,8 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const API = process.env.API;
+const DATA = process.env.DATA;
+const fs = require('fs');
 const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, ingles: true, out, dialogos: 'aceptar', ruta });
@@ -40,6 +42,32 @@ const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, ingles: 
     const abiertas = await ad.$$eval('#ruta-plan details.ruta-sem[open]', xs => xs.length);
     ok('Plan del mes: ' + r.plan.semanas.length + ' semanas, temas en español y solo la actual abierta', (await ad.$$('#ruta-plan details.ruta-sem')).length === r.plan.semanas.length && r.plan.semanas.every(s => plan.includes(s.titulo) && (s.temas || []).every(t => plan.includes(t))) && abiertas === 1 && !plan.includes('undefined'), 'abiertas=' + abiertas);
     await ad.screenshot({ path: 'ruta-profe-plan.png', fullPage: true });
+    // Ruta abierta a su ritmo (openspec: profe-ruta-abierta): todo lo que ya abrió se lista y se resuelve desde el plan,
+    // aunque su semana sea futura; la fechaLimite futura no lo vuelve atrasado.
+    const archivo = id => ['actividades', 'examenes'].map(d => `${DATA}/contenido/profe/${d}/${id}.json`).find(f => fs.existsSync(f));
+    const delPlan = r.plan.semanas.flatMap(s => (s.elementos || []).map(e => e.id)).filter(archivo);
+    const abiertos = delPlan.filter(id => JSON.parse(fs.readFileSync(archivo(id), 'utf8')).disponibleDesde <= r.hoy);
+    const futuros = abiertos.filter(id => !(r.semanaPropia || { ids: [] }).ids.includes(id));
+    if (futuros.length) {
+      const enLista = abiertos.map(id => r.items.find(i => i.id === id));
+      ok('servidor: ' + abiertos.length + ' elementos ya abiertos listados y ninguno «próximamente»', enLista.every(i => i && i.estado !== 'proximamente'), JSON.stringify(abiertos.filter((id, k) => !enLista[k] || enLista[k].estado === 'proximamente')));
+      const estados = await Promise.all(abiertos.map(async id => (await fetch(API + '/ingles/profe/actividades/' + id + '?email=admin@example.com')).status));
+      ok('servidor: abre los ' + abiertos.length + ' (incluidos exámenes de semanas futuras)', estados.every(s => s === 200), JSON.stringify(estados.filter(s => s !== 200)));
+      const conBoton = await ad.$$eval('#ruta-plan [data-plan-id]', xs => xs.filter(x => x.querySelector('[data-action="abrir-item"],[data-action="ver-resultado"]')).map(x => x.dataset.planId));
+      ok('Plan: botón para resolver cada elemento abierto', abiertos.every(id => conBoton.includes(id)) && (await ad.isVisible('#pf-ruta-abierta')), abiertos.filter(id => !conBoton.includes(id)).join(','));
+      const ultimo = futuros[futuros.length - 1];
+      const fila = r.items.find(i => i.id === ultimo);
+      const urgentes = await ad.$$eval('#pf-urgente [data-id]', xs => xs.map(x => x.dataset.id));
+      ok('fechas futuras: no salen en «Pendiente ahora» (no están atrasadas)', futuros.filter(id => r.items.find(i => i.id === id).fechaLimite > r.hoy).every(id => !urgentes.includes(id)), JSON.stringify(urgentes));
+      await ad.evaluate(id => { const d = document.querySelector(`[data-plan-id="${id}"]`).closest('details'); d.open = true; }, ultimo);
+      if (fila.estado !== 'completo') {
+        await ad.click(`#ruta-plan [data-plan-id="${ultimo}"] [data-action="abrir-item"]`);
+        await ad.waitForSelector('#exam-form', { timeout: 60000 });
+        ok('abre desde el plan el último (' + ultimo + ') y trae preguntas', (await ad.$$('#exam-form [data-q]')).length > 0);
+        await ad.screenshot({ path: 'ruta-profe-abierta.png', fullPage: false });
+        await ad.reload(); await ad.waitForSelector('.pf-hero', { timeout: 60000 });
+      }
+    } else console.log('Datos sin semanas futuras ya abiertas: se omite la ruta abierta');
     await ad.click('[data-pf-tab="semana"]');
   } else {
     ok('título genérico sin B1 → C1', titulo.includes('Mi ruta de Inglés') && !(await ad.textContent('body')).includes('C1'));

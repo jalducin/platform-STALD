@@ -122,8 +122,12 @@ function renderPlanProfe(act) {
     if (it.estado === 'proximamente') return '<span class="pill wait">🔒 ' + escapeHtml(formatFecha(it.disponibleDesde)) + '</span>';
     return '<span class="pill">pendiente</span>';
   };
+  // Ruta abierta a su ritmo (openspec: profe-ruta-abierta): todo lo que ya abrió se resuelve desde aquí, sin esperar
+  // su semana; la fecha de cada elemento es ritmo sugerido.
+  const accion = id => { const it = items.get(id); return it && it.estado !== 'proximamente' ? ' ' + accionItem(it, it.estado) : ''; };
+  const abiertas = (plan.semanas || []).filter(s => s.id !== actual && (s.elementos || []).some(e => { const it = items.get(e.id); return it && it.estado !== 'proximamente'; })).length;
   const semanas = (plan.semanas || []).map(s => {
-    const elementos = (s.elementos || []).map(e => '<li>' + icono(e.tipo) + ' ' + escapeHtml(e.titulo) + ' · <span class="meta">' + escapeHtml(formatFecha(e.fecha)) + '</span> · ' + estadoDe(e.id) + '</li>').join('');
+    const elementos = (s.elementos || []).map(e => '<li class="pf-plan-el" data-plan-id="' + escapeHtml(e.id) + '"><span>' + icono(e.tipo) + ' ' + escapeHtml(e.titulo) + ' · <span class="meta">' + escapeHtml(formatFecha(e.fecha)) + '</span> · ' + estadoDe(e.id) + '</span>' + accion(e.id) + '</li>').join('');
     const hechos = (s.elementos || []).filter(e => { const it = items.get(e.id); return it && it.estado === 'completo'; }).length;
     return '<details class="ruta-sem' + (s.id === actual ? ' actual' : '') + '"' + (s.id === actual ? ' open' : '') + '><summary><span>' + (s.id === actual ? '👉 ' : '') + escapeHtml(s.titulo) + '</span><span class="pf-avance">' + hechos + '/' + (s.elementos || []).length + '</span></summary>' +
       (s.objetivo ? '<div>' + escapeHtml(s.objetivo) + '</div>' : '') +
@@ -134,5 +138,6 @@ function renderPlanProfe(act) {
   return '<details class="section" id="ruta-plan" open><summary><div class="section-head"><span><span class="chevron">▶</span>🗺️ ' + escapeHtml(plan.titulo) + '</span>' + (plan.nivelActual && plan.meta ? '<span class="count">' + escapeHtml(plan.nivelActual + ' → ' + plan.meta) + '</span>' : '') + '</div></summary><div class="ruta-body">' +
     (plan.subtitulo ? '<div class="progress-text" style="margin:0 0 6px">' + escapeHtml(plan.subtitulo) + '</div>' : '') +
     (plan.horizonte ? '<div class="progress-text">🎯 ' + escapeHtml(plan.horizonte) + '</div>' : '') +
+    (abiertas ? '<div class="pf-ok" id="pf-ruta-abierta">🔓 Tu ruta ya está abierta: abre cualquier semana y resuélvela a tu ritmo. Las fechas son ritmo sugerido.</div>' : '') +
     semanas + '</div></details>';
 }
