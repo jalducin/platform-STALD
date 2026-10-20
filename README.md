@@ -28,6 +28,19 @@ Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:f
 | [docs/pruebas.md](docs/pruebas.md) | Pruebas unitarias (CI) y E2E en local (`tests/e2e/correr.sh`), sesión de prueba, `stald_test_*` y análisis de calidad (`tests/calidad`, `npm run calidad`) |
 | [ai-specs/skills/nueva-semana-ingles/SKILL.md](ai-specs/skills/nueva-semana-ingles/SKILL.md) | Flujo semanal: armar, validar y subir la clase de Inglés de la semana siguiente |
 
+## Herramientas del agente (Claude Code)
+
+- **Hook `proteger-git`** ([.claude/hooks/proteger-git.mjs](.claude/hooks/proteger-git.mjs), registrado en
+  [.claude/settings.json](.claude/settings.json)): antes de cada comando de Bash o PowerShell bloquea `git add`/`commit`
+  que incluirían un `.env` o algo de la carpeta privada `IA/` (también por `git add -A` o lo ya preparado), y el
+  `git push` a `main` (incluye `HEAD` y `refs/heads/main`). El repo de datos sí publica en `main`. Revísalo con
+  `/hooks`; se activa al abrir una sesión nueva.
+- **Subagentes** ([ai-specs/agents/](ai-specs/agents/), visibles con `/agents`): `revisor-solo-lectura` (segunda
+  lectura del diff contra su cambio OpenSpec) y `verificador-pruebas` (corre pruebas y devuelve solo el resumen), más
+  `backend-developer`, `frontend-developer` y `product-strategy-analyst`.
+- **Espejos**: `.claude/` y `.gemini/` son copias de `ai-specs/`; tras editar un agente o skill corre
+  `node ai-specs/scripts/sincronizar-espejos.mjs` (ver [docs/base-standards.md](docs/base-standards.md) §6).
+
 ## Inicio de sesión (Supabase Auth)
 
 Las clases entran con **correo y contraseña**, sin enlaces por correo. La contraseña inicial la da el profe y se pide

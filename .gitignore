@@ -1,6 +1,7 @@
 # Ignore in all directories
 **/.DS_Store
 **/.env
+**/.env.*
 **/.env.example
 **/node_modules
 **/prompts_master.md
@@ -28,8 +29,7 @@ yarn-error.log*
 # .env
 .mcp.json
 
-# Claude Code per-user settings
-**/.claude/settings.json
+# Claude Code: settings.json es del proyecto (hook proteger-git); settings.local.json es personal
 **/.claude/settings.local.json
 
 # temp files
@@ -40,3 +40,6 @@ yarn-error.log*
 
 # salidas de las pruebas E2E (capturas, logs, resumen)
 tests/e2e/salida/
+
+# Carpeta privada del profe (ebook de pago y notas de trabajo): nunca se versiona
+/IA/
