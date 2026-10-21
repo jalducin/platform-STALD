@@ -1,5 +1,5 @@
 // Alta de alumnos y alumnas de Inglés desde la página (openspec: alta-alumnos).
-// Registro: alumnos.json → { "<correo>": { nombre, alta, inicio?, origen? } } (en Postgres en producción). Desde la
+// Registro: alumnos.json → { "<correo>": { nombre, alta, inicio?, origen?, baja? } } (en Postgres en producción). Desde la
 // fase 2 de «Inglés sin Notion» (openspec: cierre-tecnico) es la única fuente de identidad de Inglés.
 import { slugAlumno } from "./motor.ts";
 import type { InglesRow } from "./rows.ts";
@@ -12,6 +12,7 @@ export interface AlumnoRegistrado {
   alta: string;
   inicio?: string; // lunes en que empieza (AAAA-MM-DD); antes no ve atrasos (openspec: inicio-lunes-alumnos)
   origen?: "notion"; // importada de Notion en la fase 1 (openspec: cierre-tecnico); hoy solo informativo
+  baja?: string; // AAAA-MM-DD (CDMX) en que se dio de baja de Inglés; reversible (openspec: ingles-baja-alumno)
 }
 
 // Lunes siguiente (estrictamente posterior) a la fecha del alta en CDMX (UTC−6, sin horario de verano).
@@ -29,6 +30,15 @@ export function inicioDe(registro: RegistroAlumnos, alumno: string | null): stri
   return Object.values(registro).find((a) => slugAlumno(a.nombre) === slug)?.inicio;
 }
 export type RegistroAlumnos = Record<string, AlumnoRegistrado>;
+
+// Registro sin las bajas de Inglés (openspec: ingles-baja-alumno): lo que cuenta en Inglés (tablero, resumen,
+// actividades). La identidad de Juegos, el portal y la contraseña siguen usando el registro completo.
+export function sinBajas(registro: RegistroAlumnos): RegistroAlumnos {
+  return Object.fromEntries(Object.entries(registro).filter(([, a]) => !a.baja));
+}
+export function enBajaIngles(registro: RegistroAlumnos, email: string): boolean {
+  return !!registro[(email || "").trim().toLowerCase()]?.baja;
+}
 
 export const RUTA_ALUMNOS = "alumnos.json";
 const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,7 +113,7 @@ function listarAlumnos(filas: InglesRow[], registro: RegistroAlumnos, json: Json
   }
   const alumnos = [
     ...[...notion].map(([nombre, emails]) => ({ nombre, emails: [...emails], origen: "notion" as const })),
-    ...Object.entries(registro).map(([e, a]) => ({ nombre: a.nombre, emails: [e], origen: "registro" as const, alta: a.alta, ...(a.inicio ? { inicio: a.inicio } : {}) })),
+    ...Object.entries(registro).map(([e, a]) => ({ nombre: a.nombre, emails: [e], origen: "registro" as const, alta: a.alta, ...(a.inicio ? { inicio: a.inicio } : {}), ...(a.baja ? { baja: a.baja } : {}) })),
   ].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   return json({ alumnos });
 }
@@ -156,4 +166,35 @@ export async function handleAlumnos(req: Request, sub: string, deps: DepsAlumnos
   }
 
   return json({ error: "not_found" }, 404);
+}
+
+// POST /ingles/grupos/baja | /reactivar { email } (solo admin, openspec: ingles-baja-alumno): marca o quita
+// `baja: "AAAA-MM-DD"` en su entrada del registro. No borra resultados, avance, borradores ni inscripciones.
+export interface DepsBaja {
+  email: string;
+  admin: string;
+  store: Store;
+  hoy: () => string; // AAAA-MM-DD (CDMX)
+}
+export async function handleBajaIngles(req: Request, sub: string, deps: DepsBaja, json: Json): Promise<Response> {
+  const email = (deps.email || "").trim().toLowerCase();
+  if (!deps.admin || email !== deps.admin) return json({ error: "solo_admin" }, 403);
+  if (req.method !== "POST" || (sub !== "/baja" && sub !== "/reactivar")) return json({ error: "not_found" }, 404);
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+  const correo = String(body?.email ?? "").trim().toLowerCase();
+  const actual = (await deps.store.get<RegistroAlumnos>(RUTA_ALUMNOS))?.data?.[correo];
+  if (!correo || !actual) return json({ error: "not_found" }, 404);
+  const darDeBaja = sub === "/baja";
+  if (darDeBaja === !!actual.baja) return json({ ok: true, sinCambio: true, alumno: { email: correo, ...actual } });
+  const hoy = deps.hoy();
+  let final: AlumnoRegistrado = actual;
+  const ok = await escribir(deps.store, (r) => {
+    if (!r[correo]) return r;
+    const { baja: _previa, ...resto } = r[correo];
+    final = darDeBaja ? { ...resto, baja: hoy } : resto;
+    return { ...r, [correo]: final };
+  }, `alumnos: ${darDeBaja ? "baja de Inglés de" : "reactiva en Inglés a"} ${actual.nombre}`);
+  if (!ok) return json({ error: "conflicto_escritura" }, 503);
+  return json({ ok: true, alumno: { email: correo, ...final } });
 }

@@ -434,11 +434,16 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - resultados en `resultados/<id>/<slug>.json`, en Postgres igual que Inglés; con `intentos: 2` y sin
     `segundaOportunidad`, el 2.º intento abre de inmediato y cuenta la mejor;
   - generador del examen mensual: `herramientas/secundaria-<AAAA-MM>/`.
-- `alumnos.json`: `{ "<correo>": { nombre, alta, inicio?, origen? } }`, el registro de alumnos y alumnas de Inglés:
+- `alumnos.json`: `{ "<correo>": { nombre, alta, inicio?, origen?, baja? } }`, el registro de alumnos y alumnas de Inglés:
   altas desde `ingles.html` (cambio `alta-alumnos`) y personas importadas de Notion (`origen: "notion"`, cambio
   `cierre-tecnico`). Es la única fuente de identidad de Inglés. Solo el admin ve los correos.
   - `inicio` (`AAAA-MM-DD`): el lunes siguiente al alta (cambio `inicio-lunes-alumnos`). Las actividades que
     vencen antes no aparecen. Las personas importadas de Notion no llevan `inicio` (ya llevaban el curso).
+  - `baja` (`AAAA-MM-DD`, CDMX): baja de Inglés en línea reversible (cambio `ingles-baja-alumno`). La persona sigue
+    en el registro (identidad del portal, Juegos y contraseña), pero no cuenta en Inglés: tablero, resumen, avance,
+    actividades, conteo de grupos ni Meet. No se borran `resultados/`, `avance/`, `borradores/` ni su fila de
+    `stald_inscripciones` (por eso «Reactivar» la regresa al mismo grupo). Contrato:
+    [backend-standards.md](backend-standards.md) § Rutas `/ingles/alumnos`.
 - `borradores/<id>/<slug-alumno>.json`: `{ intento, respuestas, actualizado }`, el avance del intento abierto de
   Inglés, la ruta del profe o Secundaria. Vive en Postgres, como `resultados/`, y se borra al enviar el intento
   (cambio `borrador-en-servidor`). Sin correos.

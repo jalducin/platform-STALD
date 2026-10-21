@@ -22,6 +22,8 @@ export interface DepsGrupos {
   admin: string;
   db: Db;
   hoy: () => string; // AAAA-MM-DD (CDMX)
+  // Slugs de quienes están de baja de Inglés (openspec: ingles-baja-alumno): no salen en `miembros`.
+  bajas?: () => Promise<Set<string>>;
 }
 
 let cache: { t: number; grupos: Grupo[]; vigentes: Inscripcion[] } | null = null;
@@ -64,7 +66,8 @@ export async function handleGrupos(req: Request, sub: string, deps: DepsGrupos, 
   if (sub === "" && req.method === "GET") {
     cache = null;
     const { grupos, vigentes } = await leer(db);
-    return json({ grupos, miembros: Object.fromEntries(vigentes.map((i) => [i.alumno, i.grupo_id])) });
+    const bajas = deps.bajas ? await deps.bajas() : new Set<string>();
+    return json({ grupos, miembros: Object.fromEntries(vigentes.filter((i) => !bajas.has(i.alumno)).map((i) => [i.alumno, i.grupo_id])) });
   }
 
   let body: Record<string, unknown> = {};

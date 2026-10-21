@@ -954,9 +954,10 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `.nav-item` y `.nav-barra`);
   - `ingles/ingles.css`: estilos propios de Inglés (incluida la presentación del Meet);
   - scripts clásicos con `defer`, en este orden: `comun.js` (configuración, `SECCIONES`, `api()`, formato y
-    componentes), `material.js` (material de estudio), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, registro de alumnos y alumnas, juegos; el registro va en su propia opción «➕ Registro», separado del avance en «Alumnos»), `tablero.js`
+    componentes), `material.js` (material de estudio), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, registro de alumnos y alumnas, juegos; el registro va en su propia opción «➕ Registro», separado del avance en «Alumnos»; ahí cada persona activa tiene «🚪 Baja de Inglés» con `confirm` que avisa que sus resultados se conservan como historial, y «🗂️ De baja de Inglés» lista las bajas con «↩️ Reactivar»; los conteos de la lista y de los grupos son solo de activos, cambio `ingles-baja-alumno`), `tablero.js`
     (vista del admin por secciones, mapa de calor y cajón), `alumno.js`, `profe.js` y `app.js` (sesión, ruteo y
-    eventos). No son módulos ES: comparten el ámbito global, así que un nombre de nivel superior no se puede repetir
+    eventos; si `GET /ingles/data` trae `baja: true`, `mostrarBaja()` pinta «Ya no estás en Inglés en línea» con enlace
+    a `ingles.html?modo=secundaria` y a Juegos, sin cerrar la sesión). No son módulos ES: comparten el ámbito global, así que un nombre de nivel superior no se puede repetir
     entre archivos.
 - **Modo oscuro.** Sigue a `prefers-color-scheme` salvo que `<html data-theme="light|dark">` lo fije. La preferencia
   se guarda en `localStorage.stald_tema` (`auto`, `claro` u `oscuro`; preferencia de interfaz sin datos personales) y se

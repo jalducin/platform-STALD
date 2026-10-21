@@ -124,6 +124,8 @@ function onClick(e) {
   if (act === 'filtrar') { const board = b.closest('.board'); aplicarFiltro(board, b.getAttribute('aria-pressed') === 'true' ? null : b.dataset.grupo); }
   if (act === 'ver-todo') aplicarFiltro(b.closest('.board'), null);
   if (act === 'quitar-alumno') { e.preventDefault(); quitarAlumno(b); }
+  if (act === 'baja-ingles') { e.preventDefault(); bajaIngles(b, false); }
+  if (act === 'reactivar-ingles') { e.preventDefault(); bajaIngles(b, true); }
   if (act === 'editar-grupo') { e.preventDefault(); state.grupoEdicion = (state.grupos.grupos || []).find(g => g.id === b.dataset.id) || null; state.gruposAbierto = true; render(state.data); document.getElementById('g-nombre').focus(); }
   if (act === 'tts') { e.preventDefault(); hablar(b.dataset.texto, !!b.dataset.lento); }
   if (act === 'grabar') { e.preventDefault(); grabarPron(b); }
@@ -174,6 +176,7 @@ async function loadFor(email) {
     if (!r.ok) throw new Error(data.error === 'mucho_trafico' ? 'Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : (data.mensaje || data.error || ('HTTP ' + r.status)));
 
     if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // ya se mostró la entrada
+    if (!data.isAdmin && data.baja) return mostrarBaja(); // de baja de Inglés: aviso, sin cerrar su sesión
     if (!data.isAdmin && (!data.rows || data.rows.length === 0)) {
       await StaldAuth.salir();
       return mostrarEntrada('No encontré clases asociadas a ' + email + '. Revisa que sea el correo que te dio tu profe.');
@@ -191,6 +194,22 @@ async function loadFor(email) {
     if (appEl.style.display === 'none') mostrarEntrada('⚠️ ' + e.message);
     else contentEl.innerHTML = vacio('⚠️', e.message);
   }
+}
+
+// De baja de Inglés (openspec: ingles-baja-alumno): aviso amable; Secundaria y Juegos siguen igual.
+function mostrarBaja() {
+  loginEl.style.display = 'none'; appEl.style.display = 'block'; navEl.hidden = true;
+  mostrarMaterialPublico(false);
+  state.data = null;
+  whoLabel.textContent = '';
+  document.title = 'Clases de Inglés';
+  contentEl.innerHTML = '<section class="card baja-ingles" style="max-width:560px;margin:24px auto;text-align:center">' +
+    '<div style="font-size:2.4rem" aria-hidden="true">👋</div>' +
+    '<h2 class="card-titulo">Ya no estás en Inglés en línea</h2>' +
+    '<p>Tus clases de Inglés siguen en Secundaria. Ahí encuentras tus actividades y exámenes.</p>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px">' +
+      '<a class="btn" href="' + escapeHtml(conApiParam('ingles.html?modo=secundaria')) + '">📚 Ir a mis clases de Secundaria</a>' +
+      '<a class="btn ghost" href="' + escapeHtml(conApiParam('juegos.html')) + '">🎮 Juegos</a></div></section>';
 }
 
 // ---------- Inicio de sesión con correo y contraseña (comun/auth.js, openspec: acceso-con-contrasena) ----------
