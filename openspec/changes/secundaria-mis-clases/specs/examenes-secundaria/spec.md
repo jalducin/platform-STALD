@@ -42,7 +42,7 @@ La vista de Secundaria SHALL ofrecer la pestaña «🗓️ Mi horario» con una 
 Una actividad o examen de Secundaria SHALL poder traer el campo opcional `materia` (texto corto). El listado de
 `/secundaria/actividades` SHALL incluir `materia` cuando el contenido la trae. Si no viene, la vista SHALL deducirla
 del prefijo del título antes de « · » (sin el emoji inicial), usando el nombre canónico cuando el prefijo contiene
-una materia conocida.
+una materia conocida como palabra completa.
 
 #### Scenario: Materia explícita
 - **WHEN** una clase trae `"materia": "Matemáticas"`
@@ -51,3 +51,22 @@ una materia conocida.
 #### Scenario: Materia deducida del título
 - **WHEN** una clase sin `materia` se titula «🔬 Ciencias · La célula»
 - **THEN** el listado no trae `materia` y la vista muestra el chip «Ciencias»
+
+#### Scenario: Sin falsos parecidos
+- **WHEN** una clase sin `materia` se titula «🦴 Partes del cuerpo · Huesos»
+- **THEN** el chip dice «Partes del cuerpo» con el color neutro, no «Artes»
+
+## MODIFIED Requirements
+
+### Requirement: Exámenes de Secundaria
+La plataforma SHALL ofrecer clases y exámenes de Secundaria en `ingles.html?modo=secundaria`, con el motor de
+actividades y contenido en `contenido/secundaria/`. La identidad SHALL salir de las filas de Secundaria. El admin SHALL
+ver los resultados por persona y por materia.
+
+#### Scenario: Alumna de Secundaria
+- **WHEN** una alumna de Secundaria entra a «📚 Mis clases»
+- **THEN** ve sus clases y exámenes, los resuelve y ve su calificación por materia
+
+#### Scenario: Sin Secundaria
+- **WHEN** entra un correo sin filas de Secundaria
+- **THEN** recibe un aviso de que la sección es solo para alumnos y alumnas de Secundaria

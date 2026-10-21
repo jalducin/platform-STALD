@@ -31,6 +31,11 @@
   `secundaria-lista.png`. En la primera vuelta el horario de escritorio partía palabras («Matemát icas») y el chip
   «hoy» quedaba en vertical; se corrigió con guiones (`hyphens: auto`) y un encabezado que se acomoda en dos líneas.
 
+## Revisión `revisor-solo-lectura` (atendida)
+- Materia deducida por subcadena («Partes» → Artes): ahora por palabra completa (`materiaConocida`); paso nuevo en la
+  E2E. `secundaria-clases` repetida: PASS 27/27. `secundaria.js?v=3`.
+- La spec viva decía «📝 Exámenes»: la delta agrega `## MODIFIED` del requisito «Exámenes de Secundaria».
+
 ## Verificación manual (curl, servidor local, hoy 2026-10-27)
 - Admin: 200, 22 elementos, 13 con `materia`
 - Alumna de Secundaria del fixture: 200, 17 elementos, 0 ajenos; hoy: «Matemáticas» y una sin `materia` (se deduce en la vista)

@@ -52,5 +52,5 @@
 
 ## 8. Cierre
 
-- [ ] 8.1 Revisión `revisor-solo-lectura`, PR, checks y merge
+- [x] 8.1 Revisión `revisor-solo-lectura`, PR, checks y merge
 - [ ] 8.2 `openspec archive secundaria-mis-clases` (tras verificar en celular, cuando el profe lo indique)

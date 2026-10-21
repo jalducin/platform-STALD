@@ -36,6 +36,9 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
       ok('Esta semana: el martes marcado como hoy', (await texto(p, `[data-sec-dia="${HOY}"] h4`)).includes('hoy'));
       ok('Otras clases y exámenes: el examen de prueba', !!(await p.$('#sec-otras [data-sec-item="sec-e2e"]')));
       ok('Mis clases: sin scroll horizontal a 360 px', await sinScrollH(p));
+      const deducidas = await p.evaluate(() => ['🦴 Partes del cuerpo · Huesos', '📗 Repaso de Inglés 1 · Verbos', 'Martes de Conciencias · x', '🌎 Ciencias Sociales · Mapas']
+        .map(t => { const m = materiaDe({ titulo: t }); return m ? m.nombre + '/' + m.clave : '-'; }));
+      ok('materia deducida por palabra completa (sin falsos «Artes» o «Ciencias»)', deducidas.join() === 'Partes del cuerpo/otra,Inglés/ingles,Martes de Conciencias/otra,Ciencias Sociales/sociales', deducidas.join());
       await p.screenshot({ path: 'secundaria-clases-hoy.png' });
       await p.screenshot({ path: 'secundaria-clases-semana.png', fullPage: true });
     }

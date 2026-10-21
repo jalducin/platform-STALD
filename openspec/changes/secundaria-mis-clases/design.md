@@ -19,12 +19,13 @@ Inglés, el tablero de Notion o la vista del admin (salvo mostrar la materia).
    `fechaLimite` entre el lunes y el domingo de la semana de `hoy` (calculado en la vista con `act.hoy`). Lo demás va
    en «📝 Otras clases y exámenes». Alternativa descartada: usar `semana.ids` (no cubre exámenes sueltos ni prórrogas).
 2. **Materia: campo opcional con respaldo en el título.** `materia` explícita gana; si falta, prefijo del título
-   antes de « · » sin el emoji inicial; si el prefijo contiene una materia conocida (sin acentos ni mayúsculas, la más
-   larga primero: «Ciencias Sociales» antes que «Ciencias»), se usa la canónica. Sin « · », sin chip de materia.
+   antes de « · » sin el emoji inicial; si el prefijo contiene una materia conocida como palabra(s) completa(s) (sin
+   acentos ni mayúsculas, la más larga primero: «Ciencias Sociales» antes que «Ciencias»; «Partes» o «Martes» no son
+   «Artes»), se usa la canónica. Sin « · », sin chip de materia.
 3. **Color por materia con tokens CSS.** Clase `mat-<clave>` (ingles, espanol, matematicas, ciencias, sociales,
    tecnologia, artes, edfisica, otra) que fija `--mat` y `--mat-soft`; redefinidos en oscuro con
    `[data-theme="dark"]` y `prefers-color-scheme`. El chip lleva texto (accesible sin color).
-4. **Pestañas dentro de la vista.** Botones «📚 Mis clases» / «🗓️ Mi horario» (`data-sec-tab`, `aria-pressed`); el
+4. **Pestañas dentro de la vista.** Botones «📚 Mis clases» / «🗓️ Mi horario» (`data-sec-tab`, `role="tab"` y `aria-selected`); el
    estado vive en `state.secTab`. No se usa la barra de secciones de Inglés (sigue oculta).
 5. **Horario responsive sin scroll.** `grid-template-columns: repeat(7, minmax(0, 1fr))` en anchos ≥ 760 px; debajo,
    una columna (lista por día). `minmax(0, …)` y `overflow-wrap:anywhere` evitan el desborde.

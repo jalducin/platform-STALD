@@ -24,9 +24,10 @@ const MATERIAS_SEC = [
 const DIAS_SEC = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const sinAcentos = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const EMOJI_INICIAL = /^[^\p{L}\p{N}]+/u;
+// Por palabra completa: «Repaso de Inglés 1» → Inglés, pero «Partes del cuerpo» o «Martes» no son Artes.
 function materiaConocida(texto) {
-  const t = sinAcentos(texto);
-  return MATERIAS_SEC.find(([n]) => t.includes(sinAcentos(n))) || null;
+  const t = ' ' + sinAcentos(texto).replace(/[^a-z0-9]+/g, ' ') + ' ';
+  return MATERIAS_SEC.find(([n]) => t.includes(' ' + sinAcentos(n) + ' ')) || null;
 }
 // `materia` del contenido; si falta, el prefijo del título antes de « · » (sin el emoji). Sin prefijo: sin materia.
 function materiaDe(it) {

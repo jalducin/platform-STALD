@@ -1041,7 +1041,7 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   - **«🗓️ Mi horario»** (`#sec-horario`): 7 días (`data-sec-hor-dia`) con la materia de cada clase; cuadrícula de 7
     columnas desde 760 px y lista por día debajo (sin scroll horizontal a 360 px).
 - Materia: `materia` del listado o, si falta, el prefijo del título antes de « · » sin el emoji (`materiaDe`); se
-  usa el nombre canónico si contiene una de las 8 materias. El color sale de la clase `mat-<clave>` (`ingles`,
+  usa el nombre canónico si contiene una de las 8 materias como palabra completa («Partes» no es «Artes»). El color sale de la clase `mat-<clave>` (`ingles`,
   `espanol`, `matematicas`, `ciencias`, `sociales`, `tecnologia`, `artes`, `edfisica`, `otra`), que fija `--mat` y
   `--mat-soft` desde tokens `--mat-*` de `ingles/ingles.css`, redefinidos para modo oscuro. El chip siempre lleva el
   nombre (no depende solo del color).
