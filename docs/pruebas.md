@@ -104,6 +104,9 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   `ordenar-emparejar`: aparece en su «Para ponerte al día». La semana de Secundaria `2026-10-26` (15 clases
   `sec-e2e-clase-*`, exclusivas de `valeria`, 2 por día y 3 el domingo, con y sin `materia`) es de
   `secundaria-clases`, que solo corre con `--hoy 2026-10-27` (con otro día sale `OMIT`).
+- `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
+  «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
+  y el resumen sin ella, y la reactiva al final (deja el registro como estaba).
 - Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
 - Juego en vivo sin Supabase (cambio `juegos-en-vivo`): `lib/vivo-relevo.js` levanta un relevo local (HTTP + SSE) y
   `initVivo(relevo.url, { latencia, perdida, desorden, noConecta })` es el `init` de `abrirPagina`; con la ruta

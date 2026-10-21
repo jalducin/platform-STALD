@@ -3,6 +3,8 @@
 import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { createDb, PgStore } from "./db.ts";
 import { clearCacheGrupos, grupoDe, handleGrupos } from "./grupos.ts";
+import { clearCacheAlumnos, handleBajaIngles } from "./alumnos.ts";
+import { slugAlumno } from "./motor.ts";
 import { clearCache, handleActividades } from "./actividades.ts";
 import { MemoryStore } from "./store.ts";
 import { postgrestFalso } from "./test_postgrest.ts";
@@ -90,6 +92,27 @@ Deno.test("grupos: mover de grupo conserva el historial y el mismo día solo cor
   assertEquals((await call("POST", "/mover", ADMIN, { alumno: "Luz", grupo: "no-existe" })).body.error, "grupo_inexistente");
   const g = await call("GET", "", ADMIN, undefined, "2026-10-12");
   assertEquals(g.body.miembros.luz, "domingo-b1");
+});
+
+Deno.test("baja de Inglés: la inscripción sigue (reactivar vuelve al mismo grupo) y no cuenta en miembros", async () => {
+  const { call, db } = grupos();
+  await call("POST", "", ADMIN, { nombre: "Grupo 1" });
+  await call("POST", "", ADMIN, { nombre: "Domingo B1" });
+  await call("POST", "/mover", ADMIN, { alumno: "Sofía", grupo: "domingo-b1" });
+  const store = new MemoryStore();
+  await store.put("alumnos.json", { "sofia@example.com": { nombre: "Sofía", alta: "x" } }, null);
+  clearCacheAlumnos();
+  const bajas = async () => new Set(Object.values((await store.get<any>("alumnos.json"))!.data).filter((a: any) => a.baja).map((a: any) => slugAlumno(a.nombre)));
+  const baja = (sub: string) => handleBajaIngles(new Request("http://x", { method: "POST", body: JSON.stringify({ email: "sofia@example.com" }) }), sub, { email: ADMIN, admin: ADMIN, store, hoy: () => "2026-10-21" }, json);
+  const miembros = async () => (await (await handleGrupos(new Request("http://x/ingles/grupos"), "", { email: ADMIN, admin: ADMIN, db, hoy: () => "2026-10-21", bajas }, json)).json()).miembros;
+  assertEquals(await miembros(), { sofia: "domingo-b1" });
+  assertEquals((await baja("/baja")).status, 200);
+  assertEquals(await miembros(), {}, "de baja: no cuenta en su grupo");
+  clearCacheGrupos();
+  assertEquals(await grupoDe(db, "sofia", "2026-10-21"), "domingo-b1", "la inscripción no se cerró");
+  assertEquals((await db.select<any>("inscripciones", "alumno=eq.sofia")).map((i: any) => i.hasta ?? null), [null]);
+  assertEquals((await baja("/reactivar")).status, 200);
+  assertEquals(await miembros(), { sofia: "domingo-b1" }, "reactivada: de vuelta en el mismo grupo");
 });
 
 Deno.test("calendario por grupo: una semana con grupos solo la ve su grupo", async () => {

@@ -9,7 +9,7 @@ import { handleActividades, handleProfe, handleSecundaria } from "./actividades.
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados, resolverJugador } from "./juegos.ts";
 import { handleCambio, handleOlvide, handlePreparar, handleRestablecer } from "./contrasena.ts";
-import { aplicarAlumnos, handleAlumnos, inicioDe, leerRegistro } from "./alumnos.ts";
+import { aplicarAlumnos, enBajaIngles, handleAlumnos, handleBajaIngles, inicioDe, leerRegistro, sinBajas } from "./alumnos.ts";
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
@@ -107,8 +107,17 @@ async function cuentas(): Promise<Cuenta[]> {
 
 // Filas de Inglés: solo los alumnos y alumnas del registro (alumnos.json). Inglés ya no lee Notion
 // (openspec: cierre-tecnico, fase 2); Secundaria sí.
+// Es la identidad completa (incluye bajas de Inglés): portal, Juegos y contraseña la usan tal cual.
 async function filasIngles(): Promise<InglesRow[]> {
   return aplicarAlumnos([], await leerRegistro(await getStore()));
+}
+// Solo quienes siguen en Inglés (openspec: ingles-baja-alumno): tablero, resumen y actividades de Inglés.
+async function filasInglesActivas(): Promise<InglesRow[]> {
+  return aplicarAlumnos([], sinBajas(await leerRegistro(await getStore())));
+}
+// ¿Esa persona está dada de baja de Inglés? (nunca el admin)
+async function deBajaIngles(email: string, admin: string): Promise<boolean> {
+  return !!email && email !== admin && enBajaIngles(await leerRegistro(await getStore()), email);
 }
 
 // ---------- HTTP ----------
@@ -268,6 +277,16 @@ async function rutaAlumnos(req: Request, sub: string, email: string, admin: stri
   return await handleAlumnos(req, sub, { email, admin, store: await getStore(), filas: () => Promise.resolve([]), inscribir, ahora: ahoraIso }, json);
 }
 
+// /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada).
+// /ingles/grupos/baja | /reactivar → baja de Inglés reversible (solo admin, server/alumnos.ts; también sin la base).
+async function rutaGrupos(req: Request, sub: string, email: string, admin: string): Promise<Response> {
+  if (sub === "/baja" || sub === "/reactivar") return await handleBajaIngles(req, sub, { email, admin, store: await getStore(), hoy: () => mxToday() }, json);
+  if (!await inglesEnPg()) return json({ error: "sin_base" }, 503);
+  // La inscripción de quien está de baja sigue vigente (para reactivarla en su grupo), pero no cuenta como miembro.
+  const bajas = async () => new Set(Object.values(await leerRegistro(await getStore())).filter((a) => a.baja).map((a) => slugAlumno(a.nombre)));
+  return await handleGrupos(req, sub, { email, admin, db: db!, hoy: () => mxToday(), bajas }, json);
+}
+
 // GET /ingles/resumen?grupo=<id> → tablero del profe: indicadores y mapa de calor (solo admin, server/resumen.ts,
 // openspec: ingles-pro). La racha del alumno o alumna va dentro de /ingles/actividades (sin ruta aparte).
 async function rutaResumen(req: Request, email: string, admin: string): Promise<Response> {
@@ -277,7 +296,7 @@ async function rutaResumen(req: Request, email: string, admin: string): Promise<
     email, admin, store,
     alumnos: async () => {
       const registro = await leerRegistro(store);
-      const nombres = [...new Set((await filasIngles()).map((r) => r.alumno).filter((n): n is string => !!n))];
+      const nombres = [...new Set((await filasInglesActivas()).map((r) => r.alumno).filter((n): n is string => !!n))];
       return nombres.map((nombre) => ({ nombre, ...(inicioDe(registro, nombre) ? { inicio: inicioDe(registro, nombre) } : {}) }));
     },
     ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()), grupoInfo: (id: string) => grupoInfo(db!, id) } : {}),
@@ -287,7 +306,8 @@ async function rutaResumen(req: Request, email: string, admin: string): Promise<
 // /ingles/actividades[/<id>] → actividades y exámenes del alumno o alumna (o del admin), con su grupo vigente.
 async function rutaActividades(req: Request, sub: string, email: string, admin: string): Promise<Response> {
   if (!email) return json({ error: "missing_email" }, 400);
-  const all = await filasIngles();
+  if (await deBajaIngles(email, admin)) return json({ error: "baja_ingles" }, 403); // ni calendario ni Meet del grupo
+  const all = await filasInglesActivas();
   const { rows, isAdmin } = filterForEmail(all, email, admin);
   const alumno = isAdmin ? null : (rows.find((r) => r.alumno)?.alumno ?? null);
   const store = await getStore();
@@ -304,7 +324,10 @@ async function rutaPerfil(email: string, admin: string): Promise<Response> {
   if (!email) return json({ error: "missing_email" }, 400);
   const store = await getStore();
   const [ingles, secundaria, inv] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), store.get<Invitados>("juegos/invitados.json")]);
-  return json(armarPerfil(email, admin, ingles, secundaria, inv?.data ?? {}));
+  const perfil = armarPerfil(email, admin, ingles, secundaria, inv?.data ?? {});
+  // De baja de Inglés: el portal ya no le muestra Inglés; nombre, Secundaria y Juegos no cambian.
+  if (perfil.accesos.ingles && await deBajaIngles(email, admin)) perfil.accesos.ingles = false;
+  return json(perfil);
 }
 
 // GET /ingles/data → filas de identidad del registro (Inglés ya no trae tareas de Notion); GET /data → base
@@ -313,9 +336,11 @@ async function rutaData(url: URL, email: string, admin: string): Promise<Respons
   const deIngles = url.pathname.endsWith("/ingles/data");
   if (!deIngles && !url.pathname.endsWith("/data")) return json({ error: "not_found" }, 404);
   if (!email) return json({ error: "missing_email" }, 400);
-  const all: (InglesRow | SecundariaRow)[] = deIngles ? await filasIngles() : await loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria");
+  const all: (InglesRow | SecundariaRow)[] = deIngles ? await filasInglesActivas() : await loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria");
   const { rows, isAdmin } = filterForEmail(all, email, admin);
-  return json({ rows, isAdmin, generatedAt: new Date().toISOString() });
+  // De baja de Inglés: sin filas y con la marca, para el aviso amable (sin la fecha; openspec: ingles-baja-alumno).
+  const baja = deIngles && !isAdmin && !rows.length && await deBajaIngles(email, admin);
+  return json({ rows, isAdmin, ...(baja ? { baja: true } : {}), generatedAt: new Date().toISOString() });
 }
 
 // Rutas con identidad ya resuelta (o sin identidad: registro, salud y contraseña), en orden de evaluación.
@@ -333,12 +358,8 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
   const iAl = url.pathname.indexOf("/ingles/alumnos");
   if (iAl !== -1) return await rutaAlumnos(req, url.pathname.slice(iAl + "/ingles/alumnos".length), email, admin);
 
-  // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada)
   const iGr = url.pathname.indexOf("/ingles/grupos");
-  if (iGr !== -1) {
-    if (!await inglesEnPg()) return json({ error: "sin_base" }, 503);
-    return await handleGrupos(req, url.pathname.slice(iGr + "/ingles/grupos".length), { email, admin, db: db!, hoy: () => mxToday() }, json);
-  }
+  if (iGr !== -1) return await rutaGrupos(req, url.pathname.slice(iGr + "/ingles/grupos".length), email, admin);
 
   if (url.pathname.endsWith("/ingles/resumen")) return await rutaResumen(req, email, admin);
 

@@ -26,9 +26,10 @@ function renderGruposAdmin() {
   if (!state.grupos) return '';
   const lista = state.grupos.grupos || [];
   // Grupo efectivo (openspec: grupos-conteo): inscripción o, sin ella, el primer grupo activo, como en «Registro».
-  const registro = Array.isArray(state.alumnosAdmin) ? state.alumnosAdmin : null;
+  // Solo quienes siguen en Inglés: las bajas no cuentan en su grupo (openspec: ingles-baja-alumno).
+  const registro = Array.isArray(state.alumnosAdmin) ? state.alumnosAdmin.filter(x => !x.baja) : null;
   const cuantos = id => registro ? registro.filter(x => (grupoDeNombre(x.nombre) || {}).id === id).length
-    : Object.values(state.grupos.miembros).filter(x => x === id).length;
+    : Object.values(state.grupos.miembros).filter(x => x === id).length; // `miembros` ya viene sin bajas
   const personas = n => n === 1 ? '1 alumno o alumna' : n + ' alumnos y alumnas';
   const e = state.grupoEdicion || {};
   return '<details class="section" id="grupos-admin"' + (state.gruposAbierto === false ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Grupos</span><span class="count">' + lista.length + '</span></div></summary><div class="scroll">' +
@@ -79,7 +80,9 @@ async function loadAlumnosAdmin() {
 
 function renderAlumnosAdmin() {
   const a = state.alumnosAdmin;
-  const lista = Array.isArray(a) ? a : [];
+  const todos = Array.isArray(a) ? a : [];
+  // Baja de Inglés reversible (openspec: ingles-baja-alumno): las bajas van aparte, con «Reactivar».
+  const lista = todos.filter(x => !x.baja), bajas = todos.filter(x => x.baja);
   return '<details class="section" id="alumnos-admin"' + (state.altaAbierta === false ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Alumnos y alumnas</span><span class="count">' + lista.length + '</span></div></summary><div class="scroll">' +
     '<form id="alta-alumno" autocomplete="off" style="display:grid;gap:8px;margin:6px 0 12px">' +
       '<div class="progress-text" style="margin:0">➕ Nuevo alumno o alumna: entra con su correo a Inglés, al portal y a Juegos. Empieza su curso el lunes siguiente, sin actividades en atraso.</div>' +
@@ -91,7 +94,13 @@ function renderAlumnosAdmin() {
     lista.map(x => '<div class="ultimas-lista" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div>👤 <b>' + escapeHtml(x.nombre) + '</b><br><small>' +
       escapeHtml(x.emails.join(', ')) + ' · alta en la página' + (x.inicio ? ' · 📅 inicia el lunes ' + escapeHtml(fechaCorta(x.inicio)) : '') + '</small></div>' +
       (state.grupos ? '<select class="mover-grupo" data-mover="1" data-alumno="' + escapeHtml(x.nombre) + '" aria-label="Grupo de ' + escapeHtml(x.nombre) + '">' + opcionesGrupo((grupoDeNombre(x.nombre) || {}).id) + '</select>' : '') +
-      '<button class="btn ghost" data-action="quitar-alumno" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">Quitar</button></div>').join('') +
+      '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' +
+      '<button class="btn ghost" data-action="baja-ingles" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">🚪 Baja de Inglés</button>' +
+      '<button class="btn ghost" data-action="quitar-alumno" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">Quitar</button></span></div>').join('') +
+    (bajas.length ? '<div id="bajas-ingles"><div class="progress-text" style="margin:14px 0 4px">🗂️ De baja de Inglés (' + bajas.length + ') · sus resultados se conservan como historial</div>' +
+      bajas.map(x => '<div class="ultimas-lista" data-baja="' + escapeHtml(x.emails[0]) + '" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div>👤 <b>' + escapeHtml(x.nombre) + '</b><br><small>' +
+        escapeHtml(x.emails.join(', ')) + ' · de baja desde el ' + escapeHtml(fechaCorta(x.baja)) + '</small></div>' +
+        '<button class="btn ghost" data-action="reactivar-ingles" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">↩️ Reactivar</button></div>').join('') + '</div>' : '') +
     '</div></details>';
 }
 
@@ -113,6 +122,21 @@ async function quitarAlumno(b) {
   const r = await fetchJson(API_BASE + '/ingles/alumnos/quitar?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ email: b.dataset.email }) });
   if (!r.ok) { b.disabled = false; alert('No se pudo quitar (' + (r.body.error || r.status) + ').'); return; }
   state.altaAbierta = true; state.altaAviso = '🗑️ Se quitó el acceso de ' + b.dataset.nombre + '.';
+  await loadFor(state.email);
+}
+
+// Baja de Inglés reversible (openspec: ingles-baja-alumno): no borra resultados ni toca Secundaria o Juegos.
+async function bajaIngles(b, reactivar) {
+  const nombre = b.dataset.nombre;
+  const pregunta = reactivar
+    ? '¿Reactivar a ' + nombre + ' en Inglés en línea? Vuelve a su grupo, a la lista y al tablero con sus resultados.'
+    : '¿Dar de baja de Inglés en línea a ' + nombre + '?\n\nSus resultados se conservan como historial. Ya no aparecerá en la lista, el tablero ni el resumen, y no verá las actividades ni el Meet de su grupo. Su acceso a Secundaria y a Juegos no cambia. Puedes reactivarla o reactivarlo cuando quieras.';
+  if (!confirm(pregunta)) return;
+  b.disabled = true;
+  const r = await fetchJson(API_BASE + '/ingles/grupos/' + (reactivar ? 'reactivar' : 'baja') + '?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ email: b.dataset.email }) });
+  if (!r.ok) { b.disabled = false; alert('No se pudo ' + (reactivar ? 'reactivar' : 'dar de baja') + ' (' + (r.body.error || r.status) + ').'); return; }
+  state.altaAbierta = true;
+  state.altaAviso = reactivar ? '↩️ ' + nombre + ' está de nuevo en Inglés.' : '🚪 ' + nombre + ' quedó de baja de Inglés. Sus resultados se conservan.';
   await loadFor(state.email);
 }
 

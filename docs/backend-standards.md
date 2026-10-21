@@ -438,12 +438,18 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - Inglés sin Notion (cambio `cierre-tecnico`): la fase 1 importó al registro a las personas de Notion con correo
     (`origen: "notion"`); desde la fase 2 Inglés ya no lee Notion y esa importación se retiró.
   - Rutas de grupos, solo admin:
-    - `GET /ingles/grupos` → `{ grupos, miembros: { slug: grupo } }`;
+    - `GET /ingles/grupos` → `{ grupos, miembros: { slug: grupo } }` (sin quienes están de baja de Inglés);
     - `POST /ingles/grupos` crea o edita un grupo. Errores: `nombre_invalido`, `meet_invalido` (debe ser
       `https://`), `color_invalido`, `id_invalido`;
     - `POST /ingles/grupos/mover { alumno, grupo }` cierra la inscripción vigente y abre una nueva. Si es el mismo
       día, solo corrige el grupo. Error: `grupo_inexistente`.
-    - Sin base migrada responden 503 `sin_base`.
+    - Sin base migrada responden 503 `sin_base` (salvo `/baja` y `/reactivar`, que solo escriben `alumnos.json`).
+    - `POST /ingles/grupos/baja { email }` y `POST /ingles/grupos/reactivar { email }` (cambio `ingles-baja-alumno`,
+      `handleBajaIngles` en `server/alumnos.ts`): ponen o quitan `baja: "AAAA-MM-DD"` (hoy en CDMX) en su entrada de
+      `alumnos.json`. Responden `{ ok, alumno: { email, nombre, alta, …, baja? } }`; si ya estaba así,
+      `{ ok, sinCambio: true, alumno }` sin escribir. Errores: 403 `solo_admin`, 400 `json_invalido`, 404 `not_found`
+      (correo fuera del registro), 503 `conflicto_escritura`. No borran resultados, avance, borradores ni
+      inscripciones.
   - `POST /ingles/alumnos` acepta `grupo`, que inscribe a la persona desde su `inicio`.
   - `GET /ingles/actividades`, vista de alumno o alumna:
     - filtra por el `grupos` de cada semana;
@@ -473,7 +479,7 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     `conflicto_escritura`. La lista del admin trae `prorrogas` por elemento.
 
 **Rutas `/ingles/alumnos`** (`server/alumnos.ts`, cambio `alta-alumnos`), solo admin (si no, 403):
-  - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "registro", alta, inicio? }] }`: solo el registro
+  - `GET /ingles/alumnos` → `{ alumnos: [{ nombre, emails, origen: "registro", alta, inicio?, baja? }] }`: solo el registro
     (`handleAlumnos` recibe `filas: () => Promise.resolve([])`; Inglés ya no lee Notion);
   - alta nueva: `inicio` es el lunes siguiente en CDMX (`lunesDeInicio`). `GET /ingles/actividades` omite, para esa
     persona, lo que vence antes de `inicio` y devuelve `inicio` (cambio `inicio-lunes-alumnos`);
@@ -484,6 +490,11 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - `filasIngles()` = `aplicarAlumnos([], registro)` (fase 2 de `cierre-tecnico`): una fila de identidad
     `source: "registro"` (sin tarea) por persona del registro, sin consultar Notion. Portal, `/ingles/data`,
     actividades, resumen y Juegos la reconocen. `GET /ingles/data` devuelve solo esas filas.
+  - Bajas de Inglés (cambio `ingles-baja-alumno`): `filasIngles()` (registro completo) sigue para identidad (`/perfil`,
+    Juegos, `/juegos/registro`, `/auth/*`); `filasInglesActivas()` (sin `baja`, `sinBajas`) la usan `GET /ingles/data`,
+    `GET /ingles/resumen` y `GET /ingles/actividades`. A la persona de baja: `GET /ingles/data` → 200
+    `{ rows: [], isAdmin: false, baja: true }` (sin la fecha), `/ingles/actividades` → 403 `baja_ingles` y `/perfil`
+    → `accesos.ingles: false` (nombre, Secundaria y Juegos sin cambio; su jugador sigue siendo `a-<slug>`).
 
 **Ruta `GET /perfil`** (`server/perfil.ts`; correo de la sesión o, en la transición, `?email=`):
 - Devuelve `{ email, isAdmin, nombre, conocido, invitado, accesos: { ingles, secundaria, juegos } }` para
