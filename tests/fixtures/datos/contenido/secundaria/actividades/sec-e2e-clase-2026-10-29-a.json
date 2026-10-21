@@ -1,0 +1,87 @@
+{
+  "id": "sec-e2e-clase-2026-10-29-a",
+  "tipo": "actividad",
+  "titulo": "🎨 Artes · Colores primarios",
+  "materia": "Artes",
+  "nivel": "Secundaria",
+  "disponibleDesde": "2026-10-29",
+  "fechaLimite": "2026-10-29",
+  "intentos": 2,
+  "preguntasPorIntento": 2,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "Colores primarios",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Colores primarios",
+      "texto": "Lee con calma."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "libreta",
+      "texto": "Anota lo importante."
+    }
+  ],
+  "banco": [
+    {
+      "id": "sec-e2e-clase-2026-10-29-a-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 1 de Colores primarios?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-10-29-a-2",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 2 de Colores primarios?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-10-29-a-3",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 3 de Colores primarios?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-10-29-a-4",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 4 de Colores primarios?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    }
+  ]
+}

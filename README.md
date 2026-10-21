@@ -6,7 +6,7 @@ plataforma, sin Notion), Juegos y el tablero de Secundaria (alimentado desde Not
 - Portal (entrada única): https://jalducin.github.io/platform-STALD/
 - Secundaria: https://jalducin.github.io/platform-STALD/secundaria.html
 - Juegos: https://jalducin.github.io/platform-STALD/juegos.html
-- Exámenes de Secundaria: https://jalducin.github.io/platform-STALD/ingles.html?modo=secundaria (también desde «📝 Exámenes» en Secundaria)
+- Clases y exámenes de Secundaria: https://jalducin.github.io/platform-STALD/ingles.html?modo=secundaria (también desde «📚 Mis clases» en Secundaria)
 - Crear cuenta de Juegos (para quien no está en las clases; enlace para compartir): https://jalducin.github.io/platform-STALD/juegos.html?registro=1 (también `index.html?juegos=1` o «🆕 Registrarme en Juegos» en la entrada de Juegos)
 - Inglés: https://jalducin.github.io/platform-STALD/ingles.html
 

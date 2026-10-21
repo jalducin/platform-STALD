@@ -66,7 +66,7 @@ const borradorCuenta = p => p.evaluate(async ([api, email, id]) => (await (await
 
   // 3) «← Volver» y reabrir: sigue ahí.
   await p.click('#exam-form [data-action="volver"]');
-  await p.waitForSelector('#sec-examenes', { timeout: 60000 });
+  await p.waitForSelector('#sec-clases', { timeout: 60000 });
   ok('fuera del examen: sin examen-abierto ni confirmación', !(await p.evaluate(() => document.documentElement.classList.contains('examen-abierto'))) && !(await pideConfirmar(p)));
   await abrir(p);
   ok('volver y reabrir: respuestas restauradas', await p.isChecked('input[name="g-h1"][value="0"]') && (await p.inputValue('input[name="g-h2"]')) === 'cinco');

@@ -458,3 +458,65 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 .dg-celda.dg-der .dg-nodo { background: var(--card-2); }
 /* En la diapositiva del Meet: paleta clara de la diapositiva y medidas relativas a ella. */
 .slide .dg { font-size: 1.9cqw; margin: 0; --accent: var(--tone); --accent-bg: var(--tone); --accent-soft: var(--soft); --text: #1c1917; --muted: #57534e; --border: #e7e5e4; --card: #fff; --card-2: #fafaf9; --bg: #fffdf8; }
+
+/* ---------- Clases de Secundaria (openspec: secundaria-mis-clases) ---------- */
+/* Un color por materia: --mat (texto y borde) y --mat-soft (fondo), con contraste AA en claro y oscuro. */
+:root {
+  --mat-ingles: #1d4ed8; --mat-ingles-soft: #dbeafe; --mat-espanol: #c2410c; --mat-espanol-soft: #ffedd5;
+  --mat-matematicas: #6d28d9; --mat-matematicas-soft: #ede9fe; --mat-ciencias: #15803d; --mat-ciencias-soft: #dcfce7;
+  --mat-sociales: #92400e; --mat-sociales-soft: #fef3c7; --mat-tecnologia: #0e7490; --mat-tecnologia-soft: #cffafe;
+  --mat-artes: #be185d; --mat-artes-soft: #fce7f3; --mat-edfisica: #b91c1c; --mat-edfisica-soft: #fee2e2;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --mat-ingles: #93c5fd; --mat-ingles-soft: #1e2a4d; --mat-espanol: #fdba74; --mat-espanol-soft: #3b1d0a;
+    --mat-matematicas: #c4b5fd; --mat-matematicas-soft: #2e1f57; --mat-ciencias: #86efac; --mat-ciencias-soft: #12351f;
+    --mat-sociales: #fcd34d; --mat-sociales-soft: #3a2a08; --mat-tecnologia: #67e8f9; --mat-tecnologia-soft: #0b3640;
+    --mat-artes: #f9a8d4; --mat-artes-soft: #45162f; --mat-edfisica: #fca5a5; --mat-edfisica-soft: #3b1414;
+  }
+}
+:root[data-theme="dark"] {
+  --mat-ingles: #93c5fd; --mat-ingles-soft: #1e2a4d; --mat-espanol: #fdba74; --mat-espanol-soft: #3b1d0a;
+  --mat-matematicas: #c4b5fd; --mat-matematicas-soft: #2e1f57; --mat-ciencias: #86efac; --mat-ciencias-soft: #12351f;
+  --mat-sociales: #fcd34d; --mat-sociales-soft: #3a2a08; --mat-tecnologia: #67e8f9; --mat-tecnologia-soft: #0b3640;
+  --mat-artes: #f9a8d4; --mat-artes-soft: #45162f; --mat-edfisica: #fca5a5; --mat-edfisica-soft: #3b1414;
+}
+.mat-otra { --mat: var(--muted); --mat-soft: var(--card-2); }
+.mat-ingles { --mat: var(--mat-ingles); --mat-soft: var(--mat-ingles-soft); }
+.mat-espanol { --mat: var(--mat-espanol); --mat-soft: var(--mat-espanol-soft); }
+.mat-matematicas { --mat: var(--mat-matematicas); --mat-soft: var(--mat-matematicas-soft); }
+.mat-ciencias { --mat: var(--mat-ciencias); --mat-soft: var(--mat-ciencias-soft); }
+.mat-sociales { --mat: var(--mat-sociales); --mat-soft: var(--mat-sociales-soft); }
+.mat-tecnologia { --mat: var(--mat-tecnologia); --mat-soft: var(--mat-tecnologia-soft); }
+.mat-artes { --mat: var(--mat-artes); --mat-soft: var(--mat-artes-soft); }
+.mat-edfisica { --mat: var(--mat-edfisica); --mat-soft: var(--mat-edfisica-soft); }
+.chip.mat-chip { background: var(--mat-soft); color: var(--mat); border: 1px solid var(--mat); font-weight: 800; }
+.sec-tabs { margin-bottom: 12px; }
+.sec-clase { border-left: 4px solid var(--mat); padding-left: 10px; }
+.sec-clase-info { min-width: 0; }
+.sec-clase .t { overflow-wrap: anywhere; }
+.sec-tema { display: block; margin-top: 4px; }
+.sec-dia h4 .chip, .sec-hor-dia h4 .chip { white-space: nowrap; }
+.sec-dia { padding: 8px 0; border-top: 1px solid var(--border); }
+.sec-dia:first-of-type { border-top: none; }
+.sec-dia h4, .sec-hor-dia h4 { margin: 0 0 4px; font-size: .86rem; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.sec-dia.es-hoy h4, .sec-hor-dia.es-hoy h4 { color: var(--accent); }
+/* Horario: 7 columnas en pantallas anchas; en celular, una lista por día (sin scroll horizontal). */
+.sec-horario { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) {
+  .sec-horario { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .sec-hor-dia { padding: 6px; }
+  .sec-hor-dia h4 { font-size: .78rem; }
+  /* Columnas angostas: se parte con guion (lang="es") y nunca a media palabra sin él. */
+  .sec-hor-clase { padding: 5px 6px; font-size: .74rem; overflow-wrap: normal; hyphens: auto; }
+}
+.sec-hor-dia { min-width: 0; background: var(--card-2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px; }
+.sec-hor-dia.es-hoy { border: 2px solid var(--accent); }
+.sec-hor-clase { display: grid; gap: 2px; margin-top: 6px; padding: 6px 8px; border-radius: 8px; border-left: 4px solid var(--mat); background: var(--mat-soft); color: var(--mat); font-size: .8rem; overflow-wrap: anywhere; }
+.sec-hor-clase small { font-weight: 600; font-size: .7rem; }
+.sec-hor-libre { margin-top: 6px; font-size: .78rem; color: var(--muted); }
+@media (max-width: 759.98px) {
+  .sec-hor-dia { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .sec-hor-dia h4 { flex: 1 0 100%; }
+  .sec-hor-clase, .sec-hor-libre { margin-top: 0; }
+}

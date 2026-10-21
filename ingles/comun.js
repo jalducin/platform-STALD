@@ -6,7 +6,7 @@ const API_BASE = (new URLSearchParams(location.search).get('api') || DEFAULT_API
 const DATA_URL_BASE = API_BASE + '/ingles/data';
 // ?modo=profe → ruta de estudio del profe (solo admin, openspec: ruta-profe).
 const MODO_PROFE = new URLSearchParams(location.search).get('modo') === 'profe';
-// ?modo=secundaria → exámenes de Secundaria (openspec: examen-secundaria).
+// ?modo=secundaria → clases y exámenes de Secundaria (openspec: examen-secundaria, secundaria-mis-clases).
 const MODO_SECUNDARIA = new URLSearchParams(location.search).get('modo') === 'secundaria';
 // Valor según el modo de la página: ruta del profe, Secundaria o Inglés (el normal).
 function segunModo(profe, secundaria, ingles) {
@@ -26,9 +26,9 @@ if (MODO_PROFE) {
 }
 if (MODO_SECUNDARIA) {
   document.body.classList.add('secundaria');
-  document.title = 'Exámenes de Secundaria';
-  document.getElementById('titulo').textContent = '📝 Exámenes de Secundaria';
-  document.getElementById('subtitulo').textContent = 'Exámenes mensuales: tienes dos oportunidades y se queda tu mejor calificación.';
+  document.title = 'Clases de Secundaria';
+  document.getElementById('titulo').textContent = '📚 Clases de Secundaria';
+  document.getElementById('subtitulo').textContent = 'Tus clases de cada día por materia, tu horario de la semana y tus exámenes.';
 }
 const STORAGE_KEY = 'ingles_email';
 // Claves de sesión compartidas con el portal (index.html): solo el correo.

@@ -162,6 +162,7 @@ function meta(it: ConGrupos) {
     ...(it.segundaOportunidad ? { segundaOportunidad: it.segundaOportunidad } : {}),
     ...(it.grupos ? { grupos: it.grupos } : {}),
     ...(it.alumnos ? { alumnos: it.alumnos } : {}),
+    ...(it.materia ? { materia: it.materia } : {}), // Secundaria (openspec: secundaria-mis-clases)
   };
 }
 

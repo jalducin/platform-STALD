@@ -174,6 +174,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     ámbito.
   - `porSecciones` (opcional, `true`): las preguntas salen agrupadas por tema en el orden de `temas`, con un
     encabezado por sección, y se barajan solo dentro de cada sección (cambio `examen-por-secciones`).
+  - `materia` (opcional, texto de 1 a 40 caracteres; cambio `secundaria-mis-clases`): materia de la clase de
+    Secundaria: «Inglés», «Español», «Matemáticas», «Ciencias», «Ciencias Sociales», «Tecnología», «Artes» o
+    «Educación Física». El listado la incluye cuando viene; si falta, la vista la deduce del prefijo del título antes
+    de « · » (sin el emoji). Otro valor es aviso con `--secundaria`; vacío, no texto o largo es error.
   - `temas[]`: con `retroalimentacion` por estado.
   - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }], diagrama? }`.
   - `teoria[].diagrama` (opcional, cambio `teoria-diagramas`): un dibujo sencillo hecho con HTML + CSS, debajo del
@@ -416,10 +420,15 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     mes» trae el botón de cada uno. Se valida con `validar_semana.ts <datos> <lunes> --profe`. El grupo no cambia;
   - resultados en `resultados/<id>/profe.json` (alumno "Profe"), también para los elementos del grupo que resuelve
     antes que ellos; esos archivos se excluyen de todas las vistas de resultados del grupo.
-- `contenido/secundaria/`: exámenes de Secundaria (cambio `examen-secundaria`), mismo formato que `contenido/`:
-  - `semanas/<lunes>.json` y `examenes/<id>.json`;
-  - se ven en `ingles.html?modo=secundaria` (enlace «📝 Exámenes» de `secundaria.html`) y el servidor los atiende
+- `contenido/secundaria/`: clases y exámenes de Secundaria (cambios `examen-secundaria` y `secundaria-mis-clases`),
+  mismo formato que `contenido/`:
+  - `semanas/<lunes>.json`, `actividades/<id>.json` (clases: id `sec-<materia>-<fecha>`, título
+    «<emoji> <Materia> · <tema>», `materia` opcional; 2 por día de lunes a sábado y 3 el domingo) y
+    `examenes/<id>.json`; el día de cada clase es su `fechaLimite`;
+  - se ven en `ingles.html?modo=secundaria` (enlace «📚 Mis clases» de `secundaria.html`) y el servidor los atiende
     en `/secundaria/actividades`;
+  - se validan con `deno run --allow-read server/validar_semana.ts <datos> <lunes> --secundaria`: sin patrón de
+    días, `disponibleDesde` dentro de `<lunes>…fechaLimite` y el examen mensual puede tener ventana;
   - la identidad es el primer nombre de la persona en las filas de Secundaria; su slug es el de `alumnos` y
     `resultados/`;
   - resultados en `resultados/<id>/<slug>.json`, en Postgres igual que Inglés; con `intentos: 2` y sin

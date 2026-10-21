@@ -21,7 +21,7 @@
 | `server/contrasena.ts` | Entrada con contraseña: `POST /auth/preparar`, `/auth/contrasena` y `/auth/restablecer` (cambio `acceso-con-contrasena`) |
 | `server/resumen.ts` | `GET /ingles/resumen`: indicadores y mapa de calor del tablero del profe (cambio `ingles-pro`) |
 | `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
-| `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes>` (código 1 si hay errores) |
+| `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes> [--profe \| --secundaria]` (código 1 si hay errores; 2 si los argumentos no son válidos) |
 
 **Variables:** `NOTION_TOKEN`, `SUPER_ADMIN_EMAIL`, `GITHUB_TOKEN` (token fino, solo Contents del repo
 de datos) y `DATA_REPO`. Sesión: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_KEY` y, opcionales,
@@ -417,6 +417,8 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     `AMBITO_CLASE`). El grupo nunca ve los elementos del profe, ni en su lista ni por id.
   - Validar una semana del profe: `deno run --allow-read server/validar_semana.ts <datos> <lunes> --profe`
     (patrón lun actividad, mié examen, jue actividad, sáb examen).
+  - Validar una semana de Secundaria: `deno run --allow-read server/validar_semana.ts <datos> <lunes> --secundaria`
+    (`contenido/secundaria/`, sin patrón de días; cambio `secundaria-mis-clases`). `meta` deja pasar `materia`.
 
 **Postgres de Inglés** (`server/db.ts`, `server/grupos.ts`, cambio `ingles-grupos`):
   - `createDb({ url, key, prefijo })` es un cliente PostgREST hecho con `fetch`:

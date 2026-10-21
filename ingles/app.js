@@ -199,7 +199,7 @@ function mostrarEntrada(aviso) {
   appEl.style.display = 'none'; navEl.hidden = true; loginEl.style.display = 'block';
   mostrarMaterialPublico(true);
   state.data = null;
-  StaldAuth.pintarEntrada(loginEl, { titulo: MODO_SECUNDARIA ? '📝 Exámenes de Secundaria' : '📗 Clases de Inglés', texto: 'Entra con tu correo y tu contraseña. Si es tu primera vez, usa la que te dio tu profe.', aviso, alEntrar: c => loadFor(c) });
+  StaldAuth.pintarEntrada(loginEl, { titulo: MODO_SECUNDARIA ? '📚 Clases de Secundaria' : '📗 Clases de Inglés', texto: 'Entra con tu correo y tu contraseña. Si es tu primera vez, usa la que te dio tu profe.', aviso, alEntrar: c => loadFor(c) });
 }
 let saliendo = false;
 function sesionVencida(body) {
