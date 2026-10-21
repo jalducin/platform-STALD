@@ -1,0 +1,86 @@
+{
+  "id": "sec-e2e-clase-2026-10-29-b",
+  "tipo": "actividad",
+  "titulo": "⚽ Educación Física · Calentamiento",
+  "nivel": "Secundaria",
+  "disponibleDesde": "2026-10-29",
+  "fechaLimite": "2026-10-29",
+  "intentos": 2,
+  "preguntasPorIntento": 2,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "Calentamiento",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Calentamiento",
+      "texto": "Lee con calma."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "libreta",
+      "texto": "Anota lo importante."
+    }
+  ],
+  "banco": [
+    {
+      "id": "sec-e2e-clase-2026-10-29-b-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 1 de Calentamiento?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-10-29-b-2",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 2 de Calentamiento?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-10-29-b-3",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 3 de Calentamiento?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-10-29-b-4",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 4 de Calentamiento?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    }
+  ]
+}

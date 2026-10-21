@@ -58,6 +58,7 @@ export interface Item {
   alumnos?: string[]; // slugs: solo esas personas lo ven y lo abren (openspec: examen-secundaria)
   porSecciones?: boolean; // preguntas agrupadas por tema en el orden de `temas` (openspec: examen-por-secciones)
   segundaOportunidad?: string; // examen con 2 intentos: el 2.º abre esta fecha (openspec: examen-segunda-oportunidad)
+  materia?: string; // materia de la clase de Secundaria, texto corto (openspec: secundaria-mis-clases)
 }
 
 // El elemento como lo ve un alumno o alumna: con su prórroga, si tiene (no adelanta la apertura).
@@ -536,6 +537,9 @@ export function validateItem(it: Item): string[] {
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.disponibleDesde || "")) errs.push(`${it.id}: disponibleDesde inválida`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.fechaLimite || "")) errs.push(`${it.id}: fechaLimite inválida`);
+  if (it.materia !== undefined && (typeof it.materia !== "string" || !it.materia.trim() || it.materia.length > 40)) {
+    errs.push(`${it.id}: materia debe ser un texto de 1 a 40 caracteres (${JSON.stringify(it.materia)})`);
+  }
   for (const [slug, f] of Object.entries(it.prorrogas || {})) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(f) || f < it.disponibleDesde) errs.push(`${it.id}: prorrogas.${slug} inválida (${f})`);
   }

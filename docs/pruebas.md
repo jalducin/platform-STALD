@@ -101,7 +101,9 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   gastarle las oportunidades a otra en la misma fase. También trae una clase por Meet anterior (`meet-2026-09-27`,
   semana `2026-09-21`, exclusiva de `nadie-e2e`) para la prueba `presentar`; solo la ve el admin. Y la actividad
   `fichas-e2e` (ordenar y emparejar), en la misma semana, con fecha 2026-10-04 y exclusiva de `fernando`, para
-  `ordenar-emparejar`: aparece en su «Para ponerte al día».
+  `ordenar-emparejar`: aparece en su «Para ponerte al día». La semana de Secundaria `2026-10-26` (15 clases
+  `sec-e2e-clase-*`, exclusivas de `valeria`, 2 por día y 3 el domingo, con y sin `materia`) es de
+  `secundaria-clases`, que solo corre con `--hoy 2026-10-27` (con otro día sale `OMIT`).
 - Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
 - Juego en vivo sin Supabase (cambio `juegos-en-vivo`): `lib/vivo-relevo.js` levanta un relevo local (HTTP + SSE) y
   `initVivo(relevo.url, { latencia, perdida, desorden, noConecta })` es el `init` de `abrirPagina`; con la ruta

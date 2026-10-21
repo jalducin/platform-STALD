@@ -1,0 +1,87 @@
+{
+  "id": "sec-e2e-clase-2026-11-01-c",
+  "tipo": "actividad",
+  "titulo": "🎨 Artes · Dibujo",
+  "materia": "Artes",
+  "nivel": "Secundaria",
+  "disponibleDesde": "2026-11-01",
+  "fechaLimite": "2026-11-01",
+  "intentos": 2,
+  "preguntasPorIntento": 2,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "Dibujo",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Dibujo",
+      "texto": "Lee con calma."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "libreta",
+      "texto": "Anota lo importante."
+    }
+  ],
+  "banco": [
+    {
+      "id": "sec-e2e-clase-2026-11-01-c-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 1 de Dibujo?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-11-01-c-2",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 2 de Dibujo?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-11-01-c-3",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 3 de Dibujo?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-11-01-c-4",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 4 de Dibujo?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    }
+  ]
+}

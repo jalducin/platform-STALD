@@ -31,25 +31,26 @@ const texto = async (p, sel) => (await p.textContent(sel)).replace(/\s+/g, ' ');
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
 
-  // Alumna: desde Secundaria → 📝 Exámenes
+  // Alumna: desde Secundaria → 📚 Mis clases (openspec: secundaria-mis-clases)
   const al = await pagina(b, ALUMNA, '/secundaria.html');
   await al.waitForSelector('#examenes-link', { timeout: 60000 });
+  ok('Secundaria: el enlace dice «📚 Mis clases»', (await al.textContent('#examenes-link')).trim() === '📚 Mis clases');
   await al.click('#examenes-link');
-  await al.waitForSelector('#sec-examenes', { timeout: 60000 });
-  ok('Secundaria → Exámenes conserva ?api= y muestra el título', al.url().includes('modo=secundaria') && al.url().includes('api=') && (await al.textContent('#titulo')).includes('Exámenes de Secundaria'));
+  await al.waitForSelector('#sec-clases', { timeout: 60000 });
+  ok('Secundaria → Mis clases conserva ?api= y muestra el título', al.url().includes('modo=secundaria') && al.url().includes('api=') && (await al.textContent('#titulo')).includes('Clases de Secundaria'));
   ok('la alumna ve su examen exclusivo', !!(await al.$('[data-sec-item="sec-e2e"]')));
   ok('sin la barra de secciones de Inglés', await al.$eval('#nav', n => n.hidden));
   await al.click('[data-sec-item="sec-e2e"] [data-action="abrir-item"]');
   const s1 = await resolver(al, 2);
   ok('1.ª oportunidad: 50 % con materias', s1.includes('50') && (await al.textContent('#content')).includes('Historia'), s1);
   await al.screenshot({ path: 'secundaria-resultado.png' });
-  await al.click('[data-action="volver"]'); await al.waitForSelector('#sec-examenes');
+  await al.click('[data-action="volver"]'); await al.waitForSelector('#sec-clases');
   const fila1 = await texto(al, '[data-sec-item="sec-e2e"]');
   ok('lista: 1/2 oportunidades, mejor 50 % y Reintentar', fila1.includes('1/2') && fila1.includes('50%') && fila1.includes('Reintentar'), fila1);
   await al.click('[data-sec-item="sec-e2e"] [data-action="abrir-item"]');
   const s2 = await resolver(al, 4);
   ok('2.ª oportunidad: 100 %', s2.includes('100'), s2);
-  await al.click('[data-action="volver"]'); await al.waitForSelector('#sec-examenes');
+  await al.click('[data-action="volver"]'); await al.waitForSelector('#sec-clases');
   const fila2 = await texto(al, '[data-sec-item="sec-e2e"]');
   ok('se queda la mejor (100 %) y ya no hay 3.ª', fila2.includes('2/2') && fila2.includes('100%') && fila2.includes('Ver resultado'), fila2);
   await al.screenshot({ path: 'secundaria-lista.png' });

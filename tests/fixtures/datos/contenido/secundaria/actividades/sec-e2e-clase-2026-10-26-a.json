@@ -1,0 +1,87 @@
+{
+  "id": "sec-e2e-clase-2026-10-26-a",
+  "tipo": "actividad",
+  "titulo": "🗣️ Inglés · Presente simple",
+  "materia": "Inglés",
+  "nivel": "Secundaria",
+  "disponibleDesde": "2026-10-26",
+  "fechaLimite": "2026-10-26",
+  "intentos": 2,
+  "preguntasPorIntento": 2,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "Presente simple",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Presente simple",
+      "texto": "Lee con calma."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "libreta",
+      "texto": "Anota lo importante."
+    }
+  ],
+  "banco": [
+    {
+      "id": "sec-e2e-clase-2026-10-26-a-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 1 de Presente simple?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-10-26-a-2",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 2 de Presente simple?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-10-26-a-3",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 3 de Presente simple?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-e2e-clase-2026-10-26-a-4",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 4 de Presente simple?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    }
+  ]
+}
