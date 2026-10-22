@@ -5,8 +5,8 @@ Cada grupo de Inglés SHALL tener una bandera `ocultoAdmin` (columna `oculto_adm
 omisión). Solo el admin SHALL poder encenderla o apagarla, con «👁️ Ocultar del panel» / «Mostrar en el panel» en
 «👥 Grupos» (`POST /ingles/grupos/ocultar`). Con la bandera encendida, el grupo y sus alumnos y alumnas SHALL NOT
 aparecer por omisión en ninguna vista del admin de Inglés: tablero y resumen (filas e indicadores), avance, «Últimas
-calificaciones», lista de «Registro» y su contador, selector de grupo, conteo de entregas de la semana y ranking de
-juegos. Un interruptor «Mostrar grupos ocultos (N)» SHALL mostrarlos cuando el admin quiera. La bandera SHALL NOT
+calificaciones», lista de «Registro» y su contador, selector de grupo, conteo de entregas de la semana, guion y
+retroalimentación de la clase por Meet y ranking de juegos. Un interruptor «Mostrar grupos ocultos (N)» SHALL mostrarlos cuando el admin quiera. La bandera SHALL NOT
 cambiar nada para los alumnos y alumnas: siguen entrando, ven sus actividades, horario y Meet, entregan y sus
 resultados se guardan.
 

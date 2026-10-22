@@ -46,6 +46,8 @@ los usa también para el grupo vigente del alumno o alumna (`grupoDe`, `grupoInf
   - `opcionesGrupo` (selector de grupo, alta y mover: un grupo oculto solo sale con el interruptor encendido o si es
     el grupo actual de esa persona);
   - `renderAdminWeek` (conteo «N con intentos»);
+  - `retroAlumnos` y `retroGrupal` de `ingles/presentacion.js` (guion de la clase y diapositiva de retroalimentación
+    del Meet: bloques por alumno o alumna, errores comunes, promedios y entregas);
   - `renderJuegosAdmin` (ranking y su contador). Las tarjetas de partidas multijugador no se filtran: son partidas
     compartidas con otras personas.
   - `cargarResumen` manda `&ocultos=1` cuando el interruptor está encendido.
@@ -58,7 +60,8 @@ los usa también para el grupo vigente del alumno o alumna (`grupoDe`, `grupoInf
 
 - Interruptor «Mostrar grupos ocultos (N)» (casilla) en la barra del selector de grupo, solo si N > 0. Estado en
   `state.mostrarOcultos` (no se guarda: cada carga empieza ocultando). Al apagarlo con un grupo oculto elegido en el
-  selector, el filtro vuelve a «Todos los grupos».
+  selector, el filtro vuelve a «Todos los grupos». Si ya no queda ningún grupo oculto (se mostró el último), el
+  interruptor se apaga solo, para que el siguiente grupo que se oculte desaparezca de inmediato.
 - En «👥 Grupos», cada fila: «👁️ Ocultar del panel» o «Mostrar en el panel» (`data-action="ocultar-grupo"`) y la
   etiqueta «oculto del panel». Sin confirmación: es reversible y no toca datos de alumnos.
 - Cambios de UI mínimos (otro agente rediseña Inglés): sin estilos nuevos; se reutilizan `btn ghost sm`,

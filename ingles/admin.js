@@ -76,7 +76,9 @@ async function ocultarGrupo(b) {
   if (!r.ok) { b.disabled = false; alert('No se pudo cambiar (' + (r.body.error || r.status) + ').'); return; }
   if (r.body.grupo && r.body.grupo.ocultoAdmin && state.grupoFiltro === r.body.grupo.id && !state.mostrarOcultos) state.grupoFiltro = null;
   state.gruposAbierto = true; state.resumen = null;
-  await loadGruposAdmin(); render(state.data); cargarResumen();
+  await loadGruposAdmin();
+  if (!gruposOcultos().length) state.mostrarOcultos = false; // sin grupos ocultos, el interruptor se apaga solo
+  render(state.data); cargarResumen();
 }
 async function moverGrupo(sel) {
   sel.disabled = true;

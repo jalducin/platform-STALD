@@ -1,13 +1,16 @@
 // Inglés · guion de la clase y modo presentación para el Meet (solo admin).
 // Guion de la clase del domingo (solo admin): retroalimentación automática + bloques de la clase.
+// Sin alumnos y alumnas de grupos ocultos del panel (openspec: ingles-ocultar-grupos; ocultoEnPanel en admin.js).
+const enPanel = nombre => typeof ocultoEnPanel !== 'function' || !ocultoEnPanel(nombre);
+const resultadosEnPanel = it => (it.resultados || []).filter(r => enPanel(r.alumno));
 function retroAlumnos() {
   const items = semanaItems(state.act).filter(i => i.tipo !== 'meet');
   const resumen = (state.act && state.act.resumen) || {};
   const diag = ((state.act && state.act.items) || []).find(i => i.id === 'diagnostico-a1');
-  const nombres = [...new Set(((state.data && state.data.rows) || []).map(r => r.alumno).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  const nombres = [...new Set(((state.data && state.data.rows) || []).map(r => r.alumno).filter(Boolean))].filter(enPanel).sort((a, b) => a.localeCompare(b, 'es'));
   // Errores más comunes del grupo en la semana (por enunciado, en el mejor intento).
   const cuenta = new Map();
-  items.forEach(it => (it.resultados || []).forEach(r => ((r.mejor && r.mejor.revision) || []).forEach(x => cuenta.set(x.enunciado, (cuenta.get(x.enunciado) || 0) + 1))));
+  items.forEach(it => resultadosEnPanel(it).forEach(r => ((r.mejor && r.mejor.revision) || []).forEach(x => cuenta.set(x.enunciado, (cuenta.get(x.enunciado) || 0) + 1))));
   const comunes = [...cuenta].sort((a, b) => b[1] - a[1]).slice(0, 5);
   let html = '<div class="exam-card"><h3>👥 Errores más comunes del grupo (esta semana)</h3>' +
     (comunes.length ? '<ul class="teo-list">' + comunes.map(([e, n]) => '<li>' + escapeHtml(e) + ' <span class="pill wait">' + n + '</span></li>').join('') + '</ul>' : '<div class="s">Aún no hay intentos esta semana.</div>') + '</div>';
@@ -73,10 +76,10 @@ const TONOS = { portada: 'indigo', agenda: 'indigo', retro: 'amber', teoria: 'bl
 // Retroalimentación grupal, sin nombres: promedio del mejor intento, entregas, fortalezas y errores comunes.
 function retroGrupal() {
   const items = semanaItems(state.act).filter(i => i.tipo !== 'meet');
-  const total = new Set(((state.data && state.data.rows) || []).map(r => r.alumno).filter(Boolean)).size || 5;
+  const total = new Set(((state.data && state.data.rows) || []).map(r => r.alumno).filter(Boolean).filter(enPanel)).size || 5;
   const fuertes = new Map(), errores = new Map(), debiles = new Map();
   const stats = items.map(it => {
-    const rs = (it.resultados || []).filter(r => r.mejor);
+    const rs = resultadosEnPanel(it).filter(r => r.mejor);
     rs.forEach(r => {
       (r.mejor.fortalezas || []).forEach(f => fuertes.set(f, (fuertes.get(f) || 0) + 1));
       (r.mejor.debilidades || []).forEach(f => debiles.set(f, (debiles.get(f) || 0) + 2));

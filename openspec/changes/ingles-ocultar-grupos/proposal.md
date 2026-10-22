@@ -17,11 +17,13 @@ de quien no tiene inscripción. Hace falta una bandera por grupo que **solo** af
     «sin entregas»). Con `?ocultos=1`, o si se pide `?grupo=<id>` de un grupo oculto, los incluye. La respuesta trae
     `ocultos` (cuántos alumnos y alumnas quedaron fuera).
   - Editar un grupo (`POST /ingles/grupos`) no toca la bandera.
-- **Vista del admin (`ingles/admin.js`, `ingles/tablero.js`, `ingles/comun.js`, `ingles/app.js`, `ingles.html`):**
+- **Vista del admin (`ingles/admin.js`, `ingles/tablero.js`, `ingles/comun.js`, `ingles/presentacion.js`,
+  `ingles/app.js`, `ingles.html`):**
   - Interruptor «Mostrar grupos ocultos (N)» en la barra del selector de grupo (solo si hay grupos ocultos).
   - Con el interruptor apagado (por omisión), los alumnos y alumnas de grupos ocultos no aparecen en: tablero y
     resumen (mapa de calor, indicadores), avance («Alumnos»), «Últimas calificaciones», lista de «Registro» y su
-    contador, el selector de grupo, el conteo «con intentos» de «Esta semana» ni el ranking de «Juegos de la semana».
+    contador, el selector de grupo, el conteo «con intentos» de «Esta semana», el guion y la retroalimentación del
+    Meet («🎬 Presentar» / «📋 Guion») ni el ranking de «Juegos de la semana».
   - En «👥 Grupos», cada grupo tiene «👁️ Ocultar del panel» o «Mostrar en el panel» y la etiqueta «oculto del panel».
   - Cambios mínimos y localizados (otro agente rediseña la UI de Inglés): filtro, interruptor y botón.
 - **Alumnos y alumnas: sin cambio.** `/ingles/data`, `/ingles/actividades` (calendario, horario, Meet del grupo,

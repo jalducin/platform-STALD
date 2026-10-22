@@ -25,6 +25,11 @@
   «Mostrar en el panel», filtro en Registro, selector y ranking
 - [x] 3.2 `ingles/tablero.js` (names y `ocultos=1` en el resumen), `ingles/comun.js` (conteo de «Esta semana»),
   `ingles/app.js` (eventos); `?v=` en `ingles.html`
+- [x] 3.3 `ingles/presentacion.js`: guion y retroalimentación del Meet sin grupos ocultos; el interruptor se apaga
+  solo cuando ya no queda ningún grupo oculto (hallazgos de `revisor-solo-lectura`, diseño §3 y §4)
+- [x] 3.4 E2E `ocultar-grupos`: conteo «con intentos» de «Esta semana», guion del Meet, selector que vuelve a «Todos
+  los grupos» al apagar el interruptor, interruptor apagado tras mostrar el último grupo, y ranking comparado con
+  `/juegos/admin/resumen`
 
 ## 4. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
