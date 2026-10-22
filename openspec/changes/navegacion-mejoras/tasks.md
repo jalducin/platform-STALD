@@ -32,7 +32,7 @@
   `navegacion-dispositivos` revisa la barra a 360 px (sin tapar, 44 px, «Más», atrás) y las 9 pestañas del profe en
   una fila a 1100 px
 
-## 4. PR 4 · Pruebas: fixture propio de «🌍 Mundos» y Dibuja estable
+## 4. PR 4 · Pruebas: plan de ejemplo con los 9 mundos y Dibuja estable
 
 - [x] 4.1 `tests/fixtures/datos/contenido/profe/plan.json`: plan de ejemplo de 8 semanas con clases en los 9 mundos
   (las 3 semanas publicadas sin cambios); `ingles-diseno-profe`, `ruta-profe` y `profe-diseno` en verde con él
