@@ -176,6 +176,15 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   `e2e-karts-vivo` usa 8 contextos (el cupo de la sala); para medir fps abre un solo navegador, las otras 7 personas
   entran por la API y el relevo fabrica sus karts, porque 8 navegadores dibujando en la misma máquina contaminan la
   medición (15–50 fps según la carga).
+- Sensor de Karts (cambio `karts-sensor-android`): Chromium 151+ ya trae `DeviceOrientationEvent.requestPermission`
+  (como iPhone) y el *headless shell* de Playwright deja los sensores en «prompt» (resuelve `'prompt'`, sin cuadro que
+  contestar). `e2e-karts` concede `accelerometer` y `gyroscope` en sus contextos táctiles (como Chrome real, que los
+  permite por omisión) y simula cada caso del permiso (nativo, `granted`, ausente, `denied`, rechazo y sin lecturas).
+  El caso «nativo sin conceder» espera lo que resuelva el navegador (`'prompt'` en el headless shell, `'granted'` en
+  Chrome completo). `probarSensorEnSala` arranca una sala con el sensor elegido y un `requestPermission` que rechaza
+  hasta que hay un toque dentro del juego: no usa `navigator.userActivation` porque Chromium hereda al iframe la
+  activación del clic en «Empezar». Las lecturas son eventos sintéticos (llegan aunque no haya permiso). Solo esa
+  parte: `KARTS_SOLO=sensor`.
 - Con el verificador falso local, cualquier contraseña no vacía abre la sesión; «clase» o «sensei» cuentan como la
   inicial y piden cambiarla (cambio `acceso-con-contrasena`).
 - Solo correos `@example.com`. El usuario admin de prueba es `admin@example.com`. Nada de datos reales.

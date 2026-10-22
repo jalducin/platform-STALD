@@ -218,8 +218,10 @@ Cada página debe manejar y mostrar de forma explícita:
       events* quedan para mouse y pluma. Nunca soltar un botón por `lostpointercapture` ni por `blur` (el `blur` solo
       suelta el teclado). Los mandos se ven con *touch events* o `(any-pointer: coarse)` y abajo de 700 px;
     - controles: 🕹️ Joystick (por omisión: flotante, zona muerta 0.15, abajo frena), 📱 Sensor
-      (`DeviceOrientationEvent`: `gamma` en vertical, `±beta` en horizontal; centro al arrancar y con 🎯; permiso de
-      iOS con el toque en «Activar sensor»; sin permiso o sin lecturas en 2 s regresa al joystick con aviso) y
+      (`DeviceOrientationEvent`: `gamma` en vertical, `±beta` en horizontal; centro al arrancar y con 🎯; si existe
+      `DeviceOrientationEvent.requestPermission` —iPhone y Chrome 151+ de Android y escritorio— se llama con el toque
+      en «Activar sensor» y solo `'granted'` lo activa; sin él, escucha `deviceorientation` directo; sin permiso o sin
+      lecturas en 2 s regresa a los botones con aviso; cambio `karts-sensor-android`) y
       🔘 Botones (◀ ▶). DERRAPE, 🎁 y FRENO a la derecha. Preferencia en `localStorage.karts_control` y
       `karts_sensibilidad`. El iframe de Arcade lleva `allow="autoplay; accelerometer; gyroscope"`;
     - giro analógico acotado a [−1, 1]; el derrape lo cuantiza (umbral 0.3) para que las reglas no cambien;
@@ -394,8 +396,9 @@ Cada página debe manejar y mostrar de forma explícita:
       `data-p="kcontrol"`/`"kacel"`) y escribe en texto plano `localStorage.karts_control` y `karts_acelerar` (las
       claves del modo individual; no va al servidor). Al elegir 📱 Sensor pide `DeviceOrientationEvent.requestPermission`
       dentro del toque (iPhone). El iframe relee las claves en cada `inicio` (`releerControl`); en la carrera de sala el
-      botón ⚙️ (`#b-control`, oculto a quien especta) abre `#panel-control` sin pausar; si el sensor no se activa sin
-      toque, ese panel ofrece «📱 Activar sensor»;
+      botón ⚙️ (`#b-control`, oculto a quien especta) abre `#panel-control` sin pausar; en sala el sensor solo lo
+      intenta `sensorEnSala` (silencioso; `iniciarCarrera` no lo activa con `op.sala`) y, si no se activa sin toque,
+      conserva el sensor elegido y ese panel ofrece «📱 Activar sensor» (cambio `karts-sensor-android`);
     - **🏆 Ceremonia de premiación** (mismo cambio): `juegos/karts-ceremonia.js` (`window.KartsCeremonia`, probada en
       `server/karts_ceremonia_test.ts`). Podio de 3 escalones con foco y confeti; suben 3.º, 2.º y 1.º (personaje con
       `Personajes.retrato(id, 'gana')`, kart SVG con sus colores, nombre y puntos), revelación, redoble y victoria de

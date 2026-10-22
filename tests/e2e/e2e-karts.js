@@ -6,7 +6,8 @@
 // fantasma: podio por tiempo sin tocar el progreso.
 // Controles en celular con TOQUES REALES (CDP Input.dispatchTouchEvent, hasTouch + isMobile): joystick que gira
 // proporcional, joystick + DERRAPE a la vez (multitáctil → turbo morado), botones ◀ ▶, preferencia guardada, sensor
-// con eventos deviceorientation, permiso negado y sin lecturas → joystick. Minimapa con todos los corredores (y los
+// con eventos deviceorientation, permiso negado y sin lecturas → joystick; permiso del sensor con requestPermission
+// granted, ausente (Android con Chrome < 151), denied y rechazado (karts-sensor-android). Minimapa con todos los corredores (y los
 // fantasmas en sala) sin encimarse con los mandos, mandos completos a 360×640, 390×844 y 844×390.
 // Capturas en vertical, horizontal y escritorio. Usa ?arcadePrueba=1.
 // Mando clásico (openspec: karts-mando): «🎮 Mando clásico» elegido y recordado, cruceta ◀ con toque real, A acelera
@@ -42,7 +43,10 @@ const API = process.env.API;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const EMAIL = 'angel@example.com';
-const TACTIL = { hasTouch: true, isMobile: true };
+// karts-sensor-android: Chromium 151+ trae DeviceOrientationEvent.requestPermission y el headless shell de Playwright
+// deja los sensores en «prompt» (sin cuadro que contestar, resuelve 'prompt'). Se conceden como en Chrome real, que
+// los permite por omisión; así el sensor nativo se comporta como en un Android con Chrome actual.
+const TACTIL = { hasTouch: true, isMobile: true, permissions: ['accelerometer', 'gyroscope'] };
 const progreso = async () => (await fetch(API + '/juegos/progreso/karts?email=' + encodeURIComponent(EMAIL))).json();
 const abrir = (b, viewport, contexto, init) => abrirPagina(b, { email: EMAIL, viejo: true, viewport, contexto, init, out, ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
 const marcoDe = async (p, raiz = '') => (await p.waitForSelector(raiz + ' #arcade-frame', { timeout: 30000 })).contentFrame();
@@ -1142,6 +1146,115 @@ const COPAS_PUNTOS = [
 ];
 async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probarPuntosCopa(b, c, c.deVerdad); }
 
+// ---- Permiso del sensor en cada navegador (openspec: karts-sensor-android) ----
+// Chrome 151+ (escritorio y Android) ya trae DeviceOrientationEvent.requestPermission, como iPhone; el Chromium de
+// Playwright también, así que el camino «sin requestPermission» (Android con Chrome < 151, Firefox) se simula
+// borrándolo. En cada caso el juego debe quedar con un control usable: sensor activo o botones con aviso.
+const sensorSimulado = [modo => {
+  const D = window.DeviceOrientationEvent;
+  window.__permiso = { llamadas: 0, conGesto: null, nativo: !!D && typeof D.requestPermission === 'function' };
+  if (D && modo.permiso === 'ausente') {
+    try { delete D.requestPermission; } catch (e) { /* no configurable */ }
+    if (typeof D.requestPermission === 'function') Object.defineProperty(D, 'requestPermission', { value: undefined, configurable: true });
+  } else if (D && (modo.permiso !== 'nativo' || window.__permiso.nativo)) {
+    const nativo = modo.permiso === 'nativo' ? D.requestPermission.bind(D) : null;
+    D.requestPermission = () => {
+      window.__permiso.llamadas++;
+      window.__permiso.conGesto = navigator.userActivation?.isActive === true;
+      if (nativo) return nativo().then(r => { window.__permiso.resultado = r; return r; }); // el de Chromium, contado
+      if (modo.permiso === 'error') return Promise.reject(new DOMException('Sin gesto', 'NotAllowedError'));
+      return Promise.resolve(modo.permiso);
+    };
+  }
+  if (modo.lecturas && location.pathname.endsWith('karts.html')) {
+    setInterval(() => dispatchEvent(new DeviceOrientationEvent('deviceorientation', { alpha: 0, beta: 8, gamma: 0 })), 40);
+  }
+}];
+async function probarSensorPermiso(b) {
+  const casos = [
+    { nombre: 'requestPermission nativo con sensores permitidos (Chrome 151+)', permiso: 'nativo', lecturas: true, activo: true },
+    // Sin conceder sensores, el headless shell resuelve 'prompt' (no hay cuadro) y Chrome completo 'granted' (Allow
+    // por omisión): se espera lo que diga el navegador, siempre con un control usable.
+    { nombre: 'requestPermission nativo sin conceder sensores', permiso: 'nativo', lecturas: true, activo: null, sinConceder: true },
+    { nombre: 'requestPermission → granted (iPhone)', permiso: 'granted', lecturas: true, activo: true },
+    { nombre: 'sin requestPermission (Android con Chrome < 151)', permiso: 'ausente', lecturas: true, activo: true },
+    { nombre: 'requestPermission → denied', permiso: 'denied', lecturas: true, activo: false },
+    { nombre: 'requestPermission rechaza (NotAllowedError)', permiso: 'error', lecturas: true, activo: false },
+    { nombre: 'sin requestPermission y sin lecturas', permiso: 'ausente', lecturas: false, activo: false },
+  ];
+  for (const c of casos) {
+    const contexto = c.sinConceder ? { hasTouch: true, isMobile: true } : TACTIL;
+    const q = await abrir(b, { width: 390, height: 844 }, contexto, [sensorSimulado[0], { permiso: c.permiso, lecturas: c.lecturas }]);
+    await abrirJuego(q, 'karts', { tap: true });
+    const f = await marcoDe(q);
+    await f.waitForSelector('#ov-menu:not(.hide)', { timeout: 30000 });
+    await f.tap('[data-control="sensor"]'); await f.tap('#b-activar-sensor');
+    await f.waitForFunction(() => {
+      const s = window.__karts.estado();
+      return s.sensorActivo || s.control === 'botones';
+    }, null, { timeout: 5000 }).catch(() => {});
+    const e = await estado(f);
+    const p = await f.evaluate(() => window.__permiso);
+    const txt = await f.textContent('#ctl-estado');
+    const activo = c.activo ?? (p.nativo ? p.resultado === 'granted' : true); // Chromium < 151: escucha directo
+    // Sin requestPermission no se llama; con él (simulado o el nativo envuelto) se llama una vez, dentro del toque.
+    const sinFuncion = c.permiso === 'ausente' || (c.permiso === 'nativo' && !p.nativo); // Chromium < 151: no hay nativo
+    const pidio = sinFuncion ? p.llamadas === 0 : p.llamadas === 1 && p.conGesto === true;
+    const usable = activo ? e.control === 'sensor' && e.sensorActivo && /Sensor listo/.test(txt)
+      : e.control === 'botones' && !e.sensorActivo && /No se pudo usar el sensor/.test(txt);
+    ok('sensor: ' + c.nombre + (activo ? ' → sensor activo' : ' → botones con aviso'), usable && pidio, JSON.stringify({ control: e.control, activo: e.sensorActivo, permiso: p }));
+    if (activo) {
+      await correrRapida(f, 'hielo'); await sleep(300);
+      const s = await estado(f);
+      ok('sensor: ' + c.nombre + ' → la carrera arranca con el sensor activo', s.modo === 'carrera' && s.sensorActivo);
+    }
+    await q.context().close();
+  }
+  await probarSensorEnSala(b);
+}
+// Sala (sin toque: el inicio llega por postMessage) con el sensor elegido y Chrome en «Preguntar» (o iPhone sin
+// permiso): requestPermission sin gesto rechaza con NotAllowedError. El control NO debe cambiar a botones en silencio:
+// el panel ⚙️ ofrece «📱 Activar sensor» y con ese toque se activa.
+const sensorPreguntar = [() => {
+  localStorage.setItem('karts_control', 'sensor');
+  const D = window.DeviceOrientationEvent;
+  if (!D) return;
+  // Gesto = un toque dentro del propio juego. (Chromium hereda al iframe la activación del clic en «Empezar» del
+  // anfitrión; aquí se simula a quien no tocó nada: la sala la arrancó otra persona.)
+  window.__permiso = { sinGesto: 0, conGesto: 0 };
+  let tocado = false;
+  addEventListener('touchstart', () => { tocado = true; }, { capture: true });
+  D.requestPermission = () => {
+    if (!tocado) { window.__permiso.sinGesto++; return Promise.reject(new DOMException('Sin gesto', 'NotAllowedError')); }
+    window.__permiso.conGesto++; return Promise.resolve('granted');
+  };
+  if (location.pathname.endsWith('karts.html')) setInterval(() => dispatchEvent(new DeviceOrientationEvent('deviceorientation', { alpha: 0, beta: 8, gamma: 0 })), 40);
+}];
+async function probarSensorEnSala(b) {
+  const q = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, viewport: { width: 390, height: 844 }, contexto: TACTIL, init: sensorPreguntar, out, ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
+  await q.click('[data-tab="partidas"]'); await q.waitForSelector('#f-crear');
+  await q.selectOption('#p-juego', 'karts'); await q.selectOption('#p-mapa', 'hielo');
+  await q.click('#f-crear button[type=submit]'); await q.waitForSelector('[data-p="empezar"]', { timeout: 30000 });
+  await q.click('[data-p="empezar"]');
+  const f = await marcoDe(q, '#p-body');
+  await f.waitForFunction(() => window.__karts && window.__karts.estado().sala && window.__karts.estado().modo === 'carrera', null, { timeout: 30000 });
+  await f.waitForFunction(() => window.__karts.panelControl(), null, { timeout: 5000 }).catch(() => {});
+  await sleep(2500); // más que la espera de lecturas (2 s): si fuera a cambiar a botones, ya lo habría hecho
+  const e1 = await estado(f);
+  const p1 = await f.evaluate(() => window.__permiso);
+  const visible = await f.isVisible('#b-sensor-panel');
+  ok('sensor en sala sin toque (permiso «Preguntar»): sigue el sensor elegido, el panel ⚙️ ofrece «📱 Activar sensor»',
+    p1.sinGesto >= 1 && p1.conGesto === 0 && e1.control === 'sensor' && !e1.sensorActivo && await f.evaluate(() => window.__karts.panelControl()) && visible && await f.evaluate(() => localStorage.getItem('karts_control')) === 'sensor',
+    JSON.stringify({ control: e1.control, activo: e1.sensorActivo, boton: visible, permiso: p1 }));
+  await q.screenshot({ path: 'karts-390-sensor-sala-preguntar.png' });
+  if (visible) await f.tap('#b-sensor-panel');
+  await f.waitForFunction(() => window.__karts.estado().sensorActivo, null, { timeout: 5000 }).catch(() => {});
+  const e2 = await estado(f);
+  const p2 = await f.evaluate(() => window.__permiso);
+  ok('sensor en sala: «📱 Activar sensor» pide el permiso en el toque y el sensor queda activo', e2.control === 'sensor' && e2.sensorActivo && p2.conGesto === 1, JSON.stringify({ control: e2.control, activo: e2.sensorActivo, permiso: p2 }));
+  await q.context().close();
+}
+
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   if (process.env.KARTS_SOLO === 'puntos') { // karts-puntos-copas: solo esta parte (para iterar)
@@ -1171,6 +1284,11 @@ async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probar
   }
   if (process.env.KARTS_SOLO === 'ceremonia') { // karts-ceremonia: solo esta parte (para iterar)
     await probarCeremonia(b);
+    await b.close(); console.log(out.join('\n'));
+    process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
+  }
+  if (process.env.KARTS_SOLO === 'sensor') { // karts-sensor-android: solo esta parte (para iterar)
+    await probarSensorPermiso(b);
     await b.close(); console.log(out.join('\n'));
     process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
   }
@@ -1389,6 +1507,7 @@ async function probarPuntosCopas(b) { for (const c of COPAS_PUNTOS) await probar
   const trasDe2 = await estado(fsn);
   ok('sensor: sin lecturas espera 2 s y regresa a los botones', antesDe2.control === 'sensor' && trasDe2.control === 'botones' && /No se pudo usar el sensor/.test(await fsn.textContent('#ctl-estado')), JSON.stringify({ antes: antesDe2.control, despues: trasDe2.control }));
   await sin.context().close();
+  await probarSensorPermiso(b); // karts-sensor-android: granted, ausente, denied y rechazo
 
   // ---- Horizontal 844×390 y celular angosto 360×640 ----
   const hor = await abrir(b, { width: 844, height: 390 }, TACTIL);
