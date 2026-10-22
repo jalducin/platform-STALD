@@ -2,6 +2,66 @@
 // Resumen de juegos de la semana (solo admin): jugadores y partidas con su podio.
 // ---------- Alta de alumnos y alumnas (admin, openspec: alta-alumnos) ----------
 // ---------- Grupos de clase (openspec: ingles-grupos) ----------
+// ---------- Panel del profe en una petición (openspec: panel-profe-peticiones) ----------
+// Al abrir, /ingles/data?incluir=panel trae grupos, alumnos y alumnas (sin correos), resumen y «Por revisar». Si una
+// parte falla, llega con `error` y se avisa en su sección; «🔄 Reintentar» y ocultar/mostrar un grupo piden
+// /ingles/panel. Registro (con correos), Juegos y la bandeja de Entregas se piden al abrir su pestaña.
+const filtroPanel = () => (state.grupoFiltro ? '&grupo=' + encodeURIComponent(state.grupoFiltro) : '') + (state.mostrarOcultos ? '&ocultos=1' : '');
+// Misma clave que cargarResumen (tablero.js): el resumen del panel solo se usa si se pidió con el filtro vigente.
+const claveFiltro = () => (state.grupoFiltro || '') + (state.mostrarOcultos ? '|ocultos' : '');
+// `clave`: el filtro con el que se pidió el panel. Si el profe cambió de grupo o de interruptor mientras llegaba, el
+// resumen se deja vacío (quien llama pide /ingles/resumen con el filtro nuevo) y no se toca la carga en curso.
+function aplicarPanel(p, clave) {
+  const g = p.grupos, a = p.alumnos, r = p.resumen, e = p.entregas;
+  state.grupos = g && !g.error ? g : null; // sin_base (sin Postgres): sin grupos, como siempre
+  state.alumnosAdmin = Array.isArray(a) ? a : { error: (a && a.error) || 'no_disponible' };
+  if (clave === claveFiltro()) state.resumen = r && !r.error ? r : { error: (r && r.error) || 'no_disponible', ...(r && r.detalle ? { detalle: r.detalle } : {}) };
+  else state.resumen = null;
+  state.panelEntregas = e && !e.error ? e : null;
+  state.panelFallas = (p.fallas || []).filter(n => n !== 'resumen'); // el resumen tiene su propio aviso con «Reintentar»
+}
+// Al abrir el panel: con `panel`, todo listo; sin él (servidor de una versión anterior), el camino de antes.
+// `clave`: el filtro con el que se pidió /ingles/data?incluir=panel.
+async function prepararPanelAdmin(panel, clave) {
+  // Las cargas perezosas en vuelo (de antes de una alta, baja, quitar o mover) se descartan al llegar (generación).
+  state.genPanel = (state.genPanel || 0) + 1;
+  state.juegos = undefined; state.cargandoJuegos = false;
+  state.registroAdmin = null; state.cargandoRegistro = null;
+  state.panelEntregas = null; state.panelFallas = [];
+  if (panel) { aplicarPanel(panel, clave); return; }
+  // Servidor sin `panel`: grupos, registro y bandeja (para «Por revisar» y el contador), como antes.
+  await Promise.all([loadGruposAdmin(), cargarRegistroAdmin(), typeof cargarBandejaSec === 'function' ? cargarBandejaSec() : null]);
+  state.alumnosAdmin = state.registroAdmin;
+}
+// GET /ingles/panel con el filtro vigente. Devuelve false si no llegó (el aviso lo dice).
+async function refrescarPanel() {
+  const clave = claveFiltro();
+  let r;
+  try { r = await fetchJson(API_BASE + '/ingles/panel?email=' + encodeURIComponent(state.email) + filtroPanel()); } catch (e) { r = { ok: false, body: { error: e.message } }; }
+  if (!r.ok) { state.panelFallas = ['panel']; return false; }
+  aplicarPanel(r.body, clave);
+  return true;
+}
+const TEXTO_FALLA_PANEL = { grupos: 'los grupos', alumnos: 'la lista de alumnos y alumnas', entregas: 'las entregas por revisar', panel: 'el panel' };
+// Aviso con «🔄 Reintentar»: en el encabezado del panel, todas las partes que fallaron (`#panel-avisos`, el único con
+// role=alert); en una sección (`solo`), solo la suya, sin id ni anuncio repetido.
+function avisosPanel(solo) {
+  const f = (state.panelFallas || []).filter(n => !solo || n === solo || n === 'panel');
+  if (!f.length) return '';
+  const cab = solo ? '<div class="card error" data-aviso-panel="' + escapeHtml(solo) + '" style="margin-top:10px">' : '<div class="card error" id="panel-avisos" role="alert" style="margin-top:10px">';
+  return cab + '⚠️ No se pudo cargar ' + f.map(n => escapeHtml(TEXTO_FALLA_PANEL[n] || n)).join(', ') + '. ' +
+    '<button type="button" class="btn ghost" data-action="reintentar-panel">🔄 Reintentar</button></div>';
+}
+const fallaPanel = n => (state.panelFallas || []).includes(n);
+contentEl.addEventListener('click', async e => {
+  const b = e.target.closest('[data-action="reintentar-panel"]');
+  if (!b) return;
+  e.preventDefault(); b.disabled = true;
+  await refrescarPanel();
+  render(state.data);
+  if (!state.resumen) cargarResumen();
+});
+
 const slugAlumno = n => (n || '').normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9]/).filter(Boolean).join('-') || 'sin-nombre';
 async function loadGruposAdmin() {
   try {
@@ -77,10 +137,12 @@ async function ocultarGrupo(b) {
   const r = await fetchJson(API_BASE + '/ingles/grupos/ocultar?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ grupo: b.dataset.id, oculto: b.dataset.oculto === '1' }) });
   if (!r.ok) { b.disabled = false; alert('No se pudo cambiar (' + (r.body.error || r.status) + ').'); return; }
   if (r.body.grupo && r.body.grupo.ocultoAdmin && state.grupoFiltro === r.body.grupo.id && !state.mostrarOcultos) state.grupoFiltro = null;
-  state.gruposAbierto = true; state.resumen = null;
-  await loadGruposAdmin();
+  // Grupos, alumnos y alumnas, resumen y «Por revisar» en una sola petición (openspec: panel-profe-peticiones).
+  state.gruposAbierto = true;
+  await refrescarPanel();
   if (!gruposOcultos().length) state.mostrarOcultos = false; // sin grupos ocultos, el interruptor se apaga solo
-  render(state.data); cargarResumen();
+  render(state.data);
+  if (!state.resumen) cargarResumen(); // solo si el filtro cambió mientras llegaba el panel
 }
 async function moverGrupo(sel) {
   sel.disabled = true;
@@ -96,18 +158,36 @@ function renderMiGrupo(act) {
     (g.horario ? '<span>🗓️ ' + escapeHtml(g.horario) + '</span>' : '') + (g.meet_url ? '<a class="btn" style="margin-left:auto" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Unirme a la clase</a>' : '') + '</div>';
 }
 
-async function loadAlumnosAdmin() {
-  try {
-    const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email));
-    state.alumnosAdmin = r.ok ? r.body.alumnos : { error: r.body.error || r.status };
-  } catch (e) { state.alumnosAdmin = { error: e.message }; }
+// Lista con correos para «➕ Registro» (GET /ingles/alumnos): se pide al abrir esa pestaña y solo repinta la lista,
+// no el formulario (openspec: panel-profe-peticiones). `state.alumnosAdmin` (sin correos, del panel) da los conteos.
+function cargarRegistroAdmin() {
+  if (state.cargandoRegistro) return state.cargandoRegistro;
+  const gen = state.genPanel;
+  state.cargandoRegistro = (async () => {
+    let lista;
+    try {
+      const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email));
+      lista = r.ok ? r.body.alumnos : { error: r.body.error || r.status };
+    } catch (e) { lista = { error: e.message }; }
+    if (gen !== state.genPanel) return; // llegó después de recargar el panel: la descarta
+    state.registroAdmin = lista;
+    state.cargandoRegistro = null;
+    pintarRegistroLista();
+  })();
+  return state.cargandoRegistro;
+}
+function pintarRegistroLista() {
+  const el = document.getElementById('registro-lista');
+  if (el) el.innerHTML = registroListaHtml();
 }
 
-function renderAlumnosAdmin() {
-  const a = state.alumnosAdmin;
-  const todos = Array.isArray(a) ? a : [];
+// Tarjetas de «➕ Registro» (con correos): esqueleto hasta que llega GET /ingles/alumnos.
+function registroListaHtml() {
+  const a = state.registroAdmin;
+  if (!a) return esqueleto();
+  if (a.error) return '<div class="reg-error" role="alert">No se pudo cargar la lista (' + escapeHtml(a.error) + '). <button type="button" class="btn ghost" data-action="reintentar-registro">🔄 Reintentar</button></div>';
   // Baja de Inglés reversible (openspec: ingles-baja-alumno): las bajas van aparte, con «Reactivar».
-  const lista = todos.filter(x => !x.baja && !ocultoEnPanel(x.nombre)), bajas = todos.filter(x => x.baja);
+  const lista = a.filter(x => !x.baja && !ocultoEnPanel(x.nombre)), bajas = a.filter(x => x.baja);
   // Cada persona es una tarjeta (openspec: ingles-diseno-profe): avatar con el color de su grupo, datos y acciones.
   const tarjeta = (x, extra, cuerpo, acciones) => {
     const g = grupoDeNombre(x.nombre);
@@ -117,22 +197,32 @@ function renderAlumnosAdmin() {
       '<div class="reg-acciones">' + acciones + '</div></div>';
   };
   const datos = x => ' data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '"';
-  return '<details class="section" id="alumnos-admin"' + (state.altaAbierta === false ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Alumnos y alumnas</span><span class="count">' + lista.length + '</span></div></summary><div class="scroll">' +
-    '<form id="alta-alumno" class="reg-form" autocomplete="off">' +
-      '<p class="reg-intro">➕ Nuevo alumno o alumna: entra con su correo a Inglés, al portal y a Juegos. Empieza su curso el lunes siguiente, sin actividades en atraso.</p>' +
-      '<label class="campo-et" for="alta-nombre">Nombre<input id="alta-nombre" type="text" maxlength="40" placeholder="Como aparecerá en sus calificaciones" required></label>' +
-      '<label class="campo-et" for="alta-correo">Correo<input id="alta-correo" type="email" maxlength="80" placeholder="correo@ejemplo.com" required></label>' +
-      (state.grupos ? '<label class="campo-et" for="alta-grupo">Grupo<select id="alta-grupo">' + opcionesGrupo(state.grupoFiltro || (gruposActivos()[0] || {}).id) + '</select></label>' : '') +
-      '<button class="btn reg-enviar" type="submit">➕ Dar de alta</button><div id="alta-msg" role="status"></div></form>' +
-    (a && a.error ? '<div class="reg-error" role="alert">No se pudo cargar la lista (' + escapeHtml(a.error) + ').</div>' : '') +
-    '<div class="reg-lista">' + lista.map(x => tarjeta(x, '',
+  return '<div class="reg-lista">' + lista.map(x => tarjeta(x, '',
       escapeHtml(x.emails.join(', ')) + ' · alta en la página' + (x.inicio ? ' · 📅 inicia el lunes ' + escapeHtml(fechaCorta(x.inicio)) : ''),
       (state.grupos ? '<select class="mover-grupo" data-mover="1" data-alumno="' + escapeHtml(x.nombre) + '" aria-label="Grupo de ' + escapeHtml(x.nombre) + '">' + opcionesGrupo((grupoDeNombre(x.nombre) || {}).id) + '</select>' : '') +
       '<button class="btn ghost" data-action="baja-ingles"' + datos(x) + '>🚪 Baja de Inglés</button>' +
       '<button class="btn ghost" data-action="quitar-alumno"' + datos(x) + '>Quitar</button>')).join('') + '</div>' +
     (bajas.length ? '<div id="bajas-ingles"><p class="reg-subt">🗂️ De baja de Inglés (' + bajas.length + ') · sus resultados se conservan como historial</p><div class="reg-lista">' +
       bajas.map(x => tarjeta(x, ' de-baja', escapeHtml(x.emails.join(', ')) + ' · de baja desde el ' + escapeHtml(fechaCorta(x.baja)),
-        '<button class="btn ghost" data-action="reactivar-ingles"' + datos(x) + '>↩️ Reactivar</button>')).join('') + '</div></div>' : '') +
+        '<button class="btn ghost" data-action="reactivar-ingles"' + datos(x) + '>↩️ Reactivar</button>')).join('') + '</div></div>' : '');
+}
+contentEl.addEventListener('click', e => {
+  if (!e.target.closest('[data-action="reintentar-registro"]')) return;
+  e.preventDefault(); state.registroAdmin = null; pintarRegistroLista(); cargarRegistroAdmin();
+});
+
+function renderAlumnosAdmin() {
+  // Conteo con la lista del panel (sin correos); las tarjetas, con la de Registro (openspec: panel-profe-peticiones).
+  const a = state.alumnosAdmin;
+  const activos = Array.isArray(a) ? a.filter(x => !x.baja && !ocultoEnPanel(x.nombre)).length : '—';
+  return '<details class="section" id="alumnos-admin"' + (state.altaAbierta === false ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Alumnos y alumnas</span><span class="count">' + activos + '</span></div></summary><div class="scroll">' +
+    '<form id="alta-alumno" class="reg-form" autocomplete="off">' +
+      '<p class="reg-intro">➕ Nuevo alumno o alumna: entra con su correo a Inglés, al portal y a Juegos. Empieza su curso el lunes siguiente, sin actividades en atraso.</p>' +
+      '<label class="campo-et" for="alta-nombre">Nombre<input id="alta-nombre" type="text" maxlength="40" placeholder="Como aparecerá en sus calificaciones" required></label>' +
+      '<label class="campo-et" for="alta-correo">Correo<input id="alta-correo" type="email" maxlength="80" placeholder="correo@ejemplo.com" required></label>' +
+      (state.grupos ? '<label class="campo-et" for="alta-grupo">Grupo<select id="alta-grupo">' + opcionesGrupo(state.grupoFiltro || (gruposActivos()[0] || {}).id) + '</select></label>' : '') +
+      '<button class="btn reg-enviar" type="submit">➕ Dar de alta</button><div id="alta-msg" role="status"></div></form>' +
+    avisosPanel('alumnos') + '<div id="registro-lista" aria-live="polite">' + registroListaHtml() + '</div>' +
     '</div></details>';
 }
 
@@ -172,17 +262,34 @@ async function bajaIngles(b, reactivar) {
   await loadFor(state.email);
 }
 
-async function loadJuegosAdmin() {
+// Juegos de la semana bajo demanda (openspec: panel-profe-peticiones): se piden al abrir «🎮 Juegos», «🧑‍🎓 Alumnos»
+// o el cajón; al llegar se repintan la sección y la línea de cada alumno o alumna y la del cajón ([data-juegos-slot]).
+function asegurarJuegosAdmin() {
+  if (state.juegos !== undefined || state.cargandoJuegos) return;
+  state.cargandoJuegos = true;
+  const gen = state.genPanel;
+  loadJuegosAdmin(gen).finally(() => { if (gen !== state.genPanel) return; state.cargandoJuegos = false; pintarJuegosAdmin(); });
+}
+function pintarJuegosAdmin() {
+  const j = document.getElementById('juegos-admin');
+  if (j) { const abierto = j.open; j.outerHTML = renderJuegosAdmin(); if (abierto) document.getElementById('juegos-admin').open = true; }
+  document.querySelectorAll('[data-juegos-slot]').forEach(el => { el.innerHTML = lineaJuegos(el.dataset.juegosSlot); });
+}
+async function loadJuegosAdmin(gen) {
+  let j;
   try {
     const r = await fetchJson(API_BASE + '/juegos/admin/resumen?email=' + encodeURIComponent(state.email));
-    state.juegos = r.ok ? r.body : { error: r.body.error || r.status };
-  } catch (e) { state.juegos = { error: e.message }; }
+    j = r.ok ? r.body : { error: r.body.error || r.status };
+  } catch (e) { j = { error: e.message }; }
+  if (gen === undefined || gen === state.genPanel) state.juegos = j;
 }
 
 function renderJuegosAdmin() {
   const j = state.juegos && state.juegos.jugadores ? { ...state.juegos, jugadores: state.juegos.jugadores.filter(x => !ocultoEnPanel(x.nombre)) } : state.juegos;
+  const cuantos = j && j.jugadores ? j.jugadores.length : 0;
   const cab = '<details class="section" id="juegos-admin"><summary><div class="section-head"><span><span class="chevron">▶</span>🎮 Juegos de la semana</span>' +
-    '<span class="count">' + (j && j.jugadores ? j.jugadores.length : 0) + '</span></div></summary><div style="padding:4px 12px 10px">';
+    '<span class="count">' + (j === undefined ? '…' : cuantos) + '</span></div></summary><div style="padding:4px 12px 10px">';
+  if (j === undefined) return cab + esqueleto() + '</div></details>'; // se piden al abrir la pestaña
   if (!j || j.error) return cab + '<div class="progress-text">No se pudieron cargar los juegos (' + escapeHtml(j && j.error) + ').</div></div></details>';
   if (!j.jugadores.length && !j.salas.length) return cab + '<div class="progress-text">Aún no hay juegos esta semana.</div></div></details>';
   const cuando = ms => new Date(ms).toLocaleString('es-MX', { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -206,6 +313,8 @@ function renderJuegosAdmin() {
   return cab + ranking + salas + '</div></details>';
 }
 
+// Hueco de la línea de juegos de un alumno o alumna: se llena cuando llegan los juegos (pintarJuegosAdmin).
+const huecoJuegos = name => '<div data-juegos-slot="' + escapeHtml(name) + '">' + lineaJuegos(name) + '</div>';
 function lineaJuegos(name) {
   const x = state.juegos && state.juegos.jugadores && state.juegos.jugadores.find(y => y.nombre === name);
   return x ? '<div class="progress-text" data-juegos-alumno>🎮 Juegos: ⭐ ' + (x.totalIndividual ?? x.total).toLocaleString('es-MX') + ' individuales · 👥 ' + (x.totalPartidas || 0).toLocaleString('es-MX') + ' partidas · ' + x.partidas + ' jugados</div>' : '';

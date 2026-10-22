@@ -25,6 +25,7 @@
 | `server/interruptores.ts` | Interruptores del profe en `stald_docs`: se leen en cada petición, apagados por defecto (cambio `rpg-fase2-ingles`) |
 | `server/cache_ranking.ts` | Caché de 60 s del ranking por grupo y semana; la invalidan gamificación y `POST /juegos/nick` |
 | `server/resumen.ts` | `GET /ingles/resumen`: indicadores y mapa de calor del tablero del profe (cambio `ingles-pro`) |
+| `server/panel.ts` | `GET /ingles/panel` y la parte `panel` de `GET /ingles/data?incluir=panel`: panel del profe en una petición (cambio `panel-profe-peticiones`) |
 | `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
 | `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes> [--profe \| --secundaria]` (código 1 si hay errores; 2 si los argumentos no son válidos) |
 
@@ -70,6 +71,7 @@ Alta de las personas actuales en Supabase Auth: `herramientas/alta-usuarios-auth
 | `/ingles/actividades/<id>/resultados/<alumno>` | DELETE | Solo admin: reinicia los intentos |
 | `/ingles/actividades/<id>/prorroga` | POST `{ alumno, fecha \| null }` | Solo admin: da o quita una prórroga (ver "Tablero del profe, racha y prórroga") |
 | `/ingles/resumen` | GET (`?grupo=`) | Solo admin: indicadores y mapa de calor de la semana (cambio `ingles-pro`) |
+| `/ingles/panel` | GET (`?grupo=`, `?ocultos=1`) | Solo admin: grupos, alumnos y alumnas sin correos, resumen y «Por revisar» en una respuesta (cambio `panel-profe-peticiones`) |
 
 **Rutas `/juegos/…`** (`server/juegos.ts`, cambio `juegos-plataforma`):
 
@@ -492,6 +494,22 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
       un reintento y, si falla, queda fuera de `columnas` y de `kpis` con `avisos: ["resultados_incompletos"]`; si
       fallan los grupos, sale sin filtrar con `avisos: ["grupos_no_disponibles"]`. `avisos` siempre viene (vacío si
       todo se leyó).
+**Panel del profe en una petición** (`server/panel.ts`, cambio `panel-profe-peticiones`):
+  - `GET /ingles/panel[?grupo=<id>][&ocultos=1]` (solo admin; 403 `solo_admin` a cualquier otra persona, 401 sin
+    sesión) → `{ grupos, alumnos, resumen, entregas, fallas }`, leído en paralelo con los mismos manejadores de las
+    rutas sueltas (filtros, ocultos y bajas idénticos):
+    - `grupos`: el cuerpo de `GET /ingles/grupos` (`{ grupos (con ocultoAdmin), miembros }`); sin la base migrada,
+      `{ error: "sin_base" }` (no cuenta como falla);
+    - `alumnos`: el registro como `[{ nombre, baja? }]`, **sin correos** (los correos solo en `GET /ingles/alumnos`);
+    - `resumen`: el cuerpo de `GET /ingles/resumen` con los mismos `grupo` y `ocultos` (y `hoy` con `PERMITIR_HOY=1`);
+    - `entregas`: `{ pendientes, ingles, secundaria }` de la bandeja: cuántas entregas de misiones hay listas para
+      evaluar en total (`pendientes` = `ingles` + `secundaria`) y por ámbito; sin textos ni slugs. Es el dato del
+      contador de «📥 Entregas» y de «📥 Por revisar»;
+    - `fallas`: partes que fallaron. Cada una viaja como `{ error, detalle? }` (`detalle` ≤ 200 caracteres; solo lo
+      recibe el admin) y las demás llegan completas.
+  - `GET /ingles/data?incluir=panel`: si quien pide es el admin, el panel se arma en paralelo con las filas y viaja como
+    `panel` en la misma respuesta (respeta `grupo` y `ocultos`). Para cualquier otra persona el parámetro se ignora.
+  - Las rutas sueltas no cambian: el panel solo las junta para abrir más rápido.
   - Racha: `GET /ingles/actividades` (alumno o alumna) agrega `racha: { dias, hoy }`, calculada con `calcularRacha`
     (`motor.ts`) sobre los `enviadoEn` de sus intentos, en fecha de CDMX. Cuenta días seguidos hasta hoy o, si hoy aún no
     entrega, hasta ayer. No hay ruta `/ingles/racha`: viaja con la lista para no gastar otra petición.
@@ -600,7 +618,7 @@ publica con `teoriaPublica` (sin `correcta`/`aceptadas` de su práctica).
 | Ruta | Método | Parámetros | Respuesta 200 |
 |---|---|---|---|
 | `/data` | GET | `email` (obligatorio) | `{ rows: SecundariaRow[], isAdmin: boolean, generatedAt: ISO }` |
-| `/ingles/data` | GET | `email` (obligatorio) | `{ rows: InglesRow[], isAdmin: boolean, generatedAt: ISO }` |
+| `/ingles/data` | GET | `email` (obligatorio), `incluir=panel` (opcional) | `{ rows: InglesRow[], isAdmin: boolean, panel?, generatedAt: ISO }` (`panel` solo para el admin con `incluir=panel`) |
 | cualquier ruta | OPTIONS | — | 200 con CORS |
 | cualquier otra | GET | — | `404 { error: "not_found" }` |
 

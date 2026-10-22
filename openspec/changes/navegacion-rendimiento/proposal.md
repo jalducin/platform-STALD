@@ -1,6 +1,7 @@
 ## Estado
 
-**Propuesta sin implementar.** Son las dos recomendaciones grandes de la auditoría de navegación
+**Parte 2 implementada** en el cambio `panel-profe-peticiones` (2026-10-22: el panel abre con 5 peticiones, antes 15;
+ver su reporte). **La parte 1 (carga perezosa de Juegos) sigue sin implementar.** Son las dos recomendaciones grandes de la auditoría de navegación
 (`openspec/changes/navegacion-dispositivos/reports/2026-10-22-auditoria.md`) que el profe pidió (2026-10-22) dejar
 anotadas y fuera de `navegacion-mejoras`. Antes de implementarlas: `enrich-us` / `openspec-ff-change` con este
 documento como punto de partida (design, specs y tasks), y medir otra vez la línea base.
