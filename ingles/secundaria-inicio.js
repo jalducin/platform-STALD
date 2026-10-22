@@ -63,16 +63,17 @@ function barraRpg(nivel, insignias, racha, totalInsignias) {
     '</section>';
 }
 
-// «Misión principal activa»: la primera clase de hoy sin hacer; si no hay, la próxima clase sin hacer.
-function misionPrincipal(items, hoy, deHoy, admin, saludo) {
-  const pendiente = deHoy.find(it => !GAM.estaHecha(it));
-  const prox = items.filter(it => SD.diaDeClase(it) > hoy && !GAM.estaHecha(it)).sort((a, b) => SD.diaDeClase(a).localeCompare(SD.diaDeClase(b)))[0];
-  const it = pendiente || prox;
+// «Misión principal activa» (openspec: navegacion-mejoras): la regla pura `SD.misionPrincipal` (atrasada y abierta →
+// hoy → próxima abierta → próxima bloqueada); aquí solo se dibuja con su motivo.
+function misionPrincipalHtml(items, hoy, admin, saludo) {
+  const mision = SD.misionPrincipal(items, hoy);
+  const it = mision && mision.item;
   let cuerpo;
   if (it) {
     const m = materiaODefecto(it);
     const e = SD.estadoClase(it, hoy);
-    const cuando = pendiente ? e.texto : 'Próxima: ' + SD.diaCorto(SD.diaDeClase(it));
+    const dia = SD.diaCorto(SD.diaDeClase(it));
+    const cuando = { atrasada: e.texto, hoy: e.texto, adelantar: 'Puedes adelantarla · ' + dia, proxima: 'Próxima: ' + dia }[mision.motivo];
     cuerpo = '<span class="rpg-etiqueta">⚔️ Misión principal activa</span>' +
       '<h3 class="rpg-mision-t">' + escapeHtml(SD.temaDe(it)) + '</h3>' +
       '<p class="rpg-mision-d">' + escapeHtml([mundoTexto(m, hoy), m.emoji + ' ' + m.nombre, cuando].filter(Boolean).join(' · ')) + ' · hasta +' + GAM.XP_POSIBLE + ' XP</p>' +
@@ -82,7 +83,7 @@ function misionPrincipal(items, hoy, deHoy, admin, saludo) {
     cuerpo = '<span class="rpg-etiqueta">🏁 Misiones al día</span><h3 class="rpg-mision-t">¡No tienes misiones pendientes! 🎉</h3>' +
       '<p class="rpg-mision-d">Cuando el profe publique tus siguientes clases, aquí aparecerá tu próxima misión.</p>';
   }
-  return '<section class="rpg-mision" id="rpg-mision" aria-label="Misión principal">' + saludo + cuerpo + '</section>';
+  return '<section class="rpg-mision" id="rpg-mision" aria-label="Misión principal"' + (mision ? ' data-motivo="' + mision.motivo + '"' : '') + '>' + saludo + cuerpo + '</section>';
 }
 
 const kpi = (id, cuerpo, titulo, detalle) => '<div class="sec-kpi" id="' + id + '">' + cuerpo + '<div class="sec-kpi-txt"><div class="sec-kpi-titulo">' + titulo + '</div><div class="sec-kpi-detalle">' + detalle + '</div></div></div>';
@@ -172,7 +173,7 @@ function renderSecInicio(act, o) {
     [['clases', '📅', 'Esta semana'], ['horario', '🗓️', 'Mi horario'], ['materias', '🗺️', 'Mis materias y mundos']].map(([id, e, t]) =>
       '<button type="button" class="btn ghost sec-acceso" data-sec-tab="' + id + '"><span aria-hidden="true">' + e + '</span> ' + t + '</button>').join('') + '</nav>';
   const extrasMision = typeof misionInicioHtml === 'function' ? (o.admin ? '' : avisoEvaluacionHtml(items, hoy)) + misionInicioHtml(items, hoy) + misionesSemanaHtml(items, hoy) : '';
-  return '<div class="rpg">' + barraRpg(nivel, insignias, racha) + misionPrincipal(items, hoy, deHoy, o.admin, saludo) + extrasMision + retosHtml(items, hoy, deHoy, o.admin) +
+  return '<div class="rpg">' + barraRpg(nivel, insignias, racha) + misionPrincipalHtml(items, hoy, o.admin, saludo) + extrasMision + retosHtml(items, hoy, deHoy, o.admin) +
     kpisHtml(SD.progresoSemana(items, hoy), racha, GAM.mapaMundos(items, hoy)) +
     '<div class="rpg-dos">' + actividadHtml(items) + promediosHtml(items, hoy) + '</div>' + insigniasHtml(insignias) + accesos + '</div>';
 }

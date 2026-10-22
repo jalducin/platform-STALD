@@ -1195,8 +1195,11 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     - barra `#rpg-stats`: nivel del juego y rango (`#rpg-rango`, «Nv. 3 · Exploradora» con `<abbr title="Nivel del juego">`; cambio `fix-e2e-rpg`), XP del nivel (`#rpg-xp` y `.rpg-xp-barra` con
       `role="progressbar"`), insignias (`#rpg-insignias`) y racha (`#rpg-racha`);
     - `#rpg-mision`: «Hola, <nombre>» (`.sec-hola`, de `/perfil`), fecha (`.sec-fecha`, «Martes 27 de octubre», del
-      `hoy` del servidor) y «⚔️ Misión principal activa» (la primera clase de hoy sin hacer o la próxima) con
-      `#rpg-mision-btn`;
+      `hoy` del servidor) y «⚔️ Misión principal activa» con `#rpg-mision-btn` y `data-motivo`. La elige la regla pura
+      `SecundariaDatos.misionPrincipal(items, hoy)` (cambio `navegacion-mejoras`): (1) lo atrasado y abierto, del más
+      viejo al más nuevo; (2) lo de hoy; (3) lo próximo ya abierto («Puedes adelantarla · Jue 29»); (4) solo si no hay
+      nada abierto, la próxima bloqueada («🔒 Abre el …»). Con un intento ya cuenta como hecha. La ruta del profe tiene
+      su propia regla (`profe-rpg.js`, todo abierto);
     - «⚡ Retos diarios · Hoy te toca» (`#sec-hoy-te-toca`, contador `#rpg-retos` y `#rpg-retos-texto`): una tarjeta
       `.sec-tarjeta[data-sec-card][data-estado]` por clase con chip de materia (emoji y color), estado, tema, mundo,
       XP (`.rpg-xp-chip`) y botón `.sec-btn-grande`. Sin clases: `#sec-hoy-vacio` «Hoy no tienes clases 🎉» y la

@@ -65,6 +65,28 @@
     return [...atrasadas, ...items.filter(it => diaDeClase(it) === hoy)];
   }
 
+  // «⚔️ Misión principal activa» (openspec: navegacion-mejoras): la clase sin hacer que conviene hacer ya.
+  // Prioridad: (1) atrasada y abierta (su día ya pasó), del más viejo al más nuevo; (2) la de hoy abierta; (3) la
+  // próxima ya abierta (se puede adelantar); (4) solo si no hay nada abierto, la bloqueada más próxima. A igual día, el
+  // orden de la lista. «Abierta» = el servidor no la marca `proximamente` (el botón sí tiene acción).
+  // Devuelve { item, motivo: 'atrasada' | 'hoy' | 'adelantar' | 'proxima' } o null.
+  function misionPrincipal(items, hoy) {
+    const pendientes = (items || []).map((it, i) => ({ it, i, dia: diaDeClase(it) })).filter(x => !estaHecha(x.it))
+      .sort((a, b) => a.dia.localeCompare(b.dia) || a.i - b.i);
+    const abierta = it => it.estado !== 'proximamente';
+    const grupos = [
+      ['atrasada', x => x.dia < hoy && abierta(x.it)],
+      ['hoy', x => x.dia === hoy && abierta(x.it)],
+      ['adelantar', x => x.dia > hoy && abierta(x.it)],
+      ['proxima', () => true], // bloqueada: la más próxima (también una de hoy o anterior que aún no abre)
+    ];
+    for (const [motivo, cumple] of grupos) {
+      const x = pendientes.find(cumple);
+      if (x) return { item: x.it, motivo };
+    }
+    return null;
+  }
+
   // Progreso de la semana de hoy (lunes a domingo): clases hechas entre las de la semana.
   function progresoSemana(items, hoy) {
     const dias = new Set(semanaDe(hoy));
@@ -122,6 +144,6 @@
   g.SecundariaDatos = {
     MATERIAS, SECUENCIAS, OTRA, porClave, materiaConocida, materiaDe, temaDe, sinAcentos,
     sumarDias, lunesDe, nombreDia, diaCorto, semanaDe, diaDeClase,
-    estaHecha, estadoClase, clasesDeHoy, progresoSemana, rachaDe, promedio, etapasDe, resumenMaterias, horarioSemana,
+    estaHecha, estadoClase, clasesDeHoy, misionPrincipal, progresoSemana, rachaDe, promedio, etapasDe, resumenMaterias, horarioSemana,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
