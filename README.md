@@ -27,6 +27,7 @@ Flujo de trabajo: Spec-Driven Development con OpenSpec (`/opsx:new` → `/opsx:f
 | [docs/deno-deploy-setup.md](docs/deno-deploy-setup.md) | Configurar el backend en Deno Deploy y el repo privado de datos |
 | [docs/pruebas.md](docs/pruebas.md) | Pruebas unitarias (CI) y E2E en local (`tests/e2e/correr.sh`), sesión de prueba, `stald_test_*` y análisis de calidad (`tests/calidad`, `npm run calidad`) |
 | [ai-specs/skills/nueva-semana-ingles/SKILL.md](ai-specs/skills/nueva-semana-ingles/SKILL.md) | Flujo semanal: armar, validar y subir la clase de Inglés de la semana siguiente |
+| [ai-specs/skills/clases-secundaria/SKILL.md](ai-specs/skills/clases-secundaria/SKILL.md) | Reglas para preparar las clases de Secundaria: horario, secuencia de cada materia, formato, fuentes verificadas y bloques de 2 semanas |
 
 ## Herramientas del agente (Claude Code)
 
