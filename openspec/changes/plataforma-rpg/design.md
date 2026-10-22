@@ -286,7 +286,7 @@ de los Derechos de Niñas, Niños y Adolescentes protege su intimidad. Acciones:
 (qué se guarda, para qué, cuánto tiempo, quién lo ve, proveedor de IA y su país), preparar en la Fase 2 un
 **formato simple de consentimiento** (una hoja imprimible, `consentimiento.html`, enlazada desde el aviso) con el que
 el profe recaba la firma de madre, padre o tutor para el tutor IA (y, más adelante, para imagen y audio), y documentar el procedimiento para ejercer derechos ARCO (acceso, rectificación,
-cancelación y oposición) por correo al profe. *El texto legal final lo revisa el profe; este diseño no es asesoría
+cancelación y oposición) escribiéndole al profe por el canal de la escuela (cambio `rpg-privacidad`). *El texto legal final lo revisa el profe; este diseño no es asesoría
 legal.*
 
 ### 4.4 Tutor IA socrático
