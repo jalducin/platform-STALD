@@ -107,14 +107,14 @@ h2 { font-size: 1.05rem; margin: 22px 0 10px; display: flex; align-items: center
   padding: 12px 16px; min-height: 44px; cursor: pointer; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px rgba(219, 39, 119, .25);
   text-decoration: none; transition: transform .12s, box-shadow .12s, filter .12s, border-color .12s; }
 .btn.ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
-.btn.sm { padding: 7px 11px; font-size: .8rem; min-height: 44px; }
+.btn.sm { padding: 7px 11px; font-size: .8rem; min-height: 44px; min-width: 44px; }
 .btn:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; filter: grayscale(.35); }
 .row-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 .row-btns .btn { flex: 1; }
 label { display: block; font-size: .82rem; font-weight: 700; margin: 10px 0 6px; }
 input[type=email], input[type=text] { width: 100%; font: inherit; font-size: 1rem; padding: 12px 13px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
 input:focus { border-color: var(--accent-2); }
-.check { display: flex; gap: 10px; align-items: flex-start; font-size: .84rem; font-weight: 500; margin: 12px 0; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: .84rem; font-weight: 500; margin: 12px 0; min-height: 44px; padding-top: 4px; } /* 44 px (openspec: navegacion-dispositivos) */
 .check input { width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0; }
 .alert { margin-top: 12px; padding: 10px 12px; border-radius: 12px; font-size: .86rem; background: var(--bad-soft); color: var(--bad); }
 .revancha-aviso { margin-top: 12px; padding: 10px 12px; border-radius: 12px; font-weight: 700; text-align: center; background: var(--accent-soft); } /* openspec: revancha-partidas */
@@ -664,3 +664,11 @@ html.jugando, html.jugando body { overscroll-behavior-y: contain; }
 .rank li:nth-child(-n+3) { border-color: var(--rpg-borde); background: linear-gradient(160deg, var(--rpg-panel-2), var(--card) 70%); }
 
 @media (prefers-reduced-motion: reduce) { .btn, .home-link, .chip-btn { transition: none; } .btn:active:not(:disabled), .home-link:active { transform: none; } }
+
+/* PC (openspec: navegacion-dispositivos): el hub de Juegos (categorías, juegos, partidas y ranking) usa el ancho con más
+   columnas (va al final: gana a las reglas de 620 px); dentro de un juego la columna sigue en 720 px. */
+@media (min-width: 1200px) {
+  .wrap:has(#menu-juegos), .wrap:has(#tab-body) { max-width: 1080px; }
+  .cat-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  #menu-juegos .grid { grid-template-columns: repeat(4, 1fr); }
+}

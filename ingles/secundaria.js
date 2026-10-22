@@ -142,19 +142,25 @@ function renderSecundaria(act) {
 }
 
 // Cambio de pestaña sin redibujar (se conserva el estado); el hash guarda la pestaña para volver a ella al salir de
-// una clase y para enlazarla (p. ej. secundaria.html#horario desde el portal).
-function irPestanaSec(id, enfocar) {
+// una clase y para enlazarla (p. ej. secundaria.html#horario desde el portal). `historial`: 'agregar' (toque o clic:
+// «Atrás» del navegador regresa a la pestaña anterior; openspec: navegacion-dispositivos), 'reemplazar' (flechas del
+// teclado) o 'nada' (ya viene del historial, p. ej. al tocar «Atrás»).
+function irPestanaSec(id, enfocar, historial = 'reemplazar') {
   if (!document.getElementById('sec-' + id)) return;
+  const antes = state.secTab;
   state.secTab = id;
   document.querySelectorAll('.sec-tabs [data-sec-tab]').forEach(x => { const sel = x.dataset.secTab === id; x.setAttribute('aria-selected', String(sel)); x.tabIndex = sel ? 0 : -1; });
   document.querySelectorAll('[data-sec-panel]').forEach(x => { x.hidden = x.dataset.secPanel !== id; });
   const t = SEC_TABS.find(x => x.id === id);
-  if (t && !location.hash.startsWith('#ver/')) history.replaceState(null, '', location.pathname + location.search + '#' + t.hash);
+  if (t && historial !== 'nada' && !location.hash.startsWith('#ver/')) {
+    const url = location.pathname + location.search + '#' + t.hash;
+    if (historial === 'agregar' && antes !== id) history.pushState(null, '', url); else history.replaceState(null, '', url);
+  }
   if (enfocar) { const b = document.getElementById('sec-tab-' + id); if (b) { b.focus(); b.scrollIntoView({ block: 'nearest' }); } }
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-sec-tab]'); if (!b) return;
-  irPestanaSec(b.dataset.secTab, !b.closest('.sec-tabs')); // desde un acceso del Inicio, el foco va a la pestaña
+  irPestanaSec(b.dataset.secTab, !b.closest('.sec-tabs'), 'agregar'); // desde un acceso del Inicio, el foco va a la pestaña
 });
 // Teclado en las pestañas (← → Inicio Fin), como pide el patrón de tabs.
 document.addEventListener('keydown', e => {

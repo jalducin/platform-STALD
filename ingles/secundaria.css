@@ -275,3 +275,8 @@ body.secundaria { font-family: "Inter", var(--font); }
 @media (prefers-reduced-motion: reduce) {
   .rpg-xp-barra > span { transition: none; }
 }
+
+/* PC (openspec: navegacion-dispositivos): Secundaria usa el ancho; las 7 pestañas caben en una fila. */
+@media (min-width: 1100px) {
+  body.secundaria .app-top, body.secundaria .shell { max-width: 1100px; }
+}

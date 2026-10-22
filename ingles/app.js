@@ -66,6 +66,8 @@ window.addEventListener('hashchange', () => {
   if (!state.data) return;
   if (location.hash.startsWith('#ver/')) return; // dentro del reproductor
   if (state.vista !== 'secciones') { render(state.data); window.scrollTo(0, 0); return; }
+  // Secundaria: «Atrás» entre pestañas (cada toque agrega una entrada; openspec: navegacion-dispositivos).
+  if (MODO_SECUNDARIA) { const t = tabDeHash(decodeURIComponent(location.hash.slice(1))); if (t) irPestanaSec(t, false, 'nada'); return; }
   aplicarRuta(); window.scrollTo(0, 0);
 });
 // Entrar a una actividad, resultado o guion agrega una entrada al historial: Atrás regresa a la sección.
