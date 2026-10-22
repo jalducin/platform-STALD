@@ -187,11 +187,22 @@ document.addEventListener('click', e => {
   // Desde la barra inferior o «Más» (celular), la página sube al inicio de la pestaña; desde un acceso del Inicio, el
   // foco va a la pestaña de la fila (tablet y PC).
   const desdeBarra = !!b.closest('.sec-barra, #sec-mas');
-  irPestanaSec(b.dataset.secTab, !b.closest('.sec-tabs') && !desdeBarra, 'agregar');
   const fila = document.querySelector('.sec-tabs');
-  if (desdeBarra || (fila && !fila.offsetParent)) window.scrollTo(0, 0);
+  const enCelular = !!fila && !fila.offsetParent;
+  irPestanaSec(b.dataset.secTab, !b.closest('.sec-tabs') && !desdeBarra && !enCelular, 'agregar');
+  if (desdeBarra || enCelular) {
+    window.scrollTo(0, 0);
+    // El foco no se pierde: queda en su botón de la barra o, si la pestaña vive en «Más», en «☰ Más».
+    const destino = document.querySelector('.sec-barra [data-sec-tab="' + b.dataset.secTab + '"]') || document.querySelector('[data-sec-mas]');
+    if (destino) destino.focus({ preventScroll: true });
+  }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarMasSec(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const dentro = document.activeElement && document.activeElement.closest && document.activeElement.closest('#sec-mas');
+  cerrarMasSec();
+  if (dentro) { const b = document.querySelector('[data-sec-mas]'); if (b) b.focus(); }
+});
 // Teclado en las pestañas (← → Inicio Fin), como pide el patrón de tabs.
 document.addEventListener('keydown', e => {
   const b = e.target.closest && e.target.closest('.sec-tabs [data-sec-tab]'); if (!b) return;

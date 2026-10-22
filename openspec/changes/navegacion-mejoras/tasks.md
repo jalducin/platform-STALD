@@ -32,6 +32,10 @@
   `navegacion-dispositivos` revisa la barra a 360 px (sin tapar, 44 px, «Más», atrás) y las 9 pestañas del profe en
   una fila a 1100 px
 
+- [ ] 3.3 Revisión del PR 3 (PR de cierre): el foco no se pierde al elegir desde la barra o «☰ Más» ni con Escape
+  (vuelve a su botón o a «☰ Más»); E2E `navegacion-dispositivos`: Escape cierra «Más», barra ausente con la clase
+  abierta y las 9 pestañas del profe también a 720 px
+
 ## 4. PR 4 · Pruebas: fixture propio de «🌍 Mundos» y Dibuja estable
 
 - [ ] 4.1 `tests/fixtures/profe-plan-9-mundos.json` y `ingles-diseno-profe`: 9 mundos con su fixture (interceptado en
