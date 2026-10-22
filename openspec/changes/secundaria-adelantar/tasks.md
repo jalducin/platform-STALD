@@ -40,6 +40,7 @@
 
 ## 6. Cierre
 
-- [ ] 6.1 Revisión `revisor-solo-lectura` y sus hallazgos atendidos
+- [x] 6.1 Revisión `revisor-solo-lectura` y sus hallazgos atendidos (reporte, prueba de Inglés con semana futura
+  abierta, «Otras clases» y total por materia en spec, docs y E2E)
 - [ ] 6.2 Merge de `main`, PR, checks y merge
 - [ ] 6.3 `openspec archive secundaria-adelantar` (cuando el profe lo vea en el celular)

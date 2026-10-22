@@ -9,6 +9,7 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
 const ALUMNA = 'valeria@example.com';
 const HOY = '2026-10-22';
 const MANANA = 'sec-adelanta-2026-10-23-a';
+const FUTURA = 'sec-adelanta-2026-11-02-a'; // semana 2026-11-02, abierta desde el 21
 const DE_HOY = ['sec-adelanta-2026-10-22-a', 'sec-adelanta-2026-10-22-b'];
 const API = process.env.API;
 const q = '?email=' + encodeURIComponent(ALUMNA);
@@ -27,6 +28,7 @@ const horario = async p => {
   const por = new Map(r0.items.map(i => [i.id, i]));
   const man = por.get(MANANA);
   ok('API: deja pasar `dia`', DE_HOY.every(id => por.get(id) && por.get(id).dia === HOY) && man && man.dia === '2026-10-23', JSON.stringify(man && man.dia));
+  ok('API: la de la semana 2026-11-02 ya abrió y se lista', por.get(FUTURA) && por.get(FUTURA).estado === 'disponible', JSON.stringify(por.get(FUTURA) && por.get(FUTURA).estado));
   ok('API: la del viernes ya abrió (bloque desde el 21) y no está hecha', man && man.disponibleDesde === '2026-10-21' && man.estado === 'disponible' && !man.intentosUsados, JSON.stringify(man && man.estado));
 
   const b = await chromium.launch({ executablePath: process.env.CHROME });
@@ -43,6 +45,7 @@ const horario = async p => {
   await p.click('.sec-tabs [data-sec-tab="clases"]');
   ok('Esta semana: la del viernes en su día', !!(await p.$(`[data-sec-dia="2026-10-23"] [data-sec-item="${MANANA}"]`)));
   ok('Esta semana: la del viernes no va en «Hoy»', !(await p.$(`#sec-hoy [data-sec-item="${MANANA}"]`)));
+  ok('semana futura ya abierta: en «Otras clases y exámenes», no en esta semana', !!(await p.$(`#sec-otras [data-sec-item="${FUTURA}"]`)) && !(await p.$(`#sec-semana [data-sec-item="${FUTURA}"]`)));
   await p.click(`[data-sec-dia="2026-10-23"] [data-sec-item="${MANANA}"] [data-action="abrir-item"]`);
   ok('la del viernes se abre hoy y muestra sus preguntas', await p.waitForSelector('#exam-form', { timeout: 60000 }).then(() => true, () => false));
   await p.screenshot({ path: 'secundaria-adelantar-abierta.png', fullPage: true });

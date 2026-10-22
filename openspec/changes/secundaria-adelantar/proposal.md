@@ -18,7 +18,8 @@ clases de la segunda semana del bloque no aparecerían aunque ya estuvieran abie
 - **Servidor (`server/actividades.ts`):**
   - `meta` deja pasar `dia` en `/secundaria/actividades` e `/ingles/actividades` (como `materia`).
   - Secundaria lista también las clases de semanas futuras que ya abrieron (`disponibleDesde` ≤ hoy), como la ruta del
-    profe. El grupo de Inglés no cambia.
+    profe. En la vista salen en «📝 Otras clases y exámenes» y cuentan en el total de su materia. El grupo de Inglés no
+    cambia.
 - **Validador (`server/motor.ts`, `server/semana.ts`, `server/validar_semana.ts`):**
   - `validateItem`: `dia` opcional; si viene, fecha real dentro de [`disponibleDesde`, `fechaLimite`] (error si no).
   - `--secundaria`: con `dia`, `disponibleDesde` puede ser anterior al lunes de la semana; `dia` debe caer de lunes a

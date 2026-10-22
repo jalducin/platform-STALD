@@ -142,7 +142,10 @@ Deno.test("/ingles/actividades: deja pasar `dia` y no lista semanas futuras", as
   const items = (await res.json()).items as any[];
   assertEquals(items.find((i) => i.id === "act-2026-10-06").dia, "2026-10-06");
   assertEquals("dia" in items.find((i) => i.id === "act-2026-10-08"), false);
+  // Semana futura (lunes 12) con una actividad que ya abrió: el grupo de Inglés no la ve hasta su semana.
+  f["contenido/semanas/2026-10-12.json"] = { id: "2026-10-12", titulo: "Semana 3", elementos: [{ id: "act-futura", tipo: "actividad", fecha: "2026-10-13" }] };
+  f["contenido/actividades/act-futura.json"] = { ...(f["contenido/actividades/act-2026-10-06.json"] as any), id: "act-futura", dia: "2026-10-13", disponibleDesde: "2026-10-05", fechaLimite: "2026-10-13" };
   clearCache();
-  const antes = await handleActividades(new Request("http://x/ingles/actividades?hoy=2026-10-01"), "", { isAdmin: false, alumno: "Luz" }, storeCon(f), json);
-  assertEquals(((await antes.json()).items as any[]).length, 0);
+  const res2 = await handleActividades(new Request("http://x/ingles/actividades?hoy=2026-10-06"), "", { isAdmin: false, alumno: "Luz" }, storeCon(f), json);
+  assertEquals(((await res2.json()).items as any[]).some((i) => i.id === "act-futura"), false);
 });

@@ -11,8 +11,9 @@ clase. Para que la alumna pueda adelantar, una clase de Secundaria SHALL poder t
 - Antes de su `dia`, una clase abierta SHALL NOT contar como «de hoy» ni como atrasada. Hecha antes de su día SHALL
   contar como hecha a tiempo; el bonus de XP sigue la regla vigente.
 - `/secundaria/actividades` e `/ingles/actividades` SHALL dejar pasar `dia` cuando viene y no inventarlo si falta.
-- `/secundaria/actividades` SHALL listar también las clases de semanas futuras cuyo `disponibleDesde` ya llegó. El
-  grupo de Inglés SHALL seguir viendo solo semanas iniciadas.
+- `/secundaria/actividades` SHALL listar también las clases de semanas futuras cuyo `disponibleDesde` ya llegó; la
+  vista SHALL mostrarlas en «📝 Otras clases y exámenes» (fuera de la semana actual) y SHALL contarlas en el total de
+  su materia. El grupo de Inglés SHALL seguir viendo solo semanas iniciadas.
 - El validador SHALL marcar error si `dia` no es una fecha real dentro de [`disponibleDesde`, `fechaLimite`]. Con
   `--secundaria` y `dia`, `disponibleDesde` MAY ser anterior al lunes de la semana y `dia` SHALL caer de lunes a
   domingo de esa semana. Las reglas de apertura de Inglés SHALL NOT cambiar.
@@ -26,6 +27,9 @@ clase. Para que la alumna pueda adelantar, una clase de Secundaria SHALL poder t
 #### Scenario: Semana siguiente del bloque
 - **WHEN** hoy es jueves 22 y una clase de la semana del lunes 26 trae `disponibleDesde` 21 y `dia` lunes 26
 - **THEN** `/secundaria/actividades` la lista disponible, con su `dia`
+- **AND** en la vista sale en «📝 Otras clases y exámenes» (con «hasta el …») para poder adelantarla, no en «Hoy»,
+  «Esta semana» ni «Mi horario» de la semana actual
+- **AND** cuenta en el total de su materia en «📚 Mis materias», como toda clase listada
 - **AND** el validador `--secundaria` de esa semana no marca error por abrir antes del lunes
 
 #### Scenario: Sin `dia`

@@ -1081,7 +1081,8 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   - Promedio = media de `mejor.porcentaje`.
 - **Día de la clase:** su `dia` si lo trae (clase abierta antes para adelantar; cambio `secundaria-adelantar`). Si
   no, `disponibleDesde` si vence ese día o el siguiente; si tiene ventana, `fechaLimite`. Aplica a todas las vistas y
-  al portal.
+  al portal. Las clases de semanas futuras que ya abrieron salen en «📝 Otras clases y exámenes» y cuentan en el total
+  de su materia en «📚 Mis materias».
 - **Hash:** `#inicio`, `#semana`, `#horario`, `#materias` y `#resultados` (`history.replaceState`). Al volver de una
   clase queda la misma pestaña; al cargar con `#ver/<id>`, «📅 Esta semana».
 - **Admin:** pide la lista (resultados y `alumnas`) y la vista `?alumna=<slug>` (la de la URL o la primera). El
