@@ -26,17 +26,20 @@ function entregasPendientes() {
   const b = state.secBandeja;
   return b && !b.error && Number.isFinite(b.pendientes) ? b.pendientes : null;
 }
-const contadorEntregas = () => { const n = entregasPendientes(); return n ? '<span class="nav-contador" data-contador-entregas aria-hidden="true">' + (n > 99 ? '99+' : n) + '</span><span class="sr-only"> · ' + n + ' por revisar</span>' : ''; };
-// Repinta el contador de «📥 Entregas» en la barra, el menú lateral y «☰ Más» (lo llama cargarBandejaSec al llegar la bandeja).
+// Visible: el número sobre el emoji; para lectores de pantalla, «Entregas, N por revisar» (después de la etiqueta).
+const contadorEntregas = () => { const n = entregasPendientes(); return n ? '<span class="nav-contador" data-contador-entregas aria-hidden="true">' + (n > 99 ? '99+' : n) + '</span>' : ''; };
+const avisoEntregas = () => { const n = entregasPendientes(); return n ? '<span class="sr-only" data-aviso-entregas>, ' + n + ' por revisar</span>' : ''; };
+// Repinta el contador de «📥 Entregas» en la barra del celular y en el menú lateral (lo llama cargarBandejaSec).
 function pintarContadorEntregas() {
-  document.querySelectorAll('[data-nav="entregas"]').forEach(a => {
-    a.querySelectorAll('.nav-contador, .sr-only').forEach(x => x.remove());
+  document.querySelectorAll('#nav [data-nav="entregas"]').forEach(a => {
+    a.querySelectorAll('[data-contador-entregas], [data-aviso-entregas]').forEach(x => x.remove());
     a.querySelector('.nav-emoji').insertAdjacentHTML('afterend', contadorEntregas());
+    a.querySelector('.nav-label').insertAdjacentHTML('afterend', avisoEntregas());
   });
 }
 function navItem(s, actual, extra) {
   const cur = s.id === actual ? ' aria-current="page"' : '';
-  const cuerpo = '<span class="nav-emoji" aria-hidden="true">' + s.emoji + '</span>' + (s.id === 'entregas' && s.rol === 'admin' ? contadorEntregas() : '') + '<span class="nav-label">' + escapeHtml(s.titulo) + '</span>';
+  const cuerpo = '<span class="nav-emoji" aria-hidden="true">' + s.emoji + '</span>' + (s.id === 'entregas' && s.rol === 'admin' ? contadorEntregas() : '') + '<span class="nav-label">' + escapeHtml(s.titulo) + '</span>' + (s.id === 'entregas' && s.rol === 'admin' ? avisoEntregas() : '');
   const cls = 'nav-item' + (extra ? ' ' + extra : '') + (s.id === 'ruta' ? ' profe-link' : '');
   if (s.accion) return '<button type="button" class="' + cls + '" data-nav-accion="' + s.accion + '">' + cuerpo + '</button>';
   // En ?modo=profe las secciones del admin viven en ingles.html (sin modo).
