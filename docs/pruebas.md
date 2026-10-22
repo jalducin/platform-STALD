@@ -60,7 +60,8 @@ Qué hace `correr.sh`:
 3. Levanta el servidor (`server/main.ts`) con `DATA_DIR=<copia>`, `ROWS_FIXTURE=tests/fixtures/rows-fixture.json`,
    `SUPER_ADMIN_EMAIL=admin@example.com`, `PERMITIR_HOY=1` y `HOY_FIJO=2026-10-04` (el día con el que se escribieron
    las E2E, para que no dependan del calendario; `--hoy` lo cambia), sin Notion ni GitHub, y los estáticos con
-   `python -m http.server`. `HOY_FIJO` solo tiene efecto con `ROWS_FIXTURE`, nunca en producción.
+   un `http.server` de Python con cola de 128 conexiones (con la de omisión, 5, Windows rechazaba conexiones cuando 4
+   páginas abrían a la vez y faltaban scripts en `revancha`). `HOY_FIJO` solo tiene efecto con `ROWS_FIXTURE`, nunca en producción.
    `rows-fixture.json` solo trae Secundaria y las cuentas de Supabase Auth: Inglés ya no lee Notion (cambio
    `cierre-tecnico`, fase 2). Antes de arrancar, superpone `tests/fixtures/datos/` (contenido de ejemplo) sobre la
    copia y **combina** `tests/fixtures/alumnos-ejemplo.json` (Marisol, Angel, Jesus, Laura y Fernando,
@@ -125,6 +126,17 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   21 y traen `dia` jueves 22 ×2 y viernes 23) y la semana `2026-11-02` (1 clase con `dia` 2026-11-02 que también abre
   el 21). Revisa que «Hoy te toca» traiga solo las del jueves, que la del viernes
   se abra y se resuelva hoy (a tiempo) y que «🗓️ Mi horario» quede igual antes y después; la de la semana futura sale en «📝 Otras clases y exámenes».
+- `juegos-diseno` (fase `base`, cambio `juegos-diseno-rpg`): a 360 px, en claro, en oscuro y con `stald_tema=oscuro`,
+  revisa:
+  - el encabezado `#jg-heroe` contra `/juegos/yo`;
+  - las secciones en orden y «Para ti» vacío y con puntajes (`state.mejores` solo en la página, sin escribir en el
+    servidor) con su «▶ Jugar»;
+  - «En vivo» → Partidas con el foco en el código, y «Copas»;
+  - botones de 44 px o más, foco de 3 px, sin scroll horizontal y contraste AA de los textos del hub;
+  - Ranking, Partidas, avatar y los menús de Karts, Fútbol Estelar, Billar y Golf, sin los controles táctiles del
+    mando (`tabindex="-1"`).
+
+  Deja capturas `juegos-diseno-*.png`.
 - `secundaria-dashboard` (fase `ingles`, cambio `secundaria-dashboard`): la alumna del fixture envía 3 clases por la API
   (en la copia temporal) y revisa a 360 px en claro y oscuro el Inicio RPG (retos, estados, progreso, racha, XP y
   nivel, insignias, misión, actividad, promedios), botones de 44 px o más con foco visible, «📚 Mis materias» con sus
