@@ -200,7 +200,9 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   cada pestaña y la ruta del profe y falla ante cualquier error de consola, error JS, script o estilo que no carga o 5xx
   de la API (sin Postgres solo se excusa el 503 `sin_base` de `/ingles/grupos`). Con grupos, oculta y muestra el
   grupo desde su tarjeta del Resumen y restaura la bandera. Simula en el navegador un resumen caído para revisar
-  «🔄 Reintentar».
+  «🔄 Reintentar». A 360 px (cambio `navegacion-mejoras`) revisa que «📥 Entregas» esté en la barra inferior (6 botones
+  de 44 px o más, sin scroll horizontal) con el contador = `pendientes` de `/profe/entregas`, y a 1280 px que el menú
+  lateral conserve el orden del catálogo.
 - Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
 - Juego en vivo sin Supabase (cambio `juegos-en-vivo`): `lib/vivo-relevo.js` levanta un relevo local (HTTP + SSE) y
   `initVivo(relevo.url, { latencia, perdida, desorden, noConecta })` es el `init` de `abrirPagina`; con la ruta

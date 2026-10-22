@@ -15,7 +15,8 @@ en celular (360 px, táctil), tablet (768 y 1024 px, táctil) y PC (1280 y 1920 
 
 Los toques de navegación por tarea SHALL quedar en su tope (E2E `navegacion-dispositivos`): clase de Secundaria hasta
 «Siguiente misión» 4; pestañas de Secundaria 3; actividad de Inglés 4 (3 si está en «Para hoy»); Material → PDF 2; invitado de Juegos (entrar,
-jugar y volver) 6; panel del profe (ver grupo, ocultar/mostrar y Entregas) 7; Secundaria del profe con alumna y
+jugar y volver) 6; panel del profe (ver grupo, ocultar/mostrar y Entregas) 6 (7 antes de que «📥 Entregas» pasara a la barra del celular en
+`navegacion-mejoras`); Secundaria del profe con alumna y
 Resultados 3; Mi ruta → clase 3.
 
 Matriz de acceso: sin cambios; solo navegación y estilos del cliente.

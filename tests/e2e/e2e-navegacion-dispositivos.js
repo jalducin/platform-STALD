@@ -42,7 +42,7 @@ const TOPE_TOQUES = {
   'ingles-actividad': 4, // tarjeta Inglés → la actividad (en «Para hoy» o, si no está, «Semana» →) → Enviar
   'ingles-material': 2, // Material → Ver PDF
   'juegos-invitado': 6, // «Solo vengo a jugar» → aviso → Entrar → categoría → juego → «Volver»
-  'profe-grupos': 7, // Ver grupo → Ver todos → Ocultar → Mostrar → (☰ Más →) Entregas → Guardar evaluación (no cuenta)
+  'profe-grupos': 6, // Ver grupo → Ver todos → Ocultar → Mostrar → (interruptor →) Entregas → Guardar evaluación (no cuenta); Entregas ya en la barra del celular (navegacion-mejoras: 7 → 6)
   'profe-secundaria': 3, // tarjeta Secundaria → elegir alumna → Resultados
   'profe-ruta': 3, // (Más →) Mi ruta → Empezar
 };

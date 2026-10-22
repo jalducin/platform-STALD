@@ -1122,7 +1122,10 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     y `aplicarRuta()` deja visible solo la del hash; la pestaña lleva `aria-current="page"`.
   - Abrir una actividad, un resultado o un guion agrega `#ver/<id>` al historial: Atrás regresa a la sección.
   - Menos de 720 px: `.nav-barra` fija abajo (botones de 56 px, `safe-area-inset-bottom`). El admin ve Resumen,
-    Alumnos, Semana y Resultados, y el resto en «☰ Más» (`#nav-mas`). Desde 720 px: pestañas arriba (alumno o
+    Alumnos, Semana, Resultados y «📥 Entregas» (con el contador `[data-contador-entregas]` de entregas listas para
+    evaluar, de la bandeja que ya pide el panel; `pintarContadorEntregas()` lo repinta cuando llega o cambia; cambio
+    `navegacion-mejoras`), y el resto en «☰ Más» (`#nav-mas`). `pintarNav()` sigue el orden del catálogo `SECCIONES`
+    (las que no son de barra llevan `solo-escritorio`), así el menú lateral de PC no cambia. Desde 720 px: pestañas arriba (alumno o
     alumna) o menú lateral pegajoso de 232 px (admin).
   - Los E2E deben abrir la sección antes de interactuar con ella, p. ej. `ingles.html?api=…#alumnos`.
 - **Alumno o alumna (`alumno.js`).** 🏠 Inicio: encabezado con anillo de la semana (`#anillo`), nivel de inglés (`#nivel`, «🎓 Inglés A1», de su

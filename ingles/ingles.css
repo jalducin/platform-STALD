@@ -263,6 +263,14 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 
 /* ---------- Ruta del profe (openspec: ruta-profe, profe-diseno) ---------- */
 .profe-link { font-weight: 700; color: var(--accent); text-decoration: none; }
+/* Contador de «📥 Entregas» (openspec: navegacion-mejoras): sobre el emoji en la barra del celular y a la derecha en el
+   menú lateral. Colores con tokens (contraste AA en claro y oscuro). */
+.nav-item { position: relative; }
+.nav-contador { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
+  background: var(--bad-soft); color: var(--bad); border: 1px solid var(--bad); font-size: .7rem; font-weight: 800; line-height: 1; order: 3; margin-left: auto; }
+@media (max-width: 719.98px) {
+  .nav-barra .nav-contador { position: absolute; top: 3px; left: calc(50% + 4px); margin: 0; }
+}
 .nav-item.profe-link { color: var(--muted); }
 .nav-item.profe-link[aria-current="page"] { color: var(--accent); }
 .ruta-sem { border-top: 1px solid var(--border); padding: 10px 0; display: grid; gap: 4px; }

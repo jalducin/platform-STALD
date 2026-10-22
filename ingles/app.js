@@ -21,9 +21,22 @@ function seccionActual() {
   const h = decodeURIComponent(location.hash.slice(1));
   return ids.includes(h) ? h : ids[0];
 }
+// Entregas listas para evaluar (bandeja del profe ya cargada; sin bandeja o con error: null). openspec: navegacion-mejoras.
+function entregasPendientes() {
+  const b = state.secBandeja;
+  return b && !b.error && Number.isFinite(b.pendientes) ? b.pendientes : null;
+}
+const contadorEntregas = () => { const n = entregasPendientes(); return n ? '<span class="nav-contador" data-contador-entregas aria-hidden="true">' + (n > 99 ? '99+' : n) + '</span><span class="sr-only"> · ' + n + ' por revisar</span>' : ''; };
+// Repinta el contador de «📥 Entregas» en la barra, el menú lateral y «☰ Más» (lo llama cargarBandejaSec al llegar la bandeja).
+function pintarContadorEntregas() {
+  document.querySelectorAll('[data-nav="entregas"]').forEach(a => {
+    a.querySelectorAll('.nav-contador, .sr-only').forEach(x => x.remove());
+    a.querySelector('.nav-emoji').insertAdjacentHTML('afterend', contadorEntregas());
+  });
+}
 function navItem(s, actual, extra) {
   const cur = s.id === actual ? ' aria-current="page"' : '';
-  const cuerpo = '<span class="nav-emoji" aria-hidden="true">' + s.emoji + '</span><span class="nav-label">' + escapeHtml(s.titulo) + '</span>';
+  const cuerpo = '<span class="nav-emoji" aria-hidden="true">' + s.emoji + '</span>' + (s.id === 'entregas' && s.rol === 'admin' ? contadorEntregas() : '') + '<span class="nav-label">' + escapeHtml(s.titulo) + '</span>';
   const cls = 'nav-item' + (extra ? ' ' + extra : '') + (s.id === 'ruta' ? ' profe-link' : '');
   if (s.accion) return '<button type="button" class="' + cls + '" data-nav-accion="' + s.accion + '">' + cuerpo + '</button>';
   // En ?modo=profe las secciones del admin viven en ingles.html (sin modo).
@@ -42,8 +55,9 @@ function pintarNav() {
   if (rol === 'alumno') {
     navEl.innerHTML = lista.filter(s => !s.fueraDeBarra).map(s => navItem(s, actual)).join('');
   } else {
-    const barra = lista.filter(s => s.barra), resto = lista.filter(s => !s.barra);
-    navEl.innerHTML = barra.map(s => navItem(s, actual)).join('') + resto.map(s => navItem(s, actual, 'solo-escritorio')).join('') +
+    // En el orden del catálogo (el menú lateral de PC no cambia); en celular solo las de barra y el resto en «☰ Más».
+    const resto = lista.filter(s => !s.barra);
+    navEl.innerHTML = lista.map(s => navItem(s, actual, s.barra ? '' : 'solo-escritorio')).join('') +
       '<button type="button" class="nav-item solo-celular" data-nav-accion="mas" aria-expanded="false" aria-controls="nav-mas"><span class="nav-emoji" aria-hidden="true">☰</span><span class="nav-label">Más</span></button>';
     document.getElementById('nav-mas').innerHTML = resto.map(s => navItem(s, actual)).join('');
   }
