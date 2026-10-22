@@ -30,6 +30,10 @@
   conteo de «Esta semana» y del selector) y el merge de `main`: `alta-alumnos` (13), `baja-ingles` (17), `profe-grupo`
   (7), `presentar` (11), `grupos` (12), `ocultar-grupos` (29, estable en 3 corridas seguidas), `ingles-pro` (32): 7 PASS;
   `misiones` OMIT (le faltan datos en esta copia, ajena al cambio).
+- Tras el segundo merge de `main` (PR #232, rediseño RPG de Inglés): suite 1054 pasaron, 0 fallaron; E2E `alta-alumnos`,
+  `baja-ingles`, `profe-grupo`, `presentar`, `rpg-ingles` (31), `grupos`, `ocultar-grupos` (29) e `ingles-pro` (32):
+  8 PASS. `ingles-pro` esperaba 11 secciones en el menú del profe; `rpg-fase2-ingles` agregó «🛡️ Nicks» (12) sin
+  correrla (solo corre con `--pg`); se ajustó la cuenta en `tests/e2e/e2e-ingles-pro.js`.
 
 ## Verificación de estado
 - Antes: `stald_test_docs` y `stald_test_grupos` (PostgREST falso) vacías: `[]`
