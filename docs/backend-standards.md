@@ -697,7 +697,8 @@ dos archivos.**
 - **Perfil:** `GET|PUT /gamificacion/perfil` (`{ aparecer: boolean }`) solo para alumnos y alumnas activas de Inglés
   (admin 403 `solo_alumnos`, baja 403 `baja_ingles`, solo Secundaria 404 `sin_ranking`, invitado 403, otra persona
   403 `ajeno`). Aparecer exige nick de Juegos (400 `sin_nick`) que pase `revisarNick` (400 `nick_invalido` con
-  `motivo`: `correo`, `telefono`, `nombre` o `palabra`, y un `mensaje` para mostrar).
+  `motivo`: `correo`, `telefono`, `nombre`, `palabra`, `caracteres` o `repetido`, y un `mensaje` para mostrar).
+  Ocultarse (`aparecer: false`) se acepta siempre, también con el ranking apagado.
 - **Ranking:** `GET /gamificacion/ranking[?grupo=]` → `{ semana, lista: [{ posicion, nick, puntos }], yo? }`. Solo su
   grupo (otro → 403), por puntos de constancia de `comun/constancia.js` (función pura que el servidor importa), solo
   quien activó aparecer y tiene el nick aprobado. **Nunca** nombres, correos, slugs, XP, nivel ni calificaciones (lo

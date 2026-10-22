@@ -59,11 +59,13 @@ export function estadoNick(perfil: PerfilGamificacion | null, nick: string | nul
 }
 
 // ---------- Revisión del nick ----------
-// Normaliza para comparar: sin acentos, minúsculas, números «leet» a letras.
+// Forma canónica para comparar (igual para el nick, los nombres y las listas): NFKD (letras de ancho completo y
+// similares a su forma básica), sin acentos, minúsculas, números «leet» a letras y «l» como «i» (así «Ange1» y
+// «Angel» coinciden). Lo que no quede en a-z, 0-9 o espacio (otros alfabetos, como la «а» cirílica) se rechaza.
 const LEET: Record<string, string> = { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b" };
-const sinAcentos = (s: string) => s.normalize("NFD").replaceAll(/[̀-ͯ]/g, "").toLowerCase();
-const palabras = (s: string) => sinAcentos(s).split(/[^a-z0-9]+/).filter(Boolean);
-const deLeet = (s: string) => s.replaceAll(/[0134578]/g, (d) => LEET[d]);
+const basico = (s: string) => s.normalize("NFKD").replaceAll(/\p{M}/gu, "").toLowerCase();
+const canon = (s: string) => basico(s).replaceAll(/[0134578]/g, (d) => LEET[d]).replaceAll("l", "i");
+const palabras = (s: string) => canon(s).split(/[^a-z0-9]+/).filter(Boolean);
 // Lista de palabras bloqueadas (groserías e insultos comunes en México y en inglés, y contenido para adultos).
 // Las de 5 letras o más se buscan dentro del nick; las cortas, como palabra completa.
 export const PALABRAS_BLOQUEADAS = [
@@ -71,28 +73,42 @@ export const PALABRAS_BLOQUEADAS = [
   "pinche", "idiota", "estupid", "imbecil", "naco", "baboso", "babosa", "tarado", "tarada", "menso", "mensa", "nalga",
   "sexo", "sexy", "porno", "desnud", "droga", "nazi", "hitler", "matar", "muerte", "suicid",
   "fuck", "shit", "bitch", "dick", "pussy", "nigg", "slut", "whore", "kill", "sex",
-];
-const CORREO = /(gmail|hotmail|outlook|yahoo|icloud|arroba|puntocom)/;
-export type MotivoNick = "correo" | "telefono" | "nombre" | "palabra";
+].map(canon);
+const CORREOS = ["gmail", "hotmail", "outlook", "yahoo", "icloud", "arroba", "puntocom"].map(canon);
+export type MotivoNick = "correo" | "telefono" | "nombre" | "palabra" | "caracteres" | "repetido";
 export const MENSAJES_NICK: Record<MotivoNick, string> = {
   correo: "Tu nick parece un correo. Elige uno que no diga cómo contactarte y cámbialo en Juegos.",
   telefono: "Tu nick tiene muchos números, como un teléfono. Cámbialo en Juegos.",
   nombre: "Tu nick incluye el nombre de una persona del registro. Elige uno sin nombres de personas y cámbialo en Juegos.",
   palabra: "Tu nick tiene una palabra que no se permite. Elige otro y cámbialo en Juegos.",
+  caracteres: "Usa en tu nick solo letras y números comunes (sin símbolos de otros alfabetos). Cámbialo en Juegos.",
+  repetido: "Otra persona ya usa ese nick en Juegos. Elige uno distinto y cámbialo en Juegos.",
 };
+type Revision = { ok: true } | { ok: false; motivo: MotivoNick; mensaje: string };
+const mal = (motivo: MotivoNick): Revision => ({ ok: false, motivo, mensaje: MENSAJES_NICK[motivo] });
 // nombres = nombres completos del registro; se usa el nombre de pila (la primera palabra) de cada uno.
-export function revisarNick(nick: string, nombres: string[]): { ok: true } | { ok: false; motivo: MotivoNick; mensaje: string } {
-  const mal = (motivo: MotivoNick) => ({ ok: false as const, motivo, mensaje: MENSAJES_NICK[motivo] });
-  const crudo = sinAcentos(nick);
-  if (crudo.includes("@") || CORREO.test(crudo.replaceAll(/[^a-z0-9]/g, ""))) return mal("correo");
-  if ((crudo.match(/\d/g) || []).length >= 7) return mal("telefono");
-  const ps = palabras(nick).map(deLeet);
+export function revisarNick(nick: string, nombres: string[]): Revision {
+  const b = basico(nick);
+  if (/[^a-z0-9 ]/.test(b)) return mal(b.includes("@") ? "correo" : "caracteres");
+  if ((b.match(/[0-9]/g) || []).length >= 7) return mal("telefono");
+  const ps = palabras(nick);
   const junto = ps.join("");
-  const contiene = (w: string) => w.length >= 5 ? junto.includes(w) : ps.includes(w);
+  if (CORREOS.some((c) => junto.includes(c))) return mal("correo");
   const pila = [...new Set(nombres.map((n) => palabras(n)[0]).filter((n): n is string => !!n && n.length >= 3))];
   if (pila.some((n) => n.length >= 4 ? junto.includes(n) : ps.includes(n))) return mal("nombre");
-  if (PALABRAS_BLOQUEADAS.some(contiene)) return mal("palabra");
+  if (PALABRAS_BLOQUEADAS.some((w) => w.length >= 5 ? junto.includes(w) : ps.includes(w))) return mal("palabra");
   return { ok: true };
+}
+// Juegos no exige nicks únicos: en el ranking no puede haber dos iguales (se confundirían o se suplantarían).
+export function nickRepetido(nick: string, nicks: Record<string, string>, idPropio: string): boolean {
+  const c = canon(nick).replaceAll(" ", "");
+  return Object.entries(nicks).some(([id, n]) => id !== idPropio && canon(n).replaceAll(" ", "") === c);
+}
+// Revisión completa: la automática y que nadie más tenga ese nick.
+function revisarTodo(nick: string, nombres: string[], nicks: Record<string, string>, slug: string): Revision {
+  const r = revisarNick(nick, nombres);
+  if (!r.ok) return r;
+  return nickRepetido(nick, nicks, `a-${slug}`) ? mal("repetido") : r;
 }
 
 // ---------- Dependencias ----------
@@ -176,7 +192,7 @@ async function calcularGrupo(deps: DepsGamificacion, grupo: string, semana: { de
   const visibles = miembros.flatMap((s, i) => {
     const p = perfiles[i]?.data ?? null;
     const nick = nickDe(nicks, s);
-    if (!p?.aparecer || !nick || estadoNick(p, nick) !== "aprobado" || !revisarNick(nick, nombres).ok) return [];
+    if (!p?.aparecer || !nick || estadoNick(p, nick) !== "aprobado" || !revisarTodo(nick, nombres, nicks, s).ok) return [];
     return [{ nick, puntos: puntos.get(s) ?? 0 }];
   });
   return { puntos, visibles };
@@ -237,12 +253,14 @@ async function perfilHttp(req: Request, url: URL, deps: DepsGamificacion, json: 
   let body: { aparecer?: unknown; alumno?: unknown } = {};
   try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
   if (body.alumno !== undefined && body.alumno !== p.slug) return json({ error: "ajeno" }, 403);
-  if (!prendido) return json({ error: "sin_ranking" }, 404);
   if (typeof body.aparecer !== "boolean") return json({ error: "datos_invalidos" }, 400);
+  // Ocultarse se puede siempre, también con el ranking apagado; aparecer, solo con el ranking encendido.
+  if (body.aparecer && !prendido) return json({ error: "sin_ranking" }, 404);
   if (body.aparecer) {
-    const nick = nickDe(await leerNicks(deps.store), p.slug);
+    const nicks = await leerNicks(deps.store);
+    const nick = nickDe(nicks, p.slug);
     if (!nick) return json({ error: "sin_nick", mensaje: "Para aparecer necesitas un nick. Póntelo en Juegos, en «🎨 Tu avatar» → «✏️ Tu nick», y vuelve aquí." }, 400);
-    const r = revisarNick(nick, Object.values(await deps.registro()).map((a) => a.nombre));
+    const r = revisarTodo(nick, Object.values(await deps.registro()).map((a) => a.nombre), nicks, p.slug);
     if (!r.ok) return json({ error: "nick_invalido", motivo: r.motivo, mensaje: r.mensaje }, 400);
   }
   const aparecer = body.aparecer;
@@ -277,7 +295,7 @@ async function limpiarPerfiles(deps: DepsGamificacion, registro: RegistroAlumnos
   for (const archivo of await deps.store.list("gamificacion/perfiles")) {
     const slug = archivo.replace(/\.json$/, "");
     const a = vigentes.get(slug);
-    if (a && (!a.baja || a.baja > limite)) continue;
+    if (a && (!a.baja || a.baja >= limite)) continue; // «más de 30 días»: la de hace 30 exactos se conserva
     await deps.store.remove(rutaPerfil(slug), `gamificacion: se borra el perfil de ${slug} (baja)`);
     n++;
   }
@@ -298,7 +316,7 @@ async function listaNicks(url: URL, deps: DepsGamificacion, json: Json): Promise
     const perfil = (await deps.store.get<PerfilGamificacion>(rutaPerfil(slug)))?.data ?? null;
     const nick = nickDe(nicks, slug);
     const estado = estadoNick(perfil, nick);
-    const rev = nick ? revisarNick(nick, nombres) : null;
+    const rev = nick ? revisarTodo(nick, nombres, nicks, slug) : null;
     return {
       alumno: slug, nombre: (a.nombre.trim().split(/\s+/)[0] || a.nombre), grupo, nick, estado, aparecer: !!perfil?.aparecer,
       ...(perfil?.motivo && estado === "rechazado" ? { motivo: perfil.motivo } : {}),
@@ -315,13 +333,14 @@ async function moderar(req: Request, accion: "aprobar" | "rechazar", deps: DepsG
   const slug = typeof body.alumno === "string" ? body.alumno : "";
   const registro = await deps.registro();
   if (!Object.values(registro).some((a) => !a.baja && slugAlumno(a.nombre) === slug)) return json({ error: "alumno_no_encontrado" }, 404);
-  const actual = nickDe(await leerNicks(deps.store), slug);
+  const nicks = await leerNicks(deps.store);
+  const actual = nickDe(nicks, slug);
   if (!actual) return json({ error: "sin_nick" }, 400);
   if (body.nick !== actual) return json({ error: "nick_cambio", mensaje: "El nick cambió en Juegos; vuelve a cargar la lista." }, 409);
   const motivo = typeof body.motivo === "string" ? body.motivo.trim().replaceAll(/\s+/g, " ") : "";
   if (accion === "rechazar" && (!motivo || motivo.length > MAX_MOTIVO)) return json({ error: "motivo_invalido" }, 400);
   if (accion === "aprobar") {
-    const r = revisarNick(actual, Object.values(registro).map((a) => a.nombre));
+    const r = revisarTodo(actual, Object.values(registro).map((a) => a.nombre), nicks, slug);
     if (!r.ok) return json({ error: "nick_invalido", motivo: r.motivo, mensaje: r.mensaje }, 400);
   }
   const nuevo = await guardarPerfil(deps.store, slug, (prev) => {

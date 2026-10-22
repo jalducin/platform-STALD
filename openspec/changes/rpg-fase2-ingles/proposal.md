@@ -28,7 +28,8 @@ consentimientos») y los quita del paraguas.
   responde `{ ranking: false }`, el ranking 404 y la página no dibuja nada del ranking, ni el botón.
 - **Panel del profe** («🛡️ Nicks» en `ingles.html`, admin): cola de moderación (aprobar o rechazar con motivo), lista
   de nicks con su revisión automática, interruptor general y apagado por grupo.
-- **Función pura compartida** `comun/constancia.js` (servidor con `import`, navegador con `<script>`).
+- **Función pura compartida** `comun/constancia.js`: script clásico sin DOM que el servidor importa; la página puede
+  cargarlo con `<script>` cuando muestre su propia constancia (hoy la recibe del servidor en `yo.puntos`).
 - **Retención:** los perfiles de quien lleva más de 30 días de baja (o ya no está en el registro) se borran al abrir la
   cola de moderación.
 - **Pendiente (depende de la Fase 2a):** la misión «My Hero Card» y los 20 puntos por paso de misión. El servidor ya
@@ -63,13 +64,13 @@ consentimientos») y los quita del paraguas.
 |---|---|---|---|---|
 | Admin (profe) | — | 403 `solo_alumnos` | Su `?grupo=` (solo nicks y puntos) | Sí: nombre de pila, nick, estado, si pidió aparecer; aprobar, rechazar, interruptor |
 | Alumno o alumna activa de Inglés | Sí | Solo el suyo; otra persona → 403 | Solo su grupo, con interruptor encendido; otro grupo → 403 | 403 |
-| De baja de Inglés | — (ve el aviso de baja) | 403 `baja_ingles` | 403, y no aparece | 403 |
+| De baja de Inglés | — (ve el aviso de baja) | 403 `baja_ingles` (404 `sin_ranking` si tiene Secundaria) | 403, y no aparece (404 si tiene Secundaria) | 403 |
 | Solo Secundaria | — | 404 `sin_ranking` | 404 `sin_ranking` | 403 |
 | Invitado de Juegos | — | 403 | 403 | 403 |
 | Sin sesión | — | 401 | 401 | 401 |
 
-Con el interruptor apagado (por defecto) o el grupo apagado: perfil `{ ranking: false }`, `PUT` y ranking 404
-`sin_ranking`. Ninguna respuesta lleva correos; el ranking nunca lleva nombres, slugs, XP, nivel ni calificaciones.
+Con el interruptor apagado (por defecto) o el grupo apagado: perfil `{ ranking: false }`, `PUT { aparecer: true }` y
+ranking 404 `sin_ranking`; ocultarse se acepta siempre. Ninguna respuesta lleva correos; el ranking nunca lleva nombres, slugs, XP, nivel ni calificaciones.
 Se verifica con `server/gamificacion_ingles_test.ts` (incluye un recorrido de todo el JSON), la E2E `rpg-ingles` y curl.
 
 ### Acciones externas

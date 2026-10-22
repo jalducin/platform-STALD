@@ -96,7 +96,7 @@ async function cambiarAparecer(aparecer, boton) {
 
 // ---------- Admin: «🛡️ Nicks» ----------
 const ESTADO_NICK = { pendiente: '⏳ Pendiente', aprobado: '✅ Aprobado', rechazado: '⛔ Rechazado', sin_nick: '— Sin nick' };
-const REVISION_NICK = { correo: 'parece un correo', telefono: 'parece un teléfono', nombre: 'incluye un nombre del registro', palabra: 'tiene una palabra bloqueada' };
+const REVISION_NICK = { correo: 'parece un correo', telefono: 'parece un teléfono', nombre: 'incluye un nombre del registro', palabra: 'tiene una palabra bloqueada', caracteres: 'usa símbolos de otros alfabetos', repetido: 'otra persona usa el mismo nick' };
 
 async function cargarNicksAdmin(aviso) {
   const q = state.grupoFiltro ? '&grupo=' + encodeURIComponent(state.grupoFiltro) : '';

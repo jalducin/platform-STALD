@@ -4,8 +4,9 @@
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import "../comun/constancia.js";
-import { CONFIG_POR_DEFECTO, estadoNick, handleGamificacion, handleProfeGamificacion, rankingVisible, revisarNick, RUTA_CONFIG, rutaPerfil } from "./gamificacion.ts";
+import { CONFIG_POR_DEFECTO, estadoNick, handleGamificacion, handleProfeGamificacion, nickRepetido, rankingVisible, revisarNick, RUTA_CONFIG, rutaPerfil } from "./gamificacion.ts";
 import { invalidarRanking } from "./cache_ranking.ts";
+import { clearCacheJuegos, handleJuegos } from "./juegos.ts";
 import type { Item } from "./motor.ts";
 import { MemoryStore, type Store } from "./store.ts";
 import { storeCon } from "./test_datos.ts";
@@ -279,4 +280,60 @@ Deno.test("rankingVisible: /ingles/actividades solo avisa con el interruptor enc
   assertEquals(await rankingVisible(base({}, { ranking: true }), null), true); // sin base de grupos: un solo grupo
   const roto: Store = { get: () => Promise.reject(new Error("caído")), put: () => Promise.resolve(false), list: () => Promise.resolve([]), remove: () => Promise.resolve() };
   assertEquals(await rankingVisible(roto, "g1"), false);
+});
+
+Deno.test("nick: no se brinca la revisión con «1» por «l», otros alfabetos, ancho completo ni correos con números", () => {
+  const nombres = Object.values(REGISTRO).map((a) => a.nombre);
+  assertEquals((revisarNick("Ange1 Pro", nombres) as any).motivo, "nombre"); // 1 = l
+  assertEquals((revisarNick("Ｌａｕｒａ", nombres) as any).motivo, "nombre"); // letras de ancho completo
+  assertEquals((revisarNick("Lаura", nombres) as any).motivo, "caracteres"); // «а» cirílica
+  assertEquals((revisarNick("５５１２３４５６７８", nombres) as any).motivo, "telefono");
+  assertEquals((revisarNick("mari gma1l", nombres) as any).motivo, "correo");
+  assertEquals((revisarNick("h0tmail", nombres) as any).motivo, "correo");
+  assertEquals(revisarNick("Ñandú Veloz", nombres), { ok: true }); // la ñ y los acentos sí valen
+  assertEquals(nickRepetido("estrella  AZUL", { "a-otra": "Estrella Azul" }, "a-yo"), true);
+  assertEquals(nickRepetido("Estrella Azul", { "a-yo": "Estrella Azul" }, "a-yo"), false);
+});
+
+Deno.test("nick repetido: no puede aparecer ni aprobarse, y el ranking no muestra copias", async () => {
+  const s = base({ "juegos/nicks.json": { "a-marisol-perez": "Cometa", "a-laura-gomez": "Cometa", "i-0123456789": "Tigre" } });
+  const r = await aparecer(s, "marisol@example.com");
+  assertEquals([r.status, r.body.motivo], [400, "repetido"]);
+  assertEquals((await aprobar(s, "laura-gomez", "Cometa")).body.motivo, "repetido");
+  // Si ya estaba aprobado antes de que otra persona copiara el nick, deja de verse
+  await s.put(rutaPerfil("laura-gomez"), { aparecer: true, nickAprobado: "Cometa", actualizado: "" }, null);
+  assertEquals((await llamar(s, "angel@example.com", "GET", "/gamificacion/ranking")).body.lista, []);
+});
+
+Deno.test("ocultarse se puede siempre, también con el ranking apagado", async () => {
+  const s = base({ [rutaPerfil("marisol-perez")]: { aparecer: true, nickAprobado: "Estrella Azul", actualizado: "" } }, null);
+  const r = await aparecer(s, "marisol@example.com", false);
+  assertEquals(r.status, 200);
+  assertEquals((await s.get<any>(rutaPerfil("marisol-perez")))!.data.aparecer, false);
+  assertEquals((await aparecer(s, "marisol@example.com", true)).status, 404);
+});
+
+Deno.test("retención: la baja de hace 30 días exactos se conserva; la de 31 se borra", async () => {
+  const s = base({
+    "alumnos.json": { ...REGISTRO, "jesus@example.com": { nombre: "Jesus Mora", alta: "2026-09-01", baja: "2026-09-21" }, "angel@example.com": { nombre: "Angel Ruiz", alta: "2026-09-01", baja: "2026-09-20" } },
+    [rutaPerfil("jesus-mora")]: { aparecer: false, actualizado: "" },
+    [rutaPerfil("angel-ruiz")]: { aparecer: false, actualizado: "" },
+  });
+  await llamar(s, ADMIN, "GET", "/profe/nicks");
+  assert(await s.get(rutaPerfil("jesus-mora")));
+  assertEquals(await s.get(rutaPerfil("angel-ruiz")), null);
+});
+
+Deno.test("Juegos: cambiar el nick (POST /juegos/nick) invalida la caché del ranking", async () => {
+  const s = base();
+  await aparecer(s, "marisol@example.com");
+  await aprobar(s, "marisol-perez", "Estrella Azul");
+  assertEquals((await llamar(s, "angel@example.com", "GET", "/gamificacion/ranking")).body.lista.length, 1); // queda en caché
+  clearCacheJuegos();
+  const ingles = [{ alumno: "Marisol Pérez", userEmails: ["marisol@example.com"], userNames: ["Marisol Pérez"] }];
+  const dj = { store: s, admin: ADMIN, filasIngles: () => Promise.resolve(ingles), filasSecundaria: () => Promise.resolve([]), hoy: () => HOY, ahora: () => "2026-10-21T17:00:00.000Z", cuentas: () => Promise.resolve([]) };
+  const req = new Request("http://x/juegos/nick?email=marisol%40example.com", { method: "POST", body: JSON.stringify({ nick: "Luna Roja" }) });
+  assertEquals((await handleJuegos(req, "/nick", "marisol@example.com", dj as any, json)).status, 200);
+  // Sin invalidarRanking() a mano: la siguiente carga ya no la muestra
+  assertEquals((await llamar(s, "angel@example.com", "GET", "/gamificacion/ranking")).body.lista, []);
 });

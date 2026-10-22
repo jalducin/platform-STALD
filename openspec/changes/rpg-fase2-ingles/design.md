@@ -29,7 +29,11 @@ ranking (`server/cache_ranking.ts`, módulo aparte para no crear un ciclo de imp
 
 ## 3. Revisión automática del nick
 
-Normaliza (sin acentos, minúsculas, números «leet» a letras) y rechaza con un motivo:
+Normaliza (NFKD: letras de ancho completo a su forma básica; sin acentos; minúsculas; números «leet» a letras; «l»
+como «i», para que «Ange1» coincida con «Angel») y rechaza con un motivo:
+
+- `caracteres`: queda algo fuera de a-z, 0-9 y espacio (otros alfabetos, como la «а» cirílica que imita a la «a»);
+- `repetido`: otra persona tiene el mismo nick en Juegos (Juegos no exige nicks únicos; en el ranking se suplantarían);
 
 - `correo`: `@` o nombres de proveedores (`gmail`, `hotmail`, `outlook`, `yahoo`, `icloud`, `arroba`, `puntocom`);
 - `telefono`: 7 dígitos o más;
@@ -43,7 +47,8 @@ el ranking (defensa en profundidad). El profe ve en la cola el motivo de la revi
 
 ## 4. Puntos de constancia y ranking
 
-- `comun/constancia.js` (función pura compartida; el servidor la importa por ruta relativa): por actividad con reto,
+- `comun/constancia.js` (función pura compartida; el servidor la importa por ruta relativa; la página aún no la carga,
+  recibe sus puntos en `yo.puntos`): por actividad con reto,
   **su primer envío** (reintentar no suma), 10 si `fueraDeTiempo` no es verdadero y 5 si sí, contado si su fecha en
   CDMX cae en la semana; 20 por paso de misión (dependencia `pasosMision`, vacía hasta la Fase 2a).
 - Se leen los resultados de las actividades visibles que ya abrieron hasta el domingo de la semana (una consulta por

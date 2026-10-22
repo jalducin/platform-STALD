@@ -19,8 +19,9 @@ la Fase 1, sin cambios), y el mundo actual de Inglés. SHALL NOT guardar nada nu
 El ranking de Inglés SHALL estar detrás de un interruptor del profe en `stald_docs` (`gamificacion/config.json`,
 `ranking`), **apagado por defecto** (también si el documento no existe), con efecto inmediato y sin redeploy. Con el
 interruptor apagado o el grupo apagado, `GET /gamificacion/perfil` SHALL responder solo `{ ranking: false }`,
-`PUT /gamificacion/perfil` y `GET /gamificacion/ranking` SHALL responder 404 `sin_ranking`, y la página SHALL NOT
-mostrar nada del ranking (ni la tarjeta ni el botón para aparecer).
+`PUT /gamificacion/perfil { aparecer: true }` y `GET /gamificacion/ranking` SHALL responder 404 `sin_ranking`, y la
+página SHALL NOT mostrar nada del ranking (ni la tarjeta ni el botón para aparecer). Ocultarse
+(`PUT { aparecer: false }`) SHALL aceptarse siempre, también con el ranking apagado.
 
 #### Scenario: Recién publicado
 - **WHEN** nadie ha encendido el interruptor y un alumno abre Inglés
@@ -38,7 +39,8 @@ mostrar nada del ranking (ni la tarjeta ni el botón para aparecer).
 El ranking de Inglés SHALL usar el nick de Juegos de cada persona (spec `juegos`, sin cambios). Con el interruptor general encendido, un alumno o alumna
 activo de Inglés SHALL poder pedir aparecer en el ranking con `PUT /gamificacion/perfil { aparecer: true }`. El
 servidor SHALL aceptarlo solo si tiene nick de Juegos y ese nick no contiene correos, teléfonos, ningún nombre de pila
-del registro de alumnos y alumnas ni palabras de la lista bloqueada; si no pasa, SHALL responder 400 con el motivo y
+del registro de alumnos y alumnas ni palabras de la lista bloqueada, usa solo letras latinas y números (tras normalizar
+letras de ancho completo y acentos) y ninguna otra persona tiene el mismo nick en Juegos; si no pasa, SHALL responder 400 con el motivo y
 pedir cambiarlo en Juegos. El nick SHALL quedar «pendiente» hasta que el profe lo apruebe, y SHALL volver a
 «pendiente» si la persona lo cambia en Juegos. El perfil (`gamificacion/perfiles/<slug>.json`) SHALL guardar la
 preferencia de aparecer y el valor del nick aprobado, sin correo.
@@ -107,7 +109,8 @@ contar una sola vez, por su primer envío.
 
 #### Scenario: Secundaria
 - **WHEN** la alumna de Secundaria pide el ranking
-- **THEN** el servidor responde 404 `sin_ranking` y su vista muestra «tu mejor semana» en su lugar
+- **THEN** el servidor responde 404 `sin_ranking` y su vista no muestra ranking («tu mejor semana» queda para un cambio
+  de Secundaria)
 
 #### Scenario: Ranking apagado
 - **WHEN** el profe apagó el ranking del grupo

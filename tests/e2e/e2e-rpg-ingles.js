@@ -17,7 +17,7 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
 const nickDe = j => (j && j.nombreReal ? j.nombre : '');
 let nicksAntes = null;
 async function restaurar() {
-  await pedir('/gamificacion/perfil', MARISOL, { aparecer: false }, 'PUT').catch(() => {});
+  for (const c of [MARISOL, ANGEL]) await pedir('/gamificacion/perfil', c, { aparecer: false }, 'PUT').catch(() => {});
   await pedir('/profe/ranking', ADMIN, { ranking: false }).catch(() => {});
   if (nicksAntes) for (const [c, n] of Object.entries(nicksAntes)) await pedir('/juegos/nick', c, { nick: n }).catch(() => {});
 }
@@ -92,6 +92,20 @@ async function restaurar() {
   const rk = await pedir('/gamificacion/ranking', ANGEL);
   const txt = JSON.stringify(rk.body).toLowerCase();
   ok('JSON del ranking: sin correos, nombres, slugs, XP ni calificaciones', !/@|marisol|angel|"(nombre|alumno|slug|xp|nivel|porcentaje|calificacion)"/.test(txt), txt.slice(0, 200));
+
+  // 5b) El profe rechaza un nick con motivo: el alumno ve el motivo y el botón a Juegos.
+  await pedir('/juegos/nick', ANGEL, { nick: 'Rayo Veloz' });
+  await pedir('/gamificacion/perfil', ANGEL, { aparecer: true }, 'PUT');
+  await ad.reload(); await ad.waitForSelector('#nk-cola [data-nk="rechazar"][data-nick="Rayo Veloz"]', { timeout: 60000 });
+  await ad.click('#nk-cola [data-nk="rechazar"][data-nick="Rayo Veloz"]');
+  await ad.fill('.nk-motivo input', 'Elige uno sin la palabra Veloz');
+  await ad.click('[data-nk="rechazar-ok"]');
+  await ad.waitForFunction(() => (document.getElementById('nk-msg') || {}).textContent.includes('Listo'), null, { timeout: 30000 });
+  const an = await abrirPagina(b, { email: ANGEL, viejo: true, ingles: true, out, viewport: VISTA, ruta: '/ingles.html', esperar: '#rk-estado' });
+  const est = await an.textContent('#rk-estado');
+  ok('rechazado: ve el motivo y el botón para cambiarlo en Juegos', est.includes('no aprobó') && est.includes('Elige uno sin la palabra Veloz') && !!(await an.$('#rk-estado a[href*="juegos.html"]')), est.slice(0, 120));
+  await an.context().close();
+  await pedir('/gamificacion/perfil', ANGEL, { aparecer: false }, 'PUT');
 
   // 6) Se oculta y desaparece en la siguiente carga.
   await ma.reload(); await ma.waitForSelector('[data-rk="ocultar"]', { timeout: 60000 });

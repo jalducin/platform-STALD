@@ -37,6 +37,7 @@
   misiones de la Fase 2a (`rpg-fase2-misiones`); al llegar, conectar `pasosMision` en `depsGamificacion`
   (`server/main.ts`) para los 20 puntos por paso
 - [ ] 4.2 PWA opcional (tarea 4.10 del paraguas): sin hacer en este cambio, para no arriesgar la caché de estáticos
+- [ ] 4.3 «Tu mejor semana» en la vista de Secundaria (escenario del paraguas; la ruta ya responde 404 `sin_ranking`)
 
 ## 5. Verificación (OBLIGATORIO)
 
