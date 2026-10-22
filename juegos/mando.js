@@ -269,7 +269,7 @@
  background:rgba(17,24,39,.92);color:#fff;font:700 15px "Trebuchet MS",system-ui,sans-serif;box-shadow:0 6px 16px rgba(0,0,0,.35);pointer-events:none;
  transition:opacity .2s,transform .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mando-aviso.ver{opacity:1;transform:translate(-50%,0)}
-.mando-guia-btn{font:inherit;font-weight:800;font-size:15px;min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);
+.mando-guia-btn{font:inherit;font-weight:800;font-size:15px;min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);
  background:rgba(255,255,255,.12);color:#fff;cursor:pointer}
 .mando-guia{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(8,10,20,.72);
  font-family:"Trebuchet MS",system-ui,sans-serif;color:#fff}

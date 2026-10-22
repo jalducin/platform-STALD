@@ -81,8 +81,8 @@ app.addEventListener('click', e => {
     const rjt = e.target.closest('#rj-todos'); // top 10 ↔ todos (openspec: ranking-juegos-top10)
     if (rjt) { const ol = document.getElementById('rank-juegos'), abre = !ol.classList.contains('todos'); ol.classList.toggle('todos', abre); rjt.setAttribute('aria-expanded', String(abre)); rjt.textContent = abre ? 'Ver solo el top 10 ▴' : 'Ver los ' + rjt.dataset.total + ' juegos ▾'; return; }
     const cc = e.target.closest('[data-categoria]'); if (cc) return abrirCategoria(cc.dataset.categoria); // juegos-categorias
-    const g = e.target.closest('[data-juego]');
-    if (g) { limpiar(); const j = juegoPorId(g.dataset.juego); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
+    const g = e.target.closest('[data-juego], [data-jugar]'); // juegos-diseno-rpg: «▶ Jugar» de «Para ti» y «Copas»
+    if (g) { limpiar(); const j = juegoPorId(g.dataset.juego || g.dataset.jugar); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
     return NO_ATENDIDO;
   };
   // Botones con data-a (navegación, revancha, admin, CSV, registro y sesión).
