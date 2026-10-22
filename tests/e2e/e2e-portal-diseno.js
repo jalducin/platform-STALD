@@ -10,6 +10,8 @@
 // En todos: botones de 44 px o más, sin scroll horizontal, contraste AA de los textos, foco visible, sin errores de
 // consola y el pie sin enlaces legales con el interruptor `privacidad` apagado.
 require('./lib/entorno'); // BASE, API, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
+require('../../comun/gamificacion.js'); // globalThis.Gamificacion (lo usa secundaria-datos)
+require('../../comun/secundaria-datos.js'); // globalThis.SecundariaDatos: avance esperado de la semana
 const { chromium } = require('playwright');
 const { abrirPagina, urlDe } = require('./lib/navegador');
 const API = process.env.API;
@@ -92,10 +94,12 @@ const tarjetas = p => p.$$eval('#tiles [data-espacio]', xs => xs.map(x => x.data
       ok('línea de estado de Secundaria con las clases de hoy' + et, /clases? hoy|Hoy no tienes clases/.test(estado), estado);
       const heroe = await texto(p, '#portal-heroe');
       ok('héroe sin nivel ni XP inventados' + et, !/\bNv\.|\bXP\b|Nivel/i.test(heroe), heroe);
-      if (await visible(p, '#portal-avance')) {
-        const av = await p.$eval('#portal-avance', e => ({ barra: !!e.querySelector('.rpg-xp-barra[role="progressbar"]'), racha: !!e.querySelector('#portal-racha'), txt: e.textContent }));
-        ok('avance: semana con barra y racha' + et, av.barra && av.racha && /\d+ \/ \d+ clases/.test(av.txt), av.txt);
-      } else ok('avance: oculto sin datos de la semana ni racha' + et, true);
+      // Avance esperado con la misma respuesta de /secundaria/actividades: visible solo con clases en la semana o racha.
+      const act = await (await fetch(API + '/secundaria/actividades?email=' + encodeURIComponent(SEC))).json();
+      const SD = globalThis.SecundariaDatos, prog = SD.progresoSemana(act.items || [], act.hoy), racha = SD.rachaDe(act);
+      const av = await p.$eval('#portal-avance', e => ({ ver: !e.hidden, barra: !!e.querySelector('.rpg-xp-barra[role="progressbar"]'), racha: (e.querySelector('#portal-racha .rpg-num') || {}).textContent, txt: e.textContent.replace(/\s+/g, ' ') }));
+      if (prog.total || racha.dias) ok('avance: semana ' + prog.hechas + ' / ' + prog.total + ' con barra y racha ' + racha.dias + et, av.ver && av.barra && av.txt.includes(prog.hechas + ' / ' + prog.total + ' clases') && av.racha === String(racha.dias), av.txt);
+      else ok('avance: oculto sin clases en la semana ni racha (hoy ' + act.hoy + ')' + et, !av.ver);
       ok('«🗓️ Mi horario» con el estilo del portal' + et, await visible(p, '#sec-portal'));
       await revisar(p, et, TEXTOS_HOME, p.errores);
       await p.screenshot({ path: 'portal-diseno-secundaria-360' + suf + '.png', fullPage: true });
@@ -116,7 +120,11 @@ const tarjetas = p => p.$$eval('#tiles [data-espacio]', xs => xs.map(x => x.data
       ok('tarjetas Inglés y Juegos, atajo de Material' + et, JSON.stringify(await tarjetas(p)) === '["ingles","juegos"]' && await visible(p, '#material-link'), (await tarjetas(p)).join());
       ok('sin avance RPG ni horario de Secundaria' + et, !(await visible(p, '#portal-avance')) && !(await visible(p, '#sec-portal')));
       ok('Inglés sin línea de estado (sin dato en el portal)' + et, !(await visible(p, '[data-estado="ingles"]')));
-      ok('Juegos con su línea de la semana (/juegos/yo)' + et, /puntos esta semana|Aún no juegas esta semana/.test(await texto(p, '[data-estado="juegos"]')), await texto(p, '[data-estado="juegos"]'));
+      // La línea de Juegos sale de /juegos/yo: puntos individuales con su lugar del ranking individual.
+      const yo = await (await fetch(API + '/juegos/yo?email=' + encodeURIComponent(INGLES))).json();
+      const lineaJ = await texto(p, '[data-estado="juegos"]');
+      const esperada = yo.totalIndividual ? '⭐ ' + Number(yo.totalIndividual).toLocaleString('es-MX') + ' puntos individuales esta semana' + (yo.pos ? ' · #' + yo.pos : '') : null;
+      ok('Juegos con su línea de la semana (/juegos/yo, individuales con su lugar)' + et, esperada ? lineaJ === esperada : /puntos en partidas esta semana|Aún no juegas esta semana/.test(lineaJ), lineaJ + ' | esperada: ' + esperada);
       ok('avatar de Juegos dentro del saludo' + et, !!(await p.$('#hello .av')));
       await revisar(p, et, TEXTOS_HOME, p.errores);
       await p.screenshot({ path: 'portal-diseno-ingles-360' + suf + '.png', fullPage: true });
@@ -150,12 +158,15 @@ const tarjetas = p => p.$$eval('#tiles [data-espacio]', xs => xs.map(x => x.data
       const opciones = await p.$$eval('#sec-alumna-portal option', xs => xs.map(x => x.value)).catch(() => []);
       ok('selector de alumna o alumno con la lista de Secundaria' + et, opciones.length >= 1 && (await p.getAttribute('a[data-espacio="secundaria"]', 'href')).includes('alumna=' + encodeURIComponent(opciones[0])), opciones.join());
       ok('línea de Secundaria con el número de alumnas y alumnos' + et, /\d+ alumna/.test(await texto(p, '[data-estado="secundaria"]')), await texto(p, '[data-estado="secundaria"]'));
-      if (opciones.length > 1 && tema === 'light') {
+      if (tema === 'light') {
+        // Si la copia trae una sola persona, se agrega una opción solo en la página para probar el cambio de destino.
+        if (opciones.length < 2) await p.$eval('#sec-alumna-portal', s => s.add(new Option('Otra persona', 'otra-prueba')));
+        const otra = opciones[1] || 'otra-prueba';
         const pedidas = []; const escucha = r => { if (r.url().startsWith(API)) pedidas.push(r.url()); };
         p.on('request', escucha);
-        await p.selectOption('#sec-alumna-portal', opciones[1]); await p.waitForTimeout(500);
+        await p.selectOption('#sec-alumna-portal', otra); await p.waitForTimeout(500);
         p.off('request', escucha);
-        ok('elegir otra persona cambia el botón sin pedir nada al servidor', (await p.getAttribute('a[data-espacio="secundaria"]', 'href')).includes('alumna=' + encodeURIComponent(opciones[1])) && pedidas.length === 0, pedidas.join());
+        ok('elegir otra persona cambia el botón sin pedir nada al servidor', (await p.getAttribute('a[data-espacio="secundaria"]', 'href')).includes('alumna=' + encodeURIComponent(otra)) && pedidas.length === 0, pedidas.join());
       }
       ok('«🔑 Restablecer contraseña» visible' + et, await visible(p, '#admin-link'));
       await revisar(p, et, TEXTOS_HOME, p.errores);
@@ -183,6 +194,13 @@ const tarjetas = p => p.$$eval('#tiles [data-espacio]', xs => xs.map(x => x.data
         const cs = await contrastes(p, TEXTOS_LOGIN);
         ok('tema oscuro elegido: contraste AA', cs.every(c => c.r >= 4.5), JSON.stringify(cs.filter(c => c.r < 4.5)));
         await p.screenshot({ path: 'portal-diseno-login-360-tema-oscuro.png', fullPage: true });
+        // La misma elección la leen Inglés y Juegos antes de pintar.
+        for (const ruta of ['/ingles.html', '/juegos.html']) {
+          const q = await p.context().newPage();
+          await q.goto(urlDe(ruta));
+          ok('tema oscuro del portal también en ' + ruta, (await q.evaluate(() => document.documentElement.dataset.theme)) === 'dark');
+          await q.close();
+        }
         await p.click('#tema-btn'); await p.click('#tema-btn'); // claro → automático
         ok('selector de tema: vuelve a automático', await p.evaluate(() => !document.documentElement.dataset.theme && localStorage.getItem('stald_tema') === 'auto'));
         // «Crea tu cuenta de Juegos» y ?juegos=1 llevan al registro de Juegos.

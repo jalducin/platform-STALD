@@ -7,14 +7,15 @@ encabezado tipo héroe, sin selector de tema y con la entrada (login) de otro es
 ## What Changes
 
 - **Portal con sesión** (`index.html` + `estilos/portal.css` nuevo, con los tokens `--rpg-*` de `estilos/ui.css`):
-  - Encabezado tipo héroe (`#portal-heroe`): avatar de Juegos si existe, saludo con el nombre de pila, fecha y etiqueta
+  - Encabezado tipo héroe (`#portal-heroe`): avatar de Juegos si existe, saludo con el nombre de `/perfil` (nombre de
+    pila del registro, que puede ser compuesto, o apodo del invitado), fecha y etiqueta
     del rol («🧑‍🏫 Modo maestro»).
   - Avance RPG solo con datos que el portal ya tiene, sin peticiones nuevas: la alumna o el alumno de Secundaria ve su
     semana (clases hechas / total con barra) y su racha (`/secundaria/actividades`). El nivel y rango **no** se muestran
     en el portal: el nivel real suma la XP de las misiones (`/misiones`), que el portal no pide; mostrar uno parcial
     sería un dato distinto al de su página.
   - Tarjetas grandes por área según `/perfil` (Inglés, Mi ruta del profe, Secundaria y Juegos): color y emoji, una línea
-    de estado cuando el dato ya existe («2 clases hoy · 1 pendiente», «⭐ 120 puntos esta semana · #3»,
+    de estado cuando el dato ya existe («2 clases hoy · 1 pendiente», «⭐ 120 puntos individuales esta semana · #3»,
     «3 alumnas y alumnos») y un botón principal real de 44 px o más.
   - «🗓️ Mi horario» (`#sec-portal`) y el atajo de Material con el mismo estilo.
 - **Admin (profe):** las mismas tarjetas como accesos rápidos (panel de Inglés, Mi ruta, Secundaria con selector de

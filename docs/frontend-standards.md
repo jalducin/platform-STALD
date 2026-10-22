@@ -1254,7 +1254,8 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   - `#tiles`: una `div.area` por espacio de `/perfil` con su botón `a.btn[data-espacio]` (Inglés, Mi ruta solo admin,
     Secundaria, Juegos; Juegos a todo el ancho si queda sola). La línea `[data-estado]` sale solo de lo que ya se pidió:
     Secundaria «N clases hoy · M pendientes» u «Hoy no tienes clases» (admin: «N alumnas y alumnos»), Juegos
-    «⭐ N puntos esta semana · #lugar» (de `/juegos/yo`). Inglés y Mi ruta no llevan línea.
+    «⭐ N puntos individuales esta semana · #lugar» (`totalIndividual` y `pos` de `/juegos/yo`; si solo hay partidas,
+    `totalPartidas` y `posPartidas`). Inglés y Mi ruta no llevan línea.
   - Admin: `#sec-alumna-portal` en la tarjeta de Secundaria, con las `alumnas` de su `/secundaria/actividades`; cambia
     el `href` del botón sin pedir nada.
 - **Pie:** «🔒 Aviso de privacidad» y «📝 Consentimiento» con `data-interruptor="privacidad"`.

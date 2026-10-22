@@ -17,8 +17,9 @@ ya comparten `estilos/ui.css` (tokens `--rpg-*` y componentes `rpg-`). El portal
 3. **Línea de estado solo con datos ya pedidos** (`[data-estado]` en cada tarjeta, oculta si no hay dato):
    - Secundaria (alumna o alumno): `SD.clasesDeHoy` de `/secundaria/actividades` → «2 clases hoy · 1 pendiente» u «Hoy
      no tienes clases». Admin: «N alumnas y alumnos» de `alumnas` de la misma respuesta.
-   - Juegos: `total` y `pos` de `/juegos/yo` (la misma petición del avatar) → «⭐ 120 puntos esta semana · #3»; sin
-     puntos, «Aún no juegas esta semana».
+   - Juegos: de `/juegos/yo` (la misma petición del avatar). `pos` es el lugar del ranking individual, así que va con
+     `totalIndividual` → «⭐ 120 puntos individuales esta semana · #3»; si solo jugó partidas, `totalPartidas` con
+     `posPartidas` → «👥 40 puntos en partidas esta semana · #2»; sin puntos, «Aún no juegas esta semana».
    - Inglés y Mi ruta: sin dato en el portal → sin línea.
 4. **Avance RPG del héroe** (`#portal-avance`): solo Secundaria sin admin. Semana (`SD.progresoSemana`) con
    `.rpg-xp-barra` y racha (`SD.rachaDe`). **Nivel y rango, no:** el nivel de las páginas suma la XP de las misiones
@@ -33,8 +34,10 @@ ya comparten `estilos/ui.css` (tokens `--rpg-*` y componentes `rpg-`). El portal
    script corto en `<head>` aplica `data-theme` antes de pintar.
 7. **Pie:** enlace de consentimiento con `data-interruptor="privacidad"` junto al del aviso; `comun/interruptores.js`
    ya los oculta o muestra sin petición extra.
-8. **Héroe y saludo:** `#hello` sigue siendo el saludo (lo leen las E2E) y `pintarAvatar` sigue poniendo la cara del
-   avatar dentro de `#portal-av` en lugar de dentro del texto. Nombre de pila: primera palabra de `p.nombre`.
+8. **Héroe y saludo:** `#hello` sigue siendo el saludo y `pintarAvatar` sigue poniendo la cara del avatar (`.av`)
+   dentro de `#hello` (lo leen las E2E `avatar-foto` y `una-sala`). El nombre es `p.nombre` de `/perfil` tal cual: ya
+   es el nombre de pila (campo «Nombre» del registro de Inglés, que puede ser compuesto como «Luz María»; primera
+   palabra en Secundaria) o el apodo del invitado; cortarlo partiría nombres compuestos.
 
 ## Riesgos
 

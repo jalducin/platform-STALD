@@ -2,7 +2,8 @@
 
 ### Requirement: Portal con diseño RPG
 El portal (`index.html`) SHALL usar el diseño RPG compartido (`estilos/ui.css`) de Secundaria, Inglés y Juegos:
-- con sesión, un encabezado tipo héroe con el saludo por nombre de pila, la fecha y, si existen, el avatar de Juegos y
+- con sesión, un encabezado tipo héroe con el saludo por el nombre de `/perfil` (nombre de pila del registro, aunque
+  sea compuesto, o el apodo del invitado), la fecha y, si existen, el avatar de Juegos y
   la etiqueta «Modo maestro»;
 - tarjetas grandes por área según `/perfil` (Inglés, Mi ruta del profe, Secundaria y Juegos), cada una con su color,
   su emoji, un botón principal real y una línea de estado solo cuando el dato ya existe en lo que el portal pide;

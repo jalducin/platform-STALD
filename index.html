@@ -159,7 +159,12 @@
   const TEMAS = ['auto', 'oscuro', 'claro'];
   const TEMA_ICO = { auto: '🌓', oscuro: '🌙', claro: '☀️' };
   const TEMA_NOMBRE = { auto: 'automático', oscuro: 'oscuro', claro: 'claro' };
-  let tema = (() => { try { const t = localStorage.getItem('stald_tema'); return TEMAS.includes(t) ? t : 'auto'; } catch (e) { /* sin almacenamiento */ return 'auto'; } })();
+  function temaGuardado() {
+    let t = null;
+    try { t = localStorage.getItem('stald_tema'); } catch { t = null; /* sin almacenamiento: tema automático */ }
+    return TEMAS.includes(t) ? t : 'auto';
+  }
+  let tema = temaGuardado();
   function aplicarTema(t) {
     tema = t;
     const html = document.documentElement;
@@ -197,6 +202,22 @@
     el.textContent = texto || ''; el.hidden = !texto;
   }
   const plural = (n, uno, varios) => n + ' ' + (n === 1 ? uno : varios);
+  // Línea de Juegos: los puntos individuales van con su lugar del ranking individual (el mismo orden que `pos` en
+  // /juegos/yo); si solo jugó partidas en sala, sus puntos de partidas con `posPartidas`.
+  function estadoJuegos(y) {
+    const fmt = n => n.toLocaleString('es-MX');
+    const ind = Number(y.totalIndividual) || 0, par = Number(y.totalPartidas) || 0;
+    if (ind) return '⭐ ' + fmt(ind) + ' puntos individuales esta semana' + (y.pos ? ' · #' + y.pos : '');
+    if (par) return '👥 ' + fmt(par) + ' puntos en partidas esta semana' + (y.posPartidas ? ' · #' + y.posPartidas : '');
+    return 'Aún no juegas esta semana';
+  }
+  // Línea de Secundaria (alumna o alumno): clases de hoy y cuántas faltan.
+  function estadoSecundaria(deHoy) {
+    if (!deHoy.length) return 'Hoy no tienes clases';
+    const pendientes = deHoy.filter(it => !window.SecundariaDatos.estaHecha(it)).length;
+    const resto = pendientes ? plural(pendientes, 'pendiente', 'pendientes') : '¡todas hechas! 🎉';
+    return plural(deHoy.length, 'clase hoy', 'clases hoy') + ' · ' + resto;
+  }
   const saludo = (p) => 'Hola, ' + (p.nombre || 'qué gusto verte') + ' 👋';
 
   // Avatar de Juegos en el saludo y la línea de Juegos (puntos y lugar de la semana), con la misma petición /juegos/yo.
@@ -207,8 +228,7 @@
       const r = await StaldAuth.fetchConSesion(API_BASE + conCorreo('/juegos/yo', p.email));
       const y = await r.json();
       if (!r.ok) return;
-      const pts = Number(y.total) || 0;
-      ponerEstado('juegos', pts ? '⭐ ' + pts.toLocaleString('es-MX') + ' puntos esta semana' + (y.pos ? ' · #' + y.pos : '') : 'Aún no juegas esta semana');
+      ponerEstado('juegos', estadoJuegos(y));
       const av = y.jugador && y.jugador.avatar;
       if (!av) return;
       const cara = av.foto ? '<img src="' + escapeHtml(API_BASE + '/juegos/foto/' + encodeURIComponent(av.foto)) + '" alt="" data-e="' + escapeHtml(av.emoji) + '" onerror="this.replaceWith(document.createTextNode(this.dataset.e))">' : escapeHtml(av.emoji);
@@ -267,8 +287,7 @@
       const chip = (it) => { const m = SD.materiaDe(it) || { ...SD.OTRA, nombre: 'Clase' }; return '<span class="mat-chip mat-' + m.clave + '"><span aria-hidden="true">' + m.emoji + '</span> ' + escapeHtml(m.nombre) + '</span>'; };
       const deHoy = SD.clasesDeHoy(items, hoy);
       if (!alumna) {
-        const pendientes = deHoy.filter(it => !SD.estaHecha(it)).length;
-        ponerEstado('secundaria', deHoy.length ? plural(deHoy.length, 'clase hoy', 'clases hoy') + ' · ' + (pendientes ? plural(pendientes, 'pendiente', 'pendientes') : '¡todas hechas! 🎉') : 'Hoy no tienes clases');
+        ponerEstado('secundaria', estadoSecundaria(deHoy));
         pintarAvance(items, hoy, r.body);
       }
       const dias = SD.horarioSemana(items, hoy).map(d => '<li class="sec-mini-dia' + (d.esHoy ? ' es-hoy' : '') + '" data-sec-mini="' + d.fecha + '"' + (d.esHoy ? ' aria-current="date"' : '') + '>' +
@@ -279,7 +298,7 @@
         '<ol class="sec-mini" aria-label="Horario de la semana">' + dias + '</ol>' +
         '<div class="sec-acciones"><a class="btn" id="sec-portal-clases" href="' + escapeHtml(conApi(destino)) + '">📚 Mis clases</a>' +
         '<a class="btn sec-ghost" id="sec-portal-horario" href="' + escapeHtml(conApi(destino) + '#horario') + '">🗓️ Mi horario</a></div>';
-    } catch (e) {
+    } catch (e) { // sin red o error del servidor: aviso corto en vez del horario (el detalle no le sirve a quien lo ve)
       el.innerHTML = '<h2 id="sec-portal-t">🗓️ Mi horario</h2><p class="sec-aviso">No pude cargar tu horario ahora. Ábrelo desde Secundaria.</p>' +
         '<div class="sec-acciones"><a class="btn" href="' + escapeHtml(conApi('secundaria.html')) + '">📚 Mis clases</a></div>';
     }
@@ -300,7 +319,8 @@
     const atajo = $('material-link'); atajo.href = conApi('ingles.html') + '#material'; atajo.hidden = !(p.isAdmin || p.accesos.ingles);
     const visibles = ESPACIOS.filter(e => e.soloAdmin ? p.isAdmin : p.accesos[e.id]);
     // Juegos ocupa todo el ancho cuando queda sola en su fila.
-    const ancho = (e, i) => (e.id === 'juegos' && visibles.length % 2 === 1 && i === visibles.length - 1 ? { ...e, clase: e.clase + ' wide' } : e);
+    const sola = (e, i) => e.id === 'juegos' && visibles.length % 2 === 1 && i === visibles.length - 1;
+    const ancho = (e, i) => (sola(e, i) ? { ...e, clase: e.clase + ' wide' } : e);
     $('tiles').innerHTML = visibles.map((e, i) => tarjetaArea(ancho(e, i), p)).join('');
     show('home');
     pintarAvatar(p);
