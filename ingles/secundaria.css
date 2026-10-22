@@ -105,3 +105,100 @@ body.secundaria #logout-btn { min-height: 44px; }
 .sec-etapa { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--border); color: var(--muted); }
 .sec-secuencia li.actual .sec-etapa { background: var(--mat-soft); color: var(--mat); border-color: var(--mat); font-weight: 800; }
 .sec-ahora { font-size: .66rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; }
+
+/* ---------- Estilo «RPG educativo» del Inicio (openspec: secundaria-dashboard) ----------
+   Referencia visual del profe (no versionada): neón índigo, morado y esmeralda sobre azul noche, Inter para el texto
+   y Orbitron para números y títulos de misión. Sin Tailwind ni íconos externos: tokens propios y emojis. */
+body.secundaria { font-family: "Inter", var(--font); }
+:root {
+  --rpg-indigo: #4f46e5; --rpg-purple: #7e22ce; --rpg-emerald: #047857; --rpg-amber: #b45309;
+  --rpg-panel: #ffffff; --rpg-panel-2: #f5f3ff; --rpg-borde: #ddd6fe; --rpg-texto-suave: #4c4a63;
+  --rpg-hero: linear-gradient(120deg, #eef2ff 0%, #f5f3ff 55%, #ecfdf5 100%);
+  --rpg-glow: 0 8px 24px rgba(79, 70, 229, .14);
+  --rpg-barra: linear-gradient(90deg, #6366f1, #a855f7);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --rpg-indigo: #a5b4fc; --rpg-purple: #d8b4fe; --rpg-emerald: #6ee7b7; --rpg-amber: #fcd34d;
+    --rpg-panel: #0f172a; --rpg-panel-2: #111c33; --rpg-borde: #1e293b; --rpg-texto-suave: #cbd5e1;
+    --rpg-hero: linear-gradient(120deg, rgba(49, 46, 129, .55) 0%, rgba(88, 28, 135, .40) 55%, #0f172a 100%);
+    --rpg-glow: 0 0 22px rgba(99, 102, 241, .35);
+  }
+}
+:root[data-theme="dark"] {
+  --rpg-indigo: #a5b4fc; --rpg-purple: #d8b4fe; --rpg-emerald: #6ee7b7; --rpg-amber: #fcd34d;
+  --rpg-panel: #0f172a; --rpg-panel-2: #111c33; --rpg-borde: #1e293b; --rpg-texto-suave: #cbd5e1;
+  --rpg-hero: linear-gradient(120deg, rgba(49, 46, 129, .55) 0%, rgba(88, 28, 135, .40) 55%, #0f172a 100%);
+  --rpg-glow: 0 0 22px rgba(99, 102, 241, .35);
+}
+.rpg-num, .rpg-mision-t, .rpg-contador { font-family: "Orbitron", "Inter", var(--font); letter-spacing: .02em; }
+.rpg > * + * { margin-top: 14px; }
+.rpg .card, .rpg .sec-kpi, .rpg .sec-tarjeta { background: var(--rpg-panel); border-color: var(--rpg-borde); }
+
+/* Barra de estado: nivel, XP, insignias y racha */
+.rpg-stats { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px 14px; align-items: center; padding: 12px 14px;
+  background: var(--rpg-panel); border: 1px solid var(--rpg-borde); border-radius: var(--r-md); box-shadow: var(--rpg-glow); }
+.rpg-nivel { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rpg-nivel-num { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; border-radius: 12px; font-weight: 900; font-size: 1.15rem;
+  color: var(--rpg-indigo); background: var(--accent-soft); border: 1.5px solid var(--rpg-indigo); }
+.rpg-nivel-txt { flex: 1; min-width: 0; }
+.rpg-rango { font-weight: 800; font-size: .86rem; overflow-wrap: anywhere; }
+.rpg-xp-linea { display: flex; justify-content: space-between; font-size: .72rem; color: var(--rpg-texto-suave); margin: 2px 0 4px; }
+.rpg-xp-linea .rpg-num { color: var(--rpg-indigo); font-weight: 700; }
+.rpg-xp-barra { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.rpg-xp-barra > span { display: block; height: 100%; border-radius: 999px; background: var(--rpg-barra); transition: width .5s ease; }
+.rpg-dato { display: flex; align-items: center; gap: 6px; }
+.rpg-dato-ico { font-size: 1.2rem; }
+.rpg-dato-t { font-size: .68rem; color: var(--rpg-texto-suave); text-transform: uppercase; letter-spacing: .05em; }
+.rpg-dato-v { font-weight: 800; font-size: .9rem; white-space: nowrap; }
+@media (max-width: 479.98px) { .rpg-stats { grid-template-columns: 1fr 1fr; } .rpg-nivel { grid-column: 1 / -1; } }
+
+/* Misión principal activa (incluye el saludo) */
+.rpg-mision { position: relative; overflow: hidden; padding: 18px 16px; border-radius: var(--r-lg); border: 1px solid var(--rpg-borde);
+  background: var(--rpg-hero); box-shadow: var(--rpg-glow); }
+.rpg-mision::after { content: "🐉"; position: absolute; right: -6px; bottom: -14px; font-size: 6rem; opacity: .08; pointer-events: none; }
+.rpg-mision .sec-hero { padding: 0; border: 0; background: none; box-shadow: none; margin-bottom: 12px; }
+.rpg-etiqueta { display: inline-block; font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; color: var(--rpg-indigo);
+  background: var(--accent-soft); border: 1px solid var(--rpg-indigo); }
+.rpg-mision-t { margin: 8px 0 4px; font-size: 1.2rem; line-height: 1.25; font-weight: 800; overflow-wrap: anywhere; }
+.rpg-mision-d { margin: 0 0 12px; font-size: .85rem; color: var(--rpg-texto-suave); overflow-wrap: anywhere; }
+.rpg-mision-acciones { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; position: relative; z-index: 1; }
+@media (min-width: 480px) { .rpg-mision-acciones { grid-template-columns: auto auto; justify-content: start; } }
+.rpg-btn-mision { min-height: 52px; font-size: 1rem; padding: 10px 20px; background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+.rpg-btn-sec { min-height: 52px; }
+
+/* Retos diarios */
+.rpg-seccion-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rpg-seccion-top .sec-subtitulo { margin: 0; }
+.rpg-contador { font-weight: 800; font-size: .95rem; color: var(--rpg-purple); background: var(--accent-soft); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.rpg-bonus { margin: 6px 0 10px; font-size: .85rem; font-weight: 700; color: var(--rpg-purple); }
+.sec-tarjeta-premio { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.rpg-mundo-mini { font-size: .78rem; color: var(--rpg-texto-suave); font-weight: 600; }
+.rpg-xp-chip { font-size: .74rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; white-space: nowrap; color: var(--rpg-emerald);
+  background: var(--ok-soft); border: 1px solid var(--rpg-emerald); }
+.rpg .sec-tarjeta { box-shadow: var(--rpg-glow); }
+
+/* Actividad reciente y promedios en dos columnas en pantallas anchas */
+.rpg-dos { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .rpg-dos { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rpg-dos > .card + .card { margin-top: 0; } }
+.rpg-actividad-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rpg-act { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); border-left: 4px solid var(--mat); }
+.rpg-act-ico { font-size: 1rem; }
+.rpg-act-txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.rpg-act-txt b { font-size: .86rem; overflow-wrap: anywhere; }
+.rpg-act-txt span { font-size: .75rem; color: var(--rpg-texto-suave); }
+.rpg-general { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--text); }
+
+/* Insignias */
+.rpg-insignia-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.rpg-insignia { display: grid; justify-items: center; gap: 4px; padding: 10px 6px; text-align: center; border-radius: var(--r-sm); border: 1px dashed var(--border); color: var(--muted); }
+.rpg-insignia.ganada { border: 1.5px solid var(--rpg-purple); background: var(--accent-soft); color: var(--text); box-shadow: var(--rpg-glow); }
+.rpg-insignia-ico { font-size: 1.5rem; }
+.rpg-insignia:not(.ganada) .rpg-insignia-ico { filter: grayscale(1); opacity: .7; }
+.rpg-insignia-n { font-size: .72rem; font-weight: 700; line-height: 1.2; }
+
+/* Mis materias: camino de mundos */
+.rpg-leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 10px; font-size: .78rem; color: var(--muted); }
+.sec-etapa small { font-weight: 600; opacity: .85; }
+.sec-secuencia li.mundo-completado .sec-etapa { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
+.sec-secuencia li.mundo-bloqueado .sec-etapa { opacity: .75; }

@@ -103,7 +103,12 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   `fichas-e2e` (ordenar y emparejar), en la misma semana, con fecha 2026-10-04 y exclusiva de `fernando`, para
   `ordenar-emparejar`: aparece en su «Para ponerte al día». La semana de Secundaria `2026-10-26` (15 clases
   `sec-e2e-clase-*`, exclusivas de `valeria`, 2 por día y 3 el domingo, con y sin `materia`) es de
-  `secundaria-clases`, que solo corre con `--hoy 2026-10-27` (con otro día sale `OMIT`).
+  `secundaria-clases` y `secundaria-dashboard`, que solo corren con `--hoy 2026-10-27` (con otro día salen `OMIT`).
+- `secundaria-dashboard` (fase `ingles`, cambio `secundaria-dashboard`): la alumna del fixture envía 3 clases por la API
+  (en la copia temporal) y revisa a 360 px en claro y oscuro el Inicio RPG (retos, estados, progreso, racha, XP y
+  nivel, insignias, misión, actividad, promedios), botones de 44 px o más con foco visible, «📚 Mis materias» con sus
+  mundos, abrir y volver de una clase, escritorio, el tablero del admin (`?alumna=valeria`) y el bloque «🗓️ Mi
+  horario» del portal.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).

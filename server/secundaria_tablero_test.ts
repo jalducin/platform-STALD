@@ -2,6 +2,7 @@
 // ingles.html?modo=secundaria (Inicio y «📚 Mis materias») y el bloque «🗓️ Mi horario» del portal.
 // deno-lint-ignore-file no-explicit-any
 import { assertEquals } from "jsr:@std/assert@1";
+import "../comun/gamificacion.js"; // secundaria-datos.js la usa (materias, día de la clase, mundos)
 import "../comun/secundaria-datos.js";
 import { clearCache, handleSecundaria } from "./actividades.ts";
 import { clearCacheAlumnos, leerRegistro, RUTA_ALUMNOS } from "./alumnos.ts";
@@ -95,11 +96,11 @@ Deno.test("Mis materias: las 8 materias en orden, con su secuencia y la etapa ac
   assertEquals(etapas("matematicas", "2026-10-27"), "Aritmética* → Geometría → Álgebra");
   assertEquals(etapas("matematicas", "2026-11-23"), "Aritmética → Geometría* → Álgebra");
   assertEquals(etapas("matematicas", "2027-02-10"), "Aritmética → Geometría → Álgebra*");
-  assertEquals(etapas("matematicas", "2026-12-25"), "Aritmética → Geometría → Álgebra"); // vacaciones: ninguna
+  assertEquals(etapas("matematicas", "2026-12-25"), "Aritmética → Geometría* → Álgebra"); // vacaciones: el último que empezó
   assertEquals(etapas("ciencias", "2026-10-27"), "Biología* → Química → Física");
   assertEquals(etapas("sociales", "2026-11-23"), "Cívica y Ética → Historia* → Geografía");
-  assertEquals(etapas("tecnologia", "2026-12-06"), "Bases* → Programación e IA");
-  assertEquals(etapas("tecnologia", "2026-12-14"), "Bases → Programación e IA*");
+  assertEquals(etapas("tecnologia", "2026-12-06"), "Bases* → Programación → IA");
+  assertEquals(etapas("tecnologia", "2026-12-14"), "Bases → Programación* → IA");
   // Inglés avanza a su ritmo: sin fechas no se marca etapa actual (no se inventa).
   assertEquals(SD.resumenMaterias([], "2026-10-27").find((m: any) => m.clave === "ingles").etapas.some((e: any) => e.actual), false);
 });

@@ -4,6 +4,13 @@
 // (`?alumna=<slug>` del servidor, solo lectura) y, además, «📝 Resultados» por clase.
 // Reglas puras (materia, día de la clase, estado, progreso, promedios y secuencias): comun/secundaria-datos.js.
 const SD = window.SecundariaDatos;
+// Fuentes del tablero RPG (Inter y Orbitron, Google Fonts), solo en modo Secundaria; si no cargan, quedan las del sistema.
+if (MODO_SECUNDARIA) {
+  const fuentes = document.createElement('link');
+  fuentes.rel = 'stylesheet';
+  fuentes.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;900&display=swap';
+  document.head.appendChild(fuentes);
+}
 
 // Pestañas: id interno → hash de la URL. «clases» conserva su id (#sec-clases) y se titula «📅 Esta semana».
 const SEC_TABS = [

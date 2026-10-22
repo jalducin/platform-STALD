@@ -49,8 +49,20 @@ async function enviar(id, bien) {
     ok('racha: 1 día seguido' + sufijo, (await texto(p, '#sec-racha')).includes('1 día seguido'), await texto(p, '#sec-racha'));
     const prom = await p.$$eval('[data-sec-prom]', xs => xs.map(x => x.dataset.secProm + ':' + x.querySelector('.sec-prom-num').textContent.trim()));
     ok('promedio por materia: Inglés 100, Español 50, Matemáticas 100' + sufijo, prom.slice(0, 3).join() === 'ingles:100 %,espanol:50 %,matematicas:100 %' && prom.every(x => !/tecnologia|ciencias|sociales/.test(x)), prom.join()); // «otra» depende de examen-secundaria (mismo servidor)
+    // Estilo RPG (openspec: gamificacion-nucleo): 26-a 100 % tarde (100 XP), 26-b 50 % tarde (50), 27-a 100 % a tiempo (120).
+    ok('RPG: nivel 1 · Aprendiz con 270 / 300 XP' + sufijo, (await texto(p, '#rpg-rango')) === 'Nivel 1 · Aprendiz' && (await texto(p, '#rpg-xp')) === '270 / 300', (await texto(p, '#rpg-rango')) + ' | ' + (await texto(p, '#rpg-xp')));
+    ok('RPG: barra de XP accesible (progressbar 270 de 300)' + sufijo, (await p.getAttribute('.rpg-xp-barra', 'aria-valuenow')) === '270');
+    ok('RPG: insignias 2 / 7 (Primera misión y 100 %)' + sufijo, (await texto(p, '#rpg-insignias')).includes('2 / 7') && (await p.$$eval('[data-insignia].ganada', xs => xs.map(x => x.dataset.insignia).join())) === 'primera-mision,perfecto');
+    ok('RPG: racha 1 día en la barra' + sufijo, (await texto(p, '#rpg-racha')).includes('1 día'));
+    ok('RPG: misión principal = Ciencias · La célula con «Empezar»' + sufijo, (await texto(p, '#rpg-mision')).includes('Misión principal activa') && (await texto(p, '#rpg-mision .rpg-mision-t')) === 'La célula' && (await texto(p, '#rpg-mision-btn')).startsWith('Empezar'), await texto(p, '#rpg-mision'));
+    ok('RPG: la misión dice su mundo (Selva de la Vida)' + sufijo, (await texto(p, '#rpg-mision .rpg-mision-d')).includes('Selva de la Vida'));
+    ok('RPG: retos diarios 1 / 2 y «te falta 1»' + sufijo, (await texto(p, '#rpg-retos')) === '1 / 2' && (await texto(p, '#rpg-retos-texto')).includes('falta 1 reto'), await texto(p, '#rpg-retos-texto'));
+    ok('RPG: XP en las tarjetas (+120 hecha, hasta +120 pendiente)' + sufijo, (await texto(p, '[data-sec-card="sec-e2e-clase-2026-10-27-a"] .rpg-xp-chip')) === '+120 XP' && (await texto(p, '[data-sec-card="sec-e2e-clase-2026-10-27-b"] .rpg-xp-chip')) === 'hasta +120 XP');
+    const act = await p.$$eval('[data-sec-act]', xs => xs.map(x => x.dataset.secAct.replace('sec-e2e-clase-', '') + ':' + x.querySelector('.rpg-xp-chip').textContent.trim()));
+    ok('RPG: actividad reciente con su XP' + sufijo, act.length === 3 && act.includes('2026-10-27-a:+120 XP') && act.includes('2026-10-26-b:+50 XP'), act.join());
+    ok('RPG: mundos 0 completados en el indicador' + sufijo, (await texto(p, '#sec-mundos')).includes('0 completados'));
     ok('accesos a Esta semana, Mi horario y Mis materias' + sufijo, (await p.$$eval('.sec-accesos [data-sec-tab]', xs => xs.map(x => x.dataset.secTab).join())) === 'clases,horario,materias');
-    const altos = { tarjetas: await altoMinimo(p, '.sec-btn-grande'), pestanas: await altoMinimo(p, '.sec-tabs .tab'), accesos: await altoMinimo(p, '.sec-acceso'), encabezado: await altoMinimo(p, '.app-top .home-link, .app-top .btn') };
+    const altos = { tarjetas: await altoMinimo(p, '.sec-btn-grande'), pestanas: await altoMinimo(p, '.sec-tabs .tab'), accesos: await altoMinimo(p, '.sec-acceso'), mision: await altoMinimo(p, '#rpg-mision-btn, .rpg-btn-sec'), encabezado: await altoMinimo(p, '.app-top .home-link, .app-top .btn') };
     ok('botones de 44 px o más (tarjetas, pestañas, accesos, Inicio/Juegos/tema/salir)' + sufijo, Object.values(altos).every(h => h >= 44), JSON.stringify(altos));
     const inicioBtn = await p.$eval('.app-top .home-link', a => { const s = getComputedStyle(a); return { borde: s.borderTopWidth, fondo: s.backgroundColor, padding: s.paddingLeft }; });
     ok('«← Inicio» parece botón (borde, fondo y padding)' + sufijo, inicioBtn.borde !== '0px' && inicioBtn.fondo !== 'rgba(0, 0, 0, 0)' && parseFloat(inicioBtn.padding) >= 8, JSON.stringify(inicioBtn));
@@ -73,8 +85,9 @@ async function enviar(id, bien) {
     const materias = await p.$$eval('[data-sec-materia]', xs => xs.map(x => x.dataset.secMateria));
     ok('Mis materias: las 8 en orden y «Otras clases» (el examen sin materia)' + sufijo, materias.join() === 'ingles,espanol,matematicas,tecnologia,ciencias,sociales,artes,edfisica,otra', materias.join());
     const mate = await texto(p, '[data-sec-materia="matematicas"]');
-    const actual = await p.$eval('[data-sec-materia="matematicas"] li[aria-current="step"]', li => li.textContent.trim()).catch(() => '');
-    ok('Matemáticas: 1 de 2 hechas, ⭐ 100 % y secuencia Aritmética (ahora) → Geometría → Álgebra' + sufijo, mate.includes('1 de 2 clases hechas') && mate.includes('100 %') && /Aritmética.*Geometría.*Álgebra/.test(mate) && actual.startsWith('Aritmética'), mate);
+    const actual = await p.$eval('[data-sec-materia="matematicas"] li[aria-current="step"]', li => li.dataset.mundo).catch(() => '');
+    const mundos = await p.$$eval('[data-sec-materia="matematicas"] li[data-mundo]', xs => xs.map(x => x.dataset.mundo + ':' + x.className));
+    ok('Matemáticas: 1 de 2 hechas, ⭐ 100 % y mundos Valle (ahora) → Ciudad → Torre' + sufijo, mate.includes('1 de 2 clases hechas') && mate.includes('100 %') && /Aritmética.*Geometría.*Álgebra/.test(mate) && actual === 'Valle de los Números' && mundos.length === 3 && mundos[2].includes('mundo-bloqueado'), mate + ' | ' + mundos.join());
     ok('Mis materias: hash #materias y sin scroll horizontal' + sufijo, p.url().endsWith('#materias') && await sinScrollH(p));
     await p.screenshot({ path: archivo('materias-360'), fullPage: true });
     await p.context().close();
