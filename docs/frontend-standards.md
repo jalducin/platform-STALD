@@ -870,8 +870,9 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   - grupos activos (`/ingles/grupos`; sin base de datos no sale), alumnos y alumnas del registro sin bajas;
   - «En riesgo» (`alumnosEnRiesgo`): `kpis.sinEntregas` más quien tiene alguna celda `atrasado` en `/ingles/resumen`, con
     un botón por persona que abre el cajón. Se repinta al llegar el resumen (`pintarPanelProfe`); mientras, «…»;
-  - «📥 Por revisar»: `pendientes` de la bandeja de entregas de misiones (`cargarBandejaSec`, `/profe/entregas`), con
-    enlace a «Entregas»; solo si la bandeja carga bien;
+  - «📥 Por revisar» (`porRevisarPanel`): misiones de Inglés (`mision.ambito === 'ingles'`) en estado `lista` de la
+    bandeja (`cargarBandejaSec`, `/profe/entregas`, que junta también Secundaria), del grupo elegido o sin los ocultos;
+    enlace a «Entregas»; solo si la bandeja carga bien. «🔍 Ver grupo» reinicia también los nicks, como el selector;
   - con un grupo elegido, todo cuenta solo ese grupo (sin «Grupos activos»); sin grupo, los ocultos del panel no cuentan
     salvo con «Mostrar grupos ocultos»;
   - accesos: «➕ Registrar alumno o alumna», «🎬 Presentar la clase» y «🎓 Mi ruta».
@@ -904,10 +905,11 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   se ajusta aquí y en `server/gamificacion_profe_test.ts`.
 - Toda la ruta está abierta y las fechas son ritmo sugerido: estados «Hecha», «En curso», «Ritmo de hoy» (ya pasó su
   fecha sugerida), «Abierta» y «Llega pronto» (aún no publicada); mundos «completado», «en curso» o «abierto». Nunca
-  «atrasada» ni «bloqueado». En el encabezado, «Atrasadas» es «Para hoy» y el tercer contador es «Mundos» (x/9).
-- Las clases se abren por pasos (`claseEnPasos()` incluye `MODO_PROFE`): banner «⚔️ Misión» con su mundo
+  «atrasada» ni «bloqueado». En el encabezado, «Atrasadas» es «Para hoy» y el tercer contador es «Mundos»
+  (completados / mundos con clases en el plan).
+- Con plan, las clases se abren por pasos (`claseEnPasos()` incluye `MODO_PROFE` si `act.plan`; sin plan, lista): banner «⚔️ Misión» con su mundo
   (`mundoDeClaseProfe`) y, al enviar, «+XP», nivel e insignias nuevas de su ruta (`recompensaProfe` con
-  `htmlRecompensa` de `secundaria-clase.js`). Las tablas de teoría anchas se desplazan dentro de su caja.
+  `htmlRecompensa` de `secundaria-clase.js`; lo del grupo no da recompensa). Las tablas de teoría anchas se desplazan dentro de su caja.
 - «🔥 Pendiente ahora» muestra 5 y pliega el resto en `#pf-urgente-mas`.
 
 ## Juegos de cartas (cambio `poker`)

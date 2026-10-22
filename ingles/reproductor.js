@@ -10,8 +10,12 @@ function volverBtn() { return '<button class="btn ghost" data-action="volver">�
 
 // Clase por pasos (Teoría → Video → Ejercicios → Libreta, ingles/secundaria-clase.js): Secundaria y, desde
 // ingles-alumno-diseno-rpg, alumnos y alumnas de Inglés; desde ingles-diseno-profe, también la ruta del profe
-// (?modo=profe). El panel del admin sigue con la vista de lista (vista previa).
-const claseEnPasos = () => MODO_SECUNDARIA || MODO_PROFE || (!!state.data && !state.data.isAdmin);
+// (?modo=profe) cuando trae su plan (sin plan, como antes: lista). El panel del admin sigue con la vista de lista.
+const claseEnPasos = () => {
+  if (MODO_SECUNDARIA) return true;
+  if (MODO_PROFE) return !!(state.act && state.act.plan);
+  return !!state.data && !state.data.isAdmin;
+};
 
 async function openItem(id) {
   entrarVista('actividad', id);

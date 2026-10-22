@@ -71,8 +71,8 @@ function renderPresentar() {
 
 // ---------- Encabezado del panel (openspec: ingles-diseno-profe) ----------
 // Solo con datos que ya existen: grupos activos (/ingles/grupos), alumnos y alumnas del registro (/ingles/alumnos) y
-// quienes van en riesgo según el resumen de la semana (/ingles/resumen): sin entregas o con alguna atrasada.
-// Inglés no tiene una cola de entregas por revisar (todo se califica solo), así que no se muestra ese dato.
+// quienes van en riesgo según el resumen de la semana (/ingles/resumen): sin entregas o con alguna atrasada; y las
+// misiones de Inglés listas para evaluar (bandeja /profe/entregas).
 function alumnosEnRiesgo() {
   const r = state.resumen;
   if (!r || r.error) return null;
@@ -98,10 +98,21 @@ function ppListaRiesgo(riesgo) {
 // Grupos activos que se ven en el panel: sin los ocultos (openspec: ingles-ocultar-grupos), salvo con el interruptor.
 const gruposDelPanel = () => gruposActivos().filter(g => !g.ocultoAdmin || state.mostrarOcultos);
 // «📥 Por revisar»: entregas de misiones listas para evaluar (bandeja del profe, /profe/entregas). Solo si cargó bien.
-function ppTilePorRevisar() {
+// Solo misiones de Inglés listas para evaluar, del grupo elegido o, sin grupo, sin los ocultos del panel.
+function porRevisarPanel(filtro) {
   const b = state.secBandeja;
-  if (!b || b.error || typeof b.pendientes !== 'number') return '';
-  return '<a class="pp-stat-link" href="#entregas" aria-label="' + b.pendientes + ' entregas por revisar. Abrir Entregas">' + ppStat('📥', b.pendientes, 'Por revisar', b.pendientes ? 'riesgo' : 'sin-riesgo') + '</a>';
+  if (!b || b.error || !Array.isArray(b.entregas)) return null;
+  const grupoDeSlug = s => (state.grupos ? (state.grupos.grupos || []).find(g => g.id === (state.grupos.miembros[s] || (gruposActivos()[0] || {}).id)) : null) || null;
+  return b.entregas.filter(x => x.estado === 'lista' && x.mision && x.mision.ambito === 'ingles').filter(x => {
+    const g = grupoDeSlug(x.slug);
+    if (filtro) return !!g && g.id === filtro.id;
+    return state.mostrarOcultos || !(g && g.ocultoAdmin);
+  }).length;
+}
+function ppTilePorRevisar(filtro) {
+  const n = porRevisarPanel(filtro);
+  if (n === null) return '';
+  return '<a class="pp-stat-link" href="#entregas" aria-label="' + n + ' entregas por revisar. Abrir Entregas">' + ppStat('📥', n, 'Por revisar', n ? 'riesgo' : 'sin-riesgo') + '</a>';
 }
 function renderPanelProfe() {
   const filtro = state.grupoFiltro && state.grupos ? (state.grupos.grupos || []).find(g => g.id === state.grupoFiltro) : null;
@@ -118,7 +129,7 @@ function renderPanelProfe() {
     '<div class="pp-stats" id="pp-stats">' +
       (activos === null ? '' : ppStat('👥', activos, activos === 1 ? 'Grupo activo' : 'Grupos activos')) +
       (registro === null ? '' : ppStat('🧑‍🎓', registro, registro === 1 ? 'Alumno o alumna' : 'Alumnos y alumnas')) +
-      ppTileRiesgo(riesgo) + ppTilePorRevisar() + '</div>' + ppListaRiesgo(riesgo) +
+      ppTileRiesgo(riesgo) + ppTilePorRevisar(filtro) + '</div>' + ppListaRiesgo(riesgo) +
     '<div class="pp-acciones"><a class="btn" href="#registro">➕ Registrar alumno o alumna</a><a class="btn ghost" href="#presentar">🎬 Presentar la clase</a>' +
       '<a class="btn ghost" href="' + escapeHtml(conApiParam('ingles.html?modo=profe')) + '">🎓 Mi ruta</a></div></section>';
 }
@@ -166,7 +177,7 @@ contentEl.addEventListener('click', e => {
   const b = e.target.closest('[data-action="ver-grupo"]');
   if (!b) return;
   e.preventDefault();
-  state.grupoFiltro = b.dataset.id || null; state.resumen = null;
+  state.grupoFiltro = b.dataset.id || null; state.resumen = null; state.nicks = null; // como el selector (app.js)
   render(state.data); void cargarResumen();
 });
 

@@ -131,8 +131,9 @@ function mundoDeClaseProfe(id) {
   return w ? { emoji: w.emoji, nombre: w.nombre, etapa: w.etapa } : null;
 }
 // Recompensa tras enviar una clase: XP de su ruta antes y después, nivel e insignias nuevas (con su mapa de mundos).
-function recompensaProfe(antes, despues) {
-  if (!hayRpgProfe(despues)) return '';
+// Lo del grupo (`grupo: true`) no es de su ruta: sin recompensa.
+function recompensaProfe(antes, despues, id) {
+  if (!hayRpgProfe(despues) || !itemsRuta(despues).some(it => it.id === id)) return '';
   const hoy = despues.hoy || todayStr();
   const ra = itemsRuta(antes), rd = itemsRuta(despues);
   const xpA = Gamificacion.xpRuta(ra), xpD = Gamificacion.xpRuta(rd);

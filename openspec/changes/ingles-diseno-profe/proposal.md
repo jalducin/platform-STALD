@@ -20,9 +20,9 @@ abierta y las fechas son ritmo sugerido.
   - grupos activos (`/ingles/grupos`, sin los ocultos del panel);
   - alumnos y alumnas del registro (`/ingles/alumnos`, sin bajas);
   - «En riesgo»: sin entregas o con alguna entrega atrasada en la semana (`/ingles/resumen`). Cada nombre abre el cajón;
-  - «📥 Por revisar»: entregas de misiones listas para evaluar (`/profe/entregas`, la bandeja que ya existe), con enlace
+  - «📥 Por revisar»: misiones de Inglés listas para evaluar (`/profe/entregas`, la bandeja que ya existe), con enlace
     a «Entregas»;
-  - con un grupo elegido, todo cuenta solo ese grupo;
+  - con un grupo elegido, todo cuenta solo ese grupo; «🔍 Ver grupo» reinicia también los nicks, como el selector;
   - accesos: «➕ Registrar alumno o alumna», «🎬 Presentar la clase» y «🎓 Mi ruta».
 - **Tarjetas por grupo** (`.pp-grupo`) en el Resumen: color, nivel, horario, cuántas personas, avance de la semana
   (entregadas / que ya abrieron) con barra, atrasos, «🔍 Ver grupo» (mismo filtro que el selector) y «🎥 Meet».
@@ -60,7 +60,7 @@ abierta y las fechas son ritmo sugerido.
 - Sin cambios en el servidor, el contrato HTTP, Postgres, el repo de datos ni Notion.
 - Matriz de acceso: no cambia. El panel solo pinta lo que el servidor ya entrega al admin; la ruta, lo que
   `/ingles/profe/actividades` ya entrega al profe. Una alumna o alumno no recibe estos datos ni ve estas vistas.
-- Pruebas: `server/gamificacion_profe_test.ts` (reglas) y E2E nueva `ingles-diseno-profe` (fase `ingles`); se ajusta
-  `profe-diseno` (6 pestañas con plan) si hace falta.
+- Pruebas: `server/gamificacion_profe_test.ts` (reglas) y E2E nueva `ingles-diseno-profe` (fase `ingles`); se ajustan
+  `profe-diseno` (6 pestañas con plan y tope de altura con el tablero) y `peticiones` (+2 del admin: la bandeja).
 - Docs: `docs/frontend-standards.md`, `docs/pruebas.md`.
 - Acciones externas: ninguna.

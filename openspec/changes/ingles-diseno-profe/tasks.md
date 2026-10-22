@@ -40,14 +40,14 @@
 
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
-- [ ] 4.1 `deno test -A server/`, `deno check server/main.ts`, `deno lint server/` y la suite E2E completa con una copia
+- [x] 4.1 `deno test -A server/`, `deno check server/main.ts`, `deno lint server/` y la suite E2E completa con una copia
   temporal del repo de datos (puertos 8951/8952; subagente `verificador-pruebas`), más las de Inglés con
   `--hoy 2026-10-22`. Sin tablas `stald_` y sin push de datos. Comparar con la línea base de `main`
-- [ ] 4.2 Reporte `openspec/changes/ingles-diseno-profe/reports/2026-10-22-step-4-pruebas-y-verificacion.md`
+- [x] 4.2 Reporte `openspec/changes/ingles-diseno-profe/reports/2026-10-22-step-4-pruebas-y-verificacion.md`
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Revisar las capturas a 360 px en claro y oscuro (Resumen, Registro, cajón, ruta RPG, Mundos, clase, recompensa
+- [x] 5.1 Revisar las capturas a 360 px en claro y oscuro (Resumen, Registro, cajón, ruta RPG, Mundos, clase, recompensa
   y Plan del mes) y en escritorio
 - [ ] 5.2 Producción tras el merge, solo lectura: `/salud`; `ingles.html` publica `panel-profe.css`, `profe-rpg.js` y
   los `?v=` nuevos

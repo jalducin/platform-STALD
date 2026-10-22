@@ -76,7 +76,7 @@ function recompensaMision(id) {
   const antes = envio.act, despues = state.act;
   if (!hayGamificacion() || !antes || !despues || antes.isAdmin || despues.isAdmin) return '';
   const hoy = despues.hoy || todayStr();
-  if (MODO_PROFE && typeof recompensaProfe === 'function') return recompensaProfe(antes, despues); // ruta del profe (ingles/profe-rpg.js)
+  if (MODO_PROFE && typeof recompensaProfe === 'function') return recompensaProfe(antes, despues, id); // ruta del profe (ingles/profe-rpg.js)
   // Con las misiones principales evaluadas (mismas antes y después), como el tablero de Inglés y el de Secundaria.
   const mis = typeof misionesSec === 'function' ? misionesSec() : [];
   const xpAntes = Gamificacion.xpTotalConMisiones ? Gamificacion.xpTotalConMisiones(antes.items, mis, { hoy }) : Gamificacion.xpTotal(antes.items, { hoy });

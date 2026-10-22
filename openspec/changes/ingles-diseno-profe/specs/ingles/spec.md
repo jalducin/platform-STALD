@@ -1,3 +1,31 @@
+## MODIFIED Requirements
+
+### Requirement: Vista del profe ordenada por urgencia
+La vista del profe (`ingles.html?modo=profe`) SHALL mostrar primero su avance y lo que está pendiente ahora.
+Después SHALL organizar el resto en pestañas: Esta semana, Material, Mundos (con plan), Plan del mes (con plan), Mi
+grupo y Hechas. «🔥 Pendiente ahora» SHALL mostrar 5 elementos y plegar el resto; las clases de su ruta no se marcan
+como atrasadas (su ruta va a su ritmo: «Para hoy»).
+
+#### Scenario: Lo urgente arriba
+- **WHEN** el profe tiene una actividad de su ruta con la fecha sugerida ya pasada y un examen del grupo por resolver
+- **THEN** ambas aparecen en "🔥 Pendiente ahora", con su etiqueta (🎓 Mis clases o 👥 Grupo) y su botón para resolver
+
+#### Scenario: Plan del mes compacto
+- **WHEN** el profe abre la pestaña Plan del mes
+- **THEN** solo la semana actual está abierta, y las demás muestran su título y su avance (x/y)
+
+#### Scenario: Se recuerda la pestaña
+- **WHEN** el profe deja abierta la pestaña Mi grupo y vuelve a entrar
+- **THEN** la página abre en Mi grupo
+
+#### Scenario: Escritorio en dos columnas
+- **WHEN** el profe abre su vista en una pantalla de 960 px o más
+- **THEN** ve el contenido a la izquierda y una barra lateral con horas, rutina y próximas entregas
+
+#### Scenario: Celular
+- **WHEN** el profe abre su vista en el celular
+- **THEN** todo va en una sola columna, sin desplazamiento horizontal de la página
+
 ## ADDED Requirements
 
 ### Requirement: Panel del profe con diseño RPG
@@ -5,7 +33,7 @@ La vista del admin de `ingles.html` y la ruta del profe (`ingles.html?modo=profe
 Secundaria (tarjetas, chips de color, barras de progreso y botones reales), en claro y oscuro. «🏠 Resumen» SHALL
 abrir con un encabezado (`#panel-profe`) que muestre solo datos que ya entrega el servidor: grupos activos, alumnos y
 alumnas del registro sin bajas y quienes están «En riesgo» (sin entregas o con alguna entrega atrasada en la semana del
-resumen), con un botón por persona que abre su cajón, y «📥 Por revisar» (entregas de misiones listas para evaluar de
+resumen), con un botón por persona que abre su cajón, y «📥 Por revisar» (misiones de Inglés listas para evaluar de
 la bandeja `/profe/entregas`) con enlace a «Entregas», solo si la bandeja carga. Con un grupo elegido, el encabezado
 SHALL contar solo ese grupo, y los grupos ocultos del panel no cuentan salvo con «Mostrar grupos ocultos». No SHALL
 mostrar métricas que no existen.
@@ -31,7 +59,8 @@ La matriz de acceso no cambia: solo el admin recibe y ve estos datos.
 
 #### Scenario: Encabezado con un grupo elegido
 - **WHEN** el admin toca «🔍 Ver grupo» en «Sábado A1»
-- **THEN** el título dice «Sábado A1», no aparece «Grupos activos» y «Alumnos y alumnas» cuenta solo ese grupo
+- **THEN** el título dice «Sábado A1», no aparece «Grupos activos», y «Alumnos y alumnas» y «Por revisar» cuentan solo
+  ese grupo; la sección «Nicks» se vuelve a pedir para ese grupo, como con el selector
 
 #### Scenario: Tarjeta por grupo
 - **WHEN** hay grupos activos y llega el resumen de todos los grupos
@@ -60,7 +89,7 @@ de Secundaria, separada del panel del admin (grupos, registro, entregas):
 - «⚡ Retos de hoy · a tu ritmo»: hasta 3 clases pendientes cuya fecha sugerida ya llegó (o, si va al día, las
   siguientes), con su mundo, estado y XP;
 - la pestaña «🌍 Mundos»: el camino de mundos de su ruta y una tarjeta por mundo con avance y sus clases;
-- cada clase se abre por pasos (Teoría → Video → Ejercicios → Libreta) con el banner «⚔️ Misión» y su mundo, y al
+- con plan, cada clase se abre por pasos (Teoría → Video → Ejercicios → Libreta) con el banner «⚔️ Misión» y su mundo, y al
   enviarla muestra «+XP», el nivel y las insignias nuevas.
 
 Los mundos de la ruta SHALL ser «Taller del Agente» (semanas 1–2), «Fábrica de Specs» (3), «Red de Conectores» (4),
@@ -85,4 +114,9 @@ Toda la ruta está abierta y las fechas son ritmo sugerido: ningún estado de la
 
 #### Scenario: Sin plan
 - **WHEN** los datos no traen `plan.json`
-- **THEN** no hay tablero RPG ni pestaña «🌍 Mundos»; la vista del profe queda como antes
+- **THEN** no hay tablero RPG ni pestaña «🌍 Mundos», y las clases se abren como lista; la vista del profe queda como
+  antes
+
+#### Scenario: Actividad del grupo
+- **WHEN** el profe resuelve una actividad de «👥 Mi grupo»
+- **THEN** se abre por pasos, sin mundo, y al enviarla no muestra «+XP» (no es de su ruta)

@@ -21,7 +21,7 @@ function tituloProfe(plan) {
 }
 
 // ---------- Vista del profe (openspec: profe-diseno): avance, lo urgente arriba y el resto en pestañas ----------
-const PF_TABS = [['semana', '📅 Esta semana'], ['mundos', '🌍 Mundos'], ['material', '📚 Material'], ['plan', '🗺️ Plan del mes'], ['grupo', '👥 Mi grupo'], ['hechas', '✅ Hechas']];
+const PF_TABS = [['semana', '📅 Esta semana'], ['material', '📚 Material'], ['mundos', '🌍 Mundos'], ['plan', '🗺️ Plan del mes'], ['grupo', '👥 Mi grupo'], ['hechas', '✅ Hechas']];
 // Sin plan.json (openspec: profe-semanas-del-grupo) no hay pestaña de plan ni de mundos (openspec: ingles-diseno-profe).
 const pfTabsDe = plan => PF_TABS.filter(([id]) => (id !== 'plan' && id !== 'mundos') || !!plan);
 function pfTabGuardada(tabs) { try { const t = localStorage.getItem('profe_tab'); return tabs.some(x => x[0] === t) ? t : 'semana'; } catch { /* sin almacenamiento: pestaña por omisión */ return 'semana'; } }

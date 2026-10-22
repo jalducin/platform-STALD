@@ -56,7 +56,9 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
     const bandeja = await fetch(`${API}/profe/entregas?email=${ADMIN}`).then(r => r.json()).catch(() => ({}));
     await p.waitForTimeout(1500); // la bandeja llega en paralelo al resumen
     const porRevisar = await p.$eval('#pp-stats', el => (el.querySelector('a[href="#entregas"]') || {}).textContent || '');
-    ok('encabezado: «Por revisar» con las entregas listas de la bandeja' + suf, typeof bandeja.pendientes === 'number' ? porRevisar.includes(String(bandeja.pendientes)) && /Por revisar/.test(porRevisar) : porRevisar === '', porRevisar.replace(/\s+/g, ' ') + ' · API ' + bandeja.pendientes);
+    // Solo misiones de Inglés listas para evaluar (la bandeja junta también las de Secundaria); ningún grupo de ejemplo está oculto.
+    const listasIngles = Array.isArray(bandeja.entregas) ? bandeja.entregas.filter(x => x.estado === 'lista' && x.mision && x.mision.ambito === 'ingles').length : null;
+    ok('encabezado: «Por revisar» con las misiones de Inglés listas de la bandeja' + suf, listasIngles === null ? porRevisar === '' : porRevisar.includes(String(listasIngles)) && /Por revisar/.test(porRevisar), porRevisar.replace(/\s+/g, ' ') + ' · API ' + listasIngles);
     const tarjetas = await p.$$eval('.pp-grupo', xs => xs.map(x => x.textContent.replace(/\s+/g, ' ')));
     ok('tarjetas por grupo con avance de la semana' + suf, tarjetas.length === 2 && tarjetas.every(t => /Entregas de la semana/.test(t)) && !!(await p.$('.pp-grupo .rpg-xp-barra[role="progressbar"]')), JSON.stringify(tarjetas).slice(0, 160));
     const fila = await p.$eval('#mapa-calor tbody tr', tr => ({ display: getComputedStyle(tr).display, etiqueta: getComputedStyle(tr.querySelector('td[data-label]'), '::before').content }));
@@ -97,7 +99,14 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
     ok('ruta del profe: botones y pestañas de 44 px o más' + suf, malosRuta.length === 0, malosRuta.join(' '));
     ok('ruta del profe: sin scroll horizontal a 360 px' + suf, await sinScrollH(m));
     await m.screenshot({ path: arch('ruta-360'), fullPage: true });
-    if (act.plan) {
+    // ¿Hay clases de su ruta publicadas y sin hacer? (con --hoy 2026-10-04 aún no se publica ninguna)
+    const idsPlan = act.plan ? new Set(act.plan.semanas.flatMap(s => s.elementos.map(e => e.id))) : new Set();
+    const pendientesRuta = act.items.filter(i => !i.grupo && idsPlan.has(i.id) && i.estado !== 'completo' && i.estado !== 'proximamente').length;
+    if (act.plan && !pendientesRuta) {
+      const vacia = await m.textContent('#pf-mision').catch(() => '');
+      ok('ruta RPG sin clases publicadas pendientes: «Ruta al día» sin botón' + suf, /Ruta al día/.test(vacia) && !(await m.$('#pf-mision-btn')), vacia.replace(/\s+/g, ' ').slice(0, 80));
+    }
+    if (act.plan && pendientesRuta) {
       // Tablero RPG de su ruta (ingles/profe-rpg.js): nivel, XP, insignias, racha, misión principal y retos de hoy.
       const rpg = await m.evaluate(() => ({
         barra: !!document.querySelector('#pf-rpg #rpg-stats .rpg-xp-barra'), rango: (document.getElementById('rpg-rango') || {}).textContent || '',
@@ -143,6 +152,8 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
       }
       await m.goto(require('./lib/navegador').urlDe('/ingles.html?modo=profe'));
       await m.waitForSelector('.pf-hero');
+    }
+    if (act.plan) {
 
       const delPlan = act.plan.semanas.flatMap(s => s.elementos.map(e => e.id));
       const abiertos = delPlan.filter(id => { const it = act.items.find(i => i.id === id); return it && it.estado !== 'proximamente'; }).length;
