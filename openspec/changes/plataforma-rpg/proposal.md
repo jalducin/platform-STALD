@@ -10,7 +10,7 @@ exámenes teóricos y un tutor que guía sin dar la respuesta. Hoy:
 - La **Fase 1** ya está en curso en Secundaria (dos agentes): dashboard RPG con `comun/gamificacion.js` y la clase
   como «misión» por pasos con +XP. Falta el plan de lo que sigue y las reglas que lo hagan seguro para menores.
 
-Este cambio es **solo la especificación** (propuesta para que el profe la apruebe): define la experiencia, la malla de
+Este cambio es **solo la especificación** (aprobada por el profe el 2026-10-21, con las decisiones de `design.md` §6): define la experiencia, la malla de
 misiones de 1.º de secundaria, los roles, la arquitectura técnica sobre el stack actual y un plan por fases con
 criterios medibles. No implementa código.
 
@@ -28,11 +28,12 @@ este cambio prohíbe.
      ×2), nivel = floor(XP / 300) + 1, rangos, racha, insignias derivadas y mundos por bloque de materia.
    - Nuevo: misiones diarias y semanales derivadas, árbol de habilidades por materia (a partir de los `temas` y su
      retroalimentación), retroalimentación inmediata (animación, sonido opcional, aviso de XP) y, en Inglés, ranking
-     por grupo **solo con nicks**, por puntos de constancia (no por calificaciones) y con opción de ocultarse.
+     por grupo con el **nick de Juegos**, por puntos de constancia (no por calificaciones) y **oculto por defecto**
+     (solo aparece quien lo activa).
 2. **Misiones principales** (capability nueva `misiones`): un proyecto o reto práctico por mundo y materia, con pasos,
-   entregable, rúbrica y evaluación del profe. Malla piloto de 1.º de secundaria para Matemáticas, Ciencias, Español,
+   entregable **solo en texto** por ahora, rúbrica y evaluación del profe. Piloto: Matemáticas e Inglés. Malla piloto de 1.º de secundaria para Matemáticas, Ciencias, Español,
    Ciencias Sociales, Tecnología e IA e Inglés, alineada a las secuencias de la skill `clases-secundaria`.
-3. **Tutor IA socrático** (capability nueva `tutor-ia`): endpoint en Deno con proveedor de IA, que guía con preguntas y
+3. **Tutor IA socrático** (capability nueva `tutor-ia`): endpoint en Deno con `claude-haiku-5-5`, que guía con preguntas y
    nunca da la respuesta de una pregunta calificable; sin datos personales, con límites, bitácora visible al profe y
    consentimiento de madre, padre o tutor.
 4. **Panel del profe** (capability nueva `panel-profe`): misiones como JSON validado (Fase 2) y luego editor en la
@@ -93,8 +94,8 @@ toca un requisito vivo (p. ej. `examenes-secundaria` o `juegos` por el nick), es
   | Quién | Su progreso (XP, nivel, árbol) | Progreso de otros | Ranking de su grupo (Inglés) | Entregas | Tutor IA | Panel del profe |
   |---|---|---|---|---|---|---|
   | Admin (profe) | — | Todo, con nombre de pila | Ve nicks, nombre de pila y quién se ocultó (`/profe/nicks`) | Lee y evalúa todas | Lee la bitácora de todos; apaga el tutor | Sí |
-  | Alumno o alumna de Secundaria | Sí | No | No hay ranking en Secundaria | Solo las suyas (imagen o audio con consentimiento `multimedia`) | Sí, si tiene consentimiento registrado | No (403) |
-  | Alumno o alumna de Inglés | Sí | No | Solo nicks y puntos de constancia de quien no se ocultó; su propia posición aunque se oculte | Solo las suyas (imagen o audio con consentimiento `multimedia`) | Sí, si tiene consentimiento registrado | No (403) |
+  | Alumno o alumna de Secundaria | Sí | No | No hay ranking en Secundaria | Solo las suyas (solo texto) | Sí, si tiene consentimiento registrado | No (403) |
+  | Alumno o alumna de Inglés | Sí | No | Solo nicks de Juegos y puntos de constancia de quien activó aparecer; su propia posición aunque esté oculto | Solo las suyas (solo texto) | Sí, si tiene consentimiento registrado | No (403) |
   | De baja de Inglés | Solo lectura de lo suyo | No | No aparece | Solo lectura de las suyas (enviar → 403) | No (403) | No |
   | Invitado de Juegos | No (403) | No | No | No | No | No |
   | Sin sesión | 401 | 401 | 401 | 401 | 401 | 401 |
@@ -106,13 +107,15 @@ toca un requisito vivo (p. ej. `examenes-secundaria` o `juegos` por el nick), es
 
   | Acción | Fase | Responsable |
   |---|---|---|
-  | Aprobar esta propuesta y las decisiones abiertas de `design.md` §6 | Antes de Fase 2 | Profe (usuario) |
+  | Aprobar esta propuesta y las decisiones de `design.md` §6 (hecho el 2026-10-21) | Antes de Fase 2 | Profe (usuario) |
   | Redeploy de Deno Deploy al hacer merge de cada fase y verificación en producción | 2–4 | Agente |
   | Migración de Postgres (si se crea `stald_tutor_bitacora`) aplicada desde el archivo versionado | 3 | Agente, con visto bueno del profe |
   | Subir misiones piloto al repo privado de datos | 2 | Agente (sesión principal, skill `clases-secundaria`) |
-  | Contratar el proveedor de IA, crear la llave y ponerla en Deno Deploy (`TUTOR_IA_API_KEY`), con tope de gasto | 3 | Profe |
-  | Recabar el consentimiento por escrito de madre, padre o tutor (`multimedia` en Fase 2, `tutor` en Fase 3) y aprobar el texto del aviso de privacidad | 2–3 | Profe |
-  | Revisar y aprobar los nicks del grupo de Inglés | 2 | Profe |
+  | Confirmar precios de `claude-haiku-5-5` en la página oficial y verificar el número de la Línea de la Vida (bloqueantes) | 3 | Agente, antes de activar |
+  | Contratar el proveedor de IA, crear la llave y ponerla en Deno Deploy (`TUTOR_IA_API_KEY`), con tope de gasto; configurar el correo de avisos | 3 | Profe |
+  | Aprobar el aviso de privacidad y el formato simple de consentimiento (lo prepara el agente en la Fase 2) | 2 | Profe |
+  | Recabar con ese formato el consentimiento firmado de madre, padre o tutor (`tutor` antes de la Fase 3; `multimedia` solo cuando llegue imagen y audio) | 3 | Profe |
+  | Revisar y aprobar los nicks de Juegos de quien pide aparecer en el ranking de Inglés | 2 | Profe |
 
 ## Cómo revertir
 

@@ -1,6 +1,6 @@
 # Diseño — plataforma-rpg
 
-> Propuesta para aprobación del profe. Documenta el **cómo** de las fases 2 a 4 y fija las reglas de la Fase 1 (en
+> Aprobada por el profe el 2026-10-21 con las decisiones de §6. Documenta el **cómo** de las fases 2 a 4 y fija las reglas de la Fase 1 (en
 > curso) como invariante. Todos los ejemplos usan personas inventadas.
 
 ## Contexto y restricciones
@@ -39,19 +39,22 @@
 | **Misión principal** | Proyecto práctico que cierra el mundo | «La tiendita del salón» (§2) | `misiones/<id>.json` (Fase 2) |
 | **Misiones secundarias** | Artes y Educación Física (domingos alternados), repasos y tareas sueltas | 🎨 Artistas mexicanos | Elementos sin mundo propio |
 
-**Mapa de mundos de Secundaria (tramo oct 2026 – mar 2027; nombres propuestos, el profe puede cambiarlos):**
+**Mapa de mundos de Secundaria (decidido el 2026-10-21: los nombres de `comun/gamificacion.js`, ya en `main`):**
 
 | Materia | Mundo 1 | Mundo 2 | Mundo 3 |
 |---|---|---|---|
-| Matemáticas | 🔢 Valle de los Números — Aritmética (26 oct–22 nov) | 📐 Tierra de las Formas — Geometría (23 nov–20 dic) | ❓ Reino de la Incógnita — Álgebra (ene 2027 →) |
-| Ciencias | 🌱 Bosque de la Vida — Biología (oct 2026–ene 2027) | ⚗️ Laboratorio Alquimista — Química (3 meses) | ⚡ Torre de la Energía — Física (3 meses) |
-| Ciencias Sociales | 🤝 Plaza Cívica — Cívica y Ética (26 oct–22 nov) | 📜 Archivo del Tiempo — Historia (23 nov–20 dic) | 🗺️ Atlas de México — Geografía (ene) |
-| Tecnología | 🖥️ Taller Digital — Bases (≈ 6 semanas) | 🐍 Ciudad del Código — Python e IA | — |
-| Inglés | 🔤 Isla de las Letras — alfabeto, números, colores | 🧍 Puerto *To Be* — *to be*, posesivos, adjetivos | 🛒 Mercado del Presente — presente simple, *there is/are* |
-| Español | 📚 Biblioteca de los Textos — programa de 1.º por tema, con ortografía en cada zona | — | — |
+| Matemáticas | 🔢 Valle de los Números — Aritmética (26 oct–22 nov) | 🏙️ Ciudad de las Formas — Geometría (23 nov–20 dic) | 🗼 Torre de las Incógnitas — Álgebra (ene 2027 →) |
+| Ciencias | 🌿 Selva de la Vida — Biología (oct 2026–ene 2027) | ⚗️ Laboratorio Alquimia — Química (feb–abr 2027) | 🏔️ Cumbre de la Fuerza — Física (may–jul 2027) |
+| Ciencias Sociales | 🏛️ Ágora — Cívica y Ética (26 oct–22 nov) | ⏳ Puerta del Tiempo — Historia (23 nov–20 dic) | 🗺️ Atlas del Mundo — Geografía (ene 2027) |
+| Tecnología | 🛠️ Taller Digital — Bases (26 oct–6 dic) | 🌀 Laberinto Sintaxis — Programación (7 dic →) y 🤖 Núcleo IA — IA (7 dic →), en paralelo | — |
+| Inglés | 🏝️ Isla del Alfabeto — bloque actual | Los siguientes se nombran al crear `mundos.json` (Fase 2), con el mismo estilo | — |
+| Español | 📚 Gran Biblioteca — programa de 1.º por tema, con ortografía en cada zona | — | — |
+| Artes y Educación Física | 🎨 Estudio y Arena — misiones secundarias | — | — |
 
-Ciencias Sociales rota cada mes: al volver a Cívica se abre «Plaza Cívica II» (mundo nuevo), así cada mundo tiene
-inicio y fin claros. En Inglés de grupo, los mundos siguen las unidades de la ruta del profe.
+`comun/gamificacion.js` es la fuente de estos nombres y fechas (copia de la skill `clases-secundaria`); el catálogo
+`mundos.json` de la Fase 2 los toma de ahí. Desde febrero de 2027 Ciencias Sociales rota un mundo por mes calendario en
+el orden de la tabla (Ágora → Puerta del Tiempo → Atlas del Mundo → Ágora…), como ya lo hace `mundosVigentes`. En
+Inglés de grupo, los mundos siguen las unidades de la ruta del profe.
 
 **Estados de un mundo:** 🔒 bloqueado (aún no empieza), 🟡 en curso, ✅ completado (cerró su fecha y la misión
 principal está evaluada), ⭐ dominado (completado con ≥ 80 % de promedio y misión principal ≥ 80 %). Un mundo cuya
@@ -60,8 +63,8 @@ fecha ya pasó **no se bloquea**: se puede volver a repasar.
 ### 1.2 XP, niveles, rangos, racha e insignias
 
 - XP de clases y mini exámenes: regla de Fase 1 (tabla arriba), sin cambios.
-- **XP de misión principal (nuevo, Fase 2):** porcentaje de la rúbrica (0–100) × 3 + 60 si se entregó a tiempo. Una
-  misión principal vale como tres clases: es el trabajo de varios días.
+- **XP de misión principal (nuevo, Fase 2; decidido el 2026-10-21):** porcentaje de la rúbrica (0–100) × 3 + 60 si
+  se entregó a tiempo. Una misión principal vale como tres clases: es el trabajo de varios días.
 - Nivel = floor(XP / 300) + 1 (Fase 1). La XP de misiones entra al mismo total.
 - Rangos e insignias: los de Fase 1. Fase 2 agrega insignias de misión (p. ej. «🏗️ Constructora de mundos» al cerrar
   el primer mundo con su misión) e **insignias manuales** que el profe da con un motivo (p. ej. «💡 Gran pregunta»).
@@ -78,8 +81,8 @@ Se **derivan** de las clases (no se capturan a mano):
 | Diaria (opcional) | «Revisa la teoría de mañana» o «Pregúntale al tutor algo de hoy» (Fase 3) | Marca ✔, sin XP |
 | Semanal | «Termina las 15 clases de la semana», «Avanza un paso de tu misión principal», «Mejora un tema en debilidad» | Insignia semanal («🗓️ Semana completa») |
 
-Para no tocar la fórmula de XP de la Fase 1, las misiones diarias y semanales **no dan XP extra** en Fase 2; dan
-insignias y progreso. El bono de XP queda como decisión del profe (§6).
+Las misiones diarias y semanales **no dan XP** (decidido el 2026-10-21): solo reconocimiento (insignias y progreso
+visible). Así la fórmula de XP de la Fase 1 no cambia.
 
 ### 1.4 Árbol de habilidades por materia
 
@@ -105,19 +108,20 @@ insignias y progreso. El bono de XP queda como decisión del profe (§6).
 
 ### 1.6 Nick y ranking por grupo (solo Inglés, Fase 2)
 
-- **Nick:** 3 a 16 caracteres, letras, números y espacios; sin correos, teléfonos ni el nombre real de la persona;
-  filtro de palabras ofensivas y de **cualquier nombre de pila del registro** (evita suplantar o burlarse de otro); el
-  profe lo aprueba antes de que se vea. Es **independiente del nick de Juegos**, que tiene otras reglas (2–20
-  caracteres, sin aprobación; spec `juegos`); reusarlo es decisión del profe (§6) y solo si cumple estas reglas.
+- **Nick (decidido el 2026-10-21): el de Juegos.** El ranking usa el nick que la persona ya tiene en Juegos (2–20
+  letras o números; spec `juegos`, que no cambia). Antes de mostrarlo en el ranking, el servidor lo revisa: sin
+  correos ni teléfonos, sin **ningún nombre de pila del registro** (evita suplantar o burlarse de otro) y sin
+  palabras de la lista bloqueada; si no pasa, se le pide cambiarlo en Juegos. Además el profe lo aprueba antes de que
+  se vea; si la persona cambia su nick en Juegos, la aprobación vuelve a «pendiente». Sin nick de Juegos no puede
+  aparecer.
 - **Ranking:** por grupo de Inglés y por semana (lunes a domingo, hora de la Ciudad de México), ordenado por **puntos
   de constancia**, no por XP: 10 por actividad enviada a tiempo, 5 tarde y 20 por paso de misión entregado. Así el
   ranking premia el esfuerzo y **no permite deducir calificaciones** (la XP y el nivel incluyen porcentajes). Muestra
   posición, nick y puntos de constancia. Nada de foto, nombre, correo, XP, nivel ni calificaciones. La caché se
   invalida al cambiar un nick, su aprobación o la preferencia de ocultarse.
-- **Ocultarse:** cada quien puede ocultarse en cualquier momento («🙈 No aparecer en el ranking»); sigue viendo su
-  propia posición en privado. Quien no tiene nick aprobado no aparece.
-- Por defecto: **oculto hasta que elija y le aprueben un nick** (privacidad por defecto). El profe puede apagar el
-  ranking del grupo.
+- **Oculto por defecto (decidido el 2026-10-21):** nadie aparece hasta que **lo activa** («🏆 Aparecer en el
+  ranking») y tiene su nick de Juegos aprobado. Puede volver a ocultarse en cualquier momento («🙈 No aparecer»); oculto
+  o no, siempre ve su propia posición en privado. El profe puede apagar el ranking del grupo.
 - Secundaria **no tiene ranking** (una alumna); su comparación es contra sí misma («tu mejor semana»).
 
 ### 1.7 Lo que se ve en el dashboard del estudiante
@@ -138,24 +142,30 @@ Fase 3, «💬 Pregúntale al tutor». Inglés agrega «🏆 Ranking de mi grupo
 ## 2. Malla curricular interactiva de 1.º de secundaria
 
 Cada mundo cierra con una **misión principal**: un proyecto o reto práctico en vez de un examen teórico. El mini
-examen 🎯 de la skill se queda como «jefe de zona». La tabla cubre el primer mundo de cada materia (piloto de la
-Fase 2) y anota la misión de los siguientes.
+examen 🎯 de la skill se queda como «jefe de zona». La tabla cubre el primer mundo de cada materia y anota la misión
+de los siguientes.
 
-| Materia | Mundo piloto (secuencia de la skill) | Misión principal | Entregable (sin datos personales) | Rúbrica (4 criterios, 25 pts c/u) | Siguientes mundos |
+**Decidido el 2026-10-21:** las misiones piloto de la Fase 2 son **Matemáticas («La tiendita del salón») e Inglés («My
+Hero Card»)**; las demás quedan listas para publicarse después. Por ahora **todos los entregables son solo texto**
+(lo que antes era foto, cartel, hoja de cálculo o audio se entrega escrito); imagen y audio llegan en una fase
+posterior, cuando haya consentimiento firmado (§4.3).
+
+| Materia | Mundo piloto (secuencia de la skill) | Misión principal | Entregable en texto (sin datos personales) | Rúbrica (4 criterios, 25 pts c/u) | Siguientes mundos |
 |---|---|---|---|---|---|
-| **Matemáticas** | 🔢 Valle de los Números — Aritmética, solo temas puntuales que no haya visto (26 oct–22 nov) | **«La tiendita del salón»:** planear una venta con presupuesto, precios con decimales, descuentos en porcentaje y ganancia | Tabla de precios y cálculos (hoja de cálculo o foto de la libreta) + 3 problemas que inventa para otra persona | Cálculos correctos · Uso de porcentajes y fracciones · Explicación del procedimiento · Problemas inventados con solución | 📐 «Diseña la caja»: volumen de prismas con una maqueta medida · ❓ «Acertijos de la incógnita»: 5 acertijos con ecuaciones de primer grado |
-| **Ciencias** | 🌱 Bosque de la Vida — Biología desde cero: método científico, seres vivos, célula | **«Diario de campo»:** observar una planta o un ser vivo de casa 7 días aplicando el método científico | Bitácora con pregunta, hipótesis, 7 registros, gráfica simple y conclusión | Pregunta e hipótesis · Registro constante · Análisis (gráfica) · Conclusión con evidencia | ⚗️ «Química de cocina»: mezclas y reacciones seguras · ⚡ «Carrito de Newton»: leyes de Newton con un carrito de globo |
-| **Español** | 📚 Biblioteca de los Textos — programa de 1.º sin repetir lo visto, ortografía en cada bloque | **«Reportaje de mi comunidad»:** un texto expositivo sobre un tema del entorno (el mercado, el agua, los árboles) con 2 fuentes | Reportaje de 300–400 palabras con título, subtítulos y fuentes; sin nombres ni fotos de personas | Estructura del texto · Uso de fuentes · Ortografía y puntuación · Claridad | Reseña de un libro leído · Debate escrito con argumentos |
-| **Ciencias Sociales** | 🤝 Plaza Cívica — Cívica y Ética (26 oct–22 nov) | **«Campaña por un derecho»:** cartel o infografía sobre un derecho de niñas, niños y adolescentes | Cartel (imagen) + párrafo de 100 palabras: qué derecho, por qué importa, qué puede hacer su comunidad | Derecho bien explicado · Fuente confiable (CNDH, UNICEF) · Propuesta de acción · Diseño claro | 📜 «Línea del tiempo de la Revolución» (sigue desde el Porfiriato) · 🗺️ «Mapa climático de México» con coordenadas |
-| **Tecnología, pensamiento computacional e IA** | 🖥️ Taller Digital — Bases: computadora, archivos, internet seguro, pensamiento computacional, hojas de cálculo | **«Kit de seguridad digital»:** guía y hoja de cálculo con un plan para cuidar cuentas y datos | Hoja de cálculo con checklist y diagrama de flujo «¿Es seguro este mensaje?» (**sin contraseñas reales**) | Reglas correctas · Algoritmo claro (diagrama) · Hoja de cálculo con fórmulas · Ejemplos propios | 🐍 «Bot de trivia en Python» (listas, funciones, diccionarios) + «Detective de sesgos»: evaluar 3 respuestas de una IA |
-| **Inglés** | 🔤 Isla de las Letras → 🧍 Puerto *To Be* (desde cero, despacio y con *speaking*) | **«My Hero Card»:** crear la ficha de un **personaje inventado** (nombre, edad, colores, cosas que tiene, cómo es) y presentarla | Ficha escrita de 8–10 oraciones + audio de 1 minuto para el profe (instrucciones en español, contenido en inglés) | *To be* y posesivos · Vocabulario (números, colores, adjetivos) · Pronunciación · Fluidez | 🛒 «My Perfect Day»: rutina en presente simple con *there is/are* |
+| **Matemáticas** (piloto) | 🔢 Valle de los Números — Aritmética, solo temas puntuales que no haya visto (26 oct–22 nov) | **«La tiendita del salón»:** planear una venta con presupuesto, precios con decimales, descuentos en porcentaje y ganancia | Tabla de precios y cálculos escrita en el cuadro de texto + 3 problemas que inventa para otra persona | Cálculos correctos · Uso de porcentajes y fracciones · Explicación del procedimiento · Problemas inventados con solución | 🏙️ «Diseña la caja»: volumen de prismas con una maqueta medida (medidas y cálculos en texto) · 🗼 «Acertijos de la incógnita»: 5 acertijos con ecuaciones de primer grado |
+| **Ciencias** | 🌿 Selva de la Vida — Biología desde cero: método científico, seres vivos, célula | **«Diario de campo»:** observar una planta o un ser vivo de casa 7 días aplicando el método científico | Bitácora escrita con pregunta, hipótesis, 7 registros, tabla de datos y conclusión | Pregunta e hipótesis · Registro constante · Análisis (tabla de datos) · Conclusión con evidencia | ⚗️ «Química de cocina»: mezclas y reacciones seguras · 🏔️ «Carrito de Newton»: leyes de Newton con un carrito de globo |
+| **Español** | 📚 Gran Biblioteca — programa de 1.º sin repetir lo visto, ortografía en cada bloque | **«Reportaje de mi comunidad»:** un texto expositivo sobre un tema del entorno (el mercado, el agua, los árboles) con 2 fuentes | Reportaje de 300–400 palabras con título, subtítulos y fuentes; sin nombres de personas | Estructura del texto · Uso de fuentes · Ortografía y puntuación · Claridad | Reseña de un libro leído · Debate escrito con argumentos |
+| **Ciencias Sociales** | 🏛️ Ágora — Cívica y Ética (26 oct–22 nov) | **«Campaña por un derecho»:** campaña escrita sobre un derecho de niñas, niños y adolescentes | Lema de la campaña + párrafo de 100 palabras: qué derecho, por qué importa, qué puede hacer su comunidad | Derecho bien explicado · Fuente confiable (CNDH, UNICEF) · Propuesta de acción · Mensaje claro | ⏳ «Línea del tiempo de la Revolución» (sigue desde el Porfiriato) · 🗺️ «Mapa climático de México» con coordenadas (descrito en texto) |
+| **Tecnología, pensamiento computacional e IA** | 🛠️ Taller Digital — Bases: computadora, archivos, internet seguro, pensamiento computacional, hojas de cálculo | **«Kit de seguridad digital»:** guía con un plan para cuidar cuentas y datos | Checklist y algoritmo en pasos numerados «¿Es seguro este mensaje?» (**sin contraseñas reales**) | Reglas correctas · Algoritmo claro · Orden y formato del checklist · Ejemplos propios | 🌀 «Bot de trivia en Python» (listas, funciones, diccionarios; código pegado como texto) + 🤖 «Detective de sesgos»: evaluar 3 respuestas de una IA |
+| **Inglés** (piloto) | 🏝️ Isla del Alfabeto → *to be*, posesivos y adjetivos (desde cero y despacio) | **«My Hero Card»:** crear la ficha de un **personaje inventado** (nombre, edad, colores, cosas que tiene, cómo es) | Ficha escrita de 8–10 oraciones (instrucciones en español, contenido en inglés) | *To be* y posesivos · Vocabulario (números, colores, adjetivos) · Orden de las oraciones · Ortografía | «My Perfect Day»: rutina en presente simple con *there is/are*. Cuando haya audio: presentación oral de 1 minuto con criterios de pronunciación y fluidez |
 
 Reglas comunes de la malla:
 
 - La misión se divide en **3 a 5 pasos** con fecha, para que avance durante el mundo y no todo al final.
 - Cada paso puede tener un tip con video o lectura verificada (reglas de fuentes de la skill).
-- **Privacidad en entregables:** nada de rostros, nombres reales, direcciones, escuela ni uniforme en fotos o audios;
-  la consigna lo dice en cada misión y el profe rechaza la entrega si no se cumple (con mensaje amable).
+- **Privacidad en entregables:** nada de nombres reales, direcciones, escuela ni datos de contacto en el texto (y,
+  cuando haya imagen o audio, tampoco rostros, uniforme ni voz de otras personas); la consigna lo dice en cada misión
+  y el profe pide corrección si no se cumple (con mensaje amable).
 - Artes y Educación Física quedan como misiones secundarias (sin misión principal) para no sobrecargar.
 
 ---
@@ -189,7 +199,7 @@ Reglas comunes de la malla:
   sesión principal con la skill y validado antes de subir. Ventaja: cero código de edición, misma fuente que el resto
   del contenido. Costo: el profe depende del agente.
 - *Fase 4:* editor en la página. Alternativas consideradas:
-  - (A) **Escribir al repo de datos desde el servidor** al publicar (recomendada): una sola fuente del contenido; el
+  - (A) **Escribir al repo de datos desde el servidor** al publicar (**decidida el 2026-10-21**): una sola fuente del contenido; el
     servidor ya sabe leer y escribir ese repo. Borradores en `stald_docs` (`borradores/misiones/<id>.json`).
   - (B) Misiones en Postgres: más simple de editar, pero parte el contenido en dos fuentes y rompe el flujo de la
     skill.
@@ -210,8 +220,9 @@ la ve el profe; el estudiante ve mensajes en positivo («Tienes 2 clases por rec
 
 ### 3.4 Madres, padres o tutores
 
-**No-objetivo** en este cambio. No hay panel ni cuentas para ellos. Solo se registra su consentimiento para el tutor
-IA (acción externa del profe, §4.3).
+**No-objetivo** en este cambio. No hay panel ni cuentas para ellos. Solo se registra su consentimiento: el profe lo
+recaba con un **formato simple** que prepara la Fase 2 (decidido el 2026-10-21; §4.3) y en la plataforma queda solo
+slug, tipo y fecha.
 
 ---
 
@@ -225,12 +236,12 @@ IA (acción externa del profe, §4.3).
 |---|---|---|
 | XP, nivel, rango, racha, insignias automáticas, estado de mundos, árbol | **Derivado** de `resultados/` + contenido, con la función pura de `comun/gamificacion.js` | Una sola verdad (los resultados); sin migraciones ni datos que se desincronicen; revertir no pierde nada |
 | Catálogo de mundos y misiones | Repo de datos: `contenido/<ámbito>/mundos.json` y `misiones/<id>.json` | Es contenido, como las clases |
-| Perfil RPG: nick, estado del nick, ranking oculto, insignias manuales | `stald_docs` → `gamificacion/perfiles/<slug>.json` (se borra 30 días después de la baja) | No se puede derivar |
+| Perfil RPG: si eligió aparecer en el ranking, nick de Juegos aprobado (el valor aprobado, para detectar cambios) e insignias manuales | `stald_docs` → `gamificacion/perfiles/<slug>.json` (se borra 30 días después de la baja). El nick en sí lo sigue guardando Juegos | No se puede derivar |
 | Ranking apagado por grupo | `stald_docs` → `gamificacion/config.json` | Configuración del profe |
 | Borradores de misiones (Fase 4) | `stald_docs` → `borradores/misiones/<id>.json` | Aún no es contenido publicado |
-| Entregas y evaluaciones de misión | `stald_docs` → `entregas/<mision>/<slug>.json` | Datos de la persona, junto a sus resultados |
+| Entregas (solo texto) y evaluaciones de misión | `stald_docs` → `entregas/<mision>/<slug>.json` | Datos de la persona, junto a sus resultados |
 | Bitácora del tutor | Tabla `stald_tutor_bitacora` (migración versionada) | Volumen, consultas por fecha y borrado por retención |
-| Configuración del tutor, gasto del mes y consentimientos (`tutor`, `multimedia`) | `stald_docs` → `tutor/config.json` (slug, tipo y fecha, sin nombres; se borra al retirarse o con la baja) | Interruptor y control de acceso |
+| Configuración del tutor, gasto del mes y consentimientos (`tutor`; `multimedia` cuando llegue esa fase) | `stald_docs` → `tutor/config.json` (slug, tipo y fecha, sin nombres; se borra al retirarse o con la baja). El formato firmado lo guarda el profe fuera de la plataforma | Interruptor y control de acceso |
 
 - **Una sola fórmula:** `comun/gamificacion.js` (Fase 1) se usa en el navegador. Para el ranking, el servidor necesita
   la misma cuenta. Se propone que el módulo no dependa del DOM y que `server/` lo importe por ruta relativa (Deno lo
@@ -257,9 +268,10 @@ estudiante sabe qué ve el profe) y control del profe.
 
 | Riesgo | Control |
 |---|---|
-| Exponer identidad en ranking | Solo nick aprobado; oculto por defecto; nunca nombre, correo, foto ni calificaciones; solo dentro de su grupo y con sesión |
-| Nicks que identifican u ofenden | Validación (longitud, caracteres, sin correo ni teléfono, sin su nombre real), lista de palabras bloqueadas y aprobación del profe |
-| Datos personales en entregas (rostros, nombres, direcciones, voz) | Consentimiento `multimedia` de madre, padre o tutor y casilla «Acepto» (precedente: foto de avatar en Juegos); consigna explícita; sin campo de nombre; imágenes reducidas en el cliente y **metadatos quitados también en el servidor**; servidas solo por ruta con sesión a la dueña y al admin; si el profe pide corrección por privacidad, el archivo se borra en ese momento |
+| Exponer identidad en ranking | Oculto por defecto: solo aparece quien lo activa y tiene su nick de Juegos aprobado; nunca nombre, correo, foto ni calificaciones; solo dentro de su grupo y con sesión |
+| Nicks que identifican u ofenden | Revisión del nick de Juegos al pedir aparecer (sin correo ni teléfono, sin nombres de pila del registro, lista de palabras bloqueadas) y aprobación del profe, que se reinicia si cambia el nick |
+| Datos personales en entregas (nombres, direcciones, contacto) | **Solo texto por ahora**: consigna explícita, sin campo de nombre, recordatorio antes de enviar y, si el profe pide corrección por privacidad, el texto del paso se borra en ese momento |
+| Imagen y audio (fase posterior) | No se aceptan hasta que exista el consentimiento `multimedia` firmado y un cambio OpenSpec propio. Reglas que ese cambio debe cumplir: casilla «Acepto» (precedente: foto de avatar en Juegos); imágenes reducidas en el cliente y **metadatos quitados también en el servidor**; servidas solo por ruta con sesión a la dueña y al admin; si se pide corrección por privacidad, el archivo se borra en ese momento |
 | Ver datos ajenos | Toda ruta filtra por la identidad de la sesión (`quienEs`); recurso no visible para la persona → 404 (no revela que existe); acción sobre lo de otra persona o ruta de admin → 403; pruebas por fila de la matriz |
 | Datos personales al proveedor de IA | §4.4: redacción en el servidor antes de enviar, sin identificadores, sin respuestas de ejercicios |
 | Retención | Entregas: contenido hasta el 31 de agosto (fin de ciclo 31 de julio + 30 días; se conserva solo la evaluación). Bitácora del tutor: 90 días. Perfil RPG: 30 días tras la baja. Borrado por script versionado; el profe puede borrar entregas y bitácora de una persona a petición |
@@ -271,8 +283,9 @@ estudiante sabe qué ve el profe) y control del profe.
 **Cumplimiento (México):** la Ley Federal de Protección de Datos Personales en Posesión de los Particulares exige
 aviso de privacidad y, para menores, el consentimiento de quien ejerce la patria potestad o la tutela; la Ley General
 de los Derechos de Niñas, Niños y Adolescentes protege su intimidad. Acciones: redactar el aviso de privacidad
-(qué se guarda, para qué, cuánto tiempo, quién lo ve, proveedor de IA y su país), recabar el consentimiento
-escrito para el tutor IA y documentar el procedimiento para ejercer derechos ARCO (acceso, rectificación,
+(qué se guarda, para qué, cuánto tiempo, quién lo ve, proveedor de IA y su país), preparar en la Fase 2 un
+**formato simple de consentimiento** (una hoja imprimible, `consentimiento.html`, enlazada desde el aviso) con el que
+el profe recaba la firma de madre, padre o tutor para el tutor IA (y, más adelante, para imagen y audio), y documentar el procedimiento para ejercer derechos ARCO (acceso, rectificación,
 cancelación y oposición) por correo al profe. *El texto legal final lo revisa el profe; este diseño no es asesoría
 legal.*
 
@@ -287,10 +300,15 @@ legal.*
 - Solo habla del tema de la clase o del paso de la misión que abrió; ante otro tema, redirige con amabilidad.
 - Nunca pide datos personales; si el estudiante los escribe, le recuerda que no hace falta.
 - Señales de riesgo (autolesión, abuso, violencia): las detecta una lista versionada de expresiones en el servidor
-  **o** una marca que devuelve el modelo (basta cualquiera). Respuesta: mensaje fijo de apoyo que sugiere hablar con
-  un adulto de confianza y con la Línea de la Vida (número a verificar antes de publicar); la conversación se marca y
-  el profe recibe un aviso **sin contenido** por el canal del aviso del servidor. Qué hace el profe después (hablar
-  con la familia, canalizar) es un protocolo que él define (§6).
+  **o** una marca que devuelve el modelo (basta cualquiera). Respuesta (decidida el 2026-10-21): a la alumna o al
+  alumno se le muestra un mensaje fijo de apoyo que sugiere hablar con un adulto de confianza y con la **Línea de la
+  Vida**, con su número **verificado en la fuente oficial antes de activar el tutor** (tarea bloqueante de la Fase 3);
+  la conversación se marca y el profe recibe un **aviso por correo sin contenido** que lo lleva al panel. Qué hace el
+  profe después (hablar con la familia, canalizar) lo decide él caso por caso.
+- **Correo de aviso:** hoy el servidor no manda correos (sus avisos van al log). La Fase 3 agrega el envío con un
+  servicio de correo transaccional cuya llave vive solo en Deno Deploy (`AVISO_CORREO_API_KEY`) y el destinatario en
+  `AVISO_CORREO_PROFE`; si el envío falla, la alerta queda en el panel y se reintenta. El correo solo dice «Hay una
+  conversación marcada en el tutor», sin nombre ni texto.
 - No está disponible desde mini exámenes 🎯 ni exámenes.
 
 **Integración:**
@@ -313,22 +331,25 @@ Deno Deploy  server/tutor.ts
 Respuesta { texto, restantesHoy }
 ```
 
-**Límites:** 30 mensajes por persona al día, 600 caracteres por mensaje, 12 turnos por conversación, horario
-7:00–21:30 (hora de la Ciudad de México), tope de gasto mensual (`TUTOR_IA_TOPE_USD`, contado con el uso de tokens que reporta el
-proveedor) que avisa al profe al 80 % y responde 503 `tope_alcanzado` al 100 %.
+**Límites (decididos el 2026-10-21):** 30 mensajes por persona al día, 600 caracteres por mensaje, 12 turnos por
+conversación, horario **7:00–21:00** (zona `America/Mexico_City`), tope de gasto mensual (`TUTOR_IA_TOPE_USD`,
+contado con el uso de tokens que reporta el proveedor) que avisa al profe al 80 % y responde 503 `tope_alcanzado` al
+100 %.
 
-**Proveedor (justificación de la pieza nueva):** se propone Anthropic Claude por la API desde Deno (paquete oficial
-`@anthropic-ai/sdk` vía `npm:`), por su apego a instrucciones de sistema y sus controles de seguridad. Modelos
-candidatos y precios de lista (USD por millón de tokens, según la tabla de modelos de la API consultada el
-2026-10-21; verificar en la página oficial de precios antes de contratar):
+**Proveedor y modelo (decididos el 2026-10-21): Anthropic Claude, modelo `claude-haiku-5-5`**, por la API desde Deno
+(paquete oficial `@anthropic-ai/sdk` vía `npm:`), por su apego a instrucciones de sistema, sus controles de seguridad y
+su costo. Precios de lista de referencia (USD por millón de tokens, según la tabla de modelos de la API consultada el
+2026-10-21). **Antes de activar, el agente confirma los precios en la página oficial de precios** y ajusta el tope
+con esos valores (tarea bloqueante de la Fase 3):
 
 | Modelo | Entrada | Salida | Costo por mensaje (≈ 3 000 tokens de entrada, 300 de salida) | Peor caso mensual (supuesto: 11 personas, la alumna y un grupo de ≈ 10, × 30 msj × 30 días = 9 900 msj) |
 |---|---|---|---|---|
-| `claude-opus-5-5` | 4.00 | 20.00 | ≈ 0.018 USD | ≈ 178 USD |
-| `claude-haiku-5-5` | 0.10 | 0.50 | ≈ 0.00045 USD | ≈ 4.5 USD |
+| `claude-haiku-5-5` (**elegido**) | 0.10 | 0.50 | ≈ 0.00045 USD | ≈ 4.5 USD |
+| `claude-opus-5-5` (solo referencia, descartado) | 4.00 | 20.00 | ≈ 0.018 USD | ≈ 178 USD |
 
-El uso real esperado es mucho menor (≈ 10 % del peor caso). La elección del modelo es del profe (§6); se recomienda
-correr la batería de evaluación de la Fase 3 con ambos y quedarse con el que la pase con mejor costo. **Privacidad del
+El uso real esperado es mucho menor (≈ 10 % del peor caso). La batería de evaluación de la Fase 3 se corre con
+`claude-haiku-5-5`; si no la pasa, el tutor sigue apagado y se vuelve a consultar al profe antes de cambiar de modelo.
+**Privacidad del
 proveedor:** antes de activar, verificar en los términos comerciales vigentes que los datos enviados por la API no se
 usan para entrenar modelos, el periodo de retención y si aplica retención cero; documentarlo en el aviso de
 privacidad.
@@ -377,8 +398,8 @@ funcionando) y fuga de datos (redacción y bitácora auditable).
 | Fase | Alcance | Criterios de aceptación medibles |
 |---|---|---|
 | **1 — Núcleo y dashboard (Secundaria, en curso)** | Dashboard RPG, `comun/gamificacion.js`, clase como misión con pasos y +XP | Lo definen sus cambios en curso. Este cambio solo exige que sus reglas (tabla del inicio) sigan intactas en las fases 2–4: prueba de regresión con 10 casos fijos de XP, nivel y racha |
-| **2 — Misiones principales y llegada a Inglés** | Catálogo `mundos.json`; misión principal con pasos, entrega y rúbrica; árbol de habilidades; misiones diarias y semanales; 3 misiones piloto en Secundaria (Matemáticas, Ciencias y Tecnología) y 1 en Inglés; gamificación en `ingles.html` de grupo; nick y ranking por grupo; evaluación básica del profe; PWA opcional | 1) 4 misiones piloto publicadas y validadas con 0 errores. 2) El flujo entrega → evaluación → XP pasa de punta a punta en E2E y en producción con la cuenta de prueba. 3) Ranking: 0 respuestas con nombre, correo, slug, XP o calificación (prueba automática que recorre el JSON) y quien se oculta no aparece en la siguiente carga. 4) Aviso de privacidad publicado y enlazado. 5) Dashboard p95 < 2.5 s en frío con 4G simulado. 6) E2E a 360 px sin scroll horizontal, claro y oscuro. 7) Reglas de Fase 1 sin cambios (10 casos). *Indicadores de adopción (no bloquean):* la alumna entrega ≥ 1 misión en el mes; ≥ 70 % del grupo envía ≥ 3 actividades por semana durante 2 semanas |
-| **3 — Tutor IA conversacional** | `POST /tutor/mensaje`, redacción, límites, bitácora, alertas, interruptor, tope de gasto, consentimiento | 1) Batería de 40 casos (10 de manipulación y 5 de bienestar): 0 respuestas directas a ejercicios calificables, ≥ 90 % con pregunta guía y 100 % de bienestar con el mensaje fijo. 2) 100 % de los turnos en la bitácora, ya redactados. 3) 0 datos personales enviados al proveedor en 20 casos con correos y teléfonos sembrados. 4) Sin consentimiento → 403 en el 100 % de los casos. 5) p95 de respuesta < 8 s. 6) El contador de gasto coincide ±5 % con el reporte del proveedor. 7) Casos de riesgo marcados y visibles para el profe en < 1 min |
+| **2 — Misiones principales y llegada a Inglés** | Catálogo `mundos.json`; misión principal con pasos, entrega **solo en texto** y rúbrica; árbol de habilidades; misiones diarias y semanales (sin XP); misiones piloto **«La tiendita del salón» (Matemáticas, Secundaria) y «My Hero Card» (Inglés, en el grupo y en Secundaria)**; gamificación en `ingles.html` de grupo; ranking por grupo oculto por defecto, por constancia y con el nick de Juegos; evaluación básica del profe; aviso de privacidad y formato simple de consentimiento; PWA opcional | 1) Las 2 misiones piloto publicadas y validadas con 0 errores. 2) El flujo entrega en texto → evaluación → XP pasa de punta a punta en E2E y en producción con la cuenta de prueba. 3) Ranking: 0 respuestas con nombre, correo, slug, XP o calificación (prueba automática que recorre el JSON); nadie aparece sin activarlo y quien se oculta no aparece en la siguiente carga. 4) Aviso de privacidad y formato de consentimiento publicados y enlazados. 5) Dashboard p95 < 2.5 s en frío con 4G simulado. 6) E2E a 360 px sin scroll horizontal, claro y oscuro. 7) Reglas de Fase 1 sin cambios (10 casos). *Indicadores de adopción (no bloquean):* la alumna entrega ≥ 1 misión en el mes; ≥ 70 % del grupo envía ≥ 3 actividades por semana durante 2 semanas |
+| **3 — Tutor IA conversacional** | `POST /tutor/mensaje` con `claude-haiku-5-5`, redacción, límites (7:00–21:00), bitácora, alertas por correo, interruptor, tope de gasto, consentimiento. **Bloqueantes antes de activar:** precios confirmados en la página oficial y número de la Línea de la Vida verificado | 0) Precios y número de la Línea de la Vida verificados y anotados en el reporte con su fuente y fecha. 1) Batería de 40 casos (10 de manipulación y 5 de bienestar): 0 respuestas directas a ejercicios calificables, ≥ 90 % con pregunta guía y 100 % de bienestar con el mensaje fijo. 2) 100 % de los turnos en la bitácora, ya redactados. 3) 0 datos personales enviados al proveedor en 20 casos con correos y teléfonos sembrados. 4) Sin consentimiento → 403 en el 100 % de los casos. 5) p95 de respuesta < 8 s. 6) El contador de gasto coincide ±5 % con el reporte del proveedor. 7) Casos de riesgo marcados y visibles para el profe en < 1 min |
 | **4 — Panel del profe avanzado** | Editor de misiones con borrador y publicación; bandeja de entregas con rúbrica; métricas; lista de riesgo; revisión de la bitácora | 1) El profe crea y publica una misión en < 10 min sin tocar JSON y pasa el validador. 2) Evalúa una entrega en < 3 min. 3) La lista de riesgo explica la regla en el 100 % de las filas y coincide con el cálculo a mano en 5 casos de prueba. 4) Métricas por materia y grupo cargan en < 2 s. 5) Ninguna ruta `/profe/*` responde 200 a quien no es admin |
 
 Cada fase es un cambio OpenSpec propio (con su rama, pruebas y verificación) derivado de esta propuesta: **mueve** a su
@@ -388,30 +409,41 @@ la Fase 4 se archive (o antes, si el profe descarta fases). Ver `tasks.md`.
 
 ---
 
-## 6. Decisiones que debe tomar el profe
+## 6. Decisiones tomadas (2026-10-21)
 
-1. **Nombres de los mundos** (§1.1): ¿se aceptan los propuestos o se ajustan?
-2. **Bono de XP por misiones diarias y semanales** (§1.3): sin bono (propuesta) o un bono fijo.
-3. **XP de la misión principal** (§1.2): rúbrica × 3 + 60 a tiempo, u otro peso.
-4. **Ranking de Inglés:** oculto por defecto hasta tener nick aprobado (propuesta) o visible por defecto con opción de
-   ocultarse; orden por puntos de constancia (propuesta) o por XP (permite deducir calificaciones); y si se reusa el
-   nick de Juegos.
-5. **Entregas con imágenes y audio:** permitirlas con consentimiento `multimedia` (reglas de §4.3) o solo texto en el
-   piloto.
-6. **Proveedor y modelo del tutor IA** (§4.4): `claude-opus-5-5` o `claude-haiku-5-5`, tope de gasto mensual y
-   horario.
-7. **Consentimiento y aviso de privacidad** para el tutor: quién lo recaba y cómo se guarda (propuesta: firmado en
-   papel o correo; en la plataforma solo slug + fecha).
-8. **Editor de misiones de la Fase 4:** escribir al repo de datos (A, propuesta) o guardar en Postgres (B).
-9. **Orden de las misiones piloto** de la Fase 2 (propuesta: Matemáticas, Ciencias, Tecnología e Inglés).
-10. **Protocolo de bienestar:** qué hace el profe cuando el tutor marca una conversación de riesgo.
+El profe aprobó la propuesta con las recomendaciones del diseño. Ya no hay preguntas abiertas:
+
+1. **Nombres de los mundos** (§1.1): los de `comun/gamificacion.js`, ya en `main` (Valle de los Números, Ciudad de
+   las Formas, Torre de las Incógnitas, Selva de la Vida, Laboratorio Alquimia, Cumbre de la Fuerza, Ágora, Puerta del
+   Tiempo, Atlas del Mundo, Taller Digital, Laberinto Sintaxis, Núcleo IA, Isla del Alfabeto, Gran Biblioteca,
+   Estudio y Arena).
+2. **Misiones diarias y semanales** (§1.3): **sin bono de XP**, solo reconocimiento (insignias y progreso).
+3. **XP de la misión principal** (§1.2): porcentaje de la rúbrica × 3 + 60 si se entregó a tiempo.
+4. **Ranking de Inglés** (§1.6):
+   - oculto por defecto: solo aparece quien lo activa;
+   - se ordena por puntos de constancia, no por XP;
+   - usa el nick de Juegos (revisado por el servidor y aprobado por el profe antes de verse).
+5. **Entregas** (§2, §4.3): **solo texto** por ahora. Imagen y audio, en una fase posterior con consentimiento
+   `multimedia` firmado y su propio cambio OpenSpec.
+6. **Tutor IA** (§4.4):
+   - modelo `claude-haiku-5-5`, con tope de gasto mensual (`TUTOR_IA_TOPE_USD`) y horario de 7:00 a 21:00
+     (`America/Mexico_City`);
+   - antes de activarlo: confirmar los precios en la página oficial y verificar el número de la Línea de la Vida
+     (tareas bloqueantes de la Fase 3).
+7. **Consentimiento** (§4.3): lo recaba el profe con un formato simple; prepararlo es tarea de la Fase 2. En la
+   plataforma solo queda slug, tipo y fecha.
+8. **Editor de misiones de la Fase 4** (§3.2): escribe en el repo de datos (opción A), como hoy.
+9. **Misiones piloto** (§2): primero Matemáticas («La tiendita del salón») e Inglés («My Hero Card»).
+10. **Señal de riesgo en el tutor** (§4.4):
+    - aviso al profe por correo, sin contenido;
+    - a la alumna o al alumno se le muestra la Línea de la Vida, con el número verificado antes de activar.
 
 ## 7. Riesgos generales
 
 | Riesgo | Mitigación |
 |---|---|
-| Gamificación que presiona o desmotiva (comparación) | Sin ranking en Secundaria; ranking semanal y opcional en Inglés; XP nunca baja; mensajes en positivo |
+| Gamificación que presiona o desmotiva (comparación) | Sin ranking en Secundaria; ranking semanal en Inglés, oculto por defecto y por constancia; XP nunca baja; mensajes en positivo |
 | Choque con los cambios de Fase 1 en curso | Este cambio no toca código ni specs vivas; reglas de Fase 1 como invariante; las fases 2–4 empiezan después de archivar la Fase 1 |
-| Carga de trabajo del profe (evaluar entregas) | Rúbrica de 4 criterios, XP automática, misiones piloto acotadas a 4 |
+| Carga de trabajo del profe (evaluar entregas) | Rúbrica de 4 criterios, XP automática, 2 misiones piloto y entregas solo en texto |
 | Contenido de la misión desalineado con la secuencia | La skill `clases-secundaria` se actualiza en la Fase 2 con la sección de misiones |
 | Costos o caída del proveedor de IA | Tope de gasto, interruptor y la plataforma funciona igual sin tutor |

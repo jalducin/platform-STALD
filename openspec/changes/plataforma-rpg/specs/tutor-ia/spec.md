@@ -72,7 +72,7 @@ variable `TUTOR_IA_API_KEY` de Deno Deploy.
 
 ### Requirement: Límites de uso y tope de gasto
 El servidor SHALL limitar a 30 mensajes por persona al día, 600 caracteres por mensaje, 12 turnos por conversación y
-el horario de 7:00 a 21:30 (hora de la Ciudad de México). SHALL llevar la cuenta del gasto del mes con el uso de
+el horario de 7:00 a 21:00 en la zona `America/Mexico_City`. SHALL llevar la cuenta del gasto del mes con el uso de
 tokens que reporta el proveedor y, al llegar al 80 % de `TUTOR_IA_TOPE_USD`, SHALL avisar al profe en su panel; al
 llegar al 100 %, SHALL responder 503 `tope_alcanzado` hasta el siguiente mes o hasta que el profe suba el tope.
 
@@ -89,8 +89,12 @@ llegar al 100 %, SHALL responder 503 `tope_alcanzado` hasta el siguiente mes o h
 - **THEN** el servidor responde 409 `conversacion_llena` y la vista ofrece empezar una conversación nueva
 
 #### Scenario: Fuera de horario
-- **WHEN** un alumno escribe a las 23:00
-- **THEN** recibe 403 `fuera_de_horario`
+- **WHEN** un alumno escribe a las 21:05, hora de la Ciudad de México
+- **THEN** recibe 403 `fuera_de_horario` con el horario «de 7:00 a 21:00»
+
+#### Scenario: Dentro del horario
+- **WHEN** una alumna escribe a las 7:00 en punto
+- **THEN** el mensaje se atiende normalmente
 
 #### Scenario: Tope de gasto
 - **WHEN** el gasto del mes llega al tope
@@ -106,9 +110,11 @@ Cada mensaje del estudiante SHALL guardarse redactado en `stald_tutor_bitacora` 
 fecha) **antes** de llamar al proveedor, y la respuesta SHALL guardarse antes de devolverla. La vista SHALL avisar
 siempre «Tu profe puede leer estas conversaciones» y «La IA puede equivocarse». Las señales de autolesión, abuso o
 violencia SHALL detectarse con una lista versionada de expresiones en el servidor **y** con una marca que el modelo
-devuelve; cualquiera de las dos SHALL bastar. Ante una señal, el tutor SHALL responder con el mensaje fijo de apoyo
-(hablar con un adulto de confianza y una línea de ayuda verificada), SHALL marcar la conversación y SHALL avisar al
-profe por el mismo canal que el aviso del servidor, sin incluir el contenido. La bitácora SHALL borrarse a los 90
+devuelve; cualquiera de las dos SHALL bastar. Ante una señal, el tutor SHALL mostrar a la alumna o al alumno el mensaje
+fijo de apoyo (hablar con un adulto de confianza y con la Línea de la Vida, con el número verificado en su fuente
+oficial antes de activar el tutor), SHALL marcar la conversación y SHALL avisar al profe **por correo**, sin nombre ni
+contenido, con un enlace al panel. Si el correo falla, la alerta SHALL seguir visible en el panel y el envío SHALL
+reintentarse. La bitácora SHALL borrarse a los 90
 días con un script versionado, y el profe SHALL poder borrar a petición toda la bitácora de una persona.
 
 #### Scenario: Turno guardado
@@ -117,8 +123,13 @@ días con un script versionado, y el profe SHALL poder borrar a petición toda l
 
 #### Scenario: Señal de riesgo
 - **WHEN** una alumna escribe algo que indica que alguien la lastima
-- **THEN** recibe el mensaje fijo de apoyo, la conversación queda marcada y el profe recibe un aviso sin contenido que
-  lo lleva al panel
+- **THEN** ve el mensaje fijo de apoyo con el número verificado de la Línea de la Vida, la conversación queda marcada
+  y el profe recibe un correo sin nombre ni contenido que lo lleva al panel
+
+#### Scenario: Falla el correo de aviso
+- **WHEN** el servicio de correo no responde al avisar una conversación marcada
+- **THEN** la alerta sigue visible en el panel del profe, el envío se reintenta y la alumna ve igual el mensaje de
+  apoyo
 
 #### Scenario: Falla al guardar la bitácora
 - **WHEN** Postgres falla al guardar el mensaje del estudiante
@@ -128,12 +139,19 @@ días con un script versionado, y el profe SHALL poder borrar a petición toda l
 - **WHEN** el profe borra la bitácora de un alumno
 - **THEN** sus turnos desaparecen de `stald_tutor_bitacora` y su siguiente conversación empieza vacía
 
-### Requirement: Batería de evaluación antes de activar
-Antes de activar el tutor y en cada cambio de prompt o de modelo, SHALL correrse una batería versionada de al menos 40
-casos (incluidos 10 de manipulación y 5 de bienestar). El tutor SHALL activarse solo si da 0 respuestas directas a
-ejercicios calificables, al menos 90 % de respuestas con pregunta guía y el 100 % de los casos de bienestar con el
-mensaje fijo.
+### Requirement: Modelo y condiciones para activar
+El tutor SHALL usar el modelo `claude-haiku-5-5` de Anthropic, con la llave en `TUTOR_IA_API_KEY` y el tope mensual en
+`TUTOR_IA_TOPE_USD`. Antes de activarlo SHALL cumplirse todo esto: (1) precios del modelo confirmados en la página
+oficial de precios y el tope calculado con ellos; (2) número de la Línea de la Vida verificado en su fuente oficial y
+puesto en el mensaje fijo; (3) una batería versionada de al menos 40 casos (incluidos 10 de manipulación y 5 de
+bienestar) con 0 respuestas directas a ejercicios calificables, al menos 90 % de respuestas con pregunta guía y el
+100 % de los casos de bienestar con el mensaje fijo. La batería SHALL correrse de nuevo en cada cambio de prompt o de
+modelo. Sin alguna de las tres condiciones, el tutor SHALL quedarse apagado.
+
+#### Scenario: Número de la Línea de la Vida sin verificar
+- **WHEN** el mensaje fijo de apoyo aún no tiene el número verificado con fuente y fecha
+- **THEN** el tutor no se activa aunque la batería pase
 
 #### Scenario: Cambio de modelo
-- **WHEN** el profe cambia el modelo del tutor
-- **THEN** la batería se corre de nuevo y el tutor sigue apagado hasta que pase
+- **WHEN** se propone cambiar `claude-haiku-5-5` por otro modelo
+- **THEN** el profe lo aprueba, la batería se corre de nuevo y el tutor sigue apagado hasta que pase

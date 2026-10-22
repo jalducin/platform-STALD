@@ -68,8 +68,8 @@ misión principal son ≥ 80 %. Un mundo ya pasado SHALL poder abrirse para repa
 ### Requirement: Misiones diarias y semanales derivadas
 El sistema SHALL mostrar misiones diarias («Completa tus clases de hoy»: las de `disponibleDesde` = hoy, hora de la
 Ciudad de México) y semanales («Termina las clases de la semana», «Avanza un paso de tu misión principal», «Mejora un
-tema en debilidad») calculadas a partir de las clases y resultados, sin captura manual. En la Fase 2 SHALL dar
-insignias y progreso, no XP extra.
+tema en debilidad») calculadas a partir de las clases y resultados, sin captura manual. SHALL dar solo
+reconocimiento (insignias y progreso visible) y SHALL NOT dar XP.
 
 #### Scenario: Día completo
 - **WHEN** la alumna envía las 2 clases que abrieron hoy
@@ -113,22 +113,32 @@ riesgo» ni «atrasado».
 - **WHEN** el aparato tiene activado reducir movimiento
 - **THEN** la subida de nivel se muestra sin animaciones grandes
 
-### Requirement: Nick para el ranking
-Cada alumno o alumna activo de Inglés SHALL poder proponer un nick de 3 a 16 caracteres (letras, números y espacios)
-con `PUT /gamificacion/perfil`. El servidor SHALL rechazar nicks con correos, teléfonos, cualquier nombre de pila del
-registro de alumnos y alumnas o palabras de la lista bloqueada, y SHALL dejarlos «pendientes» hasta que el profe los
-apruebe. El nick SHALL guardarse en `gamificacion/perfiles/<slug>.json` sin correo. Es independiente del nick de
-Juegos, salvo que el profe decida reusarlo y ese nick cumpla estas reglas.
+### Requirement: Nick de Juegos para el ranking
+El ranking de Inglés SHALL usar el nick de Juegos de cada persona (spec `juegos`, sin cambios). Un alumno o alumna
+activo de Inglés SHALL poder pedir aparecer en el ranking con `PUT /gamificacion/perfil { aparecer: true }`. El
+servidor SHALL aceptarlo solo si tiene nick de Juegos y ese nick no contiene correos, teléfonos, ningún nombre de pila
+del registro de alumnos y alumnas ni palabras de la lista bloqueada; si no pasa, SHALL responder 400 con el motivo y
+pedir cambiarlo en Juegos. El nick SHALL quedar «pendiente» hasta que el profe lo apruebe, y SHALL volver a
+«pendiente» si la persona lo cambia en Juegos. El perfil (`gamificacion/perfiles/<slug>.json`) SHALL guardar la
+preferencia de aparecer y el valor del nick aprobado, sin correo.
 
-#### Scenario: Nick válido
-- **WHEN** una alumna propone «Estrella Azul»
+#### Scenario: Pide aparecer con un nick válido
+- **WHEN** una alumna con el nick de Juegos «Estrella Azul» activa «Aparecer en el ranking»
 - **THEN** queda pendiente y no aparece en el ranking hasta que el profe lo aprueba
 
 #### Scenario: Nick con un nombre del registro
-- **WHEN** un alumno propone un nick que contiene el nombre de pila de un compañero
-- **THEN** el servidor responde 400 `nick_invalido` con un mensaje que explica por qué
+- **WHEN** un alumno cuyo nick de Juegos contiene el nombre de pila de un compañero pide aparecer
+- **THEN** el servidor responde 400 `nick_invalido` con un mensaje que explica por qué y le pide cambiarlo en Juegos
 
-#### Scenario: Nick de otra persona
+#### Scenario: Sin nick de Juegos
+- **WHEN** alguien sin nick de Juegos pide aparecer
+- **THEN** el servidor responde 400 `sin_nick` y la vista le explica cómo ponerse uno en Juegos
+
+#### Scenario: Cambia su nick en Juegos
+- **WHEN** un alumno con nick aprobado lo cambia en Juegos
+- **THEN** deja de aparecer en el ranking hasta que el profe apruebe el nick nuevo
+
+#### Scenario: Perfil de otra persona
 - **WHEN** alguien intenta cambiar el perfil de otra persona
 - **THEN** el servidor responde 403
 
@@ -137,17 +147,18 @@ Juegos, salvo que el profe decida reusarlo y ese nick cumpla estas reglas.
 - **THEN** el servidor responde 401
 
 #### Scenario: Invitado de Juegos o persona de baja
-- **WHEN** un invitado de Juegos o un alumno dado de baja de Inglés propone un nick
+- **WHEN** un invitado de Juegos o un alumno dado de baja de Inglés pide aparecer
 - **THEN** el servidor responde 403
 
 ### Requirement: Ranking por grupo con nicks, sin calificaciones
 `GET /gamificacion/ranking` SHALL devolver, solo para el grupo de Inglés de quien pregunta y para la semana actual
-(lunes 00:00 a domingo 23:59, hora de la Ciudad de México), la posición, el nick y los **puntos de constancia** de
-quienes tienen nick aprobado, están activos y no se ocultaron, más la posición propia aunque esté oculto. Los puntos
+(lunes 00:00 a domingo 23:59, hora de la Ciudad de México), la posición, el nick de Juegos y los **puntos de
+constancia** de quienes activaron aparecer, tienen su nick aprobado y están activos, más la posición propia aunque
+esté oculto. Los puntos
 de constancia SHALL contar esfuerzo, no calificaciones: 10 por actividad enviada a tiempo, 5 por enviada tarde y 20
 por paso de misión entregado, según la fecha de envío. La respuesta SHALL NOT incluir nombres, correos, slugs, fotos,
-XP, nivel ni calificaciones. Por defecto cada persona SHALL estar oculta hasta tener nick aprobado, y SHALL poder
-ocultarse o volver a aparecer en cualquier momento. La caché del ranking SHALL invalidarse al cambiar un nick, su
+XP, nivel ni calificaciones. Por defecto cada persona SHALL estar oculta: SHALL aparecer solo si lo activa y su nick
+está aprobado, y SHALL poder ocultarse o volver a aparecer en cualquier momento. La caché del ranking SHALL invalidarse al cambiar un nick, su
 aprobación o la preferencia de ocultarse. El profe SHALL poder apagar el ranking de un grupo. Secundaria SHALL NOT
 tener ranking.
 
@@ -156,8 +167,12 @@ tener ranking.
 - **THEN** ve nicks y puntos de constancia de su grupo y su propia posición, sin nombres, correos, XP ni
   calificaciones
 
-#### Scenario: Alumna oculta
-- **WHEN** una alumna activa «No aparecer en el ranking»
+#### Scenario: Oculto por defecto
+- **WHEN** un alumno con nick aprobado nunca activó «Aparecer en el ranking»
+- **THEN** no aparece en la lista de los demás y él ve su propia posición en privado
+
+#### Scenario: Alumna que se oculta
+- **WHEN** una alumna que aparecía activa «No aparecer en el ranking»
 - **THEN** desaparece de la lista de los demás en la siguiente carga y ella sigue viendo su posición en privado
 
 #### Scenario: Persona de baja
@@ -186,4 +201,5 @@ tener ranking.
 
 #### Scenario: Admin
 - **WHEN** el profe pide `GET /profe/nicks?grupo=`
-- **THEN** ve por persona su nombre de pila, nick, estado y si está oculta (respuesta solo para el admin, sin correos)
+- **THEN** ve por persona su nombre de pila, nick de Juegos, estado de aprobación y si pidió aparecer (respuesta solo
+  para el admin, sin correos)
