@@ -1105,7 +1105,11 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
 - **Admin (`tablero.js`).** `#grupo-filtro` arriba de todas las secciones. 🏠 Resumen: `#kpis` y `#mapa-calor` desde
   `GET /ingles/resumen?grupo=`; cada celda y cada nombre abren el cajón. El cajón (`dialog#cajon`, se cierra con Esc o
   ✕) tiene grupo (mover), la semana con «⏳ Dar prórroga» / «Quitar prórroga» / «↺ Reiniciar intentos», historial y
-  temas a reforzar. Las tarjetas `#grupos-admin` y `#alumnos-admin` van abiertas en su sección.
+  temas a reforzar. Las tarjetas `#grupos-admin` y `#alumnos-admin` van abiertas en su sección. Cada tarjeta de grupo
+  del Resumen (`#pp-grupos .pp-grupo`) trae «🔍 Ver grupo», «🎥 Meet» y «👁️ Ocultar del panel» (o «👁️ Mostrar en el
+  panel» con el interruptor; misma acción que en «👥 Grupos»). Las tarjetas salen aunque el resumen cargue o falle; si
+  falla, `#resumen-error` muestra el motivo y «🔄 Reintentar»; los `avisos` del servidor van en `#resumen-avisos`
+  (cambio `fix-ingles-admin`).
 - **Reproductor (`reproductor.js`).** Barra de progreso (`#player-bar`). Con menos de 600 px y más de una pregunta, el
   formulario lleva `.paso`: una pregunta por pantalla (`.q.actual`), con ← / «Siguiente →» y «📋 Ver todas las
   preguntas» (`[data-action="ver-todas"]`), que vuelve a la lista completa. Atajos: 1–9 eligen la opción de la

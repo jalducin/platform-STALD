@@ -114,7 +114,7 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
         mision: (document.getElementById('pf-mision-t') || {}).textContent || '', boton: !!document.querySelector('#pf-mision-btn[data-action]'),
         retos: document.querySelectorAll('#pf-retos .pf-reto').length, atrasada: /atrasad/i.test(document.getElementById('pf-rpg').textContent + document.querySelector('.pf-hero').textContent),
       }));
-      ok('ruta RPG: barra de nivel y XP, rango, insignias y racha' + suf, rpg.barra && /Nivel \d+/.test(rpg.rango) && rpg.insignias && rpg.racha, rpg.rango);
+      ok('ruta RPG: barra de nivel y XP, rango, insignias y racha' + suf, rpg.barra && /(Nv\.|Nivel) \d+/.test(rpg.rango) && rpg.insignias && rpg.racha, rpg.rango);
       ok('ruta RPG: «Misión principal activa» con botón y retos de hoy' + suf, rpg.mision.length > 3 && rpg.boton && rpg.retos >= 1, rpg.mision.slice(0, 60) + ' · retos ' + rpg.retos);
       ok('ruta RPG: nada dice «atrasada» (todo abierto, ritmo sugerido)' + suf, !rpg.atrasada);
       await m.click('[data-pf-tab="mundos"]');

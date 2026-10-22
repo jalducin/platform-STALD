@@ -168,6 +168,11 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   «Registro», el selector, el resumen, el mapa de calor, el conteo «con intentos» de «Esta semana», el guion del Meet
   y el ranking; el interruptor «Mostrar grupos ocultos (1)» (y que el selector vuelve a «Todos los grupos» al
   apagarlo); y lo revierte con «Mostrar en el panel» (el interruptor se apaga solo).
+- `ingles-admin` (fase `ingles`, con o sin `--pg`; cambio `fix-ingles-admin`) abre `ingles.html` como admin, recorre
+  cada pestaña y la ruta del profe y falla ante cualquier error de consola, error JS, script o estilo que no carga o 5xx
+  de la API (sin Postgres solo se excusa el 503 `sin_base` de `/ingles/grupos`). Con grupos, oculta y muestra el
+  grupo desde su tarjeta del Resumen y restaura la bandera. Simula en el navegador un resumen caído para revisar
+  «🔄 Reintentar».
 - Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
 - Juego en vivo sin Supabase (cambio `juegos-en-vivo`): `lib/vivo-relevo.js` levanta un relevo local (HTTP + SSE) y
   `initVivo(relevo.url, { latencia, perdida, desorden, noConecta })` es el `init` de `abrirPagina`; con la ruta

@@ -272,10 +272,12 @@ async function atender(req: Request): Promise<Response> {
     return await rutear(req, url, quien, email, admin);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "desconocido";
-    console.error("error:", msg);
+    console.error("error:", url.pathname, msg);
     // Límite de la API de GitHub agotado y sin copia en memoria (openspec: github-etag-cache).
     if (msg === "github_rate_limit") return json({ error: "mucho_trafico" }, 503);
-    return json({ error: "upstream_error" }, 500);
+    // Solo el admin ve el motivo (p. ej. «postgrest 500: …» o «Signal timed out.»), para diagnosticar desde su
+    // captura sin abrir los registros; nunca alumnos ni alumnas (openspec: fix-ingles-admin).
+    return json({ error: "upstream_error", ...(admin && email === admin ? { detalle: msg.slice(0, 200) } : {}) }, 500);
   }
 }
 

@@ -59,28 +59,57 @@ export async function handleResumen(req: Request, deps: DepsResumen, json: Json)
 
   const { items, semanaActual } = await visibleItems(deps.store, hoy);
   const ids = new Set(semanaActual?.elementos.map((e) => e.id) ?? []);
-  const columnas = items.filter((it) => ids.has(it.id) && tieneReto(it));
+  const todasColumnas = items.filter((it) => ids.has(it.id) && tieneReto(it));
 
   // Alumnos y alumnas (sin el profe), con su grupo vigente.
   const lista = (await deps.alumnos()).filter((a) => slugAlumno(a.nombre) !== ALUMNO_PROFE);
   const unicos = [...new Map(lista.map((a) => [a.nombre, a])).values()];
-  const conGrupo = await Promise.all(unicos.map(async (a) => {
-    const slug = slugAlumno(a.nombre);
-    return { ...a, slug, grupo: deps.grupoDe ? await deps.grupoDe(slug) : null };
-  }));
+  // Grupos (Postgres): si la lectura falla, el resumen sigue sin filtrar por grupo y lo avisa (openspec: fix-ingles-admin).
+  const avisos = new Set<string>();
+  let grupoDe = deps.grupoDe;
+  let conGrupo: (typeof unicos[number] & { slug: string; grupo: string | null })[];
+  try {
+    conGrupo = await Promise.all(unicos.map(async (a) => {
+      const slug = slugAlumno(a.nombre);
+      return { ...a, slug, grupo: grupoDe ? await grupoDe(slug) : null };
+    }));
+  } catch (e) {
+    console.error("resumen: grupos no disponibles:", e instanceof Error ? e.message : e);
+    avisos.add("grupos_no_disponibles");
+    grupoDe = undefined;
+    conGrupo = unicos.map((a) => ({ ...a, slug: slugAlumno(a.nombre), grupo: null }));
+  }
   const ocultosAdmin = new Set<string>();
-  if (!conOcultos && deps.ocultoAdmin) {
-    for (const g of new Set(conGrupo.map((a) => a.grupo))) if (g && await deps.ocultoAdmin(g)) ocultosAdmin.add(g);
+  if (!conOcultos && deps.ocultoAdmin && grupoDe) {
+    try {
+      for (const g of new Set(conGrupo.map((a) => a.grupo))) if (g && await deps.ocultoAdmin(g)) ocultosAdmin.add(g);
+    } catch (e) {
+      console.error("resumen: grupos ocultos no disponibles:", e instanceof Error ? e.message : e);
+      avisos.add("grupos_no_disponibles");
+    }
   }
   const visibles = conGrupo.filter((a) => !a.grupo || !ocultosAdmin.has(a.grupo));
-  const delGrupo = visibles.filter((a) => !grupoPedido || !deps.grupoDe || a.grupo === grupoPedido)
+  const delGrupo = visibles.filter((a) => !grupoPedido || !grupoDe || a.grupo === grupoPedido)
     .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 
-  // Resultados: una lectura por columna.
-  const porColumna = await Promise.all(columnas.map(async (it) => {
-    const docs = await leerCarpeta<Resultado>(deps.store, `resultados/${it.id}`);
-    return new Map(docs.filter((d) => d.nombre.endsWith(".json") && !d.nombre.startsWith("_")).map((d) => [d.nombre.slice(0, -5), d.data]));
-  }));
+  // Resultados: una lectura por columna, con un reintento. Una columna que no se pudo leer se deja fuera (con aviso)
+  // en lugar de tumbar todo el resumen con 500 `upstream_error` (openspec: fix-ingles-admin).
+  const leerColumna = async (it: Item) => {
+    for (let i = 0; ; i++) {
+      try {
+        const docs = await leerCarpeta<Resultado>(deps.store, `resultados/${it.id}`);
+        return new Map(docs.filter((d) => d.nombre.endsWith(".json") && !d.nombre.startsWith("_")).map((d) => [d.nombre.slice(0, -5), d.data]));
+      } catch (e) {
+        if (i < 1) continue;
+        console.error(`resumen: resultados de ${it.id} no disponibles:`, e instanceof Error ? e.message : e);
+        return null;
+      }
+    }
+  };
+  const leidas = await Promise.all(todasColumnas.map(leerColumna));
+  if (leidas.some((m) => m === null)) avisos.add("resultados_incompletos");
+  const columnas = todasColumnas.filter((_it, i) => leidas[i] !== null);
+  const porColumna = leidas.filter((m): m is Map<string, Resultado> => m !== null);
 
   const filas = delGrupo.map((a) => ({
     alumno: a.nombre,
@@ -106,7 +135,13 @@ export async function handleResumen(req: Request, deps: DepsResumen, json: Json)
     }).map((f) => f.alumno),
   };
 
-  const grupo = grupoPedido && deps.grupoInfo ? await deps.grupoInfo(grupoPedido) : null;
+  let grupo: InfoGrupo | null = null;
+  try {
+    grupo = grupoPedido && deps.grupoInfo && grupoDe ? await deps.grupoInfo(grupoPedido) : null;
+  } catch (e) {
+    console.error("resumen: grupo no disponible:", e instanceof Error ? e.message : e);
+    avisos.add("grupos_no_disponibles");
+  }
   return json({
     hoy,
     grupo,
@@ -115,5 +150,6 @@ export async function handleResumen(req: Request, deps: DepsResumen, json: Json)
     filas,
     kpis,
     ocultos: conGrupo.length - visibles.length, // alumnos y alumnas de grupos ocultos que quedaron fuera
+    avisos: [...avisos], // lecturas que fallaron: el resumen sale incompleto, no se cae (openspec: fix-ingles-admin)
   });
 }
