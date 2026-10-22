@@ -14,7 +14,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   (`DATA_URL_BASE`); no repetirla en varios lugares.
 - `index.html` es el **portal** (lo que Pages sirve en `/`):
   - pide el correo, consulta `/perfil` y muestra una tarjeta por espacio;
-  - el tablero de Secundaria vive en `secundaria.html` desde el cambio `portal-acceso`.
+  - la tarjeta de Secundaria lleva a `secundaria.html`, que desde el cambio `secundaria-sin-notion` es un puente a
+    `ingles.html?modo=secundaria` (ya no hay tablero de Notion).
 - Cada página de espacio lleva "← Inicio" al portal y "🎮 Juegos"; ambos conservan `?api=` para probar contra un servidor local.
 - **Excepción (`juegos.html`):**
   - El contenido de los juegos se carga de `juegos/datos/*.json` en el mismo sitio (vocabulario, trivia,
@@ -1046,4 +1047,21 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   `espanol`, `matematicas`, `ciencias`, `sociales`, `tecnologia`, `artes`, `edfisica`, `otra`), que fija `--mat` y
   `--mat-soft` desde tokens `--mat-*` de `ingles/ingles.css`, redefinidos para modo oscuro. El chip siempre lleva el
   nombre (no depende solo del color).
-- `secundaria.html` enlaza con «📚 Mis clases» (`#examenes-link`, conserva `?api=`); el tablero de Notion no cambia.
+- `secundaria.html` es un puente (cambio `secundaria-sin-notion`): `location.replace('ingles.html?' + query con
+  modo=secundaria + hash)`, con `<noscript>` y «← Inicio». No llama a `/data`.
+
+## Clase interactiva de Secundaria (cambio `secundaria-sin-notion`)
+
+- `ingles/secundaria-clase.js` (archivo propio para no mezclarse con la vista de lista): en modo Secundaria,
+  `openItem` (`ingles/reproductor.js`) arma la clase con `vistaClaseSecundaria(it, cabecera, form)`; Inglés no cambia.
+- Indicador de pasos `nav.sec-pasos` (pegajoso arriba): «1 Teoría → 2 Video → 3 Ejercicios → 4 Libreta», botones
+  `data-sec-paso` de ≥ 44 px que llevan a `#sec-paso-<id>`; el paso visible lleva `aria-current="step"`
+  (IntersectionObserver). Un paso sin contenido queda `disabled`.
+- Videos: los `tips` `video` de YouTube (`watch?v=`, `youtu.be/`, `/embed/`, `/shorts/`, `/live/`; `idYouTube`) se
+  incrustan con `https://www.youtube-nocookie.com/embed/<id>`, `loading="lazy"`, `title` y enlace «Abrir en YouTube ↗»;
+  marco 16:9 (`aspect-ratio`). Otros videos y lecturas van como botones-enlace (`.sec-enlaces`).
+- Libreta: tareas `libreta` con la casilla «✅ Ya la hice» (`data-sec-libreta`), guardada en
+  `localStorage['stald_libreta:<hash FNV-1a del correo>:<id>']` con try/catch (sin almacenamiento no se recuerda).
+- Resultado: «🎉 ¡Clase terminada!», calificación y retroalimentación por tema (`renderResultado`), la libreta y el
+  botón grande «Siguiente clase» (`.sec-siguiente`: la siguiente `disponible`/`en-curso` desde hoy; si no hay, «📚 Mis
+  clases»). Vista previa del admin: sin estos extras.

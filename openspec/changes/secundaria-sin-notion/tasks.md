@@ -84,6 +84,24 @@
 - [ ] 8.4 Portal (`index.html`): «🗓️ Mi horario» en el perfil de quien tiene Secundaria con «Hoy te toca: …» y botón
 - [ ] 8.5 Botones reales (≥ 44 px, hover/focus/disabled) en Secundaria y el perfil; 360 px y claro/oscuro
 
+## 8b. PR 2a — Clase interactiva
+
+Rama `feature/secundaria-clase-interactiva`. El dashboard, «Mis materias» y el horario en el perfil van en el PR del
+otro agente.
+
+- [x] 8b.1 `ingles/secundaria-clase.js` (archivo nuevo, para no chocar con el PR del dashboard): vista de la clase en modo Secundaria con indicador de pasos (Teoría, Video,
+  Ejercicios, Libreta; `aria-current="step"` con IntersectionObserver), videos de YouTube incrustados
+  (`youtube-nocookie`, `loading="lazy"`, enlace de respaldo), libreta con «✅ Ya la hice» (localStorage con try/catch)
+- [x] 8b.2 `ingles/reproductor.js`: en modo Secundaria, `openItem` usa la vista por pasos y `showResult` agrega la
+  libreta y «Siguiente clase»; Inglés igual
+- [x] 8b.3 `ingles/ingles.css` (`?v=` nuevo): pasos, video 16:9, libreta y acciones ≥ 44 px, foco visible, claro/oscuro,
+  360 px
+- [x] 8b.4 E2E `e2e-secundaria-clase` (registrada en `tests/e2e/correr.sh`, `--hoy 2026-10-27`): pasos y
+  `aria-current`, iframes `youtube-nocookie` lazy, casilla que persiste al recargar, resultado con temas y «Siguiente
+  clase» que abre otra clase, Inglés sin pasos; 360 px claro/oscuro sin scroll horizontal; capturas
+- [ ] 8b.5 Suite completa, E2E de Secundaria e Inglés afectadas, `revisor-solo-lectura`, PR, checks, merge y
+  verificación en producción; docs (`docs/frontend-standards.md`, `docs/pruebas.md`)
+
 ## 9. Cierre y seguimiento
 
 - [ ] 9.1 Seguimiento: quitar la caída a Notion de `filasSecundaria` (Notion ya está borrado)

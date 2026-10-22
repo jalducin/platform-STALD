@@ -103,7 +103,11 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   `fichas-e2e` (ordenar y emparejar), en la misma semana, con fecha 2026-10-04 y exclusiva de `fernando`, para
   `ordenar-emparejar`: aparece en su «Para ponerte al día». La semana de Secundaria `2026-10-26` (15 clases
   `sec-e2e-clase-*`, exclusivas de `valeria`, 2 por día y 3 el domingo, con y sin `materia`) es de
-  `secundaria-clases`, que solo corre con `--hoy 2026-10-27` (con otro día sale `OMIT`).
+  `secundaria-clases`, que solo corre con `--hoy 2026-10-27` (con otro día sale `OMIT`). La clase
+  `sec-e2e-clase-2026-10-27-a` trae además 2 videos de YouTube, una lectura y libreta para `secundaria-clase` (clase
+  interactiva, cambio `secundaria-sin-notion`; también solo con `--hoy 2026-10-27`): pasos y `aria-current`, iframes
+  `youtube-nocookie` lazy, «✅ Ya la hice» que se recuerda, resultado con «Siguiente clase», 360 px claro/oscuro e
+  Inglés sin pasos. Envía la clase de la alumna: corre después de `secundaria-clases`.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).

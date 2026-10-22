@@ -90,6 +90,35 @@ SHALL ignorarse, y SHALL NOT permitir enviar intentos a nombre de la alumna.
 - **WHEN** una alumna pide `/secundaria/actividades?alumna=otra`
 - **THEN** recibe solo lo suyo
 
+### Requirement: Clase interactiva de Secundaria
+Al abrir una clase en `ingles.html?modo=secundaria`, la vista SHALL guiar por pasos «1 Teoría → 2 Video →
+3 Ejercicios → 4 Libreta» con un indicador de paso (el paso visible marcado con `aria-current="step"`; un paso sin
+contenido se muestra deshabilitado). Los `tips` de tipo `video` con URL de YouTube SHALL incrustarse con
+`youtube-nocookie.com/embed/<id>` y `loading="lazy"` (con enlace para abrirlo en YouTube); los demás videos y lecturas
+SHALL quedar como enlaces. Las tareas de libreta SHALL tener una casilla «✅ Ya la hice» por clase, guardada solo en
+el aparato (localStorage con try/catch; sin almacenamiento la casilla funciona sin recordarse). Al enviar, la pantalla
+de resultado SHALL mostrar la calificación, la retroalimentación por tema, la libreta con su casilla y un botón
+«Siguiente clase» (la siguiente sin completar; si no hay, «Mis clases»). Botones de al menos 44 px, foco visible,
+claro y oscuro, sin scroll horizontal a 360 px. Inglés no cambia.
+
+#### Scenario: Pasos de la clase
+- **WHEN** la alumna abre una clase con teoría, 2 videos de YouTube, ejercicios y libreta
+- **THEN** ve el indicador «1 Teoría → 2 Video → 3 Ejercicios → 4 Libreta» y 2 reproductores `youtube-nocookie`
+  con `loading="lazy"`
+
+#### Scenario: Libreta hecha
+- **WHEN** marca «✅ Ya la hice» y vuelve a abrir la clase en el mismo aparato
+- **THEN** la casilla sigue marcada
+
+#### Scenario: Resultado y siguiente clase
+- **WHEN** envía sus respuestas
+- **THEN** ve su calificación, la retroalimentación por tema y «Siguiente clase», que abre la siguiente clase sin
+  completar
+
+#### Scenario: Inglés sin cambios
+- **WHEN** un alumno de Inglés abre una actividad
+- **THEN** la ve como antes, sin pasos ni reproductores incrustados
+
 ## MODIFIED Requirements
 
 ### Requirement: Exámenes de Secundaria
