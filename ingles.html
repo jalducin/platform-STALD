@@ -12,7 +12,9 @@
   try { var t = localStorage.getItem('stald_tema'); if (t === 'oscuro') document.documentElement.dataset.theme = 'dark'; else if (t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) { /* sin almacenamiento */ }
 </script>
 <link rel="stylesheet" href="estilos/stald.css">
-<link rel="stylesheet" href="ingles/ingles.css?v=8">
+<link rel="stylesheet" href="ingles/ingles.css?v=9">
+<link rel="stylesheet" href="estilos/materias.css?v=1"> <!-- colores por materia (openspec: secundaria-dashboard) -->
+<link rel="stylesheet" href="ingles/secundaria.css?v=1"> <!-- tablero de Secundaria (openspec: secundaria-dashboard) -->
 <!-- Scripts clásicos en orden (comparten el ámbito global); defer: corren cuando el DOM ya existe. -->
 <script defer src="comun/auth.js?v=8"></script> <!-- sesión (openspec: plataforma-login) -->
 <script defer src="ingles/comun.js?v=5"></script>
@@ -23,9 +25,11 @@
 <script defer src="ingles/tablero.js?v=2"></script>
 <script defer src="ingles/alumno.js?v=2"></script>
 <script defer src="ingles/profe.js?v=4"></script>
-<script defer src="ingles/secundaria.js?v=4"></script>
-<script defer src="comun/gamificacion.js?v=1"></script> <!-- reglas de XP, nivel, mundos e insignias (openspec: gamificacion-nucleo) -->
+<script defer src="comun/gamificacion.js?v=1"></script> <!-- XP, nivel, insignias y mundos (openspec: gamificacion-nucleo) -->
+<script defer src="comun/secundaria-datos.js?v=1"></script> <!-- reglas del tablero de Secundaria (openspec: secundaria-dashboard) -->
+<script defer src="ingles/secundaria.js?v=6"></script>
 <script defer src="ingles/secundaria-clase.js?v=3"></script> <!-- clase interactiva de Secundaria (openspec: secundaria-sin-notion) -->
+<script defer src="ingles/secundaria-inicio.js?v=1"></script> <!-- tablero de Secundaria (openspec: secundaria-dashboard) -->
 <script defer src="ingles/app.js?v=4"></script>
 </head>
 <body>

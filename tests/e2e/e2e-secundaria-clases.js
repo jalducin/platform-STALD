@@ -21,10 +21,10 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
 
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   for (const tema of ['light', 'dark']) {
-    const p = await abrirPagina(b, { email: ALUMNA, viejo: true, out, viewport: { width: 360, height: 780 }, contexto: { colorScheme: tema }, ruta: '/ingles.html?modo=secundaria', esperar: '#sec-clases' });
+    const p = await abrirPagina(b, { email: ALUMNA, viejo: true, out, viewport: { width: 360, height: 780 }, contexto: { colorScheme: tema }, ruta: '/ingles.html?modo=secundaria#semana', esperar: '#sec-clases' });
     const sufijo = tema === 'dark' ? ' (oscuro)' : '';
     if (tema === 'light') {
-      ok('título «📚 Clases de Secundaria» y pestaña «📚 Mis clases»', (await texto(p, '#titulo')).includes('Clases de Secundaria') && (await texto(p, '#sec-tab-clases')) === '📚 Mis clases');
+      ok('título «📚 Clases de Secundaria» y pestaña «📅 Esta semana»', (await texto(p, '#titulo')).includes('Clases de Secundaria') && (await texto(p, '#sec-tab-clases .sec-tab-largo')) === 'Esta semana');
       const hoy = await p.$$eval('#sec-hoy [data-sec-item]', xs => xs.map(x => ({ id: x.dataset.secItem, materia: x.dataset.materia, fondo: getComputedStyle(x.querySelector('.mat-chip')).backgroundColor })));
       ok('Hoy: las 2 clases del martes 27', hoy.length === 2 && hoy.every(h => h.id.includes(HOY)), JSON.stringify(hoy.map(h => h.id)));
       ok('Hoy: chips Matemáticas y Ciencias (deducida del título)', hoy.map(h => h.materia).join() === 'Matemáticas,Ciencias', hoy.map(h => h.materia).join());
@@ -42,7 +42,7 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
       await p.screenshot({ path: 'secundaria-clases-hoy.png' });
       await p.screenshot({ path: 'secundaria-clases-semana.png', fullPage: true });
     }
-    await p.click('[data-sec-tab="horario"]');
+    await p.click('.sec-tabs [data-sec-tab="horario"]');
     await p.waitForSelector('#sec-horario:not([hidden])');
     const hor = await p.$$eval('#sec-horario [data-sec-hor-dia]', xs => xs.map(x => ({ f: x.dataset.secHorDia, hoy: x.classList.contains('es-hoy'), m: [...x.querySelectorAll('.sec-hor-clase b')].map(b => b.textContent) })));
     ok('Mi horario: 7 días' + sufijo, hor.length === 7, String(hor.length));
@@ -60,15 +60,15 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
   }
 
   // Ancho de escritorio: el horario es una cuadrícula de 7 columnas.
-  const ancho = await abrirPagina(b, { email: ALUMNA, viejo: true, out, viewport: { width: 1280, height: 800 }, ruta: '/ingles.html?modo=secundaria', esperar: '#sec-clases' });
-  await ancho.click('[data-sec-tab="horario"]');
+  const ancho = await abrirPagina(b, { email: ALUMNA, viejo: true, out, viewport: { width: 1280, height: 800 }, ruta: '/ingles.html?modo=secundaria#semana', esperar: '#sec-clases' });
+  await ancho.click('.sec-tabs [data-sec-tab="horario"]');
   const cols = await ancho.$eval('#sec-horario-semana', el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
   ok('Mi horario en escritorio: 7 columnas', cols === 7, String(cols));
   ok('escritorio: sin scroll horizontal', await sinScrollH(ancho));
   await ancho.screenshot({ path: 'secundaria-horario-escritorio.png', fullPage: true });
 
   // Abrir una clase de hoy desde «Hoy» funciona como siempre.
-  await ancho.click('[data-sec-tab="clases"]');
+  await ancho.click('.sec-tabs [data-sec-tab="clases"]');
   await ancho.click(`#sec-hoy [data-sec-item="sec-e2e-clase-${HOY}-a"] [data-action="abrir-item"]`);
   ok('abrir la clase de hoy muestra sus preguntas', await ancho.waitForSelector('#exam-form', { timeout: 60000 }).then(() => true, () => false));
 

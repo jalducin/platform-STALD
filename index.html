@@ -6,6 +6,7 @@
 <title>STALD · Plataforma de aprendizaje</title>
 <meta name="description" content="Clases, tareas y juegos para aprender en un solo lugar.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%234f46e5'/><text x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'>S</text></svg>">
+<link rel="stylesheet" href="estilos/materias.css?v=1"> <!-- colores por materia (openspec: secundaria-dashboard) -->
 <style>
   :root {
     --bg: #f6f5fb; --bg-2: #eef0ff; --card: #ffffff; --text: #1e1b2e; --muted: #6b6880; --border: #e6e4f0;
@@ -112,6 +113,25 @@
   .admin-box input { width: 100%; font: inherit; padding: 11px 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
   .admin-box .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .admin-box .row .btn { width: auto; flex: 1; margin-top: 0; text-decoration: none; }
+  /* «🗓️ Mi horario» de Secundaria (openspec: secundaria-dashboard): 7 días compactos, hoy destacado y botones reales. */
+  .sec-portal { margin-top: 14px; padding: 16px; }
+  .sec-portal h2 { font-size: 1rem; margin: 0 0 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .sec-hoy-toca { padding: 12px 14px; border-radius: 14px; background: var(--secundaria-soft); border: 1.5px solid var(--secundaria); }
+  .sec-hoy-toca b { display: block; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text); margin-bottom: 6px; }
+  .sec-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mat-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .82rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; background: var(--mat-soft); color: var(--mat); border: 1px solid var(--mat); }
+  .sec-mini { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .sec-mini-dia { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); min-width: 0; }
+  .sec-mini-dia.es-hoy { border: 2px solid var(--secundaria); background: var(--secundaria-soft); }
+  .sec-mini-d { font-size: .68rem; font-weight: 800; color: var(--muted); white-space: nowrap; }
+  .sec-mini-dia.es-hoy .sec-mini-d { color: var(--text); }
+  .sec-mini-m { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 1rem; line-height: 1.2; }
+  .sec-mini-libre { font-size: .7rem; color: var(--muted); }
+  .sec-acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .sec-acciones .btn { margin-top: 0; min-height: 48px; text-decoration: none; font-size: .92rem; padding: 10px 12px; }
+  .btn.sec-ghost { background: var(--card); color: var(--text); border: 1.5px solid var(--border); box-shadow: none; }
+  .btn.sec-ghost:hover { border-color: var(--secundaria); box-shadow: var(--shadow); }
+  .sec-aviso { margin: 0; font-size: .86rem; color: var(--muted); }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -167,6 +187,8 @@
         <span class="tag" id="admin-tag" hidden>Modo maestro</span>
       </div>
       <nav class="tiles" id="tiles" aria-label="Espacios"></nav>
+      <!-- Horario compacto de Secundaria (openspec: secundaria-dashboard). -->
+      <section class="card sec-portal" id="sec-portal" aria-labelledby="sec-portal-t" hidden></section>
       <!-- Atajo al material de estudio de Inglés, siempre disponible (openspec: ingles-material-estudio). -->
       <a class="atajo-material" id="material-link" href="ingles.html#material" hidden><span aria-hidden="true">📚</span> Material de estudio de Inglés <span aria-hidden="true">→</span></a>
       <div class="notice" id="secure-notice" hidden>
@@ -196,6 +218,8 @@
 </div>
 
 <script src="comun/auth.js?v=8"></script>
+<script src="comun/gamificacion.js?v=1"></script> <!-- materias y mundos (openspec: gamificacion-nucleo) -->
+<script src="comun/secundaria-datos.js?v=1"></script> <!-- reglas del horario de Secundaria (openspec: secundaria-dashboard) -->
 <script>
   // Backend en Deno Deploy (ver docs/deno-deploy-setup.md). `?api=` permite probar contra un servidor local.
   const DEFAULT_API = 'https://stald.jalducin.deno.net';
@@ -242,6 +266,41 @@
     } catch (e) { /* sin avatar */ }
   }
 
+  // «🗓️ Mi horario» de Secundaria (openspec: secundaria-dashboard): pide /secundaria/actividades (el admin, la vista
+  // de la primera alumna con ?alumna=) y pinta los 7 días con «Hoy te toca» destacado. Si falla, un aviso corto.
+  async function pintarSecundaria(p) {
+    const el = $('sec-portal');
+    if (!p.accesos.secundaria || !window.SecundariaDatos) { el.hidden = true; return; }
+    const SD = window.SecundariaDatos;
+    const pedir = async (ruta) => { const r = await StaldAuth.fetchConSesion(API_BASE + conCorreo(ruta, p.email)); return { ok: r.ok, body: await r.json().catch(() => ({})) }; };
+    el.innerHTML = '<h2 id="sec-portal-t">🗓️ Mi horario</h2><p class="sec-aviso">Cargando tu horario…</p>';
+    el.hidden = false;
+    try {
+      let r = await pedir('/secundaria/actividades');
+      let alumna = null;
+      if (r.ok && r.body.isAdmin) {
+        alumna = (r.body.alumnas || [])[0] || null;
+        if (!alumna) { el.hidden = true; return; }
+        r = await pedir(agregarParam('/secundaria/actividades', 'alumna', alumna.slug));
+      }
+      if (!r.ok) throw new Error(r.body.error || 'error');
+      const items = r.body.items || [], hoy = r.body.hoy;
+      const chip = (it) => { const m = SD.materiaDe(it) || { ...SD.OTRA, nombre: 'Clase' }; return '<span class="mat-chip mat-' + m.clave + '"><span aria-hidden="true">' + m.emoji + '</span> ' + escapeHtml(m.nombre) + '</span>'; };
+      const deHoy = SD.clasesDeHoy(items, hoy);
+      const dias = SD.horarioSemana(items, hoy).map(d => '<li class="sec-mini-dia' + (d.esHoy ? ' es-hoy' : '') + '" data-sec-mini="' + d.fecha + '"' + (d.esHoy ? ' aria-current="date"' : '') + '>' +
+        '<span class="sec-mini-d">' + escapeHtml(SD.diaCorto(d.fecha)) + '</span><span class="sec-mini-m">' + (d.clases.length ? d.clases.map(it => { const m = SD.materiaDe(it) || SD.OTRA; return '<span role="img" title="' + escapeHtml(m.nombre) + '" aria-label="' + escapeHtml(m.nombre) + '">' + m.emoji + '</span>'; }).join('') : '<span class="sec-mini-libre">Libre</span>') + '</span></li>').join('');
+      const destino = alumna ? agregarParam('secundaria.html', 'alumna', alumna.slug) : 'secundaria.html';
+      el.innerHTML = '<h2 id="sec-portal-t">🗓️ ' + (alumna ? 'Horario de ' + escapeHtml(alumna.nombre) : 'Mi horario') + '</h2>' +
+        '<div class="sec-hoy-toca" id="sec-hoy-toca"><b>Hoy te toca</b>' + (deHoy.length ? '<div class="sec-chips">' + deHoy.map(chip).join('') + '</div>' : '<span>Hoy no tienes clases 🎉</span>') + '</div>' +
+        '<ol class="sec-mini" aria-label="Horario de la semana">' + dias + '</ol>' +
+        '<div class="sec-acciones"><a class="btn" id="sec-portal-clases" href="' + escapeHtml(conApi(destino)) + '">📚 Mis clases</a>' +
+        '<a class="btn sec-ghost" id="sec-portal-horario" href="' + escapeHtml(conApi(destino) + '#horario') + '">🗓️ Mi horario</a></div>';
+    } catch (e) {
+      el.innerHTML = '<h2 id="sec-portal-t">🗓️ Mi horario</h2><p class="sec-aviso">No pude cargar tu horario ahora. Ábrelo desde Secundaria.</p>' +
+        '<div class="sec-acciones"><a class="btn" href="' + escapeHtml(conApi('secundaria.html')) + '">📚 Mis clases</a></div>';
+    }
+  }
+
   function renderHome(p) {
     $('hello').textContent = 'Hola, ' + (p.nombre || 'qué gusto verte') + ' 👋';
     pintarAvatar(p);
@@ -259,6 +318,7 @@
         '<span class="t">' + escapeHtml(e.t) + '</span><span class="d">' + escapeHtml(e.d) + '</span><span class="go" aria-hidden="true">→</span></a>'
     ).join('');
     show('home');
+    pintarSecundaria(p);
   }
 
   function error(msg) {

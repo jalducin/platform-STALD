@@ -1,9 +1,33 @@
-// Clases de Secundaria (?modo=secundaria, openspec: examen-secundaria y secundaria-mis-clases): la alumna o el alumno
-// ve «📚 Mis clases» (hoy, la semana por día y lo demás) con chip y color por materia, y «🗓️ Mi horario» de 7 días;
-// el admin ve los resultados por persona y por materia.
+// Clases de Secundaria (?modo=secundaria, openspec: examen-secundaria, secundaria-mis-clases y secundaria-dashboard).
+// Pestañas: «🏠 Inicio» (tablero, ingles/secundaria-inicio.js), «📅 Esta semana» (hoy, la semana por día y lo demás),
+// «🗓️ Mi horario» (7 días) y «📚 Mis materias». El admin ve ese mismo tablero con los datos de una alumna
+// (`?alumna=<slug>` del servidor, solo lectura) y, además, «📝 Resultados» por clase.
+// Reglas puras (materia, día de la clase, estado, progreso, promedios y secuencias): comun/secundaria-datos.js.
+const SD = window.SecundariaDatos;
+// Fuentes del tablero RPG (Inter y Orbitron, Google Fonts), solo en modo Secundaria; si no cargan, quedan las del sistema.
+if (MODO_SECUNDARIA) {
+  const fuentes = document.createElement('link');
+  fuentes.rel = 'stylesheet';
+  fuentes.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;900&display=swap';
+  document.head.appendChild(fuentes);
+}
+
+// Pestañas: id interno → hash de la URL. «clases» conserva su id (#sec-clases) y se titula «📅 Esta semana».
+const SEC_TABS = [
+  { id: 'inicio', hash: 'inicio', titulo: '🏠 Inicio', corto: 'Inicio', emoji: '🏠' },
+  { id: 'clases', hash: 'semana', titulo: '📅 Esta semana', corto: 'Semana', emoji: '📅' },
+  { id: 'horario', hash: 'horario', titulo: '🗓️ Mi horario', corto: 'Horario', emoji: '🗓️' },
+  { id: 'materias', hash: 'materias', titulo: '📚 Mis materias', corto: 'Materias', emoji: '📚' },
+  { id: 'resultados', hash: 'resultados', titulo: '📝 Resultados', corto: 'Notas', emoji: '📝', soloAdmin: true },
+];
+const tabDeHash = h => { const t = SEC_TABS.find(x => x.hash === h || x.id === h); return t ? t.id : null; };
+
 async function loadSecundaria(email) {
-  // Con sesión el correo va en el token, no en la URL (openspec: secundaria-sin-notion; antes lo hacía secundaria.html).
-  const r = await fetchJson(ACT_URL + (StaldAuth.email() ? '' : '?email=' + encodeURIComponent(email)));
+  // Con sesión el correo va en el token, no en la URL (openspec: secundaria-sin-notion).
+  const q = StaldAuth.email() ? '' : '?email=' + encodeURIComponent(email);
+  const pedida = new URLSearchParams(location.search).get('alumna');
+  // Nombre para el saludo (/perfil) en paralelo; si falla, el saludo va sin nombre.
+  const [r, perfil] = await Promise.all([fetchJson(ACT_URL + q), fetchJson(API_BASE + '/perfil' + q).catch(() => null)]);
   if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, r.body)) return; // sesionVencida ya pintó la entrada
   loginEl.style.display = 'none'; appEl.style.display = 'block';
   if (!r.ok) {
@@ -12,50 +36,37 @@ async function loadSecundaria(email) {
       : vacio('⚠️', 'No se pudo cargar (' + (r.body.error || r.status) + '). Intenta de nuevo en unos minutos.');
     return;
   }
-  state.act = r.body; state.data = { isAdmin: !!r.body.isAdmin, rows: [] };
+  state.secNombre = perfil && perfil.ok ? perfil.body.nombre || null : null;
+  state.secLista = null;
+  let act = r.body;
+  if (act.isAdmin) {
+    // Admin: la lista con resultados (📝 Resultados) y el tablero de una alumna (la pedida o la primera).
+    state.secLista = act;
+    const alumnas = act.alumnas || [];
+    const elegida = alumnas.find(a => a.slug === pedida) || alumnas[0];
+    if (elegida) {
+      const v = await fetchJson(ACT_URL + (q ? q + '&' : '?') + 'alumna=' + encodeURIComponent(elegida.slug));
+      act = v.ok ? v.body : { ...act, errorAlumna: v.body.error || v.status };
+    }
+  }
+  // Pestaña inicial: la del hash; si recarga dentro de una clase (#ver/<id>), «📅 Esta semana», donde está su lista.
+  if (!state.secTab) state.secTab = tabDeHash(decodeURIComponent(location.hash.slice(1))) || (location.hash.startsWith('#ver/') ? 'clases' : 'inicio');
+  state.act = act; state.data = { isAdmin: !!r.body.isAdmin, rows: [] };
   render(state.data);
 }
 
-// ---------- Materia de cada clase ----------
-// Nombre canónico y clave de color. Orden: el nombre más largo primero («Ciencias Sociales» antes que «Ciencias»).
-const MATERIAS_SEC = [
-  ['Ciencias Sociales', 'sociales'], ['Educación Física', 'edfisica'], ['Matemáticas', 'matematicas'], ['Tecnología', 'tecnologia'],
-  ['Ciencias', 'ciencias'], ['Español', 'espanol'], ['Inglés', 'ingles'], ['Artes', 'artes'],
-];
-const DIAS_SEC = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const sinAcentos = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-const EMOJI_INICIAL = /^[^\p{L}\p{N}]+/u;
-// Por palabra completa: «Repaso de Inglés 1» → Inglés, pero «Partes del cuerpo» o «Martes» no son Artes.
-function materiaConocida(texto) {
-  const t = ' ' + sinAcentos(texto).replace(/[^a-z0-9]+/g, ' ') + ' ';
-  return MATERIAS_SEC.find(([n]) => t.includes(' ' + sinAcentos(n) + ' ')) || null;
-}
-// `materia` del contenido; si falta, el prefijo del título antes de « · » (sin el emoji). Sin prefijo: sin materia.
-function materiaDe(it) {
-  const titulo = it.titulo || '';
-  const i = titulo.indexOf(' · ');
-  const prefijo = i < 0 ? '' : titulo.slice(0, i).replace(EMOJI_INICIAL, '').trim();
-  const nombre = it.materia ? String(it.materia).trim() : prefijo;
-  if (!nombre) return null;
-  const c = materiaConocida(nombre);
-  const canon = !it.materia && c ? c[0] : nombre;
-  return { nombre: canon, clave: c ? c[1] : 'otra', enTitulo: !!prefijo && sinAcentos(prefijo) === sinAcentos(canon) };
-}
-// Texto de la fila: si el título empieza con la materia, solo el tema (la materia ya va en el chip).
+// ---------- Materia de cada clase (comun/secundaria-datos.js) ----------
+const materiaDe = it => SD.materiaDe(it);
+// Texto de la fila: el emoji del título (o 📝 / 📘) y el tema, sin la materia (ya va en el chip).
 function textoClase(it, m) {
   const titulo = it.titulo || '';
-  const emoji = (titulo.match(EMOJI_INICIAL) || [''])[0].trim() || (it.tipo === 'examen' ? '📝' : '📘');
-  const tema = m && m.enTitulo ? titulo.slice(titulo.indexOf(' · ') + 3) : titulo.replace(EMOJI_INICIAL, '');
-  return emoji + ' ' + tema;
+  const emoji = (titulo.match(/^[^\p{L}\p{N}]+/u) || [''])[0].trim() || (it.tipo === 'examen' ? '📝' : '📘');
+  return emoji + ' ' + (m ? SD.temaDe(it) : titulo.replace(/^[^\p{L}\p{N}]+/u, ''));
 }
 const chipMateria = m => m ? '<span class="chip mat-chip mat-' + m.clave + '">' + escapeHtml(m.nombre) + '</span>' : '';
+const nombreDia = f => SD.nombreDia(f);
 
-// ---------- Fechas de la semana ----------
-function sumarDias(fecha, n) { const d = new Date(fecha + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
-function lunesDe(fecha) { const dow = new Date(fecha + 'T12:00:00Z').getUTCDay(); return sumarDias(fecha, -((dow + 6) % 7)); }
-function nombreDia(fecha) { const d = new Date(fecha + 'T12:00:00Z'); return DIAS_SEC[d.getUTCDay()] + ' ' + d.getUTCDate(); }
-
-// ---------- Vista de la alumna o el alumno ----------
+// ---------- «📅 Esta semana» y «🗓️ Mi horario» ----------
 function filaClase(it, conFecha) {
   const m = materiaDe(it);
   let sub = (it.tipo === 'examen' ? 'Examen' : 'Clase') + (conFecha ? ' · hasta el ' + escapeHtml(formatFecha(it.fechaLimite)) : '');
@@ -65,21 +76,15 @@ function filaClase(it, conFecha) {
     '<div class="sec-clase-info"><div class="t">' + chipMateria(m) + '<span class="sec-tema">' + escapeHtml(textoClase(it, m)) + '</span></div><div class="s">' + sub + '</div></div>' + accionItem(it, it.estado) + '</div>';
 }
 
-function renderSecundaria(act) {
-  const items = (act && act.items) || [];
-  if (act && act.isAdmin) return renderSecundariaAdmin(items);
-  if (!items.length) return vacio('📚', 'No tienes clases por ahora. ¡Aquí aparecerán cuando el profe las publique!');
-  const hoy = act.hoy || fmtDate(new Date());
-  const lunes = lunesDe(hoy), domingo = sumarDias(lunes, 6);
-  const dias = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
-  const deDia = f => items.filter(it => it.fechaLimite === f);
-  const enSemana = items.filter(it => it.fechaLimite >= lunes && it.fechaLimite <= domingo);
-  const otras = items.filter(it => it.fechaLimite < lunes || it.fechaLimite > domingo);
+function panelSemana(items, hoy) {
+  const dias = SD.semanaDe(hoy), lunes = dias[0], domingo = dias[6];
+  const deDia = f => items.filter(it => SD.diaDeClase(it) === f);
+  const enSemana = items.filter(it => SD.diaDeClase(it) >= lunes && SD.diaDeClase(it) <= domingo);
+  const otras = items.filter(it => SD.diaDeClase(it) < lunes || SD.diaDeClase(it) > domingo);
   const deHoy = deDia(hoy);
-
   const panelHoy = '<div class="exam-card sec-bloque" id="sec-hoy"><h3>☀️ Hoy · ' + escapeHtml(nombreDia(hoy)) + '</h3>' +
     (deHoy.length ? deHoy.map(it => filaClase(it, false)).join('') : '<div class="pf-ok">Hoy no tienes clases. 🎉</div>') + '</div>';
-  const panelSemana = '<div class="exam-card sec-bloque" id="sec-semana"><h3>📅 Esta semana</h3>' +
+  const semana = '<div class="exam-card sec-bloque" id="sec-semana"><h3>📅 Esta semana</h3>' +
     (enSemana.length ? dias.map(f => {
       const suyas = deDia(f);
       return '<div class="sec-dia' + (f === hoy ? ' es-hoy' : '') + '" data-sec-dia="' + f + '"><h4>' + escapeHtml(nombreDia(f)) + (f === hoy ? ' <span class="chip">hoy</span>' : '') + '</h4>' +
@@ -87,25 +92,69 @@ function renderSecundaria(act) {
     }).join('') : '<div class="pf-ok">Sin clases esta semana.</div>') + '</div>';
   const panelOtras = otras.length ? '<div class="exam-card sec-bloque" id="sec-otras"><h3>📝 Otras clases y exámenes</h3>' + otras.map(it => filaClase(it, true)).join('') + '</div>' : '';
   const nota = '<p class="meta" style="margin-top:8px">En cada clase y examen se queda tu mejor calificación. Lee con calma cada pregunta. 💪</p>';
-
-  const horario = '<div class="sec-horario" id="sec-horario-semana" aria-label="Horario de la semana">' + dias.map(f => {
-    const suyas = deDia(f);
-    return '<div class="sec-hor-dia' + (f === hoy ? ' es-hoy' : '') + '" data-sec-hor-dia="' + f + '"><h4>' + escapeHtml(nombreDia(f)) + (f === hoy ? ' <span class="chip">hoy</span>' : '') + '</h4>' +
-      (suyas.length ? suyas.map(it => { const m = materiaDe(it); return '<div class="sec-hor-clase mat-' + (m ? m.clave : 'otra') + '" data-sec-hor-item="' + escapeHtml(it.id) + '"><b>' + escapeHtml(m ? m.nombre : textoClase(it, null)) + '</b>' + (it.tipo === 'examen' ? '<small>Examen</small>' : '') + '</div>'; }).join('') : '<div class="sec-hor-libre">Libre</div>') + '</div>';
-  }).join('') + '</div>';
-
-  const tab = state.secTab === 'horario' ? 'horario' : 'clases';
-  const tabs = [['clases', '📚 Mis clases'], ['horario', '🗓️ Mi horario']];
-  return '<div class="tabs sec-tabs" role="tablist" aria-label="Secundaria">' + tabs.map(([id, t]) => '<button type="button" class="tab" role="tab" id="sec-tab-' + id + '" data-sec-tab="' + id + '" aria-controls="sec-' + id + '" aria-selected="' + (id === tab) + '">' + t + '</button>').join('') + '</div>' +
-    '<section id="sec-clases" role="tabpanel" data-sec-panel="clases" aria-labelledby="sec-tab-clases"' + (tab === 'clases' ? '' : ' hidden') + '>' + panelHoy + panelSemana + panelOtras + nota + '</section>' +
-    '<section id="sec-horario" role="tabpanel" data-sec-panel="horario" aria-labelledby="sec-tab-horario"' + (tab === 'horario' ? '' : ' hidden') + '><div class="exam-card"><h3>🗓️ Mi horario · semana del ' + escapeHtml(nombreDia(lunes)) + '</h3>' + horario + '</div></section>';
+  return panelHoy + semana + panelOtras + nota;
 }
-// Cambio de pestaña sin redibujar (se conserva el scroll).
+
+function panelHorario(items, hoy) {
+  const dias = SD.horarioSemana(items, hoy);
+  const horario = '<div class="sec-horario" id="sec-horario-semana" aria-label="Horario de la semana">' + dias.map(d =>
+    '<div class="sec-hor-dia' + (d.esHoy ? ' es-hoy' : '') + '" data-sec-hor-dia="' + d.fecha + '"><h4>' + escapeHtml(nombreDia(d.fecha)) + (d.esHoy ? ' <span class="chip">hoy</span>' : '') + '</h4>' +
+      (d.clases.length ? d.clases.map(it => { const m = materiaDe(it); return '<div class="sec-hor-clase mat-' + (m ? m.clave : 'otra') + '" data-sec-hor-item="' + escapeHtml(it.id) + '"><b>' + escapeHtml(m ? m.nombre : textoClase(it, null)) + '</b>' + (it.tipo === 'examen' ? '<small>Examen</small>' : '') + '</div>'; }).join('') : '<div class="sec-hor-libre">Libre</div>') + '</div>'
+  ).join('') + '</div>';
+  return '<div class="exam-card"><h3>🗓️ Mi horario · semana del ' + escapeHtml(nombreDia(dias[0].fecha)) + '</h3>' + horario + '</div>';
+}
+
+// ---------- Página ----------
+function renderSecundaria(act) {
+  const items = (act && act.items) || [];
+  // Admin sin alumnas de Secundaria (o sin su vista): solo los resultados por clase.
+  if (act && act.isAdmin && !act.vistaDe) {
+    const aviso = act.errorAlumna ? '<div class="exam-card"><div class="pf-ok">No se pudo cargar el tablero de la alumna (' + escapeHtml(act.errorAlumna) + ').</div></div>' : '';
+    return aviso + renderSecundariaAdmin(((state.secLista || act).items) || []);
+  }
+  if (!items.length && !(act && act.isAdmin)) return vacio('📚', 'No tienes clases por ahora. ¡Aquí aparecerán cuando el profe las publique!');
+  const hoy = act.hoy || fmtDate(new Date());
+  const admin = !!(act && act.isAdmin);
+  const tabs = SEC_TABS.filter(t => !t.soloAdmin || admin);
+  const tab = tabs.some(t => t.id === state.secTab) ? state.secTab : 'inicio';
+  const cuerpo = {
+    inicio: () => renderSecInicio(act, { hoy, nombre: admin ? act.vistaDe.nombre : state.secNombre, admin }),
+    clases: () => panelSemana(items, hoy),
+    horario: () => panelHorario(items, hoy),
+    materias: () => renderSecMaterias(items, hoy),
+    resultados: () => renderSecundariaAdmin(((state.secLista || {}).items) || []),
+  };
+  return (admin ? selectorAlumna(act) : '') +
+    '<div class="tabs sec-tabs" role="tablist" aria-label="Secundaria">' + tabs.map(t =>
+      '<button type="button" class="tab" role="tab" id="sec-tab-' + t.id + '" data-sec-tab="' + t.id + '" aria-controls="sec-' + t.id + '" aria-selected="' + (t.id === tab) + '" tabindex="' + (t.id === tab ? '0' : '-1') + '">' +
+      '<span class="sec-tab-emoji" aria-hidden="true">' + t.emoji + '</span><span class="sec-tab-largo">' + escapeHtml(t.titulo.slice(t.titulo.indexOf(' ') + 1)) + '</span><span class="sec-tab-corto" aria-hidden="true">' + escapeHtml(t.corto) + '</span></button>').join('') + '</div>' +
+    tabs.map(t => '<section id="sec-' + t.id + '" class="sec-panel" role="tabpanel" data-sec-panel="' + t.id + '" aria-labelledby="sec-tab-' + t.id + '"' + (t.id === tab ? '' : ' hidden') + '>' + cuerpo[t.id]() + '</section>').join('');
+}
+
+// Cambio de pestaña sin redibujar (se conserva el estado); el hash guarda la pestaña para volver a ella al salir de
+// una clase y para enlazarla (p. ej. secundaria.html#horario desde el portal).
+function irPestanaSec(id, enfocar) {
+  if (!document.getElementById('sec-' + id)) return;
+  state.secTab = id;
+  document.querySelectorAll('.sec-tabs [data-sec-tab]').forEach(x => { const sel = x.dataset.secTab === id; x.setAttribute('aria-selected', String(sel)); x.tabIndex = sel ? 0 : -1; });
+  document.querySelectorAll('[data-sec-panel]').forEach(x => { x.hidden = x.dataset.secPanel !== id; });
+  const t = SEC_TABS.find(x => x.id === id);
+  if (t && !location.hash.startsWith('#ver/')) history.replaceState(null, '', location.pathname + location.search + '#' + t.hash);
+  if (enfocar) { const b = document.getElementById('sec-tab-' + id); if (b) { b.focus(); b.scrollIntoView({ block: 'nearest' }); } }
+}
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-sec-tab]'); if (!b) return;
-  state.secTab = b.dataset.secTab;
-  document.querySelectorAll('[data-sec-tab]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
-  document.querySelectorAll('[data-sec-panel]').forEach(x => { x.hidden = x.dataset.secPanel !== state.secTab; });
+  irPestanaSec(b.dataset.secTab, !b.closest('.sec-tabs')); // desde un acceso del Inicio, el foco va a la pestaña
+});
+// Teclado en las pestañas (← → Inicio Fin), como pide el patrón de tabs.
+document.addEventListener('keydown', e => {
+  const b = e.target.closest && e.target.closest('.sec-tabs [data-sec-tab]'); if (!b) return;
+  const lista = [...document.querySelectorAll('.sec-tabs [data-sec-tab]')];
+  const i = lista.indexOf(b);
+  const j = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: lista.length - 1 }[e.key];
+  if (j === undefined) return;
+  e.preventDefault();
+  irPestanaSec(lista[(j + lista.length) % lista.length].dataset.secTab, true);
 });
 
 // Admin: por examen, cada persona con su mejor calificación, oportunidades usadas y calificación por materia.

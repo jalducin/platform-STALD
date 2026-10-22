@@ -32,7 +32,7 @@ const texto = async (p, sel) => (await p.textContent(sel)).replace(/\s+/g, ' ');
   const b = await chromium.launch({ executablePath: process.env.CHROME });
 
   // Alumna: secundaria.html es el puente a 📚 Mis clases (openspec: secundaria-mis-clases, secundaria-sin-notion)
-  const al = await pagina(b, ALUMNA, '/secundaria.html');
+  const al = await pagina(b, ALUMNA, '/secundaria.html#semana'); // «📅 Esta semana» (openspec: secundaria-dashboard)
   await al.waitForSelector('#sec-clases', { timeout: 60000 });
   ok('Secundaria → Mis clases conserva ?api= y muestra el título', al.url().includes('modo=secundaria') && al.url().includes('api=') && (await al.textContent('#titulo')).includes('Clases de Secundaria'));
   ok('la alumna ve su examen exclusivo', !!(await al.$('[data-sec-item="sec-e2e"]')));
@@ -58,7 +58,7 @@ const texto = async (p, sel) => (await p.textContent(sel)).replace(/\s+/g, ' ');
   ok('sin Secundaria: aviso claro', aviso);
 
   // Admin: resultados por persona y materia
-  const ad = await pagina(b, 'admin@example.com', '/ingles.html?modo=secundaria');
+  const ad = await pagina(b, 'admin@example.com', '/ingles.html?modo=secundaria#resultados'); // «📝 Resultados» del admin
   await ad.waitForSelector('[data-sec-admin="sec-e2e"]', { timeout: 60000 });
   const card = await texto(ad, '[data-sec-admin="sec-e2e"]');
   ok('admin: Valeria con 100 %, 2/2 y materias', card.includes('Valeria') && card.includes('100%') && card.includes('2/2') && card.includes('Historia 100%'), card.slice(0, 220));

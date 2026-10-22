@@ -26,7 +26,7 @@ async function abrirClase(p) {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   for (const tema of ['dark', 'light']) { // oscuro primero: en claro se envía la clase
     const suf = tema === 'dark' ? ' (oscuro)' : '';
-    const p = await abrirPagina(b, { email: ALUMNA, viejo: true, out, dialogos: 'aceptar', viewport: { width: 360, height: 780 }, contexto: { colorScheme: tema }, ruta: '/ingles.html?modo=secundaria', esperar: '#sec-clases' });
+    const p = await abrirPagina(b, { email: ALUMNA, viejo: true, out, dialogos: 'aceptar', viewport: { width: 360, height: 780 }, contexto: { colorScheme: tema }, ruta: '/ingles.html?modo=secundaria#semana', esperar: '#sec-clases' }); // «📅 Esta semana» (openspec: secundaria-dashboard)
     await abrirClase(p);
     const pasos = await p.$$eval('[data-sec-paso]', xs => xs.map(x => ({ id: x.dataset.secPaso, t: x.textContent.replace(/\s+/g, ' ').trim(), dis: x.disabled, alto: x.getBoundingClientRect().height })));
     ok('pasos «1 Teoría → 2 Video → 3 Ejercicios → 4 Libreta»' + suf, pasos.map(x => x.t).join(' | ') === '1Teoría | 2Video | 3Ejercicios | 4Libreta' && pasos.every(x => !x.dis), JSON.stringify(pasos.map(x => x.t)));
@@ -106,7 +106,7 @@ async function abrirClase(p) {
   const sinAlm = await abrirPagina(b, { email: ALUMNA, viejo: true, out, init: [() => {
     const roto = () => { throw new Error('bloqueado'); };
     Object.defineProperty(window, 'localStorage', { configurable: true, get: () => ({ getItem: roto, setItem: roto, removeItem: roto, key: roto, get length() { return 0; } }) });
-  }, null], ruta: '/ingles.html?modo=secundaria' });
+  }, null], ruta: '/ingles.html?modo=secundaria#semana' });
   const abrio = await sinAlm.waitForSelector('#sec-clases [data-action="abrir-item"]', { timeout: 60000 }).then(() => true, () => false);
   if (abrio) {
     await sinAlm.click(`[data-sec-item="sec-e2e-clase-${HOY}-b"] [data-action="abrir-item"]`).catch(() => {});

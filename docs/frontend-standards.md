@@ -1033,22 +1033,83 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   `StaldAuth.pintarEntrada`.
 - 🚪 Cerrar sesión (encabezado, menú y ☰ Más) usa `StaldAuth.salir()` y regresa a la entrada.
 
-## Clases de Secundaria (cambio `secundaria-mis-clases`)
+## Clases de Secundaria (cambios `secundaria-mis-clases` y `secundaria-dashboard`)
 
-- `ingles.html?modo=secundaria` (`ingles/secundaria.js`) se titula «📚 Clases de Secundaria» y tiene dos pestañas
-  (`data-sec-tab`, sin redibujar):
-  - **«📚 Mis clases»** (`#sec-clases`): «☀️ Hoy» (`#sec-hoy`, clases con `fechaLimite` = hoy del servidor), «📅 Esta
-    semana» (`#sec-semana`, un bloque `data-sec-dia` por día de lunes a domingo) y «📝 Otras clases y exámenes»
-    (`#sec-otras`, lo visible fuera de la semana). Cada fila (`data-sec-item`) lleva chip de materia y borde de color.
-  - **«🗓️ Mi horario»** (`#sec-horario`): 7 días (`data-sec-hor-dia`) con la materia de cada clase; cuadrícula de 7
-    columnas desde 760 px y lista por día debajo (sin scroll horizontal a 360 px).
-- Materia: `materia` del listado o, si falta, el prefijo del título antes de « · » sin el emoji (`materiaDe`); se
-  usa el nombre canónico si contiene una de las 8 materias como palabra completa («Partes» no es «Artes»). El color sale de la clase `mat-<clave>` (`ingles`,
-  `espanol`, `matematicas`, `ciencias`, `sociales`, `tecnologia`, `artes`, `edfisica`, `otra`), que fija `--mat` y
-  `--mat-soft` desde tokens `--mat-*` de `ingles/ingles.css`, redefinidos para modo oscuro. El chip siempre lleva el
-  nombre (no depende solo del color).
-- `secundaria.html` es un puente (cambio `secundaria-sin-notion`): `location.replace('ingles.html?' + query con
-  modo=secundaria + hash)`, con `<noscript>` y «← Inicio». No llama a `/data`.
+- `secundaria.html` es el puente a `ingles.html?modo=secundaria`; conserva la query (`?api=`, `?alumna=`) y el `#hash`.
+- **Archivos:**
+  - `ingles/secundaria.js`: carga, pestañas, «Esta semana» y «Mi horario»;
+  - `ingles/secundaria-inicio.js`: Inicio y Mis materias;
+  - `ingles/secundaria.css`;
+  - reglas puras en `comun/secundaria-datos.js` (`SecundariaDatos`), que reusa `comun/gamificacion.js`; las prueba
+    `server/secundaria_tablero_test.ts`.
+- **Fuentes:** Inter y Orbitron de Google Fonts se inyectan solo en modo Secundaria (excepción de CDN, ver el
+  `design.md` del cambio); si no cargan, queda la fuente del sistema.
+- Título «📚 Clases de Secundaria». Pestañas `role="tab"` (`.sec-tabs [data-sec-tab]`, ← → Inicio Fin), sin redibujar:
+  - **«🏠 Inicio»** (`#sec-inicio`, la primera; estilo «RPG educativo»):
+    - barra `#rpg-stats`: nivel y rango (`#rpg-rango`), XP del nivel (`#rpg-xp` y `.rpg-xp-barra` con
+      `role="progressbar"`), insignias (`#rpg-insignias`) y racha (`#rpg-racha`);
+    - `#rpg-mision`: «Hola, <nombre>» (`.sec-hola`, de `/perfil`), fecha (`.sec-fecha`, «Martes 27 de octubre», del
+      `hoy` del servidor) y «⚔️ Misión principal activa» (la primera clase de hoy sin hacer o la próxima) con
+      `#rpg-mision-btn`;
+    - «⚡ Retos diarios · Hoy te toca» (`#sec-hoy-te-toca`, contador `#rpg-retos` y `#rpg-retos-texto`): una tarjeta
+      `.sec-tarjeta[data-sec-card][data-estado]` por clase con chip de materia (emoji y color), estado, tema, mundo,
+      XP (`.rpg-xp-chip`) y botón `.sec-btn-grande`. Sin clases: `#sec-hoy-vacio` «Hoy no tienes clases 🎉» y la
+      próxima;
+    - indicadores `#sec-progreso` (anillo, x de y), `#sec-racha` y `#sec-mundos`;
+    - `#sec-actividad`, `#sec-promedios` (`[data-sec-prom]`, con el general), `#sec-insignias`
+      (`[data-insignia].ganada`) y accesos `.sec-accesos [data-sec-tab]`.
+  - **«📅 Esta semana»** (`#sec-clases`, hash `#semana`): «☀️ Hoy» (`#sec-hoy`), «📅 Esta semana» (`#sec-semana`, un
+    bloque `data-sec-dia` por día) y «📝 Otras clases y exámenes» (`#sec-otras`). Cada fila `data-sec-item` lleva chip
+    y borde de color.
+  - **«🗓️ Mi horario»** (`#sec-horario`): 7 días (`data-sec-hor-dia`); 7 columnas desde 760 px y lista por día debajo.
+  - **«📚 Mis materias»** (`#sec-materias`): `[data-sec-materia]` por materia (las 8 y «Otras clases» si hay). Cada
+    una trae hechas/total, promedio, último tema, camino de mundos (`li[data-mundo]`, clase `mundo-<estado>`; el
+    actual con `aria-current="step"` y «ahora»), los temas de Inglés y la nota de su secuencia.
+  - **«📝 Resultados»** (solo admin): por clase, cada persona con su mejor calificación (`[data-sec-admin]`).
+- **Estado de la tarjeta** (`SecundariaDatos.estadoClase`):
+
+  | Estado | Cuándo | Botón |
+  |---|---|---|
+  | Hecha | `completo` o `en-espera`, con su calificación | «Ver resultado» |
+  | En curso | `en-curso` | «Continuar» |
+  | Pendiente / Vence hoy / Vence mañana / Atrasada | `disponible`, según la fecha límite | «Empezar» |
+  | Todavía no abre | `proximamente` | deshabilitado |
+
+  - «Hoy te toca» = lo de días anteriores que vence hoy y sigue sin hacer, más las clases de hoy.
+  - Progreso = clases hechas (con al menos un envío) entre las de lunes a domingo.
+  - Racha = la del servidor.
+  - Promedio = media de `mejor.porcentaje`.
+- **Día de la clase:** `disponibleDesde` si vence ese día o el siguiente; si tiene ventana, `fechaLimite`. Aplica a
+  todas las vistas y al portal.
+- **Hash:** `#inicio`, `#semana`, `#horario`, `#materias` y `#resultados` (`history.replaceState`). Al volver de una
+  clase queda la misma pestaña; al cargar con `#ver/<id>`, «📅 Esta semana».
+- **Admin:** pide la lista (resultados y `alumnas`) y la vista `?alumna=<slug>` (la de la URL o la primera). El
+  selector `#sec-alumna` recarga. El tablero es de solo lectura: «👀 Vista previa» en lugar de Empezar/Continuar.
+- **Botones reales** (`ingles/secundaria.css`, solo `body.secundaria`): «← Inicio» y «🎮 Juegos» (`.home-link`),
+  «Cerrar sesión», pestañas, accesos y botones de clase con fondo, borde, padding, hover, foco visible
+  (`outline` de 3 px), estado deshabilitado y 44 px o más (los grandes, 52 px).
+- **Materia:** `materia` del listado o, si falta, el prefijo del título antes de « · » sin el emoji (`materiaDe` de
+  `comun/gamificacion.js`). Se usa el nombre canónico si contiene una de las 8 materias como palabra completa
+  («Partes» no es «Artes»).
+  - El color sale de `mat-<clave>` (`ingles`, `espanol`, `matematicas`, `ciencias`, `sociales`, `tecnologia`,
+    `artes`, `edfisica`, `otra`), que fija `--mat` y `--mat-soft` en `estilos/materias.css` (compartido con el portal;
+    claro y oscuro).
+  - El chip siempre lleva el nombre.
+- **Tokens del estilo RPG:** `--rpg-*` en `ingles/secundaria.css`, redefinidos para el modo oscuro. Sin Tailwind ni
+  íconos externos.
+
+### Portal: «🗓️ Mi horario» (cambio `secundaria-dashboard`)
+
+- `index.html` carga `estilos/materias.css`, `comun/gamificacion.js` y `comun/secundaria-datos.js`.
+- Con `accesos.secundaria`, `pintarSecundaria(p)` pide `/secundaria/actividades`. El admin pide además
+  `?alumna=<primera>`.
+- Pinta `#sec-portal`:
+  - `#sec-hoy-toca`: «Hoy te toca» con chips de materia, o «Hoy no tienes clases 🎉»;
+  - `ol.sec-mini`: 7 días `[data-sec-mini]` con el emoji de cada materia (`role="img"` y su nombre); hoy con
+    `aria-current="date"`;
+  - los botones `#sec-portal-clases` («📚 Mis clases») y `#sec-portal-horario` («🗓️ Mi horario»,
+    `secundaria.html#horario`), de 44 px o más.
+- Si falla, aparece un aviso corto con el botón a Secundaria. Sin Secundaria, el bloque queda `hidden`.
 
 ## Clase interactiva de Secundaria (cambio `secundaria-sin-notion`)
 

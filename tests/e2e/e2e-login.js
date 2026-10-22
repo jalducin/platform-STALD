@@ -157,7 +157,7 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
   // ---- Secundaria con sesión ----
   ({ ctx, p, peticiones } = await contexto(b, { sesion: 'valeria@example.com' }));
   // Secundaria sin Notion (openspec: secundaria-sin-notion): puente a las clases nuevas, sin pedir /data.
-  await p.goto(BASE + '/secundaria.html' + Q); await p.waitForSelector('#sec-clases', { timeout: 60000 });
+  await p.goto(BASE + '/secundaria.html' + Q); await p.waitForSelector('#sec-inicio', { timeout: 60000 }); // abre en «🏠 Inicio» (openspec: secundaria-dashboard)
   ok('Secundaria con sesión muestra sus clases', !!(await p.$('#sec-clases')));
   ok('Secundaria no pide /data (Notion)', !peticiones.some(x => new URL(x.url).pathname.endsWith('/data') && !new URL(x.url).pathname.endsWith('/ingles/data')));
   const dat = peticiones.find(x => x.url.includes('/secundaria/actividades'));

@@ -436,7 +436,7 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   - `semanas/<lunes>.json`, `actividades/<id>.json` (clases: id `sec-<materia>-<fecha>`, título
     «<emoji> <Materia> · <tema>», `materia` opcional; 2 por día de lunes a sábado y 3 el domingo) y
     `examenes/<id>.json`; el día de cada clase es su `fechaLimite`;
-  - se ven en `ingles.html?modo=secundaria` (enlace «📚 Mis clases» de `secundaria.html`) y el servidor los atiende
+  - se ven en `ingles.html?modo=secundaria` (adonde lleva `secundaria.html`; abre en el tablero «🏠 Inicio», cambio `secundaria-dashboard`) y el servidor los atiende
     en `/secundaria/actividades`;
   - se validan con `deno run --allow-read server/validar_semana.ts <datos> <lunes> --secundaria`: sin patrón de
     días, `disponibleDesde` dentro de `<lunes>…fechaLimite` y el examen mensual puede tener ventana;

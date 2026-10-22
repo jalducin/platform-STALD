@@ -1,12 +1,12 @@
 # platform-STALD
 
 Plataforma escolar: portal, Inglés en línea (actividades, exámenes y grupos; alumnos y alumnas en el registro de la
-plataforma, sin Notion), Juegos y el tablero de Secundaria (alimentado desde Notion).
+plataforma, sin Notion), Juegos y Secundaria (tablero de clases estilo RPG con XP, insignias y mundos; sin Notion desde octubre de 2026).
 
 - Portal (entrada única): https://jalducin.github.io/platform-STALD/
 - Secundaria: https://jalducin.github.io/platform-STALD/secundaria.html
 - Juegos: https://jalducin.github.io/platform-STALD/juegos.html
-- Clases y exámenes de Secundaria: https://jalducin.github.io/platform-STALD/ingles.html?modo=secundaria (también desde «📚 Mis clases» en Secundaria)
+- Clases de Secundaria: https://jalducin.github.io/platform-STALD/ingles.html?modo=secundaria (adonde lleva `secundaria.html`; abre en «🏠 Inicio», el tablero; `#semana`, `#horario`, `#materias`)
 - Crear cuenta de Juegos (para quien no está en las clases; enlace para compartir): https://jalducin.github.io/platform-STALD/juegos.html?registro=1 (también `index.html?juegos=1` o «🆕 Registrarme en Juegos» en la entrada de Juegos)
 - Inglés: https://jalducin.github.io/platform-STALD/ingles.html
 

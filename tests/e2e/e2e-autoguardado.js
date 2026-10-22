@@ -27,7 +27,7 @@ const borradorCuenta = p => p.evaluate(async ([api, email, id]) => (await (await
   const p = await abrirPagina(b, { email: ALUMNA, out, etiqueta: '' });
   const dialogos = [];
   p.on('dialog', d => { dialogos.push(d.type()); d.accept(); });
-  await p.goto(urlDe('/ingles.html?modo=secundaria'));
+  await p.goto(urlDe('/ingles.html?modo=secundaria#semana'));
 
   // 1) Abrir y contestar una de opción múltiple y una escrita (modo paso: una por pantalla).
   await abrir(p);
@@ -78,7 +78,7 @@ const borradorCuenta = p => p.evaluate(async ([api, email, id]) => (await (await
   ok('la cuenta guarda solo preguntas del intento', !!enCuenta && JSON.stringify(enCuenta.respuestas) === '{"g-h1":0,"g-h2":"cinco"}', JSON.stringify(enCuenta));
   const otro = await abrirPagina(b, { email: ALUMNA, out, etiqueta: 'otro aparato' });
   otro.on('dialog', d => d.accept());
-  await otro.goto(urlDe('/ingles.html?modo=secundaria'));
+  await otro.goto(urlDe('/ingles.html?modo=secundaria#semana'));
   await abrir(otro);
   ok('otro aparato: respuestas recuperadas de la cuenta', await otro.isChecked('input[name="g-h1"][value="0"]') && (await otro.inputValue('input[name="g-h2"]')) === 'cinco');
   ok('otro aparato: aviso de recuperación', (await texto(otro, '#autoguardado-aviso')).includes('Recuperamos tus 2 respuestas'), await texto(otro, '#autoguardado-aviso'));
