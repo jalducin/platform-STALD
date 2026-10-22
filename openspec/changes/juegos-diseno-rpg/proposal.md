@@ -57,10 +57,11 @@ común.
 
 - Superficies:
   - `estilos/ui.css` (nuevo), `ingles/secundaria.css` y `ingles.html` (sin cambio visual);
-  - `juegos.html`, `juegos/app/juegos.css`, `juegos/app/menu.js`, `juegos/app/ranking.js` y `juegos/app/arranque.js`;
+  - `juegos.html`, `juegos/app/juegos.css`, `juegos/app/menu.js` y `juegos/app/arranque.js` (el ranking cambia solo en CSS);
   - los `<style>` de `juegos/karts.html`, `futbol.html`, `futbolito-arena.html`, `billar.html`, `golf.html`,
-    `futbolito.html`, `brigada.html`, `plataformas.html` y `dragon-run.html` (solo botones de menú);
-  - E2E nueva `juegos-diseno` y `docs/frontend-standards.md`.
+    `futbolito.html`, `brigada.html`, `plataformas.html` y `dragon-run.html`, y `juegos/mando.js` (solo botones de menú);
+  - E2E nueva `juegos-diseno`, servidor de estáticos de `tests/e2e/correr.sh` (cola de conexiones) y
+    `docs/frontend-standards.md` y `docs/pruebas.md`.
 - Sin cambios en el servidor, Postgres, Realtime, Auth, Notion ni el repo de datos. No cambia el contrato HTTP.
 - Matriz de acceso (sin cambios): cada jugador ve sus propios puntos y mejores de la semana (`/juegos/yo`, de su
   sesión), y el ranking muestra lo mismo que antes (nick y avatar, nunca correos).

@@ -498,7 +498,8 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 - **Con qué tokens base funciona:** con los de `estilos/stald.css` y con los de `juegos/app/juegos.css`. Cada
   componente trae respaldo (`var(--accent-soft, var(--rpg-panel-2))`).
 - **Cómo se enlaza:** con `<link>` antes del CSS propio de la página.
-  - Hoy: `ingles.html` (antes de `ingles/secundaria.css`).
+  - Hoy: `ingles.html` (antes de `ingles/secundaria.css`) y `juegos.html` (antes de `juegos/tablero.css` y
+    `juegos/app/juegos.css`).
   - Al cambiarlo, sube su `?v=` en todas las páginas que lo enlazan.
 - **Qué no va:** botones, tarjetas o pestañas con nombres genéricos (`.btn`, `.card`, `.tab`). Cada página ya los
   define a su manera. Lo nuevo y compartido lleva prefijo `rpg-`.
@@ -543,6 +544,44 @@ Reglas:
   un archivo pasa de ~600 líneas, se parte por juego.
 - Al cambiar un archivo de `juegos/app/`, sube su `?v=` en `juegos.html`.
 - El avance en el servidor de los juegos en iframe (Dragon Run, Axo, Karts) pasa siempre por `canalProgreso`.
+
+## Diseño RPG de Juegos (cambio `juegos-diseno-rpg`)
+
+- **Estilos:** `juegos.html` enlaza `estilos/ui.css` (tokens `--rpg-*` y componentes `rpg-`) antes de
+  `juegos/app/juegos.css`. Lo del cambio está al final de `juegos.css`, en el bloque «Diseño RPG», o fusionado en la
+  regla original. Stylelint no acepta selectores duplicados: antes de agregar una regla, busca si ya existe.
+- **Tema:** un `<script>` en `<head>` aplica `localStorage.stald_tema` (`oscuro`/`claro`) como `<html data-theme>`,
+  igual que `ingles.html`. `juegos.css` redefine sus tokens en `:root[data-theme="dark"]`, y el bloque de
+  `prefers-color-scheme: dark` respeta `data-theme="light"`.
+- **Encabezado `#jg-heroe`** (`htmlHeroe` en `juegos/app/menu.js`, arriba de las pestañas):
+  - avatar (56 px) y «¡Hola, <nick>!» (`#jg-hola`);
+  - `.jg-stats` con ⭐ individuales (`#jg-pts-ind`), 👥 partidas (`#jg-pts-par`) y lugar de la semana (`#jg-lugar`, «—» sin
+    lugar), todo de `/juegos/yo`. Juegos no tiene nivel ni XP;
+  - «🎨 Mi avatar» (`data-heroe="avatar"`) y «🆕 Registrar» (`#registrar-btn`, sin cambios).
+- **Secciones de la vista de categorías** (`pintarMenuJuegos(null)`), en orden dentro de `#tab-body`:
+  1. `[data-seccion="para-ti"]`: hasta 3 juegos de `state.mejores`, de mayor a menor. Sin puntajes, `.jg-vacio`;
+  2. `#menu-juegos[data-menu="categorias"]`, igual que antes;
+  3. `[data-seccion="en-vivo"]`: «➕ Crear partida» y «🔑 Unirme con código» (`data-ir-tab="partidas"`, con
+     `data-foco` del campo que recibe el foco). No usa `data-tab`, porque las E2E tocan la pestaña con ese selector;
+  4. `[data-seccion="copas"]`: `JUEGOS_COPA` (Karts Turbo y Fútbol Estelar).
+- **Tarjetas de las secciones:** `.jg-tarjeta` (`tarjetaSeccion`) con ícono, chip `.jg-cat` de su categoría (color
+  `cat-<id>`) y el botón «▶ Jugar» (`.btn[data-jugar]`). El clic en `[data-jugar]` lo atiende `juegos/app/arranque.js`,
+  igual que `[data-juego]`. `.game[data-juego]` queda solo para la lista de una categoría, y las E2E y
+  `tests/e2e/lib/menu.js` cuentan con eso.
+- **Tarjetas `.game`:** franja de color de su categoría (`::before`) y la píldora `.jg-pildora` «▶ Jugar», con
+  `aria-hidden`; la tarjeta entera es el botón.
+- **Botones reales (44 px o más, foco de 3 px con `--jg-focus`):**
+  - en `juegos.css`: `.btn` (también `.btn.sm`), `.tab`, `.opt`, `.home-link` («← Inicio» como botón), `.chip-btn`,
+    `.mus-opt` y los botones de avatar y color;
+  - en las páginas de juego, solo los botones de menú:
+    - `.btn.chico` de Billar, Futbolito y Fútbol Estelar;
+    - `.op` de Fútbol Estelar;
+    - `.mapa-caja .btn` de Plataformas;
+    - `.ov button` de Dragon Run;
+    - `.mando-guia-btn` de `juegos/mando.js` (`?v=3` en las 9 páginas);
+    - foco visible en Fútbol Estelar, Futbolito Arena y Brigada.
+  - No se tocan el canvas, los HUD ni los controles táctiles del mando (`tabindex="-1"`).
+- **Rendimiento:** sin `backdrop-filter` ni animaciones infinitas; el iframe de Arcade (`.arcade-caja`) no cambia.
 
 ## Navegación por categorías en Juegos (cambio `juegos-categorias`)
 
