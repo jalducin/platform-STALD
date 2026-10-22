@@ -137,6 +137,13 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
     mando (`tabindex="-1"`).
 
   Deja capturas `juegos-diseno-*.png`.
+- `portal-diseno` (fase `base`, cambio `portal-diseno-rpg`): registra un invitado de Juegos por la API (copia temporal)
+  y revisa el portal a 360 px en claro y oscuro para la alumna de Secundaria (héroe, línea «… hoy», avance de la semana
+  y racha si hay datos, sin nivel ni XP), el alumno de Inglés, el invitado (solo Juegos), el admin (4 tarjetas,
+  selector de alumna sin peticiones) y sin sesión (entrada, selector de tema que se guarda, «Crea tu cuenta de Juegos»
+  e `index.html?juegos=1`). En todos: botones de 44 px o más, sin scroll horizontal, contraste AA, sin errores de
+  consola y pie legal oculto con el interruptor apagado. Con `--hoy 2026-10-27` también ve el avance. Deja capturas
+  `portal-diseno-*.png`.
 - `secundaria-dashboard` (fase `ingles`, cambio `secundaria-dashboard`): la alumna del fixture envía 3 clases por la API
   (en la copia temporal) y revisa a 360 px en claro y oscuro el Inicio RPG (retos, estados, progreso, racha, XP y
   nivel, insignias, misión, actividad, promedios), botones de 44 px o más con foco visible, «📚 Mis materias» con sus
