@@ -28,15 +28,22 @@ Con las bases de Notion borradas (2026-10-22) `queryDatabase` lanza y esas rutas
 - `filasDeRegistro` devuelve la forma `FilaConUsuarios` (`userEmails`, `userNames`, `slug`), así `armarPerfil`,
   `resolverJugador`, `armarJugadores` y `esDeClase` no cambian.
 
-### 2. Slug
+### 2. Slug (hotfix 2: slug canónico desde el contenido)
 
-- Slug de Secundaria = `slugSecundaria` (si es válido) o `slugAlumno(nombre)`. Para Sofía: `sofy`.
-- Antes era `slugAlumno(primer nombre en Notion)`. Si su nombre de Notion era «Sofía…», sus resultados de
-  Secundaria anteriores (examen mensual de septiembre, repaso del 21) están en `resultados/<id>/sofia.json`; desde el
-  hotfix los nuevos quedan en `sofy`. No se pudo leer Postgres de producción desde esta sesión para confirmarlo.
-  - Para dejar un solo slug: poner `"slugSecundaria": "sofia"` en su entrada. La marca del profe (PR 2) lo hace sola
-    si al marcar todavía hay filas de Notion; con Notion borrado ya no, así que queda como acción manual opcional (o
-    mover sus resultados de `sofia` a `sofy`). Ver el reporte.
+- Antes era `slugAlumno(primer nombre en Notion)` = `sofia`. En producción sus resultados de Secundaria están bajo
+  `sofia` (`resultados/sec-mensual-2026-09/sofia.json` y su borrador; confirmado en solo lectura) y no hay nada bajo
+  `sofy`. El PR 1 la dejó entrar como `sofy` (su nombre en el registro), así que no veía su examen de septiembre.
+- No se puede escribir a mano en producción, así que el slug se resuelve desde el contenido:
+  1. `slugSecundaria` de su entrada, si es válido;
+  2. si no, si el slug de su `nombre` aparece en un arreglo `alumnos`, el **primero** de ese arreglo
+     (`slugsExclusivos` arma `alias → canónico`; manda el primer arreglo que nombra al alias). Para Sofía:
+     `["sofia","sofy"]` → `sofia`;
+  3. si no, el de su `nombre`.
+- Así ve su examen de septiembre y sus resultados nuevos quedan bajo `sofia`. Regla para el contenido: en `alumnos`,
+  el slug canónico va primero (skill `clases-secundaria` actualizada).
+- Salvaguarda (revisor): `alumnos` dice a quién va la clase, no siempre son alias. El primero solo se toma si empieza
+  con las mismas 3 letras que su slug y no es el slug propio (nombre o `slugSecundaria`) de otra entrada del registro.
+  Así `["sofia","ana"]` no le da a Ana el slug de Sofía.
 - `Identidad.slug?` y `handleActividades` usa `quien.slug ?? slugAlumno(alumno)`. Inglés y la ruta del profe no lo
   mandan.
 - Juegos no cambia: Sofía es `a-sofy` porque Inglés tiene prioridad en `resolverJugador`.

@@ -21,6 +21,12 @@ await Deno.writeTextFile(dir + "/datos/contenido/secundaria/actividades/sec-repa
   alumnos: ["sofia", "sofy"], temas: [{ id: "t", titulo: "t", retroalimentacion: { "fortaleza": "ok", "en-progreso": "casi", "debilidad": "repasa" } }],
   banco: [pregunta("p1"), pregunta("p2")],
 }));
+// Resultado de antes del hotfix, bajo el slug de Notion «sofia» (caso real de producción).
+await Deno.mkdir(dir + "/datos/resultados/sec-repaso", { recursive: true });
+const cal = { correctas: 1, total: 2, porcentaje: 50, nivelSugerido: "x", secciones: [], fortalezas: [], enProgreso: [], debilidades: [], revision: [] };
+await Deno.writeTextFile(dir + "/datos/resultados/sec-repaso/sofia.json", JSON.stringify({
+  id: "sec-repaso", titulo: "Repaso", alumno: "Sofía", intentos: [{ n: 1, enviadoEn: "2026-10-21T15:00:00.000Z", preguntas: null, respuestas: {}, calificacion: cal }], mejor: { ...cal, n: 1 },
+}));
 Deno.env.set("ROWS_FIXTURE", fixture);
 Deno.env.set("DATA_DIR", dir + "/datos");
 Deno.env.set("SUPER_ADMIN_EMAIL", "admin@example.com");
@@ -38,6 +44,20 @@ Deno.test("sin Notion: Sofy (de baja de Inglés, con clases exclusivas) entra a 
   assertEquals([perfil.status, perfil.body.accesos.secundaria, perfil.body.accesos.ingles, perfil.body.nombre], [200, true, false, "Sofy"]);
   const sec = await pedir("/secundaria/actividades", "sofy@example.com");
   assertEquals([sec.status, sec.body.items.map((i: any) => i.id)], [200, ["sec-repaso"]]);
+  // Su resultado anterior (guardado bajo «sofia», el slug de Notion) se ve con su mejor calificación.
+  assertEquals([sec.body.items[0].intentosUsados, sec.body.items[0].mejor?.porcentaje], [1, 50]);
+});
+
+Deno.test("slug canónico: su intento nuevo se guarda junto al anterior (bajo «sofia»)", async () => {
+  const tok = { Authorization: "Bearer prueba:sofy@example.com" };
+  const g = await handler(new Request("http://x/secundaria/actividades/sec-repaso", { headers: tok }));
+  const it = await g.json() as any;
+  assertEquals([g.status, it.intento], [200, 2], "segundo intento: el primero ya estaba bajo «sofia»");
+  const respuestas = Object.fromEntries(it.preguntas.map((p: any) => [p.id, 0]));
+  const p = await handler(new Request("http://x/secundaria/actividades/sec-repaso", { method: "POST", headers: tok, body: JSON.stringify({ intento: 2, respuestas }) }));
+  assertEquals(p.status, 200);
+  const lista = await pedir("/secundaria/actividades", "sofy@example.com");
+  assertEquals([lista.body.items[0].intentosUsados, lista.body.items[0].mejor?.porcentaje], [2, 100]);
 });
 
 Deno.test("sin Notion: quien no tiene Secundaria recibe 403 y su perfil sigue en 200", async () => {
@@ -49,10 +69,10 @@ Deno.test("sin Notion: quien no tiene Secundaria recibe 403 y su perfil sigue en
 
 Deno.test("sin Notion: el admin ve Secundaria con la lista de alumnas, sin correos", async () => {
   const r = await pedir("/secundaria/actividades", "admin@example.com");
-  assertEquals([r.status, r.body.isAdmin, r.body.alumnas], [200, true, [{ nombre: "Sofy", slug: "sofy" }]]);
+  assertEquals([r.status, r.body.isAdmin, r.body.alumnas], [200, true, [{ nombre: "Sofy", slug: "sofia" }]]);
   assert(!JSON.stringify(r.body).includes("@example.com"));
-  const vista = await pedir("/secundaria/actividades?alumna=sofy", "admin@example.com");
-  assertEquals([vista.status, vista.body.vistaDe?.slug, vista.body.items.length], [200, "sofy", 1]);
+  const vista = await pedir("/secundaria/actividades?alumna=sofia", "admin@example.com");
+  assertEquals([vista.status, vista.body.vistaDe?.slug, vista.body.items.length], [200, "sofia", 1]);
 });
 
 Deno.test("sin Notion: Juegos sigue reconociendo a Sofy (a-sofy)", async () => {

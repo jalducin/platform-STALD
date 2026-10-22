@@ -505,8 +505,9 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
 **Identidad de Secundaria** (cambio `secundaria-sin-notion`, `server/secundaria_registro.ts`):
 - `filasSecundaria()` en `server/main.ts` la usan `/perfil`, `/secundaria/actividades`, Juegos, `/juegos/registro` y
   `/auth/*`. Filas del registro completo (`leerRegistro`, con bajas) con `secundaria: true` o con su slug en `alumnos`
-  de algún elemento visible de Secundaria (`visibleItems(…, AMBITO_SECUNDARIA)`). Slug: `slugSecundaria` o el de
-  `nombre`; se pasa en `Identidad.slug`.
+  de algún elemento visible de Secundaria (`visibleItems(…, AMBITO_SECUNDARIA)`). Slug: `slugSecundaria`; si no, el
+  canónico del contenido (el primero del arreglo `alumnos` donde aparece el slug de su `nombre`, `slugsExclusivos`);
+  si no, el de `nombre`. Se pasa en `Identidad.slug`.
 - Caída temporal (seguimiento: quitarla): si nadie tiene Secundaria, filas de Notion solo con `NOTION_TOKEN` o
   `ROWS_FIXTURE`, con aviso `console.warn` (≤ 1 cada 10 min por mensaje); si Notion falla → `[]`, nunca 500.
 - `GET /secundaria/actividades` del admin: `alumnas: [{ nombre, slug }]`; con `?alumna=<slug>` (solo GET de la lista)

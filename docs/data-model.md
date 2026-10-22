@@ -40,7 +40,9 @@ backend: tratarlo como un cambio OpenSpec.
 
 - Secundaria (cambio `secundaria-sin-notion`): tiene acceso una persona del registro (`alumnos.json`, el de Inglés,
   con bajas) cuya entrada tiene `secundaria: true` **o** cuyo slug aparece en `alumnos` de algún elemento visible de
-  `contenido/secundaria/`. Su slug es `slugSecundaria` si lo tiene y, si no, el de su `nombre`. La baja de Inglés no
+  `contenido/secundaria/`. Su slug es `slugSecundaria` si lo tiene; si no, si el slug de su `nombre` aparece en un
+  arreglo `alumnos`, el **primero** de ese arreglo (slug canónico: en `["sofia","sofy"]`, `sofia`); si no, el de su
+  `nombre`. En `alumnos`, el slug canónico (con el que están sus resultados) va primero. La baja de Inglés no
   quita Secundaria. Los correos solo viven en el registro (Postgres); nunca en el repo.
 - El administrador (correo en el secreto `SUPER_ADMIN_EMAIL`) ve todo.
 - Inglés: la identidad es el registro (`alumnos.json`, en Postgres en producción); `GET /ingles/data` devuelve solo

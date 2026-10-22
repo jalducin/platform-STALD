@@ -26,6 +26,16 @@
 - [x] 2.3 `handleSecundaria`: identidad, `alumnas` y `?alumna=<slug>` de solo lectura
 - [x] 2.4 `handleSecundariaAlumno` (`server/alumnos.ts`) en `POST /ingles/grupos/secundaria`
 
+## 2b. Hotfix 2 — Slug canónico desde el contenido
+
+- [x] 2b.1 Pruebas que fallan: `slugsExclusivos` da `alias → primero del arreglo`; Sofy (slug `sofy`) entra como
+  `sofia`, también con la marca; `slugSecundaria` manda; sin alias, el de su nombre; en `main` ve su resultado
+  anterior guardado bajo `sofia` y el admin la lista como `sofia`
+- [x] 2b.2 `filasDeRegistro` y `slugsExclusivos` (`server/secundaria_registro.ts`) con el slug canónico y la
+  salvaguarda (mismas 3 letras, no el slug propio de otra entrada); prueba `["sofia","ana"]` y prueba de que el intento
+  nuevo queda junto al anterior; skill `clases-secundaria`: el canónico va primero (espejos sincronizados)
+- [x] 2b.3 Suite completa, revisor rápido, PR, merge y verificación en producción (solo lectura)
+
 ## 3. PR 1 (hotfix) — Frontend mínimo
 
 - [x] 3.1 `secundaria.html`: puente a `ingles.html?modo=secundaria` con la query y el hash (`location.replace`) y

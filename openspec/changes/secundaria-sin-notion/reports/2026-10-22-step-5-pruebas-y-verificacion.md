@@ -66,3 +66,17 @@
 ## Resultado
 - Estado Step 5 (PR 1): PASS
 - Bloqueos: ninguno
+
+## Hotfix 2 — Slug canónico (2026-10-22)
+
+- Evidencia de producción (lectura hecha por la sesión principal, sin escribir): los resultados de Secundaria de
+  Sofía están en `resultados/sec-mensual-2026-09/sofia.json` (y su borrador en `borradores/…/sofia.json`); no hay
+  nada bajo `sofy`. Con el PR 1 entraba como `sofy` y no veía su examen de septiembre.
+- Pruebas: `server/secundaria_sin_notion_test.ts` y `server/secundaria_sin_notion_main_test.ts` (alias
+  `["sofia","sofy"]` → `sofia`; `slugSecundaria` manda; clase para `["sofia","ana"]` no cruza identidades; su resultado
+  anterior bajo `sofia` se ve y el intento nuevo queda en el mismo documento).
+- Suite completa: 940 pasaron, 0 fallaron, 6 omitidas (subagente `verificador-pruebas`: 938 antes de la prueba de la
+  salvaguarda; corrida final propia: 940). `deno check` y `deno lint` limpios.
+- `revisor-solo-lectura`: un bloqueante (arreglos `alumnos` con dos personas) atendido con la salvaguarda y su
+  prueba; menores atendidos (skill `clases-secundaria`, comentario de cabecera, prueba del intento nuevo).
+- Estado: sin escrituras en producción ni en el repo de datos; sin tablas `stald_`.
