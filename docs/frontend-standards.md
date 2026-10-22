@@ -998,7 +998,7 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `.nav-item` y `.nav-barra`);
   - `ingles/ingles.css`: estilos propios de Inglés (incluida la presentación del Meet);
   - scripts clásicos con `defer`, en este orden: `comun.js` (configuración, `SECCIONES`, `api()`, formato y
-    componentes), `material.js` (material de estudio), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, registro de alumnos y alumnas, juegos; el registro va en su propia opción «➕ Registro», separado del avance en «Alumnos»; ahí cada persona activa tiene «🚪 Baja de Inglés» con `confirm` que avisa que sus resultados se conservan como historial, y «🗂️ De baja de Inglés» lista las bajas con «↩️ Reactivar»; los conteos de la lista y de los grupos son solo de activos, cambio `ingles-baja-alumno`), `tablero.js`
+    componentes), `material.js` (material de estudio), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, registro de alumnos y alumnas, juegos; el registro va en su propia opción «➕ Registro», separado del avance en «Alumnos»; ahí cada persona activa tiene «🚪 Baja de Inglés» con `confirm` que avisa que sus resultados se conservan como historial, y «🗂️ De baja de Inglés» lista las bajas con «↩️ Reactivar»; los conteos de la lista y de los grupos son solo de activos, cambio `ingles-baja-alumno`; en «👥 Grupos» cada grupo tiene «👁️ Ocultar del panel» / «Mostrar en el panel» y, si hay grupos ocultos, la barra del selector muestra el interruptor «Mostrar grupos ocultos (N)»; `ocultoEnPanel(nombre)` deja fuera a sus alumnos y alumnas del avance, «Últimas calificaciones», «Registro», el selector, el conteo de «Esta semana», el guion del Meet (`presentacion.js`), «👥 Todos los nicks» (`rpg-ingles.js`; la cola «⏳ Por revisar» los conserva) y el ranking de Juegos; tras mostrar el último grupo oculto el interruptor se apaga solo, y el tablero pide `&ocultos=1` con el interruptor encendido, cambio `ingles-ocultar-grupos`), `tablero.js`
     (vista del admin por secciones, mapa de calor y cajón), `alumno.js`, `profe.js` y `app.js` (sesión, ruteo y
     eventos; si `GET /ingles/data` trae `baja: true`, `mostrarBaja()` pinta «Ya no estás en Inglés en línea» con enlace
     a `ingles.html?modo=secundaria` y a Juegos, sin cerrar la sesión). No son módulos ES: comparten el ámbito global, así que un nombre de nivel superior no se puede repetir
@@ -1227,6 +1227,30 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
   su día del horario, sin contar como atrasada ni «de hoy» antes de ese día). Sin `dia`: `disponibleDesde` si dura
   un día (vence ese día o el siguiente); con ventana más larga, su `fechaLimite`. Hecha (`estaHecha`): al menos un envío.
 
+## Misiones principales en Secundaria (cambio `rpg-fase2-misiones`)
+
+`ingles/secundaria-misiones.js` dibuja; las reglas viven solo en `comun/gamificacion.js` (funciones aditivas de la Fase
+2a; las de la Fase 1 no cambian y las fijan los 10 casos de `server/gamificacion_regresion_test.ts`):
+
+- **XP de misión** (`xpDeMision`): porcentaje de la rúbrica × 3 + 60 si el último paso llegó a tiempo; 0 sin evaluar.
+  `xpTotalConMisiones(items, misiones)` suma clases + misiones en el mismo total del nivel (Inicio y recompensa).
+- **Mapa** (`mapaRpg(items, hoy, { catalogo, misiones })`): mundos del catálogo (o de la Fase 1 si no hay), zonas de 2
+  semanas y capítulos; estados bloqueado, en curso, completado (terminó y su misión está evaluada; sin misión, todas
+  sus clases hechas) y dominado (además promedio ≥ 80 % y misión ≥ 80 %). Un mundo pasado se puede repasar.
+- **Misiones del día y de la semana** (`misionDiaria`, `misionesSemanales`): sin XP; dan progreso e insignias
+  (`INSIGNIAS_RPG`: Semana completa, Misión principal, Constructora de mundos; van aparte de `INSIGNIAS`).
+- **Árbol** (`arbolHabilidades`): nodos = temas (`temas` del listado), por mundo; estado del último intento
+  (`ultimoTemas`): no visto (bloqueado si no abre), en progreso, a reforzar (con «🔧 Reforzar»: su repaso o la clase) y
+  dominado.
+
+Vistas (pestañas en filas de 4 en teléfono): «⚔️ Misiones» (lista; detalle con consigna, teoría con práctica, pasos,
+cuadro de texto con el recordatorio «🔒 Sin nombres reales, direcciones ni datos de contacto», contador `n / 4000`,
+borrador local por paso y rúbrica), «🗺️ Mapa», «🌳 Árbol» y, solo admin, «📥 Entregas» (rúbrica con radios por
+criterio y total en vivo, comentario, pedir corrección con casilla de privacidad, borrar contenido). En el Inicio:
+tarjeta de la misión principal, misiones de hoy y de la semana y, una sola vez por evaluación (en `localStorage`),
+el aviso «+N XP» y «¡Subiste a nivel N!». Sin sonido; `prefers-reduced-motion` quita la transición de las barras; claro
+y oscuro con los tokens RPG; 360 px sin scroll horizontal (E2E `e2e-misiones`).
+
 ## Aviso de privacidad y consentimiento (cambio `rpg-privacidad`)
 
 - **Interruptor `privacidad`** (`GET /interruptores`, dato en `config/interruptores.json`; ver
@@ -1248,3 +1272,44 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
   `@media print` en `estilos/legal.css`: tamaño carta, una hoja, sin navegación ni botones. La plataforma no guarda
   la hoja firmada; solo se registra slug, tipo y fecha (spec `plataforma-rpg`).
 - Tema: sistema o `stald_tema` (como `ingles.html`); 360 px sin scroll horizontal. Prueba: `tests/e2e/e2e-privacidad.js`.
+
+## Tablero RPG y ranking de Inglés (cambio `rpg-fase2-ingles`)
+
+- `ingles/rpg-ingles.js` y `ingles/rpg-ingles.css`. En «🏠 Inicio» de alumnos y alumnas, después del saludo:
+  `barraRpg` de `ingles/secundaria-inicio.js` (nivel, rango, XP del nivel, insignias y racha) con
+  `Gamificacion.xpTotal`/`nivelDe` y las 4 insignias de Inglés (cuarto parámetro: el total), y «Mundo actual». Nada se
+  guarda. «Esta semana», «Para ponerte al día», la próxima clase, «Para hoy» y «Material» no cambian.
+- «🏆 Ranking de mi grupo» solo si `GET /gamificacion/perfil` dijo `ranking: true` (`state.gam`); la última respuesta
+  del ranking queda en `state.rk` para volver a dibujar sin pedirla. Con el interruptor apagado **no se dibuja nada**
+  del ranking, ni el botón. Botones `data-rk="aparecer|ocultar"`; mensajes en `#rk-msg` (`role="status"`), en
+  positivo y sin decir qué nombre bloqueó un nick.
+- Admin: sección «🛡️ Nicks» (`#nicks-admin`, carga al abrirla): interruptor general (llave `ranking` de
+  `config/interruptores.json`, el mismo mecanismo que `privacidad`) y por grupo (con el filtro de grupo), «⏳ Por revisar», «👥 Todos los nicks»; rechazar pide el motivo en la misma fila (sin `prompt`). Botones
+  `data-nk`.
+- E2E: `tests/e2e/e2e-rpg-ingles.js` (fase `ingles`), a 360 px en claro y oscuro.
+
+## Misiones en Inglés (cambio `rpg-ingles-hero-card`)
+
+- Sin código propio de misiones: `ingles.html` reusa `ingles/secundaria-misiones.js` (`misionInicioHtml`,
+  `avisoEvaluacionHtml`, `renderSecMisiones` en `#sec-misiones`, `renderSecEntregas` en `#sec-entregas`). El pegamento
+  vive en `ingles/rpg-ingles.js` (`cargarMisionesIngles`, `seccionMisionesIngles`, `cargarEntregasIngles`).
+- Alumnos y alumnas: sección «⚔️ Misiones» (`fueraDeBarra: true` en `SECCIONES`: la barra sigue con 6 pestañas) y
+  tarjeta en «🏠 Inicio» que lleva a `#misiones`; `/misiones` se pide solo si
+  `/ingles/actividades` trae `misiones: true`. «Continuar misión» cambia el hash a `#misiones`. La barra RPG usa
+  `Gamificacion.xpTotalConMisiones`.
+- Admin: «📥 Entregas» (carga al abrirla). E2E: `tests/e2e/e2e-misiones-ingles.js` con la misión de ejemplo de
+  `tests/fixtures/datos/contenido/ingles/misiones/`.
+
+
+## Diseño RPG de la vista de alumnos y alumnas de Inglés (cambio `ingles-alumno-diseno-rpg`)
+
+- **Actividad por pasos:** `claseEnPasos()` (`ingles/reproductor.js`) = Secundaria o alumnos y alumnas de Inglés. En
+  esos casos `openItem` usa `vistaClaseSecundaria` de `ingles/secundaria-clase.js` y `showResult` sus extras (XP, nivel,
+  libreta y «Lo siguiente →»). En Inglés la etiqueta es el tipo (`ETIQUETA_TIPO`) y el mundo es el de Inglés. El admin
+  y la ruta del profe usan la vista de lista.
+- **Estilo:** reglas de `ingles/rpg-ingles.css` acotadas a `body.vista-alumno:not(.secundaria)`:
+  - paneles con los tokens `--rpg-*` de `estilos/ui.css`;
+  - `.exam-item`, `.hoy-item` y `.res-item` como tarjetas;
+  - `.btn` y `.btn.sm` de 44 px o más con foco visible;
+  - chips en píldora y la pestaña actual en índigo.
+- E2E: `tests/e2e/e2e-ingles-alumno-diseno.js`.

@@ -1,0 +1,71 @@
+/* Tablero RPG y ranking de Inglés (openspec: rpg-fase2-ingles). Reusa la barra .rpg-stats y los tokens --rpg-* de
+   ingles/secundaria.css; todo en tokens (claro y oscuro), botones de 44 px o más, sin scroll horizontal a 360 px. */
+.rpg-ingles { margin: 14px 0; }
+.rpg-mundo-linea { margin: 8px 2px 0; font-size: .86rem; color: var(--rpg-texto-suave); }
+.rpg-ranking .rk-explica { font-size: .82rem; margin: 0 0 8px; }
+.rk-yo { padding: 10px 12px; border-radius: var(--r-sm); background: var(--accent-soft); border: 1px solid var(--rpg-borde); margin-bottom: 8px; overflow-wrap: anywhere; }
+.rk-lista { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+.rk-fila { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) auto; gap: 8px; align-items: center; min-height: 44px; padding: 6px 10px;
+  border: 1px solid var(--rpg-borde); border-radius: var(--r-sm); background: var(--rpg-panel); }
+.rk-fila.rk-mia { border-color: var(--rpg-indigo); box-shadow: var(--rpg-glow); }
+.rk-pos { font-weight: 900; color: var(--rpg-indigo); text-align: center; }
+.rk-nick { min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.rk-pts { font-weight: 800; color: var(--rpg-emerald); white-space: nowrap; font-size: .86rem; }
+.rk-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.rk-acciones .btn { min-height: 44px; }
+.rk-aviso { margin: 8px 0 0; font-weight: 700; }
+/* Admin: cola de moderación */
+.nk-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.nk-fila { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 8px 10px;
+  border: 1px solid var(--border); border-radius: var(--r-sm); overflow-wrap: anywhere; }
+.nk-fila > div:first-child { flex: 1 1 180px; min-width: 0; }
+.nk-fila .s { font-size: .8rem; color: var(--muted); }
+.nk-fila .btn { min-height: 44px; }
+.nk-motivo { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.nk-motivo label { flex: 1 1 100%; font-size: .82rem; font-weight: 700; }
+.nk-motivo input { flex: 1 1 200px; min-width: 0; min-height: 44px; }
+
+/* ---------- Diseño RPG de toda la vista de alumnos y alumnas (openspec: ingles-alumno-diseno-rpg) ----------
+   El mismo lenguaje que Secundaria (tokens --rpg-* de estilos/ui.css): paneles con borde y brillo, filas como
+   tarjetas, botones reales de 44 px o más y chips en píldora. Solo `body.vista-alumno` fuera de Secundaria: el admin y
+   la ruta del profe no cambian. */
+body.vista-alumno:not(.secundaria) .card,
+body.vista-alumno:not(.secundaria) .exam-card,
+body.vista-alumno:not(.secundaria) .section,
+body.vista-alumno:not(.secundaria) .mi-grupo {
+  background: var(--rpg-panel); border-color: var(--rpg-borde); border-radius: var(--r-md); box-shadow: var(--rpg-glow);
+}
+body.vista-alumno:not(.secundaria) .hero { background: var(--rpg-hero); border-color: var(--rpg-borde); box-shadow: var(--rpg-glow); }
+body.vista-alumno:not(.secundaria) .sec-titulo { color: var(--rpg-indigo); }
+body.vista-alumno:not(.secundaria) .card-titulo,
+body.vista-alumno:not(.secundaria) .exam-card h3 { color: var(--rpg-purple); }
+/* Botones reales: ≥ 44 px, borde, foco visible */
+body.vista-alumno:not(.secundaria) .btn,
+body.vista-alumno:not(.secundaria) .btn.sm { min-height: 44px; border-radius: var(--r-sm); }
+body.vista-alumno:not(.secundaria) .btn.ghost { background: var(--rpg-panel); border: 1px solid var(--rpg-borde); }
+body.vista-alumno:not(.secundaria) .btn.ghost:hover { border-color: var(--rpg-indigo); }
+body.vista-alumno:not(.secundaria) .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Filas de actividades (Para hoy, Esta semana, Para ponerte al día, Hoy y atrasadas): cada una, una tarjeta */
+body.vista-alumno:not(.secundaria) .exam-item,
+body.vista-alumno:not(.secundaria) .hoy-item {
+  flex-wrap: wrap; padding: 12px; margin-top: 8px; border: 1px solid var(--rpg-borde); border-radius: var(--r-sm);
+  background: var(--rpg-panel-2);
+}
+body.vista-alumno:not(.secundaria) .exam-item:first-of-type,
+body.vista-alumno:not(.secundaria) .hoy-item:first-of-type { border-top: 1px solid var(--rpg-borde); }
+body.vista-alumno:not(.secundaria) .exam-item > div:first-child,
+body.vista-alumno:not(.secundaria) .hoy-item > div:first-child { flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; }
+body.vista-alumno:not(.secundaria) .exam-item .btn,
+body.vista-alumno:not(.secundaria) .hoy-item .btn { flex: 0 0 auto; }
+/* Chips en píldora con borde suave */
+body.vista-alumno:not(.secundaria) .chip { padding: 4px 10px; border: 1px solid transparent; }
+body.vista-alumno:not(.secundaria) .chip.gris { border-color: var(--rpg-borde); }
+/* Barra de navegación: la pestaña actual en índigo */
+body.vista-alumno:not(.secundaria) .nav .nav-item[aria-current="page"] { color: var(--rpg-indigo); background: var(--accent-soft); }
+/* Material de estudio y resultados: mismas tarjetas */
+body.vista-alumno:not(.secundaria) .res-item { padding: 12px; margin-top: 8px; border: 1px solid var(--rpg-borde); border-radius: var(--r-sm); background: var(--rpg-panel-2); }
+body.vista-alumno:not(.secundaria) .material-guia { background: var(--rpg-panel); border-color: var(--rpg-borde); box-shadow: var(--rpg-glow); }
+/* Otros botones de la vista: audio y pronunciación de la actividad y «✕ Ver todo» de Semana */
+body.vista-alumno:not(.secundaria) .tts button,
+body.vista-alumno:not(.secundaria) .pron-btns button,
+body.vista-alumno:not(.secundaria) .ver-todo { min-height: 44px; }

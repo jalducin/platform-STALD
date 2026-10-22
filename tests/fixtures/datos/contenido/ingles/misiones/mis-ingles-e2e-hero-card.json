@@ -1,0 +1,40 @@
+{
+  "id": "mis-ingles-e2e-hero-card",
+  "tipo": "mision",
+  "titulo": "🎮 My Hero Card (prueba)",
+  "materia": "Inglés",
+  "mundo": "isla-del-alfabeto",
+  "descripcion": "Misión de ejemplo para las pruebas E2E: la ficha de un personaje inventado.",
+  "disponibleDesde": "2026-09-28",
+  "alumnos": ["jesus"],
+  "consigna": "Crea la ficha de un personaje inventado (no eres tú ni alguien que conozcas).\n\n🔒 Sin nombres reales, direcciones ni datos de contacto.",
+  "pasos": [
+    { "id": "p1", "titulo": "Ficha técnica", "instrucciones": "Escribe en inglés el nombre, la edad y los colores de tu personaje inventado.", "entregable": "Texto", "fechaLimite": "2026-10-10", "tipoEntrega": "texto" },
+    { "id": "p2", "titulo": "Descripción", "instrucciones": "Escribe en inglés cómo es tu personaje y qué cosas tiene.", "entregable": "Texto", "fechaLimite": "2026-10-17", "tipoEntrega": "texto" },
+    { "id": "p3", "titulo": "Bio", "instrucciones": "Escribe en inglés una bio corta de tu personaje inventado para una red social ficticia.", "entregable": "Texto", "fechaLimite": "2026-10-24", "tipoEntrega": "texto" }
+  ],
+  "rubrica": [
+    { "id": "c1", "criterio": "To be y posesivos", "descripcion": "Usa am, is, are y my, his, her bien.", "puntos": 25, "niveles": [
+      { "nivel": 4, "nombre": "Lo domino", "puntos": 25, "descriptor": "Sin errores." },
+      { "nivel": 3, "nombre": "Casi lo logro", "puntos": 20, "descriptor": "Uno o dos errores." },
+      { "nivel": 2, "nombre": "Voy avanzando", "puntos": 15, "descriptor": "Varios errores." },
+      { "nivel": 1, "nombre": "Estoy empezando", "puntos": 10, "descriptor": "Muchos errores." } ] },
+    { "id": "c2", "criterio": "Vocabulario", "descripcion": "Números, colores y adjetivos.", "puntos": 25, "niveles": [
+      { "nivel": 4, "nombre": "Lo domino", "puntos": 25, "descriptor": "Variado y correcto." },
+      { "nivel": 3, "nombre": "Casi lo logro", "puntos": 20, "descriptor": "Casi siempre correcto." },
+      { "nivel": 2, "nombre": "Voy avanzando", "puntos": 15, "descriptor": "Poco variado." },
+      { "nivel": 1, "nombre": "Estoy empezando", "puntos": 10, "descriptor": "Muy poco." } ] },
+    { "id": "c3", "criterio": "Orden", "descripcion": "Oraciones en orden.", "puntos": 25, "niveles": [
+      { "nivel": 4, "nombre": "Lo domino", "puntos": 25, "descriptor": "Todo en orden." },
+      { "nivel": 3, "nombre": "Casi lo logro", "puntos": 20, "descriptor": "Casi." },
+      { "nivel": 2, "nombre": "Voy avanzando", "puntos": 15, "descriptor": "A veces." },
+      { "nivel": 1, "nombre": "Estoy empezando", "puntos": 10, "descriptor": "Poco." } ] },
+    { "id": "c4", "criterio": "Ortografía", "descripcion": "Palabras bien escritas.", "puntos": 25, "niveles": [
+      { "nivel": 4, "nombre": "Lo domino", "puntos": 25, "descriptor": "Sin errores." },
+      { "nivel": 3, "nombre": "Casi lo logro", "puntos": 20, "descriptor": "Pocos errores." },
+      { "nivel": 2, "nombre": "Voy avanzando", "puntos": 15, "descriptor": "Varios." },
+      { "nivel": 1, "nombre": "Estoy empezando", "puntos": 10, "descriptor": "Muchos." } ] }
+  ],
+  "teoria": [ { "titulo": "To be", "texto": "I am, you are, he/she/it is.", "practica": [ { "id": "q1", "pregunta": "She ___ twelve.", "opciones": ["is", "are"], "correcta": 0, "pista": "Una persona: is." } ] } ],
+  "tips": [ { "tipo": "libreta", "texto": "Repasa am, is, are antes de escribir." } ]
+}

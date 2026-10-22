@@ -1,5 +1,6 @@
 // Grupos de clase de Inglés (openspec: ingles-grupos): stald_grupos + stald_inscripciones en Postgres.
-// Rutas /ingles/grupos (solo admin): GET lista y miembros; POST crea o edita; POST /mover cambia de grupo.
+// Rutas /ingles/grupos (solo admin): GET lista y miembros; POST crea o edita; POST /mover cambia de grupo;
+// POST /ocultar enciende o apaga `oculto_admin` (openspec: ingles-ocultar-grupos).
 import { type Db, v } from "./db.ts";
 import { slugAlumno } from "./motor.ts";
 
@@ -14,6 +15,8 @@ export interface Grupo {
   color: string;
   activo: boolean;
   orden: number;
+  // Oculto del panel del admin (openspec: ingles-ocultar-grupos). Sin la columna (migración 002) llega undefined = no.
+  oculto_admin?: boolean;
 }
 interface Inscripcion { alumno: string; grupo_id: string; desde: string; hasta: string | null }
 
@@ -53,6 +56,12 @@ export async function grupoInfo(db: Db, id: string | null): Promise<Grupo | null
   if (!id) return null;
   return (await leer(db)).grupos.find((g) => g.id === id) ?? null;
 }
+// ¿El grupo está oculto del panel del admin? Solo lo usan las vistas del admin; nunca las de alumnos y alumnas.
+export async function grupoOcultoAdmin(db: Db, id: string | null): Promise<boolean> {
+  return (await grupoInfo(db, id))?.oculto_admin === true;
+}
+// Forma pública del grupo para el admin: la bandera como `ocultoAdmin` (boolean siempre).
+const paraAdmin = ({ oculto_admin, ...g }: Grupo) => ({ ...g, ocultoAdmin: oculto_admin === true });
 
 const NOMBRE = /^[\p{L}\p{N}][\p{L}\p{N} .,'()·:-]{0,59}$/u;
 const COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -67,7 +76,7 @@ export async function handleGrupos(req: Request, sub: string, deps: DepsGrupos, 
     cache = null;
     const { grupos, vigentes } = await leer(db);
     const bajas = deps.bajas ? await deps.bajas() : new Set<string>();
-    return json({ grupos, miembros: Object.fromEntries(vigentes.filter((i) => !bajas.has(i.alumno)).map((i) => [i.alumno, i.grupo_id])) });
+    return json({ grupos: grupos.map(paraAdmin), miembros: Object.fromEntries(vigentes.filter((i) => !bajas.has(i.alumno)).map((i) => [i.alumno, i.grupo_id])) });
   }
 
   let body: Record<string, unknown> = {};
@@ -86,9 +95,22 @@ export async function handleGrupos(req: Request, sub: string, deps: DepsGrupos, 
       id, nombre, nivel: texto(body.nivel, 20), horario: texto(body.horario, 60), meet_url: meet, color,
       activo: body.activo === undefined ? true : body.activo === true, orden: Number.isInteger(body.orden) ? body.orden as number : 0,
     };
+    // Sin `oculto_admin`: el upsert (merge-duplicates) conserva la bandera al editar.
     const [grupo] = await db.upsert<Grupo>("grupos", fila, "id");
     cache = null;
-    return json({ ok: true, grupo });
+    return json({ ok: true, grupo: paraAdmin(grupo) });
+  }
+
+  // POST /ocultar { grupo, oculto } → solo cambia la bandera; no toca inscripciones ni datos de alumnos y alumnas.
+  if (sub === "/ocultar" && req.method === "POST") {
+    if (typeof body.oculto !== "boolean") return json({ error: "oculto_invalido" }, 400);
+    cache = null;
+    const actual = (await leer(db)).grupos.find((g) => g.id === String(body.grupo ?? ""));
+    if (!actual) return json({ error: "grupo_inexistente" }, 400);
+    if ((actual.oculto_admin === true) === body.oculto) return json({ ok: true, sinCambio: true, grupo: paraAdmin(actual) });
+    const [grupo] = await db.update<Grupo>("grupos", `id=eq.${v(actual.id)}`, { oculto_admin: body.oculto });
+    cache = null;
+    return json({ ok: true, grupo: paraAdmin(grupo ?? { ...actual, oculto_admin: body.oculto }) });
   }
 
   if (sub === "/mover" && req.method === "POST") {

@@ -110,3 +110,23 @@ A la semana: Inglés 4, Español 3, Matemáticas 3, Tecnología 2, Ciencias 1, C
 - **Tareas copiadas de Inglés** (por ejemplo, la guía en PDF para la libreta):
   - copia la actividad con un `id` nuevo `sec-…`, `materia` y `alumnos`;
   - conserva sus tips (descarga del PDF, libreta) y agrega el «🎙️ audio para el profe» si lo lleva.
+
+## Misiones principales (una por mundo; cambio `rpg-fase2-misiones`)
+
+El formato de `mundos.json` y de cada misión está en [docs/data-model.md](../../../docs/data-model.md) § «Misiones
+principales». Léelo ahí; no se copia aquí.
+
+- **Entregables solo en texto.** Cada paso lleva `tipoEntrega: "texto"`; lo que antes era foto, cartel, hoja de
+  cálculo o audio se pide escrito. Imagen y audio llegarán en otro cambio, con consentimiento firmado.
+- **Privacidad en la consigna:** debe incluir «🔒 Sin nombres reales, direcciones ni datos de contacto» (el validador
+  lo exige). Pide personajes, productos y lugares inventados; nunca datos de la alumna, su familia o su escuela.
+- **Forma:** `id` `mis-<materia>-<mundo>` (único también entre `contenido/secundaria/` y `contenido/ingles/`), 3 a 5
+  pasos con fechas en orden y dentro del mundo, rúbrica de 4 criterios con niveles cuyos máximos suman 100, tips con
+  fuentes verificadas (mismas reglas de arriba) y teoría opcional con `practica` (la respuesta nunca llega al
+  navegador).
+- **Catálogo:** `contenido/secundaria/mundos.json` se genera con `npx -y deno run -A server/generar_mundos.ts <datos>`
+  (copia nombres y fechas de `comun/gamificacion.js`); si cambian los mundos, se cambian primero ahí.
+- **Validar:** `npx -y deno run --allow-read server/validar_semana.ts <datos> --misiones secundaria` con **0 errores**
+  (y `--misiones ingles` si tocaste las de Inglés).
+- **Subir:** solo después de que el código que las lee esté en producción. Commit «secundaria: misión <título>».
+- **Evaluación:** la hace el profe en «📥 Entregas» con la rúbrica; la XP de la misión es rúbrica × 3 + 60 a tiempo.

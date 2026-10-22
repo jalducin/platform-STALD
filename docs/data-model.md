@@ -137,13 +137,17 @@ Sin datos personales. Se sirve junto a `juegos.html`.
 - El proyecto Supabase *Portafolio* es compartido con el portafolio. Todas las tablas de Inglés llevan el prefijo
   `stald_` en `public` y tienen RLS sin políticas, así que solo la llave de servicio (Deno) las lee.
   - Las tablas `stald_test_*` son para pruebas E2E.
-  - Definición: `supabase/migrations/001_stald_ingles.sql`.
+  - Definición: `supabase/migrations/001_stald_ingles.sql` y `002_stald_grupos_oculto_admin.sql`.
 - `stald_docs(path, data jsonb, version, actualizado)`: documentos 1 a 1 con el repo de datos.
-  - Rutas: `alumnos.json`, `resultados/<item>/<slug>.json` y `avance/<slug>.json`.
+  - Rutas: `alumnos.json`, `resultados/<item>/<slug>.json`, `avance/<slug>.json`, `borradores/<item>/<slug>.json` y
+    `entregas/<misión>/<slug>.json` (prefijos en `PREFIJOS_INGLES`, `server/db.ts`).
   - `version` es el `sha` de la concurrencia optimista.
   - La fila `meta/migrado` activa `PgStore`.
-- `stald_grupos(id, nombre, nivel, horario, meet_url, color, activo, orden)`. El grupo inicial es `grupo-1`
-  («Grupo 1»).
+- `stald_grupos(id, nombre, nivel, horario, meet_url, color, activo, orden, oculto_admin)`. El grupo inicial es
+  `grupo-1` («Grupo 1»).
+  - `oculto_admin` (boolean, `false` por omisión; migración `002`, cambio `ingles-ocultar-grupos`): el grupo y sus
+    alumnos y alumnas no salen por omisión en las vistas del admin de Inglés. No cambia nada para ellos (siguen
+    entrando, entregan y sus resultados se guardan). En la API se llama `ocultoAdmin`; solo la ve el admin.
 - `stald_inscripciones(alumno, grupo_id, desde, hasta)`:
   - `alumno` es el slug del nombre, la misma llave que `resultados/`;
   - solo puede haber una inscripción vigente (`hasta` null) por persona;
@@ -152,15 +156,25 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   `"grupos": ["<id>"]`; si no lo declara, aplica a todos.
 - La migración se hace con `herramientas/migrar-ingles.ts`, con las opciones `--prueba`, `--delta`, `--forzar` y
   `--juegos`. El repo de datos conserva la etiqueta `antes-de-postgres`.
+- **Gamificación de Inglés** (cambio `rpg-fase2-ingles`): `gamificacion/**` vive en `stald_docs` (prefijo en
+  `PREFIJOS_INGLES`; ruta nueva, sin migración). Sin correos ni calificaciones:
+  - `gamificacion/config.json`: `{ gruposSinRanking }`, grupos con el ranking apagado (el interruptor general es la
+    llave `ranking` de `config/interruptores.json`, abajo);
+  - `gamificacion/perfiles/<slug>.json`: `{ aparecer, nickAprobado?, nickRechazado?, motivo?, actualizado }`. El nick
+    lo sigue guardando Juegos (`juegos/nicks.json`, llave `a-<slug>`); el estado del nick se deriva comparándolo con
+    `nickAprobado` y `nickRechazado`. Se borra 30 días después de la baja (al abrir «🛡️ Nicks»).
+  - El tablero RPG y los puntos de constancia se **derivan** de `resultados/`; no se guardan.
 - **Juegos en Postgres** (cambio `cierre-tecnico`):
   - `juegos/**` (salas, partidas por semana, perfiles, fotos e invitados) vive en `stald_docs` desde la marca
     `meta/migrado-juegos`;
   - ya no gasta del límite de la API de GitHub;
   - **no hay respaldo**: si Postgres falla, la ruta responde 503 en lugar de leer una copia vieja.
-- **Interruptores públicos** (cambio `rpg-privacidad`): `config/interruptores.json` = `{ "privacidad": false }`.
+- **Interruptores públicos** (cambio `rpg-privacidad`): `config/interruptores.json` = `{ "privacidad": false, "ranking": false }`.
   - Vive como fila de `stald_docs` (`path = 'config/interruptores.json'`); sin Postgres (pruebas, servidor local) se lee
     del almacén de datos. Lo lee `GET /interruptores` (60 s de caché); sin fila → todo apagado.
   - `privacidad`: muestra `privacidad.html`, `consentimiento.html` y sus enlaces en el portal, Inglés y Juegos.
+  - `ranking` (cambio `rpg-fase2-ingles`): ranking por grupo de Inglés. También lo cambia el profe en «🛡️ Nicks»
+    (`POST /profe/ranking`, upsert de la fila).
   - Encender (cambio de dato, sin deploy; se nota en ≤ 2 min):
     `insert into stald_docs (path, data) values ('config/interruptores.json', '{"privacidad": true}') on conflict (path)
     do update set data = excluded.data, version = stald_docs.version + 1, actualizado = now();`
@@ -486,3 +500,51 @@ para todos, pero con ejercicios distintos para cada alumno o alumna.
 ejercicios del intento 1 (`intentos[].preguntas`). Las correctas quedan fijas y solo se contestan las
 falladas; si el último intento tiene 100 %, el elemento queda completo. El examen tiene 1 intento; si
 tuviera más, cada uno sería una selección nueva.
+
+## Misiones principales (repo privado y `stald_docs`, cambio `rpg-fase2-misiones`)
+
+Requisitos: `openspec/changes/rpg-fase2-misiones/specs/`. Validador: `deno run --allow-read server/validar_semana.ts
+<datos> --misiones <secundaria | ingles>` (sin `<lunes>`; código 1 con errores). Ámbitos: `secundaria` →
+`contenido/secundaria/`, `ingles` (grupo de Inglés) → `contenido/ingles/`.
+
+**Catálogo `contenido/<ámbito>/mundos.json`:** `{ "mundos": [{ id, materia, nombre, emoji, etapa?, desde, hasta,
+misionPrincipal? }] }`. `id` = nombre sin acentos con guiones (`valle-de-los-numeros`); un mundo que comparten dos
+materias lleva `-<clave>` (`estudio-y-arena-artes`). `desde`/`hasta` AAAA-MM-DD o `null` (todo el ciclo). Dos mundos de
+la misma materia no se enciman (salvo los paralelos de la fuente: Laberinto Sintaxis y Núcleo IA). En Secundaria los
+nombres y fechas deben ser los de `comun/gamificacion.js` (fuente); se genera con `deno run -A server/generar_mundos.ts
+<datos>`. Si no se puede leer, la página usa la derivación de la Fase 1. Sociales rota por mes desde febrero de 2027
+(eso lo calcula `comun/gamificacion.js`, no el catálogo).
+
+**Misión `contenido/<ámbito>/misiones/<id>.json`** (contenido, sin datos personales):
+
+| Campo | Regla |
+|---|---|
+| `id` | `mis-<materia>-<mundo>`, igual al nombre del archivo; **único entre ámbitos** (las entregas se guardan por id) |
+| `tipo` | `"mision"` (informativo) |
+| `titulo`, `materia`, `descripcion?` | `materia` = nombre visible («Matemáticas») |
+| `mundo` | `id` de un mundo del catálogo |
+| `disponibleDesde?` | desde cuándo se ve; si falta, el `desde` de su mundo |
+| `consigna` | texto con saltos de línea; **debe** incluir «Sin nombres reales, direcciones ni datos de contacto» |
+| `pasos[]` | 3 a 5: `{ id, titulo, instrucciones, fechaLimite, tipoEntrega: "texto", entregable?, extension?, ejemplo? }`; fechas en orden y dentro del mundo. `imagen` o `audio` = error («por ahora las entregas son solo texto») |
+| `rubrica[]` | exactamente 4 `{ id, criterio, descripcion?, puntos, niveles: [{ nivel?, nombre, puntos, descriptor? }] }`; `puntos` = su nivel más alto; los máximos suman 100 |
+| `teoria[]?` | como la de las clases (texto, tabla, puntos, `diagrama`) y `practica[]` (abajo) |
+| `tips[]` | `{ tipo, texto, url? }` con `https` |
+| `alumnos?` / `grupos?` | exclusividad por slug (Secundaria) o por id de grupo (Inglés) |
+
+**Práctica de la teoría** (clases de Secundaria y misiones): `teoria[i].practica[] = { id, pregunta, opciones?,
+correcta?, aceptadas?, pista? }` (opción múltiple con `correcta` = índice, o abierta con `aceptadas`). `correcta` y
+`aceptadas` **nunca** llegan al navegador (`teoriaPublica`, `server/practica.ts`); se comprueba con
+`POST /practica/comprobar`. No cuenta para la calificación.
+
+**Entrega `entregas/<misión>/<slug>.json`** (`stald_docs`, Postgres; nunca en el repo de contenido):
+`{ mision, ambito, slug, pasos: { <pasoId>: { texto | null, enviadoEn, tarde, estado: "entregado" | "correccion",
+borrado?, correccion?: { motivo, privacidad, fecha } } }, evaluacion: null | { puntos: { <criterioId>: n }, porcentaje,
+aTiempo, xp, comentario, fecha }, historial: [{ accion, paso?, fecha }] }`. Sin correos ni nombres. `xp` = porcentaje
+× 3 + 60 si el último paso fue a tiempo (`Gamificacion.xpDeMision`). Pedir corrección por privacidad pone `texto: null`
+en ese momento.
+
+**Retención:** cada 31 de agosto (12:00 UTC) un `Deno.cron` de Deno Deploy (`server/main.ts`) borra el texto de todas
+las entregas y conserva la evaluación, con concurrencia optimista y reintento; a mano, `server/retencion_entregas.ts
+--confirmar` con las llaves (sale con 1 si alguna quedó pendiente). El borrado por persona alcanza también entregas de
+misiones que ya no están en el repo de datos; el profe también puede borrar el contenido de una entrega o de
+una persona desde la bandeja.

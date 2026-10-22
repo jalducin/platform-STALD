@@ -16,11 +16,22 @@ function grupoDeNombre(nombre) {
   const id = state.grupos.miembros[slugAlumno(nombre)] || (gruposActivos()[0] || {}).id;
   return (state.grupos.grupos || []).find(g => g.id === id) || null;
 }
+// Grupos ocultos del panel (openspec: ingles-ocultar-grupos): con `ocultoAdmin`, el grupo y sus alumnos y alumnas no
+// salen en las vistas del admin, salvo con el interruptor «Mostrar grupos ocultos (N)». A ellos no les cambia nada.
+const gruposOcultos = () => (state.grupos && state.grupos.grupos || []).filter(g => g.ocultoAdmin);
+function ocultoEnPanel(nombre) {
+  if (state.mostrarOcultos || !state.grupos) return false;
+  // Solo personas del registro de Inglés (en Juegos hay jugadores de Secundaria e invitados).
+  if (Array.isArray(state.alumnosAdmin) && !state.alumnosAdmin.some(x => x.nombre === nombre)) return false;
+  return !!(grupoDeNombre(nombre) || {}).ocultoAdmin;
+}
 const chipGrupo = g => g ? '<span class="grupo-chip"><span class="grupo-sw" style="background:' + escapeHtml(g.color) + ';margin:0"></span>' + escapeHtml(g.nombre) + '</span>' : '';
-const opcionesGrupo = sel => gruposActivos().map(g => '<option value="' + escapeHtml(g.id) + '"' + (g.id === sel ? ' selected' : '') + '>' + escapeHtml(g.nombre) + '</option>').join('');
+const opcionesGrupo = sel => gruposActivos().filter(g => !g.ocultoAdmin || state.mostrarOcultos || g.id === sel).map(g => '<option value="' + escapeHtml(g.id) + '"' + (g.id === sel ? ' selected' : '') + '>' + escapeHtml(g.nombre) + '</option>').join('');
 function renderFiltroGrupo() {
   if (!state.grupos) return '';
-  return '<div class="grupos-barra"><label for="grupo-filtro">👥 Grupo</label><select id="grupo-filtro"><option value="">Todos los grupos</option>' + opcionesGrupo(state.grupoFiltro) + '</select></div>';
+  const n = gruposOcultos().length;
+  const interruptor = n ? '<label class="progress-text" style="margin:0;display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="mostrar-ocultos"' + (state.mostrarOcultos ? ' checked' : '') + '> Mostrar grupos ocultos (' + n + ')</label>' : '';
+  return '<div class="grupos-barra"><label for="grupo-filtro">👥 Grupo</label><select id="grupo-filtro"><option value="">Todos los grupos</option>' + opcionesGrupo(state.grupoFiltro) + '</select>' + interruptor + '</div>';
 }
 function renderGruposAdmin() {
   if (!state.grupos) return '';
@@ -41,10 +52,11 @@ function renderGruposAdmin() {
       '<label class="campo-et" for="g-meet">Enlace de Meet<input id="g-meet" maxlength="200" placeholder="https://meet.google.com/…" value="' + escapeHtml(e.meet_url || '') + '"></label>' +
       '<label class="campo-et" for="g-color">Color<input id="g-color" type="color" value="' + escapeHtml(e.color || '#4f46e5') + '"></label>' +
       '<button class="btn" type="submit">' + (e.id ? '💾 Guardar cambios' : '➕ Crear grupo') + '</button><div id="grupo-msg"></div></form>' +
-    lista.map(g => '<div class="grupo-fila" style="--gc:' + escapeHtml(g.color) + '"><div><span class="grupo-sw" style="background:' + escapeHtml(g.color) + '"></span><b>' + escapeHtml(g.nombre) + '</b>' + (g.activo ? '' : ' <small>(inactivo)</small>') +
+    lista.map(g => '<div class="grupo-fila" style="--gc:' + escapeHtml(g.color) + '"><div><span class="grupo-sw" style="background:' + escapeHtml(g.color) + '"></span><b>' + escapeHtml(g.nombre) + '</b>' + (g.activo ? '' : ' <small>(inactivo)</small>') + (g.ocultoAdmin ? ' <small data-oculto>🙈 oculto del panel</small>' : '') +
       '<br><small>' + [g.nivel, g.horario].filter(Boolean).map(escapeHtml).join(' · ') + ' · 👤 ' + personas(cuantos(g.id)) + '</small></div>' +
-      (g.meet_url ? '<a class="btn ghost" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') +
-      '<button class="btn ghost" data-action="editar-grupo" data-id="' + escapeHtml(g.id) + '">✏️ Editar</button></div>').join('') +
+      '<span class="grupo-acc">' + (g.meet_url ? '<a class="btn ghost" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') +
+      '<button class="btn ghost" data-action="ocultar-grupo" data-id="' + escapeHtml(g.id) + '" data-oculto="' + (g.ocultoAdmin ? '0' : '1') + '">' + (g.ocultoAdmin ? 'Mostrar en el panel' : '👁️ Ocultar del panel') + '</button>' +
+      '<button class="btn ghost" data-action="editar-grupo" data-id="' + escapeHtml(g.id) + '">✏️ Editar</button></span></div>').join('') +
     '<div class="progress-text">Quien no tiene inscripción cuenta en el primer grupo activo. Las semanas con <code>"grupos"</code> en su JSON solo las ve ese grupo.</div>' +
     '</div></details>';
 }
@@ -58,6 +70,17 @@ async function guardarGrupo(form) {
   if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="reg-error" role="alert">No se pudo guardar (' + escapeHtml({ nombre_invalido: 'escribe un nombre', meet_invalido: 'el enlace de Meet debe empezar con https://', color_invalido: 'color inválido' }[r.body.error] || r.body.error || r.status) + ').</div>'; return; }
   state.grupoEdicion = null; state.gruposAbierto = true;
   await loadGruposAdmin(); render(state.data);
+}
+// Ocultar o mostrar un grupo en el panel del admin (solo cambia la bandera; reversible).
+async function ocultarGrupo(b) {
+  b.disabled = true;
+  const r = await fetchJson(API_BASE + '/ingles/grupos/ocultar?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ grupo: b.dataset.id, oculto: b.dataset.oculto === '1' }) });
+  if (!r.ok) { b.disabled = false; alert('No se pudo cambiar (' + (r.body.error || r.status) + ').'); return; }
+  if (r.body.grupo && r.body.grupo.ocultoAdmin && state.grupoFiltro === r.body.grupo.id && !state.mostrarOcultos) state.grupoFiltro = null;
+  state.gruposAbierto = true; state.resumen = null;
+  await loadGruposAdmin();
+  if (!gruposOcultos().length) state.mostrarOcultos = false; // sin grupos ocultos, el interruptor se apaga solo
+  render(state.data); cargarResumen();
 }
 async function moverGrupo(sel) {
   sel.disabled = true;
@@ -84,7 +107,7 @@ function renderAlumnosAdmin() {
   const a = state.alumnosAdmin;
   const todos = Array.isArray(a) ? a : [];
   // Baja de Inglés reversible (openspec: ingles-baja-alumno): las bajas van aparte, con «Reactivar».
-  const lista = todos.filter(x => !x.baja), bajas = todos.filter(x => x.baja);
+  const lista = todos.filter(x => !x.baja && !ocultoEnPanel(x.nombre)), bajas = todos.filter(x => x.baja);
   // Cada persona es una tarjeta (openspec: ingles-diseno-profe): avatar con el color de su grupo, datos y acciones.
   const tarjeta = (x, extra, cuerpo, acciones) => {
     const g = grupoDeNombre(x.nombre);
@@ -157,7 +180,7 @@ async function loadJuegosAdmin() {
 }
 
 function renderJuegosAdmin() {
-  const j = state.juegos;
+  const j = state.juegos && state.juegos.jugadores ? { ...state.juegos, jugadores: state.juegos.jugadores.filter(x => !ocultoEnPanel(x.nombre)) } : state.juegos;
   const cab = '<details class="section" id="juegos-admin"><summary><div class="section-head"><span><span class="chevron">▶</span>🎮 Juegos de la semana</span>' +
     '<span class="count">' + (j && j.jugadores ? j.jugadores.length : 0) + '</span></div></summary><div style="padding:4px 12px 10px">';
   if (!j || j.error) return cab + '<div class="progress-text">No se pudieron cargar los juegos (' + escapeHtml(j && j.error) + ').</div></div></details>';

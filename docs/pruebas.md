@@ -71,7 +71,7 @@ Todo lo que producen (`<prueba>.out`, capturas `.png`, `servidor-*.log`, `resume
 
 ### Postgres de prueba (`--pg`)
 Las pruebas de Inglés pueden correr contra las tablas `stald_test_*` (mismo esquema que `stald_*`, ver
-`supabase/migrations/001_stald_ingles.sql` y [data-model.md](data-model.md)). `grupos` e `ingles-pro` **solo**
+`supabase/migrations/` y [data-model.md](data-model.md)). `grupos`, `ocultar-grupos` e `ingles-pro` **solo**
 corren así; sin `--pg` salen como `OMIT`.
 
 ```bash
@@ -80,6 +80,15 @@ export SUPABASE_SERVICE_KEY=$(supabase projects api-keys --project-ref <proyecto
 bash tests/e2e/correr.sh --datos <ruta> --pg
 ```
 
+- Sin llaves (cambio `ingles-ocultar-grupos`): `tests/e2e/lib/postgrest-falso.ts` sirve en memoria un PostgREST
+  falso (el de `server/test_postgrest.ts`, con los defaults de las migraciones) que solo acepta `stald_test_*`:
+
+  ```bash
+  deno run -A tests/e2e/lib/postgrest-falso.ts 8943 &
+  SUPABASE_URL=http://127.0.0.1:8943 SUPABASE_SERVICE_KEY=falsa bash tests/e2e/correr.sh --datos <ruta> --pg
+  ```
+
+  Si cambias `server/test_postgrest.ts`, reinicia el proceso (carga el código al arrancar).
 - La llave vive **solo** en el entorno del proceso; nunca en archivos ni en el repo.
 - `correr.sh --pg` fuerza `STALD_TABLAS=stald_test_` y se niega si recibe otro prefijo: **nunca** toca `stald_*`.
 - `stald_test_*` es **compartida** por todo el que pruebe contra ese proyecto: no corras dos baterías `--pg` a la
@@ -119,7 +128,13 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   mundos, abrir y volver de una clase, escritorio, el tablero del admin (`?alumna=valeria`) y el bloque «🗓️ Mi
   horario» del portal.
   Corre después de `examen-secundaria` y `secundaria-clase` en el mismo servidor: lo que esperan XP, nivel e insignias
-  sale de lo que devuelve la API en ese momento.
+  sale de lo que devuelve la API en ese momento (incluida la XP de misiones evaluadas).
+- `misiones` (fase `ingles`, cambio `rpg-fase2-misiones`, solo con `--hoy 2026-10-27`): con `mundos.json` y la misión
+  inventada `mis-e2e-valle-de-los-numeros` del fixture (exclusiva de `valeria`), revisa a 360 px en claro y oscuro la
+  matriz básica por la API (archivo y multipart → 400, > 4 000 → 400, bandeja 403 a la alumna), «⚔️ Misiones» con el
+  recordatorio de privacidad, contador, práctica comprobada en el servidor y entrega en texto, la bandeja del admin con
+  la rúbrica (85 % → 315 XP), 409 al reenviar, el aviso «+XP» y el nivel en el Inicio, «🗺️ Mapa» y «🌳 Árbol». Corre
+  después de `secundaria-dashboard`; si la copia ya trae la misión evaluada, sale `OMIT`.
 - `ingles-diseno-profe` (fase `ingles`, cambio `ingles-diseno-profe`): panel del profe a 360 px en claro y oscuro
   (encabezado con grupos activos, alumnos y alumnas y en riesgo; tarjetas por grupo; mapa de calor como tarjetas;
   Registro; cajón; «🔍 Ver grupo»), 44 px y sin scroll en las 9 secciones del admin, la ruta del profe con su Plan del
@@ -129,6 +144,12 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).
+- `ocultar-grupos` (fase `grupos`, `--pg`; cambio `ingles-ocultar-grupos`) crea «Grupo 2» con Angel y una partida
+  de Marisol; con «Grupo 1» oculto, Marisol ve su grupo y su semana y entrega con el resultado guardado. Luego lo
+  oculta con «👁️ Ocultar del panel» y revisa que sus alumnos y alumnas salgan del avance, «Últimas calificaciones»,
+  «Registro», el selector, el resumen, el mapa de calor, el conteo «con intentos» de «Esta semana», el guion del Meet
+  y el ranking; el interruptor «Mostrar grupos ocultos (1)» (y que el selector vuelve a «Todos los grupos» al
+  apagarlo); y lo revierte con «Mostrar en el panel» (el interruptor se apaga solo).
 - Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
 - Juego en vivo sin Supabase (cambio `juegos-en-vivo`): `lib/vivo-relevo.js` levanta un relevo local (HTTP + SSE) y
   `initVivo(relevo.url, { latencia, perdida, desorden, noConecta })` es el `init` de `abrirPagina`; con la ruta

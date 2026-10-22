@@ -21,6 +21,9 @@
 | `server/rows.ts` | Extracción de filas de Notion (Secundaria) y filtrado por correo |
 | `server/auth.ts` | Sesión con Supabase Auth: `quienEs`, `GET /config` y `POST /auth/enlace` (cambio `plataforma-login`) |
 | `server/contrasena.ts` | Entrada con contraseña: `POST /auth/preparar`, `/auth/contrasena` y `/auth/restablecer` (cambio `acceso-con-contrasena`) |
+| `server/gamificacion.ts` | Nick de Juegos, perfil y ranking por grupo de Inglés (`/gamificacion/perfil`, `/gamificacion/ranking`) y su moderación (`/profe/nicks`, `/profe/ranking`); ver § «Ranking de Inglés» (cambio `rpg-fase2-ingles`) |
+| `server/interruptores.ts` | Interruptores del profe en `stald_docs`: se leen en cada petición, apagados por defecto (cambio `rpg-fase2-ingles`) |
+| `server/cache_ranking.ts` | Caché de 60 s del ranking por grupo y semana; la invalidan gamificación y `POST /juegos/nick` |
 | `server/resumen.ts` | `GET /ingles/resumen`: indicadores y mapa de calor del tablero del profe (cambio `ingles-pro`) |
 | `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
 | `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes> [--profe \| --secundaria]` (código 1 si hay errores; 2 si los argumentos no son válidos) |
@@ -444,11 +447,17 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - Inglés sin Notion (cambio `cierre-tecnico`): la fase 1 importó al registro a las personas de Notion con correo
     (`origen: "notion"`); desde la fase 2 Inglés ya no lee Notion y esa importación se retiró.
   - Rutas de grupos, solo admin:
-    - `GET /ingles/grupos` → `{ grupos, miembros: { slug: grupo } }` (sin quienes están de baja de Inglés);
+    - `GET /ingles/grupos` → `{ grupos, miembros: { slug: grupo } }` (sin quienes están de baja de Inglés); cada
+      grupo trae `ocultoAdmin` (boolean, columna `oculto_admin`);
     - `POST /ingles/grupos` crea o edita un grupo. Errores: `nombre_invalido`, `meet_invalido` (debe ser
       `https://`), `color_invalido`, `id_invalido`;
     - `POST /ingles/grupos/mover { alumno, grupo }` cierra la inscripción vigente y abre una nueva. Si es el mismo
       día, solo corrige el grupo. Error: `grupo_inexistente`.
+    - `POST /ingles/grupos/ocultar { grupo, oculto: boolean }` (cambio `ingles-ocultar-grupos`): enciende o apaga
+      `oculto_admin` con un `PATCH` de esa sola columna (editar el grupo con `POST /ingles/grupos` no la toca).
+      Responde `{ ok, grupo }` o `{ ok, sinCambio: true, grupo }`. Errores: 403 `solo_admin`, 400 `json_invalido`,
+      `oculto_invalido` (no boolean) y `grupo_inexistente`. No toca inscripciones ni datos de alumnos y alumnas: la
+      bandera no viaja en `/ingles/actividades` ni la leen `/ingles/data` o `/perfil`.
     - Sin base migrada responden 503 `sin_base` (salvo `/baja` y `/reactivar`, que solo escriben `alumnos.json`).
     - `POST /ingles/grupos/baja { email }` y `POST /ingles/grupos/reactivar { email }` (cambio `ingles-baja-alumno`,
       `handleBajaIngles` en `server/alumnos.ts`): ponen o quitan `baja: "AAAA-MM-DD"` (hoy en CDMX) en su entrada de
@@ -474,6 +483,9 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
       `promedio` (del mejor intento de lo entregado), `atrasos` y `sinEntregas` (nombres sin entregas esta semana que ya
       tienen algo abierto; no se registran visitas, así que "quién no ha entrado" se aproxima así).
     - `?grupo=` filtra solo con la base migrada (sin ella se ignora). Acepta `?hoy=` con `PERMITIR_HOY=1`.
+    - Grupos ocultos del panel (cambio `ingles-ocultar-grupos`): por omisión quedan fuera de `filas` y `kpis` los
+      alumnos y alumnas cuyo grupo efectivo tiene `oculto_admin`; `?ocultos=1` (o `?grupo=<id>` de ese grupo) los
+      incluye. La respuesta trae `ocultos` (cuántos quedaron fuera).
     - Se calcula en el servidor sobre el almacén: con `PgStore`, `leerCarpeta` trae los resultados de cada columna en
       una sola consulta (`path=like.resultados/<id>/*`). No agrega tablas, vistas ni funciones a Postgres.
   - Racha: `GET /ingles/actividades` (alumno o alumna) agrega `racha: { dias, hoy }`, calculada con `calcularRacha`
@@ -532,6 +544,28 @@ escribía quedan como historial.
 
 **Cargar una semana nueva:** skill `nueva-semana-ingles` (`ai-specs/skills/`). Se prepara el fin de
 semana anterior, se valida con la CLI y se sube al repo de datos. Aparece sola su lunes.
+
+### Misiones principales (cambio `rpg-fase2-misiones`, `server/misiones.ts`)
+
+Formatos en [data-model.md](data-model.md) § «Misiones principales». Identidad por `personaMision` (`server/main.ts`):
+admin, alumna de Secundaria, alumno activo de Inglés (con su grupo), de baja de Inglés o sin acceso. Matriz completa en
+`openspec/changes/rpg-fase2-misiones/proposal.md`.
+
+| Ruta | Quién | Respuesta |
+|---|---|---|
+| `GET /misiones[?alumna=<slug>]` | con sesión | `{ isAdmin, hoy, mundos o null, misiones: [{ …misión sin respuestas, ambito, entrega, evaluacion, xp }] }`. Admin: todas las de Secundaria sin entregas (o lo que ve una alumna). Baja: solo sus entregas, `soloLectura`. Sin acceso 403 |
+| `POST /misiones/<id>/entrega` `{ paso, texto }` | alumna o alumno | 200 `{ ok, paso, tarde, completos, totalPasos, entrega }`. JSON (`application/json` o `text/plain`). 400 `tipo_no_permitido` con archivo, multipart o `tipo` ≠ texto; 400 `entrega_invalida` vacía, > 4 000 o paso inexistente; 404 ajena o aún no visible; 409 `ya_evaluado`; 403 admin, baja o sin acceso; 503 `sin_guardar` si falla el almacén o no hay Postgres |
+| `GET /profe/entregas` | admin | `{ entregas: [{ mision, slug, nombre (de pila), estado (lista, correccion, en-progreso o evaluada), desde, pasos, evaluacion, historial, xp }], pendientes }`, de la más antigua a la más nueva |
+| `POST /profe/entregas/<id>/<slug>/evaluar` `{ puntos: { <criterio>: n }, comentario? }` | admin | 200 `{ evaluacion }`; 400 `rubrica_invalida`; 409 `incompleta`; 404 |
+| `POST /profe/entregas/<id>/<slug>/correccion` `{ pasos, motivo, privacidad }` | admin | reabre los pasos (borra el texto si `privacidad`) y quita la evaluación; 400 `correccion_invalida` |
+| `POST /profe/entregas/<id>/<slug>/borrar`, `POST /profe/entregas/persona/<slug>/borrar` | admin | borran el texto y conservan la evaluación (la XP no cambia) |
+| `POST /practica/comprobar` `{ itemId o misionId, practicaId, respuesta }` | con sesión | `{ correcta, pista }`; clases solo de Secundaria; misiones visibles para la persona (también de Inglés); 404 si no le es visible; 403 baja o sin acceso |
+
+Toda `/profe/entregas*` responde 403 a quien no es admin y 401 sin sesión. Ninguna respuesta lleva correos; a
+estudiantes la misión va sin `alumnos` ni `grupos`. Una entrega con el contenido borrado antes de evaluar ya no se puede
+evaluar (409 `incompleta`). El
+contenido de misiones y mundos va en caché 60 s por ámbito (`limpiarCacheMisiones`). La teoría de las clases se
+publica con `teoriaPublica` (sin `correcta`/`aceptadas` de su práctica).
 
 ---
 
@@ -687,3 +721,26 @@ dos archivos.**
   - Solo cuenta la primera respuesta de cada línea. Los demás juegos de preguntas no cambian (10 preguntas, sin
     `aciertos`).
 - Pruebas: `server/linea_tiempo_test.ts` (sala y funciones puras) y `server/cultura_datos_test.ts` (contenido).
+
+## Ranking de Inglés (cambio `rpg-fase2-ingles`)
+
+- **Interruptor:** general = llave `ranking` de `config/interruptores.json` (mecanismo de `rpg-privacidad`, 60 s de
+  caché, `olvidar()` al cambiarlo aquí); por grupo = `gamificacion/config.json` (`gruposSinRanking`), leído en cada
+  petición. `/ingles/actividades` agrega `ranking: true` solo si está encendido para su grupo. Apagado (o grupo apagado): `GET /gamificacion/perfil` → `{ ranking: false }`; `PUT` y
+  `GET /gamificacion/ranking` → 404 `sin_ranking`.
+- **Perfil:** `GET|PUT /gamificacion/perfil` (`{ aparecer: boolean }`) solo para alumnos y alumnas activas de Inglés
+  (admin 403 `solo_alumnos`, baja 403 `baja_ingles`, solo Secundaria 404 `sin_ranking`, invitado 403, otra persona
+  403 `ajeno`). Aparecer exige nick de Juegos (400 `sin_nick`) que pase `revisarNick` (400 `nick_invalido` con
+  `motivo`: `correo`, `telefono`, `nombre`, `palabra`, `caracteres` o `repetido`, y un `mensaje` para mostrar).
+  Ocultarse (`aparecer: false`) se acepta siempre, también con el ranking apagado.
+- **Ranking:** `GET /gamificacion/ranking[?grupo=]` → `{ semana, lista: [{ posicion, nick, puntos }], yo? }`. Solo su
+  grupo (otro → 403), por puntos de constancia de `comun/constancia.js` (función pura que el servidor importa), solo
+  quien activó aparecer y tiene el nick aprobado. **Nunca** nombres, correos, slugs, XP, nivel ni calificaciones (lo
+  revisa `server/gamificacion_ingles_test.ts` recorriendo el JSON). Falla del almacén → 503 `ranking_no_disponible`.
+- **Moderación (solo admin):** `GET /profe/nicks[?grupo=]`, `POST /profe/nicks/aprobar { alumno, nick }` (409
+  `nick_cambio` si cambió en Juegos), `POST /profe/nicks/rechazar { alumno, nick, motivo }` (1–200 caracteres) y
+  `POST /profe/ranking { ranking? , grupo?, apagado? }`. Toda escritura invalida la caché del ranking.
+- **Misiones en Inglés** (cambio `rpg-ingles-hero-card`): `/ingles/actividades` agrega `misiones: true` si la persona
+  tiene misiones visibles (`hayMisionesVisibles` de `server/misiones.ts`), y el ranking suma 20 puntos por paso con
+  `pasosEntregados(store, "ingles", slug)`.
+

@@ -50,14 +50,15 @@ function tarjetaHoy(it, hoy, admin) {
     botonClase(it, e, admin, 'sec-btn-grande') + '</article>';
 }
 
-// Barra de estado RPG: nivel, rango, XP del nivel, insignias y racha.
-function barraRpg(nivel, insignias, racha) {
+// Barra de estado RPG: nivel, rango, XP del nivel, insignias y racha. `totalInsignias`: Inglés usa su propio catálogo
+// (openspec: rpg-fase2-ingles); por omisión, el de comun/gamificacion.js.
+function barraRpg(nivel, insignias, racha, totalInsignias) {
   return '<section class="rpg-stats" id="rpg-stats" aria-label="Tu avance">' +
     '<div class="rpg-nivel"><div class="rpg-nivel-num rpg-num" aria-hidden="true">' + nivel.nivel + '</div>' +
       '<div class="rpg-nivel-txt"><div class="rpg-rango" id="rpg-rango">Nivel ' + nivel.nivel + ' · ' + escapeHtml(nivel.rango) + '</div>' +
       '<div class="rpg-xp-linea"><span>XP</span><span class="rpg-num" id="rpg-xp">' + nivel.xpNivel + ' / ' + nivel.porNivel + '</span></div>' +
       '<div class="rpg-xp-barra" role="progressbar" aria-label="XP del nivel ' + nivel.nivel + '" aria-valuemin="0" aria-valuemax="' + nivel.porNivel + '" aria-valuenow="' + nivel.xpNivel + '"><span style="width:' + nivel.porcentaje + '%"></span></div></div></div>' +
-    '<div class="rpg-dato" id="rpg-insignias"><span class="rpg-dato-ico" aria-hidden="true">🏅</span><div><div class="rpg-dato-t">Insignias</div><div class="rpg-dato-v rpg-num">' + insignias.length + ' / ' + GAM.INSIGNIAS.length + '</div></div></div>' +
+    '<div class="rpg-dato" id="rpg-insignias"><span class="rpg-dato-ico" aria-hidden="true">🏅</span><div><div class="rpg-dato-t">Insignias</div><div class="rpg-dato-v rpg-num">' + insignias.length + ' / ' + (totalInsignias || (GAM.INSIGNIAS.length + (GAM.INSIGNIAS_RPG || []).length)) + '</div></div></div>' +
     '<div class="rpg-dato" id="rpg-racha"><span class="rpg-dato-ico" aria-hidden="true">🔥</span><div><div class="rpg-dato-t">Racha</div><div class="rpg-dato-v"><span class="rpg-num">' + racha.dias + '</span> ' + (racha.dias === 1 ? 'día' : 'días') + '</div></div></div>' +
     '</section>';
 }
@@ -123,7 +124,7 @@ function kpisHtml(prog, racha, mapa) {
 
 function insigniasHtml(insignias) {
   return '<section class="card rpg-insignias" id="sec-insignias" aria-labelledby="sec-insignias-t"><h3 class="card-titulo" id="sec-insignias-t">🏅 Insignias</h3><ul class="rpg-insignia-lista">' +
-    GAM.INSIGNIAS.map(i => {
+    [...GAM.INSIGNIAS, ...(GAM.INSIGNIAS_RPG || [])].map(i => {
       const tiene = insignias.some(x => x.id === i.id);
       return '<li class="rpg-insignia' + (tiene ? ' ganada' : '') + '" data-insignia="' + i.id + '" title="' + escapeHtml(i.descripcion) + '">' +
         '<span class="rpg-insignia-ico" aria-hidden="true">' + (tiene ? i.emoji : '🔒') + '</span><span class="rpg-insignia-n">' + escapeHtml(i.nombre) + '</span>' +
@@ -158,8 +159,10 @@ function renderSecInicio(act, o) {
   const hoy = o.hoy;
   const deHoy = SD.clasesDeHoy(items, hoy);
   const racha = SD.rachaDe(act);
-  const nivel = GAM.nivelDe(GAM.xpTotal(items, { hoy }));
-  const insignias = GAM.insigniasDe({ items, hoy, racha });
+  // XP de clases + misiones principales evaluadas, en el mismo total (openspec: rpg-fase2-misiones).
+  const misiones = typeof misionesSec === 'function' ? misionesSec() : [];
+  const nivel = GAM.nivelDe(GAM.xpTotalConMisiones(items, misiones, { hoy }));
+  const insignias = [...GAM.insigniasDe({ items, hoy, racha }), ...GAM.insigniasRpgDe({ items, misiones, hoy, catalogo: typeof catalogoSec === 'function' ? catalogoSec() : null })];
   const conNombre = o.nombre ? ', ' + escapeHtml(o.nombre) : '';
   const titulo = o.admin
     ? '<h2 class="sec-hola">Tablero de ' + escapeHtml(o.nombre || 'la alumna') + '</h2><span class="chip sec-vista-profe">👀 Vista del profe · solo lectura</span>'
@@ -168,7 +171,8 @@ function renderSecInicio(act, o) {
   const accesos = '<nav class="sec-accesos" aria-label="Más de Secundaria">' +
     [['clases', '📅', 'Esta semana'], ['horario', '🗓️', 'Mi horario'], ['materias', '🗺️', 'Mis materias y mundos']].map(([id, e, t]) =>
       '<button type="button" class="btn ghost sec-acceso" data-sec-tab="' + id + '"><span aria-hidden="true">' + e + '</span> ' + t + '</button>').join('') + '</nav>';
-  return '<div class="rpg">' + barraRpg(nivel, insignias, racha) + misionPrincipal(items, hoy, deHoy, o.admin, saludo) + retosHtml(items, hoy, deHoy, o.admin) +
+  const extrasMision = typeof misionInicioHtml === 'function' ? (o.admin ? '' : avisoEvaluacionHtml(items, hoy)) + misionInicioHtml(items, hoy) + misionesSemanaHtml(items, hoy) : '';
+  return '<div class="rpg">' + barraRpg(nivel, insignias, racha) + misionPrincipal(items, hoy, deHoy, o.admin, saludo) + extrasMision + retosHtml(items, hoy, deHoy, o.admin) +
     kpisHtml(SD.progresoSemana(items, hoy), racha, GAM.mapaMundos(items, hoy)) +
     '<div class="rpg-dos">' + actividadHtml(items) + promediosHtml(items, hoy) + '</div>' + insigniasHtml(insignias) + accesos + '</div>';
 }

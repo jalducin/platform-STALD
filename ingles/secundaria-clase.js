@@ -2,7 +2,9 @@
 // Secundaria»). Al abrir una clase: pasos «1 Teoría → 2 Video → 3 Ejercicios → 4 Libreta» con indicador
 // (aria-current="step"), videos de YouTube incrustados (youtube-nocookie, lazy) y la libreta con «✅ Ya la hice»
 // (solo en este aparato). Al enviar: libreta y «Siguiente misión» en la pantalla de resultado. En Secundaria la clase se llama «Misión».
-// Lo usan openItem y showResult (ingles/reproductor.js) solo en modo Secundaria; Inglés no cambia.
+// Lo usan openItem y showResult (ingles/reproductor.js) en Secundaria y en la vista de alumnos y alumnas de Inglés
+// (`claseEnPasos`, openspec: ingles-alumno-diseno-rpg); ahí la etiqueta es el tipo («📘 Actividad», «📝 Examen»…)
+// y el mundo, el de Inglés.
 
 // Id de YouTube (11 caracteres) de watch?v=, youtu.be/, /embed/, /shorts/ o /live/; null si no es de YouTube.
 function idYouTube(url) {
@@ -74,8 +76,10 @@ function recompensaMision(id) {
   const antes = envio.act, despues = state.act;
   if (!hayGamificacion() || !antes || !despues || antes.isAdmin || despues.isAdmin) return '';
   const hoy = despues.hoy || todayStr();
-  const xpAntes = Gamificacion.xpTotal(antes.items, { hoy });
-  const xpDespues = Gamificacion.xpTotal(despues.items, { hoy });
+  // Con las misiones principales evaluadas (mismas antes y después), como el tablero de Inglés y el de Secundaria.
+  const mis = typeof misionesSec === 'function' ? misionesSec() : [];
+  const xpAntes = Gamificacion.xpTotalConMisiones ? Gamificacion.xpTotalConMisiones(antes.items, mis, { hoy }) : Gamificacion.xpTotal(antes.items, { hoy });
+  const xpDespues = Gamificacion.xpTotalConMisiones ? Gamificacion.xpTotalConMisiones(despues.items, mis, { hoy }) : Gamificacion.xpTotal(despues.items, { hoy });
   const nA = Gamificacion.nivelDe(xpAntes), nD = Gamificacion.nivelDe(xpDespues);
   const nuevas = Gamificacion.insigniaNueva({ items: antes.items, hoy, racha: antes.racha }, { items: despues.items, hoy, racha: despues.racha });
   return '<section class="exam-card sec-recompensa" id="sec-recompensa" aria-live="polite">' +
@@ -88,20 +92,29 @@ function recompensaMision(id) {
     '</section>';
 }
 
+// Etiqueta del banner: en Secundaria cada clase es una «Misión»; en Inglés, su tipo.
+const ETIQUETA_TIPO = { examen: '📝 Examen', refuerzo: '🔁 Refuerzo', meet: '🎥 Reto del Meet', actividad: '📘 Actividad' };
+const etiquetaClase = it => (MODO_SECUNDARIA ? '⚔️ Misión' : ETIQUETA_TIPO[it.tipo] || ETIQUETA_TIPO.actividad);
+
 // Vista completa de la clase. `cabecera` y `form` los arma el reproductor (los mismos que en Inglés).
 function vistaClaseSecundaria(it, cabecera, form) {
-  const teoria = it.teoria && it.teoria.length ? renderTeoria(it.teoria) : '';
+  // Práctica de la teoría con revisión en el servidor (openspec: rpg-fase2-misiones; ingles/secundaria-misiones.js).
+  // La práctica revisada en el servidor solo existe para clases de Secundaria (/practica/comprobar).
+  const practica = MODO_SECUNDARIA && typeof practicaHtml === 'function' ? practicaHtml(it.teoria || [], { itemId: it.id }) : '';
+  // Inglés: los tips sin enlace (ni libreta) se ven en la teoría, como en la vista de lista (spec dashboard-ingles).
+  const tipsTexto = MODO_SECUNDARIA ? [] : (it.tips || []).filter(t => t.tipo !== 'libreta' && !esWeb(t.url) && t.texto);
+  const teoria = (it.teoria && it.teoria.length ? renderTeoria(it.teoria) + practica : '') + (tipsTexto.length ? renderTips(tipsTexto) : '');
   const video = videosDeClase(it.tips);
   const libreta = bloqueLibreta(it.id, it.tips);
   const hay = { teoria: !!teoria, video: video.hay, ejercicios: true, libreta: !!libreta };
-  const indicador = '<nav class="sec-pasos" aria-label="Pasos de la misión"><ol>' + PASOS_CLASE.map(([id, t], i) =>
+  const indicador = '<nav class="sec-pasos" aria-label="' + (MODO_SECUNDARIA ? 'Pasos de la misión' : 'Pasos de la actividad') + '"><ol>' + PASOS_CLASE.map(([id, t], i) =>
     '<li><button type="button" class="sec-paso" data-sec-paso="' + id + '"' + (hay[id] ? '' : ' disabled') + '>' + numPaso(i + 1) +
     '<span>' + t + '</span>' + (hay[id] ? '' : '<span class="sr-only"> (sin contenido)</span>') + '</button></li>').join('') + '</ol></nav>';
   const seccion = (id, n, titulo, html) => '<section class="exam-card sec-paso-bloque" id="sec-paso-' + id + '" data-sec-bloque="' + id + '" aria-labelledby="sec-paso-t-' + id + '">' +
     '<h3 id="sec-paso-t-' + id + '">' + numPaso(n) + ' ' + titulo + '</h3>' + html + '</section>';
   const m = materiaDe(it);
-  const mundo = mundoDeMision(m);
-  const banner = '<div class="sec-mision-banner"><span class="sec-mision-tag">⚔️ Misión</span>' + chipMateria(m) +
+  const mundo = MODO_SECUNDARIA ? mundoDeMision(m) : (hayGamificacion() ? Gamificacion.mundoDe('ingles', hoyDeAct()) : null);
+  const banner = '<div class="sec-mision-banner"><span class="sec-mision-tag">' + etiquetaClase(it) + '</span>' + (MODO_SECUNDARIA ? chipMateria(m) : '') +
     (mundo ? '<span class="sec-mundo" data-sec-mundo>' + escapeHtml(mundo.emoji + ' ' + mundo.nombre) + '<small> · ' + escapeHtml(mundo.etapa) + '</small></span>' : '') + '</div>';
   return '<div class="sec-clase-vista">' + banner + cabecera + indicador +
     (hay.teoria ? seccion('teoria', 1, '📖 Teoría', teoria) : '') +
@@ -134,7 +147,8 @@ function siguienteClase(idActual) {
   const act = state.act;
   if (!act || act.isAdmin) return null;
   const hoy = act.hoy || todayStr();
-  const pendientes = (act.items || []).filter(x => x.id !== idActual && (x.estado === 'disponible' || x.estado === 'en-curso'))
+  // Sin Meets sin reto: no tienen ejercicios (se abren como material).
+  const pendientes = (act.items || []).filter(x => x.id !== idActual && (x.tipo !== 'meet' || x.tieneReto) && (x.estado === 'disponible' || x.estado === 'en-curso'))
     .sort((a, b) => String(a.fechaLimite).localeCompare(String(b.fechaLimite)));
   return pendientes.find(x => x.fechaLimite >= hoy) || pendientes[0] || null;
 }
@@ -145,8 +159,8 @@ function extrasResultadoSecundaria(id) {
   const libreta = clase ? bloqueLibreta(id, clase.tips) : '';
   const sig = siguienteClase(id);
   const boton = sig
-    ? '<button class="btn sec-siguiente" data-action="abrir-item" data-id="' + escapeHtml(sig.id) + '"><span>Siguiente misión →</span><small>' + escapeHtml(textoClase(sig, materiaDe(sig))) + '</small></button>'
-    : '<button class="btn sec-siguiente" data-action="volver"><span>🗺️ Mis misiones</span><small>No tienes más misiones pendientes por ahora.</small></button>';
+    ? '<button class="btn sec-siguiente" data-action="abrir-item" data-id="' + escapeHtml(sig.id) + '"><span>' + (MODO_SECUNDARIA ? 'Siguiente misión →' : 'Lo siguiente →') + '</span><small>' + escapeHtml(textoClase(sig, MODO_SECUNDARIA ? materiaDe(sig) : null)) + '</small></button>'
+    : '<button class="btn sec-siguiente" data-action="volver"><span>' + (MODO_SECUNDARIA ? '🗺️ Mis misiones' : '📅 Mi semana') + '</span><small>' + (MODO_SECUNDARIA ? 'No tienes más misiones pendientes por ahora.' : 'No tienes más pendientes por ahora. ¡Bien hecho!') + '</small></button>';
   return recompensaMision(id) + (libreta ? '<section class="exam-card sec-paso-bloque" id="sec-resultado-libreta"><h3>' + numPaso(4) + ' 📓 Libreta</h3>' + libreta + '</section>' : '') +
     '<div class="sec-resultado-acciones">' + boton + '</div>';
 }

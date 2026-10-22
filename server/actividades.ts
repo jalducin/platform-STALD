@@ -29,6 +29,7 @@ import {
   tieneReto,
 } from "./motor.ts";
 import { alumnasSecundaria, type FilaIdentidad, identidadSecundaria } from "./secundaria_registro.ts";
+import { teoriaPublica } from "./practica.ts";
 import type { Store } from "./store.ts";
 
 type Json = (body: unknown, status?: number) => Response;
@@ -40,6 +41,8 @@ export interface Identidad {
   inicio?: string; // lunes de inicio de un alta nueva (openspec: inicio-lunes-alumnos)
   grupo?: string; // grupo vigente (openspec: ingles-grupos); sin base de datos no se filtra
   grupoInfo?: { id: string; nombre: string; nivel: string | null; horario: string | null; meet_url: string | null; color: string } | null;
+  misiones?: boolean; // tiene misiones principales visibles (openspec: rpg-ingles-hero-card)
+  ranking?: boolean; // ranking de su grupo encendido (openspec: rpg-fase2-ingles): la página solo entonces pide el perfil
 }
 
 // Ámbito de contenido: el del grupo (contenido/) o la ruta de estudio del profe (contenido/profe/, openspec: ruta-profe).
@@ -168,6 +171,9 @@ function meta(it: ConGrupos) {
     ...(it.alumnos ? { alumnos: it.alumnos } : {}),
     ...(it.materia ? { materia: it.materia } : {}), // Secundaria (openspec: secundaria-mis-clases)
     ...(it.dia ? { dia: it.dia } : {}), // día del horario, para adelantar clases (openspec: secundaria-adelantar)
+    // Mundo explícito y títulos de los temas (árbol de habilidades; openspec: rpg-fase2-misiones). Sin respuestas.
+    ...(it.mundo ? { mundo: it.mundo } : {}),
+    ...(it.temas?.length ? { temas: it.temas.map((t) => t.titulo) } : {}),
   };
 }
 
@@ -188,6 +194,12 @@ function mejorATiempo(r: Resultado | null): boolean | null {
   if (!r?.mejor) return null;
   const mejor = r.intentos.find((i) => i.n === r.mejor!.n);
   return mejor ? !mejor.fueraDeTiempo : null;
+}
+
+// Temas del último intento (título, porcentaje y estado), para el árbol de habilidades (openspec: rpg-fase2-misiones).
+function temasDelUltimo(r: Resultado | null) {
+  const ult = r?.intentos.at(-1);
+  return ult ? (ult.calificacion.secciones || []).map((s) => ({ titulo: s.titulo, porcentaje: s.porcentaje, estado: s.estado })) : [];
 }
 
 // GET /ingles/actividades → elementos con estado (alumno) o con resultados y resumen (admin)
@@ -222,10 +234,10 @@ async function listarActividades(quien: Identidad, store: Store, json: Json, hoy
   const conEstado = await Promise.all(suyos.map(async (it) => {
     const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
     for (const i of r?.intentos || []) diasConEntrega.add(mxToday(new Date(i.enviadoEn)));
-    return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, mejorATiempo: mejorATiempo(r), ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
+    return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, mejorATiempo: mejorATiempo(r), ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ultimoTemas: temasDelUltimo(r), ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
   }));
   const plan = esProfe ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
-  return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
+  return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}), ...(quien.ranking ? { ranking: true } : {}), ...(quien.misiones ? { misiones: true } : {}) });
 }
 
 // Elemento pedido; en la ruta del profe, si no es suyo, el del grupo con sus fechas de profe.
@@ -244,7 +256,7 @@ function materialSinReto(req: Request, partes: string[], it: Item, quien: Identi
   if (req.method === "GET" && partes.length === 1 && it.tipo === "meet") {
     if (!quien.isAdmin && !abreYa(it.disponibleDesde, hoy)) return json({ error: "no_disponible", disponibleDesde: it.disponibleDesde }, 403);
     return json({
-      ...meta(it), material: true, teoria: it.teoria || [], tips: it.tips || [],
+      ...meta(it), material: true, teoria: teoriaPublica(it.teoria), tips: it.tips || [],
       ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}), ...(quien.isAdmin && it.presentacion ? { presentacion: it.presentacion } : {}),
       temas: [], enfoque: [], intento: 0, intentosUsados: 0, vistaPrevia: quien.isAdmin, preguntas: [],
     });
@@ -358,7 +370,7 @@ async function verElemento(c: CtxElemento, n: number, usados: number, alumnoVist
   const titulos = new Map((it.temas || []).map((t) => [t.id, t.titulo]));
   const bor = !quien.isAdmin && slug ? (await store.get<Borrador>(rutaBorrador(it.id, slug)))?.data : null;
   return json({
-    ...meta(it), teoria: it.teoria || [], tips: it.tips || [],
+    ...meta(it), teoria: teoriaPublica(it.teoria), tips: it.tips || [],
     ...(quien.isAdmin && it.guion ? { guion: it.guion } : {}),
     ...(quien.isAdmin && it.presentacion ? { presentacion: it.presentacion } : {}),
     temas: (it.temas || []).map((t) => ({ id: t.id, titulo: t.titulo })),

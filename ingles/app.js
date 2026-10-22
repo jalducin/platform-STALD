@@ -40,7 +40,7 @@ function pintarNav() {
   document.body.classList.add('con-barra');
   const lista = seccionesDe(rol);
   if (rol === 'alumno') {
-    navEl.innerHTML = lista.map(s => navItem(s, actual)).join('');
+    navEl.innerHTML = lista.filter(s => !s.fueraDeBarra).map(s => navItem(s, actual)).join('');
   } else {
     const barra = lista.filter(s => s.barra), resto = lista.filter(s => !s.barra);
     navEl.innerHTML = barra.map(s => navItem(s, actual)).join('') + resto.map(s => navItem(s, actual, 'solo-escritorio')).join('') +
@@ -58,6 +58,8 @@ function aplicarRuta() {
   const s = seccion(rolActual(), id);
   document.title = (s ? s.titulo + ' · ' : '') + 'Clases de Inglés';
   if (rolActual() === 'admin' && id === 'resumen' && !state.resumen) cargarResumen();
+  if (rolActual() === 'admin' && id === 'nicks' && !state.nicks) cargarNicksAdmin(); // openspec: rpg-fase2-ingles
+  if (rolActual() === 'admin' && id === 'entregas' && !state.secBandeja) cargarEntregasIngles(); // openspec: rpg-ingles-hero-card
 }
 window.addEventListener('hashchange', () => {
   document.getElementById('nav-mas').hidden = true;
@@ -112,7 +114,12 @@ function onSubmit(e) {
   const f = e.target.closest('#exam-form'); if (f) { e.preventDefault(); submitExam(f); }
 }
 function onChange(e) {
-  if (e.target.id === 'grupo-filtro') { state.grupoFiltro = e.target.value || null; state.resumen = null; render(state.data); cargarResumen(); }
+  if (e.target.id === 'grupo-filtro') { state.grupoFiltro = e.target.value || null; state.resumen = null; state.nicks = null; render(state.data); cargarResumen(); }
+  if (e.target.id === 'mostrar-ocultos') { // openspec: ingles-ocultar-grupos
+    state.mostrarOcultos = e.target.checked;
+    if (!state.mostrarOcultos && gruposOcultos().some(g => g.id === state.grupoFiltro)) state.grupoFiltro = null;
+    state.resumen = null; render(state.data); cargarResumen();
+  }
   if (e.target.dataset && e.target.dataset.mover) moverGrupo(e.target);
   if (e.target.name === 'tema') aplicarTema(e.target.value);
   const f = e.target.closest('#exam-form'); if (f) updateExamProgress(f);
@@ -126,6 +133,7 @@ function onClick(e) {
   if (act === 'quitar-alumno') { e.preventDefault(); quitarAlumno(b); }
   if (act === 'baja-ingles') { e.preventDefault(); bajaIngles(b, false); }
   if (act === 'reactivar-ingles') { e.preventDefault(); bajaIngles(b, true); }
+  if (act === 'ocultar-grupo') { e.preventDefault(); ocultarGrupo(b); }
   if (act === 'editar-grupo') { e.preventDefault(); state.grupoEdicion = (state.grupos.grupos || []).find(g => g.id === b.dataset.id) || null; state.gruposAbierto = true; render(state.data); document.getElementById('g-nombre').focus(); }
   if (act === 'tts') { e.preventDefault(); hablar(b.dataset.texto, !!b.dataset.lento); }
   if (act === 'grabar') { e.preventDefault(); grabarPron(b); }
@@ -186,9 +194,13 @@ async function loadFor(email) {
     appEl.style.display = 'block';
     state.data = data;
     await actividadesP;
+    // Ranking de Inglés: el perfil solo se pide si /ingles/actividades dice que está encendido (openspec: rpg-fase2-ingles).
+    if (!data.isAdmin && state.act && state.act.ranking) await cargarPerfilGamificacion(); else { state.gam = null; state.rk = null; }
+    if (!data.isAdmin) await cargarMisionesIngles(); // solo pide /misiones si hay alguna visible (openspec: rpg-ingles-hero-card)
     if (data.isAdmin) { state.resumen = null; await Promise.all([loadJuegosAdmin(), loadAlumnosAdmin(), loadGruposAdmin()]); }
     render(data);
     if (data.isAdmin) cargarResumen(); // idempotente; el cajón también lo usa
+    else cargarRankingIngles();
     if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) { m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; } state.altaAviso = null; }
   } catch (e) {
     if (appEl.style.display === 'none') mostrarEntrada('⚠️ ' + e.message);

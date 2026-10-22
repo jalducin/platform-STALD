@@ -16,9 +16,14 @@ if (MODO_SECUNDARIA) {
 const SEC_TABS = [
   { id: 'inicio', hash: 'inicio', titulo: '🏠 Inicio', corto: 'Inicio', emoji: '🏠' },
   { id: 'clases', hash: 'semana', titulo: '📅 Esta semana', corto: 'Semana', emoji: '📅' },
+  // Misiones principales, mapa y árbol (openspec: rpg-fase2-misiones; ingles/secundaria-misiones.js).
+  { id: 'misiones', hash: 'misiones', titulo: '⚔️ Misiones', corto: 'Misiones', emoji: '⚔️' },
+  { id: 'mapa', hash: 'mapa', titulo: '🗺️ Mapa', corto: 'Mapa', emoji: '🗺️' },
+  { id: 'arbol', hash: 'arbol', titulo: '🌳 Árbol', corto: 'Árbol', emoji: '🌳' },
   { id: 'horario', hash: 'horario', titulo: '🗓️ Mi horario', corto: 'Horario', emoji: '🗓️' },
   { id: 'materias', hash: 'materias', titulo: '📚 Mis materias', corto: 'Materias', emoji: '📚' },
   { id: 'resultados', hash: 'resultados', titulo: '📝 Resultados', corto: 'Notas', emoji: '📝', soloAdmin: true },
+  { id: 'entregas', hash: 'entregas', titulo: '📥 Entregas', corto: 'Entregas', emoji: '📥', soloAdmin: true },
 ];
 const tabDeHash = h => { const t = SEC_TABS.find(x => x.hash === h || x.id === h); return t ? t.id : null; };
 
@@ -27,7 +32,8 @@ async function loadSecundaria(email) {
   const q = StaldAuth.email() ? '' : '?email=' + encodeURIComponent(email);
   const pedida = new URLSearchParams(location.search).get('alumna');
   // Nombre para el saludo (/perfil) en paralelo; si falla, el saludo va sin nombre.
-  const [r, perfil] = await Promise.all([fetchJson(ACT_URL + q), fetchJson(API_BASE + '/perfil' + q).catch(() => null)]);
+  // Misiones (openspec: rpg-fase2-misiones) en paralelo; si fallan, el resto del tablero sigue igual.
+  const [r, perfil] = await Promise.all([fetchJson(ACT_URL + q), fetchJson(API_BASE + '/perfil' + q).catch(() => null), cargarMisionesSec(q, null)]);
   if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, r.body)) return; // sesionVencida ya pintó la entrada
   loginEl.style.display = 'none'; appEl.style.display = 'block';
   if (!r.ok) {
@@ -45,9 +51,9 @@ async function loadSecundaria(email) {
     const alumnas = act.alumnas || [];
     const elegida = alumnas.find(a => a.slug === pedida) || alumnas[0];
     if (elegida) {
-      const v = await fetchJson(ACT_URL + (q ? q + '&' : '?') + 'alumna=' + encodeURIComponent(elegida.slug));
+      const [v] = await Promise.all([fetchJson(ACT_URL + (q ? q + '&' : '?') + 'alumna=' + encodeURIComponent(elegida.slug)), cargarMisionesSec(q, elegida.slug), cargarBandejaSec()]);
       act = v.ok ? v.body : { ...act, errorAlumna: v.body.error || v.status };
-    }
+    } else await cargarBandejaSec();
   }
   // Pestaña inicial: la del hash; si recarga dentro de una clase (#ver/<id>), «📅 Esta semana», donde está su lista.
   if (!state.secTab) state.secTab = tabDeHash(decodeURIComponent(location.hash.slice(1))) || (location.hash.startsWith('#ver/') ? 'clases' : 'inicio');
@@ -110,7 +116,7 @@ function renderSecundaria(act) {
   // Admin sin alumnas de Secundaria (o sin su vista): solo los resultados por clase.
   if (act && act.isAdmin && !act.vistaDe) {
     const aviso = act.errorAlumna ? '<div class="exam-card"><div class="pf-ok">No se pudo cargar el tablero de la alumna (' + escapeHtml(act.errorAlumna) + ').</div></div>' : '';
-    return aviso + renderSecundariaAdmin(((state.secLista || act).items) || []);
+    return aviso + renderSecundariaAdmin(((state.secLista || act).items) || []) + '<h2 class="sec-subtitulo">📥 Entregas de misiones</h2><div id="sec-entregas">' + renderSecEntregas() + '</div>';
   }
   if (!items.length && !(act && act.isAdmin)) return vacio('📚', 'No tienes clases por ahora. ¡Aquí aparecerán cuando el profe las publique!');
   const hoy = act.hoy || fmtDate(new Date());
@@ -120,6 +126,10 @@ function renderSecundaria(act) {
   const cuerpo = {
     inicio: () => renderSecInicio(act, { hoy, nombre: admin ? act.vistaDe.nombre : state.secNombre, admin }),
     clases: () => panelSemana(items, hoy),
+    misiones: () => renderSecMisiones(hoy, admin),
+    mapa: () => renderSecMapa(items, hoy),
+    arbol: () => renderSecArbol(items, hoy),
+    entregas: () => renderSecEntregas(),
     horario: () => panelHorario(items, hoy),
     materias: () => renderSecMaterias(items, hoy),
     resultados: () => renderSecundariaAdmin(((state.secLista || {}).items) || []),

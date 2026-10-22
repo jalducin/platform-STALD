@@ -101,7 +101,8 @@ de resultado SHALL mostrar la calificación, la retroalimentación por tema, la 
 «Siguiente misión» (la siguiente sin completar por fecha; si no hay, «Mis misiones»). En Secundaria la clase SHALL
 llamarse «Misión» y la vista SHALL mostrar el mundo de su materia; el resultado SHALL mostrar «+N XP», el nivel y la
 insignia desbloqueada, si la hay, calculados SOLO con `comun/gamificacion.js` (sin duplicar fórmulas). Botones de al
-menos 44 px, foco visible, claro y oscuro, sin scroll horizontal a 360 px. Inglés no cambia.
+menos 44 px, foco visible, claro y oscuro, sin scroll horizontal a 360 px. La vista de alumnos y alumnas de Inglés
+usa la misma clase por pasos (cambio `ingles-alumno-diseno-rpg`); el admin y la ruta del profe no cambian.
 
 #### Scenario: Pasos de la clase
 - **WHEN** la alumna abre una clase con teoría, 2 videos de YouTube, ejercicios y libreta
@@ -117,9 +118,9 @@ menos 44 px, foco visible, claro y oscuro, sin scroll horizontal a 360 px. Ingl�
 - **THEN** ve «¡Misión cumplida!», su calificación, la retroalimentación por tema, «+N XP» y su nivel, y «Siguiente
   misión», que abre la siguiente sin completar por fecha
 
-#### Scenario: Inglés sin cambios
+#### Scenario: Inglés por pasos
 - **WHEN** un alumno de Inglés abre una actividad
-- **THEN** la ve como antes, sin pasos ni reproductores incrustados
+- **THEN** la ve por pasos, con la etiqueta de su tipo (no «Misión») y el mundo de Inglés; el admin la ve como antes
 
 ## MODIFIED Requirements
 

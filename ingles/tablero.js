@@ -8,7 +8,7 @@ function renderAdmin(data) {
   const items = (state.act && state.act.items) || [];
   const resumen = (state.act && state.act.resumen) || {};
   const diag = items.find(i => i.id === 'diagnostico-a1');
-  const names = [...new Set(rows.filter(r => r.source === 'registro' && r.alumno).map(r => r.alumno))].sort((a, b) => a.localeCompare(b, 'es')).filter(n => !state.grupoFiltro || (grupoDeNombre(n) || {}).id === state.grupoFiltro);
+  const names = [...new Set(rows.filter(r => r.source === 'registro' && r.alumno).map(r => r.alumno))].sort((a, b) => a.localeCompare(b, 'es')).filter(n => !ocultoEnPanel(n) && (!state.grupoFiltro || (grupoDeNombre(n) || {}).id === state.grupoFiltro));
   const bloques = names.map(name => {
     const filas = itemRowsAdmin(items, name);
     const g = buildGroups(filas);
@@ -46,7 +46,9 @@ function renderAdmin(data) {
     seccionHtml('admin', 'resultados', renderUltimasAdmin(names, items)) +
     seccionHtml('admin', 'material', renderMaterial()) +
     seccionHtml('admin', 'presentar', renderPresentar()) +
-    seccionHtml('admin', 'juegos', renderJuegosAdmin() + '<a class="btn ghost" href="' + escapeHtml(conApiParam('juegos.html')) + '">🎮 Abrir Juegos</a>');
+    seccionHtml('admin', 'juegos', renderJuegosAdmin() + '<a class="btn ghost" href="' + escapeHtml(conApiParam('juegos.html')) + '">🎮 Abrir Juegos</a>') +
+    seccionHtml('admin', 'nicks', '<div id="nicks-admin" aria-live="polite">' + renderNicksAdmin() + '</div>') +
+    seccionHtml('admin', 'entregas', seccionEntregasIngles());
 }
 
 // Clases por Meet: la de esta semana y las anteriores, para presentarlas a grupos nuevos (openspec: presentar-anteriores).
@@ -160,10 +162,11 @@ contentEl.addEventListener('click', e => {
 
 // ---------- Indicadores y mapa de calor ----------
 async function cargarResumen() {
-  const clave = state.grupoFiltro || '';
+  const clave = (state.grupoFiltro || '') + (state.mostrarOcultos ? '|ocultos' : '');
   if (state.cargandoResumen === clave) return;
   state.cargandoResumen = clave;
-  const q = clave ? '&grupo=' + encodeURIComponent(clave) : '';
+  // Grupos ocultos del panel (openspec: ingles-ocultar-grupos): el servidor los deja fuera salvo con ocultos=1.
+  const q = (state.grupoFiltro ? '&grupo=' + encodeURIComponent(state.grupoFiltro) : '') + (state.mostrarOcultos ? '&ocultos=1' : '');
   let r;
   try { r = await api(API_BASE + '/ingles/resumen?email=' + encodeURIComponent(state.email) + q); } catch (e) { r = { ok: false, body: { error: e.message } }; }
   if (state.cargandoResumen !== clave) return; // llegó otra petición después (cambio de grupo)
@@ -195,7 +198,7 @@ function renderTablero() {
   let tonoATiempo = '';
   if (k.aTiempo !== null && k.aTiempo >= 80) tonoATiempo = 'ok';
   else if (k.aTiempo !== null) tonoATiempo = k.aTiempo >= 60 ? 'warn' : 'bad';
-  const cab = '<p class="muted" style="margin:0 0 10px">' + (r.grupo ? chipGrupo(r.grupo) + ' · ' : '👥 Todos los grupos · ') + (r.semana ? '📚 ' + escapeHtml(r.semana.titulo) : 'Sin semana activa') + '</p>';
+  const cab = '<p class="muted" style="margin:0 0 10px">' + (r.grupo ? chipGrupo(r.grupo) + ' · ' : '👥 Todos los grupos · ') + (r.semana ? '📚 ' + escapeHtml(r.semana.titulo) : 'Sin semana activa') + (r.ocultos ? ' · 🙈 ' + r.ocultos + ' en grupos ocultos' : '') + '</p>';
   const kpis = '<div class="kpis" id="kpis">' +
     kpi(tonoATiempo, k.aTiempo === null ? '—' : k.aTiempo + '%', '✅ A tiempo') +
     kpi('', k.promedio === null ? '—' : k.promedio + '%', '📊 Promedio') +

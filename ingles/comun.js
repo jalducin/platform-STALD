@@ -42,6 +42,9 @@ const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
 const SECCIONES = [
   { id: 'inicio', emoji: '🏠', titulo: 'Inicio', rol: 'alumno' },
   { id: 'semana', emoji: '📅', titulo: 'Semana', encabezado: 'Mi semana', rol: 'alumno' },
+  // Misión principal con el motor de Secundaria (openspec: rpg-ingles-hero-card). Fuera de la barra (6 pestañas caben a
+  // 360 px): se llega desde la tarjeta «⚔️ Misión principal del mundo» de Inicio (#misiones).
+  { id: 'misiones', emoji: '⚔️', titulo: 'Misiones', encabezado: 'Mis misiones', rol: 'alumno', fueraDeBarra: true },
   // Guías en PDF siempre disponibles, sin fechas (openspec: ingles-material-estudio).
   { id: 'material', emoji: '📚', titulo: 'Material', encabezado: 'Material de estudio', rol: 'alumno' },
   { id: 'resultados', emoji: '⭐', titulo: 'Resultados', encabezado: 'Mis resultados', rol: 'alumno' },
@@ -58,6 +61,10 @@ const SECCIONES = [
   { id: 'presentar', emoji: '🎬', titulo: 'Presentar', encabezado: 'Presentar la clase', rol: 'admin' },
   { id: 'ruta', emoji: '🎓', titulo: 'Mi ruta', rol: 'admin', href: 'ingles.html?modo=profe' },
   { id: 'juegos', emoji: '🎮', titulo: 'Juegos', encabezado: 'Juegos de la semana', rol: 'admin' },
+  // Moderación de nicks e interruptor del ranking de Inglés (openspec: rpg-fase2-ingles).
+  { id: 'nicks', emoji: '🛡️', titulo: 'Nicks', encabezado: 'Nicks y ranking', rol: 'admin' },
+  // Bandeja de entregas de misiones de Inglés y Secundaria (openspec: rpg-ingles-hero-card).
+  { id: 'entregas', emoji: '📥', titulo: 'Entregas', encabezado: 'Entregas de misiones', rol: 'admin' },
   { id: 'salir', emoji: '🚪', titulo: 'Salir', rol: 'admin', accion: 'salir' },
 ];
 const seccionesDe = rol => SECCIONES.filter(s => s.rol === rol);
@@ -354,7 +361,8 @@ function renderAdminWeek(act) {
   const lista = semanaItems(act);
   if (!lista.length) return '';
   return '<div class="exam-card"><h3>📚 Esta semana · ' + escapeHtml(act.semana.titulo) + '</h3>' + lista.map(it => {
-    const n = (it.resultados || []).length;
+    // Sin alumnos y alumnas de grupos ocultos del panel (openspec: ingles-ocultar-grupos; ocultoEnPanel en admin.js).
+    const n = (it.resultados || []).filter(r => typeof ocultoEnPanel !== 'function' || !ocultoEnPanel(r.alumno)).length;
     const enlace = it.meetUrl ? ' · con enlace' : ' · sin enlace (meetUrl)';
     const sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + (it.tipo === 'meet' ? enlace : ' · ' + n + ' con intentos');
     let btn = it.tipo === 'meet' ? '' : '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Vista previa</button>';

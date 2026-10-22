@@ -45,8 +45,11 @@ async function enviar(id, bien) {
   ok('API: racha de 1 día con envío hoy', act.racha && act.racha.dias === 1 && act.racha.hoy, JSON.stringify(act.racha));
   const items = act.items;
   // Lo esperado, con las reglas puras sobre lo que devuelve la API ahora.
-  const nivel = G.nivelDe(G.xpTotal(items, { hoy: HOY }));
-  const insignias = G.insigniasDe({ items, hoy: HOY, racha: act.racha }).map(i => i.id);
+  // XP de clases + misiones principales evaluadas (openspec: rpg-fase2-misiones; la E2E de misiones puede evaluar una).
+  const mis = await fetch(`${API}/misiones${q(ALUMNA)}`).then(x => x.json());
+  const nivel = G.nivelDe(G.xpTotalConMisiones(items, mis.misiones || [], { hoy: HOY }));
+  const insignias = [...G.insigniasDe({ items, hoy: HOY, racha: act.racha }), ...G.insigniasRpgDe({ items, misiones: mis.misiones || [], hoy: HOY, catalogo: mis.mundos })].map(i => i.id);
+  const totalInsignias = G.INSIGNIAS.length + G.INSIGNIAS_RPG.length;
   const deHoy = SD.clasesDeHoy(items, HOY);
   const hechasHoy = deHoy.filter(G.estaHecha).length;
   const prog = SD.progresoSemana(items, HOY);
@@ -75,7 +78,7 @@ async function enviar(id, bien) {
     ok(`RPG: Nivel ${nivel.nivel} · ${nivel.rango} con ${nivel.xpNivel} / 300 XP` + sufijo, (await texto(p, '#rpg-rango')) === `Nivel ${nivel.nivel} · ${nivel.rango}` && (await texto(p, '#rpg-xp')) === `${nivel.xpNivel} / 300`, (await texto(p, '#rpg-rango')) + ' | ' + (await texto(p, '#rpg-xp')));
     ok('RPG: barra de XP accesible (progressbar)' + sufijo, (await p.getAttribute('.rpg-xp-barra', 'aria-valuenow')) === String(nivel.xpNivel));
     const ganadas = await p.$$eval('[data-insignia].ganada', xs => xs.map(x => x.dataset.insignia));
-    ok('RPG: insignias ganadas (al menos Primera misión y 100 %)' + sufijo, ganadas.join() === insignias.join() && ganadas.includes('primera-mision') && ganadas.includes('perfecto') && (await texto(p, '#rpg-insignias')).includes(insignias.length + ' / 7'), ganadas.join());
+    ok('RPG: insignias ganadas (al menos Primera misión y 100 %)' + sufijo, ganadas.join() === insignias.join() && ganadas.includes('primera-mision') && ganadas.includes('perfecto') && (await texto(p, '#rpg-insignias')).includes(insignias.length + ' / ' + totalInsignias), ganadas.join());
     ok('RPG: racha 1 día en la barra' + sufijo, (await texto(p, '#rpg-racha')).includes('1 día'));
     ok('RPG: misión principal = Ciencias · La célula con «Empezar»' + sufijo, (await texto(p, '#rpg-mision')).includes('Misión principal activa') && (await texto(p, '#rpg-mision .rpg-mision-t')) === 'La célula' && (await texto(p, '#rpg-mision-btn')).startsWith('Empezar'), await texto(p, '#rpg-mision'));
     ok('RPG: la misión dice su mundo (Selva de la Vida)' + sufijo, (await texto(p, '#rpg-mision .rpg-mision-d')).includes('Selva de la Vida'));

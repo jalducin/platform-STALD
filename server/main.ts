@@ -14,15 +14,19 @@ import { type FilaSecundaria, filasSecundaria as armarFilasSecundaria, identidad
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
-import { crearLectorInterruptores } from "./interruptores.ts";
+import { crearLectorInterruptores, escribirInterruptor } from "./interruptores.ts";
 import { ahoraIso, mxToday, slugAlumno } from "./motor.ts";
-import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
+import { grupoDe, grupoInfo, grupoOcultoAdmin, handleGrupos } from "./grupos.ts";
 import { configPublica, generarEnlace, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, type Quien, quienEs } from "./auth.ts";
 import { handleRegistroJuegos } from "./registro.ts";
 import type { Cuenta } from "./jugadores.ts";
 import { handleResumen } from "./resumen.ts";
 import { crearMemo, unaALaVez } from "./cache.ts";
 import { aplicarCacheHttp, politicaCache } from "./http_cache.ts";
+import { type DepsGamificacion, handleGamificacion, handleProfeGamificacion, rankingVisible } from "./gamificacion.ts";
+import { type DepsMisiones, handleMisiones, hayMisionesVisibles, pasosEntregados, handlePractica, handleProfeEntregas, type PersonaMision } from "./misiones.ts";
+import { alumnasSecundaria } from "./secundaria_registro.ts";
+import { aplicarRetencion, CRON_RETENCION } from "./retencion_entregas.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
@@ -212,7 +216,8 @@ async function getStore(): Promise<Store> {
 
 // Interruptores públicos (openspec: rpg-privacidad): `config/interruptores.json` en stald_docs (o en el almacén sin
 // Postgres), con caché de 60 s y falla cerrada (todo apagado).
-const leerInterruptores = crearLectorInterruptores({ db, store: baseStore });
+const depsInterruptores = { db, store: baseStore };
+const leerInterruptores = crearLectorInterruptores(depsInterruptores);
 
 // Caché HTTP por ruta (openspec: cache-estabilidad, server/http_cache.ts): /config se puede guardar y el ranking
 // responde 304 si no cambió; lo demás sigue no-store.
@@ -317,6 +322,7 @@ async function rutaAlumnos(req: Request, sub: string, email: string, admin: stri
 // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada).
 // /ingles/grupos/baja | /reactivar → baja de Inglés reversible (solo admin, server/alumnos.ts; también sin la base).
 // /ingles/grupos/secundaria → acceso a Secundaria sí/no (solo admin, openspec: secundaria-sin-notion).
+// /ingles/grupos/ocultar → grupo oculto del panel del admin sí/no (solo admin, openspec: ingles-ocultar-grupos).
 async function rutaGrupos(req: Request, sub: string, email: string, admin: string): Promise<Response> {
   if (sub === "/secundaria") return await handleSecundariaAlumno(req, { email, admin, store: await getStore(), hoy: () => mxToday(), slugPrevio: slugPrevioSecundaria }, json);
   if (sub === "/baja" || sub === "/reactivar") return await handleBajaIngles(req, sub, { email, admin, store: await getStore(), hoy: () => mxToday() }, json);
@@ -326,7 +332,7 @@ async function rutaGrupos(req: Request, sub: string, email: string, admin: strin
   return await handleGrupos(req, sub, { email, admin, db: db!, hoy: () => mxToday(), bajas }, json);
 }
 
-// GET /ingles/resumen?grupo=<id> → tablero del profe: indicadores y mapa de calor (solo admin, server/resumen.ts,
+// GET /ingles/resumen?grupo=<id>[&ocultos=1] → tablero del profe: indicadores y mapa de calor (solo admin, server/resumen.ts,
 // openspec: ingles-pro). La racha del alumno o alumna va dentro de /ingles/actividades (sin ruta aparte).
 async function rutaResumen(req: Request, email: string, admin: string): Promise<Response> {
   const store = await getStore();
@@ -338,7 +344,10 @@ async function rutaResumen(req: Request, email: string, admin: string): Promise<
       const nombres = [...new Set((await filasInglesActivas()).map((r) => r.alumno).filter((n): n is string => !!n))];
       return nombres.map((nombre) => ({ nombre, ...(inicioDe(registro, nombre) ? { inicio: inicioDe(registro, nombre) } : {}) }));
     },
-    ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()), grupoInfo: (id: string) => grupoInfo(db!, id) } : {}),
+    ...(conGrupos ? {
+      grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()), grupoInfo: (id: string) => grupoInfo(db!, id),
+      ocultoAdmin: (id: string | null) => grupoOcultoAdmin(db!, id), // openspec: ingles-ocultar-grupos
+    } : {}),
   }, json);
 }
 
@@ -354,7 +363,12 @@ async function rutaActividades(req: Request, sub: string, email: string, admin: 
   // Grupo vigente (openspec: ingles-grupos): filtra el calendario y da horario y Meet a la página.
   const grupo = alumno && await inglesEnPg() ? await grupoDe(db!, slugAlumno(alumno), mxToday()) : null;
   const info = grupo ? await grupoInfo(db!, grupo) : null;
-  const quien = { isAdmin, alumno, ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
+  const ranking = !isAdmin && !!alumno && await rankingVisible({ store, interruptores: leerInterruptores }, grupo); // openspec: rpg-fase2-ingles
+  // Misiones (openspec: rpg-ingles-hero-card): la misma identidad que /misiones; si también está en Secundaria, /misiones
+  // le da las de Secundaria, así que aquí no se avisa (las ve en su página de Secundaria).
+  const persona = !isAdmin && !!alumno ? await personaMision(email, admin) : null;
+  const misiones = persona?.tipo === "ingles" && await hayMisionesVisibles({ store, hoy: () => mxToday() }, persona);
+  const quien = { isAdmin, alumno, ...(ranking ? { ranking } : {}), ...(misiones ? { misiones } : {}), ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
   return await handleActividades(req, sub, quien, store, json);
 }
 
@@ -382,6 +396,57 @@ async function rutaData(url: URL, email: string, admin: string): Promise<Respons
   const baja = deIngles && !isAdmin && !rows.length && await deBajaIngles(email, admin);
   return json({ rows, isAdmin, ...(baja ? { baja: true } : {}), generatedAt: new Date().toISOString() });
 }
+
+// /gamificacion/… y /profe/nicks|ranking → nick público, ranking por grupo de Inglés y su moderación
+// (openspec: rpg-fase2-ingles; interruptor `ranking` en config/interruptores.json, apagado por defecto).
+async function depsGamificacion(email: string, admin: string): Promise<DepsGamificacion> {
+  const store = await getStore();
+  const conGrupos = await inglesEnPg();
+  return {
+    email, admin, store,
+    registro: () => leerRegistro(store),
+    esSecundaria: async (correo) => (await filasSecundaria()).some((f) => f.userEmails.includes(correo)),
+    ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()) } : {}),
+    items: async (hoy) => (await visibleItems(store, hoy)).items,
+    interruptores: leerInterruptores,
+    pasosMision: (slug) => pasosEntregados(store, "ingles", slug), // 20 puntos por paso (openspec: rpg-ingles-hero-card)
+    cambiarRankingGeneral: async (valor) => { await escribirInterruptor(depsInterruptores, "ranking", valor); leerInterruptores.olvidar(); },
+    hoy: () => mxToday(), ahora: ahoraIso,
+  };
+}
+// Misiones principales (openspec: rpg-fase2-misiones). Quién pide, sin correo: admin, alumna de Secundaria, alumno
+// activo de Inglés (con su grupo), de baja de Inglés o sin acceso (invitado de Juegos o correo no asignado).
+async function personaMision(email: string, admin: string): Promise<PersonaMision> {
+  if (!email) return { tipo: "sin_acceso" };
+  if (admin && email === admin) return { tipo: "admin" };
+  const sec = identidadSecundaria(await filasSecundaria(), email);
+  if (sec) return { tipo: "secundaria", slug: sec.slug, nombre: sec.nombre };
+  const activo = filterForEmail(await filasInglesActivas(), email, admin).rows.find((r) => r.alumno)?.alumno;
+  if (activo) {
+    const slug = slugAlumno(activo);
+    const grupo = await inglesEnPg() ? await grupoDe(db!, slug, mxToday()) : null;
+    return { tipo: "ingles", slug, nombre: activo.split(/\s+/)[0], grupo };
+  }
+  const registrado = filterForEmail(await filasIngles(), email, admin).rows.find((r) => r.alumno)?.alumno;
+  if (registrado && await deBajaIngles(email, admin)) return { tipo: "baja", slug: slugAlumno(registrado) };
+  return { tipo: "sin_acceso" };
+}
+async function depsMisiones(email: string, admin: string): Promise<DepsMisiones> {
+  return {
+    store: await getStore(), hoy: () => mxToday(), ahora: ahoraIso,
+    persona: () => personaMision(email, admin),
+    alumnasSecundaria: async () => alumnasSecundaria(await filasSecundaria()),
+    nombreDe: async (slug, ambito) => {
+      if (ambito === "secundaria") return (alumnasSecundaria(await filasSecundaria()).find((a) => a.slug === slug)?.nombre ?? null)?.split(/\s+/)[0] ?? null;
+      const nombre = Object.values(await leerRegistro(await getStore())).map((a) => a.nombre).find((n) => slugAlumno(n) === slug);
+      return nombre ? nombre.split(/\s+/)[0] : null;
+    },
+    // Las entregas viven en Postgres (stald_docs); sin la base migrada no se guardan en el repo de contenido.
+    puedeGuardar: async () => !!env("DATA_DIR") || await inglesEnPg(),
+  };
+}
+const RUTA_MISIONES = /\/misiones(\/.*)?$/;
+const RUTA_PROFE_ENTREGAS = /\/profe\/entregas(\/.*)?$/;
 
 // Rutas con identidad ya resuelta (o sin identidad: registro, salud y contraseña), en orden de evaluación.
 async function rutear(req: Request, url: URL, quien: Quien, email: string, admin: string): Promise<Response> {
@@ -419,7 +484,22 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
   const idx = url.pathname.indexOf("/ingles/actividades");
   if (idx !== -1) return await rutaActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), email, admin);
 
+  const iGam = url.pathname.indexOf("/gamificacion/");
+  if (iGam !== -1) return await handleGamificacion(req, url.pathname.slice(iGam + "/gamificacion".length), await depsGamificacion(email, admin), json);
+  const iPg = url.pathname.search(/\/profe\/(nicks|ranking)(\/|$)/);
+  if (iPg !== -1) return await handleProfeGamificacion(req, url.pathname.slice(iPg + "/profe".length), await depsGamificacion(email, admin), json);
+
   if (url.pathname.endsWith("/perfil")) return await rutaPerfil(email, admin);
+
+  // /misiones, /profe/entregas y /practica/comprobar (openspec: rpg-fase2-misiones). Antes de /juegos/, que tiene
+  // sus propias misiones (Dragon Run) bajo /juegos/….
+  if (!url.pathname.includes("/juegos/")) {
+    const mPe = url.pathname.match(RUTA_PROFE_ENTREGAS);
+    if (mPe) return await handleProfeEntregas(req, mPe[1] || "", await depsMisiones(email, admin), json);
+    const mMi = url.pathname.match(RUTA_MISIONES);
+    if (mMi) return await handleMisiones(req, mMi[1] || "", await depsMisiones(email, admin), json);
+    if (url.pathname.endsWith("/practica/comprobar")) return await handlePractica(req, await depsMisiones(email, admin), json);
+  }
 
   // /juegos/… → partidas, ranking e invitados (server/juegos.ts)
   const iJuegos = url.pathname.indexOf("/juegos/");
@@ -433,3 +513,12 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
 }
 
 if (import.meta.main) Deno.serve({ port: Number(env("PORT")) || 8000 }, handler);
+
+// Retención de entregas (openspec: rpg-fase2-misiones): cada 31 de agosto se borra el texto de las entregas y queda la
+// evaluación. Solo en Deno Deploy (Deno.cron) y con Postgres; en local y en pruebas no se programa.
+if (import.meta.main && db && !env("DATA_DIR") && !env("ROWS_FIXTURE") && typeof Deno.cron === "function") {
+  Deno.cron("retencion-entregas", CRON_RETENCION, async () => {
+    const r = await aplicarRetencion(db, new Date().toISOString(), true);
+    console.log(`retención de entregas: ${r.revisadas} revisadas, ${r.borradas} sin contenido, ${r.pendientes.length} pendientes`);
+  });
+}
