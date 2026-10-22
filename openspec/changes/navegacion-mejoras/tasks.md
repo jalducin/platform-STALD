@@ -17,10 +17,10 @@
 
 ## 2. PR 2 · Entregas en la barra del profe
 
-- [ ] 2.1 `barra: true` en `entregas` (`ingles/comun.js`), `pintarNav()` en el orden del catálogo y contador
+- [x] 2.1 `barra: true` en `entregas` (`ingles/comun.js`), `pintarNav()` en el orden del catálogo y contador
   `data-contador-entregas` repintado al llegar la bandeja (`ingles/app.js`, `ingles/secundaria-misiones.js`,
-  `ingles/ingles.css`, `estilos/stald.css`); `?v=`
-- [ ] 2.2 E2E: `ingles-admin` (Entregas en la barra a 360 px, contador = `pendientes`, sin scroll horizontal) y
+  `ingles/ingles.css`); `?v=`
+- [x] 2.2 E2E: `ingles-admin` (Entregas en la barra a 360 px, contador = `pendientes`, sin scroll horizontal) y
   `navegacion-dispositivos` (tope de «profe-grupos» 7 → 6; también en el spec de `navegacion-dispositivos`)
 
 ## 3. PR 3 · Secundaria: barra inferior en celular y pestañas en una fila

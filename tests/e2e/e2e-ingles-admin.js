@@ -7,6 +7,9 @@
 //    sale del tablero; «Mostrar grupos ocultos (N)» → vuelve con «Mostrar en el panel»; tocarlo → queda visible otra
 //    vez. La bandera se restaura al final (también si algo falla).
 // 4. Si /ingles/resumen falla (simulado en el navegador), el aviso trae «🔄 Reintentar» y las tarjetas siguen.
+// 5. Celular (360 px, openspec: navegacion-mejoras): «📥 Entregas» en la barra inferior (6 botones, sin scroll horizontal,
+//    44 px o más) con el contador de entregas listas = `pendientes` de la bandeja; un toque abre la bandeja. En PC el
+//    menú lateral conserva el orden del catálogo.
 require('./lib/entorno'); // BASE, API, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina, urlDe } = require('./lib/navegador');
@@ -101,6 +104,42 @@ const esperarResumen = p => p.waitForFunction(() => document.getElementById('kpi
     await p.click('[data-action="reintentar-resumen"]');
     await p.waitForSelector('#kpis', { timeout: 60000 });
     ok('«🔄 Reintentar» carga el resumen', !(await p.$('#resumen-error')));
+
+    // 5. Celular: «📥 Entregas» en la barra con su contador
+    const bandeja = await api('/profe/entregas');
+    const pend = bandeja.status === 200 ? bandeja.body.pendientes : null;
+    const c = await abrirPagina(b, { email: ADMIN, viejo: true, ingles: true, viewport: { width: 360, height: 740 }, contexto: { hasTouch: true, isMobile: true } });
+    await c.goto(urlDe('/ingles.html#resumen'));
+    await c.waitForSelector('#panel-profe', { timeout: 60000 });
+    const barra = await c.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).map(x => ({ id: x.dataset.nav || x.dataset.navAccion, w: Math.round(x.getBoundingClientRect().width), h: Math.round(x.getBoundingClientRect().height) })));
+    ok('celular: barra con Resumen, Alumnos, Semana, Resultados, 📥 Entregas y ☰ Más (44 px o más)', barra.map(x => x.id).join() === 'resumen,alumnos,semana,resultados,entregas,mas' && barra.every(x => x.w >= 44 && x.h >= 44), JSON.stringify(barra));
+    ok('celular: la barra no causa scroll horizontal a 360 px', await c.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    if (pend !== null) {
+      // La bandeja la pide el panel en paralelo: el contador aparece cuando llega (sin peticiones nuevas).
+      await c.waitForFunction(() => typeof state !== 'undefined' && !!state.secBandeja, null, { timeout: 30000 }).catch(() => {});
+      const txt = await c.textContent('#nav [data-nav="entregas"] [data-contador-entregas]').catch(() => '');
+      ok(`celular: contador de Entregas = ${pend} listas para evaluar (API)`, pend ? txt === String(Math.min(pend, 99)) + (pend > 99 ? '+' : '') : !(await c.$('#nav [data-contador-entregas]')), txt || 'sin contador');
+    }
+    await c.tap('#nav [data-nav="entregas"]');
+    await c.waitForSelector('[data-seccion="entregas"]:not([hidden]) #sec-entregas .ent-card, [data-seccion="entregas"]:not([hidden]) #sec-entregas .vacio', { timeout: 30000 });
+    ok('celular: un toque en la barra abre 📥 Entregas', new URL(c.url()).hash === '#entregas');
+    await c.context().close();
+    // Bandeja simulada en el navegador (no escribe nada): 2 listas → «2» y «Entregas, 2 por revisar»; caída → sin contador.
+    for (const [nombre, resp] of [['2 listas', { status: 200, body: { entregas: [], pendientes: 2 } }], ['caída', { status: 500, body: { error: 'upstream_error' } }]]) {
+      const s = await abrirPagina(b, { email: ADMIN, viejo: true, ingles: true, viewport: { width: 360, height: 740 }, contexto: { hasTouch: true, isMobile: true } });
+      await s.route(/\/profe\/entregas(\?|$)/, r => (r.request().method() === 'GET' ? r.fulfill({ status: resp.status, contentType: 'application/json', body: JSON.stringify(resp.body) }) : r.continue()));
+      await s.goto(urlDe('/ingles.html#resumen'));
+      await s.waitForFunction(() => typeof state !== 'undefined' && !!state.secBandeja, null, { timeout: 30000 }).catch(() => {});
+      const n = await s.textContent('#nav [data-nav="entregas"] [data-contador-entregas]').catch(() => null);
+      const nombreAcc = await s.$eval('#nav [data-nav="entregas"]', a => a.textContent.replace(/\s+/g, ' ').replace(/📥/u, '').trim()).catch(() => '');
+      if (resp.status === 200) ok('celular: bandeja con 2 listas → contador «2» y «Entregas, 2 por revisar»', n === '2' && /Entregas, 2 por revisar/.test(nombreAcc), (n || '') + ' | ' + nombreAcc);
+      else ok('celular: bandeja caída → «📥 Entregas» sin contador', n === null && /Entregas/.test(nombreAcc), nombreAcc);
+      await s.context().close();
+    }
+    const pc = await abrirPagina(b, { email: ADMIN, viejo: true, ingles: true, viewport: { width: 1280, height: 800 }, ruta: '/ingles.html#resumen', esperar: '#panel-profe' });
+    const menu = await pc.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).map(x => x.dataset.nav || x.dataset.navAccion).join());
+    ok('PC: el menú lateral conserva el orden del catálogo (Entregas antes de Salir)', menu === 'resumen,grupos,alumnos,registro,semana,resultados,material,presentar,ruta,juegos,nicks,entregas,salir', menu);
+    await pc.context().close();
   } finally {
     if (g1) {
       const r = await api('/ingles/grupos/ocultar', { grupo: g1.id, oculto: original }); // restaura la bandera original
