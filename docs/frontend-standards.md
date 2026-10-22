@@ -1068,7 +1068,8 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `--warn`, `--bad` y sus `-soft`; radios 12/18/24; sombras en 2 niveles; espacio de 4 px) y componentes
     (`.card`, `.btn`, `.chip`, `.tabs`, `.anillo`, `.barra`, `.tabla`, `.kpis`, `dialog.cajon`, `.esqueleto`, `.vacio`,
     `.nav-item` y `.nav-barra`);
-  - `ingles/ingles.css`: estilos propios de Inglés (incluida la presentación del Meet);
+  - `ingles/ingles.css`: estilos propios de Inglés; `ingles/presentacion.css`: modo presentación del Meet (cambio
+    `presentacion-cabe`, ver «Modo presentación» abajo);
   - scripts clásicos con `defer`, en este orden: `comun.js` (configuración, `SECCIONES`, `api()`, formato y
     componentes), `material.js` (material de estudio), `reproductor.js`, `presentacion.js`, `admin.js` (grupos, registro de alumnos y alumnas, juegos; el registro va en su propia opción «➕ Registro», separado del avance en «Alumnos»; ahí cada persona activa tiene «🚪 Baja de Inglés» con `confirm` que avisa que sus resultados se conservan como historial, y «🗂️ De baja de Inglés» lista las bajas con «↩️ Reactivar»; los conteos de la lista y de los grupos son solo de activos, cambio `ingles-baja-alumno`; en «👥 Grupos» cada grupo tiene «👁️ Ocultar del panel» / «Mostrar en el panel» y, si hay grupos ocultos, la barra del selector muestra el interruptor «Mostrar grupos ocultos (N)»; `ocultoEnPanel(nombre)` deja fuera a sus alumnos y alumnas del avance, «Últimas calificaciones», «Registro», el selector, el conteo de «Esta semana», el guion del Meet (`presentacion.js`), «👥 Todos los nicks» (`rpg-ingles.js`; la cola «⏳ Por revisar» los conserva) y el ranking de Juegos; tras mostrar el último grupo oculto el interruptor se apaga solo, y el tablero pide `&ocultos=1` con el interruptor encendido, cambio `ingles-ocultar-grupos`), `tablero.js`
     (vista del admin por secciones, mapa de calor y cajón), `alumno.js`, `profe.js` y `app.js` (sesión, ruteo y
@@ -1081,8 +1082,20 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
 - **Diagramas de la teoría** (cambio `teoria-diagramas`). `renderDiagrama()` (`comun.js`) pinta `teoria[].diagrama`
   dentro de `renderTeoria()` y en la diapositiva `teoria` (`presentacion.js`). Solo HTML + CSS (`.dg-*` en
   `ingles.css`, medidas en `em`): `.dg` es un *container query*, así que flujo y ciclo van en fila según el ancho de la
-  caja (no de la ventana) y en columna en celular; en `.slide` toma la paleta de la diapositiva. Colores solo con
+  caja (no de la ventana) y en columna en celular; en `.slide` toma la paleta de la presentación (`presentacion.css`). Colores solo con
   tokens del tema. Formato: [data-model.md](data-model.md) § `teoria[].diagrama`.
+- **Modo presentación** (cambio `presentacion-cabe`). `openPresentacion()` (`presentacion.js`) muestra
+  `presentacion.diapositivas` del Meet con diseño RPG en `ingles/presentacion.css`: misión de la semana, ruta de la
+  misión, teoría en tarjetas, reto, arena, tarea y misión cumplida. Su tema propio vive en `.deck[data-tema]`
+  (oscuro para proyector o claro; sigue a la página, se cambia con ☀️/🌙 o la tecla T y se guarda en
+  `localStorage.stald_deck_tema`).
+  - **Regla: ninguna diapositiva recorta contenido.** La letra del cuerpo es
+    `clamp(14px, 2.25cqw, 46px) × --escala` y todo lo de adentro va en `em`. `ajustarDiapositiva()` baja `--escala`
+    hasta un mínimo legible (70 % y 14 px). Si aun así no cabe, el cuerpo queda con scroll (`.desborda`) y el aviso
+    «⬇️ Hay más · parte x/y»; → baja una parte antes de pasar a la diapositiva siguiente.
+  - Las tablas van en `.s-tabla`, con scroll horizontal propio.
+  - Un estilo nuevo del cuerpo no debe usar `overflow: hidden` ni medidas en `cqw`/`px` fijas.
+  - Lo vigila la E2E `presentacion-cabe`.
 - **Navegación.** Catálogo único `SECCIONES` (`id`, `emoji`, `titulo`, `encabezado`, `rol`, `href`, `accion`, `barra`);
   de ahí salen la barra, el menú y el `<h2>` de cada sección (`seccionHtml`).
 - **Material de estudio** (cambio `ingles-material-estudio`). `ingles/material.js` (va después de `comun.js`) lee el
