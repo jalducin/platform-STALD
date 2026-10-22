@@ -159,3 +159,29 @@ body.vista-admin #logout-btn { min-height: 44px; }
 .vista-admin .pf-side .profe-link { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--card); }
 .vista-admin .exam-item { flex-wrap: wrap; }
 .vista-admin .exam-item > div:first-child { min-width: 0; flex: 1 1 180px; overflow-wrap: anywhere; }
+
+/* ---------- Ruta del profe con la experiencia RPG (ingles/profe-rpg.js) ---------- */
+.pf-rpg { margin: 0 0 14px; }
+.pf-rpg .sec-tarjeta { --mat: var(--rpg-indigo); }
+.pf-mundo-chip { background: var(--accent-soft); color: var(--rpg-indigo); border: 1px solid var(--rpg-borde); }
+.pf-camino { --mat: var(--rpg-indigo); --mat-soft: var(--accent-soft); margin: 0 0 12px; }
+.pf-mundos { margin-top: 4px; }
+.pf-mundo.actual { box-shadow: var(--rpg-glow); border-color: var(--rpg-indigo); }
+.pf-mundo-det > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; font-size: .88rem; color: var(--accent); }
+.pf-mundo-lista { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }
+.pf-mundo-clase { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 10px; border-radius: var(--r-sm); background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); font-size: .88rem; overflow-wrap: anywhere; }
+@media (min-width: 560px) { .pf-mundo-clase { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; } }
+.pf-mundo-btn { justify-self: start; }
+.pf-mas > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; font-size: .88rem; color: var(--accent); }
+/* Clase por pasos del profe: sus tablas de teoría son anchas (3 columnas) y sus enlaces largos; sin scroll de página. */
+.vista-admin .sec-clase-vista table.teo { display: block; max-width: 100%; overflow-x: auto; }
+.vista-admin .sec-clase-vista .btn, .vista-admin .sec-siguiente { white-space: normal; max-width: 100%; text-align: center; overflow-wrap: anywhere; }
+.vista-admin .sec-siguiente small { white-space: normal; }
+
+/* «📥 Por revisar» enlaza a Entregas; el interruptor «Mostrar grupos ocultos» es un área táctil de 44 px. */
+.pp-stat-link { display: block; color: inherit; text-decoration: none; border-radius: var(--r-md); min-width: 0; }
+.pp-stat-link:hover .pp-stat { border-color: var(--accent); box-shadow: var(--shadow-2); }
+.pp-stat-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.vista-admin label:has(> input[type="checkbox"]) { min-height: 44px; cursor: pointer; }
+.vista-admin .grupos-barra input[type="checkbox"] { width: 22px; height: 22px; }
+.vista-admin .grupo-acc { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }

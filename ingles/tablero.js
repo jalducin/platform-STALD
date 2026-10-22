@@ -95,11 +95,21 @@ function ppListaRiesgo(riesgo) {
   return '<div class="pp-riesgo" id="pp-riesgo"><p class="pp-riesgo-t">🚨 Sin entregas o con atrasos esta semana</p><div class="pp-riesgo-lista">' +
     riesgo.map(x => '<button type="button" class="btn ghost" data-action="cajon" data-alumno="' + escapeHtml(x.nombre) + '">' + escapeHtml(x.nombre) + ' · ' + (x.atrasos ? '⏰ ' + x.atrasos : '😴 sin entregas') + '</button>').join('') + '</div></div>';
 }
+// Grupos activos que se ven en el panel: sin los ocultos (openspec: ingles-ocultar-grupos), salvo con el interruptor.
+const gruposDelPanel = () => gruposActivos().filter(g => !g.ocultoAdmin || state.mostrarOcultos);
+// «📥 Por revisar»: entregas de misiones listas para evaluar (bandeja del profe, /profe/entregas). Solo si cargó bien.
+function ppTilePorRevisar() {
+  const b = state.secBandeja;
+  if (!b || b.error || typeof b.pendientes !== 'number') return '';
+  return '<a class="pp-stat-link" href="#entregas" aria-label="' + b.pendientes + ' entregas por revisar. Abrir Entregas">' + ppStat('📥', b.pendientes, 'Por revisar', b.pendientes ? 'riesgo' : 'sin-riesgo') + '</a>';
+}
 function renderPanelProfe() {
-  const activos = state.grupos ? gruposActivos().length : null;
-  const registro = Array.isArray(state.alumnosAdmin) ? state.alumnosAdmin.filter(x => !x.baja).length : null;
-  const riesgo = alumnosEnRiesgo();
   const filtro = state.grupoFiltro && state.grupos ? (state.grupos.grupos || []).find(g => g.id === state.grupoFiltro) : null;
+  // Con un grupo elegido, todo el encabezado es de ese grupo (el resumen ya viene filtrado).
+  const activos = state.grupos && !filtro ? gruposDelPanel().length : null;
+  const enAlcance = x => !x.baja && (filtro ? (grupoDeNombre(x.nombre) || {}).id === filtro.id : !ocultoEnPanel(x.nombre));
+  const registro = Array.isArray(state.alumnosAdmin) ? state.alumnosAdmin.filter(enAlcance).length : null;
+  const riesgo = alumnosEnRiesgo();
   const hoy = (state.act && state.act.hoy) || todayStr();
   const fecha = new Date(hoy + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
   return '<section class="pp-hero" id="panel-profe" aria-labelledby="pp-hero-t">' +
@@ -108,7 +118,7 @@ function renderPanelProfe() {
     '<div class="pp-stats" id="pp-stats">' +
       (activos === null ? '' : ppStat('👥', activos, activos === 1 ? 'Grupo activo' : 'Grupos activos')) +
       (registro === null ? '' : ppStat('🧑‍🎓', registro, registro === 1 ? 'Alumno o alumna' : 'Alumnos y alumnas')) +
-      ppTileRiesgo(riesgo) + '</div>' + ppListaRiesgo(riesgo) +
+      ppTileRiesgo(riesgo) + ppTilePorRevisar() + '</div>' + ppListaRiesgo(riesgo) +
     '<div class="pp-acciones"><a class="btn" href="#registro">➕ Registrar alumno o alumna</a><a class="btn ghost" href="#presentar">🎬 Presentar la clase</a>' +
       '<a class="btn ghost" href="' + escapeHtml(conApiParam('ingles.html?modo=profe')) + '">🎓 Mi ruta</a></div></section>';
 }
@@ -120,7 +130,7 @@ function pintarPanelProfe() {
 // Tarjetas por grupo con el avance de la semana (entregadas / que ya abrieron), del mismo resumen.
 function renderTarjetasGrupo(r) {
   if (!state.grupos) return '';
-  const lista = gruposActivos().filter(g => !r.grupo || g.id === r.grupo.id);
+  const lista = gruposDelPanel().filter(g => !r.grupo || g.id === r.grupo.id);
   if (!lista.length) return '';
   const registro = Array.isArray(state.alumnosAdmin) ? state.alumnosAdmin.filter(x => !x.baja) : [];
   return '<div class="pp-grupos" id="pp-grupos">' + lista.map(g => tarjetaGrupo(r, g, registro.filter(x => (grupoDeNombre(x.nombre) || {}).id === g.id).length)).join('') + '</div>';
@@ -165,6 +175,11 @@ async function cargarResumen() {
   const clave = (state.grupoFiltro || '') + (state.mostrarOcultos ? '|ocultos' : '');
   if (state.cargandoResumen === clave) return;
   state.cargandoResumen = clave;
+  // «📥 Por revisar» del encabezado: la bandeja de entregas se pide una vez, en paralelo (openspec: ingles-diseno-profe).
+  if (!state.secBandeja && !state.cargandoBandejaPanel && typeof cargarBandejaSec === 'function') {
+    state.cargandoBandejaPanel = true;
+    cargarBandejaSec().then(pintarPanelProfe, () => {}).finally(() => { state.cargandoBandejaPanel = false; });
+  }
   // Grupos ocultos del panel (openspec: ingles-ocultar-grupos): el servidor los deja fuera salvo con ocultos=1.
   const q = (state.grupoFiltro ? '&grupo=' + encodeURIComponent(state.grupoFiltro) : '') + (state.mostrarOcultos ? '&ocultos=1' : '');
   let r;

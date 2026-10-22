@@ -9,8 +9,9 @@ async function loadActividades() {
 function volverBtn() { return '<button class="btn ghost" data-action="volver">← Volver</button>'; }
 
 // Clase por pasos (Teoría → Video → Ejercicios → Libreta, ingles/secundaria-clase.js): Secundaria y, desde
-// ingles-alumno-diseno-rpg, alumnos y alumnas de Inglés. El admin y la ruta del profe siguen con la vista de lista.
-const claseEnPasos = () => MODO_SECUNDARIA || (!MODO_PROFE && !!state.data && !state.data.isAdmin);
+// ingles-alumno-diseno-rpg, alumnos y alumnas de Inglés; desde ingles-diseno-profe, también la ruta del profe
+// (?modo=profe). El panel del admin sigue con la vista de lista (vista previa).
+const claseEnPasos = () => MODO_SECUNDARIA || MODO_PROFE || (!!state.data && !state.data.isAdmin);
 
 async function openItem(id) {
   entrarVista('actividad', id);

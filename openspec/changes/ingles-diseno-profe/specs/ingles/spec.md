@@ -5,8 +5,10 @@ La vista del admin de `ingles.html` y la ruta del profe (`ingles.html?modo=profe
 Secundaria (tarjetas, chips de color, barras de progreso y botones reales), en claro y oscuro. «🏠 Resumen» SHALL
 abrir con un encabezado (`#panel-profe`) que muestre solo datos que ya entrega el servidor: grupos activos, alumnos y
 alumnas del registro sin bajas y quienes están «En riesgo» (sin entregas o con alguna entrega atrasada en la semana del
-resumen), con un botón por persona que abre su cajón. No SHALL mostrar métricas que no existen (p. ej. entregas por
-revisar).
+resumen), con un botón por persona que abre su cajón, y «📥 Por revisar» (entregas de misiones listas para evaluar de
+la bandeja `/profe/entregas`) con enlace a «Entregas», solo si la bandeja carga. Con un grupo elegido, el encabezado
+SHALL contar solo ese grupo, y los grupos ocultos del panel no cuentan salvo con «Mostrar grupos ocultos». No SHALL
+mostrar métricas que no existen.
 
 Con grupos activos, el Resumen SHALL mostrar una tarjeta por grupo con su color, nivel, horario, número de alumnos y
 alumnas, avance de la semana (entregadas / que ya abrieron, con barra), atrasos, «🔍 Ver grupo» (mismo filtro que el
@@ -24,8 +26,12 @@ La matriz de acceso no cambia: solo el admin recibe y ve estos datos.
 
 #### Scenario: Encabezado con resumen
 - **WHEN** el admin abre `ingles.html#resumen` con 2 grupos activos y 7 alumnos y alumnas en el registro
-- **THEN** ve «2 Grupos activos», «7 Alumnos y alumnas» y el número de «En riesgo» cuando llega el resumen, sin
-  «entregas por revisar»
+- **THEN** ve «2 Grupos activos», «7 Alumnos y alumnas», el número de «En riesgo» cuando llega el resumen y
+  «📥 Por revisar» con las entregas listas de la bandeja
+
+#### Scenario: Encabezado con un grupo elegido
+- **WHEN** el admin toca «🔍 Ver grupo» en «Sábado A1»
+- **THEN** el título dice «Sábado A1», no aparece «Grupos activos» y «Alumnos y alumnas» cuenta solo ese grupo
 
 #### Scenario: Tarjeta por grupo
 - **WHEN** hay grupos activos y llega el resumen de todos los grupos
@@ -44,3 +50,39 @@ La matriz de acceso no cambia: solo el admin recibe y ve estos datos.
 #### Scenario: Sin grupos activos
 - **WHEN** Inglés no usa la base de datos (`/ingles/grupos` responde 503)
 - **THEN** el encabezado no muestra «Grupos activos» ni tarjetas por grupo, y el resto del panel funciona igual
+
+### Requirement: Ruta del profe con la experiencia RPG
+Con `plan.json`, `ingles.html?modo=profe` SHALL mostrar su ruta de estudio con la misma experiencia RPG que la alumna
+de Secundaria, separada del panel del admin (grupos, registro, entregas):
+
+- barra de nivel, rango, XP del nivel, insignias y racha;
+- «⚔️ Misión principal activa» (lo que ya empezó; si no, lo primero pendiente del mundo actual) con su botón;
+- «⚡ Retos de hoy · a tu ritmo»: hasta 3 clases pendientes cuya fecha sugerida ya llegó (o, si va al día, las
+  siguientes), con su mundo, estado y XP;
+- la pestaña «🌍 Mundos»: el camino de mundos de su ruta y una tarjeta por mundo con avance y sus clases;
+- cada clase se abre por pasos (Teoría → Video → Ejercicios → Libreta) con el banner «⚔️ Misión» y su mundo, y al
+  enviarla muestra «+XP», el nivel y las insignias nuevas.
+
+Los mundos de la ruta SHALL ser «Taller del Agente» (semanas 1–2), «Fábrica de Specs» (3), «Red de Conectores» (4),
+«Colmena de Subagentes» (5), «Biblioteca SDD» (6), «Arena en Acción» (7) y «Proyecto Integrador» (8), más «Torre de
+Minto» (clases de la Pirámide de Minto) y «Forja de Skills» (clases de Skills), que ganan sobre la semana. Las reglas
+(XP, nivel, insignias y mundos) SHALL salir de `comun/gamificacion.js` sin cambiar las de Secundaria ni las de Inglés.
+Toda la ruta está abierta y las fechas son ritmo sugerido: ningún estado de la ruta SHALL decir «atrasada» ni
+«bloqueado», y toda clase hecha cuenta con el bono de a tiempo. «🔥 Pendiente ahora» muestra 5 y pliega el resto.
+
+#### Scenario: Tablero de la ruta
+- **WHEN** el profe abre `ingles.html?modo=profe` el 2026-10-22 con su plan de 27 clases
+- **THEN** ve su nivel y XP, la misión principal con «Empezar», retos de hoy y ningún texto «atrasada»
+
+#### Scenario: Mundos de la ruta
+- **WHEN** abre «🌍 Mundos»
+- **THEN** ve los 9 mundos; «Pirámide de Minto 1» está en «Torre de Minto» y «Clase: Skills en Claude a fondo» en
+  «Forja de Skills»
+
+#### Scenario: Clase como misión con XP
+- **WHEN** abre la misión principal y envía sus respuestas
+- **THEN** la clase se ve por pasos con «⚔️ Misión» y su mundo, y el resultado muestra «+XP» con su nivel
+
+#### Scenario: Sin plan
+- **WHEN** los datos no traen `plan.json`
+- **THEN** no hay tablero RPG ni pestaña «🌍 Mundos»; la vista del profe queda como antes
