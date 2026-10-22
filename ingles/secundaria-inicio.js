@@ -211,7 +211,8 @@ document.addEventListener('change', e => {
   if (!e.target || e.target.id !== 'sec-alumna') return;
   const q = new URLSearchParams(location.search);
   q.set('alumna', e.target.value);
-  history.replaceState(null, '', location.pathname + '?' + q.toString() + location.hash);
+  // Navegación real (openspec: navegacion-dispositivos): cada entrada del historial conserva su alumna, así «Atrás» y
+  // recargar muestran el tablero que dice la URL.
   contentEl.innerHTML = esqueleto();
-  loadSecundaria(state.email);
+  location.assign(location.pathname + '?' + q.toString() + location.hash);
 });

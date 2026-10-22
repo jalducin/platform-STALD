@@ -59,13 +59,16 @@ function aplicarRuta() {
   document.title = (s ? s.titulo + ' · ' : '') + 'Clases de Inglés';
   if (rolActual() === 'admin' && id === 'resumen' && !state.resumen) cargarResumen();
   if (rolActual() === 'admin' && id === 'nicks' && !state.nicks) cargarNicksAdmin(); // openspec: rpg-fase2-ingles
-  if (rolActual() === 'admin' && id === 'entregas' && !state.secBandeja) cargarEntregasIngles(); // openspec: rpg-ingles-hero-card
+  if (rolActual() === 'admin' && id === 'entregas') { if (state.secBandeja) pintarEntregasPendientes(); else cargarEntregasIngles(); } // openspec: rpg-ingles-hero-card, navegacion-dispositivos
 }
 window.addEventListener('hashchange', () => {
   document.getElementById('nav-mas').hidden = true;
   if (!state.data) return;
   if (location.hash.startsWith('#ver/')) return; // dentro del reproductor
   if (state.vista !== 'secciones') { render(state.data); window.scrollTo(0, 0); return; }
+  // Secundaria: «Atrás» entre pestañas (cada toque agrega una entrada; openspec: navegacion-dispositivos).
+  // Sin hash = la entrada con la que se abrió la página (Inicio); otro hash que no es pestaña (p. ej. #content) no cambia nada.
+  if (MODO_SECUNDARIA) { const h = decodeURIComponent(location.hash.slice(1)); const t = h ? tabDeHash(h) : 'inicio'; if (t) irPestanaSec(t, false, 'nada'); return; }
   aplicarRuta(); window.scrollTo(0, 0);
 });
 // Entrar a una actividad, resultado o guion agrega una entrada al historial: Atrás regresa a la sección.

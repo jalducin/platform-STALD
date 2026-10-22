@@ -36,7 +36,7 @@ PEDIDAS=()
 
 # Orden canónico: Inglés (comparten servidor), las que necesitan datos propios, plataforma y juegos, y al final
 # la de login con la transición terminada.
-ORDEN=(actividades-datos material alta-alumnos baja-ingles inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno ingles-diseno-profe ingles-admin presentar presentacion-cabe examen-secundaria secundaria-clases secundaria-clase secundaria-dashboard secundaria-adelantar misiones autoguardado ordenar-emparejar teoria-diagramas rpg-ingles misiones-ingles ingles-alumno-diseno
+ORDEN=(actividades-datos material alta-alumnos baja-ingles inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno ingles-diseno-profe ingles-admin presentar presentacion-cabe examen-secundaria secundaria-clases secundaria-clase secundaria-dashboard secundaria-adelantar misiones autoguardado ordenar-emparejar teoria-diagramas rpg-ingles misiones-ingles ingles-alumno-diseno navegacion-dispositivos
   grupos ocultar-grupos ingles-pro
   login portal portal-diseno privacidad juegos categorias juegos-diseno juegos-ingles jugadores nick partidas enlace-sala juegos-recarga revancha
   conquian-estres clasicos fusion cultura-conocimiento sudoku dragon-run plataformas karts karts-puntos karts-vivo futbol futbol-en-linea futbolito-arena brigada futbolito billar golf puntos-tipo basta-rondas loteria-sala una-sala una-robo
@@ -51,7 +51,7 @@ ORDEN=(actividades-datos material alta-alumnos baja-ingles inicio-lunes segunda-
 #   despues sin Postgres y con LOGIN_TRANSICION_HASTA en el pasado
 fase_de() {
   case $1 in
-    actividades-datos | material | alta-alumnos | baja-ingles | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | ingles-diseno-profe | ingles-admin | presentar | presentacion-cabe | examen-secundaria | secundaria-clases | secundaria-clase | secundaria-dashboard | secundaria-adelantar | misiones | autoguardado | ordenar-emparejar | teoria-diagramas | rpg-ingles | misiones-ingles | ingles-alumno-diseno) echo ingles ;;
+    actividades-datos | material | alta-alumnos | baja-ingles | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | ingles-diseno-profe | ingles-admin | presentar | presentacion-cabe | examen-secundaria | secundaria-clases | secundaria-clase | secundaria-dashboard | secundaria-adelantar | misiones | autoguardado | ordenar-emparejar | teoria-diagramas | rpg-ingles | misiones-ingles | ingles-alumno-diseno | navegacion-dispositivos) echo ingles ;;
     grupos | ocultar-grupos) echo grupos ;;
     ingles-pro) echo pro ;;
     login-despues) echo despues ;;
@@ -257,6 +257,7 @@ correr() { # $1 = prueba
   local n=$1 out=$SALIDA/$1.out rc p f estado
   local max=$TIEMPO_MAX
   [ "$n" = karts-vivo ] && max=$((TIEMPO_MAX + 960)) # karts-copa-en-sala: la copa en sala corre 4 carreras de ≈ 35 s; karts-salida-y-puntos: 2 salas más; karts-copa-espacio y karts-copa-reinos: fps y salas en sus pistas (+300); karts-puntos-copas: carrera 1 de la Copa Reinos en sala (+120)
+  [ "$n" = navegacion-dispositivos ] && max=$((TIEMPO_MAX + 600)) # 8 tareas × 5 tamaños, anchos, teclado y enlaces profundos (openspec: navegacion-dispositivos)
   [ "$n" = karts ] && max=$((TIEMPO_MAX + 1140)) # karts-copa-espacio: 4 pistas espaciales (vuelta, caída, fps) y la Copa del Espacio (+480); karts-copa-reinos: 4 pistas con interiores (+420); karts-puntos-copas: carrera 1 de las 4 copas con recarga (+240)
   (cd "$E2E" && BASE=$BASE API=$API DATA="$(nativo "$COPIA")" SALIDA="$(nativo "$SALIDA")" \
     timeout "$max" node "e2e-$n.js") > "$out" 2>&1

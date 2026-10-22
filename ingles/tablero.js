@@ -209,7 +209,7 @@ async function cargarResumen() {
   // «📥 Por revisar» del encabezado: la bandeja de entregas se pide una vez, en paralelo (openspec: ingles-diseno-profe).
   if (!state.secBandeja && !state.cargandoBandejaPanel && typeof cargarBandejaSec === 'function') {
     state.cargandoBandejaPanel = true;
-    cargarBandejaSec().then(pintarPanelProfe, () => {}).finally(() => { state.cargandoBandejaPanel = false; });
+    cargarBandejaSec().then(() => { pintarPanelProfe(); pintarEntregasPendientes(); }, () => {}).finally(() => { state.cargandoBandejaPanel = false; });
   }
   // Grupos ocultos del panel (openspec: ingles-ocultar-grupos): el servidor los deja fuera salvo con ocultos=1.
   const q = (state.grupoFiltro ? '&grupo=' + encodeURIComponent(state.grupoFiltro) : '') + (state.mostrarOcultos ? '&ocultos=1' : '');

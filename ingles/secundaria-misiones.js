@@ -241,7 +241,7 @@ document.addEventListener('click', e => {
   const abrir = e.target.closest('[data-mis-abrir]');
   if (abrir) {
     state.misAbierta = abrir.dataset.misAbrir;
-    if (typeof irPestanaSec === 'function') irPestanaSec('misiones');
+    if (typeof irPestanaSec === 'function') irPestanaSec('misiones', false, 'agregar'); // «Atrás» regresa a donde estaba (openspec: navegacion-dispositivos)
     repintarMisiones();
     const d = document.querySelector('[data-mis-detalle]');
     if (d) { d.scrollIntoView({ block: 'start' }); const h = d.querySelector('h2'); if (h) { h.tabIndex = -1; h.focus(); } }

@@ -81,6 +81,16 @@ Cada página debe manejar y mostrar de forma explícita:
 ## 4. Diseño y accesibilidad
 
 - Diseño primero para móvil (ancho máximo 720px, gutter de 16px, `safe-area-inset`).
+- Navegación en celular, tablet y PC (cambio `navegacion-dispositivos`; la E2E `navegacion-dispositivos` lo vigila):
+  - objetivos táctiles de 44 × 44 px o más en toda pantalla táctil (`.btn.sm` con `@media (pointer: coarse)`, no solo
+    bajo 720 px); un enlace suelto que se toca (p. ej. «← Inicio», «Abrir en YouTube ↗») lleva `min-height: 44px`;
+  - lo que se enfoca o se desplaza no queda bajo una barra fija (`html { scroll-padding-bottom: 96px }` en Inglés y
+    Secundaria);
+  - cada pestaña o sección que la persona toca agrega una entrada al historial (hash con `pushState` o enlace
+    `#seccion`), para que «Atrás» regrese a la anterior; las flechas del teclado la reemplazan;
+  - en PC (≥ 1100 px) el contenedor usa el ancho sin estirar la columna de lectura: Inglés (alumnos y alumnas) con el
+    menú a un lado como el panel del profe, Secundaria a 1100 px con sus pestañas en una fila y el hub de Juegos
+    (≥ 1200 px, `.wrap:has(#menu-juegos)`) a 1080 px con más columnas; dentro de un juego la columna sigue en 720 px.
 - Colores en variables CSS en `:root`, con variante `prefers-color-scheme: dark`.
 - Inputs con `<label for>`; los botones son `<button>`, no `div`.
 - Fechas en `es-MX` y comparadas como `AAAA-MM-DD` en hora local.

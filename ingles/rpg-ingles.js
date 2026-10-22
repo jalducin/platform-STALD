@@ -204,6 +204,12 @@ async function cargarEntregasIngles() {
   const panel = document.getElementById('sec-entregas');
   if (panel) panel.innerHTML = renderSecEntregas();
 }
+// Si la bandeja llegó (p. ej. con «📥 Por revisar» del panel) cuando la sección ya estaba dibujada con el esqueleto, se
+// pinta; si ya muestra entregas o el aviso, no se toca (no borra una evaluación a medias). openspec: navegacion-dispositivos.
+function pintarEntregasPendientes() {
+  const panel = document.getElementById('sec-entregas');
+  if (panel && state.secBandeja && !panel.querySelector('.ent-card, .vacio, #ent-resumen')) panel.innerHTML = renderSecEntregas();
+}
 const seccionEntregasIngles = () => '<div id="sec-entregas" aria-live="polite">' + (state.secBandeja ? renderSecEntregas() : esqueleto()) + '</div>';
 // «Continuar misión» desde Inicio lleva a la sección «⚔️ Misiones» (la vista la abre secundaria-misiones.js).
 contentEl.addEventListener('click', e => {

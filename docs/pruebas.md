@@ -151,6 +151,20 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   e `index.html?juegos=1`). En todos: botones de 44 px o más, sin scroll horizontal, contraste AA, sin errores de
   consola y pie legal oculto con el interruptor apagado. Con `--hoy 2026-10-27` también ve el avance. Deja capturas
   `portal-diseno-*.png`.
+- `navegacion-dispositivos` (fase `ingles`, cambio `navegacion-dispositivos`): recorre 8 tareas clave en celular
+  (360×740, táctil), tablet (768×1024 y 1024×768, táctiles) y PC (1280×800 y 1920×1080): clase de Secundaria hasta
+  «Siguiente misión», pestañas de Secundaria, actividad de Inglés, Material → PDF, invitado de Juegos (entrar, jugar y
+  volver), panel del profe (ver grupo, ocultar/mostrar «Grupo 1», Entregas y evaluar), Secundaria del profe (alumna y
+  Resultados) y Mi ruta → clase. Por tarea y tamaño mide toques de navegación, tiempo de cada pantalla, peticiones,
+  errores de consola (sin Postgres se excusa el 503 `sin_base` de `/ingles/grupos`), scroll horizontal, objetivos
+  < 44 px (con toque), elementos tapados, formas de volver y el atrás
+  del navegador; además el ancho en tablet y PC, el teclado en PC y 7 enlaces profundos. Falla ante scroll, objetivos
+  chicos en celular o tablet, errores, tapados, más toques que `TOPE_TOQUES`, pantallas de más de 8 s, atrás que sale de la
+  plataforma o foco invisible. Escribe `salida/navegacion-dispositivos.md` (tabla) y capturas `nav-*.png`. `MEDIR=1`
+  solo mide (línea base); `NAV_SOLO` y `NAV_DISP` acotan. La clase de Secundaria necesita `--hoy 2026-10-27` (si no,
+  esa tarea sale `OMIT`) y se envía una sola vez (en los demás tamaños abre su resultado); ocultar/mostrar el grupo
+  necesita `--pg` (si no, `OMIT`). Corre al final de la fase: si `misiones` ya evaluó las entregas, solo llega a la
+  bandeja.
 - `secundaria-dashboard` (fase `ingles`, cambio `secundaria-dashboard`): la alumna del fixture envía 3 clases por la API
   (en la copia temporal) y revisa a 360 px en claro y oscuro el Inicio RPG (retos, estados, progreso, racha, XP y
   nivel, insignias, misión, actividad, promedios), botones de 44 px o más con foco visible, «📚 Mis materias» con sus
