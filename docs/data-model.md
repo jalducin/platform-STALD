@@ -137,14 +137,17 @@ Sin datos personales. Se sirve junto a `juegos.html`.
 - El proyecto Supabase *Portafolio* es compartido con el portafolio. Todas las tablas de Inglés llevan el prefijo
   `stald_` en `public` y tienen RLS sin políticas, así que solo la llave de servicio (Deno) las lee.
   - Las tablas `stald_test_*` son para pruebas E2E.
-  - Definición: `supabase/migrations/001_stald_ingles.sql`.
+  - Definición: `supabase/migrations/001_stald_ingles.sql` y `002_stald_grupos_oculto_admin.sql`.
 - `stald_docs(path, data jsonb, version, actualizado)`: documentos 1 a 1 con el repo de datos.
   - Rutas: `alumnos.json`, `resultados/<item>/<slug>.json`, `avance/<slug>.json`, `borradores/<item>/<slug>.json` y
     `entregas/<misión>/<slug>.json` (prefijos en `PREFIJOS_INGLES`, `server/db.ts`).
   - `version` es el `sha` de la concurrencia optimista.
   - La fila `meta/migrado` activa `PgStore`.
-- `stald_grupos(id, nombre, nivel, horario, meet_url, color, activo, orden)`. El grupo inicial es `grupo-1`
-  («Grupo 1»).
+- `stald_grupos(id, nombre, nivel, horario, meet_url, color, activo, orden, oculto_admin)`. El grupo inicial es
+  `grupo-1` («Grupo 1»).
+  - `oculto_admin` (boolean, `false` por omisión; migración `002`, cambio `ingles-ocultar-grupos`): el grupo y sus
+    alumnos y alumnas no salen por omisión en las vistas del admin de Inglés. No cambia nada para ellos (siguen
+    entrando, entregan y sus resultados se guardan). En la API se llama `ocultoAdmin`; solo la ve el admin.
 - `stald_inscripciones(alumno, grupo_id, desde, hasta)`:
   - `alumno` es el slug del nombre, la misma llave que `resultados/`;
   - solo puede haber una inscripción vigente (`hasta` null) por persona;
