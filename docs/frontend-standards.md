@@ -1047,3 +1047,44 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   `--mat-soft` desde tokens `--mat-*` de `ingles/ingles.css`, redefinidos para modo oscuro. El chip siempre lleva el
   nombre (no depende solo del color).
 - `secundaria.html` enlaza con «📚 Mis clases» (`#examenes-link`, conserva `?api=`); el tablero de Notion no cambia.
+
+## Gamificación (cambio `gamificacion-nucleo`)
+
+Fuente única de las reglas; el código está en `comun/gamificacion.js` (script clásico, `globalThis.Gamificacion`, sin
+DOM ni peticiones; lo prueba `server/gamificacion_test.ts`). Todo se calcula en el aparato con lo que ya devuelve el
+servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de resultado de la clase; después, Inglés.
+
+- **XP de una clase** (`xpDeClase(item, calificacion, opciones?)`): solo el mejor intento. Porcentaje de aciertos en el
+  que cada acierto de un tema cuyo título empieza con 🎯 (mini examen) vale doble
+  (`round(100 × Σ correctas·peso / Σ total)`, peso 2 en 🎯), **+ 20** si llegó a tiempo. Usa de `calificacion`
+  `secciones[].titulo|correctas|total` (o, sin secciones, `porcentaje`). «A tiempo», en orden: `opciones.aTiempo`,
+  `calificacion.aTiempo`, `item.mejorATiempo` (del listado) y, si nada viene, `opciones.hoy <= item.fechaLimite`; sin
+  dato, sin bonus. La respuesta del envío trae `aTiempo` para el «+XP» de la pantalla de resultado.
+- **XP total** (`xpTotal(items)`): suma de las clases hechas (con al menos un envío).
+- **Nivel** (`nivelDe(xp, genero?)`): `floor(XP / 300) + 1`; devuelve `xpNivel` (XP dentro del nivel, 0–299),
+  `xpSiguiente` (XP total del siguiente nivel) y `porcentaje` del nivel. Rangos: 1–3 Aprendiz, 4–6
+  Exploradora/Explorador, 7–9 Sabia/Sabio, 10+ Gran Sabia/Gran Sabio. Lenguaje inclusivo: el registro no guarda
+  género, así que se muestran las dos formas; con `genero` `'f'` o `'m'`, solo la suya.
+- **Racha:** la del servidor (`racha.dias`, días seguidos hasta hoy o ayer con al menos un envío).
+- **Insignias** (`insigniasDe({ items, hoy, racha })`, `insigniaNueva(antes, despues)`): Primera misión, Racha de 3 / 7
+  / 14 (racha actual), 100 % en una clase, Mini examen superado (≥ 80 % en un tema 🎯) y Mundo completado.
+- **Mundos** (`mundoDe(materia, hoy?)`, `mapaMundos(items, hoy)`), con las fechas de la skill `clases-secundaria`
+  (si cambian ahí, se cambian en `MUNDOS`):
+
+  | Materia | Mundos (bloque) |
+  |---|---|
+  | Matemáticas | 🔢 Valle de los Números (Aritmética, 26 oct–22 nov 2026) → 🏙️ Ciudad de las Formas (Geometría, 23 nov–20 dic) → 🗼 Torre de las Incógnitas (Álgebra, desde ene 2027) |
+  | Ciencias | 🌿 Selva de la Vida (Biología, oct 2026–ene 2027) → ⚗️ Laboratorio Alquimia (Química, feb–abr 2027) → 🏔️ Cumbre de la Fuerza (Física, may–jul 2027) |
+  | Ciencias Sociales | 🏛️ Ágora (Cívica y Ética, 26 oct–22 nov) → ⏳ Puerta del Tiempo (Historia, 23 nov–20 dic) → 🗺️ Atlas del Mundo (Geografía, ene 2027) |
+  | Tecnología | 🛠️ Taller Digital (Bases, 26 oct–6 dic) → 🌀 Laberinto Sintaxis (Programación, desde el 7 dic) → 🤖 Núcleo IA (sin fecha aún: bloqueado) |
+  | Inglés | 🏝️ Isla del Alfabeto (bloque actual) |
+  | Español | 📚 Gran Biblioteca |
+  | Artes / Ed. Física | 🎨 Estudio y Arena |
+
+  Estado: «completado» (terminó su fecha y todas sus clases, al menos una, están hechas), «en-curso» (el actual, o uno
+  que terminó con clases pendientes) o «bloqueado» (aún no empieza; o sin fecha y no es el único de su materia).
+  `mundoDe` da el actual; en vacaciones, el último que empezó; antes del primero, el primero.
+- **Retos diarios** (`retosDiarios(items, hoy)`): las clases cuyo día es hoy, con `xp` (hechas) o `xpPosible` (120),
+  `faltan` y `xpHoy`. **Actividad reciente** (`actividadReciente(items, n)`): por `ultimoEnvio`, con porcentaje y XP.
+- Día de la clase (`diaDeClase`): `disponibleDesde` si dura un día (vence ese día o el siguiente); con ventana más
+  larga, su `fechaLimite`. Hecha (`estaHecha`): al menos un envío.
