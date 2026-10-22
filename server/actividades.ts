@@ -96,9 +96,11 @@ export async function visibleItems(store: Store, hoy: string, ambito: Ambito = A
     const enSemana = new Set(todas.flatMap((s) => s.elementos.map((e) => e.id)));
     const sueltos = (await store.list(`${ambito.contenido}/examenes`)).map((n) => n.replace(/\.json$/, "")).filter((id) => !enSemana.has(id));
     const ids = [...semanas.flatMap((s) => s.elementos.map((e) => e.id)), ...sueltos];
-    // Ruta del profe a su ritmo (openspec: profe-ruta-abierta): de sus semanas futuras entra lo que ya abrió
-    // (`disponibleDesde` ≤ hoy). El grupo sigue viendo solo semanas iniciadas.
-    const adelantables = ambito.clave === AMBITO_PROFE.clave ? todas.filter((s) => !semanas.includes(s)).flatMap((s) => s.elementos.map((e) => e.id)) : [];
+    // Ruta del profe a su ritmo (openspec: profe-ruta-abierta) y Secundaria, que adelanta clases del bloque de 2 semanas
+    // (openspec: secundaria-adelantar): de sus semanas futuras entra lo que ya abrió (`disponibleDesde` ≤ hoy). El grupo
+    // de Inglés sigue viendo solo semanas iniciadas.
+    const adelanta = ambito.clave === AMBITO_PROFE.clave || ambito.clave === AMBITO_SECUNDARIA.clave;
+    const adelantables = adelanta ? todas.filter((s) => !semanas.includes(s)).flatMap((s) => s.elementos.map((e) => e.id)) : [];
     // Estrictamente `disponibleDesde` ≤ hoy (sin el adelanto del domingo) y sin repetir ids ya listados.
     const yaListados = new Set(ids);
     const abiertas = (await Promise.all([...new Set(adelantables)].filter((id) => !yaListados.has(id)).map((id) => loadItem(store, id, ambito))))
@@ -165,6 +167,7 @@ function meta(it: ConGrupos) {
     ...(it.grupos ? { grupos: it.grupos } : {}),
     ...(it.alumnos ? { alumnos: it.alumnos } : {}),
     ...(it.materia ? { materia: it.materia } : {}), // Secundaria (openspec: secundaria-mis-clases)
+    ...(it.dia ? { dia: it.dia } : {}), // día del horario, para adelantar clases (openspec: secundaria-adelantar)
   };
 }
 
