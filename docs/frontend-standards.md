@@ -1277,3 +1277,16 @@ y oscuro con los tokens RPG; 360 px sin scroll horizontal (E2E `e2e-misiones`).
 - Admin: «📥 Entregas» (carga al abrirla). E2E: `tests/e2e/e2e-misiones-ingles.js` con la misión de ejemplo de
   `tests/fixtures/datos/contenido/ingles/misiones/`.
 
+
+## Diseño RPG de la vista de alumnos y alumnas de Inglés (cambio `ingles-alumno-diseno-rpg`)
+
+- **Actividad por pasos:** `claseEnPasos()` (`ingles/reproductor.js`) = Secundaria o alumnos y alumnas de Inglés. En
+  esos casos `openItem` usa `vistaClaseSecundaria` de `ingles/secundaria-clase.js` y `showResult` sus extras (XP, nivel,
+  libreta y «Lo siguiente →»). En Inglés la etiqueta es el tipo (`ETIQUETA_TIPO`) y el mundo es el de Inglés. El admin
+  y la ruta del profe usan la vista de lista.
+- **Estilo:** reglas de `ingles/rpg-ingles.css` acotadas a `body.vista-alumno:not(.secundaria)`:
+  - paneles con los tokens `--rpg-*` de `estilos/ui.css`;
+  - `.exam-item`, `.hoy-item` y `.res-item` como tarjetas;
+  - `.btn` y `.btn.sm` de 44 px o más con foco visible;
+  - chips en píldora y la pestaña actual en índigo.
+- E2E: `tests/e2e/e2e-ingles-alumno-diseno.js`.

@@ -8,6 +8,10 @@ async function loadActividades() {
 
 function volverBtn() { return '<button class="btn ghost" data-action="volver">← Volver</button>'; }
 
+// Clase por pasos (Teoría → Video → Ejercicios → Libreta, ingles/secundaria-clase.js): Secundaria y, desde
+// ingles-alumno-diseno-rpg, alumnos y alumnas de Inglés. El admin y la ruta del profe siguen con la vista de lista.
+const claseEnPasos = () => MODO_SECUNDARIA || (!MODO_PROFE && !!state.data && !state.data.isAdmin);
+
 async function openItem(id) {
   entrarVista('actividad', id);
   contentEl.innerHTML = esqueleto();
@@ -99,14 +103,15 @@ async function openItem(id) {
     '<div class="exam-bar">' + volverBtn() + '<span class="paso-nav"><button type="button" class="btn ghost icono" data-action="q-ant" aria-label="Pregunta anterior">←</button><button type="button" class="btn ghost" data-action="q-sig">Siguiente →</button></span>' +
     '<span class="progress-text" id="exam-count" style="margin:0" aria-live="polite">0/' + porCorregir.length + ' respondidas</span>' +
     '<button class="btn" type="submit" id="exam-send" disabled>Enviar</button></div></form>';
-  // Secundaria: clase por pasos con videos incrustados y libreta (ingles/secundaria-clase.js). Inglés, como siempre.
-  state.claseAbierta = MODO_SECUNDARIA ? { id: it.id, tips: it.tips || [] } : null;
-  contentEl.innerHTML = MODO_SECUNDARIA
+  // Clase por pasos con videos incrustados y libreta (ingles/secundaria-clase.js); el admin, como siempre.
+  const pasos = claseEnPasos();
+  state.claseAbierta = pasos ? { id: it.id, tips: it.tips || [] } : null;
+  contentEl.innerHTML = pasos
     ? vistaClaseSecundaria(it, cabecera, form)
     : cabecera +
       (it.teoria && it.teoria.length ? '<details class="section"' + teoriaAbierta + '><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
       renderTips(it.tips) + form;
-  if (MODO_SECUNDARIA) activarPasosClase();
+  if (pasos) activarPasosClase();
   state.paso = 0;
   // Correctas fijas de la corrección: la oración y los pares ya armados (openspec: ejercicios-ordenar-emparejar).
   contentEl.querySelectorAll('#exam-form .q.fija').forEach(q => {
@@ -499,7 +504,7 @@ async function submitExam(form) {
   btn.disabled = true; btn.textContent = 'Enviando…';
   const id = form.dataset.id;
   // Secundaria: la lista de antes de ESTE envío, para el XP, el nivel y las insignias ganadas (ingles/secundaria-clase.js).
-  state.actAntes = MODO_SECUNDARIA ? { id, act: state.act } : null;
+  state.actAntes = claseEnPasos() ? { id, act: state.act } : null;
   const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email), {
     method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' },
     body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas: examAnswers(form) }),
@@ -519,7 +524,9 @@ function showResult(calificacion, info) {
   entrarVista('resultado', (info && info.id) || 'resultado');
   const i = info || {};
   const it = ((state.act && state.act.items) || []).find(x => x.id === i.id);
-  let head = MODO_SECUNDARIA ? '🎉 ¡Misión cumplida! · Tu resultado' : '📝 Tu resultado';
+  let head = '📝 Tu resultado';
+  if (MODO_SECUNDARIA) head = '🎉 ¡Misión cumplida! · Tu resultado';
+  else if (claseEnPasos()) head = '🎉 ¡Listo! · Tu resultado';
   if (i.vistaPrevia) head += ' · vista previa (no se guardó)';
   else if (i.intento) head += ' · intento ' + i.intento + ' de ' + i.intentosMax + (i.mejor ? ' · mejor: ' + i.mejor.porcentaje + '%' : '');
   const corrige = it ? it.tipo !== 'examen' : true;
@@ -534,7 +541,7 @@ function showResult(calificacion, info) {
   const aviso = espera ? '<div class="aviso-corr" id="aviso-segunda">📅 Tienes una 2.ª oportunidad el ' + escapeHtml(formatFecha(it.segundaOportunidad)) + ' con preguntas nuevas. Estudia el sábado con tu refuerzo; cuenta la mejor de las dos.</div>' : '';
   contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' + aviso +
     renderResultado(calificacion, false) +
-    (MODO_SECUNDARIA && !i.vistaPrevia ? extrasResultadoSecundaria(i.id) : '') +
+    (claseEnPasos() && !i.vistaPrevia ? extrasResultadoSecundaria(i.id) : '') +
     '<div class="exam-bar">' + volverBtn() + reintento + '</div>';
   window.scrollTo(0, 0);
 }
