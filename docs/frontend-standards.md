@@ -23,6 +23,10 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - No lleva datos personales ni respuestas de evaluaciones.
   - Los relojes aceptan `window.__TIEMPO_JUEGOS` (solo en pruebas E2E) para acelerarlos.
 
+- **Páginas legales (cambio `rpg-privacidad`):** `privacidad.html` (aviso de privacidad) y `consentimiento.html`
+  (formato imprimible para madre, padre o tutor) comparten `estilos/legal.css`; ver
+  [Aviso de privacidad y consentimiento](#aviso-de-privacidad-y-consentimiento-cambio-rpg-privacidad).
+
 ## 2. Seguridad en el DOM
 
 - Todo texto que venga de Notion se inserta con `escapeHtml()` o con `textContent`. Nunca concatenar
@@ -482,6 +486,22 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 
 - `estilos/stald.css` (cambio `ingles-pro`) es la fuente única de tokens y componentes base. Hoy lo usa
   `ingles.html`; el portal y las demás páginas lo adoptan poco a poco, cada una en su propio cambio.
+- `estilos/ui.css` (cambio `juegos-diseno-rpg`) es la fuente única del diseño RPG: tokens `--rpg-*` y componentes
+  `rpg-`. Ver [Diseño RPG compartido](#diseño-rpg-compartido-estilosuicss-cambio-juegos-diseno-rpg).
+
+### Diseño RPG compartido (`estilos/ui.css`, cambio `juegos-diseno-rpg`)
+
+- **Qué trae:** los tokens `--rpg-*` (índigo, morado, esmeralda, ámbar, panel, borde, texto suave, degradado del
+  encabezado, brillo y barra) en claro, en oscuro del sistema y con `<html data-theme>`. También los componentes
+  `.rpg-num` (Orbitron si está instalada), `.rpg-etiqueta`, `.rpg-contador`, `.rpg-xp-barra` (con `<span>` de ancho),
+  `.rpg-xp-chip` y `.rpg-dato` / `-ico` / `-t` / `-v`.
+- **Con qué tokens base funciona:** con los de `estilos/stald.css` y con los de `juegos/app/juegos.css`. Cada
+  componente trae respaldo (`var(--accent-soft, var(--rpg-panel-2))`).
+- **Cómo se enlaza:** con `<link>` antes del CSS propio de la página.
+  - Hoy: `ingles.html` (antes de `ingles/secundaria.css`).
+  - Al cambiarlo, sube su `?v=` en todas las páginas que lo enlazan.
+- **Qué no va:** botones, tarjetas o pestañas con nombres genéricos (`.btn`, `.card`, `.tab`). Cada página ya los
+  define a su manera. Lo nuevo y compartido lleva prefijo `rpg-`.
 
 ## 6. Verificación
 
@@ -844,8 +864,8 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
 ## Panel del profe con diseño RPG (cambio `ingles-diseno-profe`)
 
 - La vista del admin de `ingles.html` y `?modo=profe` (las dos con `body.vista-admin`) usan el diseño RPG de Secundaria.
-  Estilos en `ingles/panel-profe.css`, todo bajo `.vista-admin` o con prefijo `pp-`/`reg-`; reusa los tokens `--rpg-*`
-  de `ingles/secundaria.css` y los base de `estilos/stald.css`, así que funciona en claro y oscuro.
+  Estilos en `ingles/panel-profe.css`, todo bajo `.vista-admin` o con prefijo `pp-`/`reg-`; reusa los tokens y
+  componentes RPG de `estilos/ui.css` (`--rpg-*`, `.rpg-etiqueta`, `.rpg-num`, `.rpg-xp-barra`) y los base de `estilos/stald.css`, así que funciona en claro y oscuro.
 - «🏠 Resumen» abre con `#panel-profe` (`renderPanelProfe`, `ingles/tablero.js`). Solo datos que ya existen:
   - grupos activos (`/ingles/grupos`; sin base de datos no sale), alumnos y alumnas del registro sin bajas;
   - «En riesgo» (`alumnosEnRiesgo`): `kpis.sinEntregas` más quien tiene alguna celda `atrasado` en `/ingles/resumen`, con
@@ -853,7 +873,7 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   - no hay «entregas por revisar»: Inglés califica solo y no tiene esa cola;
   - accesos: «➕ Registrar alumno o alumna», «🎬 Presentar la clase» y «🎓 Mi ruta».
 - Tarjetas por grupo (`#pp-grupos .pp-grupo`, dentro de `#tablero`): color (`--gc`), nivel, horario, personas, avance
-  de la semana (celdas entregadas / que ya abrieron, sin `no-aplica` ni `proximamente`) con `.barra[role=progressbar]`,
+  de la semana (celdas entregadas / que ya abrieron, sin `no-aplica` ni `proximamente`) con `.rpg-xp-barra[role=progressbar]`,
   atrasos, «🔍 Ver grupo» (`data-action="ver-grupo"`, mismo `state.grupoFiltro` que el selector) y «🎥 Meet».
 - Abajo de 640 px, `#mapa-calor` y `.ultimas-tabla` (Resultados y Juegos) pasan a tarjetas por fila. Cada celda del mapa
   lleva `td[data-label]` (emoji y fecha de la columna) que se muestra encima en celular. El DOM y los selectores no
@@ -1120,8 +1140,9 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `artes`, `edfisica`, `otra`), que fija `--mat` y `--mat-soft` en `estilos/materias.css` (compartido con el portal;
     claro y oscuro).
   - El chip siempre lleva el nombre.
-- **Tokens del estilo RPG:** `--rpg-*` en `ingles/secundaria.css`, redefinidos para el modo oscuro. Sin Tailwind ni
-  íconos externos.
+- **Tokens del estilo RPG:** `--rpg-*` y los componentes `rpg-` reutilizables viven en `estilos/ui.css` (ver
+  [Diseño RPG compartido](#diseño-rpg-compartido-estilosuicss-cambio-juegos-diseno-rpg)); `ingles/secundaria.css` solo
+  trae lo propio del tablero. Sin Tailwind ni íconos externos.
 
 ### Portal: «🗓️ Mi horario» (cambio `secundaria-dashboard`)
 
@@ -1205,3 +1226,25 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
 - Día de la clase (`diaDeClase`): su `dia` si viene (cambio `secundaria-adelantar`: la clase abre antes y sigue en
   su día del horario, sin contar como atrasada ni «de hoy» antes de ese día). Sin `dia`: `disponibleDesde` si dura
   un día (vence ese día o el siguiente); con ventana más larga, su `fechaLimite`. Hecha (`estaHecha`): al menos un envío.
+
+## Aviso de privacidad y consentimiento (cambio `rpg-privacidad`)
+
+- **Interruptor `privacidad`** (`GET /interruptores`, dato en `config/interruptores.json`; ver
+  [data-model](data-model.md)). `comun/interruptores.js?v=1` lo lee una vez por página (falla cerrada: sin red o con
+  error, apagado) y aplica atributos:
+  - `[data-interruptor="privacidad"]` visible solo encendido (a los enlaces les agrega `?api=` si la página lo trae);
+  - `[data-interruptor-apagado="privacidad"]` visible solo apagado; `[data-interruptores-cargando]` se oculta al terminar;
+  - marca `<html data-interruptores="listo">` (las E2E la esperan).
+- **Apagado:** sin enlaces en el pie del portal (`index.html`), de `ingles.html` y de `juegos.html` (`footer.pie-legal`);
+  `privacidad.html` y `consentimiento.html` muestran «Próximamente» y no el texto (el HTML sí trae el texto: es
+  público y no tiene datos personales).
+- **Encendido:** enlace «🔒 Aviso de privacidad» de 44 px en esos tres pies; el aviso enlaza al formato y viceversa.
+- `privacidad.html`: aviso integral en lenguaje claro con «En un minuto», índice y 12 secciones con `id` estables
+  (`responsable`, `datos`, `finalidades`, `donde`, `quien`, `no-compartimos`, `tutor-ia`, `conservacion`, `menores`,
+  `arco`, `navegador`, `cambios`). Mientras el profe no apruebe el texto lleva la nota `.borrador`; lo que llena el
+  profe va en `.pendiente`. Sin correos ni nombres reales.
+- `consentimiento.html`: 5 autorizaciones con «Sí / No» (plataforma; foto de avatar de Juegos y ranking de Inglés por
+  apodo, opcionales; tutor IA e imagen o audio, opcionales de fases futuras) y campos en blanco (alumno o alumna, quien firma, parentesco, fecha y firma).
+  `@media print` en `estilos/legal.css`: tamaño carta, una hoja, sin navegación ni botones. La plataforma no guarda
+  la hoja firmada; solo se registra slug, tipo y fecha (spec `plataforma-rpg`).
+- Tema: sistema o `stald_tema` (como `ingles.html`); 360 px sin scroll horizontal. Prueba: `tests/e2e/e2e-privacidad.js`.

@@ -82,7 +82,7 @@ function alumnosEnRiesgo() {
   }
   return [...m.values()].sort((a, b) => b.atrasos - a.atrasos || a.nombre.localeCompare(b.nombre, 'es'));
 }
-const ppStat = (ico, valor, texto, cls) => '<div class="pp-stat' + (cls ? ' ' + cls : '') + '"><span class="pp-stat-ico" aria-hidden="true">' + ico + '</span><span class="pp-stat-txt"><b class="pp-num">' + valor + '</b><span class="pp-stat-t">' + texto + '</span></span></div>';
+const ppStat = (ico, valor, texto, cls) => '<div class="pp-stat' + (cls ? ' ' + cls : '') + '"><span class="pp-stat-ico" aria-hidden="true">' + ico + '</span><span class="pp-stat-txt"><b class="pp-num rpg-num">' + valor + '</b><span class="pp-stat-t">' + texto + '</span></span></div>';
 // Mosaico «En riesgo»: «…» mientras llega el resumen; sin mosaico si el resumen falló (el tablero ya lo avisa).
 function ppTileRiesgo(riesgo) {
   if (riesgo) return riesgo.length ? ppStat('🚨', riesgo.length, 'En riesgo', 'riesgo') : ppStat('🛡️', 0, 'En riesgo', 'sin-riesgo');
@@ -145,7 +145,7 @@ function tarjetaGrupo(r, g, n) {
     '<div class="pp-grupo-top"><h4>' + escapeHtml(g.nombre) + '</h4>' + (g.nivel ? '<span class="chip">' + escapeHtml(g.nivel) + '</span>' : '') + '</div>' +
     '<p class="pp-grupo-meta">' + (g.horario ? '🗓️ ' + escapeHtml(g.horario) + ' · ' : '') + '👤 ' + personas + '</p>' +
     '<div class="pp-grupo-avance"><span>Entregas de la semana</span><b>' + (a.total ? a.hechas + '/' + a.total + ' · ' + a.pct + ' %' : '—') + '</b></div>' +
-    '<div class="barra" role="progressbar" aria-label="Entregas de la semana de ' + escapeHtml(g.nombre) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + a.pct + '"><span style="width:' + a.pct + '%"></span></div>' +
+    '<div class="rpg-xp-barra" role="progressbar" aria-label="Entregas de la semana de ' + escapeHtml(g.nombre) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + a.pct + '"><span style="width:' + a.pct + '%"></span></div>' +
     (a.atrasos ? '<p class="pp-grupo-meta">' + atrasos + '</p>' : '') +
     '<div class="pp-grupo-acc">' + ver + (g.meet_url ? '<a class="btn ghost" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') + '</div></article>';
 }

@@ -14,9 +14,9 @@ rediseñar la vista de alumnos y alumnas.
 ## Decisions
 
 1. **CSS propio y acotado** (`ingles/panel-profe.css`, todo bajo `.vista-admin` o con prefijo `pp-`/`reg-`), cargado
-   después de `secundaria.css` para reusar `--rpg-*`. Así no se pisa con el agente de la vista de alumnos (que edita
-   `ingles.css`). Alternativa descartada: editar `ingles.css`, con más riesgo de conflictos. Si en `main` aparece un
-   CSS común (p. ej. `estilos/ui.css`), se podrá mover ahí después.
+   después de `estilos/ui.css` (CSS común del diseño RPG, cambio `juegos-diseno-rpg`) para reusar `--rpg-*`,
+   `.rpg-etiqueta`, `.rpg-num` y `.rpg-xp-barra`. Así no se pisa con el agente de la vista de alumnos (que edita
+   `ingles.css`). Alternativa descartada: editar `ingles.css`, con más riesgo de conflictos.
 2. **Solo datos existentes.** «En riesgo» = `kpis.sinEntregas` ∪ filas con alguna celda `atrasado` del mismo
    `/ingles/resumen`. Se repinta (`pintarPanelProfe`) cuando llega el resumen; mientras, «…». Si el resumen falla, el
    mosaico no sale (el tablero ya muestra el error).

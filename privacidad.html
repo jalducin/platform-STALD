@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Aviso de privacidad · STALD</title>
+<meta name="description" content="Qué datos guarda la plataforma STALD, para qué, quién los ve y cómo ejercer tus derechos.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%234f46e5'/><text x='32' y='44' font-size='34' text-anchor='middle'>🔒</text></svg>">
+<script>
+  // Tema guardado antes de pintar, igual que ingles.html (openspec: ingles-pro).
+  try { var t = localStorage.getItem('stald_tema'); if (t === 'oscuro') document.documentElement.dataset.theme = 'dark'; else if (t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) { /* sin almacenamiento */ }
+</script>
+<link rel="stylesheet" href="estilos/legal.css?v=2">
+<!-- Aviso de privacidad (openspec: rpg-privacidad). Detrás del interruptor `privacidad`: apagado → «Próximamente». -->
+<script defer src="comun/interruptores.js?v=1"></script>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top" aria-label="Navegación">
+    <a href="./">← Inicio</a>
+    <a href="consentimiento.html" data-interruptor="privacidad" hidden>📝 Formato de consentimiento</a>
+  </nav>
+
+  <main>
+    <p class="card estado nota" data-interruptores-cargando>Cargando…</p>
+
+    <section class="card estado" id="proximamente" data-interruptor-apagado="privacidad" hidden>
+      <span class="ico" aria-hidden="true">🔒</span>
+      <h1>Aviso de privacidad</h1>
+      <p>Próximamente. Tu profe lo publicará aquí muy pronto.</p>
+      <p><a class="btn ghost" href="./">← Volver al inicio</a></p>
+    </section>
+    <noscript><section class="card estado"><h1>Aviso de privacidad</h1><p>Próximamente.</p></section></noscript>
+
+    <article class="card" id="aviso" data-interruptor="privacidad" hidden>
+      <span class="eyebrow">Aviso de privacidad integral</span>
+      <h1>Aviso de privacidad de la plataforma STALD</h1>
+      <p class="meta">Versión 0.1 · Última actualización: 21 de octubre de 2026</p>
+
+      <div class="borrador" role="note">
+        <b>Borrador para revisión del profe</b>
+        Este texto todavía no es la versión final. Los datos marcados <span class="pendiente">así</span> los llena el
+        profe. No es asesoría legal: está escrito para seguir la Ley Federal de Protección de Datos Personales en
+        Posesión de los Particulares, y conviene que lo revise una persona experta antes de publicarlo.
+      </div>
+
+      <section class="resumen" id="resumen" aria-labelledby="t-resumen">
+        <h2 id="t-resumen" style="margin-top:0">En un minuto</h2>
+        <ul>
+          <li>Guardamos lo mínimo para dar clases: nombre de pila, correo de acceso, resultados, avance y tus datos de
+            Juegos (apodo, avatar y partidas).</li>
+          <li>Los usamos para enseñar, dar seguimiento, que los juegos funcionen y mejorar la plataforma.</li>
+          <li>Tu profe ve lo de su grupo; cada alumno o alumna ve sus resultados y ningún compañero o compañera los ve.</li>
+          <li>No vendemos ni compartimos tus datos con nadie.</li>
+          <li>En Juegos, quien juega ve el apodo y el avatar de los demás: usa un apodo que no sea tu nombre y, si
+            quieres, un personaje en vez de foto.</li>
+          <li>Si algún día hay tutor con inteligencia artificial, será con permiso firmado y sin enviar tu nombre ni tu correo.</li>
+          <li>Puedes pedir ver, corregir o borrar tus datos: escríbele a tu profe por el canal de la escuela.</li>
+        </ul>
+      </section>
+
+      <nav aria-label="Contenido del aviso">
+        <ol class="indice">
+          <li><a class="enlace" href="#responsable">Quién es responsable</a></li>
+          <li><a class="enlace" href="#datos">Qué datos guardamos</a></li>
+          <li><a class="enlace" href="#finalidades">Para qué los usamos</a></li>
+          <li><a class="enlace" href="#donde">Dónde se guardan</a></li>
+          <li><a class="enlace" href="#quien">Quién los ve</a></li>
+          <li><a class="enlace" href="#no-compartimos">No vendemos ni compartimos</a></li>
+          <li><a class="enlace" href="#tutor-ia">Tutor con IA (futuro)</a></li>
+          <li><a class="enlace" href="#conservacion">Cuánto tiempo los guardamos</a></li>
+          <li><a class="enlace" href="#menores">Menores de edad y consentimiento</a></li>
+          <li><a class="enlace" href="#arco">Tus derechos (ARCO)</a></li>
+          <li><a class="enlace" href="#navegador">Lo que se guarda en tu aparato</a></li>
+          <li><a class="enlace" href="#cambios">Cambios a este aviso</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="responsable">1. Quién es responsable de tus datos</h2>
+      <p>
+        El responsable de tus datos personales es <span class="pendiente">[nombre de la escuela o de la persona
+        responsable]</span>, con domicilio en <span class="pendiente">[domicilio donde recibe avisos y documentos]</span>.
+        En este aviso le decimos «tu profe» a la persona que da las clases y administra la plataforma.
+      </p>
+      <p>
+        Este aviso aplica a la plataforma STALD: el portal, las clases de Inglés, las clases de Secundaria y Juegos.
+        También aplica a los <b>invitados de Juegos</b> (personas que no están en las clases y se registran solo para
+        jugar).
+      </p>
+
+      <h2 id="datos">2. Qué datos guardamos</h2>
+      <p>Guardamos solo lo necesario. Ninguno es un dato sensible (no pedimos salud, religión, origen ni nada parecido).</p>
+      <ul>
+        <li><b>Nombre de pila</b> del alumno o alumna (sin apellidos), para que tu profe sepa de quién es cada resultado.</li>
+        <li><b>Correo de acceso</b> y una contraseña. La contraseña se guarda cifrada: nadie la puede leer, ni tu profe.</li>
+        <li><b>Resultados</b>: respuestas y calificaciones de actividades, exámenes y clases, con su fecha.</li>
+        <li><b>Avance</b>: qué clases llevas, el borrador de un examen abierto y tu progreso (puntos, nivel e insignias).</li>
+        <li><b>Apodo de Juegos</b>. Si no escribes uno, Juegos usa tu nombre de pila.</li>
+        <li><b>Avatar de Juegos</b>: un personaje y un color o, si la subes, una foto. Al subir una foto se pide marcar
+          una casilla de que tienes permiso de tu mamá, papá o tutor; la plataforma no puede comprobar ese permiso, por
+          eso también se pregunta en el <a class="enlace" href="consentimiento.html" data-interruptor="privacidad">formato
+          de consentimiento</a>.</li>
+        <li><b>Partidas y avance de Juegos</b>: puntos, con qué apodos jugaste y tu progreso en algunos juegos.</li>
+        <li><b>Invitados de Juegos</b>: correo, apodo, avatar, partidas y la fecha de sus visitas.</li>
+        <li><b>Entregas en texto</b> de las misiones, cuando existan. Nunca piden nombres reales, direcciones ni datos de contacto.</li>
+      </ul>
+      <p class="nota">
+        No guardamos audio. Si usas el micrófono para practicar pronunciación, tu navegador (por ejemplo, Chrome) puede
+        enviar el audio a su proveedor para convertirlo en texto; la plataforma solo guarda el texto reconocido como respuesta.
+      </p>
+
+      <h2 id="finalidades">3. Para qué los usamos</h2>
+      <p><b>Finalidades necesarias</b> (sin ellas la plataforma no funciona):</p>
+      <ul>
+        <li>darte acceso a tus clases, actividades, exámenes y juegos;</li>
+        <li>calificar, mostrarte tu avance y darte retroalimentación;</li>
+        <li>que tu profe dé seguimiento a su grupo y detecte a tiempo a quien necesite apoyo;</li>
+        <li>que los juegos, las partidas y su ranking funcionen.</li>
+      </ul>
+      <p><b>Finalidad secundaria</b> (puedes oponerte sin perder el acceso; ve la sección 10. Hoy tu profe te excluye a mano <span class="pendiente">[confirmar cómo]</span>):</p>
+      <ul>
+        <li>que tu profe revise cómo se usa la plataforma (por ejemplo, qué juegos se juegan más) para mejorarla.</li>
+      </ul>
+      <p>No los usamos para publicidad, perfiles comerciales ni nada que no sea tu aprendizaje.</p>
+
+      <h2 id="donde">4. Dónde se guardan</h2>
+      <ul>
+        <li><b>Base de datos en la nube</b> (Supabase, una base de datos Postgres): cuentas, resultados, avance,
+          entregas y datos de Juegos. Está cerrada: solo el servidor de la plataforma la puede leer.</li>
+        <li><b>Archivo privado de la plataforma</b> (un repositorio privado en GitHub): el contenido de las clases y
+          datos de antes de pasar a la base de datos, incluido su historial. No es público.</li>
+        <li><b>Servidor de la plataforma</b> (el programa que atiende cada petición, en Deno Deploy): no guarda tus
+          datos por su cuenta.</li>
+      </ul>
+      <p>
+        Estos servicios son empresas de tecnología que solo guardan y procesan la información por encargo de tu profe.
+        Sus servidores pueden estar fuera de México: <span class="pendiente">[confirmar la región de cada servicio]</span>.
+      </p>
+
+      <h2 id="quien">5. Quién los ve</h2>
+      <ul class="roles">
+        <li><b>Tu profe (administración)</b>Ve los resultados, el avance y las entregas de su grupo con el nombre de
+          pila. Es quien califica y da seguimiento.</li>
+        <li><b>Tú (alumno o alumna)</b>Ves solo lo tuyo: tus resultados, tu avance, tus entregas y tus puntos.</li>
+        <li><b>Quienes juegan en Juegos</b>Compañeros, compañeras e invitados de Juegos no ven tus resultados de
+          clase. En el ranking y en las partidas de Juegos sí ven tu apodo, tu avatar (personaje o foto) y tus puntos.
+          Si no pusiste apodo, ven tu nombre de pila.</li>
+        <li><b>Ranking de tu grupo de Inglés</b> (fase futura)Estará oculto: solo aparecerás si tú lo activas, con tu
+          apodo aprobado por tu profe y tus puntos de constancia, nunca con tu nombre, foto ni calificaciones.</li>
+        <li><b>Cualquier otra persona</b>Sin sesión no ve resultados ni avance de nadie. Ojo: la foto de avatar de
+          Juegos se sirve con un enlace difícil de adivinar, y quien tenga ese enlace puede verla.</li>
+        <li><b>Empresas de tecnología</b>Guardan la información (sección 4), pero no la usan para nada propio.</li>
+      </ul>
+      <p class="nota">Solo tu profe ve los correos; nadie más ve el correo de otra persona. Ningún ranking muestra calificaciones de clase.</p>
+
+      <h2 id="no-compartimos">6. No vendemos ni compartimos tus datos</h2>
+      <p>
+        No vendemos, rentamos ni compartimos tus datos con otras personas o empresas (la ley le llama
+        «transferencia» a compartirlos, y no hacemos ninguna). Solo los entregaríamos si una autoridad lo exige
+        conforme a la ley.
+      </p>
+
+      <h2 id="tutor-ia">7. Tutor con inteligencia artificial (fase futura)</h2>
+      <p>Hoy <b>no está activo</b>. Si tu profe lo activa más adelante:</p>
+      <ul>
+        <li>solo lo podrá usar quien tenga el <a class="enlace" href="consentimiento.html" data-interruptor="privacidad">permiso firmado</a> de su mamá, papá o tutor;</li>
+        <li>antes de enviar tu mensaje al proveedor de IA, la plataforma quita correos, teléfonos, nombres y otros datos
+          personales; nunca envía tu nombre, tu correo ni tu identificador;</li>
+        <li>el proveedor previsto es <span class="pendiente">[Anthropic, Estados Unidos: confirmar]</span>. Antes de
+          activarlo se confirmará y se escribirá aquí que no usa los mensajes para entrenar sus modelos y cuánto tiempo los guarda;</li>
+        <li>las conversaciones se guardan en una bitácora, ya sin datos personales, que tu profe puede revisar; se borran a los 90 días;</li>
+        <li>si un mensaje muestra que alguien podría estar en riesgo, verá un mensaje de apoyo y tu profe recibirá un
+          aviso sin el contenido de la conversación;</li>
+        <li>la IA puede equivocarse: confirma con tu profe.</li>
+      </ul>
+      <p>Las entregas con imagen o audio tampoco existen hoy; llegarían después y solo con un permiso firmado aparte.</p>
+
+      <h2 id="conservacion">8. Cuánto tiempo los guardamos</h2>
+      <ul>
+        <li><b>Cuenta, resultados y avance</b>: mientras seas alumno o alumna; después de la baja, se borran
+          <span class="pendiente">[plazo por definir; por ejemplo, al cierre del ciclo escolar]</span> o antes si lo pides.</li>
+        <li><b>Texto de las entregas de misiones</b>: hasta el 31 de agosto de cada año (fin del ciclo más 30 días).
+          Después solo queda la calificación.</li>
+        <li><b>Datos de Juegos</b> (apodo, avatar, foto, partidas y avance; también de invitados):
+          <span class="pendiente">[plazo por definir]</span> o antes si lo pides.</li>
+        <li><b>Ranking de Inglés y apodo aprobado</b> (fase futura): 30 días después de la baja.</li>
+        <li><b>Bitácora del tutor con IA</b> (si se activa): 90 días.</li>
+        <li><b>Registro de permisos</b>: solo un identificador interno, el tipo de permiso y la fecha; se borra al
+          retirar el permiso o con la baja.</li>
+      </ul>
+      <p>
+        Hoy el borrado lo hace tu profe a mano cuando lo pides o se cumple el plazo; los borrados automáticos llegarán
+        con las nuevas funciones <span class="pendiente">[confirmar]</span>. El historial del archivo privado (sección 4)
+        conserva copias anteriores: si pides borrar tus datos, tu profe también los quita de ahí
+        <span class="pendiente">[confirmar cómo]</span>.
+      </p>
+
+      <h2 id="menores">9. Menores de edad y consentimiento</h2>
+      <p>
+        La plataforma la usan alumnos y alumnas menores de edad. Por eso pedimos el permiso de su mamá, papá o tutor
+        con un <a class="enlace" href="consentimiento.html" data-interruptor="privacidad">formato simple de consentimiento</a>. Ese formato se firma
+        en papel y lo guarda tu profe; <b>la plataforma no guarda el documento firmado</b>, solo anota que existe, de qué
+        tipo es y su fecha. Las funciones opcionales (foto de avatar, ranking por apodo y, en el futuro, tutor con IA o
+        entregas con imagen o audio) se autorizan por separado y se pueden retirar cuando quieran.
+      </p>
+
+      <h2 id="arco">10. Tus derechos ARCO y cómo ejercerlos</h2>
+      <p>Tú, o tu mamá, papá o tutor, pueden pedir en cualquier momento:</p>
+      <ul>
+        <li><b>Acceso</b>: saber qué datos tenemos y cómo los usamos.</li>
+        <li><b>Rectificación</b>: corregirlos si están mal.</li>
+        <li><b>Cancelación</b>: que los borremos.</li>
+        <li><b>Oposición</b>: que dejemos de usarlos para algo en particular.</li>
+      </ul>
+      <p>También pueden <b>retirar un permiso</b> (por ejemplo, el del ranking o el del tutor con IA) o pedir que limitemos el uso de los datos.</p>
+      <h3>Cómo pedirlo</h3>
+      <ol>
+        <li><b>Escríbele a tu profe por el canal de la escuela</b>: <span class="pendiente">[nombrar el medio concreto,
+          por ejemplo el grupo de mensajes de la clase o el correo de la escuela]</span>.</li>
+        <li>Di qué quieres (ver, corregir, borrar, oponerte o retirar un permiso) y de qué alumno o alumna se trata.</li>
+        <li>Si lo pide la mamá, el papá o el tutor, tu profe puede pedir que acredite que lo es.</li>
+      </ol>
+      <p>
+        Tu profe te responderá en un plazo máximo de <span class="pendiente">[20 días hábiles: confirmar con la ley vigente]</span>
+        y, si procede, lo hará efectivo dentro de los <span class="pendiente">[15 días hábiles: confirmar]</span> siguientes.
+        Si no quedas conforme, puedes acudir a la autoridad de protección de datos personales:
+        <span class="pendiente">[nombre de la autoridad vigente tras la reforma de 2025]</span>.
+      </p>
+
+      <h2 id="navegador">11. Lo que se guarda en tu aparato</h2>
+      <p>
+        La plataforma no usa cookies de publicidad ni de rastreo. En tu navegador guarda: tu sesión y tu correo (para
+        no pedirlo cada vez), tu tema (claro u oscuro), preferencias y avance de algunos juegos, marcas de tus clases
+        de Secundaria y, mientras contestas, el borrador del examen abierto (se borra al enviarlo, al cerrar sesión o a
+        los 14 días). Al cerrar sesión se borran la sesión y el correo de ese aparato. Si usas un aparato compartido,
+        cierra sesión al terminar.
+      </p>
+
+      <h2 id="cambios">12. Cambios a este aviso</h2>
+      <p>
+        Si este aviso cambia (por ejemplo, cuando se active el tutor con IA), publicaremos la nueva versión en esta
+        misma página con su fecha, y avisaremos en el portal. Si el cambio necesita un permiso nuevo, lo pediremos con
+        el formato de consentimiento antes de usar los datos de esa forma.
+      </p>
+    </article>
+  </main>
+
+  <footer>STALD · aprender también puede ser divertido</footer>
+</div>
+</body>
+</html>

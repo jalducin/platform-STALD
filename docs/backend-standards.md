@@ -15,6 +15,7 @@
 | `server/actividades.ts` | Rutas de actividades y exámenes sobre el almacén JSON (caché de contenido de 60 s) |
 | `server/cache.ts` | `crearMemo` y `unaALaVez`: cachés en memoria con single-flight (cambio `cache-estabilidad`) |
 | `server/http_cache.ts` | Política de caché HTTP por ruta, `ETag` y 304 (cambio `cache-estabilidad`) |
+| `server/interruptores.ts` | `GET /interruptores`: interruptores públicos del profe (`config/interruptores.json`), con caché de 60 s y falla cerrada (cambio `rpg-privacidad`) |
 | `server/motor.ts` | Lógica pura: selección por alumno e intento, calificación, mejor intento, refuerzo |
 | `server/store.ts` | `GitHubStore` (API de contenidos, escritura con `sha`) y `MemoryStore` (pruebas) |
 | `server/rows.ts` | Extracción de filas de Notion (Secundaria) y filtrado por correo |
@@ -32,7 +33,7 @@ falso de sesión), `PORT` y `PERMITIR_HOY=1` (permite `?hoy=`).
 **Identidad y sesión (`server/auth.ts`, cambio `plataforma-login`):**
 
 - Cada petición pasa por `quienEs(req, deps)` **una vez** en `main.ts`; todas las rutas usan el correo que devuelve,
-  nunca el de la URL. Excepciones sin identidad: `OPTIONS`, `GET /salud`, `GET /config` y `GET /juegos/foto/<token>`.
+  nunca el de la URL. Excepciones sin identidad: `OPTIONS`, `GET /salud`, `GET /config`, `GET /interruptores` y `GET /juegos/foto/<token>`.
 - Con `Authorization: Bearer <token>`: se valida con `GET {SUPABASE_URL}/auth/v1/user` (`apikey` = publishable) y se
   usa el correo verificado. Caché de 5 min por SHA-256 del token (tope 2,000). Token rechazado → 401
   `sesion_invalida`; Supabase sin responder o sin configurar → 503 `auth_no_disponible` (no se guarda en caché).
@@ -45,6 +46,7 @@ falso de sesión), `PORT` y `PERMITIR_HOY=1` (permite `?hoy=`).
 | Ruta | Método | Respuesta |
 |---|---|---|
 | `/config` | GET (sin sesión) | `{ supabaseUrl, publishableKey }`; con `ROWS_FIXTURE`, `{ prueba: true }`; sin variables, 503 `sin_config` |
+| `/interruptores` | GET (sin sesión) | `{ privacidad: boolean }`: solo llaves conocidas y solo `true` estricto enciende. Lee `config/interruptores.json` de `stald_docs` (o del almacén sin Postgres); sin documento o con error → todo `false`. Caché en memoria 60 s. Otro método → 405 (cambio `rpg-privacidad`) |
 | `/auth/preparar` | POST `{ email, password }` (sin sesión) | Si es la contraseña inicial de esa persona («sensei» el admin, «clase» alumnos y alumnas de Inglés o Secundaria) y su cuenta no tiene `app_metadata.contrasena_propia`, crea la cuenta de Auth (correo confirmado) o le pone la inicial y confirma su correo: `{ listo: true }`. 401 `credenciales`, 400 `correo_invalido`, 429 tras 10 intentos por correo en 10 min, 503 `auth_no_disponible`. En Auth la contraseña es `stald·` + lo que se escribe |
 | `/auth/contrasena` | POST `{ nueva }` (con token) | 6 a 60 caracteres, distinta de las iniciales; la pone y marca `contrasena_propia`. 400 `contrasena_invalida`, 401 sin token |
 | `/auth/restablecer` | POST `{ email }` | Solo admin **con token**: contraseña aleatoria y `contrasena_propia = false` (vuelve a entrar con la inicial). `{ ok, email, sinCuenta? }`; 403 `solo_admin` |
@@ -378,7 +380,7 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - `loadRows` entrega una copia (`structuredClone`): quien la recibe puede modificar sus filas.
   - Caché HTTP: `handler` pasa cada respuesta por `aplicarCacheHttp` con `politicaCache(ruta)`. Por omisión todo es
     `no-store` (datos personales: no se guardan en el aparato). Solo `GET` con 200 de estas rutas:
-    `/config` → `public, max-age=600`; `/juegos/ranking` y `/juegos/ranking/juegos` → `private, no-cache`, `Vary: Authorization`, `ETag` débil y
+    `/config` → `public, max-age=600`; `/interruptores` → `public, max-age=60`; `/juegos/ranking` y `/juegos/ranking/juegos` → `private, no-cache`, `Vary: Authorization`, `ETag` débil y
     304 si `If-None-Match` coincide. Una ruta nueva entra a la lista solo si no lleva datos de una persona.
 
 **Pronunciación** (`server/motor.ts`, cambio `pronunciacion`):
