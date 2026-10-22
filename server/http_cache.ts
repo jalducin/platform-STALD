@@ -1,6 +1,7 @@
 // Caché HTTP por ruta (openspec: cache-estabilidad). Por omisión toda respuesta es `no-store` (datos personales: no
 // se guardan en el aparato). Solo las rutas de esta lista se pueden guardar o revalidar, y solo cuando responden 200:
 // - /config: pública y casi fija → el navegador la guarda 10 min;
+// - /interruptores: pública, solo booleanos → el navegador la guarda 60 s (openspec: rpg-privacidad);
 // - /juegos/ranking: sin correos y la misma para todos los jugadores → `private, no-cache` con ETag; el navegador la
 //   revalida en cada uso (If-None-Match) y un 304 ahorra el cuerpo. `Vary: Authorization` separa por sesión.
 //   /juegos/ranking/juegos (juegos más jugados, openspec: ranking-juegos-populares) usa la misma política.
@@ -12,6 +13,7 @@ export interface PoliticaCache {
 
 const POLITICAS: { ruta: RegExp; politica: PoliticaCache }[] = [
   { ruta: /\/config$/, politica: { cacheControl: "public, max-age=600" } },
+  { ruta: /\/interruptores$/, politica: { cacheControl: "public, max-age=60" } },
   { ruta: /\/juegos\/ranking(\/juegos)?$/, politica: { cacheControl: "private, no-cache", vary: "Authorization" } },
 ];
 

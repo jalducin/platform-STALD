@@ -5,10 +5,14 @@
 
 ## 1. Interruptor del ranking
 
-- Documento `gamificacion/config.json` en `stald_docs`: `{ "ranking": false, "gruposSinRanking": [] }`. Sin documento
-  vale lo mismo (apagado). Se lee **en cada petición** (una consulta) para que apagar tenga efecto inmediato.
-- `server/interruptores.ts` es genérico (`leerInterruptores`, `cambiarInterruptores` con concurrencia optimista) para
-  que el tutor IA (`tutor/config.json`) u otros interruptores lo reusen.
+- **General:** se reusa el mecanismo de `rpg-privacidad` (en `main` antes de este PR): llave `ranking` de
+  `config/interruptores.json` en `stald_docs`, junto a `privacidad`. Sin fila o ilegible → apagado; caché de 60 s por
+  servidor (`olvidar()` tras cambiarlo desde «🛡️ Nicks»); también sale en `GET /interruptores` (solo booleanos).
+  Se cambia con `POST /profe/ranking { ranking }` (upsert de la fila con `escribirInterruptor`) o con el SQL de
+  `docs/data-model.md`.
+- **Por grupo:** `gamificacion/config.json` = `{ "gruposSinRanking": [] }`, leído en cada petición (efecto inmediato).
+- `server/interruptores.ts` agrega `leerConfigDoc` y `cambiarConfigDoc` (concurrencia optimista) para documentos de
+  configuración propios de una pieza (aquí, el apagado por grupo).
 - Decisión del profe (2026-10-21, a través de la sesión principal): el ranking se publica **apagado**. Cambia el
   paraguas, que solo preveía apagarlo por grupo: ahora hay además un interruptor general, apagado por defecto.
 

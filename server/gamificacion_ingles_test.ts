@@ -6,6 +6,7 @@ import { assert, assertEquals } from "jsr:@std/assert@1";
 import "../comun/constancia.js";
 import { CONFIG_POR_DEFECTO, estadoNick, handleGamificacion, handleProfeGamificacion, nickRepetido, rankingVisible, revisarNick, RUTA_CONFIG, rutaPerfil } from "./gamificacion.ts";
 import { invalidarRanking } from "./cache_ranking.ts";
+import { INTERRUPTORES_POR_OMISION, normalizarInterruptores, RUTA_INTERRUPTORES } from "./interruptores.ts";
 import { clearCacheJuegos, handleJuegos } from "./juegos.ts";
 import type { Item } from "./motor.ts";
 import { MemoryStore, type Store } from "./store.ts";
@@ -36,7 +37,7 @@ function base(extra: Record<string, unknown> = {}, config: unknown = { ranking: 
   return storeCon({
     "alumnos.json": REGISTRO,
     "juegos/nicks.json": { "a-marisol-perez": "Estrella Azul", "a-angel-ruiz": "Rayo 77", "a-laura-gomez": "Cometa", "a-fernando-diaz": "Tigre" },
-    ...(config ? { [RUTA_CONFIG]: config } : {}),
+    ...(config ? { [RUTA_INTERRUPTORES]: config } : {}),
     // act-1: Marisol a tiempo (10), Angel tarde (5); act-2: Marisol a tiempo el 13 (semana pasada: 0), Laura tarde el 20 (5)
     "resultados/act-1/marisol-perez.json": res("Marisol Pérez", "2026-10-19T18:00:00Z"),
     "resultados/act-1/angel-ruiz.json": res("Angel Ruiz", "2026-10-21T02:00:00Z", true),
@@ -52,6 +53,11 @@ const deps = (store: Store, email: string, extra: Record<string, unknown> = {}) 
   esSecundaria: (c: string) => Promise.resolve(c === "sofi@example.com" || c === "solo-sec@example.com"),
   grupoDe: (slug: string) => Promise.resolve(GRUPOS[slug] ?? null),
   items: () => Promise.resolve(ITEMS),
+  interruptores: async () => normalizarInterruptores((await store.get(RUTA_INTERRUPTORES))?.data),
+  cambiarRankingGeneral: async (v: boolean) => {
+    const d = await store.get<any>(RUTA_INTERRUPTORES);
+    await store.put(RUTA_INTERRUPTORES, { ...(d?.data ?? {}), ranking: v }, d?.sha ?? null, "x");
+  },
   hoy: () => HOY, ahora: () => "2026-10-21T17:00:00.000Z",
   ...extra,
 });
@@ -116,7 +122,8 @@ Deno.test("nick: rechaza correos, teléfonos, nombres de pila del registro y pal
 // ---------- Perfil ----------
 Deno.test("perfil: interruptor apagado (por defecto) → nada del ranking; PUT → 404 sin_ranking", async () => {
   const s = base({}, null);
-  assertEquals(CONFIG_POR_DEFECTO.ranking, false);
+  assertEquals(CONFIG_POR_DEFECTO, { gruposSinRanking: [] });
+  assertEquals(INTERRUPTORES_POR_OMISION.ranking, false);
   assertEquals(await llamar(s, "marisol@example.com", "GET", "/gamificacion/perfil"), { status: 200, body: { ranking: false } });
   assertEquals((await aparecer(s, "marisol@example.com")).status, 404);
   assertEquals((await llamar(s, "marisol@example.com", "GET", "/gamificacion/ranking")).body.error, "sin_ranking");
@@ -274,12 +281,15 @@ Deno.test("profe: borra el perfil 30 días después de la baja", async () => {
 });
 
 Deno.test("rankingVisible: /ingles/actividades solo avisa con el interruptor encendido (sin petición extra si está apagado)", async () => {
-  assertEquals(await rankingVisible(base({}, null), "g1"), false);
-  assertEquals(await rankingVisible(base({}, { ranking: true, gruposSinRanking: ["g2"] }), "g1"), true);
-  assertEquals(await rankingVisible(base({}, { ranking: true, gruposSinRanking: ["g2"] }), "g2"), false);
-  assertEquals(await rankingVisible(base({}, { ranking: true }), null), true); // sin base de grupos: un solo grupo
+  const dv = (st: Store) => deps(st, "") as any;
+  assertEquals(await rankingVisible(dv(base({}, null)), "g1"), false);
+  assertEquals(await rankingVisible(dv(base({}, { privacidad: true })), "g1"), false);
+  const s = base({ [RUTA_CONFIG]: { gruposSinRanking: ["g2"] } }, { ranking: true });
+  assertEquals(await rankingVisible(dv(s), "g1"), true);
+  assertEquals(await rankingVisible(dv(s), "g2"), false);
+  assertEquals(await rankingVisible(dv(base({}, { ranking: true })), null), true); // sin base de grupos: un solo grupo
   const roto: Store = { get: () => Promise.reject(new Error("caído")), put: () => Promise.resolve(false), list: () => Promise.resolve([]), remove: () => Promise.resolve() };
-  assertEquals(await rankingVisible(roto, "g1"), false);
+  assertEquals(await rankingVisible({ store: roto, interruptores: () => Promise.resolve({ ranking: true }) }, "g1"), false);
 });
 
 Deno.test("nick: no se brinca la revisión con «1» por «l», otros alfabetos, ancho completo ni correos con números", () => {

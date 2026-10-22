@@ -13,7 +13,7 @@ import { leerCarpeta } from "./db.ts";
 import { type Item, type Resultado, slugAlumno, tieneReto } from "./motor.ts";
 import type { RegistroAlumnos } from "./alumnos.ts";
 import type { Store } from "./store.ts";
-import { cambiarInterruptores, leerInterruptores } from "./interruptores.ts";
+import { cambiarConfigDoc, leerConfigDoc } from "./interruptores.ts";
 import { invalidarRanking, memoRanking } from "./cache_ranking.ts";
 
 type Json = (body: unknown, status?: number) => Response;
@@ -26,19 +26,23 @@ const C = (globalThis as any).Constancia as {
   posicionDe(puntos: number, filas: { puntos: number }[]): number;
 };
 
-// ---------- Configuración (interruptor) ----------
+// ---------- Interruptores ----------
+// General: la llave `ranking` de los interruptores públicos (`config/interruptores.json`, server/interruptores.ts,
+// mecanismo de rpg-privacidad), apagada por defecto. Por grupo: `gamificacion/config.json` (`gruposSinRanking`).
 export const RUTA_CONFIG = "gamificacion/config.json";
 export interface ConfigGamificacion {
-  ranking: boolean; // interruptor general: apagado por defecto
   gruposSinRanking: string[]; // grupos con el ranking apagado por el profe
 }
-export const CONFIG_POR_DEFECTO: ConfigGamificacion = { ranking: false, gruposSinRanking: [] };
-const leerConfig = (store: Store) => leerInterruptores(store, RUTA_CONFIG, CONFIG_POR_DEFECTO);
-const rankingPrendido = (c: ConfigGamificacion, grupo: string) => c.ranking === true && !(c.gruposSinRanking || []).includes(grupo);
+export const CONFIG_POR_DEFECTO: ConfigGamificacion = { gruposSinRanking: [] };
+const leerConfig = (store: Store) => leerConfigDoc(store, RUTA_CONFIG, CONFIG_POR_DEFECTO);
+async function rankingPrendido(deps: Pick<DepsGamificacion, "store" | "interruptores">, grupo: string): Promise<boolean> {
+  if ((await deps.interruptores()).ranking !== true) return false; // apagado: ni se lee lo demás
+  return !((await leerConfig(deps.store)).gruposSinRanking || []).includes(grupo);
+}
 // ¿Ve el ranking este grupo? Lo usa /ingles/actividades para avisar a la página (sin petición extra si está apagado).
 // Si no se puede leer la configuración, se toma como apagado.
-export async function rankingVisible(store: Store, grupo: string | null): Promise<boolean> {
-  try { return rankingPrendido(await leerConfig(store), grupo ?? GRUPO_UNICO); } catch { return false; }
+export async function rankingVisible(deps: Pick<DepsGamificacion, "store" | "interruptores">, grupo: string | null): Promise<boolean> {
+  try { return await rankingPrendido(deps, grupo ?? GRUPO_UNICO); } catch { return false; }
 }
 
 // ---------- Perfil ----------
@@ -120,6 +124,8 @@ export interface DepsGamificacion {
   esSecundaria: (email: string) => Promise<boolean>;
   grupoDe?: (slug: string) => Promise<string | null>; // sin base de grupos: todos en un solo grupo
   items: (hoy: string) => Promise<Item[]>; // contenido visible de Inglés
+  interruptores: () => Promise<{ ranking: boolean }>; // interruptores públicos (config/interruptores.json)
+  cambiarRankingGeneral?: (valor: boolean) => Promise<void>; // escribe la llave `ranking` (solo admin)
   pasosMision?: (slug: string) => Promise<{ enviadoEn: string }[]>; // motor de misiones (Fase 2a); sin él, 0
   hoy: () => string;
   ahora: () => string;
@@ -213,7 +219,7 @@ async function rutaRanking(url: URL, deps: DepsGamificacion, json: Json): Promis
     if (pedido && pedido !== grupo) return json({ error: "otro_grupo" }, 403);
     yo = { slug: p.slug };
   }
-  if (!rankingPrendido(await leerConfig(deps.store), grupo)) return json({ error: "sin_ranking" }, 404);
+  if (!await rankingPrendido(deps, grupo)) return json({ error: "sin_ranking" }, 404);
   const semana = C.semanaDe(deps.hoy());
   const calc = await memoRanking(`${grupo}|${semana.desde}`, () => calcularGrupo(deps, grupo, semana));
   const lista = C.ordenarRanking(calc.visibles).map((f) => ({ posicion: f.posicion, nick: f.nick, puntos: f.puntos }));
@@ -243,7 +249,7 @@ async function perfilHttp(req: Request, url: URL, deps: DepsGamificacion, json: 
   const ajeno = url.searchParams.get("alumno");
   if (ajeno && ajeno !== p.slug) return json({ error: "ajeno" }, 403);
   const grupo = await grupoDe(deps, p.slug);
-  const prendido = rankingPrendido(await leerConfig(deps.store), grupo);
+  const prendido = await rankingPrendido(deps, grupo);
 
   if (req.method === "GET") {
     if (!prendido) return json({ ranking: false }); // apagado: nada del ranking, ni el botón para activarlo
@@ -323,8 +329,8 @@ async function listaNicks(url: URL, deps: DepsGamificacion, json: Json): Promise
       ...(rev && !rev.ok ? { revision: rev.motivo } : {}),
     };
   }))).filter((x) => x !== null).sort((a, b) => Number(b.aparecer && b.estado === "pendiente") - Number(a.aparecer && a.estado === "pendiente") || a.nombre.localeCompare(b.nombre, "es"));
-  const config = await leerConfig(deps.store);
-  return json({ ranking: config.ranking, gruposSinRanking: config.gruposSinRanking, personas });
+  const [general, config] = await Promise.all([deps.interruptores(), leerConfig(deps.store)]);
+  return json({ ranking: general.ranking === true, gruposSinRanking: config.gruposSinRanking, personas });
 }
 
 async function moderar(req: Request, accion: "aprobar" | "rechazar", deps: DepsGamificacion, json: Json): Promise<Response> {
@@ -359,14 +365,22 @@ async function cambiarRanking(req: Request, deps: DepsGamificacion, json: Json):
   const grupo = typeof body.grupo === "string" && /^[\w-]{1,60}$/.test(body.grupo) ? body.grupo : null;
   const apagado = typeof body.apagado === "boolean" ? body.apagado : undefined;
   if (general === undefined && !(grupo && apagado !== undefined)) return json({ error: "datos_invalidos" }, 400);
-  const nueva = await cambiarInterruptores(deps.store, RUTA_CONFIG, CONFIG_POR_DEFECTO, (c) => {
-    const sin = new Set(c.gruposSinRanking || []);
-    if (grupo && apagado !== undefined) { if (apagado) sin.add(grupo); else sin.delete(grupo); }
-    return { ...c, ...(general !== undefined ? { ranking: general } : {}), gruposSinRanking: [...sin].sort() };
-  }, "gamificacion: interruptor del ranking");
-  if (!nueva) return json({ error: "conflicto_escritura" }, 503);
+  if (general !== undefined) {
+    if (!deps.cambiarRankingGeneral) return json({ error: "no_disponible" }, 503);
+    await deps.cambiarRankingGeneral(general);
+  }
+  let config = await leerConfig(deps.store);
+  if (grupo && apagado !== undefined) {
+    const nueva = await cambiarConfigDoc(deps.store, RUTA_CONFIG, CONFIG_POR_DEFECTO, (c) => {
+      const sin = new Set(c.gruposSinRanking || []);
+      if (apagado) sin.add(grupo); else sin.delete(grupo);
+      return { ...c, gruposSinRanking: [...sin].sort() };
+    }, "gamificacion: ranking por grupo");
+    if (!nueva) return json({ error: "conflicto_escritura" }, 503);
+    config = nueva;
+  }
   invalidarRanking();
-  return json({ ok: true, ranking: nueva.ranking, gruposSinRanking: nueva.gruposSinRanking });
+  return json({ ok: true, ranking: (await deps.interruptores()).ranking === true, gruposSinRanking: config.gruposSinRanking });
 }
 
 // sub: "/nicks", "/nicks/aprobar", "/nicks/rechazar" o "/ranking" (lo que sigue a /profe).

@@ -23,8 +23,9 @@ consentimientos») y los quita del paraguas.
 - **Ranking por grupo** (`GET /gamificacion/ranking`): solo su grupo, semana lunes a domingo (CDMX), por **puntos de
   constancia** (10 a tiempo, 5 tarde, 20 por paso de misión), solo quien activó «🏆 Aparecer» y tiene el nick aprobado.
   Posición propia privada aunque esté oculto. Nunca nombres, correos, slugs, XP ni calificaciones.
-- **Interruptor** `gamificacion/config.json` → `{ ranking: false, gruposSinRanking: [] }` en `stald_docs`, apagado por
-  defecto, con efecto inmediato y sin redeploy (mecanismo de «Cómo revertir» de `plataforma-rpg`). Apagado: el perfil
+- **Interruptor general:** llave `ranking` de `config/interruptores.json` en `stald_docs`. Es el mecanismo de interruptores
+  que dejó en `main` el cambio `rpg-privacidad`, y aquí se reusa. Está apagado por defecto y se cambia sin redeploy.
+  El apagado por grupo vive en `gamificacion/config.json` (`gruposSinRanking`). Apagado: el perfil
   responde `{ ranking: false }`, el ranking 404 y la página no dibuja nada del ranking, ni el botón.
 - **Panel del profe** («🛡️ Nicks» en `ingles.html`, admin): cola de moderación (aprobar o rechazar con motivo), lista
   de nicks con su revisión automática, interruptor general y apagado por grupo.
@@ -54,7 +55,7 @@ consentimientos») y los quita del paraguas.
 - **Servidor Deno:** `server/gamificacion.ts`, `server/interruptores.ts`, `server/cache_ranking.ts` (nuevos),
   `server/main.ts` (rutas), `server/db.ts` (prefijo `gamificacion/` a Postgres), `server/juegos.ts` (invalida la caché
   del ranking al cambiar un nick).
-- **Postgres de Supabase:** documentos nuevos en `stald_docs` (`gamificacion/config.json`,
+- **Postgres de Supabase:** documentos nuevos en `stald_docs` (llave `ranking` en `config/interruptores.json`, `gamificacion/config.json`,
   `gamificacion/perfiles/<slug>.json`); sin migración ni tablas nuevas. Auth, Realtime y Notion: sin cambios.
 - **Repo de datos:** sin cambios (la misión «My Hero Card» queda pendiente).
 
@@ -84,7 +85,7 @@ Se verifica con `server/gamificacion_ingles_test.ts` (incluye un recorrido de to
 
 ## Cómo revertir
 
-- **Sin redeploy:** el ranking ya nace apagado; para volver a apagarlo, «⏸️ Apagar el ranking» o borrar
-  `gamificacion/config.json` de `stald_docs`.
+- **Sin redeploy:** el ranking ya nace apagado; para volver a apagarlo, «⏸️ Apagar el ranking» o poner
+  `"ranking": false` en `config/interruptores.json` de `stald_docs`.
 - **Código:** revertir el PR. Los perfiles en `stald_docs` (`gamificacion/perfiles/`) se pueden borrar sin perder
   calificaciones: el tablero RPG se deriva de los resultados.

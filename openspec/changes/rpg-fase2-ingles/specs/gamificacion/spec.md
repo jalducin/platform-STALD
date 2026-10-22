@@ -16,8 +16,10 @@ la Fase 1, sin cambios), y el mundo actual de Inglés. SHALL NOT guardar nada nu
 - **THEN** ve lo mismo que antes del tablero RPG
 
 ### Requirement: Interruptor general del ranking
-El ranking de Inglés SHALL estar detrás de un interruptor del profe en `stald_docs` (`gamificacion/config.json`,
-`ranking`), **apagado por defecto** (también si el documento no existe), con efecto inmediato y sin redeploy. Con el
+El ranking de Inglés SHALL estar detrás de un interruptor general del profe, la llave `ranking` de los interruptores
+públicos (`config/interruptores.json` en `stald_docs`, el mismo mecanismo que `privacidad`), **apagado por defecto**
+(también si el documento no existe o no se puede leer), sin redeploy y con efecto en a lo más un minuto. El apagado por
+grupo SHALL vivir en `gamificacion/config.json` (`gruposSinRanking`), con efecto inmediato. Con el
 interruptor apagado o el grupo apagado, `GET /gamificacion/perfil` SHALL responder solo `{ ranking: false }`,
 `PUT /gamificacion/perfil { aparecer: true }` y `GET /gamificacion/ranking` SHALL responder 404 `sin_ranking`, y la
 página SHALL NOT mostrar nada del ranking (ni la tarjeta ni el botón para aparecer). Ocultarse

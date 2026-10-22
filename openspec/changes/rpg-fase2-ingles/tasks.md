@@ -18,7 +18,8 @@
   recorrido del JSON sin datos personales, otro grupo 403, baja 403 y no aparece, grupo apagado 404, Postgres caído
   503, caché invalidada al ocultarse) y panel (cola, aprobar, rechazar, 409, interruptor, retención de 30 días)
 - [x] 2.2 `comun/constancia.js`: función pura compartida (servidor con `import`, navegador con `<script>`)
-- [x] 2.3 `server/interruptores.ts` (genérico) y `gamificacion/config.json` con `ranking: false` por defecto
+- [x] 2.3 Interruptor general: llave `ranking` (apagada) en `config/interruptores.json`, reusando `server/interruptores.ts`
+  de `rpg-privacidad` (más `escribirInterruptor` y `olvidar()`); apagado por grupo en `gamificacion/config.json`
 - [x] 2.4 `server/gamificacion.ts`: `/gamificacion/perfil`, `/gamificacion/ranking`, `/profe/nicks[/aprobar|/rechazar]`
   y `/profe/ranking`; `server/cache_ranking.ts` (60 s por grupo y semana) invalidada desde `server/juegos.ts` al
   cambiar un nick; `gamificacion/` a Postgres en `server/db.ts`; rutas en `server/main.ts`

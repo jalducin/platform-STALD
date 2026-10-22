@@ -14,6 +14,7 @@ import { type FilaSecundaria, filasSecundaria as armarFilasSecundaria, identidad
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
+import { crearLectorInterruptores, escribirInterruptor } from "./interruptores.ts";
 import { ahoraIso, mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
 import { configPublica, generarEnlace, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, type Quien, quienEs } from "./auth.ts";
@@ -210,6 +211,11 @@ async function getStore(): Promise<Store> {
   return pgStore.store;
 }
 
+// Interruptores públicos (openspec: rpg-privacidad): `config/interruptores.json` en stald_docs (o en el almacén sin
+// Postgres), con caché de 60 s y falla cerrada (todo apagado).
+const depsInterruptores = { db, store: baseStore };
+const leerInterruptores = crearLectorInterruptores(depsInterruptores);
+
 // Caché HTTP por ruta (openspec: cache-estabilidad, server/http_cache.ts): /config se puede guardar y el ranking
 // responde 304 si no cambió; lo demás sigue no-store.
 export async function handler(req: Request): Promise<Response> {
@@ -225,6 +231,12 @@ async function atender(req: Request): Promise<Response> {
   if (url.pathname.endsWith("/config")) {
     const c = configPublica({ ROWS_FIXTURE: env("ROWS_FIXTURE"), SUPABASE_URL: env("SUPABASE_URL"), SUPABASE_PUBLISHABLE_KEY: env("SUPABASE_PUBLISHABLE_KEY") });
     return json(c.body, c.status);
+  }
+
+  // GET /interruptores → qué piezas encendió el profe (sin sesión, solo booleanos; openspec: rpg-privacidad).
+  if (url.pathname.endsWith("/interruptores")) {
+    if (req.method !== "GET") return json({ error: "metodo_no_permitido" }, 405);
+    return json(await leerInterruptores());
   }
 
   // Rutas sin identidad: /salud y la foto de avatar (la pide un <img>, sin encabezados).
@@ -344,7 +356,7 @@ async function rutaActividades(req: Request, sub: string, email: string, admin: 
   // Grupo vigente (openspec: ingles-grupos): filtra el calendario y da horario y Meet a la página.
   const grupo = alumno && await inglesEnPg() ? await grupoDe(db!, slugAlumno(alumno), mxToday()) : null;
   const info = grupo ? await grupoInfo(db!, grupo) : null;
-  const ranking = !isAdmin && !!alumno && await rankingVisible(store, grupo); // openspec: rpg-fase2-ingles
+  const ranking = !isAdmin && !!alumno && await rankingVisible({ store, interruptores: leerInterruptores }, grupo); // openspec: rpg-fase2-ingles
   const quien = { isAdmin, alumno, ...(ranking ? { ranking } : {}), ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
   return await handleActividades(req, sub, quien, store, json);
 }
@@ -385,6 +397,8 @@ async function depsGamificacion(email: string, admin: string): Promise<DepsGamif
     esSecundaria: async (correo) => (await filasSecundaria()).some((f) => f.userEmails.includes(correo)),
     ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()) } : {}),
     items: async (hoy) => (await visibleItems(store, hoy)).items,
+    interruptores: leerInterruptores,
+    cambiarRankingGeneral: async (valor) => { await escribirInterruptor(depsInterruptores, "ranking", valor); leerInterruptores.olvidar(); },
     hoy: () => mxToday(), ahora: ahoraIso,
   };
 }
