@@ -120,6 +120,12 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   horario» del portal.
   Corre después de `examen-secundaria` y `secundaria-clase` en el mismo servidor: lo que esperan XP, nivel e insignias
   sale de lo que devuelve la API en ese momento.
+- `ingles-diseno-profe` (fase `ingles`, cambio `ingles-diseno-profe`): panel del profe a 360 px en claro y oscuro
+  (encabezado con grupos activos, alumnos y alumnas y en riesgo; tarjetas por grupo; mapa de calor como tarjetas;
+  Registro; cajón; «🔍 Ver grupo»), 44 px y sin scroll en las 9 secciones del admin, la ruta del profe con su Plan del
+  mes (cuenta las clases abiertas con botón contra la API) y capturas de escritorio. Sin `--pg`, intercepta solo el GET
+  de `/ingles/grupos` en el navegador con dos grupos de ejemplo; no escribe nada. El Plan del mes solo se revisa si los
+  datos traen `plan.json`; con `--hoy 2026-10-22` y el repo de datos actual, las 27 clases están abiertas.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).

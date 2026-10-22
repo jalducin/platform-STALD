@@ -1,0 +1,162 @@
+/* Panel del profe de Inglés con el diseño RPG de Secundaria (openspec: ingles-diseno-profe).
+   Aplica a ingles.html con sesión de admin y a ingles.html?modo=profe: las dos pintan body.vista-admin.
+   Tokens base: estilos/stald.css; tokens RPG (--rpg-*): ingles/secundaria.css. Todo en tokens, así que funciona en
+   claro y oscuro. Botones, enlaces-botón, selectores y campos de 44 px o más; sin scroll horizontal a 360 px. */
+
+/* ---------- Encabezado: enlaces y botones reales ---------- */
+body.vista-admin .app-top .enlaces { gap: 8px; }
+body.vista-admin .home-link {
+  min-height: 44px; padding: 8px 14px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-size: .88rem; box-shadow: var(--shadow-1); transition: border-color .12s, box-shadow .12s, transform .12s;
+}
+body.vista-admin .home-link:hover { text-decoration: none; border-color: var(--accent); box-shadow: var(--shadow-2); }
+body.vista-admin .home-link:active { transform: translateY(1px); }
+body.vista-admin .home-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+body.vista-admin #logout-btn { min-height: 44px; }
+
+/* ---------- Botones y campos: 44 px, foco visible, hover y deshabilitado ---------- */
+.vista-admin .btn, .vista-admin .btn.sm { min-height: 44px; }
+.vista-admin .btn.sm { padding: 8px 12px; }
+.vista-admin .btn:focus-visible, .vista-admin .pp-link:focus-visible, .vista-admin summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.vista-admin .btn.ghost:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
+.vista-admin .btn:disabled { opacity: .55; cursor: not-allowed; }
+.vista-admin .btn:disabled:hover { box-shadow: none; }
+.vista-admin select, .vista-admin .campo, .vista-admin .grupo-form input, .vista-admin .reg-form input {
+  min-height: 44px; padding: 8px 10px; border-radius: var(--r-sm); border: 1px solid var(--border); font: inherit;
+  background: var(--card); color: var(--text); min-width: 0; max-width: 100%;
+}
+.vista-admin .grupo-form input[type="color"] { padding: 4px; width: 100%; cursor: pointer; }
+.vista-admin select:focus-visible, .vista-admin input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.vista-admin details.section > summary, .vista-admin .student > summary { min-height: 48px; }
+.vista-admin .ruta-sem summary { min-height: 44px; }
+.vista-admin .ruta-lista .pf-plan-el .btn { padding: 8px 12px; }
+.vista-admin .celda { height: 44px; }
+.vista-admin .heat .alumno button { min-height: 44px; }
+
+/* ---------- Superficies con el estilo RPG ---------- */
+.vista-admin .section, .vista-admin .student, .vista-admin .exam-card, .vista-admin .kpi, .vista-admin .card { background: var(--rpg-panel); border-color: var(--rpg-borde); }
+.vista-admin .student .section { background: var(--rpg-panel-2); }
+.vista-admin .kpi b, .pp-num { font-family: "Orbitron", "Inter", var(--font); letter-spacing: .02em; }
+.vista-admin .sec-titulo { font-size: 1.2rem; }
+.vista-admin .grupos-barra { padding: 10px 12px; background: var(--accent-soft); border: 1px solid var(--rpg-borde); border-radius: var(--r-md); }
+.vista-admin .grupos-barra select { flex: 1 1 180px; }
+
+/* ---------- Encabezado del panel (Resumen) ---------- */
+.pp-hero { position: relative; overflow: hidden; padding: 18px 16px; border-radius: var(--r-lg); border: 1px solid var(--rpg-borde);
+  background: var(--rpg-hero); box-shadow: var(--rpg-glow); }
+.pp-hero::after { content: "🛡️"; position: absolute; right: -4px; bottom: -14px; font-size: 5.5rem; opacity: .08; pointer-events: none; }
+.pp-hero-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
+.pp-hero-t { margin: 8px 0 12px; font-size: 1.2rem; line-height: 1.25; font-weight: 800; overflow-wrap: anywhere; }
+.pp-stats { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); position: relative; z-index: 1; }
+@media (min-width: 480px) { .pp-stats { gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); } }
+@media (max-width: 479.98px) {
+  .pp-stat { flex-direction: column; text-align: center; gap: 4px; padding: 10px 6px; }
+  .pp-stat-ico { width: 32px; height: 32px; font-size: 1rem; }
+  .pp-stat-t { font-size: .64rem; letter-spacing: .02em; }
+}
+.pp-stat { display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-width: 0; background: var(--rpg-panel); border: 1px solid var(--rpg-borde);
+  border-radius: var(--r-md); box-shadow: var(--shadow-1); }
+.pp-stat-ico { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; border-radius: 12px; font-size: 1.2rem; background: var(--accent-soft); }
+.pp-stat-txt { display: grid; min-width: 0; }
+.pp-num { font-size: 1.35rem; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--rpg-indigo); }
+.pp-stat-t { font-size: .74rem; font-weight: 700; color: var(--rpg-texto-suave); text-transform: uppercase; letter-spacing: .04em; overflow-wrap: anywhere; }
+.pp-stat.riesgo .pp-stat-ico { background: var(--bad-soft); }
+.pp-stat.riesgo .pp-num { color: var(--bad); }
+.pp-stat.sin-riesgo .pp-num { color: var(--rpg-emerald); }
+.pp-riesgo { margin-top: 12px; position: relative; z-index: 1; }
+.pp-riesgo-t { margin: 0 0 6px; font-size: .82rem; font-weight: 800; color: var(--rpg-texto-suave); }
+.pp-riesgo-lista { display: flex; flex-wrap: wrap; gap: 6px; }
+.pp-riesgo-lista .btn { max-width: 100%; white-space: normal; text-align: left; }
+.pp-acciones { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 14px; position: relative; z-index: 1; }
+@media (min-width: 480px) { .pp-acciones { grid-template-columns: repeat(3, auto); justify-content: start; } }
+.pp-acciones .btn:not(.ghost) { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+
+/* ---------- Tarjetas por grupo ---------- */
+.pp-grupos { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); margin-top: 12px; }
+@media (min-width: 640px) { .pp-grupos { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } }
+.pp-grupo { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 14px 20px; min-width: 0; overflow: hidden;
+  background: var(--rpg-panel); border: 1px solid var(--rpg-borde); border-radius: var(--r-md); box-shadow: var(--rpg-glow); }
+.pp-grupo::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--gc, var(--accent)); }
+.pp-grupo-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.pp-grupo-top h4 { margin: 0; font-size: 1.05rem; flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.pp-grupo-meta { margin: 0; font-size: .82rem; color: var(--rpg-texto-suave); overflow-wrap: anywhere; }
+.pp-grupo-avance { display: flex; justify-content: space-between; gap: 8px; font-size: .82rem; font-weight: 700; }
+.pp-grupo-avance b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pp-grupo .barra > span { background: var(--rpg-barra); }
+.pp-grupo-acc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.pp-grupo-acc .btn { flex: 1 1 120px; }
+.pp-grupo.actual { border-color: var(--gc, var(--accent)); }
+
+/* ---------- Mapa de calor: tabla en escritorio, tarjetas en celular ---------- */
+@media (max-width: 639.98px) {
+  .vista-admin #mapa-calor thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .vista-admin #mapa-calor, .vista-admin #mapa-calor tbody { display: block; min-width: 0; width: 100%; }
+  .vista-admin #mapa-calor tr { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; padding: 10px; margin-bottom: 8px;
+    background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); border-radius: var(--r-sm); }
+  .vista-admin #mapa-calor td { display: block; }
+  .vista-admin #mapa-calor td.alumno { grid-column: 1 / -1; white-space: normal; }
+  .vista-admin #mapa-calor td.alumno button { width: 100%; font-size: .95rem; }
+  .vista-admin #mapa-calor td[data-label]::before { content: attr(data-label); display: block; font-size: .68rem; font-weight: 700; color: var(--rpg-texto-suave); text-align: center; margin-bottom: 2px; }
+  .vista-admin #mapa-calor .celda { min-width: 0; }
+  .vista-admin .tabla-wrap { overflow-x: visible; }
+}
+
+/* ---------- Tablas de resultados y juegos: en celular, cada fila es una tarjeta ---------- */
+@media (max-width: 639.98px) {
+  .vista-admin .ultimas-tabla, .vista-admin .ultimas-tabla tbody, .vista-admin .ultimas-tabla tr, .vista-admin .ultimas-tabla td { display: block; width: 100%; }
+  .vista-admin .ultimas-tabla tr { padding: 10px 12px; margin-bottom: 8px; background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); border-radius: var(--r-sm); }
+  .vista-admin .ultimas-tabla td { border-top: 0; padding: 2px 0; }
+  .vista-admin .ultimas-tabla td:first-child { white-space: normal; width: auto; padding: 0 0 4px; overflow-wrap: anywhere; }
+}
+
+/* ---------- Registro de alumnos y alumnas ---------- */
+.reg-form { display: grid; gap: 10px; margin: 6px 0 14px; padding: 12px; background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); border-radius: var(--r-md); }
+@media (min-width: 720px) { .reg-form { grid-template-columns: repeat(3, minmax(0, 1fr)); } .reg-form .reg-intro, .reg-form .reg-enviar, .reg-form #alta-msg { grid-column: 1 / -1; } }
+.reg-intro { margin: 0; font-size: .85rem; color: var(--rpg-texto-suave); }
+.campo-et { display: grid; gap: 4px; font-size: .8rem; font-weight: 700; min-width: 0; }
+.reg-enviar { justify-self: start; }
+@media (max-width: 479.98px) { .reg-enviar { justify-self: stretch; } }
+.reg-lista { display: grid; gap: 10px; }
+.vista-admin .reg-fila { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 12px; align-items: center; margin: 0; padding: 12px;
+  font-size: .88rem; background: var(--rpg-panel); border: 1px solid var(--rpg-borde); border-left: 5px solid var(--gc, var(--accent)); border-radius: var(--r-md); box-shadow: var(--shadow-1); }
+.reg-fila .avatar { width: 40px; height: 40px; font-size: 1rem; }
+.reg-datos { min-width: 0; display: grid; gap: 2px; }
+.reg-datos b { font-size: .95rem; overflow-wrap: anywhere; }
+.reg-datos small { color: var(--rpg-texto-suave); overflow-wrap: anywhere; }
+.reg-acciones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.reg-acciones select { flex: 1 1 160px; }
+.reg-acciones .btn { flex: 0 1 auto; }
+@media (min-width: 900px) { .vista-admin .reg-fila { grid-template-columns: auto minmax(0, 1fr) auto; } .reg-acciones { grid-column: auto; justify-content: flex-end; } .reg-acciones select { flex: 0 1 200px; } }
+.reg-fila.de-baja { border-left-color: var(--muted); opacity: .92; }
+.reg-subt { margin: 16px 0 8px; font-size: .85rem; font-weight: 800; color: var(--rpg-texto-suave); }
+.reg-aviso { padding: 10px 12px; border-radius: var(--r-sm); background: var(--ok-soft); color: var(--ok); font-weight: 700; font-size: .88rem; }
+.reg-error { padding: 10px 12px; border-radius: var(--r-sm); background: var(--bad-soft); color: var(--bad); font-weight: 700; font-size: .88rem; }
+
+/* ---------- Grupos (formulario y lista) ---------- */
+.vista-admin .grupo-form { padding: 12px; background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); border-radius: var(--r-md); align-items: end; }
+.vista-admin .grupo-fila { padding: 12px; margin-bottom: 8px; border: 1px solid var(--rpg-borde); border-left: 5px solid var(--gc, var(--accent)); border-radius: var(--r-md); background: var(--rpg-panel); flex-wrap: wrap; }
+.vista-admin .grupo-fila > div { min-width: 0; flex: 1 1 200px; overflow-wrap: anywhere; }
+.grupo-fila .btn { flex: 0 0 auto; }
+
+/* ---------- Avance por alumno o alumna ---------- */
+.vista-admin .student { border-left: 5px solid var(--gc, var(--accent)); }
+.vista-admin .student > summary .mini span { padding: 2px 8px; border-radius: 999px; background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); }
+
+/* ---------- Ruta del profe (?modo=profe) ---------- */
+.vista-admin .pf-hero { background: var(--rpg-hero); border-color: var(--rpg-borde); box-shadow: var(--rpg-glow); position: relative; overflow: hidden; padding: 18px 16px; }
+.vista-admin .pf-hero::after { content: "🎓"; position: absolute; right: -4px; bottom: -12px; font-size: 5rem; opacity: .08; pointer-events: none; }
+.vista-admin .pf-hero .progress-bar { height: 10px; position: relative; z-index: 1; }
+.vista-admin .pf-hero .progress-bar span { background: var(--rpg-barra); }
+.vista-admin .pf-stats { position: relative; z-index: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 480px) { .vista-admin .pf-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.vista-admin .pf-stat { background: var(--rpg-panel); border-color: var(--rpg-borde); box-shadow: var(--shadow-1); }
+.vista-admin .pf-stat b { font-family: "Orbitron", "Inter", var(--font); color: var(--rpg-indigo); }
+.vista-admin .pf-stat.atraso b { color: var(--bad); } .vista-admin .pf-stat.hecho b { color: var(--rpg-emerald); }
+.vista-admin .pf-tabs { flex-wrap: wrap; overflow: visible; }
+.vista-admin .pf-tabs button { min-height: 44px; flex: 1 1 auto; }
+.vista-admin .pf-tabs button:hover:not([aria-selected="true"]) { border-color: var(--accent); color: var(--accent); }
+.vista-admin .pf-tabs button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.vista-admin .ruta-sem.actual { background: var(--accent-soft); border: 1px solid var(--rpg-indigo); }
+.vista-admin .pf-side .profe-link { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--card); }
+.vista-admin .exam-item { flex-wrap: wrap; }
+.vista-admin .exam-item > div:first-child { min-width: 0; flex: 1 1 180px; overflow-wrap: anywhere; }

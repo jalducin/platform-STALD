@@ -841,6 +841,29 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
 - Los E2E deben abrir la pestaña antes de hacer clic en su contenido. Por ejemplo,
   `click('[data-pf-tab="grupo"]')`.
 
+## Panel del profe con diseño RPG (cambio `ingles-diseno-profe`)
+
+- La vista del admin de `ingles.html` y `?modo=profe` (las dos con `body.vista-admin`) usan el diseño RPG de Secundaria.
+  Estilos en `ingles/panel-profe.css`, todo bajo `.vista-admin` o con prefijo `pp-`/`reg-`; reusa los tokens `--rpg-*`
+  de `ingles/secundaria.css` y los base de `estilos/stald.css`, así que funciona en claro y oscuro.
+- «🏠 Resumen» abre con `#panel-profe` (`renderPanelProfe`, `ingles/tablero.js`). Solo datos que ya existen:
+  - grupos activos (`/ingles/grupos`; sin base de datos no sale), alumnos y alumnas del registro sin bajas;
+  - «En riesgo» (`alumnosEnRiesgo`): `kpis.sinEntregas` más quien tiene alguna celda `atrasado` en `/ingles/resumen`, con
+    un botón por persona que abre el cajón. Se repinta al llegar el resumen (`pintarPanelProfe`); mientras, «…»;
+  - no hay «entregas por revisar»: Inglés califica solo y no tiene esa cola;
+  - accesos: «➕ Registrar alumno o alumna», «🎬 Presentar la clase» y «🎓 Mi ruta».
+- Tarjetas por grupo (`#pp-grupos .pp-grupo`, dentro de `#tablero`): color (`--gc`), nivel, horario, personas, avance
+  de la semana (celdas entregadas / que ya abrieron, sin `no-aplica` ni `proximamente`) con `.barra[role=progressbar]`,
+  atrasos, «🔍 Ver grupo» (`data-action="ver-grupo"`, mismo `state.grupoFiltro` que el selector) y «🎥 Meet».
+- Abajo de 640 px, `#mapa-calor` y `.ultimas-tabla` (Resultados y Juegos) pasan a tarjetas por fila. Cada celda del mapa
+  lleva `td[data-label]` (emoji y fecha de la columna) que se muestra encima en celular. El DOM y los selectores no
+  cambian.
+- «➕ Registro»: tarjetas `.ultimas-lista.reg-fila` (avatar con el color del grupo, correo, `select.mover-grupo`,
+  «🚪 Baja de Inglés», «Quitar»; las bajas con `data-baja` y «↩️ Reactivar» en `#bajas-ingles`). Los campos del alta
+  y de grupos van dentro de `label.campo-et`.
+- Todo botón, enlace-botón, selector, campo y `summary` visible de la vista (y del cajón) mide 44 px o más, con foco
+  visible, hover y deshabilitado; sin scroll horizontal a 360 px. Lo revisa la E2E `ingles-diseno-profe`.
+
 ## Juegos de cartas (cambio `poker`)
 
 - `juegos/cartas.js` es el motor sin DOM. Define `globalThis.Cartas` y lo usan `juegos.html` y
