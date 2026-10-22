@@ -146,7 +146,9 @@ function renderNicksAdmin(aviso) {
   const cola = personas.filter(p => p.aparecer && p.estado === 'pendiente');
   return interruptorRanking(n) +
     '<section class="card" id="nk-cola"><h3 class="card-titulo">⏳ Por revisar (' + cola.length + ')</h3>' + listaNicks(cola, 'No hay nicks esperando revisión.') + '</section>' +
-    '<section class="card" id="nk-todos"><h3 class="card-titulo">👥 Todos los nicks</h3>' + listaNicks(personas, 'Sin alumnos ni alumnas en este grupo.') + '</section>' +
+    // Grupos ocultos del panel (openspec: ingles-ocultar-grupos): fuera de «Todos los nicks»; «Por revisar» los conserva
+    // para que ninguna petición de nick quede sin moderar.
+    '<section class="card" id="nk-todos"><h3 class="card-titulo">👥 Todos los nicks</h3>' + listaNicks(personas.filter(p => state.mostrarOcultos || typeof gruposOcultos !== 'function' || !gruposOcultos().some(g => g.id === p.grupo)), 'Sin alumnos ni alumnas en este grupo.') + '</section>' +
     '<div id="nk-msg" role="status" aria-live="polite">' + (aviso ? '<p class="rk-aviso">' + escapeHtml(aviso) + '</p>' : '') + '</div>';
 }
 

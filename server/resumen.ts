@@ -29,6 +29,8 @@ export interface DepsResumen {
   // Solo con la base migrada (ingles-grupos); sin ellas no se filtra por grupo.
   grupoDe?: (slug: string) => Promise<string | null>;
   grupoInfo?: (id: string) => Promise<InfoGrupo | null>;
+  // ¿Grupo oculto del panel del admin? (openspec: ingles-ocultar-grupos). Sin ella no se oculta nada.
+  ocultoAdmin?: (grupo: string | null) => Promise<boolean>;
 }
 
 const ALUMNO_PROFE = "profe";
@@ -52,6 +54,8 @@ export async function handleResumen(req: Request, deps: DepsResumen, json: Json)
   const url = new URL(req.url);
   const hoy = url.searchParams.get("hoy") && Deno.env.get("PERMITIR_HOY") === "1" ? url.searchParams.get("hoy")! : mxToday();
   const grupoPedido = url.searchParams.get("grupo") || null;
+  // Grupos ocultos del panel: fuera por omisión; `?ocultos=1` o pedir ese grupo con `?grupo=` los incluye.
+  const conOcultos = url.searchParams.get("ocultos") === "1" || !!grupoPedido;
 
   const { items, semanaActual } = await visibleItems(deps.store, hoy);
   const ids = new Set(semanaActual?.elementos.map((e) => e.id) ?? []);
@@ -64,7 +68,12 @@ export async function handleResumen(req: Request, deps: DepsResumen, json: Json)
     const slug = slugAlumno(a.nombre);
     return { ...a, slug, grupo: deps.grupoDe ? await deps.grupoDe(slug) : null };
   }));
-  const delGrupo = conGrupo.filter((a) => !grupoPedido || !deps.grupoDe || a.grupo === grupoPedido)
+  const ocultosAdmin = new Set<string>();
+  if (!conOcultos && deps.ocultoAdmin) {
+    for (const g of new Set(conGrupo.map((a) => a.grupo))) if (g && await deps.ocultoAdmin(g)) ocultosAdmin.add(g);
+  }
+  const visibles = conGrupo.filter((a) => !a.grupo || !ocultosAdmin.has(a.grupo));
+  const delGrupo = visibles.filter((a) => !grupoPedido || !deps.grupoDe || a.grupo === grupoPedido)
     .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 
   // Resultados: una lectura por columna.
@@ -105,5 +114,6 @@ export async function handleResumen(req: Request, deps: DepsResumen, json: Json)
     columnas: columnas.map((it) => ({ id: it.id, tipo: it.tipo, titulo: it.titulo, disponibleDesde: it.disponibleDesde, fechaLimite: it.fechaLimite })),
     filas,
     kpis,
+    ocultos: conGrupo.length - visibles.length, // alumnos y alumnas de grupos ocultos que quedaron fuera
   });
 }

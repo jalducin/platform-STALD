@@ -5,6 +5,8 @@
 #   --datos <ruta>          carpeta del repo privado de datos (se copia; la original nunca se modifica)
 #   --pg                    Inglés contra Postgres de prueba (tablas stald_test_*). Requiere SUPABASE_URL y
 #                           SUPABASE_SERVICE_KEY en el entorno (nunca en archivos). Al terminar vacía stald_test_*.
+#                           Sin llaves: SUPABASE_URL=http://127.0.0.1:8943 y el PostgREST falso de
+#                           tests/e2e/lib/postgrest-falso.ts (en memoria; ver docs/pruebas.md).
 #   --pg-vaciar             con --pg: vacía stald_test_* aunque ya tenga filas (si no, se detiene sin tocarlas)
 #   --puerto-api <n>        puerto del servidor Deno (8817)
 #   --puerto-web <n>        puerto de los estáticos (8795)
@@ -35,7 +37,7 @@ PEDIDAS=()
 # Orden canónico: Inglés (comparten servidor), las que necesitan datos propios, plataforma y juegos, y al final
 # la de login con la transición terminada.
 ORDEN=(actividades-datos material alta-alumnos baja-ingles inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno presentar examen-secundaria secundaria-clases secundaria-clase secundaria-dashboard secundaria-adelantar misiones autoguardado ordenar-emparejar teoria-diagramas rpg-ingles misiones-ingles
-  grupos ingles-pro
+  grupos ocultar-grupos ingles-pro
   login portal privacidad juegos categorias juegos-ingles jugadores nick partidas enlace-sala juegos-recarga revancha
   conquian-estres clasicos fusion cultura-conocimiento sudoku dragon-run plataformas karts karts-puntos karts-vivo futbol futbol-en-linea futbolito-arena brigada futbolito billar golf puntos-tipo basta-rondas loteria-sala una-sala una-robo
   poker cartas-espanolas ajedrez clasicos-rapidos juegos-tablero ajustes-salas ritmo avatar-foto peticiones ranking-juegos salas-grandes mando emocion espectador
@@ -43,14 +45,14 @@ ORDEN=(actividades-datos material alta-alumnos baja-ingles inicio-lunes segunda-
 
 # Fase = cómo se preparan datos y servidor:
 #   ingles  copia limpia; con --pg, migrada a stald_test_*
-#   grupos  solo --pg; la semana 2026-09-28 se asigna a grupo-1
+#   grupos  solo --pg; la semana 2026-09-28 se asigna a grupo-1 (grupos y ocultar-grupos)
 #   pro     solo --pg; copia y migración limpias
 #   base    copia limpia, sin Postgres
 #   despues sin Postgres y con LOGIN_TRANSICION_HASTA en el pasado
 fase_de() {
   case $1 in
     actividades-datos | material | alta-alumnos | baja-ingles | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | presentar | examen-secundaria | secundaria-clases | secundaria-clase | secundaria-dashboard | secundaria-adelantar | misiones | autoguardado | ordenar-emparejar | teoria-diagramas | rpg-ingles | misiones-ingles) echo ingles ;;
-    grupos) echo grupos ;;
+    grupos | ocultar-grupos) echo grupos ;;
     ingles-pro) echo pro ;;
     login-despues) echo despues ;;
     *) echo base ;;
@@ -58,7 +60,7 @@ fase_de() {
 }
 solo_pg() { [ "$1" = grupos ] || [ "$1" = pro ]; }
 
-uso() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; }
+uso() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; }
 error() { echo "ERROR: $*" >&2; exit 2; }
 
 # «Hoy» del servidor de pruebas (openspec: pruebas-fecha-fija): las E2E se escribieron con este día.

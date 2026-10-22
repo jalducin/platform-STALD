@@ -115,6 +115,11 @@ function onSubmit(e) {
 }
 function onChange(e) {
   if (e.target.id === 'grupo-filtro') { state.grupoFiltro = e.target.value || null; state.resumen = null; state.nicks = null; render(state.data); cargarResumen(); }
+  if (e.target.id === 'mostrar-ocultos') { // openspec: ingles-ocultar-grupos
+    state.mostrarOcultos = e.target.checked;
+    if (!state.mostrarOcultos && gruposOcultos().some(g => g.id === state.grupoFiltro)) state.grupoFiltro = null;
+    state.resumen = null; render(state.data); cargarResumen();
+  }
   if (e.target.dataset && e.target.dataset.mover) moverGrupo(e.target);
   if (e.target.name === 'tema') aplicarTema(e.target.value);
   const f = e.target.closest('#exam-form'); if (f) updateExamProgress(f);
@@ -128,6 +133,7 @@ function onClick(e) {
   if (act === 'quitar-alumno') { e.preventDefault(); quitarAlumno(b); }
   if (act === 'baja-ingles') { e.preventDefault(); bajaIngles(b, false); }
   if (act === 'reactivar-ingles') { e.preventDefault(); bajaIngles(b, true); }
+  if (act === 'ocultar-grupo') { e.preventDefault(); ocultarGrupo(b); }
   if (act === 'editar-grupo') { e.preventDefault(); state.grupoEdicion = (state.grupos.grupos || []).find(g => g.id === b.dataset.id) || null; state.gruposAbierto = true; render(state.data); document.getElementById('g-nombre').focus(); }
   if (act === 'tts') { e.preventDefault(); hablar(b.dataset.texto, !!b.dataset.lento); }
   if (act === 'grabar') { e.preventDefault(); grabarPron(b); }

@@ -361,7 +361,8 @@ function renderAdminWeek(act) {
   const lista = semanaItems(act);
   if (!lista.length) return '';
   return '<div class="exam-card"><h3>📚 Esta semana · ' + escapeHtml(act.semana.titulo) + '</h3>' + lista.map(it => {
-    const n = (it.resultados || []).length;
+    // Sin alumnos y alumnas de grupos ocultos del panel (openspec: ingles-ocultar-grupos; ocultoEnPanel en admin.js).
+    const n = (it.resultados || []).filter(r => typeof ocultoEnPanel !== 'function' || !ocultoEnPanel(r.alumno)).length;
     const enlace = it.meetUrl ? ' · con enlace' : ' · sin enlace (meetUrl)';
     const sub = escapeHtml(formatFecha(it.fechaLimite)) + ' · ' + tipoTexto(it.tipo) + (it.tipo === 'meet' ? enlace : ' · ' + n + ' con intentos');
     let btn = it.tipo === 'meet' ? '' : '<button class="btn ghost" data-action="abrir-item" data-id="' + escapeHtml(it.id) + '">👁 Vista previa</button>';
