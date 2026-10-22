@@ -10,7 +10,8 @@
 
 | Archivo | Rol |
 |---|---|
-| `server/main.ts` | Entrypoint: Notion (solo Secundaria), CORS y rutas `/data`, `/ingles/data`, `/ingles/actividades…` |
+| `server/main.ts` | Entrypoint: CORS y rutas `/ingles/data`, `/ingles/actividades…`, `/secundaria/actividades…`, `/data` (historial de Notion, sin consumidores) |
+| `server/secundaria_registro.ts` | Identidad de Secundaria desde `alumnos.json` (marca `secundaria` o clases exclusivas) y caída temporal a Notion (cambio `secundaria-sin-notion`) |
 | `server/actividades.ts` | Rutas de actividades y exámenes sobre el almacén JSON (caché de contenido de 60 s) |
 | `server/cache.ts` | `crearMemo` y `unaALaVez`: cachés en memoria con single-flight (cambio `cache-estabilidad`) |
 | `server/http_cache.ts` | Política de caché HTTP por ruta, `ETag` y 304 (cambio `cache-estabilidad`) |
@@ -23,7 +24,7 @@
 | `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
 | `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes> [--profe \| --secundaria]` (código 1 si hay errores; 2 si los argumentos no son válidos) |
 
-**Variables:** `NOTION_TOKEN`, `SUPER_ADMIN_EMAIL`, `GITHUB_TOKEN` (token fino, solo Contents del repo
+**Variables:** `NOTION_TOKEN` (opcional desde `secundaria-sin-notion`), `SUPER_ADMIN_EMAIL`, `GITHUB_TOKEN` (token fino, solo Contents del repo
 de datos) y `DATA_REPO`. Sesión: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_KEY` y, opcionales,
 `LOGIN_TRANSICION_HASTA` y `SITIO_URL`. Para pruebas: `DATA_DIR`, `ROWS_FIXTURE` (también activa el verificador
 falso de sesión), `PORT` y `PERMITIR_HOY=1` (permite `?hoy=`).
@@ -499,7 +500,21 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
 **Ruta `GET /perfil`** (`server/perfil.ts`; correo de la sesión o, en la transición, `?email=`):
 - Devuelve `{ email, isAdmin, nombre, conocido, invitado, accesos: { ingles, secundaria, juegos } }` para
   el portal. Un invitado registrado (`juegos/invitados.json`) llega con `invitado: true` y solo Juegos.
-- Mismas reglas que `/data` e `/ingles/data`; sin filas ni correos ajenos.
+- Mismas reglas que `/ingles/data` y `/secundaria/actividades`; sin filas ni correos ajenos.
+
+**Identidad de Secundaria** (cambio `secundaria-sin-notion`, `server/secundaria_registro.ts`):
+- `filasSecundaria()` en `server/main.ts` la usan `/perfil`, `/secundaria/actividades`, Juegos, `/juegos/registro` y
+  `/auth/*`. Filas del registro completo (`leerRegistro`, con bajas) con `secundaria: true` o con su slug en `alumnos`
+  de algún elemento visible de Secundaria (`visibleItems(…, AMBITO_SECUNDARIA)`). Slug: `slugSecundaria` o el de
+  `nombre`; se pasa en `Identidad.slug`.
+- Caída temporal (seguimiento: quitarla): si nadie tiene Secundaria, filas de Notion solo con `NOTION_TOKEN` o
+  `ROWS_FIXTURE`, con aviso `console.warn` (≤ 1 cada 10 min por mensaje); si Notion falla → `[]`, nunca 500.
+- `GET /secundaria/actividades` del admin: `alumnas: [{ nombre, slug }]`; con `?alumna=<slug>` (solo GET de la lista)
+  la vista de esa alumna con `isAdmin: true` y `vistaDe`; desconocida → 404 `alumna_no_encontrada`. Para los demás
+  el parámetro se ignora.
+- `POST /ingles/grupos/secundaria { email, secundaria: boolean }` (solo admin, `handleSecundariaAlumno`): marca o quita
+  `secundaria: true`; al marcar guarda `slugSecundaria` si su slug de Notion difiere; al quitar lo conserva.
+  `GET /ingles/alumnos` incluye `secundaria: true`.
 - Sin `email` responde 400.
 
 **Ruta `/ingles/data/<pageId>/completado`**: retirada en la fase 2 de `cierre-tecnico` junto con

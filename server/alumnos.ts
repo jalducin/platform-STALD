@@ -1,7 +1,8 @@
 // Alta de alumnos y alumnas de Inglés desde la página (openspec: alta-alumnos).
-// Registro: alumnos.json → { "<correo>": { nombre, alta, inicio?, origen?, baja? } } (en Postgres en producción). Desde la
+// Registro: alumnos.json → { "<correo>": { nombre, alta, inicio?, origen?, baja?, secundaria?, slugSecundaria? } } (en Postgres en producción). Desde la
 // fase 2 de «Inglés sin Notion» (openspec: cierre-tecnico) es la única fuente de identidad de Inglés.
 import { slugAlumno } from "./motor.ts";
+import { SLUG_VALIDO } from "./secundaria_registro.ts";
 import type { InglesRow } from "./rows.ts";
 import type { Store } from "./store.ts";
 
@@ -13,6 +14,10 @@ export interface AlumnoRegistrado {
   inicio?: string; // lunes en que empieza (AAAA-MM-DD); antes no ve atrasos (openspec: inicio-lunes-alumnos)
   origen?: "notion"; // importada de Notion en la fase 1 (openspec: cierre-tecnico); hoy solo informativo
   baja?: string; // AAAA-MM-DD (CDMX) en que se dio de baja de Inglés; reversible (openspec: ingles-baja-alumno)
+  // Acceso a Secundaria (openspec: secundaria-sin-notion); la baja de Inglés no lo quita. `slugSecundaria`: el slug con
+  // el que ya estaban sus resultados de Secundaria (el de su primer nombre en Notion) si difiere del de `nombre`.
+  secundaria?: true;
+  slugSecundaria?: string;
 }
 
 // Lunes siguiente (estrictamente posterior) a la fecha del alta en CDMX (UTC−6, sin horario de verano).
@@ -113,7 +118,7 @@ function listarAlumnos(filas: InglesRow[], registro: RegistroAlumnos, json: Json
   }
   const alumnos = [
     ...[...notion].map(([nombre, emails]) => ({ nombre, emails: [...emails], origen: "notion" as const })),
-    ...Object.entries(registro).map(([e, a]) => ({ nombre: a.nombre, emails: [e], origen: "registro" as const, alta: a.alta, ...(a.inicio ? { inicio: a.inicio } : {}), ...(a.baja ? { baja: a.baja } : {}) })),
+    ...Object.entries(registro).map(([e, a]) => ({ nombre: a.nombre, emails: [e], origen: "registro" as const, alta: a.alta, ...(a.inicio ? { inicio: a.inicio } : {}), ...(a.baja ? { baja: a.baja } : {}), ...(a.secundaria ? { secundaria: true } : {}) })),
   ].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   return json({ alumnos });
 }
@@ -195,6 +200,41 @@ export async function handleBajaIngles(req: Request, sub: string, deps: DepsBaja
     final = darDeBaja ? { ...resto, baja: hoy } : resto;
     return { ...r, [correo]: final };
   }, `alumnos: ${darDeBaja ? "baja de Inglés de" : "reactiva en Inglés a"} ${actual.nombre}`);
+  if (!ok) return json({ error: "conflicto_escritura" }, 503);
+  return json({ ok: true, alumno: { email: correo, ...final } });
+}
+
+// POST /ingles/grupos/secundaria { email, secundaria: boolean } (solo admin, openspec: secundaria-sin-notion): marca o
+// quita `secundaria: true` en su entrada del registro. Reversible; no toca Inglés, resultados ni Juegos. Al marcarla
+// se guarda `slugSecundaria` si su slug de antes (primer nombre en Notion) no es el de su nombre, para que sus
+// resultados de Secundaria sigan bajo un solo slug. Al quitarla se conserva `slugSecundaria`.
+export interface DepsSecundariaAlumno extends DepsBaja {
+  slugPrevio?: (correo: string) => Promise<string | null>;
+}
+export async function handleSecundariaAlumno(req: Request, deps: DepsSecundariaAlumno, json: Json): Promise<Response> {
+  const email = (deps.email || "").trim().toLowerCase();
+  if (!deps.admin || email !== deps.admin) return json({ error: "solo_admin" }, 403);
+  if (req.method !== "POST") return json({ error: "not_found" }, 404);
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
+  if (typeof body?.secundaria !== "boolean") return json({ error: "secundaria_invalida" }, 400);
+  const correo = String(body.email ?? "").trim().toLowerCase();
+  const actual = (await deps.store.get<RegistroAlumnos>(RUTA_ALUMNOS))?.data?.[correo];
+  if (!correo || !actual) return json({ error: "not_found" }, 404);
+  const activar = body.secundaria;
+  if (activar === !!actual.secundaria) return json({ ok: true, sinCambio: true, alumno: { email: correo, ...actual } });
+  let previo: string | null = null;
+  if (activar && !actual.slugSecundaria && deps.slugPrevio) {
+    try { previo = await deps.slugPrevio(correo); } catch (e) { console.error("slug previo de Secundaria:", e instanceof Error ? e.message : e); }
+  }
+  let final: AlumnoRegistrado = actual;
+  const ok = await escribir(deps.store, (r) => {
+    if (!r[correo]) return r;
+    const { secundaria: _antes, ...resto } = r[correo];
+    const heredado = previo && SLUG_VALIDO.test(previo) && previo !== slugAlumno(resto.nombre) ? { slugSecundaria: previo } : {};
+    final = activar ? { ...resto, ...heredado, secundaria: true } : resto;
+    return { ...r, [correo]: final };
+  }, `alumnos: ${activar ? "da acceso a Secundaria a" : "quita Secundaria a"} ${actual.nombre}`);
   if (!ok) return json({ error: "conflicto_escritura" }, 503);
   return json({ ok: true, alumno: { email: correo, ...final } });
 }

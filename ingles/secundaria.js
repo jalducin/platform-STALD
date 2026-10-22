@@ -2,7 +2,8 @@
 // ve «📚 Mis clases» (hoy, la semana por día y lo demás) con chip y color por materia, y «🗓️ Mi horario» de 7 días;
 // el admin ve los resultados por persona y por materia.
 async function loadSecundaria(email) {
-  const r = await fetchJson(ACT_URL + '?email=' + encodeURIComponent(email));
+  // Con sesión el correo va en el token, no en la URL (openspec: secundaria-sin-notion; antes lo hacía secundaria.html).
+  const r = await fetchJson(ACT_URL + (StaldAuth.email() ? '' : '?email=' + encodeURIComponent(email)));
   if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, r.body)) return; // sesionVencida ya pintó la entrada
   loginEl.style.display = 'none'; appEl.style.display = 'block';
   if (!r.ok) {

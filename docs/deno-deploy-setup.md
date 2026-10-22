@@ -11,7 +11,11 @@ privado `jalducin/platform-STALD-data`. No usa Supabase. Necesitas 3 datos y uno
 4. **Permissions → Repository permissions → Contents:** *Read and write*. No actives nada más.
 5. **Generate token** y copia el valor (empieza con `github_pat_…`). Solo se muestra una vez.
 
-## 2. Token de Notion
+## 2. Token de Notion (opcional)
+
+Desde el cambio `secundaria-sin-notion` ninguna página lee Notion: el servidor funciona sin `NOTION_TOKEN`. Solo lo
+usan `/data` (historial, sin consumidores) y la caída temporal de Secundaria. **No lo borres** de Deno Deploy mientras
+exista esa caída.
 
 1. Entra a <https://www.notion.so/profile/integrations> → integración **Dashboard Tareas**.
 2. Copia el **Internal Integration Secret** (empieza con `ntn_…` o `secret_…`).
@@ -26,7 +30,7 @@ privado `jalducin/platform-STALD-data`. No usa Supabase. Necesitas 3 datos y uno
 
 | Variable | Valor |
 |---|---|
-| `NOTION_TOKEN` | el secreto de Notion (paso 2) |
+| `NOTION_TOKEN` | opcional: el secreto de Notion (paso 2) |
 | `SUPER_ADMIN_EMAIL` | tu correo de admin |
 | `GITHUB_TOKEN` | el token de GitHub (paso 1) |
 | `DATA_REPO` | `jalducin/platform-STALD-data` |
