@@ -1240,7 +1240,8 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   `localStorage['stald_libreta:<hash FNV-1a del correo>:<id>']` con try/catch (sin almacenamiento no se recuerda).
 - Resultado: «🎉 ¡Misión cumplida!», calificación y retroalimentación por tema (`renderResultado`), la recompensa, la
   libreta y el botón grande «Siguiente misión» (`.sec-siguiente`: la siguiente `disponible`/`en-curso` por fecha desde
-  hoy; si no hay, «🗺️ Mis misiones»). Vista previa del admin: sin estos extras.
+  hoy; si no hay, «🗺️ Mis misiones»). Vista previa del admin: sin estos extras. Con títulos largos el botón parte el
+  texto en líneas y no desborda a 360 px en ninguna vista (`ingles/ingles.css`, cambio `fix-e2e-rpg`).
 - Estilo «RPG educativo»: en Secundaria la clase se llama **«Misión»** (banner «⚔️ Misión» con chip de materia y su
   **mundo** actual, «🎉 ¡Misión cumplida!», «Siguiente misión →» / «🗺️ Mis misiones»). En el resultado,
   `#sec-recompensa` muestra «+N XP» (XP total después − antes del envío; `submitExam` guarda `state.actAntes =

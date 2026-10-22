@@ -41,10 +41,11 @@ export interface DepsInterruptores {
 export function crearLectorInterruptores(deps: DepsInterruptores, ttlMs = 60_000) {
   const ahora = deps.ahora ?? Date.now;
   let cache: { t: number; valor: Interruptores } | null = null;
-  // `olvidar()`: tras un cambio hecho en este servidor, la siguiente lectura va al dato (openspec: rpg-fase2-ingles).
-  // `ultimo()`: el último valor leído aunque la caché ya venció, o null si aún no se lee; /config lo usa para no esperar
-  // la lectura (openspec: fix-e2e-rpg).
-  return Object.assign(leer, { olvidar: () => { cache = null; }, ultimo: (): Interruptores | null => cache ? { ...cache.valor } : null });
+  // `olvidar()`: tras un cambio hecho en este servidor, la siguiente lectura va al dato (openspec: rpg-fase2-ingles); vence
+  // la caché sin perder el valor. `ultimo()`: el último valor leído aunque la caché ya venció, o null si aún no se lee;
+  // /config lo usa para no esperar la lectura (openspec: fix-e2e-rpg).
+  const olvidar = () => { if (cache) cache = { t: -Infinity, valor: cache.valor }; };
+  return Object.assign(leer, { olvidar, ultimo: (): Interruptores | null => cache ? { ...cache.valor } : null });
   async function leer(): Promise<Interruptores> {
     if (cache && ahora() - cache.t < ttlMs) return cache.valor;
     let valor: Interruptores;

@@ -34,3 +34,12 @@ estilo; las fórmulas de nivel y XP no cambian.
 #### Scenario: Tablero de Secundaria
 - **WHEN** la alumna de Secundaria abre su tablero
 - **THEN** la barra del juego dice «Nv. <n> · <rango>»
+
+### Requirement: «Lo siguiente →» sin desbordar
+El botón del resultado de la clase por pasos SHALL caber en su contenedor a 360 px con títulos largos
+(`.sec-siguiente`, «Lo siguiente →» en Inglés y «Siguiente misión» en Secundaria), en todas las vistas (alumnos y
+alumnas, Secundaria y profe), sin depender de la clase `.vista-admin`. El texto SHALL partirse en varias líneas.
+
+#### Scenario: Título largo a 360 px
+- **WHEN** la siguiente actividad tiene un título largo y la pantalla mide 360 px
+- **THEN** el botón no se sale de la pantalla y su texto se parte en líneas, sin scroll horizontal

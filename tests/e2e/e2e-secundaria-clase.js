@@ -80,7 +80,8 @@ async function abrirClase(p) {
       ok('recompensa: solo una vez y solo para la misión enviada', insig.otra === '' && insig.ajena === '');
       ok('resultado: retroalimentación por tema', (await p.textContent('#content')).includes('Fracciones') && (await p.textContent('#content')).includes('¡Muy bien!'));
       ok('resultado: la libreta con su casilla marcada', await p.isChecked(`#sec-resultado-libreta [data-sec-libreta="${CLASE}"]`));
-      const sig = await p.$eval('.sec-siguiente', x => ({ id: x.dataset.id || '', t: x.textContent.replace(/\s+/g, ' ').trim(), alto: x.getBoundingClientRect().height }));
+      const sig = await p.$eval('.sec-siguiente', x => { const r = x.getBoundingClientRect(); return { id: x.dataset.id || '', t: x.textContent.replace(/\s+/g, ' ').trim(), alto: r.height, cabe: r.left >= 0 && r.right <= innerWidth + 1 && x.scrollWidth <= x.clientWidth + 1, medida: [Math.round(r.left), Math.round(r.right), x.scrollWidth, x.clientWidth] }; });
+      ok('«Siguiente misión» cabe a 360 px, sin desbordar' + suf + ' (openspec: fix-e2e-rpg)', sig.cabe, JSON.stringify(sig.medida));
       ok('«Siguiente clase» apunta a otra clase pendiente', sig.id && sig.id !== CLASE && sig.t.startsWith('Siguiente misión'), JSON.stringify(sig));
       ok('«Siguiente clase» es un botón grande (≥ 44 px)', sig.alto >= 44, String(sig.alto));
       ok('resultado sin scroll horizontal a 360 px', await sinScrollH(p));

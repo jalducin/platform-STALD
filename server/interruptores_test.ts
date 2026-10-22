@@ -76,3 +76,14 @@ Deno.test("interruptores: ultimo() es null antes de leer y luego el último valo
   t = 120_000;
   assertEquals(leer.ultimo(), { privacidad: true, ranking: false }, "vencida: sigue el último leído");
 });
+
+// Tras un cambio del profe (olvidar), /config sigue con el último valor mientras se relee (openspec: fix-e2e-rpg).
+Deno.test("interruptores: olvidar() fuerza la relectura pero ultimo() conserva el valor", async () => {
+  const store = new MemoryStore();
+  const leer = crearLectorInterruptores({ db: null, store: () => Promise.resolve(store), ahora: () => 0 });
+  await leer();
+  await store.put(RUTA_INTERRUPTORES, { ranking: true }, null);
+  leer.olvidar();
+  assertEquals(leer.ultimo(), { privacidad: false, ranking: false }, "sigue el último leído");
+  assertEquals(await leer(), { privacidad: false, ranking: true }, "la siguiente lectura va al dato");
+});

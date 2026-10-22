@@ -27,7 +27,7 @@ function tarjetaMaterial(g) {
     '<div class="material-cuerpo"><h3 class="material-titulo">' + escapeHtml(g.titulo) + '</h3>' +
     '<p class="material-desc">' + escapeHtml(g.descripcion) + '</p>' +
     '<div class="chips">' + temas + '</div>' +
-    '<div class="material-meta">' + (g.mes ? '🗓️ Mes ' + Number(g.mes) + ' · ' : '') + (g.nivel ? '🎓 Nivel ' + escapeHtml(g.nivel) + ' · ' : '') + '📑 ' + Number(g.paginas) + ' página' + (Number(g.paginas) === 1 ? '' : 's') + ' · PDF</div>' +
+    '<div class="material-meta">' + (g.mes ? '🗓️ Mes ' + Number(g.mes) + ' · ' : '') + (g.nivel ? '🎓 Inglés ' + escapeHtml(g.nivel) + ' · ' : '') + '📑 ' + Number(g.paginas) + ' página' + (Number(g.paginas) === 1 ? '' : 's') + ' · PDF</div>' +
     '<div class="material-acciones"><a class="btn" href="' + url + '" download data-descargar>⬇️ Descargar PDF</a>' +
     '<a class="btn ghost" href="' + url + '" target="_blank" rel="noopener" data-ver>👁️ Ver</a></div></div></article>';
 }

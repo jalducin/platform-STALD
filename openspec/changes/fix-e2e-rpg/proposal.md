@@ -35,13 +35,19 @@ Tras la Fase 2 del RPG (2026-10-22), cuatro E2E fallaban en `main` y el tablero 
   el nivel del juego, en el tablero de Inglés, el de Secundaria y el resultado de la clase por pasos. Solo cambian el
   texto y el estilo; las fórmulas siguen igual.
 
+- **«Lo siguiente →» sin desbordar** (`.sec-siguiente`): a 360 px y con un título largo, el botón medía 403 px en un
+  contenedor de 326. Se arregla para todas las vistas en `ingles/ingles.css`; #239 solo lo había corregido bajo
+  `.vista-admin`.
+- **Tras la revisión:** `olvidar()` ya no borra el último valor de los interruptores, y «🎓 Inglés A1» aparece también
+  en las guías de material.
+
 ## Capabilities
 
 ### Modified Capabilities
 - `plataforma`: requisito nuevo «Interruptores públicos en /config». Se modifica «Verificación previa reutilizada»:
   la sala pasa a 42 o menos.
 - `pruebas`: requisitos nuevos «Ruta del profe de ejemplo en las E2E» y «Presupuestos de peticiones en E2E».
-- `ingles`: requisitos nuevos «Entrada de Inglés sin el formulario mientras carga» y «Nivel de inglés y nivel del
+- `ingles`: requisitos nuevos «Entrada de Inglés sin el formulario mientras carga», ««Lo siguiente →» sin desbordar» y «Nivel de inglés y nivel del
   juego con nombres distintos».
 - Se actualizan los escenarios con «Nivel N · rango» de los cambios sin archivar `rpg-fase2-ingles` y
   `secundaria-dashboard`.

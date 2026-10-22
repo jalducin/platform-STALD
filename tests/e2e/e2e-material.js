@@ -60,6 +60,7 @@ const sinScrollX = p => p.evaluate(() => document.documentElement.scrollWidth <=
   const barra = await al.$$eval('#nav .nav-item', xs => xs.map(x => x.dataset.nav || x.dataset.navAccion));
   ok('alumna 390: «📚 Material» en la barra, después de «Semana»', barra.indexOf('material') === barra.indexOf('semana') + 1, barra.join(','));
   await al.click('#nav [data-nav="material"]');
+  await al.waitForSelector('#nav [data-nav="material"][aria-current="page"]', { timeout: 10000 }).catch(() => {}); // sin carrera tras el clic
   ok('alumna 390: dirección #material y pestaña marcada', new URL(al.url()).hash === '#material' && (await al.getAttribute('#nav [data-nav="material"]', 'aria-current')) === 'page');
   await revisarLista(al, '[data-seccion="material"]', 'alumna 390');
   ok('alumna 390: sin desplazamiento horizontal', await sinScrollX(al));
