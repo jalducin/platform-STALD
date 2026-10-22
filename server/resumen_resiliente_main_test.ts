@@ -15,6 +15,8 @@ const fetchReal = globalThis.fetch;
 let llamadasNotion = 0;
 // Fallas inyectadas: rutas de PostgREST cuyo GET «se cuelga» (como el AbortSignal.timeout de server/db.ts).
 const caidas: RegExp[] = [];
+// Fallas de una sola vez: la primera petición que coincide falla y se quita de la lista.
+const caidasUnaVez: RegExp[] = [];
 globalThis.fetch = ((u: string | URL | Request, init?: RequestInit) => {
   const url = String(u instanceof Request ? u.url : u);
   if (url.startsWith("https://api.notion.com")) {
@@ -23,6 +25,11 @@ globalThis.fetch = ((u: string | URL | Request, init?: RequestInit) => {
   }
   if (url.startsWith(PG_URL)) {
     const ruta = decodeURIComponent(url.slice(PG_URL.length));
+    const unaVez = caidasUnaVez.findIndex((re) => re.test(ruta));
+    if ((init?.method ?? "GET") === "GET" && unaVez >= 0) {
+      caidasUnaVez.splice(unaVez, 1);
+      return Promise.reject(new DOMException("Signal timed out.", "TimeoutError"));
+    }
     if ((init?.method ?? "GET") === "GET" && caidas.some((re) => re.test(ruta))) {
       return Promise.reject(new DOMException("Signal timed out.", "TimeoutError"));
     }
@@ -67,11 +74,15 @@ Deno.env.set("SUPABASE_PUBLISHABLE_KEY", "publica-falsa");
 Deno.env.set("STALD_TABLAS", "stald_test_");
 const { handler } = await import("./main.ts");
 
-// Sesión del admin: /auth/v1/user del Supabase falso devuelve su correo verificado.
+// Sesión: /auth/v1/user del Supabase falso devuelve el correo según el token («token-admin» o «token-luz»).
 const fakeFetch = fake.fetch;
 fake.fetch = ((u: string | URL | Request, init?: RequestInit) => {
   const url = String(u instanceof Request ? u.url : u);
-  if (url.includes("/auth/v1/user")) return Promise.resolve(new Response(JSON.stringify({ email: "admin@example.com", email_confirmed_at: "2026-09-01T00:00:00Z" }), { status: 200 }));
+  if (url.includes("/auth/v1/user")) {
+    const token = new Headers(init?.headers).get("Authorization") ?? "";
+    const email = token.endsWith("token-luz") ? "luz@example.com" : "admin@example.com";
+    return Promise.resolve(new Response(JSON.stringify({ email, email_confirmed_at: "2026-09-01T00:00:00Z" }), { status: 200 }));
+  }
   return fakeFetch(u, init);
 }) as typeof fetch;
 
@@ -98,8 +109,24 @@ Deno.test("resumen: si falla la lectura de resultados de una columna, 200 con av
     assert(r.body.avisos.includes("resultados_incompletos"), JSON.stringify(r.body.avisos));
     assert(!r.body.columnas.some((c: any) => c.id === "act-2026-10-06"), "la columna que no se pudo leer no se cuenta");
     assert(r.body.columnas.some((c: any) => c.id === "act-2026-10-08"), "las demás columnas siguen");
+    assert(r.body.filas.every((f: any) => !("act-2026-10-06" in f.celdas)), "sin celdas de la columna caída");
+    assertEquals(r.body.kpis.promedio, null, "la entrega de Luz (90 %) en la columna caída no cuenta en los indicadores");
   } finally {
     caidas.length = 0;
+  }
+});
+
+Deno.test("resumen: una falla aislada de una columna se recupera con el reintento, sin aviso", async () => {
+  caidasUnaVez.push(/stald_test_docs\?path=like\.resultados\/act-2026-10-06\//);
+  try {
+    const r = await resumen("?grupo=grupo-1");
+    assertEquals(r.status, 200, JSON.stringify(r.body));
+    assertEquals(r.body.avisos, []);
+    assert(r.body.columnas.some((c: any) => c.id === "act-2026-10-06"));
+    assertEquals(r.body.kpis.promedio, 90);
+    assertEquals(caidasUnaVez.length, 0, "la falla sí ocurrió");
+  } finally {
+    caidasUnaVez.length = 0;
   }
 });
 
@@ -110,6 +137,10 @@ Deno.test("resumen: si fallan los grupos, 200 con aviso y sin filtrar", async ()
     assertEquals(r.status, 200, JSON.stringify(r.body));
     assert(r.body.avisos.includes("grupos_no_disponibles"), JSON.stringify(r.body.avisos));
     assertEquals(r.body.filas.map((f: any) => f.alumno), ["Luz", "Sofía"]);
+    // Con ?grupo= y grupos caídos tampoco se filtra (como sin base de datos) y `grupo` sale null.
+    const g = await resumen("?grupo=grupo-1");
+    assertEquals([g.status, g.body.grupo, g.body.filas.length], [200, null, 2]);
+    assert(g.body.avisos.includes("grupos_no_disponibles"));
   } finally {
     caidas.length = 0;
   }
@@ -123,6 +154,9 @@ Deno.test("500 genérico: el admin recibe el detalle", async () => {
     const body = await r.json() as any;
     assertEquals([r.status, body.error], [500, "upstream_error"]);
     assert(typeof body.detalle === "string" && body.detalle.length > 0, JSON.stringify(body));
+    // Una alumna con una falla del servidor (aquí, el resultado de ejemplo incompleto): solo el código, sin el motivo.
+    const al = await handler(new Request("http://x/ingles/actividades", { headers: { Authorization: "Bearer token-luz" } }));
+    assertEquals([al.status, await al.json()], [500, { error: "upstream_error" }]);
   } finally {
     caidas.length = 0;
   }

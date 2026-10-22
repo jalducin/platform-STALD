@@ -19,8 +19,8 @@ const api = async (ruta, body) => { const r = await fetch(API + ruta + (ruta.inc
 // Registra errores de consola, errores JS, recursos que no cargan y 5xx de la API. Única excepción: sin Postgres,
 // GET /ingles/grupos responde 503 `sin_base` a propósito (Chrome lo anota en consola); con --pg no se excusa nada.
 function vigilar(p, errores, sinBase) {
-  const excusado = t => sinBase && /status of 503/.test(t);
-  p.on('console', m => { if (m.type() === 'error' && !excusado(m.text())) errores.push('consola: ' + m.text().slice(0, 200)); });
+  const excusado = m => sinBase && /status of 503/.test(m.text()) && /\/ingles\/grupos\?/.test((m.location() || {}).url || '');
+  p.on('console', m => { if (m.type() === 'error' && !excusado(m)) errores.push('consola: ' + m.text().slice(0, 200) + ' ' + ((m.location() || {}).url || '').slice(0, 120)); });
   p.on('pageerror', e => errores.push('JS: ' + e.message.slice(0, 200)));
   p.on('requestfailed', r => { if (!/favicon/.test(r.url())) errores.push('falló: ' + r.url().slice(0, 160) + ' ' + ((r.failure() || {}).errorText || '')); });
   p.on('response', r => {
@@ -35,7 +35,9 @@ const esperarResumen = p => p.waitForFunction(() => document.getElementById('kpi
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const grupos = await api('/ingles/grupos');
   const conGrupos = grupos.status === 200 && (grupos.body.grupos || []).some(g => g.activo);
-  const g1 = conGrupos ? grupos.body.grupos.find(g => g.activo) : null;
+  // Un grupo activo y visible en el panel; su bandera original se restaura al final.
+  const g1 = conGrupos ? grupos.body.grupos.find(g => g.activo && !g.ocultoAdmin) || null : null;
+  const original = g1 ? g1.ocultoAdmin === true : null;
   try {
     // 1. Carga limpia del admin, pestaña por pestaña
     const errores = [];
@@ -61,7 +63,7 @@ const esperarResumen = p => p.waitForFunction(() => document.getElementById('kpi
     ok('carga del admin de Inglés (todas las pestañas y la ruta del profe) sin errores de consola, JS, recursos ni 5xx', errores.length === 0, errores.slice(0, 6).join(' | '));
 
     // 3. Ocultar y mostrar desde la tarjeta del grupo
-    if (!conGrupos) {
+    if (!g1) {
       out.push('PASS sin Postgres no hay grupos: se omite «Ocultar del panel» en las tarjetas (corre con --pg)');
     } else {
       await p.evaluate(() => { location.hash = 'resumen'; });
@@ -101,9 +103,9 @@ const esperarResumen = p => p.waitForFunction(() => document.getElementById('kpi
     ok('«🔄 Reintentar» carga el resumen', !(await p.$('#resumen-error')));
   } finally {
     if (g1) {
-      const r = await api('/ingles/grupos/ocultar', { grupo: g1.id, oculto: false }); // restaura la bandera
+      const r = await api('/ingles/grupos/ocultar', { grupo: g1.id, oculto: original }); // restaura la bandera original
       const fin = await api('/ingles/grupos');
-      ok('estado restaurado: el grupo visible en el panel', r.status === 200 && (fin.body.grupos.find(g => g.id === g1.id) || {}).ocultoAdmin === false);
+      ok('estado restaurado: la bandera del grupo como estaba (' + original + ')', r.status === 200 && (fin.body.grupos.find(g => g.id === g1.id) || {}).ocultoAdmin === original);
     }
     await b.close();
   }
