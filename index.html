@@ -103,6 +103,8 @@
   .atajo-material:hover { border-color: var(--ingles); }
   .av-link { font-size: .82rem; font-weight: 700; color: var(--juegos); text-decoration: none; margin-left: 6px; }
   footer { text-align: center; font-size: .74rem; color: var(--muted); margin-top: 36px; }
+  .pie-legal a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: .82rem; font-weight: 600; color: var(--muted); text-decoration: none; }
+  .pie-legal a:hover { color: var(--text); text-decoration: underline; }
   .notice { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--accent-soft); font-size: .88rem; }
   .notice b { display: block; margin-bottom: 4px; }
   .notice .btn { margin-top: 10px; }
@@ -214,10 +216,15 @@
     </section>
   </main>
 
-  <footer>STALD · aprender también puede ser divertido</footer>
+  <footer>
+    STALD · aprender también puede ser divertido
+    <!-- Aviso de privacidad (openspec: rpg-privacidad): visible solo con el interruptor `privacidad` encendido. -->
+    <nav class="pie-legal" aria-label="Privacidad" data-interruptor="privacidad" hidden><a href="privacidad.html" data-interruptor="privacidad">🔒 Aviso de privacidad</a></nav>
+  </footer>
 </div>
 
 <script src="comun/auth.js?v=8"></script>
+<script src="comun/interruptores.js?v=1"></script> <!-- enlace al aviso de privacidad (openspec: rpg-privacidad) -->
 <script src="comun/gamificacion.js?v=1"></script> <!-- materias y mundos (openspec: gamificacion-nucleo) -->
 <script src="comun/secundaria-datos.js?v=1"></script> <!-- reglas del horario de Secundaria (openspec: secundaria-dashboard) -->
 <script>

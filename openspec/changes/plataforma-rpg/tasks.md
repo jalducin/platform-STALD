@@ -53,11 +53,13 @@
 - [ ] 3.11 Vista «⚔️ Misión principal»: pasos, cuadro de entrega en texto con recordatorio de privacidad y contador de
   caracteres
 - [ ] 3.12 Retroalimentación inmediata accesible (XP, nivel, insignias; movimiento reducido; sonido apagado)
-- [ ] 3.13 Aviso de privacidad `privacidad.html` enlazado desde el portal (texto aprobado por el profe)
-- [ ] 3.14 Formato simple de consentimiento: hoja imprimible `consentimiento.html` enlazada desde `privacidad.html`,
+- [x] 3.13 Aviso de privacidad `privacidad.html` enlazado desde el portal (texto aprobado por el profe). Implementada
+  en el cambio derivado `rpg-privacidad`, detrás del interruptor `privacidad` apagado: el profe aprueba el texto y
+  enciende el interruptor (dato, sin deploy)
+- [x] 3.14 Formato simple de consentimiento: hoja imprimible `consentimiento.html` enlazada desde `privacidad.html`,
   con casillas para «tutor IA» y, para después, «imagen y audio»; sin datos de más (nombre de la alumna o alumno,
   nombre y firma de madre, padre o tutor, fecha). El profe aprueba el texto y lo recaba; en la plataforma solo se
-  registra slug, tipo y fecha
+  registra slug, tipo y fecha. Implementada en `rpg-privacidad` (mismo interruptor que 3.13)
 - [ ] 3.15 Contenido: `mundos.json` (nombres de `comun/gamificacion.js`) y la misión piloto «La tiendita del salón»
   (Matemáticas, solo texto) en el repo privado, generadas con la skill y validadas con 0 errores
 - [ ] 3.16 Actualizar `ai-specs/skills/clases-secundaria/SKILL.md` con la sección de misiones (entregables solo en

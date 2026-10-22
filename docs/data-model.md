@@ -157,6 +157,14 @@ Sin datos personales. Se sirve junto a `juegos.html`.
     `meta/migrado-juegos`;
   - ya no gasta del límite de la API de GitHub;
   - **no hay respaldo**: si Postgres falla, la ruta responde 503 en lugar de leer una copia vieja.
+- **Interruptores públicos** (cambio `rpg-privacidad`): `config/interruptores.json` = `{ "privacidad": false }`.
+  - Vive como fila de `stald_docs` (`path = 'config/interruptores.json'`); sin Postgres (pruebas, servidor local) se lee
+    del almacén de datos. Lo lee `GET /interruptores` (60 s de caché); sin fila → todo apagado.
+  - `privacidad`: muestra `privacidad.html`, `consentimiento.html` y sus enlaces en el portal, Inglés y Juegos.
+  - Encender (cambio de dato, sin deploy; se nota en ≤ 2 min):
+    `insert into stald_docs (path, data) values ('config/interruptores.json', '{"privacidad": true}') on conflict (path)
+    do update set data = excluded.data, version = stald_docs.version + 1, actualizado = now();`
+    Apagar: lo mismo con `false`. No guarda datos de personas.
 - **Identidad de Inglés:** `alumnos.json` es la única fuente (fase 2 de `cierre-tecnico`). Puede traer
   `origen: "notion"` en las personas que la fase 1 importó de Notion; hoy es solo informativo.
 - **Identidad de Secundaria** (cambio `secundaria-sin-notion`): el mismo `alumnos.json`. Campos opcionales:

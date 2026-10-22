@@ -23,6 +23,10 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - No lleva datos personales ni respuestas de evaluaciones.
   - Los relojes aceptan `window.__TIEMPO_JUEGOS` (solo en pruebas E2E) para acelerarlos.
 
+- **Páginas legales (cambio `rpg-privacidad`):** `privacidad.html` (aviso de privacidad) y `consentimiento.html`
+  (formato imprimible para madre, padre o tutor) comparten `estilos/legal.css`; ver
+  [Aviso de privacidad y consentimiento](#aviso-de-privacidad-y-consentimiento-cambio-rpg-privacidad).
+
 ## 2. Seguridad en el DOM
 
 - Todo texto que venga de Notion se inserta con `escapeHtml()` o con `textContent`. Nunca concatenar
@@ -1179,3 +1183,25 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
   `faltan` y `xpHoy`. **Actividad reciente** (`actividadReciente(items, n)`): por `ultimoEnvio`, con porcentaje y XP.
 - Día de la clase (`diaDeClase`): `disponibleDesde` si dura un día (vence ese día o el siguiente); con ventana más
   larga, su `fechaLimite`. Hecha (`estaHecha`): al menos un envío.
+
+## Aviso de privacidad y consentimiento (cambio `rpg-privacidad`)
+
+- **Interruptor `privacidad`** (`GET /interruptores`, dato en `config/interruptores.json`; ver
+  [data-model](data-model.md)). `comun/interruptores.js?v=1` lo lee una vez por página (falla cerrada: sin red o con
+  error, apagado) y aplica atributos:
+  - `[data-interruptor="privacidad"]` visible solo encendido (a los enlaces les agrega `?api=` si la página lo trae);
+  - `[data-interruptor-apagado="privacidad"]` visible solo apagado; `[data-interruptores-cargando]` se oculta al terminar;
+  - marca `<html data-interruptores="listo">` (las E2E la esperan).
+- **Apagado:** sin enlaces en el pie del portal (`index.html`), de `ingles.html` y de `juegos.html` (`footer.pie-legal`);
+  `privacidad.html` y `consentimiento.html` muestran «Próximamente» y no el texto (el HTML sí trae el texto: es
+  público y no tiene datos personales).
+- **Encendido:** enlace «🔒 Aviso de privacidad» de 44 px en esos tres pies; el aviso enlaza al formato y viceversa.
+- `privacidad.html`: aviso integral en lenguaje claro con «En un minuto», índice y 12 secciones con `id` estables
+  (`responsable`, `datos`, `finalidades`, `donde`, `quien`, `no-compartimos`, `tutor-ia`, `conservacion`, `menores`,
+  `arco`, `navegador`, `cambios`). Mientras el profe no apruebe el texto lleva la nota `.borrador`; lo que llena el
+  profe va en `.pendiente`. Sin correos ni nombres reales.
+- `consentimiento.html`: 4 autorizaciones con «Sí / No» (plataforma; ranking por apodo, opcional; tutor IA e imagen o
+  audio, opcionales de fases futuras) y campos en blanco (alumno o alumna, quien firma, parentesco, fecha y firma).
+  `@media print` en `estilos/legal.css`: tamaño carta, una hoja, sin navegación ni botones. La plataforma no guarda
+  la hoja firmada; solo se registra slug, tipo y fecha (spec `plataforma-rpg`).
+- Tema: sistema o `stald_tema` (como `ingles.html`); 360 px sin scroll horizontal. Prueba: `tests/e2e/e2e-privacidad.js`.
