@@ -20,7 +20,7 @@ desde su vista de Inglés y que los pasos entregados cuenten en la constancia de
   lista Inglés y Secundaria). Se carga al abrirla. Es mínima: el rediseño del admin lo hace otro agente.
 - **Ranking:** `pasosEntregados(store, "ingles", slug)` alimenta los 20 puntos por paso de misión.
 - **Pruebas:** misión de ejemplo `tests/fixtures/datos/contenido/ingles/misiones/mis-ingles-e2e-hero-card.json`
-  (contenido inventado, `alumnos: ["marisol"]`, validada con `--misiones ingles`), E2E `misiones-ingles` y
+  (contenido inventado, `alumnos: ["jesus"]`, validada con `--misiones ingles`), E2E `misiones-ingles` y
   `server/misiones_ingles_test.ts`.
 
 ## Capabilities
