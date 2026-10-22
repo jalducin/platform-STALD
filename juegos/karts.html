@@ -2224,8 +2224,10 @@ function empezarCopa(nueva) {
   iniciarCarrera(copaDe(cc).pistas[cc.carrera], { copa: true, ronda: cc.carrera, dif: cc.dif });
 }
 function iniciarCarrera(id, op) {
-  // Con el sensor elegido: se activa (o se centra) dentro del mismo toque que arranca la carrera.
-  if (control === 'sensor' && TACTIL) activarSensor();
+  // Con el sensor elegido: se activa (o se centra) dentro del mismo toque que arranca la carrera. En sala no hay toque
+  // (llega por postMessage): lo hace sensorEnSala en modo silencioso (karts-sensor-android; Chrome 151+ también trae
+  // requestPermission y, con el permiso en «Preguntar», sin toque lo rechaza: no debe cambiar a botones).
+  if (control === 'sensor' && TACTIL && !op.sala) activarSensor();
   // karts-salida-y-puntos: la hora de salida se fija ANTES de preparar la pista: pintar una pista grande tarda hasta
   // segundos en un celular y, contado después, cada aparato salía tarde según lo lento que fuera.
   const salida = performance.now() + (op.sala ? op.inicioEn : 0);
