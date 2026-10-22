@@ -14,8 +14,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   (`DATA_URL_BASE`); no repetirla en varios lugares.
 - `index.html` es el **portal** (lo que Pages sirve en `/`):
   - pide el correo, consulta `/perfil` y muestra una tarjeta por espacio;
-  - la tarjeta de Secundaria lleva a `secundaria.html`, que desde el cambio `secundaria-sin-notion` es un puente a
-    `ingles.html?modo=secundaria` (ya no hay tablero de Notion).
+  - la tarjeta de Secundaria lleva directo a `ingles.html?modo=secundaria` (cambio `navegacion-dispositivos`);
+    `secundaria.html` queda como puente para enlaces guardados (desde `secundaria-sin-notion` ya no hay tablero de Notion).
   - **Excepción de estilos (cambio `portal-diseno-rpg`):** su CSS vive en `estilos/portal.css` (más `estilos/ui.css` y
     `estilos/materias.css`); el script sigue en línea. Ver [Portal con diseño RPG](#portal-con-diseño-rpg-cambio-portal-diseno-rpg).
 - Cada página de espacio lleva "← Inicio" al portal y "🎮 Juegos"; ambos conservan `?api=` para probar contra un servidor local.
@@ -1257,7 +1257,7 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   - `ol.sec-mini`: 7 días `[data-sec-mini]` con el emoji de cada materia (`role="img"` y su nombre); hoy con
     `aria-current="date"`;
   - los botones `#sec-portal-clases` («📚 Mis clases») y `#sec-portal-horario` («🗓️ Mi horario»,
-    `secundaria.html#horario`), de 44 px o más.
+    `ingles.html?modo=secundaria#horario`, directo y sin el puente), de 44 px o más.
 - Si falla, aparece un aviso corto con el botón a Secundaria. Sin Secundaria, el bloque queda `hidden`.
 
 ### Portal con diseño RPG (cambio `portal-diseno-rpg`)
