@@ -90,7 +90,8 @@ function recompensaMision(id) {
 
 // Vista completa de la clase. `cabecera` y `form` los arma el reproductor (los mismos que en Inglés).
 function vistaClaseSecundaria(it, cabecera, form) {
-  const teoria = it.teoria && it.teoria.length ? renderTeoria(it.teoria) : '';
+  // Práctica de la teoría con revisión en el servidor (openspec: rpg-fase2-misiones; ingles/secundaria-misiones.js).
+  const teoria = it.teoria && it.teoria.length ? renderTeoria(it.teoria) + (typeof practicaHtml === 'function' ? practicaHtml(it.teoria, { itemId: it.id }) : '') : '';
   const video = videosDeClase(it.tips);
   const libreta = bloqueLibreta(it.id, it.tips);
   const hay = { teoria: !!teoria, video: video.hay, ejercicios: true, libreta: !!libreta };

@@ -1,0 +1,30 @@
+{
+  "id": "mis-e2e-valle-de-los-numeros",
+  "tipo": "mision",
+  "titulo": "🧪 Misión de prueba: el puesto de aguas",
+  "materia": "Matemáticas",
+  "mundo": "valle-de-los-numeros",
+  "descripcion": "Misión inventada para las pruebas E2E: precios, descuentos y ganancias de un puesto de aguas.",
+  "disponibleDesde": "2026-10-26",
+  "consigna": "Planea un puesto de aguas inventado.\nEscribe tus cálculos completos.\n\n🔒 Sin nombres reales, direcciones ni datos de contacto.",
+  "pasos": [
+    { "id": "p1", "titulo": "Precios", "instrucciones": "1. Elige 3 sabores.\n2. Pon el precio de cada vaso.", "entregable": "Lista de precios.", "extension": "50–100 palabras.", "ejemplo": "Jamaica: $12.50", "fechaLimite": "2026-10-29", "tipoEntrega": "texto" },
+    { "id": "p2", "titulo": "Descuentos", "instrucciones": "Calcula un descuento del 10 %.", "fechaLimite": "2026-11-05", "tipoEntrega": "texto" },
+    { "id": "p3", "titulo": "Ganancias", "instrucciones": "Resta lo que gastaste a lo que vendiste.", "fechaLimite": "2026-11-12", "tipoEntrega": "texto" }
+  ],
+  "rubrica": [
+    { "id": "c1", "criterio": "Cálculos correctos", "puntos": 25, "niveles": [{ "nivel": 4, "nombre": "Lo domino", "puntos": 25 }, { "nivel": 3, "nombre": "Casi lo logro", "puntos": 20 }, { "nivel": 2, "nombre": "Voy avanzando", "puntos": 15 }, { "nivel": 1, "nombre": "Estoy empezando", "puntos": 10 }] },
+    { "id": "c2", "criterio": "Uso de porcentajes", "puntos": 25, "niveles": [{ "nivel": 4, "nombre": "Lo domino", "puntos": 25 }, { "nivel": 3, "nombre": "Casi lo logro", "puntos": 20 }, { "nivel": 2, "nombre": "Voy avanzando", "puntos": 15 }, { "nivel": 1, "nombre": "Estoy empezando", "puntos": 10 }] },
+    { "id": "c3", "criterio": "Explicación", "puntos": 25, "niveles": [{ "nivel": 4, "nombre": "Lo domino", "puntos": 25 }, { "nivel": 3, "nombre": "Casi lo logro", "puntos": 20 }, { "nivel": 2, "nombre": "Voy avanzando", "puntos": 15 }, { "nivel": 1, "nombre": "Estoy empezando", "puntos": 10 }] },
+    { "id": "c4", "criterio": "Orden", "puntos": 25, "niveles": [{ "nivel": 4, "nombre": "Lo domino", "puntos": 25 }, { "nivel": 3, "nombre": "Casi lo logro", "puntos": 20 }, { "nivel": 2, "nombre": "Voy avanzando", "puntos": 15 }, { "nivel": 1, "nombre": "Estoy empezando", "puntos": 10 }] }
+  ],
+  "teoria": [
+    { "titulo": "Porcentajes", "texto": "El 10 % de una cantidad es dividirla entre 10.",
+      "practica": [
+        { "id": "e2e-q1", "pregunta": "¿Cuánto es el 10 % de 50?", "opciones": ["5", "10", "15"], "correcta": 0, "pista": "Divide 50 entre 10." },
+        { "id": "e2e-q2", "pregunta": "Escribe el 50 % de 30.", "aceptadas": ["15", "quince"], "pista": "La mitad de 30." }
+      ] }
+  ],
+  "tips": [{ "tipo": "lectura", "texto": "Porcentajes (Khan Academy)", "url": "https://es.khanacademy.org/math/pre-algebra/pre-algebra-ratios-rates" }],
+  "alumnos": ["valeria"]
+}

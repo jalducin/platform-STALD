@@ -57,6 +57,9 @@ Deno.test("POST entrega: texto válido → 200 y «entregado»; tardía se marca
   const doc = (await store.get<any>(`entregas/${ID}/ana.json`))!.data;
   assertEquals([doc.pasos.p2.estado, doc.pasos.p2.texto.length, doc.slug, doc.ambito], ["entregado", 900, "ana", "secundaria"]);
   assert(!JSON.stringify(doc).includes("@"), "sin correos");
+  // JSON como text/plain (sin verificación previa del navegador) también se acepta.
+  const plano = await leer(await handleMisiones(post(`/misiones/${ID}/entrega`, { paso: "p3", texto: "hola" }, "text/plain;charset=UTF-8"), `/${ID}/entrega`, d, json));
+  assertEquals(plano.status, 200);
   const tarde = await entregar(deps(store, ALUMNA, "2026-11-07"), "p1", "Mi paso uno");
   assertEquals([tarde.status, tarde.body.tarde], [200, true]);
 });

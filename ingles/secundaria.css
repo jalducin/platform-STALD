@@ -15,14 +15,15 @@ body.secundaria #logout-btn { min-height: 44px; }
 .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .btn:disabled:hover { box-shadow: none; }
 
-/* ---------- Pestañas: 4 (5 con Resultados del admin) en una fila, de 44 px o más ---------- */
-.sec-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; margin-bottom: 14px; overflow: visible; position: sticky; top: 0; z-index: 5; box-shadow: var(--shadow-1); }
+/* ---------- Pestañas: 7 (9 con las del admin) en filas de 4 en teléfono y en cuadrícula flexible en pantallas anchas (rpg-fase2-misiones), de 44 px o más ---------- */
+.sec-tabs { display: grid; grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-bottom: 14px; overflow: visible; position: sticky; top: 0; z-index: 5; box-shadow: var(--shadow-1); }
 .sec-tabs .tab { min-height: 48px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.1; min-width: 0; }
 .sec-tabs .tab:hover:not([aria-selected="true"]) { background: var(--accent-soft); color: var(--accent); }
 .sec-tab-emoji { font-size: 1.1rem; }
 .sec-tab-largo { display: none; }
 .sec-tab-corto { font-size: .72rem; overflow-wrap: anywhere; }
 @media (min-width: 560px) {
+  .sec-tabs { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); }
   .sec-tabs .tab { flex-direction: row; gap: 6px; padding: 8px 10px; }
   .sec-tab-largo { display: inline; font-size: .86rem; }
   .sec-tab-corto { display: none; }
@@ -202,3 +203,105 @@ body.secundaria { font-family: "Inter", var(--font); }
 .sec-etapa small { font-weight: 600; opacity: .85; }
 .sec-secuencia li.mundo-completado .sec-etapa { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
 .sec-secuencia li.mundo-bloqueado .sec-etapa { opacity: .75; }
+
+/* ======================================================================================================
+   Misiones principales, mapa, árbol y bandeja del profe (openspec: rpg-fase2-misiones; ingles/secundaria-misiones.js).
+   Tokens del tablero RPG: claro y oscuro; botones ≥ 44 px; sin scroll horizontal a 360 px; sin animaciones grandes.
+   ====================================================================================================== */
+.mis-pre { white-space: pre-line; overflow-wrap: anywhere; line-height: 1.5; }
+.mis-btn-chico { min-height: 44px; padding: 6px 12px; font-size: .85rem; }
+.mis-estado { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+  background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); color: var(--text); }
+.mis-estado.est-evaluada, .mis-estado.est-dominado, .mis-estado.est-completado { color: var(--rpg-emerald); border-color: var(--rpg-emerald); background: var(--ok-soft); }
+.mis-estado.est-lista { color: var(--rpg-indigo); border-color: var(--rpg-indigo); background: var(--accent-soft); }
+.mis-estado.est-correccion { color: var(--rpg-amber); border-color: var(--rpg-amber); }
+.mis-estado.est-bloqueado { opacity: .8; }
+
+/* Inicio */
+.mis-inicio { background: var(--rpg-hero); border-color: var(--rpg-borde); box-shadow: var(--rpg-glow); }
+.mis-inicio .rpg-xp-barra { margin: 4px 0; }
+.mis-semana-lista { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.mis-semana-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); }
+.mis-semana-item.completa { border-color: var(--rpg-emerald); }
+.mis-semana-t { flex: 1; min-width: 0; font-size: .88rem; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Lista y detalle de misiones */
+.mis-lista { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .mis-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mis-detalle > * + * { margin-top: 14px; }
+.mis-hero { padding: 16px; }
+.mis-hero::after { content: "⚔️"; }
+.mis-pasos { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.mis-paso { padding: 14px; border-radius: var(--r-md); background: var(--rpg-panel); border: 1px solid var(--rpg-borde); box-shadow: var(--shadow-1); min-width: 0; }
+.mis-paso h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 1rem; overflow-wrap: anywhere; }
+.mis-paso-meta { margin: 0 0 8px; font-size: .8rem; color: var(--rpg-texto-suave); }
+.mis-ejemplo, .mis-entregado, .mis-zonas, .ent-paso, .ent-corr { margin-top: 8px; }
+.mis-ejemplo summary, .mis-entregado summary, .mis-zonas summary, .ent-paso summary, .ent-corr summary, .mis-teoria summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.mis-ejemplo .mis-pre, .mis-entregado .mis-pre, .ent-paso .mis-pre { padding: 10px; border-radius: var(--r-sm); background: var(--rpg-panel-2); border: 1px dashed var(--rpg-borde); font-size: .88rem; }
+.mis-correccion { padding: 10px; border-radius: var(--r-sm); border: 1px solid var(--rpg-amber); background: var(--rpg-panel-2); }
+.mis-entrega { display: grid; gap: 6px; margin-top: 10px; }
+.mis-label { font-weight: 700; font-size: .9rem; }
+.mis-aviso { margin: 0; font-size: .82rem; font-weight: 600; color: var(--rpg-purple); }
+.mis-entrega textarea, .ent-evaluar textarea, .mis-input { width: 100%; box-sizing: border-box; font: inherit; font-size: 1rem; padding: 10px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--card); color: var(--text); min-height: 44px; }
+.mis-entrega textarea { resize: vertical; min-height: 160px; }
+.mis-entrega textarea:focus-visible, .mis-input:focus-visible, .ent-evaluar textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.mis-entrega-pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.mis-cuenta { font-size: .8rem; color: var(--rpg-texto-suave); font-variant-numeric: tabular-nums; }
+.mis-cuenta.lleno { color: var(--rpg-amber); font-weight: 700; }
+.mis-res { margin: 0; font-size: .86rem; min-height: 1em; }
+.mis-res.ok { color: var(--rpg-emerald); font-weight: 700; }
+.mis-criterio + .mis-criterio { margin-top: 10px; }
+.mis-niveles { margin: 4px 0 0; padding-left: 18px; font-size: .85rem; }
+.mis-niveles li.elegido { font-weight: 700; color: var(--rpg-emerald); }
+.mis-comentario { font-style: italic; overflow-wrap: anywhere; }
+
+/* Práctica de la teoría */
+.mis-practicas { margin-top: 12px; display: grid; gap: 10px; }
+.mis-practicas h4 { margin: 0; }
+.mis-practica { padding: 10px; border-radius: var(--r-sm); border: 1px solid var(--rpg-borde); background: var(--rpg-panel-2); display: grid; gap: 6px; }
+.mis-practica p { margin: 0; overflow-wrap: anywhere; }
+.mis-opciones { display: grid; gap: 4px; }
+.mis-opcion { display: flex; align-items: center; gap: 8px; min-height: 44px; overflow-wrap: anywhere; }
+.mis-opcion input { width: 20px; height: 20px; flex-shrink: 0; }
+.mis-practica-res.ok { color: var(--rpg-emerald); font-weight: 700; }
+.mis-practica-res.casi { color: var(--rpg-amber); font-weight: 700; }
+
+/* Mapa */
+.mis-mundos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.mis-mundo { padding: 10px; border-radius: var(--r-sm); background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); border-left: 4px solid var(--mat, var(--rpg-indigo)); min-width: 0; }
+.mis-mundo.est-bloqueado { opacity: .78; }
+.mis-mundo-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.mis-mundo-n { font-weight: 800; overflow-wrap: anywhere; }
+.mis-mundo-n small { font-weight: 600; color: var(--rpg-texto-suave); }
+.mis-mundo .meta { margin: 4px 0 0; }
+.mis-mundo-mision { margin: 6px 0 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 600; overflow-wrap: anywhere; }
+.mis-zona ul { margin: 4px 0 8px; padding-left: 4px; list-style: none; display: grid; gap: 2px; }
+.mis-zona li { display: flex; align-items: center; gap: 6px; min-height: 44px; overflow-wrap: anywhere; }
+.mis-capitulo { background: none; border: 0; padding: 6px 0; min-height: 44px; text-align: left; cursor: pointer; font: inherit; color: var(--accent); text-decoration: underline; }
+
+/* Árbol */
+.mis-arbol-mundo { margin: 10px 0 6px; font-size: .92rem; }
+.mis-nodos { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mis-nodo { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); min-width: 0; flex-wrap: wrap; }
+.mis-nodo.est-dominado { border-color: var(--rpg-emerald); }
+.mis-nodo.est-reforzar { border-color: var(--rpg-amber); }
+.mis-nodo.est-no-visto { opacity: .8; }
+.mis-nodo-ico { font-size: 1.2rem; }
+.mis-nodo-t { flex: 1; min-width: 0; display: grid; overflow-wrap: anywhere; }
+.mis-nodo-t small { color: var(--rpg-texto-suave); }
+
+/* Bandeja del profe */
+.ent-card > * + * { margin-top: 8px; }
+.ent-card.est-lista { border-color: var(--rpg-indigo); box-shadow: var(--rpg-glow); }
+.ent-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ent-top h3 { margin: 0; overflow-wrap: anywhere; }
+.ent-evaluar, .ent-correccion { display: grid; gap: 6px; }
+.ent-criterio { border: 1px solid var(--rpg-borde); border-radius: var(--r-sm); padding: 6px 10px; margin: 0; min-width: 0; }
+.ent-criterio legend { font-weight: 700; padding: 0 4px; overflow-wrap: anywhere; }
+.ent-total { font-weight: 800; color: var(--rpg-indigo); margin: 0; }
+.ent-borrar { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rpg-xp-barra > span { transition: none; }
+}

@@ -190,10 +190,14 @@ async function listar(req: Request, p: PersonaMision, d: DepsMisiones, json: Jso
   return json({ isAdmin: false, hoy, mundos: cat?.desdeArchivo ? cat.mundos : null, misiones: misiones.map((m, i) => conEntrega(m, ambito, docs[i]?.data ?? null)) });
 }
 
+// Cuerpos aceptados: JSON (application/json, o text/plain como manda la página para no pedir verificación previa).
+const esTipoTexto = (req: Request) => {
+  const ct = (req.headers.get("content-type") || "").toLowerCase();
+  return !ct || ct.includes("application/json") || ct.startsWith("text/plain");
+};
 // ¿La petición trae un archivo o pide otro tipo que texto? (spec «Intenta subir un archivo»)
 function esArchivo(req: Request, body: any): boolean {
-  const ct = (req.headers.get("content-type") || "").toLowerCase();
-  if (ct && !ct.includes("application/json")) return true;
+  if (!esTipoTexto(req)) return true;
   if (!body || typeof body !== "object") return false;
   if (CLAVES_ARCHIVO.some((k) => k in body)) return true;
   if (body.tipo !== undefined && body.tipo !== "texto") return true;
@@ -208,8 +212,7 @@ async function entregar(req: Request, id: string, p: PersonaMision, d: DepsMisio
   const { misiones } = await visiblesPara(d, p, ambito);
   const m = misiones.find((x) => x.id === id);
   if (!m) return json({ error: "not_found" }, 404); // ajena o futura: no revela que existe
-  const ct = (req.headers.get("content-type") || "").toLowerCase();
-  if (ct && !ct.includes("application/json")) {
+  if (!esTipoTexto(req)) {
     await req.body?.cancel();
     return json({ error: "tipo_no_permitido", mensaje: "Por ahora las entregas son solo texto." }, 400);
   }
