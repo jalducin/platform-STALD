@@ -642,7 +642,7 @@ agrega como opción con valor por omisión compatible, en su propio cambio OpenS
 **Cargar y crear** (dentro del iframe del juego; `window.Mando`):
 
 ```html
-<script src="mando.js?v=2"></script>
+<script src="mando.js?v=3"></script>
 ```
 
 ```js
