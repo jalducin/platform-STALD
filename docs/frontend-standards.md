@@ -1179,3 +1179,19 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
   `faltan` y `xpHoy`. **Actividad reciente** (`actividadReciente(items, n)`): por `ultimoEnvio`, con porcentaje y XP.
 - Día de la clase (`diaDeClase`): `disponibleDesde` si dura un día (vence ese día o el siguiente); con ventana más
   larga, su `fechaLimite`. Hecha (`estaHecha`): al menos un envío.
+
+## Tablero RPG y ranking de Inglés (cambio `rpg-fase2-ingles`)
+
+- `ingles/rpg-ingles.js` y `ingles/rpg-ingles.css`. En «🏠 Inicio» de alumnos y alumnas, después del saludo:
+  `barraRpg` de `ingles/secundaria-inicio.js` (nivel, rango, XP del nivel, insignias y racha) con
+  `Gamificacion.xpTotal`/`nivelDe` y las 4 insignias de Inglés (cuarto parámetro: el total), y «Mundo actual». Nada se
+  guarda. «Esta semana», «Para ponerte al día», la próxima clase, «Para hoy» y «Material» no cambian.
+- «🏆 Ranking de mi grupo» solo si `GET /gamificacion/perfil` dijo `ranking: true` (`state.gam`); la última respuesta
+  del ranking queda en `state.rk` para volver a dibujar sin pedirla. Con el interruptor apagado **no se dibuja nada**
+  del ranking, ni el botón. Botones `data-rk="aparecer|ocultar"`; mensajes en `#rk-msg` (`role="status"`), en
+  positivo y sin decir qué nombre bloqueó un nick.
+- Admin: sección «🛡️ Nicks» (`#nicks-admin`, carga al abrirla): interruptor general y por grupo (con el filtro de
+  grupo), «⏳ Por revisar», «👥 Todos los nicks»; rechazar pide el motivo en la misma fila (sin `prompt`). Botones
+  `data-nk`.
+- E2E: `tests/e2e/e2e-rpg-ingles.js` (fase `ingles`), a 360 px en claro y oscuro.
+

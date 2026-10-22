@@ -22,6 +22,7 @@ import type { Cuenta } from "./jugadores.ts";
 import { handleResumen } from "./resumen.ts";
 import { crearMemo, unaALaVez } from "./cache.ts";
 import { aplicarCacheHttp, politicaCache } from "./http_cache.ts";
+import { type DepsGamificacion, handleGamificacion, handleProfeGamificacion, rankingVisible } from "./gamificacion.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
@@ -343,7 +344,8 @@ async function rutaActividades(req: Request, sub: string, email: string, admin: 
   // Grupo vigente (openspec: ingles-grupos): filtra el calendario y da horario y Meet a la página.
   const grupo = alumno && await inglesEnPg() ? await grupoDe(db!, slugAlumno(alumno), mxToday()) : null;
   const info = grupo ? await grupoInfo(db!, grupo) : null;
-  const quien = { isAdmin, alumno, ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
+  const ranking = !isAdmin && !!alumno && await rankingVisible(store, grupo); // openspec: rpg-fase2-ingles
+  const quien = { isAdmin, alumno, ...(ranking ? { ranking } : {}), ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
   return await handleActividades(req, sub, quien, store, json);
 }
 
@@ -370,6 +372,21 @@ async function rutaData(url: URL, email: string, admin: string): Promise<Respons
   // De baja de Inglés: sin filas y con la marca, para el aviso amable (sin la fecha; openspec: ingles-baja-alumno).
   const baja = deIngles && !isAdmin && !rows.length && await deBajaIngles(email, admin);
   return json({ rows, isAdmin, ...(baja ? { baja: true } : {}), generatedAt: new Date().toISOString() });
+}
+
+// /gamificacion/… y /profe/nicks|ranking → nick público, ranking por grupo de Inglés y su moderación
+// (openspec: rpg-fase2-ingles; interruptor `ranking` en gamificacion/config.json, apagado por defecto).
+async function depsGamificacion(email: string, admin: string): Promise<DepsGamificacion> {
+  const store = await getStore();
+  const conGrupos = await inglesEnPg();
+  return {
+    email, admin, store,
+    registro: () => leerRegistro(store),
+    esSecundaria: async (correo) => (await filasSecundaria()).some((f) => f.userEmails.includes(correo)),
+    ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()) } : {}),
+    items: async (hoy) => (await visibleItems(store, hoy)).items,
+    hoy: () => mxToday(), ahora: ahoraIso,
+  };
 }
 
 // Rutas con identidad ya resuelta (o sin identidad: registro, salud y contraseña), en orden de evaluación.
@@ -407,6 +424,11 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
 
   const idx = url.pathname.indexOf("/ingles/actividades");
   if (idx !== -1) return await rutaActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), email, admin);
+
+  const iGam = url.pathname.indexOf("/gamificacion/");
+  if (iGam !== -1) return await handleGamificacion(req, url.pathname.slice(iGam + "/gamificacion".length), await depsGamificacion(email, admin), json);
+  const iPg = url.pathname.search(/\/profe\/(nicks|ranking)(\/|$)/);
+  if (iPg !== -1) return await handleProfeGamificacion(req, url.pathname.slice(iPg + "/profe".length), await depsGamificacion(email, admin), json);
 
   if (url.pathname.endsWith("/perfil")) return await rutaPerfil(email, admin);
 

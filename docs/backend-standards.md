@@ -20,6 +20,9 @@
 | `server/rows.ts` | Extracción de filas de Notion (Secundaria) y filtrado por correo |
 | `server/auth.ts` | Sesión con Supabase Auth: `quienEs`, `GET /config` y `POST /auth/enlace` (cambio `plataforma-login`) |
 | `server/contrasena.ts` | Entrada con contraseña: `POST /auth/preparar`, `/auth/contrasena` y `/auth/restablecer` (cambio `acceso-con-contrasena`) |
+| `server/gamificacion.ts` | Nick de Juegos, perfil y ranking por grupo de Inglés (`/gamificacion/perfil`, `/gamificacion/ranking`) y su moderación (`/profe/nicks`, `/profe/ranking`); ver § «Ranking de Inglés» (cambio `rpg-fase2-ingles`) |
+| `server/interruptores.ts` | Interruptores del profe en `stald_docs`: se leen en cada petición, apagados por defecto (cambio `rpg-fase2-ingles`) |
+| `server/cache_ranking.ts` | Caché de 60 s del ranking por grupo y semana; la invalidan gamificación y `POST /juegos/nick` |
 | `server/resumen.ts` | `GET /ingles/resumen`: indicadores y mapa de calor del tablero del profe (cambio `ingles-pro`) |
 | `server/semana.ts` | `validarSemana`: revisa una semana completa antes de subirla (errores y avisos) |
 | `server/validar_semana.ts` | CLI del validador: `npx -y deno run --allow-read server/validar_semana.ts <dir-datos> <lunes> [--profe \| --secundaria]` (código 1 si hay errores; 2 si los argumentos no son válidos) |
@@ -682,3 +685,21 @@ dos archivos.**
   - Solo cuenta la primera respuesta de cada línea. Los demás juegos de preguntas no cambian (10 preguntas, sin
     `aciertos`).
 - Pruebas: `server/linea_tiempo_test.ts` (sala y funciones puras) y `server/cultura_datos_test.ts` (contenido).
+
+## Ranking de Inglés (cambio `rpg-fase2-ingles`)
+
+- **Interruptor:** `gamificacion/config.json` (`ranking`, `gruposSinRanking`), apagado por defecto y leído en cada
+  petición. Apagado (o grupo apagado): `GET /gamificacion/perfil` → `{ ranking: false }`; `PUT` y
+  `GET /gamificacion/ranking` → 404 `sin_ranking`.
+- **Perfil:** `GET|PUT /gamificacion/perfil` (`{ aparecer: boolean }`) solo para alumnos y alumnas activas de Inglés
+  (admin 403 `solo_alumnos`, baja 403 `baja_ingles`, solo Secundaria 404 `sin_ranking`, invitado 403, otra persona
+  403 `ajeno`). Aparecer exige nick de Juegos (400 `sin_nick`) que pase `revisarNick` (400 `nick_invalido` con
+  `motivo`: `correo`, `telefono`, `nombre` o `palabra`, y un `mensaje` para mostrar).
+- **Ranking:** `GET /gamificacion/ranking[?grupo=]` → `{ semana, lista: [{ posicion, nick, puntos }], yo? }`. Solo su
+  grupo (otro → 403), por puntos de constancia de `comun/constancia.js` (función pura que el servidor importa), solo
+  quien activó aparecer y tiene el nick aprobado. **Nunca** nombres, correos, slugs, XP, nivel ni calificaciones (lo
+  revisa `server/gamificacion_ingles_test.ts` recorriendo el JSON). Falla del almacén → 503 `ranking_no_disponible`.
+- **Moderación (solo admin):** `GET /profe/nicks[?grupo=]`, `POST /profe/nicks/aprobar { alumno, nick }` (409
+  `nick_cambio` si cambió en Juegos), `POST /profe/nicks/rechazar { alumno, nick, motivo }` (1–200 caracteres) y
+  `POST /profe/ranking { ranking? , grupo?, apagado? }`. Toda escritura invalida la caché del ranking.
+

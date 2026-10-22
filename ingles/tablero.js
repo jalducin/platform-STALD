@@ -46,7 +46,8 @@ function renderAdmin(data) {
     seccionHtml('admin', 'resultados', renderUltimasAdmin(names, items)) +
     seccionHtml('admin', 'material', renderMaterial()) +
     seccionHtml('admin', 'presentar', renderPresentar()) +
-    seccionHtml('admin', 'juegos', renderJuegosAdmin() + '<a class="btn ghost" href="' + escapeHtml(conApiParam('juegos.html')) + '">🎮 Abrir Juegos</a>');
+    seccionHtml('admin', 'juegos', renderJuegosAdmin() + '<a class="btn ghost" href="' + escapeHtml(conApiParam('juegos.html')) + '">🎮 Abrir Juegos</a>') +
+    seccionHtml('admin', 'nicks', '<div id="nicks-admin" aria-live="polite">' + renderNicksAdmin() + '</div>');
 }
 
 // Clases por Meet: la de esta semana y las anteriores, para presentarlas a grupos nuevos (openspec: presentar-anteriores).

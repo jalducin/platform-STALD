@@ -50,14 +50,15 @@ function tarjetaHoy(it, hoy, admin) {
     botonClase(it, e, admin, 'sec-btn-grande') + '</article>';
 }
 
-// Barra de estado RPG: nivel, rango, XP del nivel, insignias y racha.
-function barraRpg(nivel, insignias, racha) {
+// Barra de estado RPG: nivel, rango, XP del nivel, insignias y racha. `totalInsignias`: Inglés usa su propio catálogo
+// (openspec: rpg-fase2-ingles); por omisión, el de comun/gamificacion.js.
+function barraRpg(nivel, insignias, racha, totalInsignias) {
   return '<section class="rpg-stats" id="rpg-stats" aria-label="Tu avance">' +
     '<div class="rpg-nivel"><div class="rpg-nivel-num rpg-num" aria-hidden="true">' + nivel.nivel + '</div>' +
       '<div class="rpg-nivel-txt"><div class="rpg-rango" id="rpg-rango">Nivel ' + nivel.nivel + ' · ' + escapeHtml(nivel.rango) + '</div>' +
       '<div class="rpg-xp-linea"><span>XP</span><span class="rpg-num" id="rpg-xp">' + nivel.xpNivel + ' / ' + nivel.porNivel + '</span></div>' +
       '<div class="rpg-xp-barra" role="progressbar" aria-label="XP del nivel ' + nivel.nivel + '" aria-valuemin="0" aria-valuemax="' + nivel.porNivel + '" aria-valuenow="' + nivel.xpNivel + '"><span style="width:' + nivel.porcentaje + '%"></span></div></div></div>' +
-    '<div class="rpg-dato" id="rpg-insignias"><span class="rpg-dato-ico" aria-hidden="true">🏅</span><div><div class="rpg-dato-t">Insignias</div><div class="rpg-dato-v rpg-num">' + insignias.length + ' / ' + GAM.INSIGNIAS.length + '</div></div></div>' +
+    '<div class="rpg-dato" id="rpg-insignias"><span class="rpg-dato-ico" aria-hidden="true">🏅</span><div><div class="rpg-dato-t">Insignias</div><div class="rpg-dato-v rpg-num">' + insignias.length + ' / ' + (totalInsignias || GAM.INSIGNIAS.length) + '</div></div></div>' +
     '<div class="rpg-dato" id="rpg-racha"><span class="rpg-dato-ico" aria-hidden="true">🔥</span><div><div class="rpg-dato-t">Racha</div><div class="rpg-dato-v"><span class="rpg-num">' + racha.dias + '</span> ' + (racha.dias === 1 ? 'día' : 'días') + '</div></div></div>' +
     '</section>';
 }

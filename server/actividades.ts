@@ -40,6 +40,7 @@ export interface Identidad {
   inicio?: string; // lunes de inicio de un alta nueva (openspec: inicio-lunes-alumnos)
   grupo?: string; // grupo vigente (openspec: ingles-grupos); sin base de datos no se filtra
   grupoInfo?: { id: string; nombre: string; nivel: string | null; horario: string | null; meet_url: string | null; color: string } | null;
+  ranking?: boolean; // ranking de su grupo encendido (openspec: rpg-fase2-ingles): la página solo entonces pide el perfil
 }
 
 // Ámbito de contenido: el del grupo (contenido/) o la ruta de estudio del profe (contenido/profe/, openspec: ruta-profe).
@@ -222,7 +223,7 @@ async function listarActividades(quien: Identidad, store: Store, json: Json, hoy
     return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, mejorATiempo: mejorATiempo(r), ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
   }));
   const plan = esProfe ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
-  return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
+  return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}), ...(quien.ranking ? { ranking: true } : {}) });
 }
 
 // Elemento pedido; en la ruta del profe, si no es suyo, el del grupo con sus fechas de profe.

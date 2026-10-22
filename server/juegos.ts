@@ -11,6 +11,7 @@ import { armarJugadores, type Cuenta } from "./jugadores.ts";
 import { crearMemo } from "./cache.ts";
 import { leerCarpeta } from "./db.ts";
 import { CATALOGO_CLASICOS_RAPIDOS } from "./clasicos_rapidos.ts"; // clasicos-rapidos
+import { invalidarRanking } from "./cache_ranking.ts"; // rpg-fase2-ingles: el ranking de Inglés usa el nick de Juegos
 import { topeRankingCopa } from "./karts_copa.ts"; // karts-copa-en-sala
 import { CARRERAS, rankingCarreraSala } from "./carreras.ts"; // karts-salida-y-puntos
 import { puntosArenaSala } from "./arena.ts"; // futbolito-arena
@@ -428,6 +429,7 @@ async function guardarNick(c: CtxJugador): Promise<Response> {
     if (!doc || await store.put(ruta, { ...doc.data, nombre: nuevo.nombre }, doc.sha, `juegos: nick de ${jugador.id}`)) break;
   }
   clearCacheJuegos();
+  invalidarRanking(); // un nick nuevo vuelve a «pendiente» en el ranking de Inglés (openspec: rpg-fase2-ingles)
   return json({ ok: true, jugador: nuevo });
 }
 

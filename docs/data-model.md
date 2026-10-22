@@ -152,6 +152,13 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   `"grupos": ["<id>"]`; si no lo declara, aplica a todos.
 - La migración se hace con `herramientas/migrar-ingles.ts`, con las opciones `--prueba`, `--delta`, `--forzar` y
   `--juegos`. El repo de datos conserva la etiqueta `antes-de-postgres`.
+- **Gamificación de Inglés** (cambio `rpg-fase2-ingles`): `gamificacion/**` vive en `stald_docs` (prefijo en
+  `PREFIJOS_INGLES`; ruta nueva, sin migración). Sin correos ni calificaciones:
+  - `gamificacion/config.json`: `{ ranking, gruposSinRanking }`, el interruptor del ranking. Sin documento = apagado;
+  - `gamificacion/perfiles/<slug>.json`: `{ aparecer, nickAprobado?, nickRechazado?, motivo?, actualizado }`. El nick
+    lo sigue guardando Juegos (`juegos/nicks.json`, llave `a-<slug>`); el estado del nick se deriva comparándolo con
+    `nickAprobado` y `nickRechazado`. Se borra 30 días después de la baja (al abrir «🛡️ Nicks»).
+  - El tablero RPG y los puntos de constancia se **derivan** de `resultados/`; no se guardan.
 - **Juegos en Postgres** (cambio `cierre-tecnico`):
   - `juegos/**` (salas, partidas por semana, perfiles, fotos e invitados) vive en `stald_docs` desde la marca
     `meta/migrado-juegos`;
