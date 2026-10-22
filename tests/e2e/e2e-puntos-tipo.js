@@ -62,6 +62,11 @@ async function jugarCalculo(p) {
   // «🎮 Juegos» se pide al abrir su pestaña (openspec: panel-profe-peticiones); en la página es un <details> plegado.
   const ad = await abrirPagina(b, { email: 'admin@example.com', ingles: true, viewport: { width: 1280, height: 720 }, ruta: '/ingles.html#juegos', esperar: ['#juegos-admin table, #juegos-admin .progress-text', { state: 'attached' }] });
   ok('admin: juegos de la semana con individuales y partidas', (await ad.textContent('#juegos-admin')).includes('individuales') && (await ad.textContent('#juegos-admin')).includes('partidas'));
+  // Se piden una sola vez aunque se vuelva a abrir la pestaña (openspec: panel-profe-peticiones).
+  const juegosGet = [];
+  ad.on('request', r => { if (r.method() === 'GET' && /\/juegos\/admin\/resumen/.test(r.url())) juegosGet.push(r.url()); });
+  await ad.evaluate(() => { location.hash = 'alumnos'; }); await ad.evaluate(() => { location.hash = 'juegos'; }); await ad.waitForTimeout(800);
+  ok('admin: «🎮 Juegos» no se vuelve a pedir al regresar a la pestaña', juegosGet.length === 0, String(juegosGet.length));
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
 })().catch(e => { console.log(out.join('\n')); console.error('ERROR', e.message.slice(0, 400)); process.exit(2); });

@@ -37,6 +37,8 @@ function pintarContadorEntregas() {
     a.querySelector('.nav-emoji').insertAdjacentHTML('afterend', contadorEntregas());
     a.querySelector('.nav-label').insertAdjacentHTML('afterend', avisoEntregas());
   });
+  // «📥 Por revisar» usa el mismo dato: se repinta con el contador (openspec: panel-profe-peticiones).
+  if (typeof pintarPanelProfe === 'function' && rolActual() === 'admin' && !MODO_PROFE && !MODO_SECUNDARIA) pintarPanelProfe();
 }
 function navItem(s, actual, extra) {
   const cur = s.id === actual ? ' aria-current="page"' : '';
@@ -204,6 +206,7 @@ async function loadFor(email) {
     const actividadesP = loadActividades();
     // incluir=panel (openspec: panel-profe-peticiones): si es el admin, el servidor agrega en la misma respuesta grupos,
     // alumnos y alumnas, resumen y «Por revisar»; a cualquier otra persona le responde lo de siempre.
+    const clavePanel = claveFiltro();
     const r = await api(DATA_URL_BASE + '?email=' + encodeURIComponent(email) + '&incluir=panel' + filtroPanel());
     const data = r.body;
     if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // sesionVencida ya pintó la entrada
@@ -223,9 +226,10 @@ async function loadFor(email) {
     // Ranking de Inglés: el perfil solo se pide si /ingles/actividades dice que está encendido (openspec: rpg-fase2-ingles).
     if (!data.isAdmin && state.act && state.act.ranking) await cargarPerfilGamificacion(); else { state.gam = null; state.rk = null; }
     if (!data.isAdmin) await cargarMisionesIngles(); // solo pide /misiones si hay alguna visible (openspec: rpg-ingles-hero-card)
-    if (data.isAdmin) { state.resumen = null; await prepararPanelAdmin(data.panel); }
+    if (data.isAdmin) { state.resumen = null; await prepararPanelAdmin(data.panel, clavePanel); }
     render(data);
-    if (data.isAdmin && !state.resumen) cargarResumen(); // solo si el servidor no mandó el panel (versión anterior)
+    if (data.isAdmin && !state.resumen) cargarResumen(); // servidor sin panel, o el filtro cambió mientras llegaba
+    if (data.isAdmin && cajonEl.open && state.cajonAlumno) pintarCajon(state.cajonAlumno); // tras mover de grupo desde el cajón
     else cargarRankingIngles();
     if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) { m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; } state.altaAviso = null; }
   } catch (e) {

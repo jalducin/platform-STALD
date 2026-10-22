@@ -80,8 +80,15 @@ const esperarResumen = p => p.waitForFunction(() => document.getElementById('kpi
       ok('el botón se ve (visible y de 44 px o más)', await p.isVisible(boton) && (await p.$eval(boton, x => x.getBoundingClientRect().height)) >= 43.5);
       await p.screenshot({ path: 'ingles-admin-tarjetas.png', fullPage: true });
 
+      // Ocultar = POST y un solo GET /ingles/panel (openspec: panel-profe-peticiones).
+      const alOcultar = [];
+      const anotar = r => { if (r.url().startsWith(API) && r.method() !== 'OPTIONS') alOcultar.push(r.method() + ' ' + new URL(r.url()).pathname); };
+      p.on('request', anotar);
       await p.click(boton);
       await p.waitForFunction(id => !document.querySelector('#pp-grupos .pp-grupo[data-grupo-id="' + id + '"]') && document.getElementById('mostrar-ocultos'), g1.id, { timeout: 30000 });
+      await p.waitForTimeout(800);
+      p.off('request', anotar);
+      ok('ocultar: el POST y una sola petición GET /ingles/panel', alOcultar.join() === 'POST /ingles/grupos/ocultar,GET /ingles/panel', alOcultar.join(' | '));
       const tras = await api('/ingles/grupos');
       ok('ocultar → el grupo sale del tablero y la bandera queda en el servidor', (tras.body.grupos.find(g => g.id === g1.id) || {}).ocultoAdmin === true);
       ok('interruptor «Mostrar grupos ocultos (1)»', /Mostrar grupos ocultos \(1\)/.test(await p.textContent('.grupos-barra')));
@@ -160,7 +167,7 @@ const esperarResumen = p => p.waitForFunction(() => document.getElementById('kpi
       const nombreAcc = await s.$eval('#nav [data-nav="entregas"]', a => a.textContent.replace(/\s+/g, ' ').replace(/📥/u, '').trim()).catch(() => '');
       const tile = await s.$eval('#pp-stats a[href="#entregas"]', a => a.textContent.replace(/\s+/g, ' ')).catch(() => null);
       if (nombre === '2 listas') ok('celular: 2 listas → contador «2», «Entregas, 2 por revisar» y «Por revisar» 2 (Inglés 1 · Secundaria 1)', n === '2' && /Entregas, 2 por revisar/.test(nombreAcc) && /2/.test(tile || '') && /Inglés 1 · Secundaria 1/.test(tile || ''), (n || '') + ' | ' + nombreAcc + ' | ' + tile);
-      else ok('celular: entregas caídas → sin contador, sin mosaico y con aviso', n === null && tile === null && /Entregas/.test(nombreAcc) && !!(await s.$('#panel-avisos')), nombreAcc);
+      else ok('celular: entregas caídas → sin contador, sin mosaico y con aviso de las entregas', n === null && tile === null && /Entregas/.test(nombreAcc) && /entregas por revisar/.test(await s.textContent('#panel-avisos').catch(() => '')), nombreAcc);
       await s.context().close();
     }
     const pc = await abrirPagina(b, { email: ADMIN, viejo: true, ingles: true, viewport: { width: 1280, height: 800 }, ruta: '/ingles.html#resumen', esperar: '#panel-profe' });

@@ -39,7 +39,7 @@ function renderAdmin(data) {
   }).join('');
   return renderFiltroGrupo() +
     seccionHtml('admin', 'resumen', renderPanelProfe() + '<div id="tablero" aria-live="polite">' + renderTablero() + '</div>') +
-    seccionHtml('admin', 'grupos', renderGruposAdmin() || (fallaPanel('grupos') ? avisosPanel() : vacio('👥', 'Los grupos se activan cuando Inglés usa la base de datos.'))) +
+    seccionHtml('admin', 'grupos', renderGruposAdmin() || (fallaPanel('grupos') ? avisosPanel('grupos') : vacio('👥', 'Los grupos se activan cuando Inglés usa la base de datos.'))) +
     seccionHtml('admin', 'alumnos', bloques || vacio('🧑‍🎓', 'Aún no hay alumnos ni alumnas en este grupo. Dalos de alta en ➕ Registro.')) +
     seccionHtml('admin', 'registro', renderAlumnosAdmin()) +
     seccionHtml('admin', 'semana', renderAdminWeek(state.act) || vacio('📅', 'Sin actividades esta semana.')) +

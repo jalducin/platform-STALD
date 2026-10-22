@@ -58,6 +58,10 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
     const arch = n => `ingles-diseno-profe-${n}${tema === 'dark' ? '-oscuro' : ''}.png`;
     const p = await abrirPagina(b, { email: ADMIN, viejo: true, ingles: true, out, viewport: { width: 360, height: 780 }, contexto: { colorScheme: tema } });
     await conGrupos(p);
+    // GET al API que hace la página (openspec: panel-profe-peticiones): Registro y Juegos se piden una sola vez.
+    const gets = [];
+    p.on('request', r => { if (r.method() === 'GET' && r.url().startsWith(API)) gets.push(new URL(r.url()).pathname); });
+    const veces = ruta => gets.filter(x => x.endsWith(ruta)).length;
     await p.goto(require('./lib/navegador').urlDe('/ingles.html#resumen'));
     await p.waitForSelector('#panel-profe', { timeout: 60000 });
     await p.waitForSelector('#mapa-calor, #tablero .card.error, #tablero .vacio', { timeout: 60000 });
@@ -88,6 +92,7 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
     await p.waitForSelector('#registro-lista .reg-lista', { timeout: 30000 }); // la lista con correos se pide al abrir Registro
     const reg = await p.$$eval('#alumnos-admin .reg-fila:not(.de-baja)', xs => xs.map(x => !!x.querySelector('[data-action="baja-ingles"]') && !!x.querySelector('[data-action="quitar-alumno"]') && !!x.querySelector('select.mover-grupo')));
     ok('Registro: cada tarjeta trae grupo, «🚪 Baja de Inglés» y Quitar' + suf, reg.length === activos.length && reg.every(Boolean), String(reg.length));
+    ok('bajo demanda: /ingles/alumnos y /juegos/admin/resumen una sola vez tras abrir Registro, Alumnos y Juegos' + suf, veces('/ingles/alumnos') === 1 && veces('/juegos/admin/resumen') === 1 && veces('/ingles/grupos') === 0, JSON.stringify({ alumnos: veces('/ingles/alumnos'), juegos: veces('/juegos/admin/resumen'), grupos: veces('/ingles/grupos') }));
     ok('Registro: campos con etiqueta visible' + suf, (await p.$$('#alta-alumno label.campo-et')).length >= 2);
     // Cajón desde el mapa de calor: botones de 44 px.
     await p.evaluate(() => { location.hash = 'resumen'; });
