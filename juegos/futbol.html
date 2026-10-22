@@ -52,7 +52,9 @@ canvas{display:block}
 .caja{width:min(620px,100%);background:linear-gradient(var(--panel2),var(--panel));border:1px solid var(--borde);border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .btn{font:inherit;font-weight:900;font-size:17px;font-style:italic;border:0;border-radius:12px;padding:11px 20px;min-height:50px;background:linear-gradient(#c7f562,#7cc61a);color:#0b2a12;box-shadow:0 4px 0 #3f6b0b;cursor:pointer}
 .btn.sec{background:linear-gradient(#3b5b98,#22396b);color:#fff;box-shadow:0 4px 0 #0f1f40}
-.btn.chico{font-size:14px;min-height:42px;padding:7px 14px}
+.btn.chico{font-size:14px;min-height:44px;padding:7px 14px}
+/* juegos-diseno-rpg: botones de menú de 44 px y foco visible */
+.btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .btn:active{transform:translateY(3px)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .fila{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
@@ -60,7 +62,7 @@ canvas{display:block}
 .modo{font:inherit;color:#fff;text-align:left;border:1px solid var(--borde);border-radius:12px;padding:10px 12px;min-height:64px;cursor:pointer;background:linear-gradient(135deg,#17407e,#0c2350);display:flex;flex-direction:column;gap:2px;box-shadow:inset 4px 0 0 var(--acento)}
 .modo b{font-size:16px;font-style:italic}
 .modo small{font-size:12px;color:var(--suave)}
-.op{font:inherit;font-weight:800;font-size:14px;border:2px solid rgba(255,255,255,.4);background:#122a57;color:#fff;border-radius:10px;min-height:42px;padding:4px 10px;cursor:pointer}
+.op{font:inherit;font-weight:800;font-size:14px;border:2px solid rgba(255,255,255,.4);background:#122a57;color:#fff;border-radius:10px;min-height:44px;padding:4px 10px;cursor:pointer}
 .op[aria-pressed="true"]{background:#2d6a12;border-color:var(--acento)}
 .ops{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 fieldset{margin:0;padding:0;border:0;min-width:0}
@@ -196,7 +198,7 @@ body.espectador #mandos,body.espectador .mando,body.espectador #b-pausa,body.esp
     </div>
   </div>
 </div>
-<script src="mando.js?v=2"></script>
+<script src="mando.js?v=3"></script>
 <script src="futbol-motor.js?v=1"></script>
 <script src="futbol-liga.js?v=1"></script>
 <script src="futbol-vista.js?v=1"></script>

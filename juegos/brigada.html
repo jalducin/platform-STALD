@@ -52,6 +52,8 @@ canvas{display:block}
 .caja{width:min(640px,100%);background:linear-gradient(var(--panel2),var(--panel));border:1px solid var(--borde);border-radius:14px;padding:9px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .caja h3{margin:2px 0 6px;font-size:14px;color:var(--oro)}
 .btn{font:inherit;font-weight:900;font-size:17px;font-style:italic;border:0;border-radius:12px;padding:11px 20px;min-height:50px;background:linear-gradient(#5eead4,#14b8a6);color:#042f2e;box-shadow:0 4px 0 #0f766e;cursor:pointer}
+/* juegos-diseno-rpg: botones de menú de 44 px y foco visible */
+.btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .btn.sec{background:linear-gradient(#36507e,#1e335a);color:#fff;box-shadow:0 4px 0 #0c1a33}
 .btn:active{transform:translateY(3px)}
 .fila{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
@@ -136,7 +138,7 @@ html body.espectador #mandos,html body.espectador.tactil.en-partido.ctl-joystick
     </div>
   </div>
 </div>
-<script src="mando.js?v=2"></script>
+<script src="mando.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script src="en-vivo.js?v=2"></script> <!-- juegos-en-vivo: canal de la sala por el puente de la página -->
 <script src="personajes.js?v=3"></script>

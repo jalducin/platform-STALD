@@ -43,6 +43,8 @@ body.lado-sol #marcador,body.lado-sol #marcador .eq{flex-direction:row-reverse} 
 .caja{width:min(620px,100%);background:linear-gradient(var(--panel2),var(--panel));border:1px solid var(--borde);border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .caja h3{margin:2px 0 6px;font-size:14px;color:var(--oro)}
 .btn{font:inherit;font-weight:900;font-size:17px;font-style:italic;border:0;border-radius:12px;padding:11px 20px;min-height:50px;background:linear-gradient(#6ee7b7,#10b981);color:#04221a;box-shadow:0 4px 0 #065f46;cursor:pointer}
+/* juegos-diseno-rpg: botones de menú de 44 px y foco visible */
+.btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .btn.sec{background:linear-gradient(#335d50,#1b3a30);color:#fff;box-shadow:0 4px 0 #0b2019}
 .btn:active{transform:translateY(3px)}
 .fila{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
@@ -108,7 +110,7 @@ html body.espectador #mandos,html body.espectador.tactil.en-partido.ctl-joystick
     </div>
   </div>
 </div>
-<script src="mando.js?v=2"></script>
+<script src="mando.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora: gol, silbato, tensión, victoria y derrota -->
 <script src="en-vivo.js?v=2"></script> <!-- juegos-en-vivo: canal de la sala por el puente de la página -->
 <script src="arena-motor.js?v=1"></script>

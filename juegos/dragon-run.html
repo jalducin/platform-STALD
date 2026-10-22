@@ -17,6 +17,7 @@ canvas{width:100%;display:block;touch-action:none}
 #wrap button{font:inherit;font-size:3.6cqw;font-weight:800;padding:1.2cqw 5cqw;border:0;border-radius:99px;background:#ff8a1f;color:#2a1300;box-shadow:0 .8cqw 0 #b94f00;cursor:pointer}
 #wrap button:active{transform:translateY(.5cqw);box-shadow:0 .3cqw 0 #b94f00}
 button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.ov button{min-height:44px} /* juegos-diseno-rpg: botones de menú de 44 px y foco visible */
 #wrap #mute{position:absolute;right:1.5cqw;bottom:1.5cqw;font-size:3cqw;padding:.6cqw 1.6cqw;box-shadow:none;background:rgba(0,0,0,.45);color:#fff}
 .hide{display:none!important}
 /* Pantalla de misiones (openspec: dragon-run-misiones): cubre todo el iframe y usa rem para leerse a 390 px. */
@@ -102,7 +103,7 @@ fieldset{margin:0;padding:0;border:0;min-width:0} /* grupos de opciones como <fi
 <output id="toast" aria-live="polite"></output>
 <p id="tip">👆 Toca en cualquier parte para saltar</p>
 <script src="dragon-misiones.js?v=2"></script>
-<script src="mando.js?v=2"></script>
+<script src="mando.js?v=3"></script>
 <script src="emocion.js?v=1"></script> <!-- emocion-sonora -->
 <script>
 /* Dragon Run — juego del profe, integrado a Juegos en Arcade (openspec: dragon-run, dragon-run-misiones).
