@@ -1,0 +1,134 @@
+## ADDED Requirements
+
+### Requirement: Definición de la misión principal en JSON
+Una misión principal SHALL definirse en `contenido/<ámbito>/misiones/<id>.json` del repo privado de datos, con `id`
+(`mis-<materia>-<mundo>`), `titulo`, `materia`, `mundo`, `consigna`, `pasos` (3 a 5, cada uno con `id`, `titulo`,
+`instrucciones`, `fechaLimite` y `tipoEntrega`, que por ahora solo puede ser `texto`), `rubrica` (exactamente 4 criterios con
+niveles y puntos que suman 100), `tips` con fuentes verificadas y `alumnos` o `grupos` opcionales para exclusividad.
+El validador SHALL revisarla con la forma nueva `validar_semana.ts <datos> --misiones <ámbito>` (sin `<lunes>`; las
+formas actuales con `<lunes>` no cambian) y SHALL marcar error si faltan campos, si la rúbrica no suma 100, si las
+fechas de los pasos no van en orden o quedan fuera del mundo, si un paso pide `imagen` o `audio` (aún no permitidos)
+o si la consigna no incluye el aviso de privacidad del entregable.
+
+#### Scenario: Misión válida
+- **WHEN** el agente valida «La tiendita del salón» con 4 pasos y rúbrica de 4 × 25
+- **THEN** el validador da 0 errores y la misión se puede subir
+
+#### Scenario: Rúbrica incompleta
+- **WHEN** la rúbrica suma 90 puntos
+- **THEN** el validador marca error y la misión no se publica
+
+#### Scenario: Paso con imagen
+- **WHEN** un paso trae `tipoEntrega: "imagen"`
+- **THEN** el validador marca error «por ahora las entregas son solo texto» y la misión no se publica
+
+### Requirement: Entrega de pasos de la misión
+`POST /misiones/<id>/entrega` SHALL guardar la entrega de un paso en `entregas/<misión>/<slug>.json` de `stald_docs`,
+solo para la persona activa de la sesión y solo si la misión le es visible. Un recurso que la persona no puede ver
+SHALL responder 404 (no revela que existe). Por ahora la entrega SHALL ser **solo texto**, de 1 a 4 000 caracteres;
+cualquier archivo (imagen, audio u otro) SHALL rechazarse. Un paso SHALL poder reenviarse mientras no esté evaluado.
+Una entrega tras la `fechaLimite` del paso SHALL aceptarse y marcarse tardía.
+
+#### Scenario: Entrega válida
+- **WHEN** la alumna envía el paso 2 con 900 caracteres de texto
+- **THEN** el servidor responde 200, el paso se ve «entregado» y el profe lo ve en su bandeja
+
+#### Scenario: Entrega fuera de límites
+- **WHEN** llegan más de 4 000 caracteres o un texto vacío
+- **THEN** el servidor responde 400 `entrega_invalida` con el motivo y no guarda nada
+
+#### Scenario: Intenta subir un archivo
+- **WHEN** la petición trae una imagen o un audio
+- **THEN** el servidor responde 400 `tipo_no_permitido` («por ahora las entregas son solo texto») y no guarda nada
+
+#### Scenario: Paso ya evaluado
+- **WHEN** se reenvía un paso que el profe ya evaluó sin pedir corrección
+- **THEN** el servidor responde 409 `ya_evaluado`
+
+#### Scenario: Misión ajena
+- **WHEN** un alumno de Inglés envía a una misión exclusiva de Secundaria
+- **THEN** el servidor responde 404
+
+#### Scenario: Persona de baja o invitado
+- **WHEN** un alumno dado de baja de Inglés o un invitado de Juegos envía una entrega
+- **THEN** el servidor responde 403; quien está de baja puede seguir viendo sus entregas anteriores
+
+#### Scenario: Sin sesión
+- **WHEN** se envía sin sesión
+- **THEN** el servidor responde 401
+
+#### Scenario: Error al guardar
+- **WHEN** Postgres falla al guardar la entrega
+- **THEN** el servidor responde 503, el cliente conserva el borrador local y avisa «No se pudo enviar; inténtalo de
+  nuevo»
+
+### Requirement: Imagen y audio solo en una fase posterior con consentimiento
+Las entregas con imagen o audio SHALL NOT habilitarse en este cambio. Solo SHALL habilitarse en un cambio OpenSpec
+posterior, cuando exista el consentimiento `multimedia` firmado por madre, padre o tutor (registrado por el profe con
+slug, tipo y fecha) y ese cambio especifique la casilla «Acepto», la reducción de imágenes, el quitado de metadatos
+(EXIF, incluido GPS) también en el servidor, el servido solo con sesión a la dueña y al admin, y el borrado del archivo
+al pedir corrección por privacidad (`design.md` §4.3).
+
+#### Scenario: Consentimiento multimedia registrado antes de esa fase
+- **WHEN** el profe ya registró el consentimiento `multimedia` de una alumna pero la fase de imagen y audio no existe
+- **THEN** sus entregas siguen siendo solo texto y un archivo recibe 400 `tipo_no_permitido`
+
+### Requirement: Evaluación con rúbrica y XP de la misión
+El profe SHALL evaluar cada misión entregada con la rúbrica (un nivel por criterio) y un comentario opcional, o SHALL
+pedir corrección con un motivo. La XP de la misión SHALL ser el porcentaje de la rúbrica × 3 más 60 si el último paso
+se entregó a tiempo, y SHALL sumarse al total de la persona. Pedir corrección SHALL reabrir los pasos indicados; si el
+motivo es de privacidad, el texto entregado en ese paso SHALL borrarse en ese momento.
+
+#### Scenario: Evaluación completa
+- **WHEN** el profe califica 25 + 20 + 25 + 15 y el último paso fue a tiempo
+- **THEN** la misión vale 85 % y da 315 XP, y la alumna ve la rúbrica con el comentario
+
+#### Scenario: Pedir corrección por privacidad
+- **WHEN** un texto incluye el nombre completo de una vecina y el profe pide corrección con el motivo «privacidad»
+- **THEN** el paso se reabre, ese texto se borra del almacenamiento y la alumna ve el motivo en positivo
+
+### Requirement: Privacidad y retención de entregables
+Cada consigna SHALL decir que el entregable no lleva nombres reales, direcciones, escuela ni datos de contacto. El
+formulario de entrega SHALL NOT tener campo de nombre. El contenido de las entregas SHALL
+borrarse el 31 de agosto de cada año (fin del ciclo escolar el 31 de julio más 30 días) con un script versionado,
+conservando solo la evaluación (puntos y fecha). El profe SHALL poder borrar a petición el contenido de todas las
+entregas de una persona, con el mismo efecto.
+
+#### Scenario: Recordatorio al entregar
+- **WHEN** un alumno abre el cuadro de entrega de un paso
+- **THEN** ve el recordatorio «Sin nombres reales, direcciones ni datos de contacto» antes de enviar
+
+#### Scenario: Borrado a petición
+- **WHEN** el profe borra las entregas de una alumna
+- **THEN** el texto de `entregas/*/<slug>.json` desaparece, queda solo la evaluación y
+  su XP no cambia
+
+### Requirement: Consulta de misiones y bandeja básica del profe
+`GET /misiones` SHALL devolver a la persona activa de la sesión las misiones principales que le son visibles (las de
+su ámbito cuyo mundo ya empezó, filtradas por `alumnos` o `grupos`), con sus pasos, rúbrica, tips, su propia entrega y
+su evaluación, más el catálogo `mundos.json` de su ámbito (o `null` si no se puede leer). El admin SHALL recibir todas
+las misiones de Secundaria sin entregas y, con `?alumna=<slug>`, lo que ve esa alumna (solo lectura). En la Fase 2 el
+profe SHALL evaluar con una bandeja básica solo para el admin: `GET /profe/entregas` (entregas con su contenido,
+nombre de pila y sin correos, ordenadas por antigüedad, primero las listas para evaluar),
+`POST /profe/entregas/<misión>/<slug>/evaluar` (un nivel por criterio y comentario opcional),
+`POST /profe/entregas/<misión>/<slug>/correccion` (pasos, motivo y si es por privacidad),
+`POST /profe/entregas/<misión>/<slug>/borrar` y `POST /profe/entregas/persona/<slug>/borrar` (borran el contenido y
+conservan la evaluación). Cada acción SHALL quedar en el historial de la entrega con su fecha. Un alumno o alumna SHALL
+recibir 403 en `/profe/entregas` y una petición sin sesión 401. La bandeja avanzada (atajos y vista por entrega) sigue
+en la Fase 4.
+
+#### Scenario: La alumna ve su misión con su evaluación
+- **WHEN** la alumna pide `GET /misiones` después de que el profe evaluó «La tiendita del salón»
+- **THEN** ve la misión con sus pasos entregados, los puntos de cada criterio, el comentario y la XP de la misión
+
+#### Scenario: Evaluar antes de que esté completa
+- **WHEN** el profe evalúa una misión a la que le falta un paso
+- **THEN** el servidor responde 409 `incompleta` y no guarda la evaluación
+
+#### Scenario: Nivel que no existe en la rúbrica
+- **WHEN** el profe manda 30 puntos en un criterio cuyos niveles son 25, 18, 10 y 0
+- **THEN** el servidor responde 400 `rubrica_invalida` y no guarda nada
+
+#### Scenario: Alumna en la bandeja
+- **WHEN** la alumna pide `GET /profe/entregas`
+- **THEN** el servidor responde 403

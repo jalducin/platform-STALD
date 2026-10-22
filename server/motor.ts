@@ -59,6 +59,7 @@ export interface Item {
   porSecciones?: boolean; // preguntas agrupadas por tema en el orden de `temas` (openspec: examen-por-secciones)
   segundaOportunidad?: string; // examen con 2 intentos: el 2.º abre esta fecha (openspec: examen-segunda-oportunidad)
   materia?: string; // materia de la clase de Secundaria, texto corto (openspec: secundaria-mis-clases)
+  mundo?: string; // id del mundo de mundos.json; si falta, el de su materia por fecha (openspec: rpg-fase2-misiones)
 }
 
 // El elemento como lo ve un alumno o alumna: con su prórroga, si tiene (no adelanta la apertura).
