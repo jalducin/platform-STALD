@@ -178,9 +178,15 @@ async function enviar(id, bien) {
     ok('portal: sin scroll horizontal a 360 px' + sufijo, await sinScrollH(p));
     await p.screenshot({ path: `secundaria-dashboard-portal-360${tema === 'dark' ? '-oscuro' : ''}.png`, fullPage: true });
     if (tema === 'light') {
+      // Directo, sin cargar el puente secundaria.html (openspec: navegacion-dispositivos).
+      const puentes = [];
+      p.on('request', r => { if (r.resourceType() === 'document' && /\/secundaria\.html(\?|#|$)/.test(r.url())) puentes.push(r.url()); });
+      const hrefs = await p.$$eval('#sec-portal a.btn', xs => xs.map(x => x.getAttribute('href')));
+      ok('portal: «Mis clases» y «Mi horario» van directo a ingles.html?modo=secundaria', hrefs.length === 2 && hrefs.every(h => h.startsWith('ingles.html?modo=secundaria')) && hrefs[1].endsWith('#horario'), hrefs.join(' '));
       await p.click('#sec-portal-horario');
       await p.waitForSelector('#sec-horario:not([hidden])', { timeout: 60000 });
       ok('portal → «🗓️ Mi horario» abre esa pestaña', (await p.getAttribute('#sec-tab-horario', 'aria-selected')) === 'true');
+      ok('portal → «🗓️ Mi horario» sin pasar por secundaria.html', puentes.length === 0, puentes.join(' '));
     }
     await p.context().close();
   }

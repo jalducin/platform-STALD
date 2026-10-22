@@ -41,6 +41,10 @@ Matriz de acceso: sin cambios; solo navegación y estilos del cliente.
 - **THEN** el contenido ocupa al menos 960 px (Inglés con el menú a un lado; Secundaria con las 7 pestañas de la alumna en una fila;
   Juegos con más columnas) y dentro de un juego la columna no cambia
 
+#### Scenario: Portal → Secundaria sin puente
+- **WHEN** una alumna o el profe tocan «📚 Mis clases» o «🗓️ Mi horario» en el portal
+- **THEN** abren `ingles.html?modo=secundaria` (con su `?alumna=` y `#horario` si aplica) sin cargar `secundaria.html`
+
 #### Scenario: Siguiente misión sin tapar
 - **WHEN** una alumna termina una clase en una tablet y el navegador la lleva a «Siguiente misión»
 - **THEN** el botón queda por encima de la barra fija del examen

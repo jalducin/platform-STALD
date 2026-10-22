@@ -83,8 +83,8 @@ const anchoUtil = p => p.evaluate(() => {
 
 // Medidor de una tarea en una página: cuenta toques, tiempos por pantalla, peticiones al API y errores.
 function medidor(p, disp, tarea) {
-  const m = { toques: 0, pantallas: [], peticiones: 0, errores: [], scrollH: [], chicos: new Set(), tapados: [], t: Date.now() };
-  p.on('request', r => { if (r.url().startsWith(API)) m.peticiones++; });
+  const m = { puentes: 0, toques: 0, pantallas: [], peticiones: 0, errores: [], scrollH: [], chicos: new Set(), tapados: [], t: Date.now() };
+  p.on('request', r => { if (r.url().startsWith(API)) m.peticiones++; if (r.resourceType() === 'document' && /\/secundaria\.html(\?|#|$)/.test(r.url())) m.puentes++; });
   // Sin Postgres de prueba, /ingles/grupos responde 503 `sin_base` a propósito (como en la E2E ingles-admin): se excusa.
   let sinBase = 0;
   p.on('response', r => { if (r.status() === 503 && /\/ingles\/grupos(\?|$)/.test(r.url())) sinBase++; });
@@ -372,6 +372,8 @@ const TAREAS = [
       if (!MEDIR) ok(nombre + `: cada pantalla usable en < ${TOPE_MS} ms`, fila.maxMs < TOPE_MS, fila.pantallas.map(x => x.nombre + ' ' + x.ms).join(', '));
       ok(nombre + ': hay forma de volver (Inicio, barra o «← Volver»)', fila.volver.inicio || fila.volver.barra || fila.volver.volver, JSON.stringify(fila.volver));
       ok(nombre + ': atrás del navegador se queda en la plataforma', fila.atras.ok, fila.atras.a);
+      // El portal lleva directo a ingles.html?modo=secundaria, sin la carga extra del puente secundaria.html.
+      if (['sec-clase', 'profe-secundaria'].includes(t.id)) ok(nombre + ': el portal abre Secundaria sin pasar por secundaria.html', m.puentes === 0, String(m.puentes));
       if (m.anchoJuego) ok(nombre + ': dentro del juego la columna sigue en 720 px o menos', m.anchoJuego <= 720, String(m.anchoJuego));
       if (fila.pdf) ok(nombre + ': el PDF abre en otra pestaña y responde 200', fila.pdf.abre && fila.pdf.status === 200 && /pdf/.test(fila.pdf.tipo), JSON.stringify(fila.pdf));
       await p.context().close();

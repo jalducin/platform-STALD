@@ -152,6 +152,9 @@
 
   // Conserva ?api= al navegar (pruebas locales).
   const conApi = (href) => API_PARAM ? agregarParam(href, 'api', API_PARAM) : href;
+  // Secundaria directo a sus clases, sin pasar por el puente secundaria.html (una carga de página menos, ~0.6 s en
+  // celular; openspec: navegacion-dispositivos). secundaria.html sigue para enlaces guardados.
+  const SECUNDARIA = 'ingles.html?modo=secundaria';
   // Enlace para compartir (openspec: registro-juegos): index.html?juegos=1 lleva directo a crear la cuenta de Juegos.
   if (new URLSearchParams(location.search).get('juegos') === '1') location.replace(conApi('juegos.html?registro=1'));
 
@@ -184,7 +187,7 @@
     { id: 'ingles', clase: 'ingles', href: 'ingles.html', ico: '📘', t: 'Clases de Inglés', d: 'Actividades de la semana, exámenes y tu avance.', boton: '📘 Entrar a Inglés',
       admin: { t: 'Panel de Inglés', d: 'Grupos, alumnos y alumnas, resultados y lo que hay por revisar.', boton: '📊 Abrir mi panel' } },
     { id: 'profe', clase: 'profe', href: 'ingles.html?modo=profe', ico: '🎓', t: 'Mi ruta', d: 'Tus clases propias y las actividades de tu grupo, para resolverlas antes que ellos.', boton: '🎓 Abrir mi ruta', soloAdmin: true },
-    { id: 'secundaria', clase: 'secundaria', href: 'secundaria.html', ico: '📚', t: 'Secundaria', d: 'Tus tareas y clases por materia.', boton: '📚 Mis clases',
+    { id: 'secundaria', clase: 'secundaria', href: SECUNDARIA, ico: '📚', t: 'Secundaria', d: 'Tus tareas y clases por materia.', boton: '📚 Mis clases',
       admin: { d: 'El tablero de cada alumna o alumno de Secundaria, con sus clases y resultados.', boton: '📚 Abrir tablero' } },
     { id: 'juegos', clase: 'juegos', href: 'juegos.html', ico: '🎮', t: 'Juegos', d: 'Aprende jugando: inglés, español, cultura, Basta, ¡Una!, Lotería y ranking semanal.', boton: '🎮 Jugar' },
   ];
@@ -256,7 +259,7 @@
     extra.innerHTML = '<label for="sec-alumna-portal">Ver el tablero de</label><select id="sec-alumna-portal">' +
       alumnas.map(a => '<option value="' + escapeHtml(a.slug) + '">' + escapeHtml(a.nombre) + '</option>').join('') + '</select>';
     const sel = $('sec-alumna-portal');
-    const destino = () => { boton.href = conApi(agregarParam('secundaria.html', 'alumna', sel.value)); };
+    const destino = () => { boton.href = conApi(agregarParam(SECUNDARIA, 'alumna', sel.value)); };
     sel.addEventListener('change', destino);
     destino();
   }
@@ -292,7 +295,7 @@
       }
       const dias = SD.horarioSemana(items, hoy).map(d => '<li class="sec-mini-dia' + (d.esHoy ? ' es-hoy' : '') + '" data-sec-mini="' + d.fecha + '"' + (d.esHoy ? ' aria-current="date"' : '') + '>' +
         '<span class="sec-mini-d">' + escapeHtml(SD.diaCorto(d.fecha)) + '</span><span class="sec-mini-m">' + (d.clases.length ? d.clases.map(it => { const m = SD.materiaDe(it) || SD.OTRA; return '<span role="img" title="' + escapeHtml(m.nombre) + '" aria-label="' + escapeHtml(m.nombre) + '">' + m.emoji + '</span>'; }).join('') : '<span class="sec-mini-libre">Libre</span>') + '</span></li>').join('');
-      const destino = alumna ? agregarParam('secundaria.html', 'alumna', alumna.slug) : 'secundaria.html';
+      const destino = alumna ? agregarParam(SECUNDARIA, 'alumna', alumna.slug) : SECUNDARIA;
       el.innerHTML = '<h2 id="sec-portal-t">🗓️ ' + (alumna ? 'Horario de ' + escapeHtml(alumna.nombre) : 'Mi horario') + '</h2>' +
         '<div class="sec-hoy-toca" id="sec-hoy-toca"><b>Hoy te toca</b>' + (deHoy.length ? '<div class="sec-chips">' + deHoy.map(chip).join('') + '</div>' : '<span>Hoy no tienes clases 🎉</span>') + '</div>' +
         '<ol class="sec-mini" aria-label="Horario de la semana">' + dias + '</ol>' +
@@ -300,7 +303,7 @@
         '<a class="btn sec-ghost" id="sec-portal-horario" href="' + escapeHtml(conApi(destino) + '#horario') + '">🗓️ Mi horario</a></div>';
     } catch (e) { // sin red o error del servidor: aviso corto en vez del horario (el detalle no le sirve a quien lo ve)
       el.innerHTML = '<h2 id="sec-portal-t">🗓️ Mi horario</h2><p class="sec-aviso">No pude cargar tu horario ahora. Ábrelo desde Secundaria.</p>' +
-        '<div class="sec-acciones"><a class="btn" href="' + escapeHtml(conApi('secundaria.html')) + '">📚 Mis clases</a></div>';
+        '<div class="sec-acciones"><a class="btn" href="' + escapeHtml(conApi(SECUNDARIA)) + '">📚 Mis clases</a></div>';
     }
   }
 
