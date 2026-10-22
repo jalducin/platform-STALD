@@ -87,10 +87,13 @@ function misionPrincipal(items, hoy, deHoy, admin, saludo) {
 const kpi = (id, cuerpo, titulo, detalle) => '<div class="sec-kpi" id="' + id + '">' + cuerpo + '<div class="sec-kpi-txt"><div class="sec-kpi-titulo">' + titulo + '</div><div class="sec-kpi-detalle">' + detalle + '</div></div></div>';
 
 // Retos diarios = «Hoy te toca» (las clases de hoy y lo pendiente que vence hoy).
+// El contador usa las mismas clases que las tarjetas (incluye lo de ayer que vence hoy y sigue sin hacer).
 function retosHtml(items, hoy, deHoy, admin) {
-  const retos = GAM.retosDiarios(items, hoy);
+  const hechas = deHoy.filter(GAM.estaHecha);
+  const retos = { total: deHoy.length, hechos: hechas.length, faltan: deHoy.length - hechas.length, xpHoy: hechas.reduce((a, it) => a + GAM.xpDeClase(it, it.mejor, { hoy }), 0) };
   let resumen = '';
-  if (retos.total) resumen = retos.faltan ? '¡Te ' + (retos.faltan === 1 ? 'falta 1 reto' : 'faltan ' + retos.faltan + ' retos') + ' para completar el día!' : '¡Retos del día completos! +' + retos.xpHoy + ' XP';
+  const cuantos = retos.faltan === 1 ? 'falta 1 reto' : 'faltan ' + retos.faltan + ' retos';
+  if (retos.total) resumen = retos.faltan ? '¡Te ' + cuantos + ' para completar el día!' : '¡Retos del día completos! +' + retos.xpHoy + ' XP';
   let cuerpo;
   if (deHoy.length) cuerpo = '<div class="sec-hoy-grid">' + deHoy.map(it => tarjetaHoy(it, hoy, admin)).join('') + '</div>';
   else {
@@ -157,9 +160,11 @@ function renderSecInicio(act, o) {
   const racha = SD.rachaDe(act);
   const nivel = GAM.nivelDe(GAM.xpTotal(items, { hoy }));
   const insignias = GAM.insigniasDe({ items, hoy, racha });
-  const saludo = '<header class="sec-hero"><div class="sec-fecha">' + escapeHtml(fechaLarga(hoy)) + '</div>' + (o.admin
+  const conNombre = o.nombre ? ', ' + escapeHtml(o.nombre) : '';
+  const titulo = o.admin
     ? '<h2 class="sec-hola">Tablero de ' + escapeHtml(o.nombre || 'la alumna') + '</h2><span class="chip sec-vista-profe">👀 Vista del profe · solo lectura</span>'
-    : '<h2 class="sec-hola">Hola' + (o.nombre ? ', ' + escapeHtml(o.nombre) : '') + ' 👋</h2>') + '</header>';
+    : '<h2 class="sec-hola">Hola' + conNombre + ' 👋</h2>';
+  const saludo = '<header class="sec-hero"><div class="sec-fecha">' + escapeHtml(fechaLarga(hoy)) + '</div>' + titulo + '</header>';
   const accesos = '<nav class="sec-accesos" aria-label="Más de Secundaria">' +
     [['clases', '📅', 'Esta semana'], ['horario', '🗓️', 'Mi horario'], ['materias', '🗺️', 'Mis materias y mundos']].map(([id, e, t]) =>
       '<button type="button" class="btn ghost sec-acceso" data-sec-tab="' + id + '"><span aria-hidden="true">' + e + '</span> ' + t + '</button>').join('') + '</nav>';

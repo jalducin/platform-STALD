@@ -61,6 +61,8 @@
 
 ## 7. Cierre
 
-- [x] 7.1 Revisión `revisor-solo-lectura` y sus hallazgos atendidos
-- [ ] 7.2 Merge de `main` (PR #225 si ya entró) con `?v=` por encima, PR, checks y merge
-- [ ] 7.3 `openspec archive secundaria-dashboard` (cuando el profe lo vea en el celular)
+- [x] 7.1 Revisión `revisor-solo-lectura` y sus hallazgos atendidos (E2E independiente del orden, contador de retos = tarjetas,
+  escenarios sin clases, portal del admin y con falla; merge de `main` con `?v=` por encima)
+- [x] 7.2 Merge de `main` (con #225 y #227): `ingles.css?v=9`, `secundaria.js?v=6`, una sola carga de `gamificacion.js`
+- [ ] 7.3 PR, checks y merge
+- [ ] 7.4 `openspec archive secundaria-dashboard` (cuando el profe lo vea en el celular)

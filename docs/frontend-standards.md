@@ -14,7 +14,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   (`DATA_URL_BASE`); no repetirla en varios lugares.
 - `index.html` es el **portal** (lo que Pages sirve en `/`):
   - pide el correo, consulta `/perfil` y muestra una tarjeta por espacio;
-  - el tablero de Secundaria vive en `secundaria.html` desde el cambio `portal-acceso`.
+  - la tarjeta de Secundaria lleva a `secundaria.html`, que desde el cambio `secundaria-sin-notion` es un puente a
+    `ingles.html?modo=secundaria` (ya no hay tablero de Notion).
 - Cada página de espacio lleva "← Inicio" al portal y "🎮 Juegos"; ambos conservan `?api=` para probar contra un servidor local.
 - **Excepción (`juegos.html`):**
   - El contenido de los juegos se carga de `juegos/datos/*.json` en el mismo sitio (vocabulario, trivia,
@@ -1110,6 +1111,29 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `secundaria.html#horario`), de 44 px o más.
 - Si falla, aparece un aviso corto con el botón a Secundaria. Sin Secundaria, el bloque queda `hidden`.
 
+## Clase interactiva de Secundaria (cambio `secundaria-sin-notion`)
+
+- `ingles/secundaria-clase.js` (archivo propio para no mezclarse con la vista de lista): en modo Secundaria,
+  `openItem` (`ingles/reproductor.js`) arma la clase con `vistaClaseSecundaria(it, cabecera, form)`; Inglés no cambia.
+- Indicador de pasos `nav.sec-pasos` (pegajoso arriba): «1 Teoría → 2 Video → 3 Ejercicios → 4 Libreta», botones
+  `data-sec-paso` de ≥ 44 px que llevan a `#sec-paso-<id>`; el paso visible lleva `aria-current="step"`
+  (IntersectionObserver). Un paso sin contenido queda `disabled`.
+- Videos: los `tips` `video` de YouTube (`watch?v=`, `youtu.be/`, `/embed/`, `/shorts/`, `/live/`; `idYouTube`) se
+  incrustan con `https://www.youtube-nocookie.com/embed/<id>`, `loading="lazy"`, `title` y enlace «Abrir en YouTube ↗»;
+  marco 16:9 (`aspect-ratio`). Otros videos y lecturas van como botones-enlace (`.sec-enlaces`).
+- Libreta: tareas `libreta` con la casilla «✅ Ya la hice» (`data-sec-libreta`), guardada en
+  `localStorage['stald_libreta:<hash FNV-1a del correo>:<id>']` con try/catch (sin almacenamiento no se recuerda).
+- Resultado: «🎉 ¡Misión cumplida!», calificación y retroalimentación por tema (`renderResultado`), la recompensa, la
+  libreta y el botón grande «Siguiente misión» (`.sec-siguiente`: la siguiente `disponible`/`en-curso` por fecha desde
+  hoy; si no hay, «🗺️ Mis misiones»). Vista previa del admin: sin estos extras.
+- Estilo «RPG educativo»: en Secundaria la clase se llama **«Misión»** (banner «⚔️ Misión» con chip de materia y su
+  **mundo** actual, «🎉 ¡Misión cumplida!», «Siguiente misión →» / «🗺️ Mis misiones»). En el resultado,
+  `#sec-recompensa` muestra «+N XP» (XP total después − antes del envío; `submitExam` guarda `state.actAntes =
+  { id, act }`, que se consume una sola vez y solo para esa misión: ver un resultado pasado no la repite), nivel y
+  rango con su barra, y las insignias desbloqueadas. **Todas las reglas** (XP, nivel, rango, mundos, insignias) salen
+  de `comun/gamificacion.js` (`Gamificacion.mundoDe`, `xpTotal`, `nivelDe`, `insigniaNueva`); `secundaria-clase.js`
+  no tiene fórmulas y, si `Gamificacion` no está cargado, omite el mundo y la recompensa.
+
 ## Gamificación (cambio `gamificacion-nucleo`)
 
 Fuente única de las reglas; el código está en `comun/gamificacion.js` (script clásico, `globalThis.Gamificacion`, sin
@@ -1121,7 +1145,9 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
   (`round(100 × (correctas + correctas🎯) / total)`, puede pasar de 100), **+ 20** si llegó a tiempo. Usa de
   `calificacion` `correctas`, `total` y `secciones[].titulo|correctas` (o, sin `total`, `porcentaje`). «A tiempo», en orden: `opciones.aTiempo`,
   `calificacion.aTiempo`, `item.mejorATiempo` (del listado) y, si nada viene, `opciones.hoy <= item.fechaLimite`; sin
-  dato, sin bonus. La respuesta del envío trae `aTiempo` para el «+XP» de la pantalla de resultado.
+  dato, sin bonus. La respuesta del envío trae `aTiempo`/`mejorATiempo`. La pantalla de resultado de Secundaria
+  (`ingles/secundaria-clase.js`) muestra como «+N XP» la diferencia de `xpTotal` entre la lista de antes y la de
+  después del envío (que ya trae `mejorATiempo`), así solo cuenta lo que ese envío mejoró.
 - **XP total** (`xpTotal(items)`): suma de las clases hechas (con al menos un envío).
 - **Nivel** (`nivelDe(xp, genero?)`): `floor(XP / 300) + 1`; devuelve `xpNivel` (XP dentro del nivel, 0–299),
   `xpSiguiente` (XP total del siguiente nivel) y `porcentaje` del nivel. Rangos: 1–3 Aprendiz, 4–6

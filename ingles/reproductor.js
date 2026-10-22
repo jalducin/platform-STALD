@@ -84,13 +84,13 @@ async function openItem(id) {
   const kb = !it.vistaPrevia && almacenDisponible() ? claveBorrador(it.id, it.intento) : '';
   if (kb) limpiarBorradores(claveBorrador(it.id, ''), kb); // intentos anteriores y caducados
   const teoriaAbierta = corr ? '' : ' open'; // en la corrección, la teoría empieza plegada
-  contentEl.innerHTML =
-    '<div class="exam-card"><h3>' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</h3>' +
+  const cabecera =
+    // Secundaria: si el título ya trae su emoji (p. ej. «📐 Matemáticas · …»), sin el ícono del tipo delante.
+    '<div class="exam-card"><h3>' + (MODO_SECUNDARIA && /^\p{Extended_Pictographic}/u.test(it.titulo || '') ? '' : icono(it.tipo) + ' ') + escapeHtml(it.titulo) + '</h3>' +
     '<div class="s" style="font-size:.82rem">' + escapeHtml(info) + '</div>' +
     '<div class="s muted" style="font-size:.76rem;margin-top:4px">⌨️ Atajos: 1–4 eligen la opción · Enter avanza</div>' +
-    (it.descripcion ? '<div class="s" style="font-size:.8rem;margin-top:4px">' + escapeHtml(it.descripcion) + '</div>' : '') + '</div>' +
-    (it.teoria && it.teoria.length ? '<details class="section"' + teoriaAbierta + '><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
-    renderTips(it.tips) +
+    (it.descripcion ? '<div class="s" style="font-size:.8rem;margin-top:4px">' + escapeHtml(it.descripcion) + '</div>' : '') + '</div>';
+  const form =
     '<form id="exam-form"' + (paso ? ' class="paso"' : '') + ' data-id="' + escapeHtml(it.id) + '" data-intento="' + it.intento + '" data-total="' + porCorregir.length + '" data-borrador="' + escapeHtml(kb) + '" data-cuenta="' + (it.vistaPrevia ? '' : '1') + '">' +
     '<div class="player-progreso"><div class="barra accent" role="progressbar" aria-label="Avance" aria-valuemin="0" aria-valuemax="' + porCorregir.length + '" aria-valuenow="0" id="player-barra"><span id="player-bar" style="width:0%"></span></div><span class="num" id="player-num">0/' + porCorregir.length + '</span></div>' +
     (kb || !it.vistaPrevia ? '<div class="autoguardado muted" id="autoguardado">Tu avance se guarda en tu cuenta ✔</div><div class="autoguardado-aviso" id="autoguardado-aviso" aria-live="polite"></div>' : '') +
@@ -99,6 +99,14 @@ async function openItem(id) {
     '<div class="exam-bar">' + volverBtn() + '<span class="paso-nav"><button type="button" class="btn ghost icono" data-action="q-ant" aria-label="Pregunta anterior">←</button><button type="button" class="btn ghost" data-action="q-sig">Siguiente →</button></span>' +
     '<span class="progress-text" id="exam-count" style="margin:0" aria-live="polite">0/' + porCorregir.length + ' respondidas</span>' +
     '<button class="btn" type="submit" id="exam-send" disabled>Enviar</button></div></form>';
+  // Secundaria: clase por pasos con videos incrustados y libreta (ingles/secundaria-clase.js). Inglés, como siempre.
+  state.claseAbierta = MODO_SECUNDARIA ? { id: it.id, tips: it.tips || [] } : null;
+  contentEl.innerHTML = MODO_SECUNDARIA
+    ? vistaClaseSecundaria(it, cabecera, form)
+    : cabecera +
+      (it.teoria && it.teoria.length ? '<details class="section"' + teoriaAbierta + '><summary><div class="section-head"><span><span class="chevron">▶</span>📖 Teoría</span><span class="count">' + it.teoria.length + '</span></div></summary><div style="padding:8px">' + renderTeoria(it.teoria) + '</div></details>' : '') +
+      renderTips(it.tips) + form;
+  if (MODO_SECUNDARIA) activarPasosClase();
   state.paso = 0;
   // Correctas fijas de la corrección: la oración y los pares ya armados (openspec: ejercicios-ordenar-emparejar).
   contentEl.querySelectorAll('#exam-form .q.fija').forEach(q => {
@@ -490,6 +498,8 @@ async function submitExam(form) {
   const btn = document.getElementById('exam-send');
   btn.disabled = true; btn.textContent = 'Enviando…';
   const id = form.dataset.id;
+  // Secundaria: la lista de antes de ESTE envío, para el XP, el nivel y las insignias ganadas (ingles/secundaria-clase.js).
+  state.actAntes = MODO_SECUNDARIA ? { id, act: state.act } : null;
   const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email), {
     method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' },
     body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas: examAnswers(form) }),
@@ -500,6 +510,7 @@ async function submitExam(form) {
     await loadActividades();
     return showResult(r.body.calificacion, { id, intento: r.body.intento, intentosMax: r.body.intentosMax, restantes: r.body.restantes, mejor: r.body.mejor, vistaPrevia: !r.body.guardado });
   }
+  state.actAntes = null; // sin envío no hay recompensa
   btn.disabled = false; btn.textContent = 'Enviar';
   alert('No se pudo enviar (' + (r.body.error || r.status) + '). Intenta de nuevo.');
 }
@@ -508,7 +519,7 @@ function showResult(calificacion, info) {
   entrarVista('resultado', (info && info.id) || 'resultado');
   const i = info || {};
   const it = ((state.act && state.act.items) || []).find(x => x.id === i.id);
-  let head = '📝 Tu resultado';
+  let head = MODO_SECUNDARIA ? '🎉 ¡Misión cumplida! · Tu resultado' : '📝 Tu resultado';
   if (i.vistaPrevia) head += ' · vista previa (no se guardó)';
   else if (i.intento) head += ' · intento ' + i.intento + ' de ' + i.intentosMax + (i.mejor ? ' · mejor: ' + i.mejor.porcentaje + '%' : '');
   const corrige = it ? it.tipo !== 'examen' : true;
@@ -523,6 +534,7 @@ function showResult(calificacion, info) {
   const aviso = espera ? '<div class="aviso-corr" id="aviso-segunda">📅 Tienes una 2.ª oportunidad el ' + escapeHtml(formatFecha(it.segundaOportunidad)) + ' con preguntas nuevas. Estudia el sábado con tu refuerzo; cuenta la mejor de las dos.</div>' : '';
   contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' + aviso +
     renderResultado(calificacion, false) +
+    (MODO_SECUNDARIA && !i.vistaPrevia ? extrasResultadoSecundaria(i.id) : '') +
     '<div class="exam-bar">' + volverBtn() + reintento + '</div>';
   window.scrollTo(0, 0);
 }

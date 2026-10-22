@@ -103,12 +103,18 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   `fichas-e2e` (ordenar y emparejar), en la misma semana, con fecha 2026-10-04 y exclusiva de `fernando`, para
   `ordenar-emparejar`: aparece en su «Para ponerte al día». La semana de Secundaria `2026-10-26` (15 clases
   `sec-e2e-clase-*`, exclusivas de `valeria`, 2 por día y 3 el domingo, con y sin `materia`) es de
-  `secundaria-clases` y `secundaria-dashboard`, que solo corren con `--hoy 2026-10-27` (con otro día salen `OMIT`).
+  `secundaria-clases`, `secundaria-clase` y `secundaria-dashboard`, que solo corren con `--hoy 2026-10-27` (con otro
+  día salen `OMIT`). La clase `sec-e2e-clase-2026-10-27-a` trae además 2 videos de YouTube, una lectura y libreta para `secundaria-clase` (clase
+  interactiva, cambio `secundaria-sin-notion`; también solo con `--hoy 2026-10-27`): pasos y `aria-current`, iframes
+  `youtube-nocookie` lazy, «✅ Ya la hice» que se recuerda, resultado con «Siguiente clase», 360 px claro/oscuro e
+  Inglés sin pasos. Envía la clase de la alumna: corre después de `secundaria-clases`.
 - `secundaria-dashboard` (fase `ingles`, cambio `secundaria-dashboard`): la alumna del fixture envía 3 clases por la API
   (en la copia temporal) y revisa a 360 px en claro y oscuro el Inicio RPG (retos, estados, progreso, racha, XP y
   nivel, insignias, misión, actividad, promedios), botones de 44 px o más con foco visible, «📚 Mis materias» con sus
   mundos, abrir y volver de una clase, escritorio, el tablero del admin (`?alumna=valeria`) y el bloque «🗓️ Mi
   horario» del portal.
+  Corre después de `examen-secundaria` y `secundaria-clase` en el mismo servidor: lo que esperan XP, nivel e insignias
+  sale de lo que devuelve la API en ese momento.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).
