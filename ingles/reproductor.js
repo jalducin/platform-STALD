@@ -516,7 +516,7 @@ function showResult(calificacion, info) {
   entrarVista('resultado', (info && info.id) || 'resultado');
   const i = info || {};
   const it = ((state.act && state.act.items) || []).find(x => x.id === i.id);
-  let head = MODO_SECUNDARIA ? '🎉 ¡Clase terminada! · Tu resultado' : '📝 Tu resultado';
+  let head = MODO_SECUNDARIA ? '🎉 ¡Misión cumplida! · Tu resultado' : '📝 Tu resultado';
   if (i.vistaPrevia) head += ' · vista previa (no se guardó)';
   else if (i.intento) head += ' · intento ' + i.intento + ' de ' + i.intentosMax + (i.mejor ? ' · mejor: ' + i.mejor.porcentaje + '%' : '');
   const corrige = it ? it.tipo !== 'examen' : true;

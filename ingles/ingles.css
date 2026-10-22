@@ -550,3 +550,14 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 @media (max-width: 419.98px) {
   .sec-paso { flex-direction: column; gap: 2px; font-size: .7rem; padding: 4px 2px; }
 }
+
+/* Estilo «RPG educativo» de la misión (referencia del profe; CSS propio, sin frameworks). Contraste AA: texto blanco
+   sobre índigo/violeta 600–700. */
+.sec-mision-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 2px 0 8px; }
+.sec-mision-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: .74rem; font-weight: 800;
+  letter-spacing: .08em; text-transform: uppercase; color: #fff; background: linear-gradient(90deg, #4f46e5, #7c3aed); box-shadow: 0 0 14px rgba(99, 102, 241, .35); }
+.sec-paso[aria-current="step"] { background: linear-gradient(90deg, #4f46e5, #7c3aed); border-color: transparent; color: #fff; box-shadow: 0 0 16px rgba(99, 102, 241, .45); }
+.sec-paso[aria-current="step"] .sec-paso-num { background: #fff; color: #4f46e5; }
+.sec-siguiente { background: linear-gradient(90deg, #4f46e5, #7c3aed); border-color: transparent; color: #fff; box-shadow: 0 0 18px rgba(124, 58, 237, .35); }
+.sec-siguiente:hover { box-shadow: 0 0 24px rgba(124, 58, 237, .55); }
+

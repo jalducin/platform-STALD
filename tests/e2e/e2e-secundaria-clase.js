@@ -31,6 +31,7 @@ async function abrirClase(p) {
     const pasos = await p.$$eval('[data-sec-paso]', xs => xs.map(x => ({ id: x.dataset.secPaso, t: x.textContent.replace(/\s+/g, ' ').trim(), dis: x.disabled, alto: x.getBoundingClientRect().height })));
     ok('pasos «1 Teoría → 2 Video → 3 Ejercicios → 4 Libreta»' + suf, pasos.map(x => x.t).join(' | ') === '1Teoría | 2Video | 3Ejercicios | 4Libreta' && pasos.every(x => !x.dis), JSON.stringify(pasos.map(x => x.t)));
     ok('botones de paso de al menos 44 px' + suf, pasos.every(x => x.alto >= 44), pasos.map(x => Math.round(x.alto)).join(','));
+    ok('banner «⚔️ Misión» con su materia' + suf, (await p.textContent('.sec-mision-banner')).includes('Misión') && (await p.textContent('.sec-mision-banner')).includes('Matemáticas'));
     ok('al abrir, el paso actual es Teoría' + suf, (await pasoActual(p)) === 'teoria', String(await pasoActual(p)));
     const iframes = await p.$$eval('#sec-paso-video iframe', xs => xs.map(x => ({ src: x.getAttribute('src'), lazy: x.getAttribute('loading'), title: x.title })));
     ok('2 videos incrustados con youtube-nocookie y loading="lazy"' + suf, iframes.length === 2 && iframes.every(x => x.src.startsWith('https://www.youtube-nocookie.com/embed/') && x.lazy === 'lazy' && x.title), JSON.stringify(iframes));
@@ -56,11 +57,11 @@ async function abrirClase(p) {
       for (const id of await p.$$eval('#exam-form [data-q]', xs => xs.map(x => x.dataset.q))) await p.check(`input[name="${id}"][value="0"]`);
       await p.click('#exam-send');
       await p.waitForSelector('.score', { timeout: 60000 });
-      ok('resultado: «¡Clase terminada!» y la calificación', (await p.textContent('.exam-card h3')).includes('Clase terminada') && (await p.textContent('.score')).includes('100'));
+      ok('resultado: «¡Misión cumplida!» y la calificación', (await p.textContent('.exam-card h3')).includes('Misión cumplida') && (await p.textContent('.score')).includes('100'));
       ok('resultado: retroalimentación por tema', (await p.textContent('#content')).includes('Fracciones') && (await p.textContent('#content')).includes('¡Muy bien!'));
       ok('resultado: la libreta con su casilla marcada', await p.isChecked(`#sec-resultado-libreta [data-sec-libreta="${CLASE}"]`));
       const sig = await p.$eval('.sec-siguiente', x => ({ id: x.dataset.id || '', t: x.textContent.replace(/\s+/g, ' ').trim(), alto: x.getBoundingClientRect().height }));
-      ok('«Siguiente clase» apunta a otra clase pendiente', sig.id && sig.id !== CLASE && sig.t.startsWith('Siguiente clase'), JSON.stringify(sig));
+      ok('«Siguiente clase» apunta a otra clase pendiente', sig.id && sig.id !== CLASE && sig.t.startsWith('Siguiente misión'), JSON.stringify(sig));
       ok('«Siguiente clase» es un botón grande (≥ 44 px)', sig.alto >= 44, String(sig.alto));
       ok('resultado sin scroll horizontal a 360 px', await sinScrollH(p));
       await p.screenshot({ path: 'secundaria-clase-resultado.png', fullPage: true });

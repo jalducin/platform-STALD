@@ -98,8 +98,10 @@ contenido se muestra deshabilitado). Los `tips` de tipo `video` con URL de YouTu
 SHALL quedar como enlaces. Las tareas de libreta SHALL tener una casilla «✅ Ya la hice» por clase, guardada solo en
 el aparato (localStorage con try/catch; sin almacenamiento la casilla funciona sin recordarse). Al enviar, la pantalla
 de resultado SHALL mostrar la calificación, la retroalimentación por tema, la libreta con su casilla y un botón
-«Siguiente clase» (la siguiente sin completar; si no hay, «Mis clases»). Botones de al menos 44 px, foco visible,
-claro y oscuro, sin scroll horizontal a 360 px. Inglés no cambia.
+«Siguiente misión» (la siguiente sin completar por fecha; si no hay, «Mis misiones»). En Secundaria la clase SHALL
+llamarse «Misión» y la vista SHALL mostrar el mundo de su materia; el resultado SHALL mostrar «+N XP», el nivel y la
+insignia desbloqueada, si la hay, calculados SOLO con `comun/gamificacion.js` (sin duplicar fórmulas). Botones de al
+menos 44 px, foco visible, claro y oscuro, sin scroll horizontal a 360 px. Inglés no cambia.
 
 #### Scenario: Pasos de la clase
 - **WHEN** la alumna abre una clase con teoría, 2 videos de YouTube, ejercicios y libreta
@@ -112,8 +114,8 @@ claro y oscuro, sin scroll horizontal a 360 px. Inglés no cambia.
 
 #### Scenario: Resultado y siguiente clase
 - **WHEN** envía sus respuestas
-- **THEN** ve su calificación, la retroalimentación por tema y «Siguiente clase», que abre la siguiente clase sin
-  completar
+- **THEN** ve «¡Misión cumplida!», su calificación, la retroalimentación por tema, «+N XP» y su nivel, y «Siguiente
+  misión», que abre la siguiente sin completar por fecha
 
 #### Scenario: Inglés sin cambios
 - **WHEN** un alumno de Inglés abre una actividad

@@ -1,7 +1,7 @@
 // Clase interactiva de Secundaria (?modo=secundaria; openspec: secundaria-sin-notion, requisito «Clase interactiva de
 // Secundaria»). Al abrir una clase: pasos «1 Teoría → 2 Video → 3 Ejercicios → 4 Libreta» con indicador
 // (aria-current="step"), videos de YouTube incrustados (youtube-nocookie, lazy) y la libreta con «✅ Ya la hice»
-// (solo en este aparato). Al enviar: libreta y «Siguiente clase» en la pantalla de resultado.
+// (solo en este aparato). Al enviar: libreta y «Siguiente misión» en la pantalla de resultado. En Secundaria la clase se llama «Misión».
 // Lo usan openItem y showResult (ingles/reproductor.js) solo en modo Secundaria; Inglés no cambia.
 
 // Id de YouTube (11 caracteres) de watch?v=, youtu.be/, /embed/, /shorts/ o /live/; null si no es de YouTube.
@@ -49,7 +49,7 @@ function videosDeClase(tips) {
   const embebidos = conUrl.filter(t => t.tipo === 'video' && idYouTube(t.url));
   const enlaces = conUrl.filter(t => !embebidos.includes(t));
   const html = embebidos.map(t => '<figure class="sec-video"><div class="sec-video-marco">' +
-      '<iframe src="https://www.youtube-nocookie.com/embed/' + idYouTube(t.url) + '" title="' + escapeHtml(t.texto || 'Video de la clase') + '" loading="lazy" ' +
+      '<iframe src="https://www.youtube-nocookie.com/embed/' + idYouTube(t.url) + '" title="' + escapeHtml(t.texto || 'Video de la misión') + '" loading="lazy" ' +
       'allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>' +
       '<figcaption>' + escapeHtml(t.texto || '') + ' <a class="link" href="https://www.youtube.com/watch?v=' + idYouTube(t.url) + '" target="_blank" rel="noopener">Abrir en YouTube ↗</a></figcaption></figure>').join('') +
     (enlaces.length ? '<div class="sec-enlaces">' + enlaces.map(t => '<a class="btn ghost" href="' + escapeHtml(t.url) + '" target="_blank" rel="noopener">' +
@@ -63,12 +63,14 @@ function vistaClaseSecundaria(it, cabecera, form) {
   const video = videosDeClase(it.tips);
   const libreta = bloqueLibreta(it.id, it.tips);
   const hay = { teoria: !!teoria, video: video.hay, ejercicios: true, libreta: !!libreta };
-  const indicador = '<nav class="sec-pasos" aria-label="Pasos de la clase"><ol>' + PASOS_CLASE.map(([id, t], i) =>
+  const indicador = '<nav class="sec-pasos" aria-label="Pasos de la misión"><ol>' + PASOS_CLASE.map(([id, t], i) =>
     '<li><button type="button" class="sec-paso" data-sec-paso="' + id + '"' + (hay[id] ? '' : ' disabled') + '>' + numPaso(i + 1) +
     '<span>' + t + '</span>' + (hay[id] ? '' : '<span class="sr-only"> (sin contenido)</span>') + '</button></li>').join('') + '</ol></nav>';
   const seccion = (id, n, titulo, html) => '<section class="exam-card sec-paso-bloque" id="sec-paso-' + id + '" data-sec-bloque="' + id + '" aria-labelledby="sec-paso-t-' + id + '">' +
     '<h3 id="sec-paso-t-' + id + '">' + numPaso(n) + ' ' + titulo + '</h3>' + html + '</section>';
-  return '<div class="sec-clase-vista">' + cabecera + indicador +
+  const m = materiaDe(it);
+  const banner = '<div class="sec-mision-banner"><span class="sec-mision-tag">⚔️ Misión</span>' + chipMateria(m) + '</div>';
+  return '<div class="sec-clase-vista">' + banner + cabecera + indicador +
     (hay.teoria ? seccion('teoria', 1, '📖 Teoría', teoria) : '') +
     (hay.video ? seccion('video', 2, '🎬 Video', video.html) : '') +
     '<section class="sec-paso-bloque" id="sec-paso-ejercicios" data-sec-bloque="ejercicios" aria-labelledby="sec-paso-t-ejercicios">' +
@@ -110,8 +112,8 @@ function extrasResultadoSecundaria(id) {
   const libreta = clase ? bloqueLibreta(id, clase.tips) : '';
   const sig = siguienteClase(id);
   const boton = sig
-    ? '<button class="btn sec-siguiente" data-action="abrir-item" data-id="' + escapeHtml(sig.id) + '"><span>Siguiente clase →</span><small>' + escapeHtml(textoClase(sig, materiaDe(sig))) + '</small></button>'
-    : '<button class="btn sec-siguiente" data-action="volver"><span>📚 Mis clases</span><small>No tienes más clases pendientes por ahora.</small></button>';
+    ? '<button class="btn sec-siguiente" data-action="abrir-item" data-id="' + escapeHtml(sig.id) + '"><span>Siguiente misión →</span><small>' + escapeHtml(textoClase(sig, materiaDe(sig))) + '</small></button>'
+    : '<button class="btn sec-siguiente" data-action="volver"><span>🗺️ Mis misiones</span><small>No tienes más misiones pendientes por ahora.</small></button>';
   return (libreta ? '<section class="exam-card sec-paso-bloque" id="sec-resultado-libreta"><h3>' + numPaso(4) + ' 📓 Libreta</h3>' + libreta + '</section>' : '') +
     '<div class="sec-resultado-acciones">' + boton + '</div>';
 }
