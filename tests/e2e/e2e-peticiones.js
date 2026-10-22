@@ -24,7 +24,7 @@ const UMBRAL = {
   'ranking: abrir y alternar pestañas 4 veces': 6, // 2 son las fotos de avatar (<img>, caché de 1 h)
   'sala de 2 personas (30 s, ambas)': 40,
   'inglés (alumna)': 5,
-  'inglés (admin)': 15,
+  'inglés (admin)': 17, // +2: «📥 Por revisar» del panel pide la bandeja /profe/entregas (OPTIONS + GET; openspec: ingles-diseno-profe)
   'abrir un examen': 2,
 };
 

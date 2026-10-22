@@ -21,9 +21,9 @@ function tituloProfe(plan) {
 }
 
 // ---------- Vista del profe (openspec: profe-diseno): avance, lo urgente arriba y el resto en pestañas ----------
-const PF_TABS = [['semana', '📅 Esta semana'], ['material', '📚 Material'], ['plan', '🗺️ Plan del mes'], ['grupo', '👥 Mi grupo'], ['hechas', '✅ Hechas']];
-// Sin plan.json (openspec: profe-semanas-del-grupo) no hay pestaña de plan.
-const pfTabsDe = plan => PF_TABS.filter(([id]) => id !== 'plan' || !!plan);
+const PF_TABS = [['semana', '📅 Esta semana'], ['material', '📚 Material'], ['mundos', '🌍 Mundos'], ['plan', '🗺️ Plan del mes'], ['grupo', '👥 Mi grupo'], ['hechas', '✅ Hechas']];
+// Sin plan.json (openspec: profe-semanas-del-grupo) no hay pestaña de plan ni de mundos (openspec: ingles-diseno-profe).
+const pfTabsDe = plan => PF_TABS.filter(([id]) => (id !== 'plan' && id !== 'mundos') || !!plan);
 function pfTabGuardada(tabs) { try { const t = localStorage.getItem('profe_tab'); return tabs.some(x => x[0] === t) ? t : 'semana'; } catch { /* sin almacenamiento: pestaña por omisión */ return 'semana'; } }
 function pfFila(it) {
   const tag = it.grupo ? '<span class="pf-tag grupo">👥 Grupo</span>' : '<span class="pf-tag ruta">🎓 Mis clases</span>';
@@ -50,16 +50,19 @@ function renderProfe(act) {
   const hero = '<section class="pf-hero"><div class="pf-top"><span class="pf-sem">' + (act && (act.semana || propia) ? '👉 ' + (propia ? [act.semana && '👥 ' + act.semana.titulo, '🎓 ' + propia.titulo] : [act.semana.titulo]).filter(Boolean).map(t => escapeHtml(t)).join(' · ') : '🎓 Tu ruta') + '</span>' +
     '<span class="pf-sig">' + (sig ? 'Siguiente: ' + icono(sig.tipo) + ' ' + escapeHtml(sig.titulo) + ' · ' + escapeHtml(formatFecha(sig.fechaLimite)) : 'Sin entregas próximas') + '</span></div>' +
     (plan ? '<div class="progress-bar" style="margin-top:10px"><span style="width:' + pct + '%"></span></div><div class="progress-text" style="margin:4px 0 0">Ruta del mes: ' + hechosPlan + '/' + delPlan.size + ' (' + pct + '%)</div>' : '') +
-    '<div class="pf-stats"><div class="pf-stat hecho"><b>' + (g.recent.length + g.older.length) + '</b><span>Hechas</span></div><div class="pf-stat atraso"><b>' + g.overdue.length + '</b><span>Atrasadas</span></div>' +
-    '<div class="pf-stat"><b>' + g.today.length + '</b><span>Hoy</span></div><div class="pf-stat"><b>' + g.upcoming.length + '</b><span>Próximas</span></div></div></section>';
+    // Su ruta va a su ritmo (openspec: ingles-diseno-profe): lo que ya pasó su fecha sugerida es «Para hoy», no «atrasada».
+    '<div class="pf-stats"><div class="pf-stat hecho"><b>' + (g.recent.length + g.older.length) + '</b><span>Hechas</span></div><div class="pf-stat"><b>' + (g.overdue.length + g.today.length) + '</b><span>Para hoy</span></div>' +
+    pfStatTercero(act, g) + '<div class="pf-stat"><b>' + g.upcoming.length + '</b><span>Próximas</span></div></div></section>';
   const urgente = '<div class="exam-card" id="pf-urgente"><h3>🔥 Pendiente ahora' + (urgentes.length ? ' (' + urgentes.length + ')' : '') + '</h3>' +
-    (urgentes.length ? urgentes.map(pfFila).join('') : '<div class="pf-ok">¡Al día! 🎉 No tienes nada atrasado ni para hoy.</div>') + '</div>';
+    (urgentes.length ? urgentes.slice(0, 5).map(pfFila).join('') : '<div class="pf-ok">¡Al día! 🎉 No tienes nada pendiente para hoy.</div>') +
+    // Solo 5 a la vista; el resto, plegado, para que el tablero y las pestañas no queden hasta abajo (openspec: ingles-diseno-profe).
+    (urgentes.length > 5 ? '<details class="pf-mas" id="pf-urgente-mas"><summary>Ver las ' + (urgentes.length - 5) + ' restantes</summary>' + urgentes.slice(5).map(pfFila).join('') + '</details>' : '') + '</div>';
   const objetivo = semPlan ? '<div class="exam-card"><h3>🎯 Objetivo de la semana</h3>' + (semPlan.objetivo ? '<div>' + escapeHtml(semPlan.objetivo) + '</div>' : '') + '<div class="chips" style="margin-top:6px">' + (semPlan.temas || []).map(t => '<span class="chip neutra">' + escapeHtml(t) + '</span>').join('') + '</div>' +
     (semPlan.busuu ? '<div class="meta" style="margin-top:6px">📗 ' + escapeHtml(semPlan.busuu) + '</div>' : '') + (semPlan.extra ? '<div class="meta">✍️ ' + escapeHtml(semPlan.extra) + '</div>' : '') + '</div>' : '';
   const semana = renderSemanasProfe(act, objetivo);
   const hechas = items.filter(it => it.estado === 'completo').sort((a, b) => (b.ultimoEnvio || '').localeCompare(a.ultimoEnvio || ''));
   const panelHechas = '<div class="exam-card"><h3>✅ Hechas (' + hechas.length + ')</h3>' + (hechas.length ? hechas.map(pfFila).join('') : '<div class="pf-ok">Todavía no hay entregas.</div>') + '</div>';
-  const paneles = { semana: semana || '<div class="pf-ok">Sin actividades esta semana.</div>', plan: renderPlanProfe(act) || '<div class="pf-ok">Sin plan.</div>', grupo: renderGrupoProfe(act) || '<div class="pf-ok">Sin actividades del grupo.</div>', hechas: panelHechas, material: renderMaterial() };
+  const paneles = { semana: semana || '<div class="pf-ok">Sin actividades esta semana.</div>', plan: renderPlanProfe(act) || '<div class="pf-ok">Sin plan.</div>', mundos: renderMundosProfe(act) || '<div class="pf-ok">Sin mundos.</div>', grupo: renderGrupoProfe(act) || '<div class="pf-ok">Sin actividades del grupo.</div>', hechas: panelHechas, material: renderMaterial() };
   const tabs = '<div class="pf-tabs" role="tablist" aria-label="Secciones de mi ruta">' + pfTabs.map(([id, t]) => '<button type="button" role="tab" id="pf-tab-' + id + '" data-pf-tab="' + id + '" aria-controls="pf-panel-' + id + '" aria-selected="' + (id === tab) + '">' + t + '</button>').join('') + '</div>' +
     pfTabs.map(([id]) => '<div role="tabpanel" id="pf-panel-' + id + '" data-pf-panel="' + id + '" aria-labelledby="pf-tab-' + id + '"' + (id === tab ? '' : ' hidden') + '>' + paneles[id] + '</div>').join('');
   const lado = '<aside class="pf-side">' +
@@ -68,7 +71,14 @@ function renderProfe(act) {
       (plan.rutinaDiaria || []).map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul><ul class="ruta-lista" style="margin-top:8px">' + (plan.reglas || []).map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul></div></details></div>' : '') +
     '<div class="exam-card"><h3>📅 Próximas</h3>' + (futuras.length ? futuras.slice(0, 3).map(it => '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + escapeHtml(formatFecha(it.fechaLimite)) + (it.grupo ? ' · 👥 Grupo' : '') + '</div></div></div>').join('') : '<div class="pf-ok">Nada próximo.</div>') + '</div>' +
     '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html')) + '">← Vista de mi grupo</a></aside>';
-  return hero + '<div class="pf-grid"><div class="pf-main">' + urgente + tabs + '</div>' + lado + '</div>';
+  // Tablero RPG de su ruta (openspec: ingles-diseno-profe; ingles/profe-rpg.js), aparte del panel del admin.
+  return hero + renderProfeRpg(act) + '<div class="pf-grid"><div class="pf-main">' + urgente + tabs + '</div>' + lado + '</div>';
+}
+// Tercer contador: con ruta propia, los mundos completados (ingles/profe-rpg.js); sin ella, lo de hoy.
+function pfStatTercero(act, g) {
+  if (!hayRpgProfe(act)) return '<div class="pf-stat"><b>' + g.today.length + '</b><span>Hoy</span></div>';
+  const mapa = mapaRutaDe(act).filter(w => w.total);
+  return '<div class="pf-stat hecho"><b>' + mapa.filter(w => w.estado === 'completado').length + '/' + mapa.length + '</b><span>Mundos</span></div>';
 }
 // Cambio de pestaña sin redibujar (se conserva el scroll); se recuerda en este navegador.
 document.addEventListener('click', e => {
