@@ -90,7 +90,9 @@ Cada página debe manejar y mostrar de forma explícita:
     `#seccion`), para que «Atrás» regrese a la anterior; las flechas del teclado la reemplazan;
   - en PC (≥ 1100 px) el contenedor usa el ancho sin estirar la columna de lectura: Inglés (alumnos y alumnas) con el
     menú a un lado como el panel del profe, Secundaria a 1100 px con sus pestañas en una fila y el hub de Juegos
-    (≥ 1200 px, `.wrap:has(#menu-juegos)`) a 1080 px con más columnas; dentro de un juego la columna sigue en 720 px.
+    (≥ 1200 px, `.wrap:has(#menu-juegos)`) a 1080 px con más columnas; dentro de un juego la columna sigue en 720 px;
+  - los enlaces internos van directo a su destino: el portal abre `ingles.html?modo=secundaria` (constante
+    `SECUNDARIA` de `index.html`), no el puente `secundaria.html`, que queda solo para enlaces guardados.
 - Colores en variables CSS en `:root`, con variante `prefers-color-scheme: dark`.
 - Inputs con `<label for>`; los botones son `<button>`, no `div`.
 - Fechas en `es-MX` y comparadas como `AAAA-MM-DD` en hora local.

@@ -45,6 +45,10 @@ responden 200 y GitHub Pages los sirve con `max-age=600`.
   el teclado en PC y 7 enlaces profundos; falla ante scroll horizontal, objetivos < 44 px en celular, errores de
   consola, elementos tapados, más toques que el tope de cada tarea, pantallas que tardan más de 8 s, atrás que saca de
   la plataforma o foco invisible.
+- **Portal → Secundaria directo** (PR 2, tras el merge del PR 1): las tarjetas y «🗓️ Mi horario» del portal enlazan
+  a `ingles.html?modo=secundaria` (con `?alumna=` del profe) en vez del puente `secundaria.html`, que en producción
+  costaba una carga de página más (~0.6 s en celular: load 871 ms contra DCL 183 ms). `secundaria.html` sigue para
+  enlaces guardados.
 - Sin cambios de servidor, contrato HTTP, datos ni peticiones.
 
 ## Capabilities
@@ -59,7 +63,8 @@ responden 200 y GitHub Pages los sirve con `max-age=600`.
   `juegos/app/juegos.css`, `ingles.html` y `juegos.html` (`?v=`).
 - `tests/e2e/e2e-navegacion-dispositivos.js` (nueva) y `tests/e2e/correr.sh`; `docs/pruebas.md`,
   `docs/frontend-standards.md`.
-- No toca `index.html` (el portal nuevo de `portal-diseno-rpg` ya pasa la auditoría) ni `ingles/presentacion.js`.
+- PR 1 no toca `index.html` (otro agente lo rediseñaba); PR 2 solo cambia sus enlaces a Secundaria. No toca
+  `ingles/presentacion.js`.
 - Peticiones: las mismas (presupuestos de la E2E `peticiones` sin cambio).
 - Matriz de acceso: sin cambios; solo estilos y navegación del cliente.
 

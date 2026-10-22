@@ -22,6 +22,8 @@
   (`pintarEntregasPendientes`); E2E: 44 px en toda pantalla táctil, «atrás» pestaña por pestaña, flechas sin historial,
   `#horario`, columna del juego, «Grupo 1» visible aunque falle, 503 `sin_base` excusado y OMIT si se acaban las
   actividades de la copia
+- [x] 2.7 PR 2 (tras el merge del PR 1 y con el portal nuevo en `main`): el portal enlaza Secundaria directo a
+  `ingles.html?modo=secundaria` (`index.html`, constante `SECUNDARIA`); la E2E revisa que no se cargue el puente
 - [x] 2.5 `?v=` de los archivos cambiados en `ingles.html` y `juegos.html`
 
 ## 3. Verificación (OBLIGATORIO)
