@@ -212,7 +212,7 @@ function ajustarDiapositiva(slide) {
 function avisoPartes(slide) {
   const cuerpo = slide.querySelector('.slide-body');
   let aviso = slide.querySelector('.slide-mas');
-  if (!cuerpo || !cuerpo.classList.contains('desborda')) { if (aviso) aviso.remove(); return; }
+  if (!cuerpo || !cuerpo.classList.contains('desborda') || cuerpo.scrollHeight <= cuerpo.clientHeight + 1) { if (aviso) aviso.remove(); return; }
   if (!aviso) {
     aviso = document.createElement('button');
     aviso.type = 'button'; aviso.className = 'slide-mas'; aviso.dataset.deck = 'mas';
@@ -300,6 +300,8 @@ async function openPresentacion(id) {
   const salir = () => { document.removeEventListener('keydown', onKey); if (ro) ro.disconnect(); else window.removeEventListener('resize', reajustar); if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); } deck.remove(); };
   const full = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else deck.requestFullscreen && deck.requestFullscreen().catch(() => {}); };
   function onKey(e) {
+    // Enter o Espacio sobre un botón de la barra hacen lo del botón (clic nativo), no avanzan.
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('button, a, input, select, textarea')) return;
     if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); avanzar(); }
     else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); retroceder(); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); moverParte(actual(), 1); }
@@ -315,6 +317,7 @@ async function openPresentacion(id) {
     const b = e.target.closest('[data-deck]');
     if (b) {
       const a = b.dataset.deck;
+      if (e.detail > 0 && b.blur) b.blur(); // con el ratón no deja el foco: Espacio y Enter siguen avanzando
       if (a === 'prev') retroceder();
       else if (a === 'next') avanzar();
       else if (a === 'full') full();
@@ -323,7 +326,7 @@ async function openPresentacion(id) {
       else if (a === 'mas') { const c = actual().querySelector('.slide-body'); if (!moverParte(actual(), 1) && c) c.scrollTo({ top: 0, behavior: 'smooth' }); }
       return;
     }
-    // Un toque en la diapositiva avanza, salvo en tablas o diagramas con scroll propio.
+    // Un toque en la diapositiva avanza, salvo en tablas (tienen scroll de lado propio).
     if (e.target.closest('.slide') && !e.target.closest('.s-tabla')) avanzar();
   });
   pintarTema();

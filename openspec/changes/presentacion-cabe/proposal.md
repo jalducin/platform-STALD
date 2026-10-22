@@ -59,5 +59,5 @@ lleve el diseño RPG de Secundaria, Inglés y Juegos.
   sin nombres.
 - Pruebas: E2E nueva `presentacion-cabe` (fase `ingles`, solo lectura, con puertos propios vía `--puerto-api` y
   `--puerto-web`). `presentar` y `teoria-diagramas` siguen en verde.
-- Acciones externas: ninguna. El profe solo recarga `ingles.html` para tomar `presentacion.js?v=4` y
-  `presentacion.css?v=1`.
+- Acciones externas: ninguna. El profe solo recarga `ingles.html` para tomar `presentacion.js?v=5` y
+  `presentacion.css?v=2`.

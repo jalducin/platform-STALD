@@ -65,7 +65,7 @@
   font-size: calc(clamp(14px, 2.25cqw, 46px) * var(--escala, 1)); line-height: 1.35; overflow: hidden;
 }
 .slide-body > * { flex-shrink: 0; }
-.slide-body.desborda { overflow-y: auto; overscroll-behavior: contain; padding-bottom: 3.2em; scrollbar-color: var(--tone) transparent; }
+.slide-body.desborda { overflow: auto; overscroll-behavior: contain; padding-bottom: 3.2em; scrollbar-color: var(--tone) transparent; }
 .slide-body p { margin: 0; }
 .slide-mas {
   position: absolute; left: 50%; bottom: .6em; transform: translateX(-50%); z-index: 2; cursor: pointer;
@@ -143,6 +143,7 @@
 /* Diagramas dentro de la diapositiva: paleta de la presentación y medidas relativas al cuerpo (siguen en columna
    cuando la diapositiva es angosta, por las consultas de contenedor de ingles.css). */
 .slide .dg { font-size: .9em; margin: 0; --accent: var(--tone); --accent-bg: var(--tone-bg); --accent-soft: var(--soft); --text: var(--p-texto); --muted: var(--p-suave); --border: var(--p-borde); --card: var(--p-panel); --card-2: var(--p-panel-2); --bg: var(--p-panel); }
+.slide .dg-regreso span { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; max-width: 100% !important; }
 
 /* Barra de navegación: botones reales (44 px), contador «x / y» y barra de progreso RPG. */
 .deck-bar { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 6px 14px 10px; color: var(--p-texto); font-size: .9rem; }
@@ -150,8 +151,8 @@
 .deck-btn:hover { border-color: #818cf8; }
 .deck-btn:focus-visible { outline: 3px solid #818cf8; outline-offset: 2px; }
 .deck-btn.principal { color: #fff; background: var(--rpg-barra, linear-gradient(90deg, #6366f1, #a855f7)); border-color: transparent; }
-.deck-contador { flex-shrink: 0; }
-.deck-progress { flex: 1; min-width: 40px; }
+.deck-contador { flex-shrink: 0; color: var(--p-texto); background: var(--p-panel-2); border: 1px solid var(--p-borde); }
+.deck-progress { flex: 1; min-width: 40px; background: var(--p-borde); }
 @media (max-width: 640px) { .deck-lbl { display: none; } .deck-bar { gap: 6px; padding: 6px 8px 8px; } .deck-btn { padding: 0 8px; } }
 /* Pantallas bajas (celular horizontal): portada y cierre más compactas para que quepan sin scroll. */
 @media (max-height: 520px) { .slide.hero .big-emoji { font-size: 2.2em; } .slide.hero h1 { font-size: 1.9em; } .hero-in { gap: .3em; } }

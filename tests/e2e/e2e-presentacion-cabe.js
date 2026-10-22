@@ -38,7 +38,7 @@ const sintetico = {
     { titulo: 'Flujo de 8', diagrama: { tipo: 'flujo', titulo: 'Ocho pasos', pasos: ['Uno', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho'].map(paso), nota: 'Nota del diagrama.' } },
     { titulo: 'Ramas de 8', texto: 'Mapa con muchas ramas.', diagrama: { tipo: 'ramas', centro: 'Centro', pasos: ['Uno', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho'].map(paso) } },
     { titulo: 'Ciclo y ejemplos', texto: 'Texto previo.', ejemplos: Array.from({ length: 6 }, (_, i) => ({ en: 'Example sentence number ' + i, es: 'Oración de ejemplo número ' + i })),
-      diagrama: { tipo: 'ciclo', pasos: ['Explorar', 'Planear', 'Codificar', 'Probar', 'Commit', 'Revisar'].map(paso) } },
+      diagrama: { tipo: 'ciclo', pasos: ['Explorar el problema con calma, con muchas palabras para alargar la etiqueta de regreso', 'Planear', 'Codificar', 'Probar'].map(paso) } },
   ],
   tips: Array.from({ length: 7 }, (_, i) => ({ tipo: 'libreta', texto: 'Tarea de libreta ' + (i + 1) + ': escribe cinco oraciones con el tema de hoy y súbrayalas.' })),
   presentacion: { diapositivas: [
@@ -63,23 +63,22 @@ function medir(minPx) {
   for (const el of [slide, ...slide.querySelectorAll('*')]) {
     const s = getComputedStyle(el);
     if (s.display === 'none' || s.visibility === 'hidden') continue;
-    // 1) Contenido oculto por overflow (sin scroll): hidden/clip con contenido que no cabe.
-    const oculta = /hidden|clip/.test(s.overflowY + ' ' + s.overflowX);
-    if (oculta && !desplazable(el) && (el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2)) {
-      problemas.push('recortado ' + desc(el) + ' ' + el.scrollWidth + 'x' + el.scrollHeight + ' > ' + el.clientWidth + 'x' + el.clientHeight);
-    }
+    // 1) Contenido oculto por overflow, eje por eje: hidden/clip en un eje cuyo contenido no cabe en ese eje.
+    const ocultaY = /hidden|clip/.test(s.overflowY) && el.scrollHeight > el.clientHeight + 2;
+    const ocultaX = /hidden|clip/.test(s.overflowX) && el.scrollWidth > el.clientWidth + 2;
+    if (ocultaY || ocultaX) problemas.push('recortado ' + desc(el) + ' ' + el.scrollWidth + 'x' + el.scrollHeight + ' > ' + el.clientWidth + 'x' + el.clientHeight);
     // 2) Texto ellipsis truncado.
     if (s.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth + 1) problemas.push('truncado con … ' + desc(el));
     // 3) Fuera del área visible: de la diapositiva o del contenedor con scroll más cercano (que sí deja verlo).
     if (el !== slide && el.children.length === 0 && (el.textContent || '').trim()) {
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) continue;
+      const fs = parseFloat(s.fontSize);
+      if (fs < minPx) problemas.push('texto ilegible (' + fs.toFixed(1) + 'px) ' + desc(el));
       let cont = el.parentElement;
       while (cont && cont !== slide && !desplazable(cont)) cont = cont.parentElement;
       if (cont && cont !== slide) continue; // dentro de un contenedor con scroll: se alcanza desplazándose
       if (r.bottom > sr.bottom + 1 || r.right > sr.right + 1 || r.top < sr.top - 1 || r.left < sr.left - 1) problemas.push('fuera de la diapositiva ' + desc(el));
-      const fs = parseFloat(s.fontSize);
-      if (fs < minPx) problemas.push('texto ilegible (' + fs.toFixed(1) + 'px) ' + desc(el));
     }
   }
   // 4) Un cuerpo con scroll que no cabe debe avisar «hay más».
@@ -97,6 +96,7 @@ function medir(minPx) {
   if (!reales.length) { console.log('OMIT presentacion-cabe: la copia de datos no trae los Meets reales (' + REALES.join(', ') + ')'); process.exit(0); }
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const resumen = [];
+  const escalas = []; // escala de las diapositivas que cupieron sin scroll
   for (const t of TAMANOS) {
     const p = await abrirPagina(b, { email: 'admin@example.com', out, etiqueta: t.n, viewport: { width: t.width, height: t.height }, ruta: '/ingles.html#presentar', esperar: '#pres-semana' });
     await p.route('**/actividades/' + SINTETICO + '*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(sintetico) }));
@@ -115,8 +115,10 @@ function medir(minPx) {
         else if (process.env.CAPTURAS) await p.screenshot({ path: nombre(k) });
         // Con scroll: → baja una parte a la vez (sin cambiar de diapositiva) hasta llegar al final del contenido.
         const partes = await p.evaluate(() => { const bd = document.querySelector('#deck-stage .slide-body'); return bd && bd.classList.contains('desborda') ? (document.querySelector('.slide-mas') || {}).textContent || '?' : ''; });
+        if (!partes) escalas.push(await p.evaluate(() => Number(document.querySelector('#deck-stage .slide').dataset.escala || 1)));
         if (partes) {
           resumen.push(`${t.n} · ${id} · ${k + 1}: ${partes}`);
+          if (!/^⬇️ Hay más · parte 1\/\d+$/.test(partes)) malas.push((k + 1) + ': aviso inicial distinto de «⬇️ Hay más · parte 1/n» (' + partes + ')');
           let pasos = 0, alFinal = false;
           while (!alFinal && pasos < 12) {
             await p.keyboard.press('ArrowRight'); await p.waitForTimeout(500); pasos++;
@@ -127,6 +129,16 @@ function medir(minPx) {
           if (!alFinal) malas.push((k + 1) + ': → no llega al final del contenido');
           const fin = await p.evaluate(() => (document.querySelector('.slide-mas') || {}).textContent || '');
           if (!/Parte \d+\/\d+/.test(fin)) malas.push((k + 1) + ': al final falta «parte x/y» (' + fin + ')');
+          // ← sube una parte sin cambiar de diapositiva; luego → vuelve al final.
+          const antes = await p.evaluate(() => document.querySelector('#deck-stage .slide-body').scrollTop);
+          await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(500);
+          const subio = await p.evaluate(() => ({ top: document.querySelector('#deck-stage .slide-body').scrollTop, cuenta: document.getElementById('deck-count').textContent }));
+          if (!(subio.top < antes) || !subio.cuenta.startsWith((k + 1) + ' /')) malas.push((k + 1) + ': ← no sube una parte dentro de la diapositiva');
+          for (let n = 0; n < 12; n++) {
+            const fin2 = await p.evaluate(() => { const bd = document.querySelector('#deck-stage .slide-body'); return bd.scrollTop + bd.clientHeight >= bd.scrollHeight - 2; });
+            if (fin2) break;
+            await p.keyboard.press('ArrowRight'); await p.waitForTimeout(500);
+          }
           if (process.env.CAPTURAS) await p.screenshot({ path: nombre(k).replace('.png', '-final.png') });
         }
         await p.keyboard.press('ArrowRight');
@@ -163,7 +175,35 @@ function medir(minPx) {
   await o.click('[data-deck="prev"]');
   ok('botón «Anterior» regresa', (await o.textContent('#deck-count')).startsWith('1 /'));
   ok('barra de progreso con aria-valuenow', (await o.$eval('#deck-progress', x => x.getAttribute('aria-valuenow'))) === '1');
+  // Enter sobre un botón enfocado hace lo del botón (☀️/🌙), no avanza.
+  await o.focus('[data-deck="tema"]'); await o.keyboard.press('Enter'); await o.waitForTimeout(200);
+  ok('Enter en el botón de tema cambia el tema sin avanzar', (await o.$eval('.deck', x => x.dataset.tema)) === 'oscuro' && (await o.textContent('#deck-count')).startsWith('1 /'));
   await o.context().close();
+
+  ok('alguna diapositiva cupo al reducir la escala (sin scroll)', escalas.some(e => e < 1), 'mínima ' + Math.min(...escalas));
+
+  // Cambio de tamaño con la presentación abierta: la diapositiva larga se reajusta y sigue sin cortes.
+  const c = await abrirPagina(b, { email: 'admin@example.com', out, etiqueta: 'tamaño', viewport: { width: 1280, height: 720 }, ruta: '/ingles.html#presentar', esperar: '#pres-semana' });
+  await c.route('**/actividades/' + SINTETICO + '*', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(sintetico) }));
+  await c.evaluate(m => openPresentacion(m), SINTETICO);
+  await c.waitForSelector('.deck #deck-stage .slide');
+  await c.keyboard.press('Home');
+  for (let n = 0; n < 6 && !(await c.textContent('#deck-count')).startsWith('3 /'); n++) { await c.keyboard.press('ArrowRight'); await c.waitForTimeout(450); }
+  const tam = [];
+  for (const v of [{ width: 1920, height: 1080 }, { width: 360, height: 740 }, { width: 740, height: 360 }, { width: 1366, height: 768 }]) {
+    await c.setViewportSize(v); await c.waitForTimeout(500);
+    const prob = await c.evaluate(medir, MIN_PX);
+    tam.push(v.width + 'x' + v.height + (prob.length ? ': ' + prob.slice(0, 2).join(' | ') : ' ok'));
+  }
+  ok('al cambiar de tamaño (pantalla completa, girar) la diapositiva 3 se reajusta sin cortes', tam.every(x => x.endsWith(' ok')), tam.join(' · '));
+  const mas = c.locator('.slide-mas');
+  if (await mas.count()) {
+    const t0 = await c.evaluate(() => document.querySelector('#deck-stage .slide-body').scrollTop);
+    await mas.click({ force: true }); await c.waitForTimeout(500); // force: el aviso «late» (animación infinita)
+    const t1 = await c.evaluate(() => ({ top: document.querySelector('#deck-stage .slide-body').scrollTop, cuenta: document.getElementById('deck-count').textContent }));
+    ok('clic en «Hay más» baja una parte sin cambiar de diapositiva', t1.top > t0 && t1.cuenta.startsWith('3 /'), JSON.stringify(t1));
+  } else ok('clic en «Hay más»: la diapositiva 3 sintética debe tener scroll en 1366×768', false);
+  await c.context().close();
   await b.close();
   if (resumen.length) console.log('INFO ' + resumen.join('\nINFO '));
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

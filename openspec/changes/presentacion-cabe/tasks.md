@@ -26,7 +26,15 @@
   `clamp()` × `--escala` con medidas en `em`, tablas con scroll horizontal propio, diagramas con la paleta de la
   presentación y diapositiva a todo el alto en vertical
 - [x] 3.3 `ingles/ingles.css`: se quita el bloque viejo del modo presentación y `.slide .dg`; `ingles.html`: enlace a
-  `presentacion.css?v=1`, `ingles.css?v=12` y `presentacion.js?v=4`
+  `presentacion.css?v=2`, `ingles.css?v=12` y `presentacion.js?v=5`
+- [x] 3.4 Ajustes de la revisión (`revisor-solo-lectura`):
+  - `.desborda` con scroll en los dos ejes; el aviso de partes solo aparece si sobra alto;
+  - la etiqueta «↺ Vuelve a …» del ciclo ya no se corta con «…»;
+  - Enter o Espacio sobre un botón de la barra hacen lo del botón, y con el ratón el botón suelta el foco;
+  - el contador y la barra de progreso toman el tema de la presentación, no el de la página;
+  - la E2E revisa el recorte por eje y la letra mínima también dentro del scroll, la etiqueta larga del ciclo, el aviso
+    inicial «parte 1/n», ← subiendo una parte, el clic en «Hay más», el cambio de tamaño con la presentación abierta,
+    una escala menor a 1 y Enter en un botón
 
 ## 4. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
@@ -45,8 +53,8 @@
 - [x] 6.1 Recorrer en Playwright las diapositivas con capturas antes y después (1280×720, 1920×1080, 360×740 y
   740×360; oscuro y claro), y revisar que → baje las partes y luego cambie de diapositiva, que ← regrese y que Esc
   salga
-- [x] 6.2 Tras el merge: verificar en producción (GitHub Pages) que `ingles.html` sirve `presentacion.css?v=1` y
-  `presentacion.js?v=4` con `ajustarDiapositiva`
+- [ ] 6.2 Tras el merge: verificar en producción (GitHub Pages) que `ingles.html` sirve `presentacion.css?v=2` y
+  `presentacion.js?v=5` con `ajustarDiapositiva`
 
 ## 7. Actualizar documentación técnica (OBLIGATORIO)
 
