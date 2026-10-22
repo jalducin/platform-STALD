@@ -52,7 +52,7 @@ const ocultarApi = oculto => api('/ingles/grupos/ocultar', ADMIN, { grupo: 'grup
     const ad = await abrirPagina(b, { email: ADMIN, viejo: true, ingles: true, out, dialogos: 'aceptar', viewport: { width: 1100, height: 900 }, ruta: '/ingles.html#grupos' });
     await ad.waitForSelector('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]', { timeout: 60000 }).catch(async e => { await ad.screenshot({ path: 'ocultar-grupos-depura.png', fullPage: true }); out.push('DEPURA ' + (await ad.textContent('body')).slice(0, 400).replace(/\s+/g, ' ')); throw e; });
     ok('sin grupos ocultos no hay interruptor', !(await ad.$('#mostrar-ocultos')));
-    ok('cada grupo tiene «👁️ Ocultar del panel»', (await ad.$$('#grupos-admin [data-action="ocultar-grupo"]')).length === 2 && /Ocultar del panel/.test(await ad.textContent('[data-action="ocultar-grupo"][data-id="grupo-1"]')));
+    ok('cada grupo tiene «👁️ Ocultar del panel»', (await ad.$$('#grupos-admin [data-action="ocultar-grupo"]')).length === 2 && /Ocultar del panel/.test(await ad.textContent('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]')));
     // Conteo «N con intentos» de «Esta semana» para la actividad que entregó Marisol
     const conIntentos = async () => ad.evaluate(t => { const x = [...document.querySelectorAll('.exam-item')].find(e => (e.querySelector('.t') || {}).textContent && e.querySelector('.t').textContent.includes(t) && /con intentos/.test(e.textContent)); const m = x && /(\d+) con intentos/.exec(x.textContent); return m ? Number(m[1]) : null; }, it ? it.titulo : '');
     const intentosVisible = await conIntentos();
@@ -60,8 +60,8 @@ const ocultarApi = oculto => api('/ingles/grupos/ocultar', ADMIN, { grupo: 'grup
     ok('antes de ocultar: Marisol en el ranking de juegos', await enRanking());
 
     // Ocultar el Grupo 1 desde la página
-    await ad.click('[data-action="ocultar-grupo"][data-id="grupo-1"]');
-    await ad.waitForFunction(() => /Mostrar en el panel/.test((document.querySelector('[data-action="ocultar-grupo"][data-id="grupo-1"]') || {}).textContent || ''), null, { timeout: 15000 });
+    await ad.click('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]');
+    await ad.waitForFunction(() => /Mostrar en el panel/.test((document.querySelector('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]') || {}).textContent || ''), null, { timeout: 15000 });
     ok('la bandera queda en la tabla (oculto_admin = true)', await bandera());
     ok('«👥 Grupos» marca «oculto del panel»', !!(await ad.$('#grupos-admin [data-oculto]')));
     ok('interruptor «Mostrar grupos ocultos (1)»', /Mostrar grupos ocultos \(1\)/.test(await ad.textContent('.grupos-barra')) && !(await ad.isChecked('#mostrar-ocultos')));
@@ -118,16 +118,16 @@ const ocultarApi = oculto => api('/ingles/grupos/ocultar', ADMIN, { grupo: 'grup
     // «Mostrar en el panel» con el interruptor encendido: el interruptor se apaga solo
     await ad.check('#mostrar-ocultos');
     await ad.waitForFunction(() => [...document.querySelectorAll('details.student')].some(d => d.dataset.alumno === 'Marisol'), null, { timeout: 15000 });
-    await ad.click('[data-action="ocultar-grupo"][data-id="grupo-1"]');
-    await ad.waitForFunction(() => /Ocultar del panel/.test((document.querySelector('[data-action="ocultar-grupo"][data-id="grupo-1"]') || {}).textContent || ''), null, { timeout: 15000 });
+    await ad.click('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]');
+    await ad.waitForFunction(() => /Ocultar del panel/.test((document.querySelector('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]') || {}).textContent || ''), null, { timeout: 15000 });
     vistos = await alumnosVista();
     ok('«Mostrar en el panel»: bandera en false, sin interruptor y Marisol de vuelta', !(await bandera()) && !(await ad.$('#mostrar-ocultos')) && vistos.includes('Marisol'), vistos.length + ' alumnos');
     // Ocultarlo otra vez en la misma sesión: desaparece de inmediato (el interruptor no quedó encendido)
-    await ad.click('[data-action="ocultar-grupo"][data-id="grupo-1"]');
-    await ad.waitForFunction(() => /Mostrar en el panel/.test((document.querySelector('[data-action="ocultar-grupo"][data-id="grupo-1"]') || {}).textContent || ''), null, { timeout: 15000 });
+    await ad.click('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]');
+    await ad.waitForFunction(() => /Mostrar en el panel/.test((document.querySelector('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]') || {}).textContent || ''), null, { timeout: 15000 });
     ok('volver a ocultar en la misma sesión: Marisol desaparece y el interruptor está apagado', !(await alumnosVista()).includes('Marisol') && !(await ad.isChecked('#mostrar-ocultos')));
-    await ad.click('[data-action="ocultar-grupo"][data-id="grupo-1"]');
-    await ad.waitForFunction(() => /Ocultar del panel/.test((document.querySelector('[data-action="ocultar-grupo"][data-id="grupo-1"]') || {}).textContent || ''), null, { timeout: 15000 });
+    await ad.click('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]');
+    await ad.waitForFunction(() => /Ocultar del panel/.test((document.querySelector('#grupos-admin [data-action="ocultar-grupo"][data-id="grupo-1"]') || {}).textContent || ''), null, { timeout: 15000 });
     ok('estado final: bandera en false', !(await bandera()));
   } finally {
     // Limpieza de las tablas de prueba

@@ -473,7 +473,7 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
 
 **Tablero del profe, racha y prórroga** (`server/resumen.ts`, cambio `ingles-pro`):
   - `GET /ingles/resumen?grupo=<id>` (solo admin; si no, 403 `solo_admin`) →
-    `{ hoy, grupo, semana: { id, titulo }, columnas, filas, kpis }`:
+    `{ hoy, grupo, semana: { id, titulo }, columnas, filas, kpis, ocultos, avisos }`:
     - `columnas`: elementos con entrega de la semana actual (`{ id, tipo, titulo, disponibleDesde, fechaLimite }`);
     - `filas`: una por alumno o alumna del registro (sin el profe), en orden alfabético, con `grupo` y
       `celdas[id] = { estado, porcentaje?, fueraDeTiempo?, intentos?, prorroga? }`. `estado`: `hecho`, `atrasado`,
@@ -488,6 +488,10 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
       incluye. La respuesta trae `ocultos` (cuántos quedaron fuera).
     - Se calcula en el servidor sobre el almacén: con `PgStore`, `leerCarpeta` trae los resultados de cada columna en
       una sola consulta (`path=like.resultados/<id>/*`). No agrega tablas, vistas ni funciones a Postgres.
+    - No se cae por una lectura (cambio `fix-ingles-admin`): no consulta Notion; cada columna lee sus resultados con
+      un reintento y, si falla, queda fuera de `columnas` y de `kpis` con `avisos: ["resultados_incompletos"]`; si
+      fallan los grupos, sale sin filtrar con `avisos: ["grupos_no_disponibles"]`. `avisos` siempre viene (vacío si
+      todo se leyó).
   - Racha: `GET /ingles/actividades` (alumno o alumna) agrega `racha: { dias, hoy }`, calculada con `calcularRacha`
     (`motor.ts`) sobre los `enviadoEn` de sus intentos, en fecha de CDMX. Cuenta días seguidos hasta hoy o, si hoy aún no
     entrega, hasta ayer. No hay ruta `/ingles/racha`: viaja con la lista para no gastar otra petición.
@@ -618,7 +622,8 @@ publica con `teoriaPublica` (sin `correcta`/`aceptadas` de su práctica).
   `fechaLimite` se acepta, pero se guarda con `fueraDeTiempo: true`.
 - Riesgo aceptado: las respuestas están en el repo público; ver el cambio `examen-diagnostico-a1`.
 
-Errores: `400 { error: "missing_email" }`, `500 { error: "upstream_error" }` (el detalle solo va al log).
+Errores: `400 { error: "missing_email" }`, `500 { error: "upstream_error" }` (el detalle va al log con la ruta; solo
+el admin lo recibe además en `detalle`, ≤ 200 caracteres; cambio `fix-ingles-admin`).
 Las filas **no** incluyen `userIds` ni `userEmails`; solo `userNames`. Las filas de Inglés incluyen además `calificacion`, `dificultad` y `editadoEn`. Los campos de cada fila están en
 `docs/data-model.md` y los tipos en `rows.ts`. Cambiar el contrato exige actualizar
 este documento y todas las páginas consumidoras en el mismo cambio.

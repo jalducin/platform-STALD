@@ -138,9 +138,12 @@ function pintarPanelProfe() {
   if (h) h.outerHTML = renderPanelProfe();
 }
 
-// Tarjetas por grupo con el avance de la semana (entregadas / que ya abrieron), del mismo resumen.
+// Tarjetas por grupo con el avance de la semana (entregadas / que ya abrieron), del mismo resumen. Sin resumen (falló
+// o aún carga) las tarjetas salen igual, con «—», para que «👁️ Ocultar del panel» siempre esté a la mano
+// (openspec: fix-ingles-admin). Con el interruptor, los grupos ocultos salen marcados con «Mostrar en el panel».
 function renderTarjetasGrupo(r) {
   if (!state.grupos) return '';
+  r = r && Array.isArray(r.filas) ? r : { filas: [], columnas: [], grupo: state.grupoFiltro ? { id: state.grupoFiltro } : null };
   const lista = gruposDelPanel().filter(g => !r.grupo || g.id === r.grupo.id);
   if (!lista.length) return '';
   const registro = Array.isArray(state.alumnosAdmin) ? state.alumnosAdmin.filter(x => !x.baja) : [];
@@ -163,15 +166,32 @@ function tarjetaGrupo(r, g, n) {
   const personas = n === 1 ? '1 alumno o alumna' : n + ' alumnos y alumnas';
   const ver = r.grupo ? '<button type="button" class="btn ghost" data-action="ver-grupo" data-id="">👥 Ver todos</button>'
     : '<button type="button" class="btn ghost" data-action="ver-grupo" data-id="' + escapeHtml(g.id) + '">🔍 Ver grupo</button>';
+  // Mismo botón y misma acción que en «👥 Grupos» (admin.js, ocultarGrupo; openspec: ingles-ocultar-grupos, fix-ingles-admin).
+  const ocultar = '<button type="button" class="btn ghost" data-action="ocultar-grupo" data-id="' + escapeHtml(g.id) + '" data-oculto="' + (g.ocultoAdmin ? '0' : '1') + '">' + (g.ocultoAdmin ? '👁️ Mostrar en el panel' : '👁️ Ocultar del panel') + '</button>';
   const atrasos = a.atrasos === 1 ? '⏰ 1 entrega atrasada' : '⏰ ' + a.atrasos + ' entregas atrasadas';
   return '<article class="pp-grupo' + (r.grupo ? ' actual' : '') + '" data-grupo-id="' + escapeHtml(g.id) + '" style="--gc:' + escapeHtml(g.color) + '">' +
-    '<div class="pp-grupo-top"><h4>' + escapeHtml(g.nombre) + '</h4>' + (g.nivel ? '<span class="chip">' + escapeHtml(g.nivel) + '</span>' : '') + '</div>' +
+    '<div class="pp-grupo-top"><h4>' + escapeHtml(g.nombre) + '</h4>' + (g.nivel ? '<span class="chip">' + escapeHtml(g.nivel) + '</span>' : '') + (g.ocultoAdmin ? '<span class="chip" data-oculto>🙈 oculto del panel</span>' : '') + '</div>' +
     '<p class="pp-grupo-meta">' + (g.horario ? '🗓️ ' + escapeHtml(g.horario) + ' · ' : '') + '👤 ' + personas + '</p>' +
     '<div class="pp-grupo-avance"><span>Entregas de la semana</span><b>' + (a.total ? a.hechas + '/' + a.total + ' · ' + a.pct + ' %' : '—') + '</b></div>' +
     '<div class="rpg-xp-barra" role="progressbar" aria-label="Entregas de la semana de ' + escapeHtml(g.nombre) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + a.pct + '"><span style="width:' + a.pct + '%"></span></div>' +
     (a.atrasos ? '<p class="pp-grupo-meta">' + atrasos + '</p>' : '') +
-    '<div class="pp-grupo-acc">' + ver + (g.meet_url ? '<a class="btn ghost" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') + '</div></article>';
+    '<div class="pp-grupo-acc">' + ver + (g.meet_url ? '<a class="btn ghost" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') + ocultar + '</div></article>';
 }
+// Lecturas que fallaron en el servidor: el resumen llega incompleto en lugar de caerse (openspec: fix-ingles-admin).
+const TEXTO_AVISO = {
+  resultados_incompletos: 'No se pudieron leer las entregas de alguna actividad; no sale en el mapa. Recarga en un momento.',
+  grupos_no_disponibles: 'No se pudieron leer los grupos; el resumen sale sin filtrar por grupo.',
+};
+function avisosResumen(r) {
+  const a = (r && r.avisos) || [];
+  return a.length ? '<div class="card" id="resumen-avisos" role="status" style="margin-top:12px">⚠️ ' + a.map(x => escapeHtml(TEXTO_AVISO[x] || x)).join('<br>⚠️ ') + '</div>' : '';
+}
+// «🔄 Reintentar» del aviso de error del resumen.
+contentEl.addEventListener('click', e => {
+  if (!e.target.closest('[data-action="reintentar-resumen"]')) return;
+  e.preventDefault();
+  state.resumen = null; render(state.data); void cargarResumen();
+});
 // «🔍 Ver grupo»: el mismo filtro que el selector «👥 Grupo».
 contentEl.addEventListener('click', e => {
   const b = e.target.closest('[data-action="ver-grupo"]');
@@ -197,7 +217,7 @@ async function cargarResumen() {
   try { r = await api(API_BASE + '/ingles/resumen?email=' + encodeURIComponent(state.email) + q); } catch (e) { r = { ok: false, body: { error: e.message } }; }
   if (state.cargandoResumen !== clave) return; // llegó otra petición después (cambio de grupo)
   state.cargandoResumen = null;
-  state.resumen = r.ok ? r.body : { error: r.body.error || r.status };
+  state.resumen = r.ok ? r.body : { error: r.body.error || r.status, ...(r.body.detalle ? { detalle: r.body.detalle } : {}) };
   const t = document.getElementById('tablero');
   if (t) t.innerHTML = renderTablero();
   pintarPanelProfe(); // «En riesgo» sale del mismo resumen
@@ -217,8 +237,10 @@ function claseCelda(c) {
 }
 function renderTablero() {
   const r = state.resumen;
-  if (!r) return esqueleto();
-  if (r.error) return '<div class="card error">No se pudo cargar el resumen (' + escapeHtml(r.error) + ').</div>';
+  if (!r) return esqueleto() + renderTarjetasGrupo(null); // las tarjetas (y «Ocultar del panel») no esperan al resumen
+  // Si el resumen falla, el aviso trae «Reintentar» y las tarjetas de grupo siguen (openspec: fix-ingles-admin).
+  if (r.error) return '<div class="card error" id="resumen-error" role="alert">No se pudo cargar el resumen (' + escapeHtml(r.error) + (r.detalle ? ': ' + escapeHtml(r.detalle) : '') + '). ' +
+    '<button type="button" class="btn ghost" data-action="reintentar-resumen">🔄 Reintentar</button></div>' + renderTarjetasGrupo(null);
   const k = r.kpis;
   const kpi = (cls, valor, texto) => '<div class="kpi ' + cls + '"><b>' + valor + '</b><span>' + texto + '</span></div>';
   let tonoATiempo = '';
@@ -231,7 +253,7 @@ function renderTablero() {
     kpi(k.atrasos ? 'bad' : 'ok', k.atrasos, '⏰ Atrasos') +
     kpi(k.sinEntregas.length ? 'warn' : 'ok', k.sinEntregas.length, '😴 Sin entregas') + '</div>' +
     (k.sinEntregas.length ? '<div class="sin-entregas">😴 Sin entregas esta semana: ' + k.sinEntregas.map(n => '<button type="button" class="btn ghost sm" data-action="cajon" data-alumno="' + escapeHtml(n) + '">' + escapeHtml(n) + '</button>').join(' ') + '</div>' : '');
-  const grupos = renderTarjetasGrupo(r);
+  const grupos = renderTarjetasGrupo(r) + avisosResumen(r);
   if (!r.columnas.length || !r.filas.length) return cab + kpis + grupos + '<div class="card" style="margin-top:12px">' + vacio('🗓️', r.filas.length ? 'Esta semana no tiene actividades con entrega.' : 'No hay alumnos ni alumnas en este grupo.') + '</div>';
   const th = r.columnas.map(c => '<th scope="col" title="' + escapeHtml(c.titulo) + '"><span aria-hidden="true">' + icono(c.tipo) + '</span><br>' + escapeHtml(fechaCorta(c.fechaLimite)) + '<span class="sr-only"> ' + escapeHtml(c.titulo) + '</span></th>').join('');
   const filas = r.filas.map(f => '<tr data-alumno="' + escapeHtml(f.alumno) + '"><td class="alumno"><button type="button" data-action="cajon" data-alumno="' + escapeHtml(f.alumno) + '">' + escapeHtml(f.alumno) + '</button></td>' +
