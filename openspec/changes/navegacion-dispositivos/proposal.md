@@ -13,6 +13,9 @@ La auditoría (Playwright, 5 tamaños: 360×740 con toque, 768×1024 y 1024×768
 - **Objetivos táctiles < 44 px:** «← Inicio» y «🎮 Juegos» de Inglés (32 px), «Abrir en YouTube ↗» de la clase
   (35 px), el nombre del alumno en el mapa de calor (43 px de ancho), la casilla del aviso de Juegos en tablet (24 px)
   y el «✕» de los juegos (34 px de ancho). `.btn.sm` medía 36 px en tablets de 720 px o más.
+- **Entregas que no cargan (sin Postgres):** el panel pide la bandeja para «📥 Por revisar» y, si la sección
+  «📥 Entregas» ya se había dibujado con el esqueleto, nadie la repintaba: se quedaba cargando para siempre.
+- **Selector de alumna del profe:** con `replaceState`, las entradas del historial perdían su `?alumna=`.
 - **Elementos tapados:** en tablet vertical, «Siguiente misión» quedaba debajo de la barra fija del examen al llegar a él.
 - **Columna de celular estirada en PC:** Inglés (alumnos y alumnas) y Secundaria en 760 px y Juegos en 720 px, también
   en 1920 px (40 % y 38 % de la ventana); las 7 pestañas de Secundaria se partían en dos filas.
@@ -24,7 +27,11 @@ responden 200 y GitHub Pages los sirve con `max-age=600`.
 
 - **Secundaria (`ingles/secundaria.js`, `ingles/app.js`):** tocar una pestaña agrega una entrada al historial
   (`pushState`); «Atrás» regresa a la pestaña anterior (`hashchange` → `irPestanaSec(…, 'nada')`). Las flechas del
-  teclado siguen reemplazando la entrada (no llenan el historial).
+  teclado siguen reemplazando la entrada (no llenan el historial). Sin hash = Inicio. «⚔️ Continuar misión», «Ver la
+  retroalimentación» y «Ver misión» también agregan su entrada. El selector de alumna del profe navega
+  (`location.assign`) para que cada entrada conserve su `?alumna=`.
+- **Entregas (`ingles/rpg-ingles.js`, `ingles/tablero.js`, `ingles/app.js`):** `pintarEntregasPendientes()` pinta la
+  bandeja si llegó cuando la sección aún mostraba el esqueleto (no toca una evaluación a medias).
 - **Objetivos de 44 px:** `.home-link` y `a.link` de Inglés, botón del alumno en el mapa de calor, `.check` y `.btn.sm`
   de Juegos, y `.btn.sm` en cualquier pantalla táctil (`pointer: coarse`).
 - **Nada tapado:** `html { scroll-padding-bottom: 96px }` en Inglés y Secundaria: al enfocar o desplazarse a un
@@ -47,7 +54,8 @@ responden 200 y GitHub Pages los sirve con `max-age=600`.
 
 ## Impact
 
-- `ingles/secundaria.js`, `ingles/app.js`, `ingles/ingles.css`, `ingles/secundaria.css`, `estilos/stald.css`,
+- `ingles/secundaria.js`, `ingles/secundaria-inicio.js`, `ingles/secundaria-misiones.js`, `ingles/rpg-ingles.js`,
+  `ingles/tablero.js`, `ingles/app.js`, `ingles/ingles.css`, `ingles/secundaria.css`, `estilos/stald.css`,
   `juegos/app/juegos.css`, `ingles.html` y `juegos.html` (`?v=`).
 - `tests/e2e/e2e-navegacion-dispositivos.js` (nueva) y `tests/e2e/correr.sh`; `docs/pruebas.md`,
   `docs/frontend-standards.md`.

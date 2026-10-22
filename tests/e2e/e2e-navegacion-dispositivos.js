@@ -39,7 +39,7 @@ const DISPOSITIVOS = [
 const TOPE_TOQUES = {
   'sec-clase': 4, // tarjeta Secundaria → la clase de hoy → Enviar → Siguiente misión (o «Ver resultado» en vez de abrir y enviar)
   'sec-secciones': 3, // Mi horario, Mis materias, Misiones (una por pestaña)
-  'ingles-actividad': 3, // tarjeta Inglés → la actividad → Enviar
+  'ingles-actividad': 4, // tarjeta Inglés → la actividad (en «Para hoy» o, si no está, «Semana» →) → Enviar
   'ingles-material': 2, // Material → Ver PDF
   'juegos-invitado': 6, // «Solo vengo a jugar» → aviso → Entrar → categoría → juego → «Volver»
   'profe-grupos': 7, // Ver grupo → Ver todos → Ocultar → Mostrar → (☰ Más →) Entregas → Guardar evaluación (no cuenta)
@@ -85,7 +85,14 @@ const anchoUtil = p => p.evaluate(() => {
 function medidor(p, disp, tarea) {
   const m = { toques: 0, pantallas: [], peticiones: 0, errores: [], scrollH: [], chicos: new Set(), tapados: [], t: Date.now() };
   p.on('request', r => { if (r.url().startsWith(API)) m.peticiones++; });
-  p.on('console', x => { if (x.type() === 'error' && !/favicon/.test(x.text())) m.errores.push(x.text().slice(0, 160)); });
+  // Sin Postgres de prueba, /ingles/grupos responde 503 `sin_base` a propósito (como en la E2E ingles-admin): se excusa.
+  let sinBase = 0;
+  p.on('response', r => { if (r.status() === 503 && /\/ingles\/grupos(\?|$)/.test(r.url())) sinBase++; });
+  p.on('console', x => {
+    if (x.type() !== 'error' || /favicon/.test(x.text())) return;
+    if (sinBase > 0 && /status of 503/.test(x.text())) { sinBase--; return; }
+    m.errores.push(x.text().slice(0, 160));
+  });
   p.on('pageerror', e => m.errores.push('JS: ' + e.message.slice(0, 160)));
   m.ir = async ruta => { m.t = Date.now(); await p.goto(urlDe(ruta)); };
   // Toca (o hace clic en) el primer elemento visible de `sel`; revisa antes que no esté tapado ni fuera de pantalla.
@@ -131,7 +138,13 @@ async function formasDeVolver(p) {
   });
 }
 // Atrás del navegador: debe quedarse en la plataforma y mostrar algo (no una página en blanco ni un error).
+// `esperado` puede ser una lista: un «atrás» por elemento, en orden (p. ej. pestaña por pestaña).
 async function probarAtras(p, esperado) {
+  if (Array.isArray(esperado)) {
+    let r = { ok: true, a: '' };
+    for (const e of esperado) { const x = await probarAtras(p, e); r = { ok: r.ok && x.ok, a: (r.a ? r.a + ' → ' : '') + x.a }; if (!x.ok) break; }
+    return r;
+  }
   const antes = p.url();
   await p.goBack({ timeout: 15000 }).catch(() => null);
   await sleep(800);
@@ -196,7 +209,7 @@ const TAREAS = [
       for (const [tab, nombre] of [['horario', 'Mi horario'], ['materias', 'Mis materias'], ['misiones', 'Misiones']]) {
         await m.toca('.sec-tabs [data-sec-tab="' + tab + '"]'); await m.listo('#sec-' + tab + ':not([hidden])', nombre);
       }
-      return { atras: '#sec-materias:not([hidden]), #sec-inicio:not([hidden]), #sec-horario:not([hidden])' };
+      return { atras: ['#sec-materias:not([hidden])', '#sec-horario:not([hidden])', '#sec-inicio:not([hidden])'] }; // pestaña por pestaña hasta Inicio
     },
   },
   {
@@ -215,7 +228,7 @@ const TAREAS = [
     },
     async correr(p, m, d, ctx) {
       const id = ctx.inglesItems.shift();
-      if (!id) throw new Error('no queda una actividad de opción múltiple disponible para Marisol');
+      if (!id) { const e = new Error('no quedan actividades de opción múltiple disponibles para Marisol en la copia (con --hoy 2026-10-27 alcanzan)'); e.omitir = true; throw e; }
       await m.ir('/'); await m.listo('#tiles a[data-espacio="ingles"]', 'portal');
       await m.toca('#tiles a[data-espacio="ingles"]'); await m.listo('#app [data-action="abrir-item"]', 'Inglés · Inicio');
       // La actividad puede estar en «Para hoy» (Inicio) o solo en «Semana»: si no se ve en Inicio, se va a Semana.
@@ -250,6 +263,7 @@ const TAREAS = [
       await m.toca('#reg-entrar'); await m.listo(MENU, 'Juegos · categorías');
       await m.toca('[data-categoria="ingles"]'); await m.listo('.game[data-juego="en-vocab"]', 'categoría Inglés');
       await m.toca('.game[data-juego="en-vocab"]'); await m.listo('.opt', 'juego');
+      m.anchoJuego = await p.evaluate(() => Math.round(document.querySelector('.wrap').getBoundingClientRect().width)); // dentro del juego no cambia
       const t0 = Date.now();
       while (!(await p.$('.result .score')) && Date.now() - t0 < 60000) { const o = await p.$('.opt:not(.ok):not(.bad)'); if (o) await o.click().catch(() => {}); await sleep(120); }
       m.t = Date.now(); await m.listo('.result .score', 'resultado del juego');
@@ -266,6 +280,8 @@ const TAREAS = [
         if (r.status === 200) ctx.entregas++;
       }
     },
+    // Si la tarea falla entre «Ocultar» y «Mostrar», el grupo vuelve a mostrarse (la copia queda como estaba).
+    async despues(ctx) { if (ctx.conGrupos) await api('/ingles/grupos/ocultar', 'admin@example.com', { grupo: 'grupo-1', oculto: false }); },
     async correr(p, m, d, ctx) {
       await m.ir('/ingles.html'); await m.listo('#panel-profe', 'panel del profe');
       if (ctx.conGrupos) {
@@ -336,7 +352,9 @@ const TAREAS = [
       const m = medidor(p, d, t.id);
       const t0 = Date.now();
       let error = null, res = {};
-      try { res = await t.correr(p, m, d, ctx) || {}; } catch (e) { error = e.message.split('\n')[0].slice(0, 200); }
+      let omitir = false;
+      try { res = await t.correr(p, m, d, ctx) || {}; } catch (e) { error = e.message.split('\n')[0].slice(0, 200); omitir = !!e.omitir; } finally { if (t.despues) await t.despues(ctx).catch(() => {}); }
+      if (omitir) { omit(`${t.id} (${d.id})`, error); await p.context().close(); continue; }
       const total = Date.now() - t0;
       const volver = error ? {} : await formasDeVolver(p);
       await p.screenshot({ path: `nav-${t.id}-${d.id}.png` }).catch(() => {});
@@ -349,11 +367,12 @@ const TAREAS = [
       ok(nombre + ': sin errores de consola ni JS', !fila.errores.length, fila.errores.slice(0, 3).join(' | '));
       ok(nombre + ': sin scroll horizontal', !fila.scrollH.length, fila.scrollH.join(', '));
       ok(nombre + ': nada tapado ni fuera de pantalla al tocar', !fila.tapados.length, fila.tapados.join(' | '));
-      if (d.id === 'celular') ok(nombre + ': objetivos táctiles ≥ 44 px', MEDIR || !fila.chicos.length, fila.chicos.length + ' chicos: ' + fila.chicos.slice(0, 6).join(' | '));
+      if (d.toque) ok(nombre + ': objetivos táctiles ≥ 44 px', MEDIR || !fila.chicos.length, fila.chicos.length + ' chicos: ' + fila.chicos.slice(0, 6).join(' | '));
       if (!MEDIR) ok(nombre + `: ${fila.toques} toques ≤ ${TOPE_TOQUES[t.id]}`, fila.toques <= TOPE_TOQUES[t.id]);
       if (!MEDIR) ok(nombre + `: cada pantalla usable en < ${TOPE_MS} ms`, fila.maxMs < TOPE_MS, fila.pantallas.map(x => x.nombre + ' ' + x.ms).join(', '));
       ok(nombre + ': hay forma de volver (Inicio, barra o «← Volver»)', fila.volver.inicio || fila.volver.barra || fila.volver.volver, JSON.stringify(fila.volver));
       ok(nombre + ': atrás del navegador se queda en la plataforma', fila.atras.ok, fila.atras.a);
+      if (m.anchoJuego) ok(nombre + ': dentro del juego la columna sigue en 720 px o menos', m.anchoJuego <= 720, String(m.anchoJuego));
       if (fila.pdf) ok(nombre + ': el PDF abre en otra pestaña y responde 200', fila.pdf.abre && fila.pdf.status === 200 && /pdf/.test(fila.pdf.tipo), JSON.stringify(fila.pdf));
       await p.context().close();
     }
@@ -401,9 +420,11 @@ const TAREAS = [
     // Pestañas de Secundaria con flechas (role=tablist) y Enter
     const tabs = await p.$('.sec-tabs [aria-selected="true"]');
     if (tabs) {
+      const largo = await p.evaluate(() => history.length);
       await tabs.focus(); await p.keyboard.press('ArrowRight');
       const sig = await p.evaluate(() => document.activeElement && document.activeElement.dataset.secTab);
       ok('teclado (Secundaria): la flecha → mueve a la siguiente pestaña', !!sig && sig !== 'inicio', String(sig));
+      ok('teclado (Secundaria): las flechas no agregan entradas al historial', await p.evaluate(() => history.length) === largo);
     }
     await p.context().close();
     // Inglés: Tab por la navegación con foco visible
@@ -422,6 +443,7 @@ const TAREAS = [
   if (!SOLO || SOLO.includes('enlaces')) {
     const ENLACES = [
       { n: '?modo=secundaria (alumna)', email: 'valeria@example.com', ruta: '/ingles.html?modo=secundaria', sel: '#sec-inicio' },
+      { n: 'secundaria.html#horario (alumna)', email: 'valeria@example.com', ruta: '/secundaria.html#horario', sel: '#sec-horario:not([hidden])' },
       { n: 'secundaria.html#misiones (alumna)', email: 'valeria@example.com', ruta: '/secundaria.html#misiones', sel: '#sec-misiones:not([hidden])' },
       { n: '?modo=profe (admin)', email: 'admin@example.com', ruta: '/ingles.html?modo=profe', sel: '.pf-hero' },
       { n: 'ingles.html#material (alumna)', email: 'marisol@example.com', ruta: '/ingles.html#material', sel: '[data-seccion="material"]:not([hidden])' },
@@ -438,7 +460,7 @@ const TAREAS = [
   await b.close();
 
   // ---------- Tabla ----------
-  const marca = f => f.error ? '❌' : (f.errores.length || f.scrollH.length || f.tapados.length || !f.atras.ok || (f.disp === 'celular' && f.chicos.length) || f.toques > TOPE_TOQUES[f.tarea]) ? '⚠️' : '✅';
+  const marca = f => f.error ? '❌' : (f.errores.length || f.scrollH.length || f.tapados.length || !f.atras.ok || f.chicos.length || f.toques > TOPE_TOQUES[f.tarea]) ? '⚠️' : '✅';
   const lineas = ['| Tarea | Dispositivo | Toques | Pantalla más lenta (ms) | Total (ms) | Peticiones | Errores | Scroll H | < 44 px | Tapados | Volver (Inicio/barra/←) | Atrás | Estado |', '|---|---|---:|---:|---:|---:|---:|---|---:|---:|---|---|---|'];
   for (const f of filas) lineas.push(`| ${f.tarea} | ${f.disp} | ${f.toques} | ${f.maxMs} | ${f.total} | ${f.peticiones} | ${f.errores.length} | ${f.scrollH.length ? 'sí' : 'no'} | ${f.chicos.length} | ${f.tapados.length} | ${f.volver.inicio ? 'I' : '-'}/${f.volver.barra ? 'B' : '-'}/${f.volver.volver ? '←' : '-'} | ${f.atras.ok ? '✅' : '❌'} ${f.atras.a} | ${marca(f)}${f.error ? ' ' + f.error : ''} |`);
   lineas.push('', '| Página | Dispositivo | Ancho útil | Ventana | % |', '|---|---|---:|---:|---:|');

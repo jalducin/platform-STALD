@@ -150,9 +150,10 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   «Siguiente misión», pestañas de Secundaria, actividad de Inglés, Material → PDF, invitado de Juegos (entrar, jugar y
   volver), panel del profe (ver grupo, ocultar/mostrar «Grupo 1», Entregas y evaluar), Secundaria del profe (alumna y
   Resultados) y Mi ruta → clase. Por tarea y tamaño mide toques de navegación, tiempo de cada pantalla, peticiones,
-  errores de consola, scroll horizontal, objetivos < 44 px (con toque), elementos tapados, formas de volver y el atrás
+  errores de consola (sin Postgres se excusa el 503 `sin_base` de `/ingles/grupos`), scroll horizontal, objetivos
+  < 44 px (con toque), elementos tapados, formas de volver y el atrás
   del navegador; además el ancho en tablet y PC, el teclado en PC y 7 enlaces profundos. Falla ante scroll, objetivos
-  chicos en celular, errores, tapados, más toques que `TOPE_TOQUES`, pantallas de más de 8 s, atrás que sale de la
+  chicos en celular o tablet, errores, tapados, más toques que `TOPE_TOQUES`, pantallas de más de 8 s, atrás que sale de la
   plataforma o foco invisible. Escribe `salida/navegacion-dispositivos.md` (tabla) y capturas `nav-*.png`. `MEDIR=1`
   solo mide (línea base); `NAV_SOLO` y `NAV_DISP` acotan. La clase de Secundaria necesita `--hoy 2026-10-27` (si no,
   esa tarea sale `OMIT`) y se envía una sola vez (en los demás tamaños abre su resultado); ocultar/mostrar el grupo

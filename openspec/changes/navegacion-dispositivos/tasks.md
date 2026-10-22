@@ -17,6 +17,11 @@
 - [x] 2.3 `scroll-padding-bottom` para que las barras fijas no tapen lo enfocado (`ingles/ingles.css`)
 - [x] 2.4 Diseño ancho: Inglés (alumnos y alumnas) con menú lateral ≥ 1100 px, Secundaria a 1100 px, hub de Juegos a
   1080 px con más columnas ≥ 1200 px (`ingles/ingles.css`, `ingles/secundaria.css`, `juegos/app/juegos.css`)
+- [x] 2.6 Hallazgos de la revisión y de la suite: «Atrás» sin hash vuelve a Inicio; accesos a Misiones con
+  `'agregar'`; selector de alumna con `location.assign`; Entregas repintada si llegó tras el esqueleto
+  (`pintarEntregasPendientes`); E2E: 44 px en toda pantalla táctil, «atrás» pestaña por pestaña, flechas sin historial,
+  `#horario`, columna del juego, «Grupo 1» visible aunque falle, 503 `sin_base` excusado y OMIT si se acaban las
+  actividades de la copia
 - [x] 2.5 `?v=` de los archivos cambiados en `ingles.html` y `juegos.html`
 
 ## 3. Verificación (OBLIGATORIO)
