@@ -268,14 +268,74 @@ function pantallaHub(tab) {
       const [id, t] = x.split(':');
       return '<button class="tab" role="tab" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + t + '</button>';
     }).join('') + '</div>';
-  app.innerHTML = '<h1>🎮 Juegos</h1><p class="lead">Aprende jugando y suma puntos para el ranking de la semana.</p>' +
-    '<div class="row-btns" style="margin:-6px 0 12px"><button class="btn ghost" type="button" id="registrar-btn" data-a="registrar">🆕 Registrar</button></div>' +
-    tabs + '<div id="tab-body"></div>';
+  app.innerHTML = htmlHeroe() + tabs + '<div id="tab-body"></div>'; // juegos-diseno-rpg: encabezado del jugador
   if (state.tab === 'ranking') return pintarRanking();
   if (state.tab === 'partidas') return pintarPartidas();
   if (state.tab === 'admin') return pintarAdmin();
   pintarMenuJuegos(categoriaInicial());
 }
+
+// ---------- Entrada estilo RPG (openspec: juegos-diseno-rpg) ----------
+// Encabezado del jugador con datos de /juegos/yo (avatar, nick, ⭐ individuales, 👥 partidas y lugar de la semana).
+// Juegos no tiene nivel ni XP: no se inventan. Tokens y componentes rpg- de estilos/ui.css.
+function htmlHeroe() {
+  const j = state.jugador || {};
+  const dato = (ico, t, v, id) => '<div class="rpg-dato" id="' + id + '"><span class="rpg-dato-ico" aria-hidden="true">' + ico + '</span><div><div class="rpg-dato-t">' + t + '</div><div class="rpg-dato-v rpg-num">' + v + '</div></div></div>';
+  return '<section id="jg-heroe" class="jg-heroe" aria-labelledby="jg-hola">' +
+    '<div class="jg-heroe-top">' + (j.avatar ? avatarHtml(j.avatar, 56) : '<span class="av jg-av-vacio" aria-hidden="true">🎮</span>') +
+    '<div class="jg-heroe-txt"><span class="rpg-etiqueta">🎮 Juegos</span><h1 id="jg-hola" class="jg-hola">¡Hola, ' + escapeHtml(j.nombre || 'jugador') + '!</h1>' +
+    '<p class="jg-lead">Aprende jugando y suma puntos para el ranking de la semana.</p></div></div>' +
+    '<div class="jg-stats">' + dato('⭐', 'Individuales', fmt(state.totalIndividual), 'jg-pts-ind') + dato('👥', 'Partidas', fmt(state.totalPartidas), 'jg-pts-par') +
+    dato('🏅', 'Tu lugar', state.pos ? '#' + state.pos : '—', 'jg-lugar') + '</div>' +
+    '<div class="jg-heroe-acc"><button class="btn ghost" type="button" data-heroe="avatar">🎨 Mi avatar</button>' +
+    '<button class="btn ghost" type="button" id="registrar-btn" data-a="registrar">🆕 Registrar</button></div></section>';
+}
+
+// Tarjeta de las secciones del hub («Para ti» y «Copas»): no es `.game[data-juego]` (esa clase es solo de la lista de
+// una categoría); el botón «▶ Jugar» lleva `data-jugar`.
+function tarjetaSeccion(j, extra) {
+  const c = CATEGORIAS.find(x => x.id === j.cat) || { clase: '', emoji: '🎮', nombre: '' };
+  return '<li class="jg-tarjeta ' + c.clase + '" data-jg="' + escapeHtml(j.id) + '"><span class="jg-ico" aria-hidden="true">' + icoJuego(j) + '</span>' +
+    '<div class="jg-tarjeta-txt"><span class="jg-cat">' + c.emoji + ' ' + escapeHtml(c.nombre) + '</span><b class="jg-tarjeta-t">' + escapeHtml(j.t) + '</b>' + (extra || '') + '</div>' +
+    '<button type="button" class="btn jg-jugar-btn" data-jugar="' + escapeHtml(j.id) + '" aria-label="Jugar ' + escapeHtml(j.t) + '">▶ Jugar</button></li>';
+}
+
+// «⭐ Para ti»: hasta 3 juegos con tu mejor puntaje de la semana (state.mejores), de mayor a menor.
+function htmlParaTi() {
+  const top = Object.entries(state.mejores || {}).filter(([id, n]) => n > 0 && JUEGOS.some(j => j.id === id))
+    .sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const cuerpo = top.length
+    ? '<ul class="jg-lista">' + top.map(([id, n]) => tarjetaSeccion(juegoPorId(id), '<span class="rpg-xp-chip">⭐ ' + fmt(n) + '</span>')).join('') + '</ul>'
+    : '<div class="jg-vacio"><span class="jg-vacio-e" aria-hidden="true">🌱</span><b>Aún no juegas esta semana</b><span>Elige una categoría y estrena tu puntaje. Aquí verás tus favoritos.</span></div>';
+  return '<section class="jg-seccion" data-seccion="para-ti" aria-labelledby="jg-para-ti"><h2 id="jg-para-ti">⭐ Para ti</h2>' + cuerpo + '</section>';
+}
+
+// «👥 En vivo · Salas»: no hay lista de salas abiertas en el servidor; lleva a la pestaña Partidas (data-ir-tab).
+function htmlEnVivo() {
+  return '<section class="jg-seccion" data-seccion="en-vivo" aria-labelledby="jg-en-vivo"><h2 id="jg-en-vivo">👥 En vivo · Salas</h2>' +
+    '<div class="jg-panel"><p>Juega al mismo tiempo con tus compañeros y compañeras: crea una sala y comparte el código, o únete con el código de alguien más.</p>' +
+    '<div class="jg-acciones"><button type="button" class="btn" data-ir-tab="partidas" data-foco="p-juego">➕ Crear partida</button><button type="button" class="btn ghost" data-ir-tab="partidas" data-foco="p-codigo">🔑 Unirme con código</button></div></div></section>';
+}
+
+// «🏆 Copas»: los juegos que tienen copas.
+const JUEGOS_COPA = [['karts', 'Copas de 4 pistas contra 7 rivales.'], ['futbol', 'Liga, copa y torneos con amigos.']];
+function htmlCopas() {
+  const js = JUEGOS_COPA.filter(([id]) => JUEGOS.some(j => j.id === id));
+  if (!js.length) return '';
+  return '<section class="jg-seccion" data-seccion="copas" aria-labelledby="jg-copas"><h2 id="jg-copas">🏆 Copas</h2><ul class="jg-lista">' +
+    js.map(([id, d]) => tarjetaSeccion(juegoPorId(id), '<span class="jg-tarjeta-d">' + escapeHtml(d) + '</span>')).join('') + '</ul></section>';
+}
+
+// Clics del hub RPG: «🎨 Mi avatar» y «👥 En vivo · Salas», que cambia de pestaña. No usa data-tab porque las E2E
+// tocan la pestaña con ese selector; los demás clics los atiende juegos/app/arranque.js.
+app.addEventListener('click', e => {
+  if (e.target.closest('[data-heroe="avatar"]')) return pantallaAvatar();
+  const it = e.target.closest('[data-ir-tab]'); if (!it) return;
+  const foco = it.dataset.foco;
+  limpiar(); olvidarRevancha(); pantallaHub(it.dataset.irTab);
+  const f = foco && document.getElementById(foco);
+  if (f) { f.scrollIntoView({ block: 'center' }); f.focus({ preventScroll: true }); }
+});
 
 // ---------- Navegación por categorías (openspec: juegos-categorias) ----------
 // 🎮 Juegos abre en las tarjetas de categoría; al tocar una se ven solo sus juegos. `#menu-juegos[data-menu]` vale
@@ -324,7 +384,8 @@ function tarjetaJuego(j, c) {
   const best = state.mejores[j.id];
   return '<button class="game ' + c.clase + '" data-juego="' + j.id + '"><span class="ico" aria-hidden="true">' + icoJuego(j) + '</span>' +
     '<span class="t">' + escapeHtml(j.t) + '</span><span class="d">' + escapeHtml(j.d) + '</span>' +
-    (best ? '<span class="best" title="Tu mejor de la semana">⭐ ' + fmt(best) + '</span>' : '') + '</button>';
+    (best ? '<span class="best" title="Tu mejor de la semana">⭐ ' + fmt(best) + '</span>' : '') +
+    '<span class="jg-pildora" aria-hidden="true">▶ Jugar</span></button>'; // juegos-diseno-rpg
 }
 
 function htmlCategorias() {
@@ -352,7 +413,7 @@ function pintarMenuJuegos(id, foco) {
   const body = document.getElementById('tab-body'); if (!body) return;
   id = catValida(id) ? id : null;
   recordarCategoria(id); marcarHistorial(id);
-  body.innerHTML = id ? htmlCategoria(id) : htmlCategorias();
+  body.innerHTML = id ? htmlCategoria(id) : htmlParaTi() + htmlCategorias() + htmlEnVivo() + htmlCopas(); // juegos-diseno-rpg: secciones del hub
   if (!foco) return;
   const sec = document.getElementById('menu-juegos'), h = document.getElementById('menu-titulo');
   if (sec.getBoundingClientRect().top < 0) sec.scrollIntoView({ block: 'start' });
