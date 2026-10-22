@@ -159,7 +159,12 @@ levantar() { # $1 = fase
     STALD_TABLAS=stald_test_ LOGIN_TRANSICION_HASTA="$hasta" HOY_FIJO="$HOY" NOTION_TOKEN= GITHUB_TOKEN= \
     "${DENO[@]}" run -A server/main.ts) > "$SALIDA/servidor-$fase.log" 2>&1 &
   PIDS+=($!)
-  "$PY" -m http.server "$PUERTO_WEB" --bind 127.0.0.1 --directory "$(nativo "$RAIZ")" > "$SALIDA/estaticos.log" 2>&1 &
+  # http.server con cola de conexiones de 128 (la de omisión es 5): con 4 páginas abriendo a la vez (revancha), Windows
+  # rechazaba conexiones y algunos scripts no llegaban (openspec: juegos-diseno-rpg).
+  "$PY" -c 'import functools, http.server as h, sys
+class S(h.ThreadingHTTPServer): request_queue_size = 128
+S(("127.0.0.1", int(sys.argv[1])), functools.partial(h.SimpleHTTPRequestHandler, directory=sys.argv[2])).serve_forever()' \
+    "$PUERTO_WEB" "$(nativo "$RAIZ")" > "$SALIDA/estaticos.log" 2>&1 &
   PIDS+=($!)
   esperar "$API/salud" "el servidor" && esperar "$BASE/index.html" "los estáticos"
 }
