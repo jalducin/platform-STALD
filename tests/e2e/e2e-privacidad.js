@@ -33,7 +33,7 @@ async function abrir(b, ruta, { modo = null, oscuro = false, esperar = null } = 
 
   // --- Servidor: la ruta pública responde apagado por omisión ---
   const r = await fetch(process.env.API + '/interruptores');
-  ok('servidor: GET /interruptores sin sesión → 200 { privacidad: false }', r.status === 200 && JSON.stringify(await r.json()) === '{"privacidad":false}', String(r.status));
+  ok('servidor: GET /interruptores sin sesión → 200 { privacidad: false, ranking: false }', r.status === 200 && JSON.stringify(await r.json()) === '{"privacidad":false,"ranking":false}', String(r.status));
 
   // --- Apagado: nada visible ---
   for (const [ruta, esperar] of [['/index.html', '#login:not([hidden]), #home:not([hidden])'], ['/ingles.html', null], ['/juegos.html', null]]) {
