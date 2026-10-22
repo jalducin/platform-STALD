@@ -30,7 +30,9 @@ Secundaria están en `comun/secundaria-datos.js` (`SecundariaDatos`, probadas en
 3. **Barra de Secundaria aparte de la fila de pestañas.** En celular se oculta `.sec-tabs` (sigue en el DOM con su
    `aria-selected`, así los enlaces profundos y el teclado no cambian) y se muestra `<nav class="sec-barra">` con botones
    `data-sec-tab` y `aria-current`. «☰ Más» abre `#sec-mas` (botones de las demás pestañas); se cierra al elegir, al
-   tocar fuera o con Escape. Al cambiar de pestaña desde la barra la página sube al inicio (como Inglés). Alternativa
+   tocar fuera o con Escape (si el foco estaba dentro, vuelve a «☰ Más»). Al cambiar de pestaña desde la barra la página
+   sube al inicio (como Inglés) y el foco queda en su botón de la barra (o en «☰ Más» si la pestaña vive ahí); desde un
+   acceso del Inicio en celular, igual. Alternativa
    descartada: convertir la fila de pestañas en barra fija con CSS (un `role=tablist` no debe contener el botón «Más» y
    el menú desplegable quedaría dentro del tablist). La barra vive dentro de `#content`: al abrir una clase desaparece,
    como la fila de pestañas, y no se encima con la barra fija del examen. Un hueco (`.sec-barra-hueco`) del alto de la
