@@ -56,7 +56,13 @@ const ocultarApi = oculto => api('/ingles/grupos/ocultar', ADMIN, { grupo: 'grup
     // Conteo «N con intentos» de «Esta semana» para la actividad que entregó Marisol
     const conIntentos = async () => ad.evaluate(t => { const x = [...document.querySelectorAll('.exam-item')].find(e => (e.querySelector('.t') || {}).textContent && e.querySelector('.t').textContent.includes(t) && /con intentos/.test(e.textContent)); const m = x && /(\d+) con intentos/.exec(x.textContent); return m ? Number(m[1]) : null; }, it ? it.titulo : '');
     const intentosVisible = await conIntentos();
-    const enRanking = async () => !!(await ad.$('#juegos-admin tr[data-jugador="Marisol"]'));
+    // Juegos y Registro se piden al abrir su pestaña (openspec: panel-profe-peticiones): se abren antes de leerlos.
+    const abrirPestana = async (h, listo) => { await ad.evaluate(x => { location.hash = x; }, h); await ad.waitForFunction(listo, null, { timeout: 30000 }); };
+    const enRanking = async () => {
+      await abrirPestana('juegos', () => { const j = document.getElementById('juegos-admin'); return j && !j.querySelector('.esqueleto'); });
+      return !!(await ad.$('#juegos-admin tr[data-jugador="Marisol"]'));
+    };
+    const textoRegistro = async () => { await abrirPestana('registro', () => !!document.querySelector('#registro-lista .reg-lista')); return ad.textContent('#alumnos-admin'); };
     ok('antes de ocultar: Marisol en el ranking de juegos', await enRanking());
 
     // Ocultar el Grupo 1 desde la página
@@ -75,7 +81,7 @@ const ocultarApi = oculto => api('/ingles/grupos/ocultar', ADMIN, { grupo: 'grup
     ok('avance («Alumnos») sin el grupo oculto', vistos.includes('Angel') && !vistos.includes('Marisol'), vistos.join(', '));
     const ultimas = await ad.$$eval('#ultimas tr[data-alumno]', ts => ts.map(t => t.dataset.alumno));
     ok('«Últimas calificaciones» sin el grupo oculto', ultimas.includes('Angel') && !ultimas.includes('Marisol'), ultimas.join(', '));
-    const registro = await ad.textContent('#alumnos-admin');
+    const registro = await textoRegistro();
     const cuenta = Number(await ad.textContent('#alumnos-admin .count'));
     ok('«Registro» sin el grupo oculto y con su contador', registro.includes('angel@example.com') && !registro.includes(MARISOL) && cuenta === 1, 'count=' + cuenta);
     ok('ranking de juegos sin el grupo oculto', !(await enRanking()));
@@ -105,7 +111,7 @@ const ocultarApi = oculto => api('/ingles/grupos/ocultar', ADMIN, { grupo: 'grup
     await ad.waitForFunction(() => [...document.querySelectorAll('details.student')].some(d => d.dataset.alumno === 'Marisol'), null, { timeout: 15000 });
     vistos = await alumnosVista();
     const opciones2 = await ad.$$eval('#grupo-filtro option', os => os.map(o => o.value));
-    ok('con el interruptor: Marisol vuelve al avance, a «Registro» y el grupo al selector', vistos.includes('Marisol') && (await ad.textContent('#alumnos-admin')).includes(MARISOL) && opciones2.includes('grupo-1'), vistos.length + ' · ' + opciones2.join(','));
+    ok('con el interruptor: Marisol vuelve al avance, a «Registro» y el grupo al selector', vistos.includes('Marisol') && (await textoRegistro()).includes(MARISOL) && opciones2.includes('grupo-1'), vistos.length + ' · ' + opciones2.join(','));
     ok('con el interruptor: Marisol en el ranking y en el conteo de «Esta semana»', await enRanking() && (await conIntentos()) === intentosVisible);
     await ad.screenshot({ path: 'ocultar-grupos-interruptor.png', fullPage: true });
     // Elegir el grupo oculto en el selector y apagar el interruptor: el filtro vuelve a «Todos los grupos»

@@ -60,6 +60,9 @@ function aplicarRuta() {
   if (rolActual() === 'admin' && id === 'resumen' && !state.resumen) cargarResumen();
   if (rolActual() === 'admin' && id === 'nicks' && !state.nicks) cargarNicksAdmin(); // openspec: rpg-fase2-ingles
   if (rolActual() === 'admin' && id === 'entregas') { if (state.secBandeja) pintarEntregasPendientes(); else cargarEntregasIngles(); } // openspec: rpg-ingles-hero-card, navegacion-dispositivos
+  // Pestañas pesadas bajo demanda (openspec: panel-profe-peticiones): la lista con correos y los juegos de la semana.
+  if (rolActual() === 'admin' && id === 'registro' && !state.registroAdmin) cargarRegistroAdmin();
+  if (rolActual() === 'admin' && (id === 'juegos' || id === 'alumnos')) asegurarJuegosAdmin();
 }
 window.addEventListener('hashchange', () => {
   document.getElementById('nav-mas').hidden = true;
@@ -181,7 +184,9 @@ async function loadFor(email) {
     if (MODO_PROFE) return await loadProfe(email);
     if (MODO_SECUNDARIA) return await loadSecundaria(email);
     const actividadesP = loadActividades();
-    const r = await api(DATA_URL_BASE + '?email=' + encodeURIComponent(email));
+    // incluir=panel (openspec: panel-profe-peticiones): si es el admin, el servidor agrega en la misma respuesta grupos,
+    // alumnos y alumnas, resumen y «Por revisar»; a cualquier otra persona le responde lo de siempre.
+    const r = await api(DATA_URL_BASE + '?email=' + encodeURIComponent(email) + '&incluir=panel' + filtroPanel());
     const data = r.body;
     if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // sesionVencida ya pintó la entrada
     if (!r.ok) throw new Error(data.error === 'mucho_trafico' ? 'Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : (data.mensaje || data.error || ('HTTP ' + r.status)));
@@ -200,9 +205,9 @@ async function loadFor(email) {
     // Ranking de Inglés: el perfil solo se pide si /ingles/actividades dice que está encendido (openspec: rpg-fase2-ingles).
     if (!data.isAdmin && state.act && state.act.ranking) await cargarPerfilGamificacion(); else { state.gam = null; state.rk = null; }
     if (!data.isAdmin) await cargarMisionesIngles(); // solo pide /misiones si hay alguna visible (openspec: rpg-ingles-hero-card)
-    if (data.isAdmin) { state.resumen = null; await Promise.all([loadJuegosAdmin(), loadAlumnosAdmin(), loadGruposAdmin()]); }
+    if (data.isAdmin) { state.resumen = null; await prepararPanelAdmin(data.panel); }
     render(data);
-    if (data.isAdmin) cargarResumen(); // idempotente; el cajón también lo usa
+    if (data.isAdmin && !state.resumen) cargarResumen(); // solo si el servidor no mandó el panel (versión anterior)
     else cargarRankingIngles();
     if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) { m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; } state.altaAviso = null; }
   } catch (e) {

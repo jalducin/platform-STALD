@@ -59,7 +59,8 @@ async function jugarCalculo(p) {
   await m.screenshot({ path: 'ranking-partidas.png' });
 
   // Admin: tarjeta de juegos en Inglés
-  const ad = await abrirPagina(b, { email: 'admin@example.com', ingles: true, viewport: { width: 1280, height: 720 }, ruta: '/ingles.html', esperar: ['#juegos-admin', { state: 'attached' }] }); // en la página nueva es un <details> plegado
+  // «🎮 Juegos» se pide al abrir su pestaña (openspec: panel-profe-peticiones); en la página es un <details> plegado.
+  const ad = await abrirPagina(b, { email: 'admin@example.com', ingles: true, viewport: { width: 1280, height: 720 }, ruta: '/ingles.html#juegos', esperar: ['#juegos-admin table, #juegos-admin .progress-text', { state: 'attached' }] });
   ok('admin: juegos de la semana con individuales y partidas', (await ad.textContent('#juegos-admin')).includes('individuales') && (await ad.textContent('#juegos-admin')).includes('partidas'));
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

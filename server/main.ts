@@ -27,6 +27,7 @@ import { type DepsGamificacion, handleGamificacion, handleProfeGamificacion, ran
 import { type DepsMisiones, handleMisiones, hayMisionesVisibles, pasosEntregados, handlePractica, handleProfeEntregas, type PersonaMision } from "./misiones.ts";
 import { alumnasSecundaria } from "./secundaria_registro.ts";
 import { aplicarRetencion, CRON_RETENCION } from "./retencion_entregas.ts";
+import { armarPanel, handlePanel, type PartesPanel } from "./panel.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
@@ -364,6 +365,20 @@ async function rutaResumen(req: Request, email: string, admin: string): Promise<
   }, json);
 }
 
+// Partes del panel del profe (openspec: panel-profe-peticiones): las mismas rutas sueltas, llamadas por dentro con el
+// filtro de grupo y ocultos de la petición. Solo se arma para el admin (handlePanel y rutaData lo revisan antes).
+function partesPanel(url: URL, email: string, admin: string): PartesPanel {
+  const filtro = new URLSearchParams();
+  for (const k of ["grupo", "ocultos", "hoy"]) { const v = url.searchParams.get(k); if (v) filtro.set(k, v); }
+  const q = filtro.size ? "?" + filtro : "";
+  return {
+    grupos: () => rutaGrupos(new Request("http://x/ingles/grupos"), "", email, admin),
+    alumnos: () => rutaAlumnos(new Request("http://x/ingles/alumnos"), "", email, admin),
+    resumen: () => rutaResumen(new Request("http://x/ingles/resumen" + q), email, admin),
+    entregas: async () => handleProfeEntregas(new Request("http://x/profe/entregas"), "", await depsMisiones(email, admin), json),
+  };
+}
+
 // /ingles/actividades[/<id>] → actividades y exámenes del alumno o alumna (o del admin), con su grupo vigente.
 async function rutaActividades(req: Request, sub: string, email: string, admin: string): Promise<Response> {
   if (!email) return json({ error: "missing_email" }, 400);
@@ -403,11 +418,15 @@ async function rutaData(url: URL, email: string, admin: string): Promise<Respons
   const deIngles = url.pathname.endsWith("/ingles/data");
   if (!deIngles && !url.pathname.endsWith("/data")) return json({ error: "not_found" }, 404);
   if (!email) return json({ error: "missing_email" }, 400);
+  // ?incluir=panel (openspec: panel-profe-peticiones): solo para el admin, el panel se arma en paralelo con las filas y
+  // viaja en la misma respuesta; para cualquier otra persona el parámetro se ignora.
+  const panelP = deIngles && url.searchParams.get("incluir") === "panel" && !!admin && email === admin ? armarPanel(partesPanel(url, email, admin)) : null;
   const all: (InglesRow | SecundariaRow)[] = deIngles ? await filasInglesActivas() : await loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria");
   const { rows, isAdmin } = filterForEmail(all, email, admin);
   // De baja de Inglés: sin filas y con la marca, para el aviso amable (sin la fecha; openspec: ingles-baja-alumno).
   const baja = deIngles && !isAdmin && !rows.length && await deBajaIngles(email, admin);
-  return json({ rows, isAdmin, ...(baja ? { baja: true } : {}), generatedAt: new Date().toISOString() });
+  const panel = panelP ? await panelP : null;
+  return json({ rows, isAdmin, ...(baja ? { baja: true } : {}), ...(panel ? { panel } : {}), generatedAt: new Date().toISOString() });
 }
 
 // /gamificacion/… y /profe/nicks|ranking → nick público, ranking por grupo de Inglés y su moderación
@@ -480,6 +499,8 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
   if (iGr !== -1) return await rutaGrupos(req, url.pathname.slice(iGr + "/ingles/grupos".length), email, admin);
 
   if (url.pathname.endsWith("/ingles/resumen")) return await rutaResumen(req, email, admin);
+  // GET /ingles/panel → panel del profe en una petición (solo admin; openspec: panel-profe-peticiones)
+  if (url.pathname.endsWith("/ingles/panel")) return await handlePanel(req, { email, admin, partes: partesPanel(url, email, admin) }, json);
 
   // /ingles/profe/actividades[/<id>] → ruta de estudio del profe (solo admin, server/actividades.ts)
   const iProfe = url.pathname.indexOf("/ingles/profe/actividades");

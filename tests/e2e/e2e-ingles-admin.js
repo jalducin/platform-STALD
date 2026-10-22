@@ -6,7 +6,9 @@
 // 3. Con grupos (--pg): «👁️ Ocultar del panel» visible en cada tarjeta, junto a «🔍 Ver grupo»; ocultar → la tarjeta
 //    sale del tablero; «Mostrar grupos ocultos (N)» → vuelve con «Mostrar en el panel»; tocarlo → queda visible otra
 //    vez. La bandera se restaura al final (también si algo falla).
-// 4. Si /ingles/resumen falla (simulado en el navegador), el aviso trae «🔄 Reintentar» y las tarjetas siguen.
+// 4. Si el resumen del panel falla (simulado en el navegador en /ingles/data?incluir=panel), el aviso trae «🔄 Reintentar»
+//    (que pide /ingles/resumen) y las tarjetas siguen. Si fallan los grupos del panel, el aviso por sección trae
+//    «🔄 Reintentar» (que pide /ingles/panel) (openspec: panel-profe-peticiones).
 require('./lib/entorno'); // BASE, API, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina, urlDe } = require('./lib/navegador');
@@ -89,7 +91,15 @@ const esperarResumen = p => p.waitForFunction(() => document.getElementById('kpi
       ok('mostrar → el grupo vuelve al tablero, bandera en false y sin interruptor', (fin.body.grupos.find(g => g.id === g1.id) || {}).ocultoAdmin === false);
     }
 
-    // 4. Resumen que falla: aviso con «Reintentar» y tarjetas de grupo a la mano
+    // 4. Resumen que falla dentro del panel (falla parcial): aviso con «Reintentar» y tarjetas de grupo a la mano
+    const panelCon = cambio => async r => {
+      const res = await r.fetch();
+      const body = await res.json();
+      if (body.panel) cambio(body.panel);
+      await r.fulfill({ response: res, body: JSON.stringify(body) });
+    };
+    const PANEL = /\/ingles\/data\?.*incluir=panel/;
+    await p.route(PANEL, panelCon(x => { x.resumen = { error: 'upstream_error', detalle: 'Signal timed out.' }; x.fallas = [...x.fallas, 'resumen']; }));
     await p.route(/\/ingles\/resumen\?/, r => r.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'upstream_error', detalle: 'Signal timed out.' }) }));
     await p.evaluate(() => { location.hash = 'resumen'; });
     await p.reload();
@@ -98,9 +108,22 @@ const esperarResumen = p => p.waitForFunction(() => document.getElementById('kpi
     ok('resumen caído: aviso con el motivo y «🔄 Reintentar»', /upstream_error/.test(txt) && /Signal timed out/.test(txt) && !!(await p.$('#resumen-error [data-action="reintentar-resumen"]')), txt);
     if (conGrupos) ok('resumen caído: las tarjetas con «Ocultar del panel» siguen', !!(await p.$('#pp-grupos [data-action="ocultar-grupo"]')));
     await p.unroute(/\/ingles\/resumen\?/);
+    await p.unroute(PANEL);
     await p.click('[data-action="reintentar-resumen"]');
     await p.waitForSelector('#kpis', { timeout: 60000 });
     ok('«🔄 Reintentar» carga el resumen', !(await p.$('#resumen-error')));
+
+    // 5. Grupos caídos en el panel: aviso por sección con «🔄 Reintentar»; el resumen y el registro siguen
+    await p.route(PANEL, panelCon(x => { x.grupos = { error: 'upstream_error', detalle: 'Signal timed out.' }; x.fallas = [...x.fallas, 'grupos']; }));
+    await p.reload();
+    await p.waitForSelector('#panel-avisos [data-action="reintentar-panel"]', { timeout: 60000 });
+    await esperarResumen(p);
+    const aviso = await p.textContent('#panel-avisos');
+    ok('grupos caídos: aviso «No se pudo cargar los grupos» con «🔄 Reintentar» y el resumen sigue', /los grupos/.test(aviso) && !!(await p.$('#kpis')) && /Alumnos y alumnas|Alumno o alumna/.test(await p.textContent('#pp-stats')), aviso.replace(/\s+/g, ' '));
+    await p.unroute(PANEL);
+    await p.click('#panel-avisos [data-action="reintentar-panel"]');
+    await p.waitForFunction(() => !document.getElementById('panel-avisos'), null, { timeout: 30000 });
+    ok('«🔄 Reintentar» del aviso vuelve a pedir el panel y el aviso se va', !(await p.$('#panel-avisos')) && (!conGrupos || !!(await p.$('#pp-grupos .pp-grupo'))));
   } finally {
     if (g1) {
       const r = await api('/ingles/grupos/ocultar', { grupo: g1.id, oculto: original }); // restaura la bandera original

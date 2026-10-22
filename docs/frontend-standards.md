@@ -922,16 +922,34 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
 - La vista del admin de `ingles.html` y `?modo=profe` (las dos con `body.vista-admin`) usan el diseño RPG de Secundaria.
   Estilos en `ingles/panel-profe.css`, todo bajo `.vista-admin` o con prefijo `pp-`/`reg-`; reusa los tokens y
   componentes RPG de `estilos/ui.css` (`--rpg-*`, `.rpg-etiqueta`, `.rpg-num`, `.rpg-xp-barra`) y los base de `estilos/stald.css`, así que funciona en claro y oscuro.
-- «🏠 Resumen» abre con `#panel-profe` (`renderPanelProfe`, `ingles/tablero.js`). Solo datos que ya existen:
-  - grupos activos (`/ingles/grupos`; sin base de datos no sale), alumnos y alumnas del registro sin bajas;
+- «🏠 Resumen» abre con `#panel-profe` (`renderPanelProfe`, `ingles/tablero.js`). Solo datos que ya existen, todos
+  del panel (`panel` de `/ingles/data?incluir=panel`, ver «Panel del profe en una petición»):
+  - grupos activos (sin base de datos no sale), alumnos y alumnas del registro sin bajas;
   - «En riesgo» (`alumnosEnRiesgo`): `kpis.sinEntregas` más quien tiene alguna celda `atrasado` en `/ingles/resumen`, con
     un botón por persona que abre el cajón. Se repinta al llegar el resumen (`pintarPanelProfe`); mientras, «…»;
-  - «📥 Por revisar» (`porRevisarPanel`): misiones de Inglés (`mision.ambito === 'ingles'`) en estado `lista` de la
-    bandeja (`cargarBandejaSec`, `/profe/entregas`, que junta también Secundaria), del grupo elegido o sin los ocultos;
-    enlace a «Entregas»; solo si la bandeja carga bien. «🔍 Ver grupo» reinicia también los nicks, como el selector;
+  - «📥 Por revisar» (`porRevisarPanel`): misiones de Inglés (`mision.ambito === 'ingles'`) en estado `lista`, del
+    grupo elegido o sin los ocultos; enlace a «Entregas». Sale de la bandeja (`cargarBandejaSec`, `/profe/entregas`) si
+    ya se cargó al abrir «📥 Entregas» (más fresca tras evaluar) y, si no, de `entregas.porRevisar` del panel; sin
+    ninguna de las dos no hay mosaico. `pendientesEntregas()` da el total de entregas listas (Inglés y Secundaria) de la
+    bandeja o del panel, para un contador sin pedir la bandeja. «🔍 Ver grupo» reinicia también los nicks, como el selector;
   - con un grupo elegido, todo cuenta solo ese grupo (sin «Grupos activos»); sin grupo, los ocultos del panel no cuentan
     salvo con «Mostrar grupos ocultos»;
   - accesos: «➕ Registrar alumno o alumna», «🎬 Presentar la clase» y «🎓 Mi ruta».
+- **Panel del profe en una petición** (cambio `panel-profe-peticiones`). Al abrir, `loadFor` (`ingles/app.js`) pide
+  `/ingles/actividades` y `/ingles/data?incluir=panel` en paralelo (5 peticiones al API con `/config` y las `OPTIONS`;
+  antes 15 en 3 oleadas en cascada) y `prepararPanelAdmin` aplica el panel (`aplicarPanel`, `ingles/admin.js`):
+  `state.grupos`, `state.alumnosAdmin` (sin correos: conteos, tarjetas y `ocultoEnPanel`), `state.resumen`,
+  `state.panelEntregas` y `state.panelFallas`. Sin `panel` (servidor anterior) cae al camino de antes.
+  - Aviso por sección: si falla una parte (grupos, alumnos y alumnas, entregas), `#panel-avisos` en el encabezado (y en
+    «👥 Grupos» si fallaron los grupos) con «🔄 Reintentar» (`data-action="reintentar-panel"`), que pide
+    `/ingles/panel` (`refrescarPanel`). El resumen caído conserva `#resumen-error` con su «🔄 Reintentar».
+  - Bajo demanda en `aplicarRuta`: «➕ Registro» pide `/ingles/alumnos` (con correos; `cargarRegistroAdmin`, repinta
+    solo `#registro-lista`, no el formulario); «🎮 Juegos», «🧑‍🎓 Alumnos» y el cajón piden `/juegos/admin/resumen`
+    (`asegurarJuegosAdmin`; `#juegos-admin` y los huecos `[data-juegos-slot]` se repintan al llegar); «📥 Entregas» pide
+    la bandeja; «🛡️ Nicks» ya pedía `/profe/nicks`. Mientras llegan, esqueleto.
+  - Ocultar o mostrar un grupo: `POST /ingles/grupos/ocultar` y un solo `GET /ingles/panel` con el filtro vigente.
+    Cambiar el grupo o el interruptor pide solo `/ingles/resumen`; `cargarResumen` ya no pide la bandeja.
+  - Las E2E deben abrir «➕ Registro» o «🎮 Juegos» antes de leer su contenido (como las pestañas de la ruta).
 - Tarjetas por grupo (`#pp-grupos .pp-grupo`, dentro de `#tablero`): color (`--gc`), nivel, horario, personas, avance
   de la semana (celdas entregadas / que ya abrieron, sin `no-aplica` ni `proximamente`) con `.rpg-xp-barra[role=progressbar]`,
   atrasos, «🔍 Ver grupo» (`data-action="ver-grupo"`, mismo `state.grupoFiltro` que el selector) y «🎥 Meet».
@@ -1072,6 +1090,8 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
 - `juegos/datos/*.json` se piden una vez por página (`datos()`); si la descarga falla, se reintenta la próxima vez.
 - Medición: `tests/e2e/e2e-peticiones.js` cuenta en un proxy las peticiones por flujo (con `OPTIONS`) y falla si un flujo
   pasa su umbral. Si un cambio agrega peticiones a un flujo, ajusta el umbral en el mismo PR y explica por qué.
+  «inglés (admin)» tiene tope 5 (antes 17; cambio `panel-profe-peticiones`) y además falla si al abrir el panel se piden
+  `/ingles/grupos`, `/ingles/alumnos`, `/ingles/resumen`, `/ingles/panel`, `/profe/entregas` o `/juegos/admin/resumen`.
 
 ## Inglés pro (cambio `ingles-pro`)
 

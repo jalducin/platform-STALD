@@ -24,7 +24,7 @@ function renderAdmin(data) {
         '<span class="o" title="Temas a reforzar">🎯 ' + temas.length + '</span></span></summary>' +
       '<div class="student-body">' +
         '<button type="button" class="btn ghost sm" data-action="cajon" data-alumno="' + escapeHtml(name) + '" style="margin:4px 0 8px">🔎 Detalle y acciones</button>' +
-        lineaJuegos(name) +
+        huecoJuegos(name) +
         (u.length ? '<div class="ultimas-lista"><div class="progress-text" style="margin:4px 0 2px">🗓️ Últimas 5 calificaciones</div>' +
           u.map(x => '<div>• ' + x.icono + ' ' + escapeHtml(x.titulo) + ' · <span class="chip ' + claseNota(x.pct) + '">' + escapeHtml(x.valor) + '</span> · ' + escapeHtml(fechaCorta(x.fecha)) + '</div>').join('') + '</div>' : '') +
         (temas.length ? '<div class="progress-text" style="margin:4px 0 2px">🎯 Temas a reforzar (para armar su clase)</div><div class="chips">' +
@@ -39,7 +39,7 @@ function renderAdmin(data) {
   }).join('');
   return renderFiltroGrupo() +
     seccionHtml('admin', 'resumen', renderPanelProfe() + '<div id="tablero" aria-live="polite">' + renderTablero() + '</div>') +
-    seccionHtml('admin', 'grupos', renderGruposAdmin() || vacio('👥', 'Los grupos se activan cuando Inglés usa la base de datos.')) +
+    seccionHtml('admin', 'grupos', renderGruposAdmin() || (fallaPanel('grupos') ? avisosPanel() : vacio('👥', 'Los grupos se activan cuando Inglés usa la base de datos.'))) +
     seccionHtml('admin', 'alumnos', bloques || vacio('🧑‍🎓', 'Aún no hay alumnos ni alumnas en este grupo. Dalos de alta en ➕ Registro.')) +
     seccionHtml('admin', 'registro', renderAlumnosAdmin()) +
     seccionHtml('admin', 'semana', renderAdminWeek(state.act) || vacio('📅', 'Sin actividades esta semana.')) +
@@ -97,14 +97,27 @@ function ppListaRiesgo(riesgo) {
 }
 // Grupos activos que se ven en el panel: sin los ocultos (openspec: ingles-ocultar-grupos), salvo con el interruptor.
 const gruposDelPanel = () => gruposActivos().filter(g => !g.ocultoAdmin || state.mostrarOcultos);
-// «📥 Por revisar»: entregas de misiones listas para evaluar (bandeja del profe, /profe/entregas). Solo si cargó bien.
-// Solo misiones de Inglés listas para evaluar, del grupo elegido o, sin grupo, sin los ocultos del panel.
-function porRevisarPanel(filtro) {
+// «📥 Por revisar»: misiones de Inglés listas para evaluar, del grupo elegido o, sin grupo, sin los ocultos del panel.
+// Salen de la bandeja (/profe/entregas) si ya se cargó (más fresca tras evaluar) o, si no, de `entregas.porRevisar` del
+// panel (openspec: panel-profe-peticiones). Sin ninguna de las dos (o si fallaron), no hay mosaico.
+function slugsPorRevisar() {
   const b = state.secBandeja;
-  if (!b || b.error || !Array.isArray(b.entregas)) return null;
+  if (b && !b.error && Array.isArray(b.entregas)) return b.entregas.filter(x => x.estado === 'lista' && x.mision && x.mision.ambito === 'ingles').map(x => x.slug);
+  const p = state.panelEntregas;
+  return p && Array.isArray(p.porRevisar) ? p.porRevisar : null;
+}
+// Total de entregas listas para evaluar (Inglés y Secundaria), de la bandeja o del panel; null si no se sabe.
+function pendientesEntregas() {
+  const b = state.secBandeja;
+  if (b && !b.error && typeof b.pendientes === 'number') return b.pendientes;
+  return state.panelEntregas ? state.panelEntregas.pendientes : null;
+}
+function porRevisarPanel(filtro) {
+  const slugs = slugsPorRevisar();
+  if (!slugs) return null;
   const grupoDeSlug = s => (state.grupos ? (state.grupos.grupos || []).find(g => g.id === (state.grupos.miembros[s] || (gruposActivos()[0] || {}).id)) : null) || null;
-  return b.entregas.filter(x => x.estado === 'lista' && x.mision && x.mision.ambito === 'ingles').filter(x => {
-    const g = grupoDeSlug(x.slug);
+  return slugs.filter(slug => {
+    const g = grupoDeSlug(slug);
     if (filtro) return !!g && g.id === filtro.id;
     return state.mostrarOcultos || !(g && g.ocultoAdmin);
   }).length;
@@ -129,7 +142,7 @@ function renderPanelProfe() {
     '<div class="pp-stats" id="pp-stats">' +
       (activos === null ? '' : ppStat('👥', activos, activos === 1 ? 'Grupo activo' : 'Grupos activos')) +
       (registro === null ? '' : ppStat('🧑‍🎓', registro, registro === 1 ? 'Alumno o alumna' : 'Alumnos y alumnas')) +
-      ppTileRiesgo(riesgo) + ppTilePorRevisar(filtro) + '</div>' + ppListaRiesgo(riesgo) +
+      ppTileRiesgo(riesgo) + ppTilePorRevisar(filtro) + '</div>' + ppListaRiesgo(riesgo) + avisosPanel() +
     '<div class="pp-acciones"><a class="btn" href="#registro">➕ Registrar alumno o alumna</a><a class="btn ghost" href="#presentar">🎬 Presentar la clase</a>' +
       '<a class="btn ghost" href="' + escapeHtml(conApiParam('ingles.html?modo=profe')) + '">🎓 Mi ruta</a></div></section>';
 }
@@ -206,11 +219,7 @@ async function cargarResumen() {
   const clave = (state.grupoFiltro || '') + (state.mostrarOcultos ? '|ocultos' : '');
   if (state.cargandoResumen === clave) return;
   state.cargandoResumen = clave;
-  // «📥 Por revisar» del encabezado: la bandeja de entregas se pide una vez, en paralelo (openspec: ingles-diseno-profe).
-  if (!state.secBandeja && !state.cargandoBandejaPanel && typeof cargarBandejaSec === 'function') {
-    state.cargandoBandejaPanel = true;
-    cargarBandejaSec().then(() => { pintarPanelProfe(); pintarEntregasPendientes(); }, () => {}).finally(() => { state.cargandoBandejaPanel = false; });
-  }
+  // «📥 Por revisar» ya no pide la bandeja: sale del panel (openspec: panel-profe-peticiones).
   // Grupos ocultos del panel (openspec: ingles-ocultar-grupos): el servidor los deja fuera salvo con ocultos=1.
   const q = (state.grupoFiltro ? '&grupo=' + encodeURIComponent(state.grupoFiltro) : '') + (state.mostrarOcultos ? '&ocultos=1' : '');
   let r;
@@ -274,6 +283,7 @@ function abrirCajon(nombre) {
   pintarCajon(nombre);
   if (!cajonEl.open) cajonEl.showModal();
   if (!state.resumen) cargarResumen();
+  asegurarJuegosAdmin(); // la línea de juegos del historial (openspec: panel-profe-peticiones)
 }
 cajonEl.addEventListener('close', () => { state.cajonAlumno = null; });
 cajonEl.addEventListener('click', e => { if (e.target === cajonEl) cajonEl.close(); }); // clic en el fondo
@@ -309,7 +319,7 @@ function pintarCajon(nombre, aviso) {
     '<div class="cajon-cuerpo"><div class="cajon-msg" id="cajon-msg" role="status">' + escapeHtml(aviso || '') + '</div>' +
     (state.grupos ? '<div class="card"><h3 class="card-titulo">👥 Grupo</h3><label class="sr-only" for="cajon-grupo">Grupo de ' + escapeHtml(nombre) + '</label><select id="cajon-grupo" class="campo" data-mover="1" data-alumno="' + escapeHtml(nombre) + '">' + opcionesGrupo((g || {}).id) + '</select></div>' : '') +
     '<div class="card"><h3 class="card-titulo">📅 Esta semana</h3>' + semana + '</div>' +
-    '<div class="card"><h3 class="card-titulo">🗓️ Historial</h3>' + (ult.length ? '<div class="ultimas-lista">' + ult.map(x => '<div>' + x.icono + ' ' + escapeHtml(x.titulo) + ' · <span class="chip ' + claseNota(x.pct) + '">' + escapeHtml(x.valor) + '</span> · ' + escapeHtml(fechaCorta(x.fecha)) + '</div>').join('') + '</div>' : '<div class="muted">Sin calificaciones todavía.</div>') + lineaJuegos(nombre) + '</div>' +
+    '<div class="card"><h3 class="card-titulo">🗓️ Historial</h3>' + (ult.length ? '<div class="ultimas-lista">' + ult.map(x => '<div>' + x.icono + ' ' + escapeHtml(x.titulo) + ' · <span class="chip ' + claseNota(x.pct) + '">' + escapeHtml(x.valor) + '</span> · ' + escapeHtml(fechaCorta(x.fecha)) + '</div>').join('') + '</div>' : '<div class="muted">Sin calificaciones todavía.</div>') + huecoJuegos(nombre) + '</div>' +
     '<div class="card"><h3 class="card-titulo">🎯 Temas a reforzar</h3>' + (temas.length ? '<div class="chips">' + temas.map(t => '<span class="chip ' + t.estado + '" title="' + escapeHtml(t.fuente) + '">' + escapeHtml(t.titulo) + '</span>').join('') + '</div>' : '<div class="muted">Nada pendiente de reforzar. 🎉</div>') + '</div>' +
     '</div>';
   cajonEl.setAttribute('aria-labelledby', 'cajon-titulo');

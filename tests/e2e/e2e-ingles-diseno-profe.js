@@ -3,8 +3,10 @@
 // (grupos activos, alumnos y alumnas, en riesgo), tarjetas por grupo, mapa de calor como tarjetas en celular,
 // Registro como tarjetas con «🚪 Baja de Inglés», botones de 44 px o más en todas las secciones (y en el cajón),
 // sin scroll horizontal, y la ruta del profe con su Plan del mes. Escritorio a 1280 px para las capturas.
-// Sin Postgres, `/ingles/grupos` responde 503; para ver las tarjetas por grupo, la prueba intercepta solo ese GET en el
-// navegador con dos grupos de ejemplo (no escribe nada). Las acciones reales de grupos las cubren `grupos` y `alta-alumnos`.
+// Sin Postgres no hay grupos (`/ingles/grupos` 503, `grupos: { error: "sin_base" }` en el panel); para ver las tarjetas por
+// grupo, la prueba cambia en el navegador la parte `grupos` del panel (`/ingles/data?incluir=panel` y `/ingles/panel`,
+// openspec: panel-profe-peticiones) y el GET de `/ingles/grupos` por dos grupos de ejemplo (no escribe nada). Las
+// acciones reales de grupos las cubren `grupos` y `alta-alumnos`.
 require('./lib/entorno'); // BASE, API, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
@@ -36,8 +38,18 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
     ],
     miembros: Object.fromEntries(activos.map((x, i) => [slug(x.nombre), i % 2 ? 'e2e-b' : 'e2e-a'])),
   };
-  const conGrupos = async p => p.route(/\/ingles\/grupos\?/, r => (r.request().method() === 'GET'
-    ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(grupos) }) : r.continue()));
+  const conGrupos = async p => {
+    await p.route(/\/ingles\/grupos\?/, r => (r.request().method() === 'GET'
+      ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(grupos) }) : r.continue()));
+    // El panel (en /ingles/data?incluir=panel o /ingles/panel) trae los grupos dentro: se cambia solo esa parte.
+    await p.route(/\/ingles\/(data\?.*incluir=panel|panel\?)/, async r => {
+      const res = await r.fetch();
+      const body = await res.json();
+      const panel = body.panel || body;
+      if (panel && panel.fallas) { panel.grupos = grupos; panel.fallas = panel.fallas.filter(n => n !== 'grupos'); }
+      await r.fulfill({ response: res, body: JSON.stringify(body) });
+    });
+  };
   const act = await (await fetch(`${API}/ingles/profe/actividades?email=${ADMIN}`)).json();
 
   const b = await chromium.launch({ executablePath: process.env.CHROME });
@@ -54,7 +66,6 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
     const stats = await p.$$eval('#pp-stats .pp-stat', xs => xs.map(x => x.textContent.replace(/\s+/g, ' ').trim()));
     ok('encabezado: grupos activos, alumnos y alumnas y en riesgo' + suf, stats.length >= 3 && /2\s*Grupos activos/.test(stats[0]) && stats[1].includes(String(activos.length)) && /En riesgo/.test(stats[2]), JSON.stringify(stats));
     const bandeja = await fetch(`${API}/profe/entregas?email=${ADMIN}`).then(r => r.json()).catch(() => ({}));
-    await p.waitForTimeout(1500); // la bandeja llega en paralelo al resumen
     const porRevisar = await p.$eval('#pp-stats', el => (el.querySelector('a[href="#entregas"]') || {}).textContent || '');
     // Solo misiones de Inglés listas para evaluar (la bandeja junta también las de Secundaria); ningún grupo de ejemplo está oculto.
     const listasIngles = Array.isArray(bandeja.entregas) ? bandeja.entregas.filter(x => x.estado === 'lista' && x.mision && x.mision.ambito === 'ingles').length : null;
@@ -73,6 +84,7 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
     }
     // Registro: tarjetas con «🚪 Baja de Inglés», grupo y Quitar.
     await p.evaluate(() => { location.hash = 'registro'; });
+    await p.waitForSelector('#registro-lista .reg-lista', { timeout: 30000 }); // la lista con correos se pide al abrir Registro
     const reg = await p.$$eval('#alumnos-admin .reg-fila:not(.de-baja)', xs => xs.map(x => !!x.querySelector('[data-action="baja-ingles"]') && !!x.querySelector('[data-action="quitar-alumno"]') && !!x.querySelector('select.mover-grupo')));
     ok('Registro: cada tarjeta trae grupo, «🚪 Baja de Inglés» y Quitar' + suf, reg.length === activos.length && reg.every(Boolean), String(reg.length));
     ok('Registro: campos con etiqueta visible' + suf, (await p.$$('#alta-alumno label.campo-et')).length >= 2);
