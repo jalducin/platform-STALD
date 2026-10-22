@@ -83,6 +83,10 @@
 
 ## 4. Fase 2b — Gamificación en Inglés con ranking por grupo (rama `feature/rpg-fase2-ingles`)
 
+> En curso en el cambio derivado `openspec/changes/rpg-fase2-ingles/` (requisitos de nick, ranking y moderación de
+> nicks movidos allá). Hechas ahí: 4.1–4.8, 4.11–4.13 y 4.15 (el ranking se publica detrás de un interruptor general
+> apagado). Pendientes: 4.9 «My Hero Card» (espera el motor de la Fase 2a), 4.10 PWA y 4.14 tras el merge.
+
 - [ ] 4.1 Step 0: crear la rama desde `main`
 - [ ] 4.2 Pruebas que fallan: perfil con nick de Juegos (pedir aparecer con nick válido → pendiente; nick con nombre del
   registro, correo o palabra bloqueada → 400 `nick_invalido`; sin nick de Juegos → 400 `sin_nick`; cambio de nick en

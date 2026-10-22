@@ -156,15 +156,25 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   `"grupos": ["<id>"]`; si no lo declara, aplica a todos.
 - La migración se hace con `herramientas/migrar-ingles.ts`, con las opciones `--prueba`, `--delta`, `--forzar` y
   `--juegos`. El repo de datos conserva la etiqueta `antes-de-postgres`.
+- **Gamificación de Inglés** (cambio `rpg-fase2-ingles`): `gamificacion/**` vive en `stald_docs` (prefijo en
+  `PREFIJOS_INGLES`; ruta nueva, sin migración). Sin correos ni calificaciones:
+  - `gamificacion/config.json`: `{ gruposSinRanking }`, grupos con el ranking apagado (el interruptor general es la
+    llave `ranking` de `config/interruptores.json`, abajo);
+  - `gamificacion/perfiles/<slug>.json`: `{ aparecer, nickAprobado?, nickRechazado?, motivo?, actualizado }`. El nick
+    lo sigue guardando Juegos (`juegos/nicks.json`, llave `a-<slug>`); el estado del nick se deriva comparándolo con
+    `nickAprobado` y `nickRechazado`. Se borra 30 días después de la baja (al abrir «🛡️ Nicks»).
+  - El tablero RPG y los puntos de constancia se **derivan** de `resultados/`; no se guardan.
 - **Juegos en Postgres** (cambio `cierre-tecnico`):
   - `juegos/**` (salas, partidas por semana, perfiles, fotos e invitados) vive en `stald_docs` desde la marca
     `meta/migrado-juegos`;
   - ya no gasta del límite de la API de GitHub;
   - **no hay respaldo**: si Postgres falla, la ruta responde 503 en lugar de leer una copia vieja.
-- **Interruptores públicos** (cambio `rpg-privacidad`): `config/interruptores.json` = `{ "privacidad": false }`.
+- **Interruptores públicos** (cambio `rpg-privacidad`): `config/interruptores.json` = `{ "privacidad": false, "ranking": false }`.
   - Vive como fila de `stald_docs` (`path = 'config/interruptores.json'`); sin Postgres (pruebas, servidor local) se lee
     del almacén de datos. Lo lee `GET /interruptores` (60 s de caché); sin fila → todo apagado.
   - `privacidad`: muestra `privacidad.html`, `consentimiento.html` y sus enlaces en el portal, Inglés y Juegos.
+  - `ranking` (cambio `rpg-fase2-ingles`): ranking por grupo de Inglés. También lo cambia el profe en «🛡️ Nicks»
+    (`POST /profe/ranking`, upsert de la fila).
   - Encender (cambio de dato, sin deploy; se nota en ≤ 2 min):
     `insert into stald_docs (path, data) values ('config/interruptores.json', '{"privacidad": true}') on conflict (path)
     do update set data = excluded.data, version = stald_docs.version + 1, actualizado = now();`

@@ -54,7 +54,8 @@ export function createDb(cfg: ConfigDb): Db {
 // cierre-tecnico): Inglés con meta/migrado y Juegos con meta/migrado-juegos. El contenido sigue en el repo.
 // borradores/: avance del intento abierto (openspec: borrador-en-servidor); ruta nueva, sin migración.
 // entregas/: entregas de misiones en texto y su evaluación (openspec: rpg-fase2-misiones); ruta nueva, sin migración.
-export const PREFIJOS_INGLES = ["alumnos.json", "resultados/", "avance/", "borradores/", "entregas/"];
+// gamificacion/: apagado del ranking por grupo y perfiles (openspec: rpg-fase2-ingles); ruta nueva, sin migración.
+export const PREFIJOS_INGLES = ["alumnos.json", "resultados/", "avance/", "borradores/", "entregas/", "gamificacion/"];
 export const PREFIJO_JUEGOS = "juegos/";
 export const esRutaPg = (path: string, prefijos: string[] = PREFIJOS_INGLES) =>
   prefijos.some((p) => p.endsWith("/") ? path.startsWith(p) : path === p);

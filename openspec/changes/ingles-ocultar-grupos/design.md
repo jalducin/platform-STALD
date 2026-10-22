@@ -48,6 +48,9 @@ los usa también para el grupo vigente del alumno o alumna (`grupoDe`, `grupoInf
   - `renderAdminWeek` (conteo «N con intentos»);
   - `retroAlumnos` y `retroGrupal` de `ingles/presentacion.js` (guion de la clase y diapositiva de retroalimentación
     del Meet: bloques por alumno o alumna, errores comunes, promedios y entregas);
+  - `renderNicksAdmin` de `ingles/rpg-ingles.js` (cambio `rpg-fase2-ingles`, llegó con el merge de `main`): la lista
+    «👥 Todos los nicks». **Excepción:** la cola «⏳ Por revisar» sigue mostrando a todos, para que ninguna petición de
+    nick de un alumno o alumna quede sin moderar (es una tarea de seguridad, no de avance);
   - `renderJuegosAdmin` (ranking y su contador). Las tarjetas de partidas multijugador no se filtran: son partidas
     compartidas con otras personas.
   - `cargarResumen` manda `&ocultos=1` cuando el interruptor está encendido.

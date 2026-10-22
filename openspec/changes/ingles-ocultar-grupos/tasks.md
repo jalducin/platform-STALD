@@ -27,6 +27,9 @@
   `ingles/app.js` (eventos); `?v=` en `ingles.html`
 - [x] 3.3 `ingles/presentacion.js`: guion y retroalimentación del Meet sin grupos ocultos; el interruptor se apaga
   solo cuando ya no queda ningún grupo oculto (hallazgos de `revisor-solo-lectura`, diseño §3 y §4)
+- [x] 3.5 Tras el merge de `main` (rediseño RPG, `rpg-fase2-ingles`): «👥 Todos los nicks» de `ingles/rpg-ingles.js`
+  sin grupos ocultos (la cola «Por revisar» los conserva, diseño §3); `?v=` subidos por encima de los de `main`
+  (`comun.js?v=7`, `tablero.js?v=4`, `app.js?v=6`, `rpg-ingles.js?v=2`)
 - [x] 3.4 E2E `ocultar-grupos`: conteo «con intentos» de «Esta semana», guion del Meet, selector que vuelve a «Todos
   los grupos» al apagar el interruptor, interruptor apagado tras mostrar el último grupo, y ranking comparado con
   `/juegos/admin/resumen`

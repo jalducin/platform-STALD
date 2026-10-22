@@ -58,6 +58,8 @@ const SECCIONES = [
   { id: 'presentar', emoji: '🎬', titulo: 'Presentar', encabezado: 'Presentar la clase', rol: 'admin' },
   { id: 'ruta', emoji: '🎓', titulo: 'Mi ruta', rol: 'admin', href: 'ingles.html?modo=profe' },
   { id: 'juegos', emoji: '🎮', titulo: 'Juegos', encabezado: 'Juegos de la semana', rol: 'admin' },
+  // Moderación de nicks e interruptor del ranking de Inglés (openspec: rpg-fase2-ingles).
+  { id: 'nicks', emoji: '🛡️', titulo: 'Nicks', encabezado: 'Nicks y ranking', rol: 'admin' },
   { id: 'salir', emoji: '🚪', titulo: 'Salir', rol: 'admin', accion: 'salir' },
 ];
 const seccionesDe = rol => SECCIONES.filter(s => s.rol === rol);

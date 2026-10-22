@@ -14,7 +14,7 @@ import { type FilaSecundaria, filasSecundaria as armarFilasSecundaria, identidad
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
-import { crearLectorInterruptores } from "./interruptores.ts";
+import { crearLectorInterruptores, escribirInterruptor } from "./interruptores.ts";
 import { ahoraIso, mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, grupoOcultoAdmin, handleGrupos } from "./grupos.ts";
 import { configPublica, generarEnlace, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, type Quien, quienEs } from "./auth.ts";
@@ -23,6 +23,7 @@ import type { Cuenta } from "./jugadores.ts";
 import { handleResumen } from "./resumen.ts";
 import { crearMemo, unaALaVez } from "./cache.ts";
 import { aplicarCacheHttp, politicaCache } from "./http_cache.ts";
+import { type DepsGamificacion, handleGamificacion, handleProfeGamificacion, rankingVisible } from "./gamificacion.ts";
 import { type DepsMisiones, handleMisiones, handlePractica, handleProfeEntregas, type PersonaMision } from "./misiones.ts";
 import { alumnasSecundaria } from "./secundaria_registro.ts";
 import { aplicarRetencion, CRON_RETENCION } from "./retencion_entregas.ts";
@@ -215,7 +216,8 @@ async function getStore(): Promise<Store> {
 
 // Interruptores públicos (openspec: rpg-privacidad): `config/interruptores.json` en stald_docs (o en el almacén sin
 // Postgres), con caché de 60 s y falla cerrada (todo apagado).
-const leerInterruptores = crearLectorInterruptores({ db, store: baseStore });
+const depsInterruptores = { db, store: baseStore };
+const leerInterruptores = crearLectorInterruptores(depsInterruptores);
 
 // Caché HTTP por ruta (openspec: cache-estabilidad, server/http_cache.ts): /config se puede guardar y el ranking
 // responde 304 si no cambió; lo demás sigue no-store.
@@ -361,7 +363,8 @@ async function rutaActividades(req: Request, sub: string, email: string, admin: 
   // Grupo vigente (openspec: ingles-grupos): filtra el calendario y da horario y Meet a la página.
   const grupo = alumno && await inglesEnPg() ? await grupoDe(db!, slugAlumno(alumno), mxToday()) : null;
   const info = grupo ? await grupoInfo(db!, grupo) : null;
-  const quien = { isAdmin, alumno, ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
+  const ranking = !isAdmin && !!alumno && await rankingVisible({ store, interruptores: leerInterruptores }, grupo); // openspec: rpg-fase2-ingles
+  const quien = { isAdmin, alumno, ...(ranking ? { ranking } : {}), ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
   return await handleActividades(req, sub, quien, store, json);
 }
 
@@ -390,6 +393,22 @@ async function rutaData(url: URL, email: string, admin: string): Promise<Respons
   return json({ rows, isAdmin, ...(baja ? { baja: true } : {}), generatedAt: new Date().toISOString() });
 }
 
+// /gamificacion/… y /profe/nicks|ranking → nick público, ranking por grupo de Inglés y su moderación
+// (openspec: rpg-fase2-ingles; interruptor `ranking` en config/interruptores.json, apagado por defecto).
+async function depsGamificacion(email: string, admin: string): Promise<DepsGamificacion> {
+  const store = await getStore();
+  const conGrupos = await inglesEnPg();
+  return {
+    email, admin, store,
+    registro: () => leerRegistro(store),
+    esSecundaria: async (correo) => (await filasSecundaria()).some((f) => f.userEmails.includes(correo)),
+    ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()) } : {}),
+    items: async (hoy) => (await visibleItems(store, hoy)).items,
+    interruptores: leerInterruptores,
+    cambiarRankingGeneral: async (valor) => { await escribirInterruptor(depsInterruptores, "ranking", valor); leerInterruptores.olvidar(); },
+    hoy: () => mxToday(), ahora: ahoraIso,
+  };
+}
 // Misiones principales (openspec: rpg-fase2-misiones). Quién pide, sin correo: admin, alumna de Secundaria, alumno
 // activo de Inglés (con su grupo), de baja de Inglés o sin acceso (invitado de Juegos o correo no asignado).
 async function personaMision(email: string, admin: string): Promise<PersonaMision> {
@@ -459,6 +478,11 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
 
   const idx = url.pathname.indexOf("/ingles/actividades");
   if (idx !== -1) return await rutaActividades(req, url.pathname.slice(idx + "/ingles/actividades".length), email, admin);
+
+  const iGam = url.pathname.indexOf("/gamificacion/");
+  if (iGam !== -1) return await handleGamificacion(req, url.pathname.slice(iGam + "/gamificacion".length), await depsGamificacion(email, admin), json);
+  const iPg = url.pathname.search(/\/profe\/(nicks|ranking)(\/|$)/);
+  if (iPg !== -1) return await handleProfeGamificacion(req, url.pathname.slice(iPg + "/profe".length), await depsGamificacion(email, admin), json);
 
   if (url.pathname.endsWith("/perfil")) return await rutaPerfil(email, admin);
 
