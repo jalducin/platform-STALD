@@ -1,0 +1,157 @@
+/* Modo presentación del Meet con diseño RPG (openspec: presentacion-cabe; antes en ingles.css).
+   - Tema propio de la presentación: oscuro (pensado para proyector) o claro, en .deck[data-tema]. Por omisión sigue el
+     tema de la página; se cambia con el botón ☀️/🌙 o la tecla T.
+   - Medidas: la letra del cuerpo usa clamp() sobre el ancho de la diapositiva (cqw) por `--escala`; todo lo de adentro
+     va en em, así el ajuste automático de presentacion.js (ajustarDiapositiva) reduce todo junto. Si no cabe ni a la
+     escala mínima, el cuerpo queda con scroll (.desborda) y el aviso «⬇️ Hay más · parte x/y» (.slide-mas).
+   - Nada se recorta: el cuerpo nunca usa overflow oculto sin scroll; tablas con scroll horizontal propio. */
+
+.deck {
+  --p-bg: radial-gradient(ellipse at top, #1e1b4b 0%, #0b1020 70%);
+  --p-panel: #0f172a; --p-panel-2: #16213b; --p-borde: #2b3a5c; --p-texto: #e2e8f0; --p-suave: #cbd5e1;
+  --p-sombra: 0 0 0 1px rgba(129, 140, 248, .25), 0 0 32px rgba(99, 102, 241, .28);
+  position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column;
+  background: var(--p-bg); color: var(--p-texto); font-family: "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
+}
+.deck[data-tema="claro"] {
+  --p-bg: linear-gradient(160deg, #eef2ff 0%, #f5f3ff 55%, #ecfdf5 100%);
+  --p-panel: #ffffff; --p-panel-2: #f5f3ff; --p-borde: #ddd6fe; --p-texto: #1c1917; --p-suave: #44403c;
+  --p-sombra: 0 10px 32px rgba(79, 70, 229, .18);
+}
+.deck-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 1.5vh 2vw; }
+
+/* Tonos por tipo: --tone (texto/acentos, legible sobre el panel), --tone-bg (relleno con texto blanco), --tone2 (degradado). */
+.slide[data-tone="indigo"] { --tone: #4338ca; --tone-bg: #4f46e5; --tone2: #7e22ce; }
+.slide[data-tone="amber"] { --tone: #b45309; --tone-bg: #b45309; --tone2: #d97706; }
+.slide[data-tone="blue"] { --tone: #1d4ed8; --tone-bg: #2563eb; --tone2: #4f46e5; }
+.slide[data-tone="green"] { --tone: #047857; --tone2: #0d9488; --tone-bg: #047857; }
+.slide[data-tone="pink"] { --tone: #be185d; --tone-bg: #be185d; --tone2: #7e22ce; }
+.slide[data-tone="orange"] { --tone: #c2410c; --tone-bg: #c2410c; --tone2: #b45309; }
+.slide[data-tone="teal"] { --tone: #0f766e; --tone-bg: #0f766e; --tone2: #4f46e5; }
+.deck:not([data-tema="claro"]) .slide[data-tone="indigo"] { --tone: #a5b4fc; }
+.deck:not([data-tema="claro"]) .slide[data-tone="amber"] { --tone: #fcd34d; }
+.deck:not([data-tema="claro"]) .slide[data-tone="blue"] { --tone: #93c5fd; }
+.deck:not([data-tema="claro"]) .slide[data-tone="green"] { --tone: #6ee7b7; }
+.deck:not([data-tema="claro"]) .slide[data-tone="pink"] { --tone: #f9a8d4; }
+.deck:not([data-tema="claro"]) .slide[data-tone="orange"] { --tone: #fdba74; }
+.deck:not([data-tema="claro"]) .slide[data-tone="teal"] { --tone: #5eead4; }
+.slide { --soft: color-mix(in srgb, var(--tone-bg) 12%, var(--p-panel)); }
+
+/* Diapositiva: 16:9 que cabe en el escenario; en vertical (celular) ocupa todo el alto disponible. */
+.slide {
+  container-type: inline-size; position: relative; display: flex; flex-direction: column;
+  width: min(96vw, calc((100dvh - 96px) * 16 / 9)); aspect-ratio: 16 / 9; max-height: 100%;
+  background: var(--p-panel); color: var(--p-texto); border: 1px solid var(--p-borde); border-radius: 18px;
+  box-shadow: var(--p-sombra); overflow: hidden; animation: slideIn .35s ease;
+}
+@media (orientation: portrait) { .slide { width: 100%; height: 100%; aspect-ratio: auto; } }
+@keyframes slideIn { from { opacity: 0; transform: translateY(1.5vmin) scale(.985); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .slide { animation: none; } }
+
+/* Encabezado: etiqueta de la misión, título y contexto. Se acomoda en varias líneas si no cabe. */
+.slide-top {
+  flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .3em .7em; padding: .55em 1.1em;
+  font-size: clamp(15px, 2.9cqw, 60px); font-weight: 800; line-height: 1.15; letter-spacing: -.01em;
+  color: #fff; background: linear-gradient(90deg, var(--tone-bg), var(--tone2));
+}
+.slide-tag { font-size: max(12px, .5em); font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: .3em .8em; border-radius: 999px; background: rgba(255, 255, 255, .2); border: 1px solid rgba(255, 255, 255, .45); white-space: nowrap; }
+.slide-tit { flex: 1 1 12em; min-width: 0; overflow-wrap: anywhere; font-family: "Orbitron", "Inter", "Segoe UI", system-ui, sans-serif; }
+.slide-top small { font-size: max(12px, .5em); font-weight: 600; opacity: .9; overflow-wrap: anywhere; }
+@container (max-width: 560px) { .slide-top small { display: none; } }
+
+/* Cuerpo: letra adaptable × --escala; nunca recorta (scroll cuando no cabe). */
+.slide-body {
+  flex: 1; min-height: 0; display: flex; flex-direction: column; gap: .65em; padding: .9em 1.6em 1em;
+  font-size: calc(clamp(14px, 2.25cqw, 46px) * var(--escala, 1)); line-height: 1.35; overflow: hidden;
+}
+.slide-body > * { flex-shrink: 0; }
+.slide-body.desborda { overflow-y: auto; overscroll-behavior: contain; padding-bottom: 3.2em; scrollbar-color: var(--tone) transparent; }
+.slide-body p { margin: 0; }
+.slide-mas {
+  position: absolute; left: 50%; bottom: .6em; transform: translateX(-50%); z-index: 2; cursor: pointer;
+  font: 800 clamp(13px, 1.6cqw, 28px)/1 "Inter", "Segoe UI", system-ui, sans-serif; color: #fff; white-space: nowrap;
+  padding: .55em 1.1em; border-radius: 999px; border: 2px solid rgba(255, 255, 255, .6);
+  background: linear-gradient(90deg, var(--tone-bg), var(--tone2)); box-shadow: 0 6px 18px rgba(0, 0, 0, .3);
+  animation: masPulso 1.6s ease-in-out infinite;
+}
+.slide-mas.al-final { animation: none; opacity: .92; }
+@keyframes masPulso { 50% { transform: translateX(-50%) translateY(-.25em); } }
+@media (prefers-reduced-motion: reduce) { .slide-mas { animation: none; } }
+
+/* Portada «Misión de la semana» y cierre «Misión cumplida». */
+.slide.hero { background: linear-gradient(135deg, var(--tone-bg), var(--tone2)); color: #fff; border-color: transparent; }
+.slide.hero .slide-body { font-size: calc(clamp(14px, 2.2cqw, 46px) * var(--escala, 1)); text-align: center; }
+.hero-in { margin: auto; display: flex; flex-direction: column; align-items: center; gap: .45em; max-width: 100%; }
+.hero-tag { font-size: .8em; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: .35em 1em; border-radius: 999px; background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .5); }
+.slide.hero .big-emoji { font-size: 3.6em; line-height: 1; filter: drop-shadow(0 .1em .25em rgba(0, 0, 0, .3)); }
+.slide.hero h1 { font-family: "Orbitron", "Inter", "Segoe UI", system-ui, sans-serif; font-size: 2.7em; line-height: 1.1; margin: 0; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.slide.hero h2 { font-size: 1.25em; margin: 0; font-weight: 600; opacity: .95; overflow-wrap: anywhere; }
+.hero-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: .5em; margin-top: .4em; }
+.pill-hero { font-size: .85em; font-weight: 700; background: rgba(255, 255, 255, .2); border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px; padding: .35em 1em; overflow-wrap: anywhere; }
+
+/* Bloques comunes en tarjetas. */
+.s-lead { font-size: 1.05em; font-weight: 600; color: var(--p-texto); background: var(--soft); border-left: .3em solid var(--tone-bg); border-radius: .5em; padding: .5em .9em; }
+.s-nota { font-size: .85em; color: var(--p-suave); margin-top: .5em !important; }
+.s-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15em), 1fr)); gap: .55em; align-items: start; }
+.s-grid.s-lista { grid-template-columns: 1fr; }
+.s-card { background: var(--soft); border: 1px solid var(--p-borde); border-radius: .6em; padding: .5em .8em; display: flex; gap: .6em; align-items: center; min-width: 0; }
+.s-txt { min-width: 0; overflow-wrap: anywhere; }
+.s-frases .s-txt { font-weight: 800; font-size: 1.1em; }
+.s-num { flex-shrink: 0; width: 1.8em; height: 1.8em; border-radius: 50%; background: var(--tone-bg); color: #fff; font-weight: 800; display: grid; place-items: center; font-size: .95em; box-shadow: 0 0 0 .15em color-mix(in srgb, var(--tone-bg) 30%, transparent); }
+.s-time { margin-left: auto; flex-shrink: 0; font-size: .85em; font-weight: 800; color: var(--tone); border: 1px solid var(--tone); border-radius: 999px; padding: .15em .7em; white-space: nowrap; }
+.s-chip { display: inline-block; font-size: .75em; font-weight: 800; letter-spacing: .05em; color: #fff; background: var(--tone-bg); border-radius: 999px; padding: .1em .6em; margin-bottom: .2em; }
+
+/* Agenda como «ruta de la misión»: pasos unidos por una línea punteada. */
+.s-ruta { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17em), 1fr)); gap: .5em 1.2em; }
+.s-paso { position: relative; display: flex; align-items: center; gap: .6em; background: var(--soft); border: 1px solid var(--p-borde); border-left: .3em dashed var(--tone-bg); border-radius: .6em; padding: .45em .8em; min-width: 0; }
+
+/* Teoría: tablas con scroll horizontal propio (nunca se cortan), ejemplos con chip, puntos como tarjetas. */
+.s-tabla { overflow-x: auto; border: 1px solid var(--p-borde); border-radius: .6em; max-width: 100%; }
+.s-table { width: 100%; border-collapse: collapse; font-size: .92em; }
+.s-table th { background: var(--tone-bg); color: #fff; text-align: left; padding: .35em .7em; font-weight: 800; }
+.s-table td { padding: .3em .7em; border-top: 1px solid var(--p-borde); background: var(--p-panel); overflow-wrap: break-word; }
+.s-table tr:nth-child(even) td { background: var(--soft); }
+.s-table td:first-child { font-weight: 800; color: var(--tone); }
+.s-dos { grid-template-columns: repeat(auto-fit, minmax(min(100%, 13em), 1fr)); }
+.s-ex { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14em), 1fr)); gap: .5em; }
+.s-ex > div { background: var(--soft); border: 1px solid var(--p-borde); border-left: .3em solid var(--tone-bg); border-radius: .6em; padding: .45em .8em; min-width: 0; overflow-wrap: anywhere; }
+.s-ex b { color: var(--tone); display: block; font-size: 1.05em; }
+.s-es { display: block; color: var(--p-suave); font-size: .9em; }
+.s-points { list-style: none; margin: 0; padding: 0; display: grid; gap: .35em; }
+.s-points li { position: relative; padding: .3em .7em .3em 2em; border-radius: .5em; background: var(--soft); overflow-wrap: anywhere; }
+.s-points li::before { content: "✦"; position: absolute; left: .6em; color: var(--tone); font-weight: 800; }
+
+/* Resultados del grupo. */
+.s-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10em), 1fr)); gap: .55em; }
+.s-stat { background: var(--soft); border: 1px solid var(--p-borde); border-radius: .7em; padding: .6em; text-align: center; }
+.s-stat .n { font-family: "Orbitron", "Inter", system-ui, sans-serif; font-size: 2em; font-weight: 800; color: var(--tone); line-height: 1; }
+.s-stat .l { font-size: .85em; color: var(--p-suave); margin-top: .3em; }
+.s-bar { height: .45em; background: var(--p-borde); border-radius: 999px; overflow: hidden; margin-top: .5em; }
+.s-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--tone-bg), var(--tone2)); }
+.s-col { min-width: 0; }
+.s-col h3 { margin: 0 0 .3em; font-size: 1em; color: var(--tone); }
+.s-col ul { margin: 0; padding-left: 1.2em; font-size: .92em; }
+
+/* Reto en vivo (QR). */
+.s-reto { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14em), 1fr)); gap: 1em; align-items: center; }
+.s-lista-col { display: flex; flex-direction: column; gap: .5em; min-width: 0; }
+.s-qr-col { display: flex; justify-content: center; }
+.s-qr { background: #fff; padding: .5em; border-radius: .7em; display: flex; align-items: center; justify-content: center; }
+.s-qr img, .s-qr canvas { width: min(9em, 40cqw) !important; height: min(9em, 40cqw) !important; }
+.s-url { font-size: .85em; font-weight: 700; color: var(--tone); word-break: break-all; }
+
+/* Diagramas dentro de la diapositiva: paleta de la presentación y medidas relativas al cuerpo (siguen en columna
+   cuando la diapositiva es angosta, por las consultas de contenedor de ingles.css). */
+.slide .dg { font-size: .9em; margin: 0; --accent: var(--tone); --accent-bg: var(--tone-bg); --accent-soft: var(--soft); --text: var(--p-texto); --muted: var(--p-suave); --border: var(--p-borde); --card: var(--p-panel); --card-2: var(--p-panel-2); --bg: var(--p-panel); }
+
+/* Barra de navegación: botones reales (44 px), contador «x / y» y barra de progreso RPG. */
+.deck-bar { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 6px 14px 10px; color: var(--p-texto); font-size: .9rem; }
+.deck-btn { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; font: 700 .9rem/1 "Inter", "Segoe UI", system-ui, sans-serif; color: var(--p-texto); background: var(--p-panel); border: 1px solid var(--p-borde); border-radius: 12px; padding: 0 12px; cursor: pointer; }
+.deck-btn:hover { border-color: #818cf8; }
+.deck-btn:focus-visible { outline: 3px solid #818cf8; outline-offset: 2px; }
+.deck-btn.principal { color: #fff; background: var(--rpg-barra, linear-gradient(90deg, #6366f1, #a855f7)); border-color: transparent; }
+.deck-contador { flex-shrink: 0; }
+.deck-progress { flex: 1; min-width: 40px; }
+@media (max-width: 640px) { .deck-lbl { display: none; } .deck-bar { gap: 6px; padding: 6px 8px 8px; } .deck-btn { padding: 0 8px; } }
+/* Pantallas bajas (celular horizontal): portada y cierre más compactas para que quepan sin scroll. */
+@media (max-height: 520px) { .slide.hero .big-emoji { font-size: 2.2em; } .slide.hero h1 { font-size: 1.9em; } .hero-in { gap: .3em; } }

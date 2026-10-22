@@ -298,57 +298,7 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 .grupo-fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 #alta-alumno input, #alta-alumno select { min-height: 44px; padding: 10px; border-radius: 10px; border: 1px solid var(--border); font: inherit; background: var(--card); color: var(--text); }
 
-/* ---------- Modo presentación (Meet): igual que antes, con su propia paleta ---------- */
-.deck { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(ellipse at top, #1e1b4b, #0b1020 70%); display: flex; flex-direction: column; }
-.deck-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5vh 2vw; min-height: 0; }
-.slide { container-type: inline-size; width: min(96vw, calc((100vh - 90px) * 16 / 9)); aspect-ratio: 16 / 9; background: #fffdf8; color: #1c1917; border-radius: 1.6vmin; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2vmin 6vmin rgba(0,0,0,.45); animation: slideIn .35s ease; font-family: "Segoe UI", Roboto, system-ui, sans-serif; }
-@keyframes slideIn { from { opacity: 0; transform: translateY(1.5vmin) scale(.985); } to { opacity: 1; transform: none; } }
-.slide[data-tone="indigo"] { --tone: #4f46e5; --tone2: #7c3aed; --soft: #eef2ff; }
-.slide[data-tone="amber"] { --tone: #d97706; --tone2: #f59e0b; --soft: #fffbeb; }
-.slide[data-tone="blue"] { --tone: #2563eb; --tone2: #0ea5e9; --soft: #eff6ff; }
-.slide[data-tone="green"] { --tone: #16a34a; --tone2: #22c55e; --soft: #f0fdf4; }
-.slide[data-tone="pink"] { --tone: #db2777; --tone2: #f472b6; --soft: #fdf2f8; }
-.slide[data-tone="orange"] { --tone: #ea580c; --tone2: #fb923c; --soft: #fff7ed; }
-.slide[data-tone="teal"] { --tone: #0d9488; --tone2: #2dd4bf; --soft: #f0fdfa; }
-.slide-top { background: linear-gradient(90deg, var(--tone), var(--tone2)); color: #fff; padding: 2.2cqw 4cqw; font-size: 3.6cqw; font-weight: 800; letter-spacing: -.02em; display: flex; justify-content: space-between; align-items: center; }
-.slide-top small { font-size: 1.6cqw; font-weight: 600; opacity: .85; }
-.slide-body { flex: 1; padding: 2.6cqw 4cqw; font-size: 2.3cqw; line-height: 1.35; overflow: hidden; display: flex; flex-direction: column; gap: 1.6cqw; }
-.slide-body p { margin: 0; }
-.slide.hero { background: linear-gradient(135deg, var(--tone), var(--tone2)); color: #fff; justify-content: center; align-items: center; text-align: center; gap: 1cqw; }
-.slide.hero .big-emoji { font-size: 9cqw; line-height: 1; }
-.slide.hero h1 { font-size: 7.5cqw; margin: 0; letter-spacing: -.03em; }
-.slide.hero h2 { font-size: 3cqw; margin: 0; font-weight: 600; opacity: .95; }
-.slide.hero .pill-hero { font-size: 1.9cqw; background: rgba(255,255,255,.2); border-radius: 99px; padding: .6cqw 2cqw; margin-top: 1.5cqw; }
-.s-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 2.1cqw; border-radius: 1cqw; overflow: hidden; }
-.s-table th { background: var(--tone); color: #fff; text-align: left; padding: .9cqw 1.4cqw; }
-.s-table td { padding: .8cqw 1.4cqw; border-bottom: .15cqw solid #eee; background: #fff; }
-.s-table tr:nth-child(even) td { background: var(--soft); }
-.s-table td:first-child { font-weight: 800; color: var(--tone); }
-.s-points { margin: 0; padding-left: 3cqw; }
-.s-points li { margin: .5cqw 0; }
-.s-ex { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2cqw; }
-.s-ex div { background: var(--soft); border-left: .6cqw solid var(--tone); border-radius: 1cqw; padding: 1cqw 1.6cqw; }
-.s-ex b { color: var(--tone); display: block; font-size: 2.6cqw; }
-.s-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4cqw; }
-.s-card { background: var(--soft); border-radius: 1.2cqw; padding: 1.4cqw 1.8cqw; display: flex; gap: 1.4cqw; align-items: center; }
-.s-num { flex-shrink: 0; width: 4.2cqw; height: 4.2cqw; border-radius: 50%; background: var(--tone); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 2.2cqw; }
-.s-time { margin-left: auto; font-size: 1.7cqw; font-weight: 700; color: var(--tone); background: #fff; border-radius: 99px; padding: .3cqw 1.2cqw; white-space: nowrap; }
-.s-stat { background: #fff; border: .2cqw solid var(--soft); border-radius: 1.4cqw; padding: 1.4cqw; text-align: center; }
-.s-stat .n { font-size: 5.2cqw; font-weight: 800; color: var(--tone); line-height: 1; }
-.s-stat .l { font-size: 1.7cqw; color: #57534e; margin-top: .6cqw; }
-.s-bar { height: 1cqw; background: #eee; border-radius: 99px; overflow: hidden; margin-top: 1cqw; }
-.s-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--tone), var(--tone2)); }
-.s-col h3 { margin: 0 0 .8cqw; font-size: 2.3cqw; color: var(--tone); }
-.s-col ul { margin: 0; padding-left: 2.6cqw; font-size: 2cqw; }
-.s-lead { font-size: 2.5cqw; font-weight: 700; color: #44403c; }
-.s-qr { background: #fff; padding: 1.2cqw; border-radius: 1.4cqw; box-shadow: 0 .5cqw 2cqw rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; }
-.s-qr img, .s-qr canvas { width: 22cqw !important; height: 22cqw !important; }
-.s-url { font-size: 1.8cqw; font-weight: 700; color: var(--tone); word-break: break-all; }
-.deck-bar { display: flex; align-items: center; gap: 10px; padding: 8px 16px 12px; color: #e0e7ff; font-size: .85rem; }
-.deck-bar button { background: rgba(255,255,255,.12); color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor: pointer; }
-.deck-bar button:hover { background: rgba(255,255,255,.22); }
-.deck-progress { flex: 1; height: 6px; background: rgba(255,255,255,.15); border-radius: 99px; overflow: hidden; }
-.deck-progress span { display: block; height: 100%; background: linear-gradient(90deg, #818cf8, #c084fc); transition: width .3s ease; }
+/* Modo presentación (Meet): vive en ingles/presentacion.css (openspec: presentacion-cabe). */
 
 /* Ordenar la oración y unir pares (openspec: ejercicios-ordenar-emparejar). Botones de 44 px o más; caben en 390 px. */
 .ord-etq { font-size: .72rem; font-weight: 800; color: var(--muted); text-transform: uppercase; margin: 8px 0 4px; }
@@ -456,8 +406,6 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 .dg-col-h.dg-der { background: var(--text); color: var(--bg); }
 .dg-celda { display: grid; min-width: 0; }
 .dg-celda.dg-der .dg-nodo { background: var(--card-2); }
-/* En la diapositiva del Meet: paleta clara de la diapositiva y medidas relativas a ella. */
-.slide .dg { font-size: 1.9cqw; margin: 0; --accent: var(--tone); --accent-bg: var(--tone); --accent-soft: var(--soft); --text: #1c1917; --muted: #57534e; --border: #e7e5e4; --card: #fff; --card-2: #fafaf9; --bg: #fffdf8; }
 
 /* ---------- Clases de Secundaria (openspec: secundaria-mis-clases) ---------- */
 /* Colores por materia (--mat, --mat-soft y .mat-<clave>): estilos/materias.css (openspec: secundaria-dashboard). */
