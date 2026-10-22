@@ -64,7 +64,9 @@ A la semana: Inglés 4, Español 3, Matemáticas 3, Tecnología 2, Ciencias 1, C
 - **Disponibilidad:** `disponibleDesde` es su día y `fechaLimite` el día siguiente. `intentos: 2` y
   `porSecciones: true`.
 - **Exclusividad:** `alumnos` con los slugs de la alumna, los mismos que en las clases anteriores de
-  `contenido/secundaria/actividades/`.
+  `contenido/secundaria/actividades/`, **en el mismo orden: el slug canónico primero** (`["sofia","sofy"]`). El
+  servidor toma el primero como su slug de Secundaria (con el que están sus resultados; cambio
+  `secundaria-sin-notion`). No mezclar en un mismo arreglo a dos personas con nombres parecidos.
 - **Ejercicios:**
   - 14–18 por clase (Artes y Ed. Física, unos 10);
   - ~70 % `opcion` / 30 % `escribir`, con `aceptadas` amplias (numéricas, contracciones, mayúsculas);

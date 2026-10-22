@@ -3,8 +3,12 @@
 ### Requirement: Identidad de Secundaria desde el registro
 La identidad de Secundaria SHALL salir del registro de alumnos y alumnas (`alumnos.json`, en Postgres en producción),
 leído a través del store, sin Notion. Una entrada SHALL tener acceso a Secundaria si tiene `secundaria: true` o si su
-slug aparece en `alumnos` de algún elemento visible de `contenido/secundaria/`. Su slug SHALL ser `slugSecundaria` si lo
-tiene y, si no, el de su `nombre`; ese slug SHALL decidir sus clases exclusivas y sus resultados. La baja de Inglés
+slug aparece en `alumnos` de algún elemento visible de `contenido/secundaria/`. Su slug de Secundaria SHALL ser
+`slugSecundaria` si lo tiene; si no, cuando el slug de su `nombre` aparece en un arreglo `alumnos`, el PRIMERO de ese
+arreglo (slug canónico, p. ej. `sofia` en `["sofia","sofy"]`); y si no, el de su `nombre`. Ese slug SHALL decidir sus
+clases exclusivas y sus resultados, para que sus resultados anteriores sigan visibles bajo un solo slug. El primero del
+arreglo SHALL tomarse solo si parece la misma persona (mismas 3 primeras letras que su slug) y no es el slug propio de
+otra entrada del registro. La baja de Inglés
 SHALL NOT quitar Secundaria. Un correo sin acceso SHALL recibir 403 `sin_acceso`. Las respuestas SHALL NOT incluir
 correos. Si nadie tiene acceso por el registro, el servidor SHALL intentar temporalmente las filas de Notion y
 registrar un aviso en el log; si Notion falla o no está configurado, SHALL seguir sin error (Secundaria sin acceso, las
@@ -15,6 +19,15 @@ demás rutas en 200).
   `alumnos: ["sofia","sofy"]`
 - **THEN** `/secundaria/actividades` responde 200 con sus clases y `/perfil` da `accesos.secundaria: true`, sin
   consultar Notion
+
+#### Scenario: Slug canónico (alias)
+- **WHEN** Sofy (slug `sofy`) tiene clases con `alumnos: ["sofia","sofy"]` y su examen de septiembre está en
+  `resultados/sec-mensual-2026-09/sofia.json`
+- **THEN** entra con el slug `sofia`, ve ese resultado y sus resultados nuevos quedan bajo `sofia`
+
+#### Scenario: Clase para dos personas
+- **WHEN** una clase trae `alumnos: ["sofia","ana"]` y Ana está en el registro
+- **THEN** Ana sigue con el slug `ana` y no ve los resultados de Sofía
 
 #### Scenario: Marca del profe
 - **WHEN** una entrada tiene `secundaria: true`
@@ -70,7 +83,7 @@ true` y `vistaDe`; un slug desconocido SHALL responder 404 `alumna_no_encontrada
 SHALL ignorarse, y SHALL NOT permitir enviar intentos a nombre de la alumna.
 
 #### Scenario: Vista de la alumna
-- **WHEN** el admin pide `?alumna=sofy`
+- **WHEN** el admin pide `?alumna=sofia`
 - **THEN** recibe las clases de Sofy con su estado y su mejor calificación, marcadas como vista del admin
 
 #### Scenario: La alumna intenta usar el parámetro

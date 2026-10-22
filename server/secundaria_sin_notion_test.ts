@@ -75,16 +75,41 @@ Deno.test("registro: con alguien marcado no se consulta Notion", async () => {
   assertEquals([filas.length, consultas], [2, 0]);
 });
 
-Deno.test("registro: sin marca, entra quien tiene clases exclusivas con su slug (Sofy, de baja de Inglés)", async () => {
+Deno.test("registro: sin marca, entra quien tiene clases exclusivas; su slug es el canónico (el primero de `alumnos`)", async () => {
   const reg: any = {
     "sofy@example.com": { nombre: "Sofy", alta: ALTA, origen: "notion", baja: "2026-10-21" },
     "marisol@example.com": { nombre: "Marisol", alta: ALTA },
   };
   const exclusivos = slugsExclusivos([{ alumnos: ["sofia", "sofy"] }, {}]);
-  assertEquals(filasDeRegistro(reg, exclusivos), [{ userIds: [], userEmails: ["sofy@example.com"], userNames: ["Sofy"], slug: "sofy" }]);
+  // Caso real: está como «Sofy» (slug sofy) y sus resultados de Secundaria están bajo «sofia», el primero del arreglo.
+  assertEquals(filasDeRegistro(reg, exclusivos), [{ userIds: [], userEmails: ["sofy@example.com"], userNames: ["Sofy"], slug: "sofia" }]);
   let consultas = 0;
   const filas = await filasSecundaria({ registro: () => Promise.resolve(reg), exclusivos: () => Promise.resolve(exclusivos), notion: () => { consultas++; return Promise.resolve([]); }, avisar: () => {} });
   assertEquals([filas.length, consultas], [1, 0], "no consulta Notion");
+});
+
+Deno.test("slug canónico: también con la marca; slugSecundaria manda; sin alias, el de su nombre", () => {
+  const exclusivos = slugsExclusivos([{ alumnos: ["sofia", "sofy"] }, { alumnos: ["sofy"] }, { alumnos: ["luz", "lucecita"] }]);
+  assertEquals([...exclusivos], [["sofia", "sofia"], ["sofy", "sofia"], ["luz", "luz"], ["lucecita", "luz"]], "el primer arreglo que nombra a cada slug decide");
+  const reg: any = {
+    "sofy@example.com": { nombre: "Sofy", alta: ALTA, secundaria: true },
+    "pin@example.com": { nombre: "Sofy Dos", alta: ALTA, secundaria: true, slugSecundaria: "sofy-dos" },
+    "ana@example.com": { nombre: "Ana", alta: ALTA, secundaria: true },
+  };
+  assertEquals(filasDeRegistro(reg, exclusivos).map((f) => f.slug), ["sofia", "sofy-dos", "ana"]);
+});
+
+Deno.test("slug canónico: una clase para dos personas no le da a una el slug de la otra", () => {
+  const reg: any = {
+    "sofy@example.com": { nombre: "Sofy", alta: ALTA },
+    "ana@example.com": { nombre: "Ana", alta: ALTA },
+    "sofi@example.com": { nombre: "Sofi", alta: ALTA, secundaria: true },
+    "sofia@example.com": { nombre: "Sofía", alta: ALTA, secundaria: true },
+  };
+  // ["sofia","ana"]: Ana no se parece a «sofia» → sigue como «ana». «sofia» es el slug propio de otra entrada (Sofía),
+  // así que Sofi tampoco lo toma aunque empiece igual.
+  const exclusivos = slugsExclusivos([{ alumnos: ["sofia", "ana"] }, { alumnos: ["sofia", "sofi", "sofy"] }]);
+  assertEquals(Object.fromEntries(filasDeRegistro(reg, exclusivos).map((f) => [f.userNames[0], f.slug])), { Ana: "ana", Sofi: "sofi", Sofía: "sofia", Sofy: "sofy" });
 });
 
 Deno.test("sin Notion: si leer el contenido falla, sigue con la marca del registro y no lanza", async () => {
