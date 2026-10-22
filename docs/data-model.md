@@ -139,7 +139,8 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - Las tablas `stald_test_*` son para pruebas E2E.
   - Definición: `supabase/migrations/001_stald_ingles.sql`.
 - `stald_docs(path, data jsonb, version, actualizado)`: documentos 1 a 1 con el repo de datos.
-  - Rutas: `alumnos.json`, `resultados/<item>/<slug>.json` y `avance/<slug>.json`.
+  - Rutas: `alumnos.json`, `resultados/<item>/<slug>.json`, `avance/<slug>.json`, `borradores/<item>/<slug>.json` y
+    `entregas/<misión>/<slug>.json` (prefijos en `PREFIJOS_INGLES`, `server/db.ts`).
   - `version` es el `sha` de la concurrencia optimista.
   - La fila `meta/migrado` activa `PgStore`.
 - `stald_grupos(id, nombre, nivel, horario, meet_url, color, activo, orden)`. El grupo inicial es `grupo-1`
@@ -486,3 +487,51 @@ para todos, pero con ejercicios distintos para cada alumno o alumna.
 ejercicios del intento 1 (`intentos[].preguntas`). Las correctas quedan fijas y solo se contestan las
 falladas; si el último intento tiene 100 %, el elemento queda completo. El examen tiene 1 intento; si
 tuviera más, cada uno sería una selección nueva.
+
+## Misiones principales (repo privado y `stald_docs`, cambio `rpg-fase2-misiones`)
+
+Requisitos: `openspec/changes/rpg-fase2-misiones/specs/`. Validador: `deno run --allow-read server/validar_semana.ts
+<datos> --misiones <secundaria | ingles>` (sin `<lunes>`; código 1 con errores). Ámbitos: `secundaria` →
+`contenido/secundaria/`, `ingles` (grupo de Inglés) → `contenido/ingles/`.
+
+**Catálogo `contenido/<ámbito>/mundos.json`:** `{ "mundos": [{ id, materia, nombre, emoji, etapa?, desde, hasta,
+misionPrincipal? }] }`. `id` = nombre sin acentos con guiones (`valle-de-los-numeros`); un mundo que comparten dos
+materias lleva `-<clave>` (`estudio-y-arena-artes`). `desde`/`hasta` AAAA-MM-DD o `null` (todo el ciclo). Dos mundos de
+la misma materia no se enciman (salvo los paralelos de la fuente: Laberinto Sintaxis y Núcleo IA). En Secundaria los
+nombres y fechas deben ser los de `comun/gamificacion.js` (fuente); se genera con `deno run -A server/generar_mundos.ts
+<datos>`. Si no se puede leer, la página usa la derivación de la Fase 1. Sociales rota por mes desde febrero de 2027
+(eso lo calcula `comun/gamificacion.js`, no el catálogo).
+
+**Misión `contenido/<ámbito>/misiones/<id>.json`** (contenido, sin datos personales):
+
+| Campo | Regla |
+|---|---|
+| `id` | `mis-<materia>-<mundo>`, igual al nombre del archivo; **único entre ámbitos** (las entregas se guardan por id) |
+| `tipo` | `"mision"` (informativo) |
+| `titulo`, `materia`, `descripcion?` | `materia` = nombre visible («Matemáticas») |
+| `mundo` | `id` de un mundo del catálogo |
+| `disponibleDesde?` | desde cuándo se ve; si falta, el `desde` de su mundo |
+| `consigna` | texto con saltos de línea; **debe** incluir «Sin nombres reales, direcciones ni datos de contacto» |
+| `pasos[]` | 3 a 5: `{ id, titulo, instrucciones, fechaLimite, tipoEntrega: "texto", entregable?, extension?, ejemplo? }`; fechas en orden y dentro del mundo. `imagen` o `audio` = error («por ahora las entregas son solo texto») |
+| `rubrica[]` | exactamente 4 `{ id, criterio, descripcion?, puntos, niveles: [{ nivel?, nombre, puntos, descriptor? }] }`; `puntos` = su nivel más alto; los máximos suman 100 |
+| `teoria[]?` | como la de las clases (texto, tabla, puntos, `diagrama`) y `practica[]` (abajo) |
+| `tips[]` | `{ tipo, texto, url? }` con `https` |
+| `alumnos?` / `grupos?` | exclusividad por slug (Secundaria) o por id de grupo (Inglés) |
+
+**Práctica de la teoría** (clases de Secundaria y misiones): `teoria[i].practica[] = { id, pregunta, opciones?,
+correcta?, aceptadas?, pista? }` (opción múltiple con `correcta` = índice, o abierta con `aceptadas`). `correcta` y
+`aceptadas` **nunca** llegan al navegador (`teoriaPublica`, `server/practica.ts`); se comprueba con
+`POST /practica/comprobar`. No cuenta para la calificación.
+
+**Entrega `entregas/<misión>/<slug>.json`** (`stald_docs`, Postgres; nunca en el repo de contenido):
+`{ mision, ambito, slug, pasos: { <pasoId>: { texto | null, enviadoEn, tarde, estado: "entregado" | "correccion",
+borrado?, correccion?: { motivo, privacidad, fecha } } }, evaluacion: null | { puntos: { <criterioId>: n }, porcentaje,
+aTiempo, xp, comentario, fecha }, historial: [{ accion, paso?, fecha }] }`. Sin correos ni nombres. `xp` = porcentaje
+× 3 + 60 si el último paso fue a tiempo (`Gamificacion.xpDeMision`). Pedir corrección por privacidad pone `texto: null`
+en ese momento.
+
+**Retención:** cada 31 de agosto (12:00 UTC) un `Deno.cron` de Deno Deploy (`server/main.ts`) borra el texto de todas
+las entregas y conserva la evaluación, con concurrencia optimista y reintento; a mano, `server/retencion_entregas.ts
+--confirmar` con las llaves (sale con 1 si alguna quedó pendiente). El borrado por persona alcanza también entregas de
+misiones que ya no están en el repo de datos; el profe también puede borrar el contenido de una entrega o de
+una persona desde la bandeja.

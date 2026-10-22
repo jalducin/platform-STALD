@@ -1,4 +1,5 @@
 // Validador de una semana completa antes de subirla al repo de datos (ver openspec: nueva-semana-ingles).
+import { erroresPractica } from "./practica.ts";
 import { AMBITO_CLASE, AMBITO_PROFE, AMBITO_SECUNDARIA, type Ambito, loadItem } from "./actividades.ts";
 import { erroresDiagramas } from "./diagrama.ts";
 import { maxIntentos, validateItem } from "./motor.ts";
@@ -79,7 +80,7 @@ async function revisarElemento(store: Store, el: Semana["elementos"][number], lu
   const esSecundaria = ambito.clave === AMBITO_SECUNDARIA.clave;
   errores.push(...erroresApertura(it, el.id, lunes, ambito));
   if (it.tipo === "examen" && maxIntentos(it) === 2 && !it.segundaOportunidad && ambito.clave === AMBITO_CLASE.clave) avisos.push(`${el.id}: examen con 2 intentos sin segundaOportunidad (se sugiere el domingo)`);
-  errores.push(...validateItem(it), ...erroresDiagramas(it.teoria).map((e) => `${el.id}: ${e}`));
+  errores.push(...validateItem(it), ...erroresDiagramas(it.teoria).map((e) => `${el.id}: ${e}`), ...erroresPractica(it.teoria).map((e) => `${el.id}: ${e}`));
 
   if (esSecundaria && typeof it.materia === "string" && it.materia.trim() && !MATERIAS_SECUNDARIA.includes(it.materia)) {
     avisos.push(`${el.id}: materia «${it.materia}» no es una de ${MATERIAS_SECUNDARIA.join(", ")}`);

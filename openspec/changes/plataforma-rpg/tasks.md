@@ -25,34 +25,34 @@
 
 ## 2. Fase 1 — Núcleo y dashboard (en curso, otros cambios)
 
-- [ ] 2.1 Esperar a que los cambios de Fase 1 (dashboard RPG con `comun/gamificacion.js` y clase como misión) se
+- [ ] 2.1 (PENDIENTE: espera el visto bueno del profe para archivar `gamificacion-nucleo` y `secundaria-dashboard`) Esperar a que los cambios de Fase 1 (dashboard RPG con `comun/gamificacion.js` y clase como misión) se
   fusionen y archiven
-- [ ] 2.2 Conciliar: confirmar que su fórmula (incluido cómo se duplica el mini examen 🎯) coincide con «Reglas de XP y
+- [x] 2.2 Conciliar: confirmar que su fórmula (incluido cómo se duplica el mini examen 🎯) coincide con «Reglas de XP y
   nivel de la Fase 1 como invariante»; si difiere, actualizar primero este spec (base-standards §7), no el código
-- [ ] 2.3 Fijar los 10 casos de regresión de XP, nivel y racha que usarán las fases 2–4
+- [x] 2.3 Fijar los 10 casos de regresión de XP, nivel y racha que usarán las fases 2–4
 
-## 3. Fase 2a — Misiones principales en Secundaria (rama `feature/rpg-fase2-misiones`)
+## 3. Fase 2a — Misiones principales en Secundaria (rama `feature/rpg-fase2-misiones`; detalle en el cambio derivado `rpg-fase2-misiones`, salvo 3.13–3.14 de privacidad)
 
-- [ ] 3.1 Step 0: crear la rama desde `main`
-- [ ] 3.2 Pruebas que fallan (Deno): validador `--misiones <ámbito>` (válida, rúbrica ≠ 100, fechas fuera del mundo,
+- [x] 3.1 Step 0: crear la rama desde `main`
+- [x] 3.2 Pruebas que fallan (Deno): validador `--misiones <ámbito>` (válida, rúbrica ≠ 100, fechas fuera del mundo,
   sin aviso de privacidad, paso con `tipoEntrega` `imagen` o `audio` = error) y `mundos.json` (encimados = error;
   nombres y fechas iguales a los de `comun/gamificacion.js`)
-- [ ] 3.3 `server/motor.ts` y `server/validar_semana.ts`: forma nueva `--misiones <ámbito>` y validación de
+- [x] 3.3 `server/motor.ts` y `server/validar_semana.ts`: forma nueva `--misiones <ámbito>` y validación de
   `mundos.json`
-- [ ] 3.4 Pruebas que fallan: `POST /misiones/<id>/entrega` solo texto (200, 400 `entrega_invalida` vacía o > 4 000
+- [x] 3.4 Pruebas que fallan: `POST /misiones/<id>/entrega` solo texto (200, 400 `entrega_invalida` vacía o > 4 000
   caracteres, 400 `tipo_no_permitido` con archivo, 409 ya evaluado, 404 ajena, 403 baja e invitado, 401, 503 al fallar
   Postgres)
-- [ ] 3.5 Ruta de entrega en texto en `server/main.ts`
-- [ ] 3.6 Pruebas que fallan y ruta de evaluación básica `/profe/entregas` (XP = rúbrica × 3 + 60 a tiempo; corrección
+- [x] 3.5 Ruta de entrega en texto en `server/main.ts`
+- [x] 3.6 Pruebas que fallan y ruta de evaluación básica `/profe/entregas` (XP = rúbrica × 3 + 60 a tiempo; corrección
   por privacidad borra el texto del paso)
-- [ ] 3.7 `POST /practica/comprobar` con prueba de que la respuesta no viaja al navegador
-- [ ] 3.8 `comun/gamificacion.js`: XP de misiones y mundos desde el catálogo (sin tocar la fórmula de Fase 1)
-- [ ] 3.9 `comun/gamificacion.js`: misiones diarias y semanales **sin XP** (solo insignias y progreso) y árbol de
+- [x] 3.7 `POST /practica/comprobar` con prueba de que la respuesta no viaja al navegador
+- [x] 3.8 `comun/gamificacion.js`: XP de misiones y mundos desde el catálogo (sin tocar la fórmula de Fase 1)
+- [x] 3.9 `comun/gamificacion.js`: misiones diarias y semanales **sin XP** (solo insignias y progreso) y árbol de
   habilidades
-- [ ] 3.10 Vista «🗺️ Mapa» con catálogo y «🌳 Árbol»
-- [ ] 3.11 Vista «⚔️ Misión principal»: pasos, cuadro de entrega en texto con recordatorio de privacidad y contador de
+- [x] 3.10 Vista «🗺️ Mapa» con catálogo y «🌳 Árbol»
+- [x] 3.11 Vista «⚔️ Misión principal»: pasos, cuadro de entrega en texto con recordatorio de privacidad y contador de
   caracteres
-- [ ] 3.12 Retroalimentación inmediata accesible (XP, nivel, insignias; movimiento reducido; sonido apagado)
+- [x] 3.12 Retroalimentación inmediata accesible (XP, nivel, insignias; movimiento reducido; sonido apagado)
 - [x] 3.13 Aviso de privacidad `privacidad.html` enlazado desde el portal (texto aprobado por el profe). Implementada
   como borrador en el cambio derivado `rpg-privacidad`, detrás del interruptor `privacidad` apagado. La aprobación del
   texto y el enlace visible quedan en su tarea 7.1 (el profe aprueba y enciende el interruptor: dato, sin deploy)
@@ -61,22 +61,23 @@
   nombre y firma de madre, padre o tutor, fecha). El profe aprueba el texto y lo recaba; en la plataforma solo se
   registra slug, tipo y fecha. Implementada como borrador en `rpg-privacidad`
   (mismo interruptor y misma tarea 7.1 que 3.13)
-- [ ] 3.15 Contenido: `mundos.json` (nombres de `comun/gamificacion.js`) y la misión piloto «La tiendita del salón»
+- [ ] 3.15 (EN CURSO: `mundos.json` validado; misiones piloto escritas por otro agente; push al estar en producción) Contenido: `mundos.json` (nombres de `comun/gamificacion.js`) y la misión piloto «La tiendita del salón»
   (Matemáticas, solo texto) en el repo privado, generadas con la skill y validadas con 0 errores
-- [ ] 3.16 Actualizar `ai-specs/skills/clases-secundaria/SKILL.md` con la sección de misiones (entregables solo en
+- [x] 3.16 Actualizar `ai-specs/skills/clases-secundaria/SKILL.md` con la sección de misiones (entregables solo en
   texto) y correr `node ai-specs/scripts/sincronizar-espejos.mjs`
-- [ ] 3.17 Revisar y actualizar pruebas existentes (OBLIGATORIO): E2E de Secundaria (`e2e-examen-secundaria`,
+- [x] 3.17 Revisar y actualizar pruebas existentes (OBLIGATORIO): E2E de Secundaria (`e2e-examen-secundaria`,
   `secundaria-clases`) y pruebas de `server/` afectadas; E2E nueva de misión a 360 px, claro y oscuro
-- [ ] 3.18 Ejecutar pruebas y verificar estado (OBLIGATORIO): `deno test -A server/` (subagente
+- [x] 3.18 Ejecutar pruebas y verificar estado (OBLIGATORIO): `deno test -A server/` (subagente
   `verificador-pruebas`), `deno check`, `deno lint`, E2E; datos de prueba solo en `stald_test_*` y restaurados; reporte
-  `openspec/changes/rpg-fase2-misiones/reports/AAAA-MM-DD-step-3.18-pruebas-y-verificacion.md`
-- [ ] 3.19 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): servidor local con copia de datos y curl a cada fila
+  `openspec/changes/rpg-fase2-misiones/reports/AAAA-MM-DD-step-3.18-pruebas-y-verificacion.md` (hecho como
+  `reports/2026-10-21-step-4.1-pruebas-y-verificacion.md`, numeración del cambio derivado)
+- [x] 3.19 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): servidor local con copia de datos y curl a cada fila
   de la matriz (admin, alumna, alumno de Inglés, de baja, invitado, sin sesión, correo no asignado, misión ajena,
   texto demasiado largo, archivo adjunto); CLI `--misiones` con caso válido e inválido; restaurar entregas de prueba
-- [ ] 3.20 Verificación en producción tras el merge — EL AGENTE EJECUTA (OBLIGATORIO): `/salud`, vistas publicadas,
+- [ ] 3.20 (sin las páginas de privacidad, que lleva otro agente) Verificación en producción tras el merge — EL AGENTE EJECUTA (OBLIGATORIO): `/salud`, vistas publicadas,
   `privacidad.html` y `consentimiento.html`, y flujo entrega en texto → evaluación → XP con la cuenta de prueba; borrar
   la entrega de prueba
-- [ ] 3.21 Actualizar documentación técnica (OBLIGATORIO): `docs/data-model.md` (`mundos.json`, `misiones/`,
+- [x] 3.21 Actualizar documentación técnica (OBLIGATORIO): `docs/data-model.md` (`mundos.json`, `misiones/`,
   `entregas/`, consentimientos), `docs/backend-standards.md` (rutas), `docs/frontend-standards.md` (vistas,
   `privacidad.html`, `consentimiento.html`), índice de docs
 

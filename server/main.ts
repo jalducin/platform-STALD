@@ -23,6 +23,9 @@ import type { Cuenta } from "./jugadores.ts";
 import { handleResumen } from "./resumen.ts";
 import { crearMemo, unaALaVez } from "./cache.ts";
 import { aplicarCacheHttp, politicaCache } from "./http_cache.ts";
+import { type DepsMisiones, handleMisiones, handlePractica, handleProfeEntregas, type PersonaMision } from "./misiones.ts";
+import { alumnasSecundaria } from "./secundaria_registro.ts";
+import { aplicarRetencion, CRON_RETENCION } from "./retencion_entregas.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
@@ -383,6 +386,40 @@ async function rutaData(url: URL, email: string, admin: string): Promise<Respons
   return json({ rows, isAdmin, ...(baja ? { baja: true } : {}), generatedAt: new Date().toISOString() });
 }
 
+// Misiones principales (openspec: rpg-fase2-misiones). Quién pide, sin correo: admin, alumna de Secundaria, alumno
+// activo de Inglés (con su grupo), de baja de Inglés o sin acceso (invitado de Juegos o correo no asignado).
+async function personaMision(email: string, admin: string): Promise<PersonaMision> {
+  if (!email) return { tipo: "sin_acceso" };
+  if (admin && email === admin) return { tipo: "admin" };
+  const sec = identidadSecundaria(await filasSecundaria(), email);
+  if (sec) return { tipo: "secundaria", slug: sec.slug, nombre: sec.nombre };
+  const activo = filterForEmail(await filasInglesActivas(), email, admin).rows.find((r) => r.alumno)?.alumno;
+  if (activo) {
+    const slug = slugAlumno(activo);
+    const grupo = await inglesEnPg() ? await grupoDe(db!, slug, mxToday()) : null;
+    return { tipo: "ingles", slug, nombre: activo.split(/\s+/)[0], grupo };
+  }
+  const registrado = filterForEmail(await filasIngles(), email, admin).rows.find((r) => r.alumno)?.alumno;
+  if (registrado && await deBajaIngles(email, admin)) return { tipo: "baja", slug: slugAlumno(registrado) };
+  return { tipo: "sin_acceso" };
+}
+async function depsMisiones(email: string, admin: string): Promise<DepsMisiones> {
+  return {
+    store: await getStore(), hoy: () => mxToday(), ahora: ahoraIso,
+    persona: () => personaMision(email, admin),
+    alumnasSecundaria: async () => alumnasSecundaria(await filasSecundaria()),
+    nombreDe: async (slug, ambito) => {
+      if (ambito === "secundaria") return (alumnasSecundaria(await filasSecundaria()).find((a) => a.slug === slug)?.nombre ?? null)?.split(/\s+/)[0] ?? null;
+      const nombre = Object.values(await leerRegistro(await getStore())).map((a) => a.nombre).find((n) => slugAlumno(n) === slug);
+      return nombre ? nombre.split(/\s+/)[0] : null;
+    },
+    // Las entregas viven en Postgres (stald_docs); sin la base migrada no se guardan en el repo de contenido.
+    puedeGuardar: async () => !!env("DATA_DIR") || await inglesEnPg(),
+  };
+}
+const RUTA_MISIONES = /\/misiones(\/.*)?$/;
+const RUTA_PROFE_ENTREGAS = /\/profe\/entregas(\/.*)?$/;
+
 // Rutas con identidad ya resuelta (o sin identidad: registro, salud y contraseña), en orden de evaluación.
 async function rutear(req: Request, url: URL, quien: Quien, email: string, admin: string): Promise<Response> {
   if (url.pathname.endsWith("/juegos/registro")) return await registroJuegos(req, admin);
@@ -421,6 +458,16 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
 
   if (url.pathname.endsWith("/perfil")) return await rutaPerfil(email, admin);
 
+  // /misiones, /profe/entregas y /practica/comprobar (openspec: rpg-fase2-misiones). Antes de /juegos/, que tiene
+  // sus propias misiones (Dragon Run) bajo /juegos/….
+  if (!url.pathname.includes("/juegos/")) {
+    const mPe = url.pathname.match(RUTA_PROFE_ENTREGAS);
+    if (mPe) return await handleProfeEntregas(req, mPe[1] || "", await depsMisiones(email, admin), json);
+    const mMi = url.pathname.match(RUTA_MISIONES);
+    if (mMi) return await handleMisiones(req, mMi[1] || "", await depsMisiones(email, admin), json);
+    if (url.pathname.endsWith("/practica/comprobar")) return await handlePractica(req, await depsMisiones(email, admin), json);
+  }
+
   // /juegos/… → partidas, ranking e invitados (server/juegos.ts)
   const iJuegos = url.pathname.indexOf("/juegos/");
   if (iJuegos !== -1) {
@@ -433,3 +480,12 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
 }
 
 if (import.meta.main) Deno.serve({ port: Number(env("PORT")) || 8000 }, handler);
+
+// Retención de entregas (openspec: rpg-fase2-misiones): cada 31 de agosto se borra el texto de las entregas y queda la
+// evaluación. Solo en Deno Deploy (Deno.cron) y con Postgres; en local y en pruebas no se programa.
+if (import.meta.main && db && !env("DATA_DIR") && !env("ROWS_FIXTURE") && typeof Deno.cron === "function") {
+  Deno.cron("retencion-entregas", CRON_RETENCION, async () => {
+    const r = await aplicarRetencion(db, new Date().toISOString(), true);
+    console.log(`retención de entregas: ${r.revisadas} revisadas, ${r.borradas} sin contenido, ${r.pendientes.length} pendientes`);
+  });
+}
