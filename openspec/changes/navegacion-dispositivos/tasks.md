@@ -28,7 +28,7 @@
 
 - [x] 3.1 Revisar y actualizar pruebas existentes (OBLIGATORIO): E2E nueva `navegacion-dispositivos` con topes fijados
   por la auditoría, registrada en `tests/e2e/correr.sh` (fase `ingles`)
-- [ ] 3.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): suite Deno y E2E afectadas (`navegacion-dispositivos`,
+- [x] 3.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): suite Deno y E2E afectadas (`navegacion-dispositivos`,
   `secundaria-clases`, `secundaria-clase`, `secundaria-dashboard`, `misiones`, `material`, `ingles-diseno-profe`,
   `ingles-alumno-diseno`, `ingles-admin`, `juegos-diseno`, `juegos`, `portal`, `portal-diseno`, `peticiones`) con
   `--hoy 2026-10-27 --pg` contra el PostgREST falso y con el «hoy» por omisión; reporte

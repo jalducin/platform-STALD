@@ -35,7 +35,7 @@ const DISPOSITIVOS = [
 ].filter(d => !SOLO_DISP || SOLO_DISP.includes(d.id));
 
 // Tope de toques o clics de navegación por tarea (sin contar las respuestas de un examen ni lo que se escribe).
-// Fijado con la auditoría del cambio (ver su reporte): lo medido en el peor tamaño, sin holgura extra.
+// Fijado con la auditoría del cambio (openspec/changes/navegacion-dispositivos/reports/2026-10-22-auditoria.md): lo medido en el peor tamaño, sin holgura extra.
 const TOPE_TOQUES = {
   'sec-clase': 4, // tarjeta Secundaria → la clase de hoy → Enviar → Siguiente misión (o «Ver resultado» en vez de abrir y enviar)
   'sec-secciones': 3, // Mi horario, Mis materias, Misiones (una por pestaña)
