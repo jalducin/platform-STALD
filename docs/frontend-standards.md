@@ -16,6 +16,8 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
   - pide el correo, consulta `/perfil` y muestra una tarjeta por espacio;
   - la tarjeta de Secundaria lleva a `secundaria.html`, que desde el cambio `secundaria-sin-notion` es un puente a
     `ingles.html?modo=secundaria` (ya no hay tablero de Notion).
+  - **Excepción de estilos (cambio `portal-diseno-rpg`):** su CSS vive en `estilos/portal.css` (más `estilos/ui.css` y
+    `estilos/materias.css`); el script sigue en línea. Ver [Portal con diseño RPG](#portal-con-diseño-rpg-cambio-portal-diseno-rpg).
 - Cada página de espacio lleva "← Inicio" al portal y "🎮 Juegos"; ambos conservan `?api=` para probar contra un servidor local.
 - **Excepción (`juegos.html`):**
   - El contenido de los juegos se carga de `juegos/datos/*.json` en el mismo sitio (vocabulario, trivia,
@@ -1245,6 +1247,33 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   - los botones `#sec-portal-clases` («📚 Mis clases») y `#sec-portal-horario` («🗓️ Mi horario»,
     `secundaria.html#horario`), de 44 px o más.
 - Si falla, aparece un aviso corto con el botón a Secundaria. Sin Secundaria, el bloque queda `hidden`.
+
+### Portal con diseño RPG (cambio `portal-diseno-rpg`)
+
+- **Estilos:** `index.html` enlaza `estilos/materias.css`, `estilos/ui.css` (tokens `--rpg-*` y componentes `rpg-`) y
+  `estilos/portal.css` (tokens base del portal, colores por área `--ingles|--profe|--secundaria|--juegos` con
+  `-soft` y `-btn`, héroe, tarjetas, entrada y pie). Claro, oscuro del sistema y `<html data-theme>`; botones de 44 px
+  o más, foco de 3 px, contraste AA y sin scroll horizontal a 360 px. Al cambiar `portal.css`, sube su `?v=`.
+- **Tema:** `#tema-btn` rota automático → oscuro → claro y guarda `stald_tema` (la misma clave que Inglés, Juegos y las
+  páginas legales). Un script en `<head>` lo aplica antes de pintar.
+- **Sin sesión (`#login.entrada`):** héroe a la izquierda y formulario a la derecha (una columna en celular). Conserva
+  los ids de siempre (`#login-form`, `#email`, `#password`, `#login-btn`, `#olvide-btn`, `#guest`, `#juegos-cta-btn`).
+- **Con sesión (`#home`):**
+  - `#portal-heroe`: etiqueta por rol (`#portal-etiqueta`), fecha, `#hello` (con el avatar `.av` de Juegos dentro, que
+    pone `pintarAvatar`), «🎨 Cambiar avatar» y `#admin-tag`.
+  - `#portal-avance` (solo Secundaria sin admin): semana con `.rpg-xp-barra` (`SD.progresoSemana`) y racha
+    (`SD.rachaDe`). **Sin nivel ni rango:** el nivel real suma la XP de las misiones (`/misiones`), que el portal no
+    pide; mostrar uno sin ellas daría un dato distinto al de Secundaria.
+  - `#tiles`: una `div.area` por espacio de `/perfil` con su botón `a.btn[data-espacio]` (Inglés, Mi ruta solo admin,
+    Secundaria, Juegos; Juegos a todo el ancho si queda sola). La línea `[data-estado]` sale solo de lo que ya se pidió:
+    Secundaria «N clases hoy · M pendientes» u «Hoy no tienes clases» (admin: «N alumnas y alumnos»), Juegos
+    «⭐ N puntos individuales esta semana · #lugar» (`totalIndividual` y `pos` de `/juegos/yo`; si solo hay partidas,
+    `totalPartidas` y `posPartidas`). Inglés y Mi ruta no llevan línea.
+  - Admin: `#sec-alumna-portal` en la tarjeta de Secundaria, con las `alumnas` de su `/secundaria/actividades`; cambia
+    el `href` del botón sin pedir nada.
+- **Pie:** «🔒 Aviso de privacidad» y «📝 Consentimiento» con `data-interruptor="privacidad"`.
+- **Peticiones:** las mismas que antes (presupuesto `portal (alumna)` de la E2E `peticiones`). Prueba:
+  `tests/e2e/e2e-portal-diseno.js`.
 
 ## Clase interactiva de Secundaria (cambio `secundaria-sin-notion`)
 

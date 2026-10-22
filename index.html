@@ -6,169 +6,59 @@
 <title>STALD · Plataforma de aprendizaje</title>
 <meta name="description" content="Clases, tareas y juegos para aprender en un solo lugar.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%234f46e5'/><text x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'>S</text></svg>">
+<script>
+  // Tema elegido (stald_tema, el mismo de Inglés y Juegos) antes de pintar, para no parpadear (openspec: portal-diseno-rpg).
+  try { var t = localStorage.getItem('stald_tema'); if (t === 'oscuro') document.documentElement.dataset.theme = 'dark'; else if (t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) { /* sin almacenamiento */ }
+</script>
 <link rel="stylesheet" href="estilos/materias.css?v=1"> <!-- colores por materia (openspec: secundaria-dashboard) -->
-<style>
-  :root {
-    --bg: #f6f5fb; --bg-2: #eef0ff; --card: #ffffff; --text: #1e1b2e; --muted: #6b6880; --border: #e6e4f0;
-    --accent: #4f46e5; --accent-2: #7c3aed; --accent-soft: #eef0ff; --ok: #16a34a; --warn: #b45309; --danger: #dc2626;
-    --shadow: 0 1px 2px rgba(30, 27, 46, .06), 0 8px 24px rgba(30, 27, 46, .07);
-    --shadow-hover: 0 2px 4px rgba(30, 27, 46, .08), 0 14px 32px rgba(79, 70, 229, .16);
-    --radius: 18px;
-    --ingles: #2563eb; --ingles-soft: #dbeafe; --secundaria: #0d9488; --secundaria-soft: #ccfbf1; --juegos: #db2777; --juegos-soft: #fce7f3;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #13111c; --bg-2: #1b1830; --card: #1e1b2e; --text: #f4f3fa; --muted: #a8a5bd; --border: #2e2a45;
-      --accent-soft: #29255a; --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
-      --shadow-hover: 0 2px 4px rgba(0, 0, 0, .5), 0 14px 32px rgba(124, 58, 237, .25);
-      --ingles-soft: #1e2a4d; --secundaria-soft: #113b37; --juegos-soft: #45162f;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #13111c; --bg-2: #1b1830; --card: #1e1b2e; --text: #f4f3fa; --muted: #a8a5bd; --border: #2e2a45;
-    --accent-soft: #29255a; --ingles-soft: #1e2a4d; --secundaria-soft: #113b37; --juegos-soft: #45162f;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; min-height: 100%; }
-  body {
-    background:
-      radial-gradient(900px 480px at 110% -10%, rgba(124, 58, 237, .16), transparent 60%),
-      radial-gradient(700px 420px at -10% 0%, rgba(37, 99, 235, .12), transparent 60%),
-      var(--bg);
-    color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    line-height: 1.45; -webkit-font-smoothing: antialiased;
-    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
-  }
-  .wrap { max-width: 720px; margin: 0 auto; }
-  .brand { display: flex; align-items: center; gap: 10px; margin: 4px 0 28px; }
-  .logo { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 1.25rem;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 6px 16px rgba(79, 70, 229, .35); }
-  .brand .name { font-weight: 800; letter-spacing: .08em; font-size: 1rem; }
-  .brand .tagline { font-size: .76rem; color: var(--muted); }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
-  .hero { padding: 28px 22px; }
-  .eyebrow { display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);
-    background: var(--accent-soft); padding: 4px 10px; border-radius: 99px; margin-bottom: 12px; }
-  h1 { font-size: 1.7rem; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.01em; }
-  .lead { color: var(--muted); margin: 0 0 22px; font-size: .98rem; }
-  label { display: block; font-size: .82rem; font-weight: 700; margin-bottom: 6px; }
-  input[type=email] { width: 100%; font: inherit; font-size: 1rem; padding: 13px 14px; border-radius: 12px; border: 1.5px solid var(--border);
-    background: var(--bg); color: var(--text); outline: none; transition: border-color .15s, box-shadow .15s; }
-  input[type=email]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 12px; font: inherit; font-weight: 700; font-size: 1rem;
-    color: #fff; border: none; border-radius: 12px; padding: 13px 16px; cursor: pointer;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px rgba(79, 70, 229, .3); transition: transform .12s, box-shadow .15s, opacity .15s; }
-  .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(79, 70, 229, .38); }
-  .btn:disabled { opacity: .6; cursor: default; transform: none; }
-  .btn:focus-visible, .tile:focus-visible, .link-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-  .hint { font-size: .8rem; color: var(--muted); margin: 14px 0 0; }
-  .alert { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .88rem; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .alert { background: #3b1414; color: #fecaca; border-color: #7f1d1d; } }
-  .loading { padding: 40px 22px; text-align: center; color: var(--muted); }
-  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--accent-soft); border-top-color: var(--accent); margin: 0 auto 12px; animation: spin .8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .greet { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-  .date { font-size: .8rem; color: var(--muted); margin-bottom: 2px; }
-  .greet p { margin: 0; color: var(--muted); }
-  .tag { font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 5px 10px; border-radius: 99px; white-space: nowrap;
-    background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
-  .tiles { display: grid; gap: 12px; grid-template-columns: 1fr; }
-  @media (min-width: 560px) { .tiles { grid-template-columns: 1fr 1fr; } .tile.wide { grid-column: 1 / -1; } }
-  .tile { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 18px 18px 16px; text-decoration: none; color: var(--text);
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
-    transition: transform .15s, box-shadow .15s, border-color .15s; }
-  .tile::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--tone); }
-  a.tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--tone); }
-  .tile .ico { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 1.5rem; background: var(--tone-soft); margin-bottom: 4px; }
-  .tile .t { font-weight: 800; font-size: 1.05rem; }
-  .tile .d { color: var(--muted); font-size: .86rem; }
-  .tile .go { position: absolute; right: 16px; top: 18px; font-size: 1.1rem; color: var(--tone); font-weight: 800; transition: transform .15s; }
-  a.tile:hover .go { transform: translateX(3px); }
-  .tile.ingles { --tone: var(--ingles); --tone-soft: var(--ingles-soft); }
-  .tile.secundaria { --tone: var(--secundaria); --tone-soft: var(--secundaria-soft); }
-  .tile.juegos { --tone: var(--juegos); --tone-soft: var(--juegos-soft); }
-  .tile.soon { opacity: .7; cursor: default; }
-  .pill { align-self: flex-start; font-size: .7rem; font-weight: 800; padding: 3px 9px; border-radius: 99px; background: var(--tone-soft); color: var(--tone); }
-  .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
-  .link-btn { font: inherit; font-size: .86rem; font-weight: 600; background: none; border: none; color: var(--muted); cursor: pointer; padding: 6px 0; }
-  .link-btn:hover { color: var(--text); }
-  .who { font-size: .8rem; color: var(--muted); }
-  .guest { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--juegos-soft); }
-  .guest-t { font-weight: 800; color: var(--juegos); }
-  .ghost-btn { margin-top: 0; background: var(--card); color: var(--juegos); border: 1.5px solid var(--juegos); box-shadow: none; }
-  .av { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font-size: 23px; vertical-align: middle; margin-right: 6px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); overflow: hidden; }
-  .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .atajo-material { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--ingles-soft); color: var(--text); font-weight: 700; text-decoration: none; }
-  .atajo-material:hover { border-color: var(--ingles); }
-  .av-link { font-size: .82rem; font-weight: 700; color: var(--juegos); text-decoration: none; margin-left: 6px; }
-  footer { text-align: center; font-size: .74rem; color: var(--muted); margin-top: 36px; }
-  .pie-legal a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: .82rem; font-weight: 600; color: var(--muted); text-decoration: none; }
-  .pie-legal a:hover { color: var(--text); text-decoration: underline; }
-  .notice { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--accent-soft); font-size: .88rem; }
-  .notice b { display: block; margin-bottom: 4px; }
-  .notice .btn { margin-top: 10px; }
-  .ok-msg { display: block; margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .88rem; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-  input.code { width: 100%; font: inherit; font-size: 1.4rem; letter-spacing: .4em; text-align: center; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
-  .admin-box { margin-top: 18px; padding: 16px; }
-  .admin-box h2 { font-size: 1rem; margin: 0 0 4px; }
-  .admin-box input { width: 100%; font: inherit; padding: 11px 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
-  .admin-box .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .admin-box .row .btn { width: auto; flex: 1; margin-top: 0; text-decoration: none; }
-  /* «🗓️ Mi horario» de Secundaria (openspec: secundaria-dashboard): 7 días compactos, hoy destacado y botones reales. */
-  .sec-portal { margin-top: 14px; padding: 16px; }
-  .sec-portal h2 { font-size: 1rem; margin: 0 0 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .sec-hoy-toca { padding: 12px 14px; border-radius: 14px; background: var(--secundaria-soft); border: 1.5px solid var(--secundaria); }
-  .sec-hoy-toca b { display: block; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text); margin-bottom: 6px; }
-  .sec-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .mat-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .82rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; background: var(--mat-soft); color: var(--mat); border: 1px solid var(--mat); }
-  .sec-mini { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
-  .sec-mini-dia { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); min-width: 0; }
-  .sec-mini-dia.es-hoy { border: 2px solid var(--secundaria); background: var(--secundaria-soft); }
-  .sec-mini-d { font-size: .68rem; font-weight: 800; color: var(--muted); white-space: nowrap; }
-  .sec-mini-dia.es-hoy .sec-mini-d { color: var(--text); }
-  .sec-mini-m { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 1rem; line-height: 1.2; }
-  .sec-mini-libre { font-size: .7rem; color: var(--muted); }
-  .sec-acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-  .sec-acciones .btn { margin-top: 0; min-height: 48px; text-decoration: none; font-size: .92rem; padding: 10px 12px; }
-  .btn.sec-ghost { background: var(--card); color: var(--text); border: 1.5px solid var(--border); box-shadow: none; }
-  .btn.sec-ghost:hover { border-color: var(--secundaria); box-shadow: var(--shadow); }
-  .sec-aviso { margin: 0; font-size: .86rem; color: var(--muted); }
-  [hidden] { display: none !important; }
-</style>
+<link rel="stylesheet" href="estilos/ui.css?v=1"> <!-- tokens y componentes RPG compartidos (openspec: juegos-diseno-rpg) -->
+<link rel="stylesheet" href="estilos/portal.css?v=1"> <!-- diseño RPG del portal (openspec: portal-diseno-rpg) -->
 </head>
 <body>
 <div class="wrap">
   <header class="brand">
     <div class="logo" aria-hidden="true">S</div>
-    <div><div class="name">STALD</div><div class="tagline">Plataforma de aprendizaje</div></div>
+    <div class="brand-txt"><div class="name">STALD</div><div class="tagline">Plataforma de aprendizaje</div></div>
+    <!-- Selector de tema: automático → oscuro → claro, guardado en stald_tema (openspec: portal-diseno-rpg). -->
+    <button class="tema-btn" id="tema-btn" type="button" aria-label="Tema: automático. Cambiar" title="Tema: automático. Cambiar">🌓</button>
   </header>
 
   <main>
-    <section id="login" class="card hero" hidden>
-      <span class="eyebrow">Te damos la bienvenida</span>
-      <h1>Aprende, practica y juega</h1>
-      <p class="lead">Tus clases, tareas y juegos en un solo lugar.</p>
-      <form id="login-form" novalidate>
-        <label for="email">Tu correo</label>
-        <input id="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" placeholder="tucorreo@gmail.com" required>
-        <label for="password" style="margin-top:10px">Tu contraseña</label>
-        <input id="password" type="password" autocomplete="current-password" autocapitalize="none" required>
-        <button class="btn" id="login-btn" type="submit">Entrar →</button>
-        <button class="link-btn" id="olvide-btn" type="button">¿Olvidaste tu contraseña?</button>
-      </form>
-      <output class="ok-msg" id="olvide-ok" hidden></output>
-      <p class="hint" id="login-hint">Entra con el correo con el que te registraron en tus clases. Si es tu primera vez, usa la contraseña que te dio tu profe. ¿La olvidaste? Pídele a tu profe que la restablezca.</p>
-      <div class="alert" id="login-error" role="alert" hidden></div>
-      <div class="guest" id="guest" hidden>
-        <div class="guest-t">🎮 Ese correo no tiene clases registradas</div>
-        <p class="hint" style="margin:4px 0 10px">Si vienes a jugar, crea tu cuenta de Juegos con este correo. Si eres alumno o alumna, revisa que esté bien escrito o pide a quien te da clases que te registre.</p>
-        <button class="btn ghost-btn" id="guest-btn" type="button">🎮 Crear mi cuenta de Juegos →</button>
+    <!-- Entrada sin sesión (openspec: portal-diseno-rpg): héroe a la izquierda y formulario a la derecha en pantallas anchas. -->
+    <section id="login" class="entrada" hidden>
+      <div class="entrada-heroe">
+        <span class="rpg-etiqueta">✨ Te damos la bienvenida</span>
+        <h1>Aprende, practica y juega</h1>
+        <p class="lead">Tus clases, tareas y juegos en un solo lugar.</p>
+        <ul class="entrada-areas" aria-label="Lo que encuentras aquí">
+          <li class="ingles"><span aria-hidden="true">📘</span> Clases de Inglés con actividades y exámenes</li>
+          <li class="secundaria"><span aria-hidden="true">📚</span> Secundaria: tus clases y tu horario</li>
+          <li class="juegos"><span aria-hidden="true">🎮</span> Juegos para aprender y ranking semanal</li>
+        </ul>
       </div>
-      <div class="guest" id="juegos-cta">
-        <div class="guest-t">🎮 ¿Solo vienes a jugar?</div>
-        <p class="hint" style="margin:4px 0 10px">Entra o crea tu cuenta de Juegos con tu correo y tu nick, sin contraseña y sin estar en las clases.</p>
-        <button class="btn ghost-btn" id="juegos-cta-btn" type="button">Crea tu cuenta de Juegos →</button>
+      <div class="card entrada-form">
+        <h2>🔐 Entra a tu espacio</h2>
+        <form id="login-form" novalidate>
+          <label for="email">Tu correo</label>
+          <input id="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" placeholder="tucorreo@gmail.com" required>
+          <label for="password">Tu contraseña</label>
+          <input id="password" type="password" autocomplete="current-password" autocapitalize="none" required>
+          <button class="btn" id="login-btn" type="submit">Entrar →</button>
+          <button class="link-btn" id="olvide-btn" type="button">¿Olvidaste tu contraseña?</button>
+        </form>
+        <output class="ok-msg" id="olvide-ok" hidden></output>
+        <p class="hint" id="login-hint">Entra con el correo con el que te registraron en tus clases. Si es tu primera vez, usa la contraseña que te dio tu profe. ¿La olvidaste? Pídele a tu profe que la restablezca.</p>
+        <div class="alert" id="login-error" role="alert" hidden></div>
+        <div class="guest" id="guest" hidden>
+          <div class="guest-t">🎮 Ese correo no tiene clases registradas</div>
+          <p class="hint">Si vienes a jugar, crea tu cuenta de Juegos con este correo. Si eres alumno o alumna, revisa que esté bien escrito o pide a quien te da clases que te registre.</p>
+          <button class="btn" id="guest-btn" type="button">🎮 Crear mi cuenta de Juegos →</button>
+        </div>
+        <div class="guest" id="juegos-cta">
+          <div class="guest-t">🎮 ¿Solo vienes a jugar?</div>
+          <p class="hint">Entra o crea tu cuenta de Juegos con tu correo y tu nick, sin contraseña y sin estar en las clases.</p>
+          <button class="btn" id="juegos-cta-btn" type="button">Crea tu cuenta de Juegos →</button>
+        </div>
       </div>
     </section>
 
@@ -180,15 +70,22 @@
     </section>
 
     <section id="home" hidden>
-      <div class="greet">
-        <div>
-          <div class="date" id="date"></div>
-          <h1 id="hello">Hola 👋</h1>
-          <p>¿Qué hacemos hoy? <a class="av-link" id="av-link" href="juegos.html?avatar=1" hidden>🎨 Cambiar avatar</a></p>
+      <!-- Encabezado tipo héroe (openspec: portal-diseno-rpg): avatar de Juegos dentro de #hello, fecha y rol. -->
+      <section class="heroe" id="portal-heroe" aria-labelledby="hello">
+        <div class="heroe-top">
+          <div class="heroe-txt">
+            <span class="rpg-etiqueta" id="portal-etiqueta">🏠 Tu inicio</span>
+            <div class="date" id="date"></div>
+            <h1 id="hello">Hola 👋</h1>
+            <p class="sub">¿Qué hacemos hoy? <a class="av-link" id="av-link" href="juegos.html?avatar=1" hidden>🎨 Cambiar avatar</a></p>
+          </div>
+          <span class="tag" id="admin-tag" hidden>🧑‍🏫 Modo maestro</span>
         </div>
-        <span class="tag" id="admin-tag" hidden>Modo maestro</span>
-      </div>
-      <nav class="tiles" id="tiles" aria-label="Espacios"></nav>
+        <!-- Avance de la semana y racha: solo con datos que el portal ya pidió (Secundaria). -->
+        <div class="avance" id="portal-avance" hidden></div>
+      </section>
+      <h2 class="seccion-t" id="tiles-t">Tus espacios</h2>
+      <nav class="areas" id="tiles" aria-labelledby="tiles-t"></nav>
       <!-- Horario compacto de Secundaria (openspec: secundaria-dashboard). -->
       <section class="card sec-portal" id="sec-portal" aria-labelledby="sec-portal-t" hidden></section>
       <!-- Atajo al material de estudio de Inglés, siempre disponible (openspec: ingles-material-estudio). -->
@@ -200,7 +97,7 @@
       </div>
       <section class="card admin-box" id="admin-link" hidden aria-labelledby="admin-link-t">
         <h2 id="admin-link-t">🔑 Restablecer contraseña</h2>
-        <p class="hint" style="margin:0 0 10px">Si alguien olvidó su contraseña, restablécela: vuelve a entrar con la inicial («clase» para alumnos y alumnas) y se le pide una nueva. No se envía correo.</p>
+        <p class="hint">Si alguien olvidó su contraseña, restablécela: vuelve a entrar con la inicial («clase» para alumnos y alumnas) y se le pide una nueva. No se envía correo.</p>
         <form id="admin-link-form" novalidate>
           <label for="admin-link-email">Correo de la persona</label>
           <input id="admin-link-email" type="email" inputmode="email" autocapitalize="none" placeholder="alumna@gmail.com">
@@ -210,16 +107,22 @@
       </section>
       <div class="foot">
         <span class="who" id="who"></span>
-        <button class="link-btn" id="cambiar-btn" type="button">🔑 Cambiar contraseña</button>
-        <button class="link-btn" id="logout" type="button">🚪 Cerrar sesión</button>
+        <div class="foot-acciones">
+          <button class="link-btn" id="cambiar-btn" type="button">🔑 Cambiar contraseña</button>
+          <button class="link-btn" id="logout" type="button">🚪 Cerrar sesión</button>
+        </div>
       </div>
     </section>
   </main>
 
   <footer>
     STALD · aprender también puede ser divertido
-    <!-- Aviso de privacidad (openspec: rpg-privacidad): visible solo con el interruptor `privacidad` encendido. -->
-    <nav class="pie-legal" aria-label="Privacidad" data-interruptor="privacidad" hidden><a href="privacidad.html" data-interruptor="privacidad">🔒 Aviso de privacidad</a></nav>
+    <!-- Aviso de privacidad y consentimiento (openspec: rpg-privacidad, portal-diseno-rpg): visibles solo con el
+         interruptor `privacidad` encendido (comun/interruptores.js). -->
+    <nav class="pie-legal" aria-label="Privacidad" data-interruptor="privacidad" hidden>
+      <a href="privacidad.html" data-interruptor="privacidad">🔒 Aviso de privacidad</a>
+      <a href="consentimiento.html" data-interruptor="privacidad">📝 Consentimiento</a>
+    </nav>
   </footer>
 </div>
 
@@ -252,29 +155,115 @@
   // Enlace para compartir (openspec: registro-juegos): index.html?juegos=1 lleva directo a crear la cuenta de Juegos.
   if (new URLSearchParams(location.search).get('juegos') === '1') location.replace(conApi('juegos.html?registro=1'));
 
-  const ESPACIOS = [
-    { id: 'ingles', clase: 'ingles', href: 'ingles.html', ico: '📘', t: 'Clases de Inglés', d: 'Actividades de la semana, exámenes y tu avance.' },
-    { id: 'profe', clase: 'ingles', href: 'ingles.html?modo=profe', ico: '🎓', t: 'Mi ruta', d: 'Tus clases propias y las actividades de tu grupo, para resolverlas antes que ellos.', soloAdmin: true },
-    { id: 'secundaria', clase: 'secundaria', href: 'secundaria.html', ico: '📚', t: 'Secundaria', d: 'Tus tareas y clases por materia.' },
-    { id: 'juegos', clase: 'juegos wide', href: 'juegos.html', ico: '🎮', t: 'Juegos', d: 'Aprende jugando: inglés, español, cultura, Basta, ¡Una!, Lotería y ranking semanal.' },
-  ];
+  // ---------- Tema (openspec: portal-diseno-rpg): automático → oscuro → claro, en `stald_tema` como Inglés y Juegos ----------
+  const TEMAS = ['auto', 'oscuro', 'claro'];
+  const TEMA_ICO = { auto: '🌓', oscuro: '🌙', claro: '☀️' };
+  const TEMA_NOMBRE = { auto: 'automático', oscuro: 'oscuro', claro: 'claro' };
+  function temaGuardado() {
+    let t = null;
+    try { t = localStorage.getItem('stald_tema'); } catch { t = null; /* sin almacenamiento: tema automático */ }
+    return TEMAS.includes(t) ? t : 'auto';
+  }
+  let tema = temaGuardado();
+  function aplicarTema(t) {
+    tema = t;
+    const html = document.documentElement;
+    if (t === 'oscuro') html.dataset.theme = 'dark'; else if (t === 'claro') html.dataset.theme = 'light'; else delete html.dataset.theme;
+    const b = $('tema-btn'), txt = 'Tema: ' + TEMA_NOMBRE[t] + '. Cambiar';
+    b.textContent = TEMA_ICO[t]; b.setAttribute('aria-label', txt); b.title = txt;
+  }
+  aplicarTema(tema);
+  $('tema-btn').addEventListener('click', () => {
+    aplicarTema(TEMAS[(TEMAS.indexOf(tema) + 1) % TEMAS.length]);
+    try { localStorage.setItem('stald_tema', tema); } catch (e) { /* sin almacenamiento: solo esta vez */ }
+  });
 
-  // Avatar de Juegos en el saludo (si tiene acceso a Juegos). Si falla, el saludo queda sin avatar.
+  // Tarjetas por área (openspec: portal-diseno-rpg). `boton` = botón principal (a.btn[data-espacio], lo usan las E2E);
+  // `admin` = textos del profe. La línea de estado ([data-estado]) se llena solo con datos que el portal ya pidió.
+  const ESPACIOS = [
+    { id: 'ingles', clase: 'ingles', href: 'ingles.html', ico: '📘', t: 'Clases de Inglés', d: 'Actividades de la semana, exámenes y tu avance.', boton: '📘 Entrar a Inglés',
+      admin: { t: 'Panel de Inglés', d: 'Grupos, alumnos y alumnas, resultados y lo que hay por revisar.', boton: '📊 Abrir mi panel' } },
+    { id: 'profe', clase: 'profe', href: 'ingles.html?modo=profe', ico: '🎓', t: 'Mi ruta', d: 'Tus clases propias y las actividades de tu grupo, para resolverlas antes que ellos.', boton: '🎓 Abrir mi ruta', soloAdmin: true },
+    { id: 'secundaria', clase: 'secundaria', href: 'secundaria.html', ico: '📚', t: 'Secundaria', d: 'Tus tareas y clases por materia.', boton: '📚 Mis clases',
+      admin: { d: 'El tablero de cada alumna o alumno de Secundaria, con sus clases y resultados.', boton: '📚 Abrir tablero' } },
+    { id: 'juegos', clase: 'juegos', href: 'juegos.html', ico: '🎮', t: 'Juegos', d: 'Aprende jugando: inglés, español, cultura, Basta, ¡Una!, Lotería y ranking semanal.', boton: '🎮 Jugar' },
+  ];
+  function tarjetaArea(e, p) {
+    const x = { ...e, ...(p.isAdmin && e.admin ? e.admin : {}) };
+    return '<div class="area ' + x.clase + '" id="area-' + x.id + '"><div class="area-top"><span class="area-ico" aria-hidden="true">' + x.ico + '</span>' +
+      '<div><h3 class="area-t">' + escapeHtml(x.t) + '</h3><span class="area-estado" data-estado="' + x.id + '" hidden></span></div></div>' +
+      '<p class="area-d">' + escapeHtml(x.d) + '</p><div data-extra="' + x.id + '"></div>' +
+      '<a class="btn" href="' + escapeHtml(conApi(x.href)) + '" data-espacio="' + x.id + '">' + x.boton + ' <span aria-hidden="true">→</span></a></div>';
+  }
+  // Línea de estado de una tarjeta; sin texto queda oculta (no se inventan datos).
+  function ponerEstado(id, texto) {
+    const el = document.querySelector('[data-estado="' + id + '"]');
+    if (!el) return;
+    el.textContent = texto || ''; el.hidden = !texto;
+  }
+  const plural = (n, uno, varios) => n + ' ' + (n === 1 ? uno : varios);
+  // Línea de Juegos: los puntos individuales van con su lugar del ranking individual (el mismo orden que `pos` en
+  // /juegos/yo); si solo jugó partidas en sala, sus puntos de partidas con `posPartidas`.
+  function estadoJuegos(y) {
+    const fmt = n => n.toLocaleString('es-MX');
+    const ind = Number(y.totalIndividual) || 0, par = Number(y.totalPartidas) || 0;
+    if (ind) return '⭐ ' + fmt(ind) + ' puntos individuales esta semana' + (y.pos ? ' · #' + y.pos : '');
+    if (par) return '👥 ' + fmt(par) + ' puntos en partidas esta semana' + (y.posPartidas ? ' · #' + y.posPartidas : '');
+    return 'Aún no juegas esta semana';
+  }
+  // Línea de Secundaria (alumna o alumno): clases de hoy y cuántas faltan.
+  function estadoSecundaria(deHoy) {
+    if (!deHoy.length) return 'Hoy no tienes clases';
+    const pendientes = deHoy.filter(it => !window.SecundariaDatos.estaHecha(it)).length;
+    const resto = pendientes ? plural(pendientes, 'pendiente', 'pendientes') : '¡todas hechas! 🎉';
+    return plural(deHoy.length, 'clase hoy', 'clases hoy') + ' · ' + resto;
+  }
+  const saludo = (p) => 'Hola, ' + (p.nombre || 'qué gusto verte') + ' 👋';
+
+  // Avatar de Juegos en el saludo y la línea de Juegos (puntos y lugar de la semana), con la misma petición /juegos/yo.
+  // Si falla, el saludo queda sin avatar y la tarjeta sin línea.
   async function pintarAvatar(p) {
     if (!p.accesos.juegos) return;
     try {
       const r = await StaldAuth.fetchConSesion(API_BASE + conCorreo('/juegos/yo', p.email));
       const y = await r.json();
-      const av = r.ok && y.jugador && y.jugador.avatar;
+      if (!r.ok) return;
+      ponerEstado('juegos', estadoJuegos(y));
+      const av = y.jugador && y.jugador.avatar;
       if (!av) return;
       const cara = av.foto ? '<img src="' + escapeHtml(API_BASE + '/juegos/foto/' + encodeURIComponent(av.foto)) + '" alt="" data-e="' + escapeHtml(av.emoji) + '" onerror="this.replaceWith(document.createTextNode(this.dataset.e))">' : escapeHtml(av.emoji);
-      $('hello').innerHTML = '<span class="av" style="background:' + escapeHtml(av.color) + '" aria-hidden="true">' + cara + '</span>' + escapeHtml('Hola, ' + (p.nombre || 'qué gusto verte')) + ' 👋';
+      $('hello').innerHTML = '<span class="av" style="background:' + escapeHtml(av.color) + '" aria-hidden="true">' + cara + '</span><span>' + escapeHtml(saludo(p)) + '</span>';
       const l = $('av-link'); l.href = API_PARAM ? 'juegos.html?avatar=1&api=' + encodeURIComponent(API_PARAM) : 'juegos.html?avatar=1'; l.hidden = false;
     } catch (e) { /* sin avatar */ }
   }
 
+  // Avance del héroe (Secundaria, sin admin): la semana (clases hechas / total) y la racha que ya trae
+  // /secundaria/actividades. Nivel y rango no: el nivel real suma las misiones (/misiones), que el portal no pide.
+  function pintarAvance(items, hoy, body) {
+    const SD = window.SecundariaDatos, el = $('portal-avance');
+    const prog = SD.progresoSemana(items, hoy), racha = SD.rachaDe(body);
+    if (!prog.total && !racha.dias) { el.hidden = true; return; }
+    el.innerHTML = '<div class="avance-semana"><div class="avance-linea"><span>📅 Tu semana</span><span class="rpg-num">' + prog.hechas + ' / ' + prog.total + ' clases</span></div>' +
+      '<div class="rpg-xp-barra" role="progressbar" aria-label="Clases hechas esta semana" aria-valuemin="0" aria-valuemax="' + prog.total + '" aria-valuenow="' + prog.hechas + '"><span style="width:' + prog.porcentaje + '%"></span></div></div>' +
+      '<div class="rpg-dato" id="portal-racha"><span class="rpg-dato-ico" aria-hidden="true">🔥</span><div><div class="rpg-dato-t">Racha</div><div class="rpg-dato-v"><span class="rpg-num">' + racha.dias + '</span> ' + (racha.dias === 1 ? 'día' : 'días') + '</div></div></div>';
+    el.hidden = false;
+  }
+
+  // Selector de alumna o alumno (admin) en la tarjeta de Secundaria: cambia el destino del botón, sin pedir nada.
+  function pintarSelectorAlumna(alumnas) {
+    const extra = document.querySelector('[data-extra="secundaria"]'), boton = document.querySelector('a[data-espacio="secundaria"]');
+    if (!extra || !boton || !alumnas.length) return;
+    extra.innerHTML = '<label for="sec-alumna-portal">Ver el tablero de</label><select id="sec-alumna-portal">' +
+      alumnas.map(a => '<option value="' + escapeHtml(a.slug) + '">' + escapeHtml(a.nombre) + '</option>').join('') + '</select>';
+    const sel = $('sec-alumna-portal');
+    const destino = () => { boton.href = conApi(agregarParam('secundaria.html', 'alumna', sel.value)); };
+    sel.addEventListener('change', destino);
+    destino();
+  }
+
   // «🗓️ Mi horario» de Secundaria (openspec: secundaria-dashboard): pide /secundaria/actividades (el admin, la vista
   // de la primera alumna con ?alumna=) y pinta los 7 días con «Hoy te toca» destacado. Si falla, un aviso corto.
+  // Con la misma respuesta llena la línea de la tarjeta, el avance del héroe y el selector del admin (portal-diseno-rpg).
   async function pintarSecundaria(p) {
     const el = $('sec-portal');
     if (!p.accesos.secundaria || !window.SecundariaDatos) { el.hidden = true; return; }
@@ -286,7 +275,10 @@
       let r = await pedir('/secundaria/actividades');
       let alumna = null;
       if (r.ok && r.body.isAdmin) {
-        alumna = (r.body.alumnas || [])[0] || null;
+        const alumnas = r.body.alumnas || [];
+        ponerEstado('secundaria', alumnas.length ? plural(alumnas.length, 'alumna o alumno', 'alumnas y alumnos') : '');
+        pintarSelectorAlumna(alumnas);
+        alumna = alumnas[0] || null;
         if (!alumna) { el.hidden = true; return; }
         r = await pedir(agregarParam('/secundaria/actividades', 'alumna', alumna.slug));
       }
@@ -294,6 +286,10 @@
       const items = r.body.items || [], hoy = r.body.hoy;
       const chip = (it) => { const m = SD.materiaDe(it) || { ...SD.OTRA, nombre: 'Clase' }; return '<span class="mat-chip mat-' + m.clave + '"><span aria-hidden="true">' + m.emoji + '</span> ' + escapeHtml(m.nombre) + '</span>'; };
       const deHoy = SD.clasesDeHoy(items, hoy);
+      if (!alumna) {
+        ponerEstado('secundaria', estadoSecundaria(deHoy));
+        pintarAvance(items, hoy, r.body);
+      }
       const dias = SD.horarioSemana(items, hoy).map(d => '<li class="sec-mini-dia' + (d.esHoy ? ' es-hoy' : '') + '" data-sec-mini="' + d.fecha + '"' + (d.esHoy ? ' aria-current="date"' : '') + '>' +
         '<span class="sec-mini-d">' + escapeHtml(SD.diaCorto(d.fecha)) + '</span><span class="sec-mini-m">' + (d.clases.length ? d.clases.map(it => { const m = SD.materiaDe(it) || SD.OTRA; return '<span role="img" title="' + escapeHtml(m.nombre) + '" aria-label="' + escapeHtml(m.nombre) + '">' + m.emoji + '</span>'; }).join('') : '<span class="sec-mini-libre">Libre</span>') + '</span></li>').join('');
       const destino = alumna ? agregarParam('secundaria.html', 'alumna', alumna.slug) : 'secundaria.html';
@@ -302,29 +298,32 @@
         '<ol class="sec-mini" aria-label="Horario de la semana">' + dias + '</ol>' +
         '<div class="sec-acciones"><a class="btn" id="sec-portal-clases" href="' + escapeHtml(conApi(destino)) + '">📚 Mis clases</a>' +
         '<a class="btn sec-ghost" id="sec-portal-horario" href="' + escapeHtml(conApi(destino) + '#horario') + '">🗓️ Mi horario</a></div>';
-    } catch (e) {
+    } catch (e) { // sin red o error del servidor: aviso corto en vez del horario (el detalle no le sirve a quien lo ve)
       el.innerHTML = '<h2 id="sec-portal-t">🗓️ Mi horario</h2><p class="sec-aviso">No pude cargar tu horario ahora. Ábrelo desde Secundaria.</p>' +
         '<div class="sec-acciones"><a class="btn" href="' + escapeHtml(conApi('secundaria.html')) + '">📚 Mis clases</a></div>';
     }
   }
 
   function renderHome(p) {
-    $('hello').textContent = 'Hola, ' + (p.nombre || 'qué gusto verte') + ' 👋';
-    pintarAvatar(p);
+    $('hello').textContent = saludo(p);
     const hoy = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
     $('date').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
+    let etiqueta = '🏠 Tu inicio';
+    if (p.isAdmin) etiqueta = '🛡️ Panel del profe'; else if (p.invitado) etiqueta = '🎮 Tu espacio de Juegos';
+    $('portal-etiqueta').textContent = etiqueta;
     $('admin-tag').hidden = !p.isAdmin;
+    $('portal-avance').hidden = true;
     $('who').textContent = p.email;
     $('secure-notice').hidden = !viejo;
     $('admin-link').hidden = !(p.isAdmin && !viejo);
     const atajo = $('material-link'); atajo.href = conApi('ingles.html') + '#material'; atajo.hidden = !(p.isAdmin || p.accesos.ingles);
-    $('tiles').innerHTML = ESPACIOS.filter(e => e.soloAdmin ? p.isAdmin : p.accesos[e.id]).map(e => e.pronto
-      ? '<div class="tile ' + e.clase + ' soon" aria-disabled="true" data-espacio="' + e.id + '"><span class="ico" aria-hidden="true">' + e.ico + '</span>' +
-        '<span class="t">' + escapeHtml(e.t) + '</span><span class="d">' + escapeHtml(e.d) + '</span><span class="pill">Muy pronto</span></div>'
-      : '<a class="tile ' + e.clase + '" href="' + escapeHtml(conApi(e.href)) + '" data-espacio="' + e.id + '"><span class="ico" aria-hidden="true">' + e.ico + '</span>' +
-        '<span class="t">' + escapeHtml(e.t) + '</span><span class="d">' + escapeHtml(e.d) + '</span><span class="go" aria-hidden="true">→</span></a>'
-    ).join('');
+    const visibles = ESPACIOS.filter(e => e.soloAdmin ? p.isAdmin : p.accesos[e.id]);
+    // Juegos ocupa todo el ancho cuando queda sola en su fila.
+    const sola = (e, i) => e.id === 'juegos' && visibles.length % 2 === 1 && i === visibles.length - 1;
+    const ancho = (e, i) => (sola(e, i) ? { ...e, clase: e.clase + ' wide' } : e);
+    $('tiles').innerHTML = visibles.map((e, i) => tarjetaArea(ancho(e, i), p)).join('');
     show('home');
+    pintarAvatar(p);
     pintarSecundaria(p);
   }
 

@@ -38,7 +38,7 @@ PEDIDAS=()
 # la de login con la transición terminada.
 ORDEN=(actividades-datos material alta-alumnos baja-ingles inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno ingles-diseno-profe ingles-admin presentar presentacion-cabe examen-secundaria secundaria-clases secundaria-clase secundaria-dashboard secundaria-adelantar misiones autoguardado ordenar-emparejar teoria-diagramas rpg-ingles misiones-ingles ingles-alumno-diseno
   grupos ocultar-grupos ingles-pro
-  login portal privacidad juegos categorias juegos-diseno juegos-ingles jugadores nick partidas enlace-sala juegos-recarga revancha
+  login portal portal-diseno privacidad juegos categorias juegos-diseno juegos-ingles jugadores nick partidas enlace-sala juegos-recarga revancha
   conquian-estres clasicos fusion cultura-conocimiento sudoku dragon-run plataformas karts karts-puntos karts-vivo futbol futbol-en-linea futbolito-arena brigada futbolito billar golf puntos-tipo basta-rondas loteria-sala una-sala una-robo
   poker cartas-espanolas ajedrez clasicos-rapidos juegos-tablero ajustes-salas ritmo avatar-foto peticiones ranking-juegos salas-grandes mando emocion espectador
   login-despues)

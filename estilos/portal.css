@@ -1,0 +1,211 @@
+/* Portal con diseño RPG (openspec: portal-diseno-rpg). Se enlaza DESPUÉS de estilos/ui.css (tokens --rpg-* y
+   componentes rpg-) y de estilos/materias.css (colores por materia del «🗓️ Mi horario»). Trae los tokens base del
+   portal (los componentes rpg- los usan como respaldo), en claro, en oscuro del sistema y con <html data-theme>.
+   Botones de 44 px o más, foco visible de 3 px, sin scroll horizontal a 360 px y contraste AA en los dos temas. */
+:root {
+  --bg: #f6f5fb; --bg-2: #eef0ff; --card: #ffffff; --text: #1e1b2e; --muted: #57546b; --border: #e2dff0;
+  --accent: #4f46e5; --accent-2: #7c3aed; --accent-soft: #eef0ff; --ok: #15803d; --danger: #b91c1c;
+  --shadow: 0 1px 2px rgba(30, 27, 46, .06), 0 8px 24px rgba(30, 27, 46, .07);
+  --radius: 18px;
+  /* Áreas: --tone = texto/acento sobre su fondo suave (AA), --tone-btn = fondo del botón con texto blanco (AA). */
+  --ingles: #1d4ed8; --ingles-soft: #dbeafe; --ingles-btn: #1d4ed8;
+  --secundaria: #0f766e; --secundaria-soft: #ccfbf1; --secundaria-btn: #0f766e;
+  --juegos: #be185d; --juegos-soft: #fce7f3; --juegos-btn: #be185d;
+  --profe: #6d28d9; --profe-soft: #ede9fe; --profe-btn: #6d28d9;
+  --alert-bg: #fef2f2; --alert-text: #991b1b; --alert-borde: #fecaca;
+  --ok-bg: #ecfdf5; --ok-text: #065f46; --ok-borde: #a7f3d0;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1020; --bg-2: #111a33; --card: #0f172a; --text: #f1f5f9; --muted: #b4bccb; --border: #26324a;
+    --accent-soft: #232a5c; --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+    --ingles: #93c5fd; --ingles-soft: #172554; --secundaria: #5eead4; --secundaria-soft: #0b3b37;
+    --juegos: #f9a8d4; --juegos-soft: #4a1230; --profe: #c4b5fd; --profe-soft: #2e1f5e;
+    --alert-bg: #3b1414; --alert-text: #fecaca; --alert-borde: #7f1d1d;
+    --ok-bg: #052e22; --ok-text: #a7f3d0; --ok-borde: #065f46;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1020; --bg-2: #111a33; --card: #0f172a; --text: #f1f5f9; --muted: #b4bccb; --border: #26324a;
+  --accent-soft: #232a5c; --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+  --ingles: #93c5fd; --ingles-soft: #172554; --secundaria: #5eead4; --secundaria-soft: #0b3b37;
+  --juegos: #f9a8d4; --juegos-soft: #4a1230; --profe: #c4b5fd; --profe-soft: #2e1f5e;
+  --alert-bg: #3b1414; --alert-text: #fecaca; --alert-borde: #7f1d1d;
+  --ok-bg: #052e22; --ok-text: #a7f3d0; --ok-borde: #065f46;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background:
+    radial-gradient(900px 480px at 110% -10%, rgba(124, 58, 237, .16), transparent 60%),
+    radial-gradient(700px 420px at -10% 0%, rgba(16, 185, 129, .10), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.45; -webkit-font-smoothing: antialiased;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden;
+}
+[hidden] { display: none !important; }
+.wrap { max-width: 960px; margin: 0 auto; }
+h1, h2, h3 { overflow-wrap: anywhere; }
+
+/* ---------- Barra superior: marca y tema ---------- */
+.brand { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; }
+.logo { width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 1.3rem;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed 60%, #047857); box-shadow: var(--rpg-glow); }
+.brand .name { font-weight: 900; letter-spacing: .12em; font-size: 1.05rem; }
+.brand .tagline { font-size: .76rem; color: var(--muted); }
+.brand-txt { flex: 1; min-width: 0; }
+.tema-btn { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; font-size: 1.2rem; cursor: pointer;
+  border-radius: 12px; border: 1px solid var(--rpg-borde); background: var(--rpg-panel); color: var(--text); }
+.tema-btn:hover { border-color: var(--rpg-indigo); }
+
+/* ---------- Botones y foco ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; margin-top: 12px; font: inherit; font-weight: 800;
+  font-size: 1rem; color: #fff; border: none; border-radius: 12px; padding: 12px 16px; cursor: pointer; text-decoration: none; text-align: center;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) #5b3fe6; box-shadow: 0 8px 20px rgba(79, 70, 229, .28); transition: transform .12s, box-shadow .15s, opacity .15s; }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(79, 70, 229, .36); }
+.btn:disabled { opacity: .6; cursor: default; transform: none; }
+.btn.ghost { background: var(--rpg-panel); color: var(--text); border: 1.5px solid var(--rpg-borde); box-shadow: none; }
+.btn.ghost:hover { border-color: var(--rpg-indigo); }
+.link-btn { display: inline-flex; align-items: center; min-height: 44px; font: inherit; font-size: .88rem; font-weight: 700; background: none; border: none;
+  color: var(--muted); cursor: pointer; padding: 0 6px; }
+.link-btn:hover { color: var(--text); text-decoration: underline; }
+:is(.btn, .link-btn, .tema-btn, .atajo-material, .pie-legal a, select, input, .av-link):focus-visible { outline: 3px solid var(--rpg-indigo); outline-offset: 3px; }
+
+/* ---------- Campos ---------- */
+label { display: block; font-size: .84rem; font-weight: 800; margin: 12px 0 6px; }
+input[type=email], input[type=password], select { width: 100%; min-height: 48px; font: inherit; font-size: 1rem; padding: 11px 14px; border-radius: 12px;
+  border: 1.5px solid var(--rpg-borde); background: var(--bg); color: var(--text); outline: none; transition: border-color .15s, box-shadow .15s; }
+input[type=email]:focus, input[type=password]:focus, select:focus { border-color: var(--rpg-indigo); box-shadow: 0 0 0 4px var(--accent-soft); }
+.hint { font-size: .84rem; color: var(--muted); margin: 12px 0 0; }
+.alert { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .9rem; background: var(--alert-bg); color: var(--alert-text); border: 1px solid var(--alert-borde); }
+.ok-msg { display: block; margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .9rem; background: var(--ok-bg); color: var(--ok-text); border: 1px solid var(--ok-borde); }
+
+/* ---------- Paneles ---------- */
+.card { background: var(--rpg-panel); border: 1px solid var(--rpg-borde); border-radius: var(--radius); box-shadow: var(--rpg-glow); }
+.loading { padding: 40px 22px; text-align: center; color: var(--muted); }
+.spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--accent-soft); border-top-color: var(--rpg-indigo); margin: 0 auto 12px; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Entrada (sin sesión) ---------- */
+.entrada { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 820px) { .entrada { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: start; } }
+.entrada-heroe { position: relative; overflow: hidden; padding: 22px 18px; border-radius: var(--radius); border: 1px solid var(--rpg-borde);
+  background: var(--rpg-hero); box-shadow: var(--rpg-glow); }
+.entrada-heroe::after { content: "🐉"; position: absolute; right: -8px; bottom: -18px; font-size: 6.5rem; opacity: .08; pointer-events: none; }
+.entrada-heroe h1 { font-size: 1.75rem; line-height: 1.15; margin: 10px 0 8px; letter-spacing: -.01em; }
+.lead { color: var(--rpg-texto-suave); margin: 0; font-size: 1rem; }
+.entrada-areas { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.entrada-areas li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--rpg-panel); border: 1px solid var(--rpg-borde);
+  border-left: 4px solid var(--tone); font-size: .9rem; font-weight: 700; }
+.entrada-areas li span[aria-hidden] { font-size: 1.2rem; }
+.entrada-form { padding: 20px 18px; }
+.entrada-form h2 { font-size: 1.15rem; margin: 0 0 2px; }
+.entrada-form label:first-of-type { margin-top: 14px; }
+.guest { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--juegos-soft); border: 1px solid var(--rpg-borde); }
+.guest-t { font-weight: 800; color: var(--juegos); }
+.guest .hint { margin: 4px 0 0; color: var(--text); }
+.guest .btn { background: var(--juegos-btn); box-shadow: none; }
+
+/* ---------- Héroe (con sesión) ---------- */
+.heroe { position: relative; overflow: hidden; padding: 18px 16px; border-radius: var(--radius); border: 1px solid var(--rpg-borde);
+  background: var(--rpg-hero); box-shadow: var(--rpg-glow); }
+.heroe::after { content: "🐉"; position: absolute; right: -6px; bottom: -16px; font-size: 6rem; opacity: .07; pointer-events: none; }
+.heroe-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
+.heroe-txt { min-width: 0; flex: 1 1 220px; }
+.date { font-size: .82rem; color: var(--rpg-texto-suave); margin: 8px 0 2px; font-weight: 600; }
+#hello { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 1.6rem; line-height: 1.15; margin: 0; letter-spacing: -.01em; }
+.heroe .sub { margin: 6px 0 0; color: var(--rpg-texto-suave); font-size: .95rem; }
+.tag { font-size: .74rem; font-weight: 800; padding: 6px 12px; border-radius: 99px; white-space: nowrap; color: #fff; background: #b45309; }
+.av { display: inline-grid; place-items: center; width: 56px; height: 56px; flex-shrink: 0; border-radius: 50%; font-size: 30px; overflow: hidden;
+  box-shadow: 0 0 0 3px var(--rpg-panel), 0 0 0 5px var(--rpg-indigo); }
+.av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.av-link { display: inline-flex; align-items: center; min-height: 44px; font-size: .88rem; font-weight: 800; color: var(--juegos); text-decoration: none; }
+.av-link:hover { text-decoration: underline; }
+/* Avance de la semana (Secundaria): .rpg-dato y .rpg-xp-barra de estilos/ui.css. */
+.avance { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; margin-top: 14px; padding: 12px 14px; position: relative; z-index: 1;
+  background: var(--rpg-panel); border: 1px solid var(--rpg-borde); border-radius: 14px; }
+.avance-semana { min-width: 0; }
+.avance-linea { display: flex; justify-content: space-between; gap: 8px; font-size: .78rem; color: var(--rpg-texto-suave); margin-bottom: 6px; font-weight: 700; }
+.avance-linea .rpg-num { color: var(--rpg-indigo); }
+
+/* ---------- Tarjetas por área ---------- */
+.seccion-t { font-size: .8rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--rpg-texto-suave); margin: 22px 0 10px; }
+.areas { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 600px) { .areas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.area { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 16px; overflow: hidden; color: var(--text);
+  background: var(--rpg-panel); border: 1px solid var(--rpg-borde); border-radius: var(--radius); box-shadow: var(--rpg-glow); transition: border-color .15s, transform .15s; }
+.area::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 5px; background: var(--tone-btn); }
+.area:hover { border-color: var(--tone); }
+.area-top { display: flex; align-items: center; gap: 12px; }
+.area-ico { width: 52px; height: 52px; flex-shrink: 0; border-radius: 14px; display: grid; place-items: center; font-size: 1.7rem; background: var(--tone-soft); }
+.area-t { font-weight: 900; font-size: 1.12rem; margin: 0; }
+.area-estado { display: inline-block; margin-top: 2px; font-size: .8rem; font-weight: 800; padding: 3px 10px; border-radius: 12px; color: var(--tone); background: var(--tone-soft); }
+.area-d { color: var(--muted); font-size: .9rem; margin: 0; flex: 1; }
+.area .btn { margin-top: 4px; background: var(--tone-btn); box-shadow: none; }
+.area .btn:hover { box-shadow: 0 8px 20px rgba(0, 0, 0, .18); }
+.area label { margin: 4px 0 4px; font-size: .8rem; }
+.area.ingles { --tone: var(--ingles); --tone-soft: var(--ingles-soft); --tone-btn: var(--ingles-btn); }
+.area.profe { --tone: var(--profe); --tone-soft: var(--profe-soft); --tone-btn: var(--profe-btn); }
+.area.secundaria { --tone: var(--secundaria); --tone-soft: var(--secundaria-soft); --tone-btn: var(--secundaria-btn); }
+.area.juegos { --tone: var(--juegos); --tone-soft: var(--juegos-soft); --tone-btn: var(--juegos-btn); }
+.entrada-areas .ingles { --tone: var(--ingles-btn); }
+.entrada-areas .secundaria { --tone: var(--secundaria-btn); }
+.entrada-areas .juegos { --tone: var(--juegos-btn); }
+@media (min-width: 600px) { .area.wide { grid-column: 1 / -1; } }
+
+/* ---------- Atajos, avisos y bloque del admin ---------- */
+.atajo-material { display: flex; align-items: center; gap: 8px; min-height: 48px; margin-top: 12px; padding: 10px 14px; border: 1px solid var(--rpg-borde);
+  border-left: 4px solid var(--ingles-btn); border-radius: 14px; background: var(--rpg-panel); color: var(--text); font-weight: 800; text-decoration: none; }
+.atajo-material:hover { border-color: var(--ingles); }
+.notice { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--accent-soft); border: 1px solid var(--rpg-borde); font-size: .9rem; }
+.notice b { display: block; margin-bottom: 4px; }
+.admin-box { margin-top: 14px; padding: 16px; }
+.admin-box h2 { font-size: 1.02rem; margin: 0 0 4px; }
+.admin-box .hint { margin: 0 0 4px; }
+
+/* ---------- «🗓️ Mi horario» de Secundaria (openspec: secundaria-dashboard) ---------- */
+.sec-portal { margin-top: 14px; padding: 16px; }
+.sec-portal h2 { font-size: 1.02rem; margin: 0 0 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sec-hoy-toca { padding: 12px 14px; border-radius: 14px; background: var(--secundaria-soft); border: 1.5px solid var(--secundaria); }
+.sec-hoy-toca b { display: block; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text); margin-bottom: 6px; }
+.sec-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mat-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .82rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; background: var(--mat-soft); color: var(--mat); border: 1px solid var(--mat); }
+.sec-mini { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.sec-mini-dia { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px; border-radius: 10px; border: 1px solid var(--rpg-borde); background: var(--bg); min-width: 0; }
+.sec-mini-dia.es-hoy { border: 2px solid var(--secundaria); background: var(--secundaria-soft); }
+.sec-mini-d { font-size: .68rem; font-weight: 800; color: var(--muted); white-space: nowrap; }
+.sec-mini-dia.es-hoy .sec-mini-d { color: var(--text); }
+.sec-mini-m { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 1rem; line-height: 1.2; }
+.sec-mini-libre { font-size: .7rem; color: var(--muted); }
+.sec-acciones { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 12px; }
+.sec-acciones .btn { margin-top: 0; min-height: 48px; font-size: .92rem; padding: 10px 12px; }
+.sec-acciones .btn:first-child { background: var(--secundaria-btn); box-shadow: none; }
+.btn.sec-ghost { background: var(--rpg-panel); color: var(--text); border: 1.5px solid var(--rpg-borde); box-shadow: none; }
+.btn.sec-ghost:hover { border-color: var(--secundaria); }
+.sec-aviso { margin: 0; font-size: .88rem; color: var(--muted); }
+
+/* ---------- Pie de la sesión y pie de página ---------- */
+.foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; margin-top: 22px; padding-top: 10px; border-top: 1px solid var(--rpg-borde); }
+.foot-acciones { display: flex; flex-wrap: wrap; gap: 4px; }
+.who { font-size: .82rem; color: var(--muted); overflow-wrap: anywhere; min-width: 0; }
+footer { text-align: center; font-size: .78rem; color: var(--muted); margin-top: 30px; }
+.pie-legal { display: flex; justify-content: center; flex-wrap: wrap; gap: 0 8px; }
+.pie-legal a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: .84rem; font-weight: 700; color: var(--muted); text-decoration: none; }
+.pie-legal a:hover { color: var(--text); text-decoration: underline; }
+
+/* Cambio de contraseña (comun/auth.js pintarCambio trae su CSS base): panel RPG, 44 px y foco visible. */
+#cambio .stald-auth { background: var(--rpg-panel); border-color: var(--rpg-borde); box-shadow: var(--rpg-glow); }
+#cambio .stald-auth p { color: var(--muted); }
+#cambio .stald-auth label { margin-top: 12px; }
+#cambio .stald-auth button { min-height: 48px; background: linear-gradient(135deg, #4f46e5, #7c3aed) #5b3fe6; }
+#cambio .stald-auth button.sec { min-height: 44px; background: none; color: var(--muted); }
+#cambio .stald-auth button:focus-visible { outline: 3px solid var(--rpg-indigo); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) { .btn, .area, .spinner { transition: none; animation: none; } .btn:hover { transform: none; } }
