@@ -8,12 +8,12 @@ const { abrirPagina } = require('./lib/navegador');
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const ALUMNA = 'marisol@example.com', ADMIN = 'admin@example.com';
 const VISTA = { width: 360, height: 780 };
-const SECCIONES = ['inicio', 'semana', 'material', 'resultados', 'perfil'];
+const SECCIONES = ['inicio', 'semana', 'misiones', 'material', 'resultados', 'perfil'];
 
-// Botones visibles de la sección actual más bajos de 44 px (alto real en pantalla).
-const botonesChicos = p => p.evaluate(() => [...document.querySelectorAll('#content .btn')]
+// Todos los botones visibles de la sección actual (button y a.btn) más bajos de 44 px (alto real en pantalla).
+const botonesChicos = p => p.evaluate(() => [...document.querySelectorAll('#content [data-seccion]:not([hidden]) button, #content [data-seccion]:not([hidden]) a.btn')]
   .filter(b => b.offsetParent && !b.closest('[hidden]')).filter(b => b.getBoundingClientRect().height < 43.5)
-  .map(b => b.textContent.trim().slice(0, 30)));
+  .map(b => (b.className + ': ' + b.textContent.trim()).slice(0, 50)));
 const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
 (async () => {
@@ -32,7 +32,8 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
         const st = getComputedStyle(c);
         return st.boxShadow !== 'none' && st.borderTopWidth !== '0px';
       }, s);
-      ok(s + ': tarjetas con borde y brillo RPG (' + tema + ')', panel !== false, String(panel));
+      // «⚔️ Misiones» sin misiones solo muestra el aviso vacío (sin tarjeta); las demás deben tener tarjetas RPG.
+      ok(s + ': tarjetas con borde y brillo RPG (' + tema + ')', s === 'misiones' ? panel !== false : panel === true, String(panel));
       await p.screenshot({ path: 'ingles-alumno-' + s + '-' + tema + '.png', fullPage: true });
     }
     await p.context().close();
@@ -45,10 +46,24 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
   const v = await p.evaluate(() => ({
     etiqueta: (document.querySelector('.sec-mision-tag') || {}).textContent || '',
     pasos: [...document.querySelectorAll('[data-sec-paso]')].map(x => x.dataset.secPaso),
+    // Cada paso habilitado tiene su bloque y cada deshabilitado no (el indicador refleja el contenido).
+    coherentes: [...document.querySelectorAll('[data-sec-paso]')].every(x => !x.disabled === !!document.getElementById('sec-paso-' + x.dataset.secPaso)),
+    habilitados: [...document.querySelectorAll('[data-sec-paso]:not([disabled])')].map(x => x.dataset.secPaso),
     form: !!document.querySelector('#sec-paso-ejercicios #exam-form'),
     mundo: (document.querySelector('[data-sec-mundo]') || {}).textContent || '',
   }));
-  ok('actividad por pasos: Teoría, Video, Ejercicios y Libreta', v.pasos.join(',') === 'teoria,video,ejercicios,libreta' && v.form, v.pasos.join(','));
+  ok('actividad por pasos: indicador de 4 pasos coherente con su contenido y Ejercicios con el formulario', v.pasos.join(',') === 'teoria,video,ejercicios,libreta' && v.coherentes && v.habilitados.includes('ejercicios') && v.form, v.habilitados.join(','));
+  ok('actividad: botones de 44 px o más', (await p.evaluate(() => [...document.querySelectorAll('#content button, #content a.btn')].filter(b => b.offsetParent && b.getBoundingClientRect().height < 43.5).map(b => b.textContent.trim().slice(0, 30)))).length === 0);
+  // Pantalla de resultado de Inglés (lo que dibuja showResult tras un envío): «¡Listo!», recompensa con XP y nivel, y
+  // «Lo siguiente →» o «📅 Mi semana». Se dibuja con una calificación de ejemplo, sin enviar al servidor.
+  const res = await p.evaluate(() => {
+    const id = state.claseAbierta.id;
+    state.actAntes = { id, act: state.act };
+    showResult({ correctas: 4, total: 5, porcentaje: 80, nivelSugerido: 'Bien', secciones: [], fortalezas: [], enProgreso: [], debilidades: [], revision: [] }, { id, intento: 1, intentosMax: 2, restantes: 1 });
+    return { texto: document.getElementById('content').textContent, recompensa: !!document.getElementById('sec-recompensa'), siguiente: (document.querySelector('.sec-siguiente') || {}).textContent || '' };
+  });
+  ok('resultado en Inglés: «¡Listo!», +XP y nivel', res.texto.includes('¡Listo!') && res.recompensa && /\+\d+ XP/.test(res.texto) && res.texto.includes('Nivel '), res.texto.slice(0, 80));
+  ok('resultado en Inglés: «Lo siguiente →» o «📅 Mi semana» (no «misión»)', /Lo siguiente|Mi semana/.test(res.siguiente) && !/misi[oó]n/i.test(res.siguiente), res.siguiente.slice(0, 60));
   ok('etiqueta del tipo (no «Misión») y mundo de Inglés', /Actividad|Examen|Refuerzo|Reto del Meet/.test(v.etiqueta) && !v.etiqueta.includes('Misión') && v.mundo.includes('Isla del Alfabeto'), v.etiqueta + ' | ' + v.mundo);
   ok('actividad: sin scroll horizontal a 360 px', await sinScrollH(p));
   await p.screenshot({ path: 'ingles-alumno-actividad-pasos.png', fullPage: true });

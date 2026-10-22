@@ -2,7 +2,7 @@
 
 ### Requirement: Vista de alumnos y alumnas con diseño RPG y actividades por pasos
 La vista de alumnos y alumnas de `ingles.html` SHALL usar el lenguaje visual de Secundaria en todas sus secciones
-(Inicio, Semana con «Esta semana» y «Para ponerte al día», Meets, Material de estudio, Resultados y Perfil):
+(Inicio, Semana con «Esta semana» y «Para ponerte al día», «⚔️ Misiones», Material de estudio, Resultados y Perfil):
 - paneles con borde y brillo RPG y filas de actividad como tarjetas;
 - botones reales de al menos 44 px con foco visible y chips en píldora;
 - modo claro y oscuro, sin scroll horizontal a 360 px.

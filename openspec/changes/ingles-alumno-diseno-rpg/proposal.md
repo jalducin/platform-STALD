@@ -12,9 +12,12 @@ actividades y exámenes por pasos, como la misión de Secundaria. La vista del p
   - En Inglés la etiqueta es el tipo («📘 Actividad», «📝 Examen», «🔁 Refuerzo», «🎥 Reto del Meet»), no «Misión»,
     y el mundo es el de Inglés.
   - El resultado muestra «🎉 ¡Listo!», «+N XP», el nivel y «Lo siguiente →».
+  - Los tips sin enlace se ven en la Teoría (como en la vista de lista). La práctica revisada en el servidor
+    (`/practica/comprobar`) sigue solo en Secundaria. «Lo siguiente →» omite los Meets sin reto, y el nivel del
+    resultado incluye la XP de las misiones evaluadas.
   - El admin (vista previa) y la ruta del profe siguen con la vista de lista.
 - **Diseño RPG de toda la vista** (`ingles/rpg-ingles.css`, solo `body.vista-alumno` fuera de Secundaria). Aplica a
-  Inicio, Semana (Esta semana, Para ponerte al día, Todas mis tareas), Meets, Material, Resultados y Perfil:
+  Inicio, Semana (Esta semana, Para ponerte al día, Todas mis tareas, con los Meets), ⚔️ Misiones, Material, Resultados y Perfil:
   - paneles con los tokens `--rpg-*` de `estilos/ui.css`;
   - cada fila de actividad como tarjeta;
   - botones de 44 px o más con foco visible;

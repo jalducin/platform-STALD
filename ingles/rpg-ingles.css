@@ -65,3 +65,7 @@ body.vista-alumno:not(.secundaria) .nav .nav-item[aria-current="page"] { color: 
 /* Material de estudio y resultados: mismas tarjetas */
 body.vista-alumno:not(.secundaria) .res-item { padding: 12px; margin-top: 8px; border: 1px solid var(--rpg-borde); border-radius: var(--r-sm); background: var(--rpg-panel-2); }
 body.vista-alumno:not(.secundaria) .material-guia { background: var(--rpg-panel); border-color: var(--rpg-borde); box-shadow: var(--rpg-glow); }
+/* Otros botones de la vista: audio y pronunciación de la actividad y «✕ Ver todo» de Semana */
+body.vista-alumno:not(.secundaria) .tts button,
+body.vista-alumno:not(.secundaria) .pron-btns button,
+body.vista-alumno:not(.secundaria) .ver-todo { min-height: 44px; }

@@ -76,8 +76,10 @@ function recompensaMision(id) {
   const antes = envio.act, despues = state.act;
   if (!hayGamificacion() || !antes || !despues || antes.isAdmin || despues.isAdmin) return '';
   const hoy = despues.hoy || todayStr();
-  const xpAntes = Gamificacion.xpTotal(antes.items, { hoy });
-  const xpDespues = Gamificacion.xpTotal(despues.items, { hoy });
+  // Con las misiones principales evaluadas (mismas antes y después), como el tablero de Inglés y el de Secundaria.
+  const mis = typeof misionesSec === 'function' ? misionesSec() : [];
+  const xpAntes = Gamificacion.xpTotalConMisiones ? Gamificacion.xpTotalConMisiones(antes.items, mis, { hoy }) : Gamificacion.xpTotal(antes.items, { hoy });
+  const xpDespues = Gamificacion.xpTotalConMisiones ? Gamificacion.xpTotalConMisiones(despues.items, mis, { hoy }) : Gamificacion.xpTotal(despues.items, { hoy });
   const nA = Gamificacion.nivelDe(xpAntes), nD = Gamificacion.nivelDe(xpDespues);
   const nuevas = Gamificacion.insigniaNueva({ items: antes.items, hoy, racha: antes.racha }, { items: despues.items, hoy, racha: despues.racha });
   return '<section class="exam-card sec-recompensa" id="sec-recompensa" aria-live="polite">' +
@@ -97,7 +99,11 @@ const etiquetaClase = it => (MODO_SECUNDARIA ? '⚔️ Misión' : ETIQUETA_TIPO[
 // Vista completa de la clase. `cabecera` y `form` los arma el reproductor (los mismos que en Inglés).
 function vistaClaseSecundaria(it, cabecera, form) {
   // Práctica de la teoría con revisión en el servidor (openspec: rpg-fase2-misiones; ingles/secundaria-misiones.js).
-  const teoria = it.teoria && it.teoria.length ? renderTeoria(it.teoria) + (typeof practicaHtml === 'function' ? practicaHtml(it.teoria, { itemId: it.id }) : '') : '';
+  // La práctica revisada en el servidor solo existe para clases de Secundaria (/practica/comprobar).
+  const practica = MODO_SECUNDARIA && typeof practicaHtml === 'function' ? practicaHtml(it.teoria || [], { itemId: it.id }) : '';
+  // Inglés: los tips sin enlace (ni libreta) se ven en la teoría, como en la vista de lista (spec dashboard-ingles).
+  const tipsTexto = MODO_SECUNDARIA ? [] : (it.tips || []).filter(t => t.tipo !== 'libreta' && !esWeb(t.url) && t.texto);
+  const teoria = (it.teoria && it.teoria.length ? renderTeoria(it.teoria) + practica : '') + (tipsTexto.length ? renderTips(tipsTexto) : '');
   const video = videosDeClase(it.tips);
   const libreta = bloqueLibreta(it.id, it.tips);
   const hay = { teoria: !!teoria, video: video.hay, ejercicios: true, libreta: !!libreta };
@@ -141,7 +147,8 @@ function siguienteClase(idActual) {
   const act = state.act;
   if (!act || act.isAdmin) return null;
   const hoy = act.hoy || todayStr();
-  const pendientes = (act.items || []).filter(x => x.id !== idActual && (x.estado === 'disponible' || x.estado === 'en-curso'))
+  // Sin Meets sin reto: no tienen ejercicios (se abren como material).
+  const pendientes = (act.items || []).filter(x => x.id !== idActual && (x.tipo !== 'meet' || x.tieneReto) && (x.estado === 'disponible' || x.estado === 'en-curso'))
     .sort((a, b) => String(a.fechaLimite).localeCompare(String(b.fechaLimite)));
   return pendientes.find(x => x.fechaLimite >= hoy) || pendientes[0] || null;
 }
