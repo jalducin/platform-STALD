@@ -138,11 +138,12 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).
-- `ocultar-grupos` (fase `grupos`, `--pg`; cambio `ingles-ocultar-grupos`) crea «Grupo 2» con Angel, oculta
-  «Grupo 1» con «👁️ Ocultar del panel» y revisa que sus alumnos y alumnas salgan del avance, «Últimas
-  calificaciones», «Registro», el selector, el resumen y el ranking; el interruptor «Mostrar grupos ocultos (1)»;
-  que Marisol (grupo oculto) ve su grupo y su semana y entrega con el resultado guardado; y lo revierte con «Mostrar
-  en el panel».
+- `ocultar-grupos` (fase `grupos`, `--pg`; cambio `ingles-ocultar-grupos`) crea «Grupo 2» con Angel y una partida
+  de Marisol; con «Grupo 1» oculto, Marisol ve su grupo y su semana y entrega con el resultado guardado. Luego lo
+  oculta con «👁️ Ocultar del panel» y revisa que sus alumnos y alumnas salgan del avance, «Últimas calificaciones»,
+  «Registro», el selector, el resumen, el mapa de calor, el conteo «con intentos» de «Esta semana», el guion del Meet
+  y el ranking; el interruptor «Mostrar grupos ocultos (1)» (y que el selector vuelve a «Todos los grupos» al
+  apagarlo); y lo revierte con «Mostrar en el panel» (el interruptor se apaga solo).
 - Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
 - Juego en vivo sin Supabase (cambio `juegos-en-vivo`): `lib/vivo-relevo.js` levanta un relevo local (HTTP + SSE) y
   `initVivo(relevo.url, { latencia, perdida, desorden, noConecta })` es el `init` de `abrirPagina`; con la ruta

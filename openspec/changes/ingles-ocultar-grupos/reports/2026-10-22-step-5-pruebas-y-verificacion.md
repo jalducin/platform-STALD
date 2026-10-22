@@ -21,9 +21,15 @@
     con `ocultos=1` o `grupo=<oculto>`; alumna del grupo oculto: `/ingles/data`, `/perfil`, `/ingles/actividades`
     (grupo sin la bandera), abre la actividad, entrega y el resultado queda en `stald_test_docs`.
 - Suite completa: 979 pasaron, 0 fallaron, 6 omitidas (≈ 43 s). `deno check` y `deno lint` (154 archivos) sin hallazgos.
+  Tras atender la revisión y el merge de `main` (PR #231, #229 y #233): 1033 pasaron, 0 fallaron, 6 omitidas; `deno lint`
+  169 archivos sin hallazgos.
 - E2E (`--pg` contra el PostgREST falso): 6 de 6 PASS — `alta-alumnos` (13), `baja-ingles` (17), `profe-grupo` (7),
   `grupos` (12), `ocultar-grupos` (24), `ingles-pro` (32). Capturas en `tests/e2e/salida/ocultar-grupos-*.png`
   revisadas (botón, etiqueta «oculto del panel» e interruptor «Mostrar grupos ocultos (1)»).
+- Tras la revisión `revisor-solo-lectura` (guion del Meet, interruptor que se apaga solo, pruebas del ranking, del
+  conteo de «Esta semana» y del selector) y el merge de `main`: `alta-alumnos` (13), `baja-ingles` (17), `profe-grupo`
+  (7), `presentar` (11), `grupos` (12), `ocultar-grupos` (29, estable en 3 corridas seguidas), `ingles-pro` (32): 7 PASS;
+  `misiones` OMIT (le faltan datos en esta copia, ajena al cambio).
 
 ## Verificación de estado
 - Antes: `stald_test_docs` y `stald_test_grupos` (PostgREST falso) vacías: `[]`
