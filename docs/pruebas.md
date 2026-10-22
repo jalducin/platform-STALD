@@ -114,7 +114,13 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   mundos, abrir y volver de una clase, escritorio, el tablero del admin (`?alumna=valeria`) y el bloque «🗓️ Mi
   horario» del portal.
   Corre después de `examen-secundaria` y `secundaria-clase` en el mismo servidor: lo que esperan XP, nivel e insignias
-  sale de lo que devuelve la API en ese momento.
+  sale de lo que devuelve la API en ese momento (incluida la XP de misiones evaluadas).
+- `misiones` (fase `ingles`, cambio `rpg-fase2-misiones`, solo con `--hoy 2026-10-27`): con `mundos.json` y la misión
+  inventada `mis-e2e-valle-de-los-numeros` del fixture (exclusiva de `valeria`), revisa a 360 px en claro y oscuro la
+  matriz básica por la API (archivo y multipart → 400, > 4 000 → 400, bandeja 403 a la alumna), «⚔️ Misiones» con el
+  recordatorio de privacidad, contador, práctica comprobada en el servidor y entrega en texto, la bandeja del admin con
+  la rúbrica (85 % → 315 XP), 409 al reenviar, el aviso «+XP» y el nivel en el Inicio, «🗺️ Mapa» y «🌳 Árbol». Corre
+  después de `secundaria-dashboard`; si la copia ya trae la misión evaluada, sale `OMIT`.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).

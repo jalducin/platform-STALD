@@ -4,45 +4,45 @@
 
 ## 1. Pruebas que fallan (TDD)
 
-- [ ] 1.1 Validador `--misiones <ámbito>`: misión válida, rúbrica ≠ 100, fechas fuera del mundo o fuera de orden, sin
+- [x] 1.1 Validador `--misiones <ámbito>`: misión válida, rúbrica ≠ 100, fechas fuera del mundo o fuera de orden, sin
   aviso de privacidad, paso con `tipoEntrega` `imagen` o `audio` = error; `mundos.json` encimado = error y, en
   Secundaria, nombres y fechas distintos a `comun/gamificacion.js` = error (`server/misiones_validar_test.ts`)
-- [ ] 1.2 Entrega solo texto: 200, 400 `entrega_invalida` (vacía o > 4 000), 400 `tipo_no_permitido` (archivo, multipart
+- [x] 1.2 Entrega solo texto: 200, 400 `entrega_invalida` (vacía o > 4 000), 400 `tipo_no_permitido` (archivo, multipart
   o `tipo` ≠ texto), 409 `ya_evaluado`, 404 ajena o mundo futuro, 403 baja e invitado, 401, 503 al fallar Postgres
   (`server/misiones_test.ts`)
-- [ ] 1.3 Bandeja `/profe/entregas`: orden, evaluar (XP = rúbrica × 3 + 60 a tiempo), 409 `incompleta`, 400
+- [x] 1.3 Bandeja `/profe/entregas`: orden, evaluar (XP = rúbrica × 3 + 60 a tiempo), 409 `incompleta`, 400
   `rubrica_invalida`, corrección por privacidad borra el texto, borrar contenido conserva la evaluación, 403 a alumnos
-- [ ] 1.4 `POST /practica/comprobar` y teoría publicada sin respuestas
-- [ ] 1.5 `comun/gamificacion.js`: XP de misión, mapa con catálogo, misiones diarias y semanales sin XP, árbol
+- [x] 1.4 `POST /practica/comprobar` y teoría publicada sin respuestas
+- [x] 1.5 `comun/gamificacion.js`: XP de misión, mapa con catálogo, misiones diarias y semanales sin XP, árbol
 
 ## 2. Implementación
 
-- [ ] 2.1 `server/misiones_validar.ts` y `server/validar_semana.ts`: forma `--misiones <ámbito>`
-- [ ] 2.2 `server/misiones.ts` y rutas en `server/main.ts`; prefijo `entregas/` en `server/db.ts`
-- [ ] 2.3 Bandeja básica del admin y script `server/retencion_entregas.ts`
-- [ ] 2.4 `POST /practica/comprobar` y teoría sin respuestas en `server/actividades.ts`
-- [ ] 2.5 `comun/gamificacion.js` (aditivo)
-- [ ] 2.6 Vistas «🗺️ Mapa», «🌳 Árbol», «⚔️ Misiones» (entrega con recordatorio y contador), retroalimentación y
+- [x] 2.1 `server/misiones_validar.ts` y `server/validar_semana.ts`: forma `--misiones <ámbito>`
+- [x] 2.2 `server/misiones.ts` y rutas en `server/main.ts`; prefijo `entregas/` en `server/db.ts`
+- [x] 2.3 Bandeja básica del admin y script `server/retencion_entregas.ts`
+- [x] 2.4 `POST /practica/comprobar` y teoría sin respuestas en `server/actividades.ts`
+- [x] 2.5 `comun/gamificacion.js` (aditivo)
+- [x] 2.6 Vistas «🗺️ Mapa», «🌳 Árbol», «⚔️ Misiones» (entrega con recordatorio y contador), retroalimentación y
   «📥 Entregas» del admin (`ingles/secundaria-misiones.js`, `ingles/secundaria.css`)
-- [ ] 2.7 `contenido/secundaria/mundos.json` en una copia del repo privado, validado con 0 errores (sin push hasta que
+- [ ] 2.7 `contenido/secundaria/mundos.json` en una copia del repo privado, validado con 0 errores (hecho y validado; falta el push, sin push hasta que
   el código esté en producción)
-- [ ] 2.8 Skill `clases-secundaria` con la sección de misiones y `node ai-specs/scripts/sincronizar-espejos.mjs`
+- [x] 2.8 Skill `clases-secundaria` con la sección de misiones y `node ai-specs/scripts/sincronizar-espejos.mjs`
 
 ## 3. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
-- [ ] 3.1 Pruebas de `server/` afectadas (actividades, gamificación, espejos) y E2E de Secundaria
+- [x] 3.1 Pruebas de `server/` afectadas (actividades, gamificación, espejos) y E2E de Secundaria
   (`e2e-examen-secundaria`, `secundaria-clases`, `secundaria-dashboard`); E2E nueva `e2e-misiones` a 360 px, claro y
   oscuro
 
 ## 4. Ejecutar pruebas y verificar estado (OBLIGATORIO)
 
-- [ ] 4.1 `deno test -A server/` (subagente `verificador-pruebas`), `deno check server/main.ts`, `deno lint server/` y
+- [x] 4.1 `deno test -A server/` (subagente `verificador-pruebas`), `deno check server/main.ts`, `deno lint server/` y
   E2E de Secundaria en los puertos 8911/8912 con copia temporal de datos; sin tablas `stald_` reales (stores en memoria
   o `stald_test_*`). Reporte `openspec/changes/rpg-fase2-misiones/reports/AAAA-MM-DD-step-4.1-pruebas-y-verificacion.md`
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 5.1 Servidor local con copia de datos y curl a cada fila de la matriz (admin, alumna, alumno de Inglés, de baja,
+- [x] 5.1 Servidor local con copia de datos y curl a cada fila de la matriz (admin, alumna, alumno de Inglés, de baja,
   invitado, sin sesión, correo no asignado, misión ajena, texto demasiado largo, archivo adjunto); CLI `--misiones` con
   caso válido e inválido; restaurar las entregas de prueba (copia temporal que se borra)
 
@@ -53,7 +53,7 @@
 
 ## 7. Documentación técnica (OBLIGATORIO)
 
-- [ ] 7.1 `docs/data-model.md` (`mundos.json`, `misiones/`, `entregas/`, `teoria[].practica`), `docs/backend-standards.md`
+- [x] 7.1 `docs/data-model.md` (`mundos.json`, `misiones/`, `entregas/`, `teoria[].practica`), `docs/backend-standards.md`
   (rutas y matriz), `docs/frontend-standards.md` (vistas y gamificación de misiones)
 
 ## Pendiente (fuera de este cambio)

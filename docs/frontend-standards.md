@@ -1179,3 +1179,27 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
   `faltan` y `xpHoy`. **Actividad reciente** (`actividadReciente(items, n)`): por `ultimoEnvio`, con porcentaje y XP.
 - Día de la clase (`diaDeClase`): `disponibleDesde` si dura un día (vence ese día o el siguiente); con ventana más
   larga, su `fechaLimite`. Hecha (`estaHecha`): al menos un envío.
+
+## Misiones principales en Secundaria (cambio `rpg-fase2-misiones`)
+
+`ingles/secundaria-misiones.js` dibuja; las reglas viven solo en `comun/gamificacion.js` (funciones aditivas de la Fase
+2a; las de la Fase 1 no cambian y las fijan los 10 casos de `server/gamificacion_regresion_test.ts`):
+
+- **XP de misión** (`xpDeMision`): porcentaje de la rúbrica × 3 + 60 si el último paso llegó a tiempo; 0 sin evaluar.
+  `xpTotalConMisiones(items, misiones)` suma clases + misiones en el mismo total del nivel (Inicio y recompensa).
+- **Mapa** (`mapaRpg(items, hoy, { catalogo, misiones })`): mundos del catálogo (o de la Fase 1 si no hay), zonas de 2
+  semanas y capítulos; estados bloqueado, en curso, completado (terminó y su misión está evaluada; sin misión, todas
+  sus clases hechas) y dominado (además promedio ≥ 80 % y misión ≥ 80 %). Un mundo pasado se puede repasar.
+- **Misiones del día y de la semana** (`misionDiaria`, `misionesSemanales`): sin XP; dan progreso e insignias
+  (`INSIGNIAS_RPG`: Semana completa, Misión principal, Constructora de mundos; van aparte de `INSIGNIAS`).
+- **Árbol** (`arbolHabilidades`): nodos = temas (`temas` del listado), por mundo; estado del último intento
+  (`ultimoTemas`): no visto (bloqueado si no abre), en progreso, a reforzar (con «🔧 Reforzar»: su repaso o la clase) y
+  dominado.
+
+Vistas (pestañas en filas de 4 en teléfono): «⚔️ Misiones» (lista; detalle con consigna, teoría con práctica, pasos,
+cuadro de texto con el recordatorio «🔒 Sin nombres reales, direcciones ni datos de contacto», contador `n / 4000`,
+borrador local por paso y rúbrica), «🗺️ Mapa», «🌳 Árbol» y, solo admin, «📥 Entregas» (rúbrica con radios por
+criterio y total en vivo, comentario, pedir corrección con casilla de privacidad, borrar contenido). En el Inicio:
+tarjeta de la misión principal, misiones de hoy y de la semana y, una sola vez por evaluación (en `localStorage`),
+el aviso «+N XP» y «¡Subiste a nivel N!». Sin sonido; `prefers-reduced-motion` quita la transición de las barras; claro
+y oscuro con los tokens RPG; 360 px sin scroll horizontal (E2E `e2e-misiones`).
