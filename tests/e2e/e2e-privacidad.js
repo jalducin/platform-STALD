@@ -37,10 +37,12 @@ async function abrir(b, ruta, { modo = null, oscuro = false, esperar = null } = 
 
   // --- Apagado: nada visible ---
   for (const [ruta, esperar] of [['/index.html', '#login:not([hidden]), #home:not([hidden])'], ['/ingles.html', null], ['/juegos.html', null]]) {
-    const p = await abrir(b, ruta, { esperar });
-    const n = await p.$$eval('a[href^="privacidad.html"]', xs => xs.filter(x => x.offsetParent).length);
-    ok(`apagado: ${ruta} sin enlace visible al aviso`, n === 0, String(n));
-    await p.context().close();
+    for (const modo of [null, 'caido']) {
+      const p = await abrir(b, ruta, { modo, esperar });
+      const n = await p.$$eval('a[href^="privacidad.html"]', xs => xs.filter(x => x.offsetParent).length);
+      ok(`apagado${modo ? ' (servidor caído)' : ''}: ${ruta} sin enlace visible al aviso`, n === 0, String(n));
+      await p.context().close();
+    }
   }
   for (const [ruta, id] of [['/privacidad.html', '#aviso'], ['/consentimiento.html', '#formato']]) {
     for (const modo of [null, 'caido']) {
@@ -81,7 +83,7 @@ async function abrir(b, ruta, { modo = null, oscuro = false, esperar = null } = 
     const texto = await p.textContent('#aviso');
     ok(`privacidad (${tema}): sin correos en el texto`, !CORREO.test(texto), (texto.match(CORREO) || [''])[0]);
     ok(`privacidad (${tema}): cubre datos, no venta, tutor IA, ARCO y canal de la escuela`,
-      ['Nombre de pila', 'Correo de acceso', 'Apodo de Juegos', 'Supabase', 'No vendemos', 'Tutor con inteligencia artificial', 'ARCO', 'escríbele a tu profe por el canal de la escuela', 'Cambios a este aviso'].every(s => texto.toLowerCase().includes(s.toLowerCase())));
+      ['Nombre de pila', 'Correo de acceso', 'Apodo de Juegos', 'Supabase', 'No vendemos', 'Avatar de Juegos', 'Invitados de Juegos', 'Finalidad secundaria', 'Tutor con inteligencia artificial', 'ARCO', 'escríbele a tu profe por el canal de la escuela', 'Cambios a este aviso'].every(s => texto.toLowerCase().includes(s.toLowerCase())));
     ok(`privacidad (${tema}): enlace al formato de consentimiento`, await visible(p, 'nav.top a[href^="consentimiento.html"]'));
     ok(`privacidad (${tema}): sin scroll horizontal a 360 px`, await sinScrollX(p));
     const fondo = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -96,8 +98,8 @@ async function abrir(b, ruta, { modo = null, oscuro = false, esperar = null } = 
     const p = await abrir(b, '/consentimiento.html', { modo: 'encendido', oscuro, esperar: '#formato:not([hidden])' });
     ok(`consentimiento (${tema}): título y h1`, (await p.title()) === 'Formato de consentimiento · STALD' && /Autorización de mamá, papá o tutor/.test(await p.textContent('#formato h1')));
     const casillas = await p.$$eval('.casillas > li .que', xs => xs.map(x => x.textContent));
-    ok(`consentimiento (${tema}): 4 autorizaciones (plataforma, ranking, tutor IA, imagen y audio)`,
-      casillas.length === 4 && /plataforma/.test(casillas[0]) && /Ranking/.test(casillas[1]) && /Tutor/.test(casillas[2]) && /imagen o audio/.test(casillas[3]), casillas.join(' | '));
+    ok(`consentimiento (${tema}): 5 autorizaciones (plataforma, foto de avatar, ranking, tutor IA, imagen y audio)`,
+      casillas.length === 5 && /plataforma/.test(casillas[0]) && /Foto/.test(casillas[1]) && /Ranking/.test(casillas[2]) && /Tutor/.test(casillas[3]) && /imagen o audio/.test(casillas[4]), casillas.join(' | '));
     const rotulos = await p.$$eval('.campos .rotulo', xs => xs.map(x => x.textContent));
     ok(`consentimiento (${tema}): campos en blanco (alumno o alumna, quien firma, fecha y firma)`,
       ['Nombre del alumno o alumna', 'Nombre de quien firma', 'Fecha', 'Firma'].every(t => rotulos.includes(t)), rotulos.join(' | '));

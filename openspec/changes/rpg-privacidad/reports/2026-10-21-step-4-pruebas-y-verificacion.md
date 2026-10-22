@@ -17,7 +17,12 @@
 - Dirigidas: 15 pasaron, 0 fallaron, 0 omitidas
 - Suite completa: 972 pasaron, 0 fallaron, 6 omitidas (las marcadas como ignoradas en el código); 49 s
 - `deno check`: sin errores; `deno lint`: 0 hallazgos en 154 archivos
-- E2E: 5 corridas, 5 PASS (privacidad 57 pasos, portal 16, login 67, juegos 31, material 56); 159 s
+- E2E (primera corrida): 5 corridas, 5 PASS (privacidad 57 pasos, portal 16, login 67, juegos 31, material 56); 159 s
+- E2E tras corregir los hallazgos de `revisor-solo-lectura`: 5 corridas, 5 PASS (privacidad 60 pasos, portal 16,
+  login 67, juegos 31, material 56). En una corrida intermedia `portal` falló una vez en «Inglés entra sin volver a
+  pedir el correo» (sin relación con el pie oculto; pasó en las otras tres corridas) y la impresión salió en 2 hojas
+  con la autorización nueva de foto: se ajustó `@media print` (`legal.css?v=2`) y volvió a 1 hoja
+- `ingles-pro` no se corrió: requiere Postgres de prueba (`--pg`); `material` sí abre `ingles.html` con el pie nuevo
 - OpenSpec: ambos cambios válidos con `--strict`
 - Búsqueda de correos y nombres reales en los archivos nuevos: 0
 
@@ -30,7 +35,8 @@
 | `{"privacidad":true,"otra":"x"}` | 200 `{"privacidad":true}` (la llave de más no sale) |
 | `{"privacidad":"true"}` | 200 `{"privacidad":false}` |
 
-E2E (navegador, 360 px): apagado y servidor caído → «Próximamente» sin texto ni enlaces en portal, Inglés y Juegos;
+E2E (navegador, 360 px): apagado y servidor caído → sin enlaces en portal, Inglés y Juegos, y «Próximamente» sin
+texto en las dos páginas;
 encendido (respuesta simulada) → enlaces de 44 px con `?api=`, 13 secciones, nota de borrador, sin correos, claro y
 oscuro sin scroll horizontal; impresión del formato: 1 hoja carta (612 × 792 pt) sin navegación ni botones.
 

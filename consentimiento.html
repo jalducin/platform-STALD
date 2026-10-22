@@ -11,7 +11,7 @@
   // Tema guardado antes de pintar, igual que ingles.html (openspec: ingles-pro).
   try { var t = localStorage.getItem('stald_tema'); if (t === 'oscuro') document.documentElement.dataset.theme = 'dark'; else if (t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) { /* sin almacenamiento */ }
 </script>
-<link rel="stylesheet" href="estilos/legal.css?v=1">
+<link rel="stylesheet" href="estilos/legal.css?v=2">
 <!-- Formato simple de consentimiento (openspec: rpg-privacidad). Detrás del interruptor `privacidad`. -->
 <script defer src="comun/interruptores.js?v=1"></script>
 </head>
@@ -45,7 +45,8 @@
 
       <p>
         La plataforma STALD se usa para clases, actividades, exámenes y juegos educativos. Guarda solo el nombre de
-        pila, el correo de acceso, los resultados, el avance y el apodo de Juegos. No vende ni comparte esos datos.
+        pila, el correo de acceso, los resultados y el avance de clases, y en Juegos el apodo, el avatar, las partidas y
+        el avance. En Juegos, quienes juegan ven el apodo y el avatar de los demás. No vende ni comparte esos datos.
         El detalle está en el <a class="enlace" href="privacidad.html" data-interruptor="privacidad">aviso de privacidad</a>
         <span class="nota">(versión impresa disponible con el profe)</span>.
       </p>
@@ -58,19 +59,25 @@
           <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>
         </li>
         <li>
-          <span class="que">2. Ranking del grupo por apodo</span> <span class="etq">Opcional</span>
-          <span class="det">Oculto por defecto. Con su autorización, su hija o hijo puede elegir aparecer con su apodo
+          <span class="que">2. Foto en el avatar de Juegos</span> <span class="etq">Opcional</span>
+          <span class="det">Si la autoriza, puede subir una foto como avatar; la verán quienes juegan en el ranking y las
+            partidas. Sin autorización, usa un personaje dibujado.</span>
+          <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>
+        </li>
+        <li>
+          <span class="que">3. Ranking del grupo de Inglés por apodo</span> <span class="etq">Opcional</span>
+          <span class="det">Fase futura y oculto por defecto. Con su autorización, su hija o hijo puede elegir aparecer con su apodo
             de Juegos y sus puntos de constancia, nunca con su nombre ni calificaciones.</span>
           <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>
         </li>
         <li>
-          <span class="que">3. Tutor con inteligencia artificial</span> <span class="etq">Opcional · fase futura</span>
+          <span class="que">4. Tutor con inteligencia artificial</span> <span class="etq">Opcional · fase futura</span>
           <span class="det">Hoy no existe. Si se activa: ayuda con preguntas guía, sin enviar nombre ni correo al
             proveedor; las conversaciones se guardan 90 días y el profe las puede revisar.</span>
           <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>
         </li>
         <li>
-          <span class="que">4. Entregas con imagen o audio</span> <span class="etq">Opcional · fase futura</span>
+          <span class="que">5. Entregas con imagen o audio</span> <span class="etq">Opcional · fase futura</span>
           <span class="det">Hoy las entregas son solo de texto. Si se agregan fotos o audios de tareas, solo se
             aceptarán con esta autorización.</span>
           <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>

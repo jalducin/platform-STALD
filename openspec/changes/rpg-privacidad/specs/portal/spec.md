@@ -39,15 +39,17 @@ La plataforma SHALL publicar `privacidad.html` (aviso de privacidad integral en 
 `index.html`, `ingles.html` y `juegos.html` SHALL NOT mostrar enlaces a ellas. Con el interruptor encendido, esos pies
 SHALL mostrar «🔒 Aviso de privacidad» y las páginas SHALL mostrar su texto.
 
-El aviso SHALL decir qué datos se guardan (nombre de pila, correo de acceso, resultados, avance y apodo de Juegos),
-para qué, dónde (Supabase/Postgres y repo privado), quién los ve, que no se venden ni se comparten, cómo será el
+El aviso SHALL decir qué datos se guardan (nombre de pila, correo de acceso, resultados, avance y los datos de Juegos:
+apodo, avatar o foto, partidas, avance e invitados), para qué (finalidades necesarias y secundarias por separado),
+dónde (Supabase/Postgres y repo privado), quién los ve tal como funciona hoy (en Juegos, quienes juegan ven apodo y
+avatar; si no hay apodo, el nombre de pila), que no se venden ni se comparten, cómo será el
 tutor IA (fase futura, sin datos personales hacia el proveedor y con bitácora), los plazos de conservación, los
 derechos ARCO y cómo ejercerlos (escribirle al profe por el canal de la escuela) y cómo se avisan los cambios.
 Mientras el profe no apruebe el texto, ambas páginas SHALL llevar una nota visible de borrador. Ninguna SHALL
 contener correos ni nombres reales.
 
-El formato SHALL tener autorizaciones separadas para el uso de la plataforma, el ranking por apodo (oculto por
-defecto) y, como opcionales de fases futuras, el tutor IA y las entregas con imagen o audio; campos en blanco para el
+El formato SHALL tener autorizaciones separadas para el uso de la plataforma, la foto en el avatar de Juegos, el
+ranking de Inglés por apodo (oculto por defecto) y, como opcionales de fases futuras, el tutor IA y las entregas con imagen o audio; campos en blanco para el
 nombre del alumno o alumna, de quien firma, fecha y firma; y SHALL decir que la plataforma no guarda el documento
 firmado.
 
@@ -68,7 +70,8 @@ hoja carta sin navegación ni botones.
 - **THEN** ve «🔒 Aviso de privacidad» en el pie, sin scroll horizontal
 - **AND** el aviso muestra sus secciones (responsable, datos, finalidades, dónde, quién los ve, no compartimos, tutor
   IA, conservación, menores, ARCO, aparato y cambios) y enlaza al formato
+- **AND** no promete lo que hoy no ocurre: dice que en Juegos se ven apodo y avatar, y que el borrado es a mano
 
 #### Scenario: Imprimir el formato
 - **WHEN** el profe imprime `consentimiento.html`
-- **THEN** sale una hoja carta con las 4 autorizaciones y los campos en blanco, sin botones ni navegación
+- **THEN** sale una hoja carta con las 5 autorizaciones y los campos en blanco, sin botones ni navegación

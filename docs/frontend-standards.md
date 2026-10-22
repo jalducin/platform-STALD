@@ -1200,8 +1200,8 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
   (`responsable`, `datos`, `finalidades`, `donde`, `quien`, `no-compartimos`, `tutor-ia`, `conservacion`, `menores`,
   `arco`, `navegador`, `cambios`). Mientras el profe no apruebe el texto lleva la nota `.borrador`; lo que llena el
   profe va en `.pendiente`. Sin correos ni nombres reales.
-- `consentimiento.html`: 4 autorizaciones con «Sí / No» (plataforma; ranking por apodo, opcional; tutor IA e imagen o
-  audio, opcionales de fases futuras) y campos en blanco (alumno o alumna, quien firma, parentesco, fecha y firma).
+- `consentimiento.html`: 5 autorizaciones con «Sí / No» (plataforma; foto de avatar de Juegos y ranking de Inglés por
+  apodo, opcionales; tutor IA e imagen o audio, opcionales de fases futuras) y campos en blanco (alumno o alumna, quien firma, parentesco, fecha y firma).
   `@media print` en `estilos/legal.css`: tamaño carta, una hoja, sin navegación ni botones. La plataforma no guarda
   la hoja firmada; solo se registra slug, tipo y fecha (spec `plataforma-rpg`).
 - Tema: sistema o `stald_tema` (como `ingles.html`); 360 px sin scroll horizontal. Prueba: `tests/e2e/e2e-privacidad.js`.

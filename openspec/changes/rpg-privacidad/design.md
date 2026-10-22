@@ -37,16 +37,24 @@ Integral pero en lenguaje claro para personas de 12 a 15 años y sus familias:
   guardan, quién los ve (matriz de `plataforma-rpg` en tarjetas), no vendemos ni compartimos, tutor IA (fase futura),
   conservación (plazos de `plataforma-rpg` §4.3), menores y consentimiento, derechos ARCO, almacenamiento en el
   aparato y cambios.
-- ARCO: «escríbele a tu profe por el canal de la escuela», sin publicar correos.
+- **Describe la plataforma como es hoy**, no como será: en Juegos el ranking y las partidas muestran apodo y avatar
+  (o nombre de pila si no hay apodo) a quien juega, incluidos invitados; la foto se sirve por un enlace difícil de
+  adivinar; el borrado es a mano; el historial del repo privado guarda copias. Lo que llega con fases futuras
+  (ranking de Inglés oculto, tutor, borrados automáticos) se marca como futuro.
+- Finalidades necesarias y secundaria (mejorar la plataforma) por separado, como pide la LFPDPPP.
+- ARCO: «escríbele a tu profe por el canal de la escuela», sin publicar correos; el medio concreto queda `[pendiente]`.
+  Sustituye «por correo al profe» de `plataforma-rpg` §4.3.
 - Lo que el diseño no fija queda como `[pendiente]` visible para el profe: nombre y domicilio del responsable, región
-  de los servicios, plazo de borrado de la cuenta tras la baja, proveedor de IA y plazos legales de respuesta.
+  de los servicios, plazos de borrado (cuenta y Juegos), cómo se borra del historial del repo, medio de contacto,
+  proveedor de IA, plazos legales de respuesta y autoridad vigente.
 - Nota visible «Borrador para revisión del profe… no es asesoría legal».
 
 ## 3. Formato de consentimiento
 
-Una hoja carta: 4 autorizaciones con «Sí / No» (plataforma; ranking por apodo; tutor IA y entregas con imagen o audio,
-opcionales y marcadas «fase futura»), campos en blanco (alumno o alumna, quien firma, parentesco, fecha y firma) y la
-leyenda de que la plataforma no guarda el documento (solo slug, tipo y fecha). El parentesco se agrega porque la ley
+Una hoja carta: 5 autorizaciones con «Sí / No» (plataforma; foto en el avatar de Juegos, opcional, porque hoy la
+casilla de permiso la marca el propio menor y nadie la verifica; ranking de Inglés por apodo; tutor IA y entregas
+con imagen o audio, opcionales y marcadas «fase futura»), campos en blanco (alumno o alumna, quien firma,
+parentesco, fecha y firma) y la leyenda de que la plataforma no guarda el documento (solo slug, tipo y fecha). El parentesco se agrega porque la ley
 pide el consentimiento de quien ejerce la patria potestad o la tutela; no se piden más datos.
 
 ## 4. Estilo

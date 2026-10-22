@@ -18,8 +18,8 @@
 
 - [x] 2.1 `privacidad.html` (tarea 3.13 de `plataforma-rpg`): aviso integral en lenguaje claro, «En un minuto»,
   12 secciones, nota de borrador y `[pendiente]` del profe; «Próximamente» con el interruptor apagado
-- [x] 2.2 `consentimiento.html` (tarea 3.14 de `plataforma-rpg`): 4 autorizaciones, campos en blanco, leyenda de que la
-  plataforma no guarda el documento, botón de imprimir; «Próximamente» con el interruptor apagado
+- [x] 2.2 `consentimiento.html` (tarea 3.14 de `plataforma-rpg`): 5 autorizaciones (incluye la foto de avatar), campos en
+  blanco, leyenda de que la plataforma no guarda el documento, botón de imprimir; «Próximamente» con el interruptor apagado
 - [x] 2.3 `estilos/legal.css`: tokens del portal, claro y oscuro, 360 px e impresión carta en una hoja
 - [x] 2.4 Pies con «🔒 Aviso de privacidad» (solo encendido) en `index.html`, `ingles.html` (`ingles.css?v=10`) y
   `juegos.html` (`juegos.css?v=8`)
@@ -33,7 +33,9 @@
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 4.1 `deno test -A server/` (subagente `verificador-pruebas`), `deno check server/main.ts`, `deno lint server/`
-- [x] 4.2 E2E `privacidad`, `portal`, `juegos` e `ingles-pro`/`login` afectadas por los pies, puertos 8905/8906
+- [x] 4.2 E2E `privacidad`, `portal`, `login`, `juegos` y `material` (esta abre `ingles.html` con el pie nuevo), puertos
+  8905/8906. `ingles-pro` requiere Postgres de prueba (`--pg`) y no se corrió: el cambio en `ingles.html` es solo el
+  pie oculto y un script
 - [x] 4.3 Estado: sin datos que mutar (la E2E simula el interruptor encendido en el navegador; el servidor de pruebas
   usa una copia temporal sin `config/interruptores.json`). Reporte
   `openspec/changes/rpg-privacidad/reports/2026-10-21-step-4-pruebas-y-verificacion.md`
@@ -54,6 +56,9 @@
   (`config/interruptores.json` y cómo encenderlo), `docs/frontend-standards.md` (páginas legales, pies y atributos)
 - [x] 6.2 `plataforma-rpg/tasks.md`: marcar 3.13 y 3.14 como implementadas aquí (texto pendiente de aprobación del
   profe antes de encender)
+- [x] 6.3 Revisión `revisor-solo-lectura`: el aviso describe Juegos como funciona hoy (apodo o nombre de pila y
+  avatar visibles a quien juega, foto por enlace, invitados, borrado a mano, historial del repo), finalidad
+  secundaria, autorización de foto en el formato y E2E de servidor caído en los pies
 
 ## 7. Cierre
 
