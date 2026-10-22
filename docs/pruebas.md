@@ -109,6 +109,12 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
 - La primera línea es `require('./lib/entorno')`: pone `BASE`, `API`, `DATOS` (por omisión `juegos/datos`) y la
   carpeta `SALIDA`, y se cambia a ella (las capturas usan rutas relativas). Nada de rutas absolutas ni puertos fijos.
 - `DATA` (la copia de datos) la pasa `correr.sh`; las pruebas de Inglés leen de ahí actividades y exámenes.
+- `presentacion-cabe` (cambio `presentacion-cabe`) recorre, como admin, todas las diapositivas de los Meets reales
+  de la copia: `meet-2026-10-25`, `meet-2026-10-11` y `meet-g1-2026-10-21`; si faltan, usa `meet-2026-11-01`. También
+  recorre una presentación sintética servida con `page.route`. Falla si un contenido queda cortado sin forma de verlo.
+  - Tamaños: 1280×720, 1024×768 y 360×740. Con `TAMANOS=todos` agrega 1920×1080, 1366×768 y 740×360.
+  - Con `CAPTURAS=1` guarda una captura de cada diapositiva.
+  - Si la copia no trae esos Meets, sale `OMIT`. Es de solo lectura.
 - `tests/fixtures/datos/` se superpone a la copia: exámenes de Secundaria exclusivos de `valeria@example.com`
   (`sec-e2e` para `examen-secundaria` y `sec-e2e-guardado` para `autoguardado`). Cada prueba usa el suyo para no
   gastarle las oportunidades a otra en la misma fase. También trae una clase por Meet anterior (`meet-2026-09-27`,

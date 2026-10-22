@@ -12,18 +12,19 @@
   try { var t = localStorage.getItem('stald_tema'); if (t === 'oscuro') document.documentElement.dataset.theme = 'dark'; else if (t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) { /* sin almacenamiento */ }
 </script>
 <link rel="stylesheet" href="estilos/stald.css?v=2">
-<link rel="stylesheet" href="ingles/ingles.css?v=12">
+<link rel="stylesheet" href="ingles/ingles.css?v=13">
 <link rel="stylesheet" href="estilos/materias.css?v=1"> <!-- colores por materia (openspec: secundaria-dashboard) -->
 <link rel="stylesheet" href="estilos/ui.css?v=1"> <!-- tokens y componentes RPG compartidos (openspec: juegos-diseno-rpg) -->
 <link rel="stylesheet" href="ingles/secundaria.css?v=12"> <!-- tablero de Secundaria (openspec: secundaria-dashboard, rpg-fase2-misiones) -->
 <link rel="stylesheet" href="ingles/rpg-ingles.css?v=2"> <!-- tablero RPG, ranking y diseño RPG de la vista de alumnos y alumnas (openspec: rpg-fase2-ingles, ingles-alumno-diseno-rpg) -->
 <link rel="stylesheet" href="ingles/panel-profe.css?v=2"> <!-- panel del profe con diseño RPG (openspec: ingles-diseno-profe) -->
+<link rel="stylesheet" href="ingles/presentacion.css?v=2"> <!-- modo presentación del Meet con diseño RPG y sin cortes (openspec: presentacion-cabe) -->
 <!-- Scripts clásicos en orden (comparten el ámbito global); defer: corren cuando el DOM ya existe. -->
 <script defer src="comun/auth.js?v=9"></script> <!-- sesión (openspec: plataforma-login) -->
 <script defer src="ingles/comun.js?v=8"></script>
 <script defer src="ingles/material.js?v=2"></script> <!-- material de estudio (openspec: ingles-material-estudio) -->
 <script defer src="ingles/reproductor.js?v=5"></script>
-<script defer src="ingles/presentacion.js?v=3"></script>
+<script defer src="ingles/presentacion.js?v=5"></script>
 <script defer src="ingles/admin.js?v=4"></script>
 <script defer src="ingles/tablero.js?v=8"></script>
 <script defer src="ingles/alumno.js?v=5"></script>
