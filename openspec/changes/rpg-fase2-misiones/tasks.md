@@ -24,8 +24,8 @@
 - [x] 2.5 `comun/gamificacion.js` (aditivo)
 - [x] 2.6 Vistas «🗺️ Mapa», «🌳 Árbol», «⚔️ Misiones» (entrega con recordatorio y contador), retroalimentación y
   «📥 Entregas» del admin (`ingles/secundaria-misiones.js`, `ingles/secundaria.css`)
-- [ ] 2.7 `contenido/secundaria/mundos.json` en una copia del repo privado, validado con 0 errores (hecho y validado; falta el push, sin push hasta que
-  el código esté en producción)
+- [x] 2.7 `contenido/secundaria/mundos.json` en una copia del repo privado, validado con 0 errores y subido el 2026-10-22
+  con el código ya en producción (las misiones piloto las sube el agente de contenido)
 - [x] 2.8 Skill `clases-secundaria` con la sección de misiones y `node ai-specs/scripts/sincronizar-espejos.mjs`
 
 ## 3. Revisar y actualizar pruebas existentes (OBLIGATORIO)
@@ -48,7 +48,7 @@
 
 ## 6. Verificación en producción — EL AGENTE EJECUTA (OBLIGATORIO)
 
-- [ ] 6.1 Tras el merge: `/salud`, rutas nuevas en solo lectura (401 sin sesión), vistas publicadas (`?v=`); avisar al
+- [x] 6.1 Tras el merge (PR #233, 2026-10-22): `/salud`, rutas nuevas en solo lectura (401 sin sesión), vistas publicadas (`?v=`); avisar al
   coordinador para subir las misiones piloto
 
 ## 7. Documentación técnica (OBLIGATORIO)

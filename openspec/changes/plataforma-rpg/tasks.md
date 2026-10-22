@@ -61,7 +61,7 @@
   nombre y firma de madre, padre o tutor, fecha). El profe aprueba el texto y lo recaba; en la plataforma solo se
   registra slug, tipo y fecha. Implementada como borrador en `rpg-privacidad`
   (mismo interruptor y misma tarea 7.1 que 3.13)
-- [ ] 3.15 (EN CURSO: `mundos.json` validado; misiones piloto escritas por otro agente; push al estar en producción) Contenido: `mundos.json` (nombres de `comun/gamificacion.js`) y la misión piloto «La tiendita del salón»
+- [ ] 3.15 (EN CURSO: `mundos.json` subido el 2026-10-22; las misiones piloto las sube el agente de contenido) Contenido: `mundos.json` (nombres de `comun/gamificacion.js`) y la misión piloto «La tiendita del salón»
   (Matemáticas, solo texto) en el repo privado, generadas con la skill y validadas con 0 errores
 - [x] 3.16 Actualizar `ai-specs/skills/clases-secundaria/SKILL.md` con la sección de misiones (entregables solo en
   texto) y correr `node ai-specs/scripts/sincronizar-espejos.mjs`
