@@ -81,4 +81,4 @@ el ranking (defensa en profundidad). El profe ve en la cola el motivo de la revi
 | Que el ranking deje deducir calificaciones | Solo constancia (envíos a tiempo o tarde); prueba que recorre el JSON |
 | Nick que identifica u ofende | Revisión automática + aprobación del profe + vuelve a pendiente al cambiar |
 | Varias instancias de Deno Deploy con caché distinta | Caché de 60 s como máximo; el interruptor se lee en cada petición |
-| «Nivel A1» (nivel de inglés) junto a «Nivel 1» (nivel RPG) | Se muestran en tarjetas distintas; si confunde, renombrar en un cambio de diseño |
+| «Nivel A1» (nivel de inglés) junto a «Nivel 1» (nivel RPG) | Resuelto en `fix-e2e-rpg`: «🎓 Inglés A1» y «Nv. 1 · Aprendiz» |

@@ -1,0 +1,17 @@
+{
+  "id": "profe-e2e-act-2026-09-28",
+  "tipo": "actividad",
+  "titulo": "Clase de ejemplo: verificación",
+  "nivel": "Ejemplo",
+  "descripcion": "Actividad de ejemplo de la ruta propia del profe para las E2E (openspec: fix-e2e-rpg).",
+  "disponibleDesde": "2026-09-28",
+  "fechaLimite": "2026-09-28",
+  "intentos": 2,
+  "temas": [
+    { "id": "verificacion", "titulo": "Verificación", "retroalimentacion": { "fortaleza": "¡Muy bien!", "en-progreso": "Casi.", "debilidad": "Repasa la clase." } }
+  ],
+  "banco": [
+    { "id": "pv-1", "tema": "verificacion", "tipo": "opcion", "enunciado": "¿Qué va antes de decir «ya quedó»?", "opciones": ["Correr las pruebas", "Nada"], "correcta": 0, "explicacion": "Primero se verifica." },
+    { "id": "pv-2", "tema": "verificacion", "tipo": "opcion", "enunciado": "¿Una buena prueba es…?", "opciones": ["Rápida y con PASS/FAIL", "Lenta y ambigua"], "correcta": 0, "explicacion": "Rápida y clara." }
+  ]
+}

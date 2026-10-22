@@ -38,7 +38,7 @@ async function contexto(b, email, ancho, opciones = {}) {
   const esperada = (await (await fetch(API + '/ingles/actividades?email=marisol%40example.com&hoy=2026-10-03')).json()).racha;
   ok('anillo de avance de la semana', /\d+ % semana/.test(await p.getAttribute('#anillo .anillo', 'aria-label')), await p.getAttribute('#anillo .anillo', 'aria-label'));
   ok('racha 🔥 del servidor', (await p.textContent('#racha')).trim() === '🔥 ' + esperada.dias, (await p.textContent('#racha')) + ' vs ' + JSON.stringify(esperada));
-  ok('nivel', /Nivel A1/.test(await p.textContent('#nivel')));
+  ok('nivel de inglés «Inglés A1» (openspec: fix-e2e-rpg)', /Inglés A1/.test(await p.textContent('#nivel')));
   const pc = await p.textContent('.proxima-clase');
   ok('próxima clase: su grupo, cuenta regresiva y Meet', /Sábado A1/.test(pc) && /Empieza en (1 h 0 min|60 min)/.test(await p.textContent('#cuenta-regresiva')) && !!(await p.$('.proxima-clase a[href*="meet.google.com/abc"]')), pc.replace(/\s+/g, ' '));
   ok('Para hoy con acciones', (await p.$$('#para-hoy .hoy-item')).length >= 1 && (await p.$$('#para-hoy .hoy-item .btn')).length >= 1, String((await p.$$('#para-hoy .hoy-item')).length));

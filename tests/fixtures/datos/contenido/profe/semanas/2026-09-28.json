@@ -1,0 +1,8 @@
+{
+  "id": "2026-09-28",
+  "titulo": "Semana 1 · Ejemplo: verificación",
+  "elementos": [
+    { "id": "profe-e2e-act-2026-09-28", "tipo": "actividad", "fecha": "2026-09-28" },
+    { "id": "profe-e2e-examen-2026-10-03", "tipo": "examen", "fecha": "2026-10-03" }
+  ]
+}

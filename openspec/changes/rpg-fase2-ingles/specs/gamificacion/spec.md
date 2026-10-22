@@ -9,7 +9,7 @@ la Fase 1, sin cambios), y el mundo actual de Inglés. SHALL NOT guardar nada nu
 
 #### Scenario: Alumna con actividades entregadas
 - **WHEN** una alumna con 310 XP abre Inglés
-- **THEN** ve «Nivel 2 · Aprendiz», «10 / 300» de XP, sus insignias de Inglés logradas y su racha
+- **THEN** ve «Nv. 2 · Aprendiz» (cambio `fix-e2e-rpg`), «10 / 300» de XP, sus insignias de Inglés logradas y su racha
 
 #### Scenario: Lo demás sigue igual
 - **WHEN** abre «📅 Semana» o «📚 Material»

@@ -34,7 +34,7 @@ async function restaurar() {
       racha: !!document.getElementById('rpg-racha'), mundo: (document.getElementById('rpg-mundo') || {}).textContent || '', rk: !!document.getElementById('rpg-ranking'),
       texto: document.getElementById('content').textContent, secciones: [...document.querySelectorAll('[data-seccion]')].map(s => s.dataset.seccion) }));
     const s = ' (' + tema + ')';
-    ok('tablero RPG: nivel y rango' + s, /^Nivel \d+ · /.test(v.rango), v.rango);
+    ok('tablero RPG: nivel y rango' + s, /^Nv\. \d+ · /.test(v.rango), v.rango);
     ok('tablero RPG: XP del nivel, racha y mundo' + s, /^\d+ \/ 300$/.test(v.xp) && v.racha && v.mundo.includes('Isla del Alfabeto'), v.xp + ' | ' + v.mundo);
     ok('apagado: sin tarjeta de ranking ni botón para aparecer' + s, !v.rk && !v.texto.includes('Aparecer en el ranking') && !v.texto.includes('Ranking de mi grupo'));
     ok('siguen Semana, Material y Para hoy' + s, ['inicio', 'semana', 'material', 'resultados', 'perfil'].every(x => v.secciones.includes(x)) && v.texto.includes('Para hoy'), v.secciones.join(','));

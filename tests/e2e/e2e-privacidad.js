@@ -20,8 +20,21 @@ const visible = (p, sel) => p.$eval(sel, el => !!el.offsetParent || getComputedS
 // Abre una página a 360 px con el interruptor simulado: 'encendido', 'caido' (sin respuesta) o null (servidor real).
 async function abrir(b, ruta, { modo = null, oscuro = false, esperar = null } = {}) {
   const p = await abrirPagina(b, { viewport: ANGOSTO, contexto: { colorScheme: oscuro ? 'dark' : 'light' }, out, etiqueta: ruta });
-  if (modo === 'encendido') await p.route('**/interruptores', r => r.fulfill({ status: 200, contentType: 'application/json', body: '{"privacidad":true}' }));
-  if (modo === 'caido') await p.route('**/interruptores', r => r.abort());
+  // Las páginas con sesión (portal, Inglés, Juegos) leen el interruptor del /config que ya piden (openspec: fix-e2e-rpg);
+  // privacidad.html y consentimiento.html, de /interruptores. Se simulan las dos rutas.
+  const conConfig = interruptores => p.route('**/config', async r => {
+    const res = await r.fetch(); const c = await res.json();
+    if (interruptores) c.interruptores = interruptores; else delete c.interruptores;
+    await r.fulfill({ response: res, json: c });
+  });
+  if (modo === 'encendido') {
+    await p.route('**/interruptores', r => r.fulfill({ status: 200, contentType: 'application/json', body: '{"privacidad":true}' }));
+    await conConfig({ privacidad: true, ranking: false });
+  }
+  if (modo === 'caido') { // /config sin interruptores (servidor anterior) y /interruptores sin respuesta: falla cerrada
+    await p.route('**/interruptores', r => r.abort());
+    await conConfig(null);
+  }
   await p.goto(urlDe(ruta));
   await listo(p);
   if (esperar) await p.waitForSelector(esperar, { timeout: 60000 });
@@ -34,6 +47,8 @@ async function abrir(b, ruta, { modo = null, oscuro = false, esperar = null } = 
   // --- Servidor: la ruta pública responde apagado por omisión ---
   const r = await fetch(process.env.API + '/interruptores');
   ok('servidor: GET /interruptores sin sesión → 200 { privacidad: false, ranking: false }', r.status === 200 && JSON.stringify(await r.json()) === '{"privacidad":false,"ranking":false}', String(r.status));
+  const rc = await (await fetch(process.env.API + '/config')).json();
+  ok('servidor: /config trae los interruptores apagados (openspec: fix-e2e-rpg)', JSON.stringify(rc.interruptores) === '{"privacidad":false,"ranking":false}', JSON.stringify(rc));
 
   // --- Apagado: nada visible ---
   for (const [ruta, esperar] of [['/index.html', '#login:not([hidden]), #home:not([hidden])'], ['/ingles.html', null], ['/juegos.html', null]]) {

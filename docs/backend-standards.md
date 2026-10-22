@@ -48,7 +48,7 @@ falso de sesión), `PORT` y `PERMITIR_HOY=1` (permite `?hoy=`).
 
 | Ruta | Método | Respuesta |
 |---|---|---|
-| `/config` | GET (sin sesión) | `{ supabaseUrl, publishableKey }`; con `ROWS_FIXTURE`, `{ prueba: true }`; sin variables, 503 `sin_config` |
+| `/config` | GET (sin sesión) | `{ supabaseUrl, publishableKey, interruptores }`; con `ROWS_FIXTURE`, `{ prueba: true, interruptores }`; sin variables, 503 `sin_config` (sin `interruptores`). `interruptores` = lo mismo que `GET /interruptores`, del último valor leído y sin esperar la lectura (se refresca en segundo plano y se lee al arrancar); en frío sale sin el campo (cambio `fix-e2e-rpg`) |
 | `/interruptores` | GET (sin sesión) | `{ privacidad: boolean }`: solo llaves conocidas y solo `true` estricto enciende. Lee `config/interruptores.json` de `stald_docs` (o del almacén sin Postgres); sin documento o con error → todo `false`. Caché en memoria 60 s. Otro método → 405 (cambio `rpg-privacidad`) |
 | `/auth/preparar` | POST `{ email, password }` (sin sesión) | Si es la contraseña inicial de esa persona («sensei» el admin, «clase» alumnos y alumnas de Inglés o Secundaria) y su cuenta no tiene `app_metadata.contrasena_propia`, crea la cuenta de Auth (correo confirmado) o le pone la inicial y confirma su correo: `{ listo: true }`. 401 `credenciales`, 400 `correo_invalido`, 429 tras 10 intentos por correo en 10 min, 503 `auth_no_disponible`. En Auth la contraseña es `stald·` + lo que se escribe |
 | `/auth/contrasena` | POST `{ nueva }` (con token) | 6 a 60 caracteres, distinta de las iniciales; la pone y marca `contrasena_propia`. 400 `contrasena_invalida`, 401 sin token |

@@ -32,7 +32,7 @@ Aplica a `index.html` (portal), `ingles.html`, `secundaria.html` y cualquier pá
 - Todo texto que venga de Notion se inserta con `escapeHtml()` o con `textContent`. Nunca concatenar
   datos crudos en `innerHTML`.
 - Los enlaces externos llevan `target="_blank" rel="noopener"`.
-- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=8">` (sube `?v=` en las
+- **Sesión (cambio `plataforma-login`):** todas las páginas incluyen `<script src="comun/auth.js?v=9">` (sube `?v=` en las
   cuatro cada vez que cambie) y usan
   `window.StaldAuth`:
   - al arrancar, `await StaldAuth.iniciar(API_BASE)`; el correo es `StaldAuth.email()` (sesión) o, solo durante la
@@ -1005,7 +1005,7 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     Alumnos, Semana y Resultados, y el resto en «☰ Más» (`#nav-mas`). Desde 720 px: pestañas arriba (alumno o
     alumna) o menú lateral pegajoso de 232 px (admin).
   - Los E2E deben abrir la sección antes de interactuar con ella, p. ej. `ingles.html?api=…#alumnos`.
-- **Alumno o alumna (`alumno.js`).** 🏠 Inicio: encabezado con anillo de la semana (`#anillo`), nivel (`#nivel`, de su
+- **Alumno o alumna (`alumno.js`).** 🏠 Inicio: encabezado con anillo de la semana (`#anillo`), nivel de inglés (`#nivel`, «🎓 Inglés A1», de su
   último examen o de su grupo) y racha (`#racha`, del servidor); «Próxima clase» (`.mi-grupo.proxima-clase`): horario del
   grupo (`Sáb 10:00`, se entienden `dom…sáb` y `am/pm`) o el Meet de la semana, cuenta regresiva cada 30 s y botón al Meet;
   «Para hoy» (`#para-hoy`, filas `.hoy-item`); insignias (`#insignias`, calculadas en el cliente, no se guardan).
@@ -1050,7 +1050,9 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     muestra la entrada con un aviso.
 - Arranque (`ingles/app.js`): `StaldAuth.iniciar(API_BASE)` → `StaldAuth.email()` o, durante la transición,
   `StaldAuth.correoViejo()` → `loadFor`. Sin correo se muestra `mostrarEntrada()`, que usa
-  `StaldAuth.pintarEntrada`.
+  `StaldAuth.pintarEntrada`. `#login` y `#app` empiezan con `style="display:none"` en línea (cambio `fix-e2e-rpg`):
+  con sesión no se ve el formulario mientras carga, aunque el CSS no haya llegado, y un error en la primera carga
+  muestra la entrada con el aviso.
 - 🚪 Cerrar sesión (encabezado, menú y ☰ Más) usa `StaldAuth.salir()` y regresa a la entrada.
 
 ## Clases de Secundaria (cambios `secundaria-mis-clases` y `secundaria-dashboard`)
@@ -1066,7 +1068,7 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   `design.md` del cambio); si no cargan, queda la fuente del sistema.
 - Título «📚 Clases de Secundaria». Pestañas `role="tab"` (`.sec-tabs [data-sec-tab]`, ← → Inicio Fin), sin redibujar:
   - **«🏠 Inicio»** (`#sec-inicio`, la primera; estilo «RPG educativo»):
-    - barra `#rpg-stats`: nivel y rango (`#rpg-rango`), XP del nivel (`#rpg-xp` y `.rpg-xp-barra` con
+    - barra `#rpg-stats`: nivel del juego y rango (`#rpg-rango`, «Nv. 3 · Exploradora» con `<abbr title="Nivel del juego">`; cambio `fix-e2e-rpg`), XP del nivel (`#rpg-xp` y `.rpg-xp-barra` con
       `role="progressbar"`), insignias (`#rpg-insignias`) y racha (`#rpg-racha`);
     - `#rpg-mision`: «Hola, <nombre>» (`.sec-hola`, de `/perfil`), fecha (`.sec-fecha`, «Martes 27 de octubre», del
       `hoy` del servidor) y «⚔️ Misión principal activa» (la primera clase de hoy sin hacer o la próxima) con
@@ -1231,8 +1233,10 @@ y oscuro con los tokens RPG; 360 px sin scroll horizontal (E2E `e2e-misiones`).
 ## Aviso de privacidad y consentimiento (cambio `rpg-privacidad`)
 
 - **Interruptor `privacidad`** (`GET /interruptores`, dato en `config/interruptores.json`; ver
-  [data-model](data-model.md)). `comun/interruptores.js?v=1` lo lee una vez por página (falla cerrada: sin red o con
-  error, apagado) y aplica atributos:
+  [data-model](data-model.md)). `comun/interruptores.js?v=2` lo lee una vez por página (falla cerrada: sin red o con
+  error, apagado). En las páginas con `comun/auth.js` lo toma del `/config` que ya se pidió
+  (`StaldAuth.configLeida()`, sin petición extra; cambio `fix-e2e-rpg`). Sin `auth.js`, o si `/config` no lo trae, pide
+  `GET /interruptores`. Aplica atributos:
   - `[data-interruptor="privacidad"]` visible solo encendido (a los enlaces les agrega `?api=` si la página lo trae);
   - `[data-interruptor-apagado="privacidad"]` visible solo apagado; `[data-interruptores-cargando]` se oculta al terminar;
   - marca `<html data-interruptores="listo">` (las E2E la esperan).

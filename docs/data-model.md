@@ -171,7 +171,8 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - **no hay respaldo**: si Postgres falla, la ruta responde 503 en lugar de leer una copia vieja.
 - **Interruptores públicos** (cambio `rpg-privacidad`): `config/interruptores.json` = `{ "privacidad": false, "ranking": false }`.
   - Vive como fila de `stald_docs` (`path = 'config/interruptores.json'`); sin Postgres (pruebas, servidor local) se lee
-    del almacén de datos. Lo lee `GET /interruptores` (60 s de caché); sin fila → todo apagado.
+    del almacén de datos. Lo lee `GET /interruptores` (60 s de caché) y viaja también en `GET /config` (cambio
+    `fix-e2e-rpg`); sin fila → todo apagado.
   - `privacidad`: muestra `privacidad.html`, `consentimiento.html` y sus enlaces en el portal, Inglés y Juegos.
   - `ranking` (cambio `rpg-fase2-ingles`): ranking por grupo de Inglés. También lo cambia el profe en «🛡️ Nicks»
     (`POST /profe/ranking`, upsert de la fila).

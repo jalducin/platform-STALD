@@ -62,7 +62,7 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
     showResult({ correctas: 4, total: 5, porcentaje: 80, nivelSugerido: 'Bien', secciones: [], fortalezas: [], enProgreso: [], debilidades: [], revision: [] }, { id, intento: 1, intentosMax: 2, restantes: 1 });
     return { texto: document.getElementById('content').textContent, recompensa: !!document.getElementById('sec-recompensa'), siguiente: (document.querySelector('.sec-siguiente') || {}).textContent || '' };
   });
-  ok('resultado en Inglés: «¡Listo!», +XP y nivel', res.texto.includes('¡Listo!') && res.recompensa && /\+\d+ XP/.test(res.texto) && res.texto.includes('Nivel '), res.texto.slice(0, 80));
+  ok('resultado en Inglés: «¡Listo!», +XP y nivel', res.texto.includes('¡Listo!') && res.recompensa && /\+\d+ XP/.test(res.texto) && res.texto.includes('Nv. '), res.texto.slice(0, 80));
   ok('resultado en Inglés: «Lo siguiente →» o «📅 Mi semana» (no «misión»)', /Lo siguiente|Mi semana/.test(res.siguiente) && !/misi[oó]n/i.test(res.siguiente), res.siguiente.slice(0, 60));
   ok('etiqueta del tipo (no «Misión») y mundo de Inglés', /Actividad|Examen|Refuerzo|Reto del Meet/.test(v.etiqueta) && !v.etiqueta.includes('Misión') && v.mundo.includes('Isla del Alfabeto'), v.etiqueta + ' | ' + v.mundo);
   ok('actividad: sin scroll horizontal a 360 px', await sinScrollH(p));

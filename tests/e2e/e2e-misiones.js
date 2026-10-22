@@ -104,7 +104,7 @@ const post = (ruta, e, body, tipo = 'application/json') => fetch(`${API}${ruta}$
     const sufijo = tema === 'dark' ? ' (oscuro)' : '';
     const p = await abrirPagina(b, { email: ALUMNA, viejo: true, out, viewport: { width: 360, height: 780 }, contexto: { colorScheme: tema }, ruta: '/secundaria.html', esperar: '#sec-inicio' });
     if (tema === 'light') ok('Inicio: aviso «+315 XP» de la misión evaluada (una vez)', (await texto(p, '#mis-recompensa')).includes('+315 XP'), await texto(p, '#mis-recompensa').catch(() => ''));
-    ok(`Inicio: Nivel ${nivel.nivel} con la XP de la misión incluida` + sufijo, (await texto(p, '#rpg-rango')).startsWith('Nivel ' + nivel.nivel) && (await texto(p, '#rpg-xp')) === `${nivel.xpNivel} / 300`, await texto(p, '#rpg-xp'));
+    ok(`Inicio: Nv. ${nivel.nivel} con la XP de la misión incluida` + sufijo, (await texto(p, '#rpg-rango')).startsWith('Nv. ' + nivel.nivel) && (await texto(p, '#rpg-xp')) === `${nivel.xpNivel} / 300`, await texto(p, '#rpg-xp'));
     ok('Inicio: insignia «⚔️ Misión principal» ganada' + sufijo, (await p.$('[data-insignia="mision-principal"].ganada')) !== null);
     await p.click('.sec-tabs [data-sec-tab="misiones"]');
     await p.click(`[data-mis-card="${ID}"] [data-mis-abrir]`);

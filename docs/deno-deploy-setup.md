@@ -60,7 +60,7 @@ npx -y deno run --allow-net --allow-env --allow-read server/main.ts
 # y abrir ingles.html?api=http://127.0.0.1:8787
 ```
 
-Con `ROWS_FIXTURE`, `GET /config` responde `{ prueba: true }`: la pantalla de entrada no manda correos y acepta
+Con `ROWS_FIXTURE`, `GET /config` responde `{ prueba: true }` (más `interruptores`, cambio `fix-e2e-rpg`): la pantalla de entrada no manda correos y acepta
 cualquier código de 6 dígitos; la sesión es `Bearer prueba:<correo>`. Para entrar directo en un E2E:
 `localStorage.setItem('stald_sesion_prueba', JSON.stringify({ email, token: 'prueba:' + email }))`.
 

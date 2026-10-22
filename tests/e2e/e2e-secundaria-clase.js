@@ -61,7 +61,7 @@ async function abrirClase(p) {
       ok('resultado: «¡Misión cumplida!» y la calificación', (await p.textContent('.exam-card h3')).includes('Misión cumplida') && (await p.textContent('.score')).includes('100'));
       const xp = await p.$eval('#sec-recompensa', s => ({ xp: s.querySelector('[data-sec-xp]').dataset.secXp, t: s.textContent.replace(/\s+/g, ' '), nivel: s.querySelector('[data-sec-nivel]').dataset.secNivel })).catch(() => null);
       // 100 % a tiempo = 100 + 20 (reglas de comun/gamificacion.js); antes no tenía XP de esta misión.
-      ok('resultado: «+120 XP», nivel y rango', xp && xp.xp === '120' && xp.t.includes('+120 XP') && /Nivel \d+/.test(xp.t) && xp.t.includes('XP para el nivel'), JSON.stringify(xp));
+      ok('resultado: «+120 XP», nivel y rango', xp && xp.xp === '120' && xp.t.includes('+120 XP') && /Nv\. \d+/.test(xp.t) && xp.t.includes('XP para el nivel'), JSON.stringify(xp));
       // Insignias nuevas con las reglas de comun/gamificacion.js: un estado de antes sin envíos y uno de después con
       // la misión al 100 % → «Primera misión» y «100 % en una clase». Y la recompensa solo sale para el envío.
       const insig = await p.evaluate(() => {

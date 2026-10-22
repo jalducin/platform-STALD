@@ -1,0 +1,17 @@
+{
+  "id": "profe-e2e-act-2026-10-05",
+  "tipo": "actividad",
+  "titulo": "Clase de ejemplo: contexto",
+  "nivel": "Ejemplo",
+  "descripcion": "Actividad de ejemplo de la ruta propia del profe para las E2E (openspec: fix-e2e-rpg).",
+  "disponibleDesde": "2026-10-05",
+  "fechaLimite": "2026-10-05",
+  "intentos": 2,
+  "temas": [
+    { "id": "contexto", "titulo": "Contexto", "retroalimentacion": { "fortaleza": "¡Muy bien!", "en-progreso": "Casi.", "debilidad": "Repasa la clase." } }
+  ],
+  "banco": [
+    { "id": "pc-1", "tema": "contexto", "tipo": "opcion", "enunciado": "¿Qué limpia el contexto?", "opciones": ["/clear", "/nada"], "correcta": 0, "explicacion": "/clear empieza de cero." },
+    { "id": "pc-2", "tema": "contexto", "tipo": "opcion", "enunciado": "¿Una tarea por…?", "opciones": ["Sesión", "Semana"], "correcta": 0, "explicacion": "Una tarea, una sesión." }
+  ]
+}

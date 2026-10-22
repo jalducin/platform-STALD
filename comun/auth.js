@@ -2,6 +2,7 @@
 // Uso en una página:
 //   <script src="comun/auth.js?v=8"></script>
 //   await StaldAuth.iniciar(API_BASE);           // lee /config, carga supabase-js y recupera la sesión
+//   StaldAuth.configLeida()                      // promesa con el /config que leyó iniciar() (null si falló)
 //   StaldAuth.email()                            // correo de la sesión o null
 //   StaldAuth.fetchConSesion(url, opts)          // fetch con Authorization: Bearer <token>
 //   StaldAuth.pedirJson(url, opts, { ttl })      // { ok, status, body }: en vuelo, caché por persona y reintentos de GET
@@ -24,6 +25,10 @@
   var CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   var estado = { listo: null, api: '', cliente: null, prueba: false, sesion: null, error: null, errorEnlace: null, porEnlace: false };
+  // /config leída por iniciar() (null si falló), para otros scripts de la página: comun/interruptores.js toma de aquí los
+  // interruptores públicos sin pedir /interruptores aparte (openspec: fix-e2e-rpg).
+  var avisarConfig;
+  var configLeida = new Promise(function (ok) { avisarConfig = ok; });
   var PREFIJO = 'stald·'; // la contraseña en Auth es PREFIJO + lo que se escribe (mínimo de 6 de Supabase)
   var INICIALES = { clase: 1, sensei: 1 };
 
@@ -63,6 +68,7 @@
     estado.listo = fetch(String(apiBase).replace(/\/$/, '') + '/config')
       .then(function (r) { return r.json().then(function (c) { if (!r.ok) { throw new Error(c.error || ('HTTP ' + r.status)); } return c; }); })
       .then(function (c) {
+        avisarConfig(c);
         if (c.prueba) {
           estado.prueba = true;
           var guardada = leer(CLAVE_PRUEBA);
@@ -80,7 +86,7 @@
           });
         });
       })
-      .catch(function (e) { estado.error = e.message || String(e); console.warn('StaldAuth:', estado.error); });
+      .catch(function (e) { avisarConfig(null); estado.error = e.message || String(e); console.warn('StaldAuth:', estado.error); });
     return estado.listo;
   }
 
@@ -358,6 +364,7 @@
 
   window.StaldAuth = {
     iniciar: iniciar,
+    configLeida: function () { return configLeida; },
     email: email,
     correoViejo: correoViejo,
     getToken: getToken,

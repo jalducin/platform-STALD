@@ -75,7 +75,7 @@ async function enviar(id, bien) {
     const prom = await p.$$eval('[data-sec-prom]', xs => xs.map(x => x.dataset.secProm + ':' + x.querySelector('.sec-prom-num').textContent.trim()));
     ok('promedio por materia (Inglés 100, Español 50, Matemáticas 100, …)' + sufijo, prom.join() === proms.join() && prom.slice(0, 3).join() === 'ingles:100 %,espanol:50 %,matematicas:100 %', prom.join());
     // Estilo RPG (openspec: gamificacion-nucleo).
-    ok(`RPG: Nivel ${nivel.nivel} · ${nivel.rango} con ${nivel.xpNivel} / 300 XP` + sufijo, (await texto(p, '#rpg-rango')) === `Nivel ${nivel.nivel} · ${nivel.rango}` && (await texto(p, '#rpg-xp')) === `${nivel.xpNivel} / 300`, (await texto(p, '#rpg-rango')) + ' | ' + (await texto(p, '#rpg-xp')));
+    ok(`RPG: Nv. ${nivel.nivel} · ${nivel.rango} con ${nivel.xpNivel} / 300 XP` + sufijo, (await texto(p, '#rpg-rango')) === `Nv. ${nivel.nivel} · ${nivel.rango}` && (await texto(p, '#rpg-xp')) === `${nivel.xpNivel} / 300`, (await texto(p, '#rpg-rango')) + ' | ' + (await texto(p, '#rpg-xp')));
     ok('RPG: barra de XP accesible (progressbar)' + sufijo, (await p.getAttribute('.rpg-xp-barra', 'aria-valuenow')) === String(nivel.xpNivel));
     const ganadas = await p.$$eval('[data-insignia].ganada', xs => xs.map(x => x.dataset.insignia));
     ok('RPG: insignias ganadas (al menos Primera misión y 100 %)' + sufijo, ganadas.join() === insignias.join() && ganadas.includes('primera-mision') && ganadas.includes('perfecto') && (await texto(p, '#rpg-insignias')).includes(insignias.length + ' / ' + totalInsignias), ganadas.join());
@@ -157,7 +157,7 @@ async function enviar(id, bien) {
     ok('admin: «Tablero de Valeria» con selector', (await texto(p, '.sec-hola')).includes('Valeria') && (await p.$eval('#sec-alumna', s => s.value)) === 'valeria', await texto(p, '.sec-hola'));
     ok('admin: mismas tarjetas de hoy', (await p.$$eval('[data-sec-card]', xs => xs.map(x => x.dataset.secCard).join())) === deHoy.map(i => i.id).join());
     ok('admin: «Vista previa» en vez de «Empezar»', (await texto(p, '[data-sec-card="sec-e2e-clase-2026-10-27-b"] .sec-btn-grande')).includes('Vista previa'));
-    ok('admin: mismo progreso y nivel', (await texto(p, '#sec-progreso')).includes(prog.hechas + ' de ' + prog.total) && (await texto(p, '#rpg-rango')) === `Nivel ${nivel.nivel} · ${nivel.rango}`);
+    ok('admin: mismo progreso y nivel', (await texto(p, '#sec-progreso')).includes(prog.hechas + ' de ' + prog.total) && (await texto(p, '#rpg-rango')) === `Nv. ${nivel.nivel} · ${nivel.rango}`);
     ok('admin: pestaña «📝 Resultados»', !!(await p.$('#sec-tab-resultados')));
     ok('admin: sin scroll horizontal a 360 px', await sinScrollH(p));
     await p.screenshot({ path: 'secundaria-dashboard-admin-360.png', fullPage: true });

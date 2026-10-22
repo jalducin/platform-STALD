@@ -84,7 +84,7 @@ function recompensaMision(id) {
   const nuevas = Gamificacion.insigniaNueva({ items: antes.items, hoy, racha: antes.racha }, { items: despues.items, hoy, racha: despues.racha });
   return '<section class="exam-card sec-recompensa" id="sec-recompensa" aria-live="polite">' +
     '<div class="sec-xp-ganado" data-sec-xp="' + Math.max(0, xpDespues - xpAntes) + '">+' + Math.max(0, xpDespues - xpAntes) + ' XP</div>' +
-    '<div class="sec-nivel" data-sec-nivel="' + nD.nivel + '"><span class="sec-nivel-num">' + nD.nivel + '</span><span><b>Nivel ' + nD.nivel + '</b> · ' + escapeHtml(nD.rango) +
+    '<div class="sec-nivel" data-sec-nivel="' + nD.nivel + '"><span class="sec-nivel-num">' + nD.nivel + '</span><span><b><abbr title="Nivel del juego">Nv.</abbr> ' + nD.nivel + '</b> · ' + escapeHtml(nD.rango) +
     (nD.nivel > nA.nivel ? ' <span class="chip fortaleza">⬆️ ¡Subiste de nivel!</span>' : '') + '</span></div>' +
     '<div class="sec-xp-barra" role="progressbar" aria-label="XP del nivel ' + nD.nivel + '" aria-valuemin="0" aria-valuemax="' + nD.porNivel + '" aria-valuenow="' + nD.xpNivel + '"><span style="width:' + nD.porcentaje + '%"></span></div>' +
     '<div class="meta">' + nD.xpNivel + ' / ' + nD.porNivel + ' XP para el nivel ' + (nD.nivel + 1) + '</div>' +

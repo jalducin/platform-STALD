@@ -229,7 +229,7 @@ function renderAlumno(data, act) {
   const hero = '<section class="hero" aria-label="Tu avance" style="--gc:' + escapeHtml((g && g.color) || '#4f46e5') + '">' +
     '<div class="quien"><div class="hola">¡Hola' + (nombre ? ', ' + escapeHtml(nombre.split(' ')[0]) : '') + '! 👋</div>' +
     '<div class="muted" style="font-size:.85rem">' + (act && act.semana ? '📚 ' + escapeHtml(act.semana.titulo) : 'Tu semana de Inglés') + '</div>' +
-    '<div class="chips">' + (nivel ? '<span class="chip" id="nivel">🎓 Nivel ' + escapeHtml(nivel) + '</span>' : '') +
+    '<div class="chips">' + (nivel ? '<span class="chip" id="nivel" title="Nivel de inglés">🎓 Inglés ' + escapeHtml(nivel) + '</span>' : '') +
     '<span class="chip racha" id="racha" title="Días seguidos con entregas" aria-label="Racha: ' + racha.dias + ' día(s) seguidos con entregas">🔥 ' + racha.dias + '</span>' +
     '<span class="chip gris">' + av.hechos + ' de ' + av.total + ' esta semana</span></div></div>' +
     '<div id="anillo">' + anillo(av.pct, 'semana') + '</div></section>';

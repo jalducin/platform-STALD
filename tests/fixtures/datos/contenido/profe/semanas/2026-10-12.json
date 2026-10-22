@@ -1,0 +1,8 @@
+{
+  "id": "2026-10-12",
+  "titulo": "Semana 3 · Ejemplo: subagentes",
+  "elementos": [
+    { "id": "profe-e2e-act-2026-10-12", "tipo": "actividad", "fecha": "2026-10-12" },
+    { "id": "profe-e2e-examen-2026-10-17", "tipo": "examen", "fecha": "2026-10-17" }
+  ]
+}
