@@ -59,6 +59,7 @@ export interface Item {
   porSecciones?: boolean; // preguntas agrupadas por tema en el orden de `temas` (openspec: examen-por-secciones)
   segundaOportunidad?: string; // examen con 2 intentos: el 2.º abre esta fecha (openspec: examen-segunda-oportunidad)
   materia?: string; // materia de la clase de Secundaria, texto corto (openspec: secundaria-mis-clases)
+  dia?: string; // AAAA-MM-DD: día del horario en que toca la clase, dentro de [disponibleDesde, fechaLimite] (openspec: secundaria-adelantar)
   mundo?: string; // id del mundo de mundos.json; si falta, el de su materia por fecha (openspec: rpg-fase2-misiones)
 }
 
@@ -529,6 +530,9 @@ function validarEjercicio(ref: string, e: Ejercicio, temas: Set<string>): string
   return errs;
 }
 
+// Fecha AAAA-MM-DD que existe en el calendario (2026-02-30 no).
+const esFechaValida = (f: string) => /^\d{4}-\d{2}-\d{2}$/.test(f) && new Date(`${f}T12:00:00Z`).toISOString().slice(0, 10) === f;
+
 export function validateItem(it: Item): string[] {
   const errs: string[] = [];
   if (it.segundaOportunidad !== undefined) {
@@ -540,6 +544,10 @@ export function validateItem(it: Item): string[] {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.fechaLimite || "")) errs.push(`${it.id}: fechaLimite inválida`);
   if (it.materia !== undefined && (typeof it.materia !== "string" || !it.materia.trim() || it.materia.length > 40)) {
     errs.push(`${it.id}: materia debe ser un texto de 1 a 40 caracteres (${JSON.stringify(it.materia)})`);
+  }
+  // `dia` (openspec: secundaria-adelantar): fecha válida entre la apertura y la fecha límite.
+  if (it.dia !== undefined && (typeof it.dia !== "string" || !esFechaValida(it.dia) || it.dia < it.disponibleDesde || it.dia > it.fechaLimite)) {
+    errs.push(`${it.id}: dia ${JSON.stringify(it.dia)} debe ser una fecha AAAA-MM-DD entre ${it.disponibleDesde} y ${it.fechaLimite}`);
   }
   for (const [slug, f] of Object.entries(it.prorrogas || {})) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(f) || f < it.disponibleDesde) errs.push(`${it.id}: prorrogas.${slug} inválida (${f})`);

@@ -1,0 +1,88 @@
+{
+  "id": "sec-adelanta-2026-10-22-a",
+  "tipo": "actividad",
+  "titulo": "📐 Matemáticas · Fracciones",
+  "materia": "Matemáticas",
+  "nivel": "Secundaria",
+  "dia": "2026-10-22",
+  "disponibleDesde": "2026-10-21",
+  "fechaLimite": "2026-10-23",
+  "intentos": 2,
+  "preguntasPorIntento": 2,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "Fracciones",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Fracciones",
+      "texto": "Lee con calma."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "libreta",
+      "texto": "Anota lo importante."
+    }
+  ],
+  "banco": [
+    {
+      "id": "sec-adelanta-2026-10-22-a-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 1 de Fracciones?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-adelanta-2026-10-22-a-2",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 2 de Fracciones?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-adelanta-2026-10-22-a-3",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 3 de Fracciones?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-adelanta-2026-10-22-a-4",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 4 de Fracciones?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    }
+  ]
+}

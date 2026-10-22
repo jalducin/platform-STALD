@@ -108,6 +108,11 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   interactiva, cambio `secundaria-sin-notion`; también solo con `--hoy 2026-10-27`): pasos y `aria-current`, iframes
   `youtube-nocookie` lazy, «✅ Ya la hice» que se recuerda, resultado con «Siguiente clase», 360 px claro/oscuro e
   Inglés sin pasos. Envía la clase de la alumna: corre después de `secundaria-clases`.
+- `secundaria-adelantar` (fase `ingles`, cambio `secundaria-adelantar`; solo con `--hoy 2026-10-22`, con otro día
+  sale `OMIT`): la semana de Secundaria `2026-10-19` del fixture (3 clases `sec-adelanta-*` de `valeria` que abren el
+  21 y traen `dia` jueves 22 ×2 y viernes 23) y la semana `2026-11-02` (1 clase con `dia` 2026-11-02 que también abre
+  el 21). Revisa que «Hoy te toca» traiga solo las del jueves, que la del viernes
+  se abra y se resuelva hoy (a tiempo) y que «🗓️ Mi horario» quede igual antes y después; la de la semana futura sale en «📝 Otras clases y exámenes».
 - `secundaria-dashboard` (fase `ingles`, cambio `secundaria-dashboard`): la alumna del fixture envía 3 clases por la API
   (en la copia temporal) y revisa a 360 px en claro y oscuro el Inicio RPG (retos, estados, progreso, racha, XP y
   nivel, insignias, misión, actividad, promedios), botones de 44 px o más con foco visible, «📚 Mis materias» con sus

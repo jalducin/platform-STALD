@@ -190,6 +190,12 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     Secundaria: «Inglés», «Español», «Matemáticas», «Ciencias», «Ciencias Sociales», «Tecnología», «Artes» o
     «Educación Física». El listado la incluye cuando viene; si falta, la vista la deduce del prefijo del título antes
     de « · » (sin el emoji). Otro valor es aviso con `--secundaria`; vacío, no texto o largo es error.
+  - `dia` (opcional, AAAA-MM-DD; cambio `secundaria-adelantar`): día del horario en que toca la clase. Debe ser una
+    fecha real dentro de [`disponibleDesde`, `fechaLimite`] (si no, error en cualquier ámbito). El listado lo incluye
+    cuando viene y las vistas agrupan por él (`diaDeClase`). En Secundaria permite abrir antes: `disponibleDesde` =
+    inicio del bloque de 2 semanas, `fechaLimite` = el día siguiente a `dia`; con `--secundaria`, `disponibleDesde`
+    puede ser anterior al lunes de la semana y `dia` debe caer de lunes a domingo de esa semana. Secundaria lista
+    también las clases de semanas futuras que ya abrieron. Inglés no cambia sus reglas de apertura.
   - `temas[]`: con `retroalimentacion` por estado.
   - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }], diagrama? }`.
   - `teoria[].diagrama` (opcional, cambio `teoria-diagramas`): un dibujo sencillo hecho con HTML + CSS, debajo del

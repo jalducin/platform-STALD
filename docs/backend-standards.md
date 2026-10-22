@@ -420,6 +420,9 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     (patrón lun actividad, mié examen, jue actividad, sáb examen).
   - Validar una semana de Secundaria: `deno run --allow-read server/validar_semana.ts <datos> <lunes> --secundaria`
     (`contenido/secundaria/`, sin patrón de días; cambio `secundaria-mis-clases`). `meta` deja pasar `materia`.
+  - Adelantar en Secundaria (cambio `secundaria-adelantar`): `meta` deja pasar `dia` (día del horario; formato en
+    docs/data-model.md) y `visibleItems` lista también las clases de semanas futuras que ya abrieron
+    (`disponibleDesde` ≤ hoy), como la ruta del profe. El grupo de Inglés sigue viendo solo semanas iniciadas.
 
 **Postgres de Inglés** (`server/db.ts`, `server/grupos.ts`, cambio `ingles-grupos`):
   - `createDb({ url, key, prefijo })` es un cliente PostgREST hecho con `fetch`:

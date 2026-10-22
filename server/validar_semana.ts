@@ -3,7 +3,8 @@
 // Con --profe valida una semana de la ruta del profe (contenido/profe/, patrón lun/mié/jue/sáb). La ruta del profe va a
 // su ritmo (openspec: profe-ruta-abierta): disponibleDesde puede ser anterior al lunes y el examen no espera su día.
 // Con --secundaria valida una semana de Secundaria (contenido/secundaria/, openspec: secundaria-mis-clases): sin patrón
-// de días, el examen mensual puede tener ventana y `materia` fuera de las 8 conocidas es aviso.
+// de días, el examen mensual puede tener ventana y `materia` fuera de las 8 conocidas es aviso. Con `dia`
+// (openspec: secundaria-adelantar), `disponibleDesde` puede ser anterior al lunes (para adelantar) y `dia` cae en la semana.
 // Forma nueva (openspec: rpg-fase2-misiones): `validar_semana.ts <dir-datos> --misiones <ámbito>` (sin lunes) valida
 // contenido/<ámbito>/mundos.json y contenido/<ámbito>/misiones/*.json (ámbito: secundaria o ingles).
 // Sale con código 1 si hay errores; los avisos no bloquean.
