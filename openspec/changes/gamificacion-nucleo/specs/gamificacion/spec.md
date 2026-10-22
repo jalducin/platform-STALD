@@ -1,9 +1,10 @@
 ## ADDED Requirements
 
 ### Requirement: XP por clase
-`comun/gamificacion.js` SHALL calcular el XP de una clase terminada solo con su mejor intento: el porcentaje de
-aciertos (0–100) en el que cada acierto de un tema cuyo título empieza con 🎯 (mini examen) vale doble, más 20 si el
-mejor intento llegó a tiempo. Sin calificación el XP SHALL ser 0. El XP total SHALL ser la suma del XP de las clases
+`comun/gamificacion.js` SHALL calcular el XP de una clase terminada solo con su mejor intento:
+round(100 × (aciertos + aciertos del tema 🎯) / preguntas de la clase), es decir, el porcentaje de aciertos en el que
+cada acierto de un tema cuyo título empieza con 🎯 (mini examen) cuenta doble (puede pasar de 100), más 20 si el mejor
+intento llegó a tiempo. Sin calificación el XP SHALL ser 0. El XP total SHALL ser la suma del XP de las clases
 hechas (con al menos un envío).
 
 #### Scenario: Clase a tiempo
@@ -28,13 +29,18 @@ Sabia/Sabio (7–9) y Gran Sabia/Gran Sabio (10 o más); sin dato de género se 
 - **THEN** el nivel es 4, el rango «Exploradora/Explorador», 50 XP dentro del nivel y 1200 para el siguiente
 
 ### Requirement: Mundos por materia
-Cada materia SHALL tener mundos por bloque, con las fechas de la skill `clases-secundaria`: Matemáticas (Valle de los
+Cada materia SHALL tener mundos por bloque, con las fechas de la skill `clases-secundaria` (las que la skill da como
+duración se derivan: Química y Física, 3 meses cada una tras Biología; «Programación e IA» comparten tramo; Ciencias
+Sociales rota un mundo por mes tras Geografía): Matemáticas (Valle de los
 Números → Ciudad de las Formas → Torre de las Incógnitas), Ciencias (Selva de la Vida → Laboratorio Alquimia → Cumbre
 de la Fuerza), Ciencias Sociales (Ágora → Puerta del Tiempo → Atlas del Mundo), Tecnología (Taller Digital →
 Laberinto Sintaxis → Núcleo IA), Inglés (Isla del Alfabeto), Español (Gran Biblioteca) y Artes / Educación Física
 (Estudio y Arena). Un mundo SHALL estar «completado» si terminó su fecha y todas sus clases (al menos una) están
-hechas; «en-curso» si es el actual o terminó con clases pendientes; «bloqueado» si aún no empieza o no tiene fecha y
-no es el único de su materia.
+hechas; «en-curso» si es el actual o terminó con clases pendientes; «bloqueado» si aún no empieza.
+
+#### Scenario: Rotación de Ciencias Sociales
+- **WHEN** hoy es 2027-02-10, después de Geografía (enero de 2027)
+- **THEN** el mundo de Ciencias Sociales vuelve a ser «Ágora»
 
 #### Scenario: Mundo actual
 - **WHEN** hoy es 2026-10-27

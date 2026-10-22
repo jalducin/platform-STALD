@@ -32,6 +32,8 @@ Deno.test("XP de una clase: porcentaje + 20 a tiempo; el tema 🎯 vale doble", 
   assertEquals(G.xpDeClase({}, calif([["🎯 Mini examen", 0, 4], ["Tema", 0, 4]]), { aTiempo: true }), 20);
   // Sin secciones: el porcentaje de la calificación.
   assertEquals(G.xpDeClase({}, { porcentaje: 70 }, { aTiempo: false }), 70);
+  // Preguntas fuera de las secciones (tema no declarado): cuentan en el porcentaje con correctas/total.
+  assertEquals(G.xpDeClase({}, { correctas: 9, total: 10, porcentaje: 90, secciones: [{ titulo: "T", correctas: 8, total: 9 }] }, { aTiempo: false }), 90);
   // Sin calificación no hay XP.
   assertEquals(G.xpDeClase({}, null, { aTiempo: true }), 0);
 });
@@ -77,6 +79,11 @@ Deno.test("mundos: el bloque de cada materia según la fecha", () => {
   assertEquals(m("Español"), "Gran Biblioteca");
   assertEquals([m("Artes"), m("Educación Física")], ["Estudio y Arena", "Estudio y Arena"]);
   assertEquals(m("Música"), null);
+  // Ciencias Sociales rota cada mes después de Geografía (enero de 2027).
+  assertEquals([m("sociales", "2027-01-15"), m("sociales", "2027-02-10"), m("sociales", "2027-03-05"), m("sociales", "2027-04-30"), m("sociales", "2027-05-02")],
+    ["Atlas del Mundo", "Ágora", "Puerta del Tiempo", "Atlas del Mundo", "Ágora"]);
+  // Tecnología: «Programación e IA» en el mismo tramo.
+  assertEquals(G.mapaMundos([], "2026-12-10").find((x: any) => x.clave === "tecnologia").mundos.map((w: any) => w.estado).slice(1), ["en-curso", "en-curso"]);
   assertEquals(G.mundoDe("Matemáticas", "2026-10-27").emoji, "🔢");
 });
 
@@ -192,4 +199,23 @@ Deno.test("servidor: el envío dice si llegó a tiempo y el listado trae mejorAT
 Deno.test("servidor: sin intentos, mejorATiempo es null", async () => {
   const lista = await pedir(tienda(), "GET", "", "2026-10-27");
   assertEquals(lista.body.items[0].mejorATiempo, null);
+});
+
+Deno.test("servidor: la vista del admin con ?alumna trae mejorATiempo; su envío (vista previa) no trae aTiempo", async () => {
+  const store = tienda();
+  await enviar(store, "2026-10-27", 1, 2);
+  clearCache();
+  Deno.env.set("PERMITIR_HOY", "1");
+  const filas = () => filasSecundaria({ registro: () => leerRegistro(store), notion: () => Promise.resolve([]), avisar: () => {} });
+  const comoAdmin = async (method: string, sub: string, q = "", body?: unknown) => {
+    const req = new Request(`http://x/secundaria/actividades${sub}?hoy=2026-10-27${q}`, { method, body: body ? JSON.stringify(body) : undefined });
+    const res = await handleSecundaria(req, sub, "admin@example.com", "admin@example.com", store, filas, json);
+    return { status: res.status, body: await res.json() };
+  };
+  const vista = await comoAdmin("GET", "", "&alumna=luz");
+  assertEquals([vista.status, vista.body.isAdmin, vista.body.items[0].mejorATiempo], [200, true, true]);
+  const lista = await comoAdmin("GET", "");
+  assertEquals("mejorATiempo" in lista.body.items[0], false); // la lista del admin trae resultados, no su propio dato
+  const previa = await comoAdmin("POST", "/sec-mate", "", { intento: 1, respuestas: {} });
+  assertEquals([previa.status, previa.body.guardado, "aTiempo" in previa.body], [200, false, false]);
 });

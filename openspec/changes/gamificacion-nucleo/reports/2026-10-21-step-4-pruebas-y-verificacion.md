@@ -1,6 +1,6 @@
 # Reporte Step 4 — Pruebas y verificación de estado
 
-- Fecha: 2026-10-22
+- Fecha: 2026-10-21
 - Cambio: gamificacion-nucleo
 - Agente: Claude (sesión principal) + subagente `verificador-pruebas`
 
@@ -14,8 +14,8 @@
   fixture, `HOY_FIJO=2026-10-27`, puerto 8901, sesión de prueba `Bearer prueba:<correo>`
 
 ## Resultados de pruebas
-- Dirigidas: 13 pasaron, 0 fallaron, 0 omitidas (`server/gamificacion_test.ts`)
-- Suite completa: 953 pasaron, 0 fallaron, 6 omitidas (sin `DATA_DIR`)
+- Dirigidas: 14 pasaron, 0 fallaron, 0 omitidas (`server/gamificacion_test.ts`, tras los hallazgos del revisor)
+- Suite completa: 953 pasaron, 0 fallaron, 6 omitidas (sin `DATA_DIR`; antes de agregar la prueba 14)
 - `deno check` y `deno lint` (150 archivos): sin hallazgos
 - Duración: 1 m 44 s
 

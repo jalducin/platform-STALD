@@ -23,7 +23,7 @@
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 4.1 `deno test -A server/` (subagente `verificador-pruebas`), `deno check server/main.ts`, `deno lint server/`
-- [x] 4.2 Reporte `openspec/changes/gamificacion-nucleo/reports/2026-10-22-step-4-pruebas-y-verificacion.md`
+- [x] 4.2 Reporte `openspec/changes/gamificacion-nucleo/reports/2026-10-21-step-4-pruebas-y-verificacion.md`
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 
@@ -39,5 +39,7 @@
 
 ## 7. Cierre
 
-- [x] 7.1 Revisión `revisor-solo-lectura`, PR, checks y merge
-- [ ] 7.2 `openspec archive gamificacion-nucleo` (junto con `secundaria-dashboard`, cuando el profe lo indique)
+- [x] 7.1 Revisión `revisor-solo-lectura` y sus hallazgos atendidos (base de XP con `correctas`/`total`, rotación de
+  Sociales, «Programación e IA» juntas, fechas derivadas documentadas, pruebas de la vista del admin)
+- [ ] 7.2 PR, checks y merge
+- [ ] 7.3 `openspec archive gamificacion-nucleo` (junto con `secundaria-dashboard`, cuando el profe lo indique)

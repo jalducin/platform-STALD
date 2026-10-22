@@ -65,18 +65,19 @@
     if (item && typeof item.mejorATiempo === 'boolean') return item.mejorATiempo;
     return !!(o.hoy && item && item.fechaLimite && o.hoy <= item.fechaLimite);
   }
-  // XP de una clase terminada (solo su mejor intento): porcentaje (0–100) en el que cada acierto del tema 🎯
-  // (mini examen) vale doble, + 20 si llegó a tiempo. Usa de `calificacion`: `secciones[].titulo|correctas|total`,
-  // `correctas` y `total` (o, sin secciones, `porcentaje`) y `aTiempo` opcional; de `item`: `mejorATiempo` y
+  // XP de una clase terminada (solo su mejor intento): el porcentaje de aciertos de la clase, en el que cada acierto
+  // del tema 🎯 (mini examen) cuenta otra vez (vale doble; por eso puede pasar de 100), + 20 si llegó a tiempo:
+  // round(100 × (correctas + correctas🎯) / total) + 20. Usa de `calificacion`: `correctas`, `total`,
+  // `secciones[].titulo|correctas` (o, sin `total`, `porcentaje`) y `aTiempo` opcional; de `item`: `mejorATiempo` y
   // `fechaLimite`. Sin calificación: 0.
   function xpDeClase(item, calificacion, opciones) {
     if (!calificacion) return 0;
     const o = opciones || {};
-    const secs = Array.isArray(calificacion.secciones) ? calificacion.secciones.filter(s => s && s.total > 0) : [];
-    const total = secs.reduce((a, s) => a + s.total, 0);
-    const base = total
-      ? Math.round(secs.reduce((a, s) => a + s.correctas * (esMiniExamen(s) ? 2 : 1), 0) * 100 / total)
-      : Math.round(Number(calificacion.porcentaje) || 0);
+    const secs = Array.isArray(calificacion.secciones) ? calificacion.secciones : [];
+    const total = Number(calificacion.total) || secs.reduce((a, s) => a + (Number(s && s.total) || 0), 0);
+    const correctas = Number.isFinite(Number(calificacion.correctas)) && calificacion.total ? Number(calificacion.correctas) : secs.reduce((a, s) => a + (Number(s && s.correctas) || 0), 0);
+    const extra = secs.filter(esMiniExamen).reduce((a, s) => a + (Number(s.correctas) || 0), 0);
+    const base = total ? Math.round((correctas + extra) * 100 / total) : Math.round(Number(calificacion.porcentaje) || 0);
     return base + (aTiempoDe(item, calificacion, o) ? XP_A_TIEMPO : 0);
   }
   // XP posible de una clase sin hacer (100 % a tiempo, sin contar el doble del mini examen).
@@ -108,8 +109,11 @@
 
   // ---------- Mundos ----------
   // Un mundo por bloque de cada materia: copia de ai-specs/skills/clases-secundaria/SKILL.md § «Cómo avanza cada
-  // materia» (fuente de las fechas; si cambia ahí, se cambia aquí). Fechas inclusivas. Sin fechas: si es el único de
-  // su materia está siempre en curso; si no, bloqueado hasta que la skill le ponga fecha (Núcleo IA).
+  // materia» (fuente; si cambia ahí, se cambia aquí). Fechas inclusivas. Derivadas (la skill da duraciones, no fechas):
+  // Química y Física, 3 meses cada una tras Biología (que termina en ene 2027). Tecnología: la skill pone
+  // «Programación e IA» en el mismo tramo, así que Laberinto Sintaxis y Núcleo IA comparten fechas. Ciencias
+  // Sociales rota (`rota`): tras Geografía (ene 2027) vuelve a Cívica, un mundo por mes calendario. Sin fechas: el
+  // único mundo de su materia, siempre en curso.
   const MUNDOS = {
     matematicas: [
       { etapa: 'Aritmética', nombre: 'Valle de los Números', emoji: '🔢', desde: '2026-10-26', hasta: '2026-11-22' },
@@ -129,7 +133,7 @@
     tecnologia: [
       { etapa: 'Bases', nombre: 'Taller Digital', emoji: '🛠️', desde: '2026-10-26', hasta: '2026-12-06' },
       { etapa: 'Programación', nombre: 'Laberinto Sintaxis', emoji: '🌀', desde: '2026-12-07' },
-      { etapa: 'IA', nombre: 'Núcleo IA', emoji: '🤖' },
+      { etapa: 'IA', nombre: 'Núcleo IA', emoji: '🤖', desde: '2026-12-07' },
     ],
     ingles: [{ etapa: 'Bloque actual', nombre: 'Isla del Alfabeto', emoji: '🏝️' }],
     espanol: [{ etapa: 'Programa de 1.º', nombre: 'Gran Biblioteca', emoji: '📚' }],
@@ -143,12 +147,28 @@
     return c ? c.clave : null;
   };
   const enCurso = (w, hoy) => !!w.desde && w.desde <= hoy && (!w.hasta || hoy <= w.hasta);
+  const ROTA = { sociales: '2027-02-01' }; // desde aquí, un mundo por mes en el orden de la lista, y vuelve a empezar
+  const finDeMes = f => { const d = fecha(f.slice(0, 8) + '01'); d.setUTCMonth(d.getUTCMonth() + 1); d.setUTCDate(0); return d.toISOString().slice(0, 10); };
+  // Mundos con las fechas que valen para `hoy`: en una materia que rota, el ciclo mensual que contiene a hoy.
+  function mundosVigentes(clave, hoy) {
+    const lista = MUNDOS[clave];
+    const inicio = ROTA[clave];
+    if (!inicio || !hoy || hoy < inicio) return lista;
+    const meses = (Number(hoy.slice(0, 4)) - Number(inicio.slice(0, 4))) * 12 + Number(hoy.slice(5, 7)) - Number(inicio.slice(5, 7));
+    const primerMes = meses - (meses % lista.length); // mes (desde `inicio`) en que empezó este ciclo
+    return lista.map((w, i) => {
+      const d = fecha(inicio); d.setUTCMonth(d.getUTCMonth() + primerMes + i);
+      const desde = d.toISOString().slice(0, 10);
+      return { ...w, desde, hasta: finDeMes(desde) };
+    });
+  }
   // Mundo actual de una materia (nombre o clave): el que contiene a `hoy`; en vacaciones, el último que empezó;
   // antes del primero, el primero. Sin `hoy`, la fecha de hoy del aparato. Materia desconocida: null.
   function mundoDe(materia, hoy) {
-    const lista = MUNDOS[claveDeMateria(materia)];
-    if (!lista) return null;
+    const clave = claveDeMateria(materia);
+    if (!MUNDOS[clave]) return null;
     const h = hoy || new Date().toISOString().slice(0, 10);
+    const lista = mundosVigentes(clave, h);
     const conFecha = lista.filter(w => w.desde);
     const w = lista.find(x => enCurso(x, h)) || [...conFecha].reverse().find(x => x.desde <= h) || lista[0];
     return { nombre: w.nombre, emoji: w.emoji, etapa: w.etapa };
@@ -159,7 +179,7 @@
     const lista = items || [];
     return MATERIAS.map(m => {
       const suyas = lista.filter(it => claveDe(it) === m.clave);
-      const mundos = MUNDOS[m.clave].map((w, i, todos) => {
+      const mundos = mundosVigentes(m.clave, hoy).map((w, i, todos) => {
         const deMundo = w.desde ? suyas.filter(it => { const d = diaDeClase(it); return d >= w.desde && (!w.hasta || d <= w.hasta); }) : (todos.length === 1 ? suyas : []);
         const hechas = deMundo.filter(estaHecha).length;
         let estado;
