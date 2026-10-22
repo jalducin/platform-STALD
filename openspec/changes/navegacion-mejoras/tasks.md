@@ -34,9 +34,10 @@
 
 ## 4. PR 4 · Pruebas: fixture propio de «🌍 Mundos» y Dibuja estable
 
-- [ ] 4.1 `tests/fixtures/profe-plan-9-mundos.json` y `ingles-diseno-profe`: 9 mundos con su fixture (interceptado en
-  su navegador) y, con el plan compartido, los de `mapaRuta`
-- [ ] 4.2 `server/salas_grandes_test.ts`: valores y llaves en lugar de texto suelto, más un caso fijo con «reloj»
+- [x] 4.1 `tests/fixtures/datos/contenido/profe/plan.json`: plan de ejemplo de 8 semanas con clases en los 9 mundos
+  (las 3 semanas publicadas sin cambios); `ingles-diseno-profe`, `ruta-profe` y `profe-diseno` en verde con él
+- [x] 4.2 `server/salas_grandes_test.ts`: valores y llaves en lugar de texto suelto, más un caso fijo con «reloj» y
+  uno de fuga real; 30/30 sola y 30/30 en la suite completa
 
 ## 5. Verificación (OBLIGATORIO)
 

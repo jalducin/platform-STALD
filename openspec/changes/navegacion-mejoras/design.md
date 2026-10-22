@@ -40,14 +40,18 @@ Secundaria están en `comun/secundaria-datos.js` (`SecundariaDatos`, probadas en
 4. **Una fila desde 720 px.** `grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr)`. Entre 720 y 1099 px el
    nombre corto bajo el emoji (≈ 81 px por pestaña con 9 a 768 px); desde 1100 px en línea, nombre largo con 7 y corto
    con 9 (`.sec-tabs-muchas`): ≈ 115 px por pestaña a 1100 px.
-5. **Fixture propio en la E2E.** La prueba intercepta el GET de `/ingles/profe/actividades` solo en un contexto nuevo y
-   responde lo del servidor con `plan` = `tests/fixtures/profe-plan-9-mundos.json` (las 5 clases del fixture compartido
-   más clases de ejemplo sin publicar, una o más por mundo). Las que no tienen `item` salen «Llega pronto», como en la
-   ruta real. El resto de la prueba sigue contra el servidor y espera los mundos de `Gamificacion.mapaRuta` con el plan
-   compartido.
+5. **Fixture propio en la E2E.** Se amplía el plan de ejemplo que ya usan las E2E de la ruta
+   (`tests/fixtures/datos/contenido/profe/plan.json`; `correr.sh` borra la ruta real de la copia antes de superponerlo,
+   como en `fix-e2e-rpg`): de 3 a 8 semanas (2026-09-28 a 2026-11-16). Semanas 1–8 caen en los 7 mundos por semana, y
+   dos clases por título («Pirámide de Minto» y «Clase: Skills…») en Torre de Minto y Forja de Skills. Las 5 semanas
+   nuevas no tienen archivo de actividad: salen «Llega pronto», como en la ruta real, y no cambian lo publicado ni lo
+   abierto. Se descartó interceptar el GET en el navegador: el plan del servidor y el de la página serían distintos, y
+   con un solo fixture las tres E2E de la ruta revisan los mismos datos.
 6. **Dibuja.** Se compara con los valores de texto del JSON (recorrido recursivo) en vez de `includes('"palabra"')`:
    «reloj» es palabra del vocabulario y también llave de la respuesta (`"reloj": <ms>`). La llave `palabra` se busca
-   entre las llaves. Se agrega un caso fijo: una sala cuya palabra 0 sea «reloj» (se busca el secreto en el test).
+   entre las llaves. Se agrega un caso fijo: una sala cuya palabra 0 sea «reloj» (secreto fijo
+   `000000000000000000000009`, escrito en la sala de la prueba antes de leerla) y un caso que comprueba que los
+   ayudantes sí detectan una fuga real (la palabra como valor y la llave `palabra`).
 
 ## Riesgos
 

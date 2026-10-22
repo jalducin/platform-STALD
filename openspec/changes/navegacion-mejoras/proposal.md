@@ -39,10 +39,11 @@ profe) **no** entran: quedan como propuesta aparte en `openspec/changes/navegaci
 - **Pestañas en una fila en tablet y PC (PR 3).** Desde 720 px la fila de pestañas es siempre una sola fila (columnas
   iguales); entre 720 y 1099 px con el emoji sobre el nombre corto, y desde 1100 px en línea (nombre largo con 7
   pestañas; nombre corto con las 9 del profe).
-- **E2E «🌍 Mundos» con su propio fixture (PR 4).** `tests/fixtures/profe-plan-9-mundos.json`: un plan de ejemplo con
-  clases en los 9 mundos; la prueba lo sirve solo en su navegador (intercepta el GET de `/ingles/profe/actividades`) y,
-  con el plan normal, espera los mundos que salen de `Gamificacion.mapaRuta`. No cambia datos reales ni el fixture
-  compartido.
+- **E2E «🌍 Mundos» con su propio fixture (PR 4).** El plan de ejemplo de las E2E
+  (`tests/fixtures/datos/contenido/profe/plan.json`, que `correr.sh` superpone tras borrar la ruta real de la copia)
+  pasa de 3 a 8 semanas, con clases en los 9 mundos. Las 3 semanas publicadas no cambian; las 5 nuevas no tienen
+  archivo de actividad (salen «Llega pronto», como en la ruta real). No cambia datos reales; `ruta-profe` y
+  `profe-diseno` siguen en verde con él.
 - **Dibuja estable (PR 4).** La prueba busca la palabra y su traducción entre los **valores** del JSON (y la llave
   `palabra` entre las llaves), no como texto suelto: verifica lo mismo sin confundir una llave con la palabra.
 - Sin cambios de servidor, contrato HTTP, datos ni peticiones.

@@ -54,9 +54,10 @@ Qué hace `correr.sh`:
 1. Valida argumentos y que los puertos estén libres (no mata procesos ajenos).
 2. Copia `--datos` a una carpeta temporal, sin `.git`, y borra los `profe.json` de resultados y los resultados del
    examen 2026-10-02 (las pruebas parten de cero). También borra `contenido/profe`: la ruta propia del profe sale solo
-   de la ruta de ejemplo de `tests/fixtures/datos/contenido/profe/` (3 semanas coherentes con 2026-10-04, una semana
-   futura ya abierta y un resultado de ejemplo), para que `ruta-profe` y `profe-diseno` no dependan de la ruta real ni
-   del orden (cambio `fix-e2e-rpg`). **La carpeta original nunca se modifica.**
+   de la ruta de ejemplo de `tests/fixtures/datos/contenido/profe/` (8 semanas coherentes con 2026-10-04: 3 publicadas,
+   con una semana futura ya abierta y un resultado de ejemplo, y 5 sin publicar; entre todas tienen clases en los 9
+   mundos de la ruta), para que `ruta-profe`, `profe-diseno` e `ingles-diseno-profe` no dependan de la ruta real ni
+   del orden (cambios `fix-e2e-rpg` y `navegacion-mejoras`). **La carpeta original nunca se modifica.**
 3. Levanta el servidor (`server/main.ts`) con `DATA_DIR=<copia>`, `ROWS_FIXTURE=tests/fixtures/rows-fixture.json`,
    `SUPER_ADMIN_EMAIL=admin@example.com`, `PERMITIR_HOY=1` y `HOY_FIJO=2026-10-04` (el día con el que se escribieron
    las E2E, para que no dependan del calendario; `--hoy` lo cambia), sin Notion ni GitHub, y los estáticos con

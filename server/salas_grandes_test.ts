@@ -240,9 +240,31 @@ Deno.test("dibuja: sin bots, de 3 a 12 personas y con secreto que nunca sale del
   assert(PALABRAS_DIBUJA.length > 50 && PALABRAS_DIBUJA.every((p) => /^[a-z]+( [a-z]+)?$/.test(p.en)), "vocabulario de ingles.json");
 });
 
-Deno.test("dibuja: la palabra solo la recibe quien dibuja (ni GET de los demás ni Realtime)", async () => {
+// Valores de texto y llaves de un JSON (recorrido recursivo). La palabra se busca entre los valores y no en el texto
+// suelto: «reloj» es palabra del vocabulario y también llave de la respuesta (`"reloj": <ms>`), y con 1 de cada 186
+// secretos al azar la prueba fallaba sin fuga (openspec: navegacion-mejoras, decisión 6).
+function valoresTexto(x: unknown, acc: string[] = []): string[] {
+  if (typeof x === "string") acc.push(x);
+  else if (Array.isArray(x)) for (const v of x) valoresTexto(v, acc);
+  else if (x && typeof x === "object") for (const v of Object.values(x)) valoresTexto(v, acc);
+  return acc;
+}
+function llaves(x: unknown, acc: string[] = []): string[] {
+  if (Array.isArray(x)) for (const v of x) llaves(v, acc);
+  else if (x && typeof x === "object") for (const [k, v] of Object.entries(x)) { acc.push(k); llaves(v, acc); }
+  return acc;
+}
+// Secreto fijo cuya palabra del turno 0 es «reloj» (la que coincide con una llave).
+const SECRETO_RELOJ = "000000000000000000000009";
+
+// Revisa que solo quien dibuja reciba la palabra (GET y Realtime). `secreto` fija la palabra; sin él, la del azar.
+async function revisarPalabraPrivada(secreto?: string) {
   const c = ctx();
   const codigo = await abrir(c, "dibuja", ["marisol", "angel", "laura"]);
+  if (secreto) {
+    const doc = (await c.store.get<any>(`juegos/salas/${codigo}/sala.json`))!;
+    await c.store.put(`juegos/salas/${codigo}/sala.json`, { ...doc.data, secreto }, doc.sha);
+  }
   const s = await c.sala(codigo);
   const p0 = palabraDibuja(s.secreto, 0);
   c.ir(s.inicio + 1000);
@@ -254,14 +276,29 @@ Deno.test("dibuja: la palabra solo la recibe quien dibuja (ni GET de los demás 
     assertEquals([g.body.dibuja.turno, g.body.dibuja.palabra, g.body.dibuja.es, g.body.dibuja.letras], [0, undefined, undefined, p0.en.replaceAll(" ", "").length]);
     assertEquals(JSON.stringify(g.body).includes(s.secreto), false);
     // La palabra en inglés puede coincidir con un valor legítimo de la sala (p. ej. un color «green»), así que se
-    // busca dentro de `dibuja`; en todo el cuerpo se buscan la traducción y la llave `palabra`.
-    assertEquals(JSON.stringify(g.body.dibuja).includes(`"${p0.en}"`), false, "la palabra no viaja en dibuja");
-    assertEquals([JSON.stringify(g.body).includes(`"${p0.es}"`), /"palabra":"/.test(JSON.stringify(g.body))], [false, false], "ni la traducción ni la llave palabra");
+    // busca entre los valores de `dibuja`; en todo el cuerpo se buscan la traducción (valores) y la llave `palabra`.
+    assertEquals(valoresTexto(g.body.dibuja).includes(p0.en), false, "la palabra no viaja en dibuja");
+    assertEquals([valoresTexto(g.body).includes(p0.es), llaves(g.body).includes("palabra")], [false, false], "ni la traducción ni la llave palabra");
   }
   // Realtime: tras un trazo se publica el estado sin secreto ni palabra.
   assertEquals((await responder(c, codigo, "marisol", { trazo: { turno: 0, nuevos: [{ c: 1, g: 2, p: [10, 10, 40, 60, 90, 90] }] } })).status, 200);
-  const ult = JSON.stringify(c.enviados.at(-1));
-  assertEquals([ult.includes(s.secreto), ult.includes(`"${p0.es}"`), /"palabra":"/.test(ult), ult.includes('"trazos"')], [false, false, false, true]);
+  const ult = c.enviados.at(-1);
+  assertEquals([JSON.stringify(ult).includes(s.secreto), valoresTexto(ult).includes(p0.es), llaves(ult).includes("palabra"), llaves(ult).includes("trazos")], [false, false, false, true]);
+  return p0;
+}
+
+Deno.test("dibuja: la palabra solo la recibe quien dibuja (ni GET de los demás ni Realtime)", async () => {
+  await revisarPalabraPrivada();
+});
+
+Deno.test("dibuja: la palabra «reloj» (también llave de la respuesta) no da falso positivo", async () => {
+  assertEquals((await revisarPalabraPrivada(SECRETO_RELOJ)).es, "reloj", "el secreto fijo da «reloj» en el turno 0");
+});
+
+Deno.test("dibuja: los ayudantes detectan una fuga real como valor y la llave palabra", () => {
+  const fuga = { sala: { reloj: 1 }, dibuja: { turno: 0, pista: "reloj" } };
+  assertEquals([valoresTexto(fuga).includes("reloj"), valoresTexto({ reloj: 1 }).includes("reloj")], [true, false]);
+  assertEquals([llaves({ a: [{ palabra: "x" }] }).includes("palabra"), llaves({ a: "palabra" }).includes("palabra")], [true, false]);
 });
 
 Deno.test("dibuja: trazos solo de quien dibuja, con límites de tamaño y frecuencia", async () => {
