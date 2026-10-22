@@ -22,7 +22,9 @@ const UMBRAL = {
   'navegar portal → inglés → portal → juegos (alumna)': 12,
   'juegos + 1 juego individual': 5,
   'ranking: abrir y alternar pestañas 4 veces': 6, // 2 son las fotos de avatar (<img>, caché de 1 h)
-  'sala de 2 personas (30 s, ambas)': 40,
+  // 14 fijas (config, yo, crear, unirse, empezar y sus OPTIONS) + sondeo cada 2.5 s de 2 páginas (≤ 14 cada una) en los
+  // ~33 s del flujo. Mide 41 desde 2026-10-12 (juegos-categorias) por tiempos, no por peticiones nuevas (openspec: fix-e2e-rpg).
+  'sala de 2 personas (30 s, ambas)': 42,
   'inglés (alumna)': 5,
   'inglés (admin)': 17, // +2: «📥 Por revisar» del panel pide la bandeja /profe/entregas (OPTIONS + GET; openspec: ingles-diseno-profe)
   'abrir un examen': 2,
@@ -83,6 +85,9 @@ async function medir(nombre, fn) {
   if (error) ok(`${nombre}: el flujo termina`, false, error.message.slice(0, 160));
   else if (SOLO_MEDIR) ok(`${nombre}: medido`, true, `${total} peticiones`);
   else ok(`${nombre}: ${total} peticiones ≤ ${UMBRAL[nombre]}`, total <= UMBRAL[nombre], detalle);
+  // Los interruptores llegan en /config (openspec: fix-e2e-rpg): ninguna página con sesión pide /interruptores aparte.
+  const extra = filas.filter(f => f.ruta.endsWith('/interruptores')).length;
+  if (!error) ok(`${nombre}: sin GET /interruptores aparte`, extra === 0, String(extra));
 }
 
 async function contexto(b, email) {

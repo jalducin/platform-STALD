@@ -218,6 +218,15 @@ async function getStore(): Promise<Store> {
 // Postgres), con caché de 60 s y falla cerrada (todo apagado).
 const depsInterruptores = { db, store: baseStore };
 const leerInterruptores = crearLectorInterruptores(depsInterruptores);
+// /config no espera a los interruptores (openspec: fix-e2e-rpg): de ella depende el inicio de sesión de cada página.
+// Responde el último valor leído (≤ 60 s, o un poco más mientras se refresca en segundo plano). En frío (recién
+// arrancado el servidor) sale sin `interruptores` y comun/interruptores.js pide GET /interruptores.
+function conInterruptores(c: { status: number; body: Record<string, unknown> }): Record<string, unknown> {
+  if (c.status !== 200) return c.body;
+  const ultimo = leerInterruptores.ultimo();
+  leerInterruptores().catch(() => {}); // refresca si venció; la falla ya se registra y deja todo apagado
+  return ultimo ? { ...c.body, interruptores: ultimo } : c.body;
+}
 
 // Caché HTTP por ruta (openspec: cache-estabilidad, server/http_cache.ts): /config se puede guardar y el ranking
 // responde 304 si no cambió; lo demás sigue no-store.
@@ -233,7 +242,9 @@ async function atender(req: Request): Promise<Response> {
   // GET /config → configuración pública para comun/auth.js (sin sesión; openspec: plataforma-login).
   if (url.pathname.endsWith("/config")) {
     const c = configPublica({ ROWS_FIXTURE: env("ROWS_FIXTURE"), SUPABASE_URL: env("SUPABASE_URL"), SUPABASE_PUBLISHABLE_KEY: env("SUPABASE_PUBLISHABLE_KEY") });
-    return json(c.body, c.status);
+    // Los interruptores públicos viajan aquí (openspec: fix-e2e-rpg): cada página ya pide /config, así que el enlace al
+    // aviso de privacidad no cuesta otra petición. Solo booleanos conocidos y falla cerrada (leerInterruptores).
+    return json(conInterruptores(c), c.status);
   }
 
   // GET /interruptores → qué piezas encendió el profe (sin sesión, solo booleanos; openspec: rpg-privacidad).
@@ -513,6 +524,8 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
 }
 
 if (import.meta.main) Deno.serve({ port: Number(env("PORT")) || 8000 }, handler);
+// Lee los interruptores al arrancar para que el primer /config ya los traiga (openspec: fix-e2e-rpg).
+if (import.meta.main) leerInterruptores().catch(() => {}); // NOSONAR: sin esperar; el servidor ya atiende
 
 // Retención de entregas (openspec: rpg-fase2-misiones): cada 31 de agosto se borra el texto de las entregas y queda la
 // evaluación. Solo en Deno Deploy (Deno.cron) y con Postgres; en local y en pruebas no se programa.

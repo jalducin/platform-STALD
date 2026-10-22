@@ -24,7 +24,10 @@ const get = async (ruta: string, token?: string) => {
 };
 
 Deno.test("main: /config en modo prueba y CORS acepta authorization", async () => {
+  // En frío /config no espera a los interruptores; ya leídos, viajan en ella (openspec: fix-e2e-rpg).
   assertEquals(await get("/config"), { status: 200, body: { prueba: true } });
+  await get("/interruptores");
+  assertEquals(await get("/config"), { status: 200, body: { prueba: true, interruptores: { privacidad: false, ranking: false } } });
   const o = await handler(new Request("http://x/perfil", { method: "OPTIONS" }));
   await o.body?.cancel();
   assertEquals(o.headers.get("Access-Control-Allow-Headers"), "content-type, authorization");

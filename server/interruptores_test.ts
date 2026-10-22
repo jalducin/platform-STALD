@@ -64,3 +64,26 @@ Deno.test("interruptores: caché de 60 s; al vencer se nota el cambio de dato", 
   t = 60_000;
   assertEquals(await leer(), { privacidad: true, ranking: false }, "caché vencida: ya encendido");
 });
+
+// /config no espera la lectura (openspec: fix-e2e-rpg): usa el último valor leído, aunque la caché ya venció.
+Deno.test("interruptores: ultimo() es null antes de leer y luego el último valor, aunque venza la caché", async () => {
+  const store = new MemoryStore();
+  let t = 0;
+  const leer = crearLectorInterruptores({ db: null, store: () => Promise.resolve(store), ahora: () => t });
+  assertEquals(leer.ultimo(), null, "en frío no hay valor");
+  await store.put(RUTA_INTERRUPTORES, { privacidad: true }, null);
+  await leer();
+  t = 120_000;
+  assertEquals(leer.ultimo(), { privacidad: true, ranking: false }, "vencida: sigue el último leído");
+});
+
+// Tras un cambio del profe (olvidar), /config sigue con el último valor mientras se relee (openspec: fix-e2e-rpg).
+Deno.test("interruptores: olvidar() fuerza la relectura pero ultimo() conserva el valor", async () => {
+  const store = new MemoryStore();
+  const leer = crearLectorInterruptores({ db: null, store: () => Promise.resolve(store), ahora: () => 0 });
+  await leer();
+  await store.put(RUTA_INTERRUPTORES, { ranking: true }, null);
+  leer.olvidar();
+  assertEquals(leer.ultimo(), { privacidad: false, ranking: false }, "sigue el último leído");
+  assertEquals(await leer(), { privacidad: false, ranking: true }, "la siguiente lectura va al dato");
+});

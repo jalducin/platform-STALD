@@ -60,9 +60,16 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
     const id = state.claseAbierta.id;
     state.actAntes = { id, act: state.act };
     showResult({ correctas: 4, total: 5, porcentaje: 80, nivelSugerido: 'Bien', secciones: [], fortalezas: [], enProgreso: [], debilidades: [], revision: [] }, { id, intento: 1, intentosMax: 2, restantes: 1 });
-    return { texto: document.getElementById('content').textContent, recompensa: !!document.getElementById('sec-recompensa'), siguiente: (document.querySelector('.sec-siguiente') || {}).textContent || '' };
+    const s = document.querySelector('.sec-siguiente');
+    // Título largo, como el de algunas clases reales, para que el desborde se note (openspec: fix-e2e-rpg).
+    const chico = s && s.querySelector('small');
+    if (chico) chico.textContent = 'Actividad: Presente simple con adverbios de frecuencia y rutinas diarias de la semana';
+    const r = s && s.getBoundingClientRect();
+    return { texto: document.getElementById('content').textContent, recompensa: !!document.getElementById('sec-recompensa'), siguiente: (s || {}).textContent || '',
+      cabe: !s || (r.left >= 0 && r.right <= innerWidth + 1 && s.scrollWidth <= s.clientWidth + 1), medida: s ? [Math.round(r.left), Math.round(r.right), s.scrollWidth, s.clientWidth] : [] };
   });
-  ok('resultado en Inglés: «¡Listo!», +XP y nivel', res.texto.includes('¡Listo!') && res.recompensa && /\+\d+ XP/.test(res.texto) && res.texto.includes('Nivel '), res.texto.slice(0, 80));
+  ok('resultado en Inglés: «Lo siguiente →» cabe a 360 px, sin desbordar (openspec: fix-e2e-rpg)', res.cabe, JSON.stringify(res.medida));
+  ok('resultado en Inglés: «¡Listo!», +XP y nivel', res.texto.includes('¡Listo!') && res.recompensa && /\+\d+ XP/.test(res.texto) && res.texto.includes('Nv. '), res.texto.slice(0, 80));
   ok('resultado en Inglés: «Lo siguiente →» o «📅 Mi semana» (no «misión»)', /Lo siguiente|Mi semana/.test(res.siguiente) && !/misi[oó]n/i.test(res.siguiente), res.siguiente.slice(0, 60));
   ok('etiqueta del tipo (no «Misión») y mundo de Inglés', /Actividad|Examen|Refuerzo|Reto del Meet/.test(v.etiqueta) && !v.etiqueta.includes('Misión') && v.mundo.includes('Isla del Alfabeto'), v.etiqueta + ' | ' + v.mundo);
   ok('actividad: sin scroll horizontal a 360 px', await sinScrollH(p));

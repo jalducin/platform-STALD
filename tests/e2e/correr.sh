@@ -191,6 +191,13 @@ filas_pg() { # cuántas filas quedan en stald_test_* (máx. 1 por tabla)
 # --- Datos ---
 preparar() { # $1 = fase
   rm -rf "$COPIA" && mkdir -p "$COPIA" && cp -r "$DATOS_ORIGEN/." "$COPIA/" && rm -rf "$COPIA/.git"
+  # Las pruebas parten de cero: sin resultados del profe ni del examen del viernes 2026-10-02. Se borra antes de
+  # superponer el contenido de prueba, que sí puede traer resultados de ejemplo del profe.
+  [ -d "$COPIA/resultados" ] && find "$COPIA/resultados" -name profe.json -delete
+  rm -f "$COPIA"/resultados/examen-2026-10-02/*.json
+  # La ruta propia del profe sale solo del contenido de prueba (tests/fixtures/datos/contenido/profe, fechas coherentes
+  # con HOY_FIJO 2026-10-04), nunca de la real, que cambia de fechas (openspec: fix-e2e-rpg).
+  rm -rf "$COPIA/contenido/profe"
   # Contenido de prueba del repo (tests/fixtures/datos, solo datos de ejemplo): se superpone antes de arrancar el
   # servidor, que carga la copia en memoria una sola vez (MemoryStore.fromDir).
   cp -r "$RAIZ/tests/fixtures/datos/." "$COPIA/"
@@ -211,9 +218,6 @@ with open(ejemplo, encoding="utf-8") as f:
 with open(destino, "w", encoding="utf-8") as f:
     json.dump(registro, f, ensure_ascii=False, indent=2)
 PY
-  # Las pruebas parten de cero: sin resultados del profe ni del examen del viernes 2026-10-02.
-  [ -d "$COPIA/resultados" ] && find "$COPIA/resultados" -name profe.json -delete
-  rm -f "$COPIA"/resultados/examen-2026-10-02/*.json
   if [ "$1" = grupos ]; then
     "$PY" - "$(nativo "$COPIA")/contenido/semanas/2026-09-28.json" <<'PY'
 import json, sys

@@ -12,32 +12,32 @@
   try { var t = localStorage.getItem('stald_tema'); if (t === 'oscuro') document.documentElement.dataset.theme = 'dark'; else if (t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) { /* sin almacenamiento */ }
 </script>
 <link rel="stylesheet" href="estilos/stald.css">
-<link rel="stylesheet" href="ingles/ingles.css?v=10">
+<link rel="stylesheet" href="ingles/ingles.css?v=11">
 <link rel="stylesheet" href="estilos/materias.css?v=1"> <!-- colores por materia (openspec: secundaria-dashboard) -->
 <link rel="stylesheet" href="estilos/ui.css?v=1"> <!-- tokens y componentes RPG compartidos (openspec: juegos-diseno-rpg) -->
-<link rel="stylesheet" href="ingles/secundaria.css?v=10"> <!-- tablero de Secundaria (openspec: secundaria-dashboard, rpg-fase2-misiones) -->
+<link rel="stylesheet" href="ingles/secundaria.css?v=11"> <!-- tablero de Secundaria (openspec: secundaria-dashboard, rpg-fase2-misiones) -->
 <link rel="stylesheet" href="ingles/rpg-ingles.css?v=2"> <!-- tablero RPG, ranking y diseño RPG de la vista de alumnos y alumnas (openspec: rpg-fase2-ingles, ingles-alumno-diseno-rpg) -->
 <link rel="stylesheet" href="ingles/panel-profe.css?v=2"> <!-- panel del profe con diseño RPG (openspec: ingles-diseno-profe) -->
 <!-- Scripts clásicos en orden (comparten el ámbito global); defer: corren cuando el DOM ya existe. -->
-<script defer src="comun/auth.js?v=8"></script> <!-- sesión (openspec: plataforma-login) -->
+<script defer src="comun/auth.js?v=9"></script> <!-- sesión (openspec: plataforma-login) -->
 <script defer src="ingles/comun.js?v=8"></script>
-<script defer src="ingles/material.js?v=1"></script> <!-- material de estudio (openspec: ingles-material-estudio) -->
+<script defer src="ingles/material.js?v=2"></script> <!-- material de estudio (openspec: ingles-material-estudio) -->
 <script defer src="ingles/reproductor.js?v=5"></script>
 <script defer src="ingles/presentacion.js?v=3"></script>
 <script defer src="ingles/admin.js?v=4"></script>
 <script defer src="ingles/tablero.js?v=6"></script>
-<script defer src="ingles/alumno.js?v=4"></script>
+<script defer src="ingles/alumno.js?v=5"></script>
 <script defer src="ingles/profe.js?v=5"></script>
 <script defer src="ingles/profe-rpg.js?v=1"></script> <!-- ruta del profe con la experiencia RPG (openspec: ingles-diseno-profe) -->
 <script defer src="comun/gamificacion.js?v=11"></script> <!-- XP, nivel, insignias y mundos (openspec: gamificacion-nucleo) -->
 <script defer src="comun/secundaria-datos.js?v=1"></script> <!-- reglas del tablero de Secundaria (openspec: secundaria-dashboard) -->
 <script defer src="ingles/secundaria.js?v=10"></script>
-<script defer src="ingles/secundaria-clase.js?v=12"></script> <!-- clase por pasos de Secundaria y de Inglés (openspec: secundaria-sin-notion, ingles-alumno-diseno-rpg) -->
-<script defer src="ingles/secundaria-inicio.js?v=11"></script> <!-- tablero de Secundaria (openspec: secundaria-dashboard) -->
+<script defer src="ingles/secundaria-clase.js?v=13"></script> <!-- clase por pasos de Secundaria y de Inglés (openspec: secundaria-sin-notion, ingles-alumno-diseno-rpg) -->
+<script defer src="ingles/secundaria-inicio.js?v=12"></script> <!-- tablero de Secundaria (openspec: secundaria-dashboard) -->
 <script defer src="ingles/secundaria-misiones.js?v=1"></script> <!-- misiones, mapa, árbol y bandeja (openspec: rpg-fase2-misiones) -->
 <script defer src="ingles/rpg-ingles.js?v=3"></script> <!-- tablero RPG, ranking de mi grupo, moderación de nicks y misiones de Inglés (openspec: rpg-fase2-ingles, rpg-ingles-hero-card) -->
 <script defer src="ingles/app.js?v=7"></script>
-<script defer src="comun/interruptores.js?v=1"></script> <!-- enlace al aviso de privacidad (openspec: rpg-privacidad) -->
+<script defer src="comun/interruptores.js?v=2"></script> <!-- enlace al aviso de privacidad (openspec: rpg-privacidad) -->
 </head>
 <body>
   <a class="skip" href="#content">Saltar al contenido</a>
@@ -55,7 +55,9 @@
   </header>
 
   <div class="login-wrap">
-    <div id="login" class="login-box">
+    <!-- Oculto hasta saber si hay sesión (openspec: fix-e2e-rpg): con sesión no se ve el formulario mientras carga;
+         sin sesión lo muestra mostrarEntrada(). En línea para que valga aunque el CSS aún no llegue. -->
+    <div id="login" class="login-box" style="display:none">
       <label for="email-input">Tu correo</label>
       <input id="email-input" type="email" placeholder="tucorreo@gmail.com" autocomplete="email">
       <button id="login-btn" class="btn">Entrar</button>
@@ -65,7 +67,7 @@
     <section id="material-publico" class="material-publico" aria-label="Material de estudio" hidden></section>
   </div>
 
-  <div id="app">
+  <div id="app" style="display:none">
     <div class="shell">
       <nav id="nav" class="nav nav-barra" aria-label="Secciones" hidden></nav>
       <div id="nav-mas" class="nav-mas" hidden></div>

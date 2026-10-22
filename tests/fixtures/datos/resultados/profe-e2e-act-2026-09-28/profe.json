@@ -1,0 +1,41 @@
+{
+  "id": "profe-e2e-act-2026-09-28",
+  "titulo": "Clase de ejemplo: verificación",
+  "alumno": "Profe",
+  "intentos": [
+    {
+      "n": 1,
+      "enviadoEn": "2026-09-28T18:00:00.000Z",
+      "fueraDeTiempo": false,
+      "preguntas": ["pv-1", "pv-2"],
+      "respuestas": { "pv-1": 0, "pv-2": 0 },
+      "calificacion": {
+        "correctas": 2,
+        "total": 2,
+        "porcentaje": 100,
+        "nivelSugerido": "¡Excelente! Dominas el tema",
+        "secciones": [
+          { "id": "verificacion", "titulo": "Verificación", "correctas": 2, "total": 2, "porcentaje": 100, "estado": "fortaleza", "retroalimentacion": "¡Muy bien!" }
+        ],
+        "fortalezas": ["Verificación"],
+        "enProgreso": [],
+        "debilidades": [],
+        "revision": []
+      }
+    }
+  ],
+  "mejor": {
+    "n": 1,
+    "correctas": 2,
+    "total": 2,
+    "porcentaje": 100,
+    "nivelSugerido": "¡Excelente! Dominas el tema",
+    "secciones": [
+      { "id": "verificacion", "titulo": "Verificación", "correctas": 2, "total": 2, "porcentaje": 100, "estado": "fortaleza", "retroalimentacion": "¡Muy bien!" }
+    ],
+    "fortalezas": ["Verificación"],
+    "enProgreso": [],
+    "debilidades": [],
+    "revision": []
+  }
+}

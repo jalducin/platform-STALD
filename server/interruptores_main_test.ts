@@ -17,6 +17,14 @@ Deno.test("main: GET /interruptores sin sesión responde solo las llaves conocid
   assertEquals([r.status, r.headers.get("Cache-Control"), await r.json()], [200, "public, max-age=60", { privacidad: true, ranking: false }]);
 });
 
+// Los interruptores viajan también en /config, que cada página ya pide (openspec: fix-e2e-rpg): así el enlace al aviso
+// no cuesta una petición extra por página.
+Deno.test("main: /config trae los interruptores (solo llaves conocidas) y se guarda 10 min", async () => {
+  await (await handler(new Request("http://x/interruptores"))).body?.cancel(); // ya leídos (en producción, al arrancar)
+  const r = await handler(new Request("http://x/config"));
+  assertEquals([r.status, r.headers.get("Cache-Control"), await r.json()], [200, "public, max-age=600", { prueba: true, interruptores: { privacidad: true, ranking: false } }]);
+});
+
 Deno.test("main: /interruptores no acepta escritura", async () => {
   const r = await handler(new Request("http://x/interruptores", { method: "POST", body: "{}" }));
   await r.body?.cancel();

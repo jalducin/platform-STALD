@@ -27,7 +27,7 @@ además «📝 Resultados». La pestaña SHALL guardarse en el hash (`#inicio`, 
 #### Scenario: Progreso, racha, XP y promedios
 - **WHEN** de las 15 clases de la semana hizo 3 (Inglés 100 % tarde, Español 50 % tarde, Matemáticas 100 % a tiempo)
   y envió algo hoy
-- **THEN** ve «3 de 15 clases hechas», «1 día seguido», «Nivel 1 · Aprendiz» con 270 / 300 XP, 2 de 7 insignias y
+- **THEN** ve «3 de 15 clases hechas», «1 día seguido», «Nv. 1 · Aprendiz» (cambio `fix-e2e-rpg`) con 270 / 300 XP, 2 de 7 insignias y
   promedios Inglés 100 %, Español 50 % y Matemáticas 100 %
 
 #### Scenario: Sin clases hoy

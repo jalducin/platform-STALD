@@ -51,8 +51,10 @@ const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, ingles: 
     if (futuros.length) {
       const enLista = abiertos.map(id => r.items.find(i => i.id === id));
       ok('servidor: ' + abiertos.length + ' elementos ya abiertos listados y ninguno «próximamente»', enLista.every(i => i && i.estado !== 'proximamente'), JSON.stringify(abiertos.filter((id, k) => !enLista[k] || enLista[k].estado === 'proximamente')));
-      const estados = await Promise.all(abiertos.map(async id => (await fetch(API + '/ingles/profe/actividades/' + id + '?email=admin@example.com')).status));
-      ok('servidor: abre los ' + abiertos.length + ' (incluidos exámenes de semanas futuras)', estados.every(s => s === 200), JSON.stringify(estados.filter(s => s !== 200)));
+      // Lo ya completo responde 409 «sin_intentos» (correcto): se abren los que aún tienen intentos.
+      const porAbrir = abiertos.filter((id, k) => enLista[k]?.estado !== 'completo');
+      const estados = await Promise.all(porAbrir.map(async id => (await fetch(API + '/ingles/profe/actividades/' + id + '?email=admin@example.com')).status));
+      ok('servidor: abre los ' + porAbrir.length + ' sin completar (incluidos los de semanas futuras)', porAbrir.length > 0 && estados.every(s => s === 200), JSON.stringify(estados.filter(s => s !== 200)));
       const conBoton = await ad.$$eval('#ruta-plan [data-plan-id]', xs => xs.filter(x => x.querySelector('[data-action="abrir-item"],[data-action="ver-resultado"]')).map(x => x.dataset.planId));
       ok('Plan: botón para resolver cada elemento abierto', abiertos.every(id => conBoton.includes(id)) && (await ad.isVisible('#pf-ruta-abierta')), abiertos.filter(id => !conBoton.includes(id)).join(','));
       const ultimo = futuros[futuros.length - 1];

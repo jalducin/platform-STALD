@@ -1,0 +1,17 @@
+{
+  "id": "profe-e2e-examen-2026-10-17",
+  "tipo": "examen",
+  "titulo": "Examen de ejemplo 3",
+  "nivel": "Ejemplo",
+  "descripcion": "Examen de ejemplo de una semana futura que todavía no abre (openspec: fix-e2e-rpg).",
+  "disponibleDesde": "2026-10-17",
+  "fechaLimite": "2026-10-17",
+  "intentos": 1,
+  "temas": [
+    { "id": "subagentes", "titulo": "Subagentes", "retroalimentacion": { "fortaleza": "¡Muy bien!", "en-progreso": "Casi.", "debilidad": "Repasa la clase." } }
+  ],
+  "banco": [
+    { "id": "pe3-1", "tema": "subagentes", "tipo": "opcion", "enunciado": "¿Un subagente comparte tu contexto?", "opciones": ["No", "Sí"], "correcta": 0, "explicacion": "Tiene el suyo." },
+    { "id": "pe3-2", "tema": "subagentes", "tipo": "opcion", "enunciado": "¿Conviene para búsquedas largas?", "opciones": ["Sí", "No"], "correcta": 0, "explicacion": "Así no llena tu contexto." }
+  ]
+}

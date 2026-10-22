@@ -1,0 +1,17 @@
+{
+  "id": "profe-e2e-act-2026-10-12",
+  "tipo": "actividad",
+  "titulo": "Clase de ejemplo: subagentes (ya abierta)",
+  "nivel": "Ejemplo",
+  "descripcion": "Actividad de ejemplo de una semana futura que ya abrió (ruta abierta; openspec: fix-e2e-rpg).",
+  "disponibleDesde": "2026-10-01",
+  "fechaLimite": "2026-10-12",
+  "intentos": 2,
+  "temas": [
+    { "id": "subagentes", "titulo": "Subagentes", "retroalimentacion": { "fortaleza": "¡Muy bien!", "en-progreso": "Casi.", "debilidad": "Repasa la clase." } }
+  ],
+  "banco": [
+    { "id": "ps-1", "tema": "subagentes", "tipo": "opcion", "enunciado": "¿Para qué sirve un subagente?", "opciones": ["Separar contexto", "Nada"], "correcta": 0, "explicacion": "Trabaja con su propio contexto." },
+    { "id": "ps-2", "tema": "subagentes", "tipo": "opcion", "enunciado": "¿Qué devuelve un subagente?", "opciones": ["Un resumen", "Todo su contexto"], "correcta": 0, "explicacion": "Solo el resumen." }
+  ]
+}

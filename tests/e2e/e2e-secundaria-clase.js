@@ -61,7 +61,7 @@ async function abrirClase(p) {
       ok('resultado: «¡Misión cumplida!» y la calificación', (await p.textContent('.exam-card h3')).includes('Misión cumplida') && (await p.textContent('.score')).includes('100'));
       const xp = await p.$eval('#sec-recompensa', s => ({ xp: s.querySelector('[data-sec-xp]').dataset.secXp, t: s.textContent.replace(/\s+/g, ' '), nivel: s.querySelector('[data-sec-nivel]').dataset.secNivel })).catch(() => null);
       // 100 % a tiempo = 100 + 20 (reglas de comun/gamificacion.js); antes no tenía XP de esta misión.
-      ok('resultado: «+120 XP», nivel y rango', xp && xp.xp === '120' && xp.t.includes('+120 XP') && /Nivel \d+/.test(xp.t) && xp.t.includes('XP para el nivel'), JSON.stringify(xp));
+      ok('resultado: «+120 XP», nivel y rango', xp && xp.xp === '120' && xp.t.includes('+120 XP') && /Nv\. \d+/.test(xp.t) && xp.t.includes('XP para el nivel'), JSON.stringify(xp));
       // Insignias nuevas con las reglas de comun/gamificacion.js: un estado de antes sin envíos y uno de después con
       // la misión al 100 % → «Primera misión» y «100 % en una clase». Y la recompensa solo sale para el envío.
       const insig = await p.evaluate(() => {
@@ -80,7 +80,8 @@ async function abrirClase(p) {
       ok('recompensa: solo una vez y solo para la misión enviada', insig.otra === '' && insig.ajena === '');
       ok('resultado: retroalimentación por tema', (await p.textContent('#content')).includes('Fracciones') && (await p.textContent('#content')).includes('¡Muy bien!'));
       ok('resultado: la libreta con su casilla marcada', await p.isChecked(`#sec-resultado-libreta [data-sec-libreta="${CLASE}"]`));
-      const sig = await p.$eval('.sec-siguiente', x => ({ id: x.dataset.id || '', t: x.textContent.replace(/\s+/g, ' ').trim(), alto: x.getBoundingClientRect().height }));
+      const sig = await p.$eval('.sec-siguiente', x => { const r = x.getBoundingClientRect(); return { id: x.dataset.id || '', t: x.textContent.replace(/\s+/g, ' ').trim(), alto: r.height, cabe: r.left >= 0 && r.right <= innerWidth + 1 && x.scrollWidth <= x.clientWidth + 1, medida: [Math.round(r.left), Math.round(r.right), x.scrollWidth, x.clientWidth] }; });
+      ok('«Siguiente misión» cabe a 360 px, sin desbordar' + suf + ' (openspec: fix-e2e-rpg)', sig.cabe, JSON.stringify(sig.medida));
       ok('«Siguiente clase» apunta a otra clase pendiente', sig.id && sig.id !== CLASE && sig.t.startsWith('Siguiente misión'), JSON.stringify(sig));
       ok('«Siguiente clase» es un botón grande (≥ 44 px)', sig.alto >= 44, String(sig.alto));
       ok('resultado sin scroll horizontal a 360 px', await sinScrollH(p));

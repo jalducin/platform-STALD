@@ -55,7 +55,7 @@ function tarjetaHoy(it, hoy, admin) {
 function barraRpg(nivel, insignias, racha, totalInsignias) {
   return '<section class="rpg-stats" id="rpg-stats" aria-label="Tu avance">' +
     '<div class="rpg-nivel"><div class="rpg-nivel-num rpg-num" aria-hidden="true">' + nivel.nivel + '</div>' +
-      '<div class="rpg-nivel-txt"><div class="rpg-rango" id="rpg-rango">Nivel ' + nivel.nivel + ' · ' + escapeHtml(nivel.rango) + '</div>' +
+      '<div class="rpg-nivel-txt"><div class="rpg-rango" id="rpg-rango"><abbr title="Nivel del juego">Nv.</abbr> ' + nivel.nivel + ' · ' + escapeHtml(nivel.rango) + '</div>' +
       '<div class="rpg-xp-linea"><span>XP</span><span class="rpg-num" id="rpg-xp">' + nivel.xpNivel + ' / ' + nivel.porNivel + '</span></div>' +
       '<div class="rpg-xp-barra" role="progressbar" aria-label="XP del nivel ' + nivel.nivel + '" aria-valuemin="0" aria-valuemax="' + nivel.porNivel + '" aria-valuenow="' + nivel.xpNivel + '"><span style="width:' + nivel.porcentaje + '%"></span></div></div></div>' +
     '<div class="rpg-dato" id="rpg-insignias"><span class="rpg-dato-ico" aria-hidden="true">🏅</span><div><div class="rpg-dato-t">Insignias</div><div class="rpg-dato-v rpg-num">' + insignias.length + ' / ' + (totalInsignias || (GAM.INSIGNIAS.length + (GAM.INSIGNIAS_RPG || []).length)) + '</div></div></div>' +

@@ -1,0 +1,17 @@
+{
+  "id": "profe-e2e-examen-2026-10-03",
+  "tipo": "examen",
+  "titulo": "Examen de ejemplo 1",
+  "nivel": "Ejemplo",
+  "descripcion": "Examen de ejemplo de la ruta propia del profe para las E2E (openspec: fix-e2e-rpg).",
+  "disponibleDesde": "2026-10-03",
+  "fechaLimite": "2026-10-03",
+  "intentos": 1,
+  "temas": [
+    { "id": "pruebas", "titulo": "Pruebas", "retroalimentacion": { "fortaleza": "¡Muy bien!", "en-progreso": "Casi.", "debilidad": "Repasa la clase." } }
+  ],
+  "banco": [
+    { "id": "pe1-1", "tema": "pruebas", "tipo": "opcion", "enunciado": "¿Quién corre las pruebas?", "opciones": ["El agente", "Nadie"], "correcta": 0, "explicacion": "El agente las corre." },
+    { "id": "pe1-2", "tema": "pruebas", "tipo": "opcion", "enunciado": "¿Una prueba roja indica…?", "opciones": ["Que algo falla", "Que todo está bien"], "correcta": 0, "explicacion": "Rojo = falla." }
+  ]
+}

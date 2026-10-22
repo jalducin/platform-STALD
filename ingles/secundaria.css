@@ -123,6 +123,8 @@ body.secundaria { font-family: "Inter", var(--font); }
   color: var(--rpg-indigo); background: var(--accent-soft); border: 1.5px solid var(--rpg-indigo); }
 .rpg-nivel-txt { flex: 1; min-width: 0; }
 .rpg-rango { font-weight: 800; font-size: .86rem; overflow-wrap: anywhere; }
+/* «Nv. 3» (nivel del juego) para no confundirlo con «Inglés A1» (openspec: fix-e2e-rpg); sin subrayado de <abbr>. */
+.rpg-rango abbr, .sec-nivel abbr { text-decoration: none; cursor: help; }
 .rpg-xp-linea { display: flex; justify-content: space-between; font-size: .72rem; color: var(--rpg-texto-suave); margin: 2px 0 4px; }
 .rpg-xp-linea .rpg-num { color: var(--rpg-indigo); font-weight: 700; }
 @media (max-width: 479.98px) { .rpg-stats { grid-template-columns: 1fr 1fr; } .rpg-nivel { grid-column: 1 / -1; } }
