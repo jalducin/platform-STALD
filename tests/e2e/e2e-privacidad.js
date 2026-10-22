@@ -79,6 +79,9 @@ async function abrir(b, ruta, { modo = null, oscuro = false, esperar = null } = 
     ok(`encendido: ${ruta} enlace de al menos 44 px`, enlace.length === 1 && enlace[0].alto >= 44, JSON.stringify(enlace));
     ok(`encendido: ${ruta} sin scroll horizontal a 360 px`, await sinScrollX(p));
     if (ruta === '/index.html') {
+      // El portal también enlaza el consentimiento (openspec: portal-diseno-rpg).
+      const cons = await p.$$eval('a[href^="consentimiento.html"]', xs => xs.filter(x => x.offsetParent).map(x => ({ t: x.textContent.trim(), href: x.getAttribute('href'), alto: x.getBoundingClientRect().height })));
+      ok('encendido: /index.html con enlace «📝 Consentimiento» de 44 px y ?api=', cons.length === 1 && cons[0].t === '📝 Consentimiento' && cons[0].href.includes('api=') && cons[0].alto >= 44, JSON.stringify(cons));
       await p.locator('footer').scrollIntoViewIfNeeded();
       await p.screenshot({ path: 'privacidad-portal-pie-360.png', fullPage: true });
     }
