@@ -22,6 +22,7 @@ async function cargarBandejaSec() {
   const q = StaldAuth.email() ? '' : '?email=' + encodeURIComponent(state.email || '');
   const r = await fetchJson(API_BASE + '/profe/entregas' + q).catch(() => null);
   state.secBandeja = r && r.ok ? r.body : { entregas: [], error: r ? (r.body.error || r.status) : 'sin_red' };
+  if (typeof pintarContadorEntregas === 'function') pintarContadorEntregas(); // contador de «📥 Entregas» (openspec: navegacion-mejoras)
 }
 const misQuery = () => (StaldAuth.email() ? '' : '?email=' + encodeURIComponent(state.email || ''));
 

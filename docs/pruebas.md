@@ -204,6 +204,10 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   grupo desde su tarjeta del Resumen y restaura la bandera. Simula en el navegador fallas parciales del panel
   (`/ingles/data?incluir=panel`, cambio `panel-profe-peticiones`): el resumen caído con su «🔄 Reintentar» (que pide
   `/ingles/resumen`) y los grupos caídos con el aviso `#panel-avisos` y su «🔄 Reintentar» (que pide `/ingles/panel`).
+  A 360 px (cambio `navegacion-mejoras`) revisa que «📥 Entregas» esté en la barra inferior (6 botones de 44 px o más,
+  sin scroll horizontal) con el contador = total de entregas listas del panel (Inglés + Secundaria, el mismo dato que
+  «📥 Por revisar»; simulado en el navegador con 2 listas y con la parte caída), y a 1280 px que el menú lateral
+  conserve el orden del catálogo.
 - Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
 - Juego en vivo sin Supabase (cambio `juegos-en-vivo`): `lib/vivo-relevo.js` levanta un relevo local (HTTP + SSE) y
   `initVivo(relevo.url, { latencia, perdida, desorden, noConecta })` es el `init` de `abrirPagina`; con la ruta
@@ -248,6 +252,9 @@ falso `Authorization: Bearer prueba:<correo>`:
    // Sin `ruta`, la página queda en blanco: agrega rutas o escuchas y luego `await p.goto(urlDe('/ingles.html#semana'))`.
    ```
 
+   Las pestañas de Secundaria se abren con `irPestanaSec(p, id, toca?)` de `lib/secundaria.js` (cambio
+   `navegacion-mejoras`): usa la fila de pestañas en tablet y PC y, en celular, la barra inferior o «☰ Más»; no toques
+   `.sec-tabs [data-sec-tab]` directo (a menos de 720 px la fila está oculta).
    El menú de `juegos.html` abre en las categorías (cambio `juegos-categorias`): espera `[data-menu]` (existe en las
    dos vistas) y usa los ayudantes de `lib/menu.js` en lugar de tocar `[data-juego="…"]` directo:
    `abrirJuego(p, id, { tap })` (abre la categoría del juego si hace falta y toca su tarjeta), `abrirCategoria`,

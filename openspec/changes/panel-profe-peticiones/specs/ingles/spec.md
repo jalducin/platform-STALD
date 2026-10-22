@@ -6,8 +6,8 @@ respuesta lo que la vista inicial del panel necesita, leído en paralelo:
 - `grupos`: `{ grupos, miembros }` como `GET /ingles/grupos` (cada grupo con `ocultoAdmin`);
 - `alumnos`: el registro de Inglés como `[{ nombre, baja? }]`, sin correos;
 - `resumen`: el mismo cuerpo que `GET /ingles/resumen` con los mismos `grupo` y `ocultos`;
-- `entregas`: `{ pendientes, porRevisar }`, donde `porRevisar` son los slugs de las misiones de Inglés listas para
-  evaluar, sin textos de entregas;
+- `entregas`: `{ pendientes, ingles, secundaria }`: cuántas entregas de misiones hay listas para evaluar en total
+  (`pendientes` = `ingles` + `secundaria`) y por ámbito, sin textos ni slugs;
 - `fallas`: los nombres de las partes que fallaron.
 
 A quien no es admin SHALL responder 403 `solo_admin`; sin sesión, 401. Ninguna parte SHALL llevar correos.
@@ -58,8 +58,7 @@ motivo y «🔄 Reintentar», y las tarjetas de grupo SHALL seguir.
 ### Requirement: Pestañas pesadas del panel bajo demanda
 La página del admin SHALL pedir `/ingles/alumnos` (con correos) solo al abrir «➕ Registro», `/juegos/admin/resumen`
 solo al abrir «🎮 Juegos», «🧑‍🎓 Alumnos» o el cajón de un alumno o alumna, y la bandeja `/profe/entregas` solo al
-abrir «📥 Entregas». Mientras llegan, la sección SHALL mostrar el esqueleto de carga. «📥 Por revisar» SHALL salir de
-`entregas.porRevisar` del panel hasta que la bandeja se cargue, y de la bandeja después. Ocultar o mostrar un grupo
+abrir «📥 Entregas». Mientras llegan, la sección SHALL mostrar el esqueleto de carga. Ocultar o mostrar un grupo
 SHALL refrescar grupos, alumnos y alumnas, resumen y «Por revisar» con una sola petición a `/ingles/panel`. Todas las
 funciones del panel (ocultar grupos, entregas, nicks, alta, baja y reactivar, quitar, mover de grupo, cajón, Mi ruta
 y presentaciones) SHALL seguir igual.
@@ -72,6 +71,22 @@ y presentaciones) SHALL seguir igual.
 - **WHEN** el admin abre «🎮 Juegos»
 - **THEN** la página pide `/juegos/admin/resumen` una vez y muestra el ranking de la semana
 
-#### Scenario: Ocultar un grupo
+#### Scenario: Ocultar un grupo (pestañas bajo demanda)
 - **WHEN** el admin toca «👁️ Ocultar del panel»
 - **THEN** la página hace el `POST` y una sola petición `GET /ingles/panel`, y el grupo sale del tablero
+
+### Requirement: «Por revisar» y el contador de Entregas con el mismo dato
+«📥 Por revisar» del encabezado del panel y el contador de «📥 Entregas» de la barra del profe SHALL mostrar el mismo
+número: las entregas de misiones listas para evaluar de Inglés y de Secundaria juntas, sin filtrar por grupo. El
+mosaico «📥 Por revisar» SHALL mostrar además el desglose «Inglés N · Secundaria M». Al abrir el panel, ambos SHALL
+salir de `entregas` del panel, sin pedir la bandeja; después de abrir «📥 Entregas», de la bandeja ya cargada. Si
+`entregas` falló, ninguno de los dos SHALL mostrarse y el aviso por sección lo SHALL decir.
+
+#### Scenario: Una de Inglés y una de Secundaria
+- **WHEN** el panel trae `entregas: { pendientes: 2, ingles: 1, secundaria: 1 }`
+- **THEN** el contador de «📥 Entregas» dice 2, su nombre accesible «Entregas, 2 por revisar» y «📥 Por revisar» dice
+  2 con «Inglés 1 · Secundaria 1», sin ninguna petición a `/profe/entregas`
+
+#### Scenario: Entregas caídas
+- **WHEN** el panel trae `entregas: { error }`
+- **THEN** no hay contador ni mosaico «Por revisar» y `#panel-avisos` avisa que no se pudieron cargar las entregas

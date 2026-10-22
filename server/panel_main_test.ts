@@ -87,7 +87,7 @@ Deno.test("/ingles/panel: el admin recibe grupos, alumnos, resumen y entregas si
   const suelto = await pedir("/ingles/resumen", "admin@example.com");
   assertEquals(r.body.resumen.filas.map((f: any) => f.alumno), suelto.body.filas.map((f: any) => f.alumno));
   assertEquals(r.body.resumen.filas.map((f: any) => f.alumno), ["Luz"]);
-  assertEquals(r.body.entregas, { pendientes: 0, porRevisar: [] });
+  assertEquals(r.body.entregas, { pendientes: 0, ingles: 0, secundaria: 0 });
   assert(!JSON.stringify(r.body).includes("@example.com"), "el panel no lleva correos");
 });
 
@@ -108,7 +108,7 @@ Deno.test("/ingles/panel: si fallan los grupos, 200 con esa parte marcada y las 
     assert(typeof r.body.grupos.detalle === "string" && r.body.grupos.detalle.length > 0, "el admin ve el motivo");
     assertEquals(r.body.alumnos.length, 3);
     assert(r.body.resumen.avisos.includes("grupos_no_disponibles"), JSON.stringify(r.body.resumen.avisos));
-    assertEquals(r.body.entregas.pendientes, 0);
+    assertEquals(r.body.entregas, { pendientes: 0, ingles: 0, secundaria: 0 });
   } finally {
     caidas.length = 0;
   }
@@ -124,7 +124,7 @@ Deno.test("/ingles/panel: si falla el registro, se marcan las partes que lo leen
     assert(r.body.fallas.includes("alumnos") && !r.body.fallas.includes("entregas"), JSON.stringify(r.body.fallas));
     assertEquals(r.body.alumnos.error, "upstream_error");
     for (const n of r.body.fallas) assertEquals(r.body[n].error, "upstream_error", n);
-    assertEquals(r.body.entregas, { pendientes: 0, porRevisar: [] });
+    assertEquals(r.body.entregas, { pendientes: 0, ingles: 0, secundaria: 0 });
   } finally {
     caidas.length = 0;
   }

@@ -30,7 +30,7 @@ La oleada 3 depende de saber que es admin (lo dice `/ingles/data`) y la 4 se lan
 ### 1. `armarPanel` reutiliza los manejadores existentes
 `server/panel.ts` recibe cuatro funciones que devuelven `Response` (las mismas rutas internas de `main.ts`:
 `rutaGrupos`, `rutaAlumnos`, `rutaResumen`, `handleProfeEntregas`) y las corre con `Promise.all`, cada una envuelta:
-- 200 → su cuerpo, recortado: `alumnos` → `[{ nombre, baja? }]`; `entregas` → `{ pendientes, porRevisar }`;
+- 200 → su cuerpo, recortado: `alumnos` → `[{ nombre, baja? }]`; `entregas` → `{ pendientes, ingles, secundaria }`;
 - otro status → `{ error: body.error ?? "upstream_error" }` (+ `detalle` si lo trae);
 - excepción → `{ error: "upstream_error", detalle: mensaje ≤ 200 }` (solo lo ve el admin).
 
@@ -54,9 +54,11 @@ La página no sabe si la persona es admin hasta `/ingles/data`. Opciones:
   repinta solo la lista, no el formulario).
 - `state.juegos` = `undefined` hasta abrir «🎮 Juegos», «🧑‍🎓 Alumnos» o el cajón; al llegar se repinta
   `#juegos-admin`, los huecos `[data-juegos-slot]` de cada alumno y el cajón abierto.
-- `state.panelEntregas` = `{ pendientes, porRevisar }`; «📥 Por revisar» usa la bandeja si ya se cargó
-  (`state.secBandeja`, más fresca tras evaluar) y si no, `porRevisar`. `pendientesEntregas()` da el total para quien
-  lo necesite (contador de la barra de `navegacion-mejoras`).
+- `state.panelEntregas` = `{ pendientes, ingles, secundaria }`. `conteoEntregas()` (`tablero.js`) es la única fuente
+  de «📥 Por revisar» y del contador de la barra (`entregasPendientes`, `app.js`): la bandeja si ya se cargó
+  (`state.secBandeja`, más fresca tras evaluar) y si no, el panel. Decisión: el total Inglés + Secundaria sin filtro
+  de grupo (lo que la bandeja muestra) con desglose en el mosaico, en vez de filtrar el mosaico por grupo y dejar el
+  contador distinto; así los dos números siempre coinciden y no hace falta mandar slugs.
 - `cargarResumen()` deja de pedir la bandeja.
 - `state.panelFallas` = partes que fallaron → aviso `#panel-avisos` con «🔄 Reintentar» (`/ingles/panel`).
 

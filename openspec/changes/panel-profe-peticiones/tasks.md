@@ -25,8 +25,12 @@
 - [ ] 3.2 `ingles/admin.js`: `aplicarPanel`, `refrescarPanel` (`/ingles/panel`), `cargarRegistroAdmin` (lista con
   correos solo en Registro, repinta solo la lista), juegos bajo demanda (`#juegos-admin`, `[data-juegos-slot]`,
   cajón), ocultar/mostrar grupo con una petición
-- [ ] 3.3 `ingles/tablero.js`: `cargarResumen` sin pedir la bandeja; «📥 Por revisar» de la bandeja o de
-  `entregas.porRevisar`; `pendientesEntregas()`; aviso `#panel-avisos` con «🔄 Reintentar»; cajón pide juegos
+- [ ] 3.3 `ingles/tablero.js`: `cargarResumen` sin pedir la bandeja; aviso `#panel-avisos` con «🔄 Reintentar»;
+  cajón pide juegos
+- [ ] 3.5 Merge de `main` (#248–#250, contador de «📥 Entregas» en la barra) y un solo dato para «📥 Por revisar» y el
+  contador: `entregas: { pendientes, ingles, secundaria }` en el panel (`server/panel.ts`, pruebas Deno), `conteoEntregas()`
+  en `tablero.js` y `entregasPendientes()` en `app.js`, desglose «Inglés N · Secundaria M» (`ingles/panel-profe.css`);
+  E2E `ingles-admin` (contador = mosaico; 2 listas y caída simuladas en el panel) e `ingles-diseno-profe`
 - [ ] 3.4 `?v=` de los scripts tocados en `ingles.html`
 
 ## 4. Pruebas E2E

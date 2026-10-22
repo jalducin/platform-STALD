@@ -502,8 +502,9 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
       `{ error: "sin_base" }` (no cuenta como falla);
     - `alumnos`: el registro como `[{ nombre, baja? }]`, **sin correos** (los correos solo en `GET /ingles/alumnos`);
     - `resumen`: el cuerpo de `GET /ingles/resumen` con los mismos `grupo` y `ocultos` (y `hoy` con `PERMITIR_HOY=1`);
-    - `entregas`: `{ pendientes, porRevisar }` de la bandeja: el total de entregas listas (Inglés y Secundaria) y los
-      slugs de las misiones de Inglés listas para evaluar; sin textos;
+    - `entregas`: `{ pendientes, ingles, secundaria }` de la bandeja: cuántas entregas de misiones hay listas para
+      evaluar en total (`pendientes` = `ingles` + `secundaria`) y por ámbito; sin textos ni slugs. Es el dato del
+      contador de «📥 Entregas» y de «📥 Por revisar»;
     - `fallas`: partes que fallaron. Cada una viaja como `{ error, detalle? }` (`detalle` ≤ 200 caracteres; solo lo
       recibe el admin) y las demás llegan completas.
   - `GET /ingles/data?incluir=panel`: si quien pide es el admin, el panel se arma en paralelo con las filas y viaja como

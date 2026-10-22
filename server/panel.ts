@@ -3,7 +3,8 @@
 // con los mismos manejadores de las rutas sueltas (/ingles/grupos, /ingles/alumnos, /ingles/resumen, /profe/entregas),
 // así que filtros, ocultos y bajas salen idénticos. Resiliente: si una parte falla, viaja como { error, detalle? },
 // su nombre va en `fallas` y las demás llegan (como el resumen en fix-ingles-admin).
-// Sin correos: `alumnos` solo trae nombre y baja; `entregas`, el total y los slugs de Inglés listos para evaluar.
+// Sin correos: `alumnos` solo trae nombre y baja; `entregas`, cuántas hay listas para evaluar (total, de Inglés y de
+// Secundaria): el mismo dato para el contador de «📥 Entregas» y para «📥 Por revisar».
 // deno-lint-ignore-file no-explicit-any
 
 type Json = (body: unknown, status?: number) => Response;
@@ -30,13 +31,16 @@ const RECORTE: Record<Nombre, (b: any) => unknown> = {
   grupos: (b) => (Array.isArray(b?.grupos) ? b : null),
   alumnos: (b) => (Array.isArray(b?.alumnos) ? b.alumnos.map((a: any) => ({ nombre: a.nombre, ...(a.baja ? { baja: a.baja } : {}) })) : null),
   resumen: (b) => (b && Array.isArray(b.filas) ? b : null),
-  entregas: (b) => Array.isArray(b?.entregas)
-    ? {
-      pendientes: Number(b.pendientes) || 0,
-      porRevisar: b.entregas.filter((e: any) => e?.estado === "lista" && e?.mision?.ambito === "ingles").map((e: any) => e.slug),
-    }
-    : null,
+  entregas: (b) => Array.isArray(b?.entregas) ? conteoEntregas(b.entregas) : null,
 };
+
+// Entregas listas para evaluar por ámbito (la bandeja junta Inglés y Secundaria). `pendientes` = ingles + secundaria.
+export function conteoEntregas(entregas: any[]): { pendientes: number; ingles: number; secundaria: number } {
+  const listas = entregas.filter((e) => e?.estado === "lista");
+  const ingles = listas.filter((e) => e?.mision?.ambito === "ingles").length;
+  const secundaria = listas.filter((e) => e?.mision?.ambito === "secundaria").length;
+  return { pendientes: listas.length, ingles, secundaria };
+}
 
 async function leerParte(nombre: Nombre, parte: Parte): Promise<unknown> {
   try {

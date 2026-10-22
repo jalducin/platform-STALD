@@ -38,7 +38,8 @@ const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
 
 // Catálogo único de secciones (openspec: ingles-pro, design 2b): la barra inferior, las pestañas, el menú lateral
 // y los encabezados de cada sección salen de aquí. `href` = enlace a otra página; `accion` = botón.
-// `barra`: en celular, el admin ve esas 4 en la barra inferior y el resto en «☰ Más».
+// `barra`: en celular, el admin ve esas 5 en la barra inferior y el resto en «☰ Más» (6 botones caben a 360 px, como la
+// barra de alumnos y alumnas; openspec: navegacion-mejoras).
 const SECCIONES = [
   { id: 'inicio', emoji: '🏠', titulo: 'Inicio', rol: 'alumno' },
   { id: 'semana', emoji: '📅', titulo: 'Semana', encabezado: 'Mi semana', rol: 'alumno' },
@@ -63,8 +64,9 @@ const SECCIONES = [
   { id: 'juegos', emoji: '🎮', titulo: 'Juegos', encabezado: 'Juegos de la semana', rol: 'admin' },
   // Moderación de nicks e interruptor del ranking de Inglés (openspec: rpg-fase2-ingles).
   { id: 'nicks', emoji: '🛡️', titulo: 'Nicks', encabezado: 'Nicks y ranking', rol: 'admin' },
-  // Bandeja de entregas de misiones de Inglés y Secundaria (openspec: rpg-ingles-hero-card).
-  { id: 'entregas', emoji: '📥', titulo: 'Entregas', encabezado: 'Entregas de misiones', rol: 'admin' },
+  // Bandeja de entregas de misiones de Inglés y Secundaria (openspec: rpg-ingles-hero-card). En la barra del celular con
+  // contador de pendientes (openspec: navegacion-mejoras).
+  { id: 'entregas', emoji: '📥', titulo: 'Entregas', encabezado: 'Entregas de misiones', rol: 'admin', barra: true },
   { id: 'salir', emoji: '🚪', titulo: 'Salir', rol: 'admin', accion: 'salir' },
 ];
 const seccionesDe = rol => SECCIONES.filter(s => s.rol === rol);

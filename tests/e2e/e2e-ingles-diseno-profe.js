@@ -67,9 +67,10 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
     ok('encabezado: grupos activos, alumnos y alumnas y en riesgo' + suf, stats.length >= 3 && /2\s*Grupos activos/.test(stats[0]) && stats[1].includes(String(activos.length)) && /En riesgo/.test(stats[2]), JSON.stringify(stats));
     const bandeja = await fetch(`${API}/profe/entregas?email=${ADMIN}`).then(r => r.json()).catch(() => ({}));
     const porRevisar = await p.$eval('#pp-stats', el => (el.querySelector('a[href="#entregas"]') || {}).textContent || '');
-    // Solo misiones de Inglés listas para evaluar (la bandeja junta también las de Secundaria); ningún grupo de ejemplo está oculto.
-    const listasIngles = Array.isArray(bandeja.entregas) ? bandeja.entregas.filter(x => x.estado === 'lista' && x.mision && x.mision.ambito === 'ingles').length : null;
-    ok('encabezado: «Por revisar» con las misiones de Inglés listas de la bandeja' + suf, listasIngles === null ? porRevisar === '' : porRevisar.includes(String(listasIngles)) && /Por revisar/.test(porRevisar), porRevisar.replace(/\s+/g, ' ') + ' · API ' + listasIngles);
+    // Inglés + Secundaria listas para evaluar, con su desglose: el mismo dato que el contador de «📥 Entregas» (openspec: panel-profe-peticiones).
+    const listas = a => (bandeja.entregas || []).filter(x => x.estado === 'lista' && x.mision && x.mision.ambito === a).length;
+    const total = Array.isArray(bandeja.entregas) ? bandeja.pendientes : null;
+    ok('encabezado: «Por revisar» = Inglés + Secundaria listas de la bandeja, con desglose' + suf, total === null ? porRevisar === '' : porRevisar.includes(String(total)) && /Por revisar/.test(porRevisar) && porRevisar.includes('Inglés ' + listas('ingles') + ' · Secundaria ' + listas('secundaria')), porRevisar.replace(/\s+/g, ' ') + ' · API ' + total);
     const tarjetas = await p.$$eval('.pp-grupo', xs => xs.map(x => x.textContent.replace(/\s+/g, ' ')));
     ok('tarjetas por grupo con avance de la semana' + suf, tarjetas.length === 2 && tarjetas.every(t => /Entregas de la semana/.test(t)) && !!(await p.$('.pp-grupo .rpg-xp-barra[role="progressbar"]')), JSON.stringify(tarjetas).slice(0, 160));
     const fila = await p.$eval('#mapa-calor tbody tr', tr => ({ display: getComputedStyle(tr).display, etiqueta: getComputedStyle(tr.querySelector('td[data-label]'), '::before').content }));

@@ -9,6 +9,10 @@
 // 4. Si el resumen del panel falla (simulado en el navegador en /ingles/data?incluir=panel), el aviso trae «🔄 Reintentar»
 //    (que pide /ingles/resumen) y las tarjetas siguen. Si fallan los grupos del panel, el aviso por sección trae
 //    «🔄 Reintentar» (que pide /ingles/panel) (openspec: panel-profe-peticiones).
+// 6. Celular (360 px, openspec: navegacion-mejoras): «📥 Entregas» en la barra inferior (6 botones, sin scroll horizontal,
+//    44 px o más) con el contador de entregas listas; un toque abre la bandeja. El contador y «📥 Por revisar» del
+//    encabezado salen del mismo dato del panel (Inglés + Secundaria, openspec: panel-profe-peticiones). En PC el menú
+//    lateral conserva el orden del catálogo.
 require('./lib/entorno'); // BASE, API, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina, urlDe } = require('./lib/navegador');
@@ -124,6 +128,45 @@ const esperarResumen = p => p.waitForFunction(() => document.getElementById('kpi
     await p.click('#panel-avisos [data-action="reintentar-panel"]');
     await p.waitForFunction(() => !document.getElementById('panel-avisos'), null, { timeout: 30000 });
     ok('«🔄 Reintentar» del aviso vuelve a pedir el panel y el aviso se va', !(await p.$('#panel-avisos')) && (!conGrupos || !!(await p.$('#pp-grupos .pp-grupo'))));
+
+    // 6. Celular: «📥 Entregas» en la barra con su contador (mismo dato que «📥 Por revisar»)
+    const bandeja = await api('/profe/entregas');
+    const pend = bandeja.status === 200 ? bandeja.body.pendientes : null;
+    const c = await abrirPagina(b, { email: ADMIN, viejo: true, ingles: true, viewport: { width: 360, height: 740 }, contexto: { hasTouch: true, isMobile: true } });
+    await c.goto(urlDe('/ingles.html#resumen'));
+    await c.waitForSelector('#panel-profe', { timeout: 60000 });
+    const barra = await c.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).map(x => ({ id: x.dataset.nav || x.dataset.navAccion, w: Math.round(x.getBoundingClientRect().width), h: Math.round(x.getBoundingClientRect().height) })));
+    ok('celular: barra con Resumen, Alumnos, Semana, Resultados, 📥 Entregas y ☰ Más (44 px o más)', barra.map(x => x.id).join() === 'resumen,alumnos,semana,resultados,entregas,mas' && barra.every(x => x.w >= 44 && x.h >= 44), JSON.stringify(barra));
+    ok('celular: la barra no causa scroll horizontal a 360 px', await c.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    if (pend !== null) {
+      // El contador sale del panel (/ingles/data?incluir=panel), sin pedir la bandeja.
+      const txt = await c.textContent('#nav [data-nav="entregas"] [data-contador-entregas]').catch(() => '');
+      ok(`celular: contador de Entregas = ${pend} listas para evaluar (API)`, pend ? txt === String(Math.min(pend, 99)) + (pend > 99 ? '+' : '') : !(await c.$('#nav [data-contador-entregas]')), txt || 'sin contador');
+      const tile = await c.$eval('#pp-stats a[href="#entregas"] .pp-num', x => x.textContent).catch(() => null);
+      ok(`celular: «📥 Por revisar» = contador = ${pend}`, tile === String(pend), String(tile));
+    }
+    await c.tap('#nav [data-nav="entregas"]');
+    await c.waitForSelector('[data-seccion="entregas"]:not([hidden]) #sec-entregas .ent-card, [data-seccion="entregas"]:not([hidden]) #sec-entregas .vacio', { timeout: 30000 });
+    ok('celular: un toque en la barra abre 📥 Entregas', new URL(c.url()).hash === '#entregas');
+    await c.context().close();
+    // Entregas simuladas en el panel (no escribe nada): 1 de Inglés y 1 de Secundaria → contador «2», «Entregas, 2 por
+    // revisar» y «📥 Por revisar» 2 con «Inglés 1 · Secundaria 1»; parte caída → sin contador ni mosaico.
+    for (const [nombre, entregas] of [['2 listas', { pendientes: 2, ingles: 1, secundaria: 1 }], ['caída', { error: 'upstream_error' }]]) {
+      const s = await abrirPagina(b, { email: ADMIN, viejo: true, ingles: true, viewport: { width: 360, height: 740 }, contexto: { hasTouch: true, isMobile: true } });
+      await s.route(PANEL, panelCon(x => { x.entregas = entregas; if (entregas.error) x.fallas = [...x.fallas, 'entregas']; }));
+      await s.goto(urlDe('/ingles.html#resumen'));
+      await s.waitForSelector('#panel-profe', { timeout: 60000 });
+      const n = await s.textContent('#nav [data-nav="entregas"] [data-contador-entregas]').catch(() => null);
+      const nombreAcc = await s.$eval('#nav [data-nav="entregas"]', a => a.textContent.replace(/\s+/g, ' ').replace(/📥/u, '').trim()).catch(() => '');
+      const tile = await s.$eval('#pp-stats a[href="#entregas"]', a => a.textContent.replace(/\s+/g, ' ')).catch(() => null);
+      if (nombre === '2 listas') ok('celular: 2 listas → contador «2», «Entregas, 2 por revisar» y «Por revisar» 2 (Inglés 1 · Secundaria 1)', n === '2' && /Entregas, 2 por revisar/.test(nombreAcc) && /2/.test(tile || '') && /Inglés 1 · Secundaria 1/.test(tile || ''), (n || '') + ' | ' + nombreAcc + ' | ' + tile);
+      else ok('celular: entregas caídas → sin contador, sin mosaico y con aviso', n === null && tile === null && /Entregas/.test(nombreAcc) && !!(await s.$('#panel-avisos')), nombreAcc);
+      await s.context().close();
+    }
+    const pc = await abrirPagina(b, { email: ADMIN, viejo: true, ingles: true, viewport: { width: 1280, height: 800 }, ruta: '/ingles.html#resumen', esperar: '#panel-profe' });
+    const menu = await pc.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).map(x => x.dataset.nav || x.dataset.navAccion).join());
+    ok('PC: el menú lateral conserva el orden del catálogo (Entregas antes de Salir)', menu === 'resumen,grupos,alumnos,registro,semana,resultados,material,presentar,ruta,juegos,nicks,entregas,salir', menu);
+    await pc.context().close();
   } finally {
     if (g1) {
       const r = await api('/ingles/grupos/ocultar', { grupo: g1.id, oculto: original }); // restaura la bandera original

@@ -32,7 +32,7 @@ Deno.test("armarPanel: las cuatro partes, recortadas y sin correos ni textos", a
   assertEquals(p.grupos, GRUPOS);
   assertEquals(p.alumnos, [{ nombre: "Luz" }, { nombre: "Sofía", baja: "2026-10-01" }]);
   assertEquals(p.resumen, RESUMEN);
-  assertEquals(p.entregas, { pendientes: 2, porRevisar: ["luz"] }, "solo misiones de Inglés listas; sin textos");
+  assertEquals(p.entregas, { pendientes: 2, ingles: 1, secundaria: 1 }, "listas por ámbito; sin textos ni slugs");
   assertEquals(p.fallas, []);
   const todo = JSON.stringify(p);
   assert(!todo.includes("@example.com"), "sin correos");
@@ -92,5 +92,5 @@ Deno.test("handlePanel: solo el admin, solo GET", async () => {
   assertEquals(post.status, 405);
   const admin = await handlePanel(new Request("http://x/ingles/panel"), deps("admin@example.com"), json2);
   const body = await admin.json() as any;
-  assertEquals([admin.status, body.fallas, body.entregas.porRevisar], [200, [], ["luz"]]);
+  assertEquals([admin.status, body.fallas, body.entregas.pendientes], [200, [], 2]);
 });

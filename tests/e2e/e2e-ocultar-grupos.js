@@ -57,12 +57,21 @@ const ocultarApi = oculto => api('/ingles/grupos/ocultar', ADMIN, { grupo: 'grup
     const conIntentos = async () => ad.evaluate(t => { const x = [...document.querySelectorAll('.exam-item')].find(e => (e.querySelector('.t') || {}).textContent && e.querySelector('.t').textContent.includes(t) && /con intentos/.test(e.textContent)); const m = x && /(\d+) con intentos/.exec(x.textContent); return m ? Number(m[1]) : null; }, it ? it.titulo : '');
     const intentosVisible = await conIntentos();
     // Juegos y Registro se piden al abrir su pestaña (openspec: panel-profe-peticiones): se abren antes de leerlos.
+    // Después de leerlas se vuelve a «👥 Grupos», donde están los botones que la prueba toca.
     const abrirPestana = async (h, listo) => { await ad.evaluate(x => { location.hash = x; }, h); await ad.waitForFunction(listo, null, { timeout: 30000 }); };
+    const aGrupos = () => abrirPestana('grupos', () => { const s = document.querySelector('[data-seccion="grupos"]'); return s && !s.hidden; });
     const enRanking = async () => {
       await abrirPestana('juegos', () => { const j = document.getElementById('juegos-admin'); return j && !j.querySelector('.esqueleto'); });
-      return !!(await ad.$('#juegos-admin tr[data-jugador="Marisol"]'));
+      const esta = !!(await ad.$('#juegos-admin tr[data-jugador="Marisol"]'));
+      await aGrupos();
+      return esta;
     };
-    const textoRegistro = async () => { await abrirPestana('registro', () => !!document.querySelector('#registro-lista .reg-lista')); return ad.textContent('#alumnos-admin'); };
+    const textoRegistro = async () => {
+      await abrirPestana('registro', () => !!document.querySelector('#registro-lista .reg-lista'));
+      const t = await ad.textContent('#alumnos-admin');
+      await aGrupos();
+      return t;
+    };
     ok('antes de ocultar: Marisol en el ranking de juegos', await enRanking());
 
     // Ocultar el Grupo 1 desde la página

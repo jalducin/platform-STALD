@@ -15,19 +15,32 @@ body.secundaria #logout-btn { min-height: 44px; }
 .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .btn:disabled:hover { box-shadow: none; }
 
-/* ---------- Pestañas: 7 (9 con las del admin) en filas de 4 en teléfono y en cuadrícula flexible en pantallas anchas (rpg-fase2-misiones), de 44 px o más ---------- */
-.sec-tabs { display: grid; grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-bottom: 14px; overflow: visible; position: sticky; top: 0; z-index: 5; box-shadow: var(--shadow-1); }
+/* ---------- Pestañas (openspec: navegacion-mejoras) ----------
+   Celular (< 720 px): la fila de pestañas se oculta y manda la barra inferior fija `.sec-barra` (estilos de `.nav-barra`
+   en estilos/stald.css) con «☰ Más» (`#sec-mas`, estilos de `.nav-mas` en ingles/ingles.css). Desde 720 px: una sola
+   fila (7 de la alumna o 9 del profe); hasta 1099 px el emoji sobre el nombre corto y desde 1100 px en línea (nombre
+   largo con 7, corto con 9). Todas de 44 px o más. */
+.sec-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; margin-bottom: 14px; overflow: visible; position: sticky; top: 0; z-index: 5; box-shadow: var(--shadow-1); }
 .sec-tabs .tab { min-height: 48px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.1; min-width: 0; }
 .sec-tabs .tab:hover:not([aria-selected="true"]) { background: var(--accent-soft); color: var(--accent); }
 .sec-tab-emoji { font-size: 1.1rem; }
 .sec-tab-largo { display: none; }
 .sec-tab-corto { font-size: .72rem; overflow-wrap: anywhere; }
-@media (min-width: 560px) {
-  .sec-tabs { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); }
-  .sec-tabs .tab { flex-direction: row; gap: 6px; padding: 8px 10px; }
-  .sec-tab-largo { display: inline; font-size: .86rem; }
-  .sec-tab-corto { display: none; }
+@media (min-width: 1100px) {
+  .sec-tabs .tab { flex-direction: row; gap: 6px; padding: 8px 8px; }
+  .sec-tabs:not(.sec-tabs-muchas) .sec-tab-largo { display: inline; font-size: .86rem; }
+  .sec-tabs:not(.sec-tabs-muchas) .sec-tab-corto { display: none; }
+  .sec-tabs-muchas .tab { gap: 4px; padding: 8px 4px; }
+  .sec-tabs-muchas .sec-tab-corto { font-size: .82rem; }
 }
+.sec-barra, .sec-barra-hueco { display: none; }
+@media (max-width: 719.98px) {
+  .sec-tabs { display: none; }
+  .sec-barra { display: flex; }
+  .sec-barra-hueco { display: block; height: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px)); }
+  .sec-barra .nav-item.activo { color: var(--accent); }
+}
+@media (min-width: 720px) { .sec-mas { display: none !important; } }
 .sec-panel > * + * { margin-top: 14px; }
 
 /* ---------- Selector del admin ---------- */

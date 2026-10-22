@@ -927,13 +927,14 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   - grupos activos (sin base de datos no sale), alumnos y alumnas del registro sin bajas;
   - «En riesgo» (`alumnosEnRiesgo`): `kpis.sinEntregas` más quien tiene alguna celda `atrasado` en `/ingles/resumen`, con
     un botón por persona que abre el cajón. Se repinta al llegar el resumen (`pintarPanelProfe`); mientras, «…»;
-  - «📥 Por revisar» (`porRevisarPanel`): misiones de Inglés (`mision.ambito === 'ingles'`) en estado `lista`, del
-    grupo elegido o sin los ocultos; enlace a «Entregas». Sale de la bandeja (`cargarBandejaSec`, `/profe/entregas`) si
-    ya se cargó al abrir «📥 Entregas» (más fresca tras evaluar) y, si no, de `entregas.porRevisar` del panel; sin
-    ninguna de las dos no hay mosaico. `pendientesEntregas()` da el total de entregas listas (Inglés y Secundaria) de la
-    bandeja o del panel, para un contador sin pedir la bandeja. «🔍 Ver grupo» reinicia también los nicks, como el selector;
-  - con un grupo elegido, todo cuenta solo ese grupo (sin «Grupos activos»); sin grupo, los ocultos del panel no cuentan
-    salvo con «Mostrar grupos ocultos»;
+  - «📥 Por revisar» (`ppTilePorRevisar`) y el contador de «📥 Entregas» de la barra (`entregasPendientes`, `app.js`)
+    usan el **mismo dato** (`conteoEntregas()`, cambio `panel-profe-peticiones`): entregas de misiones listas para
+    evaluar, Inglés + Secundaria, sin filtrar por grupo; el mosaico muestra el total y el desglose «Inglés N ·
+    Secundaria M» y enlaza a «Entregas». Sale de la bandeja (`cargarBandejaSec`, `/profe/entregas`) si ya se cargó al
+    abrir «📥 Entregas» (más fresca tras evaluar) y, si no, de `entregas` del panel; sin ninguna de las dos (o si
+    falló) no hay mosaico ni contador. «🔍 Ver grupo» reinicia también los nicks, como el selector;
+  - con un grupo elegido, todo cuenta solo ese grupo (sin «Grupos activos»), salvo «Por revisar», que es el total de la
+    bandeja como el contador; sin grupo, los ocultos del panel no cuentan salvo con «Mostrar grupos ocultos»;
   - accesos: «➕ Registrar alumno o alumna», «🎬 Presentar la clase» y «🎓 Mi ruta».
 - **Panel del profe en una petición** (cambio `panel-profe-peticiones`). Al abrir, `loadFor` (`ingles/app.js`) pide
   `/ingles/actividades` y `/ingles/data?incluir=panel` en paralelo (5 peticiones al API con `/config` y las `OPTIONS`;
@@ -1142,7 +1143,10 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     y `aplicarRuta()` deja visible solo la del hash; la pestaña lleva `aria-current="page"`.
   - Abrir una actividad, un resultado o un guion agrega `#ver/<id>` al historial: Atrás regresa a la sección.
   - Menos de 720 px: `.nav-barra` fija abajo (botones de 56 px, `safe-area-inset-bottom`). El admin ve Resumen,
-    Alumnos, Semana y Resultados, y el resto en «☰ Más» (`#nav-mas`). Desde 720 px: pestañas arriba (alumno o
+    Alumnos, Semana, Resultados y «📥 Entregas» (con el contador `[data-contador-entregas]` de entregas listas para
+    evaluar, de la bandeja que ya pide el panel; `pintarContadorEntregas()` lo repinta cuando llega o cambia; cambio
+    `navegacion-mejoras`), y el resto en «☰ Más» (`#nav-mas`). `pintarNav()` sigue el orden del catálogo `SECCIONES`
+    (las que no son de barra llevan `solo-escritorio`), así el menú lateral de PC no cambia. Desde 720 px: pestañas arriba (alumno o
     alumna) o menú lateral pegajoso de 232 px (admin).
   - Los E2E deben abrir la sección antes de interactuar con ella, p. ej. `ingles.html?api=…#alumnos`.
 - **Alumno o alumna (`alumno.js`).** 🏠 Inicio: encabezado con anillo de la semana (`#anillo`), nivel de inglés (`#nivel`, «🎓 Inglés A1», de su
@@ -1210,6 +1214,14 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `server/secundaria_tablero_test.ts`.
 - **Fuentes:** Inter y Orbitron de Google Fonts se inyectan solo en modo Secundaria (excepción de CDN, ver el
   `design.md` del cambio); si no cargan, queda la fuente del sistema.
+- Navegación (cambio `navegacion-mejoras`): desde 720 px, pestañas en una sola fila (`.sec-tabs`, columnas iguales;
+  hasta 1099 px el emoji sobre el nombre corto, desde 1100 px en línea: nombre largo con las 7 de la alumna y corto con
+  las 9 del profe, `.sec-tabs-muchas`). En celular (< 720 px) la fila se oculta y manda la barra inferior fija
+  `.sec-barra` (`.nav-barra`, `aria-current`): la alumna «🏠 Inicio», «⚔️ Misiones», «🗓️ Horario», «📚 Materias» y
+  «☰ Más» (`[data-sec-mas]` → `#sec-mas`: Semana, Mapa y Árbol); el profe «🏠 Inicio», «📝 Notas», «📥 Entregas»,
+  «⚔️ Misiones» y «☰ Más». `irPestanaSec` mantiene sincronizadas fila, barra y «Más» (marcado `.activo` si la pestaña
+  actual vive ahí); un hueco `.sec-barra-hueco` al final evita que la barra tape contenido y desaparece con la clase
+  abierta (vive en `#content`).
 - Título «📚 Clases de Secundaria». Pestañas `role="tab"` (`.sec-tabs [data-sec-tab]`, ← → Inicio Fin), sin redibujar:
   - **«🏠 Inicio»** (`#sec-inicio`, la primera; estilo «RPG educativo»):
     - barra `#rpg-stats`: nivel del juego y rango (`#rpg-rango`, «Nv. 3 · Exploradora» con `<abbr title="Nivel del juego">`; cambio `fix-e2e-rpg`), XP del nivel (`#rpg-xp` y `.rpg-xp-barra` con

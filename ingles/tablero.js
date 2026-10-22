@@ -97,35 +97,26 @@ function ppListaRiesgo(riesgo) {
 }
 // Grupos activos que se ven en el panel: sin los ocultos (openspec: ingles-ocultar-grupos), salvo con el interruptor.
 const gruposDelPanel = () => gruposActivos().filter(g => !g.ocultoAdmin || state.mostrarOcultos);
-// «📥 Por revisar»: misiones de Inglés listas para evaluar, del grupo elegido o, sin grupo, sin los ocultos del panel.
-// Salen de la bandeja (/profe/entregas) si ya se cargó (más fresca tras evaluar) o, si no, de `entregas.porRevisar` del
-// panel (openspec: panel-profe-peticiones). Sin ninguna de las dos (o si fallaron), no hay mosaico.
-function slugsPorRevisar() {
+// «📥 Por revisar» y el contador de «📥 Entregas» de la barra usan el MISMO dato (openspec: panel-profe-peticiones):
+// entregas de misiones listas para evaluar, Inglés + Secundaria (la bandeja las junta), sin filtrar por grupo. Sale de
+// la bandeja (/profe/entregas) si ya se cargó al abrir «📥 Entregas» (más fresca tras evaluar) y, si no, del conteo del
+// panel (`entregas` de /ingles/data?incluir=panel). Sin ninguno de los dos (o si falló), null: sin mosaico ni contador.
+function conteoEntregas() {
   const b = state.secBandeja;
-  if (b && !b.error && Array.isArray(b.entregas)) return b.entregas.filter(x => x.estado === 'lista' && x.mision && x.mision.ambito === 'ingles').map(x => x.slug);
+  if (b && !b.error && Array.isArray(b.entregas)) {
+    const listas = b.entregas.filter(x => x.estado === 'lista');
+    const de = a => listas.filter(x => x.mision && x.mision.ambito === a).length;
+    return { pendientes: listas.length, ingles: de('ingles'), secundaria: de('secundaria') };
+  }
   const p = state.panelEntregas;
-  return p && Array.isArray(p.porRevisar) ? p.porRevisar : null;
+  return p && Number.isFinite(p.pendientes) ? p : null;
 }
-// Total de entregas listas para evaluar (Inglés y Secundaria), de la bandeja o del panel; null si no se sabe.
-function pendientesEntregas() {
-  const b = state.secBandeja;
-  if (b && !b.error && typeof b.pendientes === 'number') return b.pendientes;
-  return state.panelEntregas ? state.panelEntregas.pendientes : null;
-}
-function porRevisarPanel(filtro) {
-  const slugs = slugsPorRevisar();
-  if (!slugs) return null;
-  const grupoDeSlug = s => (state.grupos ? (state.grupos.grupos || []).find(g => g.id === (state.grupos.miembros[s] || (gruposActivos()[0] || {}).id)) : null) || null;
-  return slugs.filter(slug => {
-    const g = grupoDeSlug(slug);
-    if (filtro) return !!g && g.id === filtro.id;
-    return state.mostrarOcultos || !(g && g.ocultoAdmin);
-  }).length;
-}
-function ppTilePorRevisar(filtro) {
-  const n = porRevisarPanel(filtro);
-  if (n === null) return '';
-  return '<a class="pp-stat-link" href="#entregas" aria-label="' + n + ' entregas por revisar. Abrir Entregas">' + ppStat('📥', n, 'Por revisar', n ? 'riesgo' : 'sin-riesgo') + '</a>';
+function ppTilePorRevisar() {
+  const c = conteoEntregas();
+  if (!c) return '';
+  const n = c.pendientes, desglose = 'Inglés ' + (c.ingles || 0) + ' · Secundaria ' + (c.secundaria || 0);
+  return '<a class="pp-stat-link" href="#entregas" aria-label="' + n + ' entregas por revisar (' + desglose + '). Abrir Entregas">' +
+    ppStat('📥', n, 'Por revisar<small class="pp-desglose">' + desglose + '</small>', n ? 'riesgo' : 'sin-riesgo') + '</a>';
 }
 function renderPanelProfe() {
   const filtro = state.grupoFiltro && state.grupos ? (state.grupos.grupos || []).find(g => g.id === state.grupoFiltro) : null;
@@ -142,7 +133,7 @@ function renderPanelProfe() {
     '<div class="pp-stats" id="pp-stats">' +
       (activos === null ? '' : ppStat('👥', activos, activos === 1 ? 'Grupo activo' : 'Grupos activos')) +
       (registro === null ? '' : ppStat('🧑‍🎓', registro, registro === 1 ? 'Alumno o alumna' : 'Alumnos y alumnas')) +
-      ppTileRiesgo(riesgo) + ppTilePorRevisar(filtro) + '</div>' + ppListaRiesgo(riesgo) + avisosPanel() +
+      ppTileRiesgo(riesgo) + ppTilePorRevisar() + '</div>' + ppListaRiesgo(riesgo) + avisosPanel() +
     '<div class="pp-acciones"><a class="btn" href="#registro">➕ Registrar alumno o alumna</a><a class="btn ghost" href="#presentar">🎬 Presentar la clase</a>' +
       '<a class="btn ghost" href="' + escapeHtml(conApiParam('ingles.html?modo=profe')) + '">🎓 Mi ruta</a></div></section>';
 }

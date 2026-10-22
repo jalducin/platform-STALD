@@ -24,7 +24,8 @@ paga otra vuelta de red y otra verificación previa (`OPTIONS`), más el dibujo 
   - `grupos`: `{ grupos (con ocultoAdmin), miembros }`, igual que `GET /ingles/grupos`;
   - `alumnos`: el registro **sin correos** (`[{ nombre, baja? }]`), solo para contar y para el filtro de grupos;
   - `resumen`: el mismo cuerpo que `GET /ingles/resumen` con los mismos `grupo` y `ocultos`;
-  - `entregas`: `{ pendientes, porRevisar: [slug] }` (misiones de Inglés listas para evaluar; sin textos);
+  - `entregas`: `{ pendientes, ingles, secundaria }` (entregas de misiones listas para evaluar, total y por ámbito;
+    sin textos ni slugs);
   - `fallas`: qué partes fallaron.
   Es **resiliente**: si una parte falla, esa parte trae `{ error, detalle? }` y las demás llegan (como el resumen en
   `fix-ingles-admin`); el 503 `sin_base` de los grupos (sin Postgres) viaja como `{ error: "sin_base" }` y no es falla.
@@ -38,8 +39,11 @@ paga otra vuelta de red y otra verificación previa (`OPTIONS`), más el dibujo 
     que pide `/ingles/panel`; el resumen conserva su aviso con «🔄 Reintentar» de `fix-ingles-admin`.
   - **Perezoso**: «➕ Registro» pide `/ingles/alumnos` (con correos) al abrir esa pestaña; «🎮 Juegos» (y la línea de
     juegos en «🧑‍🎓 Alumnos» y en el cajón) pide `/juegos/admin/resumen` al abrir esa pestaña o el cajón; «📥 Entregas»
-    pide la bandeja al abrirla (como ya hacía «🛡️ Nicks»). «📥 Por revisar» sale de `entregas.porRevisar` hasta que la
-    bandeja se carga.
+    pide la bandeja al abrirla (como ya hacía «🛡️ Nicks»).
+  - **Mismo dato** para «📥 Por revisar» y el contador de «📥 Entregas» de la barra (que llegó a `main` con
+    `navegacion-mejoras`, #248): Inglés + Secundaria, del panel al abrir y de la bandeja después; el mosaico muestra
+    el desglose «Inglés N · Secundaria M». Antes el mosaico contaba solo Inglés (filtrado por grupo) y el contador
+    Inglés + Secundaria, así que podían no coincidir (pedido del coordinador, 2026-10-22).
   - «👁️ Ocultar del panel» / «Mostrar en el panel» refresca grupos, resumen, alumnos y «Por revisar» con una sola
     petición a `/ingles/panel`.
   - Todas las funciones siguen: ocultar grupos, entregas, nicks, alta, baja/reactivar, quitar, mover de grupo, cajón,
@@ -56,7 +60,7 @@ paga otra vuelta de red y otra verificación previa (`OPTIONS`), más el dibujo 
 | Alumno o alumna (activo, de baja), Secundaria, invitado | 403 `solo_admin` | 200 como siempre, sin `panel` |
 | Sin sesión (o `?email=` del admin) | 401 | 401 (como hoy) |
 
-El panel no lleva correos: `alumnos` solo trae nombre y fecha de baja; `entregas` solo slugs. Los correos siguen solo
+El panel no lleva correos: `alumnos` solo trae nombre y fecha de baja; `entregas` solo conteos. Los correos siguen solo
 en `GET /ingles/alumnos` (pestaña «➕ Registro»). Se verifica con pruebas Deno (`server/panel_main_test.ts`).
 
 ## Capabilities
@@ -79,6 +83,7 @@ en `GET /ingles/alumnos` (pestaña «➕ Registro»). Se verifica con pruebas De
   `ocultar-grupos`, `puntos-tipo` (abren la pestaña antes de leerla).
 - Docs: `docs/backend-standards.md`, `docs/frontend-standards.md`, `docs/pruebas.md`; la propuesta
   `navegacion-rendimiento` anota que su parte 2 la hace este cambio.
-- Coordinación: `navegacion-mejoras` (PR 2) pondrá «📥 Entregas» en la barra con un contador de la bandeja; el
-  contador puede salir de `entregas.pendientes` del panel (`pendientesEntregas()`), sin pedir la bandeja al abrir.
+- Coordinación: `navegacion-mejoras` (#248–#250, ya en `main`) puso «📥 Entregas» en la barra con un contador de la
+  bandeja; tras el merge, el contador (`entregasPendientes`) y «📥 Por revisar» usan `conteoEntregas()`: el panel al
+  abrir y la bandeja después, sin pedirla al abrir.
 - Acciones externas: ninguna (Deno Deploy y Pages despliegan desde `main`).
