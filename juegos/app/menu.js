@@ -217,7 +217,10 @@ async function iniciar() {
     return await pantallaInicial();
   } catch (e) {
     const txt = { mucho_trafico: '⏳ Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.', juego_sin_cargar: '😕 No se pudo cargar el juego. Revisa tu internet e intenta de nuevo.' }[e.message] || '⚠️ No pude conectarme (' + escapeHtml(e.message) + ').';
-    app.innerHTML = '<div class="card"><div class="alert">' + txt + '</div><div class="row-btns"><button class="btn" data-a="reintentar">Reintentar</button></div></div>';
+    // juegos-carga-perezosa: si no llegó el código de los juegos, también «← Volver» al menú (olvida la sala, la
+    // revancha o el juego a medias que se quería abrir).
+    const volver = e.message === 'juego_sin_cargar' ? '<button class="btn ghost" type="button" data-a="hub">← Volver</button>' : '';
+    app.innerHTML = '<div class="card"><div class="alert">' + txt + '</div><div class="row-btns">' + volver + '<button class="btn" data-a="reintentar">' + (volver ? '🔄 ' : '') + 'Reintentar</button></div></div>';
   }
 }
 

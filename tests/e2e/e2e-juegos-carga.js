@@ -129,10 +129,18 @@ async function medir(b, nombre, o) {
   await p.click('[data-reintentar-carga]');
   const reintento = await p.waitForSelector('#app [data-tb-go]', { timeout: 30000 }).then(() => true).catch(() => false);
   ok('Reintentar: con red, el juego abre', reintento);
+  ok('Damas: tablero.css queda antes de juegos.css (misma cascada que antes)', await p.evaluate(() => {
+    const ls = [...document.querySelectorAll('link[rel="stylesheet"]')].map(l => l.getAttribute('href'));
+    const t = ls.findIndex(h => h.startsWith('juegos/tablero.css')), j = ls.findIndex(h => h.startsWith('juegos/app/juegos.css'));
+    return t >= 0 && t < j;
+  }));
   await p.click('[data-a="salir"]'); await p.waitForSelector(MENU);
 
   // Pestaña 👥 Partidas: carga lo de las salas antes de pintar el formulario.
+  await p.route('**/juegos/app/salas.js*', async r => { await sleep(1200); await r.continue(); });
   await p.click('[data-tab="partidas"]');
+  const cargandoP = await p.waitForSelector('#tab-body .loading', { timeout: 3000 }).then(x => x.textContent()).catch(() => '');
+  ok('👥 Partidas: «Cargando…» mientras llega el código de las salas', /Cargando/.test(cargandoP), cargandoP);
   ok('👥 Partidas: el formulario de crear sale tras cargar las salas', await p.waitForSelector('#f-crear', { timeout: 30000 }).then(() => true).catch(() => false));
   await p.selectOption('#p-juego', 'una'); await p.click('#f-crear button[type=submit]');
   await p.waitForSelector('[data-p="empezar"]', { timeout: 30000 });
@@ -147,6 +155,16 @@ async function medir(b, nombre, o) {
   ok('?sala=…&ver=1: entra como espectador', await ver.waitForSelector('.esp-chip', { timeout: 60000 }).then(() => true).catch(() => false));
   await ver.context().close();
   await p.context().close();
+
+  // Enlace ?sala= sin red para el código de las salas: aviso con «Reintentar» y «← Volver», que lleva al menú.
+  const sinRed = await abrirPagina(b, { email: 'laura@example.com', out, etiqueta: 'sala sin red', dialogos: 'aceptar' });
+  await sinRed.route('**/juegos/app/salas.js*', r => r.abort('internetdisconnected'));
+  await sinRed.goto(urlDe('/juegos.html?sala=' + codigo));
+  const avisoSala = await sinRed.waitForSelector('#app .alert', { timeout: 60000 }).then(x => x.textContent()).catch(() => '');
+  ok('?sala= sin red: aviso con «Reintentar» y «← Volver»', /No se pudo cargar/.test(avisoSala) && !!(await sinRed.$('[data-a="reintentar"]')) && !!(await sinRed.$('#app [data-a="hub"]')), avisoSala);
+  await sinRed.click('#app [data-a="hub"]');
+  ok('?sala= sin red: «← Volver» lleva al menú', await sinRed.waitForSelector(MENU, { timeout: 30000 }).then(() => true).catch(() => false));
+  await sinRed.context().close();
 
   const cat = await abrirPagina(b, { email: EMAIL, out, etiqueta: 'cat', ruta: '/juegos.html#cat=clasicos', esperar: '[data-menu="clasicos"]' });
   const lista = await cat.$$eval('#menu-juegos .game[data-juego]', xs => xs.map(x => x.dataset.juego));

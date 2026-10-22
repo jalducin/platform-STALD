@@ -164,8 +164,8 @@ Cada página debe manejar y mostrar de forma explícita:
     pruebas;
   - **Arcade** (`plataformas` y `karts`, cambio `juegos-plataformas-karts`): `juegos/plataformas.html` y
     `juegos/karts.html`, cada uno en un iframe del mismo origen (`.arcade-caja`), con reglas compartidas en
-    `juegos/arcade.js` (mundos, pistas, referencias, mapa de sala, tiempos de bots y puntos por lugar; también lo
-    carga `juegos.html`). El juego nunca llama al servidor: avisa a `parent` (`listo`, `guardar`, `puntos`, `meta`) y
+    `juegos/arcade.js` (mundos, pistas, referencias, mapa de sala, tiempos de bots y puntos por lugar; en
+    `juegos.html` lo trae el cargador con las salas). El juego nunca llama al servidor: avisa a `parent` (`listo`, `guardar`, `puntos`, `meta`) y
     `juegos.html` acepta solo mensajes de su iframe y su origen; responde `inicio` (avance de `GET /juegos/progreso`
     o, en sala, mapa, semilla, `inicioEn` y bots), `guardado` y `puntos-ok`. Guarda con el mismo `canalProgreso` de
     Dragon Run: `PUT` encadenado (gana el último). Canvas con paso fijo de 1/60 s y escala entera, pausa con `visibilitychange`, sonido opcional
@@ -174,8 +174,8 @@ Cada página debe manejar y mostrar de forma explícita:
     confirmación al recargar (`enCurso.foto = () => null`). `?arcadePrueba=1` abre los juegos con `?prueba=1`
     (ganchos `window.__plat` y `window.__karts`), solo para E2E;
   - **Pistas y copas de Karts Turbo** (cambio `karts-pistas-mesoamericanas`; decisiones en su `design.md`): las
-    definiciones viven en `juegos/karts-pistas.js` (script clásico sin DOM, `window.KartsPistas`), que `juegos.html`
-    y `karts.html` cargan **antes** de `juegos/arcade.js`. Cada pista lleva trazado, física, colores, `tema` (cielo
+    definiciones viven en `juegos/karts-pistas.js` (script clásico sin DOM, `window.KartsPistas`), que `karts.html` y el
+    cargador de `juegos.html` (`ARCHIVOS_JUEGO`) cargan **antes** de `juegos/arcade.js`. Cada pista lleva trazado, física, colores, `tema` (cielo
     de 360°), `decor` (adornos al azar), `fijos` (adornos por tramo), `desc` y `mecanicas` (zonas deterministas:
     `turbo`, `salto`, `cenote`, `lodo`, `trajinera`). `Arcade.PISTAS` son las de sala (`sala: true`; las 8 desde
     `juegos-en-vivo`; `MAPAS_SALA` de `server/carreras.ts` sale de ellas desde `karts-copa-reinos`); `Arcade.pistaPorId` encuentra todas. Copas en
@@ -284,7 +284,7 @@ Cada página debe manejar y mostrar de forma explícita:
       `window.__billar` con `?arcadePrueba=1`. En sala horizontal el marco se desplaza a la vista como en individual.
     - **Futbolito por equipos** (cambio `futbolito-equipos-controles`): la página ofrece «Formato» (1 vs 1 o
       2 vs 2) al crear la sala, muestra los equipos en la sala de espera (`#p-equipos-fut`, mismo reparto que el juego:
-      `juegos.html` carga `juegos/fisica.js` y `juegos/futbolito-motor.js`; `equiposFutbolito` y `cambiarEquipoFutbolito`
+      el cargador trae `juegos/fisica.js` y `juegos/futbolito-motor.js` con el paquete «todo» de las salas; `equiposFutbolito` y `cambiarEquipoFutbolito`
       en `juegos/app/arcade.js`, formulario y `participantes()` en `juegos/app/salas.js`) con «🔁 Cambiar de equipo» (`POST …/unirse { equipo }`)
       y pasa al iframe la mesa completa (hasta 4) con el `equipo` pedido de cada quien. El juego reparte con
       `Futbolito.repartir`, juega con `Fisica.linea` y `Futbolito.motorSala(reparto)` (tira el asiento dueño de la barra
@@ -455,7 +455,7 @@ Cada página debe manejar y mostrar de forma explícita:
     `.solo-lector`) y una línea `#personaje-detalle` (Axo) o `#piloto-detalle` (Karts, con el peso). Con 7 rivales, cada
     uno usa uno de los 7 personajes que la persona no eligió. Gancho de prueba: `masa` en `__karts.estado()`;
   - **Personaje en las salas de Karts y Axo** (cambio `personaje-en-salas`; decisiones en su `design.md`):
-    `juegos.html` carga `juegos/personajes.js?v=3` (el mismo que los iframes). En la sala de espera de `karts` y
+    el cargador trae `juegos/personajes.js` (el mismo que los iframes) con el paquete «todo» de las salas. En la sala de espera de `karts` y
     `plataformas`, `tarjetaPersonaje()` (`juegos/app/arcade.js`) pinta «🏁 Tu piloto» o «🦎 Tu personaje»: los 8 en
     4×2 (`.p-pers-grid`, retrato, nombre y en Karts el peso) con `data-p="personaje"`; preselecciona el del asiento o
     el de `localStorage.arcade_personaje`. Elegir guarda en el navegador (`Personajes.preferencia(id)`) y en el
@@ -890,11 +890,12 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   Conecta 4 (negamax con poda a 4 o 6), Piedra-papel-tijera, Ahorcado y Serpientes, y la reproducción determinista de
   cada sala (`salaGato`, `salaConecta4`, `salaPpt`, `salaAhorcado`, `salaSerpientes`) a partir de
   `{ orden, jugadas, inicio, ahora, dur, rng, memo? }`. Lo prueba `server/clasicos_rapidos_motor_test.ts`.
-- `juegos/clasicos-rapidos-ui.js` (`globalThis.ClasicosRapidosUI`): tarjetas, modos individuales, dibujo y clics de
-  cada sala, selector de modo del Ahorcado y ayudas. Se carga antes de los scripts de `juegos/app/` y usa sus funciones solo al
-  jugar. Estilos en `juegos/clasicos-rapidos.css` (con `prefers-reduced-motion`).
-- Ganchos en `juegos.html` y `juegos/app/*.js` (comentario `// clasicos-rapidos`): `<link>` y 2 `<script>`, `JUEGOS.push(...TARJETAS)`,
-  ids en `JUEGOS_PARTIDA` y `TIEMPO_REAL`, una línea en `pintarSala`, las opciones al crear y `AYUDA`.
+- `juegos/clasicos-rapidos-ui.js` (`globalThis.ClasicosRapidosUI`): modos individuales (`jugar(id)`), dibujo y clics de
+  cada sala, selector de modo del Ahorcado y ayudas. Lo trae el cargador con su juego (paquete `rapidos`) y usa las
+  funciones de `juegos/app/` solo al jugar; sus tarjetas viven en `JUEGOS` (`menu.js`). Estilos en
+  `juegos/clasicos-rapidos.css` (con `prefers-reduced-motion`).
+- Ganchos en `juegos/app/*.js` (comentario `// clasicos-rapidos`): sus 2 JS y su CSS en `ARCHIVOS_JUEGO` y `PAQUETES` de
+  `cargador.js`, las 5 tarjetas en `JUEGOS`, ids en `JUEGOS_PARTIDA` y `TIEMPO_REAL`, una línea en `pintarSala`, las opciones al crear y `AYUDA`.
 - Los participantes salen de `participantes()` (tabla de mesas). Las elecciones ocultas de Piedra-papel-tijera
   (`"?"`) se vuelven a pedir y las ya vistas se recuerdan en `sala.cr.vistas`.
 ## Juegos de tablero (cambio `juegos-tablero`)
@@ -902,8 +903,9 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
 - **Motores:** `juegos/tablero.js` es el motor sin DOM de Damas, Dominó, Parchís y Batalla naval. Expone
   `globalThis.Tablero`, sus estados son JSON y lo prueban `server/tablero_test.ts` y `server/naval_test.ts`.
 - **Pantallas:** `juegos/tablero-ui.js` (`TableroUI`) tiene las pantallas individuales, las salas y la ayuda.
-  - Es un script clásico que se carga antes de los scripts de `juegos/app/` y usa sus funciones globales en tiempo de llamada.
-  - Sus ganchos en `juegos.html` y `juegos/app/*.js` llevan el comentario `juegos-tablero`.
+  - Es un script clásico que trae el cargador con su juego (paquete `tablero`) y usa las funciones globales de
+    `juegos/app/` en tiempo de llamada; sus 4 tarjetas viven en `JUEGOS` (`menu.js`).
+  - Sus ganchos en `juegos/app/*.js` llevan el comentario `juegos-tablero`.
 - **Estilos:** `juegos/tablero.css`, con prefijo `tb-`.
   - El arte es propio: las piezas y fichas son CSS y el tablero de Parchís es SVG.
   - Las animaciones (deslizar la pieza, caer la ficha, girar el dado e impacto del disparo) se apagan con
@@ -915,7 +917,7 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
     avisos de Realtime no traen flotas.
 - **Celular:** todo cabe a 390 px. El Parchís y la Batalla naval mueven y disparan con botones o casillas de buen
   tamaño, y el Parchís repite las jugadas posibles como botones de 44 px.
-- **Para cambiar un motor:** sube `?v=` en las etiquetas de `juegos/tablero*.js` y `tablero.css`.
+- **Para cambiar un motor:** sube su `?v=` en `ARCHIVOS_JUEGO` (`juegos/app/cargador.js`) y el de `cargador.js` en `juegos.html`.
 
 ## Vista del profe en Inglés (cambio `profe-diseno`)
 
