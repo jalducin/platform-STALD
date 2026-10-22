@@ -5,6 +5,7 @@
 require('./lib/entorno'); // BASE, API, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { irPestanaSec } = require('./lib/secundaria'); // fila de pestañas, barra inferior o «☰ Más» según el tamaño
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const ALUMNA = 'valeria@example.com';
 const HOY = '2026-10-22';
@@ -17,7 +18,7 @@ const lista = () => fetch(`${API}/secundaria/actividades${q}`).then(x => x.json(
 const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 const tarjetasHoy = p => p.$$eval('[data-sec-card]', xs => xs.map(x => x.dataset.secCard));
 const horario = async p => {
-  await p.click('.sec-tabs [data-sec-tab="horario"]');
+  await irPestanaSec(p, 'horario');
   await p.waitForSelector('#sec-horario:not([hidden])');
   return p.$$eval('#sec-horario [data-sec-hor-dia]', xs => xs.map(x => x.dataset.secHorDia + ':' + [...x.querySelectorAll('[data-sec-hor-item]')].map(c => c.dataset.secHorItem).join('+')).join(' | '));
 };
@@ -42,7 +43,7 @@ const horario = async p => {
   await p.screenshot({ path: 'secundaria-adelantar-horario.png', fullPage: true });
 
   // La de mañana se abre desde «📅 Esta semana».
-  await p.click('.sec-tabs [data-sec-tab="clases"]');
+  await irPestanaSec(p, 'clases');
   ok('Esta semana: la del viernes en su día', !!(await p.$(`[data-sec-dia="2026-10-23"] [data-sec-item="${MANANA}"]`)));
   ok('Esta semana: la del viernes no va en «Hoy»', !(await p.$(`#sec-hoy [data-sec-item="${MANANA}"]`)));
   ok('semana futura ya abierta: en «Otras clases y exámenes», no en esta semana', !!(await p.$(`#sec-otras [data-sec-item="${FUTURA}"]`)) && !(await p.$(`#sec-semana [data-sec-item="${FUTURA}"]`)));
@@ -66,7 +67,7 @@ const horario = async p => {
   ok('después: Hoy te toca sigue con las 2 del jueves', hoy2.join() === DE_HOY.join(), hoy2.join());
   const hor2 = await horario(p);
   ok('después: el horario queda igual', hor2 === hor1, hor2);
-  await p.click('.sec-tabs [data-sec-tab="clases"]');
+  await irPestanaSec(p, 'clases');
   const fila = (await p.textContent(`[data-sec-dia="2026-10-23"] [data-sec-item="${MANANA}"]`)) || '';
   ok('después: en «Esta semana» la del viernes sale con su calificación', fila.includes('100%'), fila.replace(/\s+/g, ' ').trim());
   ok('sin scroll horizontal a 360 px', await sinScrollH(p));

@@ -9,6 +9,7 @@ require('./lib/entorno');
 require('../../comun/gamificacion.js');
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { irPestanaSec } = require('./lib/secundaria'); // fila de pestañas, barra inferior o «☰ Más» según el tamaño
 const G = globalThis.Gamificacion;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const ALUMNA = 'valeria@example.com';
@@ -106,17 +107,17 @@ const post = (ruta, e, body, tipo = 'application/json') => fetch(`${API}${ruta}$
     if (tema === 'light') ok('Inicio: aviso «+315 XP» de la misión evaluada (una vez)', (await texto(p, '#mis-recompensa')).includes('+315 XP'), await texto(p, '#mis-recompensa').catch(() => ''));
     ok(`Inicio: Nv. ${nivel.nivel} con la XP de la misión incluida` + sufijo, (await texto(p, '#rpg-rango')).startsWith('Nv. ' + nivel.nivel) && (await texto(p, '#rpg-xp')) === `${nivel.xpNivel} / 300`, await texto(p, '#rpg-xp'));
     ok('Inicio: insignia «⚔️ Misión principal» ganada' + sufijo, (await p.$('[data-insignia="mision-principal"].ganada')) !== null);
-    await p.click('.sec-tabs [data-sec-tab="misiones"]');
+    await irPestanaSec(p, 'misiones');
     await p.click(`[data-mis-card="${ID}"] [data-mis-abrir]`);
     ok('detalle: evaluación con comentario y sin cuadro de entrega' + sufijo, (await texto(p, '#mis-evaluacion')).includes('+315 XP') && (await texto(p, '#mis-evaluacion')).includes('Muy buen trabajo') && (await p.$$('form.mis-entrega')).length === 0);
-    await p.click('.sec-tabs [data-sec-tab="mapa"]');
+    await irPestanaSec(p, 'mapa');
     ok('Mapa: Valle de los Números en curso con su misión; Ciudad de las Formas bloqueada' + sufijo,
       (await texto(p, '[data-mundo-id="valle-de-los-numeros"]')).includes('En curso') && (await texto(p, '[data-mundo-id="valle-de-los-numeros"]')).includes('Misión de prueba') && (await texto(p, '[data-mundo-id="ciudad-de-las-formas"]')).includes('Bloqueado'));
     ok('Mapa: sin scroll horizontal' + sufijo, await sinScrollH(p));
     await p.screenshot({ path: `misiones-mapa-360${tema === 'dark' ? '-oscuro' : ''}.png`, fullPage: true });
-    await p.click('.sec-tabs [data-sec-tab="arbol"]');
+    await irPestanaSec(p, 'arbol');
     ok('Árbol: nodos por materia con su estado' + sufijo, (await p.$$('[data-arbol-materia] .mis-nodo')).length > 0 && await sinScrollH(p));
-    ok('pestañas de 44 px o más' + sufijo, (await altoMinimo(p, '.sec-tabs .tab')) >= 44);
+    ok('pestañas de 44 px o más' + sufijo, (await altoMinimo(p, '.sec-tabs .tab, .sec-barra .nav-item')) >= 44);
     await p.screenshot({ path: `misiones-arbol-360${tema === 'dark' ? '-oscuro' : ''}.png`, fullPage: true });
     await p.context().close();
   }

@@ -1193,6 +1193,14 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `server/secundaria_tablero_test.ts`.
 - **Fuentes:** Inter y Orbitron de Google Fonts se inyectan solo en modo Secundaria (excepción de CDN, ver el
   `design.md` del cambio); si no cargan, queda la fuente del sistema.
+- Navegación (cambio `navegacion-mejoras`): desde 720 px, pestañas en una sola fila (`.sec-tabs`, columnas iguales;
+  hasta 1099 px el emoji sobre el nombre corto, desde 1100 px en línea: nombre largo con las 7 de la alumna y corto con
+  las 9 del profe, `.sec-tabs-muchas`). En celular (< 720 px) la fila se oculta y manda la barra inferior fija
+  `.sec-barra` (`.nav-barra`, `aria-current`): la alumna «🏠 Inicio», «⚔️ Misiones», «🗓️ Horario», «📚 Materias» y
+  «☰ Más» (`[data-sec-mas]` → `#sec-mas`: Semana, Mapa y Árbol); el profe «🏠 Inicio», «📝 Notas», «📥 Entregas»,
+  «⚔️ Misiones» y «☰ Más». `irPestanaSec` mantiene sincronizadas fila, barra y «Más» (marcado `.activo` si la pestaña
+  actual vive ahí); un hueco `.sec-barra-hueco` al final evita que la barra tape contenido y desaparece con la clase
+  abierta (vive en `#content`).
 - Título «📚 Clases de Secundaria». Pestañas `role="tab"` (`.sec-tabs [data-sec-tab]`, ← → Inicio Fin), sin redibujar:
   - **«🏠 Inicio»** (`#sec-inicio`, la primera; estilo «RPG educativo»):
     - barra `#rpg-stats`: nivel del juego y rango (`#rpg-rango`, «Nv. 3 · Exploradora» con `<abbr title="Nivel del juego">`; cambio `fix-e2e-rpg`), XP del nivel (`#rpg-xp` y `.rpg-xp-barra` con

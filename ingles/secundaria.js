@@ -26,6 +26,21 @@ const SEC_TABS = [
   { id: 'entregas', hash: 'entregas', titulo: '📥 Entregas', corto: 'Entregas', emoji: '📥', soloAdmin: true },
 ];
 const tabDeHash = h => { const t = SEC_TABS.find(x => x.hash === h || x.id === h); return t ? t.id : null; };
+// Barra inferior en celular (openspec: navegacion-mejoras): 4 pestañas principales y «☰ Más» con las demás. La alumna,
+// lo de su día a día; el profe, su trabajo (Notas y Entregas) para que Resultados siga a 3 toques del portal.
+const SEC_BARRA = { alumna: ['inicio', 'misiones', 'horario', 'materias'], admin: ['inicio', 'resultados', 'entregas', 'misiones'] };
+function barraSec(tabs, tab, admin) {
+  const principales = SEC_BARRA[admin ? 'admin' : 'alumna'].filter(id => tabs.some(t => t.id === id));
+  const resto = tabs.filter(t => !principales.includes(t.id));
+  const boton = (t, cls) => '<button type="button" class="nav-item ' + cls + '" data-sec-tab="' + t.id + '"' + (t.id === tab ? ' aria-current="page"' : '') + '>' +
+    '<span class="nav-emoji" aria-hidden="true">' + t.emoji + '</span><span class="nav-label">' + escapeHtml(t.corto) + '</span></button>';
+  const enMas = resto.some(t => t.id === tab);
+  return '<nav class="nav-barra sec-barra" aria-label="Secciones de Secundaria">' + principales.map(id => boton(tabs.find(t => t.id === id), 'sec-barra-btn')).join('') +
+    '<button type="button" class="nav-item sec-barra-btn' + (enMas ? ' activo' : '') + '" data-sec-mas aria-expanded="false" aria-controls="sec-mas"><span class="nav-emoji" aria-hidden="true">☰</span><span class="nav-label">Más</span></button></nav>' +
+    '<div id="sec-mas" class="nav-mas sec-mas" hidden>' + resto.map(t => boton({ ...t, corto: t.titulo.slice(t.titulo.indexOf(' ') + 1) }, '')).join('') + '</div>' +
+    '<div class="sec-barra-hueco" aria-hidden="true"></div>';
+}
+const cerrarMasSec = () => { const m = document.getElementById('sec-mas'); if (m) m.hidden = true; const b = document.querySelector('[data-sec-mas]'); if (b) b.setAttribute('aria-expanded', 'false'); };
 
 async function loadSecundaria(email) {
   // Con sesión el correo va en el token, no en la URL (openspec: secundaria-sin-notion).
@@ -135,10 +150,11 @@ function renderSecundaria(act) {
     resultados: () => renderSecundariaAdmin(((state.secLista || {}).items) || []),
   };
   return (admin ? selectorAlumna(act) : '') +
-    '<div class="tabs sec-tabs" role="tablist" aria-label="Secundaria">' + tabs.map(t =>
+    '<div class="tabs sec-tabs' + (tabs.length > 7 ? ' sec-tabs-muchas' : '') + '" role="tablist" aria-label="Secundaria">' + tabs.map(t =>
       '<button type="button" class="tab" role="tab" id="sec-tab-' + t.id + '" data-sec-tab="' + t.id + '" aria-controls="sec-' + t.id + '" aria-selected="' + (t.id === tab) + '" tabindex="' + (t.id === tab ? '0' : '-1') + '">' +
       '<span class="sec-tab-emoji" aria-hidden="true">' + t.emoji + '</span><span class="sec-tab-largo">' + escapeHtml(t.titulo.slice(t.titulo.indexOf(' ') + 1)) + '</span><span class="sec-tab-corto" aria-hidden="true">' + escapeHtml(t.corto) + '</span></button>').join('') + '</div>' +
-    tabs.map(t => '<section id="sec-' + t.id + '" class="sec-panel" role="tabpanel" data-sec-panel="' + t.id + '" aria-labelledby="sec-tab-' + t.id + '"' + (t.id === tab ? '' : ' hidden') + '>' + cuerpo[t.id]() + '</section>').join('');
+    tabs.map(t => '<section id="sec-' + t.id + '" class="sec-panel" role="tabpanel" data-sec-panel="' + t.id + '" aria-labelledby="sec-tab-' + t.id + '"' + (t.id === tab ? '' : ' hidden') + '>' + cuerpo[t.id]() + '</section>').join('') +
+    barraSec(tabs, tab, admin);
 }
 
 // Cambio de pestaña sin redibujar (se conserva el estado); el hash guarda la pestaña para volver a ella al salir de
@@ -151,6 +167,11 @@ function irPestanaSec(id, enfocar, historial = 'reemplazar') {
   state.secTab = id;
   document.querySelectorAll('.sec-tabs [data-sec-tab]').forEach(x => { const sel = x.dataset.secTab === id; x.setAttribute('aria-selected', String(sel)); x.tabIndex = sel ? 0 : -1; });
   document.querySelectorAll('[data-sec-panel]').forEach(x => { x.hidden = x.dataset.secPanel !== id; });
+  // Barra inferior y «☰ Más» del celular: la pestaña actual (o «Más» si está ahí dentro).
+  document.querySelectorAll('.sec-barra [data-sec-tab], #sec-mas [data-sec-tab]').forEach(x => { if (x.dataset.secTab === id) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current'); });
+  const mas = document.querySelector('[data-sec-mas]');
+  if (mas) mas.classList.toggle('activo', !!document.querySelector('#sec-mas [data-sec-tab="' + id + '"]'));
+  cerrarMasSec();
   const t = SEC_TABS.find(x => x.id === id);
   if (t && historial !== 'nada' && !location.hash.startsWith('#ver/')) {
     const url = location.pathname + location.search + '#' + t.hash;
@@ -159,9 +180,18 @@ function irPestanaSec(id, enfocar, historial = 'reemplazar') {
   if (enfocar) { const b = document.getElementById('sec-tab-' + id); if (b) { b.focus(); b.scrollIntoView({ block: 'nearest' }); } }
 }
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-sec-tab]'); if (!b) return;
-  irPestanaSec(b.dataset.secTab, !b.closest('.sec-tabs'), 'agregar'); // desde un acceso del Inicio, el foco va a la pestaña
+  const mas = e.target.closest('[data-sec-mas]');
+  if (mas) { const m = document.getElementById('sec-mas'); m.hidden = !m.hidden; mas.setAttribute('aria-expanded', String(!m.hidden)); return; }
+  const b = e.target.closest('[data-sec-tab]');
+  if (!b) { if (!e.target.closest('#sec-mas')) cerrarMasSec(); return; }
+  // Desde la barra inferior o «Más» (celular), la página sube al inicio de la pestaña; desde un acceso del Inicio, el
+  // foco va a la pestaña de la fila (tablet y PC).
+  const desdeBarra = !!b.closest('.sec-barra, #sec-mas');
+  irPestanaSec(b.dataset.secTab, !b.closest('.sec-tabs') && !desdeBarra, 'agregar');
+  const fila = document.querySelector('.sec-tabs');
+  if (desdeBarra || (fila && !fila.offsetParent)) window.scrollTo(0, 0);
 });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarMasSec(); });
 // Teclado en las pestañas (← → Inicio Fin), como pide el patrón de tabs.
 document.addEventListener('keydown', e => {
   const b = e.target.closest && e.target.closest('.sec-tabs [data-sec-tab]'); if (!b) return;

@@ -19,6 +19,7 @@ const { chromium } = require('playwright');
 const fs = require('node:fs');
 const { abrirPagina, urlDe } = require('./lib/navegador');
 const { MENU } = require('./lib/menu');
+const { irPestanaSec } = require('./lib/secundaria'); // fila (tablet y PC), barra inferior o «☰ Más» (celular)
 const API = process.env.API;
 const MEDIR = process.env.MEDIR === '1';
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n}${x ? ' ' + x : ''}`);
@@ -207,7 +208,7 @@ const TAREAS = [
     async correr(p, m) {
       await m.ir('/secundaria.html'); await m.listo('#sec-inicio', 'Secundaria · Inicio');
       for (const [tab, nombre] of [['horario', 'Mi horario'], ['materias', 'Mis materias'], ['misiones', 'Misiones']]) {
-        await m.toca('.sec-tabs [data-sec-tab="' + tab + '"]'); await m.listo('#sec-' + tab + ':not([hidden])', nombre);
+        await irPestanaSec(p, tab, sel => m.toca(sel)); await m.listo('#sec-' + tab + ':not([hidden])', nombre);
       }
       return { atras: ['#sec-materias:not([hidden])', '#sec-horario:not([hidden])', '#sec-inicio:not([hidden])'] }; // pestaña por pestaña hasta Inicio
     },
@@ -318,7 +319,7 @@ const TAREAS = [
       if (d.toque) await p.keyboard.press('Escape').catch(() => {});
       await p.selectOption('#sec-alumna', { value: 'valeria' });
       await m.listo('#sec-inicio', 'tablero de la alumna');
-      await m.toca('#sec-tab-resultados'); await m.listo('[data-sec-admin]', 'Resultados');
+      await irPestanaSec(p, 'resultados', sel => m.toca(sel)); await m.listo('[data-sec-admin]', 'Resultados');
       return { atras: '#sec-inicio, #content' };
     },
   },
@@ -399,6 +400,44 @@ const TAREAS = [
   }
   // En PC el contenido usa al menos 960 px (o el 70 % de la ventana si es menor): nada de una columna de celular estirada.
   for (const a of anchos) if (!MEDIR) ok(`ancho ${a.pagina} (${a.disp}): ${a.ancho} px de ${a.vista}`, a.ancho >= Math.min(960, a.vista * 0.7));
+
+  // ---------- Secundaria: barra inferior en celular y pestañas en una fila (openspec: navegacion-mejoras) ----------
+  if (!SOLO || SOLO.includes('secundaria-barra')) {
+    const fila = p => p.evaluate(() => { const xs = [...document.querySelectorAll('.sec-tabs .tab')].filter(x => x.offsetParent); return { n: xs.length, filas: new Set(xs.map(x => Math.round(x.getBoundingClientRect().top))).size, alto: Math.min(...xs.map(x => x.getBoundingClientRect().height)) }; });
+    // Celular (alumna): barra fija abajo con 5 botones de 44 px, sin fila arriba, sin tapar lo último del Inicio.
+    const c = await abrirPagina(b, { email: 'valeria@example.com', viewport: { width: 360, height: 740 }, contexto: { hasTouch: true, isMobile: true }, ruta: '/secundaria.html', esperar: '#sec-inicio' });
+    const barra = await c.evaluate(() => {
+      const n = document.querySelector('.sec-barra'); const r = n.getBoundingClientRect();
+      const bs = [...n.querySelectorAll('.nav-item')].map(x => ({ id: x.dataset.secTab || 'mas', w: Math.round(x.getBoundingClientRect().width), h: Math.round(x.getBoundingClientRect().height) }));
+      return { fija: getComputedStyle(n).position === 'fixed', abajo: Math.round(r.bottom) >= innerHeight - 1, bs, fila: !!document.querySelector('.sec-tabs').offsetParent, actual: (n.querySelector('[aria-current="page"]') || {}).dataset?.secTab };
+    });
+    ok('Secundaria (celular): barra inferior fija con Inicio, Misiones, Horario, Materias y ☰ Más', barra.fija && barra.abajo && barra.bs.map(x => x.id).join() === 'inicio,misiones,horario,materias,mas' && barra.actual === 'inicio', JSON.stringify(barra));
+    ok('Secundaria (celular): botones de la barra de 44 px o más y sin la fila de pestañas arriba', barra.bs.every(x => x.w >= 44 && x.h >= 44) && !barra.fila);
+    await c.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await sleep(300);
+    const tapa = await c.evaluate(() => { const ult = [...document.querySelectorAll('#sec-inicio .sec-accesos .btn')].pop(); const r = ult.getBoundingClientRect(); const b = document.querySelector('.sec-barra').getBoundingClientRect(); return { ult: Math.round(r.bottom), barra: Math.round(b.top) }; });
+    ok('Secundaria (celular): la barra no tapa lo último del Inicio', tapa.ult <= tapa.barra, JSON.stringify(tapa));
+    ok('Secundaria (celular): sin scroll horizontal', await c.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await c.tap('.sec-barra [data-sec-mas]');
+    const mas = await c.$$eval('#sec-mas [data-sec-tab]', xs => xs.filter(x => x.offsetParent).map(x => x.dataset.secTab).join());
+    ok('Secundaria (celular): «☰ Más» con Semana, Mapa y Árbol', mas === 'clases,mapa,arbol', mas);
+    await c.tap('#sec-mas [data-sec-tab="mapa"]');
+    await c.waitForSelector('#sec-mapa:not([hidden])');
+    ok('Secundaria (celular): Más → Mapa cierra el menú y marca «Más»', await c.isHidden('#sec-mas') && await c.$eval('[data-sec-mas]', x => x.classList.contains('activo')));
+    const atras = await probarAtras(c, '#sec-inicio:not([hidden])');
+    ok('Secundaria (celular): «Atrás» desde Mapa regresa a Inicio y la barra lo marca', atras.ok && (await c.$eval('.sec-barra [aria-current="page"]', x => x.dataset.secTab).catch(() => '')) === 'inicio', atras.a);
+    await c.screenshot({ path: 'nav-secundaria-barra-celular.png' });
+    await c.context().close();
+    // Tablet y PC: la fila (sin barra); el profe con sus 9 pestañas en una fila también a 1100 px.
+    for (const [quien, email, ruta, w, n] of [['alumna', 'valeria@example.com', '/secundaria.html', 768, 7], ['alumna', 'valeria@example.com', '/secundaria.html', 1100, 7], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 768, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1100, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1280, 9]]) {
+      const t = await abrirPagina(b, { email, viewport: { width: w, height: 800 }, ruta, esperar: '#sec-inicio' });
+      const f = await fila(t);
+      const sinBarra = !(await t.$eval('.sec-barra', x => !!x.offsetParent));
+      ok(`Secundaria (${quien}, ${w} px): ${n} pestañas en una fila de 44 px o más, sin barra inferior ni scroll horizontal`, f.n === n && f.filas === 1 && f.alto >= 44 && sinBarra && await t.evaluate(() => document.documentElement.scrollWidth <= innerWidth), JSON.stringify(f));
+      if (w === 1100 && quien === 'profe') await t.screenshot({ path: 'nav-secundaria-profe-1100.png' });
+      await t.context().close();
+    }
+  }
 
   // ---------- Teclado en PC: Tab, Enter y foco visible ----------
   if (!SOLO || SOLO.includes('teclado')) {
