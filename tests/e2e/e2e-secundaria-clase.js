@@ -118,13 +118,16 @@ async function abrirClase(p) {
   }
   await sinAlm.context().close();
 
-  // Inglés: sin pasos ni reproductores incrustados.
+  // Inglés: desde ingles-alumno-diseno-rpg la vista de alumnos y alumnas también usa la clase por pasos, con la etiqueta
+  // de su tipo (no «Misión») y sin chip de materia.
   const ing = await abrirPagina(b, { email: INGLES, viejo: true, out, ruta: '/ingles.html', esperar: '#content' });
   const boton = await ing.waitForSelector('[data-action="abrir-item"]', { timeout: 60000 }).catch(() => null);
   if (boton) {
     await boton.click();
     await ing.waitForSelector('#exam-form, .exam-card', { timeout: 60000 });
-    ok('Inglés: la actividad se ve como antes (sin pasos ni iframes)', !(await ing.$('.sec-pasos')) && !(await ing.$('iframe')));
+    await ing.waitForSelector('.sec-pasos', { timeout: 30000 }).catch(() => null);
+    const tag = await ing.evaluate(() => (document.querySelector('.sec-mision-tag') || {}).textContent || '');
+    ok('Inglés: la actividad se abre por pasos con la etiqueta de su tipo (no «Misión»)', !!(await ing.$('.sec-pasos')) && !tag.includes('Misión') && !(await ing.$('.sec-mision-banner .mat-chip')), tag);
   } else {
     ok('Inglés: el modo Secundaria está apagado', await ing.evaluate(() => MODO_SECUNDARIA === false));
   }
