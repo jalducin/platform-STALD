@@ -53,6 +53,47 @@ Deno.test("hoy te toca: las clases de hoy y, antes, lo pendiente que vence hoy",
   assertEquals(SD.clasesDeHoy([clase("mie", "2026-10-28")], hoy), []);
 });
 
+// Misión principal (openspec: navegacion-mejoras): atrasada y abierta → hoy → próxima abierta (adelantar) → bloqueada.
+Deno.test("misión principal: lo atrasado y abierto va primero, del más viejo al más nuevo", () => {
+  const hoy = "2026-10-27";
+  const bloqueada = clase("mie", "2026-10-28", { estado: "proximamente" });
+  const items = [bloqueada, clase("hoy", hoy), clase("lun", "2026-10-26"), clase("jue-pasado", "2026-10-22", { fechaLimite: "2026-10-23" })];
+  const m = SD.misionPrincipal(items, hoy);
+  assertEquals([m.item.id, m.motivo], ["jue-pasado", "atrasada"]);
+  // Sin la del jueves, la de ayer (vence hoy) sigue siendo atrasada: su día ya pasó.
+  assertEquals(SD.misionPrincipal(items.filter((i: any) => i.id !== "jue-pasado"), hoy).item.id, "lun");
+});
+
+Deno.test("misión principal: sin atrasadas, lo de hoy; hecha (con un intento) no cuenta", () => {
+  const hoy = "2026-10-27";
+  const items = [clase("mie", "2026-10-28", { estado: "proximamente" }), clase("lun", "2026-10-26", hecha(80)), clase("hoy-a", hoy, hecha(60, "en-curso")), clase("hoy-b", hoy)];
+  const m = SD.misionPrincipal(items, hoy);
+  assertEquals([m.item.id, m.motivo], ["hoy-b", "hoy"]);
+});
+
+Deno.test("misión principal: con lo de hoy hecho, lo próximo abierto (adelantar) antes que lo bloqueado", () => {
+  const hoy = "2026-10-27";
+  const items = [
+    clase("hoy", hoy, hecha(100)),
+    clase("mie", "2026-10-28", { estado: "proximamente" }),
+    // Bloque abierto desde antes con `dia` futuro (openspec: secundaria-adelantar).
+    clase("jue", "2026-10-29", { dia: "2026-10-29", disponibleDesde: "2026-10-26", fechaLimite: "2026-10-30" }),
+  ];
+  const m = SD.misionPrincipal(items, hoy);
+  assertEquals([m.item.id, m.motivo], ["jue", "adelantar"]);
+});
+
+Deno.test("misión principal: solo si no hay nada abierto, la próxima bloqueada; todo hecho → null", () => {
+  const hoy = "2026-10-27";
+  const items = [clase("hoy", hoy, hecha(100)), clase("jue", "2026-10-29", { estado: "proximamente" }), clase("mie", "2026-10-28", { estado: "proximamente" })];
+  const m = SD.misionPrincipal(items, hoy);
+  assertEquals([m.item.id, m.motivo], ["mie", "proxima"]);
+  assertEquals(SD.misionPrincipal([clase("hoy", hoy, hecha(100))], hoy), null);
+  assertEquals(SD.misionPrincipal([], hoy), null);
+  // Una clase de hoy que aún no abre no es «hoy»: sin nada abierto, cae como próxima solo si es futura; si no, nada.
+  assertEquals(SD.misionPrincipal([clase("hoy-cerrada", hoy, { estado: "proximamente" })], hoy), null);
+});
+
 Deno.test("progreso de la semana: hechas (con un envío) entre las clases de lunes a domingo de hoy", () => {
   const hoy = "2026-10-27";
   const items = [

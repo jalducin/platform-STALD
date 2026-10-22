@@ -56,6 +56,8 @@ async function enviar(id, bien) {
   const proms = SD.resumenMaterias(items, HOY).filter(m => m.promedio !== null).map(m => m.clave + ':' + m.promedio + ' %');
   const mateEsperada = SD.resumenMaterias(items, HOY).find(m => m.clave === 'matematicas');
   const recientes = G.actividadReciente(items, 5);
+  const mision = SD.misionPrincipal(items, HOY);
+  const misionMundo = (G.mundoDe(SD.materiaDe(mision.item).clave, HOY) || {}).nombre || '';
   ok('esperado: 15 clases en la semana, 3 hechas, Ciencias pendiente', prog.total === 15 && prog.hechas >= 3 && !G.estaHecha(items.find(i => i.id === 'sec-e2e-clase-2026-10-27-b')), JSON.stringify(prog));
 
   const b = await chromium.launch({ executablePath: process.env.CHROME });
@@ -80,8 +82,11 @@ async function enviar(id, bien) {
     const ganadas = await p.$$eval('[data-insignia].ganada', xs => xs.map(x => x.dataset.insignia));
     ok('RPG: insignias ganadas (al menos Primera misión y 100 %)' + sufijo, ganadas.join() === insignias.join() && ganadas.includes('primera-mision') && ganadas.includes('perfecto') && (await texto(p, '#rpg-insignias')).includes(insignias.length + ' / ' + totalInsignias), ganadas.join());
     ok('RPG: racha 1 día en la barra' + sufijo, (await texto(p, '#rpg-racha')).includes('1 día'));
-    ok('RPG: misión principal = Ciencias · La célula con «Empezar»' + sufijo, (await texto(p, '#rpg-mision')).includes('Misión principal activa') && (await texto(p, '#rpg-mision .rpg-mision-t')) === 'La célula' && (await texto(p, '#rpg-mision-btn')).startsWith('Empezar'), await texto(p, '#rpg-mision'));
-    ok('RPG: la misión dice su mundo (Selva de la Vida)' + sufijo, (await texto(p, '#rpg-mision .rpg-mision-d')).includes('Selva de la Vida'));
+    // Misión principal (openspec: navegacion-mejoras): lo atrasado y abierto primero. Con el fixture, las clases del
+    // jueves 22 (sec-adelanta-*, de secundaria-adelantar) siguen sin hacer: «Fracciones», atrasada, antes que La célula.
+    ok(`RPG: misión principal = ${SD.temaDe(mision.item)} (${mision.motivo}) con «Empezar»` + sufijo, (await texto(p, '#rpg-mision')).includes('Misión principal activa') && (await texto(p, '#rpg-mision .rpg-mision-t')) === SD.temaDe(mision.item) && (await p.getAttribute('#rpg-mision', 'data-motivo')) === mision.motivo && (await texto(p, '#rpg-mision-btn')).startsWith('Empezar'), await texto(p, '#rpg-mision'));
+    ok('RPG: la misión no es una clase bloqueada mientras haya algo abierto' + sufijo, mision.motivo !== 'proxima' && !(await texto(p, '#rpg-mision-btn')).includes('🔒'));
+    ok(`RPG: la misión dice su mundo (${misionMundo})` + sufijo, (await texto(p, '#rpg-mision .rpg-mision-d')).includes(misionMundo));
     ok(`RPG: retos diarios ${hechasHoy} / ${deHoy.length} y «te falta 1»` + sufijo, (await texto(p, '#rpg-retos')) === `${hechasHoy} / ${deHoy.length}` && (await texto(p, '#rpg-retos-texto')).includes('falta 1 reto'), await texto(p, '#rpg-retos-texto'));
     ok('RPG: XP en las tarjetas (+120 hecha a tiempo, hasta +120 pendiente)' + sufijo, (await texto(p, '[data-sec-card="sec-e2e-clase-2026-10-27-a"] .rpg-xp-chip')) === '+120 XP' && (await texto(p, '[data-sec-card="sec-e2e-clase-2026-10-27-b"] .rpg-xp-chip')) === 'hasta +120 XP');
     const actv = await p.$$eval('[data-sec-act]', xs => xs.map(x => x.dataset.secAct + ':' + x.querySelector('.rpg-xp-chip').textContent.trim()));
@@ -126,6 +131,12 @@ async function enviar(id, bien) {
         { id: 'mar', tipo: 'actividad', titulo: '📐 Matemáticas · Martes', materia: 'Matemáticas', disponibleDesde: '2026-10-27', fechaLimite: '2026-10-28', estado: 'completo', intentosUsados: 1, mejor: { porcentaje: 100, correctas: 2, total: 2, secciones: [] }, mejorATiempo: true },
       ], racha: { dias: 1, hoy: true } }, { hoy: '2026-10-27', nombre: 'Valeria', admin: false }));
       ok('lo de ayer que vence hoy cuenta en las tarjetas y en el contador (1 / 2, te falta 1)', ayer.includes('data-sec-card="lun"') && ayer.includes('>1 / 2<') && ayer.includes('falta 1 reto'));
+      // Atrasada y abierta antes que la bloqueada de mañana (antes salía «🔒 Abre el …»; openspec: navegacion-mejoras).
+      const atrasada = await p.evaluate(() => renderSecInicio({ items: [
+        { id: 'mie', tipo: 'actividad', titulo: '🔬 Ciencias · Volcanes', materia: 'Ciencias', disponibleDesde: '2026-10-28', fechaLimite: '2026-10-29', estado: 'proximamente', intentosUsados: 0, mejor: null },
+        { id: 'jue', tipo: 'actividad', titulo: '📐 Matemáticas · Fracciones', materia: 'Matemáticas', disponibleDesde: '2026-10-22', fechaLimite: '2026-10-23', estado: 'disponible', intentosUsados: 0, mejor: null },
+      ], racha: { dias: 0, hoy: false } }, { hoy: '2026-10-27', nombre: 'Valeria', admin: false }));
+      ok('misión principal: la atrasada abierta antes que la bloqueada', atrasada.includes('data-motivo="atrasada"') && atrasada.includes('>Fracciones<') && atrasada.includes('Atrasada') && !atrasada.includes('id="rpg-mision-btn" class="btn rpg-btn-mision" disabled'));
     }
     await p.context().close();
   }
