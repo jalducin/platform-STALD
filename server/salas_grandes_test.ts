@@ -275,6 +275,8 @@ async function revisarPalabraPrivada(secreto?: string) {
     const g = await c.call("GET", `/sala/${codigo}`, q);
     assertEquals([g.body.dibuja.turno, g.body.dibuja.palabra, g.body.dibuja.es, g.body.dibuja.letras], [0, undefined, undefined, p0.en.replaceAll(" ", "").length]);
     assertEquals(JSON.stringify(g.body).includes(s.secreto), false);
+    // Con el secreto fijo, la respuesta sí trae la llave `reloj`: el caso reproduce el falso positivo de antes.
+    if (secreto === SECRETO_RELOJ) assert(llaves(g.body).includes("reloj"), "la respuesta trae la llave reloj");
     // La palabra en inglés puede coincidir con un valor legítimo de la sala (p. ej. un color «green»), así que se
     // busca entre los valores de `dibuja`; en todo el cuerpo se buscan la traducción (valores) y la llave `palabra`.
     assertEquals(valoresTexto(g.body.dibuja).includes(p0.en), false, "la palabra no viaja en dibuja");

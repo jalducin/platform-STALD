@@ -186,8 +186,8 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   «atrasada», «🌍 Mundos» con los 9 mundos, clase por pasos como «⚔️ Misión») y su Plan del mes (cuenta las clases
   abiertas con botón contra la API), más capturas de escritorio. En claro envía la misión principal del profe (en la
   copia temporal de datos) para ver «+XP». Sin `--pg`, intercepta solo el GET de `/ingles/grupos` en el navegador con
-  dos grupos de ejemplo. La ruta solo se revisa si los datos traen `plan.json`; con `--hoy 2026-10-22` y el repo de
-  datos actual, las 27 clases están abiertas.
+  dos grupos de ejemplo. La ruta sale siempre del plan de ejemplo de 8 semanas (`tests/fixtures/datos/contenido/profe/`,
+  con clases en los 9 mundos; cambio `navegacion-mejoras`), no de la ruta real.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).

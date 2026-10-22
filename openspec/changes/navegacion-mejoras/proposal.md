@@ -39,7 +39,7 @@ profe) **no** entran: quedan como propuesta aparte en `openspec/changes/navegaci
 - **Pestañas en una fila en tablet y PC (PR 3).** Desde 720 px la fila de pestañas es siempre una sola fila (columnas
   iguales); entre 720 y 1099 px con el emoji sobre el nombre corto, y desde 1100 px en línea (nombre largo con 7
   pestañas; nombre corto con las 9 del profe).
-- **E2E «🌍 Mundos» con su propio fixture (PR 4).** El plan de ejemplo de las E2E
+- **E2E «🌍 Mundos» con el plan de ejemplo de 9 mundos (PR 4).** El plan de ejemplo de las E2E
   (`tests/fixtures/datos/contenido/profe/plan.json`, que `correr.sh` superpone tras borrar la ruta real de la copia)
   pasa de 3 a 8 semanas, con clases en los 9 mundos. Las 3 semanas publicadas no cambian; las 5 nuevas no tienen
   archivo de actividad (salen «Llega pronto», como en la ruta real). No cambia datos reales; `ruta-profe` y
