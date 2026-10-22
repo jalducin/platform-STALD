@@ -1067,7 +1067,8 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   hoy; si no hay, «🗺️ Mis misiones»). Vista previa del admin: sin estos extras.
 - Estilo «RPG educativo»: en Secundaria la clase se llama **«Misión»** (banner «⚔️ Misión» con chip de materia y su
   **mundo** actual, «🎉 ¡Misión cumplida!», «Siguiente misión →» / «🗺️ Mis misiones»). En el resultado,
-  `#sec-recompensa` muestra «+N XP» (XP total después − antes del envío; `submitExam` guarda `state.actAntes`), nivel y
+  `#sec-recompensa` muestra «+N XP» (XP total después − antes del envío; `submitExam` guarda `state.actAntes =
+  { id, act }`, que se consume una sola vez y solo para esa misión: ver un resultado pasado no la repite), nivel y
   rango con su barra, y las insignias desbloqueadas. **Todas las reglas** (XP, nivel, rango, mundos, insignias) salen
   de `comun/gamificacion.js` (`Gamificacion.mundoDe`, `xpTotal`, `nivelDe`, `insigniaNueva`); `secundaria-clase.js`
   no tiene fórmulas y, si `Gamificacion` no está cargado, omite el mundo y la recompensa.
@@ -1083,7 +1084,9 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
   (`round(100 × (correctas + correctas🎯) / total)`, puede pasar de 100), **+ 20** si llegó a tiempo. Usa de
   `calificacion` `correctas`, `total` y `secciones[].titulo|correctas` (o, sin `total`, `porcentaje`). «A tiempo», en orden: `opciones.aTiempo`,
   `calificacion.aTiempo`, `item.mejorATiempo` (del listado) y, si nada viene, `opciones.hoy <= item.fechaLimite`; sin
-  dato, sin bonus. La respuesta del envío trae `aTiempo` para el «+XP» de la pantalla de resultado.
+  dato, sin bonus. La respuesta del envío trae `aTiempo`/`mejorATiempo`. La pantalla de resultado de Secundaria
+  (`ingles/secundaria-clase.js`) muestra como «+N XP» la diferencia de `xpTotal` entre la lista de antes y la de
+  después del envío (que ya trae `mejorATiempo`), así solo cuenta lo que ese envío mejoró.
 - **XP total** (`xpTotal(items)`): suma de las clases hechas (con al menos un envío).
 - **Nivel** (`nivelDe(xp, genero?)`): `floor(XP / 300) + 1`; devuelve `xpNivel` (XP dentro del nivel, 0–299),
   `xpSiguiente` (XP total del siguiente nivel) y `porcentaje` del nivel. Rangos: 1–3 Aprendiz, 4–6

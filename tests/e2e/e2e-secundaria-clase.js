@@ -62,6 +62,22 @@ async function abrirClase(p) {
       const xp = await p.$eval('#sec-recompensa', s => ({ xp: s.querySelector('[data-sec-xp]').dataset.secXp, t: s.textContent.replace(/\s+/g, ' '), nivel: s.querySelector('[data-sec-nivel]').dataset.secNivel })).catch(() => null);
       // 100 % a tiempo = 100 + 20 (reglas de comun/gamificacion.js); antes no tenía XP de esta misión.
       ok('resultado: «+120 XP», nivel y rango', xp && xp.xp === '120' && xp.t.includes('+120 XP') && /Nivel \d+/.test(xp.t) && xp.t.includes('XP para el nivel'), JSON.stringify(xp));
+      // Insignias nuevas con las reglas de comun/gamificacion.js: un estado de antes sin envíos y uno de después con
+      // la misión al 100 % → «Primera misión» y «100 % en una clase». Y la recompensa solo sale para el envío.
+      const insig = await p.evaluate(() => {
+        const guardado = [state.act, state.actAntes];
+        const hoy = state.act.hoy;
+        state.actAntes = { id: 'x', act: { items: [], hoy, racha: 0 } };
+        state.act = { hoy, racha: 0, items: [{ id: 'x', estado: 'completo', intentosUsados: 1, fechaLimite: hoy, mejor: { porcentaje: 100, correctas: 2, total: 2, secciones: [] } }] };
+        const html = recompensaMision('x');
+        const otra = recompensaMision('x'); // ya se consumió
+        state.actAntes = { id: 'y', act: guardado[0] };
+        const ajena = recompensaMision('x'); // de otra misión
+        [state.act, state.actAntes] = guardado;
+        return { html, otra, ajena };
+      });
+      ok('recompensa: insignias desbloqueadas («Primera misión», «100 % en una clase»)', insig.html.includes('¡Insignia desbloqueada!') && insig.html.includes('Primera misión') && insig.html.includes('100 % en una clase'));
+      ok('recompensa: solo una vez y solo para la misión enviada', insig.otra === '' && insig.ajena === '');
       ok('resultado: retroalimentación por tema', (await p.textContent('#content')).includes('Fracciones') && (await p.textContent('#content')).includes('¡Muy bien!'));
       ok('resultado: la libreta con su casilla marcada', await p.isChecked(`#sec-resultado-libreta [data-sec-libreta="${CLASE}"]`));
       const sig = await p.$eval('.sec-siguiente', x => ({ id: x.dataset.id || '', t: x.textContent.replace(/\s+/g, ' ').trim(), alto: x.getBoundingClientRect().height }));

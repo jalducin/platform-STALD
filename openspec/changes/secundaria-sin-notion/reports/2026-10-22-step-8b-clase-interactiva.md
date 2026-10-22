@@ -45,3 +45,17 @@
 ## Resultado
 - Estado Step 8b: PASS
 - Bloqueos: ninguno
+
+## Ronda 2 — Estilo «RPG educativo» y gamificación (8b.6)
+
+- Merge de `origin/main` con `comun/gamificacion.js` (PR #227); conflicto solo en `docs/frontend-standards.md`
+  (resuelto: puente de `secundaria.html` + clase interactiva + sección «Gamificación» de main).
+- `ingles.html`: carga `comun/gamificacion.js?v=1` antes de `secundaria-clase.js?v=3`; suben `ingles.css?v=8` y
+  `reproductor.js?v=3` (revisor: bloqueante de versiones, atendido).
+- Textos «Misión», banner «⚔️ Misión» con materia y mundo (`Gamificacion.mundoDe`), y en el resultado «+N XP»
+  (diferencia de `xpTotal`), nivel/rango con barra e insignias nuevas (`insigniaNueva`). Sin fórmulas propias.
+- La recompensa se consume una sola vez y solo para la misión enviada (`state.actAntes = { id, act }`); un envío fallido
+  la limpia (revisor: menor, atendido).
+- E2E: `examen-secundaria` 10/10, `secundaria-clases` 27/27, `secundaria-clase` 35/35 (banner con «🔢 Valle de los
+  Números · Aritmética», «+120 XP» y «Nivel 1 · Aprendiz», insignias «Primera misión» y «100 % en una clase» con un
+  estado de prueba, recompensa una sola vez). Deno: 954 pasaron, 0 fallaron. Lint y `openspec validate` limpios.

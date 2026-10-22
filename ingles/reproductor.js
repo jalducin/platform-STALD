@@ -498,7 +498,8 @@ async function submitExam(form) {
   const btn = document.getElementById('exam-send');
   btn.disabled = true; btn.textContent = 'Enviando…';
   const id = form.dataset.id;
-  state.actAntes = state.act; // Secundaria: para el XP, el nivel y las insignias ganadas (ingles/secundaria-clase.js)
+  // Secundaria: la lista de antes de ESTE envío, para el XP, el nivel y las insignias ganadas (ingles/secundaria-clase.js).
+  state.actAntes = MODO_SECUNDARIA ? { id, act: state.act } : null;
   const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email), {
     method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' },
     body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas: examAnswers(form) }),
@@ -509,6 +510,7 @@ async function submitExam(form) {
     await loadActividades();
     return showResult(r.body.calificacion, { id, intento: r.body.intento, intentosMax: r.body.intentosMax, restantes: r.body.restantes, mejor: r.body.mejor, vistaPrevia: !r.body.guardado });
   }
+  state.actAntes = null; // sin envío no hay recompensa
   btn.disabled = false; btn.textContent = 'Enviar';
   alert('No se pudo enviar (' + (r.body.error || r.status) + '). Intenta de nuevo.');
 }

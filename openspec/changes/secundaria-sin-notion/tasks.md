@@ -99,7 +99,7 @@ otro agente.
 - [x] 8b.4 E2E `e2e-secundaria-clase` (registrada en `tests/e2e/correr.sh`, `--hoy 2026-10-27`): pasos y
   `aria-current`, iframes `youtube-nocookie` lazy, casilla que persiste al recargar, resultado con temas y «Siguiente
   clase» que abre otra clase, Inglés sin pasos; 360 px claro/oscuro sin scroll horizontal; capturas
-- [ ] 8b.6 Estilo «RPG educativo» (referencia del profe): textos «Misión», banner «⚔️ Misión» con materia y mundo,
+- [x] 8b.6 Estilo «RPG educativo» (referencia del profe): textos «Misión», banner «⚔️ Misión» con materia y mundo,
   y en el resultado «+N XP», nivel e insignia nueva con `comun/gamificacion.js` del PR del dashboard (merge de `main`
   cuando esté; sin duplicar fórmulas)
 - [ ] 8b.5 Suite completa, E2E de Secundaria e Inglés afectadas, `revisor-solo-lectura`, PR, checks, merge y

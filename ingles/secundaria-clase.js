@@ -65,9 +65,13 @@ function mundoDeMision(m) {
   return hayGamificacion() && m ? Gamificacion.mundoDe(m.nombre, hoyDeAct()) : null;
 }
 // Recompensa de la misión: XP ganado (diferencia del XP total antes y después del envío), nivel y rango, barra del
-// nivel e insignias desbloqueadas. Necesita la lista de antes (`state.actAntes`, la guarda submitExam) y la de después.
-function recompensaMision() {
-  const antes = state.actAntes, despues = state.act;
+// nivel e insignias desbloqueadas. Solo justo después del envío de ESA misión: `state.actAntes` = { id, act } lo guarda
+// submitExam y se consume aquí (ver un resultado pasado no repite la recompensa).
+function recompensaMision(id) {
+  const envio = state.actAntes;
+  state.actAntes = null;
+  if (!envio || envio.id !== id) return '';
+  const antes = envio.act, despues = state.act;
   if (!hayGamificacion() || !antes || !despues || antes.isAdmin || despues.isAdmin) return '';
   const hoy = despues.hoy || todayStr();
   const xpAntes = Gamificacion.xpTotal(antes.items, { hoy });
@@ -143,7 +147,7 @@ function extrasResultadoSecundaria(id) {
   const boton = sig
     ? '<button class="btn sec-siguiente" data-action="abrir-item" data-id="' + escapeHtml(sig.id) + '"><span>Siguiente misión →</span><small>' + escapeHtml(textoClase(sig, materiaDe(sig))) + '</small></button>'
     : '<button class="btn sec-siguiente" data-action="volver"><span>🗺️ Mis misiones</span><small>No tienes más misiones pendientes por ahora.</small></button>';
-  return recompensaMision() + (libreta ? '<section class="exam-card sec-paso-bloque" id="sec-resultado-libreta"><h3>' + numPaso(4) + ' 📓 Libreta</h3>' + libreta + '</section>' : '') +
+  return recompensaMision(id) + (libreta ? '<section class="exam-card sec-paso-bloque" id="sec-resultado-libreta"><h3>' + numPaso(4) + ' 📓 Libreta</h3>' + libreta + '</section>' : '') +
     '<div class="sec-resultado-acciones">' + boton + '</div>';
 }
 
