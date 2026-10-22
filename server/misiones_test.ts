@@ -47,6 +47,10 @@ Deno.test("GET /misiones: la alumna ve su misión del mundo en curso (sin la fut
   // La práctica de la teoría llega sin la respuesta correcta.
   const q = r.body.misiones[0].teoria[0].practica[0];
   assertEquals([q.id, "correcta" in q, q.pista], ["q1", false, "Divide entre 10."]);
+  // Sin la lista de slugs de quién más la tiene (salen de nombres); el admin sí la ve.
+  assertEquals(["alumnos" in r.body.misiones[0], "grupos" in r.body.misiones[0]], [false, false]);
+  const admin = await leer(await handleMisiones(new Request("http://x/misiones"), "", deps(datos(), ADMIN), json));
+  assertEquals(admin.body.misiones.find((m: any) => m.id === ID).alumnos, ["ana"]);
 });
 
 Deno.test("POST entrega: texto válido → 200 y «entregado»; tardía se marca", async () => {
@@ -177,6 +181,22 @@ Deno.test("borrar contenido: de una entrega y de una persona; queda la evaluaci�
   assertEquals((await profe(deps(store, ADMIN), `/${ID}/ana/borrar`, {})).body.evaluacion.xp, 315);
 });
 
+Deno.test("borrar a una persona alcanza entregas de misiones que ya no están en el repo de datos", async () => {
+  const store = datos();
+  store.files.set("entregas/mis-vieja-retirada/ana.json", { data: { mision: "mis-vieja-retirada", ambito: "secundaria", slug: "ana", evaluacion: null, historial: [], pasos: { p1: { texto: "texto viejo", enviadoEn: "x", tarde: false, estado: "entregado" } } }, sha: "v1" });
+  const r = await profe(deps(store, ADMIN), "/persona/ana/borrar", {});
+  assertEquals([r.status, r.body.entregas], [200, 1]);
+  assertEquals((await store.get<any>("entregas/mis-vieja-retirada/ana.json"))!.data.pasos.p1.texto, null);
+});
+
+Deno.test("una entrega completa cuyo contenido se borró antes de evaluar no se puede evaluar (409 incompleta)", async () => {
+  const store = datos();
+  await misionEntregada(store);
+  await profe(deps(store, ADMIN), `/${ID}/ana/borrar`, {});
+  assertEquals((await profe(deps(store, ADMIN), `/${ID}/ana/evaluar`, { puntos: { c1: 25, c2: 25, c3: 25, c4: 25 } })).body.error, "incompleta");
+  assertEquals((await profe(deps(store, ADMIN), "")).body.entregas[0].estado, "en-progreso");
+});
+
 Deno.test("/profe/entregas: alumna, alumno, invitado o baja → 403", async () => {
   const store = datos();
   for (const p of [ALUMNA, { tipo: "ingles", slug: "beto", nombre: "Beto", grupo: "grupo-1" }, { tipo: "sin_acceso" }, { tipo: "baja", slug: "beto" }] as PersonaMision[]) {
@@ -200,6 +220,9 @@ Deno.test("POST /practica/comprobar: correcta o no con pista; la respuesta no vi
   assertEquals((await comprobar(ALUMNA, { misionId: ID, practicaId: "q1", respuesta: 1 })).body.correcta, false);
   assertEquals((await comprobar({ tipo: "secundaria", slug: "otra", nombre: "Otra" }, { misionId: ID, practicaId: "q1", respuesta: 0 })).status, 404);
   assertEquals((await comprobar({ tipo: "ingles", slug: "beto", nombre: "Beto", grupo: "grupo-1" }, { itemId: "mate-1", practicaId: "p-a", respuesta: "20" })).status, 404);
+  // Alumno de Inglés: la teoría de SU misión visible sí (matriz); la de una misión de Secundaria, 404.
+  assertEquals((await comprobar({ tipo: "ingles", slug: "beto", nombre: "Beto", grupo: "grupo-1" }, { misionId: "mis-ingles-grupo-isla-del-alfabeto", practicaId: "q1", respuesta: 0 })).body.correcta, true);
+  assertEquals((await comprobar({ tipo: "ingles", slug: "beto", nombre: "Beto", grupo: "grupo-1" }, { misionId: ID, practicaId: "q1", respuesta: 0 })).status, 404);
   assertEquals((await comprobar({ tipo: "sin_acceso" }, { itemId: "mate-1", practicaId: "p-a", respuesta: "20" })).status, 403);
   assertEquals((await comprobar(ADMIN, { itemId: "mate-1", practicaId: "p-a", respuesta: "20" })).body.correcta, true);
   assertEquals((await comprobar(ALUMNA, { itemId: "mate-1", practicaId: "p-a" })).status, 400);
@@ -216,8 +239,19 @@ Deno.test("retención del 31 de agosto: borra el texto, conserva la evaluación 
   // Con un Db simulado: la simulación no escribe; --confirmar actualiza con la versión.
   const cambios: string[] = [];
   const db = { select: () => Promise.resolve([con, sin]), update: (_t: string, f: string) => { cambios.push(f); return Promise.resolve([{}]); } } as any;
-  assertEquals(await aplicarRetencion(db, "2027-08-31T12:00:00Z", false), { revisadas: 2, borradas: 1 });
+  assertEquals(await aplicarRetencion(db, "2027-08-31T12:00:00Z", false), { revisadas: 2, borradas: 1, pendientes: [] });
   assertEquals(cambios, []);
-  await aplicarRetencion(db, "2027-08-31T12:00:00Z", true);
+  assertEquals(await aplicarRetencion(db, "2027-08-31T12:00:00Z", true), { revisadas: 2, borradas: 1, pendientes: [] });
   assertEquals(cambios, [`path=eq.${encodeURIComponent(con.path)}&version=eq.3`]);
+  // Si la entrega cambió entre la lectura y la escritura (0 filas), la vuelve a leer y reintenta con la versión nueva.
+  const intentos: string[] = [];
+  const conCambio = {
+    select: (_t: string, q: string) => Promise.resolve(q.includes("like.") ? [con] : [{ ...con, version: 4 }]),
+    update: (_t: string, f: string) => { intentos.push(f); return Promise.resolve(f.endsWith("version=eq.4") ? [{}] : []); },
+  } as any;
+  assertEquals(await aplicarRetencion(conCambio, "2027-08-31T12:00:00Z", true), { revisadas: 1, borradas: 1, pendientes: [] });
+  assertEquals(intentos.length, 2);
+  // Si nunca se puede escribir, queda pendiente (el script sale con 1).
+  const bloqueado = { select: (_t: string, q: string) => Promise.resolve(q.includes("like.") ? [con] : [con]), update: () => Promise.resolve([]) } as any;
+  assertEquals((await aplicarRetencion(bloqueado, "2027-08-31T12:00:00Z", true)).pendientes, [con.path]);
 });

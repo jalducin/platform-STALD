@@ -178,9 +178,9 @@ function renderSecMisiones(hoy, admin) {
   }).join('') + '</div>';
 }
 
-function borradorClave(mId, pId) { return 'stald_mis_borrador:' + misClaveEmail() + ':' + mId + ':' + pId; }
-function leerBorrador(mId, pId) { try { return localStorage.getItem(borradorClave(mId, pId)) || ''; } catch (e) { return ''; } }
-function guardarBorrador(mId, pId, v) { try { if (v) localStorage.setItem(borradorClave(mId, pId), v); else localStorage.removeItem(borradorClave(mId, pId)); } catch (e) { /* sin almacenamiento */ } }
+function misBorradorClave(mId, pId) { return 'stald_mis_borrador:' + misClaveEmail() + ':' + mId + ':' + pId; }
+function misLeerBorrador(mId, pId) { try { return localStorage.getItem(misBorradorClave(mId, pId)) || ''; } catch (e) { return ''; } }
+function misGuardarBorrador(mId, pId, v) { try { if (v) localStorage.setItem(misBorradorClave(mId, pId), v); else localStorage.removeItem(misBorradorClave(mId, pId)); } catch (e) { /* sin almacenamiento */ } }
 
 function pasoHtml(m, p, i, puedeEntregar) {
   const e = m.entrega && m.entrega.pasos[p.id];
@@ -192,7 +192,7 @@ function pasoHtml(m, p, i, puedeEntregar) {
     ? '<p class="mis-correccion">✏️ <b>Tu profe te pide un ajuste:</b> ' + escapeHtml(e.correccion.motivo) + (e.correccion.privacidad ? ' Recuerda usar nombres inventados: lo que habías escrito ya se borró para cuidar tu privacidad.' : '') + '</p>' : '';
   const entregado = e && e.texto ? '<details class="mis-entregado"' + (abierto ? '' : ' open') + '><summary>Lo que entregaste</summary>' + misPre(e.texto) + '</details>' : (e && e.borrado && !correccion ? '<p class="meta">El contenido de este paso ya se borró; tu evaluación se conserva.</p>' : '');
   const idT = 'mis-txt-' + m.id + '-' + p.id;
-  const inicial = leerBorrador(m.id, p.id) || (e && e.estado === 'entregado' && e.texto) || '';
+  const inicial = misLeerBorrador(m.id, p.id) || (e && e.estado === 'entregado' && e.texto) || '';
   const form = abierto ? '<form class="mis-entrega" data-mis-entrega="' + escapeHtml(m.id) + '" data-paso="' + escapeHtml(p.id) + '">' +
     '<label for="' + escapeHtml(idT) + '" class="mis-label">Tu entrega del paso ' + (i + 1) + '</label>' +
     '<p class="mis-aviso" id="' + escapeHtml(idT) + '-aviso">🔒 Sin nombres reales, direcciones ni datos de contacto. Solo texto.</p>' +
@@ -257,7 +257,7 @@ document.addEventListener('input', e => {
   const c = f.querySelector('.mis-cuenta');
   c.textContent = n + ' / ' + MIS_MAX;
   c.classList.toggle('lleno', n > MIS_MAX * 0.95);
-  guardarBorrador(f.dataset.misEntrega, f.dataset.paso, t.value);
+  misGuardarBorrador(f.dataset.misEntrega, f.dataset.paso, t.value);
 });
 document.addEventListener('submit', async e => {
   const f = e.target.closest && e.target.closest('form.mis-entrega');
@@ -279,7 +279,7 @@ document.addEventListener('submit', async e => {
     res.textContent = r.status === 400 && r.body.motivo ? r.body.motivo : r.status === 409 ? 'El profe ya evaluó esta misión.' : 'No se pudo enviar; inténtalo de nuevo. Tu texto se queda guardado aquí.';
     return;
   }
-  guardarBorrador(id, paso, '');
+  misGuardarBorrador(id, paso, '');
   await cargarMisionesSec(misQuery(), null);
   repintarMisiones();
   const aviso = document.querySelector('[data-mis-paso="' + CSS.escape(paso) + '"] .mis-paso-meta');

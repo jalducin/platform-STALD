@@ -36,7 +36,7 @@ servidor. El diseño completo vive en `openspec/changes/plataforma-rpg/design.md
 |---|---|---|---|---|
 | Admin | todas las de Secundaria (o `?alumna=`), sin entregas | 403 `solo_alumnos` | 200 | 200 (cualquier clase) |
 | Alumna de Secundaria | las suyas visibles | 200 en las suyas; ajena o mundo futuro 404 | 403 | 200 en sus clases visibles; ajena 404 |
-| Alumno activo de Inglés | las de `contenido/ingles/misiones` de su grupo (hoy ninguna) | ajena 404 | 403 | 404 |
+| Alumno activo de Inglés | las de `contenido/ingles/misiones` de su grupo (hoy ninguna) | ajena 404 | 403 | 200 en la teoría de sus misiones visibles; clases de Secundaria o misión ajena 404 |
 | Baja de Inglés (sin Secundaria) | solo sus entregas anteriores, sin enviar | 403 | 403 | 403 |
 | Invitado de Juegos o correo no asignado | 403 | 403 | 403 | 403 |
 | Sin sesión | 401 | 401 | 401 | 401 |

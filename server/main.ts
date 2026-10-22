@@ -24,6 +24,7 @@ import { crearMemo, unaALaVez } from "./cache.ts";
 import { aplicarCacheHttp, politicaCache } from "./http_cache.ts";
 import { type DepsMisiones, handleMisiones, handlePractica, handleProfeEntregas, type PersonaMision } from "./misiones.ts";
 import { alumnasSecundaria } from "./secundaria_registro.ts";
+import { aplicarRetencion, CRON_RETENCION } from "./retencion_entregas.ts";
 
 const NOTION_VERSION = "2022-06-28";
 const SECUNDARIA_DB_ID = "3831c6b4f8b5817ba701ed689f825cf0"; // 📖 Clases
@@ -468,3 +469,12 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
 }
 
 if (import.meta.main) Deno.serve({ port: Number(env("PORT")) || 8000 }, handler);
+
+// Retención de entregas (openspec: rpg-fase2-misiones): cada 31 de agosto se borra el texto de las entregas y queda la
+// evaluación. Solo en Deno Deploy (Deno.cron) y con Postgres; en local y en pruebas no se programa.
+if (import.meta.main && db && !env("DATA_DIR") && !env("ROWS_FIXTURE") && typeof Deno.cron === "function") {
+  Deno.cron("retencion-entregas", CRON_RETENCION, async () => {
+    const r = await aplicarRetencion(db, new Date().toISOString(), true);
+    console.log(`retención de entregas: ${r.revisadas} revisadas, ${r.borradas} sin contenido, ${r.pendientes.length} pendientes`);
+  });
+}

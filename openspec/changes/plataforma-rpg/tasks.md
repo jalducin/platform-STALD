@@ -66,7 +66,8 @@
   `secundaria-clases`) y pruebas de `server/` afectadas; E2E nueva de misión a 360 px, claro y oscuro
 - [x] 3.18 Ejecutar pruebas y verificar estado (OBLIGATORIO): `deno test -A server/` (subagente
   `verificador-pruebas`), `deno check`, `deno lint`, E2E; datos de prueba solo en `stald_test_*` y restaurados; reporte
-  `openspec/changes/rpg-fase2-misiones/reports/AAAA-MM-DD-step-3.18-pruebas-y-verificacion.md`
+  `openspec/changes/rpg-fase2-misiones/reports/AAAA-MM-DD-step-3.18-pruebas-y-verificacion.md` (hecho como
+  `reports/2026-10-21-step-4.1-pruebas-y-verificacion.md`, numeración del cambio derivado)
 - [x] 3.19 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): servidor local con copia de datos y curl a cada fila
   de la matriz (admin, alumna, alumno de Inglés, de baja, invitado, sin sesión, correo no asignado, misión ajena,
   texto demasiado largo, archivo adjunto); CLI `--misiones` con caso válido e inválido; restaurar entregas de prueba

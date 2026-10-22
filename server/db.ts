@@ -98,6 +98,13 @@ export class PgStore implements Store {
       .map((f) => ({ nombre: f.path.slice(d.length + 1), data: f.data as T }));
   }
 
+  // Todas las rutas (a cualquier profundidad) bajo un prefijo que vive en Postgres (openspec: rpg-fase2-misiones).
+  async rutasBajo(prefijo: string): Promise<string[]> {
+    if (!this.enPg(prefijo + "x")) return [];
+    const filas = await this.db.select<{ path: string }>("docs", `path=like.${v(prefijo + "*")}&select=path`);
+    return filas.map((f) => f.path).filter((p) => p.startsWith(prefijo));
+  }
+
   async remove(path: string, message: string): Promise<void> {
     if (!this.enPg(path)) return await this.base.remove(path, message);
     await this.db.remove("docs", `path=eq.${v(path)}`);
@@ -114,4 +121,11 @@ export async function leerCarpetaGenerica<T = unknown>(store: Store, dir: string
 // La carpeta con el camino rápido de PgStore cuando existe.
 export async function leerCarpeta<T = unknown>(store: Store, dir: string): Promise<{ nombre: string; data: T }[]> {
   return store instanceof PgStore ? await store.leerCarpeta<T>(dir) : await leerCarpetaGenerica<T>(store, dir);
+}
+
+// Rutas bajo un prefijo a cualquier profundidad: Postgres o almacén en memoria (pruebas). Otro almacén: ninguna.
+export async function rutasBajo(store: Store, prefijo: string): Promise<string[]> {
+  if (store instanceof PgStore) return await store.rutasBajo(prefijo);
+  const archivos = (store as { files?: Map<string, unknown> }).files;
+  return archivos instanceof Map ? [...archivos.keys()].filter((p) => p.startsWith(prefijo)) : [];
 }

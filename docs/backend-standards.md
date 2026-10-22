@@ -545,9 +545,11 @@ admin, alumna de Secundaria, alumno activo de Inglés (con su grupo), de baja de
 | `POST /profe/entregas/<id>/<slug>/evaluar` `{ puntos: { <criterio>: n }, comentario? }` | admin | 200 `{ evaluacion }`; 400 `rubrica_invalida`; 409 `incompleta`; 404 |
 | `POST /profe/entregas/<id>/<slug>/correccion` `{ pasos, motivo, privacidad }` | admin | reabre los pasos (borra el texto si `privacidad`) y quita la evaluación; 400 `correccion_invalida` |
 | `POST /profe/entregas/<id>/<slug>/borrar`, `POST /profe/entregas/persona/<slug>/borrar` | admin | borran el texto y conservan la evaluación (la XP no cambia) |
-| `POST /practica/comprobar` `{ itemId o misionId, practicaId, respuesta }` | con sesión | `{ correcta, pista }`; 404 si la clase o misión no le es visible; 403 baja o sin acceso |
+| `POST /practica/comprobar` `{ itemId o misionId, practicaId, respuesta }` | con sesión | `{ correcta, pista }`; clases solo de Secundaria; misiones visibles para la persona (también de Inglés); 404 si no le es visible; 403 baja o sin acceso |
 
-Toda `/profe/entregas*` responde 403 a quien no es admin y 401 sin sesión. Ninguna respuesta lleva correos. El
+Toda `/profe/entregas*` responde 403 a quien no es admin y 401 sin sesión. Ninguna respuesta lleva correos; a
+estudiantes la misión va sin `alumnos` ni `grupos`. Una entrega con el contenido borrado antes de evaluar ya no se puede
+evaluar (409 `incompleta`). El
 contenido de misiones y mundos va en caché 60 s por ámbito (`limpiarCacheMisiones`). La teoría de las clases se
 publica con `teoriaPublica` (sin `correcta`/`aceptadas` de su práctica).
 

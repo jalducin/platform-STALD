@@ -7,7 +7,7 @@
 import "../comun/gamificacion.js";
 import { AMBITO_SECUNDARIA, loadItem, visibleItems } from "./actividades.ts";
 import { crearMemo } from "./cache.ts";
-import { leerCarpeta } from "./db.ts";
+import { leerCarpeta, rutasBajo } from "./db.ts";
 import { esPara } from "./motor.ts";
 import { AMBITOS_MISION, catalogoDe, type Mision, type Mundo } from "./misiones_validar.ts";
 import { buscarPractica, comprobar, teoriaPublica } from "./practica.ts";
@@ -110,9 +110,11 @@ async function visiblesPara(d: DepsMisiones, p: PersonaMision, ambito: string): 
   return { misiones, mundos };
 }
 
-// La misión como la ve la página: sin respuestas de la práctica.
-function publica(m: Mision, ambito: string) {
-  return { ...m, ambito, teoria: teoriaPublica(m.teoria), tipoEntrega: "texto" };
+// La misión como la ve la página: sin respuestas de la práctica. A estudiantes, sin `alumnos` ni `grupos` (los slugs
+// salen de nombres); el admin los ve.
+function publica(m: Mision, ambito: string, admin = false) {
+  const { alumnos: _a, grupos: _g, ...resto } = m;
+  return { ...(admin ? m : resto), ambito, teoria: teoriaPublica(m.teoria), tipoEntrega: "texto" };
 }
 // Entrega para su dueña (sin historial interno).
 function entregaPublica(e: Entrega | null) {
@@ -174,7 +176,7 @@ async function listar(req: Request, p: PersonaMision, d: DepsMisiones, json: Jso
       return json({ isAdmin: true, vistaDe: alumna, hoy, mundos: cat?.mundos ?? null, misiones: misiones.map((m, i) => conEntrega(m, "secundaria", docs[i]?.data ?? null)) });
     }
     const todas = await misionesDe(d.store, "secundaria");
-    return json({ isAdmin: true, hoy, mundos: cat?.mundos ?? null, misiones: todas.map((m) => ({ ...publica(m, "secundaria"), entrega: null, evaluacion: null, xp: 0 })) });
+    return json({ isAdmin: true, hoy, mundos: cat?.mundos ?? null, misiones: todas.map((m) => ({ ...publica(m, "secundaria", true), entrega: null, evaluacion: null, xp: 0 })) });
   }
   if (p.tipo === "baja") {
     // De baja de Inglés: solo sus entregas anteriores, de solo lectura (spec «Persona de baja o invitado»).
@@ -274,7 +276,8 @@ async function buscarMision(store: Store, id: string): Promise<{ mision: Mision;
   return null;
 }
 
-const completa = (m: Mision, e: Entrega) => m.pasos.every((x) => e.pasos[x.id]?.estado === "entregado");
+// Completa = todos sus pasos entregados y con texto (si se borró el contenido antes de evaluar, no se puede evaluar).
+const completa = (m: Mision, e: Entrega) => m.pasos.every((x) => e.pasos[x.id]?.estado === "entregado" && e.pasos[x.id]?.texto !== null);
 function estadoEntrega(m: Mision, e: Entrega): "evaluada" | "lista" | "correccion" | "en-progreso" {
   if (e.evaluacion) return "evaluada";
   if (completa(m, e)) return "lista";
@@ -378,12 +381,17 @@ async function borrarEntrega(id: string, slug: string, d: DepsMisiones, json: Js
 async function borrarPersona(slug: string, d: DepsMisiones, json: Json): Promise<Response> {
   return await conAlmacen(json, async () => {
     let n = 0;
-    for (const ambito of Object.keys(AMBITOS_MISION)) {
-      for (const m of await misionesDe(d.store, ambito)) {
-        if (!await leerEntrega(d.store, m.id, slug)) continue;
-        const r = await modificarEntrega(d.store, m.id, slug, (e) => (e ? sinContenido(e, d.ahora()) : json({ error: "not_found" }, 404)), `borrado ${m.id}`);
-        if (!(r instanceof Response)) n++;
-      }
+    // Todas sus entregas, también las de misiones que ya no están en el repo de datos (spec «Borrado a petición»).
+    const ids = new Set<string>();
+    for (const ambito of Object.keys(AMBITOS_MISION)) for (const m of await misionesDe(d.store, ambito)) ids.add(m.id);
+    for (const ruta of await rutasBajo(d.store, "entregas/")) {
+      const partes = ruta.split("/");
+      if (partes.length === 3 && partes[2] === `${slug}.json`) ids.add(partes[1]);
+    }
+    for (const id of ids) {
+      if (!await leerEntrega(d.store, id, slug)) continue;
+      const r = await modificarEntrega(d.store, id, slug, (e) => (e ? sinContenido(e, d.ahora()) : json({ error: "not_found" }, 404)), `borrado ${id}`);
+      if (!(r instanceof Response)) n++;
     }
     return json({ ok: true, entregas: n });
   });

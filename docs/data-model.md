@@ -522,6 +522,8 @@ aTiempo, xp, comentario, fecha }, historial: [{ accion, paso?, fecha }] }`. Sin 
 × 3 + 60 si el último paso fue a tiempo (`Gamificacion.xpDeMision`). Pedir corrección por privacidad pone `texto: null`
 en ese momento.
 
-**Retención:** el 31 de agosto, `server/retencion_entregas.ts --confirmar` (con las llaves de Deno Deploy) borra el
-texto de todas las entregas y conserva la evaluación; el profe también puede borrar el contenido de una entrega o de
+**Retención:** cada 31 de agosto (12:00 UTC) un `Deno.cron` de Deno Deploy (`server/main.ts`) borra el texto de todas
+las entregas y conserva la evaluación, con concurrencia optimista y reintento; a mano, `server/retencion_entregas.ts
+--confirmar` con las llaves (sale con 1 si alguna quedó pendiente). El borrado por persona alcanza también entregas de
+misiones que ya no están en el repo de datos; el profe también puede borrar el contenido de una entrega o de
 una persona desde la bandeja.

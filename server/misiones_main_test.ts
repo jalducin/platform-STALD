@@ -64,6 +64,7 @@ Deno.test("main: entrega y bandeja por persona; sin sesión 401", async () => {
   assertEquals([ok.status, ok.body.ok], [200, true]);
   const bandeja = await pedir("/profe/entregas", "admin@example.com");
   assertEquals([bandeja.status, bandeja.body.entregas[0].nombre, bandeja.body.entregas[0].estado], [200, "Ana", "en-progreso"]);
+  assert(!JSON.stringify(bandeja.body).includes("@example.com"), "la bandeja no lleva correos");
   assertEquals((await pedir("/profe/entregas", "ana@example.com")).status, 403);
   assertEquals((await pedir("/profe/entregas")).status, 401);
 });
