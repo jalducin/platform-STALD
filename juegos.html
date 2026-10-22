@@ -11,9 +11,8 @@
   try { var t = localStorage.getItem('stald_tema'); if (t === 'oscuro') document.documentElement.dataset.theme = 'dark'; else if (t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) { /* sin almacenamiento */ }
 </script>
 <link rel="stylesheet" href="estilos/ui.css?v=1"> <!-- juegos-diseno-rpg: tokens y componentes RPG compartidos -->
-<link rel="stylesheet" href="juegos/tablero.css?v=1"> <!-- juegos-tablero -->
 <link rel="stylesheet" href="juegos/app/juegos.css?v=10"> <!-- organizar-codigo: estilos de esta página -->
-<link rel="stylesheet" href="juegos/clasicos-rapidos.css?v=1"> <!-- clasicos-rapidos -->
+<!-- juegos-carga-perezosa: tablero.css y clasicos-rapidos.css los inserta juegos/app/cargador.js con su juego (misma cascada). -->
 </head>
 <body>
 <!-- Baraja española (openspec: cartas-espanolas-diseno): palos es-s0..3 (oros, copas, espadas, bastos) y figuras es-f10..12 (sota, caballo, rey). -->
@@ -42,49 +41,18 @@
   <footer class="pie-legal" data-interruptor="privacidad" hidden><a class="home-link" href="privacidad.html" data-interruptor="privacidad">🔒 Aviso de privacidad</a></footer>
 </div>
 
-<script src="juegos/cartas.js?v=4"></script>
-<script src="juegos/mesas.js?v=8"></script> <!-- mesas de las partidas (openspec: mesas-con-bots) -->
-<script src="juegos/fisica.js?v=3"></script><script src="juegos/futbolito-motor.js?v=3"></script> <!-- futbolito-equipos: reparto de equipos en la sala de espera -->
-<script src="juegos/arena-motor.js?v=1"></script> <!-- futbolito-arena: equipos y puntos en la sala de espera y el podio -->
-<script src="juegos/tablero.js?v=2"></script> <!-- juegos-tablero: motores sin DOM -->
-<script src="juegos/tablero-ui.js?v=6"></script> <!-- juegos-tablero: pantallas, salas y ayuda -->
-<script src="juegos/ajedrez.js?v=2"></script>
-<script src="juegos/clasicos-rapidos.js?v=2"></script> <!-- clasicos-rapidos: reglas -->
-<script src="juegos/clasicos-rapidos-ui.js?v=3"></script> <!-- clasicos-rapidos: interfaz -->
-<script src="juegos/karts-pistas.js?v=9"></script> <!-- karts-pistas-mesoamericanas: antes de arcade.js -->
-<script src="juegos/arcade.js?v=8"></script>
-<script src="juegos/karts-copa.js?v=5"></script> <!-- karts-copa-en-sala: calendario y puntos de la copa en sala; karts-plazo-45 -->
-<script src="juegos/personajes.js?v=3"></script> <!-- personaje-en-salas: los 8 personajes en la sala de espera de Karts y Axo -->
-<script src="juegos/karts-ceremonia.js?v=1"></script> <!-- karts-ceremonia: premiación de Karts en sala -->
-<script src="juegos/ingles-gramatica.js?v=3"></script>
-<!-- juegos-salas-grandes: Bingo, Blackjack, Dibuja y adivina, y Memorama y Sopa en partida -->
-<script src="juegos/salas-grandes.js?v=3"></script>
-<script src="juegos/bingo.js?v=3"></script>
-<script src="juegos/blackjack.js?v=4"></script>
-<script src="juegos/dibuja.js?v=2"></script>
-<script src="juegos/memo-sopa-sala.js?v=2"></script>
-<script src="juegos/linea-tiempo.js?v=3"></script> <!-- cultura-conocimiento: 📜 Línea del tiempo -->
-<script src="juegos/basta.js?v=2"></script> <!-- basta-divertida-una-robo -->
-<script src="juegos/una.js?v=1"></script> <!-- basta-divertida-una-robo -->
+<!-- Núcleo del hub (openspec: juegos-carga-perezosa): el código de cada juego (motores de juegos/ y pantallas de
+     juegos/app/) lo carga juegos/app/cargador.js al elegirlo, con el ?v= de su lista ARCHIVOS_JUEGO. -->
 <script src="comun/auth.js?v=9"></script>
 <script src="comun/interruptores.js?v=2"></script> <!-- enlace al aviso de privacidad (openspec: rpg-privacidad) -->
-<script src="juegos/emocion.js?v=1"></script> <!-- emocion-sonora: stingers y tensión (WebAudio) -->
-<script src="juegos/en-vivo.js?v=2"></script> <!-- juegos-en-vivo: mensajes de navegador a navegador por el canal de la sala -->
+<script src="juegos/emocion.js?v=1"></script> <!-- emocion-sonora: stingers y tensión (WebAudio); también lo usa el menú de música -->
 <!-- Código de la página en juegos/app/ (openspec: organizar-codigo): scripts clásicos en este orden. -->
-<script src="juegos/app/nucleo.js?v=4"></script>
-<script src="juegos/app/menu.js?v=8"></script>
+<script src="juegos/app/nucleo.js?v=5"></script>
+<script src="juegos/app/cargador.js?v=1"></script> <!-- juegos-carga-perezosa -->
+<script src="juegos/app/menu.js?v=9"></script>
 <script src="juegos/app/ranking.js?v=3"></script>
 <script src="juegos/app/admin.js?v=2"></script>
-<script src="juegos/app/individuales.js?v=5"></script>
-<script src="juegos/app/arcade.js?v=17"></script>
-<script src="juegos/app/brigada-sala.js?v=2"></script> <!-- brigada-xalli: misión cooperativa en sala -->
-<script src="juegos/app/mente.js?v=2"></script>
-<script src="juegos/app/clasicos.js?v=2"></script>
-<script src="juegos/app/naipes.js?v=4"></script>
-<script src="juegos/reloj-sala.js?v=1"></script> <!-- karts-salida-y-puntos: reloj común de las salas -->
-<script src="juegos/app/salas.js?v=17"></script>
-<script src="juegos/app/salas-mesa.js?v=3"></script>
 <script src="juegos/app/musica.js?v=3"></script>
-<script src="juegos/app/arranque.js?v=13"></script>
+<script src="juegos/app/arranque.js?v=14"></script>
 </body>
 </html>

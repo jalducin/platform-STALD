@@ -6,13 +6,8 @@
   'use strict';
   const CR = g.ClasicosRapidos;
   const IDS = ['gato', 'conecta4', 'ppt', 'ahorcado', 'serpientes'];
-  const TARJETAS = [
-    { id: 'gato', cat: 'clasicos', emoji: '❌', t: 'Gato', d: 'Tres en línea contra Michi (3 niveles) o 1 vs 1.', jugar: () => elegirGato() },
-    { id: 'conecta4', cat: 'clasicos', emoji: '🔴', t: 'Conecta 4', d: 'Suelta fichas y junta 4 en línea antes que tu rival.', jugar: () => elegirConecta4() },
-    { id: 'ppt', cat: 'clasicos', emoji: '✊', t: 'Piedra, papel o tijera', d: 'Al mejor de 5, ¡todos eligen a la vez!', jugar: () => jugarPpt() },
-    { id: 'ahorcado', cat: 'clasicos', emoji: '🪢', t: 'Ahorcado en inglés', d: 'Adivina la palabra en inglés antes de que se desinfle el globo.', jugar: () => jugarAhorcado() },
-    { id: 'serpientes', cat: 'clasicos', emoji: '🐍', t: 'Serpientes y escaleras', d: 'Tira el dado, sube escaleras y esquiva serpientes.', jugar: () => elegirSerpientes() },
-  ];
+  // Tarjetas del menú: en JUEGOS (juegos/app/menu.js), que se pinta sin cargar este módulo (openspec: juegos-carga-perezosa).
+  const JUGAR = { gato: () => elegirGato(), conecta4: () => elegirConecta4(), ppt: () => jugarPpt(), ahorcado: () => jugarAhorcado(), serpientes: () => elegirSerpientes() };
   const espera = (ms, f) => { const t = setTimeout(f, ms * TIEMPO); limpiezas.push(() => clearTimeout(t)); return t; };
   const tiempoDesde = t0 => (Date.now() - t0) / 1000;
   const NIVELES = { 1: '🐣 Fácil', 2: '🦊 Medio', 3: '🦉 Difícil' };
@@ -643,5 +638,5 @@
       '<h3>Puntos</h3><p>Quien gana: 700. Los demás: 4 puntos por cada casilla avanzada.</p><p>En partida juegan de 2 a 4 (con bots si se piden); el dado sale igual en todos los celulares y nadie puede escoger su número.</p>',
   };
 
-  g.ClasicosRapidosUI = { IDS, TARJETAS, AYUDA, pintarSala: pintarSalaCR, opcionesCrear };
+  g.ClasicosRapidosUI = { IDS, jugar: id => JUGAR[id](), AYUDA, pintarSala: pintarSalaCR, opcionesCrear };
 })(typeof window !== 'undefined' ? window : globalThis);

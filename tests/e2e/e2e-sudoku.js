@@ -9,7 +9,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const b = await chromium.launch({ executablePath: process.env.CHROME });
   const p = await abrirPagina(b, { email: 'marisol@example.com', viejo: true, out, etiqueta: '', ruta: '/juegos.html', esperar: '[data-menu]' });
   ok('Sudoku aparece en Mente ágil', true);
-  // Generador: pistas por nivel, solución única y tiempo
+  // Generador: pistas por nivel, solución única y tiempo. El código de Mente ágil se carga al abrir su juego
+  // (openspec: juegos-carga-perezosa): se pide aquí antes de evaluarlo.
+  await p.evaluate(() => cargarPaquete('mente'));
   const gen = await p.evaluate(() => Object.keys(SUDOKU_NIVELES).map(nv => {
     const r = [];
     for (let k = 0; k < 3; k++) {

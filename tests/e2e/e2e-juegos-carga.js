@@ -65,7 +65,7 @@ async function medir(b, nombre, o) {
   const xs = [];
   for (let i = 0; i < REPETICIONES; i++) xs.push(await medirUna(b, o));
   const m = k => mediana(xs.map(x => x[k]));
-  return { nombre, archivos: m('archivos'), kb: m('kb'), api: m('api'), usable: m('usable'), fcp: m('fcp'), load: m('load'), perezosos: [...new Set(xs.flatMap(x => x.perezosos))] };
+  return { nombre, archivos: m('archivos'), kb: m('kb'), api: m('api'), usable: m('usable'), fcp: m('fcp'), load: m('load'), muestras: xs.map(x => x.usable).join(' / '), perezosos: [...new Set(xs.flatMap(x => x.perezosos))] };
 }
 
 (async () => {
@@ -78,10 +78,12 @@ async function medir(b, nombre, o) {
     ['menú (PC 1280, 4G)', { dispositivo: PC, email: EMAIL, ruta: '/juegos.html', listo: '[data-categoria]' }],
     ['entrada ?registro=1 (celular 360, 4G)', { dispositivo: CELULAR, ruta: '/juegos.html?registro=1', listo: '#f-entrada' }],
   ];
+  // Calentamiento (no cuenta): la primera visita también paga el arranque del servidor local y del navegador.
+  await medirUna(b, { ...casos[0][1], dispositivo: PC });
   const tabla = [];
   for (const [nombre, o] of casos) tabla.push(await medir(b, nombre, o));
-  const md = ['| Caso | Archivos | KB | Peticiones al API | Menú usable (ms) | FCP (ms) | load (ms) |', '|---|---:|---:|---:|---:|---:|---:|']
-    .concat(tabla.map(t => `| ${t.nombre} | ${t.archivos} | ${t.kb} | ${t.api} | ${t.usable} | ${t.fcp} | ${t.load} |`));
+  const md = ['| Caso | Archivos | KB | Peticiones al API | Menú usable (ms) | Muestras (ms) | FCP (ms) | load (ms) |', '|---|---:|---:|---:|---:|---|---:|---:|']
+    .concat(tabla.map(t => `| ${t.nombre} | ${t.archivos} | ${t.kb} | ${t.api} | ${t.usable} | ${t.muestras} | ${t.fcp} | ${t.load} |`));
   fs.writeFileSync('juegos-carga.md', md.join('\n') + '\n');
   console.log(md.join('\n'));
   for (const t of tabla) {
@@ -120,11 +122,11 @@ async function medir(b, nombre, o) {
   // Error de red al cargar Damas: aviso amable y reintento.
   await p.route('**/juegos/tablero-ui.js*', r => r.abort('internetdisconnected'));
   await abrirJuego(p, 'damas');
-  await p.waitForSelector('[data-reintentar-juego]', { timeout: 30000 }).catch(() => {});
+  await p.waitForSelector('[data-reintentar-carga]', { timeout: 30000 }).catch(() => {});
   const aviso = (await p.textContent('#app').catch(() => '')).replace(/\s+/g, ' ');
-  ok('sin red: aviso amable con «Reintentar» y «Volver»', /No se pudo cargar/.test(aviso) && !!(await p.$('[data-reintentar-juego="damas"]')) && !!(await p.$('#app [data-a="hub"]')), aviso.slice(0, 160));
+  ok('sin red: aviso amable con «Reintentar» y «Volver»', /No se pudo cargar/.test(aviso) && !!(await p.$('[data-reintentar-carga]')) && !!(await p.$('#app [data-a="hub"]')), aviso.slice(0, 160));
   await p.unroute('**/juegos/tablero-ui.js*');
-  await p.click('[data-reintentar-juego]');
+  await p.click('[data-reintentar-carga]');
   const reintento = await p.waitForSelector('#app [data-tb-go]', { timeout: 30000 }).then(() => true).catch(() => false);
   ok('Reintentar: con red, el juego abre', reintento);
   await p.click('[data-a="salir"]'); await p.waitForSelector(MENU);
@@ -141,7 +143,7 @@ async function medir(b, nombre, o) {
   const lobby = await otro.waitForSelector('#p-body .rank li', { timeout: 60000 }).then(() => otro.textContent('#p-body')).catch(() => '');
   ok('?sala=CODIGO: con caché vacía se une y ve la sala de espera', lobby.includes(codigo) && /Marisol/.test(lobby), lobby.replace(/\s+/g, ' ').slice(0, 120));
   await otro.context().close();
-  const ver = await abrirPagina(b, { email: 'leo@example.com', out, etiqueta: 'espectador', dialogos: 'aceptar', ruta: '/juegos.html?sala=' + codigo + '&ver=1' });
+  const ver = await abrirPagina(b, { email: 'jesus@example.com', out, etiqueta: 'espectador', dialogos: 'aceptar', ruta: '/juegos.html?sala=' + codigo + '&ver=1' });
   ok('?sala=…&ver=1: entra como espectador', await ver.waitForSelector('.esp-chip', { timeout: 60000 }).then(() => true).catch(() => false));
   await ver.context().close();
   await p.context().close();

@@ -44,7 +44,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await p.click('[data-cat="ia"]'); await p.waitForSelector('.q-card');
   ok('Maratón IA: pregunta de nivel fácil de IA', /Nivel fácil · Inteligencia artificial/.test(await p.textContent('.q-card')), (await p.textContent('.q-card')).replace(/\s+/g, ' ').slice(0, 120));
   // Partida de Ortografía: el selector ya no ofrece los absorbidos y las preguntas se mezclan
-  await inicio(); await p.click('[data-tab="partidas"]');
+  await inicio(); await p.click('[data-tab="partidas"]'); await p.waitForSelector('#p-juego'); // juegos-carga-perezosa: Partidas se pinta tras cargar las salas
   const opciones = await p.$$eval('#p-juego option', os => os.map(o => o.value));
   ok('partidas: sin juegos absorbidos', !opciones.some(o => ['en-preguntas', 'es-acentos', 'es-sinonimos', 'mente-secuencias'].includes(o)) && opciones.includes('es-ortografia'), opciones.join(','));
   const tipos = await p.evaluate(async () => (await preguntasPartida('es-ortografia', 12345, {})).map(q => q.big));

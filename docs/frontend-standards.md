@@ -530,13 +530,16 @@ debe cubrir ambas páginas. Extraer a un `shared.js` solo mediante un cambio Ope
 ## Estructura de juegos/app/ (cambio `organizar-codigo`)
 
 `juegos.html` solo tiene la estructura: el HTML (con el `<svg>` de la baraja española), los `<link>` y los
-`<script>`. Su CSS está en `juegos/app/juegos.css` (entre `juegos/tablero.css` y `juegos/clasicos-rapidos.css`, por
-la cascada) y su código en estos scripts clásicos, que se cargan **en este orden**, después de los motores e
-interfaces de `juegos/*.js` y de `comun/auth.js`:
+`<script>` del **núcleo del hub** (cambio `juegos-carga-perezosa`): `estilos/ui.css`, `juegos/app/juegos.css`,
+`comun/auth.js`, `comun/interruptores.js`, `juegos/emocion.js` y, en este orden, `nucleo.js`, `cargador.js`,
+`menu.js`, `ranking.js`, `admin.js`, `musica.js` y `arranque.js`. El resto (motores e interfaces de `juegos/*.js`,
+`tablero.css`, `clasicos-rapidos.css` y las pantallas de juego de `juegos/app/`) lo carga `cargador.js` al elegir un
+juego; ver [Carga perezosa de Juegos](#carga-perezosa-de-juegos-cambio-juegos-carga-perezosa). Archivos de `juegos/app/`:
 
 | Archivo | Responsabilidad |
 |---|---|
 | `nucleo.js` | `API_BASE` (`?api=`), `?sala=`, `state`, recarga (`juegos_sala_activa`, `juegos_partida_individual`), utilidades (`escapeHtml`, `barajar`, `fmt`…), `api`/`post`/`datos`, sonido y voz |
+| `cargador.js` | carga perezosa: `ARCHIVOS_JUEGO` (con `?v=`), `PAQUETES`, `PAQUETE_DE_JUEGO`, `cargarPaquete`, `conPaquete`, `abrirJuego`, «Cargando…» y «Reintentar»; va justo después de `nucleo.js` |
 | `menu.js` | `CATEGORIAS`, `JUEGOS`, `juegoPorId`, `icoJuego`, avatar, sesión y registro (`iniciar`, `pantallaLogin`), hub y navegación por categorías |
 | `ranking.js` | 🏆 Ranking (⭐ individuales, 👥 partidas, 🔥 juegos) |
 | `admin.js` | 🛡️ Admin (jugadores, pendientes, invitados y fotos) |
@@ -559,8 +562,32 @@ Reglas:
   posterior hasta que el usuario hace algo.
 - Un juego nuevo va en el archivo de su familia (o en un `juegos/<juego>.js` propio, como los de salas grandes). Si
   un archivo pasa de ~600 líneas, se parte por juego.
-- Al cambiar un archivo de `juegos/app/`, sube su `?v=` en `juegos.html`.
+- Al cambiar un archivo del núcleo, sube su `?v=` en `juegos.html`; al cambiar un archivo perezoso (motores de
+  `juegos/*.js`, sus CSS y las pantallas de `juegos/app/` fuera del núcleo), súbelo en `ARCHIVOS_JUEGO` de
+  `juegos/app/cargador.js` y sube también el `?v=` de `cargador.js` en `juegos.html`.
 - El avance en el servidor de los juegos en iframe (Dragon Run, Axo, Karts) pasa siempre por `canalProgreso`.
+
+## Carga perezosa de Juegos (cambio `juegos-carga-perezosa`)
+
+- **Núcleo:** al abrir `juegos.html` solo se descarga lo del hub (menú y categorías, encabezado, ranking, admin, música,
+  sesión y sonido compartido). Ningún archivo del núcleo puede usar **al cargar** un nombre de un archivo perezoso; al
+  llamar, solo después de cargar su paquete (`typeof sala === 'undefined'` o `window.X?.` para lo opcional).
+- **Paquetes** (`PAQUETES` en `cargador.js`): `marco` (`individuales.js`), `ingles`, `linea`, `mente`, `clasicos`,
+  `naipes`, `tablero`, `rapidos`, `arcade`, `grandes` y `todo`. Cada uno incluye lo que sus archivos usan al cargar;
+  `archivosDe()` los ordena según `ARCHIVOS_JUEGO` (el orden de dependencias de antes). Tabla completa en el
+  `design.md` del cambio.
+- **Juego nuevo:** su tarjeta va en `JUEGOS` (`menu.js`), nunca en el módulo del juego, y su id en
+  `PAQUETE_DE_JUEGO`; sin entrada abre con «todo» (correcto, pero más lento). Si su archivo usa algo de otro al
+  cargar, agrégalo a su paquete.
+- **Salas:** 👥 Partidas, `?sala=` (también `&ver=1`), volver a una sala, la revancha y reanudar cargan «todo» antes de
+  pintar (`conPaquete('todo', …)` / `await cargarPaquete('todo')` en `iniciar()`).
+- **Carga:** `<link rel="preload">` en paralelo y `<script>` uno tras otro; se detiene en la primera falla (un script
+  clásico a medias no se puede volver a ejecutar). La promesa de cada archivo queda en `cargas`; nada se pide dos veces.
+  `tablero.css` se inserta antes de `juegos.css` y `clasicos-rapidos.css` justo después (misma cascada).
+- **Pantallas:** «Cargando…» mientras llega; si falla, «😕 No se pudo cargar el juego» con «🔄 Reintentar»
+  (`[data-reintentar-carga]`) y «← Volver». Si el paquete ya está, abre en el mismo turno, como antes.
+- **E2E:** para evaluar un motor recién abierta la página, primero `await p.evaluate(() => cargarPaquete('…'))`.
+  `juegos-carga` mide archivos, KB y tiempo (4G simulada) y prueba todo lo anterior.
 
 ## Diseño RPG de Juegos (cambio `juegos-diseno-rpg`)
 

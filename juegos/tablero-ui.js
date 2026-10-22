@@ -14,12 +14,7 @@
   const COLORES = [{ n: 'Rojo', h: '#ef4444' }, { n: 'Verde', h: '#22c55e' }, { n: 'Amarillo', h: '#eab308' }, { n: 'Azul', h: '#3b82f6' }];
   const botsIndividual = () => [BOTS[0], BOTS[1], BOT_EXTRA];
 
-  const TARJETAS = [
-    { id: 'damas', cat: 'mente', emoji: '⚫', t: 'Damas', d: 'Come en diagonal, salta varias y corona tu dama. Contra el bot o 1 vs 1.', jugar: () => elegir('damas') },
-    { id: 'naval', cat: 'mente', emoji: '🚢', t: 'Batalla naval', d: 'Esconde tu flota y hunde la del rival: ¡agua, tocado y hundido!', jugar: () => elegir('naval') },
-    { id: 'domino', cat: 'clasicos', emoji: '🔳', icono: 'juegos/iconos/domino.svg', t: 'Dominó', d: 'Doble seis de 2 a 4: embona tus fichas y quédate sin ninguna.', jugar: () => elegir('domino') },
-    { id: 'parchis', cat: 'clasicos', emoji: '🎲', t: 'Parchís', d: 'Sal con 5, come fichas y llega a la meta antes que nadie.', jugar: () => elegir('parchis') },
-  ];
+  // Tarjetas del menú: en JUEGOS (juegos/app/menu.js), que se pinta sin cargar este módulo (openspec: juegos-carga-perezosa).
 
   // ---------- Piezas comunes ----------
   const PIPS = [[], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
@@ -31,7 +26,7 @@
     lista.map(([v, t]) => '<button class="opt" data-tb-opt="' + nombre + '" data-v="' + v + '" aria-pressed="' + (String(v) === String(valor)) + '">' + t + '</button>').join('') + '</div>';
   function menu(id, cuerpo, valores, alJugar) {
     const m = marco(id, { menu: true });
-    const j = TARJETAS.find(x => x.id === id);
+    const j = juegoPorId(id); // juegos-carga-perezosa: la tarjeta vive en JUEGOS
     m.body.innerHTML = '<div class="q-card"><div class="big">' + (typeof icoJuego === 'function' ? icoJuego(j) : j.emoji) + '</div><div class="q">' + esc(j.t) + '</div><div class="sub">' + esc(j.d) + '</div></div>' + cuerpo +
       '<div class="row-btns"><button class="btn ghost" data-ayuda="' + id + '">📖 Cómo se juega</button><button class="btn" data-tb-go>▶ Jugar</button></div>';
     m.body.addEventListener('click', e => {
@@ -749,5 +744,5 @@
       '<p><b>Puntos:</b> ganar da 600 + 400 × 17 ÷ tus disparos (¡menos disparos, más puntos!). Si pierdes, 20 por cada casilla que tocaste.</p>',
   };
 
-  g.TableroUI = { SALA, TARJETAS, esSala, elegir, pintarSala: pintarSalaTablero, clicSala, alCambiarJuego, faltan, ayuda: id => AYUDA[id] || '' };
+  g.TableroUI = { SALA, esSala, elegir, pintarSala: pintarSalaTablero, clicSala, alCambiarJuego, faltan, ayuda: id => AYUDA[id] || '' };
 })(window);

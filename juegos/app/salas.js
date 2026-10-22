@@ -13,8 +13,7 @@ const JUEGOS_PARTIDA = ['en-vocab', 'en-frases', 'en-tiempos', 'es-ortografia', 
 JUEGOS_PARTIDA.push(...TableroUI.SALA); // juegos-tablero
 JUEGOS_PARTIDA.push(...Object.keys(SALAS_GRANDES)); // juegos-salas-grandes: bingo, blackjack, dibuja, en-memorama, mente-sopa
 const ARCADE = new Set(['plataformas', 'karts']); // carreras en sala (openspec: juegos-plataformas-karts)
-const BOT_EXTRA = { id: 'bot-chonita', nombre: 'BOT-CHONITA', acierto: 0.5, avatar: { emoji: '👵', color: '#a855f7' } }; // 3.er bot para completar la Brisca
-const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
+// BOTS y BOT_EXTRA viven en nucleo.js (openspec: juegos-carga-perezosa).
 const P_Q = 15000, P_REV = 4000, P_N = 10; // ms por pregunta, ms de revelación, preguntas
 const P_BASTA = 60000, P_GRACIA = 3000, P_PAUSA = 10000; // Basta por rondas: escribir, gracia tras ¡Basta!, resultados
 const dur = ms => ms * TIEMPO;
