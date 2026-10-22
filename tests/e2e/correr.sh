@@ -34,7 +34,7 @@ PEDIDAS=()
 
 # Orden canónico: Inglés (comparten servidor), las que necesitan datos propios, plataforma y juegos, y al final
 # la de login con la transición terminada.
-ORDEN=(actividades-datos material alta-alumnos baja-ingles inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno presentar examen-secundaria secundaria-clases secundaria-clase secundaria-dashboard autoguardado ordenar-emparejar teoria-diagramas
+ORDEN=(actividades-datos material alta-alumnos baja-ingles inicio-lunes segunda-oportunidad pronunciacion profe-grupo ruta-profe profe-diseno presentar examen-secundaria secundaria-clases secundaria-clase secundaria-dashboard secundaria-adelantar autoguardado ordenar-emparejar teoria-diagramas
   grupos ingles-pro
   login portal juegos categorias juegos-ingles jugadores nick partidas enlace-sala juegos-recarga revancha
   conquian-estres clasicos fusion cultura-conocimiento sudoku dragon-run plataformas karts karts-puntos karts-vivo futbol futbol-en-linea futbolito-arena brigada futbolito billar golf puntos-tipo basta-rondas loteria-sala una-sala una-robo
@@ -49,7 +49,7 @@ ORDEN=(actividades-datos material alta-alumnos baja-ingles inicio-lunes segunda-
 #   despues sin Postgres y con LOGIN_TRANSICION_HASTA en el pasado
 fase_de() {
   case $1 in
-    actividades-datos | material | alta-alumnos | baja-ingles | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | presentar | examen-secundaria | secundaria-clases | secundaria-clase | secundaria-dashboard | autoguardado | ordenar-emparejar | teoria-diagramas) echo ingles ;;
+    actividades-datos | material | alta-alumnos | baja-ingles | inicio-lunes | segunda-oportunidad | pronunciacion | profe-grupo | ruta-profe | profe-diseno | presentar | examen-secundaria | secundaria-clases | secundaria-clase | secundaria-dashboard | secundaria-adelantar | autoguardado | ordenar-emparejar | teoria-diagramas) echo ingles ;;
     grupos) echo grupos ;;
     ingles-pro) echo pro ;;
     login-despues) echo despues ;;
