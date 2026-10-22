@@ -25,9 +25,9 @@
 
 ## 3. PR 3 · Secundaria: barra inferior en celular y pestañas en una fila
 
-- [ ] 3.1 Barra `.sec-barra` y menú `#sec-mas` (`ingles/secundaria.js`), estilos y hueco (`ingles/secundaria.css`),
+- [x] 3.1 Barra `.sec-barra` y menú `#sec-mas` (`ingles/secundaria.js`), estilos y hueco (`ingles/secundaria.css`),
   fila de pestañas desde 720 px en una sola fila (`.sec-tabs-muchas` con 9); `?v=`
-- [ ] 3.2 Ayudante E2E `tests/e2e/lib/secundaria.js` (`irPestanaSec`: fila, barra o «Más»); E2E que tocan pestañas a
+- [x] 3.2 Ayudante E2E `tests/e2e/lib/secundaria.js` (`irPestanaSec`: fila, barra o «Más»); E2E que tocan pestañas a
   360 px (`misiones`, `secundaria-adelantar`, `secundaria-clases`, `navegacion-dispositivos`) lo usan;
   `navegacion-dispositivos` revisa la barra a 360 px (sin tapar, 44 px, «Más», atrás) y las 9 pestañas del profe en
   una fila a 1100 px
