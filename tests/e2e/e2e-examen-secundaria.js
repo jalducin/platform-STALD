@@ -31,11 +31,8 @@ const texto = async (p, sel) => (await p.textContent(sel)).replace(/\s+/g, ' ');
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROME });
 
-  // Alumna: desde Secundaria → 📚 Mis clases (openspec: secundaria-mis-clases)
+  // Alumna: secundaria.html es el puente a 📚 Mis clases (openspec: secundaria-mis-clases, secundaria-sin-notion)
   const al = await pagina(b, ALUMNA, '/secundaria.html');
-  await al.waitForSelector('#examenes-link', { timeout: 60000 });
-  ok('Secundaria: el enlace dice «📚 Mis clases»', (await al.textContent('#examenes-link')).trim() === '📚 Mis clases');
-  await al.click('#examenes-link');
   await al.waitForSelector('#sec-clases', { timeout: 60000 });
   ok('Secundaria → Mis clases conserva ?api= y muestra el título', al.url().includes('modo=secundaria') && al.url().includes('api=') && (await al.textContent('#titulo')).includes('Clases de Secundaria'));
   ok('la alumna ve su examen exclusivo', !!(await al.$('[data-sec-item="sec-e2e"]')));

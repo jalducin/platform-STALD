@@ -1,14 +1,20 @@
 # Modelo de datos
 
-Fuente canónica de las bases de Notion (hoy solo Secundaria), de los formatos JSON del repo de datos y de las
+Fuente canónica de las bases de Notion (históricas: ya no se leen), de los formatos JSON del repo de datos y de las
 tablas `stald_*` de Postgres. En Notion, los nombres de
 propiedad son **literales** (incluyen acentos y espacios). Renombrar una propiedad en Notion rompe el
 backend: tratarlo como un cambio OpenSpec.
 
-## Base "📖 Clases" (Secundaria)
+## Base "📖 Clases" (Secundaria, histórica, ya no se lee)
 
-- ID: `3831c6b4f8b5817ba701ed689f825cf0`
-- Consumida por: `/data` → `secundaria.html`
+- ID: `3831c6b4f8b5817ba701ed689f825cf0`.
+- Desde el cambio `secundaria-sin-notion` ninguna página la lee: `secundaria.html` es un puente a las clases nuevas
+  (`ingles.html?modo=secundaria`, contenido en `contenido/secundaria/`) y la identidad de Secundaria sale del registro
+  (`alumnos.json`, ver «Acceso por correo»). El profe borró la base el 2026-10-22.
+- `/data` sigue en el servidor sin consumidores; con la base borrada o sin `NOTION_TOKEN` responde error.
+- Solo queda una caída temporal: si nadie tiene Secundaria en el registro, el servidor intenta estas filas y deja un
+  aviso en el log; si fallan, nadie entra a Secundaria y las demás rutas siguen.
+- Formato histórico de las filas:
 
 | Propiedad Notion | Tipo | Campo en `Row` |
 |---|---|---|
@@ -32,11 +38,11 @@ backend: tratarlo como un cambio OpenSpec.
 
 ## Acceso por correo
 
-- Secundaria: una fila es visible para una alumna si su correo está entre los correos de los usuarios de `Usuario`.
-- Para que el correo se resuelva, la persona debe ser **miembro o guest** del workspace de Notion y la
-  integración debe tener la capability de leer correos de usuarios.
-- El administrador (correo en el secreto `SUPER_ADMIN_EMAIL`) ve todas las filas.
-- La lista de alumnas de Secundaria y sus correos **vive solo en Notion**; no se copia al repo.
+- Secundaria (cambio `secundaria-sin-notion`): tiene acceso una persona del registro (`alumnos.json`, el de Inglés,
+  con bajas) cuya entrada tiene `secundaria: true` **o** cuyo slug aparece en `alumnos` de algún elemento visible de
+  `contenido/secundaria/`. Su slug es `slugSecundaria` si lo tiene y, si no, el de su `nombre`. La baja de Inglés no
+  quita Secundaria. Los correos solo viven en el registro (Postgres); nunca en el repo.
+- El administrador (correo en el secreto `SUPER_ADMIN_EMAIL`) ve todo.
 - Inglés: la identidad es el registro (`alumnos.json`, en Postgres en producción); `GET /ingles/data` devuelve solo
   filas de identidad (`source: "registro"`), sin tareas.
 
@@ -151,6 +157,9 @@ Sin datos personales. Se sirve junto a `juegos.html`.
   - **no hay respaldo**: si Postgres falla, la ruta responde 503 en lugar de leer una copia vieja.
 - **Identidad de Inglés:** `alumnos.json` es la única fuente (fase 2 de `cierre-tecnico`). Puede traer
   `origen: "notion"` en las personas que la fase 1 importó de Notion; hoy es solo informativo.
+- **Identidad de Secundaria** (cambio `secundaria-sin-notion`): el mismo `alumnos.json`. Campos opcionales:
+  - `secundaria: true`: acceso a Secundaria (lo pone el profe con `POST /ingles/grupos/secundaria`);
+  - `slugSecundaria`: slug con el que ya estaban sus resultados de Secundaria, si difiere del de `nombre`.
 
 ## Actividades semanales (repo privado `platform-STALD-data`)
 

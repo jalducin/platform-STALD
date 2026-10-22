@@ -28,6 +28,7 @@ import {
   temasRefuerzo,
   tieneReto,
 } from "./motor.ts";
+import { alumnasSecundaria, type FilaIdentidad, identidadSecundaria } from "./secundaria_registro.ts";
 import type { Store } from "./store.ts";
 
 type Json = (body: unknown, status?: number) => Response;
@@ -35,6 +36,7 @@ type Json = (body: unknown, status?: number) => Response;
 export interface Identidad {
   isAdmin: boolean;
   alumno: string | null;
+  slug?: string; // slug explícito (registro de Secundaria, openspec: secundaria-sin-notion); si falta, el de `alumno`
   inicio?: string; // lunes de inicio de un alta nueva (openspec: inicio-lunes-alumnos)
   grupo?: string; // grupo vigente (openspec: ingles-grupos); sin base de datos no se filtra
   grupoInfo?: { id: string; nombre: string; nivel: string | null; horario: string | null; meet_url: string | null; color: string } | null;
@@ -393,7 +395,7 @@ export async function handleActividades(req: Request, subpath: string, quien: Id
   const url = new URL(req.url);
   const hoy = url.searchParams.get("hoy") && Deno.env.get("PERMITIR_HOY") === "1" ? url.searchParams.get("hoy")! : mxToday();
   const partes = subpath.split("/").filter(Boolean).map(decodeURIComponent);
-  const slug = quien.alumno ? slugAlumno(quien.alumno) : null;
+  const slug = quien.alumno ? (quien.slug ?? slugAlumno(quien.alumno)) : null;
 
   // GET /ingles/actividades → elementos con estado (alumno) o con resultados y resumen (admin)
   if (partes.length === 0 && req.method === "GET") return await listarActividades(quien, store, json, hoy, ambito, slug);
@@ -434,14 +436,29 @@ export async function handleProfe(req: Request, subpath: string, email: string, 
   return await handleActividades(req, subpath, { isAdmin: false, alumno: ALUMNO_PROFE }, store, json, AMBITO_PROFE);
 }
 
-// /secundaria/actividades[/<id>] → exámenes de Secundaria (openspec: examen-secundaria). El admin ve resultados; quien
-// tiene filas de Secundaria entra con su primer nombre (el mismo de /perfil); nadie más.
+// /secundaria/actividades[/<id>] → clases y exámenes de Secundaria (openspec: examen-secundaria, secundaria-sin-notion).
+// Identidad: filas del registro contenido/secundaria/alumnos.json (o, mientras falte, de Notion; ver
+// server/secundaria_registro.ts). El admin ve resultados y la lista de alumnas; con `?alumna=<slug>` (solo GET de la
+// lista) ve las clases de esa alumna como ella las ve, de solo lectura. Quien está en el registro entra con su nombre
+// y su slug; nadie más.
 export async function handleSecundaria(req: Request, subpath: string, email: string, admin: string, store: Store,
-  filas: () => Promise<{ userEmails: string[]; userNames: string[] }[]>, json: Json): Promise<Response> {
+  filas: () => Promise<FilaIdentidad[]>, json: Json): Promise<Response> {
   const correo = (email || "").trim().toLowerCase();
   if (!correo) return json({ error: "missing_email" }, 400);
-  if (admin && correo === admin) return await handleActividades(req, subpath, { isAdmin: true, alumno: null }, store, json, AMBITO_SECUNDARIA);
-  const nombre = (await filas()).filter((r) => r.userEmails.includes(correo)).flatMap((r) => r.userNames)[0]?.trim().split(/\s+/)[0];
-  if (!nombre) return json({ error: "sin_acceso" }, 403);
-  return await handleActividades(req, subpath, { isAdmin: false, alumno: nombre }, store, json, AMBITO_SECUNDARIA);
+  if (admin && correo === admin) {
+    const esLista = req.method === "GET" && !subpath.split("/").some(Boolean);
+    if (!esLista) return await handleActividades(req, subpath, { isAdmin: true, alumno: null }, store, json, AMBITO_SECUNDARIA);
+    const alumnas = alumnasSecundaria(await filas());
+    const pedida = new URL(req.url).searchParams.get("alumna");
+    const conExtra = (extra: Record<string, unknown>): Json => (b, s) => json(!s || s === 200 ? { ...(b as Record<string, unknown>), ...extra } : b, s);
+    if (!pedida) return await handleActividades(req, subpath, { isAdmin: true, alumno: null }, store, conExtra({ alumnas }), AMBITO_SECUNDARIA);
+    const vistaDe = alumnas.find((a) => a.slug === pedida);
+    if (!vistaDe) return json({ error: "alumna_no_encontrada" }, 404);
+    // Lo mismo que ve ella (exclusivos, prórrogas, estado, intentos y mejor), marcado como vista del admin.
+    return await handleActividades(req, subpath, { isAdmin: false, alumno: vistaDe.nombre, slug: vistaDe.slug }, store,
+      conExtra({ isAdmin: true, vistaDe, alumnas }), AMBITO_SECUNDARIA);
+  }
+  const quien = identidadSecundaria(await filas(), correo);
+  if (!quien) return json({ error: "sin_acceso" }, 403);
+  return await handleActividades(req, subpath, { isAdmin: false, alumno: quien.nombre, slug: quien.slug }, store, json, AMBITO_SECUNDARIA);
 }

@@ -57,8 +57,8 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
     ok('después: Juegos con correo viejo → entrada con correo y nick', await p.isVisible('#ent-nick'));
     await ctx.close();
     ({ ctx, p } = await contexto(b, { viejo: 'valeria@example.com' }));
-    await p.goto(BASE + '/secundaria.html' + Q); await p.waitForSelector('#login-auth [data-stald-auth]', { timeout: 30000 });
-    ok('después: Secundaria con correo viejo → entrada con contraseña', await p.isVisible('#login-auth #stald-auth-clave') && !(await p.isVisible('#app')));
+    await p.goto(BASE + '/secundaria.html' + Q); await p.waitForSelector('#login [data-stald-auth]', { timeout: 30000 });
+    ok('después: Secundaria con correo viejo → entrada con contraseña', await p.isVisible('#login #stald-auth-clave') && !(await p.isVisible('#app')));
     await ctx.close();
     await b.close();
     console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);
@@ -156,12 +156,14 @@ const postApi = (ruta, body, token) => api(ruta, token, { method: 'POST', body: 
 
   // ---- Secundaria con sesión ----
   ({ ctx, p, peticiones } = await contexto(b, { sesion: 'valeria@example.com' }));
-  await p.goto(BASE + '/secundaria.html' + Q); await p.waitForSelector('#app', { state: 'visible', timeout: 60000 });
-  ok('Secundaria con sesión muestra tareas', (await p.$$('#content .row, #content-recent .row')).length > 0);
-  const dat = peticiones.find(x => x.url.includes('/data'));
+  // Secundaria sin Notion (openspec: secundaria-sin-notion): puente a las clases nuevas, sin pedir /data.
+  await p.goto(BASE + '/secundaria.html' + Q); await p.waitForSelector('#sec-clases', { timeout: 60000 });
+  ok('Secundaria con sesión muestra sus clases', !!(await p.$('#sec-clases')));
+  ok('Secundaria no pide /data (Notion)', !peticiones.some(x => new URL(x.url).pathname.endsWith('/data') && !new URL(x.url).pathname.endsWith('/ingles/data')));
+  const dat = peticiones.find(x => x.url.includes('/secundaria/actividades'));
   ok('Secundaria manda el token', dat && dat.auth === 'Bearer prueba:valeria@example.com' && !dat.url.includes('email='));
-  await p.click('#logout-btn'); await p.waitForSelector('#login-auth [data-stald-auth]');
-  ok('Secundaria: cerrar sesión → entrada con contraseña', await p.isVisible('#login-auth #stald-auth-clave') && !(await p.isVisible('#app')));
+  await p.click('#logout-btn'); await p.waitForSelector('#login [data-stald-auth]');
+  ok('Secundaria: cerrar sesión → entrada con contraseña', await p.isVisible('#login #stald-auth-clave') && !(await p.isVisible('#app')));
   await ctx.close();
 
   // ---- Admin: «sensei» obliga a cambiarla; 🔑 Restablecer contraseña ----

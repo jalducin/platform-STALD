@@ -69,9 +69,10 @@ async function entrar(p, email) {
   await entrar(p, SEC);
   ok('Secundaria: tarjetas Secundaria + Juegos', JSON.stringify(await tiles(p)) === '["secundaria","juegos"]', (await tiles(p)).join(','));
   await p.click('#tiles a[data-espacio="secundaria"]');
-  await p.waitForSelector('#app', { state: 'visible', timeout: 90000 }).catch(() => {});
-  ok('secundaria.html entra sola y muestra tareas', await p.isVisible('#app') && (await p.$$('#content .row, #content-recent .row')).length > 0);
-  ok('secundaria.html tiene "← Inicio"', !!(await p.$('a.home-link[href^="./"]')));
+  // Secundaria sin Notion (openspec: secundaria-sin-notion): secundaria.html es el puente a las clases nuevas.
+  await p.waitForSelector('#sec-clases', { timeout: 90000 }).catch(() => {});
+  ok('secundaria.html abre «📚 Mis clases» (sin el tablero de Notion)', p.url().includes('modo=secundaria') && !!(await p.$('#sec-clases')), p.url());
+  ok('Secundaria tiene "← Inicio"', !!(await p.$('a.home-link[href^="./"]')));
   await ctx.close();
   await b.close();
   console.log(out.join('\n')); process.exit(out.some(x => x.startsWith('FAIL')) ? 1 : 0);

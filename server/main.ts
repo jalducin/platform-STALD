@@ -1,15 +1,16 @@
 // Backend de platform-STALD para Deno Deploy (sin Supabase).
-// Variables: NOTION_TOKEN, SUPER_ADMIN_EMAIL, GITHUB_TOKEN, DATA_REPO (p. ej. jalducin/platform-STALD-data).
+// Variables: SUPER_ADMIN_EMAIL, NOTION_TOKEN (opcional: /data, historial de Notion, y la caída temporal de Secundaria), GITHUB_TOKEN, DATA_REPO (p. ej. jalducin/platform-STALD-data).
 // Pruebas locales: DATA_DIR (carpeta con una copia del repo de datos) y ROWS_FIXTURE (filas simuladas; también activa
 // el verificador falso de sesión `Bearer prueba:<correo>`, openspec: plataforma-login).
 // Sesión: SUPABASE_URL + SUPABASE_PUBLISHABLE_KEY (validar tokens), SUPABASE_SERVICE_KEY (enlace de acceso del admin),
 // opcionales LOGIN_TRANSICION_HASTA (AAAA-MM-DD) y SITIO_URL (a dónde llevan los enlaces).
 import { attachUsers, extractSecundariaRow, filterForEmail, type InglesRow, normalizeEmail, type SecundariaRow, type UserInfo } from "./rows.ts";
-import { handleActividades, handleProfe, handleSecundaria } from "./actividades.ts";
+import { AMBITO_SECUNDARIA, handleActividades, handleProfe, handleSecundaria, visibleItems } from "./actividades.ts";
 import { armarPerfil } from "./perfil.ts";
 import { handleJuegos, type Invitados, resolverJugador } from "./juegos.ts";
 import { handleCambio, handleOlvide, handlePreparar, handleRestablecer } from "./contrasena.ts";
-import { aplicarAlumnos, enBajaIngles, handleAlumnos, handleBajaIngles, inicioDe, leerRegistro, sinBajas } from "./alumnos.ts";
+import { aplicarAlumnos, enBajaIngles, handleAlumnos, handleBajaIngles, handleSecundariaAlumno, inicioDe, leerRegistro, sinBajas } from "./alumnos.ts";
+import { type FilaSecundaria, filasSecundaria as armarFilasSecundaria, identidadSecundaria, slugsExclusivos } from "./secundaria_registro.ts";
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
@@ -106,7 +107,7 @@ async function cuentas(): Promise<Cuenta[]> {
 }
 
 // Filas de Inglés: solo los alumnos y alumnas del registro (alumnos.json). Inglés ya no lee Notion
-// (openspec: cierre-tecnico, fase 2); Secundaria sí.
+// (openspec: cierre-tecnico, fase 2) y Secundaria tampoco (openspec: secundaria-sin-notion, filasSecundaria).
 // Es la identidad completa (incluye bajas de Inglés): portal, Juegos y contraseña la usan tal cual.
 async function filasIngles(): Promise<InglesRow[]> {
   return aplicarAlumnos([], await leerRegistro(await getStore()));
@@ -118,6 +119,31 @@ async function filasInglesActivas(): Promise<InglesRow[]> {
 // ¿Esa persona está dada de baja de Inglés? (nunca el admin)
 async function deBajaIngles(email: string, admin: string): Promise<boolean> {
   return !!email && email !== admin && enBajaIngles(await leerRegistro(await getStore()), email);
+}
+
+// Identidad de Secundaria (openspec: secundaria-sin-notion): entradas de alumnos.json (registro completo, también con
+// baja de Inglés) con `secundaria: true` o con su slug en `alumnos` de alguna clase visible de Secundaria. Caída
+// temporal: si nadie tiene Secundaria, filas de Notion (con NOTION_TOKEN o ROWS_FIXTURE; si no, ninguna; si fallan,
+// ninguna) y aviso en el log como mucho cada 10 min. Seguimiento: quitar la caída.
+const ultimoAvisoSecundaria = new Map<string, number>(); // por mensaje (son dos fijos)
+function avisoSecundaria(msg: string) {
+  if (Date.now() - (ultimoAvisoSecundaria.get(msg) ?? 0) < 10 * 60_000) return;
+  ultimoAvisoSecundaria.set(msg, Date.now());
+  console.warn(msg);
+}
+const filasNotionSecundaria = (): Promise<SecundariaRow[]> =>
+  env("NOTION_TOKEN") || env("ROWS_FIXTURE") ? loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria") : Promise.resolve([]);
+async function filasSecundaria(): Promise<FilaSecundaria[]> {
+  return await armarFilasSecundaria({
+    registro: async () => leerRegistro(await getStore()),
+    // Clases visibles de Secundaria (la misma caché de 60 s que /secundaria/actividades): sus `alumnos` dan acceso.
+    exclusivos: async () => slugsExclusivos((await visibleItems(await getStore(), mxToday(), AMBITO_SECUNDARIA)).items),
+    notion: filasNotionSecundaria, avisar: avisoSecundaria,
+  });
+}
+// Slug con el que ya estaban sus resultados de Secundaria (primer nombre en Notion), para guardarlo al marcarla.
+async function slugPrevioSecundaria(correo: string): Promise<string | null> {
+  return identidadSecundaria(await filasNotionSecundaria(), correo)?.slug ?? null;
 }
 
 // ---------- HTTP ----------
@@ -230,7 +256,7 @@ async function atender(req: Request): Promise<Response> {
 async function registroJuegos(req: Request, admin: string): Promise<Response> {
   const sitio = (env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/").replace(/\/?$/, "/");
   return await handleRegistroJuegos(req, {
-    store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"),
+    store: await getStore(), admin, filasIngles, filasSecundaria,
     ahora: ahoraIso,
     sesion: async (correo) => {
       if (env("ROWS_FIXTURE")) return { prueba: true as const };
@@ -248,7 +274,7 @@ async function rutasContrasena(req: Request, url: URL, quien: Quien, admin: stri
     supabaseUrl: env("SUPABASE_URL"), serviceKey: env("SUPABASE_SERVICE_KEY"), admin, prueba: !!env("ROWS_FIXTURE"),
     redirect: env("SITIO_URL") || "https://jalducin.github.io/platform-STALD/",
     esDeClase: async (correo: string) => {
-      const [ingles, secundaria] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria")]);
+      const [ingles, secundaria] = await Promise.all([filasIngles(), filasSecundaria()]);
       const j = await resolverJugador(correo, admin, ingles, secundaria, {});
       return !!j && j.tipo !== "invitado";
     },
@@ -279,7 +305,9 @@ async function rutaAlumnos(req: Request, sub: string, email: string, admin: stri
 
 // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada).
 // /ingles/grupos/baja | /reactivar → baja de Inglés reversible (solo admin, server/alumnos.ts; también sin la base).
+// /ingles/grupos/secundaria → acceso a Secundaria sí/no (solo admin, openspec: secundaria-sin-notion).
 async function rutaGrupos(req: Request, sub: string, email: string, admin: string): Promise<Response> {
+  if (sub === "/secundaria") return await handleSecundariaAlumno(req, { email, admin, store: await getStore(), hoy: () => mxToday(), slugPrevio: slugPrevioSecundaria }, json);
   if (sub === "/baja" || sub === "/reactivar") return await handleBajaIngles(req, sub, { email, admin, store: await getStore(), hoy: () => mxToday() }, json);
   if (!await inglesEnPg()) return json({ error: "sin_base" }, 503);
   // La inscripción de quien está de baja sigue vigente (para reactivarla en su grupo), pero no cuenta como miembro.
@@ -323,7 +351,7 @@ async function rutaActividades(req: Request, sub: string, email: string, admin: 
 async function rutaPerfil(email: string, admin: string): Promise<Response> {
   if (!email) return json({ error: "missing_email" }, 400);
   const store = await getStore();
-  const [ingles, secundaria, inv] = await Promise.all([filasIngles(), loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), store.get<Invitados>("juegos/invitados.json")]);
+  const [ingles, secundaria, inv] = await Promise.all([filasIngles(), filasSecundaria(), store.get<Invitados>("juegos/invitados.json")]);
   const perfil = armarPerfil(email, admin, ingles, secundaria, inv?.data ?? {});
   // De baja de Inglés: el portal ya no le muestra Inglés; nombre, Secundaria y Juegos no cambian.
   if (perfil.accesos.ingles && await deBajaIngles(email, admin)) perfil.accesos.ingles = false;
@@ -331,7 +359,8 @@ async function rutaPerfil(email: string, admin: string): Promise<Response> {
 }
 
 // GET /ingles/data → filas de identidad del registro (Inglés ya no trae tareas de Notion); GET /data → base
-// «📖 Clases» de Secundaria. "/ingles/data" también termina en "/data": evaluarlo primero.
+// «📖 Clases» de Secundaria en Notion: historial sin consumidores en las páginas (openspec: secundaria-sin-notion).
+// "/ingles/data" también termina en "/data": evaluarlo primero.
 async function rutaData(url: URL, email: string, admin: string): Promise<Response> {
   const deIngles = url.pathname.endsWith("/ingles/data");
   if (!deIngles && !url.pathname.endsWith("/data")) return json({ error: "not_found" }, 404);
@@ -373,7 +402,7 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
   const iSec = url.pathname.indexOf("/secundaria/actividades");
   if (iSec !== -1) {
     return await handleSecundaria(req, url.pathname.slice(iSec + "/secundaria/actividades".length), email, admin, await getStore(),
-      () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), json);
+      filasSecundaria, json);
   }
 
   const idx = url.pathname.indexOf("/ingles/actividades");
@@ -385,7 +414,7 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
   const iJuegos = url.pathname.indexOf("/juegos/");
   if (iJuegos !== -1) {
     return await handleJuegos(req, url.pathname.slice(iJuegos + "/juegos".length), email, {
-      store: await getStore(), admin, filasIngles, filasSecundaria: () => loadRows(SECUNDARIA_DB_ID, extractSecundariaRow, "secundaria"), realtime, cuentas,
+      store: await getStore(), admin, filasIngles, filasSecundaria, realtime, cuentas,
     }, json);
   }
 
