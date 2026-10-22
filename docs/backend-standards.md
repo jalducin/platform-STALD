@@ -442,11 +442,17 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
   - Inglés sin Notion (cambio `cierre-tecnico`): la fase 1 importó al registro a las personas de Notion con correo
     (`origen: "notion"`); desde la fase 2 Inglés ya no lee Notion y esa importación se retiró.
   - Rutas de grupos, solo admin:
-    - `GET /ingles/grupos` → `{ grupos, miembros: { slug: grupo } }` (sin quienes están de baja de Inglés);
+    - `GET /ingles/grupos` → `{ grupos, miembros: { slug: grupo } }` (sin quienes están de baja de Inglés); cada
+      grupo trae `ocultoAdmin` (boolean, columna `oculto_admin`);
     - `POST /ingles/grupos` crea o edita un grupo. Errores: `nombre_invalido`, `meet_invalido` (debe ser
       `https://`), `color_invalido`, `id_invalido`;
     - `POST /ingles/grupos/mover { alumno, grupo }` cierra la inscripción vigente y abre una nueva. Si es el mismo
       día, solo corrige el grupo. Error: `grupo_inexistente`.
+    - `POST /ingles/grupos/ocultar { grupo, oculto: boolean }` (cambio `ingles-ocultar-grupos`): enciende o apaga
+      `oculto_admin` con un `PATCH` de esa sola columna (editar el grupo con `POST /ingles/grupos` no la toca).
+      Responde `{ ok, grupo }` o `{ ok, sinCambio: true, grupo }`. Errores: 403 `solo_admin`, 400 `json_invalido`,
+      `oculto_invalido` (no boolean) y `grupo_inexistente`. No toca inscripciones ni datos de alumnos y alumnas: la
+      bandera no viaja en `/ingles/actividades` ni la leen `/ingles/data` o `/perfil`.
     - Sin base migrada responden 503 `sin_base` (salvo `/baja` y `/reactivar`, que solo escriben `alumnos.json`).
     - `POST /ingles/grupos/baja { email }` y `POST /ingles/grupos/reactivar { email }` (cambio `ingles-baja-alumno`,
       `handleBajaIngles` en `server/alumnos.ts`): ponen o quitan `baja: "AAAA-MM-DD"` (hoy en CDMX) en su entrada de
@@ -472,6 +478,9 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
       `promedio` (del mejor intento de lo entregado), `atrasos` y `sinEntregas` (nombres sin entregas esta semana que ya
       tienen algo abierto; no se registran visitas, así que "quién no ha entrado" se aproxima así).
     - `?grupo=` filtra solo con la base migrada (sin ella se ignora). Acepta `?hoy=` con `PERMITIR_HOY=1`.
+    - Grupos ocultos del panel (cambio `ingles-ocultar-grupos`): por omisión quedan fuera de `filas` y `kpis` los
+      alumnos y alumnas cuyo grupo efectivo tiene `oculto_admin`; `?ocultos=1` (o `?grupo=<id>` de ese grupo) los
+      incluye. La respuesta trae `ocultos` (cuántos quedaron fuera).
     - Se calcula en el servidor sobre el almacén: con `PgStore`, `leerCarpeta` trae los resultados de cada columna en
       una sola consulta (`path=like.resultados/<id>/*`). No agrega tablas, vistas ni funciones a Postgres.
   - Racha: `GET /ingles/actividades` (alumno o alumna) agrega `racha: { dias, hoy }`, calculada con `calcularRacha`

@@ -15,7 +15,7 @@ import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
 import { ahoraIso, mxToday, slugAlumno } from "./motor.ts";
-import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
+import { grupoDe, grupoInfo, grupoOcultoAdmin, handleGrupos } from "./grupos.ts";
 import { configPublica, generarEnlace, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, type Quien, quienEs } from "./auth.ts";
 import { handleRegistroJuegos } from "./registro.ts";
 import type { Cuenta } from "./jugadores.ts";
@@ -306,6 +306,7 @@ async function rutaAlumnos(req: Request, sub: string, email: string, admin: stri
 // /ingles/grupos[/mover] → grupos de clase (solo admin, server/grupos.ts; requiere la base migrada).
 // /ingles/grupos/baja | /reactivar → baja de Inglés reversible (solo admin, server/alumnos.ts; también sin la base).
 // /ingles/grupos/secundaria → acceso a Secundaria sí/no (solo admin, openspec: secundaria-sin-notion).
+// /ingles/grupos/ocultar → grupo oculto del panel del admin sí/no (solo admin, openspec: ingles-ocultar-grupos).
 async function rutaGrupos(req: Request, sub: string, email: string, admin: string): Promise<Response> {
   if (sub === "/secundaria") return await handleSecundariaAlumno(req, { email, admin, store: await getStore(), hoy: () => mxToday(), slugPrevio: slugPrevioSecundaria }, json);
   if (sub === "/baja" || sub === "/reactivar") return await handleBajaIngles(req, sub, { email, admin, store: await getStore(), hoy: () => mxToday() }, json);
@@ -315,7 +316,7 @@ async function rutaGrupos(req: Request, sub: string, email: string, admin: strin
   return await handleGrupos(req, sub, { email, admin, db: db!, hoy: () => mxToday(), bajas }, json);
 }
 
-// GET /ingles/resumen?grupo=<id> → tablero del profe: indicadores y mapa de calor (solo admin, server/resumen.ts,
+// GET /ingles/resumen?grupo=<id>[&ocultos=1] → tablero del profe: indicadores y mapa de calor (solo admin, server/resumen.ts,
 // openspec: ingles-pro). La racha del alumno o alumna va dentro de /ingles/actividades (sin ruta aparte).
 async function rutaResumen(req: Request, email: string, admin: string): Promise<Response> {
   const store = await getStore();
@@ -327,7 +328,10 @@ async function rutaResumen(req: Request, email: string, admin: string): Promise<
       const nombres = [...new Set((await filasInglesActivas()).map((r) => r.alumno).filter((n): n is string => !!n))];
       return nombres.map((nombre) => ({ nombre, ...(inicioDe(registro, nombre) ? { inicio: inicioDe(registro, nombre) } : {}) }));
     },
-    ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()), grupoInfo: (id: string) => grupoInfo(db!, id) } : {}),
+    ...(conGrupos ? {
+      grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()), grupoInfo: (id: string) => grupoInfo(db!, id),
+      ocultoAdmin: (id: string | null) => grupoOcultoAdmin(db!, id), // openspec: ingles-ocultar-grupos
+    } : {}),
   }, json);
 }
 

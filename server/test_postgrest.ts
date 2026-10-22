@@ -1,8 +1,13 @@
 // PostgREST falso en memoria para pruebas (openspec: ingles-grupos). Entiende solo lo que usa server/db.ts:
 // deno-lint-ignore-file require-await
-// filtros eq / like (* comodín) / is.null / lte / gt, select=, Prefer resolution=ignore|merge-duplicates y on_conflict.
+// filtros eq / neq / like (* comodín) / is.null / lte / gt, select=, limit=, Prefer resolution=ignore|merge-duplicates y
+// on_conflict. También lo sirve por HTTP tests/e2e/lib/postgrest-falso.ts (E2E `--pg` sin tablas reales).
 type Fila = Record<string, unknown>;
 const LLAVES: Record<string, string[]> = { docs: ["path"], grupos: ["id"], inscripciones: ["alumno", "desde"] };
+// Valores por omisión de las columnas, como en supabase/migrations/ (001 y 002).
+const DEFAULTS: Record<string, Fila> = {
+  grupos: { nivel: null, horario: null, meet_url: null, color: "#4f46e5", activo: true, orden: 0, oculto_admin: false },
+};
 
 export function postgrestFalso(prefijo = "stald_") {
   const tablas = new Map<string, Fila[]>();
@@ -13,6 +18,7 @@ export function postgrestFalso(prefijo = "stald_") {
     const [op, ...resto] = cond.split("."); const v = resto.join(".");
     const x = f[col];
     if (op === "eq") return String(x) === v;
+    if (op === "neq") return String(x) !== v;
     if (op === "is") return v === "null" ? x === null || x === undefined : false;
     if (op === "like") return new RegExp("^" + v.split("*").map((s) => s.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*") + "$").test(String(x));
     if (op === "lte") return String(x) <= v;
@@ -25,14 +31,15 @@ export function postgrestFalso(prefijo = "stald_") {
     const nombre = url.pathname.replace(/^\/rest\/v1\//, "");
     const filas = tabla(nombre);
     const params = [...url.searchParams.entries()];
-    const filtros = params.filter(([k]) => !["select", "on_conflict", "order"].includes(k));
+    const filtros = params.filter(([k]) => !["select", "on_conflict", "order", "limit"].includes(k));
+    const limite = Number(url.searchParams.get("limit")) || Infinity;
     const select = url.searchParams.get("select");
     const recorta = (f: Fila) => select && select !== "*" ? Object.fromEntries(select.split(",").map((c) => [c, f[c]])) : { ...f };
     const prefer = new Headers(init?.headers).get("Prefer") || "";
     const metodo = init?.method || "GET";
     const body = init?.body ? JSON.parse(String(init.body)) : null;
     const resp = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
-    if (metodo === "GET") return resp(filas.filter((f) => coincide(f, filtros)).map(recorta));
+    if (metodo === "GET") return resp(filas.filter((f) => coincide(f, filtros)).slice(0, limite).map(recorta));
     if (metodo === "POST") {
       const llave = (url.searchParams.get("on_conflict") || llaveDe(nombre).join(",")).split(",");
       const out: Fila[] = [];
@@ -43,7 +50,7 @@ export function postgrestFalso(prefijo = "stald_") {
           if (prefer.includes("merge-duplicates")) { filas[i] = { ...filas[i], ...n }; out.push(filas[i]); continue; }
           return resp({ code: "23505", message: "duplicate key" }, 409);
         }
-        const nueva = { version: nombre.endsWith("docs") ? 1 : undefined, ...n };
+        const nueva = { version: nombre.endsWith("docs") ? 1 : undefined, ...DEFAULTS[nombre.slice(prefijo.length)], ...n };
         if (nueva.version === undefined) delete nueva.version;
         filas.push(nueva); out.push(nueva);
       }
