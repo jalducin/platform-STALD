@@ -573,3 +573,6 @@ html.jugando, html.jugando body { overscroll-behavior-y: contain; }
 .espectando #p-body [data-pk-abrir], .espectando #p-body [data-aj-rendir], .espectando #p-body [data-cq], .espectando #p-body [data-br-carta] { pointer-events: none; }
 .espectando #p-body .opts .opt { opacity: .75; }
 .espectando #pb-form, .espectando .lot-grid, .espectando [data-lsgrito], .espectando #lot-msg { display: none; }
+/* Pie con el enlace al aviso de privacidad (openspec: rpg-privacidad; solo con el interruptor encendido). */
+.pie-legal { max-width: 760px; margin: 24px auto 0; text-align: center; }
+.pie-legal .home-link { display: inline-flex; align-items: center; min-height: 44px; }

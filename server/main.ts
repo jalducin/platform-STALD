@@ -14,6 +14,7 @@ import { type FilaSecundaria, filasSecundaria as armarFilasSecundaria, identidad
 import { revisarSalud } from "./salud.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
+import { crearLectorInterruptores } from "./interruptores.ts";
 import { ahoraIso, mxToday, slugAlumno } from "./motor.ts";
 import { grupoDe, grupoInfo, handleGrupos } from "./grupos.ts";
 import { configPublica, generarEnlace, handleEnlace, listarCuentas, LOGIN_TRANSICION_HASTA, type Quien, quienEs } from "./auth.ts";
@@ -212,6 +213,10 @@ async function getStore(): Promise<Store> {
   return pgStore.store;
 }
 
+// Interruptores públicos (openspec: rpg-privacidad): `config/interruptores.json` en stald_docs (o en el almacén sin
+// Postgres), con caché de 60 s y falla cerrada (todo apagado).
+const leerInterruptores = crearLectorInterruptores({ db, store: baseStore });
+
 // Caché HTTP por ruta (openspec: cache-estabilidad, server/http_cache.ts): /config se puede guardar y el ranking
 // responde 304 si no cambió; lo demás sigue no-store.
 export async function handler(req: Request): Promise<Response> {
@@ -227,6 +232,12 @@ async function atender(req: Request): Promise<Response> {
   if (url.pathname.endsWith("/config")) {
     const c = configPublica({ ROWS_FIXTURE: env("ROWS_FIXTURE"), SUPABASE_URL: env("SUPABASE_URL"), SUPABASE_PUBLISHABLE_KEY: env("SUPABASE_PUBLISHABLE_KEY") });
     return json(c.body, c.status);
+  }
+
+  // GET /interruptores → qué piezas encendió el profe (sin sesión, solo booleanos; openspec: rpg-privacidad).
+  if (url.pathname.endsWith("/interruptores")) {
+    if (req.method !== "GET") return json({ error: "metodo_no_permitido" }, 405);
+    return json(await leerInterruptores());
   }
 
   // Rutas sin identidad: /salud y la foto de avatar (la pide un <img>, sin encabezados).

@@ -1,0 +1,53 @@
+/* Diseño RPG compartido (openspec: juegos-diseno-rpg; tokens nacidos en secundaria-dashboard).
+   Tokens `--rpg-*` y componentes `rpg-` que usan Secundaria (ingles.html?modo=secundaria), Juegos e Inglés. Se enlaza
+   con <link> antes del CSS propio de la página. Sirve con los tokens base de estilos/stald.css o con los de
+   juegos/app/juegos.css: cada componente trae respaldo (`var(--r-md, 18px)`). Referencia visual del profe (no
+   versionada): neón índigo, morado y esmeralda sobre azul noche; Orbitron para números si está instalada. Sin
+   Tailwind ni íconos externos. Todo en claro y oscuro (sistema o <html data-theme="light|dark">). */
+:root {
+  --rpg-indigo: #4f46e5; --rpg-purple: #7e22ce; --rpg-emerald: #047857; --rpg-amber: #b45309;
+  --rpg-panel: #ffffff; --rpg-panel-2: #f5f3ff; --rpg-borde: #ddd6fe; --rpg-texto-suave: #4c4a63;
+  --rpg-hero: linear-gradient(120deg, #eef2ff 0%, #f5f3ff 55%, #ecfdf5 100%);
+  --rpg-glow: 0 8px 24px rgba(79, 70, 229, .14);
+  --rpg-barra: linear-gradient(90deg, #6366f1, #a855f7);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --rpg-indigo: #a5b4fc; --rpg-purple: #d8b4fe; --rpg-emerald: #6ee7b7; --rpg-amber: #fcd34d;
+    --rpg-panel: #0f172a; --rpg-panel-2: #111c33; --rpg-borde: #1e293b; --rpg-texto-suave: #cbd5e1;
+    --rpg-hero: linear-gradient(120deg, rgba(49, 46, 129, .55) 0%, rgba(88, 28, 135, .40) 55%, #0f172a 100%);
+    --rpg-glow: 0 0 22px rgba(99, 102, 241, .35);
+  }
+}
+:root[data-theme="dark"] {
+  --rpg-indigo: #a5b4fc; --rpg-purple: #d8b4fe; --rpg-emerald: #6ee7b7; --rpg-amber: #fcd34d;
+  --rpg-panel: #0f172a; --rpg-panel-2: #111c33; --rpg-borde: #1e293b; --rpg-texto-suave: #cbd5e1;
+  --rpg-hero: linear-gradient(120deg, rgba(49, 46, 129, .55) 0%, rgba(88, 28, 135, .40) 55%, #0f172a 100%);
+  --rpg-glow: 0 0 22px rgba(99, 102, 241, .35);
+}
+
+/* Números y títulos de misión */
+.rpg-num, .rpg-mision-t, .rpg-contador { font-family: "Orbitron", "Inter", var(--font, system-ui), sans-serif; letter-spacing: .02em; }
+
+/* Etiqueta (p. ej. «⚔️ Misión principal activa») */
+.rpg-etiqueta { display: inline-block; font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; color: var(--rpg-indigo);
+  background: var(--accent-soft, var(--rpg-panel-2)); border: 1px solid var(--rpg-indigo); }
+
+/* Contador en píldora (p. ej. «1 / 2») */
+.rpg-contador { font-weight: 800; font-size: .95rem; color: var(--rpg-purple); background: var(--accent-soft, var(--rpg-panel-2)); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+
+/* Barra de progreso (role="progressbar" en el contenedor; el <span> lleva el ancho) */
+.rpg-xp-barra { height: 8px; border-radius: 999px; background: var(--border, var(--rpg-borde)); overflow: hidden; }
+.rpg-xp-barra > span { display: block; height: 100%; border-radius: 999px; background: var(--rpg-barra); transition: width .5s ease; }
+
+/* Chip de premio (p. ej. «+120 XP») */
+.rpg-xp-chip { font-size: .74rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; white-space: nowrap; color: var(--rpg-emerald);
+  background: var(--ok-soft, var(--rpg-panel-2)); border: 1px solid var(--rpg-emerald); }
+
+/* Dato de la barra de estado: ícono, título chico y valor */
+.rpg-dato { display: flex; align-items: center; gap: 6px; }
+.rpg-dato-ico { font-size: 1.2rem; }
+.rpg-dato-t { font-size: .68rem; color: var(--rpg-texto-suave); text-transform: uppercase; letter-spacing: .05em; }
+.rpg-dato-v { font-weight: 800; font-size: .9rem; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) { .rpg-xp-barra > span { transition: none; } }
