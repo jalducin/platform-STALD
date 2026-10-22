@@ -57,6 +57,33 @@ function videosDeClase(tips) {
   return { html, hay: !!(embebidos.length || enlaces.length) };
 }
 
+// ---------- Gamificación (reglas SOLO en comun/gamificacion.js; aquí no hay fórmulas) ----------
+const hayGamificacion = () => typeof Gamificacion !== 'undefined' && !!Gamificacion.nivelDe;
+const hoyDeAct = () => (state.act && state.act.hoy) || todayStr();
+// Mundo actual de la materia de la misión (p. ej. «🔢 Valle de los Números · Aritmética»).
+function mundoDeMision(m) {
+  return hayGamificacion() && m ? Gamificacion.mundoDe(m.nombre, hoyDeAct()) : null;
+}
+// Recompensa de la misión: XP ganado (diferencia del XP total antes y después del envío), nivel y rango, barra del
+// nivel e insignias desbloqueadas. Necesita la lista de antes (`state.actAntes`, la guarda submitExam) y la de después.
+function recompensaMision() {
+  const antes = state.actAntes, despues = state.act;
+  if (!hayGamificacion() || !antes || !despues || antes.isAdmin || despues.isAdmin) return '';
+  const hoy = despues.hoy || todayStr();
+  const xpAntes = Gamificacion.xpTotal(antes.items, { hoy });
+  const xpDespues = Gamificacion.xpTotal(despues.items, { hoy });
+  const nA = Gamificacion.nivelDe(xpAntes), nD = Gamificacion.nivelDe(xpDespues);
+  const nuevas = Gamificacion.insigniaNueva({ items: antes.items, hoy, racha: antes.racha }, { items: despues.items, hoy, racha: despues.racha });
+  return '<section class="exam-card sec-recompensa" id="sec-recompensa" aria-live="polite">' +
+    '<div class="sec-xp-ganado" data-sec-xp="' + Math.max(0, xpDespues - xpAntes) + '">+' + Math.max(0, xpDespues - xpAntes) + ' XP</div>' +
+    '<div class="sec-nivel" data-sec-nivel="' + nD.nivel + '"><span class="sec-nivel-num">' + nD.nivel + '</span><span><b>Nivel ' + nD.nivel + '</b> · ' + escapeHtml(nD.rango) +
+    (nD.nivel > nA.nivel ? ' <span class="chip fortaleza">⬆️ ¡Subiste de nivel!</span>' : '') + '</span></div>' +
+    '<div class="sec-xp-barra" role="progressbar" aria-label="XP del nivel ' + nD.nivel + '" aria-valuemin="0" aria-valuemax="' + nD.porNivel + '" aria-valuenow="' + nD.xpNivel + '"><span style="width:' + nD.porcentaje + '%"></span></div>' +
+    '<div class="meta">' + nD.xpNivel + ' / ' + nD.porNivel + ' XP para el nivel ' + (nD.nivel + 1) + '</div>' +
+    (nuevas.length ? '<div class="sec-insignias" data-sec-insignias><b>🏅 ¡Insignia desbloqueada!</b>' + nuevas.map(i => '<span class="sec-insignia" title="' + escapeHtml(i.descripcion) + '">' + escapeHtml(i.emoji + ' ' + i.nombre) + '</span>').join('') + '</div>' : '') +
+    '</section>';
+}
+
 // Vista completa de la clase. `cabecera` y `form` los arma el reproductor (los mismos que en Inglés).
 function vistaClaseSecundaria(it, cabecera, form) {
   const teoria = it.teoria && it.teoria.length ? renderTeoria(it.teoria) : '';
@@ -69,7 +96,9 @@ function vistaClaseSecundaria(it, cabecera, form) {
   const seccion = (id, n, titulo, html) => '<section class="exam-card sec-paso-bloque" id="sec-paso-' + id + '" data-sec-bloque="' + id + '" aria-labelledby="sec-paso-t-' + id + '">' +
     '<h3 id="sec-paso-t-' + id + '">' + numPaso(n) + ' ' + titulo + '</h3>' + html + '</section>';
   const m = materiaDe(it);
-  const banner = '<div class="sec-mision-banner"><span class="sec-mision-tag">⚔️ Misión</span>' + chipMateria(m) + '</div>';
+  const mundo = mundoDeMision(m);
+  const banner = '<div class="sec-mision-banner"><span class="sec-mision-tag">⚔️ Misión</span>' + chipMateria(m) +
+    (mundo ? '<span class="sec-mundo" data-sec-mundo>' + escapeHtml(mundo.emoji + ' ' + mundo.nombre) + '<small> · ' + escapeHtml(mundo.etapa) + '</small></span>' : '') + '</div>';
   return '<div class="sec-clase-vista">' + banner + cabecera + indicador +
     (hay.teoria ? seccion('teoria', 1, '📖 Teoría', teoria) : '') +
     (hay.video ? seccion('video', 2, '🎬 Video', video.html) : '') +
@@ -114,7 +143,7 @@ function extrasResultadoSecundaria(id) {
   const boton = sig
     ? '<button class="btn sec-siguiente" data-action="abrir-item" data-id="' + escapeHtml(sig.id) + '"><span>Siguiente misión →</span><small>' + escapeHtml(textoClase(sig, materiaDe(sig))) + '</small></button>'
     : '<button class="btn sec-siguiente" data-action="volver"><span>🗺️ Mis misiones</span><small>No tienes más misiones pendientes por ahora.</small></button>';
-  return (libreta ? '<section class="exam-card sec-paso-bloque" id="sec-resultado-libreta"><h3>' + numPaso(4) + ' 📓 Libreta</h3>' + libreta + '</section>' : '') +
+  return recompensaMision() + (libreta ? '<section class="exam-card sec-paso-bloque" id="sec-resultado-libreta"><h3>' + numPaso(4) + ' 📓 Libreta</h3>' + libreta + '</section>' : '') +
     '<div class="sec-resultado-acciones">' + boton + '</div>';
 }
 

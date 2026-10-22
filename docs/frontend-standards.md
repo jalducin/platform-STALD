@@ -1065,3 +1065,9 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
 - Resultado: «🎉 ¡Clase terminada!», calificación y retroalimentación por tema (`renderResultado`), la libreta y el
   botón grande «Siguiente clase» (`.sec-siguiente`: la siguiente `disponible`/`en-curso` desde hoy; si no hay, «📚 Mis
   clases»). Vista previa del admin: sin estos extras.
+- Estilo «RPG educativo»: en Secundaria la clase se llama **«Misión»** (banner «⚔️ Misión» con chip de materia y su
+  **mundo** actual, «🎉 ¡Misión cumplida!», «Siguiente misión →» / «🗺️ Mis misiones»). En el resultado,
+  `#sec-recompensa` muestra «+N XP» (XP total después − antes del envío; `submitExam` guarda `state.actAntes`), nivel y
+  rango con su barra, y las insignias desbloqueadas. **Todas las reglas** (XP, nivel, rango, mundos, insignias) salen
+  de `comun/gamificacion.js` (`Gamificacion.mundoDe`, `xpTotal`, `nivelDe`, `insigniaNueva`); `secundaria-clase.js`
+  no tiene fórmulas y, si `Gamificacion` no está cargado, omite el mundo y la recompensa.

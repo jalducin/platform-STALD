@@ -31,7 +31,8 @@ async function abrirClase(p) {
     const pasos = await p.$$eval('[data-sec-paso]', xs => xs.map(x => ({ id: x.dataset.secPaso, t: x.textContent.replace(/\s+/g, ' ').trim(), dis: x.disabled, alto: x.getBoundingClientRect().height })));
     ok('pasos «1 Teoría → 2 Video → 3 Ejercicios → 4 Libreta»' + suf, pasos.map(x => x.t).join(' | ') === '1Teoría | 2Video | 3Ejercicios | 4Libreta' && pasos.every(x => !x.dis), JSON.stringify(pasos.map(x => x.t)));
     ok('botones de paso de al menos 44 px' + suf, pasos.every(x => x.alto >= 44), pasos.map(x => Math.round(x.alto)).join(','));
-    ok('banner «⚔️ Misión» con su materia' + suf, (await p.textContent('.sec-mision-banner')).includes('Misión') && (await p.textContent('.sec-mision-banner')).includes('Matemáticas'));
+    const banner = (await p.textContent('.sec-mision-banner')).replace(/\s+/g, ' ');
+    ok('banner «⚔️ Misión» con su materia y su mundo (comun/gamificacion.js)' + suf, banner.includes('Misión') && banner.includes('Matemáticas') && banner.includes('Valle de los Números') && banner.includes('Aritmética'), banner);
     ok('al abrir, el paso actual es Teoría' + suf, (await pasoActual(p)) === 'teoria', String(await pasoActual(p)));
     const iframes = await p.$$eval('#sec-paso-video iframe', xs => xs.map(x => ({ src: x.getAttribute('src'), lazy: x.getAttribute('loading'), title: x.title })));
     ok('2 videos incrustados con youtube-nocookie y loading="lazy"' + suf, iframes.length === 2 && iframes.every(x => x.src.startsWith('https://www.youtube-nocookie.com/embed/') && x.lazy === 'lazy' && x.title), JSON.stringify(iframes));
@@ -58,6 +59,9 @@ async function abrirClase(p) {
       await p.click('#exam-send');
       await p.waitForSelector('.score', { timeout: 60000 });
       ok('resultado: «¡Misión cumplida!» y la calificación', (await p.textContent('.exam-card h3')).includes('Misión cumplida') && (await p.textContent('.score')).includes('100'));
+      const xp = await p.$eval('#sec-recompensa', s => ({ xp: s.querySelector('[data-sec-xp]').dataset.secXp, t: s.textContent.replace(/\s+/g, ' '), nivel: s.querySelector('[data-sec-nivel]').dataset.secNivel })).catch(() => null);
+      // 100 % a tiempo = 100 + 20 (reglas de comun/gamificacion.js); antes no tenía XP de esta misión.
+      ok('resultado: «+120 XP», nivel y rango', xp && xp.xp === '120' && xp.t.includes('+120 XP') && /Nivel \d+/.test(xp.t) && xp.t.includes('XP para el nivel'), JSON.stringify(xp));
       ok('resultado: retroalimentación por tema', (await p.textContent('#content')).includes('Fracciones') && (await p.textContent('#content')).includes('¡Muy bien!'));
       ok('resultado: la libreta con su casilla marcada', await p.isChecked(`#sec-resultado-libreta [data-sec-libreta="${CLASE}"]`));
       const sig = await p.$eval('.sec-siguiente', x => ({ id: x.dataset.id || '', t: x.textContent.replace(/\s+/g, ' ').trim(), alto: x.getBoundingClientRect().height }));

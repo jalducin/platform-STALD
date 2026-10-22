@@ -498,6 +498,7 @@ async function submitExam(form) {
   const btn = document.getElementById('exam-send');
   btn.disabled = true; btn.textContent = 'Enviando…';
   const id = form.dataset.id;
+  state.actAntes = state.act; // Secundaria: para el XP, el nivel y las insignias ganadas (ingles/secundaria-clase.js)
   const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email), {
     method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' },
     body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas: examAnswers(form) }),

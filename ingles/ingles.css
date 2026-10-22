@@ -560,4 +560,16 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 .sec-paso[aria-current="step"] .sec-paso-num { background: #fff; color: #4f46e5; }
 .sec-siguiente { background: linear-gradient(90deg, #4f46e5, #7c3aed); border-color: transparent; color: #fff; box-shadow: 0 0 18px rgba(124, 58, 237, .35); }
 .sec-siguiente:hover { box-shadow: 0 0 24px rgba(124, 58, 237, .55); }
+.sec-mundo { display: inline-flex; align-items: baseline; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700;
+  border: 1px solid var(--border); background: var(--card); color: var(--text); overflow-wrap: anywhere; }
+.sec-mundo small { color: var(--muted); font-weight: 600; }
+.sec-recompensa { text-align: center; border: 1px solid rgba(124, 58, 237, .45); box-shadow: 0 0 22px rgba(99, 102, 241, .25); }
+.sec-xp-ganado { font-size: 2rem; font-weight: 900; letter-spacing: .04em; color: var(--warn); }
+.sec-nivel { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 6px 0 8px; }
+.sec-nivel-num { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; font-weight: 900; color: #fff;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed); box-shadow: 0 0 14px rgba(99, 102, 241, .45); }
+.sec-xp-barra { height: 10px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--border); overflow: hidden; max-width: 420px; margin: 0 auto 4px; }
+.sec-xp-barra span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f46e5, #7c3aed); }
+.sec-insignias { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; }
+.sec-insignia { padding: 6px 12px; border-radius: 999px; font-weight: 800; background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); }
 
