@@ -86,7 +86,7 @@ async function enviar(id, bien) {
     // jueves 22 (sec-adelanta-*, de secundaria-adelantar) siguen sin hacer: «Fracciones», atrasada, antes que La célula.
     ok(`RPG: misión principal = ${SD.temaDe(mision.item)} (${mision.motivo}) con «Empezar»` + sufijo, (await texto(p, '#rpg-mision')).includes('Misión principal activa') && (await texto(p, '#rpg-mision .rpg-mision-t')) === SD.temaDe(mision.item) && (await p.getAttribute('#rpg-mision', 'data-motivo')) === mision.motivo && (await texto(p, '#rpg-mision-btn')).startsWith('Empezar'), await texto(p, '#rpg-mision'));
     ok('RPG: la misión no es una clase bloqueada mientras haya algo abierto' + sufijo, mision.motivo !== 'proxima' && !(await texto(p, '#rpg-mision-btn')).includes('🔒'));
-    ok(`RPG: la misión dice su mundo (${misionMundo})` + sufijo, (await texto(p, '#rpg-mision .rpg-mision-d')).includes(misionMundo));
+    ok(`RPG: la misión dice su mundo (${misionMundo})` + sufijo, !!misionMundo && (await texto(p, '#rpg-mision .rpg-mision-d')).includes(misionMundo));
     ok(`RPG: retos diarios ${hechasHoy} / ${deHoy.length} y «te falta 1»` + sufijo, (await texto(p, '#rpg-retos')) === `${hechasHoy} / ${deHoy.length}` && (await texto(p, '#rpg-retos-texto')).includes('falta 1 reto'), await texto(p, '#rpg-retos-texto'));
     ok('RPG: XP en las tarjetas (+120 hecha a tiempo, hasta +120 pendiente)' + sufijo, (await texto(p, '[data-sec-card="sec-e2e-clase-2026-10-27-a"] .rpg-xp-chip')) === '+120 XP' && (await texto(p, '[data-sec-card="sec-e2e-clase-2026-10-27-b"] .rpg-xp-chip')) === 'hasta +120 XP');
     const actv = await p.$$eval('[data-sec-act]', xs => xs.map(x => x.dataset.secAct + ':' + x.querySelector('.rpg-xp-chip').textContent.trim()));

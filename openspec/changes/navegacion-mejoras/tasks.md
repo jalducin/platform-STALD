@@ -1,18 +1,18 @@
 ## 0. Rama (OBLIGATORIO)
 
-- [ ] 0.1 Step 0: rama `feature/navegacion-mejoras` desde `main` actualizado (PR 1); cada PR siguiente en su rama
+- [x] 0.1 Step 0: rama `feature/navegacion-mejoras` desde `main` actualizado (PR 1); cada PR siguiente en su rama
   `feature/navegacion-mejoras-<parte>` desde `main` con el PR anterior ya fusionado
 
 ## 1. PR 1 · Misión principal de Secundaria
 
-- [ ] 1.1 TDD: pruebas Deno de `SecundariaDatos.misionPrincipal` en `server/secundaria_tablero_test.ts` (atrasada antes
+- [x] 1.1 TDD: pruebas Deno de `SecundariaDatos.misionPrincipal` en `server/secundaria_tablero_test.ts` (atrasada antes
   que hoy, hoy antes que adelantar, adelantar antes que bloqueada, bloqueada solo si no hay nada abierto, la de ayer que
   vence hoy, `dia` futuro abierto, todo hecho) — fallan antes de implementar
-- [ ] 1.2 `misionPrincipal(items, hoy)` en `comun/secundaria-datos.js` y su uso en `ingles/secundaria-inicio.js` con el
+- [x] 1.2 `misionPrincipal(items, hoy)` en `comun/secundaria-datos.js` y su uso en `ingles/secundaria-inicio.js` con el
   motivo en la tarjeta; `?v=` en `ingles.html`
-- [ ] 1.3 E2E `secundaria-dashboard`: la misión esperada sale de `SD.misionPrincipal` (con el fixture, «Fracciones»,
+- [x] 1.3 E2E `secundaria-dashboard`: la misión esperada sale de `SD.misionPrincipal` (con el fixture, «Fracciones»,
   atrasada del jueves 22) y un caso dibujado sin datos: atrasada antes que bloqueada
-- [ ] 1.4 Propuesta aparte (sin implementar) `openspec/changes/navegacion-rendimiento/proposal.md`: carga perezosa de
+- [x] 1.4 Propuesta aparte (sin implementar) `openspec/changes/navegacion-rendimiento/proposal.md`: carga perezosa de
   Juegos y peticiones del panel del profe
 
 ## 2. PR 2 · Entregas en la barra del profe

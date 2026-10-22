@@ -15,9 +15,10 @@ Secundaria están en `comun/secundaria-datos.js` (`SecundariaDatos`, probadas en
    - atrasada: `diaDeClase < hoy`, abierta y sin hacer (lo de ayer que vence hoy también: su día ya pasó);
    - hoy: `diaDeClase === hoy`, abierta y sin hacer;
    - adelantar: `diaDeClase > hoy`, abierta y sin hacer;
-   - próxima: `diaDeClase > hoy` y sin hacer (bloqueada), solo si no hubo ninguna de las anteriores.
+   - próxima: sin hacer y bloqueada (la de día más cercano), solo si no hubo ninguna de las anteriores.
    Lo de hoy bloqueado (raro: `disponibleDesde` posterior a su día) no cuenta como «hoy»; cae en «próxima» si no hay
-   nada abierto. Alternativa descartada: «en curso» primero; una clase en curso ya tiene un intento y cuenta como hecha.
+   nada abierto, para no decir «al día» con una clase pendiente. Texto: en atrasada y hoy, el estado de la tarjeta
+   (`estadoClase`: «Atrasada», «Vence hoy», «Vence mañana»…), que es lo que la alumna necesita saber. Alternativa descartada: «en curso» primero; una clase en curso ya tiene un intento y cuenta como hecha.
    La ruta del profe (`profe-rpg.js`) tiene su propia regla (todo abierto, sin «atrasada»): no se toca. El Inicio de
    Inglés muestra «⚔️ Misión principal del mundo» (`misionInicioHtml`, una misión de proyecto, no una clase): no aplica.
 2. **Entregas en la barra.** `barra: true` en la sección `entregas` del admin. `pintarNav()` pinta las secciones en el

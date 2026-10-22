@@ -7,8 +7,9 @@ La tarjeta «⚔️ Misión principal activa» del Inicio de Secundaria SHALL el
 3. lo próximo ya abierto (se puede adelantar porque su `disponibleDesde` ya llegó, aunque su `dia` sea futuro);
 4. solo si no hay nada abierto, la próxima clase bloqueada («🔒 Abre el …»).
 
-A igual día, el orden de la lista. Una clase con al menos un intento cuenta como hecha. La tarjeta dice el motivo
-(«Atrasada», «Vence hoy», «Puedes adelantarla · <día>» o «Próxima: <día>»). La regla es pura
+A igual día, el orden de la lista. Una clase con al menos un intento cuenta como hecha; una bloqueada de hoy o anterior
+cuenta en el paso 4. La tarjeta lleva el motivo en `data-motivo` y dice el estado de la clase en lo atrasado y lo de hoy
+(p. ej. «Atrasada» o «Vence hoy»), «Puedes adelantarla · <día>» al adelantar y «Próxima: <día>» en la bloqueada. La regla es pura
 (`SecundariaDatos.misionPrincipal`) y la usan la alumna y la vista del profe (solo lectura). Matriz de acceso: sin
 cambios (cada alumna ve solo sus clases; el admin, las de la alumna elegida).
 

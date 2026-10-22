@@ -90,8 +90,8 @@ Deno.test("misión principal: solo si no hay nada abierto, la próxima bloqueada
   assertEquals([m.item.id, m.motivo], ["mie", "proxima"]);
   assertEquals(SD.misionPrincipal([clase("hoy", hoy, hecha(100))], hoy), null);
   assertEquals(SD.misionPrincipal([], hoy), null);
-  // Una clase de hoy que aún no abre no es «hoy»: sin nada abierto, cae como próxima solo si es futura; si no, nada.
-  assertEquals(SD.misionPrincipal([clase("hoy-cerrada", hoy, { estado: "proximamente" })], hoy), null);
+  // Una clase de hoy que aún no abre no es «hoy»; si es lo único sin hacer, sale como bloqueada (no «al día»).
+  assertEquals(SD.misionPrincipal([clase("hoy-cerrada", hoy, { estado: "proximamente" })], hoy).motivo, "proxima");
 });
 
 Deno.test("progreso de la semana: hechas (con un envío) entre las clases de lunes a domingo de hoy", () => {
