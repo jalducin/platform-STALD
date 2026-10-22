@@ -32,6 +32,21 @@
     {
       "tipo": "libreta",
       "texto": "Anota lo importante."
+    },
+    {
+      "tipo": "video",
+      "texto": "Fracciones equivalentes (video de prueba)",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    {
+      "tipo": "video",
+      "texto": "Suma de fracciones (video de prueba)",
+      "url": "https://youtu.be/aqz-KE-bpKQ"
+    },
+    {
+      "tipo": "lectura",
+      "texto": "Lectura de apoyo",
+      "url": "https://es.khanacademy.org/math"
     }
   ],
   "banco": [
