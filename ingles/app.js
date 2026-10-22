@@ -58,6 +58,7 @@ function aplicarRuta() {
   const s = seccion(rolActual(), id);
   document.title = (s ? s.titulo + ' · ' : '') + 'Clases de Inglés';
   if (rolActual() === 'admin' && id === 'resumen' && !state.resumen) cargarResumen();
+  if (rolActual() === 'admin' && id === 'nicks' && !state.nicks) cargarNicksAdmin(); // openspec: rpg-fase2-ingles
 }
 window.addEventListener('hashchange', () => {
   document.getElementById('nav-mas').hidden = true;
@@ -112,7 +113,7 @@ function onSubmit(e) {
   const f = e.target.closest('#exam-form'); if (f) { e.preventDefault(); submitExam(f); }
 }
 function onChange(e) {
-  if (e.target.id === 'grupo-filtro') { state.grupoFiltro = e.target.value || null; state.resumen = null; render(state.data); cargarResumen(); }
+  if (e.target.id === 'grupo-filtro') { state.grupoFiltro = e.target.value || null; state.resumen = null; state.nicks = null; render(state.data); cargarResumen(); }
   if (e.target.dataset && e.target.dataset.mover) moverGrupo(e.target);
   if (e.target.name === 'tema') aplicarTema(e.target.value);
   const f = e.target.closest('#exam-form'); if (f) updateExamProgress(f);
@@ -186,9 +187,12 @@ async function loadFor(email) {
     appEl.style.display = 'block';
     state.data = data;
     await actividadesP;
+    // Ranking de Inglés: el perfil solo se pide si /ingles/actividades dice que está encendido (openspec: rpg-fase2-ingles).
+    if (!data.isAdmin && state.act && state.act.ranking) await cargarPerfilGamificacion(); else { state.gam = null; state.rk = null; }
     if (data.isAdmin) { state.resumen = null; await Promise.all([loadJuegosAdmin(), loadAlumnosAdmin(), loadGruposAdmin()]); }
     render(data);
     if (data.isAdmin) cargarResumen(); // idempotente; el cajón también lo usa
+    else cargarRankingIngles();
     if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) { m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; } state.altaAviso = null; }
   } catch (e) {
     if (appEl.style.display === 'none') mostrarEntrada('⚠️ ' + e.message);

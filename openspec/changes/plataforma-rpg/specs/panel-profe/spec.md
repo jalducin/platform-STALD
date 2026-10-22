@@ -77,17 +77,13 @@ reglas se cumplieron y con qué datos. Esta lista SHALL NOT mostrarse al estudia
 - **WHEN** una alumna va al día con promedio de 90 %
 - **THEN** no aparece en la lista
 
-### Requirement: Moderación de nicks, tutor y consentimientos
-El panel SHALL permitir aprobar o rechazar con un motivo los nicks de Juegos de quien pidió aparecer en el ranking,
-apagar el ranking de un grupo, leer la bitácora del tutor por persona y fecha, ver primero las conversaciones marcadas
+### Requirement: Moderación del tutor y consentimientos
+El panel SHALL permitir leer la bitácora del tutor por persona y fecha, ver primero las conversaciones marcadas
 (también las que llegaron por correo), activar o apagar el tutor, borrar la bitácora de una persona y registrar o
 retirar el consentimiento de una persona por tipo (`tutor`, o `multimedia` para la fase posterior de imagen y audio;
 solo slug, tipo y fecha). El consentimiento SHALL recabarse fuera de la plataforma con el formato simple que prepara la
-Fase 2; la plataforma SHALL NOT guardar el documento firmado.
-
-#### Scenario: Aprobar nick
-- **WHEN** el profe aprueba el nick de Juegos «Estrella Azul» de una alumna que pidió aparecer
-- **THEN** la caché del ranking se invalida y el nick aparece en el ranking del grupo
+Fase 2; la plataforma SHALL NOT guardar el documento firmado. (La moderación de nicks y el apagado del ranking se
+movieron al cambio `rpg-fase2-ingles`.)
 
 #### Scenario: Retirar consentimiento
 - **WHEN** el profe retira el consentimiento `tutor` de un alumno

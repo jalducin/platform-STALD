@@ -14,7 +14,7 @@ const { handler } = await import("./main.ts");
 
 Deno.test("main: GET /interruptores sin sesión responde solo las llaves conocidas y se guarda 60 s", async () => {
   const r = await handler(new Request("http://x/interruptores"));
-  assertEquals([r.status, r.headers.get("Cache-Control"), await r.json()], [200, "public, max-age=60", { privacidad: true }]);
+  assertEquals([r.status, r.headers.get("Cache-Control"), await r.json()], [200, "public, max-age=60", { privacidad: true, ranking: false }]);
 });
 
 Deno.test("main: /interruptores no acepta escritura", async () => {
