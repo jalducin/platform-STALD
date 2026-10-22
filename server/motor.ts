@@ -60,6 +60,7 @@ export interface Item {
   segundaOportunidad?: string; // examen con 2 intentos: el 2.º abre esta fecha (openspec: examen-segunda-oportunidad)
   materia?: string; // materia de la clase de Secundaria, texto corto (openspec: secundaria-mis-clases)
   dia?: string; // AAAA-MM-DD: día del horario en que toca la clase, dentro de [disponibleDesde, fechaLimite] (openspec: secundaria-adelantar)
+  mundo?: string; // id del mundo de mundos.json; si falta, el de su materia por fecha (openspec: rpg-fase2-misiones)
 }
 
 // El elemento como lo ve un alumno o alumna: con su prórroga, si tiene (no adelanta la apertura).

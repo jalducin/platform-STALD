@@ -1,0 +1,148 @@
+{
+  "mundos": [
+    {
+      "id": "isla-del-alfabeto",
+      "materia": "Inglés",
+      "nombre": "Isla del Alfabeto",
+      "emoji": "🏝️",
+      "etapa": "Bloque actual",
+      "desde": null,
+      "hasta": null
+    },
+    {
+      "id": "gran-biblioteca",
+      "materia": "Español",
+      "nombre": "Gran Biblioteca",
+      "emoji": "📚",
+      "etapa": "Programa de 1.º",
+      "desde": null,
+      "hasta": null
+    },
+    {
+      "id": "valle-de-los-numeros",
+      "materia": "Matemáticas",
+      "nombre": "Valle de los Números",
+      "emoji": "🔢",
+      "etapa": "Aritmética",
+      "desde": "2026-10-26",
+      "hasta": "2026-11-22"
+    },
+    {
+      "id": "ciudad-de-las-formas",
+      "materia": "Matemáticas",
+      "nombre": "Ciudad de las Formas",
+      "emoji": "🏙️",
+      "etapa": "Geometría",
+      "desde": "2026-11-23",
+      "hasta": "2026-12-20"
+    },
+    {
+      "id": "torre-de-las-incognitas",
+      "materia": "Matemáticas",
+      "nombre": "Torre de las Incógnitas",
+      "emoji": "🗼",
+      "etapa": "Álgebra",
+      "desde": "2027-01-01",
+      "hasta": null
+    },
+    {
+      "id": "taller-digital",
+      "materia": "Tecnología",
+      "nombre": "Taller Digital",
+      "emoji": "🛠️",
+      "etapa": "Bases",
+      "desde": "2026-10-26",
+      "hasta": "2026-12-06"
+    },
+    {
+      "id": "laberinto-sintaxis",
+      "materia": "Tecnología",
+      "nombre": "Laberinto Sintaxis",
+      "emoji": "🌀",
+      "etapa": "Programación",
+      "desde": "2026-12-07",
+      "hasta": null
+    },
+    {
+      "id": "nucleo-ia",
+      "materia": "Tecnología",
+      "nombre": "Núcleo IA",
+      "emoji": "🤖",
+      "etapa": "IA",
+      "desde": "2026-12-07",
+      "hasta": null
+    },
+    {
+      "id": "selva-de-la-vida",
+      "materia": "Ciencias",
+      "nombre": "Selva de la Vida",
+      "emoji": "🌿",
+      "etapa": "Biología",
+      "desde": "2026-10-01",
+      "hasta": "2027-01-31"
+    },
+    {
+      "id": "laboratorio-alquimia",
+      "materia": "Ciencias",
+      "nombre": "Laboratorio Alquimia",
+      "emoji": "⚗️",
+      "etapa": "Química",
+      "desde": "2027-02-01",
+      "hasta": "2027-04-30"
+    },
+    {
+      "id": "cumbre-de-la-fuerza",
+      "materia": "Ciencias",
+      "nombre": "Cumbre de la Fuerza",
+      "emoji": "🏔️",
+      "etapa": "Física",
+      "desde": "2027-05-01",
+      "hasta": "2027-07-31"
+    },
+    {
+      "id": "agora",
+      "materia": "Ciencias Sociales",
+      "nombre": "Ágora",
+      "emoji": "🏛️",
+      "etapa": "Cívica y Ética",
+      "desde": "2026-10-26",
+      "hasta": "2026-11-22"
+    },
+    {
+      "id": "puerta-del-tiempo",
+      "materia": "Ciencias Sociales",
+      "nombre": "Puerta del Tiempo",
+      "emoji": "⏳",
+      "etapa": "Historia",
+      "desde": "2026-11-23",
+      "hasta": "2026-12-20"
+    },
+    {
+      "id": "atlas-del-mundo",
+      "materia": "Ciencias Sociales",
+      "nombre": "Atlas del Mundo",
+      "emoji": "🗺️",
+      "etapa": "Geografía",
+      "desde": "2027-01-01",
+      "hasta": "2027-01-31"
+    },
+    {
+      "id": "estudio-y-arena-artes",
+      "materia": "Artes",
+      "nombre": "Estudio y Arena",
+      "emoji": "🎨",
+      "etapa": "Artes y Educación Física",
+      "desde": null,
+      "hasta": null
+    },
+    {
+      "id": "estudio-y-arena-edfisica",
+      "materia": "Educación Física",
+      "nombre": "Estudio y Arena",
+      "emoji": "🎨",
+      "etapa": "Artes y Educación Física",
+      "desde": null,
+      "hasta": null
+    }
+  ]
+}

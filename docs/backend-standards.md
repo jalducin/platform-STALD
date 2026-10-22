@@ -542,6 +542,28 @@ escribía quedan como historial.
 **Cargar una semana nueva:** skill `nueva-semana-ingles` (`ai-specs/skills/`). Se prepara el fin de
 semana anterior, se valida con la CLI y se sube al repo de datos. Aparece sola su lunes.
 
+### Misiones principales (cambio `rpg-fase2-misiones`, `server/misiones.ts`)
+
+Formatos en [data-model.md](data-model.md) § «Misiones principales». Identidad por `personaMision` (`server/main.ts`):
+admin, alumna de Secundaria, alumno activo de Inglés (con su grupo), de baja de Inglés o sin acceso. Matriz completa en
+`openspec/changes/rpg-fase2-misiones/proposal.md`.
+
+| Ruta | Quién | Respuesta |
+|---|---|---|
+| `GET /misiones[?alumna=<slug>]` | con sesión | `{ isAdmin, hoy, mundos o null, misiones: [{ …misión sin respuestas, ambito, entrega, evaluacion, xp }] }`. Admin: todas las de Secundaria sin entregas (o lo que ve una alumna). Baja: solo sus entregas, `soloLectura`. Sin acceso 403 |
+| `POST /misiones/<id>/entrega` `{ paso, texto }` | alumna o alumno | 200 `{ ok, paso, tarde, completos, totalPasos, entrega }`. JSON (`application/json` o `text/plain`). 400 `tipo_no_permitido` con archivo, multipart o `tipo` ≠ texto; 400 `entrega_invalida` vacía, > 4 000 o paso inexistente; 404 ajena o aún no visible; 409 `ya_evaluado`; 403 admin, baja o sin acceso; 503 `sin_guardar` si falla el almacén o no hay Postgres |
+| `GET /profe/entregas` | admin | `{ entregas: [{ mision, slug, nombre (de pila), estado (lista, correccion, en-progreso o evaluada), desde, pasos, evaluacion, historial, xp }], pendientes }`, de la más antigua a la más nueva |
+| `POST /profe/entregas/<id>/<slug>/evaluar` `{ puntos: { <criterio>: n }, comentario? }` | admin | 200 `{ evaluacion }`; 400 `rubrica_invalida`; 409 `incompleta`; 404 |
+| `POST /profe/entregas/<id>/<slug>/correccion` `{ pasos, motivo, privacidad }` | admin | reabre los pasos (borra el texto si `privacidad`) y quita la evaluación; 400 `correccion_invalida` |
+| `POST /profe/entregas/<id>/<slug>/borrar`, `POST /profe/entregas/persona/<slug>/borrar` | admin | borran el texto y conservan la evaluación (la XP no cambia) |
+| `POST /practica/comprobar` `{ itemId o misionId, practicaId, respuesta }` | con sesión | `{ correcta, pista }`; clases solo de Secundaria; misiones visibles para la persona (también de Inglés); 404 si no le es visible; 403 baja o sin acceso |
+
+Toda `/profe/entregas*` responde 403 a quien no es admin y 401 sin sesión. Ninguna respuesta lleva correos; a
+estudiantes la misión va sin `alumnos` ni `grupos`. Una entrega con el contenido borrado antes de evaluar ya no se puede
+evaluar (409 `incompleta`). El
+contenido de misiones y mundos va en caché 60 s por ámbito (`limpiarCacheMisiones`). La teoría de las clases se
+publica con `teoriaPublica` (sin `correcta`/`aceptadas` de su práctica).
+
 ---
 
 # Versión anterior: Supabase Edge Function
