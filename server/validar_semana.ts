@@ -5,12 +5,33 @@
 // Con --secundaria valida una semana de Secundaria (contenido/secundaria/, openspec: secundaria-mis-clases): sin patrón
 // de días, el examen mensual puede tener ventana y `materia` fuera de las 8 conocidas es aviso. Con `dia`
 // (openspec: secundaria-adelantar), `disponibleDesde` puede ser anterior al lunes (para adelantar) y `dia` cae en la semana.
+// Forma nueva (openspec: rpg-fase2-misiones): `validar_semana.ts <dir-datos> --misiones <ámbito>` (sin lunes) valida
+// contenido/<ámbito>/mundos.json y contenido/<ámbito>/misiones/*.json (ámbito: secundaria o ingles).
 // Sale con código 1 si hay errores; los avisos no bloquean.
 import { AMBITO_CLASE, AMBITO_PROFE, AMBITO_SECUNDARIA } from "./actividades.ts";
+import { AMBITOS_MISION, validarMisiones } from "./misiones_validar.ts";
 import { validarSemana } from "./semana.ts";
 import { MemoryStore } from "./store.ts";
 
-const USO = "Uso: deno run --allow-read server/validar_semana.ts <dir-datos> <lunes AAAA-MM-DD> [--profe | --secundaria]";
+const USO = "Uso: deno run --allow-read server/validar_semana.ts <dir-datos> <lunes AAAA-MM-DD> [--profe | --secundaria]\n" +
+  "     deno run --allow-read server/validar_semana.ts <dir-datos> --misiones <secundaria | ingles>";
+const iMis = Deno.args.indexOf("--misiones");
+if (iMis !== -1) {
+  const resto = Deno.args.filter((_a, i) => i !== iMis && i !== iMis + 1);
+  const ambito = Deno.args[iMis + 1] || "";
+  const [dirM, ...sobra] = resto;
+  if (!dirM || dirM.startsWith("--") || sobra.length || !AMBITOS_MISION[ambito]) {
+    if (ambito && !AMBITOS_MISION[ambito]) console.error(`Ámbito desconocido: ${ambito} (usa ${Object.keys(AMBITOS_MISION).join(" o ")})`);
+    if (sobra.length) console.error("La forma --misiones no lleva <lunes> ni otras banderas");
+    console.error(USO);
+    Deno.exit(2);
+  }
+  const r = await validarMisiones(await MemoryStore.fromDir(dirM), ambito);
+  for (const e of r.errores) console.log(`❌ ${e}`);
+  for (const a of r.avisos) console.log(`⚠️  ${a}`);
+  console.log(`Misiones de ${ambito}: ${r.errores.length} error(es), ${r.avisos.length} aviso(s)`);
+  Deno.exit(r.errores.length ? 1 : 0);
+}
 const BANDERAS = ["--profe", "--secundaria"];
 const banderas = Deno.args.filter((a) => a.startsWith("--"));
 const [dir, lunes] = Deno.args.filter((a) => !a.startsWith("--"));
