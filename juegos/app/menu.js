@@ -181,6 +181,19 @@ async function cargarYo() {
   return r;
 }
 
+// Primera pantalla con sesión: enlace de sala, avatar, recarga (sala, revancha o juego a medias) o el hub.
+// juegos-carga-perezosa: las salas y la reanudación necesitan el código de los juegos antes de pintar. La sala
+// pendiente se consume después de cargarlo, así «Reintentar» vuelve a intentar la misma.
+async function pantallaInicial() {
+  if (salaPendiente) { await cargarPaquete('todo'); const c = salaPendiente; salaPendiente = null; return VER_URL ? espectarCodigo(c) : unirseCodigo(c); } // espectador: &ver=1
+  if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
+  // Recarga (openspec: juegos-recarga): primero la sala guardada; luego, el juego individual a medias.
+  const enSala = salaGuardada(); if (enSala) { await cargarPaquete('todo'); return volverASala(enSala.codigo); }
+  const revancha = revanchaGuardada(); if (revancha) { await cargarPaquete('todo'); return ofrecerRevancha(revancha.codigo); }
+  if (hayPartidaGuardada()) { await cargarPaquete('todo'); const previa = partidaGuardada(); if (previa) return pantallaReanudar(previa); }
+  return pantallaHub();
+}
+
 async function iniciar() {
   app.innerHTML = '<div class="loading">Cargando juegos…</div>';
   await StaldAuth.iniciar(API_BASE);
@@ -201,15 +214,7 @@ async function iniciar() {
     }
     if (!r.ok) throw new Error(r.body.error || ('HTTP ' + r.status));
     borrarRegistro(); // ya tenía cuenta (alumno, alumna o invitado): no hay nada que registrar
-    // juegos-carga-perezosa: las salas y la reanudación necesitan el código de los juegos antes de pintar. La sala
-    // pendiente se consume después de cargarlo, así «Reintentar» vuelve a intentar la misma.
-    if (salaPendiente) { await cargarPaquete('todo'); const c = salaPendiente; salaPendiente = null; return VER_URL ? espectarCodigo(c) : unirseCodigo(c); } // espectador: &ver=1
-    if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
-    // Recarga (openspec: juegos-recarga): primero la sala guardada; luego, el juego individual a medias.
-    const enSala = salaGuardada(); if (enSala) { await cargarPaquete('todo'); return volverASala(enSala.codigo); }
-    const revancha = revanchaGuardada(); if (revancha) { await cargarPaquete('todo'); return ofrecerRevancha(revancha.codigo); }
-    if (hayPartidaGuardada()) { await cargarPaquete('todo'); const previa = partidaGuardada(); if (previa) return pantallaReanudar(previa); }
-    pantallaHub();
+    return await pantallaInicial();
   } catch (e) {
     const txt = { mucho_trafico: '⏳ Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.', juego_sin_cargar: '😕 No se pudo cargar el juego. Revisa tu internet e intenta de nuevo.' }[e.message] || '⚠️ No pude conectarme (' + escapeHtml(e.message) + ').';
     app.innerHTML = '<div class="card"><div class="alert">' + txt + '</div><div class="row-btns"><button class="btn" data-a="reintentar">Reintentar</button></div></div>';
