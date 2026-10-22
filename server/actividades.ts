@@ -180,6 +180,13 @@ async function preguntasPara(store: Store, it: Item, alumno: string | null, n: n
   return { preguntas: selectQuestions(it.banco || [], it, slug, n, temas), enfoque: temas || [] };
 }
 
+// ¿El mejor intento llegó a tiempo? (bonus de XP, openspec: gamificacion-nucleo). Sin intentos: null.
+function mejorATiempo(r: Resultado | null): boolean | null {
+  if (!r?.mejor) return null;
+  const mejor = r.intentos.find((i) => i.n === r.mejor!.n);
+  return mejor ? !mejor.fueraDeTiempo : null;
+}
+
 // GET /ingles/actividades → elementos con estado (alumno) o con resultados y resumen (admin)
 async function listarActividades(quien: Identidad, store: Store, json: Json, hoy: string, ambito: Ambito, slug: string | null): Promise<Response> {
   const { items, ...propias } = await visibleItems(store, hoy, ambito);
@@ -212,7 +219,7 @@ async function listarActividades(quien: Identidad, store: Store, json: Json, hoy
   const conEstado = await Promise.all(suyos.map(async (it) => {
     const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
     for (const i of r?.intentos || []) diasConEntrega.add(mxToday(new Date(i.enviadoEn)));
-    return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
+    return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, mejorATiempo: mejorATiempo(r), ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
   }));
   const plan = esProfe ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
   return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}) });
@@ -384,7 +391,8 @@ async function enviarIntento(c: CtxElemento, n: number, p: PreguntasIntento): Pr
       // Enviado: el borrador sobra. Si no se puede borrar, la calificación ya quedó guardada.
       try { if (await store.get(rutaBorrador(it.id, slug!))) await store.remove(rutaBorrador(it.id, slug!), `${it.id}: borrador enviado de ${quien.alumno}`); }
       catch (e) { console.error("borrador:", e instanceof Error ? e.message : e); }
-      return json({ guardado: true, intento: n, intentosMax: maxIntentos(it), restantes, calificacion, mejor: nuevo.mejor });
+      // aTiempo / mejorATiempo: bonus de XP (openspec: gamificacion-nucleo).
+      return json({ guardado: true, intento: n, intentosMax: maxIntentos(it), restantes, calificacion, mejor: nuevo.mejor, aTiempo: !intento.fueraDeTiempo, mejorATiempo: mejorATiempo(nuevo) });
     }
   }
   return json({ error: "conflicto_escritura" }, 503);
