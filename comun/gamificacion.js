@@ -44,9 +44,11 @@
   const fecha = f => new Date(f + 'T12:00:00Z');
   function sumarDias(f, n) { const d = fecha(f); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
   const diasEntre = (a, b) => Math.round((fecha(b) - fecha(a)) / 86400000);
-  // Día de la clase: si dura un día (vence ese día o el siguiente) es su `disponibleDesde`; con ventana más larga
-  // (tareas y exámenes), su fecha límite.
+  // Día de la clase: su `dia` si lo trae (clase abierta antes para adelantar; openspec: secundaria-adelantar). Si no:
+  // si dura un día (vence ese día o el siguiente) es su `disponibleDesde`; con ventana más larga (tareas y exámenes),
+  // su fecha límite.
   function diaDeClase(it) {
+    if (it.dia) return it.dia;
     if (!it.disponibleDesde) return it.fechaLimite;
     return diasEntre(it.disponibleDesde, it.fechaLimite) <= 1 ? it.disponibleDesde : it.fechaLimite;
   }

@@ -1,0 +1,21 @@
+{
+  "id": "2026-10-19",
+  "titulo": "Prueba E2E: clases abiertas por adelantado (bloque desde el 21)",
+  "elementos": [
+    {
+      "id": "sec-adelanta-2026-10-22-a",
+      "tipo": "actividad",
+      "fecha": "2026-10-23"
+    },
+    {
+      "id": "sec-adelanta-2026-10-22-b",
+      "tipo": "actividad",
+      "fecha": "2026-10-23"
+    },
+    {
+      "id": "sec-adelanta-2026-10-23-a",
+      "tipo": "actividad",
+      "fecha": "2026-10-24"
+    }
+  ]
+}

@@ -24,6 +24,7 @@ const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "
 const CORREO = /[\w.+-]+@[\w-]+\.[\w.-]+/;
 
 const diaSemana = (fecha: string) => new Date(`${fecha}T12:00:00Z`).getUTCDay();
+const sumarDias = (fecha: string, n: number) => new Date(Date.parse(`${fecha}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
 
 type Elemento = NonNullable<Awaited<ReturnType<typeof loadItem>>>;
 
@@ -55,10 +56,14 @@ function revisarMeet(it: Elemento, id: string, r: ReporteSemana) {
 // Ruta del profe (openspec: profe-ruta-abierta): va a su ritmo; puede abrir antes del lunes de su semana y el examen
 // no espera su día, pero nunca abre después de `fechaLimite` (que queda como ritmo sugerido).
 // Secundaria (openspec: secundaria-mis-clases): dentro de su semana, y el examen mensual puede tener ventana.
+// Secundaria con `dia` (openspec: secundaria-adelantar): la clase puede abrir antes de su semana (inicio del bloque de
+// 2 semanas, para adelantar), pero su `dia` cae dentro de la semana.
 function erroresApertura(it: Elemento, id: string, lunes: string, ambito: Ambito): string[] {
   if (ambito.clave === AMBITO_PROFE.clave) return it.disponibleDesde > it.fechaLimite ? [`${id}: disponibleDesde ${it.disponibleDesde} posterior a fechaLimite ${it.fechaLimite}`] : [];
   const errores: string[] = [];
-  if (it.disponibleDesde < lunes || it.disponibleDesde > it.fechaLimite) errores.push(`${id}: disponibleDesde ${it.disponibleDesde} fuera de ${lunes}…${it.fechaLimite}`);
+  const adelanta = ambito.clave === AMBITO_SECUNDARIA.clave && typeof it.dia === "string";
+  if (adelanta && (it.dia! < lunes || it.dia! > sumarDias(lunes, 6))) errores.push(`${id}: dia ${it.dia} fuera de la semana ${lunes}…${sumarDias(lunes, 6)}`);
+  if ((!adelanta && it.disponibleDesde < lunes) || it.disponibleDesde > it.fechaLimite) errores.push(`${id}: disponibleDesde ${it.disponibleDesde} fuera de ${adelanta ? "" : lunes}…${it.fechaLimite}`);
   if (it.tipo === "examen" && it.disponibleDesde !== it.fechaLimite && ambito.clave !== AMBITO_SECUNDARIA.clave) errores.push(`${id}: el examen debe quedar bloqueado hasta su día (disponibleDesde = ${it.fechaLimite})`);
   return errores;
 }

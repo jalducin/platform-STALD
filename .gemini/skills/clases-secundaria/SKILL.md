@@ -61,8 +61,13 @@ A la semana: Inglés 4, Español 3, Matemáticas 3, Tecnología 2, Ciencias 1, C
     `artes` o `edfisica`;
   - `titulo` = «<emoji> <Materia> · <tema>»;
   - `"materia"`, con el nombre de la materia.
-- **Disponibilidad:** `disponibleDesde` es su día y `fechaLimite` el día siguiente. `intentos: 2` y
-  `porSecciones: true`.
+- **Fechas (para que pueda adelantar; cambio `secundaria-adelantar`):**
+  - `dia` = día del horario en que toca la clase;
+  - `disponibleDesde` = inicio del bloque de 2 semanas, para que pueda adelantar;
+  - `fechaLimite` = el día siguiente a `dia`.
+  - Así la clase sale en su día en «Hoy te toca», «Esta semana» y «Mi horario», pero se puede resolver antes. Hecha
+    antes de su día cuenta a tiempo. Sin `dia`, la clase vuelve a la regla vieja (`disponibleDesde` = su día).
+- `intentos: 2` y `porSecciones: true`.
 - **Exclusividad:** `alumnos` con los slugs de la alumna, los mismos que en las clases anteriores de
   `contenido/secundaria/actividades/`, **en el mismo orden: el slug canónico primero** (`["sofia","sofy"]`). El
   servidor toma el primero como su slug de Secundaria (con el que están sus resultados; cambio

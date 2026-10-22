@@ -1079,8 +1079,10 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
   - Progreso = clases hechas (con al menos un envío) entre las de lunes a domingo.
   - Racha = la del servidor.
   - Promedio = media de `mejor.porcentaje`.
-- **Día de la clase:** `disponibleDesde` si vence ese día o el siguiente; si tiene ventana, `fechaLimite`. Aplica a
-  todas las vistas y al portal.
+- **Día de la clase:** su `dia` si lo trae (clase abierta antes para adelantar; cambio `secundaria-adelantar`). Si
+  no, `disponibleDesde` si vence ese día o el siguiente; si tiene ventana, `fechaLimite`. Aplica a todas las vistas y
+  al portal. Las clases de semanas futuras que ya abrieron salen en «📝 Otras clases y exámenes» y cuentan en el total
+  de su materia en «📚 Mis materias».
 - **Hash:** `#inicio`, `#semana`, `#horario`, `#materias` y `#resultados` (`history.replaceState`). Al volver de una
   clase queda la misma pestaña; al cargar con `#ver/<id>`, «📅 Esta semana».
 - **Admin:** pide la lista (resultados y `alumnas`) y la vista `?alumna=<slug>` (la de la URL o la primera). El
@@ -1177,5 +1179,6 @@ servidor y **nada se guarda**. Lo usan el tablero de Secundaria y la pantalla de
   `mundoDe` da el actual; en vacaciones, el último que empezó; antes del primero, el primero.
 - **Retos diarios** (`retosDiarios(items, hoy)`): las clases cuyo día es hoy, con `xp` (hechas) o `xpPosible` (120),
   `faltan` y `xpHoy`. **Actividad reciente** (`actividadReciente(items, n)`): por `ultimoEnvio`, con porcentaje y XP.
-- Día de la clase (`diaDeClase`): `disponibleDesde` si dura un día (vence ese día o el siguiente); con ventana más
-  larga, su `fechaLimite`. Hecha (`estaHecha`): al menos un envío.
+- Día de la clase (`diaDeClase`): su `dia` si viene (cambio `secundaria-adelantar`: la clase abre antes y sigue en
+  su día del horario, sin contar como atrasada ni «de hoy» antes de ese día). Sin `dia`: `disponibleDesde` si dura
+  un día (vence ese día o el siguiente); con ventana más larga, su `fechaLimite`. Hecha (`estaHecha`): al menos un envío.
