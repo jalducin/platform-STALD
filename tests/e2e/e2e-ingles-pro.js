@@ -120,8 +120,8 @@ async function contexto(b, email, ancho, opciones = {}) {
   const { ctx: c4, p: d } = await contexto(b, ADMIN, 1280);
   await d.goto(BASE + '/ingles.html' + Q);
   await d.waitForSelector('#mapa-calor', { timeout: 60000 });
-  // 12 desde rpg-fase2-ingles (🛡️ Nicks); esta prueba solo corre con --pg y no se actualizó en ese cambio.
-  ok('escritorio: menú lateral con 12 secciones (con ➕ Registro, 📚 Material y 🛡️ Nicks)', await d.evaluate(() => getComputedStyle(document.getElementById('nav')).position === 'sticky') && (await d.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).length)) === 12);
+  // 13: 🛡️ Nicks (rpg-fase2-ingles) y 📥 Entregas (rpg-ingles-hero-card); esta prueba solo corre con --pg.
+  ok('escritorio: menú lateral con 13 secciones (con ➕ Registro, 📚 Material, 🛡️ Nicks y 📥 Entregas)', await d.evaluate(() => getComputedStyle(document.getElementById('nav')).position === 'sticky') && (await d.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).length)) === 13);
   ok('indicadores del grupo', (await d.$$('#kpis .kpi')).length === 4);
   await d.selectOption('#grupo-filtro', 'sabado-a1');
   await d.waitForFunction(() => { const t = document.getElementById('mapa-calor'); return t && [...t.querySelectorAll('tbody tr')].map(r => r.dataset.alumno).join() === 'Marisol'; }, null, { timeout: 15000 });

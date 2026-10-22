@@ -1264,3 +1264,16 @@ y oscuro con los tokens RPG; 360 px sin scroll horizontal (E2E `e2e-misiones`).
   `config/interruptores.json`, el mismo mecanismo que `privacidad`) y por grupo (con el filtro de grupo), «⏳ Por revisar», «👥 Todos los nicks»; rechazar pide el motivo en la misma fila (sin `prompt`). Botones
   `data-nk`.
 - E2E: `tests/e2e/e2e-rpg-ingles.js` (fase `ingles`), a 360 px en claro y oscuro.
+
+## Misiones en Inglés (cambio `rpg-ingles-hero-card`)
+
+- Sin código propio de misiones: `ingles.html` reusa `ingles/secundaria-misiones.js` (`misionInicioHtml`,
+  `avisoEvaluacionHtml`, `renderSecMisiones` en `#sec-misiones`, `renderSecEntregas` en `#sec-entregas`). El pegamento
+  vive en `ingles/rpg-ingles.js` (`cargarMisionesIngles`, `seccionMisionesIngles`, `cargarEntregasIngles`).
+- Alumnos y alumnas: sección «⚔️ Misiones» (`fueraDeBarra: true` en `SECCIONES`: la barra sigue con 6 pestañas) y
+  tarjeta en «🏠 Inicio» que lleva a `#misiones`; `/misiones` se pide solo si
+  `/ingles/actividades` trae `misiones: true`. «Continuar misión» cambia el hash a `#misiones`. La barra RPG usa
+  `Gamificacion.xpTotalConMisiones`.
+- Admin: «📥 Entregas» (carga al abrirla). E2E: `tests/e2e/e2e-misiones-ingles.js` con la misión de ejemplo de
+  `tests/fixtures/datos/contenido/ingles/misiones/`.
+

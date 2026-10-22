@@ -150,6 +150,24 @@ async function conAlmacen(json: Json, fn: () => Promise<Response>): Promise<Resp
   }
 }
 
+// ---------- Para Inglés (openspec: rpg-ingles-hero-card) ----------
+// ¿Tiene esta persona alguna misión visible? /ingles/actividades lo avisa a la página para que solo entonces pida
+// /misiones (sin peticiones de más mientras no haya misiones).
+export async function hayMisionesVisibles(d: Pick<DepsMisiones, "store" | "hoy">, p: PersonaMision): Promise<boolean> {
+  if (p.tipo !== "ingles" && p.tipo !== "secundaria") return false;
+  try {
+    return (await visiblesPara(d as DepsMisiones, p, ambitoDe(p))).misiones.length > 0;
+  } catch {
+    return false;
+  }
+}
+// Pasos entregados por una persona en las misiones de un ámbito (fecha de envío): los puntos de constancia del ranking
+// de Inglés (20 por paso; openspec: rpg-fase2-ingles).
+export async function pasosEntregados(store: Store, ambito: string, slug: string): Promise<{ enviadoEn: string }[]> {
+  const docs = await Promise.all((await misionesDe(store, ambito)).map((m) => leerEntrega(store, m.id, slug)));
+  return docs.flatMap((d) => Object.values(d?.data?.pasos ?? {}).filter((x) => x.estado === "entregado" && !!x.enviadoEn).map((x) => ({ enviadoEn: x.enviadoEn })));
+}
+
 // ---------- /misiones ----------
 // GET /misiones → misiones visibles con su entrega y evaluación, y el catálogo del ámbito.
 // POST /misiones/<id>/entrega { paso, texto } → guarda el paso (solo texto).

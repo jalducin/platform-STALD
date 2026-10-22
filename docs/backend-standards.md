@@ -740,4 +740,7 @@ dos archivos.**
 - **Moderación (solo admin):** `GET /profe/nicks[?grupo=]`, `POST /profe/nicks/aprobar { alumno, nick }` (409
   `nick_cambio` si cambió en Juegos), `POST /profe/nicks/rechazar { alumno, nick, motivo }` (1–200 caracteres) y
   `POST /profe/ranking { ranking? , grupo?, apagado? }`. Toda escritura invalida la caché del ranking.
+- **Misiones en Inglés** (cambio `rpg-ingles-hero-card`): `/ingles/actividades` agrega `misiones: true` si la persona
+  tiene misiones visibles (`hayMisionesVisibles` de `server/misiones.ts`), y el ranking suma 20 puntos por paso con
+  `pasosEntregados(store, "ingles", slug)`.
 
