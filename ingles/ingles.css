@@ -544,3 +544,6 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 .sec-insignias { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; }
 .sec-insignia { padding: 6px 12px; border-radius: 999px; font-weight: 800; background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); }
 
+/* Pie con el enlace al aviso de privacidad (openspec: rpg-privacidad; solo con el interruptor encendido). */
+.pie-legal { max-width: 760px; margin: 24px auto 0; text-align: center; }
+.pie-legal .home-link { display: inline-flex; align-items: center; min-height: 44px; }

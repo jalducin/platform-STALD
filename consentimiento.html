@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Formato de consentimiento · STALD</title>
+<meta name="description" content="Hoja imprimible para que mamá, papá o tutor autorice el uso de la plataforma STALD.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%234f46e5'/><text x='32' y='44' font-size='34' text-anchor='middle'>📝</text></svg>">
+<script>
+  // Tema guardado antes de pintar, igual que ingles.html (openspec: ingles-pro).
+  try { var t = localStorage.getItem('stald_tema'); if (t === 'oscuro') document.documentElement.dataset.theme = 'dark'; else if (t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) { /* sin almacenamiento */ }
+</script>
+<link rel="stylesheet" href="estilos/legal.css?v=2">
+<!-- Formato simple de consentimiento (openspec: rpg-privacidad). Detrás del interruptor `privacidad`. -->
+<script defer src="comun/interruptores.js?v=1"></script>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top" aria-label="Navegación">
+    <a href="./">← Inicio</a>
+    <a href="privacidad.html" data-interruptor="privacidad" hidden>🔒 Aviso de privacidad</a>
+  </nav>
+
+  <main>
+    <p class="card estado nota" data-interruptores-cargando>Cargando…</p>
+
+    <section class="card estado" id="proximamente" data-interruptor-apagado="privacidad" hidden>
+      <span class="ico" aria-hidden="true">📝</span>
+      <h1>Formato de consentimiento</h1>
+      <p>Próximamente. Tu profe lo publicará aquí muy pronto.</p>
+      <p><a class="btn ghost" href="./">← Volver al inicio</a></p>
+    </section>
+    <noscript><section class="card estado"><h1>Formato de consentimiento</h1><p>Próximamente.</p></section></noscript>
+
+    <article class="card" id="formato" data-interruptor="privacidad" hidden>
+      <div class="borrador" role="note">
+        <b>Borrador para revisión del profe: no recabar firmas con esta versión.</b>
+        Los datos marcados <span class="pendiente">así</span> los llena el profe antes de imprimir.
+      </div>
+
+      <h1>Autorización de mamá, papá o tutor para usar la plataforma STALD</h1>
+      <p class="meta">Versión 0.1 · 21 de octubre de 2026 ·
+        Responsable: <span class="pendiente">[nombre de la escuela o de la persona responsable]</span></p>
+
+      <p>
+        La plataforma STALD se usa para clases, actividades, exámenes y juegos educativos. Guarda solo el nombre de
+        pila, el correo de acceso, los resultados y el avance de clases, y en Juegos el apodo, el avatar, las partidas y
+        el avance. En Juegos, quienes juegan ven el apodo y el avatar de los demás. No vende ni comparte esos datos.
+        El detalle está en el <a class="enlace" href="privacidad.html" data-interruptor="privacidad">aviso de privacidad</a>
+        <span class="nota">(versión impresa disponible con el profe)</span>.
+      </p>
+
+      <h2>Marque lo que autoriza</h2>
+      <ul class="casillas">
+        <li>
+          <span class="que">1. Uso de la plataforma</span>
+          <span class="det">Clases, actividades, exámenes, avance y Juegos, con los datos descritos arriba.</span>
+          <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>
+        </li>
+        <li>
+          <span class="que">2. Foto en el avatar de Juegos</span> <span class="etq">Opcional</span>
+          <span class="det">Si la autoriza, puede subir una foto como avatar; la verán quienes juegan en el ranking y las
+            partidas. Si no la autoriza, el profe quita la foto y vuelve el personaje dibujado.</span>
+          <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>
+        </li>
+        <li>
+          <span class="que">3. Ranking del grupo de Inglés por apodo</span> <span class="etq">Opcional</span>
+          <span class="det">Fase futura y oculto por defecto. Con su autorización, su hija o hijo puede elegir aparecer con su apodo
+            de Juegos y sus puntos de constancia, nunca con su nombre ni calificaciones.</span>
+          <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>
+        </li>
+        <li>
+          <span class="que">4. Tutor con inteligencia artificial</span> <span class="etq">Opcional · fase futura</span>
+          <span class="det">Hoy no existe. Si se activa: ayuda con preguntas guía, sin enviar nombre ni correo al
+            proveedor; las conversaciones se guardan 90 días y el profe las puede revisar.</span>
+          <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>
+        </li>
+        <li>
+          <span class="que">5. Entregas con imagen o audio</span> <span class="etq">Opcional · fase futura</span>
+          <span class="det">Hoy las entregas son solo de texto. Si se agregan fotos o audios de tareas, solo se
+            aceptarán con esta autorización.</span>
+          <span class="opciones"><span><span class="caja"></span>Sí autorizo</span><span><span class="caja"></span>No autorizo</span></span>
+        </li>
+      </ul>
+
+      <div class="campos">
+        <div class="campo ancho"><span class="linea"></span><span class="rotulo">Nombre del alumno o alumna</span></div>
+        <div class="campo ancho"><span class="linea"></span><span class="rotulo">Nombre de quien firma</span></div>
+        <span class="campo ancho"><span class="opciones" style="margin-top:0">Soy:
+          <span><span class="caja"></span>Mamá</span><span><span class="caja"></span>Papá</span><span><span class="caja"></span>Tutor o tutora</span></span></span>
+        <div class="campo"><span class="linea"></span><span class="rotulo">Fecha</span></div>
+        <div class="campo"><span class="linea alta"></span><span class="rotulo">Firma</span></div>
+      </div>
+
+      <p class="nota">
+        <b>La plataforma no guarda este documento.</b> El profe guarda la hoja firmada
+        <span class="pendiente">[dónde: por ejemplo, en el expediente de la escuela]</span>. En la plataforma solo
+        anota que existe: un identificador interno, el tipo de autorización y la fecha. Puede retirar cualquier
+        autorización cuando quiera escribiéndole al profe por el canal de la escuela.
+      </p>
+
+      <div class="acciones no-imprimir">
+        <button type="button" class="btn" id="imprimir">🖨️ Imprimir (tamaño carta)</button>
+        <a class="btn ghost" href="privacidad.html" data-interruptor="privacidad">🔒 Leer el aviso de privacidad</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>STALD · aprender también puede ser divertido</footer>
+</div>
+<script>
+  document.getElementById('imprimir').addEventListener('click', () => window.print());
+</script>
+</body>
+</html>
