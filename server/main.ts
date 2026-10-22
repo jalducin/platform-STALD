@@ -24,7 +24,7 @@ import { handleResumen } from "./resumen.ts";
 import { crearMemo, unaALaVez } from "./cache.ts";
 import { aplicarCacheHttp, politicaCache } from "./http_cache.ts";
 import { type DepsGamificacion, handleGamificacion, handleProfeGamificacion, rankingVisible } from "./gamificacion.ts";
-import { type DepsMisiones, handleMisiones, handlePractica, handleProfeEntregas, type PersonaMision } from "./misiones.ts";
+import { type DepsMisiones, handleMisiones, hayMisionesVisibles, pasosEntregados, handlePractica, handleProfeEntregas, type PersonaMision } from "./misiones.ts";
 import { alumnasSecundaria } from "./secundaria_registro.ts";
 import { aplicarRetencion, CRON_RETENCION } from "./retencion_entregas.ts";
 
@@ -360,7 +360,11 @@ async function rutaActividades(req: Request, sub: string, email: string, admin: 
   const grupo = alumno && await inglesEnPg() ? await grupoDe(db!, slugAlumno(alumno), mxToday()) : null;
   const info = grupo ? await grupoInfo(db!, grupo) : null;
   const ranking = !isAdmin && !!alumno && await rankingVisible({ store, interruptores: leerInterruptores }, grupo); // openspec: rpg-fase2-ingles
-  const quien = { isAdmin, alumno, ...(ranking ? { ranking } : {}), ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
+  // Misiones (openspec: rpg-ingles-hero-card): la misma identidad que /misiones; si también está en Secundaria, /misiones
+  // le da las de Secundaria, así que aquí no se avisa (las ve en su página de Secundaria).
+  const persona = !isAdmin && !!alumno ? await personaMision(email, admin) : null;
+  const misiones = persona?.tipo === "ingles" && await hayMisionesVisibles({ store, hoy: () => mxToday() }, persona);
+  const quien = { isAdmin, alumno, ...(ranking ? { ranking } : {}), ...(misiones ? { misiones } : {}), ...(inicio ? { inicio } : {}), ...(grupo ? { grupo, grupoInfo: info && { id: info.id, nombre: info.nombre, nivel: info.nivel, horario: info.horario, meet_url: info.meet_url, color: info.color } } : {}) };
   return await handleActividades(req, sub, quien, store, json);
 }
 
@@ -401,6 +405,7 @@ async function depsGamificacion(email: string, admin: string): Promise<DepsGamif
     ...(conGrupos ? { grupoDe: (slug: string) => grupoDe(db!, slug, mxToday()) } : {}),
     items: async (hoy) => (await visibleItems(store, hoy)).items,
     interruptores: leerInterruptores,
+    pasosMision: (slug) => pasosEntregados(store, "ingles", slug), // 20 puntos por paso (openspec: rpg-ingles-hero-card)
     cambiarRankingGeneral: async (valor) => { await escribirInterruptor(depsInterruptores, "ranking", valor); leerInterruptores.olvidar(); },
     hoy: () => mxToday(), ahora: ahoraIso,
   };

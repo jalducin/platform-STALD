@@ -40,7 +40,7 @@ function pintarNav() {
   document.body.classList.add('con-barra');
   const lista = seccionesDe(rol);
   if (rol === 'alumno') {
-    navEl.innerHTML = lista.map(s => navItem(s, actual)).join('');
+    navEl.innerHTML = lista.filter(s => !s.fueraDeBarra).map(s => navItem(s, actual)).join('');
   } else {
     const barra = lista.filter(s => s.barra), resto = lista.filter(s => !s.barra);
     navEl.innerHTML = barra.map(s => navItem(s, actual)).join('') + resto.map(s => navItem(s, actual, 'solo-escritorio')).join('') +
@@ -59,6 +59,7 @@ function aplicarRuta() {
   document.title = (s ? s.titulo + ' · ' : '') + 'Clases de Inglés';
   if (rolActual() === 'admin' && id === 'resumen' && !state.resumen) cargarResumen();
   if (rolActual() === 'admin' && id === 'nicks' && !state.nicks) cargarNicksAdmin(); // openspec: rpg-fase2-ingles
+  if (rolActual() === 'admin' && id === 'entregas' && !state.secBandeja) cargarEntregasIngles(); // openspec: rpg-ingles-hero-card
 }
 window.addEventListener('hashchange', () => {
   document.getElementById('nav-mas').hidden = true;
@@ -189,6 +190,7 @@ async function loadFor(email) {
     await actividadesP;
     // Ranking de Inglés: el perfil solo se pide si /ingles/actividades dice que está encendido (openspec: rpg-fase2-ingles).
     if (!data.isAdmin && state.act && state.act.ranking) await cargarPerfilGamificacion(); else { state.gam = null; state.rk = null; }
+    if (!data.isAdmin) await cargarMisionesIngles(); // solo pide /misiones si hay alguna visible (openspec: rpg-ingles-hero-card)
     if (data.isAdmin) { state.resumen = null; await Promise.all([loadJuegosAdmin(), loadAlumnosAdmin(), loadGruposAdmin()]); }
     render(data);
     if (data.isAdmin) cargarResumen(); // idempotente; el cajón también lo usa

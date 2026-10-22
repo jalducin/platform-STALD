@@ -11,7 +11,7 @@ function renderRpgIngles(act) {
   if (!G || typeof barraRpg !== 'function') return '';
   const hoy = (act && act.hoy) || todayStr();
   const items = ((act && act.items) || []).filter(conReto);
-  const nivel = G.nivelDe(G.xpTotal(items, { hoy }));
+  const nivel = G.nivelDe(G.xpTotalConMisiones(items, misionesSec(), { hoy })); // clases + misiones evaluadas
   const logradas = insignias(act).filter(b => b.ok);
   const racha = (act && act.racha) || { dias: 0 };
   const mundo = G.mundoDe('ingles', hoy);
@@ -183,6 +183,31 @@ async function accionNick(b) {
   const error = (r.body && r.body.mensaje) || 'No se pudo: ' + ((r.body && r.body.error) || r.status);
   await cargarNicksAdmin(r.ok ? 'Listo.' : error);
 }
+
+// ---------- Misiones en Inglés (openspec: rpg-ingles-hero-card): el motor y la vista son los de Secundaria ----------
+// (ingles/secundaria-misiones.js: avanceMision, misionInicioHtml, renderSecMisiones, entrega en texto y bandeja).
+// Solo se piden si /ingles/actividades trae `misiones: true`.
+async function cargarMisionesIngles() {
+  if (state.act && state.act.misiones) await cargarMisionesSec(misQuery(), null);
+  else state.secMis = { misiones: [], mundos: null };
+}
+const misionesInicioIngles = act => {
+  const hoy = (act && act.hoy) || todayStr(), items = (act && act.items) || [];
+  return avisoEvaluacionHtml(items, hoy) + misionInicioHtml(items, hoy);
+};
+const seccionMisionesIngles = act => '<div id="sec-misiones">' + renderSecMisiones((act && act.hoy) || todayStr(), false) + '</div>';
+// Bandeja del profe: se carga al abrir «📥 Entregas».
+async function cargarEntregasIngles() {
+  await cargarBandejaSec();
+  const panel = document.getElementById('sec-entregas');
+  if (panel) panel.innerHTML = renderSecEntregas();
+}
+const seccionEntregasIngles = () => '<div id="sec-entregas" aria-live="polite">' + (state.secBandeja ? renderSecEntregas() : esqueleto()) + '</div>';
+// «Continuar misión» desde Inicio lleva a la sección «⚔️ Misiones» (la vista la abre secundaria-misiones.js).
+contentEl.addEventListener('click', e => {
+  if (typeof MODO_SECUNDARIA !== 'undefined' && MODO_SECUNDARIA) return;
+  if (e.target.closest('[data-mis-abrir]') && location.hash !== '#misiones') location.hash = 'misiones';
+});
 
 contentEl.addEventListener('click', e => {
   const rk = e.target.closest('[data-rk]');

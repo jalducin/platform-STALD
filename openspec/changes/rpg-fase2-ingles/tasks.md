@@ -34,7 +34,8 @@
 
 ## 4. Pendientes que dependen de otros cambios
 
-- [ ] 4.1 Misión «My Hero Card» (solo texto) en `contenido/ingles/` y `contenido/secundaria/`: espera el motor de
+- [x] 4.1 (Hecho para el grupo de Inglés en el cambio `rpg-ingles-hero-card`; la misión real la subió la sesión principal.
+  La copia en `contenido/secundaria/` queda para la skill `clases-secundaria`.) Misión «My Hero Card» (solo texto) en `contenido/ingles/` y `contenido/secundaria/`: espera el motor de
   misiones de la Fase 2a (`rpg-fase2-misiones`); al llegar, conectar `pasosMision` en `depsGamificacion`
   (`server/main.ts`) para los 20 puntos por paso
 - [ ] 4.2 PWA opcional (tarea 4.10 del paraguas): sin hacer en este cambio, para no arriesgar la caché de estáticos
@@ -50,7 +51,9 @@
 - [x] 5.3 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): servidor local con copia de datos y curl con admin,
   dos cuentas del mismo grupo, una de otro grupo, baja, Secundaria, invitado, sin sesión; aparecer, ocultarse y volver;
   cambiar el nick en Juegos; interruptor apagado y encendido; restaurar nicks y preferencias de prueba
-- [ ] 5.4 Verificación en producción tras el merge — EL AGENTE EJECUTA (OBLIGATORIO): `/salud`, `ingles.html`
+- [ ] 5.4 (Parcial, 2026-10-22: `/salud` 200, `/interruptores` con `ranking: false`, `/gamificacion/ranking` y
+  `/profe/nicks` 401 sin sesión, Pages con `rpg-ingles.js?v=1`. Falta el 404 `sin_ranking` con sesión: el agente no tiene
+  token de la cuenta de prueba en producción) Verificación en producción tras el merge — EL AGENTE EJECUTA (OBLIGATORIO): `/salud`, `ingles.html`
   publicado, y que con el interruptor apagado el ranking responde 404 (solo lectura; no se enciende)
 - [x] 5.5 Actualizar documentación técnica (OBLIGATORIO): `docs/data-model.md` (`gamificacion/`),
   `docs/backend-standards.md` (rutas e interruptor), `docs/frontend-standards.md` (tablero RPG de Inglés, ranking,

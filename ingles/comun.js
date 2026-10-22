@@ -42,6 +42,9 @@ const SESSION_KEYS = ['stald_email', 'ingles_email', 'secundaria_email'];
 const SECCIONES = [
   { id: 'inicio', emoji: '🏠', titulo: 'Inicio', rol: 'alumno' },
   { id: 'semana', emoji: '📅', titulo: 'Semana', encabezado: 'Mi semana', rol: 'alumno' },
+  // Misión principal con el motor de Secundaria (openspec: rpg-ingles-hero-card). Fuera de la barra (6 pestañas caben a
+  // 360 px): se llega desde la tarjeta «⚔️ Misión principal del mundo» de Inicio (#misiones).
+  { id: 'misiones', emoji: '⚔️', titulo: 'Misiones', encabezado: 'Mis misiones', rol: 'alumno', fueraDeBarra: true },
   // Guías en PDF siempre disponibles, sin fechas (openspec: ingles-material-estudio).
   { id: 'material', emoji: '📚', titulo: 'Material', encabezado: 'Material de estudio', rol: 'alumno' },
   { id: 'resultados', emoji: '⭐', titulo: 'Resultados', encabezado: 'Mis resultados', rol: 'alumno' },
@@ -60,6 +63,8 @@ const SECCIONES = [
   { id: 'juegos', emoji: '🎮', titulo: 'Juegos', encabezado: 'Juegos de la semana', rol: 'admin' },
   // Moderación de nicks e interruptor del ranking de Inglés (openspec: rpg-fase2-ingles).
   { id: 'nicks', emoji: '🛡️', titulo: 'Nicks', encabezado: 'Nicks y ranking', rol: 'admin' },
+  // Bandeja de entregas de misiones de Inglés y Secundaria (openspec: rpg-ingles-hero-card).
+  { id: 'entregas', emoji: '📥', titulo: 'Entregas', encabezado: 'Entregas de misiones', rol: 'admin' },
   { id: 'salir', emoji: '🚪', titulo: 'Salir', rol: 'admin', accion: 'salir' },
 ];
 const seccionesDe = rol => SECCIONES.filter(s => s.rol === rol);
