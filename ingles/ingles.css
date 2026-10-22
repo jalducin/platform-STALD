@@ -460,36 +460,7 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 .slide .dg { font-size: 1.9cqw; margin: 0; --accent: var(--tone); --accent-bg: var(--tone); --accent-soft: var(--soft); --text: #1c1917; --muted: #57534e; --border: #e7e5e4; --card: #fff; --card-2: #fafaf9; --bg: #fffdf8; }
 
 /* ---------- Clases de Secundaria (openspec: secundaria-mis-clases) ---------- */
-/* Un color por materia: --mat (texto y borde) y --mat-soft (fondo), con contraste AA en claro y oscuro. */
-:root {
-  --mat-ingles: #1d4ed8; --mat-ingles-soft: #dbeafe; --mat-espanol: #c2410c; --mat-espanol-soft: #ffedd5;
-  --mat-matematicas: #6d28d9; --mat-matematicas-soft: #ede9fe; --mat-ciencias: #15803d; --mat-ciencias-soft: #dcfce7;
-  --mat-sociales: #92400e; --mat-sociales-soft: #fef3c7; --mat-tecnologia: #0e7490; --mat-tecnologia-soft: #cffafe;
-  --mat-artes: #be185d; --mat-artes-soft: #fce7f3; --mat-edfisica: #b91c1c; --mat-edfisica-soft: #fee2e2;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --mat-ingles: #93c5fd; --mat-ingles-soft: #1e2a4d; --mat-espanol: #fdba74; --mat-espanol-soft: #3b1d0a;
-    --mat-matematicas: #c4b5fd; --mat-matematicas-soft: #2e1f57; --mat-ciencias: #86efac; --mat-ciencias-soft: #12351f;
-    --mat-sociales: #fcd34d; --mat-sociales-soft: #3a2a08; --mat-tecnologia: #67e8f9; --mat-tecnologia-soft: #0b3640;
-    --mat-artes: #f9a8d4; --mat-artes-soft: #45162f; --mat-edfisica: #fca5a5; --mat-edfisica-soft: #3b1414;
-  }
-}
-:root[data-theme="dark"] {
-  --mat-ingles: #93c5fd; --mat-ingles-soft: #1e2a4d; --mat-espanol: #fdba74; --mat-espanol-soft: #3b1d0a;
-  --mat-matematicas: #c4b5fd; --mat-matematicas-soft: #2e1f57; --mat-ciencias: #86efac; --mat-ciencias-soft: #12351f;
-  --mat-sociales: #fcd34d; --mat-sociales-soft: #3a2a08; --mat-tecnologia: #67e8f9; --mat-tecnologia-soft: #0b3640;
-  --mat-artes: #f9a8d4; --mat-artes-soft: #45162f; --mat-edfisica: #fca5a5; --mat-edfisica-soft: #3b1414;
-}
-.mat-otra { --mat: var(--muted); --mat-soft: var(--card-2); }
-.mat-ingles { --mat: var(--mat-ingles); --mat-soft: var(--mat-ingles-soft); }
-.mat-espanol { --mat: var(--mat-espanol); --mat-soft: var(--mat-espanol-soft); }
-.mat-matematicas { --mat: var(--mat-matematicas); --mat-soft: var(--mat-matematicas-soft); }
-.mat-ciencias { --mat: var(--mat-ciencias); --mat-soft: var(--mat-ciencias-soft); }
-.mat-sociales { --mat: var(--mat-sociales); --mat-soft: var(--mat-sociales-soft); }
-.mat-tecnologia { --mat: var(--mat-tecnologia); --mat-soft: var(--mat-tecnologia-soft); }
-.mat-artes { --mat: var(--mat-artes); --mat-soft: var(--mat-artes-soft); }
-.mat-edfisica { --mat: var(--mat-edfisica); --mat-soft: var(--mat-edfisica-soft); }
+/* Colores por materia (--mat, --mat-soft y .mat-<clave>): estilos/materias.css (openspec: secundaria-dashboard). */
 .chip.mat-chip { background: var(--mat-soft); color: var(--mat); border: 1px solid var(--mat); font-weight: 800; }
 .sec-tabs { margin-bottom: 12px; }
 .sec-clase { border-left: 4px solid var(--mat); padding-left: 10px; }

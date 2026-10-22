@@ -70,7 +70,7 @@ async function entrar(p, email) {
   ok('Secundaria: tarjetas Secundaria + Juegos', JSON.stringify(await tiles(p)) === '["secundaria","juegos"]', (await tiles(p)).join(','));
   await p.click('#tiles a[data-espacio="secundaria"]');
   // Secundaria sin Notion (openspec: secundaria-sin-notion): secundaria.html es el puente a las clases nuevas.
-  await p.waitForSelector('#sec-clases', { timeout: 90000 }).catch(() => {});
+  await p.waitForSelector('#sec-inicio', { timeout: 90000 }).catch(() => {}); // abre en «🏠 Inicio» (openspec: secundaria-dashboard)
   ok('secundaria.html abre «📚 Mis clases» (sin el tablero de Notion)', p.url().includes('modo=secundaria') && !!(await p.$('#sec-clases')), p.url());
   ok('Secundaria tiene "← Inicio"', !!(await p.$('a.home-link[href^="./"]')));
   await ctx.close();

@@ -1,0 +1,107 @@
+/* Tablero de Secundaria (openspec: secundaria-dashboard): ingles.html?modo=secundaria (body.secundaria).
+   Tokens y componentes base: estilos/stald.css; colores por materia: estilos/materias.css. Todo en tokens, así que
+   funciona en claro y oscuro. Botones de al menos 44 px; sin scroll horizontal a 360 px. */
+
+/* ---------- Botones reales en el encabezado (← Inicio, 🎮 Juegos, Cerrar sesión) ---------- */
+body.secundaria .app-top .enlaces { gap: 8px; }
+body.secundaria .home-link {
+  min-height: 44px; padding: 8px 14px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-size: .88rem; box-shadow: var(--shadow-1); transition: border-color .12s, box-shadow .12s, transform .12s;
+}
+body.secundaria .home-link:hover { text-decoration: none; border-color: var(--accent); box-shadow: var(--shadow-2); }
+body.secundaria .home-link:active { transform: translateY(1px); }
+body.secundaria .home-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+body.secundaria #logout-btn { min-height: 44px; }
+.btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.btn:disabled:hover { box-shadow: none; }
+
+/* ---------- Pestañas: 4 (5 con Resultados del admin) en una fila, de 44 px o más ---------- */
+.sec-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; margin-bottom: 14px; overflow: visible; position: sticky; top: 0; z-index: 5; box-shadow: var(--shadow-1); }
+.sec-tabs .tab { min-height: 48px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.1; min-width: 0; }
+.sec-tabs .tab:hover:not([aria-selected="true"]) { background: var(--accent-soft); color: var(--accent); }
+.sec-tab-emoji { font-size: 1.1rem; }
+.sec-tab-largo { display: none; }
+.sec-tab-corto { font-size: .72rem; overflow-wrap: anywhere; }
+@media (min-width: 560px) {
+  .sec-tabs .tab { flex-direction: row; gap: 6px; padding: 8px 10px; }
+  .sec-tab-largo { display: inline; font-size: .86rem; }
+  .sec-tab-corto { display: none; }
+}
+.sec-panel > * + * { margin-top: 14px; }
+
+/* ---------- Selector del admin ---------- */
+.sec-admin-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; padding: 10px 12px; background: var(--accent-soft); border: 1px solid var(--border); border-radius: var(--r-md); }
+.sec-admin-barra label { font-weight: 700; font-size: .88rem; }
+.sec-admin-barra select { min-height: 44px; min-width: 0; flex: 1 1 160px; font: inherit; padding: 8px 10px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--card); color: var(--text); }
+
+/* ---------- Encabezado del Inicio ---------- */
+.sec-hero { padding: 18px 16px; border-radius: var(--r-lg); border: 1px solid var(--border); box-shadow: var(--shadow-1);
+  background: linear-gradient(135deg, var(--accent-soft), var(--card) 75%); }
+.sec-fecha { font-size: .82rem; font-weight: 700; color: var(--muted); }
+.sec-hola { margin: 2px 0 0; font-size: 1.45rem; line-height: 1.15; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.sec-vista-profe { margin-top: 8px; }
+.sec-subtitulo { margin: 0 0 10px; font-size: 1.05rem; }
+
+/* ---------- Hoy te toca ---------- */
+.sec-hoy-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .sec-hoy-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); } }
+.sec-tarjeta { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 16px 16px 16px 20px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-md); box-shadow: var(--shadow-2); overflow: hidden; min-width: 0; }
+.sec-tarjeta::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--mat); }
+.sec-tarjeta-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
+.sec-tarjeta-tema { margin: 0; font-size: 1.12rem; line-height: 1.25; overflow-wrap: anywhere; }
+.sec-tarjeta-meta { margin: 0; font-size: .82rem; color: var(--muted); }
+.sec-btn-grande { width: 100%; min-height: 52px; font-size: 1rem; margin-top: auto; }
+.sec-tarjeta .sec-btn-grande:not(.ghost) { background: var(--accent-bg); }
+.sec-estado { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; font-weight: 800; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.est-hecha { background: var(--ok-soft); color: var(--ok); }
+.est-en-curso { background: var(--accent-soft); color: var(--accent); }
+.est-vence-hoy, .est-vence-manana { background: var(--warn-soft); color: var(--warn); }
+.est-atrasada { background: var(--bad-soft); color: var(--bad); }
+.est-pendiente, .est-proxima { background: var(--card-2); color: var(--muted); border: 1px solid var(--border); }
+.sec-vacio-hoy { text-align: center; padding: 22px 16px; background: var(--card); border: 1px dashed var(--border); border-radius: var(--r-md); }
+.sec-vacio-hoy p { margin: 4px 0; }
+.sec-vacio-emoji { font-size: 2.2rem; }
+
+/* ---------- Indicadores: progreso, racha y promedio ---------- */
+.sec-kpis { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .sec-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.sec-kpi { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--shadow-1); min-width: 0; }
+.sec-kpi .anillo { width: 64px; height: 64px; }
+.sec-kpi .anillo .centro { font-size: .9rem; }
+.sec-kpi-num { font-size: 1.35rem; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 64px; text-align: center; }
+.sec-kpi-txt { min-width: 0; }
+.sec-kpi-titulo { font-weight: 800; font-size: .92rem; }
+.sec-kpi-detalle { font-size: .82rem; color: var(--muted); }
+
+/* ---------- Promedio por materia ---------- */
+.sec-prom-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.sec-prom { display: grid; grid-template-columns: minmax(0, auto) minmax(40px, 1fr) auto; align-items: center; gap: 10px; }
+.sec-prom .chip { white-space: nowrap; }
+.sec-prom-barra > span { background: var(--mat); }
+.sec-prom-num { font-variant-numeric: tabular-nums; font-size: .9rem; }
+
+/* ---------- Accesos ---------- */
+.sec-accesos { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 560px) { .sec-accesos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.sec-acceso { min-height: 52px; font-size: .95rem; justify-content: flex-start; padding: 10px 16px; }
+.sec-acceso::after { content: "→"; margin-left: auto; color: var(--accent); }
+
+/* ---------- Mis materias ---------- */
+.sec-materias { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .sec-materias { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.sec-materia { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-top: 5px solid var(--mat);
+  border-radius: var(--r-md); box-shadow: var(--shadow-1); min-width: 0; }
+.sec-materia-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sec-materia-top h3 { margin: 0; font-size: 1.05rem; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.sec-materia-emoji { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 1.3rem; background: var(--mat-soft); flex-shrink: 0; }
+.sec-materia-avance { display: grid; gap: 6px; font-size: .85rem; font-weight: 700; }
+.sec-materia-avance .barra > span { background: var(--mat); }
+.sec-materia-ultimo, .sec-materia-nota { margin: 0; font-size: .85rem; overflow-wrap: anywhere; }
+.sec-materia-nota { color: var(--muted); }
+.sec-secuencia { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 2px; font-size: .82rem; }
+.sec-secuencia li { display: inline-flex; align-items: center; }
+.sec-secuencia li + li::before { content: "→"; margin: 0 4px; color: var(--muted); }
+.sec-etapa { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--border); color: var(--muted); }
+.sec-secuencia li.actual .sec-etapa { background: var(--mat-soft); color: var(--mat); border-color: var(--mat); font-weight: 800; }
+.sec-ahora { font-size: .66rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; }

@@ -211,7 +211,7 @@ async function contexto(b, email) {
   // Abrir un examen (solo GET; no se envía): el de prueba de Secundaria, exclusivo de la alumna del fixture.
   {
     const p = await contexto(b, 'valeria@example.com');
-    await p.goto(BASE + '/ingles.html?modo=secundaria&api=' + encodeURIComponent(PROXY));
+    await p.goto(BASE + '/ingles.html?modo=secundaria&api=' + encodeURIComponent(PROXY) + '#semana'); // «📅 Esta semana» (openspec: secundaria-dashboard)
     await p.waitForSelector('[data-sec-item="sec-e2e"] [data-action="abrir-item"]', { timeout: 60000 });
     await quieto();
     await medir('abrir un examen', async () => {
