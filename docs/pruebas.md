@@ -248,6 +248,9 @@ falso `Authorization: Bearer prueba:<correo>`:
    // Sin `ruta`, la página queda en blanco: agrega rutas o escuchas y luego `await p.goto(urlDe('/ingles.html#semana'))`.
    ```
 
+   Las pestañas de Secundaria se abren con `irPestanaSec(p, id, toca?)` de `lib/secundaria.js` (cambio
+   `navegacion-mejoras`): usa la fila de pestañas en tablet y PC y, en celular, la barra inferior o «☰ Más»; no toques
+   `.sec-tabs [data-sec-tab]` directo (a menos de 720 px la fila está oculta).
    El menú de `juegos.html` abre en las categorías (cambio `juegos-categorias`): espera `[data-menu]` (existe en las
    dos vistas) y usa los ayudantes de `lib/menu.js` en lugar de tocar `[data-juego="…"]` directo:
    `abrirJuego(p, id, { tap })` (abre la categoría del juego si hace falta y toca su tarjeta), `abrirCategoria`,
