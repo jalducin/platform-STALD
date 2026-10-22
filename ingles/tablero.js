@@ -16,7 +16,7 @@ function renderAdmin(data) {
     const temas = (resumen[name] && resumen[name].temasAReforzar) || [];
     const suyos = items.map(it => ({ it, r: (it.resultados || []).find(r => r.alumno === name) })).filter(x => x.r);
     const u = ultimasCalificaciones(name, items);
-    return '<details class="student" data-alumno="' + escapeHtml(name) + '">' +
+    return '<details class="student" data-alumno="' + escapeHtml(name) + '" style="--gc:' + escapeHtml((grupoDeNombre(name) || {}).color || '#4f46e5') + '">' +
       '<summary><span>👤 ' + escapeHtml(name) + ' ' + chipGrupo(grupoDeNombre(name)) + '</span>' +
         '<span class="mini"><span>' + g.completed + '/' + g.total + '</span>' +
         '<span class="o">⏰ ' + g.overdue.length + '</span><span class="t">📌 ' + g.today.length + '</span>' +
@@ -38,7 +38,7 @@ function renderAdmin(data) {
     '</details>';
   }).join('');
   return renderFiltroGrupo() +
-    seccionHtml('admin', 'resumen', '<div id="tablero" aria-live="polite">' + renderTablero() + '</div>') +
+    seccionHtml('admin', 'resumen', renderPanelProfe() + '<div id="tablero" aria-live="polite">' + renderTablero() + '</div>') +
     seccionHtml('admin', 'grupos', renderGruposAdmin() || vacio('👥', 'Los grupos se activan cuando Inglés usa la base de datos.')) +
     seccionHtml('admin', 'alumnos', bloques || vacio('🧑‍🎓', 'Aún no hay alumnos ni alumnas en este grupo. Dalos de alta en ➕ Registro.')) +
     seccionHtml('admin', 'registro', renderAlumnosAdmin()) +
@@ -69,11 +69,128 @@ function renderPresentar() {
       '<p class="progress-text" style="margin:0 0 6px">Para un grupo nuevo, empieza por la primera clase (la de más abajo).</p>' + anteriores.map(fila).join('') + '</div>' : '');
 }
 
+// ---------- Encabezado del panel (openspec: ingles-diseno-profe) ----------
+// Solo con datos que ya existen: grupos activos (/ingles/grupos), alumnos y alumnas del registro (/ingles/alumnos) y
+// quienes van en riesgo según el resumen de la semana (/ingles/resumen): sin entregas o con alguna atrasada; y las
+// misiones de Inglés listas para evaluar (bandeja /profe/entregas).
+function alumnosEnRiesgo() {
+  const r = state.resumen;
+  if (!r || r.error) return null;
+  const m = new Map();
+  for (const n of r.kpis.sinEntregas) m.set(n, { nombre: n, atrasos: 0, sinEntregas: true });
+  for (const f of r.filas) {
+    const atrasos = Object.values(f.celdas).filter(c => c.estado === 'atrasado').length;
+    if (atrasos) m.set(f.alumno, { ...(m.get(f.alumno) || { nombre: f.alumno, sinEntregas: false }), atrasos });
+  }
+  return [...m.values()].sort((a, b) => b.atrasos - a.atrasos || a.nombre.localeCompare(b.nombre, 'es'));
+}
+const ppStat = (ico, valor, texto, cls) => '<div class="pp-stat' + (cls ? ' ' + cls : '') + '"><span class="pp-stat-ico" aria-hidden="true">' + ico + '</span><span class="pp-stat-txt"><b class="pp-num rpg-num">' + valor + '</b><span class="pp-stat-t">' + texto + '</span></span></div>';
+// Mosaico «En riesgo»: «…» mientras llega el resumen; sin mosaico si el resumen falló (el tablero ya lo avisa).
+function ppTileRiesgo(riesgo) {
+  if (riesgo) return riesgo.length ? ppStat('🚨', riesgo.length, 'En riesgo', 'riesgo') : ppStat('🛡️', 0, 'En riesgo', 'sin-riesgo');
+  return state.resumen && state.resumen.error ? '' : ppStat('🚨', '…', 'En riesgo', '');
+}
+function ppListaRiesgo(riesgo) {
+  if (!riesgo || !riesgo.length) return '';
+  return '<div class="pp-riesgo" id="pp-riesgo"><p class="pp-riesgo-t">🚨 Sin entregas o con atrasos esta semana</p><div class="pp-riesgo-lista">' +
+    riesgo.map(x => '<button type="button" class="btn ghost" data-action="cajon" data-alumno="' + escapeHtml(x.nombre) + '">' + escapeHtml(x.nombre) + ' · ' + (x.atrasos ? '⏰ ' + x.atrasos : '😴 sin entregas') + '</button>').join('') + '</div></div>';
+}
+// Grupos activos que se ven en el panel: sin los ocultos (openspec: ingles-ocultar-grupos), salvo con el interruptor.
+const gruposDelPanel = () => gruposActivos().filter(g => !g.ocultoAdmin || state.mostrarOcultos);
+// «📥 Por revisar»: entregas de misiones listas para evaluar (bandeja del profe, /profe/entregas). Solo si cargó bien.
+// Solo misiones de Inglés listas para evaluar, del grupo elegido o, sin grupo, sin los ocultos del panel.
+function porRevisarPanel(filtro) {
+  const b = state.secBandeja;
+  if (!b || b.error || !Array.isArray(b.entregas)) return null;
+  const grupoDeSlug = s => (state.grupos ? (state.grupos.grupos || []).find(g => g.id === (state.grupos.miembros[s] || (gruposActivos()[0] || {}).id)) : null) || null;
+  return b.entregas.filter(x => x.estado === 'lista' && x.mision && x.mision.ambito === 'ingles').filter(x => {
+    const g = grupoDeSlug(x.slug);
+    if (filtro) return !!g && g.id === filtro.id;
+    return state.mostrarOcultos || !(g && g.ocultoAdmin);
+  }).length;
+}
+function ppTilePorRevisar(filtro) {
+  const n = porRevisarPanel(filtro);
+  if (n === null) return '';
+  return '<a class="pp-stat-link" href="#entregas" aria-label="' + n + ' entregas por revisar. Abrir Entregas">' + ppStat('📥', n, 'Por revisar', n ? 'riesgo' : 'sin-riesgo') + '</a>';
+}
+function renderPanelProfe() {
+  const filtro = state.grupoFiltro && state.grupos ? (state.grupos.grupos || []).find(g => g.id === state.grupoFiltro) : null;
+  // Con un grupo elegido, todo el encabezado es de ese grupo (el resumen ya viene filtrado).
+  const activos = state.grupos && !filtro ? gruposDelPanel().length : null;
+  const enAlcance = x => !x.baja && (filtro ? (grupoDeNombre(x.nombre) || {}).id === filtro.id : !ocultoEnPanel(x.nombre));
+  const registro = Array.isArray(state.alumnosAdmin) ? state.alumnosAdmin.filter(enAlcance).length : null;
+  const riesgo = alumnosEnRiesgo();
+  const hoy = (state.act && state.act.hoy) || todayStr();
+  const fecha = new Date(hoy + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+  return '<section class="pp-hero" id="panel-profe" aria-labelledby="pp-hero-t">' +
+    '<div class="pp-hero-top"><span class="rpg-etiqueta">🛡️ Panel del profe</span><span class="sec-fecha">' + escapeHtml(fecha) + '</span></div>' +
+    '<h3 class="pp-hero-t" id="pp-hero-t">' + (filtro ? '👥 ' + escapeHtml(filtro.nombre) : '👥 Todos los grupos') + '</h3>' +
+    '<div class="pp-stats" id="pp-stats">' +
+      (activos === null ? '' : ppStat('👥', activos, activos === 1 ? 'Grupo activo' : 'Grupos activos')) +
+      (registro === null ? '' : ppStat('🧑‍🎓', registro, registro === 1 ? 'Alumno o alumna' : 'Alumnos y alumnas')) +
+      ppTileRiesgo(riesgo) + ppTilePorRevisar(filtro) + '</div>' + ppListaRiesgo(riesgo) +
+    '<div class="pp-acciones"><a class="btn" href="#registro">➕ Registrar alumno o alumna</a><a class="btn ghost" href="#presentar">🎬 Presentar la clase</a>' +
+      '<a class="btn ghost" href="' + escapeHtml(conApiParam('ingles.html?modo=profe')) + '">🎓 Mi ruta</a></div></section>';
+}
+function pintarPanelProfe() {
+  const h = document.getElementById('panel-profe');
+  if (h) h.outerHTML = renderPanelProfe();
+}
+
+// Tarjetas por grupo con el avance de la semana (entregadas / que ya abrieron), del mismo resumen.
+function renderTarjetasGrupo(r) {
+  if (!state.grupos) return '';
+  const lista = gruposDelPanel().filter(g => !r.grupo || g.id === r.grupo.id);
+  if (!lista.length) return '';
+  const registro = Array.isArray(state.alumnosAdmin) ? state.alumnosAdmin.filter(x => !x.baja) : [];
+  return '<div class="pp-grupos" id="pp-grupos">' + lista.map(g => tarjetaGrupo(r, g, registro.filter(x => (grupoDeNombre(x.nombre) || {}).id === g.id).length)).join('') + '</div>';
+}
+// Celdas de la semana del grupo que ya abrieron: entregadas, total y atrasadas.
+function avanceGrupo(r, id) {
+  const a = { hechas: 0, total: 0, atrasos: 0 };
+  const celdas = r.filas.filter(f => (grupoDeNombre(f.alumno) || {}).id === id).flatMap(f => r.columnas.map(c => f.celdas[c.id]));
+  for (const x of celdas.filter(x => x && x.estado !== 'no-aplica' && x.estado !== 'proximamente')) {
+    a.total++;
+    if (x.estado === 'hecho') a.hechas++;
+    if (x.estado === 'atrasado') a.atrasos++;
+  }
+  a.pct = a.total ? Math.round(a.hechas / a.total * 100) : 0;
+  return a;
+}
+function tarjetaGrupo(r, g, n) {
+  const a = avanceGrupo(r, g.id);
+  const personas = n === 1 ? '1 alumno o alumna' : n + ' alumnos y alumnas';
+  const ver = r.grupo ? '<button type="button" class="btn ghost" data-action="ver-grupo" data-id="">👥 Ver todos</button>'
+    : '<button type="button" class="btn ghost" data-action="ver-grupo" data-id="' + escapeHtml(g.id) + '">🔍 Ver grupo</button>';
+  const atrasos = a.atrasos === 1 ? '⏰ 1 entrega atrasada' : '⏰ ' + a.atrasos + ' entregas atrasadas';
+  return '<article class="pp-grupo' + (r.grupo ? ' actual' : '') + '" data-grupo-id="' + escapeHtml(g.id) + '" style="--gc:' + escapeHtml(g.color) + '">' +
+    '<div class="pp-grupo-top"><h4>' + escapeHtml(g.nombre) + '</h4>' + (g.nivel ? '<span class="chip">' + escapeHtml(g.nivel) + '</span>' : '') + '</div>' +
+    '<p class="pp-grupo-meta">' + (g.horario ? '🗓️ ' + escapeHtml(g.horario) + ' · ' : '') + '👤 ' + personas + '</p>' +
+    '<div class="pp-grupo-avance"><span>Entregas de la semana</span><b>' + (a.total ? a.hechas + '/' + a.total + ' · ' + a.pct + ' %' : '—') + '</b></div>' +
+    '<div class="rpg-xp-barra" role="progressbar" aria-label="Entregas de la semana de ' + escapeHtml(g.nombre) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + a.pct + '"><span style="width:' + a.pct + '%"></span></div>' +
+    (a.atrasos ? '<p class="pp-grupo-meta">' + atrasos + '</p>' : '') +
+    '<div class="pp-grupo-acc">' + ver + (g.meet_url ? '<a class="btn ghost" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') + '</div></article>';
+}
+// «🔍 Ver grupo»: el mismo filtro que el selector «👥 Grupo».
+contentEl.addEventListener('click', e => {
+  const b = e.target.closest('[data-action="ver-grupo"]');
+  if (!b) return;
+  e.preventDefault();
+  state.grupoFiltro = b.dataset.id || null; state.resumen = null; state.nicks = null; // como el selector (app.js)
+  render(state.data); void cargarResumen();
+});
+
 // ---------- Indicadores y mapa de calor ----------
 async function cargarResumen() {
   const clave = (state.grupoFiltro || '') + (state.mostrarOcultos ? '|ocultos' : '');
   if (state.cargandoResumen === clave) return;
   state.cargandoResumen = clave;
+  // «📥 Por revisar» del encabezado: la bandeja de entregas se pide una vez, en paralelo (openspec: ingles-diseno-profe).
+  if (!state.secBandeja && !state.cargandoBandejaPanel && typeof cargarBandejaSec === 'function') {
+    state.cargandoBandejaPanel = true;
+    cargarBandejaSec().then(pintarPanelProfe, () => {}).finally(() => { state.cargandoBandejaPanel = false; });
+  }
   // Grupos ocultos del panel (openspec: ingles-ocultar-grupos): el servidor los deja fuera salvo con ocultos=1.
   const q = (state.grupoFiltro ? '&grupo=' + encodeURIComponent(state.grupoFiltro) : '') + (state.mostrarOcultos ? '&ocultos=1' : '');
   let r;
@@ -83,6 +200,7 @@ async function cargarResumen() {
   state.resumen = r.ok ? r.body : { error: r.body.error || r.status };
   const t = document.getElementById('tablero');
   if (t) t.innerHTML = renderTablero();
+  pintarPanelProfe(); // «En riesgo» sale del mismo resumen
   if (cajonEl.open && state.cajonAlumno) pintarCajon(state.cajonAlumno);
 }
 const TEXTO_CELDA = { hecho: 'Entregada', atrasado: 'Atrasada', hoy: 'Vence hoy', pendiente: 'Pendiente', proximamente: 'Aún no abre', 'no-aplica': 'No le toca' };
@@ -113,15 +231,17 @@ function renderTablero() {
     kpi(k.atrasos ? 'bad' : 'ok', k.atrasos, '⏰ Atrasos') +
     kpi(k.sinEntregas.length ? 'warn' : 'ok', k.sinEntregas.length, '😴 Sin entregas') + '</div>' +
     (k.sinEntregas.length ? '<div class="sin-entregas">😴 Sin entregas esta semana: ' + k.sinEntregas.map(n => '<button type="button" class="btn ghost sm" data-action="cajon" data-alumno="' + escapeHtml(n) + '">' + escapeHtml(n) + '</button>').join(' ') + '</div>' : '');
-  if (!r.columnas.length || !r.filas.length) return cab + kpis + '<div class="card" style="margin-top:12px">' + vacio('🗓️', r.filas.length ? 'Esta semana no tiene actividades con entrega.' : 'No hay alumnos ni alumnas en este grupo.') + '</div>';
+  const grupos = renderTarjetasGrupo(r);
+  if (!r.columnas.length || !r.filas.length) return cab + kpis + grupos + '<div class="card" style="margin-top:12px">' + vacio('🗓️', r.filas.length ? 'Esta semana no tiene actividades con entrega.' : 'No hay alumnos ni alumnas en este grupo.') + '</div>';
   const th = r.columnas.map(c => '<th scope="col" title="' + escapeHtml(c.titulo) + '"><span aria-hidden="true">' + icono(c.tipo) + '</span><br>' + escapeHtml(fechaCorta(c.fechaLimite)) + '<span class="sr-only"> ' + escapeHtml(c.titulo) + '</span></th>').join('');
   const filas = r.filas.map(f => '<tr data-alumno="' + escapeHtml(f.alumno) + '"><td class="alumno"><button type="button" data-action="cajon" data-alumno="' + escapeHtml(f.alumno) + '">' + escapeHtml(f.alumno) + '</button></td>' +
     r.columnas.map(c => {
       const x = f.celdas[c.id] || { estado: 'no-aplica' };
       const etiqueta = f.alumno + ' · ' + c.titulo + ': ' + TEXTO_CELDA[x.estado] + (x.estado === 'hecho' && x.porcentaje !== null ? ' ' + x.porcentaje + ' %' : '') + (x.fueraDeTiempo ? ', fuera de tiempo' : '') + (x.prorroga ? ', prórroga al ' + fechaCorta(x.prorroga) : '');
-      return '<td><button type="button" class="' + claseCelda(x) + '" data-estado="' + x.estado + '" data-action="cajon" data-alumno="' + escapeHtml(f.alumno) + '" aria-label="' + escapeHtml(etiqueta) + '" title="' + escapeHtml(etiqueta) + '">' + celdaHtml(x) + '</button></td>';
+      // data-label: en celular la fila es una tarjeta y cada celda lleva su columna encima (openspec: ingles-diseno-profe).
+      return '<td data-label="' + escapeHtml(icono(c.tipo) + ' ' + fechaCorta(c.fechaLimite)) + '"><button type="button" class="' + claseCelda(x) + '" data-estado="' + x.estado + '" data-action="cajon" data-alumno="' + escapeHtml(f.alumno) + '" aria-label="' + escapeHtml(etiqueta) + '" title="' + escapeHtml(etiqueta) + '">' + celdaHtml(x) + '</button></td>';
     }).join('') + '</tr>').join('');
-  return cab + kpis +
+  return cab + kpis + grupos +
     '<div class="card" style="margin-top:12px;padding:12px"><h3 class="card-titulo">🔥 Mapa de calor de la semana</h3><div class="tabla-wrap" style="border:none"><table class="heat" id="mapa-calor"><thead><tr><th scope="col" class="alumno-h">Alumno o alumna</th>' + th + '</tr></thead><tbody>' + filas + '</tbody></table></div>' +
     '<div class="leyenda"><span>✓ % entregada</span><span>⏱ fuera de tiempo</span><span>⏰ atrasada</span><span>📌 vence hoy</span><span>· pendiente</span><span>🔒 aún no abre</span><span>— no le toca</span></div></div>';
 }

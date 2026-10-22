@@ -150,6 +150,15 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   recordatorio de privacidad, contador, práctica comprobada en el servidor y entrega en texto, la bandeja del admin con
   la rúbrica (85 % → 315 XP), 409 al reenviar, el aviso «+XP» y el nivel en el Inicio, «🗺️ Mapa» y «🌳 Árbol». Corre
   después de `secundaria-dashboard`; si la copia ya trae la misión evaluada, sale `OMIT`.
+- `ingles-diseno-profe` (fase `ingles`, cambio `ingles-diseno-profe`): panel del profe a 360 px en claro y oscuro
+  (encabezado con grupos activos, alumnos y alumnas, en riesgo y «Por revisar» contra `/profe/entregas`; grupo elegido;
+  sin grupos; tarjetas por grupo; mapa de calor como tarjetas; Registro; cajón; «🔍 Ver grupo»), 44 px y sin scroll en
+  las 11 secciones del admin, y la ruta del profe con la experiencia RPG (barra, misión principal, retos, nada
+  «atrasada», «🌍 Mundos» con los 9 mundos, clase por pasos como «⚔️ Misión») y su Plan del mes (cuenta las clases
+  abiertas con botón contra la API), más capturas de escritorio. En claro envía la misión principal del profe (en la
+  copia temporal de datos) para ver «+XP». Sin `--pg`, intercepta solo el GET de `/ingles/grupos` en el navegador con
+  dos grupos de ejemplo. La ruta solo se revisa si los datos traen `plan.json`; con `--hoy 2026-10-22` y el repo de
+  datos actual, las 27 clases están abiertas.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).

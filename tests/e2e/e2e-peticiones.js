@@ -26,7 +26,7 @@ const UMBRAL = {
   // ~33 s del flujo. Mide 41 desde 2026-10-12 (juegos-categorias) por tiempos, no por peticiones nuevas (openspec: fix-e2e-rpg).
   'sala de 2 personas (30 s, ambas)': 42,
   'inglés (alumna)': 5,
-  'inglés (admin)': 15,
+  'inglés (admin)': 17, // +2: «📥 Por revisar» del panel pide la bandeja /profe/entregas (OPTIONS + GET; openspec: ingles-diseno-profe)
   'abrir un examen': 2,
 };
 

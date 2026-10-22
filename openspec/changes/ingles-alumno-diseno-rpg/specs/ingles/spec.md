@@ -12,7 +12,7 @@ Al abrir una actividad, examen, refuerzo o reto del Meet, la vista SHALL guiar p
 - la etiqueta SHALL ser el tipo y no «Misión», y el mundo SHALL ser el de Inglés;
 - al enviar, SHALL verse el resultado con «+N XP», el nivel y «Lo siguiente →».
 
-La vista previa del admin y la ruta del profe SHALL seguir como antes.
+La vista previa del admin SHALL seguir como antes (la ruta del profe la cambia `ingles-diseno-profe`).
 
 #### Scenario: Semana a 360 px
 - **WHEN** una alumna abre «📅 Semana» en un celular de 360 px en modo oscuro

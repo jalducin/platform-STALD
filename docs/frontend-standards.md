@@ -900,6 +900,57 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
 - Los E2E deben abrir la pestaña antes de hacer clic en su contenido. Por ejemplo,
   `click('[data-pf-tab="grupo"]')`.
 
+## Panel del profe con diseño RPG (cambio `ingles-diseno-profe`)
+
+- La vista del admin de `ingles.html` y `?modo=profe` (las dos con `body.vista-admin`) usan el diseño RPG de Secundaria.
+  Estilos en `ingles/panel-profe.css`, todo bajo `.vista-admin` o con prefijo `pp-`/`reg-`; reusa los tokens y
+  componentes RPG de `estilos/ui.css` (`--rpg-*`, `.rpg-etiqueta`, `.rpg-num`, `.rpg-xp-barra`) y los base de `estilos/stald.css`, así que funciona en claro y oscuro.
+- «🏠 Resumen» abre con `#panel-profe` (`renderPanelProfe`, `ingles/tablero.js`). Solo datos que ya existen:
+  - grupos activos (`/ingles/grupos`; sin base de datos no sale), alumnos y alumnas del registro sin bajas;
+  - «En riesgo» (`alumnosEnRiesgo`): `kpis.sinEntregas` más quien tiene alguna celda `atrasado` en `/ingles/resumen`, con
+    un botón por persona que abre el cajón. Se repinta al llegar el resumen (`pintarPanelProfe`); mientras, «…»;
+  - «📥 Por revisar» (`porRevisarPanel`): misiones de Inglés (`mision.ambito === 'ingles'`) en estado `lista` de la
+    bandeja (`cargarBandejaSec`, `/profe/entregas`, que junta también Secundaria), del grupo elegido o sin los ocultos;
+    enlace a «Entregas»; solo si la bandeja carga bien. «🔍 Ver grupo» reinicia también los nicks, como el selector;
+  - con un grupo elegido, todo cuenta solo ese grupo (sin «Grupos activos»); sin grupo, los ocultos del panel no cuentan
+    salvo con «Mostrar grupos ocultos»;
+  - accesos: «➕ Registrar alumno o alumna», «🎬 Presentar la clase» y «🎓 Mi ruta».
+- Tarjetas por grupo (`#pp-grupos .pp-grupo`, dentro de `#tablero`): color (`--gc`), nivel, horario, personas, avance
+  de la semana (celdas entregadas / que ya abrieron, sin `no-aplica` ni `proximamente`) con `.rpg-xp-barra[role=progressbar]`,
+  atrasos, «🔍 Ver grupo» (`data-action="ver-grupo"`, mismo `state.grupoFiltro` que el selector) y «🎥 Meet».
+- Abajo de 640 px, `#mapa-calor` y `.ultimas-tabla` (Resultados y Juegos) pasan a tarjetas por fila. Cada celda del mapa
+  lleva `td[data-label]` (emoji y fecha de la columna) que se muestra encima en celular. El DOM y los selectores no
+  cambian.
+- «➕ Registro»: tarjetas `.ultimas-lista.reg-fila` (avatar con el color del grupo, correo, `select.mover-grupo`,
+  «🚪 Baja de Inglés», «Quitar»; las bajas con `data-baja` y «↩️ Reactivar» en `#bajas-ingles`). Los campos del alta
+  y de grupos van dentro de `label.campo-et`.
+- Todo botón, enlace-botón, selector, campo y `summary` visible de la vista (y del cajón) mide 44 px o más, con foco
+  visible, hover y deshabilitado; sin scroll horizontal a 360 px. Lo revisa la E2E `ingles-diseno-profe`.
+
+### Ruta del profe con la experiencia RPG (cambio `ingles-diseno-profe`)
+
+- Con `plan.json`, `?modo=profe` pinta arriba el tablero de su ruta (`renderProfeRpg`, `ingles/profe-rpg.js`), aparte
+  del panel del admin: `barraRpg` (nivel, rango, XP, insignias, racha), «⚔️ Misión principal activa» (`#pf-mision`,
+  botón `#pf-mision-btn`) y «⚡ Retos de hoy · a tu ritmo» (`#pf-retos`, hasta 3 tarjetas `.pf-reto`). La pestaña
+  «🌍 Mundos» (`#pf-mundos`) trae el camino de mundos y una tarjeta `.pf-mundo[data-pf-mundo]` por mundo con avance y
+  sus clases. Sin plan no hay tablero ni pestaña.
+- Solo dibuja: las reglas están en `comun/gamificacion.js` (aditivas): `mapaRuta(plan, items, hoy)`,
+  `mundoActualRuta`, `xpRuta` (la fórmula de siempre con todo a tiempo) e `insigniasDe({ items, hoy, racha, mapa })`.
+  Rango en masculino (`GENERO_PROFE`), la forma con la que la plataforma nombra al profe.
+- **Catálogo de mundos** (`Gamificacion.MUNDOS_RUTA_PROFE`, fuente única): Taller del Agente 🛠️ (semanas 1–2),
+  Fábrica de Specs 🏭 (3), Red de Conectores 🔌 (4), Colmena de Subagentes 🐝 (5), Biblioteca SDD 📚 (6), Arena en
+  Acción ⚔️ (7), Proyecto Integrador 🏰 (8), Torre de Minto 🗼 (títulos con «Pirámide de Minto») y Forja de Skills ⚒️
+  (títulos que empiezan con «Clase: Skills»). El patrón del título gana sobre la semana. Si el plan cambia de forma,
+  se ajusta aquí y en `server/gamificacion_profe_test.ts`.
+- Toda la ruta está abierta y las fechas son ritmo sugerido: estados «Hecha», «En curso», «Ritmo de hoy» (ya pasó su
+  fecha sugerida), «Abierta» y «Llega pronto» (aún no publicada); mundos «completado», «en curso» o «abierto». Nunca
+  «atrasada» ni «bloqueado». En el encabezado, «Atrasadas» es «Para hoy» y el tercer contador es «Mundos»
+  (completados / mundos con clases en el plan).
+- Con plan, las clases se abren por pasos (`claseEnPasos()` incluye `MODO_PROFE` si `act.plan`; sin plan, lista): banner «⚔️ Misión» con su mundo
+  (`mundoDeClaseProfe`) y, al enviar, «+XP», nivel e insignias nuevas de su ruta (`recompensaProfe` con
+  `htmlRecompensa` de `secundaria-clase.js`; lo del grupo no da recompensa). Las tablas de teoría anchas se desplazan dentro de su caja.
+- «🔥 Pendiente ahora» muestra 5 y pliega el resto en `#pf-urgente-mas`.
+
 ## Juegos de cartas (cambio `poker`)
 
 - `juegos/cartas.js` es el motor sin DOM. Define `globalThis.Cartas` y lo usan `juegos.html` y

@@ -44,17 +44,19 @@ function renderGruposAdmin() {
   const personas = n => n === 1 ? '1 alumno o alumna' : n + ' alumnos y alumnas';
   const e = state.grupoEdicion || {};
   return '<details class="section" id="grupos-admin"' + (state.gruposAbierto === false ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Grupos</span><span class="count">' + lista.length + '</span></div></summary><div class="scroll">' +
+    // Campos con etiqueta visible y botones de 44 px (openspec: ingles-diseno-profe).
     '<form class="grupo-form" id="grupo-form" autocomplete="off"><input type="hidden" id="g-id" value="' + escapeHtml(e.id || '') + '">' +
-      '<input id="g-nombre" maxlength="60" placeholder="Nombre (Sábado A1)" required value="' + escapeHtml(e.nombre || '') + '">' +
-      '<input id="g-nivel" maxlength="20" placeholder="Nivel (A1)" value="' + escapeHtml(e.nivel || '') + '">' +
-      '<input id="g-horario" maxlength="60" placeholder="Horario (Sáb 10:00)" value="' + escapeHtml(e.horario || '') + '">' +
-      '<input id="g-meet" maxlength="200" placeholder="https://meet.google.com/…" value="' + escapeHtml(e.meet_url || '') + '">' +
-      '<input id="g-color" type="color" value="' + escapeHtml(e.color || '#4f46e5') + '" aria-label="Color del grupo">' +
+      '<label class="campo-et" for="g-nombre">Nombre<input id="g-nombre" maxlength="60" placeholder="Sábado A1" required value="' + escapeHtml(e.nombre || '') + '"></label>' +
+      '<label class="campo-et" for="g-nivel">Nivel<input id="g-nivel" maxlength="20" placeholder="A1" value="' + escapeHtml(e.nivel || '') + '"></label>' +
+      '<label class="campo-et" for="g-horario">Horario<input id="g-horario" maxlength="60" placeholder="Sáb 10:00" value="' + escapeHtml(e.horario || '') + '"></label>' +
+      '<label class="campo-et" for="g-meet">Enlace de Meet<input id="g-meet" maxlength="200" placeholder="https://meet.google.com/…" value="' + escapeHtml(e.meet_url || '') + '"></label>' +
+      '<label class="campo-et" for="g-color">Color<input id="g-color" type="color" value="' + escapeHtml(e.color || '#4f46e5') + '"></label>' +
       '<button class="btn" type="submit">' + (e.id ? '💾 Guardar cambios' : '➕ Crear grupo') + '</button><div id="grupo-msg"></div></form>' +
-    lista.map(g => '<div class="grupo-fila"><div><span class="grupo-sw" style="background:' + escapeHtml(g.color) + '"></span><b>' + escapeHtml(g.nombre) + '</b>' + (g.activo ? '' : ' <small>(inactivo)</small>') + (g.ocultoAdmin ? ' <small data-oculto>🙈 oculto del panel</small>' : '') +
-      '<br><small>' + [g.nivel, g.horario].filter(Boolean).map(escapeHtml).join(' · ') + (g.meet_url ? ' · <a class="link" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') + ' · 👤 ' + personas(cuantos(g.id)) + '</small></div>' +
-      '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm" data-action="ocultar-grupo" data-id="' + escapeHtml(g.id) + '" data-oculto="' + (g.ocultoAdmin ? '0' : '1') + '">' + (g.ocultoAdmin ? 'Mostrar en el panel' : '👁️ Ocultar del panel') + '</button>' +
-      '<button class="btn ghost sm" data-action="editar-grupo" data-id="' + escapeHtml(g.id) + '">✏️ Editar</button></span></div>').join('') +
+    lista.map(g => '<div class="grupo-fila" style="--gc:' + escapeHtml(g.color) + '"><div><span class="grupo-sw" style="background:' + escapeHtml(g.color) + '"></span><b>' + escapeHtml(g.nombre) + '</b>' + (g.activo ? '' : ' <small>(inactivo)</small>') + (g.ocultoAdmin ? ' <small data-oculto>🙈 oculto del panel</small>' : '') +
+      '<br><small>' + [g.nivel, g.horario].filter(Boolean).map(escapeHtml).join(' · ') + ' · 👤 ' + personas(cuantos(g.id)) + '</small></div>' +
+      '<span class="grupo-acc">' + (g.meet_url ? '<a class="btn ghost" href="' + escapeHtml(g.meet_url) + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') +
+      '<button class="btn ghost" data-action="ocultar-grupo" data-id="' + escapeHtml(g.id) + '" data-oculto="' + (g.ocultoAdmin ? '0' : '1') + '">' + (g.ocultoAdmin ? 'Mostrar en el panel' : '👁️ Ocultar del panel') + '</button>' +
+      '<button class="btn ghost" data-action="editar-grupo" data-id="' + escapeHtml(g.id) + '">✏️ Editar</button></span></div>').join('') +
     '<div class="progress-text">Quien no tiene inscripción cuenta en el primer grupo activo. Las semanas con <code>"grupos"</code> en su JSON solo las ve ese grupo.</div>' +
     '</div></details>';
 }
@@ -65,7 +67,7 @@ async function guardarGrupo(form) {
   if (val('g-id')) body.id = val('g-id');
   form.querySelector('button').disabled = true;
   const r = await fetchJson(API_BASE + '/ingles/grupos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(body) });
-  if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="empty" style="color:var(--bad)">No se pudo guardar (' + escapeHtml({ nombre_invalido: 'escribe un nombre', meet_invalido: 'el enlace de Meet debe empezar con https://', color_invalido: 'color inválido' }[r.body.error] || r.body.error || r.status) + ').</div>'; return; }
+  if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="reg-error" role="alert">No se pudo guardar (' + escapeHtml({ nombre_invalido: 'escribe un nombre', meet_invalido: 'el enlace de Meet debe empezar con https://', color_invalido: 'color inválido' }[r.body.error] || r.body.error || r.status) + ').</div>'; return; }
   state.grupoEdicion = null; state.gruposAbierto = true;
   await loadGruposAdmin(); render(state.data);
 }
@@ -106,24 +108,31 @@ function renderAlumnosAdmin() {
   const todos = Array.isArray(a) ? a : [];
   // Baja de Inglés reversible (openspec: ingles-baja-alumno): las bajas van aparte, con «Reactivar».
   const lista = todos.filter(x => !x.baja && !ocultoEnPanel(x.nombre)), bajas = todos.filter(x => x.baja);
+  // Cada persona es una tarjeta (openspec: ingles-diseno-profe): avatar con el color de su grupo, datos y acciones.
+  const tarjeta = (x, extra, cuerpo, acciones) => {
+    const g = grupoDeNombre(x.nombre);
+    return '<div class="ultimas-lista reg-fila' + extra + '" style="--gc:' + escapeHtml((g && g.color) || '#4f46e5') + '"' + (x.baja ? ' data-baja="' + escapeHtml(x.emails[0]) + '"' : '') + '>' +
+      '<span class="avatar" aria-hidden="true">' + escapeHtml(iniciales(x.nombre)) + '</span>' +
+      '<div class="reg-datos"><b>' + escapeHtml(x.nombre) + '</b><small>' + cuerpo + '</small></div>' +
+      '<div class="reg-acciones">' + acciones + '</div></div>';
+  };
+  const datos = x => ' data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '"';
   return '<details class="section" id="alumnos-admin"' + (state.altaAbierta === false ? '' : ' open') + '><summary><div class="section-head"><span><span class="chevron">▶</span>👥 Alumnos y alumnas</span><span class="count">' + lista.length + '</span></div></summary><div class="scroll">' +
-    '<form id="alta-alumno" autocomplete="off" style="display:grid;gap:8px;margin:6px 0 12px">' +
-      '<div class="progress-text" style="margin:0">➕ Nuevo alumno o alumna: entra con su correo a Inglés, al portal y a Juegos. Empieza su curso el lunes siguiente, sin actividades en atraso.</div>' +
-      '<input id="alta-nombre" type="text" maxlength="40" placeholder="Nombre (como aparecerá en sus calificaciones)" required style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' +
-      '<input id="alta-correo" type="email" maxlength="80" placeholder="correo@ejemplo.com" required style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' +
-      (state.grupos ? '<select id="alta-grupo" aria-label="Grupo" style="padding:10px;border-radius:10px;border:1px solid var(--border);font:inherit">' + opcionesGrupo(state.grupoFiltro || (gruposActivos()[0] || {}).id) + '</select>' : '') +
-      '<button class="btn" type="submit">Dar de alta</button><div id="alta-msg"></div></form>' +
-    (a && a.error ? '<div class="empty">No se pudo cargar la lista (' + escapeHtml(a.error) + ').</div>' : '') +
-    lista.map(x => '<div class="ultimas-lista" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div>👤 <b>' + escapeHtml(x.nombre) + '</b><br><small>' +
-      escapeHtml(x.emails.join(', ')) + ' · alta en la página' + (x.inicio ? ' · 📅 inicia el lunes ' + escapeHtml(fechaCorta(x.inicio)) : '') + '</small></div>' +
+    '<form id="alta-alumno" class="reg-form" autocomplete="off">' +
+      '<p class="reg-intro">➕ Nuevo alumno o alumna: entra con su correo a Inglés, al portal y a Juegos. Empieza su curso el lunes siguiente, sin actividades en atraso.</p>' +
+      '<label class="campo-et" for="alta-nombre">Nombre<input id="alta-nombre" type="text" maxlength="40" placeholder="Como aparecerá en sus calificaciones" required></label>' +
+      '<label class="campo-et" for="alta-correo">Correo<input id="alta-correo" type="email" maxlength="80" placeholder="correo@ejemplo.com" required></label>' +
+      (state.grupos ? '<label class="campo-et" for="alta-grupo">Grupo<select id="alta-grupo">' + opcionesGrupo(state.grupoFiltro || (gruposActivos()[0] || {}).id) + '</select></label>' : '') +
+      '<button class="btn reg-enviar" type="submit">➕ Dar de alta</button><div id="alta-msg" role="status"></div></form>' +
+    (a && a.error ? '<div class="reg-error" role="alert">No se pudo cargar la lista (' + escapeHtml(a.error) + ').</div>' : '') +
+    '<div class="reg-lista">' + lista.map(x => tarjeta(x, '',
+      escapeHtml(x.emails.join(', ')) + ' · alta en la página' + (x.inicio ? ' · 📅 inicia el lunes ' + escapeHtml(fechaCorta(x.inicio)) : ''),
       (state.grupos ? '<select class="mover-grupo" data-mover="1" data-alumno="' + escapeHtml(x.nombre) + '" aria-label="Grupo de ' + escapeHtml(x.nombre) + '">' + opcionesGrupo((grupoDeNombre(x.nombre) || {}).id) + '</select>' : '') +
-      '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' +
-      '<button class="btn ghost" data-action="baja-ingles" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">🚪 Baja de Inglés</button>' +
-      '<button class="btn ghost" data-action="quitar-alumno" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">Quitar</button></span></div>').join('') +
-    (bajas.length ? '<div id="bajas-ingles"><div class="progress-text" style="margin:14px 0 4px">🗂️ De baja de Inglés (' + bajas.length + ') · sus resultados se conservan como historial</div>' +
-      bajas.map(x => '<div class="ultimas-lista" data-baja="' + escapeHtml(x.emails[0]) + '" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div>👤 <b>' + escapeHtml(x.nombre) + '</b><br><small>' +
-        escapeHtml(x.emails.join(', ')) + ' · de baja desde el ' + escapeHtml(fechaCorta(x.baja)) + '</small></div>' +
-        '<button class="btn ghost" data-action="reactivar-ingles" data-email="' + escapeHtml(x.emails[0]) + '" data-nombre="' + escapeHtml(x.nombre) + '">↩️ Reactivar</button></div>').join('') + '</div>' : '') +
+      '<button class="btn ghost" data-action="baja-ingles"' + datos(x) + '>🚪 Baja de Inglés</button>' +
+      '<button class="btn ghost" data-action="quitar-alumno"' + datos(x) + '>Quitar</button>')).join('') + '</div>' +
+    (bajas.length ? '<div id="bajas-ingles"><p class="reg-subt">🗂️ De baja de Inglés (' + bajas.length + ') · sus resultados se conservan como historial</p><div class="reg-lista">' +
+      bajas.map(x => tarjeta(x, ' de-baja', escapeHtml(x.emails.join(', ')) + ' · de baja desde el ' + escapeHtml(fechaCorta(x.baja)),
+        '<button class="btn ghost" data-action="reactivar-ingles"' + datos(x) + '>↩️ Reactivar</button>')).join('') + '</div></div>' : '') +
     '</div></details>';
 }
 
@@ -134,7 +143,7 @@ async function altaAlumno(form) {
   form.querySelector('button').disabled = true;
   const grupoSel = document.getElementById('alta-grupo');
   const r = await fetchJson(API_BASE + '/ingles/alumnos?email=' + encodeURIComponent(state.email), { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ nombre, email, ...(grupoSel && grupoSel.value ? { grupo: grupoSel.value } : {}) }) });
-  if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="empty" style="color:var(--bad)">' + escapeHtml(ERRORES_ALTA[r.body.error] || ('No se pudo dar de alta (' + (r.body.error || r.status) + ').')) + '</div>'; return; }
+  if (!r.ok) { form.querySelector('button').disabled = false; msg.innerHTML = '<div class="reg-error" role="alert">' + escapeHtml(ERRORES_ALTA[r.body.error] || ('No se pudo dar de alta (' + (r.body.error || r.status) + ').')) + '</div>'; return; }
   state.altaAbierta = true;
   state.altaAviso = '✅ ' + r.body.alumno.nombre + ' ya puede entrar con ' + r.body.alumno.email + '.' + (r.body.alumno.inicio ? ' Empieza el lunes ' + fechaCorta(r.body.alumno.inicio) + ', sin actividades en atraso.' : '');
   await loadFor(state.email);

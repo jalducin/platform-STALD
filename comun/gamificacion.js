@@ -216,7 +216,9 @@
       'racha-3': racha >= 3, 'racha-7': racha >= 7, 'racha-14': racha >= 14,
       perfecto: items.some(it => it.mejor && it.mejor.porcentaje === 100),
       'mini-examen': items.some(it => it.mejor && (it.mejor.secciones || []).some(s => esMiniExamen(s) && s.porcentaje >= 80)),
-      'mundo-completado': !!e.hoy && mapaMundos(e.items || [], e.hoy).some(m => m.mundos.some(w => w.estado === 'completado')),
+      // `mapa` (opcional, aditivo: ruta del profe, openspec: ingles-diseno-profe): mundos propios con su estado.
+      'mundo-completado': Array.isArray(e.mapa) ? e.mapa.some(w => w.estado === 'completado')
+        : !!e.hoy && mapaMundos(e.items || [], e.hoy).some(m => m.mundos.some(w => w.estado === 'completado')),
     };
     return INSIGNIAS.filter(i => tiene[i.id]);
   }
@@ -457,6 +459,59 @@
     });
   }
 
+  // ======================================================================================================
+  // Ruta del profe (openspec: ingles-diseno-profe). ADITIVO: no cambia nada de Secundaria ni de Inglés.
+  // La ruta (contenido/profe/plan.json) está toda abierta y sus fechas son ritmo sugerido: no hay «bloqueado» ni
+  // «atrasada», y toda clase hecha cuenta como a tiempo.
+  // ======================================================================================================
+
+  // ---------- Mundos de la ruta ----------
+  // `semanas`: número de semana del plan (1 = la primera). `patron`: si el título lo cumple, la clase va a ese mundo
+  // aunque sea de otra semana (clases extra de Minto y de Skills). Fuente: este catálogo (documentado en
+  // docs/frontend-standards.md § «Ruta del profe con la experiencia RPG»).
+  const MUNDOS_RUTA_PROFE = [
+    { id: 'taller-del-agente', nombre: 'Taller del Agente', emoji: '🛠️', etapa: 'Claude Code base y hooks', semanas: [1, 2] },
+    { id: 'fabrica-de-specs', nombre: 'Fábrica de Specs', emoji: '🏭', etapa: 'OpenSpec y SDD', semanas: [3] },
+    { id: 'red-de-conectores', nombre: 'Red de Conectores', emoji: '🔌', etapa: 'MCP y ecosistema', semanas: [4] },
+    { id: 'colmena-de-subagentes', nombre: 'Colmena de Subagentes', emoji: '🐝', etapa: 'Subagentes', semanas: [5] },
+    { id: 'biblioteca-sdd', nombre: 'Biblioteca SDD', emoji: '📚', etapa: 'SDD según el ebook', semanas: [6] },
+    { id: 'arena-en-accion', nombre: 'Arena en Acción', emoji: '⚔️', etapa: 'Claude Code en acción', semanas: [7] },
+    { id: 'proyecto-integrador', nombre: 'Proyecto Integrador', emoji: '🏰', etapa: 'Proyecto y examen final', semanas: [8] },
+    { id: 'torre-de-minto', nombre: 'Torre de Minto', emoji: '🗼', etapa: 'Pirámide de Minto', patron: 'pir[aá]mide de minto|\\bminto\\b' },
+    { id: 'forja-de-skills', nombre: 'Forja de Skills', emoji: '⚒️', etapa: 'Skills', patron: '^\\s*clase:\\s*skills\\b' },
+  ];
+  // Mundo de una clase del plan (`{ titulo }`) en la semana `n` (1-based). Sin mundo: null.
+  function mundoDeClaseRuta(el, n, catalogo) {
+    const c = catalogo || MUNDOS_RUTA_PROFE;
+    const titulo = (el && el.titulo) || '';
+    return c.find(w => w.patron && new RegExp(w.patron, 'i').test(titulo)) || c.find(w => (w.semanas || []).includes(n)) || null;
+  }
+  // Mapa de la ruta: un mundo por entrada del catálogo con sus clases ({ elemento, item, semana }), hechas, total y
+  // estado: «completado» (todas hechas, con al menos una), «en-curso» (alguna hecha, o trae la semana sugerida de hoy)
+  // o «abierto» (todo abierto, sin empezar). `items` = lo que devuelve el servidor (id → estado y mejor intento).
+  function mapaRuta(plan, items, hoy, catalogo) {
+    const c = catalogo || MUNDOS_RUTA_PROFE;
+    const porId = new Map((items || []).map(it => [it.id, it]));
+    const semanas = (plan && plan.semanas) || [];
+    const actual = [...semanas].reverse().find(s => /^\d{4}-\d{2}-\d{2}$/.test(s.id) && hoy && s.id <= hoy);
+    const clases = semanas.flatMap((s, i) => (s.elementos || []).map(e => ({ elemento: e, item: porId.get(e.id) || null, semana: i + 1, semanaId: s.id })));
+    return c.map(w => {
+      const suyas = clases.filter(x => (mundoDeClaseRuta(x.elemento, x.semana, c) || {}).id === w.id);
+      const hechas = suyas.filter(x => x.item && estaHecha(x.item)).length;
+      let estado = 'abierto';
+      if (suyas.length && hechas === suyas.length) estado = 'completado';
+      else if (hechas || (actual && suyas.some(x => x.semanaId === actual.id))) estado = 'en-curso';
+      return { id: w.id, nombre: w.nombre, emoji: w.emoji, etapa: w.etapa, estado, hechas, total: suyas.length, promedio: promedioDe(suyas.map(x => x.item).filter(Boolean)), clases: suyas };
+    });
+  }
+  // Mundo actual: el primero en curso con clases pendientes; si no, el primero sin terminar; si todo está hecho, el último.
+  function mundoActualRuta(mapa) {
+    const conClases = (mapa || []).filter(w => w.total);
+    return conClases.find(w => w.estado === 'en-curso' && w.hechas < w.total) || conClases.find(w => w.estado !== 'completado') || conClases[conClases.length - 1] || null;
+  }
+  // XP de la ruta: la regla de siempre (xpDeClase) con toda clase hecha a tiempo (las fechas son ritmo sugerido).
+  const xpRuta = items => xpTotal(items, { aTiempo: true });
+
   g.Gamificacion = {
     MATERIAS, OTRA, MUNDOS, INSIGNIAS, RANGOS, XP_A_TIEMPO, XP_POR_NIVEL, XP_POSIBLE,
     sinAcentos, materiaConocida, materiaDe, sumarDias, diaDeClase, estaHecha, esMiniExamen,
@@ -465,5 +520,7 @@
     XP_MISION_POR_PUNTO, XP_MISION_A_TIEMPO, INSIGNIAS_RPG,
     xpDeMision, xpMisiones, xpTotalConMisiones, slugMundo, catalogoDeMundos, mapaRpg, lunesDe,
     misionDiaria, misionesSemanales, insigniasRpgDe, arbolHabilidades,
+    // Ruta del profe (openspec: ingles-diseno-profe)
+    MUNDOS_RUTA_PROFE, mundoDeClaseRuta, mapaRuta, mundoActualRuta, xpRuta,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

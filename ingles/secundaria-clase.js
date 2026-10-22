@@ -76,12 +76,17 @@ function recompensaMision(id) {
   const antes = envio.act, despues = state.act;
   if (!hayGamificacion() || !antes || !despues || antes.isAdmin || despues.isAdmin) return '';
   const hoy = despues.hoy || todayStr();
+  if (MODO_PROFE && typeof recompensaProfe === 'function') return recompensaProfe(antes, despues, id); // ruta del profe (ingles/profe-rpg.js)
   // Con las misiones principales evaluadas (mismas antes y después), como el tablero de Inglés y el de Secundaria.
   const mis = typeof misionesSec === 'function' ? misionesSec() : [];
   const xpAntes = Gamificacion.xpTotalConMisiones ? Gamificacion.xpTotalConMisiones(antes.items, mis, { hoy }) : Gamificacion.xpTotal(antes.items, { hoy });
   const xpDespues = Gamificacion.xpTotalConMisiones ? Gamificacion.xpTotalConMisiones(despues.items, mis, { hoy }) : Gamificacion.xpTotal(despues.items, { hoy });
   const nA = Gamificacion.nivelDe(xpAntes), nD = Gamificacion.nivelDe(xpDespues);
   const nuevas = Gamificacion.insigniaNueva({ items: antes.items, hoy, racha: antes.racha }, { items: despues.items, hoy, racha: despues.racha });
+  return htmlRecompensa(xpAntes, xpDespues, nA, nD, nuevas);
+}
+// Tarjeta de la recompensa (la comparten Secundaria, Inglés y la ruta del profe).
+function htmlRecompensa(xpAntes, xpDespues, nA, nD, nuevas) {
   return '<section class="exam-card sec-recompensa" id="sec-recompensa" aria-live="polite">' +
     '<div class="sec-xp-ganado" data-sec-xp="' + Math.max(0, xpDespues - xpAntes) + '">+' + Math.max(0, xpDespues - xpAntes) + ' XP</div>' +
     '<div class="sec-nivel" data-sec-nivel="' + nD.nivel + '"><span class="sec-nivel-num">' + nD.nivel + '</span><span><b><abbr title="Nivel del juego">Nv.</abbr> ' + nD.nivel + '</b> · ' + escapeHtml(nD.rango) +
@@ -94,7 +99,7 @@ function recompensaMision(id) {
 
 // Etiqueta del banner: en Secundaria cada clase es una «Misión»; en Inglés, su tipo.
 const ETIQUETA_TIPO = { examen: '📝 Examen', refuerzo: '🔁 Refuerzo', meet: '🎥 Reto del Meet', actividad: '📘 Actividad' };
-const etiquetaClase = it => (MODO_SECUNDARIA ? '⚔️ Misión' : ETIQUETA_TIPO[it.tipo] || ETIQUETA_TIPO.actividad);
+const etiquetaClase = it => (MODO_SECUNDARIA || MODO_PROFE ? '⚔️ Misión' : ETIQUETA_TIPO[it.tipo] || ETIQUETA_TIPO.actividad);
 
 // Vista completa de la clase. `cabecera` y `form` los arma el reproductor (los mismos que en Inglés).
 function vistaClaseSecundaria(it, cabecera, form) {
@@ -113,7 +118,10 @@ function vistaClaseSecundaria(it, cabecera, form) {
   const seccion = (id, n, titulo, html) => '<section class="exam-card sec-paso-bloque" id="sec-paso-' + id + '" data-sec-bloque="' + id + '" aria-labelledby="sec-paso-t-' + id + '">' +
     '<h3 id="sec-paso-t-' + id + '">' + numPaso(n) + ' ' + titulo + '</h3>' + html + '</section>';
   const m = materiaDe(it);
-  const mundo = MODO_SECUNDARIA ? mundoDeMision(m) : (hayGamificacion() ? Gamificacion.mundoDe('ingles', hoyDeAct()) : null);
+  let mundo = null;
+  if (MODO_SECUNDARIA) mundo = mundoDeMision(m);
+  else if (MODO_PROFE && typeof mundoDeClaseProfe === 'function') mundo = mundoDeClaseProfe(it.id); // ruta del profe (ingles/profe-rpg.js)
+  else if (hayGamificacion()) mundo = Gamificacion.mundoDe('ingles', hoyDeAct());
   const banner = '<div class="sec-mision-banner"><span class="sec-mision-tag">' + etiquetaClase(it) + '</span>' + (MODO_SECUNDARIA ? chipMateria(m) : '') +
     (mundo ? '<span class="sec-mundo" data-sec-mundo>' + escapeHtml(mundo.emoji + ' ' + mundo.nombre) + '<small> · ' + escapeHtml(mundo.etapa) + '</small></span>' : '') + '</div>';
   return '<div class="sec-clase-vista">' + banner + cabecera + indicador +
