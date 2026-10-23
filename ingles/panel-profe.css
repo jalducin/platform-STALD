@@ -60,6 +60,7 @@ body.vista-admin #logout-btn { min-height: 44px; }
 .pp-stat-txt { display: grid; min-width: 0; }
 .pp-num { font-size: 1.35rem; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--rpg-indigo); }
 .pp-stat-t { font-size: .74rem; font-weight: 700; color: var(--rpg-texto-suave); text-transform: uppercase; letter-spacing: .04em; overflow-wrap: anywhere; }
+.pp-desglose { display: block; font-size: .7rem; font-weight: 600; text-transform: none; letter-spacing: 0; } /* «Inglés N · Secundaria M» de «Por revisar» (openspec: panel-profe-peticiones) */
 .pp-stat.riesgo .pp-stat-ico { background: var(--bad-soft); }
 .pp-stat.riesgo .pp-num { color: var(--bad); }
 .pp-stat.sin-riesgo .pp-num { color: var(--rpg-emerald); }

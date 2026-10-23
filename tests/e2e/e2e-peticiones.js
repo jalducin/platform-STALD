@@ -17,6 +17,9 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // Umbral por flujo (peticiones al API, OPTIONS incluidas). Ver la tabla antes/después en el reporte del cambio.
+const UMBRAL_ADMIN = 5;
+// Rutas que el panel del profe ya no pide al abrir: vienen en /ingles/data?incluir=panel o se piden al abrir su pestaña.
+const PEREZOSAS_ADMIN = /\/(ingles\/grupos|ingles\/alumnos|ingles\/resumen|ingles\/panel|profe\/entregas|juegos\/admin\/resumen)$/;
 const UMBRAL = {
   'portal (alumna)': 5,
   'navegar portal → inglés → portal → juegos (alumna)': 12,
@@ -26,7 +29,9 @@ const UMBRAL = {
   // ~33 s del flujo. Mide 41 desde 2026-10-12 (juegos-categorias) por tiempos, no por peticiones nuevas (openspec: fix-e2e-rpg).
   'sala de 2 personas (30 s, ambas)': 42,
   'inglés (alumna)': 5,
-  'inglés (admin)': 17, // +2: «📥 Por revisar» del panel pide la bandeja /profe/entregas (OPTIONS + GET; openspec: ingles-diseno-profe)
+  // /config + OPTIONS y GET de /ingles/actividades y de /ingles/data?incluir=panel, que trae el panel del profe; antes 17
+  // (openspec: panel-profe-peticiones). Grupos, alumnos, resumen, entregas y juegos no se piden al abrir.
+  'inglés (admin)': UMBRAL_ADMIN,
   'abrir un examen': 2,
 };
 
@@ -210,6 +215,8 @@ async function contexto(b, email) {
     const p = await contexto(b, 'admin@example.com');
     await p.goto(BASE + '/ingles.html' + Q); await p.waitForSelector('#tablero', { state: 'attached', timeout: 60000 });
     await quieto(3000);
+    const perezosas = registro.filter(f => PEREZOSAS_ADMIN.test(f.ruta)).map(f => f.metodo + ' ' + f.ruta);
+    ok('inglés (admin): no pide grupos, alumnos, resumen, entregas ni juegos al abrir', perezosas.length === 0, perezosas.join(', '));
     await p.context().close();
   });
 

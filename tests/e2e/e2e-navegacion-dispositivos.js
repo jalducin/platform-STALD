@@ -9,7 +9,7 @@
 // Falla ante: scroll horizontal, objetivos táctiles < 44 px en celular, errores de consola o JS, elementos tapados,
 // tareas con más toques que su tope (TOPE_TOQUES) o pantallas que tardan más de TOPE_MS, atrás del navegador que saca
 // de la plataforma y foco invisible. MEDIR=1 solo imprime la tabla (sin topes), para tomar la línea base.
-// NAV_SOLO=<tarea,tarea> y NAV_DISP=<dispositivo,…> acotan la corrida.
+// NAV_SOLO=<tarea,tarea> y NAV_DISP=<dispositivo,…> acotan la corrida; NAV_TOPE_MS=<ms> baja el tope para probar el reintento.
 //
 // Datos: la clase de Secundaria necesita `--hoy 2026-10-27` (fixture `sec-e2e-clase-*` de valeria; con otro día esa
 // tarea sale OMIT) y ocultar/mostrar «Grupo 1» necesita `--pg` (sin Postgres, OMIT). Envía clases, actividades y una
@@ -19,6 +19,7 @@ const { chromium } = require('playwright');
 const fs = require('node:fs');
 const { abrirPagina, urlDe } = require('./lib/navegador');
 const { MENU } = require('./lib/menu');
+const { irPestanaSec } = require('./lib/secundaria'); // fila (tablet y PC), barra inferior o «☰ Más» (celular)
 const API = process.env.API;
 const MEDIR = process.env.MEDIR === '1';
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n}${x ? ' ' + x : ''}`);
@@ -42,11 +43,15 @@ const TOPE_TOQUES = {
   'ingles-actividad': 4, // tarjeta Inglés → la actividad (en «Para hoy» o, si no está, «Semana» →) → Enviar
   'ingles-material': 2, // Material → Ver PDF
   'juegos-invitado': 6, // «Solo vengo a jugar» → aviso → Entrar → categoría → juego → «Volver»
-  'profe-grupos': 7, // Ver grupo → Ver todos → Ocultar → Mostrar → (☰ Más →) Entregas → Guardar evaluación (no cuenta)
+  'profe-grupos': 6, // Ver grupo → Ver todos → Ocultar → Mostrar → (interruptor →) Entregas → Guardar evaluación (no cuenta); Entregas ya en la barra del celular (navegacion-mejoras: 7 → 6)
   'profe-secundaria': 3, // tarjeta Secundaria → elegir alumna → Resultados
   'profe-ruta': 3, // (Más →) Mi ruta → Empezar
 };
-const TOPE_MS = 8000; // cada pantalla usable en menos de 8 s con el servidor local (holgado para la máquina de pruebas)
+const TOPE_MS = Number(process.env.NAV_TOPE_MS) || 8000; // NAV_TOPE_MS solo para probar el reintento; cada pantalla usable en menos de 8 s con el servidor local (holgado para la máquina de pruebas)
+// Si una tarea se pasa de TOPE_MS, se repite UNA vez en ese tamaño solo para medir el tiempo: falla si se pasa en las dos
+// corridas. Un pico aislado por carga de la máquina (otras suites a la vez) no tumba la prueba; una pantalla lenta de
+// verdad, sí (openspec: navegacion-mejoras, spec `pruebas`). Al final se imprime el tiempo máximo observado.
+const REINTENTOS_MS = 1;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const api = (ruta, email, body) => fetch(API + ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(email),
@@ -207,7 +212,7 @@ const TAREAS = [
     async correr(p, m) {
       await m.ir('/secundaria.html'); await m.listo('#sec-inicio', 'Secundaria · Inicio');
       for (const [tab, nombre] of [['horario', 'Mi horario'], ['materias', 'Mis materias'], ['misiones', 'Misiones']]) {
-        await m.toca('.sec-tabs [data-sec-tab="' + tab + '"]'); await m.listo('#sec-' + tab + ':not([hidden])', nombre);
+        await irPestanaSec(p, tab, sel => m.toca(sel)); await m.listo('#sec-' + tab + ':not([hidden])', nombre);
       }
       return { atras: ['#sec-materias:not([hidden])', '#sec-horario:not([hidden])', '#sec-inicio:not([hidden])'] }; // pestaña por pestaña hasta Inicio
     },
@@ -318,7 +323,7 @@ const TAREAS = [
       if (d.toque) await p.keyboard.press('Escape').catch(() => {});
       await p.selectOption('#sec-alumna', { value: 'valeria' });
       await m.listo('#sec-inicio', 'tablero de la alumna');
-      await m.toca('#sec-tab-resultados'); await m.listo('[data-sec-admin]', 'Resultados');
+      await irPestanaSec(p, 'resultados', sel => m.toca(sel)); await m.listo('[data-sec-admin]', 'Resultados');
       return { atras: '#sec-inicio, #content' };
     },
   },
@@ -369,7 +374,7 @@ const TAREAS = [
       ok(nombre + ': nada tapado ni fuera de pantalla al tocar', !fila.tapados.length, fila.tapados.join(' | '));
       if (d.toque) ok(nombre + ': objetivos táctiles ≥ 44 px', MEDIR || !fila.chicos.length, fila.chicos.length + ' chicos: ' + fila.chicos.slice(0, 6).join(' | '));
       if (!MEDIR) ok(nombre + `: ${fila.toques} toques ≤ ${TOPE_TOQUES[t.id]}`, fila.toques <= TOPE_TOQUES[t.id]);
-      if (!MEDIR) ok(nombre + `: cada pantalla usable en < ${TOPE_MS} ms`, fila.maxMs < TOPE_MS, fila.pantallas.map(x => x.nombre + ' ' + x.ms).join(', '));
+      const tiempos = [fila.maxMs]; // el tope de tiempo se evalúa al final, tras el posible reintento
       ok(nombre + ': hay forma de volver (Inicio, barra o «← Volver»)', fila.volver.inicio || fila.volver.barra || fila.volver.volver, JSON.stringify(fila.volver));
       ok(nombre + ': atrás del navegador se queda en la plataforma', fila.atras.ok, fila.atras.a);
       // El portal lleva directo a ingles.html?modo=secundaria, sin la carga extra del puente secundaria.html.
@@ -377,6 +382,23 @@ const TAREAS = [
       if (m.anchoJuego) ok(nombre + ': dentro del juego la columna sigue en 720 px o menos', m.anchoJuego <= 720, String(m.anchoJuego));
       if (fila.pdf) ok(nombre + ': el PDF abre en otra pestaña y responde 200', fila.pdf.abre && fila.pdf.status === 200 && /pdf/.test(fila.pdf.tipo), JSON.stringify(fila.pdf));
       await p.context().close();
+      let detalle = fila.pantallas.map(x => x.nombre + ' ' + x.ms).join(', ');
+      for (let r = 0; !MEDIR && r < REINTENTOS_MS && tiempos.at(-1) >= TOPE_MS; r++) { // repite la tarea solo para medir el tiempo
+        const p2 = await abrirPagina(b, { email: t.email, dialogos: 'aceptar', tiempo: 0.4, viewport: { width: d.w, height: d.h }, contexto: d.toque ? { hasTouch: true, isMobile: d.w < 600 } : {} });
+        const m2 = medidor(p2, d, t.id);
+        try {
+          await t.correr(p2, m2, d, ctx);
+          tiempos.push(Math.max(0, ...m2.pantallas.map(x => x.ms)));
+        } catch (e) {
+          tiempos.push(Infinity);
+          m2.pantallas.push({ nombre: 'error ' + e.message.split('\n')[0].slice(0, 80), ms: Infinity });
+        } finally { if (t.despues) await t.despues(ctx).catch(() => {}); }
+        detalle += ' · reintento: ' + m2.pantallas.map(x => x.nombre + ' ' + x.ms).join(', ');
+        await p2.context().close();
+      }
+      fila.tiempos = tiempos;
+      const conReintento = tiempos.length > 1 ? ` (se pasó con ${tiempos[0]} ms; reintento ${tiempos.at(-1)} ms)` : '';
+      if (!MEDIR) ok(nombre + `: cada pantalla usable en < ${TOPE_MS} ms` + conReintento, tiempos.at(-1) < TOPE_MS, detalle);
     }
   }
 
@@ -399,6 +421,53 @@ const TAREAS = [
   }
   // En PC el contenido usa al menos 960 px (o el 70 % de la ventana si es menor): nada de una columna de celular estirada.
   for (const a of anchos) if (!MEDIR) ok(`ancho ${a.pagina} (${a.disp}): ${a.ancho} px de ${a.vista}`, a.ancho >= Math.min(960, a.vista * 0.7));
+
+  // ---------- Secundaria: barra inferior en celular y pestañas en una fila (openspec: navegacion-mejoras) ----------
+  if (!SOLO || SOLO.includes('secundaria-barra')) {
+    const fila = p => p.evaluate(() => { const xs = [...document.querySelectorAll('.sec-tabs .tab')].filter(x => x.offsetParent); return { n: xs.length, filas: new Set(xs.map(x => Math.round(x.getBoundingClientRect().top))).size, alto: Math.min(...xs.map(x => x.getBoundingClientRect().height)) }; });
+    // Celular (alumna): barra fija abajo con 5 botones de 44 px, sin fila arriba, sin tapar lo último del Inicio.
+    const c = await abrirPagina(b, { email: 'valeria@example.com', viewport: { width: 360, height: 740 }, contexto: { hasTouch: true, isMobile: true }, ruta: '/secundaria.html', esperar: '#sec-inicio' });
+    const barra = await c.evaluate(() => {
+      const n = document.querySelector('.sec-barra'); const r = n.getBoundingClientRect();
+      const bs = [...n.querySelectorAll('.nav-item')].map(x => ({ id: x.dataset.secTab || 'mas', w: Math.round(x.getBoundingClientRect().width), h: Math.round(x.getBoundingClientRect().height) }));
+      return { fija: getComputedStyle(n).position === 'fixed', abajo: Math.round(r.bottom) >= innerHeight - 1, bs, fila: !!document.querySelector('.sec-tabs').offsetParent, actual: (n.querySelector('[aria-current="page"]') || {}).dataset?.secTab };
+    });
+    ok('Secundaria (celular): barra inferior fija con Inicio, Misiones, Horario, Materias y ☰ Más', barra.fija && barra.abajo && barra.bs.map(x => x.id).join() === 'inicio,misiones,horario,materias,mas' && barra.actual === 'inicio', JSON.stringify(barra));
+    ok('Secundaria (celular): botones de la barra de 44 px o más y sin la fila de pestañas arriba', barra.bs.every(x => x.w >= 44 && x.h >= 44) && !barra.fila);
+    await c.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await sleep(300);
+    const tapa = await c.evaluate(() => { const ult = [...document.querySelectorAll('#sec-inicio .sec-accesos .btn')].pop(); const r = ult.getBoundingClientRect(); const b = document.querySelector('.sec-barra').getBoundingClientRect(); return { ult: Math.round(r.bottom), barra: Math.round(b.top) }; });
+    ok('Secundaria (celular): la barra no tapa lo último del Inicio', tapa.ult <= tapa.barra, JSON.stringify(tapa));
+    ok('Secundaria (celular): sin scroll horizontal', await c.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await c.tap('.sec-barra [data-sec-mas]');
+    const mas = await c.$$eval('#sec-mas [data-sec-tab]', xs => xs.filter(x => x.offsetParent).map(x => x.dataset.secTab).join());
+    ok('Secundaria (celular): «☰ Más» con Semana, Mapa y Árbol', mas === 'clases,mapa,arbol', mas);
+    await c.keyboard.press('Escape');
+    ok('Secundaria (celular): Escape cierra «☰ Más»', await c.isHidden('#sec-mas'));
+    await c.tap('.sec-barra [data-sec-mas]');
+    await c.tap('#sec-mas [data-sec-tab="mapa"]');
+    await c.waitForSelector('#sec-mapa:not([hidden])');
+    ok('Secundaria (celular): Más → Mapa cierra el menú, marca «Más» y le deja el foco', await c.isHidden('#sec-mas') && await c.$eval('[data-sec-mas]', x => x.classList.contains('activo') && document.activeElement === x));
+    const atras = await probarAtras(c, '#sec-inicio:not([hidden])');
+    ok('Secundaria (celular): «Atrás» desde Mapa regresa a Inicio y la barra lo marca', atras.ok && (await c.$eval('.sec-barra [aria-current="page"]', x => x.dataset.secTab).catch(() => '')) === 'inicio', atras.a);
+    await c.screenshot({ path: 'nav-secundaria-barra-celular.png' });
+    // Al abrir una clase la barra desaparece (vive en #content) y no se encima con la barra del examen.
+    if (await c.$('#rpg-mision-btn[data-action="abrir-item"]')) {
+      await c.tap('#rpg-mision-btn');
+      await c.waitForSelector('#exam-form, .sec-clase-vista', { timeout: 30000 });
+      ok('Secundaria (celular): con la clase abierta no hay barra de pestañas', !(await c.$('.sec-barra')));
+    } else omit('Secundaria (celular): barra con la clase abierta', 'sin misión abierta ese día');
+    await c.context().close();
+    // Tablet y PC: la fila (sin barra); el profe con sus 9 pestañas en una fila también a 1100 px.
+    for (const [quien, email, ruta, w, n] of [['alumna', 'valeria@example.com', '/secundaria.html', 768, 7], ['alumna', 'valeria@example.com', '/secundaria.html', 1100, 7], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 720, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 768, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1100, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1280, 9]]) {
+      const t = await abrirPagina(b, { email, viewport: { width: w, height: 800 }, ruta, esperar: '#sec-inicio' });
+      const f = await fila(t);
+      const sinBarra = !(await t.$eval('.sec-barra', x => !!x.offsetParent));
+      ok(`Secundaria (${quien}, ${w} px): ${n} pestañas en una fila de 44 px o más, sin barra inferior ni scroll horizontal`, f.n === n && f.filas === 1 && f.alto >= 44 && sinBarra && await t.evaluate(() => document.documentElement.scrollWidth <= innerWidth), JSON.stringify(f));
+      if (w === 1100 && quien === 'profe') await t.screenshot({ path: 'nav-secundaria-profe-1100.png' });
+      await t.context().close();
+    }
+  }
 
   // ---------- Teclado en PC: Tab, Enter y foco visible ----------
   if (!SOLO || SOLO.includes('teclado')) {
@@ -471,6 +540,11 @@ const TAREAS = [
   for (const f of filas) if (f.chicos.length) lineas.push(`- ${f.tarea} (${f.disp}): ${f.chicos.join(' · ')}`);
   lineas.push('', '### Detalle de pantallas');
   for (const f of filas) lineas.push(`- ${f.tarea} (${f.disp}): ${f.pantallas.map(x => x.nombre + ' ' + x.ms + ' ms').join(' → ')}${f.errores.length ? ' · errores: ' + f.errores.join(' | ') : ''}${f.tapados.length ? ' · tapados: ' + f.tapados.join(' | ') : ''}`);
+  // Tiempo máximo observado (incluidos los reintentos) y qué tareas necesitaron reintento.
+  const medidas = filas.flatMap(f => (f.tiempos || [f.maxMs]).map((ms, k) => ({ ms, quien: `${f.tarea} (${f.disp})${k ? ' reintento' : ''}` }))).filter(x => Number.isFinite(x.ms));
+  const peor = medidas.reduce((a, x) => (x.ms > a.ms ? x : a), { ms: 0, quien: '—' });
+  const reintentos = filas.filter(f => (f.tiempos || []).length > 1).map(f => `${f.tarea} (${f.disp}): ${f.tiempos.join(' → ')} ms`);
+  lineas.push('', `Tiempo máximo observado: ${peor.ms} ms en ${peor.quien} (tope ${TOPE_MS} ms). Reintentos de tiempo: ${reintentos.length ? reintentos.join(' · ') : 'ninguno'}.`);
   fs.writeFileSync('navegacion-dispositivos.md', lineas.join('\n') + '\n');
   console.log(lineas.join('\n'));
   console.log(out.join('\n'));

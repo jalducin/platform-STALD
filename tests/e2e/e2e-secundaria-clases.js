@@ -5,6 +5,7 @@
 require('./lib/entorno'); // BASE, API, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { irPestanaSec } = require('./lib/secundaria'); // fila de pestañas, barra inferior o «☰ Más» según el tamaño
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
 const ALUMNA = 'valeria@example.com';
 const HOY = '2026-10-27';
@@ -42,7 +43,7 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
       await p.screenshot({ path: 'secundaria-clases-hoy.png' });
       await p.screenshot({ path: 'secundaria-clases-semana.png', fullPage: true });
     }
-    await p.click('.sec-tabs [data-sec-tab="horario"]');
+    await irPestanaSec(p, 'horario');
     await p.waitForSelector('#sec-horario:not([hidden])');
     const hor = await p.$$eval('#sec-horario [data-sec-hor-dia]', xs => xs.map(x => ({ f: x.dataset.secHorDia, hoy: x.classList.contains('es-hoy'), m: [...x.querySelectorAll('.sec-hor-clase b')].map(b => b.textContent) })));
     ok('Mi horario: 7 días' + sufijo, hor.length === 7, String(hor.length));
@@ -61,14 +62,14 @@ const sinScrollH = p => p.evaluate(() => document.documentElement.scrollWidth <=
 
   // Ancho de escritorio: el horario es una cuadrícula de 7 columnas.
   const ancho = await abrirPagina(b, { email: ALUMNA, viejo: true, out, viewport: { width: 1280, height: 800 }, ruta: '/ingles.html?modo=secundaria#semana', esperar: '#sec-clases' });
-  await ancho.click('.sec-tabs [data-sec-tab="horario"]');
+  await irPestanaSec(ancho, 'horario');
   const cols = await ancho.$eval('#sec-horario-semana', el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
   ok('Mi horario en escritorio: 7 columnas', cols === 7, String(cols));
   ok('escritorio: sin scroll horizontal', await sinScrollH(ancho));
   await ancho.screenshot({ path: 'secundaria-horario-escritorio.png', fullPage: true });
 
   // Abrir una clase de hoy desde «Hoy» funciona como siempre.
-  await ancho.click('.sec-tabs [data-sec-tab="clases"]');
+  await irPestanaSec(ancho, 'clases');
   await ancho.click(`#sec-hoy [data-sec-item="sec-e2e-clase-${HOY}-a"] [data-action="abrir-item"]`);
   ok('abrir la clase de hoy muestra sus preguntas', await ancho.waitForSelector('#exam-form', { timeout: 60000 }).then(() => true, () => false));
 

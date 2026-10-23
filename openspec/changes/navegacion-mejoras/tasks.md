@@ -17,40 +17,49 @@
 
 ## 2. PR 2 · Entregas en la barra del profe
 
-- [ ] 2.1 `barra: true` en `entregas` (`ingles/comun.js`), `pintarNav()` en el orden del catálogo y contador
+- [x] 2.1 `barra: true` en `entregas` (`ingles/comun.js`), `pintarNav()` en el orden del catálogo y contador
   `data-contador-entregas` repintado al llegar la bandeja (`ingles/app.js`, `ingles/secundaria-misiones.js`,
-  `ingles/ingles.css`, `estilos/stald.css`); `?v=`
-- [ ] 2.2 E2E: `ingles-admin` (Entregas en la barra a 360 px, contador = `pendientes`, sin scroll horizontal) y
+  `ingles/ingles.css`); `?v=`
+- [x] 2.2 E2E: `ingles-admin` (Entregas en la barra a 360 px, contador = `pendientes`, sin scroll horizontal) y
   `navegacion-dispositivos` (tope de «profe-grupos» 7 → 6; también en el spec de `navegacion-dispositivos`)
 
 ## 3. PR 3 · Secundaria: barra inferior en celular y pestañas en una fila
 
-- [ ] 3.1 Barra `.sec-barra` y menú `#sec-mas` (`ingles/secundaria.js`), estilos y hueco (`ingles/secundaria.css`),
+- [x] 3.1 Barra `.sec-barra` y menú `#sec-mas` (`ingles/secundaria.js`), estilos y hueco (`ingles/secundaria.css`),
   fila de pestañas desde 720 px en una sola fila (`.sec-tabs-muchas` con 9); `?v=`
-- [ ] 3.2 Ayudante E2E `tests/e2e/lib/secundaria.js` (`irPestanaSec`: fila, barra o «Más»); E2E que tocan pestañas a
+- [x] 3.2 Ayudante E2E `tests/e2e/lib/secundaria.js` (`irPestanaSec`: fila, barra o «Más»); E2E que tocan pestañas a
   360 px (`misiones`, `secundaria-adelantar`, `secundaria-clases`, `navegacion-dispositivos`) lo usan;
   `navegacion-dispositivos` revisa la barra a 360 px (sin tapar, 44 px, «Más», atrás) y las 9 pestañas del profe en
   una fila a 1100 px
 
-## 4. PR 4 · Pruebas: fixture propio de «🌍 Mundos» y Dibuja estable
+- [x] 3.3 Revisión del PR 3 (PR de cierre): el foco no se pierde al elegir desde la barra o «☰ Más» ni con Escape
+  (vuelve a su botón o a «☰ Más»); E2E `navegacion-dispositivos`: Escape cierra «Más», barra ausente con la clase
+  abierta y las 9 pestañas del profe también a 720 px
 
-- [ ] 4.1 `tests/fixtures/profe-plan-9-mundos.json` y `ingles-diseno-profe`: 9 mundos con su fixture (interceptado en
-  su navegador) y, con el plan compartido, los de `mapaRuta`
-- [ ] 4.2 `server/salas_grandes_test.ts`: valores y llaves en lugar de texto suelto, más un caso fijo con «reloj»
+## 4. PR 4 · Pruebas: plan de ejemplo con los 9 mundos, Dibuja estable y tope de tiempo con reintento
+
+- [x] 4.1 `tests/fixtures/datos/contenido/profe/plan.json`: plan de ejemplo de 8 semanas con clases en los 9 mundos
+  (las 3 semanas publicadas sin cambios); `ingles-diseno-profe`, `ruta-profe` y `profe-diseno` en verde con él
+- [x] 4.2 `server/salas_grandes_test.ts`: valores y llaves en lugar de texto suelto, más un caso fijo con «reloj» y
+  uno de fuga real; 30/30 sola y 30/30 dentro de la suite completa (reporte `reports/2026-10-22-pr4-pruebas-estables.md`)
+- [x] 4.3 `tests/e2e/e2e-navegacion-dispositivos.js`: tope de 8 s con un reintento solo de la medición de tiempo (falla
+  si se pasa dos veces), tiempo máximo observado en la tabla y `NAV_TOPE_MS` para probarlo
 
 ## 5. Verificación (OBLIGATORIO)
 
-- [ ] 5.1 Revisar y actualizar pruebas existentes (OBLIGATORIO): las de 1.1, 1.3, 2.2, 3.2, 4.1 y 4.2
-- [ ] 5.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): `deno test -A server/`, `deno check`, `deno lint`,
+- [x] 5.1 Revisar y actualizar pruebas existentes (OBLIGATORIO): las de 1.1, 1.3, 2.2, 3.2 y 3.3 (las de 4.1 y 4.2, con
+  su PR)
+- [x] 5.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): `deno test -A server/`, `deno check`, `deno lint`,
   `openspec validate navegacion-mejoras --strict` y E2E `navegacion-dispositivos`, `secundaria-clases`,
   `secundaria-clase`, `secundaria-dashboard`, `secundaria-adelantar`, `examen-secundaria`, `misiones`, `ingles-admin`,
   `ingles-diseno-profe`, `peticiones` y `portal-diseno` (puertos 9021/9022, copia temporal de datos, PostgREST falso
   solo `stald_test_*`, `--hoy 2026-10-27` y el hoy por omisión según la prueba); reporte
   `openspec/changes/navegacion-mejoras/reports/2026-10-22-step-5.2-pruebas-y-verificacion.md`
-- [ ] 5.3 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): Playwright a 360, 768, 1100 y 1280 px: misión
+- [x] 5.3 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): Playwright a 360, 768, 1100 y 1280 px: misión
   principal con atrasada, barra de Secundaria (alumna y profe), Entregas con contador, 9 pestañas en una fila; capturas
-  fuera del repo
-- [ ] 5.4 Actualizar documentación técnica (OBLIGATORIO): `docs/frontend-standards.md` (barra de Secundaria, pestañas,
+  fuera del repo (hecho con las E2E en esos tamaños: `nav-secundaria-barra-celular.png`, `nav-secundaria-profe-1100.png`
+  y las de `secundaria-dashboard` e `ingles-admin`, en la carpeta de la sesión)
+- [x] 5.4 Actualizar documentación técnica (OBLIGATORIO): `docs/frontend-standards.md` (barra de Secundaria, pestañas,
   Entregas en la barra, misión principal) y `docs/pruebas.md` (ayudante de pestañas, fixture de Mundos)
 - [ ] 5.5 Verificación en producción tras cada merge — EL AGENTE EJECUTA (OBLIGATORIO): Pages sirve los JS y CSS
   nuevos (`?v=`) con 200 y las páginas públicas cargan (solo lectura, sin sesión)

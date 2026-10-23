@@ -11,6 +11,7 @@ require('../../comun/gamificacion.js'); // globalThis.Gamificacion
 require('../../comun/secundaria-datos.js'); // globalThis.SecundariaDatos
 const { chromium } = require('playwright');
 const { abrirPagina } = require('./lib/navegador');
+const { irPestanaSec } = require('./lib/secundaria'); // fila de pestañas, barra inferior o «☰ Más» según el tamaño
 const G = globalThis.Gamificacion;
 const SD = globalThis.SecundariaDatos;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
@@ -93,7 +94,7 @@ async function enviar(id, bien) {
     ok('RPG: actividad reciente con su XP' + sufijo, actv.join() === recientes.map(r => r.item.id + ':+' + r.xp + ' XP').join() && actv.includes('sec-e2e-clase-2026-10-26-b:+50 XP'), actv.join());
     ok('RPG: mundos 0 completados en el indicador' + sufijo, (await texto(p, '#sec-mundos')).includes('0 completados'));
     ok('accesos a Esta semana, Mi horario y Mis materias' + sufijo, (await p.$$eval('.sec-accesos [data-sec-tab]', xs => xs.map(x => x.dataset.secTab).join())) === 'clases,horario,materias');
-    const altos = { tarjetas: await altoMinimo(p, '.sec-btn-grande'), pestanas: await altoMinimo(p, '.sec-tabs .tab'), accesos: await altoMinimo(p, '.sec-acceso'), mision: await altoMinimo(p, '#rpg-mision-btn, .rpg-btn-sec'), encabezado: await altoMinimo(p, '.app-top .home-link, .app-top .btn') };
+    const altos = { tarjetas: await altoMinimo(p, '.sec-btn-grande'), pestanas: await altoMinimo(p, '.sec-tabs .tab, .sec-barra .nav-item'), accesos: await altoMinimo(p, '.sec-acceso'), mision: await altoMinimo(p, '#rpg-mision-btn, .rpg-btn-sec'), encabezado: await altoMinimo(p, '.app-top .home-link, .app-top .btn') };
     ok('botones de 44 px o más (tarjetas, pestañas, accesos, misión, Inicio/Juegos/tema/salir)' + sufijo, Object.values(altos).every(h => h >= 44), JSON.stringify(altos));
     const inicioBtn = await p.$eval('.app-top .home-link', a => { const s = getComputedStyle(a); return { borde: s.borderTopWidth, fondo: s.backgroundColor, padding: s.paddingLeft }; });
     ok('«← Inicio» parece botón (borde, fondo y padding)' + sufijo, inicioBtn.borde !== '0px' && inicioBtn.fondo !== 'rgba(0, 0, 0, 0)' && parseFloat(inicioBtn.padding) >= 8, JSON.stringify(inicioBtn));
@@ -170,9 +171,12 @@ async function enviar(id, bien) {
     ok('admin: «Vista previa» en vez de «Empezar»', (await texto(p, '[data-sec-card="sec-e2e-clase-2026-10-27-b"] .sec-btn-grande')).includes('Vista previa'));
     ok('admin: mismo progreso y nivel', (await texto(p, '#sec-progreso')).includes(prog.hechas + ' de ' + prog.total) && (await texto(p, '#rpg-rango')) === `Nv. ${nivel.nivel} · ${nivel.rango}`);
     ok('admin: pestaña «📝 Resultados»', !!(await p.$('#sec-tab-resultados')));
+    // Barra inferior del profe en celular (openspec: navegacion-mejoras): Inicio, Notas, Entregas, Misiones y Más.
+    const barraAdmin = await p.$$eval('.sec-barra .nav-item', xs => xs.filter(x => x.offsetParent).map(x => x.dataset.secTab || 'mas').join());
+    ok('admin: barra inferior con Inicio, Notas, Entregas, Misiones y ☰ Más', barraAdmin === 'inicio,resultados,entregas,misiones,mas', barraAdmin);
     ok('admin: sin scroll horizontal a 360 px', await sinScrollH(p));
     await p.screenshot({ path: 'secundaria-dashboard-admin-360.png', fullPage: true });
-    await p.click('#sec-tab-resultados');
+    await irPestanaSec(p, 'resultados');
     ok('admin: resultados por clase', await p.waitForSelector('[data-sec-admin="sec-e2e-clase-2026-10-27-a"]', { timeout: 30000 }).then(() => true, () => false));
     await p.context().close();
   }

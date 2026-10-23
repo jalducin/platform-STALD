@@ -951,16 +951,35 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
 - La vista del admin de `ingles.html` y `?modo=profe` (las dos con `body.vista-admin`) usan el diseño RPG de Secundaria.
   Estilos en `ingles/panel-profe.css`, todo bajo `.vista-admin` o con prefijo `pp-`/`reg-`; reusa los tokens y
   componentes RPG de `estilos/ui.css` (`--rpg-*`, `.rpg-etiqueta`, `.rpg-num`, `.rpg-xp-barra`) y los base de `estilos/stald.css`, así que funciona en claro y oscuro.
-- «🏠 Resumen» abre con `#panel-profe` (`renderPanelProfe`, `ingles/tablero.js`). Solo datos que ya existen:
-  - grupos activos (`/ingles/grupos`; sin base de datos no sale), alumnos y alumnas del registro sin bajas;
+- «🏠 Resumen» abre con `#panel-profe` (`renderPanelProfe`, `ingles/tablero.js`). Solo datos que ya existen, todos
+  del panel (`panel` de `/ingles/data?incluir=panel`, ver «Panel del profe en una petición»):
+  - grupos activos (sin base de datos no sale), alumnos y alumnas del registro sin bajas;
   - «En riesgo» (`alumnosEnRiesgo`): `kpis.sinEntregas` más quien tiene alguna celda `atrasado` en `/ingles/resumen`, con
     un botón por persona que abre el cajón. Se repinta al llegar el resumen (`pintarPanelProfe`); mientras, «…»;
-  - «📥 Por revisar» (`porRevisarPanel`): misiones de Inglés (`mision.ambito === 'ingles'`) en estado `lista` de la
-    bandeja (`cargarBandejaSec`, `/profe/entregas`, que junta también Secundaria), del grupo elegido o sin los ocultos;
-    enlace a «Entregas»; solo si la bandeja carga bien. «🔍 Ver grupo» reinicia también los nicks, como el selector;
-  - con un grupo elegido, todo cuenta solo ese grupo (sin «Grupos activos»); sin grupo, los ocultos del panel no cuentan
-    salvo con «Mostrar grupos ocultos»;
+  - «📥 Por revisar» (`ppTilePorRevisar`) y el contador de «📥 Entregas» de la barra (`entregasPendientes`, `app.js`)
+    usan el **mismo dato** (`conteoEntregas()`, cambio `panel-profe-peticiones`): entregas de misiones listas para
+    evaluar, Inglés + Secundaria, sin filtrar por grupo; el mosaico muestra el total y el desglose «Inglés N ·
+    Secundaria M» y enlaza a «Entregas». Sale de la bandeja (`cargarBandejaSec`, `/profe/entregas`) si ya se cargó al
+    abrir «📥 Entregas» (más fresca tras evaluar) y, si no, de `entregas` del panel; sin ninguna de las dos (o si
+    falló) no hay mosaico ni contador. «🔍 Ver grupo» reinicia también los nicks, como el selector;
+  - con un grupo elegido, todo cuenta solo ese grupo (sin «Grupos activos»), salvo «Por revisar», que es el total de la
+    bandeja como el contador; sin grupo, los ocultos del panel no cuentan salvo con «Mostrar grupos ocultos»;
   - accesos: «➕ Registrar alumno o alumna», «🎬 Presentar la clase» y «🎓 Mi ruta».
+- **Panel del profe en una petición** (cambio `panel-profe-peticiones`). Al abrir, `loadFor` (`ingles/app.js`) pide
+  `/ingles/actividades` y `/ingles/data?incluir=panel` en paralelo (5 peticiones al API con `/config` y las `OPTIONS`;
+  antes 15 en 3 oleadas en cascada) y `prepararPanelAdmin` aplica el panel (`aplicarPanel`, `ingles/admin.js`):
+  `state.grupos`, `state.alumnosAdmin` (sin correos: conteos, tarjetas y `ocultoEnPanel`), `state.resumen`,
+  `state.panelEntregas` y `state.panelFallas`. Sin `panel` (servidor anterior) cae al camino de antes.
+  - Aviso por sección: si falla una parte (grupos, alumnos y alumnas, entregas), `#panel-avisos` en el encabezado (y en
+    «👥 Grupos» si fallaron los grupos) con «🔄 Reintentar» (`data-action="reintentar-panel"`), que pide
+    `/ingles/panel` (`refrescarPanel`). El resumen caído conserva `#resumen-error` con su «🔄 Reintentar».
+  - Bajo demanda en `aplicarRuta`: «➕ Registro» pide `/ingles/alumnos` (con correos; `cargarRegistroAdmin`, repinta
+    solo `#registro-lista`, no el formulario); «🎮 Juegos», «🧑‍🎓 Alumnos» y el cajón piden `/juegos/admin/resumen`
+    (`asegurarJuegosAdmin`; `#juegos-admin` y los huecos `[data-juegos-slot]` se repintan al llegar); «📥 Entregas» pide
+    la bandeja; «🛡️ Nicks» ya pedía `/profe/nicks`. Mientras llegan, esqueleto.
+  - Ocultar o mostrar un grupo: `POST /ingles/grupos/ocultar` y un solo `GET /ingles/panel` con el filtro vigente.
+    Cambiar el grupo o el interruptor pide solo `/ingles/resumen`; `cargarResumen` ya no pide la bandeja.
+  - Las E2E deben abrir «➕ Registro» o «🎮 Juegos» antes de leer su contenido (como las pestañas de la ruta).
 - Tarjetas por grupo (`#pp-grupos .pp-grupo`, dentro de `#tablero`): color (`--gc`), nivel, horario, personas, avance
   de la semana (celdas entregadas / que ya abrieron, sin `no-aplica` ni `proximamente`) con `.rpg-xp-barra[role=progressbar]`,
   atrasos, «🔍 Ver grupo» (`data-action="ver-grupo"`, mismo `state.grupoFiltro` que el selector) y «🎥 Meet».
@@ -1101,6 +1120,8 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
 - `juegos/datos/*.json` se piden una vez por página (`datos()`); si la descarga falla, se reintenta la próxima vez.
 - Medición: `tests/e2e/e2e-peticiones.js` cuenta en un proxy las peticiones por flujo (con `OPTIONS`) y falla si un flujo
   pasa su umbral. Si un cambio agrega peticiones a un flujo, ajusta el umbral en el mismo PR y explica por qué.
+  «inglés (admin)» tiene tope 5 (antes 17; cambio `panel-profe-peticiones`) y además falla si al abrir el panel se piden
+  `/ingles/grupos`, `/ingles/alumnos`, `/ingles/resumen`, `/ingles/panel`, `/profe/entregas` o `/juegos/admin/resumen`.
 
 ## Inglés pro (cambio `ingles-pro`)
 
@@ -1151,7 +1172,10 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     y `aplicarRuta()` deja visible solo la del hash; la pestaña lleva `aria-current="page"`.
   - Abrir una actividad, un resultado o un guion agrega `#ver/<id>` al historial: Atrás regresa a la sección.
   - Menos de 720 px: `.nav-barra` fija abajo (botones de 56 px, `safe-area-inset-bottom`). El admin ve Resumen,
-    Alumnos, Semana y Resultados, y el resto en «☰ Más» (`#nav-mas`). Desde 720 px: pestañas arriba (alumno o
+    Alumnos, Semana, Resultados y «📥 Entregas» (con el contador `[data-contador-entregas]` de entregas listas para
+    evaluar, de la bandeja que ya pide el panel; `pintarContadorEntregas()` lo repinta cuando llega o cambia; cambio
+    `navegacion-mejoras`), y el resto en «☰ Más» (`#nav-mas`). `pintarNav()` sigue el orden del catálogo `SECCIONES`
+    (las que no son de barra llevan `solo-escritorio`), así el menú lateral de PC no cambia. Desde 720 px: pestañas arriba (alumno o
     alumna) o menú lateral pegajoso de 232 px (admin).
   - Los E2E deben abrir la sección antes de interactuar con ella, p. ej. `ingles.html?api=…#alumnos`.
 - **Alumno o alumna (`alumno.js`).** 🏠 Inicio: encabezado con anillo de la semana (`#anillo`), nivel de inglés (`#nivel`, «🎓 Inglés A1», de su
@@ -1219,6 +1243,14 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `server/secundaria_tablero_test.ts`.
 - **Fuentes:** Inter y Orbitron de Google Fonts se inyectan solo en modo Secundaria (excepción de CDN, ver el
   `design.md` del cambio); si no cargan, queda la fuente del sistema.
+- Navegación (cambio `navegacion-mejoras`): desde 720 px, pestañas en una sola fila (`.sec-tabs`, columnas iguales;
+  hasta 1099 px el emoji sobre el nombre corto, desde 1100 px en línea: nombre largo con las 7 de la alumna y corto con
+  las 9 del profe, `.sec-tabs-muchas`). En celular (< 720 px) la fila se oculta y manda la barra inferior fija
+  `.sec-barra` (`.nav-barra`, `aria-current`): la alumna «🏠 Inicio», «⚔️ Misiones», «🗓️ Horario», «📚 Materias» y
+  «☰ Más» (`[data-sec-mas]` → `#sec-mas`: Semana, Mapa y Árbol); el profe «🏠 Inicio», «📝 Notas», «📥 Entregas»,
+  «⚔️ Misiones» y «☰ Más». `irPestanaSec` mantiene sincronizadas fila, barra y «Más» (marcado `.activo` si la pestaña
+  actual vive ahí); un hueco `.sec-barra-hueco` al final evita que la barra tape contenido y desaparece con la clase
+  abierta (vive en `#content`).
 - Título «📚 Clases de Secundaria». Pestañas `role="tab"` (`.sec-tabs [data-sec-tab]`, ← → Inicio Fin), sin redibujar:
   - **«🏠 Inicio»** (`#sec-inicio`, la primera; estilo «RPG educativo»):
     - barra `#rpg-stats`: nivel del juego y rango (`#rpg-rango`, «Nv. 3 · Exploradora» con `<abbr title="Nivel del juego">`; cambio `fix-e2e-rpg`), XP del nivel (`#rpg-xp` y `.rpg-xp-barra` con

@@ -21,9 +21,28 @@ function seccionActual() {
   const h = decodeURIComponent(location.hash.slice(1));
   return ids.includes(h) ? h : ids[0];
 }
+// Entregas listas para evaluar (Inglés + Secundaria; null si no se sabe). Mismo dato que «📥 Por revisar»: la bandeja si ya
+// se cargó y, si no, el conteo del panel (openspec: navegacion-mejoras, panel-profe-peticiones).
+function entregasPendientes() {
+  const c = conteoEntregas();
+  return c ? c.pendientes : null;
+}
+// Visible: el número sobre el emoji; para lectores de pantalla, «Entregas, N por revisar» (después de la etiqueta).
+const contadorEntregas = () => { const n = entregasPendientes(); return n ? '<span class="nav-contador" data-contador-entregas aria-hidden="true">' + (n > 99 ? '99+' : n) + '</span>' : ''; };
+const avisoEntregas = () => { const n = entregasPendientes(); return n ? '<span class="sr-only" data-aviso-entregas>, ' + n + ' por revisar</span>' : ''; };
+// Repinta el contador de «📥 Entregas» en la barra del celular y en el menú lateral (lo llama cargarBandejaSec).
+function pintarContadorEntregas() {
+  document.querySelectorAll('#nav [data-nav="entregas"]').forEach(a => {
+    a.querySelectorAll('[data-contador-entregas], [data-aviso-entregas]').forEach(x => x.remove());
+    a.querySelector('.nav-emoji').insertAdjacentHTML('afterend', contadorEntregas());
+    a.querySelector('.nav-label').insertAdjacentHTML('afterend', avisoEntregas());
+  });
+  // «📥 Por revisar» usa el mismo dato: se repinta con el contador (openspec: panel-profe-peticiones).
+  if (typeof pintarPanelProfe === 'function' && rolActual() === 'admin' && !MODO_PROFE && !MODO_SECUNDARIA) pintarPanelProfe();
+}
 function navItem(s, actual, extra) {
   const cur = s.id === actual ? ' aria-current="page"' : '';
-  const cuerpo = '<span class="nav-emoji" aria-hidden="true">' + s.emoji + '</span><span class="nav-label">' + escapeHtml(s.titulo) + '</span>';
+  const cuerpo = '<span class="nav-emoji" aria-hidden="true">' + s.emoji + '</span>' + (s.id === 'entregas' && s.rol === 'admin' ? contadorEntregas() : '') + '<span class="nav-label">' + escapeHtml(s.titulo) + '</span>' + (s.id === 'entregas' && s.rol === 'admin' ? avisoEntregas() : '');
   const cls = 'nav-item' + (extra ? ' ' + extra : '') + (s.id === 'ruta' ? ' profe-link' : '');
   if (s.accion) return '<button type="button" class="' + cls + '" data-nav-accion="' + s.accion + '">' + cuerpo + '</button>';
   // En ?modo=profe las secciones del admin viven en ingles.html (sin modo).
@@ -42,8 +61,9 @@ function pintarNav() {
   if (rol === 'alumno') {
     navEl.innerHTML = lista.filter(s => !s.fueraDeBarra).map(s => navItem(s, actual)).join('');
   } else {
-    const barra = lista.filter(s => s.barra), resto = lista.filter(s => !s.barra);
-    navEl.innerHTML = barra.map(s => navItem(s, actual)).join('') + resto.map(s => navItem(s, actual, 'solo-escritorio')).join('') +
+    // En el orden del catálogo (el menú lateral de PC no cambia); en celular solo las de barra y el resto en «☰ Más».
+    const resto = lista.filter(s => !s.barra);
+    navEl.innerHTML = lista.map(s => navItem(s, actual, s.barra ? '' : 'solo-escritorio')).join('') +
       '<button type="button" class="nav-item solo-celular" data-nav-accion="mas" aria-expanded="false" aria-controls="nav-mas"><span class="nav-emoji" aria-hidden="true">☰</span><span class="nav-label">Más</span></button>';
     document.getElementById('nav-mas').innerHTML = resto.map(s => navItem(s, actual)).join('');
   }
@@ -60,6 +80,9 @@ function aplicarRuta() {
   if (rolActual() === 'admin' && id === 'resumen' && !state.resumen) cargarResumen();
   if (rolActual() === 'admin' && id === 'nicks' && !state.nicks) cargarNicksAdmin(); // openspec: rpg-fase2-ingles
   if (rolActual() === 'admin' && id === 'entregas') { if (state.secBandeja) pintarEntregasPendientes(); else cargarEntregasIngles(); } // openspec: rpg-ingles-hero-card, navegacion-dispositivos
+  // Pestañas pesadas bajo demanda (openspec: panel-profe-peticiones): la lista con correos y los juegos de la semana.
+  if (rolActual() === 'admin' && id === 'registro' && !state.registroAdmin) cargarRegistroAdmin();
+  if (rolActual() === 'admin' && (id === 'juegos' || id === 'alumnos')) asegurarJuegosAdmin();
 }
 window.addEventListener('hashchange', () => {
   document.getElementById('nav-mas').hidden = true;
@@ -181,7 +204,10 @@ async function loadFor(email) {
     if (MODO_PROFE) return await loadProfe(email);
     if (MODO_SECUNDARIA) return await loadSecundaria(email);
     const actividadesP = loadActividades();
-    const r = await api(DATA_URL_BASE + '?email=' + encodeURIComponent(email));
+    // incluir=panel (openspec: panel-profe-peticiones): si es el admin, el servidor agrega en la misma respuesta grupos,
+    // alumnos y alumnas, resumen y «Por revisar»; a cualquier otra persona le responde lo de siempre.
+    const clavePanel = claveFiltro();
+    const r = await api(DATA_URL_BASE + '?email=' + encodeURIComponent(email) + '&incluir=panel' + filtroPanel());
     const data = r.body;
     if (!r.ok && StaldAuth.esSesionVencida({ status: r.status }, data)) return; // sesionVencida ya pintó la entrada
     if (!r.ok) throw new Error(data.error === 'mucho_trafico' ? 'Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : (data.mensaje || data.error || ('HTTP ' + r.status)));
@@ -200,9 +226,10 @@ async function loadFor(email) {
     // Ranking de Inglés: el perfil solo se pide si /ingles/actividades dice que está encendido (openspec: rpg-fase2-ingles).
     if (!data.isAdmin && state.act && state.act.ranking) await cargarPerfilGamificacion(); else { state.gam = null; state.rk = null; }
     if (!data.isAdmin) await cargarMisionesIngles(); // solo pide /misiones si hay alguna visible (openspec: rpg-ingles-hero-card)
-    if (data.isAdmin) { state.resumen = null; await Promise.all([loadJuegosAdmin(), loadAlumnosAdmin(), loadGruposAdmin()]); }
+    if (data.isAdmin) { state.resumen = null; await prepararPanelAdmin(data.panel, clavePanel); }
     render(data);
-    if (data.isAdmin) cargarResumen(); // idempotente; el cajón también lo usa
+    if (data.isAdmin && !state.resumen) cargarResumen(); // servidor sin panel, o el filtro cambió mientras llegaba
+    if (data.isAdmin && cajonEl.open && state.cajonAlumno) pintarCajon(state.cajonAlumno); // tras mover de grupo desde el cajón
     else cargarRankingIngles();
     if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) { m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; } state.altaAviso = null; }
   } catch (e) {

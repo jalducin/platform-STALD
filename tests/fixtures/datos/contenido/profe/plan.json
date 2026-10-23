@@ -1,9 +1,9 @@
 {
   "titulo": "Ruta de ejemplo E2E",
-  "subtitulo": "Datos de ejemplo de la ruta propia del profe para las E2E (openspec: fix-e2e-rpg); coherentes con HOY_FIJO 2026-10-04",
+  "subtitulo": "Datos de ejemplo de la ruta propia del profe para las E2E (openspec: fix-e2e-rpg, navegacion-mejoras); coherentes con HOY_FIJO 2026-10-04 y con clases en los 9 mundos",
   "nivelActual": "Principiante",
   "meta": "Intermedio",
-  "horizonte": "3 semanas de ejemplo, unas 2 h por semana.",
+  "horizonte": "8 semanas de ejemplo, unas 2 h por semana.",
   "horasSemana": "≈ 2 h por semana",
   "reparto": [
     { "que": "Lunes: clase de ejemplo", "tiempo": "30 min" },
@@ -42,6 +42,58 @@
       "elementos": [
         { "id": "profe-e2e-act-2026-10-12", "tipo": "actividad", "titulo": "Clase de ejemplo: subagentes (ya abierta)", "fecha": "2026-10-12" },
         { "id": "profe-e2e-examen-2026-10-17", "tipo": "examen", "titulo": "Examen de ejemplo 3", "fecha": "2026-10-17" }
+      ]
+    },
+    {
+      "id": "2026-10-19",
+      "n": 4,
+      "titulo": "Semana 4 · Ejemplo: MCP",
+      "objetivo": "Semana sin publicar: da clases en otro mundo de la ruta (openspec: navegacion-mejoras).",
+      "temas": ["MCP de ejemplo"],
+      "elementos": [
+        { "id": "profe-e2e-act-2026-10-19", "tipo": "actividad", "titulo": "Clase de ejemplo: MCP (sin publicar)", "fecha": "2026-10-19" }
+      ]
+    },
+    {
+      "id": "2026-10-26",
+      "n": 5,
+      "titulo": "Semana 5 · Ejemplo: equipos de subagentes",
+      "objetivo": "Semana sin publicar: da clases en otro mundo de la ruta (openspec: navegacion-mejoras).",
+      "temas": ["Equipos de subagentes de ejemplo"],
+      "elementos": [
+        { "id": "profe-e2e-act-2026-10-26", "tipo": "actividad", "titulo": "Clase de ejemplo: equipos de subagentes (sin publicar)", "fecha": "2026-10-26" }
+      ]
+    },
+    {
+      "id": "2026-11-02",
+      "n": 6,
+      "titulo": "Semana 6 · Ejemplo: SDD",
+      "objetivo": "Semana sin publicar: da clases en otro mundo de la ruta (openspec: navegacion-mejoras).",
+      "temas": ["SDD de ejemplo"],
+      "elementos": [
+        { "id": "profe-e2e-act-2026-11-02", "tipo": "actividad", "titulo": "Clase de ejemplo: SDD (sin publicar)", "fecha": "2026-11-02" }
+      ]
+    },
+    {
+      "id": "2026-11-09",
+      "n": 7,
+      "titulo": "Semana 7 · Ejemplo: Claude Code en acción",
+      "objetivo": "Semana sin publicar: da clases en otro mundo de la ruta (openspec: navegacion-mejoras).",
+      "temas": ["Claude Code en acción de ejemplo"],
+      "elementos": [
+        { "id": "profe-e2e-act-2026-11-09", "tipo": "actividad", "titulo": "Clase de ejemplo: Claude Code en acción (sin publicar)", "fecha": "2026-11-09" },
+        { "id": "profe-e2e-act-2026-11-11", "tipo": "actividad", "titulo": "Clase de ejemplo: Pirámide de Minto (sin publicar)", "fecha": "2026-11-11" }
+      ]
+    },
+    {
+      "id": "2026-11-16",
+      "n": 8,
+      "titulo": "Semana 8 · Ejemplo: proyecto integrador",
+      "objetivo": "Semana sin publicar: da clases en otro mundo de la ruta (openspec: navegacion-mejoras).",
+      "temas": ["Proyecto integrador de ejemplo"],
+      "elementos": [
+        { "id": "profe-e2e-act-2026-11-16", "tipo": "actividad", "titulo": "Clase de ejemplo: proyecto integrador (sin publicar)", "fecha": "2026-11-16" },
+        { "id": "profe-e2e-act-2026-11-18", "tipo": "actividad", "titulo": "Clase: Skills de ejemplo (sin publicar)", "fecha": "2026-11-18" }
       ]
     }
   ]

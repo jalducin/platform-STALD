@@ -149,7 +149,7 @@ async function contexto(b, email, ancho, opciones = {}) {
   await m.goto(BASE + '/ingles.html' + Q);
   await m.waitForSelector('#mapa-calor', { timeout: 60000 });
   ok('celular admin: tablero sin desplazamiento horizontal', await sinScrollX(m));
-  ok('celular admin: 4 secciones + Más', (await m.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).length)) === 5);
+  ok('celular admin: 5 secciones (con 📥 Entregas) + Más', (await m.$$eval('#nav .nav-item', xs => xs.filter(x => x.offsetParent).length)) === 6); // openspec: navegacion-mejoras
   await m.screenshot({ path: 'pro-profe-movil.png', fullPage: true });
   await m.click('#nav [data-nav-accion="mas"]');
   await m.click('#nav-mas [data-nav="grupos"]');
