@@ -45,6 +45,9 @@
   (2337 → 2827 ms). La tabla cierra con «Tiempo máximo observado».
 - Con el tope real (8000 ms): `navegacion-dispositivos` 308 pasos PASS e `ingles-diseno-profe` 93 PASS; tiempo máximo
   observado 6003 ms en `profe-grupos (pc)`, sin reintentos.
+- Tras el merge de `main` (#251, panel del profe): `deno test -A server/` 1089 pasaron, 0 fallaron, 6 omitidas; E2E
+  `ruta-profe` 21, `profe-diseno` 11, `ingles-diseno-profe` 95 y `navegacion-dispositivos` 311 pasos, todos PASS;
+  tiempo máximo observado 1762 ms en `juegos-invitado (tablet-h)`, sin reintentos.
 
 ## Verificación de estado
 
