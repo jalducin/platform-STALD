@@ -54,9 +54,10 @@ Qué hace `correr.sh`:
 1. Valida argumentos y que los puertos estén libres (no mata procesos ajenos).
 2. Copia `--datos` a una carpeta temporal, sin `.git`, y borra los `profe.json` de resultados y los resultados del
    examen 2026-10-02 (las pruebas parten de cero). También borra `contenido/profe`: la ruta propia del profe sale solo
-   de la ruta de ejemplo de `tests/fixtures/datos/contenido/profe/` (3 semanas coherentes con 2026-10-04, una semana
-   futura ya abierta y un resultado de ejemplo), para que `ruta-profe` y `profe-diseno` no dependan de la ruta real ni
-   del orden (cambio `fix-e2e-rpg`). **La carpeta original nunca se modifica.**
+   de la ruta de ejemplo de `tests/fixtures/datos/contenido/profe/` (8 semanas coherentes con 2026-10-04: 3 publicadas,
+   con una semana futura ya abierta y un resultado de ejemplo, y 5 sin publicar; entre todas tienen clases en los 9
+   mundos de la ruta), para que `ruta-profe`, `profe-diseno` e `ingles-diseno-profe` no dependan de la ruta real ni
+   del orden (cambios `fix-e2e-rpg` y `navegacion-mejoras`). **La carpeta original nunca se modifica.**
 3. Levanta el servidor (`server/main.ts`) con `DATA_DIR=<copia>`, `ROWS_FIXTURE=tests/fixtures/rows-fixture.json`,
    `SUPER_ADMIN_EMAIL=admin@example.com`, `PERMITIR_HOY=1` y `HOY_FIJO=2026-10-04` (el día con el que se escribieron
    las E2E, para que no dependan del calendario; `--hoy` lo cambia), sin Notion ni GitHub, y los estáticos con
@@ -160,7 +161,9 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   < 44 px (con toque), elementos tapados, formas de volver y el atrás
   del navegador; además el ancho en tablet y PC, el teclado en PC y 7 enlaces profundos. Falla ante scroll, objetivos
   chicos en celular o tablet, errores, tapados, más toques que `TOPE_TOQUES`, pantallas de más de 8 s, atrás que sale de la
-  plataforma o foco invisible. Escribe `salida/navegacion-dispositivos.md` (tabla) y capturas `nav-*.png`. `MEDIR=1`
+  plataforma o foco invisible. Si una tarea se pasa de 8 s en un tamaño, se repite **una** vez solo para medir el
+  tiempo y falla solo si se pasa las dos veces; la tabla cierra con el tiempo máximo observado y los reintentos
+  (`NAV_TOPE_MS=<ms>` baja el tope para probarlo; cambio `navegacion-mejoras`). Escribe `salida/navegacion-dispositivos.md` (tabla) y capturas `nav-*.png`. `MEDIR=1`
   solo mide (línea base); `NAV_SOLO` y `NAV_DISP` acotan. La clase de Secundaria necesita `--hoy 2026-10-27` (si no,
   esa tarea sale `OMIT`) y se envía una sola vez (en los demás tamaños abre su resultado); ocultar/mostrar el grupo
   necesita `--pg` (si no, `OMIT`). Corre al final de la fase: si `misiones` ya evaluó las entregas, solo llega a la
@@ -186,8 +189,9 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   abiertas con botón contra la API), más capturas de escritorio. En claro envía la misión principal del profe (en la
   copia temporal de datos) para ver «+XP». Sin `--pg`, cambia en el navegador la parte `grupos` del panel
   (`/ingles/data?incluir=panel` y `/ingles/panel`) y el GET de `/ingles/grupos` por dos grupos de ejemplo (cambio
-  `panel-profe-peticiones`); en Registro espera la lista, que se pide al abrir la pestaña. La ruta solo se revisa si los datos traen `plan.json`; con `--hoy 2026-10-22` y el repo de
-  datos actual, las 27 clases están abiertas.
+  `panel-profe-peticiones`); en Registro espera la lista, que se pide al abrir la pestaña. La ruta sale siempre del
+  plan de ejemplo de 8 semanas (`tests/fixtures/datos/contenido/profe/`, con clases en los 9 mundos; cambio
+  `navegacion-mejoras`), no de la ruta real.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).
