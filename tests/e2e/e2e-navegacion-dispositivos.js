@@ -442,15 +442,24 @@ const TAREAS = [
     await c.tap('.sec-barra [data-sec-mas]');
     const mas = await c.$$eval('#sec-mas [data-sec-tab]', xs => xs.filter(x => x.offsetParent).map(x => x.dataset.secTab).join());
     ok('Secundaria (celular): «☰ Más» con Semana, Mapa y Árbol', mas === 'clases,mapa,arbol', mas);
+    await c.keyboard.press('Escape');
+    ok('Secundaria (celular): Escape cierra «☰ Más»', await c.isHidden('#sec-mas'));
+    await c.tap('.sec-barra [data-sec-mas]');
     await c.tap('#sec-mas [data-sec-tab="mapa"]');
     await c.waitForSelector('#sec-mapa:not([hidden])');
-    ok('Secundaria (celular): Más → Mapa cierra el menú y marca «Más»', await c.isHidden('#sec-mas') && await c.$eval('[data-sec-mas]', x => x.classList.contains('activo')));
+    ok('Secundaria (celular): Más → Mapa cierra el menú, marca «Más» y le deja el foco', await c.isHidden('#sec-mas') && await c.$eval('[data-sec-mas]', x => x.classList.contains('activo') && document.activeElement === x));
     const atras = await probarAtras(c, '#sec-inicio:not([hidden])');
     ok('Secundaria (celular): «Atrás» desde Mapa regresa a Inicio y la barra lo marca', atras.ok && (await c.$eval('.sec-barra [aria-current="page"]', x => x.dataset.secTab).catch(() => '')) === 'inicio', atras.a);
     await c.screenshot({ path: 'nav-secundaria-barra-celular.png' });
+    // Al abrir una clase la barra desaparece (vive en #content) y no se encima con la barra del examen.
+    if (await c.$('#rpg-mision-btn[data-action="abrir-item"]')) {
+      await c.tap('#rpg-mision-btn');
+      await c.waitForSelector('#exam-form, .sec-clase-vista', { timeout: 30000 });
+      ok('Secundaria (celular): con la clase abierta no hay barra de pestañas', !(await c.$('.sec-barra')));
+    } else omit('Secundaria (celular): barra con la clase abierta', 'sin misión abierta ese día');
     await c.context().close();
     // Tablet y PC: la fila (sin barra); el profe con sus 9 pestañas en una fila también a 1100 px.
-    for (const [quien, email, ruta, w, n] of [['alumna', 'valeria@example.com', '/secundaria.html', 768, 7], ['alumna', 'valeria@example.com', '/secundaria.html', 1100, 7], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 768, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1100, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1280, 9]]) {
+    for (const [quien, email, ruta, w, n] of [['alumna', 'valeria@example.com', '/secundaria.html', 768, 7], ['alumna', 'valeria@example.com', '/secundaria.html', 1100, 7], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 720, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 768, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1100, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1280, 9]]) {
       const t = await abrirPagina(b, { email, viewport: { width: w, height: 800 }, ruta, esperar: '#sec-inicio' });
       const f = await fila(t);
       const sinBarra = !(await t.$eval('.sec-barra', x => !!x.offsetParent));

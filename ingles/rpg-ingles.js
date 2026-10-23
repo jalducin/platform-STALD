@@ -203,6 +203,7 @@ async function cargarEntregasIngles() {
   await cargarBandejaSec();
   const panel = document.getElementById('sec-entregas');
   if (panel) panel.innerHTML = renderSecEntregas();
+  if (typeof pintarPanelProfe === 'function') pintarPanelProfe(); // «📥 Por revisar» sigue a la bandeja, como el contador (openspec: panel-profe-peticiones)
 }
 // Si la bandeja llegó (p. ej. con «📥 Por revisar» del panel) cuando la sección ya estaba dibujada con el esqueleto, se
 // pinta; si ya muestra entregas o el aviso, no se toca (no borra una evaluación a medias). openspec: navegacion-dispositivos.

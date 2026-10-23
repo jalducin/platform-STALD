@@ -187,9 +187,11 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   las 11 secciones del admin, y la ruta del profe con la experiencia RPG (barra, misión principal, retos, nada
   «atrasada», «🌍 Mundos» con los 9 mundos, clase por pasos como «⚔️ Misión») y su Plan del mes (cuenta las clases
   abiertas con botón contra la API), más capturas de escritorio. En claro envía la misión principal del profe (en la
-  copia temporal de datos) para ver «+XP». Sin `--pg`, intercepta solo el GET de `/ingles/grupos` en el navegador con
-  dos grupos de ejemplo. La ruta sale siempre del plan de ejemplo de 8 semanas (`tests/fixtures/datos/contenido/profe/`,
-  con clases en los 9 mundos; cambio `navegacion-mejoras`), no de la ruta real.
+  copia temporal de datos) para ver «+XP». Sin `--pg`, cambia en el navegador la parte `grupos` del panel
+  (`/ingles/data?incluir=panel` y `/ingles/panel`) y el GET de `/ingles/grupos` por dos grupos de ejemplo (cambio
+  `panel-profe-peticiones`); en Registro espera la lista, que se pide al abrir la pestaña. La ruta sale siempre del
+  plan de ejemplo de 8 semanas (`tests/fixtures/datos/contenido/profe/`, con clases en los 9 mundos; cambio
+  `navegacion-mejoras`), no de la ruta real.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).
@@ -198,14 +200,18 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   oculta con «👁️ Ocultar del panel» y revisa que sus alumnos y alumnas salgan del avance, «Últimas calificaciones»,
   «Registro», el selector, el resumen, el mapa de calor, el conteo «con intentos» de «Esta semana», el guion del Meet
   y el ranking; el interruptor «Mostrar grupos ocultos (1)» (y que el selector vuelve a «Todos los grupos» al
-  apagarlo); y lo revierte con «Mostrar en el panel» (el interruptor se apaga solo).
+  apagarlo); y lo revierte con «Mostrar en el panel» (el interruptor se apaga solo). Abre «🎮 Juegos» y «➕ Registro»
+  antes de leerlos (se piden al abrir la pestaña; cambio `panel-profe-peticiones`).
 - `ingles-admin` (fase `ingles`, con o sin `--pg`; cambio `fix-ingles-admin`) abre `ingles.html` como admin, recorre
   cada pestaña y la ruta del profe y falla ante cualquier error de consola, error JS, script o estilo que no carga o 5xx
   de la API (sin Postgres solo se excusa el 503 `sin_base` de `/ingles/grupos`). Con grupos, oculta y muestra el
-  grupo desde su tarjeta del Resumen y restaura la bandera. Simula en el navegador un resumen caído para revisar
-  «🔄 Reintentar». A 360 px (cambio `navegacion-mejoras`) revisa que «📥 Entregas» esté en la barra inferior (6 botones
-  de 44 px o más, sin scroll horizontal) con el contador = `pendientes` de `/profe/entregas`, y a 1280 px que el menú
-  lateral conserve el orden del catálogo.
+  grupo desde su tarjeta del Resumen y restaura la bandera. Simula en el navegador fallas parciales del panel
+  (`/ingles/data?incluir=panel`, cambio `panel-profe-peticiones`): el resumen caído con su «🔄 Reintentar» (que pide
+  `/ingles/resumen`) y los grupos caídos con el aviso `#panel-avisos` y su «🔄 Reintentar» (que pide `/ingles/panel`).
+  A 360 px (cambio `navegacion-mejoras`) revisa que «📥 Entregas» esté en la barra inferior (6 botones de 44 px o más,
+  sin scroll horizontal) con el contador = total de entregas listas del panel (Inglés + Secundaria, el mismo dato que
+  «📥 Por revisar»; simulado en el navegador con 2 listas y con la parte caída), y a 1280 px que el menú lateral
+  conserve el orden del catálogo.
 - Reloj acortado solo en pruebas: `window.__TIEMPO_JUEGOS` (juegos), con `addInitScript`.
 - Juego en vivo sin Supabase (cambio `juegos-en-vivo`): `lib/vivo-relevo.js` levanta un relevo local (HTTP + SSE) y
   `initVivo(relevo.url, { latencia, perdida, desorden, noConecta })` es el `init` de `abrirPagina`; con la ruta

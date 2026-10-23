@@ -32,7 +32,11 @@
   `navegacion-dispositivos` revisa la barra a 360 px (sin tapar, 44 px, «Más», atrás) y las 9 pestañas del profe en
   una fila a 1100 px
 
-## 4. PR 4 · Pruebas: plan de ejemplo con los 9 mundos y Dibuja estable
+- [x] 3.3 Revisión del PR 3 (PR de cierre): el foco no se pierde al elegir desde la barra o «☰ Más» ni con Escape
+  (vuelve a su botón o a «☰ Más»); E2E `navegacion-dispositivos`: Escape cierra «Más», barra ausente con la clase
+  abierta y las 9 pestañas del profe también a 720 px
+
+## 4. PR 4 · Pruebas: plan de ejemplo con los 9 mundos, Dibuja estable y tope de tiempo con reintento
 
 - [x] 4.1 `tests/fixtures/datos/contenido/profe/plan.json`: plan de ejemplo de 8 semanas con clases en los 9 mundos
   (las 3 semanas publicadas sin cambios); `ingles-diseno-profe`, `ruta-profe` y `profe-diseno` en verde con él
@@ -43,17 +47,19 @@
 
 ## 5. Verificación (OBLIGATORIO)
 
-- [ ] 5.1 Revisar y actualizar pruebas existentes (OBLIGATORIO): las de 1.1, 1.3, 2.2, 3.2, 4.1 y 4.2
-- [ ] 5.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): `deno test -A server/`, `deno check`, `deno lint`,
+- [x] 5.1 Revisar y actualizar pruebas existentes (OBLIGATORIO): las de 1.1, 1.3, 2.2, 3.2 y 3.3 (las de 4.1 y 4.2, con
+  su PR)
+- [x] 5.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): `deno test -A server/`, `deno check`, `deno lint`,
   `openspec validate navegacion-mejoras --strict` y E2E `navegacion-dispositivos`, `secundaria-clases`,
   `secundaria-clase`, `secundaria-dashboard`, `secundaria-adelantar`, `examen-secundaria`, `misiones`, `ingles-admin`,
   `ingles-diseno-profe`, `peticiones` y `portal-diseno` (puertos 9021/9022, copia temporal de datos, PostgREST falso
   solo `stald_test_*`, `--hoy 2026-10-27` y el hoy por omisión según la prueba); reporte
   `openspec/changes/navegacion-mejoras/reports/2026-10-22-step-5.2-pruebas-y-verificacion.md`
-- [ ] 5.3 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): Playwright a 360, 768, 1100 y 1280 px: misión
+- [x] 5.3 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): Playwright a 360, 768, 1100 y 1280 px: misión
   principal con atrasada, barra de Secundaria (alumna y profe), Entregas con contador, 9 pestañas en una fila; capturas
-  fuera del repo
-- [ ] 5.4 Actualizar documentación técnica (OBLIGATORIO): `docs/frontend-standards.md` (barra de Secundaria, pestañas,
+  fuera del repo (hecho con las E2E en esos tamaños: `nav-secundaria-barra-celular.png`, `nav-secundaria-profe-1100.png`
+  y las de `secundaria-dashboard` e `ingles-admin`, en la carpeta de la sesión)
+- [x] 5.4 Actualizar documentación técnica (OBLIGATORIO): `docs/frontend-standards.md` (barra de Secundaria, pestañas,
   Entregas en la barra, misión principal) y `docs/pruebas.md` (ayudante de pestañas, fixture de Mundos)
 - [ ] 5.5 Verificación en producción tras cada merge — EL AGENTE EJECUTA (OBLIGATORIO): Pages sirve los JS y CSS
   nuevos (`?v=`) con 200 y las páginas públicas cargan (solo lectura, sin sesión)
