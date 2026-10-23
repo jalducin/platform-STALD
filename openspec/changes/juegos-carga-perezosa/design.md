@@ -80,7 +80,8 @@ cada juego.
   «👥 En vivo · Salas» del hub espera a que se pinte para enfocar el campo.
 - `iniciar()`: antes de `?sala=` (unirse o `&ver=1`), sala guardada, revancha guardada o juego individual guardado,
   `await cargarPaquete('todo')`; `salaPendiente` se consume después de cargar, así «Reintentar» de la pantalla de
-  error vuelve a intentar la misma sala. `hayPartidaGuardada()` (nuevo en `nucleo.js`) evita cargar «todo» si no hay
+  error vuelve a intentar la misma sala. Esa pantalla de error lleva «🔄 Reintentar» y «← Volver» (al menú, que olvida la sala, la
+  revancha o el juego a medias). `hayPartidaGuardada()` (nuevo en `nucleo.js`) evita cargar «todo» si no hay
   nada que reanudar.
 - `arranque.js`: el bloque de clics de la sala sale si `typeof sala === 'undefined'` (todavía no hay código de
   salas); «📖 Cómo se juega» busca `ClasicosRapidosUI.AYUDA`, `TableroUI.ayuda` y `AYUDA_GRANDES` con `window.…?.`.
