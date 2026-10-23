@@ -37,7 +37,9 @@
 - [x] 4.1 `tests/fixtures/datos/contenido/profe/plan.json`: plan de ejemplo de 8 semanas con clases en los 9 mundos
   (las 3 semanas publicadas sin cambios); `ingles-diseno-profe`, `ruta-profe` y `profe-diseno` en verde con él
 - [x] 4.2 `server/salas_grandes_test.ts`: valores y llaves en lugar de texto suelto, más un caso fijo con «reloj» y
-  uno de fuga real; 30/30 sola y 30/30 en la suite completa
+  uno de fuga real; 30/30 sola y 30/30 dentro de la suite completa (reporte `reports/2026-10-22-pr4-pruebas-estables.md`)
+- [x] 4.3 `tests/e2e/e2e-navegacion-dispositivos.js`: tope de 8 s con un reintento solo de la medición de tiempo (falla
+  si se pasa dos veces), tiempo máximo observado en la tabla y `NAV_TOPE_MS` para probarlo
 
 ## 5. Verificación (OBLIGATORIO)
 

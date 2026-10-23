@@ -52,6 +52,13 @@ Secundaria están en `comun/secundaria-datos.js` (`SecundariaDatos`, probadas en
    entre las llaves. Se agrega un caso fijo: una sala cuya palabra 0 sea «reloj» (secreto fijo
    `000000000000000000000009`, escrito en la sala de la prueba antes de leerla) y un caso que comprueba que los
    ayudantes sí detectan una fuga real (la palabra como valor y la llave `palabra`).
+7. **Tope de tiempo de `navegacion-dispositivos`.** Un pico aislado por carga de la máquina no debe tumbar la prueba,
+   pero una pantalla lenta de verdad sí. Si la pantalla más lenta de una tarea en un tamaño llega a `TOPE_MS` (8000),
+   la tarea se repite **una** vez en ese tamaño, en una página nueva, solo para medir el tiempo (las demás revisiones
+   usan la primera corrida); el paso pasa si el reintento queda bajo el tope y falla si se pasa las dos veces o si el
+   reintento falla. El mensaje dice los dos tiempos y la tabla agrega «Tiempo máximo observado» (incluidos reintentos).
+   Se descartó subir el tope (perdería la señal) y aislar CPU o red (no se controla en Windows sin privilegios).
+   `NAV_TOPE_MS` baja el tope solo para probar el reintento.
 
 ## Riesgos
 

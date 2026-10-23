@@ -161,7 +161,9 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   < 44 px (con toque), elementos tapados, formas de volver y el atrás
   del navegador; además el ancho en tablet y PC, el teclado en PC y 7 enlaces profundos. Falla ante scroll, objetivos
   chicos en celular o tablet, errores, tapados, más toques que `TOPE_TOQUES`, pantallas de más de 8 s, atrás que sale de la
-  plataforma o foco invisible. Escribe `salida/navegacion-dispositivos.md` (tabla) y capturas `nav-*.png`. `MEDIR=1`
+  plataforma o foco invisible. Si una tarea se pasa de 8 s en un tamaño, se repite **una** vez solo para medir el
+  tiempo y falla solo si se pasa las dos veces; la tabla cierra con el tiempo máximo observado y los reintentos
+  (`NAV_TOPE_MS=<ms>` baja el tope para probarlo; cambio `navegacion-mejoras`). Escribe `salida/navegacion-dispositivos.md` (tabla) y capturas `nav-*.png`. `MEDIR=1`
   solo mide (línea base); `NAV_SOLO` y `NAV_DISP` acotan. La clase de Secundaria necesita `--hoy 2026-10-27` (si no,
   esa tarea sale `OMIT`) y se envía una sola vez (en los demás tamaños abre su resultado); ocultar/mostrar el grupo
   necesita `--pg` (si no, `OMIT`). Corre al final de la fase: si `misiones` ya evaluó las entregas, solo llega a la

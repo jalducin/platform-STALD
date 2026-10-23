@@ -9,7 +9,7 @@
 // Falla ante: scroll horizontal, objetivos táctiles < 44 px en celular, errores de consola o JS, elementos tapados,
 // tareas con más toques que su tope (TOPE_TOQUES) o pantallas que tardan más de TOPE_MS, atrás del navegador que saca
 // de la plataforma y foco invisible. MEDIR=1 solo imprime la tabla (sin topes), para tomar la línea base.
-// NAV_SOLO=<tarea,tarea> y NAV_DISP=<dispositivo,…> acotan la corrida.
+// NAV_SOLO=<tarea,tarea> y NAV_DISP=<dispositivo,…> acotan la corrida; NAV_TOPE_MS=<ms> baja el tope para probar el reintento.
 //
 // Datos: la clase de Secundaria necesita `--hoy 2026-10-27` (fixture `sec-e2e-clase-*` de valeria; con otro día esa
 // tarea sale OMIT) y ocultar/mostrar «Grupo 1» necesita `--pg` (sin Postgres, OMIT). Envía clases, actividades y una
@@ -47,7 +47,11 @@ const TOPE_TOQUES = {
   'profe-secundaria': 3, // tarjeta Secundaria → elegir alumna → Resultados
   'profe-ruta': 3, // (Más →) Mi ruta → Empezar
 };
-const TOPE_MS = 8000; // cada pantalla usable en menos de 8 s con el servidor local (holgado para la máquina de pruebas)
+const TOPE_MS = Number(process.env.NAV_TOPE_MS) || 8000; // NAV_TOPE_MS solo para probar el reintento; cada pantalla usable en menos de 8 s con el servidor local (holgado para la máquina de pruebas)
+// Si una tarea se pasa de TOPE_MS, se repite UNA vez en ese tamaño solo para medir el tiempo: falla si se pasa en las dos
+// corridas. Un pico aislado por carga de la máquina (otras suites a la vez) no tumba la prueba; una pantalla lenta de
+// verdad, sí (openspec: navegacion-mejoras, spec `pruebas`). Al final se imprime el tiempo máximo observado.
+const REINTENTOS_MS = 1;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const api = (ruta, email, body) => fetch(API + ruta + (ruta.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(email),
@@ -370,7 +374,7 @@ const TAREAS = [
       ok(nombre + ': nada tapado ni fuera de pantalla al tocar', !fila.tapados.length, fila.tapados.join(' | '));
       if (d.toque) ok(nombre + ': objetivos táctiles ≥ 44 px', MEDIR || !fila.chicos.length, fila.chicos.length + ' chicos: ' + fila.chicos.slice(0, 6).join(' | '));
       if (!MEDIR) ok(nombre + `: ${fila.toques} toques ≤ ${TOPE_TOQUES[t.id]}`, fila.toques <= TOPE_TOQUES[t.id]);
-      if (!MEDIR) ok(nombre + `: cada pantalla usable en < ${TOPE_MS} ms`, fila.maxMs < TOPE_MS, fila.pantallas.map(x => x.nombre + ' ' + x.ms).join(', '));
+      const tiempos = [fila.maxMs]; // el tope de tiempo se evalúa al final, tras el posible reintento
       ok(nombre + ': hay forma de volver (Inicio, barra o «← Volver»)', fila.volver.inicio || fila.volver.barra || fila.volver.volver, JSON.stringify(fila.volver));
       ok(nombre + ': atrás del navegador se queda en la plataforma', fila.atras.ok, fila.atras.a);
       // El portal lleva directo a ingles.html?modo=secundaria, sin la carga extra del puente secundaria.html.
@@ -378,6 +382,23 @@ const TAREAS = [
       if (m.anchoJuego) ok(nombre + ': dentro del juego la columna sigue en 720 px o menos', m.anchoJuego <= 720, String(m.anchoJuego));
       if (fila.pdf) ok(nombre + ': el PDF abre en otra pestaña y responde 200', fila.pdf.abre && fila.pdf.status === 200 && /pdf/.test(fila.pdf.tipo), JSON.stringify(fila.pdf));
       await p.context().close();
+      let detalle = fila.pantallas.map(x => x.nombre + ' ' + x.ms).join(', ');
+      for (let r = 0; !MEDIR && r < REINTENTOS_MS && tiempos.at(-1) >= TOPE_MS; r++) { // repite la tarea solo para medir el tiempo
+        const p2 = await abrirPagina(b, { email: t.email, dialogos: 'aceptar', tiempo: 0.4, viewport: { width: d.w, height: d.h }, contexto: d.toque ? { hasTouch: true, isMobile: d.w < 600 } : {} });
+        const m2 = medidor(p2, d, t.id);
+        try {
+          await t.correr(p2, m2, d, ctx);
+          tiempos.push(Math.max(0, ...m2.pantallas.map(x => x.ms)));
+        } catch (e) {
+          tiempos.push(Infinity);
+          m2.pantallas.push({ nombre: 'error ' + e.message.split('\n')[0].slice(0, 80), ms: Infinity });
+        } finally { if (t.despues) await t.despues(ctx).catch(() => {}); }
+        detalle += ' · reintento: ' + m2.pantallas.map(x => x.nombre + ' ' + x.ms).join(', ');
+        await p2.context().close();
+      }
+      fila.tiempos = tiempos;
+      const conReintento = tiempos.length > 1 ? ` (se pasó con ${tiempos[0]} ms; reintento ${tiempos.at(-1)} ms)` : '';
+      if (!MEDIR) ok(nombre + `: cada pantalla usable en < ${TOPE_MS} ms` + conReintento, tiempos.at(-1) < TOPE_MS, detalle);
     }
   }
 
@@ -510,6 +531,11 @@ const TAREAS = [
   for (const f of filas) if (f.chicos.length) lineas.push(`- ${f.tarea} (${f.disp}): ${f.chicos.join(' · ')}`);
   lineas.push('', '### Detalle de pantallas');
   for (const f of filas) lineas.push(`- ${f.tarea} (${f.disp}): ${f.pantallas.map(x => x.nombre + ' ' + x.ms + ' ms').join(' → ')}${f.errores.length ? ' · errores: ' + f.errores.join(' | ') : ''}${f.tapados.length ? ' · tapados: ' + f.tapados.join(' | ') : ''}`);
+  // Tiempo máximo observado (incluidos los reintentos) y qué tareas necesitaron reintento.
+  const medidas = filas.flatMap(f => (f.tiempos || [f.maxMs]).map((ms, k) => ({ ms, quien: `${f.tarea} (${f.disp})${k ? ' reintento' : ''}` }))).filter(x => Number.isFinite(x.ms));
+  const peor = medidas.reduce((a, x) => (x.ms > a.ms ? x : a), { ms: 0, quien: '—' });
+  const reintentos = filas.filter(f => (f.tiempos || []).length > 1).map(f => `${f.tarea} (${f.disp}): ${f.tiempos.join(' → ')} ms`);
+  lineas.push('', `Tiempo máximo observado: ${peor.ms} ms en ${peor.quien} (tope ${TOPE_MS} ms). Reintentos de tiempo: ${reintentos.length ? reintentos.join(' · ') : 'ninguno'}.`);
   fs.writeFileSync('navegacion-dispositivos.md', lineas.join('\n') + '\n');
   console.log(lineas.join('\n'));
   console.log(out.join('\n'));

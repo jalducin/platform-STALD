@@ -15,6 +15,9 @@ implementar las chicas, en PRs pequeños y en este orden:
    clases en 2: falla por datos, no por código.
 6. **Prueba inestable del CI** (`server/salas_grandes_test.ts:243`, Dibuja): falla cuando la palabra al azar es «reloj»,
    porque busca `"reloj"` en el JSON y `reloj` también es una llave de la respuesta.
+7. **E2E `navegacion-dispositivos` intermitente** por el tope «cada pantalla usable en < 8000 ms»: cuando la máquina
+   corre otras suites, un flujo distinto cada vez se pasa una sola vez (Secundaria admin 9.3 s y luego 0.5–0.9 s al
+   repetir; entrada a Juegos 8.2 s).
 
 Las recomendaciones grandes (carga perezosa de los 51 archivos de Juegos y juntar las 17–19 peticiones del panel del
 profe) **no** entran: quedan como propuesta aparte en `openspec/changes/navegacion-rendimiento/proposal.md`.
@@ -46,6 +49,9 @@ profe) **no** entran: quedan como propuesta aparte en `openspec/changes/navegaci
   `profe-diseno` siguen en verde con él.
 - **Dibuja estable (PR 4).** La prueba busca la palabra y su traducción entre los **valores** del JSON (y la llave
   `palabra` entre las llaves), no como texto suelto: verifica lo mismo sin confundir una llave con la palabra.
+- **Tope de tiempo con un reintento (PR 4).** Si una tarea de `navegacion-dispositivos` se pasa de 8 s en un tamaño,
+  se repite una vez solo para medir; falla si se pasa en las dos. La tabla reporta el tiempo máximo observado y los
+  reintentos. El tope sigue en 8 s.
 - Sin cambios de servidor, contrato HTTP, datos ni peticiones.
 
 ## Capabilities
