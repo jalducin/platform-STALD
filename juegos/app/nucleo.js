@@ -25,6 +25,10 @@ const app = document.getElementById('app');
 const chip = document.getElementById('chip');
 // Puntos por tipo (openspec: puntos-por-tipo): ⭐ individuales y 👥 partidas; todo suma.
 const state = { email: null, jugador: null, totalIndividual: 0, totalPartidas: 0, pos: null, posPartidas: null, mejores: {}, semana: null, tab: 'juegos', rtipo: 'individual' };
+// Bots de las partidas y de los juegos individuales con rivales (Tablero, Bingo). Viven en el núcleo porque esos juegos
+// se cargan sin salas.js (openspec: juegos-carga-perezosa).
+const BOT_EXTRA = { id: 'bot-chonita', nombre: 'BOT-CHONITA', acierto: 0.5, avatar: { emoji: '👵', color: '#a855f7' } }; // 3.er bot para completar la Brisca
+const BOTS = [{ id: 'bot-vachira', nombre: 'BOT-VACHIRA', acierto: 0.6, avatar: { emoji: '⚡', color: '#f59e0b' } }, { id: 'bot-isagii', nombre: 'BOT-ISAGII', acierto: 0.45, avatar: { emoji: '🌀', color: '#0ea5e9' } }];
 let limpiezas = []; // timers del juego en curso
 // Al dejar un juego (terminar, salir, empezar otro): detiene timers y descarta la partida individual guardada.
 // emocion-sonora: también apaga la tensión y desvanece los stingers que sigan sonando.
@@ -65,6 +69,8 @@ function guardarPartida() {
 }
 function soltarPartida() { enCurso = null; escribirLocal(PARTIDA_KEY, null); }
 const partidaGuardada = () => { const p = leerLocal(PARTIDA_KEY); return vigente(p) && Object.hasOwn(REANUDAR, p.juego) ? p : null; };
+// juegos-carga-perezosa: ¿hay algo que reanudar? (REANUDAR vive en salas.js, que se carga solo si hace falta).
+const hayPartidaGuardada = () => vigente(leerLocal(PARTIDA_KEY));
 // La instantánea que se va a reanudar: una sola vez y solo para su juego.
 function tomarReanudacion(id) { const r = reanudacion && reanudacion.juego === id ? reanudacion : null; reanudacion = null; return r; }
 window.addEventListener('pagehide', guardarPartida);

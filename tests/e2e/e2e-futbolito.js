@@ -19,7 +19,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const TACTIL = { hasTouch: true, isMobile: true };
 const abrir = (b, email, viewport, contexto) => abrirPagina(b, { email, viejo: true, viewport, contexto: Object.assign({}, TACTIL, contexto || {}), out, etiqueta: email, dialogos: 'aceptar', ruta: '/juegos.html?arcadePrueba=1', esperar: '[data-menu]' });
 // futbol-estelar: Futbolito ya no tiene tarjeta en el menú; se abre como lo haría un enlace viejo.
-const abrirFutbolito = q => q.evaluate(() => juegoPorId('futbolito').jugar());
+// juegos-carga-perezosa: el código de Arcade llega con su paquete (abrirJuego lo trae antes de jugar).
+const abrirFutbolito = q => q.evaluate(() => abrirJuego(juegoPorId('futbolito')));
 const marcoDe = async (p, raiz = '') => (await p.waitForSelector(raiz + ' #arcade-frame', { timeout: 30000 })).contentFrame();
 const estado = fr => fr.evaluate(() => window.__futbolito.estado());
 const esperar = (fr, fn, arg, ms = 30000) => fr.waitForFunction(fn, arg, { timeout: ms });

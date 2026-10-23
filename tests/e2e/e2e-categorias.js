@@ -144,7 +144,9 @@ const esperarImg = (p, sel) => p.waitForFunction(s => { const i = document.query
   ok('🔥 ranking de juegos: Blackjack y Dominó en imagen; Póker con su emoji', (await imgOk(p, '[data-rj="blackjack"] .rj-ico img.ico-img')) && (await imgOk(p, '[data-rj="domino"] .rj-ico img.ico-img')) && (await p.textContent('[data-rj="poker"] .rj-ico')).includes('♠️'));
   await p.screenshot({ path: 'icono-ranking-juegos.png' });
   await p.unroute('**/juegos/ranking/juegos*');
-  // Ningún texto de la página usa 🂡 ni 🁫 (catálogo, ayudas y mensajes).
+  // Ningún texto de la página usa 🂡 ni 🁫 (catálogo, ayudas y mensajes). Las ayudas de salas grandes llegan con su
+  // paquete (openspec: juegos-carga-perezosa).
+  await p.evaluate(() => cargarPaquete('grandes'));
   const viejos = await p.evaluate(() => {
     const textos = [document.body.innerHTML, JSON.stringify(JUEGOS.map(j => [j.emoji, j.t])), AYUDA_GRANDES.blackjack || '', TableroUI.ayuda('domino') || '', TableroUI.faltan('domino') || ''];
     return textos.filter(t => /🂡|🁫/u.test(t)).length;
@@ -175,7 +177,7 @@ const esperarImg = (p, sel) => p.waitForFunction(s => { const i = document.query
   await red.context().close();
 
   // ---------- 7. Diseño a 320, 844×390 y escritorio ----------
-  for (const [nombre, viewport, cols] of [['320', { width: 320, height: 640 }, 1], ['844x390', { width: 844, height: 390 }, 3], ['1280', { width: 1280, height: 800 }, 3]]) {
+  for (const [nombre, viewport, cols] of [['320', { width: 320, height: 640 }, 1], ['844x390', { width: 844, height: 390 }, 3], ['1280', { width: 1280, height: 800 }, 5]]) {
     const q = await pagina(b, { viewport, etiqueta: nombre });
     const c = await columnas(q, '[data-categoria]'), dz = await desborde(q);
     const recortes = await q.$$eval('[data-categoria]', xs => xs.filter(x => x.scrollWidth > x.clientWidth + 1).length);

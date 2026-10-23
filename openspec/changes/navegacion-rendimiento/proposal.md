@@ -6,6 +6,9 @@ ver su reporte). **La parte 1 (carga perezosa de Juegos) sigue sin implementar.*
 anotadas y fuera de `navegacion-mejoras`. Antes de implementarlas: `enrich-us` / `openspec-ff-change` con este
 documento como punto de partida (design, specs y tasks), y medir otra vez la línea base.
 
+> **2026-10-22:** la parte 1 (carga perezosa de Juegos) la implementa el cambio `juegos-carga-perezosa`; aquí queda
+> pendiente solo la parte 2 (panel del profe en una petición).
+
 ## Why
 
 - **Juegos carga 51 archivos de entrada.** `juegos.html` y `juegos.html?registro=1` piden 51 recursos (todos 200) aunque

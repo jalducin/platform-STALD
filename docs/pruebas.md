@@ -168,6 +168,12 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   esa tarea sale `OMIT`) y se envía una sola vez (en los demás tamaños abre su resultado); ocultar/mostrar el grupo
   necesita `--pg` (si no, `OMIT`). Corre al final de la fase: si `misiones` ya evaluó las entregas, solo llega a la
   bandeja.
+- `juegos-carga` (fase `base`, cambio `juegos-carga-perezosa`): abre `juegos.html` con caché vacía y 4G simulada por
+  CDP (150 ms, 1.6 Mbps) en celular 360 y PC 1280 (mediana de 3, tras una visita de calentamiento) y exige el menú con
+  ≤ 15 archivos y usable en ≤ 3 s, sin motores ni pantallas de juego; también `?registro=1`. Luego prueba la carga al
+  elegir Gato («Cargando…», archivos con `?v=`, una sola petición, misma cascada de CSS), el error de red en Damas con
+  «Reintentar», 👥 Partidas, `?sala=` y `&ver=1` con caché vacía y `#cat=`. Escribe `salida/juegos-carga.md`; `MEDIR=1`
+  solo mide (línea base) y `REPETICIONES` cambia la muestra.
 - `secundaria-dashboard` (fase `ingles`, cambio `secundaria-dashboard`): la alumna del fixture envía 3 clases por la API
   (en la copia temporal) y revisa a 360 px en claro y oscuro el Inicio RPG (retos, estados, progreso, racha, XP y
   nivel, insignias, misión, actividad, promedios), botones de 44 px o más con foco visible, «📚 Mis materias» con sus

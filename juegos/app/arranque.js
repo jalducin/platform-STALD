@@ -34,10 +34,11 @@ const AYUDA = {
     '<h3>Cómo lo haces aquí</h3><ul><li>Toca cartas de tu mano para seleccionarlas (suben).</li><li>Toca uno de tus juegos bajados si quieres agregarle cartas (se marca como destino).</li><li>Usa ✅ Tomar y bajar, ⬇️ Bajar juego, 🗑️ Descartar (1 carta seleccionada) o 🙅 No la quiero.</li></ul>' +
     '<p>Empiezas con 8 cartas: para ganar necesitas bajar las 8 más la que tomes (9). Si se acaba el mazo, es empate.</p>',
 };
-Object.assign(AYUDA, ClasicosRapidosUI.AYUDA); // clasicos-rapidos
+// Los textos de clásicos rápidos, tablero y salas grandes viven en sus módulos, que se cargan con su juego
+// (openspec: juegos-carga-perezosa): se buscan al abrir la ayuda.
 function ayuda(id) {
   const d = document.createElement('dialog'); d.className = 'ayuda'; d.setAttribute('aria-label', 'Cómo se juega');
-  d.innerHTML = (AYUDA[id] || TableroUI.ayuda(id) || AYUDA_GRANDES[id] || '<p>Pronto.</p>') + '<div class="row-btns"><button class="btn" data-cerrar-ayuda autofocus>Entendido</button></div>'; // juegos-tablero y juegos-salas-grandes
+  d.innerHTML = (AYUDA[id] || window.ClasicosRapidosUI?.AYUDA[id] || window.TableroUI?.ayuda(id) || window.AYUDA_GRANDES?.[id] || '<p>Pronto.</p>') + '<div class="row-btns"><button class="btn" data-cerrar-ayuda autofocus>Entendido</button></div>'; // clasicos-rapidos, juegos-tablero y juegos-salas-grandes
   document.body.appendChild(d);
   d.addEventListener('close', () => d.remove());
   d.addEventListener('click', e => { if (e.target.closest('[data-cerrar-ayuda]') || e.target === d) d.close(); });
@@ -51,6 +52,7 @@ app.addEventListener('click', e => {
   const NO_ATENDIDO = Symbol('no-atendido');
   // Dentro de la sala: preguntas, salas grandes, mesas (¡Una!, Póker, cartas, ajedrez, tablero), Lotería y botones de la sala.
   const clicEnSala = () => {
+    if (typeof sala === 'undefined') return NO_ATENDIDO; // juegos-carga-perezosa: sin el código de las salas no hay sala
     if (sala.espectador && sala.estado && clicEspectador(e)) return; // espectador: sin controles del juego
     const pq = e.target.closest('[data-pq]'); if (pq) return responderSala(Number(pq.dataset.pq), Number(pq.dataset.po));
     if (SalasGrandes.clic(e)) return; // juegos-salas-grandes
@@ -82,7 +84,7 @@ app.addEventListener('click', e => {
     if (rjt) { const ol = document.getElementById('rank-juegos'), abre = !ol.classList.contains('todos'); ol.classList.toggle('todos', abre); rjt.setAttribute('aria-expanded', String(abre)); rjt.textContent = abre ? 'Ver solo el top 10 ▴' : 'Ver los ' + rjt.dataset.total + ' juegos ▾'; return; }
     const cc = e.target.closest('[data-categoria]'); if (cc) return abrirCategoria(cc.dataset.categoria); // juegos-categorias
     const g = e.target.closest('[data-juego], [data-jugar]'); // juegos-diseno-rpg: «▶ Jugar» de «Para ti» y «Copas»
-    if (g) { limpiar(); const j = juegoPorId(g.dataset.juego || g.dataset.jugar); app.innerHTML = '<div class="loading">Preparando…</div>'; return Promise.resolve(j.jugar()).catch(err => { app.innerHTML = '<div class="alert">No se pudo cargar el juego (' + escapeHtml(err.message) + ').</div>'; }); }
+    if (g) return abrirJuego(juegoPorId(g.dataset.juego || g.dataset.jugar)); // juegos-carga-perezosa: trae su paquete si falta
     return NO_ATENDIDO;
   };
   // Botones con data-a (navegación, revancha, admin, CSV, registro y sesión).

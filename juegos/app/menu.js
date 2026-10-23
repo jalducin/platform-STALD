@@ -49,9 +49,19 @@ const JUEGOS = [
   { id: 'billar', cat: 'arcade', emoji: '🎱', t: 'Billar', d: 'Bola 8 con línea guía: mete tus bolas y al final la 8. Contra el bot o 1 vs 1.', jugar: () => jugarArcade('billar') }, // futbolito-billar
   { id: 'brigada', cat: 'arcade', emoji: '🦎', t: 'Brigada Xalli', d: 'Acción y rescate: corre, salta y revienta robots en confeti. 4 misiones, solo o en equipo.', jugar: () => jugarArcade('brigada') }, // brigada
   { id: 'golf', cat: 'arcade', emoji: '⛳', t: 'Golf', d: 'Minigolf de 9 hoyos: jala como resortera y métela en pocos golpes. Solo o de 2 a 4.', jugar: () => jugarArcade('golf') }, // golf
+  // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes. Sus tarjetas viven aquí y no en
+  // clasicos-rapidos-ui.js para pintar el menú sin cargar ese módulo (openspec: juegos-carga-perezosa).
+  { id: 'gato', cat: 'clasicos', emoji: '❌', t: 'Gato', d: 'Tres en línea contra Michi (3 niveles) o 1 vs 1.', jugar: () => ClasicosRapidosUI.jugar('gato') },
+  { id: 'conecta4', cat: 'clasicos', emoji: '🔴', t: 'Conecta 4', d: 'Suelta fichas y junta 4 en línea antes que tu rival.', jugar: () => ClasicosRapidosUI.jugar('conecta4') },
+  { id: 'ppt', cat: 'clasicos', emoji: '✊', t: 'Piedra, papel o tijera', d: 'Al mejor de 5, ¡todos eligen a la vez!', jugar: () => ClasicosRapidosUI.jugar('ppt') },
+  { id: 'ahorcado', cat: 'clasicos', emoji: '🪢', t: 'Ahorcado en inglés', d: 'Adivina la palabra en inglés antes de que se desinfle el globo.', jugar: () => ClasicosRapidosUI.jugar('ahorcado') },
+  { id: 'serpientes', cat: 'clasicos', emoji: '🐍', t: 'Serpientes y escaleras', d: 'Tira el dado, sube escaleras y esquiva serpientes.', jugar: () => ClasicosRapidosUI.jugar('serpientes') },
+  // juegos-tablero: Damas y Batalla naval (Mente ágil), Dominó y Parchís (Clásicos); antes en tablero-ui.js.
+  { id: 'damas', cat: 'mente', emoji: '⚫', t: 'Damas', d: 'Come en diagonal, salta varias y corona tu dama. Contra el bot o 1 vs 1.', jugar: () => TableroUI.elegir('damas') },
+  { id: 'naval', cat: 'mente', emoji: '🚢', t: 'Batalla naval', d: 'Esconde tu flota y hunde la del rival: ¡agua, tocado y hundido!', jugar: () => TableroUI.elegir('naval') },
+  { id: 'domino', cat: 'clasicos', emoji: '🔳', icono: 'juegos/iconos/domino.svg', t: 'Dominó', d: 'Doble seis de 2 a 4: embona tus fichas y quédate sin ninguna.', jugar: () => TableroUI.elegir('domino') },
+  { id: 'parchis', cat: 'clasicos', emoji: '🎲', t: 'Parchís', d: 'Sal con 5, come fichas y llega a la meta antes que nadie.', jugar: () => TableroUI.elegir('parchis') },
 ];
-JUEGOS.push(...ClasicosRapidosUI.TARJETAS); // clasicos-rapidos: Gato, Conecta 4, Piedra-papel-tijera, Ahorcado y Serpientes
-JUEGOS.push(...TableroUI.TARJETAS); // juegos-tablero: Damas y Batalla naval (Mente ágil), Dominó y Parchís (Clásicos)
 // futbol-estelar: juegos retirados del menú (no salen en categorías ni al crear salas), pero juegoPorId los sigue
 // encontrando para abrir y terminar salas que ya existían y para el ranking y el historial.
 const JUEGOS_RETIRADOS = [
@@ -171,6 +181,19 @@ async function cargarYo() {
   return r;
 }
 
+// Primera pantalla con sesión: enlace de sala, avatar, recarga (sala, revancha o juego a medias) o el hub.
+// juegos-carga-perezosa: las salas y la reanudación necesitan el código de los juegos antes de pintar. La sala
+// pendiente se consume después de cargarlo, así «Reintentar» vuelve a intentar la misma.
+async function pantallaInicial() {
+  if (salaPendiente) { await cargarPaquete('todo'); const c = salaPendiente; salaPendiente = null; return VER_URL ? espectarCodigo(c) : unirseCodigo(c); } // espectador: &ver=1
+  if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
+  // Recarga (openspec: juegos-recarga): primero la sala guardada; luego, el juego individual a medias.
+  const enSala = salaGuardada(); if (enSala) { await cargarPaquete('todo'); return volverASala(enSala.codigo); }
+  const revancha = revanchaGuardada(); if (revancha) { await cargarPaquete('todo'); return ofrecerRevancha(revancha.codigo); }
+  if (hayPartidaGuardada()) { await cargarPaquete('todo'); const previa = partidaGuardada(); if (previa) return pantallaReanudar(previa); }
+  return pantallaHub();
+}
+
 async function iniciar() {
   app.innerHTML = '<div class="loading">Cargando juegos…</div>';
   await StaldAuth.iniciar(API_BASE);
@@ -191,16 +214,13 @@ async function iniciar() {
     }
     if (!r.ok) throw new Error(r.body.error || ('HTTP ' + r.status));
     borrarRegistro(); // ya tenía cuenta (alumno, alumna o invitado): no hay nada que registrar
-    if (salaPendiente) { const c = salaPendiente; salaPendiente = null; return VER_URL ? espectarCodigo(c) : unirseCodigo(c); } // espectador: &ver=1
-    if (abrirAvatar) { abrirAvatar = false; return pantallaAvatar(); }
-    // Recarga (openspec: juegos-recarga): primero la sala guardada; luego, el juego individual a medias.
-    const enSala = salaGuardada(); if (enSala) return volverASala(enSala.codigo);
-    const revancha = revanchaGuardada(); if (revancha) return ofrecerRevancha(revancha.codigo);
-    const previa = partidaGuardada(); if (previa) return pantallaReanudar(previa);
-    pantallaHub();
+    return await pantallaInicial();
   } catch (e) {
-    const txt = e.message === 'mucho_trafico' ? '⏳ Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.' : '⚠️ No pude conectarme (' + escapeHtml(e.message) + ').';
-    app.innerHTML = '<div class="card"><div class="alert">' + txt + '</div><div class="row-btns"><button class="btn" data-a="reintentar">Reintentar</button></div></div>';
+    const txt = { mucho_trafico: '⏳ Hay mucha actividad en este momento. Intenta de nuevo en unos minutos.', juego_sin_cargar: '😕 No se pudo cargar el juego. Revisa tu internet e intenta de nuevo.' }[e.message] || '⚠️ No pude conectarme (' + escapeHtml(e.message) + ').';
+    // juegos-carga-perezosa: si no llegó el código de los juegos, también «← Volver» al menú (olvida la sala, la
+    // revancha o el juego a medias que se quería abrir).
+    const volver = e.message === 'juego_sin_cargar' ? '<button class="btn ghost" type="button" data-a="hub">← Volver</button>' : '';
+    app.innerHTML = '<div class="card"><div class="alert">' + txt + '</div><div class="row-btns">' + volver + '<button class="btn" data-a="reintentar">' + (volver ? '🔄 ' : '') + 'Reintentar</button></div></div>';
   }
 }
 
@@ -270,7 +290,7 @@ function pantallaHub(tab) {
     }).join('') + '</div>';
   app.innerHTML = htmlHeroe() + tabs + '<div id="tab-body"></div>'; // juegos-diseno-rpg: encabezado del jugador
   if (state.tab === 'ranking') return pintarRanking();
-  if (state.tab === 'partidas') return pintarPartidas();
+  if (state.tab === 'partidas') return conPaquete('todo', document.getElementById('tab-body'), () => pintarPartidas(), 'data-tab="juegos"'); // juegos-carga-perezosa
   if (state.tab === 'admin') return pintarAdmin();
   pintarMenuJuegos(categoriaInicial());
 }
@@ -332,9 +352,12 @@ app.addEventListener('click', e => {
   if (e.target.closest('[data-heroe="avatar"]')) return pantallaAvatar();
   const it = e.target.closest('[data-ir-tab]'); if (!it) return;
   const foco = it.dataset.foco;
-  limpiar(); olvidarRevancha(); pantallaHub(it.dataset.irTab);
-  const f = foco && document.getElementById(foco);
-  if (f) { f.scrollIntoView({ block: 'center' }); f.focus({ preventScroll: true }); }
+  limpiar(); olvidarRevancha();
+  // juegos-carga-perezosa: Partidas puede tardar en pintarse (carga el código de las salas); se enfoca al final.
+  Promise.resolve(pantallaHub(it.dataset.irTab)).then(() => {
+    const f = foco && document.getElementById(foco);
+    if (f) { f.scrollIntoView({ block: 'center' }); f.focus({ preventScroll: true }); }
+  });
 });
 
 // ---------- Navegación por categorías (openspec: juegos-categorias) ----------
