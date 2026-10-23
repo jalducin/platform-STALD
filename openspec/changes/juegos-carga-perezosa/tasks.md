@@ -38,7 +38,7 @@
   paquetes y `?v=`), `docs/pruebas.md` (E2E nueva) y nota en `openspec/changes/navegacion-rendimiento/proposal.md`
 - [x] 3.5 `openspec validate juegos-carga-perezosa --strict`, `verificador-pruebas` y `revisor-solo-lectura`; merge de
   `main` antes del PR
-- [ ] 3.6 Verificación en producción tras el merge — EL AGENTE EJECUTA (OBLIGATORIO): archivos al abrir `juegos.html`
+- [x] 3.6 Verificación en producción tras el merge — EL AGENTE EJECUTA (OBLIGATORIO): archivos al abrir `juegos.html`
   (sin sesión, celular y PC con 4G), abrir un juego y una sala; todo con 200
 
 ## 4. Cierre
