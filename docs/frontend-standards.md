@@ -1218,7 +1218,7 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
       `stald_mis_borrador:<hash>:<misión>:<paso>` = `{ t, texto, s }` y copia en la cuenta con
       `PUT /misiones/<id>/borrador { paso, texto }` 2.5 s después del último cambio, al salir del cuadro (`focusout`),
       al ocultar la pestaña y al volver la red. El texto inicial del paso sale de `m.borrador` (de `GET /misiones`) o de
-      la copia local sin subir. Indicador `.mis-guardado` con los mismos textos y `[data-mis-reintentar]`. 🚪 Cerrar
+      la copia local sin subir (`s: 0`), que se sube sola; las subidas van de una en una. Indicador `.mis-guardado` con los mismos textos y `[data-mis-reintentar]`. 🚪 Cerrar
       sesión borra también estas copias locales.
     - Mientras existe `#exam-form`, `html.examen-abierto` aplica `overscroll-behavior-y: contain` (sin «jalar para
       recargar») y `beforeunload` pide confirmar si hay respuestas sin enviar.

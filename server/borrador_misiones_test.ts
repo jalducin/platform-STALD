@@ -12,7 +12,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const ID = "mis-mate-valle-de-los-numeros";
 const ANA: PersonaMision = { tipo: "secundaria", slug: "ana", nombre: "Ana" };
 const ADMIN: PersonaMision = { tipo: "admin" };
-const RUTA = `borradores/misiones/${ID}/ana.json`;
+const RUTA = `borradores-misiones/${ID}/ana.json`;
 
 const datos = () => storeCon({ "contenido/secundaria/mundos.json": mundosValidos(), [`contenido/secundaria/misiones/${ID}.json`]: misionValida({ alumnos: ["ana"] }) });
 function deps(store: Store, persona: PersonaMision): DepsMisiones {
@@ -95,11 +95,24 @@ Deno.test("retención: borra los borradores de misiones (texto libre) con --conf
   const { aplicarRetencionBorradores } = await import("./retencion_entregas.ts");
   const borradas: string[] = [];
   const db = {
-    select: () => Promise.resolve([{ path: RUTA }, { path: "borradores/misiones/x/otra.json" }]),
+    select: () => Promise.resolve([{ path: RUTA }, { path: "borradores-misiones/x/otra.json" }]),
     remove: (_t: string, f: string) => { borradas.push(f); return Promise.resolve([{}, {}]); },
   } as any;
   assertEquals(await aplicarRetencionBorradores(db, false), { revisados: 2, borrados: 0 });
   assertEquals(borradas, []);
   assertEquals(await aplicarRetencionBorradores(db, true), { revisados: 2, borrados: 2 });
-  assertEquals(borradas, [`path=like.${encodeURIComponent("borradores/misiones/*")}`]);
+  assertEquals(borradas, [`path=like.${encodeURIComponent("borradores-misiones/*")}`]);
+});
+
+Deno.test("privacidad: la corrección por privacidad y «Borrar contenido» también borran el borrador", async () => {
+  const store = datos();
+  for (const p of ["p1", "p2", "p3", "p4"]) await leer(await handleMisiones(pedir("POST", `/${ID}/entrega`, { paso: p, texto: "t " + p }), `/${ID}/entrega`, deps(store, ANA), json));
+  await borrador(deps(store, ANA), "p1", "Texto con un nombre real");
+  await borrador(deps(store, ANA), "p2", "otro");
+  const corr = (sub: string, body: unknown) => handleProfeEntregas(new Request("http://x/profe/entregas" + sub, { method: "POST", body: JSON.stringify(body) }), sub, deps(store, ADMIN), json);
+  await corr(`/${ID}/ana/correccion`, { pasos: ["p1"], motivo: "Usa un nombre inventado.", privacidad: true });
+  const doc = (await store.get<any>(RUTA))!.data;
+  assertEquals([doc.pasos.p1, doc.pasos.p2.texto], [undefined, "otro"]);
+  await corr(`/${ID}/ana/borrar`, {});
+  assertEquals(await store.get(RUTA), null);
 });

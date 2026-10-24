@@ -97,7 +97,11 @@ window.addEventListener('hashchange', () => {
 // Entrar a una actividad, resultado o guion agrega una entrada al historial: Atrás regresa a la sección.
 function entrarVista(nombre, id) {
   state.vista = nombre;
-  if (!location.hash.startsWith('#ver/')) history.pushState(null, '', '#ver/' + encodeURIComponent(id || nombre));
+  // El hash nombra lo que se ve (al recargar se reabre; openspec: autoguardado-todo). El resultado lleva su prefijo
+  // para que recargarlo no abra un intento nuevo.
+  const hash = '#ver/' + (nombre === 'resultado' ? 'resultado:' : '') + encodeURIComponent(id || nombre);
+  if (!location.hash.startsWith('#ver/')) history.pushState(null, '', hash);
+  else if (location.hash !== hash) history.replaceState(null, '', hash);
 }
 function salirVista() {
   if (location.hash.startsWith('#ver/')) { history.back(); return; } // hashchange vuelve a dibujar la sección

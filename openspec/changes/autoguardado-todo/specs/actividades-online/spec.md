@@ -61,7 +61,7 @@ enviar. Fuera del examen no SHALL haber ni confirmación ni bloqueo del desplaza
 El reproductor de actividades y exámenes (Inglés, Ruta del profe y Secundaria) SHALL guardar además una copia del
 avance de cada intento en el `localStorage` del aparato, con una clave por ámbito, persona (hash corto del correo,
 nunca el correo en claro), elemento e intento, con las respuestas y el paso visible, y SHALL restaurarla al volver a
-abrir el mismo intento (entre esta copia y la de la cuenta gana la más reciente). SHALL funcionar con opción múltiple,
+abrir el mismo intento (gana la de la cuenta, salvo cambios del aparato que aún no suben). SHALL funcionar con opción múltiple,
 respuesta escrita, pronunciación, ordenar y unir pares, en lista y en modo paso, y no SHALL tocar las preguntas fijas
 de la corrección. La vista previa del admin no SHALL guardar borrador.
 

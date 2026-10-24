@@ -62,7 +62,8 @@ export interface Entrega {
 const rutaEntrega = (id: string, slug: string) => `entregas/${id}/${slug}.json`;
 // Borrador de la entrega en texto (openspec: autoguardado-todo): por persona y misión, un texto por paso. Solo lo leen y
 // escriben su dueña o su dueño y el servidor; no es entrega ni lo ve el admin. Entra al borrado de retención.
-export const PREFIJO_BORRADOR_MISION = "borradores/misiones/";
+// Prefijo propio (no `borradores/`): una actividad nunca comparte ruta con una misión (en Postgres por PREFIJOS_INGLES).
+export const PREFIJO_BORRADOR_MISION = "borradores-misiones/";
 const rutaBorradorMision = (id: string, slug: string) => `${PREFIJO_BORRADOR_MISION}${id}/${slug}.json`;
 export interface BorradorMision { mision: string; pasos: Record<string, { texto: string; actualizado: string }>; actualizado: string }
 
@@ -442,6 +443,8 @@ async function pedirCorreccion(m: Mision, slug: string, body: any, d: DepsMision
       return e;
     }, `corrección ${m.id}`);
     if (r instanceof Response) return r;
+    // Por privacidad también se va el texto sin entregar de esos pasos (openspec: autoguardado-todo).
+    if (privacidad) for (const x of pasos) await quitarPasoBorrador(d.store, m.id, slug, x);
     return json({ ok: true, pasos: r.pasos });
   });
 }
@@ -457,6 +460,8 @@ async function borrarEntrega(id: string, slug: string, d: DepsMisiones, json: Js
   return await conAlmacen(json, async () => {
     const r = await modificarEntrega(d.store, id, slug, (e) => (e ? sinContenido(e, d.ahora()) : json({ error: "not_found" }, 404)), `borrado ${id}`);
     if (r instanceof Response) return r;
+    const ruta = rutaBorradorMision(id, slug); // y su texto sin entregar (openspec: autoguardado-todo)
+    if (await d.store.get(ruta)) await d.store.remove(ruta, `borrado ${id}`);
     return json({ ok: true, evaluacion: r.evaluacion });
   });
 }

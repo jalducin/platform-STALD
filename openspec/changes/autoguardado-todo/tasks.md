@@ -18,7 +18,7 @@
 ## 3. Páginas
 
 - [x] 3.1 Misiones (`ingles/secundaria-misiones.js`): copia local + cuenta con espera de 2.5 s, al salir del cuadro, al
-  ocultar la pestaña y al volver la red; gana la más reciente; indicador y «Reintentar»
+  ocultar la pestaña y al volver la red; gana la cuenta salvo texto local sin subir (que se sube solo); subidas en orden; la entrega espera al borrador en camino; indicador y «Reintentar»
 - [x] 3.2 Reproductor (`ingles/reproductor.js`): paso en el borrador, guardar al cambiar de paso, restaurar el paso,
   indicador «Guardando… / 💾 Guardado hace N s / Reintentar», aviso 409 de otro navegador, cerrar sesión borra
   también los borradores de misiones

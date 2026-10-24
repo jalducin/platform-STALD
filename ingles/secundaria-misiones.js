@@ -194,7 +194,7 @@ function misLeerLocal(mId, pId) {
 }
 function misGuardarBorrador(mId, pId, v) {
   try {
-    if (v) localStorage.setItem(misBorradorClave(mId, pId), JSON.stringify({ t: Date.now(), texto: v }));
+    if (v) localStorage.setItem(misBorradorClave(mId, pId), JSON.stringify({ t: Date.now(), texto: v, s: 0 })); // s: 0 = sin subir
     else localStorage.removeItem(misBorradorClave(mId, pId));
   } catch (e) { /* sin almacenamiento: queda la copia en la cuenta */ }
 }
@@ -203,18 +203,32 @@ function misMarcarSubido(mId, pId, texto) {
   if (!d || d.texto !== texto) return;
   try { localStorage.setItem(misBorradorClave(mId, pId), JSON.stringify({ ...d, s: 1 })); } catch (e) { /* sin almacenamiento */ }
 }
-// Texto inicial del paso: entre este aparato y la cuenta, el más reciente.
+// Texto inicial del paso. Gana la cuenta salvo que este aparato tenga texto que aún no subió (s: 0), que entonces se
+// marca pendiente y se sube solo. Una copia de antes de este cambio (sin `s`) gana solo si es más reciente.
 function misLeerBorrador(m, pId) {
   const local = misLeerLocal(m.id, pId);
   const cuenta = m.borrador && m.borrador.pasos && m.borrador.pasos[pId];
-  // Gana la cuenta salvo que este aparato tenga texto sin subir (s ≠ 1); no depende del reloj del aparato.
-  if (cuenta && (!local || local.s === 1)) return { texto: cuenta.texto, enCuenta: Date.parse(cuenta.actualizado) };
-  return local ? { texto: local.texto, enCuenta: 0 } : null;
+  const localGana = local && (local.s === 0 || (local.s === undefined && (!cuenta || local.t > Date.parse(cuenta.actualizado))));
+  if (cuenta && !localGana) return { texto: cuenta.texto, enCuenta: Date.parse(cuenta.actualizado) };
+  return local ? { texto: local.texto, enCuenta: 0, sinSubir: true } : null;
+}
+// Formularios con texto local sin subir (p. ej. tras recargar sin red): se suben solos.
+function misSubirPendientes() {
+  misForms().filter(f => f.dataset.sinSubir && !f._misVisto).forEach(f => { f._misVisto = true; f._misPendiente = true; misSubir(f); });
 }
 const MIS_ESPERA_MS = 2500;
 function misProgramar(f) { clearTimeout(f._tMis); f._tMis = setTimeout(() => misSubir(f), MIS_ESPERA_MS); f._misPendiente = true; misPintar(f); }
-async function misSubir(f, keepalive) {
+// Una subida a la vez por formulario (en orden): si llega otra mientras va una, se repite al terminar.
+function misSubir(f, keepalive) {
   clearTimeout(f._tMis); f._tMis = null;
+  if (f._misProm) { f._misOtraVez = true; return f._misProm; }
+  f._misProm = misSubirUna(f, keepalive).finally(() => {
+    f._misProm = null;
+    if (f._misOtraVez) { f._misOtraVez = false; if (f._misPendiente) misSubir(f); }
+  });
+  return f._misProm;
+}
+async function misSubirUna(f, keepalive) {
   const t = f.querySelector('textarea'); // también si ya se repintó la vista: el texto pendiente se sube igual
   if (!t || !f._misPendiente) return;
   const texto = t.value;
@@ -243,7 +257,7 @@ function misPintar(f) {
   else el.textContent = '';
 }
 const misForms = () => [...document.querySelectorAll('form.mis-entrega')];
-setInterval(() => misForms().forEach(misPintar), 5000);
+setInterval(() => { misSubirPendientes(); misForms().forEach(misPintar); }, 5000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') misForms().filter(f => f._misPendiente).forEach(f => misSubir(f, true)); });
 window.addEventListener('online', () => misForms().filter(f => f._misPendiente && f.dataset.error).forEach(f => misSubir(f)));
 document.addEventListener('focusout', e => { // cambiar de paso (salir del cuadro) guarda ya
@@ -269,7 +283,7 @@ function pasoHtml(m, p, i, puedeEntregar) {
   const idT = 'mis-txt-' + m.id + '-' + p.id;
   const bor = abierto ? misLeerBorrador(m, p.id) : null;
   const inicial = (bor && bor.texto) || (e && e.estado === 'entregado' && e.texto) || '';
-  const form = abierto ? '<form class="mis-entrega" data-mis-entrega="' + escapeHtml(m.id) + '" data-paso="' + escapeHtml(p.id) + '"' + (bor && bor.enCuenta ? ' data-en-cuenta="' + bor.enCuenta + '"' : '') + '>' +
+  const form = abierto ? '<form class="mis-entrega" data-mis-entrega="' + escapeHtml(m.id) + '" data-paso="' + escapeHtml(p.id) + '"' + (bor && bor.enCuenta ? ' data-en-cuenta="' + bor.enCuenta + '"' : '') + (bor && bor.sinSubir ? ' data-sin-subir="1"' : '') + '>' +
     '<label for="' + escapeHtml(idT) + '" class="mis-label">Tu entrega del paso ' + (i + 1) + '</label>' +
     '<p class="mis-aviso" id="' + escapeHtml(idT) + '-aviso">🔒 Sin nombres reales, direcciones ni datos de contacto. Solo texto.</p>' +
     '<textarea id="' + escapeHtml(idT) + '" rows="8" maxlength="' + MIS_MAX + '" aria-describedby="' + escapeHtml(idT) + '-aviso ' + escapeHtml(idT) + '-cuenta" data-mis-texto>' + escapeHtml(inicial) + '</textarea>' +
@@ -314,6 +328,7 @@ function detalleMision(m, hoy, admin) {
 function repintarMisiones() {
   const panel = document.getElementById('sec-misiones');
   if (panel) panel.innerHTML = renderSecMisiones(state.act && state.act.hoy, !!(state.act && state.act.isAdmin));
+  misSubirPendientes();
 }
 document.addEventListener('click', e => {
   const abrir = e.target.closest('[data-mis-abrir]');
@@ -351,6 +366,7 @@ document.addEventListener('submit', async e => {
   boton.disabled = true;
   res.textContent = 'Enviando…';
   clearTimeout(f._tMis); f._tMis = null; f._misPendiente = false; // al entregar, el servidor quita el borrador del paso
+  if (f._misProm) await f._misProm.catch(() => {}); // que el borrador en camino llegue ANTES que la entrega
   const id = f.dataset.misEntrega, paso = f.dataset.paso;
   const r = await fetchJson(API_BASE + '/misiones/' + encodeURIComponent(id) + '/entrega' + misQuery(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ paso, texto }) });
   boton.disabled = false;

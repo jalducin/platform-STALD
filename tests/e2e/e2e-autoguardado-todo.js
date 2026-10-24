@@ -89,6 +89,17 @@ async function ciclo(b, c) {
   await listo(otro);
   await abrirItem(otro, c.id);
   ok(`${n}: otro navegador recupera las 2 respuestas`, (await respondidas(otro)) === 2, await texto(otro, '#exam-count'));
+  if (c.sinRed && total > 2) {
+    // Sin red: aviso con «🔄 Reintentar»; al volver la red y tocarlo, el avance sube.
+    await otro.context().setOffline(true);
+    await contestar(otro, 2);
+    await otro.waitForFunction(() => /No se pudo guardar/.test(document.getElementById('autoguardado').textContent), null, { timeout: 12000 })
+      .then(() => ok(`${n}: sin red, aviso «No se pudo guardar» con «Reintentar»`, true), async () => ok(`${n}: sin red, aviso «No se pudo guardar» con «Reintentar»`, false, await texto(otro, '#autoguardado')));
+    await otro.context().setOffline(false);
+    await otro.click('[data-action="reintentar-guardado"]').catch(() => {});
+    const b3 = await hasta(async () => { const x = (await pedir(`${c.ruta}/${c.id}`, c.email)).body.borrador; return x && Object.keys(x.respuestas).length === 3 && x; }, 9000);
+    ok(`${n}: «Reintentar» sube el avance pendiente`, !!b3);
+  }
   if (c.dosNavegadores && total > 2) {
     // El otro navegador avanza una más; el primero, al recargar, la ve.
     await contestar(otro, 2);
@@ -172,7 +183,9 @@ async function cicloMision(b, c) {
   ok(`${n}: «Reintentar» sube el texto pendiente`, !!b2);
   ok(`${n}: más de 4 000 caracteres → 400`, (await pedir(`/misiones/${c.id}/borrador`, c.email, 'PUT', { paso: 'p1', texto: 'x'.repeat(4001) })).status === 400);
   ok(`${n}: el admin no escribe borradores (403)`, (await pedir(`/misiones/${c.id}/borrador`, ADMIN, 'PUT', { paso: 'p1', texto: 'x' })).status === 403);
-  // Entregar: se vuelve entrega y el borrador del paso desaparece.
+  // Entregar justo después de escribir (la subida del borrador va en camino): se vuelve entrega y el borrador del paso
+  // desaparece igual (la entrega espera a que llegue el borrador).
+  await p.fill(area, 'Mi héroe inventado: Capitana Nube vuela alto');
   await p.click(`[data-mis-detalle="${c.id}"] [data-mis-paso="p1"] button[type=submit]`);
   await p.waitForSelector('.mis-res.ok', { timeout: 30000 }).catch(() => {});
   const m3 = await mis();
@@ -196,13 +209,14 @@ async function cicloMision(b, c) {
   for (const [tipo, nombre] of [['actividad', 'Inglés · actividad'], ['examen', 'Inglés · examen'], ['refuerzo', 'Inglés · refuerzo']]) {
     const it = primero(tipo);
     if (!it) { ok(`${nombre}: hay uno disponible el ${hoy}`, false); continue; }
-    await ciclo(b, { nombre, email: 'angel@example.com', ruta: '/ingles/actividades', pagina: '/ingles.html', id: it.id, admin: true, reiniciar: '/ingles/actividades', alumno: 'Angel' });
+    await ciclo(b, { nombre, email: 'angel@example.com', ruta: '/ingles/actividades', pagina: '/ingles.html', id: it.id, admin: true, reiniciar: '/ingles/actividades', alumno: 'Angel', sinRed: tipo === 'actividad' });
   }
   await ciclo(b, { nombre: 'Inglés · reto del Meet', email: 'angel@example.com', ruta: '/ingles/actividades', pagina: '/ingles.html', id: 'meet-e2e-reto-borrador', admin: true, reiniciar: '/ingles/actividades', alumno: 'Angel' });
   await cicloMision(b, { nombre: 'Inglés · My Hero Card', email: 'laura@example.com', slug: 'laura', pagina: '/ingles.html', id: 'mis-ingles-e2e-zz-borrador' });
   // Profe en su ruta (clase como misión).
-  const deProfe = ((await pedir('/ingles/profe/actividades', ADMIN)).body.items || []).find(x => !x.grupo && x.intentosMax > 0 && !x.intentosUsados && x.estado === 'disponible');
-  if (deProfe) await ciclo(b, { nombre: 'Profe · ruta', email: ADMIN, ruta: '/ingles/profe/actividades', pagina: '/ingles.html?modo=profe', id: deProfe.id });
+  // Una clase del grupo en su ruta: su resultado (resultados/<id>/profe.json) se reinicia al final.
+  const deProfe = ((await pedir('/ingles/profe/actividades', ADMIN)).body.items || []).find(x => x.grupo && x.tipo === 'actividad' && x.intentosMax > 0 && !x.intentosUsados && x.estado === 'disponible');
+  if (deProfe) await ciclo(b, { nombre: 'Profe · ruta', email: ADMIN, ruta: '/ingles/profe/actividades', pagina: '/ingles.html?modo=profe', id: deProfe.id, reiniciar: '/ingles/actividades', alumno: 'Profe' });
   else ok('Profe · ruta: hay una clase propia disponible', false);
   await b.close();
   console.log(out.join('\n'));

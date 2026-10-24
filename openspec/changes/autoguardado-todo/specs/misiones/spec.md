@@ -3,10 +3,11 @@
 ### Requirement: Borrador de la entrega de texto en la cuenta
 La plataforma SHALL guardar en el servidor el avance de la entrega de texto de cada paso de una misión principal
 (Secundaria o Inglés, como My Hero Card) mientras alguien la escribe. SHALL guardar el texto en el servidor como borrador, por persona, misión y paso
-(`PUT /misiones/<id>/borrador { paso, texto }`, ruta `borradores/misiones/<id>/<slug>.json`), a los pocos segundos del
+(`PUT /misiones/<id>/borrador { paso, texto }`, ruta `borradores-misiones/<id>/<slug>.json`), a los pocos segundos del
 último cambio, al salir del cuadro, al ocultar la pestaña y al volver la conexión, y SHALL guardar también una copia en
 el aparato. `GET /misiones` SHALL devolver el borrador solo a su dueña o dueño; al abrir la misión SHALL ganar la copia
-más reciente. El borrador NO SHALL ser entrega: no aparece en «📥 Entregas», no da XP y el admin no SHALL leerlo ni
+de la cuenta, salvo texto del aparato que aún no sube, que SHALL subirse solo. La entrega SHALL esperar al borrador en camino
+y el texto sin entregar SHALL borrarse también con la corrección por privacidad y con «Borrar contenido». El borrador NO SHALL ser entrega: no aparece en «📥 Entregas», no da XP y el admin no SHALL leerlo ni
 escribirlo (403). SHALL respetar el límite de 4 000 caracteres (400 `borrador_invalido`), solo texto, y una misión
 evaluada SHALL responder 409 salvo en el paso que está en corrección. Al entregar el paso, su borrador SHALL borrarse. El
 texto del borrador SHALL borrarse con «Borrar todas sus entregas» y con la retención del 31 de agosto, y la copia del

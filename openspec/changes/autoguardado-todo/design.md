@@ -1,11 +1,11 @@
 ## Decisiones
 
 - **Clave del borrador.** Actividades: `borradores/<id>/<slug>.json` con `intento` dentro (como antes). Misiones:
-  `borradores/misiones/<id>/<slug>.json` con un texto por paso. Así la clave es por actividad (o misión), por intento y
+  `borradores-misiones/<id>/<slug>.json` con un texto por paso. Así la clave es por actividad (o misión), por intento y
   por persona, y un flujo no pisa el de otro. En el aparato, prefijos distintos (`stald_borrador:` y
   `stald_mis_borrador:`).
-- **Mismo prefijo en Postgres.** `borradores/` ya está en `PREFIJOS_INGLES`, así que la ruta nueva va a `stald_docs` sin
-  migración ni commits a GitHub.
+- **Prefijo propio en Postgres.** `borradores-misiones/` se agrega a `PREFIJOS_INGLES` (no comparte prefijo con
+  `borradores/<id>/`, así ninguna actividad choca con una misión): va a `stald_docs` sin migración ni commits a GitHub.
 - **Misiones, escritura.** Lectura-modificación-escritura con `sha` y 3 reintentos (otro paso puede guardarse a la vez
   desde otro aparato). Texto vacío quita el paso; sin pasos se borra el archivo. Valida la persona y que la misión sea
   visible para ella (404 si no), 4 000 caracteres (400 `borrador_invalido`), solo texto (400 `tipo_no_permitido`) y que

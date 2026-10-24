@@ -67,7 +67,11 @@ const pagina = (b, email, ruta) => abrirPagina(b, { email, viejo: true, ingles: 
         await ad.waitForSelector('#exam-form', { timeout: 60000 });
         ok('abre desde el plan el último (' + ultimo + ') y trae preguntas', (await ad.$$('#exam-form [data-q]')).length > 0);
         await ad.screenshot({ path: 'ruta-profe-abierta.png', fullPage: false });
-        await ad.reload(); await ad.waitForSelector('.pf-hero', { timeout: 60000 });
+        // Recargar dentro de la clase la reabre sola (openspec: autoguardado-todo); «← Volver» regresa al panel.
+        await ad.reload();
+        ok('al recargar, la clase se reabre sola', await ad.waitForSelector('#exam-form', { timeout: 60000 }).then(() => true, () => false));
+        await ad.click('#exam-form [data-action="volver"]').catch(() => {});
+        await ad.waitForSelector('.pf-hero', { timeout: 60000 });
       }
     } else console.log('Datos sin semanas futuras ya abiertas: se omite la ruta abierta');
     await ad.click('[data-pf-tab="semana"]');

@@ -18,11 +18,11 @@ auditoría (lectura del código de cada flujo; el «después» se comprueba con 
 ## What Changes
 
 - **Misiones de texto:** `PUT /misiones/<id>/borrador { paso, texto }` guarda el avance por persona, misión y paso en
-  `borradores/misiones/<id>/<slug>.json` (Postgres). `GET /misiones` lo devuelve a su dueña o dueño (`borrador`). No es
+  `borradores-misiones/<id>/<slug>.json` (Postgres). `GET /misiones` lo devuelve a su dueña o dueño (`borrador`). No es
   entrega: el admin no lo ve (bandeja ni vista de la alumna) y no da XP. Hasta 4 000 caracteres; texto vacío lo quita;
   misión evaluada → 409. Entregar el paso borra su borrador; «Borrar todas sus entregas» y la retención del 31 de agosto
   también borran los borradores. En la página: copia inmediata en el aparato, subida 2.5 s después del último cambio,
-  al salir del cuadro, al ocultar la pestaña y al volver la red; gana la copia más reciente.
+  al salir del cuadro, al ocultar la pestaña y al volver la red; gana la copia de la cuenta salvo texto del aparato sin subir, que se sube solo.
 - **Actividades y exámenes:** el borrador guarda también el `paso` (pregunta visible) y se sube **ya** al cambiar de
   paso. Al recargar dentro de una actividad (`#ver/<id>`) se reabre sola en el mismo paso. Si el intento ya se envió
   desde otro navegador, el guardado responde 409 y la página lo avisa.
@@ -43,7 +43,7 @@ auditoría (lectura del código de cada flujo; el «después» se comprueba con 
 
 - Superficies: `ingles.html` (y `secundaria.html`, que la usa), servidor Deno (`server/misiones.ts`,
   `server/actividades.ts`, `server/retencion_entregas.ts`, `server/main.ts`), Postgres (`stald_docs`, ruta nueva
-  `borradores/misiones/`, sin migración).
+  `borradores-misiones/`, sin migración).
 - Contrato HTTP: ruta nueva `PUT /misiones/<id>/borrador`; campo nuevo `borrador` en `GET /misiones`; campo opcional
   `paso` en `PUT …/borrador` y en el `borrador` del GET del intento. Documentado en `docs/backend-standards.md` y
   `docs/data-model.md`.

@@ -172,7 +172,7 @@ function guardarBorrador(form, answers) {
   const k = form.dataset.borrador;
   if (k) {
     try {
-      if (Object.keys(answers).length) localStorage.setItem(k, JSON.stringify({ v: 1, t: Date.now(), r: answers, p: state.paso || 0 }));
+      if (Object.keys(answers).length) localStorage.setItem(k, JSON.stringify({ v: 1, t: Date.now(), r: answers, p: state.paso || 0, s: 0 })); // s: 0 = sin subir
       else localStorage.removeItem(k);
       form.dataset.guardado = String(Date.now());
     } catch (e) { /* sin almacenamiento: queda la copia en la cuenta */ }
@@ -187,8 +187,17 @@ function programarCuenta(form, answers) {
   clearTimeout(form._tCuenta);
   form._tCuenta = setTimeout(() => subirCuenta(form), CUENTA_ESPERA_MS);
 }
-async function subirCuenta(form, keepalive) {
+// Una subida a la vez (en orden): si llega otra mientras va una, se repite al terminar con lo más nuevo.
+function subirCuenta(form, keepalive) {
   clearTimeout(form._tCuenta); form._tCuenta = null;
+  if (form._prom) { form._otraVez = true; return form._prom; }
+  form._prom = subirCuentaUna(form, keepalive).finally(() => {
+    form._prom = null;
+    if (form._otraVez) { form._otraVez = false; if (form._respuestas) subirCuenta(form); }
+  });
+  return form._prom;
+}
+async function subirCuentaUna(form, keepalive) {
   if (!form.isConnected || !form._respuestas) return;
   const respuestas = form._respuestas;
   const paso = state.paso || 0; // paso visible: al recargar o en otro aparato se vuelve ahí (openspec: autoguardado-todo)
@@ -271,8 +280,10 @@ function restaurarBorrador(form) {
   if (!form) return;
   const local = leerBorrador(form.dataset.borrador || '');
   const cuenta = state.borradorCuenta;
-  // Gana la cuenta salvo que este aparato tenga cambios que aún no subió (s ≠ 1): así no depende del reloj del aparato.
-  const deCuenta = cuenta && cuenta.respuestas && (!local || local.s === 1);
+  // Gana la cuenta salvo que este aparato tenga cambios que aún no subió (s: 0): así no depende del reloj del aparato.
+  // Una copia de antes de este cambio (sin `s`) gana solo si es más reciente, como antes.
+  const localGana = local && (local.s === 0 || (local.s === undefined && cuenta && local.t > Date.parse(cuenta.actualizado)));
+  const deCuenta = cuenta && cuenta.respuestas && !localGana;
   const r = deCuenta ? cuenta.respuestas : local && local.r;
   if (!r) return;
   const pasoGuardado = deCuenta ? cuenta.paso : local.p;
