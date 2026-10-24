@@ -60,6 +60,11 @@ export interface Entrega {
 }
 
 const rutaEntrega = (id: string, slug: string) => `entregas/${id}/${slug}.json`;
+// Borrador de la entrega en texto (openspec: autoguardado-todo): por persona y misión, un texto por paso. Solo lo leen y
+// escriben su dueña o su dueño y el servidor; no es entrega ni lo ve el admin. Entra al borrado de retención.
+export const PREFIJO_BORRADOR_MISION = "borradores/misiones/";
+const rutaBorradorMision = (id: string, slug: string) => `${PREFIJO_BORRADOR_MISION}${id}/${slug}.json`;
+export interface BorradorMision { mision: string; pasos: Record<string, { texto: string; actualizado: string }>; actualizado: string }
 
 // ---------- Contenido (caché 60 s por ámbito, como las clases) ----------
 const memo = crearMemo<unknown>({ ttlMs: 60_000 });
@@ -176,6 +181,7 @@ export async function handleMisiones(req: Request, subpath: string, d: DepsMisio
   const p = await d.persona();
   if (req.method === "GET" && partes.length === 0) return await listar(req, p, d, json);
   if (req.method === "POST" && partes.length === 2 && partes[1] === "entrega") return await entregar(req, partes[0], p, d, json);
+  if (req.method === "PUT" && partes.length === 2 && partes[1] === "borrador") return await guardarBorradorMision(req, partes[0], p, d, json);
   return json({ error: "not_found" }, 404);
 }
 
@@ -207,7 +213,15 @@ async function listar(req: Request, p: PersonaMision, d: DepsMisiones, json: Jso
   const { misiones } = await visiblesPara(d, p, ambito);
   const cat = await catalogoSeguro(d.store, ambito);
   const docs = await Promise.all(misiones.map((m) => leerEntrega(d.store, m.id, p.slug)));
-  return json({ isAdmin: false, hoy, mundos: cat?.desdeArchivo ? cat.mundos : null, misiones: misiones.map((m, i) => conEntrega(m, ambito, docs[i]?.data ?? null)) });
+  // Borrador de su dueña o dueño (sin peticiones extra: viaja en la misma lista; openspec: autoguardado-todo).
+  const bors = await Promise.all(misiones.map((m) => d.store.get<BorradorMision>(rutaBorradorMision(m.id, p.slug)).catch(() => null)));
+  return json({
+    isAdmin: false, hoy, mundos: cat?.desdeArchivo ? cat.mundos : null,
+    misiones: misiones.map((m, i) => {
+      const b = bors[i]?.data;
+      return { ...conEntrega(m, ambito, docs[i]?.data ?? null), ...(b ? { borrador: { pasos: b.pasos, actualizado: b.actualizado } } : {}) };
+    }),
+  });
 }
 
 // Cuerpos aceptados: JSON (application/json, o text/plain como manda la página para no pedir verificación previa).
@@ -259,9 +273,60 @@ async function entregar(req: Request, id: string, p: PersonaMision, d: DepsMisio
       return doc;
     }, `entrega ${m.id}`);
     if (r instanceof Response) return r;
+    await quitarPasoBorrador(d.store, m.id, p.slug, paso.id); // entregado: su borrador sobra
     const completos = m.pasos.filter((x) => r.pasos[x.id]?.estado === "entregado").length;
     return json({ ok: true, paso: paso.id, tarde, completos, totalPasos: m.pasos.length, entrega: entregaPublica(r) });
   });
+}
+
+// PUT /misiones/<id>/borrador { paso, texto } → avance del paso sin entregar; texto vacío quita ese paso.
+async function guardarBorradorMision(req: Request, id: string, p: PersonaMision, d: DepsMisiones, json: Json): Promise<Response> {
+  if (p.tipo === "admin") return json({ error: "solo_alumnos" }, 403);
+  if (p.tipo === "baja") return json({ error: "baja_ingles" }, 403);
+  if (p.tipo === "sin_acceso") return json({ error: "sin_acceso" }, 403);
+  const m = (await visiblesPara(d, p, ambitoDe(p))).misiones.find((x) => x.id === id);
+  if (!m) return json({ error: "not_found" }, 404); // ajena o futura: no revela que existe
+  let body: any;
+  try { body = await req.json(); } catch { return json({ error: "borrador_invalido", motivo: "El borrador no se pudo leer." }, 400); }
+  if (esArchivo(req, body)) return json({ error: "tipo_no_permitido", mensaje: "Por ahora las entregas son solo texto." }, 400);
+  const paso = m.pasos.find((x) => x.id === body?.paso);
+  if (!paso || typeof body?.texto !== "string") return json({ error: "borrador_invalido", motivo: "Paso o texto inválido." }, 400);
+  const texto = body.texto.replace(/\r\n/g, "\n");
+  if ([...texto].length > MAX_TEXTO) return json({ error: "borrador_invalido", motivo: `El texto pasa de ${MAX_TEXTO} caracteres.` }, 400);
+  if (d.puedeGuardar && !await d.puedeGuardar()) return json({ error: "sin_guardar", mensaje: "No se pudo guardar; inténtalo de nuevo." }, 503);
+  return await conAlmacen(json, async () => {
+    const e = (await leerEntrega(d.store, m.id, p.slug))?.data;
+    if (e?.evaluacion && e.pasos[paso.id]?.estado !== "correccion") return json({ error: "ya_evaluado", mensaje: "El profe ya evaluó esta misión." }, 409);
+    const ruta = rutaBorradorMision(m.id, p.slug);
+    const actualizado = d.ahora();
+    for (let i = 0; i < 3; i++) {
+      const doc = await d.store.get<BorradorMision>(ruta);
+      const b: BorradorMision = doc ? structuredClone(doc.data) : { mision: m.id, pasos: {}, actualizado };
+      if (texto.trim()) b.pasos[paso.id] = { texto, actualizado };
+      else delete b.pasos[paso.id];
+      b.actualizado = actualizado;
+      if (!Object.keys(b.pasos).length) {
+        if (doc) await d.store.remove(ruta, `borrador vacío ${m.id}`);
+        return json({ guardado: true, vacio: true });
+      }
+      if (await d.store.put(ruta, b, doc?.sha ?? null, `borrador ${m.id}`)) return json({ guardado: true, actualizado });
+    }
+    throw new Error("conflicto_borrador");
+  });
+}
+// Quita el borrador de un paso ya entregado; si falla, la entrega ya quedó guardada (solo se registra).
+async function quitarPasoBorrador(store: Store, id: string, slug: string, pasoId: string) {
+  try {
+    const ruta = rutaBorradorMision(id, slug);
+    const doc = await store.get<BorradorMision>(ruta);
+    if (!doc?.data.pasos[pasoId]) return;
+    const b = structuredClone(doc.data);
+    delete b.pasos[pasoId];
+    if (Object.keys(b.pasos).length) await store.put(ruta, b, doc.sha, `borrador entregado ${id}`);
+    else await store.remove(ruta, `borrador entregado ${id}`);
+  } catch (e) {
+    console.error("borrador de misión:", e instanceof Error ? e.message : e);
+  }
 }
 
 // ---------- /profe/entregas (solo admin) ----------
@@ -410,6 +475,10 @@ async function borrarPersona(slug: string, d: DepsMisiones, json: Json): Promise
       if (!await leerEntrega(d.store, id, slug)) continue;
       const r = await modificarEntrega(d.store, id, slug, (e) => (e ? sinContenido(e, d.ahora()) : json({ error: "not_found" }, 404)), `borrado ${id}`);
       if (!(r instanceof Response)) n++;
+    }
+    // Y sus borradores de misiones: texto que aún no enviaba (openspec: autoguardado-todo).
+    for (const ruta of await rutasBajo(d.store, PREFIJO_BORRADOR_MISION)) {
+      if (ruta.endsWith(`/${slug}.json`)) await d.store.remove(ruta, "borrado a petición");
     }
     return json({ ok: true, entregas: n });
   });

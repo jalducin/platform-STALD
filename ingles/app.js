@@ -194,6 +194,18 @@ for (const el of [contentEl, cajonEl]) {
 }
 contentEl.addEventListener('input', (e) => { const f = e.target.closest('#exam-form'); if (f && e.target.classList.contains('q-text')) updateExamProgress(f); });
 
+// Recargar dentro de una actividad (#ver/<id>) la vuelve a abrir con su avance (openspec: autoguardado-todo). Solo una
+// vez, solo alumnos, alumnas y la ruta del profe, y solo si el elemento sigue abierto para resolverse.
+let verAlCargar = location.hash.startsWith('#ver/') ? decodeURIComponent(location.hash.slice(5)) : null;
+function reabrirTrasRecarga() {
+  const id = verAlCargar;
+  verAlCargar = null;
+  const act = state.act;
+  if (!id || !act || act.isAdmin) return;
+  const it = (act.items || []).find(x => x.id === id);
+  if (it && it.intentosMax > 0 && (it.estado === 'disponible' || it.estado === 'en-curso')) openItem(id);
+}
+
 // ---------- Sesión y carga ----------
 async function loadFor(email) {
   contentEl.innerHTML = esqueleto();
@@ -201,8 +213,8 @@ async function loadFor(email) {
   try {
     // Tablero y exámenes en paralelo para no sumar las dos esperas.
     state.email = email;
-    if (MODO_PROFE) return await loadProfe(email);
-    if (MODO_SECUNDARIA) return await loadSecundaria(email);
+    if (MODO_PROFE) { await loadProfe(email); return reabrirTrasRecarga(); }
+    if (MODO_SECUNDARIA) { await loadSecundaria(email); return reabrirTrasRecarga(); }
     const actividadesP = loadActividades();
     // incluir=panel (openspec: panel-profe-peticiones): si es el admin, el servidor agrega en la misma respuesta grupos,
     // alumnos y alumnas, resumen y «Por revisar»; a cualquier otra persona le responde lo de siempre.
@@ -231,6 +243,7 @@ async function loadFor(email) {
     if (data.isAdmin && !state.resumen) cargarResumen(); // servidor sin panel, o el filtro cambió mientras llegaba
     if (data.isAdmin && cajonEl.open && state.cajonAlumno) pintarCajon(state.cajonAlumno); // tras mover de grupo desde el cajón
     else cargarRankingIngles();
+    if (!data.isAdmin) reabrirTrasRecarga();
     if (state.altaAviso) { const m = document.getElementById('alta-msg'); if (m) { m.innerHTML = '<div class="progress-text">' + escapeHtml(state.altaAviso) + '</div>'; } state.altaAviso = null; }
   } catch (e) {
     if (appEl.style.display === 'none') mostrarEntrada('⚠️ ' + e.message);

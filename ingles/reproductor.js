@@ -20,7 +20,9 @@ const claseEnPasos = () => {
 async function openItem(id) {
   entrarVista('actividad', id);
   contentEl.innerHTML = esqueleto();
+  state.abriendo = id;
   const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email));
+  if (state.vista !== 'actividad' || state.abriendo !== id) return; // se fue a otra parte mientras cargaba
   if (r.status === 409) limpiarBorradores(claveBorrador(id, ''), null); // ya terminado: su borrador sobra
   if (r.status === 409 && r.body.resultado) return showResult(r.body.resultado.mejor, { titulo: r.body.resultado.titulo });
   if (!r.ok) {
@@ -124,8 +126,13 @@ async function openItem(id) {
     if (q.querySelector('[data-emp]')) empPintar(q, fijas[q.dataset.q], '', true);
   });
   if (paso) mostrarPaso(0);
+  state.irAPregunta = null;
   restaurarBorrador(document.getElementById('exam-form'));
   window.scrollTo(0, 0);
+  // Con avance recuperado, se abre en la pregunta donde se quedó (openspec: autoguardado-todo).
+  const q = state.irAPregunta || (document.querySelector('#exam-form.paso') && document.querySelector('#autoguardado-aviso:not(:empty)') ? document.querySelector('#exam-form .q.actual') : null);
+  if (q) q.scrollIntoView({ block: 'center' });
+  state.irAPregunta = null;
 }
 
 // ---------- Autoguardado del avance en este aparato (openspec: examen-autoguardado) ----------
@@ -156,12 +163,16 @@ function limpiarBorradores(prefijo, conservar) {
     if (!d || !(d.t > limite) || (prefijo && k.startsWith(prefijo) && k !== conservar)) quitarBorrador(k);
   }
 }
-function borrarBorradores() { clavesBorrador().forEach(quitarBorrador); } // «Cerrar sesión»
+// «Cerrar sesión»: también los borradores de misiones de este aparato (su copia sigue en la cuenta; openspec: autoguardado-todo).
+function borrarBorradores() {
+  clavesBorrador().forEach(quitarBorrador);
+  try { Object.keys(localStorage).filter(k => k.startsWith('stald_mis_borrador:')).forEach(quitarBorrador); } catch (e) { /* sin almacenamiento */ }
+}
 function guardarBorrador(form, answers) {
   const k = form.dataset.borrador;
   if (k) {
     try {
-      if (Object.keys(answers).length) localStorage.setItem(k, JSON.stringify({ v: 1, t: Date.now(), r: answers }));
+      if (Object.keys(answers).length) localStorage.setItem(k, JSON.stringify({ v: 1, t: Date.now(), r: answers, p: state.paso || 0 }));
       else localStorage.removeItem(k);
       form.dataset.guardado = String(Date.now());
     } catch (e) { /* sin almacenamiento: queda la copia en la cuenta */ }
@@ -180,16 +191,31 @@ async function subirCuenta(form, keepalive) {
   clearTimeout(form._tCuenta); form._tCuenta = null;
   if (!form.isConnected || !form._respuestas) return;
   const respuestas = form._respuestas;
+  const paso = state.paso || 0; // paso visible: al recargar o en otro aparato se vuelve ahí (openspec: autoguardado-todo)
+  form.dataset.subiendo = '1';
+  pintarGuardado();
   try {
     const res = await StaldAuth.fetchConSesion(ACT_URL + '/' + encodeURIComponent(form.dataset.id) + '/borrador?email=' + encodeURIComponent(state.email), {
       method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, keepalive: !!keepalive,
-      body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas }),
+      body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas, paso }),
     });
-    if (res.ok) { form.dataset.enCuenta = String(Date.now()); delete form.dataset.pendiente; if (form._respuestas === respuestas) form._respuestas = null; }
+    if (res.ok) { form.dataset.enCuenta = String(Date.now()); form.dataset.pasoCuenta = String(paso); delete form.dataset.pendiente; if (form._respuestas === respuestas) form._respuestas = null; }
     else if (res.status >= 500 || res.status === 429) form.dataset.pendiente = '1'; // pasajero: se reintenta
-    else form._respuestas = null; // 4xx: intento cerrado o sin acceso, no insistir
+    else { form._respuestas = null; delete form.dataset.pendiente; if (res.status === 409) form.dataset.cerrado = '1'; } // 4xx: intento cerrado o sin acceso
   } catch { /* sin conexión: queda pendiente y se reintenta */ form.dataset.pendiente = '1'; }
+  delete form.dataset.subiendo;
   pintarGuardado();
+}
+// Cambiar de pregunta (paso) guarda ya, sin esperar los 2.5 s, si hay algo que subir o el paso cambió.
+function guardarAlCambiarPaso() {
+  const f = document.getElementById('exam-form');
+  if (!f || !f.dataset.cuenta || f.dataset.cerrado) return;
+  const r = examAnswers(f);
+  if (!Object.keys(r).length) return;
+  if (!f._respuestas && f.dataset.pasoCuenta === String(state.paso || 0)) return;
+  f._respuestas = r;
+  guardarBorrador(f, r); // copia local con el paso nuevo
+  subirCuenta(f);
 }
 document.addEventListener('visibilitychange', () => {
   const f = document.getElementById('exam-form');
@@ -199,18 +225,37 @@ window.addEventListener('online', () => {
   const f = document.getElementById('exam-form');
   if (f && f.dataset.pendiente && f._respuestas) subirCuenta(f);
 });
+// «hace 5 s», «hace 3 min»… (lo comparten el examen y las misiones de texto).
+function haceCuanto(ms) {
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 60) return 'hace ' + s + ' s';
+  const min = Math.floor(s / 60);
+  return min < 60 ? 'hace ' + min + ' min' : 'hace ' + Math.floor(min / 60) + ' h';
+}
+// Indicador discreto (openspec: autoguardado-todo): «💾 Guardado hace 5 s», «Guardando…» o, si no se pudo subir,
+// el aviso con «Reintentar». El avance siempre queda también en este aparato.
 function pintarGuardado() {
   const el = document.getElementById('autoguardado'), f = document.getElementById('exam-form');
   if (!el || !f) return;
-  const ref = Number(f.dataset.enCuenta || f.dataset.guardado || 0);
-  if (!ref) return;
-  const min = Math.floor((Date.now() - ref) / 60000);
-  const cuando = 'Guardado hace ' + (min < 1 ? 'un momento' : min + ' min');
-  if (f.dataset.pendiente) el.textContent = '📴 Sin conexión: tu avance está en este aparato y se subirá a tu cuenta al reconectar';
-  else if (f.dataset.enCuenta) el.textContent = 'Tu avance se guarda en tu cuenta ✔ · ' + cuando;
-  else el.textContent = 'Guardando en tu cuenta… · ' + cuando + ' en este aparato';
+  if (f.dataset.cerrado) {
+    el.innerHTML = '⚠️ Este intento ya se envió desde otro aparato o navegador. Toca «← Volver» y ábrelo otra vez.';
+    return;
+  }
+  if (f.dataset.pendiente && !f.dataset.subiendo) {
+    el.innerHTML = '📴 No se pudo guardar en tu cuenta (¿sin internet?). Tu avance sigue en este aparato. ' +
+      '<button type="button" class="btn ghost sm" data-action="reintentar-guardado">🔄 Reintentar</button>';
+    return;
+  }
+  if (f.dataset.subiendo || f._tCuenta) { el.textContent = 'Guardando…'; return; }
+  const ref = Number(f.dataset.enCuenta || 0);
+  if (ref) el.textContent = '💾 Guardado ' + haceCuanto(ref);
 }
-setInterval(pintarGuardado, 30000);
+setInterval(pintarGuardado, 5000);
+document.addEventListener('click', e => {
+  if (!e.target.closest('[data-action="reintentar-guardado"]')) return;
+  const f = document.getElementById('exam-form');
+  if (f && f._respuestas) subirCuenta(f);
+});
 // Aplica el borrador del intento abierto por id de pregunta; ignora ids que ya no están y las fijas de la corrección.
 // Entre la copia de este aparato y la de la cuenta gana la más reciente (openspec: borrador-en-servidor).
 function restaurarBorrador(form) {
@@ -220,7 +265,8 @@ function restaurarBorrador(form) {
   const deCuenta = cuenta && cuenta.respuestas && (!local || Date.parse(cuenta.actualizado) > local.t);
   const r = deCuenta ? cuenta.respuestas : local && local.r;
   if (!r) return;
-  if (deCuenta) form.dataset.enCuenta = String(Date.parse(cuenta.actualizado) || Date.now());
+  const pasoGuardado = deCuenta ? cuenta.paso : local.p;
+  if (deCuenta) { form.dataset.enCuenta = String(Date.parse(cuenta.actualizado) || Date.now()); form.dataset.pasoCuenta = String(cuenta.paso || 0); }
   const qs = new Map(preguntasPorContestar().map(q => [q.dataset.q, q]));
   let n = 0;
   for (const [id, v] of Object.entries(r)) {
@@ -242,10 +288,12 @@ function restaurarBorrador(form) {
   if (!n) return;
   updateExamProgress(form);
   document.getElementById('autoguardado-aviso').textContent = '↺ ' + (n === 1 ? 'Recuperamos tu respuesta' : 'Recuperamos tus ' + n + ' respuestas') + '. Sigue donde te quedaste.';
-  if (form.classList.contains('paso')) {
-    const i = preguntasPorContestar().findIndex(q => !q.classList.contains('answered'));
-    mostrarPaso(i < 0 ? preguntasPorContestar().length - 1 : i);
-  }
+  // Mismo paso que dejó (openspec: autoguardado-todo); sin paso guardado, la primera sin contestar.
+  const qs2 = preguntasPorContestar();
+  const sinContestar = qs2.findIndex(q => !q.classList.contains('answered'));
+  const i = Number.isInteger(pasoGuardado) && pasoGuardado >= 0 && pasoGuardado < qs2.length ? pasoGuardado : (sinContestar < 0 ? qs2.length - 1 : sinContestar);
+  if (form.classList.contains('paso')) mostrarPaso(i);
+  else { state.paso = i; state.irAPregunta = qs2[i] || null; } // clase por pasos en lista: se desplaza al abrir
 }
 limpiarBorradores(); // caducados, al cargar la página
 // Con el examen abierto: sin «jalar para recargar» (CSS) y confirmación al salir si hay respuestas sin enviar.
@@ -271,11 +319,21 @@ function mostrarPaso(i) {
 }
 function moverPaso(d) {
   mostrarPaso((state.paso || 0) + d);
+  guardarAlCambiarPaso();
   const q = preguntasPorContestar()[state.paso];
   if (!q) return;
   const i = q.querySelector('input:not([type=hidden]):not(:disabled)');
   if (i && i.type === 'text') i.focus(); else q.scrollIntoView({ block: 'nearest' });
 }
+// En lista (clase por pasos en pantalla grande o «Ver todas»), el paso es la pregunta en la que trabaja.
+document.addEventListener('focusin', e => {
+  const q = e.target.closest && e.target.closest('#exam-form:not(.paso) .q:not(.fija)');
+  if (!q) return;
+  const i = preguntasPorContestar().indexOf(q);
+  if (i < 0 || i === state.paso) return;
+  state.paso = i;
+  guardarAlCambiarPaso();
+});
 function verTodas(b) {
   document.getElementById('exam-form').classList.remove('paso');
   b.remove();

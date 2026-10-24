@@ -6,7 +6,7 @@
 //   SUPABASE_URL=… SUPABASE_SERVICE_KEY=… deno run -A server/retencion_entregas.ts --confirmar (borra)
 // STALD_TABLAS elige el prefijo (stald_test_ en pruebas). Sin llaves, sale con código 2.
 import { createDb, type Db, v } from "./db.ts";
-import { type Entrega, sinContenido } from "./misiones.ts";
+import { type Entrega, PREFIJO_BORRADOR_MISION, sinContenido } from "./misiones.ts";
 
 interface FilaEntrega { path: string; data: Entrega; version: number }
 
@@ -40,6 +40,15 @@ export async function aplicarRetencion(db: Db, ahora: string, confirmar: boolean
   return { revisadas: filas.length, borradas: cambios.length - pendientes.length, pendientes };
 }
 
+// Borradores de misiones (texto libre que no se envió; openspec: autoguardado-todo): en la misma retención se borran
+// enteros. Con `confirmar` false solo cuenta.
+export async function aplicarRetencionBorradores(db: Db, confirmar: boolean): Promise<{ revisados: number; borrados: number }> {
+  const filtro = `path=like.${v(PREFIJO_BORRADOR_MISION + "*")}`;
+  const filas = await db.select<{ path: string }>("docs", `${filtro}&select=path`);
+  if (!confirmar || !filas.length) return { revisados: filas.length, borrados: 0 };
+  return { revisados: filas.length, borrados: (await db.remove("docs", filtro)).length };
+}
+
 // Cada 31 de agosto a las 12:00 UTC (6:00 en la Ciudad de México), en Deno Deploy (lo programa server/main.ts).
 export const CRON_RETENCION = "0 12 31 8 *";
 
@@ -53,6 +62,8 @@ if (import.meta.main) {
   const db = createDb({ url, key, prefijo: Deno.env.get("STALD_TABLAS") || "stald_" });
   const r = await aplicarRetencion(db, new Date().toISOString(), confirmar);
   console.log(`${r.revisadas} entrega(s) revisadas; ${r.borradas} ${confirmar ? "sin contenido ahora" : "se borrarían (simulación; usa --confirmar)"}`);
+  const rb = await aplicarRetencionBorradores(db, confirmar);
+  console.log(`${rb.revisados} borrador(es) de misiones; ${confirmar ? rb.borrados + " borrados" : "se borrarían (simulación)"}`);
   if (r.pendientes.length) {
     console.error(`No se pudieron borrar ${r.pendientes.length}: vuelve a correrlo.`);
     Deno.exit(1);

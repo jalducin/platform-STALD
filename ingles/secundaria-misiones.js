@@ -179,9 +179,74 @@ function renderSecMisiones(hoy, admin) {
   }).join('') + '</div>';
 }
 
+// ---------- Borrador de la entrega (openspec: autoguardado-todo) ----------
+// Copia inmediata en este aparato ({ t, texto } por persona, misión y paso; nunca el correo en claro) y copia en la
+// cuenta (PUT /misiones/<id>/borrador) 2.5 s después del último cambio, al salir del cuadro, al ocultar la pestaña y al
+// volver la conexión. Al abrir, gana la más reciente. No es entrega: el profe no la ve hasta «📤 Entregar paso».
 function misBorradorClave(mId, pId) { return 'stald_mis_borrador:' + misClaveEmail() + ':' + mId + ':' + pId; }
-function misLeerBorrador(mId, pId) { try { return localStorage.getItem(misBorradorClave(mId, pId)) || ''; } catch (e) { return ''; } }
-function misGuardarBorrador(mId, pId, v) { try { if (v) localStorage.setItem(misBorradorClave(mId, pId), v); else localStorage.removeItem(misBorradorClave(mId, pId)); } catch (e) { /* sin almacenamiento */ } }
+function misLeerLocal(mId, pId) {
+  try {
+    const v = localStorage.getItem(misBorradorClave(mId, pId));
+    if (!v) return null;
+    try { const d = JSON.parse(v); if (d && typeof d.texto === 'string') return d; } catch (e) { /* formato anterior: texto plano */ }
+    return { t: 0, texto: v };
+  } catch (e) { return null; }
+}
+function misGuardarBorrador(mId, pId, v) {
+  try {
+    if (v) localStorage.setItem(misBorradorClave(mId, pId), JSON.stringify({ t: Date.now(), texto: v }));
+    else localStorage.removeItem(misBorradorClave(mId, pId));
+  } catch (e) { /* sin almacenamiento: queda la copia en la cuenta */ }
+}
+// Texto inicial del paso: entre este aparato y la cuenta, el más reciente.
+function misLeerBorrador(m, pId) {
+  const local = misLeerLocal(m.id, pId);
+  const cuenta = m.borrador && m.borrador.pasos && m.borrador.pasos[pId];
+  if (cuenta && (!local || Date.parse(cuenta.actualizado) >= local.t)) return { texto: cuenta.texto, enCuenta: Date.parse(cuenta.actualizado) };
+  return local ? { texto: local.texto, enCuenta: 0 } : null;
+}
+const MIS_ESPERA_MS = 2500;
+function misProgramar(f) { clearTimeout(f._tMis); f._tMis = setTimeout(() => misSubir(f), MIS_ESPERA_MS); f._misPendiente = true; misPintar(f); }
+async function misSubir(f, keepalive) {
+  clearTimeout(f._tMis); f._tMis = null;
+  const t = f.querySelector('textarea'); // también si ya se repintó la vista: el texto pendiente se sube igual
+  if (!t || !f._misPendiente) return;
+  const texto = t.value;
+  f.dataset.subiendo = '1'; misPintar(f);
+  try {
+    const res = await StaldAuth.fetchConSesion(API_BASE + '/misiones/' + encodeURIComponent(f.dataset.misEntrega) + '/borrador' + misQuery(), {
+      method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, keepalive: !!keepalive, body: JSON.stringify({ paso: f.dataset.paso, texto }),
+    });
+    if (res.ok) { f.dataset.enCuenta = String(Date.now()); delete f.dataset.error; if (t.value === texto) f._misPendiente = false; }
+    else if (res.status >= 500 || res.status === 429) f.dataset.error = '1';
+    else { f._misPendiente = false; delete f.dataset.error; } // 4xx (evaluada, sin acceso): no insistir
+  } catch (e) { f.dataset.error = '1'; } // sin red: se reintenta
+  delete f.dataset.subiendo;
+  misPintar(f);
+}
+function misPintar(f) {
+  const el = f.querySelector('.mis-guardado');
+  if (!el) return;
+  if (f.dataset.error && !f.dataset.subiendo) {
+    el.innerHTML = '📴 No se pudo guardar en tu cuenta (¿sin internet?). Tu texto sigue en este aparato. <button type="button" class="btn ghost mis-btn-chico" data-mis-reintentar>🔄 Reintentar</button>';
+  } else if (f.dataset.subiendo || f._tMis) el.textContent = 'Guardando…';
+  else if (Number(f.dataset.enCuenta)) el.textContent = '💾 Guardado ' + haceCuanto(Number(f.dataset.enCuenta));
+  else el.textContent = '';
+}
+const misForms = () => [...document.querySelectorAll('form.mis-entrega')];
+setInterval(() => misForms().forEach(misPintar), 5000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') misForms().filter(f => f._misPendiente).forEach(f => misSubir(f, true)); });
+window.addEventListener('online', () => misForms().filter(f => f._misPendiente && f.dataset.error).forEach(f => misSubir(f)));
+document.addEventListener('focusout', e => { // cambiar de paso (salir del cuadro) guarda ya
+  const f = e.target.closest && e.target.closest('form.mis-entrega');
+  if (f && e.target.matches('[data-mis-texto]') && f._misPendiente) misSubir(f);
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-mis-reintentar]');
+  if (!b) return;
+  const f = b.closest('form.mis-entrega');
+  if (f) { f._misPendiente = true; misSubir(f); }
+});
 
 function pasoHtml(m, p, i, puedeEntregar) {
   const e = m.entrega && m.entrega.pasos[p.id];
@@ -193,13 +258,16 @@ function pasoHtml(m, p, i, puedeEntregar) {
     ? '<p class="mis-correccion">✏️ <b>Tu profe te pide un ajuste:</b> ' + escapeHtml(e.correccion.motivo) + (e.correccion.privacidad ? ' Recuerda usar nombres inventados: lo que habías escrito ya se borró para cuidar tu privacidad.' : '') + '</p>' : '';
   const entregado = e && e.texto ? '<details class="mis-entregado"' + (abierto ? '' : ' open') + '><summary>Lo que entregaste</summary>' + misPre(e.texto) + '</details>' : (e && e.borrado && !correccion ? '<p class="meta">El contenido de este paso ya se borró; tu evaluación se conserva.</p>' : '');
   const idT = 'mis-txt-' + m.id + '-' + p.id;
-  const inicial = misLeerBorrador(m.id, p.id) || (e && e.estado === 'entregado' && e.texto) || '';
-  const form = abierto ? '<form class="mis-entrega" data-mis-entrega="' + escapeHtml(m.id) + '" data-paso="' + escapeHtml(p.id) + '">' +
+  const bor = abierto ? misLeerBorrador(m, p.id) : null;
+  const inicial = (bor && bor.texto) || (e && e.estado === 'entregado' && e.texto) || '';
+  const form = abierto ? '<form class="mis-entrega" data-mis-entrega="' + escapeHtml(m.id) + '" data-paso="' + escapeHtml(p.id) + '"' + (bor && bor.enCuenta ? ' data-en-cuenta="' + bor.enCuenta + '"' : '') + '>' +
     '<label for="' + escapeHtml(idT) + '" class="mis-label">Tu entrega del paso ' + (i + 1) + '</label>' +
     '<p class="mis-aviso" id="' + escapeHtml(idT) + '-aviso">🔒 Sin nombres reales, direcciones ni datos de contacto. Solo texto.</p>' +
     '<textarea id="' + escapeHtml(idT) + '" rows="8" maxlength="' + MIS_MAX + '" aria-describedby="' + escapeHtml(idT) + '-aviso ' + escapeHtml(idT) + '-cuenta" data-mis-texto>' + escapeHtml(inicial) + '</textarea>' +
     '<div class="mis-entrega-pie"><span class="mis-cuenta" id="' + escapeHtml(idT) + '-cuenta" aria-live="polite">' + [...inicial].length + ' / ' + MIS_MAX + '</span>' +
-    '<button type="submit" class="btn">' + (e ? '📤 Volver a entregar' : '📤 Entregar paso') + '</button></div><p class="mis-res" aria-live="polite"></p></form>' : '';
+    '<button type="submit" class="btn">' + (e ? '📤 Volver a entregar' : '📤 Entregar paso') + '</button></div>' +
+    '<p class="mis-guardado meta" aria-live="polite">' + (bor && bor.texto ? (bor.enCuenta ? '💾 Guardado ' + haceCuanto(bor.enCuenta) : '↺ Recuperamos tu texto de este aparato.') : '') + '</p>' +
+    '<p class="mis-res" aria-live="polite"></p></form>' : '';
   return '<li class="mis-paso" data-mis-paso="' + escapeHtml(p.id) + '"><h3><span class="sec-paso-num" aria-hidden="true">' + (i + 1) + '</span> ' + escapeHtml(p.titulo) + '</h3>' +
     '<p class="mis-paso-meta"><span class="mis-estado"><span aria-hidden="true">' + estado[0] + '</span> ' + estado[1] + '</span> · vence ' + escapeHtml(misFecha(p.fechaLimite)) + '</p>' +
     misPre(p.instrucciones) + (p.entregable ? '<p><b>Qué entregas:</b> ' + escapeHtml(p.entregable) + '</p>' : '') + (p.extension ? '<p class="meta">Extensión: ' + escapeHtml(p.extension) + '</p>' : '') +
@@ -259,6 +327,7 @@ document.addEventListener('input', e => {
   c.textContent = n + ' / ' + MIS_MAX;
   c.classList.toggle('lleno', n > MIS_MAX * 0.95);
   misGuardarBorrador(f.dataset.misEntrega, f.dataset.paso, t.value);
+  misProgramar(f);
 });
 document.addEventListener('submit', async e => {
   const f = e.target.closest && e.target.closest('form.mis-entrega');
@@ -272,6 +341,7 @@ document.addEventListener('submit', async e => {
   const boton = f.querySelector('button[type=submit]');
   boton.disabled = true;
   res.textContent = 'Enviando…';
+  clearTimeout(f._tMis); f._tMis = null; f._misPendiente = false; // al entregar, el servidor quita el borrador del paso
   const id = f.dataset.misEntrega, paso = f.dataset.paso;
   const r = await fetchJson(API_BASE + '/misiones/' + encodeURIComponent(id) + '/entrega' + misQuery(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ paso, texto }) });
   boton.disabled = false;

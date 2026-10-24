@@ -70,3 +70,15 @@ Deno.test("borrador: enviar el intento lo borra; un borrador vacío también se 
   assertEquals(await store.get(RUTA), null, "enviado: sin borrador");
   assertEquals((await sec(store, "PUT", "/sec-mensual/borrador", "luz@example.com", { intento: 1, respuestas: { h1: 0 } })).status, 409);
 });
+
+Deno.test("borrador: guarda el paso visible (0 … n-1) y lo devuelve; un paso fuera de rango se ignora", async () => {
+  clearCache();
+  const store = datos();
+  await sec(store, "PUT", "/sec-mensual/borrador", "luz@example.com", { intento: 1, respuestas: { h1: 0 }, paso: 2 });
+  const g = await sec(store, "GET", "/sec-mensual", "luz@example.com");
+  assertEquals([g.body.borrador.respuestas, g.body.borrador.paso], [{ h1: 0 }, 2]);
+  await sec(store, "PUT", "/sec-mensual/borrador", "luz@example.com", { intento: 1, respuestas: { h1: 0 }, paso: 9 });
+  assertEquals((await sec(store, "GET", "/sec-mensual", "luz@example.com")).body.borrador.paso, undefined);
+  await sec(store, "PUT", "/sec-mensual/borrador", "luz@example.com", { intento: 1, respuestas: { h1: 0 }, paso: "x" });
+  assertEquals((await store.get<any>(RUTA))!.data.paso, undefined);
+});

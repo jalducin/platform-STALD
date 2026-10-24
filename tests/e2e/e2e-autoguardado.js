@@ -38,7 +38,7 @@ const borradorCuenta = p => p.evaluate(async ([api, email, id]) => (await (await
   await p.check('input[name="g-h1"][value="0"]');
   await p.click('[data-action="q-sig"]');
   await p.fill('input[name="g-h2"]', 'cinco');
-  ok('indicador «Guardado hace un momento»', (await texto(p, '#autoguardado')).includes('Guardado hace un momento'), await texto(p, '#autoguardado'));
+  ok('indicador «Guardando…» o «💾 Guardado hace N s» (openspec: autoguardado-todo)', /Guardando…|💾 Guardado hace \d+ s/.test(await texto(p, '#autoguardado')), await texto(p, '#autoguardado'));
   let bs = await borradores(p);
   const clave = bs.length === 1 ? bs[0][0] : '';
   ok('un borrador por persona, elemento e intento', bs.length === 1 && clave.startsWith('stald_borrador:secundaria:') && clave.endsWith(':' + ID + ':1'), clave);
@@ -61,7 +61,7 @@ const borradorCuenta = p => p.evaluate(async ([api, email, id]) => (await (await
   ok('avance 2/6 respondidas', (await texto(p, '#exam-count')).startsWith('2/6'), await texto(p, '#exam-count'));
   ok('aviso «Recuperamos tus 2 respuestas»', (await texto(p, '#autoguardado-aviso')).includes('Recuperamos tus 2 respuestas'), await texto(p, '#autoguardado-aviso'));
   ok('el aviso de recuperación no se confunde con la corrección (.aviso-corr)', !(await p.$('.aviso-corr')));
-  ok('modo paso: continúa en la primera sin contestar', await p.$eval('#exam-form .q.actual', q => q.dataset.q) === 'g-h3');
+  ok('modo paso: continúa en el mismo paso donde se quedó (openspec: autoguardado-todo)', await p.$eval('#exam-form .q.actual', q => q.dataset.q) === 'g-h2');
   await p.screenshot({ path: 'autoguardado-restaurado.png' });
 
   // 3) «← Volver» y reabrir: sigue ahí.
@@ -72,7 +72,7 @@ const borradorCuenta = p => p.evaluate(async ([api, email, id]) => (await (await
   ok('volver y reabrir: respuestas restauradas', await p.isChecked('input[name="g-h1"][value="0"]') && (await p.inputValue('input[name="g-h2"]')) === 'cinco');
 
   // 3b) Otro aparato (otro contexto, sin localStorage): recupera desde la cuenta (openspec: borrador-en-servidor).
-  await p.waitForFunction(() => /en tu cuenta ✔ · Guardado/.test(document.getElementById('autoguardado').textContent), null, { timeout: 15000 })
+  await p.waitForFunction(() => /💾 Guardado hace \d+ s/.test(document.getElementById('autoguardado').textContent), null, { timeout: 15000 })
     .then(() => ok('el avance se sube a la cuenta', true), async () => ok('el avance se sube a la cuenta', false, await texto(p, '#autoguardado')));
   const enCuenta = await borradorCuenta(p);
   ok('la cuenta guarda solo preguntas del intento', !!enCuenta && JSON.stringify(enCuenta.respuestas) === '{"g-h1":0,"g-h2":"cinco"}', JSON.stringify(enCuenta));
