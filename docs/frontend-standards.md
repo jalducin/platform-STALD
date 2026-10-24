@@ -1202,14 +1202,24 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     `{ v: 1, t, r }` (`r` con la forma de `examAnswers`). Es la copia inmediata en el aparato.
     - Copia en la cuenta (cambio `borrador-en-servidor`): `PUT …/<id>/borrador { intento, respuestas }` 2.5 s después
       del último cambio, al ocultar la pestaña (`keepalive`) y, si falló, al volver la conexión (`online`). Al abrir el
-      intento gana la copia más reciente entre la del aparato y la de la cuenta (`borrador.actualizado`), así que se
-      recupera desde cualquier aparato o navegador. `#autoguardado` dice «Tu avance se guarda en tu cuenta ✔ · …» o,
-      sin conexión, que se subirá al reconectar.
+      intento gana la copia de la cuenta, salvo que el aparato tenga cambios sin subir (`s ≠ 1` en la copia local;
+      no depende del reloj del aparato), así que se recupera desde cualquier aparato o navegador.
+    - Cambio `autoguardado-todo`: el borrador lleva el `paso` (pregunta visible) y se sube **ya** al cambiar de paso
+      (←/→ o foco en otra pregunta en la lista). `#autoguardado` dice «Guardando…», «💾 Guardado hace N s» o, sin red,
+      «📴 No se pudo guardar… 🔄 Reintentar» (`data-action="reintentar-guardado"`); si el intento ya se envió desde otro
+      navegador (409), «⚠️ Este intento ya se envió desde otro aparato o navegador». Recargar con `#ver/<id>` reabre el
+      elemento (`reabrirTrasRecarga` en `ingles/app.js`); `openItem` ignora una respuesta si ya se cambió de vista.
     - Al reabrir el mismo intento se restaura por id de pregunta (ignora las que ya no están y las fijas de la
-      corrección), avisa «Recuperamos tus N respuestas» (`#autoguardado-aviso`) y, en modo paso, va a la primera sin
-      contestar.
+      corrección), avisa «Recuperamos tus N respuestas» (`#autoguardado-aviso`) y abre en el paso guardado (o, sin
+      él, en la primera sin contestar).
     - Se borra al enviar con éxito, al abrir un intento posterior o un elemento terminado, con 🚪 Cerrar sesión y a
       los 14 días. La vista previa del admin no guarda.
+    - Misiones de texto (`ingles/secundaria-misiones.js`, cambio `autoguardado-todo`): copia local
+      `stald_mis_borrador:<hash>:<misión>:<paso>` = `{ t, texto, s }` y copia en la cuenta con
+      `PUT /misiones/<id>/borrador { paso, texto }` 2.5 s después del último cambio, al salir del cuadro (`focusout`),
+      al ocultar la pestaña y al volver la red. El texto inicial del paso sale de `m.borrador` (de `GET /misiones`) o de
+      la copia local sin subir. Indicador `.mis-guardado` con los mismos textos y `[data-mis-reintentar]`. 🚪 Cerrar
+      sesión borra también estas copias locales.
     - Mientras existe `#exam-form`, `html.examen-abierto` aplica `overscroll-behavior-y: contain` (sin «jalar para
       recargar») y `beforeunload` pide confirmar si hay respuestas sin enviar.
 - **Peticiones.** Todas salen por `api(url, opts, cfg?)` en `comun.js` (`fetchJson` es un alias), que usa

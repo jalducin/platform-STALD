@@ -117,7 +117,10 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   - Con `CAPTURAS=1` guarda una captura de cada diapositiva.
   - Si la copia no trae esos Meets, sale `OMIT`. Es de solo lectura.
 - `tests/fixtures/datos/` se superpone a la copia: exámenes de Secundaria exclusivos de `valeria@example.com`
-  (`sec-e2e` para `examen-secundaria` y `sec-e2e-guardado` para `autoguardado`). Cada prueba usa el suyo para no
+  (`sec-e2e` para `examen-secundaria` y `sec-e2e-guardado` para `autoguardado`) y, para `autoguardado-todo` (cambio
+  `autoguardado-todo`), la clase `sec-e2e-todo-clase` y la misión `mis-e2e-zz-borrador-sec` (de `valeria`), el reto
+  del Meet `meet-e2e-reto-borrador` (de `angel`) y la misión de Inglés `mis-ingles-e2e-zz-borrador` (de `laura`); esa
+  prueba reinicia los resultados que envía y borra el texto de sus entregas al terminar. Cada prueba usa el suyo para no
   gastarle las oportunidades a otra en la misma fase. También trae una clase por Meet anterior (`meet-2026-09-27`,
   semana `2026-09-21`, exclusiva de `nadie-e2e`) para la prueba `presentar`; solo la ve el admin. Y la actividad
   `fichas-e2e` (ordenar y emparejar), en la misma semana, con fecha 2026-10-04 y exclusiva de `fernando`, para

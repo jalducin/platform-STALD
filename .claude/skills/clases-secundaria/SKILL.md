@@ -27,6 +27,10 @@ formato de cada JSON está en [docs/data-model.md](../../../docs/data-model.md),
   - Khan Academy y Cambridge responden 200 aunque la página no exista, así que revisa el título o no las uses.
 - **Idioma:** español de México. En Inglés, las instrucciones van en español y el contenido en inglés.
 - **Tono:** lenguaje claro, motivador y nada tedioso, para 12–13 años.
+- **Avance guardado (cambio `autoguardado-todo`):** la plataforma guarda sola el avance de cada clase, repaso, examen
+  y misión de texto en la cuenta de la alumna, y solo se califica al «Enviar». Por eso cada ejercicio necesita un
+  `id` estable: no cambies los `id` de una clase ya publicada (su borrador se perdería) y no pidas entregas fuera de
+  la plataforma «para no perder lo escrito». Los pasos de una misión, hasta 4 000 caracteres de texto.
 
 ## Horario (15 clases por semana)
 
