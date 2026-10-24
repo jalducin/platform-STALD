@@ -1,8 +1,8 @@
 ## ADDED Requirements
 
 ### Requirement: Borrador de la entrega de texto en la cuenta
-Mientras alguien escribe la entrega de un paso de una misión principal (Secundaria o Inglés, como My Hero Card), la
-plataforma SHALL guardar el texto en el servidor como borrador, por persona, misión y paso
+La plataforma SHALL guardar en el servidor el avance de la entrega de texto de cada paso de una misión principal
+(Secundaria o Inglés, como My Hero Card) mientras alguien la escribe. SHALL guardar el texto en el servidor como borrador, por persona, misión y paso
 (`PUT /misiones/<id>/borrador { paso, texto }`, ruta `borradores/misiones/<id>/<slug>.json`), a los pocos segundos del
 último cambio, al salir del cuadro, al ocultar la pestaña y al volver la conexión, y SHALL guardar también una copia en
 el aparato. `GET /misiones` SHALL devolver el borrador solo a su dueña o dueño; al abrir la misión SHALL ganar la copia

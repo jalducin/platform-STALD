@@ -132,7 +132,7 @@ async function cicloMision(b, c) {
   const mis = async () => ((await pedir('/misiones', c.email)).body.misiones || []).find(m => m.id === c.id);
   const m0 = await mis();
   if (!m0) return ok(`${n}: misión visible`, false);
-  const abrir = async p => { await p.waitForSelector(`[data-mis-abrir="${c.id}"]`, { timeout: 60000 }); await p.click(`[data-mis-abrir="${c.id}"]`); await p.waitForSelector(`[data-mis-detalle="${c.id}"] [data-mis-paso="p1"] textarea`, { timeout: 30000 }); };
+  const abrir = async p => { const btn = p.locator(`[data-mis-abrir="${c.id}"]:visible`).first(); await btn.waitFor({ timeout: 60000 }); await btn.click(); await p.waitForSelector(`[data-mis-detalle="${c.id}"] [data-mis-paso="p1"] textarea`, { timeout: 30000 }); };
   const area = `[data-mis-detalle="${c.id}"] [data-mis-paso="p1"] textarea`;
   const pie = `[data-mis-detalle="${c.id}"] [data-mis-paso="p1"] .mis-guardado`;
   const p = await abrirPagina(b, { email: c.email, viejo: true, ingles: true, out, ruta: c.pagina, dialogos: 'aceptar', etiqueta: n });

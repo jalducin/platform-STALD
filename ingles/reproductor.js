@@ -199,12 +199,21 @@ async function subirCuenta(form, keepalive) {
       method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, keepalive: !!keepalive,
       body: JSON.stringify({ intento: Number(form.dataset.intento), respuestas, paso }),
     });
-    if (res.ok) { form.dataset.enCuenta = String(Date.now()); form.dataset.pasoCuenta = String(paso); delete form.dataset.pendiente; if (form._respuestas === respuestas) form._respuestas = null; }
+    if (res.ok) {
+      form.dataset.enCuenta = String(Date.now()); form.dataset.pasoCuenta = String(paso); delete form.dataset.pendiente;
+      if (form._respuestas === respuestas) { form._respuestas = null; marcarSubido(form.dataset.borrador, respuestas); }
+    }
     else if (res.status >= 500 || res.status === 429) form.dataset.pendiente = '1'; // pasajero: se reintenta
     else { form._respuestas = null; delete form.dataset.pendiente; if (res.status === 409) form.dataset.cerrado = '1'; } // 4xx: intento cerrado o sin acceso
   } catch { /* sin conexión: queda pendiente y se reintenta */ form.dataset.pendiente = '1'; }
   delete form.dataset.subiendo;
   pintarGuardado();
+}
+// La copia local ya está en la cuenta (s: 1) si sigue con las mismas respuestas.
+function marcarSubido(k, respuestas) {
+  const d = leerBorrador(k || '');
+  if (!d || JSON.stringify(d.r) !== JSON.stringify(respuestas)) return;
+  try { localStorage.setItem(k, JSON.stringify({ ...d, s: 1 })); } catch (e) { /* sin almacenamiento */ }
 }
 // Cambiar de pregunta (paso) guarda ya, sin esperar los 2.5 s, si hay algo que subir o el paso cambió.
 function guardarAlCambiarPaso() {
@@ -262,7 +271,8 @@ function restaurarBorrador(form) {
   if (!form) return;
   const local = leerBorrador(form.dataset.borrador || '');
   const cuenta = state.borradorCuenta;
-  const deCuenta = cuenta && cuenta.respuestas && (!local || Date.parse(cuenta.actualizado) > local.t);
+  // Gana la cuenta salvo que este aparato tenga cambios que aún no subió (s ≠ 1): así no depende del reloj del aparato.
+  const deCuenta = cuenta && cuenta.respuestas && (!local || local.s === 1);
   const r = deCuenta ? cuenta.respuestas : local && local.r;
   if (!r) return;
   const pasoGuardado = deCuenta ? cuenta.paso : local.p;

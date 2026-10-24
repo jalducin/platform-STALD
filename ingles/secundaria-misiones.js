@@ -198,11 +198,17 @@ function misGuardarBorrador(mId, pId, v) {
     else localStorage.removeItem(misBorradorClave(mId, pId));
   } catch (e) { /* sin almacenamiento: queda la copia en la cuenta */ }
 }
+function misMarcarSubido(mId, pId, texto) {
+  const d = misLeerLocal(mId, pId);
+  if (!d || d.texto !== texto) return;
+  try { localStorage.setItem(misBorradorClave(mId, pId), JSON.stringify({ ...d, s: 1 })); } catch (e) { /* sin almacenamiento */ }
+}
 // Texto inicial del paso: entre este aparato y la cuenta, el más reciente.
 function misLeerBorrador(m, pId) {
   const local = misLeerLocal(m.id, pId);
   const cuenta = m.borrador && m.borrador.pasos && m.borrador.pasos[pId];
-  if (cuenta && (!local || Date.parse(cuenta.actualizado) >= local.t)) return { texto: cuenta.texto, enCuenta: Date.parse(cuenta.actualizado) };
+  // Gana la cuenta salvo que este aparato tenga texto sin subir (s ≠ 1); no depende del reloj del aparato.
+  if (cuenta && (!local || local.s === 1)) return { texto: cuenta.texto, enCuenta: Date.parse(cuenta.actualizado) };
   return local ? { texto: local.texto, enCuenta: 0 } : null;
 }
 const MIS_ESPERA_MS = 2500;
@@ -217,7 +223,10 @@ async function misSubir(f, keepalive) {
     const res = await StaldAuth.fetchConSesion(API_BASE + '/misiones/' + encodeURIComponent(f.dataset.misEntrega) + '/borrador' + misQuery(), {
       method: 'PUT', headers: { 'content-type': 'text/plain;charset=UTF-8' }, keepalive: !!keepalive, body: JSON.stringify({ paso: f.dataset.paso, texto }),
     });
-    if (res.ok) { f.dataset.enCuenta = String(Date.now()); delete f.dataset.error; if (t.value === texto) f._misPendiente = false; }
+    if (res.ok) {
+      f.dataset.enCuenta = String(Date.now()); delete f.dataset.error;
+      if (t.value === texto) { f._misPendiente = false; misMarcarSubido(f.dataset.misEntrega, f.dataset.paso, texto); }
+    }
     else if (res.status >= 500 || res.status === 429) f.dataset.error = '1';
     else { f._misPendiente = false; delete f.dataset.error; } // 4xx (evaluada, sin acceso): no insistir
   } catch (e) { f.dataset.error = '1'; } // sin red: se reintenta

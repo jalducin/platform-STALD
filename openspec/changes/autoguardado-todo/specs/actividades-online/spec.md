@@ -1,8 +1,8 @@
 ## MODIFIED Requirements
 
 ### Requirement: Avance del examen guardado en la cuenta
-Mientras alguien contesta un intento (actividad, examen, refuerzo, reto del Meet o clase por pasos, en Inglés,
-Secundaria o la ruta del profe), la plataforma SHALL guardar su avance en el servidor, asociado a su cuenta, a ese
+La plataforma SHALL guardar en el servidor el avance de quien contesta un intento (actividad, examen, refuerzo, reto
+del Meet o clase por pasos, en Inglés, Secundaria o la ruta del profe), asociado a su cuenta, a ese
 elemento y a ese intento, a los pocos segundos del último cambio y de inmediato al cambiar de paso, junto con el paso
 visible. Al volver a abrirlo desde cualquier aparato o navegador SHALL recuperar las respuestas y abrir en el mismo
 paso; al recargar la página dentro del elemento, SHALL reabrirlo solo. El borrador NO SHALL calificarse ni contar como
