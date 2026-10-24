@@ -53,9 +53,10 @@ export function createDb(cfg: ConfigDb): Db {
 // Rutas que viven en Postgres (documentos 1 a 1), según las marcas de migración (openspec: ingles-grupos,
 // cierre-tecnico): Inglés con meta/migrado y Juegos con meta/migrado-juegos. El contenido sigue en el repo.
 // borradores/: avance del intento abierto (openspec: borrador-en-servidor); ruta nueva, sin migración.
+// borradores-misiones/: texto sin entregar de las misiones (openspec: autoguardado-todo); ruta nueva, sin migración.
 // entregas/: entregas de misiones en texto y su evaluación (openspec: rpg-fase2-misiones); ruta nueva, sin migración.
 // gamificacion/: apagado del ranking por grupo y perfiles (openspec: rpg-fase2-ingles); ruta nueva, sin migración.
-export const PREFIJOS_INGLES = ["alumnos.json", "resultados/", "avance/", "borradores/", "entregas/", "gamificacion/"];
+export const PREFIJOS_INGLES = ["alumnos.json", "resultados/", "avance/", "borradores/", "borradores-misiones/", "entregas/", "gamificacion/"];
 export const PREFIJO_JUEGOS = "juegos/";
 export const esRutaPg = (path: string, prefijos: string[] = PREFIJOS_INGLES) =>
   prefijos.some((p) => p.endsWith("/") ? path.startsWith(p) : path === p);

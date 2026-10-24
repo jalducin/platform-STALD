@@ -11,6 +11,11 @@
       "id": "sec-e2e-guardado",
       "tipo": "examen",
       "fecha": "2026-12-31"
+    },
+    {
+      "id": "sec-e2e-todo-clase",
+      "tipo": "actividad",
+      "fecha": "2026-12-31"
     }
   ]
 }

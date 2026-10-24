@@ -74,7 +74,7 @@ const abrir = async p => {
   ok('pares incompletos no cuentan como respondida', (await texto(p, '#exam-count')).startsWith('1/4') && !(await p.$eval('[data-q="fe-m1"]', q => q.classList.contains('answered'))), await texto(p, '#exam-count'));
 
   // 4) Recargar a medio intento: la oración y los pares siguen armados.
-  await p.waitForFunction(() => /en tu cuenta ✔ · Guardado/.test(document.getElementById('autoguardado').textContent), null, { timeout: 15000 })
+  await p.waitForFunction(() => /💾 Guardado hace \d+ s/.test(document.getElementById('autoguardado').textContent), null, { timeout: 15000 })
     .then(() => ok('el avance se sube a la cuenta', true), async () => ok('el avance se sube a la cuenta', false, await texto(p, '#autoguardado')));
   const cuenta = (await (await fetch(API + `/ingles/actividades/${ID}?email=${ALUMNO}`)).json()).borrador;
   ok('borrador en la cuenta con el avance parcial de los pares', !!cuenta && cuenta.respuestas['fe-o1'] === 'I will' && JSON.stringify(cuenta.respuestas['fe-m1']) === JSON.stringify(['este / esta', 'estos / estas', '', '']), JSON.stringify(cuenta));

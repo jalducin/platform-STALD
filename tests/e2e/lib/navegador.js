@@ -44,9 +44,10 @@ async function abrirPagina(b, o = {}) {
     const etiqueta = o.etiqueta ?? o.email ?? '';
     p.on('pageerror', e => o.out.push('FAIL error JS' + (etiqueta ? ' (' + etiqueta + ')' : '') + ': ' + e.message));
   }
-  if (o.dialogos === 'aceptar') p.on('dialog', d => d.accept());
-  else if (o.dialogos === 'rechazar') p.on('dialog', d => d.dismiss());
-  else if (o.dialogos === 'registrar') { p.alertas = []; p.on('dialog', d => { p.alertas.push(d.message()); d.accept(); }); }
+  // .catch: si el diálogo ya se cerró (p. ej. beforeunload al recargar), no tumba la prueba.
+  if (o.dialogos === 'aceptar') p.on('dialog', d => d.accept().catch(() => {}));
+  else if (o.dialogos === 'rechazar') p.on('dialog', d => d.dismiss().catch(() => {}));
+  else if (o.dialogos === 'registrar') { p.alertas = []; p.on('dialog', d => { p.alertas.push(d.message()); d.accept().catch(() => {}); }); }
   if (o.ruta) {
     await p.goto(urlDe(o.ruta));
     if (o.esperar) {

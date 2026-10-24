@@ -145,7 +145,8 @@ async function itemsDelGrupo(store: Store): Promise<Item[]> {
 const rutaResultado = (id: string, slug: string) => `resultados/${id}/${slug}.json`;
 // Borrador del intento abierto: { intento, respuestas, actualizado } (openspec: borrador-en-servidor).
 const rutaBorrador = (id: string, slug: string) => `borradores/${id}/${slug}.json`;
-interface Borrador { intento: number; respuestas: Record<string, unknown>; actualizado: string }
+// `paso` (opcional): índice de la pregunta visible al guardar, para volver al mismo paso (openspec: autoguardado-todo).
+interface Borrador { intento: number; respuestas: Record<string, unknown>; actualizado: string; paso?: number }
 const ARCHIVO_PROFE = "profe.json"; // intentos del profe en elementos del grupo: nunca cuentan como alumno
 
 async function leerResultado(store: Store, id: string, slug: string) {
@@ -345,9 +346,10 @@ async function guardarBorrador(c: CtxElemento, n: number, p: PreguntasIntento): 
   const { correccion, preguntas } = p;
   if (req.method !== "PUT") return json({ error: "metodo_no_permitido" }, 405);
   if (quien.isAdmin) return json({ error: "solo_alumno" }, 403);
-  let body: { intento?: number; respuestas?: unknown } = {};
+  let body: { intento?: number; respuestas?: unknown; paso?: unknown } = {};
   try { body = await req.json(); } catch { return json({ error: "json_invalido" }, 400); }
   if (body.intento !== n) return json({ error: "intento_invalido", esperado: n }, 409);
+  const paso = Number.isInteger(body.paso) && (body.paso as number) >= 0 && (body.paso as number) < preguntas.length ? body.paso as number : undefined;
   const fijas = new Set(Object.keys(correccion?.fijas || {}));
   const respuestas = Object.fromEntries(Object.entries(sanitizeRespuestas(preguntas, body.respuestas)).filter(([id]) => !fijas.has(id)));
   const ruta = rutaBorrador(it.id, slug!);
@@ -355,7 +357,7 @@ async function guardarBorrador(c: CtxElemento, n: number, p: PreguntasIntento): 
     if (await store.get(ruta)) await store.remove(ruta, `${it.id}: borrador vacío de ${quien.alumno}`);
     return json({ guardado: true, vacio: true });
   }
-  const borrador: Borrador = { intento: n, respuestas, actualizado: ahoraIso() };
+  const borrador: Borrador = { intento: n, respuestas, actualizado: ahoraIso(), ...(paso !== undefined ? { paso } : {}) };
   for (let i = 0; i < 3; i++) {
     const actual = await store.get<Borrador>(ruta);
     if (await store.put(ruta, borrador, actual?.sha ?? null, `${it.id}: borrador de ${quien.alumno}`)) return json({ guardado: true, actualizado: borrador.actualizado });
@@ -379,7 +381,7 @@ async function verElemento(c: CtxElemento, n: number, usados: number, alumnoVist
     ...(correccion ? { correccion: { fijas: correccion.fijas, anteriores: correccion.anteriores } } : {}),
     // Fichas y pares barajados con la misma base que la selección: elemento + alumno (o admin) + intento.
     preguntas: preguntas.map((p) => publicQuestion(p, `${it.id}|${alumnoVista ? slugAlumno(alumnoVista) : "admin"}|${n}`)),
-    ...(bor && bor.intento === n ? { borrador: { respuestas: bor.respuestas, actualizado: bor.actualizado } } : {}),
+    ...(bor && bor.intento === n ? { borrador: { respuestas: bor.respuestas, actualizado: bor.actualizado, ...(bor.paso !== undefined ? { paso: bor.paso } : {}) } } : {}),
   });
 }
 

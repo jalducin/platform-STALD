@@ -484,9 +484,13 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     actividades, conteo de grupos ni Meet. No se borran `resultados/`, `avance/`, `borradores/` ni su fila de
     `stald_inscripciones` (por eso «Reactivar» la regresa al mismo grupo). Contrato:
     [backend-standards.md](backend-standards.md) § Rutas `/ingles/alumnos`.
-- `borradores/<id>/<slug-alumno>.json`: `{ intento, respuestas, actualizado }`, el avance del intento abierto de
-  Inglés, la ruta del profe o Secundaria. Vive en Postgres, como `resultados/`, y se borra al enviar el intento
-  (cambio `borrador-en-servidor`). Sin correos.
+- `borradores/<id>/<slug-alumno>.json`: `{ intento, respuestas, actualizado, paso? }`, el avance del intento abierto
+  de Inglés, la ruta del profe o Secundaria (`paso`: pregunta visible, cambio `autoguardado-todo`). Vive en Postgres,
+  como `resultados/`, y se borra al enviar el intento (cambio `borrador-en-servidor`). Sin correos.
+- `borradores-misiones/<misión>/<slug>.json`: `{ mision, pasos: { <paso>: { texto, actualizado } }, actualizado }`,
+  el texto sin entregar de cada paso de una misión (cambio `autoguardado-todo`). Hasta 4 000 caracteres por paso. Solo
+  lo leen y escriben su dueña o dueño y el servidor; no es entrega ni lo ve el admin. Se quita el paso al entregarlo y
+  se borra entero con «Borrar contenido», «Borrar todas sus entregas» y la retención del 31 de agosto (la corrección por privacidad quita sus pasos). Sin correos.
 - `avance/<slug-alumno>.json`: historial de las marcas de tareas de Notion de Inglés. Desde la fase 2 de
   `cierre-tecnico` nadie lo escribe; se conserva como historial.
   - `{ alumno, notion: { <pageId>: { titulo, completado, en, por } }, historial: [...] }`.

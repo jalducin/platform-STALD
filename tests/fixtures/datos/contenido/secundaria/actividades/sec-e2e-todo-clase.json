@@ -1,0 +1,77 @@
+{
+  "id": "sec-e2e-todo-clase",
+  "tipo": "actividad",
+  "titulo": "🏛️ Historia · Prueba del autoguardado",
+  "nivel": "Secundaria",
+  "materia": "Historia",
+  "disponibleDesde": "2026-09-21",
+  "fechaLimite": "2026-12-31",
+  "intentos": 2,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "Autoguardado",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Lee con calma",
+      "texto": "Tu avance se guarda solo mientras contestas."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "video",
+      "texto": "Video de prueba",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    {
+      "tipo": "libreta",
+      "texto": "Copia la idea principal en tu libreta."
+    }
+  ],
+  "banco": [
+    {
+      "id": "todo-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Se guarda tu avance?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "todo-2",
+      "tema": "t",
+      "tipo": "escribir",
+      "enunciado": "Escribe «guardado».",
+      "aceptadas": [
+        "guardado"
+      ],
+      "explicacion": "Así se escribe."
+    },
+    {
+      "id": "todo-3",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Cuenta como intento antes de enviar?",
+      "opciones": [
+        "no",
+        "sí"
+      ],
+      "correcta": 0,
+      "explicacion": "Solo al enviar."
+    }
+  ]
+}

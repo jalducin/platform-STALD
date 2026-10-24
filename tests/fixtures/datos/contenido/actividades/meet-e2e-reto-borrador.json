@@ -1,0 +1,54 @@
+{
+  "id": "meet-e2e-reto-borrador",
+  "tipo": "meet",
+  "titulo": "🎥 Reto del Meet (autoguardado)",
+  "nivel": "A1",
+  "disponibleDesde": "2026-09-21",
+  "fechaLimite": "2026-12-31",
+  "intentos": 2,
+  "alumnos": [
+    "angel"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "Meet",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Reto",
+      "texto": "Contesta el reto del Meet."
+    }
+  ],
+  "tips": [],
+  "banco": [
+    {
+      "id": "mr-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "I ___ a student.",
+      "opciones": [
+        "am",
+        "is"
+      ],
+      "correcta": 0,
+      "explicacion": "I am."
+    },
+    {
+      "id": "mr-2",
+      "tema": "t",
+      "tipo": "escribir",
+      "enunciado": "Write: hello",
+      "aceptadas": [
+        "hello"
+      ],
+      "explicacion": "hello"
+    }
+  ]
+}

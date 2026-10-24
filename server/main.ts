@@ -26,7 +26,7 @@ import { aplicarCacheHttp, politicaCache } from "./http_cache.ts";
 import { type DepsGamificacion, handleGamificacion, handleProfeGamificacion, rankingVisible } from "./gamificacion.ts";
 import { type DepsMisiones, handleMisiones, hayMisionesVisibles, pasosEntregados, handlePractica, handleProfeEntregas, type PersonaMision } from "./misiones.ts";
 import { alumnasSecundaria } from "./secundaria_registro.ts";
-import { aplicarRetencion, CRON_RETENCION } from "./retencion_entregas.ts";
+import { aplicarRetencion, aplicarRetencionBorradores, CRON_RETENCION } from "./retencion_entregas.ts";
 import { armarPanel, handlePanel, type PartesPanel } from "./panel.ts";
 
 const NOTION_VERSION = "2022-06-28";
@@ -556,5 +556,7 @@ if (import.meta.main && db && !env("DATA_DIR") && !env("ROWS_FIXTURE") && typeof
   Deno.cron("retencion-entregas", CRON_RETENCION, async () => {
     const r = await aplicarRetencion(db, new Date().toISOString(), true);
     console.log(`retención de entregas: ${r.revisadas} revisadas, ${r.borradas} sin contenido, ${r.pendientes.length} pendientes`);
+    const rb = await aplicarRetencionBorradores(db, true); // borradores de misiones (openspec: autoguardado-todo)
+    console.log(`retención de borradores de misiones: ${rb.borrados} borrados`);
   });
 }

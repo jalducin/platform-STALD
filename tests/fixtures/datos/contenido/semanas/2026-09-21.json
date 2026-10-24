@@ -16,6 +16,11 @@
       "id": "diagramas-e2e",
       "tipo": "actividad",
       "fecha": "2026-10-04"
+    },
+    {
+      "id": "meet-e2e-reto-borrador",
+      "tipo": "meet",
+      "fecha": "2026-12-31"
     }
   ]
 }

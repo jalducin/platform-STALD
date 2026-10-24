@@ -1,0 +1,142 @@
+{
+  "id": "mis-e2e-zz-borrador-sec",
+  "tipo": "mision",
+  "titulo": "🧪 Misión de prueba: diario de campo",
+  "materia": "Ciencias",
+  "mundo": "selva-de-la-vida",
+  "descripcion": "Misión inventada para la prueba del autoguardado.",
+  "disponibleDesde": "2026-09-28",
+  "consigna": "Escribe un diario de campo inventado.\n\n🔒 Sin nombres reales, direcciones ni datos de contacto.",
+  "pasos": [
+    {
+      "id": "p1",
+      "titulo": "Observación",
+      "instrucciones": "Describe una planta inventada.",
+      "entregable": "Texto",
+      "fechaLimite": "2026-12-30",
+      "tipoEntrega": "texto"
+    },
+    {
+      "id": "p2",
+      "titulo": "Conclusión",
+      "instrucciones": "Escribe qué aprendiste.",
+      "entregable": "Texto",
+      "fechaLimite": "2026-12-31",
+      "tipoEntrega": "texto"
+    }
+  ],
+  "rubrica": [
+    {
+      "id": "c1",
+      "criterio": "Cálculos correctos",
+      "puntos": 25,
+      "niveles": [
+        {
+          "nivel": 4,
+          "nombre": "Lo domino",
+          "puntos": 25
+        },
+        {
+          "nivel": 3,
+          "nombre": "Casi lo logro",
+          "puntos": 20
+        },
+        {
+          "nivel": 2,
+          "nombre": "Voy avanzando",
+          "puntos": 15
+        },
+        {
+          "nivel": 1,
+          "nombre": "Estoy empezando",
+          "puntos": 10
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "criterio": "Uso de porcentajes",
+      "puntos": 25,
+      "niveles": [
+        {
+          "nivel": 4,
+          "nombre": "Lo domino",
+          "puntos": 25
+        },
+        {
+          "nivel": 3,
+          "nombre": "Casi lo logro",
+          "puntos": 20
+        },
+        {
+          "nivel": 2,
+          "nombre": "Voy avanzando",
+          "puntos": 15
+        },
+        {
+          "nivel": 1,
+          "nombre": "Estoy empezando",
+          "puntos": 10
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "criterio": "Explicación",
+      "puntos": 25,
+      "niveles": [
+        {
+          "nivel": 4,
+          "nombre": "Lo domino",
+          "puntos": 25
+        },
+        {
+          "nivel": 3,
+          "nombre": "Casi lo logro",
+          "puntos": 20
+        },
+        {
+          "nivel": 2,
+          "nombre": "Voy avanzando",
+          "puntos": 15
+        },
+        {
+          "nivel": 1,
+          "nombre": "Estoy empezando",
+          "puntos": 10
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "criterio": "Orden",
+      "puntos": 25,
+      "niveles": [
+        {
+          "nivel": 4,
+          "nombre": "Lo domino",
+          "puntos": 25
+        },
+        {
+          "nivel": 3,
+          "nombre": "Casi lo logro",
+          "puntos": 20
+        },
+        {
+          "nivel": 2,
+          "nombre": "Voy avanzando",
+          "puntos": 15
+        },
+        {
+          "nivel": 1,
+          "nombre": "Estoy empezando",
+          "puntos": 10
+        }
+      ]
+    }
+  ],
+  "tips": [],
+  "alumnos": [
+    "valeria"
+  ]
+}
