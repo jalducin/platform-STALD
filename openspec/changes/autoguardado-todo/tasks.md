@@ -29,15 +29,15 @@
 - [x] 4.1 Revisar y actualizar pruebas existentes (OBLIGATORIO): E2E nueva `autoguardado-todo` (fixtures de prueba en
   `tests/fixtures/datos`) registrada en `tests/e2e/correr.sh`; `autoguardado` y `ordenar-emparejar` con el indicador y
   el paso nuevos
-- [ ] 4.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): suite Deno y E2E de la fase `ingles` (y `peticiones`) con
+- [x] 4.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): suite Deno y E2E de la fase `ingles` (y `peticiones`) con
   puertos 9071/9072 y copia temporal de datos (sin tablas `stald_*`); reporte
-  `openspec/changes/autoguardado-todo/reports/2026-10-24-step-4.2-pruebas-y-verificacion.md`
-- [ ] 4.3 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): con Playwright, cada flujo (contestar parcial → recargar →
+  `openspec/changes/autoguardado-todo/reports/2026-10-24-step-4.2-pruebas-y-verificacion.md` (también la 4.3)
+- [x] 4.3 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): con Playwright, cada flujo (contestar parcial → recargar →
   otro navegador → no calificado → enviar → limpio), dos navegadores y misión sin red; restaurar estado (reinicios y
   borrado de entregas de prueba)
-- [ ] 4.4 Actualizar documentación técnica (OBLIGATORIO): `docs/backend-standards.md`, `docs/data-model.md`,
-  `docs/frontend-standards.md`, `docs/pruebas.md` y la skill `ai-specs/skills/clases-secundaria` (+ espejos)
-- [ ] 4.5 `openspec validate autoguardado-todo --strict`, `verificador-pruebas` y `revisor-solo-lectura`
+- [x] 4.4 Actualizar documentación técnica (OBLIGATORIO): `docs/backend-standards.md`, `docs/data-model.md`,
+  `docs/frontend-standards.md`, `docs/pruebas.md`, `privacidad.html` y la skill `ai-specs/skills/clases-secundaria` (+ espejos)
+- [x] 4.5 `openspec validate autoguardado-todo --strict`, `verificador-pruebas` y `revisor-solo-lectura`
 - [ ] 4.6 Verificación en producción tras el merge — EL AGENTE EJECUTA (OBLIGATORIO), solo lectura: `/salud`, la ruta
   nueva sin sesión responde 401/403 y los `?v=` nuevos se sirven
 
