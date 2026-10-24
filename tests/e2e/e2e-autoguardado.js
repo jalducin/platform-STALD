@@ -54,7 +54,8 @@ const borradorCuenta = p => p.evaluate(async ([api, email, id]) => (await (await
   // 2) Recargar (como jalar la pantalla hacia abajo) y volver a abrir.
   await p.reload();
   ok('recargar con respuestas: el navegador pidió confirmar (beforeunload)', dialogos.includes('beforeunload'), dialogos.join(','));
-  await abrir(p);
+  // Recargar dentro del examen (#ver/<id>) lo reabre solo (openspec: autoguardado-todo).
+  ok('al recargar, el examen se reabre solo', await p.waitForSelector('#exam-form', { timeout: 60000 }).then(() => true, () => false));
   ok('borrador caducado (15 días) se borra al cargar', !(await borradores(p)).some(([k]) => k.includes('otro-examen')));
   ok('tras recargar: radio restaurado', await p.isChecked('input[name="g-h1"][value="0"]'));
   ok('tras recargar: respuesta escrita restaurada', (await p.inputValue('input[name="g-h2"]')) === 'cinco');
