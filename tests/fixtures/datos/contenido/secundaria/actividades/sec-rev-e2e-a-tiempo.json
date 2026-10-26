@@ -7,7 +7,7 @@
   "disponibleDesde": "2026-09-16",
   "fechaLimite": "2026-09-16",
   "intentos": 2,
-  "preguntasPorIntento": 4,
+  "preguntasPorIntento": 5,
   "alumnos": [
     "valeria"
   ],
@@ -47,7 +47,7 @@
       "id": "sec-rev-e2e-a-tiempo-1",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 1?",
+      "enunciado": "¿Pregunta 1 de La Independencia?",
       "opciones": [
         "sí",
         "no"
@@ -59,7 +59,7 @@
       "id": "sec-rev-e2e-a-tiempo-2",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 2?",
+      "enunciado": "¿Pregunta 2 de La Independencia?",
       "opciones": [
         "sí",
         "no"
@@ -71,7 +71,7 @@
       "id": "sec-rev-e2e-a-tiempo-3",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 3?",
+      "enunciado": "¿Pregunta 3 de La Independencia?",
       "opciones": [
         "sí",
         "no"
@@ -83,7 +83,19 @@
       "id": "sec-rev-e2e-a-tiempo-4",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 4?",
+      "enunciado": "¿Pregunta 4 de La Independencia?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-a-tiempo-5",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 5 de La Independencia?",
       "opciones": [
         "sí",
         "no"

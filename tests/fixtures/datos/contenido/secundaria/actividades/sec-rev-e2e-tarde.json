@@ -39,7 +39,7 @@
       "id": "sec-rev-e2e-tarde-1",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 1?",
+      "enunciado": "¿Pregunta 1 de Present continuous?",
       "opciones": [
         "sí",
         "no"
@@ -51,7 +51,7 @@
       "id": "sec-rev-e2e-tarde-2",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 2?",
+      "enunciado": "¿Pregunta 2 de Present continuous?",
       "opciones": [
         "sí",
         "no"
@@ -63,7 +63,7 @@
       "id": "sec-rev-e2e-tarde-3",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 3?",
+      "enunciado": "¿Pregunta 3 de Present continuous?",
       "opciones": [
         "sí",
         "no"
@@ -75,7 +75,7 @@
       "id": "sec-rev-e2e-tarde-4",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 4?",
+      "enunciado": "¿Pregunta 4 de Present continuous?",
       "opciones": [
         "sí",
         "no"

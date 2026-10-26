@@ -1,7 +1,7 @@
 // E2E: revisión del profe en Secundaria (openspec: revision-profe). Semana propia de la alumna del fixture
 // (tests/fixtures/datos, lunes 2026-09-14; no toca la 2026-10-26 de secundaria-clases): una clase sin abrir, una en
 // borrador (2 de 4), una enviada a tiempo (80 %), una fuera de tiempo (50 %, ya calificada por el profe con 6) y una de
-// Español con audio y libro de ortografía (70 %).
+// Español con audio y libro de ortografía (75 %). «🔎 Ver respuestas» se prueba con las enviadas.
 //   1. API: semana, estados, qué pide cada clase, matriz de acceso (403 alumna o alumno, 401 sin sesión), 400 y 404, y
 //      la alumna solo recibe calificación y comentario.
 //   2. Profe (PC): la pestaña «📋 Revisión» es perezosa; navega a la semana; tarjetas y resumen; marca el checklist,
@@ -182,6 +182,20 @@ async function finalCoincide(p, id) {
     ok('tarjeta: a tiempo, «✅ Enviada» con 80 % y sin «⏰»', (await texto(p, `${tarjeta(ID.aTiempo)} [data-testid="rev-estado"]`)).includes('Enviada') && (await texto(p, `${tarjeta(ID.aTiempo)} [data-testid="rev-en-linea"]`)).includes('80') && !(await p.$(`${tarjeta(ID.aTiempo)} [data-testid="rev-fuera-de-tiempo"]`)));
     ok('tarjeta: fuera de tiempo con «⏰»', (await texto(p, `${tarjeta(ID.tarde)} [data-testid="rev-fuera-de-tiempo"]`)).includes('Fuera de tiempo'));
     ok('tarjeta: «🔎 Ver respuestas» en las enviadas', !!(await p.$(`${tarjeta(ID.aTiempo)} [data-testid="rev-ver-respuestas"]`)));
+    ok('tarjeta: sin «🔎 Ver respuestas» en la sin abrir ni en el borrador', !(await p.$(`${tarjeta(ID.sinAbrir)} [data-testid="rev-ver-respuestas"]`)) && !(await p.$(`${tarjeta(ID.borrador)} [data-testid="rev-ver-respuestas"]`)));
+    // «🔎 Ver respuestas» de una clase enviada: el detalle del mejor intento (80 %, 4 de 5, su error) y regreso.
+    for (const [id, pct, correctas, errores] of [[ID.aTiempo, 80, '4 de 5', 1], [ID.tarde, 50, '2 de 4', 2]]) {
+      await p.click(`${tarjeta(id)} [data-testid="rev-ver-respuestas"]`);
+      const visto = await p.waitForSelector('#content .score', { timeout: 15000 }).then(() => true, () => false);
+      const det = visto ? await texto(p, '#content') : '';
+      const n = await p.$$eval('#content .rev', xs => xs.length).catch(() => 0);
+      ok(`🔎 Ver respuestas (${id}): ${pct} %, ${correctas} correctas y sus ${errores} errores`, visto && det.includes(pct + '%') && det.includes(correctas + ' correctas') && n === errores, `${n} errores · ${det.slice(0, 160)}`);
+      if (visto) await p.screenshot({ path: `revision-profe-ver-respuestas-${pct}.png`, fullPage: true });
+      await p.click('[data-action="volver"]').catch(() => {});
+      await p.waitForSelector('#sec-revision:not([hidden]) [data-testid="rev-semana"]', { timeout: 15000 }).catch(async () => { await irPestanaSec(p, 'revision').catch(() => {}); });
+      await irASemana(p);
+      ok(`🔎 Ver respuestas (${id}): «Volver» regresa a la semana de revisión`, !!(await p.$(`#sec-revision:not([hidden]) ${tarjeta(id).replace('#sec-revision ', '')}`)));
+    }
     ok('tarjeta: checklist con las 3 tareas de libreta', (await p.$$(`${tarjeta(ID.aTiempo)} [data-testid="rev-check"]`)).length === 3);
     ok('tarjeta: sin audio ni libro donde no se piden', !(await p.$(`${tarjeta(ID.aTiempo)} [data-testid="rev-audio"]`)) && !(await p.$(`${tarjeta(ID.aTiempo)} [data-testid="rev-libro"]`)));
     ok('tarjeta Español: audio y libro', !!(await p.$(`${tarjeta(ID.espanol)} [data-testid="rev-audio"]`)) && !!(await p.$(`${tarjeta(ID.espanol)} [data-testid="rev-libro"]`)));

@@ -43,7 +43,7 @@
       "id": "sec-rev-e2e-sin-abrir-1",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 1?",
+      "enunciado": "¿Pregunta 1 de Fracciones equivalentes?",
       "opciones": [
         "sí",
         "no"
@@ -55,7 +55,7 @@
       "id": "sec-rev-e2e-sin-abrir-2",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 2?",
+      "enunciado": "¿Pregunta 2 de Fracciones equivalentes?",
       "opciones": [
         "sí",
         "no"
@@ -67,7 +67,7 @@
       "id": "sec-rev-e2e-sin-abrir-3",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 3?",
+      "enunciado": "¿Pregunta 3 de Fracciones equivalentes?",
       "opciones": [
         "sí",
         "no"
@@ -79,7 +79,7 @@
       "id": "sec-rev-e2e-sin-abrir-4",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 4?",
+      "enunciado": "¿Pregunta 4 de Fracciones equivalentes?",
       "opciones": [
         "sí",
         "no"

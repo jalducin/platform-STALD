@@ -47,7 +47,7 @@
       "id": "sec-rev-e2e-espanol-1",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 1?",
+      "enunciado": "¿Pregunta 1 de Uso de la b y la v?",
       "opciones": [
         "sí",
         "no"
@@ -59,7 +59,7 @@
       "id": "sec-rev-e2e-espanol-2",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 2?",
+      "enunciado": "¿Pregunta 2 de Uso de la b y la v?",
       "opciones": [
         "sí",
         "no"
@@ -71,7 +71,7 @@
       "id": "sec-rev-e2e-espanol-3",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 3?",
+      "enunciado": "¿Pregunta 3 de Uso de la b y la v?",
       "opciones": [
         "sí",
         "no"
@@ -83,7 +83,7 @@
       "id": "sec-rev-e2e-espanol-4",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 4?",
+      "enunciado": "¿Pregunta 4 de Uso de la b y la v?",
       "opciones": [
         "sí",
         "no"

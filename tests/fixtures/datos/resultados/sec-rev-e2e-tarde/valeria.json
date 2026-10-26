@@ -27,20 +27,37 @@
         "secciones": [
           {
             "id": "t",
-            "titulo": "Tema",
+            "titulo": "Present continuous",
             "correctas": 2,
             "total": 4,
             "porcentaje": 50,
             "estado": "en-progreso",
-            "retroalimentacion": "¡Muy bien!"
+            "retroalimentacion": "Casi, repasa un poco."
           }
         ],
         "fortalezas": [],
         "enProgreso": [
-          "Tema"
+          "Present continuous"
         ],
         "debilidades": [],
-        "revision": []
+        "revision": [
+          {
+            "id": "sec-rev-e2e-tarde-3",
+            "tema": "t",
+            "enunciado": "¿Pregunta 3 de Present continuous?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          },
+          {
+            "id": "sec-rev-e2e-tarde-4",
+            "tema": "t",
+            "enunciado": "¿Pregunta 4 de Present continuous?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          }
+        ]
       }
     }
   ],
@@ -53,19 +70,36 @@
     "secciones": [
       {
         "id": "t",
-        "titulo": "Tema",
+        "titulo": "Present continuous",
         "correctas": 2,
         "total": 4,
         "porcentaje": 50,
         "estado": "en-progreso",
-        "retroalimentacion": "¡Muy bien!"
+        "retroalimentacion": "Casi, repasa un poco."
       }
     ],
     "fortalezas": [],
     "enProgreso": [
-      "Tema"
+      "Present continuous"
     ],
     "debilidades": [],
-    "revision": []
+    "revision": [
+      {
+        "id": "sec-rev-e2e-tarde-3",
+        "tema": "t",
+        "enunciado": "¿Pregunta 3 de Present continuous?",
+        "tuRespuesta": "no",
+        "correcta": "sí",
+        "explicacion": "Así es."
+      },
+      {
+        "id": "sec-rev-e2e-tarde-4",
+        "tema": "t",
+        "enunciado": "¿Pregunta 4 de Present continuous?",
+        "tuRespuesta": "no",
+        "correcta": "sí",
+        "explicacion": "Así es."
+      }
+    ]
   }
 }

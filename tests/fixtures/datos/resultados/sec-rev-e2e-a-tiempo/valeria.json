@@ -11,61 +11,81 @@
         "sec-rev-e2e-a-tiempo-1",
         "sec-rev-e2e-a-tiempo-2",
         "sec-rev-e2e-a-tiempo-3",
-        "sec-rev-e2e-a-tiempo-4"
+        "sec-rev-e2e-a-tiempo-4",
+        "sec-rev-e2e-a-tiempo-5"
       ],
       "respuestas": {
         "sec-rev-e2e-a-tiempo-1": 0,
         "sec-rev-e2e-a-tiempo-2": 0,
         "sec-rev-e2e-a-tiempo-3": 0,
-        "sec-rev-e2e-a-tiempo-4": 1
+        "sec-rev-e2e-a-tiempo-4": 0,
+        "sec-rev-e2e-a-tiempo-5": 1
       },
       "calificacion": {
-        "correctas": 3,
-        "total": 4,
+        "correctas": 4,
+        "total": 5,
         "porcentaje": 80,
-        "nivelSugerido": "Vas bien, repasa un poco",
+        "nivelSugerido": "¡Excelente! Dominas el tema",
         "secciones": [
           {
             "id": "t",
-            "titulo": "Tema",
-            "correctas": 3,
-            "total": 4,
-            "porcentaje": 75,
-            "estado": "en-progreso",
+            "titulo": "La Independencia",
+            "correctas": 4,
+            "total": 5,
+            "porcentaje": 80,
+            "estado": "fortaleza",
             "retroalimentacion": "¡Muy bien!"
           }
         ],
-        "fortalezas": [],
-        "enProgreso": [
-          "Tema"
+        "fortalezas": [
+          "La Independencia"
         ],
+        "enProgreso": [],
         "debilidades": [],
-        "revision": []
+        "revision": [
+          {
+            "id": "sec-rev-e2e-a-tiempo-5",
+            "tema": "t",
+            "enunciado": "¿Pregunta 5 de La Independencia?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          }
+        ]
       }
     }
   ],
   "mejor": {
     "n": 1,
-    "correctas": 3,
-    "total": 4,
+    "correctas": 4,
+    "total": 5,
     "porcentaje": 80,
-    "nivelSugerido": "Vas bien, repasa un poco",
+    "nivelSugerido": "¡Excelente! Dominas el tema",
     "secciones": [
       {
         "id": "t",
-        "titulo": "Tema",
-        "correctas": 3,
-        "total": 4,
-        "porcentaje": 75,
-        "estado": "en-progreso",
+        "titulo": "La Independencia",
+        "correctas": 4,
+        "total": 5,
+        "porcentaje": 80,
+        "estado": "fortaleza",
         "retroalimentacion": "¡Muy bien!"
       }
     ],
-    "fortalezas": [],
-    "enProgreso": [
-      "Tema"
+    "fortalezas": [
+      "La Independencia"
     ],
+    "enProgreso": [],
     "debilidades": [],
-    "revision": []
+    "revision": [
+      {
+        "id": "sec-rev-e2e-a-tiempo-5",
+        "tema": "t",
+        "enunciado": "¿Pregunta 5 de La Independencia?",
+        "tuRespuesta": "no",
+        "correcta": "sí",
+        "explicacion": "Así es."
+      }
+    ]
   }
 }

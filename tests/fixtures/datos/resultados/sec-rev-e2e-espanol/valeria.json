@@ -27,20 +27,37 @@
         "secciones": [
           {
             "id": "t",
-            "titulo": "Tema",
+            "titulo": "Uso de la b y la v",
             "correctas": 2,
             "total": 4,
             "porcentaje": 50,
             "estado": "en-progreso",
-            "retroalimentacion": "¡Muy bien!"
+            "retroalimentacion": "Casi, repasa un poco."
           }
         ],
         "fortalezas": [],
         "enProgreso": [
-          "Tema"
+          "Uso de la b y la v"
         ],
         "debilidades": [],
-        "revision": []
+        "revision": [
+          {
+            "id": "sec-rev-e2e-espanol-3",
+            "tema": "t",
+            "enunciado": "¿Pregunta 3 de Uso de la b y la v?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          },
+          {
+            "id": "sec-rev-e2e-espanol-4",
+            "tema": "t",
+            "enunciado": "¿Pregunta 4 de Uso de la b y la v?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          }
+        ]
       }
     },
     {
@@ -62,25 +79,34 @@
       "calificacion": {
         "correctas": 3,
         "total": 4,
-        "porcentaje": 70,
+        "porcentaje": 75,
         "nivelSugerido": "Vas bien, repasa un poco",
         "secciones": [
           {
             "id": "t",
-            "titulo": "Tema",
+            "titulo": "Uso de la b y la v",
             "correctas": 3,
             "total": 4,
             "porcentaje": 75,
             "estado": "en-progreso",
-            "retroalimentacion": "¡Muy bien!"
+            "retroalimentacion": "Casi, repasa un poco."
           }
         ],
         "fortalezas": [],
         "enProgreso": [
-          "Tema"
+          "Uso de la b y la v"
         ],
         "debilidades": [],
-        "revision": []
+        "revision": [
+          {
+            "id": "sec-rev-e2e-espanol-4",
+            "tema": "t",
+            "enunciado": "¿Pregunta 4 de Uso de la b y la v?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          }
+        ]
       }
     }
   ],
@@ -88,24 +114,33 @@
     "n": 2,
     "correctas": 3,
     "total": 4,
-    "porcentaje": 70,
+    "porcentaje": 75,
     "nivelSugerido": "Vas bien, repasa un poco",
     "secciones": [
       {
         "id": "t",
-        "titulo": "Tema",
+        "titulo": "Uso de la b y la v",
         "correctas": 3,
         "total": 4,
         "porcentaje": 75,
         "estado": "en-progreso",
-        "retroalimentacion": "¡Muy bien!"
+        "retroalimentacion": "Casi, repasa un poco."
       }
     ],
     "fortalezas": [],
     "enProgreso": [
-      "Tema"
+      "Uso de la b y la v"
     ],
     "debilidades": [],
-    "revision": []
+    "revision": [
+      {
+        "id": "sec-rev-e2e-espanol-4",
+        "tema": "t",
+        "enunciado": "¿Pregunta 4 de Uso de la b y la v?",
+        "tuRespuesta": "no",
+        "correcta": "sí",
+        "explicacion": "Así es."
+      }
+    ]
   }
 }
