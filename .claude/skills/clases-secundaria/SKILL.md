@@ -55,7 +55,7 @@ A la semana: Inglés 4, Español 3, Matemáticas 3, Tecnología 2, Ciencias 1, C
 | **Ciencias Sociales** | Rotación mensual: **Cívica y Ética** (26 oct–22 nov) → **Historia** (23 nov–20 dic; sigue la Revolución, porque llegó al Porfiriato) → **Geografía** (ene; coordenadas y climas de México) → otra vez Cívica… |
 | **Tecnología** | **Bases** desde cero, rápidas y prácticas, unas 6 semanas: computadora, archivos, internet seguro, pensamiento computacional, hojas de cálculo, ofimática → **Programación** (repaso de listas, funciones y diccionarios en Python) e **IA** (bases, sesgos, uso responsable) |
 | **Inglés** | Desde cero (le fue mal): alfabeto → números y colores → *to be* → posesivos → adjetivos → **presente simple** (-s, do/does) → *there is/are* → pasado → futuro. Avanza despacio, con mucha práctica y *speaking* |
-| **Español** | Programa de 1.º de secundaria sin repetir lo visto (acentuación, categorías gramaticales y cuento ya los domina). Ortografía en cada bloque. Tareas del **libro físico de ortografía** cuando el profe lo pida |
+| **Español** | Programa de 1.º de secundaria sin repetir lo visto (acentuación, categorías gramaticales y cuento ya los domina). Ortografía en cada bloque. Toda clase de Español incluye en su libreta **2 páginas del libro físico de ortografía** («📖 Libro de ortografía (el físico): resuelve 2 páginas, continuando donde te quedaste.») |
 | **Artes / Ed. Física** | Domingos alternados. Artes: elementos visuales y artistas mexicanos (el círculo cromático ya lo vio). Ed. Física: rutina segura, registro en la libreta. Coordinación y equilibrio estaba pendiente |
 
 ## Formato de cada clase
