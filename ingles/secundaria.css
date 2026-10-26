@@ -344,10 +344,10 @@ body.secundaria { font-family: "Inter", var(--font); }
 .rev-com textarea { resize: vertical; }
 .rev-cal select:focus-visible, .rev-com textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .rev-final { margin: 0; padding: 8px 10px; border-radius: var(--r-sm); background: var(--rpg-panel-2); border: 1px dashed var(--rpg-borde); }
-.rev-estado { font-size: .86rem; font-weight: 700; }
-.rev-estado.ok { color: var(--ok); }
-.rev-estado.error { color: var(--bad); }
-.rev-estado.pendiente, .rev-estado.guardando { color: var(--muted); }
+.rev-guardado { font-size: .86rem; font-weight: 700; }
+.rev-guardado.ok { color: var(--ok); }
+.rev-guardado.error { color: var(--bad); }
+.rev-guardado.pendiente, .rev-guardado.guardando { color: var(--muted); }
 .rev-misiones { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .rev-mision { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); }
 .rev-mision > div { min-width: 0; overflow-wrap: anywhere; }

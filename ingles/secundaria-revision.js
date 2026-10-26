@@ -67,29 +67,29 @@ function cuerpoRevision() {
   return navSemana(d) + (s.cargando ? esqueleto() : resumenRevision(d.clases) + avisos + diasRevision(d) + abiertasRevision(d) + misionesRevision(d));
 }
 
-const fechaCorta = f => formatFecha(f);
+const revFecha = f => formatFecha(f);
 function navSemana(d) {
-  const titulo = d ? 'Semana del ' + fechaCorta(d.semana.lunes) + ' al ' + fechaCorta(d.semana.domingo) : 'Revisión de la semana';
+  const titulo = d ? 'Semana del ' + revFecha(d.semana.lunes) + ' al ' + revFecha(d.semana.domingo) : 'Revisión de la semana';
   const nombre = d ? ' · ' + d.alumna.nombre : '';
   const dis = d ? '' : ' disabled';
   const esEsta = d && d.hoy >= d.semana.lunes && d.hoy <= d.semana.domingo;
-  return '<div class="exam-card rev-cabeza"><h3 id="rev-titulo" tabindex="-1">📋 ' + escapeHtml(titulo + nombre) + '</h3>' +
+  return '<div class="exam-card rev-cabeza" data-testid="rev-semana" data-lunes="' + (d ? d.semana.lunes : '') + '"><h3 id="rev-titulo" tabindex="-1">📋 ' + escapeHtml(titulo + nombre) + '</h3>' +
     '<nav class="rev-nav" aria-label="Cambiar de semana">' +
-    '<button type="button" class="btn ghost" data-rev-semana="' + (d ? d.semana.anterior : '') + '"' + dis + '>◀ Semana anterior</button>' +
-    '<button type="button" class="btn ghost" data-rev-semana=""' + (d && !esEsta ? '' : ' disabled') + (esEsta ? ' aria-current="date"' : '') + '>Esta semana</button>' +
-    '<button type="button" class="btn ghost" data-rev-semana="' + (d ? d.semana.siguiente : '') + '"' + dis + '>Semana siguiente ▶</button></nav></div>';
+    '<button type="button" class="btn ghost" data-testid="rev-semana-anterior" data-rev-semana="' + (d ? d.semana.anterior : '') + '"' + dis + '>◀ Semana anterior</button>' +
+    '<button type="button" class="btn ghost" data-testid="rev-semana-hoy" data-rev-semana=""' + (d && !esEsta ? '' : ' disabled') + (esEsta ? ' aria-current="date"' : '') + '>Esta semana</button>' +
+    '<button type="button" class="btn ghost" data-testid="rev-semana-siguiente" data-rev-semana="' + (d ? d.semana.siguiente : '') + '"' + dis + '>Semana siguiente ▶</button></nav></div>';
 }
 
 const numero = n => (n === null || n === undefined ? '—' : String(n));
 function resumenRevision(clases) {
   const r = RevD().resumenSemana(clases);
-  const kpi = (id, valor, titulo) => '<div class="rev-kpi" id="' + id + '"><b class="rpg-num">' + escapeHtml(valor) + '</b><span>' + titulo + '</span></div>';
-  const materias = r.porMateria.map(m => '<span class="chip mat-chip mat-' + escapeHtml(m.clave) + '">' + escapeHtml(m.nombre) + ' · ' + escapeHtml(numero(m.promedio)) +
+  const kpi = (id, valor, titulo) => '<div class="rev-kpi" id="rev-k-' + id + '" data-rev-resumen="' + id + '"><b class="rpg-num">' + escapeHtml(valor) + '</b><span>' + titulo + '</span></div>';
+  const materias = r.porMateria.map(m => '<span class="chip mat-chip mat-' + escapeHtml(m.clave) + '" data-testid="rev-materia" data-materia="' + escapeHtml(m.clave) + '">' + escapeHtml(m.nombre) + ' · ' + escapeHtml(numero(m.promedio)) +
     ' <small>(' + m.revisadas + '/' + m.clases + ')</small></span>').join(' ');
-  return '<section class="exam-card rev-resumen" id="rev-resumen" aria-label="Resumen de la semana" aria-live="polite">' +
-    '<div class="rev-kpis">' + kpi('rev-k-clases', String(r.clases), 'Clases') + kpi('rev-k-enviadas', String(r.enviadas), 'Enviadas') +
-    kpi('rev-k-revisadas', String(r.revisadas), 'Revisadas por ti') + kpi('rev-k-pendientes', String(r.pendientes), 'Pendientes de revisar') +
-    kpi('rev-k-promedio', numero(r.promedio), 'Promedio final') + '</div>' +
+  return '<section class="exam-card rev-resumen" id="rev-resumen" data-testid="rev-resumen" aria-label="Resumen de la semana" aria-live="polite">' +
+    '<div class="rev-kpis">' + kpi('clases', String(r.clases), 'Clases') + kpi('enviadas', String(r.enviadas), 'Enviadas') +
+    kpi('revisadas', String(r.revisadas), 'Revisadas por ti') + kpi('pendientes', String(r.pendientes), 'Pendientes de revisar') +
+    kpi('promedio', numero(r.promedio), 'Promedio final') + '</div>' +
     (materias ? '<div class="rev-materias"><span class="meta">Por materia (final · revisadas/clases):</span> ' + materias + '</div>' : '') + '</section>';
 }
 function repintarResumen() {
@@ -101,13 +101,13 @@ function diasRevision(d) {
   return '<div class="rev-dias">' + d.semana.dias.map(f => {
     const suyas = d.clases.filter(c => c.dia === f);
     const hoy = f === d.hoy;
-    return '<section class="rev-dia' + (hoy ? ' es-hoy' : '') + '" data-rev-dia="' + f + '" aria-label="' + escapeHtml(nombreDia(f)) + '"><h4>' + escapeHtml(nombreDia(f)) + (hoy ? ' <span class="chip">hoy</span>' : '') + '</h4>' +
+    return '<section class="rev-dia' + (hoy ? ' es-hoy' : '') + '" data-testid="rev-dia" data-dia="' + f + '" aria-label="' + escapeHtml(nombreDia(f)) + '"><h4>' + escapeHtml(nombreDia(f)) + (hoy ? ' <span class="chip">hoy</span>' : '') + '</h4>' +
       (suyas.length ? suyas.map(tarjetaRevision).join('') : '<p class="meta rev-libre">Sin clases.</p>') + '</section>';
   }).join('') + '</div>';
 }
 function abiertasRevision(d) {
   if (!d.abiertas || !d.abiertas.length) return '';
-  return '<section class="rev-abiertas" aria-labelledby="rev-abiertas-t"><h3 class="sec-subtitulo" id="rev-abiertas-t">📌 Abiertas esta semana</h3>' +
+  return '<section class="rev-abiertas" data-testid="rev-abiertas" aria-labelledby="rev-abiertas-t"><h3 class="sec-subtitulo" id="rev-abiertas-t">📌 Abiertas esta semana</h3>' +
     '<p class="meta">Repasos y guías de otro día que siguen abiertos esta semana.</p><div class="rev-dias rev-dias-plana">' + d.abiertas.map(tarjetaRevision).join('') + '</div></section>';
 }
 
@@ -115,24 +115,24 @@ function abiertasRevision(d) {
 function avanceLinea(c) {
   const partes = [];
   if (c.estado === 'enviada') {
-    partes.push('<span class="chip ok">✅ Enviada</span>');
-    if (c.mejor) partes.push('<span class="chip">⭐ ' + c.mejor.porcentaje + ' %</span>');
-    if (c.fueraDeTiempo) partes.push('<span class="chip warn">⏰ Fuera de tiempo</span>');
+    partes.push('<span class="chip ok" data-testid="rev-estado">✅ Enviada</span>');
+    if (c.mejor) partes.push('<span class="chip" data-testid="rev-en-linea">⭐ ' + c.mejor.porcentaje + ' %</span>');
+    if (c.fueraDeTiempo) partes.push('<span class="chip warn" data-testid="rev-fuera-de-tiempo">⏰ Fuera de tiempo</span>');
     if (c.intentosMax) partes.push('<span class="meta">' + (c.intentosUsados || 0) + '/' + c.intentosMax + ' oportunidades</span>');
   } else if (c.estado === 'borrador') {
     const b = c.borrador || {};
-    partes.push('<span class="chip warn">💾 En borrador · avanzó ' + (b.respondidas || 0) + ' de ' + (b.total || 0) + '</span>');
+    partes.push('<span class="chip warn" data-testid="rev-estado">💾 En borrador · avanzó ' + (b.respondidas || 0) + ' de ' + (b.total || 0) + '</span>');
   } else if (c.abre) {
-    partes.push('<span class="chip gris">🔒 Abre ' + escapeHtml(fechaCorta(c.abre)) + '</span>');
+    partes.push('<span class="chip gris" data-testid="rev-estado">🔒 Abre ' + escapeHtml(revFecha(c.abre)) + '</span>');
   } else {
-    partes.push('<span class="chip gris">⏳ Sin abrir</span>');
+    partes.push('<span class="chip gris" data-testid="rev-estado">⏳ Sin abrir</span>');
   }
   return partes.join(' ');
 }
 // «🔎 Ver respuestas» usa el detalle que ya existe (ver-resultado de ingles/app.js) con la lista de la alumna.
 function botonesLinea(c) {
   const it = ((state.act && state.act.items) || []).find(x => x.id === c.id);
-  const ver = c.estado === 'enviada' && it && it.mejor ? '<button type="button" class="btn ghost" data-action="ver-resultado" data-id="' + escapeHtml(c.id) + '">🔎 Ver respuestas</button>' : '';
+  const ver = c.estado === 'enviada' && it && it.mejor ? '<button type="button" class="btn ghost" data-testid="rev-ver-respuestas" data-action="ver-resultado" data-id="' + escapeHtml(c.id) + '">🔎 Ver respuestas</button>' : '';
   return '<div class="rev-acciones">' + ver + '<button type="button" class="btn ghost" data-sec-tab="resultados">📝 Resultados</button></div>';
 }
 
@@ -142,7 +142,17 @@ function textoFinal(c, calificacion) {
   const enLinea = RD.enLineaDe(c);
   const f = RD.finalDe({ ...c, revision: { calificacion } });
   const linea = 'en línea ' + (RD.enviada(c) ? enLinea.toFixed(1) : '0 (sin enviar)');
-  return f === null ? '<b>Final:</b> falta tu revisión <span class="meta">· ' + linea + '</span>' : '<b>Final: <span class="rpg-num">' + f.toFixed(1) + '</span></b> <span class="meta">· ' + linea + ' · tuya ' + calificacion + '</span>';
+  return f === null ? '<b>Final: falta tu revisión</b> <span class="meta">· ' + linea + '</span>' : '<b>Final: <span class="rpg-num">' + f.toFixed(1) + '</span></b> <span class="meta">· ' + linea + ' · tuya ' + calificacion + '</span>';
+}
+
+function valorFinal(c, calificacion) {
+  const f = RevD().finalDe({ ...c, revision: { calificacion } });
+  return f === null ? '' : String(f);
+}
+function pintarFinal(f, c, calificacion) {
+  const el = f.querySelector('[data-rev-final]');
+  el.dataset.final = valorFinal(c, calificacion);
+  el.innerHTML = textoFinal(c, calificacion);
 }
 
 const OPCIONES_CAL = Array.from({ length: 21 }, (_, i) => i / 2);
@@ -153,31 +163,31 @@ function tarjetaRevision(c) {
   const k = 'rev-' + c.id.replace(/[^\w-]/g, '_');
   const casilla = (attrs, texto, marcada) => '<label class="rev-check"><input type="checkbox" ' + attrs + (marcada ? ' checked' : '') + '> <span>' + texto + '</span></label>';
   const checklist = pide.libreta.length
-    ? '<fieldset class="rev-libreta"><legend>📓 Libreta</legend>' + pide.libreta.map((t, i) => casilla('data-rev-check="' + i + '"', escapeHtml(t), rev.checks.includes(i))).join('') + '</fieldset>' : '';
-  const extras = (pide.audio ? casilla('data-rev-audio', '🎙️ Audio recibido', rev.audio) : '') +
-    (pide.libro ? casilla('data-rev-libro', '📖 Páginas del libro de ortografía revisadas', rev.libro) : '');
+    ? '<fieldset class="rev-libreta"><legend>📓 Libreta</legend>' + pide.libreta.map((t, i) => casilla('data-testid="rev-check" data-indice="' + i + '" data-rev-check="' + i + '"', escapeHtml(t), rev.checks.includes(i))).join('') + '</fieldset>' : '';
+  const extras = (pide.audio ? casilla('data-testid="rev-audio" data-rev-audio', '🎙️ Audio recibido', rev.audio) : '') +
+    (pide.libro ? casilla('data-testid="rev-libro" data-rev-libro', '📖 Páginas del libro de ortografía revisadas', rev.libro) : '');
   const revisada = typeof rev.calificacion === 'number';
-  return '<form class="exam-card rev-card mat-' + (m ? m.clave : 'otra') + (revisada ? ' rev-hecha' : '') + '" data-rev-id="' + escapeHtml(c.id) + '" novalidate>' +
+  return '<form class="exam-card rev-card mat-' + (m ? m.clave : 'otra') + (revisada ? ' rev-hecha' : '') + '" data-testid="rev-tarjeta" data-rev-id="' + escapeHtml(c.id) + '" data-estado="' + escapeHtml(c.estado) + '" novalidate>' +
     '<header class="rev-card-top"><div class="t">' + chipMateria(m) + ' <span class="sec-tema">' + escapeHtml(textoClase(c, m)) + '</span>' + (c.tipo === 'examen' ? ' <span class="chip">Examen</span>' : '') + '</div>' +
     '<span class="rev-sello" data-rev-sello>' + (revisada ? '✅ Revisada' : (c.estado === 'enviada' ? '🕓 Por revisar' : '')) + '</span></header>' +
     '<div class="rev-linea">' + avanceLinea(c) + '</div>' + botonesLinea(c) +
     '<div class="rev-manual">' + checklist + (extras ? '<div class="rev-extras">' + extras + '</div>' : '') +
     '<div class="rev-campos"><label class="rev-cal" for="' + k + '-cal">Tu calificación' +
-    '<select id="' + k + '-cal" data-rev-cal><option value="">— Sin calificar</option>' +
+    '<select id="' + k + '-cal" data-testid="rev-calificacion" data-rev-cal><option value="">— Sin calificar</option>' +
     OPCIONES_CAL.map(n => '<option value="' + n + '"' + (rev.calificacion === n ? ' selected' : '') + '>' + n + '</option>').join('') + '</select></label>' +
     '<label class="rev-com" for="' + k + '-com">Comentario para la alumna <small class="meta" data-rev-cuenta>' + (rev.comentario || '').length + ' / ' + RevD().MAX_COMENTARIO + '</small>' +
-    '<textarea id="' + k + '-com" rows="2" maxlength="' + RevD().MAX_COMENTARIO + '" data-rev-com>' + escapeHtml(rev.comentario || '') + '</textarea></label></div></div>' +
-    '<p class="rev-final" data-rev-final aria-live="polite">' + textoFinal(c, rev.calificacion) + '</p>' +
-    '<div class="rev-guardar"><button type="submit" class="btn">💾 Guardar revisión</button>' +
-    '<span class="rev-estado" data-rev-estado role="status" aria-live="polite">' + (rev.revisadoEn ? '💾 Guardado' : '') + '</span></div></form>';
+    '<textarea id="' + k + '-com" rows="2" maxlength="' + RevD().MAX_COMENTARIO + '" data-testid="rev-comentario" data-rev-com>' + escapeHtml(rev.comentario || '') + '</textarea></label></div></div>' +
+    '<p class="rev-final" data-testid="rev-final" data-final="' + valorFinal(c, rev.calificacion) + '" data-rev-final aria-live="polite">' + textoFinal(c, rev.calificacion) + '</p>' +
+    '<div class="rev-guardar"><button type="submit" class="btn" data-testid="rev-guardar">💾 Guardar revisión</button>' +
+    '<span class="rev-guardado" data-rev-estado role="status" aria-live="polite">' + (rev.revisadoEn ? '💾 Guardado' : '') + '</span></div></form>';
 }
 
 function misionesRevision(d) {
   const lista = RevD().misionesDeSemana(misionesSec(), d.semana.lunes);
   const cuerpo = lista.length ? '<ul class="rev-misiones">' + lista.map(mi => {
     const a = avanceMision(mi);
-    return '<li class="rev-mision"><div><b>' + escapeHtml(mi.titulo) + '</b><div class="meta">' + EMOJI_AVANCE[a.clave] + ' ' + escapeHtml(a.texto) + ' · ' + a.hechos + ' de ' + a.total + ' pasos entregados</div></div>' +
-      '<button type="button" class="btn ghost" data-sec-tab="entregas">📥 Ir a Entregas</button></li>';
+    return '<li class="rev-mision" data-testid="rev-mision"><div><b>' + escapeHtml(mi.titulo) + '</b><div class="meta">' + EMOJI_AVANCE[a.clave] + ' ' + escapeHtml(a.texto) + ' · ' + a.hechos + ' de ' + a.total + ' pasos entregados</div></div>' +
+      '<button type="button" class="btn ghost" data-testid="rev-ir-entregas" data-sec-tab="entregas">📥 Ir a Entregas</button></li>';
   }).join('') + '</ul>' : '<p class="meta">Ninguna misión vence esta semana.</p>';
   return '<section class="exam-card rev-mis" aria-labelledby="rev-mis-t"><h3 id="rev-mis-t">⚔️ Misiones de la semana</h3>' + cuerpo +
     '<p class="meta">La evaluación con rúbrica está en «📥 Entregas».</p></section>';
@@ -205,7 +215,7 @@ const MSG_ERROR = {
 };
 function ponerEstado(f, html, clase) {
   const e = f.querySelector('[data-rev-estado]');
-  e.className = 'rev-estado' + (clase ? ' ' + clase : '');
+  e.className = 'rev-guardado' + (clase ? ' ' + clase : '');
   e.innerHTML = html;
 }
 async function guardarRevision(f, intento = 1) {
@@ -261,7 +271,7 @@ document.addEventListener('change', e => {
   if (e.target.matches('[data-rev-cal]')) {
     const clase = claseDeForm(f);
     const v = e.target.value === '' ? null : Number(e.target.value);
-    if (clase) f.querySelector('[data-rev-final]').innerHTML = textoFinal(clase, v);
+    if (clase) pintarFinal(f, clase, v);
     ponerEstado(f, '✏️ Sin guardar', 'pendiente');
   }
 });
