@@ -187,7 +187,7 @@ body.secundaria { font-family: "Inter", var(--font); }
 .sec-secuencia li.mundo-completado .sec-etapa { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
 .sec-secuencia li.mundo-bloqueado .sec-etapa { opacity: .75; }
 
-/* ======================================================================================================
+/* ===============================================================================================
    Misiones principales, mapa, árbol y bandeja del profe (openspec: rpg-fase2-misiones; ingles/secundaria-misiones.js).
    Tokens del tablero RPG: claro y oscuro; botones ≥ 44 px; sin scroll horizontal a 360 px; sin animaciones grandes.
    ====================================================================================================== */
@@ -294,6 +294,28 @@ body.secundaria { font-family: "Inter", var(--font); }
   body.secundaria .app-top, body.secundaria .shell { max-width: 1100px; }
 }
 
+/* Revisión del profe que ve la alumna (openspec: revision-profe): calificación, comentario y final. Tokens de
+   estilos/stald.css: el modo oscuro sale de --ok/--ok-soft sin reglas aparte. */
+.sec-rev-pill { display: block; width: fit-content; max-width: 100%; margin-top: 6px; padding: 4px 10px; border-radius: 10px; background: var(--ok-soft); color: var(--ok); font-weight: 700; font-size: .82rem; line-height: 1.35; overflow-wrap: anywhere; }
+.sec-rev-pill .sec-revision-coment { color: var(--text); font-weight: 600; }
+.sec-tarjeta .sec-rev-pill { margin: 0 0 8px; }
+.sec-rev-bloque { border-left: 4px solid var(--ok); }
+.sec-revision-t { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
+.sec-revision-t b { color: var(--ok); font-size: 1.15rem; }
+.sec-rev-bloque .meta { margin: 6px 0 0; }
+.sec-rev-aviso { border-left: 4px solid var(--ok); display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.sec-rev-aviso p { margin: 0; overflow-wrap: anywhere; }
+.sec-rev-ir { max-width: 100%; white-space: normal; }
+.sec-materia-rev h4 { margin: 10px 0 6px; font-size: .9rem; }
+.sec-materia-rev ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.sec-rev-abrir { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; text-align: left; }
+button.sec-rev-abrir { cursor: pointer; }
+button.sec-rev-abrir:hover { border-color: var(--ok); }
+.sec-rev-abrir .sec-rev-tema { flex: 1; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+.sec-rev-abrir small { color: var(--muted); white-space: nowrap; }
+.sec-rev-abrir small b { color: var(--ok); }
+@media (max-width: 420px) { .sec-rev-abrir { flex-wrap: wrap; } .sec-rev-abrir small { white-space: normal; } }
+=======
 /* ---------- 📋 Revisión del profe (openspec: revision-profe; ingles/secundaria-revision.js) ----------
    Celular: una columna. Desde 560 px: resumen en una fila y calificación junto al comentario. Desde 900 px: días en 2
    columnas. Botones, casillas y campos de 44 px o más; todo en tokens (claro y oscuro); sin scroll horizontal a 360 px. */

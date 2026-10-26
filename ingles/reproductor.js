@@ -24,7 +24,7 @@ async function openItem(id) {
   const r = await fetchJson(ACT_URL + '/' + encodeURIComponent(id) + '?email=' + encodeURIComponent(state.email));
   if (state.vista !== 'actividad' || state.abriendo !== id) return; // se fue a otra parte mientras cargaba
   if (r.status === 409) limpiarBorradores(claveBorrador(id, ''), null); // ya terminado: su borrador sobra
-  if (r.status === 409 && r.body.resultado) return showResult(r.body.resultado.mejor, { titulo: r.body.resultado.titulo });
+  if (r.status === 409 && r.body.resultado) return showResult(r.body.resultado.mejor, { titulo: r.body.resultado.titulo, revisionDe: id });
   if (!r.ok) {
     const msg = r.body.error === 'no_disponible' ? 'Se abre el ' + formatFecha(r.body.disponibleDesde) + '.' : 'No se pudo abrir (' + (r.body.error || r.status) + ').';
     contentEl.innerHTML = '<div class="exam-card"><div class="empty">' + escapeHtml(msg) + '</div>' + volverBtn() + '</div>';
@@ -626,6 +626,7 @@ function showResult(calificacion, info) {
   contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' + aviso +
     renderResultado(calificacion, false) +
     (claseEnPasos() && !i.vistaPrevia ? extrasResultadoSecundaria(i.id) : '') +
+    (i.revisionDe && typeof bloqueRevision === 'function' ? bloqueRevision(i.revisionDe) : '') + // «Ver resultado» (openspec: revision-profe)
     '<div class="exam-bar">' + volverBtn() + reintento + '</div>';
   window.scrollTo(0, 0);
 }

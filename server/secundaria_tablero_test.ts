@@ -4,6 +4,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import "../comun/gamificacion.js"; // secundaria-datos.js la usa (materias, día de la clase, mundos)
 import "../comun/secundaria-datos.js";
+import "../comun/revision-datos.js"; // calificación final de la clase revisada (openspec: revision-profe)
 import { clearCache, handleSecundaria } from "./actividades.ts";
 import { clearCacheAlumnos, leerRegistro, RUTA_ALUMNOS } from "./alumnos.ts";
 import { filasSecundaria } from "./secundaria_registro.ts";
@@ -128,6 +129,40 @@ Deno.test("promedio por materia: media de la mejor calificación de las clases h
   assertEquals([otras.nombre, otras.total, otras.promedio], ["Otras clases", 1, 90]);
   assertEquals(SD.resumenMaterias([clase("m1", "2026-10-26")], "2026-10-27").some((m: any) => m.clave === "otra"), false);
   assertEquals(SD.promedio([]), null);
+});
+
+// Revisión del profe (openspec: revision-profe): la alumna solo recibe { calificacion, comentario, revisadoEn }.
+const revisada = (calificacion: number, revisadoEn = "2026-10-28T18:00:00.000Z", comentario = "Muy buena letra") => ({ revision: { calificacion, comentario, revisadoEn } });
+
+Deno.test("revisión del profe: revisionDe, finalDe (RevisionDatos) y clases revisadas, de la más reciente a la más vieja", () => {
+  const a = clase("m1", "2026-10-26", { ...hecha(80), ...revisada(9, "2026-10-28T18:00:00.000Z") });
+  const b = clase("m2", "2026-10-27", { ...hecha(70), ...revisada(7.5, "2026-10-29T10:00:00.000Z", "") });
+  const sinRev = clase("m3", "2026-10-28", hecha(90));
+  const sinNumero = clase("m4", "2026-10-28", { revision: { calificacion: null, comentario: "x" } });
+  assertEquals(SD.revisionDe(a), { calificacion: 9, comentario: "Muy buena letra", revisadoEn: "2026-10-28T18:00:00.000Z" });
+  assertEquals([SD.revisionDe(sinRev), SD.revisionDe(sinNumero), SD.revisionDe(null)], [null, null, null]);
+  // Final = promedio simple de la en línea (80 % → 8) y la del profe (9): 8.5. Sin la del profe, no hay final.
+  assertEquals([SD.finalDe(a), SD.finalDe(b), SD.finalDe(sinRev)], [8.5, 7.3, null]);
+  // Revisada sin enviar: la en línea cuenta 0.
+  assertEquals(SD.finalDe(clase("m5", "2026-10-28", revisada(8))), 4);
+  assertEquals(SD.clasesRevisadas([a, sinRev, b, sinNumero]).map((x: any) => x.id), ["m2", "m1"]);
+});
+
+Deno.test("Mis materias: final de cada clase revisada y promedio final de la materia", () => {
+  const items = [
+    clase("m1", "2026-10-26", { ...hecha(80), ...revisada(9) }), clase("m2", "2026-10-27", { ...hecha(60), ...revisada(8) }),
+    clase("m3", "2026-10-28", hecha(100)),
+    { ...clase("i1", "2026-10-26", hecha(80)), titulo: "🗣️ Inglés · Hola", materia: "Inglés" },
+  ];
+  const res = SD.resumenMaterias(items, "2026-10-28");
+  const mate = res.find((m: any) => m.clave === "matematicas");
+  assertEquals(mate.revisadas, [
+    { id: "m1", tema: "Tema m1", calificacion: 9, comentario: "Muy buena letra", final: 8.5 },
+    { id: "m2", tema: "Tema m2", calificacion: 8, comentario: "Muy buena letra", final: 7 },
+  ]);
+  assertEquals(mate.promedioFinal, 7.8); // (8.5 + 7) / 2 = 7.75 → 7.8
+  const ingles = res.find((m: any) => m.clave === "ingles");
+  assertEquals([ingles.revisadas, ingles.promedioFinal], [[], null]);
 });
 
 Deno.test("Mis materias: las 8 materias en orden, con su secuencia y la etapa actual según la fecha", () => {

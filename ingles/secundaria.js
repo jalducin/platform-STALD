@@ -95,6 +95,8 @@ function filaClase(it, conFecha) {
   let sub = (it.tipo === 'examen' ? 'Examen' : 'Clase') + (conFecha ? ' · hasta el ' + escapeHtml(formatFecha(it.fechaLimite)) : '');
   if (it.intentosMax) sub += ' · ' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' oportunidades';
   if (it.mejor) sub += ' · <span class="pill ok">⭐ ' + it.mejor.porcentaje + '% (tu mejor)</span>';
+  // Revisión del profe (openspec: revision-profe): calificación y comentario; nada del checklist.
+  sub += pillRevision(it, true); // bloque propio (CSS), '' si no está calificada
   return '<div class="exam-item sec-clase mat-' + (m ? m.clave : 'otra') + '" data-sec-item="' + escapeHtml(it.id) + '"' + (m ? ' data-materia="' + escapeHtml(m.nombre) + '"' : '') + '>' +
     '<div class="sec-clase-info"><div class="t">' + chipMateria(m) + '<span class="sec-tema">' + escapeHtml(textoClase(it, m)) + '</span></div><div class="s">' + sub + '</div></div>' + accionItem(it, it.estado) + '</div>';
 }

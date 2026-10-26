@@ -45,7 +45,7 @@ function tarjetaHoy(it, hoy, admin) {
   return '<article class="sec-tarjeta mat-' + m.clave + '" data-sec-card="' + escapeHtml(it.id) + '" data-estado="' + e.clave + '" aria-labelledby="sec-card-t-' + escapeHtml(it.id) + '">' +
     '<div class="sec-tarjeta-top">' + chipConEmoji(m) + '<span class="sec-estado est-' + e.clave + '"><span aria-hidden="true">' + EMOJI_ESTADO[e.clave] + '</span> ' + escapeHtml(e.texto + nota) + '</span></div>' +
     '<h3 class="sec-tarjeta-tema" id="sec-card-t-' + escapeHtml(it.id) + '">' + escapeHtml(SD.temaDe(it)) + '</h3>' +
-    '<p class="sec-tarjeta-meta">' + escapeHtml(meta.join(' · ')) + '</p>' +
+    '<p class="sec-tarjeta-meta">' + escapeHtml(meta.join(' · ')) + '</p>' + pillRevision(it) + // revisión del profe (openspec: revision-profe)
     '<div class="sec-tarjeta-premio">' + (mundo ? '<span class="rpg-mundo-mini">' + escapeHtml(mundo) + '</span>' : '<span></span>') + xp + '</div>' +
     botonClase(it, e, admin, 'sec-btn-grande') + '</article>';
 }
@@ -85,6 +85,29 @@ function misionPrincipalHtml(items, hoy, admin, saludo) {
   }
   return '<section class="rpg-mision" id="rpg-mision" aria-label="Misión principal"' + (mision ? ' data-motivo="' + mision.motivo + '"' : '') + '>' + saludo + cuerpo + '</section>';
 }
+
+// «📝 El profe revisó N clases» (openspec: revision-profe): las revisiones que la alumna aún no ve. Acceso directo: con
+// una, abre su resultado; con varias, «📚 Mis materias». Al tocarlo quedan vistas (y al abrir la clase o su resultado).
+// Sin petición nueva: `revision` llega en /secundaria/actividades.
+function avisoRevisionHtml(items, hoy) {
+  const nuevas = revisionesNuevas(items);
+  if (!nuevas.length) return '';
+  const n = nuevas.length;
+  const detalle = nuevas.slice(0, 3).map(it => SD.temaDe(it) + ': ' + califProfe(SD.revisionDe(it).calificacion)).join(' · ') + (n > 3 ? ' · …' : '');
+  const una = n === 1 && SD.estadoClase(nuevas[0], hoy).accion === 'ver-resultado';
+  const boton = una
+    ? '<button type="button" class="btn sec-rev-ir" data-sec-rev-vistas data-action="ver-resultado" data-id="' + escapeHtml(nuevas[0].id) + '">Ver la revisión <span aria-hidden="true">→</span></button>'
+    : '<button type="button" class="btn sec-rev-ir" data-sec-rev-vistas data-sec-tab="materias">Ver mis calificaciones <span aria-hidden="true">→</span></button>';
+  return '<section class="exam-card sec-rev-aviso" id="sec-rev-aviso" data-sec-rev-nuevas="' + n + '" aria-live="polite">' +
+    '<p><b>📝 El profe revisó ' + n + (n === 1 ? ' clase' : ' clases') + '</b></p><p class="sec-kpi-detalle">' + escapeHtml(detalle) + '</p>' + boton + '</section>';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-sec-rev-vistas]');
+  if (!b) return;
+  SD.clasesRevisadas((state.act && state.act.items) || []).forEach(marcarRevisionVista);
+  const aviso = document.getElementById('sec-rev-aviso');
+  if (aviso && !b.dataset.action) aviso.remove(); // con «Ver la revisión» la página cambia de vista
+});
 
 const kpi = (id, cuerpo, titulo, detalle) => '<div class="sec-kpi" id="' + id + '">' + cuerpo + '<div class="sec-kpi-txt"><div class="sec-kpi-titulo">' + titulo + '</div><div class="sec-kpi-detalle">' + detalle + '</div></div></div>';
 
@@ -173,7 +196,8 @@ function renderSecInicio(act, o) {
     [['clases', '📅', 'Esta semana'], ['horario', '🗓️', 'Mi horario'], ['materias', '🗺️', 'Mis materias y mundos']].map(([id, e, t]) =>
       '<button type="button" class="btn ghost sec-acceso" data-sec-tab="' + id + '"><span aria-hidden="true">' + e + '</span> ' + t + '</button>').join('') + '</nav>';
   const extrasMision = typeof misionInicioHtml === 'function' ? (o.admin ? '' : avisoEvaluacionHtml(items, hoy)) + misionInicioHtml(items, hoy) + misionesSemanaHtml(items, hoy) : '';
-  return '<div class="rpg">' + barraRpg(nivel, insignias, racha) + misionPrincipalHtml(items, hoy, o.admin, saludo) + extrasMision + retosHtml(items, hoy, deHoy, o.admin) +
+  const avisoRevision = o.admin ? '' : avisoRevisionHtml(items, hoy);
+  return '<div class="rpg">' + barraRpg(nivel, insignias, racha) + misionPrincipalHtml(items, hoy, o.admin, saludo) + avisoRevision + extrasMision + retosHtml(items, hoy, deHoy, o.admin) +
     kpisHtml(SD.progresoSemana(items, hoy), racha, GAM.mapaMundos(items, hoy)) +
     '<div class="rpg-dos">' + actividadHtml(items) + promediosHtml(items, hoy) + '</div>' + insigniasHtml(insignias) + accesos + '</div>';
 }
@@ -186,10 +210,25 @@ function caminoMundos(m) {
     '<span aria-hidden="true">' + e.emoji + '</span> ' + escapeHtml(e.mundo) + ' <small>' + escapeHtml(e.nombre) + '</small> <span class="sec-mundo-estado" aria-hidden="true">' + EMOJI_MUNDO[e.estado] + '</span>' +
     '<span class="sr-only">, ' + TEXTO_MUNDO[e.estado] + '</span>' + (e.actual ? ' <span class="sec-ahora">ahora</span>' : '') + '</span></li>').join('') + '</ol>';
 }
+// Clases revisadas por el profe de la materia (openspec: revision-profe): calificación del profe y final de la clase
+// (comun/revision-datos.js vía SD). Si ya la envió, el botón abre su resultado con la revisión.
+function revisadasMateria(m, items, hoy) {
+  if (!m.revisadas.length) return '';
+  return '<div class="sec-materia-rev" data-sec-materia-rev="' + m.clave + '"><h4>📋 Revisadas por el profe</h4><ul>' + m.revisadas.map(x => {
+    const it = items.find(i => i.id === x.id);
+    const cuerpo = '<span class="sec-rev-tema">' + escapeHtml(x.tema) + '</span><small>Profe: ' + escapeHtml(califProfe(x.calificacion)) +
+      (x.final !== null ? ' · Final: <b>' + escapeHtml(califProfe(x.final)) + '</b>' : '') + '</small>';
+    return '<li data-sec-rev-item="' + escapeHtml(x.id) + '"' + (x.final !== null ? ' data-sec-final="' + x.final + '"' : '') + '>' +
+      (it && SD.estadoClase(it, hoy).accion === 'ver-resultado'
+        ? '<button type="button" class="sec-rev-abrir" data-action="ver-resultado" data-id="' + escapeHtml(x.id) + '">' + cuerpo + '<span aria-hidden="true">→</span></button>'
+        : '<div class="sec-rev-abrir">' + cuerpo + '</div>') + '</li>';
+  }).join('') + '</ul></div>';
+}
 function renderSecMaterias(items, hoy) {
   return '<p class="rpg-leyenda" aria-hidden="true"><span>✅ completado</span><span>▶️ en curso</span><span>🔒 bloqueado</span></p><div class="sec-materias">' + SD.resumenMaterias(items, hoy).map(m => {
     const pct = m.total ? Math.round(m.hechas * 100 / m.total) : 0;
-    const prom = m.promedio === null ? '<span class="chip gris">Sin calificación</span>' : '<span class="chip mat-chip mat-' + m.clave + '">⭐ ' + m.promedio + ' %</span>';
+    const prom = (m.promedio === null ? '<span class="chip gris">Sin calificación</span>' : '<span class="chip mat-chip mat-' + m.clave + '">⭐ ' + m.promedio + ' %</span>') +
+      (m.promedioFinal === null ? '' : '<span class="chip ok sec-final-chip" data-sec-final-materia="' + m.promedioFinal + '" title="Promedio de la calificación final de las clases revisadas por el profe">📋 Final ' + escapeHtml(califProfe(m.promedioFinal)) + '</span>');
     const temas = m.temas.length ? '<p class="sec-materia-nota">Temas: ' + escapeHtml(m.temas.join(' → ')) + '</p>' : '';
     let ultimo = 'Todavía no hay clases de esta materia.';
     if (m.ultimoTema) ultimo = 'Último tema: <b>' + escapeHtml(m.ultimoTema) + '</b>';
@@ -198,7 +237,7 @@ function renderSecMaterias(items, hoy) {
       '<header class="sec-materia-top"><span class="sec-materia-emoji" aria-hidden="true">' + m.emoji + '</span><h3 id="sec-mat-' + m.clave + '">' + escapeHtml(m.nombre) + '</h3>' + prom + '</header>' +
       '<div class="sec-materia-avance"><span>' + m.hechas + ' de ' + m.total + (m.total === 1 ? ' clase hecha' : ' clases hechas') + '</span>' +
       '<div class="barra" role="progressbar" aria-label="Clases hechas de ' + escapeHtml(m.nombre) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div></div>' +
-      '<p class="sec-materia-ultimo">' + ultimo + '</p>' + caminoMundos(m) + temas + (m.nota ? '<p class="sec-materia-nota">' + escapeHtml(m.nota) + '</p>' : '') + '</article>';
+      '<p class="sec-materia-ultimo">' + ultimo + '</p>' + revisadasMateria(m, items, hoy) + caminoMundos(m) + temas + (m.nota ? '<p class="sec-materia-nota">' + escapeHtml(m.nota) + '</p>' : '') + '</article>';
   }).join('') + '</div>';
 }
 

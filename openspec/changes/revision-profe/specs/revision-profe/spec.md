@@ -89,6 +89,16 @@ libro. Si la lectura de revisiones falla, su lista SHALL salir igual, sin `revis
 - **WHEN** el profe calificó con 9 y comentó «Muy buena letra»
 - **THEN** la alumna ve «✅ Revisado por el profe: 9 · Muy buena letra» y su respuesta no trae `checks`, `audio` ni `libro`
 
+#### Scenario: Final de la clase en «Mis materias»
+- **WHEN** la clase tiene 100 % en línea y el profe le pone 9
+- **THEN** en «📚 Mis materias» la clase dice «Profe: 9 · Final: 9.5» y la materia muestra «📋 Final» con el promedio
+  de las finales de sus clases revisadas (misma fórmula, `comun/revision-datos.js`)
+
+#### Scenario: Aviso de clases revisadas
+- **WHEN** el profe revisó 2 clases que la alumna aún no ve en ese aparato
+- **THEN** su «🏠 Inicio» dice «📝 El profe revisó 2 clases» con un botón a «📚 Mis materias», sin peticiones nuevas
+  (el dato llega en `GET /secundaria/actividades`); al tocarlo o al ver la clase ya no sale
+
 ### Requirement: Matriz de acceso de la revisión
 `GET` y `PUT /profe/revision` SHALL ser solo del admin: cualquier otra persona con sesión (alumna de Secundaria, alumno
 o alumna de Inglés, baja, invitado) SHALL recibir 403 y sin sesión 401. Sin Postgres migrado (fuera de pruebas locales)

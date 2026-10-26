@@ -108,6 +108,21 @@
     return pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
   }
 
+  // ---------- Revisión del profe (openspec: revision-profe) ----------
+  // La alumna solo recibe `revision: { calificacion, comentario, revisadoEn }` en sus clases calificadas por el profe
+  // (nunca el checklist). La fórmula de la calificación final vive SOLO en comun/revision-datos.js (`RevisionDatos`);
+  // sin ese script cargado no hay final.
+  function revisionDe(it) {
+    const r = it && it.revision;
+    return r && typeof r.calificacion === 'number' && Number.isFinite(r.calificacion)
+      ? { calificacion: r.calificacion, comentario: String(r.comentario || ''), revisadoEn: String(r.revisadoEn || '') } : null;
+  }
+  const finalDe = it => (revisionDe(it) && g.RevisionDatos ? g.RevisionDatos.finalDe(it) : null);
+  // Clases revisadas por el profe, de la revisión más reciente a la más vieja.
+  const clasesRevisadas = items => (items || []).filter(revisionDe)
+    .sort((a, b) => revisionDe(b).revisadoEn.localeCompare(revisionDe(a).revisadoEn));
+  const redondeo1 = n => Math.round(n * 10 + 1e-9) / 10;
+
   // Etapas de la materia = sus mundos (comun/gamificacion.js) con su estado; «actual» = el mundo actual (`mundoDe`).
   function etapasDe(clave, hoy, items) {
     const fila = G.mapaMundos(items || [], hoy).find(m => m.clave === clave);
@@ -128,9 +143,16 @@
       const suyas = grupos.get(m.clave);
       const vistas = suyas.filter(it => diaDeClase(it) <= hoy).sort((a, b) => diaDeClase(a).localeCompare(diaDeClase(b)));
       const ultima = vistas[vistas.length - 1];
+      // Clases revisadas por el profe (por día) con su final; promedio final de la materia (0–10, a 0.1) o null.
+      const revisadas = suyas.filter(revisionDe).sort((a, b) => diaDeClase(a).localeCompare(diaDeClase(b))).map(it => {
+        const r = revisionDe(it);
+        return { id: it.id, tema: temaDe(it), calificacion: r.calificacion, comentario: r.comentario, final: finalDe(it) };
+      });
+      const finales = revisadas.map(x => x.final).filter(f => f !== null);
       return {
         clave: m.clave, nombre: m.nombre, emoji: m.emoji, total: suyas.length, hechas: suyas.filter(estaHecha).length,
         promedio: promedio(suyas), ultimoTema: ultima ? temaDe(ultima) : null,
+        revisadas, promedioFinal: finales.length ? redondeo1(finales.reduce((a, b) => a + b, 0) / finales.length) : null,
         etapas: etapasDe(m.clave, hoy, items), temas: (SECUENCIAS[m.clave] || {}).temas || [], nota: (SECUENCIAS[m.clave] || {}).nota || '',
       };
     });
@@ -145,5 +167,6 @@
     MATERIAS, SECUENCIAS, OTRA, porClave, materiaConocida, materiaDe, temaDe, sinAcentos,
     sumarDias, lunesDe, nombreDia, diaCorto, semanaDe, diaDeClase,
     estaHecha, estadoClase, clasesDeHoy, misionPrincipal, progresoSemana, rachaDe, promedio, etapasDe, resumenMaterias, horarioSemana,
+    revisionDe, finalDe, clasesRevisadas,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
