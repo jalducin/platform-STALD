@@ -584,6 +584,20 @@ admin, alumna de Secundaria, alumno activo de Inglés (con su grupo), de baja de
 | `POST /profe/entregas/<id>/<slug>/borrar`, `POST /profe/entregas/persona/<slug>/borrar` | admin | borran el texto y conservan la evaluación (la XP no cambia) |
 | `POST /practica/comprobar` `{ itemId o misionId, practicaId, respuesta }` | con sesión | `{ correcta, pista }`; clases solo de Secundaria; misiones visibles para la persona (también de Inglés); 404 si no le es visible; 403 baja o sin acceso |
 
+#### Revisión del profe (cambio `revision-profe`, `server/revision.ts`)
+
+| Ruta | Quién | Respuesta |
+|---|---|---|
+| `GET /profe/revision?alumna=<slug>&semana=<AAAA-MM-DD>` | admin | `{ alumna, hoy, semana: { lunes, domingo, anterior, siguiente, dias }, clases, abiertas, avisos? }`. `semana` (opcional, cualquier día) se lleva a su lunes. `clases`: las de Secundaria de esa alumna (todas las semanas subidas, también futuras, con su prórroga) cuyo día de clase (`Gamificacion.diaDeClase`) cae en la semana; `abiertas`: las de otro día abiertas esa semana. Cada una: `{ id, tipo, titulo, materia?, dia, disponibleDesde, fechaLimite, preguntas, intentosMax, intentosUsados, mejor, fueraDeTiempo, estado (sin-abrir, borrador, enviada), abre?, borrador: { respondidas, total, actualizado } o null, pide: { libreta, audio, libro }, revision o null }`, con `resultados/` y `borradores/`. Si una lectura falla, la clase sale sin ese dato y `avisos` lo dice. 404 `alumna_no_encontrada`; 400 `semana_invalida` |
+| `PUT /profe/revision` `{ alumna, id, checks, audio, libro, calificacion, comentario }` | admin | Guarda `revisiones/<slug>/<id>.json` (estado completo de la tarjeta; gana el último guardado; 3 reintentos con `sha`). 200 `{ guardado, revision }` o `{ guardado, vacia: true, revision: null }` (vacía se borra). 400 `json_invalido`, `calificacion_invalida` (0–10 de medio en medio, o `null`), `comentario_invalido` (> 300), `checks_invalidos`; 404 `alumna_no_encontrada` o `no_encontrado` (clase inexistente o de otra alumna); 503 `sin_base` (sin Postgres migrado, fuera de `DATA_DIR`) o `conflicto_escritura` |
+
+Cualquier otra persona con sesión: 403 `solo_admin`; sin sesión verificada (también `?email=` de la transición), 401
+`inicia_sesion`. La alumna recibe en `GET /secundaria/actividades`
+`revision: { calificacion, comentario, revisadoEn }` solo en sus clases ya calificadas (una lectura de
+`revisiones/<slug>/`; si falla, su lista sale sin `revision`); nunca `checks`, `audio` ni `libro`. La calificación final
+de la clase (promedio simple de la en línea y la del profe) y el resumen de la semana se calculan en la página con
+`comun/revision-datos.js` (`FORMULA_FINAL`, único lugar); el servidor valida la calificación con esas mismas reglas.
+
 Toda `/profe/entregas*` responde 403 a quien no es admin y 401 sin sesión. Ninguna respuesta lleva correos; a
 estudiantes la misión va sin `alumnos` ni `grupos`. Una entrega con el contenido borrado antes de evaluar ya no se puede
 evaluar (409 `incompleta`). El

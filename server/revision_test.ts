@@ -99,7 +99,7 @@ function datos(): Record<string, unknown> {
 }
 const alumnas = () => Promise.resolve([{ slug: "luz", nombre: "Luz María Pérez" }, { slug: "ana", nombre: "Ana" }]);
 const deps = (store: any, email = ADMIN, extra: Record<string, unknown> = {}) => ({
-  email, admin: ADMIN, store, hoy: () => "2026-10-28", ahora: () => AHORA, alumnas, puedeGuardar: () => Promise.resolve(true), ...extra,
+  email, verificado: true, admin: ADMIN, store, hoy: () => "2026-10-28", ahora: () => AHORA, alumnas, puedeGuardar: () => Promise.resolve(true), ...extra,
 });
 async function pedir(store: any, metodo: string, q: string, body?: unknown, email = ADMIN, extra: Record<string, unknown> = {}) {
   clearCache();
@@ -189,6 +189,11 @@ Deno.test("revision: matriz de acceso (solo admin; sin base, 503)", async () => 
     assertEquals((await guardar(store, { calificacion: 10 }, correo)).status, 403, correo);
   }
   assertEquals(await store.get(rutaRevision("luz", "c-esp")), null);
+  // Sin sesión verificada (también con el correo del admin por `?email=`): 401.
+  for (const metodo of ["GET", "PUT"]) {
+    const r = await pedir(store, metodo, "?alumna=luz", metodo === "PUT" ? { alumna: "luz", id: "c-esp", calificacion: 9 } : undefined, ADMIN, { verificado: false });
+    assertEquals([r.status, r.body.error], [401, "inicia_sesion"], metodo);
+  }
   const sinBase = await pedir(store, "PUT", "", { alumna: "luz", id: "c-esp", calificacion: 9 }, ADMIN, { puedeGuardar: () => Promise.resolve(false) });
   assertEquals([sinBase.status, sinBase.body.error], [503, "sin_base"]);
   assertEquals((await pedir(store, "POST", "")).status, 405);

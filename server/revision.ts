@@ -21,6 +21,7 @@ const RD = (globalThis as any).RevisionDatos;
 export interface Revision { checks: number[]; audio: boolean; libro: boolean; calificacion: number | null; comentario: string; revisadoEn: string }
 export interface DepsRevision {
   email: string;
+  verificado: boolean; // correo de una sesión verificada (no `?email=` de la transición)
   admin: string;
   store: Store;
   hoy: () => string;
@@ -156,6 +157,8 @@ async function guardar(req: Request, deps: DepsRevision, json: Json): Promise<Re
 }
 
 export async function handleRevision(req: Request, deps: DepsRevision, json: Json): Promise<Response> {
+  // Sin sesión verificada (p. ej. `?email=` o nada durante la transición del login): 401, como /auth/enlace.
+  if (!deps.verificado) return json({ error: "inicia_sesion" }, 401);
   if (!deps.admin || (deps.email || "").trim().toLowerCase() !== deps.admin) return json({ error: "solo_admin" }, 403);
   if (req.method === "GET") return await verSemana(new URL(req.url), deps, json);
   if (req.method === "PUT") return await guardar(req, deps, json);
