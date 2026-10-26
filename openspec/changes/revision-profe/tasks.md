@@ -27,19 +27,19 @@
 
 ## 4. Verificación (OBLIGATORIO)
 
-- [ ] 4.1 Revisar y actualizar pruebas existentes (OBLIGATORIO): E2E nueva `revision-profe` registrada en
+- [x] 4.1 Revisar y actualizar pruebas existentes (OBLIGATORIO): E2E nueva `revision-profe` registrada en
   `tests/e2e/correr.sh` (fase `ingles`); revisar `secundaria-*`, `misiones`, `autoguardado-todo`, `peticiones`,
   `navegacion-dispositivos` e `ingles-admin`
-- [ ] 4.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): suite Deno y E2E (`revision-profe`, `secundaria-*`,
-  `misiones`, `autoguardado-todo`, `peticiones`, `navegacion-dispositivos`, `ingles-admin`) con puertos 9081/9082, copia
+- [x] 4.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): suite Deno y E2E (`revision-profe`, `secundaria-*`,
+  `misiones`, `autoguardado-todo`, `peticiones`, `navegacion-dispositivos`, `ingles-admin`) con puertos 9181/9182 (9081/9082 ocupados), copia
   temporal de datos y, para Postgres, el PostgREST falso (`tests/e2e/lib/postgrest-falso.ts`, solo `stald_test_*`);
-  reporte `openspec/changes/revision-profe/reports/2026-10-25-step-4.2-pruebas-y-verificacion.md`
-- [ ] 4.3 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): con Playwright y `curl`, marcar checklist, calificar,
+  reporte `openspec/changes/revision-profe/reports/2026-10-26-step-4.2-pruebas-y-verificacion.md`
+- [x] 4.3 Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO): con Playwright y `curl`, marcar checklist, calificar,
   comentar, recargar, ver la calificación como alumna, 403 para no admin y 400/404 de casos inválidos; restaurar estado
   (borrar las revisiones de prueba)
-- [ ] 4.4 Actualizar documentación técnica (OBLIGATORIO): `docs/backend-standards.md`, `docs/data-model.md`,
+- [x] 4.4 Actualizar documentación técnica (OBLIGATORIO): `docs/backend-standards.md`, `docs/data-model.md`,
   `docs/frontend-standards.md`, `docs/pruebas.md` y `privacidad.html`
-- [ ] 4.5 `openspec validate revision-profe --strict`, `verificador-pruebas` y `revisor-solo-lectura`
+- [x] 4.5 `openspec validate revision-profe --strict`, `verificador-pruebas` y `revisor-solo-lectura`
 - [ ] 4.6 Verificación en producción tras el merge — EL AGENTE EJECUTA (OBLIGATORIO), solo lectura: `/salud`,
   `/profe/revision` sin sesión responde 401 y los `?v=` nuevos se sirven
 
