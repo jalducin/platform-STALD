@@ -193,6 +193,8 @@ async function finalCoincide(p, id) {
       const det = visto ? await texto(p, '#content') : '';
       const n = await p.$$eval('#content .rev', xs => xs.length).catch(() => 0);
       ok(`🔎 Ver respuestas (${id}): ${pct} %, ${correctas} correctas y sus ${errores} errores`, visto && det.includes(pct + '%') && det.includes(correctas + ' correctas') && n === errores, `${n} errores · ${det.slice(0, 160)}`);
+      const cab = visto ? await texto(p, '#content .exam-card h3') : '';
+      ok(`🔎 Ver respuestas (${id}): «Resultado de Valeria», sin festejo ni «Siguiente misión»`, cab.startsWith('📝 Resultado de Valeria') && !cab.includes('Misión cumplida') && !(await p.$('#content .sec-siguiente')), cab);
       if (visto) await p.screenshot({ path: `revision-profe-ver-respuestas-${pct}.png`, fullPage: true });
       await p.click('[data-action="volver"]').catch(() => {});
       await p.waitForSelector('#sec-revision:not([hidden]) [data-testid="rev-semana"]', { timeout: 15000 }).catch(async () => { await irPestanaSec(p, 'revision').catch(() => {}); });
