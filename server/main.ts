@@ -479,9 +479,9 @@ async function depsMisiones(email: string, admin: string): Promise<DepsMisiones>
   };
 }
 // Revisión del profe (openspec: revision-profe): en Postgres (stald_docs); sin la base migrada no se guarda.
-async function depsRevision(email: string, admin: string): Promise<DepsRevision> {
+async function depsRevision(email: string, verificado: boolean, admin: string): Promise<DepsRevision> {
   return {
-    email, admin, store: await getStore(), hoy: () => mxToday(), ahora: ahoraIso,
+    email, verificado, admin, store: await getStore(), hoy: () => mxToday(), ahora: ahoraIso,
     alumnas: async () => alumnasSecundaria(await filasSecundaria()),
     puedeGuardar: async () => !!env("DATA_DIR") || await inglesEnPg(),
   };
@@ -538,7 +538,7 @@ async function rutear(req: Request, url: URL, quien: Quien, email: string, admin
   // sus propias misiones (Dragon Run) bajo /juegos/….
   if (!url.pathname.includes("/juegos/")) {
     // GET/PUT /profe/revision → revisión de la semana de una alumna (solo admin; openspec: revision-profe).
-    if (url.pathname.endsWith("/profe/revision")) return await handleRevision(req, await depsRevision(email, admin), json);
+    if (url.pathname.endsWith("/profe/revision")) return await handleRevision(req, await depsRevision(email, quien.ok && quien.verificado, admin), json);
     const mPe = url.pathname.match(RUTA_PROFE_ENTREGAS);
     if (mPe) return await handleProfeEntregas(req, mPe[1] || "", await depsMisiones(email, admin), json);
     const mMi = url.pathname.match(RUTA_MISIONES);
