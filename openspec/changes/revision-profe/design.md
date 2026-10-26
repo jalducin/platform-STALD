@@ -50,6 +50,16 @@
 - **Lo que ve la alumna.** `listarActividades` (ámbito Secundaria, no admin) lee `revisiones/<slug>/` una vez y agrega
   `revision: { calificacion, comentario, revisadoEn }` solo a las clases con calificación. Si la lectura falla, la lista
   sale sin `revision` (se registra). La página pinta «✅ Revisado por el profe: 9 · comentario» en la fila y en la clase.
+  - Dónde: fila de «📅 Esta semana» y vista de la clase (`[data-testid="revisado-profe"]`, uno por vista), su resultado
+    (también al abrir una clase ya terminada o con «Ver resultado») y un distintivo en las tarjetas de «Retos diarios».
+  - Final de la clase: `SecundariaDatos.finalDe` delega en `RevisionDatos.finalDe` (la fórmula sigue en un solo
+    lugar). «📚 Mis materias» lista las clases revisadas de cada materia (profe y final) y el chip «📋 Final» con el
+    promedio de las finales de la materia (`resumenMaterias` → `revisadas`, `promedioFinal`).
+  - Aviso «📝 El profe revisó N clases» en «🏠 Inicio» con acceso directo (con una, su resultado; con varias, «📚 Mis
+    materias»). «Ya la vio» por aparato: `localStorage` `stald_rev_vista:<hash del correo>:<id>:<revisadoEn>` (sin el
+    correo); se marca al tocar el aviso o al ver la revisión en la clase o su resultado; si el profe la cambia, vuelve a
+    ser nueva. Sin almacenamiento cuenta como vista. En la vista del profe «como la alumna» no hay aviso ni se marca.
+  - Gamificación sin cambios: la calificación del profe no da XP (el contrato no lo pide).
 - **Página.** `ingles/secundaria-revision.js` (nuevo): pestaña `revision` (`#revision`, «📋 Revisión», corto «Revisión»,
   solo admin; en celular vive en «☰ Más»). Carga perezosa en `irPestanaSec` (primera vez que se abre, o al llegar con
   `#revision`). Cada tarjeta es un `<form>`; «💾 Guardar revisión» manda el `PUT` y repinta solo esa tarjeta y el

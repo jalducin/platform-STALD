@@ -19,8 +19,11 @@
 
 - [x] 3.1 `ingles/secundaria-revision.js` y estilos: pestaña «📋 Revisión» perezosa, semanas, tarjetas por día, resumen,
   guardar, misiones con enlace a «📥 Entregas»; `ingles/secundaria.js` (pestaña y carga perezosa)
-- [ ] 3.2 La alumna: «✅ Revisado por el profe» en su fila y en la clase (`ingles/secundaria.js`,
-  `ingles/secundaria-clase.js`); `?v=` en `ingles.html`
+- [x] 3.2 La alumna: «✅ Revisado por el profe» en su fila y en la clase (`ingles/secundaria.js`,
+  `ingles/secundaria-clase.js`, también en el resultado); `?v=` en `ingles.html`
+- [x] 3.3 La alumna en su tablero: final de cada clase revisada y promedio final por materia en «📚 Mis materias», aviso
+  «📝 El profe revisó N clases» en «🏠 Inicio» (`comun/secundaria-datos.js` con pruebas en
+  `server/secundaria_tablero_test.ts`, `ingles/secundaria-inicio.js`, `ingles/secundaria.css`)
 
 ## 4. Verificación (OBLIGATORIO)
 
