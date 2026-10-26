@@ -15,10 +15,13 @@ const REV_REINTENTO_MS = 3000;
 // `revAbiertas` guarda lo que el profe tocó en cada tarjeta (id → true desplegada / false plegada) hasta que cambie el modo.
 const REV_MODO_KEY = 'stald_revision_modo';
 const revAbiertas = new Map();
+let revModoVisita = null; // lo elegido en esta visita: manda aunque no haya almacenamiento
 function revModo() {
+  if (revModoVisita) return revModoVisita;
   try { return localStorage.getItem(REV_MODO_KEY) === 'todo' ? 'todo' : 'plegar'; } catch { return 'plegar'; }
 }
 function guardarRevModo(modo) {
+  revModoVisita = modo;
   try { localStorage.setItem(REV_MODO_KEY, modo); } catch { /* sin almacenamiento: solo dura esta visita */ }
 }
 const esRevisada = c => !!(c.revision && typeof c.revision.calificacion === 'number');
@@ -277,7 +280,8 @@ async function guardarRevision(f, intento = 1) {
     clase.revision = r.body.revision;
     const revisada = !!(r.body.revision && typeof r.body.revision.calificacion === 'number');
     f.classList.toggle('rev-hecha', revisada);
-    f.querySelector('[data-rev-sello]').textContent = selloDe(clase); // no se pliega sola: el profe sigue en la tarjeta
+    revAbiertas.set(clase.id, f.dataset.plegada !== '1'); // no se pliega sola, ni al volver a dibujar la pestaña
+    f.querySelector('[data-rev-sello]').textContent = selloDe(clase);
     f.querySelector('[data-rev-final-corta]').textContent = finalCorta(clase);
     ponerEstado(f, r.body.vacia ? '💾 Guardado · sin revisión' : '💾 Guardado', 'ok');
     repintarResumen();
