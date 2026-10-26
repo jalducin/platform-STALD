@@ -137,7 +137,8 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   `revisiones/valeria/`; y Español con audio y libro de ortografía, 50 %; las materias no mueven los promedios que fija `secundaria-dashboard`). Prueba la API (semana, estados, matriz
   403/401, 400/404, lo que recibe la alumna), la pestaña «📋 Revisión» del profe (perezosa, «🔎 Ver respuestas»,
   checklist, audio, libro, calificación, comentario, recarga, final y resumen contra `comun/revision-datos.js`) y lo
-  que ve la alumna, en 360, 768 y 1280 px, claro y oscuro. Con `--pg` siembra en `stald_test_docs` el borrador y la
+  que ve la alumna (aviso «📝 El profe revisó N clases», «Profe · Final» y chip «📋 Final» en «Mis materias», y
+  «✅ Revisado por el profe» en su fila y en la clase), en 360, 768 y 1280 px, claro y oscuro. Con `--pg` siembra en `stald_test_docs` el borrador y la
   revisión de ejemplo (la migración solo lleva `resultados/` y `avance/`). Al terminar deja las revisiones como en el
   fixture. Selectores `data-testid`: `openspec/changes/revision-profe/design.md`.
 - `secundaria-adelantar` (fase `ingles`, cambio `secundaria-adelantar`; solo con `--hoy 2026-10-22`, con otro día

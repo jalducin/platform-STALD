@@ -6,7 +6,8 @@
 //      la alumna solo recibe calificación y comentario.
 //   2. Profe (PC): la pestaña «📋 Revisión» es perezosa; navega a la semana; tarjetas y resumen; marca el checklist,
 //      el audio y el libro, califica y comenta; recarga y todo sigue; la final sale de RevisionDatos.finalDe.
-//   3. Alumna: «✅ Revisado por el profe: N · comentario» en su lista y en la clase, sin checklist.
+//   3. Alumna: aviso «📝 El profe revisó N clases» en Inicio, «Profe: 9 · Final: 8.5» y chip «📋 Final» en «Mis
+//      materias», «✅ Revisado por el profe: N · comentario» en su fila y en la clase, sin checklist.
 //   4. Celular 360, tablet 768 y PC 1280, en claro y oscuro: sin scroll horizontal, objetivos ≥ 44 px, sin errores.
 // Con --pg (PostgREST falso o real, solo stald_test_*) siembra el borrador y la revisión de ejemplo en stald_test_docs
 // (la migración solo lleva resultados/ y avance/). Restaura lo que guarda: deja las revisiones como en el fixture.
@@ -16,6 +17,8 @@ const { chromium } = require('playwright');
 const fs = require('node:fs');
 const { abrirPagina } = require('./lib/navegador');
 const { irPestanaSec } = require('./lib/secundaria');
+require('../../comun/revision-datos.js'); // globalThis.RevisionDatos: la final esperada sale de la misma fórmula
+const RD = globalThis.RevisionDatos;
 const API = process.env.API;
 const DATA = process.env.DATA;
 const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${n} ${x}`);
@@ -203,13 +206,17 @@ async function finalCoincide(p, id) {
     const fTarde = await finalCoincide(p, ID.tarde);
     ok('final: la ya revisada (50 % y 6) coincide con la fórmula', fTarde.ok, fTarde.detalle);
     // Resumen contra la regla única
+    // El número de cada dato del resumen (el primero del texto; «—» = sin promedio) contra la regla única. Espera hasta
+    // 10 s a que la página repinte tras guardar.
     const resumenOk = async etapa => {
       const sem = await semana();
       const esperado = await p.evaluate(cl => window.RevisionDatos && window.RevisionDatos.resumenSemana(cl), sem.body.clases || []);
-      const visto = await p.$$eval('#sec-revision [data-testid="rev-resumen"] [data-rev-resumen]', xs => Object.fromEntries(xs.map(x => [x.dataset.revResumen, x.textContent.replace(/\s+/g, ' ').trim()])));
-      const num = v => v === null ? '—' : String(v);
-      const bien = esperado && ['clases', 'enviadas', 'revisadas', 'pendientes', 'promedio'].every(k => (visto[k] || '').includes(num(esperado[k])));
-      ok(`resumen (${etapa}): coincide con RevisionDatos.resumenSemana`, bien, JSON.stringify({ visto, esperado: esperado && { c: esperado.clases, e: esperado.enviadas, r: esperado.revisadas, p: esperado.pendientes, m: esperado.promedio } }));
+      const leer = () => p.$$eval('#sec-revision [data-testid="rev-resumen"] [data-rev-resumen]', xs => Object.fromEntries(xs.map(x => [x.dataset.revResumen, x.textContent.replace(/\s+/g, ' ').trim()])));
+      const num = t => { const m = /^(—|\d+(?:\.\d+)?)/.exec(t || ''); return m ? m[1] : null; };
+      const cuadra = v => esperado && ['clases', 'enviadas', 'revisadas', 'pendientes', 'promedio'].every(k => num(v[k]) === (esperado[k] === null ? '—' : String(esperado[k])));
+      let visto = await leer();
+      for (let i = 0; i < 25 && !cuadra(visto); i++) { await sleep(400); visto = await leer(); }
+      ok(`resumen (${etapa}): coincide con RevisionDatos.resumenSemana`, cuadra(visto), JSON.stringify({ visto, esperado: esperado && { c: esperado.clases, e: esperado.enviadas, r: esperado.revisadas, p: esperado.pendientes, m: esperado.promedio } }));
       return esperado;
     };
     const r1 = await resumenOk('inicial');
@@ -266,19 +273,41 @@ async function finalCoincide(p, id) {
   }
   try {
     // ---------- 3. Alumna ----------
-    const a = await pagina(b, ALUMNA, '/ingles.html?modo=secundaria#semana', { viewport: pc, esperar: '#sec-clases' });
-    ok('alumna: la clase revisada está en su lista («📝 Otras clases»)', !!(await a.$(`#sec-clases [data-sec-item="${ID.aTiempo}"]`)));
-    const fila = `[data-sec-item="${ID.aTiempo}"] [data-testid="revisado-profe"]`;
+    const items = (await pedir('/secundaria/actividades', ALUMNA)).body.items || [];
+    const revisadas = items.filter(x => x.revision && typeof x.revision.calificacion === 'number');
+    const histo = items.find(x => x.id === ID.aTiempo) || {};
+    const finalHisto = RD.finalDe(histo);
+    const a = await pagina(b, ALUMNA, '/ingles.html?modo=secundaria#inicio', { viewport: pc, esperar: '#sec-inicio' });
+    // Inicio: aviso «📝 El profe revisó N clases» (en un aparato que aún no las ha visto).
+    await a.waitForSelector('#sec-rev-aviso', { timeout: 15000 }).catch(() => {});
+    const aviso = await texto(a, '#sec-rev-aviso');
+    ok(`alumna (Inicio): «📝 El profe revisó ${revisadas.length} clases»`, revisadas.length > 1 && aviso.includes(`📝 El profe revisó ${revisadas.length} clases`), aviso.slice(0, 160));
+    if (aviso) await a.locator('#sec-rev-aviso').screenshot({ path: 'revision-alumna-aviso.png' });
+    // Mis materias: «Profe: 9 · Final: 8.5» y el chip «📋 Final» de su materia.
+    await irPestanaSec(a, 'materias');
+    const li = `#sec-materias [data-sec-rev-item="${ID.aTiempo}"]`;
+    const tLi = await texto(a, li);
+    ok(`alumna (Mis materias): «Profe: 9 · Final: ${finalHisto}»`, finalHisto === 8.5 && tLi.includes('Profe: 9 · Final: ' + finalHisto) && (await a.getAttribute(li, 'data-sec-final').catch(() => null)) === String(finalHisto), tLi);
+    const chip = await a.$eval(li, e => { const c = e.closest('[data-sec-materia]'); const x = c && c.querySelector('[data-sec-final-materia]'); return x ? { v: x.dataset.secFinalMateria, t: x.textContent.trim() } : null; }).catch(() => null);
+    ok('alumna (Mis materias): chip «📋 Final» en la materia', !!chip && chip.t.startsWith('📋 Final'), JSON.stringify(chip));
+    // «📅 Esta semana»: la fila (va en «📝 Otras clases y exámenes», que usa la misma fila que los días de la semana).
+    await irPestanaSec(a, 'clases');
+    ok('alumna: la clase revisada está en su lista', !!(await a.$(`#sec-clases [data-sec-item="${ID.aTiempo}"]`)));
+    const fila = `#sec-clases [data-sec-item="${ID.aTiempo}"] [data-testid="revisado-profe"]`;
     await a.waitForSelector(fila, { timeout: 30000 }).catch(() => {});
     const t = await texto(a, fila);
-    ok('alumna: «✅ Revisado por el profe: 9 · Muy buena letra» en su lista', t.includes('✅ Revisado por el profe: 9') && t.includes('Muy buena letra'), t);
+    ok('alumna: «✅ Revisado por el profe: 9 · Muy buena letra» en su fila', t === '✅ Revisado por el profe: 9 · Muy buena letra', t);
+    ok('alumna: la de fuera de tiempo, con su 6 y comentario', (await texto(a, `#sec-clases [data-sec-item="${ID.tarde}"] [data-testid="revisado-profe"]`)) === '✅ Revisado por el profe: 6 · Entrégala a tiempo, por favor.');
     ok('alumna: sin pestaña «📋 Revisión»', !(await a.$('[data-sec-tab="revision"]')));
     ok('alumna: no ve checklist, audio ni libro', !(await a.$('[data-testid="rev-check"], [data-testid="rev-audio"], [data-testid="rev-libro"]')) && !(await a.evaluate(() => /Audio recibido|libro de ortografía revisadas/i.test(document.body.innerText))));
-    ok('alumna: sin «Revisado» en clases que el profe no calificó', !(await a.$(`[data-sec-item="${ID.borrador}"] [data-testid="revisado-profe"]`)));
-    await a.click(`[data-sec-item="${ID.aTiempo}"] [data-action]`).catch(() => {});
-    await a.waitForSelector('#content [data-testid="revisado-profe"]:not([data-sec-item] *)', { timeout: 30000 }).catch(() => {});
+    ok('alumna: sin «Revisado» en clases que el profe no calificó', !(await a.$(`[data-sec-item="${ID.borrador}"] [data-testid="revisado-profe"]`)) && !(await a.$(`[data-sec-item="${ID.sinAbrir}"] [data-testid="revisado-profe"]`)));
+    await a.locator(`#sec-clases [data-sec-item="${ID.aTiempo}"]`).screenshot({ path: 'revision-alumna-fila.png' }).catch(() => {});
+    // La clase («Ver resultado»).
+    await a.click(`#sec-clases [data-sec-item="${ID.aTiempo}"] [data-action]`).catch(() => {});
+    await a.waitForSelector('#content .score', { timeout: 30000 }).catch(() => {});
     const enClase = await texto(a, '#content [data-testid="revisado-profe"]');
-    ok('alumna: también en la clase', enClase.includes('Revisado por el profe: 9'), enClase);
+    ok('alumna: también en la clase', enClase === '✅ Revisado por el profe: 9 · Muy buena letra', enClase);
+    ok('alumna: una sola marca por vista', (await a.$$('#content [data-testid="revisado-profe"]')).length === 1);
     ok('alumna: sin errores de consola', a.errores.length === 0, a.errores.slice(0, 3).join(' | '));
     ok('alumna: nunca pide /profe/revision', a.revisiones.length === 0);
     await a.context().close();
