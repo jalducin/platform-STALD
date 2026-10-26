@@ -347,6 +347,18 @@ button.sec-rev-abrir:hover { border-color: var(--ok); }
 .rev-card.rev-hecha { background: linear-gradient(135deg, var(--ok-soft), var(--card) 40%); }
 .rev-card-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; }
 .rev-card-top .t { font-weight: 700; overflow-wrap: anywhere; min-width: 0; }
+/* Tarjetas plegables (openspec: revision-profe-plegar): la cabecera es el botón; plegada = una línea. */
+.rev-plegar { width: 100%; min-height: 44px; margin: 0; padding: 4px 2px; border: 0; border-radius: var(--r-sm); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.rev-plegar:hover { background: var(--accent-soft); }
+.rev-plegar:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.rev-linea-fin { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.rev-final-corta { font-size: .86rem; color: var(--rpg-emerald); font-variant-numeric: tabular-nums; }
+.rev-final-corta:empty { display: none; }
+.rev-flecha { font-size: .9rem; color: var(--muted); width: 1em; text-align: center; }
+.rev-cuerpo { display: grid; gap: 10px; min-width: 0; }
+.rev-cuerpo[hidden] { display: none; }
+.rev-card[data-plegada="1"] { padding-top: 8px; padding-bottom: 8px; }
+.rev-modo { display: flex; justify-content: flex-end; }
 .rev-sello { font-size: .8rem; font-weight: 800; color: var(--muted); }
 .rev-hecha .rev-sello { color: var(--ok); }
 .rev-linea { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }

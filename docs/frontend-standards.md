@@ -1295,6 +1295,12 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     libreta, audio y libro si la clase los pide, calificación (0–10 de medio en medio), comentario (≤ 300) y la final
     en vivo. Fórmula y resumen: `comun/revision-datos.js` (`FORMULA_FINAL`, único lugar). Guardar repinta solo esa
     tarjeta y el resumen.
+    Tarjetas plegables (cambio `revision-profe-plegar`): la cabecera es un botón (`rev-plegar`, ≥ 44 px,
+    `aria-expanded`) y el formulario va en `[data-rev-cuerpo]` con `hidden`; `rev-tarjeta` lleva `data-plegada="1|0"`.
+    Por omisión se pliegan las sin abrir y las revisadas (una línea: materia, tema, estado corto y «Final N»); las
+    pendientes (enviada o borrador sin revisión) quedan desplegadas y guardar no pliega. El botón general
+    `rev-plegar-todo` («📂 Mostrar todo» / «📁 Plegar revisadas») guarda `todo` o `plegar` en `localStorage`
+    (`stald_revision_modo`, en `try/catch`) y descarta lo tocado tarjeta por tarjeta.
 - **Estado de la tarjeta** (`SecundariaDatos.estadoClase`):
 
   | Estado | Cuándo | Botón |
