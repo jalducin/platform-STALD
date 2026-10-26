@@ -17,7 +17,7 @@
 
 ## 3. Página
 
-- [ ] 3.1 `ingles/secundaria-revision.js` y estilos: pestaña «📋 Revisión» perezosa, semanas, tarjetas por día, resumen,
+- [x] 3.1 `ingles/secundaria-revision.js` y estilos: pestaña «📋 Revisión» perezosa, semanas, tarjetas por día, resumen,
   guardar, misiones con enlace a «📥 Entregas»; `ingles/secundaria.js` (pestaña y carga perezosa)
 - [ ] 3.2 La alumna: «✅ Revisado por el profe» en su fila y en la clase (`ingles/secundaria.js`,
   `ingles/secundaria-clase.js`); `?v=` en `ingles.html`

@@ -135,7 +135,7 @@ function bloqueRevision(id) {
   if (!r) return '';
   marcarRevisionVista(it);
   const final = SD.finalDe(it);
-  return '<section class="exam-card sec-revision" id="sec-revision" data-sec-revision="' + escapeHtml(califProfe(r.calificacion)) + '">' +
+  return '<section class="exam-card sec-rev-bloque" id="sec-rev-bloque" data-sec-revision="' + escapeHtml(califProfe(r.calificacion)) + '">' +
     '<p class="sec-revision-t" data-testid="revisado-profe">' + textoRevision(r) + '</p>' +
     (final !== null ? '<p class="meta" data-sec-final="' + final + '">Calificación final de la clase: <b>' + escapeHtml(califProfe(final)) + '</b> (junta tu calificación en línea con la del profe)</p>' : '') +
     '</section>';

@@ -187,7 +187,7 @@ body.secundaria { font-family: "Inter", var(--font); }
 .sec-secuencia li.mundo-completado .sec-etapa { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
 .sec-secuencia li.mundo-bloqueado .sec-etapa { opacity: .75; }
 
-/* ======================================================================================================
+/* ===============================================================================================
    Misiones principales, mapa, árbol y bandeja del profe (openspec: rpg-fase2-misiones; ingles/secundaria-misiones.js).
    Tokens del tablero RPG: claro y oscuro; botones ≥ 44 px; sin scroll horizontal a 360 px; sin animaciones grandes.
    ====================================================================================================== */
@@ -299,10 +299,10 @@ body.secundaria { font-family: "Inter", var(--font); }
 .sec-rev-pill { display: block; width: fit-content; max-width: 100%; margin-top: 6px; padding: 4px 10px; border-radius: 10px; background: var(--ok-soft); color: var(--ok); font-weight: 700; font-size: .82rem; line-height: 1.35; overflow-wrap: anywhere; }
 .sec-rev-pill .sec-revision-coment { color: var(--text); font-weight: 600; }
 .sec-tarjeta .sec-rev-pill { margin: 0 0 8px; }
-.sec-revision { border-left: 4px solid var(--ok); }
+.sec-rev-bloque { border-left: 4px solid var(--ok); }
 .sec-revision-t { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
 .sec-revision-t b { color: var(--ok); font-size: 1.15rem; }
-.sec-revision .meta { margin: 6px 0 0; }
+.sec-rev-bloque .meta { margin: 6px 0 0; }
 .sec-rev-aviso { border-left: 4px solid var(--ok); display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .sec-rev-aviso p { margin: 0; overflow-wrap: anywhere; }
 .sec-rev-ir { max-width: 100%; white-space: normal; }
@@ -315,3 +315,67 @@ button.sec-rev-abrir:hover { border-color: var(--ok); }
 .sec-rev-abrir small { color: var(--muted); white-space: nowrap; }
 .sec-rev-abrir small b { color: var(--ok); }
 @media (max-width: 420px) { .sec-rev-abrir { flex-wrap: wrap; } .sec-rev-abrir small { white-space: normal; } }
+=======
+/* ---------- 📋 Revisión del profe (openspec: revision-profe; ingles/secundaria-revision.js) ----------
+   Celular: una columna. Desde 560 px: resumen en una fila y calificación junto al comentario. Desde 900 px: días en 2
+   columnas. Botones, casillas y campos de 44 px o más; todo en tokens (claro y oscuro); sin scroll horizontal a 360 px. */
+.rev { min-width: 0; }
+.rev > * + * { margin-top: 14px; }
+.rev-cabeza h3 { margin: 0 0 10px; overflow-wrap: anywhere; }
+.rev-cabeza h3:focus { outline: none; }
+.rev-cabeza h3:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.rev-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.rev .btn { min-height: 44px; }
+.rev-nav .btn { padding: 8px 6px; font-size: .84rem; white-space: normal; line-height: 1.15; }
+.rev-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.rev-kpi { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px; padding: 10px 6px; border-radius: var(--r-md);
+  background: var(--rpg-panel-2); border: 1px solid var(--rpg-borde); min-width: 0; }
+.rev-kpi b { font-size: 1.4rem; color: var(--rpg-indigo); font-variant-numeric: tabular-nums; }
+.rev-kpi span { font-size: .78rem; color: var(--muted); }
+#rev-k-pendientes b { color: var(--warn); }
+#rev-k-promedio { grid-column: 1 / -1; }
+#rev-k-promedio b { color: var(--rpg-emerald); }
+.rev-materias { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rev-aviso { margin: 0; padding: 8px 12px; border-radius: var(--r-sm); background: var(--warn-soft); color: var(--warn); font-size: .86rem; }
+.rev-dias { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }
+.rev-dia { min-width: 0; padding: 10px; border-radius: var(--r-md); border: 1px solid var(--border); background: var(--card); }
+.rev-dia.es-hoy { border-color: var(--accent); box-shadow: var(--rpg-glow); }
+.rev-dia h4 { margin: 0 0 8px; }
+.rev-dia > * + * { margin-top: 10px; }
+.rev-libre { margin: 0; }
+.rev-card { margin: 0; min-width: 0; border-left: 5px solid var(--mat, var(--rpg-indigo)); display: grid; gap: 10px; }
+.rev-card.rev-hecha { background: linear-gradient(135deg, var(--ok-soft), var(--card) 40%); }
+.rev-card-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; }
+.rev-card-top .t { font-weight: 700; overflow-wrap: anywhere; min-width: 0; }
+.rev-sello { font-size: .8rem; font-weight: 800; color: var(--muted); }
+.rev-hecha .rev-sello { color: var(--ok); }
+.rev-linea { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rev-acciones, .rev-guardar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rev-manual { display: grid; gap: 10px; min-width: 0; }
+.rev-libreta { margin: 0; padding: 6px 10px 8px; border: 1px solid var(--border); border-radius: var(--r-sm); min-width: 0; }
+.rev-libreta legend { font-weight: 800; font-size: .86rem; padding: 0 4px; }
+.rev-extras { display: grid; gap: 4px; }
+.rev-check { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 6px; border-radius: var(--r-sm); cursor: pointer; overflow-wrap: anywhere; }
+.rev-check:hover { background: var(--accent-soft); }
+.rev-check input { width: 22px; height: 22px; flex: 0 0 auto; accent-color: var(--rpg-emerald); }
+.rev-check input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.rev-campos { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+.rev-cal, .rev-com { display: grid; gap: 4px; font-weight: 700; font-size: .86rem; min-width: 0; }
+.rev-cal select, .rev-com textarea { font: inherit; font-weight: 400; min-height: 44px; padding: 8px 10px; border-radius: var(--r-sm); border: 1px solid var(--border);
+  background: var(--card); color: var(--text); min-width: 0; width: 100%; box-sizing: border-box; }
+.rev-com textarea { resize: vertical; }
+.rev-cal select:focus-visible, .rev-com textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.rev-final { margin: 0; padding: 8px 10px; border-radius: var(--r-sm); background: var(--rpg-panel-2); border: 1px dashed var(--rpg-borde); }
+.rev-guardado { font-size: .86rem; font-weight: 700; }
+.rev-guardado.ok { color: var(--ok); }
+.rev-guardado.error { color: var(--bad); }
+.rev-guardado.pendiente, .rev-guardado.guardando { color: var(--muted); }
+.rev-misiones { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rev-mision { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); }
+.rev-mision > div { min-width: 0; overflow-wrap: anywhere; }
+@media (min-width: 560px) {
+  .rev-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #rev-k-promedio { grid-column: auto; }
+  .rev-campos { grid-template-columns: minmax(120px, 160px) minmax(0, 1fr); }
+}
+@media (min-width: 900px) { .rev-dias { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rev-nav { max-width: 640px; } }
