@@ -4,8 +4,8 @@
 
 ## 1. Reglas compartidas (TDD)
 
-- [ ] 1.1 Pruebas que fallan de la fórmula y el resumen (`server/revision_test.ts`, parte de `comun/revision-datos.js`)
-- [ ] 1.2 `comun/revision-datos.js`: `FORMULA_FINAL`, `finalDe`, `resumenSemana`, `misionesDeSemana`
+- [x] 1.1 Pruebas que fallan de la fórmula y el resumen (`server/revision_test.ts`, parte de `comun/revision-datos.js`)
+- [x] 1.2 `comun/revision-datos.js`: `FORMULA_FINAL`, `finalDe`, `resumenSemana`, `misionesDeSemana`
 
 ## 2. Servidor (TDD)
 
