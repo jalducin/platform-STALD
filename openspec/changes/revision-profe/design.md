@@ -137,5 +137,5 @@ Acordados con la UI (ayudantes A y B) y usados por `tests/e2e/e2e-revision-profe
   la final igual a `RevisionDatos.finalDe`; la alumna ve «✅ Revisado por el profe» y no el checklist; 403 para no
   admin y 401 sin sesión; 400/404; objetivos de 44 px, sin scroll horizontal ni errores de consola; restaura el estado.
   Fixtures: semana propia `2026-09-14` de `valeria` (`sec-rev-e2e-*`: sin abrir, borrador 2 de 4, enviada a tiempo
-  80 %, fuera de tiempo 50 % ya calificada con 6, y Español con audio y libro, 75 %). La E2E `peticiones` mide que
+  80 %, fuera de tiempo 50 % ya calificada con 6, y Español con audio y libro, 50 %; materias elegidas para no mover los promedios de `secundaria-dashboard`). La E2E `peticiones` mide que
   abrir el tablero no pide `/profe/revision` y que la pestaña la pide 1 vez (≤ 2 con su `OPTIONS`).

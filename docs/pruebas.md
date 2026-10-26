@@ -134,7 +134,7 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
 - `revision-profe` (fase `ingles`, cambio `revision-profe`): semana de Secundaria `2026-09-14` del fixture, propia de
   esta prueba (no toca la `2026-10-26`): 5 clases `sec-rev-e2e-*` de `valeria` (sin abrir; en borrador 2 de 4 en
   `borradores/`; enviada a tiempo con 80 %; fuera de tiempo con 50 % y una revisión previa del profe con 6 en
-  `revisiones/valeria/`; y Español con audio y libro de ortografía, 75 %). Prueba la API (semana, estados, matriz
+  `revisiones/valeria/`; y Español con audio y libro de ortografía, 50 %; las materias no mueven los promedios que fija `secundaria-dashboard`). Prueba la API (semana, estados, matriz
   403/401, 400/404, lo que recibe la alumna), la pestaña «📋 Revisión» del profe (perezosa, «🔎 Ver respuestas»,
   checklist, audio, libro, calificación, comentario, recarga, final y resumen contra `comun/revision-datos.js`) y lo
   que ve la alumna, en 360, 768 y 1280 px, claro y oscuro. Con `--pg` siembra en `stald_test_docs` el borrador y la

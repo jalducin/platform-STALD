@@ -1,7 +1,7 @@
 // E2E: revisión del profe en Secundaria (openspec: revision-profe). Semana propia de la alumna del fixture
 // (tests/fixtures/datos, lunes 2026-09-14; no toca la 2026-10-26 de secundaria-clases): una clase sin abrir, una en
 // borrador (2 de 4), una enviada a tiempo (80 %), una fuera de tiempo (50 %, ya calificada por el profe con 6) y una de
-// Español con audio y libro de ortografía (75 %). «🔎 Ver respuestas» se prueba con las enviadas.
+// Español con audio y libro de ortografía (50 %). «🔎 Ver respuestas» se prueba con las enviadas.
 //   1. API: semana, estados, qué pide cada clase, matriz de acceso (403 alumna o alumno, 401 sin sesión), 400 y 404, y
 //      la alumna solo recibe calificación y comentario.
 //   2. Profe (PC): la pestaña «📋 Revisión» es perezosa; navega a la semana; tarjetas y resumen; marca el checklist,

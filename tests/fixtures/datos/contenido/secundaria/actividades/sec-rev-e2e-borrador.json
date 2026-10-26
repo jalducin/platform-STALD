@@ -1,8 +1,8 @@
 {
   "id": "sec-rev-e2e-borrador",
   "tipo": "actividad",
-  "titulo": "🔬 Ciencias · La célula",
-  "materia": "Ciencias",
+  "titulo": "🗣️ Inglés · Present continuous",
+  "materia": "Inglés",
   "nivel": "Secundaria",
   "disponibleDesde": "2026-09-15",
   "fechaLimite": "2026-09-15",
@@ -14,7 +14,7 @@
   "temas": [
     {
       "id": "t",
-      "titulo": "La célula",
+      "titulo": "Present continuous",
       "retroalimentacion": {
         "fortaleza": "¡Muy bien!",
         "en-progreso": "Casi, repasa un poco.",
@@ -24,14 +24,14 @@
   ],
   "teoria": [
     {
-      "titulo": "La célula",
+      "titulo": "Present continuous",
       "texto": "Lee con calma."
     }
   ],
   "tips": [
     {
       "tipo": "libreta",
-      "texto": "Dibuja la célula y señala sus partes."
+      "texto": "Write 5 sentences in present continuous."
     }
   ],
   "banco": [
@@ -39,7 +39,7 @@
       "id": "sec-rev-e2e-borrador-1",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 1 de La célula?",
+      "enunciado": "¿Pregunta 1 de Present continuous?",
       "opciones": [
         "sí",
         "no"
@@ -51,7 +51,7 @@
       "id": "sec-rev-e2e-borrador-2",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 2 de La célula?",
+      "enunciado": "¿Pregunta 2 de Present continuous?",
       "opciones": [
         "sí",
         "no"
@@ -63,7 +63,7 @@
       "id": "sec-rev-e2e-borrador-3",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 3 de La célula?",
+      "enunciado": "¿Pregunta 3 de Present continuous?",
       "opciones": [
         "sí",
         "no"
@@ -75,7 +75,7 @@
       "id": "sec-rev-e2e-borrador-4",
       "tema": "t",
       "tipo": "opcion",
-      "enunciado": "¿Pregunta 4 de La célula?",
+      "enunciado": "¿Pregunta 4 de Present continuous?",
       "opciones": [
         "sí",
         "no"
