@@ -102,14 +102,14 @@ function htmlRecompensa(xpAntes, xpDespues, nA, nD, nuevas) {
 // clase (fórmula SOLO en comun/revision-datos.js, vía SD.finalDe). Nunca el checklist: no llega al navegador.
 // «Ya la vio»: por persona (hash del correo) y revisión (`revisadoEn`), en localStorage; si el profe la cambia, vuelve
 // a ser nueva. Sin almacenamiento cuenta como vista (no hay aviso que no se pueda quitar).
-const califProfe = n => String(n); // 9, 8.5 (punto decimal, como en México)
-const itemDeLista = id => ((state.act && state.act.items) || []).find(x => x.id === id) || null;
+const califProfe = String; // 9, 8.5 (punto decimal, como en México)
+const itemDeLista = id => (state.act?.items || []).find(x => x.id === id) || null;
 const claveRevVista = it => 'stald_rev_vista:' + hashCorto(state.email || '') + ':' + it.id + ':' + SD.revisionDe(it).revisadoEn;
 function revisionVista(it) {
   try { return localStorage.getItem(claveRevVista(it)) === '1'; } catch (e) { return true; }
 }
 function marcarRevisionVista(it) {
-  if (!it || !SD.revisionDe(it) || (state.act && state.act.isAdmin)) return; // el profe en «vista de la alumna» no la marca
+  if (!it || !SD.revisionDe(it) || state.act?.isAdmin) return; // el profe en «vista de la alumna» no la marca
   try { localStorage.setItem(claveRevVista(it), '1'); } catch (e) { /* sin almacenamiento */ }
 }
 // Revisadas que la alumna aún no ve, de la más reciente a la más vieja.
@@ -123,7 +123,9 @@ function textoRevision(r) {
 // Distintivo para filas y tarjetas; '' si el profe aún no la califica.
 function pillRevision(it, testid) {
   const r = SD.revisionDe(it);
-  return r ? '<span class="sec-rev-pill" data-sec-rev="' + escapeHtml(califProfe(r.calificacion)) + '"' + (testid ? ' data-testid="revisado-profe"' : '') + '>' + textoRevision(r) + '</span>' : '';
+  if (!r) return '';
+  const prueba = testid ? ' data-testid="revisado-profe"' : '';
+  return '<span class="sec-rev-pill" data-sec-rev="' + escapeHtml(califProfe(r.calificacion)) + '"' + prueba + '>' + textoRevision(r) + '</span>';
 }
 // Bloque de la clase y de su resultado: calificación, comentario y final. '' si el profe aún no la califica.
 function bloqueRevision(id) {
