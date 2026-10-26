@@ -491,6 +491,13 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   el texto sin entregar de cada paso de una misión (cambio `autoguardado-todo`). Hasta 4 000 caracteres por paso. Solo
   lo leen y escriben su dueña o dueño y el servidor; no es entrega ni lo ve el admin. Se quita el paso al entregarlo y
   se borra entero con «Borrar contenido», «Borrar todas sus entregas» y la retención del 31 de agosto (la corrección por privacidad quita sus pasos). Sin correos.
+- `revisiones/<slug>/<id>.json`: `{ checks, audio, libro, calificacion, comentario, revisadoEn }`, la revisión del
+  profe de una clase de Secundaria (cambio `revision-profe`; por alumna primero para leer su semana en una consulta).
+  `checks`: índices de las tareas de libreta marcadas (orden de sus tips `libreta`, sin las de audio y libro);
+  `audio`/`libro`: solo `true` si la clase lo pide; `calificacion`: `null` o 0–10 de medio en medio; `comentario`:
+  hasta 300 caracteres; `revisadoEn`: ISO. Vacía se borra. Solo el admin la lee y la escribe; la alumna recibe solo
+  `calificacion`, `comentario` y `revisadoEn` dentro de su lista de clases. Vive en Postgres. Sin correos. Contrato:
+  [backend-standards.md](backend-standards.md) § «Revisión del profe».
 - `avance/<slug-alumno>.json`: historial de las marcas de tareas de Notion de Inglés. Desde la fase 2 de
   `cierre-tecnico` nadie lo escribe; se conserva como historial.
   - `{ alumno, notion: { <pageId>: { titulo, completado, en, por } }, historial: [...] }`.
