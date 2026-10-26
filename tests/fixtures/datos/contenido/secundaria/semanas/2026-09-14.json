@@ -1,0 +1,31 @@
+{
+  "id": "2026-09-14",
+  "titulo": "Prueba E2E: revisión del profe",
+  "elementos": [
+    {
+      "id": "sec-rev-e2e-sin-abrir",
+      "tipo": "actividad",
+      "fecha": "2026-09-14"
+    },
+    {
+      "id": "sec-rev-e2e-borrador",
+      "tipo": "actividad",
+      "fecha": "2026-09-15"
+    },
+    {
+      "id": "sec-rev-e2e-a-tiempo",
+      "tipo": "actividad",
+      "fecha": "2026-09-16"
+    },
+    {
+      "id": "sec-rev-e2e-tarde",
+      "tipo": "actividad",
+      "fecha": "2026-09-17"
+    },
+    {
+      "id": "sec-rev-e2e-espanol",
+      "tipo": "actividad",
+      "fecha": "2026-09-18"
+    }
+  ]
+}

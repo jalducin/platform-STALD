@@ -1,0 +1,71 @@
+{
+  "id": "sec-rev-e2e-tarde",
+  "titulo": "🗣️ Inglés · Present continuous",
+  "alumno": "Valeria Gómez",
+  "intentos": [
+    {
+      "n": 1,
+      "enviadoEn": "2026-09-19T17:00:00.000Z",
+      "fueraDeTiempo": true,
+      "preguntas": [
+        "sec-rev-e2e-tarde-1",
+        "sec-rev-e2e-tarde-2",
+        "sec-rev-e2e-tarde-3",
+        "sec-rev-e2e-tarde-4"
+      ],
+      "respuestas": {
+        "sec-rev-e2e-tarde-1": 0,
+        "sec-rev-e2e-tarde-2": 0,
+        "sec-rev-e2e-tarde-3": 1,
+        "sec-rev-e2e-tarde-4": 1
+      },
+      "calificacion": {
+        "correctas": 2,
+        "total": 4,
+        "porcentaje": 50,
+        "nivelSugerido": "Vas bien, repasa un poco",
+        "secciones": [
+          {
+            "id": "t",
+            "titulo": "Tema",
+            "correctas": 2,
+            "total": 4,
+            "porcentaje": 50,
+            "estado": "en-progreso",
+            "retroalimentacion": "¡Muy bien!"
+          }
+        ],
+        "fortalezas": [],
+        "enProgreso": [
+          "Tema"
+        ],
+        "debilidades": [],
+        "revision": []
+      }
+    }
+  ],
+  "mejor": {
+    "n": 1,
+    "correctas": 2,
+    "total": 4,
+    "porcentaje": 50,
+    "nivelSugerido": "Vas bien, repasa un poco",
+    "secciones": [
+      {
+        "id": "t",
+        "titulo": "Tema",
+        "correctas": 2,
+        "total": 4,
+        "porcentaje": 50,
+        "estado": "en-progreso",
+        "retroalimentacion": "¡Muy bien!"
+      }
+    ],
+    "fortalezas": [],
+    "enProgreso": [
+      "Tema"
+    ],
+    "debilidades": [],
+    "revision": []
+  }
+}

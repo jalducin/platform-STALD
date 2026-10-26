@@ -8,6 +8,7 @@
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
 const { abrirJuego } = require('./lib/menu'); // abre la categoría del juego y toca su tarjeta (openspec: juegos-categorias)
+const { irPestanaSec } = require('./lib/secundaria'); // pestaña de Secundaria según el tamaño (openspec: revision-profe)
 const http = require('node:http');
 const fs = require('node:fs');
 const BASE = process.env.BASE;
@@ -33,6 +34,8 @@ const UMBRAL = {
   // (openspec: panel-profe-peticiones). Grupos, alumnos, resumen, entregas y juegos no se piden al abrir.
   'inglés (admin)': UMBRAL_ADMIN,
   'abrir un examen': 2,
+  // GET /profe/revision y su OPTIONS (openspec: revision-profe): nada más al abrir la pestaña.
+  'secundaria (admin): abrir «📋 Revisión»': 2,
 };
 
 // ---------- Proxy que cuenta (y puede fallar a propósito) ----------
@@ -219,6 +222,26 @@ async function contexto(b, email) {
     ok('inglés (admin): no pide grupos, alumnos, resumen, entregas ni juegos al abrir', perezosas.length === 0, perezosas.join(', '));
     await p.context().close();
   });
+
+  // Secundaria del profe (openspec: revision-profe): «📋 Revisión» es perezosa. Abrir el tablero no pide
+  // /profe/revision; abrir la pestaña pide la semana una sola vez (GET y, a lo más, su OPTIONS).
+  {
+    const p = await contexto(b, 'admin@example.com');
+    registro = [];
+    await p.goto(BASE + '/ingles.html?modo=secundaria&alumna=valeria&api=' + encodeURIComponent(PROXY) + '#inicio');
+    await p.waitForSelector('#sec-inicio', { timeout: 60000 });
+    await quieto(3000);
+    const alAbrir = registro.filter(f => /\/profe\/revision$/.test(f.ruta)).length;
+    ok('secundaria (admin): abrir el tablero no pide /profe/revision', alAbrir === 0, String(alAbrir));
+    await medir('secundaria (admin): abrir «📋 Revisión»', async () => {
+      await irPestanaSec(p, 'revision');
+      await p.waitForSelector('#sec-revision [data-testid="rev-semana"]', { timeout: 60000 });
+      await quieto();
+    });
+    const gets = tabla[tabla.length - 1].rutas.filter(([k]) => k === 'GET /profe/revision').reduce((n, [, v]) => n + v, 0);
+    ok('secundaria (admin): la pestaña pide la semana 1 vez', gets === 1, String(gets));
+    await p.context().close();
+  }
 
   // Abrir un examen (solo GET; no se envía): el de prueba de Secundaria, exclusivo de la alumna del fixture.
   {
