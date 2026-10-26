@@ -1,0 +1,107 @@
+{
+  "id": "sec-rev-e2e-a-tiempo",
+  "tipo": "actividad",
+  "titulo": "🏛️ Historia · La Independencia",
+  "materia": "Historia",
+  "nivel": "Secundaria",
+  "disponibleDesde": "2026-09-16",
+  "fechaLimite": "2026-09-16",
+  "intentos": 2,
+  "preguntasPorIntento": 5,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "La Independencia",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "La Independencia",
+      "texto": "Lee con calma."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "libreta",
+      "texto": "Haz la línea del tiempo de 1810 a 1821."
+    },
+    {
+      "tipo": "libreta",
+      "texto": "Escribe 3 personajes y qué hicieron."
+    },
+    {
+      "tipo": "libreta",
+      "texto": "Pega o dibuja un mapa de la Nueva España."
+    }
+  ],
+  "banco": [
+    {
+      "id": "sec-rev-e2e-a-tiempo-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 1 de La Independencia?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-a-tiempo-2",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 2 de La Independencia?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-a-tiempo-3",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 3 de La Independencia?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-a-tiempo-4",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 4 de La Independencia?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-a-tiempo-5",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 5 de La Independencia?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    }
+  ]
+}

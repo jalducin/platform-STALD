@@ -1,0 +1,170 @@
+{
+  "id": "sec-rev-e2e-espanol",
+  "titulo": "📘 Español · Uso de la b y la v",
+  "alumno": "Valeria Gómez",
+  "intentos": [
+    {
+      "n": 1,
+      "enviadoEn": "2026-09-18T16:00:00.000Z",
+      "fueraDeTiempo": false,
+      "preguntas": [
+        "sec-rev-e2e-espanol-1",
+        "sec-rev-e2e-espanol-2",
+        "sec-rev-e2e-espanol-3",
+        "sec-rev-e2e-espanol-4"
+      ],
+      "respuestas": {
+        "sec-rev-e2e-espanol-1": 0,
+        "sec-rev-e2e-espanol-2": 1,
+        "sec-rev-e2e-espanol-3": 1,
+        "sec-rev-e2e-espanol-4": 1
+      },
+      "calificacion": {
+        "correctas": 1,
+        "total": 4,
+        "porcentaje": 25,
+        "nivelSugerido": "Vas bien, repasa un poco",
+        "secciones": [
+          {
+            "id": "t",
+            "titulo": "Uso de la b y la v",
+            "correctas": 1,
+            "total": 4,
+            "porcentaje": 25,
+            "estado": "en-progreso",
+            "retroalimentacion": "Casi, repasa un poco."
+          }
+        ],
+        "fortalezas": [],
+        "enProgreso": [
+          "Uso de la b y la v"
+        ],
+        "debilidades": [],
+        "revision": [
+          {
+            "id": "sec-rev-e2e-espanol-2",
+            "tema": "t",
+            "enunciado": "¿Pregunta 2 de Uso de la b y la v?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          },
+          {
+            "id": "sec-rev-e2e-espanol-3",
+            "tema": "t",
+            "enunciado": "¿Pregunta 3 de Uso de la b y la v?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          },
+          {
+            "id": "sec-rev-e2e-espanol-4",
+            "tema": "t",
+            "enunciado": "¿Pregunta 4 de Uso de la b y la v?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          }
+        ]
+      }
+    },
+    {
+      "n": 2,
+      "enviadoEn": "2026-09-18T19:00:00.000Z",
+      "fueraDeTiempo": false,
+      "preguntas": [
+        "sec-rev-e2e-espanol-1",
+        "sec-rev-e2e-espanol-2",
+        "sec-rev-e2e-espanol-3",
+        "sec-rev-e2e-espanol-4"
+      ],
+      "respuestas": {
+        "sec-rev-e2e-espanol-1": 0,
+        "sec-rev-e2e-espanol-2": 0,
+        "sec-rev-e2e-espanol-3": 1,
+        "sec-rev-e2e-espanol-4": 1
+      },
+      "calificacion": {
+        "correctas": 2,
+        "total": 4,
+        "porcentaje": 50,
+        "nivelSugerido": "Vas bien, repasa un poco",
+        "secciones": [
+          {
+            "id": "t",
+            "titulo": "Uso de la b y la v",
+            "correctas": 2,
+            "total": 4,
+            "porcentaje": 50,
+            "estado": "en-progreso",
+            "retroalimentacion": "Casi, repasa un poco."
+          }
+        ],
+        "fortalezas": [],
+        "enProgreso": [
+          "Uso de la b y la v"
+        ],
+        "debilidades": [],
+        "revision": [
+          {
+            "id": "sec-rev-e2e-espanol-3",
+            "tema": "t",
+            "enunciado": "¿Pregunta 3 de Uso de la b y la v?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          },
+          {
+            "id": "sec-rev-e2e-espanol-4",
+            "tema": "t",
+            "enunciado": "¿Pregunta 4 de Uso de la b y la v?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          }
+        ]
+      }
+    }
+  ],
+  "mejor": {
+    "n": 2,
+    "correctas": 2,
+    "total": 4,
+    "porcentaje": 50,
+    "nivelSugerido": "Vas bien, repasa un poco",
+    "secciones": [
+      {
+        "id": "t",
+        "titulo": "Uso de la b y la v",
+        "correctas": 2,
+        "total": 4,
+        "porcentaje": 50,
+        "estado": "en-progreso",
+        "retroalimentacion": "Casi, repasa un poco."
+      }
+    ],
+    "fortalezas": [],
+    "enProgreso": [
+      "Uso de la b y la v"
+    ],
+    "debilidades": [],
+    "revision": [
+      {
+        "id": "sec-rev-e2e-espanol-3",
+        "tema": "t",
+        "enunciado": "¿Pregunta 3 de Uso de la b y la v?",
+        "tuRespuesta": "no",
+        "correcta": "sí",
+        "explicacion": "Así es."
+      },
+      {
+        "id": "sec-rev-e2e-espanol-4",
+        "tema": "t",
+        "enunciado": "¿Pregunta 4 de Uso de la b y la v?",
+        "tuRespuesta": "no",
+        "correcta": "sí",
+        "explicacion": "Así es."
+      }
+    ]
+  }
+}

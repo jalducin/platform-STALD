@@ -114,6 +114,20 @@ enviada, calificacionProfe, enLineaDe, finalDe(clase), resumenSemana(clases) →
 pendientes, promedio, porMateria: [{ clave, nombre, clases, revisadas, promedio }] }, misionesDeSemana(misiones, lunes) }`.
 Las clases que reciben son las de `GET /profe/revision` (`intentosUsados`, `mejor`, `revision`).
 
+### Selectores de la E2E (`data-testid`)
+
+Acordados con la UI (ayudantes A y B) y usados por `tests/e2e/e2e-revision-profe.js` y `e2e-peticiones.js`:
+
+- Profe, dentro de `#sec-revision` (pestaña `data-sec-tab="revision"`): `rev-semana` (con `data-lunes`),
+  `rev-semana-anterior`, `rev-semana-hoy`, `rev-semana-siguiente`; `rev-resumen` con hijos
+  `[data-rev-resumen="clases|enviadas|revisadas|pendientes|promedio"]`; `rev-materia` (`data-materia`); `rev-dia`
+  (`data-dia`); `rev-abiertas`; `rev-tarjeta` (`data-rev-id`, `data-estado`) con `rev-estado`, `rev-en-linea`,
+  `rev-fuera-de-tiempo`, `rev-ver-respuestas`, `rev-check` (`data-indice` = índice de `pide.libreta`), `rev-audio`,
+  `rev-libro`, `rev-calificacion`, `rev-comentario`, `rev-guardar` y `rev-final` (`data-final`, vacío sin final);
+  `rev-mision` y `rev-ir-entregas`.
+- Alumna: `revisado-profe` dentro de su fila `[data-sec-item="<id>"]` y en la vista de la clase (`#content`), con el
+  texto «✅ Revisado por el profe: <calificación> · <comentario>». Nunca `rev-check`, `rev-audio` ni `rev-libro`.
+
 ## Alternativas descartadas
 
 - `revisiones/<id>/<slug>.json` (como `resultados/`): obliga a una lectura por clase para la semana y para la alumna.
@@ -129,5 +143,9 @@ Las clases que reciben son las de `GET /profe/revision` (`intentosUsados`, `mejo
   clase; matriz 403; revisión vacía se borra; la alumna recibe solo calificación y comentario; fórmula y resumen
   (`comun/revision-datos.js`); prefijo en Postgres.
 - E2E `revision-profe` (celular, tablet y PC; claro y oscuro): abrir la pestaña (perezosa), navegar semanas, marcar
-  checklist, calificar, comentar, guardar, recargar y ver que persiste; resumen; enlace a «📥 Entregas»; la alumna ve
-  «✅ Revisado por el profe» y no el checklist; 403 para no admin; restaura el estado.
+  checklist, calificar, comentar, guardar, recargar y ver que persiste; resumen; «🔎 Ver respuestas» de las enviadas;
+  la final igual a `RevisionDatos.finalDe`; la alumna ve «✅ Revisado por el profe» y no el checklist; 403 para no
+  admin y 401 sin sesión; 400/404; objetivos de 44 px, sin scroll horizontal ni errores de consola; restaura el estado.
+  Fixtures: semana propia `2026-09-14` de `valeria` (`sec-rev-e2e-*`: sin abrir, borrador 2 de 4, enviada a tiempo
+  80 %, fuera de tiempo 50 % ya calificada con 6, y Español con audio y libro, 50 %; materias elegidas para no mover los promedios de `secundaria-dashboard`). La E2E `peticiones` mide que
+  abrir el tablero no pide `/profe/revision` y que la pestaña la pide 1 vez (≤ 2 con su `OPTIONS`).

@@ -1,0 +1,105 @@
+{
+  "id": "sec-rev-e2e-tarde",
+  "titulo": "🔬 Ciencias · La célula",
+  "alumno": "Valeria Gómez",
+  "intentos": [
+    {
+      "n": 1,
+      "enviadoEn": "2026-09-19T17:00:00.000Z",
+      "fueraDeTiempo": true,
+      "preguntas": [
+        "sec-rev-e2e-tarde-1",
+        "sec-rev-e2e-tarde-2",
+        "sec-rev-e2e-tarde-3",
+        "sec-rev-e2e-tarde-4"
+      ],
+      "respuestas": {
+        "sec-rev-e2e-tarde-1": 0,
+        "sec-rev-e2e-tarde-2": 0,
+        "sec-rev-e2e-tarde-3": 1,
+        "sec-rev-e2e-tarde-4": 1
+      },
+      "calificacion": {
+        "correctas": 2,
+        "total": 4,
+        "porcentaje": 50,
+        "nivelSugerido": "Vas bien, repasa un poco",
+        "secciones": [
+          {
+            "id": "t",
+            "titulo": "La célula",
+            "correctas": 2,
+            "total": 4,
+            "porcentaje": 50,
+            "estado": "en-progreso",
+            "retroalimentacion": "Casi, repasa un poco."
+          }
+        ],
+        "fortalezas": [],
+        "enProgreso": [
+          "La célula"
+        ],
+        "debilidades": [],
+        "revision": [
+          {
+            "id": "sec-rev-e2e-tarde-3",
+            "tema": "t",
+            "enunciado": "¿Pregunta 3 de La célula?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          },
+          {
+            "id": "sec-rev-e2e-tarde-4",
+            "tema": "t",
+            "enunciado": "¿Pregunta 4 de La célula?",
+            "tuRespuesta": "no",
+            "correcta": "sí",
+            "explicacion": "Así es."
+          }
+        ]
+      }
+    }
+  ],
+  "mejor": {
+    "n": 1,
+    "correctas": 2,
+    "total": 4,
+    "porcentaje": 50,
+    "nivelSugerido": "Vas bien, repasa un poco",
+    "secciones": [
+      {
+        "id": "t",
+        "titulo": "La célula",
+        "correctas": 2,
+        "total": 4,
+        "porcentaje": 50,
+        "estado": "en-progreso",
+        "retroalimentacion": "Casi, repasa un poco."
+      }
+    ],
+    "fortalezas": [],
+    "enProgreso": [
+      "La célula"
+    ],
+    "debilidades": [],
+    "revision": [
+      {
+        "id": "sec-rev-e2e-tarde-3",
+        "tema": "t",
+        "enunciado": "¿Pregunta 3 de La célula?",
+        "tuRespuesta": "no",
+        "correcta": "sí",
+        "explicacion": "Así es."
+      },
+      {
+        "id": "sec-rev-e2e-tarde-4",
+        "tema": "t",
+        "enunciado": "¿Pregunta 4 de La célula?",
+        "tuRespuesta": "no",
+        "correcta": "sí",
+        "explicacion": "Así es."
+      }
+    ]
+  }
+}
