@@ -5,8 +5,52 @@
 // checklist de libreta, audio, libro de ortografía, calificación del profe (0–10 de medio en medio), comentario y
 // calificación final. Guardar = PUT /profe/revision con el estado completo de la tarjeta; las casillas se guardan solas.
 // Fórmula de la final y resumen: SOLO en comun/revision-datos.js (RevisionDatos). Aquí solo se dibuja.
+// Tarjetas plegables (openspec: revision-profe-plegar): por omisión se pliegan las que no hay que revisar (sin abrir y
+// las ya revisadas); una plegada es una línea (materia, tema, estado y final) que se despliega al tocarla.
 const RevD = () => window.RevisionDatos;
 const REV_REINTENTO_MS = 3000;
+
+// ---------- Plegado ----------
+// Modo general por aparato (localStorage, con try/catch): 'plegar' (por omisión) o 'todo' («Mostrar todo»).
+// `revAbiertas` guarda lo que el profe tocó en cada tarjeta (id → true desplegada / false plegada) hasta que cambie el modo.
+const REV_MODO_KEY = 'stald_revision_modo';
+const revAbiertas = new Map();
+let revModoVisita = null; // lo elegido en esta visita: manda aunque no haya almacenamiento
+function revModo() {
+  if (revModoVisita) return revModoVisita;
+  try { return localStorage.getItem(REV_MODO_KEY) === 'todo' ? 'todo' : 'plegar'; } catch { return 'plegar'; }
+}
+function guardarRevModo(modo) {
+  revModoVisita = modo;
+  try { localStorage.setItem(REV_MODO_KEY, modo); } catch { /* sin almacenamiento: solo dura esta visita */ }
+}
+const esRevisada = c => !!(c.revision && typeof c.revision.calificacion === 'number');
+// Pendiente de revisar = enviada o en borrador, sin revisión del profe. Esas nunca se pliegan por omisión.
+const plegadaPorOmision = c => esRevisada(c) || (c.estado !== 'enviada' && c.estado !== 'borrador');
+function estaPlegada(c) {
+  if (revAbiertas.has(c.id)) return !revAbiertas.get(c.id);
+  return revModo() === 'plegar' && plegadaPorOmision(c);
+}
+// Estado corto de la línea de la tarjeta (también la plegada).
+function selloDe(c) {
+  if (esRevisada(c)) return '✅ Revisada';
+  if (c.estado === 'enviada') return '🕓 Por revisar';
+  if (c.estado === 'borrador') return '💾 En borrador';
+  return c.abre ? '🔒 Abre ' + revFecha(c.abre) : '⏳ Sin abrir';
+}
+const finalCorta = c => { const v = valorFinal(c, (c.revision || {}).calificacion); return v ? 'Final ' + v : ''; };
+function aplicarPliegue(f, plegada) {
+  f.dataset.plegada = plegada ? '1' : '0';
+  f.querySelector('[data-rev-cuerpo]').hidden = plegada;
+  const b = f.querySelector('[data-rev-plegar]');
+  b.setAttribute('aria-expanded', String(!plegada));
+  b.querySelector('[data-rev-flecha]').textContent = plegada ? '▸' : '▾';
+}
+function botonModo() {
+  const todo = revModo() === 'todo';
+  return '<div class="rev-modo"><button type="button" class="btn ghost" data-testid="rev-plegar-todo" data-rev-modo="' + (todo ? 'plegar' : 'todo') + '">' +
+    (todo ? '📁 Plegar revisadas' : '📂 Mostrar todo') + '</button></div>';
+}
 
 // ---------- Estado y carga ----------
 // state.secRev = { semana, datos, error, cargando, pedida } (datos = respuesta de GET /profe/revision).
@@ -64,7 +108,7 @@ function cuerpoRevision() {
   const d = s.datos;
   const avisos = d.avisos && d.avisos.length
     ? '<p class="rev-aviso" role="status">⚠️ Algunos datos no se pudieron leer (' + escapeHtml(d.avisos.join(', ')) + '); esas tarjetas salen sin ellos.</p>' : '';
-  return navSemana(d) + (s.cargando ? esqueleto() : resumenRevision(d.clases) + avisos + diasRevision(d) + abiertasRevision(d) + misionesRevision(d));
+  return navSemana(d) + (s.cargando ? esqueleto() : resumenRevision(d.clases) + avisos + botonModo() + diasRevision(d) + abiertasRevision(d) + misionesRevision(d));
 }
 
 const revFecha = f => formatFecha(f);
@@ -166,10 +210,16 @@ function tarjetaRevision(c) {
     ? '<fieldset class="rev-libreta"><legend>📓 Libreta</legend>' + pide.libreta.map((t, i) => casilla('data-testid="rev-check" data-indice="' + i + '" data-rev-check="' + i + '"', escapeHtml(t), rev.checks.includes(i))).join('') + '</fieldset>' : '';
   const extras = (pide.audio ? casilla('data-testid="rev-audio" data-rev-audio', '🎙️ Audio recibido', rev.audio) : '') +
     (pide.libro ? casilla('data-testid="rev-libro" data-rev-libro', '📖 Páginas del libro de ortografía revisadas', rev.libro) : '');
-  const revisada = typeof rev.calificacion === 'number';
-  return '<form class="exam-card rev-card mat-' + (m ? m.clave : 'otra') + (revisada ? ' rev-hecha' : '') + '" data-testid="rev-tarjeta" data-rev-id="' + escapeHtml(c.id) + '" data-estado="' + escapeHtml(c.estado) + '" novalidate>' +
-    '<header class="rev-card-top"><div class="t">' + chipMateria(m) + ' <span class="sec-tema">' + escapeHtml(textoClase(c, m)) + '</span>' + (c.tipo === 'examen' ? ' <span class="chip">Examen</span>' : '') + '</div>' +
-    '<span class="rev-sello" data-rev-sello>' + (revisada ? '✅ Revisada' : (c.estado === 'enviada' ? '🕓 Por revisar' : '')) + '</span></header>' +
+  const revisada = esRevisada(c);
+  const plegada = estaPlegada(c);
+  // La cabecera es el botón que pliega y despliega (una línea: materia, tema, estado y final si existe).
+  return '<form class="exam-card rev-card mat-' + (m ? m.clave : 'otra') + (revisada ? ' rev-hecha' : '') + '" data-testid="rev-tarjeta" data-rev-id="' + escapeHtml(c.id) + '" data-estado="' + escapeHtml(c.estado) + '" data-plegada="' + (plegada ? '1' : '0') + '" novalidate>' +
+    '<button type="button" class="rev-card-top rev-plegar" data-testid="rev-plegar" data-rev-plegar aria-expanded="' + !plegada + '" aria-controls="' + k + '-cuerpo">' +
+    '<span class="t">' + chipMateria(m) + ' <span class="sec-tema">' + escapeHtml(textoClase(c, m)) + '</span>' + (c.tipo === 'examen' ? ' <span class="chip">Examen</span>' : '') + '</span>' +
+    '<span class="rev-linea-fin"><span class="rev-sello" data-rev-sello>' + escapeHtml(selloDe(c)) + '</span>' +
+    '<b class="rev-final-corta rpg-num" data-rev-final-corta>' + escapeHtml(finalCorta(c)) + '</b>' +
+    '<span class="rev-flecha" data-rev-flecha aria-hidden="true">' + (plegada ? '▸' : '▾') + '</span></span></button>' +
+    '<div class="rev-cuerpo" id="' + k + '-cuerpo" data-rev-cuerpo' + (plegada ? ' hidden' : '') + '>' +
     '<div class="rev-linea">' + avanceLinea(c) + '</div>' + botonesLinea(c) +
     '<div class="rev-manual">' + checklist + (extras ? '<div class="rev-extras">' + extras + '</div>' : '') +
     '<div class="rev-campos"><label class="rev-cal" for="' + k + '-cal">Tu calificación' +
@@ -179,7 +229,7 @@ function tarjetaRevision(c) {
     '<textarea id="' + k + '-com" rows="2" maxlength="' + RevD().MAX_COMENTARIO + '" data-testid="rev-comentario" data-rev-com>' + escapeHtml(rev.comentario || '') + '</textarea></label></div></div>' +
     '<p class="rev-final" data-testid="rev-final" data-final="' + valorFinal(c, rev.calificacion) + '" data-rev-final aria-live="polite">' + textoFinal(c, rev.calificacion) + '</p>' +
     '<div class="rev-guardar"><button type="submit" class="btn" data-testid="rev-guardar">💾 Guardar revisión</button>' +
-    '<span class="rev-guardado" data-rev-estado role="status" aria-live="polite">' + (rev.revisadoEn ? '💾 Guardado' : '') + '</span></div></form>';
+    '<span class="rev-guardado" data-rev-estado role="status" aria-live="polite">' + (rev.revisadoEn ? '💾 Guardado' : '') + '</span></div></div></form>';
 }
 
 function misionesRevision(d) {
@@ -230,7 +280,9 @@ async function guardarRevision(f, intento = 1) {
     clase.revision = r.body.revision;
     const revisada = !!(r.body.revision && typeof r.body.revision.calificacion === 'number');
     f.classList.toggle('rev-hecha', revisada);
-    f.querySelector('[data-rev-sello]').textContent = revisada ? '✅ Revisada' : (clase.estado === 'enviada' ? '🕓 Por revisar' : '');
+    revAbiertas.set(clase.id, f.dataset.plegada !== '1'); // no se pliega sola, ni al volver a dibujar la pestaña
+    f.querySelector('[data-rev-sello]').textContent = selloDe(clase);
+    f.querySelector('[data-rev-final-corta]').textContent = finalCorta(clase);
     ponerEstado(f, r.body.vacia ? '💾 Guardado · sin revisión' : '💾 Guardado', 'ok');
     repintarResumen();
     return;
@@ -252,6 +304,23 @@ document.addEventListener('click', e => {
   if (s && !s.disabled) {
     const destino = s.dataset.revSemana || (state.secRev && state.secRev.datos ? state.secRev.datos.hoy : '');
     cargarRevisionSec(destino).then(() => pintarRevision(true));
+    return;
+  }
+  const pl = e.target.closest('[data-rev-plegar]');
+  if (pl) {
+    const f = pl.closest('form.rev-card');
+    const plegar = f.dataset.plegada !== '1';
+    revAbiertas.set(f.dataset.revId, !plegar);
+    aplicarPliegue(f, plegar);
+    return;
+  }
+  const mo = e.target.closest('[data-rev-modo]');
+  if (mo) {
+    guardarRevModo(mo.dataset.revModo);
+    revAbiertas.clear(); // el botón general manda sobre lo que se tocó tarjeta por tarjeta
+    pintarRevision();
+    const b = document.querySelector('[data-testid="rev-plegar-todo"]');
+    if (b) b.focus();
     return;
   }
   if (e.target.closest('[data-rev-recargar]')) { cargarRevisionSec(state.secRev && state.secRev.pedida); return; }

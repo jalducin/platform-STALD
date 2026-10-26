@@ -9,6 +9,9 @@
 //   3. Alumna: aviso «📝 El profe revisó N clases» en Inicio, «Profe: 9 · Final: 8.5» y chip «📋 Final» en «Mis
 //      materias», «✅ Revisado por el profe: N · comentario» en su fila y en la clase, sin checklist.
 //   4. Celular 360, tablet 768 y PC 1280, en claro y oscuro: sin scroll horizontal, objetivos ≥ 44 px, sin errores.
+// Plegado (openspec: revision-profe-plegar): la revisada y la sin abrir salen plegadas (`data-plegada="1"`) y se
+// despliegan al tocar su cabecera (`rev-plegar`, ≥ 44 px); las pendientes salen desplegadas; «Mostrar todo» /
+// «Plegar revisadas» (`rev-plegar-todo`) se recuerda en el aparato tras recargar.
 // Con --pg (PostgREST falso o real, solo stald_test_*) siembra el borrador y la revisión de ejemplo en stald_test_docs
 // (la migración solo lleva resultados/ y avance/). Restaura lo que guarda: deja las revisiones como en el fixture.
 // Selectores `data-testid` acordados para la UI: ver openspec/changes/revision-profe/design.md («Selectores de la E2E»).
@@ -87,7 +90,7 @@ function vigilar(p) {
   p.on('request', r => { if (/\/profe\/revision(\?|$)/.test(r.url())) p.revisiones.push(r.method()); });
   return p;
 }
-const pagina = async (b, email, ruta, o = {}) => vigilar(await abrirPagina(b, { email, viejo: true, dialogos: 'aceptar', viewport: o.viewport, contexto: o.tema ? { colorScheme: o.tema } : undefined, ruta, esperar: o.esperar }));
+const pagina = async (b, email, ruta, o = {}) => vigilar(await abrirPagina(b, { email, viejo: true, dialogos: 'aceptar', viewport: o.viewport, contexto: o.tema ? { colorScheme: o.tema } : undefined, ruta, esperar: o.esperar, init: o.init }));
 
 // Lleva la pestaña a la semana LUNES con «◀ Semana anterior» / «Semana siguiente ▶».
 async function irASemana(p) {
@@ -179,6 +182,18 @@ async function finalCoincide(p, id) {
     // Tarjetas
     const estados = await p.$$eval('#sec-revision [data-testid="rev-tarjeta"]', xs => Object.fromEntries(xs.map(x => [x.dataset.revId, x.dataset.estado])));
     ok('tarjetas: estado de cada clase', estados[ID.sinAbrir] === 'sin-abrir' && estados[ID.borrador] === 'borrador' && estados[ID.aTiempo] === 'enviada' && estados[ID.tarde] === 'enviada' && estados[ID.espanol] === 'enviada', JSON.stringify(estados));
+    // Plegado por omisión: revisada y sin abrir plegadas; pendientes (enviada o borrador sin revisión) desplegadas.
+    const pliegues = await p.$$eval('#sec-revision [data-testid="rev-tarjeta"]', xs => Object.fromEntries(xs.map(x => [x.dataset.revId, x.dataset.plegada])));
+    ok('plegado: la revisada (6) y la sin abrir salen plegadas', pliegues[ID.tarde] === '1' && pliegues[ID.sinAbrir] === '1', JSON.stringify(pliegues));
+    ok('plegado: las pendientes salen desplegadas', pliegues[ID.aTiempo] === '0' && pliegues[ID.borrador] === '0' && pliegues[ID.espanol] === '0', JSON.stringify(pliegues));
+    ok('plegado: la plegada no muestra su formulario', !(await p.isVisible(`${tarjeta(ID.tarde)} [data-testid="rev-guardar"]`)) && await p.isVisible(`${tarjeta(ID.aTiempo)} [data-testid="rev-guardar"]`));
+    const lineaTarde = await texto(p, `${tarjeta(ID.tarde)} [data-testid="rev-plegar"]`);
+    const finTarde = String(RD.finalDe(claseDe(await semana(), ID.tarde)));
+    ok('plegado: una línea con materia, tema, estado y final', /Revisada/.test(lineaTarde) && lineaTarde.includes('Final ' + finTarde) && !!(await p.$(`${tarjeta(ID.tarde)} [data-testid="rev-plegar"] .mat-chip`)), lineaTarde);
+    const medidas = await p.$$eval('#sec-revision [data-testid="rev-plegar"]', xs => xs.map(x => { const r = x.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }));
+    ok('plegado: el control de cada tarjeta mide 44 px o más', medidas.length >= 5 && medidas.every(([w, h]) => w >= 44 && h >= 43.5), JSON.stringify(medidas));
+    await p.click(`${tarjeta(ID.tarde)} [data-testid="rev-plegar"]`);
+    ok('plegado: al tocarla se despliega', (await p.getAttribute(tarjeta(ID.tarde), 'data-plegada')) === '0' && await p.isVisible(`${tarjeta(ID.tarde)} [data-testid="rev-guardar"]`) && (await p.getAttribute(`${tarjeta(ID.tarde)} [data-testid="rev-plegar"]`, 'aria-expanded')) === 'true');
     ok('tarjetas: por día (la del lunes en el lunes)', !!(await p.$(`#sec-revision [data-testid="rev-dia"][data-dia="${LUNES}"] [data-rev-id="${ID.sinAbrir}"]`)));
     ok('tarjeta: «⏳ Sin abrir»', (await texto(p, `${tarjeta(ID.sinAbrir)} [data-testid="rev-estado"]`)).includes('Sin abrir'));
     ok('tarjeta: «💾 En borrador · avanzó 2 de 4»', /avanzó 2 de 4/.test(await texto(p, `${tarjeta(ID.borrador)} [data-testid="rev-estado"]`)), await texto(p, `${tarjeta(ID.borrador)} [data-testid="rev-estado"]`));
@@ -242,8 +257,12 @@ async function finalCoincide(p, id) {
     await p.fill(`${tarjeta(ID.espanol)} [data-testid="rev-comentario"]`, 'Buen audio; revisa la b');
     const g2 = await guardarTarjeta(p, ID.espanol, r => r.calificacion === 8);
     ok('guardar Español: audio, libro, casilla, 8 y comentario', g2 && g2.revision.audio === true && g2.revision.libro === true && JSON.stringify(g2.revision.checks) === '[0]' && g2.revision.comentario === 'Buen audio; revisa la b', JSON.stringify(g2 && g2.revision));
+    ok('plegado: guardar no pliega la tarjeta', (await p.getAttribute(tarjeta(ID.aTiempo), 'data-plegada')) === '0' && (await p.getAttribute(tarjeta(ID.espanol), 'data-plegada')) === '0');
     const r2 = await resumenOk('tras guardar');
     ok('resumen: se actualiza al guardar (2 revisadas más)', r1 && r2 && r2.revisadas === r1.revisadas + 2 && r2.pendientes === r1.pendientes - 2);
+    // «📂 Mostrar todo»: despliega todas y se recuerda en el aparato (se prueba tras recargar).
+    await p.click('#sec-revision [data-testid="rev-plegar-todo"]');
+    ok('Mostrar todo: todas desplegadas y el botón cambia a «Plegar revisadas»', (await p.$$eval('#sec-revision [data-testid="rev-tarjeta"]', xs => xs.every(x => x.dataset.plegada === '0'))) && (await texto(p, '#sec-revision [data-testid="rev-plegar-todo"]')).includes('Plegar revisadas'));
     // Recargar: la pestaña vuelve (con #revision) y todo sigue.
     p.revisiones.length = 0;
     await p.reload();
@@ -261,6 +280,9 @@ async function finalCoincide(p, id) {
     }, [ID.aTiempo, ID.espanol]);
     ok('recarga: casillas, calificación y comentario persisten', persiste.c0 && !persiste.c1 && persiste.c2 && Number(persiste.cal) === 9 && persiste.com === 'Muy buena letra' && persiste.audio && persiste.libro && Number(persiste.calE) === 8, JSON.stringify(persiste));
     for (const id of [ID.aTiempo, ID.tarde, ID.espanol]) { const f = await finalCoincide(p, id); ok(`final ${id}: coincide con la fórmula del contrato`, f.ok, f.detalle); }
+    ok('recarga: «Mostrar todo» se recordó (todas desplegadas)', (await p.$$eval('#sec-revision [data-testid="rev-tarjeta"]', xs => xs.every(x => x.dataset.plegada === '0'))) && (await texto(p, '#sec-revision [data-testid="rev-plegar-todo"]')).includes('Plegar revisadas'));
+    await p.click('#sec-revision [data-testid="rev-plegar-todo"]');
+    ok('Plegar revisadas: la recién revisada se pliega y la sin abrir también', (await p.getAttribute(tarjeta(ID.aTiempo), 'data-plegada')) === '1' && (await p.getAttribute(tarjeta(ID.sinAbrir), 'data-plegada')) === '1' && (await p.getAttribute(tarjeta(ID.borrador), 'data-plegada')) === '0' && (await texto(p, '#sec-revision [data-testid="rev-plegar-todo"]')).includes('Mostrar todo'));
     ok('profe (PC): sin errores de consola', p.errores.length === 0, p.errores.slice(0, 3).join(' | '));
     await p.screenshot({ path: 'revision-profe-pc.png', fullPage: true });
     await p.context().close();
@@ -340,6 +362,23 @@ async function finalCoincide(p, id) {
       ok(`${et} (alumna): «✅ Revisado por el profe» visible y sin scroll horizontal`, await al.isVisible(`[data-sec-item="${ID.aTiempo}"] [data-testid="revisado-profe"]`).catch(() => false) && await sinScrollH(al));
       ok(`${et} (alumna): sin errores de consola`, al.errores.length === 0, al.errores.slice(0, 3).join(' | '));
       await al.context().close();
+    }
+    // Sin almacenamiento (localStorage lanza con la llave del modo): la vista funciona con el plegado por omisión.
+    if (hayTab) {
+      const bloqueo = () => {
+        const g = Storage.prototype.getItem, st = Storage.prototype.setItem;
+        Storage.prototype.getItem = function (k) { if (k === 'stald_revision_modo') throw new Error('bloqueado'); return g.call(this, k); };
+        Storage.prototype.setItem = function (k, v) { if (k === 'stald_revision_modo') throw new Error('bloqueado'); return st.call(this, k, v); };
+      };
+      const q = await pagina(b, ADMIN, `/ingles.html?modo=secundaria&alumna=${SLUG}#inicio`, { viewport: TAMANOS[0], esperar: '#sec-inicio', init: [bloqueo] });
+      await irPestanaSec(q, 'revision');
+      await irASemana(q);
+      await q.waitForSelector(tarjeta(ID.tarde), { timeout: 30000 });
+      const antes = await q.getAttribute(tarjeta(ID.tarde), 'data-plegada');
+      await q.click('#sec-revision [data-testid="rev-plegar-todo"]');
+      const todas = await q.$$eval('#sec-revision [data-testid="rev-tarjeta"]', xs => xs.every(x => x.dataset.plegada === '0'));
+      ok('sin almacenamiento: plegado por omisión y «Mostrar todo» funciona en la visita', antes === '1' && todas && q.errores.length === 0, `antes=${antes} todas=${todas} ${q.errores.slice(0, 2).join(' | ')}`);
+      await q.context().close();
     }
   } catch (e) {
     ok('tamaños (UI): el flujo termina', false, e.message.slice(0, 300));
