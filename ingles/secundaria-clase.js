@@ -97,6 +97,50 @@ function htmlRecompensa(xpAntes, xpDespues, nA, nD, nuevas) {
     '</section>';
 }
 
+// ---------- Revisión del profe (openspec: revision-profe) ----------
+// La alumna ve la calificación y el comentario del profe (`it.revision`, de /secundaria/actividades) y la final de la
+// clase (fórmula SOLO en comun/revision-datos.js, vía SD.finalDe). Nunca el checklist: no llega al navegador.
+// «Ya la vio»: por persona (hash del correo) y revisión (`revisadoEn`), en localStorage; si el profe la cambia, vuelve
+// a ser nueva. Sin almacenamiento cuenta como vista (no hay aviso que no se pueda quitar).
+const califProfe = String; // 9, 8.5 (punto decimal, como en México)
+const itemDeLista = id => (state.act?.items || []).find(x => x.id === id) || null;
+const claveRevVista = it => 'stald_rev_vista:' + hashCorto(state.email || '') + ':' + it.id + ':' + SD.revisionDe(it).revisadoEn;
+function revisionVista(it) {
+  try { return localStorage.getItem(claveRevVista(it)) === '1'; } catch (e) { return true; }
+}
+function marcarRevisionVista(it) {
+  if (!it || !SD.revisionDe(it) || state.act?.isAdmin) return; // el profe en «vista de la alumna» no la marca
+  try { localStorage.setItem(claveRevVista(it), '1'); } catch (e) { /* sin almacenamiento */ }
+}
+// Revisadas que la alumna aún no ve, de la más reciente a la más vieja.
+const revisionesNuevas = items => SD.clasesRevisadas(items).filter(it => !revisionVista(it));
+// Texto de la revisión: «✅ Revisado por el profe: 9 · comentario» (sin comentario, solo la calificación). Con `testid`,
+// lleva data-testid="revisado-profe" (la E2E lo busca en la fila y en la clase; solo uno por vista).
+function textoRevision(r) {
+  return '<span aria-hidden="true">✅</span> Revisado por el profe: <b>' + escapeHtml(califProfe(r.calificacion)) + '</b>' +
+    (r.comentario ? ' · <span class="sec-revision-coment">' + escapeHtml(r.comentario) + '</span>' : '');
+}
+// Distintivo para filas y tarjetas; '' si el profe aún no la califica.
+function pillRevision(it, testid) {
+  const r = SD.revisionDe(it);
+  if (!r) return '';
+  const prueba = testid ? ' data-testid="revisado-profe"' : '';
+  return '<span class="sec-rev-pill" data-sec-rev="' + escapeHtml(califProfe(r.calificacion)) + '"' + prueba + '>' + textoRevision(r) + '</span>';
+}
+// Bloque de la clase y de su resultado: calificación, comentario y final. '' si el profe aún no la califica.
+function bloqueRevision(id) {
+  if (!MODO_SECUNDARIA) return '';
+  const it = itemDeLista(id);
+  const r = it && SD.revisionDe(it);
+  if (!r) return '';
+  marcarRevisionVista(it);
+  const final = SD.finalDe(it);
+  return '<section class="exam-card sec-rev-bloque" id="sec-rev-bloque" data-sec-revision="' + escapeHtml(califProfe(r.calificacion)) + '">' +
+    '<p class="sec-revision-t" data-testid="revisado-profe">' + textoRevision(r) + '</p>' +
+    (final !== null ? '<p class="meta" data-sec-final="' + final + '">Calificación final de la clase: <b>' + escapeHtml(califProfe(final)) + '</b> (junta tu calificación en línea con la del profe)</p>' : '') +
+    '</section>';
+}
+
 // Etiqueta del banner: en Secundaria cada clase es una «Misión»; en Inglés, su tipo.
 const ETIQUETA_TIPO = { examen: '📝 Examen', refuerzo: '🔁 Refuerzo', meet: '🎥 Reto del Meet', actividad: '📘 Actividad' };
 const etiquetaClase = it => (MODO_SECUNDARIA || MODO_PROFE ? '⚔️ Misión' : ETIQUETA_TIPO[it.tipo] || ETIQUETA_TIPO.actividad);
@@ -124,7 +168,7 @@ function vistaClaseSecundaria(it, cabecera, form) {
   else if (hayGamificacion()) mundo = Gamificacion.mundoDe('ingles', hoyDeAct());
   const banner = '<div class="sec-mision-banner"><span class="sec-mision-tag">' + etiquetaClase(it) + '</span>' + (MODO_SECUNDARIA ? chipMateria(m) : '') +
     (mundo ? '<span class="sec-mundo" data-sec-mundo>' + escapeHtml(mundo.emoji + ' ' + mundo.nombre) + '<small> · ' + escapeHtml(mundo.etapa) + '</small></span>' : '') + '</div>';
-  return '<div class="sec-clase-vista">' + banner + cabecera + indicador +
+  return '<div class="sec-clase-vista">' + banner + cabecera + bloqueRevision(it.id) + indicador +
     (hay.teoria ? seccion('teoria', 1, '📖 Teoría', teoria) : '') +
     (hay.video ? seccion('video', 2, '🎬 Video', video.html) : '') +
     '<section class="sec-paso-bloque" id="sec-paso-ejercicios" data-sec-bloque="ejercicios" aria-labelledby="sec-paso-t-ejercicios">' +
@@ -169,7 +213,7 @@ function extrasResultadoSecundaria(id) {
   const boton = sig
     ? '<button class="btn sec-siguiente" data-action="abrir-item" data-id="' + escapeHtml(sig.id) + '"><span>' + (MODO_SECUNDARIA ? 'Siguiente misión →' : 'Lo siguiente →') + '</span><small>' + escapeHtml(textoClase(sig, MODO_SECUNDARIA ? materiaDe(sig) : null)) + '</small></button>'
     : '<button class="btn sec-siguiente" data-action="volver"><span>' + (MODO_SECUNDARIA ? '🗺️ Mis misiones' : '📅 Mi semana') + '</span><small>' + (MODO_SECUNDARIA ? 'No tienes más misiones pendientes por ahora.' : 'No tienes más pendientes por ahora. ¡Bien hecho!') + '</small></button>';
-  return recompensaMision(id) + (libreta ? '<section class="exam-card sec-paso-bloque" id="sec-resultado-libreta"><h3>' + numPaso(4) + ' 📓 Libreta</h3>' + libreta + '</section>' : '') +
+  return bloqueRevision(id) + recompensaMision(id) + (libreta ? '<section class="exam-card sec-paso-bloque" id="sec-resultado-libreta"><h3>' + numPaso(4) + ' 📓 Libreta</h3>' + libreta + '</section>' : '') +
     '<div class="sec-resultado-acciones">' + boton + '</div>';
 }
 

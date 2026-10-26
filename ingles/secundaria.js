@@ -24,6 +24,8 @@ const SEC_TABS = [
   { id: 'materias', hash: 'materias', titulo: '📚 Mis materias', corto: 'Materias', emoji: '📚' },
   { id: 'resultados', hash: 'resultados', titulo: '📝 Resultados', corto: 'Notas', emoji: '📝', soloAdmin: true },
   { id: 'entregas', hash: 'entregas', titulo: '📥 Entregas', corto: 'Entregas', emoji: '📥', soloAdmin: true },
+  // Revisión de la semana de la alumna (openspec: revision-profe; ingles/secundaria-revision.js). En celular, en «☰ Más».
+  { id: 'revision', hash: 'revision', titulo: '📋 Revisión', corto: 'Revisión', emoji: '📋', soloAdmin: true },
 ];
 const tabDeHash = h => { const t = SEC_TABS.find(x => x.hash === h || x.id === h); return t ? t.id : null; };
 // Barra inferior en celular (openspec: navegacion-mejoras): 4 pestañas principales y «☰ Más» con las demás. La alumna,
@@ -93,6 +95,8 @@ function filaClase(it, conFecha) {
   let sub = (it.tipo === 'examen' ? 'Examen' : 'Clase') + (conFecha ? ' · hasta el ' + escapeHtml(formatFecha(it.fechaLimite)) : '');
   if (it.intentosMax) sub += ' · ' + (it.intentosUsados || 0) + '/' + it.intentosMax + ' oportunidades';
   if (it.mejor) sub += ' · <span class="pill ok">⭐ ' + it.mejor.porcentaje + '% (tu mejor)</span>';
+  // Revisión del profe (openspec: revision-profe): calificación y comentario; nada del checklist.
+  sub += pillRevision(it, true); // bloque propio (CSS), '' si no está calificada
   return '<div class="exam-item sec-clase mat-' + (m ? m.clave : 'otra') + '" data-sec-item="' + escapeHtml(it.id) + '"' + (m ? ' data-materia="' + escapeHtml(m.nombre) + '"' : '') + '>' +
     '<div class="sec-clase-info"><div class="t">' + chipMateria(m) + '<span class="sec-tema">' + escapeHtml(textoClase(it, m)) + '</span></div><div class="s">' + sub + '</div></div>' + accionItem(it, it.estado) + '</div>';
 }
@@ -148,6 +152,7 @@ function renderSecundaria(act) {
     horario: () => panelHorario(items, hoy),
     materias: () => renderSecMaterias(items, hoy),
     resultados: () => renderSecundariaAdmin(((state.secLista || {}).items) || []),
+    revision: () => renderSecRevision(tab === 'revision'), // perezosa: pide la semana solo si es la pestaña activa
   };
   return (admin ? selectorAlumna(act) : '') +
     '<div class="tabs sec-tabs' + (tabs.length > 7 ? ' sec-tabs-muchas' : '') + '" role="tablist" aria-label="Secundaria">' + tabs.map(t =>
@@ -172,6 +177,7 @@ function irPestanaSec(id, enfocar, historial = 'reemplazar') {
   const mas = document.querySelector('[data-sec-mas]');
   if (mas) mas.classList.toggle('activo', !!document.querySelector('#sec-mas [data-sec-tab="' + id + '"]'));
   cerrarMasSec();
+  if (id === 'revision') abrirRevisionSec(); // carga perezosa (openspec: revision-profe)
   const t = SEC_TABS.find(x => x.id === id);
   if (t && historial !== 'nada' && !location.hash.startsWith('#ver/')) {
     const url = location.pathname + location.search + '#' + t.hash;

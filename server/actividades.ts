@@ -31,6 +31,7 @@ import {
 import { alumnasSecundaria, type FilaIdentidad, identidadSecundaria } from "./secundaria_registro.ts";
 import { teoriaPublica } from "./practica.ts";
 import type { Store } from "./store.ts";
+import { leerCarpeta } from "./db.ts";
 
 type Json = (body: unknown, status?: number) => Response;
 
@@ -116,6 +117,33 @@ export async function visibleItems(store: Store, hoy: string, ambito: Ambito = A
     const actuales = semanas.filter((s) => s.id <= hoy);
     return { items, semanaActual: actuales[actuales.length - 1] || null, semanaSiguiente: semanas.find((s) => s.id === lunesSiguiente(hoy)) || null };
   });
+}
+
+// Todos los elementos del ámbito, sin filtro de fecha: los de todas las semanas subidas (también futuras) y los
+// exámenes sueltos, sin repetir. Para la revisión del profe, que navega semanas (openspec: revision-profe).
+export async function todosLosElementos(store: Store, ambito: Ambito): Promise<Item[]> {
+  return await cached(`${ambito.clave}:todos`, async () => {
+    const nombres = (await store.list(`${ambito.contenido}/semanas`)).filter((n) => n.endsWith(".json"));
+    // Una semana que falte o venga sin `elementos` se salta (no tumba la revisión).
+    const semanas = (await Promise.all(nombres.map((n) => store.get<Semana>(`${ambito.contenido}/semanas/${n}`))))
+      .map((d) => d?.data).filter((s): s is Semana => !!s && Array.isArray(s.elementos));
+    const sueltos = (await store.list(`${ambito.contenido}/examenes`)).filter((n) => n.endsWith(".json")).map((n) => n.slice(0, -5));
+    const ids = [...new Set([...semanas.flatMap((s) => s.elementos.map((e) => e.id)), ...sueltos])];
+    return (await Promise.all(ids.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x);
+  });
+}
+
+// Revisiones del profe de una alumna (openspec: revision-profe), solo lo que ella puede ver: calificación, comentario y
+// fecha, y solo de las clases ya calificadas. Una consulta (revisiones/<slug>/). Si falla, ninguna (se registra).
+async function revisionesVisibles(store: Store, slug: string): Promise<Map<string, { calificacion: number; comentario: string; revisadoEn: string }>> {
+  try {
+    const docs = await leerCarpeta<{ calificacion?: unknown; comentario?: unknown; revisadoEn?: unknown }>(store, `revisiones/${slug}`);
+    return new Map(docs.filter((d) => d.nombre.endsWith(".json") && typeof d.data?.calificacion === "number")
+      .map((d) => [d.nombre.slice(0, -5), { calificacion: d.data.calificacion as number, comentario: String(d.data.comentario ?? ""), revisadoEn: String(d.data.revisadoEn ?? "") }]));
+  } catch (e) {
+    console.error("revisiones:", e instanceof Error ? e.message : e);
+    return new Map();
+  }
 }
 
 // Elementos del grupo en la ruta del profe (openspec: profe-actividades-grupo): actividades, exámenes y refuerzos de
@@ -232,10 +260,12 @@ async function listarActividades(quien: Identidad, store: Store, json: Json, hoy
     .filter((it) => esPara(it, slug!)) // exclusivos (openspec: examen-secundaria)
     .map((base) => paraAlumno(base, slug!)).filter((it) => !quien.inicio || it.fechaLimite >= quien.inicio);
   const diasConEntrega = new Set<string>(); // racha (openspec: ingles-pro)
+  // Secundaria: calificación y comentario del profe en sus clases revisadas (openspec: revision-profe).
+  const revisiones = ambito.clave === AMBITO_SECUNDARIA.clave ? await revisionesVisibles(store, slug!) : new Map();
   const conEstado = await Promise.all(suyos.map(async (it) => {
     const r = tieneReto(it) ? (await leerResultado(store, it.id, slug!))?.data ?? null : null;
     for (const i of r?.intentos || []) diasConEntrega.add(mxToday(new Date(i.enviadoEn)));
-    return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, mejorATiempo: mejorATiempo(r), ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ultimoTemas: temasDelUltimo(r), ...(deGrupo.has(it.id) ? { grupo: true } : {}) };
+    return { ...meta(it), estado: estadoItem(it, hoy, r), intentosUsados: r?.intentos.length || 0, mejor: r?.mejor ?? null, mejorATiempo: mejorATiempo(r), ultimoEnvio: r?.intentos.at(-1)?.enviadoEn ?? null, ultimoTemas: temasDelUltimo(r), ...(deGrupo.has(it.id) ? { grupo: true } : {}), ...(revisiones.has(it.id) ? { revision: revisiones.get(it.id) } : {}) };
   }));
   const plan = esProfe ? (await store.get(`${ambito.contenido}/plan.json`))?.data ?? null : undefined;
   return json({ isAdmin: false, hoy, semana, ...siguiente, items: conEstado, racha: calcularRacha(diasConEntrega, hoy), ...(plan !== undefined ? { plan } : {}), ...(quien.inicio ? { inicio: quien.inicio } : {}), ...(quien.grupoInfo ? { grupo: quien.grupoInfo } : {}), ...(quien.ranking ? { ranking: true } : {}), ...(quien.misiones ? { misiones: true } : {}) });

@@ -131,6 +131,16 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   interactiva, cambio `secundaria-sin-notion`; también solo con `--hoy 2026-10-27`): pasos y `aria-current`, iframes
   `youtube-nocookie` lazy, «✅ Ya la hice» que se recuerda, resultado con «Siguiente clase», 360 px claro/oscuro e
   Inglés sin pasos. Envía la clase de la alumna: corre después de `secundaria-clases`.
+- `revision-profe` (fase `ingles`, cambio `revision-profe`): semana de Secundaria `2026-09-14` del fixture, propia de
+  esta prueba (no toca la `2026-10-26`): 5 clases `sec-rev-e2e-*` de `valeria` (sin abrir; en borrador 2 de 4 en
+  `borradores/`; enviada a tiempo con 80 %; fuera de tiempo con 50 % y una revisión previa del profe con 6 en
+  `revisiones/valeria/`; y Español con audio y libro de ortografía, 50 %; las materias no mueven los promedios que fija `secundaria-dashboard`). Prueba la API (semana, estados, matriz
+  403/401, 400/404, lo que recibe la alumna), la pestaña «📋 Revisión» del profe (perezosa, «🔎 Ver respuestas»,
+  checklist, audio, libro, calificación, comentario, recarga, final y resumen contra `comun/revision-datos.js`) y lo
+  que ve la alumna (aviso «📝 El profe revisó N clases», «Profe · Final» y chip «📋 Final» en «Mis materias», y
+  «✅ Revisado por el profe» en su fila y en la clase), en 360, 768 y 1280 px, claro y oscuro. Con `--pg` siembra en `stald_test_docs` el borrador y la
+  revisión de ejemplo (la migración solo lleva `resultados/` y `avance/`). Al terminar deja las revisiones como en el
+  fixture. Selectores `data-testid`: `openspec/changes/revision-profe/design.md`.
 - `secundaria-adelantar` (fase `ingles`, cambio `secundaria-adelantar`; solo con `--hoy 2026-10-22`, con otro día
   sale `OMIT`): la semana de Secundaria `2026-10-19` del fixture (3 clases `sec-adelanta-*` de `valeria` que abren el
   21 y traen `dia` jueves 22 ×2 y viernes 23) y la semana `2026-11-02` (1 clase con `dia` 2026-11-02 que también abre

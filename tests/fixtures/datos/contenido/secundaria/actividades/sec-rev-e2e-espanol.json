@@ -1,0 +1,95 @@
+{
+  "id": "sec-rev-e2e-espanol",
+  "tipo": "actividad",
+  "titulo": "📘 Español · Uso de la b y la v",
+  "materia": "Español",
+  "nivel": "Secundaria",
+  "disponibleDesde": "2026-09-18",
+  "fechaLimite": "2026-09-18",
+  "intentos": 2,
+  "preguntasPorIntento": 4,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "Uso de la b y la v",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Uso de la b y la v",
+      "texto": "Lee con calma."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "libreta",
+      "texto": "Copia las reglas de la b y la v."
+    },
+    {
+      "tipo": "libreta",
+      "texto": "🎙️ Graba un audio leyendo en voz alta las 10 palabras."
+    },
+    {
+      "tipo": "libreta",
+      "texto": "Resuelve 2 páginas del libro de ortografía (b y v)."
+    }
+  ],
+  "banco": [
+    {
+      "id": "sec-rev-e2e-espanol-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 1 de Uso de la b y la v?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-espanol-2",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 2 de Uso de la b y la v?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-espanol-3",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 3 de Uso de la b y la v?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-espanol-4",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 4 de Uso de la b y la v?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    }
+  ]
+}

@@ -56,7 +56,8 @@ export function createDb(cfg: ConfigDb): Db {
 // borradores-misiones/: texto sin entregar de las misiones (openspec: autoguardado-todo); ruta nueva, sin migración.
 // entregas/: entregas de misiones en texto y su evaluación (openspec: rpg-fase2-misiones); ruta nueva, sin migración.
 // gamificacion/: apagado del ranking por grupo y perfiles (openspec: rpg-fase2-ingles); ruta nueva, sin migración.
-export const PREFIJOS_INGLES = ["alumnos.json", "resultados/", "avance/", "borradores/", "borradores-misiones/", "entregas/", "gamificacion/"];
+// revisiones/: revisión del profe por alumna y clase (openspec: revision-profe); ruta nueva, sin migración.
+export const PREFIJOS_INGLES = ["alumnos.json", "resultados/", "avance/", "borradores/", "borradores-misiones/", "entregas/", "gamificacion/", "revisiones/"];
 export const PREFIJO_JUEGOS = "juegos/";
 export const esRutaPg = (path: string, prefijos: string[] = PREFIJOS_INGLES) =>
   prefijos.some((p) => p.endsWith("/") ? path.startsWith(p) : path === p);

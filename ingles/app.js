@@ -174,7 +174,7 @@ function onClick(e) {
   if (act === 'abrir-item') { e.preventDefault(); if (cajonEl.open) { cajonEl.close(); } openItem(b.dataset.id, b.dataset.alumno); }
   if (act === 'ver-resultado') {
     const it = ((state.act && state.act.items) || []).find(x => x.id === b.dataset.id);
-    if (it && it.mejor) showResult(it.mejor, { titulo: it.titulo + ' · mejor intento (' + it.intentosUsados + '/' + it.intentosMax + ')' });
+    if (it && it.mejor) showResult(it.mejor, { titulo: it.titulo + ' · mejor intento (' + it.intentosUsados + '/' + it.intentosMax + ')', revisionDe: it.id });
   }
   if (act === 'abrir-guion') { e.preventDefault(); openGuion(b.dataset.id); }
   if (act === 'abrir-material') { e.preventDefault(); openMaterial(b.dataset.id); }

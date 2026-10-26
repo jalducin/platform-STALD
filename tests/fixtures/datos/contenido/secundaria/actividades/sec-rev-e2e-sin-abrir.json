@@ -1,0 +1,91 @@
+{
+  "id": "sec-rev-e2e-sin-abrir",
+  "tipo": "actividad",
+  "titulo": "📐 Matemáticas · Fracciones equivalentes",
+  "materia": "Matemáticas",
+  "nivel": "Secundaria",
+  "disponibleDesde": "2026-09-14",
+  "fechaLimite": "2026-09-14",
+  "intentos": 2,
+  "preguntasPorIntento": 4,
+  "alumnos": [
+    "valeria"
+  ],
+  "temas": [
+    {
+      "id": "t",
+      "titulo": "Fracciones equivalentes",
+      "retroalimentacion": {
+        "fortaleza": "¡Muy bien!",
+        "en-progreso": "Casi, repasa un poco.",
+        "debilidad": "Repasa la teoría."
+      }
+    }
+  ],
+  "teoria": [
+    {
+      "titulo": "Fracciones equivalentes",
+      "texto": "Lee con calma."
+    }
+  ],
+  "tips": [
+    {
+      "tipo": "libreta",
+      "texto": "Copia la tabla de fracciones equivalentes."
+    },
+    {
+      "tipo": "libreta",
+      "texto": "Resuelve los 3 ejemplos del pizarrón."
+    }
+  ],
+  "banco": [
+    {
+      "id": "sec-rev-e2e-sin-abrir-1",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 1 de Fracciones equivalentes?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-sin-abrir-2",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 2 de Fracciones equivalentes?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-sin-abrir-3",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 3 de Fracciones equivalentes?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    },
+    {
+      "id": "sec-rev-e2e-sin-abrir-4",
+      "tema": "t",
+      "tipo": "opcion",
+      "enunciado": "¿Pregunta 4 de Fracciones equivalentes?",
+      "opciones": [
+        "sí",
+        "no"
+      ],
+      "correcta": 0,
+      "explicacion": "Así es."
+    }
+  ]
+}

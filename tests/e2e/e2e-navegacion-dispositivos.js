@@ -458,8 +458,8 @@ const TAREAS = [
       ok('Secundaria (celular): con la clase abierta no hay barra de pestañas', !(await c.$('.sec-barra')));
     } else omit('Secundaria (celular): barra con la clase abierta', 'sin misión abierta ese día');
     await c.context().close();
-    // Tablet y PC: la fila (sin barra); el profe con sus 9 pestañas en una fila también a 1100 px.
-    for (const [quien, email, ruta, w, n] of [['alumna', 'valeria@example.com', '/secundaria.html', 768, 7], ['alumna', 'valeria@example.com', '/secundaria.html', 1100, 7], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 720, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 768, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1100, 9], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1280, 9]]) {
+    // Tablet y PC: la fila (sin barra); el profe con sus 10 pestañas (con «📋 Revisión», cambio revision-profe) en una fila también a 1100 px.
+    for (const [quien, email, ruta, w, n] of [['alumna', 'valeria@example.com', '/secundaria.html', 768, 7], ['alumna', 'valeria@example.com', '/secundaria.html', 1100, 7], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 720, 10], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 768, 10], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1100, 10], ['profe', 'admin@example.com', '/ingles.html?modo=secundaria&alumna=valeria', 1280, 10]]) {
       const t = await abrirPagina(b, { email, viewport: { width: w, height: 800 }, ruta, esperar: '#sec-inicio' });
       const f = await fila(t);
       const sinBarra = !(await t.$eval('.sec-barra', x => !!x.offsetParent));
