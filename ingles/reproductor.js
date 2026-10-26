@@ -630,7 +630,7 @@ function showResult(calificacion, info) {
   const aviso = espera ? '<div class="aviso-corr" id="aviso-segunda">📅 Tienes una 2.ª oportunidad el ' + escapeHtml(formatFecha(it.segundaOportunidad)) + ' con preguntas nuevas. Estudia el sábado con tu refuerzo; cuenta la mejor de las dos.</div>' : '';
   contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' + aviso +
     renderResultado(calificacion, false) +
-    (extras ? extrasResultadoSecundaria(i.id) : '') +
+    (extras ? extrasResultadoSecundaria(i.id || i.revisionDe) : '') + // «Ver resultado» solo trae revisionDe
     // «Ver resultado» (openspec: revision-profe): la revisión del profe, si los extras no la trajeron ya.
     (!extras && i.revisionDe && typeof bloqueRevision === 'function' ? bloqueRevision(i.revisionDe) : '') +
     '<div class="exam-bar">' + volverBtn() + reintento + '</div>';

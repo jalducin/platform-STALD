@@ -124,7 +124,9 @@ export async function visibleItems(store: Store, hoy: string, ambito: Ambito = A
 export async function todosLosElementos(store: Store, ambito: Ambito): Promise<Item[]> {
   return await cached(`${ambito.clave}:todos`, async () => {
     const nombres = (await store.list(`${ambito.contenido}/semanas`)).filter((n) => n.endsWith(".json"));
-    const semanas = (await Promise.all(nombres.map((n) => store.get<Semana>(`${ambito.contenido}/semanas/${n}`)))).map((d) => d!.data);
+    // Una semana que falte o venga sin `elementos` se salta (no tumba la revisión).
+    const semanas = (await Promise.all(nombres.map((n) => store.get<Semana>(`${ambito.contenido}/semanas/${n}`))))
+      .map((d) => d?.data).filter((s): s is Semana => !!s && Array.isArray(s.elementos));
     const sueltos = (await store.list(`${ambito.contenido}/examenes`)).filter((n) => n.endsWith(".json")).map((n) => n.slice(0, -5));
     const ids = [...new Set([...semanas.flatMap((s) => s.elementos.map((e) => e.id)), ...sueltos])];
     return (await Promise.all(ids.map((id) => loadItem(store, id, ambito)))).filter((x): x is Item => !!x);

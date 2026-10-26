@@ -25,7 +25,7 @@ async function cargarRevisionSec(semana) {
   state.secRev = { ...(state.secRev || {}), cargando: true, pedida, alumna };
   pintarRevision();
   const r = await fetchJson(API_BASE + '/profe/revision' + revQuery({ alumna, ...(pedida ? { semana: pedida } : {}) })).catch(() => null);
-  if (!state.secRev || state.secRev.pedida !== pedida) return; // cambió de semana mientras cargaba
+  if (!state.secRev || state.secRev.pedida !== pedida || state.secRev.alumna !== alumna) return; // cambió de semana o de alumna mientras cargaba
   state.secRev = r && r.ok
     ? { alumna, pedida, semana: r.body.semana.lunes, datos: r.body, cargando: false }
     : { alumna, pedida, semana: pedida, datos: null, cargando: false, error: r ? (r.body.error || r.status) : 'sin_red' };
