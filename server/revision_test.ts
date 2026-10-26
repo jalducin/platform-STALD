@@ -120,7 +120,8 @@ Deno.test("revision: semana normalizada a su lunes, días de lunes a domingo y n
   // Sin semana: la de hoy. La siguiente, aunque sus clases no abran todavía.
   assertEquals((await pedir(storeCon(datos()), "GET", "?alumna=luz")).body.semana.lunes, "2026-10-26");
   const sig = await pedir(storeCon(datos()), "GET", "?alumna=luz&semana=2026-11-02");
-  assertEquals(sig.body.clases.map((c: any) => [c.id, c.estado, c.abre]), [["c-sig", "sin-abrir", "2026-11-02"]]);
+  // La guía (ventana larga) cuenta en la semana de su fecha límite (Gamificacion.diaDeClase), aquí la del 8 de noviembre.
+  assertEquals(sig.body.clases.map((c: any) => [c.id, c.estado, c.abre]), [["c-sig", "sin-abrir", "2026-11-02"], ["c-guia", "sin-abrir", undefined]]);
   assertEquals((await pedir(storeCon(datos()), "GET", "?alumna=luz&semana=ayer")).status, 400);
 });
 

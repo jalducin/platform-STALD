@@ -56,6 +56,54 @@
   resumen. Las casillas se guardan solas al marcarlas (sin perder lo escrito en la calificación o el comentario).
 - **Rendimiento.** Ninguna petición al abrir el tablero; la semana es 1 petición; cambiar de semana, 1; guardar, 1.
 
+## Contrato (fuente para la página y la E2E)
+
+Documento `revisiones/<slug>/<id>.json` (ojo: alumna primero):
+
+```json
+{ "checks": [0, 2], "audio": false, "libro": true, "calificacion": 9, "comentario": "Muy buena letra", "revisadoEn": "2026-10-28T18:00:00.000Z" }
+```
+
+`GET /profe/revision?alumna=<slug>&semana=<AAAA-MM-DD>` (solo admin; `semana` opcional, cualquier día; `hoy` solo
+con `PERMITIR_HOY=1`) → 200:
+
+```json
+{
+  "alumna": { "slug": "valeria", "nombre": "Valeria Gómez" },
+  "hoy": "2026-10-04",
+  "semana": { "lunes": "2026-10-26", "domingo": "2026-11-01", "anterior": "2026-10-19", "siguiente": "2026-11-02", "dias": ["2026-10-26", "…7 fechas"] },
+  "clases": [ {
+    "id": "sec-…", "tipo": "actividad", "titulo": "📘 Español · …", "materia": "Español", "dia": "2026-10-26",
+    "disponibleDesde": "…", "fechaLimite": "…", "preguntas": 4, "intentosMax": 2, "intentosUsados": 1,
+    "mejor": { "porcentaje": 75 } , "fueraDeTiempo": true,
+    "estado": "sin-abrir | borrador | enviada", "abre": "AAAA-MM-DD (solo si sin-abrir y aún no abre)",
+    "borrador": { "respondidas": 3, "total": 4, "actualizado": "ISO" },
+    "pide": { "libreta": ["texto de cada tarea (índice = checks)"], "audio": true, "libro": false },
+    "revision": { "checks": [], "audio": false, "libro": false, "calificacion": null, "comentario": "", "revisadoEn": "ISO" }
+  } ],
+  "abiertas": [ "mismas claves que clases" ],
+  "avisos": ["borradores | resultados | revisiones (solo si una lectura falló)"]
+}
+```
+
+`mejor`, `fueraDeTiempo`, `borrador` y `revision` pueden ser `null`. `clases` y `abiertas` van ordenadas por `dia` e
+`id`. Errores: 403 `solo_admin`, 404 `alumna_no_encontrada`, 400 `semana_invalida`, 405 `metodo_no_permitido`.
+
+`PUT /profe/revision` con `{ "alumna": "<slug>", "id": "<id>", "checks": [0], "audio": false, "libro": true,
+"calificacion": 9 | null, "comentario": "…" }` (estado completo de la tarjeta) → 200
+`{ "guardado": true, "revision": { …documento… } }` o, si quedó vacía, `{ "guardado": true, "vacia": true,
+"revision": null }`. Errores: 400 `json_invalido`, `calificacion_invalida`, `comentario_invalido`, `checks_invalidos`;
+404 `alumna_no_encontrada`, `no_encontrado` (clase inexistente o de otra alumna); 403 `solo_admin`; 503 `sin_base`,
+`conflicto_escritura`. `audio`/`libro` llegan `false` si la clase no los pide.
+
+`GET /secundaria/actividades` (alumna o vista del admin con `?alumna=`): cada elemento calificado por el profe trae
+`"revision": { "calificacion": 9, "comentario": "…", "revisadoEn": "ISO" }`; los demás no traen la clave.
+
+Página: `comun/revision-datos.js` expone `RevisionDatos.{ FORMULA_FINAL, MAX_COMENTARIO, calificacionValida,
+enviada, calificacionProfe, enLineaDe, finalDe(clase), resumenSemana(clases) → { clases, enviadas, revisadas,
+pendientes, promedio, porMateria: [{ clave, nombre, clases, revisadas, promedio }] }, misionesDeSemana(misiones, lunes) }`.
+Las clases que reciben son las de `GET /profe/revision` (`intentosUsados`, `mejor`, `revision`).
+
 ## Alternativas descartadas
 
 - `revisiones/<id>/<slug>.json` (como `resultados/`): obliga a una lectura por clase para la semana y para la alumna.

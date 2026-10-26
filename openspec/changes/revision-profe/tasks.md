@@ -9,11 +9,11 @@
 
 ## 2. Servidor (TDD)
 
-- [ ] 2.1 Pruebas que fallan del servidor (`server/revision_test.ts`): semana, estados, qué pide cada clase, guardar y
+- [x] 2.1 Pruebas que fallan del servidor (`server/revision_test.ts`): semana, estados, qué pide cada clase, guardar y
   leer, validaciones, 404, matriz 403, revisión vacía, campo `revision` de la alumna, prefijo en Postgres
-- [ ] 2.2 `server/revision.ts`: `GET` y `PUT /profe/revision`; `revisiones/` en `PREFIJOS_INGLES` (`server/db.ts`);
+- [x] 2.2 `server/revision.ts`: `GET` y `PUT /profe/revision`; `revisiones/` en `PREFIJOS_INGLES` (`server/db.ts`);
   `todosLosElementos` en `server/actividades.ts`
-- [ ] 2.3 `revision` en la lista de la alumna (`server/actividades.ts`) y la ruta en `server/main.ts`
+- [x] 2.3 `revision` en la lista de la alumna (`server/actividades.ts`) y la ruta en `server/main.ts`
 
 ## 3. Página
 
