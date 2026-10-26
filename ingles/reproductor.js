@@ -626,6 +626,7 @@ function showResult(calificacion, info) {
   contentEl.innerHTML = '<div class="exam-card"><h3>' + escapeHtml(head) + '</h3>' + (i.titulo ? '<div class="s">' + escapeHtml(i.titulo) + '</div>' : '') + '</div>' + aviso +
     renderResultado(calificacion, false) +
     (claseEnPasos() && !i.vistaPrevia ? extrasResultadoSecundaria(i.id) : '') +
+    (i.revisionDe && typeof bloqueRevision === 'function' ? bloqueRevision(i.revisionDe) : '') + // «Ver resultado» (openspec: revision-profe)
     '<div class="exam-bar">' + volverBtn() + reintento + '</div>';
   window.scrollTo(0, 0);
 }
