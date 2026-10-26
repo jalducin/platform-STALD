@@ -1286,6 +1286,15 @@ servidor, en [backend-standards.md](backend-standards.md) «Caché y single-flig
     una trae hechas/total, promedio, último tema, camino de mundos (`li[data-mundo]`, clase `mundo-<estado>`; el
     actual con `aria-current="step"` y «ahora»), los temas de Inglés y la nota de su secuencia.
   - **«📝 Resultados»** (solo admin): por clase, cada persona con su mejor calificación (`[data-sec-admin]`).
+  - **«📋 Revisión»** (solo admin, `#revision`, en celular dentro de «☰ Más»; cambio `revision-profe`,
+    `ingles/secundaria-revision.js`): semana de la alumna del selector, perezosa (pide `GET /profe/revision` solo al
+    abrir la pestaña; `abrirRevisionSec` desde `irPestanaSec`), con «◀ Semana anterior / Esta semana / Semana
+    siguiente ▶», resumen (`#rev-resumen`: clases, enviadas, revisadas, pendientes, promedio final y por materia),
+    días (`.rev-dia`), «📌 Abiertas esta semana» y misiones de la semana con «📥 Ir a Entregas» (la rúbrica sigue allá).
+    Cada tarjeta (`.rev-card`, un `<form>`): estado en línea, «🔎 Ver respuestas» (`ver-resultado`), checklist de
+    libreta, audio y libro si la clase los pide, calificación (0–10 de medio en medio), comentario (≤ 300) y la final
+    en vivo. Fórmula y resumen: `comun/revision-datos.js` (`FORMULA_FINAL`, único lugar). Guardar repinta solo esa
+    tarjeta y el resumen.
 - **Estado de la tarjeta** (`SecundariaDatos.estadoClase`):
 
   | Estado | Cuándo | Botón |
