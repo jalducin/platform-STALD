@@ -1,6 +1,6 @@
 ---
 name: clases-secundaria
-description: Prepara, valida y sube las clases de Secundaria de cada bloque de 2 semanas (2 por día de lunes a sábado y 3 el domingo), además de repasos y tareas sueltas, en el repo privado de datos. Úsala cuando pidan «arma las siguientes 2 semanas de Secundaria», «las clases de la alumna de Secundaria», «un repaso de Secundaria», «agrega esta tarea a Secundaria», o den temas de alguna materia de Secundaria.
+description: Prepara, valida y sube las clases de Secundaria de cada bloque de 2 semanas (2 o 3 por día de lunes a sábado; el domingo solo Artes o Educación Física y rezagos), además de repasos y tareas sueltas, en el repo privado de datos. Úsala cuando pidan «arma las siguientes 2 semanas de Secundaria», «las clases de la alumna de Secundaria», «un repaso de Secundaria», «agrega esta tarea a Secundaria», o den temas de alguna materia de Secundaria.
 ---
 
 # clases-secundaria
@@ -32,19 +32,73 @@ formato de cada JSON está en [docs/data-model.md](../../../docs/data-model.md),
   `id` estable: no cambies los `id` de una clase ya publicada (su borrador se perdería) y no pidas entregas fuera de
   la plataforma «para no perder lo escrito». Los pasos de una misión, hasta 4 000 caracteres de texto.
 
-## Horario (15 clases por semana)
+## Horario (15 clases por semana; plantilla vigente desde el 2026-11-01)
 
 | Día | Clases |
 |---|---|
 | Lunes | Inglés, Español |
-| Martes | Matemáticas, Inglés |
+| Martes | Matemáticas, Inglés, Tecnología |
 | Miércoles | Español, Ciencias |
-| Jueves | Matemáticas, Inglés |
+| Jueves | Matemáticas, Inglés, Ciencias Sociales |
 | Viernes | Español, Tecnología |
 | Sábado | Matemáticas, Inglés |
-| Domingo | Tecnología, Ciencias Sociales, Artes **o** Educación Física (alternan cada domingo) |
+| Domingo | Solo extracurricular: Artes **o** Educación Física (alternan cada domingo) + rezagos |
 
 A la semana: Inglés 4, Español 3, Matemáticas 3, Tecnología 2, Ciencias 1, Ciencias Sociales 1 y Artes o Ed. Física 1.
+
+- **Máximo 3 clases por día.** Tecnología y Ciencias Sociales ya no van en domingo.
+- **Domingos extracurriculares:** solo Artes o Ed. Física y lo atrasado (rezagos). Ninguna clase normal en domingo.
+- **Si un día no hay clases** (descanso), sus clases se reparten en la misma semana, sin pasar los topes.
+- **Fechas reacomodadas:** viven en `herramientas/secundaria-calendario/calendario.py` del repo de datos (idempotente;
+  los generadores lo llaman al final para que regenerar no lo deshaga). `comprobar.py`, en la misma carpeta, revisa
+  topes, domingos, descansos y la secuencia de cada materia. Cada elemento va en la semana de su `dia`, porque el
+  validador lo exige.
+
+## Reacomodo de atrasadas
+
+- Revisa qué entregó en Postgres (solo lectura, `resultados/sec-*/<slug>.json`); la llave del servicio va solo en
+  una variable de entorno.
+- La atrasada toma el lugar de la clase del día de su materia y el resto se recorre, solo en materias con secuencia;
+  las demás se agregan como extra.
+  - **Con secuencia** (Matemáticas, Español, Inglés, Tecnología, Ciencias y Sociales dentro del mismo tema): la
+    atrasada ocupa el siguiente lugar de su materia en la plantilla (Matemáticas mar/jue/sáb, Español lun/mié/vie,
+    Tecnología mar/vie, Sociales jue, Ciencias mié) y las clases siguientes de esa materia se recorren en cascada.
+    Así cada día queda con sus clases normales.
+  - **Sin dependencia** (Artes, Ed. Física, Sociales cuando cambia de tema, repasos): la atrasada va como tarea extra
+    en un día con espacio o en domingo, sin recorrer nada. Ahí aplica el tope de 4 tareas por día.
+- Al recorrer atrasadas se respeta la secuencia de cada materia: nunca se programa un tema que depende de otro (p. ej.
+  binomios) antes del tema atrasado (monomios). Si hace falta, se recorre en cascada el resto de la materia. Dos
+  clases de la misma materia nunca caen el mismo día.
+- **Exámenes y repasos generales** van después de lo que evalúan. Si una atrasada no alcanza a quedar antes de que
+  venza el examen, el examen se recorre unos días (en nov 2026, el de octubre pasó a jue 5–sáb 7).
+- **Desborde:** lo que la cascada saque del bloque no se escribe en semanas que arman otros agentes; se anota en
+  `DESBORDE` de `calendario.py` y se avisa al profe o al coordinador cuántas clases por materia se recorrieron.
+
+## Descansos y vacaciones
+
+| Fechas | Qué pasa |
+|---|---|
+| Dom 1 de noviembre de 2026 (Día de Muertos) | Sin clases (el lunes 2 sí hay clases) |
+| Vie 20 de noviembre de 2026 (Revolución) | Sin clases |
+| 24 de diciembre de 2026 al 6 de enero de 2027 (vacaciones) | Solo Inglés y Matemáticas; todo lo demás se pausa |
+| 25 de diciembre y 1 de enero | Nada, ni Inglés ni Matemáticas |
+
+- **Vacaciones:** clases ligeras de Inglés y Matemáticas, con temas breves de Navidad y Año Nuevo. Las demás
+  materias retoman su secuencia donde se quedaron.
+- Los rezagos se atienden los domingos y también en vacaciones, que tienen menos clases. Para ponerse al corriente
+  se permiten hasta 4 tareas por día.
+
+## Examen mensual (al inicio de cada mes)
+
+- Al inicio de cada mes sale `sec-mensual-<AAAA-MM>` con lo visto el mes anterior (solo las clases de ese mes; lo
+  que empieza en el mes nuevo no entra).
+- **Ventana de 3 días:** abre el primer día hábil con clases del mes (`dia` = `disponibleDesde`) y vence 2 días
+  después (`fechaLimite`). Si cae en descanso, se recorre al siguiente día con clases. Ejemplo: noviembre 2026 abre
+  el martes 1 de diciembre y vence el jueves 3.
+- 60–70 preguntas nuevas (no copiadas de las clases), `porSecciones: true` con un tema por materia, `intentos: 2` y
+  la clave `.md` para el profe junto a su generador (`herramientas/secundaria-<AAAA-MM>-mensual/`).
+- Va en la semana de su `dia`, con `fecha` = `fechaLimite`. Si esa semana todavía no existe, se crea solo con el
+  examen y no se borra lo que otros agreguen.
 
 ## Cómo avanza cada materia
 
