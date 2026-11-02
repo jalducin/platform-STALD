@@ -405,7 +405,7 @@ function renderResultado(r, compacto) {
 function renderTeoria(teoria) {
   return (teoria || []).map(b => {
     let h = '<div class="topic"><div class="h"><span>' + escapeHtml(b.titulo || '') + '</span></div>';
-    if (b.texto) h += '<div class="r" style="margin-top:6px;color:var(--text)">' + escapeHtml(b.texto) + '</div>';
+    if (b.texto) h += '<div class="r teoria-texto" style="margin-top:6px;color:var(--text)">' + escapeHtml(b.texto) + '</div>';
     if (b.tabla) {
       h += '<div class="scroll" style="max-height:260px;padding:6px 0"><table class="teo"><thead><tr>' + b.tabla.columnas.map(c => '<th>' + escapeHtml(c) + '</th>').join('') + '</tr></thead><tbody>' +
         b.tabla.filas.map(f => '<tr>' + f.map(c => '<td>' + escapeHtml(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';

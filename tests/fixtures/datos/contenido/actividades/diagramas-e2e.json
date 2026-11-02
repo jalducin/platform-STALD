@@ -13,6 +13,15 @@
   ],
   "teoria": [
     {
+      "titulo": "Código (saltos de línea)",
+      "texto": "Una función se define así:\n\ndef saluda(nombre):\n    print('Hola', nombre)\n\nsaluda('Luna')\nresultado_de_una_variable_con_nombre_larguisimo_que_no_cabe_en_un_celular_de_360 = 1\n<b>sin HTML</b>",
+      "puntos": ["Primero:\n    con sangría", "Un punto de una sola línea"]
+    },
+    {
+      "titulo": "Una línea",
+      "texto": "Texto corto."
+    },
+    {
       "titulo": "Flujo",
       "texto": "Así se pide un cambio a Claude Code.",
       "diagrama": {
