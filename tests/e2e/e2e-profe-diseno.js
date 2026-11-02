@@ -1,6 +1,6 @@
 // E2E profe-diseno: encabezado, Pendiente ahora, pestañas recordadas y dos columnas en escritorio.
 // Sin ruta propia (openspec: profe-semanas-del-grupo): 4 pestañas, sin plan ni barra del mes; todo es del grupo.
-// Con ruta propia (openspec: profe-grupo-y-ruta-ia): 6 pestañas (🌍 Mundos desde ingles-diseno-profe), barra del mes y
+// Con ruta propia (openspec: profe-grupo-y-ruta-ia): 8 pestañas (🌍 Mundos desde ingles-diseno-profe; 🗓️ Mi horario y 🧭 Por materia desde profe-horario-materias), barra del mes y
 // Esta semana con dos bloques.
 require('./lib/entorno'); // BASE, API, DATOS, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
 const { chromium } = require('playwright');
@@ -19,7 +19,7 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
   const urg = await p.textContent('#pf-urgente').catch(() => '');
   ok('Pendiente ahora con etiqueta Grupo', /Pendiente ahora/.test(urg) && (/Grupo/.test(urg) || /Al día/.test(urg)) && !/🎓 Ruta/.test(urg), urg.replace(/\s+/g, ' ').slice(0, 140));
   const nTabs = (await p.$$('[role="tab"][data-pf-tab]')).length;
-  ok((conRuta ? '6 pestañas (con Plan y Mundos)' : '4 pestañas (sin Plan ni Mundos)') + ' con "Esta semana" activa', nTabs === (conRuta ? 6 : 4) && !!(await p.$('[data-pf-tab="plan"]')) === conRuta && !!(await p.$('[data-pf-tab="mundos"]')) === conRuta && (await p.getAttribute('[data-pf-tab="semana"]', 'aria-selected')) === 'true', String(nTabs));
+  ok((conRuta ? '8 pestañas (con Plan, Mundos, Mi horario y Por materia)' : '4 pestañas (sin Plan, Mundos, Mi horario ni Por materia)') + ' con "Esta semana" activa', nTabs === (conRuta ? 8 : 4) && !!(await p.$('[data-pf-tab="plan"]')) === conRuta && !!(await p.$('[data-pf-tab="mundos"]')) === conRuta && !!(await p.$('[data-pf-tab="horario"]')) === conRuta && !!(await p.$('[data-pf-tab="materias"]')) === conRuta && (await p.getAttribute('[data-pf-tab="semana"]', 'aria-selected')) === 'true', String(nTabs));
   const col = await p.evaluate(() => { const m = document.querySelector('.pf-main').getBoundingClientRect(), s = document.querySelector('.pf-side').getBoundingClientRect(); return { lado: s.left > m.right - 1, ancho: document.body.getBoundingClientRect().width }; });
   ok('escritorio: dos columnas y página ancha', col.lado && col.ancho > 1000, JSON.stringify(col));
   ok('«Esta semana» muestra la semana del grupo', /Esta semana|Adelanta/.test(await p.textContent('[data-pf-panel="semana"]')));

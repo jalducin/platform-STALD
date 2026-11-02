@@ -1016,6 +1016,32 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   `htmlRecompensa` de `secundaria-clase.js`; lo del grupo no da recompensa). Las tablas de teoría anchas se desplazan dentro de su caja.
 - «🔥 Pendiente ahora» muestra 5 y pliega el resto en `#pf-urgente-mas`.
 
+### «🗓️ Mi horario» y «🧭 Por materia» del profe (cambio `profe-horario-materias`)
+
+- Con `plan.json`, `?modo=profe` suma dos pestañas (`horario` y `materias`; sin plan no aparecen). Reglas puras en
+  `comun/profe-horario-datos.js` (`globalThis.ProfeHorario`, probado en `server/profe_horario_test.ts`); dibujo en
+  `ingles/profe-horario.js`; estilos en `ingles/profe-horario.css` (prefijo `ph-`).
+- **Materia** (fuente: `ProfeHorario.MATERIAS_PROFE`, en este orden): Inglés 🗣️, IA · Agentic Engineer 🤖, Staff
+  Software Engineer 🏗️, Tech Lead 🧭, Cultura General 🌎 y Evaluación 📝; una desconocida conserva su nombre con color
+  neutro. Sale de `materia` (actividad o elemento del plan); lo del grupo, de `plan.materiaDelGrupo`; si falta, el
+  respaldo `materiaPorRespaldo(id, nivel, titulo)` (ver el spec del cambio). Color por clase `ph-m-<clave>` con tokens
+  `--ph-c` (texto/borde), `--ph-s` (fondo suave) y `--ph-g` (degradado) en claro y oscuro; el nombre siempre va escrito.
+- **Estados** con ícono y texto: ⏳ Pendiente, ✅ Hecha, ⏰ Vencida (sin hacer y su fecha ya pasó; aquí sí se dice,
+  porque el profe lo pidió para su horario) y ⏩ Adelantada (hecha antes de su fecha).
+- **Semana** (`#ph-semana[data-ph-lunes]`, días `.ph-dia[data-ph-dia]`): hoy con `.es-hoy`, «✨ Hoy» y
+  `aria-current="date"`; días de oficina **solo** de `plan.diasOficina` (sello `.ph-sello` 🏢, `[data-ph-oficina]`
+  «Día de oficina: solo en página», «máx. 2»; sin el campo, ninguno y «máx. 4»); flechas `[data-ph-semana="-1|1"]`
+  limitadas a las semanas con tareas y `[data-ph-semana="hoy"]`; «Día libre» y «Semana libre» como estados vacíos.
+  Columnas por container query del panel `.ph`: 1 (celular), 2 desde 460 px, 3 desde 640, 4 desde 900 y 7 desde 1180.
+- **Filtro** `[data-ph-filtro][aria-pressed]` (uno para las dos pestañas, en `localStorage.profe_materia` con
+  `try/catch`); al cambiar se redibujan solo los paneles y el foco vuelve al control. **Progreso** `#ph-progreso`
+  (`.ph-prog[data-ph-prog]`): hechas/totales con `role="progressbar"` y «Cierra el …»; total (`elementos`) y cierre
+  (`fin`) de `plan.materias` si viene.
+- **Por materia** `#ph-por-materia`: `.ph-materia[data-ph-materia]` con barra y líneas plegables
+  `.ph-linea[data-ph-linea]` (la primera con pendientes abierta) y filas `.ph-fila[data-ph-fila]` por fecha.
+- **Encabezado** de la ruta desde `plan.titulo` y `plan.subtitulo` (`tituloProfe`, respaldo «🍥 Mi propio camino
+  ninja»); el panel «⏱️» sale de `plan.horasSemana` y `plan.reparto`. Lo revisa la E2E `profe-horario`.
+
 ## Juegos de cartas (cambio `poker`)
 
 - `juegos/cartas.js` es el motor sin DOM. Define `globalThis.Cartas` y lo usan `juegos.html` y
