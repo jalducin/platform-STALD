@@ -38,6 +38,40 @@ async function revisar(b, modo, ancho) {
     fuera: [...document.querySelectorAll('.dg, .dg *')].filter(e => e.getBoundingClientRect().right > window.innerWidth + 1).length }));
   ok(`${et}: sin scroll horizontal`, desborde.sw <= desborde.cw && desborde.fuera === 0, JSON.stringify(desborde));
 
+  // Saltos de línea y sangría del `texto` y los `puntos` (openspec: teoria-saltos-de-linea).
+  const sl = await p.evaluate(() => {
+    const topic = [...document.querySelectorAll('.topic')].find(t => t.querySelector('.h').textContent.trim() === 'Código (saltos de línea)');
+    const corto = [...document.querySelectorAll('.topic')].find(t => t.querySelector('.h').textContent.trim() === 'Una línea');
+    if (!topic || !corto) return { falta: true };
+    const caja = (el, s) => { // rectángulo de la primera aparición de s dentro de el
+      const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let n; (n = w.nextNode());) { const i = n.data.indexOf(s); if (i >= 0) { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + s.length); return r.getClientRects()[0]; } }
+      return null;
+    };
+    const txt = topic.querySelector('.teoria-texto') || topic.querySelector('.r');
+    const def = caja(txt, 'def saluda'), pr = caja(txt, 'print('), intro = caja(txt, 'Una función'), luna = caja(txt, "saluda('Luna')");
+    const li = topic.querySelector('.teo-list li');
+    const p1 = caja(li, 'Primero'), p2 = caja(li, 'con sangría');
+    const ctxt = corto.querySelector('.teoria-texto') || corto.querySelector('.r');
+    const lh = parseFloat(getComputedStyle(ctxt).lineHeight) || parseFloat(getComputedStyle(ctxt).fontSize) * 1.6;
+    return {
+      ws: getComputedStyle(txt).whiteSpace,
+      renglones: !!(def && pr && intro) && pr.top > def.top + 2 && def.top > intro.top + 2,
+      sangria: !!(def && pr && luna) && Math.abs(def.left - luna.left) < 2 && pr.left > def.left + 8, // def y saluda() al inicio del renglón, print más adentro
+      html: txt.textContent.includes('<b>sin HTML</b>') && !txt.querySelector('b'),
+      puntos: !!(p1 && p2) && p2.top > p1.top + 2 && p2.left > p1.left + 8,
+      corto: ctxt.getBoundingClientRect().height < lh * 1.9,
+      fuera: [...document.querySelectorAll('.topic, .topic *')].filter(e => e.getBoundingClientRect().right > window.innerWidth + 1).length,
+      sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth,
+    };
+  });
+  ok(`${et}: texto de la teoría respeta saltos de línea`, sl.renglones === true && sl.ws === 'pre-wrap', JSON.stringify(sl));
+  ok(`${et}: texto de la teoría respeta la sangría`, sl.sangria === true);
+  ok(`${et}: texto multilínea con HTML escapado`, sl.html === true);
+  ok(`${et}: puntos respetan saltos y sangría`, sl.puntos === true);
+  ok(`${et}: texto de una línea en un renglón`, sl.corto === true);
+  ok(`${et}: teoría sin scroll horizontal`, sl.fuera === 0 && sl.sw <= sl.cw, `fuera=${sl.fuera} sw=${sl.sw} cw=${sl.cw}`);
+
   // Disposición: flujo en columna en el celular y en fila en escritorio; ciclo con U de regreso solo en fila.
   const tops = await p.$eval('.dg-flujo', x => [...x.querySelectorAll('.dg-nodo')].map(n => Math.round(n.getBoundingClientRect().top)));
   const enFila = new Set(tops).size === 1;

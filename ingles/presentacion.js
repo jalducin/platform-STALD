@@ -134,7 +134,7 @@ function slideHtml(d, ctx) {
   if (d.tipo === 'teoria') {
     const b = (ctx.teoria || [])[d.ref] || {};
     let c = '';
-    if (b.texto) c += '<p class="s-lead">' + escapeHtml(b.texto) + '</p>';
+    if (b.texto) c += '<p class="s-lead teoria-texto">' + escapeHtml(b.texto) + '</p>';
     if (b.tabla) {
       const tabla = (filas) => '<div class="s-tabla"><table class="s-table"><thead><tr>' + b.tabla.columnas.map(x => '<th>' + escapeHtml(x) + '</th>').join('') + '</tr></thead><tbody>' + filas.map(f => '<tr>' + f.map(x => '<td>' + escapeHtml(x) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
       const fs = b.tabla.filas;

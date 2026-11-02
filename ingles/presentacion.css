@@ -91,6 +91,7 @@
 
 /* Bloques comunes en tarjetas. */
 .s-lead { font-size: 1.05em; font-weight: 600; color: var(--p-texto); background: var(--soft); border-left: .3em solid var(--tone-bg); border-radius: .5em; padding: .5em .9em; }
+.s-lead.teoria-texto, .s-points li { white-space: pre-wrap; overflow-wrap: anywhere; } /* saltos y sangría de la teoría (openspec: teoria-saltos-de-linea) */
 .s-nota { font-size: .85em; color: var(--p-suave); margin-top: .5em !important; }
 .s-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15em), 1fr)); gap: .55em; align-items: start; }
 .s-grid.s-lista { grid-template-columns: 1fr; }

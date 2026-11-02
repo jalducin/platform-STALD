@@ -220,6 +220,10 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
     también las clases de semanas futuras que ya abrieron. Inglés no cambia sus reglas de apertura.
   - `temas[]`: con `retroalimentacion` por estado.
   - `teoria[]`: `{ titulo, texto?, tabla?: { columnas, filas }, puntos?, ejemplos?: [{ en, es }], diagrama? }`.
+    `texto` y cada elemento de `puntos` respetan los saltos de línea (`\n`), las líneas en blanco y la sangría al
+    mostrarse (clases, misiones, ruta del profe y diapositiva `teoria` del Meet), así que el código de ejemplo se
+    escribe tal cual, con `\n` y espacios; una línea larga se parte sin scroll horizontal (cambio
+    `teoria-saltos-de-linea`). Lo mismo aplica a `tips[].texto`.
   - `teoria[].diagrama` (opcional, cambio `teoria-diagramas`): un dibujo sencillo hecho con HTML + CSS, debajo del
     resto del bloque (también en la diapositiva `teoria` del Meet). Forma:
     `{ tipo, titulo?, pasos: [{ texto, detalle?, icono? }], centro?, columnas?, derecha?, nota? }`.
