@@ -456,7 +456,18 @@ Fuente canónica del formato. El contenido **incluye las respuestas** y por eso 
   Code); el profe ve **a la vez** la semana del grupo y la de su ruta (cambio `profe-grupo-y-ruta-ia`):
   - `plan.json`: `{ titulo, semanas[{ id, titulo, temas[], elementos[{ id, tipo, titulo, fecha }] }] }`. Opcionales:
     `subtitulo`, `horizonte`, `nivelActual` + `meta`, `horasSemana`, `reparto[]`, `rutinaDiaria[]`, `reglas[]` y, por
-    semana, `n`, `objetivo`, `busuu` y `extra`; la vista solo muestra los que vienen. `titulo` da nombre a la vista;
+    semana, `n`, `objetivo`, `busuu` y `extra`; la vista solo muestra los que vienen. `titulo` y `subtitulo` dan
+    nombre y subtítulo a la vista (respaldo «🍥 Mi propio camino ninja»); `horasSemana` y `reparto[]`, el panel «⏱️»;
+  - **materias** (cambio `profe-horario-materias`, pestañas «🗓️ Mi horario» y «🧭 Por materia»):
+    - `materia` en cada actividad/examen de `contenido/profe/` y en cada elemento de `plan.semanas[].elementos[]`
+      (y de `semanas/<lunes>.json`): «Staff Software Engineer», «Tech Lead», «IA · Agentic Engineer», «Inglés»,
+      «Cultura General» o «Evaluación» (diagnóstico, exámenes semanales y AI Assessment); texto de 1 a 40 caracteres.
+      Si falta, la vista la deduce por prefijo del id, `nivel` y título (`ProfeHorario.materiaPorRespaldo`);
+    - opcional `linea` (o `tema`) por elemento del plan: agrupa dentro de la materia; si falta, el `nivel`;
+    - `plan.materias[{ materia, elementos, inicio, fin }]`: resumen por materia (total y fecha de cierre de cada
+      barra); `plan.materiaDelGrupo` (p. ej. «Inglés»): materia de lo del grupo, cuyos JSON no llevan el campo;
+    - `plan.diasOficina["AAAA-MM-DD", …]`: días de oficina (sello 🏢, máximo 2 y solo en página). La vista nunca los
+      calcula por día de la semana; sin el campo no marca ninguno;
   - `semanas/<lunes>.json`, `actividades/profe-act-<fecha>.json` y `examenes/profe-examen-<fecha>.json`;
   - **a su ritmo** (cambio `profe-ruta-abierta`): `disponibleDesde` puede ser anterior al lunes de su semana (p. ej.
     toda la ruta con el primer lunes) y los exámenes no esperan su día; `fechaLimite` es ritmo sugerido (nunca antes de

@@ -211,6 +211,12 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   `panel-profe-peticiones`); en Registro espera la lista, que se pide al abrir la pestaña. La ruta sale siempre del
   plan de ejemplo de 8 semanas (`tests/fixtures/datos/contenido/profe/`, con clases en los 9 mundos; cambio
   `navegacion-mejoras`), no de la ruta real.
+- `profe-horario` (fase `ingles`, cambio `profe-horario-materias`): «🗓️ Mi horario» y «🧭 Por materia» con el fixture
+  propio `tests/fixtures/profe-horario.json` (datos inventados, hoy = 2026-11-04, con `diasOficina`, `materias`,
+  título, subtítulo y reparto), que la prueba responde en el navegador como GET de `/ingles/profe/actividades` (no
+  escribe nada). A 360, 768 y 1280 px en claro y oscuro: 7 días con hoy, 🏢 solo en las fechas de `diasOficina` (y
+  ninguno sin el campo), materia de respaldo y estados, flechas y «Hoy», filtro recordado, progreso con el resumen,
+  agrupación por materia y línea, encabezado desde el plan, 44 px, foco visible, contraste ≥ 4.5 y sin scroll.
 - `baja-ingles` (fase `ingles`, sin `--pg`; cambio `ingles-baja-alumno`) da de baja a `laura@example.com` desde
   «Registro», revisa el aviso de la alumna, `/ingles/actividades` 403, el portal sin Inglés, el mismo jugador de Juegos
   y el resumen sin ella, y la reactiva al final (deja el registro como estaba).

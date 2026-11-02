@@ -12,18 +12,26 @@ async function loadProfe(email) {
   tituloProfe(r.body.plan);
   render(state.data);
 }
-// Título desde el plan (openspec: profe-grupo-y-ruta-ia): la ruta propia puede ser de IA u otro tema; sin plan, el genérico.
+// Encabezado desde el plan (openspec: profe-grupo-y-ruta-ia, profe-horario-materias): `plan.titulo` y `plan.subtitulo`
+// del repo de datos; si el plan no los trae, «🍥 Mi propio camino ninja» y un subtítulo con sus materias. Sin plan, el
+// genérico de la página. Si el título ya empieza con emoji no se le agrega otro.
+const TITULO_PROFE = '🍥 Mi propio camino ninja';
+const SUBTITULO_PROFE = 'IA, Staff, Tech Lead, Inglés y Cultura General, con todo abierto para avanzar a tu ritmo. Solo tú ves tus resultados.';
 function tituloProfe(plan) {
-  if (!plan || !plan.titulo) return;
-  document.title = plan.titulo;
-  document.getElementById('titulo').textContent = '🎓 ' + plan.titulo;
-  document.getElementById('subtitulo').textContent = 'Tus clases propias y las mismas actividades de tu grupo, para resolverlas antes que ellos. Solo tú ves tus resultados.';
+  if (!plan) return;
+  const titulo = (typeof plan.titulo === 'string' && plan.titulo.trim()) || TITULO_PROFE;
+  const subtitulo = (typeof plan.subtitulo === 'string' && plan.subtitulo.trim()) || SUBTITULO_PROFE;
+  document.title = titulo;
+  document.getElementById('titulo').textContent = (/^[\p{L}\p{N}]/u.test(titulo) ? '🎓 ' : '') + titulo;
+  document.getElementById('subtitulo').textContent = subtitulo;
 }
 
 // ---------- Vista del profe (openspec: profe-diseno): avance, lo urgente arriba y el resto en pestañas ----------
-const PF_TABS = [['semana', '📅 Esta semana'], ['material', '📚 Material'], ['mundos', '🌍 Mundos'], ['plan', '🗺️ Plan del mes'], ['grupo', '👥 Mi grupo'], ['hechas', '✅ Hechas']];
-// Sin plan.json (openspec: profe-semanas-del-grupo) no hay pestaña de plan ni de mundos (openspec: ingles-diseno-profe).
-const pfTabsDe = plan => PF_TABS.filter(([id]) => (id !== 'plan' && id !== 'mundos') || !!plan);
+const PF_TABS = [['semana', '📅 Esta semana'], ['horario', '🗓️ Mi horario'], ['materias', '🧭 Por materia'], ['material', '📚 Material'], ['mundos', '🌍 Mundos'], ['plan', '🗺️ Plan del mes'], ['grupo', '👥 Mi grupo'], ['hechas', '✅ Hechas']];
+// Sin plan.json (openspec: profe-semanas-del-grupo) no hay pestaña de plan ni de mundos (openspec: ingles-diseno-profe),
+// ni «Mi horario» ni «Por materia» (openspec: profe-horario-materias; ingles/profe-horario.js).
+const PF_TABS_CON_PLAN = new Set(['plan', 'mundos', 'horario', 'materias']);
+const pfTabsDe = plan => PF_TABS.filter(([id]) => !PF_TABS_CON_PLAN.has(id) || !!plan);
 function pfTabGuardada(tabs) { try { const t = localStorage.getItem('profe_tab'); return tabs.some(x => x[0] === t) ? t : 'semana'; } catch { /* sin almacenamiento: pestaña por omisión */ return 'semana'; } }
 function pfFila(it) {
   const tag = it.grupo ? '<span class="pf-tag grupo">👥 Grupo</span>' : '<span class="pf-tag ruta">🎓 Mis clases</span>';
@@ -62,7 +70,8 @@ function renderProfe(act) {
   const semana = renderSemanasProfe(act, objetivo);
   const hechas = items.filter(it => it.estado === 'completo').sort((a, b) => (b.ultimoEnvio || '').localeCompare(a.ultimoEnvio || ''));
   const panelHechas = '<div class="exam-card"><h3>✅ Hechas (' + hechas.length + ')</h3>' + (hechas.length ? hechas.map(pfFila).join('') : '<div class="pf-ok">Todavía no hay entregas.</div>') + '</div>';
-  const paneles = { semana: semana || '<div class="pf-ok">Sin actividades esta semana.</div>', plan: renderPlanProfe(act) || '<div class="pf-ok">Sin plan.</div>', mundos: renderMundosProfe(act) || '<div class="pf-ok">Sin mundos.</div>', grupo: renderGrupoProfe(act) || '<div class="pf-ok">Sin actividades del grupo.</div>', hechas: panelHechas, material: renderMaterial() };
+  const paneles = { semana: semana || '<div class="pf-ok">Sin actividades esta semana.</div>', plan: renderPlanProfe(act) || '<div class="pf-ok">Sin plan.</div>', mundos: renderMundosProfe(act) || '<div class="pf-ok">Sin mundos.</div>', grupo: renderGrupoProfe(act) || '<div class="pf-ok">Sin actividades del grupo.</div>', hechas: panelHechas, material: renderMaterial(),
+    horario: renderHorarioProfe(act) || '<div class="pf-ok">Sin horario.</div>', materias: renderPorMateriaProfe(act) || '<div class="pf-ok">Sin materias.</div>' };
   const tabs = '<div class="pf-tabs" role="tablist" aria-label="Secciones de mi ruta">' + pfTabs.map(([id, t]) => '<button type="button" role="tab" id="pf-tab-' + id + '" data-pf-tab="' + id + '" aria-controls="pf-panel-' + id + '" aria-selected="' + (id === tab) + '">' + t + '</button>').join('') + '</div>' +
     pfTabs.map(([id]) => '<div role="tabpanel" id="pf-panel-' + id + '" data-pf-panel="' + id + '" aria-labelledby="pf-tab-' + id + '"' + (id === tab ? '' : ' hidden') + '>' + paneles[id] + '</div>').join('');
   const lado = '<aside class="pf-side">' +

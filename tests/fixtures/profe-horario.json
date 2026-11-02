@@ -1,0 +1,523 @@
+{
+ "isAdmin": false,
+ "hoy": "2026-11-04",
+ "semana": null,
+ "items": [
+  {
+   "id": "profe-ing-0",
+   "tipo": "actividad",
+   "titulo": "🗣️ Inglés diario · saludos",
+   "nivel": "Inglés A1",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-10-27",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "completo",
+   "intentosUsados": 1,
+   "mejor": {
+    "correctas": 90,
+    "total": 100,
+    "porcentaje": 90,
+    "secciones": []
+   },
+   "mejorATiempo": true,
+   "ultimoEnvio": "2026-10-27T18:00:00Z",
+   "ultimoTemas": [],
+   "materia": "Inglés"
+  },
+  {
+   "id": "profe-act-2026-10-27",
+   "tipo": "actividad",
+   "titulo": "Clase: CLAUDE.md a fondo",
+   "nivel": "Claude Code",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-10-28",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "completo",
+   "intentosUsados": 1,
+   "mejor": {
+    "correctas": 80,
+    "total": 100,
+    "porcentaje": 80,
+    "secciones": []
+   },
+   "mejorATiempo": true,
+   "ultimoEnvio": "2026-10-28T18:00:00Z",
+   "ultimoTemas": [],
+   "materia": "IA · Agentic Engineer"
+  },
+  {
+   "id": "profe-examen-diagnostico-2026-11-02",
+   "tipo": "examen",
+   "titulo": "Examen de diagnóstico",
+   "nivel": "Examen semanal",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-02",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "completo",
+   "intentosUsados": 1,
+   "mejor": {
+    "correctas": 70,
+    "total": 100,
+    "porcentaje": 70,
+    "secciones": []
+   },
+   "mejorATiempo": true,
+   "ultimoEnvio": "2026-11-02T18:00:00Z",
+   "ultimoTemas": [],
+   "materia": "Evaluación"
+  },
+  {
+   "id": "profe-ing-1",
+   "tipo": "actividad",
+   "titulo": "🗣️ Inglés diario · to be",
+   "nivel": "Inglés A1",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-02",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": [],
+   "materia": "Inglés"
+  },
+  {
+   "id": "profe-ing-2",
+   "tipo": "actividad",
+   "titulo": "🗣️ Inglés diario · there is / there are",
+   "nivel": "Inglés A1",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-03",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "completo",
+   "intentosUsados": 1,
+   "mejor": {
+    "correctas": 90,
+    "total": 100,
+    "porcentaje": 90,
+    "secciones": []
+   },
+   "mejorATiempo": true,
+   "ultimoEnvio": "2026-11-03T18:00:00Z",
+   "ultimoTemas": [],
+   "materia": "Inglés"
+  },
+  {
+   "id": "profe-lid-1",
+   "tipo": "actividad",
+   "titulo": "Liderazgo: delegar con contexto",
+   "nivel": "Liderazgo",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-03",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": []
+  },
+  {
+   "id": "profe-ing-3",
+   "tipo": "actividad",
+   "titulo": "🗣️ Inglés diario · present simple",
+   "nivel": "Inglés A1",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-04",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": [],
+   "materia": "Inglés"
+  },
+  {
+   "id": "profe-act-2026-11-04",
+   "tipo": "actividad",
+   "titulo": "Clase: tu primera skill y cómo Claude la elige",
+   "nivel": "Claude Code",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-04",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": [],
+   "materia": "IA · Agentic Engineer"
+  },
+  {
+   "id": "profe-ing-4",
+   "tipo": "actividad",
+   "titulo": "🗣️ Inglés diario · can / can’t",
+   "nivel": "Inglés A1",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-05",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": [],
+   "materia": "Inglés"
+  },
+  {
+   "id": "profe-staff-2026-11-06",
+   "tipo": "actividad",
+   "titulo": "Staff: escribir un design doc que se lea",
+   "nivel": "Staff Engineer y Tech Lead",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-06",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "completo",
+   "intentosUsados": 1,
+   "mejor": {
+    "correctas": 100,
+    "total": 100,
+    "porcentaje": 100,
+    "secciones": []
+   },
+   "mejorATiempo": true,
+   "ultimoEnvio": "2026-11-03T18:00:00Z",
+   "ultimoTemas": []
+  },
+  {
+   "id": "profe-examen-semanal-2026-11-07",
+   "tipo": "examen",
+   "titulo": "Examen semanal combinado",
+   "nivel": "Examen semanal",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-07",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": [],
+   "materia": "Evaluación"
+  },
+  {
+   "id": "profe-ing-5",
+   "tipo": "actividad",
+   "titulo": "🗣️ Inglés diario · past simple",
+   "nivel": "Inglés A1",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-07",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": [],
+   "materia": "Inglés"
+  },
+  {
+   "id": "profe-cg-2026-11-08",
+   "tipo": "actividad",
+   "titulo": "Cultura General: la imprenta y la web",
+   "nivel": "Cultura",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-08",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": []
+  },
+  {
+   "id": "profe-act-2026-11-10",
+   "tipo": "actividad",
+   "titulo": "Clase: hooks y permisos",
+   "nivel": "Claude Code",
+   "descripcion": "",
+   "disponibleDesde": "2026-10-19",
+   "fechaLimite": "2026-11-10",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": [],
+   "materia": "IA · Agentic Engineer"
+  },
+  {
+   "id": "act-2026-11-06",
+   "tipo": "actividad",
+   "titulo": "Actividad del grupo · daily routines",
+   "nivel": "A1",
+   "descripcion": "",
+   "disponibleDesde": "2000-01-01",
+   "fechaLimite": "2026-11-05",
+   "intentosMax": 2,
+   "preguntas": 5,
+   "meetUrl": null,
+   "hora": null,
+   "tieneReto": false,
+   "tieneMaterial": false,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": [],
+   "grupo": true
+  }
+ ],
+ "racha": {
+  "dias": 2
+ },
+ "plan": {
+  "titulo": "🍥 Camino de ejemplo",
+  "subtitulo": "Fixture de la E2E profe-horario: 5 materias inventadas",
+  "semanas": [
+   {
+    "id": "2026-10-26",
+    "n": 2,
+    "titulo": "Semana 2 · Contexto",
+    "elementos": [
+     {
+      "id": "profe-ing-0",
+      "tipo": "actividad",
+      "titulo": "🗣️ Inglés diario · saludos",
+      "fecha": "2026-10-27",
+      "materia": "Inglés"
+     },
+     {
+      "id": "profe-act-2026-10-27",
+      "tipo": "actividad",
+      "titulo": "Clase: CLAUDE.md a fondo",
+      "fecha": "2026-10-28",
+      "materia": "IA · Agentic Engineer"
+     }
+    ]
+   },
+   {
+    "id": "2026-11-02",
+    "n": 3,
+    "titulo": "Semana 3 · Skills",
+    "elementos": [
+     {
+      "id": "profe-examen-diagnostico-2026-11-02",
+      "tipo": "examen",
+      "titulo": "Examen de diagnóstico",
+      "fecha": "2026-11-02",
+      "materia": "Evaluación"
+     },
+     {
+      "id": "profe-ing-1",
+      "tipo": "actividad",
+      "titulo": "🗣️ Inglés diario · to be",
+      "fecha": "2026-11-02",
+      "materia": "Inglés"
+     },
+     {
+      "id": "profe-ing-2",
+      "tipo": "actividad",
+      "titulo": "🗣️ Inglés diario · there is / there are",
+      "fecha": "2026-11-03",
+      "materia": "Inglés"
+     },
+     {
+      "id": "profe-lid-1",
+      "tipo": "actividad",
+      "titulo": "Liderazgo: delegar con contexto",
+      "fecha": "2026-11-03"
+     },
+     {
+      "id": "profe-ing-3",
+      "tipo": "actividad",
+      "titulo": "🗣️ Inglés diario · present simple",
+      "fecha": "2026-11-04",
+      "materia": "Inglés"
+     },
+     {
+      "id": "profe-act-2026-11-04",
+      "tipo": "actividad",
+      "titulo": "Clase: tu primera skill y cómo Claude la elige",
+      "fecha": "2026-11-04",
+      "materia": "IA · Agentic Engineer"
+     },
+     {
+      "id": "profe-ing-4",
+      "tipo": "actividad",
+      "titulo": "🗣️ Inglés diario · can / can’t",
+      "fecha": "2026-11-05",
+      "materia": "Inglés"
+     },
+     {
+      "id": "profe-staff-2026-11-06",
+      "tipo": "actividad",
+      "titulo": "Staff: escribir un design doc que se lea",
+      "fecha": "2026-11-06"
+     },
+     {
+      "id": "profe-examen-semanal-2026-11-07",
+      "tipo": "examen",
+      "titulo": "Examen semanal combinado",
+      "fecha": "2026-11-07",
+      "materia": "Evaluación"
+     },
+     {
+      "id": "profe-ing-5",
+      "tipo": "actividad",
+      "titulo": "🗣️ Inglés diario · past simple",
+      "fecha": "2026-11-07",
+      "materia": "Inglés"
+     },
+     {
+      "id": "profe-cg-2026-11-08",
+      "tipo": "actividad",
+      "titulo": "Cultura General: la imprenta y la web",
+      "fecha": "2026-11-08"
+     }
+    ]
+   },
+   {
+    "id": "2026-11-09",
+    "n": 4,
+    "titulo": "Semana 4 · Hooks",
+    "elementos": [
+     {
+      "id": "profe-act-2026-11-10",
+      "tipo": "actividad",
+      "titulo": "Clase: hooks y permisos",
+      "fecha": "2026-11-10",
+      "materia": "IA · Agentic Engineer"
+     },
+     {
+      "id": "profe-staff-2026-11-11",
+      "tipo": "actividad",
+      "titulo": "Staff: system design de un acortador",
+      "fecha": "2026-11-11",
+      "materia": "Staff Software Engineer"
+     }
+    ]
+   }
+  ],
+  "materias": [
+   {
+    "materia": "Staff Software Engineer",
+    "elementos": 38,
+    "inicio": "2026-11-06",
+    "fin": "2027-01-29"
+   },
+   {
+    "materia": "Tech Lead",
+    "elementos": 17,
+    "inicio": "2026-11-03",
+    "fin": "2027-01-21"
+   }
+  ],
+  "materiaDelGrupo": "Inglés",
+  "diasOficina": [
+   "2026-11-03",
+   "2026-11-05",
+   "2026-11-09",
+   "2026-11-10"
+  ],
+  "horasSemana": "≈ 6 h por semana (ejemplo)",
+  "reparto": [
+   {
+    "que": "Inglés diario",
+    "tiempo": "20 min"
+   },
+   {
+    "que": "Clase de IA",
+    "tiempo": "45 min"
+   }
+  ]
+ }
+}
