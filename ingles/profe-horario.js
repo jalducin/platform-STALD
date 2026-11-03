@@ -16,7 +16,11 @@ const phHoy = act => (act && act.hoy) || todayStr();
 const phClase = m => 'ph-m-' + ProfeHorario.infoMateria(m).clave;
 const phEstado = e => { const x = ProfeHorario.ESTADOS[e]; return '<span class="ph-estado ph-est-' + e + '"><span aria-hidden="true">' + x.icono + '</span> ' + x.texto + '</span>'; };
 const phGrupo = t => (t.grupo ? '<span class="ph-tag-grupo"><span aria-hidden="true">👥</span> Grupo</span>' : '');
+// Clase en vivo (meet) que imparte el profe: etiqueta, hora si la trae y, en lugar del botón, la liga del Meet.
+const phVivo = t => (t.meet ? '<span class="ph-vivo" data-ph-vivo><span aria-hidden="true">🎥</span> Clase en vivo</span>' + (t.hora ? '<span class="ph-hora" data-ph-hora>' + escapeHtml(t.hora) + '</span>' : '') : '');
+const phTipo = t => phVivo(t) + phGrupo(t);
 function phBoton(t) {
+  if (t.meet) return t.meetUrl ? '<a class="btn ghost ph-abrir" href="' + escapeHtml(t.meetUrl) + '" target="_blank" rel="noopener" data-ph-meet aria-label="' + escapeHtml('Abrir Meet: ' + t.titulo) + '"><span aria-hidden="true">🎥</span> Abrir Meet</a>' : '';
   const it = t.item;
   if (!it) return '<span class="ph-pronto"><span aria-hidden="true">🗓️</span> Llega pronto</span>';
   const etiqueta = ' aria-label="' + escapeHtml((ProfeHorario.esHechaEstado(t.estado) ? 'Ver resultado: ' : 'Abrir: ') + t.titulo) + '"';
@@ -25,8 +29,9 @@ function phBoton(t) {
 }
 
 // ---------- Filtro y progreso (comunes a las dos pestañas) ----------
-function phChips(tareas, filtro, donde) {
-  const materias = ProfeHorario.materiasDe(tareas);
+function phChips(todas, filtro, donde) {
+  const materias = ProfeHorario.materiasDe(todas);
+  const tareas = ProfeHorario.contables(todas); // los meets no cuentan como tarea
   const chip = (valor, html, n) => '<button type="button" class="ph-chip' + (valor ? ' ' + phClase(valor) : '') + '" data-ph-filtro="' + escapeHtml(valor) + '" data-ph-donde="' + donde + '" aria-pressed="' + (valor === filtro) + '">' + html + (n !== null ? ' <span class="ph-n">' + n + '</span>' : '') + '</button>';
   return '<div class="ph-filtro" role="group" aria-label="Filtrar por materia">' + chip('', '<span aria-hidden="true">✨</span> Todas', tareas.length) +
     materias.map(m => chip(m, '<span aria-hidden="true">' + ProfeHorario.infoMateria(m).icono + '</span> ' + escapeHtml(m), tareas.filter(t => t.materia === m).length)).join('') + '</div>';
@@ -46,8 +51,8 @@ function phProgreso(act, tareas, filtro) {
 // ---------- 🗓️ Mi horario ----------
 function phTarea(t) {
   const m = ProfeHorario.infoMateria(t.materia);
-  return '<li class="ph-tarea ' + phClase(t.materia) + ' ph-t-' + t.estado + '" data-ph-tarea="' + escapeHtml(t.id) + '" data-materia="' + escapeHtml(t.materia) + '" data-estado="' + t.estado + '">' +
-    '<div class="ph-tarea-top"><span class="ph-mat"><span aria-hidden="true">' + m.icono + '</span> ' + escapeHtml(t.materia) + '</span>' + phGrupo(t) + '</div>' +
+  return '<li class="ph-tarea ' + phClase(t.materia) + ' ph-t-' + t.estado + (t.meet ? ' ph-t-meet' : '') + '" data-ph-tarea="' + escapeHtml(t.id) + '" data-materia="' + escapeHtml(t.materia) + '" data-estado="' + t.estado + '">' +
+    '<div class="ph-tarea-top"><span class="ph-mat"><span aria-hidden="true">' + m.icono + '</span> ' + escapeHtml(t.materia) + '</span>' + phTipo(t) + '</div>' +
     '<b class="ph-titulo">' + escapeHtml(t.titulo) + '</b>' +
     '<div class="ph-tarea-pie">' + phEstado(t.estado) + phBoton(t) + '</div></li>';
 }
@@ -59,7 +64,7 @@ function phDia(d) {
     (d.oficina ? 'Nada que hacer en la oficina.' : 'Buen momento para adelantar algo.') + '</small></div>';
   return '<section class="ph-dia' + (d.esHoy ? ' es-hoy' : '') + (d.oficina ? ' oficina' : '') + '" data-ph-dia="' + d.fecha + '" aria-labelledby="' + id + '"' + (d.esHoy ? ' aria-current="date"' : '') + '>' +
     '<header class="ph-dia-top"><h5 class="ph-dia-t" id="' + id + '">' + (d.oficina ? '<span class="ph-sello" aria-hidden="true">🏢</span>' : '') + '<span class="ph-dia-nom">' + escapeHtml(nom) + '</span> <span class="ph-dia-fecha">' + escapeHtml(resto.join(' ')) + '</span></h5>' +
-    (d.esHoy ? '<span class="ph-hoy"><span aria-hidden="true">✨</span> Hoy</span>' : '') + '<span class="ph-cupo" title="Tareas del día y máximo de tu calendario">' + d.tareas.length + ' · máx. ' + d.max + '</span></header>' +
+    (d.esHoy ? '<span class="ph-hoy"><span aria-hidden="true">✨</span> Hoy</span>' : '') + '<span class="ph-cupo" title="Tareas del día y máximo de tu calendario (sin clases en vivo)">' + ProfeHorario.contables(d.tareas).length + ' · máx. ' + d.max + '</span></header>' +
     (d.oficina ? '<p class="ph-oficina" data-ph-oficina>Día de oficina: solo en página</p>' : '') +
     (d.tareas.length ? '<ul class="ph-lista">' + d.tareas.map(phTarea).join('') + '</ul>' : libre) + '</section>';
 }
@@ -85,7 +90,8 @@ function renderHorarioProfe(act) {
     (oficina.size ? '<li><span aria-hidden="true">🏢</span> Días de oficina (los marca tu plan): máximo 2 tareas y solo en página.</li>' : '') +
     '<li><span aria-hidden="true">📆</span> Los demás días, máximo 4.</li>' +
     '<li><span aria-hidden="true">🗣️</span> Inglés diario.</li>' +
-    '<li><span aria-hidden="true">🔓</span> Todo está abierto: puedes adelantar lo que quieras.</li></ul>' +
+    '<li><span aria-hidden="true">🔓</span> Todo está abierto: puedes adelantar lo que quieras.</li>' +
+    '<li><span aria-hidden="true">🎥</span> Clases en vivo: las impartes tú; no son tareas ni cuentan en el progreso.</li></ul>' +
     '<p class="ph-leyenda">' + Object.keys(ProfeHorario.ESTADOS).map(phEstado).join('') + '<span class="ph-tag-grupo"><span aria-hidden="true">👥</span> Grupo: lo de tu grupo, que resuelves antes</span></p></details>';
   return '<section class="ph" id="ph-horario" aria-labelledby="ph-horario-t"><h3 class="sec-subtitulo" id="ph-horario-t">🗓️ Mi horario</h3>' +
     // La semana primero (en celular el progreso iría antes de la semana y la empujaría hacia abajo).
@@ -97,9 +103,9 @@ function renderHorarioProfe(act) {
 
 // ---------- 🧭 Por materia ----------
 function phFila(t, oficina) {
-  return '<li class="ph-fila ' + phClase(t.materia) + ' ph-t-' + t.estado + '" data-ph-fila="' + escapeHtml(t.id) + '" data-estado="' + t.estado + '">' +
+  return '<li class="ph-fila ' + phClase(t.materia) + ' ph-t-' + t.estado + (t.meet ? ' ph-t-meet' : '') + '" data-ph-fila="' + escapeHtml(t.id) + '" data-estado="' + t.estado + '">' +
     '<div class="ph-fila-info"><b class="ph-titulo">' + escapeHtml(t.titulo) + '</b><span class="ph-fila-meta">' + escapeHtml(ProfeHorario.nombreDia(t.fecha)) + (t.semana ? ' · Semana ' + t.semana : '') + (ProfeHorario.esOficina(t.fecha, oficina) ? ' · <span aria-hidden="true">🏢</span> oficina' : '') + '</span>' +
-    '<span class="ph-fila-estado">' + phEstado(t.estado) + phGrupo(t) + '</span></div>' + phBoton(t) + '</li>';
+    '<span class="ph-fila-estado">' + phEstado(t.estado) + phTipo(t) + '</span></div>' + phBoton(t) + '</li>';
 }
 function renderPorMateriaProfe(act) {
   if (!hayHorarioProfe(act)) return '';
@@ -112,10 +118,11 @@ function renderPorMateriaProfe(act) {
   const secciones = grupos.map(g => {
     const p = prog.get(g.materia);
     // Abierta: la primera línea con algo sin hacer (si no hay, ninguna).
-    const abierta = g.lineas.find(l => l.tareas.some(t => !ProfeHorario.esHechaEstado(t.estado)));
+    const abierta = g.lineas.find(l => ProfeHorario.contables(l.tareas).some(t => !ProfeHorario.esHechaEstado(t.estado)));
     const lineas = g.lineas.map(l => {
-      const hechas = l.tareas.filter(t => ProfeHorario.esHechaEstado(t.estado)).length;
-      return '<details class="ph-linea" data-ph-linea="' + escapeHtml(l.linea) + '"' + (l === abierta ? ' open' : '') + '><summary><span class="ph-linea-t">' + escapeHtml(l.linea) + '</span><span class="ph-linea-n">' + hechas + '/' + l.tareas.length + '</span></summary>' +
+      const suyas = ProfeHorario.contables(l.tareas); // los meets se listan, pero no cuentan
+      const hechas = suyas.filter(t => ProfeHorario.esHechaEstado(t.estado)).length;
+      return '<details class="ph-linea" data-ph-linea="' + escapeHtml(l.linea) + '"' + (l === abierta ? ' open' : '') + '><summary><span class="ph-linea-t">' + escapeHtml(l.linea) + '</span><span class="ph-linea-n">' + hechas + '/' + suyas.length + '</span></summary>' +
         '<ol class="ph-filas">' + l.tareas.map(t => phFila(t, oficina)).join('') + '</ol></details>';
     }).join('');
     return '<section class="ph-materia ' + phClase(g.materia) + '" data-ph-materia="' + escapeHtml(g.materia) + '" aria-labelledby="ph-mat-t-' + g.clave + '">' +
