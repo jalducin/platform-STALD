@@ -1028,6 +1028,11 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   `--ph-c` (texto/borde), `--ph-s` (fondo suave) y `--ph-g` (degradado) en claro y oscuro; el nombre siempre va escrito.
 - **Estados** con ícono y texto: ⏳ Pendiente, ✅ Hecha, ⏰ Vencida (sin hacer y su fecha ya pasó; aquí sí se dice,
   porque el profe lo pidió para su horario) y ⏩ Adelantada (hecha antes de su fecha).
+- **Clases en vivo** (meets: `tipo: "meet"` o prefijo `meet-`, `ProfeHorario.esMeet`): las imparte el profe, no son
+  tareas. Tarjeta `.ph-t-meet` con «🎥 Clase en vivo» (`[data-ph-vivo]`), su `hora` (`[data-ph-hora]`) y la liga
+  `a[data-ph-meet]` «Abrir Meet» si trae `meetUrl` (en lugar de «Abrir»). Estado neutral: 🎥 Próxima (hoy o después) o
+  ✓ Impartida (ya pasó), nunca «Vencida»; línea «Clases en vivo» si no trae la suya. Quedan fuera del progreso, de los
+  conteos de los chips, del cupo del día y de las hechas/totales de cada línea (`ProfeHorario.contables`).
 - **Semana** (`#ph-semana[data-ph-lunes]`, días `.ph-dia[data-ph-dia]`): hoy con `.es-hoy`, «✨ Hoy» y
   `aria-current="date"`; días de oficina **solo** de `plan.diasOficina` (sello `.ph-sello` 🏢, `[data-ph-oficina]`
   «Día de oficina: solo en página», «máx. 2»; sin el campo, ninguno y «máx. 4»); flechas `[data-ph-semana="-1|1"]`

@@ -58,6 +58,27 @@
    "materia": "IA · Agentic Engineer"
   },
   {
+   "id": "meet-2026-11-01",
+   "tipo": "meet",
+   "titulo": "🎥 Clase en vivo del grupo · repaso",
+   "nivel": "A1",
+   "descripcion": "",
+   "disponibleDesde": "2026-11-01",
+   "fechaLimite": "2026-11-01",
+   "intentosMax": 0,
+   "preguntas": 0,
+   "meetUrl": "https://meet.google.com/abc-defg-hij",
+   "hora": "18:00",
+   "tieneReto": false,
+   "tieneMaterial": true,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": []
+  },
+  {
    "id": "profe-examen-diagnostico-2026-11-02",
    "tipo": "examen",
    "titulo": "Examen de diagnóstico",
@@ -312,6 +333,27 @@
    "ultimoTemas": []
   },
   {
+   "id": "meet-2026-11-08",
+   "tipo": "meet",
+   "titulo": "🎥 Clase en vivo del grupo · present simple",
+   "nivel": "A1",
+   "descripcion": "",
+   "disponibleDesde": "2026-11-08",
+   "fechaLimite": "2026-11-08",
+   "intentosMax": 0,
+   "preguntas": 0,
+   "meetUrl": "https://meet.google.com/abc-defg-hij",
+   "hora": "18:00",
+   "tieneReto": false,
+   "tieneMaterial": true,
+   "estado": "disponible",
+   "intentosUsados": 0,
+   "mejor": null,
+   "mejorATiempo": null,
+   "ultimoEnvio": null,
+   "ultimoTemas": []
+  },
+  {
    "id": "profe-act-2026-11-10",
    "tipo": "actividad",
    "titulo": "Clase: hooks y permisos",
@@ -381,6 +423,12 @@
       "titulo": "Clase: CLAUDE.md a fondo",
       "fecha": "2026-10-28",
       "materia": "IA · Agentic Engineer"
+     },
+     {
+      "id": "meet-2026-11-01",
+      "tipo": "meet",
+      "titulo": "🎥 Clase en vivo del grupo · repaso",
+      "fecha": "2026-11-01"
      }
     ]
    },
@@ -461,6 +509,12 @@
       "id": "profe-cg-2026-11-08",
       "tipo": "actividad",
       "titulo": "Cultura General: la imprenta y la web",
+      "fecha": "2026-11-08"
+     },
+     {
+      "id": "meet-2026-11-08",
+      "tipo": "meet",
+      "titulo": "🎥 Clase en vivo del grupo · present simple",
       "fecha": "2026-11-08"
      }
     ]

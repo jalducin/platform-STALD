@@ -12,7 +12,7 @@
 .ph-m-evaluacion { --ph-c: #334155; --ph-s: #f1f5f9; --ph-g: #64748b; }
 .ph-m-otra { --ph-c: #4b5563; --ph-s: #f3f4f6; --ph-g: #9ca3af; }
 .ph { --ph-pend-c: #4c4a63; --ph-pend-s: #f1f0f7; --ph-hecha-c: #166534; --ph-hecha-s: #dcfce7;
-  --ph-venc-c: #b91c1c; --ph-venc-s: #fee2e2; --ph-adel-c: #4338ca; --ph-adel-s: #e0e7ff; --ph-ofi-s: #fff7ed; --ph-ofi-c: #9a3412; --ph-ofi-b: #fdba74;
+  --ph-venc-c: #b91c1c; --ph-venc-s: #fee2e2; --ph-adel-c: #4338ca; --ph-adel-s: #e0e7ff; --ph-vivo-c: #155e75; --ph-vivo-s: #cffafe; --ph-imp-c: #475569; --ph-imp-s: #f1f5f9; --ph-ofi-s: #fff7ed; --ph-ofi-c: #9a3412; --ph-ofi-b: #fdba74;
   --ph-sombra: 0 1px 2px rgba(27, 26, 46, .06), 0 4px 14px rgba(27, 26, 46, .06); --ph-r: var(--r-md, 16px); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .ph-m-ingles { --ph-c: #6ee7b7; --ph-s: #123a30; --ph-g: #34d399; }
@@ -23,7 +23,7 @@
   :root:not([data-theme="light"]) .ph-m-evaluacion { --ph-c: #cbd5e1; --ph-s: #273246; --ph-g: #94a3b8; }
   :root:not([data-theme="light"]) .ph-m-otra { --ph-c: #d1d5db; --ph-s: #2b2d36; --ph-g: #9ca3af; }
   :root:not([data-theme="light"]) .ph { --ph-pend-c: #cbd5e1; --ph-pend-s: #2a2840; --ph-hecha-c: #86efac; --ph-hecha-s: #14351f;
-    --ph-venc-c: #fca5a5; --ph-venc-s: #4a1c1c; --ph-adel-c: #c7d2fe; --ph-adel-s: #2a2a5c; --ph-ofi-s: #3a2614; --ph-ofi-c: #fdba74; --ph-ofi-b: #9a3412;
+    --ph-venc-c: #fca5a5; --ph-venc-s: #4a1c1c; --ph-adel-c: #c7d2fe; --ph-adel-s: #2a2a5c; --ph-vivo-c: #67e8f9; --ph-vivo-s: #123a44; --ph-imp-c: #cbd5e1; --ph-imp-s: #2b3445; --ph-ofi-s: #3a2614; --ph-ofi-c: #fdba74; --ph-ofi-b: #9a3412;
     --ph-sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 18px rgba(0, 0, 0, .25); }
 }
 :root[data-theme="dark"] .ph-m-ingles { --ph-c: #6ee7b7; --ph-s: #123a30; --ph-g: #34d399; }
@@ -34,7 +34,7 @@
 :root[data-theme="dark"] .ph-m-evaluacion { --ph-c: #cbd5e1; --ph-s: #273246; --ph-g: #94a3b8; }
 :root[data-theme="dark"] .ph-m-otra { --ph-c: #d1d5db; --ph-s: #2b2d36; --ph-g: #9ca3af; }
 :root[data-theme="dark"] .ph { --ph-pend-c: #cbd5e1; --ph-pend-s: #2a2840; --ph-hecha-c: #86efac; --ph-hecha-s: #14351f;
-  --ph-venc-c: #fca5a5; --ph-venc-s: #4a1c1c; --ph-adel-c: #c7d2fe; --ph-adel-s: #2a2a5c; --ph-ofi-s: #3a2614; --ph-ofi-c: #fdba74; --ph-ofi-b: #9a3412;
+  --ph-venc-c: #fca5a5; --ph-venc-s: #4a1c1c; --ph-adel-c: #c7d2fe; --ph-adel-s: #2a2a5c; --ph-vivo-c: #67e8f9; --ph-vivo-s: #123a44; --ph-imp-c: #cbd5e1; --ph-imp-s: #2b3445; --ph-ofi-s: #3a2614; --ph-ofi-c: #fdba74; --ph-ofi-b: #9a3412;
   --ph-sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 18px rgba(0, 0, 0, .25); }
 
 .ph { container-type: inline-size; min-width: 0; }
@@ -122,6 +122,13 @@
 .ph-est-hecha { color: var(--ph-hecha-c); background: var(--ph-hecha-s); }
 .ph-est-vencida { color: var(--ph-venc-c); background: var(--ph-venc-s); }
 .ph-est-adelantada { color: var(--ph-adel-c); background: var(--ph-adel-s); }
+/* Clase en vivo (meet): estado neutral, nunca «vencida» */
+.ph-est-proxima, .ph-vivo { color: var(--ph-vivo-c); background: var(--ph-vivo-s); }
+.ph-est-impartida { color: var(--ph-imp-c); background: var(--ph-imp-s); }
+.ph-vivo { font-size: .72rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.ph-hora { font-size: .74rem; font-weight: 700; color: var(--text); }
+.ph-t-meet { border-style: dashed; }
+.ph-t-impartida .ph-titulo { color: var(--muted); }
 
 /* Reglas y leyenda */
 .ph-reglas { background: var(--card); border: 1px solid var(--border); border-radius: var(--ph-r); margin: 14px 0 0; }

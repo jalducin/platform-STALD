@@ -3,7 +3,8 @@
 // /ingles/profe/actividades con ese JSON (hoy = miércoles 2026-11-04) y no escribe nada. Revisa, a 360, 768 y 1280 px y
 // en claro y oscuro: la semana de lunes a domingo con hoy resaltado, 🏢 en los días de `plan.diasOficina` con «Día de oficina: solo
 // en página», cada tarea con su materia (campo `materia` o respaldo por prefijo y nivel), su estado (pendiente,
-// hecha, vencida o adelantada) y su botón; flechas y «Hoy»; filtro por materia recordado; progreso por materia con el
+// hecha, vencida o adelantada) y su botón; las clases en vivo (meets: una pasada y una futura) con «🎥 Clase en vivo»,
+// hora y liga, «✓ Impartida» o «🎥 Próxima» (nunca «Vencida») y fuera del progreso, de los chips y del cupo; flechas y «Hoy»; filtro por materia recordado; progreso por materia con el
 // resumen de plan.json; la vista por materia y línea en orden de fecha; 44 px, sin scroll horizontal, contraste AA de
 // las etiquetas, el encabezado y el panel de horas desde plan.json, y que las demás pestañas y el tablero RPG siguen ahí.
 require('./lib/entorno'); // BASE, API, DATA, CHROME, carpeta de salida y sesión de prueba en fetch
@@ -24,7 +25,7 @@ const contrastes = p => p.evaluate(() => {
   const rgb = s => s.match(/[\d.]+/g).slice(0, 3).map(Number);
   const lum = c => { const [r, g, b] = c.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
   const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
-  return [...document.querySelectorAll('#ph-horario .ph-mat, #ph-horario .ph-estado, #ph-horario .ph-oficina')].filter(x => x.offsetParent).map(x => {
+  return [...document.querySelectorAll('#ph-horario .ph-mat, #ph-horario .ph-estado, #ph-horario .ph-oficina, #ph-horario .ph-vivo')].filter(x => x.offsetParent).map(x => {
     const cs = getComputedStyle(x);
     return { clase: x.className, r: Math.round(ratio(rgb(cs.color), rgb(cs.backgroundColor)) * 10) / 10 };
   });
@@ -84,7 +85,13 @@ const columnas = p => p.$eval('#ph-semana', x => getComputedStyle(x).gridTemplat
       }
       const ia = await estadoDe(p, 'profe-act-2026-11-04'), ing = await estadoDe(p, 'profe-ing-3');
       ok('color por materia: IA e Inglés con franja y etiqueta distintas' + suf, ia && ing && ia.borde !== ing.borde, ia && ing ? ia.borde + ' / ' + ing.borde : '');
-      ok('cada tarea abierta trae su botón (Abrir o Ver resultado)' + suf, await p.$$eval('#ph-semana .ph-tarea', xs => xs.every(x => x.querySelector('[data-action="abrir-item"], [data-action="ver-resultado"]'))));
+      ok('cada tarea abierta trae su botón (Abrir o Ver resultado)' + suf, await p.$$eval('#ph-semana .ph-tarea:not(.ph-t-meet)', xs => xs.every(x => x.querySelector('[data-action="abrir-item"], [data-action="ver-resultado"]'))));
+      // Clase en vivo futura (domingo 8): «🎥 Próxima», hora y liga del Meet, sin botón «Abrir»; no cuenta en el cupo.
+      const mf = await p.$eval('[data-ph-tarea="meet-2026-11-08"]', x => ({ estado: x.dataset.estado, materia: x.dataset.materia, texto: x.textContent.replace(/\s+/g, ' ').trim(), liga: (x.querySelector('a[data-ph-meet]') || {}).href || '', boton: !!x.querySelector('[data-action="abrir-item"]'), cupo: x.closest('.ph-dia').querySelector('.ph-cupo').textContent })).catch(() => null);
+      ok('meet futuro: «🎥 Clase en vivo», «🎥 Próxima», 18:00 y «Abrir Meet»' + suf, mf && mf.estado === 'proxima' && mf.materia === 'Inglés' && /Clase en vivo/.test(mf.texto) && /Próxima/.test(mf.texto) && !/Vencida/.test(mf.texto) && /18:00/.test(mf.texto) && mf.liga.startsWith('https://meet.google.com/') && !mf.boton, JSON.stringify(mf).slice(0, 200));
+      ok('meet futuro: no cuenta en el cupo del día (domingo 8: 1 tarea)' + suf, mf && /^1 · máx\. 4$/.test(mf.cupo.trim()), mf ? mf.cupo : '');
+      const chipIngles = await p.$eval('[data-ph-donde="horario"][data-ph-filtro="Inglés"] .ph-n', x => x.textContent).catch(() => '');
+      ok('chip Inglés: cuenta 7 tareas, sin los 2 meets' + suf, chipIngles === '7', chipIngles);
       const cs = await contrastes(p);
       const bajos = cs.filter(x => x.r < 4.5);
       ok('contraste AA (≥ 4.5) en etiquetas de materia, estado y oficina' + suf, cs.length > 5 && !bajos.length, JSON.stringify(bajos.slice(0, 4)));
@@ -114,6 +121,10 @@ const columnas = p => p.$eval('#ph-semana', x => getComputedStyle(x).gridTemplat
       ok('«Hoy» regresa a la semana de hoy' + suf, (await lunesVisible(p)) === '2026-11-02');
       await p.click('[data-ph-semana="-1"]');
       ok('«Anterior» lleva a la semana del 26 de octubre y se deshabilita al inicio' + suf, (await lunesVisible(p)) === '2026-10-26' && await p.$eval('[data-ph-semana="-1"]', x => x.disabled));
+      // Clase en vivo pasada (domingo 1, sin intentos): «✓ Impartida», nunca «⏰ Vencida».
+      const mp = await estadoDe(p, 'meet-2026-11-01');
+      ok('meet pasado: «✓ Impartida» con «🎥 Clase en vivo», nunca «Vencida»' + suf, mp && mp.estado === 'impartida' && /Impartida/.test(mp.texto) && /Clase en vivo/.test(mp.texto) && !/Vencida/.test(mp.texto), mp ? mp.texto.slice(0, 120) : 'no está');
+      ok('semana pasada: ningún meet vencido' + suf, !(await p.$('#ph-semana .ph-t-meet[data-estado="vencida"]')));
       await p.click('[data-ph-semana="hoy"]');
 
       // Progreso por materia (con el resumen de plan.json para Staff y Tech Lead).
@@ -140,7 +151,9 @@ const columnas = p => p.$eval('#ph-semana', x => getComputedStyle(x).gridTemplat
       const mats = await p.$$eval('#ph-por-materia .ph-materia', xs => xs.map(x => ({ m: x.dataset.phMateria, l: [...x.querySelectorAll('.ph-linea')].map(l => ({ t: l.dataset.phLinea, ids: [...l.querySelectorAll('[data-ph-fila]')].map(f => f.dataset.phFila) })) })));
       ok('Por materia: todas, en el orden del catálogo' + suf, mats.map(x => x.m).join('|') === 'Inglés|IA · Agentic Engineer|Staff Software Engineer|Tech Lead|Cultura General|Evaluación', mats.map(x => x.m).join('|'));
       const ingl = (mats.find(x => x.m === 'Inglés') || { l: [] }).l;
-      ok('Por materia: Inglés por línea (su nivel y «Inglés con el grupo»)' + suf, ingl.map(l => l.t).join('|') === 'Inglés A1|Inglés con el grupo', ingl.map(l => l.t).join('|'));
+      ok('Por materia: Inglés por línea (su nivel, «Clases en vivo» e «Inglés con el grupo»)' + suf, ingl.map(l => l.t).join('|') === 'Inglés A1|Clases en vivo|Inglés con el grupo', ingl.map(l => l.t).join('|'));
+      const vivo = await p.$eval('#ph-por-materia [data-ph-linea="Clases en vivo"]', x => ({ n: x.querySelector('.ph-linea-n').textContent, est: [...x.querySelectorAll('[data-ph-fila]')].map(f => f.dataset.estado).join(',') })).catch(() => null);
+      ok('Por materia: los meets se listan sin contar (0/0) y sin «vencida»' + suf, vivo && vivo.n === '0/0' && vivo.est === 'impartida,proxima', JSON.stringify(vivo));
       const ids = (ingl[0] || { ids: [] }).ids;
       ok('Por materia: dentro de la línea, en orden de fecha' + suf, ids.join(',') === 'profe-ing-0,profe-ing-1,profe-ing-2,profe-ing-3,profe-ing-4,profe-ing-5', ids.join(','));
       ok('Por materia: el filtro «Todas» también aplica en Mi horario' + suf, await p.$eval('[data-ph-donde="horario"][data-ph-filtro=""]', x => x.getAttribute('aria-pressed') === 'true'));

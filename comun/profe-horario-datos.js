@@ -37,7 +37,7 @@
   function materiaPorRespaldo(id, nivel, titulo) {
     const i = String(id || '');
     if (/ (ai )?assessment /.test(palabras(titulo))) return 'Evaluación'; // AI Assessment de inicio y de cierre
-    if (/^(profe-ing-|act-|tec-|refuerzo-|examen-|guia-)/.test(i)) return INGLES; // inglés del profe y lo del grupo
+    if (/^(profe-ing-|act-|tec-|refuerzo-|examen-|guia-|meet-)/.test(i)) return INGLES; // inglés del profe y lo del grupo (meets incluidos)
     if (i.startsWith('profe-lid-')) return LEAD;
     if (i.startsWith('profe-cg-')) return 'Cultura General';
     if (/^profe-examen-(semanal|diagnostico)-/.test(i)) return 'Evaluación';
@@ -85,8 +85,12 @@
   // ---------- Estado ----------
   // Misma regla que la ruta RPG (Gamificacion.estaHecha): un intento enviado, completo o en espera.
   const estaHecha = it => !!it && ((it.intentosUsados || 0) > 0 || it.estado === 'completo' || it.estado === 'en-espera');
+  // Clase en vivo (meet) que imparte el profe: `tipo: "meet"` o id con prefijo `meet-`. No es una tarea suya.
+  const esMeet = x => !!x && (x.tipo === 'meet' || String(x.id || '').startsWith('meet-'));
   // pendiente | hecha | vencida | adelantada. Adelantada = hecha antes de su fecha; vencida = sin hacer y su fecha ya pasó.
+  // Un meet es neutral: proxima (hoy o después) | impartida (ya pasó); nunca vencida.
   function estadoTarea(t, hoy) {
+    if (t && t.meet) return t.fecha < hoy ? 'impartida' : 'proxima';
     const it = t && t.item;
     if (estaHecha(it)) return it.ultimoEnvio && String(it.ultimoEnvio).slice(0, 10) < t.fecha ? 'adelantada' : 'hecha';
     return t.fecha < hoy ? 'vencida' : 'pendiente';
@@ -96,13 +100,17 @@
     hecha: { icono: '✅', texto: 'Hecha' },
     vencida: { icono: '⏰', texto: 'Vencida' },
     adelantada: { icono: '⏩', texto: 'Adelantada' },
+    proxima: { icono: '🎥', texto: 'Próxima' }, // meet que aún no pasa
+    impartida: { icono: '✓', texto: 'Impartida' }, // meet que ya pasó
   };
+  const contables = tareas => tareas.filter(t => !t.meet); // sin meets: lo que cuenta como tarea (progreso y conteos)
   const esHechaEstado = e => e === 'hecha' || e === 'adelantada';
 
   // ---------- Tareas: su ruta (plan.json) y lo del grupo que resuelve antes (`grupo: true`) ----------
   // Lo del grupo no trae `materia` en su JSON: la de `plan.materiaDelGrupo` (Inglés) o el respaldo; su fecha es la
   // del profe (`fechaLimite`, un día antes de que abra al grupo) y su línea, «Inglés con el grupo».
   const LINEA_GRUPO = 'Inglés con el grupo';
+  const LINEA_MEET = 'Clases en vivo'; // línea de los meets sin `linea` ni `tema` propios
   function tareasRuta(act) {
     const plan = act && act.plan;
     if (!plan || !Array.isArray(plan.semanas)) return [];
@@ -117,18 +125,22 @@
       vistos.add(e.id);
       const item = items.get(e.id) || null;
       const materia = materiaDe(e, item);
+      const tipo = e.tipo || (item && item.tipo) || 'actividad';
+      const meet = esMeet({ id: e.id, tipo }) || esMeet(item);
       agregar({
-        id: e.id, titulo: e.titulo || (item && item.titulo) || e.id, tipo: e.tipo || (item && item.tipo) || 'actividad',
+        id: e.id, titulo: e.titulo || (item && item.titulo) || e.id, tipo, meet,
+        ...(meet ? { hora: texto(e.hora) || texto(item && item.hora), meetUrl: texto(e.meetUrl) || texto(item && item.meetUrl) } : {}),
         fecha: String(e.fecha || (item && item.fechaLimite) || s.id || ''), semana: s.n || i + 1, semanaId: s.id, materia,
-        linea: texto(e.linea) || texto(e.tema) || texto(item && item.linea) || texto(item && item.nivel) || materia, item, grupo: false,
+        linea: texto(e.linea) || texto(e.tema) || texto(item && item.linea) || (meet ? LINEA_MEET : texto(item && item.nivel) || materia), item, grupo: false,
       });
     }));
     for (const item of todos.filter(it => it.grupo && !vistos.has(it.id))) {
       vistos.add(item.id);
       agregar({
-        id: item.id, titulo: item.titulo || item.id, tipo: item.tipo || 'actividad', fecha: String(item.fechaLimite || ''),
+        id: item.id, titulo: item.titulo || item.id, tipo: item.tipo || 'actividad', fecha: String(item.fechaLimite || ''), meet: esMeet(item),
+        ...(esMeet(item) ? { hora: texto(item.hora), meetUrl: texto(item.meetUrl) } : {}),
         semana: null, semanaId: null, materia: texto(item.materia) || texto(plan.materiaDelGrupo) || materiaPorRespaldo(item.id, item.nivel, item.titulo),
-        linea: LINEA_GRUPO, item, grupo: true,
+        linea: esMeet(item) ? LINEA_MEET : LINEA_GRUPO, item, grupo: true,
       });
     }
     return lista.sort((a, b) => a.fecha.localeCompare(b.fecha) || Number(a.grupo) - Number(b.grupo));
@@ -166,9 +178,10 @@
     }
     return m;
   }
-  // Hechas / totales y fecha de cierre por materia. Las hechas siempre se cuentan; el cierre y el total salen del
+  // Hechas / totales y fecha de cierre por materia (sin meets: no son tareas). Las hechas siempre se cuentan; el cierre y el total salen del
   // resumen si viene (el total nunca queda debajo de las tareas que ya existen); si no, del plan (última fecha).
-  function progresoPorMateria(tareas, materias) {
+  function progresoPorMateria(todas, materias) {
+    const tareas = contables(todas);
     const resumen = resumenDe(materias);
     const nombres = [...new Set([...tareas.map(t => t.materia), ...resumen.keys()])].sort(porMateria);
     return nombres.map(nombre => {
@@ -191,8 +204,8 @@
   }
 
   g.ProfeHorario = {
-    MATERIAS_PROFE, ESTADOS, LINEA_GRUPO, sinAcentos, materiaPorNivel, materiaPorRespaldo, materiaDe, infoMateria,
-    sumarDias, lunesDe, diasOficinaDe, esOficina, maxDelDia, nombreDia, fechaCorta, rangoSemana, estaHecha, estadoTarea, esHechaEstado,
+    MATERIAS_PROFE, ESTADOS, LINEA_GRUPO, LINEA_MEET, sinAcentos, materiaPorNivel, materiaPorRespaldo, materiaDe, infoMateria,
+    sumarDias, lunesDe, diasOficinaDe, esOficina, maxDelDia, nombreDia, fechaCorta, rangoSemana, estaHecha, esMeet, estadoTarea, esHechaEstado, contables,
     tareasRuta, filtrar, materiasDe, semanaHorario, rangoSemanas, progresoPorMateria, agruparPorMateria,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

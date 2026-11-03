@@ -194,3 +194,45 @@ Deno.test("agrupación por materia y, dentro, por línea en orden de fecha", () 
   assertEquals(ia.lineas.map((l: any) => [l.linea, l.tareas.map((t: any) => t.id)]), [["Claude Code", ["profe-act-2026-10-27", "profe-act-2026-11-06", "profe-act-2026-11-10"]]]);
   assertEquals(H.agruparPorMateria(H.tareasRuta(act), "Tech Lead").map((m: any) => m.materia), ["Tech Lead"]);
 });
+
+// Clases en vivo (meets): el profe las imparte, no son tareas suyas. Nunca «vencida» y fuera de todo conteo.
+Deno.test("meets: estado próxima o impartida (nunca vencida), con hora y liga, y fuera del progreso", () => {
+  const [s1, s2, s3] = act.plan.semanas;
+  const conMeets = {
+    ...act,
+    plan: {
+      ...act.plan,
+      semanas: [
+        // Meet pasado (tipo meet) y uno que solo se reconoce por el prefijo `meet-` del id.
+        { ...s1, elementos: [...s1.elementos, el("meet-2026-11-01", "2026-11-01", { tipo: "meet" })] },
+        { ...s2, elementos: [...s2.elementos, el("meet-dudas-g1-2026-11-08", "2026-11-08")] },
+        s3,
+      ],
+    },
+    items: [
+      ...act.items,
+      it("meet-2026-11-01", { tipo: "meet", nivel: "A1", meetUrl: "https://meet.google.com/abc", hora: "18:00" }),
+      it("meet-dudas-g1-2026-11-08", { nivel: "A1", hora: "19:30", meetUrl: null }),
+    ],
+  };
+  const ts = H.tareasRuta(conMeets);
+  const pasado = ts.find((t: any) => t.id === "meet-2026-11-01");
+  const futuro = ts.find((t: any) => t.id === "meet-dudas-g1-2026-11-08");
+  assertEquals([pasado.meet, pasado.estado, pasado.hora, pasado.meetUrl, pasado.materia], [true, "impartida", "18:00", "https://meet.google.com/abc", "Inglés"]);
+  assertEquals([futuro.meet, futuro.estado, futuro.hora, futuro.meetUrl], [true, "proxima", "19:30", null]);
+  assertEquals([pasado.linea, futuro.linea], ["Clases en vivo", "Clases en vivo"]); // sin `linea` propia
+  assertEquals(H.estadoTarea({ fecha: "2026-11-04", meet: true, item: null }, "2026-11-04"), "proxima"); // hoy aún es próxima
+  assertEquals(H.estadoTarea({ fecha: "2026-11-03", meet: true, item: null }, "2026-11-04"), "impartida");
+  assertEquals([H.ESTADOS.proxima.texto, H.ESTADOS.impartida.texto], ["Próxima", "Impartida"]);
+  assertEquals(H.esMeet({ id: "meet-x" }), true);
+  assertEquals(H.esMeet({ id: "act-1", tipo: "meet" }), true);
+  assertEquals(H.esMeet({ id: "act-1", tipo: "actividad" }), false);
+  assertEquals(H.materiaPorRespaldo("meet-g1-2026-10-18", null), "Inglés");
+  assertEquals(ts.some((t: any) => t.meet && t.estado === "vencida"), false);
+  // Fuera del progreso y de los conteos: mismo resultado que sin meets.
+  assertEquals(H.progresoPorMateria(ts, null), H.progresoPorMateria(H.tareasRuta(act), null));
+  assertEquals(H.contables(ts).map((t: any) => t.id), H.tareasRuta(act).map((t: any) => t.id));
+  // Siguen en la semana: se ven en su día.
+  const dias = H.semanaHorario(ts, "2026-11-02", act.hoy, null, []);
+  assertEquals(dias[6].tareas.map((t: any) => t.id), ["profe-cg-1", "meet-dudas-g1-2026-11-08"]);
+});

@@ -14,6 +14,9 @@ servidor ya incluye `materia` y `nivel` de cada elemento.
 - **Fecha de cada tarea:** la del plan (`elemento.fecha`, ritmo sugerido); lo del grupo, su `fechaLimite` de profe.
 - **Estados:** hecha = misma regla que la ruta RPG (`estaHecha`); adelantada = hecha con `ultimoEnvio` antes de su
   fecha; vencida = sin hacer y su fecha < hoy; pendiente = el resto. «hoy» es `act.hoy` del servidor.
+- **Clases en vivo (meets):** `tipo: "meet"` o prefijo `meet-` (del elemento del plan o de su actividad). El profe
+  las imparte, no las resuelve: estado `proxima` (fecha ≥ hoy) o `impartida` (fecha < hoy), nunca `vencida`, y fuera
+  de todo conteo de tareas (`contables`). Se muestran con su `hora` y su `meetUrl` en lugar del botón «Abrir».
 - **Días de oficina:** solo `plan.diasOficina` (fechas). Alternativa descartada: martes y jueves fijos, porque la regla
   cambió el 9 de noviembre a lunes y martes. Sin el campo, no hay sello ni «máx. 2».
 - **Progreso:** hechas siempre calculadas; total y cierre del resumen `plan.materias` (`elementos`/`total`,
