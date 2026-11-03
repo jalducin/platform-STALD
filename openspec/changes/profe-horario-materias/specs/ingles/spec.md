@@ -32,6 +32,25 @@ regresar a la semana de hoy. Sin `plan.json` la pestaña no aparece.
 - **WHEN** un día de la semana no tiene tareas
 - **THEN** muestra «Día libre» en lugar de una tarjeta vacía
 
+### Requirement: Clases en vivo (meets) en el horario del profe
+Un meet del grupo (elemento con `tipo: "meet"` o id con prefijo `meet-`) SHALL tratarse como una clase en vivo que el
+profe imparte, no como una tarea suya. En «🗓️ Mi horario» y en «🧭 Por materia» SHALL mostrarse con la etiqueta «🎥 Clase en vivo», su hora
+(`hora`) si la trae y la liga «Abrir Meet» si trae `meetUrl`. Su estado SHALL ser neutral y nunca «vencida»:
+«🎥 Próxima» si su fecha es hoy o después y «✓ Impartida» si ya pasó. Un meet SHALL quedar fuera del progreso por
+materia, de los conteos de los chips del filtro, del cupo del día («N · máx. M») y de las hechas/totales de cada línea.
+
+#### Scenario: Un meet no cuenta como tarea vencida
+- **WHEN** un meet tiene fecha anterior a hoy y el profe no tiene intentos en él
+- **THEN** se marca «✓ Impartida», nunca «⏰ Vencida», con la etiqueta «🎥 Clase en vivo»
+
+#### Scenario: Meet próximo con su hora y su liga
+- **WHEN** un meet con `hora: "18:00"` y `meetUrl` tiene fecha de hoy o posterior
+- **THEN** se marca «🎥 Próxima» y muestra «18:00» y la liga «Abrir Meet», sin botón «Abrir»
+
+#### Scenario: Un meet no cuenta en el progreso
+- **WHEN** la semana tiene un meet de Inglés y tareas de Inglés
+- **THEN** la barra de Inglés, el conteo de su chip y el cupo del día cuentan solo las tareas, no el meet
+
 ### Requirement: Días de oficina desde el plan
 Los días de oficina SHALL salir solo de `plan.diasOficina` (fechas AAAA-MM-DD); la vista no los calcula por día de la
 semana. Cada día de oficina SHALL mostrar el sello 🏢, el texto «Día de oficina: solo en página» y «máx. 2»; los demás
@@ -49,7 +68,7 @@ mostrarse plegadas, sin validarse.
 ### Requirement: Materia de cada elemento de la ruta del profe
 La materia de cada elemento SHALL ser su campo `materia` (de la actividad o del elemento del plan). Si falta, SHALL
 deducirse con un respaldo por prefijo del id, `nivel` y título: `profe-ing-`, `act-`, `tec-`, `refuerzo-`, `examen-` y
-`guia-` → Inglés; `profe-lid-` → Tech Lead; `profe-staff-` y `profe-ref-` según su nivel; `profe-cg-` → Cultura
+`guia-` y `meet-` → Inglés; `profe-lid-` → Tech Lead; `profe-staff-` y `profe-ref-` según su nivel; `profe-cg-` → Cultura
 General; exámenes semanales, diagnóstico y AI Assessment → Evaluación; el resto de `profe-act-`, `profe-rag-` y
 `profe-loop-` → IA · Agentic Engineer.
 
