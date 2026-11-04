@@ -1,6 +1,6 @@
 ---
 name: clases-secundaria
-description: Prepara, valida y sube las clases de Secundaria de cada bloque de 2 semanas (2 o 3 por día de lunes a sábado; el domingo solo Artes o Educación Física y rezagos), además de repasos y tareas sueltas, en el repo privado de datos. Úsala cuando pidan «arma las siguientes 2 semanas de Secundaria», «las clases de la alumna de Secundaria», «un repaso de Secundaria», «agrega esta tarea a Secundaria», o den temas de alguna materia de Secundaria.
+description: Prepara, valida y sube las clases de Secundaria de cada bloque de 2 semanas (máximo 2 por día de lunes a sábado; el domingo solo Artes cada 15 días), además de repasos y tareas sueltas, en el repo privado de datos. Úsala cuando pidan «arma las siguientes 2 semanas de Secundaria», «las clases de la alumna de Secundaria», «un repaso de Secundaria», «agrega esta tarea a Secundaria», o den temas de alguna materia de Secundaria.
 ---
 
 # clases-secundaria
@@ -32,29 +32,50 @@ formato de cada JSON está en [docs/data-model.md](../../../docs/data-model.md),
   `id` estable: no cambies los `id` de una clase ya publicada (su borrador se perdería) y no pidas entregas fuera de
   la plataforma «para no perder lo escrito». Los pasos de una misión, hasta 4 000 caracteres de texto.
 
-## Horario (15 clases por semana; plantilla vigente desde el 2026-11-01)
+## Horario (máximo 2 clases por día; vigente desde el viernes 6 de noviembre de 2026 hasta el 31 de enero de 2027)
 
 | Día | Clases |
 |---|---|
 | Lunes | Inglés, Español |
-| Martes | Matemáticas, Inglés, Tecnología |
-| Miércoles | Español, Ciencias |
-| Jueves | Matemáticas, Inglés, Ciencias Sociales |
-| Viernes | Español, Tecnología |
-| Sábado | Matemáticas, Inglés |
-| Domingo | Solo extracurricular: Artes **o** Educación Física (alternan cada domingo) + rezagos |
+| Martes | Matemáticas, Ciencias |
+| Miércoles | Inglés, Tecnología |
+| Jueves | Matemáticas, Ciencias Sociales |
+| Viernes | Español, Ciencias |
+| Sábado | Inglés, Matemáticas |
+| Domingo | Libre; Artes cada 15 días (8 y 22 nov, 6 y 20 dic, 3, 17 y 31 ene) |
 
-A la semana: Inglés 4, Español 3, Matemáticas 3, Tecnología 2, Ciencias 1, Ciencias Sociales 1 y Artes o Ed. Física 1.
+- **Tope de 2 por día.** Única excepción: el sábado 7 de noviembre de 2026 lleva 3 (la primera Cívica, porque faltan
+  jueves en noviembre). Los exámenes mensuales no cuentan para el tope.
+- **Domingos:** solo Artes en sus fechas. Educación Física queda en espera.
+- **Sin clases:** viernes 20 de noviembre, 25 de diciembre y 1 de enero. No se reparten: se pierden.
+- **Vacaciones (24 dic – 6 ene):** el mismo horario con todas las materias. Inglés lleva 6 clases de Navidad y Año
+  Nuevo en fecha coherente y Matemáticas los 6 retos.
+- **En espera:** lo que no cabe sale de las semanas (sin semana, la plataforma no muestra una actividad) y se lista en
+  `contenido/secundaria/en-espera-febrero.md` del repo de datos con su materia y motivo. Los ids no cambian.
+- **Clases nuevas** (`sec-ciencias-nv-NN`, `sec-mate-nv-NN`, `sec-tec-nv-NN`, `sec-sociales-nv-NN`, `sec-artes-nv-NN`):
+  sus fechas ya están reservadas en el calendario; si el archivo aún no existe se salta con aviso.
+- **Fechas:** la última fuente es `herramientas/secundaria-calendario/calendario_2026_11_04.py` del repo de datos
+  (idempotente). Orden al regenerar: generadores de cada bloque y de exámenes mensuales, luego `calendario.py`,
+  `herramientas/secundaria-2026-11-23/armar_semanas.py` y, al final, `calendario_2026_11_04.py`.
+  `comprobar_2026_11_04.py` revisa tope, descansos, domingos, orden por materia, vencidos y el límite del 31 de enero.
+  Cada elemento va en la semana de su `dia`, porque el validador lo exige.
+- **Lo entregado no se mueve:** antes de reacomodar, consulta en solo lectura `stald_docs`
+  (`resultados/sec-*/sofia.json`) con la llave en una variable de entorno; nunca leas `.env`.
 
-- **Máximo 3 clases por día.** Tecnología y Ciencias Sociales ya no van en domingo.
-- **Domingos extracurriculares:** solo Artes o Ed. Física y lo atrasado (rezagos). Ninguna clase normal en domingo.
-- **Si un día no hay clases** (descanso), sus clases se reparten en la misma semana, sin pasar los topes.
-- **Fechas reacomodadas:** viven en `herramientas/secundaria-calendario/calendario.py` del repo de datos (idempotente;
-  los generadores lo llaman al final para que regenerar no lo deshaga). `comprobar.py`, en la misma carpeta, revisa
-  topes, domingos, descansos y la secuencia de cada materia. Cada elemento va en la semana de su `dia`, porque el
-  validador lo exige.
+## Descansos y vacaciones
 
-## Reacomodo de atrasadas
+Ver arriba: sin clases el 20 de noviembre, el 25 de diciembre y el 1 de enero; en vacaciones rige el mismo horario.
+
+## Exámenes mensuales
+
+| Examen | Ventana | Cubre |
+|---|---|---|
+| `sec-mensual-2026-10` | 19 al 21 nov (después de la última clase de octubre pendiente) | Octubre y sus rezagos |
+| `sec-mensual-2026-11` | 1 al 3 dic | Lo visto del 6 al 30 de noviembre |
+| `sec-mensual-2026-12` | 7 al 9 ene | Lo visto del 1 al 31 de diciembre |
+| `sec-mensual-2027-01` | 29 al 31 ene | Lo visto del 1 al 28 de enero |
+
+## Reacomodo de atrasadas (historia del 1 al 3 de noviembre; el horario nuevo de arriba lo reemplaza desde el 6)
 
 - Revisa qué entregó en Postgres (solo lectura, `resultados/sec-*/<slug>.json`); la llave del servicio va solo en
   una variable de entorno.
@@ -74,27 +95,13 @@ A la semana: Inglés 4, Español 3, Matemáticas 3, Tecnología 2, Ciencias 1, C
 - **Desborde:** lo que la cascada saque del bloque no se escribe en semanas que arman otros agentes; se anota en
   `DESBORDE` de `calendario.py` y se avisa al profe o al coordinador cuántas clases por materia se recorrieron.
 
-## Descansos y vacaciones
-
-| Fechas | Qué pasa |
-|---|---|
-| Dom 1 de noviembre de 2026 (Día de Muertos) | Sin clases (el lunes 2 sí hay clases) |
-| Vie 20 de noviembre de 2026 (Revolución) | Sin clases |
-| 24 de diciembre de 2026 al 6 de enero de 2027 (vacaciones) | Solo Inglés y Matemáticas; todo lo demás se pausa |
-| 25 de diciembre y 1 de enero | Nada, ni Inglés ni Matemáticas |
-
-- **Vacaciones:** clases ligeras de Inglés y Matemáticas, con temas breves de Navidad y Año Nuevo. Las demás
-  materias retoman su secuencia donde se quedaron.
-- Los rezagos se atienden los domingos y también en vacaciones, que tienen menos clases. Para ponerse al corriente
-  se permiten hasta 4 tareas por día.
-
 ## Examen mensual (al inicio de cada mes)
 
 - Al inicio de cada mes sale `sec-mensual-<AAAA-MM>` con lo visto el mes anterior (solo las clases de ese mes; lo
   que empieza en el mes nuevo no entra).
 - **Ventana de 3 días:** abre el primer día hábil con clases del mes (`dia` = `disponibleDesde`) y vence 2 días
-  después (`fechaLimite`). Si cae en descanso, se recorre al siguiente día con clases. Ejemplo: noviembre 2026 abre
-  el martes 1 de diciembre y vence el jueves 3.
+  después (`fechaLimite`). Si cae en descanso, se recorre al siguiente día con clases. Con el horario nuevo, los exámenes
+  son los de la tabla de arriba.
 - 60–70 preguntas nuevas (no copiadas de las clases), `porSecciones: true` con un tema por materia, `intentos: 2` y
   la clave `.md` para el profe junto a su generador (`herramientas/secundaria-<AAAA-MM>-mensual/`).
 - Va en la semana de su `dia`, con `fecha` = `fechaLimite`. Si esa semana todavía no existe, se crea solo con el
