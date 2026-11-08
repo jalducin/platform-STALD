@@ -15,10 +15,10 @@ function itemsRuta(act) {
   const plan = act && act.plan;
   if (!plan) return [];
   const ids = new Set((plan.semanas || []).flatMap(s => (s.elementos || []).map(e => e.id)));
-  return ((act && act.items) || []).filter(it => !it.grupo && ids.has(it.id));
+  return ProfeHorario.sinMeets(act && act.items).filter(it => !it.grupo && ids.has(it.id)); // un meet no es misión, reto ni XP (openspec: profe-horario-materias)
 }
 const hayRpgProfe = act => !!(act && act.plan && window.Gamificacion && Gamificacion.mapaRuta && typeof barraRpg === 'function');
-function mapaRutaDe(act) { return Gamificacion.mapaRuta(act.plan, itemsRuta(act), (act && act.hoy) || todayStr()); }
+function mapaRutaDe(act) { return Gamificacion.mapaRuta(ProfeHorario.planSinMeets(act.plan), itemsRuta(act), (act && act.hoy) || todayStr()); }
 // Estado de una clase de la ruta, sin «atrasada»: lo que ya pasó su fecha sugerida es «Ritmo de hoy».
 function estadoRuta(it, fecha, hoy) {
   if (!it) return 'sin-abrir';

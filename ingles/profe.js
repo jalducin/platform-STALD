@@ -40,10 +40,11 @@ function pfFila(it) {
   return '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + tag + '</div><div class="s">' + sub + '</div></div>' + accionItem(it, it.estado) + '</div>';
 }
 function renderProfe(act) {
-  const items = (act && act.items) || [];
+  // Un meet es una clase en vivo, no una tarea: fuera de pendientes, siguiente, ruta del mes (openspec: profe-horario-materias).
+  const items = ProfeHorario.sinMeets(act && act.items);
   const hoy = (act && act.hoy) || todayStr();
   const g = buildGroups(itemRowsAlumno(act));
-  const plan = act && act.plan;
+  const plan = ProfeHorario.planSinMeets(act && act.plan);
   const delPlan = new Set(plan ? (plan.semanas || []).flatMap(s => (s.elementos || []).map(e => e.id)) : []);
   const hechosPlan = items.filter(it => delPlan.has(it.id) && it.estado === 'completo').length;
   const pct = delPlan.size ? Math.round(hechosPlan / delPlan.size * 100) : 0;

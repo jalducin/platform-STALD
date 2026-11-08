@@ -103,6 +103,9 @@
     proxima: { icono: '🎥', texto: 'Próxima' }, // meet que aún no pasa
     impartida: { icono: '✓', texto: 'Impartida' }, // meet que ya pasó
   };
+  // Un meet nunca es pendiente, misión ni reto del profe (openspec: profe-horario-materias): se quita de listas (items o tareas) y del plan.
+  const sinMeets = lista => (lista || []).filter(x => !esMeet(x));
+  const planSinMeets = plan => (plan ? { ...plan, semanas: (plan.semanas || []).map(s => ({ ...s, elementos: sinMeets(s.elementos) })) } : plan);
   const contables = tareas => tareas.filter(t => !t.meet); // sin meets: lo que cuenta como tarea (progreso y conteos)
   const esHechaEstado = e => e === 'hecha' || e === 'adelantada';
 
@@ -205,7 +208,7 @@
 
   g.ProfeHorario = {
     MATERIAS_PROFE, ESTADOS, LINEA_GRUPO, LINEA_MEET, sinAcentos, materiaPorNivel, materiaPorRespaldo, materiaDe, infoMateria,
-    sumarDias, lunesDe, diasOficinaDe, esOficina, maxDelDia, nombreDia, fechaCorta, rangoSemana, estaHecha, esMeet, estadoTarea, esHechaEstado, contables,
+    sumarDias, lunesDe, diasOficinaDe, esOficina, maxDelDia, nombreDia, fechaCorta, rangoSemana, estaHecha, esMeet, estadoTarea, esHechaEstado, contables, sinMeets, planSinMeets,
     tareasRuta, filtrar, materiasDe, semanaHorario, rangoSemanas, progresoPorMateria, agruparPorMateria,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -1033,6 +1033,11 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   `a[data-ph-meet]` «Abrir Meet» si trae `meetUrl` (en lugar de «Abrir»). Estado neutral: 🎥 Próxima (hoy o después) o
   ✓ Impartida (ya pasó), nunca «Vencida»; línea «Clases en vivo» si no trae la suya. Quedan fuera del progreso, de los
   conteos de los chips, del cupo del día y de las hechas/totales de cada línea (`ProfeHorario.contables`).
+  Tampoco son pendientes, misión ni reto: `ingles/profe.js` (`renderProfe`: «🔥 Pendiente ahora», «Siguiente»,
+  «📅 Próximas», `hechosPlan`/`pct` y total de «Ruta del mes») e `ingles/profe-rpg.js` (`itemsRuta`, `mapaRutaDe`:
+  misión, retos, mundos y XP) filtran con `ProfeHorario.sinMeets(items)` y `ProfeHorario.planSinMeets(plan)` (mismo
+  `esMeet`, sin copiarlo); por eso `ingles.html` carga `comun/profe-horario-datos.js` antes de `profe.js`. El servidor
+  deja un meet sin reto «disponible» para siempre (`estadoItem`); el panel del profe no debe leer ese estado como tarea.
 - **Semana** (`#ph-semana[data-ph-lunes]`, días `.ph-dia[data-ph-dia]`): hoy con `.es-hoy`, «✨ Hoy» y
   `aria-current="date"`; días de oficina **solo** de `plan.diasOficina` (sello `.ph-sello` 🏢, `[data-ph-oficina]`
   «Día de oficina: solo en página», «máx. 2»; sin el campo, ninguno y «máx. 4»); flechas `[data-ph-semana="-1|1"]`

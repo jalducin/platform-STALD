@@ -13,6 +13,9 @@
   cambio): un meet (`tipo: "meet"` o prefijo `meet-`) lleva `meet: true`, `hora` y `meetUrl`; su estado es `proxima`
   o `impartida`, nunca `vencida`; queda fuera de `progresoPorMateria` y de `contables`; `meet-` → Inglés por respaldo.
   Después, `ProfeHorario` hasta pasar
+- [x] 1.4 Meets fuera de pendientes (rama `fix/meets-fuera-de-pendientes`): prueba primero en
+  `server/profe_horario_test.ts` (falla sin el cambio) para `ProfeHorario.sinMeets` y `ProfeHorario.planSinMeets`
+  (mismo predicado `esMeet`, sin copiarlo)
 
 ## 2. Vista
 
@@ -28,6 +31,10 @@
   «🎥 Próxima» y «✓ Impartida» con contraste AA en claro y oscuro; fuera de los conteos de chips, cupo del día y
   líneas; `ingles.html`: `comun/profe-horario-datos.js?v=2`, `ingles/profe-horario.js?v=2`, `ingles/profe-horario.css?v=2`
 
+- [x] 2.6 Meets fuera de pendientes: `ingles/profe.js` («🔥 Pendiente ahora», «Siguiente», «📅 Próximas», `hechosPlan` y
+  `pct`) e `ingles/profe-rpg.js` (misión, retos, mundos y XP) usan `ProfeHorario.sinMeets` / `planSinMeets`;
+  `ingles.html` carga `comun/profe-horario-datos.js` antes de `profe.js` y sube los `?v=`
+
 ## 3. Verificación (OBLIGATORIO)
 
 - [x] 3.1 Revisar y actualizar pruebas existentes (OBLIGATORIO): E2E nueva `profe-horario` con fixture propio
@@ -35,6 +42,8 @@
   oscuro; `profe-diseno` cuenta 8 pestañas con ruta propia; registro en `tests/e2e/correr.sh`
 - [x] 3.1b Fixture y E2E `profe-horario` con un meet pasado («✓ Impartida») y uno futuro («🎥 Próxima», hora y liga);
   progreso y chips sin contarlos
+- [x] 3.1c E2E `profe-horario`: con el meet pasado «disponible» del fixture, «🔥 Pendiente ahora» (`#pf-urgente`),
+  el «Siguiente», la misión y los retos no lo listan (falla primero), y el meet sigue en «Mi horario»
 - [x] 3.2 Ejecutar pruebas y verificar estado (OBLIGATORIO): `npx -y deno test -A server/` y E2E `ruta-profe`,
   `profe-diseno`, `ingles-diseno-profe`, `profe-horario` y `navegacion-dispositivos` en puertos propios con copia
   temporal de datos (sin tablas `stald_*`); reporte
@@ -47,6 +56,9 @@
   `materiaDelGrupo`, `diasOficina`), `docs/frontend-standards.md` (vista del profe, también las clases en vivo) y
   `docs/pruebas.md`
 - [x] 3.5 `openspec validate profe-horario-materias --strict`
+- [x] 3.2c Re-ejecutar 3.2 con meets fuera de pendientes; reporte
+  `openspec/changes/profe-horario-materias/reports/2026-11-07-meets-fuera-de-pendientes.md`
+- [x] 3.4b Actualizar `docs/frontend-standards.md` (meets fuera de pendientes, misión y retos del profe)
 - [ ] 3.6 Verificación en producción tras el merge — EL AGENTE EJECUTA (OBLIGATORIO), solo lectura: Pages sirve los
   `?v=` nuevos de `ingles.html`
 

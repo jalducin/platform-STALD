@@ -51,6 +51,21 @@ materia, de los conteos de los chips del filtro, del cupo del día («N · máx.
 - **WHEN** la semana tiene un meet de Inglés y tareas de Inglés
 - **THEN** la barra de Inglés, el conteo de su chip y el cupo del día cuentan solo las tareas, no el meet
 
+### Requirement: Un meet nunca es pendiente, misión ni reto del profe
+Un meet (`ProfeHorario.esMeet`) SHALL quedar fuera de todo lo que el profe debe hacer: «🔥 Pendiente ahora», el
+contador «Siguiente» y la tarjeta «📅 Próximas», el avance «Ruta del mes» (`hechosPlan`, `pct` y su total), la
+«⚔️ Misión principal activa», los «⚡ Retos de hoy · a tu ritmo», y los conteos y XP de «🌍 Mundos». Sigue
+listado como clase en vivo en «🗓️ Mi horario» y «🧭 Por materia». El filtro SHALL usar el mismo predicado
+`ProfeHorario.esMeet`, sin copiarlo.
+
+#### Scenario: Un meet pasado no sale en «Pendiente ahora»
+- **WHEN** un meet tiene fecha anterior a hoy y el servidor lo devuelve «disponible» (no tiene reto)
+- **THEN** «🔥 Pendiente ahora» no lo lista, no cuenta como urgente y no es el «Siguiente»
+
+#### Scenario: Un meet no es misión ni reto
+- **WHEN** el plan trae un meet y el profe no tiene intentos en él
+- **THEN** la «⚔️ Misión principal activa» y los «⚡ Retos de hoy» no lo incluyen, y los mundos y «Ruta del mes» no lo cuentan en su total
+
 ### Requirement: Días de oficina desde el plan
 Los días de oficina SHALL salir solo de `plan.diasOficina` (fechas AAAA-MM-DD); la vista no los calcula por día de la
 semana. Cada día de oficina SHALL mostrar el sello 🏢, el texto «Día de oficina: solo en página» y «máx. 2»; los demás
