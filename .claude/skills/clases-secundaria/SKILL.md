@@ -44,8 +44,8 @@ formato de cada JSON está en [docs/data-model.md](../../../docs/data-model.md),
 | Sábado | Inglés, Matemáticas |
 | Domingo | Libre; Artes cada 15 días (8 y 22 nov, 6 y 20 dic, 3, 17 y 31 ene) |
 
-- **Tope de 2 por día.** Única excepción: el sábado 7 de noviembre de 2026 lleva 3 (la primera Cívica, porque faltan
-  jueves en noviembre). Los exámenes mensuales no cuentan para el tope.
+- **Tope de 2 por día.** Única excepción: del lunes 9 al lunes 16 de noviembre de 2026 hay hasta 3 por día, porque ahí
+  se repartieron las clases del 6 al 8 de noviembre (la alumna estuvo enferma). Los exámenes mensuales no cuentan para el tope.
 - **Domingos:** solo Artes en sus fechas. Educación Física queda en espera.
 - **Sin clases:** viernes 20 de noviembre, 25 de diciembre y 1 de enero. No se reparten: se pierden.
 - **Vacaciones (24 dic – 6 ene):** el mismo horario con todas las materias. Inglés lleva 6 clases de Navidad y Año
@@ -113,11 +113,11 @@ Ver arriba: sin clases el 20 de noviembre, el 25 de diciembre y el 1 de enero; e
 |---|---|
 | **Matemáticas** | Aritmética, 1 mes (26 oct–22 nov 2026): solo temas puntuales que no haya visto, porque va avanzada → **Geometría**, 1 mes (23 nov–20 dic): empieza por volumen de prismas, lo pendiente → **Álgebra** (desde ene 2027): ecuaciones de primer grado, incógnita en ambos lados y luego los temas avanzados de secundaria |
 | **Ciencias** | **Biología**, 3 meses (oct 2026–ene 2027): de cero (método científico, seres vivos, célula) y luego los sistemas que no ha visto (nervioso, excretor, reproductor) → **Química**, 3 meses → **Física**, 3 meses (Leyes de Newton y energía estaban pendientes) |
-| **Ciencias Sociales** | Rotación mensual: **Cívica y Ética** (26 oct–22 nov) → **Historia** (23 nov–20 dic; sigue la Revolución, porque llegó al Porfiriato) → **Geografía** (ene; coordenadas y climas de México) → otra vez Cívica… |
+| **Ciencias Sociales** | **Cívica y Ética** en noviembre → en diciembre y enero alternan **Historia** (sigue la Revolución, desde el Porfiriato; cada clase lleva el bloque «🌍 Mientras tanto en el mundo») y **Geografía** (coordenadas y climas de México) → en febrero, clases completas de historia universal: Primera Guerra Mundial, Segunda Guerra Mundial y Guerra Fría |
 | **Tecnología** | **Bases** desde cero, rápidas y prácticas, unas 6 semanas: computadora, archivos, internet seguro, pensamiento computacional, hojas de cálculo, ofimática → **Programación** (repaso de listas, funciones y diccionarios en Python) e **IA** (bases, sesgos, uso responsable) |
 | **Inglés** | Desde cero (le fue mal): alfabeto → números y colores → *to be* → posesivos → adjetivos → **presente simple** (-s, do/does) → *there is/are* → pasado → futuro. Avanza despacio, con mucha práctica y *speaking* |
 | **Español** | Programa de 1.º de secundaria sin repetir lo visto (acentuación, categorías gramaticales y cuento ya los domina). Ortografía en cada bloque. Toda clase de Español incluye en su libreta **2 páginas del libro físico de ortografía** («📖 Libro de ortografía (el físico): resuelve 2 páginas, continuando donde te quedaste.») |
-| **Artes / Ed. Física** | Domingos alternados. Artes: elementos visuales y artistas mexicanos (el círculo cromático ya lo vio). Ed. Física: rutina segura, registro en la libreta. Coordinación y equilibrio estaba pendiente |
+| **Artes** | Domingos, cada 15 días (Ed. Física queda en espera). Artes: elementos visuales y artistas mexicanos (el círculo cromático ya lo vio). Ed. Física: rutina segura, registro en la libreta. Coordinación y equilibrio estaba pendiente |
 
 ## Formato de cada clase
 
