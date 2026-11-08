@@ -59,6 +59,11 @@ const columnas = p => p.$eval('#ph-semana', x => getComputedStyle(x).gridTemplat
       ok('encabezado desde plan.titulo y plan.subtitulo (sin el texto fijo de antes)' + suf, cab.t === '🍥 Camino de ejemplo' && cab.doc === '🍥 Camino de ejemplo' && cab.s.includes('5 materias inventadas') && !/Tus clases propias/.test(cab.s), JSON.stringify(cab).slice(0, 160));
       ok('panel de horas desde plan.horasSemana y plan.reparto' + suf, cab.lado.includes('≈ 6 h por semana (ejemplo)') && cab.lado.includes('Inglés diario') && cab.lado.includes('20 min'));
       ok('el tablero RPG y «Pendiente ahora» siguen' + suf, !!(await p.$('#pf-rpg')) && !!(await p.$('#pf-urgente')));
+      // Meets fuera de pendientes (openspec: profe-horario-materias): el meet pasado llega «disponible» y no es tarea.
+      const pend = await p.evaluate(() => ({ urgente: document.getElementById('pf-urgente').textContent, sig: document.querySelector('.pf-sig').textContent, lado: document.querySelector('.pf-side').textContent,
+        mision: (document.getElementById('pf-mision') || {}).textContent || '', retos: (document.getElementById('pf-retos') || {}).textContent || '', ruta: document.querySelector('.pf-hero .progress-text').textContent }));
+      ok('meets: ni «Pendiente ahora» ni «Siguiente» ni «Próximas» ni misión ni retos los listan' + suf, ![pend.urgente, pend.sig, pend.lado, pend.mision, pend.retos].some(t => /Clase en vivo del grupo/.test(t)), JSON.stringify(pend).slice(0, 300));
+      ok('meets: «Ruta del mes» no los cuenta (17 elementos del plan, 2 son meets: total 15)' + suf, /Ruta del mes: \d+\/15 /.test(pend.ruta), pend.ruta);
 
       // ---------- 🗓️ Mi horario ----------
       await p.click('[data-pf-tab="horario"]');

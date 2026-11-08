@@ -236,3 +236,16 @@ Deno.test("meets: estado próxima o impartida (nunca vencida), con hora y liga, 
   const dias = H.semanaHorario(ts, "2026-11-02", act.hoy, null, []);
   assertEquals(dias[6].tareas.map((t: any) => t.id), ["profe-cg-1", "meet-dudas-g1-2026-11-08"]);
 });
+
+// Meets fuera de pendientes, misión y retos del profe: un solo predicado (`esMeet`) filtra listas y plan.
+Deno.test("sinMeets y planSinMeets quitan los meets con el predicado esMeet", () => {
+  const items = [{ id: "act-1", tipo: "actividad" }, { id: "m1", tipo: "meet" }, { id: "meet-g1-2026-11-08", tipo: "actividad" }];
+  assertEquals(H.sinMeets(items).map((x: any) => x.id), ["act-1"]);
+  assertEquals(H.sinMeets(null), []);
+  const plan = { titulo: "P", semanas: [{ id: "2026-11-02", elementos: [{ id: "act-1" }, { id: "meet-2026-11-01" }, { id: "x", tipo: "meet" }] }] };
+  const sin = H.planSinMeets(plan);
+  assertEquals(sin.semanas[0].elementos.map((e: any) => e.id), ["act-1"]);
+  assertEquals(sin.titulo, "P");
+  assertEquals(plan.semanas[0].elementos.length, 3); // no muta el plan original
+  assertEquals(H.planSinMeets(null), null);
+});
