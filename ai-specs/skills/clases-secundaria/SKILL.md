@@ -54,7 +54,8 @@ Por semana: Inglés 3, Matemáticas 3, Tecnología 2, Ciencias 2, Español 1, Ci
   queda en espera.
 - **Omitidas:** si el profe dice que unas clases le resultaron muy fáciles y las da por completadas, salen del
   calendario (`OMITIDAS` en el calendario) y se listan aparte en `en-espera-febrero.md`.
-- **Sin clases:** viernes 20 de noviembre, 25 de diciembre y 1 de enero. No se reparten: se pierden.
+- **Sin clases:** viernes 20 de noviembre, 25 de diciembre, 1 de enero y lunes 1 de febrero (feriado del Día de la
+  Constitución). No se reparten: se pierden.
 - **Vacaciones (24 dic – 6 ene):** el mismo horario con todas las materias. Inglés lleva 6 clases de Navidad y Año
   Nuevo en fecha coherente y Matemáticas los 6 retos.
 - **En espera:** lo que no cabe sale de las semanas (sin semana, la plataforma no muestra una actividad) y se lista en
@@ -72,7 +73,7 @@ Por semana: Inglés 3, Matemáticas 3, Tecnología 2, Ciencias 2, Español 1, Ci
 
 ## Descansos y vacaciones
 
-Ver arriba: sin clases el 20 de noviembre, el 25 de diciembre y el 1 de enero; en vacaciones rige el mismo horario.
+Ver arriba: sin clases el 20 de noviembre, el 25 de diciembre, el 1 de enero y el 1 de febrero; en vacaciones rige el mismo horario.
 
 ## Exámenes mensuales
 
