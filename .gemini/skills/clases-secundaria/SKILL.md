@@ -1,6 +1,6 @@
 ---
 name: clases-secundaria
-description: Prepara, valida y sube las clases de Secundaria de cada bloque de 2 semanas (máximo 2 por día de lunes a sábado; el domingo solo Artes cada 15 días), además de repasos y tareas sueltas, en el repo privado de datos. Úsala cuando pidan «arma las siguientes 2 semanas de Secundaria», «las clases de la alumna de Secundaria», «un repaso de Secundaria», «agrega esta tarea a Secundaria», o den temas de alguna materia de Secundaria.
+description: Prepara, valida y sube las clases de Secundaria de cada bloque de 2 semanas (máximo 2 por día; el domingo Artes y la lámina semanal del profe), además de repasos y tareas sueltas, en el repo privado de datos. Úsala cuando pidan «arma las siguientes 2 semanas de Secundaria», «las clases de la alumna de Secundaria», «un repaso de Secundaria», «agrega esta tarea a Secundaria», o den temas de alguna materia de Secundaria.
 ---
 
 # clases-secundaria
@@ -32,21 +32,28 @@ formato de cada JSON está en [docs/data-model.md](../../../docs/data-model.md),
   `id` estable: no cambies los `id` de una clase ya publicada (su borrador se perdería) y no pidas entregas fuera de
   la plataforma «para no perder lo escrito». Los pasos de una misión, hasta 4 000 caracteres de texto.
 
-## Horario (máximo 2 clases por día; vigente desde el viernes 6 de noviembre de 2026 hasta el 31 de enero de 2027)
+## Horario (máximo 2 clases por día; vigente desde el lunes 9 de noviembre de 2026 hasta el 28 de febrero de 2027)
 
 | Día | Clases |
 |---|---|
 | Lunes | Inglés, Español |
-| Martes | Matemáticas, Ciencias |
-| Miércoles | Inglés, Tecnología |
-| Jueves | Matemáticas, Ciencias Sociales |
-| Viernes | Español, Ciencias |
-| Sábado | Inglés, Matemáticas |
-| Domingo | Libre; Artes cada 15 días (8 y 22 nov, 6 y 20 dic, 3, 17 y 31 ene) |
+| Martes | Tecnología, Matemáticas |
+| Miércoles | Tecnología, Ciencias |
+| Jueves | Matemáticas, Inglés |
+| Viernes | Matemáticas, Ciencias Sociales |
+| Sábado | Inglés, Ciencias |
+| Domingo | Artes (cada domingo) + la lámina semanal del profe |
 
-- **Tope de 2 por día.** Única excepción: del lunes 9 al lunes 16 de noviembre de 2026 hay hasta 3 por día, porque ahí
-  se repartieron las clases del 6 al 8 de noviembre (la alumna estuvo enferma). Los exámenes mensuales no cuentan para el tope.
-- **Domingos:** solo Artes en sus fechas. Educación Física queda en espera.
+Por semana: Inglés 3, Matemáticas 3, Tecnología 2, Ciencias 2, Español 1, Ciencias Sociales 1 y Artes 1.
+
+- **Tope de 2 por día, sin excepciones.** Los exámenes mensuales no cuentan para el tope. (El 9 de noviembre se quitó la
+  excepción de 3 por día: la semana estaba demasiado cargada.)
+- **Domingos:** Artes y la **lámina semanal**. La lámina es material del profe para la alumna, no una tarea de la
+  plataforma: una presentación `.pptx` en el Escritorio del profe (`Sofy-lamina-semana-<lunes>.pptx`) con el resumen
+  de la semana; si el profe da un tema puntual (p. ej. «los 3 tiempos de Inglés»), ese va a fondo. Educación Física
+  queda en espera.
+- **Omitidas:** si el profe dice que unas clases le resultaron muy fáciles y las da por completadas, salen del
+  calendario (`OMITIDAS` en el calendario) y se listan aparte en `en-espera-febrero.md`.
 - **Sin clases:** viernes 20 de noviembre, 25 de diciembre y 1 de enero. No se reparten: se pierden.
 - **Vacaciones (24 dic – 6 ene):** el mismo horario con todas las materias. Inglés lleva 6 clases de Navidad y Año
   Nuevo en fecha coherente y Matemáticas los 6 retos.
@@ -54,10 +61,11 @@ formato de cada JSON está en [docs/data-model.md](../../../docs/data-model.md),
   `contenido/secundaria/en-espera-febrero.md` del repo de datos con su materia y motivo. Los ids no cambian.
 - **Clases nuevas** (`sec-ciencias-nv-NN`, `sec-mate-nv-NN`, `sec-tec-nv-NN`, `sec-sociales-nv-NN`, `sec-artes-nv-NN`):
   sus fechas ya están reservadas en el calendario; si el archivo aún no existe se salta con aviso.
-- **Fechas:** la última fuente es `herramientas/secundaria-calendario/calendario_2026_11_04.py` del repo de datos
-  (idempotente). Orden al regenerar: generadores de cada bloque y de exámenes mensuales, luego `calendario.py`,
-  `herramientas/secundaria-2026-11-23/armar_semanas.py` y, al final, `calendario_2026_11_04.py`.
-  `comprobar_2026_11_04.py` revisa tope, descansos, domingos, orden por materia, vencidos y el límite del 31 de enero.
+- **Fechas:** la última fuente es `herramientas/secundaria-calendario/calendario_2026_11_09.py` del repo de datos
+  (idempotente; toma las secuencias por materia de `calendario_2026_11_04.py`). Orden al regenerar: generadores de cada
+  bloque y de exámenes mensuales, luego `calendario.py`, `herramientas/secundaria-2026-11-23/armar_semanas.py` y, al
+  final, `calendario_2026_11_09.py`. `comprobar_2026_11_09.py` revisa tope, descansos, domingos, materia en su día,
+  orden por materia y el límite del 28 de febrero.
   Cada elemento va en la semana de su `dia`, porque el validador lo exige.
 - **Lo entregado no se mueve:** antes de reacomodar, consulta en solo lectura `stald_docs`
   (`resultados/sec-*/sofia.json`) con la llave en una variable de entorno; nunca leas `.env`.
@@ -70,7 +78,7 @@ Ver arriba: sin clases el 20 de noviembre, el 25 de diciembre y el 1 de enero; e
 
 | Examen | Ventana | Cubre |
 |---|---|---|
-| `sec-mensual-2026-10` | 19 al 21 nov (después de la última clase de octubre pendiente) | Octubre y sus rezagos |
+| `sec-mensual-2026-10` | 14 al 16 nov (el sábado 14, pedido del profe) | Octubre |
 | `sec-mensual-2026-11` | 1 al 3 dic | Lo visto del 6 al 30 de noviembre |
 | `sec-mensual-2026-12` | 7 al 9 ene | Lo visto del 1 al 31 de diciembre |
 | `sec-mensual-2027-01` | 29 al 31 ene | Lo visto del 1 al 28 de enero |
@@ -82,8 +90,9 @@ Ver arriba: sin clases el 20 de noviembre, el 25 de diciembre y el 1 de enero; e
 - La atrasada toma el lugar de la clase del día de su materia y el resto se recorre, solo en materias con secuencia;
   las demás se agregan como extra.
   - **Con secuencia** (Matemáticas, Español, Inglés, Tecnología, Ciencias y Sociales dentro del mismo tema): la
-    atrasada ocupa el siguiente lugar de su materia en la plantilla (Matemáticas mar/jue/sáb, Español lun/mié/vie,
-    Tecnología mar/vie, Sociales jue, Ciencias mié) y las clases siguientes de esa materia se recorren en cascada.
+    atrasada ocupa el siguiente lugar de su materia en la plantilla (desde el 9 nov: Inglés lun/jue/sáb, Matemáticas
+    mar/jue/vie, Tecnología mar/mié, Ciencias mié/sáb, Español lun, Sociales vie, Artes dom) y las clases siguientes
+    de esa materia se recorren en cascada.
     Así cada día queda con sus clases normales.
   - **Sin dependencia** (Artes, Ed. Física, Sociales cuando cambia de tema, repasos): la atrasada va como tarea extra
     en un día con espacio o en domingo, sin recorrer nada. Ahí aplica el tope de 4 tareas por día.
@@ -113,11 +122,11 @@ Ver arriba: sin clases el 20 de noviembre, el 25 de diciembre y el 1 de enero; e
 |---|---|
 | **Matemáticas** | Aritmética, 1 mes (26 oct–22 nov 2026): solo temas puntuales que no haya visto, porque va avanzada → **Geometría**, 1 mes (23 nov–20 dic): empieza por volumen de prismas, lo pendiente → **Álgebra** (desde ene 2027): ecuaciones de primer grado, incógnita en ambos lados y luego los temas avanzados de secundaria |
 | **Ciencias** | **Biología**, 3 meses (oct 2026–ene 2027): de cero (método científico, seres vivos, célula) y luego los sistemas que no ha visto (nervioso, excretor, reproductor) → **Química**, 3 meses → **Física**, 3 meses (Leyes de Newton y energía estaban pendientes) |
-| **Ciencias Sociales** | **Cívica y Ética** en noviembre → en diciembre y enero alternan **Historia** (sigue la Revolución, desde el Porfiriato; cada clase lleva el bloque «🌍 Mientras tanto en el mundo») y **Geografía** (coordenadas y climas de México) → en febrero, clases completas de historia universal: Primera Guerra Mundial, Segunda Guerra Mundial y Guerra Fría |
+| **Ciencias Sociales** | **Cívica y Ética** en noviembre → en diciembre y enero alternan **Historia** (sigue la Revolución, desde el Porfiriato; cada clase lleva el bloque «🌍 Mientras tanto en el mundo») y **Geografía** (coordenadas y climas de México); en febrero terminan las de Historia y Geografía que no cupieron → en marzo, clases completas de historia universal: Primera Guerra Mundial, Segunda Guerra Mundial y Guerra Fría |
 | **Tecnología** | **Bases** desde cero, rápidas y prácticas, unas 6 semanas: computadora, archivos, internet seguro, pensamiento computacional, hojas de cálculo, ofimática → **Programación** (repaso de listas, funciones y diccionarios en Python) e **IA** (bases, sesgos, uso responsable) |
 | **Inglés** | Desde cero (le fue mal): alfabeto → números y colores → *to be* → posesivos → adjetivos → **presente simple** (-s, do/does) → *there is/are* → pasado → futuro. Avanza despacio, con mucha práctica y *speaking* |
 | **Español** | Programa de 1.º de secundaria sin repetir lo visto (acentuación, categorías gramaticales y cuento ya los domina). Ortografía en cada bloque. Toda clase de Español incluye en su libreta **2 páginas del libro físico de ortografía** («📖 Libro de ortografía (el físico): resuelve 2 páginas, continuando donde te quedaste.») |
-| **Artes** | Domingos, cada 15 días (Ed. Física queda en espera). Artes: elementos visuales y artistas mexicanos (el círculo cromático ya lo vio). Ed. Física: rutina segura, registro en la libreta. Coordinación y equilibrio estaba pendiente |
+| **Artes** | Cada domingo (Ed. Física queda en espera). Artes: elementos visuales y artistas mexicanos (el círculo cromático ya lo vio). Ed. Física: rutina segura, registro en la libreta. Coordinación y equilibrio estaba pendiente |
 
 ## Formato de cada clase
 
