@@ -56,6 +56,11 @@ rediseñar la vista de alumnos y alumnas.
 12. **Sin «atrasada»** en la ruta: el contador «Atrasadas» pasa a «Para hoy» y el tercero a «Mundos» (x/9); los estados
    de las clases son «Ritmo de hoy», «Abierta», «En curso» o «Hecha». «🔥 Pendiente ahora» muestra 5 y pliega el resto
    (con 25 pendientes empujaba todo hacia abajo).
+13. **Atrasadas a la mano** (2026-11-22): el profe pidió tenerlas visibles «cuando pasen». El encabezado suma un quinto
+   contador «⏰ Atrasadas» (siempre visible, también en 0) y «Para hoy» cuenta solo lo de hoy, para no contar dos veces.
+   Con 1 o más es un botón que abre y lleva a `<details id="pf-atrasadas">` (arriba de «🔥 Pendiente ahora»), con `pfFila`
+   y su botón. El tablero RPG sigue sin decir «atrasada». Rejilla: 5 columnas desde 480 px; en celular, 2 columnas y
+   «Atrasadas» a lo ancho.
 
 ## Risks / Trade-offs
 

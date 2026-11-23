@@ -204,7 +204,7 @@ bash tests/e2e/correr.sh --datos <ruta> --pg
   (encabezado con grupos activos, alumnos y alumnas, en riesgo y «Por revisar» contra `/profe/entregas`; grupo elegido;
   sin grupos; tarjetas por grupo; mapa de calor como tarjetas; Registro; cajón; «🔍 Ver grupo»), 44 px y sin scroll en
   las 11 secciones del admin, y la ruta del profe con la experiencia RPG (barra, misión principal, retos, nada
-  «atrasada», «🌍 Mundos» con los 9 mundos, clase por pasos como «⚔️ Misión») y su Plan del mes (cuenta las clases
+  «atrasada» en el tablero RPG, contador «⏰ Atrasadas» en el encabezado que abre `#pf-atrasadas`, «🌍 Mundos» con los 9 mundos, clase por pasos como «⚔️ Misión») y su Plan del mes (cuenta las clases
   abiertas con botón contra la API), más capturas de escritorio. En claro envía la misión principal del profe (en la
   copia temporal de datos) para ver «+XP». Sin `--pg`, cambia en el navegador la parte `grupos` del panel
   (`/ingles/data?incluir=panel` y `/ingles/panel`) y el GET de `/ingles/grupos` por dos grupos de ejemplo (cambio

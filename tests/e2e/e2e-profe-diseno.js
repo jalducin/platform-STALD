@@ -15,7 +15,8 @@ const out = []; const ok = (n, c, x = '') => out.push(`${c ? 'PASS' : 'FAIL'} ${
   // Escritorio
   const p = await abrirPagina(b, { email: 'admin@example.com', viejo: true, viewport: { width: 1280, height: 900 }, out, etiqueta: '', ruta: RUTA });
   const hero = await p.waitForSelector('.pf-hero', { timeout: 15000 }).catch(() => null);
-  ok('encabezado con contadores' + (conRuta ? ' y barra del mes' : ' y sin barra del mes (no hay plan)'), !!hero && (await p.$$('.pf-hero .pf-stat')).length === 4 && !!(await p.$('.pf-hero .progress-bar')) === conRuta);
+  // 5 contadores: Hechas, Para hoy, Mundos (u Hoy), Próximas y ⏰ Atrasadas (ingles-diseno-profe, design 13).
+  ok('encabezado con contadores' + (conRuta ? ' y barra del mes' : ' y sin barra del mes (no hay plan)'), !!hero && (await p.$$('.pf-hero .pf-stat')).length === 5 && !!(await p.$('.pf-hero .progress-bar')) === conRuta);
   const urg = await p.textContent('#pf-urgente').catch(() => '');
   ok('Pendiente ahora con etiqueta Grupo', /Pendiente ahora/.test(urg) && (/Grupo/.test(urg) || /Al día/.test(urg)) && !/🎓 Ruta/.test(urg), urg.replace(/\s+/g, ' ').slice(0, 140));
   const nTabs = (await p.$$('[role="tab"][data-pf-tab]')).length;
