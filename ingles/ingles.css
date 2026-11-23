@@ -292,11 +292,20 @@ table.teo th { background: var(--accent-soft); color: var(--accent); }
 .pf-hero .pf-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
 .pf-hero .pf-sem { font-weight: 800; font-size: 1rem; }
 .pf-hero .pf-sig { font-size: .84rem; color: var(--muted); }
-.pf-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+.pf-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
 .pf-stat { border-radius: 12px; padding: 8px 6px; text-align: center; background: var(--card); border: 1px solid var(--border); }
 .pf-stat b { display: block; font-size: 1.35rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .pf-stat span { font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; }
 .pf-stat.atraso b { color: var(--bad); } .pf-stat.hecho b { color: var(--ok); }
+/* «⏰ Atrasadas» (ingles-diseno-profe, design 13): a lo ancho en celular; botón cuando hay. */
+.pf-stats > .pf-stat-atrasadas { grid-column: 1 / -1; }
+@media (min-width: 480px) { .pf-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); } .pf-stats > .pf-stat-atrasadas { grid-column: auto; } }
+button.pf-stat { font: inherit; color: inherit; cursor: pointer; min-height: 44px; }
+button.pf-stat:focus-visible { outline: 3px solid var(--accent, #6366f1); outline-offset: 2px; }
+.pf-atrasadas > summary { cursor: pointer; list-style: none; min-height: 44px; display: flex; align-items: center; } .pf-atrasadas > summary h3 { display: inline; }
+.pf-atrasadas[open] > summary { margin-bottom: 6px; }
+.pf-atrasadas > summary::-webkit-details-marker { display: none; }
+.pf-atrasadas > summary::before { content: "▶"; font-size: .7em; margin-right: 8px; transition: transform .15s; } .pf-atrasadas[open] > summary::before { transform: rotate(90deg); }
 .pf-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .pf-main, .pf-side { min-width: 0; }
 @media (min-width: 960px) { .pf-grid { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; } .pf-side { position: sticky; top: 12px; } }

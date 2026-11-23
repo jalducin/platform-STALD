@@ -4,7 +4,18 @@
 La vista del profe (`ingles.html?modo=profe`) SHALL mostrar primero su avance y lo que está pendiente ahora.
 Después SHALL organizar el resto en pestañas: Esta semana, Material, Mundos (con plan), Plan del mes (con plan), Mi
 grupo y Hechas. «🔥 Pendiente ahora» SHALL mostrar 5 elementos y plegar el resto; las clases de su ruta no se marcan
-como atrasadas (su ruta va a su ritmo: «Para hoy»).
+como atrasadas (su ruta va a su ritmo: «Para hoy»). Aparte, el encabezado SHALL tener siempre a la mano el contador
+«⏰ Atrasadas» (pendientes con fecha sugerida anterior a hoy, de su ruta y del grupo, sin meets), también en 0; con 1 o
+más, tocarlo SHALL abrir y llevar a la lista «⏰ Atrasadas (n)», cada una con su botón para resolver (pedido del profe
+el 2026-11-22).
+
+#### Scenario: Atrasadas a la mano
+- **WHEN** el profe tiene una clase de su ruta pendiente con fecha sugerida de ayer
+- **THEN** el contador «⏰ Atrasadas» dice 1 y al tocarlo se abre la lista «⏰ Atrasadas (1)» con esa clase y su botón
+
+#### Scenario: Sin atrasadas
+- **WHEN** no tiene pendientes con fecha anterior a hoy
+- **THEN** el contador «⏰ Atrasadas» se ve con 0 y no hay lista de atrasadas
 
 #### Scenario: Lo urgente arriba
 - **WHEN** el profe tiene una actividad de su ruta con la fecha sugerida ya pasada y un examen del grupo por resolver
@@ -96,8 +107,8 @@ Los mundos de la ruta SHALL ser «Taller del Agente» (semanas 1–2), «Fábric
 «Colmena de Subagentes» (5), «Biblioteca SDD» (6), «Arena en Acción» (7) y «Proyecto Integrador» (8), más «Torre de
 Minto» (clases de la Pirámide de Minto) y «Forja de Skills» (clases de Skills), que ganan sobre la semana. Las reglas
 (XP, nivel, insignias y mundos) SHALL salir de `comun/gamificacion.js` sin cambiar las de Secundaria ni las de Inglés.
-Toda la ruta está abierta y las fechas son ritmo sugerido: ningún estado de la ruta SHALL decir «atrasada» ni
-«bloqueado», y toda clase hecha cuenta con el bono de a tiempo. «🔥 Pendiente ahora» muestra 5 y pliega el resto.
+Toda la ruta está abierta y las fechas son ritmo sugerido: ningún estado del tablero RPG SHALL decir «atrasada» ni
+«bloqueado» (el único lugar que nombra atrasadas es el contador y la lista del encabezado), y toda clase hecha cuenta con el bono de a tiempo. «🔥 Pendiente ahora» muestra 5 y pliega el resto.
 
 #### Scenario: Tablero de la ruta
 - **WHEN** el profe abre `ingles.html?modo=profe` el 2026-10-22 con su plan de 27 clases

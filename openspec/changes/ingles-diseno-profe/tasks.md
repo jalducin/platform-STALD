@@ -27,6 +27,9 @@
 - [x] 2.5 `ingles/reproductor.js` y `ingles/secundaria-clase.js`: clase por pasos como «⚔️ Misión» con su mundo y
   «+XP» también en `?modo=profe`
 
+- [x] 2.6 `ingles/profe.js` y CSS: contador «⏰ Atrasadas» siempre visible y lista `#pf-atrasadas` al tocarlo; «Para
+  hoy» solo cuenta lo de hoy (pedido del 2026-11-22; design 13)
+
 ## 3. Revisar y actualizar pruebas existentes (OBLIGATORIO)
 
 - [x] 3.1 Revisar los selectores de las E2E de admin/profe (`alta-alumnos`, `baja-ingles`, `material`, `profe-grupo`,
@@ -38,12 +41,18 @@
   claro y oscuro; ruta RPG (barra, misión, retos, sin «atrasada»), «🌍 Mundos», clase por pasos, envío con «+XP»,
   Plan del mes (27 abiertas) y capturas de escritorio
 
+- [x] 3.3 `e2e-ingles-diseno-profe`: el tablero RPG sigue sin «atrasada»; el contador «Atrasadas» está en el
+  encabezado y, con atrasadas, al tocarlo abre `#pf-atrasadas` con el mismo número de filas
+
 ## 4. Pruebas y verificación de estado (OBLIGATORIO)
 
 - [x] 4.1 `deno test -A server/`, `deno check server/main.ts`, `deno lint server/` y la suite E2E completa con una copia
   temporal del repo de datos (puertos 8951/8952; subagente `verificador-pruebas`), más las de Inglés con
   `--hoy 2026-10-22`. Sin tablas `stald_` y sin push de datos. Comparar con la línea base de `main`
 - [x] 4.2 Reporte `openspec/changes/ingles-diseno-profe/reports/2026-10-22-step-4-pruebas-y-verificacion.md`
+
+- [x] 4.3 Atrasadas a la mano: `deno test -A server/` y E2E `ingles-diseno-profe` y `ruta-profe`; reporte
+  `openspec/changes/ingles-diseno-profe/reports/2026-11-22-step-4-atrasadas-a-la-mano.md`
 
 ## 5. Verificación manual — EL AGENTE EJECUTA (OBLIGATORIO)
 

@@ -50,6 +50,8 @@ function renderProfe(act) {
   const pct = delPlan.size ? Math.round(hechosPlan / delPlan.size * 100) : 0;
   const pendientes = items.filter(it => it.estado !== 'completo' && it.estado !== 'proximamente');
   const urgentes = pendientes.filter(it => it.fechaLimite <= hoy).sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
+  // Atrasadas a la mano (openspec: ingles-diseno-profe, design 13): pendientes con fecha sugerida anterior a hoy.
+  const atrasadas = urgentes.filter(it => it.fechaLimite < hoy);
   const futuras = items.filter(it => it.estado !== 'completo' && it.fechaLimite > hoy).sort((a, b) => a.fechaLimite.localeCompare(b.fechaLimite));
   const sig = futuras[0];
   const propia = act && (act.semanaPropia || act.semanaSiguientePropia); // ruta propia; el domingo antes de empezar, la siguiente (openspec: profe-grupo-y-ruta-ia)
@@ -59,9 +61,10 @@ function renderProfe(act) {
   const hero = '<section class="pf-hero"><div class="pf-top"><span class="pf-sem">' + (act && (act.semana || propia) ? '👉 ' + (propia ? [act.semana && '👥 ' + act.semana.titulo, '🎓 ' + propia.titulo] : [act.semana.titulo]).filter(Boolean).map(t => escapeHtml(t)).join(' · ') : '🎓 Tu ruta') + '</span>' +
     '<span class="pf-sig">' + (sig ? 'Siguiente: ' + icono(sig.tipo) + ' ' + escapeHtml(sig.titulo) + ' · ' + escapeHtml(formatFecha(sig.fechaLimite)) : 'Sin entregas próximas') + '</span></div>' +
     (plan ? '<div class="progress-bar" style="margin-top:10px"><span style="width:' + pct + '%"></span></div><div class="progress-text" style="margin:4px 0 0">Ruta del mes: ' + hechosPlan + '/' + delPlan.size + ' (' + pct + '%)</div>' : '') +
-    // Su ruta va a su ritmo (openspec: ingles-diseno-profe): lo que ya pasó su fecha sugerida es «Para hoy», no «atrasada».
-    '<div class="pf-stats"><div class="pf-stat hecho"><b>' + (g.recent.length + g.older.length) + '</b><span>Hechas</span></div><div class="pf-stat"><b>' + (g.overdue.length + g.today.length) + '</b><span>Para hoy</span></div>' +
-    pfStatTercero(act, g) + '<div class="pf-stat"><b>' + g.upcoming.length + '</b><span>Próximas</span></div></div></section>';
+    // «Para hoy» es solo lo de hoy; lo que ya pasó su fecha va en «⏰ Atrasadas», siempre a la mano (design 13).
+    '<div class="pf-stats"><div class="pf-stat hecho"><b>' + (g.recent.length + g.older.length) + '</b><span>Hechas</span></div><div class="pf-stat"><b>' + g.today.length + '</b><span>Para hoy</span></div>' +
+    pfStatTercero(act, g) + '<div class="pf-stat"><b>' + g.upcoming.length + '</b><span>Próximas</span></div>' + pfStatAtrasadas(atrasadas.length) + '</div></section>';
+  const listaAtrasadas = atrasadas.length ? '<details class="exam-card pf-atrasadas" id="pf-atrasadas"><summary><h3>⏰ Atrasadas (' + atrasadas.length + ')</h3></summary>' + atrasadas.map(pfFila).join('') + '</details>' : '';
   const urgente = '<div class="exam-card" id="pf-urgente"><h3>🔥 Pendiente ahora' + (urgentes.length ? ' (' + urgentes.length + ')' : '') + '</h3>' +
     (urgentes.length ? urgentes.slice(0, 5).map(pfFila).join('') : '<div class="pf-ok">¡Al día! 🎉 No tienes nada pendiente para hoy.</div>') +
     // Solo 5 a la vista; el resto, plegado, para que el tablero y las pestañas no queden hasta abajo (openspec: ingles-diseno-profe).
@@ -82,7 +85,7 @@ function renderProfe(act) {
     '<div class="exam-card"><h3>📅 Próximas</h3>' + (futuras.length ? futuras.slice(0, 3).map(it => '<div class="exam-item"><div><div class="t">' + icono(it.tipo) + ' ' + escapeHtml(it.titulo) + '</div><div class="s">' + escapeHtml(formatFecha(it.fechaLimite)) + (it.grupo ? ' · 👥 Grupo' : '') + '</div></div></div>').join('') : '<div class="pf-ok">Nada próximo.</div>') + '</div>' +
     '<a class="profe-link" href="' + escapeHtml(conApiParam('ingles.html')) + '">← Vista de mi grupo</a></aside>';
   // Tablero RPG de su ruta (openspec: ingles-diseno-profe; ingles/profe-rpg.js), aparte del panel del admin.
-  return hero + renderProfeRpg(act) + '<div class="pf-grid"><div class="pf-main">' + urgente + tabs + '</div>' + lado + '</div>';
+  return hero + renderProfeRpg(act) + '<div class="pf-grid"><div class="pf-main">' + listaAtrasadas + urgente + tabs + '</div>' + lado + '</div>';
 }
 // Tercer contador: con ruta propia, los mundos completados (ingles/profe-rpg.js); sin ella, lo de hoy.
 function pfStatTercero(act, g) {
@@ -90,6 +93,18 @@ function pfStatTercero(act, g) {
   const mapa = mapaRutaDe(act).filter(w => w.total);
   return '<div class="pf-stat hecho"><b>' + mapa.filter(w => w.estado === 'completado').length + '/' + mapa.length + '</b><span>Mundos</span></div>';
 }
+// Contador «⏰ Atrasadas»: siempre visible; con 1 o más es un botón que abre la lista #pf-atrasadas.
+function pfStatAtrasadas(n) {
+  const cuerpo = '<b>' + n + '</b><span>⏰ Atrasadas</span>';
+  return n ? '<button type="button" class="pf-stat pf-stat-atrasadas atraso" id="pf-stat-atrasadas" aria-controls="pf-atrasadas">' + cuerpo + '</button>'
+    : '<div class="pf-stat pf-stat-atrasadas" id="pf-stat-atrasadas">' + cuerpo + '</div>';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('button#pf-stat-atrasadas')) return;
+  const d = document.getElementById('pf-atrasadas'); if (!d) return;
+  d.open = true;
+  d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 // Cambio de pestaña sin redibujar (se conserva el scroll); se recuerda en este navegador.
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-pf-tab]'); if (!b) return;

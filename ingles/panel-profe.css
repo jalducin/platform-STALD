@@ -148,7 +148,7 @@ body.vista-admin #logout-btn { min-height: 44px; }
 .vista-admin .pf-hero .progress-bar { height: 10px; position: relative; z-index: 1; }
 .vista-admin .pf-hero .progress-bar span { background: var(--rpg-barra); }
 .vista-admin .pf-stats { position: relative; z-index: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (min-width: 480px) { .vista-admin .pf-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 480px) { .vista-admin .pf-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .vista-admin .pf-stat { background: var(--rpg-panel); border-color: var(--rpg-borde); box-shadow: var(--shadow-1); }
 .vista-admin .pf-stat b { font-family: "Orbitron", "Inter", var(--font); color: var(--rpg-indigo); }
 .vista-admin .pf-stat.atraso b { color: var(--bad); } .vista-admin .pf-stat.hecho b { color: var(--rpg-emerald); }

@@ -1009,8 +1009,11 @@ muestras WAV en `tests/e2e/salida/emocion/`). Ojo: `page.evaluate` de Playwright
   se ajusta aquí y en `server/gamificacion_profe_test.ts`.
 - Toda la ruta está abierta y las fechas son ritmo sugerido: estados «Hecha», «En curso», «Ritmo de hoy» (ya pasó su
   fecha sugerida), «Abierta» y «Llega pronto» (aún no publicada); mundos «completado», «en curso» o «abierto». Nunca
-  «atrasada» ni «bloqueado». En el encabezado, «Atrasadas» es «Para hoy» y el tercer contador es «Mundos»
-  (completados / mundos con clases en el plan).
+  «atrasada» ni «bloqueado» en el tablero RPG. Encabezado: «Hechas», «Para hoy» (solo lo de hoy), «Mundos»
+  (completados / mundos con clases en el plan), «Próximas» y «⏰ Atrasadas» (`#pf-stat-atrasadas`, siempre visible;
+  pendientes con fecha anterior a hoy, de su ruta y del grupo). Con 1 o más es un botón que abre y lleva a
+  `<details id="pf-atrasadas">`, arriba de «🔥 Pendiente ahora», con `pfFila` y su botón (pedido del 2026-11-22). Rejilla:
+  5 columnas desde 480 px; en celular, 2 y «Atrasadas» a lo ancho.
 - Con plan, las clases se abren por pasos (`claseEnPasos()` incluye `MODO_PROFE` si `act.plan`; sin plan, lista): banner «⚔️ Misión» con su mundo
   (`mundoDeClaseProfe`) y, al enviar, «+XP», nivel e insignias nuevas de su ruta (`recompensaProfe` con
   `htmlRecompensa` de `secundaria-clase.js`; lo del grupo no da recompensa). Las tablas de teoría anchas se desplazan dentro de su caja.

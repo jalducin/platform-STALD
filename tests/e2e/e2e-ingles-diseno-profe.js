@@ -130,11 +130,22 @@ const fondoOscuro = p => p.evaluate(() => { const m = getComputedStyle(document.
         barra: !!document.querySelector('#pf-rpg #rpg-stats .rpg-xp-barra'), rango: (document.getElementById('rpg-rango') || {}).textContent || '',
         insignias: !!document.getElementById('rpg-insignias'), racha: !!document.getElementById('rpg-racha'),
         mision: (document.getElementById('pf-mision-t') || {}).textContent || '', boton: !!document.querySelector('#pf-mision-btn[data-action]'),
-        retos: document.querySelectorAll('#pf-retos .pf-reto').length, atrasada: /atrasad/i.test(document.getElementById('pf-rpg').textContent + document.querySelector('.pf-hero').textContent),
+        retos: document.querySelectorAll('#pf-retos .pf-reto').length, atrasada: /atrasad/i.test(document.getElementById('pf-rpg').textContent),
       }));
       ok('ruta RPG: barra de nivel y XP, rango, insignias y racha' + suf, rpg.barra && /(Nv\.|Nivel) \d+/.test(rpg.rango) && rpg.insignias && rpg.racha, rpg.rango);
       ok('ruta RPG: «Misión principal activa» con botón y retos de hoy' + suf, rpg.mision.length > 3 && rpg.boton && rpg.retos >= 1, rpg.mision.slice(0, 60) + ' · retos ' + rpg.retos);
       ok('ruta RPG: nada dice «atrasada» (todo abierto, ritmo sugerido)' + suf, !rpg.atrasada);
+      // Atrasadas a la mano (2026-11-22): contador siempre visible en el encabezado; con atrasadas abre su lista.
+      const atr = await m.evaluate(() => {
+        const b = document.querySelector('.pf-hero #pf-stat-atrasadas'), d = document.getElementById('pf-atrasadas');
+        return { hay: !!b, n: b ? Number(b.querySelector('b').textContent) : -1, boton: !!b && b.tagName === 'BUTTON', filas: d ? d.querySelectorAll('.exam-item').length : 0, lista: !!d };
+      });
+      ok('encabezado: contador «⏰ Atrasadas» siempre a la mano' + suf, atr.hay && atr.n >= 0, JSON.stringify(atr));
+      if (atr.n > 0) {
+        await m.click('#pf-stat-atrasadas');
+        const abierta = await m.$eval('#pf-atrasadas', d => d.open);
+        ok('atrasadas: tocar el contador abre la lista con el mismo número' + suf, atr.boton && abierta && atr.filas === atr.n, JSON.stringify(atr));
+      } else ok('sin atrasadas: contador en 0 y sin lista' + suf, !atr.lista && !atr.boton, JSON.stringify(atr));
       await m.click('[data-pf-tab="mundos"]');
       await m.waitForSelector('#pf-mundos');
       const mundos = await m.$$eval('#pf-mundos .pf-mundo', xs => xs.map(x => x.dataset.pfMundo));
