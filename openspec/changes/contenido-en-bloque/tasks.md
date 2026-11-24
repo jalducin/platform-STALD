@@ -16,4 +16,4 @@
 - [x] 4.1 `docs/backend-standards.md` y `docs/data-model.md`
 
 ## 5. Producción — EL AGENTE EJECUTA
-- [ ] 5.1 `/salud` en verde y consumo medido tras publicar
+- [x] 5.1 `/salud` en verde y consumo medido tras publicar
