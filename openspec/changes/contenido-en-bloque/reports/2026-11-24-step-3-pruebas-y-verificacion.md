@@ -27,3 +27,10 @@
 ## Resultado
 - Estado Step 3: PASS
 - Bloqueos: ninguno
+
+## Producción (PR 271, 2026-11-24)
+- `/salud` en 200 y `estado: ok`; `/config` 200; `/secundaria/actividades` sin sesión 401.
+- Arranque en frío: 1 consulta contada (el tarball y los 304 no contaron al medirlos).
+- Uso continuo (24 peticiones tras el arranque, cada ~4.5 s): 0 consultas más.
+- Tiempo de `/salud`: ~0.4 s en caliente; de 2.2 a 6.4 s en frío (baja el paquete).
+- Sin verificar: la fila `respaldo/contenido` en Postgres y el flujo con la sesión de una alumna.
