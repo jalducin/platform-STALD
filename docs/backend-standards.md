@@ -18,6 +18,7 @@
 | `server/interruptores.ts` | `GET /interruptores`: interruptores públicos del profe (`config/interruptores.json`), con caché de 60 s y falla cerrada (cambio `rpg-privacidad`) |
 | `server/motor.ts` | Lógica pura: selección por alumno e intento, calificación, mejor intento, refuerzo |
 | `server/store.ts` | `GitHubStore` (API de contenidos, escritura con `sha`) y `MemoryStore` (pruebas) |
+| `server/contenido.ts` | `ContenidoStore`: `contenido/**` en un solo paquete, con respaldo en Postgres (cambio `contenido-en-bloque`) |
 | `server/rows.ts` | Extracción de filas de Notion (Secundaria) y filtrado por correo |
 | `server/auth.ts` | Sesión con Supabase Auth: `quienEs`, `GET /config` y `POST /auth/enlace` (cambio `plataforma-login`) |
 | `server/contrasena.ts` | Entrada con contraseña: `POST /auth/preparar`, `/auth/contrasena` y `/auth/restablecer` (cambio `acceso-con-contrasena`) |
@@ -373,6 +374,13 @@ simple, sin verificación previa). El servidor lee JSON con `req.json()`/`req.te
     de 3,000 entradas.
   - Incidente que lo motivó (2026-10-02): las partidas consultan cada 2.5 s y cada consulta leía varios
     archivos; con varias instancias de Deno se superó el límite y cayeron todas las rutas.
+
+**Contenido en un solo paquete** (`server/contenido.ts`, cambio `contenido-en-bloque`):
+  - En producción `contenido/**` se lee del tarball del commit de `main`: 2 consultas por arranque en lugar de una por
+    archivo (hasta 682). Cada 60 s, a lo más, revisa el commit con `If-None-Match`; solo baja el paquete si cambió.
+  - Si GitHub falla: copia en memoria → respaldo de Postgres (`docs/data-model.md`) → archivo por archivo.
+  - Lo que se escribe en `contenido/` (prórrogas) se lee directo hasta cargar un paquete posterior.
+  - Incidente que lo motivó (2026-11-23): `/salud` en 503 por límite agotado.
 
 **Caché y single-flight** (`server/cache.ts`, `server/http_cache.ts`, cambio `cache-estabilidad`; decisiones en su
 `design.md`). Fuente canónica de las reglas de caché del servidor:

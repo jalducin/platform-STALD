@@ -12,6 +12,7 @@ import { handleCambio, handleOlvide, handlePreparar, handleRestablecer } from ".
 import { aplicarAlumnos, enBajaIngles, handleAlumnos, handleBajaIngles, handleSecundariaAlumno, inicioDe, leerRegistro, sinBajas } from "./alumnos.ts";
 import { type FilaSecundaria, filasSecundaria as armarFilasSecundaria, identidadSecundaria, slugsExclusivos } from "./secundaria_registro.ts";
 import { revisarSalud } from "./salud.ts";
+import { ContenidoStore, respaldoPg } from "./contenido.ts";
 import { GitHubStore, MemoryStore, type Store } from "./store.ts";
 import { createDb, PgStore, PREFIJO_JUEGOS, PREFIJOS_INGLES, v as pgv } from "./db.ts";
 import { crearLectorInterruptores, escribirInterruptor } from "./interruptores.ts";
@@ -174,7 +175,7 @@ function baseStore(): Promise<Store> {
   if (!storePromise) {
     storePromise = env("DATA_DIR")
       ? MemoryStore.fromDir(env("DATA_DIR"))
-      : Promise.resolve(new GitHubStore(env("DATA_REPO"), env("GITHUB_TOKEN")));
+      : Promise.resolve(new ContenidoStore(new GitHubStore(env("DATA_REPO"), env("GITHUB_TOKEN")), { repo: env("DATA_REPO"), token: env("GITHUB_TOKEN"), respaldo: db ? respaldoPg(db) : null }));
   }
   return storePromise;
 }
