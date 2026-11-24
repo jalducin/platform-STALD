@@ -143,6 +143,8 @@ Sin datos personales. Se sirve junto a `juegos.html`.
     `entregas/<misión>/<slug>.json` (prefijos en `PREFIJOS_INGLES`, `server/db.ts`).
   - `version` es el `sha` de la concurrencia optimista.
   - La fila `meta/migrado` activa `PgStore`.
+  - La fila `respaldo/contenido` (`{ sha, gz }`: JSON de `contenido/**` comprimido, en base64) es el respaldo de emergencia
+    del contenido; el servidor la escribe en cada versión nueva (cambio `contenido-en-bloque`). No se edita a mano.
 - `stald_grupos(id, nombre, nivel, horario, meet_url, color, activo, orden, oculto_admin)`. El grupo inicial es
   `grupo-1` («Grupo 1»).
   - `oculto_admin` (boolean, `false` por omisión; migración `002`, cambio `ingles-ocultar-grupos`): el grupo y sus
